@@ -1,0 +1,12 @@
+b64 - License
+===================
+
+Updated:    15th March 2008
+
+
+
+b64 uses the BSD-form license, as described in the
+accompanying doc/html/index.html file.
+
+
+=============================== End of file ================================

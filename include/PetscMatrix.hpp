@@ -1,0 +1,383 @@
+#ifndef __petsc_matrixMn_h__
+#define __petsc_matrixMn_h__
+
+#include "FEMTTUConfig.h"
+
+// ======================================
+#if HAVE_PETSC == 1
+// ======================================
+
+// This class
+#include "SparseMatrix.hpp"
+#include "PetscMacro.hpp"
+// Petsc include files.
+EXTERN_C_FOR_PETSC_BEGIN
+# include <petscmat.h>
+EXTERN_C_FOR_PETSC_END
+
+// C++ includes -------------------
+#include <algorithm> // equal_range
+
+// Local includes
+#include "Parallel.hpp"        // parallel commands
+
+// Macro to identify and debug functions which should be called in
+// parallel on parallel matrices but which may be called in serial on
+// serial matrices.  This macro will only be valid inside non-static
+// PetscMatrix methods
+#undef semiparallel_onlyM
+#ifndef NDEBUG
+#include <cstring>
+
+#define semiparallel_onlyM() do { if (this->initialized()) { const char *mytype; \
+    MatGetType(_mat,&mytype); \
+    if (!strcmp(mytype, MATSEQAIJ)) \
+      parallel_onlyM(); } } while (0)
+#else
+#define semiparallel_onlyM()
+#endif
+
+
+
+
+// =======================================================
+// Petsc matrix
+// =======================================================
+
+class PetscMatrix : public SparseMatrix {
+
+private:
+  // data ------------------------------------
+  Mat _mat;                 ///< Petsc matrix pointer
+  bool _destroy_mat_on_exit;///< Boolean value (false)
+
+public:
+  // Constructor ---------------------------------------------------------
+  /// Constructor I;  initialize the matrix before usage with \p init(...).
+  PetscMatrix();
+  /// Constructor II.
+  PetscMatrix(Mat m);
+
+  /// Initialize a Petsc matrix
+  void init(const int m,const int n,const int m_l,const int n_l,
+            const int nnz=0, const int noz=0);
+  void init (const int m,  const int n) {
+    _m=m;
+    _n=n;
+  }
+  void init () {};
+  // Destructors ----------------------------
+  /// Destructor
+  ~PetscMatrix();
+
+  void clear(); /// Release all memory
+  void zero();///< set to zero
+  void zero_rows(std::vector<int> & rows, double diag_value = 0.0);///< set  rows to zero
+  void close() const;///< close
+
+
+  // Returns -------------------------------------------
+  /// PETSc matrix context pointer
+  Mat mat() {
+    assert(_mat != NULL);
+    return _mat;
+  }
+
+  // matrix dimensions
+  int m() const;          ///< row-dimension
+  int n() const;          ///< column dimension
+  int row_start() const;  ///< row-start
+  int row_stop() const;   ///< row-stop
+
+  ///    Return the value of the entry  (i,j). Do not use
+  double operator()(const int i,const int j) const;
+  /// Return the row values
+  int MatGetRowM(const int i_val,int cols[]=PETSC_NULL , double vals[]=PETSC_NULL );
+
+  // Setting -------------------------------------
+  // update pattern
+//   void update_sparsity_pattern(const Graph &sparsity_pattern); ///<   sparsity patter update (Graph)
+  void update_sparsity_pattern(int m,int n,int m_l,int n_l,    ///<   sparsity patter update (petsc)
+                               const std::vector<int>  n_oz,const std::vector<int>  n_nz);
+  // set values
+  void set(const int i,const int j, const double value); ///< Set the value.
+  void add(const int i,const int j,const double value);///<  add  value
+  // add
+  /// Add the full matrix to the Petsc matrix.
+  void add_matrix(const DenseMatrix &dm,
+                  const std::vector<int> &rows,
+                  const std::vector<int> &cols);
+  /// Add the full matrix to the Petsc matrix.
+  void add_matrix(const DenseMatrix &dm,
+                  const std::vector<int> &dof_indices);
+
+  /// Add a Sparse matrix
+  void add(const double a, SparseMatrix &X);
+
+
+  // functions ------------------------------------
+  /// Return the l1-norm of the matrix
+  double l1_norm() const;
+  /// Return the linfty-norm of the matrix
+  double linfty_norm() const;
+
+  /// Petsc matrix has been closed and fully assembled
+  bool closed() const;
+
+
+  // print -----------------------------------------------------
+  void print_personal(std::ostream& os=std::cout) const;    ///< print personal
+  void print_personal(const std::string name="NULL") const; ///< print
+  void print_hdf5(const std::string name="NULL") const;     ///< print hdf5
+
+  // functions ---------------------------------------------------
+  /// Copies the diagonal part of the matrix
+  virtual void get_diagonal(NumericVector& dest) const;
+  /// Transpose Matrix.
+  virtual void get_transpose(SparseMatrix& dest) const;
+  /// Swaps the raw PETSc matrix context pointers.
+  void swap(PetscMatrix &);
+
+
+// ========================================================
+
+
+protected:
+  ///  get "submatrix" from sparse matrix.
+  virtual void _get_submatrix(SparseMatrix& submatrix,
+                              const std::vector<int>& rows,
+                              const std::vector<int>& cols,
+                              const bool reuse_submatrix) const;
+
+
+};
+
+// ===============================================
+// PetscMatrix inline members
+// ===============================================
+
+// ===============================================
+inline PetscMatrix::PetscMatrix()  : _destroy_mat_on_exit(true) {}
+
+// =================================================================
+inline PetscMatrix::PetscMatrix(Mat m): _destroy_mat_on_exit(false) {
+  this->_mat = m;
+  this->_is_initialized = true;
+}
+
+// ===============================================
+inline PetscMatrix::~PetscMatrix() {
+  this->clear();
+}
+
+// ==========================================
+/// This function checks if the matrix is closed
+inline void PetscMatrix::close() const {
+  parallel_onlyM();
+  int ierr=0;
+  ierr = MatAssemblyBegin(_mat, MAT_FINAL_ASSEMBLY);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = MatAssemblyEnd(_mat, MAT_FINAL_ASSEMBLY);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+}
+
+// ==================================================
+/// This function returns the row number
+inline int PetscMatrix::m() const {
+  assert(this->initialized());
+  int petsc_m=0, petsc_n=0, ierr=0;
+  ierr = MatGetSize(_mat, &petsc_m, &petsc_n);
+  return static_cast<int>(petsc_m);
+}
+
+// ============================================
+/// This function returns the column number
+inline int PetscMatrix::n() const {
+  assert(this->initialized());
+  int petsc_m=0, petsc_n=0, ierr=0;
+  ierr = MatGetSize(_mat, &petsc_m, &petsc_n);
+  return static_cast<int>(petsc_n);
+}
+
+// ==========================================
+/// This function returns the start row location
+inline int PetscMatrix::row_start() const {
+  assert(this->initialized());
+  int start=0, stop=0, ierr=0;
+  ierr = MatGetOwnershipRange(_mat, &start, &stop);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  return static_cast<int>(start);
+}
+
+// =========================================
+/// This function returns the stop row location
+inline int PetscMatrix::row_stop() const {
+  assert(this->initialized());
+  int start=0, stop=0, ierr=0;
+  ierr = MatGetOwnershipRange(_mat, &start, &stop);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+  return static_cast<int>(stop);
+}
+
+// ======================================================
+/// This function sets the value in the (i,j) pos
+inline void PetscMatrix::set(const int i,
+                              const int j,
+                              const double value) {
+  assert(this->initialized());
+  int ierr=0, i_val=i, j_val=j;
+  PetscScalar petsc_value = static_cast<PetscScalar>(value);
+  ierr = MatSetValues(_mat, 1, &i_val, 1, &j_val,
+                      &petsc_value, INSERT_VALUES);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+}
+
+// =================================================
+/// This function add the  value to the element (i,j).
+inline void PetscMatrix::add(const int i,    // index i
+                              const int j, // index j
+                              const double value      // value
+                             ) {
+  assert(this->initialized());
+  int ierr=0, i_val=i, j_val=j;
+
+  PetscScalar petsc_value = static_cast<PetscScalar>(value);
+  ierr = MatSetValues(_mat, 1, &i_val, 1, &j_val,
+                      &petsc_value, ADD_VALUES);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+}
+
+// =====================================================
+/// This function adds a square dense matrix to the main sparse matrix
+inline void PetscMatrix::add_matrix(
+  const DenseMatrix& dm,                       // dense matrix
+  const std::vector<int>& dof_indices  // index vector
+) {
+  this->add_matrix(dm, dof_indices, dof_indices);
+}
+
+// =========================================================
+/// This function performs \f$\texttt{this} = a*X + \texttt{this} \f$.
+inline void PetscMatrix::add(const double a_in,      // double constant
+                              SparseMatrix &X_in  // sparse matrix
+                             ) {
+  assert(this->initialized());
+
+  // crash due to incompatible sparsity structure...
+  assert(this->m() == X_in.m());
+  assert(this->n() == X_in.n());
+
+  PetscScalar     a = static_cast<PetscScalar>(a_in);
+  PetscMatrix*   X = dynamic_cast<PetscMatrix*>(&X_in);
+
+  // the matrix from which we copy the values has to be assembled/closed
+  // X->close ();
+  assert(X != NULL);
+  assert(X->closed());
+  semiparallel_onlyM();
+  int ierr=0;
+
+#if PETSC_VERSION_LESS_THAN(2,3,0)  // 2.2.x & earlier style  
+  ierr = MatAXPY(&a,  X->_mat, _mat, SAME_NONZERO_PATTERN);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+#else    // 2.3.x & newer 
+  ierr = MatAXPY(_mat, a, X->_mat, DIFFERENT_NONZERO_PATTERN);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+#endif
+}
+
+// ========================================================
+inline double PetscMatrix::operator()(const int i, // index i
+                                       const int j  // index j
+                                      ) const {
+
+  // do no use this function !!!!!!!!
+  assert(this->initialized());
+#if PETSC_VERSION_LESS_THAN(2,2,1)  // PETSc 2.2.0 & older
+  PetscScalar *petsc_row;
+  int* petsc_cols;
+#else   // PETSc 2.2.1 & newer
+  const PetscScalar *petsc_row;
+  const PetscInt    *petsc_cols;
+#endif
+
+  // If the entry is not in the sparse matrix, it is 0.
+  double value=0.;
+  int  ierr=0, ncols=0,  i_val=static_cast<int>(i),    j_val=static_cast<int>(j);
+
+  assert(this->closed());// the matrix needs to be closed for this to work
+  ierr = MatGetRow(_mat, i_val, &ncols, &petsc_cols, &petsc_row);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // Perform a binary search to find the contiguous index in
+  // petsc_cols (resp. petsc_row) corresponding to global index j_val
+  std::pair<const int*, const int*> p =
+    std::equal_range(&petsc_cols[0], &petsc_cols[0] + ncols, j_val);
+  // Found an entry for j_val
+  if (p.first != p.second)    {
+    // The entry in the contiguous row corresponding to the j_val column of interest
+    const int j = std::distance(const_cast<int*>(&petsc_cols[0]),const_cast<int*>(p.first));
+
+    assert(j < ncols);
+    assert(petsc_cols[j] == j_val);
+    value = static_cast<double>(petsc_row[j]);
+  }
+  ierr  = MatRestoreRow(_mat, i_val,
+                        &ncols, &petsc_cols, &petsc_row);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  return value;
+}
+
+
+// ========================================================
+inline int PetscMatrix::MatGetRowM(const int i_val, // index i
+                                    int cols[],
+                                    double vals[]
+                                   ) {
+  // Set up
+  assert(this->initialized());
+  const PetscScalar *petsc_row;
+  const PetscInt    *petsc_cols;
+  int  ierr=0, ncols=0;
+  // Get row
+  assert(this->closed());// the matrix needs to be closed for this to work
+  ierr = MatGetRow(_mat, i_val, &ncols, &petsc_cols, &petsc_row);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // close row
+  ierr  = MatRestoreRow(_mat, i_val,&ncols, &petsc_cols, &petsc_row);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // print row
+  if(&cols[0] !=PETSC_NULL)   for (int j=0; j<ncols; j++)  {
+      cols[j]=petsc_cols[j];
+      vals[j]=petsc_row[j];
+    }
+  // return # of columns
+  return ncols;
+}
+
+
+// ================================================
+inline bool PetscMatrix::closed() const {
+  assert(this->initialized());
+  int ierr=0;
+  PetscBool assembled;
+  ierr = MatAssembled(_mat, &assembled);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  return (assembled == PETSC_TRUE);
+}
+
+// =========================================
+inline void PetscMatrix::swap(
+  PetscMatrix &m // pointer to swap
+) {// =========================================
+  std::swap(_mat, m._mat);
+  std::swap(_destroy_mat_on_exit, m._destroy_mat_on_exit);
+}
+
+
+
+
+
+
+#endif // #ifdef LIBMESH_HAVE_PETSC
+#endif // #ifdef __petsc_matrix_h__

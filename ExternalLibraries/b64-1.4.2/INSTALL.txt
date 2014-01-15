@@ -1,0 +1,14 @@
+b64 - Install
+=============
+
+Updated:    4th February 2012
+
+
+
+b64 requires manual installation, by copying files after building,
+as described in the accompanying doc/html/index.html file.
+
+NOTE: b64 depends on the (header-only) STLSoft libraries - version
+  1.9.111 or later - available from http://stlsoft.org/.
+
+=============================== End of file ================================

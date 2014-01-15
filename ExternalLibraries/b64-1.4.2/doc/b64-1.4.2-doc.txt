@@ -1,0 +1,5 @@
+FILE DELETED
+
+Microsoft Forefront Protection for Exchange Server removed a file since it was found to match a filter.
+File name: "FEMTTUCMAKE.tar.gz->->FEMTTUCMAKE/ExternalLibraries/b64-1.4.2/doc/b64-1.4.2-doc.chm"
+Filter name: "FILE FILTER= Delete Attachment: *.chm"

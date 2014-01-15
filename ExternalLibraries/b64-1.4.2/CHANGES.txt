@@ -1,0 +1,584 @@
+b64 - Changes
+=============
+
+Updated:    4th February 2012
+
+
+    ************************************
+    * Change key:                      *
+    *                                  *
+    *  ~  means something has changed  *
+    *  +  means a new addition         *
+    *  -  means removal of something   *
+    *  *  means a general bullet-point *
+    *                                  *
+    ************************************
+
+
+1st December 2011 - 1.4.2
+=========================
+
+Summary:
+--------
+
+ * added b64_getStatusCodeString(), b64_getStatusCodeStringLength(); deprecated b64_getErrorString() and b64_getErrorStringLength()
+ * now implemented shims in terms of b64_getStatusCodeString() and b64_getStatusCodeStringLength()
+ * ensures exception bears code B64_RC_TRUNCATED_INPUT when input truncated (it previously was passing B64_RC_OK)
+ * abstracted declaration and application of string access shims, in readiness for widestring builds and/or STLSoft 1.10+
+ * added implicit link support for VC++10
+ * added core library names according to implicit link format, i.e. b64.1.core.*
+ * added makefile for GCC 4.5
+ * added makefile for GCC 4.6
+ * added makefile for GCC 4.7
+ * NOTE: bundles shwild 0.9.20
+ * NOTE: bundles xContract 0.3.7
+ * NOTE: bundles xTests 0.16.4
+ * NOTE: depends on STLSoft 1.9.111
+
+Details:
+--------
+
+General:
+
+ ~ include/b64/implicit_link.h:
+    + added implicit link support for VC++10
+
+Core:
+
+ ~ src/b64.c:
+    ~ trivial changes (for debugging purposes only)
+
+C API:
+
+ ~ include/b64/b64.h:
+    + added b64_getStatusCodeString(), b64_getStatusCodeStringLength()
+    ~ now implemented in terms of b64_getErrorString() and b64_getErrorStringLength()
+    ~ trivial documentation changes
+
+ ~ include/b64/b64.hpp:
+    ~ abstracted declaration and application of string access shims, in readiness for widestring builds and/or STLSoft 1.10+
+    ~ now implemented in terms of b64_getErrorString() and b64_getErrorStringLength()
+    ~ ensures exception bears code B64_RC_TRUNCATED_INPUT when input truncated (it previously was passing B64_RC_OK)
+
+C++ API:
+
+Distribution:
+
+Makefiles / Project-files:
+
+ ~ build/ar/makefile:
+ ~ build/bc55/makefile:
+ ~ build/bc551/makefile:
+ ~ build/bc56/makefile:
+ ~ build/bc564/makefile:
+ ~ build/bc584/makefile:
+ ~ build/bc59x/makefile:
+ ~ build/bc61x/makefile:
+ ~ build/como433.unix/makefile:
+ ~ build/como433.win32/makefile:
+ ~ build/cw7.unix/makefile:
+ ~ build/cw7.win32/makefile:
+ ~ build/cw8.unix/makefile:
+ ~ build/cw8.win32/makefile:
+ ~ build/dm/makefile:
+ ~ build/gcc295.unix/makefile:
+ ~ build/gcc295.win32/makefile:
+ ~ build/gcc32.unix/makefile:
+ ~ build/gcc32.win32/makefile:
+ ~ build/gcc33.mac/makefile:
+ ~ build/gcc33.unix/makefile:
+ ~ build/gcc33.win32/makefile:
+ ~ build/gcc34.unix/makefile:
+ ~ build/gcc34.win32/makefile:
+ ~ build/gcc40.unix/makefile:
+ ~ build/gcc41.unix/makefile:
+ ~ build/gcc42.unix/makefile:
+ ~ build/gcc43.unix/makefile:
+ ~ build/gcc44.unix/makefile:
+ ~ build/icl10.win32/makefile:
+ ~ build/icl11.win32/makefile:
+ ~ build/icl6.win32/makefile:
+ ~ build/icl7.win32/makefile:
+ ~ build/icl8.win32/makefile:
+ ~ build/icl9.win32/makefile:
+ ~ build/ow12/makefile:
+ ~ build/ow13/makefile:
+ ~ build/ow14/makefile:
+ + build/vc10.unixem/makefile:
+ + build/vc10.x64/makefile:
+ + build/vc10/makefile:
+ ~ build/vc5/makefile:
+ ~ build/vc6.unixem/makefile:
+ ~ build/vc6/makefile:
+ ~ build/vc7/makefile:
+ ~ build/vc71/makefile:
+ ~ build/vc8.unixem/makefile:
+ ~ build/vc8.x64/makefile:
+ ~ build/vc8/makefile:
+ ~ build/vc9.unixem/makefile:
+ ~ build/vc9.x64/makefile:
+ ~ build/vc9/makefile:
+    + added core library names according to implicit link format, i.e. b64.1.core.*
+
+ + build/gcc45.unix/makefile:
+    + added makefile for GCC 4.5
+
+ + build/gcc46.unix/makefile:
+    + added makefile for GCC 4.6
+
+ + build/gcc47.unix/makefile:
+    + added makefile for GCC 4.7
+
+Examples:
+
+Test:
+
+Depends on:
+
+ * STLSoft 1.9.111 or later, for C++ API only
+   (http://stlsoft.org/)
+
+
+
+20th January 2010 - 1.4.1
+=========================
+
+Summary:
+--------
+
+ * added test variant for all makefile projects
+ * added support for Borland 5.9+
+ * preparations for widestring support
+ * fixed defect in b64_encode()/b64_encode2()
+ * fixed defective use of std::vector subscript operator
+ * improvements in C++ API exception handling, including message and additional information
+ * NOTE: bundles xContract 0.3.1
+ * NOTE: bundles xTests 0.14.3
+ * NOTE: depends on STLSoft 1.9.89
+
+Details:
+--------
+
+General:
+
+Core:
+
+ ~ include/b64/implicit_link.h:
+    + added test variant
+    + added support for Borland 5.9.x and 6.1.x
+
+ ~ src/b64.c:
+    ~ use of != instead of <
+    ~ fixed defect in b64_encode[2](), whereby passing non-0 line length on an empty source returns an invalid estimated length
+    ~ now used b64_char_t
+    ~ contract enforcements now implemented in terms of xContract, in test builds
+
+C API:
+
+ ~ include/b64/b64.h:
+    ~ now uses b64_char_t
+    ~ contract enforcements now implemented in terms of xContract, in test builds
+
+C++ API:
+
+ ~ include/b64/b64.hpp:
+    ~ better information in exception message
+    ~ C++ API uses int for flags (rather than unsigned)
+    ~ badChar only propagated if a known contiguous string
+    + added template <T> decode(int flags, S const &str) overload
+    ~ now avoids asserts/defects in vectors if the subscript operator is called on an empty instance
+
+Distribution:
+
+Makefiles / Project-files:
+
+ ~ projects/core/vc6/b64.core.dsp:
+    ~ renamed core lib from b64.1.* to b64.1.core.*
+
+ ~ build/ar/makefile:
+ ~ build/bc55/makefile:
+ ~ build/bc551/makefile:
+ ~ build/bc56/makefile:
+ ~ build/bc564/makefile:
+ ~ build/bc59x/makefile:
+ ~ build/bc61x/makefile:
+ ~ build/cw7/makefile:
+ ~ build/cw8/makefile:
+ ~ build/dm/makefile:
+ ~ build/icl6.win32/makefile:
+ ~ build/icl7.win32/makefile:
+ ~ build/icl8.win32/makefile:
+ ~ build/ow12/makefile:
+ ~ build/ow13/makefile:
+ ~ build/ow14/makefile:
+ ~ build/vc5/makefile:
+ ~ build/vc6/makefile:
+ ~ build/vc7/makefile:
+ ~ build/vc71/makefile:
+ ~ build/vc8.x64/makefile:
+ ~ build/vc8/makefile:
+ ~ build/vc9.x64/makefile:
+ ~ build/vc9/makefile:
+    + added xcontract libraries
+    ~ adjusted for new project structure
+
+Examples:
+
+ ~ examples/c/example.c.1/example.c.1.c:
+ ~ examples/c/example.c.2/example.c.2.c:
+ ~ examples/cpp/example.cpp.1/example.cpp.1.cpp:
+ ~ examples/cpp/example.cpp.2/example.cpp.2.cpp:
+    ~ changed source array from ints to bytes, so output consistent between different-endian platforms
+    ~ enhanced example output to show source bytes
+
+Test:
+
+Depends on:
+
+ * STLSoft 1.9.89 or later, for C++ API only
+   (http://stlsoft.org/)
+
+
+
+24th August 2008 - 1.3.4
+========================
+
+Summary:
+--------
+
+ * fix for GCC 4.x's defective resolution of function template names for
+   std::string overloads of string access shim
+ * fixed printf format-specifier warning in example.2.c
+
+Details:
+--------
+
+General:
+
+Core:
+
+C API:
+
+C++ API:
+
+ ~ fix for GCC 4.x's defective resolution of function template names for
+   std::string overloads of string access shim
+
+Distribution:
+
+Makefiles / Project-files:
+
+Examples:
+
+ ~ fixed printf format-specifier warning in example.2.c
+
+Test:
+
+Depends on:
+
+ * STLSoft 1.9.48 or later, for C++ API only
+   (http://stlsoft.org/)
+
+
+
+3rd August 2008 - 1.3.3
+=======================
+
+Summary:
+--------
+
+ * fixed warning in GCC 4.x makefile
+ * added makefiles for GCC 4.1, 4.2, 4.3
+ * added makefiles for VC++ 9
+ * fixed printf format-specifier warning in example.2.c
+
+Details:
+--------
+
+General:
+
+Core:
+
+C API:
+
+C++ API:
+
+Distribution:
+
+Makefiles / Project-files:
+
+ ~ fixed warning in GCC 4.x makefile
+ + added makefiles for GCC 4.1, 4.2, 4.3
+ + added makefiles for VC++ 9
+
+Examples:
+
+ ~ fixed printf format-specifier warning in example.2.c
+
+Test:
+
+Depends on:
+
+ * STLSoft 1.9.45 or later, for C++ API only
+   (http://stlsoft.org/)
+
+
+
+13th May 2008 - 1.3.2
+=======================
+
+Summary:
+--------
+
+ * Win64 compatibility
+
+Details:
+--------
+
+General:
+
+Core:
+
+ ~ one minor fix for Win64 compatibility (changing a variable from unsigned
+   to size_t)
+
+ + implicit link compatibility with bc582, vc8 and vc9
+
+C API:
+
+C++ API:
+
+Distribution:
+
+Makefiles / Project-files:
+
+ + vc8_x64 makefile
+
+Examples:
+
+Test:
+
+Depends on:
+
+ * STLSoft 1.9.41 or later, for C++ API only
+   (http://stlsoft.org/)
+
+
+
+15th March 2008 - 1.3.1
+=======================
+
+Summary:
+--------
+
+ * added ability to customise namespace name
+ * renamed test/example/sample directories and filenames to fit in with the
+   prevailing standard in all Synesis-related libraries
+
+Details:
+--------
+
+General:
+
+Core:
+
+C API:
+
+C++ API:
+
+ + added ability to customise the namespace from b64, using the 
+   B64_CUSTOM_NAMESPACE pre-processor symbol
+
+Distribution:
+
+Makefiles / Project-files:
+
+Examples:
+
+ ~ renamed all examples from example_(c|cpp)_X to example.(c|cpp).X
+
+Test:
+
+ ~ renamed all tests from test_(c|cpp)_X to test.(c|cpp).X
+
+Depends on:
+
+ * STLSoft 1.9.26 or later, for C++ API only
+   (http://stlsoft.org/)
+
+
+
+9th February 2008 - 1.2.6
+=========================
+
+Summary:
+--------
+
+ * workaround for weird GCC bug on 64-bit Linux
+
+Details:
+--------
+
+General:
+
+Core:
+
+ ~ workaround for weird GCC bug on 64-bit Linux
+
+
+C API:
+
+C++ API:
+
+ + added ability to customise the namespace from b64, using the 
+   B64_CUSTOM_NAMESPACE pre-processor symbol
+
+Distribution:
+
+Makefiles / Project-files:
+
+Examples:
+
+ ~ renamed all examples from example_(c|cpp)_X to example.(c|cpp).X
+
+Test:
+
+ ~ renamed all tests from test_(c|cpp)_X to test.(c|cpp).X
+
+Depends on:
+
+ * STLSoft 1.9.23 or later, for C++ API only
+   (http://stlsoft.org/)
+
+
+
+8th February 2008 - 1.2.5
+=========================
+
+Summary:
+--------
+
+ * workaround for weird GCC bug on 64-bit Linux
+
+Details:
+--------
+
+General:
+
+Core:
+
+ ~ workaround for weird GCC bug on 64-bit Linux
+
+
+C API:
+
+C++ API:
+
+ ~ compatibility with STLSoft 1.9.22
+
+Distribution:
+
+Makefiles / Project-files:
+
+Examples:
+
+ ~ compatibility with Visual C++ 8+ "Safe String" library
+
+Test:
+
+ ~ compatibility with Visual C++ 8+ "Safe String" library
+
+Depends on:
+
+ * STLSoft 1.9.22 or later, for C++ API only
+   (http://stlsoft.org/)
+
+
+
+Version 1.2.4 (30th April 2007)
+---------------------------------
+
+    Distribution:
+        * version released on Extended STL, volume 1: CD
+
+    b64/C++
+        ~ compatibility with STLSoft 1.9.1
+
+
+Version 1.2.3 (26th January 2007)
+---------------------------------
+
+    Distribution:
+        ~ trimming of unused/unwanted makefiles
+        ~ fix of omission (in 1.2.2) of compiled HTML help (.CHM)
+          file
+
+    b64 C-API:
+        ~ minor changes to help
+
+    b64/C++:
+        ~ minor changes to help
+
+Version 1.2.2 (22nd January 2007)
+---------------------------------
+
+    Distribution:
+        + now roots the distribution under b64-X.Y, e.g. b64-1.2.2
+        ~ minor fixes to makefiles
+
+    b64 C-API:
+        ~ minor changes to help
+
+Version 1.2.1 (7th December 2006)
+---------------------------------
+
+    b64 core:
+        + b64_getErrorString() and b64_getErrorStringLength()
+
+    b64/C++:
+        - deprecated b64/cpp/b64.hpp
+        + b64/b64.hpp
+        ~ all public C++ names moved from b64::cpp namespace
+          into b64 namespace; old namespace retained for
+          backwards compatibility
+        ~ fix to b64::decode() to avoiding invoking subscript
+          operator for empty blob_t instances
+
+Version 1.1.3 (2nd August 2006)
+------------------------------
+
+    b64 core:
+        ~ moved the Null Object dummy variables out of
+          b64_encode_() and b64_decode_() into callers, and
+          added precondition enforcements into
+          b64_encode_() and b64_decode_().
+
+    b64/C++:
+        - removed obsolete inclusions and definitions from
+          b64/cpp/b64.hpp
+        + now assumes contiguous string type for Dinkumware
+          C++ libraries for VC++ up to version 7.1
+        + added B64_NO_CONTIGUOUS_STRING_TYPE that, if defined,
+          suppresses contiguous assumption
+        ~ fixed a bug in encode(), whereby the coding_exception
+          would have had the wrong return code.
+
+Version 1.1.2 (26th July 2006)
+------------------------------
+
+    Minor changes to the header file for the C++ mapping, to be
+    compatible with latest STLSoft (1.9.1 beta 16 - download from
+    http://stlsoft.org/downloads.html)
+
+    Minor fixes/changes to makefiles
+
+    Minor fixes to the documentation
+
+
+Version 1.1.1 (28th April 2006)
+-------------------------------
+
+    This will be kept up to date from v1.1 (28th April 2006) onwards.
+
+
+=============================== End of file ================================
