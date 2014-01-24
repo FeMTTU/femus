@@ -21,9 +21,9 @@ lsysPDE::lsysPDE(const char infile[], vector < vector < double> > &vt,const doub
   _is_symmetric = false;
   _stabilization = false;
   _compressibility = 0.;
-  for(int i=0;i<5;i++){
-    Proj_mat_flag[i]=0;
-  }
+//   for(int i=0;i<5;i++){
+//     Proj_mat_flag[i]=0;
+//   }
   CC_flag=0;
 };
 
@@ -38,9 +38,9 @@ lsysPDE::lsysPDE(const unsigned &igrid,elem *elc){
   _is_symmetric = false;
   _stabilization = false;
   _compressibility = 0.;
-  for(int i=0;i<5;i++){
-    Proj_mat_flag[i]=0;
-  }
+//   for(int i=0;i<5;i++){
+//     Proj_mat_flag[i]=0;
+//   }
   CC_flag=0;
 }
 
@@ -49,9 +49,9 @@ lsysPDE::lsysPDE(mesh *other_msh){
   _is_symmetric = false;
   _stabilization = false;
   _compressibility = 0.;
-  for(int i=0;i<5;i++){
-    Proj_mat_flag[i]=0;
-  }
+//   for(int i=0;i<5;i++){
+//     Proj_mat_flag[i]=0;
+//   }
   CC_flag=0;
 }
 
@@ -63,121 +63,28 @@ lsysPDE::~lsysPDE() {
   //delete _msh;
 }
 
-/**
- * This function flags the elements that will be refined
- **/
-//--------------------------------------------------------------------------------
-void lsysPDE::set_elr(const unsigned &test) {
- 
-  _msh->el->InitRefinedToZero();
-  
-  unsigned grid = _msh->GetGridNumber();
-  unsigned nel = _msh->GetElementNumber();
-   
-  if (test==1) { //refine all next grid elements
-    for (unsigned iel=0; iel<nel; iel++) {
-      _msh->el->SetRefinedElementIndex(iel,1);
-      _msh->el->AddToRefinedElementNumber(1);
-      short unsigned elt=_msh->el->GetElementType(iel);
-      _msh->el->AddToRefinedElementNumber(1,elt);
-    }
-  } else if (test==2) { //refine based of the position of the mid point;
-    //serial loop
-    for (unsigned iel=0; iel<nel; iel+=1) {
-      unsigned nve=_msh->el->GetElementDofNumber(iel,0);
-      double vtx=0.,vty=0.,vtz=0.;
-      for ( unsigned i=0; i<nve; i++) {
-        unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
-	unsigned inode_Metis=_msh->GetMetisDof(inode,2);
-// 	vtx+=(*Sol_[0])(inode_Metis);  
-// 	vty+=(*Sol_[1])(inode_Metis);
-// 	vtz+=(*Sol_[2])(inode_Metis);
-      }
-      vtx/=nve;
-      vty/=nve;
-      vtz/=nve;
-      if (_msh->_SetRefinementFlag(vtx,vty,vtz,_msh->el->GetElementGroup(iel),grid)) {
-        _msh->el->SetRefinedElementIndex(iel,1);
-        _msh->el->AddToRefinedElementNumber(1);
-        short unsigned elt=_msh->el->GetElementType(iel);
-        _msh->el->AddToRefinedElementNumber(1,elt);
-      }
-    }
-  
-//     //parallel loop
-//     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-//       for(int iel=IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-//         unsigned kel = IS_Mts2Gmt_elem[iel];
-//         unsigned nve=el->GetElementDofNumber(kel,0);
-//         double vtx=0.,vty=0.,vtz=0.;
-//         for ( unsigned i=0; i<nve; i++) {
-//           unsigned inode=el->GetElementVertexIndex(kel,i)-1u;
-// 	  unsigned inode_Metis=GetMetisDof(inode,2);
-// 	  vtx+=(*Sol_[0])(inode_Metis);  
-// 	  vty+=(*Sol_[1])(inode_Metis);
-// 	  vtz+=(*Sol_[2])(inode_Metis);
-//         }
-//         vtx/=nve;
-//         vty/=nve;
-//         vtz/=nve;
-//         if (_SetRefinementFlag(vtx,vty,vtz,el->GetElementGroup(kel),grid)) {
-//           el->SetRefinedElementIndex(kel,1);
-//           el->AddToRefinedElementNumber(1);
-//           short unsigned elt=el->GetElementType(kel);
-//           el->AddToRefinedElementNumber(1,elt);
-//        }
-//      } 
-//    }
-   
-  } else if (test==3) { //refine all next grid even elements
-    for (unsigned iel=0; iel<nel; iel+=2) {
-      _msh->el->SetRefinedElementIndex(iel,1);
-      _msh->el->AddToRefinedElementNumber(1);
-      short unsigned elt=_msh->el->GetElementType(iel);
-      _msh->el->AddToRefinedElementNumber(1,elt);
-    }
-  }
-  _msh->el->AllocateChildrenElement(_msh->_ref_index);
-}
 
-//--------------------------------------------------------------------------------
-void lsysPDE::GetCoordinates( vector < vector < double> > &vt){
-  unsigned indexSol;
- 
-  indexSol=GetIndex("X");
-  *Sol_[indexSol]=vt[0];
-//   Sol_[indexSol]->close();
-  
-  indexSol=GetIndex("Y");
-  *Sol_[indexSol]=vt[1];
-//   Sol_[indexSol]->close();
-  
-  indexSol=GetIndex("Z");
-  *Sol_[indexSol]=vt[2];
-//   Sol_[indexSol]->close();
-  
-}
 
 //--------------------------------------------------------------------------------
 void lsysPDE::AddSolutionVector( const char name[], const char order[],
                                 const unsigned& tmorder, const bool &PDE_type) {
-  unsigned n=Sol_.size();
+  unsigned n=Bdc_.size();
 
   //Bdc.resize(n+1u);
   SolType.resize(n+1u);
   SolName.resize(n+1u);
-  SolTmOrder.resize(n+1u);
-  SolTmOrder[n]=tmorder;
+  //SolTmOrder.resize(n+1u);
+  //SolTmOrder[n]=tmorder;
 
   //new
-  Sol_.resize(n+1u);
-  Res_.resize(n+1u);
-  Eps_.resize(n+1u);
+  //Sol_.resize(n+1u);
+  //Res_.resize(n+1u);
+  //Eps_.resize(n+1u);
   Bdc_.resize(n+1u);
   ResEpsBdc_flag_.resize(n+1u);
   if(PDE_type) ResEpsBdc_flag_[n]=1;
 
-  Sol_old_.resize(n+1u);
+  //Sol_old_.resize(n+1u);
 
   if (!strcmp(order,"linear")) {
     SolType[n]=0;
@@ -231,43 +138,69 @@ void lsysPDE::ResizeSolutionVector(const char name[]) {
 
   unsigned i=GetIndex(name);
   
-  Sol_[i] = NumericVector::build().release();
-  if(_msh->_nprocs==1) {
-    Sol_[i]->init(_msh->MetisOffset[SolType[i]][_msh->_nprocs],_msh->own_size[SolType[i]][_msh->_iproc],false,SERIAL);
-  } else {
-    if(SolType[i]<3) {
-     if(_msh->ghost_size[SolType[i]][_msh->_iproc]!=0) { 
-      Sol_[i]->init(_msh->MetisOffset[SolType[i]][_msh->_nprocs],_msh->own_size[SolType[i]][_msh->_iproc],_msh->ghost_nd_mts[SolType[i]][_msh->_iproc],
-		    false,GHOSTED);
-      } else {
-      std::vector <int> fake_ghost(1,_msh->own_size[SolType[i]][_msh->_iproc]);
-      Sol_[i]->init(_msh->MetisOffset[SolType[i]][_msh->_nprocs],_msh->own_size[SolType[i]][_msh->_iproc],fake_ghost,false,GHOSTED);
+//   Sol_[i] = NumericVector::build().release();
+//   if(_msh->_nprocs==1) {
+//     Sol_[i]->init(_msh->MetisOffset[SolType[i]][_msh->_nprocs],_msh->own_size[SolType[i]][_msh->_iproc],false,SERIAL);
+//   } else {
+//     if(SolType[i]<3) {
+//      if(_msh->ghost_size[SolType[i]][_msh->_iproc]!=0) { 
+//       Sol_[i]->init(_msh->MetisOffset[SolType[i]][_msh->_nprocs],_msh->own_size[SolType[i]][_msh->_iproc],_msh->ghost_nd_mts[SolType[i]][_msh->_iproc],
+// 		    false,GHOSTED);
+//       } else {
+//       std::vector <int> fake_ghost(1,_msh->own_size[SolType[i]][_msh->_iproc]);
+//       Sol_[i]->init(_msh->MetisOffset[SolType[i]][_msh->_nprocs],_msh->own_size[SolType[i]][_msh->_iproc],fake_ghost,false,GHOSTED);
+//       }
+//     }
+//     else { //discontinuous pressure has not ghost nodes
+//       Sol_[i]->init(_msh->MetisOffset[SolType[i]][_msh->_nprocs],_msh->own_size[SolType[i]][_msh->_iproc],false,PARALLEL); 
+//       
+//     }
+//   }
+//   
+//   if (SolTmOrder[i]==2) {
+//     Sol_old_[i] = NumericVector::build().release();
+//     Sol_old_[i]->init(*Sol_[i]);
+//   }
+//     
+//   if(ResEpsBdc_flag_[i]) {
+//     
+//     Res_[i] = NumericVector::build().release();
+//     Res_[i]->init(*Sol_[i]);
+// 
+//     Eps_[i] = NumericVector::build().release();
+//     Eps_[i]->init(*Sol_[i]);
+//     
+//     Bdc_[i] = NumericVector::build().release();
+//     Bdc_[i]->init(*Sol_[i]);
+//     
+//     //Bdc[i].resize(MetisOffset[SolType[i]][_nprocs]);
+//   }
+  
+  
+  
+  if(ResEpsBdc_flag_[i]) {
+    Bdc_[i] = NumericVector::build().release();
+    if(_msh->_nprocs==1) {
+      Bdc_[i]->init(_msh->MetisOffset[SolType[i]][_msh->_nprocs],_msh->own_size[SolType[i]][_msh->_iproc],false,SERIAL);
+    } else {
+      if(SolType[i]<3) {
+      if(_msh->ghost_size[SolType[i]][_msh->_iproc]!=0) { 
+	Bdc_[i]->init(_msh->MetisOffset[SolType[i]][_msh->_nprocs],_msh->own_size[SolType[i]][_msh->_iproc],_msh->ghost_nd_mts[SolType[i]][_msh->_iproc],
+		      false,GHOSTED);
+	} else {
+	std::vector <int> fake_ghost(1,_msh->own_size[SolType[i]][_msh->_iproc]);
+	Bdc_[i]->init(_msh->MetisOffset[SolType[i]][_msh->_nprocs],_msh->own_size[SolType[i]][_msh->_iproc],fake_ghost,false,GHOSTED);
+	}
+      }
+      else { //discontinuous pressure has not ghost nodes
+	Bdc_[i]->init(_msh->MetisOffset[SolType[i]][_msh->_nprocs],_msh->own_size[SolType[i]][_msh->_iproc],false,PARALLEL); 
       }
     }
-    else { //discontinuous pressure has not ghost nodes
-      Sol_[i]->init(_msh->MetisOffset[SolType[i]][_msh->_nprocs],_msh->own_size[SolType[i]][_msh->_iproc],false,PARALLEL); 
-      
-    }
+  
   }
   
-  if (SolTmOrder[i]==2) {
-    Sol_old_[i] = NumericVector::build().release();
-    Sol_old_[i]->init(*Sol_[i]);
-  }
-    
-  if(ResEpsBdc_flag_[i]) {
-    
-    Res_[i] = NumericVector::build().release();
-    Res_[i]->init(*Sol_[i]);
-
-    Eps_[i] = NumericVector::build().release();
-    Eps_[i]->init(*Sol_[i]);
-    
-    Bdc_[i] = NumericVector::build().release();
-    Bdc_[i]->init(*Sol_[i]);
-    
-    //Bdc[i].resize(MetisOffset[SolType[i]][_nprocs]);
-  }
+  
+  
 }
 
 //--------------------------------------------------------------------------------
@@ -275,13 +208,19 @@ unsigned lsysPDE::GetIndex(const char name[]) {
   unsigned index=0;
   while (strcmp(SolName[index],name)) {
     index++;
-    if (index==Res_.size()) {
+    if (index==Bdc_.size()) {
       cout<<"error! invalid name entry GetIndex(...)"<<endl;
       exit(0);
     }
   }
   return index;
 }
+
+
+void lsysPDE::GetBoundaryCondition(vector <NumericVector*> *Bdc_other){
+    _Bdc=Bdc_other;
+}
+
 
 //--------------------------------------------------------------------------------
 int lsysPDE::InitMultigrid(const vector <unsigned> &MGIndex) {
@@ -399,6 +338,7 @@ int lsysPDE::InitMultigrid(const vector <unsigned> &MGIndex) {
       for(unsigned inode_mts=_msh->MetisOffset[soltype][_msh->_iproc]; 
 	 inode_mts<_msh->MetisOffset[soltype][_msh->_iproc+1]; inode_mts++) {
 	 if((*Bdc_[indexSol])(inode_mts)<1.9) {
+	 //if((*(*_Bdc)[indexSol])(inode_mts)<1.9) {
 	   int local_mts = inode_mts-_msh->MetisOffset[soltype][_msh->_iproc];
 	   int idof_kk = KKoffset[k][_msh->_iproc] +local_mts; 
 	   DrchKKdofs[counter]=idof_kk;
@@ -486,104 +426,7 @@ int lsysPDE::UpdateResidual() {
   return 1;
 }
 
-//--------------------------------------------------------------------------------
-int lsysPDE::SumEpsToSol(const vector <unsigned> &MGIndex) {
 
-  PetscScalar* R;
-  PetscScalar* E;
-  PetscScalar zero=0.;
-  int ierr;
-  PetscScalar value;
-  
-  Vec RESloc;
-  Vec EPSloc;
-
-  
-  if(_msh->_nprocs==1) {
-    ierr = VecGetArray(RES,&R);
-    CHKERRQ(ierr);
-    ierr = VecGetArray(EPS,&E);
-    CHKERRQ(ierr);
-  } 
-  else {
-    ierr=VecGhostGetLocalForm(RES,&RESloc);
-    CHKERRQ(ierr);
-    ierr=VecGhostGetLocalForm(EPS,&EPSloc);
-    CHKERRQ(ierr);
-    ierr = VecGetArray(RESloc,&R);
-    CHKERRQ(ierr);
-    ierr = VecGetArray(EPSloc,&E);
-    CHKERRQ(ierr);
-  }
-  
-  for (unsigned k=0; k<MGIndex.size(); k++) {
-    unsigned indexSol=MGIndex[k];
-    unsigned soltype =  SolType[indexSol];
-//     cout << "indexSol" << indexSol << endl;
-//     
-     int loc_size   = Eps_[indexSol]->local_size();
-     int loc_offset_EPS = KKoffset[k][_msh->_iproc] - KKoffset[0][_msh->_iproc];
-//      int offset_eps = Eps_[indexSol]->first_local_index();
-     int glob_offset_eps = _msh->MetisOffset[soltype][_msh->_iproc];
-     
-//    if(_iproc==1) printf("iproc %d  local_size: %d    offset_EPS: %d    offset_eps: %d \n",_iproc,loc_size, offset_EPS, offset_eps);
-//      PetscSynchronizedPrintf(PETSC_COMM_WORLD,"rank %d   %d \n",_iproc,own_size[soltype][_iproc]);
-//      PetscSynchronizedFlush(PETSC_COMM_WORLD);
-     //ottimizzare utilizzando il puntatore 
-     //porre il residuo uguale a zero direttamente nell'assembly
-     for(int i=0; i<_msh->own_size[soltype][_msh->_iproc]; i++) {
-       Eps_[indexSol]->set(i+glob_offset_eps,E[loc_offset_EPS+i]);
-       if ((*Bdc_[indexSol])(i+glob_offset_eps)>1.1) Res_[indexSol]->set(i+glob_offset_eps,R[loc_offset_EPS+i]);
-       else Res_[indexSol]->set(i+glob_offset_eps,zero);
-    }
-    
-//     for (PetscInt i=KKIndex[k]; i<KKIndex[k+1]; i++) {
-//       PetscInt inode=i-KKIndex[k];
-//       PetscInt kkdof=GetKKDof(indexSol,k,inode);
-//       PetscInt inode_Metis=GetMetisDof(inode,SolType[indexSol]);
-//       if (Bdc[indexSol][inode]>1) {
-//         Res_[indexSol]->set(inode_Metis,R[0][kkdof]);
-//       } 
-//       else {
-//         Res_[indexSol]->set(inode_Metis,zero);
-//       }
-//       Eps_[indexSol]->set(inode_Metis,E[0][kkdof]);
-//     }
-// 
-//     //close TODO
-    Res_[indexSol]->close();
-    Eps_[indexSol]->close();
-  }
-
-  if(_msh->_nprocs==1) {
-    ierr = VecRestoreArray(RES,&R);
-    CHKERRQ(ierr);
-    ierr = VecRestoreArray(EPS,&E);
-    CHKERRQ(ierr);
-  } else {
-    ierr = VecRestoreArray(RESloc,&R);
-    CHKERRQ(ierr);
-    ierr = VecRestoreArray(EPSloc,&E);
-    CHKERRQ(ierr);
-    ierr=VecGhostRestoreLocalForm(RES,&RESloc);
-    CHKERRQ(ierr);
-    ierr=VecGhostRestoreLocalForm(EPS,&EPSloc);
-    CHKERRQ(ierr);
-  }
-
-
-  for (unsigned k=0; k<MGIndex.size(); k++) {
-    unsigned indexSol=MGIndex[k];
-    //Adding Eps to Solu for every variable
-    Sol_[indexSol]->add(*Eps_[indexSol]);
-//     cout << "pluto " << endl;
-    Sol_[indexSol]->close();
-  }
-  
- 
-
-  return ierr;
-}
 
 //-------------------------------------------------------------------------------------------
 int lsysPDE::DeallocateMatrix(const vector <unsigned> &MGIndex) {
@@ -661,37 +504,37 @@ int lsysPDE::AllocateMatrix(const vector <unsigned> &MGIndex) {
 
 //-------------------------------------------------------------------------------------------
 void lsysPDE::FreeSolutionVectors() {
-  for (unsigned i=0; i<Sol_.size(); i++) {
+  for (unsigned i=0; i<Bdc_.size(); i++) {
     //Delete structures
     if(ResEpsBdc_flag_[i]){
-      delete Res_[i];
-      delete Eps_[i];
+     // delete Res_[i];
+     // delete Eps_[i];
       delete Bdc_[i];
     }
-    delete Sol_[i];
+    //delete Sol_[i];
 
     //
-    if (SolTmOrder[i]==2) {
-      delete Sol_old_[i];
-    }
+    //if (SolTmOrder[i]==2) {
+      //delete Sol_old_[i];
+    //}
   }
   
-  for (unsigned i=0; i<5; i++) 
-    if (Proj_mat_flag[i]) {
-      delete Proj_mat[i];
-  }
+//   for (unsigned i=0; i<5; i++) 
+//     if (Proj_mat_flag[i]) {
+//       delete Proj_mat[i];
+//   }
 }
 
 //-------------------------------------------------------------------------------------------
 void lsysPDE::UpdateSolution() {
 
-  for (unsigned i=0; i<Sol_.size(); i++) {
-
-// cout << soldiscr[i]<<endl;
-// Copy the old vector
-    if (SolTmOrder[i]==2) {
-      *(Sol_old_[i]) = *(Sol_[i]);
-    }
-  }
+//   for (unsigned i=0; i<Sol_.size(); i++) {
+// 
+// // cout << soldiscr[i]<<endl;
+// // Copy the old vector
+//     if (SolTmOrder[i]==2) {
+//       *(Sol_old_[i]) = *(Sol_[i]);
+//     }
+//   }
 
 }

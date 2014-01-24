@@ -297,6 +297,7 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
   start_time=clock();
   
   //pointers and references
+  Solution*     solution = nl_ml_prob._solution[level];
   LinearSolverM*     lsyspde_lev = nl_ml_prob.Lin_Solver_[level];
   LinearSolverM* lsyspdemesh_lev = nl_ml_prob.Lin_Solver_[level];
   elem*           myel     = lsyspdemesh_lev->_msh->el;
@@ -396,7 +397,8 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
       node2[i]=inode;
       unsigned inode_Metis=lsyspde_lev->_msh->GetMetisDof(inode,2);
       for(unsigned ivar=0; ivar<dim; ivar++) {
-        coord[ivar][i]=(*lsyspde_lev->Sol_[indCOORD[ivar]])(inode_Metis);
+        //coord[ivar][i]=(*lsyspde_lev->Sol_[indCOORD[ivar]])(inode_Metis);
+	coord[ivar][i]=(*solution->_Sol[indCOORD[ivar]])(inode_Metis);
 	nodeVAR[ivar][i]=lsyspde_lev->GetKKDof(indVAR[ivar],indexVAR[ivar],inode);
       }
     }
@@ -422,7 +424,8 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
 	  unsigned SolType=nl_ml_prob.GetSolType(&varname[ivar][0]);
 	  for(unsigned i=0; i<nve2; i++) {
 	    unsigned sol_dof = lsyspde_lev->_msh->GetMetisDof(node2[i],SolType);
-	    double soli = (*lsyspde_lev->Sol_[SolIndex])(sol_dof);
+	    //double soli = (*lsyspde_lev->Sol_[SolIndex])(sol_dof);
+	    double soli = (*solution->_Sol[SolIndex])(sol_dof);
 	    SolVAR[ivar]+=phi2[i]*soli;
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) gradSolVAR[ivar][ivar2] += gradphi2[i][ivar2]*soli; 
 	  }
@@ -433,7 +436,8 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
 	unsigned SolType=nl_ml_prob.GetSolType(&varname[3][0]);
 	for(unsigned i=0; i<nve1; i++){
 	  unsigned sol_dof = lsyspde_lev->_msh->GetMetisDof(node1[i],SolType);
-	  double soli = (*lsyspde_lev->Sol_[SolIndex])(sol_dof);
+	  //double soli = (*lsyspde_lev->Sol_[SolIndex])(sol_dof);
+	  double soli = (*solution->_Sol[SolIndex])(sol_dof);
 	  SolVAR[3]+=phi1[i]*soli;
 	}
 

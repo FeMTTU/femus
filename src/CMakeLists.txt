@@ -30,6 +30,7 @@ PetscVector.cpp
 Preconditioner.cpp
 Quadrilateral.cpp
 Solid.cpp
+Solution.cpp
 SparseMatrix.cpp
 SparseRectangularMatrix.cpp
 Tetrahedral.cpp

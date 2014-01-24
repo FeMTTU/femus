@@ -2,6 +2,7 @@
 #define __NonLinearMultiLevelProblem_hpp__
 
 #include "LinSysPde.hpp"
+#include "Solution.hpp"
 #include "Fluid.hpp"
 #include "Solid.hpp"
 #include <b64/b64.h>
@@ -28,7 +29,7 @@ private:
   bool _init_func_set;
   bool _bdc_func_set;
   vector <mesh*> _msh;
-protected:
+ protected:
 
   int _nprocs;
   int _iproc;
@@ -67,7 +68,9 @@ protected:
   
   ///Array of linear solver
   vector <LinearSolverM*> Lin_Solver_;
-
+  vector <Solution*>  _solution;
+  
+  
   ///Physical Object
   Fluid* _fluid;
   Solid* _solid;
@@ -132,7 +135,7 @@ protected:
   void ResizeSolutionVector( const char name[]);
   void CheckVectorSize(const unsigned &i);
   void Initialize(const char name[]);
-  unsigned GetIndex(const char name[]);
+  unsigned GetIndex(const char name[]) const;
   unsigned GetTmOrder(const unsigned i);
 
   //Index

@@ -117,7 +117,8 @@ int NonLinearTimeDependentMultiLevelProblem::SaveData() const {
       sprintf(filename,"./save/save.time_%d.level_%d.%s.bin",_time_step,ig,SolName[i]);
       ierr = PetscViewerBinaryOpen(MPI_COMM_WORLD,filename,FILE_MODE_WRITE,&bin_viewer);
       CHKERRQ(ierr);
-      petsc_vec_sol  = static_cast<PetscVector*>(Lin_Solver_[ig]->Sol_[i]);
+      //petsc_vec_sol  = static_cast<PetscVector*>(Lin_Solver_[ig]->Sol_[i]);
+      petsc_vec_sol  = static_cast<PetscVector*>(_solution[ig]->_Sol[i]);
       ierr = VecView(petsc_vec_sol->vec(),bin_viewer);
       CHKERRQ(ierr);
       ierr = PetscViewerDestroy(&bin_viewer);
@@ -158,7 +159,8 @@ int NonLinearTimeDependentMultiLevelProblem::InitializeFromRestart(unsigned rest
     for(unsigned i=0;i<SolType.size();i++){
       sprintf(filename,"./save/save.time_%d.level_%d.%s.bin",restart_time_step,ig,SolName[i]);
       ierr = PetscViewerBinaryOpen(MPI_COMM_WORLD,filename,FILE_MODE_READ,&bin_viewer); CHKERRQ(ierr);
-      petsc_vec_sol  = static_cast<PetscVector*>(Lin_Solver_[ig]->Sol_[i]);
+      //petsc_vec_sol  = static_cast<PetscVector*>(Lin_Solver_[ig]->Sol_[i]);
+      petsc_vec_sol  = static_cast<PetscVector*>(_solution[ig]->_Sol[i]);
       ierr = VecLoad(petsc_vec_sol->vec(),bin_viewer); CHKERRQ(ierr);
       ierr = PetscViewerDestroy(&bin_viewer);
     }
@@ -216,9 +218,15 @@ void NonLinearTimeDependentMultiLevelProblem::_NewmarkAccUpdate() {
 //     unsigned vy=GetIndex("V");
 //     unsigned vz=GetIndex("W");
     for(unsigned i=0; i<dim; i++) {
-      Lin_Solver_[ig]->Sol_[axyz[i]]->scale(a5);
-      Lin_Solver_[ig]->Sol_[axyz[i]]->add(a1,*(Lin_Solver_[ig]->Sol_[vxyz[i]]));
-      Lin_Solver_[ig]->Sol_[axyz[i]]->add(a2,*(Lin_Solver_[ig]->Sol_old_[vxyz[i]]));
+//       Lin_Solver_[ig]->Sol_[axyz[i]]->scale(a5);
+//       Lin_Solver_[ig]->Sol_[axyz[i]]->add(a1,*(Lin_Solver_[ig]->Sol_[vxyz[i]]));
+//       Lin_Solver_[ig]->Sol_[axyz[i]]->add(a2,*(Lin_Solver_[ig]->Sol_old_[vxyz[i]]));
+      
+      _solution[ig]->_Sol[axyz[i]]->scale(a5);
+      _solution[ig]->_Sol[axyz[i]]->add(a1,*(_solution[ig]->_Sol[vxyz[i]]));
+      _solution[ig]->_Sol[axyz[i]]->add(a2,*(_solution[ig]->_SolOld[vxyz[i]]));
+      
+      
     }
 
 
@@ -388,7 +396,8 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(unsigned const &ncycl
 	cout << endl;
 	start_time=clock();
 	for (unsigned ig=0; ig<igridn; ig++) {
-	  Lin_Solver_[ig]->SumEpsToSol(MGIndex);
+	  //Lin_Solver_[ig]->SumEpsToSol(MGIndex);
+	  _solution[ig]->SumEpsToSol(MGIndex, Lin_Solver_[ig]->EPS, Lin_Solver_[ig]->RES, Lin_Solver_[ig]->KKoffset );
 	}
 
 	conv  = GetConvergence(igridn-1);
@@ -623,10 +632,13 @@ void NonLinearTimeDependentMultiLevelProblem::UpdateBdc() {
   // 0 Dirichlet
   for (unsigned igridn=0; igridn<gridn; igridn++) {
 //     for (unsigned i=i_start; i<i_end; i++) {
-      if(Lin_Solver_[igridn]->ResEpsBdc_flag_[k]){
+      //if(Lin_Solver_[igridn]->ResEpsBdc_flag_[k]){
+      if(_solution[igridn]->_ResEpsBdcFlag[k]){
+	
 	for (unsigned j=Lin_Solver_[igridn]->_msh->MetisOffset[SolType[k]][_iproc]; j<Lin_Solver_[igridn]->_msh->MetisOffset[SolType[k]][_iproc+1]; j++) {
 	  //Lin_Solver_[igridn]->Bdc[i][j]=2; //Default Neumann
 	  Lin_Solver_[igridn]->Bdc_[k]->set(j,2.);
+	  _solution[igridn]->_Bdc[k]->set(j,2.);
 	}
 	if (SolType[k]<3) {  
 	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
@@ -646,6 +658,7 @@ void NonLinearTimeDependentMultiLevelProblem::UpdateBdc() {
 		    unsigned inode_Metis=Lin_Solver_[igridn]->_msh->GetMetisDof(inode,SolType[k]);
 		    // if (inode_Metis<Lin_Solver_[igridn]->MetisOffset[SolType[i]][_nprocs] ) {
 		    Lin_Solver_[igridn]->Bdc_[k]->set(inode_Metis,1.);
+		    _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
 		    // }
 		  }
 		}
@@ -688,15 +701,24 @@ void NonLinearTimeDependentMultiLevelProblem::UpdateBdc() {
 		    //if (inode<Lin_Solver_[igridn]->MetisOffset[SolType[k]][_nprocs]) {
 		      unsigned inode_coord_Metis=Lin_Solver_[igridn]->_msh->GetMetisDof(inode,2);
 		      double value;
-		      xx=(*Lin_Solver_[igridn]->Sol_[indX])(inode_coord_Metis);  
-		      yy=(*Lin_Solver_[igridn]->Sol_[indY])(inode_coord_Metis);
-		      zz=(*Lin_Solver_[igridn]->Sol_[indZ])(inode_coord_Metis);
+// 		      xx=(*Lin_Solver_[igridn]->Sol_[indX])(inode_coord_Metis);  
+// 		      yy=(*Lin_Solver_[igridn]->Sol_[indY])(inode_coord_Metis);
+// 		      zz=(*Lin_Solver_[igridn]->Sol_[indZ])(inode_coord_Metis);
+		      
+		      xx=(*_solution[igridn]->_Sol[indX])(inode_coord_Metis);  
+		      yy=(*_solution[igridn]->_Sol[indY])(inode_coord_Metis);
+		      zz=(*_solution[igridn]->_Sol[indZ])(inode_coord_Metis);
+		      
 		      bool test=_SetBoundaryConditionFunction(xx,yy,zz,SolName[k],value,-(Lin_Solver_[igridn]->_msh->el->GetFaceElementIndex(kel_gmt,jface)+1),_time);
 		      if (test) {
 			unsigned inode_Metis=Lin_Solver_[igridn]->_msh->GetMetisDof(inode,SolType[k]);
 			//Lin_Solver_[igridn]->Bdc[i][inode_Metis]=0;
 			Lin_Solver_[igridn]->Bdc_[k]->set(inode_Metis,0.);
-			Lin_Solver_[igridn]->Sol_[k]->set(inode_Metis,value);
+			//Lin_Solver_[igridn]->Sol_[k]->set(inode_Metis,value);
+			
+			_solution[igridn]->_Bdc[k]->set(inode_Metis,0.);
+			_solution[igridn]->_Sol[k]->set(inode_Metis,value);
+			
 		      }
 		    //}
 		  }
@@ -719,14 +741,21 @@ void NonLinearTimeDependentMultiLevelProblem::UpdateBdc() {
 		    unsigned inode=(kel_gmt+iv*nel);
 		    unsigned inode_Metis=Lin_Solver_[igridn]->_msh->GetMetisDof(inode,SolType[k]);
 		    Lin_Solver_[igridn]->Bdc_[k]->set(inode_Metis,1.);
+		    
+		    _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
+		    
 		  }
 		}
 	      }
 	    }
 	  }
 	}
-	Lin_Solver_[igridn]->Sol_[k]->close();
+	//Lin_Solver_[igridn]->Sol_[k]->close();
 	Lin_Solver_[igridn]->Bdc_[k]->close();
+	
+	_solution[igridn]->_Sol[k]->close();
+	_solution[igridn]->_Bdc[k]->close();
+	
       }
   }
       

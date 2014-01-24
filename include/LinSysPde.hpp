@@ -22,32 +22,36 @@ public:
   
   mesh *_msh;
   
-  vector <PetscInt> DrchKKdofs;
+ 
   //vector <vector <unsigned short> > Bdc;  
   vector <int> SolType;  
   vector <char*> SolName;
-  vector <unsigned> SolTmOrder;
-  vector <NumericVector*> Sol_;      //one for every variable
-  vector <NumericVector*> Sol_old_;  //one for every variable
-  vector <NumericVector*> Res_;      //one for every variable
-  vector <NumericVector*> Eps_;      //one for every variable
+  //vector <unsigned> SolTmOrder;
+  //vector <NumericVector*> Sol_;      //one for every variable
+  //vector <NumericVector*> Sol_old_;  //one for every variable
+  //vector <NumericVector*> Res_;      //one for every variable
+  //vector <NumericVector*> Eps_;      //one for every variable
   vector <NumericVector*> Bdc_;      //one for every variable
   vector <bool> ResEpsBdc_flag_;
+    
+  vector <NumericVector*> *_Bdc;
+ 
+  void GetBoundaryCondition(vector <NumericVector*> *Bdc_other);
   
+  vector <PetscInt> DrchKKdofs;
   vector < vector <unsigned> > KKoffset;
   vector < unsigned > KKghostsize;
   vector < vector < int> > KKghost_nd;
   vector <int> KKIndex;
   Mat PP;
-  Mat K_;
   Mat KK,CC;
   Vec RES,RESC;
   Vec EPS,EPSC;
   bool CC_flag;
   
   //Projection matrices (for every kind of variable)
-  SparseRectangularMatrix* Proj_mat[5];
-  bool Proj_mat_flag[5];
+//   SparseRectangularMatrix* Proj_mat[5];
+//   bool Proj_mat_flag[5];
 
   static const unsigned END_IND[5];
 
@@ -78,13 +82,13 @@ public:
   int SetResZero(const vector <unsigned> &MGIndex);
   int SetEpsZero(const vector <unsigned> &MGIndex);
   int SumEpsCToEps(const vector <unsigned> &MGIndex);
-  int SumEpsToSol(const vector <unsigned> &MGIndex);
+  //int SumEpsToSol(const vector <unsigned> &MGIndex);
 
   int UpdateResidual();
   void UpdateSolution();
 
-  void GetCoordinates( vector < vector < double> > &vt);
-  void set_elr(const unsigned &test=0);
+  //void GetCoordinates( vector < vector < double> > &vt);
+  //void set_elr(const unsigned &test=0);
 };
 
 
