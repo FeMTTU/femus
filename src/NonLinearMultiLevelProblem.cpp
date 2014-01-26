@@ -106,14 +106,11 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
   vector <vector <double> > vt;  
   vt.resize(3);
 
-  Lin_Solver_.resize(gridn);
   _msh.resize(gridn);
   _solution.resize(gridn);
   
   _msh[0]=new mesh(mesh_file, vt,Lref);
   _solution[0]=new Solution(_msh[0]);
-  Lin_Solver_[0]=LinearSolverM::build(0,_msh[0],LSOLVER).release();
-  Lin_Solver_[0]->SetBdcPointer(&_solution[0]->_Bdc);
   
   unsigned gridn_temp=gridn;
   gridn=1;
@@ -146,13 +143,7 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
     _solution[i]->ResizeSolutionVector("X");
     _solution[i]->ResizeSolutionVector("Y");
     _solution[i]->ResizeSolutionVector("Z");
-        
-    Lin_Solver_[i]=LinearSolverM::build(i,_msh[i],LSOLVER).release();
-    Lin_Solver_[i]->SetBdcPointer(&_solution[i]->_Bdc);
-    Lin_Solver_[i]->AddSolutionVector("X","biquadratic",1,0);
-    Lin_Solver_[i]->AddSolutionVector("Y","biquadratic",1,0);
-    Lin_Solver_[i]->AddSolutionVector("Z","biquadratic",1,0);
-        
+             
     BuildProlungatorMatrix(i, indX);
     unsigned TypeIndex=SolType[indX];
     
@@ -183,14 +174,7 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
     _solution[i]->ResizeSolutionVector("X");
     _solution[i]->ResizeSolutionVector("Y");
     _solution[i]->ResizeSolutionVector("Z");
-        
-    Lin_Solver_[i]=LinearSolverM::build(i,_msh[i],LSOLVER).release();
-    Lin_Solver_[i]->SetBdcPointer(&_solution[i]->_Bdc);
-    Lin_Solver_[i]->AddSolutionVector("X","biquadratic",1,0);
-    Lin_Solver_[i]->AddSolutionVector("Y","biquadratic",1,0);
-    Lin_Solver_[i]->AddSolutionVector("Z","biquadratic",1,0);    
-      
-    
+     
     BuildProlungatorMatrix(i, indX);
     unsigned TypeIndex=SolType[indX];
     
@@ -200,8 +184,7 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
     _solution[i]->_Sol[indX]->close();
     _solution[i]->_Sol[indY]->close();
     _solution[i]->_Sol[indZ]->close();
-    
-    
+        
   }
   _solution[gridn-1u]->SetElementRefiniement(0);	
   elr_old.resize(_msh[gridr-1u]->GetElementNumber());
@@ -599,8 +582,15 @@ int NonLinearMultiLevelProblem::ComputeBdIntegral(const char var_name[], const u
 
 //---------------------------------------------------------------------------------------------------
 void NonLinearMultiLevelProblem::CreateMGStruct() {
+  
+  Lin_Solver_.resize(gridn);
+  for(unsigned i=0;i<gridn;i++){
+    Lin_Solver_[i]=LinearSolverM::build(i,_msh[i]).release();
+    Lin_Solver_[i]->SetBdcPointer(&_solution[i]->_Bdc);
+  }
+    
   for (unsigned i=0; i<gridn; i++) {
-    Lin_Solver_[i]->InitMultigrid(MGIndex);
+    Lin_Solver_[i]->InitMultigrid(MGIndex,SolType,SolName);
   }
   for (unsigned ig=1; ig<gridn; ig++) {
     BuildProlungatorMatrix(ig);
@@ -889,7 +879,7 @@ void NonLinearMultiLevelProblem::AddSolutionVector(const char name[], const char
        << std::setw(12) << order << " and time discretzation order " << tmorder-1 << endl;
 
   for (unsigned ig=0; ig<gridn; ig++) {
-    Lin_Solver_[ig]->AddSolutionVector(name,order,tmorder,PDE_type);
+   // Lin_Solver_[ig]->AddSolutionVector(name,order);
     _solution[ig]->AddSolutionVector(name,order,tmorder,PDE_type);
   }
 }

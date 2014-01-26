@@ -42,9 +42,9 @@ public:
   lsysPDE(mesh *other_msh);
   ~lsysPDE();
 
-  void AddSolutionVector(const char name[], const char order[],const unsigned& tmorder, const bool &PDE_type=1);
+  //void AddSolutionVector(const char name[], const char order[]);
   void SetBdcPointer(vector <NumericVector*> *Bdc_other);
-  int InitMultigrid(const vector <unsigned> &MGIndex);
+  int InitMultigrid(const vector <unsigned> &MGIndex,const  vector <int> &SolType,  const vector <char*> &SolName);
   int DeallocateMatrix();
   int AllocateMatrix();
   unsigned GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,const unsigned &idof_gmt) const;

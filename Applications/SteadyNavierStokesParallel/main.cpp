@@ -107,17 +107,17 @@ int main(int argc,char **args) {
   //Solver Configuration 
   
   //Solver I (Gmres)
-  //nl_ml_prob.SetSmoother("Gmres");
-  //nl_ml_prob.SetTolerances(1.e-12,1.e-20,1.e+50,10);
-  
-  //Solver II (Vanka - MPSC)
-  nl_ml_prob.SetSmoother("Vanka");
-  nl_ml_prob.SetVankaSchurOptions(true,false,1);
-  nl_ml_prob.SetSolverFineGrids("GMRES");
-  nl_ml_prob.SetPreconditionerFineGrids("LU");
+  nl_ml_prob.SetSmoother("Gmres");
   nl_ml_prob.SetTolerances(1.e-12,1.e-20,1.e+50,10);
-  nl_ml_prob.SetSchurTolerances(1.e-12,1.e-20,1.e+50,1);
-  nl_ml_prob.SetDimVankaBlock(6);                             //2^lev 1D 4^lev 2D 8^lev 3D
+  
+  // Solver II (Vanka - MPSC)
+  //nl_ml_prob.SetSmoother("Vanka");
+  //nl_ml_prob.SetVankaSchurOptions(true,false,1);
+  //nl_ml_prob.SetSolverFineGrids("GMRES");
+  //nl_ml_prob.SetPreconditionerFineGrids("LU");
+  //nl_ml_prob.SetTolerances(1.e-12,1.e-20,1.e+50,10);
+  //nl_ml_prob.SetSchurTolerances(1.e-12,1.e-20,1.e+50,1);
+  //nl_ml_prob.SetDimVankaBlock(6);                             //2^lev 1D 4^lev 2D 8^lev 3D
   
   // Solving
   nl_ml_prob.FullMultiGrid(10,1,1,"F-Cycle");

@@ -20,39 +20,7 @@ lsysPDE::lsysPDE(mesh *other_msh){
 }
 
 //--------------------------------------------------------------------------------
-lsysPDE::~lsysPDE() {
-  for (unsigned i=0; i<_SolName.size(); i++) {
-    delete [] _SolName[i];
-  }
-}
-
-//--------------------------------------------------------------------------------
-void lsysPDE::AddSolutionVector( const char name[], const char order[],
-                                const unsigned& tmorder, const bool &PDE_type) {
-  unsigned n=_SolType.size();
- 
-  _SolType.resize(n+1u);
-  _SolName.resize(n+1u);
-  
-  if (!strcmp(order,"linear")) {
-    _SolType[n]=0;
-  } else if (!strcmp(order,"quadratic")) {
-    _SolType[n]=1;
-  } else if (!strcmp(order,"biquadratic")) {
-    _SolType[n]=2;
-  } else if (!strcmp(order,"constant")) {
-    _SolType[n]=3;
-  } else if (!strcmp(order,"disc_linear")) {
-    _SolType[n]=4;
-  } else {
-    cout<<"error! invalid order entry in AddSolutionVector(...)"<<endl;
-    exit(0);
-  }
-  _SolName[n]=new char [8];
-  strcpy(_SolName[n],name);
-}
-
-
+lsysPDE::~lsysPDE() { }
 
 //--------------------------------------------------------------------------------
 void lsysPDE::SetMatrixProperties(const bool property) {
@@ -93,15 +61,18 @@ unsigned lsysPDE::GetIndex(const char name[]) {
   return index;
 }
 
-
+//--------------------------------------------------------------------------------
 void lsysPDE::SetBdcPointer(vector <NumericVector*> *Bdc_other){
     _Bdc=Bdc_other;
 }
 
-
 //--------------------------------------------------------------------------------
-int lsysPDE::InitMultigrid(const vector <unsigned> &MGIndex) {
-
+int lsysPDE::InitMultigrid(const vector <unsigned> &MGIndex, const  vector <int> &SolType_other,  const vector <char*> &SolName_other ) {
+   
+  _SolType=SolType_other;
+  _SolName=SolName_other;
+  
+  
   int ierr;
   KKIndex.resize(MGIndex.size()+1u);
   KKIndex[0]=0;
@@ -276,24 +247,20 @@ int lsysPDE::UpdateResidual() {
   CHKERRQ(ierr);
   ierr = VecAXPBY(RES,-1.,1.,RESC);
   CHKERRQ(ierr);
-
   return 1;
 }
 
-
-
 //-------------------------------------------------------------------------------------------
 int lsysPDE::DeallocateMatrix() {
-
   int ierr;
   ierr=MatDestroy(&KK);
   CHKERRQ(ierr);
-
+  
   if (_msh->GetGridNumber()>0) {
     ierr=MatDestroy(&PP);
     CHKERRQ(ierr);
   }
-
+  
   ierr=VecDestroy(&RES);
   CHKERRQ(ierr);
   ierr=VecDestroy(&RESC);
@@ -330,8 +297,6 @@ int lsysPDE::AllocateMatrix() {
   else {
 
     PetscInt KK_local_size =KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
-    
-//     printf(" a %d  %d  %d ", _iproc, KK_local_size, KKsize );
     
     ierr = MatCreate(MPI_COMM_WORLD, &KK);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
