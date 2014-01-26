@@ -726,6 +726,8 @@ int NonLinearMultiLevelProblem::FullMultiGrid(unsigned const &ncycle, unsigned c
           }
         }
 
+        
+        
 	start_time=clock();
 
         //standard Multigrid matrix restriction =========================
@@ -737,12 +739,12 @@ int NonLinearMultiLevelProblem::FullMultiGrid(unsigned const &ncycle, unsigned c
       }
       
         /// Coarse direct solver
-        if(_VankaIsSet) {
-	  if (_VankaSchur)Lin_Solver_[0]->Vanka_Smoother(MGIndex,VankaIndex,_NSchurVar,_Schur);
+      if(_VankaIsSet) {
+	if (_VankaSchur)Lin_Solver_[0]->Vanka_Smoother(MGIndex,VankaIndex,_NSchurVar,_Schur);
           else Lin_Solver_[0]->Vanka_Smoother(MGIndex,VankaIndex);
 	} else {
-  	  Lin_Solver_[0]->solve();
-	}
+  	Lin_Solver_[0]->solve();
+      }
       
 
 	for (unsigned ig=1; ig<igridn; ig++) {

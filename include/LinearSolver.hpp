@@ -198,17 +198,21 @@ public:
 inline LinearSolverM::LinearSolverM(const unsigned &igrid, mesh* other_msh) :
   lsysPDE(other_msh),
   _solver_type(GMRES),
-  _preconditioner_type(ILU_PRECOND),
   _preconditioner(NULL),
   _is_initialized(false),
   same_preconditioner(false) {
 
-  unsigned dim = _msh->GetDimension();
-  unsigned base = pow(2,dim);
-  unsigned exponent = 5 - dim;
-
-  _num_elem_vanka_block = pow(base,exponent);
-
+  if(igrid==0){
+    _preconditioner_type=LU_PRECOND;
+    _num_elem_vanka_block = _msh->el->GetElementNumber();  
+  }
+  else{
+    _preconditioner_type=ILU_PRECOND;
+    unsigned dim = _msh->GetDimension();
+    unsigned base = pow(2,dim);
+    unsigned exponent = 5 - dim;
+    _num_elem_vanka_block = pow(base,exponent);
+  }
 }
 
 inline LinearSolverM::~LinearSolverM() {

@@ -287,10 +287,7 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &MGIndex,const vec
     CHKERRQ(ierr);
 
     if (!Schur || grid==0) {
-      
-      cout<<grid<<"gggggggggggggggggggggggggggg "<<_preconditioner_type<<endl;
-      //exit(0);
-      
+        
       ISCreateStride(PETSC_COMM_SELF,PBsize,0,1,&isPB);
       PetscScalar *y=new PetscScalar [PBsize];
 
@@ -1138,10 +1135,6 @@ void PetscLinearSolver::init(Mat& matrix, const bool pc_flag, const bool Schur) 
     ierr = PCFactorSetZeroPivot(_pc,zero); CHKERRABORT(MPI_COMM_WORLD,ierr); 
     ierr = PCFactorSetShiftType(_pc,MAT_SHIFT_NONZERO); CHKERRABORT(MPI_COMM_WORLD,ierr); 
     
-    
-   
-    
-    
   }
 }
 
@@ -1369,7 +1362,7 @@ std::pair< int, double> PetscLinearSolver::solve() {
 // 
 //   else {
 // 
-  cout<<"gggggggggggggggggggggggggggg "<<_preconditioner_type<<endl;
+  
   this->init(KK);  //as before
   
   VecZeroEntries(EPSC);
