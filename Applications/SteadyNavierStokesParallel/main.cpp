@@ -105,18 +105,19 @@ int main(int argc,char **args) {
   nl_ml_prob.AddStabilization(true);
   
   //Solver Configuration 
-  //Solver I (Gmres)
-  nl_ml_prob.SetSmoother("Gmres");
-  nl_ml_prob.SetTolerances(1.e-12,1.e-20,1.e+50,10);
   
- // Solver II (Vanka - MPSC)
-//   nl_ml_prob.SetSmoother("Vanka");
-//   nl_ml_prob.SetVankaSchurOptions(true,false,1);
-//   nl_ml_prob.SetSolverFineGrids("GMRES");
-//   nl_ml_prob.SetPreconditionerFineGrids("LU");
-//   nl_ml_prob.SetTolerances(1.e-12,1.e-20,1.e+50,10);
-//   nl_ml_prob.SetSchurTolerances(1.e-12,1.e-20,1.e+50,1);
-//   nl_ml_prob.SetDimVankaBlock(6);                             //2^lev 1D 4^lev 2D 8^lev 3D
+  //Solver I (Gmres)
+  //nl_ml_prob.SetSmoother("Gmres");
+  //nl_ml_prob.SetTolerances(1.e-12,1.e-20,1.e+50,10);
+  
+ //Solver II (Vanka - MPSC)
+  nl_ml_prob.SetSmoother("Vanka");
+  nl_ml_prob.SetVankaSchurOptions(true,false,1);
+  nl_ml_prob.SetSolverFineGrids("GMRES");
+  nl_ml_prob.SetPreconditionerFineGrids("LU");
+  nl_ml_prob.SetTolerances(1.e-12,1.e-20,1.e+50,10);
+  nl_ml_prob.SetSchurTolerances(1.e-12,1.e-20,1.e+50,1);
+  nl_ml_prob.SetDimVankaBlock(6);                             //2^lev 1D 4^lev 2D 8^lev 3D
   
   // Solving
   nl_ml_prob.FullMultiGrid(10,1,1,"F-Cycle");
@@ -297,13 +298,13 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
   start_time=clock();
   
   //pointers and references
-  Solution*     solution = nl_ml_prob._solution[level];
-  LinearSolverM*     lsyspde_lev = nl_ml_prob.Lin_Solver_[level];
-  LinearSolverM* lsyspdemesh_lev = nl_ml_prob.Lin_Solver_[level];
-  elem*           myel     = lsyspdemesh_lev->_msh->el;
-  Mat&           myKK      = lsyspde_lev->KK;
-  Vec&           myRES     = lsyspde_lev->RES;
-  vector <int>& myKKIndex  = lsyspde_lev->KKIndex; 
+  Solution*       mysolution  = nl_ml_prob._solution[level];
+  LinearSolverM*  mylsyspde = nl_ml_prob.Lin_Solver_[level];
+  mesh*           mymsh    = nl_ml_prob._msh[level];
+  elem*           myel     =  mymsh->el;
+  Mat&            myKK     = mylsyspde->KK;
+  Vec&            myRES    = mylsyspde->RES;
+  vector <int>&   myKKIndex= mylsyspde->KKIndex; 
     
   // Allocation
   PetscInt node2[27];
@@ -318,15 +319,15 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
   PetscErrorCode ierr;  
 
   //data
-  const unsigned dim = lsyspde_lev->_msh->GetDimension();
-  unsigned nel=lsyspdemesh_lev->_msh->GetElementNumber();
-  unsigned igrid=lsyspdemesh_lev->_msh->GetGridNumber();
-  unsigned iproc = lsyspdemesh_lev->_msh->GetProcID();
-  unsigned nprocs = lsyspdemesh_lev->_msh->GetNumProcs();
-  double _ILambda= lsyspde_lev->GetCompressibility();
+  const unsigned dim = mymsh->GetDimension();
+  unsigned nel= mymsh->GetElementNumber();
+  unsigned igrid= mymsh->GetGridNumber();
+  unsigned iproc = mymsh->GetProcID();
+  unsigned nprocs = mymsh->GetNumProcs();
+  double _ILambda= mylsyspde->GetCompressibility();
   double _IRe = nl_ml_prob._fluid->get_IReynolds_number();
-  bool _penalty = lsyspde_lev->GetStabilization();
-  const bool symm_mat = lsyspde_lev->GetMatrixProperties();
+  bool _penalty = mylsyspde->GetStabilization();
+  const bool symm_mat = mylsyspde->GetMatrixProperties();
   const bool _NavierStokes = nl_ml_prob.GetNonLinearCase();
   unsigned _nwtn_alg = nl_ml_prob.GetNonLinearAlgorithm();
   bool _newton;
@@ -353,10 +354,10 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
   indVAR[3]=nl_ml_prob.GetIndex(&varname[3][0]);
   
   //unknown order
-  unsigned order_ind2 = lsyspde_lev->SolType[nl_ml_prob.GetIndex(&varname[0][0])];
-  unsigned end_ind2   = lsyspde_lev->END_IND[order_ind2];
-  unsigned order_ind1 = lsyspde_lev->SolType[nl_ml_prob.GetIndex(&varname[3][0])];
-  unsigned end_ind1   = lsyspde_lev->END_IND[order_ind1];
+  unsigned order_ind2 = nl_ml_prob.SolType[nl_ml_prob.GetIndex(&varname[0][0])];
+  unsigned end_ind2   = mymsh->GetEndIndex(order_ind2);
+  unsigned order_ind1 = nl_ml_prob.SolType[nl_ml_prob.GetIndex(&varname[3][0])];
+  unsigned end_ind1   = mymsh->GetEndIndex(order_ind1);
   
   // Set to zeto all the entries of the matrix
   ierr = MatZeroEntries(myKK);  CHKERRQ(ierr);
@@ -364,9 +365,9 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
   /// *** element loop ***
 // for(int isdom=0; isdom<lsyspdemesh_lev->nsubdom; isdom++) {
   for(int isdom=iproc; isdom<iproc+1; isdom++) {
-    for (int iel=lsyspdemesh_lev->_msh->IS_Mts2Gmt_elem_offset[isdom]; iel < lsyspdemesh_lev->_msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+    for (int iel=mymsh->IS_Mts2Gmt_elem_offset[isdom]; iel < mymsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
 
-    unsigned kel = lsyspdemesh_lev->_msh->IS_Mts2Gmt_elem[iel];
+    unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
     short unsigned kelt=myel->GetElementType(kel);
     unsigned nve2=myel->GetElementDofNumber(kel,end_ind2);
     unsigned nve1=myel->GetElementDofNumber(kel,end_ind1);
@@ -395,18 +396,18 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
     for( unsigned i=0;i<nve2;i++){
       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;	
       node2[i]=inode;
-      unsigned inode_Metis=lsyspde_lev->_msh->GetMetisDof(inode,2);
+      unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
       for(unsigned ivar=0; ivar<dim; ivar++) {
-        //coord[ivar][i]=(*lsyspde_lev->Sol_[indCOORD[ivar]])(inode_Metis);
-	coord[ivar][i]=(*solution->_Sol[indCOORD[ivar]])(inode_Metis);
-	nodeVAR[ivar][i]=lsyspde_lev->GetKKDof(indVAR[ivar],indexVAR[ivar],inode);
+        //coord[ivar][i]=(*mylsyspde->Sol_[indCOORD[ivar]])(inode_Metis);
+	coord[ivar][i]=(*mysolution->_Sol[indCOORD[ivar]])(inode_Metis);
+	nodeVAR[ivar][i]=mylsyspde->GetKKDof(indVAR[ivar],indexVAR[ivar],inode);
       }
     }
     
     for(unsigned i=0;i<nve1;i++) {
       unsigned inode=(order_ind1<3)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
       node1[i]=inode;
-      nodeVAR[3][i]=lsyspde_lev->GetKKDof(indVAR[3],indexVAR[3],inode);
+      nodeVAR[3][i]=mylsyspde->GetKKDof(indVAR[3],indexVAR[3],inode);
     }
    
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
@@ -423,9 +424,9 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
 	  unsigned SolIndex=nl_ml_prob.GetIndex(&varname[ivar][0]);
 	  unsigned SolType=nl_ml_prob.GetSolType(&varname[ivar][0]);
 	  for(unsigned i=0; i<nve2; i++) {
-	    unsigned sol_dof = lsyspde_lev->_msh->GetMetisDof(node2[i],SolType);
-	    //double soli = (*lsyspde_lev->Sol_[SolIndex])(sol_dof);
-	    double soli = (*solution->_Sol[SolIndex])(sol_dof);
+	    unsigned sol_dof = mymsh->GetMetisDof(node2[i],SolType);
+	    //double soli = (*mylsyspde->Sol_[SolIndex])(sol_dof);
+	    double soli = (*mysolution->_Sol[SolIndex])(sol_dof);
 	    SolVAR[ivar]+=phi2[i]*soli;
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) gradSolVAR[ivar][ivar2] += gradphi2[i][ivar2]*soli; 
 	  }
@@ -435,9 +436,9 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
 	unsigned SolIndex=nl_ml_prob.GetIndex(&varname[3][0]);
 	unsigned SolType=nl_ml_prob.GetSolType(&varname[3][0]);
 	for(unsigned i=0; i<nve1; i++){
-	  unsigned sol_dof = lsyspde_lev->_msh->GetMetisDof(node1[i],SolType);
-	  //double soli = (*lsyspde_lev->Sol_[SolIndex])(sol_dof);
-	  double soli = (*solution->_Sol[SolIndex])(sol_dof);
+	  unsigned sol_dof = mymsh->GetMetisDof(node1[i],SolType);
+	  //double soli = (*mylsyspde->Sol_[SolIndex])(sol_dof);
+	  double soli = (*mysolution->_Sol[SolIndex])(sol_dof);
 	  SolVAR[3]+=phi1[i]*soli;
 	}
 

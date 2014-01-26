@@ -10,9 +10,10 @@
 using std::cout;
 using std::endl;
 
-const unsigned Solution::_END_IND[5]= {0,1,3,4,5};
-
-// ------------ Contructor ------------------------------------------
+/**
+ *  Contructor 
+ **/
+// ------------------------------------------------------------------
 Solution::Solution(mesh *other_msh){    
  _msh = other_msh;
   for(int i=0;i<5;i++){
@@ -20,14 +21,20 @@ Solution::Solution(mesh *other_msh){
   }
 }
 
-// ------------- Destructor -----------------------------------------
+/**
+ * Destructor
+ **/
+// ------------------------------------------------------------------
 Solution::~Solution() {
   for (unsigned i=0; i<_SolName.size(); i++) {
     delete [] _SolName[i];
   }
 }
 
-// ------------- Add a new solution ---------------------------------
+/**
+ * Add new varible called name
+ **/
+// ------------------------------------------------------------------
 void Solution::AddSolutionVector( const char name[], const char order[],
                                 const unsigned& tmorder, const bool &PDE_type) {
   unsigned n=_Sol.size();
@@ -67,7 +74,11 @@ void Solution::AddSolutionVector( const char name[], const char order[],
   strcpy(_SolName[n],name);
 }
 
-//-------------- Get the solution index base on its name ------------
+/**
+ * Get the solution index for the variable called name
+ **/
+
+//-------------------------------------------------------------------
 unsigned Solution::GetIndex(const char name[]) const {
   unsigned index=0;
   while (strcmp(_SolName[index],name)) {
@@ -80,7 +91,10 @@ unsigned Solution::GetIndex(const char name[]) const {
   return index;
 }
 
-// ------------- Allocate the solution memory -----------------------
+/**
+ * Allocate memory for the variable called name
+ **/
+// ------------------------------------------------------------------
 void Solution::ResizeSolutionVector(const char name[]) {
 
   unsigned i=GetIndex(name);
@@ -124,7 +138,10 @@ void Solution::ResizeSolutionVector(const char name[]) {
   }
 }
 
-// -------------- Deallocate solution memory ------------------------
+/**
+ * Deallocate memory for all variables
+ **/
+// ------------------------------------------------------------------
 void Solution::FreeSolutionVectors() {
   for (unsigned i=0; i<_Sol.size(); i++) {
     if(_ResEpsBdcFlag[i]){
@@ -144,7 +161,10 @@ void Solution::FreeSolutionVectors() {
   }
 }
 
-// ------------- Initialize the coordinate solution X,Y,Z -----------
+/**
+ * Initialize the coarse variable coordinates X,Y,Z 
+ **/
+// ------------------------------------------------------------------
 void Solution::SetCoarseCoordinates( vector < vector < double> > &vt){
   unsigned indexSol;
   
@@ -159,6 +179,9 @@ void Solution::SetCoarseCoordinates( vector < vector < double> > &vt){
   
 }
 
+/**
+ * Update _Sol, _Res and _Eps based on EPS and RES 
+ **/
 //--------------------------------------------------------------------------------
 int Solution::SumEpsToSol(const vector <unsigned> &MGIndex, const Vec &EPS, const Vec &RES, const vector <vector <unsigned> > &KKoffset ) {
 
@@ -231,7 +254,10 @@ int Solution::SumEpsToSol(const vector <unsigned> &MGIndex, const Vec &EPS, cons
   return ierr;
 }
 
-// ---------------  Set _SolOld=_Sol ----------------------------------
+/**
+ * Set _SolOld=_Sol
+ **/
+// ------------------------------------------------------------------
 void Solution::UpdateSolution() {
   for (unsigned i=0; i<_Sol.size(); i++) {
     // Copy the old vector
@@ -242,10 +268,10 @@ void Solution::UpdateSolution() {
 }
 
 /**
- * This function flags the elements that will be refined
+ * Flag the elements to be refined
  **/
-//--------------------------------------------------------------------------------
-void Solution::set_elr(const unsigned &test) {
+//-------------------------------------------------------------------
+void Solution::SetElementRefiniement(const unsigned &test) {
  
   _msh->el->InitRefinedToZero();
   
@@ -259,17 +285,25 @@ void Solution::set_elr(const unsigned &test) {
       short unsigned elt=_msh->el->GetElementType(iel);
       _msh->el->AddToRefinedElementNumber(1,elt);
     }
-  } else if (test==2) { //refine based of the position of the mid point;
+  } 
+  else if (test==2) { //refine based on the function SetRefinementFlag defined in the main;
     //serial loop
+    std::vector<double> X_local;
+    std::vector<double> Y_local;
+    std::vector<double> Z_local;
+    _Sol[0]->localize_to_one(X_local,0);
+    _Sol[1]->localize_to_one(Y_local,0);
+    _Sol[2]->localize_to_one(Z_local,0);
+  
     for (unsigned iel=0; iel<nel; iel+=1) {
       unsigned nve=_msh->el->GetElementDofNumber(iel,0);
       double vtx=0.,vty=0.,vtz=0.;
       for ( unsigned i=0; i<nve; i++) {
         unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
 	unsigned inode_Metis=_msh->GetMetisDof(inode,2);
-// 	vtx+=(*_Sol[0])(inode_Metis);  
-// 	vty+=(*_Sol[1])(inode_Metis);
-// 	vtz+=(*_Sol[2])(inode_Metis);
+	vtx+=X_local[inode_Metis];  
+	vty+=Y_local[inode_Metis]; 
+	vtz+=Z_local[inode_Metis]; 
       }
       vtx/=nve;
       vty/=nve;
@@ -281,33 +315,8 @@ void Solution::set_elr(const unsigned &test) {
         _msh->el->AddToRefinedElementNumber(1,elt);
       }
     }
-  
-//     //parallel loop
-//     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-//       for(int iel=IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-//         unsigned kel = IS_Mts2Gmt_elem[iel];
-//         unsigned nve=el->GetElementDofNumber(kel,0);
-//         double vtx=0.,vty=0.,vtz=0.;
-//         for ( unsigned i=0; i<nve; i++) {
-//           unsigned inode=el->GetElementVertexIndex(kel,i)-1u;
-// 	  unsigned inode_Metis=GetMetisDof(inode,2);
-// 	  vtx+=(*_Sol[0])(inode_Metis);  
-// 	  vty+=(*_Sol[1])(inode_Metis);
-// 	  vtz+=(*_Sol[2])(inode_Metis);
-//         }
-//         vtx/=nve;
-//         vty/=nve;
-//         vtz/=nve;
-//         if (_SetRefinementFlag(vtx,vty,vtz,el->GetElementGroup(kel),grid)) {
-//           el->SetRefinedElementIndex(kel,1);
-//           el->AddToRefinedElementNumber(1);
-//           short unsigned elt=el->GetElementType(kel);
-//           el->AddToRefinedElementNumber(1,elt);
-//        }
-//      } 
-//    }
-   
-  } else if (test==3) { //refine all next grid even elements
+  } 
+  else if (test==3) { //refine all next grid even elements
     for (unsigned iel=0; iel<nel; iel+=2) {
       _msh->el->SetRefinedElementIndex(iel,1);
       _msh->el->AddToRefinedElementNumber(1);

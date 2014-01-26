@@ -166,33 +166,33 @@ public:
 // -------------------- inline functions ---------
 
 // =============================================
-inline LinearSolverM::LinearSolverM(const char infile[], vector < vector < double> > &vt, const double Lref) :
-  lsysPDE(infile,vt,Lref),
-  _solver_type(GMRES),
-  _preconditioner_type(LU_PRECOND),
-  _preconditioner(NULL),
-  _is_initialized(false),
-  same_preconditioner(false) {
-  _num_elem_vanka_block = _msh->el->GetElementNumber();
-
-}
+// inline LinearSolverM::LinearSolverM(const char infile[], vector < vector < double> > &vt, const double Lref) :
+//   lsysPDE(infile,vt,Lref),
+//   _solver_type(GMRES),
+//   _preconditioner_type(LU_PRECOND),
+//   _preconditioner(NULL),
+//   _is_initialized(false),
+//   same_preconditioner(false) {
+//   _num_elem_vanka_block = _msh->el->GetElementNumber();
+// 
+// }
 // ========================================================
 // =============================================
-inline LinearSolverM::LinearSolverM(const unsigned &igrid,elem *elc) :
-  lsysPDE(igrid,elc),
-  _solver_type(GMRES),
-  _preconditioner_type(ILU_PRECOND),
-  _preconditioner(NULL),
-  _is_initialized(false),
-  same_preconditioner(false) {
-
-  unsigned dim = _msh->GetDimension();
-  unsigned base = pow(2,dim);
-  unsigned exponent = 5 - dim;
-
-  _num_elem_vanka_block = pow(base,exponent);
-
-}
+// inline LinearSolverM::LinearSolverM(const unsigned &igrid,elem *elc) :
+//   lsysPDE(igrid,elc),
+//   _solver_type(GMRES),
+//   _preconditioner_type(ILU_PRECOND),
+//   _preconditioner(NULL),
+//   _is_initialized(false),
+//   same_preconditioner(false) {
+// 
+//   unsigned dim = _msh->GetDimension();
+//   unsigned base = pow(2,dim);
+//   unsigned exponent = 5 - dim;
+// 
+//   _num_elem_vanka_block = pow(base,exponent);
+// 
+// }
 
 // =============================================
 inline LinearSolverM::LinearSolverM(const unsigned &igrid, mesh* other_msh) :

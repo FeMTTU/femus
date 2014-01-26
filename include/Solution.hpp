@@ -12,40 +12,39 @@ class SparseRectangularMatrix;
 //class lsysPDE: public mesh {
 
 class Solution{
-  
-public:
-  
-  mesh *_msh;
-  
+  //member data
+private:
   vector <int> _SolType;  
   vector <char*> _SolName;
   vector <unsigned> _SolTmOrder;
+  mesh *_msh;
+public:
   vector <NumericVector*> _Sol;      //one for every variable
   vector <NumericVector*> _SolOld;   //one for every variable
   vector <NumericVector*> _Res;      //one for every variable
   vector <NumericVector*> _Eps;      //one for every variable
   vector <NumericVector*> _Bdc;      //one for every variable
-  vector <bool> _ResEpsBdcFlag;
+  vector <bool> _ResEpsBdcFlag;      //one for every variable
     
-  //Projection matrices (for every kind of variable)
-  SparseRectangularMatrix* _ProjMat[5];
-  bool _ProjMatFlag[5];
-
-  static const unsigned _END_IND[5];
+  SparseRectangularMatrix* _ProjMat[5];  //Projection matrices (one for every type of variable)
+  bool _ProjMatFlag[5];			 //One for every type of variable
 
   // Constructor - Destructor
   Solution(mesh *other_msh);
   ~Solution();
-
-  // function
-  void AddSolutionVector( const char name[], const char order[],const unsigned& tmorder, const bool &PDE_type=1);
+  
+  // functions
+private:
   unsigned GetIndex(const char name[]) const;
+public:
+  void AddSolutionVector( const char name[], const char order[],const unsigned& tmorder, const bool &PDE_type=1);
   void ResizeSolutionVector(const char name[]);
   void FreeSolutionVectors();
   void SetCoarseCoordinates( vector < vector < double> > &vt);
-  int SumEpsToSol(const vector <unsigned> &MGIndex, const Vec &EPS, const Vec &RES, const vector <vector <unsigned> > &KKoffset);
+  int  SumEpsToSol(const vector <unsigned> &MGIndex, const Vec &EPS, const Vec &RES, const vector <vector <unsigned> > &KKoffset);
   void UpdateSolution();
-  void set_elr(const unsigned &test=0);
+  void SetElementRefiniement(const unsigned &test=0);
+
 };
 
 #endif

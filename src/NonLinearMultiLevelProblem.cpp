@@ -15,7 +15,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include <algorithm>    // std::min
+#include <algorithm>   
 #include <string.h>
 using std::cout;
 using std::endl;
@@ -113,7 +113,7 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
   _msh[0]=new mesh(mesh_file, vt,Lref);
   _solution[0]=new Solution(_msh[0]);
   Lin_Solver_[0]=LinearSolverM::build(0,_msh[0],LSOLVER).release();
- 
+  Lin_Solver_[0]->SetBdcPointer(&_solution[0]->_Bdc);
   
   unsigned gridn_temp=gridn;
   gridn=1;
@@ -123,40 +123,22 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
   sprintf(BdcType[0],"Steady");
   sprintf(BdcType[1],"Steady");
   sprintf(BdcType[2],"Steady");
-  
-  Lin_Solver_[0]->ResizeSolutionVector("X");
-  Lin_Solver_[0]->ResizeSolutionVector("Y");
-  Lin_Solver_[0]->ResizeSolutionVector("Z");
-  
+    
   _solution[0]->ResizeSolutionVector("X");
   _solution[0]->ResizeSolutionVector("Y");
   _solution[0]->ResizeSolutionVector("Z");
-  
-  
+    
   gridn=gridn_temp;
-  //Lin_Solver_[0]->GetCoordinates(vt);
   _solution[0]->SetCoarseCoordinates(vt);
-  
-  
+    
   unsigned indX=GetIndex("X");
   unsigned indY=GetIndex("Y");
   unsigned indZ=GetIndex("Z");
-  
-
-  
+    
   for (unsigned i=1; i<gridr; i++) {
-    _solution[i-1u]->set_elr(1);
-    _msh[i] = new mesh(i,Lin_Solver_[i-1]->_msh->el); 
-    
-    Lin_Solver_[i]=LinearSolverM::build(i,_msh[i],LSOLVER).release();
-    Lin_Solver_[i]->AddSolutionVector("X","biquadratic",1,0);
-    Lin_Solver_[i]->AddSolutionVector("Y","biquadratic",1,0);
-    Lin_Solver_[i]->AddSolutionVector("Z","biquadratic",1,0);
-    Lin_Solver_[i]->ResizeSolutionVector("X");
-    Lin_Solver_[i]->ResizeSolutionVector("Y");
-    Lin_Solver_[i]->ResizeSolutionVector("Z");   
-    
-    
+    _solution[i-1u]->SetElementRefiniement(1);
+    _msh[i] = new mesh(i,_msh[i-1]->el); 
+        
     _solution[i]=new Solution(_msh[i]);
     _solution[i]->AddSolutionVector("X","biquadratic",1,0);
     _solution[i]->AddSolutionVector("Y","biquadratic",1,0);
@@ -164,16 +146,15 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
     _solution[i]->ResizeSolutionVector("X");
     _solution[i]->ResizeSolutionVector("Y");
     _solution[i]->ResizeSolutionVector("Z");
-  
-    
+        
+    Lin_Solver_[i]=LinearSolverM::build(i,_msh[i],LSOLVER).release();
+    Lin_Solver_[i]->SetBdcPointer(&_solution[i]->_Bdc);
+    Lin_Solver_[i]->AddSolutionVector("X","biquadratic",1,0);
+    Lin_Solver_[i]->AddSolutionVector("Y","biquadratic",1,0);
+    Lin_Solver_[i]->AddSolutionVector("Z","biquadratic",1,0);
+        
     BuildProlungatorMatrix(i, indX);
     unsigned TypeIndex=SolType[indX];
-//     Lin_Solver_[i]->Sol_[indX]->matrix_mult(*Lin_Solver_[i-1]->Sol_[indX],*Lin_Solver_[i]->Proj_mat[TypeIndex]);
-//     Lin_Solver_[i]->Sol_[indY]->matrix_mult(*Lin_Solver_[i-1]->Sol_[indY],*Lin_Solver_[i]->Proj_mat[TypeIndex]);
-//     Lin_Solver_[i]->Sol_[indZ]->matrix_mult(*Lin_Solver_[i-1]->Sol_[indZ],*Lin_Solver_[i]->Proj_mat[TypeIndex]);
-//     Lin_Solver_[i]->Sol_[indX]->close();
-//     Lin_Solver_[i]->Sol_[indY]->close();
-//     Lin_Solver_[i]->Sol_[indZ]->close();
     
     _solution[i]->_Sol[indX]->matrix_mult(*_solution[i-1]->_Sol[indX],*_solution[i]->_ProjMat[TypeIndex]);
     _solution[i]->_Sol[indY]->matrix_mult(*_solution[i-1]->_Sol[indY],*_solution[i]->_ProjMat[TypeIndex]);
@@ -191,17 +172,9 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
     }
     else {
       mesh::_SetRefinementFlag = SetRefinementFlag;
-      _solution[i-1u]->set_elr(2);
+      _solution[i-1u]->SetElementRefiniement(2);
     }
-    _msh[i] = new mesh(i,Lin_Solver_[i-1u]->_msh->el); 
-    Lin_Solver_[i]=LinearSolverM::build(i,_msh[i],LSOLVER).release();
-    Lin_Solver_[i]->AddSolutionVector("X","biquadratic",1,0);
-    Lin_Solver_[i]->AddSolutionVector("Y","biquadratic",1,0);
-    Lin_Solver_[i]->AddSolutionVector("Z","biquadratic",1,0);
-    Lin_Solver_[i]->ResizeSolutionVector("X");
-    Lin_Solver_[i]->ResizeSolutionVector("Y");
-    Lin_Solver_[i]->ResizeSolutionVector("Z");
-    
+    _msh[i] = new mesh(i,_msh[i-1]->el); 
     
     _solution[i]=new Solution(_msh[i]);
     _solution[i]->AddSolutionVector("X","biquadratic",1,0);
@@ -210,17 +183,16 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
     _solution[i]->ResizeSolutionVector("X");
     _solution[i]->ResizeSolutionVector("Y");
     _solution[i]->ResizeSolutionVector("Z");
-   
+        
+    Lin_Solver_[i]=LinearSolverM::build(i,_msh[i],LSOLVER).release();
+    Lin_Solver_[i]->SetBdcPointer(&_solution[i]->_Bdc);
+    Lin_Solver_[i]->AddSolutionVector("X","biquadratic",1,0);
+    Lin_Solver_[i]->AddSolutionVector("Y","biquadratic",1,0);
+    Lin_Solver_[i]->AddSolutionVector("Z","biquadratic",1,0);    
+      
     
     BuildProlungatorMatrix(i, indX);
     unsigned TypeIndex=SolType[indX];
-    
-//     Lin_Solver_[i]->Sol_[indX]->matrix_mult(*Lin_Solver_[i-1]->Sol_[indX],*Lin_Solver_[i]->Proj_mat[TypeIndex]);
-//     Lin_Solver_[i]->Sol_[indY]->matrix_mult(*Lin_Solver_[i-1]->Sol_[indY],*Lin_Solver_[i]->Proj_mat[TypeIndex]);
-//     Lin_Solver_[i]->Sol_[indZ]->matrix_mult(*Lin_Solver_[i-1]->Sol_[indZ],*Lin_Solver_[i]->Proj_mat[TypeIndex]);
-//     Lin_Solver_[i]->Sol_[indX]->close();
-//     Lin_Solver_[i]->Sol_[indY]->close();
-//     Lin_Solver_[i]->Sol_[indZ]->close();
     
     _solution[i]->_Sol[indX]->matrix_mult(*_solution[i-1]->_Sol[indX],*_solution[i]->_ProjMat[TypeIndex]);
     _solution[i]->_Sol[indY]->matrix_mult(*_solution[i-1]->_Sol[indY],*_solution[i]->_ProjMat[TypeIndex]);
@@ -231,13 +203,11 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
     
     
   }
-  
-  
-  //Lin_Solver_[gridn-1u]->set_elr(0);
-  _solution[gridn-1u]->set_elr(0);	
-  elr_old.resize(Lin_Solver_[gridr-1u]->_msh->GetElementNumber());
+  _solution[gridn-1u]->SetElementRefiniement(0);	
+  elr_old.resize(_msh[gridr-1u]->GetElementNumber());
+    
 
-  unsigned refindex = Lin_Solver_[0]->_msh->GetRefIndex();
+  unsigned refindex = _msh[0]->GetRefIndex();
   // cout << "******" << refindex << endl;
   elem_type::_refindex=refindex;
 
@@ -263,7 +233,7 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
 
 //---------------------------------------------------------------------------------------------------
 void NonLinearMultiLevelProblem::MarkStructureNode() {
-  for (unsigned i=0; i<gridn; i++) Lin_Solver_[i]->_msh->AllocateAndMarkStructureNode();
+  for (unsigned i=0; i<gridn; i++) _msh[i]->AllocateAndMarkStructureNode();
 }
 
 //---------------------------------------------------------------------------------------------------
@@ -346,29 +316,21 @@ void NonLinearMultiLevelProblem::SetSmoother(const char smoothername[]) {
 //---------------------------------------------------------------------------------------------------
 void NonLinearMultiLevelProblem::SetDimVankaBlock(unsigned const dim_vanka_block) {
 
-  //   unsigned num_vanka_block = (DIM[0]*pow(2,dim_vanka_block) + DIM[1]*pow(4,dim_vanka_block)
-  //                              + DIM[2]*pow(8,dim_vanka_block));
-
-  const unsigned dim = Lin_Solver_[0]->_msh->GetDimension();
+  const unsigned dim = _msh[0]->GetDimension();
   const unsigned base = pow(2,dim);
   unsigned num_vanka_block = pow(base,dim_vanka_block);
 
-
   for (unsigned i=1; i<gridn; i++) {
-
-    unsigned num_vanka_block2 = min(num_vanka_block,Lin_Solver_[i]->_msh->GetElementNumber());
-
+    unsigned num_vanka_block2 = min(num_vanka_block,_msh[i]->GetElementNumber());
     Lin_Solver_[i]->set_num_elem_vanka_block(num_vanka_block2);
-
   }
 }
 
 //---------------------------------------------------------------------------------------------------
 void NonLinearMultiLevelProblem::SetDimVankaBlock(const char dim_vanka_block[]) {
-
   if (!strcmp(dim_vanka_block,"All")) {
     for (unsigned i=1; i<gridn; i++) {
-      unsigned num_vanka_block2 = Lin_Solver_[i]->_msh->GetElementNumber();
+      unsigned num_vanka_block2 = _msh[i]->GetElementNumber();
       Lin_Solver_[i]->set_num_elem_vanka_block(num_vanka_block2);
     }
   } else if (!strcmp(dim_vanka_block,"All")) {
@@ -376,7 +338,6 @@ void NonLinearMultiLevelProblem::SetDimVankaBlock(const char dim_vanka_block[]) 
     cout<<"Error! This option is not admitted \"All\""<<endl;
     exit(1);
   }
-
 }
 
 //---------------------------------------------------------------------------------------------------
@@ -508,40 +469,33 @@ int NonLinearMultiLevelProblem::ComputeBdStress(int bd, double Cforce[3]) {
 
   for (unsigned ig=0; ig<gridn; ig++) {
 
-    //PetscVector* petsc_vec_solP = static_cast<PetscVector*>(Lin_Solver_[ig]->Sol_[kP]);
+   
     PetscVector* petsc_vec_solP = static_cast<PetscVector*>(_solution[ig]->_Sol[kP]);
     ierr = VecGetArray(petsc_vec_solP->vec(),&MYSOL[0]);
     CHKERRQ(ierr);
 
     //tested up to now for quad9 in 2D
-//     unsigned order_ind1 = Lin_Solver_[ig]->SolType[kP];
-    unsigned order_ind = Lin_Solver_[ig]->SolType[GetIndex("U")];
-    //unsigned order_ind2 = Lin_Solver_[ig]->SolType[kU];
+    unsigned order_ind = SolType[GetIndex("U")];
 
+    for (unsigned iel=0; iel<_msh[ig]->GetElementNumber(); iel++) {
+      if (_msh[ig]->el->GetRefinedElementIndex(iel)==0 || ig==gridn-1u) {
 
-    for (unsigned iel=0; iel<Lin_Solver_[ig]->_msh->GetElementNumber(); iel++) {
-      if (Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(iel)==0 || ig==gridn-1u) {
-
-        short unsigned kelt=Lin_Solver_[ig]->_msh->el->GetElementType(iel);
-        unsigned nfaces = Lin_Solver_[ig]->_msh->el->GetElementFaceNumber(iel);
+        short unsigned kelt=_msh[ig]->el->GetElementType(iel);
+        unsigned nfaces = _msh[ig]->el->GetElementFaceNumber(iel);
 
         for (unsigned jface=0; jface<nfaces; jface++) {
-          if (Lin_Solver_[ig]->_msh->el->GetFaceElementIndex(iel,jface)<0) {
+          if (_msh[ig]->el->GetFaceElementIndex(iel,jface)<0) {
 
-            int dom = -( (Lin_Solver_[ig]->_msh->el->GetFaceElementIndex(iel,jface))+1);
+            int dom = -( (_msh[ig]->el->GetFaceElementIndex(iel,jface))+1);
             if (dom==bd) {
 
-              unsigned nve=NV1[kelt][jface<(Lin_Solver_[ig]->_msh->el->GetElementFaceNumber(iel,0))];
+              unsigned nve=NV1[kelt][jface<(_msh[ig]->el->GetElementFaceNumber(iel,0))];
 //               //linear pressure
-//               nve = 2;
-              unsigned felt = FELT[kelt][jface< (Lin_Solver_[ig]->_msh->el->GetElementFaceNumber(iel,0))];
+              unsigned felt = FELT[kelt][jface< (_msh[ig]->el->GetElementFaceNumber(iel,0))];
 
 	      for(unsigned i=0;i<nve;i++) {
-                unsigned inode=Lin_Solver_[ig]->_msh->el->GetFaceVertexIndex(iel,jface,i)-1u;
-                unsigned inode_Metis=Lin_Solver_[ig]->_msh->GetMetisDof(inode,2);
-//                 vx[0][i]=(*Lin_Solver_[ig]->Sol_[indX])(inode_Metis);  
-//                 vx[1][i]=(*Lin_Solver_[ig]->Sol_[indY])(inode_Metis);
-//                 vx[2][i]=(*Lin_Solver_[ig]->Sol_[indZ])(inode_Metis);
+                unsigned inode=_msh[ig]->el->GetFaceVertexIndex(iel,jface,i)-1u;
+                unsigned inode_Metis=_msh[ig]->GetMetisDof(inode,2);
 		
 		vx[0][i]=(*_solution[ig]->_Sol[indX])(inode_Metis);  
                 vx[1][i]=(*_solution[ig]->_Sol[indY])(inode_Metis);
@@ -549,16 +503,6 @@ int NonLinearMultiLevelProblem::ComputeBdStress(int bd, double Cforce[3]) {
 		
               }
 	      
-	      
-//               for (unsigned i=0; i<nve; i++) {
-//                 unsigned inode=Lin_Solver_[ig]->el->GetFaceVertexIndex(iel,jface,i)-1u;
-//                 node2[i]=inode;
-// 		vx[0][i]=(*Lin_Solver_[ig]->Sol_[indX])(inode);  
-//                 vx[1][i]=(*Lin_Solver_[ig]->Sol_[indY])(inode);
-//                 vx[2][i]=(*Lin_Solver_[ig]->Sol_[indZ])(inode);
-//               }
-
-
               for (unsigned igs=0; igs < type_elem[felt][order_ind]->GetGaussPointNumber(); igs++) {
                 (type_elem[felt][order_ind]->*type_elem[felt][order_ind]->Jacobian_sur_ptr)(vx,igs,Weight2,phi2,gradphi2,normal);
                 for (unsigned i=0; i<nve; i++) {
@@ -599,30 +543,27 @@ int NonLinearMultiLevelProblem::ComputeBdIntegral(const char var_name[], const u
   double normal[3];
   PetscInt node[27];
   unsigned indexvar = GetMGIndex(var_name);
-  short unsigned kelt = Lin_Solver_[level]->_msh->el->GetElementType(kel);
-  unsigned order_ind = Lin_Solver_[level]->SolType[GetIndex(var_name)];
+  short unsigned kelt = _msh[level]->el->GetElementType(kel);
+  unsigned order_ind = SolType[GetIndex(var_name)];
   unsigned indX=GetIndex("X");
   unsigned indY=GetIndex("Y");
   unsigned indZ=GetIndex("Z");
 		
-  bool test = _SetBoundaryConditionFunction(0.,0.,0.,var_name,tau,-(Lin_Solver_[level]->_msh->el->GetFaceElementIndex(kel,jface)+1),_time);
+  bool test = _SetBoundaryConditionFunction(0.,0.,0.,var_name,tau,-(_msh[level]->el->GetFaceElementIndex(kel,jface)+1),_time);
   if(!test) {
 		
     const short unsigned NV1[6][2]={{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
-    unsigned nve=NV1[kelt][jface<Lin_Solver_[level]->_msh->el->GetElementFaceNumber(kel,0)];
+    unsigned nve=NV1[kelt][jface<_msh[level]->el->GetElementFaceNumber(kel,0)];
     const unsigned FELT[6][2]={{3,3},{4,4},{3,4},{5,5},{5,5}};
-    unsigned felt = FELT[kelt][jface<Lin_Solver_[level]->_msh->el->GetElementFaceNumber(kel,0)];
+    unsigned felt = FELT[kelt][jface<_msh[level]->el->GetElementFaceNumber(kel,0)];
 
     //		cout << "felt : "  << felt << endl;
     // 		cout << "node: " << nve << endl;
 		
     for(unsigned i=0;i<nve;i++) {
-      unsigned inode=Lin_Solver_[level]->_msh->el->GetFaceVertexIndex(kel,jface,i)-1u;
+      unsigned inode=_msh[level]->el->GetFaceVertexIndex(kel,jface,i)-1u;
       node[i] = inode + Lin_Solver_[level]->KKIndex[indexvar];
-      unsigned inode_Metis=Lin_Solver_[level]->_msh->GetMetisDof(inode,2);
-//       vx[0][i]=(*Lin_Solver_[level]->Sol_[indX])(inode_Metis);  
-//       vx[1][i]=(*Lin_Solver_[level]->Sol_[indY])(inode_Metis);
-//       vx[2][i]=(*Lin_Solver_[level]->Sol_[indZ])(inode_Metis);
+      unsigned inode_Metis=_msh[level]->GetMetisDof(inode,2);
       
       vx[0][i]=(*_solution[level]->_Sol[indX])(inode_Metis);  
       vx[1][i]=(*_solution[level]->_Sol[indY])(inode_Metis);
@@ -641,7 +582,7 @@ int NonLinearMultiLevelProblem::ComputeBdIntegral(const char var_name[], const u
       //  		  cout << "  " << endl;
       for(unsigned i=0;i<nve;i++) {
 	//     	          cout << phi[i] << "  " << nve << endl;
-	_SetBoundaryConditionFunction(vx[0][i],vx[1][i],vx[2][i],var_name,tau,-(Lin_Solver_[level]->_msh->el->GetFaceElementIndex(kel,jface)+1),_time);
+	_SetBoundaryConditionFunction(vx[0][i],vx[1][i],vx[2][i],var_name,tau,-(_msh[level]->el->GetFaceElementIndex(kel,jface)+1),_time);
  	    
 	//Manca la moltiplicazione x la normale che e'ancora da fare
 	PetscScalar value = -phi[i]*tau*normal[dir]*Weight*_dt;
@@ -653,43 +594,27 @@ int NonLinearMultiLevelProblem::ComputeBdIntegral(const char var_name[], const u
       }
     }
   }
-   
   return ierr;
 }
 
 //---------------------------------------------------------------------------------------------------
 void NonLinearMultiLevelProblem::CreateMGStruct() {
-
-  
-  
-  
   for (unsigned i=0; i<gridn; i++) {
-    //Lin_Solver_[i]->GetBoundaryCondition(&_solution[i]->_Bdc);
     Lin_Solver_[i]->InitMultigrid(MGIndex);
   }
-  
-  for(int i=0;i<1;i++) {
-    for(int j=0;j<MGIndex.size();j++) {
-      Lin_Solver_[i]->SolType[j];
-      
-    }
-  }
-  
   for (unsigned ig=1; ig<gridn; ig++) {
     BuildProlungatorMatrix(ig);
   }
-
   for (unsigned ig=0; ig<gridn; ig++) {
-    Lin_Solver_[ig]->AllocateMatrix(MGIndex);
+    Lin_Solver_[ig]->AllocateMatrix();
   }
-  
   return;
 }
 
 //---------------------------------------------------------------------------------------------------
 void NonLinearMultiLevelProblem::DeleteMGStruct() {
   for (unsigned ig=0; ig<gridn; ig++) {
-    Lin_Solver_[ig]->DeallocateMatrix(MGIndex);
+    Lin_Solver_[ig]->DeallocateMatrix();
   }
 }
 
@@ -708,8 +633,7 @@ void NonLinearMultiLevelProblem::AttachSetBoundaryConditionFunction ( bool (* Se
   return;
 }
 
-
-
+// *******************************************************
 void NonLinearMultiLevelProblem::AttachInitVariableFunction ( double (* InitVariableFunction)(const double &x, const double &y, 
 											      const double &z,const char name[]) ) {
   _init_func_set = true;
@@ -742,8 +666,8 @@ int NonLinearMultiLevelProblem::FullMultiGrid(unsigned const &ncycle, unsigned c
       cout << endl;
 
       start_time=clock();
-      Lin_Solver_[igridn-1u]->SetResZero(MGIndex);
-      Lin_Solver_[igridn-1u]->SetEpsZero(MGIndex);
+      Lin_Solver_[igridn-1u]->SetResZero();
+      Lin_Solver_[igridn-1u]->SetEpsZero();
       end_time=clock();
       cout<<"Grid: "<<igridn-1<<"      INITIALIZATION TIME:      "
 	  <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
@@ -755,8 +679,8 @@ int NonLinearMultiLevelProblem::FullMultiGrid(unsigned const &ncycle, unsigned c
       for (unsigned ig=igridn-1u; ig>0; ig--) {
 	start_time=clock();
 
-        Lin_Solver_[ig-1u]->SetResZero(MGIndex);
-        Lin_Solver_[ig-1u]->SetEpsZero(MGIndex);
+        Lin_Solver_[ig-1u]->SetResZero();
+        Lin_Solver_[ig-1u]->SetEpsZero();
 	
         if (ig>=gridr) {
           //assemble residual only on the part of the coarse grid that is not refined
@@ -825,7 +749,7 @@ int NonLinearMultiLevelProblem::FullMultiGrid(unsigned const &ncycle, unsigned c
 	  start_time=clock();
 	  Prolungator(ig);
 	  Lin_Solver_[ig]->UpdateResidual();
-	  Lin_Solver_[ig]->SumEpsCToEps(MGIndex);
+	  Lin_Solver_[ig]->SumEpsCToEps();
 	  end_time=clock();
 	  cout<<"Grid: "<<ig-1<<"-->"<<ig<<"  PROLUNGATION TIME:        "
 	      <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
@@ -880,7 +804,6 @@ int NonLinearMultiLevelProblem::FullMultiGrid(unsigned const &ncycle, unsigned c
 }
 
 //---------------------------------------------------------------------------------------------------------------
-
 bool NonLinearMultiLevelProblem::GetConvergence(const unsigned gridn) {
 
   bool conv=true;
@@ -890,17 +813,12 @@ bool NonLinearMultiLevelProblem::GetConvergence(const unsigned gridn) {
   //for debugging purpose
   for (unsigned k=0; k<MGIndex.size(); k++) {
     unsigned indexSol=MGIndex[k];
-//     L2normEps    = Lin_Solver_[gridn]->Eps_[indexSol]->l2_norm();
-//     ResMax       = Lin_Solver_[gridn]->Res_[indexSol]->linfty_norm();
-// 
-//     cout << "level=" << Lin_Solver_[gridn]->_msh->GetGridNumber() << "\tLinftynormRes" << SolName[indexSol] << "=" << ResMax    <<endl;
-//     cout << "level=" << Lin_Solver_[gridn]->_msh->GetGridNumber() << "\tL2normEps"     << SolName[indexSol] << "=" << L2normEps <<endl;
-
+    
     L2normEps    = _solution[gridn]->_Eps[indexSol]->l2_norm();
     ResMax       = _solution[gridn]->_Res[indexSol]->linfty_norm();
 
-    cout << "level=" << Lin_Solver_[gridn]->_msh->GetGridNumber() << "\tLinftynormRes" << SolName[indexSol] << "=" << ResMax    <<endl;
-    cout << "level=" << Lin_Solver_[gridn]->_msh->GetGridNumber() << "\tL2normEps"     << SolName[indexSol] << "=" << L2normEps <<endl;
+    cout << "level=" << _msh[gridn]->GetGridNumber() << "\tLinftynormRes" << SolName[indexSol] << "=" << ResMax    <<endl;
+    cout << "level=" << _msh[gridn]->GetGridNumber() << "\tL2normEps"     << SolName[indexSol] << "=" << L2normEps <<endl;
     
     if (L2normEps < _non_linear_toll && conv==true) {
       conv=true;
@@ -909,13 +827,10 @@ bool NonLinearMultiLevelProblem::GetConvergence(const unsigned gridn) {
       conv=false;
     }
   }
-
   return conv;
 }
 
-
 //*****************************************************************************************
-
 int NonLinearMultiLevelProblem::FreeMultigrid() {
   PetscErrorCode ierr;
   for (int igridn=0; igridn<gridn; igridn++) {
@@ -924,16 +839,12 @@ int NonLinearMultiLevelProblem::FreeMultigrid() {
  	delete ProlQitoQj_[itype][jtype][igridn];
       }
     }
-    Lin_Solver_[igridn]->FreeSolutionVectors();
     _solution[igridn]->FreeSolutionVectors();
   }
   return 1;
 }
 
-
-
 //*******************************************************************************************
-
 void NonLinearMultiLevelProblem::AddSolutionVector(const char name[], const char order[],
                                                    unsigned tmorder, const bool &PDE_type) {
   
@@ -981,6 +892,7 @@ void NonLinearMultiLevelProblem::AddSolutionVector(const char name[], const char
   }
 }
 
+// *******************************************************
 void NonLinearMultiLevelProblem::AssociatePropertyToSolution(const char solution_name[], const char solution_property[]){
   unsigned index=GetIndex(solution_name);
   if( !strcmp(solution_property,"pressure") || !strcmp(solution_property,"Pressure") ) TestIfPressure[index]=1;
@@ -991,9 +903,7 @@ void NonLinearMultiLevelProblem::AssociatePropertyToSolution(const char solution
   }
 }
 
-
 // *******************************************************
-
 void NonLinearMultiLevelProblem::Initialize(const char name[]) {
   
   unsigned i_start;
@@ -1019,63 +929,36 @@ void NonLinearMultiLevelProblem::Initialize(const char name[]) {
     //CheckVectorSize(i);
     unsigned sol_type = SolType[i];
     for (unsigned ig=0; ig<gridn; ig++) {
-      unsigned num_el = Lin_Solver_[ig]->_msh->GetElementNumber();
-      Lin_Solver_[ig]->ResizeSolutionVector(SolName[i]);
+      unsigned num_el = _msh[ig]->GetElementNumber();
       _solution[ig]->ResizeSolutionVector(SolName[i]);
       if (ig>0) BuildProlungatorMatrix(ig,i);     
       //for parallel
       for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-        for (int iel=Lin_Solver_[ig]->_msh->IS_Mts2Gmt_elem_offset[isdom]; 
-	     iel < Lin_Solver_[ig]->_msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-// 	  if(_iproc==1 && i==i_start) printf("rank %d iel: %d \n",_iproc,iel);
-	  unsigned kel_gmt = Lin_Solver_[ig]->_msh->IS_Mts2Gmt_elem[iel];    
-	  unsigned sol_ord = Lin_Solver_[ig]->END_IND[SolType[i]];
-	  unsigned nloc_dof= Lin_Solver_[ig]->_msh->el->GetElementDofNumber(kel_gmt,sol_ord);
+        for (int iel=_msh[ig]->IS_Mts2Gmt_elem_offset[isdom]; 
+	     iel < _msh[ig]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	  unsigned kel_gmt = _msh[ig]->IS_Mts2Gmt_elem[iel];    
+	  unsigned sol_ord = _msh[ig]->GetEndIndex(SolType[i]);
+	  unsigned nloc_dof= _msh[ig]->el->GetElementDofNumber(kel_gmt,sol_ord);
 	  if(sol_type<3) {
             for(int j=0; j<nloc_dof; j++) {
-	      unsigned inode=(sol_type<3)?(Lin_Solver_[ig]->_msh->el->GetElementVertexIndex(kel_gmt,j)-1u):(kel_gmt+j*num_el);
-	      PetscInt inode_Metis=Lin_Solver_[ig]->_msh->GetMetisDof(inode,sol_type);
-	      unsigned icoord_Metis=Lin_Solver_[ig]->_msh->GetMetisDof(inode,2);
-// 	      xx=(*Lin_Solver_[ig]->Sol_[indX])(icoord_Metis);  
-// 	      yy=(*Lin_Solver_[ig]->Sol_[indY])(icoord_Metis);
-// 	      zz=(*Lin_Solver_[ig]->Sol_[indZ])(icoord_Metis);
-// 	      
+	      unsigned inode=(sol_type<3)?(_msh[ig]->el->GetElementVertexIndex(kel_gmt,j)-1u):(kel_gmt+j*num_el);
+	      PetscInt inode_Metis=_msh[ig]->GetMetisDof(inode,sol_type);
+	      unsigned icoord_Metis=_msh[ig]->GetMetisDof(inode,2);
 	      xx=(*_solution[ig]->_Sol[indX])(icoord_Metis);  
 	      yy=(*_solution[ig]->_Sol[indY])(icoord_Metis);
 	      zz=(*_solution[ig]->_Sol[indZ])(icoord_Metis);
 	      
 	      value = (sol_type<3)?_InitVariableFunction(xx,yy,zz,SolName[i]):0;
-	      //Lin_Solver_[ig]->Sol_[i]->set(inode_Metis,value);
 	      _solution[ig]->_Sol[i]->set(inode_Metis,value);
 	      if (SolTmorder[i]==2) {
-		//Lin_Solver_[ig]->Sol_old_[i]->set(inode_Metis,value);
 		_solution[ig]->_SolOld[i]->set(inode_Metis,value);
 	      }
 	    }
 	  }
 	}
       }
-      
-      
-      //       for (unsigned j=0; j<Lin_Solver_[ig]->GetDofNumber(SolType[i]); j++) {
-      // 	
-      // 	unsigned j_coord_Metis=Lin_Solver_[ig]->GetMetisDof(j,2);
-      // 	xx=(*Lin_Solver_[ig]->Sol_[indX])(j_coord_Metis);  
-      // 	yy=(*Lin_Solver_[ig]->Sol_[indY])(j_coord_Metis);
-      // 	zz=(*Lin_Solver_[ig]->Sol_[indZ])(j_coord_Metis);
-      // 	
-      // 	unsigned j_Metis=Lin_Solver_[ig]->GetMetisDof(j,SolType[i]);
-      // 	value = (SolType[i]<3)?_InitVariableFunction(xx,yy,zz,SolName[i]):0;
-      // 	
-      //         Lin_Solver_[ig]->Sol_[i]->set(j_Metis,value);
-      //         if (SolTmorder[i]==2) {
-      //           Lin_Solver_[ig]->Sol_old_[i]->set(j_Metis,0);
-      //         }
-      //       }
-      //Lin_Solver_[ig]->Sol_[i]->close();
       _solution[ig]->_Sol[i]->close();
       if (SolTmorder[i]==2) {
-        //Lin_Solver_[ig]->Sol_old_[i]->close();
 	_solution[ig]->_SolOld[i]->close();
       }
     }
@@ -1083,7 +966,6 @@ void NonLinearMultiLevelProblem::Initialize(const char name[]) {
 }
 
 // *******************************************************
-
 unsigned NonLinearMultiLevelProblem::GetIndex(const char name[]) const {
   unsigned index=0;
   while (strcmp(SolName[index],name)) {
@@ -1096,7 +978,7 @@ unsigned NonLinearMultiLevelProblem::GetIndex(const char name[]) const {
   return index;
 }
 
-
+// *******************************************************
 unsigned NonLinearMultiLevelProblem::GetSolType(const char name[]) {
   unsigned index=0;
   while (strcmp(SolName[index],name)) {
@@ -1109,16 +991,12 @@ unsigned NonLinearMultiLevelProblem::GetSolType(const char name[]) {
   return SolType[index];
 }
 
-
-
 // *******************************************************
-
 void NonLinearMultiLevelProblem::ClearMGIndex() {
   MGIndex.clear();
 };
 
 // *******************************************************
-
 void NonLinearMultiLevelProblem::AddToMGIndex(const char name[]) {
   unsigned n=MGIndex.size();
   MGIndex.resize(n+1u);
@@ -1126,7 +1004,6 @@ void NonLinearMultiLevelProblem::AddToMGIndex(const char name[]) {
 };
 
 // *******************************************************
-
 unsigned NonLinearMultiLevelProblem::GetMGIndex(const char name[]) {
   unsigned index=0;
   while (strcmp(SolName[MGIndex[index]],name)) {
@@ -1140,13 +1017,11 @@ unsigned NonLinearMultiLevelProblem::GetMGIndex(const char name[]) {
 }
 
 // *******************************************************
-
 void NonLinearMultiLevelProblem::ClearVankaIndex() {
   VankaIndex.clear();
 };
 
 // *******************************************************
-
 void NonLinearMultiLevelProblem::AddToVankaIndex(const char name[]) {
   unsigned n=VankaIndex.size();
   VankaIndex.resize(n+1u);
@@ -1165,7 +1040,6 @@ void NonLinearMultiLevelProblem::AddToVankaIndex(const char name[]) {
 };
 
 // *******************************************************
-
 int NonLinearMultiLevelProblem::Restrictor(unsigned gridf) {
   PetscErrorCode ierr;
   ierr = MatMultTranspose(Lin_Solver_[gridf]->PP,Lin_Solver_[gridf]->RES,Lin_Solver_[gridf-1]->RESC);
@@ -1176,7 +1050,6 @@ int NonLinearMultiLevelProblem::Restrictor(unsigned gridf) {
 }
 
 // *******************************************************
-
 int NonLinearMultiLevelProblem::Prolungator(unsigned gridf) {
   PetscErrorCode ierr;
   ierr = MatMult(Lin_Solver_[gridf]->PP,Lin_Solver_[gridf-1]->EPS,Lin_Solver_[gridf]->EPSC);
@@ -1186,15 +1059,10 @@ int NonLinearMultiLevelProblem::Prolungator(unsigned gridf) {
 }
 
 // *******************************************************
-
 void NonLinearMultiLevelProblem::ProlungatorSol(unsigned gridf) {
   for (unsigned k=0; k<MGIndex.size(); k++) {
     unsigned SolIndex=MGIndex[k];
     unsigned Typeindex=SolType[SolIndex];
-    //Lin_Solver_[gridf]->Sol_[SolIndex]->matrix_mult(*Lin_Solver_[gridf-1]->Sol_[SolIndex],*Lin_Solver_[gridf]->Proj_mat[Typeindex]);
-    //Lin_Solver_[gridf]->Sol_[SolIndex]->close(); 
-    //cout << k << " after prol  " << Lin_Solver_[gridf]->Sol_[SolIndex]->l2_norm() << endl;
-    
     _solution[gridf]->_Sol[SolIndex]->matrix_mult(*_solution[gridf-1]->_Sol[SolIndex],*_solution[gridf]->_ProjMat[Typeindex]);
     _solution[gridf]->_Sol[SolIndex]->close(); 
     cout << k << " after prol  " << _solution[gridf]->_Sol[SolIndex]->l2_norm() << endl;
@@ -1241,24 +1109,15 @@ int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf) {
   
   for (unsigned k=0; k<MGIndex.size(); k++) {
     unsigned SolIndex=MGIndex[k];
-    
-    //     if (gridf>=gridr && SolType[SolIndex]<3) { //non necessary
-    //       for (unsigned i=0; i<Lin_Solver_[gridf-1]->GetDofNumber(SolType[SolIndex]); i++) {
-    //         PetscInt inode=Lin_Solver_[gridf]->KKIndex[k]+i;
-    //         PetscInt jnode=Lin_Solver_[gridf-1]->KKIndex[k]+i;
-    //         const PetscScalar value=1.;
-    //         //ierr=MatSetValues(Lin_Solver_[gridf]->PP,1,&inode,1,&jnode,&value,INSERT_VALUES); CHKERRQ(ierr);
-    //       }
-    //     }
-    
+       
     // loop on the coarse grid 
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-      for (int iel_mts=Lin_Solver_[gridf-1]->_msh->IS_Mts2Gmt_elem_offset[isdom]; 
-	   iel_mts < Lin_Solver_[gridf-1]->_msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = Lin_Solver_[gridf-1]->_msh->IS_Mts2Gmt_elem[iel_mts];
-	if(Lin_Solver_[gridf-1]->_msh->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+      for (int iel_mts=_msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom]; 
+	   iel_mts < _msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	unsigned iel = _msh[gridf-1]->IS_Mts2Gmt_elem[iel_mts];
+	if(_msh[gridf-1]->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
     
-	  short unsigned ielt=Lin_Solver_[gridf-1]->_msh->el->GetElementType(iel);
+	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
 	  type_elem[ielt][SolType[SolIndex]]->prolongation(*Lin_Solver_[gridf],*Lin_Solver_[gridf-1],iel,
 							   Lin_Solver_[gridf]->PP,SolIndex,k);
 	
@@ -1266,17 +1125,6 @@ int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf) {
       }
     }
   }
-	 
-    
-  //     // loop on the coarse grid 
-  //     for (unsigned iel=0; iel<Lin_Solver_[gridf-1]->GetElementNumber(); iel++) {
-  //       if(Lin_Solver_[gridf-1]->_msh->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
-  // 	short unsigned ielt=Lin_Solver_[gridf-1]->_msh->el->GetElementType(iel);
-  // 	type_elem[ielt][SolType[SolIndex]]->prolongation(*Lin_Solver_[gridf],*Lin_Solver_[gridf-1],iel,
-  // 							 Lin_Solver_[gridf]->PP,SolIndex,k);
-  //       }
-  //     }
-  //   }
 
   ierr = MatAssemblyBegin(Lin_Solver_[gridf]->PP,MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
   ierr = MatAssemblyEnd(Lin_Solver_[gridf]->PP,MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
@@ -1306,66 +1154,36 @@ void NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, unsigned
   }
   
   unsigned TypeIndex=SolType[SolIndex];
-  
-//   if(Lin_Solver_[gridf]->Proj_mat_flag[TypeIndex]==0){
-//     Lin_Solver_[gridf]->Proj_mat_flag[TypeIndex]=1;
-// 
-//     int nf     = Lin_Solver_[gridf]->_msh->MetisOffset[SolType[SolIndex]][_nprocs];
-//     int nc     = Lin_Solver_[gridf-1]->_msh->MetisOffset[SolType[SolIndex]][_nprocs];
-//     int nf_loc = Lin_Solver_[gridf]->_msh->own_size[SolType[SolIndex]][_iproc];
-//     int nc_loc = Lin_Solver_[gridf-1]->_msh->own_size[SolType[SolIndex]][_iproc]; 
-// 
-//     Lin_Solver_[gridf]->Proj_mat[TypeIndex] = SparseRectangularMatrix::build().release();
-//     Lin_Solver_[gridf]->Proj_mat[TypeIndex]->init(nf,nc,nf_loc,nc_loc,27,27);
-//  
-//      // loop on the coarse grid 
-//     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-//       for (int iel_mts=Lin_Solver_[gridf-1]->_msh->IS_Mts2Gmt_elem_offset[isdom]; 
-// 	   iel_mts < Lin_Solver_[gridf-1]->_msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-// 	unsigned iel = Lin_Solver_[gridf-1]->_msh->IS_Mts2Gmt_elem[iel_mts];
-// 	if(Lin_Solver_[gridf-1]->_msh->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
-// 	  short unsigned ielt=Lin_Solver_[gridf-1]->_msh->el->GetElementType(iel);
-// 	  type_elem[ielt][SolType[SolIndex]]->prolongation(*Lin_Solver_[gridf]->_msh,*Lin_Solver_[gridf-1]->_msh,iel,
-// 							   Lin_Solver_[gridf]->Proj_mat[TypeIndex]); 
-// 	}
-//       }
-//     }
-//     Lin_Solver_[gridf]->Proj_mat[TypeIndex]->close();
-//   }
-  
+    
   if(_solution[gridf]->_ProjMatFlag[TypeIndex]==0){
     _solution[gridf]->_ProjMatFlag[TypeIndex]=1;
 
-    int nf     = _solution[gridf]->_msh->MetisOffset[SolType[SolIndex]][_nprocs];
-    int nc     = _solution[gridf-1]->_msh->MetisOffset[SolType[SolIndex]][_nprocs];
-    int nf_loc = _solution[gridf]->_msh->own_size[SolType[SolIndex]][_iproc];
-    int nc_loc = _solution[gridf-1]->_msh->own_size[SolType[SolIndex]][_iproc]; 
+    int nf     = _msh[gridf]->MetisOffset[SolType[SolIndex]][_nprocs];
+    int nc     = _msh[gridf-1]->MetisOffset[SolType[SolIndex]][_nprocs];
+    int nf_loc = _msh[gridf]->own_size[SolType[SolIndex]][_iproc];
+    int nc_loc = _msh[gridf-1]->own_size[SolType[SolIndex]][_iproc]; 
 
     _solution[gridf]->_ProjMat[TypeIndex] = SparseRectangularMatrix::build().release();
     _solution[gridf]->_ProjMat[TypeIndex]->init(nf,nc,nf_loc,nc_loc,27,27);
  
      // loop on the coarse grid 
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-      for (int iel_mts=_solution[gridf-1]->_msh->IS_Mts2Gmt_elem_offset[isdom]; 
-	   iel_mts < _solution[gridf-1]->_msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = _solution[gridf-1]->_msh->IS_Mts2Gmt_elem[iel_mts];
-	if(_solution[gridf-1]->_msh->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
-	  short unsigned ielt=_solution[gridf-1]->_msh->el->GetElementType(iel);
-	  type_elem[ielt][SolType[SolIndex]]->prolongation(*_solution[gridf]->_msh,*_solution[gridf-1]->_msh,iel,
+      for (int iel_mts=_msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom]; 
+	   iel_mts < _msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	unsigned iel = _msh[gridf-1]->IS_Mts2Gmt_elem[iel_mts];
+	if(_msh[gridf-1]->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
+	  type_elem[ielt][SolType[SolIndex]]->prolongation(*_msh[gridf],*_msh[gridf-1],iel,
 							   _solution[gridf]->_ProjMat[TypeIndex]); 
 	}
       }
     }
-     
     _solution[gridf]->_ProjMat[TypeIndex]->close();
-      
   }
-  
 }
 
 //---------------------------------------------------------------------------------------------------
 /// This routine generates the matrices for the projection of the solutions from different FE spaces 
-// TODO to be rewritten considering the nowadays printing DD function 
 //---------------------------------------------------------------------------------------------------
 
 void NonLinearMultiLevelProblem::BuildProlungatorMatrices() {
@@ -1382,40 +1200,28 @@ void NonLinearMultiLevelProblem::BuildProlungatorMatrices() {
   ProlQitoQj_[2][1].resize(gridn);
   ProlQitoQj_[2][2].resize(gridn);
   
-  for (unsigned _igridn=0; _igridn<gridn; _igridn++) {
+  for (unsigned igridn=0; igridn<gridn; igridn++) {
     for(int itype=0;itype<3;itype++){
-//       PetscInt ni= Lin_Solver_[_igridn]->GetDofNumber(itype);
-      PetscInt ni = Lin_Solver_[_igridn]->_msh->MetisOffset[itype][_nprocs];
+      PetscInt ni = _msh[igridn]->MetisOffset[itype][_nprocs];
       bool *testnode=new bool [ni];
       for (int jtype=0; jtype<3; jtype++) {
-// 	PetscInt nj= Lin_Solver_[_igridn]->GetDofNumber(jtype);
-        PetscInt nj = Lin_Solver_[_igridn]->_msh->MetisOffset[jtype][_nprocs];
+        PetscInt nj = _msh[igridn]->MetisOffset[jtype][_nprocs];
 	memset(testnode,0,ni*sizeof(bool));
-	
-	// 	if(_nprocs==1) {
-	// 	  ProlQitoQj_[itype][jtype][_igridn] = SparseRectangularMatrix::build().release();
-	//           ProlQitoQj_[itype][jtype][_igridn]->init(ni,nj,ni,nj,27);
-	// 	} else {
-	ProlQitoQj_[itype][jtype][_igridn] = SparseRectangularMatrix::build().release();
-	ProlQitoQj_[itype][jtype][_igridn]->init(ni,nj,Lin_Solver_[_igridn]->_msh->own_size[itype][_iproc],
-						 Lin_Solver_[_igridn]->_msh->own_size[jtype][_iproc],27,27);
+	ProlQitoQj_[itype][jtype][igridn] = SparseRectangularMatrix::build().release();
+	ProlQitoQj_[itype][jtype][igridn]->init(ni,nj,_msh[igridn]->own_size[itype][_iproc],
+						_msh[igridn]->own_size[jtype][_iproc],27,27);
 	// 	}
 	
 	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-	  for (int iel_mts=Lin_Solver_[_igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom]; 
-	       iel_mts < Lin_Solver_[_igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	    unsigned iel = Lin_Solver_[_igridn]->_msh->IS_Mts2Gmt_elem[iel_mts];
-	    short unsigned ielt=Lin_Solver_[_igridn]->_msh->el->GetElementType(iel);
-            type_elem[ielt][jtype]->ProlQitoQj(*Lin_Solver_[_igridn]->_msh,iel,ProlQitoQj_[itype][jtype][_igridn],testnode,itype);	  
+	  for (int iel_mts=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+	       iel_mts < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	    unsigned iel = _msh[igridn]->IS_Mts2Gmt_elem[iel_mts];
+	    short unsigned ielt=_msh[igridn]->el->GetElementType(iel);
+            type_elem[ielt][jtype]->ProlQitoQj(*_msh[igridn],iel,ProlQitoQj_[itype][jtype][igridn],testnode,itype);	  
 	   
 	  }
 	}
-	
-	// 	for (unsigned iel=0; iel<Lin_Solver_[_igridn]->GetElementNumber(); iel++) {
-	//           short unsigned ielt=Lin_Solver_[_igridn]->_msh->el->GetElementType(iel);
-	//           type_elem[ielt][jtype]->ProlQitoQj(*Lin_Solver_[_igridn],iel,ProlQitoQj_[itype][jtype][_igridn],testnode,itype);	  
-	// 	}
-	ProlQitoQj_[itype][jtype][_igridn]->close();
+	ProlQitoQj_[itype][jtype][igridn]->close();
       }
       delete [] testnode;
     }
@@ -1432,9 +1238,7 @@ void NonLinearMultiLevelProblem::GenerateBdc(const char name[], const char bdc_t
   }
   
   const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
-  //unsigned g_start=(0==grid_start)?0:D[grid_start-1u]->GetDofNumber(2);
-
-  //unsigned dim = Lin_Solver_[0]->GetDimension() - 1u;
+  
   unsigned indX=GetIndex("X");
   unsigned indY=GetIndex("Y");
   unsigned indZ=GetIndex("Z");
@@ -1448,7 +1252,6 @@ void NonLinearMultiLevelProblem::GenerateBdc(const char name[], const char bdc_t
     i_start=0;
     i_end=SolType.size();
     for (unsigned k=i_start; k<i_end; k++) {
-      //if(Lin_Solver_[0]->ResEpsBdc_flag_[k]){
       if(_solution[0]->_ResEpsBdcFlag[k]){
 	sprintf(BdcType[k],"Steady");
 	cout << "Set " << std::setw(15) << BdcType[k] << " Boundary_condition"
@@ -1459,10 +1262,10 @@ void NonLinearMultiLevelProblem::GenerateBdc(const char name[], const char bdc_t
       }
 	
     }
-  } else {
+  } 
+  else {
     i_start=GetIndex(name);
     i_end=i_start+1u;
-    //if(Lin_Solver_[0]->ResEpsBdc_flag_[i_start]){
     if(_solution[0]->_ResEpsBdcFlag[i_start]){
       if (!strcmp(bdc_type,"Steady")) {
 	strcpy(BdcType[i_start],bdc_type);
@@ -1480,7 +1283,6 @@ void NonLinearMultiLevelProblem::GenerateBdc(const char name[], const char bdc_t
       sprintf(BdcType[i_start],"Not-available");
     }
   }
-
   // 2 Default Neumann
   // 1 DD Dirichlet
   // 0 Dirichlet
@@ -1488,66 +1290,51 @@ void NonLinearMultiLevelProblem::GenerateBdc(const char name[], const char bdc_t
     for (unsigned i=i_start; i<i_end; i++) {
       //if(Lin_Solver_[igridn]->ResEpsBdc_flag_[i]){
       if(_solution[igridn]->_ResEpsBdcFlag[i]){
-	for (unsigned j=Lin_Solver_[igridn]->_msh->MetisOffset[SolType[i]][_iproc]; j<Lin_Solver_[igridn]->_msh->MetisOffset[SolType[i]][_iproc+1]; j++) {
-	  Lin_Solver_[igridn]->Bdc_[i]->set(j,2.);
-	  _solution[igridn]->_Bdc[i]->set(j,2.);
+	for (unsigned j=_msh[igridn]->MetisOffset[SolType[i]][_iproc]; j<_msh[igridn]->MetisOffset[SolType[i]][_iproc+1]; j++) {
+	   _solution[igridn]->_Bdc[i]->set(j,2.);
 	}
 	if (SolType[i]<3) {  
 	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
-	    for (int iel=Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom]; 
-		 iel < Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	      unsigned iel_gmt = Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem[iel];
-	      for (unsigned jface=0; jface<Lin_Solver_[igridn]->_msh->el->GetElementFaceNumber(iel_gmt); jface++) {
-		if (Lin_Solver_[igridn]->_msh->el->GetFaceElementIndex(iel_gmt,jface)==0) { //Domain Decomposition Dirichlet
-		  short unsigned ielt=Lin_Solver_[igridn]->_msh->el->GetElementType(iel_gmt);
+	    for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+		 iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	      unsigned iel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
+	      for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt); jface++) {
+		if (_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+		  short unsigned ielt=_msh[igridn]->el->GetElementType(iel_gmt);
 		  unsigned nv1=(!TestIfPressure[i])?
-				NV1[ielt][jface<Lin_Solver_[igridn]->_msh->el->GetElementFaceNumber(iel_gmt,0)]: //non-pressure type
-				Lin_Solver_[igridn]->_msh->el->GetElementDofNumber(iel,Lin_Solver_[igridn]->END_IND[SolType[i]]); //pressure type
+				NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt,0)]: //non-pressure type
+				_msh[igridn]->el->GetElementDofNumber(iel,_msh[igridn]->GetEndIndex(SolType[i]) ); //pressure type
 		  for (unsigned iv=0; iv<nv1; iv++) {
 		    unsigned inode=(!TestIfPressure[i])? 
-				    Lin_Solver_[igridn]->_msh->el->GetFaceVertexIndex(iel_gmt,jface,iv)-1u: //non-pressure type
-				    Lin_Solver_[igridn]->_msh->el->GetElementVertexIndex(iel_gmt,iv)-1u;    //pressure type
-		    unsigned inode_Metis=Lin_Solver_[igridn]->_msh->GetMetisDof(inode,SolType[i]);
-		    // if (inode_Metis<Lin_Solver_[igridn]->MetisOffset[SolType[i]][_nprocs] ) {
-		    Lin_Solver_[igridn]->Bdc_[i]->set(inode_Metis,1.);
+				    _msh[igridn]->el->GetFaceVertexIndex(iel_gmt,jface,iv)-1u: //non-pressure type
+				    _msh[igridn]->el->GetElementVertexIndex(iel_gmt,iv)-1u;    //pressure type
+		    unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[i]);
 		    _solution[igridn]->_Bdc[i]->set(inode_Metis,1.);
-		    // }
 		  }
 		}
 	      }
 	    }
 	  }
 	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {  // 0 Dirichlet
-	    for (int iel=Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom]; 
-		 iel < Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	      unsigned iel_gmt = Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem[iel];
-	      for (unsigned jface=0; jface<Lin_Solver_[igridn]->_msh->el->GetElementFaceNumber(iel_gmt); jface++) {
-		if (Lin_Solver_[igridn]->_msh->el->GetFaceElementIndex(iel_gmt,jface)<0) { //Dirichlet
-		  short unsigned ielt=Lin_Solver_[igridn]->_msh->el->GetElementType(iel_gmt);
-		  unsigned nv1=NV1[ielt][jface<Lin_Solver_[igridn]->_msh->el->GetElementFaceNumber(iel_gmt,0)];
+	    for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+		 iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	      unsigned iel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
+	      for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt); jface++) {
+		if (_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)<0) { //Dirichlet
+		  short unsigned ielt=_msh[igridn]->el->GetElementType(iel_gmt);
+		  unsigned nv1=NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt,0)];
 		  for (unsigned iv=0; iv<nv1; iv++) {
-		    unsigned inode=Lin_Solver_[igridn]->_msh->el->GetFaceVertexIndex(iel_gmt,jface,iv)-1u;
-		    //if (inode_Metis<Lin_Solver_[igridn]->MetisOffset[SolType[i]][_nprocs]) {
-		    unsigned inode_coord_Metis=Lin_Solver_[igridn]->_msh->GetMetisDof(inode,2);
+		    unsigned inode=_msh[igridn]->el->GetFaceVertexIndex(iel_gmt,jface,iv)-1u;
+		    unsigned inode_coord_Metis=_msh[igridn]->GetMetisDof(inode,2);
 		    double value;
-// 		    xx=(*Lin_Solver_[igridn]->Sol_[indX])(inode_coord_Metis);  
-// 		    yy=(*Lin_Solver_[igridn]->Sol_[indY])(inode_coord_Metis);
-// 		    zz=(*Lin_Solver_[igridn]->Sol_[indZ])(inode_coord_Metis);
-// 		    
 		    xx=(*_solution[igridn]->_Sol[indX])(inode_coord_Metis);  
 		    yy=(*_solution[igridn]->_Sol[indY])(inode_coord_Metis);
 		    zz=(*_solution[igridn]->_Sol[indZ])(inode_coord_Metis);
-		    
-		    
-		    bool test=_SetBoundaryConditionFunction(xx,yy,zz,SolName[i],value,-(Lin_Solver_[igridn]->_msh->el->GetFaceElementIndex(iel_gmt,jface)+1),_time);
+		    bool test=_SetBoundaryConditionFunction(xx,yy,zz,SolName[i],value,-(_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)+1),_time);
 		    if (test) {
-		      unsigned inode_Metis=Lin_Solver_[igridn]->_msh->GetMetisDof(inode,SolType[i]);
-		      Lin_Solver_[igridn]->Bdc_[i]->set(inode_Metis,0.);
-		      //Lin_Solver_[igridn]->Sol_[i]->set(inode_Metis,value);
-		      
+		      unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[i]);
 		      _solution[igridn]->_Bdc[i]->set(inode_Metis,0.);
 		      _solution[igridn]->_Sol[i]->set(inode_Metis,value);
-		      
 		    }
 		  }
 		}
@@ -1557,31 +1344,26 @@ void NonLinearMultiLevelProblem::GenerateBdc(const char name[], const char bdc_t
 	}
 	else if(TestIfPressure[i]){ // 1 DD Dirichlet for pressure types only
 	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   
-	    unsigned nel=Lin_Solver_[igridn]->_msh->GetElementNumber();
-	    for (int iel=Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom]; 
-		 iel < Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	      unsigned iel_gmt = Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem[iel];
-	      for (unsigned jface=0; jface<Lin_Solver_[igridn]->_msh->el->GetElementFaceNumber(iel_gmt); jface++) {
-		if (Lin_Solver_[igridn]->_msh->el->GetFaceElementIndex(iel_gmt,jface)==0) { //Domain Decomposition Dirichlet
-		  short unsigned ielt=Lin_Solver_[igridn]->_msh->el->GetElementType(iel_gmt);
-		  unsigned nv1=Lin_Solver_[igridn]->_msh->el->GetElementDofNumber(iel_gmt,Lin_Solver_[igridn]->END_IND[SolType[i]]);
+	    unsigned nel=_msh[igridn]->GetElementNumber();
+	    for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+		 iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	      unsigned iel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
+	      for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt); jface++) {
+		if (_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+		  short unsigned ielt=_msh[igridn]->el->GetElementType(iel_gmt);
+		  unsigned nv1=_msh[igridn]->el->GetElementDofNumber(iel_gmt,_msh[igridn]->GetEndIndex(SolType[i]));
 	  	  for (unsigned iv=0; iv<nv1; iv++) {
 		    unsigned inode=(iel_gmt+iv*nel);
-		    unsigned inode_Metis=Lin_Solver_[igridn]->_msh->GetMetisDof(inode,SolType[i]);
-		    Lin_Solver_[igridn]->Bdc_[i]->set(inode_Metis,1.);
+		    unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[i]);
 		    _solution[igridn]->_Bdc[i]->set(inode_Metis,1.);
 		  }
 		}
 	      }
 	    }
 	  }
-	}
-	//Lin_Solver_[igridn]->Sol_[i]->close();
-	Lin_Solver_[igridn]->Bdc_[i]->close();
-	
+	}	
 	_solution[igridn]->_Sol[i]->close();
 	_solution[igridn]->_Bdc[i]->close();
-	
       }
     }
   }
@@ -1591,10 +1373,7 @@ void NonLinearMultiLevelProblem::GenerateBdc(const char name[], const char bdc_t
 
 // *******************************************************************
 int  NonLinearMultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, bool debug) const {
-  // TODO
-
-  //if(_iproc!=0) return 1;  
-  
+ 
   unsigned _igridn=igridn;
   if (_igridn==0) _igridn=gridn;
   
@@ -1624,7 +1403,7 @@ int  NonLinearMultiLevelProblem::printsol_gmv_binary(const char type[],unsigned 
   unsigned nvt=0;
   unsigned nvt_max=0;
   for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-    unsigned nvt_ig=Lin_Solver_[ig]->_msh->MetisOffset[index][_nprocs];
+    unsigned nvt_ig=_msh[ig]->MetisOffset[index][_nprocs];
     nvt_max=(nvt_max>nvt_ig)?nvt_max:nvt_ig;
     nvt+=nvt_ig;
   }
@@ -1633,7 +1412,7 @@ int  NonLinearMultiLevelProblem::printsol_gmv_binary(const char type[],unsigned 
   vector <NumericVector*> Mysol(_igridn);
   for(unsigned ig=_gridr-1u; ig<gridn; ig++) {
     Mysol[ig] = NumericVector::build().release();
-    Mysol[ig]->init(Lin_Solver_[ig]->_msh->MetisOffset[index][_nprocs],Lin_Solver_[ig]->_msh->own_size[index][_iproc],true,AUTOMATIC);
+    Mysol[ig]->init(_msh[ig]->MetisOffset[index][_nprocs],_msh[ig]->own_size[index][_iproc],true,AUTOMATIC);
   }
      
   // ********** Header **********
@@ -1649,33 +1428,25 @@ int  NonLinearMultiLevelProblem::printsol_gmv_binary(const char type[],unsigned 
   fout.write((char *)&nvt,sizeof(unsigned));
     
   unsigned indXYZ[3];
-  
-  
-//   indXYZ[0]=Lin_Solver_[_igridn-1]->GetIndex("X");
-//   indXYZ[1]=Lin_Solver_[_igridn-1]->GetIndex("Y");
-//   indXYZ[2]=Lin_Solver_[_igridn-1]->GetIndex("Z");
-  
   indXYZ[0]=GetIndex("X");
   indXYZ[1]=GetIndex("Y");
   indXYZ[2]=GetIndex("Z");
    
   for (int i=0; i<3; i++) {
     for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-      //Mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Sol_[indXYZ[i]],*ProlQitoQj_[index][SolType[indXYZ[i]]][ig]);
       Mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indXYZ[i]],*ProlQitoQj_[index][SolType[indXYZ[i]]][ig]);
       vector <double> v_local;
       Mysol[ig]->localize_to_one(v_local,0);
-      unsigned nvt_ig=Lin_Solver_[ig]->_msh->MetisOffset[index][_nprocs];      
+      unsigned nvt_ig=_msh[ig]->MetisOffset[index][_nprocs];      
       if(_iproc==0){ 
 	for (unsigned ii=0; ii<nvt_ig; ii++) 
 	  var_nd[ii]= v_local[ii];
       }
       if (_moving_mesh) {
-	unsigned indDXDYDZ=Lin_Solver_[ig]->GetIndex(_moving_vars[i].c_str());
-	//Mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Sol_[indDXDYDZ],*ProlQitoQj_[index][SolType[indDXDYDZ]][ig]);
+	unsigned indDXDYDZ=GetIndex(_moving_vars[i].c_str());
 	Mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indDXDYDZ],*ProlQitoQj_[index][SolType[indDXDYDZ]][ig]);
 	Mysol[ig]->localize_to_one(v_local,0);
-	unsigned nvt_ig=Lin_Solver_[ig]->_msh->MetisOffset[index][_nprocs];      
+	unsigned nvt_ig=_msh[ig]->MetisOffset[index][_nprocs];      
 	if(_iproc==0){ 
 	  for (unsigned ii=0; ii<nvt_ig; ii++) 
 	    var_nd[ii]+= v_local[ii];
@@ -1693,17 +1464,17 @@ int  NonLinearMultiLevelProblem::printsol_gmv_binary(const char type[],unsigned 
 
   unsigned nel=0;
   for (unsigned ig=_gridr-1u; ig<_igridn-1u; ig++)
-    nel+=( Lin_Solver_[ig]->_msh->GetElementNumber() - Lin_Solver_[ig]->_msh->el->GetRefinedElementNumber());
-  nel+=Lin_Solver_[_igridn-1u]->_msh->GetElementNumber();
+    nel+=( _msh[ig]->GetElementNumber() - _msh[ig]->el->GetRefinedElementNumber());
+  nel+=_msh[_igridn-1u]->GetElementNumber();
   fout.write((char *)&nel,sizeof(unsigned));
 
   unsigned topology[27];
   unsigned offset=1;
   
   for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-    for (unsigned ii=0; ii<Lin_Solver_[ig]->_msh->GetElementNumber(); ii++) {
-      if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(ii)) {
-        short unsigned ielt=Lin_Solver_[ig]->_msh->el->GetElementType(ii);
+    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
+      if ( ig==_igridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
+        short unsigned ielt=_msh[ig]->el->GetElementType(ii);
         if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
         else if (ielt==1) sprintf(det,"ptet%d",eltp[index][1]);
         else if (ielt==2) sprintf(det,"pprism%d",eltp[index][2]);
@@ -1721,15 +1492,15 @@ int  NonLinearMultiLevelProblem::printsol_gmv_binary(const char type[],unsigned 
         fout.write((char *)&NVE[ielt][index],sizeof(unsigned));
 	for(unsigned j=0;j<NVE[ielt][index];j++){
 	  
-	  unsigned jnode=Lin_Solver_[ig]->_msh->el->GetElementVertexIndex(ii,j)-1u;
-	  unsigned jnode_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(jnode,index);
+	  unsigned jnode=_msh[ig]->el->GetElementVertexIndex(ii,j)-1u;
+	  unsigned jnode_Metis = _msh[ig]->GetMetisDof(jnode,index);
 	  	  
 	  topology[j]=jnode_Metis+offset;
 	}
 	fout.write((char *)topology,sizeof(unsigned)*NVE[ielt][index]);
       }
     }
-    offset+=Lin_Solver_[ig]->_msh->MetisOffset[index][_nprocs];
+    offset+=_msh[ig]->MetisOffset[index][_nprocs];
   }
   // ********** End printing cell connectivity  **********
   
@@ -1741,8 +1512,6 @@ int  NonLinearMultiLevelProblem::printsol_gmv_binary(const char type[],unsigned 
   sprintf(det,"%s","variable");
   fout.write((char *)det,sizeof(char)*8);
 
-
-
   // ********** Start printing Regions **********
   strcpy(det,"Regions");
   fout.write((char *)det,sizeof(char)*8);
@@ -1750,16 +1519,15 @@ int  NonLinearMultiLevelProblem::printsol_gmv_binary(const char type[],unsigned 
 
   int icount=0;
   for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-    for (unsigned ii=0; ii<Lin_Solver_[ig]->_msh->GetElementNumber(); ii++) {
-      if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(ii,3);
-        var_el[icount]=Lin_Solver_[ig]->_msh->el->GetElementGroup(iel_Metis);
+    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
+      if ( ig==_igridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
+	unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
+        var_el[icount]=_msh[ig]->el->GetElementGroup(iel_Metis);
         icount++;
       }
     }
   }
   fout.write((char *)&var_el[0],nel*sizeof(double));
-  
   
   if(_nprocs>=1){
     strcpy(det,"Reg_proc");
@@ -1768,10 +1536,10 @@ int  NonLinearMultiLevelProblem::printsol_gmv_binary(const char type[],unsigned 
 
     int icount=0;
     for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-      for (unsigned ii=0; ii<Lin_Solver_[ig]->_msh->GetElementNumber(); ii++) {
-	if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(ii)) {
-	  unsigned iel_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(ii,3);
-	  var_el[icount]=Lin_Solver_[ig]->_msh->epart[ii];
+      for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
+	if ( ig==_igridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
+	  unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
+	  var_el[icount]=_msh[ig]->epart[ii];
 	  icount++;
 	}
       }
@@ -1779,203 +1547,92 @@ int  NonLinearMultiLevelProblem::printsol_gmv_binary(const char type[],unsigned 
     fout.write((char *)&var_el[0],nel*sizeof(double));
   }
   
-  
   // ********** End printing Regions **********
   
   // ********** Start printing Solution **********
   for (unsigned i=0; i<SolType.size(); i++) {
-    if (SolType[i]<3) {  // ********** Printing Solution on nodes **********
-      strcpy(det,SolName[i]);
-      fout.write((char *)det,sizeof(char)*8);
-      fout.write((char *)&one,sizeof(unsigned));
-      for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-	//Mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Sol_[i],*ProlQitoQj_[index][SolType[i]][ig]);
-	Mysol[ig]->matrix_mult(*_solution[ig]->_Sol[i],*ProlQitoQj_[index][SolType[i]][ig]);
-	std::vector<double> v_local;
-	Mysol[ig]->localize_to_one(v_local,0);
-	fout.write((char *)&v_local[0],v_local.size()*sizeof(double));
+    for(int name=0;name<4;name++){
+      if (name==0){
+	sprintf(det,"%s %s","Sol",SolName[i]);
       }
-    } 
-    else { // ********** Printing Solution on elements **********
-      strcpy(det,SolName[i]);
-      fout.write((char *)det,sizeof(char)*8);
-      fout.write((char *)&zero,sizeof(unsigned));
-      int icount=0;
-      for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-	std::vector<double> v_local;
-	//Lin_Solver_[ig]->Sol_[i]->localize_to_one(v_local,0);
-	_solution[ig]->_Sol[i]->localize_to_one(v_local,0);
-	for (unsigned ii=0; ii<Lin_Solver_[ig]->_msh->GetElementNumber(); ii++) {
-	  if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(ii)) {
-	    unsigned iel_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(ii,SolType[i]);
-	    var_el[icount]=v_local[iel_Metis];
-	    icount++;
+      else if (name==1){
+	sprintf(det,"%s %s","Bdc",SolName[i]);
+      }
+      else if (name==2){
+	sprintf(det,"%s %s","Res",SolName[i]);
+      }
+      else{
+	sprintf(det,"%s %s","Eps",SolName[i]);
+      }
+      if(name==0 || (debug && _solution[_igridn-1u]->_ResEpsBdcFlag[i])){
+	if (SolType[i]<3) {  // **********  on the nodes **********
+	  fout.write((char *)det,sizeof(char)*8);
+	  fout.write((char *)&one,sizeof(unsigned));
+	  for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
+	    if (name==0){
+	      Mysol[ig]->matrix_mult(*_solution[ig]->_Sol[i],*ProlQitoQj_[index][SolType[i]][ig]);  
+	    }
+	    else if (name==1){
+	      Mysol[ig]->matrix_mult(*_solution[ig]->_Bdc[i],*ProlQitoQj_[index][SolType[i]][ig]);
+	    }
+	    else if (name==2){
+	      Mysol[ig]->matrix_mult(*_solution[ig]->_Res[i],*ProlQitoQj_[index][SolType[i]][ig]);
+	    }
+	    else{
+	      Mysol[ig]->matrix_mult(*_solution[ig]->_Eps[i],*ProlQitoQj_[index][SolType[i]][ig]);
+	    }
+	    std::vector<double> v_local;
+	    Mysol[ig]->localize_to_one(v_local,0);
+	    fout.write((char *)&v_local[0],v_local.size()*sizeof(double));
 	  }
 	}
+	else { // ********** on the elements **********
+	  fout.write((char *)det,sizeof(char)*8);
+	  fout.write((char *)&zero,sizeof(unsigned));
+	  int icount=0;
+	  for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
+	    std::vector<double> v_local;
+	    if (name==0){
+	      _solution[ig]->_Sol[i]->localize_to_one(v_local,0); 
+	    }
+	    if (name==1){
+	      _solution[ig]->_Bdc[i]->localize_to_one(v_local,0); 
+	    }
+	    else if (name==2){
+	      _solution[ig]->_Res[i]->localize_to_one(v_local,0);
+	    }
+	    else{
+	      _solution[ig]->_Eps[i]->localize_to_one(v_local,0);
+	    }
+	    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
+	      if ( ig==_igridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
+		unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,SolType[i]);
+		var_el[icount]=v_local[iel_Metis];
+		icount++;
+	      }
+	    }
+	  }
+	  fout.write((char *)&var_el[0],nel*sizeof(double));
+	}	
       }
-      fout.write((char *)&var_el[0],nel*sizeof(double));
     }
   }
   // ********** End printing Solution **********
-  
-  if (debug) { // ********** Only if the debug flag is 1 **********
-    // ********** Start printing Boundary **********
-    for (unsigned i=0; i<SolType.size(); i++) {
-      //if(Lin_Solver_[_igridn-1u]->ResEpsBdc_flag_[i]){
-      if(_solution[_igridn-1u]->_ResEpsBdcFlag[i]){
-	if (SolType[i]<3) {  // ********** Bdc on the nodes **********
-	  sprintf(det,"%s %s","bdcd",SolName[i]);
-	  fout.write((char *)det,sizeof(char)*8);
-	  fout.write((char *)&one,sizeof(unsigned));
-	  for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-	    //Mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Bdc_[i],*ProlQitoQj_[index][SolType[i]][ig]);
-	    Mysol[ig]->matrix_mult(*_solution[ig]->_Bdc[i],*ProlQitoQj_[index][SolType[i]][ig]);
-	    std::vector<double> v_local;
-	    Mysol[ig]->localize_to_one(v_local,0);
-	    fout.write((char *)&v_local[0],v_local.size()*sizeof(double));
-	  }
-	}
-	else { // ********** Printing Solution on elements **********
-	  sprintf(det,"%s %s","bdcd",SolName[i]);
-	  fout.write((char *)det,sizeof(char)*8);
-	  fout.write((char *)&zero,sizeof(unsigned));
-	  int icount=0;
-	  for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-	    std::vector<double> v_local;
-	    //Lin_Solver_[ig]->Bdc_[i]->localize_to_one(v_local,0);
-	    _solution[ig]->_Bdc[i]->localize_to_one(v_local,0);
-	    for (unsigned ii=0; ii<Lin_Solver_[ig]->_msh->GetElementNumber(); ii++) {
-	      if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(ii)) {
-		unsigned iel_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(ii,SolType[i]);
-		var_el[icount]=v_local[iel_Metis];
-		icount++;
-	      }
-	    }
-	  }
-	  fout.write((char *)&var_el[0],nel*sizeof(double));
-	}
-      }
-    }
-    // ********** End printing Boundary **********
- 
-    // ********** Start ownership **********
-//     if(_nprocs>=1){
-//       sprintf(det,"proc");
-//       fout.write((char *)det,sizeof(char)*8);
-//       fout.write((char *)&one,sizeof(unsigned));
-//       for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-// 	unsigned nvt_ig=Lin_Solver_[ig]->MetisOffset[index][_nprocs];
-// 	for (unsigned ii=0; ii<nvt_ig; ii++){
-// 	  unsigned inode_Metis = Lin_Solver_[ig]->GetMetisDof(ii,index);
-// 	  var_nd[inode_Metis]=Lin_Solver_[ig]->npart[ii];
-// 	}
-// 	fout.write((char *)&var_nd[0],nvt_ig*sizeof(double));
-//       }
-//     }
-     
-    // ********** End ownership Boundary **********
-  
-    // ********** Start printing Residual **********
-    for (unsigned i=0; i<SolType.size(); i++) {
-      //if(Lin_Solver_[_igridn-1u]->ResEpsBdc_flag_[i]){
-      if(_solution[_igridn-1u]->_ResEpsBdcFlag[i]){
-	if (SolType[i]<3) {  // ********** Printing Residual on  nodes **********
-	  sprintf(det,"%s %s","Res",SolName[i]);
-	  fout.write((char *)det,sizeof(char)*8);
-	  fout.write((char *)&one,sizeof(unsigned));
-	  for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-	    //Mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Res_[i],*ProlQitoQj_[index][SolType[i]][ig]);
-	    Mysol[ig]->matrix_mult(*_solution[ig]->_Res[i],*ProlQitoQj_[index][SolType[i]][ig]);
-	    std::vector<double> v_local;
-	    Mysol[ig]->localize_to_one(v_local,0);
-	    fout.write((char *)&v_local[0],v_local.size()*sizeof(double));
-	  }
-	} 
-	else { // ********** Printing Residual on elements **********
-	  sprintf(det,"%s %s","Res",SolName[i]);
-	  fout.write((char *)det,sizeof(char)*8);
-	  fout.write((char *)&zero,sizeof(unsigned));
-	  int icount=0;
-	  for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-	    std::vector<double> v_local;
-	    //Lin_Solver_[ig]->Res_[i]->localize_to_one(v_local,0);
-	    _solution[ig]->_Res[i]->localize_to_one(v_local,0);
-	    for (unsigned ii=0; ii<Lin_Solver_[ig]->_msh->GetElementNumber(); ii++) {
-	      if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(ii)) {
-		unsigned iel_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(ii,SolType[i]);
-		var_el[icount]=v_local[iel_Metis];
-		icount++;
-	      }
-	    }
-	  }
-	  fout.write((char *)&var_el[0],nel*sizeof(double));
-	}
-      }
-    }
-    
-  
-    // ********** End printing Residual **********
-
-    // ********** Start printing Epsilon **********
-    for (unsigned i=0; i<SolType.size(); i++) {
-      //if(Lin_Solver_[_igridn-1u]->ResEpsBdc_flag_[i]){
-      if(_solution[_igridn-1u]->_ResEpsBdcFlag[i]){
-	if (SolType[i]<3) {  // ********** Printing Epsilon on  nodes **********
-	  sprintf(det,"%s %s","Eps",SolName[i]);
-	  fout.write((char *)det,sizeof(char)*8);
-	  fout.write((char *)&one,sizeof(unsigned));  
-	  for (unsigned ig=_gridr-1u; ig<_igridn; ig++) { 
-	    //Mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Eps_[i],*ProlQitoQj_[index][SolType[i]][ig]);
-	    Mysol[ig]->matrix_mult(*_solution[ig]->_Eps[i],*ProlQitoQj_[index][SolType[i]][ig]);
-	    std::vector<double> v_local;
-	    Mysol[ig]->localize_to_one(v_local,0);
-	    fout.write((char *)&v_local[0],v_local.size()*sizeof(double));
-	  }
-	} 
-	else { // ********** Printing Epsilon on elements **********
-	  sprintf(det,"%s %s","Eps",SolName[i]);
-	  fout.write((char *)det,sizeof(char)*8);
-	  fout.write((char *)&zero,sizeof(unsigned));
-	  int icount=0;
-	  for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-	    std::vector<double> v_local;
-	    //Lin_Solver_[ig]->Eps_[i]->localize_to_one(v_local,0);
-	    _solution[ig]->_Eps[i]->localize_to_one(v_local,0);
-	    for (unsigned ii=0; ii<Lin_Solver_[ig]->_msh->GetElementNumber(); ii++) {
-	      if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(ii)) {
-		unsigned iel_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(ii,SolType[i]);
-		var_el[icount]=v_local[iel_Metis];
-		icount++;
-	      }
-	    }
-	  }
-	  fout.write((char *)&var_el[0],nel*sizeof(double));
-	}
-      }
-    }
-    // ********** End printing Epsilon **********
-  }
-
   sprintf(det,"%s","endvars");
   fout.write((char *)det,sizeof(char)*8);
-
+  
   // ********** End printing Variables **********
- 
-
   sprintf(det,"%s","endgmv");
   fout.write((char *)det,sizeof(char)*8);
-
- 
-
   fout.close();
+  // ********** End printing file **********
+  
+  // Free memory
   delete [] var_el;
   delete [] var_nd;
-
   for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
     delete Mysol[ig];
   }
-  
-  
   delete [] det;
   delete [] filename;
   return 1;
@@ -2032,28 +1689,28 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
   unsigned nvt=0;
   for (unsigned ig=gridr-1u; ig<gridn; ig++) {
 //     unsigned nvt_ig=Lin_Solver_[ig]->GetDofNumber(index_nd);
-    unsigned nvt_ig=Lin_Solver_[ig]->_msh->MetisOffset[index_nd][_nprocs];
+    unsigned nvt_ig=_msh[ig]->MetisOffset[index_nd][_nprocs];
     nvt+=nvt_ig;
   }  
 
   unsigned nel=0;
   unsigned counter=0;
   for (unsigned ig=gridr-1u; ig<gridn-1u; ig++) {
-    nel+=( Lin_Solver_[ig]->_msh->GetElementNumber() - Lin_Solver_[ig]->_msh->el->GetRefinedElementNumber());
-    counter+=(Lin_Solver_[ig]->_msh->el->GetElementNumber("Hex")-Lin_Solver_[ig]->_msh->el->GetRefinedElementNumber("Hex"))*NVE[0][index];
-    counter+=(Lin_Solver_[ig]->_msh->el->GetElementNumber("Tet")-Lin_Solver_[ig]->_msh->el->GetRefinedElementNumber("Tet"))*NVE[1][index];
-    counter+=(Lin_Solver_[ig]->_msh->el->GetElementNumber("Wedge")-Lin_Solver_[ig]->_msh->el->GetRefinedElementNumber("Wedge"))*NVE[2][index];
-    counter+=(Lin_Solver_[ig]->_msh->el->GetElementNumber("Quad")-Lin_Solver_[ig]->_msh->el->GetRefinedElementNumber("Quad"))*NVE[3][index];
-    counter+=(Lin_Solver_[ig]->_msh->el->GetElementNumber("Triangle")-Lin_Solver_[ig]->_msh->el->GetRefinedElementNumber("Triangle"))*NVE[4][index];
-    counter+=(Lin_Solver_[ig]->_msh->el->GetElementNumber("Line")-Lin_Solver_[ig]->_msh->el->GetRefinedElementNumber("Line"))*NVE[5][index];
+    nel+=( _msh[ig]->GetElementNumber() - _msh[ig]->el->GetRefinedElementNumber());
+    counter+=(_msh[ig]->el->GetElementNumber("Hex")-_msh[ig]->el->GetRefinedElementNumber("Hex"))*NVE[0][index];
+    counter+=(_msh[ig]->el->GetElementNumber("Tet")-_msh[ig]->el->GetRefinedElementNumber("Tet"))*NVE[1][index];
+    counter+=(_msh[ig]->el->GetElementNumber("Wedge")-_msh[ig]->el->GetRefinedElementNumber("Wedge"))*NVE[2][index];
+    counter+=(_msh[ig]->el->GetElementNumber("Quad")-_msh[ig]->el->GetRefinedElementNumber("Quad"))*NVE[3][index];
+    counter+=(_msh[ig]->el->GetElementNumber("Triangle")-_msh[ig]->el->GetRefinedElementNumber("Triangle"))*NVE[4][index];
+    counter+=(_msh[ig]->el->GetElementNumber("Line")-_msh[ig]->el->GetRefinedElementNumber("Line"))*NVE[5][index];
   }
-  nel+=Lin_Solver_[gridn-1u]->_msh->GetElementNumber();
-  counter+=Lin_Solver_[gridn-1u]->_msh->el->GetElementNumber("Hex")*NVE[0][index];
-  counter+=Lin_Solver_[gridn-1u]->_msh->el->GetElementNumber("Tet")*NVE[1][index];
-  counter+=Lin_Solver_[gridn-1u]->_msh->el->GetElementNumber("Wedge")*NVE[2][index];
-  counter+=Lin_Solver_[gridn-1u]->_msh->el->GetElementNumber("Quad")*NVE[3][index];
-  counter+=Lin_Solver_[gridn-1u]->_msh->el->GetElementNumber("Triangle")*NVE[4][index];
-  counter+=Lin_Solver_[gridn-1u]->_msh->el->GetElementNumber("Line")*NVE[5][index]; 
+  nel+=_msh[gridn-1u]->GetElementNumber();
+  counter+=_msh[gridn-1u]->el->GetElementNumber("Hex")*NVE[0][index];
+  counter+=_msh[gridn-1u]->el->GetElementNumber("Tet")*NVE[1][index];
+  counter+=_msh[gridn-1u]->el->GetElementNumber("Wedge")*NVE[2][index];
+  counter+=_msh[gridn-1u]->el->GetElementNumber("Quad")*NVE[3][index];
+  counter+=_msh[gridn-1u]->el->GetElementNumber("Triangle")*NVE[4][index];
+  counter+=_msh[gridn-1u]->el->GetElementNumber("Line")*NVE[5][index]; 
   
   const unsigned dim_array_coord [] = { nvt*3*sizeof(float) };  
   const unsigned dim_array_conn[]   = { counter*sizeof(int) };
@@ -2082,14 +1739,14 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
   fout << "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\">" << endl;
   
   unsigned indXYZ[3];
-  indXYZ[0]=Lin_Solver_[gridn-1]->GetIndex("X");
-  indXYZ[1]=Lin_Solver_[gridn-1]->GetIndex("Y");
-  indXYZ[2]=Lin_Solver_[gridn-1]->GetIndex("Z");
+  indXYZ[0]=GetIndex("X");
+  indXYZ[1]=GetIndex("Y");
+  indXYZ[2]=GetIndex("Z");
   
   vector <NumericVector*> mysol(gridn);
   for(unsigned ig=gridr-1u; ig<gridn; ig++) {
     mysol[ig] = NumericVector::build().release();
-    mysol[ig]->init(Lin_Solver_[ig]->_msh->MetisOffset[index_nd][_nprocs],Lin_Solver_[ig]->_msh->own_size[index_nd][_iproc],
+    mysol[ig]->init(_msh[ig]->MetisOffset[index_nd][_nprocs],_msh[ig]->own_size[index_nd][_iproc],
 		    true,AUTOMATIC);
   }
   
@@ -2099,9 +1756,8 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
   unsigned offset_nvt3=0;
   for(unsigned ig=gridr-1u; ig<gridn; ig++) {
     std::vector<double> v_local;
-    unsigned nvt_ig=Lin_Solver_[ig]->_msh->MetisOffset[index_nd][_nprocs];
+    unsigned nvt_ig=_msh[ig]->MetisOffset[index_nd][_nprocs];
     for(int kk=0;kk<3;kk++) {
-      //mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Sol_[indXYZ[kk]],*ProlQitoQj_[index_nd][SolType[indXYZ[kk]]][ig]);
       mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indXYZ[kk]],*ProlQitoQj_[index_nd][SolType[indXYZ[kk]]][ig]);
       mysol[ig]->localize_to_one(v_local,0);
       if(_iproc==0) { 
@@ -2116,15 +1772,14 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
   if (_moving_mesh) {
       
     unsigned indDXDYDZ[3];
-    indDXDYDZ[0]=Lin_Solver_[gridn-1]->GetIndex(_moving_vars[0].c_str());
-    indDXDYDZ[1]=Lin_Solver_[gridn-1]->GetIndex(_moving_vars[1].c_str());
-    indDXDYDZ[2]=Lin_Solver_[gridn-1]->GetIndex(_moving_vars[2].c_str());
+    indDXDYDZ[0]=GetIndex(_moving_vars[0].c_str());
+    indDXDYDZ[1]=GetIndex(_moving_vars[1].c_str());
+    indDXDYDZ[2]=GetIndex(_moving_vars[2].c_str());
       
     for(unsigned ig=gridr-1u; ig<gridn; ig++){
       std::vector<double> v_local;
-      unsigned nvt_ig=Lin_Solver_[ig]->_msh->MetisOffset[index_nd][_nprocs];
+      unsigned nvt_ig=_msh[ig]->MetisOffset[index_nd][_nprocs];
       for(int kk=0;kk<3;kk++) {
-	//mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Sol_[indDXDYDZ[kk]],*ProlQitoQj_[index_nd][SolType[indDXDYDZ[kk]]][ig]);
 	mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indDXDYDZ[kk]],*ProlQitoQj_[index_nd][SolType[indDXDYDZ[kk]]][ig]);
         mysol[ig]->localize_to_one(v_local,0);
 	if(_iproc==0) { 
@@ -2168,17 +1823,17 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
   icount = 0;
   unsigned offset_nvt=0;
   for (unsigned ig=gridr-1u; ig<gridn; ig++) {
-    for (unsigned iel=0; iel<Lin_Solver_[ig]->_msh->GetElementNumber(); iel++) {
-      if (Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(iel)==0 || ig==gridn-1u) {
-        for (unsigned j=0; j<Lin_Solver_[ig]->_msh->el->GetElementDofNumber(iel,index); j++) {
-	  unsigned jnode=Lin_Solver_[ig]->_msh->el->GetElementVertexIndex(iel,j)-1u;
-	  unsigned jnode_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(jnode,index_nd);
+    for (unsigned iel=0; iel<_msh[ig]->GetElementNumber(); iel++) {
+      if (_msh[ig]->el->GetRefinedElementIndex(iel)==0 || ig==gridn-1u) {
+        for (unsigned j=0; j<_msh[ig]->el->GetElementDofNumber(iel,index); j++) {
+	  unsigned jnode=_msh[ig]->el->GetElementVertexIndex(iel,j)-1u;
+	  unsigned jnode_Metis = _msh[ig]->GetMetisDof(jnode,index_nd);
 	  var_conn[icount] = offset_nvt+jnode_Metis;
 	  icount++;
 	}
       }
     }
-    offset_nvt+=Lin_Solver_[ig]->_msh->MetisOffset[index_nd][_nprocs];
+    offset_nvt+=_msh[ig]->MetisOffset[index_nd][_nprocs];
   }
   
   //print connectivity dimension
@@ -2208,10 +1863,10 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
   int offset_el=0;
   //print offset array
   for (unsigned ig=gridr-1u; ig<gridn; ig++) {
-    for (unsigned iel=0; iel<Lin_Solver_[ig]->_msh->GetElementNumber(); iel++) {
-      if (Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(iel)==0 || ig==gridn-1u) {
-	unsigned iel_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(iel,3);
-        offset_el += Lin_Solver_[ig]->_msh->el->GetElementDofNumber(iel_Metis,index);
+    for (unsigned iel=0; iel<_msh[ig]->GetElementNumber(); iel++) {
+      if (_msh[ig]->el->GetRefinedElementIndex(iel)==0 || ig==gridn-1u) {
+	unsigned iel_Metis = _msh[ig]->GetMetisDof(iel,3);
+        offset_el += _msh[ig]->el->GetElementDofNumber(iel_Metis,index);
         var_off[icount] = offset_el;
 	icount++;
       }
@@ -2243,10 +1898,10 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
   unsigned short *var_type = static_cast <unsigned short*> (buffer_void);
   icount=0;
   for (unsigned ig=gridr-1u; ig<gridn; ig++) {
-    for (unsigned ii=0; ii<Lin_Solver_[ig]->_msh->GetElementNumber(); ii++) {
-      if (Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(ii)==0 || ig==gridn-1u) {
-	unsigned iel_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(ii,3);
-        short unsigned ielt=Lin_Solver_[ig]->_msh->el->GetElementType(iel_Metis);
+    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
+      if (_msh[ig]->el->GetRefinedElementIndex(ii)==0 || ig==gridn-1u) {
+	unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
+        short unsigned ielt=_msh[ig]->el->GetElementType(iel_Metis);
 	var_type[icount] = (short unsigned)(eltp[index][ielt]);
 	icount++;
       }
@@ -2285,10 +1940,10 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
   unsigned short* var_reg=static_cast <unsigned short*> (buffer_void);
   icount=0;
   for (unsigned ig=gridr-1u; ig<gridn; ig++) {
-    for (unsigned ii=0; ii<Lin_Solver_[ig]->_msh->GetElementNumber(); ii++) {
-      if ( ig==gridn-1u || 0==Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(ii,3);
-	var_reg[icount]= Lin_Solver_[ig]->_msh->el->GetElementGroup(ii);
+    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
+      if ( ig==gridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
+	unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
+	var_reg[icount]= _msh[ig]->el->GetElementGroup(ii);
 	icount++;
       }
     }
@@ -2317,10 +1972,10 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
   unsigned short* var_proc=static_cast <unsigned short*> (buffer_void);
   icount=0;
   for (unsigned ig=gridr-1u; ig<gridn; ig++) {
-    for (unsigned ii=0; ii<Lin_Solver_[ig]->_msh->GetElementNumber(); ii++) {
-      if ( ig==gridn-1u || 0==Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(ii)) {
-	 unsigned iel_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(ii,3);
-	 var_proc[icount]=(unsigned short)(Lin_Solver_[ig]->_msh->epart[ii]);
+    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
+      if ( ig==gridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
+	 unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
+	 var_proc[icount]=(unsigned short)(_msh[ig]->epart[ii]);
 	 icount++;
       }
     }
@@ -2345,7 +2000,7 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
 
   //Print Solution (on element) ***************************************************************
   for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*SolName.size(); i++) {
-    unsigned indx=(test_all==0)?Lin_Solver_[gridn-1]->GetIndex(vars[i].c_str()):i;
+    unsigned indx=(test_all==0)?GetIndex(vars[i].c_str()):i;
     if (3 <= SolType[indx]) {
       fout << "    <DataArray type=\"Float32\" Name=\"" << SolName[indx] <<"\" format=\"binary\">" << endl;
       // point pointer to common memory area buffer of void type;
@@ -2353,11 +2008,10 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
       icount=0;
       for (unsigned ig=gridr-1u; ig<gridn; ig++) {
 	vector<double> sol_local;
-	//Lin_Solver_[ig]->Sol_[indx]->localize_to_one(sol_local,0);
 	_solution[ig]->_Sol[indx]->localize_to_one(sol_local,0);
-	for (unsigned ii=0; ii<Lin_Solver_[ig]->_msh->GetElementNumber(); ii++) {
-	  if (ig==gridn-1u || 0==Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(ii)) {
-	    unsigned iel_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(ii,SolType[indx]);
+	for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
+	  if (ig==gridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
+	    unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,SolType[indx]);
 	    var_el[icount]=sol_local[iel_Metis];
 	    icount++;
 	  }
@@ -2393,7 +2047,7 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
   // point pointer to common mamory area buffer of void type;
   float* var_nd = static_cast<float*>(buffer_void);
   for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*SolName.size(); i++) {
-    unsigned indx=(test_all==0)?Lin_Solver_[gridn-1]->GetIndex(vars[i].c_str()):i;
+    unsigned indx=(test_all==0)?GetIndex(vars[i].c_str()):i;
     if (SolType[indx]<3) {
       fout << " <DataArray type=\"Float32\" Name=\"" << SolName[indx] <<"\" format=\"binary\">" << endl;
       //print solutions on nodes dimension
@@ -2404,11 +2058,10 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
       
       unsigned offset_nvt=0;
       for(unsigned ig=gridr-1u; ig<gridn; ig++) {
-	//mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Sol_[indx],*ProlQitoQj_[index_nd][SolType[indx]][ig]);
 	mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indx],*ProlQitoQj_[index_nd][SolType[indx]][ig]);
 	vector<double> sol_local;
 	mysol[ig]->localize_to_one(sol_local,0);
-	unsigned nvt_ig=Lin_Solver_[ig]->_msh->MetisOffset[index_nd][_nprocs];//Lin_Solver_[ig]->(index_nd);
+	unsigned nvt_ig=_msh[ig]->MetisOffset[index_nd][_nprocs];//Lin_Solver_[ig]->(index_nd);
 	for (unsigned ii=0; ii<nvt_ig; ii++) {
 	  var_nd[ii+offset_nvt] = sol_local[ii];
 	}
@@ -2486,25 +2139,25 @@ void  NonLinearMultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vec
   
   //I assume that the mesh is not mixed
   string type_elem;
-  type_elem = type_el[index][Lin_Solver_[gridn-1u]->_msh->el->GetElementType(0)];
+  type_elem = type_el[index][_msh[gridn-1u]->el->GetElementType(0)];
   
   if (type_elem.compare("Not_implemented") == 0) exit(1);
   
   unsigned nvt=0;
   for (unsigned ig=gridr-1u; ig<gridn; ig++) {
-    unsigned nvt_ig=Lin_Solver_[ig]->_msh->GetDofNumber(index_nd);
+    unsigned nvt_ig=_msh[ig]->GetDofNumber(index_nd);
     nvt+=nvt_ig;
   } 
   
   // Printing connectivity
   unsigned nel=0;
   for(unsigned ig=0;ig<gridn-1u;ig++) {
-    nel+=( Lin_Solver_[ig]->_msh->GetElementNumber() - Lin_Solver_[ig]->_msh->el->GetRefinedElementNumber());
+    nel+=( _msh[ig]->GetElementNumber() - _msh[ig]->el->GetRefinedElementNumber());
   }
-  nel+=Lin_Solver_[gridn-1u]->_msh->GetElementNumber();
+  nel+=_msh[gridn-1u]->GetElementNumber();
   
   unsigned icount;
-  unsigned el_dof_number  = Lin_Solver_[gridn-1u]->_msh->el->GetElementDofNumber(0,index);
+  unsigned el_dof_number  = _msh[gridn-1u]->el->GetElementDofNumber(0,index);
   int *var_int             = new int [nel*el_dof_number];
   float *var_el_f         = new float [nel];
   float *var_nd_f         = new float [nvt];
@@ -2559,7 +2212,7 @@ void  NonLinearMultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vec
   fout << "</Attribute>" << endl;
   // Solution Variables
   for (unsigned i=0; i<vars.size(); i++) {
-    unsigned indx=Lin_Solver_[gridn-1]->GetIndex(vars[i].c_str());  
+    unsigned indx=GetIndex(vars[i].c_str());  
     //Printing biquadratic solution on the nodes
     if(SolType[indx]<3) {  
       fout << "<Attribute Name=\""<< SolName[indx]<<"\" AttributeType=\"Scalar\" Center=\"Node\">" << endl;
@@ -2597,9 +2250,9 @@ void  NonLinearMultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vec
   
   PetscScalar *MYSOL[1]; //TODO
   unsigned varind[3];
-  varind[0]=Lin_Solver_[gridn-1u]->GetIndex("X");
-  varind[1]=Lin_Solver_[gridn-1u]->GetIndex("Y");
-  varind[2]=Lin_Solver_[gridn-1u]->GetIndex("Z");
+  varind[0]=GetIndex("X");
+  varind[1]=GetIndex("Y");
+  varind[2]=GetIndex("Z");
 
   
   for (int i=0; i<3; i++) {
@@ -2607,14 +2260,12 @@ void  NonLinearMultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vec
     for (unsigned ig=gridr-1u; ig<gridn; ig++) {
       NumericVector* mysol;
       mysol = NumericVector::build().release();
-      mysol->init(Lin_Solver_[ig]->_msh->GetDofNumber(index_nd),Lin_Solver_[ig]->_msh->GetDofNumber(index_nd),true,SERIAL);
-      //mysol->matrix_mult(*Lin_Solver_[ig]->Sol_[varind[i]],*ProlQitoQj_[index_nd][SolType[varind[i]]][ig]);
+      mysol->init(_msh[ig]->GetDofNumber(index_nd),_msh[ig]->GetDofNumber(index_nd),true,SERIAL);
       mysol->matrix_mult(*_solution[ig]->_Sol[varind[i]],*ProlQitoQj_[index_nd][SolType[varind[i]]][ig]);
-      unsigned nvt_ig=Lin_Solver_[ig]->_msh->GetDofNumber(index_nd);
+      unsigned nvt_ig=_msh[ig]->GetDofNumber(index_nd);
       for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
       if (_moving_mesh) {
-	unsigned varind_DXDYDZ=Lin_Solver_[ig]->GetIndex(_moving_vars[i].c_str());
-	//mysol->matrix_mult(*Lin_Solver_[ig]->Sol_[varind_DXDYDZ],*ProlQitoQj_[index_nd][SolType[varind_DXDYDZ]][ig]);
+	unsigned varind_DXDYDZ=GetIndex(_moving_vars[i].c_str());
 	mysol->matrix_mult(*_solution[ig]->_Sol[varind_DXDYDZ],*ProlQitoQj_[index_nd][SolType[varind_DXDYDZ]][ig]);
 	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] += (*mysol)(ii);
       }
@@ -2640,17 +2291,17 @@ void  NonLinearMultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vec
   icount = 0;
   unsigned offset_conn=0;
   for (unsigned ig=gridr-1u; ig<gridn; ig++) {
-    for (unsigned iel=0; iel<Lin_Solver_[ig]->_msh->GetElementNumber(); iel++) {
-      if (Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(iel)==0 || ig==gridn-1u) {
-        for (unsigned j=0; j<Lin_Solver_[ig]->_msh->el->GetElementDofNumber(iel,index); j++) {
-	  unsigned jnode=Lin_Solver_[ig]->_msh->el->GetElementVertexIndex(iel,j)-1u;
-	  unsigned jnode_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(jnode,index_nd);
+    for (unsigned iel=0; iel<_msh[ig]->GetElementNumber(); iel++) {
+      if (_msh[ig]->el->GetRefinedElementIndex(iel)==0 || ig==gridn-1u) {
+        for (unsigned j=0; j<_msh[ig]->el->GetElementDofNumber(iel,index); j++) {
+	  unsigned jnode=_msh[ig]->el->GetElementVertexIndex(iel,j)-1u;
+	  unsigned jnode_Metis = _msh[ig]->GetMetisDof(jnode,index_nd);
 	  var_int[icount] = offset_conn + jnode_Metis;
 	  icount++;
 	}
       }
     }
-    offset_conn += Lin_Solver_[ig]->_msh->GetDofNumber(index_nd);
+    offset_conn += _msh[ig]->GetDofNumber(index_nd);
   }
   
   dimsf[0] = nel*el_dof_number ;  dimsf[1] = 1;
@@ -2667,10 +2318,10 @@ void  NonLinearMultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vec
   // print regions
   icount=0;
   for (unsigned ig=gridr-1u; ig<gridn; ig++) {
-    for (unsigned ii=0; ii<Lin_Solver_[ig]->_msh->GetElementNumber(); ii++) {
-      if (ig==gridn-1u || 0==Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(ii,3);
-	var_int[icount] = Lin_Solver_[ig]->_msh->el->GetElementGroup(iel_Metis);
+    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
+      if (ig==gridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
+	unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
+	var_int[icount] = _msh[ig]->el->GetElementGroup(iel_Metis);
 	icount++;
       }
     }
@@ -2687,14 +2338,13 @@ void  NonLinearMultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vec
   //-------------------------------------------------------------------------------------------------------
   // printing element variables
   for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*SolName.size(); i++) {
-    unsigned indx=(test_all==0)?Lin_Solver_[gridn-1]->GetIndex(vars[i].c_str()):i;
+    unsigned indx=(test_all==0)?GetIndex(vars[i].c_str()):i;
     if (SolType[indx]>=3) {
       icount=0;
       for (unsigned ig=gridr-1u; ig<gridn; ig++) {
-	for (unsigned ii=0; ii<Lin_Solver_[ig]->_msh->GetElementNumber(); ii++) {
-	  if (ig==gridn-1u || 0==Lin_Solver_[ig]->_msh->el->GetRefinedElementIndex(ii)) {
-	    unsigned iel_Metis = Lin_Solver_[ig]->_msh->GetMetisDof(ii,SolType[indx]);
-	    //var_el_f[icount]=(*Lin_Solver_[ig]->Sol_[indx])(iel_Metis);
+	for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
+	  if (ig==gridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
+	    unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,SolType[indx]);
 	    var_el_f[icount]=(*_solution[ig]->_Sol[indx])(iel_Metis);
 	    icount++;
 	  }
@@ -2715,16 +2365,15 @@ void  NonLinearMultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vec
   //-------------------------------------------------------------------------------------------------------
   // printing nodes variables
   for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*SolName.size(); i++) {
-    unsigned indx=(test_all==0)?Lin_Solver_[gridn-1]->GetIndex(vars[i].c_str()):i;
+    unsigned indx=(test_all==0)?GetIndex(vars[i].c_str()):i;
     if (SolType[indx] < 3) {
       unsigned offset_nvt=0;
       for(unsigned ig=gridr-1u; ig<gridn; ig++) {
         NumericVector* mysol;
 	mysol = NumericVector::build().release();
-        mysol->init(Lin_Solver_[ig]->_msh->GetDofNumber(index_nd),Lin_Solver_[ig]->_msh->GetDofNumber(index_nd),true,SERIAL);
-	//mysol->matrix_mult(*Lin_Solver_[ig]->Sol_[indx],*ProlQitoQj_[index_nd][SolType[indx]][ig]);
+        mysol->init(_msh[ig]->GetDofNumber(index_nd),_msh[ig]->GetDofNumber(index_nd),true,SERIAL);
 	mysol->matrix_mult(*_solution[ig]->_Sol[indx],*ProlQitoQj_[index_nd][SolType[indx]][ig]);
-	unsigned nvt_ig=Lin_Solver_[ig]->_msh->GetDofNumber(index_nd);
+	unsigned nvt_ig=_msh[ig]->GetDofNumber(index_nd);
 	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
 	offset_nvt+=nvt_ig;
 	delete mysol;
@@ -2762,425 +2411,5 @@ void  NonLinearMultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vec
 //   return status;
 // }
 
-/*
-// ********************************************************************
-int  NonLinearMultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, bool debug) const {
-// TODO
-
-if(_iproc!=0) return 1;  
-  
-unsigned _igridn=igridn;
-if (_igridn==0) _igridn=gridn;
-  
-unsigned _gridr=(gridr <= _igridn)?gridr:_igridn;
-
-// ********** linear -> index==0 *** quadratic -> index==1 **********
-unsigned index=(strcmp(type,"linear"))?1:0;
-
-char *filename = new char[60];
-sprintf(filename,"./output/mesh.level%d.%d.%s.gmv",_igridn,_time_step,type);
-
-std::ofstream fout;
-//  // fout.open(filename);
-//   if (!fout) {
-//     cout << "Output mesh file "<< filename <<" cannot be opened.\n";
-//     exit(0);
-//   }
-
-PetscErrorCode ierr;
-
-unsigned nvt=0;
-unsigned nvt_max=0;
-for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-unsigned nvt_ig=Lin_Solver_[ig]->GetDofNumber(index);
-nvt_max=(nvt_max>nvt_ig)?nvt_max:nvt_ig;
-nvt+=nvt_ig;
-}
-  
-double *var_nd=new double [nvt_max+1]; //TO FIX Valgrind complaints! In reality it should be only nvt
-vector <NumericVector*> Mysol(_igridn);
-for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-Mysol[ig] = NumericVector::build().release();
-Mysol[ig]->init(Lin_Solver_[ig]->GetDofNumber(index),Lin_Solver_[ig]->GetDofNumber(index),true,SERIAL);
-}
-   
-   
-// fout.close();
-int fd;
-int fd_copy;
-PetscBinaryOpen(filename,FILE_MODE_WRITE,&fd); 
-// ********** Header **********
-char *det= new char[10];
-sprintf(det,"%s","gmvinput");
-//fout.write((char *)det,sizeof(char)*8);
-PetscBinaryWrite(fd,det,8,PETSC_CHAR,PETSC_FALSE);
-  
-  
-sprintf(det,"%s","ieeei4r8");
-//fout.write((char *)det,sizeof(char)*8);
-PetscBinaryWrite(fd,det,8,PETSC_CHAR,PETSC_FALSE);
-
-// ********** Start printing node coordinates  **********
-sprintf(det,"%s","nodes");
-//fout.write((char *)det,sizeof(char)*8);
-PetscBinaryWrite(fd,det,8,PETSC_CHAR,PETSC_FALSE);
-  
-  
-//fout.write((char *)&nvt,sizeof(unsigned));
-PetscBinaryWrite(fd,&nvt,1,PETSC_INT,PETSC_FALSE);
-  
-  
-  
-unsigned indXYZ[3];
-  
-indXYZ[0]=Lin_Solver_[_igridn-1]->GetIndex("X");
-indXYZ[1]=Lin_Solver_[_igridn-1]->GetIndex("Y");
-indXYZ[2]=Lin_Solver_[_igridn-1]->GetIndex("Z");
-   
-for (int i=0; i<3; i++) {
-for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-Mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Sol_[indXYZ[i]],*ProlQitoQj_[index][SolType[indXYZ[i]]][ig]);
-unsigned nvt_ig=Lin_Solver_[ig]->GetDofNumber(index);
-for (unsigned ii=0; ii<nvt_ig; ii++) var_nd[ii]=  (*Mysol[ig])(ii);
-if (_moving_mesh) {
-unsigned indDXDYDZ=Lin_Solver_[ig]->GetIndex(_moving_vars[i].c_str());
-Mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Sol_[indDXDYDZ],*ProlQitoQj_[index][SolType[indDXDYDZ]][ig]);
-for (unsigned ii=0; ii<nvt_ig; ii++) var_nd[ii]+= (*Mysol[ig])(ii);
-}
-//fout.write((char *)&var_nd[0],nvt_ig*sizeof(double)); 
-PetscBinaryWrite(fd,&var_nd[0],nvt_ig,PETSC_SCALAR,PETSC_FALSE);
-}
-}
-// ********** End printing node coordinates  **********
-
-// ********** Start printing cell connectivity  **********
-const int eltp[2][6]= {{8,4,6,4,3,2},{20,10,15,8,6,3}};
-sprintf(det,"%s","cells");
-//fout.write((char *)det,sizeof(char)*8);
-PetscBinaryWrite(fd,det,8,PETSC_CHAR,PETSC_FALSE);
-   
-unsigned nel=0;
-for (unsigned ig=_gridr-1u; ig<_igridn-1u; ig++)
-nel+=( Lin_Solver_[ig]->GetElementNumber() - Lin_Solver_[ig]->el->GetRefinedElementNumber());
-nel+=Lin_Solver_[_igridn-1u]->GetElementNumber();
-//fout.write((char *)&nel,sizeof(unsigned));
-PetscBinaryWrite(fd,&nel,1,PETSC_INT,PETSC_FALSE);
-  
-  
-unsigned topology[27];
-unsigned offset=1;
-  
-for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-for (unsigned ii=0; ii<Lin_Solver_[ig]->GetElementNumber(); ii++) {
-if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->el->GetRefinedElementIndex(ii)) {
-short unsigned ielt=Lin_Solver_[ig]->el->GetElementType(ii);
-if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
-else if (ielt==1) sprintf(det,"ptet%d",eltp[index][1]);
-else if (ielt==2) sprintf(det,"pprism%d",eltp[index][2]);
-else if (ielt==3) {
-if (eltp[index][3]==8) sprintf(det,"%dquad",eltp[index][3]);
-else sprintf(det,"quad");
-} else if (ielt==4) {
-if (eltp[index][4]==6) sprintf(det,"%dtri",eltp[index][4]);
-else sprintf(det,"tri");
-} else if (ielt==5) {
-if (eltp[index][5]==3) sprintf(det,"%dline",eltp[index][5]);
-else sprintf(det,"line");
-}
-//fout.write((char *)det,sizeof(char)*8);
-PetscBinaryWrite(fd,det,8,PETSC_CHAR,PETSC_FALSE);
-//fout.write((char *)&NVE[ielt][index],sizeof(unsigned));
-unsigned nvetype=NVE[ielt][index];
-PetscBinaryWrite(fd,&nvetype,1,PETSC_INT,PETSC_FALSE);
-	
-for(unsigned j=0;j<NVE[ielt][index];j++){
-	  
-unsigned jnode=Lin_Solver_[ig]->el->GetElementVertexIndex(ii,j)-1u;
-unsigned jnode_Metis = Lin_Solver_[ig]->GetMetisDof(jnode,index);
-	  	  
-topology[j]=jnode_Metis+offset;
-}
-//fout.write((char *)topology,sizeof(unsigned)*NVE[ielt][index]);
-PetscBinaryWrite(fd,topology,NVE[ielt][index],PETSC_INT,PETSC_FALSE);
-}
-}
-offset+=Lin_Solver_[ig]->GetDofNumber(index);
-}
-// ********** End printing cell connectivity  **********
- 
-double *var_el=new double [nel+1]; //TO FIX Valgrind complaints! In reality it should be only nel
-//   
-//   // ********** Start printing Variables **********
-//   const unsigned zero=0u;
-unsigned one=1u;
-sprintf(det,"%s","variable");
-//fout.write((char *)det,sizeof(char)*8);
-PetscBinaryWrite(fd,det,8,PETSC_CHAR,PETSC_FALSE);
-
-// 
-// 
-// 
-//   // ********** Start printing Regions **********
-//   strcpy(det,"Regions");
-//   fout.write((char *)det,sizeof(char)*8);
-//   fout.write((char *)&zero,sizeof(unsigned));
-// 
-//   int icount=0;
-//   for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-//     for (unsigned ii=0; ii<Lin_Solver_[ig]->GetElementNumber(); ii++) {
-//       if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->el->GetRefinedElementIndex(ii)) {
-// 	unsigned iel_Metis = Lin_Solver_[ig]->GetMetisDof(ii,3);
-//         var_el[icount]=Lin_Solver_[ig]->el->GetElementGroup(iel_Metis);
-//         icount++;
-//       }
-//     }
-//   }
-//   fout.write((char *)&var_el[0],nel*sizeof(double));
-//   
-//   
-//   if(_nprocs>=1){
-//     strcpy(det,"Reg_proc");
-//     fout.write((char *)det,sizeof(char)*8);
-//     fout.write((char *)&zero,sizeof(unsigned));
-// 
-//     int icount=0;
-//     for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-//       for (unsigned ii=0; ii<Lin_Solver_[ig]->GetElementNumber(); ii++) {
-// 	if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->el->GetRefinedElementIndex(ii)) {
-// 	  unsigned iel_Metis = Lin_Solver_[ig]->GetMetisDof(ii,3);
-// 	  var_el[icount]=Lin_Solver_[ig]->epart[ii];
-// 	  icount++;
-// 	}
-//       }
-//     }
-//     fout.write((char *)&var_el[0],nel*sizeof(double));
-//   }
-//   
-//   
-//   // ********** End printing Regions **********
-//   
-//   // ********** Start printing Solution **********
-for (unsigned i=0; i<SolType.size(); i++) {
-if (SolType[i]<3) {  // ********** Printing Solution on nodes **********
-strcpy(det,SolName[i]);
-//fout.write((char *)det,sizeof(char)*8);
-PetscBinaryWrite(fd,det,8,PETSC_CHAR,PETSC_FALSE);
-//fout.write((char *)&one,sizeof(unsigned));
-PetscBinaryWrite(fd,&one,1,PETSC_INT,PETSC_FALSE);
-for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-	
-// 	Mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Sol_[i],*ProlQitoQj_[index][SolType[i]][ig]);
-// 	PetscVector* petsc_vec_sol  = static_cast<PetscVector*>(Mysol[ig]);
-// 	fout.close();
-// 	PetscBinaryClose(fd);
-// 	PetscViewer binv;
-// 	ierr=PetscViewerBinaryOpen(PETSC_COMM_SELF,filename,FILE_MODE_APPEND,&binv); CHKERRQ(ierr);
-// 	
-// 	ierr=PetscViewerBinarySetSkipHeader(binv,PETSC_TRUE);
-// 	
-// 	ierr=VecView(petsc_vec_sol->vec(),binv); CHKERRQ(ierr);
-// 	ierr=PetscViewerDestroy(&binv); CHKERRQ(ierr);
-// 	fout.open(filename, std::ios::app);
-// 	PetscBinaryOpen(filename,FILE_MODE_APPEND,&fd); 
-
-	
-// 	Mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Sol_[i],*ProlQitoQj_[index][SolType[i]][ig]);
-// 	PetscVector* petsc_vec_sol  = static_cast<PetscVector*>(Mysol[ig]);
-// 	PetscScalar *MYSOL[1];
-// 	ierr = VecGetArray(petsc_vec_sol->vec(),&MYSOL[0]); CHKERRQ(ierr);
-// 	unsigned nvt_ig=Lin_Solver_[ig]->GetDofNumber(index);
-// 	fout.write((char *)&MYSOL[0][0],nvt_ig*sizeof(double));
-// 	ierr = VecRestoreArray(petsc_vec_sol->vec(),&MYSOL[0]); CHKERRQ(ierr);
-	  
-	  
-fd_copy=fd;  
-cout<<fd<<endl;
-PetscBinaryClose(fd);  
-PetscBinaryOpen(filename,FILE_MODE_APPEND,&fd_copy); 
-cout<<fd_copy<<endl;
-	
-// 	
-Mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Sol_[i],*ProlQitoQj_[index][SolType[i]][ig]);
-unsigned nvt_ig=Lin_Solver_[ig]->GetDofNumber(index);
-std::vector<double> v_local;
-Mysol[ig]->localize_to_one(v_local,0);
-PetscBinaryWrite(fd_copy,&v_local[0],nvt_ig,PETSC_SCALAR,PETSC_FALSE);
-//fout.write((char *)&v_local[0],nvt_ig*sizeof(double));
-	
-}
-} 
-else { // ********** Printing Solution on elements **********
-//       strcpy(det,SolName[i]);
-//       fout.write((char *)det,sizeof(char)*8);
-//       fout.write((char *)&zero,sizeof(unsigned));
-//       int icount=0;
-//       for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-// 	std::vector<double> v_local;
-// 	Lin_Solver_[ig]->Sol_[i]->localize_to_one(v_local,0);
-// 	for (unsigned ii=0; ii<Lin_Solver_[ig]->GetElementNumber(); ii++) {
-// 	  if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->el->GetRefinedElementIndex(ii)) {
-// 	    unsigned iel_Metis = Lin_Solver_[ig]->GetMetisDof(ii,SolType[i]);
-// 	    var_el[icount]=v_local[iel_Metis];
-// 	    icount++;
-// 	  }
-// 	}
-// // 	for (unsigned ii=0; ii<Lin_Solver_[ig]->GetElementNumber(); ii++) {
-// // 	  if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->el->GetRefinedElementIndex(ii)) {
-// // 	    unsigned iel_Metis = Lin_Solver_[ig]->GetMetisDof(ii,SolType[i]);
-// // 	    var_el[icount]=(*Lin_Solver_[ig]->Sol_[i])(iel_Metis);
-// // 	    icount++;
-// // 	  }
-// // 	}
-//       }
-//       fout.write((char *)&var_el[0],nel*sizeof(double));
-}
-}
-//   // ********** End printing Solution **********
-//   
-//   if (debug) { // ********** Only if the debug flag is 1 **********
-//     // ********** Start printing Boundary **********
-//     for (unsigned i=0; i<SolType.size(); i++) {
-//       if(Lin_Solver_[_igridn-1u]->ResEpsBdc_flag_[i]){
-// 	if (SolType[i]<3) {  // ********** Bdc on the nodes **********
-// 	  if ( (index==1 && SolType[i]>0) || index==0 ) {
-// 	    sprintf(det,"%s %s","bdcd",SolName[i]);
-// 	    fout.write((char *)det,sizeof(char)*8);
-// 	    fout.write((char *)&one,sizeof(unsigned));
-// 	    for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-// 	      unsigned nvt_ig=Lin_Solver_[ig]->GetDofNumber(index);
-// 	      for (unsigned ii=0; ii<nvt_ig; ii++){
-// 		unsigned inode_Metis = Lin_Solver_[ig]->GetMetisDof(ii,index);
-// 		var_nd[inode_Metis]=Lin_Solver_[ig]->Bdc[i][ii];
-// 	      }
-// 	      fout.write((char *)&var_nd[0],nvt_ig*sizeof(double));
-// 	    }
-// 	  }
-// 	}
-//       }
-//     }
-//     // ********** End printing Boundary **********
-//  
-//     // ********** Start ownership **********
-//     if(_nprocs>=1){
-//       sprintf(det,"proc");
-//       fout.write((char *)det,sizeof(char)*8);
-//       fout.write((char *)&one,sizeof(unsigned));
-//       for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-// 	unsigned nvt_ig=Lin_Solver_[ig]->GetDofNumber(index);
-// 	for (unsigned ii=0; ii<nvt_ig; ii++){
-// 	  unsigned inode_Metis = Lin_Solver_[ig]->GetMetisDof(ii,index);
-// 	  var_nd[inode_Metis]=Lin_Solver_[ig]->npart[ii];
-// 	}
-// 	fout.write((char *)&var_nd[0],nvt_ig*sizeof(double));
-//       }
-//     }
-//      
-//     // ********** End ownership Boundary **********
-//   
-//     // ********** Start printing Residual **********
-//     for (unsigned i=0; i<SolType.size(); i++) {
-//       if(Lin_Solver_[_igridn-1u]->ResEpsBdc_flag_[i]){
-// 	if (SolType[i]<3) {  // ********** Printing Residual on  nodes **********
-// 	  sprintf(det,"%s %s","Res",SolName[i]);
-// 	  fout.write((char *)det,sizeof(char)*8);
-// 	  fout.write((char *)&one,sizeof(unsigned));
-// 	  for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-// 	    Mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Res_[i],*ProlQitoQj_[index][SolType[i]][ig]);
-// 	    PetscVector* petsc_vec_sol  = static_cast<PetscVector*>(Mysol[ig]);
-// 	    PetscScalar *MYSOL[1];
-// 	    ierr = VecGetArray(petsc_vec_sol->vec(),&MYSOL[0]); CHKERRQ(ierr);
-// 	    unsigned nvt_ig=Lin_Solver_[ig]->GetDofNumber(index);
-// 	    fout.write((char *)&MYSOL[0][0],nvt_ig*sizeof(double));
-// 	    ierr = VecRestoreArray(petsc_vec_sol->vec(),&MYSOL[0]); CHKERRQ(ierr);
-// 	  }
-// 	} 
-// 	else { // ********** Printing Residual on elements **********
-// 	  sprintf(det,"%s %s","Res",SolName[i]);
-// 	  fout.write((char *)det,sizeof(char)*8);
-// 	  fout.write((char *)&zero,sizeof(unsigned));
-// 	  int icount=0;
-// 	  for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-// 	    for (unsigned ii=0; ii<Lin_Solver_[ig]->GetElementNumber(); ii++) {
-// 	      if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->el->GetRefinedElementIndex(ii)) {
-// 		unsigned iel_Metis = Lin_Solver_[ig]->GetMetisDof(ii,SolType[i]);
-// 		var_el[icount]=(*Lin_Solver_[ig]->Res_[i])(iel_Metis);
-// 		icount++;
-// 	      }
-// 	    }
-// 	  }
-// 	  fout.write((char *)&var_el[0],nel*sizeof(double));
-// 	}
-//       }
-//     }
-//     
-//   
-//     // ********** End printing Residual **********
-// 
-//     // ********** Start printing Epsilon **********
-//     for (unsigned i=0; i<SolType.size(); i++) {
-//       if(Lin_Solver_[_igridn-1u]->ResEpsBdc_flag_[i]){
-// 	if (SolType[i]<3) {  // ********** Printing Epsilon on  nodes **********
-// 	  sprintf(det,"%s %s","Eps",SolName[i]);
-// 	  fout.write((char *)det,sizeof(char)*8);
-// 	  fout.write((char *)&one,sizeof(unsigned));
-// 	
-// 	  
-// 	  for (unsigned ig=_gridr-1u; ig<_igridn; ig++) { 
-// 	    Mysol[ig]->matrix_mult(*Lin_Solver_[ig]->Eps_[i],*ProlQitoQj_[index][SolType[i]][ig]);
-// 	    PetscVector* petsc_vec_sol  = static_cast<PetscVector*>(Mysol[ig]);
-// 	    PetscScalar *MYSOL[1];
-// 	    ierr = VecGetArray(petsc_vec_sol->vec(),&MYSOL[0]); CHKERRQ(ierr);
-// 	    unsigned nvt_ig=Lin_Solver_[ig]->GetDofNumber(index);
-// 	    fout.write((char *)&MYSOL[0][0],nvt_ig*sizeof(double));
-// 	    ierr = VecRestoreArray(petsc_vec_sol->vec(),&MYSOL[0]); CHKERRQ(ierr);
-// 	  }
-// 	} 
-// 	else { // ********** Printing Epsilon on elements **********
-// 	  sprintf(det,"%s %s","Eps",SolName[i]);
-// 	  fout.write((char *)det,sizeof(char)*8);
-// 	  fout.write((char *)&zero,sizeof(unsigned));
-// 	  int icount=0;
-// 	  for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-// 	    for (unsigned ii=0; ii<Lin_Solver_[ig]->GetElementNumber(); ii++) {
-// 	      if ( ig==_igridn-1u || 0==Lin_Solver_[ig]->el->GetRefinedElementIndex(ii)) {
-// 		unsigned iel_Metis = Lin_Solver_[ig]->GetMetisDof(ii,SolType[i]);
-// 		var_el[icount]=(*Lin_Solver_[ig]->Eps_[i])(iel_Metis);
-// 		icount++;
-// 	      }
-// 	    }
-// 	  }
-// 	  fout.write((char *)&var_el[0],nel*sizeof(double));
-// 	}
-//       }
-//     }
-//     // ********** End printing Epsilon **********
-//   }
-// 
-sprintf(det,"%s","endvars");
-PetscBinaryWrite(fd,det,8,PETSC_CHAR,PETSC_FALSE);
-//   fout.write((char *)det,sizeof(char)*8);
-// 
-//   // ********** End printing Variables **********
-//  
-
-sprintf(det,"%s","endgmv");
-PetscBinaryWrite(fd,det,8,PETSC_CHAR,PETSC_FALSE);
-//fout.write((char *)det,sizeof(char)*8);
-
-PetscBinaryClose(fd);
-
-//fout.close();
-delete [] var_el;
-delete [] var_nd;
-
-for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
-delete Mysol[ig];
-}
-  
-  
-delete [] det;
-delete [] filename;
-return 1;
-}*/
 
 

@@ -13,6 +13,8 @@ using std::min;
 #include "metis.h"
 using std::sort;
 
+const unsigned mesh::_END_IND[5]= {0,1,3,4,5};
+
 unsigned mesh::_dimension=2;
 unsigned mesh::_ref_index=4;  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
 unsigned mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
@@ -1417,3 +1419,6 @@ void mesh::AllocateAndMarkStructureNode() {
   return;
 }
 
+unsigned mesh::GetEndIndex(const unsigned i) const{
+  return _END_IND[i];
+};

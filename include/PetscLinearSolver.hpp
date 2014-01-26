@@ -72,9 +72,9 @@ private:
 public:
   // Constructor --------------------------------------
   ///  Constructor. Initializes Petsc data structures
-  PetscLinearSolver (const char infile[], vector < vector < double> > &vt, const double Lref);
-
-  PetscLinearSolver (const unsigned &igrid,elem *elc);
+//   PetscLinearSolver (const char infile[], vector < vector < double> > &vt, const double Lref);
+// 
+//   PetscLinearSolver (const unsigned &igrid,elem *elc);
 
   PetscLinearSolver (const unsigned &igrid, mesh *other_mesh);
   
@@ -166,45 +166,45 @@ private:
 
 /*----------------------- functions ----------------------------------*/
 // =================================================
-inline PetscLinearSolver::PetscLinearSolver (const char infile[],
-    vector < vector < double> > &vt, const double Lref)
-  : LinearSolverM(infile,vt,Lref) {
-   
-    this->_preconditioner_type = MLU_PRECOND;
-
-  _rtol   = 1.e-8;
-  _abstol = 1.e-40;
-  _dtol   = 1.e+50;
-  _maxits = 10;
-
-  _rtol_   = 1.e-8;
-  _abstol_ = 1.e-40;
-  _dtol_   = 1.e+50;
-  _maxits_ = 10;
-}
-
-inline PetscLinearSolver::PetscLinearSolver (const unsigned &igrid,elem *elc)
-  : LinearSolverM(igrid,elc) {
-   
-  std::cout << " PetscLin " << std::endl;  
-  if(_msh->_nprocs==1) {  
-   this->_preconditioner_type = ILU_PRECOND;
-  } else {
-    this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
-  }
-
-  _rtol   = 1.e-8;
-  _abstol = 1.e-40;
-  _dtol   = 1.e+50;
-  _maxits = 10;
-
-  _rtol_   = 1.e-8;
-  _abstol_ = 1.e-40;
-  _dtol_   = 1.e+50;
-  _maxits_ = 10;
-
-
-}
+// inline PetscLinearSolver::PetscLinearSolver (const char infile[],
+//     vector < vector < double> > &vt, const double Lref)
+//   : LinearSolverM(infile,vt,Lref) {
+//    
+//     this->_preconditioner_type = MLU_PRECOND;
+// 
+//   _rtol   = 1.e-8;
+//   _abstol = 1.e-40;
+//   _dtol   = 1.e+50;
+//   _maxits = 10;
+// 
+//   _rtol_   = 1.e-8;
+//   _abstol_ = 1.e-40;
+//   _dtol_   = 1.e+50;
+//   _maxits_ = 10;
+// }
+// 
+// inline PetscLinearSolver::PetscLinearSolver (const unsigned &igrid,elem *elc)
+//   : LinearSolverM(igrid,elc) {
+//    
+//   std::cout << " PetscLin " << std::endl;  
+//   if(_msh->_nprocs==1) {  
+//    this->_preconditioner_type = ILU_PRECOND;
+//   } else {
+//     this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
+//   }
+// 
+//   _rtol   = 1.e-8;
+//   _abstol = 1.e-40;
+//   _dtol   = 1.e+50;
+//   _maxits = 10;
+// 
+//   _rtol_   = 1.e-8;
+//   _abstol_ = 1.e-40;
+//   _dtol_   = 1.e+50;
+//   _maxits_ = 10;
+// 
+// 
+// }
 
 inline PetscLinearSolver::PetscLinearSolver (const unsigned &igrid, mesh* other_msh)
   : LinearSolverM(igrid, other_msh) {

@@ -26,59 +26,59 @@ vector <PetscInt> LinearSolverM::indexdi;
 // LinearSolver members
 
 // =============================================================
-std::auto_ptr<LinearSolverM > LinearSolverM::build(vector < vector < double> > &vt,
-    const double Lref, const char infile[], const SolverPackage solver_package) {
-  // Build the appropriate solver
-  switch (solver_package)  {
-#if HAVE_PETSC == 1
-  case PETSC_SOLVERS:      {
-    std::auto_ptr<LinearSolverM > ap(new PetscLinearSolver(infile,vt,Lref));
-    return ap;
-  }
-#endif
-#if HAVE_TRILINOS == 1
-  case TRILINOS_SOLVERS:  {
-    std::auto_ptr<LinearSolverM > ap(new AztecLinearSolverM);
-    return ap;
-  }
-#endif
-
-  default:
-    std::cerr << "ERROR:  Unrecognized solver package: "
-              << solver_package<< std::endl;
-    abort();
-  }
-
-  std::auto_ptr<LinearSolverM > ap(NULL);
-  return ap;
-}
-
-// =============================================================
-std::auto_ptr<LinearSolverM > LinearSolverM::build(const unsigned &igrid,elem *elc, const SolverPackage solver_package) {
-  // Build the appropriate solver
-  switch (solver_package)  {
-#if HAVE_PETSC == 1
-  case PETSC_SOLVERS:      {
-    std::auto_ptr<LinearSolverM > ap(new PetscLinearSolver(igrid,elc));
-    return ap;
-  }
-#endif
-#if HAVE_TRILINOS == 1
-  case TRILINOS_SOLVERS:  {
-    std::auto_ptr<LinearSolverM > ap(new AztecLinearSolverM);
-    return ap;
-  }
-#endif
-
-  default:
-    std::cerr << "ERROR:  Unrecognized solver package: "
-              << solver_package<< std::endl;
-    abort();
-  }
-
-  std::auto_ptr<LinearSolverM > ap(NULL);
-  return ap;
-}
+// std::auto_ptr<LinearSolverM > LinearSolverM::build(vector < vector < double> > &vt,
+//     const double Lref, const char infile[], const SolverPackage solver_package) {
+//   // Build the appropriate solver
+//   switch (solver_package)  {
+// #if HAVE_PETSC == 1
+//   case PETSC_SOLVERS:      {
+//     std::auto_ptr<LinearSolverM > ap(new PetscLinearSolver(infile,vt,Lref));
+//     return ap;
+//   }
+// #endif
+// #if HAVE_TRILINOS == 1
+//   case TRILINOS_SOLVERS:  {
+//     std::auto_ptr<LinearSolverM > ap(new AztecLinearSolverM);
+//     return ap;
+//   }
+// #endif
+// 
+//   default:
+//     std::cerr << "ERROR:  Unrecognized solver package: "
+//               << solver_package<< std::endl;
+//     abort();
+//   }
+// 
+//   std::auto_ptr<LinearSolverM > ap(NULL);
+//   return ap;
+// }
+// 
+// // =============================================================
+// std::auto_ptr<LinearSolverM > LinearSolverM::build(const unsigned &igrid,elem *elc, const SolverPackage solver_package) {
+//   Build the appropriate solver
+//   switch (solver_package)  {
+// #if HAVE_PETSC == 1
+//   case PETSC_SOLVERS:      {
+//     std::auto_ptr<LinearSolverM > ap(new PetscLinearSolver(igrid,elc));
+//     return ap;
+//   }
+// #endif
+// #if HAVE_TRILINOS == 1
+//   case TRILINOS_SOLVERS:  {
+//     std::auto_ptr<LinearSolverM > ap(new AztecLinearSolverM);
+//     return ap;
+//   }
+// #endif
+// 
+//   default:
+//     std::cerr << "ERROR:  Unrecognized solver package: "
+//               << solver_package<< std::endl;
+//     abort();
+//   }
+// 
+//   std::auto_ptr<LinearSolverM > ap(NULL);
+//   return ap;
+// }
 
 
 // =============================================================

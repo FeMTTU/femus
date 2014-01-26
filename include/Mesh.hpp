@@ -17,12 +17,10 @@ private:
   vector <unsigned> IS_Gmt2Mts_dof_offset[5]; // map offset 
   
 public:
-  //static unsigned _ref_index;
+  static const unsigned _END_IND[5];  
   vector< vector<unsigned> > ghost_nd[5];
   vector< vector<int> > ghost_nd_mts[5];
   vector <unsigned> ghost_size[5];
-  //int _iproc;
-  //int _nprocs;
   int nel;
   
 public:
@@ -74,6 +72,8 @@ public:
   unsigned GetRefIndex();
   
   unsigned GetMetisDof(unsigned inode, short unsigned SolType) const;
+  unsigned GetEndIndex(const unsigned i) const;
+  
   
 };
 

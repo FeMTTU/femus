@@ -12,7 +12,6 @@ using std::endl;
 // ****************** MGTimeLoop CLASS ********************************
 // *******************************************************************
 
-
 ///Constructor
 NonLinearTimeDependentMultiLevelProblem::NonLinearTimeDependentMultiLevelProblem(const unsigned short &igridn,const unsigned short &igridr, const char mesh_file[],
                                      const char GaussOrder[], const double Lref, bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, 
@@ -164,8 +163,7 @@ int NonLinearTimeDependentMultiLevelProblem::InitializeFromRestart(unsigned rest
       ierr = VecLoad(petsc_vec_sol->vec(),bin_viewer); CHKERRQ(ierr);
       ierr = PetscViewerDestroy(&bin_viewer);
     }
-    
-    Lin_Solver_[ig]->UpdateSolution();
+    _solution[ig]->UpdateSolution();
   }
   
   delete [] filename;
@@ -177,7 +175,7 @@ int NonLinearTimeDependentMultiLevelProblem::InitializeFromRestart(unsigned rest
 void NonLinearTimeDependentMultiLevelProblem::_UpdateSolution() {
  
     for (int ig=0; ig<gridn; ig++) {
-      Lin_Solver_[ig]->UpdateSolution();
+      _solution[ig]->UpdateSolution();
     }
   
   return;
@@ -198,7 +196,7 @@ void NonLinearTimeDependentMultiLevelProblem::_NewmarkAccUpdate() {
   const double a1    = 1./(gamma*_dt);
   const double a2    = -1./(gamma*_dt);
   
-  unsigned dim = Lin_Solver_[0]->_msh->GetDimension();
+  unsigned dim = _msh[0]->GetDimension();
 
   unsigned axyz[3];
   unsigned vxyz[3];
@@ -292,8 +290,8 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(unsigned const &ncycl
       cout << endl;
 
       start_time=clock();
-      Lin_Solver_[igridn-1u]->SetResZero(MGIndex);
-      Lin_Solver_[igridn-1u]->SetEpsZero(MGIndex);
+      Lin_Solver_[igridn-1u]->SetResZero();
+      Lin_Solver_[igridn-1u]->SetEpsZero();
       end_time=clock();
       cout<<"Grid: "<<igridn-1<<"      INITIALIZATION TIME:      "
 	  <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
@@ -305,8 +303,8 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(unsigned const &ncycl
       for (unsigned ig=igridn-1u; ig>0; ig--) {
 	start_time=clock();
 
-        Lin_Solver_[ig-1u]->SetResZero(MGIndex);
-        Lin_Solver_[ig-1u]->SetEpsZero(MGIndex);
+        Lin_Solver_[ig-1u]->SetResZero();
+        Lin_Solver_[ig-1u]->SetEpsZero();
 	
         if (ig>=gridr) {
           //assemble residual only on the part of the coarse grid that is not refined
@@ -375,7 +373,7 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(unsigned const &ncycl
 	  start_time=clock();
 	  Prolungator(ig);
 	  Lin_Solver_[ig]->UpdateResidual();
-	  Lin_Solver_[ig]->SumEpsCToEps(MGIndex);
+	  Lin_Solver_[ig]->SumEpsCToEps();
 	  end_time=clock();
 	  cout<<"Grid: "<<ig-1<<"-->"<<ig<<"  PROLUNGATION TIME:        "
 	      <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
@@ -396,7 +394,6 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(unsigned const &ncycl
 	cout << endl;
 	start_time=clock();
 	for (unsigned ig=0; ig<igridn; ig++) {
-	  //Lin_Solver_[ig]->SumEpsToSol(MGIndex);
 	  _solution[ig]->SumEpsToSol(MGIndex, Lin_Solver_[ig]->EPS, Lin_Solver_[ig]->RES, Lin_Solver_[ig]->KKoffset );
 	}
 
@@ -612,7 +609,7 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(unsigned const &ncycl
 void NonLinearTimeDependentMultiLevelProblem::UpdateBdc() {
 
   const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
-  unsigned dim = Lin_Solver_[0]->_msh->GetDimension() - 1u;
+  unsigned dim = _msh[0]->GetDimension() - 1u;
   unsigned indX=GetIndex("X");
   unsigned indY=GetIndex("Y");
   unsigned indZ=GetIndex("Z");
@@ -627,190 +624,87 @@ void NonLinearTimeDependentMultiLevelProblem::UpdateBdc() {
       i_end=i_start+1u;
       
       
-        // 2 Default Neumann
-  // 1 DD Dirichlet
-  // 0 Dirichlet
-  for (unsigned igridn=0; igridn<gridn; igridn++) {
-//     for (unsigned i=i_start; i<i_end; i++) {
-      //if(Lin_Solver_[igridn]->ResEpsBdc_flag_[k]){
-      if(_solution[igridn]->_ResEpsBdcFlag[k]){
-	
-	for (unsigned j=Lin_Solver_[igridn]->_msh->MetisOffset[SolType[k]][_iproc]; j<Lin_Solver_[igridn]->_msh->MetisOffset[SolType[k]][_iproc+1]; j++) {
-	  //Lin_Solver_[igridn]->Bdc[i][j]=2; //Default Neumann
-	  Lin_Solver_[igridn]->Bdc_[k]->set(j,2.);
-	  _solution[igridn]->_Bdc[k]->set(j,2.);
-	}
-	if (SolType[k]<3) {  
-	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
-	    for (int iel=Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom]; 
-		 iel < Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	      unsigned kel_gmt = Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem[iel];
-	      for (unsigned jface=0; jface<Lin_Solver_[igridn]->_msh->el->GetElementFaceNumber(kel_gmt); jface++) {
-		if (Lin_Solver_[igridn]->_msh->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
-		  short unsigned ielt=Lin_Solver_[igridn]->_msh->el->GetElementType(kel_gmt);
-		  unsigned nv1=(!TestIfPressure[k])?
-				NV1[ielt][jface<Lin_Solver_[igridn]->_msh->el->GetElementFaceNumber(kel_gmt,0)]:
-				Lin_Solver_[igridn]->_msh->el->GetElementDofNumber(iel,Lin_Solver_[igridn]->END_IND[SolType[k]]);
-		  for (unsigned iv=0; iv<nv1; iv++) {
-		    unsigned inode=(!TestIfPressure[k])? 
-				    Lin_Solver_[igridn]->_msh->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
-				    Lin_Solver_[igridn]->_msh->el->GetElementVertexIndex(kel_gmt,iv)-1u;
-		    unsigned inode_Metis=Lin_Solver_[igridn]->_msh->GetMetisDof(inode,SolType[k]);
-		    // if (inode_Metis<Lin_Solver_[igridn]->MetisOffset[SolType[i]][_nprocs] ) {
-		    Lin_Solver_[igridn]->Bdc_[k]->set(inode_Metis,1.);
-		    _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
-		    // }
-		  }
-		}
-	      }
-	    }
-	  }
-// 	if (SolType[k]<3) { 
-// 	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
-// 	    for (int iel=Lin_Solver_[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-// 		 iel < Lin_Solver_[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-// 	      unsigned kel_gmt = Lin_Solver_[igridn]->IS_Mts2Gmt_elem[iel];
-// 	      for (unsigned jface=0; jface<Lin_Solver_[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
-// 		if (Lin_Solver_[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
-// 		  short unsigned ielt=Lin_Solver_[igridn]->el->GetElementType(kel_gmt);
-// 		  unsigned nv1=NV1[ielt][jface<Lin_Solver_[igridn]->el->GetElementFaceNumber(kel_gmt,0)];
-// 		  for (unsigned iv=0; iv<nv1; iv++) {
-// 		    unsigned inode= Lin_Solver_[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u;
-// 		    unsigned inode_Metis=Lin_Solver_[igridn]->GetMetisDof(inode,SolType[k]);
-// 		    if (inode<Lin_Solver_[igridn]->MetisOffset[SolType[k]][_nprocs] ) {
-// 		      //if (Lin_Solver_[igridn]->Bdc[i][inode_Metis]==2) {
-// 			//Lin_Solver_[igridn]->Bdc[i][inode_Metis]=1; 
-// 			Lin_Solver_[igridn]->Bdc_[k]->set(inode_Metis,1.);
-// 		      //}
-// 		    }
-// 		  }
-// 		}
-// 	      }
-// 	    }
-// 	  }
-	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {  // 0 Dirichlet
-	    for (int iel=Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom]; 
-		 iel < Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	      unsigned kel_gmt = Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem[iel];
-	      for (unsigned jface=0; jface<Lin_Solver_[igridn]->_msh->el->GetElementFaceNumber(kel_gmt); jface++) {
-		if (Lin_Solver_[igridn]->_msh->el->GetFaceElementIndex(kel_gmt,jface)<0) { //Dirichlet
-		  short unsigned ielt=Lin_Solver_[igridn]->_msh->el->GetElementType(kel_gmt);
-		  unsigned nv1=NV1[ielt][jface<Lin_Solver_[igridn]->_msh->el->GetElementFaceNumber(kel_gmt,0)];
-		  for (unsigned iv=0; iv<nv1; iv++) {
-		    unsigned inode=Lin_Solver_[igridn]->_msh->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u;
-		    //if (inode<Lin_Solver_[igridn]->MetisOffset[SolType[k]][_nprocs]) {
-		      unsigned inode_coord_Metis=Lin_Solver_[igridn]->_msh->GetMetisDof(inode,2);
-		      double value;
-// 		      xx=(*Lin_Solver_[igridn]->Sol_[indX])(inode_coord_Metis);  
-// 		      yy=(*Lin_Solver_[igridn]->Sol_[indY])(inode_coord_Metis);
-// 		      zz=(*Lin_Solver_[igridn]->Sol_[indZ])(inode_coord_Metis);
-		      
-		      xx=(*_solution[igridn]->_Sol[indX])(inode_coord_Metis);  
-		      yy=(*_solution[igridn]->_Sol[indY])(inode_coord_Metis);
-		      zz=(*_solution[igridn]->_Sol[indZ])(inode_coord_Metis);
-		      
-		      bool test=_SetBoundaryConditionFunction(xx,yy,zz,SolName[k],value,-(Lin_Solver_[igridn]->_msh->el->GetFaceElementIndex(kel_gmt,jface)+1),_time);
-		      if (test) {
-			unsigned inode_Metis=Lin_Solver_[igridn]->_msh->GetMetisDof(inode,SolType[k]);
-			//Lin_Solver_[igridn]->Bdc[i][inode_Metis]=0;
-			Lin_Solver_[igridn]->Bdc_[k]->set(inode_Metis,0.);
-			//Lin_Solver_[igridn]->Sol_[k]->set(inode_Metis,value);
-			
-			_solution[igridn]->_Bdc[k]->set(inode_Metis,0.);
-			_solution[igridn]->_Sol[k]->set(inode_Metis,value);
-			
-		      }
-		    //}
-		  }
-		}
-	      }
-	    }
-	  }
-	}
-	else if(TestIfPressure[k]){
-	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
-	    unsigned nel=Lin_Solver_[igridn]->_msh->GetElementNumber();
-	    for (int iel=Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom]; 
-		 iel < Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	      unsigned kel_gmt = Lin_Solver_[igridn]->_msh->IS_Mts2Gmt_elem[iel];
-	      for (unsigned jface=0; jface<Lin_Solver_[igridn]->_msh->el->GetElementFaceNumber(kel_gmt); jface++) {
-		if (Lin_Solver_[igridn]->_msh->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
-		  short unsigned ielt=Lin_Solver_[igridn]->_msh->el->GetElementType(kel_gmt);
-		  unsigned nv1=Lin_Solver_[igridn]->_msh->el->GetElementDofNumber(kel_gmt,Lin_Solver_[igridn]->END_IND[SolType[k]]);
-	  	  for (unsigned iv=0; iv<nv1; iv++) {
-		    unsigned inode=(kel_gmt+iv*nel);
-		    unsigned inode_Metis=Lin_Solver_[igridn]->_msh->GetMetisDof(inode,SolType[k]);
-		    Lin_Solver_[igridn]->Bdc_[k]->set(inode_Metis,1.);
-		    
-		    _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
-		    
-		  }
-		}
-	      }
-	    }
-	  }
-	}
-	//Lin_Solver_[igridn]->Sol_[k]->close();
-	Lin_Solver_[igridn]->Bdc_[k]->close();
-	
-	_solution[igridn]->_Sol[k]->close();
-	_solution[igridn]->_Bdc[k]->close();
-	
-      }
-  }
-      
-      
-      
-      
-      
       // 2 Default Neumann
       // 1 DD Dirichlet
       // 0 Dirichlet
-//       for (unsigned igridn=0; igridn<gridn; igridn++) {
-//         for (unsigned j=0; j<Lin_Solver_[igridn]->GetDofNumber(SolType[k]); j++)
-//         Lin_Solver_[igridn]->Bdc[k][j]=2;
-// 	if (SolType[k]<3) {
-// 	  for (unsigned iel=0; iel<Lin_Solver_[igridn]->GetElementNumber(); iel++) {
-// 	    for (unsigned jface=0; jface<Lin_Solver_[igridn]->el->GetElementFaceNumber(iel); jface++) {
-// 	      if (Lin_Solver_[igridn]->el->GetFaceElementIndex(iel,jface)<0) { //Dirichlet
-// 		short unsigned ielt=Lin_Solver_[igridn]->el->GetElementType(iel);
-// 		unsigned nv1=NV1[ielt][jface<Lin_Solver_[igridn]->el->GetElementFaceNumber(iel,0)];
-// 		for (unsigned iv=0; iv<nv1; iv++) {
-// 		  unsigned inode=Lin_Solver_[igridn]->el->GetFaceVertexIndex(iel,jface,iv)-1u;
-// 		  if (inode<Lin_Solver_[igridn]->GetDofNumber(SolType[k]) ) {
-// 		    unsigned inode_coord_Metis=Lin_Solver_[igridn]->GetMetisDof(inode,2); //the coordinates are always biquadratic
-// 		    double value;
-// 		    xx=(*Lin_Solver_[igridn]->Sol_[indX])(inode_coord_Metis);  
-// 		    yy=(*Lin_Solver_[igridn]->Sol_[indY])(inode_coord_Metis);
-// 		    zz=(*Lin_Solver_[igridn]->Sol_[indZ])(inode_coord_Metis);
-// 		    bool test=_SetBoundaryConditionFunction(xx,yy,zz,SolName[k],value,-(Lin_Solver_[igridn]->el->GetFaceElementIndex(iel,jface)+1),_time);
-// 		    if (test) {
-// 		      unsigned inode_Metis=Lin_Solver_[igridn]->GetMetisDof(inode,SolType[k]);
-// 		      Lin_Solver_[igridn]->Bdc[k][inode_Metis]=0;
-// 		      Lin_Solver_[igridn]->Sol_[k]->set(inode_Metis,value);
-// 		    }
-// 		  }
-// 		}
-// 	      } 
-// 	      else if (Lin_Solver_[igridn]->el->GetFaceElementIndex(iel,jface)==0) { //Domain Decomposition Dirichlet
-// 		short unsigned ielt=Lin_Solver_[igridn]->el->GetElementType(iel);
-// 		unsigned nv1=NV1[ielt][jface<Lin_Solver_[igridn]->el->GetElementFaceNumber(iel,0)];
-// 		for (unsigned iv=0; iv<nv1; iv++) {
-// 		  unsigned inode= Lin_Solver_[igridn]->el->GetFaceVertexIndex(iel,jface,iv)-1u;
-// 		  unsigned inode_Metis=Lin_Solver_[igridn]->GetMetisDof(inode,SolType[k]);
-// 		  if (inode<Lin_Solver_[igridn]->GetDofNumber(SolType[k]) ) {
-// 		    if (Lin_Solver_[igridn]->Bdc[k][inode_Metis]==2) {
-// 		      Lin_Solver_[igridn]->Bdc[k][inode_Metis]=1; 
-// 		    }
-// 		  }
-// 		}
-// 	      }
-// 	    }
-// 	  }
-// 	}
-// 	
-//        Lin_Solver_[igridn]->Sol_[k]->close();
-//       }
+      for (unsigned igridn=0; igridn<gridn; igridn++) {
+	if(_solution[igridn]->_ResEpsBdcFlag[k]){
+	  for (unsigned j=_msh[igridn]->MetisOffset[SolType[k]][_iproc]; j<_msh[igridn]->MetisOffset[SolType[k]][_iproc+1]; j++) {
+	    _solution[igridn]->_Bdc[k]->set(j,2.);
+	  }
+	  if (SolType[k]<3) {  
+	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
+	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+		   iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
+		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
+		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
+		    unsigned nv1=(!TestIfPressure[k])?
+				  NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt,0)]:
+				  _msh[igridn]->el->GetElementDofNumber(iel,_msh[igridn]->GetEndIndex(SolType[k]));
+		    for (unsigned iv=0; iv<nv1; iv++) {
+		      unsigned inode=(!TestIfPressure[k])? 
+				      _msh[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
+				      _msh[igridn]->el->GetElementVertexIndex(kel_gmt,iv)-1u;
+		      unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
+		      _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
+		    }
+		  }
+		}
+	      }
+	    }
+	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {  // 0 Dirichlet
+	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+		  iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
+		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
+		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)<0) { //Dirichlet
+		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
+		    unsigned nv1=NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt,0)];
+		    for (unsigned iv=0; iv<nv1; iv++) {
+		      unsigned inode=_msh[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u;
+		      unsigned inode_coord_Metis=_msh[igridn]->GetMetisDof(inode,2);
+		      double value;
+		      xx=(*_solution[igridn]->_Sol[indX])(inode_coord_Metis);  
+		      yy=(*_solution[igridn]->_Sol[indY])(inode_coord_Metis);
+		      zz=(*_solution[igridn]->_Sol[indZ])(inode_coord_Metis);
+		      bool test=_SetBoundaryConditionFunction(xx,yy,zz,SolName[k],value,-(_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)+1),_time);
+		      if (test) {
+			unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
+			_solution[igridn]->_Bdc[k]->set(inode_Metis,0.);
+			_solution[igridn]->_Sol[k]->set(inode_Metis,value);
+		      }
+		    }
+		  }
+		}
+	      }
+	    }
+	  }
+	  else if(TestIfPressure[k]){
+	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
+	      unsigned nel=_msh[igridn]->GetElementNumber();
+	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+		  iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
+		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
+		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
+		    unsigned nv1=_msh[igridn]->el->GetElementDofNumber(kel_gmt,_msh[igridn]->GetEndIndex(SolType[k]));
+		    for (unsigned iv=0; iv<nv1; iv++) {
+		      unsigned inode=(kel_gmt+iv*nel);
+		      unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
+		      _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
+		    }
+		  }
+		}
+	      }
+	    }
+	  }	
+	  _solution[igridn]->_Sol[k]->close();
+	  _solution[igridn]->_Bdc[k]->close();
+	}
+      }
     }
   }
 }

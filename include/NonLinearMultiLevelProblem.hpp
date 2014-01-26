@@ -28,9 +28,8 @@ private:
   double _non_linear_toll;
   bool _init_func_set;
   bool _bdc_func_set;
-  vector <mesh*> _msh;
+  
  protected:
-
   int _nprocs;
   int _iproc;
   unsigned short gridn, gridr;
@@ -45,7 +44,7 @@ private:
   bool _VankaIsSet;
   short unsigned _NSchurVar;
 
-  vector <int> SolType;
+ 
   vector <char*> SolName;
   vector <int> SolTmorder;
   vector <char*> BdcType;
@@ -60,7 +59,7 @@ private:
   double (* _InitVariableFunction)(const double &x, const double &y, const double &z,const char name[]);
 
  public:
-
+  vector <int> SolType;
   vector <unsigned> MGIndex;
   vector <unsigned> VankaIndex;
   const elem_type *type_elem[6][5]; 
@@ -69,6 +68,7 @@ private:
   ///Array of linear solver
   vector <LinearSolverM*> Lin_Solver_;
   vector <Solution*>  _solution;
+  vector <mesh*> _msh;
   
   
   ///Physical Object
