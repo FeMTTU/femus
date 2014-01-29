@@ -128,12 +128,9 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &MGIndex,const vec
   }
 
   /// *** Start Vanka Block ***
-  for(int isdom=0; isdom<_msh->nsubdom; isdom++) {
-//    
-//    unsigned isdom = mapsubdomain[iasdom];
-   
-//  for (int gel=0; gel < static_cast <int> (nel); gel += _num_elem_vanka_block) {
-  for (int gel=_msh->IS_Mts2Gmt_elem_offset[isdom]; gel < _msh->IS_Mts2Gmt_elem_offset[isdom+1]; gel += _num_elem_vanka_block) {
+  for(int isdom=0; isdom<_msh->nsubdom; isdom++) {  
+  //    unsigned isdom = mapsubdomain[iasdom];
+    for (int gel=_msh->IS_Mts2Gmt_elem_offset[isdom]; gel < _msh->IS_Mts2Gmt_elem_offset[isdom+1]; gel += _num_elem_vanka_block) {
     // ***************** NODE/ELEMENT SERCH *******************
     start_time=clock();
     Asize=0;
@@ -141,22 +138,9 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &MGIndex,const vec
     Csize=0;
     Dsize=0;
     PDsize=0;
-    
-//     cout << gel << endl;
-//     cout << "isdom " << isdom << "  " << IS_Mts2Gmt_elem_offset[isdom] << "  " << IS_Mts2Gmt_elem_offset[isdom+1] << endl;
-//      cout << "+++++++++++" << endl;
-//     cout << "metis offset: " << MetisOffset[2][isdom+1] << MetisOffset[4][isdom+1] << endl;
-    
-//      for (int iel=gel; iel<gel+_num_elem_vanka_block && iel< nel; iel++) {
-     for (int iel_mts=gel; iel_mts<gel+_num_elem_vanka_block && iel_mts< _msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-      
-//        cout << "gel: " << gel << "  iel: " << iel_mts << endl; 
-      // IS_Mts2Gmt_elem from Metis dof to Gmt element dof     
-//       cout << "iel metis: " << iel << "  iel gambit " << IS_Mts2Gmt_elem[iel] << endl;
-      
+    for (int iel_mts=gel; iel_mts<gel+_num_elem_vanka_block && iel_mts< _msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
       unsigned iel = _msh->IS_Mts2Gmt_elem[iel_mts];     
-//      cout << "iel metis: " << iel_mts << "  iel gambit " << iel << endl;
-      
+    
       for (unsigned i=0; i<_msh->el->GetElementDofNumber(iel,0); i++) {
         unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
         unsigned nvei=_msh->el->GetVertexElementNumber(inode);
@@ -234,7 +218,7 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &MGIndex,const vec
       }
       //-----------------------------------------------------------------------------------------
     }
-
+    
     PBsize=Asize;
     PCsize=PBsize-PDsize;
     for (PetscInt i=0; i<counterb; i++) {
@@ -724,14 +708,29 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &MGIndex, const ve
   // *** Start Vanka Block ***
   int grid=_msh->GetGridNumber();
   
- for (int gel=0; gel < static_cast <int> (nel); gel += _num_elem_vanka_block) {
+  for(int isdom=0; isdom<_msh->nsubdom; isdom++) {  
+  //    unsigned isdom = mapsubdomain[iasdom];
+    for (int gel=_msh->IS_Mts2Gmt_elem_offset[isdom]; gel < _msh->IS_Mts2Gmt_elem_offset[isdom+1]; gel += _num_elem_vanka_block) {
+    // ***************** NODE/ELEMENT SERCH *******************
+    start_time=clock();
+    PetscInt Asize=0;
+    PetscInt counterb=0;
+    PetscInt Csize=0;
+    PetscInt Dsize=0;
+    for (int iel_mts=gel; iel_mts<gel+_num_elem_vanka_block && iel_mts< _msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+      unsigned iel = _msh->IS_Mts2Gmt_elem[iel_mts];    
+  
+ /*for (int gel=0; gel < static_cast <int> (nel); gel += _num_elem_vanka_block) {
     /// ***************** NODE/ELEMENT SERCH *******************
     start_time=clock();
     PetscInt Asize=0;
     PetscInt counterb=0;
     PetscInt Csize=0;
     PetscInt Dsize=0;
-    for (int iel=gel; iel<gel+_num_elem_vanka_block && iel< static_cast <int> (nel); iel++) {
+    //for (int iel=gel; iel<gel+_num_elem_vanka_block && iel< static_cast <int> (nel); iel++) {
+    for (int iel_mts=gel; iel_mts<gel+_num_elem_vanka_block && iel_mts< _msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+      unsigned iel = _msh->IS_Mts2Gmt_elem[iel_mts];  
+ */          
       for (unsigned i=0; i<_msh->el->GetElementDofNumber(iel,0); i++) {
         unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
         unsigned nvei=_msh->el->GetVertexElementNumber(inode);
@@ -749,9 +748,16 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &MGIndex, const ve
               unsigned nvej=_msh->el->GetElementDofNumber(jel,end_ind[indexSol]);
               for (unsigned jj=0; jj<nvej; jj++) {
                 unsigned jnode=*(pt_un++)-1u;
-                if (indexa[jnode+KKIndex[indexSol]]==IndexaSize && 1.1<(*(*_Bdc)[MGIndex[indexSol]])(jnode)) {
-                  indexai[Asize]=jnode+KKIndex[indexSol];
-                  indexa[jnode+KKIndex[indexSol]]=Asize++;
+		
+		unsigned kkdof=GetKKDof(MGIndex[indexSol], indexSol, jnode);
+		unsigned jnode_Metis = _msh->GetMetisDof(jnode,_SolType[MGIndex[indexSol]]);
+		if (indexa[kkdof]==IndexaSize && 1.1 <(*(*_Bdc)[MGIndex[indexSol]])(jnode_Metis) ) {
+		  indexai[Asize]=kkdof;
+                  indexa[kkdof]=Asize++;
+		  //if (indexa[jnode+KKIndex[indexSol]]==IndexaSize && 1.1<(*(*_Bdc)[MGIndex[indexSol]])(jnode)) {
+		  //indexbi[counterb]=kkdof;
+                  //indexb[kkdof]=counterb++;
+		  
                 }
               }
             }
@@ -771,9 +777,15 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &MGIndex, const ve
                     unsigned nvek=_msh->el->GetElementDofNumber(kel,end_ind[indexSol]);
                     for (unsigned kk=0; kk<nvek; kk++) {
                       unsigned knode=*(pt_un++)-1u;
-                      if (indexb[knode+KKIndex[indexSol]]==IndexbSize && 0.1<(*(*_Bdc)[MGIndex[indexSol]])(knode)) {
-                        indexbi[counterb]=knode+KKIndex[indexSol];
-                        indexb[knode+KKIndex[indexSol]]=counterb++;
+		      		      
+		      unsigned kkdof=GetKKDof(MGIndex[indexSol], indexSol, knode);
+		      unsigned knode_Metis = _msh->GetMetisDof(knode,_SolType[MGIndex[indexSol]]);
+		       if (indexb[kkdof]==IndexbSize && 0.1<(*(*_Bdc)[MGIndex[indexSol]])(knode_Metis)) {
+                        indexbi[counterb]=kkdof;
+                        indexb[kkdof]=counterb++;
+                        //if (indexb[knode+KKIndex[indexSol]]==IndexbSize && 0.1<(*(*_Bdc)[MGIndex[indexSol]])(knode)) {
+                        //indexbi[counterb]=knode+KKIndex[indexSol];
+                        //indexb[knode+KKIndex[indexSol]]=counterb++;
                       }
                     }
                   }
@@ -1011,6 +1023,7 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &MGIndex, const ve
     UpdateTime+=(end_time-start_time);
 
     /// ***************** END SOLVE AND UPDATE *******************
+  }
   }
   
   // *** Computational info ***

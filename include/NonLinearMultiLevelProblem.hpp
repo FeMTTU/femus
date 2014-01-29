@@ -23,9 +23,11 @@ private:
   vector <unsigned> elr_old;
   int _moving_mesh;
   std::vector<std::string> _moving_vars;
+  
   unsigned _non_linear_algorithm;
   bool _is_nonlinear;
   double _non_linear_toll;
+  
   bool _init_func_set;
   bool _bdc_func_set;
   
@@ -49,6 +51,11 @@ private:
   vector <int> SolTmorder;
   vector <char*> BdcType;
   vector <bool> TestIfPressure;
+  
+ 
+  
+  
+  
 
   //pointer function to the assemble function
   int (* _assemble_function)(NonLinearMultiLevelProblem &mg, unsigned level, const unsigned &gridn);
@@ -59,14 +66,22 @@ private:
   double (* _InitVariableFunction)(const double &x, const double &y, const double &z,const char name[]);
 
  public:
+   
+  vector <char*> _PDEName;
+  vector <unsigned> _PDE_MGIndex;
+  void AddPDE(const char name[]);
+  unsigned GetPDEIndex(const char name[]) const; 
+   
+   
+   
   vector <int> SolType;
-  vector <unsigned> MGIndex;
+  vector< vector <unsigned> > MGIndex;
   vector <unsigned> VankaIndex;
   const elem_type *type_elem[6][5]; 
 
   
   ///Array of linear solver
-  vector <LinearSolverM*> Lin_Solver_;
+  vector<vector <LinearSolverM*> > _LinSolver;
   vector <Solution*>  _solution;
   vector <mesh*> _msh;
   
@@ -96,15 +111,15 @@ private:
   //utilities
   void MarkStructureNode();
   double ComputeL2norm();
-  bool GetConvergence(const unsigned gridn);
+  bool GetConvergence(const char pdename[],const unsigned gridn);
   int ComputeBdStress(int bd, double cforce[3]);
-  int ComputeBdIntegral(const char var_name[], const unsigned & kel, 
+  int ComputeBdIntegral(const char pdename[],const char var_name[], const unsigned & kel, 
                          const unsigned & jface, unsigned level, unsigned dir);
   unsigned GetNumberOfGrid();
   
   // Config
-  void SetMatrixProperties(const char property[]);
-  void AddStabilization(const bool stab=false, const double compressibility=0.);
+  void SetMatrixProperties(const char pdename[], const char property[]);
+  void AddStabilization(const char pdename[], const bool stab=false, const double compressibility=0.);
   void SetNonLinearAlgorithm(bool isnonlinear=false, const char nnlinalg[]="Linear", const double nl_toll=1.e-03);
   unsigned GetNonLinearAlgorithm();
   bool GetNonLinearCase();
@@ -113,17 +128,17 @@ private:
   void GenerateBdc(const char name[], const char bdc_type[]="Steady");
 
   // Solver  
-  int FullMultiGrid(unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
+  int FullMultiGrid(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
                     const char mg_type[]="F-Cycle");
   int FreeMultigrid();
   void SetSmoother(const char smoothername[]);
   void SetVankaSchurOptions(bool VankaSchur=1, bool Schur=0, short unsigned NSchurVar=1);
-  void SetTolerances(const double rtol,const double atol,const double divtol, const unsigned maxits);
-  void SetSchurTolerances(const double rtol,const double atol,const double divtol, const unsigned maxits);
-  void SetSolverFineGrids(const char solvertype[] = "GMRES");
-  void SetPreconditionerFineGrids(const char preconditionertype[] = "LU");
-  void SetDimVankaBlock(unsigned const dim_vanka_block);
-  void SetDimVankaBlock(const char dim_vanka_block[] = "All");
+  void SetTolerances(const char pdename[],const double rtol,const double atol,const double divtol, const unsigned maxits);
+  void SetSchurTolerances(const char pdename[], const double rtol,const double atol,const double divtol, const unsigned maxits);
+  void SetSolverFineGrids(const char pdename[], const char solvertype[] = "GMRES");
+  void SetPreconditionerFineGrids(const char pdename[], const char preconditionertype[] = "LU");
+  void SetDimVankaBlock(const char pdename[], unsigned const dim_vanka_block);
+  void SetDimVankaBlock(const char pdename[], const char dim_vanka_block[] = "All");
   
   // Fluid and Solid object
   void Add_Fluid(Fluid *fluid);
@@ -142,18 +157,18 @@ private:
   void CreateMGStruct();
   void DeleteMGStruct();
   void ClearMGIndex();
-  void AddToMGIndex(const char name[]);
-  unsigned GetMGIndex(const char name[]);
+  void AddToMGIndex(const char pdename[], const char solname[]);
+  unsigned GetMGIndex(const char pdename[], const char name[]);
   unsigned GetSolType(const char name[]) ;
-  char * GetMGIndexName(unsigned index);
+  //char* GetMGIndexName(unsigned index);
   void ClearVankaIndex();
-  void AddToVankaIndex(const char name[]);
+  void AddToVankaIndex( const char pdename[], const char solname[]);
 
   //MultiGrid tools
-  int Restrictor(unsigned gridf);
-  int Prolungator(unsigned gridf);
-  void ProlungatorSol(unsigned gridf);
-  int BuildProlungatorMatrix(unsigned gridf);
+  int Restrictor(const unsigned &gridf, const unsigned &ipde);
+  int Prolungator(const unsigned &gridf, const unsigned &ipde);
+  void ProlungatorSol(const char pdename[], unsigned gridf);
+  int BuildProlungatorMatrix(unsigned gridf,const char pdename[]);
   void BuildProlungatorMatrix(unsigned gridf, unsigned SolIndex);
   void BuildProlungatorMatrices();
 
