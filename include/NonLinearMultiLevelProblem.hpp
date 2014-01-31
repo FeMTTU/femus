@@ -45,37 +45,29 @@ private:
   bool _Schur;
   bool _VankaIsSet;
   short unsigned _NSchurVar;
-
  
   vector <char*> SolName;
   vector <int> SolTmorder;
   vector <char*> BdcType;
   vector <bool> TestIfPressure;
-  
  
-  
-  
-  
-
   //pointer function to the assemble function
-  int (* _assemble_function)(NonLinearMultiLevelProblem &mg, unsigned level, const unsigned &gridn);
+  int (*_assemble_function)(NonLinearMultiLevelProblem &mg, unsigned level, const unsigned &gridn);
   
-  bool (* _SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
+  bool (*_SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
                             double &value, const int FaceName, const double time);
   
-  double (* _InitVariableFunction)(const double &x, const double &y, const double &z,const char name[]);
+  double (*_InitVariableFunction)(const double &x, const double &y, const double &z,const char name[]);
 
  public:
    
-  vector <char*> _PDEName;
-  vector <unsigned> _PDE_MGIndex;
-  void AddPDE(const char name[]);
-  unsigned GetPDEIndex(const char name[]) const; 
-   
-   
+  vector <char*> _PdeName;
+  vector <unsigned> _PdeIndex;
+  void AddPde(const char name[]);
+  unsigned GetPdeIndex(const char name[]) const; 
    
   vector <int> SolType;
-  vector< vector <unsigned> > MGIndex;
+  vector< vector <unsigned> > _SolPdeIndex;
   vector <unsigned> VankaIndex;
   const elem_type *type_elem[6][5]; 
 
@@ -145,7 +137,7 @@ private:
   void Add_Solid(Solid *solid);
 
   // Vector handling functions
-  void AddSolutionVector(const char name[], const char type[],unsigned tmorder=0, const bool &PDE_type=1);
+  void AddSolution(const char name[], const char type[],unsigned tmorder=0, const bool &Pde_type=1);
   void AssociatePropertyToSolution(const char solution_name[], const char solution_property[]);
   void ResizeSolutionVector( const char name[]);
   void CheckVectorSize(const unsigned &i);
@@ -154,13 +146,12 @@ private:
   unsigned GetTmOrder(const unsigned i);
 
   //Index
-  void CreateMGStruct();
-  void DeleteMGStruct();
-  void ClearMGIndex();
-  void AddToMGIndex(const char pdename[], const char solname[]);
-  unsigned GetMGIndex(const char pdename[], const char name[]);
+  void CreatePdeStructure();
+  void DeletePdeStructure();
+  void ClearSolPdeIndex();
+  void AddSolutionToSolPdeIndex(const char pdename[], const char solname[]);
+  unsigned GetSolPdeIndex(const char pdename[], const char name[]);
   unsigned GetSolType(const char name[]) ;
-  //char* GetMGIndexName(unsigned index);
   void ClearVankaIndex();
   void AddToVankaIndex( const char pdename[], const char solname[]);
 

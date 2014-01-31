@@ -75,7 +75,7 @@ public:
   int prolongation(const elem* el,const elem* elc, const int& ielc, 
 		   Mat &PP,const PetscInt& istart=0,const PetscInt& jstart=0) const ;
 		   
-  void prolongation(const lsysPDE &lspdef,const lsysPDE &lspdec, const int& ielc, Mat& PP, 
+  void prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, Mat& PP, 
 		    const unsigned &index_sol, const unsigned &kkindex_sol) const;
 		   
   void prolongation(const mesh &meshf,const mesh &meshc, const int& ielc, SparseRectangularMatrix* Projmat) const;

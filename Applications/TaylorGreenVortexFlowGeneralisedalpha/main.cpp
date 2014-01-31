@@ -60,12 +60,12 @@ int main(int argc,char **args) {
   nl_td_ml_prob.Add_Fluid(&fluid);
   
   // generate solution vector
-  nl_td_ml_prob.AddSolutionVector("U","biquadratic",2);
-  nl_td_ml_prob.AddSolutionVector("V","biquadratic",2);
-  nl_td_ml_prob.AddSolutionVector("AX","biquadratic",1,0);
-  nl_td_ml_prob.AddSolutionVector("AY","biquadratic",1,0);
+  nl_td_ml_prob.AddSolution("U","biquadratic",2);
+  nl_td_ml_prob.AddSolution("V","biquadratic",2);
+  nl_td_ml_prob.AddSolution("AX","biquadratic",1,0);
+  nl_td_ml_prob.AddSolution("AY","biquadratic",1,0);
   // the pressure variable should be the last for the Schur decomposition
-  nl_td_ml_prob.AddSolutionVector("P","linear",1);
+  nl_td_ml_prob.AddSolution("P","linear",1);
   
   //Initialize (update Init(...) function)
   nl_td_ml_prob.AttachInitVariableFunction(InitVariables);
@@ -89,16 +89,16 @@ int main(int argc,char **args) {
   
   /// Start Navier-Stokes Muligrid Block
   //start Multigrid for UVWP
-  nl_td_ml_prob.ClearMGIndex();
-  nl_td_ml_prob.AddPDE("NS");  
-  nl_td_ml_prob.AddToMGIndex("NS","U"); 
-  nl_td_ml_prob.AddToMGIndex("NS","V");
-  nl_td_ml_prob.AddToMGIndex("NS","P");
+  nl_td_ml_prob.ClearSolPdeIndex();
+  nl_td_ml_prob.AddPde("NS");  
+  nl_td_ml_prob.AddSolutionToSolPdeIndex("NS","U"); 
+  nl_td_ml_prob.AddSolutionToSolPdeIndex("NS","V");
+  nl_td_ml_prob.AddSolutionToSolPdeIndex("NS","P");
   
 
   
-  // create Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
-  nl_td_ml_prob.CreateMGStruct();
+  // create Multigrid (PRLO, REST, MAT, VECs) based on SolPdeIndex
+  nl_td_ml_prob.CreatePdeStructure();
   
   // create index of solutions to be to used in the Vanka Smoother  
   nl_td_ml_prob.ClearVankaIndex();
@@ -163,8 +163,8 @@ int main(int argc,char **args) {
   } //end loop timestep
   
  
-  // Delete Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
-  nl_td_ml_prob.DeleteMGStruct();
+  // Delete Multigrid (PRLO, REST, MAT, VECs) based on SolPdeIndex
+  nl_td_ml_prob.DeletePdeStructure();
   
   /// End Navier-Stokes Muligrid Block
    
@@ -269,7 +269,7 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned lev
   NonLinearTimeDependentMultiLevelProblem& nl_td_ml_prob = static_cast<NonLinearTimeDependentMultiLevelProblem&>(nl_td_ml_prob2);
   
   const char pdename[]="NS";
-  unsigned ipde=nl_td_ml_prob.GetPDEIndex(pdename);
+  unsigned ipde=nl_td_ml_prob.GetPdeIndex(pdename);
     
  //pointers and references
   Solution*       mysolution = nl_td_ml_prob2._solution[level];
@@ -326,11 +326,11 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned lev
   double gradSolVAR[3][3];
   double gradSolOldVAR[3][3];
   for(unsigned ivar=0; ivar<dim; ivar++) {
-    indexVAR[ivar]=nl_td_ml_prob.GetMGIndex("NS",&varname[ivar][0]);
+    indexVAR[ivar]=nl_td_ml_prob.GetSolPdeIndex("NS",&varname[ivar][0]);
     indCOORD[ivar]=nl_td_ml_prob.GetIndex(&coordname[ivar][0]);
     indVAR[ivar]=nl_td_ml_prob.GetIndex(&varname[ivar][0]);
   }
-  indexVAR[3]=nl_td_ml_prob.GetMGIndex("NS",&varname[3][0]);
+  indexVAR[3]=nl_td_ml_prob.GetSolPdeIndex("NS",&varname[3][0]);
   indVAR[3]=nl_td_ml_prob.GetIndex(&varname[3][0]);
   
   //unknown order

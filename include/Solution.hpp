@@ -9,7 +9,7 @@ class elem_type;
 class NumericVector;
 class SparseRectangularMatrix;
 
-//class lsysPDE: public mesh {
+//class lsysPde: public mesh {
 
 class Solution{
   //member data
@@ -37,11 +37,11 @@ public:
 private:
   unsigned GetIndex(const char name[]) const;
 public:
-  void AddSolutionVector( const char name[], const char order[],const unsigned& tmorder, const bool &PDE_type=1);
+  void AddSolution( const char name[], const char order[],const unsigned& tmorder, const bool &Pde_type=1);
   void ResizeSolutionVector(const char name[]);
   void FreeSolutionVectors();
   void SetCoarseCoordinates( vector < vector < double> > &vt);
-  int  SumEpsToSol(const vector <unsigned> &MGIndex, const Vec &EPS, const Vec &RES, const vector <vector <unsigned> > &KKoffset);
+  int  SumEpsToSol(const vector <unsigned> &_SolPdeIndex, const Vec &EPS, const Vec &RES, const vector <vector <unsigned> > &KKoffset);
   void UpdateSolution();
   void SetElementRefiniement(const unsigned &test=0);
 
