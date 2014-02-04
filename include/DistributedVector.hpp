@@ -206,6 +206,12 @@ public:
     exit(0);
   }
 
+  void matrix_mult_transpose(const NumericVector &vec_in,const SparseRectangularMatrix &mat_in){
+    std::cout <<"error";
+    exit(0);
+  }
+  
+  
   /// \f$U+=V\f$ with DenseVector V
   void add_vector (const DenseVector& V,
                    const std::vector< int>& dof_indices);

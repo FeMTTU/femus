@@ -237,6 +237,7 @@ public:
   /// \f$U+=A*V\f$, add the product A*v
   void matrix_mult (const NumericVector &vec_in,const SparseRectangularMatrix &mat_in);
 
+  void matrix_mult_transpose (const NumericVector &vec_in,const SparseRectangularMatrix &mat_in);
   /// Scale each element of the vector by the given factor.
   void scale (const double factor);
 

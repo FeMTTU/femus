@@ -30,10 +30,10 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=1;
+  nm=2;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
-  nr=1;
+  nr=2;
   std::cout<<"MAX_REFINEMENT levels: " << nr << endl<< endl;
   
   int tmp=nm;  nm+=nr;  nr=tmp;
@@ -93,7 +93,7 @@ int main(int argc,char **args) {
     
   /// Start Navier-Stokes Muligrid Block
   //start Multigrid for UVWP
-  nl_ml_prob.ClearSolPdeIndex();; 
+  nl_ml_prob.ClearSolPdeIndex();
   nl_ml_prob.AddSolutionToSolPdeIndex("NS1","U"); 
   nl_ml_prob.AddSolutionToSolPdeIndex("NS1","V");
   nl_ml_prob.AddSolutionToSolPdeIndex("NS1","P");
@@ -104,9 +104,10 @@ int main(int argc,char **args) {
   
   nl_ml_prob.AddSolutionToSolPdeIndex("Temp","T");
   
+  
   // create Multigrid (PRLO, REST, MAT, VECs) based on SolPdeIndex
   nl_ml_prob.CreatePdeStructure();
-     
+     exit(0);
   //Equation 1
   nl_ml_prob.AttachAssembleFunction(AssembleMatrixResNS1);
   nl_ml_prob.SetNonLinearAlgorithm(true,"Newton",1.e-07);  //Navier-Stokes (Quasi-Newton - Newton)
@@ -181,10 +182,12 @@ int main(int argc,char **args) {
   nl_ml_prob.FullMultiGrid("Temp",10,1,1,"F-Cycle");
   */
   
+  
+  
   // Delete Multigrid (PRLO, REST, MAT, VECs) based on SolPdeIndex
   nl_ml_prob.DeletePdeStructure();
   /// End Navier-Stokes Muligrid Block
-   
+   exit(0);
   //Post processing
 //   double cforce[3];
 //   nl_ml_prob.ComputeBdStress(4,cforce);

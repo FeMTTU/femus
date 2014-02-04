@@ -231,7 +231,7 @@ void PetscRectangularMatrix::clear () {
   // ============================================
   int ierr=0;
   if ((this->initialized()) && (this->_destroy_mat_on_exit)) {
-    semiparallel_onlyM();
+    //semiparallel_onlyM();
     ierr = MatDestroy (&_mat);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
     this->_is_initialized = false;

@@ -542,6 +542,9 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &_SolPdeIndex,cons
     ierr = VecAssemblyEnd(RES);
     CHKERRQ(ierr);
 
+     PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
+     Vec EPS=EPSp->vec(); //TODO
+    
     ierr=VecSetValues(EPS,PBsize,ind,W[0],ADD_VALUES);
     CHKERRQ(ierr);
     ierr = VecAssemblyBegin(EPS);
@@ -944,6 +947,10 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &_SolPdeIndex, con
     ierr = VecAssemblyEnd(RES);
     CHKERRQ(ierr);
 
+    PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
+    Vec EPS=EPSp->vec(); //TODO
+
+    
     ierr=VecSetValues(EPS,PBsize,ind[0],W[0],ADD_VALUES);
     CHKERRQ(ierr);
     ierr = VecAssemblyBegin(EPS);
@@ -1377,6 +1384,14 @@ std::pair< int, double> PetscLinearSolver::solve() {
 // 
   
   this->init(KK);  //as before
+  
+  
+  PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  //TODO
+  Vec EPSC=EPSCp->vec(); //TODO
+  PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
+  Vec EPS=EPSp->vec(); //TODO
+
+  
   
   VecZeroEntries(EPSC);
   

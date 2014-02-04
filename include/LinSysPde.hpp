@@ -32,8 +32,7 @@ public:
   vector <int> KKIndex;
   Mat PP;
   Mat KK,CC;
-  Vec RES,RESC;
-  Vec EPS,EPSC;
+  Vec RES;
   bool CC_flag;
     
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
@@ -44,22 +43,20 @@ public:
 public:  
   lsysPde(mesh *other_msh);
   ~lsysPde();
-
-  //void AddSolution(const char name[], const char order[]);
-  void SetBdcPointer(vector <NumericVector*> *Bdc_other);
-  int InitMultigrid(const vector <unsigned> &_SolPdeIndex,const  vector <int> &SolType,  const vector <char*> &SolName);
-  int DeallocateMatrix();
-  int AllocateMatrix();
+  
+  int InitPde(const vector <unsigned> &_SolPdeIndex,const  vector <int> &SolType,  
+	      const vector <char*> &SolName, vector <NumericVector*> *Bdc_other);
+  void DeletePde();
   unsigned GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,const unsigned &idof_gmt) const;
   void SetMatrixProperties(const bool property);
   bool GetMatrixProperties();
   void AddStabilization(const bool stab, const double compressibility);
   double GetCompressibility();
   bool GetStabilization();
-  int SetResZero();
-  int SetEpsZero();
-  int SumEpsCToEps();
-  int UpdateResidual();
+  void SetResZero();
+  void SetEpsZero();
+  void SumEpsCToEps();
+  void UpdateResidual();
 
 protected:
   unsigned GetIndex(const char name[]);

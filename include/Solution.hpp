@@ -41,7 +41,7 @@ public:
   void ResizeSolutionVector(const char name[]);
   void FreeSolutionVectors();
   void SetCoarseCoordinates( vector < vector < double> > &vt);
-  int  SumEpsToSol(const vector <unsigned> &_SolPdeIndex, const Vec &EPS, const Vec &RES, const vector <vector <unsigned> > &KKoffset);
+  void SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
   void UpdateSolution();
   void SetElementRefiniement(const unsigned &test=0);
 

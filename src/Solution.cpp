@@ -6,7 +6,9 @@
 #include "ElemType.hpp"
 #include "ParalleltypeEnum.hpp"
 #include "NumericVector.hpp"
-#include "SparseRectangularMatrix.hpp"
+
+
+
 using std::cout;
 using std::endl;
 
@@ -183,66 +185,35 @@ void Solution::SetCoarseCoordinates( vector < vector < double> > &vt){
  * Update _Sol, _Res and _Eps based on EPS and RES 
  **/
 //--------------------------------------------------------------------------------
-int Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex, const Vec &EPS, const Vec &RES, const vector <vector <unsigned> > &KKoffset ) {
-
-  PetscScalar* R;
-  PetscScalar* E;
+void Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* _EPS,  NumericVector* _RES, 
+			   const vector <vector <unsigned> > &KKoffset){
+ 
   PetscScalar zero=0.;
-  int ierr;
-  PetscScalar value;
-  
-  Vec RESloc;
-  Vec EPSloc;
-  
-  if(_msh->_nprocs==1) {
-    ierr = VecGetArray(RES,&R);
-    CHKERRQ(ierr);
-    ierr = VecGetArray(EPS,&E);
-    CHKERRQ(ierr);
-  } 
-  else {
-    ierr=VecGhostGetLocalForm(RES,&RESloc);
-    CHKERRQ(ierr);
-    ierr=VecGhostGetLocalForm(EPS,&EPSloc);
-    CHKERRQ(ierr);
-    ierr = VecGetArray(RESloc,&R);
-    CHKERRQ(ierr);
-    ierr = VecGetArray(EPSloc,&E);
-    CHKERRQ(ierr);
-  }
-  
   for (unsigned k=0; k<_SolPdeIndex.size(); k++) {
     unsigned indexSol=_SolPdeIndex[k];
     unsigned soltype =  _SolType[indexSol];
 
-     int loc_size   = _Eps[indexSol]->local_size();
-     int loc_offset_EPS = KKoffset[k][_msh->_iproc] - KKoffset[0][_msh->_iproc];
+    int loc_size   = _Eps[indexSol]->local_size();
+    int loc_offset_EPS = KKoffset[k][_msh->_iproc];// - KKoffset[0][_msh->_iproc]; //?????????
 
-     int glob_offset_eps = _msh->MetisOffset[soltype][_msh->_iproc];
+    int glob_offset_eps = _msh->MetisOffset[soltype][_msh->_iproc];
 
-     for(int i=0; i<_msh->own_size[soltype][_msh->_iproc]; i++) {
-       _Eps[indexSol]->set(i+glob_offset_eps,E[loc_offset_EPS+i]);
-       if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) _Res[indexSol]->set(i+glob_offset_eps,R[loc_offset_EPS+i]);
-       else _Res[indexSol]->set(i+glob_offset_eps,zero);
+    vector <int> index(_msh->own_size[soltype][_msh->_iproc]);
+    for(int i=0; i<_msh->own_size[soltype][_msh->_iproc]; i++) {
+      index[i]=loc_offset_EPS+i;
+    }
+    vector <double> valueEPS(_msh->own_size[soltype][_msh->_iproc]);
+    _EPS->get(index,valueEPS);
+    vector <double> valueRES(_msh->own_size[soltype][_msh->_iproc]);
+    _RES->get(index,valueRES);
+
+    for(int i=0; i<_msh->own_size[soltype][_msh->_iproc]; i++) {
+      _Eps[indexSol]->set(i+glob_offset_eps,valueEPS[i]);
+      if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) _Res[indexSol]->set(i+glob_offset_eps,valueRES[i]);
+      else _Res[indexSol]->set(i+glob_offset_eps,zero);
     }
     _Res[indexSol]->close();
     _Eps[indexSol]->close();
-  }
-
-  if(_msh->_nprocs==1) {
-    ierr = VecRestoreArray(RES,&R);
-    CHKERRQ(ierr);
-    ierr = VecRestoreArray(EPS,&E);
-    CHKERRQ(ierr);
-  } else {
-    ierr = VecRestoreArray(RESloc,&R);
-    CHKERRQ(ierr);
-    ierr = VecRestoreArray(EPSloc,&E);
-    CHKERRQ(ierr);
-    ierr=VecGhostRestoreLocalForm(RES,&RESloc);
-    CHKERRQ(ierr);
-    ierr=VecGhostRestoreLocalForm(EPS,&EPSloc);
-    CHKERRQ(ierr);
   }
 
   for (unsigned k=0; k<_SolPdeIndex.size(); k++) {
@@ -250,8 +221,100 @@ int Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex, const Vec &EPS,
     _Sol[indexSol]->add(*_Eps[indexSol]);
     _Sol[indexSol]->close();
   }
+    
+  /*
+//   PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
+//   Vec EPS=EPSp->vec(); //TODO
+//   PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
+//   Vec RES=RESp->vec(); //TODO
+// 
+// 
+//   PetscScalar* R;
+//   PetscScalar* E;
+   PetscScalar zero=0.;
+//   int ierr;
+//   PetscScalar value;
+//   
+//   Vec RESloc;
+//   Vec EPSloc;
+//   
+//   if(_msh->_nprocs==1) {
+//     ierr = VecGetArray(RES,&R);
+//     CHKERRQ(ierr);
+//     ierr = VecGetArray(EPS,&E);
+//     CHKERRQ(ierr);
+//   } 
+//   else {
+//     ierr=VecGhostGetLocalForm(RES,&RESloc);
+//     CHKERRQ(ierr);
+//     ierr=VecGhostGetLocalForm(EPS,&EPSloc);
+//     CHKERRQ(ierr);
+//     ierr = VecGetArray(RESloc,&R);
+//     CHKERRQ(ierr);
+//     ierr = VecGetArray(EPSloc,&E);
+//     CHKERRQ(ierr);
+//   }
   
-  return ierr;
+  for (unsigned k=0; k<_SolPdeIndex.size(); k++) {
+    unsigned indexSol=_SolPdeIndex[k];
+    unsigned soltype =  _SolType[indexSol];
+
+    int loc_size   = _Eps[indexSol]->local_size();
+    int loc_offset_EPS = KKoffset[k][_msh->_iproc];// - KKoffset[0][_msh->_iproc];
+
+    int glob_offset_eps = _msh->MetisOffset[soltype][_msh->_iproc];
+
+    vector <int> index(_msh->own_size[soltype][_msh->_iproc]);
+    vector <double> valueEPS(_msh->own_size[soltype][_msh->_iproc]);
+    vector <double> valueRES(_msh->own_size[soltype][_msh->_iproc]);
+    for(int i=0; i<_msh->own_size[soltype][_msh->_iproc]; i++) {
+      index[i]=loc_offset_EPS+i;
+    }
+
+   _EPS->get(index,valueEPS);
+   _RES->get(index,valueRES);
+
+    for(int i=0; i<_msh->own_size[soltype][_msh->_iproc]; i++) {
+      _Eps[indexSol]->set(i+glob_offset_eps,valueEPS[i]);
+      if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) _Res[indexSol]->set(i+glob_offset_eps,valueRES[i]);
+      else _Res[indexSol]->set(i+glob_offset_eps,zero);
+    }
+    
+     
+     
+     
+//      for(int i=0; i<_msh->own_size[soltype][_msh->_iproc]; i++) {
+//        _Eps[indexSol]->set(i+glob_offset_eps,E[loc_offset_EPS+i]);
+//        if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) _Res[indexSol]->set(i+glob_offset_eps,R[loc_offset_EPS+i]);
+//        else _Res[indexSol]->set(i+glob_offset_eps,zero);
+//     }
+    _Res[indexSol]->close();
+    _Eps[indexSol]->close();
+  }
+
+//   if(_msh->_nprocs==1) {
+//     ierr = VecRestoreArray(RES,&R);
+//     CHKERRQ(ierr);
+//     ierr = VecRestoreArray(EPS,&E);
+//     CHKERRQ(ierr);
+//   } else {
+//     ierr = VecRestoreArray(RESloc,&R);
+//     CHKERRQ(ierr);
+//     ierr = VecRestoreArray(EPSloc,&E);
+//     CHKERRQ(ierr);
+//     ierr=VecGhostRestoreLocalForm(RES,&RESloc);
+//     CHKERRQ(ierr);
+//     ierr=VecGhostRestoreLocalForm(EPS,&EPSloc);
+//     CHKERRQ(ierr);
+//   }
+
+  for (unsigned k=0; k<_SolPdeIndex.size(); k++) {
+    unsigned indexSol=_SolPdeIndex[k];
+    _Sol[indexSol]->add(*_Eps[indexSol]);
+    _Sol[indexSol]->close();
+  }
+  
+  return 1;*/
 }
 
 /**

@@ -595,29 +595,27 @@ void NonLinearMultiLevelProblem::CreatePdeStructure() {
     _LinSolver[ipde].resize(gridn);
     for(unsigned i=0;i<gridn;i++){
       _LinSolver[ipde][i]=LinearSolverM::build(i,_msh[i]).release();
-      _LinSolver[ipde][i]->SetBdcPointer(&_solution[i]->_Bdc);
+      //_LinSolver[ipde][i]->SetBdcPointer(&_solution[i]->_Bdc);
     }
     
     for (unsigned i=0; i<gridn; i++) {
-      _LinSolver[ipde][i]->InitMultigrid(_SolPdeIndex[ipde],SolType,SolName);
+      _LinSolver[ipde][i]->InitPde(_SolPdeIndex[ipde],SolType,SolName,&_solution[i]->_Bdc);
     }
     for (unsigned ig=1; ig<gridn; ig++) {
       BuildProlungatorMatrix(ig,_PdeName[ipde]);
     }
-    for (unsigned ig=0; ig<gridn; ig++) {
-      _LinSolver[ipde][ig]->AllocateMatrix();
-    }
   }
+  
   return;
 }
 
 //---------------------------------------------------------------------------------------------------
 void NonLinearMultiLevelProblem::DeletePdeStructure() {
   for(unsigned ipde=0;ipde<_PdeIndex.size();ipde++)
-  
-  for (unsigned ig=0; ig<gridn; ig++) {
-    _LinSolver[ipde][ig]->DeallocateMatrix();
+    for (unsigned ig=0; ig<gridn; ig++) {
+    _LinSolver[ipde][ig]->DeletePde();
   }
+  
   for (unsigned i=0; i<_PdeName.size(); i++){ 
     delete [] _PdeName[i];
   }
@@ -782,7 +780,7 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
 	start_time=clock();
 	for (unsigned ig=0; ig<igridn; ig++) {
 	  //_LinSolver[ipde][ig]->SumEpsToSol(_SolPdeIndex[ipde]);
-	  _solution[ig]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][ig]->EPS, _LinSolver[ipde][ig]->RES, _LinSolver[ipde][ig]->KKoffset );
+	  _solution[ig]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][ig]->_EPS, _LinSolver[ipde][ig]->_RES, _LinSolver[ipde][ig]->KKoffset );
 	}
 
 	conv  = GetConvergence(pdename, igridn-1);
@@ -1102,21 +1100,17 @@ void NonLinearMultiLevelProblem::AddToVankaIndex(const char pdename[], const cha
 };
 
 // *******************************************************
-int NonLinearMultiLevelProblem::Restrictor(const unsigned &gridf, const unsigned &ipde) {
-  PetscErrorCode ierr;
-  ierr = MatMultTranspose(_LinSolver[ipde][gridf]->PP,_LinSolver[ipde][gridf]->RES,_LinSolver[ipde][gridf-1]->RESC);
-  ierr = VecAXPY(_LinSolver[ipde][gridf-1]->RES,1.,_LinSolver[ipde][gridf-1]->RESC);
-  CHKERRQ(ierr);
-  
-  return 1;
+void NonLinearMultiLevelProblem::Restrictor(const unsigned &gridf, const unsigned &ipde) {
+  _LinSolver[ipde][gridf-1]->_RESC->matrix_mult_transpose(*_LinSolver[ipde][gridf]->_RES,*_LinSolver[ipde][gridf]->_PP);
+  *_LinSolver[ipde][gridf-1]->_RES +=*_LinSolver[ipde][gridf-1]->_RESC;
 }
 
 // *******************************************************
 int NonLinearMultiLevelProblem::Prolungator(const unsigned &gridf, const unsigned &ipde) {
-  PetscErrorCode ierr;
-  ierr = MatMult(_LinSolver[ipde][gridf]->PP,_LinSolver[ipde][gridf-1]->EPS,_LinSolver[ipde][gridf]->EPSC);
+//  
   
-  CHKERRQ(ierr);
+  
+   _LinSolver[ipde][gridf]->_EPSC->matrix_mult(*_LinSolver[ipde][gridf-1]->_EPS,*_LinSolver[ipde][gridf]->_PP);
   return 1;
 }
 

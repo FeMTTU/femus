@@ -395,7 +395,7 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(const char pdename[],
 	cout << endl;
 	start_time=clock();
 	for (unsigned ig=0; ig<igridn; ig++) {
-	  _solution[ig]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][ig]->EPS, _LinSolver[ipde][ig]->RES, _LinSolver[ipde][ig]->KKoffset );
+	  _solution[ig]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][ig]->_EPS, _LinSolver[ipde][ig]->_RES, _LinSolver[ipde][ig]->KKoffset );
 	}
 
 	conv  = GetConvergence(pdename, igridn-1);

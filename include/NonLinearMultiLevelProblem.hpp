@@ -156,7 +156,7 @@ private:
   void AddToVankaIndex( const char pdename[], const char solname[]);
 
   //MultiGrid tools
-  int Restrictor(const unsigned &gridf, const unsigned &ipde);
+  void Restrictor(const unsigned &gridf, const unsigned &ipde);
   int Prolungator(const unsigned &gridf, const unsigned &ipde);
   void ProlungatorSol(const char pdename[], unsigned gridf);
   int BuildProlungatorMatrix(unsigned gridf,const char pdename[]);

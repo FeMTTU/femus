@@ -170,6 +170,21 @@ void PetscVector::matrix_mult(const NumericVector &vec_in,const SparseRectangula
   return;
 }
 
+/// This function computes the residual r=P^t x
+// =========================================================
+
+void PetscVector::matrix_mult_transpose(const NumericVector &vec_in,const SparseRectangularMatrix &mat_in) {
+  this->_restore_array();
+  // Make sure the data passed in are really of Petsc types
+  const PetscVector* v = static_cast<const PetscVector*>(&vec_in);
+  const PetscRectangularMatrix* A = static_cast<const PetscRectangularMatrix*>(&mat_in);
+  int ierr=0;
+  A->close();
+  ierr = MatMultTranspose(const_cast<PetscRectangularMatrix*>(A)->mat(),v->_vec,_vec);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  return;
+}
+
 /// This function computes the residual r=b-Ax
 // =========================================================
 void PetscVector::resid(const NumericVector& b_in,const NumericVector& x_in,
