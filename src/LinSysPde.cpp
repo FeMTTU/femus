@@ -11,7 +11,7 @@ using std::cout;
 using std::endl;
 
 //--------------------------------------------------------------------------------
-lsysPDE::lsysPDE(mesh *other_msh){    
+lsysPde::lsysPde(mesh *other_msh){    
   _msh = other_msh;
   _is_symmetric = false;
   _stabilization = false;
@@ -20,36 +20,36 @@ lsysPDE::lsysPDE(mesh *other_msh){
 }
 
 //--------------------------------------------------------------------------------
-lsysPDE::~lsysPDE() { }
+lsysPde::~lsysPde() { }
 
 //--------------------------------------------------------------------------------
-void lsysPDE::SetMatrixProperties(const bool property) {
+void lsysPde::SetMatrixProperties(const bool property) {
   _is_symmetric = property;
 }
 
 //--------------------------------------------------------------------------------
-bool lsysPDE::GetMatrixProperties() {
+bool lsysPde::GetMatrixProperties() {
   return _is_symmetric;
 }
 
 //--------------------------------------------------------------------------------
-void lsysPDE::AddStabilization(const bool stab, const double compressibility) {
+void lsysPde::AddStabilization(const bool stab, const double compressibility) {
   _stabilization = stab;
   _compressibility = compressibility;
 }
 
 //--------------------------------------------------------------------------------
-double lsysPDE::GetCompressibility() {
+double lsysPde::GetCompressibility() {
   return _compressibility;
 };
 
 //--------------------------------------------------------------------------------
-bool lsysPDE::GetStabilization() {
+bool lsysPde::GetStabilization() {
   return _stabilization;
 };
 
 //--------------------------------------------------------------------------------
-unsigned lsysPDE::GetIndex(const char name[]) {
+unsigned lsysPde::GetIndex(const char name[]) {
   unsigned index=0;
   while (strcmp(_SolName[index],name)) {
     index++;
@@ -62,40 +62,40 @@ unsigned lsysPDE::GetIndex(const char name[]) {
 }
 
 //--------------------------------------------------------------------------------
-void lsysPDE::SetBdcPointer(vector <NumericVector*> *Bdc_other){
+void lsysPde::SetBdcPointer(vector <NumericVector*> *Bdc_other){
     _Bdc=Bdc_other;
 }
 
 //--------------------------------------------------------------------------------
-int lsysPDE::InitMultigrid(const vector <unsigned> &MGIndex, const  vector <int> &SolType_other,  const vector <char*> &SolName_other ) {
+int lsysPde::InitMultigrid(const vector <unsigned> &_SolPdeIndex, const  vector <int> &SolType_other,  const vector <char*> &SolName_other ) {
    
   _SolType=SolType_other;
   _SolName=SolName_other;
   
   
   int ierr;
-  KKIndex.resize(MGIndex.size()+1u);
+  KKIndex.resize(_SolPdeIndex.size()+1u);
   KKIndex[0]=0;
   for (unsigned i=1; i<KKIndex.size(); i++)
-//     KKIndex[i]=KKIndex[i-1]+GetDofNumber(SolType[MGIndex[i-1]]);
-  KKIndex[i]=KKIndex[i-1]+_msh->MetisOffset[_SolType[MGIndex[i-1]]][_msh->_nprocs];
+//     KKIndex[i]=KKIndex[i-1]+GetDofNumber(SolType[_SolPdeIndex[i-1]]);
+  KKIndex[i]=KKIndex[i-1]+_msh->MetisOffset[_SolType[_SolPdeIndex[i-1]]][_msh->_nprocs];
 
   //-----------------------------------------------------------------------------------------------
-  KKoffset.resize(MGIndex.size()+1);
-  for(int i=0;i<MGIndex.size()+1;i++) {
+  KKoffset.resize(_SolPdeIndex.size()+1);
+  for(int i=0;i<_SolPdeIndex.size()+1;i++) {
     KKoffset[i].resize(_msh->nsubdom);
   }
   
    KKoffset[0][0]=0;
-   for(int j=1; j<MGIndex.size()+1; j++) {
-      unsigned indexSol=MGIndex[j-1];
+   for(int j=1; j<_SolPdeIndex.size()+1; j++) {
+      unsigned indexSol=_SolPdeIndex[j-1];
       KKoffset[j][0] = KKoffset[j-1][0]+(_msh->MetisOffset[_SolType[indexSol]][1] - _msh->MetisOffset[_SolType[indexSol]][0]);
    }
   
   for(int i=1; i<_msh->nsubdom; i++) {
-    KKoffset[0][i] = KKoffset[MGIndex.size()][i-1];
-    for(int j=1; j<MGIndex.size()+1; j++) {
-      unsigned indexSol=MGIndex[j-1];
+    KKoffset[0][i] = KKoffset[_SolPdeIndex.size()][i-1];
+    for(int j=1; j<_SolPdeIndex.size()+1; j++) {
+      unsigned indexSol=_SolPdeIndex[j-1];
       KKoffset[j][i] = KKoffset[j-1][i]+(_msh->MetisOffset[_SolType[indexSol]][i+1] - _msh->MetisOffset[_SolType[indexSol]][i]);
     }
   }
@@ -103,8 +103,8 @@ int lsysPDE::InitMultigrid(const vector <unsigned> &MGIndex, const  vector <int>
   //ghost size
   KKghostsize.resize(_msh->nsubdom,0);
   for(int i=0; i<_msh->nsubdom; i++) {
-    for(int j=0; j<MGIndex.size(); j++) {
-      unsigned indexSol=MGIndex[j];
+    for(int j=0; j<_SolPdeIndex.size(); j++) {
+      unsigned indexSol=_SolPdeIndex[j];
       KKghostsize[i] += _msh->ghost_size[_SolType[indexSol]][i];
     }
   }
@@ -119,8 +119,8 @@ int lsysPDE::InitMultigrid(const vector <unsigned> &MGIndex, const  vector <int>
   
    for(int i=0; i<_msh->nsubdom; i++) {
      unsigned counter=0;
-     for(int j=0; j<MGIndex.size(); j++) {
-        unsigned indexSol=MGIndex[j];
+     for(int j=0; j<_SolPdeIndex.size(); j++) {
+        unsigned indexSol=_SolPdeIndex[j];
 	for(int k=0; k<_msh->ghost_size[_SolType[indexSol]][i];k++) {
 	  //gambit ghost node
 	  unsigned gmt_ghost_nd = _msh->ghost_nd[_SolType[indexSol]][i][k];
@@ -161,8 +161,8 @@ int lsysPDE::InitMultigrid(const vector <unsigned> &MGIndex, const  vector <int>
   //--------------------------------------------------------------------------------------
   DrchKKdofs.resize(KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc]);
   unsigned counter=0;
-  for(int k=0; k<MGIndex.size(); k++) {
-    unsigned indexSol=MGIndex[k];
+  for(int k=0; k<_SolPdeIndex.size(); k++) {
+    unsigned indexSol=_SolPdeIndex[k];
     unsigned soltype=_SolType[indexSol];
     if(soltype<3) {
       for(unsigned inode_mts=_msh->MetisOffset[soltype][_msh->_iproc]; 
@@ -183,7 +183,7 @@ int lsysPDE::InitMultigrid(const vector <unsigned> &MGIndex, const  vector <int>
 }
 
 //--------------------------------------------------------------------------------
-int lsysPDE::SetResZero() {
+int lsysPde::SetResZero() {
   int ierr;
   
   if(_msh->_nprocs==1) {
@@ -204,7 +204,7 @@ int lsysPDE::SetResZero() {
 }
 
 //--------------------------------------------------------------------------------
-int lsysPDE::SetEpsZero() {
+int lsysPde::SetEpsZero() {
   int ierr;
   if(_msh->_nprocs==1) {
     ierr=VecSet(EPS,0.);
@@ -233,7 +233,7 @@ int lsysPDE::SetEpsZero() {
 }
 
 //--------------------------------------------------------------------------------
-int lsysPDE::SumEpsCToEps() {
+int lsysPde::SumEpsCToEps() {
   int ierr;
   ierr=VecAXPBY(EPS,1,1,EPSC);
   CHKERRQ(ierr);
@@ -241,7 +241,7 @@ int lsysPDE::SumEpsCToEps() {
 }
 
 //--------------------------------------------------------------------------------
-int lsysPDE::UpdateResidual() {
+int lsysPde::UpdateResidual() {
   int ierr;
   ierr = MatMult(KK,EPSC,RESC);
   CHKERRQ(ierr);
@@ -251,7 +251,7 @@ int lsysPDE::UpdateResidual() {
 }
 
 //-------------------------------------------------------------------------------------------
-int lsysPDE::DeallocateMatrix() {
+int lsysPde::DeallocateMatrix() {
   int ierr;
   ierr=MatDestroy(&KK);
   CHKERRQ(ierr);
@@ -275,7 +275,7 @@ int lsysPDE::DeallocateMatrix() {
 }
 
 //-------------------------------------------------------------------------------------------
-int lsysPDE::AllocateMatrix() {
+int lsysPde::AllocateMatrix() {
 
   PetscInt KKsize=KKIndex[KKIndex.size()-1u];
   PetscErrorCode ierr;

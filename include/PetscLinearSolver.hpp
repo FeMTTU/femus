@@ -101,12 +101,12 @@ public:
   // Solvers ------------------------------------------------------
   // ========================================================
   /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.
-  int Vanka_Smoother(const vector <unsigned> &MGIndex,const vector <unsigned> &VankaIndex,
+  int Vanka_Smoother(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
                      const short unsigned &NSchurVar,const bool &Schur);
 
 
   /// Call the Vanka smoother-solver using the PetscLibrary.
-  int Vanka_Smoother(const vector <unsigned> &MGIndex, const vector <unsigned> &VankaIndex);
+  int Vanka_Smoother(const vector <unsigned> &_SolPdeIndex, const vector <unsigned> &VankaIndex);
 
   /// Call the Gmres smoother-solver
   std::pair< int, double> solve();

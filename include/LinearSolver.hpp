@@ -26,7 +26,7 @@ class Preconditioner;
 // class is overloaded to provide linear solvers from different packages
 // like PETSC or LASPACK.
 // ===============================================
-class LinearSolverM : public lsysPDE {
+class LinearSolverM : public lsysPde {
   // ================================
   // DATA
   // ==============================
@@ -38,7 +38,7 @@ protected:
   PreconditionerType _preconditioner_type;
 
   /// Holds the Preconditioner object to be used for the linear solves.
-  Preconditioner * _preconditioner;
+  Preconditioner *_preconditioner;
 
   /// Flag indicating if the data structures have been initialized.
   bool _is_initialized;
@@ -67,9 +67,9 @@ public:
   // CONSTR/DESTR
   // ================================
   ///  Constructor. Initializes Solver data structure
-  LinearSolverM (const char infile[], vector < vector < double> > &vt, const double Lref);
-  
-  LinearSolverM (const unsigned &igrid,elem *elc);
+//   LinearSolverM (const char infile[], vector < vector < double> > &vt, const double Lref);
+//   
+//   LinearSolverM (const unsigned &igrid,elem *elc);
 
   LinearSolverM (const unsigned &igrid, mesh* other_msh);
   /// Destructor.
@@ -82,9 +82,9 @@ public:
   virtual void init() = 0;
 
   /// Builds a \p LinearSolverM using the linear solver in \p solver_package
-  static std::auto_ptr<LinearSolverM > build(vector < vector < double> > &vt, const double Lref, const char infile[],const SolverPackage solver_package =LSOLVER);
-
-  static std::auto_ptr<LinearSolverM > build(const unsigned &igrid,elem *elc,const SolverPackage solver_package =LSOLVER);
+//   static std::auto_ptr<LinearSolverM > build(vector < vector < double> > &vt, const double Lref, const char infile[],const SolverPackage solver_package =LSOLVER);
+// 
+//   static std::auto_ptr<LinearSolverM > build(const unsigned &igrid,elem *elc,const SolverPackage solver_package =LSOLVER);
 
   static std::auto_ptr<LinearSolverM > build(const unsigned &igrid, mesh* other_msh,const SolverPackage solver_package =LSOLVER);
   
@@ -135,11 +135,11 @@ public:
   // ================================
 
     /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.
-  virtual int Vanka_Smoother(const vector <unsigned> &MGIndex,const vector <unsigned> &VankaIndex,
+  virtual int Vanka_Smoother(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
                              const short unsigned &NSchurVar,const bool &Schur) = 0;
 
   /// Call the Vanka smoother-solver using the PetscLibrary.
-  virtual int Vanka_Smoother(const vector <unsigned> &MGIndex, const vector <unsigned> &VankaIndex) = 0;
+  virtual int Vanka_Smoother(const vector <unsigned> &_SolPdeIndex, const vector <unsigned> &VankaIndex) = 0;
   
   /// Call the Gmres smoother-solver
   virtual std::pair< int, double> solve() = 0;
@@ -167,7 +167,7 @@ public:
 
 // =============================================
 // inline LinearSolverM::LinearSolverM(const char infile[], vector < vector < double> > &vt, const double Lref) :
-//   lsysPDE(infile,vt,Lref),
+//   lsysPde(infile,vt,Lref),
 //   _solver_type(GMRES),
 //   _preconditioner_type(LU_PRECOND),
 //   _preconditioner(NULL),
@@ -179,7 +179,7 @@ public:
 // ========================================================
 // =============================================
 // inline LinearSolverM::LinearSolverM(const unsigned &igrid,elem *elc) :
-//   lsysPDE(igrid,elc),
+//   lsysPde(igrid,elc),
 //   _solver_type(GMRES),
 //   _preconditioner_type(ILU_PRECOND),
 //   _preconditioner(NULL),
@@ -196,7 +196,7 @@ public:
 
 // =============================================
 inline LinearSolverM::LinearSolverM(const unsigned &igrid, mesh* other_msh) :
-  lsysPDE(other_msh),
+  lsysPde(other_msh),
   _solver_type(GMRES),
   _preconditioner(NULL),
   _is_initialized(false),

@@ -9,9 +9,9 @@ class elem_type;
 class NumericVector;
 class SparseRectangularMatrix;
 
-//class lsysPDE: public mesh {
+//class lsysPde: public mesh {
 
-class lsysPDE{
+class lsysPde{
  //Data 
 private:
   bool _is_symmetric;
@@ -39,12 +39,12 @@ public:
   //Functions
   
 public:  
-  lsysPDE(mesh *other_msh);
-  ~lsysPDE();
+  lsysPde(mesh *other_msh);
+  ~lsysPde();
 
-  //void AddSolutionVector(const char name[], const char order[]);
+  //void AddSolution(const char name[], const char order[]);
   void SetBdcPointer(vector <NumericVector*> *Bdc_other);
-  int InitMultigrid(const vector <unsigned> &MGIndex,const  vector <int> &SolType,  const vector <char*> &SolName);
+  int InitMultigrid(const vector <unsigned> &_SolPdeIndex,const  vector <int> &SolType,  const vector <char*> &SolName);
   int DeallocateMatrix();
   int AllocateMatrix();
   unsigned GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,const unsigned &idof_gmt) const;
@@ -65,7 +65,7 @@ protected:
 
 /*----------------------- functions ----------------------------------*/
 //--------------------------------------------------------------------------------------------
-inline unsigned lsysPDE::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol, 
+inline unsigned lsysPde::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol, 
 				  const unsigned &idof_gmt) const {
   
    //return KKIndex[kkindex_sol]+idof_gmt;

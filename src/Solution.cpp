@@ -35,8 +35,8 @@ Solution::~Solution() {
  * Add new varible called name
  **/
 // ------------------------------------------------------------------
-void Solution::AddSolutionVector( const char name[], const char order[],
-                                const unsigned& tmorder, const bool &PDE_type) {
+void Solution::AddSolution( const char name[], const char order[],
+                                const unsigned& tmorder, const bool &Pde_type) {
   unsigned n=_Sol.size();
 
   _SolType.resize(n+1u);
@@ -50,7 +50,7 @@ void Solution::AddSolutionVector( const char name[], const char order[],
   
   _Bdc.resize(n+1u);
   _ResEpsBdcFlag.resize(n+1u);
-  _ResEpsBdcFlag[n]=PDE_type;
+  _ResEpsBdcFlag[n]=Pde_type;
   
   
   _SolTmOrder[n]=tmorder;
@@ -67,7 +67,7 @@ void Solution::AddSolutionVector( const char name[], const char order[],
   } else if (!strcmp(order,"disc_linear")) {
     _SolType[n]=4;
   } else {
-    cout<<"error! invalid order entry in AddSolutionVector(...)"<<endl;
+    cout<<"error! invalid order entry in AddSolution(...)"<<endl;
     exit(0);
   }
   _SolName[n]=new char [8];
@@ -125,7 +125,7 @@ void Solution::ResizeSolutionVector(const char name[]) {
     _SolOld[i]->init(*_Sol[i]);
   }
     
-  if(_ResEpsBdcFlag[i]) { //only if the variable is a PDE type
+  if(_ResEpsBdcFlag[i]) { //only if the variable is a Pde type
     
     _Res[i] = NumericVector::build().release();
     _Res[i]->init(*_Sol[i]);
@@ -183,7 +183,7 @@ void Solution::SetCoarseCoordinates( vector < vector < double> > &vt){
  * Update _Sol, _Res and _Eps based on EPS and RES 
  **/
 //--------------------------------------------------------------------------------
-int Solution::SumEpsToSol(const vector <unsigned> &MGIndex, const Vec &EPS, const Vec &RES, const vector <vector <unsigned> > &KKoffset ) {
+int Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex, const Vec &EPS, const Vec &RES, const vector <vector <unsigned> > &KKoffset ) {
 
   PetscScalar* R;
   PetscScalar* E;
@@ -211,8 +211,8 @@ int Solution::SumEpsToSol(const vector <unsigned> &MGIndex, const Vec &EPS, cons
     CHKERRQ(ierr);
   }
   
-  for (unsigned k=0; k<MGIndex.size(); k++) {
-    unsigned indexSol=MGIndex[k];
+  for (unsigned k=0; k<_SolPdeIndex.size(); k++) {
+    unsigned indexSol=_SolPdeIndex[k];
     unsigned soltype =  _SolType[indexSol];
 
      int loc_size   = _Eps[indexSol]->local_size();
@@ -245,8 +245,8 @@ int Solution::SumEpsToSol(const vector <unsigned> &MGIndex, const Vec &EPS, cons
     CHKERRQ(ierr);
   }
 
-  for (unsigned k=0; k<MGIndex.size(); k++) {
-    unsigned indexSol=MGIndex[k];
+  for (unsigned k=0; k<_SolPdeIndex.size(); k++) {
+    unsigned indexSol=_SolPdeIndex[k];
     _Sol[indexSol]->add(*_Eps[indexSol]);
     _Sol[indexSol]->close();
   }

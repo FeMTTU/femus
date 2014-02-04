@@ -753,7 +753,7 @@ int elem_type::prolongation(const elem* elf,const elem* elc, const int& ielc,
 // prolungator for Matrix
 //----------------------------------------------------------------------------------------------------
 
-void elem_type::prolongation(const lsysPDE &lspdef,const lsysPDE &lspdec, const int& ielc, Mat& PP, 
+void elem_type::prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, Mat& PP, 
 		    const unsigned &index_sol, const unsigned &kkindex_sol) const {
 		      
   vector<PetscInt> cols(27);

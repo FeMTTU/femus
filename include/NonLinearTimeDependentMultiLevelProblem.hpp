@@ -59,7 +59,7 @@ public:
 
   void SetNumTimeSteps(const double ntimesteps);
 
-  int FullMultiGrid(unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
+  int FullMultiGrid(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
 		    const char mg_type[]="F-Cycle");
   
   void printsol_xdmf_archive(const char type[]) const;
