@@ -1148,31 +1148,43 @@ int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, const cha
   }
   
   int ierr;
-  PetscInt nf= _LinSolver[ipde][gridf]->KKIndex[_LinSolver[ipde][gridf]->KKIndex.size()-1u];
-  PetscInt nc= _LinSolver[ipde][gridf-1]->KKIndex[_LinSolver[ipde][gridf-1]->KKIndex.size()-1u];
+  //PetscInt nf= _LinSolver[ipde][gridf]->KKIndex[_LinSolver[ipde][gridf]->KKIndex.size()-1u];
+  //PetscInt nc= _LinSolver[ipde][gridf-1]->KKIndex[_LinSolver[ipde][gridf-1]->KKIndex.size()-1u];
   
-  if(_nprocs==1) {
-    ierr = MatCreateSeqAIJ(PETSC_COMM_SELF,nf,nc,27,PETSC_NULL,&_LinSolver[ipde][gridf]->PP); CHKERRQ(ierr);
-    ierr = MatSetFromOptions(_LinSolver[ipde][gridf]->PP); CHKERRQ(ierr);
-  } else {
-    PetscInt nf_loc = _LinSolver[ipde][gridf]->KKoffset[_LinSolver[ipde][gridf]->KKIndex.size()-1][_iproc]
-      -_LinSolver[ipde][gridf]->KKoffset[0][_iproc];
-    PetscInt nc_loc = _LinSolver[ipde][gridf-1]->KKoffset[_LinSolver[ipde][gridf-1]->KKIndex.size()-1][_iproc]
-      -_LinSolver[ipde][gridf-1]->KKoffset[0][_iproc];
-    
-    ierr = MatCreate(MPI_COMM_WORLD, &_LinSolver[ipde][gridf]->PP);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-    ierr = MatSetSizes(_LinSolver[ipde][gridf]->PP, nf_loc, nc_loc, nf, nc);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-    ierr = MatSetType(_LinSolver[ipde][gridf]->PP, MATMPIAIJ); 
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-    ierr = MatMPIAIJSetPreallocation(_LinSolver[ipde][gridf]->PP, 27, PETSC_NULL, 27, PETSC_NULL);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    
-  }
+//   if(_nprocs==1) {
+//     ierr = MatCreateSeqAIJ(PETSC_COMM_SELF,nf,nc,27,PETSC_NULL,&_LinSolver[ipde][gridf]->PP); CHKERRQ(ierr);
+//     ierr = MatSetFromOptions(_LinSolver[ipde][gridf]->PP); CHKERRQ(ierr);
+//   } else {
+//     PetscInt nf_loc = _LinSolver[ipde][gridf]->KKoffset[_LinSolver[ipde][gridf]->KKIndex.size()-1][_iproc]
+//       -_LinSolver[ipde][gridf]->KKoffset[0][_iproc];
+//     PetscInt nc_loc = _LinSolver[ipde][gridf-1]->KKoffset[_LinSolver[ipde][gridf-1]->KKIndex.size()-1][_iproc]
+//       -_LinSolver[ipde][gridf-1]->KKoffset[0][_iproc];
+//     
+//     ierr = MatCreate(MPI_COMM_WORLD, &_LinSolver[ipde][gridf]->PP);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+// 
+//     ierr = MatSetSizes(_LinSolver[ipde][gridf]->PP, nf_loc, nc_loc, nf, nc);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+// 
+//     ierr = MatSetType(_LinSolver[ipde][gridf]->PP, MATMPIAIJ); 
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+// 
+//     ierr = MatMPIAIJSetPreallocation(_LinSolver[ipde][gridf]->PP, 27, PETSC_NULL, 27, PETSC_NULL);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     
+//   }
+  
+  
+  int nf= _LinSolver[ipde][gridf]->KKIndex[_LinSolver[ipde][gridf]->KKIndex.size()-1u];
+  int nc= _LinSolver[ipde][gridf-1]->KKIndex[_LinSolver[ipde][gridf-1]->KKIndex.size()-1u];
+  int nf_loc = _LinSolver[ipde][gridf]->KKoffset[_LinSolver[ipde][gridf]->KKIndex.size()-1][_iproc]-_LinSolver[ipde][gridf]->KKoffset[0][_iproc];
+  int nc_loc = _LinSolver[ipde][gridf-1]->KKoffset[_LinSolver[ipde][gridf-1]->KKIndex.size()-1][_iproc]-_LinSolver[ipde][gridf-1]->KKoffset[0][_iproc];
+  _LinSolver[ipde][gridf]->_PP = SparseRectangularMatrix::build().release();
+  _LinSolver[ipde][gridf]->_PP->init(nf,nc,nf_loc,nc_loc,27,27);
+  
+   PetscRectangularMatrix* PPp=static_cast<PetscRectangularMatrix*>(_LinSolver[ipde][gridf]->_PP);
+   _LinSolver[ipde][gridf]->PP=PPp->mat();
+  
   
   for (unsigned k=0; k<_SolPdeIndex[ipde].size(); k++) {
     unsigned SolIndex=_SolPdeIndex[ipde][k];

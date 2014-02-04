@@ -6,7 +6,10 @@
 #include "ElemType.hpp"
 #include "ParalleltypeEnum.hpp"
 #include "NumericVector.hpp"
+#include "PetscVector.hpp"
 #include "SparseRectangularMatrix.hpp"
+#include "PetscRectangularMatrix.hpp"
+
 using std::cout;
 using std::endl;
 
@@ -133,30 +136,58 @@ int lsysPde::InitMultigrid(const vector <unsigned> &_SolPdeIndex, const  vector 
   //-----------------------------------------------------------------------------------------------
   
   
-  PetscInt RESsize= KKIndex[KKIndex.size()-1];
+//   PetscInt RESsize= KKIndex[KKIndex.size()-1];
+// 
+//   if(_msh->_nprocs==1) {  
+//     ierr=VecCreateSeq(PETSC_COMM_SELF,RESsize,&RES);
+//     CHKERRQ(ierr);
+//     ierr=VecSetFromOptions(RES);
+//     CHKERRQ(ierr);
+//   } else {
+//     PetscInt RES_local_size =KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
+//     if(_msh->_iproc==0)
+//       ierr=VecCreateGhost(PETSC_COMM_WORLD,RES_local_size,RESsize,0,PETSC_NULL,&RES); 
+//     else
+//       ierr=VecCreateGhost(PETSC_COMM_WORLD,RES_local_size,RESsize,KKghostsize[_msh->_iproc],&KKghost_nd[_msh->_iproc][0],&RES); 
+//     CHKERRQ(ierr);
+//   }
+//   
+// 
+//   ierr=VecDuplicate(RES,&RESC);
+//   CHKERRQ(ierr);
+//   ierr=VecDuplicate(RES,&EPS);
+//   CHKERRQ(ierr);
+//   ierr=VecDuplicate(RES,&EPSC);
+//   CHKERRQ(ierr);
 
-  if(_msh->_nprocs==1) {  
-    ierr=VecCreateSeq(PETSC_COMM_SELF,RESsize,&RES);
-    CHKERRQ(ierr);
-    ierr=VecSetFromOptions(RES);
-    CHKERRQ(ierr);
-  } else {
-    PetscInt RES_local_size =KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
-    if(_msh->_iproc==0)
-      ierr=VecCreateGhost(PETSC_COMM_WORLD,RES_local_size,RESsize,0,PETSC_NULL,&RES); 
-    else
-      ierr=VecCreateGhost(PETSC_COMM_WORLD,RES_local_size,RESsize,KKghostsize[_msh->_iproc],&KKghost_nd[_msh->_iproc][0],&RES); 
-    CHKERRQ(ierr);
+  int EPSsize= KKIndex[KKIndex.size()-1];
+  _EPS = NumericVector::build().release();
+  if(_msh->_nprocs==1) { // IF SERIAL
+    _EPS->init(EPSsize,EPSsize,false,SERIAL);
+  } 
+  else { // IF PARALLEL
+    int EPS_local_size =KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
+    _EPS->init(EPSsize,EPS_local_size, KKghost_nd[_msh->_iproc], false,GHOSTED);
   }
   
-
-  ierr=VecDuplicate(RES,&RESC);
-  CHKERRQ(ierr);
-  ierr=VecDuplicate(RES,&EPS);
-  CHKERRQ(ierr);
-  ierr=VecDuplicate(RES,&EPSC);
-  CHKERRQ(ierr);
-
+  _RES = NumericVector::build().release();
+  _RES->init(*_EPS);
+  
+  _EPSC = NumericVector::build().release();
+  _EPSC->init(*_EPS);
+  
+  _RESC = NumericVector::build().release();
+  _RESC->init(*_EPS);
+  
+  PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
+  PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  //TODO
+  PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
+  PetscVector* RESCp=static_cast<PetscVector*> (_RESC); //TODO
+  
+  EPS=EPSp->vec(); //TODO
+  EPSC=EPSCp->vec(); //TODO
+  RES=RESp->vec(); //TODO
+  RESC=RESCp->vec(); //TODO
   
   //--------------------------------------------------------------------------------------
   DrchKKdofs.resize(KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc]);
@@ -184,83 +215,100 @@ int lsysPde::InitMultigrid(const vector <unsigned> &_SolPdeIndex, const  vector 
 
 //--------------------------------------------------------------------------------
 int lsysPde::SetResZero() {
-  int ierr;
-  
-  if(_msh->_nprocs==1) {
-    ierr=VecSet(RES,0.);
-    CHKERRQ(ierr);
-  }  else {
-     /* Vectors that include ghost values require a special
-    handling.  */
-    Vec loc_vec; ierr = VecGhostGetLocalForm (RES,&loc_vec);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    ierr = VecSet (loc_vec, 0.);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    ierr = VecGhostRestoreLocalForm (RES,&loc_vec);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-  }
-  
-  return ierr;
-}
+//   int ierr;
+//   
+//   if(_msh->_nprocs==1) {
+//     ierr=VecSet(RES,0.);
+//     CHKERRQ(ierr);
+//   }  else {
+//      /* Vectors that include ghost values require a special
+//     handling.  */
+//     Vec loc_vec; ierr = VecGhostGetLocalForm (RES,&loc_vec);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     ierr = VecSet (loc_vec, 0.);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     ierr = VecGhostRestoreLocalForm (RES,&loc_vec);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+// }
+// return ierr;
 
-//--------------------------------------------------------------------------------
-int lsysPde::SetEpsZero() {
-  int ierr;
-  if(_msh->_nprocs==1) {
-    ierr=VecSet(EPS,0.);
-    CHKERRQ(ierr);
-    ierr=VecSet(EPSC,0.);
-    CHKERRQ(ierr);
-  } else {
-     /* Vectors that include ghost values require a special
-    handling.  */
-    Vec loc_vec; ierr = VecGhostGetLocalForm (EPS,&loc_vec);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    ierr = VecSet (loc_vec, 0.);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    ierr = VecGhostRestoreLocalForm (EPS,&loc_vec);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    
-    ierr = VecGhostGetLocalForm (EPSC,&loc_vec);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    ierr = VecSet (loc_vec, 0.);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    ierr = VecGhostRestoreLocalForm (EPSC,&loc_vec);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    
-  }
-  return ierr;
-}
-
-//--------------------------------------------------------------------------------
-int lsysPde::SumEpsCToEps() {
-  int ierr;
-  ierr=VecAXPBY(EPS,1,1,EPSC);
-  CHKERRQ(ierr);
+  _RES->zero();
   return 1;
 }
 
 //--------------------------------------------------------------------------------
+int lsysPde::SetEpsZero() {
+//   int ierr;
+//   if(_msh->_nprocs==1) {
+//     ierr=VecSet(EPS,0.);
+//     CHKERRQ(ierr);
+//     ierr=VecSet(EPSC,0.);
+//     CHKERRQ(ierr);
+//   } else {
+//      /* Vectors that include ghost values require a special
+//     handling.  */
+//     Vec loc_vec; ierr = VecGhostGetLocalForm (EPS,&loc_vec);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     ierr = VecSet (loc_vec, 0.);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     ierr = VecGhostRestoreLocalForm (EPS,&loc_vec);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     
+//     ierr = VecGhostGetLocalForm (EPSC,&loc_vec);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     ierr = VecSet (loc_vec, 0.);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     ierr = VecGhostRestoreLocalForm (EPSC,&loc_vec);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     
+//   }
+//   return ierr;
+
+  _EPS->zero();
+  _EPSC->zero();
+  return 1;
+}
+
+//--------------------------------------------------------------------------------
+int lsysPde::SumEpsCToEps() {
+//   int ierr;
+//   ierr=VecAXPBY(EPS,1,1,EPSC);
+//   CHKERRQ(ierr);
+//   return 1;
+
+  *_EPS += *_EPSC;
+
+}
+
+//--------------------------------------------------------------------------------
 int lsysPde::UpdateResidual() {
-  int ierr;
-  ierr = MatMult(KK,EPSC,RESC);
-  CHKERRQ(ierr);
-  ierr = VecAXPBY(RES,-1.,1.,RESC);
-  CHKERRQ(ierr);
+//   int ierr;
+//   ierr = MatMult(KK,EPSC,RESC);
+//   CHKERRQ(ierr);
+//   ierr = VecAXPBY(RES,-1.,1.,RESC);
+//   CHKERRQ(ierr);
+  
+  
+  _RESC->matrix_mult(*_EPSC,*_KK);
+  *_RES -= *_RESC;
+  
   return 1;
 }
 
 //-------------------------------------------------------------------------------------------
 int lsysPde::DeallocateMatrix() {
   int ierr;
-  ierr=MatDestroy(&KK);
-  CHKERRQ(ierr);
+//   ierr=MatDestroy(&KK);
+//   CHKERRQ(ierr);
+//   
+  delete _KK;
   
   if (_msh->GetGridNumber()>0) {
-    ierr=MatDestroy(&PP);
-    CHKERRQ(ierr);
+//     ierr=MatDestroy(&PP);
+//     CHKERRQ(ierr);
+    delete _PP;
   }
-  
+ /* 
   ierr=VecDestroy(&RES);
   CHKERRQ(ierr);
   ierr=VecDestroy(&RESC);
@@ -269,56 +317,73 @@ int lsysPde::DeallocateMatrix() {
   ierr=VecDestroy(&EPSC);
   CHKERRQ(ierr);
   ierr=VecDestroy(&EPS);
-  CHKERRQ(ierr);
-
+  CHKERRQ(ierr);*/
+  
+  delete _EPS;
+  delete _EPSC;
+  delete _RES;
+  delete _RESC;
+  
   return ierr;
 }
 
 //-------------------------------------------------------------------------------------------
 int lsysPde::AllocateMatrix() {
 
-  PetscInt KKsize=KKIndex[KKIndex.size()-1u];
-  PetscErrorCode ierr;
-  const unsigned dim = _msh->GetDimension();
-  PetscInt KK_UNIT_SIZE_ = pow(5,dim);
+//   PetscInt KKsize=KKIndex[KKIndex.size()-1u];
+//   PetscErrorCode ierr;
+//   const unsigned dim = _msh->GetDimension();
+//   PetscInt KK_UNIT_SIZE_ = pow(5,dim);
+// 
+//   if(_msh->_nprocs==1) {
+//     //TODO optimize memory
+//     ierr = MatCreateSeqAIJ(PETSC_COMM_SELF,KKsize,KKsize,KK_UNIT_SIZE_*KKIndex.size(),PETSC_NULL,&KK);
+//     CHKERRQ(ierr);
+//     
+//     ierr = MatSetFromOptions(KK);
+//     CHKERRQ(ierr);
+//     
+//     ierr=MatSetOption(KK,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE); 
+//     CHKERRQ(ierr);
+//     
+//   }
+//   else {
+// 
+//     PetscInt KK_local_size =KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
+//     
+//     ierr = MatCreate(MPI_COMM_WORLD, &KK);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+// 
+//     ierr = MatSetSizes(KK, KK_local_size, KK_local_size, KKsize,KKsize);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+// 
+//     ierr = MatSetType(KK, MATMPIAIJ);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+// 
+//     ierr = MatMPIAIJSetPreallocation(KK, KK_UNIT_SIZE_*KKIndex.size(), PETSC_NULL, KK_UNIT_SIZE_*KKIndex.size(), PETSC_NULL);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//   
+//     ierr = MatSetFromOptions(KK);
+//     CHKERRQ(ierr);
+//     
+//     ierr=MatSetOption(KK,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE); 
+//     CHKERRQ(ierr);
+//     
+//   }
 
-  if(_msh->_nprocs==1) {
-    //TODO optimize memory
-    ierr = MatCreateSeqAIJ(PETSC_COMM_SELF,KKsize,KKsize,KK_UNIT_SIZE_*KKIndex.size(),PETSC_NULL,&KK);
-    CHKERRQ(ierr);
-    
-    ierr = MatSetFromOptions(KK);
-    CHKERRQ(ierr);
-    
-    ierr=MatSetOption(KK,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE); 
-    CHKERRQ(ierr);
-    
-  }
-  else {
-
-    PetscInt KK_local_size =KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
-    
-    ierr = MatCreate(MPI_COMM_WORLD, &KK);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-    ierr = MatSetSizes(KK, KK_local_size, KK_local_size, KKsize,KKsize);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-    ierr = MatSetType(KK, MATMPIAIJ);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-    ierr = MatMPIAIJSetPreallocation(KK, KK_UNIT_SIZE_*KKIndex.size(), PETSC_NULL, KK_UNIT_SIZE_*KKIndex.size(), PETSC_NULL);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
   
-    ierr = MatSetFromOptions(KK);
-    CHKERRQ(ierr);
+  const unsigned dim = _msh->GetDimension();
+  int KK_UNIT_SIZE_ = pow(5,dim);
+  int KK_size=KKIndex[KKIndex.size()-1u];
+  int KK_local_size =KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
     
-    ierr=MatSetOption(KK,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE); 
-    CHKERRQ(ierr);
-    
-  }
-
-  return ierr;
+  _KK = SparseRectangularMatrix::build().release();
+  _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
+  
+  PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_KK); //TODO
+  KK=KKp->mat(); //TODO
+  
+  return 1;
 }
 
 //-------------------------------------------------------------------------------------------

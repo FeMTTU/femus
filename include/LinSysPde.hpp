@@ -36,6 +36,9 @@ public:
   Vec EPS,EPSC;
   bool CC_flag;
     
+  NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
+  SparseRectangularMatrix *_KK, *_PP;
+  
   //Functions
   
 public:  
