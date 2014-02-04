@@ -152,8 +152,7 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
     _solution[i]->_Sol[indZ]->matrix_mult(*_solution[i-1]->_Sol[indZ],*_solution[i]->_ProjMat[TypeIndex]);
     _solution[i]->_Sol[indX]->close();
     _solution[i]->_Sol[indY]->close();
-    _solution[i]->_Sol[indZ]->close();
-    
+    _solution[i]->_Sol[indZ]->close(); 
   }
   
   for (unsigned i=gridr; i<gridn; i++) {
@@ -189,7 +188,6 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
   _solution[gridn-1u]->SetElementRefiniement(0);	
   elr_old.resize(_msh[gridr-1u]->GetElementNumber());
     
-
   unsigned refindex = _msh[0]->GetRefIndex();
   // cout << "******" << refindex << endl;
   elem_type::_refindex=refindex;
