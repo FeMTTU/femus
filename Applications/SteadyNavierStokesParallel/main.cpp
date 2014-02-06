@@ -400,9 +400,12 @@ int AssembleMatrixResNS1(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
   // Allocation
   int node2[27];
   int node1[27];
-  int nodeVAR[4][27];
-  double B[4][4][27*27];
-  double F[4][27];
+  vector<vector<int> > nodeVAR(4); //[4][27]
+  vector<vector<vector<vector< double > > > > B(4);//B[4][4][27*27];
+  for(int i=0;i<4;i++) { 
+    B[i].resize(4);
+  }
+  vector<vector<double> > F(4);//[4][27];
   double coord[3][27];
   double phi2[27],gradphi2[27][3],Weight2;
   double normal[3];
@@ -468,23 +471,48 @@ int AssembleMatrixResNS1(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
     
     //set to zero all the entries of the FE matrices
     for(int ivar=0; ivar<dim; ivar++) {
-      memset(F[SolPdeIndexVAR[ivar]],0,nve2*sizeof(double));
-      memset(B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[ivar]],0,nve2*nve2*sizeof(double));
-      memset(B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[3]],0,nve2*nve1*sizeof(double));
-      memset(B[SolPdeIndexVAR[3]][SolPdeIndexVAR[ivar]],0,nve1*nve2*sizeof(double));
+      int SolUindx=SolPdeIndexVAR[ivar];
+      int SolPindx=SolPindx;
+      nodeVAR[SolUindx].resize(nve2);
+      F[SolUindx].resize(nve2,0.);
+      B[SolUindx][SolUindx].resize(nve2);
+      B[SolUindx][SolPindx].resize(nve2);
+      for(int j=0;j<nve2;j++){
+	B[SolUindx][SolUindx][j].resize(nve2,0.);
+	B[SolUindx][SolPindx][j].resize(nve1,0.);
+      }
+      B[SolPindx][SolUindx].resize(nve1);
+      for(int j=0;j<nve1;j++){
+	B[SolPindx][SolUindx][j].resize(nve2,0.);
+      }
+    //       memset(F[SolPdeIndexVAR[ivar]],0,nve2*sizeof(double));
+    //       memset(B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[ivar]],0,nve2*nve2*sizeof(double));
+    //       memset(B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[3]],0,nve2*nve1*sizeof(double));
+    //       memset(B[SolPdeIndexVAR[3]][SolPdeIndexVAR[ivar]],0,nve1*nve2*sizeof(double));
     }
-    memset(F[SolPdeIndexVAR[3]],0,nve1*sizeof(double));
+    nodeVAR[SolPdeIndexVAR[3]].resize(nve1);
+    F[SolPdeIndexVAR[3]].resize(nve1,0.);
+    //memset(F[SolPdeIndexVAR[3]],0,nve1*sizeof(double));
+    
     
     if(_nwtn_alg==2){
       for(int ivar=0; ivar<dim; ivar++) {
 	for(int ivar2=1; ivar2<dim; ivar2++) {
-	  memset(B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[(ivar+ivar2)%dim]],0,nve2*nve2*sizeof(double));
+	  B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[(ivar+ivar2)%dim]].resize(nve2);
+	  for(int j=0;j<nve2;j++){
+	    B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[(ivar+ivar2)%dim]][j].resize(nve2,0.);
+	  }
+	  //memset(B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[(ivar+ivar2)%dim]],0,nve2*nve2*sizeof(double));
 	}
       }
     }
   
     if(_penalty){
-      memset(B[SolPdeIndexVAR[3]][SolPdeIndexVAR[3]],0,nve1*nve1*sizeof(double));
+      B[SolPdeIndexVAR[3]][SolPdeIndexVAR[3]].resize(nve1);
+      for(int j=0;j<nve1;j++){
+	B[SolPdeIndexVAR[3]][SolPdeIndexVAR[3]][j].resize(nve1,0.);
+      }
+      //memset(B[SolPdeIndexVAR[3]][SolPdeIndexVAR[3]],0,nve1*nve1*sizeof(double));
     }
     
     for( unsigned i=0;i<nve2;i++){
@@ -567,12 +595,15 @@ int AssembleMatrixResNS1(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
 	    }
 
 	    for(unsigned ivar=0; ivar<dim; ivar++) {    
-	      B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[ivar]][i*nve2+j] += _IRe*Lap + _NavierStokes*_newton*Adv1;
+	      //B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[ivar]][i*nve2+j] += _IRe*Lap + _NavierStokes*_newton*Adv1;
+	      B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[ivar]][i][j] += _IRe*Lap + _NavierStokes*_newton*Adv1;
 	      if(_nwtn_alg==2){
 		// Advection term II
-		B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[ivar]][i*nve2+j]       += Adv2*gradSolVAR[ivar][ivar];
+		//B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[ivar]][i*nve2+j]       += Adv2*gradSolVAR[ivar][ivar];
+		B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[ivar]][i][j]       += Adv2*gradSolVAR[ivar][ivar];
 		for(unsigned ivar2=1; ivar2<dim; ivar2++) {
-		  B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[(ivar+ivar2)%dim]][i*nve2+j] += Adv2*gradSolVAR[ivar][(ivar+ivar2)%dim];
+		  B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[(ivar+ivar2)%dim]][i][j] += Adv2*gradSolVAR[ivar][(ivar+ivar2)%dim];
+		  //B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[(ivar+ivar2)%dim]][i*nve2+j] += Adv2*gradSolVAR[ivar][(ivar+ivar2)%dim];
 		}
 	      }
 	    }
@@ -586,7 +617,8 @@ int AssembleMatrixResNS1(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
 	  // *** phi_j loop ***
 	  for(unsigned j=0; j<nve1; j++){
 	    for(unsigned ivar=0; ivar<dim; ivar++) {
-	      B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[3]][i*nve1+j] -= gradphi2[i][ivar]*phi1[j]*Weight2;
+	      //B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[3]][i*nve1+j] -= gradphi2[i][ivar]*phi1[j]*Weight2;
+	      B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[3]][i][j] += - gradphi2[i][ivar]*phi1[j]*Weight2;
 	    }
 	  }
 	} 
@@ -604,7 +636,8 @@ int AssembleMatrixResNS1(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
 	  // *** phi_j loop ***
 	  for(unsigned j=0; j<nve2; j++) {
 	    for(unsigned ivar=0; ivar<dim; ivar++) {
-	      B[SolPdeIndexVAR[3]][SolPdeIndexVAR[ivar]][i*nve2+j]-= phi1[i]*gradphi2[j][ivar]*Weight2;
+	      //B[SolPdeIndexVAR[3]][SolPdeIndexVAR[ivar]][i*nve2+j]-= phi1[i]*gradphi2[j][ivar]*Weight2;
+	      B[SolPdeIndexVAR[3]][SolPdeIndexVAR[ivar]][i][j]+= - phi1[i]*gradphi2[j][ivar]*Weight2;
 	    }
 	  }  //end phij loop
 	}  //end nve1
@@ -614,7 +647,8 @@ int AssembleMatrixResNS1(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
 	  for(unsigned i=0; i<nve1; i++){
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve1; j++){
-	      B[SolPdeIndexVAR[3]][SolPdeIndexVAR[3]][i*nve1+j]-=_ILambda*phi1[i]*phi1[j]*Weight2;
+	      //B[SolPdeIndexVAR[3]][SolPdeIndexVAR[3]][i*nve1+j]-=_ILambda*phi1[i]*phi1[j]*Weight2;
+	      B[SolPdeIndexVAR[3]][SolPdeIndexVAR[3]][i][j] += -_ILambda*phi1[i]*phi1[j]*Weight2;
 	    }
 	  }
 	}   //end if penalty
