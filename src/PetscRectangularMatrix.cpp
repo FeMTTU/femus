@@ -225,6 +225,31 @@ void PetscRectangularMatrix::zero_rows (std::vector<int> & rows, double diag_val
   return;
 }
 
+
+
+void PetscRectangularMatrix::matrix_PtAP(const SparseRectangularMatrix &mat_P, const SparseRectangularMatrix &mat_A, const bool &mat_reuse){
+  
+  const PetscRectangularMatrix* A = static_cast<const PetscRectangularMatrix*>(&mat_A);
+  A->close();
+  
+  const PetscRectangularMatrix* P = static_cast<const PetscRectangularMatrix*>(&mat_P);
+  P->close();
+  
+  int ierr=0;
+  if(mat_reuse){  
+    ierr = MatPtAP(const_cast<PetscRectangularMatrix*>(A)->mat(), const_cast<PetscRectangularMatrix*>(P)->mat(), MAT_REUSE_MATRIX,1.0,&_mat);
+  }
+  else{
+    this->clear();
+    ierr = MatPtAP(const_cast<PetscRectangularMatrix*>(A)->mat(), const_cast<PetscRectangularMatrix*>(P)->mat(), MAT_INITIAL_MATRIX ,1.0,&_mat);
+    this->_is_initialized = true;
+  }
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+}
+
+
+
+
 // =================================================
 /// This function clears the matrix
 void PetscRectangularMatrix::clear () {

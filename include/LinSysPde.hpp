@@ -25,18 +25,17 @@ protected:
   
 public:   
   mesh *_msh; 
-  vector <PetscInt> DrchKKdofs;
+  vector <int> DrchKKdofs;
   vector < vector <unsigned> > KKoffset;
   vector < unsigned > KKghostsize;
   vector < vector < int> > KKghost_nd;
   vector <int> KKIndex;
-  Mat PP;
-  Mat KK,CC;
-  Vec RES;
-  bool CC_flag;
+  
+  
     
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
-  SparseRectangularMatrix *_KK, *_PP;
+  SparseRectangularMatrix *_KK, *_PP, *_CC;
+  bool _CC_flag;
   
   //Functions
   

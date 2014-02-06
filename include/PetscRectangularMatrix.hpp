@@ -117,7 +117,10 @@ public:
   /// Add a Sparse matrix
   void add(const double a, SparseRectangularMatrix &X);
 
-
+  void matrix_add (const double a_in, SparseRectangularMatrix &X_in, const char pattern []);
+  
+  void matrix_PtAP(const SparseRectangularMatrix &mat_P, const SparseRectangularMatrix &mat_A, const bool &reuse);
+  
   // functions ------------------------------------
   /// Return the l1-norm of the matrix
   double l1_norm() const;
@@ -336,6 +339,44 @@ inline void PetscRectangularMatrix::add (const double a_in, SparseRectangularMat
 
 }
 
+// =========================================================
+
+inline void PetscRectangularMatrix::matrix_add (const double a_in, SparseRectangularMatrix &X_in, const char pattern_type []) {
+  assert (this->initialized());
+
+  // sanity check. but this cannot avoid
+  // crash due to incompatible sparsity structure...
+  assert (this->m() == X_in.m());
+  assert (this->n() == X_in.n());
+
+  PetscScalar     a = static_cast<PetscScalar>      (a_in);
+  PetscRectangularMatrix* X = dynamic_cast<PetscRectangularMatrix*> (&X_in);
+
+  assert (X != NULL);
+
+  int ierr=0;
+
+  // the matrix from which we copy the values has to be assembled/closed
+  // X->close ();
+  assert(X->closed());
+
+  semiparallel_onlyM();
+
+  if(!strcmp(pattern_type,"different_nonzero_pattern")){
+    ierr = MatAXPY(_mat, a, X->_mat, DIFFERENT_NONZERO_PATTERN);
+  }
+  else if(!strcmp(pattern_type,"subset_nonzero_pattern")){
+    ierr = MatAXPY(_mat, a, X->_mat, SUBSET_NONZERO_PATTERN);
+  }
+  else if(!strcmp(pattern_type,"same_nonzero_pattern")){
+    ierr = MatAXPY(_mat, a, X->_mat, SAME_NONZERO_PATTERN);
+  }
+  else{
+    std::cout<<"Error in pattern_type in function PetscRectangularMatrix::matrix_add "<<std::endl;
+    exit(0);
+  }
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+}
 
 // ========================================================
 inline double PetscRectangularMatrix::operator () (const  int i,

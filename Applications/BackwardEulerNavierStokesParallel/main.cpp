@@ -6,6 +6,8 @@
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
+#include "SparseRectangularMatrix.hpp"
+#include "PetscRectangularMatrix.hpp"
 using std::cout;
 using std::endl;
    
@@ -320,14 +322,16 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned lev
   LinearSolverM*  mylsyspde  = nl_td_ml_prob2._LinSolver[ipde][level];
   mesh*           mymsh      = nl_td_ml_prob2._msh[level];
   elem*           myel       = mymsh->el;
-  Mat&            myKK       = mylsyspde->KK;
-  Vec&            myRES      = mylsyspde->RES;
+  PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(mylsyspde->_KK); //TODO
+  Mat myKK=KKp->mat(); //TODO
+  PetscVector* RESp=static_cast<PetscVector*> (mylsyspde->_RES);  //TODO
+  Vec myRES=RESp->vec(); //TODO
   vector <int>&   myKKIndex  = mylsyspde->KKIndex; 
     
   // Allocation
-  PetscInt node2[27];
-  PetscInt node1[27];
-  PetscInt nodeVAR[4][27];
+  int node2[27];
+  int node1[27];
+  int nodeVAR[4][27];
   double B[4][4][27*27];
   double F[4][27];
   double coord[3][27];

@@ -2,7 +2,7 @@
 #include "ElemType.hpp"
 #include "Elem.hpp"
 #include "SparseRectangularMatrix.hpp"
-#include "PetscRectangularMatrix.hpp"
+// #include "PetscRectangularMatrix.hpp"
 
 unsigned elem_type::_refindex=1;
 
@@ -725,46 +725,46 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
 // prolungator for Matrix
 //-----------------------------------------------------------------------------------------------------
 
-int elem_type::prolongation(const elem* elf,const elem* elc, const int& ielc, 
-			    Mat &PP, const PetscInt& istart,const PetscInt& jstart) const {
-  PetscInt node[27];
-  PetscErrorCode ierr;
-  for (int i=0; i<nf_; i++) {
-    int i0=KVERT_IND[i][0];
-    int i1=KVERT_IND[i][1];
-    int ielf=elc->GetChildElement(ielc,i0);
-    PetscInt iadd=elf->GetDof(ielf,i1,type_);
-    PetscInt ii=istart+iadd;
-    PetscInt k_max=prol_ind[i+1]-prol_ind[i];
-    memset(node,0,k_max*sizeof(PetscInt));
-    for (int k=0; k<k_max; k++) {
-      int j=prol_ind[i][k];
-      PetscInt jadd=elc->GetDof(ielc,j,type_);
-      node[k]=jstart+jadd;
-    }
-    ierr=MatSetValues(PP,1,&ii,k_max,node,prol_val[i],INSERT_VALUES);
-    CHKERRQ(ierr);
-  }
-  return 1;
-}
+// int elem_type::prolongation(const elem* elf,const elem* elc, const int& ielc, 
+// 			    Mat &PP, const int& istart,const int& jstart) const {
+//   int node[27];
+//   PetscErrorCode ierr;
+//   for (int i=0; i<nf_; i++) {
+//     int i0=KVERT_IND[i][0];
+//     int i1=KVERT_IND[i][1];
+//     int ielf=elc->GetChildElement(ielc,i0);
+//     int iadd=elf->GetDof(ielf,i1,type_);
+//     int ii=istart+iadd;
+//     int k_max=prol_ind[i+1]-prol_ind[i];
+//     memset(node,0,k_max*sizeof(int));
+//     for (int k=0; k<k_max; k++) {
+//       int j=prol_ind[i][k];
+//       int jadd=elc->GetDof(ielc,j,type_);
+//       node[k]=jstart+jadd;
+//     }
+//     ierr=MatSetValues(PP,1,&ii,k_max,node,prol_val[i],INSERT_VALUES);
+//     CHKERRQ(ierr);
+//   }
+//   return 1;
+// }
 
 
 //----------------------------------------------------------------------------------------------------
 // prolungator for Matrix
 //----------------------------------------------------------------------------------------------------
 
-void elem_type::prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, Mat& PP, 
+void elem_type::prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseRectangularMatrix* Projmat, 
 		    const unsigned &index_sol, const unsigned &kkindex_sol) const {
 		      
-  vector<PetscInt> cols(27);
-  int ierr;
+  vector<int> cols(27);
+  //int ierr;
   for (int i=0; i<nf_; i++) {
     int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
     int ielf=lspdec._msh->el->GetChildElement(ielc,i0);
     int i1=KVERT_IND[i][1]; //local id node on the subdivision of the fine element
     int iadd=lspdef._msh->el->GetDof(ielf,i1,type_);
-    PetscInt irow=lspdef.GetKKDof(index_sol,kkindex_sol,iadd);  //  local-id to dof 
-    PetscInt ncols=prol_ind[i+1]-prol_ind[i];
+    int irow=lspdef.GetKKDof(index_sol,kkindex_sol,iadd);  //  local-id to dof 
+    int ncols=prol_ind[i+1]-prol_ind[i];
     cols.assign(ncols,0);
     for (int k=0; k<ncols; k++) {
       int j=prol_ind[i][k]; 
@@ -772,8 +772,11 @@ void elem_type::prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const 
       int jj=lspdec.GetKKDof(index_sol,kkindex_sol,jadd); 
       cols[k]=jj;
     }
-    ierr=MatSetValues(PP,1,&irow,ncols,&cols[0],prol_val[i],INSERT_VALUES);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    //ierr=MatSetValues(PP,1,&irow,ncols,&cols[0],prol_val[i],INSERT_VALUES);
+    
+    Projmat->insert_row(irow,ncols,cols,*prol_val[i]);
+    
+    //CHKERRABORT(MPI_COMM_WORLD,ierr);
   }
 }
 

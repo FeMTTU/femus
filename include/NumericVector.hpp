@@ -243,6 +243,10 @@ public:
   /// \f$U+=a*V\f$. Simple vector addition, equal to the
   virtual void add (const double a, const NumericVector& v) = 0;
 
+  /// \f$ U+=v \f$ where \p v is a std::vector !!!fast
+  virtual void add_vector_block(const std::vector<double>& v,
+			const std::vector< int>& dof_indices) =0;
+  
   /// \f$ U+=v \f$ where v is a DenseVector
   virtual void add_vector (const std::vector<double>& v,
                            const std::vector< int>& dof_indices) = 0;

@@ -105,6 +105,19 @@ void PetscVector::add(const  int i, const double value) {
   this->_is_closed = false;
 }
 
+
+// ===============================================================
+void PetscVector::add_vector_block(const std::vector<double>& v,
+				   const std::vector< int>& dof_indices) {
+  this->_restore_array();
+  assert(v.size() == dof_indices.size());
+  
+ // std::vector<PetscScalar> petsc_value = static_cast< std::vector<PetscScalar> >(v);
+  
+  
+//   for (int i=0; i<(int)v.size(); i++)    this->add(dof_indices[i], v[i]);
+}
+
 // ===============================================================
 void PetscVector::add_vector(const std::vector<double>& v,
                               const std::vector< int>& dof_indices) {

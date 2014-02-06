@@ -6,6 +6,8 @@
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
+#include "SparseRectangularMatrix.hpp"
+#include "PetscRectangularMatrix.hpp"
 using std::cout;
 using std::endl;
    
@@ -107,7 +109,7 @@ int main(int argc,char **args) {
   
   // create Multigrid (PRLO, REST, MAT, VECs) based on SolPdeIndex
   nl_ml_prob.CreatePdeStructure();
-     exit(0);
+   
   //Equation 1
   nl_ml_prob.AttachAssembleFunction(AssembleMatrixResNS1);
   nl_ml_prob.SetNonLinearAlgorithm(true,"Newton",1.e-07);  //Navier-Stokes (Quasi-Newton - Newton)
@@ -181,13 +183,12 @@ int main(int argc,char **args) {
   // Solving
   nl_ml_prob.FullMultiGrid("Temp",10,1,1,"F-Cycle");
   */
-  
-  
+ 
   
   // Delete Multigrid (PRLO, REST, MAT, VECs) based on SolPdeIndex
   nl_ml_prob.DeletePdeStructure();
   /// End Navier-Stokes Muligrid Block
-   exit(0);
+  
   //Post processing
 //   double cforce[3];
 //   nl_ml_prob.ComputeBdStress(4,cforce);
@@ -386,14 +387,20 @@ int AssembleMatrixResNS1(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
   LinearSolverM*  mylsyspde   = nl_ml_prob._LinSolver[ipde][level];
   mesh*           mymsh       = nl_ml_prob._msh[level];
   elem*           myel        = mymsh->el;
-  Mat&            myKK        = mylsyspde->KK;
-  Vec&            myRES       = mylsyspde->RES;
   vector <int>&   myKKIndex   = mylsyspde->KKIndex; 
     
+  PetscVector* RESp=static_cast<PetscVector*> (mylsyspde->_RES);  //TODO
+  Vec myRES=RESp->vec(); //TODO
+  
+  SparseRectangularMatrix* KK=mylsyspde->_KK;
+  PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(mylsyspde->_KK); //TODO
+  Mat myKK=KKp->mat(); //TODO
+  
+  
   // Allocation
-  PetscInt node2[27];
-  PetscInt node1[27];
-  PetscInt nodeVAR[4][27];
+  int node2[27];
+  int node1[27];
+  int nodeVAR[4][27];
   double B[4][4][27*27];
   double F[4][27];
   double coord[3][27];
@@ -444,7 +451,10 @@ int AssembleMatrixResNS1(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
   unsigned end_ind1   = mymsh->GetEndIndex(order_ind1);
   
   // Set to zeto all the entries of the matrix
-  ierr = MatZeroEntries(myKK);  CHKERRQ(ierr);
+  
+  
+  KK->zero();
+  //ierr = MatZeroEntries(myKK);  CHKERRQ(ierr);
   
   /// *** element loop ***
 // for(int isdom=0; isdom<lsyspdemesh_lev->nsubdom; isdom++) {
@@ -663,11 +673,12 @@ int AssembleMatrixResNS1(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
   } //end list of subdomain
   
 
-  //BEGIN MATRIX ASSEMBLY ============ 
-  ierr = MatAssemblyBegin(myKK,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(myKK,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  //END MATRIX ASSEMBLY   ============ 
-  
+  KK->close();
+//   //BEGIN MATRIX ASSEMBLY ============ 
+//   ierr = MatAssemblyBegin(myKK,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+//   ierr = MatAssemblyEnd(myKK,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+//   //END MATRIX ASSEMBLY   ============ 
+//   
   
 //    PetscViewer viewer;
 // // PetscViewerSetFormat(viewer,PETSC_VIEWER_DEFAULT);
@@ -712,14 +723,19 @@ int AssembleMatrixResNS2(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
   LinearSolverM*  mylsyspde = nl_ml_prob._LinSolver[ipde][level];
   mesh*           mymsh    = nl_ml_prob._msh[level];
   elem*           myel     =  mymsh->el;
-  Mat&            myKK     = mylsyspde->KK;
-  Vec&            myRES    = mylsyspde->RES;
+  
+  SparseRectangularMatrix* KK=mylsyspde->_KK;
+  
+  PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(mylsyspde->_KK); //TODO
+  Mat myKK=KKp->mat(); //TODO
+  PetscVector* RESp=static_cast<PetscVector*> (mylsyspde->_RES);  //TODO
+  Vec myRES=RESp->vec(); //TODO
   vector <int>&   myKKIndex= mylsyspde->KKIndex; 
     
   // Allocation
-  PetscInt node2[27];
-  PetscInt node1[27];
-  PetscInt nodeVAR[4][27];
+  int node2[27];
+  int node1[27];
+  int nodeVAR[4][27];
   double B[4][4][27*27];
   double F[4][27];
   double coord[3][27];
@@ -770,7 +786,8 @@ int AssembleMatrixResNS2(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
   unsigned end_ind1   = mymsh->GetEndIndex(order_ind1);
   
   // Set to zeto all the entries of the matrix
-  ierr = MatZeroEntries(myKK);  CHKERRQ(ierr);
+  KK->zero();
+  //ierr = MatZeroEntries(myKK);  CHKERRQ(ierr);
   
   /// *** element loop ***
 // for(int isdom=0; isdom<lsyspdemesh_lev->nsubdom; isdom++) {
@@ -988,12 +1005,13 @@ int AssembleMatrixResNS2(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
     } //end list of elements loop for each subdomain
   } //end list of subdomain
   
-
-  //BEGIN MATRIX ASSEMBLY ============ 
-  ierr = MatAssemblyBegin(myKK,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(myKK,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  //END MATRIX ASSEMBLY   ============ 
+  KK->close();
   
+//   //BEGIN MATRIX ASSEMBLY ============ 
+//   ierr = MatAssemblyBegin(myKK,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+//   ierr = MatAssemblyEnd(myKK,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+//   //END MATRIX ASSEMBLY   ============ 
+//   
   
 //    PetscViewer viewer;
 // // PetscViewerSetFormat(viewer,PETSC_VIEWER_DEFAULT);
@@ -1040,13 +1058,16 @@ int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, c
   LinearSolverM*  mylsyspde = nl_ml_prob._LinSolver[ipde][level];
   mesh*           mymsh    = nl_ml_prob._msh[level];
   elem*           myel     =  mymsh->el;
-  Mat&            myKK     = mylsyspde->KK;
-  Vec&            myRES    = mylsyspde->RES;
+  SparseRectangularMatrix* KK=mylsyspde->_KK;  
+  PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(mylsyspde->_KK); //TODO
+  Mat myKK=KKp->mat(); //TODO
+  PetscVector* RESp=static_cast<PetscVector*> (mylsyspde->_RES);  //TODO
+  Vec myRES=RESp->vec(); //TODO
   vector <int>&   myKKIndex= mylsyspde->KKIndex; 
     
   // Allocation
-  PetscInt node2[27];
-  PetscInt nodeT[27];
+  int node2[27];
+  int nodeT[27];
   double B[27*27];
   double F[27];
   double coord[3][27];
@@ -1080,7 +1101,9 @@ int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, c
   unsigned end_ind   = mymsh->GetEndIndex(order_ind);
   
   // Set to zeto all the entries of the matrix
-  ierr = MatZeroEntries(myKK);  CHKERRQ(ierr);
+  
+  KK->zero();
+  //ierr = MatZeroEntries(myKK);  CHKERRQ(ierr);
   
   /// *** element loop ***
 // for(int isdom=0; isdom<lsyspdemesh_lev->nsubdom; isdom++) {
@@ -1171,10 +1194,12 @@ int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, c
     } //end list of elements loop for each subdomain
   } //end list of subdomain
   
-  //BEGIN MATRIX ASSEMBLY ============ 
-  ierr = MatAssemblyBegin(myKK,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(myKK,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  //END MATRIX ASSEMBLY   ============ 
+  KK->close();
+  
+//   //BEGIN MATRIX ASSEMBLY ============ 
+//   ierr = MatAssemblyBegin(myKK,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+//   ierr = MatAssemblyEnd(myKK,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+//   //END MATRIX ASSEMBLY   ============ 
   
   
 //    PetscViewer viewer;

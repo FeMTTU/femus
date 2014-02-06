@@ -6,9 +6,7 @@
 #include "ElemType.hpp"
 #include "ParalleltypeEnum.hpp"
 #include "NumericVector.hpp"
-#include "PetscVector.hpp"
 #include "SparseRectangularMatrix.hpp"
-#include "PetscRectangularMatrix.hpp"
 
 using std::cout;
 using std::endl;
@@ -19,7 +17,7 @@ lsysPde::lsysPde(mesh *other_msh){
   _is_symmetric = false;
   _stabilization = false;
   _compressibility = 0.;
-  CC_flag=0;
+  _CC_flag=0;
 }
 
 //--------------------------------------------------------------------------------
@@ -109,7 +107,7 @@ int lsysPde::InitPde(const vector <unsigned> &_SolPdeIndex, const  vector <int> 
   
   //ghost nodes
   KKghost_nd.resize(_msh->nsubdom);
-  KKghost_nd[0].resize(1);  KKghost_nd[0][0]=1;
+  //KKghost_nd[0].resize(1);  KKghost_nd[0][0]=1;
   for(int i=1; i<_msh->nsubdom; i++) {
     KKghost_nd[i].resize(KKghostsize[i]);
   }
@@ -159,33 +157,34 @@ int lsysPde::InitPde(const vector <unsigned> &_SolPdeIndex, const  vector <int> 
     _EPS->init(EPSsize,EPS_local_size, KKghost_nd[_msh->_iproc], false,GHOSTED);
   }
     
-//   _RES = NumericVector::build().release();
-//   _RES->init(*_EPS);
-//   
-//   _EPSC = NumericVector::build().release();
-//   _EPSC->init(*_EPS);
-//   
-//   _RESC = NumericVector::build().release();
-//   _RESC->init(*_EPS);
-//   
-//   const unsigned dim = _msh->GetDimension();
-//   int KK_UNIT_SIZE_ = pow(5,dim);
-//   int KK_size=KKIndex[KKIndex.size()-1u];
-//   int KK_local_size =KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
-//     
-//  // _KK = SparseRectangularMatrix::build().release();
-//  // _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
-//   
-//   
-//   
-// //   PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
-// //   EPS=EPSp->vec(); //TODO
+  _RES = NumericVector::build().release();
+  _RES->init(*_EPS);
+  
+  _EPSC = NumericVector::build().release();
+  _EPSC->init(*_EPS);
+  
+  _RESC = NumericVector::build().release();
+  _RESC->init(*_EPS);
+  
+  const unsigned dim = _msh->GetDimension();
+  int KK_UNIT_SIZE_ = pow(5,dim);
+  int KK_size=KKIndex[KKIndex.size()-1u];
+  int KK_local_size =KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
+    
+ _KK = SparseRectangularMatrix::build().release();
+ _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
+   
+//   PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
+//   EPS=EPSp->vec(); //TODO
 //   PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
 //   RES=RESp->vec(); //TODO
-//  
-//   //PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_KK); //TODO
-//   //KK=KKp->mat(); //TODO
+ 
+//   PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_KK); //TODO
+//   KK=KKp->mat(); //TODO
     
+  _CC = SparseRectangularMatrix::build().release();
+  _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
+  
   return 1;
 }
 
@@ -214,6 +213,7 @@ void lsysPde::UpdateResidual() {
 //-------------------------------------------------------------------------------------------
 void lsysPde::DeletePde() {
   delete _KK;
+  delete _CC;
   
   if (_msh->GetGridNumber()>0) {
      delete _PP;

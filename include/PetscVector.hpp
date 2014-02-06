@@ -218,8 +218,9 @@ public:
   /// \f$ U+=a*V \f$. Simple vector addition, equal to the
   void add (const double a, const NumericVector&  v);
 
-
-
+  /// \f$ U+=v \f$ where \p v is a std::vector !!!fast
+  void add_vector_block(const std::vector<double>& v,
+			const std::vector< int>& dof_indices);
 
   /// \f$ U+=v \f$ where \p v is a std::vector
   void add_vector (const std::vector<double>& v,
@@ -489,18 +490,30 @@ inline void PetscVector::init (const int n,
                                const bool fast,
                                const ParallelType type) {
   int ierr=0;
-  int petsc_n=static_cast<int>(n);
-  int petsc_n_local=static_cast<int>(n_local);
-  int petsc_n_ghost=static_cast<int>(ghost.size());
+  PetscInt petsc_n=static_cast<int>(n);
+  PetscInt petsc_n_local=static_cast<int>(n_local);
+  PetscInt petsc_n_ghost=static_cast<int>(ghost.size());
 
+  // If the mesh is not disjoint, every processor will either have
+  // all the dofs, none of the dofs, or some non-zero dofs at the
+  // boundary between processors.
+  //
+  // However we can't assert this, because someone might want to
+  // construct a GHOSTED vector which doesn't include neighbor element
+  // dofs.  Boyce tried to do so in user code, and we're going to want
+  // to do so in System::project_vector().
+  //
+  // libmesh_assert(n_local == 0 || n_local == n || !ghost.empty());
+
+  assert(sizeof(PetscInt) == sizeof(int));
   // If the mesh is disjoint, the following assertion will fail.
   // If the mesh is not disjoint, every processor will either have
   // all the dofs, none of the dofs, or some non-zero dofs at the
   // boundary between processors.
-  assert(n_local == 0 || n_local == n || !ghost.empty());
+  //assert(n_local == 0 || n_local == n || !ghost.empty());
 
-  int* petsc_ghost = ghost.empty() ? PETSC_NULL :
-                     const_cast<int*>(reinterpret_cast<const int*>(&ghost[0]));
+  PetscInt* petsc_ghost = ghost.empty() ? PETSC_NULL :
+                     const_cast<int*>(reinterpret_cast<const PetscInt*>(&ghost[0]));
 
   // Clear initialized vectors
   if (this->initialized())   this->clear();
@@ -509,7 +522,9 @@ inline void PetscVector::init (const int n,
   this->_type = GHOSTED;
 
   /* Make the global-to-local ghost cell map.  */
-  for (int i=0; i<(int)ghost.size(); i++) _global_to_local_map[ghost[i]] = i;
+  for (int i=0; i<(int)ghost.size(); i++){
+    _global_to_local_map[ghost[i]] = i;
+  }
 
   /* Create vector.  */
   ierr = VecCreateGhost (MPI_COMM_WORLD, petsc_n_local, petsc_n,
@@ -521,7 +536,8 @@ inline void PetscVector::init (const int n,
 
   this->_is_initialized = true;
   this->_is_closed = true;
-  if (fast == false) this->zero ();
+  if (fast == false) 
+    this->zero ();
 }
 
 // ==============================================================

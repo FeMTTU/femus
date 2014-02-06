@@ -3,6 +3,7 @@
 #include "ElemType.hpp"
 #include "LinearSolver.hpp"
 #include "PetscVector.hpp"
+#include "PetscRectangularMatrix.hpp"
 #include <iostream>
 #include <fstream>
 using std::cout;
@@ -306,28 +307,32 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(const char pdename[],
 
         _LinSolver[ipde][ig-1u]->SetResZero();
         _LinSolver[ipde][ig-1u]->SetEpsZero();
+	bool matrix_reuse=true;
 	
         if (ig>=gridr) {
           //assemble residual only on the part of the coarse grid that is not refined
           //Domain Decomposition matrix restriction =========================
           _assemble_function(*this,ig-1,igridn-1u);
-	   
-	  if (!_LinSolver[ipde][ig-1]->CC_flag) {
-            MatPtAP(_LinSolver[ipde][ig]->KK, _LinSolver[ipde][ig]->PP,  MAT_INITIAL_MATRIX ,1.0,&_LinSolver[ipde][ig-1]->CC);
-	    _LinSolver[ipde][ig-1]->CC_flag=1;
-          } else MatPtAP(_LinSolver[ipde][ig]->KK, _LinSolver[ipde][ig]->PP,  MAT_REUSE_MATRIX ,1.0,&_LinSolver[ipde][ig-1]->CC);
-	  MatAXPY(_LinSolver[ipde][ig-1u]->KK,1,_LinSolver[ipde][ig-1u]->CC, SUBSET_NONZERO_PATTERN);
-        } 
+	  if (!_LinSolver[ipde][ig-1]->_CC_flag) {
+	    _LinSolver[ipde][ig-1]->_CC_flag=1;
+	    _LinSolver[ipde][ig-1]->_CC->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,!matrix_reuse);
+          } 
+          else{
+	    _LinSolver[ipde][ig-1]->_CC->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,matrix_reuse);
+	  }
+	  _LinSolver[ipde][ig-1u]->_KK->matrix_add(1.,*_LinSolver[ipde][ig-1u]->_CC,"subset_nonzero_pattern");
+	} 
 	else {
           if (icycle==0 && ( flagmc*(ig==igridn-1u) || !flagmc )) {
-            MatDestroy(&_LinSolver[ipde][ig-1]->KK);
-            MatPtAP(_LinSolver[ipde][ig]->KK, _LinSolver[ipde][ig]->PP, MAT_INITIAL_MATRIX ,1.0,&_LinSolver[ipde][ig-1]->KK);
-          }
+	    _LinSolver[ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,!matrix_reuse);
+	  //   PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_LinSolver[ipde][ig-1]->_KK); //TODO
+	  //  _LinSolver[ipde][ig-1]->KK=KKp->mat(); //TODO
+	  }
           //Projection of the Matrix on the lower level
-          else
-            MatPtAP(_LinSolver[ipde][ig]->KK, _LinSolver[ipde][ig]->PP, MAT_REUSE_MATRIX ,1.0,&_LinSolver[ipde][ig-1]->KK);
-        }
-        
+          else{
+	    _LinSolver[ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,matrix_reuse);
+	  }	  
+	}
         end_time=clock();
         cout<<"Grid: "<<ig-1<<"      ASSEMBLY + RESIDUAL TIME: "
 	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
@@ -415,10 +420,7 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(const char pdename[],
   }
 
   for (int ig=gridr-1; ig<gridn-1; ig++) {
-    if(_LinSolver[ipde][ig]->CC_flag){
-      MatDestroy(&(_LinSolver[ipde][ig]->CC));
-      _LinSolver[ipde][ig]->CC_flag=0;
-    }
+    _LinSolver[ipde][ig]->_CC_flag=0;
   }
     
   end_mg_time = clock();

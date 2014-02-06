@@ -29,15 +29,15 @@ bool (* mesh::_SetRefinementFlag)(const double &x, const double &y, const double
 NonLinearMultiLevelProblem::~NonLinearMultiLevelProblem() {
 
   for (unsigned i=0; i<gridn; i++) {
-    delete _msh[i];
     delete _solution[i];
+    delete _msh[i];
   }
   
-  for(int i=0;i<_LinSolver.size();i++){
-    for (unsigned j=0; j<gridn; j++) {
-      delete _LinSolver[i][j];
-    }
-  }
+//   for(int i=0;i<_LinSolver.size();i++){
+//     for (unsigned j=0; j<gridn; j++) {
+//       delete _LinSolver[i][j];
+//     }
+//   }
   
   for (unsigned i=0; i<3; i++)
     for (unsigned j=0; j<3; j++)
@@ -412,7 +412,7 @@ void NonLinearMultiLevelProblem::SetMovingMesh(std::vector<std::string>& movvars
 double NonLinearMultiLevelProblem::ComputeL2norm() {
 
   //   double _Td=2;
-  //   PetscInt node2[27];
+  //   int node2[27];
   //   double vx[3][27];
   //   double phi2[27],gradphi2[27][3],Weight2;
   // 
@@ -430,7 +430,7 @@ double NonLinearMultiLevelProblem::ComputeL2norm() {
 //---------------------------------------------------------------------------------------------------
 int NonLinearMultiLevelProblem::ComputeBdStress(int bd, double Cforce[3]) {
 
-  PetscInt node2[27];
+  int node2[27];
   double vx[3][27];
   double phi2[27],gradphi2[27][3],Weight2;
   double normal[3];
@@ -521,15 +521,18 @@ int NonLinearMultiLevelProblem::ComputeBdStress(int bd, double Cforce[3]) {
 ///
 //---------------------------------------------------------------------------------------------------
 int NonLinearMultiLevelProblem::ComputeBdIntegral(const char pdename[],const char var_name[], const unsigned & kel, const unsigned & jface, unsigned level, unsigned dir) {
-                
   
+  
+  unsigned ipde=GetPdeIndex(pdename);
+  PetscVector* RESp=static_cast<PetscVector*> (_LinSolver[ipde][level]->_RES);  //TODO
+  Vec RES=RESp->vec(); //TODO
   
   int ierr;
   double tau;
   double vx[3][27];
   double phi[27],gradphi[27][3],Weight;
   double normal[3];
-  PetscInt node[27];
+  int node[27];
   
   
   
@@ -553,7 +556,7 @@ int NonLinearMultiLevelProblem::ComputeBdIntegral(const char pdename[],const cha
 		
     for(unsigned i=0;i<nve;i++) {
       unsigned inode=_msh[level]->el->GetFaceVertexIndex(kel,jface,i)-1u;
-      node[i] = inode + _LinSolver[0][level]->KKIndex[indexvar];
+      node[i] = inode + _LinSolver[ipde][level]->KKIndex[indexvar];
       unsigned inode_Metis=_msh[level]->GetMetisDof(inode,2);
       
       vx[0][i]=(*_solution[level]->_Sol[indX])(inode_Metis);  
@@ -580,7 +583,7 @@ int NonLinearMultiLevelProblem::ComputeBdIntegral(const char pdename[],const cha
 		    
 	// Non voglio chiamare Vecsetvalue ma aggiungere il valore direttamente a F
 	// per fare questo mi serve la relazione tra i(node locale di surface) e il nodo locale di volume
-	ierr = VecSetValue(_LinSolver[0][level]->RES,node[i],value,ADD_VALUES);CHKERRQ(ierr);
+	ierr = VecSetValue(RES,node[i],value,ADD_VALUES);CHKERRQ(ierr);
 
       }
     }
@@ -614,6 +617,7 @@ void NonLinearMultiLevelProblem::DeletePdeStructure() {
   for(unsigned ipde=0;ipde<_PdeIndex.size();ipde++)
     for (unsigned ig=0; ig<gridn; ig++) {
     _LinSolver[ipde][ig]->DeletePde();
+    delete _LinSolver[ipde][ig];
   }
   
   for (unsigned i=0; i<_PdeName.size(); i++){ 
@@ -689,27 +693,32 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
         _LinSolver[ipde][ig-1u]->SetResZero();
         _LinSolver[ipde][ig-1u]->SetEpsZero();
 	
+	bool matrix_reuse=true;
+	
         if (ig>=gridr) {
           //assemble residual only on the part of the coarse grid that is not refined
           //Domain Decomposition matrix restriction =========================
           _assemble_function(*this,ig-1,igridn-1u);
-	   
-	  if (!_LinSolver[ipde][ig-1]->CC_flag) {
-            MatPtAP(_LinSolver[ipde][ig]->KK, _LinSolver[ipde][ig]->PP,  MAT_INITIAL_MATRIX ,1.0,&_LinSolver[ipde][ig-1]->CC);
-	    _LinSolver[ipde][ig-1]->CC_flag=1;
-          } else MatPtAP(_LinSolver[ipde][ig]->KK, _LinSolver[ipde][ig]->PP,  MAT_REUSE_MATRIX ,1.0,&_LinSolver[ipde][ig-1]->CC);
-	  MatAXPY(_LinSolver[ipde][ig-1u]->KK,1,_LinSolver[ipde][ig-1u]->CC, SUBSET_NONZERO_PATTERN);
-        } 
+	  if (!_LinSolver[ipde][ig-1]->_CC_flag) {
+	    _LinSolver[ipde][ig-1]->_CC_flag=1;
+	    _LinSolver[ipde][ig-1]->_CC->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,!matrix_reuse);
+          } 
+          else{
+	    _LinSolver[ipde][ig-1]->_CC->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,matrix_reuse);
+	  }
+	  _LinSolver[ipde][ig-1u]->_KK->matrix_add(1.,*_LinSolver[ipde][ig-1u]->_CC,"subset_nonzero_pattern");
+	} 
 	else {
           if (icycle==0 && ( flagmc*(ig==igridn-1u) || !flagmc )) {
-            MatDestroy(&_LinSolver[ipde][ig-1]->KK);
-            MatPtAP(_LinSolver[ipde][ig]->KK, _LinSolver[ipde][ig]->PP, MAT_INITIAL_MATRIX ,1.0,&_LinSolver[ipde][ig-1]->KK);
-          }
+	    _LinSolver[ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,!matrix_reuse);
+	   //  PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_LinSolver[ipde][ig-1]->_KK); //TODO
+	   // _LinSolver[ipde][ig-1]->KK=KKp->mat(); //TODO
+	  }
           //Projection of the Matrix on the lower level
-          else
-            MatPtAP(_LinSolver[ipde][ig]->KK, _LinSolver[ipde][ig]->PP, MAT_REUSE_MATRIX ,1.0,&_LinSolver[ipde][ig-1]->KK);
-        }
-        
+          else{
+	    _LinSolver[ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,matrix_reuse);
+	  }	  
+	}
         end_time=clock();
         cout<<"Grid: "<<ig-1<<"      ASSEMBLY + RESIDUAL TIME: "
 	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
@@ -800,10 +809,7 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
   }
 
   for (int ig=gridr-1; ig<gridn-1; ig++) {
-    if(_LinSolver[ipde][ig]->CC_flag){
-      MatDestroy(&(_LinSolver[ipde][ig]->CC));
-      _LinSolver[ipde][ig]->CC_flag=0;
-    }
+      _LinSolver[ipde][ig]->_CC_flag=0;
   }
     
   end_mg_time = clock();
@@ -951,7 +957,7 @@ void NonLinearMultiLevelProblem::Initialize(const char name[]) {
 	  if(sol_type<3) {
             for(int j=0; j<nloc_dof; j++) {
 	      unsigned inode=(sol_type<3)?(_msh[ig]->el->GetElementVertexIndex(kel_gmt,j)-1u):(kel_gmt+j*num_el);
-	      PetscInt inode_Metis=_msh[ig]->GetMetisDof(inode,sol_type);
+	      int inode_Metis=_msh[ig]->GetMetisDof(inode,sol_type);
 	      unsigned icoord_Metis=_msh[ig]->GetMetisDof(inode,2);
 	      xx=(*_solution[ig]->_Sol[indX])(icoord_Metis);  
 	      yy=(*_solution[ig]->_Sol[indY])(icoord_Metis);
@@ -1142,16 +1148,16 @@ int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, const cha
   }
   
   int ierr;
-  //PetscInt nf= _LinSolver[ipde][gridf]->KKIndex[_LinSolver[ipde][gridf]->KKIndex.size()-1u];
-  //PetscInt nc= _LinSolver[ipde][gridf-1]->KKIndex[_LinSolver[ipde][gridf-1]->KKIndex.size()-1u];
+  //int nf= _LinSolver[ipde][gridf]->KKIndex[_LinSolver[ipde][gridf]->KKIndex.size()-1u];
+  //int nc= _LinSolver[ipde][gridf-1]->KKIndex[_LinSolver[ipde][gridf-1]->KKIndex.size()-1u];
   
 //   if(_nprocs==1) {
 //     ierr = MatCreateSeqAIJ(PETSC_COMM_SELF,nf,nc,27,PETSC_NULL,&_LinSolver[ipde][gridf]->PP); CHKERRQ(ierr);
 //     ierr = MatSetFromOptions(_LinSolver[ipde][gridf]->PP); CHKERRQ(ierr);
 //   } else {
-//     PetscInt nf_loc = _LinSolver[ipde][gridf]->KKoffset[_LinSolver[ipde][gridf]->KKIndex.size()-1][_iproc]
+//     int nf_loc = _LinSolver[ipde][gridf]->KKoffset[_LinSolver[ipde][gridf]->KKIndex.size()-1][_iproc]
 //       -_LinSolver[ipde][gridf]->KKoffset[0][_iproc];
-//     PetscInt nc_loc = _LinSolver[ipde][gridf-1]->KKoffset[_LinSolver[ipde][gridf-1]->KKIndex.size()-1][_iproc]
+//     int nc_loc = _LinSolver[ipde][gridf-1]->KKoffset[_LinSolver[ipde][gridf-1]->KKIndex.size()-1][_iproc]
 //       -_LinSolver[ipde][gridf-1]->KKoffset[0][_iproc];
 //     
 //     ierr = MatCreate(MPI_COMM_WORLD, &_LinSolver[ipde][gridf]->PP);
@@ -1176,8 +1182,8 @@ int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, const cha
   _LinSolver[ipde][gridf]->_PP = SparseRectangularMatrix::build().release();
   _LinSolver[ipde][gridf]->_PP->init(nf,nc,nf_loc,nc_loc,27,27);
   
-   PetscRectangularMatrix* PPp=static_cast<PetscRectangularMatrix*>(_LinSolver[ipde][gridf]->_PP);
-   _LinSolver[ipde][gridf]->PP=PPp->mat();
+   //PetscRectangularMatrix* PPp=static_cast<PetscRectangularMatrix*>(_LinSolver[ipde][gridf]->_PP);
+   //_LinSolver[ipde][gridf]->PP=PPp->mat();
   
   
   for (unsigned k=0; k<_SolPdeIndex[ipde].size(); k++) {
@@ -1192,15 +1198,17 @@ int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, const cha
     
 	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
 	  type_elem[ielt][SolType[SolIndex]]->prolongation(*_LinSolver[ipde][gridf],*_LinSolver[ipde][gridf-1],iel,
-							   _LinSolver[ipde][gridf]->PP,SolIndex,k);
+							   _LinSolver[ipde][gridf]->_PP,SolIndex,k);
 	
 	}
       }
     }
   }
 
-  ierr = MatAssemblyBegin(_LinSolver[ipde][gridf]->PP,MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(_LinSolver[ipde][gridf]->PP,MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
+  _LinSolver[ipde][gridf]->_PP->close();
+  
+  //ierr = MatAssemblyBegin(_LinSolver[ipde][gridf]->PP,MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
+  //ierr = MatAssemblyEnd(_LinSolver[ipde][gridf]->PP,MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
     
   
   /*  
@@ -1275,10 +1283,10 @@ void NonLinearMultiLevelProblem::BuildProlungatorMatrices() {
   
   for (unsigned igridn=0; igridn<gridn; igridn++) {
     for(int itype=0;itype<3;itype++){
-      PetscInt ni = _msh[igridn]->MetisOffset[itype][_nprocs];
+      int ni = _msh[igridn]->MetisOffset[itype][_nprocs];
       bool *testnode=new bool [ni];
       for (int jtype=0; jtype<3; jtype++) {
-        PetscInt nj = _msh[igridn]->MetisOffset[jtype][_nprocs];
+        int nj = _msh[igridn]->MetisOffset[jtype][_nprocs];
 	memset(testnode,0,ni*sizeof(bool));
 	ProlQitoQj_[itype][jtype][igridn] = SparseRectangularMatrix::build().release();
 	ProlQitoQj_[itype][jtype][igridn]->init(ni,nj,_msh[igridn]->own_size[itype][_iproc],

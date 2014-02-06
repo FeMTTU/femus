@@ -112,9 +112,11 @@ public:
   virtual void add(const double /*c*/, SparseRectangularMatrix & /*B*/) = 0;
   
   /// Add a row to a Sparse matrix
-  virtual void insert_row(const int row, const int ncols, 
-	       const std::vector<int>& cols, const double& values) = 0;
-
+  virtual void insert_row(const int row, const int ncols, const std::vector<int>& cols, const double& values) = 0;
+  
+  virtual void matrix_add (const double a_in, SparseRectangularMatrix &X_in, const char pattern []) = 0;       
+  virtual void matrix_PtAP(const SparseRectangularMatrix &mat_P, const SparseRectangularMatrix &mat_A, const bool &reuse) = 0;	       
+  
   // norm of the matrix
   virtual double l1_norm() const = 0;      ///< Return the l1-norm
   virtual double linfty_norm() const = 0;  ///< Return the linfty-norm

@@ -90,6 +90,16 @@ void PetscLinearSolver::set_schur_tolerances(const double rtol, const double ato
 int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
                                        const short unsigned &NSchurVar,const bool &Schur) {
 
+   PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
+   Vec EPS=EPSp->vec(); //TODO
+  
+   PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
+   Vec RES=RESp->vec(); //TODO
+  
+   PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_KK); //TODO
+   Mat KK=KKp->mat(); //TODO
+  
+  
   SearchTime=0, AssemblyTime=0, SolveTime0=0, SolveTime1=0, SolveTime2=0, UpdateTime=0;
 
   its_A=0; its_C=0; its=0;
@@ -542,9 +552,6 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &_SolPdeIndex,cons
     ierr = VecAssemblyEnd(RES);
     CHKERRQ(ierr);
 
-     PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
-     Vec EPS=EPSp->vec(); //TODO
-    
     ierr=VecSetValues(EPS,PBsize,ind,W[0],ADD_VALUES);
     CHKERRQ(ierr);
     ierr = VecAssemblyBegin(EPS);
@@ -664,6 +671,16 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &_SolPdeIndex,cons
 //------------------------------------------------------------------------------------------------
 
 int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &_SolPdeIndex, const vector <unsigned> &VankaIndex) {
+  
+   PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
+   Vec EPS=EPSp->vec(); //TODO
+  
+   PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
+   Vec RES=RESp->vec(); //TODO
+  
+   PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_KK); //TODO
+   Mat KK=KKp->mat(); //TODO
+  
   PetscErrorCode ierr;
   clock_t SearchTime=0, AssemblyTime=0, SolveTime0=0, UpdateTime=0;
   clock_t start_time, end_time;
@@ -947,10 +964,6 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &_SolPdeIndex, con
     ierr = VecAssemblyEnd(RES);
     CHKERRQ(ierr);
 
-    PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
-    Vec EPS=EPSp->vec(); //TODO
-
-    
     ierr=VecSetValues(EPS,PBsize,ind[0],W[0],ADD_VALUES);
     CHKERRQ(ierr);
     ierr = VecAssemblyBegin(EPS);
@@ -1190,6 +1203,10 @@ void PetscLinearSolver::init_schur(Mat& matrix) {
 
 // ========================================================
 void PetscLinearSolver::init(Mat& matrix) {
+  
+  PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_KK); //TODO
+  Mat KK=KKp->mat(); //TODO
+  
   // Initialize the data structures if not done so already.
   if (!this->initialized())    {
     this->_is_initialized = true;
@@ -1259,7 +1276,17 @@ void PetscLinearSolver::init(Mat& matrix) {
 
 // ========================================================
 std::pair< int, double> PetscLinearSolver::solve() {
-
+  
+  
+ 
+  PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
+  Vec EPS=EPSp->vec(); //TODO
+  PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  //TODO
+  Vec EPSC=EPSCp->vec(); //TODO
+  PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
+  Vec RES=RESp->vec(); //TODO
+  PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_KK); //TODO
+  Mat KK=KKp->mat(); //TODO
   
 
   int ierr=0;
@@ -1386,11 +1413,6 @@ std::pair< int, double> PetscLinearSolver::solve() {
   this->init(KK);  //as before
   
   
-  PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  //TODO
-  Vec EPSC=EPSCp->vec(); //TODO
-  PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
-  Vec EPS=EPSp->vec(); //TODO
-
   
   
   VecZeroEntries(EPSC);
