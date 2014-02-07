@@ -62,15 +62,22 @@ void PetscMatrix::init(const  int m,
   }
 
   else {
-    cout << "Parallel PETSCMMATRIXM is not implented" << endl;
-    exit(1);
-//         parallel_only();
-//         ierr = MatCreateMPIAIJ (MPI_COMM_WORLD, m_local, n_local, m_global, n_global,
-//                                 n_nz, PETSC_NULL, n_oz, PETSC_NULL, &_mat);
-//         CHKERRABORT(MPI_COMM_WORLD,ierr);
-//         ierr = MatSetFromOptions (_mat);
-//         CHKERRABORT(MPI_COMM_WORLD,ierr);
+    parallel_onlyM();
+ 
+    ierr = MatCreate(MPI_COMM_WORLD, &_mat);
+    CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    ierr = MatSetSizes(_mat, m_l, n_l, m, n);
+    CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    ierr = MatSetType(_mat, MATMPIAIJ); // Automatically chooses seqaij or mpiaij
+    CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    ierr = MatMPIAIJSetPreallocation(_mat, nnz, PETSC_NULL, noz, PETSC_NULL);
+    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    
   }
+  
   this->zero ();
 }
 
@@ -386,6 +393,59 @@ void PetscMatrix::add_matrix(const DenseMatrix& dm,
   CHKERRABORT(MPI_COMM_WORLD,ierr);
 }
 
+// ============================================================
+/// This Petsc adds a dense matrix to a sparse matrix
+void PetscMatrix::add_matrix_blocked(
+  const std::vector< double > &mat_values,  // blocked matrix stored as an m*n array 
+  const std::vector< int>& rows, // row vector indexes
+  const std::vector< int>& cols) { // column vector indices
+  // ==================================================
+  assert (this->initialized());
+  int ierr=0;
+//   const  int m = dm.m();  //senza DenseMatrix non puoi fare questo controllo, oppure aggiungi altri argomenti
+//   const  int n = dm.n();
+//   assert ((int)rows.size() == m);
+//   assert ((int)cols.size() == n);
+  // These casts are required for PETSc <= 2.1.5
+//   ierr = MatSetValuesBlocked(_mat,/*m*/rows.size(), (int*) &rows[0],
+// 			          /*n*/cols.size(), (int*) &cols[0],
+//                       (PetscScalar*) mat_ptr/*&dm.get_values()[0]*/,ADD_VALUES);
+//   CHKERRABORT(MPI_COMM_WORLD,ierr);  
+  const  int m = (int)rows.size(); 
+  const  int n = (int)cols.size();
+  assert ( m*n == mat_values.size());
+  
+  //These casts are required for PETSc <= 2.1.5
+  ierr = MatSetValuesBlocked(_mat,m, &rows[0],n, &cols[0],
+                      (PetscScalar*) &mat_values[0],ADD_VALUES);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  
+  return;
+}
+
+
+
+// // ============================================================
+
+void PetscMatrix::matrix_PtAP(const SparseMatrix &mat_P, const SparseMatrix &mat_A, const bool &mat_reuse){
+  
+  const PetscMatrix* A = static_cast<const PetscMatrix*>(&mat_A);
+  A->close();
+  
+  const PetscMatrix* P = static_cast<const PetscMatrix*>(&mat_P);
+  P->close();
+  
+  int ierr=0;
+  if(mat_reuse){  
+    ierr = MatPtAP(const_cast<PetscMatrix*>(A)->mat(), const_cast<PetscMatrix*>(P)->mat(), MAT_REUSE_MATRIX,1.0,&_mat);
+  }
+  else{
+    this->clear();
+    ierr = MatPtAP(const_cast<PetscMatrix*>(A)->mat(), const_cast<PetscMatrix*>(P)->mat(), MAT_INITIAL_MATRIX ,1.0,&_mat);
+    this->_is_initialized = true;
+  }
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+}
 
 // ===========================================================
 /// This function either creates or re-initializes a matrix called "submatrix".

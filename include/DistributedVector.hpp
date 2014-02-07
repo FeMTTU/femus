@@ -208,12 +208,12 @@ public:
     std::cout <<"error";
     exit(0);
   }
-  void matrix_mult (const NumericVector &/*vec_in*/,const SparseRectangularMatrix &/*mat_in*/) {
+  void matrix_mult (const NumericVector &/*vec_in*/,const SparseMatrix &/*mat_in*/) {
     std::cout <<"error";
     exit(0);
   }
 
-  void matrix_mult_transpose(const NumericVector &vec_in,const SparseRectangularMatrix &mat_in){
+  void matrix_mult_transpose(const NumericVector &vec_in,const SparseMatrix &mat_in){
     std::cout <<"error";
     exit(0);
   }

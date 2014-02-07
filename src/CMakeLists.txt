@@ -25,14 +25,12 @@ Parameter.cpp
 PetscLinearSolver.cpp
 PetscMatrix.cpp
 PetscPreconditioner.cpp
-PetscRectangularMatrix.cpp
 PetscVector.cpp
 Preconditioner.cpp
 Quadrilateral.cpp
 Solid.cpp
 Solution.cpp
 SparseMatrix.cpp
-SparseRectangularMatrix.cpp
 Tetrahedral.cpp
 Triangle.cpp
 Wedge.cpp

@@ -9,7 +9,6 @@
 #include "PetscPreconditioner.hpp"
 #include "PetscVector.hpp"
 #include "PetscMatrix.hpp"
-#include "PetscRectangularMatrix.hpp"
 
 using namespace std;
 
@@ -96,7 +95,7 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &_SolPdeIndex,cons
    PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
    Vec RES=RESp->vec(); //TODO
   
-   PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_KK); //TODO
+   PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); //TODO
    Mat KK=KKp->mat(); //TODO
   
   
@@ -678,7 +677,7 @@ int PetscLinearSolver::Vanka_Smoother(const vector <unsigned> &_SolPdeIndex, con
    PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
    Vec RES=RESp->vec(); //TODO
   
-   PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_KK); //TODO
+   PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); //TODO
    Mat KK=KKp->mat(); //TODO
   
   PetscErrorCode ierr;
@@ -1204,7 +1203,7 @@ void PetscLinearSolver::init_schur(Mat& matrix) {
 // ========================================================
 void PetscLinearSolver::init(Mat& matrix) {
   
-  PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_KK); //TODO
+  PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); //TODO
   Mat KK=KKp->mat(); //TODO
   
   // Initialize the data structures if not done so already.
@@ -1285,7 +1284,7 @@ std::pair< int, double> PetscLinearSolver::solve() {
   Vec EPSC=EPSCp->vec(); //TODO
   PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
   Vec RES=RESp->vec(); //TODO
-  PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_KK); //TODO
+  PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); //TODO
   Mat KK=KKp->mat(); //TODO
   
 

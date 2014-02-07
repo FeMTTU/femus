@@ -3,7 +3,7 @@
 #include "ElemType.hpp"
 #include "LinearSolver.hpp"
 #include "PetscVector.hpp"
-#include "PetscRectangularMatrix.hpp"
+
 #include <iostream>
 #include <fstream>
 using std::cout;

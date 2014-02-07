@@ -6,7 +6,7 @@
 #include "ElemType.hpp"
 #include "ParalleltypeEnum.hpp"
 #include "NumericVector.hpp"
-#include "SparseRectangularMatrix.hpp"
+#include "SparseMatrix.hpp"
 
 using std::cout;
 using std::endl;
@@ -171,7 +171,7 @@ int lsysPde::InitPde(const vector <unsigned> &_SolPdeIndex, const  vector <int> 
   int KK_size=KKIndex[KKIndex.size()-1u];
   int KK_local_size =KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
     
- _KK = SparseRectangularMatrix::build().release();
+ _KK = SparseMatrix::build().release();
  _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
    
 //   PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
@@ -182,7 +182,7 @@ int lsysPde::InitPde(const vector <unsigned> &_SolPdeIndex, const  vector <int> 
 //   PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_KK); //TODO
 //   KK=KKp->mat(); //TODO
     
-  _CC = SparseRectangularMatrix::build().release();
+  _CC = SparseMatrix::build().release();
   _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
   
   return 1;

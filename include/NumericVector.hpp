@@ -255,10 +255,9 @@ public:
                            const std::vector< int>& dof_indices) = 0;
   /// \f$U+=A*V\f$, add the product A*v
   virtual void add_vector (const NumericVector& /*A*/,const SparseMatrix& /*V*/) = 0;
-  virtual void add_vector (const NumericVector& /*A*/,const SparseRectangularMatrix& /*V*/) = 0;
   virtual void resid (const NumericVector &/*rhs_in*/,const NumericVector& /*A*/,const SparseMatrix& /*V*/) = 0;
-  virtual void matrix_mult (const NumericVector &vec_in,const SparseRectangularMatrix &mat_in) = 0;
-  virtual void matrix_mult_transpose(const NumericVector &vec_in,const SparseRectangularMatrix &mat_in) = 0; 
+  virtual void matrix_mult (const NumericVector &vec_in,const SparseMatrix &mat_in) = 0;
+  virtual void matrix_mult_transpose(const NumericVector &vec_in,const SparseMatrix &mat_in) = 0; 
   /// \f$U+=A*V\f$, add the product of a \p ShellMatrix \p
 //   void add_vector (const NumericVector& v,
 // 		   const ShellMatrix<double>& a);

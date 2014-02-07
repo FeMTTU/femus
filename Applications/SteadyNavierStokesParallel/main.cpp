@@ -1,12 +1,11 @@
 #include "ElemType.hpp"
 #include "NonLinearMultiLevelProblem.hpp"
-#include "NumericVector.hpp"
-#include "LinearSolver.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
-#include "SparseRectangularMatrix.hpp"
-#include "DenseMatrix.hpp"
+#include "NumericVector.hpp"
+#include "LinearSolver.hpp"
+#include "SparseMatrix.hpp"
 
 using std::cout;
 using std::endl;
@@ -386,7 +385,7 @@ int AssembleMatrixResNS1(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
   mesh*           mymsh    = nl_ml_prob._msh[level];
   elem*           myel     =  mymsh->el;
   
-  SparseRectangularMatrix* myKK=mylsyspde->_KK;
+  SparseMatrix* myKK=mylsyspde->_KK;
   NumericVector* myRES = mylsyspde->_RES;
     
   // Allocation
@@ -696,7 +695,7 @@ int AssembleMatrixResNS2(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
   mesh*           mymsh    = nl_ml_prob._msh[level];
   elem*           myel     =  mymsh->el;
   
-  SparseRectangularMatrix* myKK=mylsyspde->_KK;
+  SparseMatrix* myKK=mylsyspde->_KK;
   NumericVector* myRES = mylsyspde->_RES;
     
   // Allocation
@@ -1011,7 +1010,7 @@ int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, c
   mesh*           mymsh    = nl_ml_prob._msh[level];
   elem*           myel     =  mymsh->el;
     
-  SparseRectangularMatrix* myKK=mylsyspde->_KK;
+  SparseMatrix* myKK=mylsyspde->_KK;
   NumericVector* myRES = mylsyspde->_RES;
     
   // Allocation

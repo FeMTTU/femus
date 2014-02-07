@@ -1,8 +1,6 @@
 #include "GaussPoints.hpp"
 #include "ElemType.hpp"
 #include "Elem.hpp"
-#include "SparseRectangularMatrix.hpp"
-// #include "PetscRectangularMatrix.hpp"
 
 unsigned elem_type::_refindex=1;
 
@@ -753,7 +751,7 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
 // prolungator for Matrix
 //----------------------------------------------------------------------------------------------------
 
-void elem_type::prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseRectangularMatrix* Projmat, 
+void elem_type::prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseMatrix* Projmat, 
 		    const unsigned &index_sol, const unsigned &kkindex_sol) const {
 		      
   vector<int> cols(27);
@@ -784,7 +782,7 @@ void elem_type::prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const 
 // prolungator for single variable in multigrid solver
 //-----------------------------------------------------------------------------------------------------
 void elem_type::prolongation(const mesh &meshf,const mesh &meshc, const int& ielc,
-			    SparseRectangularMatrix* Projmat) const {
+			    SparseMatrix* Projmat) const {
   
   vector<int> cols(27);
   for (int i=0; i<nf_; i++) {
@@ -809,7 +807,7 @@ void elem_type::prolongation(const mesh &meshf,const mesh &meshc, const int& iel
 // prolungator for solution printing
 //-----------------------------------------------------------------------------------------------------
 
-void elem_type::ProlQitoQj(const mesh& mymesh,const int& iel, SparseRectangularMatrix* Projmat, 
+void elem_type::ProlQitoQj(const mesh& mymesh,const int& iel, SparseMatrix* Projmat, 
 			  bool testnode[],const unsigned &itype) const{
   
   vector<int> cols(27);

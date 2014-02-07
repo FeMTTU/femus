@@ -18,7 +18,7 @@ class LinearSolverM;
 class NonLinearMultiLevelProblem {
 
 private:
-  vector < SparseRectangularMatrix* > ProlQitoQj_[3][3];
+  vector < SparseMatrix* > ProlQitoQj_[3][3];
   vector < map <unsigned,bool> > index;
   vector <unsigned> elr_old;
   int _moving_mesh;

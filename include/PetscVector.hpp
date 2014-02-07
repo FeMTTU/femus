@@ -231,14 +231,13 @@ public:
                    const std::vector<int>& dof_indices);
   ///\f$U+=A*V\f$, add the product of a \p SparseMatrix \p A
   void add_vector (const NumericVector &V,const SparseMatrix &A);
-  void add_vector (const NumericVector& V,const SparseRectangularMatrix& A);
   ///\f$U+=V \f$ where U and V are type DenseVector
   void add_vector (const DenseVector& V,const std::vector<int>& dof_indices);
   void resid (const NumericVector & rhs_in,const NumericVector& x,const SparseMatrix& A);
   /// \f$U+=A*V\f$, add the product A*v
-  void matrix_mult (const NumericVector &vec_in,const SparseRectangularMatrix &mat_in);
+  void matrix_mult (const NumericVector &vec_in,const SparseMatrix &mat_in);
 
-  void matrix_mult_transpose (const NumericVector &vec_in,const SparseRectangularMatrix &mat_in);
+  void matrix_mult_transpose (const NumericVector &vec_in,const SparseMatrix &mat_in);
   /// Scale each element of the vector by the given factor.
   void scale (const double factor);
 

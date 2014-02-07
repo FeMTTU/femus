@@ -2,7 +2,7 @@
 #include "ElemType.hpp"
 #include "Elem.hpp"
 #include "NumericVector.hpp"
-#include "SparseRectangularMatrix.hpp"
+#include "SparseMatrix.hpp"
 #include "LinearSolver.hpp"
 #include "FEMTTUConfig.h"
 #include "Parameter.hpp"
@@ -1176,7 +1176,7 @@ int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, const cha
   int nc= _LinSolver[ipde][gridf-1]->KKIndex[_LinSolver[ipde][gridf-1]->KKIndex.size()-1u];
   int nf_loc = _LinSolver[ipde][gridf]->KKoffset[_LinSolver[ipde][gridf]->KKIndex.size()-1][_iproc]-_LinSolver[ipde][gridf]->KKoffset[0][_iproc];
   int nc_loc = _LinSolver[ipde][gridf-1]->KKoffset[_LinSolver[ipde][gridf-1]->KKIndex.size()-1][_iproc]-_LinSolver[ipde][gridf-1]->KKoffset[0][_iproc];
-  _LinSolver[ipde][gridf]->_PP = SparseRectangularMatrix::build().release();
+  _LinSolver[ipde][gridf]->_PP = SparseMatrix::build().release();
   _LinSolver[ipde][gridf]->_PP->init(nf,nc,nf_loc,nc_loc,27,27);
   
    //PetscRectangularMatrix* PPp=static_cast<PetscRectangularMatrix*>(_LinSolver[ipde][gridf]->_PP);
@@ -1241,7 +1241,7 @@ void NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, unsigned
     int nf_loc = _msh[gridf]->own_size[SolType[SolIndex]][_iproc];
     int nc_loc = _msh[gridf-1]->own_size[SolType[SolIndex]][_iproc]; 
 
-    _solution[gridf]->_ProjMat[TypeIndex] = SparseRectangularMatrix::build().release();
+    _solution[gridf]->_ProjMat[TypeIndex] = SparseMatrix::build().release();
     _solution[gridf]->_ProjMat[TypeIndex]->init(nf,nc,nf_loc,nc_loc,27,27);
  
      // loop on the coarse grid 
@@ -1285,7 +1285,7 @@ void NonLinearMultiLevelProblem::BuildProlungatorMatrices() {
       for (int jtype=0; jtype<3; jtype++) {
         int nj = _msh[igridn]->MetisOffset[jtype][_nprocs];
 	memset(testnode,0,ni*sizeof(bool));
-	ProlQitoQj_[itype][jtype][igridn] = SparseRectangularMatrix::build().release();
+	ProlQitoQj_[itype][jtype][igridn] = SparseMatrix::build().release();
 	ProlQitoQj_[itype][jtype][igridn]->init(ni,nj,_msh[igridn]->own_size[itype][_iproc],
 						_msh[igridn]->own_size[jtype][_iproc],27,27);
 	// 	}

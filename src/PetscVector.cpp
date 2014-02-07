@@ -10,8 +10,6 @@
 #include "PetscMatrix.hpp"
 #include "DenseVector.hpp"
 #include "DenseSubvector.hpp"
-#include "PetscRectangularMatrix.hpp"
-#include "SparseRectangularMatrix.hpp"
 #include "Parallel.hpp"
 #include "PetscMacro.hpp"
 #include "Casts.hpp"  
@@ -148,22 +146,6 @@ void PetscVector::add_vector(const NumericVector& V_in,
   ierr = MatMultAdd(const_cast<PetscMatrix*>(A)->mat(), V->_vec, _vec, _vec);
   CHKERRABORT(MPI_COMM_WORLD,ierr);
 }
-// =========================================================
-void PetscVector::add_vector(const NumericVector& V_in,
-                              const SparseRectangularMatrix& A_in) {
-  this->_restore_array();
-  // Make sure the data passed in are really of Petsc types
-  const PetscVector* V = static_cast<const PetscVector*>(&V_in);
-  const PetscRectangularMatrix* A = static_cast<const PetscRectangularMatrix*>(&A_in);
-  int ierr=0;
-  A->close();
-
-  // The const_cast<> is not elegant, but it is required since PETSc
-  // is not const-correct.
-  ierr = MatMultAdd(const_cast<PetscRectangularMatrix*>(A)->mat(), V->_vec, _vec, _vec);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
-}
-
 // ====================================================
 void PetscVector::add_vector(const DenseVector& V,
                               const std::vector< int>& dof_indices) {
@@ -171,14 +153,14 @@ void PetscVector::add_vector(const DenseVector& V,
   for (int i=0; i<(int)V.size(); i++)  this->add(dof_indices[i], V(i));
 }
 // ====================================================
-void PetscVector::matrix_mult(const NumericVector &vec_in,const SparseRectangularMatrix &mat_in) {
+void PetscVector::matrix_mult(const NumericVector &vec_in,const SparseMatrix &mat_in) {
   this->_restore_array();
   // Make sure the data passed in are really of Petsc types
   const PetscVector* v = static_cast<const PetscVector*>(&vec_in);
-  const PetscRectangularMatrix* A = static_cast<const PetscRectangularMatrix*>(&mat_in);
+  const PetscMatrix* A = static_cast<const PetscMatrix*>(&mat_in);
   int ierr=0;
   A->close();
-  ierr = MatMult(const_cast<PetscRectangularMatrix*>(A)->mat(),v->_vec,_vec);
+  ierr = MatMult(const_cast<PetscMatrix*>(A)->mat(),v->_vec,_vec);
   CHKERRABORT(MPI_COMM_WORLD,ierr);
   return;
 }
@@ -186,14 +168,14 @@ void PetscVector::matrix_mult(const NumericVector &vec_in,const SparseRectangula
 /// This function computes the residual r=P^t x
 // =========================================================
 
-void PetscVector::matrix_mult_transpose(const NumericVector &vec_in,const SparseRectangularMatrix &mat_in) {
+void PetscVector::matrix_mult_transpose(const NumericVector &vec_in,const SparseMatrix &mat_in) {
   this->_restore_array();
   // Make sure the data passed in are really of Petsc types
   const PetscVector* v = static_cast<const PetscVector*>(&vec_in);
-  const PetscRectangularMatrix* A = static_cast<const PetscRectangularMatrix*>(&mat_in);
+  const PetscMatrix* A = static_cast<const PetscMatrix*>(&mat_in);
   int ierr=0;
   A->close();
-  ierr = MatMultTranspose(const_cast<PetscRectangularMatrix*>(A)->mat(),v->_vec,_vec);
+  ierr = MatMultTranspose(const_cast<PetscMatrix*>(A)->mat(),v->_vec,_vec);
   CHKERRABORT(MPI_COMM_WORLD,ierr);
   return;
 }

@@ -7,7 +7,7 @@
 //Forward Declaration
 class elem_type;
 class NumericVector;
-class SparseRectangularMatrix;
+class SparseMatrix;
 
 //class lsysPde: public mesh {
 
@@ -26,7 +26,7 @@ public:
   vector <NumericVector*> _Bdc;      //one for every variable
   vector <bool> _ResEpsBdcFlag;      //one for every variable
     
-  SparseRectangularMatrix* _ProjMat[5];  //Projection matrices (one for every type of variable)
+  SparseMatrix* _ProjMat[5];  //Projection matrices (one for every type of variable)
   bool _ProjMatFlag[5];			 //One for every type of variable
 
   // Constructor - Destructor

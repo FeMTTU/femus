@@ -7,7 +7,7 @@
 //Forward Declaration
 class elem_type;
 class NumericVector;
-class SparseRectangularMatrix;
+class SparseMatrix;
 
 //class lsysPde: public mesh {
 
@@ -34,7 +34,7 @@ public:
   
     
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
-  SparseRectangularMatrix *_KK, *_PP, *_CC; //will become SparseMatrix ASAP
+  SparseMatrix *_KK, *_PP, *_CC; //will become SparseMatrix ASAP
   bool _CC_flag;
   
   //Functions

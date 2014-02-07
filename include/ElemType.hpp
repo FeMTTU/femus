@@ -4,7 +4,7 @@
 #include "Basis.hpp"
 // #include "petscksp.h"
 // #include "petscvec.h" 
-#include "SparseRectangularMatrix.hpp"
+#include "SparseMatrix.hpp"
 #include "Mesh.hpp"
 #include "LinSysPde.hpp"
 
@@ -75,12 +75,12 @@ public:
 //   int prolongation(const elem* el,const elem* elc, const int& ielc, 
 // 		   Mat &PP,const int& istart=0,const int& jstart=0) const ;
 		   
-  void prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseRectangularMatrix* Projmat, 
+  void prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseMatrix* Projmat, 
 		    const unsigned &index_sol, const unsigned &kkindex_sol) const;
 		   
-  void prolongation(const mesh &meshf,const mesh &meshc, const int& ielc, SparseRectangularMatrix* Projmat) const;
+  void prolongation(const mesh &meshf,const mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;
   
-  void ProlQitoQj(const mesh& mymesh,const int& iel, SparseRectangularMatrix* Projmat, 
+  void ProlQitoQj(const mesh& mymesh,const int& iel, SparseMatrix* Projmat, 
 		  bool testnode[],const unsigned &itype) const;
 
   // Jacobian over Riemaniann Manifold (2D or 3D)

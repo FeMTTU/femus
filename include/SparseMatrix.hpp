@@ -105,9 +105,22 @@ public:
                            const std::vector< int> &cols) = 0;
   /// Same, but assumes the row and column maps are the same.
   virtual void add_matrix (const DenseMatrix &dm,const std::vector< int> &dof_indices) = 0;
+  
+  // Add a row to a Sparse matrix
+  virtual void insert_row(const int row, const int ncols, 
+	       const std::vector<int>& cols, const double& values) = 0;
+  
+  virtual void add_matrix_blocked(const std::vector< double > &mat_value,
+                          const std::vector< int> &rows,
+                          const std::vector< int> &cols) = 0;
+  virtual void matrix_add (const double a_in, SparseMatrix &X_in, const char pattern []) = 0;
+  
+  virtual void matrix_PtAP(const SparseMatrix &mat_P, const SparseMatrix &mat_A, const bool &reuse) = 0;
+
+
   /// Add a Sparse matrix \p _X, scaled with \p _a, to \p  A += cB
   virtual void add (const double /*c*/, SparseMatrix & /*B*/) = 0;
-
+ 
   // norm of the matrix
   virtual double l1_norm () const = 0;     ///< Return the l1-norm
   virtual double linfty_norm () const = 0; ///< Return the linfty-norm
