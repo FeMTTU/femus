@@ -34,7 +34,7 @@ public:
   
     
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
-  SparseRectangularMatrix *_KK, *_PP, *_CC;
+  SparseRectangularMatrix *_KK, *_PP, *_CC; //will become SparseMatrix ASAP
   bool _CC_flag;
   
   //Functions

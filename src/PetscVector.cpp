@@ -108,7 +108,7 @@ void PetscVector::add(const  int i, const double value) {
 
 // ===============================================================
 void PetscVector::add_vector_blocked(const std::vector<double>& values,
-				   const std::vector< int>& dof_indices) {
+				     const std::vector< int>& dof_indices) {
   //this->_restore_array();
   int dof_size = dof_indices.size();
   assert(values.size() == dof_size);

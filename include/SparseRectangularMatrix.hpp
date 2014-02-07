@@ -108,6 +108,11 @@ public:
                           const std::vector<int> &cols) = 0;
   /// Same, but assumes the row and column maps are the same.
   virtual void add_matrix(const DenseMatrix &dm,const std::vector<int> &dof_indices) = 0;
+  /// Add the full matrix by blocks
+  virtual void add_matrix_blocked(const std::vector< double > &mat_value,
+                                  const std::vector< int> &rows,
+                                  const std::vector< int> &cols) = 0;
+  
   /// Add a Sparse matrix \p _X, scaled with \p _a, to \p  A += cB
   virtual void add(const double /*c*/, SparseRectangularMatrix & /*B*/) = 0;
   

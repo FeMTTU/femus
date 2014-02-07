@@ -4,7 +4,6 @@
 #include "Elem.hpp"
 #include "vector"
 #include "metis.h"
-#include "NumericVector.hpp"
 using std::vector;
 
 // **************** class mesh **************************

@@ -2,9 +2,7 @@
 #include "ElemType.hpp"
 #include "Elem.hpp"
 #include "NumericVector.hpp"
-#include "PetscVector.hpp"
 #include "SparseRectangularMatrix.hpp"
-#include "PetscRectangularMatrix.hpp"
 #include "LinearSolver.hpp"
 #include "FEMTTUConfig.h"
 #include "Parameter.hpp"
@@ -456,9 +454,9 @@ int NonLinearMultiLevelProblem::ComputeBdStress(int bd, double Cforce[3]) {
   for (unsigned ig=0; ig<gridn; ig++) {
 
    
-    PetscVector* petsc_vec_solP = static_cast<PetscVector*>(_solution[ig]->_Sol[kP]);
-    ierr = VecGetArray(petsc_vec_solP->vec(),&MYSOL[0]);
-    CHKERRQ(ierr);
+//     PetscVector* petsc_vec_solP = static_cast<PetscVector*>(_solution[ig]->_Sol[kP]);
+//     ierr = VecGetArray(petsc_vec_solP->vec(),&MYSOL[0]);
+//     CHKERRQ(ierr);
 
     //tested up to now for quad9 in 2D
     unsigned order_ind = SolType[GetIndex("U")];
@@ -503,7 +501,7 @@ int NonLinearMultiLevelProblem::ComputeBdStress(int bd, double Cforce[3]) {
       }
     }
 
-    ierr = VecRestoreArray(petsc_vec_solP->vec(),&MYSOL[0]);
+    //ierr = VecRestoreArray(petsc_vec_solP->vec(),&MYSOL[0]);
     CHKERRQ(ierr);
 
   }
@@ -524,8 +522,8 @@ int NonLinearMultiLevelProblem::ComputeBdIntegral(const char pdename[],const cha
   
   
   unsigned ipde=GetPdeIndex(pdename);
-  PetscVector* RESp=static_cast<PetscVector*> (_LinSolver[ipde][level]->_RES);  //TODO
-  Vec RES=RESp->vec(); //TODO
+//   PetscVector* RESp=static_cast<PetscVector*> (_LinSolver[ipde][level]->_RES);  //TODO
+//   Vec RES=RESp->vec(); //TODO
   
   int ierr;
   double tau;
@@ -583,8 +581,7 @@ int NonLinearMultiLevelProblem::ComputeBdIntegral(const char pdename[],const cha
 		    
 	// Non voglio chiamare Vecsetvalue ma aggiungere il valore direttamente a F
 	// per fare questo mi serve la relazione tra i(node locale di surface) e il nodo locale di volume
-	ierr = VecSetValue(RES,node[i],value,ADD_VALUES);CHKERRQ(ierr);
-
+	_LinSolver[ipde][level]->_RES->add(node[i],value);
       }
     }
   }

@@ -332,6 +332,38 @@ void PetscRectangularMatrix::print_matlab (const std::string name) const {
 
 // ============================================================
 /// This Petsc adds a dense matrix to a sparse matrix
+void PetscRectangularMatrix::add_matrix_blocked(
+  const std::vector< double > &mat_values,  // blocked matrix stored as an m*n array 
+  const std::vector< int>& rows, // row vector indexes
+  const std::vector< int>& cols) { // column vector indices
+  // ==================================================
+  assert (this->initialized());
+  int ierr=0;
+//   const  int m = dm.m();  //senza DenseMatrix non puoi fare questo controllo, oppure aggiungi altri argomenti
+//   const  int n = dm.n();
+//   assert ((int)rows.size() == m);
+//   assert ((int)cols.size() == n);
+  // These casts are required for PETSc <= 2.1.5
+//   ierr = MatSetValuesBlocked(_mat,/*m*/rows.size(), (int*) &rows[0],
+// 			          /*n*/cols.size(), (int*) &cols[0],
+//                       (PetscScalar*) mat_ptr/*&dm.get_values()[0]*/,ADD_VALUES);
+//   CHKERRABORT(MPI_COMM_WORLD,ierr);  
+  const  int m = (int)rows.size(); 
+  const  int n = (int)cols.size();
+  assert ( m*n == mat_values.size());
+  
+  //These casts are required for PETSc <= 2.1.5
+  ierr = MatSetValuesBlocked(_mat,m, &rows[0],n, &cols[0],
+                      (PetscScalar*) &mat_values[0],ADD_VALUES);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  
+  return;
+}
+
+
+
+// ============================================================
+/// This Petsc adds a dense matrix to a sparse matrix
 void PetscRectangularMatrix::add_matrix(
   const DenseMatrix& dm,        // dense matrix
   const std::vector< int>& rows, // row vector
@@ -349,6 +381,7 @@ void PetscRectangularMatrix::add_matrix(
   CHKERRABORT(MPI_COMM_WORLD,ierr);
   return;
 }
+
 
 // ===========================================================
 /// This Petsc function exctract submatrix from matrix

@@ -113,6 +113,10 @@ public:
   /// Add the full matrix to the Petsc matrix.
   void add_matrix(const DenseMatrix &dm,
                   const std::vector< int> &dof_indices);
+  /// Add the full matrix by blocks
+  void add_matrix_blocked(const std::vector< double > &mat_value,
+                          const std::vector< int> &rows,
+                          const std::vector< int> &cols);
 
   /// Add a Sparse matrix
   void add(const double a, SparseRectangularMatrix &X);
