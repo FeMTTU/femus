@@ -107,15 +107,15 @@ void PetscVector::add(const  int i, const double value) {
 
 
 // ===============================================================
-void PetscVector::add_vector_block(const std::vector<double>& v,
+void PetscVector::add_vector_blocked(const std::vector<double>& values,
 				   const std::vector< int>& dof_indices) {
-  this->_restore_array();
-  assert(v.size() == dof_indices.size());
-  
- // std::vector<PetscScalar> petsc_value = static_cast< std::vector<PetscScalar> >(v);
-  
-  
-//   for (int i=0; i<(int)v.size(); i++)    this->add(dof_indices[i], v[i]);
+  //this->_restore_array();
+  int dof_size = dof_indices.size();
+  assert(values.size() == dof_size);
+    
+  int ierr = VecSetValues(_vec,dof_size,&dof_indices[0],&values[0],ADD_VALUES);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+    
 }
 
 // ===============================================================
