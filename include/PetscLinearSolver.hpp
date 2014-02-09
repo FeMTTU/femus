@@ -29,52 +29,16 @@ class PetscLinearSolver : public LinearSolverM {
 private:
   // data ---------------------------------
   PC _pc;      ///< Preconditioner context
-  KSP _ksp;    ///< Krylov subspace context
-  KSP _ksp2;   ///< Krylov subspace context
-  unsigned num_elem_vanka_block_;
-
-  PetscReal _rtol;
-  PetscReal _abstol;
-  PetscReal _dtol;
-  PetscInt  _maxits;
-
-  PetscReal _rtol_;
-  PetscReal _abstol_;
-  PetscReal _dtol_;
-  PetscInt  _maxits_;
-  IS isPA;
-  IS isPB;
-  IS isB;
-  IS isCl;   //local indices for the Schur Complement
-  IS isDl; 
-  Vec Pw, Pr, Ps;     
-  Mat PA;  
-  Mat PB;
-  Vec f,w;
-  Vec z,g;
-  Mat A,B,Bt,D,C;
-  const PetscInt *ind;
-  const PetscInt *ind2;
-  PetscInt PAmBsize;
-  PetscInt PBsize;
-  PetscInt PCsize;
-  PetscInt PDsize;
-  PetscInt Asize;
-  PetscInt counterb;
-  PetscInt Csize;
-  PetscInt Dsize;
-  
-  clock_t SearchTime, AssemblyTime, SolveTime0, SolveTime1, SolveTime2, UpdateTime, start_time, end_time;
-  PetscErrorCode ierr;
-  int its_A, its_C, its;
+  vector <KSP> _ksp;    ///< Krylov subspace context
+  vector< PetscReal > _rtol;
+  vector< PetscReal > _abstol;
+  vector< PetscReal > _dtol;
+  vector< PetscInt >  _maxits;
+  unsigned _num_elem_vanka_block;
     
-  
 public:
   // Constructor --------------------------------------
   ///  Constructor. Initializes Petsc data structures
-//   PetscLinearSolver (const char infile[], vector < vector < double> > &vt, const double Lref);
-// 
-//   PetscLinearSolver (const unsigned &igrid,elem *elc);
 
   PetscLinearSolver (const unsigned &igrid, mesh *other_mesh);
   
@@ -98,16 +62,13 @@ public:
   void set_schur_tolerances(const double rtol, const double atol,
                             const double divtol, const unsigned maxits);
 
+  void set_num_elem_vanka_block(const unsigned num_elem_vanka_block);
+  
   // Solvers ------------------------------------------------------
   // ========================================================
   /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.
-  int Vanka_Smoother(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
-                     const short unsigned &NSchurVar,const bool &Schur);
-
-
-  /// Call the Vanka smoother-solver using the PetscLibrary.
-  int Vanka_Smoother(const vector <unsigned> &_SolPdeIndex, const vector <unsigned> &VankaIndex);
-
+  std::pair< int, double> solve(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
+				const short unsigned &NSchurVar,const bool &Schur);
   /// Call the Gmres smoother-solver
   std::pair< int, double> solve();
 
@@ -142,7 +103,7 @@ public:
   /// you are for example setting a custom convergence test with KSPSetConvergenceTest().
   KSP ksp() {
     this->init();
-    return _ksp;
+    return _ksp[0];
   }
   /// Fills the input vector with residual norms from the latest iterative solve.
   void get_residual_history(std::vector<double>& hist);
@@ -163,54 +124,12 @@ private:
 
 };
 
-
-/*----------------------- functions ----------------------------------*/
-// =================================================
-// inline PetscLinearSolver::PetscLinearSolver (const char infile[],
-//     vector < vector < double> > &vt, const double Lref)
-//   : LinearSolverM(infile,vt,Lref) {
-//    
-//     this->_preconditioner_type = MLU_PRECOND;
-// 
-//   _rtol   = 1.e-8;
-//   _abstol = 1.e-40;
-//   _dtol   = 1.e+50;
-//   _maxits = 10;
-// 
-//   _rtol_   = 1.e-8;
-//   _abstol_ = 1.e-40;
-//   _dtol_   = 1.e+50;
-//   _maxits_ = 10;
-// }
-// 
-// inline PetscLinearSolver::PetscLinearSolver (const unsigned &igrid,elem *elc)
-//   : LinearSolverM(igrid,elc) {
-//    
-//   std::cout << " PetscLin " << std::endl;  
-//   if(_msh->_nprocs==1) {  
-//    this->_preconditioner_type = ILU_PRECOND;
-//   } else {
-//     this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
-//   }
-// 
-//   _rtol   = 1.e-8;
-//   _abstol = 1.e-40;
-//   _dtol   = 1.e+50;
-//   _maxits = 10;
-// 
-//   _rtol_   = 1.e-8;
-//   _abstol_ = 1.e-40;
-//   _dtol_   = 1.e+50;
-//   _maxits_ = 10;
-// 
-// 
-// }
-
 inline PetscLinearSolver::PetscLinearSolver (const unsigned &igrid, mesh* other_msh)
   : LinearSolverM(igrid, other_msh) {
-  
+        
   if(igrid==0){
-    this->_preconditioner_type = MLU_PRECOND;  
+    this->_preconditioner_type = MLU_PRECOND;
+    _num_elem_vanka_block = _msh->el->GetElementNumber();  
   }
   else{
     std::cout << " PetscLin " << std::endl;  
@@ -220,18 +139,18 @@ inline PetscLinearSolver::PetscLinearSolver (const unsigned &igrid, mesh* other_
     else {
       this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
     }
+    unsigned dim = _msh->GetDimension();
+    unsigned base = pow(2,dim);
+    unsigned exponent = 5 - dim;
+    _num_elem_vanka_block = pow(base,exponent);
   }
 
-  _rtol   = 1.e-8;
-  _abstol = 1.e-40;
-  _dtol   = 1.e+50;
-  _maxits = 10;
-
-  _rtol_   = 1.e-8;
-  _abstol_ = 1.e-40;
-  _dtol_   = 1.e+50;
-  _maxits_ = 10;
-
+  _ksp.resize(2);  
+  
+  _rtol.resize(2,1.e-8);
+  _abstol.resize(2, 1.e-40);
+  _dtol.resize(2, 1.e+50);
+  _maxits.resize(2,10);
 
 }
 

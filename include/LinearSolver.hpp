@@ -44,19 +44,7 @@ protected:
   bool _is_initialized;
 
   /// The number of elements in a Vanka Block
-  unsigned _num_elem_vanka_block;
-
-  ///solver indexes
-  static vector < unsigned > indexa;
-  static vector < unsigned > indexb;
-  static vector < unsigned > indexc;
-  static vector < unsigned > indexd;
-
-  static vector <PetscInt> indexai;
-  static vector <PetscInt> indexbi;
-  static vector <PetscInt> indexci;
-  static vector <PetscInt> indexdi;
-
+  //unsigned _num_elem_vanka_block;
 
 public:
 
@@ -82,10 +70,7 @@ public:
   virtual void init() = 0;
 
   /// Builds a \p LinearSolverM using the linear solver in \p solver_package
-//   static std::auto_ptr<LinearSolverM > build(vector < vector < double> > &vt, const double Lref, const char infile[],const SolverPackage solver_package =LSOLVER);
-// 
-//   static std::auto_ptr<LinearSolverM > build(const unsigned &igrid,elem *elc,const SolverPackage solver_package =LSOLVER);
-
+  
   static std::auto_ptr<LinearSolverM > build(const unsigned &igrid, mesh* other_msh,const SolverPackage solver_package =LSOLVER);
   
   // =================================
@@ -99,8 +84,7 @@ public:
   virtual void set_schur_tolerances(const double rtol, const double atol,
                                     const double divtol, const unsigned maxits) = 0;
 
-  /// Set the number of elements of the Vanka Block
-  void set_num_elem_vanka_block(const unsigned num_elem_vanka_block);
+  
 
   /// Sets the type of solver to use.
   void set_solver_type (const SolverType st)  {
@@ -131,16 +115,15 @@ public:
   PreconditionerType preconditioner_type () const;
 
   // =================================
-  // SOLVE FUNCTIONS
+  // OUR virtual FUNCTIONS
   // ================================
 
-    /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.
-  virtual int Vanka_Smoother(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
-                             const short unsigned &NSchurVar,const bool &Schur) = 0;
-
-  /// Call the Vanka smoother-solver using the PetscLibrary.
-  virtual int Vanka_Smoother(const vector <unsigned> &_SolPdeIndex, const vector <unsigned> &VankaIndex) = 0;
+  /// Set the number of elements of the Vanka Block
+  virtual void set_num_elem_vanka_block(const unsigned num_elem_vanka_block)=0;
   
+  /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.
+  virtual std::pair< int, double> solve(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
+					const short unsigned &NSchurVar,const bool &Schur) = 0;
   /// Call the Gmres smoother-solver
   virtual std::pair< int, double> solve() = 0;
   
@@ -166,35 +149,6 @@ public:
 // -------------------- inline functions ---------
 
 // =============================================
-// inline LinearSolverM::LinearSolverM(const char infile[], vector < vector < double> > &vt, const double Lref) :
-//   lsysPde(infile,vt,Lref),
-//   _solver_type(GMRES),
-//   _preconditioner_type(LU_PRECOND),
-//   _preconditioner(NULL),
-//   _is_initialized(false),
-//   same_preconditioner(false) {
-//   _num_elem_vanka_block = _msh->el->GetElementNumber();
-// 
-// }
-// ========================================================
-// =============================================
-// inline LinearSolverM::LinearSolverM(const unsigned &igrid,elem *elc) :
-//   lsysPde(igrid,elc),
-//   _solver_type(GMRES),
-//   _preconditioner_type(ILU_PRECOND),
-//   _preconditioner(NULL),
-//   _is_initialized(false),
-//   same_preconditioner(false) {
-// 
-//   unsigned dim = _msh->GetDimension();
-//   unsigned base = pow(2,dim);
-//   unsigned exponent = 5 - dim;
-// 
-//   _num_elem_vanka_block = pow(base,exponent);
-// 
-// }
-
-// =============================================
 inline LinearSolverM::LinearSolverM(const unsigned &igrid, mesh* other_msh) :
   lsysPde(other_msh),
   _solver_type(GMRES),
@@ -204,14 +158,9 @@ inline LinearSolverM::LinearSolverM(const unsigned &igrid, mesh* other_msh) :
 
   if(igrid==0){
     _preconditioner_type=LU_PRECOND;
-    _num_elem_vanka_block = _msh->el->GetElementNumber();  
   }
   else{
     _preconditioner_type=ILU_PRECOND;
-    unsigned dim = _msh->GetDimension();
-    unsigned base = pow(2,dim);
-    unsigned exponent = 5 - dim;
-    _num_elem_vanka_block = pow(base,exponent);
   }
 }
 

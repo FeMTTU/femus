@@ -13,10 +13,10 @@ using std::endl;
 // ****************** MGTimeLoop CLASS ********************************
 // *******************************************************************
 
-///Constructor
+//Constructor
 NonLinearTimeDependentMultiLevelProblem::NonLinearTimeDependentMultiLevelProblem(const unsigned short &igridn,const unsigned short &igridr, const char mesh_file[],
-                                     const char GaussOrder[], const double Lref, bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, 
-                     const int &ElemGroupNumber,const int &level)) :
+										 const char GaussOrder[], const double Lref, bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, 
+																			const int &ElemGroupNumber,const int &level)) :
   NonLinearMultiLevelProblem(igridn, igridr, mesh_file, GaussOrder, Lref,SetRefinementFlag) {
 
   _print_step    = 100000;
@@ -28,7 +28,7 @@ NonLinearTimeDependentMultiLevelProblem::NonLinearTimeDependentMultiLevelProblem
 }
 
 
-///Destructor
+//Destructor
 NonLinearTimeDependentMultiLevelProblem::~NonLinearTimeDependentMultiLevelProblem() {}
 
 //------------------------------------------------------------------------------------------------------
@@ -140,11 +140,11 @@ int NonLinearTimeDependentMultiLevelProblem::InitializeFromRestart(unsigned rest
     _time = restart_time_step*_dt;
   } 
   else {
-   _time = 0;
-   for(unsigned i=0; i<restart_time_step; i++) {
-     _dt = _set_time_step_function(_time);
-     _time += _dt;
-   }
+    _time = 0;
+    for(unsigned i=0; i<restart_time_step; i++) {
+      _dt = _set_time_step_function(_time);
+      _time += _dt;
+    }
   }
    
   //Set the restart time step
@@ -175,9 +175,9 @@ int NonLinearTimeDependentMultiLevelProblem::InitializeFromRestart(unsigned rest
 
 void NonLinearTimeDependentMultiLevelProblem::_UpdateSolution() {
  
-    for (int ig=0; ig<gridn; ig++) {
-      _solution[ig]->UpdateSolution();
-    }
+  for (int ig=0; ig<gridn; ig++) {
+    _solution[ig]->UpdateSolution();
+  }
   
   return;
 }
@@ -188,10 +188,10 @@ void NonLinearTimeDependentMultiLevelProblem::_UpdateSolution() {
 void NonLinearTimeDependentMultiLevelProblem::_NewmarkAccUpdate() {
 
   //Static conversion from the Base class (MultiGrid) to the Derived class (NonLinearTimeDependentMultiLevelProblem)
-//   NonLinearTimeDependentMultiLevelProblem& mg = static_cast<NonLinearTimeDependentMultiLevelProblem&>(mg2);
+  //   NonLinearTimeDependentMultiLevelProblem& mg = static_cast<NonLinearTimeDependentMultiLevelProblem&>(mg2);
 
-//   const double dt    = GetTimeStep();
-//   cout << dt << endl;
+  //   const double dt    = GetTimeStep();
+  //   cout << dt << endl;
   const double gamma = 0.5;
   const double a5    = -1.*(1. - gamma)/gamma;
   const double a1    = 1./(gamma*_dt);
@@ -210,16 +210,16 @@ void NonLinearTimeDependentMultiLevelProblem::_NewmarkAccUpdate() {
   }
   
   for (int ig=0;ig<gridn;ig++) {
-//     unsigned ax=GetIndex("AX");
-//     unsigned ay=GetIndex("AY");
-//     unsigned az=GetIndex("AZ");
-//     unsigned vx=GetIndex("U");
-//     unsigned vy=GetIndex("V");
-//     unsigned vz=GetIndex("W");
+    //     unsigned ax=GetIndex("AX");
+    //     unsigned ay=GetIndex("AY");
+    //     unsigned az=GetIndex("AZ");
+    //     unsigned vx=GetIndex("U");
+    //     unsigned vy=GetIndex("V");
+    //     unsigned vz=GetIndex("W");
     for(unsigned i=0; i<dim; i++) {
-//       _LinSolver[0][ig]->Sol_[axyz[i]]->scale(a5);
-//       _LinSolver[0][ig]->Sol_[axyz[i]]->add(a1,*(_LinSolver[0][ig]->Sol_[vxyz[i]]));
-//       _LinSolver[0][ig]->Sol_[axyz[i]]->add(a2,*(_LinSolver[0][ig]->Sol_old_[vxyz[i]]));
+      //       _LinSolver[0][ig]->Sol_[axyz[i]]->scale(a5);
+      //       _LinSolver[0][ig]->Sol_[axyz[i]]->add(a1,*(_LinSolver[0][ig]->Sol_[vxyz[i]]));
+      //       _LinSolver[0][ig]->Sol_[axyz[i]]->add(a2,*(_LinSolver[0][ig]->Sol_old_[vxyz[i]]));
       
       _solution[ig]->_Sol[axyz[i]]->scale(a5);
       _solution[ig]->_Sol[axyz[i]]->add(a1,*(_solution[ig]->_Sol[vxyz[i]]));
@@ -229,29 +229,30 @@ void NonLinearTimeDependentMultiLevelProblem::_NewmarkAccUpdate() {
     }
 
 
-//     _LinSolver[0][ig]->Sol_[ax]->scale(a5);
-//     _LinSolver[0][ig]->Sol_[ax]->add(a1,*(_LinSolver[0][ig]->Sol_[vx]));
-//     _LinSolver[0][ig]->Sol_[ax]->add(a2,*(_LinSolver[0][ig]->Sol_old_[vx]));
-//     
-//     _LinSolver[0][ig]->Sol_[ay]->scale(a5);
-//     _LinSolver[0][ig]->Sol_[ay]->add(a1,*(_LinSolver[0][ig]->Sol_[vy]));
-//     _LinSolver[0][ig]->Sol_[ay]->add(a2,*(_LinSolver[0][ig]->Sol_old_[vy]));
-//     
-//     _LinSolver[0][ig]->Sol_[az]->scale(a5);
-//     _LinSolver[0][ig]->Sol_[az]->add(a1,*(_LinSolver[0][ig]->Sol_[vz]));
-//     _LinSolver[0][ig]->Sol_[az]->add(a2,*(_LinSolver[0][ig]->Sol_old_[vz]));
+    //     _LinSolver[0][ig]->Sol_[ax]->scale(a5);
+    //     _LinSolver[0][ig]->Sol_[ax]->add(a1,*(_LinSolver[0][ig]->Sol_[vx]));
+    //     _LinSolver[0][ig]->Sol_[ax]->add(a2,*(_LinSolver[0][ig]->Sol_old_[vx]));
+    //     
+    //     _LinSolver[0][ig]->Sol_[ay]->scale(a5);
+    //     _LinSolver[0][ig]->Sol_[ay]->add(a1,*(_LinSolver[0][ig]->Sol_[vy]));
+    //     _LinSolver[0][ig]->Sol_[ay]->add(a2,*(_LinSolver[0][ig]->Sol_old_[vy]));
+    //     
+    //     _LinSolver[0][ig]->Sol_[az]->scale(a5);
+    //     _LinSolver[0][ig]->Sol_[az]->add(a1,*(_LinSolver[0][ig]->Sol_[vz]));
+    //     _LinSolver[0][ig]->Sol_[az]->add(a2,*(_LinSolver[0][ig]->Sol_old_[vz]));
   }
 
 }
 
 //---------------------------------------------------------------------------------------------------------
 
-///Time Dependent Full Multigrid
+//Time Dependent Full Multigrid
 int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned const &ncycle,  unsigned const &npre, 
 							   unsigned const &npost, const char mg_type[]) {
   
   unsigned ipde=GetPdeIndex(pdename);
   
+  std::pair<int, double> solver_info;
   clock_t start_time, end_time, start_cycle_time, end_cycle_time, start_mg_time, end_mg_time;
   int conv;
   
@@ -325,8 +326,6 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(const char pdename[],
 	else {
           if (icycle==0 && ( flagmc*(ig==igridn-1u) || !flagmc )) {
 	    _LinSolver[ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,!matrix_reuse);
-	  //   PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_LinSolver[ipde][ig-1]->_KK); //TODO
-	  //  _LinSolver[ipde][ig-1]->KK=KKp->mat(); //TODO
 	  }
           //Projection of the Matrix on the lower level
           else{
@@ -343,15 +342,15 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(const char pdename[],
       cout<<"Grid: "<<igridn-1<<"      ASSEMBLY + RESIDUAL TIME: "
 	  <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
 
-      /// Presmoothing  
+      // Presmoothing  
       for (unsigned ig=igridn-1u; ig>0; ig--) {
 	for (unsigned k=0; k<npre; k++) {
           if (ig==ig) {
 	    if(_VankaIsSet) {
-             if (_VankaSchur) _LinSolver[ipde][ig]->Vanka_Smoother(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
-             else _LinSolver[ipde][ig]->Vanka_Smoother(_SolPdeIndex[ipde],VankaIndex);
-	    }  else {
-              _LinSolver[ipde][ig]->solve();
+	      solver_info = _LinSolver[ipde][ig]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
+	    }  
+	    else {
+              solver_info = _LinSolver[ipde][ig]->solve();
 	    }
           }
         }
@@ -366,52 +365,52 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(const char pdename[],
 
       }
       
-        /// Coarse direct solver
-        if(_VankaIsSet) {
-	  if (_VankaSchur)_LinSolver[ipde][0]->Vanka_Smoother(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
-          else _LinSolver[ipde][0]->Vanka_Smoother(_SolPdeIndex[ipde],VankaIndex);
-	} else {
-  	  _LinSolver[ipde][0]->solve();
-	}
+      // Coarse direct solver
+      if(_VankaIsSet) {
+	solver_info = _LinSolver[ipde][0]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
+      } 
+      else {
+	solver_info = _LinSolver[ipde][0]->solve();
+      }
       
+      for (unsigned ig=1; ig<igridn; ig++) {
+	start_time=clock();
+	Prolungator(ig,ipde);
+	_LinSolver[ipde][ig]->UpdateResidual();
+	_LinSolver[ipde][ig]->SumEpsCToEps();
+	end_time=clock();
+	cout<<"Grid: "<<ig-1<<"-->"<<ig<<"  PROLUNGATION TIME:        "
+	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
 
-	for (unsigned ig=1; ig<igridn; ig++) {
-	  start_time=clock();
-	  Prolungator(ig,ipde);
-	  _LinSolver[ipde][ig]->UpdateResidual();
-	  _LinSolver[ipde][ig]->SumEpsCToEps();
-	  end_time=clock();
-	  cout<<"Grid: "<<ig-1<<"-->"<<ig<<"  PROLUNGATION TIME:        "
-	      <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-
-	  /// PostSmoothing    
-	  for (unsigned k=0; k<npost; k++) {
-	    if (ig==ig) {
-	      if(_VankaIsSet) {
-	        if (_VankaSchur) _LinSolver[ipde][ig]->Vanka_Smoother(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
-	        else _LinSolver[ipde][ig]->Vanka_Smoother(_SolPdeIndex[ipde],VankaIndex);
-	      } else {
-  	        _LinSolver[ipde][ig]->solve();
-	      }
+	// PostSmoothing    
+	for (unsigned k=0; k<npost; k++) {
+	  if (ig==ig) {
+	    if(_VankaIsSet) {
+	      solver_info = _LinSolver[ipde][ig]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
+	      
+	    } 
+	    else {
+	      solver_info = _LinSolver[ipde][ig]->solve();
 	    }
 	  }
 	}
+      }
 
-	cout << endl;
-	start_time=clock();
-	for (unsigned ig=0; ig<igridn; ig++) {
-	  _solution[ig]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][ig]->_EPS, _LinSolver[ipde][ig]->_RES, _LinSolver[ipde][ig]->KKoffset );
-	}
+      cout << endl;
+      start_time=clock();
+      for (unsigned ig=0; ig<igridn; ig++) {
+	_solution[ig]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][ig]->_EPS, _LinSolver[ipde][ig]->_RES, _LinSolver[ipde][ig]->KKoffset );
+      }
 
-	conv  = GetConvergence(pdename, igridn-1);
-	if (conv ==true) icycle = ncycle + 1;
+      conv  = GetConvergence(pdename, igridn-1);
+      if (conv ==true) icycle = ncycle + 1;
 
-	end_time=clock();
-	cout << endl;
-	cout<<"COMPUTATION RESIDUAL:                  "<<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
+      end_time=clock();
+      cout << endl;
+      cout<<"COMPUTATION RESIDUAL:                  "<<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
 
-	end_cycle_time=clock();
-	cout<<"CYCLE TIME:                            "<<static_cast<double>((end_cycle_time-start_cycle_time))/CLOCKS_PER_SEC<<endl;
+      end_cycle_time=clock();
+      cout<<"CYCLE TIME:                            "<<static_cast<double>((end_cycle_time-start_cycle_time))/CLOCKS_PER_SEC<<endl;
     }
     //only for the Full Multicycle
     if (igridn<gridn) {
@@ -427,183 +426,6 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(const char pdename[],
   cout<<"STEADYSOLVER TIME:                            "<<static_cast<double>((end_mg_time-start_mg_time))/CLOCKS_PER_SEC<<endl;
 
   return 1;
-  
-  
-  
-  
-  
-//   clock_t start_time, end_time, start_cycle_time, end_cycle_time,start_time_step, end_time_step;
-//   clock_t start_time1, end_time1;
-//   int conv;
-//   start_time_step=clock();
-//   
-//     bool flagmc = 1;
-//     if (_time_step>1 && !strcmp(mg_type,"V-Cycle")) {
-//       flagmc = 0;
-//     }
-// 
-//     if (_ats_flag) {
-//       //update time step
-//       _dt = _set_time_step_function(_time);
-//     }
-// 
-//     //update time
-//     _time += _dt;
-// 
-//     //update time step
-//     _time_step++;
-//     
-//     //update boundary condition
-//     UpdateBdc();
-// 
-//     cout << endl;
-//     cout << " ************** time step " << _time_step << " **************** " << endl;
-//     cout << " ************** time      " << _time << " **************** " << endl;
-//    
-//     // Here I do a V-Multigrid and not a FullMultiGrid
-//     for (unsigned igridn=1*flagmc + (!flagmc)*gridn; igridn<=gridn; igridn++) {
-//     cout << endl;
-//     cout << "    ************* Level Max: " << igridn << " *************";
-//     for (unsigned icycle=0; icycle<ncycle; icycle++) {
-//       start_cycle_time = clock();
-//       cout << endl;
-//       cout << "    ************** Cycle: " << icycle + 1 << " **************** " << endl;
-//       cout << endl;
-// 
-//       start_time=clock();
-//       _LinSolver[0][igridn-1u]->SetResZero(_SolPdeIndex);
-//       _LinSolver[0][igridn-1u]->SetEpsZero(_SolPdeIndex);
-//       end_time=clock();
-//       cout<<"Grid: "<<igridn-1<<"      INITIALIZATION TIME:      "
-//       <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-// 
-//       start_time=clock();
-//       //assemble residual and matrix on the finer grid at igridn level
-//       _assemble_function(*this,igridn-1u,igridn-1u);
-// 
-// 
-//       end_time=clock();
-//       cout<<"Grid: "<<igridn-1<<"      ASSEMBLY + RESIDUAL TIME: "
-//       <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-// 
-//       //  PetscViewer viewer;
-//       //       PetscViewerDrawOpen(PETSC_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);
-//       //       for(int ig=igridn-1;ig>0;ig--){
-//       // 	MatView(D[ig]->KK,viewer);
-//       // 	double ff;
-//       //         std::cin>>ff;
-//       //       }
-// 
-// 
-//       for (unsigned ig=igridn-1u; ig>0; ig--) {
-// 
-//         for (unsigned k=0; k<npre; k++) {
-//           if (ig==ig) {
-//             if (_VankaSchur) _LinSolver[0][ig]->Vanka_Smoother(_SolPdeIndex,VankaIndex,_NSchurVar,_Schur);
-//             else _LinSolver[0][ig]->Vanka_Smoother(_SolPdeIndex,VankaIndex);
-//           }
-//         }
-// 
-//         start_time=clock();
-//         _LinSolver[0][ig-1u]->SetResZero(_SolPdeIndex);
-//         _LinSolver[0][ig-1u]->SetEpsZero(_SolPdeIndex);
-// 
-//         //standard Multigrid matrix restriction =========================
-//         Restrictor(ig); //restriction of the residual
-//         end_time=clock();
-//         cout<<"Grid: "<<ig<<"-->"<<ig-1<<"  RESTRICTION TIME:         "
-//         <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-// 
-// 
-// 
-//         start_time=clock();
-// 
-//         if (ig>=gridr) {
-//           //assemble residual only on the part of the coarse grid that is not refined
-//           //Domain Decomposition matrix restriction =========================
-//           _assemble_function(*this,ig-1,igridn-1u);
-// 	   
-// 	  if (!_LinSolver[0][ig-1]->CC_flag) {
-//             MatPtAP(_LinSolver[0][ig]->KK, _LinSolver[0][ig]->PP,  MAT_INITIAL_MATRIX ,1.0,&_LinSolver[0][ig-1]->CC);
-// 	    _LinSolver[0][ig-1]->CC_flag=1;
-//           } else MatPtAP(_LinSolver[0][ig]->KK, _LinSolver[0][ig]->PP,  MAT_REUSE_MATRIX ,1.0,&_LinSolver[0][ig-1]->CC);
-// 	  MatAXPY(_LinSolver[0][ig-1u]->KK,1,_LinSolver[0][ig-1u]->CC, SUBSET_NONZERO_PATTERN);
-//         } else {
-//           if (icycle==0 && ig==igridn-1u) {
-//             MatDestroy(&_LinSolver[0][ig-1]->KK);
-//             MatPtAP(_LinSolver[0][ig]->KK, _LinSolver[0][ig]->PP, MAT_INITIAL_MATRIX ,1.0,&_LinSolver[0][ig-1]->KK);
-//           }
-//           //Projection of the Matrix on the lower level
-//           else
-//             MatPtAP(_LinSolver[0][ig]->KK, _LinSolver[0][ig]->PP, MAT_REUSE_MATRIX ,1.0,&_LinSolver[0][ig-1]->KK);
-//         }
-// 
-//         end_time=clock();
-//         cout<<"Grid: "<<ig-1<<"      ASSEMBLY + RESIDUAL TIME: "
-//         <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-// 
-//       }
-// 
-// 
-//       //coarse smoother
-//       if (_VankaSchur)_LinSolver[0][0]->Vanka_Smoother(_SolPdeIndex,VankaIndex,_NSchurVar,_Schur);
-//       else _LinSolver[0][0]->Vanka_Smoother(_SolPdeIndex,VankaIndex);
-// 
-// 
-//       for (unsigned ig=1; ig<igridn; ig++) {
-//         start_time=clock();
-//         Prolungator(ig);
-//         _LinSolver[0][ig]->UpdateResidual();
-//         _LinSolver[0][ig]->SumEpsCToEps(_SolPdeIndex);
-//         end_time=clock();
-//         cout<<"Grid: "<<ig-1<<"-->"<<ig<<"  PROLUNGATION TIME:        "
-//         <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-// 
-//         for (unsigned k=0; k<npost; k++) {
-//           if (ig==ig) {
-//             if (_VankaSchur) _LinSolver[0][ig]->Vanka_Smoother(_SolPdeIndex,VankaIndex,_NSchurVar,_Schur);
-//             else _LinSolver[0][ig]->Vanka_Smoother(_SolPdeIndex,VankaIndex);
-//           }
-//         }
-//       }
-// 
-//       cout << endl;
-//       start_time=clock();
-//       for (unsigned ig=0; ig<igridn; ig++) {
-//         _LinSolver[0][ig]->SumEpsToSol(_SolPdeIndex);
-//       }
-// 
-//       
-//  //     conv = _LinSolver[0][igridn-1]->comp_toll(_SolPdeIndex);
-//       conv  = GetConvergence(igridn-1);
-//       if (conv ==true) icycle = ncycle + 1;
-// 
-// 
-//       end_time=clock();
-//       cout << endl;
-//       cout<<"COMPUTATION RESIDUAL:                  "<<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-// 
-//       //if(igridn==1) icycle+=100;
-//       end_cycle_time=clock();
-//       cout<<"CYCLE TIME:                            "<<static_cast<double>((end_cycle_time-start_cycle_time))/CLOCKS_PER_SEC<<endl;
-//     }
-//     //only for the Full Multicycle
-//     if (igridn<gridn) {
-//       ProlungatorSol(igridn);
-//     }
-//   }
-// 
-//   for (int ig=gridr-1; ig<gridn-1; ig++) {
-//     if(_LinSolver[0][ig]->CC_flag){
-//       MatDestroy(&(_LinSolver[0][ig]->CC));
-//       _LinSolver[0][ig]->CC_flag=0;
-//     }
-//   }
-//     
-//   end_time_step=clock();
-//   cout<<"TIME_STEP TIME:                        "<<static_cast<double>((end_time_step-start_time_step))/CLOCKS_PER_SEC<<endl;
-// 
-//   return 1;
 }
 
 
@@ -644,12 +466,12 @@ void NonLinearTimeDependentMultiLevelProblem::UpdateBdc() {
 		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
 		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
 		    unsigned nv1=(!TestIfPressure[k])?
-				  NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt,0)]:
-				  _msh[igridn]->el->GetElementDofNumber(iel,_msh[igridn]->GetEndIndex(SolType[k]));
+		      NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt,0)]:
+		      _msh[igridn]->el->GetElementDofNumber(iel,_msh[igridn]->GetEndIndex(SolType[k]));
 		    for (unsigned iv=0; iv<nv1; iv++) {
 		      unsigned inode=(!TestIfPressure[k])? 
-				      _msh[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
-				      _msh[igridn]->el->GetElementVertexIndex(kel_gmt,iv)-1u;
+			_msh[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
+			_msh[igridn]->el->GetElementVertexIndex(kel_gmt,iv)-1u;
 		      unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
 		      _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
 		    }
@@ -659,7 +481,7 @@ void NonLinearTimeDependentMultiLevelProblem::UpdateBdc() {
 	    }
 	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {  // 0 Dirichlet
 	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-		  iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+		   iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
 		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
 		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
 		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)<0) { //Dirichlet
@@ -688,7 +510,7 @@ void NonLinearTimeDependentMultiLevelProblem::UpdateBdc() {
 	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
 	      unsigned nel=_msh[igridn]->GetElementNumber();
 	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-		  iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+		   iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
 		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
 		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
 		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
@@ -725,25 +547,25 @@ void NonLinearTimeDependentMultiLevelProblem::printsol_xdmf_archive(const char t
     exit(0);
   }
   
-    ftr_out << "<?xml version=\"1.0\" ?> \n";
-    ftr_out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd []\">"<<endl;
-    ftr_out << "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.2\"> " << endl;
-    ftr_out << "<Domain> " << endl;
-    ftr_out << "<Grid Name=\"Mesh\" GridType=\"Collection\" CollectionType=\"Temporal\"> \n";
-    // time loop for grid sequence
-    for ( unsigned time_step = _time_step0; time_step < _time_step0 + _ntime_steps; time_step++) {
-     if ( !(time_step%_print_step) ) {
-       sprintf(filename,"./mesh.level%d.%d.%s.xmf",gridn,time_step,type);
-       ftr_out << "<xi:include href=\"" << filename << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid["<< 1 <<"])\">\n";
-        ftr_out << "<xi:fallback/>\n";
-        ftr_out << "</xi:include>\n";
-       }
-      }
-     ftr_out << "</Grid> \n";
-     ftr_out << "</Domain> \n";
-     ftr_out << "</Xdmf> \n";
-     ftr_out.close();
-   ftr_out.close();  
+  ftr_out << "<?xml version=\"1.0\" ?> \n";
+  ftr_out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd []\">"<<endl;
+  ftr_out << "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.2\"> " << endl;
+  ftr_out << "<Domain> " << endl;
+  ftr_out << "<Grid Name=\"Mesh\" GridType=\"Collection\" CollectionType=\"Temporal\"> \n";
+  // time loop for grid sequence
+  for ( unsigned time_step = _time_step0; time_step < _time_step0 + _ntime_steps; time_step++) {
+    if ( !(time_step%_print_step) ) {
+      sprintf(filename,"./mesh.level%d.%d.%s.xmf",gridn,time_step,type);
+      ftr_out << "<xi:include href=\"" << filename << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid["<< 1 <<"])\">\n";
+      ftr_out << "<xi:fallback/>\n";
+      ftr_out << "</xi:include>\n";
+    }
+  }
+  ftr_out << "</Grid> \n";
+  ftr_out << "</Domain> \n";
+  ftr_out << "</Xdmf> \n";
+  ftr_out.close();
+  ftr_out.close();  
   //----------------------------------------------------------------------------------------------------------
   delete [] filename;
  

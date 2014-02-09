@@ -31,11 +31,11 @@ NonLinearMultiLevelProblem::~NonLinearMultiLevelProblem() {
     delete _msh[i];
   }
   
-//   for(int i=0;i<_LinSolver.size();i++){
-//     for (unsigned j=0; j<gridn; j++) {
-//       delete _LinSolver[i][j];
-//     }
-//   }
+  //   for(int i=0;i<_LinSolver.size();i++){
+  //     for (unsigned j=0; j<gridn; j++) {
+  //       delete _LinSolver[i][j];
+  //     }
+  //   }
   
   for (unsigned i=0; i<3; i++)
     for (unsigned j=0; j<3; j++)
@@ -403,9 +403,9 @@ void NonLinearMultiLevelProblem::SetMovingMesh(std::vector<std::string>& movvars
   _moving_vars = movvars_in;
 }
 
-/// 
-/// TODO Create a function that compute the l2norm of a quantity
-///
+// 
+// TODO Create a function that compute the l2norm of a quantity
+//
 //---------------------------------------------------------------------------------------------------
 double NonLinearMultiLevelProblem::ComputeL2norm() {
 
@@ -422,9 +422,9 @@ double NonLinearMultiLevelProblem::ComputeL2norm() {
   return Error;
 }
 
-/// 
-/// TODO Create a function that compute the Force on the boundary
-///
+// 
+// TODO Create a function that compute the Force on the boundary
+//
 //---------------------------------------------------------------------------------------------------
 int NonLinearMultiLevelProblem::ComputeBdStress(int bd, double Cforce[3]) {
 
@@ -454,9 +454,9 @@ int NonLinearMultiLevelProblem::ComputeBdStress(int bd, double Cforce[3]) {
   for (unsigned ig=0; ig<gridn; ig++) {
 
    
-//     PetscVector* petsc_vec_solP = static_cast<PetscVector*>(_solution[ig]->_Sol[kP]);
-//     ierr = VecGetArray(petsc_vec_solP->vec(),&MYSOL[0]);
-//     CHKERRQ(ierr);
+    //     PetscVector* petsc_vec_solP = static_cast<PetscVector*>(_solution[ig]->_Sol[kP]);
+    //     ierr = VecGetArray(petsc_vec_solP->vec(),&MYSOL[0]);
+    //     CHKERRQ(ierr);
 
     //tested up to now for quad9 in 2D
     unsigned order_ind = SolType[GetIndex("U")];
@@ -474,7 +474,7 @@ int NonLinearMultiLevelProblem::ComputeBdStress(int bd, double Cforce[3]) {
             if (dom==bd) {
 
               unsigned nve=NV1[kelt][jface<(_msh[ig]->el->GetElementFaceNumber(iel,0))];
-//               //linear pressure
+	      //               //linear pressure
               unsigned felt = FELT[kelt][jface< (_msh[ig]->el->GetElementFaceNumber(iel,0))];
 
 	      for(unsigned i=0;i<nve;i++) {
@@ -490,9 +490,9 @@ int NonLinearMultiLevelProblem::ComputeBdStress(int bd, double Cforce[3]) {
               for (unsigned igs=0; igs < type_elem[felt][order_ind]->GetGaussPointNumber(); igs++) {
                 (type_elem[felt][order_ind]->*type_elem[felt][order_ind]->Jacobian_sur_ptr)(vx,igs,Weight2,phi2,gradphi2,normal);
                 for (unsigned i=0; i<nve; i++) {
-                   BdIntx += phi2[i]*MYSOL[0][iel]*normal[0]*Weight2;
-                   BdInty += phi2[i]*MYSOL[0][iel]*normal[1]*Weight2;
-                   BdIntz += phi2[i]*MYSOL[0][iel]*normal[2]*Weight2;
+		  BdIntx += phi2[i]*MYSOL[0][iel]*normal[0]*Weight2;
+		  BdInty += phi2[i]*MYSOL[0][iel]*normal[1]*Weight2;
+		  BdIntz += phi2[i]*MYSOL[0][iel]*normal[2]*Weight2;
                 }
               } //end loop on gauss point
             }
@@ -513,17 +513,17 @@ int NonLinearMultiLevelProblem::ComputeBdStress(int bd, double Cforce[3]) {
   return ierr;
 }
 
-/// 
-/// This function computes the integral on the boundary of a Pde like Navier-stokes or Heat equation
-/// It has been tested on flat boundary and HEX27 and Quad9
-///
+// 
+// This function computes the integral on the boundary of a Pde like Navier-stokes or Heat equation
+// It has been tested on flat boundary and HEX27 and Quad9
+//
 //---------------------------------------------------------------------------------------------------
 int NonLinearMultiLevelProblem::ComputeBdIntegral(const char pdename[],const char var_name[], const unsigned & kel, const unsigned & jface, unsigned level, unsigned dir) {
   
   
   unsigned ipde=GetPdeIndex(pdename);
-//   PetscVector* RESp=static_cast<PetscVector*> (_LinSolver[ipde][level]->_RES);  //TODO
-//   Vec RES=RESp->vec(); //TODO
+  //   PetscVector* RESp=static_cast<PetscVector*> (_LinSolver[ipde][level]->_RES);  //TODO
+  //   Vec RES=RESp->vec(); //TODO
   
   int ierr;
   double tau;
@@ -613,9 +613,9 @@ void NonLinearMultiLevelProblem::CreatePdeStructure() {
 void NonLinearMultiLevelProblem::DeletePdeStructure() {
   for(unsigned ipde=0;ipde<_PdeIndex.size();ipde++)
     for (unsigned ig=0; ig<gridn; ig++) {
-    _LinSolver[ipde][ig]->DeletePde();
-    delete _LinSolver[ipde][ig];
-  }
+      _LinSolver[ipde][ig]->DeletePde();
+      delete _LinSolver[ipde][ig];
+    }
   
   for (unsigned i=0; i<_PdeName.size(); i++){ 
     delete [] _PdeName[i];
@@ -651,8 +651,8 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
 					      unsigned const &npost, const char mg_type[]) {
   
   unsigned ipde=GetPdeIndex(pdename);
-  //cout<<ipde<<endl; exit(0);
   
+  std::pair<int, double> solver_info;
   clock_t start_time, end_time, start_cycle_time, end_cycle_time, start_mg_time, end_mg_time;
   bool conv;
   
@@ -705,14 +705,11 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
 	  }
 	  _LinSolver[ipde][ig-1u]->_KK->matrix_add(1.,*_LinSolver[ipde][ig-1u]->_CC,"subset_nonzero_pattern");
 	} 
-	else {
+	else { //Projection of the Matrix on the lower level
           if (icycle==0 && ( flagmc*(ig==igridn-1u) || !flagmc )) {
 	    _LinSolver[ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,!matrix_reuse);
-	   //  PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_LinSolver[ipde][ig-1]->_KK); //TODO
-	   // _LinSolver[ipde][ig-1]->KK=KKp->mat(); //TODO
 	  }
-          //Projection of the Matrix on the lower level
-          else{
+          else{ 
 	    _LinSolver[ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,matrix_reuse);
 	  }	  
 	}
@@ -720,84 +717,77 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
         cout<<"Grid: "<<ig-1<<"      ASSEMBLY + RESIDUAL TIME: "
 	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
       }
-      
-      
+          
       end_time=clock();
       cout<<"Grid: "<<igridn-1<<"      ASSEMBLY + RESIDUAL TIME: "
 	  <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
 
-      /// Presmoothing  
+      // Presmoothing  
       for (unsigned ig=igridn-1u; ig>0; ig--) {
 	for (unsigned k=0; k<npre; k++) {
-          if (ig==ig) {
+	  if (ig==ig) {
 	    if(_VankaIsSet) {
-             if (_VankaSchur) _LinSolver[ipde][ig]->Vanka_Smoother(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
-             else _LinSolver[ipde][ig]->Vanka_Smoother(_SolPdeIndex[ipde],VankaIndex);
-	    }  else {
-              _LinSolver[ipde][ig]->solve();
+	      solver_info =_LinSolver[ipde][ig]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
+	    }  
+	    else {
+	      solver_info = _LinSolver[ipde][ig]->solve();
 	    }
-          }
-        }
-
-        
-        
+	  }
+	}
+  
 	start_time=clock();
-
-        //standard Multigrid matrix restriction =========================
-        Restrictor(ig,ipde); //restriction of the residual
-        end_time=clock();
-        cout<<"Grid: "<<ig<<"-->"<<ig-1<<"  RESTRICTION TIME:         "
+	//standard Multigrid matrix restriction =========================
+	Restrictor(ig,ipde); //restriction of the residual
+	end_time=clock();
+	cout<<"Grid: "<<ig<<"-->"<<ig-1<<"  RESTRICTION TIME:         "
 	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
 
       }
       
-        /// Coarse direct solver
+      // Coarse direct solver
       if(_VankaIsSet) {
-	if (_VankaSchur)_LinSolver[ipde][0]->Vanka_Smoother(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
-          else _LinSolver[ipde][0]->Vanka_Smoother(_SolPdeIndex[ipde],VankaIndex);
-	} else {
-  	_LinSolver[ipde][0]->solve();
+	solver_info =_LinSolver[ipde][0]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
+      } else {
+	solver_info =_LinSolver[ipde][0]->solve();
       }
       
 
-	for (unsigned ig=1; ig<igridn; ig++) {
-	  start_time=clock();
-	  Prolungator(ig,ipde);
-	  _LinSolver[ipde][ig]->UpdateResidual();
-	  _LinSolver[ipde][ig]->SumEpsCToEps();
-	  end_time=clock();
-	  cout<<"Grid: "<<ig-1<<"-->"<<ig<<"  PROLUNGATION TIME:        "
-	      <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
+      for (unsigned ig=1; ig<igridn; ig++) {
+	start_time=clock();
+	Prolungator(ig,ipde);
+	_LinSolver[ipde][ig]->UpdateResidual();
+	_LinSolver[ipde][ig]->SumEpsCToEps();
+	end_time=clock();
+	cout<<"Grid: "<<ig-1<<"-->"<<ig<<"  PROLUNGATION TIME:        "
+	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
 
-	  /// PostSmoothing    
-	  for (unsigned k=0; k<npost; k++) {
-	    if (ig==ig) {
-	      if(_VankaIsSet) {
-	        if (_VankaSchur) _LinSolver[ipde][ig]->Vanka_Smoother(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
-	        else _LinSolver[ipde][ig]->Vanka_Smoother(_SolPdeIndex[ipde],VankaIndex);
-	      } else {
-  	        _LinSolver[ipde][ig]->solve();
-	      }
+	// PostSmoothing    
+	for (unsigned k=0; k<npost; k++) {
+	  if (ig==ig) {
+	    if(_VankaIsSet) {
+	      solver_info =_LinSolver[ipde][ig]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
+	    } else {
+	      solver_info =_LinSolver[ipde][ig]->solve();
 	    }
 	  }
 	}
+      }
 
-	cout << endl;
-	start_time=clock();
-	for (unsigned ig=0; ig<igridn; ig++) {
-	  //_LinSolver[ipde][ig]->SumEpsToSol(_SolPdeIndex[ipde]);
-	  _solution[ig]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][ig]->_EPS, _LinSolver[ipde][ig]->_RES, _LinSolver[ipde][ig]->KKoffset );
-	}
+      cout << endl;
+      start_time=clock();
+      for (unsigned ig=0; ig<igridn; ig++) {
+	_solution[ig]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][ig]->_EPS, _LinSolver[ipde][ig]->_RES, _LinSolver[ipde][ig]->KKoffset );
+      }
 
-	conv  = GetConvergence(pdename, igridn-1);
-	if (conv ==true) icycle = ncycle + 1;
+      conv  = GetConvergence(pdename, igridn-1);
+      if (conv ==true) icycle = ncycle + 1;
 
-	end_time=clock();
-	cout << endl;
-	cout<<"COMPUTATION RESIDUAL:                  "<<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
+      end_time=clock();
+      cout << endl;
+      cout<<"COMPUTATION RESIDUAL:                  "<<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
 
-	end_cycle_time=clock();
-	cout<<"CYCLE TIME:                            "<<static_cast<double>((end_cycle_time-start_cycle_time))/CLOCKS_PER_SEC<<endl;
+      end_cycle_time=clock();
+      cout<<"CYCLE TIME:                            "<<static_cast<double>((end_cycle_time-start_cycle_time))/CLOCKS_PER_SEC<<endl;
     }
     //only for the Full Multicycle
     if (igridn<gridn) {
@@ -806,7 +796,7 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
   }
 
   for (int ig=gridr-1; ig<gridn-1; ig++) {
-      _LinSolver[ipde][ig]->_CC_flag=0;
+    _LinSolver[ipde][ig]->_CC_flag=0;
   }
     
   end_mg_time = clock();
@@ -859,7 +849,7 @@ int NonLinearMultiLevelProblem::FreeMultigrid() {
 
 //*******************************************************************************************
 void NonLinearMultiLevelProblem::AddSolution(const char name[], const char order[],
-                                                   unsigned tmorder, const bool &Pde_type) {
+					     unsigned tmorder, const bool &Pde_type) {
   
   unsigned n=SolType.size();
   SolType.resize(n+1u);
@@ -1056,17 +1046,17 @@ void NonLinearMultiLevelProblem::AddSolutionToSolPdeIndex( const char pdename[],
     _SolPdeIndex[ipde][jsol]=GetIndex(solname);
   }
   
-//   for(int i=0;i<_PdeIndex.size();i++){
-//     for(int j=0;j<_SolPdeIndex[i].size();j++){
-//       cout<<_PdeIndex[i]<<" "<<_SolPdeIndex[i][j]<<endl;
-//     }
-//     cout<<endl;
-//   }
+  //   for(int i=0;i<_PdeIndex.size();i++){
+  //     for(int j=0;j<_SolPdeIndex[i].size();j++){
+  //       cout<<_PdeIndex[i]<<" "<<_SolPdeIndex[i][j]<<endl;
+  //     }
+  //     cout<<endl;
+  //   }
 }
 
 // *******************************************************
 unsigned NonLinearMultiLevelProblem::GetSolPdeIndex(const char pdename[], const char solname[]) {
-   unsigned ipde=GetPdeIndex(pdename);  
+  unsigned ipde=GetPdeIndex(pdename);  
   unsigned index=0;
   while (strcmp(SolName[_SolPdeIndex[ipde][index]],solname)) {
     index++;
@@ -1110,10 +1100,10 @@ void NonLinearMultiLevelProblem::Restrictor(const unsigned &gridf, const unsigne
 
 // *******************************************************
 int NonLinearMultiLevelProblem::Prolungator(const unsigned &gridf, const unsigned &ipde) {
-//  
+  //  
   
   
-   _LinSolver[ipde][gridf]->_EPSC->matrix_mult(*_LinSolver[ipde][gridf-1]->_EPS,*_LinSolver[ipde][gridf]->_PP);
+  _LinSolver[ipde][gridf]->_EPSC->matrix_mult(*_LinSolver[ipde][gridf-1]->_EPS,*_LinSolver[ipde][gridf]->_PP);
   return 1;
 }
 
@@ -1132,7 +1122,7 @@ void NonLinearMultiLevelProblem::ProlungatorSol(const char pdename[], unsigned g
 }
 
 //---------------------------------------------------------------------------------------------------
-/// This routine generates the matrix for the projection of the FE matrix to finer grids 
+// This routine generates the matrix for the projection of the FE matrix to finer grids 
 //---------------------------------------------------------------------------------------------------
 
 int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, const char pdename[]) {
@@ -1148,28 +1138,28 @@ int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, const cha
   //int nf= _LinSolver[ipde][gridf]->KKIndex[_LinSolver[ipde][gridf]->KKIndex.size()-1u];
   //int nc= _LinSolver[ipde][gridf-1]->KKIndex[_LinSolver[ipde][gridf-1]->KKIndex.size()-1u];
   
-//   if(_nprocs==1) {
-//     ierr = MatCreateSeqAIJ(PETSC_COMM_SELF,nf,nc,27,PETSC_NULL,&_LinSolver[ipde][gridf]->PP); CHKERRQ(ierr);
-//     ierr = MatSetFromOptions(_LinSolver[ipde][gridf]->PP); CHKERRQ(ierr);
-//   } else {
-//     int nf_loc = _LinSolver[ipde][gridf]->KKoffset[_LinSolver[ipde][gridf]->KKIndex.size()-1][_iproc]
-//       -_LinSolver[ipde][gridf]->KKoffset[0][_iproc];
-//     int nc_loc = _LinSolver[ipde][gridf-1]->KKoffset[_LinSolver[ipde][gridf-1]->KKIndex.size()-1][_iproc]
-//       -_LinSolver[ipde][gridf-1]->KKoffset[0][_iproc];
-//     
-//     ierr = MatCreate(MPI_COMM_WORLD, &_LinSolver[ipde][gridf]->PP);
-//     CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//     ierr = MatSetSizes(_LinSolver[ipde][gridf]->PP, nf_loc, nc_loc, nf, nc);
-//     CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//     ierr = MatSetType(_LinSolver[ipde][gridf]->PP, MATMPIAIJ); 
-//     CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//     ierr = MatMPIAIJSetPreallocation(_LinSolver[ipde][gridf]->PP, 27, PETSC_NULL, 27, PETSC_NULL);
-//     CHKERRABORT(MPI_COMM_WORLD,ierr);
-//     
-//   }
+  //   if(_nprocs==1) {
+  //     ierr = MatCreateSeqAIJ(PETSC_COMM_SELF,nf,nc,27,PETSC_NULL,&_LinSolver[ipde][gridf]->PP); CHKERRQ(ierr);
+  //     ierr = MatSetFromOptions(_LinSolver[ipde][gridf]->PP); CHKERRQ(ierr);
+  //   } else {
+  //     int nf_loc = _LinSolver[ipde][gridf]->KKoffset[_LinSolver[ipde][gridf]->KKIndex.size()-1][_iproc]
+  //       -_LinSolver[ipde][gridf]->KKoffset[0][_iproc];
+  //     int nc_loc = _LinSolver[ipde][gridf-1]->KKoffset[_LinSolver[ipde][gridf-1]->KKIndex.size()-1][_iproc]
+  //       -_LinSolver[ipde][gridf-1]->KKoffset[0][_iproc];
+  //     
+  //     ierr = MatCreate(MPI_COMM_WORLD, &_LinSolver[ipde][gridf]->PP);
+  //     CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // 
+  //     ierr = MatSetSizes(_LinSolver[ipde][gridf]->PP, nf_loc, nc_loc, nf, nc);
+  //     CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // 
+  //     ierr = MatSetType(_LinSolver[ipde][gridf]->PP, MATMPIAIJ); 
+  //     CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // 
+  //     ierr = MatMPIAIJSetPreallocation(_LinSolver[ipde][gridf]->PP, 27, PETSC_NULL, 27, PETSC_NULL);
+  //     CHKERRABORT(MPI_COMM_WORLD,ierr);
+  //     
+  //   }
   
   
   int nf= _LinSolver[ipde][gridf]->KKIndex[_LinSolver[ipde][gridf]->KKIndex.size()-1u];
@@ -1179,8 +1169,8 @@ int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, const cha
   _LinSolver[ipde][gridf]->_PP = SparseMatrix::build().release();
   _LinSolver[ipde][gridf]->_PP->init(nf,nc,nf_loc,nc_loc,27,27);
   
-   //PetscRectangularMatrix* PPp=static_cast<PetscRectangularMatrix*>(_LinSolver[ipde][gridf]->_PP);
-   //_LinSolver[ipde][gridf]->PP=PPp->mat();
+  //PetscRectangularMatrix* PPp=static_cast<PetscRectangularMatrix*>(_LinSolver[ipde][gridf]->_PP);
+  //_LinSolver[ipde][gridf]->PP=PPp->mat();
   
   
   for (unsigned k=0; k<_SolPdeIndex[ipde].size(); k++) {
@@ -1221,7 +1211,7 @@ int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, const cha
 
 
 //---------------------------------------------------------------------------------------------------
-/// This routine generates the matrix for the projection of the solution to finer grids  
+// This routine generates the matrix for the projection of the solution to finer grids  
 //---------------------------------------------------------------------------------------------------
 
 void NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, unsigned SolIndex) {
@@ -1244,7 +1234,7 @@ void NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, unsigned
     _solution[gridf]->_ProjMat[TypeIndex] = SparseMatrix::build().release();
     _solution[gridf]->_ProjMat[TypeIndex]->init(nf,nc,nf_loc,nc_loc,27,27);
  
-     // loop on the coarse grid 
+    // loop on the coarse grid 
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
       for (int iel_mts=_msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom]; 
 	   iel_mts < _msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
@@ -1261,7 +1251,7 @@ void NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, unsigned
 }
 
 //---------------------------------------------------------------------------------------------------
-/// This routine generates the matrices for the projection of the solutions from different FE spaces 
+// This routine generates the matrices for the projection of the solutions from different FE spaces 
 //---------------------------------------------------------------------------------------------------
 
 void NonLinearMultiLevelProblem::BuildProlungatorMatrices() {
@@ -1368,7 +1358,7 @@ void NonLinearMultiLevelProblem::GenerateBdc(const char name[], const char bdc_t
     for (unsigned i=i_start; i<i_end; i++) {
       if(_solution[igridn]->_ResEpsBdcFlag[i]){
 	for (unsigned j=_msh[igridn]->MetisOffset[SolType[i]][_iproc]; j<_msh[igridn]->MetisOffset[SolType[i]][_iproc+1]; j++) {
-	   _solution[igridn]->_Bdc[i]->set(j,2.);
+	  _solution[igridn]->_Bdc[i]->set(j,2.);
 	}
 	if (SolType[i]<3) {  
 	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
@@ -1379,12 +1369,12 @@ void NonLinearMultiLevelProblem::GenerateBdc(const char name[], const char bdc_t
 		if (_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)==0) { //Domain Decomposition Dirichlet
 		  short unsigned ielt=_msh[igridn]->el->GetElementType(iel_gmt);
 		  unsigned nv1=(!TestIfPressure[i])?
-				NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt,0)]: //non-pressure type
-				_msh[igridn]->el->GetElementDofNumber(iel,_msh[igridn]->GetEndIndex(SolType[i]) ); //pressure type
+		    NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt,0)]: //non-pressure type
+		    _msh[igridn]->el->GetElementDofNumber(iel,_msh[igridn]->GetEndIndex(SolType[i]) ); //pressure type
 		  for (unsigned iv=0; iv<nv1; iv++) {
 		    unsigned inode=(!TestIfPressure[i])? 
-				    _msh[igridn]->el->GetFaceVertexIndex(iel_gmt,jface,iv)-1u: //non-pressure type
-				    _msh[igridn]->el->GetElementVertexIndex(iel_gmt,iv)-1u;    //pressure type
+		      _msh[igridn]->el->GetFaceVertexIndex(iel_gmt,jface,iv)-1u: //non-pressure type
+		      _msh[igridn]->el->GetElementVertexIndex(iel_gmt,iv)-1u;    //pressure type
 		    unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[i]);
 		    _solution[igridn]->_Bdc[i]->set(inode_Metis,1.);
 		  }
@@ -2050,9 +2040,9 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
   for (unsigned ig=gridr-1u; ig<gridn; ig++) {
     for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
       if ( ig==gridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
-	 unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
-	 var_proc[icount]=(unsigned short)(_msh[ig]->epart[ii]);
-	 icount++;
+	unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
+	var_proc[icount]=(unsigned short)(_msh[ig]->epart[ii]);
+	icount++;
       }
     }
   }

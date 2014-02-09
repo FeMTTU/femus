@@ -23,7 +23,6 @@ const double HEX_X[125][3]= {{-1, -1, -1},{1, -1, -1},{1, 1, -1},{-1, 1, -1},{-1
   {-0.5, -0.5, 0.5},{0.5, -0.5, 0.5},{0.5, 0.5, 0.5},{-0.5, 0.5, 0.5}
 };
 
-
 const int HEX_IND[27][3]= {{0, 0, 0},{2, 0, 0},{2, 2, 0},{0, 2, 0},
   {0, 0, 2},{2, 0, 2},{2, 2, 2},{0, 2, 2},
   {1, 0, 0},{2, 1, 0},{1, 2, 0},{0, 1, 0},
@@ -31,7 +30,6 @@ const int HEX_IND[27][3]= {{0, 0, 0},{2, 0, 0},{2, 2, 0},{0, 2, 0},
   {0, 0, 1},{2, 0, 1},{2, 2, 1},{0, 2, 1},
   {1, 0, 1},{2, 1, 1},{1, 2, 1},{0, 1, 1},{1, 1, 0},{1, 1, 2},{1, 1, 1}
 };
-
 
 const int HEX_KVERT_IND[125][2]= {{0,0},{1,1},{2,2},{3,3},{4,4},{5,5},{6,6},{7,7}
   ,{0,1},{1,2},{2,3},{3,0},{4,5},{5,6},{6,7},{7,4}
@@ -53,10 +51,8 @@ const int HEX_KVERT_IND[125][2]= {{0,0},{1,1},{2,2},{3,3},{4,4},{5,5},{6,6},{7,7
   ,{5,20},{5,21},{5,22}              ,{5,25} //106->109
   ,       {6,21},{6,22},{6,23}       ,{6,25} //110->113
   ,              {7,22},{7,23}       ,{7,25} //114->116
-  ,{0,26},{1,26},{2,26},{3,26},{4,26},{5,26},{6,26},{7,26}
-}; //117->124
-
-
+  ,{0,26},{1,26},{2,26},{3,26},{4,26},{5,26},{6,26},{7,26} //117->124
+}; 
 
 const double HEX_X0[32][3]= {{-0.5,-0.5,-0.5},{0.5,-0.5,-0.5},{0.5, 0.5,-0.5},{-0.5, 0.5,-0.5},
   {-0.5,-0.5, 0.5},{0.5,-0.5, 0.5},{0.5, 0.5, 0.5},{-0.5, 0.5, 0.5},
@@ -75,10 +71,6 @@ const int HEX_KVERT_IND0[32][2]= {{0,0},{1,0},{2,0},{3,0},{4,0},{5,0},{6,0},{7,0
   {0,2},{1,2},{2,2},{3,2},{4,2},{5,2},{6,2},{7,2},
   {0,3},{1,3},{2,3},{3,3},{4,3},{5,3},{6,3},{7,3}
 };
-
-
-
-
 
 // wedge const vectors
 const double WEDGE_X[75][3]= {{0, 0, -1},      {1, 0, -1},     {0, 1, -1},
@@ -110,7 +102,6 @@ const double WEDGE_X[75][3]= {{0, 0, -1},      {1, 0, -1},     {0, 1, -1},
   {0,0.75,0.5},    {0.25,0.5,0.5},  {0.25,0.75,0.5}// 66->74
 };
 
-
 const int WEDGE_IND[18][3]= {{0, 0, 0},{2, 0, 0},{0, 2, 0},
   {0, 0, 2},{2, 0, 2},{0, 2, 2},
   {1, 0, 0},{1, 1, 0},{0, 1, 0},
@@ -118,7 +109,6 @@ const int WEDGE_IND[18][3]= {{0, 0, 0},{2, 0, 0},{0, 2, 0},
   {0, 0, 1},{2, 0, 1},{0, 2, 1},
   {1, 0, 1},{1, 1, 1},{0, 1, 1}
 };
-
 
 const int WEDGE_KVERT_IND[75][2]= {{0,0},{1,0},{2,0},{4,3},{5,3},{6,3},
   {0,1},{1,1},{2,1},{4,4},{5,4},{6,4},
@@ -137,7 +127,6 @@ const int WEDGE_KVERT_IND[75][2]= {{0,0},{1,0},{2,0},{4,3},{5,3},{6,3},
   {5,15},{5,16},{5,17},
   {6,15},{6,16},{6,17}
 };
-
 
 // tet const vectors
 const double TET_X[35][3]= {{0, 0, 0},      {1, 0, 0},       {0, 1, 0},   {0, 0, 1}, //0->4
@@ -158,7 +147,6 @@ const int TET_IND[10][3]= {{0, 0, 0},{2, 0, 0},{0, 2, 0},{0, 0, 2},
   {1, 0, 0},{1, 1, 0},{0, 1, 0},
   {0, 0, 1},{1, 0, 1},{0, 1, 1}
 };
-
 
 const int TET_KVERT_IND[35][2]= {{0,0},{1,0},{2,0},{3,3},
   {0,1},{1,1},{2,1},
@@ -237,8 +225,6 @@ const int LINE_IND[3][3]= {{0},{2},{1}};
 
 
 const int LINE_KVERT_IND[5][2]= {{0,0},{1,1},{0,1},{0,2},{1,2}};
-
-
 
 const double *GaussLine[5]= {
   GaussLine0[0],
@@ -442,8 +428,7 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
     GaussPoints=GaussPointsWedge[gauss_order];
   } else if (!strcmp(solid,"tet")) { //TETRAHEDRA
     Jacobian_ptr=&elem_type::Jacobian3D;
-    
-        
+         
     ncf_[0]=4;
     ncf_[1]=10;
     ncf_[2]=10;
@@ -719,43 +704,14 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
 
 }
 
-//----------------------------------------------------------------------------------------------------
-// prolungator for Matrix
-//-----------------------------------------------------------------------------------------------------
-
-// int elem_type::prolongation(const elem* elf,const elem* elc, const int& ielc, 
-// 			    Mat &PP, const int& istart,const int& jstart) const {
-//   int node[27];
-//   PetscErrorCode ierr;
-//   for (int i=0; i<nf_; i++) {
-//     int i0=KVERT_IND[i][0];
-//     int i1=KVERT_IND[i][1];
-//     int ielf=elc->GetChildElement(ielc,i0);
-//     int iadd=elf->GetDof(ielf,i1,type_);
-//     int ii=istart+iadd;
-//     int k_max=prol_ind[i+1]-prol_ind[i];
-//     memset(node,0,k_max*sizeof(int));
-//     for (int k=0; k<k_max; k++) {
-//       int j=prol_ind[i][k];
-//       int jadd=elc->GetDof(ielc,j,type_);
-//       node[k]=jstart+jadd;
-//     }
-//     ierr=MatSetValues(PP,1,&ii,k_max,node,prol_val[i],INSERT_VALUES);
-//     CHKERRQ(ierr);
-//   }
-//   return 1;
-// }
-
 
 //----------------------------------------------------------------------------------------------------
-// prolungator for Matrix
+// prolungator for LsysPde  Matrix 
 //----------------------------------------------------------------------------------------------------
 
 void elem_type::prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseMatrix* Projmat, 
 		    const unsigned &index_sol, const unsigned &kkindex_sol) const {
-		      
   vector<int> cols(27);
-  //int ierr;
   for (int i=0; i<nf_; i++) {
     int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
     int ielf=lspdec._msh->el->GetChildElement(ielc,i0);
@@ -770,20 +726,15 @@ void elem_type::prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const 
       int jj=lspdec.GetKKDof(index_sol,kkindex_sol,jadd); 
       cols[k]=jj;
     }
-    //ierr=MatSetValues(PP,1,&irow,ncols,&cols[0],prol_val[i],INSERT_VALUES);
-    
     Projmat->insert_row(irow,ncols,cols,*prol_val[i]);
-    
-    //CHKERRABORT(MPI_COMM_WORLD,ierr);
   }
 }
 
 //----------------------------------------------------------------------------------------------------
-// prolungator for single variable in multigrid solver
+// prolungator for single solution
 //-----------------------------------------------------------------------------------------------------
 void elem_type::prolongation(const mesh &meshf,const mesh &meshc, const int& ielc,
 			    SparseMatrix* Projmat) const {
-  
   vector<int> cols(27);
   for (int i=0; i<nf_; i++) {
     int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
@@ -806,10 +757,8 @@ void elem_type::prolongation(const mesh &meshf,const mesh &meshc, const int& iel
 //----------------------------------------------------------------------------------------------------
 // prolungator for solution printing
 //-----------------------------------------------------------------------------------------------------
-
 void elem_type::ProlQitoQj(const mesh& mymesh,const int& iel, SparseMatrix* Projmat, 
 			  bool testnode[],const unsigned &itype) const{
-  
   vector<int> cols(27);
   for (int i=0; i<ncf_[itype]; i++) {
     int inode=mymesh.el->GetDof(iel,i,type_);
