@@ -124,6 +124,10 @@ public:
   
   void matrix_PtAP(const SparseMatrix &mat_P, const SparseMatrix &mat_A, const bool &reuse);
   
+  void matrix_get_diagonal_values(const std::vector< int > &index, std::vector<double> &value) const ;
+  void matrix_set_diagonal_values(const std::vector< int > &index, const double &value);
+  void matrix_set_diagonal_values(const std::vector< int > &index, const std::vector<double> &value);
+  
   // functions ------------------------------------
   /// Return the l1-norm of the matrix
   double l1_norm() const;

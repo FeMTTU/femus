@@ -448,6 +448,34 @@ void PetscMatrix::matrix_PtAP(const SparseMatrix &mat_P, const SparseMatrix &mat
 }
 
 // ===========================================================
+
+void PetscMatrix::matrix_get_diagonal_values(const std::vector< int > &index, std::vector<double> &value) const{
+  assert ( index.size() == value.size());
+  for(int i=0;i<index.size();i++){
+    int ierr = MatGetValues(_mat,1,&index[i],1,&index[i],&value[i]);  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  }
+}
+
+// ===========================================================
+
+void PetscMatrix::matrix_set_diagonal_values(const std::vector< int > &index, const double &value){
+  for(int i=0;i<index.size();i++){ 
+    int ierr = MatSetValuesBlocked(_mat,1,&index[i],1,&index[i],&value,INSERT_VALUES);  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  }
+}
+
+// ===========================================================
+
+void PetscMatrix::matrix_set_diagonal_values(const std::vector< int > &index, const std::vector<double> &value){
+  assert ( index.size() == value.size());
+  for(int i=0;i<index.size();i++){
+    int ierr = MatSetValuesBlocked(_mat,1,&index[i],1,&index[i],&value[i],INSERT_VALUES);  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  }
+}
+
+
+
+// ===========================================================
 /// This function either creates or re-initializes a matrix called "submatrix".
 void PetscMatrix::_get_submatrix(SparseMatrix& submatrix,
                                   const std::vector< int> &rows,

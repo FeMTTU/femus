@@ -41,7 +41,6 @@ private:
   double _dt;
   double _time;
   unsigned _time_step0;
-  bool _VankaSchur;
   bool _Schur;
   bool _VankaIsSet;
   short unsigned _NSchurVar;
@@ -124,7 +123,7 @@ private:
                     const char mg_type[]="F-Cycle");
   int FreeMultigrid();
   void SetSmoother(const char smoothername[]);
-  void SetVankaSchurOptions(bool VankaSchur=1, bool Schur=0, short unsigned NSchurVar=1);
+  void SetVankaSchurOptions(bool Schur=0, short unsigned NSchurVar=0);
   void SetTolerances(const char pdename[],const double rtol,const double atol,const double divtol, const unsigned maxits);
   void SetSchurTolerances(const char pdename[], const double rtol,const double atol,const double divtol, const unsigned maxits);
   void SetSolverFineGrids(const char pdename[], const char solvertype[] = "GMRES");

@@ -19,7 +19,6 @@ class SparseMatrix;
 class NumericVector;
 template <typename T> class ShellMatrix;  //
 class Preconditioner;
-// #include "matrix.h"  //TODO does it need this? oh, it's from LASPACK!
 
 // ================================================
 // This class provides a uniform interface for linear solvers.  This base
@@ -55,10 +54,6 @@ public:
   // CONSTR/DESTR
   // ================================
   ///  Constructor. Initializes Solver data structure
-//   LinearSolverM (const char infile[], vector < vector < double> > &vt, const double Lref);
-//   
-//   LinearSolverM (const unsigned &igrid,elem *elc);
-
   LinearSolverM (const unsigned &igrid, mesh* other_msh);
   /// Destructor.
   virtual ~LinearSolverM();
@@ -77,14 +72,8 @@ public:
   // SETTING FUNCTIONS
   // ================================
   ///Set the tolerance for the solver
-  virtual void set_tolerances(const double rtol, const double atol,
-                              const double divtol, const unsigned maxits) = 0;
-
-  ///Set the tolerance for the Schur solver
-  virtual void set_schur_tolerances(const double rtol, const double atol,
-                                    const double divtol, const unsigned maxits) = 0;
-
-  
+  virtual void set_tolerances(const double &rtol, const double &atol,
+                              const double &divtol, const unsigned &maxits, const unsigned &index) = 0;
 
   /// Sets the type of solver to use.
   void set_solver_type (const SolverType st)  {

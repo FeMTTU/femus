@@ -61,3 +61,9 @@ OPTION(BUILD_TAYLORVORTEX "Build the Time dependent Taylor vortex application" O
 IF(BUILD_TAYLORVORTEX)
     SUBDIRS(Applications/TaylorGreenVortexFlowGeneralisedalpha/)
 ENDIF(BUILD_TAYLORVORTEX)   
+
+OPTION(BUILD_FSI_CMS_NWM "Build the Time dependent FSI vortex application" ON)
+
+IF(BUILD_FSI_CMS_NWM)
+    SUBDIRS(Applications/FSI_CMS_NWM/)
+ENDIF(BUILD_FSI_CMS_NWM)

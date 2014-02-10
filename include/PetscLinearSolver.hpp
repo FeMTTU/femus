@@ -55,12 +55,8 @@ public:
 
   void init_schur(Mat& matrix);
 
-
-  void set_tolerances(const double rtol, const double atol,
-                      const double divtol, const unsigned maxits);
-
-  void set_schur_tolerances(const double rtol, const double atol,
-                            const double divtol, const unsigned maxits);
+  void set_tolerances(const double &rtol, const double &atol,
+                      const double &divtol, const unsigned &maxits,const unsigned &index);
 
   void set_num_elem_vanka_block(const unsigned num_elem_vanka_block);
   

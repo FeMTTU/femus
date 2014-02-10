@@ -202,7 +202,6 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
   _time=0.;
   _time_step=0;
   _moving_mesh=0;
-  _VankaSchur=1;
   _Schur=0;
   _NSchurVar=1;
   _is_nonlinear = false;
@@ -254,8 +253,12 @@ void NonLinearMultiLevelProblem::AddStabilization(const char pdename[], const bo
 }
 
 //---------------------------------------------------------------------------------------------------
-void NonLinearMultiLevelProblem::SetVankaSchurOptions(bool VankaSchur, bool Schur, short unsigned NSchurVar) {
-  _VankaSchur=VankaSchur;
+void NonLinearMultiLevelProblem::SetVankaSchurOptions(bool Schur, short unsigned NSchurVar) {
+  
+  if(Schur==1 && NSchurVar ==0){
+    cout<<"Error incompatible options in NonLinearMultiLevelProblem::SetVankaSchurOptions "<<endl;
+    exit(0);
+  }
   _Schur=Schur;
   _NSchurVar=NSchurVar;
 }
@@ -265,7 +268,7 @@ void NonLinearMultiLevelProblem::SetTolerances(const char pdename[],const double
 					       const double divtol, const unsigned maxits) {
   unsigned ipde=GetPdeIndex(pdename);					       
   for (unsigned i=1; i<gridn; i++) {
-    _LinSolver[ipde][i]->set_tolerances(rtol,atol,divtol,maxits);
+    _LinSolver[ipde][i]->set_tolerances(rtol,atol,divtol,maxits,0);
   }
 }
 
@@ -274,7 +277,7 @@ void NonLinearMultiLevelProblem::SetSchurTolerances(const char pdename[], const 
 						    const double divtol, const unsigned maxits) {
   unsigned ipde=GetPdeIndex(pdename);
   for (unsigned i=1; i<gridn; i++) {
-    _LinSolver[ipde][i]->set_schur_tolerances(rtol,atol,divtol,maxits);
+    _LinSolver[ipde][i]->set_tolerances(rtol,atol,divtol,maxits,1);
   }
 }
 
@@ -663,7 +666,7 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
 
   start_mg_time = clock();
   
-  for (unsigned igridn=1*flagmc + (!flagmc)*gridn; igridn<=gridn; igridn++) {
+  for (unsigned igridn=flagmc + (!flagmc)*gridn; igridn<=gridn; igridn++) {
     cout << endl;
     cout << "    ************* Level Max: " << igridn << " *************";
     cout << endl;
@@ -747,7 +750,8 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
       // Coarse direct solver
       if(_VankaIsSet) {
 	solver_info =_LinSolver[ipde][0]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
-      } else {
+      } 
+      else {
 	solver_info =_LinSolver[ipde][0]->solve();
       }
       
@@ -766,7 +770,8 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
 	  if (ig==ig) {
 	    if(_VankaIsSet) {
 	      solver_info =_LinSolver[ipde][ig]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
-	    } else {
+	    } 
+	    else {
 	      solver_info =_LinSolver[ipde][ig]->solve();
 	    }
 	  }
@@ -1835,28 +1840,23 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
     offset_nvt3+=3*nvt_ig;
   }
     
-  if (_moving_mesh) {
-      
-    unsigned indDXDYDZ[3];
-    indDXDYDZ[0]=GetIndex(_moving_vars[0].c_str());
-    indDXDYDZ[1]=GetIndex(_moving_vars[1].c_str());
-    indDXDYDZ[2]=GetIndex(_moving_vars[2].c_str());
-      
-    for(unsigned ig=gridr-1u; ig<gridn; ig++){
-      std::vector<double> v_local;
-      unsigned nvt_ig=_msh[ig]->MetisOffset[index_nd][_nprocs];
-      for(int kk=0;kk<3;kk++) {
-	mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indDXDYDZ[kk]],*ProlQitoQj_[index_nd][SolType[indDXDYDZ[kk]]][ig]);
-        mysol[ig]->localize_to_one(v_local,0);
-	if(_iproc==0) { 
-	  for (unsigned i=0; i<nvt_ig; i++) {
-	    var_coord[offset_nvt3+i*3+kk] += v_local[i];
-	  }
-	} //if iproc
-      } //loop over dimension
-      offset_nvt3+=3*nvt_ig;
-    }
-  }
+//   if (_moving_mesh) {
+//     for(unsigned ig=gridr-1u; ig<gridn; ig++){
+//       std::vector<double> v_local;
+//       unsigned nvt_ig=_msh[ig]->MetisOffset[index_nd][_nprocs];
+//       for(int kk=0;kk<_msh[ig]->GetDimension();kk++) {
+// 	unsigned indDXDYDZ=GetIndex(_moving_vars[kk].c_str());
+// 	mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indDXDYDZ],*ProlQitoQj_[index_nd][SolType[indDXDYDZ]][ig]);
+//         mysol[ig]->localize_to_one(v_local,0);
+// 	if(_iproc==0) { 
+// 	  for (unsigned i=0; i<nvt_ig; i++) {
+// 	    var_coord[offset_nvt3+i*3+kk] += v_local[i];
+// 	  }
+// 	} //if iproc
+//       } //loop over dimension
+//       offset_nvt3+=3*nvt_ig;
+//     }
+//  }
   
   if(_iproc==0) {
     //print coordinates dimension
