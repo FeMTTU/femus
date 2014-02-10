@@ -1839,24 +1839,32 @@ void  NonLinearMultiLevelProblem::printsol_vtu_inline(const char type[], std::ve
     } //loop over dimension
     offset_nvt3+=3*nvt_ig;
   }
+  
+  if (_moving_mesh) {
     
-//   if (_moving_mesh) {
-//     for(unsigned ig=gridr-1u; ig<gridn; ig++){
-//       std::vector<double> v_local;
-//       unsigned nvt_ig=_msh[ig]->MetisOffset[index_nd][_nprocs];
-//       for(int kk=0;kk<_msh[ig]->GetDimension();kk++) {
-// 	unsigned indDXDYDZ=GetIndex(_moving_vars[kk].c_str());
-// 	mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indDXDYDZ],*ProlQitoQj_[index_nd][SolType[indDXDYDZ]][ig]);
-//         mysol[ig]->localize_to_one(v_local,0);
-// 	if(_iproc==0) { 
-// 	  for (unsigned i=0; i<nvt_ig; i++) {
-// 	    var_coord[offset_nvt3+i*3+kk] += v_local[i];
-// 	  }
-// 	} //if iproc
-//       } //loop over dimension
-//       offset_nvt3+=3*nvt_ig;
-//     }
-//  }
+    unsigned offset_nvt3=0;
+    unsigned indDXDYDZ[3];
+    indDXDYDZ[0]=GetIndex(_moving_vars[0].c_str());
+    indDXDYDZ[1]=GetIndex(_moving_vars[1].c_str());
+    if(_msh[0]->GetDimension() == 3) {
+      indDXDYDZ[2]=GetIndex(_moving_vars[2].c_str());
+    }
+      
+    for(unsigned ig=gridr-1u; ig<gridn; ig++){
+      std::vector<double> v_local;
+      unsigned nvt_ig=_msh[ig]->MetisOffset[index_nd][_nprocs];
+      for(int kk=0;kk<_msh[0]->GetDimension();kk++) {
+	mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indDXDYDZ[kk]],*ProlQitoQj_[index_nd][SolType[indDXDYDZ[kk]]][ig]);
+        mysol[ig]->localize_to_one(v_local,0);
+	if(_iproc==0) { 
+	  for (unsigned i=0; i<nvt_ig; i++) {
+	    var_coord[offset_nvt3+i*3+kk] += v_local[i];
+	  }
+	} //if iproc
+      } //loop over dimension
+      offset_nvt3+=3*nvt_ig;
+    }
+  }
   
   if(_iproc==0) {
     //print coordinates dimension
