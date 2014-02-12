@@ -26,8 +26,31 @@ ENDIF(MPI_FOUND)
 # to the source code
 CONFIGURE_FILE(
   "${PROJECT_SOURCE_DIR}/config/FEMTTUConfig.h.in"
-  "${PROJECT_BINARY_DIR}/config/FEMTTUConfig.h"
+  "${PROJECT_BINARY_DIR}/config/FEMTTUConfig.h" @ONLY IMMEDIATE
   )
+
+#-- Add an Option to toggle the generation of the API documentation
+OPTION(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
+if(BUILD_DOCUMENTATION)
+  FIND_PACKAGE(Doxygen)
+  if (NOT DOXYGEN_FOUND)
+    message(FATAL_ERROR 
+      "Doxygen is needed to build the documentation. Please install it correctly")
+  endif()
+  #-- Configure the Template Doxyfile for our specific project
+  CONFIGURE_FILE(
+    "${PROJECT_SOURCE_DIR}/Doxygen/DoxyfileFemTTUlib.in"
+    "${PROJECT_BINARY_DIR}/DoxygenDocumentation/DoxyfileFemTTUlib" @ONLY IMMEDIATE
+  ) 
+
+  #-- Add a custom target to run Doxygen when ever the project is built
+  add_custom_target (Docs ALL 
+    COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}//DoxygenDocumentation/DoxyfileFemTTUlib
+    SOURCES ${PROJECT_BINARY_DIR}//DoxygenDocumentation/DoxyfileFemTTUlib)
+  # IF you do NOT want the documentation to be generated EVERY time you build the project
+  # then leave out the 'ALL' keyword from the above command.
+endif()
+ 
 
 # Include petsc files
 INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
