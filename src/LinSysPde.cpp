@@ -146,6 +146,7 @@ int lsysPde::InitPde(const vector <unsigned> &_SolPdeIndex, const  vector <int> 
     //}
   } 
   DrchKKdofs.resize(counter);
+  
   //--------------------------------------------------------------------------------------
   NeumKKdofs.resize(KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc]);
   counter=0;
@@ -194,14 +195,6 @@ int lsysPde::InitPde(const vector <unsigned> &_SolPdeIndex, const  vector <int> 
  _KK = SparseMatrix::build().release();
  _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
    
-//   PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
-//   EPS=EPSp->vec(); //TODO
-//   PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
-//   RES=RESp->vec(); //TODO
- 
-//   PetscRectangularMatrix* KKp=static_cast<PetscRectangularMatrix*>(_KK); //TODO
-//   KK=KKp->mat(); //TODO
-    
   _CC = SparseMatrix::build().release();
   _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
   
