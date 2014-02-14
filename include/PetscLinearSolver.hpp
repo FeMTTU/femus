@@ -128,7 +128,6 @@ inline PetscLinearSolver::PetscLinearSolver (const unsigned &igrid, mesh* other_
     _num_elem_vanka_block = _msh->el->GetElementNumber();  
   }
   else{
-    std::cout << " PetscLin " << std::endl;  
     if(_msh->_nprocs==1) {  
       this->_preconditioner_type = ILU_PRECOND;
     } 
