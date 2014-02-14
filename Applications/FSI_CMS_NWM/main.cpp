@@ -135,18 +135,18 @@ int main(int argc,char **args) {
   nl_td_ml_prob.CreatePdeStructure();
   
    //Solver I (Gmres)
-//    nl_td_ml_prob.SetSmoother("Gmres");
-//    nl_td_ml_prob.SetTolerances("FSI",1.e-12,1.e-20,1.e+50,15);
+   nl_td_ml_prob.SetSmoother("Gmres");
+   nl_td_ml_prob.SetTolerances("FSI",1.e-12,1.e-20,1.e+50,1);
   
   
-  //Solver II (Vanka-smoother-MPSC)
-  nl_td_ml_prob.AddStabilization("FSI",true);
-  nl_td_ml_prob.SetSolverFineGrids("FSI","GMRES");
-  nl_td_ml_prob.SetPreconditionerFineGrids("FSI","ILU");
-  nl_td_ml_prob.SetVankaSchurOptions(false,0);
-  nl_td_ml_prob.SetTolerances("FSI",1.e-12,1.e-20,1.e+50,1);
-  nl_td_ml_prob.SetSchurTolerances("FSI",1.e-12,1.e-20,1.e+50,4);
-  nl_td_ml_prob.SetDimVankaBlock("FSI","All");                //2^lev 1D 4^lev 2D 8^lev 3D
+//   //Solver II (Vanka-smoother-MPSC)
+//   nl_td_ml_prob.AddStabilization("FSI",true);
+//   nl_td_ml_prob.SetSolverFineGrids("FSI","GMRES");
+//   nl_td_ml_prob.SetPreconditionerFineGrids("FSI","ILU");
+//   nl_td_ml_prob.SetVankaSchurOptions(false,0);
+//   nl_td_ml_prob.SetTolerances("FSI",1.e-12,1.e-20,1.e+50,1);
+//   nl_td_ml_prob.SetSchurTolerances("FSI",1.e-12,1.e-20,1.e+50,4);
+//   nl_td_ml_prob.SetDimVankaBlock("FSI","All");                //2^lev 1D 4^lev 2D 8^lev 3D
 
   //End System Variables; ==============================
 
