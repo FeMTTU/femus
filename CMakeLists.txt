@@ -85,8 +85,14 @@ IF(BUILD_TAYLORVORTEX)
     SUBDIRS(Applications/TaylorGreenVortexFlowGeneralisedalpha/)
 ENDIF(BUILD_TAYLORVORTEX)   
 
-OPTION(BUILD_FSI_CMS_NWM "Build the Time dependent FSI vortex application" ON)
+OPTION(BUILD_FSI_CMS_NWM "Build the FSI COMSOL Benchmark" ON)
 
 IF(BUILD_FSI_CMS_NWM)
     SUBDIRS(Applications/FSI_CMS_NWM/)
 ENDIF(BUILD_FSI_CMS_NWM)
+
+OPTION(BUILD_FSI_TUREK_3 "Build the FSI Turek 3 Benchmark" ON)
+
+IF(BUILD_FSI_TUREK_3)
+    SUBDIRS(Applications/FSI_TUREK_3/)
+ENDIF(BUILD_FSI_TUREK_3)
