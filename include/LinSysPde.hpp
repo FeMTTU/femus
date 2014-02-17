@@ -25,8 +25,7 @@ protected:
   
 public:   
   mesh *_msh; 
-  vector <int> DrchKKdofs;
-  vector <int> NeumKKdofs;
+  vector <int> _KKdofs_tobe_Solved;
   vector < vector <unsigned> > KKoffset;
   vector < unsigned > KKghostsize;
   vector < vector < int> > KKghost_nd;

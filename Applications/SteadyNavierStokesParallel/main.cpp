@@ -117,10 +117,10 @@ int main(int argc,char **args) {
   
   //Solver Configuration 
   //Solver I (Gmres)
-  nl_ml_prob.SetSmoother("Gmres");
-  nl_ml_prob.SetTolerances("NS1",1.e-12,1.e-20,1.e+50,10);
-  // Solving
-  nl_ml_prob.FullMultiGrid("NS1",2,1,1,"F-Cycle");
+//   nl_ml_prob.SetSmoother("Gmres");
+//   nl_ml_prob.SetTolerances("NS1",1.e-12,1.e-20,1.e+50,10);
+//   // Solving
+//   nl_ml_prob.FullMultiGrid("NS1",2,1,1,"F-Cycle");
    
   //Equation 2
   nl_ml_prob.AttachAssembleFunction(AssembleMatrixResNS2);
@@ -136,20 +136,20 @@ int main(int argc,char **args) {
 //   nl_ml_prob.FullMultiGrid("NS2",2,1,1,"V-Cycle");
   
     
-  // Solver II (Vanka - MPSC)
-  // create index of solutions to be to used in the Vanka Smoother  
+//   // Solver II (Vanka - MPSC)
+//   // create index of solutions to be to used in the Vanka Smoother  
   nl_ml_prob.ClearVankaIndex();
   nl_ml_prob.AddToVankaIndex("NS2","U"); 
   nl_ml_prob.AddToVankaIndex("NS2","V"); 
   nl_ml_prob.AddToVankaIndex("NS2","P"); 
   
   nl_ml_prob.SetSmoother("Vanka");
-  nl_ml_prob.SetVankaSchurOptions(false,0);
+  nl_ml_prob.SetVankaSchurOptions(true,1);
   nl_ml_prob.SetSolverFineGrids("NS2","GMRES");
   nl_ml_prob.SetPreconditionerFineGrids("NS2","ILU");
   nl_ml_prob.SetTolerances("NS2",1.e-12,1.e-20,1.e+50,10);
   nl_ml_prob.SetSchurTolerances("NS2",1.e-12,1.e-20,1.e+50,1);
-  nl_ml_prob.SetDimVankaBlock("NS2","All");                             //2^lev 1D 4^lev 2D 8^lev 3D
+  nl_ml_prob.SetDimVankaBlock("NS2",4);                             //2^lev 1D 4^lev 2D 8^lev 3D
   // Solving
   nl_ml_prob.FullMultiGrid("NS2",2,1,1,"V-Cycle");
   
@@ -178,7 +178,7 @@ int main(int argc,char **args) {
   nl_ml_prob.SetTolerances("Temp",1.e-12,1.e-20,1.e+50,10);
   nl_ml_prob.SetSchurTolerances("Temp",1.e-12,1.e-20,1.e+50,1);
   nl_ml_prob.SetDimVankaBlock("Temp","All");                             //2^lev 1D 4^lev 2D 8^lev 3D
-      // Solving
+  // Solving
   nl_ml_prob.FullMultiGrid("Temp",2,1,1,"V-Cycle");
   
  

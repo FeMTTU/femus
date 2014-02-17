@@ -1593,8 +1593,7 @@ int  NonLinearMultiLevelProblem::printsol_gmv_binary(const char type[],unsigned 
   for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
     for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
       if ( ig==_igridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
-        var_el[icount]=_msh[ig]->el->GetElementGroup(iel_Metis);
+	var_el[icount]=_msh[ig]->el->GetElementGroup(ii);
         icount++;
       }
     }
@@ -1610,7 +1609,6 @@ int  NonLinearMultiLevelProblem::printsol_gmv_binary(const char type[],unsigned 
     for (unsigned ig=_gridr-1u; ig<_igridn; ig++) {
       for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
 	if ( ig==_igridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
-	  unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
 	  var_el[icount]=_msh[ig]->epart[ii];
 	  icount++;
 	}
