@@ -7,7 +7,7 @@ DenseMatrix.cpp
 DenseMatrixBase.cpp
 DenseSubmatrix.cpp
 DenseVectorBase.cpp
-distributed_vector.cpp
+# distributed_vector.cpp
 Elem.cpp
 ElemType.cpp
 FemTTUInit.cpp
