@@ -1,0 +1,7 @@
+# ignore generated files
+
+*.kdev4/
+*CMakeFiles/
+.directory
+*CMakeCache.txt
+config/FEMTTUConfig.h
