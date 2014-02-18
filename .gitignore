@@ -2,6 +2,6 @@
 
 *.kdev4/
 *CMakeFiles/
-.directory
+*.directory
 *CMakeCache.txt
 config/FEMTTUConfig.h
