@@ -338,7 +338,10 @@ void NonLinearMultiLevelProblem::SetDimVankaBlock(const char pdename[], const ch
   unsigned ipde=GetPdeIndex(pdename);
   if (!strcmp(dim_vanka_block,"All")) {
     for (unsigned i=1; i<gridn; i++) {
-      unsigned num_vanka_block2 = _msh[i]->GetElementNumber();
+      //unsigned num_vanka_block2 = _msh[i]->GetElementNumber();
+          
+      unsigned num_vanka_block2=_msh[i]->IS_Mts2Gmt_elem_offset[_msh[i]->_iproc+1]-_msh[i]->IS_Mts2Gmt_elem_offset[_msh[i]->_iproc]; 
+           
       _LinSolver[ipde][i]->set_num_elem_vanka_block(num_vanka_block2);
     }
   } else if (!strcmp(dim_vanka_block,"All")) {
@@ -366,7 +369,7 @@ void NonLinearMultiLevelProblem::SetPreconditionerFineGrids(const char pdename[]
   unsigned ipde=GetPdeIndex(pdename);
   if (!strcmp(preconditioner_type,"LU")) {
     for (unsigned i=1; i<gridn; i++) {
-      _LinSolver[ipde][i]->set_preconditioner_type(LU_PRECOND);
+      _LinSolver[ipde][i]->set_preconditioner_type(MLU_PRECOND);
     }
   } else if (!strcmp(preconditioner_type,"ILU")) {
     for (unsigned i=1; i<gridn; i++) {
@@ -623,7 +626,7 @@ void NonLinearMultiLevelProblem::CreatePdeStructure() {
     }
     
     for (unsigned i=0; i<gridn; i++) {
-      _LinSolver[ipde][i]->InitPde(_SolPdeIndex[ipde],SolType,SolName,&_solution[i]->_Bdc);
+      _LinSolver[ipde][i]->InitPde(_SolPdeIndex[ipde],SolType,SolName,&_solution[i]->_Bdc,gridr,gridn);
     }
     for (unsigned ig=1; ig<gridn; ig++) {
       BuildProlungatorMatrix(ig,_PdeName[ipde]);
