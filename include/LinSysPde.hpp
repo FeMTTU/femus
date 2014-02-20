@@ -35,7 +35,8 @@ public:
     
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
   SparseMatrix *_KK, *_PP, *_CC; //will become SparseMatrix ASAP
-  bool _CC_flag;
+  bool _CC_flag; 
+  unsigned _gridr,_gridn;
   
   //Functions
   
@@ -44,7 +45,9 @@ public:
   ~lsysPde();
   
   int InitPde(const vector <unsigned> &_SolPdeIndex,const  vector <int> &SolType,  
-	      const vector <char*> &SolName, vector <NumericVector*> *Bdc_other);
+	      const vector <char*> &SolName, vector <NumericVector*> *Bdc_other, 
+	      const unsigned &other_gridr, const unsigned &other_gridn);
+  
   void DeletePde();
   unsigned GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,const unsigned &idof_gmt) const;
   void SetMatrixProperties(const bool property);

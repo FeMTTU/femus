@@ -144,18 +144,25 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
     indexc[i]=IndexcSize;
     indexd[i]=IndexdSize;
   }
-
+  
   // *** Start Vanka Block ***
-  for(int isdom=0; isdom<_msh->nsubdom; isdom++) {  
-    //    unsigned isdom = mapsubdomain[iasdom];
-    for (int gel=_msh->IS_Mts2Gmt_elem_offset[isdom]; gel < _msh->IS_Mts2Gmt_elem_offset[isdom+1]; gel += _num_elem_vanka_block) {
+  bool test_end=0;
+  int vanka_block_index=0;
+  while (test_end==0){
+    clock_t start_time=clock();
+    PetscInt Asize=0;
+    PetscInt counterb=0;
+    PetscInt Csize=0;
+    PetscInt Dsize=0;
+    PetscInt PDsize=0;
+    
+    test_end=1;
+    for(int isdom=0; isdom<_msh->nsubdom; isdom++) {  
+      int gel=_msh->IS_Mts2Gmt_elem_offset[isdom] + vanka_block_index*_num_elem_vanka_block;
+            
+      //for (int gel=_msh->IS_Mts2Gmt_elem_offset[isdom]; gel < _msh->IS_Mts2Gmt_elem_offset[isdom+1]; gel += _num_elem_vanka_block) {
       // ***************** NODE/ELEMENT SERCH *******************
-      clock_t start_time=clock();
-      PetscInt Asize=0;
-      PetscInt counterb=0;
-      PetscInt Csize=0;
-      PetscInt Dsize=0;
-      PetscInt PDsize=0;
+      
       for (int iel_mts=gel; iel_mts<gel+_num_elem_vanka_block && iel_mts< _msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
 	unsigned iel = _msh->IS_Mts2Gmt_elem[iel_mts];     
     
@@ -177,12 +184,17 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
 		unsigned nvej=_msh->el->GetElementDofNumber(jel,_msh->_END_IND[_SolType[_SolPdeIndex[indexSol]]]);
 		for (unsigned jj=0; jj<nvej; jj++) {
 		  unsigned jnode=(_SolType[_SolPdeIndex[indexSol]]<3)?(*(pt_un++)-1u):(jel+jj*nel);
-		  unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, jnode);
+
 		  unsigned jnode_Metis = _msh->GetMetisDof(jnode,_SolType[_SolPdeIndex[indexSol]]);
-		  if (indexa[kkdof]==IndexaSize && 1.1 <(*(*_Bdc)[_SolPdeIndex[indexSol]])(jnode_Metis) ) {
-		    indexai[Asize]=kkdof;
-		    indexa[kkdof]=Asize++;
+		  if(jnode_Metis >= _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc] &&
+		     jnode_Metis <  _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc+1]){
+		    unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, jnode);
+		    if (indexa[kkdof]==IndexaSize && 1.1 <(*(*_Bdc)[_SolPdeIndex[indexSol]])(jnode_Metis) ) {
+		      indexai[Asize]=kkdof;
+		      indexa[kkdof]=Asize++;
+		    }
 		  }
+		  
 		}
 	      }
 	      //-----------------------------------------------------------------------------------
@@ -201,17 +213,23 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
 		      unsigned nvek=_msh->el->GetElementDofNumber(kel,_msh->_END_IND[_SolType[_SolPdeIndex[indexSol]]]);
 		      for (unsigned kk=0; kk<nvek; kk++) {
 			unsigned knode=(_SolType[_SolPdeIndex[indexSol]]<3)?(*(pt_un++)-1u):(kel+kk*nel);
-			unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, knode);
+			
 			unsigned knode_Metis = _msh->GetMetisDof(knode,_SolType[_SolPdeIndex[indexSol]]);
-			if (indexb[kkdof]==IndexbSize && 0.1<(*(*_Bdc)[_SolPdeIndex[indexSol]])(knode_Metis)) {
-			  indexbi[counterb]=kkdof;
-			  indexb[kkdof]=counterb++;
+			if(knode_Metis >= _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc] &&
+			   knode_Metis <  _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc+1]){
+			  unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, knode);
+			  if (indexb[kkdof]==IndexbSize && 0.1<(*(*_Bdc)[_SolPdeIndex[indexSol]])(knode_Metis)) {
+			    indexbi[counterb]=kkdof;
+			    indexb[kkdof]=counterb++;
+			  }
 			}
+			
 		      }
 		    }
 		  }
 		}
-	      } //------------------------------------------------------------------------
+	      }
+	      //------------------------------------------------------------------------
 	    }
 	  }
 	}
@@ -224,274 +242,281 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
 	    unsigned nvei=_msh->el->GetElementDofNumber(iel,_msh->_END_IND[_SolType[_SolPdeIndex[indexSol]]]);
 	    for (unsigned ii=0; ii<nvei; ii++) {
 	      unsigned inode=(_SolType[_SolPdeIndex[indexSol]]<3)?(*(pt_un++)-1u):(iel+ii*nel);
-	      unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, inode);
+	     
 	      unsigned inode_Metis = _msh->GetMetisDof(inode,_SolType[_SolPdeIndex[indexSol]]);
-	      if (indexa[kkdof]==IndexaSize && 1.1<(*(*_Bdc)[_SolPdeIndex[indexSol]])(inode_Metis) ) {
-		indexai[Asize]=kkdof;
-		indexa[kkdof]=Asize++;
-		PDsize++;
+	      if(inode_Metis >= _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc] &&
+		 inode_Metis <  _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc+1]){
+		unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, inode);
+		if (indexa[kkdof]==IndexaSize && 1.1<(*(*_Bdc)[_SolPdeIndex[indexSol]])(inode_Metis) ) {
+		  indexai[Asize]=kkdof;
+		  indexa[kkdof]=Asize++;
+		  PDsize++;
+		}
 	      }
 	    }
 	  }
 	}
 	//-----------------------------------------------------------------------------------------
       }
+      if(gel+_num_elem_vanka_block <_msh->IS_Mts2Gmt_elem_offset[isdom+1] ) test_end=0;     
+    }
+    vanka_block_index++;
     
-      PetscInt PBsize=Asize;
-      PetscInt PCsize=PBsize-PDsize;
-      for (PetscInt i=0; i<counterb; i++) {
-	unsigned jnode=indexbi[i];
-	if (indexa[jnode]==IndexaSize) {
-	  indexai[Asize]=jnode;
-	  indexa[jnode]=Asize++;
-	}
-	// *** reinitialize indexb
-	indexb[jnode]=IndexbSize;
-      }
-      PetscInt PAmBsize=Asize-PBsize;
     
-      // *** re-initialize indeces(a,c,d)
-      for (PetscInt i=0; i<Asize; i++) {
-	indexa[indexai[i]]=IndexaSize;
+    PetscInt PBsize=Asize;
+    PetscInt PCsize=PBsize-PDsize;
+    for (PetscInt i=0; i<counterb; i++) {
+      unsigned jnode=indexbi[i];
+      if (indexa[jnode]==IndexaSize) {
+	indexai[Asize]=jnode;
+	indexa[jnode]=Asize++;
       }
-      for (PetscInt i=0; i<Csize; i++) {
-	indexc[indexci[i]]=IndexcSize;
-      }
-      for (PetscInt i=0; i<Dsize; i++) {
-	indexd[indexdi[i]]=IndexdSize;
-      }
-
-      clock_t end_time=clock();
-      SearchTime+=(end_time-start_time);
-      start_time=clock();
-      // ***************** END NODE/ELEMENT SEARCH *******************
-      // ***************** ASSEMBLY *******************
-      // generate IS
-      IS isPA;
-      ierr=ISCreateGeneral(MPI_COMM_WORLD,PBsize,&indexai[0],PETSC_USE_POINTER,&isPA); CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr=ISSort(isPA); CHKERRABORT(MPI_COMM_WORLD,ierr);
-        
-      Vec res;
-      ierr = VecGetSubVector(RES,isPA,&res); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
+      // *** reinitialize indexb
+      indexb[jnode]=IndexbSize;
+    }
+    PetscInt PAmBsize=Asize-PBsize;
   
-      Vec Pr;
-      ierr = VecDuplicate(res,&Pr); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-      
-      // Solution Vector Pw
-      Vec Pw;
-      ierr = VecDuplicate(Pr,&Pw); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = VecSet(Pw,0); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // *** re-initialize indeces(a,c,d)
+    for (PetscInt i=0; i<Asize; i++) {
+      indexa[indexai[i]]=IndexaSize;
+    }
+    for (PetscInt i=0; i<Csize; i++) {
+      indexc[indexci[i]]=IndexcSize;
+    }
+    for (PetscInt i=0; i<Dsize; i++) {
+      indexd[indexdi[i]]=IndexdSize;
+    }
+    clock_t end_time=clock();
+    SearchTime+=(end_time-start_time);
+    // ***************** END NODE/ELEMENT SEARCH *******************
+    // ***************** ASSEMBLY *******************
+    start_time=clock();
+    // generate IS
+    IS isPA;
+    ierr=ISCreateGeneral(MPI_COMM_WORLD,PBsize,&indexai[0],PETSC_USE_POINTER,&isPA); CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr=ISSort(isPA); CHKERRABORT(MPI_COMM_WORLD,ierr);
         
-      //Matrix PA (PA is the Total matrix over a patch)
-      Mat PA;
-      ierr = MatGetSubMatrix(KK,isPA,isPA,MAT_INITIAL_MATRIX,&PA); CHKERRABORT(MPI_COMM_WORLD,ierr);
-      IS isPB;  
-      const PetscInt *ind,*ind2;
-      if (!Schur || grid==0) { // ******** IF NON-SCHUR COMPLEMENT ***************
-	ierr = VecCopy(res,Pr); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-	end_time=clock();
-	AssemblyTime+=(end_time-start_time);
-	// ***************** END NON-SCHUR ASSEMBLY ******************
-	// ***************** START NON-SCHUR COMPLEMENT SOLVER ******************
-	start_time=clock(); 
-	
-	//init ksp object
-	this->init(PA,false,false);
+    Vec res;
+    ierr = VecGetSubVector(RES,isPA,&res); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
+  
+    Vec Pr;
+    ierr = VecDuplicate(res,&Pr); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
       
-	// Solve
-	ierr = KSPSolve(_ksp[0],Pr,Pw);  		CHKERRABORT(MPI_COMM_WORLD,ierr);
-	
-	ierr = KSPGetIterationNumber(_ksp[0],&its); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
-	its_A += its;
-
-	end_time=clock();
-	SolveTime0+=(end_time-start_time);
-	// ***************** END NON-SCHUR COMPLEMENT SOLVER ******************
-      }
-      else { // *********** if SCHUR COMPLEMENT ****************
-	
- 	ierr = ISCreateStride(MPI_COMM_WORLD,PBsize,0,1,&isPB); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
- 	ierr = ISGetIndices(isPB,&ind2); 					CHKERRABORT(MPI_COMM_WORLD,ierr);
-      
-	IS isCl,isDl;
-	ierr=ISCreateGeneral(MPI_COMM_WORLD,PCsize,ind2,PETSC_USE_POINTER,&isCl); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr=ISCreateGeneral(MPI_COMM_WORLD,PDsize,&ind2[PCsize],PETSC_USE_POINTER,&isDl); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-	Vec f;
-	ierr = VecGetSubVector(res,isCl,&f); 					CHKERRABORT(MPI_COMM_WORLD,ierr);
-  	Vec w;
-	ierr = VecDuplicate(f,&w); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-        ierr = VecSet(w,0); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-     
-	Vec g;
-	ierr = VecGetSubVector(res,isDl,&g); 					CHKERRABORT(MPI_COMM_WORLD,ierr);
-  	Vec z;
-	ierr = VecDuplicate(g,&z); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-        ierr = VecSet(z,0); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-	
-	/* linear system matrix Schur Complement*/
-	Mat A;
-	ierr = MatGetSubMatrix(PA,isCl,isCl,MAT_INITIAL_MATRIX,&A);		CHKERRABORT(MPI_COMM_WORLD,ierr);
-	Mat B;
-	ierr = MatGetSubMatrix(PA,isDl,isCl,MAT_INITIAL_MATRIX,&B);		CHKERRABORT(MPI_COMM_WORLD,ierr);
-	Mat Bt;
-	if (GetMatrixProperties()) {
-	  ierr = MatCreateTranspose(B,&Bt); 					CHKERRABORT(MPI_COMM_WORLD,ierr);
-	} 
-	else {
-	  // In the Monolithic Fluid-Structure formulation Bt is not the transpose of B
-	  ierr = MatGetSubMatrix(PA,isCl,isDl,MAT_INITIAL_MATRIX,&Bt);		CHKERRABORT(MPI_COMM_WORLD,ierr);
-	}
-       
-	ierr = KSPMatRegisterAll();						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	Mat C,D;
-	//C=D-B A^{-1} B^t
-	if (!GetStabilization()) {
-	  ierr = MatCreateSchurComplement(A,A,Bt,B,PETSC_NULL,&C); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
-	} 
-	else {
-	  ierr = MatGetSubMatrix(PA,isDl,isDl,MAT_INITIAL_MATRIX,&D); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
-	  ierr = MatCreateSchurComplement(A,A,Bt,B,D,&C); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-	}
-
-	ierr = ISDestroy(&isCl); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = ISDestroy(&isDl); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	
-	end_time=clock();
-	AssemblyTime+=(end_time-start_time);
-	// ***************** END ASSEMBLY ******************
-	// ***************** START SCHUR COMPLEMENT SOLVER ******************
-	
-	start_time=clock(); // START SOLVE 0 TIME
-	//init Schur Complement
-	this->init_schur(C);
-	//init _Ksp (GMRESM - no precond)
-	this->init(C,true,Schur);
-	// Prediction step: solve A^{-1} f -> w (temporary)
-	ierr = KSPSolve(_ksp[1],f,w);  						CHKERRABORT(MPI_COMM_WORLD,ierr);   
-	ierr = KSPGetIterationNumber(_ksp[1],&its); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
-	its_A += its;
-	end_time=clock();  // END SOLVE 0 TIME
-	SolveTime0+=(end_time-start_time);
-
-	start_time=clock(); // START SOLVE 1 TIME
-	// Projection Step
-	// Compute: g - B A^{-1} f -> g (temporary)
-	ierr = VecScale (w, -1.); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = MatMultAdd(B,w,g,g); 						CHKERRABORT(MPI_COMM_WORLD,ierr); 
-      
-	// Solve z = C^{-1} (g - B A^{-1} f)
-	ierr = KSPSolve(_ksp[0],g,z); 						CHKERRABORT(MPI_COMM_WORLD,ierr); 
-	ierr = KSPGetIterationNumber(_ksp[0],&its); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
-	its_C += its;
-	end_time=clock(); // END SOLVE 1 TIME
-	SolveTime1+=(end_time-start_time);
-
-	start_time=clock(); // START SOLVE 2 TIME
-	
-	// Correction Step
-	// Compute: f - Bt z -> f
-	ierr =VecCopy(z,g); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = VecScale(g, -1.); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = MatMultAdd(Bt,g,f,f); 						CHKERRABORT(MPI_COMM_WORLD,ierr);  
-
-	// solve w=A^{-1}(f-Bt z)
-	ierr = KSPSolve(_ksp[1],f,w); 						CHKERRABORT(MPI_COMM_WORLD,ierr); 
-
-	PetscScalar *Z[1];
-	ierr = VecGetArray(w,Z); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = VecSetValues(Pw,PCsize,ind2,Z[0],INSERT_VALUES); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = VecRestoreArray(w,Z); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-	ierr = VecGetArray(z,Z); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = VecSetValues(Pw,PDsize,&ind2[PCsize],Z[0],INSERT_VALUES); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = VecRestoreArray(z,Z); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-	ierr = VecAssemblyBegin(Pw); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = VecAssemblyEnd(Pw); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-      
-	ierr=ISRestoreIndices(isPB,&ind2); 					CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = ISDestroy(&isPB); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-	end_time=clock(); // END SOLVE 2 TIME
-	SolveTime2+=(end_time-start_time);
-      
-	ierr = MatDestroy(&A); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = MatDestroy(&B); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = MatDestroy(&Bt); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = MatDestroy(&C); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-	if (GetStabilization()) {
-	  ierr = MatDestroy(&D); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	}
-	ierr = VecDestroy(&f); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = VecDestroy(&w); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = VecDestroy(&g); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = VecDestroy(&z); 							CHKERRABORT(MPI_COMM_WORLD,ierr);   
-      }
-      // ***************** END VANKA SCHUR COMPLEMENT SOLVER ******************
-
-      // ***************** START UPDATING AND CLEANING ******************
-      start_time=clock();
-
-      //update Residual for PA
-      ierr = MatMult(PA,Pw,Pr); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = VecScale(Pr, -1.); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-      PetscScalar *R[1];
-      ierr = VecGetArray(Pr,R); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-      PetscScalar *W[1];
-      ierr = VecGetArray(Pw,W); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = ISGetIndices(isPA,&ind); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-      ierr=VecSetValues(RES,PBsize,ind,R[0],ADD_VALUES); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr=VecSetValues(EPS,PBsize,ind,W[0],ADD_VALUES); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-      _EPS->close();
-
-      ierr = ISRestoreIndices(isPA,&ind); 					CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = VecRestoreArray(Pr,R); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-      if (PAmBsize) {
-	IS isB;
-	ierr=ISCreateGeneral(MPI_COMM_WORLD,PAmBsize,&indexai[PBsize],PETSC_USE_POINTER,&isB);	CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr=ISSort(isB); CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-	Vec Ps;
-	ierr = VecCreateMPI(MPI_COMM_WORLD, PAmBsize, PETSC_DETERMINE, &Ps); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
-	
-	ierr = VecSetFromOptions(Ps); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-	Mat PB;
-	ierr = MatGetSubMatrix(KK,isB,isPA,MAT_INITIAL_MATRIX,&PB); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = MatMult(PB,Pw,Ps); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-	ierr = VecScale (Ps, -1.); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	PetscScalar *S[1];
-	ierr = VecGetArray(Ps,S); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = ISGetIndices(isB,&ind); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-	ierr=VecSetValues(RES,PAmBsize,ind,S[0],ADD_VALUES); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-	
-	ierr = ISRestoreIndices(isB,&ind); 					CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = VecRestoreArray(Ps,S); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = VecDestroy(&Ps); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = MatDestroy(&PB); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = ISDestroy(&isB); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-      }
-
-      _RES->close();
-     
-      ierr = VecRestoreArray(Pw,W); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = VecDestroy(&Pw); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = VecDestroy(&Pr); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = VecDestroy(&res); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = MatDestroy(&PA); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = ISDestroy(&isPA); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = KSPDestroy(&_ksp[0]); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Solution Vector Pw
+    Vec Pw;
+    ierr = VecDuplicate(Pr,&Pw); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecSet(Pw,0); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
+        
+    //Matrix PA (PA is the Total matrix over a patch)
+    Mat PA;
+    ierr = MatGetSubMatrix(KK,isPA,isPA,MAT_INITIAL_MATRIX,&PA); CHKERRABORT(MPI_COMM_WORLD,ierr);
+    IS isPB;  
+    const PetscInt *ind,*ind2;
+    if (!Schur || grid==0) { // ******** IF NON-SCHUR COMPLEMENT ***************
+      ierr = VecCopy(res,Pr); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
       end_time=clock();
-      UpdateTime+=(end_time-start_time);
-      // ***************** END UPDATING AND CLEANING *******************
+      AssemblyTime+=(end_time-start_time);
+      // ***************** END NON-SCHUR ASSEMBLY ******************
+      // ***************** START NON-SCHUR COMPLEMENT SOLVER ******************
+      start_time=clock(); 
+	
+      //init ksp object
+      this->init(PA,false,false);
       
-    } //end loop over vanka block
+      // Solve
+      ierr = KSPSolve(_ksp[0],Pr,Pw);  			CHKERRABORT(MPI_COMM_WORLD,ierr);
+	
+      ierr = KSPGetIterationNumber(_ksp[0],&its); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
+      its_A += its;
+
+      end_time=clock();
+      SolveTime0+=(end_time-start_time);
+      // ***************** END NON-SCHUR COMPLEMENT SOLVER ******************
+    }
+    else { // *********** if SCHUR COMPLEMENT ****************
+	
+      ierr = ISCreateStride(MPI_COMM_WORLD,PBsize,0,1,&isPB); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = ISGetIndices(isPB,&ind2); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      
+      IS isCl,isDl;
+      ierr=ISCreateGeneral(MPI_COMM_WORLD,PCsize,ind2,PETSC_USE_POINTER,&isCl); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr=ISCreateGeneral(MPI_COMM_WORLD,PDsize,&ind2[PCsize],PETSC_USE_POINTER,&isDl); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+      Vec f;
+      ierr = VecGetSubVector(res,isCl,&f); 					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      Vec w;
+      ierr = VecDuplicate(f,&w); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = VecSet(w,0); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+     
+      Vec g;
+      ierr = VecGetSubVector(res,isDl,&g); 					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      Vec z;
+      ierr = VecDuplicate(g,&z); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = VecSet(z,0); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+	
+      /* linear system matrix Schur Complement*/
+      Mat A;
+      ierr = MatGetSubMatrix(PA,isCl,isCl,MAT_INITIAL_MATRIX,&A);		CHKERRABORT(MPI_COMM_WORLD,ierr);
+      Mat B;
+      ierr = MatGetSubMatrix(PA,isDl,isCl,MAT_INITIAL_MATRIX,&B);		CHKERRABORT(MPI_COMM_WORLD,ierr);
+      Mat Bt;
+      if (GetMatrixProperties()) {
+	ierr = MatCreateTranspose(B,&Bt); 					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      } 
+      else {
+	// In the Monolithic Fluid-Structure formulation Bt is not the transpose of B
+	ierr = MatGetSubMatrix(PA,isCl,isDl,MAT_INITIAL_MATRIX,&Bt);		CHKERRABORT(MPI_COMM_WORLD,ierr);
+      }
+       
+      ierr = KSPMatRegisterAll();						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      Mat C,D;
+      //C=D-B A^{-1} B^t
+      if (!GetStabilization()) {
+	ierr = MatCreateSchurComplement(A,A,Bt,B,PETSC_NULL,&C); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
+      } 
+      else {
+	ierr = MatGetSubMatrix(PA,isDl,isDl,MAT_INITIAL_MATRIX,&D); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
+	ierr = MatCreateSchurComplement(A,A,Bt,B,D,&C); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
+      }
+
+      ierr = ISDestroy(&isCl); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = ISDestroy(&isDl); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+	
+      end_time=clock();
+      AssemblyTime+=(end_time-start_time);
+      // ***************** END ASSEMBLY ******************
+      // ***************** START SCHUR COMPLEMENT SOLVER ******************
+	
+      start_time=clock(); // START SOLVE 0 TIME
+      //init Schur Complement
+      this->init_schur(C);
+      //init _Ksp (GMRESM - no precond)
+      this->init(C,true,Schur);
+      // Prediction step: solve A^{-1} f -> w (temporary)
+      ierr = KSPSolve(_ksp[1],f,w);  						CHKERRABORT(MPI_COMM_WORLD,ierr);   
+      ierr = KSPGetIterationNumber(_ksp[1],&its); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
+      its_A += its;
+      end_time=clock();  // END SOLVE 0 TIME
+      SolveTime0+=(end_time-start_time);
+
+      start_time=clock(); // START SOLVE 1 TIME
+      // Projection Step
+      // Compute: g - B A^{-1} f -> g (temporary)
+      ierr = VecScale (w, -1.); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = MatMultAdd(B,w,g,g); 						CHKERRABORT(MPI_COMM_WORLD,ierr); 
+      
+      // Solve z = C^{-1} (g - B A^{-1} f)
+      ierr = KSPSolve(_ksp[0],g,z); 						CHKERRABORT(MPI_COMM_WORLD,ierr); 
+      ierr = KSPGetIterationNumber(_ksp[0],&its); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
+      its_C += its;
+      end_time=clock(); // END SOLVE 1 TIME
+      SolveTime1+=(end_time-start_time);
+
+      start_time=clock(); // START SOLVE 2 TIME
+	
+      // Correction Step
+      // Compute: f - Bt z -> f
+      ierr =VecCopy(z,g); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = VecScale(g, -1.); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = MatMultAdd(Bt,g,f,f); 						CHKERRABORT(MPI_COMM_WORLD,ierr);  
+
+      // solve w=A^{-1}(f-Bt z)
+      ierr = KSPSolve(_ksp[1],f,w); 						CHKERRABORT(MPI_COMM_WORLD,ierr); 
+
+      PetscScalar *Z[1];
+      ierr = VecGetArray(w,Z); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = VecSetValues(Pw,PCsize,ind2,Z[0],INSERT_VALUES); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = VecRestoreArray(w,Z); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+      ierr = VecGetArray(z,Z); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = VecSetValues(Pw,PDsize,&ind2[PCsize],Z[0],INSERT_VALUES); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = VecRestoreArray(z,Z); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+      ierr = VecAssemblyBegin(Pw); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = VecAssemblyEnd(Pw); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      
+      ierr=ISRestoreIndices(isPB,&ind2); 					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = ISDestroy(&isPB); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    
+      
+      ierr = MatDestroy(&A); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = MatDestroy(&B); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = MatDestroy(&Bt); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = MatDestroy(&C); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+      if (GetStabilization()) {
+	ierr = MatDestroy(&D); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+      }
+      ierr = VecDestroy(&f); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = VecDestroy(&w); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = VecDestroy(&g); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = VecDestroy(&z); 							CHKERRABORT(MPI_COMM_WORLD,ierr);   
+      
+      end_time=clock(); // END SOLVE 2 TIME
+      SolveTime2+=(end_time-start_time);  
+    }
+    // ***************** END VANKA SCHUR COMPLEMENT SOLVER ******************
+    // ***************** START UPDATING AND CLEANING ******************
+    start_time=clock();
+    //update Residual for PA
+    ierr = MatMult(PA,Pw,Pr); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecScale(Pr, -1.); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    PetscScalar *R[1];
+    ierr = VecGetArray(Pr,R); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+    PetscScalar *W[1];
+    ierr = VecGetArray(Pw,W); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = ISGetIndices(isPA,&ind); 					CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    ierr=VecSetValues(RES,PBsize,ind,R[0],ADD_VALUES); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr=VecSetValues(EPS,PBsize,ind,W[0],ADD_VALUES); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
+    _EPS->close();
+
+    ierr = ISRestoreIndices(isPA,&ind); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecRestoreArray(Pr,R); 					CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    //  if (PAmBsize) {
+    IS isB;
+    ierr=ISCreateGeneral(MPI_COMM_WORLD,PAmBsize,&indexai[PBsize],PETSC_USE_POINTER,&isB);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr=ISSort(isB); 										CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    Vec Ps;
+    ierr = VecCreateMPI(MPI_COMM_WORLD, PAmBsize, PETSC_DETERMINE, &Ps); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
+	
+    ierr = VecSetFromOptions(Ps); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    Mat PB;
+    ierr = MatGetSubMatrix(KK,isB,isPA,MAT_INITIAL_MATRIX,&PB); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = MatMult(PB,Pw,Ps); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    ierr = VecScale (Ps, -1.); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+    PetscScalar *S[1];
+    ierr = VecGetArray(Ps,S); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = ISGetIndices(isB,&ind); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    ierr=VecSetValues(RES,PAmBsize,ind,S[0],ADD_VALUES); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
+	
+    ierr = ISRestoreIndices(isB,&ind); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecRestoreArray(Ps,S); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecDestroy(&Ps); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = MatDestroy(&PB); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = ISDestroy(&isB); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+    //}
+
+    _RES->close();
+     
+    ierr = VecRestoreArray(Pw,W); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecDestroy(&Pw); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecDestroy(&Pr); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecDestroy(&res); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = MatDestroy(&PA); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = ISDestroy(&isPA); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPDestroy(&_ksp[0]); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+    end_time=clock();
+    UpdateTime+=(end_time-start_time);
+    // ***************** END UPDATING AND CLEANING *******************
+      
+    //  } //end loop over vanka block
   } //loop over subdomain
 
   // *** Computational info ***
@@ -763,68 +788,68 @@ void PetscLinearSolver::init(Mat& matrix) {
   
   // Initialize the data structures if not done so already.
   //if (!this->initialized())    {
-    this->_is_initialized = true;
-    int ierr=0;
-    // Create the linear solver context
-    ierr = KSPCreate(MPI_COMM_WORLD, &_ksp[0]);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    //ierr = PCCreate (MPI_COMM_WORLD, &_pc); CHKERRABORT(MPI_COMM_WORLD,ierr);
-    // Create the preconditioner context
-    ierr = KSPGetPC(_ksp[0], &_pc);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    // Set operators. The input matrix works as the preconditioning matrix
+  this->_is_initialized = true;
+  int ierr=0;
+  // Create the linear solver context
+  ierr = KSPCreate(MPI_COMM_WORLD, &_ksp[0]);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  //ierr = PCCreate (MPI_COMM_WORLD, &_pc); CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // Create the preconditioner context
+  ierr = KSPGetPC(_ksp[0], &_pc);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // Set operators. The input matrix works as the preconditioning matrix
+  ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_NONZERO_PATTERN);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // Have the Krylov subspace method use our good initial guess rather than 0
+  ierr = KSPSetInitialGuessNonzero(_ksp[0], PETSC_TRUE);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // Set user-specified  solver and preconditioner types
+  this->set_petsc_solver_type();
+    
+  if (!this->same_preconditioner)  {
     ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_NONZERO_PATTERN);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
-    // Have the Krylov subspace method use our good initial guess rather than 0
-    ierr = KSPSetInitialGuessNonzero(_ksp[0], PETSC_TRUE);
+  } else {
+    ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_PRECONDITIONER);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
-    // Set user-specified  solver and preconditioner types
-    this->set_petsc_solver_type();
+  }
+
+  // Set the tolerances for the iterative solver.  Use the user-supplied
+  // tolerance for the relative residual & leave the others at default values.
+  ierr = KSPSetTolerances(_ksp[0],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);
+  //   ierr = KSPSetTolerances(_ksp[0], , PETSC_DEFAULT,PETSC_DEFAULT, max_its);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
     
-    if (!this->same_preconditioner)  {
-      ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_NONZERO_PATTERN);
-      CHKERRABORT(MPI_COMM_WORLD,ierr);
-    } else {
-      ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_PRECONDITIONER);
-      CHKERRABORT(MPI_COMM_WORLD,ierr);
-    }
+  // Set the options from user-input
+  // Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
+  //  These options will override those specified above as long as
+  //  KSPSetFromOptions() is called _after_ any other customization  routines.
+  ierr = KSPSetFromOptions(_ksp[0]);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // Not sure if this is necessary, or if it is already handled by KSPSetFromOptions?
+  //ierr = PCSetFromOptions (_pc);CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-    // Set the tolerances for the iterative solver.  Use the user-supplied
-    // tolerance for the relative residual & leave the others at default values.
-    ierr = KSPSetTolerances(_ksp[0],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);
-    //   ierr = KSPSetTolerances(_ksp[0], , PETSC_DEFAULT,PETSC_DEFAULT, max_its);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    
-    // Set the options from user-input
-    // Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
-    //  These options will override those specified above as long as
-    //  KSPSetFromOptions() is called _after_ any other customization  routines.
-    ierr = KSPSetFromOptions(_ksp[0]);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    // Not sure if this is necessary, or if it is already handled by KSPSetFromOptions?
-    //ierr = PCSetFromOptions (_pc);CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // Notify PETSc of location to store residual history.
+  // This needs to be called before any solves, since
+  // it sets the residual history length to zero.  The default
+  // behavior is for PETSc to allocate (internally) an array
+  // of size 1000 to hold the residual norm history.
+  ierr = KSPSetResidualHistory(_ksp[0],
+			       PETSC_NULL,   // pointer to the array which holds the history
+			       PETSC_DECIDE, // size of the array holding the history
+			       PETSC_TRUE);  // Whether or not to reset the history for each solve.
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-    // Notify PETSc of location to store residual history.
-    // This needs to be called before any solves, since
-    // it sets the residual history length to zero.  The default
-    // behavior is for PETSc to allocate (internally) an array
-    // of size 1000 to hold the residual norm history.
-    ierr = KSPSetResidualHistory(_ksp[0],
-                                 PETSC_NULL,   // pointer to the array which holds the history
-                                 PETSC_DECIDE, // size of the array holding the history
-                                 PETSC_TRUE);  // Whether or not to reset the history for each solve.
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
-    PetscReal zero = 1.e-16;
-    PCFactorSetZeroPivot(_pc,zero);
-    PCFactorSetShiftType(_pc,MAT_SHIFT_NONZERO);
-    //     if (this->_preconditioner) {
-    //       this->_preconditioner->set_matrix(*matrix);
-    //       PCShellSetContext(_pc,(void*)this->_preconditioner);
-    //       PCShellSetSetUp(_pc,__libmesh_petsc_preconditioner_setup);
-    //       PCShellSetApply(_pc,__libmesh_petsc_preconditioner_apply);
-    //     }
+  PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
+  PetscReal zero = 1.e-16;
+  PCFactorSetZeroPivot(_pc,zero);
+  PCFactorSetShiftType(_pc,MAT_SHIFT_NONZERO);
+  //     if (this->_preconditioner) {
+  //       this->_preconditioner->set_matrix(*matrix);
+  //       PCShellSetContext(_pc,(void*)this->_preconditioner);
+  //       PCShellSetSetUp(_pc,__libmesh_petsc_preconditioner_setup);
+  //       PCShellSetApply(_pc,__libmesh_petsc_preconditioner_apply);
+  //     }
   //}
 }
 

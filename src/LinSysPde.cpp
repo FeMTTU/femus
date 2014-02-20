@@ -64,8 +64,12 @@ unsigned lsysPde::GetIndex(const char name[]) {
 
 //--------------------------------------------------------------------------------
 int lsysPde::InitPde(const vector <unsigned> &_SolPdeIndex, const  vector <int> &SolType_other,  
-		     const vector <char*> &SolName_other, vector <NumericVector*> *Bdc_other ) {
+		     const vector <char*> &SolName_other, vector <NumericVector*> *Bdc_other, 
+		     const unsigned &other_gridr, const unsigned &other_gridn) {
    
+  _gridr=other_gridr;
+  _gridn=other_gridn;
+  
   _SolType=SolType_other;
   _SolName=SolName_other;
   _Bdc=Bdc_other;
@@ -193,9 +197,11 @@ int lsysPde::InitPde(const vector <unsigned> &_SolPdeIndex, const  vector <int> 
  _KK = SparseMatrix::build().release();
  _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
    
-  _CC = SparseMatrix::build().release();
-  _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
-  
+  unsigned igrid=_msh->GetGridNumber()+1;
+  if(igrid>=_gridr && igrid<_gridn){
+    _CC = SparseMatrix::build().release();
+    _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
+  }
   return 1;
 }
 
@@ -224,7 +230,11 @@ void lsysPde::UpdateResidual() {
 //-------------------------------------------------------------------------------------------
 void lsysPde::DeletePde() {
   delete _KK;
-  delete _CC;
+  unsigned igrid=_msh->GetGridNumber()+1;
+  if(igrid>=_gridr && igrid<_gridn){
+    delete _CC;
+  }
+  
   
   if (_msh->GetGridNumber()>0) {
      delete _PP;
