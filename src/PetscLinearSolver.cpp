@@ -514,102 +514,204 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
 
 std::pair< int, double> PetscLinearSolver::solve() {
   
-  PetscVector* RESp=static_cast<PetscVector*> (_RES);  
-  Vec RES=RESp->vec(); 
-  PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); 
-  Mat KK=KKp->mat(); 
-   
-  PetscErrorCode ierr;
-  
-  clock_t  AssemblyTime, SolveTime, UpdateTime;
-
-  int its;
-    
-  clock_t start_time=clock();
-  
-  // ***************** ASSEMBLE *******************
-    
-  PetscInt Asize=_KKdofs_tobe_Solved.size();
+    if(_DirichletBCsHandlingMode==0) // By penalty
+    {
       
-  // generate IS
-  IS isA;
-  ierr=ISCreateGeneral(MPI_COMM_WORLD,Asize,&_KKdofs_tobe_Solved[0], PETSC_USE_POINTER ,&isA); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr=ISSort(isA); 										CHKERRABORT(MPI_COMM_WORLD,ierr);
-  
-  Vec Pr;
-  ierr = VecGetSubVector(RES,isA,&Pr); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
-  
-  // Solution Vector Pw
-  Vec Pw;
-  ierr = VecDuplicate(Pr,&Pw); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr = VecSet(Pw,0); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
-      
-  //Matrix A 
-  Mat A;
-  ierr = MatGetSubMatrix(KK,isA,isA,MAT_INITIAL_MATRIX,&A);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+        clock_t  AssemblyTime, SolveTime, UpdateTime;
+        clock_t start_time=clock();
 
-  clock_t end_time=clock();
-  AssemblyTime = (end_time-start_time);
-  // ***************** END ASSEMBLE ******************    
+        // ***************** ASSEMBLE matrix to set Dirichlet BCs by penalty *******************
 
-  // ***************** SOLVE ******************
-  start_time=clock(); 
-      
-  // Initialize the data structure with the matrix PA
-  this->init(A,false,false);
-      
-  // Solve the linear system
-  ierr = KSPSolve(_ksp[0],Pr,Pw);  		CHKERRABORT(MPI_COMM_WORLD,ierr);
-  
-  ierr = KSPGetIterationNumber(_ksp[0],&its); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
- 
-  ierr = KSPDestroy(&_ksp[0]); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr = MatDestroy(&A); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr = VecRestoreSubVector(RES,isA,&Pr); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr = VecDestroy(&Pr); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-  
-  end_time = clock();
-  SolveTime = (end_time-start_time);
-  // ***************** END SOLVE ******************
-      
-  // ***************** UPDATE ******************
-  start_time=clock();
-  
-  _EPSC->zero();
-  PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  
-  Vec EPSC = EPSCp->vec(); 
-  
-  const PetscInt *ind;
-  ierr = ISGetIndices(isA,&ind); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-  PetscScalar *W[1];
-  ierr = VecGetArray(Pw,W); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr = VecSetValues(EPSC,Asize,ind,W[0],ADD_VALUES); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr = VecRestoreArray(Pw,W); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr = ISRestoreIndices(isA,&ind); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-  
-  ierr = VecDestroy(&Pw); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr = ISDestroy(&isA); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
-  
-  *_EPS += *_EPSC; 
-    
-  _RESC->matrix_mult(*_EPSC,*_KK);
-  *_RES -= *_RESC;
-  
-  _RES->close();
-  _EPS->close();
-  
-  end_time=clock();
-  UpdateTime = (end_time-start_time);
-  // ***************** END UPDATE ******************  
-  
-  // *** Computational info ***
-  cout << _msh->GetGridNumber()<<_msh->GetGridNumber()<< "      SOLVER TIME:              " <<
-    static_cast<double>( AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
-    "  ITS: " << its << endl;
+        PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  //TODO
+        Vec EPSC=EPSCp->vec(); //TODO
+        PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
+        Vec RES=RESp->vec(); //TODO
+        PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); //TODO
+        Mat KK=KKp->mat(); //TODO
 
-  return std::make_pair(its, 
-			static_cast<double>( AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC);
+        int ierr=0;
+        int its=0;
 
+        vector <double>  value(_DrchKKdofs.size());
+        _KK->matrix_get_diagonal_values(_DrchKKdofs,value);
+
+        double penalty=1.0e20;
+        _KK->matrix_set_diagonal_values(_DrchKKdofs,penalty);
+        _KK->close();
+
+        clock_t end_time=clock();
+        AssemblyTime = (end_time-start_time);
+        // ***************** END ASSEMBLE ******************
+
+        // ***************** SOLVE ******************
+        start_time=clock();
+
+        this->init(KK);  //as before
+
+        _EPSC->zero();
+
+        // Solve the linear system
+        ierr = KSPSolve(_ksp[0], RES, EPSC);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+        end_time = clock();
+        SolveTime = (end_time-start_time);
+        // ***************** END SOLVE ******************
+
+        // ***************** UPDATE and Restore Matrix ******************
+        start_time=clock();
+
+        *_EPS += *_EPSC;
+
+        _KK->matrix_set_diagonal_values(_DrchKKdofs,value);
+        _KK->close();
+
+        _RESC->matrix_mult(*_EPSC,*_KK);
+        *_RES -= *_RESC;
+
+        // Get the number of iterations required for convergence
+        ierr = KSPGetIterationNumber(_ksp[0], &its);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+        // Get the norm of the final residual to return to the user.
+        //ierr = KSPGetResidualNorm(_ksp[0], &final_resid); CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+        ierr = KSPDestroy(&_ksp[0]);
+
+        // STOP_LOG("solve()", "PetscLinearSolver");
+        //return std::make_pair(its, final_resid);
+
+        end_time=clock();
+        UpdateTime = (end_time-start_time);
+        // ***************** END UPDATE ******************
+
+        // *** Computational info ***
+        cout << "Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:              " <<
+             static_cast<double>( 0*AssemblyTime + 0*SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
+             "  ITS: " << its << endl;
+
+        return std::make_pair(its,
+                              static_cast<double>( AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC);
+
+    }
+    else if(_DirichletBCsHandlingMode==1) { // By elimination
+
+        PetscVector* RESp=static_cast<PetscVector*> (_RES);
+        Vec RES=RESp->vec();
+        PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK);
+        Mat KK=KKp->mat();
+
+        PetscErrorCode ierr;
+
+        clock_t  AssemblyTime, SolveTime, UpdateTime;
+
+        int its;
+
+        clock_t start_time=clock();
+
+        // ***************** ASSEMBLE *******************
+
+        PetscInt Asize=_KKdofs_tobe_Solved.size();
+
+        // generate IS
+        IS isA;
+        ierr=ISCreateGeneral(MPI_COMM_WORLD,Asize,&_KKdofs_tobe_Solved[0], PETSC_USE_POINTER ,&isA);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+        ierr=ISSort(isA);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+        Vec Pr;
+        ierr = VecGetSubVector(RES,isA,&Pr);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+        // Solution Vector Pw
+        Vec Pw;
+        ierr = VecDuplicate(Pr,&Pw);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+        ierr = VecSet(Pw,0);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+        //Matrix A
+        Mat A;
+        ierr = MatGetSubMatrix(KK,isA,isA,MAT_INITIAL_MATRIX,&A);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+        clock_t end_time=clock();
+        AssemblyTime = (end_time-start_time);
+        // ***************** END ASSEMBLE ******************
+
+        // ***************** SOLVE ******************
+        start_time=clock();
+
+        // Initialize the data structure with the matrix PA
+        this->init(A,false,false);
+
+        // Solve the linear system
+        ierr = KSPSolve(_ksp[0],Pr,Pw);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+        ierr = KSPGetIterationNumber(_ksp[0],&its);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+        ierr = KSPDestroy(&_ksp[0]);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+        ierr = MatDestroy(&A);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+        ierr = VecRestoreSubVector(RES,isA,&Pr);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+        ierr = VecDestroy(&Pr);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+        end_time = clock();
+        SolveTime = (end_time-start_time);
+        // ***************** END SOLVE ******************
+
+        // ***************** UPDATE ******************
+        start_time=clock();
+
+        _EPSC->zero();
+        PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);
+        Vec EPSC = EPSCp->vec();
+
+        const PetscInt *ind;
+        ierr = ISGetIndices(isA,&ind);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+        PetscScalar *W[1];
+        ierr = VecGetArray(Pw,W);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+        ierr = VecSetValues(EPSC,Asize,ind,W[0],ADD_VALUES);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+        ierr = VecRestoreArray(Pw,W);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+        ierr = ISRestoreIndices(isA,&ind);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+        ierr = VecDestroy(&Pw);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+        ierr = ISDestroy(&isA);
+        CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+        *_EPS += *_EPSC;
+
+        _RESC->matrix_mult(*_EPSC,*_KK);
+        *_RES -= *_RESC;
+
+        _RES->close();
+        _EPS->close();
+
+        end_time=clock();
+        UpdateTime = (end_time-start_time);
+        // ***************** END UPDATE ******************
+
+        // *** Computational info ***
+        cout << "Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:              " <<
+             static_cast<double>( AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
+             "  ITS: " << its << endl;
+
+        return std::make_pair(its,
+                              static_cast<double>( AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC);
+
+    }
 }
 
 

@@ -116,6 +116,8 @@ int main(int argc,char **args) {
   nl_td_ml_prob.SetMatrixProperties("NS","Symmetric");
   nl_td_ml_prob.AddStabilization("NS",true);
   
+  nl_td_ml_prob.SetDirichletBCsHandling("NS","Penalty");
+  
   //Solver Configuration 
   //Solver I (Gmres)
   nl_td_ml_prob.SetSmoother("Gmres");

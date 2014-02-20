@@ -117,6 +117,7 @@ private:
 
   //Boundary conditions
   void GenerateBdc(const char name[], const char bdc_type[]="Steady");
+  void SetDirichletBCsHandling(const char pdename[],const char DirichletMode[]);
 
   // Solver  
   int FullMultiGrid(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 

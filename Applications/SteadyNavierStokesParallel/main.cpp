@@ -31,10 +31,10 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=2;
+  nm=5;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
-  nr=2;
+  nr=0;
   std::cout<<"MAX_REFINEMENT levels: " << nr << endl<< endl;
   
   int tmp=nm;  nm+=nr;  nr=tmp;
@@ -105,10 +105,14 @@ int main(int argc,char **args) {
   
   nl_ml_prob.AddSolutionToSolPdeIndex("Temp","T");
   
-  
   // create Multigrid (PRLO, REST, MAT, VECs) based on SolPdeIndex
   nl_ml_prob.CreatePdeStructure();
    
+  
+  nl_ml_prob.SetDirichletBCsHandling("NS1","Penalty");
+  nl_ml_prob.SetDirichletBCsHandling("NS2","Penalty");
+  nl_ml_prob.SetDirichletBCsHandling("Temp","Penalty");
+  
   //Equation 1
   nl_ml_prob.AttachAssembleFunction(AssembleMatrixResNS1);
   nl_ml_prob.SetNonLinearAlgorithm(true,"Newton",1.e-07);  //Navier-Stokes (Quasi-Newton - Newton)
@@ -143,15 +147,19 @@ int main(int argc,char **args) {
   nl_ml_prob.AddToVankaIndex("NS2","V"); 
   nl_ml_prob.AddToVankaIndex("NS2","P"); 
   
-  nl_ml_prob.SetSmoother("Vanka");
+  
+  nl_ml_prob.SetSmoother("Gmres");
+  nl_ml_prob.SetTolerances("NS2",1.e-12,1.e-20,1.e+50,6); 
+  
+/*  nl_ml_prob.SetSmoother("Vanka");
   nl_ml_prob.SetVankaSchurOptions(true,1);
   nl_ml_prob.SetSolverFineGrids("NS2","GMRES");
   nl_ml_prob.SetPreconditionerFineGrids("NS2","ILU");
   nl_ml_prob.SetTolerances("NS2",1.e-12,1.e-20,1.e+50,10);
   nl_ml_prob.SetSchurTolerances("NS2",1.e-12,1.e-20,1.e+50,1);
-  nl_ml_prob.SetDimVankaBlock("NS2",4);                             //2^lev 1D 4^lev 2D 8^lev 3D
+  nl_ml_prob.SetDimVankaBlock("NS2",4); */                            //2^lev 1D 4^lev 2D 8^lev 3D
   // Solving
-  nl_ml_prob.FullMultiGrid("NS2",2,1,1,"V-Cycle");
+  nl_ml_prob.FullMultiGrid("NS2",15,1,1,"V-Cycle");
   
   
   //Equation 3
@@ -179,7 +187,7 @@ int main(int argc,char **args) {
   nl_ml_prob.SetSchurTolerances("Temp",1.e-12,1.e-20,1.e+50,1);
   nl_ml_prob.SetDimVankaBlock("Temp","All");                             //2^lev 1D 4^lev 2D 8^lev 3D
   // Solving
-  nl_ml_prob.FullMultiGrid("Temp",2,1,1,"V-Cycle");
+  //nl_ml_prob.FullMultiGrid("Temp",2,1,1,"V-Cycle");
   
  
   

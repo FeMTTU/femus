@@ -282,6 +282,27 @@ void NonLinearMultiLevelProblem::SetSchurTolerances(const char pdename[], const 
 }
 
 //---------------------------------------------------------------------------------------------------
+void NonLinearMultiLevelProblem::SetDirichletBCsHandling(const char pdename[],const char DirichletMode[]) {
+  unsigned ipde=GetPdeIndex(pdename);     
+  unsigned int DirichletBCsHandlingMode;
+  
+  if (!strcmp(DirichletMode,"Penalty")) {
+    DirichletBCsHandlingMode = 0;   
+  }
+  else if (!strcmp(DirichletMode,"Elimination")) {
+    DirichletBCsHandlingMode = 1;   
+  } 
+  else {
+    cout << "Error! The Dirichlet BCs Handling method " << DirichletMode  << " is not implemented"<<endl;
+    exit(1);
+  }
+  
+  for (unsigned i=0; i<gridn; i++) {
+    _LinSolver[ipde][i]->set_dirichletBCsHandling(DirichletBCsHandlingMode);
+  }
+}
+
+//---------------------------------------------------------------------------------------------------
 unsigned NonLinearMultiLevelProblem::GetTmOrder(const unsigned i) {
   return SolTmorder[i];
 };

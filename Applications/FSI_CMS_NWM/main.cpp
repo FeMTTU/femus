@@ -134,9 +134,11 @@ int main(int argc,char **args) {
   // create Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
   nl_td_ml_prob.CreatePdeStructure();
   
-   //Solver I (Gmres)
-   nl_td_ml_prob.SetSmoother("Gmres");
-   nl_td_ml_prob.SetTolerances("FSI",1.e-12,1.e-20,1.e+50,1);
+  nl_td_ml_prob.SetDirichletBCsHandling("FSI","Elimination");
+  
+  //Solver I (Gmres)
+  nl_td_ml_prob.SetSmoother("Gmres");
+  nl_td_ml_prob.SetTolerances("FSI",1.e-12,1.e-20,1.e+50,1);
   
   
 //   //Solver II (Vanka-smoother-MPSC)
