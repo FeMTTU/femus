@@ -145,17 +145,15 @@ int lsysPde::InitPde(const vector <unsigned> &_SolPdeIndex, const  vector <int> 
   for(int k=0; k<_SolPdeIndex.size(); k++) {
     unsigned indexSol=_SolPdeIndex[k];
     unsigned soltype=_SolType[indexSol];
-    //if(soltype<3) {
-      for(unsigned inode_mts=_msh->MetisOffset[soltype][_msh->_iproc]; 
-	 inode_mts<_msh->MetisOffset[soltype][_msh->_iproc+1]; inode_mts++) {
-	 if((*(*_Bdc)[indexSol])(inode_mts)<1.9) {
-	   int local_mts = inode_mts-_msh->MetisOffset[soltype][_msh->_iproc];
-	   int idof_kk = KKoffset[k][_msh->_iproc] +local_mts; 
-	   _DrchKKdofs[count]=idof_kk;
-	   count++;
-	 }
+    for(unsigned inode_mts=_msh->MetisOffset[soltype][_msh->_iproc]; 
+      inode_mts<_msh->MetisOffset[soltype][_msh->_iproc+1]; inode_mts++) {
+      if((*(*_Bdc)[indexSol])(inode_mts)<1.9) {
+	int local_mts = inode_mts-_msh->MetisOffset[soltype][_msh->_iproc];
+	int idof_kk = KKoffset[k][_msh->_iproc] +local_mts; 
+	_DrchKKdofs[count]=idof_kk;
+	count++;
       }
-    //}
+    }
   } 
   _DrchKKdofs.resize(count);
   
