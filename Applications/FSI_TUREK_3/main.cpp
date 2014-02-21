@@ -39,7 +39,7 @@ int main(int argc,char **args) {
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
-  nr=0;
+  nr=2;
   int tmp=nm;
   nm+=nr;
   nr=tmp;
@@ -231,6 +231,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
   //refinemenet based on elemen group number
   if (elemgroupnumber==5) refine=1;
   if (elemgroupnumber==6) refine=1;
+  if (elemgroupnumber==7 && level<3) refine=1;
 
   return refine;
 
