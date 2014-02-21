@@ -120,8 +120,8 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
   vector <PetscInt> indexbi(IndexbSize);
   vector < unsigned > indexb(IndexbSize,IndexbSize);
   
-  unsigned IndexdOffset   =0;//_msh->MetisOffset[3][_msh->_iproc];
-  unsigned IndexdOffsetp1 =nel;//_msh->MetisOffset[3][_msh->_iproc+1];
+  unsigned IndexdOffset   =_msh->MetisOffset[3][_msh->_iproc];
+  unsigned IndexdOffsetp1 =_msh->MetisOffset[3][_msh->_iproc+1];
   unsigned IndexdSize= IndexdOffsetp1 - IndexdOffset;
   vector <PetscInt> indexdi(IndexdSize);
   vector < unsigned > indexd(IndexdSize,IndexdSize);
@@ -130,8 +130,8 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
   
   
   
-  unsigned IndexcOffset   = 0;//_msh->MetisOffset[3][_msh->_iproc];
-  unsigned IndexcOffsetp1 = nel;//_msh->MetisOffset[3][_msh->_iproc+1];
+  unsigned IndexcOffset   = _msh->MetisOffset[3][_msh->_iproc];
+  unsigned IndexcOffsetp1 = _msh->MetisOffset[3][_msh->_iproc+1];
   unsigned IndexcSize= IndexcOffsetp1 - IndexcOffset;
   vector <PetscInt> indexci(IndexcSize);
   vector < unsigned > indexc(IndexcSize,IndexcSize);
@@ -187,16 +187,18 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
 		//add non-schur node to be solved
 		for (unsigned iind=0; iind<VankaIndex.size()-NSchurVar; iind++) {
 		  unsigned indexSol=VankaIndex[iind];
+		  unsigned SolPdeIndex = _SolPdeIndex[indexSol];
+		  unsigned SolType = _SolType[SolPdeIndex];
 		  const unsigned *pt_un=_msh->el->GetElementVertexAddress(jel,0);
-		  unsigned nvej=_msh->el->GetElementDofNumber(jel,_msh->_END_IND[_SolType[_SolPdeIndex[indexSol]]]);
+		  unsigned nvej=_msh->el->GetElementDofNumber(jel,_msh->_END_IND[SolType]);
 		  for (unsigned jj=0; jj<nvej; jj++) {
-		    unsigned jnode=(_SolType[_SolPdeIndex[indexSol]]<3)?(*(pt_un++)-1u):(jel+jj*nel);
+		    unsigned jnode=(SolType<3)?(*(pt_un++)-1u):(jel+jj*nel);
 
-		    unsigned jnode_Metis = _msh->GetMetisDof(jnode,_SolType[_SolPdeIndex[indexSol]]);
-		    if(jnode_Metis >= _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc] &&
-		      jnode_Metis <  _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc+1]){
-		      unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, jnode);
-		      if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1 <(*(*_Bdc)[_SolPdeIndex[indexSol]])(jnode_Metis) ) {
+		    unsigned jnode_Metis = _msh->GetMetisDof(jnode,SolType);
+		    if(jnode_Metis >= _msh->MetisOffset[SolType][_msh->_iproc] &&
+		      jnode_Metis <  _msh->MetisOffset[SolType][_msh->_iproc+1]){
+		      unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
+		      if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1 <(*(*_Bdc)[SolPdeIndex])(jnode_Metis) ) {
 			indexai[Asize]=kkdof;
 			indexa[kkdof-IndexaOffset]=Asize++;
 		      }
@@ -224,15 +226,17 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
 		  		    
 		    for (unsigned int indexSol=0; indexSol<KKIndex.size()-1u; indexSol++) {
 		      const unsigned *pt_un=_msh->el->GetElementVertexAddress(kel,0);
-		      unsigned nvek=_msh->el->GetElementDofNumber(kel,_msh->_END_IND[_SolType[_SolPdeIndex[indexSol]]]);
+		      unsigned SolPdeIndex = _SolPdeIndex[indexSol];
+		      unsigned SolType = _SolType[SolPdeIndex];
+		      unsigned nvek=_msh->el->GetElementDofNumber(kel,_msh->_END_IND[SolType]);
 		      for (unsigned kk=0; kk<nvek; kk++) {
-			unsigned knode=(_SolType[_SolPdeIndex[indexSol]]<3)?(*(pt_un++)-1u):(kel+kk*nel);
+			unsigned knode=(SolType<3)?(*(pt_un++)-1u):(kel+kk*nel);
 		
-			unsigned knode_Metis = _msh->GetMetisDof(knode,_SolType[_SolPdeIndex[indexSol]]);
-			if(knode_Metis >= _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc] &&
-			   knode_Metis <  _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc+1]){
-			  unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, knode);
-			  if (indexb[kkdof- IndexbOffset]==IndexbSize && 0.1<(*(*_Bdc)[_SolPdeIndex[indexSol]])(knode_Metis)) {
+			unsigned knode_Metis = _msh->GetMetisDof(knode,SolType);
+			if(knode_Metis >= _msh->MetisOffset[SolType][_msh->_iproc] &&
+			   knode_Metis <  _msh->MetisOffset[SolType][_msh->_iproc+1]){
+			  unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, knode);
+			  if (indexb[kkdof- IndexbOffset]==IndexbSize && 0.1<(*(*_Bdc)[SolPdeIndex])(knode_Metis)) {
 			    indexbi[counterb]=kkdof;
 			    indexb[kkdof-IndexbOffset]=counterb++;
 			  }
@@ -253,16 +257,17 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
 	{
 	  for (unsigned iind=VankaIndex.size()-NSchurVar; iind<VankaIndex.size(); iind++) {
 	    unsigned indexSol=VankaIndex[iind];
+	    unsigned SolPdeIndex = _SolPdeIndex[indexSol];
+	    unsigned SolType = _SolType[SolPdeIndex];
 	    const unsigned *pt_un=_msh->el->GetElementVertexAddress(iel,0);
-	    unsigned nvei=_msh->el->GetElementDofNumber(iel,_msh->_END_IND[_SolType[_SolPdeIndex[indexSol]]]);
+	    unsigned nvei=_msh->el->GetElementDofNumber(iel,_msh->_END_IND[SolType]);
 	    for (unsigned ii=0; ii<nvei; ii++) {
-	      unsigned inode=(_SolType[_SolPdeIndex[indexSol]]<3)?(*(pt_un++)-1u):(iel+ii*nel);
-	     
-	      unsigned inode_Metis = _msh->GetMetisDof(inode,_SolType[_SolPdeIndex[indexSol]]);
-	      if(inode_Metis >= _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc] &&
-		 inode_Metis <  _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc+1]){
-		unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, inode);
-		if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1<(*(*_Bdc)[_SolPdeIndex[indexSol]])(inode_Metis) ) {
+	      unsigned inode=(SolType<3)?(*(pt_un++)-1u):(iel+ii*nel);
+	      unsigned inode_Metis = _msh->GetMetisDof(inode,SolType);
+	      if(inode_Metis >= _msh->MetisOffset[SolType][_msh->_iproc] &&
+		 inode_Metis <  _msh->MetisOffset[SolType][_msh->_iproc+1]){
+		unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, inode);
+		if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1<(*(*_Bdc)[SolPdeIndex])(inode_Metis) ) {
 		  indexai[Asize]=kkdof;
 		  indexa[kkdof - IndexaOffset]=Asize++;
 		  PDsize++;
