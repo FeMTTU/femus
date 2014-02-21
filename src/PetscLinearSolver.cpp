@@ -94,15 +94,7 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
   PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); //TODO
   Mat KK=KKp->mat(); //TODO
    
-  vector < unsigned > indexa;
-  vector < unsigned > indexb;
-  vector < unsigned > indexc;
-  vector < unsigned > indexd;
  
-  vector <PetscInt> indexai;
-  vector <PetscInt> indexbi;
-  vector <PetscInt> indexci;
-  vector <PetscInt> indexdi;
  
   PetscErrorCode ierr;
   
@@ -117,34 +109,35 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
   if(NSchurVar==!0){
     FastVankaBlock=(_SolType[_SolPdeIndex[VankaIndex[VankaIndex.size()-NSchurVar]]]<3)?false:true;
   }
-  if (indexa.size()<nvt || indexc.size()<nel) {
-    indexa.resize(nvt);
-    indexb.resize(nvt);
-    indexc.resize(nel);
-    indexd.resize(nel);
-  }
+ 
+  unsigned IndexaOffset = KKoffset[0][_msh->_iproc];
+  unsigned IndexaSize=KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
+  vector <PetscInt> indexai(IndexaSize);
+  vector < unsigned > indexa(IndexaSize,IndexaSize);
   
-  long unsigned IndexaSize=nvt;
-  long unsigned IndexbSize=nvt;
-  long unsigned IndexcSize=nel;
-  long unsigned IndexdSize=nel;
-
-  if (indexai.size()<IndexaSize) {
-    indexai.resize(IndexaSize);
-    indexbi.resize(IndexbSize);
-    indexci.resize(IndexcSize);
-    indexdi.resize(IndexdSize);
-  }
-
-  for (unsigned i=0; i<nvt; i++) {
-    indexa[i]=IndexaSize;
-    indexb[i]=IndexbSize;
-  }
-  for (unsigned i=0; i<nel; i++) {
-    indexc[i]=IndexcSize;
-    indexd[i]=IndexdSize;
-  }
+  unsigned IndexbOffset = IndexaOffset;
+  unsigned IndexbSize=IndexaSize;
+  vector <PetscInt> indexbi(IndexbSize);
+  vector < unsigned > indexb(IndexbSize,IndexbSize);
   
+  unsigned IndexdOffset   =0;//_msh->MetisOffset[3][_msh->_iproc];
+  unsigned IndexdOffsetp1 =nel;//_msh->MetisOffset[3][_msh->_iproc+1];
+  unsigned IndexdSize= IndexdOffsetp1 - IndexdOffset;
+  vector <PetscInt> indexdi(IndexdSize);
+  vector < unsigned > indexd(IndexdSize,IndexdSize);
+  for(unsigned i=0;i<indexd.size();i++) indexd[i] = IndexdSize;
+  
+  
+  
+  
+  unsigned IndexcOffset   = 0;//_msh->MetisOffset[3][_msh->_iproc];
+  unsigned IndexcOffsetp1 = nel;//_msh->MetisOffset[3][_msh->_iproc+1];
+  unsigned IndexcSize= IndexcOffsetp1 - IndexcOffset;
+  vector <PetscInt> indexci(IndexcSize);
+  vector < unsigned > indexc(IndexcSize,IndexcSize);
+  
+  
+   
   // *** Start Vanka Block ***
   bool test_end=0;
   int vanka_block_index=0;
@@ -173,30 +166,45 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
 	  for (unsigned j=0; j<nvei*(!FastVankaBlock)+FastVankaBlock; j++) {
 	    unsigned jel=(!FastVankaBlock)?*(pt_jel++)-1u:iel;
 	    //add elements for velocity to be solved
-	    if (indexc[jel]==IndexcSize) {
-	      indexci[Csize]=jel;
-	      indexc[jel]=Csize++;
-	      //----------------------------------------------------------------------------------
-	      //add velocity nodes to be solved
-	      for (unsigned iind=0; iind<VankaIndex.size()-NSchurVar; iind++) {
-		unsigned indexSol=VankaIndex[iind];
-		const unsigned *pt_un=_msh->el->GetElementVertexAddress(jel,0);
-		unsigned nvej=_msh->el->GetElementDofNumber(jel,_msh->_END_IND[_SolType[_SolPdeIndex[indexSol]]]);
-		for (unsigned jj=0; jj<nvej; jj++) {
-		  unsigned jnode=(_SolType[_SolPdeIndex[indexSol]]<3)?(*(pt_un++)-1u):(jel+jj*nel);
 
-		  unsigned jnode_Metis = _msh->GetMetisDof(jnode,_SolType[_SolPdeIndex[indexSol]]);
-		  if(jnode_Metis >= _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc] &&
-		     jnode_Metis <  _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc+1]){
-		    unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, jnode);
-		    if (indexa[kkdof]==IndexaSize && 1.1 <(*(*_Bdc)[_SolPdeIndex[indexSol]])(jnode_Metis) ) {
-		      indexai[Asize]=kkdof;
-		      indexa[kkdof]=Asize++;
-		    }
-		  }
-		  
-		}
+	    
+	    
+	    unsigned jel_Metis = _msh->GetMetisDof(jel,3);
+	     
+	    if(jel_Metis >= IndexcOffsetp1 || jel_Metis < IndexcOffset ||
+	       indexc[jel_Metis-IndexcOffset] == IndexcSize){
+	      if(jel_Metis < IndexcOffsetp1 && jel_Metis >= IndexcOffset){
+		indexci[Csize]=jel_Metis-IndexcOffset;
+		indexc[jel_Metis-IndexcOffset]=Csize++;
 	      }
+	    	      	      
+		
+// 	      if (indexc[jel]==IndexcSize) {
+// 		indexci[Csize]=jel;
+// 		indexc[jel]=Csize++;
+// 		
+		//----------------------------------------------------------------------------------
+		//add non-schur node to be solved
+		for (unsigned iind=0; iind<VankaIndex.size()-NSchurVar; iind++) {
+		  unsigned indexSol=VankaIndex[iind];
+		  const unsigned *pt_un=_msh->el->GetElementVertexAddress(jel,0);
+		  unsigned nvej=_msh->el->GetElementDofNumber(jel,_msh->_END_IND[_SolType[_SolPdeIndex[indexSol]]]);
+		  for (unsigned jj=0; jj<nvej; jj++) {
+		    unsigned jnode=(_SolType[_SolPdeIndex[indexSol]]<3)?(*(pt_un++)-1u):(jel+jj*nel);
+
+		    unsigned jnode_Metis = _msh->GetMetisDof(jnode,_SolType[_SolPdeIndex[indexSol]]);
+		    if(jnode_Metis >= _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc] &&
+		      jnode_Metis <  _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc+1]){
+		      unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, jnode);
+		      if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1 <(*(*_Bdc)[_SolPdeIndex[indexSol]])(jnode_Metis) ) {
+			indexai[Asize]=kkdof;
+			indexa[kkdof-IndexaOffset]=Asize++;
+		      }
+		    }
+		  
+		  }
+		}
+	      //}
 	      //-----------------------------------------------------------------------------------
 	      for (unsigned jj=0; jj<_msh->el->GetElementDofNumber(jel,0); jj++) {
 		unsigned jnode=_msh->el->GetElementVertexIndex(jel,jj)-1u;
@@ -205,22 +213,28 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
 		for (unsigned k=0; k<nvej; k++) {
 		  unsigned kel=*(pt_kel++)-1u;
 		  //add all variables to be updated
-		  if (indexd[kel]==IndexdSize) {
-		    indexdi[Dsize]=kel;
-		    indexd[kel]=Dsize++;
+		  unsigned kel_Metis = _msh->GetMetisDof(kel,3);
+		  if(kel_Metis >= IndexdOffsetp1 || 
+		    (kel_Metis >= IndexdOffset && indexd[kel_Metis-IndexdOffset] == IndexdSize)){
+		    
+		    if(kel_Metis < IndexdOffsetp1){
+		      indexdi[Dsize]=kel_Metis-IndexdOffset;
+		      indexd[kel_Metis-IndexdOffset]=Dsize++;
+		    }
+		  		    
 		    for (unsigned int indexSol=0; indexSol<KKIndex.size()-1u; indexSol++) {
 		      const unsigned *pt_un=_msh->el->GetElementVertexAddress(kel,0);
 		      unsigned nvek=_msh->el->GetElementDofNumber(kel,_msh->_END_IND[_SolType[_SolPdeIndex[indexSol]]]);
 		      for (unsigned kk=0; kk<nvek; kk++) {
 			unsigned knode=(_SolType[_SolPdeIndex[indexSol]]<3)?(*(pt_un++)-1u):(kel+kk*nel);
-			
+		
 			unsigned knode_Metis = _msh->GetMetisDof(knode,_SolType[_SolPdeIndex[indexSol]]);
 			if(knode_Metis >= _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc] &&
 			   knode_Metis <  _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc+1]){
 			  unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, knode);
-			  if (indexb[kkdof]==IndexbSize && 0.1<(*(*_Bdc)[_SolPdeIndex[indexSol]])(knode_Metis)) {
+			  if (indexb[kkdof- IndexbOffset]==IndexbSize && 0.1<(*(*_Bdc)[_SolPdeIndex[indexSol]])(knode_Metis)) {
 			    indexbi[counterb]=kkdof;
-			    indexb[kkdof]=counterb++;
+			    indexb[kkdof-IndexbOffset]=counterb++;
 			  }
 			}
 			
@@ -234,7 +248,8 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
 	  }
 	}
 	//-----------------------------------------------------------------------------------------
-	//Add pressure nodes to be solved
+	//Add Schur nodes (generally pressure) to be solved
+	//if(iel_mts >= _msh->IS_Mts2Gmt_elem_offset[_msh->_iproc] && iel_mts < _msh->IS_Mts2Gmt_elem_offset[_msh->_iproc+1])
 	{
 	  for (unsigned iind=VankaIndex.size()-NSchurVar; iind<VankaIndex.size(); iind++) {
 	    unsigned indexSol=VankaIndex[iind];
@@ -247,9 +262,9 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
 	      if(inode_Metis >= _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc] &&
 		 inode_Metis <  _msh->MetisOffset[_SolType[_SolPdeIndex[indexSol]]][_msh->_iproc+1]){
 		unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, inode);
-		if (indexa[kkdof]==IndexaSize && 1.1<(*(*_Bdc)[_SolPdeIndex[indexSol]])(inode_Metis) ) {
+		if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1<(*(*_Bdc)[_SolPdeIndex[indexSol]])(inode_Metis) ) {
 		  indexai[Asize]=kkdof;
-		  indexa[kkdof]=Asize++;
+		  indexa[kkdof - IndexaOffset]=Asize++;
 		  PDsize++;
 		}
 	      }
@@ -262,23 +277,22 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
     }
     vanka_block_index++;
     
-    
     PetscInt PBsize=Asize;
     PetscInt PCsize=PBsize-PDsize;
     for (PetscInt i=0; i<counterb; i++) {
       unsigned jnode=indexbi[i];
-      if (indexa[jnode]==IndexaSize) {
+      if (indexa[jnode- IndexaOffset]==IndexaSize) {
 	indexai[Asize]=jnode;
-	indexa[jnode]=Asize++;
+	indexa[jnode-IndexaOffset]=Asize++;
       }
       // *** reinitialize indexb
-      indexb[jnode]=IndexbSize;
+      indexb[jnode- IndexbOffset]=IndexbSize;
     }
     PetscInt PAmBsize=Asize-PBsize;
   
     // *** re-initialize indeces(a,c,d)
     for (PetscInt i=0; i<Asize; i++) {
-      indexa[indexai[i]]=IndexaSize;
+      indexa[indexai[i]-IndexaOffset]=IndexaSize;
     }
     for (PetscInt i=0; i<Csize; i++) {
       indexc[indexci[i]]=IndexcSize;
