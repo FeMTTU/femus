@@ -107,9 +107,9 @@ int main(int argc,char **args) {
 
   //Set Time step information
   nl_td_ml_prob.SetTimeStep(0.005);
-  nl_td_ml_prob.SetPrintTimeStep(1);
+  nl_td_ml_prob.SetPrintTimeStep(100);
   nl_td_ml_prob.SetSaveTimeStep(33300);
-  nl_td_ml_prob.SetNumTimeSteps(5);  //165   
+  nl_td_ml_prob.SetNumTimeSteps(13000);  //165   
 // nl_td_ml_prob.InitializeFromRestart(5);
   nl_td_ml_prob.AttachSetTimeStepFunction(SetVariableTimeStep);
   
@@ -192,8 +192,7 @@ int main(int argc,char **args) {
     }
 
     // print solution
-    if ( !(time_step%nl_td_ml_prob.GetPrintTimeStep()) ) {
-       
+    if ( time_step>=0 || !(time_step%nl_td_ml_prob.GetPrintTimeStep()) ) {
       std::vector<std::string> print_vars;
       print_vars.resize(5);
       print_vars[0] = "DX";
@@ -231,7 +230,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
   //refinemenet based on elemen group number
   if (elemgroupnumber==5) refine=1;
   if (elemgroupnumber==6) refine=1;
-  if (elemgroupnumber==7 && level<3) refine=1;
+  if (elemgroupnumber==7) refine=1;
 
   return refine;
 
