@@ -35,7 +35,12 @@ private:
   vector< PetscReal > _dtol;
   vector< PetscInt >  _maxits;
   unsigned _num_elem_vanka_block;
-    
+  
+  
+  vector< vector <PetscInt> > _indexai;
+  vector< vector <unsigned> > _PSIZE;
+  bool _index_init;
+      
 public:
   // Constructor --------------------------------------
   ///  Constructor. Initializes Petsc data structures
@@ -146,6 +151,8 @@ inline PetscLinearSolver::PetscLinearSolver (const unsigned &igrid, mesh* other_
   _abstol.resize(2, 1.e-40);
   _dtol.resize(2, 1.e+50);
   _maxits.resize(2,10);
+  
+  _index_init=0;
 
 }
 
