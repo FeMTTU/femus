@@ -123,6 +123,9 @@ private:
   void set_petsc_solver_type ();
   void set_petsc_solver_type2 ();
 
+  clock_t BuildVankaIndex(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
+		       const short unsigned &NSchurVar);
+  
 };
 
 inline PetscLinearSolver::PetscLinearSolver (const unsigned &igrid, mesh* other_msh)
