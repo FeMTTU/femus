@@ -62,7 +62,7 @@ public:
   // Solvers ------------------------------------------------------
   // ========================================================
   /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.
-  std::pair< int, double> solve(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
+  std::pair< int, double> solve(const vector <unsigned> &VankaIndex,
 				const short unsigned &NSchurVar,const bool &Schur);
   /// Call the Gmres smoother-solver
   std::pair< int, double> solve();
@@ -117,8 +117,9 @@ private:
   void set_petsc_solver_type ();
   void set_petsc_solver_type2 ();
 
-  clock_t BuildVankaIndex(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
-		       const short unsigned &NSchurVar);
+  clock_t BuildIndex(const vector <unsigned> &VankaIndex, const short unsigned &NSchurVar);
+  clock_t BuildIndex();
+  
   
 };
 

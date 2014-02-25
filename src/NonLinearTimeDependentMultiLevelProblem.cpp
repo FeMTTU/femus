@@ -346,7 +346,7 @@ void NonLinearTimeDependentMultiLevelProblem::Solve(const char pdename[], unsign
 	for (unsigned k=0; k<npre; k++) {
           if (ig==ig) {
 	    if(_VankaIsSet) {
-	      solver_info = _LinSolver[ipde][ig]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
+	      solver_info = _LinSolver[ipde][ig]->solve(VankaIndex,_NSchurVar,_Schur);
 	    }  
 	    else {
               solver_info = _LinSolver[ipde][ig]->solve();
@@ -366,7 +366,7 @@ void NonLinearTimeDependentMultiLevelProblem::Solve(const char pdename[], unsign
       
       // Coarse direct solver
       if(_VankaIsSet) {
-	solver_info = _LinSolver[ipde][0]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
+	solver_info = _LinSolver[ipde][0]->solve(VankaIndex,_NSchurVar,_Schur);
       } 
       else {
 	solver_info = _LinSolver[ipde][0]->solve();
@@ -385,7 +385,7 @@ void NonLinearTimeDependentMultiLevelProblem::Solve(const char pdename[], unsign
 	for (unsigned k=0; k<npost; k++) {
 	  if (ig==ig) {
 	    if(_VankaIsSet) {
-	      solver_info = _LinSolver[ipde][ig]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
+	      solver_info = _LinSolver[ipde][ig]->solve(VankaIndex,_NSchurVar,_Schur);
 	      
 	    } 
 	    else {

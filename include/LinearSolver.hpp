@@ -111,8 +111,7 @@ public:
   virtual void set_num_elem_vanka_block(const unsigned num_elem_vanka_block)=0;
   
   /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.
-  virtual std::pair< int, double> solve(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
-					const short unsigned &NSchurVar,const bool &Schur) = 0;
+  virtual std::pair< int, double> solve(const vector <unsigned> &VankaIndex, const short unsigned &NSchurVar,const bool &Schur) = 0;
   /// Call the Gmres smoother-solver
   virtual std::pair< int, double> solve() = 0;
   

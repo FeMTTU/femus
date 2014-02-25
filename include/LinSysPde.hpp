@@ -19,6 +19,7 @@ private:
   double _compressibility;
   
 protected:
+  vector <unsigned> _SolPdeIndex;
   vector <int> _SolType;  
   vector <char*> _SolName;
   const vector <NumericVector*> *_Bdc;
@@ -26,8 +27,6 @@ protected:
   
 public:   
   mesh *_msh; 
-  vector <int> _KKdofs_tobe_Solved;
-  vector <int> _DrchKKdofs;
   vector < vector <unsigned> > KKoffset;
   vector < unsigned > KKghostsize;
   vector < vector < int> > KKghost_nd;
