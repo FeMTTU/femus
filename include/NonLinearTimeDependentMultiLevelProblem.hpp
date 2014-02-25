@@ -3,8 +3,11 @@
 
 #include "NonLinearMultiLevelProblem.hpp"
 
-//******************** Time loop class **************************
-//***************************************************************
+/**
+* This class is a black box container to handle time-dependent multilevel problems
+* The multigrid solver is called by calling the function solve
+*/
+
 class NonLinearTimeDependentMultiLevelProblem : public NonLinearMultiLevelProblem {
 
 private:
@@ -59,7 +62,7 @@ public:
 
   void SetNumTimeSteps(const double ntimesteps);
 
-  int FullMultiGrid(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
+  void Solve(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
 		    const char mg_type[]="F-Cycle");
   
   void printsol_xdmf_archive(const char type[]) const;

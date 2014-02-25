@@ -26,7 +26,15 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 int main(int argc,char **args) {
   
   bool vanka=1;
-  if( strcmp("vanka",args[1])) vanka=0; 
+  if(argc == 2) {
+    if( strcmp("vanka",args[1])) vanka=0;
+  }
+  else
+  {
+    cout << "No input arguments!" << endl;
+    exit(0);
+  }
+    
   
   cout<<args[1]<<" "<<vanka<<endl;
   
@@ -143,7 +151,7 @@ int main(int argc,char **args) {
     nl_ml_prob.SetSmoother("Gmres"); 
     nl_ml_prob.SetTolerances("NS2",1.e-12,1.e-20,1.e+50,10);
     // Solving
-    nl_ml_prob.FullMultiGrid("NS2",3,1,1,"F-Cycle");
+    nl_ml_prob.Solve("NS2",3,1,1,"F-Cycle");
   }  
   else{ 
     // Solver II (Vanka - MPSC)
@@ -161,7 +169,7 @@ int main(int argc,char **args) {
     nl_ml_prob.SetSchurTolerances("NS2",1.e-12,1.e-20,1.e+50,1);
     nl_ml_prob.SetDimVankaBlock("NS2",3);                             //2^lev 1D 4^lev 2D 8^lev 3D
     // Solving
-    nl_ml_prob.FullMultiGrid("NS2",3,1,1,"F-Cycle");
+    nl_ml_prob.Solve("NS2",3,1,1,"F-Cycle");
   }
   
   //Equation 3
@@ -176,7 +184,7 @@ int main(int argc,char **args) {
     nl_ml_prob.SetSmoother("Gmres");
     nl_ml_prob.SetTolerances("Temp",1.e-12,1.e-20,1.e+50,10);
     // Solving
-    nl_ml_prob.FullMultiGrid("Temp",3,1,1,"F-Cycle");
+    nl_ml_prob.Solve("Temp",3,1,1,"F-Cycle");
   }
   else{ 
     nl_ml_prob.ClearVankaIndex();
@@ -190,7 +198,7 @@ int main(int argc,char **args) {
     nl_ml_prob.SetSchurTolerances("Temp",1.e-12,1.e-20,1.e+50,1);
     nl_ml_prob.SetDimVankaBlock("Temp",3);                             //2^lev 1D 4^lev 2D 8^lev 3D
     // Solving
-    nl_ml_prob.FullMultiGrid("Temp",3,1,1,"F-Cycle");
+    nl_ml_prob.Solve("Temp",3,1,1,"F-Cycle");
   }
    
   // Delete Multigrid (PRLO, REST, MAT, VECs) based on SolPdeIndex
@@ -390,7 +398,7 @@ int AssembleMatrixResNS1(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
   
   //pointers and references
   Solution*       mysolution  = nl_ml_prob._solution[level];
-  LinearSolverM*  mylsyspde = nl_ml_prob._LinSolver[ipde][level];
+  LinearSolver*   mylsyspde = nl_ml_prob._LinSolver[ipde][level];
   mesh*           mymsh    = nl_ml_prob._msh[level];
   elem*           myel     =  mymsh->el;
   
@@ -700,7 +708,7 @@ int AssembleMatrixResNS2(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
   
   //pointers and references
   Solution*       mysolution  = nl_ml_prob._solution[level];
-  LinearSolverM*  mylsyspde = nl_ml_prob._LinSolver[ipde][level];
+  LinearSolver*   mylsyspde = nl_ml_prob._LinSolver[ipde][level];
   mesh*           mymsh    = nl_ml_prob._msh[level];
   elem*           myel     =  mymsh->el;
   
@@ -1015,7 +1023,7 @@ int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, c
   
   //pointers and references
   Solution*       mysolution  = nl_ml_prob._solution[level];
-  LinearSolverM*  mylsyspde = nl_ml_prob._LinSolver[ipde][level];
+  LinearSolver*   mylsyspde = nl_ml_prob._LinSolver[ipde][level];
   mesh*           mymsh    = nl_ml_prob._msh[level];
   elem*           myel     =  mymsh->el;
     

@@ -1,8 +1,7 @@
-#ifndef __petsc_linear_solverMaa_h__
-#define __petsc_linear_solverMaa_h__
+#ifndef __PetscLinearSolver_hpp__
+#define __PetscLinearSolver_hpp__
 
 #include "FEMTTUConfig.h"
-//#include "SolverlibConf.hpp"
 
 #if HAVE_PETSC == 1
 
@@ -16,15 +15,11 @@
 #include "PetscMatrix.hpp"
 #include "PetscMacro.hpp"
 
-// Petsc include files.
-EXTERN_C_FOR_PETSC_BEGIN
-#include <petscksp.h>
-EXTERN_C_FOR_PETSC_END
+/**
+* This class inherits the abstract class LinearSolver. In this class the solver is implemented using the PETSc package
+*/
 
-// ==========================================
-/// This class provides an interface to PETSc iterative solvers
-class PetscLinearSolver : public LinearSolverM {
-  // ============================================
+class PetscLinearSolver : public LinearSolver {
 
 private:
   // data ---------------------------------
@@ -43,8 +38,7 @@ private:
       
 public:
   // Constructor --------------------------------------
-  ///  Constructor. Initializes Petsc data structures
-
+  /**  Constructor. Initializes Petsc data structures */
   PetscLinearSolver (const unsigned &igrid, mesh *other_mesh);
   
   /// Destructor.
@@ -129,7 +123,7 @@ private:
 };
 
 inline PetscLinearSolver::PetscLinearSolver (const unsigned &igrid, mesh* other_msh)
-  : LinearSolverM(igrid, other_msh) {
+  : LinearSolver(igrid, other_msh) {
         
   if(igrid==0){
     this->_preconditioner_type = MLU_PRECOND;
@@ -164,5 +158,5 @@ inline PetscLinearSolver::~PetscLinearSolver () {
   this->clear ();
 }
 
-#endif // #ifdef FEMTTU_HAVE_PETSC
-#endif // #ifdef __petsc_linear_solver_h__
+#endif 
+#endif 

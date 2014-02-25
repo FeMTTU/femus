@@ -1,5 +1,5 @@
-#ifndef __linear_solverM_h__
-#define __linear_solverM_h__
+#ifndef __linear_solver_h__
+#define __linear_solver_h__
 
 #include <memory>
 #include <cstdio>
@@ -14,18 +14,19 @@
 using std::vector;
 
 // forward declarations
-template <typename T> class AutoPtr;  //
+template <typename T> class AutoPtr;  
 class SparseMatrix;
 class NumericVector;
-template <typename T> class ShellMatrix;  //
+template <typename T> class ShellMatrix;  
 class Preconditioner;
 
-// ================================================
-// This class provides a uniform interface for linear solvers.  This base
-// class is overloaded to provide linear solvers from different packages
-// like PETSC or LASPACK.
-// ===============================================
-class LinearSolverM : public lsysPde {
+/** 
+* This class provides a uniform interface for linear solvers.  This base
+* class is overloaded to provide linear solvers from different packages
+* like PETSC or LASPACK.
+*/ 
+
+class LinearSolver : public lsysPde {
   // ================================
   // DATA
   // ==============================
@@ -53,10 +54,10 @@ public:
   // =================================
   // CONSTR/DESTR
   // ================================
-  ///  Constructor. Initializes Solver data structure
-  LinearSolverM (const unsigned &igrid, mesh* other_msh);
+  /**  Constructor. Initializes Solver data structure */
+  LinearSolver (const unsigned &igrid, mesh* other_msh);
   /// Destructor.
-  virtual ~LinearSolverM();
+  virtual ~LinearSolver();
 
   /// Release all memory and clear data structures.
   virtual void clear() {}
@@ -64,9 +65,8 @@ public:
   /// Initialize data structures if not done so already.
   virtual void init() = 0;
 
-  /// Builds a \p LinearSolverM using the linear solver in \p solver_package
-  
-  static std::auto_ptr<LinearSolverM > build(const unsigned &igrid, mesh* other_msh,const SolverPackage solver_package =LSOLVER);
+  /** Builds a \p LinearSolver using the linear solver in \p solver_package */
+  static std::auto_ptr<LinearSolver > build(const unsigned &igrid, mesh* other_msh,const SolverPackage solver_package =LSOLVER);
   
   // =================================
   // SETTING FUNCTIONS
@@ -138,7 +138,7 @@ public:
 // -------------------- inline functions ---------
 
 // =============================================
-inline LinearSolverM::LinearSolverM(const unsigned &igrid, mesh* other_msh) :
+inline LinearSolver::LinearSolver(const unsigned &igrid, mesh* other_msh) :
   lsysPde(other_msh),
   _solver_type(GMRES),
   _preconditioner(NULL),
@@ -153,8 +153,8 @@ inline LinearSolverM::LinearSolverM(const unsigned &igrid, mesh* other_msh) :
   }
 }
 
-inline LinearSolverM::~LinearSolverM() {
+inline LinearSolver::~LinearSolver() {
   this->clear();
 }
 
-#endif // #ifdef __solver_h__
+#endif 

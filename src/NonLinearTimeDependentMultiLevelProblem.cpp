@@ -247,7 +247,7 @@ void NonLinearTimeDependentMultiLevelProblem::_NewmarkAccUpdate() {
 //---------------------------------------------------------------------------------------------------------
 
 //Time Dependent Full Multigrid
-int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned const &ncycle,  unsigned const &npre, 
+void NonLinearTimeDependentMultiLevelProblem::Solve(const char pdename[], unsigned const &ncycle,  unsigned const &npre, 
 							   unsigned const &npost, const char mg_type[]) {
   
   unsigned ipde=GetPdeIndex(pdename);
@@ -302,6 +302,10 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(const char pdename[],
       start_time=clock();
       //assemble residual and matrix on the finer grid at igridn level
       _assemble_function(*this,igridn-1u,igridn-1u);
+      
+      end_time=clock();
+      cout<<"Grid: "<<igridn-1<<"      ASSEMBLY + RESIDUAL TIME: "
+	  <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
 
       for (unsigned ig=igridn-1u; ig>0; ig--) {
 	start_time=clock();
@@ -337,11 +341,6 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(const char pdename[],
 	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
       }
       
-      
-      end_time=clock();
-      cout<<"Grid: "<<igridn-1<<"      ASSEMBLY + RESIDUAL TIME: "
-	  <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-
       // Presmoothing  
       for (unsigned ig=igridn-1u; ig>0; ig--) {
 	for (unsigned k=0; k<npre; k++) {
@@ -423,9 +422,8 @@ int NonLinearTimeDependentMultiLevelProblem::FullMultiGrid(const char pdename[],
   }
     
   end_mg_time = clock();
-  cout<<"STEADYSOLVER TIME:                            "<<static_cast<double>((end_mg_time-start_mg_time))/CLOCKS_PER_SEC<<endl;
+  cout<<"NonSteadySOLVER TIME:                            "<<static_cast<double>((end_mg_time-start_mg_time))/CLOCKS_PER_SEC<<endl;
 
-  return 1;
 }
 
 

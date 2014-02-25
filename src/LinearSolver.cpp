@@ -12,17 +12,17 @@
 
 using namespace std;
 
-//------------------------------------------------------------------
-// LinearSolver members
-//------------------------------------------------------------------
+/**
+* LinearSolver members
+*/
 
 // =============================================================
-std::auto_ptr<LinearSolverM > LinearSolverM::build(const unsigned &igrid, mesh *other_mesh, const SolverPackage solver_package) {
+std::auto_ptr<LinearSolver> LinearSolver::build(const unsigned &igrid, mesh *other_mesh, const SolverPackage solver_package) {
   // Build the appropriate solver
   switch (solver_package)  {
 #if HAVE_PETSC == 1
   case PETSC_SOLVERS:      {
-    std::auto_ptr<LinearSolverM > ap(new PetscLinearSolver(igrid, other_mesh));
+    std::auto_ptr<LinearSolver > ap(new PetscLinearSolver(igrid, other_mesh));
     return ap;
   }
 #endif
@@ -39,24 +39,24 @@ std::auto_ptr<LinearSolverM > LinearSolverM::build(const unsigned &igrid, mesh *
     abort();
   }
 
-  std::auto_ptr<LinearSolverM > ap(NULL);
+  std::auto_ptr<LinearSolver> ap(NULL);
   return ap;
 }
 
 // ============================================================
-PreconditionerType LinearSolverM::preconditioner_type () const {
+PreconditionerType LinearSolver::preconditioner_type () const {
   if (_preconditioner)    return _preconditioner->type();
   return _preconditioner_type;
 }
 
 // ===========================================================
-void LinearSolverM::set_preconditioner_type (const PreconditionerType pct) {
+void LinearSolver::set_preconditioner_type (const PreconditionerType pct) {
   if (_preconditioner)    _preconditioner->set_type(pct);
   else    _preconditioner_type = pct;
 }
 
 // =============================================================
-void LinearSolverM::attach_preconditioner(Preconditioner * preconditioner) {
+void LinearSolver::attach_preconditioner(Preconditioner * preconditioner) {
   if (this->_is_initialized)  {
     std::cerr<<"Preconditioner must be attached before the solver is initialized!"<<std::endl;
     abort();

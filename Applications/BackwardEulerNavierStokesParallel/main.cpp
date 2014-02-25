@@ -132,7 +132,7 @@ int main(int argc,char **args) {
        time_step++) {
    
     //Solve with V-cycle or F-cycle
-    nl_td_ml_prob.FullMultiGrid("NS",15,1,1,"V-Cycle");
+    nl_td_ml_prob.Solve("NS",15,1,1,"V-Cycle");
   
 //     //The update of the acceleration must be done before the update of the other variables
 //     //update time step
@@ -321,7 +321,7 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned lev
   
   //pointers and references
   Solution*       mysolution = nl_td_ml_prob2._solution[level];
-  LinearSolverM*  mylsyspde  = nl_td_ml_prob2._LinSolver[ipde][level];
+  LinearSolver*   mylsyspde  = nl_td_ml_prob2._LinSolver[ipde][level];
   mesh*           mymsh      = nl_td_ml_prob2._msh[level];
   elem*           myel       = mymsh->el;
   PetscMatrix* KKp=static_cast<PetscMatrix*>(mylsyspde->_KK); //TODO

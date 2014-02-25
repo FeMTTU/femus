@@ -621,7 +621,7 @@ void NonLinearMultiLevelProblem::CreatePdeStructure() {
   for(unsigned ipde=0;ipde<_PdeIndex.size();ipde++){
     _LinSolver[ipde].resize(gridn);
     for(unsigned i=0;i<gridn;i++){
-      _LinSolver[ipde][i]=LinearSolverM::build(i,_msh[i]).release();
+      _LinSolver[ipde][i]=LinearSolver::build(i,_msh[i]).release();
       //_LinSolver[ipde][i]->SetBdcPointer(&_solution[i]->_Bdc);
     }
     
@@ -674,7 +674,7 @@ void NonLinearMultiLevelProblem::AttachInitVariableFunction ( double (* InitVari
 }
 
 //--------------------------------------------------------------------------------------------------
-int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned const &ncycle, unsigned const &npre, 
+void NonLinearMultiLevelProblem::Solve(const char pdename[], unsigned const &ncycle, unsigned const &npre, 
 					      unsigned const &npost, const char mg_type[]) {
   
   unsigned ipde=GetPdeIndex(pdename);
@@ -704,13 +704,17 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
       _LinSolver[ipde][igridn-1u]->SetResZero();
       _LinSolver[ipde][igridn-1u]->SetEpsZero();
       end_time=clock();
-      cout<<"Grid: "<<igridn-1<<"      INITIALIZATION TIME:      "
+      cout<<"Grid: "<<igridn-1u<<"      INITIALIZATION TIME:      "
 	  <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
 
       start_time=clock();
       //assemble residual and matrix on the finer grid at igridn level
       _assemble_function(*this,igridn-1u,igridn-1u);
-
+      
+      end_time=clock();
+      cout<<"Grid: "<<igridn-1<<"      ASSEMBLY + RESIDUAL TIME: "
+	  <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
+ 
       for (unsigned ig=igridn-1u; ig>0; ig--) {
 	start_time=clock();
 
@@ -745,10 +749,6 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
 	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
       }
           
-      end_time=clock();
-      cout<<"Grid: "<<igridn-1<<"      ASSEMBLY + RESIDUAL TIME: "
-	  <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-
       // Presmoothing  
       for (unsigned ig=igridn-1u; ig>0; ig--) {
 	for (unsigned k=0; k<npre; k++) {
@@ -831,7 +831,7 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
   end_mg_time = clock();
   cout<<"STEADYSOLVER TIME:                            "<<static_cast<double>((end_mg_time-start_mg_time))/CLOCKS_PER_SEC<<endl;
 
-  return 1;
+ // return 1;
 }
 
 //---------------------------------------------------------------------------------------------------------------

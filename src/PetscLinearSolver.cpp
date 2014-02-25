@@ -650,7 +650,7 @@ std::pair< int, double> PetscLinearSolver::solve() {
 
         // *** Computational info ***
         cout << "Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:              " <<
-             static_cast<double>( 0*AssemblyTime + 0*SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
+             static_cast<double>( AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
              "  ITS: " << its << endl;
 
         return std::make_pair(its,

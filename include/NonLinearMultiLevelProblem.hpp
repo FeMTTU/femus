@@ -12,9 +12,13 @@
 using std::map;
 
 class elem_type;
-class LinearSolverM;
-//********************  class solver**************************
-//************************************************************
+class LinearSolver;
+
+/**
+* This class is a black box container to handle multilevel problems
+* The multigrid solver is called by calling the function solve
+*/
+
 class NonLinearMultiLevelProblem {
 
 private:
@@ -72,7 +76,7 @@ private:
 
   
   ///Array of linear solver
-  vector<vector <LinearSolverM*> > _LinSolver;
+  vector<vector <LinearSolver*> > _LinSolver;
   vector <Solution*>  _solution;
   vector <mesh*> _msh;
   
@@ -119,8 +123,8 @@ private:
   void GenerateBdc(const char name[], const char bdc_type[]="Steady");
   void SetDirichletBCsHandling(const char pdename[],const char DirichletMode[]);
 
-  // Solver  
-  int FullMultiGrid(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
+  //* Multigrid Solver  */
+  void Solve(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
                     const char mg_type[]="F-Cycle");
   int FreeMultigrid();
   void SetSmoother(const char smoothername[]);
