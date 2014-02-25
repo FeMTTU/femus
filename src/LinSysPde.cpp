@@ -70,10 +70,10 @@ unsigned lsysPde::GetIndex(const char name[]) {
 }
 
 //--------------------------------------------------------------------------------
-int lsysPde::InitPde(const vector <unsigned> &_SolPdeIndex, const  vector <int> &SolType_other,  
+int lsysPde::InitPde(const vector <unsigned> &SolPdeIndex_other, const  vector <int> &SolType_other,  
 		     const vector <char*> &SolName_other, vector <NumericVector*> *Bdc_other, 
 		     const unsigned &other_gridr, const unsigned &other_gridn) {
-   
+  _SolPdeIndex=SolPdeIndex_other;
   _gridr=other_gridr;
   _gridn=other_gridn;
   
@@ -136,45 +136,6 @@ int lsysPde::InitPde(const vector <unsigned> &_SolPdeIndex, const  vector <int> 
        }
      }
    }
-  
- 
- //--------------------------------------------------------------------------------------
- // Dirichlet Dofs
-  _DrchKKdofs.resize(KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc]);
-  unsigned count=0;
-  for(int k=0; k<_SolPdeIndex.size(); k++) {
-    unsigned indexSol=_SolPdeIndex[k];
-    unsigned soltype=_SolType[indexSol];
-    for(unsigned inode_mts=_msh->MetisOffset[soltype][_msh->_iproc]; 
-      inode_mts<_msh->MetisOffset[soltype][_msh->_iproc+1]; inode_mts++) {
-      if((*(*_Bdc)[indexSol])(inode_mts)<1.9) {
-	int local_mts = inode_mts-_msh->MetisOffset[soltype][_msh->_iproc];
-	int idof_kk = KKoffset[k][_msh->_iproc] +local_mts; 
-	_DrchKKdofs[count]=idof_kk;
-	count++;
-      }
-    }
-  } 
-  _DrchKKdofs.resize(count);
-  
-  //--------------------------------------------------------------------------------------
-  // Neumann dofs 
-  _KKdofs_tobe_Solved.resize(KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc]);
-  unsigned counter=0;
-  for(int k=0; k<_SolPdeIndex.size(); k++) {
-    unsigned indexSol=_SolPdeIndex[k];
-    unsigned soltype=_SolType[indexSol];
-    for(unsigned inode_mts=_msh->MetisOffset[soltype][_msh->_iproc]; 
-      inode_mts<_msh->MetisOffset[soltype][_msh->_iproc+1]; inode_mts++) {
-      if((*(*_Bdc)[indexSol])(inode_mts)>1.9) {
-	int local_mts = inode_mts-_msh->MetisOffset[soltype][_msh->_iproc];
-	int idof_kk = KKoffset[k][_msh->_iproc] +local_mts; 
-	_KKdofs_tobe_Solved[counter]=idof_kk;
-	counter++;
-      }
-    }
-  } 
-  _KKdofs_tobe_Solved.resize(counter);
  
   //-----------------------------------------------------------------------------------------------
   int EPSsize= KKIndex[KKIndex.size()-1];

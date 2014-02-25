@@ -83,12 +83,52 @@ void PetscLinearSolver::set_tolerances(const double &rtol, const double &atol,
 
 void PetscLinearSolver::set_num_elem_vanka_block(const unsigned num_elem_vanka_block) {
   _num_elem_vanka_block = num_elem_vanka_block;
+  _index_init=0;
 };
 
-// ******************************************************************
+// *********************** for GMRES *********************************
+clock_t PetscLinearSolver::BuildIndex(){
+  
+  clock_t SearchTime = 0;
+  clock_t start_time = clock();
+  _index_init = 1;
+   
+  unsigned IndexaSize=KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
+  _indexai.resize(2);
+  _indexai[0].resize(IndexaSize);
+  _indexai[1].resize(IndexaSize);
+    
+  unsigned count0=0;
+  unsigned count1=0;
+  for(int k=0; k < _SolPdeIndex.size(); k++) {
+    unsigned indexSol = _SolPdeIndex[k];
+    unsigned soltype = _SolType[indexSol];
+    for(unsigned inode_mts = _msh->MetisOffset[soltype][_msh->_iproc]; 
+      inode_mts < _msh->MetisOffset[soltype][_msh->_iproc+1]; inode_mts++) {
+      int local_mts = inode_mts-_msh->MetisOffset[soltype][_msh->_iproc];
+      int idof_kk = KKoffset[k][_msh->_iproc] +local_mts; 
+      if((*(*_Bdc)[indexSol])(inode_mts) < 1.9) {
+	_indexai[0][count0] = idof_kk;
+	count0++;
+      }
+      else{
+	_indexai[1][count1] = idof_kk;
+	count1++;
+      }
+    }
+  } 
+  _indexai[0].resize(count0);
+  _indexai[1].resize(count1);
+  clock_t end_time=clock();
+  SearchTime = (end_time-start_time);
+  
+  return SearchTime;
+}
 
-clock_t PetscLinearSolver::BuildVankaIndex(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
-					   const short unsigned &NSchurVar){
+// *********************** for VANKA *********************************
+
+clock_t PetscLinearSolver::BuildIndex(const vector <unsigned> &VankaIndex,
+				      const short unsigned &NSchurVar){
   clock_t SearchTime=0;
   clock_t start_time=clock();
   _index_init=1;
@@ -300,7 +340,7 @@ clock_t PetscLinearSolver::BuildVankaIndex(const vector <unsigned> &_SolPdeIndex
  
 // ***********************************************************************
 
-std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
+std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &VankaIndex,
 						 const short unsigned &NSchurVar,const bool &Schur) {
   PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
   Vec EPS=EPSp->vec(); //TODO
@@ -315,7 +355,7 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
   int its_A=0, its_C=0, its=0;
   
   // ***************** NODE/ELEMENT SEARCH *******************
-  if(_index_init==0) SearchTime += BuildVankaIndex(_SolPdeIndex,VankaIndex,NSchurVar); 
+  if(_index_init==0) SearchTime += BuildIndex(VankaIndex,NSchurVar); 
   // ***************** END NODE/ELEMENT SEARCH *******************  
   
   for(unsigned vanka_block_index=0;vanka_block_index<_PSIZE[0][0];vanka_block_index++){  
@@ -574,12 +614,14 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPd
 
 // ********************************************************************************
 
-
 std::pair< int, double> PetscLinearSolver::solve() {
-  
+    
+    // ***************** NODE/ELEMENT SEARCH *******************
+    if(_index_init==0) BuildIndex(); 
+    // ***************** END NODE/ELEMENT SEARCH *******************  
+    
     if(_DirichletBCsHandlingMode==0) // By penalty
     {
-      
         clock_t  AssemblyTime, SolveTime, UpdateTime;
         clock_t start_time=clock();
 
@@ -595,11 +637,11 @@ std::pair< int, double> PetscLinearSolver::solve() {
         int ierr=0;
         int its=0;
 
-        vector <double>  value(_DrchKKdofs.size());
-        _KK->matrix_get_diagonal_values(_DrchKKdofs,value);
+        vector <double>  value(_indexai[0].size());
+        _KK->matrix_get_diagonal_values(_indexai[0],value);
 
         double penalty=1.0e20;
-        _KK->matrix_set_diagonal_values(_DrchKKdofs,penalty);
+        _KK->matrix_set_diagonal_values(_indexai[0],penalty);
         _KK->close();
 
         clock_t end_time=clock();
@@ -626,7 +668,7 @@ std::pair< int, double> PetscLinearSolver::solve() {
 
         *_EPS += *_EPSC;
 
-        _KK->matrix_set_diagonal_values(_DrchKKdofs,value);
+        _KK->matrix_set_diagonal_values(_indexai[0],value);
         _KK->close();
 
         _RESC->matrix_mult(*_EPSC,*_KK);
@@ -674,11 +716,11 @@ std::pair< int, double> PetscLinearSolver::solve() {
 
         // ***************** ASSEMBLE *******************
 
-        PetscInt Asize=_KKdofs_tobe_Solved.size();
+        PetscInt Asize=_indexai[1].size();
 
         // generate IS
         IS isA;
-        ierr=ISCreateGeneral(MPI_COMM_WORLD,Asize,&_KKdofs_tobe_Solved[0], PETSC_USE_POINTER ,&isA);
+        ierr=ISCreateGeneral(MPI_COMM_WORLD,Asize,&_indexai[1][0], PETSC_USE_POINTER ,&isA);
         CHKERRABORT(MPI_COMM_WORLD,ierr);
         ierr=ISSort(isA);
         CHKERRABORT(MPI_COMM_WORLD,ierr);

@@ -338,15 +338,13 @@ void NonLinearMultiLevelProblem::SetDimVankaBlock(const char pdename[], const ch
   unsigned ipde=GetPdeIndex(pdename);
   if (!strcmp(dim_vanka_block,"All")) {
     for (unsigned i=1; i<gridn; i++) {
-      //unsigned num_vanka_block2 = _msh[i]->GetElementNumber();
-          
       unsigned num_vanka_block2=_msh[i]->IS_Mts2Gmt_elem_offset[_msh[i]->_iproc+1]-_msh[i]->IS_Mts2Gmt_elem_offset[_msh[i]->_iproc]; 
-           
       _LinSolver[ipde][i]->set_num_elem_vanka_block(num_vanka_block2);
     }
-  } else if (!strcmp(dim_vanka_block,"All")) {
-  } else {
-    cout<<"Error! This option is not admitted \"All\""<<endl;
+  } 
+  else {
+    cout<<"Error! option \""<< dim_vanka_block<<"\" is not admitted in function"
+        <<" NonLinearMultiLevelProblem::SetDimVankaBlock(const char [], const char [])"<<endl;
     exit(1);
   }
 }
@@ -754,7 +752,7 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
 	for (unsigned k=0; k<npre; k++) {
 	  if (ig==ig) {
 	    if(_VankaIsSet) {
-	      solver_info = _LinSolver[ipde][ig]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
+	      solver_info = _LinSolver[ipde][ig]->solve(VankaIndex,_NSchurVar,_Schur);
 	    }  
 	    else {
 	      solver_info = _LinSolver[ipde][ig]->solve();
@@ -773,7 +771,7 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
       
       // Coarse direct solver
       if(_VankaIsSet) {
-	solver_info =_LinSolver[ipde][0]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
+	solver_info =_LinSolver[ipde][0]->solve(VankaIndex,_NSchurVar,_Schur);
       } 
       else {
 	solver_info =_LinSolver[ipde][0]->solve();
@@ -793,7 +791,7 @@ int NonLinearMultiLevelProblem::FullMultiGrid(const char pdename[], unsigned con
 	for (unsigned k=0; k<npost; k++) {
 	  if (ig==ig) {
 	    if(_VankaIsSet) {
-	      solver_info =_LinSolver[ipde][ig]->solve(_SolPdeIndex[ipde],VankaIndex,_NSchurVar,_Schur);
+	      solver_info =_LinSolver[ipde][ig]->solve(VankaIndex,_NSchurVar,_Schur);
 	    } 
 	    else {
 	      solver_info =_LinSolver[ipde][ig]->solve();
