@@ -36,9 +36,11 @@ Triangle.cpp
 Wedge.cpp
 )
 
-#SET(CMAKE_BUILD_TYPE Release)
-SET(CMAKE_BUILD_TYPE Debug)
-
+IF (NOT LIBRARY_OUTPUT_PATH)
+  SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib64 CACHE PATH
+       "Single output directory for building all libraries.")
+  MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH)
+ENDIF (NOT LIBRARY_OUTPUT_PATH)
 
 ADD_LIBRARY(${PROJECT_NAME} SHARED ${femlibsrc})
 
