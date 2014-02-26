@@ -104,7 +104,7 @@ clock_t PetscLinearSolver::BuildIndex(){
     unsigned indexSol = _SolPdeIndex[k];
     unsigned soltype = _SolType[indexSol];
     for(unsigned inode_mts = _msh->MetisOffset[soltype][_msh->_iproc]; 
-      inode_mts < _msh->MetisOffset[soltype][_msh->_iproc+1]; inode_mts++) {
+	inode_mts < _msh->MetisOffset[soltype][_msh->_iproc+1]; inode_mts++) {
       int local_mts = inode_mts-_msh->MetisOffset[soltype][_msh->_iproc];
       int idof_kk = KKoffset[k][_msh->_iproc] +local_mts; 
       if((*(*_Bdc)[indexSol])(inode_mts) < 1.9) {
@@ -120,8 +120,8 @@ clock_t PetscLinearSolver::BuildIndex(){
   _indexai[0].resize(count0);
   _indexai[1].resize(count1);
   
-  std::sort(_indexai[0].begin(),_indexai[0].end());
-  std::sort(_indexai[1].begin(),_indexai[1].end());
+  std::sort(_indexai[0].begin(), _indexai[0].end());
+  std::sort(_indexai[1].begin(), _indexai[1].end());
   
   clock_t end_time=clock();
   SearchTime = (end_time-start_time);
@@ -145,7 +145,7 @@ clock_t PetscLinearSolver::BuildIndex(const vector <unsigned> &VankaIndex,
   unsigned IndexaOffset = KKoffset[0][_msh->_iproc];
   unsigned IndexaSize=KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
   vector < unsigned > indexa(IndexaSize,IndexaSize);
-  _Psize.resize(4);
+  _Psize.resize(3);
   
   unsigned IndexbOffset = IndexaOffset;
   unsigned IndexbSize=IndexaSize;
@@ -173,11 +173,9 @@ clock_t PetscLinearSolver::BuildIndex(const vector <unsigned> &VankaIndex,
   while (test_end==0){
     _indexai.resize(vanka_block_index+1);
     _indexai[vanka_block_index].resize(IndexaSize);
-    _Psize[0].resize(1);
-    _Psize[0][0]=vanka_block_index+1;
+    _Psize[0].resize(vanka_block_index+1);
     _Psize[1].resize(vanka_block_index+1);
     _Psize[2].resize(vanka_block_index+1);
-    _Psize[3].resize(vanka_block_index+1);
          
     PetscInt Asize=0;
     PetscInt counterb=0;
@@ -204,7 +202,7 @@ clock_t PetscLinearSolver::BuildIndex(const vector <unsigned> &VankaIndex,
 	    unsigned jel_Metis = _msh->GetMetisDof(jel,3);
 	     
 	    if(jel_Metis >= IndexcOffsetp1 || jel_Metis < IndexcOffset ||
-	      indexc[jel_Metis-IndexcOffset] == IndexcSize){
+	       indexc[jel_Metis-IndexcOffset] == IndexcSize){
 	      if(jel_Metis < IndexcOffsetp1 && jel_Metis >= IndexcOffset){
 		indexci[Csize]=jel_Metis-IndexcOffset;
 		indexc[jel_Metis-IndexcOffset]=Csize++;
@@ -222,7 +220,7 @@ clock_t PetscLinearSolver::BuildIndex(const vector <unsigned> &VankaIndex,
 
 		  unsigned jnode_Metis = _msh->GetMetisDof(jnode,SolType);
 		  if(jnode_Metis >= _msh->MetisOffset[SolType][_msh->_iproc] &&
-		    jnode_Metis <  _msh->MetisOffset[SolType][_msh->_iproc+1]){
+		     jnode_Metis <  _msh->MetisOffset[SolType][_msh->_iproc+1]){
 		    unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
 		    if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1 <(*(*_Bdc)[SolPdeIndex])(jnode_Metis) ) {
 		      _indexai[vanka_block_index][Asize]=kkdof;
@@ -241,7 +239,7 @@ clock_t PetscLinearSolver::BuildIndex(const vector <unsigned> &VankaIndex,
 		  //add all variables to be updated
 		  unsigned kel_Metis = _msh->GetMetisDof(kel,3);
 		  if(kel_Metis >= IndexdOffsetp1 || 
-		    (kel_Metis >= IndexdOffset && indexd[kel_Metis-IndexdOffset] == IndexdSize)){
+		     (kel_Metis >= IndexdOffset && indexd[kel_Metis-IndexdOffset] == IndexdSize)){
 		    
 		    if(kel_Metis < IndexdOffsetp1){
 		      indexdi[Dsize]=kel_Metis-IndexdOffset;
@@ -258,7 +256,7 @@ clock_t PetscLinearSolver::BuildIndex(const vector <unsigned> &VankaIndex,
 		
 			unsigned knode_Metis = _msh->GetMetisDof(knode,SolType);
 			if(knode_Metis >= _msh->MetisOffset[SolType][_msh->_iproc] &&
-			  knode_Metis <  _msh->MetisOffset[SolType][_msh->_iproc+1]){
+			   knode_Metis <  _msh->MetisOffset[SolType][_msh->_iproc+1]){
 			  unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, knode);
 			  if(indexb[kkdof- IndexbOffset]==IndexbSize && 0.1<(*(*_Bdc)[SolPdeIndex])(knode_Metis)) {
 			    indexbi[counterb]=kkdof;
@@ -288,7 +286,7 @@ clock_t PetscLinearSolver::BuildIndex(const vector <unsigned> &VankaIndex,
 	      unsigned inode=(SolType<3)?(*(pt_un++)-1u):(iel+ii*nel);
 	      unsigned inode_Metis = _msh->GetMetisDof(inode,SolType);
 	      if(inode_Metis >= _msh->MetisOffset[SolType][_msh->_iproc] &&
-		inode_Metis <  _msh->MetisOffset[SolType][_msh->_iproc+1]){
+		 inode_Metis <  _msh->MetisOffset[SolType][_msh->_iproc+1]){
 		unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, inode);
 		if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1<(*(*_Bdc)[SolPdeIndex])(inode_Metis) ) {
 		  _indexai[vanka_block_index][Asize]=kkdof;
@@ -310,8 +308,8 @@ clock_t PetscLinearSolver::BuildIndex(const vector <unsigned> &VankaIndex,
     for (PetscInt i=0; i<counterb; i++) {
       unsigned jnode=indexbi[i];
       if(indexa[jnode- IndexaOffset]==IndexaSize) {
-	 _indexai[vanka_block_index][Asize]=jnode;
-	 indexa[jnode-IndexaOffset]=Asize++;
+	_indexai[vanka_block_index][Asize]=jnode;
+	indexa[jnode-IndexaOffset]=Asize++;
       }
       // *** reinitialize indexb
       indexb[jnode- IndexbOffset]=IndexbSize;
@@ -333,11 +331,11 @@ clock_t PetscLinearSolver::BuildIndex(const vector <unsigned> &VankaIndex,
     
     
     std::sort(_indexai[vanka_block_index].begin(), _indexai[vanka_block_index].begin()+PBsize);
-    std::sort(_indexai[vanka_block_index].begin()+PBsize, _indexai[vanka_block_index].end());
+    std::sort(_indexai[vanka_block_index].begin() + PBsize, _indexai[vanka_block_index].end());
     
-    _Psize[1][vanka_block_index]=PBsize;
-    _Psize[2][vanka_block_index]=PCsize;
-    _Psize[3][vanka_block_index]=PDsize;
+    _Psize[0][vanka_block_index]=PBsize;
+    _Psize[1][vanka_block_index]=PCsize;
+    _Psize[2][vanka_block_index]=PDsize;
       
     vanka_block_index++;
   }
@@ -367,10 +365,10 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &VankaI
   if(_index_init==0) SearchTime += BuildIndex(VankaIndex,NSchurVar); 
   // ***************** END NODE/ELEMENT SEARCH *******************  
   
-  for(unsigned vanka_block_index=0;vanka_block_index<_Psize[0][0];vanka_block_index++){  
+  for(unsigned vanka_block_index=0;vanka_block_index<_indexai.size();vanka_block_index++){  
     // ***************** ASSEMBLY ******************
     clock_t start_time = clock(); 
-    unsigned PBsize = _Psize[1][vanka_block_index];
+    unsigned PBsize = _Psize[0][vanka_block_index];
     unsigned PAmBsize = _indexai[vanka_block_index].size()-PBsize;
     // generate IS
     IS isPA;
@@ -416,8 +414,8 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &VankaI
     }
     else { // *********** if SCHUR COMPLEMENT ****************
 	
-      unsigned PCsize = _Psize[2][vanka_block_index];
-      unsigned PDsize = _Psize[3][vanka_block_index];
+      unsigned PCsize = _Psize[1][vanka_block_index];
+      unsigned PDsize = _Psize[2][vanka_block_index];
       
       ierr = ISCreateStride(MPI_COMM_WORLD,PBsize,0,1,&isPB); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
       ierr = ISGetIndices(isPB,&ind2); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -625,217 +623,175 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &VankaI
 
 std::pair< int, double> PetscLinearSolver::solve() {
     
-    // ***************** NODE/ELEMENT SEARCH *******************
-    if(_index_init==0) BuildIndex(); 
-    // ***************** END NODE/ELEMENT SEARCH *******************  
+  clock_t SearchTime, AssemblyTime, SolveTime, UpdateTime;
+  int its;
+  PetscErrorCode ierr; 
     
-    if(_DirichletBCsHandlingMode==0) // By penalty
+  // ***************** NODE/ELEMENT SEARCH *******************
+  clock_t start_time=clock();
+  if(_index_init==0) BuildIndex();
+  SearchTime = clock() - start_time;
+  // ***************** END NODE/ELEMENT SEARCH *******************  
+    
+  if(_DirichletBCsHandlingMode==0) // By penalty
     {
-        clock_t  AssemblyTime, SolveTime, UpdateTime;
-        clock_t start_time=clock();
+      
+      PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  //TODO
+      Vec EPSC=EPSCp->vec(); //TODO
+      PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
+      Vec RES=RESp->vec(); //TODO
+      PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); //TODO
+      Mat KK=KKp->mat(); //TODO
 
-        // ***************** ASSEMBLE matrix to set Dirichlet BCs by penalty *******************
+      
+      // ***************** ASSEMBLE matrix to set Dirichlet BCs by penalty *******************
+      start_time=clock();
+        
+      vector <double>  value(_indexai[0].size());
+      _KK->matrix_get_diagonal_values(_indexai[0],value);
 
-        PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  //TODO
-        Vec EPSC=EPSCp->vec(); //TODO
-        PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
-        Vec RES=RESp->vec(); //TODO
-        PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); //TODO
-        Mat KK=KKp->mat(); //TODO
+      double penalty=1.0e20;
+      _KK->matrix_set_diagonal_values(_indexai[0],penalty);
+      _KK->close();
 
-        int ierr=0;
-        int its=0;
+      AssemblyTime = clock()-start_time;
+      // ***************** END ASSEMBLE ******************
 
-        vector <double>  value(_indexai[0].size());
-        _KK->matrix_get_diagonal_values(_indexai[0],value);
+      // ***************** SOLVE ******************
+      start_time=clock();
 
-        double penalty=1.0e20;
-        _KK->matrix_set_diagonal_values(_indexai[0],penalty);
-        _KK->close();
+      this->init(KK);  //as before
 
-        clock_t end_time=clock();
-        AssemblyTime = (end_time-start_time);
-        // ***************** END ASSEMBLE ******************
+      _EPSC->zero();
 
-        // ***************** SOLVE ******************
-        start_time=clock();
+      // Solve the linear system
+      ierr = KSPSolve(_ksp[0], RES, EPSC);			CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-        this->init(KK);  //as before
+      SolveTime = clock()-start_time;
+      // ***************** END SOLVE ******************
 
-        _EPSC->zero();
+      // ***************** UPDATE and Restore Matrix ******************
+      start_time=clock();
 
-        // Solve the linear system
-        ierr = KSPSolve(_ksp[0], RES, EPSC);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
+      *_EPS += *_EPSC;
 
-        end_time = clock();
-        SolveTime = (end_time-start_time);
-        // ***************** END SOLVE ******************
+      _KK->matrix_set_diagonal_values(_indexai[0],value);
+      _KK->close();
 
-        // ***************** UPDATE and Restore Matrix ******************
-        start_time=clock();
+      _RESC->matrix_mult(*_EPSC,*_KK);
+      *_RES -= *_RESC;
 
-        *_EPS += *_EPSC;
+      // Get the number of iterations required for convergence
+      ierr = KSPGetIterationNumber(_ksp[0], &its);		CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-        _KK->matrix_set_diagonal_values(_indexai[0],value);
-        _KK->close();
+      // Get the norm of the final residual to return to the user.
+      //ierr = KSPGetResidualNorm(_ksp[0], &final_resid); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-        _RESC->matrix_mult(*_EPSC,*_KK);
-        *_RES -= *_RESC;
+      ierr = KSPDestroy(&_ksp[0]);				CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-        // Get the number of iterations required for convergence
-        ierr = KSPGetIterationNumber(_ksp[0], &its);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
+      UpdateTime = clock() -start_time;
+      // ***************** END UPDATE ******************
 
-        // Get the norm of the final residual to return to the user.
-        //ierr = KSPGetResidualNorm(_ksp[0], &final_resid); CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-        ierr = KSPDestroy(&_ksp[0]);
-
-        // STOP_LOG("solve()", "PetscLinearSolver");
-        //return std::make_pair(its, final_resid);
-
-        end_time=clock();
-        UpdateTime = (end_time-start_time);
-        // ***************** END UPDATE ******************
-
-        // *** Computational info ***
-        cout << "Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:              " <<
-             static_cast<double>( AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
-             "  ITS: " << its << endl;
-
-        return std::make_pair(its,
-                              static_cast<double>( AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC);
+      
 
     }
-    else if(_DirichletBCsHandlingMode==1) { // By elimination
+  else if(_DirichletBCsHandlingMode==1) { // By elimination
 
-        PetscVector* RESp=static_cast<PetscVector*> (_RES);
-        Vec RES=RESp->vec();
-        PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK);
-        Mat KK=KKp->mat();
+    PetscVector* RESp=static_cast<PetscVector*> (_RES);
+    Vec RES=RESp->vec();
+    PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK);
+    Mat KK=KKp->mat();
+              
+    // ***************** ASSEMBLE *******************
+    clock_t start_time=clock();
+ 
+    PetscInt Asize=_indexai[1].size();
 
-        PetscErrorCode ierr;
+    // generate IS
+    IS isA;
+    ierr=ISCreateGeneral(MPI_COMM_WORLD,Asize,&_indexai[1][0], PETSC_USE_POINTER ,&isA);	   CHKERRABORT(MPI_COMM_WORLD,ierr);
+        
+    Vec Pr;
+    ierr = VecGetSubVector(RES,isA,&Pr);				CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-        clock_t  AssemblyTime, SolveTime, UpdateTime;
+    // Solution Vector Pw
+    Vec Pw;
+    ierr = VecDuplicate(Pr,&Pw);			        	CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecSet(Pw,0);				        	CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-        int its;
+    //Matrix A
+    Mat A;
+    ierr = MatGetSubMatrix(KK,isA,isA,MAT_INITIAL_MATRIX,&A);		CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-        clock_t start_time=clock();
+    AssemblyTime = clock()-start_time;
+    // ***************** END ASSEMBLE ******************
 
-        // ***************** ASSEMBLE *******************
+    // ***************** SOLVE ******************
+    start_time=clock();
 
-        PetscInt Asize=_indexai[1].size();
+    // Initialize the data structure with the matrix PA
+    this->init(A,false,false);
 
-        // generate IS
-        IS isA;
-        ierr=ISCreateGeneral(MPI_COMM_WORLD,Asize,&_indexai[1][0], PETSC_USE_POINTER ,&isA);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
-        //ierr=ISSort(isA);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Solve the linear system
+    ierr = KSPSolve(_ksp[0],Pr,Pw);					CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-        Vec Pr;
-        ierr = VecGetSubVector(RES,isA,&Pr);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPGetIterationNumber(_ksp[0],&its);				CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-        // Solution Vector Pw
-        Vec Pw;
-        ierr = VecDuplicate(Pr,&Pw);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
-        ierr = VecSet(Pw,0);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPDestroy(&_ksp[0]);				        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = MatDestroy(&A);					        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecRestoreSubVector(RES,isA,&Pr);				CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecDestroy(&Pr);					        CHKERRABORT(MPI_COMM_WORLD,ierr);
+        
+    SolveTime = clock()-start_time;
+    // ***************** END SOLVE ******************
 
-        //Matrix A
-        Mat A;
-        ierr = MatGetSubMatrix(KK,isA,isA,MAT_INITIAL_MATRIX,&A);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // ***************** UPDATE ******************
+    start_time=clock();
 
-        clock_t end_time=clock();
-        AssemblyTime = (end_time-start_time);
-        // ***************** END ASSEMBLE ******************
+    _EPSC->zero();
+    PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);
+    Vec EPSC = EPSCp->vec();
 
-        // ***************** SOLVE ******************
-        start_time=clock();
+    const PetscInt *ind;
+    ierr = ISGetIndices(isA,&ind);				        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    PetscScalar *W[1];
+    ierr = VecGetArray(Pw,W);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecSetValues(EPSC,Asize,ind,W[0],ADD_VALUES);	        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecRestoreArray(Pw,W);				        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = ISRestoreIndices(isA,&ind);					CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-        // Initialize the data structure with the matrix PA
-        this->init(A,false,false);
+    ierr = VecDestroy(&Pw);					        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = ISDestroy(&isA);						CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-        // Solve the linear system
-        ierr = KSPSolve(_ksp[0],Pr,Pw);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    *_EPS += *_EPSC;
 
-        ierr = KSPGetIterationNumber(_ksp[0],&its);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    _RESC->matrix_mult(*_EPSC,*_KK);
+    *_RES -= *_RESC;
 
-        ierr = KSPDestroy(&_ksp[0]);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
-        ierr = MatDestroy(&A);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
-        ierr = VecRestoreSubVector(RES,isA,&Pr);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
-        ierr = VecDestroy(&Pr);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    _RES->close();
+    _EPS->close();
 
-        end_time = clock();
-        SolveTime = (end_time-start_time);
-        // ***************** END SOLVE ******************
+    UpdateTime = clock() - start_time;
+    // ***************** END UPDATE ******************
+  }
+    
+  // *** Computational info ***
+  cout << "Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:              " <<
+    static_cast<double>( SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
+    "  ITS: " << its << endl;
 
-        // ***************** UPDATE ******************
-        start_time=clock();
-
-        _EPSC->zero();
-        PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);
-        Vec EPSC = EPSCp->vec();
-
-        const PetscInt *ind;
-        ierr = ISGetIndices(isA,&ind);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
-        PetscScalar *W[1];
-        ierr = VecGetArray(Pw,W);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
-        ierr = VecSetValues(EPSC,Asize,ind,W[0],ADD_VALUES);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
-        ierr = VecRestoreArray(Pw,W);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
-        ierr = ISRestoreIndices(isA,&ind);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-        ierr = VecDestroy(&Pw);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
-        ierr = ISDestroy(&isA);
-        CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-        *_EPS += *_EPSC;
-
-        _RESC->matrix_mult(*_EPSC,*_KK);
-        *_RES -= *_RESC;
-
-        _RES->close();
-        _EPS->close();
-
-        end_time=clock();
-        UpdateTime = (end_time-start_time);
-        // ***************** END UPDATE ******************
-
-        // *** Computational info ***
-        cout << "Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:              " <<
-             static_cast<double>( AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
-             "  ITS: " << its << endl;
-
-        return std::make_pair(its,
-                              static_cast<double>( AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC);
-
-    }
+  return std::make_pair(its,static_cast<double>( SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC);
+    
+    
+    
 }
-
-
 
 
 void PetscLinearSolver::clear() {
   if (this->initialized()) {
     this->_is_initialized = false;
     int ierr=0;
-    ierr = KSPDestroy(&_ksp[0]);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPDestroy(&_ksp[0]);	CHKERRABORT(MPI_COMM_WORLD,ierr);
     // Mimic PETSc default solver and preconditioner
     this->_solver_type  = GMRES;
     if (!this->_preconditioner)      {
@@ -854,22 +810,18 @@ void PetscLinearSolver::init() {
     this->_is_initialized = true;
     int ierr=0;
     // Create the linear solver context
-    ierr = KSPCreate(MPI_COMM_WORLD, &_ksp[0]);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPCreate(MPI_COMM_WORLD, &_ksp[0]);  			CHKERRABORT(MPI_COMM_WORLD,ierr);
     // Create the preconditioner context
-    ierr = KSPGetPC(_ksp[0], &_pc);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPGetPC(_ksp[0], &_pc);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     // Have the Krylov subspace method use our good initial guess rather than 0
-    ierr = KSPSetInitialGuessNonzero(_ksp[0], PETSC_TRUE);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetInitialGuessNonzero(_ksp[0], PETSC_TRUE);		CHKERRABORT(MPI_COMM_WORLD,ierr);
     // Set user-specified  solver and preconditioner types
     this->set_petsc_solver_type();
     // Set the options from user-input
     // Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
     //  These options will override those specified above as long as
     //  KSPSetFromOptions() is called _after_ any other customization  routines.
-    ierr = KSPSetFromOptions(_ksp[0]);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetFromOptions(_ksp[0]);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     // Not sure if this is necessary, or if it is already handled by KSPSetFromOptions?
     // NOT NECESSARY!!!!
     //ierr = PCSetFromOptions (_pc);
@@ -910,34 +862,26 @@ void PetscLinearSolver::init(Mat& matrix, const bool pc_flag, const bool Schur) 
 
   // Since the matrix is sequential for us, we use as communicator MPI_COMM_WORLD (serial) 
   // instead of PETSC_COMM_WORLD (parallel)
-  ierr = KSPCreate(MPI_COMM_WORLD,&_ksp[0]);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr = KSPSetOperators(_ksp[0],matrix,matrix,DIFFERENT_NONZERO_PATTERN);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr = KSPSetInitialGuessNonzero(_ksp[0], PETSC_TRUE);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPCreate(MPI_COMM_WORLD,&_ksp[0]);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPSetOperators(_ksp[0],matrix,matrix,DIFFERENT_NONZERO_PATTERN);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPSetInitialGuessNonzero(_ksp[0], PETSC_TRUE);			CHKERRABORT(MPI_COMM_WORLD,ierr);
 
   if (!Schur || grid==0) {
-    ierr = KSPSetTolerances(_ksp[0],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetTolerances(_ksp[0],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);	CHKERRABORT(MPI_COMM_WORLD,ierr);
   } else {
-    ierr = KSPSetTolerances(_ksp[0],_rtol[1],_abstol[1],_dtol[1],_maxits[1]);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetTolerances(_ksp[0],_rtol[1],_abstol[1],_dtol[1],_maxits[1]);	CHKERRABORT(MPI_COMM_WORLD,ierr);
   }
-  ierr = KSPSetFromOptions(_ksp[0]);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPSetFromOptions(_ksp[0]);						CHKERRABORT(MPI_COMM_WORLD,ierr);
 
   // Set user-specified  solver and preconditioner types
   this->set_petsc_solver_type();
 
   if (!pc_flag) {
-    ierr = KSPGetPC(_ksp[0],&_pc);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);  
+    ierr = KSPGetPC(_ksp[0],&_pc);						CHKERRABORT(MPI_COMM_WORLD,ierr);  
     PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
     PetscReal zero = 1.e-16;
-    ierr = PCFactorSetZeroPivot(_pc,zero); CHKERRABORT(MPI_COMM_WORLD,ierr); 
-    ierr = PCFactorSetShiftType(_pc,MAT_SHIFT_NONZERO); CHKERRABORT(MPI_COMM_WORLD,ierr); 
-    
+    ierr = PCFactorSetZeroPivot(_pc,zero); 					CHKERRABORT(MPI_COMM_WORLD,ierr); 
+    ierr = PCFactorSetShiftType(_pc,MAT_SHIFT_NONZERO); 			CHKERRABORT(MPI_COMM_WORLD,ierr); 
   }
 }
 
@@ -949,20 +893,17 @@ void PetscLinearSolver::init_schur(Mat& matrix) {
   this->_is_initialized = true;
   int ierr=0;
 
-  ierr = MatSchurComplementGetKSP(matrix,&_ksp[1]);
-  ierr = KSPSetInitialGuessNonzero(_ksp[1], PETSC_TRUE);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = MatSchurComplementGetKSP(matrix,&_ksp[1]);				CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPSetInitialGuessNonzero(_ksp[1], PETSC_TRUE);			CHKERRABORT(MPI_COMM_WORLD,ierr);
+  
 
-  ierr = KSPSetTolerances(_ksp[1],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr = KSPSetFromOptions(_ksp[1]);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPSetTolerances(_ksp[1],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPSetFromOptions(_ksp[1]);						CHKERRABORT(MPI_COMM_WORLD,ierr);
 
   // Set user-specified  solver and preconditioner types
   this->set_petsc_solver_type2();
 
-  ierr = KSPGetPC(_ksp[1], &_pc);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPGetPC(_ksp[1], &_pc);						CHKERRABORT(MPI_COMM_WORLD,ierr);
   PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
   PetscReal zero = 1.e-16;
   PCFactorSetZeroPivot(_pc,zero);
@@ -981,43 +922,36 @@ void PetscLinearSolver::init(Mat& matrix) {
   this->_is_initialized = true;
   int ierr=0;
   // Create the linear solver context
-  ierr = KSPCreate(MPI_COMM_WORLD, &_ksp[0]);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPCreate(MPI_COMM_WORLD, &_ksp[0]);					CHKERRABORT(MPI_COMM_WORLD,ierr);
   //ierr = PCCreate (MPI_COMM_WORLD, &_pc); CHKERRABORT(MPI_COMM_WORLD,ierr);
   // Create the preconditioner context
-  ierr = KSPGetPC(_ksp[0], &_pc);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPGetPC(_ksp[0], &_pc);						CHKERRABORT(MPI_COMM_WORLD,ierr);
   // Set operators. The input matrix works as the preconditioning matrix
-  ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_NONZERO_PATTERN);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_NONZERO_PATTERN);	CHKERRABORT(MPI_COMM_WORLD,ierr);
   // Have the Krylov subspace method use our good initial guess rather than 0
-  ierr = KSPSetInitialGuessNonzero(_ksp[0], PETSC_TRUE);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPSetInitialGuessNonzero(_ksp[0], PETSC_TRUE);			CHKERRABORT(MPI_COMM_WORLD,ierr);
   // Set user-specified  solver and preconditioner types
   this->set_petsc_solver_type();
     
   if (!this->same_preconditioner)  {
-    ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_NONZERO_PATTERN);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_NONZERO_PATTERN);	CHKERRABORT(MPI_COMM_WORLD,ierr);
   } else {
-    ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_PRECONDITIONER);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_PRECONDITIONER);	CHKERRABORT(MPI_COMM_WORLD,ierr);
   }
 
   // Set the tolerances for the iterative solver.  Use the user-supplied
   // tolerance for the relative residual & leave the others at default values.
-  ierr = KSPSetTolerances(_ksp[0],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);
-  //   ierr = KSPSetTolerances(_ksp[0], , PETSC_DEFAULT,PETSC_DEFAULT, max_its);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPSetTolerances(_ksp[0],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+  //   ierr = KSPSetTolerances(_ksp[0], , PETSC_DEFAULT,PETSC_DEFAULT, max_its);CHKERRABORT(MPI_COMM_WORLD,ierr);
+  
     
   // Set the options from user-input
   // Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
   //  These options will override those specified above as long as
   //  KSPSetFromOptions() is called _after_ any other customization  routines.
-  ierr = KSPSetFromOptions(_ksp[0]);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPSetFromOptions(_ksp[0]);						CHKERRABORT(MPI_COMM_WORLD,ierr);
   // Not sure if this is necessary, or if it is already handled by KSPSetFromOptions?
-  //ierr = PCSetFromOptions (_pc);CHKERRABORT(MPI_COMM_WORLD,ierr);
+  //ierr = PCSetFromOptions (_pc);	CHKERRABORT(MPI_COMM_WORLD,ierr);
 
   // Notify PETSc of location to store residual history.
   // This needs to be called before any solves, since
@@ -1058,8 +992,7 @@ void PetscLinearSolver::get_residual_history(std::vector<double>& hist) {
   // vector may be different from what you are expecting.  For
   // example, TFQMR returns two residual values per iteration step.
   PetscReal* p;
-  ierr = KSPGetResidualHistory(_ksp[0], &p, &its);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPGetResidualHistory(_ksp[0], &p, &its);				  CHKERRABORT(MPI_COMM_WORLD,ierr);
   // Check for early return
   if (its == 0) return;
   // Create space to store the result
@@ -1082,8 +1015,7 @@ double PetscLinearSolver::get_initial_residual() {
   // vector may be different from what you are expecting.  For
   // example, TFQMR returns two residual values per iteration step.
   PetscReal* p;
-  ierr = KSPGetResidualHistory(_ksp[0], &p, &its);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPGetResidualHistory(_ksp[0], &p, &its);					CHKERRABORT(MPI_COMM_WORLD,ierr);
   // Check no residual history
   if (its == 0) {
     std::cerr << "No iterations have been performed, returning 0." << std::endl;
@@ -1098,56 +1030,43 @@ void PetscLinearSolver::set_petsc_solver_type() {
   int ierr = 0;
   switch (this->_solver_type) {
   case CG:
-    ierr = KSPSetType(_ksp[0], (char*) KSPCG);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[0], (char*) KSPCG);						CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case CR:
-    ierr = KSPSetType(_ksp[0], (char*) KSPCR);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[0], (char*) KSPCR);						CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case CGS:
-    ierr = KSPSetType(_ksp[0], (char*) KSPCGS);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[0], (char*) KSPCGS);						CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case BICG:
-    ierr = KSPSetType(_ksp[0], (char*) KSPBICG);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[0], (char*) KSPBICG);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case TCQMR:
-    ierr = KSPSetType(_ksp[0], (char*) KSPTCQMR);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[0], (char*) KSPTCQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case TFQMR:
-    ierr = KSPSetType(_ksp[0], (char*) KSPTFQMR);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[0], (char*) KSPTFQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case LSQR:
-    ierr = KSPSetType(_ksp[0], (char*) KSPLSQR);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[0], (char*) KSPLSQR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case BICGSTAB:
-    ierr = KSPSetType(_ksp[0], (char*) KSPBCGS);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[0], (char*) KSPBCGS);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case MINRES:
-    ierr = KSPSetType(_ksp[0], (char*) KSPMINRES);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[0], (char*) KSPMINRES);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case GMRES:
-    ierr = KSPSetType(_ksp[0], (char*) KSPGMRES);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[0], (char*) KSPGMRES);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case RICHARDSON:
-    ierr = KSPSetType(_ksp[0], (char*) KSPRICHARDSON);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[0], (char*) KSPRICHARDSON);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case CHEBYSHEV:
-    ierr = KSPSetType(_ksp[0], (char*) KSPCHEBYSHEV);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[0], (char*) KSPCHEBYSHEV);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case PREONLY:
-    ierr = KSPSetType(_ksp[0], (char*) KSPPREONLY);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[0], (char*) KSPPREONLY);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   default:
     std::cerr << "ERROR:  Unsupported PETSC Solver: "
@@ -1162,56 +1081,43 @@ void PetscLinearSolver::set_petsc_solver_type2() {
   int ierr = 0;
   switch (this->_solver_type) {
   case CG:
-    ierr = KSPSetType(_ksp[1], (char*) KSPCG);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[1], (char*) KSPCG);						CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case CR:
-    ierr = KSPSetType(_ksp[1], (char*) KSPCR);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[1], (char*) KSPCR);						CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case CGS:
-    ierr = KSPSetType(_ksp[1], (char*) KSPCGS);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[1], (char*) KSPCGS);						CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case BICG:
-    ierr = KSPSetType(_ksp[1], (char*) KSPBICG);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[1], (char*) KSPBICG);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case TCQMR:
-    ierr = KSPSetType(_ksp[1], (char*) KSPTCQMR);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[1], (char*) KSPTCQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case TFQMR:
-    ierr = KSPSetType(_ksp[1], (char*) KSPTFQMR);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[1], (char*) KSPTFQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case LSQR:
-    ierr = KSPSetType(_ksp[1], (char*) KSPLSQR);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[1], (char*) KSPLSQR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case BICGSTAB:
-    ierr = KSPSetType(_ksp[1], (char*) KSPBCGS);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[1], (char*) KSPBCGS);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case MINRES:
-    ierr = KSPSetType(_ksp[1], (char*) KSPMINRES);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[1], (char*) KSPMINRES);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case GMRES:
-    ierr = KSPSetType(_ksp[1], (char*) KSPGMRES);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[1], (char*) KSPGMRES);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case RICHARDSON:
-    ierr = KSPSetType(_ksp[1], (char*) KSPRICHARDSON);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[1], (char*) KSPRICHARDSON);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case CHEBYSHEV:
-    ierr = KSPSetType(_ksp[1], (char*) KSPCHEBYSHEV);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[1], (char*) KSPCHEBYSHEV);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   case PREONLY:
-    ierr = KSPSetType(_ksp[1], (char*) KSPPREONLY);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetType(_ksp[1], (char*) KSPPREONLY);					CHKERRABORT(MPI_COMM_WORLD,ierr);
     return;
   default:
     std::cerr << "ERROR:  Unsupported PETSC Solver: "
@@ -1267,686 +1173,3 @@ void PetscLinearSolver::print_converged_reason() {
 
 #endif // #ifdef LIBMESH_HAVE_PETSC
 
-
-
-
-// // ========================================================
-// std::pair< int, double> PetscLinearSolver::solve(SparseMatrix&  matrix_in,
-//     SparseMatrix&  precond_in,  NumericVector& solution_in,  NumericVector& rhs_in,
-//     const double tol,   const  int m_its) {
-// 
-// //   START_LOG("solve()", "PetscLinearSolver");
-//   // Make sure the data passed in are really of Petsc types
-//   PetscMatrix* matrix   = libmeshM_cast_ptr<PetscMatrix*>(&matrix_in);
-//   PetscMatrix* precond  = libmeshM_cast_ptr<PetscMatrix*>(&precond_in);
-//   PetscVector* solution = libmeshM_cast_ptr<PetscVector*>(&solution_in);
-//   PetscVector* rhs      = libmeshM_cast_ptr<PetscVector*>(&rhs_in);
-// 
-//   Mat precond_ = precond->mat();
-// 
-//   this->init(matrix);  //as before
-// 
-// //   this->init();
-// 
-//   int ierr=0;
-//   int its=0, max_its = static_cast<int>(m_its);
-//   PetscReal final_resid=0.;
-//   // Close the matrices and vectors in case this wasn't already done.
-//   matrix->close();
-//   precond->close();
-//   solution->close();
-//   rhs->close();
-// //   // If matrix != precond, then this means we have specified a
-// //   // special preconditioner, so reset preconditioner type to PCMAT.
-// //   if (matrix != precond)
-// //     {
-// //       this->_preconditioner_type = USER_PRECOND;
-// //       this->set_petsc_preconditioner_type ();
-// //     }
-// 
-//   if (this->_preconditioner) {
-//     this->_preconditioner->set_matrix(matrix_in);
-//   }
-// 
-//   // 2.2.1 & newer style
-//   // Set operators. The input matrix works as the preconditioning matrix
-// 
-// 
-//   if ( this->_preconditioner_type==MCC_PRECOND || this->_preconditioner_type==ICC_PRECOND ) {
-// //       /* A is symmetric. Set symmetric flag to enable ICC/Cholesky preconditioner */
-//     ierr = MatSetOption(matrix->mat(),MAT_SYMMETRIC,PETSC_TRUE);
-//     CHKERRABORT(MPI_COMM_WORLD,ierr);
-//     ierr = MatSetOption(matrix->mat(),MAT_SPD,PETSC_TRUE);
-//     CHKERRABORT(MPI_COMM_WORLD,ierr); /* set MUMPS id%SYM=1 */
-//   }
-// 
-//   if ( this->_preconditioner_type==MLU_PRECOND ) {
-//     PetscInt ival,icntl;
-// 
-//     ierr = KSPSetOperators(_ksp, matrix->mat(), precond_, DIFFERENT_NONZERO_PATTERN);
-//     CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//     ierr = PCFactorSetUpMatSolverPackage(_pc);
-//     CHKERRABORT(MPI_COMM_WORLD,ierr);   /* call MatGetFactor() to create F */
-//     ierr = PCFactorGetMatrix(_pc,&precond_);
-//     CHKERRABORT(MPI_COMM_WORLD,ierr);
-//     icntl=7;
-//     ival = 2;
-//     ierr = MatMumpsSetIcntl(precond_,icntl,ival);
-//     CHKERRABORT(MPI_COMM_WORLD,ierr);
-//   }
-// 
-//   else if ( this->_preconditioner_type==MCC_PRECOND ) {
-//     PetscInt ival,icntl;
-// 
-//     ierr = KSPSetOperators(_ksp, matrix->mat(), precond_, DIFFERENT_NONZERO_PATTERN);
-//     CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//     ierr = PCFactorSetUpMatSolverPackage(_pc);
-//     CHKERRABORT(MPI_COMM_WORLD,ierr);   /* call MatGetFactor() to create F */
-//     ierr = PCFactorGetMatrix(_pc,&precond_);
-//     CHKERRABORT(MPI_COMM_WORLD,ierr);
-//     icntl=7;
-//     ival = 2;
-//     ierr = MatMumpsSetIcntl(precond_,icntl,ival);
-//     CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//   } else {
-// 
-//     if (!this->same_preconditioner)  {
-//       ierr = KSPSetOperators(_ksp, matrix->mat(), precond_, SAME_NONZERO_PATTERN);
-//       CHKERRABORT(MPI_COMM_WORLD,ierr);
-//     } else {
-//       ierr = KSPSetOperators(_ksp, matrix->mat(), precond_, SAME_PRECONDITIONER);
-//       CHKERRABORT(MPI_COMM_WORLD,ierr);
-//     }
-//   }
-// 
-//   // Set the tolerances for the iterative solver.  Use the user-supplied
-//   // tolerance for the relative residual & leave the others at default values.
-//   ierr = KSPSetTolerances(_ksp, tol, PETSC_DEFAULT,PETSC_DEFAULT, max_its);
-//   CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 
-//   // Solve the linear system
-// 
-// // PetscLogEvent USER_EVENT;
-// // PetscLogDouble user_event_flops;
-// // PetscLogEventRegister("User event",0,&USER_EVENT);
-// // PetscLogEventBegin(USER_EVENT,0,0,0,0);
-// 
-// 
-//   ierr = KSPSolve(_ksp, rhs->vec(), solution->vec());
-//   CHKERRABORT(MPI_COMM_WORLD,ierr);
-//   // PetscLogFlops(user_event_flops);
-//   // PetscLogEventEnd(USER_EVENT,0,0,0,0);
-// 
-//   // Get the number of iterations required for convergence
-//   ierr = KSPGetIterationNumber(_ksp, &its);
-//   CHKERRABORT(MPI_COMM_WORLD,ierr);
-//   // Get the norm of the final residual to return to the user.
-//   ierr = KSPGetResidualNorm(_ksp, &final_resid);
-//   CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//   // STOP_LOG("solve()", "PetscLinearSolver");
-//   return std::make_pair(its, final_resid);
-// }
-
-
-// // ========================================================
-// std::pair< int, double> PetscLinearSolver::solve() {
-// 
-//   PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  //TODO
-//   Vec EPSC=EPSCp->vec(); //TODO
-//   PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
-//   Vec RES=RESp->vec(); //TODO
-//   PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); //TODO
-//   Mat KK=KKp->mat(); //TODO
-//  
-//   int ierr=0;
-//   int its=0;
-//   int max_its = 100; //= static_cast<int>(m_its);
-//   PetscReal final_resid = 0.;
-//   
-//   vector <double>  value(DrchKKdofs.size());
-//   _KK->matrix_get_diagonal_values(DrchKKdofs,value);
-//   
-//   double penalty=1.0e20;
-//   _KK->matrix_set_diagonal_values(DrchKKdofs,penalty);
-//   _KK->close();
-//   
-//   this->init(KK);  //as before
-//    
-//   _EPSC->zero(); 
-//     
-// 
-//   
-//   // Solve the linear system
-//   ierr = KSPSolve(_ksp[0], RES, EPSC); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//    
-//   *_EPS += *_EPSC; 
-//    
-//   _KK->matrix_set_diagonal_values(DrchKKdofs,value);
-//   _KK->close();
-//  
-//   _RESC->matrix_mult(*_EPSC,*_KK);
-//   *_RES -= *_RESC;
-//   
-//   // Get the number of iterations required for convergence
-//   ierr = KSPGetIterationNumber(_ksp[0], &its); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//   
-//   // Get the norm of the final residual to return to the user.
-//   ierr = KSPGetResidualNorm(_ksp[0], &final_resid); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//    ierr = KSPDestroy(&_ksp[0]);
-//   
-//   // STOP_LOG("solve()", "PetscLinearSolver");
-//   return std::make_pair(its, final_resid);
-//   
-// }
-
-
-
-// std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &_SolPdeIndex,const vector <unsigned> &VankaIndex,
-// 						 const short unsigned &NSchurVar,const bool &Schur) {
-//   PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
-//   Vec EPS=EPSp->vec(); //TODO
-//   PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
-//   Vec RES=RESp->vec(); //TODO
-//   PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); //TODO
-//   Mat KK=KKp->mat(); //TODO
-//    
-//   vector < unsigned > indexa;
-//   vector < unsigned > indexb;
-//   vector < unsigned > indexc;
-//   vector < unsigned > indexd;
-//  
-//   vector <PetscInt> indexai;
-//   vector <PetscInt> indexbi;
-//   vector <PetscInt> indexci;
-//   vector <PetscInt> indexdi;
-//  
-//   PetscErrorCode ierr;
-//   
-//   clock_t SearchTime=0, AssemblyTime=0, SolveTime0=0, SolveTime1=0, SolveTime2=0, UpdateTime=0;
-// 
-//   int its_A=0, its_C=0, its=0;
-// 
-//   unsigned nvt=KKIndex[KKIndex.size()-1u];
-//   unsigned nel=_msh->GetElementNumber();
-//   int grid=_msh->GetGridNumber();
-//   bool FastVankaBlock=true;
-//   if(NSchurVar==!0){
-//     FastVankaBlock=(_SolType[_SolPdeIndex[VankaIndex[VankaIndex.size()-NSchurVar]]]<3)?false:true;
-//   }
-//   if (indexa.size()<nvt || indexc.size()<nel) {
-//     indexa.resize(nvt);
-//     indexb.resize(nvt);
-//     indexc.resize(nel);
-//     indexd.resize(nel);
-//   }
-//   
-//   long unsigned IndexaSize=nvt;
-//   long unsigned IndexbSize=nvt;
-//   long unsigned IndexcSize=nel;
-//   long unsigned IndexdSize=nel;
-// 
-//   if (indexai.size()<IndexaSize) {
-//     indexai.resize(IndexaSize);
-//     indexbi.resize(IndexbSize);
-//     indexci.resize(IndexcSize);
-//     indexdi.resize(IndexdSize);
-//   }
-// 
-//   for (unsigned i=0; i<nvt; i++) {
-//     indexa[i]=IndexaSize;
-//     indexb[i]=IndexbSize;
-//   }
-//   for (unsigned i=0; i<nel; i++) {
-//     indexc[i]=IndexcSize;
-//     indexd[i]=IndexdSize;
-//   }
-// 
-//   // *** Start Vanka Block ***
-//   for(int isdom=0; isdom<_msh->nsubdom; isdom++) {  
-//     //    unsigned isdom = mapsubdomain[iasdom];
-//     for (int gel=_msh->IS_Mts2Gmt_elem_offset[isdom]; gel < _msh->IS_Mts2Gmt_elem_offset[isdom+1]; gel += _num_elem_vanka_block) {
-//       // ***************** NODE/ELEMENT SERCH *******************
-//       clock_t start_time=clock();
-//       PetscInt Asize=0;
-//       PetscInt counterb=0;
-//       PetscInt Csize=0;
-//       PetscInt Dsize=0;
-//       PetscInt PDsize=0;
-//       for (int iel_mts=gel; iel_mts<gel+_num_elem_vanka_block && iel_mts< _msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-// 	unsigned iel = _msh->IS_Mts2Gmt_elem[iel_mts];     
-//     
-// 	for (unsigned i=0; i<_msh->el->GetElementDofNumber(iel,0); i++) {
-// 	  unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
-// 	  unsigned nvei=_msh->el->GetVertexElementNumber(inode);
-// 	  const unsigned *pt_jel=_msh->el->GetVertexElementAddress(inode,0);
-// 	  for (unsigned j=0; j<nvei*(!FastVankaBlock)+FastVankaBlock; j++) {
-// 	    unsigned jel=(!FastVankaBlock)?*(pt_jel++)-1u:iel;
-// 	    //add elements for velocity to be solved
-// 	    if (indexc[jel]==IndexcSize) {
-// 	      indexci[Csize]=jel;
-// 	      indexc[jel]=Csize++;
-// 	      //----------------------------------------------------------------------------------
-// 	      //add velocity nodes to be solved
-// 	      for (unsigned iind=0; iind<VankaIndex.size()-NSchurVar; iind++) {
-// 		unsigned indexSol=VankaIndex[iind];
-// 		const unsigned *pt_un=_msh->el->GetElementVertexAddress(jel,0);
-// 		unsigned nvej=_msh->el->GetElementDofNumber(jel,_msh->_END_IND[_SolType[_SolPdeIndex[indexSol]]]);
-// 		for (unsigned jj=0; jj<nvej; jj++) {
-// 		  unsigned jnode=(_SolType[_SolPdeIndex[indexSol]]<3)?(*(pt_un++)-1u):(jel+jj*nel);
-// 		  unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, jnode);
-// 		  unsigned jnode_Metis = _msh->GetMetisDof(jnode,_SolType[_SolPdeIndex[indexSol]]);
-// 		  if (indexa[kkdof]==IndexaSize && 1.1 <(*(*_Bdc)[_SolPdeIndex[indexSol]])(jnode_Metis) ) {
-// 		    indexai[Asize]=kkdof;
-// 		    indexa[kkdof]=Asize++;
-// 		  }
-// 		}
-// 	      }
-// 	      //-----------------------------------------------------------------------------------
-// 	      for (unsigned jj=0; jj<_msh->el->GetElementDofNumber(jel,0); jj++) {
-// 		unsigned jnode=_msh->el->GetElementVertexIndex(jel,jj)-1u;
-// 		unsigned nvej=_msh->el->GetVertexElementNumber(jnode);
-// 		const unsigned *pt_kel=_msh->el->GetVertexElementAddress(jnode,0);
-// 		for (unsigned k=0; k<nvej; k++) {
-// 		  unsigned kel=*(pt_kel++)-1u;
-// 		  //add all variables to be updated
-// 		  if (indexd[kel]==IndexdSize) {
-// 		    indexdi[Dsize]=kel;
-// 		    indexd[kel]=Dsize++;
-// 		    for (unsigned int indexSol=0; indexSol<KKIndex.size()-1u; indexSol++) {
-// 		      const unsigned *pt_un=_msh->el->GetElementVertexAddress(kel,0);
-// 		      unsigned nvek=_msh->el->GetElementDofNumber(kel,_msh->_END_IND[_SolType[_SolPdeIndex[indexSol]]]);
-// 		      for (unsigned kk=0; kk<nvek; kk++) {
-// 			unsigned knode=(_SolType[_SolPdeIndex[indexSol]]<3)?(*(pt_un++)-1u):(kel+kk*nel);
-// 			unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, knode);
-// 			unsigned knode_Metis = _msh->GetMetisDof(knode,_SolType[_SolPdeIndex[indexSol]]);
-// 			if (indexb[kkdof]==IndexbSize && 0.1<(*(*_Bdc)[_SolPdeIndex[indexSol]])(knode_Metis)) {
-// 			  indexbi[counterb]=kkdof;
-// 			  indexb[kkdof]=counterb++;
-// 			}
-// 		      }
-// 		    }
-// 		  }
-// 		}
-// 	      } //------------------------------------------------------------------------
-// 	    }
-// 	  }
-// 	}
-// 	//-----------------------------------------------------------------------------------------
-// 	//Add pressure nodes to be solved
-// 	{
-// 	  for (unsigned iind=VankaIndex.size()-NSchurVar; iind<VankaIndex.size(); iind++) {
-// 	    unsigned indexSol=VankaIndex[iind];
-// 	    const unsigned *pt_un=_msh->el->GetElementVertexAddress(iel,0);
-// 	    unsigned nvei=_msh->el->GetElementDofNumber(iel,_msh->_END_IND[_SolType[_SolPdeIndex[indexSol]]]);
-// 	    for (unsigned ii=0; ii<nvei; ii++) {
-// 	      unsigned inode=(_SolType[_SolPdeIndex[indexSol]]<3)?(*(pt_un++)-1u):(iel+ii*nel);
-// 	      unsigned kkdof=GetKKDof(_SolPdeIndex[indexSol], indexSol, inode);
-// 	      unsigned inode_Metis = _msh->GetMetisDof(inode,_SolType[_SolPdeIndex[indexSol]]);
-// 	      if (indexa[kkdof]==IndexaSize && 1.1<(*(*_Bdc)[_SolPdeIndex[indexSol]])(inode_Metis) ) {
-// 		indexai[Asize]=kkdof;
-// 		indexa[kkdof]=Asize++;
-// 		PDsize++;
-// 	      }
-// 	    }
-// 	  }
-// 	}
-// 	//-----------------------------------------------------------------------------------------
-//       }
-//     
-//       PetscInt PBsize=Asize;
-//       PetscInt PCsize=PBsize-PDsize;
-//       for (PetscInt i=0; i<counterb; i++) {
-// 	unsigned jnode=indexbi[i];
-// 	if (indexa[jnode]==IndexaSize) {
-// 	  indexai[Asize]=jnode;
-// 	  indexa[jnode]=Asize++;
-// 	}
-// 	// *** reinitialize indexb
-// 	indexb[jnode]=IndexbSize;
-//       }
-//       PetscInt PAmBsize=Asize-PBsize;
-//     
-//       // *** re-initialize indeces(a,c,d)
-//       for (PetscInt i=0; i<Asize; i++) {
-// 	indexa[indexai[i]]=IndexaSize;
-//       }
-//       for (PetscInt i=0; i<Csize; i++) {
-// 	indexc[indexci[i]]=IndexcSize;
-//       }
-//       for (PetscInt i=0; i<Dsize; i++) {
-// 	indexd[indexdi[i]]=IndexdSize;
-//       }
-// 
-//       clock_t end_time=clock();
-//       SearchTime+=(end_time-start_time);
-//       start_time=clock();
-//       // ***************** END NODE/ELEMENT SEARCH *******************
-// 
-//       // ***************** ASSEMBLY *******************
-//     
-//       // generate IS
-//       IS isPA;
-//       ierr=ISCreateGeneral(MPI_COMM_WORLD,PBsize,&indexai[0],PETSC_USE_POINTER,&isPA); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       ierr=ISSort(isPA); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//     
-// //       // Solution Vector Pw
-// //       Vec Pw;
-// //       ierr = VecCreateSeq(MPI_COMM_WORLD,PBsize,&Pw); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// //       ierr = VecSetFromOptions(Pw); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// // 
-// //       // RHS Pr
-// //       Vec Pr;
-// //       ierr = VecDuplicate(Pw,&Pr); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//       
-//       Vec Pr;
-//       ierr = VecGetSubVector(RES,isPA,&Pr); 		CHKERRABORT(MPI_COMM_WORLD,ierr);
-//   
-//       // Solution Vector Pw
-//       Vec Pw;
-//       ierr = VecDuplicate(Pr,&Pw); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       ierr = VecSet(Pw,0); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       
-//       
-//       
-//       
-//       
-//       //Matrix PA (PA is the Total matrix over a patch)
-//       Mat PA;
-//       ierr = MatGetSubMatrix(KK,isPA,isPA,MAT_INITIAL_MATRIX,&PA); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       IS isPB;  
-//       const PetscInt *ind,*ind2;
-//       if (!Schur || grid==0) {
-// // 	ierr = ISCreateStride(MPI_COMM_WORLD,PBsize,0,1,&isPB); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// // 	PetscScalar *y=new PetscScalar [PBsize];
-// // 	ierr = ISGetIndices(isPA,&ind); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// // 	ierr = ISGetIndices(isPB,&ind2); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// // 	ierr = VecGetValues(RES,PBsize,ind,y); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// // 	ierr = VecSetValues(Pr,PBsize,ind2,y,INSERT_VALUES); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// // 	ierr = VecAssemblyBegin(Pr); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// // 	ierr = VecAssemblyEnd(Pr); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// // 	ierr = ISRestoreIndices(isPA,&ind); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// // 	ierr = ISRestoreIndices(isPB,&ind2); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// // 	ierr = ISDestroy(&isPB); CHKERRABORT(MPI_COMM_WORLD,ierr);  
-// //       
-// // 	delete [] y;
-// 
-// 	end_time=clock();
-// 	AssemblyTime+=(end_time-start_time);
-// 	// ***************** END ASSEMBLY ******************
-//       
-// 
-// 	// ***************** START NON SCHUR COMPLEMENT SOLVER ******************
-// 	start_time=clock(); // START SOLVE 0 TIME
-// 	//        PetscViewer    viewer;
-// 	//        ierr=PetscViewerDrawOpen(PETSC_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	// //        ierr= MatView(PA,viewer); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	//        ierr= VecView(Pr,viewer); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	//        double ff;
-// 	//        std::cin>>ff;
-// 	//        exit(0);
-// 
-// 	// Initialize the data structure with the matrix PA
-// 	this->init(PA,false,false);
-//       
-// 	// Solve the linear system
-// 	ierr = KSPSolve(_ksp[0],Pr,Pw);  CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	// print information on ksp solver
-// 	//ierr = KSPView(_ksp[0],PETSC_VIEWER_STDOUT_WORLD); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	ierr = KSPGetIterationNumber(_ksp[0],&its); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	its_A += its;
-// 
-// 	end_time=clock();
-// 	SolveTime0+=(end_time-start_time);
-// 
-// 	// ***************** END NON SCHUR COMPLEMENT SOLVER ******************
-//       }
-// 
-//       else {
-// 
-// 	// ***************** START SCHUR COMPLEMENT SOLVER ******************
-//    
-// 	// residual w (Velocity only)
-// 	Vec w;
-// 	ierr = VecCreateSeq(MPI_COMM_WORLD,PCsize,&w); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecSetFromOptions(w); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	// RHS f (Momentum only)
-// 	Vec f;
-// 	ierr = VecDuplicate(w,&f); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	// residual z (Pressure only)
-// 	Vec z;
-// 	ierr = VecCreateSeq(MPI_COMM_WORLD,PDsize,&z); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecSetFromOptions(z); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	// RHS g (Continuity only);
-// 	Vec g;
-// 	ierr = VecDuplicate(z,&g); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       
-// 	ierr = ISCreateStride(MPI_COMM_WORLD,PBsize,0,1,&isPB); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = ISGetIndices(isPB,&ind2); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       
-// 	//da sistemare (TODO I think that allocation is not necessary)
-// 	PetscScalar *y=new PetscScalar [PBsize];
-//       
-// 	ierr = VecGetValues(RES,PBsize,&indexai[0],y); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecSetValues(f,PCsize,ind2,y,INSERT_VALUES); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecAssemblyBegin(f); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecAssemblyEnd(f); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecSetValues(g,PDsize,ind2,&y[PCsize],INSERT_VALUES); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecAssemblyBegin(g); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecAssemblyEnd(g); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	delete [] y;
-//       
-// 	IS isCl,isDl;
-// 	ierr=ISCreateGeneral(MPI_COMM_WORLD,PCsize,ind2,PETSC_USE_POINTER,&isCl); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr=ISCreateGeneral(MPI_COMM_WORLD,PDsize,&ind2[PCsize],PETSC_USE_POINTER,&isDl); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	/* linear system matrix Schur Complement*/
-// 	Mat A;
-// 	ierr = MatGetSubMatrix(PA,isCl,isCl,MAT_INITIAL_MATRIX,&A); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	Mat B;
-// 	ierr = MatGetSubMatrix(PA,isDl,isCl,MAT_INITIAL_MATRIX,&B); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       
-// 	Mat Bt;
-// 	if (GetMatrixProperties()) {
-// 	  ierr = MatCreateTranspose(B,&Bt); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	} else {
-// 	  // In the Monolithic Fluid-Structure formulation Bt is not the transpose of B
-// 	  ierr = MatGetSubMatrix(PA,isCl,isDl,MAT_INITIAL_MATRIX,&Bt); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	}
-// 
-// 	KSPMatRegisterAll();
-// 	Mat C,D;
-// 	//C=D-B A^{-1} B^t
-// 	if (!GetStabilization()) {
-// 	  ierr = MatCreateSchurComplement(A,A,Bt,B,PETSC_NULL,&C); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	} else {
-// 	  ierr = MatGetSubMatrix(PA,isDl,isDl,MAT_INITIAL_MATRIX,&D); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	  ierr = MatCreateSchurComplement(A,A,Bt,B,D,&C); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	}
-// 
-// 	ierr = ISDestroy(&isCl); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = ISDestroy(&isDl); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//       
-// 	end_time=clock();
-// 	AssemblyTime+=(end_time-start_time);
-// 
-// 	// ***************** END ASSEMBLY ******************
-// 
-// 	// ***************** START SCHUR COMPLEMENT SOLVER ******************
-// 
-// 	start_time=clock(); // START SOLVE 0 TIME
-// 
-// 	//init Schur Complement
-// 	this->init_schur(C);
-// 
-// 	//init _Ksp (GMRESM - no precond)
-// 	this->init(C,true,Schur);
-//    
-// 	// Prediction step
-//       
-// 	ierr = KSPSolve(_ksp[1],f,w); CHKERRABORT(MPI_COMM_WORLD,ierr);   // solve A^{-1} f -> w (temporary)
-// 	ierr = KSPGetIterationNumber(_ksp[1],&its); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	its_A += its;
-// 
-// 	end_time=clock();  // END SOLVE 0 TIME
-// 	SolveTime0+=(end_time-start_time);
-// 	start_time=clock(); // START SOLVE 1 TIME
-// 
-// 	// Projection Step
-// 	// Computation of the Rhs for the Projection Step
-// 	ierr = VecScale (w, -1.); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = MatMultAdd(B,w,g,g); CHKERRABORT(MPI_COMM_WORLD,ierr); // evaluate g - B A^{-1} f -> g (temporary)
-//       
-// 	ierr = KSPSolve(_ksp[0],g,z); CHKERRABORT(MPI_COMM_WORLD,ierr); // solve z = C^{-1} (g - B A^{-1} f)
-// 
-// 	ierr = KSPGetIterationNumber(_ksp[0],&its); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	its_C += its;
-// 
-// 	// print information on ksp solver
-// 	// ierr = KSPView(_ksp[1],PETSC_VIEWER_STDOUT_WORLD); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	end_time=clock(); // END SOLVE 1 TIME
-// 	SolveTime1+=(end_time-start_time);
-// 	start_time=clock(); // START SOLVE 2 TIME
-// 
-// 	// Correction Step
-// 	// Computation of the Rhs for the Correction Step
-// 	ierr =VecCopy(z,g); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecScale(g, -1.); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = MatMultAdd(Bt,g,f,f); CHKERRABORT(MPI_COMM_WORLD,ierr);  // evaluate f - Bt z -> f
-// 
-// 	ierr = KSPSolve(_ksp[1],f,w); CHKERRABORT(MPI_COMM_WORLD,ierr); // solve w=A^{-1}(f-Bt z)
-// 
-// 	PetscScalar *Z[1];
-// 	ierr = VecGetArray(w,Z); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecSetValues(Pw,PCsize,ind2,Z[0],INSERT_VALUES); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecRestoreArray(w,Z); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	ierr = VecGetArray(z,Z); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecSetValues(Pw,PDsize,&ind2[PCsize],Z[0],INSERT_VALUES); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecRestoreArray(z,Z); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	ierr = VecAssemblyBegin(Pw); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecAssemblyEnd(Pw); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       
-// 	ierr=ISRestoreIndices(isPB,&ind2); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	ierr = ISDestroy(&isPB); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	end_time=clock(); // END SOLVE 2 TIME
-// 	SolveTime2+=(end_time-start_time);
-//       
-// 	ierr = MatDestroy(&A); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = MatDestroy(&B); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = MatDestroy(&Bt); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = MatDestroy(&C); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	if (GetStabilization()) {
-// 	  ierr = MatDestroy(&D); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	}
-// 	ierr = VecDestroy(&f); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecDestroy(&w); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecDestroy(&g); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecDestroy(&z); CHKERRABORT(MPI_COMM_WORLD,ierr);   
-// 
-//       }
-//       // ***************** END VANKA SCHUR COMPLEMENT SOLVER ******************
-// 
-//       // ***************** START UPDATE ******************
-// 
-//       start_time=clock();
-// 
-//       //update Residual for PA
-//       ierr = MatMult(PA,Pw,Pr); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//       ierr = VecScale(Pr, -1.); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       PetscScalar *R[1];
-//       ierr = VecGetArray(Pr,R); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//       PetscScalar *W[1];
-//       ierr = VecGetArray(Pw,W); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//       ierr = ISGetIndices(isPA,&ind); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//       ierr=VecSetValues(RES,PBsize,ind,R[0],ADD_VALUES); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       ierr = VecAssemblyBegin(RES); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       ierr = VecAssemblyEnd(RES); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//       ierr=VecSetValues(EPS,PBsize,ind,W[0],ADD_VALUES); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       ierr = VecAssemblyBegin(EPS); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       ierr = VecAssemblyEnd(EPS); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//       ierr = ISRestoreIndices(isPA,&ind); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       ierr = VecRestoreArray(Pr,R); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//       if (PAmBsize) {
-// 	IS isB;
-// 	ierr=ISCreateGeneral(MPI_COMM_WORLD,PAmBsize,&indexai[PBsize],PETSC_USE_POINTER,&isB); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr=ISSort(isB); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	Vec Ps;
-// 	ierr = VecCreateSeq(MPI_COMM_WORLD,PAmBsize,&Ps); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	ierr = VecSetFromOptions(Ps); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	Mat PB;
-// 	ierr = MatGetSubMatrix(KK,isB,isPA,MAT_INITIAL_MATRIX,&PB); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = MatMult(PB,Pw,Ps); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	ierr = VecScale (Ps, -1.); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	PetscScalar *S[1];
-// 	ierr = VecGetArray(Ps,S); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = ISGetIndices(isB,&ind); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	ierr=VecSetValues(RES,PAmBsize,ind,S[0],ADD_VALUES); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecAssemblyBegin(RES); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecAssemblyEnd(RES); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-// 	ierr = ISRestoreIndices(isB,&ind); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecRestoreArray(Ps,S); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = VecDestroy(&Ps); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = MatDestroy(&PB); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	ierr = ISDestroy(&isB); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       }
-// 
-//       // ***************** START CLEANING ******************
-//     
-//       ierr = VecRestoreArray(Pw,W); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       ierr = VecDestroy(&Pw); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       ierr = VecDestroy(&Pr); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       ierr = MatDestroy(&PA); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       ierr = ISDestroy(&isPA); CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 
-//       ierr = KSPDestroy(&_ksp[0]); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       end_time=clock();
-//       UpdateTime+=(end_time-start_time);
-// 
-//       // ***************** END SOLVE AND UPDATE *******************
-//     } //end loop over vanka block
-//   } //loop over subdomain
-// 
-//   // *** Computational info ***
-//   cout << "Grid: "<<_msh->GetGridNumber()<< "      SOLVER TIME:              " <<
-//     static_cast<double>(SearchTime + AssemblyTime + SolveTime0 + SolveTime1 + SolveTime2 + UpdateTime)/ CLOCKS_PER_SEC<<
-//     "  ITS: " << its_A + its_C << endl;
-// 
-// 
-//   //    cout <<  " SearchTime: " << static_cast<double>(SearchTime)/ CLOCKS_PER_SEC << endl;
-//   //    cout << " AssemblyTime: " << static_cast<double>(AssemblyTime)/ CLOCKS_PER_SEC << endl;
-//   //    cout << " SolverTime: " <<  static_cast<double>(SolveTime0 + SolveTime1 + SolveTime2)/ CLOCKS_PER_SEC << endl;
-//   //    cout << " UpdateTime: " <<  static_cast<double>(UpdateTime)/ CLOCKS_PER_SEC << endl;
-// 
-//   return std::make_pair(its_A+its_C, 
-// 			static_cast<double>(SearchTime + AssemblyTime 
-// 					    + SolveTime0 + SolveTime1 
-// 					    + SolveTime2 + UpdateTime)/ CLOCKS_PER_SEC);
-// 
-// }
