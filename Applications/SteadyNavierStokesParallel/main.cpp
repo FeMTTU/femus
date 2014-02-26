@@ -122,13 +122,13 @@ int main(int argc,char **args) {
   nl_ml_prob.CreatePdeStructure();
    
   
-//   nl_ml_prob.SetDirichletBCsHandling("NS1","Penalty");
-//   nl_ml_prob.SetDirichletBCsHandling("NS2","Penalty");
-//   nl_ml_prob.SetDirichletBCsHandling("Temp","Penalty");
+  nl_ml_prob.SetDirichletBCsHandling("NS1","Penalty");
+  nl_ml_prob.SetDirichletBCsHandling("NS2","Penalty");
+  nl_ml_prob.SetDirichletBCsHandling("Temp","Penalty");
   
-  nl_ml_prob.SetDirichletBCsHandling("NS1","Elimination");
-  nl_ml_prob.SetDirichletBCsHandling("NS2","Elimination");
-  nl_ml_prob.SetDirichletBCsHandling("Temp","Elimination");
+//   nl_ml_prob.SetDirichletBCsHandling("NS1","Elimination");
+//   nl_ml_prob.SetDirichletBCsHandling("NS2","Elimination");
+//   nl_ml_prob.SetDirichletBCsHandling("Temp","Elimination");
   
   //Equation 1
   nl_ml_prob.AttachAssembleFunction(AssembleMatrixResNS1);

@@ -33,7 +33,7 @@ private:
   
   
   vector< vector <PetscInt> > _indexai;
-  vector< vector <unsigned> > _PSIZE;
+  vector< vector <unsigned> > _Psize;
   bool _index_init;
       
 public:
