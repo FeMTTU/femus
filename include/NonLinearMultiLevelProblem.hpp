@@ -35,6 +35,11 @@ private:
   bool _init_func_set;
   bool _bdc_func_set;
   
+  bool _assemble_matrix;
+  bool _assemble_res;
+ 
+  unsigned _this_ipde;
+  
  protected:
   int _nprocs;
   int _iproc;
@@ -68,7 +73,7 @@ private:
   vector <unsigned> _PdeIndex;
   void AddPde(const char name[]);
   unsigned GetPdeIndex(const char name[]) const; 
-   
+    
   vector <int> SolType;
   vector< vector <unsigned> > _SolPdeIndex;
   vector <unsigned> VankaIndex;
@@ -125,7 +130,7 @@ private:
 
   //* Multigrid Solver  */
   void Solve(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
-                    const char mg_type[]="F-Cycle");
+                    const char mg_type[]="F-Cycle", const bool &linear=0);
   int FreeMultigrid();
   void SetSmoother(const char smoothername[]);
   void SetVankaSchurOptions(bool Schur=0, short unsigned NSchurVar=0);
@@ -174,6 +179,10 @@ private:
 //  hid_t print_Dhdf5(hid_t file,const std::string & name, hsize_t dimsf[],double data[]);
   void SetMovingMesh(std::vector<std::string>& myss);
   
+  bool TestAssembleMatrix(){ return _assemble_matrix;};
+  bool TestAssembleRes(){ return _assemble_res;};
+  unsigned GetThisPdeIndex(){ return _this_ipde;};
+  char* GetThisPdeName(){ return _PdeName[_this_ipde];}
 };
 
 #endif

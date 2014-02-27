@@ -83,7 +83,7 @@ void PetscLinearSolver::set_tolerances(const double &rtol, const double &atol,
 
 void PetscLinearSolver::set_num_elem_vanka_block(const unsigned num_elem_vanka_block) {
   _num_elem_vanka_block = num_elem_vanka_block;
-  _index_init=0;
+  _indexai_init=0;
 };
 
 // *********************** for GMRES *********************************
@@ -91,7 +91,7 @@ clock_t PetscLinearSolver::BuildIndex(){
   
   clock_t SearchTime = 0;
   clock_t start_time = clock();
-  _index_init = 1;
+  _indexai_init = 1;
    
   unsigned IndexaSize=KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
   _indexai.resize(2);
@@ -135,7 +135,7 @@ clock_t PetscLinearSolver::BuildIndex(const vector <unsigned> &VankaIndex,
 				      const short unsigned &NSchurVar){
   clock_t SearchTime=0;
   clock_t start_time=clock();
-  _index_init=1;
+  _indexai_init=1;
   unsigned nel=_msh->GetElementNumber();
   bool FastVankaBlock=true;
   if(NSchurVar==!0){
@@ -362,7 +362,7 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &VankaI
   int its_A=0, its_C=0, its=0;
   
   // ***************** NODE/ELEMENT SEARCH *******************
-  if(_index_init==0) SearchTime += BuildIndex(VankaIndex,NSchurVar); 
+  if(_indexai_init==0) SearchTime += BuildIndex(VankaIndex,NSchurVar); 
   // ***************** END NODE/ELEMENT SEARCH *******************  
   
   for(unsigned vanka_block_index=0;vanka_block_index<_indexai.size();vanka_block_index++){  
@@ -629,20 +629,18 @@ std::pair< int, double> PetscLinearSolver::solve() {
     
   // ***************** NODE/ELEMENT SEARCH *******************
   clock_t start_time=clock();
-  if(_index_init==0) BuildIndex();
+  if(_indexai_init==0) BuildIndex();
   SearchTime = clock() - start_time;
   // ***************** END NODE/ELEMENT SEARCH *******************  
     
   if(_DirichletBCsHandlingMode==0) // By penalty
     {
-      
       PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  //TODO
       Vec EPSC=EPSCp->vec(); //TODO
       PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
       Vec RES=RESp->vec(); //TODO
       PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); //TODO
       Mat KK=KKp->mat(); //TODO
-
       
       // ***************** ASSEMBLE matrix to set Dirichlet BCs by penalty *******************
       start_time=clock();
@@ -689,7 +687,7 @@ std::pair< int, double> PetscLinearSolver::solve() {
 
       ierr = KSPDestroy(&_ksp[0]);				CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-      UpdateTime = clock() -start_time;
+      UpdateTime = clock() - start_time;
       // ***************** END UPDATE ******************
 
       
@@ -785,7 +783,6 @@ std::pair< int, double> PetscLinearSolver::solve() {
     
     
 }
-
 
 void PetscLinearSolver::clear() {
   if (this->initialized()) {

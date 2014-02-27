@@ -34,7 +34,7 @@ private:
   
   vector< vector <PetscInt> > _indexai;
   vector< vector <unsigned> > _Psize;
-  bool _index_init;
+  bool _indexai_init;
       
 public:
   // Constructor --------------------------------------
@@ -150,7 +150,7 @@ inline PetscLinearSolver::PetscLinearSolver (const unsigned &igrid, mesh* other_
   _dtol.resize(2, 1.e+50);
   _maxits.resize(2,10);
   
-  _index_init=0;
+  _indexai_init=0;
 
 }
 
