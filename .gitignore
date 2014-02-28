@@ -11,8 +11,8 @@ config/FEMTTUConfig.h
 
 
 #machine-dependent stuff 
-install_femus.sh
-configure_femus.sh
+# install_femus.sh
+# configure_femus.sh
 
 
 # folders
