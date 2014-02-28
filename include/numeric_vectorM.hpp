@@ -21,7 +21,7 @@
 
 // forward declarations
 class DenseVector;
-class DenseSubVectorM;
+class DenseSubVector;
 class SparseMatrixM;
 
 
@@ -154,7 +154,7 @@ public:
   virtual void insert (const DenseVector& V,
 		       const std::vector<unsigned int>& dof_indices) = 0;
   /// \f$ U=V \f$ and specify WHERE to insert it
-  virtual void insert (const DenseSubVectorM& V,
+  virtual void insert (const DenseSubVector& V,
 		       const std::vector<unsigned int>& dof_indices) = 0;
   // =====================================
   // RETURN FUNCTIONS

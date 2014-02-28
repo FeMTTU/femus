@@ -191,8 +191,8 @@ public:
     void insert(const NumericVectorM& V,const std::vector<unsigned int>& dof_indices);
     /// \f$ U=V \f$ where V is type DenseVector
     void insert (const DenseVector& V, const std::vector<unsigned int>& dof_indices);
-    /// \f$ U=V \f$ where V is type DenseSubVectorM
-     void insert (const DenseSubVectorM& V, const std::vector<unsigned int>& dof_indices);
+    /// \f$ U=V \f$ where V is type DenseSubVector
+     void insert (const DenseSubVector& V, const std::vector<unsigned int>& dof_indices);
 
     // ===========================
     // RETURN FUNCTIONS

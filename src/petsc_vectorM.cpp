@@ -11,7 +11,7 @@
 // Local Includes
 #include "petsc_vectorM.hpp"
 #include "petsc_matrixM.hpp"
-#include "dense_subvectorM.hpp"
+#include "DenseSubvector.hpp"
 #include "DenseVector.hpp"
 #include "parallelM.hpp"
 #include "petsc_macroM.hpp"
@@ -256,7 +256,7 @@ void PetscVectorM::insert (const DenseVector& V,
 }
 
 // =========================================================
-void PetscVectorM::insert (const DenseSubVectorM& V,
+void PetscVectorM::insert (const DenseSubVector& V,
 			     const std::vector<unsigned int>& dof_indices){
   assert (V.size() == dof_indices.size());
   for (unsigned int i=0; i<V.size(); i++)  this->set (dof_indices[i], V(i));

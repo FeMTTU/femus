@@ -9,7 +9,7 @@
 // Local Includes
 #include "dense_matrix_baseM.hpp"
 #include "dense_matrixM.hpp"
-#include "dense_subvectorM.hpp"
+#include "DenseSubvector.hpp"
 
 
 
@@ -114,7 +114,7 @@ DenseSubMatrixM(const DenseSubMatrixM& other_matrix)
    * symmetry of the matrix.
    */
   void condense(const unsigned int i,const unsigned int j,
-		const Real val,DenseSubVectorM& rhs){
+		const Real val,DenseSubVector& rhs){
     this->parent().condense(this->i_off()+i,
 			    this->j_off()+j,
 			    val, rhs.parent());
