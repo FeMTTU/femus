@@ -165,7 +165,7 @@ void PetscVectorM::add (const Real v_in){
   this->_restore_array();  int ierr=0;
   PetscScalar* values;  const PetscScalar v = static_cast<PetscScalar>(v_in);  
 
-  if(this->type() != GHOSTEDM)    {
+  if(this->type() != GHOSTED)    {
       const int n   = static_cast<int>(this->local_size());
       const int fli = static_cast<int>(this->first_local_index());
       
@@ -210,7 +210,7 @@ void PetscVectorM::add (const Real a_in, const NumericVectorM& v_in){
   // Make sure the NumericVector passed in is really a PetscVector
   const PetscVectorM* v = static_cast<const PetscVectorM*>(&v_in);
   v->_restore_array();  assert(this->size() == v->size());
-  if(this->type() != GHOSTEDM)  {
+  if(this->type() != GHOSTED)  {
 // #if PETSC_VERSION_LESS_THAN(2,3,0)
 //       // 2.2.x & earlier style
 //       ierr = VecAXPY(&a, v->_vec, _vec);  CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -267,7 +267,7 @@ void PetscVectorM::scale (const Real factor_in){
   this->_restore_array();  int ierr = 0;
   PetscScalar factor = static_cast<PetscScalar>(factor_in);
   
-  if(this->type() != GHOSTEDM)    {
+  if(this->type() != GHOSTED)    {
 // #if PETSC_VERSION_LESS_THAN(2,3,0)
 //       // 2.2.x & earlier style
 //       ierr = VecScale(&factor, _vec);
@@ -297,7 +297,7 @@ void PetscVectorM::scale (const Real factor_in){
 void PetscVectorM::abs(){
   this->_restore_array();
   int ierr = 0;
-  if(this->type() != GHOSTEDM)   {
+  if(this->type() != GHOSTED)   {
       ierr = VecAbs(_vec);
       CHKERRABORT(MPI_COMM_WORLD,ierr);  
     }
@@ -327,7 +327,7 @@ NumericVectorM& PetscVectorM::operator = (const Real s_in){
   int ierr = 0;  PetscScalar s = static_cast<PetscScalar>(s_in);
 
   if (this->size() != 0)    {
-      if(this->type() != GHOSTEDM)	{
+      if(this->type() != GHOSTED)	{
 // #if PETSC_VERSION_LESS_THAN(2,3,0)
 // 	  // 2.2.x & earlier style
 // 	  ierr = VecSet(&s, _vec);
@@ -374,7 +374,7 @@ PetscVectorM& PetscVectorM::operator = (const PetscVectorM& v){
   assert (this->local_size() == v.local_size());  assert (this->_global_to_local_map == v._global_to_local_map);
   if (v.size() != 0)    {
       int ierr = 0;
-      if(this->type() != GHOSTEDM)	{
+      if(this->type() != GHOSTED)	{
 	  ierr = VecCopy (v._vec, this->_vec);  CHKERRABORT(MPI_COMM_WORLD,ierr);
 	}
       else {
@@ -418,7 +418,7 @@ NumericVectorM& PetscVectorM::operator = (const std::vector<Real>& v){
       ierr = VecRestoreArray (_vec, &values);  CHKERRABORT(MPI_COMM_WORLD,ierr);
     }
   // Make sure ghost dofs are up to date
-  if (this->type() == GHOSTEDM)   this->close();
+  if (this->type() == GHOSTED)   this->close();
 
   return *this;
 }
@@ -451,7 +451,7 @@ void PetscVectorM::localize (NumericVectorM& v_local_in) const  {
   ierr = ISDestroy (&is);CHKERRABORT(MPI_COMM_WORLD,ierr);
   ierr = VecScatterDestroy(&scatter); CHKERRABORT(MPI_COMM_WORLD,ierr);
   // Make sure ghost dofs are up to date
-  if (v_local->type() == GHOSTEDM)  v_local->close();
+  if (v_local->type() == GHOSTED)  v_local->close();
 }
 
 // ==========================================================
@@ -500,7 +500,7 @@ void PetscVectorM::localize (NumericVectorM& v_local_in,
   ierr = ISDestroy (&is);  CHKERRABORT(MPI_COMM_WORLD,ierr);
   ierr = VecScatterDestroy(&scatter); CHKERRABORT(MPI_COMM_WORLD,ierr);
   // Make sure ghost dofs are up to date
-  if (v_local->type() == GHOSTEDM)  v_local->close();
+  if (v_local->type() == GHOSTED)  v_local->close();
 }
 
 // ================================================================
@@ -521,7 +521,7 @@ void PetscVectorM::localize (const unsigned int first_local_idx,
   if ((first_local_idx == 0) &&      (local_size == size))   return;
   
   // Build a parallel vector, initialize it with the local parts of (*this)
-  PetscVectorM parallel_vec; parallel_vec.init (size, local_size, true, PARALLELM);
+  PetscVectorM parallel_vec; parallel_vec.init (size, local_size, true, PARALLEL);
 
   // Copy part of *this into the parallel_vec
   {
@@ -636,7 +636,7 @@ void PetscVectorM::pointwise_mult (const NumericVectorM& vec1,
 
 #else
   
-  if(this->type() != GHOSTEDM)
+  if(this->type() != GHOSTED)
     {
       ierr = VecPointwiseMult(this->vec(),
 			      const_cast<PetscVectorM*>(vec1_petsc)->vec(),

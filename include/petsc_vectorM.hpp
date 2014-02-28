@@ -7,7 +7,7 @@
 #ifdef FEMUS_HAVE_PETSC
 
 #include "Typedefs_conf.hpp"
-#include "Paralleltype_enum.hpp"
+#include "ParalleltypeEnum.hpp"
 
 
 //#include "libmesh.h" //TODO
@@ -94,21 +94,21 @@ public:
     // =====================================
     ///  Dummy-Constructor. Dimension=0
     explicit
-    PetscVectorM (const ParallelTypeM type = AUTOMATICM);
+    PetscVectorM (const ParallelType type = AUTOMATIC);
     /// Constructor. Set dimension to \p n and initialize all elements with zero.
     explicit
     PetscVectorM (const unsigned int n,
-                  const ParallelTypeM type = AUTOMATICM);
+                  const ParallelType type = AUTOMATIC);
     /// Constructor. Set local dimension to \p n_local, the global dimension
     /// to \p n, and initialize all elements with zero.
     PetscVectorM (const unsigned int n,
                   const unsigned int n_local,
-                  const ParallelTypeM type = AUTOMATICM);
+                  const ParallelType type = AUTOMATIC);
     /// Constructor. Set local dimension to \p n_local, the global dimension to \p n
     PetscVectorM (const unsigned int N,
                   const unsigned int n_local,
                   const std::vector<unsigned int>& ghost,
-                  const ParallelTypeM type = AUTOMATICM);
+                  const ParallelType type = AUTOMATIC);
     /// Constructor.  Creates a PetscVectorM assuming a valid PETSc Vec object
     PetscVectorM(Vec v);
 
@@ -135,19 +135,19 @@ public:
     void init (const unsigned int N,
                const unsigned int n_local,
                const bool         fast=false,
-               const ParallelTypeM type=AUTOMATICM);
+               const ParallelType type=AUTOMATIC);
 
     /// call init with n_local = N,
     void init (const unsigned int N,
                const bool         fast=false,
-               const ParallelTypeM type=AUTOMATICM);
+               const ParallelType type=AUTOMATIC);
 
     /// Create a vector that holds tha local indices plus those specified in the \p ghost argument.
     void init (const unsigned int /*N*/,
                        const unsigned int /*n_local*/,
                        const std::vector<unsigned int>& /*ghost*/,
                        const bool /*fast*/ = false,
-                       const ParallelTypeM = AUTOMATICM);
+                       const ParallelType = AUTOMATIC);
     /// Creates a vector that has the same dimension
     void init (const NumericVectorM& other,
                        const bool fast = false);
@@ -285,7 +285,7 @@ public:
 
 
     // ===========================
-    // PARALLELM OPERATIONS
+    // PARALLEL OPERATIONS
     // ===========================
      
     /// Creates a copy of the global vector in the local vector \p v_local.
@@ -344,7 +344,7 @@ protected:
 /*----------------------- Inline functions ----------------------------------*/
 
 // ===========================================================
-inline PetscVectorM::PetscVectorM (const ParallelTypeM type)
+inline PetscVectorM::PetscVectorM (const ParallelType type)
         : _array_is_present(false),
         _local_form(NULL),
         _values(NULL),
@@ -353,7 +353,7 @@ inline PetscVectorM::PetscVectorM (const ParallelTypeM type)
 	  this->_type = type;}
 
 // =========================================================
-inline PetscVectorM::PetscVectorM (const unsigned int n,const ParallelTypeM type)
+inline PetscVectorM::PetscVectorM (const unsigned int n,const ParallelType type)
         : _array_is_present(false),
         _local_form(NULL),
         _values(NULL),
@@ -364,7 +364,7 @@ inline PetscVectorM::PetscVectorM (const unsigned int n,const ParallelTypeM type
 // ===========================================================
 inline PetscVectorM::PetscVectorM (const unsigned int n,
                                    const unsigned int n_local,
-                                   const ParallelTypeM type)
+                                   const ParallelType type)
         : _array_is_present(false),
         _local_form(NULL),
         _values(NULL),
@@ -377,7 +377,7 @@ inline PetscVectorM::PetscVectorM (const unsigned int n,
 inline PetscVectorM::PetscVectorM (const unsigned int n,
                                    const unsigned int n_local,
                                    const std::vector<unsigned int>& ghost,
-                                   const ParallelTypeM type)
+                                   const ParallelType type)
         : _array_is_present(false),
         _local_form(NULL),
         _values(NULL),
@@ -453,13 +453,13 @@ inline PetscVectorM::PetscVectorM (Vec v)
       
       for(unsigned int i=ghost_begin; i<ghost_end; i++)
         _global_to_local_map[indices[i]] = i-local_size;
-      this->_type = GHOSTEDM;
+      this->_type = GHOSTED;
     }
     else
-      this->_type = PARALLELM;
+      this->_type = PARALLEL;
   }
   else
-    this->_type = SERIALM;
+    this->_type = SERIAL;
 
   this->close();
   
@@ -477,11 +477,11 @@ inline PetscVectorM::PetscVectorM (Vec v)
 // // //             const unsigned int ghost_end = static_cast<unsigned int>(mapping->n);
 // // //             for (unsigned int i=ghost_begin; i<ghost_end; i++)
 // // //                 _global_to_local_map[mapping->indices[i]] = i-local_size;
-// // //             this->_type = GHOSTEDM;
+// // //             this->_type = GHOSTED;
 // // //         }
-// // //         else this->_type = PARALLELM;
+// // //         else this->_type = PARALLEL;
 // // //     }
-// // //     else    this->_type = SERIALM;*/
+// // //     else    this->_type = SERIAL;*/
       
 }
 
@@ -492,7 +492,7 @@ inline PetscVectorM::~PetscVectorM () { this->clear ();}
 inline void PetscVectorM::init (const unsigned int n,
                                 const unsigned int n_local,
                                 const bool fast,
-                                const ParallelTypeM type){
+                                const ParallelType type){
   
   
   int ierr=0;
@@ -500,23 +500,23 @@ inline void PetscVectorM::init (const unsigned int n,
     int petsc_n_local=static_cast<int>(n_local);
     // Clear initialized vectors
     if (this->initialized())  this->clear();
-    if (type == AUTOMATICM)    {
-        if (n == n_local)   this->_type = SERIALM;
-        else    this->_type = PARALLELM;
+    if (type == AUTOMATIC)    {
+        if (n == n_local)   this->_type = SERIAL;
+        else    this->_type = PARALLEL;
     }
     else    this->_type = type;
     
 //  int size0; MPI_Comm_size(MPI_COMM_WORLD,&size0);
-//  if(size0>1) this->_type = PARALLELM;
-    assert ((this->_type==SERIALM && n==n_local) || this->_type==PARALLELM);
+//  if(size0>1) this->_type = PARALLEL;
+    assert ((this->_type==SERIAL && n==n_local) || this->_type==PARALLEL);
 
     // create a sequential vector if on only 1 processor
-    if (this->_type == SERIALM)    {
+    if (this->_type == SERIAL)    {
         ierr = VecCreateSeq (PETSC_COMM_SELF, petsc_n, &_vec); CHKERRABORT(PETSC_COMM_SELF,ierr);
         ierr = VecSetFromOptions (_vec);        CHKERRABORT(PETSC_COMM_SELF,ierr);
     }
     // otherwise create an MPI-enabled vector
-    else if (this->_type == PARALLELM) {
+    else if (this->_type == PARALLEL) {
         assert (n_local <= n);
        ierr = VecCreateMPI (MPI_COMM_WORLD, petsc_n_local, petsc_n, &_vec);
 //         ierr = VecCreateMPI (MPI_COMM_WORLD,PETSC_DECIDE, petsc_n, &_vec);
@@ -537,7 +537,7 @@ inline void PetscVectorM::init (const unsigned int n,
 // ==================================================
 inline void PetscVectorM::init (const unsigned int n,
                                 const bool fast,
-                                const ParallelTypeM type){
+                                const ParallelType type){
     this->init(n,n,fast,type);
 }
 
@@ -546,7 +546,7 @@ inline void PetscVectorM::init (const unsigned int n,
                                 const unsigned int n_local,
                                 const std::vector<unsigned int>& ghost,
                                 const bool fast,
-                                const ParallelTypeM type){
+                                const ParallelType type){
     int ierr=0;
     int petsc_n=static_cast<int>(n);
     int petsc_n_local=static_cast<int>(n_local);
@@ -564,8 +564,8 @@ inline void PetscVectorM::init (const unsigned int n,
     // Clear initialized vectors
     if (this->initialized())   this->clear();
 
-    assert(type == AUTOMATICM || type == GHOSTEDM);
-    this->_type = GHOSTEDM;
+    assert(type == AUTOMATIC || type == GHOSTED);
+    this->_type = GHOSTED;
 
     /* Make the global-to-local ghost cell map.  */
     for (unsigned int i=0; i<ghost.size(); i++)  _global_to_local_map[ghost[i]] = i;
@@ -615,7 +615,7 @@ inline void PetscVectorM::close (){
     CHKERRABORT(MPI_COMM_WORLD,ierr);
     ierr = VecAssemblyEnd(_vec);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
-    if (this->type() == GHOSTEDM)  {
+    if (this->type() == GHOSTED)  {
         ierr = VecGhostUpdateBegin(_vec,INSERT_VALUES,SCATTER_FORWARD);
         CHKERRABORT(MPI_COMM_WORLD,ierr);
         ierr = VecGhostUpdateEnd(_vec,INSERT_VALUES,SCATTER_FORWARD);
@@ -643,7 +643,7 @@ inline void PetscVectorM::zero (){
     int ierr=0;
     PetscScalar z=0.;
 
-    if (this->type() != GHOSTEDM) {
+    if (this->type() != GHOSTED) {
 // #if PETSC_VERSION_LESS_THAN(2,3,0)
 //         // 2.2.x & earlier style
 //         ierr = VecSet (&z, _vec);
@@ -739,7 +739,7 @@ inline Real PetscVectorM::operator() (const unsigned int i) const{
     this->_get_array();
     const unsigned int local_index = this->map_global_to_local_index(i);
 #ifndef NDEBUG
-    if (this->type() == GHOSTEDM) assert(local_index<_local_size);
+    if (this->type() == GHOSTED) assert(local_index<_local_size);
 #endif
     return static_cast<Real>(_values[local_index]);
 }
@@ -754,7 +754,7 @@ inline void PetscVectorM::get(const std::vector<unsigned int>& index, std::vecto
     for (unsigned int i=0; i<num; i++) {
         const unsigned int local_index = this->map_global_to_local_index(index[i]);
 #ifndef NDEBUG
-        if (this->type() == GHOSTEDM) assert(local_index<_local_size);
+        if (this->type() == GHOSTED) assert(local_index<_local_size);
 #endif
         values[i] = static_cast<Real>(_values[local_index]);
     }
@@ -797,7 +797,7 @@ inline void PetscVectorM::_get_array(void) const{
     assert (this->initialized());
     if (!_array_is_present)    {
         int ierr=0;
-        if (this->type() != GHOSTEDM)	{
+        if (this->type() != GHOSTED)	{
             ierr = VecGetArray(_vec, &_values);
             CHKERRABORT(MPI_COMM_WORLD,ierr);
         }
@@ -822,7 +822,7 @@ inline void PetscVectorM::_restore_array(void) const{
     assert (this->initialized());
     if (_array_is_present) {
         int ierr=0;
-        if (this->type() != GHOSTEDM) {
+        if (this->type() != GHOSTED) {
             ierr = VecRestoreArray (_vec, &_values); CHKERRABORT(MPI_COMM_WORLD,ierr);
             _values = NULL;
         }

@@ -6,7 +6,7 @@
 
 #include "Typedefs_conf.hpp" 
 #include "SolverPackageEnum.hpp"
-#include "Paralleltype_enum.hpp"
+#include "ParalleltypeEnum.hpp"
 
 
 // C++ includes
@@ -47,7 +47,7 @@ class NumericVectorM
   /// Flag to tell if init  has been called yet
   bool _is_initialized;
   /// Type of vector
-  ParallelTypeM _type;
+  ParallelType _type;
   
   // =====================================
   // Constructor /Destructor
@@ -55,23 +55,23 @@ class NumericVectorM
 public:
   /// Dummy-Constructor. Dimension=0
   explicit
-  NumericVectorM (const ParallelTypeM = AUTOMATICM);
+  NumericVectorM (const ParallelType = AUTOMATIC);
   
   /// Constructor. Set dimension to \p n and initialize all elements with zero.
   explicit
   NumericVectorM (const unsigned int n,
-                 const ParallelTypeM = AUTOMATICM);
+                 const ParallelType = AUTOMATIC);
     
   /// Constructor. Set local dimension to \p n_local, the global dimension to \p n
   NumericVectorM (const unsigned int n,
 		 const unsigned int n_local,
-                 const ParallelTypeM = AUTOMATICM);
+                 const ParallelType = AUTOMATIC);
   
   /// Constructor. Set local dimension to \p n_local, the global dimension to \p n
   NumericVectorM (const unsigned int N,
 		 const unsigned int n_local,
 		 const std::vector<unsigned int>& ghost,
-                 const ParallelTypeM = AUTOMATICM);
+                 const ParallelType = AUTOMATIC);
     
  /// Builds a \p NumericVectorM using the linear solver package 
  /// specified by \p solver_package
@@ -96,12 +96,12 @@ public:
   virtual void init (const unsigned int,
 		     const unsigned int,
 		     const bool = false,
-                     const ParallelTypeM = AUTOMATICM) = 0;
+                     const ParallelType = AUTOMATIC) = 0;
   
   /// call init with n_local = N,
   virtual void init (const unsigned int,
 		     const bool = false,
-                     const ParallelTypeM = AUTOMATICM) = 0;
+                     const ParallelType = AUTOMATIC) = 0;
     
   /// Create a vector that holds tha local indices plus those specified
   /// in the \p ghost argument.
@@ -109,7 +109,7 @@ public:
 		     const unsigned int /*n_local*/,
 		     const std::vector<unsigned int>& /*ghost*/,
 		     const bool /*fast*/ = false,
-                     const ParallelTypeM = AUTOMATICM) = 0;
+                     const ParallelType = AUTOMATIC) = 0;
 
   /// Creates a vector that has the same dimension and storage type as
   /// \p other, including ghost dofs.
@@ -165,9 +165,9 @@ public:
   virtual bool closed() const { return _is_closed; }
   
   /// @returns the type (SERIAL, PARALLEL, GHOSTED) of the vector.
-  ParallelTypeM type() const { return _type; }
+  ParallelType type() const { return _type; }
   /// @returns the type (SERIAL, PARALLEL, GHOSTED) of the vector.
-  ParallelTypeM & type() { return _type; }
+  ParallelType & type() { return _type; }
 
 
   /// @returns the minimum element in the vector.
@@ -317,11 +317,11 @@ public:
 
 
 // ==============================================
-inline NumericVectorM::NumericVectorM (const ParallelTypeM type) :
+inline NumericVectorM::NumericVectorM (const ParallelType type) :
   _is_closed(false),  _is_initialized(false),  _type(type){}
 // ==============================================
 inline NumericVectorM::NumericVectorM (const unsigned int /*n*/,
-                                 const ParallelTypeM type) :
+                                 const ParallelType type) :
   _is_closed(false),_is_initialized(false), _type(type){
    std::cout<< "Abstract base class! ";exit(0); // Abstract base class!
   // init(n, n, false, type);
@@ -329,7 +329,7 @@ inline NumericVectorM::NumericVectorM (const unsigned int /*n*/,
 
 // ==============================================
 inline NumericVectorM::NumericVectorM (const uint /*n*/,const uint /*n_local*/,
-                                 const ParallelTypeM type) :
+                                 const ParallelType type) :
   _is_closed(false),  _is_initialized(false),  _type(type){
  std::cout<< "Abstract base class! "; exit(0); // Abstract base class!
   // init(n, n_local, false, type);
@@ -338,7 +338,7 @@ inline NumericVectorM::NumericVectorM (const uint /*n*/,const uint /*n_local*/,
 // ==============================================
 inline NumericVectorM::NumericVectorM (const uint /*n*/,const uint /*n_local*/,
 				 const std::vector<uint>& /*ghost*/,
-                                 const ParallelTypeM type) :
+                                 const ParallelType type) :
   _is_closed(false),  _is_initialized(false),  _type(type){
  std::cout<< "Abstract base class! "; exit(0); // Abstract base class!
   // init(n, n_local, ghost, false, type);

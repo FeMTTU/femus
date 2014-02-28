@@ -91,7 +91,7 @@ void EqnMHDCONT::init_equation_data() {
       
         for(uint  Level=0; Level<_NoLevels; Level++)  {
    uint n_glob=_Dim[Level]; //is it already filled? Now yes!!!!!!!!!
-  _x_oldopt[Level] = NumericVectorM::build().release(); _x_oldopt[Level]->init(n_glob,false, SERIALM);
+  _x_oldopt[Level] = NumericVectorM::build().release(); _x_oldopt[Level]->init(n_glob,false, SERIAL);
        }
  
   
