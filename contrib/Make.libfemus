@@ -74,11 +74,11 @@ endif
 # we initialize the includes and libs
 FEMUS_INCLUDE := -I$(FEMUS_DIR)/include/
 FEMUS_INCLUDE += -I.
-# see if it compiles...
+# TODO manual trick so that it compiles
 FEMUS_INCLUDE += -I$(FEMUS_DIR)/../binary/config/
 FEMUS_INCLUDE += -I$(FEMUS_DIR)/ExternalLibraries/b64-1.4.2/include/
-FEMUS_LIBS    += -L
-FEMUS_LIBS    += -l
+FEMUS_LIBS    +=   $(FEMUS_DIR)/ExternalLibraries/b64-1.4.2/build/gcc47.unix/b64.o
+
 # FEMUS_LIBS := must do it before
 ##################
 
