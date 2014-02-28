@@ -229,7 +229,7 @@
 
 
 // #define SOLVERNS VANKANSM
-#define SOLVERNS GMRESM
+#define SOLVERNS GMRES
 // // //   #define SOLVERNS CGM   //conjugate gradient, ONLY symmetric positive definite
 
 
@@ -256,7 +256,7 @@
 
 #define MHD_DIR_PENALTY 0
 
-#define SOLVERMHD GMRESM
+#define SOLVERMHD GMRES
 
 #define ADV_MHD  1.
 
@@ -280,7 +280,7 @@
 #define NSAD_DIR_PENALTY 0
 
 
-#define SOLVERNSAD GMRESM
+#define SOLVERNSAD GMRES
 
 
 //**************************************************************************************
@@ -292,7 +292,7 @@
 
 #define LAPADJ 1.
 
-#define SOLVERMHDAD GMRESM
+#define SOLVERMHDAD GMRES
 
 
 //**************************************************************************************
@@ -301,7 +301,7 @@
 
 #define MHDCONT_DIR_PENALTY 0
 
-#define SOLVERMHDCONT GMRESM
+#define SOLVERMHDCONT GMRES
 
 
 
@@ -331,7 +331,7 @@
 // // // // ========================================
 // // // 
 // // // // #define SOLVERNS VANKANSM
-// // // #define SOLVERNS GMRESM
+// // // #define SOLVERNS GMRES
 // // // 
 // // // //#define PROJ
 // // // 
@@ -393,7 +393,7 @@
 // // // #define PRT (0.85)
 // // // 
 // // // // #define SOLVERT VANKATM =======================
-// // // #define SOLVERT GMRESM
+// // // #define SOLVERT GMRES
 // // // 
 // // // 
 // // // // temperature lows ================================

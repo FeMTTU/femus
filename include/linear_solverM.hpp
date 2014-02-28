@@ -9,7 +9,7 @@
 
 #include "SolverPackageEnum.hpp"      // #include "enum_solver_package.h"
 #include "Precondtype_enum.hpp"        // #include "enum_preconditioner_type.h"
-#include "Solvertype_enum.hpp"         // #include "enum_solver_type.h"
+#include "SolvertypeEnum.hpp"         // #include "enum_solver_type.h"
 
 
 
@@ -36,7 +36,7 @@ class LinearSolverM
   // ==============================
 protected:
   /// Enum stating which type of iterative solver to use.
-  SolverTypeM _solver_type;
+  SolverType _solver_type;
 
   /// Enum statitng with type of preconditioner to use.
   PreconditionerTypeM _preconditioner_type;
@@ -71,7 +71,7 @@ public:
   // SETTING FUNCTIONS 
   // ================================
   /// Sets the type of solver to use.
-  void set_solver_type (const SolverTypeM st)  { _solver_type = st; }
+  void set_solver_type (const SolverType st)  { _solver_type = st; }
   
   /// Sets the type of preconditioner to use.
   void set_preconditioner_type (const PreconditionerTypeM pct);
@@ -86,7 +86,7 @@ public:
   bool initialized () const { return _is_initialized; }
   
   /// Returns the type of solver to use.
-  SolverTypeM solver_type () const { return _solver_type; }
+  SolverType solver_type () const { return _solver_type; }
 
   /// Returns the type of preconditioner to use.
   PreconditionerTypeM preconditioner_type () const;
@@ -131,7 +131,7 @@ public:
 
 // =============================================
 inline LinearSolverM::LinearSolverM() :
-    _solver_type(GMRESM),
+    _solver_type(GMRES),
     _preconditioner_type(ILU_PRECONDM),
     _preconditioner(NULL),
     _is_initialized(false),

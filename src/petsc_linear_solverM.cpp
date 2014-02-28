@@ -137,7 +137,7 @@ void PetscLinearSolverM::clear() {
     CHKERRABORT(MPI_COMM_WORLD,ierr);
 // #endif
     // Mimic PETSc default solver and preconditioner
-    this->_solver_type  = GMRESM;
+    this->_solver_type  = GMRES;
     if (!this->_preconditioner)      {
       int i; MPI_Comm_size(MPI_COMM_WORLD,&i);
       if (i == 1) this->_preconditioner_type = ILU_PRECONDM;
@@ -808,29 +808,29 @@ Real PetscLinearSolverM::get_initial_residual() {
 void PetscLinearSolverM::set_petsc_solver_type() {
   int ierr = 0;
   switch (this->_solver_type) {
-  case CGM:
+  case CG:
     ierr = KSPSetType(_ksp, (char*) KSPCG);         CHKERRABORT(MPI_COMM_WORLD,ierr); return;
-  case CRM:
+  case CR:
     ierr = KSPSetType(_ksp, (char*) KSPCR);         CHKERRABORT(MPI_COMM_WORLD,ierr); return;
-  case CGSM:
+  case CGS:
     ierr = KSPSetType(_ksp, (char*) KSPCGS);        CHKERRABORT(MPI_COMM_WORLD,ierr); return;
-  case BICGM:
+  case BICG:
     ierr = KSPSetType(_ksp, (char*) KSPBICG);       CHKERRABORT(MPI_COMM_WORLD,ierr); return;
-  case TCQMRM:
+  case TCQMR:
     ierr = KSPSetType(_ksp, (char*) KSPTCQMR);      CHKERRABORT(MPI_COMM_WORLD,ierr); return;
-  case TFQMRM:
+  case TFQMR:
     ierr = KSPSetType(_ksp, (char*) KSPTFQMR);      CHKERRABORT(MPI_COMM_WORLD,ierr); return;
-  case LSQRM:
+  case LSQR:
     ierr = KSPSetType(_ksp, (char*) KSPLSQR);       CHKERRABORT(MPI_COMM_WORLD,ierr); return;
-  case BICGSTABM:
+  case BICGSTAB:
     ierr = KSPSetType(_ksp, (char*) KSPBCGS);       CHKERRABORT(MPI_COMM_WORLD,ierr); return;
-  case MINRESM:
+  case MINRES:
     ierr = KSPSetType(_ksp, (char*) KSPMINRES);     CHKERRABORT(MPI_COMM_WORLD,ierr); return;
-  case GMRESM:
+  case GMRES:
     ierr = KSPSetType(_ksp, (char*) KSPGMRES);      CHKERRABORT(MPI_COMM_WORLD,ierr); return;
-  case RICHARDSONM:
+  case RICHARDSON:
     ierr = KSPSetType(_ksp, (char*) KSPRICHARDSON); CHKERRABORT(MPI_COMM_WORLD,ierr); return;
-  case CHEBYSHEVM:
+  case CHEBYSHEV:
     ierr = KSPSetType(_ksp, (char*) KSPCHEBYSHEV);  CHKERRABORT(MPI_COMM_WORLD,ierr); return;
   default:
     std::cerr << "ERROR:  Unsupported PETSC Solver: "

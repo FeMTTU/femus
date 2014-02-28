@@ -472,7 +472,7 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &VankaI
       start_time=clock(); // START SOLVE 0 TIME
       //init Schur Complement
       this->init_schur(C);
-      //init _Ksp (GMRESM - no precond)
+      //init _Ksp (GMRES - no precond)
       this->init(C,true,Schur);
       // Prediction step: solve A^{-1} f -> w (temporary)
       ierr = KSPSolve(_ksp[1],f,w);  						CHKERRABORT(MPI_COMM_WORLD,ierr);   

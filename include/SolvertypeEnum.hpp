@@ -13,7 +13,7 @@ enum SolverType {
   BICGSTAB,
   MINRES,
   GMRES,
-  VANKAT,
+  VANKAT,   //TODO is there any way to make this agree with our routines?
   VANKANS,
   LSQR,
   JACOBI,
