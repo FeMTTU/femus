@@ -672,17 +672,17 @@ void EqnBase::initVectors() {
     for (int fe=0; fe<QL; fe++)  m_l +=  ml[fe]*_nvars[fe];
     
         _b[Level] = NumericVectorM::build().release();
-        _b[Level]->init(_Dim[Level],m_l,false,AUTOMATICM);
+        _b[Level]->init(_Dim[Level],m_l,false,AUTOMATIC);
         _res[Level] = NumericVectorM::build().release();
-        _res[Level]->init(_Dim[Level],m_l,false,AUTOMATICM);
+        _res[Level]->init(_Dim[Level],m_l,false,AUTOMATIC);
         _x[Level] = NumericVectorM::build().release();
-        _x[Level]->init(_Dim[Level],m_l,false,AUTOMATICM);
+        _x[Level]->init(_Dim[Level],m_l,false,AUTOMATIC);
         _x_old[Level] = NumericVectorM::build().release();
-        _x_old[Level]->init(_Dim[Level],false, SERIALM);
+        _x_old[Level]->init(_Dim[Level],false, SERIAL);
         _x_oold[Level] = NumericVectorM::build().release();
-        _x_oold[Level]->init(_Dim[Level],false, SERIALM);
+        _x_oold[Level]->init(_Dim[Level],false, SERIAL);
         _x_tmp[Level] = NumericVectorM::build().release();
-        _x_tmp[Level]->init(_Dim[Level],false, SERIALM);
+        _x_tmp[Level]->init(_Dim[Level],false, SERIAL);
 
     } //end level loop
 
