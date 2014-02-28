@@ -3,7 +3,7 @@
 
 #include "Typedefs_conf.hpp"
 
-#include "dense_vector_baseM.hpp"
+#include "DenseVectorBase.hpp"
 
 // C++ includes
 #include <vector>
@@ -23,7 +23,7 @@
 
 // ------------------------------------------------------------
 // DenseVector class definition
-class DenseVectorM : public DenseVectorBaseM
+class DenseVectorM : public DenseVectorBase
 {
   private:
 
@@ -129,7 +129,7 @@ inline DenseVectorM::DenseVectorM(const unsigned int n) : _val (n, 0.){}
 
 // ======================================================
 inline DenseVectorM::DenseVectorM (const DenseVectorM& other_vector) :
-  DenseVectorBaseM()
+  DenseVectorBase()
 {
   const std::vector<Real> &other_vals = other_vector.get_values();
   _val.clear();
