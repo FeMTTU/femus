@@ -708,7 +708,7 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
 //------------------------------------------------------------------------------------------------------------
 int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn){
    
-  bool test_matrix = nl_ml_prob.TestAssembleMatrix(); // to call only if problem is linear
+  bool test_matrix = nl_ml_prob.TestAssembleMatrix(); // to call if the problem is linear
          
   unsigned ipde=nl_ml_prob.GetThisPdeIndex();
   const char* pdename=nl_ml_prob.GetThisPdeName();

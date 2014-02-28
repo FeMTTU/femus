@@ -42,7 +42,7 @@ protected:
   
   int _nprocs;
   int _iproc;
-  unsigned short gridn, gridr;
+  unsigned short _gridn, _gridr;
   bool _test_time;
   unsigned _time_step;
   unsigned _ntime_steps;

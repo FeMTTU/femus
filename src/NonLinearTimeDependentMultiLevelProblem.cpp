@@ -112,7 +112,7 @@ int NonLinearTimeDependentMultiLevelProblem::SaveData() const {
 
   PetscErrorCode ierr;
   PetscViewer bin_viewer;
-  for (unsigned ig=0; ig<gridn; ig++) {
+  for (unsigned ig=0; ig<_gridn; ig++) {
     for (unsigned i=0; i<SolType.size(); i++) {
       sprintf(filename,"./save/save.time_%d.level_%d.%s.bin",_time_step,ig,SolName[i]);
       ierr = PetscViewerBinaryOpen(MPI_COMM_WORLD,filename,FILE_MODE_WRITE,&bin_viewer);
@@ -155,7 +155,7 @@ int NonLinearTimeDependentMultiLevelProblem::InitializeFromRestart(unsigned rest
 
   PetscErrorCode ierr;
   PetscViewer bin_viewer;
-  for(unsigned ig=0;ig<gridn;ig++){
+  for(unsigned ig=0;ig<_gridn;ig++){
     for(unsigned i=0;i<SolType.size();i++){
       sprintf(filename,"./save/save.time_%d.level_%d.%s.bin",restart_time_step,ig,SolName[i]);
       ierr = PetscViewerBinaryOpen(MPI_COMM_WORLD,filename,FILE_MODE_READ,&bin_viewer); CHKERRQ(ierr);
@@ -175,7 +175,7 @@ int NonLinearTimeDependentMultiLevelProblem::InitializeFromRestart(unsigned rest
 
 void NonLinearTimeDependentMultiLevelProblem::_UpdateSolution() {
  
-  for (int ig=0; ig<gridn; ig++) {
+  for (int ig=0; ig<_gridn; ig++) {
     _solution[ig]->UpdateSolution();
   }
   
@@ -209,7 +209,7 @@ void NonLinearTimeDependentMultiLevelProblem::_NewmarkAccUpdate() {
     vxyz[i] = GetIndex(&velname[i][0]);
   }
   
-  for (int ig=0;ig<gridn;ig++) {
+  for (int ig=0;ig<_gridn;ig++) {
     //     unsigned ax=GetIndex("AX");
     //     unsigned ay=GetIndex("AY");
     //     unsigned az=GetIndex("AZ");
@@ -457,7 +457,7 @@ void NonLinearTimeDependentMultiLevelProblem::UpdateBdc() {
       // 2 Default Neumann
       // 1 DD Dirichlet
       // 0 Dirichlet
-      for (unsigned igridn=0; igridn<gridn; igridn++) {
+      for (unsigned igridn=0; igridn<_gridn; igridn++) {
 	if(_solution[igridn]->_ResEpsBdcFlag[k]){
 	  for (unsigned j=_msh[igridn]->MetisOffset[SolType[k]][_iproc]; j<_msh[igridn]->MetisOffset[SolType[k]][_iproc+1]; j++) {
 	    _solution[igridn]->_Bdc[k]->set(j,2.);
@@ -544,7 +544,7 @@ void NonLinearTimeDependentMultiLevelProblem::printsol_xdmf_archive(const char t
   
   char *filename= new char[60];
   // Print The Xdmf transient wrapper
-  sprintf(filename,"./output/mesh.level%d.%s.xmf",gridn,type);
+  sprintf(filename,"./output/mesh.level%d.%s.xmf",_gridn,type);
   std::ofstream ftr_out;
   ftr_out.open(filename);
   if (!ftr_out) {
@@ -560,7 +560,7 @@ void NonLinearTimeDependentMultiLevelProblem::printsol_xdmf_archive(const char t
   // time loop for grid sequence
   for ( unsigned time_step = _time_step0; time_step < _time_step0 + _ntime_steps; time_step++) {
     if ( !(time_step%_print_step) ) {
-      sprintf(filename,"./mesh.level%d.%d.%s.xmf",gridn,time_step,type);
+      sprintf(filename,"./mesh.level%d.%d.%s.xmf",_gridn,time_step,type);
       ftr_out << "<xi:include href=\"" << filename << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid["<< 1 <<"])\">\n";
       ftr_out << "<xi:fallback/>\n";
       ftr_out << "</xi:include>\n";
