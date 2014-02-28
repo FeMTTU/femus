@@ -16,7 +16,7 @@
 #include "parallelM.hpp"
 #include "petsc_macroM.hpp"
 
-#include "casts.hpp"  // TODO #include "utility.h"  
+#include "Casts.hpp"  // TODO #include "utility.h"  
 
 //-----------------------------------------------------------------------
 // PetscVector members
