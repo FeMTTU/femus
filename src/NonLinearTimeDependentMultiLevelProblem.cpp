@@ -247,21 +247,9 @@ void NonLinearTimeDependentMultiLevelProblem::_NewmarkAccUpdate() {
 //---------------------------------------------------------------------------------------------------------
 
 //Time Dependent Full Multigrid
-void NonLinearTimeDependentMultiLevelProblem::Solve(const char pdename[], unsigned const &ncycle,  unsigned const &npre, 
-							   unsigned const &npost, const char mg_type[]) {
+void NonLinearTimeDependentMultiLevelProblem::Solve(const char pdename[], unsigned const &ncycle,  unsigned const &npre,
+						    unsigned const &npost, const char mg_type[], const bool &test_linear) {
   
-  unsigned ipde=GetPdeIndex(pdename);
-  
-  std::pair<int, double> solver_info;
-  clock_t start_time, end_time, start_cycle_time, end_cycle_time, start_mg_time, end_mg_time;
-  int conv;
-  
-  bool flagmc = 1;
-  if (!strcmp(mg_type,"V-Cycle")) {
-    flagmc = 0;
-  }
-  
-  cout << "flagmc: " << flagmc << endl;
   if (_ats_flag) {
     //update time step
     _dt = _set_time_step_function(_time);
@@ -276,155 +264,174 @@ void NonLinearTimeDependentMultiLevelProblem::Solve(const char pdename[], unsign
   //update boundary condition
   UpdateBdc();
 
-  start_mg_time = clock();
+ // start_mg_time = clock();
 
   cout << endl;
   cout << " ************** time step " << _time_step << " **************** " << endl;
   cout << " ************** time      " << _time << " **************** " << endl;
   
-  for (unsigned igridn=1*flagmc + (!flagmc)*gridn; igridn<=gridn; igridn++) {
-    cout << endl;
-    cout << "    ************* Level Max: " << igridn << " *************";
-    cout << endl;
-    for (unsigned icycle=0; icycle<ncycle; icycle++) {
-      start_cycle_time = clock();
-      cout << endl;
-      cout << "    ************** Cycle: " << icycle + 1 << " **************** " << endl;
-      cout << endl;
+  NonLinearMultiLevelProblem::Solve(pdename, ncycle, npre, npost, mg_type, test_linear); 
+}  
+  
 
-      start_time=clock();
-      _LinSolver[ipde][igridn-1u]->SetResZero();
-      _LinSolver[ipde][igridn-1u]->SetEpsZero();
-      end_time=clock();
-      cout<<"Grid: "<<igridn-1<<"      INITIALIZATION TIME:      "
-	  <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-
-      start_time=clock();
-      //assemble residual and matrix on the finer grid at igridn level
-      _assemble_function(*this,igridn-1u,igridn-1u);
-      
-      end_time=clock();
-      cout<<"Grid: "<<igridn-1<<"      ASSEMBLY + RESIDUAL TIME: "
-	  <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-
-      for (unsigned ig=igridn-1u; ig>0; ig--) {
-	start_time=clock();
-
-        _LinSolver[ipde][ig-1u]->SetResZero();
-        _LinSolver[ipde][ig-1u]->SetEpsZero();
-	bool matrix_reuse=true;
-	
-        if (ig>=gridr) {
-          //assemble residual only on the part of the coarse grid that is not refined
-          //Domain Decomposition matrix restriction =========================
-          _assemble_function(*this,ig-1,igridn-1u);
-	  if (!_LinSolver[ipde][ig-1]->_CC_flag) {
-	    _LinSolver[ipde][ig-1]->_CC_flag=1;
-	    _LinSolver[ipde][ig-1]->_CC->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,!matrix_reuse);
-          } 
-          else{
-	    _LinSolver[ipde][ig-1]->_CC->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,matrix_reuse);
-	  }
-	  _LinSolver[ipde][ig-1u]->_KK->matrix_add(1.,*_LinSolver[ipde][ig-1u]->_CC,"subset_nonzero_pattern");
-	} 
-	else {
-          if (icycle==0 && ( flagmc*(ig==igridn-1u) || !flagmc )) {
-	    _LinSolver[ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,!matrix_reuse);
-	  }
-          //Projection of the Matrix on the lower level
-          else{
-	    _LinSolver[ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,matrix_reuse);
-	  }	  
-	}
-        end_time=clock();
-        cout<<"Grid: "<<ig-1<<"      ASSEMBLY + RESIDUAL TIME: "
-	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-      }
-      
-      // Presmoothing  
-      for (unsigned ig=igridn-1u; ig>0; ig--) {
-	for (unsigned k=0; k<npre; k++) {
-          if (ig==ig) {
-	    if(_VankaIsSet) {
-	      solver_info = _LinSolver[ipde][ig]->solve(VankaIndex,_NSchurVar,_Schur);
-	    }  
-	    else {
-              solver_info = _LinSolver[ipde][ig]->solve();
-	    }
-          }
-        }
-
-	start_time=clock();
-
-        //standard Multigrid matrix restriction =========================
-        Restrictor(ig,ipde); //restriction of the residual
-        end_time=clock();
-        cout<<"Grid: "<<ig<<"-->"<<ig-1<<"  RESTRICTION TIME:         "
-	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-
-      }
-      
-      // Coarse direct solver
-      if(_VankaIsSet) {
-	solver_info = _LinSolver[ipde][0]->solve(VankaIndex,_NSchurVar,_Schur);
-      } 
-      else {
-	solver_info = _LinSolver[ipde][0]->solve();
-      }
-      
-      for (unsigned ig=1; ig<igridn; ig++) {
-	start_time=clock();
-	Prolungator(ig,ipde);
-	_LinSolver[ipde][ig]->UpdateResidual();
-	_LinSolver[ipde][ig]->SumEpsCToEps();
-	end_time=clock();
-	cout<<"Grid: "<<ig-1<<"-->"<<ig<<"  PROLUNGATION TIME:        "
-	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-
-	// PostSmoothing    
-	for (unsigned k=0; k<npost; k++) {
-	  if (ig==ig) {
-	    if(_VankaIsSet) {
-	      solver_info = _LinSolver[ipde][ig]->solve(VankaIndex,_NSchurVar,_Schur);
-	      
-	    } 
-	    else {
-	      solver_info = _LinSolver[ipde][ig]->solve();
-	    }
-	  }
-	}
-      }
-
-      cout << endl;
-      start_time=clock();
-      for (unsigned ig=0; ig<igridn; ig++) {
-	_solution[ig]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][ig]->_EPS, _LinSolver[ipde][ig]->_RES, _LinSolver[ipde][ig]->KKoffset );
-      }
-
-      conv  = GetConvergence(pdename, igridn-1);
-      if (conv ==true) icycle = ncycle + 1;
-
-      end_time=clock();
-      cout << endl;
-      cout<<"COMPUTATION RESIDUAL:                  "<<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
-
-      end_cycle_time=clock();
-      cout<<"CYCLE TIME:                            "<<static_cast<double>((end_cycle_time-start_cycle_time))/CLOCKS_PER_SEC<<endl;
-    }
-    //only for the Full Multicycle
-    if (igridn<gridn) {
-      ProlungatorSol(pdename, igridn);
-    }
-  }
-
-  for (int ig=gridr-1; ig<gridn-1; ig++) {
-    _LinSolver[ipde][ig]->_CC_flag=0;
-  }
+  
+//   unsigned nonlinear_ncycle =(test_linear == false)?ncycle:1;
+//   unsigned linear_ncycle = (test_linear == true)?ncycle:1;
+//   _this_ipde=GetPdeIndex(pdename);
     
-  end_mg_time = clock();
-  cout<<"NonSteadySOLVER TIME:                            "<<static_cast<double>((end_mg_time-start_mg_time))/CLOCKS_PER_SEC<<endl;
-
-}
+//   std::pair<int, double> solver_info;
+//   clock_t start_time, start_cycle_time, start_mg_time;
+//   int conv;
+  
+//   bool flagmc = 1;
+//   if (!strcmp(mg_type,"V-Cycle")) {
+//     flagmc = 0;
+//   } 
+  
+ 
+//   for (unsigned igridn=1*flagmc + (!flagmc)*gridn; igridn<=gridn; igridn++) {
+//     cout << endl;
+//     cout << "    ************* Level Max: " << igridn << " *************";
+//     cout << endl;
+//     for (unsigned icycle=0; icycle<ncycle; icycle++) {
+//       start_cycle_time = clock();
+//       cout << endl;
+//       cout << "    ************** Cycle: " << icycle + 1 << " **************** " << endl;
+//       cout << endl;
+// 
+//       start_time=clock();
+//       _LinSolver[ipde][igridn-1u]->SetResZero();
+//       _LinSolver[ipde][igridn-1u]->SetEpsZero();
+//       end_time=clock();
+//       cout<<"Grid: "<<igridn-1<<"      INITIALIZATION TIME:      "
+// 	  <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
+// 
+//       start_time=clock();
+//       //assemble residual and matrix on the finer grid at igridn level
+//       _assemble_function(*this,igridn-1u,igridn-1u);
+//       
+//       end_time=clock();
+//       cout<<"Grid: "<<igridn-1<<"      ASSEMBLY + RESIDUAL TIME: "
+// 	  <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
+// 
+// //      for (unsigned ig=igridn-1u; ig>0; ig--) {
+// //	start_time=clock();
+// 
+// //         _LinSolver[ipde][ig-1u]->SetResZero();
+// //         _LinSolver[ipde][ig-1u]->SetEpsZero();
+// // 	bool matrix_reuse=true;
+// // 	
+// //         if (ig>=gridr) {
+// //           //assemble residual only on the part of the coarse grid that is not refined
+// //           //Domain Decomposition matrix restriction =========================
+// //           _assemble_function(*this,ig-1,igridn-1u);
+// // 	  if (!_LinSolver[ipde][ig-1]->_CC_flag) {
+// // 	    _LinSolver[ipde][ig-1]->_CC_flag=1;
+// // 	    _LinSolver[ipde][ig-1]->_CC->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,!matrix_reuse);
+// //           } 
+// //           else{
+// // 	    _LinSolver[ipde][ig-1]->_CC->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,matrix_reuse);
+// // 	  }
+// // 	  _LinSolver[ipde][ig-1u]->_KK->matrix_add(1.,*_LinSolver[ipde][ig-1u]->_CC,"subset_nonzero_pattern");
+// // 	} 
+// // 	else {
+// //           if (icycle==0 && ( flagmc*(ig==igridn-1u) || !flagmc )) {
+// // 	    _LinSolver[ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,!matrix_reuse);
+// // 	  }
+// //           //Projection of the Matrix on the lower level
+// //           else{
+// // 	    _LinSolver[ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[ipde][ig]->_PP,*_LinSolver[ipde][ig]->_KK,matrix_reuse);
+// // 	  }	  
+// // 	}
+// //         end_time=clock();
+// //         cout<<"Grid: "<<ig-1<<"      ASSEMBLY + RESIDUAL TIME: "
+// // 	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
+// //      }
+//       
+//       // Presmoothing  
+//       for (unsigned ig=igridn-1u; ig>0; ig--) {
+// 	for (unsigned k=0; k<npre; k++) {
+//           if (ig==ig) {
+// 	    if(_VankaIsSet) {
+// 	      solver_info = _LinSolver[ipde][ig]->solve(VankaIndex,_NSchurVar,_Schur);
+// 	    }  
+// 	    else {
+//               solver_info = _LinSolver[ipde][ig]->solve();
+// 	    }
+//           }
+//         }
+// 
+// 	start_time=clock();
+// 
+//         //standard Multigrid matrix restriction =========================
+// 	Restrictor(ipde, ig, igridn, ncycle, 0, flagmc);
+//         //Restrictor(0,ig,ipde,igridn, ncycle, flagmc); //restriction of the residual
+//         end_time=clock();
+//         cout<<"Grid: "<<ig<<"-->"<<ig-1<<"  RESTRICTION TIME:         "
+// 	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
+// 
+//       }
+//       
+//       // Coarse direct solver
+//       if(_VankaIsSet) {
+// 	solver_info = _LinSolver[ipde][0]->solve(VankaIndex,_NSchurVar,_Schur);
+//       } 
+//       else {
+// 	solver_info = _LinSolver[ipde][0]->solve();
+//       }
+//       
+//       for (unsigned ig=1; ig<igridn; ig++) {
+// 	start_time=clock();
+// 	Prolongator(ipde,ig);
+// 	_LinSolver[ipde][ig]->UpdateResidual();
+// 	_LinSolver[ipde][ig]->SumEpsCToEps();
+// 	end_time=clock();
+// 	cout<<"Grid: "<<ig-1<<"-->"<<ig<<"  PROLUNGATION TIME:        "
+// 	    <<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
+// 
+// 	// PostSmoothing    
+// 	for (unsigned k=0; k<npost; k++) {
+// 	  if (ig==ig) {
+// 	    if(_VankaIsSet) {
+// 	      solver_info = _LinSolver[ipde][ig]->solve(VankaIndex,_NSchurVar,_Schur);
+// 	      
+// 	    } 
+// 	    else {
+// 	      solver_info = _LinSolver[ipde][ig]->solve();
+// 	    }
+// 	  }
+// 	}
+//       }
+// 
+//       cout << endl;
+//       start_time=clock();
+//       for (unsigned ig=0; ig<igridn; ig++) {
+// 	_solution[ig]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][ig]->_EPS, _LinSolver[ipde][ig]->_RES, _LinSolver[ipde][ig]->KKoffset );
+//       }
+// 
+//       conv  = GetConvergence(pdename, igridn-1);
+//       if (conv ==true) icycle = ncycle + 1;
+// 
+//       end_time=clock();
+//       cout << endl;
+//       cout<<"COMPUTATION RESIDUAL:                  "<<static_cast<double>((end_time-start_time))/CLOCKS_PER_SEC<<endl;
+// 
+//       end_cycle_time=clock();
+//       cout<<"CYCLE TIME:                            "<<static_cast<double>((end_cycle_time-start_cycle_time))/CLOCKS_PER_SEC<<endl;
+//     }
+//     //only for the Full Multicycle
+//     if (igridn<gridn) {
+//       ProlongatorSol(pdename, igridn);
+//     }
+//   }
+// 
+//   for (int ig=gridr-1; ig<gridn-1; ig++) {
+//     _LinSolver[ipde][ig]->_CC_flag=0;
+//   }
+//     
+//   end_mg_time = clock();
+//   cout<<"NonSteadySOLVER TIME:                            "<<static_cast<double>((end_mg_time-start_mg_time))/CLOCKS_PER_SEC<<endl;
+//}
 
 
 //--------------------------------------------------------------------------------------------------------

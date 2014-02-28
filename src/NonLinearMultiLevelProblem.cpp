@@ -141,7 +141,7 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
     _solution[i]->ResizeSolutionVector("Y");
     _solution[i]->ResizeSolutionVector("Z");
              
-    BuildProlungatorMatrix(i, indX);
+    BuildProlongatorMatrix(i, indX);
     unsigned TypeIndex=SolType[indX];
     
     _solution[i]->_Sol[indX]->matrix_mult(*_solution[i-1]->_Sol[indX],*_solution[i]->_ProjMat[TypeIndex]);
@@ -171,7 +171,7 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
     _solution[i]->ResizeSolutionVector("Y");
     _solution[i]->ResizeSolutionVector("Z");
      
-    BuildProlungatorMatrix(i, indX);
+    BuildProlongatorMatrix(i, indX);
     unsigned TypeIndex=SolType[indX];
     
     _solution[i]->_Sol[indX]->matrix_mult(*_solution[i-1]->_Sol[indX],*_solution[i]->_ProjMat[TypeIndex]);
@@ -205,7 +205,7 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
   _bdc_func_set=false;
   _VankaIsSet = true;
 
-  BuildProlungatorMatrices();
+  BuildProlongatorMatrices();
 }
 
 //---------------------------------------------------------------------------------------------------
@@ -550,9 +550,7 @@ int NonLinearMultiLevelProblem::ComputeBdIntegral(const char pdename[],const cha
   double phi[27],gradphi[27][3],Weight;
   double normal[3];
   int node[27];
-  
-  
-  
+     
   unsigned indexvar = GetSolPdeIndex(pdename,var_name);
   short unsigned kelt = _msh[level]->el->GetElementType(kel);
   unsigned order_ind = SolType[GetIndex(var_name)];
@@ -621,7 +619,7 @@ void NonLinearMultiLevelProblem::CreatePdeStructure() {
       _LinSolver[ipde][i]->InitPde(_SolPdeIndex[ipde],SolType,SolName,&_solution[i]->_Bdc,gridr,gridn);
     }
     for (unsigned ig=1; ig<gridn; ig++) {
-      BuildProlungatorMatrix(ig,_PdeName[ipde]);
+      BuildProlongatorMatrix(ig,_PdeName[ipde]);
     }
   }
   
@@ -668,7 +666,7 @@ void NonLinearMultiLevelProblem::AttachInitVariableFunction ( double (* InitVari
 //--------------------------------------------------------------------------------------------------
 void NonLinearMultiLevelProblem::Solve(const char pdename[], unsigned const &ncycle, unsigned const &npre, 
 					      unsigned const &npost, const char mg_type[], const bool &test_linear) {
-  
+ 
   unsigned nonlinear_ncycle =(test_linear == false)?ncycle:1;
   unsigned linear_ncycle = (test_linear == true)?ncycle:1;
   _this_ipde=GetPdeIndex(pdename);
@@ -685,66 +683,24 @@ void NonLinearMultiLevelProblem::Solve(const char pdename[], unsigned const &ncy
   start_mg_time = clock();
   
   for (unsigned igridn=flagmc + (!flagmc)*gridr; igridn<=gridn; igridn++) {
-    cout << endl;
-    cout << "    ************* Level Max: " << igridn << " *************";
-    cout << endl;
+    cout << endl<< "    ************* Level Max: " << igridn << " *************\n"<< endl;
     for (unsigned nlcycle=0; nlcycle<nonlinear_ncycle; nlcycle++) { //non linear cycle
       start_cycle_time = clock();
-      cout << endl;
-      cout << "    ************** Cycle: " << nlcycle + 1 << " **************** " << endl;
-      cout << endl;
-
+      cout <<endl<<"    ************** Cycle: " << nlcycle + 1 << " ****************\n" << endl;
+     
+      // ============== Fine level Assembly ==============
       start_time=clock();
       _LinSolver[_this_ipde][igridn-1u]->SetResZero();
       _LinSolver[_this_ipde][igridn-1u]->SetEpsZero();
- 
-      cout<<"Grid: "<<igridn-1u<<"      INITIALIZATION TIME:      "
-	  <<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC<<endl;
-
-      start_time=clock();
-      //assemble residual and matrix on the finer grid at igridn level
-      _assemble_matrix = true;
-      _assemble_res = true;
+      _assemble_matrix = true; // always assemble matrix on the finest level
       _assemble_function(*this,igridn-1u,igridn-1u);
-      
-      cout<<"Grid: "<<igridn-1<<"      ASSEMBLY + RESIDUAL TIME: "
-	  <<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC<<endl;
+      cout<<"Grid: "<<igridn-1<<"\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC<<endl;
  
-      for (unsigned ig=igridn-1u; ig>0; ig--) {
-	start_time=clock();
-	bool matrix_reuse=true;
-        if (ig>=gridr) {
-          //assemble residual only on the part of the coarse grid that is not refined
-          //Domain Decomposition matrix restriction =========================
-	  _assemble_matrix = true;
-	  _assemble_res = false;
-          _assemble_function(*this,ig-1,igridn-1u);
-	  if (!_LinSolver[_this_ipde][ig-1]->_CC_flag) {
-	    _LinSolver[_this_ipde][ig-1]->_CC_flag=1;
-	    _LinSolver[_this_ipde][ig-1]->_CC->matrix_PtAP(*_LinSolver[_this_ipde][ig]->_PP,*_LinSolver[_this_ipde][ig]->_KK,!matrix_reuse);
-          } 
-          else{
-	    _LinSolver[_this_ipde][ig-1]->_CC->matrix_PtAP(*_LinSolver[_this_ipde][ig]->_PP,*_LinSolver[_this_ipde][ig]->_KK,matrix_reuse);
-	  }
-	  _LinSolver[_this_ipde][ig-1u]->_KK->matrix_add(1.,*_LinSolver[_this_ipde][ig-1u]->_CC,"subset_nonzero_pattern");
-	} 
-	else { //Projection of the Matrix on the lower level
-          if (nlcycle==0 && ( flagmc*(ig==igridn-1u) || !flagmc )) {
-	    _LinSolver[_this_ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[_this_ipde][ig]->_PP,*_LinSolver[_this_ipde][ig]->_KK,!matrix_reuse);
-	  }
-          else{ 
-	    _LinSolver[_this_ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[_this_ipde][ig]->_PP,*_LinSolver[_this_ipde][ig]->_KK,matrix_reuse);
-	  }	  
-	}
-        cout<<"Grid: "<<ig-1<<"      ASSEMBLY + RESIDUAL TIME: "
-	    <<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC<<endl;
-      }
-      
       for(int lcycle=0;lcycle<linear_ncycle;lcycle++){ //linear cycle
 
 	for (unsigned ig=igridn-1u; ig>0; ig--) {
-	
-	  // Presmoothing  
+	  
+	  // ============== Presmoothing ============== 
 	  for (unsigned k=0; k<npre; k++) {
 	    if(_VankaIsSet) {
 	      solver_info = _LinSolver[_this_ipde][ig]->solve(VankaIndex,_NSchurVar,_Schur);
@@ -753,13 +709,13 @@ void NonLinearMultiLevelProblem::Solve(const char pdename[], unsigned const &ncy
 	      solver_info = _LinSolver[_this_ipde][ig]->solve();
 	    }
 	  }
+	  // ============== Non-Standard Multigrid Restriction ==============
 	  start_time=clock();
-	  //standard Multigrid matrix restriction =========================
-	  Restrictor(ig,_this_ipde); //restriction of the residual
-	  cout<<"Grid: "<<ig<<"-->"<<ig-1<<"  RESTRICTION TIME:         "<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC<<endl;
+	  Restrictor(_this_ipde, ig, igridn, nlcycle, lcycle, flagmc);
+	  cout<<"Grid: "<<ig<<"-->"<<ig-1<<"  RESTRICTION TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC<<endl;
 	}
       
-	// Coarse direct solver
+	// ============== Coarse Direct Solver ==============
 	if(_VankaIsSet) {
 	  solver_info =_LinSolver[_this_ipde][0]->solve(VankaIndex,_NSchurVar,_Schur);
 	} 
@@ -768,14 +724,13 @@ void NonLinearMultiLevelProblem::Solve(const char pdename[], unsigned const &ncy
 	}
             
 	for (unsigned ig=1; ig<igridn; ig++) {
-	  // Prolongation
-	  start_time=clock();
-	  Prolungator(ig,_this_ipde);
 	  
-	  cout<<"Grid: "<<ig-1<<"-->"<<ig<<"  PROLUNGATION TIME:        "
-	      <<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC<<endl;
+	  // ============== Standard Prolongation ==============
+	  start_time=clock();
+	  Prolongator(_this_ipde,ig);
+	  cout<<"Grid: "<<ig-1<<"-->"<<ig<<" PROLUNGATION TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC<<endl;
 
-	  // PostSmoothing    
+	  // ============== PostSmoothing ==============    
 	  for (unsigned k=0; k<npost; k++) {
 	    if(_VankaIsSet) {
 	      solver_info =_LinSolver[_this_ipde][ig]->solve(VankaIndex,_NSchurVar,_Schur);
@@ -785,25 +740,27 @@ void NonLinearMultiLevelProblem::Solve(const char pdename[], unsigned const &ncy
 	    }
 	  }
 	}
+	// ============== Update Solution ==============
 	for (unsigned ig=gridr-1; ig<igridn-1; ig++) {
 	  _solution[ig]->SumEpsToSol(_SolPdeIndex[_this_ipde], _LinSolver[_this_ipde][ig]->_EPS, _LinSolver[_this_ipde][ig]->_RES, _LinSolver[_this_ipde][ig]->KKoffset );	
 	}
       }
-      
+      // ============== Update Solution ==============
       for (unsigned ig=igridn-1; ig<igridn; ig++) {
  	_solution[ig]->SumEpsToSol(_SolPdeIndex[_this_ipde], _LinSolver[_this_ipde][ig]->_EPS, _LinSolver[_this_ipde][ig]->_RES, _LinSolver[_this_ipde][ig]->KKoffset );
       }
+      // ============== Test for Convergence ==============
       conv  = GetConvergence(pdename, igridn-1);
       if (conv ==true) nlcycle = nonlinear_ncycle + 1;
        
       cout << endl;
-      cout<<"COMPUTATION RESIDUAL:                  "<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC<<endl;
+      cout<<"COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC<<endl;
 
-      cout<<"CYCLE TIME:                            "<<static_cast<double>((clock()-start_cycle_time))/CLOCKS_PER_SEC<<endl;
+      cout<<"CYCLE TIME:           \t"<<static_cast<double>((clock()-start_cycle_time))/CLOCKS_PER_SEC<<endl;
     }
-    //only for the Full Multicycle
+    // // ==============  Solution Prolongation (only for Full-Multigrid) ==============
     if (igridn<gridn) {
-      ProlungatorSol(pdename, igridn);
+      ProlongatorSol(pdename, igridn);
     }
   }
 
@@ -811,7 +768,7 @@ void NonLinearMultiLevelProblem::Solve(const char pdename[], unsigned const &ncy
     _LinSolver[_this_ipde][ig]->_CC_flag=0;
   }
     
-  cout<<"STEADYSOLVER TIME:                            "<<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC<<endl;
+  cout<<"SOLVER TIME:   \t\t\t"<<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC<<endl;
 
 }
 
@@ -945,7 +902,7 @@ void NonLinearMultiLevelProblem::Initialize(const char name[]) {
     for (unsigned ig=0; ig<gridn; ig++) {
       unsigned num_el = _msh[ig]->GetElementNumber();
       _solution[ig]->ResizeSolutionVector(SolName[i]);
-      if (ig>0) BuildProlungatorMatrix(ig,i);     
+      if (ig>0) BuildProlongatorMatrix(ig,i);     
       //for parallel
       for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
         for (int iel=_msh[ig]->IS_Mts2Gmt_elem_offset[isdom]; 
@@ -1057,13 +1014,6 @@ void NonLinearMultiLevelProblem::AddSolutionToSolPdeIndex( const char pdename[],
     _SolPdeIndex[ipde].resize(jsol+1u);
     _SolPdeIndex[ipde][jsol]=GetIndex(solname);
   }
-  
-  //   for(int i=0;i<_PdeIndex.size();i++){
-  //     for(int j=0;j<_SolPdeIndex[i].size();j++){
-  //       cout<<_PdeIndex[i]<<" "<<_SolPdeIndex[i][j]<<endl;
-  //     }
-  //     cout<<endl;
-  //   }
 }
 
 // *******************************************************
@@ -1105,23 +1055,49 @@ void NonLinearMultiLevelProblem::AddToVankaIndex(const char pdename[], const cha
 };
 
 // *******************************************************
-void NonLinearMultiLevelProblem::Restrictor(const unsigned &gridf, const unsigned &ipde) {
+
+
+void NonLinearMultiLevelProblem::Restrictor(const unsigned &ipde, const unsigned &ig, const unsigned &igridn, 
+					    const unsigned &nlcycle, const unsigned &lcycle, const bool &flagmc){
     
-  _LinSolver[ipde][gridf-1u]->SetEpsZero();
-  _LinSolver[ipde][gridf-1u]->SetResZero();
-	
-  if (gridf >= gridr) { //assemble residual only on the part of the coarse grid that is not refined
-    _assemble_matrix=false;
-    _assemble_res=true;
-    _assemble_function(*this, gridf-1u, 0);
+  _LinSolver[ipde][ig-1u]->SetEpsZero();
+  _LinSolver[ipde][ig-1u]->SetResZero();
+  
+  bool matrix_reuse=true;
+  _assemble_matrix = (lcycle == 0) ? true : false;
+  
+  
+  if (ig>=gridr) {
+    _assemble_function(*this,ig-1,igridn-1u);
   }
-    
-  _LinSolver[ipde][gridf-1u]->_RESC->matrix_mult_transpose(*_LinSolver[ipde][gridf]->_RES, *_LinSolver[ipde][gridf]->_PP);
-  *_LinSolver[ipde][gridf-1u]->_RES += *_LinSolver[ipde][gridf-1u]->_RESC;
+  
+  if(_assemble_matrix){
+    if (ig>=gridr) {
+      if (!_LinSolver[_this_ipde][ig-1]->_CC_flag) {
+	_LinSolver[_this_ipde][ig-1]->_CC_flag=1;
+	_LinSolver[_this_ipde][ig-1]->_CC->matrix_PtAP(*_LinSolver[_this_ipde][ig]->_PP,*_LinSolver[_this_ipde][ig]->_KK,!matrix_reuse);
+      } 
+      else{
+	_LinSolver[_this_ipde][ig-1]->_CC->matrix_PtAP(*_LinSolver[_this_ipde][ig]->_PP,*_LinSolver[_this_ipde][ig]->_KK,matrix_reuse);
+      }
+      _LinSolver[_this_ipde][ig-1u]->_KK->matrix_add(1.,*_LinSolver[_this_ipde][ig-1u]->_CC,"subset_nonzero_pattern");
+    } 
+    else { //Projection of the Matrix on the lower level
+      if (nlcycle==0 && ( flagmc*(ig==igridn-1u) || !flagmc )) {
+	_LinSolver[_this_ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[_this_ipde][ig]->_PP,*_LinSolver[_this_ipde][ig]->_KK,!matrix_reuse);
+      }
+      else{ 
+	_LinSolver[_this_ipde][ig-1]->_KK->matrix_PtAP(*_LinSolver[_this_ipde][ig]->_PP,*_LinSolver[_this_ipde][ig]->_KK,matrix_reuse);
+      }	    
+    }
+  }
+      
+  _LinSolver[ipde][ig-1u]->_RESC->matrix_mult_transpose(*_LinSolver[ipde][ig]->_RES, *_LinSolver[ipde][ig]->_PP);
+  *_LinSolver[ipde][ig-1u]->_RES += *_LinSolver[ipde][ig-1u]->_RESC;
 }
 
 // *******************************************************
-int NonLinearMultiLevelProblem::Prolungator(const unsigned &gridf, const unsigned &ipde) {
+int NonLinearMultiLevelProblem::Prolongator(const unsigned &ipde, const unsigned &gridf) {
   _LinSolver[ipde][gridf]->_EPSC->matrix_mult(*_LinSolver[ipde][gridf-1]->_EPS,*_LinSolver[ipde][gridf]->_PP);
   _LinSolver[ipde][gridf]->UpdateResidual();
   _LinSolver[ipde][gridf]->SumEpsCToEps();
@@ -1129,7 +1105,7 @@ int NonLinearMultiLevelProblem::Prolungator(const unsigned &gridf, const unsigne
 }
 
 // *******************************************************
-void NonLinearMultiLevelProblem::ProlungatorSol(const char pdename[], unsigned gridf) {
+void NonLinearMultiLevelProblem::ProlongatorSol(const char pdename[], unsigned gridf) {
   
   unsigned ipde = GetPdeIndex(pdename);
   
@@ -1146,42 +1122,16 @@ void NonLinearMultiLevelProblem::ProlungatorSol(const char pdename[], unsigned g
 // This routine generates the matrix for the projection of the FE matrix to finer grids 
 //---------------------------------------------------------------------------------------------------
 
-int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, const char pdename[]) {
+int NonLinearMultiLevelProblem::BuildProlongatorMatrix(unsigned gridf, const char pdename[]) {
 
   unsigned ipde = GetPdeIndex(pdename);
       
   if (gridf<1) {
-    cout<<"Error! In function \"BuildProlungatorMatrix\" argument less then 1"<<endl;
+    cout<<"Error! In function \"BuildProlongatorMatrix\" argument less then 1"<<endl;
     exit(0);
   }
   
   int ierr;
-  //int nf= _LinSolver[ipde][gridf]->KKIndex[_LinSolver[ipde][gridf]->KKIndex.size()-1u];
-  //int nc= _LinSolver[ipde][gridf-1]->KKIndex[_LinSolver[ipde][gridf-1]->KKIndex.size()-1u];
-  
-  //   if(_nprocs==1) {
-  //     ierr = MatCreateSeqAIJ(PETSC_COMM_SELF,nf,nc,27,PETSC_NULL,&_LinSolver[ipde][gridf]->PP); CHKERRQ(ierr);
-  //     ierr = MatSetFromOptions(_LinSolver[ipde][gridf]->PP); CHKERRQ(ierr);
-  //   } else {
-  //     int nf_loc = _LinSolver[ipde][gridf]->KKoffset[_LinSolver[ipde][gridf]->KKIndex.size()-1][_iproc]
-  //       -_LinSolver[ipde][gridf]->KKoffset[0][_iproc];
-  //     int nc_loc = _LinSolver[ipde][gridf-1]->KKoffset[_LinSolver[ipde][gridf-1]->KKIndex.size()-1][_iproc]
-  //       -_LinSolver[ipde][gridf-1]->KKoffset[0][_iproc];
-  //     
-  //     ierr = MatCreate(MPI_COMM_WORLD, &_LinSolver[ipde][gridf]->PP);
-  //     CHKERRABORT(MPI_COMM_WORLD,ierr);
-  // 
-  //     ierr = MatSetSizes(_LinSolver[ipde][gridf]->PP, nf_loc, nc_loc, nf, nc);
-  //     CHKERRABORT(MPI_COMM_WORLD,ierr);
-  // 
-  //     ierr = MatSetType(_LinSolver[ipde][gridf]->PP, MATMPIAIJ); 
-  //     CHKERRABORT(MPI_COMM_WORLD,ierr);
-  // 
-  //     ierr = MatMPIAIJSetPreallocation(_LinSolver[ipde][gridf]->PP, 27, PETSC_NULL, 27, PETSC_NULL);
-  //     CHKERRABORT(MPI_COMM_WORLD,ierr);
-  //     
-  //   }
-  
   
   int nf= _LinSolver[ipde][gridf]->KKIndex[_LinSolver[ipde][gridf]->KKIndex.size()-1u];
   int nc= _LinSolver[ipde][gridf-1]->KKIndex[_LinSolver[ipde][gridf-1]->KKIndex.size()-1u];
@@ -1189,11 +1139,7 @@ int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, const cha
   int nc_loc = _LinSolver[ipde][gridf-1]->KKoffset[_LinSolver[ipde][gridf-1]->KKIndex.size()-1][_iproc]-_LinSolver[ipde][gridf-1]->KKoffset[0][_iproc];
   _LinSolver[ipde][gridf]->_PP = SparseMatrix::build().release();
   _LinSolver[ipde][gridf]->_PP->init(nf,nc,nf_loc,nc_loc,27,27);
-  
-  //PetscRectangularMatrix* PPp=static_cast<PetscRectangularMatrix*>(_LinSolver[ipde][gridf]->_PP);
-  //_LinSolver[ipde][gridf]->PP=PPp->mat();
-  
-  
+      
   for (unsigned k=0; k<_SolPdeIndex[ipde].size(); k++) {
     unsigned SolIndex=_SolPdeIndex[ipde][k];
        
@@ -1212,21 +1158,8 @@ int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, const cha
       }
     }
   }
-
   _LinSolver[ipde][gridf]->_PP->close();
-  
-  //ierr = MatAssemblyBegin(_LinSolver[ipde][gridf]->PP,MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
-  //ierr = MatAssemblyEnd(_LinSolver[ipde][gridf]->PP,MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
     
-  
-  /*  
-      PetscViewer viewer;
-      ierr=PetscViewerDrawOpen(PETSC_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);CHKERRQ(ierr);
-      ierr= MatView(_LinSolver[ipde][gridf]->PP,viewer);CHKERRQ(ierr);
-  
-      double ff;
-      std::cin>>ff;*/
-  
   return ierr;
 }
 
@@ -1235,10 +1168,10 @@ int NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, const cha
 // This routine generates the matrix for the projection of the solution to finer grids  
 //---------------------------------------------------------------------------------------------------
 
-void NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, unsigned SolIndex) {
+void NonLinearMultiLevelProblem::BuildProlongatorMatrix(unsigned gridf, unsigned SolIndex) {
   
   if (gridf<1) {
-    cout<<"Error! In function \"BuildProlungatorMatrix\" argument less then 1"<<endl;
+    cout<<"Error! In function \"BuildProlongatorMatrix\" argument less then 1"<<endl;
     exit(0);
   }
   
@@ -1275,7 +1208,7 @@ void NonLinearMultiLevelProblem::BuildProlungatorMatrix(unsigned gridf, unsigned
 // This routine generates the matrices for the projection of the solutions from different FE spaces 
 //---------------------------------------------------------------------------------------------------
 
-void NonLinearMultiLevelProblem::BuildProlungatorMatrices() {
+void NonLinearMultiLevelProblem::BuildProlongatorMatrices() {
 
   ProlQitoQj_[0][0].resize(gridn);
   ProlQitoQj_[0][1].resize(gridn);

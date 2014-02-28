@@ -63,7 +63,7 @@ public:
   void SetNumTimeSteps(const double ntimesteps);
 
   void Solve(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
-		    const char mg_type[]="F-Cycle");
+		    const char mg_type[]="F-Cycle", const bool &test_linear=0);
   
   void printsol_xdmf_archive(const char type[]) const;
 

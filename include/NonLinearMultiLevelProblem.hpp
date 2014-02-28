@@ -35,12 +35,11 @@ private:
   bool _init_func_set;
   bool _bdc_func_set;
   
-  bool _assemble_matrix;
-  bool _assemble_res;
- 
   unsigned _this_ipde;
+  bool _assemble_matrix;
   
- protected:
+protected:
+  
   int _nprocs;
   int _iproc;
   unsigned short gridn, gridr;
@@ -130,7 +129,7 @@ private:
 
   //* Multigrid Solver  */
   void Solve(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
-                    const char mg_type[]="F-Cycle", const bool &linear=0);
+             const char mg_type[]="F-Cycle", const bool &linear=0);
   int FreeMultigrid();
   void SetSmoother(const char smoothername[]);
   void SetVankaSchurOptions(bool Schur=0, short unsigned NSchurVar=0);
@@ -165,12 +164,13 @@ private:
   void AddToVankaIndex( const char pdename[], const char solname[]);
 
   //MultiGrid tools
-  void Restrictor(const unsigned &gridf, const unsigned &ipde);
-  int Prolungator(const unsigned &gridf, const unsigned &ipde);
-  void ProlungatorSol(const char pdename[], unsigned gridf);
-  int BuildProlungatorMatrix(unsigned gridf,const char pdename[]);
-  void BuildProlungatorMatrix(unsigned gridf, unsigned SolIndex);
-  void BuildProlungatorMatrices();
+  void Restrictor(const unsigned &ig, const unsigned &ipde, const unsigned &igridn, 
+                  const unsigned &nlcycle,const unsigned &lcycle, const bool &flagmc);
+  int Prolongator(const unsigned &gridf, const unsigned &ipde);
+  void ProlongatorSol(const char pdename[], unsigned gridf);
+  int BuildProlongatorMatrix(unsigned gridf,const char pdename[]);
+  void BuildProlongatorMatrix(unsigned gridf, unsigned SolIndex);
+  void BuildProlongatorMatrices();
 
   //printing and reading solution Functions 
   int printsol_gmv_binary(const char name[]="linear",unsigned igridn=0, bool debug=0) const;
@@ -180,7 +180,6 @@ private:
   void SetMovingMesh(std::vector<std::string>& myss);
   
   bool TestAssembleMatrix(){ return _assemble_matrix;};
-  bool TestAssembleRes(){ return _assemble_res;};
   unsigned GetThisPdeIndex(){ return _this_ipde;};
   char* GetThisPdeName(){ return _PdeName[_this_ipde];}
 };

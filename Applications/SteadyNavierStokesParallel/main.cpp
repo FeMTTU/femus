@@ -392,8 +392,8 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 
 int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn){
    
-  bool test_matrix  =  nl_ml_prob.TestAssembleMatrix();
-  bool test_res     =  nl_ml_prob.TestAssembleRes();
+  bool test_matrix  =  nl_ml_prob.TestAssembleMatrix(); // to call only if problem is linear
+  
   
   unsigned ipde=nl_ml_prob.GetThisPdeIndex();
   const char* pdename=nl_ml_prob.GetThisPdeName();
@@ -481,10 +481,10 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
       //set to zero all the entries of the FE matrices
       for(int ivar=0; ivar<dim; ivar++) {
 	nodeVAR[ivar].resize(nve2);
-	if(test_res){
-	  F[SolPdeIndexVAR[ivar]].resize(nve2);
-	  memset(&F[SolPdeIndexVAR[ivar]][0],0,nve2*sizeof(double));
-	}
+	
+	F[SolPdeIndexVAR[ivar]].resize(nve2);
+	memset(&F[SolPdeIndexVAR[ivar]][0],0,nve2*sizeof(double));
+	
 	if(test_matrix){
 	  B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[ivar]].resize(nve2*nve2);
 	  B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[3]].resize(nve2*nve1);
@@ -495,10 +495,9 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
 	}
       }
       nodeVAR[3].resize(nve1);
-      if(test_res){
-	F[SolPdeIndexVAR[3]].resize(nve1);
-	memset(&F[SolPdeIndexVAR[3]][0],0,nve1*sizeof(double));
-      }
+      F[SolPdeIndexVAR[3]].resize(nve1);
+      memset(&F[SolPdeIndexVAR[3]][0],0,nve1*sizeof(double));
+      
       
       if(test_matrix*_nwtn_alg==2){
 	for(int ivar=0; ivar<dim; ivar++) {
@@ -568,16 +567,15 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
 	
 	    //BEGIN RESIDUALS A block ===========================
 	    for(unsigned ivar=0; ivar<dim; ivar++) {
-	      if(test_res){
-		double Adv_rhs=0;
-		double Lap_rhs=0;
-		for(unsigned ivar2=0; ivar2<dim; ivar2++) {
-		  Lap_rhs += gradphi2[i][ivar2]*gradSolVAR[ivar][ivar2];
-		  Adv_rhs += SolVAR[ivar2]*gradSolVAR[ivar][ivar2];
-		}
-		F[SolPdeIndexVAR[ivar]][i]+= (-_IRe*Lap_rhs-_NavierStokes*Adv_rhs*phi2[i]+SolVAR[3]*gradphi2[i][ivar])*Weight2; 
+	      double Adv_rhs=0;
+	      double Lap_rhs=0;
+	      for(unsigned ivar2=0; ivar2<dim; ivar2++) {
+		Lap_rhs += gradphi2[i][ivar2]*gradSolVAR[ivar][ivar2];
+		Adv_rhs += SolVAR[ivar2]*gradSolVAR[ivar][ivar2];
 	      }
+	      F[SolPdeIndexVAR[ivar]][i]+= (-_IRe*Lap_rhs-_NavierStokes*Adv_rhs*phi2[i]+SolVAR[3]*gradphi2[i][ivar])*Weight2; 
 	    }
+	    
 	    
 	    //END RESIDUALS A block ===========================
 	    if(test_matrix){
@@ -620,11 +618,10 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
 	  // *** phi1_i loop ***
 	  for(unsigned i=0; i<nve1; i++){
 	    //BEGIN RESIDUALS B block ===========================
-	    if(test_res){
-	      double div = 0;
-	      for(unsigned ivar=0; ivar<dim; ivar++) div += gradSolVAR[ivar][ivar];
-	      F[SolPdeIndexVAR[3]][i]+= (phi1[i]*div +_penalty*_ILambda*phi1[i]*SolVAR[3])*Weight2;
-	    }
+	    double div = 0;
+	    for(unsigned ivar=0; ivar<dim; ivar++) div += gradSolVAR[ivar][ivar];
+	    F[SolPdeIndexVAR[3]][i]+= (phi1[i]*div +_penalty*_ILambda*phi1[i]*SolVAR[3])*Weight2;
+	   
 	  	  	    
 	    //END RESIDUALS  B block ===========================
 	    if(test_matrix){
@@ -674,7 +671,7 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
       //--------------------------------------------------------------------------------------------------------
       //Sum the small matrices into the Big Matrix
       for(unsigned ivar=0; ivar<dim; ivar++) {
-	if(test_res) myRES->add_vector_blocked(F[SolPdeIndexVAR[ivar]],nodeVAR[ivar]);
+	myRES->add_vector_blocked(F[SolPdeIndexVAR[ivar]],nodeVAR[ivar]);
 	if(test_matrix){
 	  myKK->add_matrix_blocked(B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[ivar]],nodeVAR[ivar],nodeVAR[ivar]);  
 	  myKK->add_matrix_blocked(B[SolPdeIndexVAR[ivar]][SolPdeIndexVAR[3]],nodeVAR[ivar],nodeVAR[3]);
@@ -688,13 +685,13 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
       }
       //Penalty
       if(test_matrix*_penalty) myKK->add_matrix_blocked(B[SolPdeIndexVAR[3]][SolPdeIndexVAR[3]],nodeVAR[3],nodeVAR[3]);
-      if(test_res) myRES->add_vector_blocked(F[SolPdeIndexVAR[3]],nodeVAR[3]);
+      myRES->add_vector_blocked(F[SolPdeIndexVAR[3]],nodeVAR[3]);
       //--------------------------------------------------------------------------------------------------------  
     } //end list of elements loop for each subdomain
   } //end list of subdomain
   
   if(test_matrix) myKK->close();
-  if(test_res)myRES->close();
+  myRES->close();
   
   // ***************** END ASSEMBLY *******************
  
@@ -711,9 +708,8 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
 //------------------------------------------------------------------------------------------------------------
 int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn){
    
-  bool test_matrix = nl_ml_prob.TestAssembleMatrix();
-  bool test_res = nl_ml_prob.TestAssembleRes();
-       
+  bool test_matrix = nl_ml_prob.TestAssembleMatrix(); // to call only if problem is linear
+         
   unsigned ipde=nl_ml_prob.GetThisPdeIndex();
   const char* pdename=nl_ml_prob.GetThisPdeName();
   
@@ -773,10 +769,9 @@ int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, c
     
       //set to zero all the entries of the FE matrices
       nodeT.resize(nve);
-      if(test_res){
-	F.resize(nve);
-	memset(&F[0],0,nve*sizeof(double));
-      }
+      F.resize(nve);
+      memset(&F[0],0,nve*sizeof(double));
+      
       if(test_matrix){
 	B.resize(nve*nve);
 	memset(&B[0],0,nve*nve*sizeof(double));
@@ -823,15 +818,14 @@ int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, c
 	  for(unsigned i=0; i<nve; i++){
 	
 	    //BEGIN RESIDUALS A block ===========================
-	    if(test_res){
-	      double Adv_rhs=0;
-	      double Lap_rhs=0;
-	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		Lap_rhs += gradphi2[i][ivar]*gradSolT[ivar];
-		Adv_rhs += SolU[ivar]*gradSolT[ivar];
-	      }
-	    F[i]+= (-_IPr*Lap_rhs-Adv_rhs*phi2[i])*Weight2; 
+	    double Adv_rhs=0;
+	    double Lap_rhs=0;
+	    for(unsigned ivar=0; ivar<dim; ivar++) {
+	      Lap_rhs += gradphi2[i][ivar]*gradSolT[ivar];
+	      Adv_rhs += SolU[ivar]*gradSolT[ivar];
 	    }
+	    F[i]+= (-_IPr*Lap_rhs-Adv_rhs*phi2[i])*Weight2; 
+	    
 	    
 	    //END RESIDUALS A block ===========================
 	    if(test_matrix){
@@ -854,12 +848,12 @@ int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, c
       //--------------------------------------------------------------------------------------------------------
       //Sum the small matrices into the Big Matrix
       
-      if(test_res) myRES->add_vector_blocked(F,nodeT);
+      myRES->add_vector_blocked(F,nodeT);
       if(test_matrix) myKK->add_matrix_blocked(B,nodeT,nodeT);  
     } //end list of elements loop for each subdomain
   } //end list of subdomain
   
-  if(test_res) myRES->close();
+  myRES->close();
   if(test_matrix) myKK->close();
   
     
