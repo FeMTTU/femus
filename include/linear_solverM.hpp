@@ -8,7 +8,7 @@
 #include "Typedefs_conf.hpp" 
 
 #include "SolverPackageEnum.hpp"      // #include "enum_solver_package.h"
-#include "Precondtype_enum.hpp"        // #include "enum_preconditioner_type.h"
+#include "PrecondtypeEnum.hpp"        // #include "enum_preconditioner_type.h"
 #include "SolvertypeEnum.hpp"         // #include "enum_solver_type.h"
 
 
@@ -39,7 +39,7 @@ protected:
   SolverType _solver_type;
 
   /// Enum statitng with type of preconditioner to use.
-  PreconditionerTypeM _preconditioner_type;
+  PreconditionerType _preconditioner_type;
   /// Holds the Preconditioner object to be used for the linear solves.
   PreconditionerM * _preconditioner;
   
@@ -74,7 +74,7 @@ public:
   void set_solver_type (const SolverType st)  { _solver_type = st; }
   
   /// Sets the type of preconditioner to use.
-  void set_preconditioner_type (const PreconditionerTypeM pct);
+  void set_preconditioner_type (const PreconditionerType pct);
   /// Attaches a Preconditioner object to be used
   void attach_preconditioner(PreconditionerM * preconditioner);
   
@@ -89,7 +89,7 @@ public:
   SolverType solver_type () const { return _solver_type; }
 
   /// Returns the type of preconditioner to use.
-  PreconditionerTypeM preconditioner_type () const;
+  PreconditionerType preconditioner_type () const;
 
   // =================================
   // SOLVE FUNCTIONS 
@@ -132,7 +132,7 @@ public:
 // =============================================
 inline LinearSolverM::LinearSolverM() :
     _solver_type(GMRES),
-    _preconditioner_type(ILU_PRECONDM),
+    _preconditioner_type(ILU_PRECOND),
     _preconditioner(NULL),
     _is_initialized(false),
     same_preconditioner(false) {}

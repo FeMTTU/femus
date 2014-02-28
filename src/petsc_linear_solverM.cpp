@@ -140,8 +140,8 @@ void PetscLinearSolverM::clear() {
     this->_solver_type  = GMRES;
     if (!this->_preconditioner)      {
       int i; MPI_Comm_size(MPI_COMM_WORLD,&i);
-      if (i == 1) this->_preconditioner_type = ILU_PRECONDM;
-      else this->_preconditioner_type = BLOCK_JACOBI_PRECONDM;
+      if (i == 1) this->_preconditioner_type = ILU_PRECOND;
+      else this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
     }
   }
 }

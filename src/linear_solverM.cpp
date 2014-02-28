@@ -2,7 +2,7 @@
 
 #include "FemusExtLib_conf.hpp"
 
-#include "Precondtype_enum.hpp"
+#include "PrecondtypeEnum.hpp"
 
 // C++ includes
 #include <memory>
@@ -43,14 +43,14 @@ std::auto_ptr<LinearSolverM > LinearSolverM::build(const SolverPackage solver_pa
 }
 
 // ============================================================
-PreconditionerTypeM LinearSolverM::preconditioner_type () const
+PreconditionerType LinearSolverM::preconditioner_type () const
 {
   if(_preconditioner)    return _preconditioner->type();
   return _preconditioner_type;
 }
 
 // ===========================================================
-void LinearSolverM::set_preconditioner_type (const PreconditionerTypeM pct)
+void LinearSolverM::set_preconditioner_type (const PreconditionerType pct)
 {
   if(_preconditioner)    _preconditioner->set_type(pct);
   else    _preconditioner_type = pct;
@@ -63,7 +63,7 @@ void LinearSolverM::attach_preconditioner(PreconditionerM * preconditioner)
     std::cerr<<"Preconditioner must be attached before the solver is initialized!"<<std::endl;
     abort();
   } 
-  _preconditioner_type = SHELL_PRECONDM;
+  _preconditioner_type = SHELL_PRECOND;
   _preconditioner = preconditioner;
 }
 

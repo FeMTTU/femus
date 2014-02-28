@@ -4,7 +4,7 @@
 #include "FemusExtLib_conf.hpp"
 
 #include "SolverPackageEnum.hpp"
-#include "Precondtype_enum.hpp"
+#include "PrecondtypeEnum.hpp"
 
 
 // C++ includes
@@ -72,10 +72,10 @@ public:
   void set_matrix(SparseMatrixM & mat);
 
   /// Returns the type of preconditioner to use.
-  PreconditionerTypeM type () const{ return _preconditioner_type; }
+  PreconditionerType type () const{ return _preconditioner_type; }
 
   /// Sets the type of preconditioner to use.
-  void set_type (const PreconditionerTypeM pct);
+  void set_type (const PreconditionerType pct);
   
 protected:
 
@@ -83,7 +83,7 @@ protected:
   SparseMatrixM * _matrix;
   
   /// Enum statitng with type of preconditioner to use.
-  PreconditionerTypeM _preconditioner_type;
+  PreconditionerType _preconditioner_type;
   
   /// Flag indicating if the data structures have been initialized.
   bool _is_initialized;
@@ -96,7 +96,7 @@ protected:
 // =============================================
 inline PreconditionerM::PreconditionerM () :
   _matrix(NULL),
-  _preconditioner_type (ILU_PRECONDM),
+  _preconditioner_type (ILU_PRECOND),
   _is_initialized      (false)
 {
 }
@@ -109,7 +109,7 @@ inline void PreconditionerM::set_matrix(SparseMatrixM & mat){
   _matrix = &mat;
 }
 // ==========================================================
-inline void PreconditionerM::set_type (const PreconditionerTypeM pct){
+inline void PreconditionerM::set_type (const PreconditionerType pct){
   //If the preconditioner type changes we (probably) need to reinitialize.
   _is_initialized = false;
   _preconditioner_type = pct;

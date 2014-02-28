@@ -6,7 +6,7 @@
 
 #ifdef FEMUS_HAVE_PETSC
 
-#include "Precondtype_enum.hpp"
+#include "PrecondtypeEnum.hpp"
 
 // Local includes
 #include "preconditionerM.hpp"
@@ -45,7 +45,7 @@ public:
   virtual void apply(const NumericVectorM & x, NumericVectorM & y);
   /// Tells PETSC to use the user-specified preconditioner  
   static void set_petsc_preconditioner_type 
-             (const PreconditionerTypeM & preconditioner_type, PC & pc);
+             (const PreconditionerType & preconditioner_type, PC & pc);
 };
 
 
