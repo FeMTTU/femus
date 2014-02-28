@@ -3,7 +3,7 @@
 #include "FemusDefault.hpp"
 
 #include "numeric_vectorM.hpp"
-#include "dense_vectorM.hpp"
+#include "DenseVector.hpp"
 #include "sparse_matrixM.hpp"
 #include "dense_matrixM.hpp"
 #include "linear_solverM.hpp"

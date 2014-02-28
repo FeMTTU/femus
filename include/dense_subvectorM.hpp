@@ -3,7 +3,7 @@
 
 
 #include "Typedefs_conf.hpp"
-#include "dense_vectorM.hpp"
+#include "DenseVector.hpp"
 
 // ===========================================
 // Defines a dense subvector for use in Finite Element-type computations.
@@ -21,7 +21,7 @@ class DenseSubVectorM : public DenseVectorBase
   private:
     
   /// The parent vector that contains this subvector.
-  DenseVectorM& _parent_vector;
+  DenseVector& _parent_vector;
   /// The length of this subvector.
   unsigned int _n;
   /// The offset into the parent vector.
@@ -32,13 +32,13 @@ public:
   // CONSTRUCTOR /DESTRUCTOR
   // =====================================
   /// Constructor.  Creates a dense subvector of the vector
-  DenseSubVectorM(DenseVectorM& parent,const unsigned int ioff=0, const unsigned int n=0);
+  DenseSubVectorM(DenseVector& parent,const unsigned int ioff=0, const unsigned int n=0);
 
   /// Destructor.  Does nothing.     
   virtual ~DenseSubVectorM() {}
   
   /// @returns a reference to the parent vector.
-  DenseVectorM& parent () { return _parent_vector; }
+  DenseVector& parent () { return _parent_vector; }
   
   /// Set every element in the subvector to 0.
   virtual void zero();
@@ -76,7 +76,7 @@ public:
 // ------------------------------------------------------------
 // Dense Vector member functions
 inline
-DenseSubVectorM::DenseSubVectorM(DenseVectorM& parent,
+DenseSubVectorM::DenseSubVectorM(DenseVector& parent,
 				  const unsigned int ioff,
 				  const unsigned int n) :
   _parent_vector(parent)

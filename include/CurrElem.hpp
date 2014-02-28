@@ -5,7 +5,7 @@
 #include "VBType_enum.hpp"
 #include "FEType_enum.hpp"
 
-#include "dense_vectorM.hpp"
+#include "DenseVector.hpp"
 #include "dense_matrixM.hpp"
 
 class EqnBase;
@@ -94,7 +94,7 @@ class QuantityLocal;
   std::vector<uint> _el_dof_indices[VB];
   uint*                  _bc_eldofs[VB]; //So the element must be aware of the BC of the equation
   DenseMatrixM                 _KeM[VB]; 
-  DenseVectorM                 _FeM[VB];
+  DenseVector                 _FeM[VB];
   
  void GetElDofsBc(const uint vbfl, const uint Level);  //needs the EQUATION basically
  
