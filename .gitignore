@@ -6,3 +6,96 @@
 *CMakeCache.txt
 *src/.kdev_include_paths
 config/FEMTTUConfig.h
+
+
+
+
+#machine-dependent stuff 
+install_femus.sh
+configure_femus.sh
+
+
+# folders
+data_in/
+input/
+output/
+packs/
+templates/
+tests/
+contrib/lib/
+contrib/hdf5-1.8.5-patch1-linux-x86_64-shared/
+lib/
+applications/*/lib/
+
+# kdevelop files
+.kdev4/
+.kdev_include_paths
+
+# code::blocks
+codeblocks/
+
+# text files
+# i would not remove these
+# they can be doc files
+# *.ps
+# *.pdf
+
+# latex junk stuff
+*.aux
+*.dvi
+*.idx
+*.ilg
+*.ind
+*.out
+*.toc
+
+
+
+# packages
+*.tar.*
+
+# temporary files
+*~
+*#
+
+# system files
+.directory
+
+# old files
+*.old
+
+# mesh input files
+*.gam
+*.neu
+*.med
+
+# output files
+*.gmv
+*.xmf
+*.h5
+*.pvsm
+*.prn
+
+# objects
+*.o
+
+# executables
+# main
+*_opt
+*_dbg
+*_pro
+# gencase also the subfolder are ignored!
+gencase_opt
+gencase_dbg
+gencase_pro
+navier
+
+#log files
+*.log
+
+#depend
+.depend
+.dependlib
+
+#cmake
+build*/
