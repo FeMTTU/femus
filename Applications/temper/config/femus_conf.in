@@ -1,0 +1,259 @@
+
+<Gencase>
+
+libmesh_gen 1           # ==== in library routines
+mgops_gen   1            # ==== in library routines
+
+</Gencase>
+
+
+<TimeLoop>
+# double
+
+dt          0.1   # ==== in library routines
+itime       0.0   # ==== in library routines
+nsteps      5     # ==== in library routines
+printstep   1     # ==== in library routines
+ndigits     4     # ==== in library routines
+restart     0     # ==== in library routines  # ==== both for the App and for Gencase ======
+
+</TimeLoop>
+
+
+<Box>
+
+ lxb 0.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======   # ==== DO IT ONLY FOR Gencase ======   # USER must provide this info explicitly
+ lxe 1.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======   # ==== DO IT ONLY FOR Gencase ======  # USER must provide this info explicitly
+
+ lyb 0.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======    # ==== DO IT ONLY FOR Gencase ====== # USER must provide this info explicitly
+ lye 2.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======    # ==== DO IT ONLY FOR Gencase ====== # USER must provide this info explicitly
+
+ lzb 0.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======  # USER must provide this info explicitly
+ lze 1.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======  # USER must provide this info explicitly
+
+# only for libmesh_gen=1
+nintervx   8
+nintervy   8 
+nintervz   8
+
+</Box>
+
+
+# ================================================================================================================================
+
+<Utils>
+# double
+
+# ------<ViewerOrder>------------------------------# mesh order for the viewer, this is not mathematical, it is a misc ---<Utils></Utils>---
+viewer_order 1       # ==== not in library routines, but library-type
+# ------</ViewerOrder>------------------------------
+
+# ==== only for the App ==================================
+
+# ----<BCHandling>-----------------
+ibc_gen     0            # ==== in library routines
+bdry_toll   0.0000001    # ==== not in library routines, but library-type
+penalty_val 1.e10        # ==== not in library routines, but library-type
+# ----</BCHandling>-----------------
+
+# --------<Domain>---------, not nec. a Box--
+domain   0      # this should be OUTSIDE  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # ==== DO IT ONLY FOR Gencase ====== # USER must provide this info explicitly # 0=Box# 1=Cylinder# Whatever the rest
+transflag 0       # ==== not in library routines, but library-type
+thetax    0.       # ==== not in library routines, but library-type
+thetay    0.       # ==== not in library routines, but library-type
+thetaz    0.       # ==== not in library routines, but library-type
+# thetaz0.523598775598
+# --------</Domain>---------, not nec. a Box--
+
+
+# === only for Gencase ==================================== we'll do a ##<GenCase> tag later
+# ----<EqnBase,Mesh,MultiGrid...>----------
+nolevels 3           # ==== in library routines     # USER must provide this info explicitly 
+# ----</EqnBase,Mesh,MultiGrid...>----------
+# ------<Mesh>---------------------------------------
+meshql        1           # ------<ElementMapping>------- # for THE APP # =MESH CONSISTENCY=== # ==== in library routines      # USER must provide this info explicitly # depends on the kind of Mesh that is used# depends basically on the Boundary Mesh# 0=QUADRATIC Mapping  1=LINEAR Mapping
+mesh_ord      0             # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# 0=QUADRATIC GeomElements (Quad8,Quad9,Hex27,...)# 1=LINEAR GeomElements (Quad4,Hex8,...)
+numgeomels    1             # =MESH CONSISTENCY===  # ==== in library routines     # quadrilateral,triangular,pyramidal,...        # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# no support for hybrid mesh yet
+dimension     2             # =MESH CONSISTENCY===  # ==== in library routines 
+# ------</Mesh>----------------------------------------
+# ------<GeomEl>---------------------------------------
+geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
+# ------</GeomEl>-----------------------------------------
+
+</Utils>
+
+
+
+# ==============================================================================================================================
+# ==============================================================================================================================
+# ============== runtime parameters for the Files class ========================================================================
+# ==============================================================================================================================
+# interesting, the file holds the name of itself...
+# we should make a distinction between LIBRARY VARIABLES and NON-LIBRARY VARIABLES
+
+<Files>
+# std::string
+
+# ********** general, libfemus configuration, both gencase and App ****************
+# extensions *********
+EXT_H5         .h5
+EXT_XDMF       .xmf 
+EXT_IN         .in 
+EXT_LOG        .log
+
+# DIRECTORIES *******
+# AAA leave OUTPUT_DIR like this for now!
+# the convention is that all the keys ending with _DIR are directory names, so put a trailing "/" on them!
+INPUT_DIR     input/
+OUTPUT_DIR    output/
+AUX_XDMF      Xdmf.dtd 
+# **********************************************************
+
+
+# **********************gencase*****************************
+# --------------------------------------------------
+# ---- GENCASE class, external mesh file ----
+# --------------------------------------------------
+# ======only gencase
+# we recognize the file format from the extension: .gam=gambit, .med=salome
+GAMBIT_EXT     .gam 
+SALOME_EXT     .med 
+ F_MESH_READ    inclQ2D2x2.gam
+# F_MESH_READ    inclQ3D4x4x4.gam
+
+# =======gencase, output for the App and input to the app
+
+# --------------------------------------------------
+# ----  Mesh class ----
+# --------------------------------------------------
+BASEMESH      mesh 
+MULTIMESH     multimesh 
+CONNLIN      _conn_lin 
+
+# --------------------------------------------------
+# ----  MULTIGRID  --------------
+# --------------------------------------------------
+F_MATRIX     Matrix 
+F_PROL       Prol 
+F_REST       Rest 
+# *****************************
+
+
+# **********only for the App ****************
+
+# --------------------------------------------------
+# ----  Time, sort of  --------------
+# --------------------------------------------------
+BASESOL       sol 
+BASECASE      case 
+BASETIME      time 
+CASE_DATA     case.txt
+# RESTART FILES
+# if a run reaches the end, then we write it as a "default restart" run
+LAST_RUN    run_to_restart_from
+NEW_RUN      new_run
+
+# ----  BCHandling  --------------
+# external ibc file
+IBC           case 
+BDRY_SUFFIX   _bd
+
+# --------------------------------------------------
+# ----  MyApp log  --------------
+# --------------------------------------------------
+RUN_LOG    run
+PETSC_FEMUS_LOG  petsc_main.log 
+
+# ********************** NON_LIBRARY, specific application *****************************
+
+# ------- OPT CONTROL -----------
+INTEGRAL   integral.txt
+
+
+</Files>
+
+
+# ================================================================================================================================
+# ============== runtime parameters for the Physics class ========================================================================
+# ================================================================================================================================
+# the following are supposed to be only APPLICATION variables
+
+
+<Physics>
+
+# ReferenceValueForNon-dimensionalizationVelLenTemperature
+Uref      1.
+Lref      1.
+Tref      1.
+
+# FluidProperties 
+
+# Monophase
+rho0      1.
+mu0       1.
+kappa0    1.
+cp0       1.
+komp0     0.
+
+# Two-Phase
+rho1      1.
+mu1       1.
+kappa1    1.
+cp1       1.
+komp1    0.
+
+# SurfaceTension
+sigma   1.
+
+# VolumetricHeatSource
+qheat 0.
+
+# FSI
+rhos 7890.
+
+# ----------------------------------------------------------------------
+# ------ for the Gravity "Quantity" (NS, STRUCT-MECH) ---------------------
+# -----------------------------------------------------------------------
+# Gravity-0.101937-cos60+sin60=-0.0509685+0.0882800315856
+dirgx  0.
+dirgy  0.
+dirgz  0.
+
+# ----------------------------------------------------------------------
+# ------ for the MHD Quantities ---------------------
+# ----------------------------------------------------------------------- 
+MUMHD 1.e-6
+SIGMHD 1.e+6
+Bref 5.e-3
+
+# ----------------------------------------------------------------------
+# ------ for the MHDCONT Equation class ---------------------------------------
+# -----------------------------------------------------------------------
+# BC FLAGS
+# the next one is a flag, I'll put it here for convenience
+# 0 means false, so FIX
+# 1 means true, so CONTROL
+UseControl 1
+
+# ----------------------------------------------------------------------
+# ------ for the Box:Domain class ---------------------------------------
+# -----------------------------------------------------------------------
+# true or fake 3D simulation
+Fake3D 1
+
+# ----------------------------------------------------------------------
+# ------ for every Equation class ---------------------------------------
+# -----------------------------------------------------------------------
+# PseudoTimeStepping
+NonStatNS 0 # 1
+NonStatMHD 0 # 1
+NonStatTEMP 0
+
+ alphaT 1000 
+alphaL2  1.
+alphaH1  1. # LEAVE IT THERE
+
+ injsuc 2.0 
+
+
+</Physics>

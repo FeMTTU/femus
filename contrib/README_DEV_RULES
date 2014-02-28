@@ -1,0 +1,24 @@
+RULES FOR DEVELOPING FEMUS
+
+- Use std::cout, do not use printf for output.
+
+- If a function must be performed by only one processor (processor 0),
+then write an ifproc INSIDE the FUNCTION.
+
+- Divide the includes in 
+FEMuS includes,
+ C++ includes,
+ other external libraries' includes.
+
+- Always put include guards in header files.
+
+- Write the function names with CapitalLettersLikeThisAndNotWithUnderscores.
+
+
+- In the SCRIPTS and in the MAKEFILES, almost all the variables have a FM_ or FEMUS_ prefix.
+ The variables without this prefix are like this because 
+ they are defined for external packages
+ For instance, PETSC_DIR and PETSC_ARCH are used to COMPILE PETSC.
+ 
+ - when you create a NEW HEADER, make sure you change the INCLUDE GUARD.
+ Then, make sure you add the new files to git.

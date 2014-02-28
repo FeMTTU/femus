@@ -1,0 +1,55 @@
+##############################
+###### LIBRARY ###############
+##############################
+
+
+###### How to install ###########
+
+
+
+
+###### How to configure ###########
+
+
+######## How to choose the COMPILE MODE for the library AND external packages ###########
+export FM_FEMUS_METHOD={opt,dbg}
+export FM_LIBMESH_METHOD={opt,dbg}
+export FM_PETSC_METHOD={opt,dbg}
+
+source configure_femus.sh
+fm_set_femus
+
+######## IF YOU WANT TO CHANGE the COMPILE MODE ###############
+You have to open another shell and set new values 
+
+
+##############################
+###### APPLICATION ###########
+##############################
+
+###### How to set the parameters for an application ###########
+- See the files in the config/ directory
+- Compile first the application then the gencase
+
+###### How to change the mesh file of an application ###########
+- Put the mesh file in the config/ directory 
+- Set the filename in the femus_conf.in file
+- Set libmesh_gen to 0
+- Set DIMENSION to the consistent value with the mesh file
+- Recompile the application then the gencase (whatever order)
+
+###### IF YOU WANT TO REVERT TO LIBMESH GENERATED MESH ###########
+- Set libmesh_gen to 1
+- Set DIMENSION accordingly (we have only Box-type domains with libmesh)
+- Don't have to move any mesh file
+- ONLY IF you CHANGED the DIMENSION, recompile first the application then the gencase
+
+####### How to schedule a suite of runs ##########
+Folders with time files
+
+####### How to switch from one application to another ##########
+- Just change folder. 
+
+####### How to create a new application ##########
+- Copy the structure of an existing application, in particular the directories
+   and the configuration files
