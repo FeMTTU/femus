@@ -7,7 +7,7 @@
 
 #include "Typedefs_conf.hpp" 
 
-#include "SolverPackage_enum.hpp"      // #include "enum_solver_package.h"
+#include "SolverPackageEnum.hpp"      // #include "enum_solver_package.h"
 #include "Precondtype_enum.hpp"        // #include "enum_preconditioner_type.h"
 #include "Solvertype_enum.hpp"         // #include "enum_solver_type.h"
 
@@ -65,7 +65,7 @@ public:
   /// Initialize data structures if not done so already.
   virtual void init() = 0;
   /// Builds a \p LinearSolverM using the linear solver in \p solver_package
-  static std::auto_ptr<LinearSolverM > build(const SolverPackageM solver_package = LSOLVER);
+  static std::auto_ptr<LinearSolverM > build(const SolverPackage solver_package = LSOLVER);
 
   // =================================
   // SETTING FUNCTIONS 

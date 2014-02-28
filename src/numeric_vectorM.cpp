@@ -18,7 +18,7 @@
 // Full specialization for Real datatypes
 
 std::auto_ptr<NumericVectorM >
-NumericVectorM::build(const SolverPackageM solver_package){
+NumericVectorM::build(const SolverPackage solver_package){
   // Build the appropriate vector
   switch (solver_package){
 #ifdef FEMUS_HAVE_LASPACK
@@ -28,7 +28,7 @@ NumericVectorM::build(const SolverPackageM solver_package){
       }
 #endif
 #ifdef FEMUS_HAVE_PETSC
-    case PETSC_SOLVERSM:{
+    case PETSC_SOLVERS:{
 	std::auto_ptr<NumericVectorM > ap(new PetscVectorM);
 	return ap;
       }

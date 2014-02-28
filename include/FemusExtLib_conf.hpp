@@ -71,7 +71,7 @@
 //   #define HAVE_MPI   //what if I want to use Petsc without MPI?
  
 #ifdef FEMUS_HAVE_PETSC
- #define LSOLVER  PETSC_SOLVERSM
+ #define LSOLVER  PETSC_SOLVERS
 #endif
 
 

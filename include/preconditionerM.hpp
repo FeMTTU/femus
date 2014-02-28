@@ -3,7 +3,7 @@
 
 #include "FemusExtLib_conf.hpp"
 
-#include "SolverPackage_enum.hpp"
+#include "SolverPackageEnum.hpp"
 #include "Precondtype_enum.hpp"
 
 
@@ -54,7 +54,7 @@ public:
   virtual ~PreconditionerM ();
   
   /// Builds a \p PreconditionerM using the linear solver package specified by \p solver_package
-  static PreconditionerM * build(const SolverPackageM solver_package = PETSC_SOLVERSM);
+  static PreconditionerM * build(const SolverPackage solver_package = PETSC_SOLVERS);
   
   /// @returns true if the data structures 
   bool initialized () const { return _is_initialized; }

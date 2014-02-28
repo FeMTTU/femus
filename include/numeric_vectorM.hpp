@@ -5,7 +5,7 @@
 #include "FemusDefault.hpp"
 
 #include "Typedefs_conf.hpp" 
-#include "SolverPackage_enum.hpp"
+#include "SolverPackageEnum.hpp"
 #include "Paralleltype_enum.hpp"
 
 
@@ -76,7 +76,7 @@ public:
  /// Builds a \p NumericVectorM using the linear solver package 
  /// specified by \p solver_package
   static std::auto_ptr<NumericVectorM>
-  build(const SolverPackageM solver_package = LSOLVER); 
+  build(const SolverPackage solver_package = LSOLVER); 
   /// Creates a copy of this vector and returns it in an \p AutoPtr.
   virtual std::auto_ptr<NumericVectorM > clone () const = 0;  
   
