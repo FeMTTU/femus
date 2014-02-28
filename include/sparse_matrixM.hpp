@@ -23,7 +23,7 @@
 // #include "reference_counted_object.h"
 
 // forward declarations
-class DenseMatrixM;
+class DenseMatrix;
 //  inline std::ostream& operator << (std::ostream& os, const SparseMatrixM& m);
 // class DofMap;
 // namespace SparsityPattern { class Graph; }
@@ -146,12 +146,12 @@ public:
   // ===========================
 
   /// Add the full matrix to the Sparse matrix.  
-  virtual void add_matrix (const DenseMatrixM &dm,
+  virtual void add_matrix (const DenseMatrix &dm,
 			   const std::vector<unsigned int> &rows,
 			   const std::vector<unsigned int> &cols) = 0;
   
   /// Same, but assumes the row and column maps are the same.
-  virtual void add_matrix (const DenseMatrixM &dm,const std::vector<unsigned int> &dof_indices) = 0;
+  virtual void add_matrix (const DenseMatrix &dm,const std::vector<unsigned int> &dof_indices) = 0;
       
   /// Add a Sparse matrix \p _X, scaled with \p _a, to \p  A += cB
   virtual void add (const Real /*c*/, SparseMatrixM & /*B*/) = 0;

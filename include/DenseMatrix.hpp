@@ -249,7 +249,7 @@ DenseMatrix::DenseMatrix(const int m,const int n)
 //
 // inline
 // DenseMatrix::DenseMatrix (const DenseMatrix& other_matrix)
-//   : DenseMatrixBaseM <double>(other_matrix._m, other_matrix._n)
+//   : DenseMatrixBase <double>(other_matrix._m, other_matrix._n)
 // {
 //   _val = other_matrix._val;
 // }

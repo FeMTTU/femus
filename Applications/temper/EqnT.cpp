@@ -5,7 +5,7 @@
 #include "numeric_vectorM.hpp"
 #include "DenseVector.hpp"
 #include "sparse_matrixM.hpp"
-#include "dense_matrixM.hpp"
+#include "DenseMatrix.hpp"
 #include "linear_solverM.hpp"
 
 #include "Files.hpp"

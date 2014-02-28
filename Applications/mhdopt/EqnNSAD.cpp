@@ -1,6 +1,6 @@
 #include "EqnNSAD.hpp"
 
-#include "dense_matrixM.hpp"
+#include "DenseMatrix.hpp"
 #include "sparse_matrixM.hpp"
 #include "DenseVector.hpp"
 #include "numeric_vectorM.hpp"
