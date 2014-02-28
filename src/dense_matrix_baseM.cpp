@@ -1,7 +1,7 @@
 #include "dense_matrix_baseM.hpp"
 
 #include "Typedefs_conf.hpp"
-#include "dense_vector_baseM.hpp"
+#include "DenseVectorBase.hpp"
 
 #include <iomanip> // for std::setw()
 
@@ -34,7 +34,7 @@ void DenseMatrixBaseM::multiply (DenseMatrixBaseM& M1,
 void DenseMatrixBaseM::condense(const unsigned int iv,
                                 const unsigned int jv,
                                 const Real val,
-                                DenseVectorBaseM& rhs)
+                                DenseVectorBase& rhs)
 {
     assert (this->_m == rhs.size());assert (iv == jv);
 

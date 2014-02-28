@@ -163,7 +163,7 @@ public:
   void condense(const unsigned int i,
 		const unsigned int j,
 		const Real val,
-		DenseVectorBaseM& rhs)
+		DenseVectorBase& rhs)
   { DenseMatrixBaseM::condense (i, j, val, rhs); }
 
   /// Solve the system Ax=b given the input vector b.

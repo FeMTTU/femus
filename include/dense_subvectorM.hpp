@@ -13,7 +13,7 @@
 
 // ------------------------------------------------------------
 // DenseSubVector class definition
-class DenseSubVectorM : public DenseVectorBaseM
+class DenseSubVectorM : public DenseVectorBase
 {
   // =====================================
   // DATA

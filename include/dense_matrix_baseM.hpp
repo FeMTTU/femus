@@ -9,7 +9,7 @@
 #include <iostream>
 
 // Forward Delcarations
-class DenseVectorBaseM;
+class DenseVectorBase;
 // template<typename T> class DenseVectorBase<T>;
 
 
@@ -89,7 +89,7 @@ protected:
    * symmetry of the matrix.
    */
    void condense(const unsigned int i,const unsigned int j,
-		const Real val,DenseVectorBaseM& rhs);
+		const Real val,DenseVectorBase& rhs);
 
 };
 
