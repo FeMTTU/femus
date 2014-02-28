@@ -75,7 +75,7 @@ endif
 FEMUS_INCLUDE := -I$(FEMUS_DIR)/include/
 FEMUS_INCLUDE += -I.
 # TODO manual trick so that it compiles
-FEMUS_INCLUDE += -I$(FEMUS_DIR)/../binary/config/
+FEMUS_INCLUDE += -I$(FEMUS_DIR)/config/
 FEMUS_INCLUDE += -I$(FEMUS_DIR)/ExternalLibraries/b64-1.4.2/include/
 FEMUS_LIBS    +=   $(FEMUS_DIR)/ExternalLibraries/b64-1.4.2/build/gcc47.unix/b64.o
 
