@@ -12,7 +12,7 @@
 #include "petsc_vectorM.hpp"
 #include "petsc_matrixM.hpp"
 #include "dense_subvectorM.hpp"
-#include "dense_vectorM.hpp"
+#include "DenseVector.hpp"
 #include "parallelM.hpp"
 #include "petsc_macroM.hpp"
 
@@ -126,7 +126,7 @@ void PetscVectorM::add_vector (const NumericVectorM& V_in,
 }
 
 // ====================================================
-void PetscVectorM::add_vector (const DenseVectorM& V,
+void PetscVectorM::add_vector (const DenseVector& V,
 				 const std::vector<unsigned int>& dof_indices){
   assert (V.size() == dof_indices.size());
   for (unsigned int i=0; i<V.size(); i++)  this->add (dof_indices[i], V(i));
@@ -249,7 +249,7 @@ void PetscVectorM::insert (const NumericVectorM& V,
 }
 
 // ========================================================
-void PetscVectorM::insert (const DenseVectorM& V,
+void PetscVectorM::insert (const DenseVector& V,
 			     const std::vector<unsigned int>& dof_indices){
   assert (V.size() == dof_indices.size());
   for (unsigned int i=0; i<V.size(); i++)  this->set (dof_indices[i], V(i));

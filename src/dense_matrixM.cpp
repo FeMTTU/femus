@@ -7,7 +7,7 @@
 
 // Local Includes
 
-#include "dense_vectorM.hpp"
+#include "DenseVector.hpp"
 
 
 #ifdef MATRIX_HAVE_PETSC    //?
@@ -190,8 +190,8 @@ void DenseMatrixM::right_multiply_transpose (const DenseMatrixM& B)
 }
 
 
-void DenseMatrixM::vector_mult (DenseVectorM& dest,
-                                const DenseVectorM& arg) const
+void DenseMatrixM::vector_mult (DenseVector& dest,
+                                const DenseVector& arg) const
 {
     const unsigned int n_rows = this->m();
     const unsigned int n_cols = this->n();
@@ -209,11 +209,11 @@ void DenseMatrixM::vector_mult (DenseVectorM& dest,
 }
 
 
-void DenseMatrixM::vector_mult_add (DenseVectorM& dest,
+void DenseMatrixM::vector_mult_add (DenseVector& dest,
                                     const Real factor,
-                                    const DenseVectorM& arg) const
+                                    const DenseVector& arg) const
 {
-    DenseVectorM temp(arg.size());
+    DenseVector temp(arg.size());
     this->vector_mult(temp, arg);
     dest.add(factor, temp);
 }
@@ -243,8 +243,8 @@ void DenseMatrixM::get_transpose (DenseMatrixM& dest) const
 
 
 // ===================================================
-void DenseMatrixM::lu_solve (DenseVectorM& b,
-                             DenseVectorM& x,
+void DenseMatrixM::lu_solve (DenseVector& b,
+                             DenseVector& x,
                              const bool partial_pivot)
 {
     // Check for a previous decomposition
@@ -268,8 +268,8 @@ void DenseMatrixM::lu_solve (DenseVectorM& b,
 
 
 
-void DenseMatrixM::_lu_back_substitute (DenseVectorM& b,
-                                        DenseVectorM& x,
+void DenseMatrixM::_lu_back_substitute (DenseVector& b,
+                                        DenseVector& x,
                                         const bool ) const
 {
     const unsigned int
@@ -381,8 +381,8 @@ Real DenseMatrixM::det ()
 // with cholesky_decompose and then uses the cholesky_back_substitute
 // routine to find the solution x.
 
-void DenseMatrixM::cholesky_solve (DenseVectorM& b,
-                                   DenseVectorM& x)
+void DenseMatrixM::cholesky_solve (DenseVector& b,
+                                   DenseVector& x)
 {
     // Check for a previous decomposition
     switch (this->_decomposition_type)
@@ -467,8 +467,8 @@ void DenseMatrixM::_cholesky_decompose ()
 
 
 
-void DenseMatrixM::_cholesky_back_substitute (DenseVectorM& b,
-        DenseVectorM& x) const
+void DenseMatrixM::_cholesky_back_substitute (DenseVector& b,
+        DenseVector& x) const
 {
     // Shorthand notation for number of rows and columns.
     const unsigned int

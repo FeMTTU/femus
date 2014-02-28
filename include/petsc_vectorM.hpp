@@ -189,8 +189,8 @@ public:
     void insert (const std::vector<Real>& v,const std::vector<unsigned int>& dof_indices);
     /// \f$U=V\f$, where U and V are type NumericVectorM and you
     void insert(const NumericVectorM& V,const std::vector<unsigned int>& dof_indices);
-    /// \f$ U=V \f$ where V is type DenseVectorM
-    void insert (const DenseVectorM& V, const std::vector<unsigned int>& dof_indices);
+    /// \f$ U=V \f$ where V is type DenseVector
+    void insert (const DenseVector& V, const std::vector<unsigned int>& dof_indices);
     /// \f$ U=V \f$ where V is type DenseSubVectorM
      void insert (const DenseSubVectorM& V, const std::vector<unsigned int>& dof_indices);
 
@@ -264,8 +264,8 @@ public:
                      const std::vector<unsigned int>& dof_indices);
     ///\f$U+=A*V\f$, add the product of a \p SparseMatrix \p A
     void add_vector (const NumericVectorM &V,const SparseMatrixM &A);
-    ///\f$U+=V \f$ where U and V are type DenseVectorM
-    void add_vector (const DenseVectorM& V,const std::vector<unsigned int>& dof_indices);
+    ///\f$U+=V \f$ where U and V are type DenseVector
+    void add_vector (const DenseVector& V,const std::vector<unsigned int>& dof_indices);
   void resid (const NumericVectorM & rhs_in,const NumericVectorM& x,const SparseMatrixM& A);
      /// \f$U+=A*V\f$, add the product A*v
      void matrix_mult (const NumericVectorM &vec_in,const SparseMatrixM &mat_in);

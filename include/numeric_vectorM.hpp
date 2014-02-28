@@ -20,7 +20,7 @@
 
 
 // forward declarations
-class DenseVectorM;
+class DenseVector;
 class DenseSubVectorM;
 class SparseMatrixM;
 
@@ -151,7 +151,7 @@ public:
   virtual void insert (const NumericVectorM& V,
 		       const std::vector<unsigned int>& dof_indices) = 0;
   /// \f$ U=V \f$ insert
-  virtual void insert (const DenseVectorM& V,
+  virtual void insert (const DenseVector& V,
 		       const std::vector<unsigned int>& dof_indices) = 0;
   /// \f$ U=V \f$ and specify WHERE to insert it
   virtual void insert (const DenseSubVectorM& V,
@@ -237,7 +237,7 @@ public:
   /// \f$U+=a*V\f$. Simple vector addition, equal to the
   virtual void add (const Real a, const NumericVectorM& v) = 0;
   
-  /// \f$ U+=v \f$ where v is a DenseVectorM 
+  /// \f$ U+=v \f$ where v is a DenseVector 
   virtual void add_vector (const std::vector<Real>& v,
 			   const std::vector<unsigned int>& dof_indices) = 0;
   /// \f$U+=V\f$, where U and V are type 
@@ -253,7 +253,7 @@ public:
 // 		   const ShellMatrix<Real>& a); 
 //        
   /// \f$ U+=V \f$ where U and V are type 
-  virtual void add_vector (const DenseVectorM& V,
+  virtual void add_vector (const DenseVector& V,
 			   const std::vector<unsigned int>& dof_indices) = 0;
 
   /// Scale each element 

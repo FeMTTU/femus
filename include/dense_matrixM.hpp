@@ -11,7 +11,7 @@
 #include "dense_matrix_baseM.hpp"
 
 // Forward Declarations
-class DenseVectorM;
+class DenseVector;
 
 
 // #define MATRIX_HAVE_PETSC 1
@@ -97,9 +97,9 @@ public:
   virtual void right_multiply (const DenseMatrixBaseM& M3);
 
   /// Perform matrix vector multiplication.
-  void vector_mult(DenseVectorM& dest, const DenseVectorM& arg) const;
+  void vector_mult(DenseVector& dest, const DenseVector& arg) const;
   /// Perform matrix vector multiplication and add scaled result to \p dest.
-  void vector_mult_add (DenseVectorM& dest,const Real factor,const DenseVectorM& arg) const;
+  void vector_mult_add (DenseVector& dest,const Real factor,const DenseVector& arg) const;
 
   /// Assignment operator
   DenseMatrixM& operator = (const DenseMatrixM& other_matrix);
@@ -167,9 +167,9 @@ public:
   { DenseMatrixBaseM::condense (i, j, val, rhs); }
 
   /// Solve the system Ax=b given the input vector b.
-  void lu_solve (DenseVectorM& b,DenseVectorM& x,const bool partial_pivot = false);
+  void lu_solve (DenseVector& b,DenseVector& x,const bool partial_pivot = false);
   /// A Cholesky factorizationof A such that A = L L^T   
-  void cholesky_solve(DenseVectorM& b,DenseVectorM& x);
+  void cholesky_solve(DenseVector& b,DenseVector& x);
 
   ///   * @returns the determinant of the matrix.  
   Real det();
@@ -183,12 +183,12 @@ private:
   /// Form the LU decomposition of the matrix.  
   void _lu_decompose (const bool partial_pivot = false);
   /// Solves the system Ax=b through back substitution.  
-  void _lu_back_substitute (DenseVectorM& b,DenseVectorM& x,const bool partial_pivot = false) const;
+  void _lu_back_substitute (DenseVector& b,DenseVector& x,const bool partial_pivot = false) const;
   
   ///Decomposes a symmetric positive definite matrix 
   void _cholesky_decompose();
   /// Solves the equation Ax=b for the unknown value x and rhs b based on the Cholesky factorization 
-  void _cholesky_back_substitute(DenseVectorM& b, DenseVectorM& x) const;
+  void _cholesky_back_substitute(DenseVector& b, DenseVector& x) const;
 
   // ======================
   // BLAS operations
