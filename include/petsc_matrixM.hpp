@@ -37,7 +37,7 @@
 
 
 // Forward Declarations
-class DenseMatrixM;
+class DenseMatrix;
 
 /// Petsc include files.
 EXTERN_C_FOR_PETSC_BEGIN
@@ -174,7 +174,7 @@ public:
    * at assembly time
    */
     
-  void add_matrix (const DenseMatrixM &dm,
+  void add_matrix (const DenseMatrix &dm,
 		   const std::vector<unsigned int> &rows,
 		   const std::vector<unsigned int> &cols);	     
 
@@ -182,7 +182,7 @@ public:
    * Same, but assumes the row and column maps are the same.
    * Thus the matrix \p dm must be square.
    */
-  void add_matrix (const DenseMatrixM &dm,
+  void add_matrix (const DenseMatrix &dm,
 		   const std::vector<unsigned int> &dof_indices);	     
       
   /**
@@ -426,7 +426,7 @@ void PetscMatrixM::add (const unsigned int i,
 
 
 // =====================================================
-inline void PetscMatrixM::add_matrix(const DenseMatrixM& dm,
+inline void PetscMatrixM::add_matrix(const DenseMatrix& dm,
 				const std::vector<unsigned int>& dof_indices){
   this->add_matrix (dm, dof_indices, dof_indices);
 }

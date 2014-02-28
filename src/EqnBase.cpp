@@ -23,7 +23,7 @@
 #include "sparse_matrixM.hpp"
 #include "numeric_vectorM.hpp"
 #include "linear_solverM.hpp"
-#include "dense_matrixM.hpp"
+#include "DenseMatrix.hpp"
 
 
 
@@ -2604,7 +2604,7 @@ void EqnBase::ReadProl(const std::string& name) {
     _Prl[ Lev_f ]->update_sparsity_pattern(pattern);  //TODO shall we make the two operations of updating sparsity pattern and setting values together?
 
 //=========== VALUES ===================
-    DenseMatrixM *valmat;
+    DenseMatrix *valmat;
     std::vector<uint> tmp(1);
    for (int fe=0; fe<QL; fe++) { 
        for (uint ivar=0;ivar<_nvars[fe];ivar++) {
@@ -2619,7 +2619,7 @@ void EqnBase::ReadProl(const std::string& name) {
             tmp[0] = irow;
             std::vector< uint> ind(pattern[irow].size()-1);
             for (uint j=0; j<ind.size(); j++) ind[j] = pattern[irow][j];
-            valmat = new DenseMatrixM(1,ncol);
+            valmat = new DenseMatrix(1,ncol);
             for (uint j=0; j<ncol; j++)(*valmat)(0,j) = Prol_val[fe][j+len[fe][i]];
             _Prl[ Lev_f ]->add_matrix(*valmat,tmp,ind);
             delete  valmat;
@@ -2835,7 +2835,7 @@ void EqnBase::ReadRest(const std::string& name) {
 //========= SET VALUES =========
 //==============================
 
-    DenseMatrixM *valmat;
+    DenseMatrix *valmat;
     std::vector<uint> tmp(1);
         for (int fe=0;fe<QL;fe++) {
 
@@ -2851,7 +2851,7 @@ void EqnBase::ReadRest(const std::string& name) {
             std::vector< uint> ind(pattern[irow].size()-1);
 // 	    std::cout << "\n ==== " << irow << ": ";
             for (uint i1=0;i1<ind.size();i1++) { ind[i1] = pattern[irow][i1]; /*std::cout << " " << ind[i1] << " ";*/}
-            valmat = new DenseMatrixM(1,ncol);  //TODO add a matrix row by row...
+            valmat = new DenseMatrix(1,ncol);  //TODO add a matrix row by row...
             for (uint j=0; j<ncol; j++) (*valmat)(0,j) = _bc[irow_top]*Rest_val[fe][ j+len[fe][i] ];
             _Rst[Lev_c]->add_matrix(*valmat,tmp,ind);
             delete  valmat;

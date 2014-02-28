@@ -6,7 +6,7 @@
 
 // Local includes
 #include "petsc_matrixM.hpp"
-#include "dense_matrixM.hpp"
+#include "DenseMatrix.hpp"
 #include "petsc_vectorM.hpp"
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -247,7 +247,7 @@ void PetscMatrixM::print_hdf5(const std::string /*name*/) const {
 }
 
 // ============================================================
-void PetscMatrixM::add_matrix(const DenseMatrixM& dm,
+void PetscMatrixM::add_matrix(const DenseMatrix& dm,
                               const std::vector<unsigned int>& rows,
                               const std::vector<unsigned int>& cols) {
     assert (this->initialized());
