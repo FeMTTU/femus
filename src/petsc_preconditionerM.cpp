@@ -48,49 +48,49 @@ void PetscPreconditionerM::init (){
 
 // =====================================================
 void PetscPreconditionerM::set_petsc_preconditioner_type
-                (const PreconditionerTypeM & preconditioner_type, PC & pc){
+                (const PreconditionerType & preconditioner_type, PC & pc){
   int ierr = 0;
   switch (preconditioner_type)  {
-  case IDENTITY_PRECONDM:
+  case IDENTITY_PRECOND:
     ierr = PCSetType (pc, (char*) PCNONE);      CHKERRABORT(MPI_COMM_WORLD,ierr); break;
 	
-  case CHOLESKY_PRECONDM:
+  case CHOLESKY_PRECOND:
     ierr = PCSetType (pc, (char*) PCCHOLESKY);  CHKERRABORT(MPI_COMM_WORLD,ierr); break;
 
-  case ICC_PRECONDM:
+  case ICC_PRECOND:
     ierr = PCSetType (pc, (char*) PCICC);       CHKERRABORT(MPI_COMM_WORLD,ierr); break;
 
-  case ILU_PRECONDM:
+  case ILU_PRECOND:
     ierr = PCSetType (pc, (char*) PCILU);       CHKERRABORT(MPI_COMM_WORLD,ierr); break;
 
-  case LU_PRECONDM:
+  case LU_PRECOND:
     ierr = PCSetType (pc, (char*) PCLU);        CHKERRABORT(MPI_COMM_WORLD,ierr); break;
       
-  case ASM_PRECONDM:
+  case ASM_PRECOND:
     ierr = PCSetType (pc, (char*) PCASM);       CHKERRABORT(MPI_COMM_WORLD,ierr); break;
 
-  case JACOBI_PRECONDM:
+  case JACOBI_PRECOND:
     ierr = PCSetType (pc, (char*) PCJACOBI);    CHKERRABORT(MPI_COMM_WORLD,ierr); break;
 
-  case BLOCK_JACOBI_PRECONDM:
+  case BLOCK_JACOBI_PRECOND:
     ierr = PCSetType (pc, (char*) PCBJACOBI);   CHKERRABORT(MPI_COMM_WORLD,ierr); break;
 
-  case SOR_PRECONDM:
+  case SOR_PRECOND:
     ierr = PCSetType (pc, (char*) PCSOR);       CHKERRABORT(MPI_COMM_WORLD,ierr); break;
 
-  case EISENSTAT_PRECONDM:
+  case EISENSTAT_PRECOND:
     ierr = PCSetType (pc, (char*) PCEISENSTAT); CHKERRABORT(MPI_COMM_WORLD,ierr); break;
 
-  case AMG_PRECONDM:
+  case AMG_PRECOND:
     ierr = PCSetType (pc, (char*) PCHYPRE);     CHKERRABORT(MPI_COMM_WORLD,ierr); break;
 
 #if !(PETSC_VERSION_LESS_THAN(2,1,2))
     // Only available for PETSC >= 2.1.2      
-  case USER_PRECONDM:
+  case USER_PRECOND:
     ierr = PCSetType (pc, (char*) PCMAT);       CHKERRABORT(MPI_COMM_WORLD,ierr); break;
 #endif
 
-  case SHELL_PRECONDM:
+  case SHELL_PRECOND:
     ierr = PCSetType (pc, (char*) PCSHELL);     CHKERRABORT(MPI_COMM_WORLD,ierr); break;
 
   default:
@@ -100,7 +100,7 @@ void PetscPreconditionerM::set_petsc_preconditioner_type
   }
 
   //Let the commandline override stuff
-  if( preconditioner_type != AMG_PRECONDM )   PCSetFromOptions(pc);
+  if( preconditioner_type != AMG_PRECOND )   PCSetFromOptions(pc);
 }
 
 //------------------------------------------------------------------
