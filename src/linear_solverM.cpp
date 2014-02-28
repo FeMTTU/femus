@@ -15,12 +15,12 @@
 // LinearSolver members
 
 // =============================================================
-std::auto_ptr<LinearSolverM > LinearSolverM::build(const SolverPackageM solver_package)
+std::auto_ptr<LinearSolverM > LinearSolverM::build(const SolverPackage solver_package)
 {
   // Build the appropriate solver
   switch (solver_package)  {
 #ifdef FEMUS_HAVE_PETSC
-    case PETSC_SOLVERSM:      {
+    case PETSC_SOLVERS:      {
 	std::auto_ptr<LinearSolverM > ap(new PetscLinearSolverM);
 	return ap;
       }

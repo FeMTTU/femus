@@ -12,7 +12,7 @@
 // Preconditioner members
 
 PreconditionerM *
-PreconditionerM::build(const SolverPackageM solver_package)
+PreconditionerM::build(const SolverPackage solver_package)
 {
   // Build the appropriate solver
   switch (solver_package)
@@ -29,7 +29,7 @@ PreconditionerM::build(const SolverPackageM solver_package)
 */
 
 #ifdef FEMUS_HAVE_PETSC
-    case PETSC_SOLVERSM:
+    case PETSC_SOLVERS:
       {
 	return new PetscPreconditionerM();
       }

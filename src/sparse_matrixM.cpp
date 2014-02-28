@@ -21,7 +21,7 @@
 // Full specialization for Real datatypes 
 
 std::auto_ptr<SparseMatrixM >
-SparseMatrixM::build(const SolverPackageM solver_package)
+SparseMatrixM::build(const SolverPackage solver_package)
 {
   // Build the appropriate vector
   switch (solver_package){
@@ -32,7 +32,7 @@ SparseMatrixM::build(const SolverPackageM solver_package)
       }
 #endif
 #ifdef FEMUS_HAVE_PETSC
-    case PETSC_SOLVERSM:
+    case PETSC_SOLVERS:
       {	std::auto_ptr<SparseMatrixM > ap(new PetscMatrixM);
 	return ap;
       }

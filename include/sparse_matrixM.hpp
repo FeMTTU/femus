@@ -5,7 +5,7 @@
 
 #include "Typedefs_conf.hpp"
 #include "Graph.hpp"
-#include "SolverPackage_enum.hpp"
+#include "SolverPackageEnum.hpp"
 
 // #include "linear_solverM.h"
 
@@ -72,7 +72,7 @@ public:
   virtual void clear () = 0;
   
   /// Builds a \p SparseMatrixM using the linear solver package specified by \p solver_package
-  static std::auto_ptr<SparseMatrixM>  build(const SolverPackageM solver_package = LSOLVER);
+  static std::auto_ptr<SparseMatrixM>  build(const SolverPackage solver_package = LSOLVER);
   
   /**
    * Initialize a Sparse matrix that is of global
