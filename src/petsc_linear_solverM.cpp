@@ -36,23 +36,24 @@ extern "C" {
     return 0;
   }
 #else
-// ----------------------------------------------------------------
-  PetscErrorCode __libmesh_petsc_preconditioner_setup(PC pc) {
-    void *ctx;
-    PetscErrorCode ierr = PCShellGetContext(pc,&ctx);CHKERRQ(ierr);
-    PreconditionerM * preconditioner = static_cast<PreconditionerM*>(ctx);
-    preconditioner->init();
-    return 0;
-  }
-// --------------------------------------------------------------------------
-  PetscErrorCode __libmesh_petsc_preconditioner_apply(PC pc, Vec x, Vec y) {
-    void *ctx;
-    PetscErrorCode ierr = PCShellGetContext(pc,&ctx);CHKERRQ(ierr);
-    PreconditionerM * preconditioner = static_cast<PreconditionerM*>(ctx);
-    PetscVectorM x_vec(x); PetscVectorM y_vec(y);
-    preconditioner->apply(x_vec,y_vec);
-    return 0;
-  }
+// se if it compiles...
+// // // // ----------------------------------------------------------------
+// // //   PetscErrorCode __libmesh_petsc_preconditioner_setup(PC pc) {
+// // //     void *ctx;
+// // //     PetscErrorCode ierr = PCShellGetContext(pc,&ctx);CHKERRQ(ierr);
+// // //     PreconditionerM * preconditioner = static_cast<PreconditionerM*>(ctx);
+// // //     preconditioner->init();
+// // //     return 0;
+// // //   }
+// // // // --------------------------------------------------------------------------
+// // //   PetscErrorCode __libmesh_petsc_preconditioner_apply(PC pc, Vec x, Vec y) {
+// // //     void *ctx;
+// // //     PetscErrorCode ierr = PCShellGetContext(pc,&ctx);CHKERRQ(ierr);
+// // //     PreconditionerM * preconditioner = static_cast<PreconditionerM*>(ctx);
+// // //     PetscVectorM x_vec(x); PetscVectorM y_vec(y);
+// // //     preconditioner->apply(x_vec,y_vec);
+// // //     return 0;
+// // //   }
 #endif
 } // end extern "C
 // ================================================
