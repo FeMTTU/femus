@@ -109,8 +109,7 @@
 
 
 // #define SOLVERNS VANKANSM
-#define SOLVERNS GMRESM
-// // //   #define SOLVERNS CGM   //conjugate gradient, ONLY symmetric positive definite
+#define SOLVERNS GMRES
 
 
 //  ===============================
@@ -141,7 +140,7 @@
 
 
 // #define SOLVERT VANKATM =======================
-#define SOLVERT GMRESM
+#define SOLVERT GMRES
 
 
 
