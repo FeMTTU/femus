@@ -15,8 +15,8 @@
 
 // forward declarations
 template <typename T> class AutoPtr;
-class SparseMatrixM;
-class NumericVectorM;
+class SparseMatrix;
+class NumericVector;
 template <typename T> class ShellMatrix;
  class PreconditionerM;
  
@@ -98,28 +98,28 @@ public:
 //   //sandro
 //   /// This function calls the solver
 //   virtual std::pair<unsigned int, Real> solve(
-//     SparseMatrixM&/*Sys Mtrx*/,NumericVectorM&/*sol_vec*/, NumericVectorM&/*rhs*/,
+//     SparseMatrix&/*Sys Mtrx*/,NumericVector&/*sol_vec*/, NumericVector&/*rhs*/,
 //     const double /*tol*/,const unsigned int/*NIter*/) = 0;
 // 
 //   ///   *This function calls the solver with preconditioner
 //   virtual std::pair<unsigned int, Real> solve(
-//     SparseMatrixM&/*Sys Mtrx*/,SparseMatrixM&/*Prec Mtrx*/,
-//     NumericVectorM&/*sol_vec*/,NumericVectorM&/*rhs*/,
+//     SparseMatrix&/*Sys Mtrx*/,SparseMatrix&/*Prec Mtrx*/,
+//     NumericVector&/*sol_vec*/,NumericVector&/*rhs*/,
 //     const double /*tol*/,const unsigned int/*NIter*/) = 0; 
   
  
   /// This function calls the solver
-  virtual std::pair<unsigned int, Real> solve (SparseMatrixM&,  // System Matrix
-					       NumericVectorM&, // Solution vector
-					       NumericVectorM&, // RHS vector
+  virtual std::pair<unsigned int, Real> solve (SparseMatrix&,  // System Matrix
+					       NumericVector&, // Solution vector
+					       NumericVector&, // RHS vector
 					       const double,      // Stopping tolerance
 					       const unsigned int) = 0; // N. Iterations
   
   ///   *This function calls the solver with preconditioner 
-  virtual std::pair<unsigned int, Real> solve (SparseMatrixM&,  // System Matrix
-					       SparseMatrixM&,  // Preconditioning Matrix
-					       NumericVectorM&, // Solution vector
-					       NumericVectorM&, // RHS vector
+  virtual std::pair<unsigned int, Real> solve (SparseMatrix&,  // System Matrix
+					       SparseMatrix&,  // Preconditioning Matrix
+					       NumericVector&, // Solution vector
+					       NumericVector&, // RHS vector
 					       const double,      // Stopping tolerance
 					       const unsigned int) = 0; // N. Iteration
  /// This function calls the solver	       

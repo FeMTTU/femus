@@ -8,8 +8,8 @@
 #include "PetscMacro.hpp"
 #include "petsc_linear_solverM.hpp"
 #include "petsc_preconditionerM.hpp"
-#include "petsc_vectorM.hpp"
-#include "petsc_matrixM.hpp"
+#include "PetscVector.hpp"
+#include "PetscMatrix.hpp"
 
 
 
@@ -30,8 +30,8 @@ extern "C" {
 // ------------------------------------------------------------------------------
   PetscErrorCode __libmesh_petsc_preconditioner_apply(void *ctx, Vec x, Vec y)  {
     PreconditionerM * preconditioner = static_cast<PreconditionerM*>(ctx);
-    PetscVectorM x_vec(x);
-    PetscVectorM y_vec(y);
+    PetscVector x_vec(x);
+    PetscVector y_vec(y);
     preconditioner->apply(x_vec,y_vec);
     return 0;
   }
@@ -50,7 +50,7 @@ extern "C" {
 // // //     void *ctx;
 // // //     PetscErrorCode ierr = PCShellGetContext(pc,&ctx);CHKERRQ(ierr);
 // // //     PreconditionerM * preconditioner = static_cast<PreconditionerM*>(ctx);
-// // //     PetscVectorM x_vec(x); PetscVectorM y_vec(y);
+// // //     PetscVector x_vec(x); PetscVector y_vec(y);
 // // //     preconditioner->apply(x_vec,y_vec);
 // // //     return 0;
 // // //   }
@@ -216,7 +216,7 @@ void PetscLinearSolverM::init() {
 }
 
 // ========================================================
-void PetscLinearSolverM::init(PetscMatrixM* matrix) {
+void PetscLinearSolverM::init(PetscMatrix* matrix) {
   // Initialize the data structures if not done so already.
   if (!this->initialized())    {
     this->_is_initialized = true;   int ierr=0;
@@ -525,16 +525,16 @@ void PetscLinearSolverM::init(PetscMatrixM* matrix) {
 
 
 // ========================================================
-std::pair<unsigned int, Real> PetscLinearSolverM::solve(SparseMatrixM&  matrix_in,
-    SparseMatrixM&  precond_in,  NumericVectorM& solution_in,  NumericVectorM& rhs_in,
+std::pair<unsigned int, Real> PetscLinearSolverM::solve(SparseMatrix&  matrix_in,
+    SparseMatrix&  precond_in,  NumericVector& solution_in,  NumericVector& rhs_in,
     const double tol,   const unsigned int m_its) {
 
 //   START_LOG("solve()", "PetscLinearSolverM");
   // Make sure the data passed in are really of Petsc types
-  PetscMatrixM* matrix   = libmeshM_cast_ptr<PetscMatrixM*>(&matrix_in);
-  PetscMatrixM* precond  = libmeshM_cast_ptr<PetscMatrixM*>(&precond_in);
-  PetscVectorM* solution = libmeshM_cast_ptr<PetscVectorM*>(&solution_in);
-  PetscVectorM* rhs      = libmeshM_cast_ptr<PetscVectorM*>(&rhs_in);
+  PetscMatrix* matrix   = libmeshM_cast_ptr<PetscMatrix*>(&matrix_in);
+  PetscMatrix* precond  = libmeshM_cast_ptr<PetscMatrix*>(&precond_in);
+  PetscVector* solution = libmeshM_cast_ptr<PetscVector*>(&solution_in);
+  PetscVector* rhs      = libmeshM_cast_ptr<PetscVector*>(&rhs_in);
   this->init(matrix);
 
   int ierr=0;  int its=0, max_its = static_cast<int>(m_its);
@@ -606,8 +606,8 @@ std::pair<unsigned int, Real> PetscLinearSolverM::solve(SparseMatrixM&  matrix_i
 //   START_LOG("solve()", "PetscLinearSolver");
 //
 //   // Make sure the data passed in are really of Petsc types
-//   PetscVectorM* solution = libmesh_cast_ptr<PetscVectorM*>(&solution_in);
-//   PetscVectorM* rhs      = libmesh_cast_ptr<PetscVectorM*>(&rhs_in);
+//   PetscVector* solution = libmesh_cast_ptr<PetscVector*>(&solution_in);
+//   PetscVector* rhs      = libmesh_cast_ptr<PetscVector*>(&rhs_in);
 //
 //   this->init ();
 //
@@ -698,9 +698,9 @@ std::pair<unsigned int, Real> PetscLinearSolverM::solve(SparseMatrixM&  matrix_i
 //   START_LOG("solve()", "PetscLinearSolver");
 //
 //   // Make sure the data passed in are really of Petsc types
-//   const PetscMatrixM* precond  = libmesh_cast_ptr<const PetscMatrixM*>(&precond_matrix);
-//   PetscVectorM* solution = libmesh_cast_ptr<PetscVectorM*>(&solution_in);
-//   PetscVectorM* rhs      = libmesh_cast_ptr<PetscVectorM*>(&rhs_in);
+//   const PetscMatrix* precond  = libmesh_cast_ptr<const PetscMatrix*>(&precond_matrix);
+//   PetscVector* solution = libmesh_cast_ptr<PetscVector*>(&solution_in);
+//   PetscVector* rhs      = libmesh_cast_ptr<PetscVector*>(&rhs_in);
 //
 //   this->init ();
 //
@@ -732,7 +732,7 @@ std::pair<unsigned int, Real> PetscLinearSolverM::solve(SparseMatrixM&  matrix_i
 //   CHKERRABORT(MPI_COMM_WORLD,ierr);
 //
 //   // Set operators. The input matrix works as the preconditioning matrix
-//   ierr = KSPSetOperators(_ksp, mat, const_cast<PetscMatrixM*>(precond)->mat(),
+//   ierr = KSPSetOperators(_ksp, mat, const_cast<PetscMatrix*>(precond)->mat(),
 // 			 DIFFERENT_NONZERO_PATTERN);
 //   CHKERRABORT(MPI_COMM_WORLD,ierr);
 //
@@ -860,8 +860,8 @@ void PetscLinearSolverM::print_converged_reason() {
 //   const ShellMatrix<T>& shell_matrix = *static_cast<const ShellMatrix<T>*>(ctx);
 //
 //   /* Make \p NumericVector instances around the vectors.  */
-//   PetscVectorM arg_global(arg);
-//   PetscVectorM dest_global(dest);
+//   PetscVector arg_global(arg);
+//   PetscVector dest_global(dest);
 //
 //   /* Call the user function.  */
 //   shell_matrix.vector_mult(dest_global,arg_global);
@@ -881,7 +881,7 @@ void PetscLinearSolverM::print_converged_reason() {
 //   const ShellMatrix<T>& shell_matrix = *static_cast<const ShellMatrix<T>*>(ctx);
 //
 //   /* Make \p NumericVector instances around the vector.  */
-//   PetscVectorM dest_global(dest);
+//   PetscVector dest_global(dest);
 //
 //   /* Call the user function.  */
 //   shell_matrix.get_diagonal(dest_global);

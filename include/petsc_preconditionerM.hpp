@@ -15,8 +15,8 @@
 #include "petscpc.h"
 
 // forward declarations
-class SparseMatrixM;
-class NumericVectorM;
+class SparseMatrix;
+class NumericVector;
 
 /// This class provides an interface to  preconditioners  from Petsc.
 class PetscPreconditionerM : public PreconditionerM{
@@ -42,7 +42,7 @@ public:
   // Compute 
    /// Computes the preconditioned vector "y" based on input "x".
   /// Usually by solving Py=x to get the action of P^-1 x.
-  virtual void apply(const NumericVectorM & x, NumericVectorM & y);
+  virtual void apply(const NumericVector & x, NumericVector & y);
   /// Tells PETSC to use the user-specified preconditioner  
   static void set_petsc_preconditioner_type 
              (const PreconditionerType & preconditioner_type, PC & pc);

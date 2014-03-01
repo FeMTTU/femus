@@ -148,7 +148,7 @@ void PetscVector::add_vector(const NumericVector& V_in,
 }
 // ====================================================
 void PetscVector::add_vector(const DenseVector& V,
-                              const std::vector< int>& dof_indices) {
+                              const std::vector<unsigned int>& dof_indices) {
   assert((int)V.size() == dof_indices.size());
   for (int i=0; i<(int)V.size(); i++)  this->add(dof_indices[i], V(i));
 }

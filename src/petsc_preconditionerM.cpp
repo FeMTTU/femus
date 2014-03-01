@@ -8,8 +8,8 @@
 // #include "auto_ptr.h"
 #include "petsc_preconditionerM.hpp"
 #include "PetscMacro.hpp"
-#include "petsc_matrixM.hpp"
-#include "petsc_vectorM.hpp"
+#include "PetscMatrix.hpp"
+#include "PetscVector.hpp"
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "mpi.h"  //for MPI_COMM_WORLD
@@ -17,9 +17,9 @@
 
 
 // =============================================================================
-void PetscPreconditionerM::apply(const NumericVectorM & x, NumericVectorM & y){
-  PetscVectorM & x_pvec = static_cast<PetscVectorM&>(const_cast<NumericVectorM&>(x));
-  PetscVectorM & y_pvec = static_cast<PetscVectorM&>(const_cast<NumericVectorM&>(y));
+void PetscPreconditionerM::apply(const NumericVector & x, NumericVector & y){
+  PetscVector & x_pvec = static_cast<PetscVector&>(const_cast<NumericVector&>(x));
+  PetscVector & y_pvec = static_cast<PetscVector&>(const_cast<NumericVector&>(y));
   Vec x_vec = x_pvec.vec();  Vec y_vec = y_pvec.vec();
   PCApply(_pc,x_vec,y_vec);
 }
@@ -39,7 +39,7 @@ void PetscPreconditionerM::init (){
 //     if(this->_preconditioner_type == AMG_PRECOND)
 //       PCHYPRESetType(this->_pc, "boomerang");
 // #endif
-    PetscMatrixM * pmatrix = libmeshM_cast_ptr<PetscMatrixM*, SparseMatrixM >(this->_matrix);
+    PetscMatrix * pmatrix = libmeshM_cast_ptr<PetscMatrix*, SparseMatrix >(this->_matrix);
     _mat = pmatrix->mat();
   }
   PCSetOperators(_pc,_mat,_mat,SAME_NONZERO_PATTERN);

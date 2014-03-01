@@ -20,8 +20,8 @@
 #include "Files.hpp"
 #include "CurrElem.hpp"
 
-#include "sparse_matrixM.hpp"
-#include "numeric_vectorM.hpp"
+#include "SparseMatrix.hpp"
+#include "NumericVector.hpp"
 #include "linear_solverM.hpp"
 #include "DenseMatrix.hpp"
 
@@ -671,17 +671,17 @@ void EqnBase::initVectors() {
     uint m_l = 0;
     for (int fe=0; fe<QL; fe++)  m_l +=  ml[fe]*_nvars[fe];
     
-        _b[Level] = NumericVectorM::build().release();
+        _b[Level] = NumericVector::build().release();
         _b[Level]->init(_Dim[Level],m_l,false,AUTOMATIC);
-        _res[Level] = NumericVectorM::build().release();
+        _res[Level] = NumericVector::build().release();
         _res[Level]->init(_Dim[Level],m_l,false,AUTOMATIC);
-        _x[Level] = NumericVectorM::build().release();
+        _x[Level] = NumericVector::build().release();
         _x[Level]->init(_Dim[Level],m_l,false,AUTOMATIC);
-        _x_old[Level] = NumericVectorM::build().release();
+        _x_old[Level] = NumericVector::build().release();
         _x_old[Level]->init(_Dim[Level],false, SERIAL);
-        _x_oold[Level] = NumericVectorM::build().release();
+        _x_oold[Level] = NumericVector::build().release();
         _x_oold[Level]->init(_Dim[Level],false, SERIAL);
-        _x_tmp[Level] = NumericVectorM::build().release();
+        _x_tmp[Level] = NumericVector::build().release();
         _x_tmp[Level]->init(_Dim[Level],false, SERIAL);
 
     } //end level loop
@@ -2301,8 +2301,8 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
     }    
     
     
-    _A[Level] = SparseMatrixM::build().release();
-    _A[Level]->init(_Dim[Level],_Dim[Level], mrow_lev_proc_t, mrow_lev_proc_t);
+    _A[Level] = SparseMatrix::build().release();
+// //     _A[Level]->init(_Dim[Level],_Dim[Level], mrow_lev_proc_t, mrow_lev_proc_t); //TODO BACK TO a REASONABLE INIT
 
     Graph graph;
     graph.resize(mrow_glob_t);
@@ -2398,7 +2398,7 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
 	graph.print();
 //===========================
 
-    _A[Level]->update_sparsity_pattern(graph);
+    _A[Level]->update_sparsity_pattern_old(graph);  //TODO see how it works
 
     //  clean ===============
     graph.clear();
@@ -2524,8 +2524,8 @@ void EqnBase::ReadProl(const std::string& name) {
    
     uint off_proc = _iproc*_NoLevels;
 
-    _Prl[ Lev_f ] = SparseMatrixM::build().release();
-    _Prl[ Lev_f ]->init(0,0,0,0); //TODO this function is at present empty
+    _Prl[ Lev_f ] = SparseMatrix::build().release();
+// // //     _Prl[ Lev_f ]->init(0,0,0,0); //TODO BACK TO A REASONABLE INIT
 
     // local matrix dimension
     uint ml[QL]; uint nl[QL];
@@ -2601,7 +2601,7 @@ void EqnBase::ReadProl(const std::string& name) {
 
     std::cout << "Printing Prolongator ===========" << std::endl;
     pattern.print();
-    _Prl[ Lev_f ]->update_sparsity_pattern(pattern);  //TODO shall we make the two operations of updating sparsity pattern and setting values together?
+    _Prl[ Lev_f ]->update_sparsity_pattern_old(pattern);  //TODO shall we make the two operations of updating sparsity pattern and setting values together?
 
 //=========== VALUES ===================
     DenseMatrix *valmat;
@@ -2644,7 +2644,7 @@ void EqnBase::ReadProl(const std::string& name) {
 
     _Prl[  Lev_f ]->close();  //TODO do we need this?
 //     if (_iproc==0) _Prl[  Lev_f ]->print_personal();
-    _Prl[  Lev_f ]->print_graphic(false); //TODO should pass this true or false as a parameter
+//     _Prl[  Lev_f ]->print_graphic(false); //TODO should pass this true or false as a parameter
    } //end levels
     
 #ifdef DEFAULT_PRINT_INFO
@@ -2761,8 +2761,8 @@ void EqnBase::ReadRest(const std::string& name) {
 
     uint off_proc=_NoLevels*_iproc;
 
-    _Rst[Lev_c] = SparseMatrixM::build().release();
-    _Rst[Lev_c]->init(0,0,0,0);   //TODO why is it set with the GLOBAL dimensions?!?
+    _Rst[Lev_c] = SparseMatrix::build().release();
+// // //     _Rst[Lev_c]->init(0,0,0,0);   //TODO BACK TO A REASONABLE INIT  //we have to do this before appropriately!!!
 
     int nrowt=0;int nclnt=0;
         for (int fe=0;fe<QL;fe++) {
@@ -2825,7 +2825,7 @@ void EqnBase::ReadRest(const std::string& name) {
 
     std::cout << "Printing Restrictor ===========" << std::endl;
     pattern.print();
-    _Rst[Lev_c]->update_sparsity_pattern(pattern);
+    _Rst[Lev_c]->update_sparsity_pattern_old(pattern);  //TODO see 
 //         _Rst[Lev_c]->close();
 //     if (_iproc==0) _Rst[Lev_c]->print_personal(); //there is no print function for rectangular matrices, and print_personal doesnt seem to be working...
 // la print stampa il contenuto, ma io voglio solo stampare lo sparsity pattern!
@@ -2875,7 +2875,7 @@ void EqnBase::ReadRest(const std::string& name) {
 
     _Rst[Lev_c]->close();   //TODO Do we really need this?
 //     if (_iproc==0)  _Rst[Lev_c]->print_personal(std::cout);
-    _Rst[Lev_c]->print_graphic(false); // TODO should pass this true or false as a parameter
+//     _Rst[Lev_c]->print_graphic(false); // TODO should pass this true or false as a parameter
 
   } //end levels
   
@@ -3655,7 +3655,7 @@ void EqnBase::ReadVector(std::string namefile) {
 ///this function scales the passed dof vector and takes into account the boundary conditions as well
 ///a function like that can be useful also for multiplying/dividing by reference values or the like
 
-void EqnBase::Bc_ScaleDofVec(NumericVectorM* myvec,  double ScaleFac /*, dimension */ ) {
+void EqnBase::Bc_ScaleDofVec(NumericVector* myvec,  double ScaleFac /*, dimension */ ) {
 //only works with Level = NoLevels - 1 , because bc is only on the finest level
   
   //pass the pointer to the array,the dimension of the array, and the scale factor  
@@ -3684,7 +3684,7 @@ for (uint i=0; i < _Dim[_NoLevels-1]; i++) { //loop over all the dofs, both quad
 }
 
 //add only where boundary conditions are not fixed
-void EqnBase::Bc_AddDofVec(NumericVectorM* vec_in,NumericVectorM* vec_out ) {
+void EqnBase::Bc_AddDofVec(NumericVector* vec_in,NumericVector* vec_out ) {
 
 for (uint i=0; i < _Dim[_NoLevels-1]; i++) { 
 
@@ -3700,7 +3700,7 @@ return;
 
 }
 
-void EqnBase::Bc_AddScaleDofVec(NumericVectorM* vec_in,NumericVectorM* vec_out,const double ScaleFac ) {
+void EqnBase::Bc_AddScaleDofVec(NumericVector* vec_in,NumericVector* vec_out,const double ScaleFac ) {
 //add a vector multiplied by a constant (only where it is not fixed)
   
 for (uint i=0; i < _Dim[_NoLevels-1]; i++) { 
