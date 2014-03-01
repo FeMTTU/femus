@@ -5,7 +5,7 @@
 #include "Typedefs_conf.hpp"
 
 // Local Includes
-#include "petsc_macroM.hpp"
+#include "PetscMacro.hpp"
 #include "petsc_linear_solverM.hpp"
 #include "petsc_preconditionerM.hpp"
 #include "petsc_vectorM.hpp"

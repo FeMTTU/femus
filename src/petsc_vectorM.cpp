@@ -14,7 +14,7 @@
 #include "DenseSubvector.hpp"
 #include "DenseVector.hpp"
 #include "Parallel.hpp"
-#include "petsc_macroM.hpp"
+#include "PetscMacro.hpp"
 
 #include "Casts.hpp"  // TODO #include "utility.h"  
 

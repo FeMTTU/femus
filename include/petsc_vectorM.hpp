@@ -10,14 +10,13 @@
 #include "ParalleltypeEnum.hpp"
 
 
-//#include "libmesh.h" //TODO
 // C++ includes
 #include <map>
 #include <vector>
 #include <cstdio> 
 // Local includes
 #include "numeric_vectorM.hpp"
-#include "petsc_macroM.hpp"
+#include "PetscMacro.hpp"
 
 /// Petsc include files.
 EXTERN_C_FOR_PETSC_BEGIN
