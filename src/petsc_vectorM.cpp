@@ -13,7 +13,7 @@
 #include "petsc_matrixM.hpp"
 #include "DenseSubvector.hpp"
 #include "DenseVector.hpp"
-#include "parallelM.hpp"
+#include "Parallel.hpp"
 #include "petsc_macroM.hpp"
 
 #include "Casts.hpp"  // TODO #include "utility.h"  
@@ -583,7 +583,7 @@ void PetscVectorM::localize (std::vector<Real>& v_local) const{
   unsigned int ioff = first_local_index();
   for (int i=0; i<nl; i++)   v_local[i+ioff] = static_cast<Real>(values[i]);
   ierr = VecRestoreArray (_vec, &values); CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ParallelM::sum(v_local);   //TODO must become ParallelM
+  Parallel::sum(v_local);
 }
 
 //  ===========================================================
