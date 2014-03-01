@@ -8,7 +8,7 @@
 #include "mesh.hpp"
 
 
-#include "numeric_vectorM.hpp"  //TODO this is needed for x_old
+#include "NumericVector.hpp"  //TODO this is needed for x_old
 
 
      QuantityLocal::QuantityLocal(CurrGaussPointBase & currgp_in, CurrElem & currel_in)

@@ -8,14 +8,14 @@
 #include "EqnBase.hpp"
 
 // Forwarded classes
-class NumericVectorM;
+class NumericVector;
 
 class EqnMHDCONT : public EqnBase {
 
   public:
     
 //====data  
-    std::vector<NumericVectorM *> _x_oldopt;  //old optimization step
+    std::vector<NumericVector *> _x_oldopt;  //old optimization step
   
     
     

@@ -176,25 +176,108 @@ void PetscMatrix::update_sparsity_pattern(
 }
 
 // =====================================0
-// void PetscMatrix::update_sparsity_pattern(const Graph &sparsity_pattern) {
+void PetscMatrix::update_sparsity_pattern(const Graph &sparsity_pattern) {
+
+  // dimension
+  const  int m   =  sparsity_pattern._m; // global rows;
+  const  int n   =  sparsity_pattern._n; // global columns
+  const  int n_l =sparsity_pattern._nl;  // local rows
+  const  int m_l =sparsity_pattern._ml;  // local columns
+  const  int ml_start =sparsity_pattern._ml_start;
+
+  // vectors n_nz (diagonal) and n_oz (offset) -------------------------------
+  std::vector< int> n_nz(m_l);   std::vector< int> n_oz(m_l);
+  for (int i=0;i<m_l;i++) {
+    int len=sparsity_pattern[ml_start+i].size()-1;
+    n_oz[i]=sparsity_pattern[ml_start+i][len];
+    n_nz[i]=len-n_oz[i];
+  }
+  update_sparsity_pattern(m,n,m_l,n_l,n_oz,n_nz);
+  return;
+}
+
+void PetscMatrix::update_sparsity_pattern_old (const Graph & sparsity_pattern) {
+    
+    // Clear initialized matrices
+    if (this->initialized())    this->clear();
+    this->_is_initialized = true;
+    int proc_id = 0;    MPI_Comm_rank(MPI_COMM_WORLD, &proc_id);
+    
+    const unsigned int m   = sparsity_pattern._m;  //this->_dof_map->n_dofs();
+    const unsigned int n   = sparsity_pattern._n;
+    const unsigned int n_l = sparsity_pattern._nl;
+    const unsigned int m_l = sparsity_pattern._ml;
+    const unsigned int ml_start = sparsity_pattern._ml_start;
+    std::vector<unsigned int> n_nz(m_l);
+    std::vector<unsigned int> n_oz(m_l);
+   for(uint i=0; i<m_l; i++) {
+     uint len = sparsity_pattern[ml_start+i].size()-1;  //this is the real number of nonzero dofs in each row
+     n_oz[i]  = sparsity_pattern[ml_start+i][len];      //in the last position we put the number of offset dofs
+     n_nz[i]  = len - n_oz[i];
+   }
+//      for(uint i=0;i<m;i++) n_nz[i]=0;
+    
+//     for(uint i=0;i<m;i++) n_oz[i]=0;   
+//    const unsigned int n_l = this->_dof_map->n_dofs_on_processor(proc_id);
+//   const unsigned int m_l = n_l;
+//   const std::vector<unsigned int>& n_nz = this->_dof_map->get_n_nz();
+//   const std::vector<unsigned int>& n_oz = this->_dof_map->get_n_oz();
 //
-//   // dimension
-//   const  int m   =  sparsity_pattern._m; // global rows;
-//   const  int n   =  sparsity_pattern._n; // global columns
-//   const  int n_l =sparsity_pattern._nl;  // local rows
-//   const  int m_l =sparsity_pattern._ml;  // local columns
-//   const  int ml_start =sparsity_pattern._ml_start;
+//   // Make sure the sparsity pattern isn't empty unless the matrix is 0x0
+//   libmesh_assert (n_nz.size() == n_l);  libmesh_assert (n_oz.size() == n_l);
 //
-//   // vectors n_nz (diagonal) and n_oz (offset) -------------------------------
-//   std::vector< int> n_nz(m_l);   std::vector< int> n_oz(m_l);
-//   for (int i=0;i<m_l;i++) {
-//     int len=sparsity_pattern[ml_start+i].size()-1;
-//     n_oz[i]=sparsity_pattern[ml_start+i][len];
-//     n_nz[i]=len-n_oz[i];
-//   }
-//   update_sparsity_pattern(m,n,m_l,n_l,n_oz,n_nz);
-//   return;
-// }
+//   // We allow 0x0 matrices now
+//   //if (m==0)
+//   //  return;
+//
+  int ierr     = 0;
+  int m_global = static_cast<int>(m);
+  int n_global = static_cast<int>(n);
+  int m_local  = static_cast<int>(m_l);
+  int n_local  = static_cast<int>(n_l);
+
+  int numprocs; MPI_Comm_size(MPI_COMM_WORLD,&numprocs); 
+  
+  if (numprocs == 1)    {
+      assert ((m_l == m) && (n_l == n));
+      if (n_nz.empty())
+        ierr = MatCreateSeqAIJ (MPI_COMM_WORLD, m_global, n_global,
+			        PETSC_NULL, (int*) PETSC_NULL, &_mat);
+      else
+        ierr = MatCreateSeqAIJ (MPI_COMM_WORLD, m_global, n_global,
+			        PETSC_NULL, (int*) &n_nz[0], &_mat);
+             CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+      ierr = MatSetFromOptions (_mat);
+             CHKERRABORT(MPI_COMM_WORLD,ierr);
+    }
+  else    {
+      parallel_onlyM();
+      if (n_nz.empty())
+        ierr = MatCreateAIJ (MPI_COMM_WORLD,
+			        m_local, n_local,
+			        m_global, n_global,
+			        PETSC_NULL, (int*) PETSC_NULL,
+			        PETSC_NULL, (int*) PETSC_NULL, &_mat);
+      else
+        ierr = MatCreateAIJ (MPI_COMM_WORLD,
+			        m_local, n_local,
+			        m_global, n_global,
+			        PETSC_NULL, (int*) &n_nz[0],
+			        PETSC_NULL, (int*) &n_oz[0], &_mat);
+             CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = MatSetFromOptions (_mat);
+             CHKERRABORT(MPI_COMM_WORLD,ierr);
+    }
+    
+//   int rank,size,Istart,Iend;
+//   ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);//CHKERRQ(ierr);
+//   ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);//CHKERRQ(ierr);
+//   ierr = MatGetOwnershipRange(_mat,&Istart,&Iend);//CHKERRQ(ierr);
+//   printf(" Rostartend %d %d %d \n ",Istart,Iend,rank); 
+   this->zero();
+   
+}
 
 // ==========================================
 /// This function sets all the entries to 0
@@ -375,8 +458,8 @@ void PetscMatrix::print_hdf5(const std::string /*name*/) const {
 
 // // ============================================================
 void PetscMatrix::add_matrix(const DenseMatrix& dm,
-                              const std::vector< int>& rows,
-                              const std::vector< int>& cols) {
+                              const std::vector<unsigned int>& rows,
+                              const std::vector<unsigned int>& cols) {
   assert(this->initialized());
   const  int m = dm.m();
   assert((int)rows.size() == m);

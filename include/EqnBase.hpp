@@ -23,8 +23,8 @@ class FEElemBase   ;
 class Quantity     ;
 class QuantityLocal;
 
-class SparseMatrixM;
-class NumericVectorM;
+class SparseMatrix;
+class NumericVector;
 class LinearSolverM;
 
 
@@ -54,9 +54,9 @@ protected:
 //=======================================================================
 //======== MG Ops ============ (procs,levels) ====
 //=======================================================================
-  std::vector<SparseMatrixM  *> _A;    ///< Matrix A
-  std::vector<SparseMatrixM *> _Rst; ///< Restrictor
-  std::vector<SparseMatrixM *> _Prl; ///< Prolongation
+  std::vector<SparseMatrix  *> _A;    ///< Matrix A
+  std::vector<SparseMatrix *> _Rst; ///< Restrictor
+  std::vector<SparseMatrix *> _Prl; ///< Prolongation
 
 public:
 
@@ -64,13 +64,13 @@ public:
 //======== Vectors =============== (procs,levels) ==
 //=======================================================================
 
-  std::vector<NumericVectorM *> _b;   ///< rhs b
-  std::vector<NumericVectorM *> _x;   ///< solution x
-  std::vector<NumericVectorM *> _res; ///< residual
+  std::vector<NumericVector *> _b;   ///< rhs b
+  std::vector<NumericVector *> _x;   ///< solution x
+  std::vector<NumericVector *> _res; ///< residual
 
-  std::vector<NumericVectorM *> _x_old;
-  std::vector<NumericVectorM *> _x_oold;
-  std::vector<NumericVectorM *> _x_tmp;
+  std::vector<NumericVector *> _x_old;
+  std::vector<NumericVector *> _x_oold;
+  std::vector<NumericVector *> _x_tmp;
 
           void  initVectors();                                      ///initialize vectors
           void PrintVector(std::string namefile);   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation 
@@ -162,9 +162,9 @@ public:
           void Bc_ConvertToDirichletPenalty(const uint vb, const uint ql, uint* bc) const;
           void Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const uint vb, const uint *bc_eldofs,const QuantityLocal &Velold_in,const QuantityLocal& press_in,uint &press_fl) const;
 //========= treating NumericVectors, related to Dirichlet Boundary Conditions! =======
-          void Bc_ScaleDofVec(NumericVectorM * myvec,  double ScaleFac);
-          void Bc_AddDofVec(NumericVectorM* myvec, NumericVectorM* myvec2 );
-          void Bc_AddScaleDofVec(NumericVectorM* vec_in,NumericVectorM* vec_out,const double ScaleFac );
+          void Bc_ScaleDofVec(NumericVector * myvec,  double ScaleFac);
+          void Bc_AddDofVec(NumericVector* myvec, NumericVector* myvec2 );
+          void Bc_AddScaleDofVec(NumericVector* vec_in,NumericVector* vec_out,const double ScaleFac );
 
 
  //========== Miscellaneous, to be removed... ========================

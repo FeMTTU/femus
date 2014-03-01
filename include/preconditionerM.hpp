@@ -21,8 +21,8 @@
 
 // forward declarations
 // template <typename T> class AutoPtr;
-class SparseMatrixM;
-class NumericVectorM;
+class SparseMatrix;
+class NumericVector;
 // template <typename T> class ShellMatrix;
 
 
@@ -60,7 +60,7 @@ public:
   bool initialized () const { return _is_initialized; }
 
   /// Computes the preconditioned vector "y" based on input "x". Usually by solving Py=x to get the action of P^-1 x.
-  virtual void apply(const NumericVectorM & x, NumericVectorM & y) = 0;
+  virtual void apply(const NumericVector & x, NumericVector & y) = 0;
   
   /// Release all memory and clear data structures.
   virtual void clear () {}
@@ -69,7 +69,7 @@ public:
   virtual void init () {};
 
   /// Sets the matrix P to be preconditioned.
-  void set_matrix(SparseMatrixM & mat);
+  void set_matrix(SparseMatrix & mat);
 
   /// Returns the type of preconditioner to use.
   PreconditionerType type () const{ return _preconditioner_type; }
@@ -80,7 +80,7 @@ public:
 protected:
 
   /// The matrix P... ie the matrix to be preconditioned. This is often the actual system matrix of a linear sytem.
-  SparseMatrixM * _matrix;
+  SparseMatrix * _matrix;
   
   /// Enum statitng with type of preconditioner to use.
   PreconditionerType _preconditioner_type;
@@ -103,7 +103,7 @@ inline PreconditionerM::PreconditionerM () :
 // =========================================================
 inline PreconditionerM::~PreconditionerM (){  this->clear ();}
 // ========================================================
-inline void PreconditionerM::set_matrix(SparseMatrixM & mat){
+inline void PreconditionerM::set_matrix(SparseMatrix & mat){
   //If the matrix is changing then we (probably) need to reinitialize.
   _is_initialized = false;
   _matrix = &mat;

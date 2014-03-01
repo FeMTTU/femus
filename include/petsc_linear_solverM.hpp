@@ -8,8 +8,8 @@
 #include "Typedefs_conf.hpp"
 
 #include "linear_solverM.hpp"
-#include "petsc_vectorM.hpp"
-#include "petsc_matrixM.hpp"
+#include "PetscVector.hpp"
+#include "PetscMatrix.hpp"
 #include "PetscMacro.hpp"
 
 // Petsc include files. 
@@ -72,13 +72,13 @@ public:
   /// Initialize data structures if not done so already.
   void init ();
   /// Initialize data structures if not done so already plus much more
-  void init (PetscMatrixM* matrix);
+  void init (PetscMatrix* matrix);
   
   // Solvers ------------------------------------------------------
   /// Call the Petsc solver.  This function calls the method below, using the
   /// same matrix for the system and preconditioner matrices.    
   std::pair<unsigned int, Real>   solve (
-    SparseMatrixM  &matrix_in, NumericVectorM &solution_in, NumericVectorM &rhs_in,
+    SparseMatrix  &matrix_in, NumericVector &solution_in, NumericVector &rhs_in,
     const double tol,const unsigned int m_its)  {
     return this->solve(matrix_in, matrix_in, solution_in, rhs_in, tol, m_its);
   }
@@ -91,15 +91,15 @@ public:
   /// before invoking KSPSolve().  Note: this functionality is not implemented
   /// in the LinearSolver class since there is not a built-in analog to this method for LasPack 
   std::pair<unsigned int, Real>   solve (
-         SparseMatrixM  &/*matrix*/,SparseMatrixM  &/*preconditioner*/,
-	 NumericVectorM &/*solution*/,NumericVectorM &/*rhs*/,
+         SparseMatrix  &/*matrix*/,SparseMatrix  &/*preconditioner*/,
+	 NumericVector &/*solution*/,NumericVector &/*rhs*/,
 	 const double /*tol*/,const unsigned int /*Niter*/);  
 
 // This function solves a system whose matrix is a shell matrix.
 //   std::pair<unsigned int, Real>
 //     solve (const ShellMatrix<T>& shell_matrix,
-// 	   NumericVectorM& solution_in,
-// 	   NumericVectorM& rhs_in,
+// 	   NumericVector& solution_in,
+// 	   NumericVector& rhs_in,
 // 	   const double tol,
 // 	   const unsigned int m_its);
   
@@ -109,14 +109,14 @@ public:
 //   */
 //   virtual std::pair<unsigned int, Real>
 //     solve (const ShellMatrix<T>& shell_matrix,
-// 	   const SparseMatrixM& precond_matrix,
-// 	   NumericVectorM& solution_in,
-// 	   NumericVectorM& rhs_in,
+// 	   const SparseMatrix& precond_matrix,
+// 	   NumericVector& solution_in,
+// 	   NumericVector& rhs_in,
 // 	   const double tol,
 // 	   const unsigned int m_its);
-// void MGSolve(std::vector<SparseMatrixM *>  &/*matrix_in*/,   // System Matrix
-//	              std::vector<NumericVectorM *> &/*solution_in*/,// Solution vector
-//		      std::vector<NumericVectorM *> &/*rhs_in*/,     // RHS vector
+// void MGSolve(std::vector<SparseMatrix *>  &/*matrix_in*/,   // System Matrix
+//	              std::vector<NumericVector *> &/*solution_in*/,// Solution vector
+//		      std::vector<NumericVector *> &/*rhs_in*/,     // RHS vector
 //		      Matrix */*P*/, Matrix */*R*/,  
 //		      const double /*tol*/,const unsigned int /*m_its*/){
 // std::cout << "not implemented"; abort(); 

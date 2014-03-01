@@ -1,7 +1,7 @@
 #include <cmath>
 
 //library headers
-#include "numeric_vectorM.hpp"
+#include "NumericVector.hpp"
 #include "Physics.hpp"
 #include "EquationsMap.hpp"
 #include "EqnBase.hpp"

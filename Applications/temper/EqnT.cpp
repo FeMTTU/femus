@@ -2,9 +2,9 @@
 
 #include "FemusDefault.hpp"
 
-#include "numeric_vectorM.hpp"
+#include "NumericVector.hpp"
 #include "DenseVector.hpp"
-#include "sparse_matrixM.hpp"
+#include "SparseMatrix.hpp"
 #include "DenseMatrix.hpp"
 #include "linear_solverM.hpp"
 

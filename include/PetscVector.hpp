@@ -232,7 +232,7 @@ public:
   ///\f$U+=A*V\f$, add the product of a \p SparseMatrix \p A
   void add_vector (const NumericVector &V,const SparseMatrix &A);
   ///\f$U+=V \f$ where U and V are type DenseVector
-  void add_vector (const DenseVector& V,const std::vector<int>& dof_indices);
+  void add_vector (const DenseVector& V,const std::vector<unsigned int>& dof_indices);
   void resid (const NumericVector & rhs_in,const NumericVector& x,const SparseMatrix& A);
   /// \f$U+=A*V\f$, add the product A*v
   void matrix_mult (const NumericVector &vec_in,const SparseMatrix &mat_in);
