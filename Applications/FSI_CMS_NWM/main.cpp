@@ -14,7 +14,7 @@ using std::cout;
 using std::endl;
 
 // User defined functions
-int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob, unsigned level, const unsigned &gridn);
+int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
 
 double SetVariableTimeStep(const double time);
 
@@ -432,7 +432,7 @@ double InitVariables(const double &x, const double &y, const double &z,const cha
 
 //--------------------------------------------------------------------------------------------------------------------
 
-int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned level, const unsigned &gridn) {
+int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
 
   clock_t AssemblyTime=0;
   clock_t start_time, end_time;
@@ -440,16 +440,8 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
   
   //Static conversion from the Base class (NonLinearMultiLevelProblem) to the Derived class (NonLinearMultiLevelProblemTimeLoop)
   NonLinearTimeDependentMultiLevelProblem& nl_td_ml_prob = static_cast<NonLinearTimeDependentMultiLevelProblem&>(nl_td_ml_prob2);
-
-  // deferencing global object
-  //LinearSolverM*     lsyspde_lev = nl_td_ml_prob.Lin_Solver_[level];
- // LinearSolverM* lsyspdemesh_lev = nl_td_ml_prob.Lin_Solver_[level];
- // elem*                     myel = lsyspdemesh_lev->el;
- // Mat&                      myKK = lsyspde_lev->KK;
- // Vec&                     myRES = lsyspde_lev->RES;
-  
-  const char pdename[]="FSI";
-  unsigned ipde=nl_td_ml_prob.GetPdeIndex(pdename);
+ 
+  const char* pdename= nl_td_ml_prob.GetThisPdeName(ipde);
   
   
    //pointers and references

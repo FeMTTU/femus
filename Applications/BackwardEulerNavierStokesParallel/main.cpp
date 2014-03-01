@@ -12,7 +12,7 @@ using std::cout;
 using std::endl;
    
 
-int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_td_ml_prob, unsigned level, const unsigned &gridn);
+int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_td_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
 
 double InitVariables(const double &x, const double &y, const double &z,const char name[]);
 
@@ -307,7 +307,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 
 //------------------------------------------------------------------------------------------------------------
 
-int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned level, const unsigned &gridn){
+int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix){
     
   clock_t AssemblyTime=0; 
   clock_t start_time, end_time;
@@ -315,8 +315,7 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned lev
   
   NonLinearTimeDependentMultiLevelProblem& nl_td_ml_prob = static_cast<NonLinearTimeDependentMultiLevelProblem&>(nl_td_ml_prob2);
   
-  const char pdename[]="NS";
-  unsigned ipde=nl_td_ml_prob.GetPdeIndex(pdename);
+  const char* pdename= nl_td_ml_prob.GetThisPdeName(ipde);
   
   
   //pointers and references
