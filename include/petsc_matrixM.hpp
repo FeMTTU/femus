@@ -13,7 +13,7 @@
 
 // Local includes
 #include "sparse_matrixM.hpp"
-#include "parallelM.hpp"
+#include "Parallel.hpp"
 #include "petsc_macroM.hpp"
 
 // Macro to identify and debug functions which should be called in

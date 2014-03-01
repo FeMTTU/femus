@@ -5,7 +5,7 @@
 #include "Typedefs_conf.hpp"
 
 // Local Includes
-#include "parallelM.hpp"
+#include "Parallel.hpp"
 #include "petsc_vectorM.hpp"
 
 // C++ includes
@@ -138,7 +138,7 @@ Real NumericVectorM::subset_l1_norm (const std::set<unsigned int> & indices){
   const std::set<unsigned int>::iterator it_end = indices.end();
   Real norm = 0;
   for(; it!=it_end; ++it)    norm += std::abs(v(*it));
-  ParallelM::sum(norm);
+  Parallel::sum(norm);
   return norm;
 }
 
@@ -149,7 +149,7 @@ Real NumericVectorM::subset_l2_norm (const std::set<unsigned int> & indices){
   const std::set<unsigned int>::iterator it_end = indices.end();
   Real norm = 0;
   for(; it!=it_end; ++it)    norm += (v(*it)*v(*it));
-  ParallelM::sum(norm);
+  Parallel::sum(norm);
   return std::sqrt(norm);
 }
 
@@ -163,7 +163,7 @@ Real NumericVectorM::subset_linfty_norm (const std::set<unsigned int> & indices)
       Real value = std::abs(v(*it));
       if(value > norm)     norm = value;
     }
-  ParallelM::max(norm); 
+  Parallel::max(norm); 
 
   return norm;
 }
