@@ -10,7 +10,7 @@
 #include "linear_solverM.hpp"
 #include "petsc_vectorM.hpp"
 #include "petsc_matrixM.hpp"
-#include "petsc_macroM.hpp"
+#include "PetscMacro.hpp"
 
 // Petsc include files. 
 EXTERN_C_FOR_PETSC_BEGIN

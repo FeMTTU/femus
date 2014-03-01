@@ -14,7 +14,7 @@
 // Local includes
 #include "sparse_matrixM.hpp"
 #include "Parallel.hpp"
-#include "petsc_macroM.hpp"
+#include "PetscMacro.hpp"
 
 // Macro to identify and debug functions which should be called in
 // parallel on parallel matrices but which may be called in serial on

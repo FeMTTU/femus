@@ -7,7 +7,7 @@
 // Local Includes
 // #include "auto_ptr.h"
 #include "petsc_preconditionerM.hpp"
-#include "petsc_macroM.hpp"
+#include "PetscMacro.hpp"
 #include "petsc_matrixM.hpp"
 #include "petsc_vectorM.hpp"
 

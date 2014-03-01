@@ -12,7 +12,7 @@
 
 // #if defined(LIBMESH_HAVE_PETSC)
 #ifdef FEMUS_HAVE_PETSC
-# include "petsc_macroM.hpp"
+# include "PetscMacro.hpp"
 EXTERN_C_FOR_PETSC_BEGIN
 # include "petsc.h"
 # include "petscerror.h"
