@@ -6,7 +6,7 @@
 
 #include "Typedefs_conf.hpp"
 #include "VBType_enum.hpp"
-#include "FEType_enum.hpp"
+#include "FETypeEnum.hpp"
 
 
 //here, we must do in such a way that we dont need the "false dynamic" initializer

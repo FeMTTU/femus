@@ -22,7 +22,7 @@
 #include "Physics.hpp"
 #include "GeomEl.hpp"
 #include "mesh.hpp"
-#include "FEType_enum.hpp"
+#include "FETypeEnum.hpp"
 #include "FEElemBase.hpp"
 #include "QRule.hpp"
 #include "EquationsMap.hpp"
