@@ -17,7 +17,7 @@
 #include "QRule.hpp"
 #include "NormTangEnum.hpp"
 #include "Quantity.hpp"
-#include "QTYnum_enum.hpp"
+#include "QTYnumEnum.hpp"
 #include "TimeLoop.hpp"
 #include "CurrGaussPoint.hpp"
 #include "CurrElem.hpp"

@@ -20,7 +20,7 @@
 #include "QRule.hpp"
 #include "NormTangEnum.hpp"
 #include "VBType_enum.hpp"
-#include "QTYnum_enum.hpp"
+#include "QTYnumEnum.hpp"
 #include "Domain.hpp"
 #include "TimeLoop.hpp"
 #include "CurrGaussPoint.hpp"
