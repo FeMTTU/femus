@@ -9,7 +9,7 @@
 #include <cstdlib>
 
 #include "petsc_linear_solverM.hpp"
-#include "preconditionerM.hpp"
+#include "Preconditioner.hpp"
 
 //------------------------------------------------------------------
 // LinearSolver members
@@ -57,7 +57,7 @@ void LinearSolverM::set_preconditioner_type (const PreconditionerType pct)
 }
 
 // =============================================================
-void LinearSolverM::attach_preconditioner(PreconditionerM * preconditioner)
+void LinearSolverM::attach_preconditioner(Preconditioner * preconditioner)
 {
   if(this->_is_initialized)  {
     std::cerr<<"Preconditioner must be attached before the solver is initialized!"<<std::endl;

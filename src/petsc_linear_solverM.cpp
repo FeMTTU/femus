@@ -7,7 +7,7 @@
 // Local Includes
 #include "PetscMacro.hpp"
 #include "petsc_linear_solverM.hpp"
-#include "petsc_preconditionerM.hpp"
+#include "PetscPreconditioner.hpp"
 #include "PetscVector.hpp"
 #include "PetscMatrix.hpp"
 
@@ -23,13 +23,13 @@ extern "C" {
 #if PETSC_VERSION_LESS_THAN(3,0,1) && PETSC_VERSION_RELEASE
   // ------------------------------------------------------------------
   PetscErrorCode __libmesh_petsc_preconditioner_setup(void * ctx) {
-    PreconditionerM * preconditioner = static_cast<PreconditionerM*>(ctx);
+    Preconditioner * preconditioner = static_cast<Preconditioner*>(ctx);
     preconditioner->init();
     return 0;
   }
 // ------------------------------------------------------------------------------
   PetscErrorCode __libmesh_petsc_preconditioner_apply(void *ctx, Vec x, Vec y)  {
-    PreconditionerM * preconditioner = static_cast<PreconditionerM*>(ctx);
+    Preconditioner * preconditioner = static_cast<Preconditioner*>(ctx);
     PetscVector x_vec(x);
     PetscVector y_vec(y);
     preconditioner->apply(x_vec,y_vec);
@@ -41,7 +41,7 @@ extern "C" {
 // // //   PetscErrorCode __libmesh_petsc_preconditioner_setup(PC pc) {
 // // //     void *ctx;
 // // //     PetscErrorCode ierr = PCShellGetContext(pc,&ctx);CHKERRQ(ierr);
-// // //     PreconditionerM * preconditioner = static_cast<PreconditionerM*>(ctx);
+// // //     Preconditioner * preconditioner = static_cast<Preconditioner*>(ctx);
 // // //     preconditioner->init();
 // // //     return 0;
 // // //   }
@@ -49,7 +49,7 @@ extern "C" {
 // // //   PetscErrorCode __libmesh_petsc_preconditioner_apply(PC pc, Vec x, Vec y) {
 // // //     void *ctx;
 // // //     PetscErrorCode ierr = PCShellGetContext(pc,&ctx);CHKERRQ(ierr);
-// // //     PreconditionerM * preconditioner = static_cast<PreconditionerM*>(ctx);
+// // //     Preconditioner * preconditioner = static_cast<Preconditioner*>(ctx);
 // // //     PetscVector x_vec(x); PetscVector y_vec(y);
 // // //     preconditioner->apply(x_vec,y_vec);
 // // //     return 0;
@@ -204,7 +204,7 @@ void PetscLinearSolverM::init() {
                                  PETSC_DECIDE, // size of the array holding the history
                                  PETSC_TRUE);  // Whether or not to reset the history for each solve.
     CHKERRABORT(MPI_COMM_WORLD,ierr);
-    PetscPreconditionerM::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
+    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
 
     //If there is a preconditioner object we need to set the internal setup and apply routines
     if (this->_preconditioner) {
@@ -277,7 +277,7 @@ void PetscLinearSolverM::init(PetscMatrix* matrix) {
                                  PETSC_TRUE);  // Whether or not to reset the history for each solve.
     CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-    PetscPreconditionerM::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
+    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
     if (this->_preconditioner) {
       this->_preconditioner->set_matrix(*matrix);
       PCShellSetContext(_pc,(void*)this->_preconditioner);
@@ -385,7 +385,7 @@ void PetscLinearSolverM::init(PetscMatrix* matrix) {
 // 				   PETSC_TRUE);  // Whether or not to reset the history for each solve. 
 //       CHKERRABORT(MPI_COMM_WORLD,ierr);
 // 
-//       PetscPreconditionerM::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
+//       PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
 // 
 //       //If there is a preconditioner object we need to set the internal setup and apply routines
 //       if(this->_preconditioner)

@@ -18,7 +18,7 @@ template <typename T> class AutoPtr;
 class SparseMatrix;
 class NumericVector;
 template <typename T> class ShellMatrix;
- class PreconditionerM;
+ class Preconditioner;
  
 
 // ================================================
@@ -41,7 +41,7 @@ protected:
   /// Enum statitng with type of preconditioner to use.
   PreconditionerType _preconditioner_type;
   /// Holds the Preconditioner object to be used for the linear solves.
-  PreconditionerM * _preconditioner;
+  Preconditioner * _preconditioner;
   
    /// Flag indicating if the data structures have been initialized.
   bool _is_initialized;
@@ -76,7 +76,7 @@ public:
   /// Sets the type of preconditioner to use.
   void set_preconditioner_type (const PreconditionerType pct);
   /// Attaches a Preconditioner object to be used
-  void attach_preconditioner(PreconditionerM * preconditioner);
+  void attach_preconditioner(Preconditioner * preconditioner);
   
   // =================================
   // RETURN FUNCTIONS 
