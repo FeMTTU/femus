@@ -6,7 +6,7 @@
 #include "DenseVector.hpp"
 #include "SparseMatrix.hpp"
 #include "DenseMatrix.hpp"
-#include "linear_solverM.hpp"
+#include "LinearSolverM.hpp"
 
 #include "Files.hpp"
 #include "Utils.hpp"
