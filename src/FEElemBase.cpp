@@ -7,7 +7,7 @@
 #include "Files.hpp"
 #include "QRule.hpp"
 
-#include "GeomElType_enum.hpp"
+#include "GeomElTypeEnum.hpp"
 #include "GeomEl.hpp"
 
 #include "FEType_enum.hpp"
