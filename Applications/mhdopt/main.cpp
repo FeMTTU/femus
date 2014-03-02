@@ -33,7 +33,7 @@
 #include "Typedefs_conf.hpp"
 #include "CmdLine.hpp"
 #include "Quantity.hpp"
-#include "QTYnum_enum.hpp"
+#include "QTYnumEnum.hpp"
 #include "Box.hpp"  //for the DOMAIN
 
 
