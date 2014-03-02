@@ -6,7 +6,7 @@
 #include "EquationsMap.hpp"
 #include "Physics.hpp"
 #include "mesh.hpp" 
-#include "NormTang_enum.hpp"
+#include "NormTangEnum.hpp"
 
 
 //application headers
