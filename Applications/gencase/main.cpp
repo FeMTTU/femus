@@ -22,7 +22,7 @@
 #include "FETri6.hpp"
 #include "FETet4.hpp"
 #include "FETet10.hpp"
-#include "FEType_enum.hpp"
+#include "FETypeEnum.hpp"
 #include "RunTimeMap.hpp"
 #include "TimeLoop.hpp"
 #include "CmdLine.hpp"

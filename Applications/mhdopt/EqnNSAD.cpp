@@ -12,7 +12,7 @@
 #include "GeomEl.hpp"
 #include "Domain.hpp"
 #include "EquationsMap.hpp"
-#include "FEType_enum.hpp"
+#include "FETypeEnum.hpp"
 #include "FEElemBase.hpp"
 #include "QRule.hpp"
 #include "NormTang_enum.hpp"

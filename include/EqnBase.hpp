@@ -11,7 +11,7 @@
 #include "FemusExtLib_conf.hpp"
 
 #include "Typedefs_conf.hpp"
-#include "FEType_enum.hpp"
+#include "FETypeEnum.hpp"
 #include "VBType_enum.hpp"
 
 

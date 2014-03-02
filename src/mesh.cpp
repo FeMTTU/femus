@@ -11,7 +11,7 @@
 #include "Utils.hpp"
 #include "GeomEl.hpp"
 #include "VBType_enum.hpp"
-#include "FEType_enum.hpp"
+#include "FETypeEnum.hpp"
 
 #include "paral.hpp"
 

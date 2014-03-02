@@ -10,7 +10,7 @@
 #include "GeomElTypeEnum.hpp"
 #include "GeomEl.hpp"
 
-#include "FEType_enum.hpp"
+#include "FETypeEnum.hpp"
 #include "FEQuad1.hpp"
 #include "FEQuad4.hpp"
 #include "FEQuad9.hpp"
