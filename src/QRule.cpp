@@ -3,7 +3,7 @@
 #include <cstdlib>
 
  
-#include "GeomElType_enum.hpp"
+#include "GeomElTypeEnum.hpp"
 #include "GeomEl.hpp"
  
 
