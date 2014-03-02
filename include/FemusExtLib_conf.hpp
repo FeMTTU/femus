@@ -30,25 +30,16 @@
 
 // #define LM_REFCOUNT  //uncoupled         *********** LIB-TYPE dependency
 
-//#define LM_REAL      //uncoupled          *********** INCLUDE-TYPE dependency
-
 
 //*****************
 #ifdef LM_REFCOUNT
+  #include "libmesh/reference_counted_object.h"
 
 //refcount needs init (and also debug mode, by the way)
     #ifndef LM_INIT   
       #define LM_INIT
     #endif
-
-//also,if refcount starts then LM_REAL must also start, otherwise
-                      //you get ambiguous references to Real
-    #ifndef LM_REAL 
-    #define LM_REAL
-    #endif
     
-  #include "libmesh/reference_counted_object.h"
-
 #endif
  //******************
 
@@ -116,10 +107,6 @@
 #endif
 
 
-
-
-
-
 //*******************************************************
 //************ HDF5 *************************************
 //*******************************************************
@@ -131,9 +118,5 @@
  * Well, we could also choose more than one i/o format.
  
  */
-// ======= OUTPUT FORMAT ======
-// #define Vtk 1
-#define FEMUS_PRINT_XDMF //not used yet
-#define FEMUS_HAVE_HDF5  //not used yet
 
 #endif

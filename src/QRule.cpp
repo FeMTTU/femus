@@ -1,7 +1,7 @@
 #include "QRule.hpp"
 
 #include <cstdlib>
-
+#include <iostream>
  
 #include "GeomElTypeEnum.hpp"
 #include "GeomEl.hpp"

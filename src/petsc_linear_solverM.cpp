@@ -525,7 +525,7 @@ void PetscLinearSolverM::init(PetscMatrix* matrix) {
 
 
 // ========================================================
-std::pair<unsigned int, Real> PetscLinearSolverM::solve(SparseMatrix&  matrix_in,
+std::pair<unsigned int, double> PetscLinearSolverM::solve(SparseMatrix&  matrix_in,
     SparseMatrix&  precond_in,  NumericVector& solution_in,  NumericVector& rhs_in,
     const double tol,   const unsigned int m_its) {
 
@@ -583,7 +583,7 @@ std::pair<unsigned int, Real> PetscLinearSolverM::solve(SparseMatrix&  matrix_in
   return std::make_pair(its, final_resid);
 }
 
-// std::pair<unsigned int, Real>
+// std::pair<unsigned int, double>
 // PetscLinearSolverM::solve (const ShellMatrix<T>& shell_matrix,
 // 			     NumericVector<T>& solution_in,
 // 			     NumericVector<T>& rhs_in,
@@ -674,7 +674,7 @@ std::pair<unsigned int, Real> PetscLinearSolverM::solve(SparseMatrix&  matrix_in
 // }
 
 
-// std::pair<unsigned int, Real>
+// std::pair<unsigned int, double>
 // PetscLinearSolverM::solve (const ShellMatrix<T>& shell_matrix,
 // 			     const SparseMatrix<T>& precond_matrix,
 // 			     NumericVector<T> &solution_in,
@@ -789,7 +789,7 @@ void PetscLinearSolverM::get_residual_history(std::vector<double>& hist) {
 }
 
 // ======================================================
-Real PetscLinearSolverM::get_initial_residual() {
+double PetscLinearSolverM::get_initial_residual() {
   int ierr = 0;  int its  = 0;
   // Fill the residual history vector with the residual norms
   // Note that GetResidualHistory() does not copy any values, it
