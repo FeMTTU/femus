@@ -19,7 +19,7 @@
 #include "Domain.hpp"
 #include "Box.hpp"
 
-#include "VBType_enum.hpp"
+#include "VBTypeEnum.hpp"
 #include "Files.hpp"
 #include "Utils.hpp"
 #include "GeomEl.hpp"

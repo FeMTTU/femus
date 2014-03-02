@@ -10,7 +10,7 @@
 #include "Files.hpp"
 #include "Utils.hpp"
 #include "GeomEl.hpp"
-#include "VBType_enum.hpp"
+#include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"
 
 #include "paral.hpp"

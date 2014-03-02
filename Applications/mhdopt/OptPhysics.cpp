@@ -7,7 +7,7 @@
 #include "Utils.hpp"
 #include "mesh.hpp"
 #include "Box.hpp"
-#include "VBType_enum.hpp"
+#include "VBTypeEnum.hpp"
 
 //application
 #include "Opt_conf.hpp"

@@ -2,7 +2,7 @@
 #define __currelem_h__
 
 
-#include "VBType_enum.hpp"
+#include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"
 
 #include "DenseVector.hpp"

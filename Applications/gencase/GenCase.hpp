@@ -10,7 +10,7 @@
 #include "libmesh/mesh.h"
 // FEMuS
 #include "Typedefs_conf.hpp"
-#include "VBType_enum.hpp"
+#include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"
 #include "RunTimeMap.hpp"
 #include "ElemSto.hpp"

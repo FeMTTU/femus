@@ -2,7 +2,7 @@
 #define __quantitylocal_h__
 
 #include <vector>
-#include "VBType_enum.hpp"
+#include "VBTypeEnum.hpp"
 #include "CurrGaussPoint.hpp"
 
 // The main difference to consider is  Vect WITH    Quantity
