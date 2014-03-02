@@ -4,7 +4,7 @@
 
 #include "Typedefs_conf.hpp"
 #include "FETypeEnum.hpp"
-#include "VBType_enum.hpp"
+#include "VBTypeEnum.hpp"
 
 class FEElemBase;
 class QRule;

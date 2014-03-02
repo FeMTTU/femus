@@ -19,7 +19,7 @@
 #include "FEElemBase.hpp"
 #include "QRule.hpp"
 #include "NormTangEnum.hpp"
-#include "VBType_enum.hpp"
+#include "VBTypeEnum.hpp"
 #include "QTYnumEnum.hpp"
 #include "Domain.hpp"
 #include "TimeLoop.hpp"

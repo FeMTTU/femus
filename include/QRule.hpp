@@ -2,7 +2,7 @@
 #define __mgqrule_h__
 
 #include "Typedefs_conf.hpp"
-#include "VBType_enum.hpp"
+#include "VBTypeEnum.hpp"
 
 
 
