@@ -7,7 +7,7 @@
 #include "FemusExtLib_conf.hpp"
 #include "FemusDefault.hpp"
 
-#include "NormTang_enum.hpp"
+#include "NormTangEnum.hpp"
 #include "QTYnum_enum.hpp"
 #include "Quantity.hpp"
 #include "Utils.hpp"

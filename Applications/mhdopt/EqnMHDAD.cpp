@@ -17,7 +17,7 @@
 #include "FETypeEnum.hpp"
 #include "FEElemBase.hpp"
 #include "QRule.hpp"
-#include "NormTang_enum.hpp"
+#include "NormTangEnum.hpp"
 #include "QTYnum_enum.hpp"
 #include "TimeLoop.hpp"
 

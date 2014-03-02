@@ -7,7 +7,7 @@
 #include "EquationsMap.hpp"
 #include "Physics.hpp"
 #include "mesh.hpp" 
-#include "NormTang_enum.hpp"
+#include "NormTangEnum.hpp"
 #include "TimeLoop.hpp"
 
 //application headers
