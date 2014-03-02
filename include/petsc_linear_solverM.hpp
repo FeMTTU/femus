@@ -77,7 +77,7 @@ public:
   // Solvers ------------------------------------------------------
   /// Call the Petsc solver.  This function calls the method below, using the
   /// same matrix for the system and preconditioner matrices.    
-  std::pair<unsigned int, Real>   solve (
+  std::pair<unsigned int, double>   solve (
     SparseMatrix  &matrix_in, NumericVector &solution_in, NumericVector &rhs_in,
     const double tol,const unsigned int m_its)  {
     return this->solve(matrix_in, matrix_in, solution_in, rhs_in, tol, m_its);
@@ -90,13 +90,13 @@ public:
   /// In PETSc, this is accomplished by calling  PCSetType(_pc, PCMAT);
   /// before invoking KSPSolve().  Note: this functionality is not implemented
   /// in the LinearSolver class since there is not a built-in analog to this method for LasPack 
-  std::pair<unsigned int, Real>   solve (
+  std::pair<unsigned int, double>   solve (
          SparseMatrix  &/*matrix*/,SparseMatrix  &/*preconditioner*/,
 	 NumericVector &/*solution*/,NumericVector &/*rhs*/,
 	 const double /*tol*/,const unsigned int /*Niter*/);  
 
 // This function solves a system whose matrix is a shell matrix.
-//   std::pair<unsigned int, Real>
+//   std::pair<unsigned int, double>
 //     solve (const ShellMatrix<T>& shell_matrix,
 // 	   NumericVector& solution_in,
 // 	   NumericVector& rhs_in,
@@ -107,7 +107,7 @@ public:
 //   * a sparse matrix is used as preconditioning matrix, this allowing
 //   * other preconditioners than JACOBI.
 //   */
-//   virtual std::pair<unsigned int, Real>
+//   virtual std::pair<unsigned int, double>
 //     solve (const ShellMatrix<T>& shell_matrix,
 // 	   const SparseMatrix& precond_matrix,
 // 	   NumericVector& solution_in,
@@ -133,7 +133,7 @@ public:
   /// Returns just the initial residual for the solve just
   /// completed with this interface.  Use this method instead
   /// of the one above if you just want the starting residual and not the entire history.
-  Real get_initial_residual();
+  double get_initial_residual();
 
   // Print ----------------------------------------
   /// Prints a useful message about why the latest linear solve con(di)verged.

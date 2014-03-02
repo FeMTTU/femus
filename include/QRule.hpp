@@ -1,6 +1,9 @@
 #ifndef __mgqrule_h__
 #define __mgqrule_h__
 
+
+#include <string>
+
 #include "Typedefs_conf.hpp"
 #include "VBTypeEnum.hpp"
 

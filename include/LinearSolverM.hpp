@@ -97,26 +97,26 @@ public:
   
 //   //sandro
 //   /// This function calls the solver
-//   virtual std::pair<unsigned int, Real> solve(
+//   virtual std::pair<unsigned int, double> solve(
 //     SparseMatrix&/*Sys Mtrx*/,NumericVector&/*sol_vec*/, NumericVector&/*rhs*/,
 //     const double /*tol*/,const unsigned int/*NIter*/) = 0;
 // 
 //   ///   *This function calls the solver with preconditioner
-//   virtual std::pair<unsigned int, Real> solve(
+//   virtual std::pair<unsigned int, double> solve(
 //     SparseMatrix&/*Sys Mtrx*/,SparseMatrix&/*Prec Mtrx*/,
 //     NumericVector&/*sol_vec*/,NumericVector&/*rhs*/,
 //     const double /*tol*/,const unsigned int/*NIter*/) = 0; 
   
  
   /// This function calls the solver
-  virtual std::pair<unsigned int, Real> solve (SparseMatrix&,  // System Matrix
+  virtual std::pair<unsigned int, double> solve (SparseMatrix&,  // System Matrix
 					       NumericVector&, // Solution vector
 					       NumericVector&, // RHS vector
 					       const double,      // Stopping tolerance
 					       const unsigned int) = 0; // N. Iterations
   
   ///   *This function calls the solver with preconditioner 
-  virtual std::pair<unsigned int, Real> solve (SparseMatrix&,  // System Matrix
+  virtual std::pair<unsigned int, double> solve (SparseMatrix&,  // System Matrix
 					       SparseMatrix&,  // Preconditioning Matrix
 					       NumericVector&, // Solution vector
 					       NumericVector&, // RHS vector
