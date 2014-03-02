@@ -22,7 +22,7 @@
 
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
-#include "linear_solverM.hpp"
+#include "LinearSolverM.hpp"
 #include "DenseMatrix.hpp"
 
 

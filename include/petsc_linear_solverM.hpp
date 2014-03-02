@@ -7,7 +7,7 @@
 
 #include "Typedefs_conf.hpp"
 
-#include "linear_solverM.hpp"
+#include "LinearSolverM.hpp"
 #include "PetscVector.hpp"
 #include "PetscMatrix.hpp"
 #include "PetscMacro.hpp"
