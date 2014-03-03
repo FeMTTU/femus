@@ -1047,9 +1047,9 @@ void GenCase::PrintMultimeshXdmf() {
 
     std::string basepath  = _utils._files.get_basepath();
     std::string input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
-    std::string multimesh = _utils._files.get_frtmap().get("MULTIMESH");
+    std::string multimesh = DEFAULT_MULTIMESH;
     std::string ext_xdmf  = DEFAULT_EXT_XDMF;
-    std::string basemesh  = _utils._files.get_frtmap().get("BASEMESH");
+    std::string basemesh  = DEFAULT_BASEMESH;
     std::string ext_h5    = DEFAULT_EXT_H5;
 
     std::ostringstream inmesh_xmf;
@@ -1116,7 +1116,7 @@ void GenCase::PrintMeshHDF5()   {
 
     std::string basepath  = _utils._files.get_basepath();
     std::string input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
-    std::string basemesh  = _utils._files.get_frtmap().get("BASEMESH");
+    std::string basemesh  = DEFAULT_BASEMESH;
     std::string ext_h5    = DEFAULT_EXT_H5;
 
     std::ostringstream inmesh;

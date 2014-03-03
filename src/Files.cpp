@@ -377,13 +377,13 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
 
     // >>>>>>> outtime dir: COPY FILES   //needs the BASEPATH of the APPLICATION
   //copy mesh.h5
-   std::string  mesh_in = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + get_frtmap().get("BASEMESH") + DEFAULT_EXT_H5;
-   std::string  mesh_out =  app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + get_frtmap().get("BASEMESH") + DEFAULT_EXT_H5;
+   std::string  mesh_in = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
+   std::string  mesh_out =  app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(mesh_in,mesh_out); 
    
 //copy multimesh.xmf
-   std::string  mmesh_in = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + get_frtmap().get("MULTIMESH") + DEFAULT_EXT_XDMF;
-   std::string  mmesh_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  get_frtmap().get("MULTIMESH") + DEFAULT_EXT_XDMF;
+   std::string  mmesh_in = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_MULTIMESH + DEFAULT_EXT_XDMF;
+   std::string  mmesh_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_MULTIMESH + DEFAULT_EXT_XDMF;
 /*(iproc==0)*/ CopyFile(mmesh_in,mmesh_out); 
 
 //copy MG files
