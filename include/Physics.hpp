@@ -6,7 +6,7 @@
 #include <string>
 
 // configure files ----------------
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 #include "RunTimeMap.hpp"
 
 // Forward class -------------

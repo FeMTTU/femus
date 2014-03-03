@@ -2,7 +2,7 @@
 #define __mgtimeloop_h__
 
 // configure files  --------------------
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 
 // Forward class
 class Utils;

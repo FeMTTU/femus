@@ -5,7 +5,7 @@
 #include <string>
 using namespace std;
 
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 
 
 #include "EqnBase.hpp"

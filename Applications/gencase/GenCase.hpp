@@ -9,7 +9,7 @@
 #include "libmesh/boundary_mesh.h"
 #include "libmesh/mesh.h"
 // FEMuS
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"
 #include "RunTimeMap.hpp"

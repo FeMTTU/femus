@@ -5,7 +5,7 @@
 
 #include "Domain.hpp"
 
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 
 #include "Files.hpp"
 #include "Utils.hpp"
