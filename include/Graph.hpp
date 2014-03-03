@@ -1,7 +1,7 @@
 #ifndef _mggraph_
 #define _mggraph_
 
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 
 #include <vector>
 

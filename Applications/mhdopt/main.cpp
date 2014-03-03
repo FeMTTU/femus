@@ -30,7 +30,7 @@
 #include "QRule.hpp"
 #include "EquationsMap.hpp"
 #include "TimeLoop.hpp"
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 #include "CmdLine.hpp"
 #include "Quantity.hpp"
 #include "QTYnumEnum.hpp"

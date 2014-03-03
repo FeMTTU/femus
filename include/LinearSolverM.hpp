@@ -5,7 +5,7 @@
 
 #include "FemusExtLib_conf.hpp"
 
-#include "Typedefs_conf.hpp" 
+#include "Typedefs.hpp" 
 
 #include "SolverPackageEnum.hpp"      // #include "enum_solver_package.h"
 #include "PrecondtypeEnum.hpp"        // #include "enum_preconditioner_type.h"

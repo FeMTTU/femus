@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
 
 

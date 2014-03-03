@@ -2,7 +2,7 @@
 
 #ifdef FEMUS_HAVE_PETSC
 
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 
 // Local Includes
 #include "PetscMacro.hpp"

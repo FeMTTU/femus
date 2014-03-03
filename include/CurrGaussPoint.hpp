@@ -1,7 +1,7 @@
 #ifndef __currgausspoint_h__
 #define __currgausspoint_h__
 
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 #include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "CurrGaussPointBase.hpp"

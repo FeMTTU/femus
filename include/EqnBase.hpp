@@ -10,7 +10,7 @@
 #include "FemusDefault.hpp"
 #include "FemusExtLib_conf.hpp"
 
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 #include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"
 

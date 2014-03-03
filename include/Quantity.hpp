@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 #include "QuantityLocal.hpp"
 
 class EqnBase;

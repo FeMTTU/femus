@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 #include "Quantity.hpp"
 #include "EquationsMap.hpp"
 

@@ -2,7 +2,7 @@
 #define __domain_h__
 
 #include <string>
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 
 class Utils;
 

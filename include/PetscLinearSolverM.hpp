@@ -5,7 +5,7 @@
 
 #ifdef FEMUS_HAVE_PETSC
 
-#include "Typedefs_conf.hpp"
+#include "Typedefs.hpp"
 
 #include "LinearSolverM.hpp"
 #include "PetscVector.hpp"
