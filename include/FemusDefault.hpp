@@ -16,11 +16,10 @@
 //************** FILES ************************
 #define DEFAULT_EXT_H5         ".h5"
 #define DEFAULT_EXT_XDMF       ".xmf" 
-// // // #define DEFAULT_EXT_IN         ".in" 
-// // // #define DEFAULT_EXT_LOG        ".log"
-// // // #define DEFAULT_AUX_XDMF      "Xdmf.dtd" 
-// // // #define DEFAULT_GAMBIT_EXT     ".gam" 
-// // // #define DEFAULT_SALOME_EXT     ".med" 
+#define DEFAULT_EXT_IN         ".in" 
+#define DEFAULT_EXT_LOG        ".log"
+#define DEFAULT_AUX_XDMF       "Xdmf.dtd" 
+// TODO ".gam" and ".med" for gambit and salome should be known to libmesh but we don't want to put OUR OWN includes in LIBMESH!!! 
 // // // // # ----  Mesh class ----
 // // // #define DEFAULT_BASEMESH      "mesh" 
 // // // #define DEFAULT_MULTIMESH     "multimesh" 

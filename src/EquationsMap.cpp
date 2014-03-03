@@ -188,7 +188,7 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) {
         std::string outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
         std::string basesol     = _utils._files.get_frtmap().get("BASESOL");
         std::string basemesh    = _utils._files.get_frtmap().get("BASEMESH");
-        std::string aux_xdmf    = _utils._files.get_frtmap().get("AUX_XDMF");
+        std::string aux_xdmf    = DEFAULT_AUX_XDMF;
         std::string connlin     = _utils._files.get_frtmap().get("CONNLIN");
         std::string     ext_h5  = DEFAULT_EXT_H5;
         std::string    ext_xdmf = DEFAULT_EXT_XDMF;
@@ -412,7 +412,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) {
         std::string     basemesh = _utils._files.get_frtmap().get("BASEMESH");
         std::string       ext_h5 = DEFAULT_EXT_H5;
         std::string     ext_xdmf = DEFAULT_EXT_XDMF;
-        std::string     aux_xdmf = _utils._files.get_frtmap().get("AUX_XDMF");
+        std::string     aux_xdmf = DEFAULT_AUX_XDMF;
         std::string      connlin = _utils._files.get_frtmap().get("CONNLIN");
         std::string  bdry_suffix = _utils._files.get_frtmap().get("BDRY_SUFFIX");
 
@@ -545,7 +545,7 @@ void EquationsMap::TransientSetup()  {
     std::string    basecase = _utils._files.get_frtmap().get("BASECASE");
     std::string    basemesh = _utils._files.get_frtmap().get("BASEMESH");
 
-    std::string  aux_xdmf   = _utils._files.get_frtmap().get("AUX_XDMF");
+    std::string  aux_xdmf   = DEFAULT_AUX_XDMF;
     std::string  connlin    = _utils._files.get_frtmap().get("CONNLIN");
 
 

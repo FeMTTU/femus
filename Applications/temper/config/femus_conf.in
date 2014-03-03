@@ -22,8 +22,8 @@ restart     0    # ==== both for the App and for Gencase ======
 
 
 <Box>
-# double # mesh file consistency  
-# =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======   # ==== DO IT ONLY FOR Gencase ======   # USER must provide this info explicitly
+# double # mesh file consistency (case libmesh_gen=0)  
+# ==== both for the App and for Gencase ======   # ==== DO IT ONLY FOR Gencase ======   # USER must provide this info explicitly
 
  lxb 0.    
  lxe 1.  
@@ -48,13 +48,10 @@ nintervz   8
 <Utils>
 # double # mesh file consistency
 
-# ==== only for the App ==================================
-
 # ----<BCHandling>-----------------
 ibc_gen     0            # ==== in library routines
 bdry_toll   0.0000001    # ==== not in library routines, but library-type
 penalty_val 1.e10        # ==== not in library routines, but library-type
-# ----</BCHandling>-----------------
 
 # --------<Domain>---------, not nec. a Box--
 domain   0      # this should be OUTSIDE  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # ==== DO IT ONLY FOR Gencase ====== # USER must provide this info explicitly # 0=Box# 1=Cylinder# Whatever the rest
@@ -63,22 +60,21 @@ thetax    0.       # ==== not in library routines, but library-type
 thetay    0.       # ==== not in library routines, but library-type
 thetaz    0.       # ==== not in library routines, but library-type
 # thetaz0.523598775598
-# --------</Domain>---------, not nec. a Box--
 
 
 # === only for Gencase ==================================== we'll do a ##<GenCase> tag later
 # ----<EqnBase,Mesh,MultiGrid...>----------
-nolevels 3           # ==== in library routines     # USER must provide this info explicitly 
-# ----</EqnBase,Mesh,MultiGrid...>----------
+nolevels 3                # USER must provide this info explicitly 
+
 # ------<Mesh>---------------------------------------
 meshql        1           # ------<ElementMapping>------- # for THE APP # =MESH CONSISTENCY=== # ==== in library routines      # USER must provide this info explicitly # depends on the kind of Mesh that is used# depends basically on the Boundary Mesh# 0=QUADRATIC Mapping  1=LINEAR Mapping
-mesh_ord      0             # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# 0=QUADRATIC GeomElements (Quad8,Quad9,Hex27,...)# 1=LINEAR GeomElements (Quad4,Hex8,...)
-numgeomels    1             # =MESH CONSISTENCY===  # ==== in library routines     # quadrilateral,triangular,pyramidal,...        # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# no support for hybrid mesh yet
-dimension     2             # =MESH CONSISTENCY===  # ==== in library routines 
-# ------</Mesh>----------------------------------------
+mesh_ord      0           # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# 0=QUADRATIC GeomElements (Quad8,Quad9,Hex27,...)# 1=LINEAR GeomElements (Quad4,Hex8,...)
+numgeomels    1           # quadrilateral,triangular,pyramidal,...        # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# no support for hybrid mesh yet
+dimension     2              
+
 # ------<GeomEl>---------------------------------------
-geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
-# ------</GeomEl>-----------------------------------------
+geomel_type   0           # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
+
 
 </Utils>
 
@@ -89,13 +85,6 @@ geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines  
 # std::string  # mesh file consistency
 
 # all of these will be moved inside the library ####################
-# extensions *********
-EXT_XDMF       .xmf 
-EXT_IN         .in 
-EXT_LOG        .log
-AUX_XDMF      Xdmf.dtd 
-GAMBIT_EXT     .gam 
-SALOME_EXT     .med 
 # ----  Mesh class ----
 BASEMESH      mesh 
 MULTIMESH     multimesh 

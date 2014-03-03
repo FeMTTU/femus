@@ -155,7 +155,7 @@ void FEElemBase::init() {
   std::cout << " Reading FE:: " << std::endl;
 
   std::string femus_dir = getenv("FEMUS_DIR");  //TODO remove this
-  std::string    ext_in = _utils->_files.get_frtmap().get("EXT_IN");
+  std::string    ext_in = DEFAULT_EXT_IN;
   std::ostringstream file;
 
   std::string    f_shape = "shape";
