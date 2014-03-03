@@ -536,7 +536,7 @@ void EquationsMap::TransientSetup()  {
 
     std::string    basepath = _utils._files.get_basepath();
     std::string  output_dir = _utils._files.get_frtmap().get("OUTPUT_DIR");
-    std::string   lastrun_f = _utils._files.get_frtmap().get("LAST_RUN");
+    std::string   lastrun_f = DEFAULT_LAST_RUN;
     std::string     basesol = DEFAULT_BASESOL;
     std::string    ext_xdmf = DEFAULT_EXT_XDMF;
     std::string      ext_h5 = DEFAULT_EXT_H5;
@@ -562,7 +562,7 @@ void EquationsMap::TransientSetup()  {
 //let us just try by hand now...no we cant, because we will not know
 // the NEW output_dir...
 //We have to find a way to keep track of the PREVIOUS output dir.
-//--- use a shell variable. $FEMUS_LAST_RUN
+//--- use a shell variable. $FEMUS_last_run
 //SORRY, BUT YOU CANT DO THAT!
 // A process cannot export to parent processes.
 // So the solution will be to print a very small file, called
@@ -689,7 +689,7 @@ void EquationsMap::TransientSetup()  {
     //now you can update last_run with new_run for a following run
     //well,actually before putting the last_run you should be sure that this run was completely finished.
     //That is why I'd better put this call at the end of the main program
-//   _utils._files.PrintRun(_utils._files.get("LAST_RUN"));
+//   _utils._files.PrintRun(DEFAULT_LAST_RUN);
 
 //------- print
     //this happens when the output dir is already set
