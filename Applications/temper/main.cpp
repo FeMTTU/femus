@@ -88,7 +88,7 @@
 // >>>>>>>>>>>>> END REDIRECT COUT
 
    files.CopyGencaseFiles();
-   files.PrintRun(files.get_frtmap().get("NEW_RUN"));  /*(iproc==0)*/ //output dir: print the new run, for the restart 
+   files.PrintRun(DEFAULT_NEW_RUN);  /*(iproc==0)*/ //output dir: print the new run, for the restart 
    files.InitCaseData();                  /*(iproc==0)*/              // outtime dir
 
   // ======= Utils ========================
@@ -223,7 +223,7 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 
 //============= prepare default for next restart ==========  
 // at this point, the run has been completed 
-/*(iproc==0)*/  files.PrintRun(files.get_frtmap().get("LAST_RUN"));
+/*(iproc==0)*/  files.PrintRun(DEFAULT_LAST_RUN);
 
   // ============  log ================================
 #ifdef FEMUS_HAVE_PETSC

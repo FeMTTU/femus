@@ -84,12 +84,6 @@ geomel_type   0           # ==== both for the App and for Gencase ======  # ====
 <Files>
 # std::string  # mesh file consistency
 
-
-# RESTART FILES
-# if a run reaches the end, then we write it as a "default restart" run
-LAST_RUN    run_to_restart_from
-NEW_RUN      new_run
-
 # ----  BCHandling  --------------
 # external ibc file
 IBC           case 

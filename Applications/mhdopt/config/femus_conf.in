@@ -88,8 +88,6 @@ OUTPUT_DIR    output/
 F_MESH_READ    straightQ3D2x2x2ZERO.gam
 
 
-LAST_RUN    run_to_restart_from
-NEW_RUN      new_run
 
 # ----  BCHandling  --------------
 # external ibc file

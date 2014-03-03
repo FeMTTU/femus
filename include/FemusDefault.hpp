@@ -34,8 +34,8 @@
 #define DEFAULT_BASETIME      "time" 
 #define DEFAULT_CASE_DATA     "case.txt"
 // // // // # ---- RESTART -------- // # if a run reaches the end, then we write it as a "default restart" run
-// // // #define DEFAULT_LAST_RUN    "run_to_restart_from"
-// // // #define DEFAULT_NEW_RUN      "new_run"
+#define DEFAULT_LAST_RUN      "run_to_restart_from"
+#define DEFAULT_NEW_RUN       "new_run"
 // // // // # ----  BCHandling  -------------- // # external ibc file
 // // // #define DEFAULT_IBC           "case" 
 // // // #define DEFAULT_BDRY_SUFFIX   "_bd"

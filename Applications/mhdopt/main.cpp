@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 // >>>>>>>>>>>>> END REDIRECT COUT
 
    files.CopyGencaseFiles();
-   files.PrintRun(files.get_frtmap().get("NEW_RUN"));
+   files.PrintRun(DEFAULT_NEW_RUN);
    files.InitCaseData();
 
  // =========================================
@@ -302,7 +302,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 // well, we do not know whether for the whole time range time.N-M.xmf
 // or the optimization loop stopped before
 // we could also print the last step number
-/*(iproc==0)*/  files.PrintRun(files.get_frtmap().get("LAST_RUN"));  /*TODO fileIO*/
+/*(iproc==0)*/  files.PrintRun(DEFAULT_LAST_RUN);  /*TODO fileIO*/
 
   // ============  log ================================
 #ifdef FEMUS_HAVE_PETSC
