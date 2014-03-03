@@ -25,9 +25,9 @@
 #define DEFAULT_MULTIMESH     "multimesh" 
 #define DEFAULT_CONNLIN       "_conn_lin" 
 // // // // # ----  Multigrid  --------------
-// // // #define DEFAULT_F_MATRIX     "Matrix" 
-// // // #define DEFAULT_F_PROL       "Prol" 
-// // // #define DEFAULT_F_REST       "Rest" 
+#define DEFAULT_F_MATRIX     "Matrix" 
+#define DEFAULT_F_PROL       "Prol" 
+#define DEFAULT_F_REST       "Rest" 
 // // // // # ----  Time, sort of  --------------
 // // // #define DEFAULT_BASESOL       "sol" 
 // // // #define DEFAULT_BASECASE      "case" 

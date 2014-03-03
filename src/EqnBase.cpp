@@ -2031,9 +2031,9 @@ void EqnBase::initMGOps() {
     std::string     basepath = _utils._files.get_basepath();
     std::string   output_dir = _utils._files.get_frtmap().get("OUTPUT_DIR");
     std::string  outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
-    std::string     f_matrix = _utils._files.get_frtmap().get("F_MATRIX");
-    std::string       f_rest = _utils._files.get_frtmap().get("F_REST");
-    std::string       f_prol = _utils._files.get_frtmap().get("F_PROL");
+    std::string     f_matrix = DEFAULT_F_MATRIX;
+    std::string       f_rest = DEFAULT_F_REST;
+    std::string       f_prol = DEFAULT_F_PROL;
     std::string       ext_h5 = DEFAULT_EXT_H5;
 
     std::ostringstream filename;
