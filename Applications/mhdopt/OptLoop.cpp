@@ -97,7 +97,7 @@ void optimization_loop(EquationsMap& e_map_in)  {
 std::string intgr_fname = e_map_in._utils._files.get_basepath()     + "/" +
                           e_map_in._utils._files.get_frtmap().get("OUTPUT_DIR")  + "/" +
                           e_map_in._utils._files.get_frtmap().get("OUTTIME_DIR") + "/" +
-                          e_map_in._utils._files.get_frtmap().get("INTEGRAL");
+			  "integral.txt";
 
  std::ofstream intgr_fstream;
 

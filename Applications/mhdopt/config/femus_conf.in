@@ -87,27 +87,12 @@ INPUT_DIR     input/
 OUTPUT_DIR    output/
 F_MESH_READ    straightQ3D2x2x2ZERO.gam
 
-
-
-# ----  BCHandling  --------------
-# external ibc file
-IBC           case 
-BDRY_SUFFIX   _bd
-
-# --------------------------------------------------
-# ----  MyApp log  --------------
-# --------------------------------------------------
-RUN_LOG    run
-PETSC_FEMUS_LOG  petsc_main.log 
+</Files>
 
 # **********************NON_LIBRARY, specific application *****************************
 # now, here is a problem: WE ABSOLUTELY MUST DISTINGUISH  BETWEEN LIBRARY STRINGS and APPLICATION STRINGS
+# if a user has to set filenames then he can do that directly in his source files... here is only for library-related filenames...
 
-# ------- OPT CONTROL -----------
-INTEGRAL   integral.txt
-
-
-</Files>
 
 
 # ================================================================================================================================

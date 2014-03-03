@@ -514,7 +514,7 @@ void Files::CheckIODirectories() {
 //I'd prefer passing the file name explicitly
 
     std::string abs_runlog = get_basepath() + "/" + get_frtmap().get("OUTPUT_DIR") 
-    + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + get_frtmap().get("RUN_LOG");
+    + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_RUN_LOG;
 
 //  std::ofstream file;  //if a filestream dies, then also its stream-buffer dies ?!? 
 //                       //So I have to declare it outside? Yes. This seems to work.

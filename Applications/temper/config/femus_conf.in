@@ -84,32 +84,11 @@ geomel_type   0           # ==== both for the App and for Gencase ======  # ====
 <Files>
 # std::string  # mesh file consistency
 
-# ----  BCHandling  --------------
-# external ibc file
-IBC           case 
-BDRY_SUFFIX   _bd
-
-# --------------------------------------------------
-# ----  MyApp log  --------------
-# --------------------------------------------------
-RUN_LOG    run
-PETSC_FEMUS_LOG  petsc_main.log 
-
-# all of these will be moved inside the library ####################
-
-
 # ======== AAA leave OUTPUT_DIR like this for now!
 INPUT_DIR     input/
 OUTPUT_DIR    output/
 F_MESH_READ    inclQ2D2x2.gam
 # ======== this last one is Only Gencase # we recognize the file format from the extension: .gam=gambit, .med=salome
-
-
-# ********************** NON_LIBRARY, specific application *****************************
-
-# ------- OPT CONTROL -----------
-INTEGRAL   integral.txt
-
 
 </Files>
 

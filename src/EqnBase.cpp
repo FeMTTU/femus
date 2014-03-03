@@ -838,12 +838,12 @@ void EqnBase::initVectors() {
 
 void EqnBase::GenBc() {
   
-    std::string  basepath = _utils._files.get_basepath();
-    std::string input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
-    std::string       ibc = _utils._files.get_frtmap().get("IBC");
-    std::string  ext_xdmf = DEFAULT_EXT_XDMF;
-    std::string    ext_h5 = DEFAULT_EXT_H5;
-    std::string  bdry_suffix = _utils._files.get_frtmap().get("BDRY_SUFFIX");
+    std::string     basepath = _utils._files.get_basepath();
+    std::string    input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
+    std::string          ibc = DEFAULT_IBC;
+    std::string     ext_xdmf = DEFAULT_EXT_XDMF;
+    std::string       ext_h5 = DEFAULT_EXT_H5;
+    std::string  bdry_suffix = DEFAULT_BDRY_SUFFIX;
     
     std::ostringstream ibc_fileh5;
     ibc_fileh5  << basepath << "/" << input_dir << "/" << ibc << ext_h5;
@@ -1089,7 +1089,7 @@ void EqnBase::PrintBc(std::string namefile) {
 
     hid_t file_id = H5Fopen(namefile.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
 
-    std::string  bdry_suffix = _utils._files.get_frtmap().get("BDRY_SUFFIX");
+    std::string  bdry_suffix = DEFAULT_BDRY_SUFFIX;
 
     const uint Lev_pick_bc_NODE_dof = _NoLevels-1;  //we use the FINE Level as reference
     
@@ -1525,7 +1525,7 @@ void EqnBase::GenIc() {
   
     std::string   basepath = _utils._files.get_basepath();
     std::string  input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
-    std::string        ibc = _utils._files.get_frtmap().get("IBC");
+    std::string        ibc = DEFAULT_IBC;
     std::string     ext_h5 = DEFAULT_EXT_H5;
     std::ostringstream ibc_filexmf;
     ibc_filexmf << basepath << "/"<< input_dir << ibc << ext_h5;

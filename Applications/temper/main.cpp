@@ -227,7 +227,7 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 
   // ============  log ================================
 #ifdef FEMUS_HAVE_PETSC
-  std::string petsc_femus_log = files.get_frtmap().get("PETSC_FEMUS_LOG");
+  std::string petsc_femus_log = "petsc_main.log";
   std::ostringstream petsc_log;
   petsc_log <<  files.get_basepath() + "/" + files.get_frtmap().get("OUTPUT_DIR")
             << "/" << files.get_frtmap().get("OUTTIME_DIR") << "/" << petsc_femus_log;
