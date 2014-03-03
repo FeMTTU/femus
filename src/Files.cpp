@@ -382,8 +382,8 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
 /*(iproc==0)*/ CopyFile(mesh_in,mesh_out); 
    
 //copy multimesh.xmf
-   std::string  mmesh_in = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + get_frtmap().get("MULTIMESH") + get_frtmap().get("EXT_XDMF");
-   std::string  mmesh_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  get_frtmap().get("MULTIMESH") + get_frtmap().get("EXT_XDMF");
+   std::string  mmesh_in = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + get_frtmap().get("MULTIMESH") + DEFAULT_EXT_XDMF;
+   std::string  mmesh_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  get_frtmap().get("MULTIMESH") + DEFAULT_EXT_XDMF;
 /*(iproc==0)*/ CopyFile(mmesh_in,mmesh_out); 
 
 //copy MG files

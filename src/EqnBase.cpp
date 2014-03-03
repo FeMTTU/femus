@@ -841,7 +841,7 @@ void EqnBase::GenBc() {
     std::string  basepath = _utils._files.get_basepath();
     std::string input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
     std::string       ibc = _utils._files.get_frtmap().get("IBC");
-    std::string  ext_xdmf = _utils._files.get_frtmap().get("EXT_XDMF");
+    std::string  ext_xdmf = DEFAULT_EXT_XDMF;
     std::string    ext_h5 = DEFAULT_EXT_H5;
     std::string  bdry_suffix = _utils._files.get_frtmap().get("BDRY_SUFFIX");
     

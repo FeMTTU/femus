@@ -374,7 +374,7 @@ void Mesh::PrintForVisualizationAllLEVAllVB()  {
   std::string   output_dir = _utils._files.get_frtmap().get("OUTPUT_DIR");
   std::string  outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
   std::string     basemesh = _utils._files.get_frtmap().get("BASEMESH");
-  std::string     ext_xdmf = _utils._files.get_frtmap().get("EXT_XDMF");
+  std::string     ext_xdmf = DEFAULT_EXT_XDMF;
   std::string       ext_h5 = DEFAULT_EXT_H5;
   std::string      connlin = _utils._files.get_frtmap().get("CONNLIN");
 
