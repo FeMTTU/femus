@@ -901,17 +901,17 @@ void elem_type::JacobianSur1D(const double vt[][27],const unsigned &ig,
 }
 
 //---------------------------------------------------------------------------------------------------------
-void elem_type::Jacobian3D(const double vt[][27],const unsigned &ig,
-                           double &Weight, double *other_phi, double gradphi[][3]) const {
+void elem_type::Jacobian3D(const vector < vector < double > > &vt,const unsigned &ig,
+                           double &Weight, vector < double > &other_phi, vector < double > &gradphi) const {
   double Jac[3][3];
   double JacI[3][3];
   for (double *pt_d=Jac[0]; pt_d<Jac[0]+9; pt_d++) *pt_d=0.;
   const double *dfx=dphidxi[ig];
   const double *dfy=dphideta[ig];
   const double *dfz=dphidzeta[ig];
-  const double *vx=vt[0];
-  const double *vy=vt[1];
-  const double *vz=vt[2];
+  const double *vx=&vt[0][0];
+  const double *vy=&vt[1][0];
+  const double *vz=&vt[2][0];
   for (int inode=0; inode<nc_; inode++,dfx++,dfy++,dfz++,vx++,vy++,vz++) {
     double *pt_d=Jac[0];
     *(pt_d++)+=(*dfx)*(*vx);
@@ -940,13 +940,14 @@ void elem_type::Jacobian3D(const double vt[][27],const unsigned &ig,
 
   Weight=det*GaussWeight[ig];
 
-  double *gradf=gradphi[0];
+  double *other_f=&other_phi[0];
+  double *gradf=&gradphi[0];
   double *fi=phi[ig];
   dfx=dphidxi[ig];
   dfy=dphideta[ig];
   dfz=dphidzeta[ig];
-  for (int inode=0; inode<nc_; inode++,other_phi++,fi++,dfx++,dfy++,dfz++) {
-    *other_phi=*fi;
+  for (int inode=0; inode<nc_; inode++,other_f++,fi++,dfx++,dfy++,dfz++) {
+    *other_f=*fi;
     double *pt_d=JacI[0];
     for (int j=0; j<3; j++) {
       *(gradf++)=(*dfx)*(*pt_d)+(*dfy)*(*(pt_d+1))+(*dfz)*(*(pt_d+2));
@@ -956,16 +957,16 @@ void elem_type::Jacobian3D(const double vt[][27],const unsigned &ig,
 }
 
 //---------------------------------------------------------------------------------------------------------
-void elem_type::Jacobian2D(const double vt[][27],const unsigned &ig,
-                           double &Weight, double *other_phi, double gradphi[][3]) const {
+void elem_type::Jacobian2D(const vector < vector < double > > &vt,const unsigned &ig,
+                           double &Weight, vector < double > &other_phi, vector < double > &gradphi) const {
 
   double Jac[2][2];
   double JacI[2][2];
   for (double *pt_d=Jac[0]; pt_d<Jac[0]+4; pt_d++) *pt_d=0.;
   const double *dfx=dphidxi[ig];
   const double *dfy=dphideta[ig];
-  const double *vx=vt[0];
-  const double *vy=vt[1];
+  const double *vx=&vt[0][0];
+  const double *vy=&vt[1][0];
   for (int inode=0; inode<nc_; inode++,dfx++,dfy++,vx++,vy++) {
     double *pt_d=Jac[0];
     *(pt_d++)+=(*dfx)*(*vx);
@@ -982,43 +983,45 @@ void elem_type::Jacobian2D(const double vt[][27],const unsigned &ig,
 
   Weight=det*GaussWeight[ig];
 
-  double *gradf=gradphi[0];
+  double *other_f=&other_phi[0];
+  double *gradf=&gradphi[0];
   double *fi=phi[ig];
   dfx=dphidxi[ig];
   dfy=dphideta[ig];
-  for (int inode=0; inode<nc_; inode++,other_phi++,fi++,dfx++,dfy++) {
-    *other_phi=*fi;
+  for (int inode=0; inode<nc_; inode++,other_f++,fi++,dfx++,dfy++) {
+    *other_f=*fi;
     double *pt_d=JacI[0];
     for (int j=0; j<2; j++) {
       *(gradf++)=(*dfx)*(*pt_d)+(*dfy)*(*(pt_d+1));
       pt_d+=2;
     }
-    *(gradf++)=0.;
+    //*(gradf++)=0.;
   }
 }
 
 //---------------------------------------------------------------------------------------------------------
-void elem_type::Jacobian1D(const double vt[][27],const unsigned &ig,
-                           double &Weight, double *other_phi, double gradphi[][3]) const {
+void elem_type::Jacobian1D(const vector < vector < double > > &vt,const unsigned &ig,
+                           double &Weight, vector < double > &other_phi, vector < double > &gradphi) const {
 
   double Jac=0.;
 
   const double *dfx=dphidxi[ig];
-  const double *vx=vt[0];
+  const double *vx=&vt[0][0];
 
   for (int inode=0; inode<nc_; inode++,dfx++,vx++) {
     Jac+=(*dfx)*(*vx);
   }
   Weight=Jac*GaussWeight[ig];
 
-  double *gradf=gradphi[0];
+  double *other_f=&other_phi[0];
+  double *gradf=&gradphi[0];
   double *fi=phi[ig];
   dfx=dphidxi[ig];
-  for (int inode=0; inode<nc_; inode++,other_phi++,fi++,dfx++) {
-    *other_phi=*fi;
+  for (int inode=0; inode<nc_; inode++,other_f++,fi++,dfx++) {
+    *other_f=*fi;
     *(gradf++)=(*dfx);
-    *(gradf++)=0.;
-    *(gradf++)=0.;
+    //*(gradf++)=0.;
+    //*(gradf++)=0.;
   }
 }
 

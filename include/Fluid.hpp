@@ -30,6 +30,7 @@ public:
   double get_Prandtl_number();
   double get_Rayleigh_number();
   unsigned get_physical_model();
+  double get_Peclet_number();
 
 
 };

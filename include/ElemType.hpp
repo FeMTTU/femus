@@ -92,14 +92,14 @@ public:
                                       double &Weight, double *other_phi, double gradphi[][3], double normal[3]) const;
 
 
-  void Jacobian3D(const double vt[][27],const unsigned &ig,
-                  double &Weight, double *other_phi, double gradphi[][3])const;
-  void Jacobian2D(const double vt[][27],const unsigned &ig,
-                  double &Weight, double *other_phi,double gradphi[][3]) const;
-  void Jacobian1D(const double vt[][27],const unsigned &ig,
-                  double &Weight, double *other_phi, double gradphi[][3]) const;
-  void (elem_type::*Jacobian_ptr)(const double vtx[][27],const unsigned &ig,
-                                  double &Weight, double *other_phi, double gradphi[][3]) const;
+  void Jacobian3D(const vector < vector < double > > &vt,const unsigned &ig,
+                  double &Weight, vector < double > &other_phi, vector < double > &gradphi)const;
+  void Jacobian2D(const vector < vector < double > > &vt,const unsigned &ig,
+                  double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
+  void Jacobian1D(const vector < vector < double > > &vt,const unsigned &ig,
+                  double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
+  void (elem_type::*Jacobian_ptr)(const vector < vector < double > > &vt,const unsigned &ig,
+                                  double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
 
   double* GetPhi(const unsigned &ig) const;
 

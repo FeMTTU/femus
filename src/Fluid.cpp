@@ -83,5 +83,7 @@ double Fluid::get_Rayleigh_number() {
   return _Rayleigh;
 };
 
-
+double Fluid::get_Peclet_number() {
+  return _Peclet;
+};
 
