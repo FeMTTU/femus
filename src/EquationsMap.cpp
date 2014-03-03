@@ -414,7 +414,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) {
         std::string     ext_xdmf = DEFAULT_EXT_XDMF;
         std::string     aux_xdmf = DEFAULT_AUX_XDMF;
         std::string      connlin = DEFAULT_CONNLIN;
-        std::string  bdry_suffix = _utils._files.get_frtmap().get("BDRY_SUFFIX");
+        std::string  bdry_suffix = DEFAULT_BDRY_SUFFIX;
 
         //FE print
         std::string DofType[QL];

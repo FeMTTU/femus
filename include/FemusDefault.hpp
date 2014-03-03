@@ -37,17 +37,15 @@
 #define DEFAULT_LAST_RUN      "run_to_restart_from"
 #define DEFAULT_NEW_RUN       "new_run"
 // // // // # ----  BCHandling  -------------- // # external ibc file
-// // // #define DEFAULT_IBC           "case" 
-// // // #define DEFAULT_BDRY_SUFFIX   "_bd"
+#define DEFAULT_IBC           "case" 
+#define DEFAULT_BDRY_SUFFIX   "_bd"
 // // // // # ----  log  --------------
-// // // #define DEFAULT_RUN_LOG    run
-// // // #define DEFAULT_PETSC_FEMUS_LOG  petsc_main.log 
+#define DEFAULT_RUN_LOG       "run"
  
 
 #define DEFAULT_BASEPATH     "./"
 #define DEFAULT_FEMDIR       "fem/"
 #define DEFAULT_CONTRIBDIR   "contrib/"
-#define DEFAULT_APPDIR       "Applications/" //TODO not used anymore
 #define DEFAULT_CONFIGDIR    "config/"
 #define DEFAULT_RUNTIMECONF  "femus_conf.in"
 //*********************************************
