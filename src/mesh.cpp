@@ -127,7 +127,7 @@ void Mesh::ReadMeshFile()   {
   std::string  output_dir = _utils._files.get_frtmap().get("OUTPUT_DIR");
   std::string outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
   std::string    basemesh = _utils._files.get_frtmap().get("BASEMESH");
-  std::string      ext_h5 = _utils._files.get_frtmap().get("EXT_H5");
+  std::string      ext_h5 = DEFAULT_EXT_H5;
   
   std::ostringstream meshname;
   meshname << basepath  << "/" << output_dir << "/" << outtime_dir << "/" << basemesh << ext_h5;
@@ -375,7 +375,7 @@ void Mesh::PrintForVisualizationAllLEVAllVB()  {
   std::string  outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
   std::string     basemesh = _utils._files.get_frtmap().get("BASEMESH");
   std::string     ext_xdmf = _utils._files.get_frtmap().get("EXT_XDMF");
-  std::string       ext_h5 = _utils._files.get_frtmap().get("EXT_H5");
+  std::string       ext_h5 = DEFAULT_EXT_H5;
   std::string      connlin = _utils._files.get_frtmap().get("CONNLIN");
 
   std::ostringstream top_file; top_file << basemesh << connlin << ext_h5;
@@ -443,7 +443,7 @@ void Mesh::PrintConnLinAllLEVAllVB()  {
     std::string  output_dir = _utils._files.get_frtmap().get("OUTPUT_DIR");
     std::string outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
  
-    std::string    ext_h5   = _utils._files.get_frtmap().get("EXT_H5");
+    std::string    ext_h5   = DEFAULT_EXT_H5;
     std::string    connlin  = _utils._files.get_frtmap().get("CONNLIN");
 
   std::ostringstream namefile;
