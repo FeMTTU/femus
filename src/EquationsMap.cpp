@@ -187,9 +187,9 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) {
         std::string output_dir  = _utils._files.get_frtmap().get("OUTPUT_DIR");
         std::string outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
         std::string basesol     = _utils._files.get_frtmap().get("BASESOL");
-        std::string basemesh    = _utils._files.get_frtmap().get("BASEMESH");
+        std::string basemesh    = DEFAULT_BASEMESH;
         std::string aux_xdmf    = DEFAULT_AUX_XDMF;
-        std::string connlin     = _utils._files.get_frtmap().get("CONNLIN");
+        std::string connlin     = DEFAULT_CONNLIN;
         std::string     ext_h5  = DEFAULT_EXT_H5;
         std::string    ext_xdmf = DEFAULT_EXT_XDMF;
 
@@ -409,11 +409,11 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) {
         std::string   output_dir = _utils._files.get_frtmap().get("OUTPUT_DIR");
         std::string  outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
         std::string     basecase = _utils._files.get_frtmap().get("BASECASE");
-        std::string     basemesh = _utils._files.get_frtmap().get("BASEMESH");
+        std::string     basemesh = DEFAULT_BASEMESH;
         std::string       ext_h5 = DEFAULT_EXT_H5;
         std::string     ext_xdmf = DEFAULT_EXT_XDMF;
         std::string     aux_xdmf = DEFAULT_AUX_XDMF;
-        std::string      connlin = _utils._files.get_frtmap().get("CONNLIN");
+        std::string      connlin = DEFAULT_CONNLIN;
         std::string  bdry_suffix = _utils._files.get_frtmap().get("BDRY_SUFFIX");
 
         //FE print
@@ -509,8 +509,8 @@ void EquationsMap::PrintXDMFTopologyGeometry(std::ofstream& out, const uint Leve
     //Mesh
     uint n_elements = _mesh._NoElements[vb][Level];
 
-    std::string basemesh   = _utils._files.get_frtmap().get("BASEMESH");
-    std::string connlin    = _utils._files.get_frtmap().get("CONNLIN");
+    std::string basemesh   = DEFAULT_BASEMESH;
+    std::string connlin    = DEFAULT_CONNLIN;
     std::string     ext_h5 = DEFAULT_EXT_H5;
     
     //connectivity
@@ -543,10 +543,10 @@ void EquationsMap::TransientSetup()  {
     std::string outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
 
     std::string    basecase = _utils._files.get_frtmap().get("BASECASE");
-    std::string    basemesh = _utils._files.get_frtmap().get("BASEMESH");
+    std::string    basemesh = DEFAULT_BASEMESH;
 
     std::string  aux_xdmf   = DEFAULT_AUX_XDMF;
-    std::string  connlin    = _utils._files.get_frtmap().get("CONNLIN");
+    std::string  connlin    = DEFAULT_CONNLIN;
 
 
     std::string lastrun_str;

@@ -85,10 +85,6 @@ geomel_type   0           # ==== both for the App and for Gencase ======  # ====
 # std::string  # mesh file consistency
 
 # all of these will be moved inside the library ####################
-# ----  Mesh class ----
-BASEMESH      mesh 
-MULTIMESH     multimesh 
-CONNLIN      _conn_lin 
 # ----  MULTIGRID  --------------
 F_MATRIX     Matrix 
 F_PROL       Prol 

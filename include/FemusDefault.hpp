@@ -21,9 +21,9 @@
 #define DEFAULT_AUX_XDMF       "Xdmf.dtd" 
 // TODO ".gam" and ".med" for gambit and salome should be known to libmesh but we don't want to put OUR OWN includes in LIBMESH!!! 
 // // // // # ----  Mesh class ----
-// // // #define DEFAULT_BASEMESH      "mesh" 
-// // // #define DEFAULT_MULTIMESH     "multimesh" 
-// // // #define DEFAULT_CONNLIN       "_conn_lin" 
+#define DEFAULT_BASEMESH      "mesh" 
+#define DEFAULT_MULTIMESH     "multimesh" 
+#define DEFAULT_CONNLIN       "_conn_lin" 
 // // // // # ----  Multigrid  --------------
 // // // #define DEFAULT_F_MATRIX     "Matrix" 
 // // // #define DEFAULT_F_PROL       "Prol" 
