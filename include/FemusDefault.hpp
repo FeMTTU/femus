@@ -15,7 +15,7 @@
 //*********************************************
 //************** FILES ************************
 #define DEFAULT_EXT_H5         ".h5"
-// // // #define DEFAULT_EXT_XDMF       ".xmf" 
+#define DEFAULT_EXT_XDMF       ".xmf" 
 // // // #define DEFAULT_EXT_IN         ".in" 
 // // // #define DEFAULT_EXT_LOG        ".log"
 // // // #define DEFAULT_AUX_XDMF      "Xdmf.dtd" 

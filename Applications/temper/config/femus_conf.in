@@ -1,7 +1,6 @@
 
 <Gencase>
-# int
-# ==== in library routines
+# int # library
 
 libmesh_gen 1   
 mgops_gen   1
@@ -10,8 +9,7 @@ mgops_gen   1
 
 
 <TimeLoop>
-# double
-# ==== in library routines
+# double # library
 
 dt          0.1  
 itime       0.0  
@@ -24,7 +22,7 @@ restart     0    # ==== both for the App and for Gencase ======
 
 
 <Box>
-# double
+# double # mesh file consistency  
 # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======   # ==== DO IT ONLY FOR Gencase ======   # USER must provide this info explicitly
 
  lxb 0.    
@@ -48,7 +46,7 @@ nintervz   8
 # ================================================================================================================================
 
 <Utils>
-# double
+# double # mesh file consistency
 
 # ==== only for the App ==================================
 
@@ -88,7 +86,7 @@ geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines  
 
 
 <Files>
-# std::string
+# std::string  # mesh file consistency
 
 # all of these will be moved inside the library ####################
 # extensions *********
@@ -132,15 +130,11 @@ PETSC_FEMUS_LOG  petsc_main.log
 # all of these will be moved inside the library ####################
 
 
-
-# DIRECTORIES *******
 # ======== AAA leave OUTPUT_DIR like this for now!
-# ======== the convention is that all the keys ending with _DIR are directory names, so put a trailing "/" on them!
 INPUT_DIR     input/
 OUTPUT_DIR    output/
-# ======== only gencase # we recognize the file format from the extension: .gam=gambit, .med=salome
 F_MESH_READ    inclQ2D2x2.gam
-# **********************************************************
+# ======== this last one is Only Gencase # we recognize the file format from the extension: .gam=gambit, .med=salome
 
 
 # ********************** NON_LIBRARY, specific application *****************************
@@ -153,10 +147,9 @@ INTEGRAL   integral.txt
 
 
 # ================================================================================================================================
-# the following are supposed to be only APPLICATION variables
 
 <Physics>
-# double
+# double # application only
 
 # ReferenceValueForNon-dimensionalizationVelLenTemperature
 Uref      1.
