@@ -40,7 +40,7 @@ void Files::InitCaseData() {
   //construct the common output file stream for the data
   //first,build its name
    std::ostringstream data_name;
-   data_name << get_basepath() << "/" << get_frtmap().get("OUTPUT_DIR") << get_frtmap().get("OUTTIME_DIR") << get_frtmap().get("CASE_DATA");
+   data_name << get_basepath() << "/" << get_frtmap().get("OUTPUT_DIR") << get_frtmap().get("OUTTIME_DIR") << DEFAULT_CASE_DATA;
 
    //open the common output file stream
      if (paral::get_rank() == 0 )   {

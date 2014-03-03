@@ -82,18 +82,12 @@ geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines  
 
 <Files>
 # std::string
+
 INPUT_DIR     input/
 OUTPUT_DIR    output/
 F_MESH_READ    straightQ3D2x2x2ZERO.gam
 
 
-# ----  Time, sort of  --------------
-BASESOL       sol 
-BASECASE      case 
-BASETIME      time 
-CASE_DATA     case.txt
-# RESTART FILES
-# if a run reaches the end, then we write it as a "default restart" run
 LAST_RUN    run_to_restart_from
 NEW_RUN      new_run
 

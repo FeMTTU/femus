@@ -127,7 +127,7 @@ void EquationsMap::PrintSolHDF5(const uint t_flag ) {
         std::string    basepath = _utils._files.get_basepath();
         std::string output_dir  = _utils._files.get_frtmap().get("OUTPUT_DIR");
         std::string outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
-        std::string    basesol  = _utils._files.get_frtmap().get("BASESOL");
+        std::string    basesol  = DEFAULT_BASESOL;
         std::string     ext_h5  = DEFAULT_EXT_H5;
         std::ostringstream filename;
         filename << basepath << "/" << output_dir << outtime_dir
@@ -186,7 +186,7 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) {
         std::string    basepath = _utils._files.get_basepath();
         std::string output_dir  = _utils._files.get_frtmap().get("OUTPUT_DIR");
         std::string outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
-        std::string basesol     = _utils._files.get_frtmap().get("BASESOL");
+        std::string basesol     = DEFAULT_BASESOL;
         std::string basemesh    = DEFAULT_BASEMESH;
         std::string aux_xdmf    = DEFAULT_AUX_XDMF;
         std::string connlin     = DEFAULT_CONNLIN;
@@ -268,7 +268,7 @@ void EquationsMap::ReadSol(const uint t_step, double& time_out) {
     std::string    basepath = _utils._files.get_basepath();
     std::string output_dir  = _utils._files.get_frtmap().get("OUTPUT_DIR");
     std::string outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
-    std::string    basesol  = _utils._files.get_frtmap().get("BASESOL");
+    std::string    basesol  = DEFAULT_BASESOL;
     std::string   ext_xdmf  = DEFAULT_EXT_XDMF;
     std::string     ext_h5  = DEFAULT_EXT_H5;
 // ---------------------------------------------------
@@ -357,7 +357,7 @@ void EquationsMap::PrintCaseHDF5(const uint t_init) {
         std::string    basepath = _utils._files.get_basepath();
         std::string output_dir  = _utils._files.get_frtmap().get("OUTPUT_DIR");
         std::string outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
-        std::string    basecase = _utils._files.get_frtmap().get("BASECASE");
+        std::string    basecase = DEFAULT_BASECASE;
         std::string   ext_xdmf  = DEFAULT_EXT_XDMF;
         std::string     ext_h5  = DEFAULT_EXT_H5;
 
@@ -408,7 +408,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) {
         std::string    input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
         std::string   output_dir = _utils._files.get_frtmap().get("OUTPUT_DIR");
         std::string  outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
-        std::string     basecase = _utils._files.get_frtmap().get("BASECASE");
+        std::string     basecase = DEFAULT_BASECASE;
         std::string     basemesh = DEFAULT_BASEMESH;
         std::string       ext_h5 = DEFAULT_EXT_H5;
         std::string     ext_xdmf = DEFAULT_EXT_XDMF;
@@ -537,12 +537,12 @@ void EquationsMap::TransientSetup()  {
     std::string    basepath = _utils._files.get_basepath();
     std::string  output_dir = _utils._files.get_frtmap().get("OUTPUT_DIR");
     std::string   lastrun_f = _utils._files.get_frtmap().get("LAST_RUN");
-    std::string     basesol = _utils._files.get_frtmap().get("BASESOL");
+    std::string     basesol = DEFAULT_BASESOL;
     std::string    ext_xdmf = DEFAULT_EXT_XDMF;
     std::string      ext_h5 = DEFAULT_EXT_H5;
     std::string outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
 
-    std::string    basecase = _utils._files.get_frtmap().get("BASECASE");
+    std::string    basecase = DEFAULT_BASECASE;
     std::string    basemesh = DEFAULT_BASEMESH;
 
     std::string  aux_xdmf   = DEFAULT_AUX_XDMF;
