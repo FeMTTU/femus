@@ -84,14 +84,7 @@ geomel_type   0           # ==== both for the App and for Gencase ======  # ====
 <Files>
 # std::string  # mesh file consistency
 
-# all of these will be moved inside the library ####################
-# --------------------------------------------------
-# ----  Time, sort of  --------------
-# --------------------------------------------------
-BASESOL       sol 
-BASECASE      case 
-BASETIME      time 
-CASE_DATA     case.txt
+
 # RESTART FILES
 # if a run reaches the end, then we write it as a "default restart" run
 LAST_RUN    run_to_restart_from

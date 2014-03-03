@@ -29,10 +29,10 @@
 #define DEFAULT_F_PROL       "Prol" 
 #define DEFAULT_F_REST       "Rest" 
 // // // // # ----  Time, sort of  --------------
-// // // #define DEFAULT_BASESOL       "sol" 
-// // // #define DEFAULT_BASECASE      "case" 
-// // // #define DEFAULT_BASETIME      "time" 
-// // // #define DEFAULT_CASE_DATA     "case.txt"
+#define DEFAULT_BASESOL       "sol" 
+#define DEFAULT_BASECASE      "case" 
+#define DEFAULT_BASETIME      "time" 
+#define DEFAULT_CASE_DATA     "case.txt"
 // // // // # ---- RESTART -------- // # if a run reaches the end, then we write it as a "default restart" run
 // // // #define DEFAULT_LAST_RUN    "run_to_restart_from"
 // // // #define DEFAULT_NEW_RUN      "new_run"

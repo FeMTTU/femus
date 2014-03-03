@@ -65,9 +65,9 @@
         std::string    basepath     = _utils._files.get_basepath();
         std::string    output_dir   = _utils._files.get_frtmap().get("OUTPUT_DIR");
         std::string    outtime_dir  = _utils._files.get_frtmap().get("OUTTIME_DIR");
-        std::string    basetime     = _utils._files.get_frtmap().get("BASETIME");
+        std::string    basetime     = DEFAULT_BASETIME;
         std::string    ext_xdmf     = DEFAULT_EXT_XDMF;
-        std::string    basesol      = _utils._files.get_frtmap().get("BASESOL");
+        std::string    basesol      = DEFAULT_BASESOL;
         std::string    aux_xdmf     = DEFAULT_AUX_XDMF;
 
 // =================================
