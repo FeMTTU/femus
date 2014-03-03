@@ -8,7 +8,7 @@
 #include <memory>
 #include <cstdlib>
 
-#include "petsc_linear_solverM.hpp"
+#include "PetscLinearSolverM.hpp"
 #include "Preconditioner.hpp"
 
 //------------------------------------------------------------------
