@@ -14,6 +14,8 @@ FEMuS includes,
 
 - Write the function names with CapitalLettersLikeThisAndNotWithUnderscores.
 
+- Try to put the includes EXPLICITLY WHERE THEY HAVE TO BE, 
+  and not thinking that somewhere some include will lead me to the file i need...
 
 - In the SCRIPTS and in the MAKEFILES, almost all the variables have a FM_ or FEMUS_ prefix.
  The variables without this prefix are like this because 
@@ -22,3 +24,6 @@ FEMuS includes,
  
  - when you create a NEW HEADER, make sure you change the INCLUDE GUARD.
  Then, make sure you add the new files to git.
+ 
+ - when you change the name of a file, header or source, recompile all the applications
+   and make sure that everything compiles correctly.

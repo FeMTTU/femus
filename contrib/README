@@ -2,6 +2,12 @@
 ###### LIBRARY ###############
 ##############################
 
+###### LIBRARY FEATURES #########
+Integration only with open source software
+Closed symulation cycle, from mesh to output
+Multiphysics applications
+Restart feature
+
 
 ###### How to install ###########
 
@@ -29,23 +35,18 @@ You have to open another shell and set new values
 
 ###### How to set the parameters for an application ###########
 - See the files in the config/ directory
-- Compile first the application then the gencase
 
 ###### How to change the mesh file of an application ###########
 - Put the mesh file in the config/ directory 
 - Set the filename in the femus_conf.in file
 - Set libmesh_gen to 0
-- Set DIMENSION to the consistent value with the mesh file
-- Recompile the application then the gencase (whatever order)
 
 ###### IF YOU WANT TO REVERT TO LIBMESH GENERATED MESH ###########
-- Set libmesh_gen to 1
-- Set DIMENSION accordingly (we have only Box-type domains with libmesh)
+- Set libmesh_gen back to 1
 - Don't have to move any mesh file
-- ONLY IF you CHANGED the DIMENSION, recompile first the application then the gencase
 
 ####### How to schedule a suite of runs ##########
-Folders with time files
+- Folders with time files
 
 ####### How to switch from one application to another ##########
 - Just change folder. 
@@ -53,3 +54,11 @@ Folders with time files
 ####### How to create a new application ##########
 - Copy the structure of an existing application, in particular the directories
    and the configuration files
+- Define your own Equations, Quantities and Physics based on the BASE CLASSES provided with the library.   
+- Instantiate in the main one object of each of the following types:
+  <Gencase>, <Box>, <TimeLoop>, <Utils>, <Files>, <Physics>
+  (notice, these are the names of the TYPES, not of the instantiations...
+   suppose you want to have more than one instantiation, then you should give DIFFERENT TAGS 
+   for each separate instantiation...)
+   We should define for each type if they need a RuntimeMap and what parameters they need in it...
+   Yeah, in the constructor of such an object we must put the check "if the file isn't there, abort"
