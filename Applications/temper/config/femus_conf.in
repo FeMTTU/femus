@@ -1,37 +1,43 @@
 
 <Gencase>
+# int
+# ==== in library routines
 
-libmesh_gen 1           # ==== in library routines
-mgops_gen   1            # ==== in library routines
+libmesh_gen 1   
+mgops_gen   1
 
 </Gencase>
 
 
 <TimeLoop>
 # double
+# ==== in library routines
 
-dt          0.1   # ==== in library routines
-itime       0.0   # ==== in library routines
-nsteps      5     # ==== in library routines
-printstep   1     # ==== in library routines
-ndigits     4     # ==== in library routines
-restart     0     # ==== in library routines  # ==== both for the App and for Gencase ======
+dt          0.1  
+itime       0.0  
+nsteps      5    
+printstep   1    
+ndigits     4    
+restart     0    # ==== both for the App and for Gencase ======
 
 </TimeLoop>
 
 
 <Box>
+# double
+# =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======   # ==== DO IT ONLY FOR Gencase ======   # USER must provide this info explicitly
 
- lxb 0.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======   # ==== DO IT ONLY FOR Gencase ======   # USER must provide this info explicitly
- lxe 1.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======   # ==== DO IT ONLY FOR Gencase ======  # USER must provide this info explicitly
+ lxb 0.    
+ lxe 1.  
 
- lyb 0.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======    # ==== DO IT ONLY FOR Gencase ====== # USER must provide this info explicitly
- lye 2.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======    # ==== DO IT ONLY FOR Gencase ====== # USER must provide this info explicitly
+ lyb 0.  
+ lye 2.  
 
- lzb 0.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======  # USER must provide this info explicitly
- lze 1.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======  # USER must provide this info explicitly
+ lzb 0.  
+ lze 1.  
 
 # only for libmesh_gen=1
+
 nintervx   8
 nintervy   8 
 nintervz   8
@@ -43,10 +49,6 @@ nintervz   8
 
 <Utils>
 # double
-
-# ------<ViewerOrder>------------------------------# mesh order for the viewer, this is not mathematical, it is a misc ---<Utils></Utils>---
-viewer_order 1       # ==== not in library routines, but library-type
-# ------</ViewerOrder>------------------------------
 
 # ==== only for the App ==================================
 
@@ -82,65 +84,28 @@ geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines  
 
 </Utils>
 
+# ================================================================================================================================
 
-
-# ==============================================================================================================================
-# ==============================================================================================================================
-# ============== runtime parameters for the Files class ========================================================================
-# ==============================================================================================================================
-# interesting, the file holds the name of itself...
-# we should make a distinction between LIBRARY VARIABLES and NON-LIBRARY VARIABLES
 
 <Files>
 # std::string
 
-# ********** general, libfemus configuration, both gencase and App ****************
+# all of these will be moved inside the library ####################
 # extensions *********
-EXT_H5         .h5
 EXT_XDMF       .xmf 
 EXT_IN         .in 
 EXT_LOG        .log
-
-# DIRECTORIES *******
-# AAA leave OUTPUT_DIR like this for now!
-# the convention is that all the keys ending with _DIR are directory names, so put a trailing "/" on them!
-INPUT_DIR     input/
-OUTPUT_DIR    output/
 AUX_XDMF      Xdmf.dtd 
-# **********************************************************
-
-
-# **********************gencase*****************************
-# --------------------------------------------------
-# ---- GENCASE class, external mesh file ----
-# --------------------------------------------------
-# ======only gencase
-# we recognize the file format from the extension: .gam=gambit, .med=salome
 GAMBIT_EXT     .gam 
 SALOME_EXT     .med 
- F_MESH_READ    inclQ2D2x2.gam
-# F_MESH_READ    inclQ3D4x4x4.gam
-
-# =======gencase, output for the App and input to the app
-
-# --------------------------------------------------
 # ----  Mesh class ----
-# --------------------------------------------------
 BASEMESH      mesh 
 MULTIMESH     multimesh 
 CONNLIN      _conn_lin 
-
-# --------------------------------------------------
 # ----  MULTIGRID  --------------
-# --------------------------------------------------
 F_MATRIX     Matrix 
 F_PROL       Prol 
 F_REST       Rest 
-# *****************************
-
-
-# **********only for the App ****************
-
 # --------------------------------------------------
 # ----  Time, sort of  --------------
 # --------------------------------------------------
@@ -164,6 +129,20 @@ BDRY_SUFFIX   _bd
 RUN_LOG    run
 PETSC_FEMUS_LOG  petsc_main.log 
 
+# all of these will be moved inside the library ####################
+
+
+
+# DIRECTORIES *******
+# ======== AAA leave OUTPUT_DIR like this for now!
+# ======== the convention is that all the keys ending with _DIR are directory names, so put a trailing "/" on them!
+INPUT_DIR     input/
+OUTPUT_DIR    output/
+# ======== only gencase # we recognize the file format from the extension: .gam=gambit, .med=salome
+F_MESH_READ    inclQ2D2x2.gam
+# **********************************************************
+
+
 # ********************** NON_LIBRARY, specific application *****************************
 
 # ------- OPT CONTROL -----------
@@ -174,12 +153,10 @@ INTEGRAL   integral.txt
 
 
 # ================================================================================================================================
-# ============== runtime parameters for the Physics class ========================================================================
-# ================================================================================================================================
 # the following are supposed to be only APPLICATION variables
 
-
 <Physics>
+# double
 
 # ReferenceValueForNon-dimensionalizationVelLenTemperature
 Uref      1.

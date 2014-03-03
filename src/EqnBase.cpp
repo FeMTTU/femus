@@ -842,7 +842,7 @@ void EqnBase::GenBc() {
     std::string input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
     std::string       ibc = _utils._files.get_frtmap().get("IBC");
     std::string  ext_xdmf = _utils._files.get_frtmap().get("EXT_XDMF");
-    std::string    ext_h5 = _utils._files.get_frtmap().get("EXT_H5");
+    std::string    ext_h5 = DEFAULT_EXT_H5;
     std::string  bdry_suffix = _utils._files.get_frtmap().get("BDRY_SUFFIX");
     
     std::ostringstream ibc_fileh5;
@@ -1526,7 +1526,7 @@ void EqnBase::GenIc() {
     std::string   basepath = _utils._files.get_basepath();
     std::string  input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
     std::string        ibc = _utils._files.get_frtmap().get("IBC");
-    std::string     ext_h5 = _utils._files.get_frtmap().get("EXT_H5");
+    std::string     ext_h5 = DEFAULT_EXT_H5;
     std::ostringstream ibc_filexmf;
     ibc_filexmf << basepath << "/"<< input_dir << ibc << ext_h5;
     std::ifstream in(ibc_filexmf.str().c_str());
@@ -2034,7 +2034,7 @@ void EqnBase::initMGOps() {
     std::string     f_matrix = _utils._files.get_frtmap().get("F_MATRIX");
     std::string       f_rest = _utils._files.get_frtmap().get("F_REST");
     std::string       f_prol = _utils._files.get_frtmap().get("F_PROL");
-    std::string       ext_h5 = _utils._files.get_frtmap().get("EXT_H5");
+    std::string       ext_h5 = DEFAULT_EXT_H5;
 
     std::ostringstream filename;
     std::string filename_base;

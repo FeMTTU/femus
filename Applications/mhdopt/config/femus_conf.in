@@ -2,8 +2,8 @@
 
 <Gencase>
 
-  libmesh_gen 1           # ==== in library routines
-  mgops_gen   1            # ==== in library routines
+  libmesh_gen 1     
+  mgops_gen   1     
 
 </Gencase>
 
@@ -11,27 +11,28 @@
 <TimeLoop>
 # double
 
-dt          1.  # ==== in library routines
-itime       0.0   # ==== in library routines
-nsteps      5    # ==== in library routines
-printstep   1     # ==== in library routines
-ndigits     4     # ==== in library routines
-restart     0     # ==== both for the App and for Gencase ======
+dt          1. 
+itime       0.0 
+nsteps      5   
+printstep   1   
+ndigits     4   
+restart     0   
 
 </TimeLoop>
 
 <Box>
 
- lxb 0.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======   # ==== DO IT ONLY FOR Gencase ======   # USER must provide this info explicitly
- lxe 1.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======   # ==== DO IT ONLY FOR Gencase ======  # USER must provide this info explicitly
+ lxb 0.  
+ lxe 1.  
 
- lyb 0.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======    # ==== DO IT ONLY FOR Gencase ====== # USER must provide this info explicitly
- lye 2.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======    # ==== DO IT ONLY FOR Gencase ====== # USER must provide this info explicitly
+ lyb 0.  
+ lye 2.  
 
- lzb 0.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======  # USER must provide this info explicitly
- lze 1.    # =MESH CONSISTENCY(libmesh_gen=0)=== # ==== both for the App and for Gencase ======  # USER must provide this info explicitly
+ lzb 0.    
+ lze 1.    
 
 # only for libmesh_gen=1
+
 nintervx   4
 nintervy   4
 nintervz   4
@@ -43,10 +44,6 @@ nintervz   4
 
 <Utils>
 # double
-
-# ------<ViewerOrder>------------------------------# mesh order for the viewer, this is not mathematical, it is a misc ---<Utils></Utils>---
-viewer_order 1       # ==== not in library routines, but library-type
-# ------</ViewerOrder>------------------------------
 
 # ==== only for the App ==================================
 
@@ -85,18 +82,12 @@ geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines  
 
 
 # ==============================================================================================================================
-# ==============================================================================================================================
-# ============== runtime parameters for the Files class ========================================================================
-# ==============================================================================================================================
-# interesting, the file holds the name of itself...
-# we should make a distinction between LIBRARY VARIABLES and NON-LIBRARY VARIABLES
 
 <Files>
 # std::string
 
 # ********** general, libfemus configuration, both gencase and App ****************
 # extensions *********
-EXT_H5         .h5
 EXT_XDMF       .xmf 
 EXT_IN         .in 
 EXT_LOG        .log
@@ -119,24 +110,8 @@ AUX_XDMF      Xdmf.dtd
 # we recognize the file format from the extension: .gam=gambit, .med=salome
 GAMBIT_EXT     .gam 
 SALOME_EXT     .med 
-# F_MESH_READ  elsy.neu
-# F_MESH_READ    straightQ3D10x10x10.neu
-# F_MESH_READ    straightQ3D4x4x4.neu
-# F_MESH_READ        inclQ3D4x4x4.neu 
-# F_MESH_READ        inclQ3D2x2x2.neu
  F_MESH_READ    straightQ3D2x2x2ZERO.neu
-#  F_MESH_READ    straightQ2DunstructZERO.neu
-#  F_MESH_READ    xmas_tree2D.neu
-#  F_MESH_READ    xmas_tree3D.neu
 
-# F_MESH_READ    straightQ3DunstructZERO.neu
-
-# F_MESH_READ        inclQ2D2x2.neu
-# F_MESH_READ        inclQ2D10x10.neu
-
-# F_MESH_READ  mesh_sl.neu 
-# F_MESH_READ  mesh_slmolti.neu 
-# F_MESH_READ  mesh.med 
 
 # =======gencase, output for the App and input to the app
 
@@ -183,8 +158,6 @@ PETSC_FEMUS_LOG  petsc_main.log
 
 # **********************NON_LIBRARY, specific application *****************************
 # now, here is a problem: WE ABSOLUTELY MUST DISTINGUISH  BETWEEN LIBRARY STRINGS and APPLICATION STRINGS
-# this variable is only used by the application, and it can be added by the user for its own purposes.
-# so, we must make some distinction between ONLY LIBRARY FILES and APPLICATION FILES
 
 # ------- OPT CONTROL -----------
 INTEGRAL   integral.txt

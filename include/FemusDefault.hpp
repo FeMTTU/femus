@@ -13,7 +13,38 @@
 
 
 //*********************************************
-//************** FILESYSTEM *******************
+//************** FILES ************************
+#define DEFAULT_EXT_H5         ".h5"
+// // // #define DEFAULT_EXT_XDMF       ".xmf" 
+// // // #define DEFAULT_EXT_IN         ".in" 
+// // // #define DEFAULT_EXT_LOG        ".log"
+// // // #define DEFAULT_AUX_XDMF      "Xdmf.dtd" 
+// // // #define DEFAULT_GAMBIT_EXT     ".gam" 
+// // // #define DEFAULT_SALOME_EXT     ".med" 
+// // // // # ----  Mesh class ----
+// // // #define DEFAULT_BASEMESH      "mesh" 
+// // // #define DEFAULT_MULTIMESH     "multimesh" 
+// // // #define DEFAULT_CONNLIN       "_conn_lin" 
+// // // // # ----  Multigrid  --------------
+// // // #define DEFAULT_F_MATRIX     "Matrix" 
+// // // #define DEFAULT_F_PROL       "Prol" 
+// // // #define DEFAULT_F_REST       "Rest" 
+// // // // # ----  Time, sort of  --------------
+// // // #define DEFAULT_BASESOL       "sol" 
+// // // #define DEFAULT_BASECASE      "case" 
+// // // #define DEFAULT_BASETIME      "time" 
+// // // #define DEFAULT_CASE_DATA     "case.txt"
+// // // // # ---- RESTART -------- // # if a run reaches the end, then we write it as a "default restart" run
+// // // #define DEFAULT_LAST_RUN    "run_to_restart_from"
+// // // #define DEFAULT_NEW_RUN      "new_run"
+// // // // # ----  BCHandling  -------------- // # external ibc file
+// // // #define DEFAULT_IBC           "case" 
+// // // #define DEFAULT_BDRY_SUFFIX   "_bd"
+// // // // # ----  log  --------------
+// // // #define DEFAULT_RUN_LOG    run
+// // // #define DEFAULT_PETSC_FEMUS_LOG  petsc_main.log 
+ 
+
 #define DEFAULT_BASEPATH     "./"
 #define DEFAULT_FEMDIR       "fem/"
 #define DEFAULT_CONTRIBDIR   "contrib/"

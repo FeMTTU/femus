@@ -1050,7 +1050,7 @@ void GenCase::PrintMultimeshXdmf() {
     std::string multimesh = _utils._files.get_frtmap().get("MULTIMESH");
     std::string ext_xdmf  = _utils._files.get_frtmap().get("EXT_XDMF");
     std::string basemesh  = _utils._files.get_frtmap().get("BASEMESH");
-    std::string ext_h5    = _utils._files.get_frtmap().get("EXT_H5");
+    std::string ext_h5    = DEFAULT_EXT_H5;
 
     std::ostringstream inmesh_xmf;
     inmesh_xmf << basepath << "/" << input_dir << multimesh << ext_xdmf;
@@ -1117,7 +1117,7 @@ void GenCase::PrintMeshHDF5()   {
     std::string basepath  = _utils._files.get_basepath();
     std::string input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
     std::string basemesh  = _utils._files.get_frtmap().get("BASEMESH");
-    std::string ext_h5    = _utils._files.get_frtmap().get("EXT_H5");
+    std::string ext_h5    = DEFAULT_EXT_H5;
 
     std::ostringstream inmesh;
     inmesh << basepath << "/" << input_dir << basemesh << ext_h5;
@@ -1650,7 +1650,7 @@ void GenCase::ComputeProl()  {
     std::string basepath  = _utils._files.get_basepath();
     std::string input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
     std::string f_prol    = _utils._files.get_frtmap().get("F_PROL");
-    std::string ext_h5    = _utils._files.get_frtmap().get("EXT_H5");
+    std::string ext_h5    = DEFAULT_EXT_H5;
 
     std::ostringstream name;
     name << basepath << "/" << input_dir << f_prol   << ext_h5;
@@ -2253,7 +2253,7 @@ void GenCase::ComputeMatrix() {
     std::string basepath  = _utils._files.get_basepath();
     std::string input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
     std::string f_matrix  = _utils._files.get_frtmap().get("F_MATRIX");
-    std::string ext_h5    = _utils._files.get_frtmap().get("EXT_H5");
+    std::string ext_h5    = DEFAULT_EXT_H5;
 
         std::ostringstream name;
         name << basepath << "/" << input_dir << f_matrix << ext_h5;
@@ -2574,7 +2574,7 @@ void GenCase::ComputeRest( ) {
         std::string basepath  = _utils._files.get_basepath();
         std::string input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
         std::string f_rest    = _utils._files.get_frtmap().get("F_REST");
-        std::string ext_h5    = _utils._files.get_frtmap().get("EXT_H5");
+        std::string ext_h5    = DEFAULT_EXT_H5;
 
         std::ostringstream filename;
         filename << basepath << "/" << input_dir << f_rest << ext_h5;
