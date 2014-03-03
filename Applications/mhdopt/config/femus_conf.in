@@ -45,13 +45,11 @@ nintervz   4
 <Utils>
 # double
 
-# ==== only for the App ==================================
-
 # ----<BCHandling>-----------------
 ibc_gen     0            # ==== in library routines
 bdry_toll   0.0000001    # ==== not in library routines, but library-type
 penalty_val 1.e10        # ==== not in library routines, but library-type
-# ----</BCHandling>-----------------
+
 
 # --------<Domain>---------, not nec. a Box--
 domain   0      # this should be OUTSIDE  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # ==== DO IT ONLY FOR Gencase ====== # USER must provide this info explicitly # 0=Box# 1=Cylinder# Whatever the rest
@@ -60,22 +58,21 @@ thetax    0.       # ==== not in library routines, but library-type
 thetay    0.       # ==== not in library routines, but library-type
 thetaz    0.       # ==== not in library routines, but library-type
 # thetaz0.523598775598
-# --------</Domain>---------, not nec. a Box--
 
 
 # === only for Gencase ==================================== we'll do a ##<GenCase> tag later
 # ----<EqnBase,Mesh,MultiGrid...>----------
 nolevels    1            # ==== in library routines     # USER must provide this info explicitly 
-# ----</EqnBase,Mesh,MultiGrid...>----------
+
 # ------<Mesh>---------------------------------------
 meshql        1           # ------<ElementMapping>------- # for THE APP # =MESH CONSISTENCY=== # ==== in library routines      # USER must provide this info explicitly # depends on the kind of Mesh that is used# depends basically on the Boundary Mesh# 0=QUADRATIC Mapping  1=LINEAR Mapping
 mesh_ord      0             # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# 0=QUADRATIC GeomElements (Quad8,Quad9,Hex27,...)# 1=LINEAR GeomElements (Quad4,Hex8,...)
 numgeomels    1             # =MESH CONSISTENCY===  # ==== in library routines     # quadrilateral,triangular,pyramidal,...        # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# no support for hybrid mesh yet
 dimension     3                # =MESH CONSISTENCY===  # ==== in library routines 
-# ------</Mesh>----------------------------------------
+
 # ------<GeomEl>---------------------------------------
 geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
-# ------</GeomEl>-----------------------------------------
+
 
 </Utils>
 
@@ -87,10 +84,6 @@ geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines  
 # std::string
 
 # ********** general, libfemus configuration, both gencase and App ****************
-# extensions *********
-EXT_XDMF       .xmf 
-EXT_IN         .in 
-EXT_LOG        .log
 
 # DIRECTORIES *******
 # AAA leave OUTPUT_DIR like this for now!  # AAA now the name folder is based on time
@@ -98,22 +91,9 @@ EXT_LOG        .log
 # So far we dont put the config here, it would be contradictory
 INPUT_DIR     input/
 OUTPUT_DIR    output/
-AUX_XDMF      Xdmf.dtd 
+F_MESH_READ    straightQ3D2x2x2ZERO.gam
 # **********************************************************
 
-
-# **********************gencase*****************************
-# --------------------------------------------------
-# ---- GENCASE class, external mesh file ----
-# --------------------------------------------------
-# ======only gencase
-# we recognize the file format from the extension: .gam=gambit, .med=salome
-GAMBIT_EXT     .gam 
-SALOME_EXT     .med 
- F_MESH_READ    straightQ3D2x2x2ZERO.neu
-
-
-# =======gencase, output for the App and input to the app
 
 # --------------------------------------------------
 # ----  Mesh class ----

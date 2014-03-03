@@ -525,7 +525,7 @@ void Files::CheckIODirectories() {
 //////// MULTIPRINT // // if (paral::get_rank() == 0) {  //only processor 0 has to open the file stream
  
     std::stringstream runlogproc;
-    runlogproc << abs_runlog << "_p" << paral::get_rank() << get_frtmap().get("EXT_LOG"); //multiprint
+    runlogproc << abs_runlog << "_p" << paral::get_rank() << DEFAULT_EXT_LOG; //multiprint
     
     abs_runlog = runlogproc.str();
     
