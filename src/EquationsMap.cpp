@@ -277,7 +277,7 @@ void EquationsMap::ReadSol(const uint t_step, double& time_out) {
     // open file -----------------------------
     std::ostringstream namefile;
     namefile << basepath << "/" << output_dir << outtime_dir
-    << basesol << "." << setw(ndigits) << setfill('0') << t_step << ext_xdmf;
+    << basesol << "." << setw(ndigits) << setfill('0') << t_step << "_l" << (_mesh._NoLevels - 1) << ext_xdmf;  //TODO here we should avoid doing this process TWICE because we already do it in the TransientSetup calling function
 
 #ifdef DEFAULT_PRINT_INFO // --------  info ------------------ 
     std::cout << "\n EquationsMap::read_soln: Reading time  from "
@@ -314,8 +314,7 @@ void EquationsMap::ReadSol(const uint t_step, double& time_out) {
     namefile << basepath << "/" << output_dir << outtime_dir
     << basesol << "." << setw(ndigits) << setfill('0') << t_step << ext_h5;
     //if i put the path of this file to be relative, will the read depend on where I launched the executable...
-    // or where the executable is I think
-    //anyay,absolute for now
+    // or where the executable is I think... no, the path is given by where the executable is LAUNCHED
 
 #ifdef DEFAULT_PRINT_INFO  // --------------- info ---------------
     std::cout << "\n EquationsMap::read_soln: Reading from file "
@@ -600,14 +599,18 @@ void EquationsMap::TransientSetup()  {
             stringstream tidxin;
             tidxin << setw(ndigits) << setfill('0') << _timeloop._t_idx_in;
             _utils._files._case_data <<	std::cout << " Restarting from run: " << lastone << std::endl;
-            std::string cp_src_xmf = basepath + "/" + output_dir + "/" + lastone + "/" + basesol + "." + tidxin.str() + ext_xdmf;
+	    std::ostringstream cp_src_xmf_stream;
+	    cp_src_xmf_stream << basepath << "/" << output_dir << "/" << lastone << "/" << basesol << "." << tidxin.str() << "_l" << (_mesh._NoLevels - 1) << ext_xdmf;
+            std::string cp_src_xmf = cp_src_xmf_stream.str();
             fstream file_cp_xmf(cp_src_xmf.c_str());
             if (!file_cp_xmf.is_open()) {
                 std::cout <<"No xmf file"<< std::endl;
                 abort();
             }
 
-            std::string cp_src_h5 = basepath + "/" + output_dir + "/" + lastone + "/" + basesol + "." + tidxin.str()  + ext_h5;
+	    std::ostringstream cp_src_h5_stream;
+	    cp_src_h5_stream << basepath << "/" << output_dir << "/" << lastone << "/" << basesol << "." << tidxin.str() /*<< "_l" << (_mesh._NoLevels - 1)*/ << ext_h5;
+            std::string cp_src_h5 = cp_src_h5_stream.str();
             fstream file_cp_h5(cp_src_h5.c_str());
             if (!file_cp_h5.is_open()) {
                 std::cout <<"No h5 file"<< std::endl;

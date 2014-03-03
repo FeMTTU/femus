@@ -15,7 +15,7 @@ itime       0.0   # ==== in library routines
 nsteps      5     # ==== in library routines
 printstep   1     # ==== in library routines
 ndigits     4     # ==== in library routines
-restart     1     # ==== in library routines  # ==== both for the App and for Gencase ======
+restart     3     # ==== in library routines  # ==== both for the App and for Gencase ======
 
 </TimeLoop>
 
