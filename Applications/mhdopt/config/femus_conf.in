@@ -82,31 +82,12 @@ geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines  
 
 <Files>
 # std::string
-
-# ********** general, libfemus configuration, both gencase and App ****************
-
-# DIRECTORIES *******
-# AAA leave OUTPUT_DIR like this for now!  # AAA now the name folder is based on time
-# the convention is that all the keys ending with _DIR are directory names, so put a trailing "/" on them!
-# So far we dont put the config here, it would be contradictory
 INPUT_DIR     input/
 OUTPUT_DIR    output/
 F_MESH_READ    straightQ3D2x2x2ZERO.gam
-# **********************************************************
-# --------------------------------------------------
-# ----  MULTIGRID  --------------
-# --------------------------------------------------
-F_MATRIX     Matrix 
-F_PROL       Prol 
-F_REST       Rest 
-# *****************************
 
 
-# **********only for the App ****************
-
-# --------------------------------------------------
 # ----  Time, sort of  --------------
-# --------------------------------------------------
 BASESOL       sol 
 BASECASE      case 
 BASETIME      time 

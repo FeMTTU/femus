@@ -387,16 +387,16 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
 /*(iproc==0)*/ CopyFile(mmesh_in,mmesh_out); 
 
 //copy MG files
-   std::string  op_in = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + get_frtmap().get("F_MATRIX") + DEFAULT_EXT_H5;
-   std::string  op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  get_frtmap().get("F_MATRIX") + DEFAULT_EXT_H5;
+   std::string  op_in = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
+   std::string  op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
-   op_in  = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + get_frtmap().get("F_REST") + DEFAULT_EXT_H5;
-   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  get_frtmap().get("F_REST") + DEFAULT_EXT_H5;
+   op_in  = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_F_REST + DEFAULT_EXT_H5;
+   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_F_REST + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
-   op_in  = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + get_frtmap().get("F_PROL") + DEFAULT_EXT_H5;
-   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  get_frtmap().get("F_PROL") + DEFAULT_EXT_H5;
+   op_in  = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_F_PROL + DEFAULT_EXT_H5;
+   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_F_PROL + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
 //TODO we should also copy the files in the config/ directory, so we keep track of ALL the input!!!
