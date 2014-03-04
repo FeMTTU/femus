@@ -29,7 +29,6 @@
 // ========================================================
 GenCase::GenCase(Utils& mgutils_in,GeomEl& geomel_in,
                  std::vector<FEElemBase*>& feelems_in):
-        _rtmap("Gencase",mgutils_in._files.get_basepath()),
         _utils(mgutils_in),
         _dimension( (uint) mgutils_in._urtmap.get("dimension")),
         _GeomEl(geomel_in),
@@ -125,7 +124,7 @@ void GenCase::GenerateCase()   {
 //===============================================================================
 void GenCase::GenerateCoarseMesh(Mesh* msh_coarse)  {
 
-    const uint libmesh_gen = _rtmap.get("libmesh_gen");
+    const uint libmesh_gen = _utils._urtmap.get("libmesh_gen");
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t start_timeA=std::clock();
@@ -628,15 +627,11 @@ void GenCase::CreateStructuresLevSubd() {
 
         PrintMultimeshXdmf();
 
-        const uint mgops_gen = _rtmap.get("mgops_gen");
-
-        if (mgops_gen) {
             //this involves only VOLUME STUFF, no boundary stuff
             // instead, not only NODES but also ELEMENTS are used
-            ComputeMatrix(); 
-            ComputeProl(); 
-            ComputeRest();
-        }
+        ComputeMatrix(); 
+        ComputeProl(); 
+        ComputeRest();
 
 //=====================================
 //delete

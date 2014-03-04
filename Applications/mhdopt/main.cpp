@@ -67,10 +67,6 @@ int main(int argc, char** argv) {
   FemusInit init(argc,argv);
 #endif
 
-   std::cout << "***** REMEMBER TO PASS THE VALUES TO COMMAND LINE ****** " << std::endl;
-
-  CmdLine::parse(argc,argv);
-  
 // ======= Files ========================
   Files files; 
   files.get_frtmap().read();
@@ -93,35 +89,12 @@ int main(int argc, char** argv) {
   // ======= Utils ========================
   Utils utils(files);
   utils._urtmap.read();  
-// // // //======== NOW WE DON'T USE THE COMMAND LINE FOR THE VALUES, but the CONFIG ==============
-// // // //======== SUBSTITUTE WITH COMMAND LINE VALUES==== modify the just read Utils map==============
-// // //     utils.get_utils_map().erase("dt");
-// // //     //you must erase before inserting the modified value
-// // //     //erase doesnt give error if the parameter is not there
-// // //  //PATH TO THE ERROR //when,I get_utils_map , it must be a reference!   
-// // //     utils.set_par("dt",CmdLine::get("--dt"));
-// // // //======== END SUBSTITUTE WITH COMMAND LINE VALUES================
   utils._urtmap.print();
       
   OptPhysics phys(utils);
   phys._physrtmap.read();
-// // // //======== NOW WE DON'T USE THE COMMAND LINE FOR THE VALUES, but the CONFIG ==============
-// // // //======== SUBSTITUTE WITH COMMAND LINE VALUES===== modify the just read Phys map ===========
-// // //      phys.get_phys_map().erase("alphaVel");
-// // //      phys.set_par("alphaVel",CmdLine::get("--alphaVel"));
-// // //      phys.get_phys_map().erase("udes");
-// // //      phys.set_par("udes",CmdLine::get("--udes"));
-// // //      phys.get_phys_map().erase("Bref");
-// // //      phys.set_par("Bref",CmdLine::get("--Bref"));
-// // // 
-// // //      std::cout <<"FROM COMMAND LINE dt " << timeloop........("dt") << std::endl;
-// // //      std::cout <<"FROM COMMAND LINE AlphaVel " << phys.get_par("alphaVel") << std::endl;
-// // //      std::cout <<"FROM COMMAND LINE udes " << phys.get_par("udes") << std::endl;
-// // //      std::cout <<"FROM COMMAND LINE Bref " << phys.get_par("Bref") << std::endl;
-// // // //======== END SUBSTITUTE WITH COMMAND LINE VALUES================
-
- phys.set_nondimgroups();
- phys._physrtmap.print();
+  phys.set_nondimgroups();
+  phys._physrtmap.print();
 
 //===========================================
   const double Lref  = phys._physrtmap.get("Lref");     // reference L
@@ -332,7 +305,6 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   return 0;
 }
 
-//TODO change the QuantityMap constructor so that it receives the mesh directly
 
 
 //manual breakpoint
