@@ -134,7 +134,8 @@ int main(int argc,char **args) {
        time_step++) {
    
     //Solve with V-cycle or F-cycle
-    nl_td_ml_prob.Solve("NS",10,1,1,"V-Cycle");
+    if(time_step) nl_td_ml_prob.Solve("NS",15,1,1,"F-Cycle");
+    else nl_td_ml_prob.Solve("NS",15,1,1,"V-Cycle");
   
     //The update of the acceleration must be done before the update of the other variables
     nl_td_ml_prob._NewmarkAccUpdate();

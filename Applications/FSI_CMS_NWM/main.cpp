@@ -141,14 +141,14 @@ int main(int argc,char **args) {
 //   nl_td_ml_prob.SetTolerances("FSI",1.e-12,1.e-20,1.e+50,1);
   
   
-//   //Solver II (Vanka-smoother-MPSC)
+  //Solver II (Vanka-smoother-MPSC)
   nl_td_ml_prob.AddStabilization("FSI",true);
   nl_td_ml_prob.SetSolverFineGrids("FSI","GMRES");
-  nl_td_ml_prob.SetPreconditionerFineGrids("FSI","ILU");
+  nl_td_ml_prob.SetPreconditionerFineGrids("FSI","LU");
   nl_td_ml_prob.SetVankaSchurOptions(false,1);
   nl_td_ml_prob.SetTolerances("FSI",1.e-12,1.e-20,1.e+50,1);
   nl_td_ml_prob.SetSchurTolerances("FSI",1.e-12,1.e-20,1.e+50,4);
-  nl_td_ml_prob.SetDimVankaBlock("FSI",3);                //2^lev 1D 4^lev 2D 8^lev 3D
+  nl_td_ml_prob.SetDimVankaBlock("FSI",4);                //2^lev 1D 4^lev 2D 8^lev 3D
 
   //End System Variables; ==============================
 
@@ -172,7 +172,7 @@ int main(int argc,char **args) {
        time_step++) {
    
     //Solve with V-cycle or F-cycle
-    nl_td_ml_prob.Solve("FSI",15,0,3,"F-Cycle");
+    nl_td_ml_prob.Solve("FSI",15,0,3,"V-Cycle");
   
     //The update of the acceleration must be done before the update of the other variables
     //update time step

@@ -676,7 +676,7 @@ void NonLinearMultiLevelProblem::Solve(const char pdename[], unsigned const &Vcy
     
   std::pair<int, double> solver_info;
      
-  for ( unsigned igridn=full_cycle + (!full_cycle)*_gridr; igridn <= _gridn; igridn++) {
+  for ( unsigned igridn=full_cycle + (!full_cycle)*_gridn; igridn <= _gridn; igridn++) {
     cout << endl << "    ************* Level Max: " << igridn << " *************\n" << endl;
     for ( unsigned nonlinear_cycle = 0; nonlinear_cycle < nonlinear_Vcycle_numeber; nonlinear_cycle++ ) { //non linear cycle
       clock_t start_cycle_time = clock();
