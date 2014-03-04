@@ -13,10 +13,10 @@ mgops_gen   1
 
 dt          0.1  
 itime       0.0  
-nsteps      5    
+nsteps      1    
 printstep   1    
 ndigits     4    
-restart     0    # ==== both for the App and for Gencase ======
+restart     1    # ==== both for the App and for Gencase ======
 
 </TimeLoop>
 
@@ -54,7 +54,7 @@ bdry_toll   0.0000001    # ==== not in library routines, but library-type
 penalty_val 1.e10        # ==== not in library routines, but library-type
 
 # --------<Domain>---------, not nec. a Box--
-domain   0      # this should be OUTSIDE  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # ==== DO IT ONLY FOR Gencase ====== # USER must provide this info explicitly # 0=Box# 1=Cylinder# Whatever the rest
+domain    0      # this should be OUTSIDE  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # ==== DO IT ONLY FOR Gencase ====== # USER must provide this info explicitly # 0=Box# 1=Cylinder# Whatever the rest
 transflag 0       # ==== not in library routines, but library-type
 thetax    0.       # ==== not in library routines, but library-type
 thetay    0.       # ==== not in library routines, but library-type
@@ -70,10 +70,8 @@ nolevels 3                # USER must provide this info explicitly
 meshql        1           # ------<ElementMapping>------- # for THE APP # =MESH CONSISTENCY=== # ==== in library routines      # USER must provide this info explicitly # depends on the kind of Mesh that is used# depends basically on the Boundary Mesh# 0=QUADRATIC Mapping  1=LINEAR Mapping
 mesh_ord      0           # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# 0=QUADRATIC GeomElements (Quad8,Quad9,Hex27,...)# 1=LINEAR GeomElements (Quad4,Hex8,...)
 numgeomels    1           # quadrilateral,triangular,pyramidal,...        # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# no support for hybrid mesh yet
+geomel_type   0           # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
 dimension     2              
-
-# ------<GeomEl>---------------------------------------
-geomel_type   0           # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
 
 
 </Utils>
