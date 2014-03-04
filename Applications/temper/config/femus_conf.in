@@ -1,58 +1,9 @@
 
-<Gencase>
-# int
-
-libmesh_gen 1   
-mgops_gen   1
-
-</Gencase>
-
-
-<TimeLoop>
-# double
-
-dt          0.1  
-itime       0.0  
-nsteps      5    
-printstep   1    
-ndigits     4    
-restart     0    # ==== both for the App and for Gencase ======
-
-</TimeLoop>
-
-
-<Box>
-# double # mesh file consistency (case libmesh_gen=0)  
-
- lxb 0.    
- lxe 1.  
-
- lyb 0.  
- lye 2.  
-
- lzb 0.  
- lze 1.  
-
-# only for libmesh_gen=1
-
-nintervx   8
-nintervy   8 
-nintervz   8
-
-transflag 0       # ==== not in library routines, but library-type
-thetax    0.       # ==== not in library routines, but library-type
-thetay    0.       # ==== not in library routines, but library-type
-thetaz    0.       # ==== not in library routines, but library-type
-# thetaz0.523598775598
-
-</Box>
-
-
-
 <Utils>
 # double # mesh file consistency
 
 # ------<Mesh>---------------------------------------
+libmesh_gen   1   
 nolevels      3                 
 domain        0           # Box, or whatever SHAPE...  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # 0=Box# 1=Cylinder# Whatever the rest
 meshql        1           # ------<ElementMapping>------- # for THE APP # =MESH CONSISTENCY=== # ==== in library routines # depends on the kind of Mesh that is used# depends basically on the Boundary Mesh# 0=QUADRATIC Mapping  1=LINEAR Mapping
@@ -79,6 +30,49 @@ F_MESH_READ    inclQ2D2x2.gam
 # ======== this last one is Only Gencase # we recognize the file format from the extension: .gam=gambit, .med=salome
 
 </Files>
+
+
+
+<TimeLoop>
+# double
+
+dt          0.1  
+itime       0.0  
+nsteps      5    
+printstep   1    
+ndigits     4    
+restart     0    # ==== both for the App and for Gencase ======
+
+</TimeLoop>
+
+
+
+
+<Box>
+# double # mesh file consistency (case libmesh_gen=0)  
+
+ lxb 0.    
+ lxe 1.  
+
+ lyb 0.  
+ lye 2.  
+
+ lzb 0.  
+ lze 1.  
+
+# only for libmesh_gen=1
+
+nintervx   8
+nintervy   8 
+nintervz   8
+
+transflag 0   
+thetax    0.  
+thetay    0.  
+thetaz    0.
+# thetaz0.523598775598
+
+</Box>
 
 
 

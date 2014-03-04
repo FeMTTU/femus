@@ -1,57 +1,10 @@
 
-<Gencase>
-# int 
-
-  libmesh_gen 1     
-  mgops_gen   1     
-
-</Gencase>
-
-
-<TimeLoop>
-# double
-
-dt          1. 
-itime       0.0 
-nsteps      5   
-printstep   1   
-ndigits     4   
-restart     0   
-
-</TimeLoop>
-
-<Box>
-# double
-
- lxb 0.  
- lxe 1.  
-
- lyb 0.  
- lye 2.  
-
- lzb 0.    
- lze 1.    
-
-# only for libmesh_gen=1
-
-nintervx   4
-nintervy   4
-nintervz   4
-
-transflag 0       # ==== not in library routines, but library-type
-thetax    0.       # ==== not in library routines, but library-type
-thetay    0.       # ==== not in library routines, but library-type
-thetaz    0.       # ==== not in library routines, but library-type
-# thetaz0.523598775598
-
-</Box>
-
-
 <Utils>
 # double
 
 # ------<Mesh>---------------------------------------
-nolevels      1       # ----<EqnBase,Mesh,MultiGrid...>----------
+libmesh_gen   1     
+nolevels      1       # ----<EqnBaseMeshMultiGrid>----------
 domain        0       # 0=Box# 1=Cylinder# Whatever the rest # this should be OUTSIDE  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # ==== DO IT ONLY FOR Gencase ====== 
 meshql        1           # ------<ElementMapping>------- # for THE APP # =MESH CONSISTENCY=== # ==== in library routines      # USER must provide this info explicitly # depends on the kind of Mesh that is used# depends basically on the Boundary Mesh# 0=QUADRATIC Mapping  1=LINEAR Mapping
 mesh_ord      0             # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# 0=QUADRATIC GeomElements (Quad8,Quad9,Hex27,...)# 1=LINEAR GeomElements (Quad4,Hex8,...)
@@ -73,9 +26,53 @@ penalty_val 1.e10        # ==== not in library routines, but library-type
 
 INPUT_DIR     input/
 OUTPUT_DIR    output/
-F_MESH_READ    straightQ3D2x2x2ZERO.gam
+F_MESH_READ   straightQ3D2x2x2ZERO.gam
 
 </Files>
+
+
+
+<TimeLoop>
+# double
+
+dt          1. 
+itime       0.0 
+nsteps      5   
+printstep   1   
+ndigits     4   
+restart     0   
+
+</TimeLoop>
+
+
+<Box>
+# double
+
+ lxb 0.  
+ lxe 1.  
+
+ lyb 0.  
+ lye 2.  
+
+ lzb 0.    
+ lze 1.    
+
+# only for libmesh_gen=1
+
+nintervx   4
+nintervy   4
+nintervz   4
+
+transflag 0 
+thetax    0.
+thetay    0.
+thetaz    0.
+# thetaz0.523598775598
+
+</Box>
+
+
+
 
 
 

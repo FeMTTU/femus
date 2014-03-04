@@ -27,9 +27,6 @@ class FEElemBase;
 
 class GenCase {
 
-public:
-    RunTimeMap<int>  _rtmap;
-
 protected:
 
     // Basic data ==========

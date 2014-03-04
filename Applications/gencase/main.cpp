@@ -126,8 +126,6 @@ std::vector<FEElemBase*> FEElements(QL); //these are basically used only for the
     
   // ========= GenCase =====
       GenCase gencase(utils,geomel,FEElements);
-      gencase._rtmap.read();
-      gencase._rtmap.print();
       gencase.GenerateCase();
 
   std::cout << "=======End of GenCase========" << std::endl;
