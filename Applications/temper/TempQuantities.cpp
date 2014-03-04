@@ -79,18 +79,17 @@ Velocity::Velocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uin
 void Velocity::Function_txyz(const double /*t*/,const double* xp, double* func) const {
 
   
-    //=====ROTATION of the Function
-    //this one is about the reference frame, 
-    //here instead we dont want to change the reference frame, 
-    //we just want to rotate the function but in a straight reference
-  const double thetaz = 0.*3.14/2.;//_qtymap._utils._urtmap.get("thetaz");
-
 
   Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
   // we should do this static_cast in the QUANTITY or QUANTITY MAP constructor
   //if there is some domain shape, we see what type it is and we do the static cast
   //if there is no domain shape, we dont need the domain.
   
+    //=====ROTATION of the Function
+    //this one is about the reference frame, 
+    //here instead we dont want to change the reference frame, 
+    //we just want to rotate the function but in a straight reference
+  const double thetaz = 0.*3.14/2.;  //const double thetaz = box->_boxrtmap.get("thetaz");
   
   //====== Physics
 //   TempPhysics *optphys; optphys = static_cast<TempPhysics*>(&(_qtymap._phys));
@@ -288,7 +287,8 @@ void Temperature::Function_txyz(const double/* t*/, const double* xp,double* tem
 void Temperature::heatflux_txyz(const double /*t*/, const double* /*xyz*/, double* qflux) const {
 
 // std::cout << "Temperature: Heatflux, check which coordinates are passed in here" << std::endl;
-//   double thetaz = _qtymap._utils._urtmap.get("thetaz");
+//     Box* box= static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
+//   const double thetaz = box->_boxrtmap.get("thetaz");
 
      qflux[0]=-2.1*0./**cos(thetaz)*/;
      qflux[1]=0./**sin(thetaz)*/;

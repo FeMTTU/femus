@@ -70,3 +70,9 @@ You have to open another shell and set new values
 - Do not change NUMBER OF PROCESSORS
 - Do not change NUMBER OF LEVELS
 - Do not change the OUTPUT FOLDERNAME
+
+######## How to ADD PARAMETERS to the runtime configuration file ############
+- One has to see if these will be LIBRARY parameters or APPLICATION parameters
+- In case one wants to add a parameter to the library, one HAS to DOCUMENT what that parameter is used for!
+- The idea is that the user DOES NOT ADD PARAMETERS that affect the library, but only he MODIFIES the values.
+- The only TAG in which the user can put THE PARAMETERS he WANTS is <Physics> which is fully application-oriented

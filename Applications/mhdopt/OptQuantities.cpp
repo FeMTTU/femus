@@ -175,17 +175,13 @@ DesVelocity::DesVelocity(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 
 void Velocity::Function_txyz(const double t,const double* xp, double* func) const {
 
-  
-    //=====ROTATION of the Function
-  const double thetaz = _qtymap._utils._urtmap.get("thetaz");
-
-
-
   Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
   // we should do this static_cast in the QUANTITY or QUANTITY MAP constructor
   //if there is some domain shape, we see what type it is and we do the static cast
   //if there is no domain shape, we dont need the domain.
   
+    //=====ROTATION of the Function
+  const double thetaz = box->_boxrtmap.get("thetaz");
   
   //====== Physics
   OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&(_qtymap._phys));
@@ -390,7 +386,8 @@ void Temperature::heatflux_txyz(const double t, const double* xyz, double* qflux
 //  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
 
 std::cout << "Temperature: Heatflux, check which coordinates are passed in here" << std::endl;
-  double thetaz = _qtymap._utils._urtmap.get("thetaz");
+  Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
+  const double thetaz = box->_boxrtmap.get("thetaz");
 
      qflux[0]=+700.*cos(thetaz);
      qflux[1]=+700.*sin(thetaz);
@@ -410,9 +407,11 @@ std::cout << "Temperature: Heatflux, check which coordinates are passed in here"
 void MagnFieldExt::Function_txyz(const double t,const double* xp, double* func) const {
 
   
-    //=====ROTATION of the Function
-  const double thetaz = _qtymap._utils._urtmap.get("thetaz");
-//============== PICK THE REQUIRED REFERENCE VALUES for the FUNCTION
+  //=====ROTATION of the Function
+  Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
+  const double thetaz = box->_boxrtmap.get("thetaz");
+
+  //============== PICK THE REQUIRED REFERENCE VALUES for the FUNCTION
   const double Bref   = _qtymap._phys._physrtmap.get("Bref");      //Uref*sqrt(rhof*MUMHD);   //in order to make S=1
 
 //function
@@ -493,9 +492,9 @@ void MagnFieldHom::Function_txyz(const double t, const double* xp, double* func)
   
    const double LHm =2.;  //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
 
-const double thetaz = _qtymap._utils._urtmap.get("thetaz");
+   const double thetaz = box->_boxrtmap.get("thetaz");
  
- const double magnitude = 0.*DpDzad/S*Lhalf/Lref*(sinh(Hm/LHm*Lref/Lhalf*xtr) - xtr*Lref/Lhalf*sinh(Hm/LHm)) / sinh(Hm/LHm);
+   const double magnitude = 0.*DpDzad/S*Lhalf/Lref*(sinh(Hm/LHm*Lref/Lhalf*xtr) - xtr*Lref/Lhalf*sinh(Hm/LHm)) / sinh(Hm/LHm);
 
   func[0] = -sin(thetaz)*magnitude; //0./Bref;
   func[1] = cos(thetaz)*magnitude; //DpDzad/S*Lhalf/Lref*(sinh(Hm/LHm*Lref/Lhalf*xtr) - xtr*Lref/Lhalf*sinh(Hm/LHm)) / sinh(Hm/LHm) ;
@@ -559,7 +558,7 @@ void DesVelocity::Function_txyz(const double t, const double* xp,double* func) c
   double S   = /*_qtymap._phys.*/optphys->_S;
  
   
-    Box* box= static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
+  Box* box= static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
   
   
   double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
@@ -567,7 +566,7 @@ void DesVelocity::Function_txyz(const double t, const double* xp,double* func) c
 
   double xtr = xp[0] - Lmid;
 
-  const double thetaz = _qtymap._utils._urtmap.get("thetaz");
+  const double thetaz = box->_boxrtmap.get("thetaz");
 
   //constant for the real reference length in the Hartmann number
   const double LHm =2.;   //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now

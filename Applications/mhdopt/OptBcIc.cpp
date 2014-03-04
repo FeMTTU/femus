@@ -70,7 +70,7 @@ void EqnNS::ic_read(double xp[],double u_value[], double el_xm[]) {
 //TODO here you should also rotate the ELEMENT COORDINATES  
   
 //rotation of the function  
-    double thetaz = _utils._urtmap.get("thetaz");
+    double thetaz = box->_boxrtmap.get("thetaz");
 
   
 #if (DIMENSION==2)
