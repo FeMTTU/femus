@@ -15,7 +15,7 @@ class Utils;
  
  public:
    
-   RunTimeMap<double> _boxrtmap;
+   RunTimeMap<double> _boxrtmap;  //TODO maybe later put this in the Domain father class...
    
     double* _lb;
     double* _le;

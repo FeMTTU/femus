@@ -1,6 +1,6 @@
 
-
 <Gencase>
+# int 
 
   libmesh_gen 1     
   mgops_gen   1     
@@ -21,6 +21,7 @@ restart     0
 </TimeLoop>
 
 <Box>
+# double
 
  lxb 0.  
  lxe 1.  
@@ -37,13 +38,26 @@ nintervx   4
 nintervy   4
 nintervz   4
 
+transflag 0       # ==== not in library routines, but library-type
+thetax    0.       # ==== not in library routines, but library-type
+thetay    0.       # ==== not in library routines, but library-type
+thetaz    0.       # ==== not in library routines, but library-type
+# thetaz0.523598775598
+
 </Box>
 
 
-# ================================================================================================================================
-
 <Utils>
 # double
+
+# ------<Mesh>---------------------------------------
+nolevels      1       # ----<EqnBase,Mesh,MultiGrid...>----------
+domain        0       # 0=Box# 1=Cylinder# Whatever the rest # this should be OUTSIDE  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # ==== DO IT ONLY FOR Gencase ====== 
+meshql        1           # ------<ElementMapping>------- # for THE APP # =MESH CONSISTENCY=== # ==== in library routines      # USER must provide this info explicitly # depends on the kind of Mesh that is used# depends basically on the Boundary Mesh# 0=QUADRATIC Mapping  1=LINEAR Mapping
+mesh_ord      0             # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# 0=QUADRATIC GeomElements (Quad8,Quad9,Hex27,...)# 1=LINEAR GeomElements (Quad4,Hex8,...)
+numgeomels    1             # =MESH CONSISTENCY===  # ==== in library routines     # quadrilateral,triangular,pyramidal,...        # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# no support for hybrid mesh yet
+geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
+dimension     3                # =MESH CONSISTENCY===  # ==== in library routines 
 
 # ----<BCHandling>-----------------
 ibc_gen     0            # ==== in library routines
@@ -51,34 +65,8 @@ bdry_toll   0.0000001    # ==== not in library routines, but library-type
 penalty_val 1.e10        # ==== not in library routines, but library-type
 
 
-# --------<Domain>---------, not nec. a Box--
-domain   0      # this should be OUTSIDE  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # ==== DO IT ONLY FOR Gencase ====== # USER must provide this info explicitly # 0=Box# 1=Cylinder# Whatever the rest
-transflag 0       # ==== not in library routines, but library-type
-thetax    0.       # ==== not in library routines, but library-type
-thetay    0.       # ==== not in library routines, but library-type
-thetaz    0.       # ==== not in library routines, but library-type
-# thetaz0.523598775598
-
-
-# === only for Gencase ==================================== we'll do a ##<GenCase> tag later
-# ----<EqnBase,Mesh,MultiGrid...>----------
-nolevels    1            # ==== in library routines     # USER must provide this info explicitly 
-
-# ------<Mesh>---------------------------------------
-meshql        1           # ------<ElementMapping>------- # for THE APP # =MESH CONSISTENCY=== # ==== in library routines      # USER must provide this info explicitly # depends on the kind of Mesh that is used# depends basically on the Boundary Mesh# 0=QUADRATIC Mapping  1=LINEAR Mapping
-mesh_ord      0             # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# 0=QUADRATIC GeomElements (Quad8,Quad9,Hex27,...)# 1=LINEAR GeomElements (Quad4,Hex8,...)
-numgeomels    1             # =MESH CONSISTENCY===  # ==== in library routines     # quadrilateral,triangular,pyramidal,...        # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# no support for hybrid mesh yet
-dimension     3                # =MESH CONSISTENCY===  # ==== in library routines 
-
-# ------<GeomEl>---------------------------------------
-geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
-
-
 </Utils>
 
-
-
-# ==============================================================================================================================
 
 <Files>
 # std::string
@@ -89,19 +77,10 @@ F_MESH_READ    straightQ3D2x2x2ZERO.gam
 
 </Files>
 
-# **********************NON_LIBRARY, specific application *****************************
-# now, here is a problem: WE ABSOLUTELY MUST DISTINGUISH  BETWEEN LIBRARY STRINGS and APPLICATION STRINGS
-# if a user has to set filenames then he can do that directly in his source files... here is only for library-related filenames...
-
-
-
-# ================================================================================================================================
-# ============== runtime parameters for the Physics class ========================================================================
-# ================================================================================================================================
-
 
 
 <Physics>
+# double
 
 # ReferenceValueForNon-dimensionalizationVelLenTemperature
 Uref      1.

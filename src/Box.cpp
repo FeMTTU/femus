@@ -68,8 +68,8 @@ void Box::init(double Lref_in)     {
 //related only to the Box as <Box> </Box>
 void Box::TransformPointToRef(const double* x_in,double* x_out) const {
 
-  double thetaz = _utils._urtmap.get("thetaz");
-  double transfl = _utils._urtmap.get("transflag");
+  double thetaz  = _boxrtmap.get("thetaz");
+  double transfl = _boxrtmap.get("transflag");
 
     double        xpr[3]={0.,0.,0.};
     double         Dx[3]={0.,0.,0.};
