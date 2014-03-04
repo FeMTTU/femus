@@ -199,7 +199,7 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
   _Schur=0;
   _NSchurVar=1;
   _is_nonlinear = false;
-  _non_linear_toll = 1.e-03;
+  _non_linear_toll = 1.e-04;
   _non_linear_algorithm = 0;
   _init_func_set=false;
   _bdc_func_set=false;
@@ -386,7 +386,7 @@ void NonLinearMultiLevelProblem::SetNonLinearAlgorithm(const bool isnonlinear,co
 						       const double nl_toll) {
 
   _is_nonlinear = isnonlinear;
-  _non_linear_toll = nl_toll;
+    double _non_linear_toll = nl_toll;
 
   if (isnonlinear) {
 
@@ -670,13 +670,27 @@ void NonLinearMultiLevelProblem::Solve(const char pdename[], unsigned const &Vcy
   
   unsigned nonlinear_Vcycle_numeber    = (test_linear == false) ? Vcycle_number:1;
   unsigned linear_Vcycle_numeber       = (test_linear == true ) ? Vcycle_number:1;
-  bool full_cycle = (!strcmp(multigrid_type,"V-Cycle")) ? 0 : 1;
+   
+  bool full_cycle;
+  unsigned igrid0; 
+  if( !strcmp(multigrid_type,"F-Cycle") ){
+    full_cycle=1;
+    igrid0=1;
+  }
+  else if(!strcmp(multigrid_type,"V-Cycle")){
+    full_cycle=0;
+    igrid0=_gridn;
+  }
+  else if(!strcmp(multigrid_type,"M-Cycle")){
+    full_cycle=0;
+    igrid0=_gridr;
+  }
   
   unsigned ipde = GetPdeIndex(pdename);
     
   std::pair<int, double> solver_info;
      
-  for ( unsigned igridn=full_cycle + (!full_cycle)*_gridn; igridn <= _gridn; igridn++) {
+  for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {
     cout << endl << "    ************* Level Max: " << igridn << " *************\n" << endl;
     for ( unsigned nonlinear_cycle = 0; nonlinear_cycle < nonlinear_Vcycle_numeber; nonlinear_cycle++ ) { //non linear cycle
       clock_t start_cycle_time = clock();

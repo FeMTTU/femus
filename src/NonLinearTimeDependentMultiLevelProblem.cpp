@@ -64,7 +64,7 @@ double NonLinearTimeDependentMultiLevelProblem::GetTime() {
 //------------------------------------------------------------------------------------------------------
 
 void NonLinearTimeDependentMultiLevelProblem::SetInitTimeStep(const unsigned time_step0) {
-  _time_step0 = time_step0;
+    unsigned int _time_step0 = time_step0;
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -257,10 +257,17 @@ void NonLinearTimeDependentMultiLevelProblem::Solve(const char pdename[], unsign
 
   //update time
   _time += _dt;
-
+   
   //update time step
   _time_step++;
-    
+  
+  char *this_mgtype = new char [50];
+  sprintf(this_mgtype,"%s",mg_type);
+  
+  if(_time_step ==_time_step0){
+    sprintf(this_mgtype,"F-Cycle"); 
+  }
+     
   //update boundary condition
   UpdateBdc();
 
@@ -270,7 +277,8 @@ void NonLinearTimeDependentMultiLevelProblem::Solve(const char pdename[], unsign
   cout << " ************** time step " << _time_step << " **************** " << endl;
   cout << " ************** time      " << _time << " **************** " << endl;
   
-  NonLinearMultiLevelProblem::Solve(pdename, ncycle, npre, npost, mg_type, test_linear); 
+  NonLinearMultiLevelProblem::Solve(pdename, ncycle, npre, npost, this_mgtype, test_linear); 
+  delete [] this_mgtype;
 }  
   
 
