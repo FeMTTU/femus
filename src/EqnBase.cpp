@@ -5,6 +5,10 @@
 #include <limits>
 
 #include "FemusExtLib_conf.hpp"
+#ifdef HAVE_MPI
+#include "mpi.h"
+#endif
+
 #include "FemusDefault.hpp"
 
 #include "NormTangEnum.hpp"
@@ -59,11 +63,7 @@ EqnBase::EqnBase(std::vector<Quantity*> int_map_in,
     initVarNamesRefValues(varname_in);
 
     //========== processor number ==============
-#ifndef FEMUS_HAVE_LASPACK
     _iproc=_mesh._iproc;
-#else
-    _iproc=0;
-#endif
 
 // ========= PENALTY DIRICHLET FLAG ==============
 //put a default to zero, then every Eqn will OVERRIDE it
@@ -2352,22 +2352,21 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
 	    for (int c=0;c<QL;c++) rowsize +=_nvars[c]*len[c];
 	      graph[irow].resize(rowsize + 1);  //There is a +1 because in the last position you memorize the number of offset dofs in that row
 
-#ifdef FEMUS_HAVE_LASPACK
-
-            for (uint jvar=0; jvar<_nvars[QQ]; jvar++) {
-            // quadratic-quadratic
-                for (int j=0; j<len[QQ]; j++) {
-                    graph[irow][j+jvar*len[QQ]] = _node_dof[Level][ _mesh._node_map[FELevel[QQ]][pos_row[QQ][QQ][j+length_row[QQ][QQ][DofObj_lev]]]+jvar*_mesh._NoNodes[_NoLevels-1]];
-                }
-	    }
-                // quadratic-linear 
-                for (uint jvar=0; jvar<_nvars[LL]; jvar++) {
-                    for (int j=0; j<len[LL]; j++) {
-                        graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][_mesh._node_map[FELevel[LL]][pos_row[QQ][LL][j+length_row[QQ][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*_mesh._NoNodes[_NoLevels-1]];
-                    }
-                }
-
-// this was below ( linear-quadratic AND linear-linear).  I'll resume it when LasPack is needed...
+// // // #ifdef FEMUS_HAVE_LASPACK
+// // // 
+// // //             for (uint jvar=0; jvar<_nvars[QQ]; jvar++) {
+// // //             // quadratic-quadratic
+// // //                 for (int j=0; j<len[QQ]; j++) {
+// // //                     graph[irow][j+jvar*len[QQ]] = _node_dof[Level][ _mesh._node_map[FELevel[QQ]][pos_row[QQ][QQ][j+length_row[QQ][QQ][DofObj_lev]]]+jvar*_mesh._NoNodes[_NoLevels-1]];
+// // //                 }
+// // // 	    }
+// // //                 // quadratic-linear 
+// // //                 for (uint jvar=0; jvar<_nvars[LL]; jvar++) {
+// // //                     for (int j=0; j<len[LL]; j++) {
+// // //                         graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][_mesh._node_map[FELevel[LL]][pos_row[QQ][LL][j+length_row[QQ][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*_mesh._NoNodes[_NoLevels-1]];
+// // //                     }
+// // //                 }
+// // // 
 // // //             
 // // //             for (uint jvar=0; jvar<_nvars[QQ]; jvar++) {
 // // //                 for (int j=0; j<len[QQ]; j++) {
@@ -2380,8 +2379,8 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
 // // //                     graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][ _mesh._node_map[FELevel[LL]][pos_row[LL][LL][j+length_row[LL][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*offset];
 // // //                 }
 // // //             }
-            
-#endif
+// // //            
+// // #endif
  
             int lenoff[QL];  for (int c=0;c<QL;c++) lenoff[c] = 0;
 	    for (int c=0;c<QL;c++)  lenoff[c] = length_offrow[r][c][DofObj_lev+1] - length_offrow[r][c][ DofObj_lev ];

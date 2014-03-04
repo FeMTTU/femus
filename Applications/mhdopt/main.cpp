@@ -12,7 +12,7 @@
 #include "FemusExtLib_conf.hpp"
 
 
-#ifdef FEMUS_HAVE_PETSC// Petsc   //TODO remove it later, this is here only for the LOG at the end
+#if HAVE_PETSC == 1  // Petsc   //TODO remove it later, this is here only for the LOG at the end
 #include "petsc.h"
 #endif
 
@@ -61,11 +61,7 @@ double funzione(double t , const double* xyz) {return 1.;}
 int main(int argc, char** argv) {
 
   // ====== FemusInit =====  //put this as the first call because mpi is initialized here
-#ifdef LM_INIT
-  LibMeshInit init(argc, argv);
-#else
   FemusInit init(argc,argv);
-#endif
 
 // ======= Files ========================
   Files files; 
@@ -278,7 +274,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 /*(iproc==0)*/  files.PrintRun(DEFAULT_LAST_RUN);  /*TODO fileIO*/
 
   // ============  log ================================
-#ifdef FEMUS_HAVE_PETSC
+#if HAVE_PETSC == 1
   std::string petsc_femus_log = "petsc_main.log";
   std::ostringstream petsc_log;
   petsc_log <<  files.get_basepath() + "/" + files.get_frtmap().get("OUTPUT_DIR")

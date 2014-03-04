@@ -140,5 +140,4 @@ std::vector<FEElemBase*> FEElements(QL); //these are basically used only for the
 }
 
 //=======you dont need the solver library for gencase
-//======= neither FEMUS_HAVE_PETSC nor HAVE_MPI
 // gencase needs mpi somewhere

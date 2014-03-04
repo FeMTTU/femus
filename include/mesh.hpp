@@ -19,11 +19,7 @@ class GeomEl;
 class QuantityLocal;
 class Domain;
 
-class Mesh
-#ifdef LM_REFCOUNT
-            : public ReferenceCountedObject < Mesh >
-#endif
-{
+class Mesh  {
 
 protected:
 

@@ -2,16 +2,13 @@
 
 #include "FemusExtLib_conf.hpp"
 
-// #ifndef FEMUS_HAVE_LASPACK
 
-#if defined HAVE_MPI
-#pragma GCC diagnostic ignored "-Wunused-parameter"
+#ifdef HAVE_MPI
 # include "mpi.h"
-#pragma GCC diagnostic warning "-Wunused-parameter"
 #endif
 
-// #if defined(LIBMESH_HAVE_PETSC)
-#ifdef FEMUS_HAVE_PETSC
+
+#if HAVE_PETSC == 1
 # include "PetscMacro.hpp"
 EXTERN_C_FOR_PETSC_BEGIN
 # include "petsc.h"
@@ -42,7 +39,7 @@ FemusInit::FemusInit(int & argc, char** & argv/*, MPI_Comm comm_world_in*/) {
 //           _rank = static_cast<unsigned int>(i);
 #endif	  
 
-#ifdef FEMUS_HAVE_PETSC	
+#if HAVE_PETSC == 1
 std::cout << "PETSC_COMM_WORLD first " << PETSC_COMM_WORLD << std::endl;
 
 //      PETSC_COMM_WORLD = comm_world_in;
@@ -92,7 +89,7 @@ std::cout << "PETSC_COMM_WORLD first " << PETSC_COMM_WORLD << std::endl;
 FemusInit::~FemusInit() {
 
 
-#ifdef FEMUS_HAVE_PETSC
+#if HAVE_PETSC == 1
       PetscFinalize();
 #endif
 
@@ -106,5 +103,3 @@ FemusInit::~FemusInit() {
   
   
   
-//   #endif
- 

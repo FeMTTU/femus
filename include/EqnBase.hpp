@@ -29,11 +29,7 @@ class LinearSolverM;
 
 
 
-class EqnBase
-#ifdef LM_REFCOUNT
-      : public ReferenceCountedObject<EqnBase>
-#endif
-{
+class EqnBase  {
 
 protected:
   

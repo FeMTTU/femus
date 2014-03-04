@@ -562,7 +562,7 @@ void EquationsMap::TransientSetup()  {
 //let us just try by hand now...no we cant, because we will not know
 // the NEW output_dir...
 //We have to find a way to keep track of the PREVIOUS output dir.
-//--- use a shell variable. $FEMUS_last_run
+//--- use a shell variable. $femus_last_run
 //SORRY, BUT YOU CANT DO THAT!
 // A process cannot export to parent processes.
 // So the solution will be to print a very small file, called

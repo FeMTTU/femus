@@ -3,7 +3,7 @@
 
 #include "FemusExtLib_conf.hpp"
 
-#ifdef FEMUS_HAVE_PETSC
+#if HAVE_PETSC == 1
 
 #include "Typedefs.hpp"
 
