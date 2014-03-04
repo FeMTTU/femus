@@ -2,6 +2,7 @@
 #define __linear_solverM_h__
 
 #include <memory>
+#include <cstdlib>
 
 #include "FemusExtLib_conf.hpp"
 
@@ -26,11 +27,7 @@ template <typename T> class ShellMatrix;
 // class is overloaded to provide linear solvers from different packages
 // like PETSC.
 // ===============================================
-class LinearSolverM
-#ifdef LM_REFCOUNT
-: public ReferenceCountedObject<LinearSolverM > 
-#endif
-{
+class LinearSolverM  {
   // ================================
   // DATA
   // ==============================

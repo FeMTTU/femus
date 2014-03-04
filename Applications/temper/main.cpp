@@ -9,7 +9,7 @@
 #include "FemusExtLib_conf.hpp"
 
 // Petsc  //TODO remove it later, this is here only for the LOG at the end
-#ifdef FEMUS_HAVE_PETSC
+#if HAVE_PETSC == 1
 #include "petsc.h"
 #endif
 
@@ -28,7 +28,6 @@
 #include "EquationsMap.hpp"
 #include "TimeLoop.hpp"
 #include "Typedefs.hpp"
-#include "CmdLine.hpp"
 #include "Quantity.hpp"
 #include "QTYnumEnum.hpp"
 #include "Box.hpp"  //for the DOMAIN
@@ -69,13 +68,7 @@
  int main(int argc, char** argv) {
 
   // ====== FemusInit =====  //put this as the first call because mpi is initialized here
-#ifdef LM_INIT
-  LibMeshInit init(argc, argv);
-#else
   FemusInit init(argc,argv);
-#endif
-
-  CmdLine::parse(argc,argv); 
   
 // ======= Files ========================
   Files files; 
@@ -226,7 +219,7 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 /*(iproc==0)*/  files.PrintRun(DEFAULT_LAST_RUN);
 
   // ============  log ================================
-#ifdef FEMUS_HAVE_PETSC
+#if HAVE_PETSC == 1
   std::string petsc_femus_log = "petsc_main.log";
   std::ostringstream petsc_log;
   petsc_log <<  files.get_basepath() + "/" + files.get_frtmap().get("OUTPUT_DIR")

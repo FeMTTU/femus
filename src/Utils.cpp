@@ -13,9 +13,7 @@
 
 #include "FemusExtLib_conf.hpp"
 #ifdef HAVE_MPI  
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "mpi.h"
-#pragma GCC diagnostic warning "-Wunused-parameter"
 #endif
 // ===============================
 //  Utils Class functions

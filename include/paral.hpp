@@ -4,10 +4,8 @@
 
 #include "FemusExtLib_conf.hpp"
 
-#ifdef HAVE_MPI// Mpi
-#pragma GCC diagnostic ignored "-Wunused-parameter"
+#ifdef HAVE_MPI
  #include "mpi.h" 
-#pragma GCC diagnostic warning "-Wunused-parameter"
 #endif
 
 ///This namespace will hold global data and functions for parallel purposes
