@@ -3242,7 +3242,7 @@ void EqnBase::PrintVector(std::string namefile) {
               }
           } // 2bB end interpolation over the fine mesh --------
         
-     std::ostringstream var_name; var_name << _var_names[ ivar + _VarOff[LL] ] << "_" << grname.str();  //      std::string var_name = grname.str() + "/" + _var_names[VarOff[LL] + ivar];
+     std::ostringstream var_name; var_name << _var_names[ ivar + _VarOff[LL] ] << "_" << grname.str();
      hsize_t  dimsf[2]; dimsf[0] = NGeomObjOnWhichToPrint[LL];  dimsf[1] = 1;
     _utils.print_Dhdf5(file_id,var_name.str(),dimsf,sol_on_Qnodes);
      
@@ -3296,11 +3296,15 @@ void EqnBase::PrintVector(std::string namefile) {
 
 
 // ===================================================
-/// This function reads the MSolDA system solution from namefile.h5
+/// This function reads the system solution from namefile.h5
 //TODO this must be modified in order to take into account KK element dofs
 void EqnBase::ReadVector(std::string namefile) {
 //this is done in parallel
 
+  std::cout << "ReadVector still has to be written for CONSTANT elements, BEWARE!!! ==============================  " << std::endl;
+  
+    const uint Level = _NoLevels-1;
+    
     const uint mesh_ord = (int) _utils._urtmap.get("mesh_ord");
     const uint offset=_mesh._NoNodesXLev[_NoLevels-1];
 
@@ -3309,11 +3313,12 @@ void EqnBase::ReadVector(std::string namefile) {
     hid_t  file_id = H5Fopen(namefile.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
 
     // reading loop over system varables
-    for (uint ivar=0;ivar< _nvars[1]+_nvars[0]; ivar++) {
+    for (uint ivar=0;ivar< _nvars[LL]+_nvars[QQ]; ivar++) {
         uint el_nds=_mesh._GeomEl._elnds[VV][QQ];
-        if (ivar >= _nvars[0]) el_nds=_mesh._GeomEl._elnds[VV][LL]; // quad and linear
+        if (ivar >= _nvars[QQ]) el_nds = _mesh._GeomEl._elnds[VV][LL]; // quad and linear
         // reading ivar param
-        _utils.read_Dhdf5(file_id,"/"+_var_names[ivar],sol);
+       std::ostringstream grname; grname << _var_names[ivar] << "_" << "LEVEL" << Level;
+        _utils.read_Dhdf5(file_id,grname.str(),sol);
         double Irefval = 1./_refvalue[ivar]; // units
 
         // storing  ivar variables (in parallell)

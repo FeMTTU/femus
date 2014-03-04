@@ -144,7 +144,7 @@ void GenCase::GenerateCoarseMesh(Mesh* msh_coarse)  {
             Box box(_utils);
             box._boxrtmap.read();
             box._boxrtmap.print();
-            box.init(1.);  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!!
+            box.init(1.);  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
 //i guess we could do this instantiation also INSIDE the gencase class
 
 //---Meshing -------

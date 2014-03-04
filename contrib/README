@@ -54,7 +54,7 @@ You have to open another shell and set new values
 ####### How to create a new application ##########
 - Copy the structure of an existing application, in particular the directories
    and the configuration files
-- Define your own Equations, Quantities and Physics based on the BASE CLASSES provided with the library.   
+- Define your own Equations, Quantities, Physics and Domain based on the BASE CLASSES provided with the library.   
 - Instantiate in the main one object of each of the following types:
   <Gencase>, <Box>, <TimeLoop>, <Utils>, <Files>, <Physics>
   (notice, these are the names of the TYPES, not of the instantiations...
@@ -62,3 +62,11 @@ You have to open another shell and set new values
    for each separate instantiation...)
    We should define for each type if they need a RuntimeMap and what parameters they need in it...
    Yeah, in the constructor of such an object we must put the check "if the file isn't there, abort"
+   
+####### How to RESTART a run of an application ##########
+- Here, we must be very careful.
+- We must change ALMOST NOTHING
+- Do not rerun GENCASE
+- Do not change NUMBER OF PROCESSORS
+- Do not change NUMBER OF LEVELS
+- Do not change the OUTPUT FOLDERNAME

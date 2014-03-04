@@ -89,10 +89,7 @@ int main(int argc, char** argv) {
   files.CheckDirOrAbort(files.get_basepath(),DEFAULT_CONFIGDIR); 
   files.get_frtmap().read();
   files.get_frtmap().print();
-  
-//here, we must check if the input directory where gencase writes is there  //if not, we make it
-//before we should have checked for the existence of the CONFIG DIRECTORY
-  files.CheckDir(files.get_basepath(),files.get_frtmap().get("INPUT_DIR"));
+  files.CheckDir(files.get_basepath(),files.get_frtmap().get("INPUT_DIR")); //here, we must check if the input directory where gencase writes is there  //if not, we make it
   
   // ======= Utils =====
   Utils utils(files);
@@ -119,9 +116,9 @@ std::vector<FEElemBase*> FEElements(QL); //these are basically used only for the
   //anyway, now we do like this
       
 //======== check for restart ======      
-      RunTimeMap<double> timemap("TimeLoop",files.get_basepath());
-      timemap.read();
-      timemap.print();
+     RunTimeMap<double> timemap("TimeLoop",files.get_basepath());  //here you don't need to instantiate a TimeLoop object, but only to read its RUNTIME MAP
+     timemap.read();
+     timemap.print();
      TimeLoop::check_time_par(timemap);
      const uint restart      = (uint) timemap.get("restart");    // restart param
      if (restart)  {std::cout << "No GenCase because of restart flag !=0 " << std::endl; abort();}
