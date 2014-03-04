@@ -83,7 +83,7 @@ int main(int argc,char **args) {
   nl_td_ml_prob.SetTimeStep(0.1);
   nl_td_ml_prob.SetPrintTimeStep(1);
   nl_td_ml_prob.SetSaveTimeStep(33300);
-  nl_td_ml_prob.SetNumTimeSteps(5);  
+  nl_td_ml_prob.SetNumTimeSteps(15);  
   
   ///End System Variables; ==============================
 
@@ -134,7 +134,7 @@ int main(int argc,char **args) {
        time_step++) {
    
     //Solve with V-cycle or F-cycle
-    if(time_step) nl_td_ml_prob.Solve("NS",15,1,1,"F-Cycle");
+    if(time_step == nl_td_ml_prob.GetInitTimeStep()) nl_td_ml_prob.Solve("NS",15,1,1,"F-Cycle");
     else nl_td_ml_prob.Solve("NS",15,1,1,"V-Cycle");
   
     //The update of the acceleration must be done before the update of the other variables
