@@ -465,8 +465,8 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
   double GradSolOldVAR[10][3];
   double GradSolOldhatVAR[10][3];
   
-  vector <int> node(max_size);
-  vector <int> node1(max_size);
+  vector <int> metis_node2(max_size);
+  vector <int> metis_node1(max_size);
   vector <bool> solidmark(max_size);
   
   vector <double > phi(max_size);
@@ -652,14 +652,10 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
     //initialization of everything is in common fluid and solid
     
     //Rhs
-    for(int i=0; i<dim; i++) {
-      dofsVAR[i].resize(nve);
-      dofsVAR[dim+i].resize(nve);
-	
+    for(int i=0; i<2*dim; i++) {
+      dofsVAR[i].resize(nve);	
       Rhs[indexVAR[i]].resize(nve);
       memset(&Rhs[indexVAR[i]][0],0,nve*sizeof(double));
-      Rhs[indexVAR[dim+i]].resize(nve);
-      memset(&Rhs[indexVAR[dim+i]][0],0,nve*sizeof(double));
     }
     dofsVAR[2*dim].resize(nve1);
     Rhs[indexVAR[2*dim]].resize(nve1);
@@ -694,7 +690,26 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
     // Pressure Mass Matrix
     B[indexVAR[2*dim]][indexVAR[2*dim]].resize(nve1*nve1);
     memset(&B[indexVAR[2*dim]][indexVAR[2*dim]][0],0,nve1*nve1*sizeof(double));
-        
+    
+    if (flag_mat==2) { //initialization for fluid only
+      // Fluid Continuity Matrix: divergence of the velocity
+      for(int i=0; i<dim; i++) {
+	B[indexVAR[2*dim]][indexVAR[dim+i]].resize(nve1*nve);
+	memset(&B[indexVAR[2*dim]][indexVAR[dim+i]][0],0,nve1*nve*sizeof(double));
+      }
+    }
+    else{ // initialization for solid only
+      // Kinematic relation
+      for(int i=0; i<dim; i++) {
+	B[indexVAR[i]][indexVAR[dim+i]].resize(nve*nve);
+	memset(&B[indexVAR[i]][indexVAR[dim+i]][0],0,nve*nve*sizeof(double));
+      }
+      // Solid Continuity Matrix: divergence of the displacemnet
+      for(int i=0; i<dim; i++) {
+	B[indexVAR[2*dim]][indexVAR[i]].resize(nve1*nve);
+	memset(&B[indexVAR[2*dim]][indexVAR[i]][0],0,nve1*nve*sizeof(double));
+      }
+    }
     
     // ----------------------------------------------------------------------------------------
     // coordinates, displacement, velocity dofs
@@ -702,9 +717,11 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
     for (unsigned i=0;i<nve;i++) {
       // gambit nodes
       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
-      node[i]=inode;
       // dof metis
       unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+      metis_node2[i]=inode_Metis;
+      
+      //unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
       // flag to know if the node "inode" lays on the fluid-solid interface
       solidmark[i]=myel->GetNodeRegion(inode); // to check
       for(int j=0; j<dim; j++) {
@@ -724,120 +741,95 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
     // pressure dofs
     for (unsigned i=0;i<nve1;i++) {
       unsigned inode=(order_ind1<3)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
-      node1[i]=inode;
+      metis_node1[i]=mymsh->GetMetisDof(inode,SolType[2*dim]);
       dofsVAR[2*dim][i]=mylsyspde->GetKKDof(indVAR[2*dim],indexVAR[2*dim],inode);
     }
     // ----------------------------------------------------------------------------------------
-      
-    
-    //BEGIN FLUID ASSEMBLY ============
-    if (flag_mat==2) {
+       
+    if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
+      /// *** Gauss point loop ***
+      for (unsigned ig=0;ig < nl_td_ml_prob.type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
 
-      //initialization of fluid only
-      
-      // Fluid Continuity Matrix
-      for(int i=0; i<dim; i++) {
-	B[indexVAR[2*dim]][indexVAR[dim+i]].resize(nve1*nve);
-	memset(&B[indexVAR[2*dim]][indexVAR[dim+i]][0],0,nve1*nve*sizeof(double));
-      }
-   
-      if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
-        /// *** Gauss point loop ***
-        for (unsigned ig=0;ig < nl_td_ml_prob.type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
+	// *** get Jacobian and test function and test function derivatives in the moving frame***
+	(nl_td_ml_prob.type_elem[kelt][order_ind2]->*(nl_td_ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
+	(nl_td_ml_prob.type_elem[kelt][order_ind2]->*(nl_td_ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_old,ig,Weight_old,phi_old,gradphi_old);
+	(nl_td_ml_prob.type_elem[kelt][order_ind2]->*(nl_td_ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
+	phi1=nl_td_ml_prob.type_elem[kelt][order_ind1]->GetPhi(ig);
+	if (flag_mat==2) Weight_nojac = nl_td_ml_prob.type_elem[kelt][order_ind2]->GetGaussWeight(ig);
 
-          // *** get Jacobian and test function and test function derivatives in the moving frame***
-          (nl_td_ml_prob.type_elem[kelt][order_ind2]->*(nl_td_ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
-          (nl_td_ml_prob.type_elem[kelt][order_ind2]->*(nl_td_ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_old,ig,Weight_old,phi_old,gradphi_old);
-          (nl_td_ml_prob.type_elem[kelt][order_ind2]->*(nl_td_ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
-          phi1=nl_td_ml_prob.type_elem[kelt][order_ind1]->GetPhi(ig);
-          Weight_nojac = nl_td_ml_prob.type_elem[kelt][order_ind2]->GetGaussWeight(ig);
-
-          ////////// Sol
-          //--------------------------------------------------------------------------------------
-	  //---------------------------------------------------------------------------
-	  for(int idim=0; idim<dim; idim++) {
-	    
-	    // displ init
-	    SolVAR[idim]=0.;
-	    SolOldVAR[idim]=0.;
-	    
-	    // vel init
-	    SolVAR[idim+dim]=0.;
-	    SolOldVAR[idim+dim]=0.;
-	    
-	    // grad displ and vel init
-	    for(int idim2=0; idim2<dim; idim2++) {
-	      GradSolhatVAR[idim][idim2]=0.;
-	      GradSolVAR[idim][idim2]=0.;
-	      GradSolVAR[idim+dim][idim2]=0.;
-	      GradSolOldVAR[idim][idim2]=0.;
-	      GradSolOldVAR[idim+dim][idim2]=0.;
-	    }
-	    
-	    for (unsigned i=0; i<nve; i++) {
-	      // displ
-	      unsigned sol_dof = mymsh->GetMetisDof(node[i],SolType[idim]);
-	      double soli = (*mysolution->_Sol[indVAR[idim]])(sol_dof);
-	      SolVAR[idim]+=phi[i]*soli;
-	      
-	      //displ old
-	      double soli_old = (*mysolution->_SolOld[indVAR[idim]])(sol_dof);
-	      SolOldVAR[idim]+=phi[i]*soli_old;
-	      
-	      // grad displ
-	      for(int idim2=0; idim2<dim; idim2++) {
-		GradSolhatVAR[idim][idim2]+=gradphi_hat[i*dim+idim2]*soli;
-		GradSolVAR[idim][idim2]+=gradphi[i*dim+idim2]*soli;
-		GradSolOldVAR[idim][idim2]+=gradphi[i*dim+idim2]*soli_old;
-	      }
-	      
-	      // vel
-	      sol_dof = mymsh->GetMetisDof(node[i],SolType[idim+dim]);
-	      soli = (*mysolution->_Sol[indVAR[idim+dim]])(sol_dof);
-	      SolVAR[idim+dim]+=phi[i]*soli;
-	      
-	      //vel old
-	      soli_old = (*mysolution->_SolOld[indVAR[idim+dim]])(sol_dof);
-	      SolOldVAR[idim+dim]+=phi[i]*soli_old;
-	      
-	      // grad vel
-	      for(int idim2=0; idim2<dim; idim2++) {
-		GradSolVAR[idim+dim][idim2]+=gradphi[i*dim+idim2]*soli;
-		GradSolOldVAR[idim+dim][idim2]+=gradphi[i*dim+idim2]*soli_old;
-	      }
-	    }
-	    
+	// ---------------------------------------------------------------------------
+	// displacement and velocity
+	for(int i=0; i<2*dim; i++){
+	  SolVAR[i]=0.;
+	  SolOldVAR[i]=0.;
+	  for(int j=0; j<dim; j++) {
+	    GradSolVAR[i][j]=0.;
+	    GradSolOldVAR[i][j]=0.;
+	    GradSolhatVAR[i][j]=0.;
+	    GradSolOldhatVAR[i][j]=0.;
 	  }
-	  
-	  // pressure
-          SolVAR[2*dim]=0.;
-          for (unsigned i=0; i<nve1; i++) {
-	    unsigned sol_dof = mymsh->GetMetisDof(node1[i],SolType[2*dim]);
-	    double soli = (*mysolution->_Sol[indVAR[2*dim]])(sol_dof);
-            SolVAR[2*dim]+=phi1[i]*soli;
-          }
+	    
+	  for (unsigned inode=0; inode<nve; inode++) {
+	    unsigned sol_dof = metis_node2[inode];
+	      
+	    double soli = (*mysolution->_Sol[indVAR[i]])(sol_dof);
+	    SolVAR[i]+=phi[inode]*soli;
+	      
+	    double soli_old = (*mysolution->_SolOld[indVAR[i]])(sol_dof);
+	    SolOldVAR[i]+=phi[inode]*soli_old;
+	      
+	    for(int j=0; j<dim; j++) {
+	      GradSolVAR[i][j]+=gradphi[inode*dim+j]*soli;
+	      GradSolOldVAR[i][j]+=gradphi[inode*dim+j]*soli_old;
+	      if(i<dim){ 
+		GradSolhatVAR[i][j]   +=gradphi_hat[inode*dim+j]*soli;
+		GradSolOldhatVAR[i][j]+=gradphi_hat[inode*dim+j]*soli_old;
+	      }
+	    }	      
+	  }
+	}  
+		  
+	// pressure
+	SolVAR[2*dim]=0.;
+	for (unsigned inode=0; inode<nve1; inode++) {
+	  double soli = (*mysolution->_Sol[indVAR[2*dim]])(metis_node1[inode]);
+	  SolVAR[2*dim]+=phi1[inode]*soli;
+	}
   
-	  //---------------------------------------------------------------------------
-
-
+	// acceleration (solid only)  
+	if(flag_mat!=2){
+	  for(int i=2*dim+1; i<3*dim+1; i++){
+	    SolVAR[i]=0.;
+	    for (unsigned inode=0; inode<nve; inode++) {
+	      double soli = (*mysolution->_Sol[indVAR[i]])(metis_node2[inode]);
+	      SolVAR[i]+=phi[i]*soli;  
+	    }
+	  }
+	}
+  
+	// ---------------------------------------------------------------------------
+	 	  
+	//BEGIN FLUID ASSEMBLY ============
+	  
+	if(flag_mat==2){
+	  
           //divergence of the velocity
 	  double div_vel=0.;
 	  double div_w=0.;
-	  for(int idim=0; idim<dim; idim++) {
-	    div_vel+=GradSolVAR[dim+idim][idim];
-	    div_w+=(GradSolVAR[idim][idim]-GradSolOldVAR[idim][idim])*(1./dt);
+	  for(int i=0; i<dim; i++) {
+	    div_vel+=GradSolVAR[dim+i][i];
+	    div_w+=(GradSolVAR[i][i]-GradSolOldVAR[i][i])*(1./dt);
 	  }
 	  
-          { /// Laplacian operator + adection operator + Mass operator
+          { // Laplace operator + adection operator + Mass operator
 
             const double *gradfi=&gradphi[0];
             const double *fi=&phi[0];
 
-            /// *** phi_i loop ***
+            // *** phi_i loop ***
             for (unsigned i=0; i<nve; i++,gradfi+=dim,fi++) {
 
               //BEGIN RESIDUALS A block ===========================
-
  	      double LapmapVAR[3] = {0., 0., 0.};
  	      for(int idim=0; idim<dim; idim++) {
  		for(int idim2=0; idim2<dim; idim2++) {
@@ -850,8 +842,7 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
  	        Rhs[indexVAR[idim]][i]+=(!solidmark[i])*(-LapmapVAR[idim]*Weight_nojac);
  	      }
 	      
-	      
-	      //        //---------------------------------------------------------------------------------------------------------------------------------
+	      //-------------------------------------------------------------------------------
 	      
 	      double LapvelVAR[3]={0.,0.,0.};
 	      double AdvaleVAR[3]={0.,0.,0.};
@@ -861,8 +852,7 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
 		  AdvaleVAR[idim]+=((SolVAR[dim+idim2]*dt - (SolVAR[idim2]-SolOldVAR[idim2]))*GradSolVAR[dim+idim][idim2])*phi[i];;
 		}
 	      }
-	      // 	      
-              // Residual Momentum equations 
+	      // Residual Momentum equations 
 	      for(int idim=0; idim<dim; idim++) {
 		Rhs[indexVAR[dim+idim]][i]+= (
 					      -phi[i]*_betans*SolVAR[dim+idim]*Weight
@@ -874,13 +864,11 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
 					      +dt*SolVAR[2*dim]*gradphi[i*dim+idim]*Weight
 					      );
 	      }
+	      //END RESIDUALS A block ===========================
 	      
-              //END RESIDUALS A block ===========================
-
-
               const double *gradfj=&gradphi[0];
               const double *fj=&phi[0];
-              /// *** phi_j loop ***
+              //  *** phi_j loop ***
               for (unsigned j=0; j<nve; j++,gradfj+=dim,fj++) {
 
                 //Laplacian
@@ -906,7 +894,7 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
 		  B[indexVAR[dim+idim]][indexVAR[dim+idim]][i*nve+j] += dt*_IRe*LapXweight + Adv1 + dt*div_stab - dt*div_ale + _betans*Mass;
 		}
 		
-                for(int idim=0; idim<dim; idim++) {// Simone, ma che cazzo hai fatto????
+                for(int idim=0; idim<dim; idim++) {
 		  for(int idim2=0; idim2<dim; idim2++) {
 		    B[indexVAR[dim+idim]][indexVAR[0+idim2]][i*nve+j] += _betans*SolVAR[dim+idim]*((*fi))*(*(gradfi+idim2))*Weight;
 		  }
@@ -917,17 +905,16 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
 		  Lap_ale+=_mu_ale[idim]*(*(gradfi+idim))*(*(gradfj+idim));
 		}
 		  
-		// 	      // Laplacian ALE map
+		// Laplacian ALE map
 		for(int idim=0; idim<dim; idim++) {
 		  B[indexVAR[0+idim]][indexVAR[0+idim]][i*nve+j] += (!solidmark[i])*dt*Lap_ale*Weight_nojac;  
 		}
 
-              } //end phi_j loop
-            } //end phi loop
+              } // end phi_j loop
+            } // end phi loop
           } // end A + Bt
 
-          ////////////
-          { ///Gradient of Pressure operator
+          { //Gradient of Pressure operator
 
             const double *gradfi=&gradphi[0];
             const double *fi=phi1;
@@ -942,20 +929,17 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
 		  B[indexVAR[dim+idim]][indexVAR[2*dim]][i*nve1+j] -= dt*((*(gradfi+idim))*(*fj))*Weight;
 		}
               } // end phi_j loop
-            }   // end phi_i loop
-          }     // End Bt
+            } // end phi_i loop
+          } // End Bt
         
-          { ///Divergence of the Velocity operator
+          { // Divergence of the Velocity operator
             const double *fi=phi1;
             // *** phi_i loop ***
             for (unsigned i=0; i<nve1; i++,fi++) {
 
               //BEGIN RESIDUALS B block ===========================
-
               Rhs[indexVAR[2*dim]][i] += -(-((*fi))*div_vel)*Weight;
-
               //END RESIDUALS  B block ===========================
-
 
               const double *gradfj=&gradphi[0];
               // *** phi_j loop ***
@@ -966,145 +950,13 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
               }
             }
           }
-        }
-      }
-
-      //---------------------------------------------------------------------------------------------------
-      
-      // ALE map
-      for(int idim=0; idim<dim; idim++) {
-	myRES->add_vector_blocked(Rhs[indexVAR[idim]],dofsVAR[idim]);
-	myKK->add_matrix_blocked(B[indexVAR[idim]][indexVAR[idim]],dofsVAR[idim],dofsVAR[idim]);  
-      }
-      
-      //---------------------------------------------------------------------------------------------------
-
-      // Momentum equation
-      for(int idim=0; idim<dim; idim++) {
-	myRES->add_vector_blocked(Rhs[indexVAR[dim+idim]],dofsVAR[dim+idim]);
-	myKK->add_matrix_blocked(B[indexVAR[dim+idim]][indexVAR[dim+idim]],dofsVAR[dim+idim],dofsVAR[dim+idim]);
-        myKK->add_matrix_blocked(B[indexVAR[dim+idim]][indexVAR[2*dim]],dofsVAR[dim+idim],dofsVAR[2*dim]);
-	for(int idim2=0; idim2<dim; idim2++) {
-	  myKK->add_matrix_blocked(B[indexVAR[dim+idim]][indexVAR[idim2]],dofsVAR[dim+idim],dofsVAR[idim2]);
-	}
-      }
-      
-      //---------------------------------------------------------------------------------------------------
-
-      //P-continuity equation
-      myRES->add_vector_blocked(Rhs[indexVAR[2*dim]],dofsVAR[2*dim]);
-      for(int idim=0; idim<dim; idim++) {
-	myKK->add_matrix_blocked(B[indexVAR[2*dim]][indexVAR[dim+idim]],dofsVAR[2*dim],dofsVAR[dim+idim]);
-      }
-      myKK->add_matrix_blocked(B[indexVAR[2*dim]][indexVAR[2*dim]],dofsVAR[2*dim],dofsVAR[2*dim]);
-      //------------------------------------------------------------------------------------------------------
-
-    } //end fluid assembly
-    //END FLUID ASSEMBLY ============
-
-    //*******************************************************************************************************
-
-    //BEGIN SOLID ASSEMBLY ============
-    else {
-      
-      //initialization of solid only
-      
-      //Kinematic relation
-      for(int i=0; i<dim; i++) {
-	B[indexVAR[i]][indexVAR[dim+i]].resize(nve*nve);
-	memset(&B[indexVAR[i]][indexVAR[dim+i]][0],0,nve*nve*sizeof(double));
-      }
-      
-      //divergence
-      for(int i=0; i<dim; i++) {
-	B[indexVAR[2*dim]][indexVAR[i]].resize(nve1*nve);
-	memset(&B[indexVAR[2*dim]][indexVAR[i]][0],0,nve1*nve*sizeof(double));
-      }
-
-      if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
-        // *** Gauss point loop ***
-        for (unsigned ig=0;ig < nl_td_ml_prob.type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
-          // *** get Jacobian and test function and test function derivatives ***
-          (nl_td_ml_prob.type_elem[kelt][order_ind2]->*(nl_td_ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
-          (nl_td_ml_prob.type_elem[kelt][order_ind2]->*(nl_td_ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_old,ig,Weight_old,phi_old,gradphi_old);
-          (nl_td_ml_prob.type_elem[kelt][order_ind2]->*(nl_td_ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
-          phi1=nl_td_ml_prob.type_elem[kelt][order_ind1]->GetPhi(ig);
-
-          //---------------------------------------------------------------------------------------
-	  //----------------------------------------------------------------------------------------------
-	  for(int idim=0; idim<dim; idim++) {
-	    // displ init
-	    SolVAR[idim]=0.;
-	    SolOldVAR[idim]=0.;
-	    
-	    // vel init
-	    SolVAR[idim+dim]=0.;
-	    SolOldVAR[idim+dim]=0.;
-	    
-	    // acceleration for the Newmark family
-	    SolVAR[idim+2*dim+1]=0.;
-	    
-	    // grad displ and vel init
-	    for(int idim2=0; idim2<dim; idim2++) {
-	      GradSolhatVAR[idim][idim2]=0.;
-	      GradSolVAR[idim][idim2]=0.;
-	      GradSolVAR[idim+dim][idim2]=0.;
-	      GradSolOldVAR[idim][idim2]=0.;
-	      GradSolOldVAR[idim+dim][idim2]=0.;
-	      GradSolOldhatVAR[idim][idim2]=0.;
-	    }
-	    
-	    for (unsigned i=0; i<nve; i++) {
-	      // displ
-	      unsigned sol_dof = mymsh->GetMetisDof(node[i],SolType[idim]);
-	      double soli = (*mysolution->_Sol[indVAR[idim]])(sol_dof);
-	      SolVAR[idim]+=phi[i]*soli;
-	      
-	      //displ old
-	      double soli_old = (*mysolution->_SolOld[indVAR[idim]])(sol_dof);
-	      SolOldVAR[idim]+=phi[i]*soli_old;
-	      
-	      // grad displ
-	      for(int idim2=0; idim2<dim; idim2++) {
-		GradSolhatVAR[idim][idim2]+=gradphi_hat[i*dim+idim2]*soli;
-		GradSolVAR[idim][idim2]+=gradphi[i*dim+idim2]*soli;
-		GradSolOldVAR[idim][idim2]+=gradphi[i*dim+idim2]*soli_old;
-		GradSolOldhatVAR[idim][idim2]+=gradphi_hat[i*dim+idim2]*soli_old;
-	      }
-	      
-	      // vel
-	      sol_dof = mymsh->GetMetisDof(node[i],SolType[idim+dim]);
-	      soli = (*mysolution->_Sol[indVAR[idim+dim]])(sol_dof);
-	      SolVAR[idim+dim]+=phi[i]*soli;
-	      
-	      //vel old
-	      soli_old = (*mysolution->_SolOld[indVAR[idim+dim]])(sol_dof);
-	      SolOldVAR[idim+dim]+=phi[i]*soli_old;
-	      
-	      // grad vel
-	      for(int idim2=0; idim2<dim; idim2++) {
-		GradSolVAR[idim+dim][idim2]+=gradphi[i*dim+idim2]*soli;
-		GradSolOldVAR[idim+dim][idim2]+=gradphi[i*dim+idim2]*soli_old;
-	      }
-	      
-	      // acceleration for the Newmark family
-	      sol_dof = mymsh->GetMetisDof(node[i],SolType[idim+2*dim+1]);
-	      soli = (*mysolution->_Sol[indVAR[idim+2*dim+1]])(sol_dof);
-	      SolVAR[idim+2*dim+1]+=phi[i]*soli;    
-	    }
-	  }
+	}   
+	//END FLUID ASSEMBLY ============
+	//*******************************************************************************************************
+	//BEGIN SOLID ASSEMBLY ============
 	  
-	  // pressure
-          SolVAR[2*dim]=0.;
-          for (unsigned i=0; i<nve1; i++) {
-	    unsigned sol_dof = mymsh->GetMetisDof(node1[i],SolType[2*dim]);
-	    double soli = (*mysolution->_Sol[indVAR[2*dim]])(sol_dof);
-            SolVAR[2*dim]+=phi1[i]*soli;
-          }
-          
-          //----------------------------------------------------------------------------------------------
-          
-          //------------------------------------------------------------------------------------------------------------
+	else{
+	  //------------------------------------------------------------------------------------------------------------
           if (_solid_model==0) {
 
             //computation of the stress tensor
@@ -1394,7 +1246,6 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
 
               //END RESIDUALS B block ===========================
 
-
               const double *gradfj=&gradphi[0];
               // *** phi_j loop ***
               for (unsigned j=0; j<nve; j++,gradfj+=dim) {
@@ -1405,7 +1256,6 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
             }
           }
           //  /////////////
-
           {  ///Pressure Mass term
             const double *fi=phi1;
             // *** phi_i loop ***
@@ -1417,53 +1267,46 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
               }
             }
           }  //end pressure mass term
-
-        }
-      }
-
-      //---------------------------------------------------------------------------------------------------------------------------------
-
-      // ALE map
-      
-      for(int idim=0; idim<dim; idim++) {
-	myRES->add_vector_blocked(Rhs[indexVAR[idim]],dofsVAR[idim]);
-	myKK->add_matrix_blocked(B[indexVAR[idim]][indexVAR[idim]],dofsVAR[idim],dofsVAR[idim]);
-        myKK->add_matrix_blocked(B[indexVAR[idim]][indexVAR[idim+dim]],dofsVAR[idim],dofsVAR[idim+dim]);
-      }
-      
-      //---------------------------------------------------------------------------------------------------
-
-      // Momentum equation
-      for(int idim=0; idim<dim; idim++) {
-	myRES->add_vector_blocked(Rhs[indexVAR[dim+idim]],dofsVAR[dim+idim]);
-	myKK->add_matrix_blocked(B[indexVAR[dim+idim]][indexVAR[dim+idim]],dofsVAR[dim+idim],dofsVAR[dim+idim]);
-      
-	for(int idim2=0; idim2<dim; idim2++) {
-	  myKK->add_matrix_blocked(B[indexVAR[dim+idim]][indexVAR[idim2]],dofsVAR[dim+idim],dofsVAR[idim2]);
+	  //---------------------------------------------------------------------------------------------------------------------------------
 	}
-	myKK->add_matrix_blocked(B[indexVAR[dim+idim]][indexVAR[2*dim]],dofsVAR[dim+idim],dofsVAR[2*dim]);
+	  
+	//END SOLID ASSEMBLY ============
       }
-      
-      //---------------------------------------------------------------------------------------------------------------------------
+    }
 
-      // P-continuity equation
-      myRES->add_vector_blocked(Rhs[indexVAR[2*dim]],dofsVAR[2*dim]);
-      
-      for(int idim=0; idim<dim; idim++) {
-	myKK->add_matrix_blocked(B[indexVAR[2*dim]][indexVAR[idim]],dofsVAR[2*dim],dofsVAR[idim]);
+    //BEGIN local to global assembly 
+    // ALE mapping
+    for(int i=0; i<dim; i++) {
+      myRES->add_vector_blocked(Rhs[indexVAR[i]],dofsVAR[i]);
+      myKK ->add_matrix_blocked(B[indexVAR[i]][indexVAR[i]],dofsVAR[i],dofsVAR[i]);  
+      if(flag_mat!=2){ //Solid only
+	myKK->add_matrix_blocked(B[indexVAR[i]][indexVAR[i+dim]],dofsVAR[i],dofsVAR[i+dim]);
       }
-      myKK->add_matrix_blocked(B[indexVAR[2*dim]][indexVAR[2*dim]],dofsVAR[2*dim],dofsVAR[2*dim]);
-      //------------------------------------------------------------------------------------------------------------------------
-
-    } // end loop solid region
-
-    //-----------------------------------------------------------------------------------------------------------------------------------------------------
-    //END SOLID ASSEMBLY ============
-
-    //-----------------------------------------------------------------------------------------------------------------------------------------------------
-    //-----------------------------------------------------------------------------------------------------------------------------------------------------
-    //-----------------------------------------------------------------------------------------------------------------------------------------------------
-
+    }
+    
+    // Momentum equation
+    for(int i=0; i<dim; i++) {
+      myRES->add_vector_blocked(Rhs[indexVAR[dim+i]],dofsVAR[dim+i]);
+      myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[dim+i]],dofsVAR[dim+i],dofsVAR[dim+i]);
+      myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[2*dim]],dofsVAR[dim+i],dofsVAR[2*dim]);
+      for(int j=0; j<dim; j++) {
+	myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[j]],dofsVAR[dim+i],dofsVAR[j]);
+      }
+    }
+   
+    //P-continuity equation
+    myRES->add_vector_blocked(Rhs[indexVAR[2*dim]],dofsVAR[2*dim]);
+    for(int i=0; i<dim; i++) {
+      if(flag_mat==2){ //Fluid only
+	myKK->add_matrix_blocked(B[indexVAR[2*dim]][indexVAR[dim+i]],dofsVAR[2*dim],dofsVAR[dim+i]);
+      }
+      else{ //Solid only
+	myKK->add_matrix_blocked(B[indexVAR[2*dim]][indexVAR[i]],dofsVAR[2*dim],dofsVAR[i]);  
+      } 
+    }
+    myKK->add_matrix_blocked(B[indexVAR[2*dim]][indexVAR[2*dim]],dofsVAR[2*dim],dofsVAR[2*dim]);
+    //END local to global assembly
+   
   } //end list of elements loop
 
 
