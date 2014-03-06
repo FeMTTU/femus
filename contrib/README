@@ -83,6 +83,6 @@ You have to open another shell and set new values
 - Write the Cmakelists.txt file for it
 - Add the reference to the application in the Cmakelists.txt of the package library
 - open cmake-gui and run configure and generate
-- NOW PAY ATTENTION TO WHAT HAPPENS WHEN YOU ADD SOURCE FILES to the LIBRARY! You have to update the LIST in the src/ cmake file!!! (use ls -1)
+- NOW PAY ATTENTION TO WHAT HAPPENS WHEN YOU ADD SOURCE FILES to the LIBRARY (not to the application)! You have to update the LIST in the src/ cmake file!!! (use ls -1)
 - now go to the binary directory and type make to generate the library
 - then enter your application folder and run make to generate your executable

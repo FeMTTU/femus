@@ -123,9 +123,14 @@ IF(BUILD_FSI_TUREK_3)
     SUBDIRS(Applications/FSI_TUREK_3/)
 ENDIF(BUILD_FSI_TUREK_3)
 
-OPTION(BUILD_MHDOPT "Build the FSI Turek 3 Benchmark" ON)
+OPTION(BUILD_MHDOPT "Build the MHD optimal control problem" ON)
 
 IF(BUILD_MHDOPT)
     SUBDIRS(Applications/mhdopt/)
-    LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib/)
 ENDIF(BUILD_MHDOPT)
+
+OPTION(BUILD_GENCASE "Build the case generator" ON)
+
+IF(BUILD_GENCASE)
+    SUBDIRS(Applications/gencase/)
+ENDIF(BUILD_GENCASE)
