@@ -758,9 +758,9 @@ void NonLinearMultiLevelProblem::Solve(const char pdename[], unsigned const &Vcy
     }
   }
 
-  for (int ig = _gridr-1; ig < _gridn-1; ig++) {
-    _LinSolver[ipde][ig]->_CC_flag = 0;
-  }
+//   for (int ig = _gridr-1; ig < _gridn-1; ig++) {
+//     _LinSolver[ipde][ig]->_CC_flag = 0;
+//   }
     
   cout << "SOLVER TIME:   \t\t\t"<<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << endl;
 
@@ -1072,7 +1072,7 @@ void NonLinearMultiLevelProblem::Restrictor(const unsigned &ipde, const unsigned
       else{
 	_LinSolver[ipde][gridf-1]->_CC->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,matrix_reuse);
       }
-      _LinSolver[ipde][gridf-1u]->_KK->matrix_add(1.,*_LinSolver[ipde][gridf-1u]->_CC,"subset_nonzero_pattern");
+      _LinSolver[ipde][gridf-1u]->_KK->matrix_add(1.,*_LinSolver[ipde][gridf-1u]->_CC,"different_nonzero_pattern");
     } 
     else { //Projection of the Matrix on the lower level
       if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {

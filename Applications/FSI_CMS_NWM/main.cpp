@@ -104,7 +104,7 @@ int main(int argc,char **args) {
   nl_td_ml_prob.SetTimeStep(0.005);
   nl_td_ml_prob.SetPrintTimeStep(1);
   nl_td_ml_prob.SetSaveTimeStep(33300);
-  nl_td_ml_prob.SetNumTimeSteps(2);  //165   
+  nl_td_ml_prob.SetNumTimeSteps(1);  //165   
   // nl_td_ml_prob.InitializeFromRestart(5);
   nl_td_ml_prob.AttachSetTimeStepFunction(SetVariableTimeStep);
   
@@ -460,11 +460,19 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
   // local objects
   vector<double> SolVAR(3*dim+1);
   vector<double> SolOldVAR(3*dim+1);
-  double GradSolVAR[10][3];
-  double GradSolhatVAR[10][3];
-  double GradSolOldVAR[10][3];
-  double GradSolOldhatVAR[10][3];
-  
+  vector<vector<double> > GradSolVAR(2*dim);
+  vector<vector<double> > GradSolOldVAR(2*dim);
+  for(int i=0;i<2*dim;i++){
+    GradSolVAR[i].resize(dim);
+    GradSolOldVAR[i].resize(dim);
+  }
+  vector<vector<double> > GradSolhatVAR(dim);
+  vector<vector<double> > GradSolOldhatVAR(dim);
+  for(int i=0;i<dim;i++){
+    GradSolhatVAR[i].resize(dim);
+    GradSolOldhatVAR[i].resize(dim);
+  }
+    
   vector <int> metis_node1;
   vector <int> metis_node2;
   vector <bool> solidmark;
@@ -531,51 +539,22 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
   int    solid_model= nl_td_ml_prob._solid->get_physical_model();
 
   //physical quantity
-  double Jnp1_hat=0.;
-  double Jn_hat=0.;
-  double I_bleft=0.;
-  double I_e=0.;
-  double Cauchy[3][3] = {
+  double Jnp1_hat;
+  double Jn_hat;
+  double I_bleft;
+  double I_e;
+  double Cauchy[3][3];
+  double Cauchy_old[3][3];
+  double b_left[3][3];
+  double e[3][3];
+  double e_old[3][3];
+  double tg_stiff_matrix[3][3];
+  
+  const double Id2th[3][3]= {
     { 1.,0.,0.},
     { 0.,1.,0.},
     { 0.,0.,1.}
   };
-  double Cauchy_old[3][3] = {
-    { 1.,0.,0.},
-    { 0.,1.,0.},
-    { 0.,0.,1.}
-  };
-  double F[3][3] = {
-    { 1.,0.,0.},
-    { 0.,1.,0.},
-    { 0.,0.,1.}
-  };
-  double b_left[3][3] = {
-    { 1.,0.,0.},
-    { 0.,1.,0.},
-    { 0.,0.,1.}
-  };
-  double e[3][3] = {
-    { 1.,0.,0.},
-    { 0.,1.,0.},
-    { 0.,0.,1.}
-  };
-  double e_old[3][3] = {
-    { 1.,0.,0.},
-    { 0.,1.,0.},
-    { 0.,0.,1.}
-  };
-  double tg_stiff_matrix[3][3] = {
-    { 0.,0.,0.},
-    { 0.,0.,0.},
-    { 0.,0.,0.}
-  };
-  const double Id2th[3][3] = {
-    { 1.,0.,0.},
-    { 0.,1.,0.},
-    { 0.,0.,1.}
-  };
-
   //initialization C tensor: Saint-Venaint Kirchoff model
   double C_mat[3][3][3][3];
   for (int I=0; I<3; ++I) {
@@ -790,8 +769,10 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
 	  for(int j=0; j<dim; j++) {
 	    GradSolVAR[i][j]=0.;
 	    GradSolOldVAR[i][j]=0.;
-	    GradSolhatVAR[i][j]=0.;
-	    GradSolOldhatVAR[i][j]=0.;
+	    if(i<dim){
+	      GradSolhatVAR[i][j]=0.;
+	      GradSolOldhatVAR[i][j]=0.;
+	    }
 	  }
 	    
 	  for (unsigned inode=0; inode<nve; inode++) {
@@ -981,96 +962,111 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
 	//BEGIN SOLID ASSEMBLY ============
 	  
 	else{
+	  
 	  //------------------------------------------------------------------------------------------------------------
           if (solid_model==0) {
-
-            //computation of the stress tensor
-            e[0][0] = GradSolhatVAR[0][0];
-            e[0][1] = 0.5*(GradSolhatVAR[0][1] + GradSolhatVAR[1][0]);
-            e[0][2] = 0.;
-            e[0][2] = 0.*0.5*(GradSolhatVAR[0][2] + GradSolhatVAR[2][0]);
-
-            e[1][0] = 0.5*(GradSolhatVAR[1][0] + GradSolhatVAR[0][1]);
-            e[1][1] = GradSolhatVAR[1][1];
-            e[1][2] = 0.;
-            e[1][2] = 0.*0.5*(GradSolhatVAR[1][2] + GradSolhatVAR[2][1]);
-
-            e[2][0] = 0.*0.5*(GradSolhatVAR[0][2] + GradSolhatVAR[2][0]);
-            e[2][1] = 0.*0.5*(GradSolhatVAR[1][2] + GradSolhatVAR[2][1]);
-            e[2][2] = 0.*GradSolhatVAR[2][2];
-
-            I_e = e[0][0] + e[1][1] + e[2][2];
-
-
-            // Cauchy stress tensor
-            for (int irow=0; irow<3; ++irow) {
-              for (int jcol=0; jcol<3; ++jcol) {
-                //compressible
-		// 	   Cauchy[irow][jcol] = _lambda*I_e*Id2th[irow][jcol] + 2*_mus*e[irow][jcol];
+	    
+	    //computation of the stress tensor
+	    for(int i=0;i<dim;i++){
+	      for(int j=0;j<dim;j++){
+		e[i][j]=0.5*(GradSolhatVAR[i][j]+GradSolhatVAR[j][i]);
+		e_old[i][j]=0.5*(GradSolOldhatVAR[i][j]+GradSolOldhatVAR[j][i]);
+	      }
+	    }
+	    I_e=0;
+	    for(int i=0;i<dim;i++){
+	      I_e += e[i][i];
+	    }
+	    
+	    for (int i=0; i<dim; i++) {
+              for (int j=0; j<dim; j++) {
                 //incompressible
-                Cauchy[irow][jcol] = 2*mus*e[irow][jcol];
+                Cauchy[i][j] = 2*mus*e[i][j];
+		Cauchy_old[i][j]=2*mus*e_old[i][j];
               }
             }
-
-            //computation of the older stress tensor
-            e_old[0][0] = GradSolOldhatVAR[0][0];
-            e_old[0][1] = 0.5*(GradSolOldhatVAR[0][1] + GradSolOldhatVAR[1][0]);
-            e_old[0][2] = 0.;
-            e_old[0][2] = 0.*0.5*(GradSolOldhatVAR[0][2] + GradSolOldhatVAR[2][0]);
-
-            e_old[1][0] = 0.5*(GradSolOldhatVAR[1][0] + GradSolOldhatVAR[0][1]);
-            e_old[1][1] = GradSolOldhatVAR[1][1];
-            e_old[1][2] = 0.;
-            e_old[1][2] = 0.*0.5*(GradSolOldhatVAR[1][2] + GradSolOldhatVAR[2][1]);
-
-            e_old[2][0] = 0.*0.5*(GradSolOldhatVAR[0][2] + GradSolOldhatVAR[2][0]);
-            e_old[2][1] = 0.*0.5*(GradSolOldhatVAR[1][2] + GradSolOldhatVAR[2][1]);
-            e_old[2][2] = 0.*GradSolOldhatVAR[2][2];
-
-            //Iold_e = e_old[0][0] + e_old[1][1] + e_old[2][2];
-
-            // Cauchy stress tensor
-            for (int irow=0; irow<3; ++irow) {
-              for (int jcol=0; jcol<3; ++jcol) {
-                //compressible
-		// 	   Cauchy[irow][jcol] = _lambda*I_e*Id2th[irow][jcol] + 2*_mus*e[irow][jcol];
-                //incompressible
-                Cauchy_old[irow][jcol] = 2*mus*e_old[irow][jcol];
-              }
-            }
+	    
+	    
+//             //computation of the stress tensor
+//             e[0][0] = GradSolhatVAR[0][0];
+//             e[0][1] = 0.5*(GradSolhatVAR[0][1] + GradSolhatVAR[1][0]);
+//             e[0][2] = 0.;
+//             e[0][2] = 0.*0.5*(GradSolhatVAR[0][2] + GradSolhatVAR[2][0]);
+// 
+//             e[1][0] = 0.5*(GradSolhatVAR[1][0] + GradSolhatVAR[0][1]);
+//             e[1][1] = GradSolhatVAR[1][1];
+//             e[1][2] = 0.;
+//             e[1][2] = 0.*0.5*(GradSolhatVAR[1][2] + GradSolhatVAR[2][1]);
+// 
+//             e[2][0] = 0.*0.5*(GradSolhatVAR[0][2] + GradSolhatVAR[2][0]);
+//             e[2][1] = 0.*0.5*(GradSolhatVAR[1][2] + GradSolhatVAR[2][1]);
+//             e[2][2] = 0.*GradSolhatVAR[2][2];
+// 
+//             I_e = e[0][0] + e[1][1] + e[2][2];
+// 
+// 
+//             Cauchy stress tensor
+//             for (int irow=0; irow<3; ++irow) {
+//               for (int jcol=0; jcol<3; ++jcol) {
+//                 //compressible
+// 		// 	   Cauchy[irow][jcol] = _lambda*I_e*Id2th[irow][jcol] + 2*_mus*e[irow][jcol];
+//                 //incompressible
+//                 Cauchy[irow][jcol] = 2*mus*e[irow][jcol];
+//               }
+//             }
+// 
+//             //computation of the older stress tensor
+//             e_old[0][0] = GradSolOldhatVAR[0][0];
+//             e_old[0][1] = 0.5*(GradSolOldhatVAR[0][1] + GradSolOldhatVAR[1][0]);
+//             e_old[0][2] = 0.;
+//             e_old[0][2] = 0.*0.5*(GradSolOldhatVAR[0][2] + GradSolOldhatVAR[2][0]);
+// 
+//             e_old[1][0] = 0.5*(GradSolOldhatVAR[1][0] + GradSolOldhatVAR[0][1]);
+//             e_old[1][1] = GradSolOldhatVAR[1][1];
+//             e_old[1][2] = 0.;
+//             e_old[1][2] = 0.*0.5*(GradSolOldhatVAR[1][2] + GradSolOldhatVAR[2][1]);
+// 
+//             e_old[2][0] = 0.*0.5*(GradSolOldhatVAR[0][2] + GradSolOldhatVAR[2][0]);
+//             e_old[2][1] = 0.*0.5*(GradSolOldhatVAR[1][2] + GradSolOldhatVAR[2][1]);
+//             e_old[2][2] = 0.*GradSolOldhatVAR[2][2];
+// 
+//             //Iold_e = e_old[0][0] + e_old[1][1] + e_old[2][2];
+// 
+//             // Cauchy stress tensor
+//             for (int irow=0; irow<3; ++irow) {
+//               for (int jcol=0; jcol<3; ++jcol) {
+//                 //compressible
+// 		// 	   Cauchy[irow][jcol] = _lambda*I_e*Id2th[irow][jcol] + 2*_mus*e[irow][jcol];
+//                 //incompressible
+//                 Cauchy_old[irow][jcol] = 2*mus*e_old[irow][jcol];
+//               }
+//		}
           }
 
           else if (solid_model==1) {
+	    double F[3][3]={{1.,0.,0.},{0.,1.,0.},{0.,0.,1.}};
+	    for(int i=0;i<dim;i++){
+	      for(int j=0;j<dim;j++){
+		F[i][j]+=GradSolhatVAR[i][j];
+	      }
+	    }
+	    
+	    Jnp1_hat =  F[0][0]*F[1][1]*F[2][2] + F[0][1]*F[1][2]*F[2][0] + F[0][2]*F[1][0]*F[2][1]
+		      - F[2][0]*F[1][1]*F[0][2] - F[2][1]*F[1][2]*F[0][0] - F[2][2]*F[1][0]*F[0][1];
 
-            //deformation gradient
-            F[0][0] = 1. + GradSolhatVAR[0][0];
-            F[0][1] = GradSolhatVAR[0][1];
-            F[0][2] = GradSolhatVAR[0][2];
+	    // computation of the the three deformation tensor b
+	    for (int I=0; I<3; ++I) {
+	      for (int J=0; J<3; ++J) {
+		b_left[I][J]=0.;
+		for (int K=0; K<3; ++K) {
+		  //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
+		  b_left[I][J] += F[I][K]*F[J][K];
+		}
+		Cauchy[I][J] = (mus/Jnp1_hat)*(b_left[I][J] - Id2th[I][J]);
+	      }
+	    }
 
-            F[1][0] = GradSolhatVAR[1][0];
-            F[1][1] = 1. + GradSolhatVAR[1][1];
-            F[1][2] = GradSolhatVAR[1][2];
-
-            F[2][0] = GradSolhatVAR[2][0];
-            F[2][1] = GradSolhatVAR[2][1];
-            F[2][2] = 1. + GradSolhatVAR[2][2];
-
-            Jnp1_hat =   F[0][0]*F[1][1]*F[2][2] + F[0][1]*F[1][2]*F[2][0] + F[0][2]*F[1][0]*F[2][1]
-	      - F[2][0]*F[1][1]*F[0][2] - F[2][1]*F[1][2]*F[0][0] - F[2][2]*F[1][0]*F[0][1];
-
-            // computation of the the three deformation tensor b
-            for (int I=0; I<3; ++I) {
-              for (int J=0; J<3; ++J) {
-                b_left[I][J]=0.;
-                for (int K=0; K<3; ++K) {
-                  //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
-                  b_left[I][J] += F[I][K]*F[J][K];
-                }
-                Cauchy[I][J] = (mus/Jnp1_hat)*(b_left[I][J] - Id2th[I][J]);
-              }
-            }
-
-            I_bleft = b_left[0][0] + b_left[1][1] + b_left[2][2];
+	    I_bleft = b_left[0][0] + b_left[1][1] + b_left[2][2];
 	    
 	    //compressible case
 	    //             for (int ii=0; ii<3; ++ii) {
@@ -1085,46 +1081,40 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
 	    //             }
 	    
 	    //for the incompressible(nearly incompressible) case
-            for (int ii=0; ii<3; ++ii) {
-              for (int jj=0; jj<3; ++jj) {
-                for (int kk=0; kk<3; ++kk) {
-                  for (int ll=0; ll<3; ++ll) {
-                    C_mat[ii][jj][kk][ll] = 2.*mus*pow(Jnp1_hat,-1.6666666666666)*(
-										    0.333333333333*I_bleft*Id2th[ii][kk]*Id2th[jj][ll]              //1/3*I_c*i
-										    // 	                        +0.111111111111*I_C*Id2th[i][j]*Id2th[k][l]             //1/9*I_b*IxI
-										    // 				-0.333333333333*b_left[i][j]*Id2th[k][l]                //-1/3*b*I
-										    // 				-0.333333333333*Id2th[i][j]*b_left[k][l]                //-1/3*b*I
-										    )
+	    for (int ii=0; ii<3; ++ii) {
+	      for (int jj=0; jj<3; ++jj) {
+		for (int kk=0; kk<3; ++kk) {
+		  for (int ll=0; ll<3; ++ll) {
+		    C_mat[ii][jj][kk][ll] = 2.*mus*pow(Jnp1_hat,-1.6666666666666)*(
+										  0.333333333333*I_bleft*Id2th[ii][kk]*Id2th[jj][ll]              //1/3*I_c*i
+										  // 	                        +0.111111111111*I_C*Id2th[i][j]*Id2th[k][l]             //1/9*I_b*IxI
+										  // 				-0.333333333333*b_left[i][j]*Id2th[k][l]                //-1/3*b*I
+										  // 				-0.333333333333*Id2th[i][j]*b_left[k][l]                //-1/3*b*I
+										  )
 		      -SolVAR[2*dim]*(Id2th[ii][jj]*Id2th[kk][ll]-2.*Id2th[ii][kk]*Id2th[jj][ll] );  // -p(IxI-2i)
-
-                  }
-                }
-              }
-            }
-
-            //Old deformation gradient
-            F[0][0] = 1. + GradSolOldhatVAR[0][0];
-            F[0][1] = GradSolOldhatVAR[0][1];
-            F[0][2] = GradSolOldhatVAR[0][2];
-
-            F[1][0] = GradSolOldhatVAR[1][0];
-            F[1][1] = 1. + GradSolOldhatVAR[1][1];
-            F[1][2] = GradSolOldhatVAR[1][2];
-
-            F[2][0] = GradSolOldhatVAR[2][0];
-            F[2][1] = GradSolOldhatVAR[2][1];
-            F[2][2] = 1. + GradSolOldhatVAR[2][2];
-
-            Jn_hat =   F[0][0]*F[1][1]*F[2][2] + F[0][1]*F[1][2]*F[2][0] + F[0][2]*F[1][0]*F[2][1]
-	      - F[2][0]*F[1][1]*F[0][2] - F[2][1]*F[1][2]*F[0][0] - F[2][2]*F[1][0]*F[0][1] ;
+		  }
+		}
+	      }
+	    }
+	    
+	    //Old deformation gradient
+	    double F_old[3][3]={{1.,0.,0.},{0.,1.,0.},{0.,0.,1.}};
+	    for(int i=0;i<dim;i++){
+	      for(int j=0;j<dim;j++){
+		F_old[i][j]+=GradSolhatVAR[i][j];
+	      }
+	    }
+            
+            Jn_hat =  F_old[0][0]*F_old[1][1]*F_old[2][2] + F_old[0][1]*F_old[1][2]*F_old[2][0] + F_old[0][2]*F_old[1][0]*F_old[2][1]
+		    - F_old[2][0]*F_old[1][1]*F_old[0][2] - F_old[2][1]*F_old[1][2]*F_old[0][0] - F_old[2][2]*F_old[1][0]*F_old[0][1] ;
 
             // computation of the the three deformation tensor b
             for (int I=0; I<3; ++I) {
               for (int J=0; J<3; ++J) {
                 b_left[I][J]=0.;
                 for (int k=0; k<3; ++k) {
-                  //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
-                  b_left[I][J] += F[I][k]*F[J][k];
+                  //left Cauchy-Green deformation tensor or F_oldinger tensor (b = F_old*F_old^T)
+                  b_left[I][J] += F_old[I][k]*F_old[J][k];
                 }
                 Cauchy_old[I][J] = (mus/Jn_hat)*(b_left[I][J] - Id2th[I][J]);
               }
