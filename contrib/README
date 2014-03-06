@@ -76,3 +76,11 @@ You have to open another shell and set new values
 - In case one wants to add a parameter to the library, one HAS to DOCUMENT what that parameter is used for!
 - The idea is that the user DOES NOT ADD PARAMETERS that affect the library, but only he MODIFIES the values.
 - The only TAG in which the user can put THE PARAMETERS he WANTS is <Physics> which is fully application-oriented
+
+
+######## How to SETUP a NEW APPLICATION of the LIBRARY #############
+- Create a folder in the Applications directory with your main function and your src/header files
+- Write the Cmakelists.txt file for it
+- Add the reference to the application in the Cmakelists.txt of the package library
+- open cmake-gui and run configure and generate
+- NOW PAY ATTENTION TO WHAT HAPPENS WHEN YOU ADD SOURCE FILES to the LIBRARY! You have to update the LIST in the src/ cmake file!!!

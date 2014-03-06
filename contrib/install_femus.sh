@@ -30,9 +30,9 @@
 # Now we can install the software that we need #
 ################################################################################################
 echo This script must be run with ./install_femus.sh from the main femus directory!!!
- 
-mkdir -p external/
-cd external/
+EXTERNALDIR=external2/
+mkdir -p $EXTERNALDIR
+cd $EXTERNALDIR
 SOFTWARE_DIR=$PWD/
 
 #######################################################################
@@ -80,76 +80,79 @@ sleep 1
 
 
 #######################################################################
-echo Download, extract, compile HDF5, or pre-binary, without compiling
-FM_HDF5_DIR_REL=hdf5-1.8.12-linux-x86_64-shared
-FM_HDF5_DIR_ABS=$SOFTWARE_DIR/$FM_HDF5_DIR_REL
 
+# We will take hdf5 directly from petsc: he compiles the source. maybe it is not the last version but it's good that he compiles!
 
-echo =========== Remove previous installations
-rm -rf $FM_HDF5_DIR_REL/
-if [ ! -f $FM_HDF5_DIR_REL$TARGZ ]
-then
-echo =========== Download
-wget http://www.hdfgroup.org/ftp/HDF5/current/bin/linux-x86_64/$FM_HDF5_DIR_REL$TARGZ
-# wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.12.tar.gz
-else
-echo The file $FM_HDF5_DIR_REL$TARGZ already exists and we assume it is not corrupted
-fi
-echo =========== Extract
-$EXTRACT_COMMAND $FM_HDF5_DIR_REL$TARGZ
-echo =========== Clean
-rm -f $FM_HDF5_DIR_REL$TARGZ
-
-# source code
-# wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.11.tar.gz
-# now, before running configure, does it need to know the presence of mpi?
-# here, i should put the flag to remove the valgrind error, and do maybe dbg and opt and else...
-# ./configure --enable-using-memchecker --enable-clear-file-buffers
-
-# wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.12.tar.gz
-# extract 
-# cd hdf5-1.8.12
-# wget http://www.hdfgroup.org/ftp/lib-external/CMake/SZip.tar.gz
-# wget http://www.hdfgroup.org/ftp/lib-external/CMake/ZLib.tar.gz
-# wget http://www.hdfgroup.org/ftp/HDF5/examples/CMake/HDF518LinuxRWDICMake.cmake
-# wget http://www.hdfgroup.org/ftp/HDF5/examples/CMake/CTestScript.cmake
-# ctest -S HDF518LinuxRWDICMake.cmake,hdf5-1.8.12 -C RelWithDebInfo -VV -O hdf5.log
-# 
-# Now my question is: with this new system, how do we pass the CONFIGURE OPTIONS like we did before?
-
-echo =========== Configure environment variables
-export LD_LIBRARY_PATH=$FM_HDF5_DIR_ABS/lib:$LD_LIBRARY_PATH
-
-# now, it seems like petsc does not find the libz which is automatically brought inside by hdf5... so let me set the library path for that
-# the alternative is to download hdf5 but to put it OUTSIDE of petsc
-# CHIARO CI VOGLIONO ANCHE GLI INCLUDE!!! E questi il pacchetto hdf5 NON CE LI HA!!! Quindi bisogna per forza prendere il pacchetto zlib da sistema o scaricarlo!!!
-# Prendiamolo da sistema per ora
-
-# HDF5 also needs sz... who is providing it? 
-# Since HDF5 may need SZIP and ZLIB, i don't understand why they only put the PRECOMPILED LIBRARIES in the package WITHOUT the INCLUDE FILES...
-# Well, if an application using HDF5 will not use those libraries DIRECTLY, then you don't need the includes but only the libs
-# So... i have to do LD_LIBRARY_PATH to  let petsc reach libsz... now the only thing is that, doing this, i have TWO LIBZ, one from the system and one from hdf5.
-# This may create a little conflict because if the SYSTEM LIBZ has the priority wrt the hdf5 package, then we link against a library which is not exactly
-# the one with which hdf5 was compiled and linked... in this sense the most accurate solution would be to COMPILE HDF5... so far let us do with LD_LIBRARY_PATH
-
-# The one thing i dont understand is why the petsc configure script DOES NOT FIND libz.so from the hdf5 lib folder. It should find it,
-# because i added it in the LD_LIBRARY_PATH... WHY DOES IT NOT FIND IT?
-
-# You need to set PATH and LD_LIBRARY_PATH  with the new MPI I think... at least PATH,
-# otherwise where are the compilers?!?
-# well, what you need to do is for sure to let petsc know about YOUR openmpi and YOUR HDF5...
-# then i think that he will automatically find mpic++
-# then, another point will be to let MY CODE be aware of MPI and HDF5,
-# so I may need PATH and LD_LIBRARY_PATH for that
-
-#plus, if what i download with petsc may be needed by future "higher level" packages i may consider installing them
-# in a different folder than INSIDE petsc, for instance metis or parmetis, but we'll see next...
-
-# Ok, the libraries are specified in LD_LIBRARY_PATH,
-#     the binaries are specified in PATH,
-# but how do I specify the INCLUDES?!?
-# they must be specified in the COMPILING COMMAND IN THE MAKEFILE
-# I think that if i installed hdf5 with petsc, i would not have any problem
+# # # # echo Download, extract, compile HDF5, or pre-binary, without compiling
+# # # # FM_HDF5_DIR_REL=hdf5-1.8.12-linux-x86_64-shared
+# # # # FM_HDF5_DIR_ABS=$SOFTWARE_DIR/$FM_HDF5_DIR_REL
+# # # # 
+# # # # 
+# # # # echo =========== Remove previous installations
+# # # # rm -rf $FM_HDF5_DIR_REL/
+# # # # if [ ! -f $FM_HDF5_DIR_REL$TARGZ ]
+# # # # then
+# # # # echo =========== Download
+# # # # wget http://www.hdfgroup.org/ftp/HDF5/current/bin/linux-x86_64/$FM_HDF5_DIR_REL$TARGZ
+# # # # # wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.12.tar.gz
+# # # # else
+# # # # echo The file $FM_HDF5_DIR_REL$TARGZ already exists and we assume it is not corrupted
+# # # # fi
+# # # # echo =========== Extract
+# # # # $EXTRACT_COMMAND $FM_HDF5_DIR_REL$TARGZ
+# # # # echo =========== Clean
+# # # # rm -f $FM_HDF5_DIR_REL$TARGZ
+# # # # 
+# # # # # source code
+# # # # # wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.11.tar.gz
+# # # # # now, before running configure, does it need to know the presence of mpi?
+# # # # # here, i should put the flag to remove the valgrind error, and do maybe dbg and opt and else...
+# # # # # ./configure --enable-using-memchecker --enable-clear-file-buffers
+# # # # 
+# # # # # wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.12.tar.gz
+# # # # # extract 
+# # # # # cd hdf5-1.8.12
+# # # # # wget http://www.hdfgroup.org/ftp/lib-external/CMake/SZip.tar.gz
+# # # # # wget http://www.hdfgroup.org/ftp/lib-external/CMake/ZLib.tar.gz
+# # # # # wget http://www.hdfgroup.org/ftp/HDF5/examples/CMake/HDF518LinuxRWDICMake.cmake
+# # # # # wget http://www.hdfgroup.org/ftp/HDF5/examples/CMake/CTestScript.cmake
+# # # # # ctest -S HDF518LinuxRWDICMake.cmake,hdf5-1.8.12 -C RelWithDebInfo -VV -O hdf5.log
+# # # # # 
+# # # # # Now my question is: with this new system, how do we pass the CONFIGURE OPTIONS like we did before?
+# # # # 
+# # # # echo =========== Configure environment variables
+# # # # export LD_LIBRARY_PATH=$FM_HDF5_DIR_ABS/lib:$LD_LIBRARY_PATH
+# # # # 
+# # # # # now, it seems like petsc does not find the libz which is automatically brought inside by hdf5... so let me set the library path for that
+# # # # # the alternative is to download hdf5 but to put it OUTSIDE of petsc
+# # # # # CHIARO CI VOGLIONO ANCHE GLI INCLUDE!!! E questi il pacchetto hdf5 NON CE LI HA!!! Quindi bisogna per forza prendere il pacchetto zlib da sistema o scaricarlo!!!
+# # # # # Prendiamolo da sistema per ora
+# # # # 
+# # # # # HDF5 also needs sz... who is providing it? 
+# # # # # Since HDF5 may need SZIP and ZLIB, i don't understand why they only put the PRECOMPILED LIBRARIES in the package WITHOUT the INCLUDE FILES...
+# # # # # Well, if an application using HDF5 will not use those libraries DIRECTLY, then you don't need the includes but only the libs
+# # # # # So... i have to do LD_LIBRARY_PATH to  let petsc reach libsz... now the only thing is that, doing this, i have TWO LIBZ, one from the system and one from hdf5.
+# # # # # This may create a little conflict because if the SYSTEM LIBZ has the priority wrt the hdf5 package, then we link against a library which is not exactly
+# # # # # the one with which hdf5 was compiled and linked... in this sense the most accurate solution would be to COMPILE HDF5... so far let us do with LD_LIBRARY_PATH
+# # # # 
+# # # # # The one thing i dont understand is why the petsc configure script DOES NOT FIND libz.so from the hdf5 lib folder. It should find it,
+# # # # # because i added it in the LD_LIBRARY_PATH... WHY DOES IT NOT FIND IT?
+# # # # 
+# # # # # You need to set PATH and LD_LIBRARY_PATH  with the new MPI I think... at least PATH,
+# # # # # otherwise where are the compilers?!?
+# # # # # well, what you need to do is for sure to let petsc know about YOUR openmpi and YOUR HDF5...
+# # # # # then i think that he will automatically find mpic++
+# # # # # then, another point will be to let MY CODE be aware of MPI and HDF5,
+# # # # # so I may need PATH and LD_LIBRARY_PATH for that
+# # # # 
+# # # # #plus, if what i download with petsc may be needed by future "higher level" packages i may consider installing them
+# # # # # in a different folder than INSIDE petsc, for instance metis or parmetis, but we'll see next...
+# # # # 
+# # # # # Ok, the libraries are specified in LD_LIBRARY_PATH,
+# # # # #     the binaries are specified in PATH,
+# # # # # but how do I specify the INCLUDES?!?
+# # # # # they must be specified in the COMPILING COMMAND IN THE MAKEFILE
+# # # # # I think that if i installed hdf5 with petsc, i would not have any problem
 
 
 
@@ -193,9 +196,9 @@ cd $FM_PETSC_DIR_REL
 for i in 0 1
 do
 export PETSC_ARCH=${myarchs[i]}
- ./configure   --with-mpi-dir=$FM_MPI_DIR_ABS --with-debugging=${debugflag[i]}  --with-clanguage=cxx  --with-shared-libraries=1  --with-x=1 --download-f-blas-lapack=1  --download-superlu_dist=1 --download-superlu=1 --download-blacs=1 --download-scalapack=1 --download-mumps=1  --download-metis=1 --download-parmetis=1
-#  --with-hdf5-dir=$FM_HDF5_DIR_ABS 
-make all
+ ./configure  --download-hdf5=yes              --with-mpi-dir=$FM_MPI_DIR_ABS --with-debugging=${debugflag[i]}  --with-clanguage=cxx  --with-shared-libraries=1  --with-x=1 --download-f-blas-lapack=1  --download-superlu_dist=1 --download-superlu=1 --download-blacs=1 --download-scalapack=1 --download-mumps=1  --download-metis=1 --download-parmetis=1
+#             --with-hdf5-dir=$FM_HDF5_DIR_ABS
+make all #don't put -j here because it gives error! it's automatically -j!
 make test
 done
 # I don't want to redownload everything once i have them... is it possible? i should tell it to download from the other linux-dbg folder... 
@@ -259,9 +262,9 @@ git clone git://github.com/libMesh/libmesh.git $FM_LIBMESH_DIR_REL-petsc-${myarc
 cd  $FM_LIBMESH_DIR_REL-petsc-${myarchs[i]}/${FM_LIBMESH_BUILD}
 export PETSC_ARCH=${myarchs[i]}
 echo =========== Compile
-./configure  --prefix=$SOFTWARE_DIR/$FM_LIBMESH_DIR_REL-petsc-${myarchs[i]}/${FM_LIBMESH_INSTALL}
+./configure --prefix=$SOFTWARE_DIR/$FM_LIBMESH_DIR_REL-petsc-${myarchs[i]}/${FM_LIBMESH_INSTALL}  --disable-hdf5
 # this script should be clever enough to find the external packages in petsc
-make -j 4
+make -j $(( $(nproc)-1 ))
 make install
 cd ../../
 done
