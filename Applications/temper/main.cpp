@@ -6,7 +6,7 @@
 #include <sstream>
 
 // External library include ( LibMesh, PETSc...) ------------------------------
-#include "FemusExtLib_conf.hpp"
+#include "FEMTTUConfig.h"
 
 // Petsc  //TODO remove it later, this is here only for the LOG at the end
 #if HAVE_PETSC == 1

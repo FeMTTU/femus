@@ -11,7 +11,7 @@
 // class includes ----------------
 #include "Files.hpp"
 
-#include "FemusExtLib_conf.hpp"
+#include "FEMTTUConfig.h"
 #ifdef HAVE_MPI  
 #include "mpi.h"
 #endif

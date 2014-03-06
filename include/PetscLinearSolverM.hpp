@@ -1,7 +1,7 @@
 #ifndef __petsc_linear_solverMaa_h__
 #define __petsc_linear_solverMaa_h__
 
-#include "FemusExtLib_conf.hpp"
+#include "FEMTTUConfig.h"
 
 #if HAVE_PETSC == 1
 
