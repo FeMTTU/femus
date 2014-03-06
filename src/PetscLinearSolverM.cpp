@@ -1,4 +1,4 @@
-#include "FemusExtLib_conf.hpp"
+#include "FEMTTUConfig.h"
 
 #if HAVE_PETSC == 1
 

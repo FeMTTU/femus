@@ -1,6 +1,6 @@
 #include "LinearSolverM.hpp"
 
-#include "FemusExtLib_conf.hpp"
+#include "FEMTTUConfig.h"
 
 #include "PrecondtypeEnum.hpp"
 

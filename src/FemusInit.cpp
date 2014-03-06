@@ -1,6 +1,6 @@
 #include "FemusInit.hpp"
 
-#include "FemusExtLib_conf.hpp"
+#include "FEMTTUConfig.h"
 
 
 #ifdef HAVE_MPI

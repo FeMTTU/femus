@@ -2,7 +2,7 @@
 #define    _paral_h_
 
 
-#include "FemusExtLib_conf.hpp"
+#include "FEMTTUConfig.h"
 
 #ifdef HAVE_MPI
  #include "mpi.h" 

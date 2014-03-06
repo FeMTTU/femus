@@ -11,7 +11,7 @@
 #include "hdf5.h"
 
 #include "Typedefs.hpp"
-#include "FemusExtLib_conf.hpp"
+#include "FEMTTUConfig.h"
 
 
 class Utils;

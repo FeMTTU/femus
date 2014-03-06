@@ -8,7 +8,7 @@
 
 //FEMuS includes 
 #include "FemusDefault.hpp"
-#include "FemusExtLib_conf.hpp"
+#include "FEMTTUConfig.h"
 
 #include "Typedefs.hpp"
 #include "FETypeEnum.hpp"

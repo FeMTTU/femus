@@ -4,7 +4,7 @@
 #include <memory>
 #include <cstdlib>
 
-#include "FemusExtLib_conf.hpp"
+#include "FEMTTUConfig.h"
 
 #include "Typedefs.hpp" 
 

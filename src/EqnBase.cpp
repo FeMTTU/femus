@@ -4,7 +4,7 @@
 #include <sstream>
 #include <limits>
 
-#include "FemusExtLib_conf.hpp"
+#include "FEMTTUConfig.h"
 #ifdef HAVE_MPI
 #include "mpi.h"
 #endif
