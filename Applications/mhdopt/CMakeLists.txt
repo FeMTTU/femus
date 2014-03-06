@@ -5,7 +5,6 @@ PROJECT(mhdopt)
 set(CMAKE_VERBOSE_MAKEFILE on)
 # set(CMAKE_BUILD_TYPE Debug)
 
-# Build the executable
 ADD_EXECUTABLE(mhdopt
 ${CMAKE_PROJECT_DIR}main.cpp 
 ${CMAKE_PROJECT_DIR}EqnNS.cpp
@@ -19,8 +18,8 @@ ${CMAKE_PROJECT_DIR}OptPhysics.cpp
 ${CMAKE_PROJECT_DIR}OptQuantities.cpp
 )
 
-# Link the executable to the petsc anf femttu libs
-TARGET_LINK_LIBRARIES(mhdopt femus_opt)
+
+TARGET_LINK_LIBRARIES(mhdopt femlib)
 TARGET_LINK_LIBRARIES(mhdopt ${PETSC_LIBRARIES})
 TARGET_LINK_LIBRARIES(mhdopt ${CMAKE_SOURCE_DIR}/ExternalLibraries/b64-1.4.2/lib/libb64.gcc47.a)
 
