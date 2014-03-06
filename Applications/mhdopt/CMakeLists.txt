@@ -1,0 +1,29 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+PROJECT(mhdopt)
+
+set(CMAKE_VERBOSE_MAKEFILE on)
+# set(CMAKE_BUILD_TYPE Debug)
+
+# Build the executable
+ADD_EXECUTABLE(mhdopt
+${CMAKE_PROJECT_DIR}main.cpp 
+${CMAKE_PROJECT_DIR}EqnNS.cpp
+${CMAKE_PROJECT_DIR}EqnMHD.cpp
+${CMAKE_PROJECT_DIR}EqnNSAD.cpp
+${CMAKE_PROJECT_DIR}EqnMHDAD.cpp
+${CMAKE_PROJECT_DIR}EqnMHDCONT.cpp
+${CMAKE_PROJECT_DIR}OptBcIc.cpp
+${CMAKE_PROJECT_DIR}OptLoop.cpp
+${CMAKE_PROJECT_DIR}OptPhysics.cpp
+${CMAKE_PROJECT_DIR}OptQuantities.cpp
+)
+
+# Link the executable to the petsc anf femttu libs
+TARGET_LINK_LIBRARIES(mhdopt femus_opt)
+TARGET_LINK_LIBRARIES(mhdopt ${PETSC_LIBRARIES})
+TARGET_LINK_LIBRARIES(mhdopt ${CMAKE_SOURCE_DIR}/ExternalLibraries/b64-1.4.2/lib/libb64.gcc47.a)
+
+IF(MPI_FOUND)
+  TARGET_LINK_LIBRARIES(mhdopt ${MPI_EXTRA_LIBRARY})
+ENDIF(MPI_FOUND)
