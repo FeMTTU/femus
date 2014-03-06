@@ -118,7 +118,7 @@
    
 # these are like GLOBAL variables after you do "source"
 # 
-export FM_EXTERNAL=../external2/
+export FM_EXTERNAL=../../external2/
 for FM_ARG in $*
 do
  echo $FM_ARG

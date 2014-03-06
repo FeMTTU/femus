@@ -134,3 +134,9 @@ OPTION(BUILD_GENCASE "Build the case generator" ON)
 IF(BUILD_GENCASE)
     SUBDIRS(Applications/gencase/)
 ENDIF(BUILD_GENCASE)
+
+OPTION(BUILD_TEMPER "Build the temperature optimal control problem" ON)
+
+IF(BUILD_TEMPER)
+    SUBDIRS(Applications/temper/)
+ENDIF(BUILD_TEMPER)
