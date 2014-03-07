@@ -13,7 +13,7 @@
 # non si possono cambiare i nomi delle variabili senza cambiare anche nei makefile
 
 # Variabili di ingresso a questo script:
-# $FM_FEMUS_METHOD {opt dbg pro}
+# $FM_FEMUS_METHOD {opt dbg pro}  #don't need this anymore, everything is managed by CMAKE
 # $FM_PETSC_METHOD {opt dbg}
 # $FM_LIBMESH_METHOD {opt dbg}
 ########################
@@ -118,7 +118,7 @@
    
 # these are like GLOBAL variables after you do "source"
 # 
-export FM_EXTERNAL=../../external2/
+export FM_EXTERNAL=../../external/
 for FM_ARG in $*
 do
  echo $FM_ARG
@@ -230,11 +230,6 @@ fi
 export FM_BASEPATH_TO_PETSC=$PWD/$FM_EXTERNAL/
 export FM_PETSC_FOLDER=petsc-3.4.3
 export PETSC_ARCH=linux-$FM_PETSC_METHOD
-# //these are only for femus
-export FM_PETSCV_MAJOR=3
-export FM_PETSCV_MINOR=4
-export FM_PETSCV_SUBMINOR=3   # it has no relationship with the patch, has it?
-
 ############ END MACHINE DEPENDENT ###################
 
 export PETSC_DIR=$FM_BASEPATH_TO_PETSC/$FM_PETSC_FOLDER
@@ -265,7 +260,7 @@ fi
 FM_LIBMESH_DIR_REL=libmesh
 FM_LIBMESH_INSTALL=install
 export FM_BASEPATH_TO_LM=$PWD/$FM_EXTERNAL/
-export FM_LM_FOLDER=$FM_LIBMESH_DIR_REL-petsc-linux-$FM_PETSC_METHOD/$FM_LIBMESH_INSTALL
+export FM_LM_FOLDER=$FM_LIBMESH_DIR_REL/$FM_LIBMESH_INSTALL-petsc-linux-$FM_PETSC_METHOD
 ############## END MACHINE DEPENDENT ###################
 
 
@@ -298,18 +293,11 @@ function fm_set_femus() {
 
 #fm_set_mpi      # should be first because hdf5 may need it
 
-fm_set_hdf5     
+# fm_set_hdf5     # let me remove this now, i'll take it from petsc so far
 
 fm_set_petsc    #needs FM_PETSC_METHOD; fm_set_mpi is set within here
 
 fm_set_libmesh  #needs FM_PETSC_METHOD and FM_LIBMESH_METHOD
-
-
-######################################
-
-if test "$FM_FEMUS_METHOD" = ""; then
-  echo "Set the compiling mode for FEMuS first: FM_FEMUS_METHOD ";  return;
-fi
 
 
 ######## FEMUS #########
@@ -323,18 +311,17 @@ echo -e \
 "============================================================
 ============================================================
 ================ Welcome to FEMuS =========================  
-===== The method for FEMuS is  $FM_FEMUS_METHOD \n
+===== The method for FEMuS will be given by CMake \n
 ===== The method for LibMesh is $FM_LIBMESH_METHOD \n
 ===== The method for PETSc is  $FM_PETSC_METHOD \n
 "
 
-if test $FM_FEMUS_METHOD != $FM_LIBMESH_METHOD; then
 echo -e "======== BEWARE !!! ============
-You are very likely to encounter problems
- during compilation, due to different compile modes 
-for FEMuS and LibMesh!
+If the methods for FEMuS and for LibMesh differ,
+you are very likely to encounter problems
+ during compilation, due to different compile modes!
 ========================================="
-fi
+
 
 
 
