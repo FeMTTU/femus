@@ -18,7 +18,6 @@ Restart feature
 
 
 ######## How to choose the COMPILE MODE for the library AND external packages ###########
-export FM_FEMUS_METHOD={opt,dbg}
 export FM_LIBMESH_METHOD={opt,dbg}
 export FM_PETSC_METHOD={opt,dbg}
 

@@ -30,7 +30,7 @@
 # Now we can install the software that we need #
 ################################################################################################
 echo This script must be run with ./install_femus.sh from the main femus directory!!!
-EXTERNALDIR=external2/
+EXTERNALDIR=external/
 mkdir -p $EXTERNALDIR
 cd $EXTERNALDIR
 SOFTWARE_DIR=$PWD/
@@ -249,20 +249,17 @@ FM_LIBMESH_BUILD=build
 FM_LIBMESH_INSTALL=install
 
 echo =========== Remove previous installations
-for i in 0 1
-do
-rm -rf $FM_LIBMESH_DIR_REL-petsc-${myarchs[i]}/
-done
-for i in 0 1
-do
-mkdir -p $FM_LIBMESH_DIR_REL-petsc-${myarchs[i]}/${FM_LIBMESH_BUILD}
-mkdir -p $FM_LIBMESH_DIR_REL-petsc-${myarchs[i]}/${FM_LIBMESH_INSTALL}
+rm   -rf $FM_LIBMESH_DIR_REL/
+mkdir -p $FM_LIBMESH_DIR_REL/${FM_LIBMESH_BUILD}
 echo =========== Download from git repository
-git clone git://github.com/libMesh/libmesh.git $FM_LIBMESH_DIR_REL-petsc-${myarchs[i]}/${FM_LIBMESH_BUILD}
-cd  $FM_LIBMESH_DIR_REL-petsc-${myarchs[i]}/${FM_LIBMESH_BUILD}
+git clone git://github.com/libMesh/libmesh.git ${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_BUILD}
+for i in 0 1
+do
+mkdir -p ${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_INSTALL}-petsc-${myarchs[i]}
+cd  ${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_BUILD}
 export PETSC_ARCH=${myarchs[i]}
 echo =========== Compile
-./configure --prefix=$SOFTWARE_DIR/$FM_LIBMESH_DIR_REL-petsc-${myarchs[i]}/${FM_LIBMESH_INSTALL}  --disable-hdf5
+./configure --prefix=$SOFTWARE_DIR/${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_INSTALL}-petsc-${myarchs[i]}  --disable-hdf5
 # this script should be clever enough to find the external packages in petsc
 make -j $(( $(nproc)-1 ))
 make install

@@ -123,20 +123,24 @@ IF(BUILD_FSI_TUREK_3)
     SUBDIRS(Applications/FSI_TUREK_3/)
 ENDIF(BUILD_FSI_TUREK_3)
 
-OPTION(BUILD_MHDOPT "Build the MHD optimal control problem" ON)
-
-IF(BUILD_MHDOPT)
-    SUBDIRS(Applications/mhdopt/)
-ENDIF(BUILD_MHDOPT)
-
 OPTION(BUILD_GENCASE "Build the case generator" ON)
 
 IF(BUILD_GENCASE)
     SUBDIRS(Applications/gencase/)
 ENDIF(BUILD_GENCASE)
 
+OPTION(BUILD_MHDOPT "Build the MHD optimal control problem" ON)
+
+IF(BUILD_MHDOPT)
+    SUBDIRS(Applications/mhdopt/)
+    file(MAKE_DIRECTORY Applications/mhdopt/config/)
+    file(COPY Applications/mhdopt/config/ DESTINATION ${PROJECT_BINARY_DIR}/Applications/mhdopt/config/)
+ENDIF(BUILD_MHDOPT)
+
 OPTION(BUILD_TEMPER "Build the temperature optimal control problem" ON)
 
 IF(BUILD_TEMPER)
     SUBDIRS(Applications/temper/)
+    file(MAKE_DIRECTORY Applications/temper/config/)
+    file(COPY Applications/temper/config/ DESTINATION ${PROJECT_BINARY_DIR}/Applications/temper/config/)
 ENDIF(BUILD_TEMPER)

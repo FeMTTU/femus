@@ -545,7 +545,6 @@ void Files::CheckIODirectories() {
 // the file for processor 0
 
 std::cout << "The number of processors is " << paral::get_size() << std::endl;
-std::cout << "The mode in which this executable was compiled is " << getenv("FM_FEMUS_METHOD") << std::endl;
  
      
     
