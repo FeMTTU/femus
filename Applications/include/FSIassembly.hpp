@@ -1,439 +1,5 @@
-#include "ElemType.hpp"
-#include "NonLinearMultiLevelProblem.hpp"
-// Timedependent MultiGrid Header
-#include "NonLinearTimeDependentMultiLevelProblem.hpp"
-#include "NumericVector.hpp"
-#include "PetscVector.hpp"
-#include "LinearSolver.hpp"
-#include "Solid.hpp"
-#include "Fluid.hpp"
-#include "Parameter.hpp"
-#include <iostream>
-#include "FemTTUInit.hpp"
-
-#include "../include/FSIassembly.hpp"
-
-using std::cout;
-using std::endl;
-
-// User defined functions
-//int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
-
-double SetVariableTimeStep(const double time);
-
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
-			  double &value, const int FaceName, const double = 0.);
-
-double InitVariables(const double &x, const double &y, const double &z,const char name[]);
-
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
-
-//------------------------------------------------------------------------------------------------------------------
-
-int main(int argc,char **args) {
-  
-  /// Init Petsc-MPI communicator
-  FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
-
-  unsigned short nm,nr;
-  std::cout<<"#MULTIGRID levels? (>=1) \n";
-  //std::cin>>nm;
-  nm=3;
-
-  std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
-  //std::cin>>nr;
-  nr=1;
-  int tmp=nm;
-  nm+=nr;
-  nr=tmp;
-
-  char *infile = new char [50];
-
-  //input file
-  sprintf(infile,"./input/mesh.comsolbenchmark");
-
-  const double Lref = 1.;
-  
-  // Generate Parameter Object
-  Parameter parameter(1.,1.);
-  // Generate Solid Object
-  Solid solid(parameter,200000,0.3,7850.,"Neo-Hookean");
-  // Generate Fluid Object
-  Fluid fluid(parameter,0.001,1000.,"Newtonian");
-
-  NonLinearTimeDependentMultiLevelProblem nl_td_ml_prob(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
-
-  // END MESH =================================
-
-  // Add fluid object
-  nl_td_ml_prob.Add_Fluid(&fluid);
-  // Add Solid Object
-  nl_td_ml_prob.Add_Solid(&solid);
-
-  //Start System Variables;===========================
-  //Focus here is on VARIABLES first, rather than on Equations
-  // generate solution vector
-  nl_td_ml_prob.AddSolution("DX","biquadratic");
-  nl_td_ml_prob.AddSolution("DY","biquadratic");
-  //nl_td_ml_prob.AddSolution("DZ","biquadratic");
-  nl_td_ml_prob.AddSolution("U","biquadratic");
-  nl_td_ml_prob.AddSolution("V","biquadratic");
-  //    nl_td_ml_prob.AddSolutionVector("W","biquadratic");
-  nl_td_ml_prob.AddSolution("AX","biquadratic",1,0);
-  nl_td_ml_prob.AddSolution("AY","biquadratic",1,0);
-  //    nl_td_ml_prob.AddSolutionVector("AZ","biquadratic",1,0);
-  // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  nl_td_ml_prob.AddSolution("P","disc_linear",1);
-  nl_td_ml_prob.AssociatePropertyToSolution("P","Pressure"); // Add this line
-
-  //Initialize (update Init(...) function)
-  nl_td_ml_prob.AttachInitVariableFunction(InitVariables);
-  nl_td_ml_prob.Initialize("All");
-
-  //Set Boundary (update Dirichlet(...) function)
-  nl_td_ml_prob.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  nl_td_ml_prob.GenerateBdc("DX","Steady");
-  nl_td_ml_prob.GenerateBdc("DY","Steady");
-  //nl_td_ml_prob.GenerateBdc("DZ","Steady");
-  nl_td_ml_prob.GenerateBdc("U","Time_dependent");
-  nl_td_ml_prob.GenerateBdc("V","Steady");
-  //    nl_td_ml_prob.GenerateBdc("W","Steady");
-  nl_td_ml_prob.GenerateBdc("AX","Steady");
-  nl_td_ml_prob.GenerateBdc("AY","Steady");
-  //    nl_td_ml_prob.GenerateBdc("AZ","Steady");
-  nl_td_ml_prob.GenerateBdc("P","Steady");
-
-  //Set Time step information
-  nl_td_ml_prob.SetTimeStep(0.005);
-  nl_td_ml_prob.SetPrintTimeStep(1);
-  nl_td_ml_prob.SetSaveTimeStep(33300);
-  nl_td_ml_prob.SetNumTimeSteps(165);  //165   
-  // nl_td_ml_prob.InitializeFromRestart(5);
-  nl_td_ml_prob.AttachSetTimeStepFunction(SetVariableTimeStep);
-  
-
-  std::vector<std::string> mov_vars;
-  mov_vars.resize(2);
-  mov_vars[0] = "DX";
-  mov_vars[1] = "DY";
-  //mov_vars[2] = "DZ";
-  nl_td_ml_prob.SetMovingMesh(mov_vars);
-  nl_td_ml_prob.MarkStructureNode();
- 
-
-  //Solver Configuration 
- 
-  
-  
-  nl_td_ml_prob.AddPde("FSI");
-  nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","DX"); 
-  nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","DY");
-  //nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","DZ");
-  nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","U");
-  nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","V");
-  //nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","W");
-  nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","P");
-  
-  // create Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
-  nl_td_ml_prob.CreatePdeStructure();
-  
-  nl_td_ml_prob.SetDirichletBCsHandling("FSI","Elimination");
-  
-  //Solver I (Gmres)
-  //   nl_td_ml_prob.SetSmoother("Gmres");
-  //   nl_td_ml_prob.SetTolerances("FSI",1.e-12,1.e-20,1.e+50,1);
-  
-  
-  //Solver II (Vanka-smoother-MPSC)
-  nl_td_ml_prob.AddStabilization("FSI",true);
-  nl_td_ml_prob.SetSolverFineGrids("FSI","GMRES");
-  nl_td_ml_prob.SetPreconditionerFineGrids("FSI","LU");
-  nl_td_ml_prob.SetVankaSchurOptions(false,1);
-  nl_td_ml_prob.SetTolerances("FSI",1.e-12,1.e-20,1.e+50,1);
-  nl_td_ml_prob.SetSchurTolerances("FSI",1.e-12,1.e-20,1.e+50,4);
-  nl_td_ml_prob.SetDimVankaBlock("FSI",4);                //2^lev 1D 4^lev 2D 8^lev 3D
-
-  //End System Variables; ==============================
-
-  // START EQUATIONS =================================
-
-  // Start FSI Muligrid Block
-  nl_td_ml_prob.AttachAssembleFunction(AssembleMatrixResFSI);
-
-
-  
-  // create index of solutions to be to used in the Vanka Smoother
-  nl_td_ml_prob.ClearVankaIndex();
-  nl_td_ml_prob.AddToVankaIndex("FSI","DX");
-  nl_td_ml_prob.AddToVankaIndex("FSI","DY");
-  nl_td_ml_prob.AddToVankaIndex("FSI","U");
-  nl_td_ml_prob.AddToVankaIndex("FSI","V");
-  nl_td_ml_prob.AddToVankaIndex("FSI","P");
-
-  
-  for (unsigned time_step = nl_td_ml_prob.GetInitTimeStep(); time_step < nl_td_ml_prob.GetInitTimeStep() + nl_td_ml_prob.GetNumTimeSteps(); 
-       time_step++) {
-   
-    //Solve with V-cycle or F-cycle
-    nl_td_ml_prob.Solve("FSI",15,0,3,"V-Cycle");
-  
-    //The update of the acceleration must be done before the update of the other variables
-    //update time step
-    nl_td_ml_prob._NewmarkAccUpdate();
-
-    //update Solution
-    nl_td_ml_prob._UpdateSolution();
-
-    //print solution for restart
-    if ( !(time_step%nl_td_ml_prob.GetSaveTimeStep()) ) {
-      nl_td_ml_prob.SaveData();
-    }
-
-    // print solution
-    if ( !(time_step%nl_td_ml_prob.GetPrintTimeStep()) ) {
-       
-      std::vector<std::string> print_vars;
-      print_vars.resize(5);
-      print_vars[0] = "DX";
-      print_vars[1] = "DY";
-      print_vars[2] = "U";
-      print_vars[3] = "V";
-      print_vars[4] = "P";
-
-      nl_td_ml_prob.printsol_vtu_inline("biquadratic",print_vars);
-      nl_td_ml_prob.printsol_vtu_inline("linear",print_vars);
-      //nl_td_ml_prob.printsol_xdmf_hdf5("biquadratic",print_vars);
-       
-    }
-  
-  } //end loop timestep
-  
-  //print the XDMF time archive
-  //nl_td_ml_prob.printsol_xdmf_archive("biquadratic");
-
-  // Delete Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
-  nl_td_ml_prob.DeletePdeStructure();
-
-  // End FSI Muligrid Block
-  // Destroy the last PETSC objects
-  nl_td_ml_prob.FreeMultigrid();
-
-  delete [] infile;
-  return(0);
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level) {
-  bool refine=0;
-
-  //refinemenet based on Elemen Group Number
-  if (ElemGroupNumber==5) refine=1;
-  if (ElemGroupNumber==6) refine=1;
-
-  return refine;
-
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-double SetVariableTimeStep(const double time) {
-  if (time < 0.75) {
-    return 0.005;
-  }
-  else {
-    return 0.25;
-  }
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName, const double time) {
-  bool test=1; //Dirichlet
-  value=0.;
-  //   cout << "Time bdc : " <<  time << endl;
-  if (!strcmp(name,"U")) {
-    if (1==FaceName) { //inflow
-      test=1;
-      //comsol Benchmark
-      value = (0.05*time*time)/(sqrt( (0.04 - time*time)*(0.04 - time*time) + (0.1*time)*(0.1*time) ))*y*(0.0001-y)*4.*100000000;
-    }
-    else if (2==FaceName ) {  //outflow
-      test=0;
-      //    test=1;
-      value=0.;
-    }
-    else if (3==FaceName ) {  // no-slip fluid wall
-      test=1;
-      value=0.;
-    }
-    else if (4==FaceName ) {  // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-  }
-  else if (!strcmp(name,"V")) {
-    if (1==FaceName) {          //inflow
-      test=1;
-      value=0.;
-    }
-    else if (2==FaceName ) {    //outflow
-      test=0;
-      //    test=1;
-      value=0.;
-    }
-    else if (3==FaceName ) {    // no-slip fluid wall
-      test=1;
-      value=0;
-    }
-    else if (4==FaceName ) {    // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-  }
-  else if (!strcmp(name,"W")) {
-    if (1==FaceName) {
-      test=1;
-      value=0.;
-    }
-    else if (2==FaceName ) {
-      test=1;
-      value=0.;
-    }
-    else if (3==FaceName ) {
-      test=1;
-      value=0.;
-    }
-    else if (4==FaceName ) {
-      test=1;
-      value=0.;
-    }
-  }
-  else if (!strcmp(name,"P")) {
-    if (1==FaceName) {
-      test=0;
-      value=0.;
-    }
-    else if (2==FaceName ) {
-      test=0;
-      value=0.;
-    }
-    else if (3==FaceName ) {
-      test=0;
-      value=0.;
-    }
-    else if (4==FaceName ) {
-      test=0;
-      value=0.;
-    }
-  }
-  else if (!strcmp(name,"DX")) {
-    if (1==FaceName) {       //inflow
-      test=1;
-      value=0.;
-    }
-    else if (2==FaceName ) { //outflow
-      test=1;
-      value=0.;
-    }
-    else if (3==FaceName ) { // no-slip fluid wall
-      test=0;
-      value=0.;
-    }
-    else if (4==FaceName ) { // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-  }
-  else if (!strcmp(name,"DY")) {
-    if (1==FaceName) {       //inflow
-      test=0;
-      value=0.;
-    }
-    else if (2==FaceName ) { //outflow
-      test=0;
-      value=0.;
-    }
-    else if (3==FaceName ) { // no-slip fluid wall
-      test=1;
-      value=0.;
-    }
-    else if (4==FaceName ) { // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-  }
-  else if (!strcmp(name,"DZ")) {
-    if (1==FaceName) {       //inflow
-      test=1;
-      value=0.;
-    }
-    else if (2==FaceName ) { //outflow
-      test=1;
-      value=0.;
-    }
-    else if (3==FaceName ) { // no-slip fluid wall
-      test=1;
-      value=0.;
-    }
-    else if (4==FaceName ) { // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-  }
-  else if (!strcmp(name,"AX")) {
-    test=0;
-    value=0;
-  }
-  else if (!strcmp(name,"AY")) {
-    test=0;
-    value=0;
-  }
-  else if (!strcmp(name,"AZ")) {
-    test=0;
-    value=0;
-  }
-  return test;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-double InitVariables(const double &x, const double &y, const double &z,const char name[]) {
-  double value=0.;
-  if (!strcmp(name,"U")) {
-    value=0;
-  }
-  else if (!strcmp(name,"V")) {
-    value=0;
-  }
-  else if (!strcmp(name,"W")) {
-    value=0;
-  }
-  else if (!strcmp(name,"P")) {
-    value=0;
-  }
-  else if (!strcmp(name,"DX")) {
-    value=0;
-  }
-  else if (!strcmp(name,"DY")) {
-    value=0;
-  }
-  else if (!strcmp(name,"DZ")) {
-    value=0;
-  }
-  else if (!strcmp(name,"AX")) {
-    value=0;
-  }
-  else if (!strcmp(name,"AY")) {
-    value=0;
-  }
-  else if (!strcmp(name,"AZ")) {
-    value=0;
-  }
-  return value;
-}
-/*
-//--------------------------------------------------------------------------------------------------------------------
+#ifndef __FSIassembly_hpp__
+#define __FSIassembly_hpp__
 
 int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
 
@@ -446,15 +12,14 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
  
   const char* pdename= nl_td_ml_prob.GetThisPdeName(ipde);
   
-  
   //pointers and references
-  Solution*		mysolution	=	nl_td_ml_prob._solution[level];
-  LinearSolver*		mylsyspde	=	nl_td_ml_prob._LinSolver[ipde][level];
-  mesh*			mymsh		=	nl_td_ml_prob._msh[level];
-  elem*			myel		=	mymsh->el;
-  SparseMatrix*		myKK		=	mylsyspde->_KK;
-  NumericVector*	myRES		=	mylsyspde->_RES;
-  vector <int>&		myKKIndex	=	mylsyspde->KKIndex;
+  Solution	*mysolution	=  nl_td_ml_prob._solution[level];
+  LinearSolver	*mylsyspde	=  nl_td_ml_prob._LinSolver[ipde][level];
+  mesh		*mymsh		=  nl_td_ml_prob._msh[level];
+  elem		*myel		=  mymsh->el;
+  SparseMatrix	*myKK		=  mylsyspde->_KK;
+  NumericVector *myRES		=  mylsyspde->_RES;
+  vector <int>	&myKKIndex	=  mylsyspde->KKIndex;
   
   
   const unsigned dim = mymsh->GetDimension();
@@ -498,7 +63,7 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
   gradphi_hat.reserve(max_size*dim);
   gradphi_old.reserve(max_size*dim);
   
-  const double * phi1 = NULL;
+  const double *phi1;
     
   double Weight=0.;
   double Weight_nojac=0.;
@@ -520,26 +85,25 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
   for(int i=0;i<2*dim+1;i++){
     B[i].resize(2*dim+1);
   }
-  
   vector< vector< int > > dofsVAR(2*dim+1); 
   
   // algorithm parameters
-  double eps_pen = 1.e40;
-  bool   newton = 0;
-  bool   penalty = mylsyspde->GetStabilization();
+  double eps_pen 	= 1.e40;
+  bool   newton		= 0;
+  bool   penalty 	= mylsyspde->GetStabilization();
   
   // ------------------------------------------------------------------------
   // Physical parameters
-  double rhof = nl_td_ml_prob._fluid->get_density();
-  double rhos = nl_td_ml_prob._solid->get_density();
-  double mu_lame = nl_td_ml_prob._solid->get_lame_shear_modulus();
-  double lambda_lame = nl_td_ml_prob._solid->get_lame_lambda();
-  double mus= mu_lame/rhof;
-  double IRe = nl_td_ml_prob._fluid->get_IReynolds_number();
-  double lambda= lambda_lame / rhof;
-  double betafsi= rhos / rhof;
-  double betans=1.;
-  int    solid_model= nl_td_ml_prob._solid->get_physical_model();
+  double rhof	 	= nl_td_ml_prob._fluid->get_density();
+  double rhos 		= nl_td_ml_prob._solid->get_density();
+  double mu_lame 	= nl_td_ml_prob._solid->get_lame_shear_modulus();
+  double lambda_lame 	= nl_td_ml_prob._solid->get_lame_lambda();
+  double mus		= mu_lame/rhof;
+  double IRe 		= nl_td_ml_prob._fluid->get_IReynolds_number();
+  double lambda		= lambda_lame / rhof;
+  double betafsi	= rhos / rhof;
+  double betans		= 1.;
+  int    solid_model	= nl_td_ml_prob._solid->get_physical_model();
 
   //physical quantity
   double Jnp1_hat;
@@ -547,18 +111,10 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
   double I_bleft;
   double I_e;
   double Cauchy[3][3];
-  double Cauchy_old[3][3];
-  double b_left[3][3];
-  double e[3][3];
-  double e_old[3][3];
+  double Cauchy_old[3][3]; 
   double tg_stiff_matrix[3][3];
-  
-  const double Id2th[3][3]= {
-    { 1.,0.,0.},
-    { 0.,1.,0.},
-    { 0.,0.,1.}
-  };
-  //initialization C tensor: Saint-Venaint Kirchoff model
+  //initialization C tensor: Saint-Venaint Kirchoff model : solid_model==1;
+  const double Id2th[3][3]= {{ 1.,0.,0.}, { 0.,1.,0.}, { 0.,0.,1.}};
   double C_mat[3][3][3][3];
   for (int I=0; I<3; ++I) {
     for (int J=0; J<3; ++J) {
@@ -584,7 +140,7 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
   const double gamma = 0.5;
   const double gammaratio = (1.-gamma)/gamma;
   double _theta_ns=1.0;
-
+  
   // space discretization parameters
   unsigned order_ind2 = nl_td_ml_prob.SolType[nl_td_ml_prob.GetIndex("U")];  
   unsigned end_ind2   = mymsh->GetEndIndex(order_ind2);
@@ -968,7 +524,8 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
 	  
 	  //------------------------------------------------------------------------------------------------------------
           if (solid_model==0) {
-	    
+	    double e[3][3];
+	    double e_old[3][3];
 	    //computation of the stress tensor
 	    for(int i=0;i<dim;i++){
 	      for(int j=0;j<dim;j++){
@@ -988,66 +545,12 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
 		Cauchy_old[i][j]=2*mus*e_old[i][j];
               }
             }
-	    
-	    
-//             //computation of the stress tensor
-//             e[0][0] = GradSolhatVAR[0][0];
-//             e[0][1] = 0.5*(GradSolhatVAR[0][1] + GradSolhatVAR[1][0]);
-//             e[0][2] = 0.;
-//             e[0][2] = 0.*0.5*(GradSolhatVAR[0][2] + GradSolhatVAR[2][0]);
-// 
-//             e[1][0] = 0.5*(GradSolhatVAR[1][0] + GradSolhatVAR[0][1]);
-//             e[1][1] = GradSolhatVAR[1][1];
-//             e[1][2] = 0.;
-//             e[1][2] = 0.*0.5*(GradSolhatVAR[1][2] + GradSolhatVAR[2][1]);
-// 
-//             e[2][0] = 0.*0.5*(GradSolhatVAR[0][2] + GradSolhatVAR[2][0]);
-//             e[2][1] = 0.*0.5*(GradSolhatVAR[1][2] + GradSolhatVAR[2][1]);
-//             e[2][2] = 0.*GradSolhatVAR[2][2];
-// 
-//             I_e = e[0][0] + e[1][1] + e[2][2];
-// 
-// 
-//             Cauchy stress tensor
-//             for (int irow=0; irow<3; ++irow) {
-//               for (int jcol=0; jcol<3; ++jcol) {
-//                 //compressible
-// 		// 	   Cauchy[irow][jcol] = _lambda*I_e*Id2th[irow][jcol] + 2*_mus*e[irow][jcol];
-//                 //incompressible
-//                 Cauchy[irow][jcol] = 2*mus*e[irow][jcol];
-//               }
-//             }
-// 
-//             //computation of the older stress tensor
-//             e_old[0][0] = GradSolOldhatVAR[0][0];
-//             e_old[0][1] = 0.5*(GradSolOldhatVAR[0][1] + GradSolOldhatVAR[1][0]);
-//             e_old[0][2] = 0.;
-//             e_old[0][2] = 0.*0.5*(GradSolOldhatVAR[0][2] + GradSolOldhatVAR[2][0]);
-// 
-//             e_old[1][0] = 0.5*(GradSolOldhatVAR[1][0] + GradSolOldhatVAR[0][1]);
-//             e_old[1][1] = GradSolOldhatVAR[1][1];
-//             e_old[1][2] = 0.;
-//             e_old[1][2] = 0.*0.5*(GradSolOldhatVAR[1][2] + GradSolOldhatVAR[2][1]);
-// 
-//             e_old[2][0] = 0.*0.5*(GradSolOldhatVAR[0][2] + GradSolOldhatVAR[2][0]);
-//             e_old[2][1] = 0.*0.5*(GradSolOldhatVAR[1][2] + GradSolOldhatVAR[2][1]);
-//             e_old[2][2] = 0.*GradSolOldhatVAR[2][2];
-// 
-//             //Iold_e = e_old[0][0] + e_old[1][1] + e_old[2][2];
-// 
-//             // Cauchy stress tensor
-//             for (int irow=0; irow<3; ++irow) {
-//               for (int jcol=0; jcol<3; ++jcol) {
-//                 //compressible
-// 		// 	   Cauchy[irow][jcol] = _lambda*I_e*Id2th[irow][jcol] + 2*_mus*e[irow][jcol];
-//                 //incompressible
-//                 Cauchy_old[irow][jcol] = 2*mus*e_old[irow][jcol];
-//               }
-//		}
           }
 
           else if (solid_model==1) {
 	    double F[3][3]={{1.,0.,0.},{0.,1.,0.},{0.,0.,1.}};
+	    double b_left[3][3];      
+	    
 	    for(int i=0;i<dim;i++){
 	      for(int j=0;j<dim;j++){
 		F[i][j]+=GradSolhatVAR[i][j];
@@ -1055,8 +558,8 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
 	    }
 	    
 	    Jnp1_hat =  F[0][0]*F[1][1]*F[2][2] + F[0][1]*F[1][2]*F[2][0] + F[0][2]*F[1][0]*F[2][1]
-		      - F[2][0]*F[1][1]*F[0][2] - F[2][1]*F[1][2]*F[0][0] - F[2][2]*F[1][0]*F[0][1];
-
+		      - F[2][0]*F[1][1]*F[0][2] - F[2][1]*F[1][2]*F[0][0] - F[2][2]*F[1][0]*F[0][1];		      
+	   
 	    // computation of the the three deformation tensor b
 	    for (int I=0; I<3; ++I) {
 	      for (int J=0; J<3; ++J) {
@@ -1176,7 +679,6 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
               const double *fj=&phi[0];
               // *** phi_j loop ***
               for (unsigned j=0; j<nve; j++,gradfj+=dim,fj++) {
-
                 /// Mass term
                 // (v_n+1,psi)
                 //gamma = 1 Backward Euler
@@ -1279,8 +781,7 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
             }
           }  //end pressure mass term
 	  //---------------------------------------------------------------------------------------------------------------------------------
-	}
-	  
+	}  
 	//END SOLID ASSEMBLY ============
       }
     }
@@ -1320,10 +821,9 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
    
   } //end list of elements loop
 
+  // close residual vector and matrix
 
-  //----------------------------------------------------------------------------------------------------------
   myKK->close();
-  
   myRES->close();
   
   // *************************************
@@ -1331,10 +831,7 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
   AssemblyTime+=(end_time-start_time);
   // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
 
-  //----------------------------------------------------------------------------------------------
-
-
   return 0;
 
-}*/
-
+} 
+#endif 
