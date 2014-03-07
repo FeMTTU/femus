@@ -344,179 +344,29 @@ void FEElemBase::init_switch() {
           switch(_geomel->_geomel_type)  {
 
           case(QUADR): {  //QUADR-2D-QQ  ========
-	    elem_type myelem("quad","biquadratic","fifth");
-	    elem_type myelem_b("line","biquadratic","fifth");
+	    elem_type* myelems[VB];
+	    myelems[VV] = new elem_type("quad","biquadratic","fifth");
+	    myelems[BB] = new elem_type("line","biquadratic","fifth");
 
-	    _phi_mapVBGD[VV][0][0] = 1.;
-	     _phi_mapVBGD[VV][0][1] = 1.;
-	     _phi_mapVBGD[VV][0][2] = 1.;
-	     _phi_mapVBGD[VV][0][3] = 1.;
-	     _phi_mapVBGD[VV][0][4] = 1.;
-	     _phi_mapVBGD[VV][0][5] = 1.;
-	     _phi_mapVBGD[VV][0][6] = 1.;
-	     _phi_mapVBGD[VV][0][7] = 1.;
-	     _phi_mapVBGD[VV][0][8] = 1.;  
+	      for (int vb=0; vb<VB; vb++) {
+	if ( myelems[vb]->GetGaussPointNumber() != _qrule->_NoGaussVB[vb]) { std::cout << "Wrong gauss points" << std::endl; abort(); }
 
-	     _phi_mapVBGD[VV][1][0] = 1.;
-	     _phi_mapVBGD[VV][1][1] = 1.;
-	     _phi_mapVBGD[VV][1][2] = 1.;
-	     _phi_mapVBGD[VV][1][3] = 1.;
-	     _phi_mapVBGD[VV][1][4] = 1.;
-	     _phi_mapVBGD[VV][1][5] = 1.;
-	     _phi_mapVBGD[VV][1][6] = 1.;
-	     _phi_mapVBGD[VV][1][7] = 1.;
-	     _phi_mapVBGD[VV][1][8] = 1.;
-	     
-	     _phi_mapVBGD[VV][2][0] = 1.;
-	     _phi_mapVBGD[VV][2][1] = 1.;
-	     _phi_mapVBGD[VV][2][2] = 1.;
-	     _phi_mapVBGD[VV][2][3] = 1.;
-	     _phi_mapVBGD[VV][2][4] = 1.;
-	     _phi_mapVBGD[VV][2][5] = 1.;
-	     _phi_mapVBGD[VV][2][6] = 1.;
-	     _phi_mapVBGD[VV][2][7] = 1.;
-	     _phi_mapVBGD[VV][2][8] = 1.; 
-	     
-	     _phi_mapVBGD[VV][3][0] = 1.;
-	     _phi_mapVBGD[VV][3][1] = 1.;
-	     _phi_mapVBGD[VV][3][2] = 1.;
-	     _phi_mapVBGD[VV][3][3] = 1.;
-	     _phi_mapVBGD[VV][3][4] = 1.;
-	     _phi_mapVBGD[VV][3][5] = 1.;
-	     _phi_mapVBGD[VV][3][6] = 1.;
-	     _phi_mapVBGD[VV][3][7] = 1.;
-	     _phi_mapVBGD[VV][3][8] = 1.;  
-
-	     _phi_mapVBGD[VV][4][0] = 1.;
-	     _phi_mapVBGD[VV][4][1] = 1.;
-	     _phi_mapVBGD[VV][4][2] = 1.;
-	     _phi_mapVBGD[VV][4][3] = 1.;
-	     _phi_mapVBGD[VV][4][4] = 1.;
-	     _phi_mapVBGD[VV][4][5] = 1.;
-	     _phi_mapVBGD[VV][4][6] = 1.;
-	     _phi_mapVBGD[VV][4][7] = 1.;
-	     _phi_mapVBGD[VV][4][8] = 1.; 
-
-	     _phi_mapVBGD[VV][5][0] = 1.;
-	     _phi_mapVBGD[VV][5][1] = 1.;
-	     _phi_mapVBGD[VV][5][2] = 1.;
-	     _phi_mapVBGD[VV][5][3] = 1.;
-	     _phi_mapVBGD[VV][5][4] = 1.;
-	     _phi_mapVBGD[VV][5][5] = 1.;
-	     _phi_mapVBGD[VV][5][6] = 1.;
-	     _phi_mapVBGD[VV][5][7] = 1.;
-	     _phi_mapVBGD[VV][5][8] = 1.;  
-
-	     _phi_mapVBGD[VV][6][0] = 1.;
-	     _phi_mapVBGD[VV][6][1] = 1.;
-	     _phi_mapVBGD[VV][6][2] = 1.;
-	     _phi_mapVBGD[VV][6][3] = 1.;
-	     _phi_mapVBGD[VV][6][4] = 1.;
-	     _phi_mapVBGD[VV][6][5] = 1.;
-	     _phi_mapVBGD[VV][6][6] = 1.;
-	     _phi_mapVBGD[VV][6][7] = 1.;
-	     _phi_mapVBGD[VV][6][8] = 1.;  
-
-	     _phi_mapVBGD[VV][7][0] = 1.;
-	     _phi_mapVBGD[VV][7][1] = 1.;
-	     _phi_mapVBGD[VV][7][2] = 1.;
-	     _phi_mapVBGD[VV][7][3] = 1.;
-	     _phi_mapVBGD[VV][7][4] = 1.;
-	     _phi_mapVBGD[VV][7][5] = 1.;
-	     _phi_mapVBGD[VV][7][6] = 1.;
-	     _phi_mapVBGD[VV][7][7] = 1.;
-	     _phi_mapVBGD[VV][7][8] = 1.;  
-
-	     _phi_mapVBGD[VV][8][0] = 1.;
-	     _phi_mapVBGD[VV][8][1] = 1.;
-	     _phi_mapVBGD[VV][8][2] = 1.;
-	     _phi_mapVBGD[VV][8][3] = 1.;
-	     _phi_mapVBGD[VV][8][4] = 1.;
-	     _phi_mapVBGD[VV][8][5] = 1.;
-	     _phi_mapVBGD[VV][8][6] = 1.;
-	     _phi_mapVBGD[VV][8][7] = 1.;
-	     _phi_mapVBGD[VV][8][8] = 1.;  
-
-	     // boundary element ===============
-	     _phi_mapVBGD[BB][0][0] = 1.;
-	     _phi_mapVBGD[BB][0][1] = 1.;
-	     _phi_mapVBGD[BB][0][2] = 1.; 
+	for (int ig=0; ig < _qrule->_NoGaussVB[vb]; ig++) {
+	  
+	for (int dof=0; dof < _ndof[vb]; dof++) {
+	  
+	_phi_mapVBGD[vb][ig][dof] = myelems[vb]->GetPhi(ig)[dof];
+		std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapVBGD[vb][ig][dof] << std::endl;
+	          }
+               }
+           }
 	    
-	     _phi_mapVBGD[BB][1][0] = 1.;
-	     _phi_mapVBGD[BB][1][1] = 1.;
-	     _phi_mapVBGD[BB][1][2] = 1.; 
-
-	     _phi_mapVBGD[BB][2][0] = 1.;
-	     _phi_mapVBGD[BB][2][1] = 1.;
-	     _phi_mapVBGD[BB][2][2] = 1.; 
-
           } //end //QUADR-2D-QQ =======
 
           case(TRIANG): { //TRIANG-2D-QQ ======
 	    elem_type myelem("tri","biquadratic","fifth");
 	    elem_type myelem_b("line","biquadratic","fifth");
 
-	     _phi_mapVBGD[VV][0][0] = 1.;
-	     _phi_mapVBGD[VV][0][1] = 1.;
-	     _phi_mapVBGD[VV][0][2] = 1.;
-	     _phi_mapVBGD[VV][0][3] = 1.;
-	     _phi_mapVBGD[VV][0][4] = 1.;
-	     _phi_mapVBGD[VV][0][5] = 1.;
-
-	     _phi_mapVBGD[VV][1][0] = 1.;
-	     _phi_mapVBGD[VV][1][1] = 1.;
-	     _phi_mapVBGD[VV][1][2] = 1.;
-	     _phi_mapVBGD[VV][1][3] = 1.;
-	     _phi_mapVBGD[VV][1][4] = 1.;
-	     _phi_mapVBGD[VV][1][5] = 1.;
-
-	     _phi_mapVBGD[VV][2][0] = 1.;
-	     _phi_mapVBGD[VV][2][1] = 1.;
-	     _phi_mapVBGD[VV][2][2] = 1.;
-	     _phi_mapVBGD[VV][2][3] = 1.;
-	     _phi_mapVBGD[VV][2][4] = 1.;
-	     _phi_mapVBGD[VV][2][5] = 1.;
-
-	     _phi_mapVBGD[VV][3][0] = 1.;
-	     _phi_mapVBGD[VV][3][1] = 1.;
-	     _phi_mapVBGD[VV][3][2] = 1.;
-	     _phi_mapVBGD[VV][3][3] = 1.;
-	     _phi_mapVBGD[VV][3][4] = 1.;
-	     _phi_mapVBGD[VV][3][5] = 1.;
-
-	     _phi_mapVBGD[VV][4][0] = 1.;
-	     _phi_mapVBGD[VV][4][1] = 1.;
-	     _phi_mapVBGD[VV][4][2] = 1.;
-	     _phi_mapVBGD[VV][4][3] = 1.;
-	     _phi_mapVBGD[VV][4][4] = 1.;
-	     _phi_mapVBGD[VV][4][5] = 1.;
-
-	     _phi_mapVBGD[VV][5][0] = 1.;
-	     _phi_mapVBGD[VV][5][1] = 1.;
-	     _phi_mapVBGD[VV][5][2] = 1.;
-	     _phi_mapVBGD[VV][5][3] = 1.;
-	     _phi_mapVBGD[VV][5][4] = 1.;
-	     _phi_mapVBGD[VV][5][5] = 1.;
-
-	     _phi_mapVBGD[VV][6][0] = 1.;
-	     _phi_mapVBGD[VV][6][1] = 1.;
-	     _phi_mapVBGD[VV][6][2] = 1.;
-	     _phi_mapVBGD[VV][6][3] = 1.;
-	     _phi_mapVBGD[VV][6][4] = 1.;
-	     _phi_mapVBGD[VV][6][5] = 1.;
-	     
-	     // boundary element ===============
-	     _phi_mapVBGD[BB][0][0] = 1.;
-	     _phi_mapVBGD[BB][0][1] = 1.;
-	     _phi_mapVBGD[BB][0][2] = 1.; 
-	    
-	     _phi_mapVBGD[BB][1][0] = 1.;
-	     _phi_mapVBGD[BB][1][1] = 1.;
-	     _phi_mapVBGD[BB][1][2] = 1.; 
-
-	     _phi_mapVBGD[BB][2][0] = 1.;
-	     _phi_mapVBGD[BB][2][1] = 1.;
-	     _phi_mapVBGD[BB][2][2] = 1.; 
 	     
           }  //end TRIANG-2D-QQ  ======
 
@@ -532,38 +382,7 @@ void FEElemBase::init_switch() {
 	    elem_type myelem("hex","biquadratic","fifth");
 	    elem_type myelem_b("quad","biquadratic","fifth");
 	    
-	     _phi_mapVBGD[VV][0][0] = 1.;
-	     _phi_mapVBGD[VV][0][1] = 1.;
-	     _phi_mapVBGD[VV][0][2] = 1.;
-	     _phi_mapVBGD[VV][0][3] = 1.;
-	     _phi_mapVBGD[VV][0][4] = 1.;
-	     _phi_mapVBGD[VV][0][5] = 1.;
-	     _phi_mapVBGD[VV][0][6] = 1.;
-	     _phi_mapVBGD[VV][0][7] = 1.;
-	     _phi_mapVBGD[VV][0][8] = 1.;  
-	     _phi_mapVBGD[VV][0][9] = 1.;
-	     _phi_mapVBGD[VV][0][10] = 1.;
-	     _phi_mapVBGD[VV][0][11] = 1.;
-	     _phi_mapVBGD[VV][0][12] = 1.;
-	     _phi_mapVBGD[VV][0][13] = 1.;
-	     _phi_mapVBGD[VV][0][14] = 1.;
-	     _phi_mapVBGD[VV][0][15] = 1.;
-	     _phi_mapVBGD[VV][0][16] = 1.;
-	     _phi_mapVBGD[VV][0][17] = 1.;  
-	     _phi_mapVBGD[VV][0][18] = 1.;
-	     _phi_mapVBGD[VV][0][19] = 1.;
-	     _phi_mapVBGD[VV][0][20] = 1.;
-	     _phi_mapVBGD[VV][0][21] = 1.;
-	     _phi_mapVBGD[VV][0][22] = 1.;
-	     _phi_mapVBGD[VV][0][23] = 1.;
-	     _phi_mapVBGD[VV][0][24] = 1.;
-	     _phi_mapVBGD[VV][0][25] = 1.;
-	     _phi_mapVBGD[VV][0][26] = 1.;  
-
 	     //boundary element: Quad9
-
-
-
 	     
           } //end //QUADR-3D-QQ
 
