@@ -9,6 +9,7 @@
 // configure files ----------------
 #include "FEMTTUConfig.h"
 #include "SolverPackageEnum.hpp"// solver package
+#include "Graph.hpp"
 
 // forward declarations ----------------------
 class SparseMatrix;     // sparse matrix
@@ -86,7 +87,8 @@ public:
   virtual bool closed() const = 0;                                  ///< Close flag
 
   // Updates the matrix sparsity pattern
-//   virtual void update_sparsity_pattern (const Graph &) =0;                                  ///< Full sparsity update
+  virtual void update_sparsity_pattern_old (const Graph &) =0;
+  virtual void update_sparsity_pattern (const Graph &) =0;                                  ///< Full sparsity update
   virtual void update_sparsity_pattern(int m,int n, int m_l,int n_l,
                                        const std::vector<int >  n_oz, const std::vector<int >  n_nz  ) =0; ///< Partial sparsity update
 
@@ -101,10 +103,10 @@ public:
   // Add
   /// Add the full matrix to the Sparse matrix.
   virtual void add_matrix (const DenseMatrix &dm,
-                           const std::vector< int> &rows,
-                           const std::vector< int> &cols) = 0;
+                           const std::vector<unsigned int> &rows,
+                           const std::vector<unsigned int> &cols) = 0;
   /// Same, but assumes the row and column maps are the same.
-  virtual void add_matrix (const DenseMatrix &dm,const std::vector< int> &dof_indices) = 0;
+  virtual void add_matrix (const DenseMatrix &dm,const std::vector<unsigned int> &dof_indices) = 0;
   
   // Add a row to a Sparse matrix
   virtual void insert_row(const int row, const int ncols, 

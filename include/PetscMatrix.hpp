@@ -96,7 +96,8 @@ public:
 
   // Setting -------------------------------------
   // update pattern
-//   void update_sparsity_pattern(const Graph &sparsity_pattern); ///<   sparsity patter update (Graph)
+  void update_sparsity_pattern_old (const Graph & sparsity_pattern); //TODO remove it soon
+  void update_sparsity_pattern(const Graph &sparsity_pattern); ///<   sparsity patter update (Graph)
   void update_sparsity_pattern(int m,int n,int m_l,int n_l,    ///<   sparsity patter update (petsc)
                                const std::vector<int>  n_oz,const std::vector<int>  n_nz);
   // set values
@@ -105,11 +106,11 @@ public:
   // add
   /// Add the full matrix to the Petsc matrix.
   void add_matrix(const DenseMatrix &dm,
-                  const std::vector<int> &rows,
-                  const std::vector<int> &cols);
+                  const std::vector<unsigned int> &rows,
+                  const std::vector<unsigned int> &cols);
   /// Add the full matrix to the Petsc matrix.
   void add_matrix(const DenseMatrix &dm,
-                  const std::vector<int> &dof_indices);
+                  const std::vector<unsigned int> &dof_indices);
 
   /// Add a Sparse matrix
   void add(const double a, SparseMatrix &X);
@@ -265,7 +266,7 @@ inline void PetscMatrix::add(const int i,    // index i
 /// This function adds a square dense matrix to the main sparse matrix
 inline void PetscMatrix::add_matrix(
   const DenseMatrix& dm,                       // dense matrix
-  const std::vector<int>& dof_indices  // index vector
+  const std::vector<unsigned int>& dof_indices  // index vector
 ) {
   this->add_matrix(dm, dof_indices, dof_indices);
 }

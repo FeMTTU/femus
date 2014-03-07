@@ -1557,7 +1557,7 @@ inline void broadcast(T &data, const unsigned int root_id) {
 
 
 // ========================================================
-template <>
+template <typename T>
 inline void broadcast(std::string &data, const unsigned int root_id_in) {
   int n_proc;
   int iproc;
