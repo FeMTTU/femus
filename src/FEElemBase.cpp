@@ -25,6 +25,8 @@
 #include "FETet4.hpp"
 #include "FETet10.hpp"
 
+#include "ElemType.hpp"
+
 FEElemBase::FEElemBase(GeomEl* geomel_in ) {
 
   _geomel = geomel_in;
@@ -342,7 +344,10 @@ void FEElemBase::init_switch() {
           switch(_geomel->_geomel_type)  {
 
           case(QUADR): {  //QUADR-2D-QQ  ========
-	     _phi_mapVBGD[VV][0][0] = 1.;
+	    elem_type myelem("quad","biquadratic","fifth");
+	    elem_type myelem_b("line","biquadratic","fifth");
+
+	    _phi_mapVBGD[VV][0][0] = 1.;
 	     _phi_mapVBGD[VV][0][1] = 1.;
 	     _phi_mapVBGD[VV][0][2] = 1.;
 	     _phi_mapVBGD[VV][0][3] = 1.;
@@ -448,6 +453,8 @@ void FEElemBase::init_switch() {
           } //end //QUADR-2D-QQ =======
 
           case(TRIANG): { //TRIANG-2D-QQ ======
+	    elem_type myelem("tri","biquadratic","fifth");
+	    elem_type myelem_b("line","biquadratic","fifth");
 
 	     _phi_mapVBGD[VV][0][0] = 1.;
 	     _phi_mapVBGD[VV][0][1] = 1.;
@@ -522,6 +529,8 @@ void FEElemBase::init_switch() {
           switch(_geomel->_geomel_type)  {
 
           case(QUADR): {  //QUADR-3D-QQ
+	    elem_type myelem("hex","biquadratic","fifth");
+	    elem_type myelem_b("quad","biquadratic","fifth");
 	    
 	     _phi_mapVBGD[VV][0][0] = 1.;
 	     _phi_mapVBGD[VV][0][1] = 1.;
@@ -559,6 +568,8 @@ void FEElemBase::init_switch() {
           } //end //QUADR-3D-QQ
 
           case(TRIANG): {  //TRIANG-3D-QQ
+	    elem_type myelem("tet","biquadratic","fifth");
+	    elem_type myelem_b("tri","biquadratic","fifth");
 
 
           }  //end TRIANG-3D-QQ
@@ -584,11 +595,15 @@ void FEElemBase::init_switch() {
         case(2): {
           switch(_geomel->_geomel_type)  {
           case(QUADR): {  //QUADR-2D-LL
+	    elem_type myelem("quad","linear","fifth");
+	    elem_type myelem_b("line","linear","fifth");
 
 
           } //end //QUADR-2D-LL
 
           case(TRIANG): { //TRIANG-2D-LL
+	    elem_type myelem("tri","linear","fifth");
+	    elem_type myelem_b("line","linear","fifth");
 
 
           }  //end TRIANG-2D-LL
@@ -598,12 +613,14 @@ void FEElemBase::init_switch() {
         case(3): {
           switch(_geomel->_geomel_type)  {
           case(QUADR): { //QUADR-3D-LL
-
+	    elem_type myelem("hex","linear","fifth");
+	    elem_type myelem_b("quad","linear","fifth");
 
           } //end //QUADR-3D-LL
 
           case(TRIANG): {//TRIANG-3D-LL
-
+	    elem_type myelem("tet","linear","fifth");
+	    elem_type myelem_b("tri","linear","fifth");
 
           }  //end //TRIANG-3D-LL
 
@@ -628,12 +645,13 @@ void FEElemBase::init_switch() {
           switch(_geomel->_geomel_type)  {
 
           case(QUADR): {  //QUADR-2D-KK
-
+	    elem_type myelem("quad","constant","fifth");
+	    elem_type myelem_b("line","constant","fifth");
 
           } //end //QUADR-2D-KK
 
           case(TRIANG): { //TRIANG-2D-KK
-
+         std::cout << "Not implemented yet" << std::endl; abort();
 
           }  //end //TRIANG-2D-KK
 
@@ -642,11 +660,13 @@ void FEElemBase::init_switch() {
         case(3): {
           switch(_geomel->_geomel_type)  {
           case(QUADR): { //QUADR-3D-KK
-
+	    elem_type myelem("hex","constant","fifth");
+	    elem_type myelem_b("quad","constant","fifth");
 
           } //end  //QUADR-3D-KK
 
           case(TRIANG): {  //TRIANG-3D-KK
+         std::cout << "Not implemented yet" << std::endl; abort();
 
 
           }  //end //TRIANG-3D-KK
