@@ -18,7 +18,6 @@
 class DenseVector;
 class DenseSubVector;
 class SparseMatrix;
-class SparseRectangularMatrix;
 
 // ==========================================
 // Numeric vector. Provides a uniform interface
@@ -264,7 +263,7 @@ public:
 //
   /// \f$ U+=V \f$ where U and V are type
   virtual void add_vector (const DenseVector& V,
-                           const std::vector< int>& dof_indices) = 0;
+                           const std::vector<unsigned int>& dof_indices) = 0;
 
   /// Scale each element
   virtual void scale (const double factor) = 0;
