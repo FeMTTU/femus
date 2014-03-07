@@ -89,58 +89,58 @@ INCLUDE_DIRECTORIES(${PROJECT_BINARY_DIR}/config)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/ExternalLibraries/b64-1.4.2/include/)
 
 # Build the FEMTTUlib library
-SUBDIRS(src)
+ADD_SUBDIRECTORY(src)
 
 # Ask the user which executable have to be built
 OPTION(BUILD_STEADYNAVIERSTOKES "Build the Steady NavierStokes application" ON)
 
 # Build Applications
 IF(BUILD_STEADYNAVIERSTOKES)
-    SUBDIRS(Applications/SteadyNavierStokesParallel)
+    ADD_SUBDIRECTORY(Applications/SteadyNavierStokesParallel)
 ENDIF(BUILD_STEADYNAVIERSTOKES)  
 
 OPTION(BUILD_TIMEDEPNAVIERSTOKES "Build the Time dependent NavierStokes application" ON)
 
 IF(BUILD_TIMEDEPNAVIERSTOKES)
-    SUBDIRS(Applications/BackwardEulerNavierStokesParallel/)
+    ADD_SUBDIRECTORY(Applications/BackwardEulerNavierStokesParallel/)
 ENDIF(BUILD_TIMEDEPNAVIERSTOKES)   
 
 OPTION(BUILD_TAYLORVORTEX "Build the Time dependent Taylor vortex application" ON)
 
 IF(BUILD_TAYLORVORTEX)
-    SUBDIRS(Applications/TaylorGreenVortexFlowGeneralisedalpha/)
+    ADD_SUBDIRECTORY(Applications/TaylorGreenVortexFlowGeneralisedalpha/)
 ENDIF(BUILD_TAYLORVORTEX)   
 
 OPTION(BUILD_FSI_CMS_NWM "Build the FSI COMSOL Benchmark" ON)
 
 IF(BUILD_FSI_CMS_NWM)
-    SUBDIRS(Applications/FSI_CMS_NWM/)
+    ADD_SUBDIRECTORY(Applications/FSI_CMS_NWM/)
 ENDIF(BUILD_FSI_CMS_NWM)
 
 OPTION(BUILD_FSI_TUREK_3 "Build the FSI Turek 3 Benchmark" ON)
 
 IF(BUILD_FSI_TUREK_3)
-    SUBDIRS(Applications/FSI_TUREK_3/)
+    ADD_SUBDIRECTORY(Applications/FSI_TUREK_3/)
 ENDIF(BUILD_FSI_TUREK_3)
 
 OPTION(BUILD_GENCASE "Build the case generator" ON)
 
 IF(BUILD_GENCASE)
-    SUBDIRS(Applications/gencase/)
+    ADD_SUBDIRECTORY(Applications/gencase/)
 ENDIF(BUILD_GENCASE)
 
 OPTION(BUILD_MHDOPT "Build the MHD optimal control problem" ON)
 
 IF(BUILD_MHDOPT)
-    SUBDIRS(Applications/mhdopt/)
-    file(MAKE_DIRECTORY Applications/mhdopt/config/)
-    file(COPY Applications/mhdopt/config/ DESTINATION ${PROJECT_BINARY_DIR}/Applications/mhdopt/config/)
+    ADD_SUBDIRECTORY(Applications/mhdopt/)
+    FILE(MAKE_DIRECTORY Applications/mhdopt/config/)
+    FILE(COPY Applications/mhdopt/config/ DESTINATION ${PROJECT_BINARY_DIR}/Applications/mhdopt/config/)
 ENDIF(BUILD_MHDOPT)
 
 OPTION(BUILD_TEMPER "Build the temperature optimal control problem" ON)
 
 IF(BUILD_TEMPER)
-    SUBDIRS(Applications/temper/)
-    file(MAKE_DIRECTORY Applications/temper/config/)
-    file(COPY Applications/temper/config/ DESTINATION ${PROJECT_BINARY_DIR}/Applications/temper/config/)
+    ADD_SUBDIRECTORY(Applications/temper/)
+    FILE(MAKE_DIRECTORY Applications/temper/config/)
+    FILE(COPY Applications/temper/config/ DESTINATION ${PROJECT_BINARY_DIR}/Applications/temper/config/)
 ENDIF(BUILD_TEMPER)
