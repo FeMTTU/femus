@@ -126,6 +126,7 @@
     FEElements[fe]->SetUtils(&utils);
 //end sort of constructor
     FEElements[fe]->init();
+    FEElements[fe]->init_switch();
   }
 
   // ======== TimeLoop ===================================
