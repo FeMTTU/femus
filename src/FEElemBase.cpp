@@ -328,195 +328,215 @@ void FEElemBase::init_switch() {
       _dphidxez_mapVBGD[vb][g] = new double[_ndof[vb]*dim];
     }
 
-
-
-    if ( _qrule->_qrule_type == "Gauss5th") {     //only quadrature rule implemented so far
-
-      switch(_order) {  //what leads is the FE ORDER, the quadrature rule is usually mathematically chosen with respect to that
-
-// ================================================================================
-      case(QQ):  {
-
-        switch(space_dim) {
-
-        case(2): {
-
-          switch(_geomel->_geomel_type)  {
-
-          case(QUADR): {  //QUADR-2D-QQ  ========
-	    elem_type* myelems[VB];
-	    myelems[VV] = new elem_type("quad","biquadratic","fifth");
-	    myelems[BB] = new elem_type("line","biquadratic","fifth");
-
-	      for (int vb=0; vb<VB; vb++) {
-	if ( myelems[vb]->GetGaussPointNumber() != _qrule->_NoGaussVB[vb]) { std::cout << "Wrong gauss points" << std::endl; abort(); }
-
-	for (int ig=0; ig < _qrule->_NoGaussVB[vb]; ig++) {
-	  
-	for (int dof=0; dof < _ndof[vb]; dof++) {
-	  
-	_phi_mapVBGD[vb][ig][dof] = myelems[vb]->GetPhi(ig)[dof];
-		std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapVBGD[vb][ig][dof] << std::endl;
-	          }
-               }
-           }
-	    
-          } //end //QUADR-2D-QQ =======
-
-          case(TRIANG): { //TRIANG-2D-QQ ======
-	    elem_type myelem("tri","biquadratic","fifth");
-	    elem_type myelem_b("line","biquadratic","fifth");
-
-	     
-          }  //end TRIANG-2D-QQ  ======
-
-          } //end geomel_type
-
-
-        }  //end 2D
-        case(3): {
-
-          switch(_geomel->_geomel_type)  {
-
-          case(QUADR): {  //QUADR-3D-QQ
-	    elem_type myelem("hex","biquadratic","fifth");
-	    elem_type myelem_b("quad","biquadratic","fifth");
-	    
-	     //boundary element: Quad9
-	     
-          } //end //QUADR-3D-QQ
-
-          case(TRIANG): {  //TRIANG-3D-QQ
-	    elem_type myelem("tet","biquadratic","fifth");
-	    elem_type myelem_b("tri","biquadratic","fifth");
-
-
-          }  //end TRIANG-3D-QQ
-
-          } //end geomel_type
-
-
-        }  //end 2D
-        default: {
-          std::cout << "Space_dim ONE not implemented" << std::endl;
-          abort();
-        }
-
-        }  //end switch dimension
-
-      } //end feorder QQ
-
-// ================================================================================
-
-// ================================================================================
-      case(LL): {
-        switch(space_dim) {
-        case(2): {
-          switch(_geomel->_geomel_type)  {
-          case(QUADR): {  //QUADR-2D-LL
-	    elem_type myelem("quad","linear","fifth");
-	    elem_type myelem_b("line","linear","fifth");
-
-
-          } //end //QUADR-2D-LL
-
-          case(TRIANG): { //TRIANG-2D-LL
-	    elem_type myelem("tri","linear","fifth");
-	    elem_type myelem_b("line","linear","fifth");
-
-
-          }  //end TRIANG-2D-LL
-
-          } //end geomel_type
-        }  //end 2D
-        case(3): {
-          switch(_geomel->_geomel_type)  {
-          case(QUADR): { //QUADR-3D-LL
-	    elem_type myelem("hex","linear","fifth");
-	    elem_type myelem_b("quad","linear","fifth");
-
-          } //end //QUADR-3D-LL
-
-          case(TRIANG): {//TRIANG-3D-LL
-	    elem_type myelem("tet","linear","fifth");
-	    elem_type myelem_b("tri","linear","fifth");
-
-          }  //end //TRIANG-3D-LL
-
-          } //end geomel_type
-        }  //end 2D
-        default: {
-          std::cout << "Space_dim ONE not implemented" << std::endl;
-          abort();
-        }
-
-
-        }  //end switch dimension
-
-      } //end feorder LL
-// ================================================================================
-
-
-// ================================================================================
-      case(KK): {
-        switch(space_dim) {
-        case(2): {
-          switch(_geomel->_geomel_type)  {
-
-          case(QUADR): {  //QUADR-2D-KK
-	    elem_type myelem("quad","constant","fifth");
-	    elem_type myelem_b("line","constant","fifth");
-
-          } //end //QUADR-2D-KK
-
-          case(TRIANG): { //TRIANG-2D-KK
-         std::cout << "Not implemented yet" << std::endl; abort();
-
-          }  //end //TRIANG-2D-KK
-
-          } //end geomel_type
-        }  //end 2D
-        case(3): {
-          switch(_geomel->_geomel_type)  {
-          case(QUADR): { //QUADR-3D-KK
-	    elem_type myelem("hex","constant","fifth");
-	    elem_type myelem_b("quad","constant","fifth");
-
-          } //end  //QUADR-3D-KK
-
-          case(TRIANG): {  //TRIANG-3D-KK
-         std::cout << "Not implemented yet" << std::endl; abort();
-
-
-          }  //end //TRIANG-3D-KK
-
-          } //end geomel_type
-        }  //end 2D
-        default: {
-          std::cout << "Space_dim ONE not implemented" << std::endl;
-          abort();
-        }
-
-
-        }  //end switch dimension
-
-      }  //end feorder KK
-// ================================================================================
-
-      }  //end switch fe order
-
-
-    } //end if Gauss5th
-
-    else {
-      std::cout << "Quadrature rule not implemented" << std::endl;
-      abort();
-    }
-
-
-
-
   } //end VB
+
+
+
+  if ( _qrule->_qrule_type == "Gauss5th") {     //only quadrature rule implemented so far
+    std::string gauss_ord = "fifth";
+    
+    switch(_order) {  //what leads is the FE ORDER, the quadrature rule is usually mathematically chosen with respect to that
+
+// ================================================================================
+    case(QQ):  {
+
+      switch(space_dim) {
+
+      case(2): {
+
+        switch(_geomel->_geomel_type)  {
+
+        case(QUADR): {  //QUADR-2D-QQ  ========
+          elem_type* myelems[VB];
+          myelems[VV] = new elem_type("quad","biquadratic",gauss_ord.c_str());
+          myelems[BB] = new elem_type("line","biquadratic",gauss_ord.c_str());
+
+          for (int vb=0; vb<VB; vb++) {
+            if ( myelems[vb]->GetGaussPointNumber() != _qrule->_NoGaussVB[vb]) {
+              std::cout << "Wrong gauss points" << std::endl;
+              abort();
+            }
+
+            for (int ig = 0; ig < _qrule->_NoGaussVB[vb]; ig++) {
+
+              for (int dof=0; dof < _ndof[vb]; dof++) {
+                std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << std::endl;
+                _phi_mapVBGD[vb][ig][dof] = (myelems[vb]->GetPhi(ig))[dof];
+// 	std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapVBGD[vb][ig][dof] << std::endl;
+              }
+            }
+          } //end VB
+          break; //quadr
+        }
+
+        case(TRIANG): {
+
+
+
+
+          break;
+        }  //end TRIANG-2D-QQ  ======
+
+
+        } //end geomel_type
+
+        break;
+      }  //end 2D
+      case(3): {
+
+        switch(_geomel->_geomel_type)  {
+
+        case(QUADR): {  //QUADR-3D-QQ
+          elem_type myelem("hex","biquadratic",gauss_ord.c_str());
+          elem_type myelem_b("quad","biquadratic",gauss_ord.c_str());
+
+          //boundary element: Quad9
+          break;
+        } //end //QUADR-3D-QQ
+
+        case(TRIANG): {  //TRIANG-3D-QQ
+          elem_type myelem("tet","biquadratic",gauss_ord.c_str());
+          elem_type myelem_b("tri","biquadratic",gauss_ord.c_str());
+
+          break;
+        }  //end TRIANG-3D-QQ
+
+        } //end geomel_type
+
+        break;
+      }  //end 2D
+      default: {
+        std::cout << "Space_dim ONE not implemented" << std::endl;
+        abort();
+        break;
+      } //end 1D
+
+      }  //end switch dimension
+
+      break;
+    } //end feorder QQ
+
+// ================================================================================
+
+// ================================================================================
+    case(LL): {
+      switch(space_dim) {
+      case(2): {
+        switch(_geomel->_geomel_type)  {
+        case(QUADR): {  //QUADR-2D-LL
+          elem_type myelem("quad","linear",gauss_ord.c_str());
+          elem_type myelem_b("line","linear",gauss_ord.c_str());
+
+          break;
+        } //end //QUADR-2D-LL
+
+        case(TRIANG): { //TRIANG-2D-LL
+          elem_type myelem("tri","linear",gauss_ord.c_str());
+          elem_type myelem_b("line","linear",gauss_ord.c_str());
+
+
+          break;
+        }  //end TRIANG-2D-LL
+
+        } //end switch geomel_type
+        break;
+      }  //end 2D
+      case(3): {
+        switch(_geomel->_geomel_type)  {
+        case(QUADR): { //QUADR-3D-LL
+          elem_type myelem("hex","linear",gauss_ord.c_str());
+          elem_type myelem_b("quad","linear",gauss_ord.c_str());
+
+          break;
+        } //end //QUADR-3D-LL
+
+        case(TRIANG): { //TRIANG-3D-LL
+          elem_type myelem("tet","linear",gauss_ord.c_str());
+          elem_type myelem_b("tri","linear",gauss_ord.c_str());
+
+          break;
+        }  //end //TRIANG-3D-LL
+
+        } //end geomel_type
+
+        break;
+      }  //end 3D
+
+      default: {
+        std::cout << "Space_dim ONE not implemented" << std::endl;
+        abort();
+        break;
+      }
+
+      }  //end switch dimension
+
+      break;
+    } //end feorder LL
+// ================================================================================
+
+
+// ================================================================================
+    case(KK): {
+      switch(space_dim) {
+      case(2): {
+        switch(_geomel->_geomel_type)  {
+
+        case(QUADR): {  //QUADR-2D-KK
+          elem_type myelem("quad","constant",gauss_ord.c_str());
+          elem_type myelem_b("line","constant",gauss_ord.c_str());
+
+        } //end //QUADR-2D-KK
+
+        case(TRIANG): { //TRIANG-2D-KK
+          std::cout << "Not implemented yet" << std::endl;
+          abort();
+
+        }  //end //TRIANG-2D-KK
+
+        } //end geomel_type
+      }  //end 2D
+      case(3): {
+        switch(_geomel->_geomel_type)  {
+        case(QUADR): { //QUADR-3D-KK
+          elem_type myelem("hex","constant",gauss_ord.c_str());
+          elem_type myelem_b("quad","constant",gauss_ord.c_str());
+
+          break;
+        } //end  //QUADR-3D-KK
+
+        case(TRIANG): {  //TRIANG-3D-KK
+          std::cout << "Not implemented yet" << std::endl;
+          abort();
+
+          break;
+        }  //end //TRIANG-3D-KK
+
+        } //end geomel_type
+
+        break;
+      }  //end 2D
+      default: {
+        std::cout << "Space_dim ONE not implemented" << std::endl;
+        abort();
+        break;
+      }
+
+
+      }  //end switch dimension
+
+      break;
+    }  //end feorder KK
+// ================================================================================
+
+    }  //end switch fe order
+
+
+  } //end if Gauss5th
+
+  else {
+    std::cout << "Quadrature rule not implemented" << std::endl;
+    abort();
+  }
 
 
   return;
