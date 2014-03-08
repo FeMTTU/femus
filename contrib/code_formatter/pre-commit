@@ -1,0 +1,4 @@
+#!/bin/bash
+
+
+for file in include/*.hpp src/*.cpp; do astyle --mode=c  --indent=spaces=2   --brackets=attach   $file; done
