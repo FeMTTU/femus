@@ -180,6 +180,7 @@ void FEElemBase::init() {
       std::ifstream infile(file.str().c_str());
       readVB(vb,dim,infile);               //TODO    AAAAAAAAAAAAAAAAAAAAAAAAAA  notice that one dimension is the SPACE and another one is the MANIFOLD!!!
 
+      
     }
 
   }
@@ -351,7 +352,27 @@ void FEElemBase::init_switch() {
           myelems[VV] = new elem_type("quad","biquadratic",gauss_ord.c_str());
           myelems[BB] = new elem_type("line","biquadratic",gauss_ord.c_str());
 
+	  
+	//here i can construct beforehand an array of function pointers for VV and BB, so that i'll loop on it later
+	//the declaration of function pointers doesn't seem to me to be well understood by the compiler...  
+	//he basically accepts any declaration... but then he checks when you do the ASSIGNMENT...  
+	// i have to understand if i should make these functions STATIC or not  
+	// it seems like you don't need STATIC
+	//STATIC function DOES NOT MEAN a CONST function (a function that modifies the data)
+	//   
+	//i want to make an array of arrays of function pointers, EXTERNALLY STATIC [VB] and INTERNALLY DYNAMIC[ dim or (dim-1)]
+	  
+	  double* (elem_type::**Dphiptr[VB])(const unsigned & ig) const;  //static two-array of function pointers 
+// 	  double* (elem_type::* Dphiptr[VV]= new[2])(const unsigned & ig) const;
+// 	  Dphiptr[BB] = new  double* (elem_type::*[1])(const unsigned & ig) const;
+	  double* (elem_type::*prova)(const unsigned & ig)  myfptr = new  double* (elem_type::*prova)(const unsigned & ig) [2]; //dynamic array of pointers
+	  double* (elem_type::*DphiptrVV[2])(const unsigned & ig) const;  //static array of pointers
+	  double* (elem_type::*DphiptrBB[1])(const unsigned & ig) const;
+	  DphiptrVV[0] = &elem_type::GetDPhiDXi;
+	  DphiptrVV[1] = &elem_type::GetDPhiDEta;
+	  DphiptrBB[0] = &elem_type::GetDPhiDXi;
           for (int vb=0; vb<VB; vb++) {
+
             if ( myelems[vb]->GetGaussPointNumber() != _qrule->_NoGaussVB[vb]) {
               std::cout << "Wrong gauss points" << std::endl;
               abort();
@@ -359,13 +380,25 @@ void FEElemBase::init_switch() {
 
             for (int ig = 0; ig < _qrule->_NoGaussVB[vb]; ig++) {
 
-              for (int dof=0; dof < _ndof[vb]; dof++) {
-                std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << std::endl;
-                _phi_mapVBGD[vb][ig][dof] = (myelems[vb]->GetPhi(ig))[dof];
+              for (int idof=0; idof < _ndof[vb]; idof++) {
+//                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;
+                _phi_mapVBGD[vb][ig][idof] = myelems[vb]->GetPhi(ig)[idof];
 // 	std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapVBGD[vb][ig][dof] << std::endl;
-              }
+
+// derivatives in canonical element
+		uint dim = space_dim - vb;
+		for (uint idim = 0; idim < dim; idim++) {
+		  
+		_dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]]/* =  myelems[vb]->DphiptrVV[idim](ig)[idof]*/ ;
+
+		}
+ 		
+	      }
             }
           } //end VB
+          
+
+          
           break; //quadr
         }
 
