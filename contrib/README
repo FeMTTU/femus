@@ -85,3 +85,5 @@ You have to open another shell and set new values
 - NOW PAY ATTENTION TO WHAT HAPPENS WHEN YOU ADD SOURCE FILES to the LIBRARY (not to the application)! You have to update the LIST in the src/ cmake file!!! (use ls -1)
 - now go to the binary directory and type make to generate the library
 - then enter your application folder and run make to generate your executable
+
+######## Critical part: understand for what parameters in the config file one has to RERUN GENCASE OR NOT #############

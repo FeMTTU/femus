@@ -296,8 +296,6 @@ elem_type::~elem_type() {
   delete [] dphideta_memory;
   delete [] dphidzeta;
   delete [] dphidzeta_memory;
-  for (unsigned int vb = 0; vb < VB; vb++)  delete [] Dphiptr[vb];
-  
 };
 
 elem_type::elem_type(const char *solid, const char *order, const char *order_gauss) {
@@ -704,13 +702,6 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
     }
   }
 
-//arrays of function pointers TODO do all the CASES
-  	  Dphiptr[VV] = new FunctionPointer[2];
-	  Dphiptr[BB] = new FunctionPointer[1];
-	  Dphiptr[VV][0] = &elem_type::GetDPhiDXi;
-	  Dphiptr[VV][1] = &elem_type::GetDPhiDEta;
-	  Dphiptr[BB][0] = &elem_type::GetDPhiDXi;
-  
 }
 
 
