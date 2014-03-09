@@ -65,6 +65,7 @@ int main(int argc, char** argv) {
 // ======= Files ========================
   Files files; 
   files.get_frtmap().read();
+  files.get_frtmap().print();
   files.CheckIODirectories();
 
  //>>>>>>>>> REDIRECT COUT
@@ -83,13 +84,13 @@ int main(int argc, char** argv) {
  
   // ======= Utils ========================
   Utils utils(files);
-  utils._urtmap.read();  
-  utils._urtmap.print();
+        utils._urtmap.read();  
+        utils._urtmap.print();
       
   OptPhysics phys(utils);
-  phys._physrtmap.read();
-  phys.set_nondimgroups();
-  phys._physrtmap.print();
+             phys._physrtmap.read();
+             phys.set_nondimgroups();
+             phys._physrtmap.print();
 
 //===========================================
   const double Lref  = phys._physrtmap.get("Lref");     // reference L
@@ -122,6 +123,7 @@ int main(int argc, char** argv) {
     FEElements[fe]->SetUtils(&utils);
 //end sort of constructor
     FEElements[fe]->init();
+    FEElements[fe]->init_switch();
   }
   
   // ===== QuantityMap =========================================
