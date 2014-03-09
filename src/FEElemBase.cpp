@@ -362,16 +362,32 @@ void FEElemBase::init_switch() {
 	//   
 	//i want to make an array of arrays of function pointers, EXTERNALLY STATIC [VB] and INTERNALLY DYNAMIC[ dim or (dim-1)]
 	  
-	  double* (elem_type::**Dphiptr[VB])(const unsigned & ig) const;  //static two-array of function pointers 
-// 	  double* (elem_type::* Dphiptr[VV]= new[2])(const unsigned & ig) const;
-// 	  Dphiptr[BB] = new  double* (elem_type::*[1])(const unsigned & ig) const;
-	  double* (elem_type::*prova)(const unsigned & ig)  myfptr = new  double* (elem_type::*prova)(const unsigned & ig) [2]; //dynamic array of pointers
-	  double* (elem_type::*DphiptrVV[2])(const unsigned & ig) const;  //static array of pointers
-	  double* (elem_type::*DphiptrBB[1])(const unsigned & ig) const;
-	  DphiptrVV[0] = &elem_type::GetDPhiDXi;
-	  DphiptrVV[1] = &elem_type::GetDPhiDEta;
-	  DphiptrBB[0] = &elem_type::GetDPhiDXi;
-          for (int vb=0; vb<VB; vb++) {
+//        *FunctionPointer is a function.
+// 	  hence, FunctionPointer is a pointer to function
+// 	  you want an array of pointers to pointers to function,
+// 	  so your array will be FunctionPointer*
+// 	  you have to think that one star is embedded in the "Pointer" word
+// 	  typedef double* (elem_type::*FunctionPointer)(const unsigned & ig) const; //declaring the FunctionPointer type
+	  // I guess I have to set this definition at the class level
+	  
+	  //ok, allora, che cosa voglio fare:
+	  //ho due istanziazioni di una classe
+	  //da ciascuna istanziazione voglio prendere diversi puntatori a funzione
+	  
+	  
+// // // 	  elem_type::FunctionPointer* Dphiptr[VB];   // OR ALSO double* (elem_type::**Dphiptr[VB])(const unsigned & ig) const;  //static two-array of function pointers 
+// // // 	  Dphiptr[VV] = new elem_type::FunctionPointer[2];
+// // // 	  Dphiptr[BB] = new elem_type::FunctionPointer[1];
+// // // // 	  THIS ONE DOESN'T WORK double* ((elem_type::**prova))(const unsigned & ig) const  myfptr = new  double* (elem_type::*prova)(const unsigned & ig) const [2];
+// // // 	  Dphiptr[VV][0] = &elem_type::GetDPhiDXi;
+// // // 	  Dphiptr[VV][1] = &elem_type::GetDPhiDEta;
+// // // 	  Dphiptr[BB][0] = &elem_type::GetDPhiDXi;
+// // // 	  
+// // // 	  
+// // // 	  double* (elem_type::*DphiptrVV[2])(const unsigned & ig) const;  //static array of pointers
+// // // 	  double* (elem_type::*DphiptrBB[1])(const unsigned & ig) const;
+
+	  for (int vb=0; vb<VB; vb++) {
 
             if ( myelems[vb]->GetGaussPointNumber() != _qrule->_NoGaussVB[vb]) {
               std::cout << "Wrong gauss points" << std::endl;
@@ -389,7 +405,7 @@ void FEElemBase::init_switch() {
 		uint dim = space_dim - vb;
 		for (uint idim = 0; idim < dim; idim++) {
 		  
-		_dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]]/* =  myelems[vb]->DphiptrVV[idim](ig)[idof]*/ ;
+		_dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]]/* =  myelems[vb]->Dphiptr[vb][idim](ig)[idof]*/;
 
 		}
  		

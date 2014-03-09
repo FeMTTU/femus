@@ -105,7 +105,8 @@ public:
   double* GetDPhiDXi(const unsigned &ig) const;
   double* GetDPhiDEta(const unsigned &ig) const;
   double* GetDPhiDZeta(const unsigned &ig) const;
-  
+  typedef double* (*FunctionPointer)(const unsigned & ig); //declaring the FunctionPointer type //const and volatile function specifiers are invalid in type declaration
+
   void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
                double &Weight, double *other_phi) const;
 

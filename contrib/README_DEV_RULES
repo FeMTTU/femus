@@ -27,3 +27,12 @@ FEMuS includes,
  
  - when you change the name of a file, header or source, recompile all the applications
    and make sure that everything compiles correctly.
+   
+
+   
+========== "DO-IT-YOURSELF" DEBUG SNIPPETS   
+//manual breakpoint
+// #ifdef HAVE_MPI
+// MPI_Barrier(MPI_COMM_WORLD);
+// #endif
+//   std::cout << "***** Up to this point ****** " << std::endl; abort();

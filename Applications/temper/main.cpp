@@ -34,36 +34,16 @@
 
 
 // application ==============================
- #include "Temp_conf.hpp"
- #include "TempQuantities.hpp"
- #include "TempPhysics.hpp"
- #include "EqnNS.hpp"
- #include "EqnT.hpp"
+#include "Temp_conf.hpp"
+#include "TempQuantities.hpp"
+#include "TempPhysics.hpp"
+#include "EqnNS.hpp"
+#include "EqnT.hpp"
 
-
- //TODO when you change Temp_conf.h the main is not recompiled by make!!!
- //TODO why do I often get an "Unrecognized solver error"?
- //Ok, when I only recompile EqnBase.C it gives me this error!!!
- //TODO Fare il print_personal delle Petsc NEL FILE, e NON NEL TERMINALE.
- //TODO Fare la "stampa grafica" di matrici, proiettori e restrittori, SPEDENDOLA SU FILE INSTEAD OF X window
- //TODO la stampa di print_personal funziona solo con UN PROCESSORE!
- //TODO I have to find a way to redirect to file the PETSC outputs to standard out...
- //TODO every quantity in an equation, be it a SCALAR or a VECTOR, has a BLOCK POSITION, both in SERIAL and in PARALLEL.
- //since every quantity has ONLY ONE pointer to an equation, it means that every quantity can be associated to ONLY ONE equation.
- //So, it means that we can attribute to each quantity ONLY ONE position
- //so to every quantity we give the block position in the associated equation
- //of course if you instantiate another quantity of the same type you can associate another equation to it and another position
- //Allora, per le posizioni delle condizioni al contorno la questione e' un attimo diversa
- //io le impongo in modo SCALARE, mentre le equazioni hanno quantita' che possono essere VETTORIALI (se sono vettoriali, tra l'altro, hanno lo stesso FE order)
- //quindi, devo fare una routine che mi calcola la "posizione scalare" a partire dalla "posizione vettoriale"
- //perfetto, si puo' fare
- //la posizione scalare sarebbe un attributo di CIASCUNA COMPONENTE di una QUANTITA'
- //anche il nome di ogni componente scalare e' un attributo di ciascuna quantita' secondo me. 
- //(infatti poi si potrebbe pensare di stampare una quantita' anche se non e' associata ad un'equazione...)
- //TODO Study how you can treat everything in terms of VB as TEMPLATE or something
- //TODO Put the gauss point values inside the library
  
- 
+// =======================================
+// TEMPERATURE + NS optimal control problem
+// ======================================= 
 
  int main(int argc, char** argv) {
 
@@ -247,6 +227,3 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 
   return 0;
 }
-
-//TODO change the QuantityMap constructor so that it receives the mesh directly
-
