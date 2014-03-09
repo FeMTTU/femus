@@ -43,7 +43,7 @@ class QRule  {
    GeomEl * _geomel;
 
 //Quadrature =========
-   std::string  _qrule_type = "Gauss5th";
+   std::string  _qrule_type;
     uint         _NoGaussVB[VB];
     double*       _weightVB[VB];
     

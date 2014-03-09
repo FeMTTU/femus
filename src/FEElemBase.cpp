@@ -156,7 +156,7 @@ void FEElemBase::init() {
 
   std::cout << " Reading FE:: " << std::endl;
 
-  std::string femus_dir = getenv("FEMUS_DIR");  //TODO remove this
+  std::string femus_dir = getenv("FEMUS_DIR");  //TODO remove this asap
   std::string    ext_in = DEFAULT_EXT_IN;
   std::ostringstream file;
 
@@ -335,6 +335,8 @@ void FEElemBase::init_switch() {
 
   if ( _qrule->_qrule_type == "Gauss5th") {     //only quadrature rule implemented so far
     std::string gauss_ord = "fifth";
+
+    std::cout << " Read init FE order " << _order << std::endl;
     
     switch(_order) {  //what leads is the FE ORDER, the quadrature rule is usually mathematically chosen with respect to that
 
@@ -373,19 +375,6 @@ void FEElemBase::init_switch() {
 	  //ok, allora, che cosa voglio fare:
 	  //ho due istanziazioni di una classe
 	  //da ciascuna istanziazione voglio prendere diversi puntatori a funzione
-	  
-	  
-// // // 	  elem_type::FunctionPointer* Dphiptr[VB];   // OR ALSO double* (elem_type::**Dphiptr[VB])(const unsigned & ig) const;  //static two-array of function pointers 
-// // // 	  Dphiptr[VV] = new elem_type::FunctionPointer[2];
-// // // 	  Dphiptr[BB] = new elem_type::FunctionPointer[1];
-// // // // 	  THIS ONE DOESN'T WORK double* ((elem_type::**prova))(const unsigned & ig) const  myfptr = new  double* (elem_type::*prova)(const unsigned & ig) const [2];
-// // // 	  Dphiptr[VV][0] = &elem_type::GetDPhiDXi;
-// // // 	  Dphiptr[VV][1] = &elem_type::GetDPhiDEta;
-// // // 	  Dphiptr[BB][0] = &elem_type::GetDPhiDXi;
-// // // 	  
-// // // 	  
-// // // 	  double* (elem_type::*DphiptrVV[2])(const unsigned & ig) const;  //static array of pointers
-// // // 	  double* (elem_type::*DphiptrBB[1])(const unsigned & ig) const;
 
 	  for (int vb=0; vb<VB; vb++) {
 
@@ -404,14 +393,15 @@ void FEElemBase::init_switch() {
 // derivatives in canonical element
 		uint dim = space_dim - vb;
 		for (uint idim = 0; idim < dim; idim++) {
-		  
-		_dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]]/* =  myelems[vb]->Dphiptr[vb][idim](ig)[idof]*/;
+		 double* temp =  ( myelems[vb]->*(myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
+		_dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]] =  temp[idof];
+// 	std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]] << std::endl;
 
 		}
  		
 	      }
             }
-          } //end VB
+          } //end VB for
           
 
           
@@ -532,17 +522,19 @@ void FEElemBase::init_switch() {
 
         case(QUADR): {  //QUADR-2D-KK
           elem_type myelem("quad","constant",gauss_ord.c_str());
-          elem_type myelem_b("line","constant",gauss_ord.c_str());
-
+//           elem_type myelem_b("line","constant",gauss_ord.c_str());
+        break;
         } //end //QUADR-2D-KK
 
         case(TRIANG): { //TRIANG-2D-KK
-          std::cout << "Not implemented yet" << std::endl;
+          std::cout << "Not implemented yet TRIANG-2D-KK" << std::endl;
           abort();
-
+         break;
         }  //end //TRIANG-2D-KK
 
         } //end geomel_type
+
+	break;
       }  //end 2D
       case(3): {
         switch(_geomel->_geomel_type)  {
@@ -554,7 +546,7 @@ void FEElemBase::init_switch() {
         } //end  //QUADR-3D-KK
 
         case(TRIANG): {  //TRIANG-3D-KK
-          std::cout << "Not implemented yet" << std::endl;
+          std::cout << "Not implemented yet TRIANG-3D-KK" << std::endl;
           abort();
 
           break;
@@ -563,7 +555,7 @@ void FEElemBase::init_switch() {
         } //end geomel_type
 
         break;
-      }  //end 2D
+      }  //end 3D
       default: {
         std::cout << "Space_dim ONE not implemented" << std::endl;
         abort();
@@ -575,8 +567,14 @@ void FEElemBase::init_switch() {
 
       break;
     }  //end feorder KK
+    
 // ================================================================================
-
+      default: {
+        std::cout << "FE order not implemented" << std::endl;
+        abort();
+        break;
+      }
+      
     }  //end switch fe order
 
 
