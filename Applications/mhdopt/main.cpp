@@ -1,4 +1,3 @@
-//CONTROL PROGRAM
 // launch it with sthg like 'mpiexec -n 6 main-dbg --dt 1 --alphaVel 55 --udes 3 --Bref 0.001'
 
 //C++ includes ============
@@ -55,7 +54,7 @@ void optimization_loop(EquationsMap& e_map_in);
 double funzione(double t , const double* xyz) {return 1.;} 
 
 // =======================================
-// Main program
+// MHD optimal control problem
 // =======================================
 
 int main(int argc, char** argv) {
@@ -300,11 +299,3 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   
   return 0;
 }
-
-
-
-//manual breakpoint
-// #ifdef HAVE_MPI
-// MPI_Barrier(MPI_COMM_WORLD);
-// #endif
-//   std::cout << "***** Up to this point ****** " << std::endl; abort();
