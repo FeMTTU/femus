@@ -366,6 +366,7 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
   return;
 }
 
+
 /// ========== Copy Gencase Files ==========
 //it copies the mesh files to the outtime dir
 //the multigrid files are not copied here
@@ -398,7 +399,10 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
    op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_F_PROL + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
-//TODO we should also copy the files in the config/ directory, so we keep track of ALL the input!!!
+//copy configuration file
+   op_in  = app_basepath + "/" + DEFAULT_CONFIGDIR + "/" + DEFAULT_RUNTIMECONF;
+   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_RUNTIMECONF;
+/*(iproc==0)*/ CopyFile(op_in,op_out);
 
 //barrier so that all the processors will have mesh.h5 and else to read from
 //if you copy ALL THE I/O you need into the run, then the restart will read ONLY FROM THAT RUN.
@@ -417,7 +421,6 @@ MPI_Barrier(MPI_COMM_WORLD);
 /// This function checks if the needed directories are where they have to
 /// This is called by an APP, not by the gencase
 /// Beh
-void Files::CheckIODirectories() {
   //this does the preparation for a single run
  
  //after reading the file names, we can SET UP the NEW RUN
@@ -439,19 +442,8 @@ void Files::CheckIODirectories() {
 //if you let a check be done by only one processor, then all the others must wait for that check
 //so a thing that is useful to everyone but with "if proc==0" must be followed by a MPI_Barrier
  
- 
- 
- //========= CHECK  NEEDED I/O DIRECTORIES
-//INPUT: fem/,config/,input/
-                    std::string abs_app = get_basepath() + "/";
-/*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_CONFIGDIR);
-/*all procs*/   CheckDirOrAbort(abs_app,get_frtmap().get("INPUT_DIR"));
-
-
-//OUTPUT: output/
-/*all procs*/   CheckDir(abs_app,get_frtmap().get("OUTPUT_DIR"));
-
-  //if you reached this point, then output/ exists, so you can do the makedir for outtime!
+//============== OUTPUT
+ //if you reached this point, then output/ exists, so you can do the makedir for outtime!
    //the executable has to make a dir which is  in its ./ directory...
    //we could have made that in a run script, doing those operations with the shell.
    //for instance, you may not want a program (or also a script) to write somewhere else
@@ -464,12 +456,8 @@ void Files::CheckIODirectories() {
    //it's better to give relative paths also because the TEXT .xmd files that you write 
    //will only contain RELATIVE PATHS, so they will be readable anywhere
 
-
-   std::string abs_outputdir = abs_app + "/" + get_frtmap().get("OUTPUT_DIR");
-/*(iproc==0)*/  ComposeOutdirName();  //this adds an element to the Files map, so the SetupAll function cannot be constant
-/*(iproc==0)*/  CheckDirOrMake(abs_outputdir, get_frtmap().get("OUTTIME_DIR"));
-
-//this is better a makedir! because it never exists
+//==============   
+// CheckDirOrMake is better a makedir! because it never exists
 //if you let it do by all processors, then the fastest one will create the file, the others will find it
 //AAA there can be one case when the directory already exists! Suppose there is a script running in background 
 //and in the meantime i do some runs by hand... then i may start a run in the very precise moment when 
@@ -479,10 +467,19 @@ void Files::CheckIODirectories() {
 //so the OUTTIME DIR can be already there for two reasons: either for a background script of another run,
 // or for the fastest process of my runs. That is why it is better to let this check be done only by processor zero.
 //If the dir is already there, it is because of a contemporary background run
+ 
+void Files::CheckIODirectories() {
+ 
+//INPUT
+                    std::string abs_app = get_basepath() + "/";
+/*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_CONFIGDIR);
+/*all procs*/   CheckDirOrAbort(abs_app,get_frtmap().get("INPUT_DIR"));
 
-//========= END CHECK  NEEDED I/O DIRECTORIES
+/*all procs*/   CheckDir(abs_app,get_frtmap().get("OUTPUT_DIR"));
 
-
+   std::string abs_outputdir = abs_app + "/" + get_frtmap().get("OUTPUT_DIR");
+/*(iproc==0)*/  ComposeOutdirName();  //this adds an element to the Files map, so the SetupAll function cannot be constant
+/*(iproc==0)*/  CheckDirOrMake(abs_outputdir, get_frtmap().get("OUTTIME_DIR"));
 
  return; 
 }

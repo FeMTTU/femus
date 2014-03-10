@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
   // ======= Files =====
   Files files(/*"../mhdopt/"*/basepath);
    std::cout << "******The basepath starting from the gencase directory is ***** " << files.get_basepath() << std::endl;
-  files.CheckDirOrAbort(files.get_basepath(),DEFAULT_CONFIGDIR); 
+//   files.CheckDirOrAbort(files.get_basepath(),DEFAULT_CONFIGDIR); 
   files.get_frtmap().read();
   files.get_frtmap().print();
   files.CheckDir(files.get_basepath(),files.get_frtmap().get("INPUT_DIR")); //here, we must check if the input directory where gencase writes is there  //if not, we make it

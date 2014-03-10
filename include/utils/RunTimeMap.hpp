@@ -12,17 +12,17 @@
 
 #include "FemusDefault.hpp"
 
-//can i use a template string as a nontype template parameter? No:
-//  http://stackoverflow.com/questions/5547852/string-literals-not-allowed-as-non-type-template-parameters
-
 template <typename T>
 class RunTimeMap   {
 
+private:
+
+  const std::string               _basepath;
+  
 public:
   
   std::map<std::string, T > _rtmap;
   const std::string               _tag_name;  //for the tag
-  const std::string               _basepath;
 
 
    RunTimeMap(const std::string class_name, const std::string basepath_in );
@@ -34,6 +34,8 @@ public:
   void   set(const std::string & name, T & value);
   T      get(const std::string & name) const;
 
+  const std::string  get_rbasepath() const {return _basepath;}
+  
 };
 
 
@@ -43,8 +45,8 @@ public:
 //=============
 template <typename T>
 RunTimeMap<T>::RunTimeMap(const std::string class_name_in, const std::string basepath_in) : 
-_tag_name(class_name_in), 
-_basepath(basepath_in)
+_basepath(basepath_in),
+_tag_name(class_name_in)
 { 
   //_tag_name = class_name; 
   //fill it in the initialization list instead of here;
