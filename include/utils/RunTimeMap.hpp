@@ -21,11 +21,11 @@ class RunTimeMap   {
 public:
   
   std::map<std::string, T > _rtmap;
-  std::string               _tag_name;  //for the tag
-  std::string               _basepath;
+  const std::string               _tag_name;  //for the tag
+  const std::string               _basepath;
 
 
-   RunTimeMap(std::string class_name, std::string basepath_in );
+   RunTimeMap(const std::string class_name, const std::string basepath_in );
   ~RunTimeMap();
 
   void read();         ///< Reading file names from file
@@ -42,7 +42,7 @@ public:
 
 //=============
 template <typename T>
-RunTimeMap<T>::RunTimeMap(std::string class_name_in,  std::string basepath_in) : 
+RunTimeMap<T>::RunTimeMap(const std::string class_name_in, const std::string basepath_in) : 
 _tag_name(class_name_in), 
 _basepath(basepath_in)
 { 

@@ -16,7 +16,6 @@ class Files {
 
 protected:
   
-  std::string                       _basepath;
   RunTimeMap<std::string>           _frtmap;   //this map cannot be declared as CONST because at some point it is FILLED and it is not in the initialization in the constructor!!!
 
 public:
@@ -24,13 +23,13 @@ public:
   std::ofstream _case_data;
 
   // Constructor-Destructor ------------------------
-   Files(std::string = DEFAULT_BASEPATH);  ///< Constructor //TODO seems like it doesn't work with ONE DEFAULT PARAMETER
+   Files(const std::string &/*  = DEFAULT_BASEPATH*/);  ///< Constructor //TODO seems like it doesn't work with ONE DEFAULT PARAMETER
   ~Files(); ///< Destructor
 
   // Return functions ---------------------------------
-  inline RunTimeMap<std::string>   get_frtmap() const {return  _frtmap;}    //TODO this is allowed!!!
-  inline RunTimeMap<std::string> & get_frtmap()       {return  _frtmap;}         // I WANT THIS TO RETURN a REFERENCE, because this is going to call the READ FUNCTION which modifies the object 
-  inline            std::string  get_basepath() const {return _basepath; }  //THIS RETURNS a COPY
+  inline       RunTimeMap<std::string> & get_frtmap()       {return  _frtmap;}    //non-const version //WHO DECIDES whether to use THIS FUNCTION or the OTHER ONE? TODO OVERLOADING
+  inline const RunTimeMap<std::string> & get_frtmap() const {return  _frtmap;}         // I WANT THIS TO RETURN a REFERENCE, because this is going to call the READ FUNCTION which modifies the object 
+  inline           const       std::string &  get_basepath() const {return _frtmap._basepath; }  //THIS RETURNS a COPY
 
 
   void PrintRun(const std::string run_name_in) const;   //for restart
@@ -47,8 +46,7 @@ public:
   void RedirectCout(std::streambuf* sbuf,  std::ofstream& file_in);
 
   void CopyFile(std::string  f_in,std::string  f_out) const;
- 
-  void CopyGencaseFiles();
+  void CopyGencaseFiles() const;
 
 };
 

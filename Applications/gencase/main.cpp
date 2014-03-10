@@ -46,18 +46,7 @@
 //This is a special application in the sense all that its configuration
 //is dependent on the App that we are considering,
 //so it is a sort of "service application"
-//in fact, it links with the libfemus as compiled for the corresponding application
-//May be possible for us to ISOLATE the parameters that are 
-//necessary ONLY to GENCASE?
-//Well there are some parameters that are required for both, like "dimension", NDOF_FEM
-//But i think we could make things much more ordered
 
-//For instance, of the three parameter files (which could actually be put inside the class
-// subdirectory in config/, as each of them is closely related to the classes Utils Files and Physics)
-// we have that:
-//param_phys is not involved for the gencase
-//param_utils is involved
-//param_files is involved
 
 // Considering instead the configuration of the classes, the classes that are involved 
 // are the FE because you must know how the dofs are arranged, the GeomEl which gives you 
@@ -84,7 +73,7 @@ int main(int argc, char** argv) {
   std::string basepath = "../" + chosen_app + "/";
 
   // ======= Files =====
-  Files files(basepath);
+  Files files(/*"../mhdopt/"*/basepath);
    std::cout << "******The basepath starting from the gencase directory is ***** " << files.get_basepath() << std::endl;
   files.CheckDirOrAbort(files.get_basepath(),DEFAULT_CONFIGDIR); 
   files.get_frtmap().read();
