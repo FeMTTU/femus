@@ -16,8 +16,6 @@ config/FEMTTUConfig.h
 
 
 # folders
-data_in/
-input/
 output/
 packs/
 templates/
@@ -65,9 +63,6 @@ codeblocks/
 *.old
 
 # mesh input files
-*.gam
-*.neu
-*.med
 
 # output files
 *.gmv
