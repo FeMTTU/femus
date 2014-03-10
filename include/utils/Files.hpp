@@ -28,8 +28,8 @@ public:
 
   // Return functions ---------------------------------
   inline       RunTimeMap<std::string> & get_frtmap()       {return  _frtmap;}    //non-const version //WHO DECIDES whether to use THIS FUNCTION or the OTHER ONE? TODO OVERLOADING
-  inline const RunTimeMap<std::string> & get_frtmap() const {return  _frtmap;}         // I WANT THIS TO RETURN a REFERENCE, because this is going to call the READ FUNCTION which modifies the object 
-  inline           const       std::string &  get_basepath() const {return _frtmap._basepath; }  //THIS RETURNS a COPY
+  inline const RunTimeMap<std::string> & get_frtmap() const {return  _frtmap;}    // I WANT THIS TO RETURN a REFERENCE, because this is going to call the READ FUNCTION which modifies the object //THIS FUNCTION WILL BE CALLED by functions inside the class basically, which have the "const this" as well
+  inline const std::string             get_basepath() const {return  _frtmap.get_rbasepath(); }  //THIS RETURNS a COPY
 
 
   void PrintRun(const std::string run_name_in) const;   //for restart
