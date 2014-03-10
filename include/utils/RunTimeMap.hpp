@@ -18,17 +18,17 @@ class RunTimeMap   {
 private:
 
   const std::string               _basepath;
+  const std::string               _tag_name;
   
 public:
   
   std::map<std::string, T > _rtmap;
-  const std::string               _tag_name;  //for the tag
 
 
    RunTimeMap(const std::string class_name, const std::string basepath_in );
   ~RunTimeMap();
 
-  void read();         ///< Reading file names from file
+  void read();
   void print() const;
 
   void   set(const std::string & name, T & value);
