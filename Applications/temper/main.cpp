@@ -51,7 +51,7 @@
   FemusInit init(argc,argv);
   
 // ======= Files ========================
-  Files files; 
+  Files files("./"); 
   files.get_frtmap().read();
   files.get_frtmap().print();
   files.CheckIODirectories();

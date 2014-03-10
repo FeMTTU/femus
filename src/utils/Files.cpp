@@ -22,11 +22,10 @@
 //         Files Class functions
 // =================================================
 
-  Files::Files(std::string  string_in) : 
-        _basepath(string_in),
-        _frtmap("Files",_basepath)   { 
+  Files::Files(const std::string &  string_in) : 
+        _frtmap("Files",string_in)   { 
 	  
-	    if (_basepath == "")  { std::cout << " Set the basepath in the command line" << std::endl;    abort(); }
+	    if (string_in == "")  { std::cout << " Set the basepath in the command line" << std::endl;    abort(); }
 
 	}  ///< Constructor
 
@@ -342,7 +341,7 @@ MPI_Bcast(out_char,outchar_size,MPI_CHAR,0,MPI_COMM_WORLD);
 
  delete [] out_char;
 
- this->get_frtmap().set("OUTTIME_DIR",new_out);
+ get_frtmap().set("OUTTIME_DIR",new_out);
 
  std::cout << "iproc = " << paral::get_rank() << " ***** The output dir of this run will be: " << get_frtmap().get("OUTPUT_DIR") << get_frtmap().get("OUTTIME_DIR") << std::endl;
 
@@ -371,7 +370,7 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
 //it copies the mesh files to the outtime dir
 //the multigrid files are not copied here
     /*TODO fileIO*/
-  void Files::CopyGencaseFiles() { 
+  void Files::CopyGencaseFiles() const { 
 
    std::string app_basepath = get_basepath() + "/"; 
 
