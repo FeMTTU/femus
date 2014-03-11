@@ -51,7 +51,7 @@
 //***************** functions for this application
 void optimization_loop(EquationsMap& e_map_in);
 
-double funzione(double t , const double* xyz) {return 1.;} 
+// double funzione(double t , const double* xyz) {return 1.;} 
 
 // =======================================
 // MHD optimal control problem
@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
   FemusInit init(argc,argv);
 
 // ======= Files ========================
-  Files files("./"); 
+  Files files("./");
   files.get_frtmap().read();
   files.get_frtmap().print();
   files.CheckIODirectories();
