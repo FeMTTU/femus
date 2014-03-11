@@ -31,7 +31,7 @@ public:
   void read();
   void print() const;
 
-  void   set(const std::string & name, T & value);
+  void   set(const std::string & name, const T & value);
   T      get(const std::string & name) const;
 
   const std::string  get_rbasepath() const {return _basepath;}
@@ -53,6 +53,14 @@ _tag_name(class_name_in)
   //    you may also put it here because it is not a reference nor a const;
   //    but in the initialization list you avoid calling for an empty constructor, IIRC
   
+  // I AM ALMOST SURE THAT THERE IS SOME PROBLEM WITH THE CONSTRUCTION of the _rtmap object...
+  // it sounds like it's not well initialized
+  //clearly the object is not const, so we need to find some other way to "sort of initialize" it
+//    _rtmap.clear();
+
+// IF I UNDERSTOOD CORRECTLY FROM THE DEBUGGER, the DEFAULT CONSTRUCTOR for STD::MAP is called here !!!  
+
+  
 }
 
 template <typename T>
@@ -66,7 +74,7 @@ RunTimeMap<T>::~RunTimeMap() {}
 //i'm afraid you have to do it always, even if you dont use that template
 //in that function (or you do not SEEM to use that template...)
 template <typename T>
- void   RunTimeMap<T>::set(const std::string & name, T & value)  {
+ void   RunTimeMap<T>::set(const std::string & name, const T & value)  {
     _rtmap.insert(make_pair(name,value));
   }
 

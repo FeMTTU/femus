@@ -27,7 +27,8 @@ public:
   ~Files(); ///< Destructor
 
   // Return functions ---------------------------------
-  inline       RunTimeMap<std::string> & get_frtmap()       {return  _frtmap;}    //non-const version //WHO DECIDES whether to use THIS FUNCTION or the OTHER ONE? TODO OVERLOADING
+  inline       RunTimeMap<std::string> * get_frtmap_ptr()       {return  &_frtmap;} 
+  inline       RunTimeMap<std::string> & get_frtmap()       {return  _frtmap;}   //trying to return the pointer instead of the reference //non-const version //WHO DECIDES whether to use THIS FUNCTION or the OTHER ONE? TODO OVERLOADING
   inline const RunTimeMap<std::string> & get_frtmap() const {return  _frtmap;}    // I WANT THIS TO RETURN a REFERENCE, because this is going to call the READ FUNCTION which modifies the object //THIS FUNCTION WILL BE CALLED by functions inside the class basically, which have the "const this" as well
   inline const std::string             get_basepath() const {return  _frtmap.get_rbasepath(); }  //THIS RETURNS a COPY
 
