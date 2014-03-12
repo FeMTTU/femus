@@ -14,7 +14,7 @@
 // =======================================
 class Files {
 
-protected:
+private:
   
   RunTimeMap<std::string>           _frtmap;   //this map cannot be declared as CONST because at some point it is FILLED and it is not in the initialization in the constructor!!!
 
