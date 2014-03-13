@@ -19,19 +19,35 @@ private:
   unsigned _model;   // Physical model for the fluid (0-->Newtonian)
 
 public:
-  Fluid(Parameter& par);
+  
   Fluid(Parameter& par, const double viscosity, const double density, const char model[]="Newtonian",
         const double k=1., const double cp=1., const double alpha=1.e-06);
+  
+  Fluid(Parameter& par);
+  
+  Fluid();
+  
   ~Fluid() {};
 
   void set_viscosity(const double viscosity);
-  double get_viscosity();
-  double get_IReynolds_number();
-  double get_Prandtl_number();
-  double get_Rayleigh_number();
-  unsigned get_physical_model();
-  double get_Peclet_number();
+  
+  const double get_viscosity() const;
+  
+  const double get_IReynolds_number() const;
+  
+  const double get_Prandtl_number() const;
+  
+  const double get_Rayleigh_number() const;
+  
+  const unsigned get_physical_model() const;
+  
+  const double get_Peclet_number() const;
+  
+  /** printing operator */
+  friend std::ostream & operator << (std::ostream & os, const Fluid & fluid); 
 
+  /** overloadinf of the = operator */
+  Fluid & operator=(const Fluid &fluid);
 
 };
 
