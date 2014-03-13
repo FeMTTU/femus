@@ -35,7 +35,7 @@ public:
   
     
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
-  SparseMatrix *_KK, *_PP, *_CC; //will become SparseMatrix ASAP
+  SparseMatrix *_KK, *_PP,*_RR, *_CC; //will become SparseMatrix ASAP
   bool _CC_flag; 
   unsigned _gridr,_gridn;
   

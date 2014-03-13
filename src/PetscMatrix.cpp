@@ -530,6 +530,34 @@ void PetscMatrix::matrix_PtAP(const SparseMatrix &mat_P, const SparseMatrix &mat
   CHKERRABORT(MPI_COMM_WORLD,ierr);
 }
 
+// // ============================================================
+
+void PetscMatrix::matrix_ABC(const SparseMatrix &mat_A, const SparseMatrix &mat_B, const SparseMatrix &mat_C, const bool &mat_reuse){
+  
+  const PetscMatrix* A = static_cast<const PetscMatrix*>(&mat_A);
+  A->close();
+  
+  const PetscMatrix* B = static_cast<const PetscMatrix*>(&mat_B);
+  B->close();
+  
+  const PetscMatrix* C = static_cast<const PetscMatrix*>(&mat_C);
+  C->close();
+  
+  int ierr=0;
+  if(mat_reuse){  
+    ierr = MatMatMatMult(const_cast<PetscMatrix*>(A)->mat(), const_cast<PetscMatrix*>(B)->mat(), 
+			 const_cast<PetscMatrix*>(C)->mat(), MAT_REUSE_MATRIX,1.0,&_mat);
+  }
+  else{
+    this->clear();
+    ierr = MatMatMatMult(const_cast<PetscMatrix*>(A)->mat(), const_cast<PetscMatrix*>(B)->mat(), 
+			 const_cast<PetscMatrix*>(C)->mat(), MAT_INITIAL_MATRIX, 1.0,&_mat);
+    this->_is_initialized = true;
+  }
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+}
+
+
 // ===========================================================
 
 void PetscMatrix::matrix_get_diagonal_values(const std::vector< int > &index, std::vector<double> &value) const{

@@ -206,6 +206,7 @@ void lsysPde::DeletePde() {
   
   if (_msh->GetGridNumber()>0) {
      delete _PP;
+     delete _RR;
   }
   
   delete _EPS;

@@ -118,7 +118,8 @@ public:
   virtual void matrix_add (const double a_in, SparseMatrix &X_in, const char pattern []) = 0;
   
   virtual void matrix_PtAP(const SparseMatrix &mat_P, const SparseMatrix &mat_A, const bool &reuse) = 0;
- 
+  virtual void matrix_ABC(const SparseMatrix &mat_A,const SparseMatrix &mat_B, const SparseMatrix &mat_C, const bool &reuse) = 0;
+  
   virtual void matrix_get_diagonal_values(const std::vector< int > &index, std::vector<double> &value)const=0;
   virtual void matrix_set_diagonal_values(const std::vector< int > &index, const double &value)=0;
   virtual void matrix_set_diagonal_values(const std::vector< int > &index, const std::vector<double> &value)=0;

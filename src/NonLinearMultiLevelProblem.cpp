@@ -1068,24 +1068,33 @@ void NonLinearMultiLevelProblem::Restrictor(const unsigned &ipde, const unsigned
       if (!_LinSolver[ipde][gridf-1]->_CC_flag) {
 	_LinSolver[ipde][gridf-1]->_CC_flag=1;
 	_LinSolver[ipde][gridf-1]->_CC->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,!matrix_reuse);
+	//_LinSolver[ipde][gridf-1]->_CC->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,!matrix_reuse);
       } 
       else{
 	_LinSolver[ipde][gridf-1]->_CC->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,matrix_reuse);
+	//_LinSolver[ipde][gridf-1]->_CC->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,matrix_reuse);
       }
       _LinSolver[ipde][gridf-1u]->_KK->matrix_add(1.,*_LinSolver[ipde][gridf-1u]->_CC,"different_nonzero_pattern");
     } 
     else { //Projection of the Matrix on the lower level
       if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
 	_LinSolver[ipde][gridf-1]->_KK->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,!matrix_reuse);
+	//_LinSolver[ipde][gridf-1]->_KK->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,!matrix_reuse);
       }
       else{ 
 	_LinSolver[ipde][gridf-1]->_KK->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,matrix_reuse);
+	//_LinSolver[ipde][gridf-1]->_KK->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,matrix_reuse);
+
       }	    
     }
   }
       
   _LinSolver[ipde][gridf-1u]->_RESC->matrix_mult_transpose(*_LinSolver[ipde][gridf]->_RES, *_LinSolver[ipde][gridf]->_PP);
   *_LinSolver[ipde][gridf-1u]->_RES += *_LinSolver[ipde][gridf-1u]->_RESC;
+  
+  // _LinSolver[ipde][gridf-1u]->_RESC->matrix_mult(*_LinSolver[ipde][gridf]->_RES, *_LinSolver[ipde][gridf]->_RR);
+ // *_LinSolver[ipde][gridf-1u]->_RES += *_LinSolver[ipde][gridf-1u]->_RESC;
+  
 }
 
 // *******************************************************
@@ -1132,9 +1141,21 @@ int NonLinearMultiLevelProblem::BuildProlongatorMatrix(unsigned gridf, const cha
   _LinSolver[ipde][gridf]->_PP = SparseMatrix::build().release();
   _LinSolver[ipde][gridf]->_PP->init(nf,nc,nf_loc,nc_loc,27,27);
       
+  
+  SparseMatrix *RRt;
+ 
+  RRt = SparseMatrix::build().release();
+  RRt->init(nf,nc,nf_loc,nc_loc,27,27);
+ 
+  _LinSolver[ipde][gridf]->_RR = SparseMatrix::build().release();
+  _LinSolver[ipde][gridf]->_RR->init(nc,nf,nc_loc,nf_loc,27,27);
+  
   for (unsigned k=0; k<_SolPdeIndex[ipde].size(); k++) {
     unsigned SolIndex=_SolPdeIndex[ipde][k];
-       
+    bool TestDisp=0;
+    if( !strcmp(SolName[SolIndex],"DX") || !strcmp(SolName[SolIndex],"DY") )   TestDisp=1;
+    //TestDisp=0;
+    
     // loop on the coarse grid 
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
       for (int iel_mts=_msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom]; 
@@ -1143,15 +1164,27 @@ int NonLinearMultiLevelProblem::BuildProlongatorMatrix(unsigned gridf, const cha
 	if(_msh[gridf-1]->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
     
 	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
+	  
 	  type_elem[ielt][SolType[SolIndex]]->prolongation(*_LinSolver[ipde][gridf],*_LinSolver[ipde][gridf-1],iel,
-							   _LinSolver[ipde][gridf]->_PP,SolIndex,k);
+							   RRt,SolIndex,k, TestDisp);
+	  
+	  type_elem[ielt][SolType[SolIndex]]->prolongation(*_LinSolver[ipde][gridf],*_LinSolver[ipde][gridf-1],iel,
+							   _LinSolver[ipde][gridf]->_PP,SolIndex,k, 0);
 	
 	}
       }
     }
   }
   _LinSolver[ipde][gridf]->_PP->close();
-    
+  RRt->close();
+  
+  RRt->get_transpose( *_LinSolver[ipde][gridf]->_RR);
+  
+  
+  delete RRt;
+  
+  
+  
   return ierr;
 }
 
