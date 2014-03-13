@@ -88,7 +88,7 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
   vector< vector< int > > dofsVAR(2*dim+1); 
   
   // algorithm parameters
-  double eps_pen 	= 1.e40;
+  double eps_pen 	= 1;//.e40;
   bool   newton		= 0;
   bool   penalty 	= mylsyspde->GetStabilization();
   
@@ -459,11 +459,11 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
 		  B[indexVAR[dim+idim]][indexVAR[dim+idim]][i*nve+j] += dt*IRe*LapXweight + Adv1 + dt*div_stab - dt*div_ale + betans*Mass;
 		}
 		
-                for(int idim=0; idim<dim; idim++) {
-		  for(int idim2=0; idim2<dim; idim2++) {
-		    B[indexVAR[dim+idim]][indexVAR[idim2]][i*nve+j] += betans*SolVAR[dim+idim]*((*fi))*(*(gradfi+idim2))*Weight;
-		  }
-		}
+//                 for(int idim=0; idim<dim; idim++) {
+// 		  for(int idim2=0; idim2<dim; idim2++) {
+// 		    B[indexVAR[dim+idim]][indexVAR[idim2]][i*nve+j] += betans*SolVAR[dim+idim]*((*fi))*(*(gradfi+idim2))*Weight;
+// 		  }
+// 		}
 
 		double Lap_ale=0.;
 		for(int idim=0; idim<dim; idim++) {

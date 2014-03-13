@@ -710,23 +710,27 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
 //----------------------------------------------------------------------------------------------------
 
 void elem_type::prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseMatrix* Projmat, 
-		    const unsigned &index_sol, const unsigned &kkindex_sol) const {
+		    const unsigned &index_sol, const unsigned &kkindex_sol, const bool &TestDisp) const {
   vector<int> cols(27);
   for (int i=0; i<nf_; i++) {
     int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
     int ielf=lspdec._msh->el->GetChildElement(ielc,i0);
     int i1=KVERT_IND[i][1]; //local id node on the subdivision of the fine element
     int iadd=lspdef._msh->el->GetDof(ielf,i1,type_);
-    int irow=lspdef.GetKKDof(index_sol,kkindex_sol,iadd);  //  local-id to dof 
-    int ncols=prol_ind[i+1]-prol_ind[i];
-    cols.assign(ncols,0);
-    for (int k=0; k<ncols; k++) {
-      int j=prol_ind[i][k]; 
-      int jadd=lspdec._msh->el->GetDof(ielc,j,type_);
-      int jj=lspdec.GetKKDof(index_sol,kkindex_sol,jadd); 
-      cols[k]=jj;
+    bool solidmark=lspdef._msh->el->GetNodeRegion(iadd);
+    bool fluid_region (2==lspdec._msh->el->GetElementMaterial(ielc));
+    if( !TestDisp || !solidmark || !fluid_region){
+      int irow=lspdef.GetKKDof(index_sol,kkindex_sol,iadd);  //  local-id to dof 
+      int ncols=prol_ind[i+1]-prol_ind[i];
+      cols.assign(ncols,0);
+      for (int k=0; k<ncols; k++) {
+	int j=prol_ind[i][k]; 
+	int jadd=lspdec._msh->el->GetDof(ielc,j,type_);
+	int jj=lspdec.GetKKDof(index_sol,kkindex_sol,jadd); 
+	cols[k]=jj;
+      }
+      Projmat->insert_row(irow,ncols,cols,*prol_val[i]);
     }
-    Projmat->insert_row(irow,ncols,cols,*prol_val[i]);
   }
 }
 
