@@ -94,16 +94,16 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
   
   // ------------------------------------------------------------------------
   // Physical parameters
-  double rhof	 	= nl_td_ml_prob._fluid->get_density();
-  double rhos 		= nl_td_ml_prob._solid->get_density();
-  double mu_lame 	= nl_td_ml_prob._solid->get_lame_shear_modulus();
-  double lambda_lame 	= nl_td_ml_prob._solid->get_lame_lambda();
+  double rhof	 	= nl_td_ml_prob.parameters.get<Fluid>("Fluid").get_density();            // nl_td_ml_prob._fluid->get_density();
+  double rhos 		= nl_td_ml_prob.parameters.get<Solid>("Solid").get_density();            // nl_td_ml_prob._solid->get_density();
+  double mu_lame 	= nl_td_ml_prob.parameters.get<Solid>("Solid").get_lame_shear_modulus(); // nl_td_ml_prob._solid->get_lame_shear_modulus();
+  double lambda_lame 	= nl_td_ml_prob.parameters.get<Solid>("Solid").get_lame_lambda();        // nl_td_ml_prob._solid->get_lame_lambda();
   double mus		= mu_lame/rhof;
-  double IRe 		= nl_td_ml_prob._fluid->get_IReynolds_number();
+  double IRe 		= nl_td_ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();   // nl_td_ml_prob._fluid->get_IReynolds_number();
   double lambda		= lambda_lame / rhof;
   double betafsi	= rhos / rhof;
   double betans		= 1.;
-  int    solid_model	= nl_td_ml_prob._solid->get_physical_model();
+  int    solid_model	= nl_td_ml_prob.parameters.get<Solid>("Solid").get_physical_model();     // nl_td_ml_prob._solid->get_physical_model();
 
   //physical quantity
   double Jnp1_hat;
