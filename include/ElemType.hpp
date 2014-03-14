@@ -75,8 +75,12 @@ public:
 //   int prolongation(const elem* el,const elem* elc, const int& ielc, 
 // 		   Mat &PP,const int& istart=0,const int& jstart=0) const ;
 		   
-  void prolongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseMatrix* Projmat, 
-		    const unsigned &index_sol, const unsigned &kkindex_sol, const bool &TestDisp) const;
+  void BuildProlongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseMatrix* Projmat, 
+			 const unsigned &index_sol, const unsigned &kkindex_sol) const;
+		    
+		    
+  void BuildRestrictionTranspose(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseMatrix* Projmat, 
+				 const unsigned &index_sol, const unsigned &kkindex_sol, const bool &TestDisp) const;		    
 		   
   void prolongation(const mesh &meshf,const mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;
   
