@@ -1,4 +1,3 @@
-//CONTROL PROGRAM
 // launch it with sthg like 'mpiexec -n 6 main-dbg --dt 1 --alphaVel 55 --udes 3 --Bref 0.001'
 
 //C++ includes ============
@@ -55,7 +54,7 @@ void optimization_loop(EquationsMap& e_map_in);
 double funzione(double t , const double* xyz) {return 1.;} 
 
 // =======================================
-// Main program
+// MHD optimal control problem
 // =======================================
 
 int main(int argc, char** argv) {
@@ -66,6 +65,7 @@ int main(int argc, char** argv) {
 // ======= Files ========================
   Files files; 
   files.get_frtmap().read();
+  files.get_frtmap().print();
   files.CheckIODirectories();
 
  //>>>>>>>>> REDIRECT COUT
@@ -84,13 +84,13 @@ int main(int argc, char** argv) {
  
   // ======= Utils ========================
   Utils utils(files);
-  utils._urtmap.read();  
-  utils._urtmap.print();
+        utils._urtmap.read();  
+        utils._urtmap.print();
       
   OptPhysics phys(utils);
-  phys._physrtmap.read();
-  phys.set_nondimgroups();
-  phys._physrtmap.print();
+             phys._physrtmap.read();
+             phys.set_nondimgroups();
+             phys._physrtmap.print();
 
 //===========================================
   const double Lref  = phys._physrtmap.get("Lref");     // reference L
@@ -123,6 +123,7 @@ int main(int argc, char** argv) {
     FEElements[fe]->SetUtils(&utils);
 //end sort of constructor
     FEElements[fe]->init();
+    FEElements[fe]->init_switch();
   }
   
   // ===== QuantityMap =========================================
@@ -300,11 +301,3 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   
   return 0;
 }
-
-
-
-//manual breakpoint
-// #ifdef HAVE_MPI
-// MPI_Barrier(MPI_COMM_WORLD);
-// #endif
-//   std::cout << "***** Up to this point ****** " << std::endl; abort();

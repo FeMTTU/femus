@@ -16,7 +16,7 @@
  }
  
  
- QRule::QRule(GeomEl* geomel_in)  : _geomel(geomel_in)  {
+ QRule::QRule(GeomEl* geomel_in)  : _geomel(geomel_in),_qrule_type("Gauss5th")  {
    
    
        switch(_geomel->_geomel_type) {

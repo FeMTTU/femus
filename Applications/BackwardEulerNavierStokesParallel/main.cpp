@@ -11,8 +11,6 @@ using std::endl;
 
 int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_td_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
 
-double InitVariables(const double &x, const double &y, const double &z,const char name[]);
-
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
 			  double &value, const int FaceName, const double time);
 
@@ -45,6 +43,8 @@ int main(int argc,char **args) {
   
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
   Fluid fluid(parameter,0.001,1.,"Newtonian");
+  cout << "Fluid properties: " << endl;
+  cout << fluid << endl;
   
   //Steadystate NonLinearMultiLevelProblem  
   NonLinearTimeDependentMultiLevelProblem nl_td_ml_prob(nm,nr,infile,"seventh",Lref,SetRefinementFlag);
@@ -55,7 +55,7 @@ int main(int argc,char **args) {
   //Focus here is on VARIABLES first, rather than on Equations
  
   // add fluid material
-  nl_td_ml_prob.Add_Fluid(&fluid);
+  nl_td_ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   
   // generate solution vector
   nl_td_ml_prob.AddSolution("U","biquadratic");
@@ -65,8 +65,8 @@ int main(int argc,char **args) {
   nl_td_ml_prob.AssociatePropertyToSolution("P","Pressure");
   
   //Initialize (update Init(...) function)
-  nl_td_ml_prob.AttachInitVariableFunction(InitVariables);
   nl_td_ml_prob.Initialize("All");
+  
   
   //Set Boundary (update Dirichlet(...) function)
   nl_td_ml_prob.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -192,26 +192,6 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
    return refine;
 }
 
-//--------------------------------------------------------------------------------------------------------------
-
-double InitVariables(const double &x, const double &y, const double &z,const char name[]){
-  double value=0.;
-  if(!strcmp(name,"U")){
-   value=0;
-   //value=1.5*1*(4.0/(0.1681*100))*y*(0.41/0.1-y);
-  }
-  else if(!strcmp(name,"V")){
-    value=0;
-  } 
-  else if(!strcmp(name,"W")){
-    value=0;
-  }
-  else if(!strcmp(name,"P")){
-    value=0;
-  }
-  return value;
-}
-
 //-------------------------------------------------------------------------------------------------------------------
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
@@ -328,7 +308,7 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
   unsigned iproc = mymsh->GetProcID();
   unsigned nprocs = mymsh->GetNumProcs();
   double ILambda= mylsyspde->GetCompressibility();
-  double IRe = nl_td_ml_prob._fluid->get_IReynolds_number();
+  double IRe = nl_td_ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
   bool penalty = mylsyspde->GetStabilization();
   const bool symm_mat = mylsyspde->GetMatrixProperties();
   const bool NavierStokes = nl_td_ml_prob.GetNonLinearCase();

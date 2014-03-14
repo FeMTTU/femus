@@ -1069,6 +1069,19 @@ double* elem_type::GetPhi(const unsigned &ig) const {
   return phi[ig];
 }
 
+double* elem_type::GetDPhiDXi(const unsigned &ig) const {
+  return dphidxi[ig];
+}
+
+double* elem_type::GetDPhiDEta(const unsigned &ig) const {
+  return dphideta[ig];
+}
+
+double* elem_type::GetDPhiDZeta(const unsigned &ig) const {
+  return dphidzeta[ig];
+}
+
+
 //---------------------------------------------------------------------------------------------------------
 void elem_type::GetArea(const double *vtx,const double *vty, const double *vtz, const unsigned &ig,
                         double &Weight, double *other_phi) const {

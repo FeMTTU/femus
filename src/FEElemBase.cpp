@@ -156,7 +156,7 @@ void FEElemBase::init() {
 
   std::cout << " Reading FE:: " << std::endl;
 
-  std::string femus_dir = getenv("FEMUS_DIR");  //TODO remove this
+  std::string femus_dir = getenv("FEMUS_DIR");  //TODO remove this asap
   std::string    ext_in = DEFAULT_EXT_IN;
   std::ostringstream file;
 
@@ -179,6 +179,7 @@ void FEElemBase::init() {
            << f_shape << dim << "D_" << _qrule->_NoGaussVB[vb] << "." << _ndof[vb] << ext_in;
       std::ifstream infile(file.str().c_str());
       readVB(vb,dim,infile);               //TODO    AAAAAAAAAAAAAAAAAAAAAAAAAA  notice that one dimension is the SPACE and another one is the MANIFOLD!!!
+
 
     }
 
@@ -308,19 +309,23 @@ void FEElemBase::init_switch() {
     abort();
   }
 
+  if ( _qrule->_qrule_type != "Gauss5th") {
+    std::cout << "Quadrature rule not implemented" << std::endl;
+    abort();
+  }
 
   std::string  geomel[2];
   geomel[QUADR]  =  "quadr_";
   geomel[TRIANG] = "triang_";
   uint space_dim = _geomel->_dim;
 
+  std::string gauss_ord = "fifth";
 
   for (int vb=0; vb<VB; vb++) {
 
     uint dim = space_dim - vb;
 
-// TODO remember to DEALLOCATE THESE
-    _phi_mapVBGD[vb] = new double*[_qrule->_NoGaussVB[vb]];
+    _phi_mapVBGD[vb] = new double*[_qrule->_NoGaussVB[vb]];// TODO valgrind, remember to DEALLOCATE THESE
     _dphidxez_mapVBGD[vb] = new double*[_qrule->_NoGaussVB[vb]];
 
     for (int g=0; g < _qrule->_NoGaussVB[vb]; g++) {
@@ -328,377 +333,265 @@ void FEElemBase::init_switch() {
       _dphidxez_mapVBGD[vb][g] = new double[_ndof[vb]*dim];
     }
 
+  } //end VB
 
 
-    if ( _qrule->_qrule_type == "Gauss5th") {     //only quadrature rule implemented so far
+//====== FUNCTION POINTERS SETUP ===========
+// initialize the function pointers outside, as well as everything that has to be accessible after all the "switch" things, so you have to only fill them inside
 
-      switch(_order) {  //what leads is the FE ORDER, the quadrature rule is usually mathematically chosen with respect to that
+  typedef double* (elem_type::*FunctionPointerTwo)(const unsigned & ig) const; //declaring the FunctionPointer type
+  std::vector< std::vector<FunctionPointerTwo> > DphiptrTwo(space_dim);  /// array of array of function pointers based on Volume and Boundary
+  DphiptrTwo[VV].resize(space_dim);
+  DphiptrTwo[BB].resize(space_dim-1);
 
-// ================================================================================
-      case(QQ):  {
+  switch(space_dim) {
 
-        switch(space_dim) {
+  case(2): {
+    DphiptrTwo[VV][0] = &elem_type::GetDPhiDXi;
+    DphiptrTwo[VV][1] = &elem_type::GetDPhiDEta;
+    DphiptrTwo[BB][0] = &elem_type::GetDPhiDXi;
 
-        case(2): {
+    break;
+  }
 
-          switch(_geomel->_geomel_type)  {
+  case(3): {
+    DphiptrTwo[VV][0] = &elem_type::GetDPhiDXi;
+    DphiptrTwo[VV][1] = &elem_type::GetDPhiDEta;
+    DphiptrTwo[VV][2] = &elem_type::GetDPhiDZeta;
+    DphiptrTwo[BB][0] = &elem_type::GetDPhiDXi;
+    DphiptrTwo[BB][1] = &elem_type::GetDPhiDEta;
 
-          case(QUADR): {  //QUADR-2D-QQ  ========
-	    elem_type myelem("quad","biquadratic","fifth");
-	    elem_type myelem_b("line","biquadratic","fifth");
+    break;
+  }
 
-	    _phi_mapVBGD[VV][0][0] = 1.;
-	     _phi_mapVBGD[VV][0][1] = 1.;
-	     _phi_mapVBGD[VV][0][2] = 1.;
-	     _phi_mapVBGD[VV][0][3] = 1.;
-	     _phi_mapVBGD[VV][0][4] = 1.;
-	     _phi_mapVBGD[VV][0][5] = 1.;
-	     _phi_mapVBGD[VV][0][6] = 1.;
-	     _phi_mapVBGD[VV][0][7] = 1.;
-	     _phi_mapVBGD[VV][0][8] = 1.;  
+  default: {
+    std::cout << "Space_dim ONE not implemented" << std::endl;
+    abort();
+    break;
+  }
+  }
+//====== END FUNCTION POINTERS  SETUP ===========
 
-	     _phi_mapVBGD[VV][1][0] = 1.;
-	     _phi_mapVBGD[VV][1][1] = 1.;
-	     _phi_mapVBGD[VV][1][2] = 1.;
-	     _phi_mapVBGD[VV][1][3] = 1.;
-	     _phi_mapVBGD[VV][1][4] = 1.;
-	     _phi_mapVBGD[VV][1][5] = 1.;
-	     _phi_mapVBGD[VV][1][6] = 1.;
-	     _phi_mapVBGD[VV][1][7] = 1.;
-	     _phi_mapVBGD[VV][1][8] = 1.;
-	     
-	     _phi_mapVBGD[VV][2][0] = 1.;
-	     _phi_mapVBGD[VV][2][1] = 1.;
-	     _phi_mapVBGD[VV][2][2] = 1.;
-	     _phi_mapVBGD[VV][2][3] = 1.;
-	     _phi_mapVBGD[VV][2][4] = 1.;
-	     _phi_mapVBGD[VV][2][5] = 1.;
-	     _phi_mapVBGD[VV][2][6] = 1.;
-	     _phi_mapVBGD[VV][2][7] = 1.;
-	     _phi_mapVBGD[VV][2][8] = 1.; 
-	     
-	     _phi_mapVBGD[VV][3][0] = 1.;
-	     _phi_mapVBGD[VV][3][1] = 1.;
-	     _phi_mapVBGD[VV][3][2] = 1.;
-	     _phi_mapVBGD[VV][3][3] = 1.;
-	     _phi_mapVBGD[VV][3][4] = 1.;
-	     _phi_mapVBGD[VV][3][5] = 1.;
-	     _phi_mapVBGD[VV][3][6] = 1.;
-	     _phi_mapVBGD[VV][3][7] = 1.;
-	     _phi_mapVBGD[VV][3][8] = 1.;  
-
-	     _phi_mapVBGD[VV][4][0] = 1.;
-	     _phi_mapVBGD[VV][4][1] = 1.;
-	     _phi_mapVBGD[VV][4][2] = 1.;
-	     _phi_mapVBGD[VV][4][3] = 1.;
-	     _phi_mapVBGD[VV][4][4] = 1.;
-	     _phi_mapVBGD[VV][4][5] = 1.;
-	     _phi_mapVBGD[VV][4][6] = 1.;
-	     _phi_mapVBGD[VV][4][7] = 1.;
-	     _phi_mapVBGD[VV][4][8] = 1.; 
-
-	     _phi_mapVBGD[VV][5][0] = 1.;
-	     _phi_mapVBGD[VV][5][1] = 1.;
-	     _phi_mapVBGD[VV][5][2] = 1.;
-	     _phi_mapVBGD[VV][5][3] = 1.;
-	     _phi_mapVBGD[VV][5][4] = 1.;
-	     _phi_mapVBGD[VV][5][5] = 1.;
-	     _phi_mapVBGD[VV][5][6] = 1.;
-	     _phi_mapVBGD[VV][5][7] = 1.;
-	     _phi_mapVBGD[VV][5][8] = 1.;  
-
-	     _phi_mapVBGD[VV][6][0] = 1.;
-	     _phi_mapVBGD[VV][6][1] = 1.;
-	     _phi_mapVBGD[VV][6][2] = 1.;
-	     _phi_mapVBGD[VV][6][3] = 1.;
-	     _phi_mapVBGD[VV][6][4] = 1.;
-	     _phi_mapVBGD[VV][6][5] = 1.;
-	     _phi_mapVBGD[VV][6][6] = 1.;
-	     _phi_mapVBGD[VV][6][7] = 1.;
-	     _phi_mapVBGD[VV][6][8] = 1.;  
-
-	     _phi_mapVBGD[VV][7][0] = 1.;
-	     _phi_mapVBGD[VV][7][1] = 1.;
-	     _phi_mapVBGD[VV][7][2] = 1.;
-	     _phi_mapVBGD[VV][7][3] = 1.;
-	     _phi_mapVBGD[VV][7][4] = 1.;
-	     _phi_mapVBGD[VV][7][5] = 1.;
-	     _phi_mapVBGD[VV][7][6] = 1.;
-	     _phi_mapVBGD[VV][7][7] = 1.;
-	     _phi_mapVBGD[VV][7][8] = 1.;  
-
-	     _phi_mapVBGD[VV][8][0] = 1.;
-	     _phi_mapVBGD[VV][8][1] = 1.;
-	     _phi_mapVBGD[VV][8][2] = 1.;
-	     _phi_mapVBGD[VV][8][3] = 1.;
-	     _phi_mapVBGD[VV][8][4] = 1.;
-	     _phi_mapVBGD[VV][8][5] = 1.;
-	     _phi_mapVBGD[VV][8][6] = 1.;
-	     _phi_mapVBGD[VV][8][7] = 1.;
-	     _phi_mapVBGD[VV][8][8] = 1.;  
-
-	     // boundary element ===============
-	     _phi_mapVBGD[BB][0][0] = 1.;
-	     _phi_mapVBGD[BB][0][1] = 1.;
-	     _phi_mapVBGD[BB][0][2] = 1.; 
-	    
-	     _phi_mapVBGD[BB][1][0] = 1.;
-	     _phi_mapVBGD[BB][1][1] = 1.;
-	     _phi_mapVBGD[BB][1][2] = 1.; 
-
-	     _phi_mapVBGD[BB][2][0] = 1.;
-	     _phi_mapVBGD[BB][2][1] = 1.;
-	     _phi_mapVBGD[BB][2][2] = 1.; 
-
-          } //end //QUADR-2D-QQ =======
-
-          case(TRIANG): { //TRIANG-2D-QQ ======
-	    elem_type myelem("tri","biquadratic","fifth");
-	    elem_type myelem_b("line","biquadratic","fifth");
-
-	     _phi_mapVBGD[VV][0][0] = 1.;
-	     _phi_mapVBGD[VV][0][1] = 1.;
-	     _phi_mapVBGD[VV][0][2] = 1.;
-	     _phi_mapVBGD[VV][0][3] = 1.;
-	     _phi_mapVBGD[VV][0][4] = 1.;
-	     _phi_mapVBGD[VV][0][5] = 1.;
-
-	     _phi_mapVBGD[VV][1][0] = 1.;
-	     _phi_mapVBGD[VV][1][1] = 1.;
-	     _phi_mapVBGD[VV][1][2] = 1.;
-	     _phi_mapVBGD[VV][1][3] = 1.;
-	     _phi_mapVBGD[VV][1][4] = 1.;
-	     _phi_mapVBGD[VV][1][5] = 1.;
-
-	     _phi_mapVBGD[VV][2][0] = 1.;
-	     _phi_mapVBGD[VV][2][1] = 1.;
-	     _phi_mapVBGD[VV][2][2] = 1.;
-	     _phi_mapVBGD[VV][2][3] = 1.;
-	     _phi_mapVBGD[VV][2][4] = 1.;
-	     _phi_mapVBGD[VV][2][5] = 1.;
-
-	     _phi_mapVBGD[VV][3][0] = 1.;
-	     _phi_mapVBGD[VV][3][1] = 1.;
-	     _phi_mapVBGD[VV][3][2] = 1.;
-	     _phi_mapVBGD[VV][3][3] = 1.;
-	     _phi_mapVBGD[VV][3][4] = 1.;
-	     _phi_mapVBGD[VV][3][5] = 1.;
-
-	     _phi_mapVBGD[VV][4][0] = 1.;
-	     _phi_mapVBGD[VV][4][1] = 1.;
-	     _phi_mapVBGD[VV][4][2] = 1.;
-	     _phi_mapVBGD[VV][4][3] = 1.;
-	     _phi_mapVBGD[VV][4][4] = 1.;
-	     _phi_mapVBGD[VV][4][5] = 1.;
-
-	     _phi_mapVBGD[VV][5][0] = 1.;
-	     _phi_mapVBGD[VV][5][1] = 1.;
-	     _phi_mapVBGD[VV][5][2] = 1.;
-	     _phi_mapVBGD[VV][5][3] = 1.;
-	     _phi_mapVBGD[VV][5][4] = 1.;
-	     _phi_mapVBGD[VV][5][5] = 1.;
-
-	     _phi_mapVBGD[VV][6][0] = 1.;
-	     _phi_mapVBGD[VV][6][1] = 1.;
-	     _phi_mapVBGD[VV][6][2] = 1.;
-	     _phi_mapVBGD[VV][6][3] = 1.;
-	     _phi_mapVBGD[VV][6][4] = 1.;
-	     _phi_mapVBGD[VV][6][5] = 1.;
-	     
-	     // boundary element ===============
-	     _phi_mapVBGD[BB][0][0] = 1.;
-	     _phi_mapVBGD[BB][0][1] = 1.;
-	     _phi_mapVBGD[BB][0][2] = 1.; 
-	    
-	     _phi_mapVBGD[BB][1][0] = 1.;
-	     _phi_mapVBGD[BB][1][1] = 1.;
-	     _phi_mapVBGD[BB][1][2] = 1.; 
-
-	     _phi_mapVBGD[BB][2][0] = 1.;
-	     _phi_mapVBGD[BB][2][1] = 1.;
-	     _phi_mapVBGD[BB][2][2] = 1.; 
-	     
-          }  //end TRIANG-2D-QQ  ======
-
-          } //end geomel_type
-
-
-        }  //end 2D
-        case(3): {
-
-          switch(_geomel->_geomel_type)  {
-
-          case(QUADR): {  //QUADR-3D-QQ
-	    elem_type myelem("hex","biquadratic","fifth");
-	    elem_type myelem_b("quad","biquadratic","fifth");
-	    
-	     _phi_mapVBGD[VV][0][0] = 1.;
-	     _phi_mapVBGD[VV][0][1] = 1.;
-	     _phi_mapVBGD[VV][0][2] = 1.;
-	     _phi_mapVBGD[VV][0][3] = 1.;
-	     _phi_mapVBGD[VV][0][4] = 1.;
-	     _phi_mapVBGD[VV][0][5] = 1.;
-	     _phi_mapVBGD[VV][0][6] = 1.;
-	     _phi_mapVBGD[VV][0][7] = 1.;
-	     _phi_mapVBGD[VV][0][8] = 1.;  
-	     _phi_mapVBGD[VV][0][9] = 1.;
-	     _phi_mapVBGD[VV][0][10] = 1.;
-	     _phi_mapVBGD[VV][0][11] = 1.;
-	     _phi_mapVBGD[VV][0][12] = 1.;
-	     _phi_mapVBGD[VV][0][13] = 1.;
-	     _phi_mapVBGD[VV][0][14] = 1.;
-	     _phi_mapVBGD[VV][0][15] = 1.;
-	     _phi_mapVBGD[VV][0][16] = 1.;
-	     _phi_mapVBGD[VV][0][17] = 1.;  
-	     _phi_mapVBGD[VV][0][18] = 1.;
-	     _phi_mapVBGD[VV][0][19] = 1.;
-	     _phi_mapVBGD[VV][0][20] = 1.;
-	     _phi_mapVBGD[VV][0][21] = 1.;
-	     _phi_mapVBGD[VV][0][22] = 1.;
-	     _phi_mapVBGD[VV][0][23] = 1.;
-	     _phi_mapVBGD[VV][0][24] = 1.;
-	     _phi_mapVBGD[VV][0][25] = 1.;
-	     _phi_mapVBGD[VV][0][26] = 1.;  
-
-	     //boundary element: Quad9
-
-
-
-	     
-          } //end //QUADR-3D-QQ
-
-          case(TRIANG): {  //TRIANG-3D-QQ
-	    elem_type myelem("tet","biquadratic","fifth");
-	    elem_type myelem_b("tri","biquadratic","fifth");
-
-
-          }  //end TRIANG-3D-QQ
-
-          } //end geomel_type
-
-
-        }  //end 2D
-        default: {
-          std::cout << "Space_dim ONE not implemented" << std::endl;
-          abort();
-        }
-
-        }  //end switch dimension
-
-      } //end feorder QQ
+  std::cout << " Read init FE order " << _order << std::endl;
+  
+  elem_type* myelems[VB];
 
 // ================================================================================
+// ============================ begin switch fe order ===============================
+// ================================================================================
+  switch(_order) {  //what leads is the FE ORDER, the quadrature rule is usually mathematically chosen with respect to that
 
 // ================================================================================
-      case(LL): {
-        switch(space_dim) {
-        case(2): {
-          switch(_geomel->_geomel_type)  {
-          case(QUADR): {  //QUADR-2D-LL
-	    elem_type myelem("quad","linear","fifth");
-	    elem_type myelem_b("line","linear","fifth");
+  case(QQ):  {
+
+    switch(space_dim) {
+
+    case(2): {
+
+      switch(_geomel->_geomel_type)  {
+
+      case(QUADR): {  //QUADR-2D-QQ  ========
+        myelems[VV] = new elem_type("quad","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        myelems[BB] = new elem_type("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        break;
+      }
+      case(TRIANG): {
+        myelems[VV] = new elem_type("tri","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        myelems[BB] = new elem_type("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        break;
+      }  //end TRIANG-2D-QQ  ======
 
 
-          } //end //QUADR-2D-LL
+      } //end geomel_type
 
-          case(TRIANG): { //TRIANG-2D-LL
-	    elem_type myelem("tri","linear","fifth");
-	    elem_type myelem_b("line","linear","fifth");
+      break;
+    }  //end 2D
+    case(3): {
 
+      switch(_geomel->_geomel_type)  {
 
-          }  //end TRIANG-2D-LL
+      case(QUADR): {  //QUADR-3D-QQ
+        myelems[VV] = new elem_type("hex","biquadratic",gauss_ord.c_str());
+        myelems[BB] = new elem_type("quad","biquadratic",gauss_ord.c_str());
+        break;
+      } //end //QUADR-3D-QQ
 
-          } //end geomel_type
-        }  //end 2D
-        case(3): {
-          switch(_geomel->_geomel_type)  {
-          case(QUADR): { //QUADR-3D-LL
-	    elem_type myelem("hex","linear","fifth");
-	    elem_type myelem_b("quad","linear","fifth");
+      case(TRIANG): {  //TRIANG-3D-QQ
+        myelems[VV] = new elem_type("tet","biquadratic",gauss_ord.c_str());
+        myelems[BB] = new elem_type("tri","biquadratic",gauss_ord.c_str());
+        break;
+      }  //end TRIANG-3D-QQ
 
-          } //end //QUADR-3D-LL
+      } //end geomel_type
 
-          case(TRIANG): {//TRIANG-3D-LL
-	    elem_type myelem("tet","linear","fifth");
-	    elem_type myelem_b("tri","linear","fifth");
-
-          }  //end //TRIANG-3D-LL
-
-          } //end geomel_type
-        }  //end 2D
-        default: {
-          std::cout << "Space_dim ONE not implemented" << std::endl;
-          abort();
-        }
-
-
-        }  //end switch dimension
-
-      } //end feorder LL
-// ================================================================================
-
-
-// ================================================================================
-      case(KK): {
-        switch(space_dim) {
-        case(2): {
-          switch(_geomel->_geomel_type)  {
-
-          case(QUADR): {  //QUADR-2D-KK
-	    elem_type myelem("quad","constant","fifth");
-	    elem_type myelem_b("line","constant","fifth");
-
-          } //end //QUADR-2D-KK
-
-          case(TRIANG): { //TRIANG-2D-KK
-         std::cout << "Not implemented yet" << std::endl; abort();
-
-          }  //end //TRIANG-2D-KK
-
-          } //end geomel_type
-        }  //end 2D
-        case(3): {
-          switch(_geomel->_geomel_type)  {
-          case(QUADR): { //QUADR-3D-KK
-	    elem_type myelem("hex","constant","fifth");
-	    elem_type myelem_b("quad","constant","fifth");
-
-          } //end  //QUADR-3D-KK
-
-          case(TRIANG): {  //TRIANG-3D-KK
-         std::cout << "Not implemented yet" << std::endl; abort();
-
-
-          }  //end //TRIANG-3D-KK
-
-          } //end geomel_type
-        }  //end 2D
-        default: {
-          std::cout << "Space_dim ONE not implemented" << std::endl;
-          abort();
-        }
-
-
-        }  //end switch dimension
-
-      }  //end feorder KK
-// ================================================================================
-
-      }  //end switch fe order
-
-
-    } //end if Gauss5th
-
-    else {
-      std::cout << "Quadrature rule not implemented" << std::endl;
+      break;
+    }  //end 2D
+    default: {
+      std::cout << "Space_dim ONE not implemented" << std::endl;
       abort();
+      break;
+    } //end 1D
+
+    }  //end switch dimension
+
+    break;
+  } //end feorder QQ
+
+// ================================================================================
+
+// ================================================================================
+  case(LL): {
+    switch(space_dim) {
+    case(2): {
+      switch(_geomel->_geomel_type)  {
+      case(QUADR): {  //QUADR-2D-LL
+        myelems[VV] = new elem_type("quad","linear",gauss_ord.c_str());
+	myelems[BB] = new elem_type("line","linear",gauss_ord.c_str());
+        break;
+      } //end //QUADR-2D-LL
+
+      case(TRIANG): { //TRIANG-2D-LL
+        myelems[VV] = new elem_type("tri","linear",gauss_ord.c_str());
+	myelems[BB] = new elem_type("line","linear",gauss_ord.c_str());
+        break;
+      }  //end TRIANG-2D-LL
+
+      } //end switch geomel_type
+      break;
+    }  //end 2D
+    case(3): {
+      switch(_geomel->_geomel_type)  {
+      case(QUADR): { //QUADR-3D-LL
+        myelems[VV] = new elem_type("hex","linear",gauss_ord.c_str());
+	myelems[BB] = new elem_type("quad","linear",gauss_ord.c_str());
+        break;
+      } //end //QUADR-3D-LL
+
+      case(TRIANG): { //TRIANG-3D-LL
+        myelems[VV] = new elem_type("tet","linear",gauss_ord.c_str());
+	myelems[BB] = new elem_type("tri","linear",gauss_ord.c_str());
+        break;
+      }  //end //TRIANG-3D-LL
+
+      } //end geomel_type
+
+      break;
+    }  //end 3D
+
+    default: {
+      std::cout << "Space_dim ONE not implemented" << std::endl;
+      abort();
+      break;
+    }
+
+    }  //end switch dimension
+
+    break;
+  } //end feorder LL
+// ================================================================================
+
+
+// ================================================================================
+  case(KK): {
+    switch(space_dim) {
+    case(2): {
+      switch(_geomel->_geomel_type)  {
+
+      case(QUADR): {  //QUADR-2D-KK
+        myelems[VV] = new elem_type("quad","constant",gauss_ord.c_str());
+	myelems[BB] = new elem_type("line","linear",gauss_ord.c_str()); 
+	std::cout << " line constant not implemented... I put this only to make the program run!!!" << std::endl;  //TODO 
+        break;
+      } //end //QUADR-2D-KK
+
+      case(TRIANG): { //TRIANG-2D-KK
+//      myelems[VV] = new elem_type
+//      myelems[BB] = new elem_type
+        std::cout << "Not implemented yet TRIANG-2D-KK" << std::endl;
+        abort();
+        break;
+      }  //end //TRIANG-2D-KK
+
+      } //end geomel_type
+
+      break;
+    }  //end 2D
+    case(3): {
+      switch(_geomel->_geomel_type)  {
+      case(QUADR): { //QUADR-3D-KK
+        myelems[VV] = new elem_type("hex","constant",gauss_ord.c_str());
+	myelems[BB] = new elem_type("quad","constant",gauss_ord.c_str());
+        break;
+      } //end  //QUADR-3D-KK
+
+      case(TRIANG): {  //TRIANG-3D-KK
+//      myelems[VV] = new elem_type
+//      myelems[BB] = new elem_type
+	std::cout << "Not implemented yet TRIANG-3D-KK" << std::endl;
+        abort();
+        break;
+      }  //end //TRIANG-3D-KK
+
+      } //end geomel_type
+
+      break;
+    }  //end 3D
+    default: {
+      std::cout << "Space_dim ONE not implemented" << std::endl;
+      abort();
+      break;
     }
 
 
+    }  //end switch dimension
+
+    break;
+  }  //end feorder KK
+
+// ================================================================================
+  default: {
+    std::cout << "FE order not implemented" << std::endl;
+    abort();
+    break;
+  }
+
+  }  //end switch fe order
+// ================================================================================
+// ============================ end switch fe order ===============================
+// ================================================================================
 
 
-  } //end VB
+  // loop ===========================
+  // loop ===========================
+  for (int vb=0; vb<VB; vb++) {
 
+    if ( myelems[vb]->GetGaussPointNumber() != _qrule->_NoGaussVB[vb]) {
+      std::cout << "Wrong gauss points" << std::endl;
+      abort();
+    }
+
+    for (int ig = 0; ig < _qrule->_NoGaussVB[vb]; ig++) {
+
+      for (int idof=0; idof < _ndof[vb]; idof++) {
+//                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;
+        _phi_mapVBGD[vb][ig][idof] = myelems[vb]->GetPhi(ig)[idof];
+// 	std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapVBGD[vb][ig][dof] << std::endl;
+
+// derivatives in canonical element
+        uint dim = space_dim - vb;
+        for (uint idim = 0; idim < dim; idim++) {
+// 		 double* temp =  ( myelems[vb]->*(myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
+          double* tempTwo =  ( myelems[vb]->*(DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
+          _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]] =  tempTwo[idof];
+          std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]] << std::endl;
+
+        }
+
+      }
+    }
+  } //end VB for
+// loop ===========================
+// loop  ===========================
 
   return;
 }

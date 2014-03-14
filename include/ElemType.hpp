@@ -106,7 +106,10 @@ public:
                                   double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
 
   double* GetPhi(const unsigned &ig) const;
-
+  double* GetDPhiDXi(const unsigned &ig) const;
+  double* GetDPhiDEta(const unsigned &ig) const;
+  double* GetDPhiDZeta(const unsigned &ig) const;
+  
   void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
                double &Weight, double *other_phi) const;
 
