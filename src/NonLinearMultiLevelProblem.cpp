@@ -1067,33 +1067,33 @@ void NonLinearMultiLevelProblem::Restrictor(const unsigned &ipde, const unsigned
     if (gridf>=_gridr) {
       if (!_LinSolver[ipde][gridf-1]->_CC_flag) {
 	_LinSolver[ipde][gridf-1]->_CC_flag=1;
-	_LinSolver[ipde][gridf-1]->_CC->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,!matrix_reuse);
-	//_LinSolver[ipde][gridf-1]->_CC->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,!matrix_reuse);
+	//_LinSolver[ipde][gridf-1]->_CC->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,!matrix_reuse);
+	_LinSolver[ipde][gridf-1]->_CC->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,!matrix_reuse);
       } 
       else{
-	_LinSolver[ipde][gridf-1]->_CC->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,matrix_reuse);
-	//_LinSolver[ipde][gridf-1]->_CC->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,matrix_reuse);
+	//_LinSolver[ipde][gridf-1]->_CC->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,matrix_reuse);
+	_LinSolver[ipde][gridf-1]->_CC->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,matrix_reuse);
       }
       _LinSolver[ipde][gridf-1u]->_KK->matrix_add(1.,*_LinSolver[ipde][gridf-1u]->_CC,"different_nonzero_pattern");
     } 
     else { //Projection of the Matrix on the lower level
       if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
-	_LinSolver[ipde][gridf-1]->_KK->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,!matrix_reuse);
-	//_LinSolver[ipde][gridf-1]->_KK->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,!matrix_reuse);
+	//_LinSolver[ipde][gridf-1]->_KK->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,!matrix_reuse);
+	_LinSolver[ipde][gridf-1]->_KK->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,!matrix_reuse);
       }
       else{ 
-	_LinSolver[ipde][gridf-1]->_KK->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,matrix_reuse);
-	//_LinSolver[ipde][gridf-1]->_KK->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,matrix_reuse);
+	//_LinSolver[ipde][gridf-1]->_KK->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,matrix_reuse);
+	_LinSolver[ipde][gridf-1]->_KK->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,matrix_reuse);
 
       }	    
     }
   }
       
-  _LinSolver[ipde][gridf-1u]->_RESC->matrix_mult_transpose(*_LinSolver[ipde][gridf]->_RES, *_LinSolver[ipde][gridf]->_PP);
-  *_LinSolver[ipde][gridf-1u]->_RES += *_LinSolver[ipde][gridf-1u]->_RESC;
+  //_LinSolver[ipde][gridf-1u]->_RESC->matrix_mult_transpose(*_LinSolver[ipde][gridf]->_RES, *_LinSolver[ipde][gridf]->_PP);
+  //*_LinSolver[ipde][gridf-1u]->_RES += *_LinSolver[ipde][gridf-1u]->_RESC;
   
-  // _LinSolver[ipde][gridf-1u]->_RESC->matrix_mult(*_LinSolver[ipde][gridf]->_RES, *_LinSolver[ipde][gridf]->_RR);
- // *_LinSolver[ipde][gridf-1u]->_RES += *_LinSolver[ipde][gridf-1u]->_RESC;
+  _LinSolver[ipde][gridf-1u]->_RESC->matrix_mult(*_LinSolver[ipde][gridf]->_RES, *_LinSolver[ipde][gridf]->_RR);
+  *_LinSolver[ipde][gridf-1u]->_RES += *_LinSolver[ipde][gridf-1u]->_RESC;
   
 }
 
