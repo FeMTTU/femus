@@ -116,7 +116,7 @@ public:
   void add(const double a, SparseMatrix &X);
   // Add a row to a Sparse matrix
   void insert_row(const int row, const int ncols, 
-	       const std::vector<int>& cols, const double& values);
+	       const std::vector<int>& cols, double* values);
 
   void add_matrix_blocked(const std::vector< double > &mat_value,
                           const std::vector< int> &rows,
@@ -430,13 +430,13 @@ inline void PetscMatrix::matrix_add (const double a_in, SparseMatrix &X_in, cons
 
 // =================================================
 inline void PetscMatrix::insert_row(const int row, const int ncols, 
-				    const std::vector<int>& cols, const double& values) {
+				    const std::vector<int>& cols, double* values) {
   
   assert (this->initialized());
   int ierr=0;
    
   ierr=MatSetValues(_mat,1,(PetscInt*) &row,(PetscInt) ncols, (PetscInt*) &cols[0],
-		    (PetscScalar*) &values,INSERT_VALUES); 
+		    values,INSERT_VALUES); 
   
   CHKERRABORT(MPI_COMM_WORLD,ierr);
  

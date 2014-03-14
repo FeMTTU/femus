@@ -110,7 +110,7 @@ public:
   
   // Add a row to a Sparse matrix
   virtual void insert_row(const int row, const int ncols, 
-	       const std::vector<int>& cols, const double& values) = 0;
+	       const std::vector<int>& cols, double* values) = 0;
   
   virtual void add_matrix_blocked(const std::vector< double > &mat_value,
                           const std::vector< int> &rows,
