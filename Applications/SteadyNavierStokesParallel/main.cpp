@@ -14,7 +14,8 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
 int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
 
 
-double InitVariables(const double &x, const double &y, const double &z,const char name[]);
+double InitVariableU(const double &x, const double &y, const double &z);
+
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
 			  double &value, const int FaceName, const double time);
@@ -57,6 +58,8 @@ int main(int argc,char **args) {
   
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
   Fluid fluid(parameter,0.001,1.,"Newtonian",0.001,1.);
+  cout << "Fluid properties: " << endl;
+  cout << fluid << endl;
   
   //Steadystate NonLinearMultiLevelProblem  
   NonLinearMultiLevelProblem nl_ml_prob(nm,nr,infile,"seventh",Lref,SetRefinementFlag);
@@ -67,7 +70,7 @@ int main(int argc,char **args) {
   //Focus here is on VARIABLES first, rather than on Equations
  
   // add fluid material
-  nl_ml_prob.Add_Fluid(&fluid);
+  nl_ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   
   // generate solution vector
   nl_ml_prob.AddSolution("T","biquadratic");
@@ -81,8 +84,10 @@ int main(int argc,char **args) {
   //nl_ml_prob.AssociatePropertyToSolution("P","Default");
  
   //Initialize (update Init(...) function)
-  nl_ml_prob.AttachInitVariableFunction(InitVariables);
-  nl_ml_prob.Initialize("All");
+  nl_ml_prob.Initialize("U",InitVariableU);
+  nl_ml_prob.Initialize("V");
+  nl_ml_prob.Initialize("P");
+  nl_ml_prob.Initialize("T");
   
   //Set Boundary (update Dirichlet(...) function)
   nl_ml_prob.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -261,22 +266,10 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //--------------------------------------------------------------------------------------------------------------
 
-double InitVariables(const double &x, const double &y, const double &z,const char name[]){
-  double value=0.;
-  if(!strcmp(name,"U")){
-    double um = 0.2;
-    value=1.5*um*(4.0/(0.1681))*y*(0.41-y);
-  }
-  else if(!strcmp(name,"V")){
-    value=0;
-  } 
-  else if(!strcmp(name,"W")){
-    value=0;
-  }
-  else if(!strcmp(name,"P")){
-    value=0;
-  }
-  return value;
+double InitVariableU(const double &x, const double &y, const double &z) { 
+   double um = 0.2;
+   double  value=1.5*um*(4.0/(0.1681))*y*(0.41-y);
+   return value;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -405,7 +398,8 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
   unsigned iproc = mymsh->GetProcID();
   unsigned nprocs = mymsh->GetNumProcs();
   double ILambda= mylsyspde->GetCompressibility();
-  double IRe = nl_ml_prob._fluid->get_IReynolds_number();
+  //double IRe = nl_ml_prob._fluid->get_IReynolds_number();
+  double IRe = nl_ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
   bool penalty = mylsyspde->GetStabilization();
   const bool symm_mat = mylsyspde->GetMatrixProperties();
   const bool NavierStokes = nl_ml_prob.GetNonLinearCase();
@@ -724,7 +718,7 @@ int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, c
   unsigned 		nel	= mymsh->GetElementNumber();
   unsigned 		igrid	= mymsh->GetGridNumber();
   unsigned 		iproc	= mymsh->GetProcID();
-  double		IPe	= 1./nl_ml_prob._fluid->get_Peclet_number();  
+  double		IPe	= 1./(nl_ml_prob.parameters.get<Fluid>("Fluid").get_Peclet_number());  
   
   //solution variable
   unsigned SolIndex;  

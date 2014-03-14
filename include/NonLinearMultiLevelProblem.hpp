@@ -3,6 +3,7 @@
 
 #include "LinSysPde.hpp"
 #include "Solution.hpp"
+#include "Parameters.hpp"
 #include "Fluid.hpp"
 #include "Solid.hpp"
 #include <b64/b64.h>
@@ -13,6 +14,8 @@ using std::map;
 
 class elem_type;
 class LinearSolver;
+
+typedef double (*initfunc) (const double &x, const double &y, const double &z);
 
 /**
 * This class is a black box container to handle multilevel problems
@@ -64,8 +67,6 @@ protected:
   bool (*_SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
                             double &value, const int FaceName, const double time);
   
-  double (*_InitVariableFunction)(const double &x, const double &y, const double &z,const char name[]);
-
  public:
    
   vector <char*> _PdeName;
@@ -78,34 +79,32 @@ protected:
   vector <unsigned> VankaIndex;
   const elem_type *type_elem[6][5]; 
 
-  
-  ///Array of linear solver
+  /** Array of linear solver */
   vector<vector <LinearSolver*> > _LinSolver;
+  
+  /** Array of solution */
   vector <Solution*>  _solution;
+  
+  /** Array of mesh */
   vector <mesh*> _msh;
   
-  
-  ///Physical Object
-  Fluid* _fluid;
-  Solid* _solid;
+  /** Data structure holding arbitrary parameters. */
+  Parameters parameters;
 
-  ///Constructor
+  /** Constructor */
   NonLinearMultiLevelProblem(const unsigned short &igridn, const unsigned short &igridr, const char mesh_file[],
             const char GaussOrder[], const double Lref=1., bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, 
                                    const int &ElemGroupNumber,const int &level)=NULL );
 
+  /** Destructor */
   ~NonLinearMultiLevelProblem();
 
   //Attaching Functions
-  ///Provides a method for filling the Matrix and the Residual vector
+  /** Provides a method for filling the Matrix and the Residual vector */
   void AttachAssembleFunction ( int (*function)(NonLinearMultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix));
   
   void AttachSetBoundaryConditionFunction ( bool (* SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
                             double &value, const int FaceName, const double time) );
-  
-  
-  void AttachInitVariableFunction ( double (* _InitVariableFunction)(const double &x, const double &y, 
-                                                                     const double &z,const char name[]) );
   
   //utilities
   void MarkStructureNode();
@@ -140,16 +139,12 @@ protected:
   void SetDimVankaBlock(const char pdename[], unsigned const dim_vanka_block);
   void SetDimVankaBlock(const char pdename[], const char dim_vanka_block[] = "All");
   
-  // Fluid and Solid object
-  void Add_Fluid(Fluid *fluid);
-  void Add_Solid(Solid *solid);
-
   // Vector handling functions
   void AddSolution(const char name[], const char type[],unsigned tmorder=0, const bool &Pde_type=1);
   void AssociatePropertyToSolution(const char solution_name[], const char solution_property[]);
   void ResizeSolutionVector( const char name[]);
   void CheckVectorSize(const unsigned &i);
-  void Initialize(const char name[]);
+  void Initialize(const char name[], initfunc func = NULL);
   unsigned GetIndex(const char name[]) const;
   unsigned GetTmOrder(const unsigned i);
 

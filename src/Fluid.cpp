@@ -6,6 +6,17 @@
 #include "Parameter.hpp"
 using namespace std;
 
+Fluid::Fluid() : Material() {
+  _viscosity = 1.;
+  _IRe = 1;
+  _Reynolds = 1.;
+  _model = 0;
+  _Prandtl=1.;
+  _Froude = 1.;
+  _Rayleigh = 1.;
+  _Peclet = 1.;
+  _Grashof = 1.;
+}
 
 Fluid::Fluid(Parameter& par) : Material(par) {
   _viscosity = 1.;
@@ -45,45 +56,80 @@ Fluid::Fluid(Parameter& par, const double viscosity, const double density, const
   _Rayleigh = _Grashof*_Prandtl;
   _Peclet = _Prandtl*_Reynolds;
 
-  cout << endl << "FLUID properties: " << endl;
-  cout << "Density [kg/m3]: " << density << endl;
-  cout << "Viscosity [Pa*s]: " << viscosity << endl;
-  cout << "Heat capacity [J/Kg*K]: " << cp << endl;
-  cout << "Thermal conductivity [W/m*K]: " << k << endl;
-  cout << "Thermal expansion coefficient [1/K]: " << alpha << endl;
-  cout << "Reynolds Number: " << _Reynolds << endl;
-  cout << "Prandtl number: " << _Prandtl << endl;
-  cout << "Froude Number: " << _Froude << endl;
-  cout << "Grashof Number: " << _Grashof << endl;
-  cout << "Rayleigh Number: " << _Rayleigh << endl;
-  cout << "Peclet Number: " << _Peclet << endl << endl;
+//   cout << endl << "FLUID properties: " << endl;
+//   cout << "Density [kg/m3]: " << density << endl;
+//   cout << "Viscosity [Pa*s]: " << viscosity << endl;
+//   cout << "Heat capacity [J/Kg*K]: " << cp << endl;
+//   cout << "Thermal conductivity [W/m*K]: " << k << endl;
+//   cout << "Thermal expansion coefficient [1/K]: " << alpha << endl;
+//   cout << "Reynolds Number: " << _Reynolds << endl;
+//   cout << "Prandtl number: " << _Prandtl << endl;
+//   cout << "Froude Number: " << _Froude << endl;
+//   cout << "Grashof Number: " << _Grashof << endl;
+//   cout << "Rayleigh Number: " << _Rayleigh << endl;
+//   cout << "Peclet Number: " << _Peclet << endl << endl;
 }
 
 void Fluid::set_viscosity(const double viscosity) {
   _viscosity = viscosity;
 }
 
-double Fluid::get_viscosity() {
+const double Fluid::get_viscosity() const {
   return _viscosity;
 }
 
-unsigned Fluid::get_physical_model() {
+const unsigned Fluid::get_physical_model() const{
   return _model;
 }
 
-double Fluid::get_IReynolds_number() {
+const double Fluid::get_IReynolds_number() const{
   return _IRe;
 }
 
-double Fluid::get_Prandtl_number() {
+const double Fluid::get_Prandtl_number() const{
   return _Prandtl;
 };
 
-double Fluid::get_Rayleigh_number() {
+const double Fluid::get_Rayleigh_number() const{
   return _Rayleigh;
 };
 
-double Fluid::get_Peclet_number() {
+const double Fluid::get_Peclet_number() const{
   return _Peclet;
 };
 
+std::ostream & operator << (std::ostream & os, const Fluid & fluid)
+{
+  os << "Density: " << fluid._density << std::endl;
+  os << "viscosity: " << fluid._viscosity << std::endl;
+  os << "Inverse of Reynolds number: " << fluid._IRe << std::endl;
+  os << "Inverse of Prandtl number: " << fluid._Prandtl << std::endl;
+  os << "Inverse of Froude number: " << fluid._Froude << std::endl;
+  os << "Inverse of Rayleigh number: " << fluid._Rayleigh << std::endl;
+  os << "Inverse of Peclet number: " << fluid._Peclet << std::endl;
+  os << "Inverse of Reynolds number: " << fluid._Reynolds << std::endl;
+  os << "Inverse of Grashof number: " << fluid._Grashof << std::endl;
+  os << "Physical Model: " << fluid._model << std::endl;
+  os << std::endl;
+  return os;
+}
+
+// Take a const-reference to the right-hand side of the assignment.
+// Return a non-const reference to the left-hand side.
+Fluid& Fluid::operator=(const Fluid &fluid) {
+  this->_parameter = fluid._parameter;
+  this->_density = fluid._density;
+  this->_thermal_conductivity = fluid._thermal_conductivity;
+  this->_heat_capacity = fluid._heat_capacity;
+  this->_thermal_expansion_coefficient = fluid._thermal_expansion_coefficient;
+  this->_viscosity = fluid._viscosity;
+  this->_IRe = fluid._IRe;
+  this->_Prandtl = fluid._Prandtl;
+  this->_Froude = fluid._Froude;
+  this->_Rayleigh = fluid._Rayleigh;
+  this->_Peclet = fluid._Peclet;
+  this->_Reynolds = fluid._Reynolds;
+  this->_Grashof = fluid._Grashof;
+  this->_model = fluid._model;
+  return *this;  // Return a reference to myself.
+}

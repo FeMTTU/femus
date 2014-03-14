@@ -21,8 +21,6 @@ double SetVariableTimeStep(const double time);
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
 		double &value, const int FaceName, const double = 0.);
 
-double InitVariables(const double &x, const double &y, const double &z,const char name[]);
-
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
 //------------------------------------------------------------------------------------------------------------------
@@ -60,17 +58,23 @@ int main(int argc,char **args) {
   
   // Generate Solid Object
   Solid solid(par,E,ni,rhos,"Neo-Hookean");
+  cout << "Solid properties: " << endl;
+  cout << solid << endl;
+  
   // Generate Fluid Object
   Fluid fluid(par,muf,rhof,"Newtonian");
+  cout << "Fluid properties: " << endl;
+  cout << fluid << endl;
 
   NonLinearTimeDependentMultiLevelProblem nl_td_ml_prob(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
 
   // END MESH =================================
 
   // Add fluid object
-  nl_td_ml_prob.Add_Fluid(&fluid);
+  nl_td_ml_prob.parameters.set<Fluid>("Fluid") = fluid;
+  
   // Add Solid Object
-  nl_td_ml_prob.Add_Solid(&solid);
+  nl_td_ml_prob.parameters.set<Solid>("Solid") = solid;
 
   //Start System Variables;===========================
   //Focus here is on VARIABLES first, rather than on Equations
@@ -92,7 +96,6 @@ int main(int argc,char **args) {
   nl_td_ml_prob.AssociatePropertyToSolution("P","Pressure"); // Add this line
 
   //Initialize (update Init(...) function)
-  nl_td_ml_prob.AttachInitVariableFunction(InitVariables);
   nl_td_ml_prob.Initialize("All");
 
   //Set Boundary (update Dirichlet(...) function)
@@ -403,42 +406,4 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
   }
   return test;
 }
-
-//---------------------------------------------------------------------------------------------------------------------
-
-double InitVariables(const double &x, const double &y, const double &z,const char name[]) {
-  double value=0.;
-  if (!strcmp(name,"U")) {
-    value=0;
-  }
-  else if (!strcmp(name,"V")) {
-    value=0;
-  }
-  else if (!strcmp(name,"W")) {
-    value=0;
-  }
-  else if (!strcmp(name,"P")) {
-    value=0;
-  }
-  else if (!strcmp(name,"DX")) {
-    value=0;
-  }
-  else if (!strcmp(name,"DY")) {
-    value=0;
-  }
-  else if (!strcmp(name,"DZ")) {
-    value=0;
-  }
-  else if (!strcmp(name,"AX")) {
-    value=0;
-  }
-  else if (!strcmp(name,"AY")) {
-    value=0;
-  }
-  else if (!strcmp(name,"AZ")) {
-    value=0;
-  }
-  return value;
-}
-
 

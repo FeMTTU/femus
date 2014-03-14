@@ -214,16 +214,6 @@ void NonLinearMultiLevelProblem::MarkStructureNode() {
 }
 
 //---------------------------------------------------------------------------------------------------
-void NonLinearMultiLevelProblem::Add_Fluid(Fluid *fluid) {
-  _fluid = fluid;
-}
-
-//---------------------------------------------------------------------------------------------------
-void NonLinearMultiLevelProblem::Add_Solid(Solid *solid) {
-  _solid = solid;
-}
-
-//---------------------------------------------------------------------------------------------------
 unsigned NonLinearMultiLevelProblem::GetNumberOfGrid() {
   return _gridn;
 }
@@ -666,12 +656,12 @@ void NonLinearMultiLevelProblem::AttachSetBoundaryConditionFunction ( bool (* Se
 }
 
 // *******************************************************
-void NonLinearMultiLevelProblem::AttachInitVariableFunction ( double (* InitVariableFunction)(const double &x, const double &y, 
-											      const double &z,const char name[]) ) {
-  _init_func_set = true;
-  _InitVariableFunction = InitVariableFunction;
-  return;
-}
+// void NonLinearMultiLevelProblem::AttachInitVariableFunction ( double (* InitVariableFunction)(const double &x, const double &y, 
+// 											      const double &z,const char name[]) ) {
+//   _init_func_set = true;
+//   _InitVariableFunction = InitVariableFunction;
+//   return;
+// }
 
 //--------------------------------------------------------------------------------------------------
 void NonLinearMultiLevelProblem::Solve(const char pdename[], unsigned const &Vcycle_number, unsigned const &npre, 
@@ -883,7 +873,7 @@ void NonLinearMultiLevelProblem::AssociatePropertyToSolution(const char solution
 }
 
 // *******************************************************
-void NonLinearMultiLevelProblem::Initialize(const char name[]) {
+void NonLinearMultiLevelProblem::Initialize(const char name[], initfunc func) {
   
   unsigned i_start;
   unsigned i_end;
@@ -927,7 +917,12 @@ void NonLinearMultiLevelProblem::Initialize(const char name[]) {
 	      yy=(*_solution[ig]->_Sol[indY])(icoord_Metis);
 	      zz=(*_solution[ig]->_Sol[indZ])(icoord_Metis);
 	      
-	      value = (sol_type<3)?_InitVariableFunction(xx,yy,zz,SolName[i]):0;
+	      if(func) {
+		value = (sol_type<3)?func(xx,yy,zz):0;
+	      }
+	      else {
+		value = 0.;
+	      }
 	      _solution[ig]->_Sol[i]->set(inode_Metis,value);
 	      if (SolTmorder[i]==2) {
 		_solution[ig]->_SolOld[i]->set(inode_Metis,value);
