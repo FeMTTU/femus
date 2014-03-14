@@ -607,20 +607,30 @@ int NonLinearMultiLevelProblem::ComputeBdIntegral(const char pdename[],const cha
 
 //---------------------------------------------------------------------------------------------------
 void NonLinearMultiLevelProblem::CreatePdeStructure() {
+  
+  _TestIfPdeHasDisplacement.resize(_PdeIndex.size());
+  
   _LinSolver.resize(_PdeIndex.size());
   for(unsigned ipde=0;ipde<_PdeIndex.size();ipde++){
     _LinSolver[ipde].resize(_gridn);
     for(unsigned i=0;i<_gridn;i++){
       _LinSolver[ipde][i]=LinearSolver::build(i,_msh[i]).release();
-      //_LinSolver[ipde][i]->SetBdcPointer(&_solution[i]->_Bdc);
     }
     
     for (unsigned i=0; i<_gridn; i++) {
       _LinSolver[ipde][i]->InitPde(_SolPdeIndex[ipde],SolType,SolName,&_solution[i]->_Bdc,_gridr,_gridn);
     }
+    
+    unsigned test=0;
+    for(int i=0;i<_SolPdeIndex[ipde].size();i++){
+      test += _TestIfDisplacement[_SolPdeIndex[ipde][i]];
+    } 
+    _TestIfPdeHasDisplacement[ipde]=test;
+        
     for (unsigned ig=1; ig<_gridn; ig++) {
       BuildProlongatorMatrix(ig,_PdeName[ipde]);
     }
+        
   }
   
   return;
@@ -819,8 +829,8 @@ void NonLinearMultiLevelProblem::AddSolution(const char name[], const char order
   SolName.resize(n+1u);
   BdcType.resize(n+1u);
   SolTmorder.resize(n+1u);
-  TestIfPressure.resize(n+1u);
-
+  _TestIfPressure.resize(n+1u);
+  _TestIfDisplacement.resize(n+1u);
   if (tmorder==0) {
     if (_test_time==0) {
       tmorder=1;
@@ -828,8 +838,8 @@ void NonLinearMultiLevelProblem::AddSolution(const char name[], const char order
       tmorder=2;
     }
   }
-
-  TestIfPressure[n]=0;
+  _TestIfDisplacement[n]=0;
+  _TestIfPressure[n]=0;
   if (!strcmp(order,"linear")) {
     SolType[n]=0;
   } else if (!strcmp(order,"quadratic")) {
@@ -860,8 +870,12 @@ void NonLinearMultiLevelProblem::AddSolution(const char name[], const char order
 // *******************************************************
 void NonLinearMultiLevelProblem::AssociatePropertyToSolution(const char solution_name[], const char solution_property[]){
   unsigned index=GetIndex(solution_name);
-  if( !strcmp(solution_property,"pressure") || !strcmp(solution_property,"Pressure") ) TestIfPressure[index]=1;
-  else if( !strcmp(solution_property,"default") || !strcmp(solution_property,"Default") ) TestIfPressure[index]=0;
+  if( !strcmp(solution_property,"pressure") || !strcmp(solution_property,"Pressure") ) _TestIfPressure[index]=1;
+  else if( !strcmp(solution_property,"displacement") || !strcmp(solution_property,"Displacement") ) _TestIfDisplacement[index]=1;
+  else if( !strcmp(solution_property,"default") || !strcmp(solution_property,"Default") ) {
+    _TestIfPressure[index]=0;
+    _TestIfDisplacement[index]=0;
+  }
   else {
     cout<<"Error invalid property in function NonLinearMultiLevelProblem::AssociatePropertyToSolution"<<endl;
     exit(0);
@@ -1140,20 +1154,23 @@ int NonLinearMultiLevelProblem::BuildProlongatorMatrix(unsigned gridf, const cha
   int nc_loc = _LinSolver[ipde][gridf-1]->KKoffset[_LinSolver[ipde][gridf-1]->KKIndex.size()-1][_iproc]-_LinSolver[ipde][gridf-1]->KKoffset[0][_iproc];
   _LinSolver[ipde][gridf]->_PP = SparseMatrix::build().release();
   _LinSolver[ipde][gridf]->_PP->init(nf,nc,nf_loc,nc_loc,27,27);
-      
+  _LinSolver[ipde][gridf]->_RR = SparseMatrix::build().release();
+  _LinSolver[ipde][gridf]->_RR->init(nc,nf,nc_loc,nf_loc,27,27);    
   
   SparseMatrix *RRt;
+  if( _TestIfPdeHasDisplacement[ipde]){
+    RRt = SparseMatrix::build().release();
+    RRt->init(nf,nc,nf_loc,nc_loc,27,27);
+  }
  
-  RRt = SparseMatrix::build().release();
-  RRt->init(nf,nc,nf_loc,nc_loc,27,27);
- 
-  _LinSolver[ipde][gridf]->_RR = SparseMatrix::build().release();
-  _LinSolver[ipde][gridf]->_RR->init(nc,nf,nc_loc,nf_loc,27,27);
+  
+  
+  
   
   for (unsigned k=0; k<_SolPdeIndex[ipde].size(); k++) {
     unsigned SolIndex=_SolPdeIndex[ipde][k];
     bool TestDisp=0;
-    if( !strcmp(SolName[SolIndex],"DX") || !strcmp(SolName[SolIndex],"DY") )   TestDisp=1;
+    if( _TestIfPdeHasDisplacement[ipde] && _TestIfDisplacement[SolIndex] )   TestDisp=1;
     //TestDisp=0;
     
     // loop on the coarse grid 
@@ -1165,23 +1182,27 @@ int NonLinearMultiLevelProblem::BuildProlongatorMatrix(unsigned gridf, const cha
     
 	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
 	  
-	  type_elem[ielt][SolType[SolIndex]]->prolongation(*_LinSolver[ipde][gridf],*_LinSolver[ipde][gridf-1],iel,
-							   RRt,SolIndex,k, TestDisp);
+	  if( _TestIfPdeHasDisplacement[ipde]){
+	    type_elem[ielt][SolType[SolIndex]]->BuildRestrictionTranspose(*_LinSolver[ipde][gridf],*_LinSolver[ipde][gridf-1],iel,
+									  RRt,SolIndex,k, TestDisp);
+	  }
 	  
-	  type_elem[ielt][SolType[SolIndex]]->prolongation(*_LinSolver[ipde][gridf],*_LinSolver[ipde][gridf-1],iel,
-							   _LinSolver[ipde][gridf]->_PP,SolIndex,k, 0);
+	  type_elem[ielt][SolType[SolIndex]]->BuildProlongation(*_LinSolver[ipde][gridf],*_LinSolver[ipde][gridf-1],iel,
+								 _LinSolver[ipde][gridf]->_PP,SolIndex,k);
 	
 	}
       }
     }
   }
   _LinSolver[ipde][gridf]->_PP->close();
-  RRt->close();
-  
-  RRt->get_transpose( *_LinSolver[ipde][gridf]->_RR);
-  
-  
-  delete RRt;
+  if( _TestIfPdeHasDisplacement[ipde]){
+    RRt->close();
+    RRt->get_transpose( *_LinSolver[ipde][gridf]->_RR);
+    delete RRt;
+  }
+  else{
+    _LinSolver[ipde][gridf]->_PP->get_transpose( *_LinSolver[ipde][gridf]->_RR);
+  }
   
   
   
@@ -1345,11 +1366,11 @@ void NonLinearMultiLevelProblem::GenerateBdc(const char name[], const char bdc_t
 	      for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt); jface++) {
 		if (_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)==0) { //Domain Decomposition Dirichlet
 		  short unsigned ielt=_msh[igridn]->el->GetElementType(iel_gmt);
-		  unsigned nv1=(!TestIfPressure[i])?
+		  unsigned nv1=(!_TestIfPressure[i])?
 		    NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt,0)]: //non-pressure type
 		    _msh[igridn]->el->GetElementDofNumber(iel,_msh[igridn]->GetEndIndex(SolType[i]) ); //pressure type
 		  for (unsigned iv=0; iv<nv1; iv++) {
-		    unsigned inode=(!TestIfPressure[i])? 
+		    unsigned inode=(!_TestIfPressure[i])? 
 		      _msh[igridn]->el->GetFaceVertexIndex(iel_gmt,jface,iv)-1u: //non-pressure type
 		      _msh[igridn]->el->GetElementVertexIndex(iel_gmt,iv)-1u;    //pressure type
 		    unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[i]);
@@ -1386,7 +1407,7 @@ void NonLinearMultiLevelProblem::GenerateBdc(const char name[], const char bdc_t
 	    }
 	  }
 	}
-	else if(TestIfPressure[i]){ // 1 DD Dirichlet for pressure types only
+	else if(_TestIfPressure[i]){ // 1 DD Dirichlet for pressure types only
 	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   
 	    unsigned nel=_msh[igridn]->GetElementNumber();
 	    for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 

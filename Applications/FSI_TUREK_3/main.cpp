@@ -77,6 +77,9 @@ int main(int argc,char **args) {
   // generate solution vector
   nl_td_ml_prob.AddSolution("DX","biquadratic");
   nl_td_ml_prob.AddSolution("DY","biquadratic");
+  nl_td_ml_prob.AssociatePropertyToSolution("DX","Displacement"); // Add this line
+  nl_td_ml_prob.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
+  
   //nl_td_ml_prob.AddSolution("DZ","biquadratic");
   nl_td_ml_prob.AddSolution("U","biquadratic");
   nl_td_ml_prob.AddSolution("V","biquadratic");

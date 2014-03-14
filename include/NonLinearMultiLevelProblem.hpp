@@ -53,8 +53,11 @@ protected:
   vector <char*> SolName;
   vector <int> SolTmorder;
   vector <char*> BdcType;
-  vector <bool> TestIfPressure;
- 
+  vector <bool> _TestIfPressure;
+  vector <bool> _TestIfDisplacement;
+  vector <bool> _TestIfPdeHasDisplacement;
+  
+  
   //pointer function to the assemble function
   int (*_assemble_function)(NonLinearMultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
   

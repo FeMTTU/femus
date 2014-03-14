@@ -478,11 +478,11 @@ void NonLinearTimeDependentMultiLevelProblem::UpdateBdc() {
 		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
 		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
 		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
-		    unsigned nv1=(!TestIfPressure[k])?
+		    unsigned nv1=(!_TestIfPressure[k])?
 		      NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt,0)]:
 		      _msh[igridn]->el->GetElementDofNumber(iel,_msh[igridn]->GetEndIndex(SolType[k]));
 		    for (unsigned iv=0; iv<nv1; iv++) {
-		      unsigned inode=(!TestIfPressure[k])? 
+		      unsigned inode=(!_TestIfPressure[k])? 
 			_msh[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
 			_msh[igridn]->el->GetElementVertexIndex(kel_gmt,iv)-1u;
 		      unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
@@ -519,7 +519,7 @@ void NonLinearTimeDependentMultiLevelProblem::UpdateBdc() {
 	      }
 	    }
 	  }
-	  else if(TestIfPressure[k]){
+	  else if(_TestIfPressure[k]){
 	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
 	      unsigned nel=_msh[igridn]->GetElementNumber();
 	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
