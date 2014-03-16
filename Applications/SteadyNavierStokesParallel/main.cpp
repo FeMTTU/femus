@@ -6,6 +6,8 @@
 #include "NumericVector.hpp"
 #include "LinearSolver.hpp"
 #include "SparseMatrix.hpp"
+#include "NonLinearImplicitSystem.hpp"
+#include "LinearImplicitSystem.hpp"
 
 using std::cout;
 using std::endl;
@@ -103,7 +105,7 @@ int main(int argc,char **args) {
   nl_ml_prob.AddPde("NS1");
   nl_ml_prob.AddPde("NS2");
   nl_ml_prob.AddPde("Temp");
-    
+  
   /// Start Navier-Stokes Muligrid Block
   //start Multigrid for UVWP
   nl_ml_prob.ClearSolPdeIndex();
@@ -119,6 +121,34 @@ int main(int argc,char **args) {
   
   // create Multigrid (PRLO, REST, MAT, VECs) based on SolPdeIndex
   nl_ml_prob.CreatePdeStructure();
+  
+  
+  
+  // add the system Navier-Stokes to the MultiLevel problem
+  NonLinearImplicitSystem & system = nl_ml_prob.add_system<NonLinearImplicitSystem> ("Navier-Stokes");
+  system.AddSolutionToSytemPDE("U");
+  system.AddSolutionToSytemPDE("V");
+  system.AddSolutionToSytemPDE("P");
+
+  
+  // add the system Navier-Stokes2 to the MultiLevel problem
+  NonLinearImplicitSystem & system2 = nl_ml_prob.add_system<NonLinearImplicitSystem> ("Navier-Stokes2");
+  system2.AddSolutionToSytemPDE("U");
+  system2.AddSolutionToSytemPDE("V");
+  system2.AddSolutionToSytemPDE("P");
+
+  
+  // add the system Temperature to the MultiLevel problem
+  LinearImplicitSystem & system3 = nl_ml_prob.add_system<LinearImplicitSystem> ("Temperature");
+  system3.AddSolutionToSytemPDE("T");
+
+  // init all the systems
+  nl_ml_prob.init();
+  
+  // printing information
+  cout << system.name() << " : " << system.number() << endl;
+  cout << system2.name() << " : " << system2.number() << endl;
+  cout << system3.name() << " : " << system3.number() << endl;
    
   
   nl_ml_prob.SetDirichletBCsHandling("NS1","Penalty");
@@ -238,8 +268,13 @@ int main(int argc,char **args) {
   nl_ml_prob.printsol_vtu_inline("linear",print_vars);
   //nl_ml_prob.printsol_xdmf_hdf5("biquadratic",print_vars);
   
+  // Destroy all the new systems
+  nl_ml_prob.clear();
+  
   /// Destroy the last PETSC objects
   nl_ml_prob.FreeMultigrid(); 
+  
+
    
   delete [] infile;
   return(0);

@@ -19,6 +19,14 @@ lsysPde::lsysPde(mesh *other_msh){
   _compressibility = 0.;
   _CC_flag=0;
   _DirichletBCsHandlingMode = 0;
+  _EPS = NULL;
+  _EPSC = NULL;
+  _RES = NULL;
+  _RESC = NULL;
+  _PP = NULL;
+  _RR = NULL;
+  _KK = NULL;
+  _CC = NULL;
 }
 
 //--------------------------------------------------------------------------------
@@ -205,8 +213,8 @@ void lsysPde::DeletePde() {
   
   
   if (_msh->GetGridNumber()>0) {
-     delete _PP;
-     delete _RR;
+     if(_PP) delete _PP;
+     if(_RR) delete _RR;
   }
   
   delete _EPS;

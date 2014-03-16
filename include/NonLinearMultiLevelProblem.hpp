@@ -14,6 +14,8 @@ using std::map;
 
 class elem_type;
 class LinearSolver;
+class System;
+
 
 typedef double (*initfunc) (const double &x, const double &y, const double &z);
 
@@ -53,7 +55,6 @@ protected:
   bool _VankaIsSet;
   short unsigned _NSchurVar;
  
-  vector <char*> SolName;
   vector <int> SolTmorder;
   vector <char*> BdcType;
   vector <bool> _TestIfPressure;
@@ -69,11 +70,93 @@ protected:
   
  public:
    
+   /** Data structure holding the systems. */
+  std::map<std::string, System*> _systems;
+
+  /** Typedef for system iterators */
+  typedef std::map<std::string, System*>::iterator       system_iterator;
+
+  /** Typedef for constatnt system iterators */
+  typedef std::map<std::string, System*>::const_iterator const_system_iterator; 
+   
   vector <char*> _PdeName;
   vector <unsigned> _PdeIndex;
   void AddPde(const char name[]);
   unsigned GetPdeIndex(const char name[]) const; 
-    
+  
+  /** Add the system of type \p system_type named \p name to the systems array. */
+  virtual System & add_system (const std::string& system_type, const std::string& name);
+
+  /** Add the system named \p name to the systems array. */
+  template <typename T_sys> T_sys & add_system (const std::string& name);
+  
+  /**
+   * @returns a constant reference to the system named \p name.
+   * The template argument defines the return type.  For example,
+   * const SteadySystem& sys = eq.get_system<SteadySystem> ("sys");
+   * is an example of how the method might be used
+   */
+  template <typename T_sys>
+  const T_sys & get_system (const std::string& name) const;
+
+  /**
+   * @returns a writeable referene to the system named \p name.
+   * The template argument defines the return type.  For example,
+   * const SteadySystem& sys = eq.get_system<SteadySystem> ("sys");
+   * is an example of how the method might be used
+   */
+  template <typename T_sys>
+  T_sys & get_system (const std::string& name);
+
+  /**
+   * @returns a constant reference to system number \p num.
+   * The template argument defines the return type.  For example,
+   * const SteadySystem& sys = eq.get_system<SteadySystem> (0);
+   * is an example of how the method might be used
+   */
+  template <typename T_sys>
+  const T_sys & get_system (const unsigned int num) const;
+
+  /**
+   * @returns a writeable referene to the system number \p num.
+   * The template argument defines the return type.  For example,
+   * const SteadySystem& sys = eq.get_system<SteadySystem> (0);
+   * is an example of how the method might be used
+   */
+  template <typename T_sys>
+  T_sys & get_system (const unsigned int num);
+
+  /**
+   * @returns a constant reference to the system named \p name.
+   */
+  const System & get_system (const std::string& name) const;
+
+  /**
+   * @returns a writeable referene to the system named \p name.
+   */
+  System & get_system (const std::string& name);
+
+  /**
+   * @returns a constant reference to system number \p num.
+   */
+  const System & get_system (const unsigned int num) const;
+
+  /**
+   * @returns a writeable referene to the system number \p num.
+   */
+  System & get_system (const unsigned int num);
+  
+  
+  /** @returns the number of equation systems. */
+  unsigned int n_systems() const;
+  
+  /** Clear all the Sytems PDE structures */
+  void clear();
+  
+  /** init the system pde structures */
+  void init();
+
+  vector <char*> SolName;
   vector <int> SolType;
   vector< vector <unsigned> > _SolPdeIndex;
   vector <unsigned> VankaIndex;
@@ -108,12 +191,13 @@ protected:
   
   //utilities
   void MarkStructureNode();
-  double ComputeL2norm();
   bool GetConvergence(const char pdename[],const unsigned gridn);
-  int ComputeBdStress(int bd, double cforce[3]);
+
   int ComputeBdIntegral(const char pdename[],const char var_name[], const unsigned & kel, 
                          const unsigned & jface, unsigned level, unsigned dir);
   unsigned GetNumberOfGrid();
+  unsigned GetNumberOfGridNotRefined();
+
   
   // Config
   void SetMatrixProperties(const char pdename[], const char property[]);
@@ -176,6 +260,155 @@ protected:
  
   char* GetThisPdeName(const unsigned &ipde){ return _PdeName[ipde];}
 };
+
+template <typename T_sys>
+inline
+T_sys & NonLinearMultiLevelProblem::add_system (const std::string& name)
+{
+  T_sys* ptr = NULL;
+
+  if (!_systems.count(name))
+    {
+      ptr = new T_sys(*this, name, this->n_systems());
+
+      _systems.insert (std::make_pair(name, ptr));
+
+    }
+  else
+    {
+      // We now allow redundant add_system calls, to make it
+      // easier to load data from files for user-derived system
+      // subclasses
+      std::cerr << "ERROR: There was already a system"
+              << " named " << name
+              << std::endl;
+
+      //ptr = &(this->get_system<T_sys>(name));
+    }
+
+  // Return a dynamically casted reference to the newly added System.
+  return *ptr;
+}
+
+// template <typename T_sys>
+// inline
+// const T_sys & NonLinearMultiLevelProblem::get_system (const unsigned int num) const
+// {
+//   assert(num < this->n_systems());
+// 
+// 
+//   const_system_iterator       pos = _systems.begin();
+//   const const_system_iterator end = _systems.end();
+// 
+//   for (; pos != end; ++pos)
+//     if (pos->second->number() == num)
+//       break;
+// 
+//   // Check for errors
+//   if (pos == end)
+//     {
+//       std::cerr << "ERROR: no system number " << num << " found!"
+//                     << std::endl;
+//       //libmesh_error();
+//     }
+// 
+//   // Attempt dynamic cast
+//   return *static_cast<T_sys*>(pos->second);
+// }
+
+// template <typename T_sys>
+// inline
+// T_sys & NonLinearMultiLevelProblem::get_system (const unsigned int num)
+// {
+//   assert(num < this->n_systems());
+// 
+//   const_system_iterator       pos = _systems.begin();
+//   const const_system_iterator end = _systems.end();
+// 
+//   for (; pos != end; ++pos)
+//     if (pos->second->number() == num)
+//       break;
+// 
+//   // Check for errors
+//   if (pos == end)
+//     {
+//       std::cerr << "ERROR: no system number " << num << " found!"
+//                     << std::endl;
+//   //    libmesh_error();
+//     }
+// 
+//   // Attempt dynamic cast
+//   return *static_cast<T_sys*>(pos->second);
+// }
+
+template <typename T_sys>
+inline
+const T_sys & NonLinearMultiLevelProblem::get_system (const std::string& name) const
+{
+  const_system_iterator pos = _systems.find(name);
+
+  // Check for errors
+  if (pos == _systems.end())
+    {
+      std::cerr << "ERROR: no system named \"" << name << "\" found!"
+                    << std::endl;
+      //libmesh_error();
+    }
+
+  // Attempt dynamic cast
+  return *static_cast<T_sys*>(pos->second);
+}
+
+template <typename T_sys>
+inline
+T_sys & NonLinearMultiLevelProblem::get_system (const std::string& name)
+{
+  system_iterator pos = _systems.find(name);
+
+  // Check for errors
+  if (pos == _systems.end())
+    {
+      std::cerr << "ERROR: no system named " << name << " found!"
+                    << std::endl;
+ //     libmesh_error();
+    }
+
+  // Attempt dynamic cast
+  return *static_cast<T_sys*>(pos->second);
+}
+
+inline
+const System & NonLinearMultiLevelProblem::get_system (const std::string& name) const
+{
+  return this->get_system<System>(name);
+}
+
+
+inline
+System & NonLinearMultiLevelProblem::get_system (const std::string& name)
+{
+  return this->get_system<System>(name);
+}
+
+
+inline
+const System & NonLinearMultiLevelProblem::get_system (const unsigned int num) const
+{
+  return this->get_system<System>(num);
+}
+
+
+inline
+System & NonLinearMultiLevelProblem::get_system (const unsigned int num)
+{
+  return this->get_system<System>(num);
+}
+
+inline
+unsigned int NonLinearMultiLevelProblem::n_systems () const
+{
+  return static_cast<unsigned int>(_systems.size());  //libmesh static_cast_int
+}
 
 #endif
 // kate: indent-mode cstyle; space-indent on; indent-width 2;

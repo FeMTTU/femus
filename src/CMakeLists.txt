@@ -17,6 +17,7 @@ ElemSto.cpp
 ElemType.cpp
 EqnBase.cpp
 EquationsMap.cpp
+ExplicitSystem.cpp
 FEElemBase.cpp
 FEHex1.cpp
 FEHex27.cpp
@@ -37,6 +38,8 @@ Fluid.cpp
 GeomEl.cpp
 Graph.cpp
 Hexaedron.cpp
+ImplicitSystem.cpp
+LinearImplicitSystem.cpp
 LinearSolver.cpp
 LinearSolverM.cpp
 Line.cpp
@@ -44,6 +47,7 @@ LinSysPde.cpp
 Material.cpp
 mesh.cpp
 Mesh.cpp
+NonLinearImplicitSystem.cpp
 NonLinearMultiLevelProblem.cpp
 NonLinearTimeDependentMultiLevelProblem.cpp
 NumericVector.cpp
@@ -62,8 +66,10 @@ QuantityLocal.cpp
 Solid.cpp
 Solution.cpp
 SparseMatrix.cpp
+System.cpp
 Tetrahedral.cpp
 TimeLoop.cpp
+TransientSystem.cpp
 Triangle.cpp
 Utils.cpp
 Wedge.cpp

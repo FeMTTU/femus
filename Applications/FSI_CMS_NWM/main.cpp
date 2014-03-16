@@ -116,7 +116,7 @@ int main(int argc,char **args) {
   nl_td_ml_prob.SetTimeStep(0.005);
   nl_td_ml_prob.SetPrintTimeStep(1);
   nl_td_ml_prob.SetSaveTimeStep(33300);
-  nl_td_ml_prob.SetNumTimeSteps(1);  //165   
+  nl_td_ml_prob.SetNumTimeSteps(100);  //165   
   // nl_td_ml_prob.InitializeFromRestart(5);
   nl_td_ml_prob.AttachSetTimeStepFunction(SetVariableTimeStep);
   
