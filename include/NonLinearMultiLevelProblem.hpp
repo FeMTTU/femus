@@ -63,7 +63,7 @@ protected:
   
   
   //pointer function to the assemble function
-  int (*_assemble_function)(NonLinearMultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+  void (*_assemble_function)(NonLinearMultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
   
   bool (*_SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
                             double &value, const int FaceName, const double time);
@@ -184,7 +184,7 @@ protected:
 
   //Attaching Functions
   /** Provides a method for filling the Matrix and the Residual vector */
-  void AttachAssembleFunction ( int (*function)(NonLinearMultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix));
+  void AttachAssembleFunction ( void (*function)(NonLinearMultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix));
   
   void AttachSetBoundaryConditionFunction ( bool (* SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
                             double &value, const int FaceName, const double time) );

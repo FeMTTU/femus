@@ -692,7 +692,7 @@ void NonLinearMultiLevelProblem::DeletePdeStructure() {
 }
 
 //---------------------------------------------------------------------------------------------------
-void NonLinearMultiLevelProblem::AttachAssembleFunction (  int (*function)(NonLinearMultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) ) {
+void NonLinearMultiLevelProblem::AttachAssembleFunction (void (*function)(NonLinearMultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) ) {
   _assemble_function = function;
   return;
 }

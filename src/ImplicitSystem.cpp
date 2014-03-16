@@ -22,7 +22,11 @@ ImplicitSystem::ImplicitSystem (NonLinearMultiLevelProblem& es,
 				const unsigned int number_in) :
   ExplicitSystem (es, name_in, number_in)
 {
-
+  _npre = 1;
+  _npost = 1;
+  _VankaIsSet = false;
+  _NSchurVar = 1;
+  _Schur = false;
 }
 
 ImplicitSystem::~ImplicitSystem() {
@@ -36,3 +40,7 @@ void ImplicitSystem::clear() {
 void ImplicitSystem::init() {
   
 }
+
+
+
+

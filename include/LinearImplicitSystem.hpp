@@ -34,6 +34,9 @@ public:
 
   virtual ~LinearImplicitSystem();
   
+  /** Solves the system. */
+  virtual void solve ();
+  
   /** Clear all the data structures associated with the system. */
   virtual void clear();
 
@@ -57,6 +60,14 @@ protected:
   /** The final residual for the linear system Ax=b. */
   double _final_linear_residual;
 
+  void Prolongator(const unsigned &gridf);
+  
+  void Restrictor(const unsigned &gridf, const unsigned &gridn, 
+					    const unsigned &non_linear_iteration, const unsigned &linear_iteration, const bool &full_cycle);
+  
+  int BuildProlongatorMatrix(unsigned gridf, const char pdename[]);
+  
+  
 private:
 
   void CreateSystemPDEStructure();

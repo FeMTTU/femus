@@ -47,11 +47,19 @@ public:
   /** Associate the solution variables to the system PDE */
   void AddSolutionToSytemPDE(const char solname[]);
   
+  /** Register a user function to use in assembling the system matrix and RHS. */
+  void AttachAssembleFunction (void fptr(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
+				      const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix));
+
+  /** Solves the system.  Should be overloaded in derived systems. */
+  virtual void solve () {};
+  
    /** Clear all the data structures associated with the system. */
   virtual void clear();
   
   /** Init the system PDE structures */
   virtual void init();
+  
 
 protected:
   
@@ -60,13 +68,21 @@ protected:
   
   vector <unsigned> _SolSystemPdeIndex;
 
-private:
+  /** Function that assembles the system. */
+  void (* _assemble_system_function) (NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
+				      const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+  
+  /** The number associated with this system */
+  const unsigned int _sys_number;
   
   /** A name associated with this system. */
   const std::string _sys_name;
+  
+private:
+  
 
-  /** The number associated with this system */
-  const unsigned int _sys_number;
+
+
   
 };
 
