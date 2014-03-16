@@ -35,6 +35,9 @@ public:
 
   virtual ~ExplicitSystem();
   
+  /** Solves the system. */
+  virtual void solve () {};
+  
    /** Clear all the data structures associated with the system. */
   virtual void clear();
 

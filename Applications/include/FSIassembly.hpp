@@ -1,7 +1,7 @@
 #ifndef __FSIassembly_hpp__
 #define __FSIassembly_hpp__
 
-int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
+void AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
 
   clock_t AssemblyTime=0;
   clock_t start_time, end_time;
@@ -830,8 +830,6 @@ int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned le
   end_time=clock();
   AssemblyTime+=(end_time-start_time);
   // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
-
-  return 0;
 
 } 
 #endif 

@@ -35,6 +35,9 @@ public:
   
   virtual ~NonLinearImplicitSystem();
   
+  /** Solves the system. */
+  virtual void solve ();
+  
   /** Clear all the data structures associated with the system. */
   virtual void clear();
 
@@ -48,6 +51,12 @@ public:
    * like PETSc or LASPACK. Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
    */
    vector<LinearSolver*> _LinSolver;
+   
+  /** Returns  the number of iterations taken for the most recent nonlinear solve. */
+  unsigned int n_nonlinear_iterations() const { return _n_nonlinear_iterations; }
+
+  /** Returns the final residual for the nonlinear system solve. */
+  double final_nonlinear_residual() const { return _final_nonlinear_residual; }
 
 protected:
   
