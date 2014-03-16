@@ -1,4 +1,9 @@
 #include "NonLinearMultiLevelProblem.hpp"
+#include "ExplicitSystem.hpp"
+#include "LinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystem.hpp"
+#include "TransientSystem.hpp"
+#include "System.hpp"
 #include "ElemType.hpp"
 #include "Elem.hpp"
 #include "NumericVector.hpp"
@@ -7,6 +12,7 @@
 #include "FEMTTUConfig.h"
 #include "Parameter.hpp"
 #include "hdf5.h"
+
 
 //C++ include
 #include <ctime>
@@ -208,6 +214,156 @@ NonLinearMultiLevelProblem::NonLinearMultiLevelProblem(const unsigned short &igr
   BuildProlongatorMatrices();
 }
 
+
+System & NonLinearMultiLevelProblem::add_system (const std::string& sys_type,
+				      const std::string& name)
+{
+  // If the user already built a system with this name, we'll
+  // trust them and we'll use it.  That way they can pre-add
+  // non-standard derived system classes, and if their restart file
+  // has some non-standard sys_type we won't throw an error.
+  if (_systems.count(name))
+    {
+      return this->get_system(name);
+    }
+  // Build a basic System
+  else if (sys_type == "Basic")
+    this->add_system<System> (name);
+
+  // Build a Newmark system
+//   else if (sys_type == "Newmark")
+//     this->add_system<NewmarkSystem> (name);
+
+  // Build an Explicit system
+  else if ((sys_type == "Explicit"))
+    this->add_system<ExplicitSystem> (name);
+
+  // Build an Implicit system
+  else if ((sys_type == "Implicit") ||
+	   (sys_type == "Steady"  ))
+    this->add_system<ImplicitSystem> (name);
+
+  // build a transient implicit linear system
+  else if ((sys_type == "Transient") ||
+	   (sys_type == "TransientImplicit") ||
+	   (sys_type == "TransientLinearImplicit"))
+    this->add_system<TransientLinearImplicitSystem> (name);
+
+  // build a transient implicit nonlinear system
+  else if (sys_type == "TransientNonlinearImplicit")
+    this->add_system<TransientNonlinearImplicitSystem> (name);
+
+  // build a transient explicit system
+  else if (sys_type == "TransientExplicit")
+    this->add_system<TransientExplicitSystem> (name);
+
+  // build a linear implicit system
+  else if (sys_type == "LinearImplicit")
+    this->add_system<LinearImplicitSystem> (name);
+
+  // build a nonlinear implicit system
+  else if (sys_type == "NonlinearImplicit")
+    this->add_system<NonLinearImplicitSystem> (name);
+
+  else
+    {
+      std::cerr << "ERROR: Unknown system type: "
+		    << sys_type
+		    << std::endl;
+   }
+
+  // Return a reference to the new system
+  //return (*this)(name);
+  return this->get_system(name);
+}
+
+
+template <typename T_sys>
+inline
+const T_sys & NonLinearMultiLevelProblem::get_system (const unsigned int num) const
+{
+  assert(num < this->n_systems());
+
+
+  const_system_iterator       pos = _systems.begin();
+  const const_system_iterator end = _systems.end();
+
+  for (; pos != end; ++pos)
+    if (pos->second->number() == num)
+      break;
+
+  // Check for errors
+  if (pos == end)
+    {
+      std::cerr << "ERROR: no system number " << num << " found!"
+                    << std::endl;
+      //libmesh_error();
+    }
+
+  // Attempt dynamic cast
+  return *static_cast<T_sys*>(pos->second);
+}
+
+template <typename T_sys>
+inline
+T_sys & NonLinearMultiLevelProblem::get_system (const unsigned int num)
+{
+  assert(num < this->n_systems());
+
+  const_system_iterator       pos = _systems.begin();
+  const const_system_iterator end = _systems.end();
+
+  for (; pos != end; ++pos)
+    if (pos->second->number() == num)
+      break;
+
+  // Check for errors
+  if (pos == end)
+    {
+      std::cerr << "ERROR: no system number " << num << " found!"
+                    << std::endl;
+  //    libmesh_error();
+    }
+
+  // Attempt dynamic cast
+  return *static_cast<T_sys*>(pos->second);
+}
+
+void NonLinearMultiLevelProblem::clear ()
+{
+  // Clear any additional parameters
+  parameters.clear();
+
+  // clear the systems.  We must delete them
+  // since we newed them!
+  while (!_systems.empty())
+    {
+      system_iterator pos = _systems.begin();
+
+       System *sys = pos->second;
+       delete sys;
+       sys = NULL;
+
+      _systems.erase (pos);
+    }
+}
+
+
+void NonLinearMultiLevelProblem::init()
+{
+  const unsigned int n_sys = this->n_systems();
+
+  assert(n_sys != 0);
+
+  // init mesh???
+  
+  for (unsigned int i=0; i != this->n_systems(); ++i)
+    this->get_system(i).init();
+}
+
+
+
+
 //---------------------------------------------------------------------------------------------------
 void NonLinearMultiLevelProblem::MarkStructureNode() {
   for (unsigned i=0; i<_gridn; i++) _msh[i]->AllocateAndMarkStructureNode();
@@ -216,6 +372,11 @@ void NonLinearMultiLevelProblem::MarkStructureNode() {
 //---------------------------------------------------------------------------------------------------
 unsigned NonLinearMultiLevelProblem::GetNumberOfGrid() {
   return _gridn;
+}
+
+//---------------------------------------------------------------------------------------------------
+unsigned NonLinearMultiLevelProblem::GetNumberOfGridNotRefined() {
+  return _gridr;
 }
 
 //---------------------------------------------------------------------------------------------------
@@ -410,116 +571,6 @@ bool NonLinearMultiLevelProblem::GetNonLinearCase() {
 void NonLinearMultiLevelProblem::SetMovingMesh(std::vector<std::string>& movvars_in) {
   _moving_mesh = 1;
   _moving_vars = movvars_in;
-}
-
-// 
-// TODO Create a function that compute the l2norm of a quantity
-//
-//---------------------------------------------------------------------------------------------------
-double NonLinearMultiLevelProblem::ComputeL2norm() {
-
-  //   double _Td=2;
-  //   int node2[27];
-  //   double vx[3][27];
-  //   double phi2[27],gradphi2[27][3],Weight2;
-  // 
-  //   unsigned order_ind2 = _LinSolver[0][0]->SolType[GetIndex("T")];
-  //   unsigned end_ind2   = _LinSolver[0][0]->END_IND[order_ind2];
-
-  double Error=0;
-
-  return Error;
-}
-
-// 
-// TODO Create a function that compute the Force on the boundary
-//
-//---------------------------------------------------------------------------------------------------
-int NonLinearMultiLevelProblem::ComputeBdStress(int bd, double Cforce[3]) {
-
-  int node2[27];
-  double vx[3][27];
-  double phi2[27],gradphi2[27][3],Weight2;
-  double normal[3];
-  //const double rho = _fluid->get_density();
-  //const double mu = _fluid->get_viscosity();
-  //const double uref = _fluid->_parameter.Get_reference_velocity();
-
-  double BdIntx=0;
-  double BdInty=0;
-  double BdIntz=0;
-  PetscScalar *MYSOL[1];
-  unsigned kP=GetIndex("P");
-  //unsigned kU=GetIndex("U");
-  PetscErrorCode ierr;
-  const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
-  const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5}};
-
-  unsigned indX=GetIndex("X");
-  unsigned indY=GetIndex("Y");
-  unsigned indZ=GetIndex("Z");
-
-
-  for (unsigned ig=0; ig<_gridn; ig++) {
-
-   
-    //     PetscVector* petsc_vec_solP = static_cast<PetscVector*>(_solution[ig]->_Sol[kP]);
-    //     ierr = VecGetArray(petsc_vec_solP->vec(),&MYSOL[0]);
-    //     CHKERRQ(ierr);
-
-    //tested up to now for quad9 in 2D
-    unsigned order_ind = SolType[GetIndex("U")];
-
-    for (unsigned iel=0; iel<_msh[ig]->GetElementNumber(); iel++) {
-      if (_msh[ig]->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-
-        short unsigned kelt=_msh[ig]->el->GetElementType(iel);
-        unsigned nfaces = _msh[ig]->el->GetElementFaceNumber(iel);
-
-        for (unsigned jface=0; jface<nfaces; jface++) {
-          if (_msh[ig]->el->GetFaceElementIndex(iel,jface)<0) {
-
-            int dom = -( (_msh[ig]->el->GetFaceElementIndex(iel,jface))+1);
-            if (dom==bd) {
-
-              unsigned nve=NV1[kelt][jface<(_msh[ig]->el->GetElementFaceNumber(iel,0))];
-	      //               //linear pressure
-              unsigned felt = FELT[kelt][jface< (_msh[ig]->el->GetElementFaceNumber(iel,0))];
-
-	      for(unsigned i=0;i<nve;i++) {
-                unsigned inode=_msh[ig]->el->GetFaceVertexIndex(iel,jface,i)-1u;
-                unsigned inode_Metis=_msh[ig]->GetMetisDof(inode,2);
-		
-		vx[0][i]=(*_solution[ig]->_Sol[indX])(inode_Metis);  
-                vx[1][i]=(*_solution[ig]->_Sol[indY])(inode_Metis);
-                vx[2][i]=(*_solution[ig]->_Sol[indZ])(inode_Metis);
-		
-              }
-	      
-              for (unsigned igs=0; igs < type_elem[felt][order_ind]->GetGaussPointNumber(); igs++) {
-                (type_elem[felt][order_ind]->*type_elem[felt][order_ind]->Jacobian_sur_ptr)(vx,igs,Weight2,phi2,gradphi2,normal);
-                for (unsigned i=0; i<nve; i++) {
-		  BdIntx += phi2[i]*MYSOL[0][iel]*normal[0]*Weight2;
-		  BdInty += phi2[i]*MYSOL[0][iel]*normal[1]*Weight2;
-		  BdIntz += phi2[i]*MYSOL[0][iel]*normal[2]*Weight2;
-                }
-              } //end loop on gauss point
-            }
-          }
-        }
-      }
-    }
-
-    //ierr = VecRestoreArray(petsc_vec_solP->vec(),&MYSOL[0]);
-    CHKERRQ(ierr);
-
-  }
-
-  Cforce[0] = BdIntx;
-  Cforce[1] = BdInty;
-  Cforce[2] = BdIntz;
-
-  return ierr;
 }
 
 // 
