@@ -35,6 +35,9 @@ public:
 
   virtual ~ImplicitSystem();
   
+  /** Solves the system. */
+  virtual void solve () {};
+  
   /** Clear all the data structures associated with the system. */
   virtual void clear();
 
@@ -44,7 +47,14 @@ public:
   // the sparse matrix must be putted here A
   
 protected:
-
+  
+  int _npre;
+  int _npost;
+  bool _VankaIsSet;
+  short unsigned _NSchurVar = 1;
+  bool _Schur = false;
+  vector <unsigned> _VankaIndex;
+  
 private:
 
  

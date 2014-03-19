@@ -12,8 +12,8 @@
 using std::cout;
 using std::endl;
    
-int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
-int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+void AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+void AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
 
 
 double InitVariableU(const double &x, const double &y, const double &z);
@@ -125,21 +125,21 @@ int main(int argc,char **args) {
   
   
   // add the system Navier-Stokes to the MultiLevel problem
-  NonLinearImplicitSystem & system = nl_ml_prob.add_system<NonLinearImplicitSystem> ("Navier-Stokes");
+  NonLinearImplicitSystem & system = nl_ml_prob.add_system<NonLinearImplicitSystem> ("NS1");
   system.AddSolutionToSytemPDE("U");
   system.AddSolutionToSytemPDE("V");
   system.AddSolutionToSytemPDE("P");
 
   
   // add the system Navier-Stokes2 to the MultiLevel problem
-  NonLinearImplicitSystem & system2 = nl_ml_prob.add_system<NonLinearImplicitSystem> ("Navier-Stokes2");
+  NonLinearImplicitSystem & system2 = nl_ml_prob.add_system<NonLinearImplicitSystem> ("NS2");
   system2.AddSolutionToSytemPDE("U");
   system2.AddSolutionToSytemPDE("V");
   system2.AddSolutionToSytemPDE("P");
 
   
   // add the system Temperature to the MultiLevel problem
-  LinearImplicitSystem & system3 = nl_ml_prob.add_system<LinearImplicitSystem> ("Temperature");
+  LinearImplicitSystem & system3 = nl_ml_prob.add_system<LinearImplicitSystem> ("Temp");
   system3.AddSolutionToSytemPDE("T");
 
   // init all the systems
@@ -149,7 +149,22 @@ int main(int argc,char **args) {
   cout << system.name() << " : " << system.number() << endl;
   cout << system2.name() << " : " << system2.number() << endl;
   cout << system3.name() << " : " << system3.number() << endl;
-   
+ 
+  // System 1
+  system.AttachAssembleFunction(AssembleMatrixResNS);
+  const unsigned int n_nonlinear_steps = 15;
+  const double nonlinear_tolerance       = 1.e-3;
+  
+  nl_ml_prob.parameters.set<unsigned int>("linear solver maximum iterations") = 250;
+  
+  const double initial_linear_solver_tol = 1.e-6;
+  nl_ml_prob.parameters.set<double> ("linear solver tolerance") = initial_linear_solver_tol;
+  
+  // System 2
+  system2.AttachAssembleFunction(AssembleMatrixResNS);  
+  
+  // System 3
+  system3.AttachAssembleFunction(AssembleMatrixResT);  
   
   nl_ml_prob.SetDirichletBCsHandling("NS1","Penalty");
   nl_ml_prob.SetDirichletBCsHandling("NS2","Penalty");
@@ -184,7 +199,7 @@ int main(int argc,char **args) {
     nl_ml_prob.SetSmoother("Gmres"); 
     nl_ml_prob.SetTolerances("NS2",1.e-12,1.e-20,1.e+50,10);
     // Solving
-    nl_ml_prob.Solve("NS2",3,1,1,"F-Cycle",!linear);
+    //nl_ml_prob.Solve("NS2",3,1,1,"F-Cycle",!linear);
   }  
   else{ 
     // Solver II (Vanka - MPSC)
@@ -211,49 +226,49 @@ int main(int argc,char **args) {
   nl_ml_prob.SetMatrixProperties("Temp","Symmetric");
   nl_ml_prob.AddStabilization("Temp",true);
   
-  if(!vanka){
-    //Solver Configuration 
-    // Solver I (Gmres)
-    nl_ml_prob.SetSmoother("Gmres");
-    nl_ml_prob.SetTolerances("Temp",1.e-12,1.e-20,1.e+50,10);
+//   if(!vanka){
+//     //Solver Configuration 
+//     // Solver I (Gmres)
+//     nl_ml_prob.SetSmoother("Gmres");
+//     nl_ml_prob.SetTolerances("Temp",1.e-12,1.e-20,1.e+50,10);
+//     // Solving
+//     //nl_ml_prob.Solve("Temp",3,1,1,"F-Cycle",linear);
+//   }
+//   else{ 
+//     nl_ml_prob.ClearVankaIndex();
+//     nl_ml_prob.AddToVankaIndex("Temp","T");
+// 
+//     nl_ml_prob.SetSmoother("Vanka");
+//     nl_ml_prob.SetVankaSchurOptions(false,0);
+//     nl_ml_prob.SetSolverFineGrids("Temp","GMRES");
+//     nl_ml_prob.SetPreconditionerFineGrids("Temp","ILU");
+//     nl_ml_prob.SetTolerances("Temp",1.e-12,1.e-20,1.e+50,10);
+//     nl_ml_prob.SetSchurTolerances("Temp",1.e-12,1.e-20,1.e+50,1);
+//     nl_ml_prob.SetDimVankaBlock("Temp",3);                             //2^lev 1D 4^lev 2D 8^lev 3D
+//     // Solving
+//     // nl_ml_prob.Solve("Temp",3,1,1,"F-Cycle",linear);
+//   }
+  
     // Solving
-    nl_ml_prob.Solve("Temp",3,1,1,"F-Cycle",linear);
-  }
-  else{ 
-    nl_ml_prob.ClearVankaIndex();
-    nl_ml_prob.AddToVankaIndex("Temp","T");
-
-    nl_ml_prob.SetSmoother("Vanka");
-    nl_ml_prob.SetVankaSchurOptions(false,0);
-    nl_ml_prob.SetSolverFineGrids("Temp","GMRES");
-    nl_ml_prob.SetPreconditionerFineGrids("Temp","ILU");
-    nl_ml_prob.SetTolerances("Temp",1.e-12,1.e-20,1.e+50,10);
-    nl_ml_prob.SetSchurTolerances("Temp",1.e-12,1.e-20,1.e+50,1);
-    nl_ml_prob.SetDimVankaBlock("Temp",3);                             //2^lev 1D 4^lev 2D 8^lev 3D
-    // Solving
-    nl_ml_prob.Solve("Temp",3,1,1,"F-Cycle",linear);
-  }
+  //nl_ml_prob.get_system("NS1").solve();
+  
+  // System 2
+  //nl_ml_prob.get_system("NS2").solve();
+  
+  // System 3
+  nl_ml_prob.get_system("Temp").solve();
    
   // Delete Multigrid (PRLO, REST, MAT, VECs) based on SolPdeIndex
   nl_ml_prob.DeletePdeStructure();
   /// End Navier-Stokes Muligrid Block
   
-  //Post processing
-  //   double cforce[3];
-  //   nl_ml_prob.ComputeBdStress(4,cforce);
-  //   std::cout << "forcex:  " << cforce[0] << "   forcey: " << cforce[1] << std::endl;
-  //   
-  //   double cl[2];
-  //   cl[0] = (2.*cforce[0])/(1.*0.2*0.2*0.1);
-  //   cl[1] = (2.*cforce[1])/(1.*0.2*0.2*0.1);
-  //   std::cout << "drag_force:  " << cl[0] << "   lift_force: " << cl[1] << std::endl;
-  //   
   /// Print all solutions
   std::vector<std::string> print_vars;
-  print_vars.resize(3);
+  print_vars.resize(4);
   print_vars[0] = "U";
   print_vars[1] = "V";
   print_vars[2] = "P";
+  print_vars[3] = "T";
   
   bool DebugOn=1;
   //nl_ml_prob.printsol_gmv_binary("quadratic",nm-1,DebugOn);
@@ -414,7 +429,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 // //------------------------------------------------------------------------------------------------------------
 
 
-int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix){
+void AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix){
      
   const char* pdename=nl_ml_prob.GetThisPdeName(ipde);
   
@@ -732,17 +747,16 @@ int AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
   if(assembe_matrix) myKK->close();
   myRES->close();
   // ***************** END ASSEMBLY *******************
-  return 0;
 }
 
 //------------------------------------------------------------------------------------------------------------
-int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix){
+void AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix){
   
   
     
   //pointers and references
   Solution*      mysolution	= nl_ml_prob._solution[level];
-  LinearSolver*  mylsyspde	= nl_ml_prob._LinSolver[ipde][level];
+  LinearSolver*  mylsyspde	= nl_ml_prob.get_system<LinearImplicitSystem>("Temp")._LinSolver[level];   //_LinSolver[ipde][level]
   mesh*          mymsh		= nl_ml_prob._msh[level];
   elem*          myel		= mymsh->el;
   SparseMatrix*  myKK		= mylsyspde->_KK;
@@ -898,7 +912,6 @@ int AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, c
   
    // ***************** END ASSEMBLY *******************
   
-  return 0;
 }
 
 
