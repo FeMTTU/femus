@@ -36,7 +36,14 @@ void System::clear() {
 void System::init() {
   
 }
-  
+
+void System::AttachAssembleFunction(void fptr(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
+				      const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix))
+{
+  assert(fptr);
+
+  _assemble_system_function = fptr;
+}
   
 // *******************************************************
 void System::AddSolutionToSytemPDE(const char solname[]){
