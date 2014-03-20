@@ -26,7 +26,7 @@
 // Forward declarations
 //------------------------------------------------------------------------------
 class System;
-class NonLinearMultiLevelProblem;
+class MultiLevelProblem;
 class String;
 
 
@@ -35,7 +35,7 @@ class System {
 public:
 
   /** Constructor.  Optionally initializes required data structures. */
-  System (NonLinearMultiLevelProblem& es, const std::string& name, const unsigned int number);
+  System (MultiLevelProblem& ml_prob, const std::string& name, const unsigned int number);
 
   /** destructor */
   virtual ~System();
@@ -48,7 +48,7 @@ public:
   void AddSolutionToSytemPDE(const char solname[]);
   
   /** Register a user function to use in assembling the system matrix and RHS. */
-  void AttachAssembleFunction (void fptr(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
+  void AttachAssembleFunction (void fptr(MultiLevelProblem &ml_prob, unsigned level, 
 				      const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix));
 
   /** Solves the system.  Should be overloaded in derived systems. */
@@ -64,12 +64,12 @@ public:
 protected:
   
   /** Constant reference to the \p EquationSystems object used for the simulation. */
-  NonLinearMultiLevelProblem& _equation_systems;
+  MultiLevelProblem& _equation_systems;
   
   vector <unsigned> _SolSystemPdeIndex;
 
   /** Function that assembles the system. */
-  void (* _assemble_system_function) (NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
+  void (* _assemble_system_function) (MultiLevelProblem &ml_prob, unsigned level, 
 				      const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
   
   /** The number associated with this system */

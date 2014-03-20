@@ -10,11 +10,11 @@
 // ------------------------------------------------------------
 // TransientSystem implementation
 template <class Base>
-TransientSystem<Base>::TransientSystem (NonLinearMultiLevelProblem& es,
+TransientSystem<Base>::TransientSystem (MultiLevelProblem& ml_probl,
 					const std::string& name_in,
 					const unsigned int number_in) :
 
-  Base                 (es, name_in, number_in)
+  Base                 (ml_probl, name_in, number_in)
 {
 // #ifdef LIBMESH_ENABLE_GHOSTED
 //   old_local_solution =

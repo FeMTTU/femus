@@ -31,7 +31,7 @@ class ImplicitSystem : public ExplicitSystem {
 public:
 
   /** Constructor.  Optionally initializes required data structures. */
-  ImplicitSystem (NonLinearMultiLevelProblem& es, const std::string& name, const unsigned int number);
+  ImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number);
 
   virtual ~ImplicitSystem();
   
@@ -51,7 +51,7 @@ protected:
   int _npre;
   int _npost;
   bool _VankaIsSet;
-  short unsigned _NSchurVar = 1;
+  short unsigned _NSchurVar;
   bool _Schur = false;
   vector <unsigned> _VankaIndex;
   

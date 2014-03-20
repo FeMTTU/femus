@@ -17,10 +17,10 @@
 
 // ------------------------------------------------------------
 // ExplicitSystem implementation
-ExplicitSystem::ExplicitSystem (NonLinearMultiLevelProblem& es,
+ExplicitSystem::ExplicitSystem (MultiLevelProblem& ml_probl,
 				const std::string& name_in,
 				const unsigned int number_in) :
-  System (es, name_in, number_in)
+  System (ml_probl, name_in, number_in)
 {
 }
 

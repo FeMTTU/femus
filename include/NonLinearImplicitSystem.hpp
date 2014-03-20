@@ -31,7 +31,7 @@ class NonLinearImplicitSystem : public ImplicitSystem {
 public:
 
 /** Constructor.  Optionally initializes required data structures. */
-  NonLinearImplicitSystem (NonLinearMultiLevelProblem& es, const std::string& name, const unsigned int number);
+  NonLinearImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number);
   
   virtual ~NonLinearImplicitSystem();
   
