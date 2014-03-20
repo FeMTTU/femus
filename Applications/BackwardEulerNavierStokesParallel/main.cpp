@@ -9,7 +9,7 @@
 using std::cout;
 using std::endl;
 
-void AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_td_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+void AssembleMatrixResNS(MultiLevelProblem &nl_td_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
 			  double &value, const int FaceName, const double time);
@@ -285,7 +285,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 
 
 //------------------------------------------------------------------------------------------------------------
-void AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix){
+void AssembleMatrixResNS(MultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix){
      
   NonLinearTimeDependentMultiLevelProblem& nl_td_ml_prob = static_cast<NonLinearTimeDependentMultiLevelProblem&>(nl_ml_prob);
   

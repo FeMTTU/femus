@@ -22,10 +22,10 @@
 
 // ------------------------------------------------------------
 // LinearImplicitSystem implementation
-LinearImplicitSystem::LinearImplicitSystem (NonLinearMultiLevelProblem& es,
+LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
 				const std::string& name_in,
 				const unsigned int number_in) :
-  ImplicitSystem (es, name_in, number_in),
+  ImplicitSystem (ml_probl, name_in, number_in),
   _n_linear_iterations   (0),
   _final_linear_residual (1.e20)
 {

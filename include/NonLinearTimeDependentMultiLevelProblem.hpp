@@ -5,10 +5,10 @@
 
 /**
 * This class is a black box container to handle time-dependent multilevel problems
-* The multigrid solver is called by calling the function solve
+* This class have to be deleted as soon as possible
 */
 
-class NonLinearTimeDependentMultiLevelProblem : public NonLinearMultiLevelProblem {
+class NonLinearTimeDependentMultiLevelProblem : public MultiLevelProblem {
 
 private:
   unsigned _save_step;

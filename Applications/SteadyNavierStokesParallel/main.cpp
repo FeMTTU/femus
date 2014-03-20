@@ -12,8 +12,8 @@
 using std::cout;
 using std::endl;
    
-void AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
-void AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
 
 
 double InitVariableU(const double &x, const double &y, const double &z);
@@ -64,7 +64,7 @@ int main(int argc,char **args) {
   cout << fluid << endl;
   
   //Steadystate NonLinearMultiLevelProblem  
-  NonLinearMultiLevelProblem nl_ml_prob(nm,nr,infile,"seventh",Lref,SetRefinementFlag);
+  MultiLevelProblem nl_ml_prob(nm,nr,infile,"seventh",Lref,SetRefinementFlag);
   
   /// END MESH =================================  
   
@@ -429,7 +429,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 // //------------------------------------------------------------------------------------------------------------
 
 
-void AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix){
+void AssembleMatrixResNS(MultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix){
      
   const char* pdename=nl_ml_prob.GetThisPdeName(ipde);
   
@@ -750,7 +750,7 @@ void AssembleMatrixResNS(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level,
 }
 
 //------------------------------------------------------------------------------------------------------------
-void AssembleMatrixResT(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix){
+void AssembleMatrixResT(MultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix){
   
   
     

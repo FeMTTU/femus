@@ -17,7 +17,7 @@ using std::endl;
 NonLinearTimeDependentMultiLevelProblem::NonLinearTimeDependentMultiLevelProblem(const unsigned short &igridn,const unsigned short &igridr, const char mesh_file[],
 										 const char GaussOrder[], const double Lref, bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, 
 																			const int &ElemGroupNumber,const int &level)) :
-  NonLinearMultiLevelProblem(igridn, igridr, mesh_file, GaussOrder, Lref,SetRefinementFlag) {
+  MultiLevelProblem(igridn, igridr, mesh_file, GaussOrder, Lref,SetRefinementFlag) {
 
   _print_step    = 100000;
   _save_step     = 100000;
@@ -277,7 +277,7 @@ void NonLinearTimeDependentMultiLevelProblem::Solve(const char pdename[], unsign
   cout << " ************** time step " << _time_step << " **************** " << endl;
   cout << " ************** time      " << _time << " **************** " << endl;
   
-  NonLinearMultiLevelProblem::Solve(pdename, ncycle, npre, npost, this_mgtype, test_linear); 
+  MultiLevelProblem::Solve(pdename, ncycle, npre, npost, this_mgtype, test_linear); 
   delete [] this_mgtype;
 }  
   

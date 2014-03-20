@@ -18,26 +18,26 @@
 
 // ------------------------------------------------------------
 // NonLinearImplicitSystem implementation
-NonLinearImplicitSystem::NonLinearImplicitSystem (NonLinearMultiLevelProblem& es,
+NonLinearImplicitSystem::NonLinearImplicitSystem (MultiLevelProblem& ml_probl,
 				const std::string& name_in,
 				const unsigned int number_in) :
-  ImplicitSystem (es, name_in, number_in),
+  ImplicitSystem (ml_probl, name_in, number_in),
   _n_nonlinear_iterations   (0),
   _final_nonlinear_residual (1.e20)
 {
     // Set default parameters
   // These were chosen to match the Petsc defaults
-  es.parameters.set<double>        ("linear solver tolerance") = 1e-5;
-  es.parameters.set<double>        ("linear solver minimum tolerance") = 1e-5;
-  es.parameters.set<unsigned int>("linear solver maximum iterations") = 10000;
+  ml_probl.parameters.set<double>        ("linear solver tolerance") = 1e-5;
+  ml_probl.parameters.set<double>        ("linear solver minimum tolerance") = 1e-5;
+  ml_probl.parameters.set<unsigned int>("linear solver maximum iterations") = 10000;
 
-  es.parameters.set<unsigned int>("nonlinear solver maximum iterations") = 50;
-  es.parameters.set<unsigned int>("nonlinear solver maximum function evaluations") = 10000;
+  ml_probl.parameters.set<unsigned int>("nonlinear solver maximum iterations") = 50;
+  ml_probl.parameters.set<unsigned int>("nonlinear solver maximum function evaluations") = 10000;
 
-  es.parameters.set<double>("nonlinear solver absolute residual tolerance") = 1e-35;
-  es.parameters.set<double>("nonlinear solver relative residual tolerance") = 1e-8;
-  es.parameters.set<double>("nonlinear solver absolute step tolerance") = 1e-8;
-  es.parameters.set<double>("nonlinear solver relative step tolerance") = 1e-8;
+  ml_probl.parameters.set<double>("nonlinear solver absolute residual tolerance") = 1e-35;
+  ml_probl.parameters.set<double>("nonlinear solver relative residual tolerance") = 1e-8;
+  ml_probl.parameters.set<double>("nonlinear solver absolute step tolerance") = 1e-8;
+  ml_probl.parameters.set<double>("nonlinear solver relative step tolerance") = 1e-8;
 }
 
 NonLinearImplicitSystem::~NonLinearImplicitSystem() {

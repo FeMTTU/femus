@@ -30,7 +30,7 @@ public:
    * Constructor.  Initializes required
    * data structures.
    */
-  TransientSystem (NonLinearMultiLevelProblem& es,
+  TransientSystem (MultiLevelProblem& ml_probl,
 		   const std::string& name,
 		   const unsigned int number);
 

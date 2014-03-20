@@ -17,10 +17,10 @@
 
 // ------------------------------------------------------------
 // ExplicitSystem implementation
-ImplicitSystem::ImplicitSystem (NonLinearMultiLevelProblem& es,
+ImplicitSystem::ImplicitSystem (MultiLevelProblem& ml_probl,
 				const std::string& name_in,
 				const unsigned int number_in) :
-  ExplicitSystem (es, name_in, number_in)
+  ExplicitSystem (ml_probl, name_in, number_in)
 {
   _npre = 1;
   _npost = 1;

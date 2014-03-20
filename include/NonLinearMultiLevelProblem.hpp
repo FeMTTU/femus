@@ -1,6 +1,24 @@
-#ifndef __NonLinearMultiLevelProblem_hpp__
-#define __NonLinearMultiLevelProblem_hpp__
+/*=========================================================================
 
+ Program: FEMUS
+ Module: MultiLevelProblem
+ Authors: Eugenio Aulisa, Simone Bnà
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+#ifndef __MultiLevelProblem_hpp__
+#define __MultiLevelProblem_hpp__
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "LinSysPde.hpp"
 #include "Solution.hpp"
 #include "Parameters.hpp"
@@ -12,6 +30,9 @@
 #include <map>
 using std::map;
 
+//------------------------------------------------------------------------------
+// Forward declarations
+//------------------------------------------------------------------------------
 class elem_type;
 class LinearSolver;
 class System;
@@ -20,11 +41,10 @@ class System;
 typedef double (*initfunc) (const double &x, const double &y, const double &z);
 
 /**
-* This class is a black box container to handle multilevel problems
-* The multigrid solver is called by calling the function solve
+* This class is a black box container to handle multilevel problems.
 */
 
-class NonLinearMultiLevelProblem {
+class MultiLevelProblem {
 
 private:
   vector < SparseMatrix* > ProlQitoQj_[3][3];
@@ -63,7 +83,7 @@ protected:
   
   
   //pointer function to the assemble function
-  void (*_assemble_function)(NonLinearMultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+  void (*_assemble_function)(MultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
   
   bool (*_SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
                             double &value, const int FaceName, const double time);
@@ -175,16 +195,16 @@ protected:
   Parameters parameters;
 
   /** Constructor */
-  NonLinearMultiLevelProblem(const unsigned short &igridn, const unsigned short &igridr, const char mesh_file[],
+  MultiLevelProblem(const unsigned short &igridn, const unsigned short &igridr, const char mesh_file[],
             const char GaussOrder[], const double Lref=1., bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, 
                                    const int &ElemGroupNumber,const int &level)=NULL );
 
   /** Destructor */
-  ~NonLinearMultiLevelProblem();
+  ~MultiLevelProblem();
 
   //Attaching Functions
   /** Provides a method for filling the Matrix and the Residual vector */
-  void AttachAssembleFunction ( void (*function)(NonLinearMultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix));
+  void AttachAssembleFunction ( void (*function)(MultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix));
   
   void AttachSetBoundaryConditionFunction ( bool (* SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
                             double &value, const int FaceName, const double time) );
@@ -213,7 +233,7 @@ protected:
   //* Multigrid Solver  */
   void Solve(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
              const char mg_type[]="F-Cycle", const bool &linear=0);
-  int FreeMultigrid();
+  void FreeMultigrid();
   void SetSmoother(const char smoothername[]);
   void SetVankaSchurOptions(bool Schur=0, short unsigned NSchurVar=0);
   void SetTolerances(const char pdename[],const double rtol,const double atol,const double divtol, const unsigned maxits);
@@ -245,14 +265,14 @@ protected:
   //MultiGrid tools
   void Restrictor(const unsigned &ig, const unsigned &ipde, const unsigned &igridn, 
                   const unsigned &nlcycle,const unsigned &lcycle, const bool &flagmc);
-  int Prolongator(const unsigned &gridf, const unsigned &ipde);
+  void Prolongator(const unsigned &gridf, const unsigned &ipde);
   void ProlongatorSol(const char pdename[], unsigned gridf);
-  int BuildProlongatorMatrix(unsigned gridf,const char pdename[]);
+  void BuildProlongatorMatrix(unsigned gridf,const char pdename[]);
   void BuildProlongatorMatrix(unsigned gridf, unsigned SolIndex);
   void BuildProlongatorMatrices();
 
   //printing and reading solution Functions 
-  int printsol_gmv_binary(const char name[]="linear",unsigned igridn=0, bool debug=0) const;
+  void printsol_gmv_binary(const char name[]="linear",unsigned igridn=0, bool debug=0) const;
   void printsol_vtu_inline(const char name[],std::vector<std::string>& vars) const;
   void printsol_xdmf_hdf5(const char name[],std::vector<std::string>& vars)const;
 //  hid_t print_Dhdf5(hid_t file,const std::string & name, hsize_t dimsf[],double data[]);
@@ -263,7 +283,7 @@ protected:
 
 template <typename T_sys>
 inline
-T_sys & NonLinearMultiLevelProblem::add_system (const std::string& name)
+T_sys & MultiLevelProblem::add_system (const std::string& name)
 {
   T_sys* ptr = NULL;
 
@@ -283,67 +303,17 @@ T_sys & NonLinearMultiLevelProblem::add_system (const std::string& name)
               << " named " << name
               << std::endl;
 
-      //ptr = &(this->get_system<T_sys>(name));
+      ptr = &(this->get_system<T_sys>(name));
     }
 
   // Return a dynamically casted reference to the newly added System.
   return *ptr;
 }
 
-// template <typename T_sys>
-// inline
-// const T_sys & NonLinearMultiLevelProblem::get_system (const unsigned int num) const
-// {
-//   assert(num < this->n_systems());
-// 
-// 
-//   const_system_iterator       pos = _systems.begin();
-//   const const_system_iterator end = _systems.end();
-// 
-//   for (; pos != end; ++pos)
-//     if (pos->second->number() == num)
-//       break;
-// 
-//   // Check for errors
-//   if (pos == end)
-//     {
-//       std::cerr << "ERROR: no system number " << num << " found!"
-//                     << std::endl;
-//       //libmesh_error();
-//     }
-// 
-//   // Attempt dynamic cast
-//   return *static_cast<T_sys*>(pos->second);
-// }
-
-// template <typename T_sys>
-// inline
-// T_sys & NonLinearMultiLevelProblem::get_system (const unsigned int num)
-// {
-//   assert(num < this->n_systems());
-// 
-//   const_system_iterator       pos = _systems.begin();
-//   const const_system_iterator end = _systems.end();
-// 
-//   for (; pos != end; ++pos)
-//     if (pos->second->number() == num)
-//       break;
-// 
-//   // Check for errors
-//   if (pos == end)
-//     {
-//       std::cerr << "ERROR: no system number " << num << " found!"
-//                     << std::endl;
-//   //    libmesh_error();
-//     }
-// 
-//   // Attempt dynamic cast
-//   return *static_cast<T_sys*>(pos->second);
-// }
 
 template <typename T_sys>
 inline
-const T_sys & NonLinearMultiLevelProblem::get_system (const std::string& name) const
+const T_sys & MultiLevelProblem::get_system (const std::string& name) const
 {
   const_system_iterator pos = _systems.find(name);
 
@@ -352,7 +322,6 @@ const T_sys & NonLinearMultiLevelProblem::get_system (const std::string& name) c
     {
       std::cerr << "ERROR: no system named \"" << name << "\" found!"
                     << std::endl;
-      //libmesh_error();
     }
 
   // Attempt dynamic cast
@@ -361,7 +330,7 @@ const T_sys & NonLinearMultiLevelProblem::get_system (const std::string& name) c
 
 template <typename T_sys>
 inline
-T_sys & NonLinearMultiLevelProblem::get_system (const std::string& name)
+T_sys & MultiLevelProblem::get_system (const std::string& name)
 {
   system_iterator pos = _systems.find(name);
 
@@ -370,7 +339,6 @@ T_sys & NonLinearMultiLevelProblem::get_system (const std::string& name)
     {
       std::cerr << "ERROR: no system named " << name << " found!"
                     << std::endl;
- //     libmesh_error();
     }
 
   // Attempt dynamic cast
@@ -378,37 +346,37 @@ T_sys & NonLinearMultiLevelProblem::get_system (const std::string& name)
 }
 
 inline
-const System & NonLinearMultiLevelProblem::get_system (const std::string& name) const
+const System & MultiLevelProblem::get_system (const std::string& name) const
 {
   return this->get_system<System>(name);
 }
 
 
 inline
-System & NonLinearMultiLevelProblem::get_system (const std::string& name)
+System & MultiLevelProblem::get_system (const std::string& name)
 {
   return this->get_system<System>(name);
 }
 
 
 inline
-const System & NonLinearMultiLevelProblem::get_system (const unsigned int num) const
+const System & MultiLevelProblem::get_system (const unsigned int num) const
 {
   return this->get_system<System>(num);
 }
 
 
 inline
-System & NonLinearMultiLevelProblem::get_system (const unsigned int num)
+System & MultiLevelProblem::get_system (const unsigned int num)
 {
   return this->get_system<System>(num);
 }
 
 inline
-unsigned int NonLinearMultiLevelProblem::n_systems () const
+unsigned int MultiLevelProblem::n_systems () const
 {
   return static_cast<unsigned int>(_systems.size());  //libmesh static_cast_int
 }
 
 #endif
-// kate: indent-mode cstyle; space-indent on; indent-width 2;
+

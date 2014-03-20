@@ -16,8 +16,8 @@
 #include "System.hpp"
 
   /** Constructor.  Optionally initializes required data structures. */
-  System::System (NonLinearMultiLevelProblem& es, const std::string& name_in, const unsigned int number_in) :
-  _equation_systems                 (es),
+  System::System (MultiLevelProblem& ml_probl, const std::string& name_in, const unsigned int number_in) :
+  _equation_systems                 (ml_probl),
 //  _mesh                           (es.get_mesh()),
   _sys_name                         (name_in),
   _sys_number                       (number_in)
@@ -37,7 +37,7 @@ void System::init() {
   
 }
 
-void System::AttachAssembleFunction(void fptr(NonLinearMultiLevelProblem &nl_ml_prob, unsigned level, 
+void System::AttachAssembleFunction(void fptr(MultiLevelProblem &ml_prob, unsigned level, 
 				      const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix))
 {
   assert(fptr);
