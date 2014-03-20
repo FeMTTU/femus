@@ -20,6 +20,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "ImplicitSystem.hpp"
+#include "LinearSolver.hpp"
 
 //------------------------------------------------------------------------------
 // Forward declarations
@@ -29,10 +30,14 @@ class LinearImplicitSystem : public ImplicitSystem {
 
 public:
 
-/** Constructor.  Optionally initializes required data structures. */
+  /** Constructor.  Optionally initializes required data structures. */
   LinearImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number);
 
+  /** Destructor */
   virtual ~LinearImplicitSystem();
+  
+  /** The type of the parent. */
+  typedef ImplicitSystem Parent;
   
   /** Solves the system. */
   virtual void solve ();
@@ -49,7 +54,19 @@ public:
    * details of interfacing with various nonlinear algebra packages
    * like PETSc or LASPACK. Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
    */
-   vector<LinearSolver*> _LinSolver;  
+   vector<LinearSolver*> _LinSolver;
+   
+   /** Set the max number of linear iterationsfor solving Ax=b */
+   void SetMaxNumberOfLinearIterations(unsigned int max_lin_it) {_n_max_linear_iterations = max_lin_it;};
+   
+   /** Get the number of linear iterations for solving Ax=b*/
+   unsigned int GetNumberOfLinearIterations() const {return _n_linear_iterations;}; 
+   
+   /** Get the final Linear Residual of the linear problem Ax=b*/
+   double GetFinalLinearResidual() const {return _final_linear_residual;}; 
+   
+   /** Set a parameter option for the SparseMatrix A */
+   virtual void SetMatrixOption(MatOption op, bool flag);
  
 
 protected:
@@ -59,19 +76,33 @@ protected:
 
   /** The final residual for the linear system Ax=b. */
   double _final_linear_residual;
+  
+  /** The max number of linear iterations */
+  unsigned int _n_max_linear_iterations;
 
+  /** Create the Prolongator matrix for the Multigrid solver */
   void Prolongator(const unsigned &gridf);
   
+  /** Create the Restrictor matrix for the Multigrid solver */
   void Restrictor(const unsigned &gridf, const unsigned &gridn, 
 					    const unsigned &non_linear_iteration, const unsigned &linear_iteration, const bool &full_cycle);
   
-  int BuildProlongatorMatrix(unsigned gridf, const char pdename[]);
+  /** Create the Prolongator Matrix in order to get the coarser matrix for the Algebraic Multigrid Solver */ 
+  void BuildProlongatorMatrix(unsigned gridf, const char pdename[]);
   
   
 private:
 
+  /** Initialize the PDE system structure */
   void CreateSystemPDEStructure();
 
 };
+
+inline void LinearImplicitSystem::SetMatrixOption(MatOption op, bool flag)
+{
+//   for (unsigned ig=0; ig<_equation_systems.GetNumberOfGrid(); ig++) {
+//     MatSetOption(_LinSolver[ig]->_KK->mat(),op,flag);
+//   }
+}
 
 #endif

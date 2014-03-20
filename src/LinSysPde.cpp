@@ -205,22 +205,35 @@ void lsysPde::UpdateResidual() {
 
 //-------------------------------------------------------------------------------------------
 void lsysPde::DeletePde() {
-  delete _KK;
+  
+  if(_KK)
+    delete _KK;
+  
   unsigned igrid=_msh->GetGridNumber()+1;
   if(igrid>=_gridr && igrid<_gridn){
-    delete _CC;
+    if(_CC)
+      delete _CC;
   }
   
   
   if (_msh->GetGridNumber()>0) {
-     if(_PP) delete _PP;
-     if(_RR) delete _RR;
+     if(_PP) 
+       delete _PP;
+     if(_RR) 
+       delete _RR;
   }
   
-  delete _EPS;
-  delete _EPSC;
-  delete _RES;
-  delete _RESC;
+  if(_EPS)
+    delete _EPS;
+  
+  if(_EPSC)
+    delete _EPSC;
+  
+  if(_RES)
+    delete _RES;
+  
+  if(_RESC)
+    delete _RESC;
   
 }
 //-------------------------------------------------------------------------------------------

@@ -152,19 +152,13 @@ int main(int argc,char **args) {
  
   // System 1
   system.AttachAssembleFunction(AssembleMatrixResNS);
-  const unsigned int n_nonlinear_steps = 15;
-  const double nonlinear_tolerance       = 1.e-3;
-  
-  nl_ml_prob.parameters.set<unsigned int>("linear solver maximum iterations") = 250;
-  
-  const double initial_linear_solver_tol = 1.e-6;
-  nl_ml_prob.parameters.set<double> ("linear solver tolerance") = initial_linear_solver_tol;
   
   // System 2
   system2.AttachAssembleFunction(AssembleMatrixResNS);  
   
   // System 3
-  system3.AttachAssembleFunction(AssembleMatrixResT);  
+  system3.AttachAssembleFunction(AssembleMatrixResT);
+  system3.SetMaxNumberOfLinearIterations(2);  
   
   nl_ml_prob.SetDirichletBCsHandling("NS1","Penalty");
   nl_ml_prob.SetDirichletBCsHandling("NS2","Penalty");

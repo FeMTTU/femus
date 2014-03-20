@@ -35,6 +35,9 @@ public:
 
   virtual ~ExplicitSystem();
   
+  /** The type of the parent. */
+  typedef System Parent;
+  
   /** Solves the system. */
   virtual void solve () {};
   
