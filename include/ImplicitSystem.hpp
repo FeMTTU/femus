@@ -35,6 +35,9 @@ public:
 
   virtual ~ImplicitSystem();
   
+  /** The type of the parent. */
+  typedef ExplicitSystem Parent;
+  
   /** Solves the system. */
   virtual void solve () {};
   
@@ -44,7 +47,10 @@ public:
   /** Init the system PDE structures */
   virtual void init();
 
-  // the sparse matrix must be putted here A
+  // the sparse matrix must be putted here A, now is in linsysPDE
+  
+  /** Set a parameter option for the SparseMatrix A */
+  virtual void SetMatrixOption(MatOption op, bool flag) {};
   
 protected:
   

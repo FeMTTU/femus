@@ -27,6 +27,7 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
 				const unsigned int number_in) :
   ImplicitSystem (ml_probl, name_in, number_in),
   _n_linear_iterations   (0),
+  _n_max_linear_iterations (3),
   _final_linear_residual (1.e20)
 {
 }
@@ -67,8 +68,7 @@ void LinearImplicitSystem::solve() {
   
   clock_t start_mg_time = clock();
   
-  unsigned linear_Vcycle_numeber  = 3;  // deve essere uguale a quello impostato nel main...
-   
+
   bool full_cycle;
   unsigned igrid0; 
   
@@ -108,7 +108,7 @@ void LinearImplicitSystem::solve() {
       
       std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
  
-      for(int linear_cycle = 0; linear_cycle < linear_Vcycle_numeber; linear_cycle++) { //linear cycle
+      for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
  
 	for (unsigned ig = igridn-1u; ig > 0; ig--) {
 	  
@@ -118,7 +118,7 @@ void LinearImplicitSystem::solve() {
 	  }
 	  // ============== Non-Standard Multigrid Restriction ==============
 	  start_time = clock();
-	  Restrictor(ig, igridn, nonlinear_cycle, linear_cycle, full_cycle);
+	  Restrictor(ig, igridn, nonlinear_cycle, _n_linear_iterations, full_cycle);
 	  std::cout << "Grid: " << ig << "-->" << ig-1 << "  RESTRICTION TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 	}
        
@@ -152,8 +152,7 @@ void LinearImplicitSystem::solve() {
       // ============== Test for non-linear Convergence ==============
       bool conv = _equation_systems.GetConvergence(_sys_name.c_str(), igridn-1);
       
-      //_sys_name.getcstr()
-      
+     
       std::cout << std::endl;
       std::cout << "COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 
@@ -163,7 +162,6 @@ void LinearImplicitSystem::solve() {
     }
   }
 
-    
   std::cout << "SOLVER TIME:   \t\t\t"<<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
   
 }
@@ -227,7 +225,7 @@ void LinearImplicitSystem::Prolongator(const unsigned &gridf) {
 // This routine generates the matrix for the projection of the FE matrix to finer grids 
 //---------------------------------------------------------------------------------------------------
 
-int LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pdename[]) {
+void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pdename[]) {
 
   unsigned ipde = _equation_systems.GetPdeIndex(pdename);
       
@@ -236,7 +234,6 @@ int LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pden
     exit(0);
   }
   
-  int ierr;
   int iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
   
@@ -246,18 +243,15 @@ int LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pden
   int nc_loc = _LinSolver[gridf-1]->KKoffset[_LinSolver[gridf-1]->KKIndex.size()-1][iproc]-_LinSolver[gridf-1]->KKoffset[0][iproc];
   _LinSolver[gridf]->_PP = SparseMatrix::build().release();
   _LinSolver[gridf]->_PP->init(nf,nc,nf_loc,nc_loc,27,27);
-  _LinSolver[gridf]->_RR = SparseMatrix::build().release();
-  _LinSolver[gridf]->_RR->init(nc,nf,nc_loc,nf_loc,27,27);    
+  
+/*  _LinSolver[gridf]->_RR = SparseMatrix::build().release();
+  _LinSolver[gridf]->_RR->init(nc,nf,nc_loc,nf_loc,27,27); */   
    
 //   SparseMatrix *RRt;
 //   if( _TestIfPdeHasDisplacement[ipde]){
 //     RRt = SparseMatrix::build().release();
 //     RRt->init(nf,nc,nf_loc,nc_loc,27,27);
 //   }
- 
-  
-  
-  
   
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned SolIndex=_SolSystemPdeIndex[k];
@@ -286,6 +280,7 @@ int LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pden
       }
     }
   }
+  
   _LinSolver[gridf]->_PP->close();
   
 //   if( _TestIfPdeHasDisplacement[ipde]){
@@ -294,12 +289,9 @@ int LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pden
 //     delete RRt;
 //   }
 //   else{
-    _LinSolver[gridf]->_PP->get_transpose( *_LinSolver[gridf]->_RR);
+//  _LinSolver[gridf]->_PP->get_transpose( *_LinSolver[gridf]->_RR);
 //   }
   
-  
-  
-  return ierr;
 }
 
 

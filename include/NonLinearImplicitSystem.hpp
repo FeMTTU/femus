@@ -19,14 +19,14 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "ImplicitSystem.hpp"
+#include "LinearImplicitSystem.hpp"
 
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
 
 
-class NonLinearImplicitSystem : public ImplicitSystem {
+class NonLinearImplicitSystem : public LinearImplicitSystem {
 
 public:
 
@@ -34,6 +34,9 @@ public:
   NonLinearImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number);
   
   virtual ~NonLinearImplicitSystem();
+  
+  /** The type of the parent. */
+  typedef LinearImplicitSystem Parent;
   
   /** Solves the system. */
   virtual void solve ();
@@ -44,37 +47,32 @@ public:
   /** Init the system PDE structures */
   virtual void init();
    
-   /**
-   * The \p NonlinearSolver defines the default interface used to
-   * solve the nonlinear_implicit system.  This class handles all the
-   * details of interfacing with various nonlinear algebra packages
-   * like PETSc or LASPACK. Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
-   */
-   vector<LinearSolver*> _LinSolver;
-   
   /** Returns  the number of iterations taken for the most recent nonlinear solve. */
   unsigned int n_nonlinear_iterations() const { return _n_nonlinear_iterations; }
 
   /** Returns the final residual for the nonlinear system solve. */
   double final_nonlinear_residual() const { return _final_nonlinear_residual; }
+  
+  /** Set the max number of non-linear iterations for the nonlinear system solve. */
+  void SetMaxNumberOfNonLinearIterations(unsigned int max_nonlin_it) {_n_max_nonlinear_iterations = max_nonlin_it;};
+  
 
 protected:
   
-   /**
-   * The number of nonlinear iterations required to solve the nonlinear
-   * system R(x)=0.
-   */
+   /** The number of nonlinear iterations required to solve the nonlinear system R(x)=0.  */
   unsigned int _n_nonlinear_iterations;
 
-  /**
-   * The final residual for the nonlinear system R(x)
-   */
+  /** The final residual for the nonlinear system R(x) */
   double _final_nonlinear_residual;
+  
+  /** The max number of non-linear iterations */
+  unsigned int _n_max_nonlinear_iterations;
 
 private:
 
   void CreateSystemPDEStructure();
   
 };
+
 
 #endif
