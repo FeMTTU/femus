@@ -1,7 +1,7 @@
 #ifndef __NonLinearTimeDependentMultiLevelProblem_hpp__
 #define __NonLinearTimeDependentMultiLevelProblem_hpp__
 
-#include "NonLinearMultiLevelProblem.hpp"
+#include "MultiLevelProblem.hpp"
 
 /**
 * This class is a black box container to handle time-dependent multilevel problems

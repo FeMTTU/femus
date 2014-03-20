@@ -1,4 +1,4 @@
-#include "NonLinearMultiLevelProblem.hpp"
+#include "MultiLevelProblem.hpp"
 #include "ExplicitSystem.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"

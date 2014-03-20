@@ -1,5 +1,5 @@
 #include "ElemType.hpp"
-#include "NonLinearMultiLevelProblem.hpp"
+#include "MultiLevelProblem.hpp"
 // Timedependent MultiGrid Header
 #include "NonLinearTimeDependentMultiLevelProblem.hpp"
 #include "NumericVector.hpp"

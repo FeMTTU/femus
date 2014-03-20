@@ -1,7 +1,7 @@
 // C++ includes
 
 // Local includes
-#include "NonLinearMultiLevelProblem.hpp"
+#include "MultiLevelProblem.hpp"
 #include "TransientSystem.hpp"
 #include "ExplicitSystem.hpp"
 #include "LinearImplicitSystem.hpp"
