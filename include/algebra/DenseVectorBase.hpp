@@ -1,6 +1,24 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: DenseVectorBase
+ Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __dense_vector_base_h__
 #define __dense_vector_base_h__
 
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include <iostream>
 // Local Includes
 

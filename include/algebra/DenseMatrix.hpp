@@ -1,3 +1,18 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: DenseMatrix
+ Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __dense_matrixM_h__
 #define __dense_matrixM_h__
 
@@ -6,10 +21,14 @@
 #include <cmath>
 #include <algorithm>
 
-// Local Includes
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "DenseMatrixBase.hpp"
 
-// Forward Declarations
+//------------------------------------------------------------------------------
+// Forward declarations
+//------------------------------------------------------------------------------
 class DenseVector;
 
 // ===========================================================

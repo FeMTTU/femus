@@ -1,4 +1,22 @@
-//C++ include
+/*=========================================================================
+
+ Program: FEMUS
+ Module: LinearEquation
+ Authors: Eugenio Aulisa, Simone Bnà
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
+
 #include <ctime>
 #include <fstream>
 #include <algorithm>
@@ -12,7 +30,7 @@ using std::cout;
 using std::endl;
 
 //--------------------------------------------------------------------------------
-lsysPde::lsysPde(mesh *other_msh){    
+LinearEquation::LinearEquation(mesh *other_msh){    
   _msh = other_msh;
   _is_symmetric = false;
   _stabilization = false;
@@ -30,42 +48,42 @@ lsysPde::lsysPde(mesh *other_msh){
 }
 
 //--------------------------------------------------------------------------------
-lsysPde::~lsysPde() { }
+LinearEquation::~LinearEquation() { }
 
 //--------------------------------------------------------------------------------
-void lsysPde::set_dirichletBCsHandling(unsigned int DirichletBCsHandlingMode) {
+void LinearEquation::set_dirichletBCsHandling(unsigned int DirichletBCsHandlingMode) {
   _DirichletBCsHandlingMode = DirichletBCsHandlingMode;
 }
 
 
 //--------------------------------------------------------------------------------
-void lsysPde::SetMatrixProperties(const bool property) {
+void LinearEquation::SetMatrixProperties(const bool property) {
   _is_symmetric = property;
 }
 
 //--------------------------------------------------------------------------------
-bool lsysPde::GetMatrixProperties() {
+bool LinearEquation::GetMatrixProperties() {
   return _is_symmetric;
 }
 
 //--------------------------------------------------------------------------------
-void lsysPde::AddStabilization(const bool stab, const double compressibility) {
+void LinearEquation::AddStabilization(const bool stab, const double compressibility) {
   _stabilization = stab;
   _compressibility = compressibility;
 }
 
 //--------------------------------------------------------------------------------
-double lsysPde::GetCompressibility() {
+double LinearEquation::GetCompressibility() {
   return _compressibility;
 };
 
 //--------------------------------------------------------------------------------
-bool lsysPde::GetStabilization() {
+bool LinearEquation::GetStabilization() {
   return _stabilization;
 };
 
 //--------------------------------------------------------------------------------
-unsigned lsysPde::GetIndex(const char name[]) {
+unsigned LinearEquation::GetIndex(const char name[]) {
   unsigned index=0;
   while (strcmp(_SolName[index],name)) {
     index++;
@@ -78,7 +96,7 @@ unsigned lsysPde::GetIndex(const char name[]) {
 }
 
 //--------------------------------------------------------------------------------
-int lsysPde::InitPde(const vector <unsigned> &SolPdeIndex_other, const  vector <int> &SolType_other,  
+int LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  vector <int> &SolType_other,  
 		     const vector <char*> &SolName_other, vector <NumericVector*> *Bdc_other, 
 		     const unsigned &other_gridr, const unsigned &other_gridn) {
   _SolPdeIndex=SolPdeIndex_other;
@@ -182,29 +200,29 @@ int lsysPde::InitPde(const vector <unsigned> &SolPdeIndex_other, const  vector <
 }
 
 //--------------------------------------------------------------------------------
-void lsysPde::SetResZero() {
+void LinearEquation::SetResZero() {
   _RES->zero();
 }
 
 //--------------------------------------------------------------------------------
-void lsysPde::SetEpsZero() {
+void LinearEquation::SetEpsZero() {
   _EPS->zero();
   _EPSC->zero();
 }
 
 //--------------------------------------------------------------------------------
-void lsysPde::SumEpsCToEps() {
+void LinearEquation::SumEpsCToEps() {
   *_EPS += *_EPSC;
 }
 
 //--------------------------------------------------------------------------------
-void lsysPde::UpdateResidual() {
+void LinearEquation::UpdateResidual() {
   _RESC->matrix_mult(*_EPSC,*_KK);
   *_RES -= *_RESC;
 }
 
 //-------------------------------------------------------------------------------------------
-void lsysPde::DeletePde() {
+void LinearEquation::DeletePde() {
   
   if(_KK)
     delete _KK;

@@ -1,7 +1,26 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: Hexaedron
+ Authors: Eugenio Aulisa
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
+
 #include "Basis.hpp"
 #include <cmath>
 
-//************************************************************
+
 double hex0::eval_phi(const int *I,const double* x) const {
   return 1;
 }

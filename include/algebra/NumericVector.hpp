@@ -1,6 +1,24 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: NumericVector
+ Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __numeric_vector_h__
 #define __numeric_vector_h__
 
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "SolverPackageEnum.hpp"
 #include "ParalleltypeEnum.hpp"
 #include "FEMTTUConfig.h"
@@ -13,8 +31,9 @@
 #include <cassert>
 #include <iostream>
 
-// forward declarations
-//  class NumericVector;
+//------------------------------------------------------------------------------
+// Forward declarations
+//------------------------------------------------------------------------------
 class DenseVector;
 class DenseSubVector;
 class SparseMatrix;

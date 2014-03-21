@@ -1,17 +1,43 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: Solution
+ Authors: Simone Bnà
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+/**
+ * This class is useful to handle multilevel variables. It's going to be splitted
+ * into meshvariables and solutionvariables 
+*/
+
+
 #ifndef __solution_hpp__
 #define __solution_hpp__
 
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "Mesh.hpp"
 #include "petscmat.h"
 
-//Forward Declaration
+//------------------------------------------------------------------------------
+// Forward declarations
+//------------------------------------------------------------------------------
 class elem_type;
 class NumericVector;
 class SparseMatrix;
 
-//class lsysPde: public mesh {
 
-class Solution{
+class Solution {
+  
   //member data
 private:
   vector <int> _SolType;  

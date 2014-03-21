@@ -1,14 +1,40 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: ElemType
+ Authors: Eugenio Aulisa
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+/**
+ * The ElemType class
+*/
+
 #ifndef __elem_type_hpp__
 #define __elem_type_hpp__
 
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "Basis.hpp"
 #include "SparseMatrix.hpp"
 #include "Mesh.hpp"
 #include "LinearEquation.hpp"
 
+//------------------------------------------------------------------------------
+// Forward declarations
+//------------------------------------------------------------------------------
 class elem;
 
 class elem_type {
+  
 private:
   void test_prol_and_rest();
 
@@ -73,11 +99,11 @@ public:
 //   int prolongation(const elem* el,const elem* elc, const int& ielc, 
 // 		   Mat &PP,const int& istart=0,const int& jstart=0) const ;
 		   
-  void BuildProlongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseMatrix* Projmat, 
+  void BuildProlongation(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
 			 const unsigned &index_sol, const unsigned &kkindex_sol) const;
 		    
 		    
-  void BuildRestrictionTranspose(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseMatrix* Projmat, 
+  void BuildRestrictionTranspose(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
 				 const unsigned &index_sol, const unsigned &kkindex_sol, const bool &TestDisp) const;		    
 		   
   void prolongation(const mesh &meshf,const mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;

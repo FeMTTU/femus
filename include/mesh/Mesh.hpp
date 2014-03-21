@@ -1,13 +1,35 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: Mesh
+ Authors: Eugenio Aulisa
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __mesh_hpp__
 #define __mesh_hpp__
 
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "Elem.hpp"
 #include "vector"
 #include "metis.h"
 using std::vector;
 
-// **************** class mesh **************************
+/** 
+ * The mesh class 
+*/
+
 class mesh {
+  
 private:
   unsigned nvt,grid;
   static unsigned _dimension;

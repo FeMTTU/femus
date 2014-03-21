@@ -1,18 +1,41 @@
-#ifndef __lsyspde_hpp__
-#define __lsyspde_hpp__
+/*=========================================================================
 
+ Program: FEMUS
+ Module: LinearEquation
+ Authors: Eugenio Aulisa, Simone Bnà
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+#ifndef __linear_equation_hpp__
+#define __linear_equation_hpp__
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "Mesh.hpp"
 #include "petscmat.h"
 
-//Forward Declaration
+//------------------------------------------------------------------------------
+// Forward declarations
+//------------------------------------------------------------------------------
 class elem_type;
 class NumericVector;
 class SparseMatrix;
 
-//class lsysPde: public mesh {
+/**
+ This class is a container that holds linear operators and other structure for solving a linear equation system
+*/
 
-class lsysPde{
- //Data 
+class LinearEquation {
+
+  //Data 
 private:
   bool _is_symmetric;
   bool _stabilization;
@@ -42,8 +65,12 @@ public:
   //Functions
   
 public:  
-  lsysPde(mesh *other_msh);
-  ~lsysPde();
+  
+  /** costructor */
+  LinearEquation(mesh *other_msh);
+  
+  /** destructor */
+  ~LinearEquation();
   
   int InitPde(const vector <unsigned> &_SolPdeIndex,const  vector <int> &SolType,  
 	      const vector <char*> &SolName, vector <NumericVector*> *Bdc_other, 
@@ -68,9 +95,7 @@ protected:
 };
 
 
-/*----------------------- functions ----------------------------------*/
-//--------------------------------------------------------------------------------------------
-inline unsigned lsysPde::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol, 
+inline unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol, 
 				  const unsigned &idof_gmt) const {
   
    //return KKIndex[kkindex_sol]+idof_gmt;
@@ -80,6 +105,6 @@ inline unsigned lsysPde::GetKKDof(const unsigned &index_sol, const unsigned &kki
    unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);   
    return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
 }
-//--------------------------------------------------------------------------------------------
+
 
 #endif

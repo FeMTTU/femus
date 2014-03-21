@@ -1,7 +1,24 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: Parallel
+ Authors: Simone Bnà
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __parallel_h__
 #define __parallel_h__
 
-//#include "SolverlibConf.hpp"
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "FEMTTUConfig.h"
 
 #if HAVE_MPI == 1

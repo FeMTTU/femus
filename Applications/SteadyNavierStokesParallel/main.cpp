@@ -429,7 +429,7 @@ void AssembleMatrixResNS(MultiLevelProblem &nl_ml_prob, unsigned level, const un
   
   //pointers 
   Solution*	 mysolution  	= nl_ml_prob._solution[level];
-  LinearSolver*  mylsyspde 	= nl_ml_prob._LinSolver[ipde][level];
+  LinearEquationSolver*  mylsyspde 	= nl_ml_prob._LinSolver[ipde][level];
   mesh*		 mymsh    	= nl_ml_prob._msh[level];
   elem*		 myel		= mymsh->el;
   SparseMatrix*	 myKK		= mylsyspde->_KK;
@@ -750,7 +750,7 @@ void AssembleMatrixResT(MultiLevelProblem &nl_ml_prob, unsigned level, const uns
     
   //pointers and references
   Solution*      mysolution	= nl_ml_prob._solution[level];
-  LinearSolver*  mylsyspde	= nl_ml_prob.get_system<LinearImplicitSystem>("Temp")._LinSolver[level];   //_LinSolver[ipde][level]
+  LinearEquationSolver*  mylsyspde	= nl_ml_prob.get_system<LinearImplicitSystem>("Temp")._LinSolver[level];   //_LinSolver[ipde][level]
   mesh*          mymsh		= nl_ml_prob._msh[level];
   elem*          myel		= mymsh->el;
   SparseMatrix*  myKK		= mylsyspde->_KK;

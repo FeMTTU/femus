@@ -1,7 +1,24 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: DenseSubMatrix
+ Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __dense_submatrixM_h__
 #define __dense_submatrixM_h__
 
-// C++ includes
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include <cassert>
 
 // Local Includes

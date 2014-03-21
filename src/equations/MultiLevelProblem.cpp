@@ -1,3 +1,21 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: MultiLevelProblem
+ Authors: Eugenio Aulisa, Simone Bnà
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "MultiLevelProblem.hpp"
 #include "ExplicitSystem.hpp"
 #include "LinearImplicitSystem.hpp"
@@ -655,7 +673,7 @@ void MultiLevelProblem::CreatePdeStructure() {
   for(unsigned ipde=0;ipde<_PdeIndex.size();ipde++){
     _LinSolver[ipde].resize(_gridn);
     for(unsigned i=0;i<_gridn;i++){
-      _LinSolver[ipde][i]=LinearSolver::build(i,_msh[i]).release();
+      _LinSolver[ipde][i]=LinearEquationSolver::build(i,_msh[i]).release();
     }
     
     for (unsigned i=0; i<_gridn; i++) {

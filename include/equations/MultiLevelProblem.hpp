@@ -34,7 +34,7 @@ using std::map;
 // Forward declarations
 //------------------------------------------------------------------------------
 class elem_type;
-class LinearSolver;
+class LinearEquationSolver;
 class System;
 
 
@@ -183,7 +183,7 @@ protected:
   const elem_type *type_elem[6][5]; 
 
   /** Array of linear solver */
-  vector<vector <LinearSolver*> > _LinSolver;
+  vector<vector <LinearEquationSolver*> > _LinSolver;
   
   /** Array of solution */
   vector <Solution*>  _solution;

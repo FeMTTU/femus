@@ -54,7 +54,7 @@ public:
    * details of interfacing with various nonlinear algebra packages
    * like PETSc or LASPACK. Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
    */
-   vector<LinearSolver*> _LinSolver;
+   vector<LinearEquationSolver*> _LinSolver;
    
    /** Set the max number of linear iterationsfor solving Ax=b */
    void SetMaxNumberOfLinearIterations(unsigned int max_lin_it) {_n_max_linear_iterations = max_lin_it;};
