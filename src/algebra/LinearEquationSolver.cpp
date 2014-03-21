@@ -1,4 +1,4 @@
-#include "LinearSolver.hpp"
+#include "LinearEquationSolver.hpp"
 #include "FEMTTUConfig.h"
 #include "PrecondtypeEnum.hpp"
 #include "petscksp.h"
@@ -7,7 +7,7 @@
 // C++ includes
 #include <memory>
 // Local Includes
-#include "PetscLinearSolver.hpp"
+#include "PetscLinearEquationSolver.hpp"
 #include "Preconditioner.hpp"
 
 using namespace std;

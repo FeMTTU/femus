@@ -19,7 +19,7 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "LinSysPde.hpp"
+#include "LinearEquation.hpp"
 #include "Solution.hpp"
 #include "Parameters.hpp"
 #include "Fluid.hpp"

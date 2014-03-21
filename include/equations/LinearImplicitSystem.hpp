@@ -20,7 +20,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "ImplicitSystem.hpp"
-#include "LinearSolver.hpp"
+#include "LinearEquationSolver.hpp"
 
 //------------------------------------------------------------------------------
 // Forward declarations

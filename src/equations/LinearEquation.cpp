@@ -2,7 +2,7 @@
 #include <ctime>
 #include <fstream>
 #include <algorithm>
-#include "LinSysPde.hpp"
+#include "LinearEquation.hpp"
 #include "ElemType.hpp"
 #include "ParalleltypeEnum.hpp"
 #include "NumericVector.hpp"

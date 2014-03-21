@@ -5,7 +5,7 @@
 
 // Local Includes
 #include "PetscMacro.hpp"
-#include "PetscLinearSolver.hpp"
+#include "PetscLinearEquationSolver.hpp"
 #include "PetscPreconditioner.hpp"
 #include "PetscVector.hpp"
 #include "PetscMatrix.hpp"

@@ -8,7 +8,7 @@
 #include "SolverPackageEnum.hpp"
 #include "PrecondtypeEnum.hpp"
 #include "SolvertypeEnum.hpp"
-#include "LinSysPde.hpp"
+#include "LinearEquation.hpp"
 
 #include "vector"
 using std::vector;

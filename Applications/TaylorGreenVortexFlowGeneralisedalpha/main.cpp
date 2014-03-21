@@ -1,7 +1,7 @@
 #include "ElemType.hpp"
 #include "NonLinearTimeDependentMultiLevelProblem.hpp"
 #include "NumericVector.hpp"
-#include "LinearSolver.hpp"
+#include "LinearEquationSolver.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
