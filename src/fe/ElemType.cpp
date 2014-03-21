@@ -1,3 +1,22 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: ElemType
+ Authors: Eugenio Aulisa
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
+
 #include "GaussPoints.hpp"
 #include "ElemType.hpp"
 #include "Elem.hpp"
@@ -708,7 +727,7 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
 //----------------------------------------------------------------------------------------------------
 // prolungator for LsysPde  Matrix 
 //----------------------------------------------------------------------------------------------------
-void elem_type::BuildProlongation(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseMatrix* Projmat, 
+void elem_type::BuildProlongation(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
 				  const unsigned &index_sol, const unsigned &kkindex_sol) const {
   vector<int> cols(27);
    
@@ -732,7 +751,7 @@ void elem_type::BuildProlongation(const lsysPde &lspdef,const lsysPde &lspdec, c
 
 
 
-void elem_type::BuildRestrictionTranspose(const lsysPde &lspdef,const lsysPde &lspdec, const int& ielc, SparseMatrix* Projmat, 
+void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
 					  const unsigned &index_sol, const unsigned &kkindex_sol, const bool &TestDisp) const {
   vector<int> cols(27);
   bool fluid_region = (2==lspdec._msh->el->GetElementMaterial(ielc))?1:0;

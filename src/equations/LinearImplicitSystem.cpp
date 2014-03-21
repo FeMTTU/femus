@@ -50,7 +50,7 @@ void LinearImplicitSystem::init() {
 void LinearImplicitSystem::CreateSystemPDEStructure() {
     _LinSolver.resize(_equation_systems.GetNumberOfGrid());
     for(unsigned i=0;i<_equation_systems.GetNumberOfGrid();i++){
-      _LinSolver[i]=LinearSolver::build(i,_equation_systems._msh[i]).release();
+      _LinSolver[i]=LinearEquationSolver::build(i,_equation_systems._msh[i]).release();
     }
     
     for (unsigned i=0; i<_equation_systems.GetNumberOfGrid(); i++) {

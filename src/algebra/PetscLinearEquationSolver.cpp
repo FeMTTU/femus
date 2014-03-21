@@ -1,4 +1,21 @@
-//#include "SolverlibConf.hpp"
+/*=========================================================================
+
+ Program: FEMUS
+ Module: PetscLinearEquationSolver
+ Authors: Eugenio Aulisa, Simone Bnà
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "FEMTTUConfig.h"
 
 #ifdef HAVE_PETSC
@@ -64,11 +81,11 @@ extern "C" {
 // ----------------------- functions ------
 // ==============================================
 
-void PetscLinearSolver::set_tolerances(const double &rtol, const double &atol,
+void PetscLinearEquationSolver::set_tolerances(const double &rtol, const double &atol,
                                        const double &divtol, const unsigned &maxits, const unsigned &index) {
 
   if(index>=_rtol.size()){
-    cout<<"Error the index in the PetscLinearSolver::set_tolerances is out of range"<<endl;
+    cout<<"Error the index in the PetscLinearEquationSolver::set_tolerances is out of range"<<endl;
     exit(0);
   }
   
@@ -81,13 +98,13 @@ void PetscLinearSolver::set_tolerances(const double &rtol, const double &atol,
 
 // ******************************************************************
 
-void PetscLinearSolver::set_num_elem_vanka_block(const unsigned num_elem_vanka_block) {
+void PetscLinearEquationSolver::set_num_elem_vanka_block(const unsigned num_elem_vanka_block) {
   _num_elem_vanka_block = num_elem_vanka_block;
   _indexai_init=0;
 };
 
 // *********************** for GMRES *********************************
-clock_t PetscLinearSolver::BuildIndex(){
+clock_t PetscLinearEquationSolver::BuildIndex(){
   
   clock_t SearchTime = 0;
   clock_t start_time = clock();
@@ -131,7 +148,7 @@ clock_t PetscLinearSolver::BuildIndex(){
 
 // *********************** for VANKA *********************************
 
-clock_t PetscLinearSolver::BuildIndex(const vector <unsigned> &VankaIndex,
+clock_t PetscLinearEquationSolver::BuildIndex(const vector <unsigned> &VankaIndex,
 				      const short unsigned &NSchurVar){
   clock_t SearchTime=0;
   clock_t start_time=clock();
@@ -347,7 +364,7 @@ clock_t PetscLinearSolver::BuildIndex(const vector <unsigned> &VankaIndex,
  
 // ***********************************************************************
 
-std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &VankaIndex,
+std::pair< int, double> PetscLinearEquationSolver::solve(const vector <unsigned> &VankaIndex,
 						 const short unsigned &NSchurVar,const bool &Schur) {
   PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
   Vec EPS=EPSp->vec(); //TODO
@@ -621,7 +638,7 @@ std::pair< int, double> PetscLinearSolver::solve(const vector <unsigned> &VankaI
 
 // ********************************************************************************
 
-std::pair< int, double> PetscLinearSolver::solve() {
+std::pair< int, double> PetscLinearEquationSolver::solve() {
     
   clock_t SearchTime, AssemblyTime, SolveTime, UpdateTime;
   int its;
@@ -784,7 +801,7 @@ std::pair< int, double> PetscLinearSolver::solve() {
     
 }
 
-void PetscLinearSolver::clear() {
+void PetscLinearEquationSolver::clear() {
   if (this->initialized()) {
     this->_is_initialized = false;
     int ierr=0;
@@ -801,7 +818,7 @@ void PetscLinearSolver::clear() {
 }
 
 // ==============================================================
-void PetscLinearSolver::init() {
+void PetscLinearEquationSolver::init() {
   // Initialize the data structures if not done so already.
   if (!this->initialized()) {
     this->_is_initialized = true;
@@ -849,7 +866,7 @@ void PetscLinearSolver::init() {
 
 
 // ========================================================
-void PetscLinearSolver::init(Mat& matrix, const bool pc_flag, const bool Schur) {
+void PetscLinearEquationSolver::init(Mat& matrix, const bool pc_flag, const bool Schur) {
   // Initialize the data structures if not done so already.
   //I have to initialize many times the data structure therefore the next line must be commented
   //   if (!this->initialized()) {
@@ -883,7 +900,7 @@ void PetscLinearSolver::init(Mat& matrix, const bool pc_flag, const bool Schur) 
 }
 
 // ========================================================
-void PetscLinearSolver::init_schur(Mat& matrix) {
+void PetscLinearEquationSolver::init_schur(Mat& matrix) {
   // Initialize the data structures if not done so already.
   //I have to initialize many times the data structure therefore the next line must be commented
   //   if (!this->initialized()) {
@@ -910,7 +927,7 @@ void PetscLinearSolver::init_schur(Mat& matrix) {
 }
 
 // ========================================================
-void PetscLinearSolver::init(Mat& matrix) {
+void PetscLinearEquationSolver::init(Mat& matrix) {
   
   
   
@@ -979,7 +996,7 @@ void PetscLinearSolver::init(Mat& matrix) {
 
 
 // =========================================================================
-void PetscLinearSolver::get_residual_history(std::vector<double>& hist) {
+void PetscLinearEquationSolver::get_residual_history(std::vector<double>& hist) {
   int ierr = 0;
   int its  = 0;
   // Fill the residual history vector with the residual norms
@@ -1002,7 +1019,7 @@ void PetscLinearSolver::get_residual_history(std::vector<double>& hist) {
 }
 
 // ======================================================
-double PetscLinearSolver::get_initial_residual() {
+double PetscLinearEquationSolver::get_initial_residual() {
   int ierr = 0;
   int its  = 0;
   // Fill the residual history vector with the residual norms
@@ -1023,7 +1040,7 @@ double PetscLinearSolver::get_initial_residual() {
 }
 
 // =================================================
-void PetscLinearSolver::set_petsc_solver_type() {
+void PetscLinearEquationSolver::set_petsc_solver_type() {
   int ierr = 0;
   switch (this->_solver_type) {
   case CG:
@@ -1074,7 +1091,7 @@ void PetscLinearSolver::set_petsc_solver_type() {
 
 
 // =================================================
-void PetscLinearSolver::set_petsc_solver_type2() {
+void PetscLinearEquationSolver::set_petsc_solver_type2() {
   int ierr = 0;
   switch (this->_solver_type) {
   case CG:
@@ -1124,49 +1141,11 @@ void PetscLinearSolver::set_petsc_solver_type2() {
 }
 
 // =======================================================
-void PetscLinearSolver::print_converged_reason() {
+void PetscLinearEquationSolver::print_converged_reason() {
   KSPConvergedReason reason;
   KSPGetConvergedReason(_ksp[0], &reason);
   std::cout << "Linear solver convergence/divergence reason: " << KSPConvergedReasons[reason] << std::endl;
-  //   //  KSP_CONVERGED_RTOL (residual 2-norm decreased by a factor of rtol, from 2-norm of right hand side)
-  //   //  KSP_CONVERGED_ATOL (residual 2-norm less than abstol)
-  //   //  KSP_CONVERGED_ITS (used by the preonly preconditioner that always uses ONE iteration)
-  //   //  KSP_CONVERGED_STEP_LENGTH
-  //   //  KSP_DIVERGED_ITS  (required more than its to reach convergence)
-  //   //  KSP_DIVERGED_DTOL (residual norm increased by a factor of divtol)
-  //   //  KSP_DIVERGED_NAN (residual norm became Not-a-number likely do to 0/0)
-  //   //  KSP_DIVERGED_BREAKDOWN (generic breakdown in method)
-  //   switch (reason) {
-  //   case KSP_CONVERGED_RTOL: {
-  //     std::cout << "Linear solver converged, relative tolerance reached." << std::endl;
-  //     break;
-  //   }
-  //   case KSP_CONVERGED_ATOL: {
-  //     std::cout << "Linear solver converged, absolute tolerance reached." << std::endl;
-  //     break;
-  //   }
-  //   // Divergence
-  //   case KSP_DIVERGED_ITS: {
-  //     std::cout << "Linear solver diverged, max no. of iterations reached." << std::endl;
-  //     break;
-  //   }
-  //   case KSP_DIVERGED_DTOL: {
-  //     std::cout << "Linear solver diverged, residual norm increase by dtol (default 1.e5)." << std::endl;
-  //     break;
-  //   }
-  // //   case KSP_DIVERGED_NAN: {
-  // //     std::cout << "Linear solver diverged, residual norm is NaN." << std::endl;
-  // //     break;
-  // //   }
-  //   case KSP_DIVERGED_BREAKDOWN: {
-  //     std::cout << "Linear solver diverged, generic breakdown in the method." << std::endl;
-  //     break;
-  //   }
-  //   default: {
-  //     std::cout << "Unknown/unsupported con(di)vergence reason: " << reason << std::endl;
-  //   }
-  //   }
 }
 
-#endif // #ifdef LIBMESH_HAVE_PETSC
+#endif 
 

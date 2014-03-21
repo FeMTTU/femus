@@ -1,5 +1,24 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: Tetrahedral
+ Authors: Eugenio Aulisa
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
+
 #include "Basis.hpp"
-//************************************************************
+
 
 double tet1::eval_phi(const int *I,const double* x) const {
   return tet_1(x[0],x[1],x[2],I[0],I[1],I[2]);

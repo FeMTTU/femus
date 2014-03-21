@@ -1,5 +1,23 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: Triangle
+ Authors: Eugenio Aulisa
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "Basis.hpp"
-//************************************************************
+
 
 double tri1::eval_phi(const int *I,const double* x) const {
   return tri1a(x[0],x[1],I[0],I[1]);

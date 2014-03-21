@@ -1,18 +1,26 @@
-// ========================================
-//            SparseMatrix class
-// ========================================
-// std lib includes -------------------------
-#include <fstream>  // std::ofsream
-#include <sstream>  // std::ostringstream
-#include "hdf5.h"   // hdf5
+/*=========================================================================
 
-// this class ----------------------------
+ Program: FEMUS
+ Module: SparseMatrix
+ Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
+#include <fstream>  
+#include <sstream>  
+#include "hdf5.h"   
 #include "SparseMatrix.hpp"
-
-// configuration files -------------------
 #include "FEMTTUConfig.h"
-
-// local includes ------------------------
 #include "NumericVector.hpp"
 #include "PetscMatrix.hpp"
 

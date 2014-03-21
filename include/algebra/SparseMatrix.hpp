@@ -1,7 +1,24 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: SparseMatrix
+ Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __sparse_matrix_h__
 #define __sparse_matrix_h__
 
-// C++ includes -------------------
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include <memory>     // auto pointer
 #include <iostream>   // std::cout
 #include <vector>
@@ -11,7 +28,9 @@
 #include "SolverPackageEnum.hpp"// solver package
 #include "Graph.hpp"
 
-// forward declarations ----------------------
+//------------------------------------------------------------------------------
+// Forward declarations
+//------------------------------------------------------------------------------
 class SparseMatrix;     // sparse matrix
 class DenseMatrix;      // dense matrix
 class NumericVector;    // vector

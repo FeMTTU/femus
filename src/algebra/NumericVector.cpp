@@ -1,10 +1,25 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: NumericVector
+ Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "NumericVector.hpp"
 #include "FEMTTUConfig.h"
-
-// Local Includes
 #include "PetscVector.hpp"
 #include "Parallel.hpp"
-// C++ includes
 #include <cmath> 
 #include <memory>
 

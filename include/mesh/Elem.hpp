@@ -1,3 +1,18 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: Elem
+ Authors: Eugenio Aulisa
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __elem_hpp__
 #define __elem_hpp__
 
@@ -11,9 +26,12 @@ const unsigned NVE[6][6]= {{8,20,26,27,1,4},  //hex
   {2, 3, 3, 3,1,2}
 };  //line
 
+/**
+ * The elem class
+*/
 
-//************* class  element ************************
 class elem {
+
 private:
   int **kel;
   unsigned *elr;

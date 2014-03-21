@@ -1,3 +1,22 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: Elem
+ Authors: Eugenio Aulisa
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
+
 #include "Elem.hpp"
 #include <cstdlib>
 #include <cstdio>

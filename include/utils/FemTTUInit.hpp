@@ -1,6 +1,24 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: FemTTUInit
+ Authors: Simone Bnà
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef _femttu_init_
 #define _femttu_init_
 
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "FEMTTUConfig.h"
 
 //use this class only with petsc-mpi
@@ -17,7 +35,7 @@
 #endif
 
 // ========================================
-/// Class MGFemusInit
+/// Class FemTTUInit
 // ========================================
 
 class FemTTUInit { 

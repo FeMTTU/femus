@@ -1,12 +1,26 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: DenseMatrixBase
+ Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "DenseMatrix.hpp"
-
-// C++ Includes
-#include <cmath> // for sqrt
-
-// Local Includes
+#include <cmath> 
 #include "DenseVector.hpp"
 
-#ifdef MATRIX_HAVE_PETSC    //?
+#ifdef MATRIX_HAVE_PETSC    
 #include "petsc_macroM.h"
 
 EXTERN_C_FOR_PETSC_BEGIN

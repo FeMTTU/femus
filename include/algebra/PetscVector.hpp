@@ -1,6 +1,24 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: PetscVector
+ Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __petsc_vector_h__
 #define __petsc_vector_h__
 
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "FEMTTUConfig.h"
 
 #if HAVE_PETSC == 1
@@ -22,7 +40,9 @@ EXTERN_C_FOR_PETSC_END
 
 #include <mpi.h>
 
-// forward declarations
+//------------------------------------------------------------------------------
+// Forward declarations
+//------------------------------------------------------------------------------
 class SparseMatrix;
 
 // ====================================================

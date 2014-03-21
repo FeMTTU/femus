@@ -1,23 +1,39 @@
-#ifndef __linear_solver_h__
-#define __linear_solver_h__
+/*=========================================================================
 
-#include <memory>
-#include <cstdio>
+ Program: FEMUS
+ Module: LinearEquationSolver
+ Authors: Eugenio Aulisa, Simone Bnà
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
 
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+#ifndef __linear_equation_solver_h__
+#define __linear_equation_solver_h__
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "FEMTTUConfig.h"
 #include "SolverPackageEnum.hpp"
 #include "PrecondtypeEnum.hpp"
 #include "SolvertypeEnum.hpp"
 #include "LinearEquation.hpp"
-
 #include "vector"
+#include <memory>
+#include <cstdio>
 using std::vector;
 
-// forward declarations
-template <typename T> class AutoPtr;  
+//------------------------------------------------------------------------------
+// Forward declarations
+//------------------------------------------------------------------------------
 class SparseMatrix;
 class NumericVector;
-template <typename T> class ShellMatrix;  
 class Preconditioner;
 
 /** 
@@ -26,7 +42,7 @@ class Preconditioner;
 * like PETSC or LASPACK.
 */ 
 
-class LinearSolver : public lsysPde {
+class LinearEquationSolver : public LinearEquation {
   // ================================
   // DATA
   // ==============================
@@ -55,9 +71,9 @@ public:
   // CONSTR/DESTR
   // ================================
   /**  Constructor. Initializes Solver data structure */
-  LinearSolver (const unsigned &igrid, mesh* other_msh);
+  LinearEquationSolver (const unsigned &igrid, mesh* other_msh);
   /// Destructor.
-  virtual ~LinearSolver();
+  virtual ~LinearEquationSolver();
 
   /// Release all memory and clear data structures.
   virtual void clear() {}
@@ -65,8 +81,8 @@ public:
   /// Initialize data structures if not done so already.
   virtual void init() = 0;
 
-  /** Builds a \p LinearSolver using the linear solver in \p solver_package */
-  static std::auto_ptr<LinearSolver > build(const unsigned &igrid, mesh* other_msh,const SolverPackage solver_package =LSOLVER);
+  /** Builds a \p LinearEquationSolver using the linear solver in \p solver_package */
+  static std::auto_ptr<LinearEquationSolver> build(const unsigned &igrid, mesh* other_msh,const SolverPackage solver_package =LSOLVER);
   
   // =================================
   // SETTING FUNCTIONS
@@ -137,8 +153,8 @@ public:
 // -------------------- inline functions ---------
 
 // =============================================
-inline LinearSolver::LinearSolver(const unsigned &igrid, mesh* other_msh) :
-  lsysPde(other_msh),
+inline LinearEquationSolver::LinearEquationSolver(const unsigned &igrid, mesh* other_msh) :
+  LinearEquation(other_msh),
   _solver_type(GMRES),
   _preconditioner(NULL),
   _is_initialized(false),
@@ -152,7 +168,7 @@ inline LinearSolver::LinearSolver(const unsigned &igrid, mesh* other_msh) :
   }
 }
 
-inline LinearSolver::~LinearSolver() {
+inline LinearEquationSolver::~LinearEquationSolver() {
   this->clear();
 }
 

@@ -1,8 +1,29 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: Fluid
+ Authors: Simone Bnà
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __fluid_hpp__
 #define __fluid_hpp__
 
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "Material.hpp"
 
+//------------------------------------------------------------------------------
+// Forward declarations
+//------------------------------------------------------------------------------
 class Parameter;
 
 class Fluid : public Material {

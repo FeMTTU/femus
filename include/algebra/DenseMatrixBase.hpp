@@ -1,13 +1,31 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: DenseMatrixBase
+ Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __dense_matrix_baseM_h__
 #define __dense_matrix_baseM_h__
 
-// C++ includes
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include <cassert>
 #include <iostream>
 
-// Forward Delcarations
+//------------------------------------------------------------------------------
+// Forward declarations
+//------------------------------------------------------------------------------
 class DenseVectorBase;
-
 
 /**
  * Defines an abstract dense matrix base class for use in Finite Element-type

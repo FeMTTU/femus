@@ -1,3 +1,23 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: basis
+ Authors: Eugenio Aulisa
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+/**
+ * This class contains the fe basis function and their derivatives
+*/
+
+
 #ifndef __basis_h___
 #define __basis_h___
 

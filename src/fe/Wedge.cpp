@@ -1,5 +1,23 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: Wedge
+ Authors: Eugenio Aulisa
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "Basis.hpp"
-//************************************************************
+
 
 double wedge1::eval_phi(const int *I,const double* x) const {
   return tri1(x[0],x[1],I[0],I[1])*lag1(x[2],I[2]);

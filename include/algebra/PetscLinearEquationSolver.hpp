@@ -1,3 +1,18 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: PetscLinearEquationSolver
+ Authors: Eugenio Aulisa, Simone Bnà
+ 
+ Copyright (c) FEMTTU
+ All rights reserved. 
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __PetscLinearSolver_hpp__
 #define __PetscLinearSolver_hpp__
 
@@ -9,17 +24,19 @@
   #include <mpi.h> 
 #endif
 
-// Local includes
+//----------------------------------------------------------------------------
+// includes :
+//----------------------------------------------------------------------------
 #include "LinearEquationSolver.hpp"
 #include "PetscVector.hpp"
 #include "PetscMatrix.hpp"
 #include "PetscMacro.hpp"
 
 /**
-* This class inherits the abstract class LinearSolver. In this class the solver is implemented using the PETSc package
+* This class inherits the abstract class LinearEquationSolver. In this class the solver is implemented using the PETSc package
 */
 
-class PetscLinearSolver : public LinearSolver {
+class PetscLinearEquationSolver : public LinearEquationSolver {
 
 private:
   // data ---------------------------------
@@ -39,10 +56,10 @@ private:
 public:
   // Constructor --------------------------------------
   /**  Constructor. Initializes Petsc data structures */
-  PetscLinearSolver (const unsigned &igrid, mesh *other_mesh);
+  PetscLinearEquationSolver (const unsigned &igrid, mesh *other_mesh);
   
   /// Destructor.
-  ~PetscLinearSolver ();
+  ~PetscLinearEquationSolver ();
   /// Release all memory and clear data structures.
   void clear ();
   /// Initialize data structures if not done so already.
@@ -123,8 +140,8 @@ private:
   
 };
 
-inline PetscLinearSolver::PetscLinearSolver (const unsigned &igrid, mesh* other_msh)
-  : LinearSolver(igrid, other_msh) {
+inline PetscLinearEquationSolver::PetscLinearEquationSolver (const unsigned &igrid, mesh* other_msh)
+  : LinearEquationSolver(igrid, other_msh) {
         
   if(igrid==0){
     this->_preconditioner_type = MLU_PRECOND;
@@ -155,7 +172,7 @@ inline PetscLinearSolver::PetscLinearSolver (const unsigned &igrid, mesh* other_
 }
 
 // =============================================
-inline PetscLinearSolver::~PetscLinearSolver () {
+inline PetscLinearEquationSolver::~PetscLinearEquationSolver () {
   this->clear ();
 }
 
