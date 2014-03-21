@@ -14,7 +14,7 @@
 =========================================================================*/
 
 #include "LinearImplicitSystem.hpp"
-#include "LinearSolver.hpp"
+#include "LinearEquationSolver.hpp"
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
 #include "string.h"

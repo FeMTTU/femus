@@ -14,7 +14,7 @@
 =========================================================================*/
 
 #include "NonLinearImplicitSystem.hpp"
-#include "LinearSolver.hpp"
+#include "LinearEquationSolver.hpp"
 
 // ------------------------------------------------------------
 // NonLinearImplicitSystem implementation

@@ -2,11 +2,9 @@
 #define __elem_type_hpp__
 
 #include "Basis.hpp"
-// #include "petscksp.h"
-// #include "petscvec.h" 
 #include "SparseMatrix.hpp"
 #include "Mesh.hpp"
-#include "LinSysPde.hpp"
+#include "LinearEquation.hpp"
 
 class elem;
 

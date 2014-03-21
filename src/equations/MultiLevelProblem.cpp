@@ -8,7 +8,7 @@
 #include "Elem.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
-#include "LinearSolver.hpp"
+#include "LinearEquationSolver.hpp"
 #include "FEMTTUConfig.h"
 #include "Parameter.hpp"
 #include "hdf5.h"

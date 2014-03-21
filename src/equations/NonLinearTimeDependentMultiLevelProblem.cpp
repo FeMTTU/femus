@@ -1,7 +1,7 @@
 #include "NonLinearTimeDependentMultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "ElemType.hpp"
-#include "LinearSolver.hpp"
+#include "LinearEquationSolver.hpp"
 #include "PetscVector.hpp"
 
 #include <iostream>

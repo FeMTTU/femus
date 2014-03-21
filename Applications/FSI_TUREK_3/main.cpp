@@ -4,7 +4,7 @@
 #include "NonLinearTimeDependentMultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "PetscVector.hpp"
-#include "LinearSolver.hpp"
+#include "LinearEquationSolver.hpp"
 #include "Solid.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"

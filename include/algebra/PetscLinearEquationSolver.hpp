@@ -10,7 +10,7 @@
 #endif
 
 // Local includes
-#include "LinearSolver.hpp"
+#include "LinearEquationSolver.hpp"
 #include "PetscVector.hpp"
 #include "PetscMatrix.hpp"
 #include "PetscMacro.hpp"

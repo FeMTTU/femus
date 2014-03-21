@@ -4,7 +4,7 @@
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
 #include "NumericVector.hpp"
-#include "LinearSolver.hpp"
+#include "LinearEquationSolver.hpp"
 #include "SparseMatrix.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearImplicitSystem.hpp"

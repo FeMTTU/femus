@@ -40,10 +40,10 @@ algebra/Graph.cpp
 fe/Hexaedron.cpp
 equations/ImplicitSystem.cpp
 equations/LinearImplicitSystem.cpp
-algebra/LinearSolver.cpp
+algebra/LinearEquationSolver.cpp
 algebra/LinearSolverM.cpp
 fe/Line.cpp
-equations/LinSysPde.cpp
+equations/LinearEquation.cpp
 physics/Material.cpp
 mesh/mesh.cpp
 mesh/Mesh.cpp
@@ -52,7 +52,7 @@ equations/MultiLevelProblem.cpp
 equations/NonLinearTimeDependentMultiLevelProblem.cpp
 algebra/NumericVector.cpp
 physics/Parameter.cpp
-algebra/PetscLinearSolver.cpp
+algebra/PetscLinearEquationSolver.cpp
 algebra/PetscLinearSolverM.cpp
 algebra/PetscMatrix.cpp
 algebra/PetscPreconditioner.cpp
