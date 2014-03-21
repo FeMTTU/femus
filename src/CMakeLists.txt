@@ -14,7 +14,7 @@ algebra/DenseVectorBase.cpp
 mesh/Domain.cpp
 mesh/Elem.cpp
 mesh/ElemSto.cpp
-mesh/ElemType.cpp
+fe/ElemType.cpp
 equations/EqnBase.cpp
 equations/EquationsMap.cpp
 equations/ExplicitSystem.cpp
