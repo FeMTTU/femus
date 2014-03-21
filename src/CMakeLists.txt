@@ -43,7 +43,7 @@ equations/LinearImplicitSystem.cpp
 algebra/LinearEquationSolver.cpp
 algebra/LinearSolverM.cpp
 fe/Line.cpp
-equations/LinearEquation.cpp
+algebra/LinearEquation.cpp
 physics/Material.cpp
 mesh/mesh.cpp
 mesh/Mesh.cpp
