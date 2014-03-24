@@ -5,7 +5,7 @@
 #include "Physics.hpp"
 #include "EquationsMap.hpp"
 #include "EqnBase.hpp"
-#include "mesh.hpp"
+#include "MeshTwo.hpp"
 #include "Utils.hpp"
 #include "TimeLoop.hpp"
 #include "Files.hpp"
