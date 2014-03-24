@@ -172,3 +172,14 @@ IF(BUILD_TEMPER)
     FILE(MAKE_DIRECTORY applications/temper/config/)
     FILE(COPY applications/temper/config/ DESTINATION ${PROJECT_BINARY_DIR}/applications/temper/config/)
 ENDIF(BUILD_TEMPER)
+
+OPTION(BUILD_FSIPOROUS "Build the fsi problem in a porous medium" ON)
+
+IF(BUILD_FSIPOROUS)
+       ADD_SUBDIRECTORY(applications/fsi_porous/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/fsi_porous/output/)
+    FILE(MAKE_DIRECTORY applications/fsi_porous/input/)
+    FILE(COPY           applications/fsi_porous/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/fsi_porous/input/)
+    FILE(COPY applications/fsi_porous/parameters.in DESTINATION ${PROJECT_BINARY_DIR}/applications/fsi_porous/)
+ENDIF(BUILD_FSIPOROUS)

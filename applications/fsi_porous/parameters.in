@@ -1,0 +1,54 @@
+# questo e' il template file dei parametri
+# alcuni sono riferiti alla libreria, altri all'applicazione
+# quelli che sono riferiti alla libreria devono rimanere cosi'
+# poi l'utente puo' decidere di aggiungerne altri a suo piacimento
+
+<Doubles>
+
+nlevs 1
+
+nrefins 3
+
+kappa_well 1.e-2
+kappa_frac 2.5e+6
+
+
+young_well 1.e10
+young_frac 1.e5
+
+p_out 1.e6
+p_in  0.
+
+nonlin_iter 1
+
+Lap 1
+Graddiv 1
+
+
+moving_dom_p 0
+moving_dom_disp 0
+moving_dom_vel 0
+moving_dom_ints 0
+
+
+
+# mesh region labels
+
+frac_reg_idx    5
+layer1          6
+layer2          7
+layer3          8
+
+# mesh boundaries labels
+inner     1
+outer     2
+
+</Doubles>
+
+
+<Strings>
+# outdir_time 
+# mesh_name  well_NOfrac_real_2.neu
+mesh_name  well_frac_real.neu
+# mesh_name well_fracs_geom_symmetry.neu
+</Strings>
