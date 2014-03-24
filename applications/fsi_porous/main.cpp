@@ -142,18 +142,21 @@ int main(int argc,char **args) {
    
   //End System Variables; ==============================
 
-// // //   // START EQUATIONS =================================
-// // // 
-// // //   mg.ClearMGIndex();
-// // //   for (int i=0; i<NVAR_P; ++i)       mg.AddToMGIndex(varnames_p[i].c_str());
-// // //   for (int i=0; i<NVAR_D; ++i)       mg.AddToMGIndex(varnames_d[i].c_str());
-// // //   for (int i=0; i<NVAR_VEL; ++i)     mg.AddToMGIndex(varnames_u[i].c_str());
-// // //   
-// // //   mg.CreateMGStruct();  // create Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
-// // //   mg.BuildSparsityPattern();  //in principle this depends on the OPERATORS!
-// // //   
-// // //  for (unsigned nonlin = 0; nonlin < runtime_double->get("nonlin_iter"); nonlin++) {
-// // //    
+  // START EQUATIONS =================================
+  mg.AddPde("EQN_P");
+  mg.AddPde("EQN_D");
+  mg.AddPde("EQN_VEL");
+  
+  mg.ClearSolPdeIndex();
+  for (int i=0; i<NVAR_P; ++i)       mg.AddSolutionToSolPdeIndex("EQN_P",varnames_p[i].c_str());
+  for (int i=0; i<NVAR_D; ++i)       mg.AddSolutionToSolPdeIndex("EQN_D",varnames_d[i].c_str());
+  for (int i=0; i<NVAR_VEL; ++i)     mg.AddSolutionToSolPdeIndex("EQN_VEL",varnames_u[i].c_str());
+  
+  mg.CreatePdeStructure();
+// // //   mg.BuildSparsityPattern();  //TODO this will not be needed now
+  
+ for (unsigned nonlin = 0; nonlin < runtime_double->get("nonlin_iter"); nonlin++) {
+   
 // // //   mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
 // // //   mg.AttachAssembleFunction(AssembleMatrixResP);
 // // //   for (int i=0; i<NVAR_P; ++i)       mg.AddToVankaIndex(varnames_p[i].c_str());
@@ -204,23 +207,21 @@ int main(int argc,char **args) {
 // // //   mg.SetMovingMesh(mov_vars);
 // // //   mg.IncreaseStep(nonlin);
 // // //   mg.printsol_vtu_binary(outfolder,"biquadratic");
-// // // 
+// // //
+   
 // // // //   if (nonlin == runtime_double.get("nonlin_iter") -1 ) {
 // // //   ofs  << std::left << std::setw(15) << std::setprecision(12) << outfolder << "   " << runtime_double->get("young_frac") << "  " << runtime_double->get("young_well") << "  " << runtime_double->get("kappa_frac") << "  "  << runtime_double->get("kappa_well") << "  "  << runtime_double->get("nlevs") << " *** " << Num << "   " << Den << "  " <<  Num / Den <<  "   " << std::endl;
 // // // //   }
-// // //   
-// // // }
-// // //    
-// // //    ofs << std::endl;
-// // //    
-// // //   delete [] infile;
-// // // 
-// // //   mg.DeleteMGStruct();  // Delete Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
-// // //   // Destroy the last PETSC objects ===================
-// // //   mg.FreeMultigrid();  //Sol
+  
+}
+   
+   ofs << std::endl;
+   
 
+  mg.clear();
+  mg.FreeMultigrid();
+  delete [] infile;
   return 0;
-
 }
 
 
