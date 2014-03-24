@@ -28,7 +28,9 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   ImplicitSystem (ml_probl, name_in, number_in),
   _n_linear_iterations   (0),
   _n_max_linear_iterations (3),
-  _final_linear_residual (1.e20)
+  _final_linear_residual (1.e20),
+  _absolute_convergence_tolerance (1.e-08),
+  _mg_type(F_CYCLE)
 {
 }
 
@@ -68,23 +70,21 @@ void LinearImplicitSystem::solve() {
   
   clock_t start_mg_time = clock();
   
-
   bool full_cycle;
   unsigned igrid0; 
   
-// Bisogna dirgli quale tipo di multigrd vogliamo---  
-//   if( !strcmp(multigrid_type,"F-Cycle") ){
+  if(_mg_type == F_CYCLE) {
     full_cycle=1;
     igrid0=1;
-//   }
-//   else if(!strcmp(multigrid_type,"V-Cycle")){
-//     full_cycle=0;
-//     igrid0=_gridn;
-//   }
-//   else if(!strcmp(multigrid_type,"M-Cycle")){
-//     full_cycle=0;
-//     igrid0=_gridr;
-//   }
+  }
+  else if(_mg_type == V_CYCLE){
+    full_cycle=0;
+    igrid0=_equation_systems.GetNumberOfGrid();
+  }
+  else {
+    full_cycle=0;
+    igrid0=_equation_systems.GetNumberOfGridNotRefined();
+  }
   
   unsigned ipde = _equation_systems.GetPdeIndex(_sys_name.c_str());  // non esiste + la chiamata alla pde, siamo già dentro ad una pde specifica
     
@@ -142,8 +142,12 @@ void LinearImplicitSystem::solve() {
  	for (unsigned ig = _equation_systems.GetNumberOfGridNotRefined()-1; ig < igridn-1; ig++) {  // _gridr
  	  _equation_systems._solution[ig]->SumEpsToSol(_equation_systems._SolPdeIndex[ipde], _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
  	}
- 	// ============== Test for linear Convergence ==============
- 	//if(igridn>2) GetConvergence(pdename, igridn-2);  //Sistemare la funzione che dice quando uscire dal lineare
+ 	
+ 	_final_linear_residual = solver_info.second;
+	
+	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
+ 	if(_final_linear_residual < _absolute_convergence_tolerance) 
+	  break;
       }
       
       // ============== Update Solution ( ig = igridn )==============
