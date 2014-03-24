@@ -21,6 +21,7 @@ int AssembleMatrixResD(MultiLevelProblem &mg, unsigned level, const elem_type *t
 int AssembleMatrixResVel(MultiLevelProblem &mg, unsigned level, const elem_type *type_elem[6][5],
                        vector <vector <double> > &vt, const unsigned &gridn);
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
+bool BoundaryND(/*MultiLevelProblem& mg_in,*/const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName,const double time);
 
 
 RunTimeMap<double> * runtime_double; //per ora devo usarla cosi' global... dovrebbe appartenere a tutte le classi...
@@ -103,39 +104,44 @@ int main(int argc,char **args) {
 //   print_vars_tmp[0] = "TMP";
 //   mg.printsol_vtu_inline("biquadratic",print_vars_tmp);
 // // //   // END MESH =================================
-// // // 
-// // // // PHYSICS ===========================
-// // //   mg.AddParameters(runtime_double);
-// // //   mg.Add_Fluid(&fluid);
-// // //   mg.Add_Solid(&solid);
-// // // 
-// // // //Start System Variables;===========================
-// // //   std::vector<std::string> varnames_p(NVAR_P);
-// // //   varnames_p[0] = "p";
-// // //   std::vector<std::string> varnames_d(NVAR_D);
-// // //   varnames_d[0] = "DX";
-// // //   varnames_d[1] = "DY";
-// // //   varnames_d[2] = "DZ";
-// // //   std::vector<std::string> varnames_u(NVAR_VEL);
-// // //   varnames_u[0] = "UX";
-// // //   varnames_u[1] = "UY";
-// // //   varnames_u[2] = "UZ";
-// // //   //all these variables are added to the vector that is "spanned" by INDEX
-// // //   for (int i=0; i<NVAR_P; ++i)     mg.AddSolutionVector(varnames_p[i].c_str(),"biquadratic");
-// // //   for (int i=0; i<NVAR_D; ++i)     mg.AddSolutionVector(varnames_d[i].c_str(),"biquadratic");
-// // //   for (int i=0; i<NVAR_VEL; ++i)   mg.AddSolutionVector(varnames_u[i].c_str(),"biquadratic");
-// // // 
-// // //   mg.Initialize("All");
-// // // 
-// // //   //Set Boundary (update Dirichlet(...) function)
-// // //   for (int i=0; i<NVAR_P; ++i)   mg.GenerateBdc(varnames_p[i].c_str());
-// // //   for (int i=0; i<NVAR_D; ++i)   mg.GenerateBdc(varnames_d[i].c_str());
-// // //   for (int i=0; i<NVAR_VEL; ++i) mg.GenerateBdc(varnames_u[i].c_str());
-// // //       //TODO do i have to generate them also for the velocity? by default they do nothing?
-// // //       //it seems like it was necessary... so the default is not neumann "do nothing"?!
-// // //    
-// // //   //End System Variables; ==============================
-// // // 
+
+// PHYSICS ===========================
+  mg.AddParameters(runtime_double);  //TODO where do i need this?
+  mg.parameters.set<Fluid>("Fluid") = fluid;
+  mg.parameters.set<Solid>("Solid") = solid;
+
+//Start System Variables;===========================
+  std::vector<std::string> varnames_p(NVAR_P);
+  varnames_p[0] = "p";
+  std::vector<std::string> varnames_d(NVAR_D);
+  varnames_d[0] = "DX";
+  varnames_d[1] = "DY";
+  varnames_d[2] = "DZ";
+  std::vector<std::string> varnames_u(NVAR_VEL);
+  varnames_u[0] = "UX";
+  varnames_u[1] = "UY";
+  varnames_u[2] = "UZ";
+  //all these variables are added to the vector that is "spanned" by INDEX
+  for (int i=0; i<NVAR_P; ++i)     mg.AddSolution(varnames_p[i].c_str(),"biquadratic");
+  for (int i=0; i<NVAR_D; ++i)     mg.AddSolution(varnames_d[i].c_str(),"biquadratic");
+  for (int i=0; i<NVAR_VEL; ++i)   mg.AddSolution(varnames_u[i].c_str(),"biquadratic");
+
+  for (int i=0; i<NVAR_P; ++i)     mg.Initialize(varnames_p[i].c_str());
+  for (int i=0; i<NVAR_D; ++i)     mg.Initialize(varnames_d[i].c_str());
+  for (int i=0; i<NVAR_VEL; ++i)   mg.Initialize(varnames_u[i].c_str());
+//  mg.Initialize("All"); //TODO would this "All" still be working?
+
+  mg.AttachSetBoundaryConditionFunction(BoundaryND);
+  
+  //Set Boundary (update Dirichlet(...) function)
+  for (int i=0; i<NVAR_P; ++i)   mg.GenerateBdc(varnames_p[i].c_str());
+  for (int i=0; i<NVAR_D; ++i)   mg.GenerateBdc(varnames_d[i].c_str());
+  for (int i=0; i<NVAR_VEL; ++i) mg.GenerateBdc(varnames_u[i].c_str());
+      //TODO do i have to generate them also for the velocity? by default they do nothing?
+      //it seems like it was necessary... so the default is not neumann "do nothing"?!
+   
+  //End System Variables; ==============================
+
 // // //   // START EQUATIONS =================================
 // // // 
 // // //   mg.ClearMGIndex();
@@ -237,11 +243,6 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
   return refine;
 }
 
-bool Boundary1D(MultiLevelProblem& mg, const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName,const double time) {
-  value=0;
-  return 0;
-}
-
 //This function initializes all the variables  GEN IC
 double Init(const double &x, const double &y, const double &z,const char name[]) {
   double value=0.;
@@ -261,23 +262,24 @@ double Init(const double &x, const double &y, const double &z,const char name[])
 }
 
 /// 1 Dirichlet 0 Neumann - value: any nonhomogeneous BC
-bool BoundaryND(MultiLevelProblem& mg_in, const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName,const double time) {
+bool BoundaryND(/*MultiLevelProblem& mg_in,*/const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName,const double time) {
+
   bool test=1; //Dirichlet
   bool DIR=1;
   bool NEU=0;
   value=0.;
 
-  MyMultiGrid* mg = static_cast<MyMultiGrid*>(&mg_in);
+//   MyMultiGrid* mg = static_cast<MyMultiGrid*>(&mg_in); //we use the "global" runtime map so far
   
   if (!strcmp(name,"p")) {
 
-    if ( (int) mg->_runtime_double->get("inner") == FaceName) {
+    if ( (int) runtime_double->get("inner") == FaceName) {
       test=DIR;
-      value = mg->_runtime_double->get("p_in"); //well
+      value = runtime_double->get("p_in"); //well
     }
-    else if ( (int) mg->_runtime_double->get("outer") == FaceName) {
+    else if ( (int) runtime_double->get("outer") == FaceName) {
       test=DIR;
-      value = mg->_runtime_double->get("p_out");
+      value = runtime_double->get("p_out");
     }
 
   }
@@ -285,11 +287,11 @@ bool BoundaryND(MultiLevelProblem& mg_in, const double &x, const double &y, cons
   
   else if (!strcmp(name,"DX")) {
 
-    if ( (int) mg->_runtime_double->get("inner") == FaceName) {
+    if ( (int) runtime_double->get("inner") == FaceName) {
       test=DIR;
       value=0.;
     }
-    else if ( (int) mg->_runtime_double->get("outer") == FaceName) {
+    else if ( (int) runtime_double->get("outer") == FaceName) {
       test=DIR;
       value=0.;
     }
@@ -298,11 +300,11 @@ bool BoundaryND(MultiLevelProblem& mg_in, const double &x, const double &y, cons
 
   else if (!strcmp(name,"DY")) {
 
-    if ( (int) mg->_runtime_double->get("inner") == FaceName) {
+    if ( (int) runtime_double->get("inner") == FaceName) {
       test=DIR;
       value=0.;
     }
-    else if ( (int) mg->_runtime_double->get("outer") == FaceName) {
+    else if ( (int) runtime_double->get("outer") == FaceName) {
       test=DIR;
       value=0.;
     }
@@ -310,11 +312,11 @@ bool BoundaryND(MultiLevelProblem& mg_in, const double &x, const double &y, cons
   }
   else if (!strcmp(name,"DZ")) {
 
-    if ( (int) mg->_runtime_double->get("inner") == FaceName) {
+    if ( (int) runtime_double->get("inner") == FaceName) {
       test=NEU;
       value=0.;
     }
-    else if ( (int) mg->_runtime_double->get("outer") == FaceName) {
+    else if ( (int) runtime_double->get("outer") == FaceName) {
       test=NEU;
       value=0.;
     }
@@ -323,11 +325,11 @@ bool BoundaryND(MultiLevelProblem& mg_in, const double &x, const double &y, cons
   
    else if (!strcmp(name,"UX")) {
 
-    if ( (int) mg->_runtime_double->get("inner") == FaceName) {
+    if ( (int) runtime_double->get("inner") == FaceName) {
       test=NEU;
       value=0.;
     }
-    else if ( (int) mg->_runtime_double->get("outer") == FaceName) {
+    else if ( (int) runtime_double->get("outer") == FaceName) {
       test=NEU;
       value=0.;
     }
@@ -336,11 +338,11 @@ bool BoundaryND(MultiLevelProblem& mg_in, const double &x, const double &y, cons
 
   else if (!strcmp(name,"UY")) {
 
-    if ( (int) mg->_runtime_double->get("inner") == FaceName) {
+    if ( (int) runtime_double->get("inner") == FaceName) {
       test=NEU;
       value=0.;
     }
-    else if ( (int) mg->_runtime_double->get("outer") == FaceName) {
+    else if ( (int) runtime_double->get("outer") == FaceName) {
       test=NEU;
       value=0.;
     }
@@ -348,11 +350,11 @@ bool BoundaryND(MultiLevelProblem& mg_in, const double &x, const double &y, cons
   }
   else if (!strcmp(name,"UZ")) {
 
-    if ( (int) mg->_runtime_double->get("inner") == FaceName) {
+    if ( (int) runtime_double->get("inner") == FaceName) {
       test=NEU;
       value=0.;
     }
-    else if ( (int) mg->_runtime_double->get("outer") == FaceName) {
+    else if ( (int) runtime_double->get("outer") == FaceName) {
       test=NEU;
       value=0.;
     }
