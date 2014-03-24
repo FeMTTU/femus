@@ -21,7 +21,7 @@
 //----------------------------------------------------------------------------
 #include "ImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
-
+#include "MgTypeEnum.hpp"
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -65,8 +65,17 @@ public:
    /** Get the final Linear Residual of the linear problem Ax=b*/
    double GetFinalLinearResidual() const {return _final_linear_residual;}; 
    
+   /** Get the absolute convergence tolerance for the linear problem Ax=b*/
+   double GetAbsoluteConvergenceTolerance() const {return _absolute_convergence_tolerance;}; 
+   
+   /** Set the absolute convergence tolerance for the linear problem Ax=b*/
+   void SetAbsoluteConvergenceTolerance(double absolute_convergence_tolerance) { _absolute_convergence_tolerance = absolute_convergence_tolerance;};
+   
    /** Set a parameter option for the SparseMatrix A */
    virtual void SetMatrixOption(MatOption op, bool flag);
+   
+   /** Set the type of multigrid */
+   void SetMgType(const MgType mgtype) {_mg_type = mgtype;};
  
 
 protected:
@@ -77,9 +86,15 @@ protected:
   /** The final residual for the linear system Ax=b. */
   double _final_linear_residual;
   
+  /** The threshold residual for the linear system Ax=b. */
+  double _absolute_convergence_tolerance;
+  
   /** The max number of linear iterations */
   unsigned int _n_max_linear_iterations;
 
+  /** The type of multigrid, F-cyle, V-cycle, M-cycle */
+  MgType _mg_type;
+  
   /** Create the Prolongator matrix for the Multigrid solver */
   void Prolongator(const unsigned &gridf);
   

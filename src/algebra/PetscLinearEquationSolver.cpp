@@ -642,6 +642,7 @@ std::pair< int, double> PetscLinearEquationSolver::solve() {
     
   clock_t SearchTime, AssemblyTime, SolveTime, UpdateTime;
   int its;
+  double final_resid;
   PetscErrorCode ierr; 
     
   // ***************** NODE/ELEMENT SEARCH *******************
@@ -695,21 +696,19 @@ std::pair< int, double> PetscLinearEquationSolver::solve() {
 
       _RESC->matrix_mult(*_EPSC,*_KK);
       *_RES -= *_RESC;
-
+      
       // Get the number of iterations required for convergence
       ierr = KSPGetIterationNumber(_ksp[0], &its);		CHKERRABORT(MPI_COMM_WORLD,ierr);
 
       // Get the norm of the final residual to return to the user.
-      //ierr = KSPGetResidualNorm(_ksp[0], &final_resid); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPGetResidualNorm(_ksp[0], &final_resid); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
 
       ierr = KSPDestroy(&_ksp[0]);				CHKERRABORT(MPI_COMM_WORLD,ierr);
 
       UpdateTime = clock() - start_time;
       // ***************** END UPDATE ******************
 
-      
-
-    }
+  }
   else if(_DirichletBCsHandlingMode==1) { // By elimination
 
     PetscVector* RESp=static_cast<PetscVector*> (_RES);
@@ -750,8 +749,12 @@ std::pair< int, double> PetscLinearEquationSolver::solve() {
     // Solve the linear system
     ierr = KSPSolve(_ksp[0],Pr,Pw);					CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-    ierr = KSPGetIterationNumber(_ksp[0],&its);				CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Get the number of iterations required for convergence
+    ierr = KSPGetIterationNumber(_ksp[0], &its);			CHKERRABORT(MPI_COMM_WORLD,ierr);
 
+    // Get the norm of the final residual to return to the user.
+    ierr = KSPGetResidualNorm(_ksp[0], &final_resid); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
+ 
     ierr = KSPDestroy(&_ksp[0]);				        CHKERRABORT(MPI_COMM_WORLD,ierr);
     ierr = MatDestroy(&A);					        CHKERRABORT(MPI_COMM_WORLD,ierr);
     ierr = VecRestoreSubVector(RES,isA,&Pr);				CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -789,13 +792,13 @@ std::pair< int, double> PetscLinearEquationSolver::solve() {
     UpdateTime = clock() - start_time;
     // ***************** END UPDATE ******************
   }
-    
+  
   // *** Computational info ***
   cout << "Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:              " <<
     static_cast<double>( SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
     "  ITS: " << its << endl;
 
-  return std::make_pair(its,static_cast<double>( SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC);
+  return std::make_pair(its,final_resid);
     
     
     

@@ -158,7 +158,9 @@ int main(int argc,char **args) {
   
   // System 3
   system3.AttachAssembleFunction(AssembleMatrixResT);
-  system3.SetMaxNumberOfLinearIterations(2);  
+  system3.SetMaxNumberOfLinearIterations(10);
+  system3.SetAbsoluteConvergenceTolerance(1.e-10);  
+  system3.SetMgType(F_CYCLE);
   
   nl_ml_prob.SetDirichletBCsHandling("NS1","Penalty");
   nl_ml_prob.SetDirichletBCsHandling("NS2","Penalty");
