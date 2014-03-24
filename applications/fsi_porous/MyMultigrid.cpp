@@ -12,11 +12,19 @@
 
 MyMultiGrid::MyMultiGrid(const unsigned short &igridn,const unsigned short &igridr,
                          const char mesh_file[], const char GaussOrder[],
-                         const double Lref):
-    MultiLevelProblem(igridn,igridr,mesh_file,GaussOrder,Lref),
-     _qty_idx({IDX_P,IDX_D, IDX_VEL}),
-     _qty_ncomps({NVAR_P,NVAR_D, NVAR_VEL})
-    {  }
+                         const double Lref, 
+			 bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level)) 
+:   MultiLevelProblem(igridn,igridr,mesh_file,GaussOrder,Lref,SetRefinementFlag) {  
+      
+      _qty_idx[0] = IDX_P;
+      _qty_idx[1] = IDX_D;
+      _qty_idx[2] = IDX_VEL;
+      
+     _qty_ncomps[0] = NVAR_P; 
+     _qty_ncomps[1] = NVAR_D; 
+     _qty_ncomps[2] = NVAR_VEL; 
+      
+    }
 
 
     

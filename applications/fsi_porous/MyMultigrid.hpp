@@ -11,13 +11,14 @@ public:
   RunTimeMap<double>* _runtime_double;
   void AddParameters(RunTimeMap<double>* runtimein);
   
-  const unsigned _qty_idx[N_QTIES];
-  const int   _qty_ncomps[N_QTIES];
+  unsigned _qty_idx[N_QTIES];
+  unsigned   _qty_ncomps[N_QTIES];
 
   
   MyMultiGrid(const unsigned short &igridn,const unsigned short &igridr,
               const char mesh_file[], const char GaussOrder[],
-              const double Lref=1.);
+              const double Lref,
+	      bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level) );
   double Error();
   
   void   BuildSparsityPattern();
