@@ -3,20 +3,20 @@
 #include "MyMultigrid.hpp"
 
 // library includes
-#include "elem_type.hpp"
-#include "multigrid.hpp"
-#include "numeric_vector.hpp"
-#include "petsc_vector.hpp"
-#include "linear_solver.hpp"
-#include "fluid.hpp"
-#include "parameter.hpp"
+#include "ElemType.hpp"
+#include "NumericVector.hpp"
+#include "PetscVector.hpp"
+#include "LinearEquationSolver.hpp" //linear_solver
+#include "Fluid.hpp"
+#include "Parameter.hpp"
+#include "MultiLevelProblem.hpp"
 
 //===============================
-int AssembleMatrixResP(MultiGrid &mg, unsigned level, const elem_type *type_elem[6][5],
+int AssembleMatrixResP(MultiLevelProblem &mg, unsigned level, const elem_type *type_elem[6][5],
                        vector <vector <double> > &vt, const unsigned &gridn);
-int AssembleMatrixResD(MultiGrid &mg, unsigned level, const elem_type *type_elem[6][5],
+int AssembleMatrixResD(MultiLevelProblem &mg, unsigned level, const elem_type *type_elem[6][5],
                        vector <vector <double> > &vt, const unsigned &gridn);
-int AssembleMatrixResVel(MultiGrid &mg, unsigned level, const elem_type *type_elem[6][5],
+int AssembleMatrixResVel(MultiLevelProblem &mg, unsigned level, const elem_type *type_elem[6][5],
                        vector <vector <double> > &vt, const unsigned &gridn);
 
 // Program usage:  mpiexec mesh.out [-help] [all PETSc options]
@@ -31,183 +31,183 @@ RunTimeMap<double> *runtime_double;
 
 int main(int argc,char **args) {
   
-  PetscErrorCode ierr;
-  PetscMPIInt    size;
-  PetscInitialize(&argc,&args,(char *)0,help);
-  ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);
-  CHKERRQ(ierr);
-  if (size != 1) SETERRQ(PETSC_COMM_WORLD,1,"This is a uniprocessor example only!");
-
-  //READ STRING of TIME FROM SHELL;
-  std::string outfolder = "output";//getenv("OUTFOLDER");  //if you don't set this environment variable, the code doesn't run
-  if (outfolder == "") {
-    std::cout << " Set OUTFOLDER in your shell environment" << std::endl;
-    abort();
-  } 
-    
-  // READ DOUBLES FROM FILE ======== declared as GLOBAL SCOPE
-//   RunTimeMap<double> * runtime_double; //this line is not needed, it works nevertheless but it's not needed //so the brutal way to make it visible everywhere is to put the declaration OUTSIDE the function and to declare it with extern in all the files where it's needed
-                                          //non serve il singleton pattern per questo! serve solo chiamare il costruttore QUI NEL MAIN e non OUTSIDE
-  runtime_double = RunTimeMap<double>::getInstance("Doubles",/*outfolder +*/ "parameters.in");
-  runtime_double->read();
-  runtime_double->print();
-
-  // READ STRINGS FROM FILE ========
- RunTimeMap<std::string> * runtime_string;  
-  runtime_string = RunTimeMap<std::string>::getInstance("Strings",/*outfolder +*/ "parameters.in");
-  runtime_string->read();
-  runtime_string->print();
-  
-  
-   //  OPEN BIG TABLE ========
-  std::ofstream ofs;
-  ofs.open("./output/BigTable.txt",std::fstream::app);
-  ofs /*<< outfolder << " =============="*/ << std::endl;
-  ofs  << std::left << std::setw(15) << std::setprecision(12) << outfolder << "   " << "E_frac" << "  " << "E_well" << "  "  << "K_frac" << "  " << "K_well" << "  " << "nlevs" << " *** " << "NUM_FLUX"  << "  " << "DEN_AVG_PRESS"  << "  "  << "P.I."  << "  "  <<  std::endl;
-  
-  //go ahead================
-  unsigned short nm,nr;
-  std::cout << "#MULTIGRID levels? (>=1) \n";
-  nm = (int) runtime_double->get("nlevs");
-
-  std::cout << "#MAX_REFINEMENT levels? (>=0) \n";
-  nr = (int) runtime_double->get("nrefins");
-  int tmp = nm;
-  nm += nr;
-  nr = tmp;
-
-  cout << "nm  ==== " << nm << " nr ==== " << nr << std::endl;
-  
-  char *infile = new char [50];
-  std::ostringstream meshfile; meshfile << "./input/" << runtime_string->get("mesh_name");
-  sprintf(infile, meshfile.str().c_str() );
-
-  //Adimensional quantity (Lref,Uref)
-  double Lref = 1.0;
-  double Uref = 1.0;
-  Parameter parameter(Lref,Uref);
-
-  // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,1.,1.,"Newtonian");
-  Solid solid(parameter,runtime_double->get("young_well"),0.4,1000.,"Linear_elastic");
-//AAAAAAA: HERE you are setting 1 kg/m^3 for the FLUID DENSITY and 1000 for the SOLID DENSITY!!!
-// In this case we are not actually using those numbers, but PAY ATTENTION!  
-  
-  
-//Steadystate MultiGrid
-  MyMultiGrid  mg(nm,nr,infile,"fifth",Lref);   //this has become the multilevel problem
-  mg.printsol_vtu_binary(outfolder,"biquadratic");
-  // END MESH =================================
-
-// PHYSICS ===========================
-  mg.AddParameters(runtime_double);
-  mg.Add_Fluid(&fluid);
-  mg.Add_Solid(&solid);
-
-//Start System Variables;===========================
-  std::vector<std::string> varnames_p(NVAR_P);
-  varnames_p[0] = "p";
-  std::vector<std::string> varnames_d(NVAR_D);
-  varnames_d[0] = "DX";
-  varnames_d[1] = "DY";
-  varnames_d[2] = "DZ";
-  std::vector<std::string> varnames_u(NVAR_VEL);
-  varnames_u[0] = "UX";
-  varnames_u[1] = "UY";
-  varnames_u[2] = "UZ";
-  //all these variables are added to the vector that is "spanned" by INDEX
-  for (int i=0; i<NVAR_P; ++i)     mg.AddSolutionVector(varnames_p[i].c_str(),"biquadratic");
-  for (int i=0; i<NVAR_D; ++i)     mg.AddSolutionVector(varnames_d[i].c_str(),"biquadratic");
-  for (int i=0; i<NVAR_VEL; ++i)   mg.AddSolutionVector(varnames_u[i].c_str(),"biquadratic");
-
-  mg.Initialize("All");
-
-  //Set Boundary (update Dirichlet(...) function)
-  for (int i=0; i<NVAR_P; ++i)   mg.GenerateBdc(varnames_p[i].c_str());
-  for (int i=0; i<NVAR_D; ++i)   mg.GenerateBdc(varnames_d[i].c_str());
-  for (int i=0; i<NVAR_VEL; ++i) mg.GenerateBdc(varnames_u[i].c_str());
-      //TODO do i have to generate them also for the velocity? by default they do nothing?
-      //it seems like it was necessary... so the default is not neumann "do nothing"?!
-   
-  //End System Variables; ==============================
-
-  // START EQUATIONS =================================
-
-  mg.ClearMGIndex();
-  for (int i=0; i<NVAR_P; ++i)       mg.AddToMGIndex(varnames_p[i].c_str());
-  for (int i=0; i<NVAR_D; ++i)       mg.AddToMGIndex(varnames_d[i].c_str());
-  for (int i=0; i<NVAR_VEL; ++i)     mg.AddToMGIndex(varnames_u[i].c_str());
-  
-  mg.CreateMGStruct();  // create Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
-  mg.BuildSparsityPattern();  //in principle this depends on the OPERATORS!
-  
- for (unsigned nonlin = 0; nonlin < runtime_double->get("nonlin_iter"); nonlin++) {
-   
-  mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
-  mg.AttachAssembleFunction(AssembleMatrixResP);
-  for (int i=0; i<NVAR_P; ++i)       mg.AddToVankaIndex(varnames_p[i].c_str());
-  mg.SetVankaSchurOptions(false);//(true,true,1);
-  mg.SetSolverFineGrids("GMRES");
-  mg.SetPreconditionerFineGrids("LU");
-  mg.SetTolerances(1.e-12,1.e-20,1.e+50,20);
-  mg.SetDimVankaBlock("All"/*3*/);                //2^lev 1D 4^lev 2D 8^lev 3D
-  mg.FullMultiGrid(7,1,1);
-
-  
-  mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
-  mg.AttachAssembleFunction(AssembleMatrixResD);
-  mg.AddToVankaIndex("DX");
-  mg.AddToVankaIndex("DY");
-  mg.AddToVankaIndex("DZ");  //remember it must be in MGIndex first //i dont solve 3d comp in 2D
-  mg.SetVankaSchurOptions(false);
-  mg.SetSolverFineGrids("GMRES");
-  mg.SetPreconditionerFineGrids("LU");
-  mg.SetTolerances(1.e-12,1.e-20,1.e+50,20);
-  mg.SetDimVankaBlock("All"/*3*/);                //2^lev 1D 4^lev 2D 8^lev 3D     //No DD:pass "All"
-  mg.FullMultiGrid(7,1,1);
-  
-
-  mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
-  mg.AttachAssembleFunction(AssembleMatrixResVel);
-  mg.AddToVankaIndex("UX");
-  mg.AddToVankaIndex("UY");
-  mg.AddToVankaIndex("UZ");  //remember it must be in MGIndex first //i dont solve 3d comp in 2D
-  mg.SetVankaSchurOptions(false);
-  //Solver configuration for Temperature problem
-  mg.SetSolverFineGrids("GMRES");
-  mg.SetPreconditionerFineGrids("LU");
-  mg.SetTolerances(1.e-12,1.e-20,1.e+50,20);
-  mg.SetDimVankaBlock("All"/*3*/);                //2^lev 1D 4^lev 2D 8^lev 3D     //No DD:pass "All"
-  mg.FullMultiGrid(7,1,1);
-
- 
-  double Num = mg.ComputeProductivityIndexNum( (int) runtime_double->get("inner") );  //face 1
-  std::vector<double> integrals(mg.ComputeProductivityIndexDen(2));
-
-  double Den = (integrals[0]/integrals[1] - runtime_double->get("p_in")  );  
-  
-  std::cout << " The productivity index is " << Num / Den << std::endl;
-  
-//move mesh according to displacement
-  std::vector<std::string> mov_vars(varnames_d);  //copy constructor
-  mg.SetMovingMesh(mov_vars);
-  mg.IncreaseStep(nonlin);
-  mg.printsol_vtu_binary(outfolder,"biquadratic");
-
-//   if (nonlin == runtime_double.get("nonlin_iter") -1 ) {
-  ofs  << std::left << std::setw(15) << std::setprecision(12) << outfolder << "   " << runtime_double->get("young_frac") << "  " << runtime_double->get("young_well") << "  " << runtime_double->get("kappa_frac") << "  "  << runtime_double->get("kappa_well") << "  "  << runtime_double->get("nlevs") << " *** " << Num << "   " << Den << "  " <<  Num / Den <<  "   " << std::endl;
-//   }
-  
-}
-   
-   ofs << std::endl;
-   
-  delete [] infile;
-
-  mg.DeleteMGStruct();  // Delete Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
-  // Destroy the last PETSC objects ===================
-  mg.FreeMultigrid();  //Sol
-  ierr = PetscFinalize();  CHKERRQ(ierr);
+// // //   PetscErrorCode ierr;
+// // //   PetscMPIInt    size;
+// // //   PetscInitialize(&argc,&args,(char *)0,help);
+// // //   ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);
+// // //   CHKERRQ(ierr);
+// // //   if (size != 1) SETERRQ(PETSC_COMM_WORLD,1,"This is a uniprocessor example only!");
+// // // 
+// // //   //READ STRING of TIME FROM SHELL;
+// // //   std::string outfolder = "output";//getenv("OUTFOLDER");  //if you don't set this environment variable, the code doesn't run
+// // //   if (outfolder == "") {
+// // //     std::cout << " Set OUTFOLDER in your shell environment" << std::endl;
+// // //     abort();
+// // //   } 
+// // //     
+// // //   // READ DOUBLES FROM FILE ======== declared as GLOBAL SCOPE
+// // // //   RunTimeMap<double> * runtime_double; //this line is not needed, it works nevertheless but it's not needed //so the brutal way to make it visible everywhere is to put the declaration OUTSIDE the function and to declare it with extern in all the files where it's needed
+// // //                                           //non serve il singleton pattern per questo! serve solo chiamare il costruttore QUI NEL MAIN e non OUTSIDE
+// // //   runtime_double = RunTimeMap<double>::getInstance("Doubles",/*outfolder +*/ "parameters.in");
+// // //   runtime_double->read();
+// // //   runtime_double->print();
+// // // 
+// // //   // READ STRINGS FROM FILE ========
+// // //  RunTimeMap<std::string> * runtime_string;  
+// // //   runtime_string = RunTimeMap<std::string>::getInstance("Strings",/*outfolder +*/ "parameters.in");
+// // //   runtime_string->read();
+// // //   runtime_string->print();
+// // //   
+// // //   
+// // //    //  OPEN BIG TABLE ========
+// // //   std::ofstream ofs;
+// // //   ofs.open("./output/BigTable.txt",std::fstream::app);
+// // //   ofs /*<< outfolder << " =============="*/ << std::endl;
+// // //   ofs  << std::left << std::setw(15) << std::setprecision(12) << outfolder << "   " << "E_frac" << "  " << "E_well" << "  "  << "K_frac" << "  " << "K_well" << "  " << "nlevs" << " *** " << "NUM_FLUX"  << "  " << "DEN_AVG_PRESS"  << "  "  << "P.I."  << "  "  <<  std::endl;
+// // //   
+// // //   //go ahead================
+// // //   unsigned short nm,nr;
+// // //   std::cout << "#MULTIGRID levels? (>=1) \n";
+// // //   nm = (int) runtime_double->get("nlevs");
+// // // 
+// // //   std::cout << "#MAX_REFINEMENT levels? (>=0) \n";
+// // //   nr = (int) runtime_double->get("nrefins");
+// // //   int tmp = nm;
+// // //   nm += nr;
+// // //   nr = tmp;
+// // // 
+// // //   cout << "nm  ==== " << nm << " nr ==== " << nr << std::endl;
+// // //   
+// // //   char *infile = new char [50];
+// // //   std::ostringstream meshfile; meshfile << "./input/" << runtime_string->get("mesh_name");
+// // //   sprintf(infile, meshfile.str().c_str() );
+// // // 
+// // //   //Adimensional quantity (Lref,Uref)
+// // //   double Lref = 1.0;
+// // //   double Uref = 1.0;
+// // //   Parameter parameter(Lref,Uref);
+// // // 
+// // //   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
+// // //   Fluid fluid(parameter,1.,1.,"Newtonian");
+// // //   Solid solid(parameter,runtime_double->get("young_well"),0.4,1000.,"Linear_elastic");
+// // // //AAAAAAA: HERE you are setting 1 kg/m^3 for the FLUID DENSITY and 1000 for the SOLID DENSITY!!!
+// // // // In this case we are not actually using those numbers, but PAY ATTENTION!  
+// // //   
+// // //   
+// // // //Steadystate MultiGrid
+// // //   MyMultiGrid  mg(nm,nr,infile,"fifth",Lref);   //this has become the multilevel problem
+// // //   mg.printsol_vtu_binary(outfolder,"biquadratic");
+// // //   // END MESH =================================
+// // // 
+// // // // PHYSICS ===========================
+// // //   mg.AddParameters(runtime_double);
+// // //   mg.Add_Fluid(&fluid);
+// // //   mg.Add_Solid(&solid);
+// // // 
+// // // //Start System Variables;===========================
+// // //   std::vector<std::string> varnames_p(NVAR_P);
+// // //   varnames_p[0] = "p";
+// // //   std::vector<std::string> varnames_d(NVAR_D);
+// // //   varnames_d[0] = "DX";
+// // //   varnames_d[1] = "DY";
+// // //   varnames_d[2] = "DZ";
+// // //   std::vector<std::string> varnames_u(NVAR_VEL);
+// // //   varnames_u[0] = "UX";
+// // //   varnames_u[1] = "UY";
+// // //   varnames_u[2] = "UZ";
+// // //   //all these variables are added to the vector that is "spanned" by INDEX
+// // //   for (int i=0; i<NVAR_P; ++i)     mg.AddSolutionVector(varnames_p[i].c_str(),"biquadratic");
+// // //   for (int i=0; i<NVAR_D; ++i)     mg.AddSolutionVector(varnames_d[i].c_str(),"biquadratic");
+// // //   for (int i=0; i<NVAR_VEL; ++i)   mg.AddSolutionVector(varnames_u[i].c_str(),"biquadratic");
+// // // 
+// // //   mg.Initialize("All");
+// // // 
+// // //   //Set Boundary (update Dirichlet(...) function)
+// // //   for (int i=0; i<NVAR_P; ++i)   mg.GenerateBdc(varnames_p[i].c_str());
+// // //   for (int i=0; i<NVAR_D; ++i)   mg.GenerateBdc(varnames_d[i].c_str());
+// // //   for (int i=0; i<NVAR_VEL; ++i) mg.GenerateBdc(varnames_u[i].c_str());
+// // //       //TODO do i have to generate them also for the velocity? by default they do nothing?
+// // //       //it seems like it was necessary... so the default is not neumann "do nothing"?!
+// // //    
+// // //   //End System Variables; ==============================
+// // // 
+// // //   // START EQUATIONS =================================
+// // // 
+// // //   mg.ClearMGIndex();
+// // //   for (int i=0; i<NVAR_P; ++i)       mg.AddToMGIndex(varnames_p[i].c_str());
+// // //   for (int i=0; i<NVAR_D; ++i)       mg.AddToMGIndex(varnames_d[i].c_str());
+// // //   for (int i=0; i<NVAR_VEL; ++i)     mg.AddToMGIndex(varnames_u[i].c_str());
+// // //   
+// // //   mg.CreateMGStruct();  // create Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
+// // //   mg.BuildSparsityPattern();  //in principle this depends on the OPERATORS!
+// // //   
+// // //  for (unsigned nonlin = 0; nonlin < runtime_double->get("nonlin_iter"); nonlin++) {
+// // //    
+// // //   mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
+// // //   mg.AttachAssembleFunction(AssembleMatrixResP);
+// // //   for (int i=0; i<NVAR_P; ++i)       mg.AddToVankaIndex(varnames_p[i].c_str());
+// // //   mg.SetVankaSchurOptions(false);//(true,true,1);
+// // //   mg.SetSolverFineGrids("GMRES");
+// // //   mg.SetPreconditionerFineGrids("LU");
+// // //   mg.SetTolerances(1.e-12,1.e-20,1.e+50,20);
+// // //   mg.SetDimVankaBlock("All"/*3*/);                //2^lev 1D 4^lev 2D 8^lev 3D
+// // //   mg.FullMultiGrid(7,1,1);
+// // // 
+// // //   
+// // //   mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
+// // //   mg.AttachAssembleFunction(AssembleMatrixResD);
+// // //   mg.AddToVankaIndex("DX");
+// // //   mg.AddToVankaIndex("DY");
+// // //   mg.AddToVankaIndex("DZ");  //remember it must be in MGIndex first //i dont solve 3d comp in 2D
+// // //   mg.SetVankaSchurOptions(false);
+// // //   mg.SetSolverFineGrids("GMRES");
+// // //   mg.SetPreconditionerFineGrids("LU");
+// // //   mg.SetTolerances(1.e-12,1.e-20,1.e+50,20);
+// // //   mg.SetDimVankaBlock("All"/*3*/);                //2^lev 1D 4^lev 2D 8^lev 3D     //No DD:pass "All"
+// // //   mg.FullMultiGrid(7,1,1);
+// // //   
+// // // 
+// // //   mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
+// // //   mg.AttachAssembleFunction(AssembleMatrixResVel);
+// // //   mg.AddToVankaIndex("UX");
+// // //   mg.AddToVankaIndex("UY");
+// // //   mg.AddToVankaIndex("UZ");  //remember it must be in MGIndex first //i dont solve 3d comp in 2D
+// // //   mg.SetVankaSchurOptions(false);
+// // //   //Solver configuration for Temperature problem
+// // //   mg.SetSolverFineGrids("GMRES");
+// // //   mg.SetPreconditionerFineGrids("LU");
+// // //   mg.SetTolerances(1.e-12,1.e-20,1.e+50,20);
+// // //   mg.SetDimVankaBlock("All"/*3*/);                //2^lev 1D 4^lev 2D 8^lev 3D     //No DD:pass "All"
+// // //   mg.FullMultiGrid(7,1,1);
+// // // 
+// // //  
+// // //   double Num = mg.ComputeProductivityIndexNum( (int) runtime_double->get("inner") );  //face 1
+// // //   std::vector<double> integrals(mg.ComputeProductivityIndexDen(2));
+// // // 
+// // //   double Den = (integrals[0]/integrals[1] - runtime_double->get("p_in")  );  
+// // //   
+// // //   std::cout << " The productivity index is " << Num / Den << std::endl;
+// // //   
+// // // //move mesh according to displacement
+// // //   std::vector<std::string> mov_vars(varnames_d);  //copy constructor
+// // //   mg.SetMovingMesh(mov_vars);
+// // //   mg.IncreaseStep(nonlin);
+// // //   mg.printsol_vtu_binary(outfolder,"biquadratic");
+// // // 
+// // // //   if (nonlin == runtime_double.get("nonlin_iter") -1 ) {
+// // //   ofs  << std::left << std::setw(15) << std::setprecision(12) << outfolder << "   " << runtime_double->get("young_frac") << "  " << runtime_double->get("young_well") << "  " << runtime_double->get("kappa_frac") << "  "  << runtime_double->get("kappa_well") << "  "  << runtime_double->get("nlevs") << " *** " << Num << "   " << Den << "  " <<  Num / Den <<  "   " << std::endl;
+// // // //   }
+// // //   
+// // // }
+// // //    
+// // //    ofs << std::endl;
+// // //    
+// // //   delete [] infile;
+// // // 
+// // //   mg.DeleteMGStruct();  // Delete Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
+// // //   // Destroy the last PETSC objects ===================
+// // //   mg.FreeMultigrid();  //Sol
+// // //   ierr = PetscFinalize();  CHKERRQ(ierr);
 
   return 0;
 
@@ -231,7 +231,7 @@ bool CheckRefinement(const double &x, const double &y, const double &z, const in
   return refine;
 }
 
-bool Boundary1D(MultiGrid& mg, const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName,const double time) {
+bool Boundary1D(MultiLevelProblem& mg, const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName,const double time) {
   value=0;
   return 0;
 }
@@ -255,7 +255,7 @@ double Init(const double &x, const double &y, const double &z,const char name[])
 }
 
 /// 1 Dirichlet 0 Neumann - value: any nonhomogeneous BC
-bool BoundaryND(MultiGrid& mg_in, const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName,const double time) {
+bool BoundaryND(MultiLevelProblem& mg_in, const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName,const double time) {
   bool test=1; //Dirichlet
   bool DIR=1;
   bool NEU=0;
@@ -357,7 +357,7 @@ bool BoundaryND(MultiGrid& mg_in, const double &x, const double &y, const double
 }
 
 
-int AssembleMatrixResP(MultiGrid &mg2, unsigned level, const elem_type *type_elem[6][5],
+int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, const elem_type *type_elem[6][5],
                        vector <vector <double> > &vt, const unsigned &gridn) {
 
 // not time dependent
@@ -366,203 +366,203 @@ int AssembleMatrixResP(MultiGrid &mg2, unsigned level, const elem_type *type_ele
   unsigned eqn_idx_current = IDX_P;
 
   
-  LinearSolverM*    lsyspde_lev     = mg.Lin_Solver_[level];
-  LinearSolverM*    lsyspdemesh_lev = mg.Lin_Solver_[level];
-
-  PetscErrorCode ierr;
-  
-//global lin algebra
-  Mat&           myKK      = lsyspde_lev->KK;
-  Vec&           myRES     = lsyspde_lev->RES;
-  vector <int>& myKKIndex  = lsyspde_lev->KKIndex;
-
-//geometry
-  PetscInt node_geom_el[MAX_EL_NODES];
-  double geom_el_coords[SPACEDIM][MAX_EL_NODES];
-  elem*    myel  = lsyspdemesh_lev->el;
-  unsigned nel   = lsyspdemesh_lev->GetElementNumber();
-  unsigned igrid = lsyspdemesh_lev->GetGridNumber();
-
-// variables
-  PetscInt nodeP[MAX_EL_NODES];
-  unsigned indexP    = mg.GetMGIndex("p"); //block //corresponds to position of P in mg (set in main)
-  unsigned indexSolP = mg.GetIndex("p");
-  unsigned order_ind2 = lsyspde_lev->SolType[indexSolP];  //quadratic
-  unsigned end_ind2   = lsyspde_lev->END_IND[order_ind2];
-
-  double B[NVAR_P][NVAR_P][MAX_EL_NODES*MAX_EL_NODES];
-  double F[NVAR_P][MAX_EL_NODES];
-
-
-// FE order
-  double phi2[MAX_EL_NODES],gradphi2[MAX_EL_NODES][SPACEDIM];
-
-
-// quadrature
-  double WeightXJac;
-
-// Physics, and Math (operators)
-  double    _ILambda = .0e-3;
-  double    _IRe     = mg._fluid->get_IReynolds_number();
-  bool _NavierStokes = 1;
-  bool       _newton = 0*_NavierStokes;
-  bool      _penalty = 0;
-
-  int indexSolD[NVAR_D];
-  std::string varnamesD[NVAR_D];
-  varnamesD[0] = "DX";
-  varnamesD[1] = "DY";
-  varnamesD[2] = "DZ";
-
-   for (int i=0; i<NVAR_D; ++i)    indexSolD[i] = mg.GetIndex(varnamesD[i].c_str());  
-//   unsigned varindx=mg.GetIndex("DX");
- 
- //==== Parameters ======
- int moving_dom_p = mg._runtime_double->get("moving_dom_p");  
-
- //the following is a loop over all the system variables, because all of them may be involved
-  
-// vectors for getting dofs   ====================
-  int sol_size = lsyspde_lev->Sol_.size();
-  PetscScalar **vec_sol     = new PetscScalar*[sol_size];
-  vector<PetscVectorM*> petsc_vec_sol;
-  petsc_vec_sol.resize(sol_size);
-
-  for (int k=0; k<sol_size; k++) {
-    petsc_vec_sol[k]  = static_cast<PetscVectorM*>(lsyspde_lev->Sol_[k]);
-    ierr = VecGetArray(petsc_vec_sol[k]->vec(),&vec_sol[k]);    CHKERRQ(ierr);
-  }
-// vectors for getting dofs   ====================
-
-  ierr = MatZeroEntries(myKK);  CHKERRQ(ierr);
-  ierr = VecZeroEntries(myRES);  CHKERRQ(ierr);
-   
-
-  clock_t AssemblyTime=0;
-  clock_t start_time, end_time;
-  start_time=clock();
-
-
-  for (unsigned kel=0;kel<nel;kel++) {
-
-    short unsigned kelt = myel->GetElementType(kel);
-    unsigned       nve2 = myel->GetElementDofNumber(kel,end_ind2);
-    int        myregion = myel->GetElementGroup(kel);
-    
-    double kappa = mg._runtime_double-> get("kappa_well");
-    if ( myregion == (int) mg._runtime_double-> get("frac_reg_idx") ) kappa =  mg._runtime_double-> get("kappa_frac");
-
-    memset(F[indexP],0,nve2*sizeof(double));
-    memset(B[indexP][indexP],0,nve2*nve2*sizeof(double));
-
-// geometry and dof indices
-    for (unsigned i=0;i<nve2;i++) {
-      unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
-      node_geom_el[i]=inode;
-    for (unsigned j=0; j<SPACEDIM; j++)    {  geom_el_coords[j][i] = vt[j][inode] + moving_dom_p*vec_sol[ indexSolD[j] ][inode]; }
-      nodeP[i] = node_geom_el[i] + myKKIndex[indexP];
-    }
-
-
-    if (igrid==gridn || !myel->GetRefinedElementIndex(kel)) {   //
-      
-      for (unsigned ig=0; ig < type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
-        // *** get Jacobian and test function and test function derivatives ***
-       
-        (type_elem[kelt][order_ind2]->*type_elem[kelt][order_ind2]->Jacobian_ptr)(geom_el_coords,ig,WeightXJac,phi2,gradphi2);
-
-        double SolP = 0;
-        double gradSolP[3]={0.,0.,0.};
-        for (unsigned i=0; i<nve2; i++) {
-          unsigned k=mg.GetIndex("p");
-          double soli=vec_sol[k][node_geom_el[i]];
-          SolP += phi2[i]*soli;
-	  for (unsigned j=0; j<SPACEDIM; j++) {  gradSolP[j] += gradphi2[i][j]*soli;   }
-        }
-
-        const double *gradfi=gradphi2[0];
-        const double *fi=phi2;
-        // *** phi_i loop ***
-        for (unsigned i=0; i<nve2; i++,gradfi+=3,fi++) {
-
-          //BEGIN RESIDUALS A block ===========================
-
-            double Lap_rhs =gradphi2[i][0]*gradSolP[0]+gradphi2[i][1]*gradSolP[1]+gradphi2[i][2]*gradSolP[2];
-            // residual equation U
-          F[indexP][i] += WeightXJac*(-0*phi2[i]
-                          -kappa*Lap_rhs
-// 			-_NavierStokes*(SolP*gradSolP[0] + SolV*gradSolP[1] + SolW*gradSolP[2])*phi2[i]
-// 			+SolP*gradphi2[i][0]
-                          );
-
-          //END RESIDUALS A block ===========================
-
-          const double *gradfj=gradphi2[0];
-          const double *fj=phi2;
-          // *** phi_j loop ***
-          for (unsigned j=0; j<nve2; j++,gradfj+=3,fj++) {
-
-            // Laplacian
-            double Lap = ((*(gradfi+0))*(*(gradfj+0))+(*(gradfi+1))*(*(gradfj+1))+(*(gradfi+2))*(*(gradfj+2)));
-            // advection term I
-// 	    double Adv1 = ( SolP*(*(gradfj+0))*(*(fi))+ SolV*(*(gradfj+1))*(*(fi))+ SolW*(*(gradfj+2))*(*(fi)) );
-
-            B[indexP][indexP][i*nve2+j] += WeightXJac*kappa*Lap;
-
-          }   //end phij loop
-        } //end phii loop
-
-
-      }  // end gauss point loop
-    }  // endif single element not refined or fine grid loop
-
-
-    // U-equation
-    ierr = VecSetValues(myRES,nve2,nodeP,F[indexP],ADD_VALUES);    CHKERRQ(ierr);
-    ierr = MatSetValuesBlocked(myKK,nve2,nodeP,nve2,nodeP,B[indexP][indexP],ADD_VALUES);    CHKERRQ(ierr);
-
-  } //end list of elements loop
-
-  //BEGIN MATRIX ASSEMBLY ============
-  ierr = MatAssemblyBegin(myKK,MAT_FINAL_ASSEMBLY);  CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(myKK,MAT_FINAL_ASSEMBLY);  CHKERRQ(ierr);
-  //END MATRIX ASSEMBLY   ============
-
-  //BEGIN RESIDUAL ASSEMBLY ============
-  ierr = VecAssemblyBegin(myRES);  CHKERRQ(ierr);
-  ierr = VecAssemblyEnd(myRES);  CHKERRQ(ierr);
-  //END RESIDUAL ASSEMBLY ============
-
-//  ierr= MatView(myKK, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-
-//   if(igrid==30){
-//     PetscViewer viewer;
-//     ierr=PetscViewerDrawOpen(PETSC_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);CHKERRQ(ierr);
-//     ierr= MatView(myKK,viewer);CHKERRQ(ierr);
-//         ierr= VecView(myRES,viewer);CHKERRQ(ierr);
-//     double ff;
-//     std::cin>>ff;
-    
-//     system("sleep 5");
-    
-//   }
-
-  // *************************************
-  end_time=clock();
-  AssemblyTime+=(end_time-start_time);
-  // ***************** END ASSEMBLY *******************
-
-  // *** Computational info ***
-//  cout<<"Grid="<< lsyspdemesh_lev->GetGridNumber()<<endl;
-//  cout<<"ASSEMBLY + RESIDUAL time="<<static_cast<double>(AssemblyTime)/CLOCKS_PER_SEC<<endl;
-
-  //free memory
-  for (int k=0; k<lsyspde_lev->Sol_.size(); k++) {
-    ierr = VecRestoreArray(petsc_vec_sol[k]->vec(),&vec_sol[k]);
-    CHKERRQ(ierr);
-    delete [] vec_sol[k];
-  }
-  delete [] vec_sol;
+// // //   LinearSolverM*    lsyspde_lev     = mg.Lin_Solver_[level];
+// // //   LinearSolverM*    lsyspdemesh_lev = mg.Lin_Solver_[level];
+// // // 
+// // //   PetscErrorCode ierr;
+// // //   
+// // // //global lin algebra
+// // //   Mat&           myKK      = lsyspde_lev->KK;
+// // //   Vec&           myRES     = lsyspde_lev->RES;
+// // //   vector <int>& myKKIndex  = lsyspde_lev->KKIndex;
+// // // 
+// // // //geometry
+// // //   PetscInt node_geom_el[MAX_EL_NODES];
+// // //   double geom_el_coords[SPACEDIM][MAX_EL_NODES];
+// // //   elem*    myel  = lsyspdemesh_lev->el;
+// // //   unsigned nel   = lsyspdemesh_lev->GetElementNumber();
+// // //   unsigned igrid = lsyspdemesh_lev->GetGridNumber();
+// // // 
+// // // // variables
+// // //   PetscInt nodeP[MAX_EL_NODES];
+// // //   unsigned indexP    = mg.GetMGIndex("p"); //block //corresponds to position of P in mg (set in main)
+// // //   unsigned indexSolP = mg.GetIndex("p");
+// // //   unsigned order_ind2 = lsyspde_lev->SolType[indexSolP];  //quadratic
+// // //   unsigned end_ind2   = lsyspde_lev->END_IND[order_ind2];
+// // // 
+// // //   double B[NVAR_P][NVAR_P][MAX_EL_NODES*MAX_EL_NODES];
+// // //   double F[NVAR_P][MAX_EL_NODES];
+// // // 
+// // // 
+// // // // FE order
+// // //   double phi2[MAX_EL_NODES],gradphi2[MAX_EL_NODES][SPACEDIM];
+// // // 
+// // // 
+// // // // quadrature
+// // //   double WeightXJac;
+// // // 
+// // // // Physics, and Math (operators)
+// // //   double    _ILambda = .0e-3;
+// // //   double    _IRe     = mg._fluid->get_IReynolds_number();
+// // //   bool _NavierStokes = 1;
+// // //   bool       _newton = 0*_NavierStokes;
+// // //   bool      _penalty = 0;
+// // // 
+// // //   int indexSolD[NVAR_D];
+// // //   std::string varnamesD[NVAR_D];
+// // //   varnamesD[0] = "DX";
+// // //   varnamesD[1] = "DY";
+// // //   varnamesD[2] = "DZ";
+// // // 
+// // //    for (int i=0; i<NVAR_D; ++i)    indexSolD[i] = mg.GetIndex(varnamesD[i].c_str());  
+// // // //   unsigned varindx=mg.GetIndex("DX");
+// // //  
+// // //  //==== Parameters ======
+// // //  int moving_dom_p = mg._runtime_double->get("moving_dom_p");  
+// // // 
+// // //  //the following is a loop over all the system variables, because all of them may be involved
+// // //   
+// // // // vectors for getting dofs   ====================
+// // //   int sol_size = lsyspde_lev->Sol_.size();
+// // //   PetscScalar **vec_sol     = new PetscScalar*[sol_size];
+// // //   vector<PetscVectorM*> petsc_vec_sol;
+// // //   petsc_vec_sol.resize(sol_size);
+// // // 
+// // //   for (int k=0; k<sol_size; k++) {
+// // //     petsc_vec_sol[k]  = static_cast<PetscVectorM*>(lsyspde_lev->Sol_[k]);
+// // //     ierr = VecGetArray(petsc_vec_sol[k]->vec(),&vec_sol[k]);    CHKERRQ(ierr);
+// // //   }
+// // // // vectors for getting dofs   ====================
+// // // 
+// // //   ierr = MatZeroEntries(myKK);  CHKERRQ(ierr);
+// // //   ierr = VecZeroEntries(myRES);  CHKERRQ(ierr);
+// // //    
+// // // 
+// // //   clock_t AssemblyTime=0;
+// // //   clock_t start_time, end_time;
+// // //   start_time=clock();
+// // // 
+// // // 
+// // //   for (unsigned kel=0;kel<nel;kel++) {
+// // // 
+// // //     short unsigned kelt = myel->GetElementType(kel);
+// // //     unsigned       nve2 = myel->GetElementDofNumber(kel,end_ind2);
+// // //     int        myregion = myel->GetElementGroup(kel);
+// // //     
+// // //     double kappa = mg._runtime_double-> get("kappa_well");
+// // //     if ( myregion == (int) mg._runtime_double-> get("frac_reg_idx") ) kappa =  mg._runtime_double-> get("kappa_frac");
+// // // 
+// // //     memset(F[indexP],0,nve2*sizeof(double));
+// // //     memset(B[indexP][indexP],0,nve2*nve2*sizeof(double));
+// // // 
+// // // // geometry and dof indices
+// // //     for (unsigned i=0;i<nve2;i++) {
+// // //       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
+// // //       node_geom_el[i]=inode;
+// // //     for (unsigned j=0; j<SPACEDIM; j++)    {  geom_el_coords[j][i] = vt[j][inode] + moving_dom_p*vec_sol[ indexSolD[j] ][inode]; }
+// // //       nodeP[i] = node_geom_el[i] + myKKIndex[indexP];
+// // //     }
+// // // 
+// // // 
+// // //     if (igrid==gridn || !myel->GetRefinedElementIndex(kel)) {   //
+// // //       
+// // //       for (unsigned ig=0; ig < type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
+// // //         // *** get Jacobian and test function and test function derivatives ***
+// // //        
+// // //         (type_elem[kelt][order_ind2]->*type_elem[kelt][order_ind2]->Jacobian_ptr)(geom_el_coords,ig,WeightXJac,phi2,gradphi2);
+// // // 
+// // //         double SolP = 0;
+// // //         double gradSolP[3]={0.,0.,0.};
+// // //         for (unsigned i=0; i<nve2; i++) {
+// // //           unsigned k=mg.GetIndex("p");
+// // //           double soli=vec_sol[k][node_geom_el[i]];
+// // //           SolP += phi2[i]*soli;
+// // // 	  for (unsigned j=0; j<SPACEDIM; j++) {  gradSolP[j] += gradphi2[i][j]*soli;   }
+// // //         }
+// // // 
+// // //         const double *gradfi=gradphi2[0];
+// // //         const double *fi=phi2;
+// // //         // *** phi_i loop ***
+// // //         for (unsigned i=0; i<nve2; i++,gradfi+=3,fi++) {
+// // // 
+// // //           //BEGIN RESIDUALS A block ===========================
+// // // 
+// // //             double Lap_rhs =gradphi2[i][0]*gradSolP[0]+gradphi2[i][1]*gradSolP[1]+gradphi2[i][2]*gradSolP[2];
+// // //             // residual equation U
+// // //           F[indexP][i] += WeightXJac*(-0*phi2[i]
+// // //                           -kappa*Lap_rhs
+// // // // 			-_NavierStokes*(SolP*gradSolP[0] + SolV*gradSolP[1] + SolW*gradSolP[2])*phi2[i]
+// // // // 			+SolP*gradphi2[i][0]
+// // //                           );
+// // // 
+// // //           //END RESIDUALS A block ===========================
+// // // 
+// // //           const double *gradfj=gradphi2[0];
+// // //           const double *fj=phi2;
+// // //           // *** phi_j loop ***
+// // //           for (unsigned j=0; j<nve2; j++,gradfj+=3,fj++) {
+// // // 
+// // //             // Laplacian
+// // //             double Lap = ((*(gradfi+0))*(*(gradfj+0))+(*(gradfi+1))*(*(gradfj+1))+(*(gradfi+2))*(*(gradfj+2)));
+// // //             // advection term I
+// // // // 	    double Adv1 = ( SolP*(*(gradfj+0))*(*(fi))+ SolV*(*(gradfj+1))*(*(fi))+ SolW*(*(gradfj+2))*(*(fi)) );
+// // // 
+// // //             B[indexP][indexP][i*nve2+j] += WeightXJac*kappa*Lap;
+// // // 
+// // //           }   //end phij loop
+// // //         } //end phii loop
+// // // 
+// // // 
+// // //       }  // end gauss point loop
+// // //     }  // endif single element not refined or fine grid loop
+// // // 
+// // // 
+// // //     // U-equation
+// // //     ierr = VecSetValues(myRES,nve2,nodeP,F[indexP],ADD_VALUES);    CHKERRQ(ierr);
+// // //     ierr = MatSetValuesBlocked(myKK,nve2,nodeP,nve2,nodeP,B[indexP][indexP],ADD_VALUES);    CHKERRQ(ierr);
+// // // 
+// // //   } //end list of elements loop
+// // // 
+// // //   //BEGIN MATRIX ASSEMBLY ============
+// // //   ierr = MatAssemblyBegin(myKK,MAT_FINAL_ASSEMBLY);  CHKERRQ(ierr);
+// // //   ierr = MatAssemblyEnd(myKK,MAT_FINAL_ASSEMBLY);  CHKERRQ(ierr);
+// // //   //END MATRIX ASSEMBLY   ============
+// // // 
+// // //   //BEGIN RESIDUAL ASSEMBLY ============
+// // //   ierr = VecAssemblyBegin(myRES);  CHKERRQ(ierr);
+// // //   ierr = VecAssemblyEnd(myRES);  CHKERRQ(ierr);
+// // //   //END RESIDUAL ASSEMBLY ============
+// // // 
+// // // //  ierr= MatView(myKK, PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+// // // 
+// // // //   if(igrid==30){
+// // // //     PetscViewer viewer;
+// // // //     ierr=PetscViewerDrawOpen(PETSC_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);CHKERRQ(ierr);
+// // // //     ierr= MatView(myKK,viewer);CHKERRQ(ierr);
+// // // //         ierr= VecView(myRES,viewer);CHKERRQ(ierr);
+// // // //     double ff;
+// // // //     std::cin>>ff;
+// // //     
+// // // //     system("sleep 5");
+// // //     
+// // // //   }
+// // // 
+// // //   // *************************************
+// // //   end_time=clock();
+// // //   AssemblyTime+=(end_time-start_time);
+// // //   // ***************** END ASSEMBLY *******************
+// // // 
+// // //   // *** Computational info ***
+// // // //  cout<<"Grid="<< lsyspdemesh_lev->GetGridNumber()<<endl;
+// // // //  cout<<"ASSEMBLY + RESIDUAL time="<<static_cast<double>(AssemblyTime)/CLOCKS_PER_SEC<<endl;
+// // // 
+// // //   //free memory
+// // //   for (int k=0; k<lsyspde_lev->Sol_.size(); k++) {
+// // //     ierr = VecRestoreArray(petsc_vec_sol[k]->vec(),&vec_sol[k]);
+// // //     CHKERRQ(ierr);
+// // //     delete [] vec_sol[k];
+// // //   }
+// // //   delete [] vec_sol;
 
   return 1;
 
@@ -586,434 +586,434 @@ int AssembleMatrixResP(MultiGrid &mg2, unsigned level, const elem_type *type_ele
 //Physically speaking, we must take into account the couplings,
 //and they must be somewhat IN ACCORDANCE: the permeabilities must be in agreement with the elastic constants...
 
-int AssembleMatrixResD(MultiGrid &mg2, unsigned level, const elem_type *type_elem[6][5],
+int AssembleMatrixResD(MultiLevelProblem &mg2, unsigned level, const elem_type *type_elem[6][5],
                        vector <vector <double> > &vt, const unsigned &gridn) {
 
 // not time dependent
-  MyMultiGrid& mg = static_cast<MyMultiGrid&>(mg2);
-  
-  unsigned eqn_idx_current = IDX_D;
-
-   unsigned eqn_offset = 0;
-   for (unsigned i=0; i< eqn_idx_current; i++) { eqn_offset += mg._qty_ncomps[i];  }
-    
-  PetscErrorCode ierr;
-
-  LinearSolverM*     lsyspde_lev = mg.Lin_Solver_[level];
-  LinearSolverM* lsyspdemesh_lev = mg.Lin_Solver_[level];
-  
-  Mat&           myKK      = lsyspde_lev->KK;
-  Vec&           myRES     = lsyspde_lev->RES;
-  vector <int>& myKKIndex  = lsyspde_lev->KKIndex;   //offset of the variables in the global matrix and rhs 
-
- 
-// variables  
-  std::string varnamesD[NVAR_D];
-  varnamesD[0] = "DX";
-  varnamesD[1] = "DY";
-  varnamesD[2] = "DZ";
-  
-  unsigned order_ind2 = lsyspde_lev->SolType[mg.GetIndex( varnamesD[0].c_str() )];
-  unsigned end_ind2   = lsyspde_lev->END_IND[order_ind2];
-  
-  PetscInt nodeD[NVAR_D][MAX_EL_NODES];  //node+offset for variables
-  unsigned indexD[NVAR_D];
-  unsigned indexD_LocBlocks[NVAR_D];
-  
-  for (int i=0; i<NVAR_D; ++i) {   
-    indexD[i]           = mg.GetMGIndex(varnamesD[i].c_str());
-    indexD_LocBlocks[i] = indexD[i] - eqn_offset;
-  }
-  double B[NVAR_D][NVAR_D][MAX_EL_NODES*MAX_EL_NODES];
-  double Rhs[NVAR_D][MAX_EL_NODES];
-
-  int indexSolD[NVAR_D];
-   for (int i=0; i<NVAR_D; ++i)    indexSolD[i] = mg.GetIndex(varnamesD[i].c_str());  
-  
-   //Parameters
-   int moving_dom_disp = mg._runtime_double->get("moving_dom_disp");
-   int Lap_flag = mg._runtime_double->get("Lap");
-   int Graddiv_flag = mg._runtime_double->get("Graddiv");
-  
-  // FE
-  double phi[MAX_EL_NODES],gradphi[MAX_EL_NODES][SPACEDIM];
-  
-  // quadrature
-  double WeightXJac,Weight_nojac;
-
-  // Element, geometry
-  elem*           myel     = lsyspdemesh_lev->el;
-  double elem_coords[SPACEDIM][MAX_EL_NODES];
-  PetscInt node_geom_el[MAX_EL_NODES]; 
-
-  // Physics
-  double g[SPACEDIM] = {0.,0.,0.};
-  double dt = 1.; //mg.GetTimeStep();
-  double eps_pen = 1.e40;
-
-  double _rhof = mg._fluid->get_density();
-  double _IRe  = mg._fluid->get_IReynolds_number();
-  double _rhos = mg._solid->get_density();
-  
-  double     _mu_lame = mg._solid->get_lame_shear_modulus();
-  double _lambda_lame = mg._solid->get_lame_lambda();
-  
-  double _mus = _mu_lame/_rhof;
-  double _lambda  = _lambda_lame / _rhof;
-  double _betafsi = _rhos; //_rhos / _rhof;
-  double _betans   = 1.;
-  double _theta_ns = 1.0;
-  double _theta_sm = 1.0; //0.5;
-  double _lambda_map = 0.;
-  int    _solid_model = mg._solid->get_physical_model();
-  bool   _newton=0;
-
-  bool   penalty = lsyspde_lev->GetStabilization();
-
-  double C_mat[3][3][3][3];
-  double Cauchy[3][3];
-  double Cauchy_old[3][3];
-  double Jnp1_hat;
-  double Jn_hat;
-  double I_bleft;
-  double F[3][3];
-  double b_left[3][3];
-  double e[3][3];
-  double e_old[3][3];
-  double tg_stiff_matrix[3][3];
-  const double Id2th[3][3] = {
-    { 1.,0.,0.},
-    { 0.,1.,0.},
-    { 0.,0.,1.}
-  };
-
-  //initialization: Saint-Venaint Kirchoff model
-  for (int I=0; I<3; ++I) {
-    for (int J=0; J<3; ++J) {
-      for (int K=0; K<3; ++K) {
-        for (int L=0; L<3; ++L) {
-// 	 C_mat[I][J][K][L] = 2.*_mus*Id2th[I][K]*Id2th[J][L]; //incompressible
-          C_mat[I][J][K][L] = _lambda*Id2th[I][J]*Id2th[K][L] + 2.*_mus*Id2th[I][K]*Id2th[J][L]; //compressible
-// 	 cout << C_mat[I][J][K][L] << endl;
-        }
-      }
-    }
-  }
-
-  
-// take the dof vector ============================  
-  int sol_size = lsyspde_lev->Sol_.size(); //number of variables in sol
-  PetscScalar **vec_sol     = new PetscScalar*[sol_size];
-  vector<PetscVectorM*> petsc_vec_sol;
-  petsc_vec_sol.resize(sol_size);
-
-  for (int k=0; k< sol_size; k++) {
-    petsc_vec_sol[k]  = static_cast<PetscVectorM*>(lsyspde_lev->Sol_[k]);
-    ierr = VecGetArray(petsc_vec_sol[k]->vec(),&vec_sol[k]);    CHKERRQ(ierr);  //here the input is the first, the output to be used later is the last
-  }
-// end take the dof vector ============================  
-
-  clock_t AssemblyTime=0;
-  clock_t start_time, end_time;
-
-  unsigned nel   = lsyspdemesh_lev->GetElementNumber();
-  unsigned igrid = lsyspdemesh_lev->GetGridNumber();
-
-  start_time=clock();
-  
-  ierr = MatZeroEntries(myKK);  CHKERRQ(ierr);
-  ierr = VecZeroEntries(myRES);  CHKERRQ(ierr);
-
-  
-//         PetscViewer viewer;
-//         ierr=PetscViewerDrawOpen(PETSC_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);CHKERRQ(ierr);
-//         ierr= MatView(myKK,viewer);CHKERRQ(ierr);
-// //         ierr= VecView(myRES,viewer);CHKERRQ(ierr);
-//         double ff;
-//         std::cin>>ff;
-
- 
-  for (unsigned kel=0;kel<nel;kel++) {
-
-    short unsigned kelt = myel->GetElementType(kel);
-    unsigned nve        = myel->GetElementDofNumber(kel,end_ind2);
-    int myregion        = myel->GetElementGroup(kel);  //choose the material
-
-// SECOND SOLID =======
-    //i could instantiate another solid here, but then i should change the _mus and _lambda in the equation...i'll do it here
-        double YoungFrac = mg._runtime_double->get("young_frac");
-	double poisson = mg._solid->get_poisson_coeff();
-   if (myregion== (int) mg._runtime_double-> get("frac_reg_idx") ) {
-  _lambda_lame = (YoungFrac*poisson)/((1.+poisson)*(1.-2.*poisson));
-  _mu_lame     = YoungFrac/(2.*(1.+poisson));
-  _mus         = _mu_lame/_rhof;
-  _lambda      = _lambda_lame / _rhof;  //the nondimensional ones
-   }
-// END SECOND SOLID =======
-    
-    for (unsigned i=0; i<NVAR_D;i++) {
-      memset(Rhs[indexD_LocBlocks[i]],0,nve*sizeof(double));
-      for (unsigned j=0; j<NVAR_D; j++) {
-         memset(B[indexD_LocBlocks[i]][indexD_LocBlocks[j]],0,nve*nve*sizeof(double));
-      }
-    }
-
-    for (unsigned i=0;i<nve;i++) {
-      unsigned inode = myel->GetElementVertexIndex(kel,i)-1u;
-      for (unsigned j=0; j<SPACEDIM; j++)    elem_coords[j][i] = vt[j][inode] + moving_dom_disp*vec_sol[ indexSolD[j] ][inode];
-      node_geom_el[i] = inode;
-      for (unsigned j=0; j<NVAR_D; j++)       nodeD[ indexD_LocBlocks[j] ][i] = node_geom_el[i] + myKKIndex[indexD[j]];   //global
-    }
-
-
-    if (igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
- 
-      for (unsigned igauss=0;igauss < type_elem[kelt][order_ind2]->GetGaussPointNumber(); igauss++) {
-
-        (type_elem[kelt][order_ind2]->*type_elem[kelt][order_ind2]->Jacobian_ptr)(elem_coords,igauss,WeightXJac,phi,gradphi);         // *** get Jacobian and test function and test function derivatives ***
-
-	
-        double SolU[NVAR_VEL]={0.,0.,0.};
-        for (unsigned i=0; i<nve; i++) {
-          unsigned  k = mg.GetIndex("p");
-          double soli = vec_sol[k][node_geom_el[i]];
-          for (unsigned j=0; j<SPACEDIM; j++)  SolU[j] += - gradphi[i][j]*soli;  // drag term (- alpha*1/alpha grad P)
-         }
-         
-        double SolD[NVAR_D]={0.,0.,0.};
-        double gradSolD[NVAR_D][SPACEDIM] = {{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
-
-	for (unsigned i=0; i<nve; i++) {
-             for (unsigned d=0; d<NVAR_D; d++) {
-	       unsigned k = mg.GetIndex( varnamesD[d].c_str() );
-	       
-          double soli = vec_sol[k][node_geom_el[i]];
-          SolD[d]+=phi[i]*soli;
-	  for (unsigned j=0; j<SPACEDIM; j++)  gradSolD[d][j] += gradphi[i][j]*soli;
-
-	    }
-	}
-
-
-        //--------------------------------------------------------------------
-        if (_solid_model==0) {
-
-          //computation of the stress tensor
-          e[0][0] = gradSolD[0][0];
-          e[0][1] = 0.5*(gradSolD[0][1] + gradSolD[1][0]);
-          e[0][2] = 0.;
-          e[0][2] = 0.*0.5*(gradSolD[0][2] + gradSolD[2][0]);
-
-          e[1][0] = 0.5*(gradSolD[1][0] + gradSolD[0][1]);
-          e[1][1] = gradSolD[1][1];
-          e[1][2] = 0.;
-          e[1][2] = 0.*0.5*(gradSolD[1][2] + gradSolD[2][1]);
-
-          e[2][0] = 0.*0.5*(gradSolD[0][2] + gradSolD[2][0]);
-          e[2][1] = 0.*0.5*(gradSolD[1][2] + gradSolD[2][1]);
-          e[2][2] = 0.*gradSolD[2][2];
-
-
-          // Cauchy stress tensor
-          for (int irow=0; irow<3; ++irow) {
-            for (int jcol=0; jcol<3; ++jcol) {
-              //compressible
-// 	   Cauchy[irow][jcol] = _lambda*I_e*Id2th[irow][jcol] + 2*_mus*e[irow][jcol];
-              //incompressible
-              Cauchy[irow][jcol] = 2*_mus*e[irow][jcol];
-            }
-          }
-
-        }  //end solid model 0
-
-        else if (_solid_model==1) {
-
-          //deformation gradient
-          F[0][0] = 1. + gradSolD[0][0];
-          F[0][1] = gradSolD[0][1];
-          F[0][2] = gradSolD[0][2];
-
-          F[1][0] = gradSolD[1][0];
-          F[1][1] = 1. + gradSolD[1][1];
-          F[1][2] = gradSolD[1][2];
-
-          F[2][0] = gradSolD[2][0];
-          F[2][1] = gradSolD[2][1];
-          F[2][2] = 1. + gradSolD[2][2];
-
-          Jnp1_hat =     F[0][0]*F[1][1]*F[2][2] + F[0][1]*F[1][2]*F[2][0] + F[0][2]*F[1][0]*F[2][1]
-                       - F[2][0]*F[1][1]*F[0][2] - F[2][1]*F[1][2]*F[0][0] - F[2][2]*F[1][0]*F[0][1];
-
-          // computation of the the three deformation tensor b
-          for (int I=0; I<3; ++I) {
-            for (int J=0; J<3; ++J) {
-              b_left[I][J]=0.;
-              for (int K=0; K<3; ++K) {
-                //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
-                b_left[I][J] += F[I][K]*F[J][K];
-              }
-//         Cauchy compressible
-              Cauchy[I][J] = (_mus/Jnp1_hat)*(b_left[I][J] - Id2th[I][J])
-                             + (_lambda/Jnp1_hat)*log(Jnp1_hat)*Id2th[I][J];
-//         Cauchy incompressible
-//            Cauchy[I][J] = (_mus/Jnp1_hat)*(b_left[I][J] - Id2th[I][J]);
-            }
-          }
-
-          I_bleft = b_left[0][0] + b_left[1][1] + b_left[2][2];
-
-          for (int ii=0; ii<3; ++ii) {
-            for (int jj=0; jj<3; ++jj) {
-              for (int kk=0; kk<3; ++kk) {
-                for (int ll=0; ll<3; ++ll) {
-                  C_mat[ii][jj][kk][ll] = (_lambda/Jnp1_hat)*Id2th[ii][jj]*Id2th[kk][ll]
-                                          + 2.*((_mus - _lambda*log(Jnp1_hat))/Jnp1_hat)*Id2th[ii][kk]*Id2th[jj][ll];
-
-//                      C_mat[ii][jj][kk][ll] = 2.*_mus*pow(Jnp1_hat,-1.6666666666666)*(
-//  	                        0.333333333333*I_bleft*Id2th[ii][kk]*Id2th[jj][ll]              //1/3*I_c*i
-// // 	                        +0.111111111111*I_C*Id2th[i][j]*Id2th[k][l]             //1/9*I_b*IxI
-// // 				-0.333333333333*b_left[i][j]*Id2th[k][l]                //-1/3*b*I
-// // 				-0.333333333333*Id2th[i][j]*b_left[k][l]                //-1/3*b*I
-// 				)
-//  	                     -SolP*(Id2th[ii][jj]*Id2th[kk][ll]-2.*Id2th[ii][kk]*Id2th[jj][ll] );  // -p(IxI-2i)
-
-                }
-              }
-            }
-          }
-
-          //Old deformation gradient
-//          F[0][0] = 1. + gradSolOldhatDX[0];
-
-
-        }  //end solid model 1
-        //----------------------------------------------------------------------------------------------------------------------------
-
-        /////////////
-
-
-        {
-          const double *gradfi=gradphi[0];
-          const double *fi=phi;
-
-          /// *** phi_i loop ***
-          for (unsigned i=0; i<nve; i++,gradfi+=3,fi++) {
-
-
-            //BEGIN RESIDUALS A + Bt block ==========================
-
-              for (int r=0; r<NVAR_D; ++r) {
-
-		double Div_d = 0.;
-		             for (int j=0; j<3; ++j) { Div_d += gradSolD[ j ][ j ]  ;}
-            Rhs[ indexD_LocBlocks[r] ][i] += 
-                                     WeightXJac*(
-				       +        SolU[ indexD_LocBlocks[r] ]*phi[i] /*DRAG TERM*/ 
-				       +  _betafsi*g[ indexD_LocBlocks[r] ]*phi[i] 
-                                  - Lap_flag*_mus * ( gradSolD[indexD_LocBlocks[r]][0]*gradphi[i][0] + gradSolD[indexD_LocBlocks[r]][1]*gradphi[i][1] + gradSolD[indexD_LocBlocks[r]][2]*gradphi[i][2] )  //laplace
-                                   - Graddiv_flag*(_mus + _lambda)*( Div_d )*gradphi[i][indexD_LocBlocks[r]]
-                                   + 0.*(-_theta_sm*dt*(gradphi[i][0]*Cauchy[r][0] + gradphi[i][1]*Cauchy[r][1] + gradphi[i][2]*Cauchy[r][2]) )
-                                 );
-// 		    -(1-_theta_sm)*dt*(gradphi_old[i][0]*Cauchy_old[0][0] + gradphi_old[i][1]*Cauchy_old[0][1] + gradphi_old[i][2]*Cauchy_old[0][2])*Weight_old
-// 	            -phi[i]*_betafsi*(SolU - SolOldU)*Weight
-// 		    +dt*SolP*gradphi[i][0]*Weight
-// 		    +(1-_theta_sm)*dt*SolOldP*gradphi_old[i][0]*Weight_old
-			 }
-            //-------------------------------------------------------------------------------------------------------------------------------
-
-
-            //END RESIDUALS A + Bt block ===========================
-
-            const double *gradfj=gradphi[0];
-            const double *fj=phi;
-            // *** phi_j loop ***
-            for (unsigned j=0; j<nve; j++,gradfj+=3,fj++) {
-
-              //Laplacian
-              double Lap = ((*(gradfi+0))*(*(gradfj+0))+(*(gradfi+1))*(*(gradfj+1))+(*(gradfi+2))*(*(gradfj+2)));
-
-              //now only 2D
-              for (int icount=0; icount<2; ++icount) {
-                for (int jcount=0; jcount<2; ++jcount) {
-                  tg_stiff_matrix[icount][jcount] = 0.;
-                  for (int kcount=0; kcount<2; ++kcount) {
-                    for (int lcount=0; lcount<2; ++lcount) {
-                      tg_stiff_matrix[icount][jcount] += (*(gradfi+kcount))*0.25*(
-                                                           C_mat[icount][kcount][jcount][lcount]+C_mat[icount][kcount][lcount][jcount]
-                                                           +C_mat[kcount][icount][jcount][lcount]+C_mat[kcount][icount][lcount][jcount]
-                                                         )*(*(gradfj+lcount));
-                    }
-                  }
-                }
-              }
-
-              /// Stiffness operator -- Elasticity equation (Linear or not)
-             for (int r=0; r<2; ++r) {
-                for (int c=0; c<2; ++c) {
-		  if (c==r){
-              B[ indexD_LocBlocks[r] ][ indexD_LocBlocks[c] ][i*nve+j] += WeightXJac*(
-		                                                                     + Lap_flag*_mus*Lap                                  //_theta_sm*dt*tg_stiff_matrix[r][c]*Weight;
-	                                                                              + Graddiv_flag*(_mus + _lambda)*gradphi[i][r]*gradphi[j][c]  //so check that it is ADDING to the LAPLACIAN
-										     );                          
-		  }
-		    
-		  }
-	     }
-
-              B[ indexD_LocBlocks[2] ][ indexD_LocBlocks[2] ][i*nve+j] += WeightXJac*(
-		                                                                  Lap_flag*_mus*Lap
-                                                                            + Graddiv_flag*(_mus + _lambda)*gradphi[i][2]*gradphi[j][2]
-										     );
-
-            }
-          }
-        }
-        ////////////
-
-      }
-    }
-
-    for (unsigned i=0;i<NVAR_D;i++) {
-      ierr = VecSetValues(myRES,nve,nodeD[ indexD_LocBlocks[i] ],Rhs[ indexD_LocBlocks[i] ],ADD_VALUES);      CHKERRQ(ierr);
-      for (unsigned j=0;j<NVAR_D;j++) {
-        ierr = MatSetValuesBlocked(myKK,nve,nodeD[ indexD_LocBlocks[i] ],nve,nodeD[ indexD_LocBlocks[j] ],B[ indexD_LocBlocks[i] ][ indexD_LocBlocks[j] ],ADD_VALUES);        CHKERRQ(ierr);
-      }
-    }
-
-   } //end list of elements loop
-
-//----------------------------------------------------------------------
-
-  //BEGIN MATRIX ASSEMBLY ==========
-  ierr = MatAssemblyBegin(myKK,MAT_FINAL_ASSEMBLY);  CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(myKK,MAT_FINAL_ASSEMBLY);  CHKERRQ(ierr);
-  //END MATRIX ASSEMBLY ============
-
-  //BEGIN RESIDUAL ASSEMBLY ==========
-  ierr = VecAssemblyBegin(myRES);  CHKERRQ(ierr);
-  ierr = VecAssemblyEnd(myRES);  CHKERRQ(ierr);
-  //END RESIDUAL ASSEMBLY ============
-  
-  
-//         PetscViewer viewer;
-//         ierr=PetscViewerDrawOpen(PETSC_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);CHKERRQ(ierr);
-//         ierr= MatView(myKK,viewer);CHKERRQ(ierr);
-// //         ierr= VecView(myRES,viewer);CHKERRQ(ierr);
-//         double ff;
-//         std::cin>>ff;
-
-
-  //free memory
-  for (int k=0; k<lsyspde_lev->Sol_.size(); k++) {
-    ierr = VecRestoreArray(petsc_vec_sol[k]->vec(),&vec_sol[k]);    CHKERRQ(ierr);
-    delete [] vec_sol[k];
-  }
-  delete [] vec_sol;
-
-  // *************************************
-  end_time=clock();
-  AssemblyTime+=(end_time-start_time);
-  // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
+// // //   MyMultiGrid& mg = static_cast<MyMultiGrid&>(mg2);
+// // //   
+// // //   unsigned eqn_idx_current = IDX_D;
+// // // 
+// // //    unsigned eqn_offset = 0;
+// // //    for (unsigned i=0; i< eqn_idx_current; i++) { eqn_offset += mg._qty_ncomps[i];  }
+// // //     
+// // //   PetscErrorCode ierr;
+// // // 
+// // //   LinearSolverM*     lsyspde_lev = mg.Lin_Solver_[level];
+// // //   LinearSolverM* lsyspdemesh_lev = mg.Lin_Solver_[level];
+// // //   
+// // //   Mat&           myKK      = lsyspde_lev->KK;
+// // //   Vec&           myRES     = lsyspde_lev->RES;
+// // //   vector <int>& myKKIndex  = lsyspde_lev->KKIndex;   //offset of the variables in the global matrix and rhs 
+// // // 
+// // //  
+// // // // variables  
+// // //   std::string varnamesD[NVAR_D];
+// // //   varnamesD[0] = "DX";
+// // //   varnamesD[1] = "DY";
+// // //   varnamesD[2] = "DZ";
+// // //   
+// // //   unsigned order_ind2 = lsyspde_lev->SolType[mg.GetIndex( varnamesD[0].c_str() )];
+// // //   unsigned end_ind2   = lsyspde_lev->END_IND[order_ind2];
+// // //   
+// // //   PetscInt nodeD[NVAR_D][MAX_EL_NODES];  //node+offset for variables
+// // //   unsigned indexD[NVAR_D];
+// // //   unsigned indexD_LocBlocks[NVAR_D];
+// // //   
+// // //   for (int i=0; i<NVAR_D; ++i) {   
+// // //     indexD[i]           = mg.GetMGIndex(varnamesD[i].c_str());
+// // //     indexD_LocBlocks[i] = indexD[i] - eqn_offset;
+// // //   }
+// // //   double B[NVAR_D][NVAR_D][MAX_EL_NODES*MAX_EL_NODES];
+// // //   double Rhs[NVAR_D][MAX_EL_NODES];
+// // // 
+// // //   int indexSolD[NVAR_D];
+// // //    for (int i=0; i<NVAR_D; ++i)    indexSolD[i] = mg.GetIndex(varnamesD[i].c_str());  
+// // //   
+// // //    //Parameters
+// // //    int moving_dom_disp = mg._runtime_double->get("moving_dom_disp");
+// // //    int Lap_flag = mg._runtime_double->get("Lap");
+// // //    int Graddiv_flag = mg._runtime_double->get("Graddiv");
+// // //   
+// // //   // FE
+// // //   double phi[MAX_EL_NODES],gradphi[MAX_EL_NODES][SPACEDIM];
+// // //   
+// // //   // quadrature
+// // //   double WeightXJac,Weight_nojac;
+// // // 
+// // //   // Element, geometry
+// // //   elem*           myel     = lsyspdemesh_lev->el;
+// // //   double elem_coords[SPACEDIM][MAX_EL_NODES];
+// // //   PetscInt node_geom_el[MAX_EL_NODES]; 
+// // // 
+// // //   // Physics
+// // //   double g[SPACEDIM] = {0.,0.,0.};
+// // //   double dt = 1.; //mg.GetTimeStep();
+// // //   double eps_pen = 1.e40;
+// // // 
+// // //   double _rhof = mg._fluid->get_density();
+// // //   double _IRe  = mg._fluid->get_IReynolds_number();
+// // //   double _rhos = mg._solid->get_density();
+// // //   
+// // //   double     _mu_lame = mg._solid->get_lame_shear_modulus();
+// // //   double _lambda_lame = mg._solid->get_lame_lambda();
+// // //   
+// // //   double _mus = _mu_lame/_rhof;
+// // //   double _lambda  = _lambda_lame / _rhof;
+// // //   double _betafsi = _rhos; //_rhos / _rhof;
+// // //   double _betans   = 1.;
+// // //   double _theta_ns = 1.0;
+// // //   double _theta_sm = 1.0; //0.5;
+// // //   double _lambda_map = 0.;
+// // //   int    _solid_model = mg._solid->get_physical_model();
+// // //   bool   _newton=0;
+// // // 
+// // //   bool   penalty = lsyspde_lev->GetStabilization();
+// // // 
+// // //   double C_mat[3][3][3][3];
+// // //   double Cauchy[3][3];
+// // //   double Cauchy_old[3][3];
+// // //   double Jnp1_hat;
+// // //   double Jn_hat;
+// // //   double I_bleft;
+// // //   double F[3][3];
+// // //   double b_left[3][3];
+// // //   double e[3][3];
+// // //   double e_old[3][3];
+// // //   double tg_stiff_matrix[3][3];
+// // //   const double Id2th[3][3] = {
+// // //     { 1.,0.,0.},
+// // //     { 0.,1.,0.},
+// // //     { 0.,0.,1.}
+// // //   };
+// // // 
+// // //   //initialization: Saint-Venaint Kirchoff model
+// // //   for (int I=0; I<3; ++I) {
+// // //     for (int J=0; J<3; ++J) {
+// // //       for (int K=0; K<3; ++K) {
+// // //         for (int L=0; L<3; ++L) {
+// // // // 	 C_mat[I][J][K][L] = 2.*_mus*Id2th[I][K]*Id2th[J][L]; //incompressible
+// // //           C_mat[I][J][K][L] = _lambda*Id2th[I][J]*Id2th[K][L] + 2.*_mus*Id2th[I][K]*Id2th[J][L]; //compressible
+// // // // 	 cout << C_mat[I][J][K][L] << endl;
+// // //         }
+// // //       }
+// // //     }
+// // //   }
+// // // 
+// // //   
+// // // // take the dof vector ============================  
+// // //   int sol_size = lsyspde_lev->Sol_.size(); //number of variables in sol
+// // //   PetscScalar **vec_sol     = new PetscScalar*[sol_size];
+// // //   vector<PetscVectorM*> petsc_vec_sol;
+// // //   petsc_vec_sol.resize(sol_size);
+// // // 
+// // //   for (int k=0; k< sol_size; k++) {
+// // //     petsc_vec_sol[k]  = static_cast<PetscVectorM*>(lsyspde_lev->Sol_[k]);
+// // //     ierr = VecGetArray(petsc_vec_sol[k]->vec(),&vec_sol[k]);    CHKERRQ(ierr);  //here the input is the first, the output to be used later is the last
+// // //   }
+// // // // end take the dof vector ============================  
+// // // 
+// // //   clock_t AssemblyTime=0;
+// // //   clock_t start_time, end_time;
+// // // 
+// // //   unsigned nel   = lsyspdemesh_lev->GetElementNumber();
+// // //   unsigned igrid = lsyspdemesh_lev->GetGridNumber();
+// // // 
+// // //   start_time=clock();
+// // //   
+// // //   ierr = MatZeroEntries(myKK);  CHKERRQ(ierr);
+// // //   ierr = VecZeroEntries(myRES);  CHKERRQ(ierr);
+// // // 
+// // //   
+// // // //         PetscViewer viewer;
+// // // //         ierr=PetscViewerDrawOpen(PETSC_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);CHKERRQ(ierr);
+// // // //         ierr= MatView(myKK,viewer);CHKERRQ(ierr);
+// // // // //         ierr= VecView(myRES,viewer);CHKERRQ(ierr);
+// // // //         double ff;
+// // // //         std::cin>>ff;
+// // // 
+// // //  
+// // //   for (unsigned kel=0;kel<nel;kel++) {
+// // // 
+// // //     short unsigned kelt = myel->GetElementType(kel);
+// // //     unsigned nve        = myel->GetElementDofNumber(kel,end_ind2);
+// // //     int myregion        = myel->GetElementGroup(kel);  //choose the material
+// // // 
+// // // // SECOND SOLID =======
+// // //     //i could instantiate another solid here, but then i should change the _mus and _lambda in the equation...i'll do it here
+// // //         double YoungFrac = mg._runtime_double->get("young_frac");
+// // // 	double poisson = mg._solid->get_poisson_coeff();
+// // //    if (myregion== (int) mg._runtime_double-> get("frac_reg_idx") ) {
+// // //   _lambda_lame = (YoungFrac*poisson)/((1.+poisson)*(1.-2.*poisson));
+// // //   _mu_lame     = YoungFrac/(2.*(1.+poisson));
+// // //   _mus         = _mu_lame/_rhof;
+// // //   _lambda      = _lambda_lame / _rhof;  //the nondimensional ones
+// // //    }
+// // // // END SECOND SOLID =======
+// // //     
+// // //     for (unsigned i=0; i<NVAR_D;i++) {
+// // //       memset(Rhs[indexD_LocBlocks[i]],0,nve*sizeof(double));
+// // //       for (unsigned j=0; j<NVAR_D; j++) {
+// // //          memset(B[indexD_LocBlocks[i]][indexD_LocBlocks[j]],0,nve*nve*sizeof(double));
+// // //       }
+// // //     }
+// // // 
+// // //     for (unsigned i=0;i<nve;i++) {
+// // //       unsigned inode = myel->GetElementVertexIndex(kel,i)-1u;
+// // //       for (unsigned j=0; j<SPACEDIM; j++)    elem_coords[j][i] = vt[j][inode] + moving_dom_disp*vec_sol[ indexSolD[j] ][inode];
+// // //       node_geom_el[i] = inode;
+// // //       for (unsigned j=0; j<NVAR_D; j++)       nodeD[ indexD_LocBlocks[j] ][i] = node_geom_el[i] + myKKIndex[indexD[j]];   //global
+// // //     }
+// // // 
+// // // 
+// // //     if (igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
+// // //  
+// // //       for (unsigned igauss=0;igauss < type_elem[kelt][order_ind2]->GetGaussPointNumber(); igauss++) {
+// // // 
+// // //         (type_elem[kelt][order_ind2]->*type_elem[kelt][order_ind2]->Jacobian_ptr)(elem_coords,igauss,WeightXJac,phi,gradphi);         // *** get Jacobian and test function and test function derivatives ***
+// // // 
+// // // 	
+// // //         double SolU[NVAR_VEL]={0.,0.,0.};
+// // //         for (unsigned i=0; i<nve; i++) {
+// // //           unsigned  k = mg.GetIndex("p");
+// // //           double soli = vec_sol[k][node_geom_el[i]];
+// // //           for (unsigned j=0; j<SPACEDIM; j++)  SolU[j] += - gradphi[i][j]*soli;  // drag term (- alpha*1/alpha grad P)
+// // //          }
+// // //          
+// // //         double SolD[NVAR_D]={0.,0.,0.};
+// // //         double gradSolD[NVAR_D][SPACEDIM] = {{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
+// // // 
+// // // 	for (unsigned i=0; i<nve; i++) {
+// // //              for (unsigned d=0; d<NVAR_D; d++) {
+// // // 	       unsigned k = mg.GetIndex( varnamesD[d].c_str() );
+// // // 	       
+// // //           double soli = vec_sol[k][node_geom_el[i]];
+// // //           SolD[d]+=phi[i]*soli;
+// // // 	  for (unsigned j=0; j<SPACEDIM; j++)  gradSolD[d][j] += gradphi[i][j]*soli;
+// // // 
+// // // 	    }
+// // // 	}
+// // // 
+// // // 
+// // //         //--------------------------------------------------------------------
+// // //         if (_solid_model==0) {
+// // // 
+// // //           //computation of the stress tensor
+// // //           e[0][0] = gradSolD[0][0];
+// // //           e[0][1] = 0.5*(gradSolD[0][1] + gradSolD[1][0]);
+// // //           e[0][2] = 0.;
+// // //           e[0][2] = 0.*0.5*(gradSolD[0][2] + gradSolD[2][0]);
+// // // 
+// // //           e[1][0] = 0.5*(gradSolD[1][0] + gradSolD[0][1]);
+// // //           e[1][1] = gradSolD[1][1];
+// // //           e[1][2] = 0.;
+// // //           e[1][2] = 0.*0.5*(gradSolD[1][2] + gradSolD[2][1]);
+// // // 
+// // //           e[2][0] = 0.*0.5*(gradSolD[0][2] + gradSolD[2][0]);
+// // //           e[2][1] = 0.*0.5*(gradSolD[1][2] + gradSolD[2][1]);
+// // //           e[2][2] = 0.*gradSolD[2][2];
+// // // 
+// // // 
+// // //           // Cauchy stress tensor
+// // //           for (int irow=0; irow<3; ++irow) {
+// // //             for (int jcol=0; jcol<3; ++jcol) {
+// // //               //compressible
+// // // // 	   Cauchy[irow][jcol] = _lambda*I_e*Id2th[irow][jcol] + 2*_mus*e[irow][jcol];
+// // //               //incompressible
+// // //               Cauchy[irow][jcol] = 2*_mus*e[irow][jcol];
+// // //             }
+// // //           }
+// // // 
+// // //         }  //end solid model 0
+// // // 
+// // //         else if (_solid_model==1) {
+// // // 
+// // //           //deformation gradient
+// // //           F[0][0] = 1. + gradSolD[0][0];
+// // //           F[0][1] = gradSolD[0][1];
+// // //           F[0][2] = gradSolD[0][2];
+// // // 
+// // //           F[1][0] = gradSolD[1][0];
+// // //           F[1][1] = 1. + gradSolD[1][1];
+// // //           F[1][2] = gradSolD[1][2];
+// // // 
+// // //           F[2][0] = gradSolD[2][0];
+// // //           F[2][1] = gradSolD[2][1];
+// // //           F[2][2] = 1. + gradSolD[2][2];
+// // // 
+// // //           Jnp1_hat =     F[0][0]*F[1][1]*F[2][2] + F[0][1]*F[1][2]*F[2][0] + F[0][2]*F[1][0]*F[2][1]
+// // //                        - F[2][0]*F[1][1]*F[0][2] - F[2][1]*F[1][2]*F[0][0] - F[2][2]*F[1][0]*F[0][1];
+// // // 
+// // //           // computation of the the three deformation tensor b
+// // //           for (int I=0; I<3; ++I) {
+// // //             for (int J=0; J<3; ++J) {
+// // //               b_left[I][J]=0.;
+// // //               for (int K=0; K<3; ++K) {
+// // //                 //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
+// // //                 b_left[I][J] += F[I][K]*F[J][K];
+// // //               }
+// // // //         Cauchy compressible
+// // //               Cauchy[I][J] = (_mus/Jnp1_hat)*(b_left[I][J] - Id2th[I][J])
+// // //                              + (_lambda/Jnp1_hat)*log(Jnp1_hat)*Id2th[I][J];
+// // // //         Cauchy incompressible
+// // // //            Cauchy[I][J] = (_mus/Jnp1_hat)*(b_left[I][J] - Id2th[I][J]);
+// // //             }
+// // //           }
+// // // 
+// // //           I_bleft = b_left[0][0] + b_left[1][1] + b_left[2][2];
+// // // 
+// // //           for (int ii=0; ii<3; ++ii) {
+// // //             for (int jj=0; jj<3; ++jj) {
+// // //               for (int kk=0; kk<3; ++kk) {
+// // //                 for (int ll=0; ll<3; ++ll) {
+// // //                   C_mat[ii][jj][kk][ll] = (_lambda/Jnp1_hat)*Id2th[ii][jj]*Id2th[kk][ll]
+// // //                                           + 2.*((_mus - _lambda*log(Jnp1_hat))/Jnp1_hat)*Id2th[ii][kk]*Id2th[jj][ll];
+// // // 
+// // // //                      C_mat[ii][jj][kk][ll] = 2.*_mus*pow(Jnp1_hat,-1.6666666666666)*(
+// // // //  	                        0.333333333333*I_bleft*Id2th[ii][kk]*Id2th[jj][ll]              //1/3*I_c*i
+// // // // // 	                        +0.111111111111*I_C*Id2th[i][j]*Id2th[k][l]             //1/9*I_b*IxI
+// // // // // 				-0.333333333333*b_left[i][j]*Id2th[k][l]                //-1/3*b*I
+// // // // // 				-0.333333333333*Id2th[i][j]*b_left[k][l]                //-1/3*b*I
+// // // // 				)
+// // // //  	                     -SolP*(Id2th[ii][jj]*Id2th[kk][ll]-2.*Id2th[ii][kk]*Id2th[jj][ll] );  // -p(IxI-2i)
+// // // 
+// // //                 }
+// // //               }
+// // //             }
+// // //           }
+// // // 
+// // //           //Old deformation gradient
+// // // //          F[0][0] = 1. + gradSolOldhatDX[0];
+// // // 
+// // // 
+// // //         }  //end solid model 1
+// // //         //----------------------------------------------------------------------------------------------------------------------------
+// // // 
+// // //         /////////////
+// // // 
+// // // 
+// // //         {
+// // //           const double *gradfi=gradphi[0];
+// // //           const double *fi=phi;
+// // // 
+// // //           /// *** phi_i loop ***
+// // //           for (unsigned i=0; i<nve; i++,gradfi+=3,fi++) {
+// // // 
+// // // 
+// // //             //BEGIN RESIDUALS A + Bt block ==========================
+// // // 
+// // //               for (int r=0; r<NVAR_D; ++r) {
+// // // 
+// // // 		double Div_d = 0.;
+// // // 		             for (int j=0; j<3; ++j) { Div_d += gradSolD[ j ][ j ]  ;}
+// // //             Rhs[ indexD_LocBlocks[r] ][i] += 
+// // //                                      WeightXJac*(
+// // // 				       +        SolU[ indexD_LocBlocks[r] ]*phi[i] /*DRAG TERM*/ 
+// // // 				       +  _betafsi*g[ indexD_LocBlocks[r] ]*phi[i] 
+// // //                                   - Lap_flag*_mus * ( gradSolD[indexD_LocBlocks[r]][0]*gradphi[i][0] + gradSolD[indexD_LocBlocks[r]][1]*gradphi[i][1] + gradSolD[indexD_LocBlocks[r]][2]*gradphi[i][2] )  //laplace
+// // //                                    - Graddiv_flag*(_mus + _lambda)*( Div_d )*gradphi[i][indexD_LocBlocks[r]]
+// // //                                    + 0.*(-_theta_sm*dt*(gradphi[i][0]*Cauchy[r][0] + gradphi[i][1]*Cauchy[r][1] + gradphi[i][2]*Cauchy[r][2]) )
+// // //                                  );
+// // // // 		    -(1-_theta_sm)*dt*(gradphi_old[i][0]*Cauchy_old[0][0] + gradphi_old[i][1]*Cauchy_old[0][1] + gradphi_old[i][2]*Cauchy_old[0][2])*Weight_old
+// // // // 	            -phi[i]*_betafsi*(SolU - SolOldU)*Weight
+// // // // 		    +dt*SolP*gradphi[i][0]*Weight
+// // // // 		    +(1-_theta_sm)*dt*SolOldP*gradphi_old[i][0]*Weight_old
+// // // 			 }
+// // //             //-------------------------------------------------------------------------------------------------------------------------------
+// // // 
+// // // 
+// // //             //END RESIDUALS A + Bt block ===========================
+// // // 
+// // //             const double *gradfj=gradphi[0];
+// // //             const double *fj=phi;
+// // //             // *** phi_j loop ***
+// // //             for (unsigned j=0; j<nve; j++,gradfj+=3,fj++) {
+// // // 
+// // //               //Laplacian
+// // //               double Lap = ((*(gradfi+0))*(*(gradfj+0))+(*(gradfi+1))*(*(gradfj+1))+(*(gradfi+2))*(*(gradfj+2)));
+// // // 
+// // //               //now only 2D
+// // //               for (int icount=0; icount<2; ++icount) {
+// // //                 for (int jcount=0; jcount<2; ++jcount) {
+// // //                   tg_stiff_matrix[icount][jcount] = 0.;
+// // //                   for (int kcount=0; kcount<2; ++kcount) {
+// // //                     for (int lcount=0; lcount<2; ++lcount) {
+// // //                       tg_stiff_matrix[icount][jcount] += (*(gradfi+kcount))*0.25*(
+// // //                                                            C_mat[icount][kcount][jcount][lcount]+C_mat[icount][kcount][lcount][jcount]
+// // //                                                            +C_mat[kcount][icount][jcount][lcount]+C_mat[kcount][icount][lcount][jcount]
+// // //                                                          )*(*(gradfj+lcount));
+// // //                     }
+// // //                   }
+// // //                 }
+// // //               }
+// // // 
+// // //               /// Stiffness operator -- Elasticity equation (Linear or not)
+// // //              for (int r=0; r<2; ++r) {
+// // //                 for (int c=0; c<2; ++c) {
+// // // 		  if (c==r){
+// // //               B[ indexD_LocBlocks[r] ][ indexD_LocBlocks[c] ][i*nve+j] += WeightXJac*(
+// // // 		                                                                     + Lap_flag*_mus*Lap                                  //_theta_sm*dt*tg_stiff_matrix[r][c]*Weight;
+// // // 	                                                                              + Graddiv_flag*(_mus + _lambda)*gradphi[i][r]*gradphi[j][c]  //so check that it is ADDING to the LAPLACIAN
+// // // 										     );                          
+// // // 		  }
+// // // 		    
+// // // 		  }
+// // // 	     }
+// // // 
+// // //               B[ indexD_LocBlocks[2] ][ indexD_LocBlocks[2] ][i*nve+j] += WeightXJac*(
+// // // 		                                                                  Lap_flag*_mus*Lap
+// // //                                                                             + Graddiv_flag*(_mus + _lambda)*gradphi[i][2]*gradphi[j][2]
+// // // 										     );
+// // // 
+// // //             }
+// // //           }
+// // //         }
+// // //         ////////////
+// // // 
+// // //       }
+// // //     }
+// // // 
+// // //     for (unsigned i=0;i<NVAR_D;i++) {
+// // //       ierr = VecSetValues(myRES,nve,nodeD[ indexD_LocBlocks[i] ],Rhs[ indexD_LocBlocks[i] ],ADD_VALUES);      CHKERRQ(ierr);
+// // //       for (unsigned j=0;j<NVAR_D;j++) {
+// // //         ierr = MatSetValuesBlocked(myKK,nve,nodeD[ indexD_LocBlocks[i] ],nve,nodeD[ indexD_LocBlocks[j] ],B[ indexD_LocBlocks[i] ][ indexD_LocBlocks[j] ],ADD_VALUES);        CHKERRQ(ierr);
+// // //       }
+// // //     }
+// // // 
+// // //    } //end list of elements loop
+// // // 
+// // // //----------------------------------------------------------------------
+// // // 
+// // //   //BEGIN MATRIX ASSEMBLY ==========
+// // //   ierr = MatAssemblyBegin(myKK,MAT_FINAL_ASSEMBLY);  CHKERRQ(ierr);
+// // //   ierr = MatAssemblyEnd(myKK,MAT_FINAL_ASSEMBLY);  CHKERRQ(ierr);
+// // //   //END MATRIX ASSEMBLY ============
+// // // 
+// // //   //BEGIN RESIDUAL ASSEMBLY ==========
+// // //   ierr = VecAssemblyBegin(myRES);  CHKERRQ(ierr);
+// // //   ierr = VecAssemblyEnd(myRES);  CHKERRQ(ierr);
+// // //   //END RESIDUAL ASSEMBLY ============
+// // //   
+// // //   
+// // // //         PetscViewer viewer;
+// // // //         ierr=PetscViewerDrawOpen(PETSC_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);CHKERRQ(ierr);
+// // // //         ierr= MatView(myKK,viewer);CHKERRQ(ierr);
+// // // // //         ierr= VecView(myRES,viewer);CHKERRQ(ierr);
+// // // //         double ff;
+// // // //         std::cin>>ff;
+// // // 
+// // // 
+// // //   //free memory
+// // //   for (int k=0; k<lsyspde_lev->Sol_.size(); k++) {
+// // //     ierr = VecRestoreArray(petsc_vec_sol[k]->vec(),&vec_sol[k]);    CHKERRQ(ierr);
+// // //     delete [] vec_sol[k];
+// // //   }
+// // //   delete [] vec_sol;
+// // // 
+// // //   // *************************************
+// // //   end_time=clock();
+// // //   AssemblyTime+=(end_time-start_time);
+// // //   // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
 
 //----------------------------------------------------------------------------------------------
 
@@ -1023,206 +1023,206 @@ int AssembleMatrixResD(MultiGrid &mg2, unsigned level, const elem_type *type_ele
 
 
 
-int AssembleMatrixResVel(MultiGrid &mg2, unsigned level, const elem_type *type_elem[6][5],
+int AssembleMatrixResVel(MultiLevelProblem &mg2, unsigned level, const elem_type *type_elem[6][5],
                        vector <vector <double> > &vt, const unsigned &gridn) {
 
 // not time dependent
-  MyMultiGrid& mg = static_cast<MyMultiGrid&>(mg2);
-  
-  unsigned eqn_idx_current = IDX_VEL;
-
-  unsigned eqn_offset = 0;
-  for (unsigned i=0; i< eqn_idx_current; i++) { eqn_offset += mg._qty_ncomps[i];  }
-
-  
-  LinearSolverM*    lsyspde_lev     = mg.Lin_Solver_[level];
-  LinearSolverM*    lsyspdemesh_lev = mg.Lin_Solver_[level];
-
-  PetscErrorCode ierr;
-  
-//global lin algebra
-  Mat&           myKK      = lsyspde_lev->KK;
-  Vec&           myRES     = lsyspde_lev->RES;
-  vector <int>& myKKIndex  = lsyspde_lev->KKIndex;
-
-//geometry
-  double vx[SPACEDIM][MAX_EL_NODES];
-  PetscInt node_geom[MAX_EL_NODES];
-  elem*    myel  = lsyspdemesh_lev->el;
-  unsigned nel   = lsyspdemesh_lev->GetElementNumber();
-  unsigned igrid = lsyspdemesh_lev->GetGridNumber();
-
-// variables  
-  std::string varnames[NVAR_VEL];
-  varnames[0] = "UX";
-  varnames[1] = "UY";
-  varnames[2] = "UZ";
-
-  unsigned order_ind2 = lsyspde_lev->SolType[mg.GetIndex( varnames[0].c_str() )];
-  unsigned end_ind2   = lsyspde_lev->END_IND[order_ind2];
-  
-  PetscInt nodeU[NVAR_VEL][MAX_EL_NODES];  //node+offset for variables (with offset)
-  unsigned indexU[NVAR_VEL];
-  unsigned indexU_localBlocks[NVAR_VEL];
-
-  int indexSolD[NVAR_D];
-  std::string varnamesD[NVAR_D];
-  varnamesD[0] = "DX";
-  varnamesD[1] = "DY";
-  varnamesD[2] = "DZ";
-
-   for (int i=0; i<NVAR_D; ++i)    indexSolD[i] = mg.GetIndex(varnamesD[i].c_str());  
-  
-
-  for (int i=0; i<NVAR_VEL; ++i) {
-    indexU[i] = mg.GetMGIndex(varnames[i].c_str());
-    indexU_localBlocks[i] = indexU[i] - eqn_offset;
-  }
-    
-  double B[NVAR_VEL][NVAR_VEL][MAX_EL_NODES*MAX_EL_NODES];
-  double F[NVAR_VEL][MAX_EL_NODES];
-
-// FE
-  double phi2[MAX_EL_NODES],gradphi2[MAX_EL_NODES][SPACEDIM];
-
-// quadrature
-  double Weight2XJac;
-
-//Parameters
-  int moving_dom_vel = mg._runtime_double->get("moving_dom_vel");
-  
-//the following is a loop over all the system variables, because all of them may be involved  
-  // vectors for getting dofs   ====================
-  int sol_size = lsyspde_lev->Sol_.size();
-  PetscScalar **vec_sol     = new PetscScalar*[sol_size];
-  vector<PetscVectorM*> petsc_vec_sol;
-  petsc_vec_sol.resize(sol_size);
-
-  for (int k=0; k<sol_size; k++) {
-    petsc_vec_sol[k]  = static_cast<PetscVectorM*>(lsyspde_lev->Sol_[k]);
-    ierr = VecGetArray(petsc_vec_sol[k]->vec(),&vec_sol[k]);    CHKERRQ(ierr);
-  }
-// vectors for getting dofs   ====================
-
-  ierr = MatZeroEntries(myKK);  CHKERRQ(ierr);
-  ierr = VecZeroEntries(myRES);  CHKERRQ(ierr);
-
-  clock_t AssemblyTime=0;
-  clock_t start_time, end_time;
-  start_time=clock();
-
-
-  for (unsigned kel=0;kel<nel;kel++) {
-
-    short unsigned kelt = myel->GetElementType(kel);
-    unsigned       nve2 = myel->GetElementDofNumber(kel,end_ind2);
-    int        myregion = myel->GetElementGroup(kel);
-    
-    double kappa = mg._runtime_double->get("kappa_well");
-    if (myregion == (int) mg._runtime_double-> get("frac_reg_idx")) kappa = mg._runtime_double->get("kappa_frac");
-
-    for (unsigned i=0; i<NVAR_VEL;i++) {
-      memset(F[indexU_localBlocks[i]],0,nve2*sizeof(double));
-      for (unsigned j=0; j<NVAR_VEL; j++) {
-        memset(B[indexU_localBlocks[i]][indexU_localBlocks[j]],0,nve2*nve2*sizeof(double));
-      }
-    }    
-
-    for (unsigned i=0;i<nve2;i++) {
-      unsigned inode = myel->GetElementVertexIndex(kel,i)-1u;
-      for (unsigned j=0; j<SPACEDIM; j++)    vx[j][i] = vt[j][inode] + moving_dom_vel*vec_sol[ indexSolD[j] ][inode];
-      node_geom[i] = inode;
-      for (unsigned j=0; j<NVAR_VEL; j++)       nodeU[ indexU_localBlocks[j] ][i] = node_geom[i] + myKKIndex[indexU[j]];   //global
-    }    
-    
-
-    if (igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
-      
-      for (unsigned ig=0; ig < type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
-	
-        (type_elem[kelt][order_ind2]->*type_elem[kelt][order_ind2]->Jacobian_ptr)(vx,ig,Weight2XJac,phi2,gradphi2);        // *** get Jacobian and test function and test function derivatives ***
-
-
-        double SolP=0;
-        double gradSolP[SPACEDIM]={0.,0.,0.};
-        for (unsigned i=0; i<nve2; i++) {
-          unsigned k=mg.GetIndex("p");
-          double soli=vec_sol[k][node_geom[i]];
-          SolP+=phi2[i]*soli;
-	  for (unsigned j=0; j<SPACEDIM; j++) {  gradSolP[j]+=gradphi2[i][j]*soli;   }
-        }
-
-         double SolU[NVAR_VEL]={0.,0.,0.};
-        for (unsigned i=0; i<nve2; i++) {
-	  for (unsigned j=0; j<NVAR_VEL; j++) {
-	  unsigned k=mg.GetIndex(varnames[j].c_str());
-          double soli=vec_sol[k][node_geom[i]];
-          SolU[j]+=phi2[i]*soli;
-	  }
-        }       
-        
-// 	  for (unsigned j=0; j<SPACEDIM; j++) {  std::cout << SolU[j] << " == "<< std::endl; }
-	    
-	const double *fi=phi2;
-        const double *gradfi=gradphi2[0];
-	
-        for (unsigned i=0; i<nve2; i++,gradfi+=3,fi++) {
-	  
-              for (int r=0; r<NVAR_VEL; ++r) { F[ indexU_localBlocks[r] ][i]+=( (-kappa*gradSolP[r]- SolU[r])*phi2[i] )*Weight2XJac; }
-
-          const double *fj=phi2;
-          const double *gradfj=gradphi2[0];
-
-	  for (unsigned j=0; j<nve2; j++,gradfj+=3,fj++) {
-             for (int r=0; r<NVAR_VEL; ++r) {
-               B[ indexU_localBlocks[r] ][ indexU_localBlocks[r] ][i*nve2+j] += phi2[i]*phi2[j]*Weight2XJac;
-		}
-            }   //end phij loop
-         } //end phii loop
-
-      }  // end gauss point loop
-    }  // endif single element not refined or fine grid loop
-
-   for (unsigned i=0;i<NVAR_VEL;i++) {
-      ierr = VecSetValues(myRES,nve2,nodeU[indexU_localBlocks[i]],F[indexU_localBlocks[i]],ADD_VALUES);      CHKERRQ(ierr);
-      for (unsigned j=0;j<NVAR_VEL;j++) {
-        ierr = MatSetValuesBlocked(myKK,nve2,nodeU[indexU_localBlocks[i]],nve2,nodeU[indexU_localBlocks[j]],B[indexU_localBlocks[i]][indexU_localBlocks[j]],ADD_VALUES);        CHKERRQ(ierr);
-      }
-    }
- 
-  } //end list of elements loop
-
-  // MATRIX ASSEMBLY ============
-  ierr = MatAssemblyBegin(myKK,MAT_FINAL_ASSEMBLY);  CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(myKK,MAT_FINAL_ASSEMBLY);  CHKERRQ(ierr);
-  // RESIDUAL ASSEMBLY ============
-  ierr = VecAssemblyBegin(myRES);  CHKERRQ(ierr);
-  ierr = VecAssemblyEnd(myRES);  CHKERRQ(ierr);
-
-//   if(igrid==30){
-//     PetscViewer viewer;
-//     ierr=PetscViewerDrawOpen(PETSC_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);CHKERRQ(ierr);
-//     ierr= MatView(myKK,viewer);CHKERRQ(ierr);
-//     double ff;
-//     std::cin>>ff;
-//   }
-
-  // *************************************
-  end_time=clock();
-  AssemblyTime+=(end_time-start_time);
-  // ***************** END ASSEMBLY *******************
-
-  // *** Computational info ***
-//  cout<<"Grid="<< lsyspdemesh_lev->GetGridNumber()<<endl;
-//  cout<<"ASSEMBLY + RESIDUAL time="<<static_cast<double>(AssemblyTime)/CLOCKS_PER_SEC<<endl;
-
-  //free memory
-  for (int k=0; k<lsyspde_lev->Sol_.size(); k++) {
-    ierr = VecRestoreArray(petsc_vec_sol[k]->vec(),&vec_sol[k]);
-    CHKERRQ(ierr);
-    delete [] vec_sol[k];
-  }
-  delete [] vec_sol;
+// // //   MyMultiGrid& mg = static_cast<MyMultiGrid&>(mg2);
+// // //   
+// // //   unsigned eqn_idx_current = IDX_VEL;
+// // // 
+// // //   unsigned eqn_offset = 0;
+// // //   for (unsigned i=0; i< eqn_idx_current; i++) { eqn_offset += mg._qty_ncomps[i];  }
+// // // 
+// // //   
+// // //   LinearSolverM*    lsyspde_lev     = mg.Lin_Solver_[level];
+// // //   LinearSolverM*    lsyspdemesh_lev = mg.Lin_Solver_[level];
+// // // 
+// // //   PetscErrorCode ierr;
+// // //   
+// // // //global lin algebra
+// // //   Mat&           myKK      = lsyspde_lev->KK;
+// // //   Vec&           myRES     = lsyspde_lev->RES;
+// // //   vector <int>& myKKIndex  = lsyspde_lev->KKIndex;
+// // // 
+// // // //geometry
+// // //   double vx[SPACEDIM][MAX_EL_NODES];
+// // //   PetscInt node_geom[MAX_EL_NODES];
+// // //   elem*    myel  = lsyspdemesh_lev->el;
+// // //   unsigned nel   = lsyspdemesh_lev->GetElementNumber();
+// // //   unsigned igrid = lsyspdemesh_lev->GetGridNumber();
+// // // 
+// // // // variables  
+// // //   std::string varnames[NVAR_VEL];
+// // //   varnames[0] = "UX";
+// // //   varnames[1] = "UY";
+// // //   varnames[2] = "UZ";
+// // // 
+// // //   unsigned order_ind2 = lsyspde_lev->SolType[mg.GetIndex( varnames[0].c_str() )];
+// // //   unsigned end_ind2   = lsyspde_lev->END_IND[order_ind2];
+// // //   
+// // //   PetscInt nodeU[NVAR_VEL][MAX_EL_NODES];  //node+offset for variables (with offset)
+// // //   unsigned indexU[NVAR_VEL];
+// // //   unsigned indexU_localBlocks[NVAR_VEL];
+// // // 
+// // //   int indexSolD[NVAR_D];
+// // //   std::string varnamesD[NVAR_D];
+// // //   varnamesD[0] = "DX";
+// // //   varnamesD[1] = "DY";
+// // //   varnamesD[2] = "DZ";
+// // // 
+// // //    for (int i=0; i<NVAR_D; ++i)    indexSolD[i] = mg.GetIndex(varnamesD[i].c_str());  
+// // //   
+// // // 
+// // //   for (int i=0; i<NVAR_VEL; ++i) {
+// // //     indexU[i] = mg.GetMGIndex(varnames[i].c_str());
+// // //     indexU_localBlocks[i] = indexU[i] - eqn_offset;
+// // //   }
+// // //     
+// // //   double B[NVAR_VEL][NVAR_VEL][MAX_EL_NODES*MAX_EL_NODES];
+// // //   double F[NVAR_VEL][MAX_EL_NODES];
+// // // 
+// // // // FE
+// // //   double phi2[MAX_EL_NODES],gradphi2[MAX_EL_NODES][SPACEDIM];
+// // // 
+// // // // quadrature
+// // //   double Weight2XJac;
+// // // 
+// // // //Parameters
+// // //   int moving_dom_vel = mg._runtime_double->get("moving_dom_vel");
+// // //   
+// // // //the following is a loop over all the system variables, because all of them may be involved  
+// // //   // vectors for getting dofs   ====================
+// // //   int sol_size = lsyspde_lev->Sol_.size();
+// // //   PetscScalar **vec_sol     = new PetscScalar*[sol_size];
+// // //   vector<PetscVectorM*> petsc_vec_sol;
+// // //   petsc_vec_sol.resize(sol_size);
+// // // 
+// // //   for (int k=0; k<sol_size; k++) {
+// // //     petsc_vec_sol[k]  = static_cast<PetscVectorM*>(lsyspde_lev->Sol_[k]);
+// // //     ierr = VecGetArray(petsc_vec_sol[k]->vec(),&vec_sol[k]);    CHKERRQ(ierr);
+// // //   }
+// // // // vectors for getting dofs   ====================
+// // // 
+// // //   ierr = MatZeroEntries(myKK);  CHKERRQ(ierr);
+// // //   ierr = VecZeroEntries(myRES);  CHKERRQ(ierr);
+// // // 
+// // //   clock_t AssemblyTime=0;
+// // //   clock_t start_time, end_time;
+// // //   start_time=clock();
+// // // 
+// // // 
+// // //   for (unsigned kel=0;kel<nel;kel++) {
+// // // 
+// // //     short unsigned kelt = myel->GetElementType(kel);
+// // //     unsigned       nve2 = myel->GetElementDofNumber(kel,end_ind2);
+// // //     int        myregion = myel->GetElementGroup(kel);
+// // //     
+// // //     double kappa = mg._runtime_double->get("kappa_well");
+// // //     if (myregion == (int) mg._runtime_double-> get("frac_reg_idx")) kappa = mg._runtime_double->get("kappa_frac");
+// // // 
+// // //     for (unsigned i=0; i<NVAR_VEL;i++) {
+// // //       memset(F[indexU_localBlocks[i]],0,nve2*sizeof(double));
+// // //       for (unsigned j=0; j<NVAR_VEL; j++) {
+// // //         memset(B[indexU_localBlocks[i]][indexU_localBlocks[j]],0,nve2*nve2*sizeof(double));
+// // //       }
+// // //     }    
+// // // 
+// // //     for (unsigned i=0;i<nve2;i++) {
+// // //       unsigned inode = myel->GetElementVertexIndex(kel,i)-1u;
+// // //       for (unsigned j=0; j<SPACEDIM; j++)    vx[j][i] = vt[j][inode] + moving_dom_vel*vec_sol[ indexSolD[j] ][inode];
+// // //       node_geom[i] = inode;
+// // //       for (unsigned j=0; j<NVAR_VEL; j++)       nodeU[ indexU_localBlocks[j] ][i] = node_geom[i] + myKKIndex[indexU[j]];   //global
+// // //     }    
+// // //     
+// // // 
+// // //     if (igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
+// // //       
+// // //       for (unsigned ig=0; ig < type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
+// // // 	
+// // //         (type_elem[kelt][order_ind2]->*type_elem[kelt][order_ind2]->Jacobian_ptr)(vx,ig,Weight2XJac,phi2,gradphi2);        // *** get Jacobian and test function and test function derivatives ***
+// // // 
+// // // 
+// // //         double SolP=0;
+// // //         double gradSolP[SPACEDIM]={0.,0.,0.};
+// // //         for (unsigned i=0; i<nve2; i++) {
+// // //           unsigned k=mg.GetIndex("p");
+// // //           double soli=vec_sol[k][node_geom[i]];
+// // //           SolP+=phi2[i]*soli;
+// // // 	  for (unsigned j=0; j<SPACEDIM; j++) {  gradSolP[j]+=gradphi2[i][j]*soli;   }
+// // //         }
+// // // 
+// // //          double SolU[NVAR_VEL]={0.,0.,0.};
+// // //         for (unsigned i=0; i<nve2; i++) {
+// // // 	  for (unsigned j=0; j<NVAR_VEL; j++) {
+// // // 	  unsigned k=mg.GetIndex(varnames[j].c_str());
+// // //           double soli=vec_sol[k][node_geom[i]];
+// // //           SolU[j]+=phi2[i]*soli;
+// // // 	  }
+// // //         }       
+// // //         
+// // // // 	  for (unsigned j=0; j<SPACEDIM; j++) {  std::cout << SolU[j] << " == "<< std::endl; }
+// // // 	    
+// // // 	const double *fi=phi2;
+// // //         const double *gradfi=gradphi2[0];
+// // // 	
+// // //         for (unsigned i=0; i<nve2; i++,gradfi+=3,fi++) {
+// // // 	  
+// // //               for (int r=0; r<NVAR_VEL; ++r) { F[ indexU_localBlocks[r] ][i]+=( (-kappa*gradSolP[r]- SolU[r])*phi2[i] )*Weight2XJac; }
+// // // 
+// // //           const double *fj=phi2;
+// // //           const double *gradfj=gradphi2[0];
+// // // 
+// // // 	  for (unsigned j=0; j<nve2; j++,gradfj+=3,fj++) {
+// // //              for (int r=0; r<NVAR_VEL; ++r) {
+// // //                B[ indexU_localBlocks[r] ][ indexU_localBlocks[r] ][i*nve2+j] += phi2[i]*phi2[j]*Weight2XJac;
+// // // 		}
+// // //             }   //end phij loop
+// // //          } //end phii loop
+// // // 
+// // //       }  // end gauss point loop
+// // //     }  // endif single element not refined or fine grid loop
+// // // 
+// // //    for (unsigned i=0;i<NVAR_VEL;i++) {
+// // //       ierr = VecSetValues(myRES,nve2,nodeU[indexU_localBlocks[i]],F[indexU_localBlocks[i]],ADD_VALUES);      CHKERRQ(ierr);
+// // //       for (unsigned j=0;j<NVAR_VEL;j++) {
+// // //         ierr = MatSetValuesBlocked(myKK,nve2,nodeU[indexU_localBlocks[i]],nve2,nodeU[indexU_localBlocks[j]],B[indexU_localBlocks[i]][indexU_localBlocks[j]],ADD_VALUES);        CHKERRQ(ierr);
+// // //       }
+// // //     }
+// // //  
+// // //   } //end list of elements loop
+// // // 
+// // //   // MATRIX ASSEMBLY ============
+// // //   ierr = MatAssemblyBegin(myKK,MAT_FINAL_ASSEMBLY);  CHKERRQ(ierr);
+// // //   ierr = MatAssemblyEnd(myKK,MAT_FINAL_ASSEMBLY);  CHKERRQ(ierr);
+// // //   // RESIDUAL ASSEMBLY ============
+// // //   ierr = VecAssemblyBegin(myRES);  CHKERRQ(ierr);
+// // //   ierr = VecAssemblyEnd(myRES);  CHKERRQ(ierr);
+// // // 
+// // // //   if(igrid==30){
+// // // //     PetscViewer viewer;
+// // // //     ierr=PetscViewerDrawOpen(PETSC_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);CHKERRQ(ierr);
+// // // //     ierr= MatView(myKK,viewer);CHKERRQ(ierr);
+// // // //     double ff;
+// // // //     std::cin>>ff;
+// // // //   }
+// // // 
+// // //   // *************************************
+// // //   end_time=clock();
+// // //   AssemblyTime+=(end_time-start_time);
+// // //   // ***************** END ASSEMBLY *******************
+// // // 
+// // //   // *** Computational info ***
+// // // //  cout<<"Grid="<< lsyspdemesh_lev->GetGridNumber()<<endl;
+// // // //  cout<<"ASSEMBLY + RESIDUAL time="<<static_cast<double>(AssemblyTime)/CLOCKS_PER_SEC<<endl;
+// // // 
+// // //   //free memory
+// // //   for (int k=0; k<lsyspde_lev->Sol_.size(); k++) {
+// // //     ierr = VecRestoreArray(petsc_vec_sol[k]->vec(),&vec_sol[k]);
+// // //     CHKERRQ(ierr);
+// // //     delete [] vec_sol[k];
+// // //   }
+// // //   delete [] vec_sol;
 
   
   return 1;

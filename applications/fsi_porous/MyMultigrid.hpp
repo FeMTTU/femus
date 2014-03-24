@@ -1,8 +1,9 @@
-#include "multigrid.hpp"
+#include "MultiLevelProblem.hpp"
 
 #include "RunTimeMapSingleton.hpp"
+#include "main.hpp"
 
-class MyMultiGrid: public MultiGrid {
+class MyMultiGrid: public MultiLevelProblem {
   
 public:
   
