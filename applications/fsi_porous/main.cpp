@@ -1,8 +1,5 @@
-// application includes and prototypes
-#include "main.hpp"
-#include "MyMultigrid.hpp"
-
 // library includes
+#include "FemTTUInit.hpp"
 #include "ElemType.hpp"
 #include "NumericVector.hpp"
 #include "PetscVector.hpp"
@@ -11,6 +8,11 @@
 #include "Parameter.hpp"
 #include "MultiLevelProblem.hpp"
 
+// application includes and prototypes
+#include "main.hpp"
+#include "MyMultigrid.hpp"
+#include "RunTimeMapSingleton.hpp"
+
 //===============================
 int AssembleMatrixResP(MultiLevelProblem &mg, unsigned level, const elem_type *type_elem[6][5],
                        vector <vector <double> > &vt, const unsigned &gridn);
@@ -18,85 +20,88 @@ int AssembleMatrixResD(MultiLevelProblem &mg, unsigned level, const elem_type *t
                        vector <vector <double> > &vt, const unsigned &gridn);
 int AssembleMatrixResVel(MultiLevelProblem &mg, unsigned level, const elem_type *type_elem[6][5],
                        vector <vector <double> > &vt, const unsigned &gridn);
+bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
-// Program usage:  mpiexec mesh.out [-help] [all PETSc options]
-static char help[] = "Multigrid solver with PETSC\n\n";
-// ===============================================
 
-#include "RunTimeMapSingleton.hpp"
-// GLOBAL SCOPE PORCATA // e' chiaramente una porcata perche' nel punto in cui la usi nessuno ti garantisce che sia nello stato giusto,
-// perche' non c'e' passaggio di argomenti di funzione e quindi nessuna consequenzialita'
-RunTimeMap<double> *runtime_double;
-
+RunTimeMap<double> * runtime_double; //per ora devo usarla cosi' global... dovrebbe appartenere a tutte le classi...
 
 int main(int argc,char **args) {
+
+  bool linear=1;
+  bool vanka=1;
+  if(argc == 2) {
+    if( strcmp("vanka",args[1])) vanka=0;
+  }
+  else {
+    cout << "No input arguments!" << endl;
+    exit(0);
+  }
   
-// // //   PetscErrorCode ierr;
-// // //   PetscMPIInt    size;
-// // //   PetscInitialize(&argc,&args,(char *)0,help);
-// // //   ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);
-// // //   CHKERRQ(ierr);
-// // //   if (size != 1) SETERRQ(PETSC_COMM_WORLD,1,"This is a uniprocessor example only!");
-// // // 
-// // //   //READ STRING of TIME FROM SHELL;
-// // //   std::string outfolder = "output";//getenv("OUTFOLDER");  //if you don't set this environment variable, the code doesn't run
-// // //   if (outfolder == "") {
-// // //     std::cout << " Set OUTFOLDER in your shell environment" << std::endl;
-// // //     abort();
-// // //   } 
-// // //     
-// // //   // READ DOUBLES FROM FILE ======== declared as GLOBAL SCOPE
-// // // //   RunTimeMap<double> * runtime_double; //this line is not needed, it works nevertheless but it's not needed //so the brutal way to make it visible everywhere is to put the declaration OUTSIDE the function and to declare it with extern in all the files where it's needed
-// // //                                           //non serve il singleton pattern per questo! serve solo chiamare il costruttore QUI NEL MAIN e non OUTSIDE
-// // //   runtime_double = RunTimeMap<double>::getInstance("Doubles",/*outfolder +*/ "parameters.in");
-// // //   runtime_double->read();
-// // //   runtime_double->print();
-// // // 
-// // //   // READ STRINGS FROM FILE ========
-// // //  RunTimeMap<std::string> * runtime_string;  
-// // //   runtime_string = RunTimeMap<std::string>::getInstance("Strings",/*outfolder +*/ "parameters.in");
-// // //   runtime_string->read();
-// // //   runtime_string->print();
-// // //   
-// // //   
-// // //    //  OPEN BIG TABLE ========
-// // //   std::ofstream ofs;
-// // //   ofs.open("./output/BigTable.txt",std::fstream::app);
-// // //   ofs /*<< outfolder << " =============="*/ << std::endl;
-// // //   ofs  << std::left << std::setw(15) << std::setprecision(12) << outfolder << "   " << "E_frac" << "  " << "E_well" << "  "  << "K_frac" << "  " << "K_well" << "  " << "nlevs" << " *** " << "NUM_FLUX"  << "  " << "DEN_AVG_PRESS"  << "  "  << "P.I."  << "  "  <<  std::endl;
-// // //   
-// // //   //go ahead================
-// // //   unsigned short nm,nr;
-// // //   std::cout << "#MULTIGRID levels? (>=1) \n";
-// // //   nm = (int) runtime_double->get("nlevs");
-// // // 
-// // //   std::cout << "#MAX_REFINEMENT levels? (>=0) \n";
-// // //   nr = (int) runtime_double->get("nrefins");
-// // //   int tmp = nm;
-// // //   nm += nr;
-// // //   nr = tmp;
-// // // 
-// // //   cout << "nm  ==== " << nm << " nr ==== " << nr << std::endl;
-// // //   
-// // //   char *infile = new char [50];
-// // //   std::ostringstream meshfile; meshfile << "./input/" << runtime_string->get("mesh_name");
-// // //   sprintf(infile, meshfile.str().c_str() );
-// // // 
-// // //   //Adimensional quantity (Lref,Uref)
-// // //   double Lref = 1.0;
-// // //   double Uref = 1.0;
-// // //   Parameter parameter(Lref,Uref);
-// // // 
-// // //   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-// // //   Fluid fluid(parameter,1.,1.,"Newtonian");
-// // //   Solid solid(parameter,runtime_double->get("young_well"),0.4,1000.,"Linear_elastic");
-// // // //AAAAAAA: HERE you are setting 1 kg/m^3 for the FLUID DENSITY and 1000 for the SOLID DENSITY!!!
-// // // // In this case we are not actually using those numbers, but PAY ATTENTION!  
-// // //   
-// // //   
-// // // //Steadystate MultiGrid
-// // //   MyMultiGrid  mg(nm,nr,infile,"fifth",Lref);   //this has become the multilevel problem
-// // //   mg.printsol_vtu_binary(outfolder,"biquadratic");
+  /// Init Petsc-MPI communicator
+  FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
+  
+ //READ STRING of TIME FROM SHELL;
+  std::string outfolder = "output";//getenv("OUTFOLDER");  //if you don't set this environment variable, the code doesn't run
+  if (outfolder == "") {
+    std::cout << " Set OUTFOLDER in your shell environment" << std::endl;
+    abort();
+  } 
+    
+  // READ DOUBLES FROM FILE ======== WAS declared as GLOBAL SCOPE, now NO MORE
+//   RunTimeMap<double> * runtime_double; //this line is not needed, it works nevertheless but it's not needed //so the brutal way to make it visible everywhere is to put the declaration OUTSIDE the function and to declare it with extern in all the files where it's needed
+                                          //non serve il singleton pattern per questo! serve solo chiamare il costruttore QUI NEL MAIN e non OUTSIDE
+  runtime_double = RunTimeMap<double>::getInstance("Doubles",/*outfolder +*/ "parameters.in");
+  runtime_double->read();
+  runtime_double->print();
+
+  // READ STRINGS FROM FILE ========
+ RunTimeMap<std::string> * runtime_string;  
+  runtime_string = RunTimeMap<std::string>::getInstance("Strings",/*outfolder +*/ "parameters.in");
+  runtime_string->read();
+  runtime_string->print();
+  
+  
+   //  OPEN BIG TABLE ========
+  std::ofstream ofs;
+  ofs.open("./output/BigTable.txt",std::fstream::app);
+  ofs /*<< outfolder << " =============="*/ << std::endl;
+  ofs  << std::left << std::setw(15) << std::setprecision(12) << outfolder << "   " << "E_frac" << "  " << "E_well" << "  "  << "K_frac" << "  " << "K_well" << "  " << "nlevs" << " *** " << "NUM_FLUX"  << "  " << "DEN_AVG_PRESS"  << "  "  << "P.I."  << "  "  <<  std::endl;
+  
+  unsigned short nm,nr;
+  std::cout << "#MULTIGRID levels? (>=1) \n";
+  nm = (int) runtime_double->get("nlevs");
+
+  std::cout << "#MAX_REFINEMENT levels? (>=0) \n";
+  nr = (int) runtime_double->get("nrefins");
+  int tmp = nm;
+  nm += nr;
+  nr = tmp;
+
+  cout << "nm  ==== " << nm << " nr ==== " << nr << std::endl;
+  
+  char *infile = new char [50];
+  std::ostringstream meshfile; meshfile << "./input/" << runtime_string->get("mesh_name");
+  sprintf(infile, meshfile.str().c_str() );
+
+  //Adimensional quantity (Lref,Uref)
+  double Lref = 1.0;
+  double Uref = 1.0;
+  Parameter parameter(Lref,Uref);
+
+  // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
+  Fluid fluid(parameter,1.,1.,"Newtonian");
+  Solid solid(parameter,runtime_double->get("young_well"),0.4,1000.,"Linear_elastic");
+//AAAAAAA: HERE you are setting 1 kg/m^3 for the FLUID DENSITY and 1000 for the SOLID DENSITY!!!
+// In this case we are not actually using those numbers, but PAY ATTENTION!  
+  
+//Steadystate MultiGrid
+  MyMultiGrid  mg(nm,nr,infile,"fifth",Lref,SetRefinementFlag);   //this has become the multilevel problem
+
+//i wanted to print the mesh without variables, we need to add a function for that
+//   std::vector<std::string> print_vars_tmp;
+//   print_vars_tmp.resize(1);
+//   print_vars_tmp[0] = "TMP";
+//   mg.printsol_vtu_inline("biquadratic",print_vars_tmp);
 // // //   // END MESH =================================
 // // // 
 // // // // PHYSICS ===========================
@@ -207,14 +212,13 @@ int main(int argc,char **args) {
 // // //   mg.DeleteMGStruct();  // Delete Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
 // // //   // Destroy the last PETSC objects ===================
 // // //   mg.FreeMultigrid();  //Sol
-// // //   ierr = PetscFinalize();  CHKERRQ(ierr);
 
   return 0;
 
 }
 
 
-bool CheckRefinement(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level, const unsigned nlevs) {
+bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level) {
   bool refine=0;
   //refinement based on center element coordinate and level
   //   if( (y<(1.5-0.25 *level) && (x<0.25 || x >0.75)) ||
@@ -223,6 +227,8 @@ bool CheckRefinement(const double &x, const double &y, const double &z, const in
   //     refine=0;
   //   }
   //refinemenet based on Elemen Group Number
+  const unsigned nlevs = runtime_double->get("nlevs");
+  
   if (ElemGroupNumber== (int) runtime_double->get("frac_reg_idx") && level< 3+nlevs-1) refine=1;
   if (ElemGroupNumber== (int) runtime_double->get("layer1")       && level< 2+nlevs-1) refine=1;
   if (ElemGroupNumber== (int) runtime_double->get("layer2")       && level< 1+nlevs-1) refine=1;
