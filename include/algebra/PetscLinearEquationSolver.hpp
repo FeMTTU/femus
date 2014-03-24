@@ -52,6 +52,9 @@ private:
   vector< vector <PetscInt> > _indexai;
   vector< vector <unsigned> > _Psize;
   bool _indexai_init;
+  
+  vector <IS> _isA;
+  vector <IS> _isB;
       
 public:
   // Constructor --------------------------------------
