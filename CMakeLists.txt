@@ -102,73 +102,73 @@ ADD_SUBDIRECTORY(src)
 # Ask the user which executable have to be built
 OPTION(BUILD_STEADYNAVIERSTOKES "Build the Steady NavierStokes application" ON)
 
-# Build Applications
+# Build applications
 IF(BUILD_STEADYNAVIERSTOKES)
-       ADD_SUBDIRECTORY(Applications/SteadyNavierStokesParallel)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/Applications/SteadyNavierStokesParallel/output/)
-    FILE(MAKE_DIRECTORY Applications/SteadyNavierStokesParallel/input/)
-    FILE(COPY           Applications/SteadyNavierStokesParallel/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/Applications/SteadyNavierStokesParallel/input/)
+       ADD_SUBDIRECTORY(applications/SteadyNavierStokesParallel)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/SteadyNavierStokesParallel/output/)
+    FILE(MAKE_DIRECTORY applications/SteadyNavierStokesParallel/input/)
+    FILE(COPY           applications/SteadyNavierStokesParallel/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/SteadyNavierStokesParallel/input/)
 ENDIF(BUILD_STEADYNAVIERSTOKES)  
 
 OPTION(BUILD_TIMEDEPNAVIERSTOKES "Build the Time dependent NavierStokes application" ON)
 
 IF(BUILD_TIMEDEPNAVIERSTOKES)
-       ADD_SUBDIRECTORY(Applications/BackwardEulerNavierStokesParallel/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/Applications/BackwardEulerNavierStokesParallel/output/)
-    FILE(MAKE_DIRECTORY Applications/BackwardEulerNavierStokesParallel/input/)
-    FILE(COPY           Applications/BackwardEulerNavierStokesParallel/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/Applications/BackwardEulerNavierStokesParallel/input/)
+       ADD_SUBDIRECTORY(applications/BackwardEulerNavierStokesParallel/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/BackwardEulerNavierStokesParallel/output/)
+    FILE(MAKE_DIRECTORY applications/BackwardEulerNavierStokesParallel/input/)
+    FILE(COPY           applications/BackwardEulerNavierStokesParallel/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/BackwardEulerNavierStokesParallel/input/)
 ENDIF(BUILD_TIMEDEPNAVIERSTOKES)   
 
 OPTION(BUILD_TAYLORVORTEX "Build the Time dependent Taylor vortex application" ON)
 
 IF(BUILD_TAYLORVORTEX)
-       ADD_SUBDIRECTORY(Applications/TaylorGreenVortexFlowGeneralisedalpha/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/Applications/TaylorGreenVortexFlowGeneralisedalpha/output/)
-    FILE(MAKE_DIRECTORY Applications/TaylorGreenVortexFlowGeneralisedalpha/input/)
-    FILE(COPY           Applications/TaylorGreenVortexFlowGeneralisedalpha/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/Applications/TaylorGreenVortexFlowGeneralisedalpha/input/)
+       ADD_SUBDIRECTORY(applications/TaylorGreenVortexFlowGeneralisedalpha/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/TaylorGreenVortexFlowGeneralisedalpha/output/)
+    FILE(MAKE_DIRECTORY applications/TaylorGreenVortexFlowGeneralisedalpha/input/)
+    FILE(COPY           applications/TaylorGreenVortexFlowGeneralisedalpha/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/TaylorGreenVortexFlowGeneralisedalpha/input/)
 ENDIF(BUILD_TAYLORVORTEX)   
 
 OPTION(BUILD_FSI_CMS_NWM "Build the FSI COMSOL Benchmark" ON)
 
 IF(BUILD_FSI_CMS_NWM)
-       ADD_SUBDIRECTORY(Applications/FSI_CMS_NWM/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/Applications/FSI_CMS_NWM/output/)
-    FILE(MAKE_DIRECTORY Applications/FSI_CMS_NWM/input/)
-    FILE(COPY           Applications/FSI_CMS_NWM/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/Applications/FSI_CMS_NWM/input/)
+       ADD_SUBDIRECTORY(applications/FSI_CMS_NWM/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_CMS_NWM/output/)
+    FILE(MAKE_DIRECTORY applications/FSI_CMS_NWM/input/)
+    FILE(COPY           applications/FSI_CMS_NWM/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/FSI_CMS_NWM/input/)
 ENDIF(BUILD_FSI_CMS_NWM)
 
 OPTION(BUILD_FSI_TUREK_3 "Build the FSI Turek 3 Benchmark" ON)
 
 IF(BUILD_FSI_TUREK_3)
-       ADD_SUBDIRECTORY(Applications/FSI_TUREK_3/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/Applications/FSI_TUREK_3/output/)
-    FILE(MAKE_DIRECTORY Applications/FSI_TUREK_3/input/)
-    FILE(COPY           Applications/FSI_TUREK_3/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/Applications/FSI_TUREK_3/input/)
+       ADD_SUBDIRECTORY(applications/FSI_TUREK_3/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_3/output/)
+    FILE(MAKE_DIRECTORY applications/FSI_TUREK_3/input/)
+    FILE(COPY           applications/FSI_TUREK_3/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_3/input/)
 ENDIF(BUILD_FSI_TUREK_3)
 
 OPTION(BUILD_GENCASE "Build the case generator" ON)
 
 IF(BUILD_GENCASE)
-    ADD_SUBDIRECTORY(Applications/gencase/)
+    ADD_SUBDIRECTORY(applications/gencase/)
 ENDIF(BUILD_GENCASE)
 
 OPTION(BUILD_MHDOPT "Build the MHD optimal control problem" ON)
 
 IF(BUILD_MHDOPT)
-       ADD_SUBDIRECTORY(Applications/mhdopt/)
-    FILE(MAKE_DIRECTORY Applications/mhdopt/config/)
-    FILE(COPY Applications/mhdopt/config/ DESTINATION ${PROJECT_BINARY_DIR}/Applications/mhdopt/config/)
+       ADD_SUBDIRECTORY(applications/mhdopt/)
+    FILE(MAKE_DIRECTORY applications/mhdopt/config/)
+    FILE(COPY applications/mhdopt/config/ DESTINATION ${PROJECT_BINARY_DIR}/applications/mhdopt/config/)
 ENDIF(BUILD_MHDOPT)
 
 OPTION(BUILD_TEMPER "Build the temperature optimal control problem" ON)
 
 IF(BUILD_TEMPER)
-       ADD_SUBDIRECTORY(Applications/temper/)
-    FILE(MAKE_DIRECTORY Applications/temper/config/)
-    FILE(COPY Applications/temper/config/ DESTINATION ${PROJECT_BINARY_DIR}/Applications/temper/config/)
+       ADD_SUBDIRECTORY(applications/temper/)
+    FILE(MAKE_DIRECTORY applications/temper/config/)
+    FILE(COPY applications/temper/config/ DESTINATION ${PROJECT_BINARY_DIR}/applications/temper/config/)
 ENDIF(BUILD_TEMPER)
