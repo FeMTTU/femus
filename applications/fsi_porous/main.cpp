@@ -49,13 +49,13 @@ int main(int argc,char **args) {
   // READ DOUBLES FROM FILE ======== WAS declared as GLOBAL SCOPE, now NO MORE
 //   RunTimeMap<double> * runtime_double; //this line is not needed, it works nevertheless but it's not needed //so the brutal way to make it visible everywhere is to put the declaration OUTSIDE the function and to declare it with extern in all the files where it's needed
                                           //non serve il singleton pattern per questo! serve solo chiamare il costruttore QUI NEL MAIN e non OUTSIDE
-  runtime_double = RunTimeMap<double>::getInstance("Doubles",/*outfolder +*/ "./input/parameters.in");
+  runtime_double = RunTimeMap<double>::getInstance("Doubles",/*outfolder +*/ "./input/femus_conf.in");
   runtime_double->read();
   runtime_double->print();
 
   // READ STRINGS FROM FILE ========
  RunTimeMap<std::string> * runtime_string;  
-  runtime_string = RunTimeMap<std::string>::getInstance("Strings",/*outfolder +*/ "./input/parameters.in");
+  runtime_string = RunTimeMap<std::string>::getInstance("Strings",/*outfolder +*/ "./input/femus_conf.in");
   runtime_string->read();
   runtime_string->print();
   
