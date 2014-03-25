@@ -24,7 +24,7 @@ penalty_val 1.e10        # ==== not in library routines, but library-type
 <Files>
 # std::string
 
-INPUT_DIR     input/
+INPUT_DIR     case/
 OUTPUT_DIR    output/
 F_MESH_READ   straightQ3D2x2x2ZERO.gam
 
