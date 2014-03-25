@@ -102,6 +102,9 @@ protected:
   void Restrictor(const unsigned &gridf, const unsigned &gridn, 
 					    const unsigned &non_linear_iteration, const unsigned &linear_iteration, const bool &full_cycle);
   
+  /** Prolongate the solution to a finer level */
+  void ProlongatorSol(unsigned gridf);
+  
   /** Create the Prolongator Matrix in order to get the coarser matrix for the Algebraic Multigrid Solver */ 
   void BuildProlongatorMatrix(unsigned gridf, const char pdename[]);
   
