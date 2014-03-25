@@ -26,14 +26,14 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 int main(int argc,char **args) {
   bool linear=1;
-  bool vanka=1;
-  if(argc == 2) {
-    if( strcmp("vanka",args[1])) vanka=0;
-  }
-  else {
-    cout << "No input arguments!" << endl;
-    exit(0);
-  }
+  bool vanka=0;
+//   if(argc == 2) {
+//     if( strcmp("vanka",args[1])) vanka=0;
+//   }
+//   else {
+//     cout << "No input arguments!" << endl;
+//     exit(0);
+//   }
   
   /// Init Petsc-MPI communicator
   FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
@@ -139,7 +139,7 @@ int main(int argc,char **args) {
 
   
   // add the system Temperature to the MultiLevel problem
-  LinearImplicitSystem & system3 = nl_ml_prob.add_system<LinearImplicitSystem> ("Temp");
+  NonLinearImplicitSystem & system3 = nl_ml_prob.add_system<NonLinearImplicitSystem> ("Temp");
   system3.AddSolutionToSytemPDE("T");
 
   // init all the systems
@@ -155,11 +155,18 @@ int main(int argc,char **args) {
   
   // System 2
   system2.AttachAssembleFunction(AssembleMatrixResNS);  
+//   system2.SetMaxNumberOfLinearIterations(1);
+//   system2.SetAbsoluteConvergenceTolerance(1.e-10);  
+//   system2.SetMgType(F_CYCLE);
+//   system2.SetMaxNumberOfNonLinearIterations(10);
+//   
+  
   
   // System 3
   system3.AttachAssembleFunction(AssembleMatrixResT);
   system3.SetMaxNumberOfLinearIterations(10);
   system3.SetAbsoluteConvergenceTolerance(1.e-10);  
+  system3.SetMaxNumberOfNonLinearIterations(10);
   system3.SetMgType(F_CYCLE);
   
   nl_ml_prob.SetDirichletBCsHandling("NS1","Penalty");
@@ -431,7 +438,11 @@ void AssembleMatrixResNS(MultiLevelProblem &nl_ml_prob, unsigned level, const un
   
   //pointers 
   Solution*	 mysolution  	= nl_ml_prob._solution[level];
-  LinearEquationSolver*  mylsyspde 	= nl_ml_prob._LinSolver[ipde][level];
+  //LinearEquationSolver*  mylsyspde 	= nl_ml_prob._LinSolver[ipde][level];
+  
+  LinearEquationSolver*  mylsyspde	= nl_ml_prob.get_system<NonLinearImplicitSystem>("NS2")._LinSolver[level];   //_LinSolver[ipde][level]
+ 
+  
   mesh*		 mymsh    	= nl_ml_prob._msh[level];
   elem*		 myel		= mymsh->el;
   SparseMatrix*	 myKK		= mylsyspde->_KK;
@@ -752,7 +763,7 @@ void AssembleMatrixResT(MultiLevelProblem &nl_ml_prob, unsigned level, const uns
     
   //pointers and references
   Solution*      mysolution	= nl_ml_prob._solution[level];
-  LinearEquationSolver*  mylsyspde	= nl_ml_prob.get_system<LinearImplicitSystem>("Temp")._LinSolver[level];   //_LinSolver[ipde][level]
+  LinearEquationSolver*  mylsyspde	= nl_ml_prob.get_system<NonLinearImplicitSystem>("Temp")._LinSolver[level];   //_LinSolver[ipde][level]
   mesh*          mymsh		= nl_ml_prob._msh[level];
   elem*          myel		= mymsh->el;
   SparseMatrix*  myKK		= mylsyspde->_KK;

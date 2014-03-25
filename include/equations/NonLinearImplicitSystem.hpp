@@ -56,7 +56,9 @@ public:
   /** Set the max number of non-linear iterations for the nonlinear system solve. */
   void SetMaxNumberOfNonLinearIterations(unsigned int max_nonlin_it) {_n_max_nonlinear_iterations = max_nonlin_it;};
   
-
+  /** Checks for the non the linear convergence */
+  bool CheckConvergence(const char pdename[], const unsigned gridn);
+    
 protected:
   
    /** The number of nonlinear iterations required to solve the nonlinear system R(x)=0.  */
@@ -68,6 +70,10 @@ protected:
   /** The max number of non-linear iterations */
   unsigned int _n_max_nonlinear_iterations;
 
+  /** The max non linear tolerance **/
+  double _max_nonlinear_convergence_tolerance;
+  
+  
 private:
 
   void CreateSystemPDEStructure();
