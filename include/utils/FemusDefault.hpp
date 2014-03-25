@@ -46,7 +46,7 @@
 #define DEFAULT_BASEPATH     "./"
 #define DEFAULT_FEMDIR       "fem/"
 #define DEFAULT_CONTRIBDIR   "contrib/"
-#define DEFAULT_CONFIGDIR    "config/"
+#define DEFAULT_CONFIGDIR    "input/"
 #define DEFAULT_RUNTIMECONF  "femus_conf.in"
 //*********************************************
 
