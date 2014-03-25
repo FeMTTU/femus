@@ -161,14 +161,23 @@ OPTION(BUILD_MHDOPT "Build the MHD optimal control problem" ON)
 
 IF(BUILD_MHDOPT)
        ADD_SUBDIRECTORY(applications/mhdopt/)
-    FILE(MAKE_DIRECTORY applications/mhdopt/config/)
-    FILE(COPY applications/mhdopt/config/ DESTINATION ${PROJECT_BINARY_DIR}/applications/mhdopt/config/)
+    FILE(MAKE_DIRECTORY applications/mhdopt/input/)
+    FILE(COPY applications/mhdopt/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/mhdopt/input/)
 ENDIF(BUILD_MHDOPT)
 
 OPTION(BUILD_TEMPER "Build the temperature optimal control problem" ON)
 
 IF(BUILD_TEMPER)
        ADD_SUBDIRECTORY(applications/temper/)
-    FILE(MAKE_DIRECTORY applications/temper/config/)
-    FILE(COPY applications/temper/config/ DESTINATION ${PROJECT_BINARY_DIR}/applications/temper/config/)
+    FILE(MAKE_DIRECTORY applications/temper/input/)
+    FILE(COPY applications/temper/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/temper/input/)
 ENDIF(BUILD_TEMPER)
+
+OPTION(BUILD_FSIPOROUS "Build the fsi problem in a porous medium" ON)
+
+IF(BUILD_FSIPOROUS)
+       ADD_SUBDIRECTORY(applications/fsi_porous/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/fsi_porous/output/)
+    FILE(MAKE_DIRECTORY applications/fsi_porous/input/)
+    FILE(COPY           applications/fsi_porous/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/fsi_porous/input/)
+ENDIF(BUILD_FSIPOROUS)

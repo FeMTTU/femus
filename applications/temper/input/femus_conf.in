@@ -24,7 +24,7 @@ penalty_val 1.e10        # ==== not in library routines, but library-type
 <Files>
 # std::string  # mesh file consistency
 
-INPUT_DIR     input/
+INPUT_DIR     case/
 OUTPUT_DIR    output/
 F_MESH_READ    inclQ2D2x2.gam
 # ======== this last one is Only Gencase # we recognize the file format from the extension: .gam=gambit, .med=salome
