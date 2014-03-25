@@ -61,8 +61,6 @@ void NonLinearImplicitSystem::solve() {
     igrid0=_equation_systems.GetNumberOfGridNotRefined();
   }
   
-  unsigned ipde = _equation_systems.GetPdeIndex(_sys_name.c_str());  // non esiste + la chiamata alla pde, siamo già dentro ad una pde specifica
-    
   std::pair<int, double> solver_info;
      
   for ( unsigned igridn=igrid0; igridn <= _equation_systems.GetNumberOfGrid(); igridn++) {   //_igridn
@@ -79,7 +77,7 @@ void NonLinearImplicitSystem::solve() {
       bool assemble_matrix = true; //Be carefull!!!! this is needed in the _assemble_function
       
       /// Be careful !!!! adesso stiamo usando _sys_number invece che ipde, da togliere al + presto
-      _assemble_system_function(_equation_systems,igridn-1u, igridn-1u,ipde, assemble_matrix);    
+      _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix);    
       
       std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
  
@@ -115,7 +113,7 @@ void NonLinearImplicitSystem::solve() {
  	}
  	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
  	for (unsigned ig = _equation_systems.GetNumberOfGridNotRefined()-1; ig < igridn-1; ig++) {  // _gridr
- 	  _equation_systems._solution[ig]->SumEpsToSol(_equation_systems._SolPdeIndex[ipde], _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
+ 	  _equation_systems._solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
  	}
  	
  	_final_linear_residual = solver_info.second;
@@ -125,7 +123,7 @@ void NonLinearImplicitSystem::solve() {
       }
       
       // ============== Update Solution ( ig = igridn )==============
-      _equation_systems._solution[igridn-1]->SumEpsToSol(_equation_systems._SolPdeIndex[ipde], _LinSolver[igridn-1]->_EPS, 
+      _equation_systems._solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
 							 _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
       // ============== Test for non-linear Convergence ==============
       bool conv = CheckConvergence(_sys_name.c_str(), igridn-1);
@@ -136,7 +134,7 @@ void NonLinearImplicitSystem::solve() {
     }
     // ==============  Solution Prolongation ==============
     if (igridn < _equation_systems.GetNumberOfGrid()) {
-      _equation_systems.ProlongatorSol(_sys_name.c_str(), igridn);
+      ProlongatorSol(igridn);
     }
   }
 
@@ -148,15 +146,15 @@ void NonLinearImplicitSystem::solve() {
 
 bool NonLinearImplicitSystem::CheckConvergence(const char pdename[], const unsigned gridn){
 
-  unsigned ipde=_equation_systems.GetPdeIndex(pdename);
+  //unsigned ipde=_equation_systems.GetPdeIndex(pdename);
   bool conv=true;
   double ResMax;
   double L2normEps;
   Solution *solution=_equation_systems._solution[gridn];
   
   //for debugging purpose
-  for (unsigned k=0; k<_equation_systems._SolPdeIndex[ipde].size(); k++) {
-    unsigned indexSol=_equation_systems._SolPdeIndex[ipde][k];
+  for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
+    unsigned indexSol=_SolSystemPdeIndex[k];
     
     L2normEps    = solution->_Eps[indexSol]->l2_norm();
     ResMax       = solution->_Res[indexSol]->linfty_norm();

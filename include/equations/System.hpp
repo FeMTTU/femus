@@ -49,7 +49,7 @@ public:
   
   /** Register a user function to use in assembling the system matrix and RHS. */
   void AttachAssembleFunction (void fptr(MultiLevelProblem &ml_prob, unsigned level, 
-				      const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix));
+				      const unsigned &gridn, const bool &assembe_matrix));
 
   /** Solves the system.  Should be overloaded in derived systems. */
   virtual void solve () {};
@@ -59,6 +59,9 @@ public:
   
   /** Init the system PDE structures */
   virtual void init();
+  
+  /** Get the index of the Solution "solname" for this system */
+  unsigned GetSolPdeIndex(const char solname[]);
   
 
 protected:
@@ -70,7 +73,7 @@ protected:
 
   /** Function that assembles the system. */
   void (* _assemble_system_function) (MultiLevelProblem &ml_prob, unsigned level, 
-				      const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+				      const unsigned &gridn, const bool &assembe_matrix);
   
   /** The number associated with this system */
   const unsigned int _sys_number;

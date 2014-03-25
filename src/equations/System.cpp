@@ -38,14 +38,14 @@ void System::init() {
 }
 
 void System::AttachAssembleFunction(void fptr(MultiLevelProblem &ml_prob, unsigned level, 
-				      const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix))
+				      const unsigned &gridn, const bool &assembe_matrix))
 {
   assert(fptr);
 
   _assemble_system_function = fptr;
 }
   
-// *******************************************************
+
 void System::AddSolutionToSytemPDE(const char solname[]){
   unsigned jsol=0;
   for(unsigned j=0;j<_SolSystemPdeIndex.size();j++){
@@ -55,4 +55,18 @@ void System::AddSolutionToSytemPDE(const char solname[]){
     _SolSystemPdeIndex.resize(jsol+1u);
     _SolSystemPdeIndex[jsol]=_equation_systems.GetIndex(solname);
   }
+}
+
+
+unsigned System::GetSolPdeIndex(const char solname[]) {
+  //unsigned ipde=GetPdeIndex(pdename);  
+  unsigned index=0;
+  while (strcmp(_equation_systems.SolName[_SolSystemPdeIndex[index]],solname)) {
+    index++;
+    if (index==_SolSystemPdeIndex.size()) {
+      std::cout<<"error! invalid name entry MultiLevelProblem::GetSolPdeIndex(const char pdename[], const char solname[])"<<std::endl;
+      exit(0);
+    }
+  }
+  return index;
 }

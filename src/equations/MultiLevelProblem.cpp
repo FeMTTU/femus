@@ -599,68 +599,68 @@ void MultiLevelProblem::SetMovingMesh(std::vector<std::string>& movvars_in) {
 int MultiLevelProblem::ComputeBdIntegral(const char pdename[],const char var_name[], const unsigned & kel, const unsigned & jface, unsigned level, unsigned dir) {
   
   
-  unsigned ipde=GetPdeIndex(pdename);
-  //   PetscVector* RESp=static_cast<PetscVector*> (_LinSolver[ipde][level]->_RES);  //TODO
-  //   Vec RES=RESp->vec(); //TODO
-  
-  int ierr;
-  double tau;
-  double vx[3][27];
-  double phi[27],gradphi[27][3],Weight;
-  double normal[3];
-  int node[27];
-     
-  unsigned indexvar = GetSolPdeIndex(pdename,var_name);
-  short unsigned kelt = _msh[level]->el->GetElementType(kel);
-  unsigned order_ind = SolType[GetIndex(var_name)];
-  unsigned indX=GetIndex("X");
-  unsigned indY=GetIndex("Y");
-  unsigned indZ=GetIndex("Z");
-		
-  bool test = _SetBoundaryConditionFunction(0.,0.,0.,var_name,tau,-(_msh[level]->el->GetFaceElementIndex(kel,jface)+1),_time);
-  if(!test) {
-		
-    const short unsigned NV1[6][2]={{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
-    unsigned nve=NV1[kelt][jface<_msh[level]->el->GetElementFaceNumber(kel,0)];
-    const unsigned FELT[6][2]={{3,3},{4,4},{3,4},{5,5},{5,5}};
-    unsigned felt = FELT[kelt][jface<_msh[level]->el->GetElementFaceNumber(kel,0)];
-
-    //		cout << "felt : "  << felt << endl;
-    // 		cout << "node: " << nve << endl;
-		
-    for(unsigned i=0;i<nve;i++) {
-      unsigned inode=_msh[level]->el->GetFaceVertexIndex(kel,jface,i)-1u;
-      node[i] = inode + _LinSolver[ipde][level]->KKIndex[indexvar];
-      unsigned inode_Metis=_msh[level]->GetMetisDof(inode,2);
-      
-      vx[0][i]=(*_solution[level]->_Sol[indX])(inode_Metis);  
-      vx[1][i]=(*_solution[level]->_Sol[indY])(inode_Metis);
-      vx[2][i]=(*_solution[level]->_Sol[indZ])(inode_Metis);
-      
-      
-    }
-
-    for(unsigned igs=0;igs < type_elem[felt][order_ind]->GetGaussPointNumber(); igs++) {
-      (type_elem[felt][order_ind]->*type_elem[felt][order_ind]->Jacobian_sur_ptr)(vx,igs,Weight,phi,gradphi,normal);
-      //   		  cout << Weight << endl;
-      //  		  cout << "normal_x: " << normal[0] << endl;
-      //  		  cout << "normal_y: " << normal[1] << endl;
-      // 		  cout << "normal_z: " << normal[2] << endl;
-      //  		  cout << type_elem[felt][order_ind]->GetGaussPointNumber() << endl;
-      //  		  cout << "  " << endl;
-      for(unsigned i=0;i<nve;i++) {
-	//     	          cout << phi[i] << "  " << nve << endl;
-	_SetBoundaryConditionFunction(vx[0][i],vx[1][i],vx[2][i],var_name,tau,-(_msh[level]->el->GetFaceElementIndex(kel,jface)+1),_time);
- 	    
-	//Manca la moltiplicazione x la normale che e'ancora da fare
-	PetscScalar value = -phi[i]*tau*normal[dir]*Weight*_dt;
-		    
-	// Non voglio chiamare Vecsetvalue ma aggiungere il valore direttamente a F
-	// per fare questo mi serve la relazione tra i(node locale di surface) e il nodo locale di volume
-	_LinSolver[ipde][level]->_RES->add(node[i],value);
-      }
-    }
-  }
+//   unsigned ipde=GetPdeIndex(pdename);
+//   //   PetscVector* RESp=static_cast<PetscVector*> (_LinSolver[ipde][level]->_RES);  //TODO
+//   //   Vec RES=RESp->vec(); //TODO
+//   
+    int ierr;
+//   double tau;
+//   double vx[3][27];
+//   double phi[27],gradphi[27][3],Weight;
+//   double normal[3];
+//   int node[27];
+//      
+//   unsigned indexvar = GetSolPdeIndex(pdename,var_name);
+//   short unsigned kelt = _msh[level]->el->GetElementType(kel);
+//   unsigned order_ind = SolType[GetIndex(var_name)];
+//   unsigned indX=GetIndex("X");
+//   unsigned indY=GetIndex("Y");
+//   unsigned indZ=GetIndex("Z");
+// 		
+//   bool test = _SetBoundaryConditionFunction(0.,0.,0.,var_name,tau,-(_msh[level]->el->GetFaceElementIndex(kel,jface)+1),_time);
+//   if(!test) {
+// 		
+//     const short unsigned NV1[6][2]={{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
+//     unsigned nve=NV1[kelt][jface<_msh[level]->el->GetElementFaceNumber(kel,0)];
+//     const unsigned FELT[6][2]={{3,3},{4,4},{3,4},{5,5},{5,5}};
+//     unsigned felt = FELT[kelt][jface<_msh[level]->el->GetElementFaceNumber(kel,0)];
+// 
+//     //		cout << "felt : "  << felt << endl;
+//     // 		cout << "node: " << nve << endl;
+// 		
+//     for(unsigned i=0;i<nve;i++) {
+//       unsigned inode=_msh[level]->el->GetFaceVertexIndex(kel,jface,i)-1u;
+//       node[i] = inode + _LinSolver[ipde][level]->KKIndex[indexvar];
+//       unsigned inode_Metis=_msh[level]->GetMetisDof(inode,2);
+//       
+//       vx[0][i]=(*_solution[level]->_Sol[indX])(inode_Metis);  
+//       vx[1][i]=(*_solution[level]->_Sol[indY])(inode_Metis);
+//       vx[2][i]=(*_solution[level]->_Sol[indZ])(inode_Metis);
+//       
+//       
+//     }
+// 
+//     for(unsigned igs=0;igs < type_elem[felt][order_ind]->GetGaussPointNumber(); igs++) {
+//       (type_elem[felt][order_ind]->*type_elem[felt][order_ind]->Jacobian_sur_ptr)(vx,igs,Weight,phi,gradphi,normal);
+//       //   		  cout << Weight << endl;
+//       //  		  cout << "normal_x: " << normal[0] << endl;
+//       //  		  cout << "normal_y: " << normal[1] << endl;
+//       // 		  cout << "normal_z: " << normal[2] << endl;
+//       //  		  cout << type_elem[felt][order_ind]->GetGaussPointNumber() << endl;
+//       //  		  cout << "  " << endl;
+//       for(unsigned i=0;i<nve;i++) {
+// 	//     	          cout << phi[i] << "  " << nve << endl;
+// 	_SetBoundaryConditionFunction(vx[0][i],vx[1][i],vx[2][i],var_name,tau,-(_msh[level]->el->GetFaceElementIndex(kel,jface)+1),_time);
+//  	    
+// 	//Manca la moltiplicazione x la normale che e'ancora da fare
+// 	PetscScalar value = -phi[i]*tau*normal[dir]*Weight*_dt;
+// 		    
+// 	// Non voglio chiamare Vecsetvalue ma aggiungere il valore direttamente a F
+// 	// per fare questo mi serve la relazione tra i(node locale di surface) e il nodo locale di volume
+// 	_LinSolver[ipde][level]->_RES->add(node[i],value);
+//       }
+//     }
+//   }
   return ierr;
 }
 

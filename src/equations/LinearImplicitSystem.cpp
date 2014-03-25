@@ -85,8 +85,6 @@ void LinearImplicitSystem::solve() {
     full_cycle=0;
     igrid0=_equation_systems.GetNumberOfGridNotRefined();
   }
-  
-  unsigned ipde = _equation_systems.GetPdeIndex(_sys_name.c_str());  // non esiste + la chiamata alla pde, siamo già dentro ad una pde specifica
     
   std::pair<int, double> solver_info;
      
@@ -104,7 +102,7 @@ void LinearImplicitSystem::solve() {
       bool assemble_matrix = true; //Be carefull!!!! this is needed in the _assemble_function
       
       /// Be careful !!!! adesso stiamo usando _sys_number invece che ipde, da togliere al + presto
-      _assemble_system_function(_equation_systems,igridn-1u, igridn-1u,ipde, assemble_matrix);    
+      _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix);    
       
       std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
  
@@ -140,7 +138,7 @@ void LinearImplicitSystem::solve() {
  	}
  	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
  	for (unsigned ig = _equation_systems.GetNumberOfGridNotRefined()-1; ig < igridn-1; ig++) {  // _gridr
- 	  _equation_systems._solution[ig]->SumEpsToSol(_equation_systems._SolPdeIndex[ipde], _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
+ 	  _equation_systems._solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
  	}
  	
  	_final_linear_residual = solver_info.second;
@@ -151,18 +149,16 @@ void LinearImplicitSystem::solve() {
       }
       
       // ============== Update Solution ( ig = igridn )==============
-      _equation_systems._solution[igridn-1]->SumEpsToSol(_equation_systems._SolPdeIndex[ipde], _LinSolver[igridn-1]->_EPS, 
+      _equation_systems._solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
 							 _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
-      // ============== Test for non-linear Convergence ==============
-      bool conv = _equation_systems.GetConvergence(_sys_name.c_str(), igridn-1);
-      
+            
      
       std::cout << std::endl;
       std::cout << "COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 
     // ==============  Solution Prolongation ==============
     if (igridn < _equation_systems.GetNumberOfGrid()) {
-      _equation_systems.ProlongatorSol(_sys_name.c_str(), igridn);
+      ProlongatorSol(igridn);
     }
   }
 
@@ -176,11 +172,9 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
   _LinSolver[gridf-1u]->SetEpsZero();
   _LinSolver[gridf-1u]->SetResZero();
   
-  unsigned ipde = _equation_systems.GetPdeIndex(_sys_name.c_str());
-   
   bool assemble_matrix = (linear_iteration == 0) ? true : false;  //Be carefull!!!! this is needed in the _assemble_function      
   if (gridf>=_equation_systems.GetNumberOfGridNotRefined()) {   //_gridr
-    _assemble_system_function(_equation_systems,gridf-1,gridn-1u,ipde, assemble_matrix);
+    _assemble_system_function(_equation_systems, gridf-1, gridn-1u, assemble_matrix);
   }
   
   bool matrix_reuse=true;
@@ -219,9 +213,26 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
 
 // *******************************************************
 void LinearImplicitSystem::Prolongator(const unsigned &gridf) {
+  
   _LinSolver[gridf]->_EPSC->matrix_mult(*_LinSolver[gridf-1]->_EPS,*_LinSolver[gridf]->_PP);
   _LinSolver[gridf]->UpdateResidual();
   _LinSolver[gridf]->SumEpsCToEps();
+
+  
+}
+
+
+void LinearImplicitSystem::ProlongatorSol(unsigned gridf) {
+
+  for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
+    unsigned SolIndex=_SolSystemPdeIndex[k];
+    unsigned Typeindex=_equation_systems.SolType[SolIndex];
+    _equation_systems._solution[gridf]->_Sol[SolIndex]->matrix_mult(*_equation_systems._solution[gridf-1]->_Sol[SolIndex],*_equation_systems._solution[gridf]->_ProjMat[Typeindex]);
+    _equation_systems._solution[gridf]->_Sol[SolIndex]->close(); 
+    
+  }
+
+  
 }
 
 
@@ -231,7 +242,7 @@ void LinearImplicitSystem::Prolongator(const unsigned &gridf) {
 
 void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pdename[]) {
 
-  unsigned ipde = _equation_systems.GetPdeIndex(pdename);
+  unsigned ipde = _sys_number;   //_equation_systems.GetPdeIndex(pdename);
       
   if (gridf<1) {
     std::cout<<"Error! In function \"BuildProlongatorMatrix\" argument less then 1"<<std::endl;
