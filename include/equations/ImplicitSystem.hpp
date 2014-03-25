@@ -58,7 +58,7 @@ protected:
   int _npost;
   bool _VankaIsSet;
   short unsigned _NSchurVar;
-  bool _Schur = false;
+  bool _Schur;
   vector <unsigned> _VankaIndex;
   
 private:
