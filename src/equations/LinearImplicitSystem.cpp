@@ -144,9 +144,9 @@ void LinearImplicitSystem::solve() {
  	}
  	
  	_final_linear_residual = solver_info.second;
-	
 	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
  	if(_final_linear_residual < _absolute_convergence_tolerance) 
+	  
 	  break;
       }
       
