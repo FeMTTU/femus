@@ -20,14 +20,6 @@ using std::map;
 using std::cout;
 using std::endl;
 
-// main must be included BEFORE MULTIGRID, therefore this one must go OUTSIDE this main
-//These functions are functions that belong to no class, but it is like they belong to some class...
-//so let me do a file with Spare Functions"
-
-
-// #include "sparefuncs.hpp"
-
-
 ///////////////// application specific includes
 
 //compile time

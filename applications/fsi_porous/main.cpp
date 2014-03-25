@@ -7,11 +7,11 @@
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "MultiLevelProblem.hpp"
+#include "RunTimeMap.hpp"
 
 // application includes and prototypes
 #include "main.hpp"
 #include "MyMultigrid.hpp"
-#include "RunTimeMapSingleton.hpp"
 
 //===============================
 int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
@@ -22,7 +22,7 @@ bool BoundaryND(/*MultiLevelProblem& mg_in,*/const double &x, const double &y, c
 
 
 RunTimeMap<double> * runtime_double; //per ora devo usarla cosi' global... dovrebbe appartenere a tutte le classi...
-                                     //e' chiaro che lasciarla qui e' un problema perche' gli argomenti del costruttore
+                                     //e' chiaro che lasciarla qui e' un problema perche' gli argomenti del costruttore...
 
 int main(int argc,char **args) {
 
@@ -40,22 +40,17 @@ int main(int argc,char **args) {
   FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
   
  //READ STRING of TIME FROM SHELL;
-  std::string outfolder = "output";//getenv("OUTFOLDER");  //if you don't set this environment variable, the code doesn't run
-  if (outfolder == "") {
-    std::cout << " Set OUTFOLDER in your shell environment" << std::endl;
-    abort();
-  } 
+  std::string outfolder = "output"; //was getenv(OUTFOLDER);
     
   // READ DOUBLES FROM FILE ======== WAS declared as GLOBAL SCOPE, now NO MORE
 //   RunTimeMap<double> * runtime_double; //this line is not needed, it works nevertheless but it's not needed //so the brutal way to make it visible everywhere is to put the declaration OUTSIDE the function and to declare it with extern in all the files where it's needed
                                           //non serve il singleton pattern per questo! serve solo chiamare il costruttore QUI NEL MAIN e non OUTSIDE
-  runtime_double = RunTimeMap<double>::getInstance("Doubles",/*outfolder +*/ "./input/femus_conf.in");
+  runtime_double = new RunTimeMap<double>("Doubles","./");
   runtime_double->read();
   runtime_double->print();
 
   // READ STRINGS FROM FILE ========
- RunTimeMap<std::string> * runtime_string;  
-  runtime_string = RunTimeMap<std::string>::getInstance("Strings",/*outfolder +*/ "./input/femus_conf.in");
+  RunTimeMap<std::string> * runtime_string = new RunTimeMap<std::string>("Strings","./");  
   runtime_string->read();
   runtime_string->print();
   
@@ -219,6 +214,9 @@ int main(int argc,char **args) {
   mg.clear();
   mg.FreeMultigrid();
   delete [] infile;
+//   delete [] runtime_double; //check seg fault on these two... the global variable may not help
+//   delete [] runtime_string;
+  
   return 0;
 }
 

@@ -1,6 +1,5 @@
 #include "MultiLevelProblem.hpp"
-
-#include "RunTimeMapSingleton.hpp"
+#include "RunTimeMap.hpp"
 #include "main.hpp"
 
 class MyMultiGrid: public MultiLevelProblem {
