@@ -46,9 +46,6 @@
 // // // };
 
 
-//can i use a template string as a nontype template parameter? No:
-//  http://stackoverflow.com/questions/5547852/string-literals-not-allowed-as-non-type-template-parameters
-
 template <typename T>
 class RunTimeMap   {
 
