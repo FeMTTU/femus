@@ -179,7 +179,5 @@ IF(BUILD_FSIPOROUS)
        ADD_SUBDIRECTORY(applications/fsi_porous/)
     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/fsi_porous/output/)
     FILE(MAKE_DIRECTORY applications/fsi_porous/input/)
-    FILE(COPY           applications/fsi_porous/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/fsi_porous/input/)
-    FILE(COPY applications/fsi_porous/parameters.in DESTINATION ${PROJECT_BINARY_DIR}/applications/fsi_porous/)
+    FILE(COPY           applications/fsi_porous/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/fsi_porous/input/)
 ENDIF(BUILD_FSIPOROUS)

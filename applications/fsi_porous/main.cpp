@@ -14,17 +14,15 @@
 #include "RunTimeMapSingleton.hpp"
 
 //===============================
-int AssembleMatrixResP(MultiLevelProblem &mg, unsigned level, const elem_type *type_elem[6][5],
-                       vector <vector <double> > &vt, const unsigned &gridn);
-int AssembleMatrixResD(MultiLevelProblem &mg, unsigned level, const elem_type *type_elem[6][5],
-                       vector <vector <double> > &vt, const unsigned &gridn);
-int AssembleMatrixResVel(MultiLevelProblem &mg, unsigned level, const elem_type *type_elem[6][5],
-                       vector <vector <double> > &vt, const unsigned &gridn);
+int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+int AssembleMatrixResD(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+int AssembleMatrixResVel(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 bool BoundaryND(/*MultiLevelProblem& mg_in,*/const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName,const double time);
 
 
 RunTimeMap<double> * runtime_double; //per ora devo usarla cosi' global... dovrebbe appartenere a tutte le classi...
+                                     //e' chiaro che lasciarla qui e' un problema perche' gli argomenti del costruttore
 
 int main(int argc,char **args) {
 
@@ -51,13 +49,13 @@ int main(int argc,char **args) {
   // READ DOUBLES FROM FILE ======== WAS declared as GLOBAL SCOPE, now NO MORE
 //   RunTimeMap<double> * runtime_double; //this line is not needed, it works nevertheless but it's not needed //so the brutal way to make it visible everywhere is to put the declaration OUTSIDE the function and to declare it with extern in all the files where it's needed
                                           //non serve il singleton pattern per questo! serve solo chiamare il costruttore QUI NEL MAIN e non OUTSIDE
-  runtime_double = RunTimeMap<double>::getInstance("Doubles",/*outfolder +*/ "parameters.in");
+  runtime_double = RunTimeMap<double>::getInstance("Doubles",/*outfolder +*/ "./input/parameters.in");
   runtime_double->read();
   runtime_double->print();
 
   // READ STRINGS FROM FILE ========
  RunTimeMap<std::string> * runtime_string;  
-  runtime_string = RunTimeMap<std::string>::getInstance("Strings",/*outfolder +*/ "parameters.in");
+  runtime_string = RunTimeMap<std::string>::getInstance("Strings",/*outfolder +*/ "./input/parameters.in");
   runtime_string->read();
   runtime_string->print();
   
@@ -244,24 +242,6 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
   return refine;
 }
 
-//This function initializes all the variables  GEN IC
-double Init(const double &x, const double &y, const double &z,const char name[]) {
-  double value=0.;
-//   if(!strcmp(name,"U")){
-//     value=0;
-//   }
-//   else if(!strcmp(name,"V")){
-//     value=0;
-//   }
-//   else if(!strcmp(name,"W")){
-//     value=0;
-//   }
-//   else if(!strcmp(name,"P")){
-//     value=0;
-//   }
-  return value;
-}
-
 /// 1 Dirichlet 0 Neumann - value: any nonhomogeneous BC
 bool BoundaryND(/*MultiLevelProblem& mg_in,*/const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName,const double time) {
 
@@ -366,8 +346,7 @@ bool BoundaryND(/*MultiLevelProblem& mg_in,*/const double &x, const double &y, c
 }
 
 
-int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, const elem_type *type_elem[6][5],
-                       vector <vector <double> > &vt, const unsigned &gridn) {
+int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
 
 // not time dependent
   MyMultiGrid& mg = static_cast<MyMultiGrid&>(mg2);
@@ -595,8 +574,7 @@ int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, const elem_type *
 //Physically speaking, we must take into account the couplings,
 //and they must be somewhat IN ACCORDANCE: the permeabilities must be in agreement with the elastic constants...
 
-int AssembleMatrixResD(MultiLevelProblem &mg2, unsigned level, const elem_type *type_elem[6][5],
-                       vector <vector <double> > &vt, const unsigned &gridn) {
+int AssembleMatrixResD(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
 
 // not time dependent
 // // //   MyMultiGrid& mg = static_cast<MyMultiGrid&>(mg2);
@@ -1031,9 +1009,7 @@ int AssembleMatrixResD(MultiLevelProblem &mg2, unsigned level, const elem_type *
 }
 
 
-
-int AssembleMatrixResVel(MultiLevelProblem &mg2, unsigned level, const elem_type *type_elem[6][5],
-                       vector <vector <double> > &vt, const unsigned &gridn) {
+int AssembleMatrixResVel(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
 
 // not time dependent
 // // //   MyMultiGrid& mg = static_cast<MyMultiGrid&>(mg2);
