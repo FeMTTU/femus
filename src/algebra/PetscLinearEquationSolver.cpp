@@ -140,6 +140,16 @@ clock_t PetscLinearEquationSolver::BuildIndex(){
   std::sort(_indexai[0].begin(), _indexai[0].end());
   std::sort(_indexai[1].begin(), _indexai[1].end());
   
+  
+  
+  //BEGIN Generate std::vector<IS> for GMRES solve by elimination ***********
+  _isA.resize(1);
+  PetscInt Asize=_indexai[1].size();
+  int ierr=ISCreateGeneral(MPI_COMM_WORLD,Asize,&_indexai[1][0], PETSC_USE_POINTER ,&_isA[0]);	   
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  //END Generate std::vector<IS> for GMRES solve by elimination ***********  
+    
+  
   clock_t end_time=clock();
   SearchTime = (end_time-start_time);
   
@@ -361,11 +371,10 @@ clock_t PetscLinearEquationSolver::BuildIndex(const vector <unsigned> &VankaInde
   SearchTime+=(end_time-start_time);
   
   
-  //BEGIN Generate std::vector<IS> for each the vanka block ***********
+  //BEGIN Generate std::vector<IS> for vanka solve ***********
   _isA.resize(_indexai.size());
   _isB.resize(_indexai.size());
   for(unsigned vanka_block_index=0;vanka_block_index<_indexai.size();vanka_block_index++){  
-    clock_t start_time = clock(); 
     unsigned PBsize = _Psize[0][vanka_block_index];
     unsigned PAmBsize = _indexai[vanka_block_index].size()-PBsize;
     PetscErrorCode ierr;     
@@ -374,7 +383,7 @@ clock_t PetscLinearEquationSolver::BuildIndex(const vector <unsigned> &VankaInde
     ierr=ISCreateGeneral(MPI_COMM_WORLD,PAmBsize,&_indexai[vanka_block_index][PBsize],PETSC_USE_POINTER,&_isB[vanka_block_index]);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
   }
-  //END Generate std::vector<IS> for each the vanka block ***********  
+  //END Generate std::vector<IS> for vanka solve ***********  
   return SearchTime;
 }
  
@@ -728,10 +737,11 @@ std::pair< int, double> PetscLinearEquationSolver::solve() {
  
     PetscInt Asize=_indexai[1].size();
 
-    // generate IS
-    IS isA;
-    ierr=ISCreateGeneral(MPI_COMM_WORLD,Asize,&_indexai[1][0], PETSC_USE_POINTER ,&isA);	   CHKERRABORT(MPI_COMM_WORLD,ierr);
-        
+//     // generate IS
+//     IS isA;
+//     ierr=ISCreateGeneral(MPI_COMM_WORLD,Asize,&_indexai[1][0], PETSC_USE_POINTER ,&isA);	   CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    IS isA=_isA[0];
     Vec Pr;
     ierr = VecGetSubVector(RES,isA,&Pr);				CHKERRABORT(MPI_COMM_WORLD,ierr);
 
@@ -786,7 +796,7 @@ std::pair< int, double> PetscLinearEquationSolver::solve() {
     ierr = ISRestoreIndices(isA,&ind);					CHKERRABORT(MPI_COMM_WORLD,ierr);
 
     ierr = VecDestroy(&Pw);					        CHKERRABORT(MPI_COMM_WORLD,ierr);
-    ierr = ISDestroy(&isA);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+    //ierr = ISDestroy(&isA);						CHKERRABORT(MPI_COMM_WORLD,ierr);
 
     *_EPS += *_EPSC;
 
