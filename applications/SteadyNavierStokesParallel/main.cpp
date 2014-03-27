@@ -64,7 +64,9 @@ int main(int argc,char **args) {
   Parameter parameter(Lref,Uref);
   
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,0.001,1.,"Newtonian",0.001,1.);
+  //Fluid fluid(parameter,0.001,1.,"Newtonian",0.001,1.);
+  
+  Fluid fluid(parameter,100.,1.,"Newtonian",0.001,1.);
   cout << "Fluid properties: " << endl;
   cout << fluid << endl;
   
@@ -107,16 +109,17 @@ int main(int argc,char **args) {
    
   // System Navier-Stokes
   system1.AttachAssembleFunction(AssembleMatrixResNS);  
+  system1.SetMaxNumberOfNonLinearIterations(6);
   system1.SetMaxNumberOfLinearIterations(1);
   system1.SetAbsoluteConvergenceTolerance(1.e-10);  
   system1.SetMgType(F_CYCLE);
-  system1.SetMaxNumberOfNonLinearIterations(3);
    
   // System Temperature
   system2.AttachAssembleFunction(AssembleMatrixResT);
-  system2.SetMaxNumberOfLinearIterations(10);
+  system2.SetMaxNumberOfLinearIterations(6);
   system2.SetAbsoluteConvergenceTolerance(1.e-10);  
   system2.SetMgType(F_CYCLE);
+  
   
   // Solving
   // System Navier-Stokes system
@@ -127,7 +130,7 @@ int main(int argc,char **args) {
   // System Temperature system
   std::cout << std::endl;
   std::cout << " *********** Temperature ************* " << std::endl;
-  nl_ml_prob.get_system("Temperature").solve();
+  //nl_ml_prob.get_system("Temperature").solve();
    
   /// Print all solutions
   std::vector<std::string> print_vars;

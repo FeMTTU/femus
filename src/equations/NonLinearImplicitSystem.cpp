@@ -118,16 +118,16 @@ void NonLinearImplicitSystem::solve() {
  	
  	_final_linear_residual = solver_info.second;
 	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
- 	if(_final_linear_residual < _absolute_convergence_tolerance) 
-	   break;
+ 	//if(_final_linear_residual < _absolute_convergence_tolerance) 
+	  // break;
       }
-      
+      std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
       // ============== Update Solution ( ig = igridn )==============
       _equation_systems._solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
 							 _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
       // ============== Test for non-linear Convergence ==============
       bool conv = CheckConvergence(_sys_name.c_str(), igridn-1);
-      if (conv == true) _n_nonlinear_iterations = _n_max_nonlinear_iterations+1;
+      //if (conv == true) _n_nonlinear_iterations = _n_max_nonlinear_iterations+1;
      
       std::cout << std::endl;
       std::cout << "COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
