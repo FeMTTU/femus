@@ -46,6 +46,12 @@ public:
 
   /** Init the system PDE structures */
   virtual void init();
+  
+  /**
+   * @returns \p "Implicit".  Helps in identifying
+   * the system type in an equation system file.
+   */
+  virtual std::string system_type () const { return "Implicit"; }
 
   // the sparse matrix must be putted here A, now is in linsysPDE
   

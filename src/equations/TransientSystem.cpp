@@ -21,7 +21,7 @@
 #include "ExplicitSystem.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
-
+#include "NumericVector.hpp"
 // ------------------------------------------------------------
 // TransientSystem implementation
 template <class Base>
@@ -29,163 +29,169 @@ TransientSystem<Base>::TransientSystem (MultiLevelProblem& ml_probl,
 					const std::string& name_in,
 					const unsigned int number_in) :
 
-  Base                 (ml_probl, name_in, number_in)
+  Base (ml_probl, name_in, number_in),
+  _equation_systems(ml_probl),
+  _is_selective_timestep(false),
+  _time(0.),
+  _time_step(0),
+  _dt(0.1)
 {
-// #ifdef LIBMESH_ENABLE_GHOSTED
-//   old_local_solution =
-//     AutoPtr<NumericVector<Number> >
-//       (&(this->add_vector("_transient_old_local_solution", true, GHOSTED)));
-//   older_local_solution =
-//     AutoPtr<NumericVector<Number> >
-//       (&(this->add_vector("_transient_older_local_solution", true, GHOSTED)));
-// #else
-//   old_local_solution =
-//     AutoPtr<NumericVector<Number> >
-//       (&(this->add_vector("_transient_old_local_solution", true, SERIAL)));
-//   older_local_solution =
-//     AutoPtr<NumericVector<Number> >
-//       (&(this->add_vector("_transient_older_local_solution", true, SERIAL)));
-// #endif
+
 }
-
-
 
 template <class Base>
 TransientSystem<Base>::~TransientSystem ()
 {
   this->clear();
-
-  // We still have AutoPtrs for API compatibility, but
-  // now that we're System::add_vector()ing these, we can trust
-  // the base class to handle memory management
-  old_local_solution;
-  older_local_solution;
 }
-
-
 
 template <class Base>
 void TransientSystem<Base>::clear ()
 {
   // clear the parent data
-  //Base::clear(); // ancora non esiste
+  Base::clear(); 
 
-  // the old & older local solutions
-  // are now deleted by System!
-  // old_local_solution->clear();
-  // older_local_solution->clear();
-
-//   // FIXME: This preserves maximum backwards compatibility,
-//   // but is probably grossly unnecessary:
-//   old_local_solution.release();
-//   older_local_solution.release();
-// 
-//   old_local_solution =
-//     AutoPtr<NumericVector<Number> >
-//       (&(this->add_vector("_transient_old_local_solution")));
-//   older_local_solution =
-//     AutoPtr<NumericVector<Number> >
-//       (&(this->add_vector("_transient_older_local_solution")));
 }
 
+template <class Base>
+void TransientSystem<Base>::UpdateSolution() {
+ 
+  for (int ig=0; ig<_equation_systems.GetNumberOfGrid(); ig++) {   
+    _equation_systems._solution[ig]->UpdateSolution();
+  }
+  
+}
+
+template <class Base>
+void TransientSystem<Base>::solve() {
+ 
+  if (_is_selective_timestep) {
+    _dt = _get_time_interval_function(_time);
+  }
+
+  //update time
+  _time += _dt;
+   
+  //update time step
+  _time_step++;
+  
+   //update boundary condition
+  _equation_systems.UpdateBdc(_time);
+  
+  // call the parent solver
+  Base::solve();
+  
+}
+
+
+//---------------------------------------------------------------------------------------------------------
+
+template <class Base>
+void TransientSystem<Base>::NewmarkAccUpdate() {
+
+  const double gamma = 0.5;
+  const double a5    = -1.*(1. - gamma)/gamma;
+  const double a1    = 1./(gamma*_dt);
+  const double a2    = -1./(gamma*_dt);
+  
+  unsigned dim = _equation_systems._msh[0]->GetDimension();
+ 
+  unsigned axyz[3];
+  unsigned vxyz[3];
+  const char accname[3][3] = {"AX","AY","AZ"};
+  const char velname[3][2] = {"U","V","W"};
+   
+  for(unsigned i=0; i<dim; i++) {
+     axyz[i] = _equation_systems.GetIndex(&accname[i][0]);
+     vxyz[i] = _equation_systems.GetIndex(&velname[i][0]);
+  }
+   
+  for (int ig=0;ig<_equation_systems.GetNumberOfGrid();ig++) {
+    for(unsigned i=0; i<dim; i++) {
+      _equation_systems._solution[ig]->_Sol[axyz[i]]->scale(a5);
+      _equation_systems._solution[ig]->_Sol[axyz[i]]->add(a1,*(_equation_systems._solution[ig]->_Sol[vxyz[i]]));
+      _equation_systems._solution[ig]->_Sol[axyz[i]]->add(a2,*(_equation_systems._solution[ig]->_SolOld[vxyz[i]]));
+    }
+  }
+}
+
+
+//------------------------------------------------------------------------------------------------------
+
+// template <class Base>
+// int TransientSystem<Base>::SaveData() const {
+//   char *filename = new char[80];
+//   PetscVector* petsc_vec_sol;
+// 
+//   PetscErrorCode ierr;
+//   PetscViewer bin_viewer;
+//   for (unsigned ig=0; ig<_gridn; ig++) {
+//     for (unsigned i=0; i<SolType.size(); i++) {
+//       sprintf(filename,"./save/save.time_%d.level_%d.%s.bin",_time_step,ig,SolName[i]);
+//       ierr = PetscViewerBinaryOpen(MPI_COMM_WORLD,filename,FILE_MODE_WRITE,&bin_viewer);
+//       CHKERRQ(ierr);
+//       //petsc_vec_sol  = static_cast<PetscVector*>(_LinSolver[0][ig]->Sol_[i]);
+//       petsc_vec_sol  = static_cast<PetscVector*>(_solution[ig]->_Sol[i]);
+//       ierr = VecView(petsc_vec_sol->vec(),bin_viewer);
+//       CHKERRQ(ierr);
+//       ierr = PetscViewerDestroy(&bin_viewer);
+//     }
+//   }
+//   delete [] filename;
+//   return ierr;
+// }
+// 
+// //------------------------------------------------------------------------------------------------------
+
+// template <class Base>
+// int TransientSystem<Base>::InitializeFromRestart(unsigned restart_time_step) {
+// 
+//   // Set the restart time step
+//   SetInitTimeStep(restart_time_step+1);
+//   
+//   //Set the restart time
+//   if(_ats_flag==0) {
+//     _time = restart_time_step*_dt;
+//   } 
+//   else {
+//     _time = 0;
+//     for(unsigned i=0; i<restart_time_step; i++) {
+//       _dt = _set_time_step_function(_time);
+//       _time += _dt;
+//     }
+//   }
+//    
+//   //Set the restart time step
+//   _time_step = restart_time_step+1;
+//      
+//   char *filename = new char[80];
+//   PetscVector* petsc_vec_sol;
+// 
+//   PetscErrorCode ierr;
+//   PetscViewer bin_viewer;
+//   for(unsigned ig=0;ig<_gridn;ig++){
+//     for(unsigned i=0;i<SolType.size();i++){
+//       sprintf(filename,"./save/save.time_%d.level_%d.%s.bin",restart_time_step,ig,SolName[i]);
+//       ierr = PetscViewerBinaryOpen(MPI_COMM_WORLD,filename,FILE_MODE_READ,&bin_viewer); CHKERRQ(ierr);
+//       //petsc_vec_sol  = static_cast<PetscVector*>(_LinSolver[0][ig]->Sol_[i]);
+//       petsc_vec_sol  = static_cast<PetscVector*>(_solution[ig]->_Sol[i]);
+//       ierr = VecLoad(petsc_vec_sol->vec(),bin_viewer); CHKERRQ(ierr);
+//       ierr = PetscViewerDestroy(&bin_viewer);
+//     }
+//     _solution[ig]->UpdateSolution();
+//   }
+//   
+//   delete [] filename;
+//   return ierr;
+// }
 
 
 
 template <class Base>
-void TransientSystem<Base>::init_data ()
-{
-  // initialize parent data
-  //Base::init_data(); ancora non esiste
-
-//   // Initialize the old & older solutions
-//   // Using new ghosted vectors if enabled
-// #ifdef LIBMESH_ENABLE_GHOSTED
-//   old_local_solution->init   (this->n_dofs(), this->n_local_dofs(),
-//                               this->get_dof_map().get_send_list(), false,
-//                               GHOSTED);
-//   older_local_solution->init (this->n_dofs(), this->n_local_dofs(),
-//                               this->get_dof_map().get_send_list(), false,
-//                               GHOSTED);
-// #else
-//   old_local_solution->init   (this->n_dofs(), false, SERIAL);
-//   older_local_solution->init (this->n_dofs(), false, SERIAL);
-// #endif
+void TransientSystem<Base>::AttachGetTimeIntervalFunction (double (* get_time_interval_function)(const double time)) {
+  _get_time_interval_function = get_time_interval_function;
+  _is_selective_timestep = true;
 }
-
-
-
-template <class Base>
-void TransientSystem<Base>::reinit ()
-{
-  // initialize parent data
-  //Base::reinit();  // ancora non esiste
-
-  // Project the old & older vectors to the new mesh
-  // The System::reinit handles this now
-  // this->project_vector (*old_local_solution);
-  // this->project_vector (*older_local_solution);
-}
-
-
-
-template <class Base>
-void TransientSystem<Base>::re_update ()
-{
-  // re_update the parent system
-//   Base::re_update ();
-// 
-//   const std::vector<dof_id_type>& send_list = this->get_dof_map().get_send_list ();
-// 
-//   const dof_id_type first_local_dof = Base::get_dof_map().first_dof();
-//   const dof_id_type end_local_dof  = Base::get_dof_map().end_dof();
-// 
-//   // Check sizes
-//   libmesh_assert_greater_equal (end_local_dof, first_local_dof);
-//   libmesh_assert_greater_equal (older_local_solution->size(), send_list.size());
-//   libmesh_assert_greater_equal (old_local_solution->size(), send_list.size());
-// 
-//   // Even if we don't have to do anything ourselves, localize() may
-//   // use parallel_only tools
-//   // if (first_local_dof == end_local_dof)
-//   //   return;
-// 
-//   // Update the old & older solutions with the send_list,
-//   // which may have changed since their last update.
-//   older_local_solution->localize (first_local_dof,
-// 				  end_local_dof-1,
-// 				  send_list);
-// 
-//   old_local_solution->localize (first_local_dof,
-// 				end_local_dof-1,
-// 				send_list);
-}
-
-
-
-
-template <class Base>
-double TransientSystem<Base>::old_solution (const int global_dof_number) const
-{
-  // Check the sizes
-//   libmesh_assert_less (global_dof_number, this->get_dof_map().n_dofs());
-//   libmesh_assert_less (global_dof_number, old_local_solution->size());
-// 
-//   return (*old_local_solution)(global_dof_number);
-}
-
-
-
-template <class Base>
-double TransientSystem<Base>::older_solution (const int global_dof_number) const
-{
-  // Check the sizes
-//   libmesh_assert_less (global_dof_number, this->get_dof_map().n_dofs());
-//   libmesh_assert_less (global_dof_number, older_local_solution->size());
-// 
-//   return (*older_local_solution)(global_dof_number);
-}
-
-
 
 
 // ------------------------------------------------------------

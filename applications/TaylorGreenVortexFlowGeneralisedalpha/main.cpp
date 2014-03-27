@@ -1,5 +1,6 @@
 #include "ElemType.hpp"
-#include "NonLinearTimeDependentMultiLevelProblem.hpp"
+#include "MultiLevelProblem.hpp"
+#include "TransientSystem.hpp"
 #include "NumericVector.hpp"
 #include "LinearEquationSolver.hpp"
 #include "Fluid.hpp"
@@ -10,7 +11,7 @@ using std::cout;
 using std::endl;
    
 
-void AssembleMatrixResNS(MultiLevelProblem &nl_td_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
 
 double InitVariableU(const double &x, const double &y, const double &z);
 double InitVariableV(const double &x, const double &y, const double &z);
@@ -45,147 +46,101 @@ int main(int argc,char **args) {
   double Lref = 1.0;
   double Ladimref = 1./(2.*3.1415926535897932);
   double Uref = 1.0;
+  
+  MultiLevelProblem ml_prob(nm,nr,infile,"seventh",Ladimref,SetRefinementFlag);
+  
   Parameter parameter(Lref,Uref);
   
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
   Fluid fluid(parameter,0.01,1.,"Newtonian");
   cout << "Fluid properties: " << endl;
   cout << fluid << endl;
-  
-  //Steadystate NonLinearMultiLevelProblem  
-  NonLinearTimeDependentMultiLevelProblem nl_td_ml_prob(nm,nr,infile,"seventh",Ladimref,SetRefinementFlag);
-  
-  /// END MESH =================================  
-  
-  ///Start System Variables;===========================
-  //Focus here is on VARIABLES first, rather than on Equations
  
   // add fluid material
-  nl_td_ml_prob.parameters.set<Fluid>("Fluid") = fluid;
-
+  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   
   // generate solution vector
-  nl_td_ml_prob.AddSolution("U","biquadratic",2);
-  nl_td_ml_prob.AddSolution("V","biquadratic",2);
-  nl_td_ml_prob.AddSolution("AX","biquadratic",1,0);
-  nl_td_ml_prob.AddSolution("AY","biquadratic",1,0);
+  ml_prob.AddSolution("U","biquadratic",2);
+  ml_prob.AddSolution("V","biquadratic",2);
+  ml_prob.AddSolution("AX","biquadratic",1,0);
+  ml_prob.AddSolution("AY","biquadratic",1,0);
   // the pressure variable should be the last for the Schur decomposition
-  nl_td_ml_prob.AddSolution("P","linear",1);
+  ml_prob.AddSolution("P","linear",1);
   
   //Initialize (update Init(...) function)
-  nl_td_ml_prob.Initialize("U",InitVariableU);
-  nl_td_ml_prob.Initialize("V",InitVariableV);
-  nl_td_ml_prob.Initialize("AX");
-  nl_td_ml_prob.Initialize("AY");  
-  nl_td_ml_prob.Initialize("P",InitVariableP);  
+  ml_prob.Initialize("U",InitVariableU);
+  ml_prob.Initialize("V",InitVariableV);
+  ml_prob.Initialize("AX");
+  ml_prob.Initialize("AY");  
+  ml_prob.Initialize("P",InitVariableP);  
   
   //Set Boundary (update Dirichlet(...) function)
-  nl_td_ml_prob.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  nl_td_ml_prob.GenerateBdc("U","Time_dependent");
-  nl_td_ml_prob.GenerateBdc("V","Time_dependent");
-  nl_td_ml_prob.GenerateBdc("P","Time_dependent");
+  ml_prob.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_prob.GenerateBdc("U","Time_dependent");
+  ml_prob.GenerateBdc("V","Time_dependent");
+  ml_prob.GenerateBdc("P","Time_dependent");
+  ml_prob.GenerateBdc("AX","Steady");
+  ml_prob.GenerateBdc("AY","Steady"); 
   
-  nl_td_ml_prob.GenerateBdc("AX","Steady");
-  nl_td_ml_prob.GenerateBdc("AY","Steady");  
-  //Set Time step information
-  nl_td_ml_prob.SetTimeStep(0.1);
-  nl_td_ml_prob.SetPrintTimeStep(1);
-  nl_td_ml_prob.SetSaveTimeStep(33300);
-  nl_td_ml_prob.SetNumTimeSteps(5);  
+  //create systems
+  // add the system Navier-Stokes to the MultiLevel problem
+  TransientNonlinearImplicitSystem & system = ml_prob.add_system<TransientNonlinearImplicitSystem> ("Navier-Stokes");
+  system.AddSolutionToSytemPDE("U");
+  system.AddSolutionToSytemPDE("V");
+  system.AddSolutionToSytemPDE("P");
   
-  ///End System Variables; ==============================
+  // init all the systems
+  ml_prob.init();
+ 
+  // System Navier-Stokes
+  system.AttachAssembleFunction(AssembleMatrixResNS);  
+  system.SetMaxNumberOfLinearIterations(1);
+  system.SetAbsoluteConvergenceTolerance(1.e-8);  
+  system.SetMgType(V_CYCLE);
+  system.SetMaxNumberOfNonLinearIterations(15);
 
-  // START EQUATIONS =================================  
+  // time loop parameter
+  system.SetIntervalTime(0.1);
+  const unsigned int n_timesteps = 5;
+  const unsigned int write_interval = 1;
   
-  /// Start Navier-Stokes Muligrid Block
-  //start Multigrid for UVWP
-  nl_td_ml_prob.ClearSolPdeIndex();
-  nl_td_ml_prob.AddPde("NS");  
-  nl_td_ml_prob.AddSolutionToSolPdeIndex("NS","U"); 
-  nl_td_ml_prob.AddSolutionToSolPdeIndex("NS","V");
-  nl_td_ml_prob.AddSolutionToSolPdeIndex("NS","P");
-  
-
-  
-  // create Multigrid (PRLO, REST, MAT, VECs) based on SolPdeIndex
-  nl_td_ml_prob.CreatePdeStructure();
-  
-  // create index of solutions to be to used in the Vanka Smoother  
-  nl_td_ml_prob.ClearVankaIndex();
-  nl_td_ml_prob.AddToVankaIndex("NS","U"); 
-  nl_td_ml_prob.AddToVankaIndex("NS","V"); 
-  nl_td_ml_prob.AddToVankaIndex("NS","P"); 
-    
-  //Equation
-  nl_td_ml_prob.AttachAssembleFunction(AssembleMatrixResNS);
-  nl_td_ml_prob.SetNonLinearAlgorithm(true,"Newton",1.e-06);  //Navier-Stokes (Quasi-Newton - Newton)
-  nl_td_ml_prob.SetMatrixProperties("NS","Symmetric");
-  nl_td_ml_prob.AddStabilization("NS",true);
-  
-  nl_td_ml_prob.SetDirichletBCsHandling("NS","Penalty");
-  
-  //Solver Configuration 
-  //Solver I (Gmres)
-  nl_td_ml_prob.SetSmoother("Gmres");
-  nl_td_ml_prob.SetTolerances("NS",1.e-12,1.e-20,1.e+50,15);
-  
- // Solver II (Vanka - MPSC)
-//   nl_td_ml_prob.SetSmoother("Vanka");
-//   nl_td_ml_prob.SetVankaSchurOptions(true,true,1);
-//   nl_td_ml_prob.SetSolverFineGrids("GMRES");
-//   nl_td_ml_prob.SetPreconditionerFineGrids("ILU");
-//   nl_td_ml_prob.SetTolerances(1.e-12,1.e-20,1.e+50,15);
-//   nl_td_ml_prob.SetSchurTolerances(1.e-12,1.e-20,1.e+50,5);
-//   nl_td_ml_prob.SetDimVankaBlock(3);                             //2^lev 1D 4^lev 2D 8^lev 3D
-  
-    for (unsigned time_step = nl_td_ml_prob.GetInitTimeStep(); time_step < nl_td_ml_prob.GetInitTimeStep() + nl_td_ml_prob.GetNumTimeSteps(); 
-       time_step++) {
+  for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
    
-    //Solve with V-cycle or F-cycle
-    nl_td_ml_prob.Solve("NS",15,1,1,"V-Cycle");
-    
-  
+    // Solving Navier-Stokes system
+    std::cout << std::endl;
+    std::cout << " *********** Navier-Stokes ************  " << std::endl;
+    ml_prob.get_system("Navier-Stokes").solve();
+   
     //The update of the acceleration must be done before the update of the other variables
-    nl_td_ml_prob._NewmarkAccUpdate();
-
+    ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes").NewmarkAccUpdate();
+    
     //update Solution
-    nl_td_ml_prob._UpdateSolution();
-
-    //print solution for restart
-    if ( !(time_step%nl_td_ml_prob.GetSaveTimeStep()) ) {
-      nl_td_ml_prob.SaveData();
-    }
+    ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes").UpdateSolution();
 
     // print solution
-    if ( !(time_step%nl_td_ml_prob.GetPrintTimeStep()) ) {
-       
-      ///print solution 
+    if ( !(time_step%write_interval) ) {
+        
+      //print solution 
       std::vector<std::string> print_vars;
-      print_vars.resize(5);
-      print_vars[0] = "U";
-      print_vars[1] = "V";
-      print_vars[2] = "P";
-      print_vars[3] = "AX";
-      print_vars[4] = "AY";
-
-      nl_td_ml_prob.printsol_vtu_inline("biquadratic",print_vars);
-//       nl_td_ml_prob.printsol_xdmf_hdf5("biquadratic",print_vars);
-       
+      print_vars.push_back("U");
+      print_vars.push_back("V");
+      print_vars.push_back("P");
+      print_vars.push_back("AX");
+      print_vars.push_back("AY");
+      
+      ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
     }
   
   } //end loop timestep
   
- 
-  // Delete Multigrid (PRLO, REST, MAT, VECs) based on SolPdeIndex
-  nl_td_ml_prob.DeletePdeStructure();
-  
-  /// End Navier-Stokes Muligrid Block
+  // Destroy all the new systems
+  ml_prob.clear();
    
   /// Destroy the last PETSC objects
-  nl_td_ml_prob.FreeMultigrid(); 
+  ml_prob.FreeMultigrid(); 
    
-  delete [] infile;
-  return(0);
+  delete[] infile;
+  return 0;
 }
 
 //-----------------------------------------------------------------------------------------------------------------
@@ -266,34 +221,33 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 }
 
 //------------------------------------------------------------------------------------------------------------
-void AssembleMatrixResNS(MultiLevelProblem &nl_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix){
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
      
-  NonLinearTimeDependentMultiLevelProblem& nl_td_ml_prob = static_cast<NonLinearTimeDependentMultiLevelProblem&>(nl_ml_prob);
-  
-  const char* pdename=nl_td_ml_prob.GetThisPdeName(ipde);
-  
   //pointers 
-  Solution*	 mysolution  	= nl_td_ml_prob._solution[level];
-  LinearEquationSolver*  mylsyspde 	= nl_td_ml_prob._LinSolver[ipde][level];
-  mesh*		 mymsh    	= nl_td_ml_prob._msh[level];
+  Solution*	 mysolution  	                      = ml_prob._solution[level];
+  TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes");
+  LinearEquationSolver*  mylsyspde	              = my_nnlin_impl_sys._LinSolver[level];   
+  const char* pdename                                 = my_nnlin_impl_sys.name().c_str();
+  
+  mesh*		 mymsh    	= ml_prob._msh[level];
   elem*		 myel		= mymsh->el;
   SparseMatrix*	 myKK		= mylsyspde->_KK;
   NumericVector* myRES 		= mylsyspde->_RES;
     
   //data
-  double dt = nl_td_ml_prob.GetTimeStep();
+   double dt = my_nnlin_impl_sys.GetIntervalTime();
   double theta = 0.5;
   const unsigned dim = mymsh->GetDimension();
   unsigned nel= mymsh->GetElementNumber();
   unsigned igrid= mymsh->GetGridNumber();
   unsigned iproc = mymsh->GetProcID();
   unsigned nprocs = mymsh->GetNumProcs();
-  double ILambda= mylsyspde->GetCompressibility();
-  double IRe = nl_td_ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
-  bool penalty = mylsyspde->GetStabilization();
-  const bool symm_mat = mylsyspde->GetMatrixProperties();
-  const bool NavierStokes = nl_td_ml_prob.GetNonLinearCase();
-  unsigned nwtn_alg = nl_td_ml_prob.GetNonLinearAlgorithm();
+  double ILambda = 0.; 
+  double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
+  bool penalty = true; // mylsyspde->GetStabilization();
+  const bool symm_mat = false; //mylsyspde->GetMatrixProperties();
+  const bool NavierStokes = true; 
+  unsigned nwtn_alg = 1;
   bool newton = (nwtn_alg==0) ? 0:1;
   
   // solution and coordinate variables
@@ -308,16 +262,16 @@ void AssembleMatrixResNS(MultiLevelProblem &nl_ml_prob, unsigned level, const un
   vector< vector < double> > coordinates(dim);
   
   for(unsigned ivar=0; ivar<dim; ivar++) {
-    SolPdeIndex[ivar]=nl_td_ml_prob.GetSolPdeIndex(pdename,&Solname[ivar][0]);
-    SolIndex[ivar]=nl_td_ml_prob.GetIndex(&Solname[ivar][0]);
-    coordinate_Index[ivar]=nl_td_ml_prob.GetIndex(&coordinate_name[ivar][0]);
+    SolPdeIndex[ivar]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[ivar][0]);
+    SolIndex[ivar]=ml_prob.GetIndex(&Solname[ivar][0]);
+    coordinate_Index[ivar]=ml_prob.GetIndex(&coordinate_name[ivar][0]);
   }
-  SolPdeIndex[dim]=nl_td_ml_prob.GetSolPdeIndex(pdename, &Solname[3][0]);
-  SolIndex[dim]=nl_td_ml_prob.GetIndex(&Solname[3][0]);       
+  SolPdeIndex[dim]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[3][0]);
+  SolIndex[dim]=ml_prob.GetIndex(&Solname[3][0]);       
   //solution order
-  unsigned order_ind2 = nl_td_ml_prob.SolType[SolIndex[0]];
+  unsigned order_ind2 = ml_prob.SolType[SolIndex[0]];
   unsigned end_ind2   = mymsh->GetEndIndex(order_ind2);
-  unsigned order_ind1 = nl_td_ml_prob.SolType[SolIndex[dim]];
+  unsigned order_ind1 = ml_prob.SolType[SolIndex[dim]];
   unsigned end_ind1   = mymsh->GetEndIndex(order_ind1);
   
   // declare 
@@ -439,10 +393,10 @@ void AssembleMatrixResNS(MultiLevelProblem &nl_ml_prob, unsigned level, const un
    
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
       // *** Gauss poit loop ***
-      for(unsigned ig=0;ig < nl_td_ml_prob.type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig=0;ig < ml_prob.type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
-	(nl_td_ml_prob.type_elem[kelt][order_ind2]->*(nl_td_ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(coordinates,ig,Weight2,phi2,gradphi2);
-	phi1=nl_td_ml_prob.type_elem[kelt][order_ind1]->GetPhi(ig);
+	(ml_prob.type_elem[kelt][order_ind2]->*(ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(coordinates,ig,Weight2,phi2,gradphi2);
+	phi1=ml_prob.type_elem[kelt][order_ind1]->GetPhi(ig);
 
 	//velocity variable
 	for(unsigned ivar=0; ivar<dim; ivar++) {
@@ -453,9 +407,9 @@ void AssembleMatrixResNS(MultiLevelProblem &nl_ml_prob, unsigned level, const un
 	    gradSol[ivar][ivar2]=0;
 	    gradSolOld[ivar][ivar2]=0;
 	  }
-	  unsigned SolIndex=nl_td_ml_prob.GetIndex(&Solname[ivar][0]);
-	  unsigned SolType =nl_td_ml_prob.GetSolType(&Solname[ivar][0]);
-	  unsigned AccSolIndex=nl_td_ml_prob.GetIndex(&AccSolname[ivar][0]);
+	  unsigned SolIndex=ml_prob.GetIndex(&Solname[ivar][0]);
+	  unsigned SolType =ml_prob.GetSolType(&Solname[ivar][0]);
+	  unsigned AccSolIndex=ml_prob.GetIndex(&AccSolname[ivar][0]);
 	  for(unsigned i=0; i<nve2; i++) {
 	    double soli    = (*mysolution->_Sol[SolIndex])(metis_node2[i]);
 	    double sololdi = (*mysolution->_SolOld[SolIndex])(metis_node2[i]);
@@ -471,8 +425,8 @@ void AssembleMatrixResNS(MultiLevelProblem &nl_ml_prob, unsigned level, const un
 	}
 	//pressure variable
 	Sol[dim]=0;
-	unsigned SolIndex=nl_td_ml_prob.GetIndex(&Solname[3][0]);
-	unsigned SolType=nl_td_ml_prob.GetSolType(&Solname[3][0]);
+	unsigned SolIndex=ml_prob.GetIndex(&Solname[3][0]);
+	unsigned SolType=ml_prob.GetSolType(&Solname[3][0]);
 	for(unsigned i=0; i<nve1; i++){
 	  unsigned sol_dof = mymsh->GetMetisDof(node1[i],SolType);
 	  double soli = (*mysolution->_Sol[SolIndex])(sol_dof);
@@ -584,7 +538,7 @@ void AssembleMatrixResNS(MultiLevelProblem &nl_ml_prob, unsigned level, const un
 	  // look for boundary faces
 	  if(myel->GetFaceElementIndex(kel,jface)<0){
 	    for(unsigned ivar=0; ivar<dim; ivar++) {
-	      nl_td_ml_prob.ComputeBdIntegral(pdename, &Solname[ivar][0], kel, jface, level, ivar);
+	      ml_prob.ComputeBdIntegral(pdename, &Solname[ivar][0], kel, jface, level, ivar);
 	    }
 	  }
 	}	

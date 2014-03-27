@@ -48,6 +48,12 @@ public:
   /** Init the system PDE structures */
   virtual void init();
   
+  /**
+   * @returns \p "LinearImplicit".  Helps in identifying
+   * the system type in an equation system file.
+   */
+  virtual std::string system_type () const { return "LinearImplicit"; }
+  
    /**
    * The \p NonlinearSolver defines the default interface used to
    * solve the nonlinear_implicit system.  This class handles all the

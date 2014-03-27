@@ -30,7 +30,7 @@ class NonLinearTimeDependentMultiLevelProblem : public MultiLevelProblem {
 
 private:
   unsigned _save_step;
-  unsigned _print_step;
+
   bool _ats_flag;      //adaptive time step flag
 
   //pointer function to the set time step function
@@ -38,7 +38,7 @@ private:
 
   void SetInitTimeStep(const unsigned time_step0);
   
-  void UpdateBdc();
+  
 
 public:
 
@@ -83,7 +83,7 @@ public:
   void Solve(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
 		    const char mg_type[]="F-Cycle", const bool &test_linear=0);
   
-  void printsol_xdmf_archive(const char type[]) const;
+
 
 };
 

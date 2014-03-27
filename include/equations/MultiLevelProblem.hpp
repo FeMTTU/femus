@@ -59,7 +59,8 @@ private:
   
   bool _init_func_set;
   bool _bdc_func_set;
-   
+  
+    
 protected:
   
   int _nprocs;
@@ -74,6 +75,8 @@ protected:
   bool _Schur;
   bool _VankaIsSet;
   short unsigned _NSchurVar;
+  
+  unsigned int _print_step;
  
   vector <int> SolTmorder;
   vector <char*> BdcType;
@@ -228,6 +231,7 @@ protected:
 
   //Boundary conditions
   void GenerateBdc(const char name[], const char bdc_type[]="Steady");
+  void UpdateBdc(const double time);
   void SetDirichletBCsHandling(const char pdename[],const char DirichletMode[]);
 
   //* Multigrid Solver  */
@@ -273,10 +277,10 @@ protected:
 
   //printing and reading solution Functions 
   void printsol_gmv_binary(const char name[]="linear",unsigned igridn=0, bool debug=0) const;
-  void printsol_vtu_inline(const char name[],std::vector<std::string>& vars) const;
+  void printsol_vtu_inline(const char name[], std::vector<std::string>& vars, const unsigned time_step=0) const;
   void printsol_xdmf_hdf5(const char name[],std::vector<std::string>& vars)const;
-//  hid_t print_Dhdf5(hid_t file,const std::string & name, hsize_t dimsf[],double data[]);
   void SetMovingMesh(std::vector<std::string>& myss);
+  void printsol_xdmf_archive(const char type[]) const;
  
   char* GetThisPdeName(const unsigned &ipde){ return _PdeName[ipde];}
 };
