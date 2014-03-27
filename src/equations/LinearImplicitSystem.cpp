@@ -154,7 +154,7 @@ void LinearImplicitSystem::solve() {
             
      
       std::cout << std::endl;
-      std::cout << "COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+      std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
 
     // ==============  Solution Prolongation ==============
     if (igridn < _equation_systems.GetNumberOfGrid()) {
