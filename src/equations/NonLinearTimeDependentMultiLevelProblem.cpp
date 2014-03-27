@@ -36,8 +36,6 @@ NonLinearTimeDependentMultiLevelProblem::NonLinearTimeDependentMultiLevelProblem
 										 const char GaussOrder[], const double Lref, bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, 
 																			const int &ElemGroupNumber,const int &level)) :
   MultiLevelProblem(igridn, igridr, mesh_file, GaussOrder, Lref,SetRefinementFlag) {
-
-  _print_step    = 100000;
   _save_step     = 100000;
   _ats_flag      = 0;
   _test_time     = 1;
@@ -287,7 +285,7 @@ void NonLinearTimeDependentMultiLevelProblem::Solve(const char pdename[], unsign
   }
      
   //update boundary condition
-  UpdateBdc();
+  UpdateBdc(_time);
 
  // start_mg_time = clock();
 
@@ -460,146 +458,6 @@ void NonLinearTimeDependentMultiLevelProblem::Solve(const char pdename[], unsign
 //}
 
 
-//--------------------------------------------------------------------------------------------------------
 
-void NonLinearTimeDependentMultiLevelProblem::UpdateBdc() {
-
-  const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
-  unsigned dim = _msh[0]->GetDimension() - 1u;
-  unsigned indX=GetIndex("X");
-  unsigned indY=GetIndex("Y");
-  unsigned indZ=GetIndex("Z");
-  double xx;
-  double yy;
-  double zz;
-
-  for (int k=0; k<SolName.size(); k++) {
-    if (!strcmp(BdcType[k],"Time_dependent")) {
-      unsigned i_start = k;
-      unsigned i_end;
-      i_end=i_start+1u;
-      
-      
-      // 2 Default Neumann
-      // 1 DD Dirichlet
-      // 0 Dirichlet
-      for (unsigned igridn=0; igridn<_gridn; igridn++) {
-	if(_solution[igridn]->_ResEpsBdcFlag[k]){
-	  for (unsigned j=_msh[igridn]->MetisOffset[SolType[k]][_iproc]; j<_msh[igridn]->MetisOffset[SolType[k]][_iproc+1]; j++) {
-	    _solution[igridn]->_Bdc[k]->set(j,2.);
-	  }
-	  if (SolType[k]<3) {  
-	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
-	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-		   iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
-		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
-		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
-		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
-		    unsigned nv1=(!_TestIfPressure[k])?
-		      NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt,0)]:
-		      _msh[igridn]->el->GetElementDofNumber(iel,_msh[igridn]->GetEndIndex(SolType[k]));
-		    for (unsigned iv=0; iv<nv1; iv++) {
-		      unsigned inode=(!_TestIfPressure[k])? 
-			_msh[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
-			_msh[igridn]->el->GetElementVertexIndex(kel_gmt,iv)-1u;
-		      unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
-		      _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
-		    }
-		  }
-		}
-	      }
-	    }
-	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {  // 0 Dirichlet
-	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-		   iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
-		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
-		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)<0) { //Dirichlet
-		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
-		    unsigned nv1=NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt,0)];
-		    for (unsigned iv=0; iv<nv1; iv++) {
-		      unsigned inode=_msh[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u;
-		      unsigned inode_coord_Metis=_msh[igridn]->GetMetisDof(inode,2);
-		      double value;
-		      xx=(*_solution[igridn]->_Sol[indX])(inode_coord_Metis);  
-		      yy=(*_solution[igridn]->_Sol[indY])(inode_coord_Metis);
-		      zz=(*_solution[igridn]->_Sol[indZ])(inode_coord_Metis);
-		      bool test=_SetBoundaryConditionFunction(xx,yy,zz,SolName[k],value,-(_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)+1),_time);
-		      if (test) {
-			unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
-			_solution[igridn]->_Bdc[k]->set(inode_Metis,0.);
-			_solution[igridn]->_Sol[k]->set(inode_Metis,value);
-		      }
-		    }
-		  }
-		}
-	      }
-	    }
-	  }
-	  else if(_TestIfPressure[k]){
-	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
-	      unsigned nel=_msh[igridn]->GetElementNumber();
-	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-		   iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
-		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
-		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
-		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
-		    unsigned nv1=_msh[igridn]->el->GetElementDofNumber(kel_gmt,_msh[igridn]->GetEndIndex(SolType[k]));
-		    for (unsigned iv=0; iv<nv1; iv++) {
-		      unsigned inode=(kel_gmt+iv*nel);
-		      unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
-		      _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
-		    }
-		  }
-		}
-	      }
-	    }
-	  }	
-	  _solution[igridn]->_Sol[k]->close();
-	  _solution[igridn]->_Bdc[k]->close();
-	}
-      }
-    }
-  }
-}
-
-//------------------------------------------------------------------------------------------------------------
-void NonLinearTimeDependentMultiLevelProblem::printsol_xdmf_archive(const char type[]) const {
-  
-  char *filename= new char[60];
-  // Print The Xdmf transient wrapper
-  sprintf(filename,"./output/mesh.level%d.%s.xmf",_gridn,type);
-  std::ofstream ftr_out;
-  ftr_out.open(filename);
-  if (!ftr_out) {
-    cout << "Transient Output mesh file "<<filename<<" cannot be opened.\n";
-    exit(0);
-  }
-  
-  ftr_out << "<?xml version=\"1.0\" ?> \n";
-  ftr_out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd []\">"<<endl;
-  ftr_out << "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.2\"> " << endl;
-  ftr_out << "<Domain> " << endl;
-  ftr_out << "<Grid Name=\"Mesh\" GridType=\"Collection\" CollectionType=\"Temporal\"> \n";
-  // time loop for grid sequence
-  for ( unsigned time_step = _time_step0; time_step < _time_step0 + _ntime_steps; time_step++) {
-    if ( !(time_step%_print_step) ) {
-      sprintf(filename,"./mesh.level%d.%d.%s.xmf",_gridn,time_step,type);
-      ftr_out << "<xi:include href=\"" << filename << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid["<< 1 <<"])\">\n";
-      ftr_out << "<xi:fallback/>\n";
-      ftr_out << "</xi:include>\n";
-    }
-  }
-  ftr_out << "</Grid> \n";
-  ftr_out << "</Domain> \n";
-  ftr_out << "</Xdmf> \n";
-  ftr_out.close();
-  ftr_out.close();  
-  //----------------------------------------------------------------------------------------------------------
-  delete [] filename;
- 
-}
 
 

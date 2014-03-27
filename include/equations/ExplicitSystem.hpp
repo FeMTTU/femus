@@ -47,6 +47,12 @@ public:
   /** Init the system PDE structures */
   virtual void init();
   
+  /**
+   * @returns \p "Explicit".  Helps in identifying
+   * the system type in an equation system file.
+  */
+  virtual std::string system_type () const { return "Explicit"; }
+  
 protected:
 
 private:

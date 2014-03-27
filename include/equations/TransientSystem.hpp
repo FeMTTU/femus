@@ -23,14 +23,14 @@
 class LinearImplicitSystem;
 class NonLinearImplicitSystem;
 class ExplicitSystem;
-class NonLinearMultiLevelProblem;
+class MultiLevelProblem;
+
+#include "NonLinearImplicitSystem.hpp"
 
 /**
  * This class provides a specific system class.  It aims
  * at transient systems, offering nothing more than just
- * the essentials needed to solve a system.  Note
- * that still additional vectors/matrices may be added,
- * as offered in the parent classes.
+ * the essentials needed to solve a system.  
  */
 
 // ------------------------------------------------------------
@@ -40,98 +40,72 @@ class TransientSystem : public Base
 {
 public:
 
-  /**
-   * Constructor.  Initializes required
-   * data structures.
-   */
+  /** Constructor.  Initializes required data structures.  */
   TransientSystem (MultiLevelProblem& ml_probl,
 		   const std::string& name,
 		   const unsigned int number);
 
-  /**
-   * Destructor.
-   */
+  /** Destructor. */
   virtual ~TransientSystem ();
 
-  /**
-   * The type of system.
-   */
+  /** The type of system. */
   typedef TransientSystem<Base> sys_type;
 
-  /**
-   * @returns a clever pointer to the system.
-   */
+  /** @returns a clever pointer to the system. */
   sys_type & system () { return *this; }
 
-  /**
-   * Clear all the data structures associated with
-   * the system.
-   */
+  /** Clear all the data structures associated with the system. */
   virtual void clear ();
-
-  /**
-   * Reinitializes the member data fields associated with
-   * the system, so that, e.g., \p assemble() may be used.
-   */
-  virtual void reinit ();
 
   /**
    * @returns \p "Transient" prepended to T::system_type().
    * Helps in identifying the system type in an equation
    * system file.
-   */
+  */
   virtual std::string system_type () const;
 
 
-  //-----------------------------------------------------------------
-  // access to the solution data fields
-
-  /**
-   * @returns the old solution (at the previous timestep)
-   * for the specified global DOF.
-   */
-  double old_solution (const int global_dof_number) const;
-
-  /**
-   * @returns the older solution (two timesteps ago)
-   * for the specified global DOF.
-   */
-  double older_solution (const int global_dof_number) const;
-
-  /**
-   * All the values I need to compute my contribution
-   * to the simulation at hand.  Think of this as the
-   * current solution with any ghost values needed from
-   * other processors.
-   */
-  NumericVector* old_local_solution;
-
-  /**
-   * All the values I need to compute my contribution
-   * to the simulation at hand.  Think of this as the
-   * current solution with any ghost values needed from
-   * other processors.
-   */
-  NumericVector* older_local_solution;
-
+  /** Update the old solution with new ones. It calls the update solution function of the Solution class */ 
+  virtual void UpdateSolution();
+  
+  
+  /** calling the parent solve */
+  virtual void solve();
+  
+  
+  /** update the Newmark variables */
+  void NewmarkAccUpdate();
+  
+  
+  /** attach the GetTimeInterval Function for selective interval time */  
+  void AttachGetTimeIntervalFunction (double (* get_time_interval_function)(const double time));
+  
+  
+  /** Set the interval time */
+  void SetIntervalTime(const double dt) { _dt = dt;};
+  
+  
+  /** Get the interval time */
+  double GetIntervalTime() const {return _dt;};
 
 protected:
+  
 
+private:
+  
+  MultiLevelProblem& _equation_systems;
 
-  /**
-   * Initializes the member data fields associated with
-   * the system, so that, e.g., \p assemble() may be used.
-   */
-  virtual void init_data ();
-
-  /**
-   * Re-update the local values when the mesh has changed.
-   * This method takes the data updated by \p update() and
-   * makes it up-to-date on the current mesh.
-   */
-  virtual void re_update ();
+  bool _is_selective_timestep;
+  
+  double _time;
+  
+  unsigned int _time_step;
+  
+  double _dt;
+  
+  //pointer function to the set time step function
+  double (* _get_time_interval_function)(const double time);
 };
-
 
 
 // -----------------------------------------------------------
@@ -143,7 +117,6 @@ protected:
  typedef TransientSystem<System> TransientBaseSystem;
 
 
-
 // ------------------------------------------------------------
 // TransientSystem inline methods
 template <class Base>
@@ -151,11 +124,9 @@ inline
 std::string TransientSystem<Base>::system_type () const
 {
   std::string type = "Transient";
-  //type += Base::system_type ();  // ancora non esiste
+  type += Base::system_type ();  
 
   return type;
 }
-
-
 
 #endif 

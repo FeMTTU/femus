@@ -44,6 +44,13 @@ public:
   
   const std::string & name() const;
   
+  /**
+   * @returns the type of system, helpful in identifying
+   * which system type to use when reading equation system
+   * data from file.  Should be overloaded in derived classes.
+  */
+  virtual std::string system_type () const { return "Basic"; }
+  
   /** Associate the solution variables to the system PDE */
   void AddSolutionToSytemPDE(const char solname[]);
   

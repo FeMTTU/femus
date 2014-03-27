@@ -47,6 +47,12 @@ public:
   /** Init the system PDE structures */
   virtual void init();
    
+  /**
+   * @returns \p "NonlinearImplicit".  Helps in identifying
+   * the system type in an equation system file.
+  */
+  virtual std::string system_type () const { return "NonlinearImplicit"; }
+  
   /** Returns  the number of iterations taken for the most recent nonlinear solve. */
   unsigned int n_nonlinear_iterations() const { return _n_nonlinear_iterations; }
 
