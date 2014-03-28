@@ -1714,7 +1714,7 @@ void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, 
 	    if (name==0){
 	      _solution[ig]->_Sol[i]->localize_to_one(v_local,0); 
 	    }
-	    if (name==1){
+	    else if (name==1){
 	      _solution[ig]->_Bdc[i]->localize_to_one(v_local,0); 
 	    }
 	    else if (name==2){

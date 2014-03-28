@@ -66,7 +66,7 @@ int main(int argc,char **args) {
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
   //Fluid fluid(parameter,0.001,1.,"Newtonian",0.001,1.);
   
-  Fluid fluid(parameter,100.,1.,"Newtonian",0.001,1.);
+  Fluid fluid(parameter,0.001,1,"Newtonian",0.001,1.);
   cout << "Fluid properties: " << endl;
   cout << fluid << endl;
   
@@ -78,7 +78,7 @@ int main(int argc,char **args) {
   nl_ml_prob.AddSolution("V","biquadratic");
   // the pressure variable should be the last for the Schur decomposition
   nl_ml_prob.AddSolution("P","disc_linear");
-  nl_ml_prob.AssociatePropertyToSolution("P","Pressure");
+  //nl_ml_prob.AssociatePropertyToSolution("P","Pressure");
  
   //Initialize (update Init(...) function)
   nl_ml_prob.Initialize("U",InitVariableU);
@@ -109,7 +109,7 @@ int main(int argc,char **args) {
    
   // System Navier-Stokes
   system1.AttachAssembleFunction(AssembleMatrixResNS);  
-  system1.SetMaxNumberOfNonLinearIterations(6);
+  system1.SetMaxNumberOfNonLinearIterations(10);
   system1.SetMaxNumberOfLinearIterations(1);
   system1.SetAbsoluteConvergenceTolerance(1.e-10);  
   system1.SetMgType(F_CYCLE);
@@ -130,7 +130,7 @@ int main(int argc,char **args) {
   // System Temperature system
   std::cout << std::endl;
   std::cout << " *********** Temperature ************* " << std::endl;
-  //nl_ml_prob.get_system("Temperature").solve();
+  nl_ml_prob.get_system("Temperature").solve();
    
   /// Print all solutions
   std::vector<std::string> print_vars;
@@ -140,6 +140,10 @@ int main(int argc,char **args) {
   print_vars.push_back("T");
   
   nl_ml_prob.printsol_vtu_inline("biquadratic",print_vars);
+  
+  
+  nl_ml_prob.printsol_gmv_binary("biquadratic",0,1);
+  
   
   // Destroy all the new systems
   nl_ml_prob.clear();
@@ -159,7 +163,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
   if(ElemGroupNumber==5 ) {
     refine=1;
   }
-  if(ElemGroupNumber==6 && level<2) {
+  if(ElemGroupNumber==6 ){//&& level<2) {
     refine=1;
   }
   if(ElemGroupNumber==7 ) {
@@ -174,7 +178,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 double InitVariableU(const double &x, const double &y, const double &z) { 
    double um = 0.2;
-   double  value=1.5*um*(4.0/(0.1681))*y*(0.41-y);
+   double  value=1.5*um*(4.0/(0.1681))*y*(0.41-y); 
    return value;
 }
 
@@ -488,7 +492,8 @@ void AssembleMatrixResNS(MultiLevelProblem &nl_ml_prob, unsigned level, const un
 	      Lap_rhs += gradphi2[i*dim+ivar2]*gradSolVAR[ivar][ivar2];
 	      Adv_rhs += SolVAR[ivar2]*gradSolVAR[ivar][ivar2];
 	    }
-	    F[SolPdeIndex[ivar]][i]+= (-IRe*Lap_rhs-NavierStokes*Adv_rhs*phi2[i]+SolVAR[dim]*gradphi2[i*dim+ivar])*Weight2; 
+	    F[SolPdeIndex[ivar]][i]+= (-IRe*Lap_rhs-NavierStokes*Adv_rhs*phi2[i]+IRe*SolVAR[dim]*gradphi2[i*dim+ivar])*Weight2;
+	    //F[SolPdeIndex[ivar]][i]+= (-IRe*Lap_rhs+ IRe*SolVAR[dim]*gradphi2[i*dim+ivar])*Weight2; 
 	  }
 	  //END RESIDUALS A block ===========================
 	  
@@ -506,21 +511,21 @@ void AssembleMatrixResNS(MultiLevelProblem &nl_ml_prob, unsigned level, const un
 	      }
 
 	      for(unsigned ivar=0; ivar<dim; ivar++) {    
-		B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j] += IRe*Lap + NavierStokes*newton*Adv1;
-		if(nwtn_alg==2){
-		  // Advection term II
-		  B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j]       += Adv2*gradSolVAR[ivar][ivar];
-		  for(unsigned ivar2=1; ivar2<dim; ivar2++) {
-		    B[SolPdeIndex[ivar]][SolPdeIndex[(ivar+ivar2)%dim]][i*nve2+j] += Adv2*gradSolVAR[ivar][(ivar+ivar2)%dim];
-		  }
-		}
+		B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j] += IRe*Lap+ NavierStokes*newton*Adv1;
+// 		if(nwtn_alg==2){
+// 		  // Advection term II
+// 		  B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j]       += Adv2*gradSolVAR[ivar][ivar];
+// 		  for(unsigned ivar2=1; ivar2<dim; ivar2++) {
+// 		    B[SolPdeIndex[ivar]][SolPdeIndex[(ivar+ivar2)%dim]][i*nve2+j] += Adv2*gradSolVAR[ivar][(ivar+ivar2)%dim];
+// 		  }
+// 		}
 	      }
   	    } //end phij loop
 	    
 	    // *** phi1_j loop ***
 	    for(unsigned j=0; j<nve1; j++){
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		B[SolPdeIndex[ivar]][SolPdeIndex[dim]][i*nve1+j] -= gradphi2[i*dim+ivar]*phi1[j]*Weight2;
+		B[SolPdeIndex[ivar]][SolPdeIndex[dim]][i*nve1+j] -= IRe*gradphi2[i*dim+ivar]*phi1[j]*Weight2;
 	      }
 	    } //end phi1_j loop
 	  } // endif assembe_matrix
