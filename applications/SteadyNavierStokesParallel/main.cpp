@@ -41,10 +41,10 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=2;
+  nm=5;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
-  nr=2;
+  nr=0;
   std::cout<<"MAX_REFINEMENT levels: " << nr << endl<< endl;
   
   int tmp=nm;  nm+=nr;  nr=tmp;
@@ -64,7 +64,7 @@ int main(int argc,char **args) {
   Parameter parameter(Lref,Uref);
   
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,0.001,1.,"Newtonian",0.001,1.);
+  Fluid fluid(parameter,0.01,1.,"Newtonian",0.001,1.);
   cout << "Fluid properties: " << endl;
   cout << fluid << endl;
   
@@ -111,6 +111,21 @@ int main(int argc,char **args) {
   system1.SetAbsoluteConvergenceTolerance(1.e-10);  
   system1.SetMgType(F_CYCLE);
   system1.SetMaxNumberOfNonLinearIterations(3);
+  
+  system1.SetNumberPreSmoothingStep(1);
+  system1.SetNumberPostSmoothingStep(1);
+  system1.SetMgSmoother(GMRES_SMOOTHER);
+//   system1.AddStabilization(true);
+//   system1.ClearVankaIndex();
+//   system1.AddVariableToVankaIndex("U");
+//   system1.AddVariableToVankaIndex("V");
+//   system1.AddVariableToVankaIndex("P");
+//   system1.SetSolverFineGrids(GMRES);
+//   system1.SetPreconditionerFineGrids(ILU_PRECOND);
+//   system1.SetVankaSchurOptions(false,1);
+  system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
+//   system1.SetSchurTolerances(1.e-12,1.e-20,1.e+50,4);
+//   system1.SetDimVankaBlock(3);
    
   // System Temperature
   system2.AttachAssembleFunction(AssembleMatrixResT);
@@ -127,7 +142,7 @@ int main(int argc,char **args) {
   // System Temperature system
   std::cout << std::endl;
   std::cout << " *********** Temperature ************* " << std::endl;
-  ml_prob.get_system("Temperature").solve();
+//   ml_prob.get_system("Temperature").solve();
    
   /// Print all solutions
   std::vector<std::string> print_vars;

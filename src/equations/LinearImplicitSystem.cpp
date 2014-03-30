@@ -30,7 +30,12 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   _n_max_linear_iterations (3),
   _final_linear_residual (1.e20),
   _absolute_convergence_tolerance (1.e-08),
-  _mg_type(F_CYCLE)
+  _mg_type(F_CYCLE),
+  _npre(1),
+  _npost(1),
+  _VankaIsSet(false),
+  _NSchurVar(1),
+  _Schur(false)
 {
 }
 
@@ -310,10 +315,109 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pde
 }
 
 
+void LinearImplicitSystem::SetDirichletBCsHandling(const DirichletBCType DirichletMode) {
+  
+  unsigned int DirichletBCsHandlingMode;
+  
+  if (DirichletMode == PENALTY) {
+    DirichletBCsHandlingMode = 0;   
+  }
+  else { // elimination
+    DirichletBCsHandlingMode = 1;   
+  } 
+  
+  for (unsigned i=0; i<_equation_systems.GetNumberOfGrid(); i++) {
+    _LinSolver[i]->set_dirichletBCsHandling(DirichletBCsHandlingMode);
+  }
+}
 
 
+void LinearImplicitSystem::AddVariableToVankaIndex(const char solname[]) {
+  unsigned n=_VankaIndex.size();
+  _VankaIndex.resize(n+1u);
+  unsigned varind=_equation_systems.GetIndex(solname);
+
+  for (unsigned i=0; i<_SolSystemPdeIndex.size(); i++) {
+    if (_SolSystemPdeIndex[i]==varind) {
+      _VankaIndex[n]=i;
+      break;
+    }
+    if (_SolSystemPdeIndex.size()-1u==i) {
+      std::cout<<"Error! The variable "<<solname<<" cannot be added to VankaIndex because it is not included in the solution variable set."<<std::endl;
+      std::exit(0);
+    }
+  }
+}
+
+void LinearImplicitSystem::ClearVankaIndex() {
+  _VankaIndex.clear();
+}
 
 
+void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
+  if (mgsmoother == VANKA_SMOOTHER) {
+    _VankaIsSet = true;
+  } else {
+    _VankaIsSet = false;
+  } 
+}
+
+
+void LinearImplicitSystem::SetDimVankaBlock(unsigned const dim_vanka_block) {
+  
+  const unsigned dim = _equation_systems._msh[0]->GetDimension();
+  const unsigned base = pow(2,dim);
+  unsigned num_vanka_block = pow(base,dim_vanka_block);
+
+  for (unsigned i=1; i<_equation_systems.GetNumberOfGrid(); i++) {
+    unsigned num_vanka_block2 = std::min(num_vanka_block,_equation_systems._msh[i]->GetElementNumber());
+    _LinSolver[i]->set_num_elem_vanka_block(num_vanka_block2);
+  }
+}
+
+
+void LinearImplicitSystem::SetSolverFineGrids(const SolverType solvertype) {
+  for (unsigned i=1; i<_equation_systems.GetNumberOfGrid(); i++) {
+    _LinSolver[i]->set_solver_type(solvertype);
+  }
+}
+
+
+void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType preconditioner_type) {
+  for (unsigned i=1; i<_equation_systems.GetNumberOfGrid(); i++) {
+    _LinSolver[i]->set_preconditioner_type(preconditioner_type);
+  }
+}
+
+
+void LinearImplicitSystem::SetTolerances(const double rtol, const double atol,
+					       const double divtol, const unsigned maxits) {       
+  for (unsigned i=1; i<_equation_systems.GetNumberOfGrid(); i++) {
+    _LinSolver[i]->set_tolerances(rtol,atol,divtol,maxits,0);
+  }
+}
+
+void LinearImplicitSystem::SetSchurTolerances(const double rtol, const double atol,
+						    const double divtol, const unsigned maxits) {
+  for (unsigned i=1; i<_equation_systems.GetNumberOfGrid(); i++) {
+    _LinSolver[i]->set_tolerances(rtol,atol,divtol,maxits,1);
+  }
+}
+
+void LinearImplicitSystem::SetVankaSchurOptions(bool Schur, short unsigned NSchurVar) {
+  if(Schur==1 && NSchurVar ==0){
+    std::cout<<"Error incompatible options in SetVankaSchurOptions "<<std::endl;
+    std::exit(0);
+  }
+  _Schur=Schur;
+  _NSchurVar=NSchurVar;
+}
+
+void LinearImplicitSystem::AddStabilization(const bool stab, const double compressibility) {
+  for (unsigned i=0; i<_equation_systems.GetNumberOfGrid(); i++) {
+    _LinSolver[i]->AddStabilization(stab, compressibility);
+  }
+}
 
 
 

@@ -60,13 +60,7 @@ public:
   
 protected:
   
-  int _npre;
-  int _npost;
-  bool _VankaIsSet;
-  short unsigned _NSchurVar;
-  bool _Schur;
-  vector <unsigned> _VankaIndex;
-  
+ 
 private:
 
  

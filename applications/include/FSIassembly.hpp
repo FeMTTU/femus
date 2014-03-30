@@ -1,21 +1,27 @@
 #ifndef __FSIassembly_hpp__
 #define __FSIassembly_hpp__
 
-void AssembleMatrixResFSI(MultiLevelProblem &nl_td_ml_prob2, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
+#include "TransientSystem.hpp"
+
+ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+// void AssembleMatrixResFSI(MultiLevelProblem &ml_prob2, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
 
   clock_t AssemblyTime=0;
   clock_t start_time, end_time;
   PetscErrorCode ierr;
   
   //Static conversion from the Base class (NonLinearMultiLevelProblem) to the Derived class (NonLinearMultiLevelProblemTimeLoop)
-  NonLinearTimeDependentMultiLevelProblem& nl_td_ml_prob = static_cast<NonLinearTimeDependentMultiLevelProblem&>(nl_td_ml_prob2);
- 
-  const char* pdename= nl_td_ml_prob.GetThisPdeName(ipde);
+//   NonLinearTimeDependentMultiLevelProblem& ml_prob = static_cast<NonLinearTimeDependentMultiLevelProblem&>(ml_prob2);
   
+  
+  Solution*	 mysolution  	                      = ml_prob._solution[level];
+  TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem>("Fluid-Structure-Interaction");
+  LinearEquationSolver*  mylsyspde	              = my_nnlin_impl_sys._LinSolver[level];   
+
   //pointers and references
-  Solution	*mysolution	=  nl_td_ml_prob._solution[level];
-  LinearEquationSolver	*mylsyspde	=  nl_td_ml_prob._LinSolver[ipde][level];
-  mesh		*mymsh		=  nl_td_ml_prob._msh[level];
+//   Solution	*mysolution	=  ml_prob._solution[level];
+//   LinearEquationSolver	*mylsyspde =  ml_prob._LinSolver[ipde][level];
+  mesh		*mymsh		=  ml_prob._msh[level];
   elem		*myel		=  mymsh->el;
   SparseMatrix	*myKK		=  mylsyspde->_KK;
   NumericVector *myRES		=  mylsyspde->_RES;
@@ -88,22 +94,21 @@ void AssembleMatrixResFSI(MultiLevelProblem &nl_td_ml_prob2, unsigned level, con
   vector< vector< int > > dofsVAR(2*dim+1); 
   
   // algorithm parameters
-  double eps_pen 	= 1;//.e40;
+  double eps_pen 	= 1.e40;  // previous 1
   bool   newton		= 0;
-  bool   penalty 	= mylsyspde->GetStabilization();
   
   // ------------------------------------------------------------------------
   // Physical parameters
-  double rhof	 	= nl_td_ml_prob.parameters.get<Fluid>("Fluid").get_density();            // nl_td_ml_prob._fluid->get_density();
-  double rhos 		= nl_td_ml_prob.parameters.get<Solid>("Solid").get_density();            // nl_td_ml_prob._solid->get_density();
-  double mu_lame 	= nl_td_ml_prob.parameters.get<Solid>("Solid").get_lame_shear_modulus(); // nl_td_ml_prob._solid->get_lame_shear_modulus();
-  double lambda_lame 	= nl_td_ml_prob.parameters.get<Solid>("Solid").get_lame_lambda();        // nl_td_ml_prob._solid->get_lame_lambda();
+  double rhof	 	= ml_prob.parameters.get<Fluid>("Fluid").get_density();            // ml_prob._fluid->get_density();
+  double rhos 		= ml_prob.parameters.get<Solid>("Solid").get_density();            // ml_prob._solid->get_density();
+  double mu_lame 	= ml_prob.parameters.get<Solid>("Solid").get_lame_shear_modulus(); // ml_prob._solid->get_lame_shear_modulus();
+  double lambda_lame 	= ml_prob.parameters.get<Solid>("Solid").get_lame_lambda();        // ml_prob._solid->get_lame_lambda();
   double mus		= mu_lame/rhof;
-  double IRe 		= nl_td_ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();   // nl_td_ml_prob._fluid->get_IReynolds_number();
+  double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();   // ml_prob._fluid->get_IReynolds_number();
   double lambda		= lambda_lame / rhof;
   double betafsi	= rhos / rhof;
   double betans		= 1.;
-  int    solid_model	= nl_td_ml_prob.parameters.get<Solid>("Solid").get_physical_model();     // nl_td_ml_prob._solid->get_physical_model();
+  int    solid_model	= ml_prob.parameters.get<Solid>("Solid").get_physical_model();     // ml_prob._solid->get_physical_model();
 
   //physical quantity
   double Jnp1_hat;
@@ -136,16 +141,18 @@ void AssembleMatrixResFSI(MultiLevelProblem &nl_td_ml_prob2, unsigned level, con
   // -----------------------------------------------------------------
 
   // time discretization algorithm paramters
-  double dt = nl_td_ml_prob.GetTimeStep();
+   double dt =  my_nnlin_impl_sys.GetIntervalTime(); 
+//   double dt =  0.005; //ml_prob.GetTimeStep();
+  
   const double gamma = 0.5;
   const double gammaratio = (1.-gamma)/gamma;
   double _theta_ns=1.0;
   
   // space discretization parameters
-  unsigned order_ind2 = nl_td_ml_prob.SolType[nl_td_ml_prob.GetIndex("U")];  
+  unsigned order_ind2 = ml_prob.SolType[ml_prob.GetIndex("U")];  
   unsigned end_ind2   = mymsh->GetEndIndex(order_ind2);
 
-  unsigned order_ind1 = nl_td_ml_prob.SolType[nl_td_ml_prob.GetIndex("P")];  
+  unsigned order_ind1 = ml_prob.SolType[ml_prob.GetIndex("P")];  
   unsigned end_ind1   = mymsh->GetEndIndex(order_ind1);
 
   // mesh and procs
@@ -164,21 +171,24 @@ void AssembleMatrixResFSI(MultiLevelProblem &nl_td_ml_prob2, unsigned level, con
   vector <unsigned> SolType(3*dim+1);  
   
   for(unsigned ivar=0; ivar<dim; ivar++) {
-    indCOORD[ivar]=nl_td_ml_prob.GetIndex(&coordname[ivar][0]);
-    indVAR[ivar]=nl_td_ml_prob.GetIndex(&varname[ivar][0]);
-    indVAR[ivar+dim]=nl_td_ml_prob.GetIndex(&varname[ivar+3][0]);
-    indVAR[ivar+2*dim+1]=nl_td_ml_prob.GetIndex(&varname[ivar+7][0]);
+    indCOORD[ivar]=ml_prob.GetIndex(&coordname[ivar][0]);
+    indVAR[ivar]=ml_prob.GetIndex(&varname[ivar][0]);
+    indVAR[ivar+dim]=ml_prob.GetIndex(&varname[ivar+3][0]);
+    indVAR[ivar+2*dim+1]=ml_prob.GetIndex(&varname[ivar+7][0]);
     
-    SolType[ivar]=nl_td_ml_prob.GetSolType(&varname[ivar][0]);
-    SolType[ivar+dim]=nl_td_ml_prob.GetSolType(&varname[ivar+3][0]);
-    SolType[ivar+2*dim+1]=nl_td_ml_prob.GetSolType(&varname[ivar+7][0]);
+    SolType[ivar]=ml_prob.GetSolType(&varname[ivar][0]);
+    SolType[ivar+dim]=ml_prob.GetSolType(&varname[ivar+3][0]);
+    SolType[ivar+2*dim+1]=ml_prob.GetSolType(&varname[ivar+7][0]);
     
-    indexVAR[ivar]=nl_td_ml_prob.GetSolPdeIndex("FSI",&varname[ivar][0]);
-    indexVAR[ivar+dim]=nl_td_ml_prob.GetSolPdeIndex("FSI",&varname[ivar+3][0]);
+//     indexVAR[ivar]=ml_prob.GetSolPdeIndex("FSI",&varname[ivar][0]);
+    indexVAR[ivar]=my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar][0]);
+//     indexVAR[ivar+dim]=ml_prob.GetSolPdeIndex("FSI",&varname[ivar+3][0]);
+    indexVAR[ivar+dim]=my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar+3][0]);
   }
-  indexVAR[2*dim]=nl_td_ml_prob.GetSolPdeIndex("FSI",&varname[6][0]);
-  indVAR[2*dim]=nl_td_ml_prob.GetIndex(&varname[6][0]);
-  SolType[2*dim]=nl_td_ml_prob.GetSolType(&varname[6][0]);
+//   indexVAR[2*dim]=ml_prob.GetSolPdeIndex("FSI",&varname[6][0]);
+  indexVAR[2*dim]=my_nnlin_impl_sys.GetSolPdeIndex(&varname[6][0]);
+  indVAR[2*dim]=ml_prob.GetIndex(&varname[6][0]);
+  SolType[2*dim]=ml_prob.GetSolType(&varname[6][0]);
   //----------------------------------------------------------------------------------
   
   start_time=clock();
@@ -311,14 +321,14 @@ void AssembleMatrixResFSI(MultiLevelProblem &nl_td_ml_prob2, unsigned level, con
        
     if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
       /// *** Gauss point loop ***
-      for (unsigned ig=0;ig < nl_td_ml_prob.type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig=0;ig < ml_prob.type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
 
 	// *** get Jacobian and test function and test function derivatives in the moving frame***
-	(nl_td_ml_prob.type_elem[kelt][order_ind2]->*(nl_td_ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
-	(nl_td_ml_prob.type_elem[kelt][order_ind2]->*(nl_td_ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_old,ig,Weight_old,phi_old,gradphi_old);
-	(nl_td_ml_prob.type_elem[kelt][order_ind2]->*(nl_td_ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
-	phi1=nl_td_ml_prob.type_elem[kelt][order_ind1]->GetPhi(ig);
-	if (flag_mat==2) Weight_nojac = nl_td_ml_prob.type_elem[kelt][order_ind2]->GetGaussWeight(ig);
+	(ml_prob.type_elem[kelt][order_ind2]->*(ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
+	(ml_prob.type_elem[kelt][order_ind2]->*(ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_old,ig,Weight_old,phi_old,gradphi_old);
+	(ml_prob.type_elem[kelt][order_ind2]->*(ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
+	phi1=ml_prob.type_elem[kelt][order_ind1]->GetPhi(ig);
+	if (flag_mat==2) Weight_nojac = ml_prob.type_elem[kelt][order_ind2]->GetGaussWeight(ig);
 
 	// ---------------------------------------------------------------------------
 	// displacement and velocity
