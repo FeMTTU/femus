@@ -76,8 +76,6 @@ int main(int argc,char **args) {
   //Start System Variables
   ml_prob.AddSolution("DX","biquadratic",2);
   ml_prob.AddSolution("DY","biquadratic",2);
-  ml_prob.AssociatePropertyToSolution("DX","Displacement"); // Add this line
-  ml_prob.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
   ml_prob.AddSolution("U","biquadratic",2);
   ml_prob.AddSolution("V","biquadratic",2);
   ml_prob.AddSolution("AX","biquadratic",1,0);
@@ -123,7 +121,7 @@ int main(int argc,char **args) {
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteConvergenceTolerance(1.e-8);  
   system.SetMgType(V_CYCLE);
-  system.SetMaxNumberOfNonLinearIterations(15);
+  system.SetMaxNumberOfNonLinearIterations(4);
   system.SetDirichletBCsHandling(ELIMINATION);
 
   // time loop parameter
@@ -164,126 +162,7 @@ int main(int argc,char **args) {
   // Destroy all the new systems
   ml_prob.clear();
    
-  /// Destroy the last PETSC objects
-  ml_prob.FreeMultigrid(); 
-  
-  
-  
-  
-  
-  
-//   //Set Time step information
-//   nl_td_ml_prob.SetTimeStep(0.05);
-//   nl_td_ml_prob.SetPrintTimeStep(1);
-//   nl_td_ml_prob.SetSaveTimeStep(3330);
-//   nl_td_ml_prob.SetNumTimeSteps(1000);  //165   
-// // nl_td_ml_prob.InitializeFromRestart(5);
-//   nl_td_ml_prob.AttachSetTimeStepFunction(SetVariableTimeStep);
-//   
-// 
-//   std::vector<std::string> mov_vars;
-//   mov_vars.push_back("DX");
-//   mov_vars.push_back("DY");
-//   nl_td_ml_prob.SetMovingMesh(mov_vars);
-//   nl_td_ml_prob.MarkStructureNode();
-//  
-//   //Solver Configuration 
-//  
-//   
-//   
-//   nl_td_ml_prob.AddPde("FSI");
-//   nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","DX"); 
-//   nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","DY");
-//   //nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","DZ");
-//   nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","U");
-//   nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","V");
-//   //nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","W");
-//   nl_td_ml_prob.AddSolutionToSolPdeIndex("FSI","P");
-//   
-//   // create Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
-//   nl_td_ml_prob.CreatePdeStructure();
-//   
-//   nl_td_ml_prob.SetDirichletBCsHandling("FSI","Elimination");
-//   
-//   //Solver I (Gmres)
-// //   nl_td_ml_prob.SetSmoother("Gmres");
-// //   nl_td_ml_prob.SetTolerances("FSI",1.e-12,1.e-20,1.e+50,6);
-//   
-//   
-// //   //Solver II (Vanka-smoother-MPSC)
-//   nl_td_ml_prob.AddStabilization("FSI",true);
-//   nl_td_ml_prob.SetSolverFineGrids("FSI","GMRES");
-//   nl_td_ml_prob.SetPreconditionerFineGrids("FSI","LU");
-//   nl_td_ml_prob.SetVankaSchurOptions(false,0);
-//   nl_td_ml_prob.SetTolerances("FSI",1.e-12,1.e-20,1.e+50,1);
-//   nl_td_ml_prob.SetSchurTolerances("FSI",1.e-12,1.e-20,1.e+50,4);
-//   nl_td_ml_prob.SetDimVankaBlock("FSI",4);                //2^lev 1D 4^lev 2D 8^lev 3D
-// 
-//   //End System Variables; ==============================
-// 
-//   // START EQUATIONS =================================
-// 
-//   // Start FSI Muligrid Block
-//   nl_td_ml_prob.AttachAssembleFunction(AssembleMatrixResFSI);
-// 
-// 
-//   
-//   // create index of solutions to be to used in the Vanka Smoother
-//   nl_td_ml_prob.ClearVankaIndex();
-//   nl_td_ml_prob.AddToVankaIndex("FSI","DX");
-//   nl_td_ml_prob.AddToVankaIndex("FSI","DY");
-//   nl_td_ml_prob.AddToVankaIndex("FSI","U");
-//   nl_td_ml_prob.AddToVankaIndex("FSI","V");
-//   nl_td_ml_prob.AddToVankaIndex("FSI","P");
-// 
-//   
-//   for (unsigned time_step = nl_td_ml_prob.GetInitTimeStep(); time_step < nl_td_ml_prob.GetInitTimeStep() + nl_td_ml_prob.GetNumTimeSteps(); 
-//        time_step++) {
-//    
-//     //Solve with V-cycle or F-cycle
-//     nl_td_ml_prob.Solve("FSI",30,1,1,"V-Cycle");
-//   
-//     //The update of the acceleration must be done before the update of the other variables
-//     //update time step
-//     nl_td_ml_prob._NewmarkAccUpdate();
-// 
-//     //update Solution
-//     nl_td_ml_prob._UpdateSolution();
-// 
-//     //print solution for restart
-//     if ( !(time_step%nl_td_ml_prob.GetSaveTimeStep()) ) {
-//       nl_td_ml_prob.SaveData();
-//     }
-// 
-//     // print solution
-//     if ( time_step>9000 || time_step==1 || !(time_step%nl_td_ml_prob.GetPrintTimeStep()) ) {
-//       std::vector<std::string> print_vars;
-//       print_vars.resize(5);
-//       print_vars[0] = "DX";
-//       print_vars[1] = "DY";
-//       print_vars[2] = "U";
-//       print_vars[3] = "V";
-//       print_vars[4] = "P";
-// 
-//       //nl_td_ml_prob.printsol_vtu_inline("biquadratic",print_vars);
-//       nl_td_ml_prob.printsol_vtu_inline("linear",print_vars);
-//       //nl_td_ml_prob.printsol_xdmf_hdf5("biquadratic",print_vars);
-//        
-//     }
-//   
-//   } //end loop timestep
-//   
-//   //print the XDMF time archive
-//   //nl_td_ml_prob.printsol_xdmf_archive("biquadratic");
-// 
-//   // Delete Multigrid (PRLO, REST, MAT, VECs) based on MGIndex
-//   nl_td_ml_prob.DeletePdeStructure();
-// 
-//   // End FSI Muligrid Block
-//   // Destroy the last PETSC objects
-//   nl_td_ml_prob.FreeMultigrid();
-// 
-//   delete [] infile;
+  delete [] infile;
   return 0;
 }
 

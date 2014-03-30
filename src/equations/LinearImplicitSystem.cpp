@@ -235,14 +235,14 @@ void LinearImplicitSystem::ProlongatorSol(unsigned gridf) {
     unsigned SolIndex=_SolSystemPdeIndex[k];
     unsigned Typeindex=_equation_systems.SolType[SolIndex];
     
-    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<_equation_systems._solution[gridf]->_Sol[SolIndex]->linfty_norm()<<std::endl;
+//     std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<_equation_systems._solution[gridf]->_Sol[SolIndex]->linfty_norm()<<std::endl;
     
     
     _equation_systems._solution[gridf]->_Sol[SolIndex]->matrix_mult(*_equation_systems._solution[gridf-1]->_Sol[SolIndex],*_equation_systems._solution[gridf]->_ProjMat[Typeindex]);
     _equation_systems._solution[gridf]->_Sol[SolIndex]->close();
     
-    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<_equation_systems._solution[gridf-1]->_Sol[SolIndex]->linfty_norm()<<std::endl;
-    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<_equation_systems._solution[gridf]->_Sol[SolIndex]->linfty_norm()<<std::endl;
+//     std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<_equation_systems._solution[gridf-1]->_Sol[SolIndex]->linfty_norm()<<std::endl;
+//     std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<_equation_systems._solution[gridf]->_Sol[SolIndex]->linfty_norm()<<std::endl;
         
   }
 

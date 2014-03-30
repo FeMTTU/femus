@@ -30,7 +30,8 @@ MyMultiGrid::MyMultiGrid(const unsigned short &igridn,const unsigned short &igri
     
   double MyMultiGrid::IncreaseStep(unsigned i)  {
     
-   _time_step += i; 
+    // Now time_step is no more a variable of MultiLevelProblem but of TransientSystem
+//    _time_step += i; 
         
   }
     

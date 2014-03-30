@@ -136,16 +136,17 @@ int main(int argc,char **args) {
   //End System Variables; ==============================
 
   // START EQUATIONS =================================
-  mg.AddPde("EQN_P");
-  mg.AddPde("EQN_D");
-  mg.AddPde("EQN_VEL");
+  //TODO use the new system-based-framework
+//   mg.AddPde("EQN_P");
+//   mg.AddPde("EQN_D");
+//   mg.AddPde("EQN_VEL");
   
-  mg.ClearSolPdeIndex();
-  for (int i=0; i<NVAR_P; ++i)       mg.AddSolutionToSolPdeIndex("EQN_P",varnames_p[i].c_str());
-  for (int i=0; i<NVAR_D; ++i)       mg.AddSolutionToSolPdeIndex("EQN_D",varnames_d[i].c_str());
-  for (int i=0; i<NVAR_VEL; ++i)     mg.AddSolutionToSolPdeIndex("EQN_VEL",varnames_u[i].c_str());
+//   mg.ClearSolPdeIndex();
+//   for (int i=0; i<NVAR_P; ++i)       mg.AddSolutionToSolPdeIndex("EQN_P",varnames_p[i].c_str());
+//   for (int i=0; i<NVAR_D; ++i)       mg.AddSolutionToSolPdeIndex("EQN_D",varnames_d[i].c_str());
+//   for (int i=0; i<NVAR_VEL; ++i)     mg.AddSolutionToSolPdeIndex("EQN_VEL",varnames_u[i].c_str());
   
-  mg.CreatePdeStructure();
+//   mg.CreatePdeStructure();
 // // //   mg.BuildSparsityPattern();  //TODO this will not be needed now
   
  for (unsigned nonlin = 0; nonlin < runtime_double->get("nonlin_iter"); nonlin++) {
@@ -212,7 +213,7 @@ int main(int argc,char **args) {
    
 
   mg.clear();
-  mg.FreeMultigrid();
+//   mg.FreeMultigrid(); //it does not exit anymore
   delete [] infile;
 //   delete [] runtime_double; //check seg fault on these two... the global variable may not help
 //   delete [] runtime_string;

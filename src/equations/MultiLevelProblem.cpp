@@ -121,9 +121,9 @@ MultiLevelProblem::MultiLevelProblem(const unsigned short &igridn,const unsigned
   cout << "MESH DATA: " << endl;
 
   //Steady State simulation
-  _test_time = 0;
+//   _test_time = 0;
   
-  _print_step    = 100000;
+//   _print_step    = 100000;
 
   //Temporary coordinates vector
   vector <vector <double> > vt;  
@@ -216,20 +216,20 @@ MultiLevelProblem::MultiLevelProblem(const unsigned short &igridn,const unsigned
   elem_type::_refindex=refindex;
 
   cout << endl;
-  _ntime_steps=0;
-  _dt=1.;
-  _time_step0 = 1;
-  _time=0.;
-  _time_step=0;
+//   _ntime_steps=0;
+//   _dt=1.;
+//   _time_step0 = 1;
+//   _time=0.;
+//   _time_step=0;
   _moving_mesh=0;
-  _Schur=0;
-  _NSchurVar=1;
-  _is_nonlinear = false;
-  _non_linear_toll = 1.e-04;
-  _non_linear_algorithm = 0;
+//   _Schur=0;
+//   _NSchurVar=1;
+//   _is_nonlinear = false;
+//   _non_linear_toll = 1.e-04;
+//   _non_linear_algorithm = 0;
   _init_func_set=false;
   _bdc_func_set=false;
-  _VankaIsSet = true;
+//   _VankaIsSet = true;
 
   BuildProlongatorMatrices();
 }
@@ -354,6 +354,16 @@ void MultiLevelProblem::clear ()
   // Clear any additional parameters
   parameters.clear();
 
+  // clear multilevel data
+  for (int igridn=0; igridn<_gridn; igridn++) {
+    for (int itype=0; itype<3; itype++) {
+      for (int jtype=0; jtype<3; jtype++) {
+ 	delete ProlQitoQj_[itype][jtype][igridn];
+      }
+    }
+    _solution[igridn]->FreeSolutionVectors();
+  }
+  
   // clear the systems.  We must delete them
   // since we newed them!
   while (!_systems.empty())
@@ -400,192 +410,192 @@ unsigned MultiLevelProblem::GetNumberOfGridNotRefined() {
 }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::SetMatrixProperties(const char pdename[], const char property[]) {
-  unsigned ipde=GetPdeIndex(pdename);
-  if (!strcmp(property,"Symmetric")) {
-    const bool mprop = true;
-    for (unsigned i=0; i<_gridn; i++) _LinSolver[ipde][i]->SetMatrixProperties(mprop);
-  } else {
-    cout<<"Error! This option is not admitted \"All\""<<endl;
-    exit(1);
-  }
-}
+// void MultiLevelProblem::SetMatrixProperties(const char pdename[], const char property[]) {
+//   unsigned ipde=GetPdeIndex(pdename);
+//   if (!strcmp(property,"Symmetric")) {
+//     const bool mprop = true;
+//     for (unsigned i=0; i<_gridn; i++) _LinSolver[ipde][i]->SetMatrixProperties(mprop);
+//   } else {
+//     cout<<"Error! This option is not admitted \"All\""<<endl;
+//     exit(1);
+//   }
+// }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::AddStabilization(const char pdename[], const bool stab, const double compressibility) {
-  unsigned ipde=GetPdeIndex(pdename);
-  for (unsigned i=0; i<_gridn; i++) _LinSolver[ipde][i]->AddStabilization(stab, compressibility);
-}
+// void MultiLevelProblem::AddStabilization(const char pdename[], const bool stab, const double compressibility) {
+//   unsigned ipde=GetPdeIndex(pdename);
+//   for (unsigned i=0; i<_gridn; i++) _LinSolver[ipde][i]->AddStabilization(stab, compressibility);
+// }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::SetVankaSchurOptions(bool Schur, short unsigned NSchurVar) {
-  
-  if(Schur==1 && NSchurVar ==0){
-    cout<<"Error incompatible options in MultiLevelProblem::SetVankaSchurOptions "<<endl;
-    exit(0);
-  }
-  _Schur=Schur;
-  _NSchurVar=NSchurVar;
-}
+// void MultiLevelProblem::SetVankaSchurOptions(bool Schur, short unsigned NSchurVar) {
+//   
+//   if(Schur==1 && NSchurVar ==0){
+//     cout<<"Error incompatible options in MultiLevelProblem::SetVankaSchurOptions "<<endl;
+//     exit(0);
+//   }
+//   _Schur=Schur;
+//   _NSchurVar=NSchurVar;
+// }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::SetTolerances(const char pdename[],const double rtol, const double atol,
-					       const double divtol, const unsigned maxits) {
-  unsigned ipde=GetPdeIndex(pdename);					       
-  for (unsigned i=1; i<_gridn; i++) {
-    _LinSolver[ipde][i]->set_tolerances(rtol,atol,divtol,maxits,0);
-  }
-}
+// void MultiLevelProblem::SetTolerances(const char pdename[],const double rtol, const double atol,
+// 					       const double divtol, const unsigned maxits) {
+//   unsigned ipde=GetPdeIndex(pdename);					       
+//   for (unsigned i=1; i<_gridn; i++) {
+//     _LinSolver[ipde][i]->set_tolerances(rtol,atol,divtol,maxits,0);
+//   }
+// }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::SetSchurTolerances(const char pdename[], const double rtol, const double atol,
-						    const double divtol, const unsigned maxits) {
-  unsigned ipde=GetPdeIndex(pdename);
-  for (unsigned i=1; i<_gridn; i++) {
-    _LinSolver[ipde][i]->set_tolerances(rtol,atol,divtol,maxits,1);
-  }
-}
+// void MultiLevelProblem::SetSchurTolerances(const char pdename[], const double rtol, const double atol,
+// 						    const double divtol, const unsigned maxits) {
+//   unsigned ipde=GetPdeIndex(pdename);
+//   for (unsigned i=1; i<_gridn; i++) {
+//     _LinSolver[ipde][i]->set_tolerances(rtol,atol,divtol,maxits,1);
+//   }
+// }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::SetDirichletBCsHandling(const char pdename[],const char DirichletMode[]) {
-  unsigned ipde=GetPdeIndex(pdename);     
-  unsigned int DirichletBCsHandlingMode;
-  
-  if (!strcmp(DirichletMode,"Penalty")) {
-    DirichletBCsHandlingMode = 0;   
-  }
-  else if (!strcmp(DirichletMode,"Elimination")) {
-    DirichletBCsHandlingMode = 1;   
-  } 
-  else {
-    cout << "Error! The Dirichlet BCs Handling method " << DirichletMode  << " is not implemented"<<endl;
-    exit(1);
-  }
-  
-  for (unsigned i=0; i<_gridn; i++) {
-    _LinSolver[ipde][i]->set_dirichletBCsHandling(DirichletBCsHandlingMode);
-  }
-}
+// void MultiLevelProblem::SetDirichletBCsHandling(const char pdename[],const char DirichletMode[]) {
+//   unsigned ipde=GetPdeIndex(pdename);     
+//   unsigned int DirichletBCsHandlingMode;
+//   
+//   if (!strcmp(DirichletMode,"Penalty")) {
+//     DirichletBCsHandlingMode = 0;   
+//   }
+//   else if (!strcmp(DirichletMode,"Elimination")) {
+//     DirichletBCsHandlingMode = 1;   
+//   } 
+//   else {
+//     cout << "Error! The Dirichlet BCs Handling method " << DirichletMode  << " is not implemented"<<endl;
+//     exit(1);
+//   }
+//   
+//   for (unsigned i=0; i<_gridn; i++) {
+//     _LinSolver[ipde][i]->set_dirichletBCsHandling(DirichletBCsHandlingMode);
+//   }
+// }
 
 //---------------------------------------------------------------------------------------------------
-unsigned MultiLevelProblem::GetTmOrder(const unsigned i) {
-  return SolTmorder[i];
-};
+// unsigned MultiLevelProblem::GetTmOrder(const unsigned i) {
+//   return SolTmorder[i];
+// };
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::SetSmoother(const char smoothername[]) {
-  if (!strcmp(smoothername,"Vanka")) {
-    _VankaIsSet = true;
-  } else if (!strcmp(smoothername,"Gmres")) {
-    _VankaIsSet = false;
-  } else {
-    cout<<"Error! The smoother " << smoothername  << " is not implemented"<<endl;
-    exit(1);
-  }
-}
+// void MultiLevelProblem::SetSmoother(const char smoothername[]) {
+//   if (!strcmp(smoothername,"Vanka")) {
+//     _VankaIsSet = true;
+//   } else if (!strcmp(smoothername,"Gmres")) {
+//     _VankaIsSet = false;
+//   } else {
+//     cout<<"Error! The smoother " << smoothername  << " is not implemented"<<endl;
+//     exit(1);
+//   }
+// }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::SetDimVankaBlock(const char pdename[],unsigned const dim_vanka_block) {
-
-  unsigned ipde=GetPdeIndex(pdename);
-  const unsigned dim = _msh[0]->GetDimension();
-  const unsigned base = pow(2,dim);
-  unsigned num_vanka_block = pow(base,dim_vanka_block);
-
-  for (unsigned i=1; i<_gridn; i++) {
-    unsigned num_vanka_block2 = min(num_vanka_block,_msh[i]->GetElementNumber());
-    _LinSolver[ipde][i]->set_num_elem_vanka_block(num_vanka_block2);
-  }
-}
-
-//---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::SetDimVankaBlock(const char pdename[], const char dim_vanka_block[]) {
-  unsigned ipde=GetPdeIndex(pdename);
-  if (!strcmp(dim_vanka_block,"All")) {
-    for (unsigned i=1; i<_gridn; i++) {
-      unsigned num_vanka_block2=_msh[i]->IS_Mts2Gmt_elem_offset[_msh[i]->_iproc+1]-_msh[i]->IS_Mts2Gmt_elem_offset[_msh[i]->_iproc]; 
-      _LinSolver[ipde][i]->set_num_elem_vanka_block(num_vanka_block2);
-    }
-  } 
-  else {
-    cout<<"Error! option \""<< dim_vanka_block<<"\" is not admitted in function"
-        <<" MultiLevelProblem::SetDimVankaBlock(const char [], const char [])"<<endl;
-    exit(1);
-  }
-}
+// void MultiLevelProblem::SetDimVankaBlock(const char pdename[],unsigned const dim_vanka_block) {
+// 
+//   unsigned ipde=GetPdeIndex(pdename);
+//   const unsigned dim = _msh[0]->GetDimension();
+//   const unsigned base = pow(2,dim);
+//   unsigned num_vanka_block = pow(base,dim_vanka_block);
+// 
+//   for (unsigned i=1; i<_gridn; i++) {
+//     unsigned num_vanka_block2 = min(num_vanka_block,_msh[i]->GetElementNumber());
+//     _LinSolver[ipde][i]->set_num_elem_vanka_block(num_vanka_block2);
+//   }
+// }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::SetSolverFineGrids(const char pdename[], const char solvertype[]) {
-  unsigned ipde=GetPdeIndex(pdename);
-  if (!strcmp(solvertype,"GMRES")) {
-    for (unsigned i=1; i<_gridn; i++) {
-      _LinSolver[ipde][i]->set_solver_type(GMRES);
-    }
-  } else {
-    cout<<"Error! The solver " <<  solvertype << " is not implemented"<<endl;
-    exit(1);
-  }
-}
+// void MultiLevelProblem::SetDimVankaBlock(const char pdename[], const char dim_vanka_block[]) {
+//   unsigned ipde=GetPdeIndex(pdename);
+//   if (!strcmp(dim_vanka_block,"All")) {
+//     for (unsigned i=1; i<_gridn; i++) {
+//       unsigned num_vanka_block2=_msh[i]->IS_Mts2Gmt_elem_offset[_msh[i]->_iproc+1]-_msh[i]->IS_Mts2Gmt_elem_offset[_msh[i]->_iproc]; 
+//       _LinSolver[ipde][i]->set_num_elem_vanka_block(num_vanka_block2);
+//     }
+//   } 
+//   else {
+//     cout<<"Error! option \""<< dim_vanka_block<<"\" is not admitted in function"
+//         <<" MultiLevelProblem::SetDimVankaBlock(const char [], const char [])"<<endl;
+//     exit(1);
+//   }
+// }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::SetPreconditionerFineGrids(const char pdename[],const char preconditioner_type[]) {
-  unsigned ipde=GetPdeIndex(pdename);
-  if (!strcmp(preconditioner_type,"LU")) {
-    for (unsigned i=1; i<_gridn; i++) {
-      _LinSolver[ipde][i]->set_preconditioner_type(MLU_PRECOND);
-    }
-  } else if (!strcmp(preconditioner_type,"ILU")) {
-    for (unsigned i=1; i<_gridn; i++) {
-      _LinSolver[ipde][i]->set_preconditioner_type(ILU_PRECOND);
-    }
-  } else if (!strcmp(preconditioner_type,"JACOBI")) {
-    for (unsigned i=1; i<_gridn; i++) {
-      _LinSolver[ipde][i]->set_preconditioner_type(JACOBI_PRECOND);
-    }
-  } else if (!strcmp(preconditioner_type,"NO_PRECONDITIONING")) {
-    for (unsigned i=1; i<_gridn; i++) {
-      _LinSolver[ipde][i]->set_preconditioner_type(IDENTITY_PRECOND);
-    }
-  } else {
-    cout<<"Error! The " <<  preconditioner_type << " preconditioner is not implemented"<<endl;
-    exit(1);
-  }
-}
+// void MultiLevelProblem::SetSolverFineGrids(const char pdename[], const char solvertype[]) {
+//   unsigned ipde=GetPdeIndex(pdename);
+//   if (!strcmp(solvertype,"GMRES")) {
+//     for (unsigned i=1; i<_gridn; i++) {
+//       _LinSolver[ipde][i]->set_solver_type(GMRES);
+//     }
+//   } else {
+//     cout<<"Error! The solver " <<  solvertype << " is not implemented"<<endl;
+//     exit(1);
+//   }
+// }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::SetNonLinearAlgorithm(const bool isnonlinear,const char nnlinalg[], 
-						       const double nl_toll) {
-
-  _is_nonlinear = isnonlinear;
-    double _non_linear_toll = nl_toll;
-
-  if (isnonlinear) {
-
-    if (!strcmp(nnlinalg,"Quasi-Newton")) {
-      _non_linear_algorithm = 1;
-    } else if (!strcmp(nnlinalg,"Newton")) {
-      _non_linear_algorithm = 2;
-    } else if (!strcmp(nnlinalg,"Linear")) {
-      _non_linear_algorithm = 0;
-    } else {
-      cout<<"Error! The "<< nnlinalg  << " algorithm is not implemented"<<endl;
-      exit(1);
-    }
-  } else {
-    _non_linear_algorithm = 0;
-  }
-
-}
-
-//---------------------------------------------------------------------------------------------------
-unsigned MultiLevelProblem::GetNonLinearAlgorithm() {
-  return _non_linear_algorithm;
-}
+// void MultiLevelProblem::SetPreconditionerFineGrids(const char pdename[],const char preconditioner_type[]) {
+//   unsigned ipde=GetPdeIndex(pdename);
+//   if (!strcmp(preconditioner_type,"LU")) {
+//     for (unsigned i=1; i<_gridn; i++) {
+//       _LinSolver[ipde][i]->set_preconditioner_type(MLU_PRECOND);
+//     }
+//   } else if (!strcmp(preconditioner_type,"ILU")) {
+//     for (unsigned i=1; i<_gridn; i++) {
+//       _LinSolver[ipde][i]->set_preconditioner_type(ILU_PRECOND);
+//     }
+//   } else if (!strcmp(preconditioner_type,"JACOBI")) {
+//     for (unsigned i=1; i<_gridn; i++) {
+//       _LinSolver[ipde][i]->set_preconditioner_type(JACOBI_PRECOND);
+//     }
+//   } else if (!strcmp(preconditioner_type,"NO_PRECONDITIONING")) {
+//     for (unsigned i=1; i<_gridn; i++) {
+//       _LinSolver[ipde][i]->set_preconditioner_type(IDENTITY_PRECOND);
+//     }
+//   } else {
+//     cout<<"Error! The " <<  preconditioner_type << " preconditioner is not implemented"<<endl;
+//     exit(1);
+//   }
+// }
 
 //---------------------------------------------------------------------------------------------------
-bool MultiLevelProblem::GetNonLinearCase() {
-  return _is_nonlinear;
-}
+// void MultiLevelProblem::SetNonLinearAlgorithm(const bool isnonlinear,const char nnlinalg[], 
+// 						       const double nl_toll) {
+// 
+//   _is_nonlinear = isnonlinear;
+//     double _non_linear_toll = nl_toll;
+// 
+//   if (isnonlinear) {
+// 
+//     if (!strcmp(nnlinalg,"Quasi-Newton")) {
+//       _non_linear_algorithm = 1;
+//     } else if (!strcmp(nnlinalg,"Newton")) {
+//       _non_linear_algorithm = 2;
+//     } else if (!strcmp(nnlinalg,"Linear")) {
+//       _non_linear_algorithm = 0;
+//     } else {
+//       cout<<"Error! The "<< nnlinalg  << " algorithm is not implemented"<<endl;
+//       exit(1);
+//     }
+//   } else {
+//     _non_linear_algorithm = 0;
+//   }
+// 
+// }
+
+//---------------------------------------------------------------------------------------------------
+// unsigned MultiLevelProblem::GetNonLinearAlgorithm() {
+//   return _non_linear_algorithm;
+// }
+
+//---------------------------------------------------------------------------------------------------
+// bool MultiLevelProblem::GetNonLinearCase() {
+//   return _is_nonlinear;
+// }
 
 //---------------------------------------------------------------------------------------------------
 void MultiLevelProblem::SetMovingMesh(std::vector<std::string>& movvars_in) {
@@ -667,55 +677,55 @@ int MultiLevelProblem::ComputeBdIntegral(const char pdename[],const char var_nam
 }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::CreatePdeStructure() {
-  
-  _TestIfPdeHasDisplacement.resize(_PdeIndex.size());
-  
-  _LinSolver.resize(_PdeIndex.size());
-  for(unsigned ipde=0;ipde<_PdeIndex.size();ipde++){
-    _LinSolver[ipde].resize(_gridn);
-    for(unsigned i=0;i<_gridn;i++){
-      _LinSolver[ipde][i]=LinearEquationSolver::build(i,_msh[i]).release();
-    }
-    
-    for (unsigned i=0; i<_gridn; i++) {
-      _LinSolver[ipde][i]->InitPde(_SolPdeIndex[ipde],SolType,SolName,&_solution[i]->_Bdc,_gridr,_gridn);
-    }
-    
-    unsigned test=0;
-    for(int i=0;i<_SolPdeIndex[ipde].size();i++){
-      test += _TestIfDisplacement[_SolPdeIndex[ipde][i]];
-    } 
-    _TestIfPdeHasDisplacement[ipde]=test;
-        
-    for (unsigned ig=1; ig<_gridn; ig++) {
-      BuildProlongatorMatrix(ig,_PdeName[ipde]);
-    }
-        
-  }
-  
-  return;
-}
+// void MultiLevelProblem::CreatePdeStructure() {
+//   
+//   _TestIfPdeHasDisplacement.resize(_PdeIndex.size());
+//   
+//   _LinSolver.resize(_PdeIndex.size());
+//   for(unsigned ipde=0;ipde<_PdeIndex.size();ipde++){
+//     _LinSolver[ipde].resize(_gridn);
+//     for(unsigned i=0;i<_gridn;i++){
+//       _LinSolver[ipde][i]=LinearEquationSolver::build(i,_msh[i]).release();
+//     }
+//     
+//     for (unsigned i=0; i<_gridn; i++) {
+//       _LinSolver[ipde][i]->InitPde(_SolPdeIndex[ipde],SolType,SolName,&_solution[i]->_Bdc,_gridr,_gridn);
+//     }
+//     
+//     unsigned test=0;
+//     for(int i=0;i<_SolPdeIndex[ipde].size();i++){
+//       test += _TestIfDisplacement[_SolPdeIndex[ipde][i]];
+//     } 
+//     _TestIfPdeHasDisplacement[ipde]=test;
+//         
+//     for (unsigned ig=1; ig<_gridn; ig++) {
+//       BuildProlongatorMatrix(ig,_PdeName[ipde]);
+//     }
+//         
+//   }
+//   
+//   return;
+// }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::DeletePdeStructure() {
-  for(unsigned ipde=0;ipde<_PdeIndex.size();ipde++)
-    for (unsigned ig=0; ig<_gridn; ig++) {
-      _LinSolver[ipde][ig]->DeletePde();
-      delete _LinSolver[ipde][ig];
-    }
-  
-  for (unsigned i=0; i<_PdeName.size(); i++){ 
-    delete [] _PdeName[i];
-  }
-  
-}
+// void MultiLevelProblem::DeletePdeStructure() {
+//   for(unsigned ipde=0;ipde<_PdeIndex.size();ipde++)
+//     for (unsigned ig=0; ig<_gridn; ig++) {
+//       _LinSolver[ipde][ig]->DeletePde();
+//       delete _LinSolver[ipde][ig];
+//     }
+//   
+//   for (unsigned i=0; i<_PdeName.size(); i++){ 
+//     delete [] _PdeName[i];
+//   }
+//   
+// }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::AttachAssembleFunction (void (*function)(MultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) ) {
-  _assemble_function = function;
-  return;
-}
+// void MultiLevelProblem::AttachAssembleFunction (void (*function)(MultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) ) {
+//   _assemble_function = function;
+//   return;
+// }
 
 //---------------------------------------------------------------------------------------------------
 void MultiLevelProblem::AttachSetBoundaryConditionFunction ( bool (* SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
@@ -735,150 +745,150 @@ void MultiLevelProblem::AttachSetBoundaryConditionFunction ( bool (* SetBoundary
 // }
 
 //--------------------------------------------------------------------------------------------------
-void MultiLevelProblem::Solve(const char pdename[], unsigned const &Vcycle_number, unsigned const &npre, 
-				       unsigned const &npost, const char multigrid_type[], const bool &test_linear) {
-  clock_t start_mg_time = clock();
-  
-  unsigned nonlinear_Vcycle_numeber    = (test_linear == false) ? Vcycle_number:1;
-  unsigned linear_Vcycle_numeber       = (test_linear == true ) ? Vcycle_number:1;
-   
-  bool full_cycle;
-  unsigned igrid0; 
-  if( !strcmp(multigrid_type,"F-Cycle") ){
-    full_cycle=1;
-    igrid0=1;
-  }
-  else if(!strcmp(multigrid_type,"V-Cycle")){
-    full_cycle=0;
-    igrid0=_gridn;
-  }
-  else if(!strcmp(multigrid_type,"M-Cycle")){
-    full_cycle=0;
-    igrid0=_gridr;
-  }
-  
-  unsigned ipde = GetPdeIndex(pdename);
-    
-  std::pair<int, double> solver_info;
-     
-  for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {
-    cout << endl << "    ************* Level Max: " << igridn << " *************\n" << endl;
-    for ( unsigned nonlinear_cycle = 0; nonlinear_cycle < nonlinear_Vcycle_numeber; nonlinear_cycle++ ) { //non linear cycle
-      clock_t start_cycle_time = clock();
-      cout << endl << "    ************** Cycle: " << nonlinear_cycle + 1 << " ****************\n" << endl;
-     
-      // ============== Fine level Assembly ==============
-      clock_t start_time = clock();
-      _LinSolver[ipde][igridn-1u]->SetResZero();
-      _LinSolver[ipde][igridn-1u]->SetEpsZero();
-      bool assemble_matrix = true; //Be carefull!!!! this is needed in the _assemble_function
-      _assemble_function(*this,igridn-1u, igridn-1u,ipde, assemble_matrix);
-      cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << endl;
- 
-      for(int linear_cycle = 0; linear_cycle < linear_Vcycle_numeber; linear_cycle++){ //linear cycle
-
-	for (unsigned ig = igridn-1u; ig > 0; ig--) {
-	  
-	  // ============== Presmoothing ============== 
-	  for (unsigned k = 0; k < npre; k++) {
-	    solver_info = (_VankaIsSet) ? _LinSolver[ipde][ig]->solve(VankaIndex, _NSchurVar, _Schur) : _LinSolver[ipde][ig]->solve();
-	  }
-	  // ============== Non-Standard Multigrid Restriction ==============
-	  start_time = clock();
-	  Restrictor(ipde, ig, igridn, nonlinear_cycle, linear_cycle, full_cycle);
-	  cout << "Grid: " << ig << "-->" << ig-1 << "  RESTRICTION TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << endl;
-	}
-      
-	// ============== Coarse Direct Solver ==============
-	solver_info = ( _VankaIsSet ) ? _LinSolver[ipde][0]->solve(VankaIndex, _NSchurVar, _Schur) : _LinSolver[ipde][0]->solve();
-	
-            
-	for (unsigned ig = 1; ig < igridn; ig++) {
-	  
-	  // ============== Standard Prolongation ==============
-	  start_time=clock();
-	  Prolongator(ipde, ig);
-	  cout << "Grid: " << ig-1 << "-->" << ig << " PROLUNGATION TIME:\t" << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << endl;
-
-	  // ============== PostSmoothing ==============    
-	  for (unsigned k = 0; k < npost; k++) {
-	    solver_info = ( _VankaIsSet ) ? _LinSolver[ipde][ig]->solve(VankaIndex, _NSchurVar, _Schur) : _LinSolver[ipde][ig]->solve();
-	  }
-	}
-	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
-	for (unsigned ig = _gridr-1; ig < igridn-1; ig++) {
-	  _solution[ig]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][ig]->_EPS, _LinSolver[ipde][ig]->_RES, _LinSolver[ipde][ig]->KKoffset );	
-	}
-	// ============== Test for linear Convergence ==============
-	if(test_linear && igridn>2) GetConvergence(pdename, igridn-2);
-      }
-      // ============== Update Solution ( ig = igridn )==============
-      _solution[igridn-1]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][igridn-1]->_EPS, _LinSolver[ipde][igridn-1]->_RES, _LinSolver[ipde][igridn-1]->KKoffset );
-      // ============== Test for non-linear Convergence ==============
-      bool conv = GetConvergence(pdename, igridn-1);
-      if (conv == true) nonlinear_cycle = nonlinear_Vcycle_numeber + 1;
-       
-      cout << endl;
-      cout << "COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << endl;
-
-      cout << "CYCLE TIME:           \t"<<static_cast<double>((clock()-start_cycle_time))/CLOCKS_PER_SEC << endl;
-    }
-    // ==============  Solution Prolongation ==============
-    if (igridn < _gridn) {
-      ProlongatorSol(pdename, igridn);
-    }
-  }
-
-//   for (int ig = _gridr-1; ig < _gridn-1; ig++) {
-//     _LinSolver[ipde][ig]->_CC_flag = 0;
+// void MultiLevelProblem::Solve(const char pdename[], unsigned const &Vcycle_number, unsigned const &npre, 
+// 				       unsigned const &npost, const char multigrid_type[], const bool &test_linear) {
+//   clock_t start_mg_time = clock();
+//   
+//   unsigned nonlinear_Vcycle_numeber    = (test_linear == false) ? Vcycle_number:1;
+//   unsigned linear_Vcycle_numeber       = (test_linear == true ) ? Vcycle_number:1;
+//    
+//   bool full_cycle;
+//   unsigned igrid0; 
+//   if( !strcmp(multigrid_type,"F-Cycle") ){
+//     full_cycle=1;
+//     igrid0=1;
 //   }
-    
-  cout << "SOLVER TIME:   \t\t\t"<<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << endl;
-
-}
+//   else if(!strcmp(multigrid_type,"V-Cycle")){
+//     full_cycle=0;
+//     igrid0=_gridn;
+//   }
+//   else if(!strcmp(multigrid_type,"M-Cycle")){
+//     full_cycle=0;
+//     igrid0=_gridr;
+//   }
+//   
+//   unsigned ipde = GetPdeIndex(pdename);
+//     
+//   std::pair<int, double> solver_info;
+//      
+//   for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {
+//     cout << endl << "    ************* Level Max: " << igridn << " *************\n" << endl;
+//     for ( unsigned nonlinear_cycle = 0; nonlinear_cycle < nonlinear_Vcycle_numeber; nonlinear_cycle++ ) { //non linear cycle
+//       clock_t start_cycle_time = clock();
+//       cout << endl << "    ************** Cycle: " << nonlinear_cycle + 1 << " ****************\n" << endl;
+//      
+//       // ============== Fine level Assembly ==============
+//       clock_t start_time = clock();
+//       _LinSolver[ipde][igridn-1u]->SetResZero();
+//       _LinSolver[ipde][igridn-1u]->SetEpsZero();
+//       bool assemble_matrix = true; //Be carefull!!!! this is needed in the _assemble_function
+//       _assemble_function(*this,igridn-1u, igridn-1u,ipde, assemble_matrix);
+//       cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << endl;
+//  
+//       for(int linear_cycle = 0; linear_cycle < linear_Vcycle_numeber; linear_cycle++){ //linear cycle
+// 
+// 	for (unsigned ig = igridn-1u; ig > 0; ig--) {
+// 	  
+// 	  // ============== Presmoothing ============== 
+// 	  for (unsigned k = 0; k < npre; k++) {
+// 	    solver_info = (_VankaIsSet) ? _LinSolver[ipde][ig]->solve(VankaIndex, _NSchurVar, _Schur) : _LinSolver[ipde][ig]->solve();
+// 	  }
+// 	  // ============== Non-Standard Multigrid Restriction ==============
+// 	  start_time = clock();
+// 	  Restrictor(ipde, ig, igridn, nonlinear_cycle, linear_cycle, full_cycle);
+// 	  cout << "Grid: " << ig << "-->" << ig-1 << "  RESTRICTION TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << endl;
+// 	}
+//       
+// 	// ============== Coarse Direct Solver ==============
+// 	solver_info = ( _VankaIsSet ) ? _LinSolver[ipde][0]->solve(VankaIndex, _NSchurVar, _Schur) : _LinSolver[ipde][0]->solve();
+// 	
+//             
+// 	for (unsigned ig = 1; ig < igridn; ig++) {
+// 	  
+// 	  // ============== Standard Prolongation ==============
+// 	  start_time=clock();
+// 	  Prolongator(ipde, ig);
+// 	  cout << "Grid: " << ig-1 << "-->" << ig << " PROLUNGATION TIME:\t" << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << endl;
+// 
+// 	  // ============== PostSmoothing ==============    
+// 	  for (unsigned k = 0; k < npost; k++) {
+// 	    solver_info = ( _VankaIsSet ) ? _LinSolver[ipde][ig]->solve(VankaIndex, _NSchurVar, _Schur) : _LinSolver[ipde][ig]->solve();
+// 	  }
+// 	}
+// 	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
+// 	for (unsigned ig = _gridr-1; ig < igridn-1; ig++) {
+// 	  _solution[ig]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][ig]->_EPS, _LinSolver[ipde][ig]->_RES, _LinSolver[ipde][ig]->KKoffset );	
+// 	}
+// 	// ============== Test for linear Convergence ==============
+// 	if(test_linear && igridn>2) GetConvergence(pdename, igridn-2);
+//       }
+//       // ============== Update Solution ( ig = igridn )==============
+//       _solution[igridn-1]->SumEpsToSol(_SolPdeIndex[ipde], _LinSolver[ipde][igridn-1]->_EPS, _LinSolver[ipde][igridn-1]->_RES, _LinSolver[ipde][igridn-1]->KKoffset );
+//       // ============== Test for non-linear Convergence ==============
+//       bool conv = GetConvergence(pdename, igridn-1);
+//       if (conv == true) nonlinear_cycle = nonlinear_Vcycle_numeber + 1;
+//        
+//       cout << endl;
+//       cout << "COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << endl;
+// 
+//       cout << "CYCLE TIME:           \t"<<static_cast<double>((clock()-start_cycle_time))/CLOCKS_PER_SEC << endl;
+//     }
+//     // ==============  Solution Prolongation ==============
+//     if (igridn < _gridn) {
+//       ProlongatorSol(pdename, igridn);
+//     }
+//   }
+// 
+// //   for (int ig = _gridr-1; ig < _gridn-1; ig++) {
+// //     _LinSolver[ipde][ig]->_CC_flag = 0;
+// //   }
+//     
+//   cout << "SOLVER TIME:   \t\t\t"<<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << endl;
+// 
+// }
 
 
 
 //---------------------------------------------------------------------------------------------------------------
-bool MultiLevelProblem::GetConvergence(const char pdename[], const unsigned gridn) {
-
-  unsigned ipde=GetPdeIndex(pdename);
-  bool conv=true;
-  double ResMax;
-  double L2normEps;
-  
-  //for debugging purpose
-  for (unsigned k=0; k<_SolPdeIndex[ipde].size(); k++) {
-    unsigned indexSol=_SolPdeIndex[ipde][k];
-    
-    L2normEps    = _solution[gridn]->_Eps[indexSol]->l2_norm();
-    ResMax       = _solution[gridn]->_Res[indexSol]->linfty_norm();
-
-    cout << "level=" << _msh[gridn]->GetGridNumber() << "\tLinftynormRes" << SolName[indexSol] << "=" << ResMax    <<endl;
-    cout << "level=" << _msh[gridn]->GetGridNumber() << "\tL2normEps"     << SolName[indexSol] << "=" << L2normEps <<endl;
-    
-    if (L2normEps < _non_linear_toll && conv==true) {
-      conv=true;
-    } 
-    else {
-      conv=false;
-    }
-  }
-  return conv;
-}
+// bool MultiLevelProblem::GetConvergence(const char pdename[], const unsigned gridn) {
+// 
+//   unsigned ipde=GetPdeIndex(pdename);
+//   bool conv=true;
+//   double ResMax;
+//   double L2normEps;
+//   
+//   //for debugging purpose
+//   for (unsigned k=0; k<_SolPdeIndex[ipde].size(); k++) {
+//     unsigned indexSol=_SolPdeIndex[ipde][k];
+//     
+//     L2normEps    = _solution[gridn]->_Eps[indexSol]->l2_norm();
+//     ResMax       = _solution[gridn]->_Res[indexSol]->linfty_norm();
+// 
+//     cout << "level=" << _msh[gridn]->GetGridNumber() << "\tLinftynormRes" << SolName[indexSol] << "=" << ResMax    <<endl;
+//     cout << "level=" << _msh[gridn]->GetGridNumber() << "\tL2normEps"     << SolName[indexSol] << "=" << L2normEps <<endl;
+//     
+//     if (L2normEps < _non_linear_toll && conv==true) {
+//       conv=true;
+//     } 
+//     else {
+//       conv=false;
+//     }
+//   }
+//   return conv;
+// }
 
 //*****************************************************************************************
-void MultiLevelProblem::FreeMultigrid() {
-
-  for (int igridn=0; igridn<_gridn; igridn++) {
-    for (int itype=0; itype<3; itype++) {
-      for (int jtype=0; jtype<3; jtype++) {
- 	delete ProlQitoQj_[itype][jtype][igridn];
-      }
-    }
-    _solution[igridn]->FreeSolutionVectors();
-  }
-}
+// void MultiLevelProblem::FreeMultigrid() {
+// 
+//   for (int igridn=0; igridn<_gridn; igridn++) {
+//     for (int itype=0; itype<3; itype++) {
+//       for (int jtype=0; jtype<3; jtype++) {
+//  	delete ProlQitoQj_[itype][jtype][igridn];
+//       }
+//     }
+//     _solution[igridn]->FreeSolutionVectors();
+//   }
+// }
 
 //*******************************************************************************************
 void MultiLevelProblem::AddSolution(const char name[], const char order[],
@@ -890,15 +900,9 @@ void MultiLevelProblem::AddSolution(const char name[], const char order[],
   BdcType.resize(n+1u);
   SolTmorder.resize(n+1u);
   _TestIfPressure.resize(n+1u);
-  _TestIfDisplacement.resize(n+1u);
-  if (tmorder==0) {
-    if (_test_time==0) {
-      tmorder=1;
-    } else {
-      tmorder=2;
-    }
-  }
-  _TestIfDisplacement[n]=0;
+//   _TestIfDisplacement.resize(n+1u);
+
+//   _TestIfDisplacement[n]=0;
   _TestIfPressure[n]=0;
   if (!strcmp(order,"linear")) {
     SolType[n]=0;
@@ -931,10 +935,10 @@ void MultiLevelProblem::AddSolution(const char name[], const char order[],
 void MultiLevelProblem::AssociatePropertyToSolution(const char solution_name[], const char solution_property[]){
   unsigned index=GetIndex(solution_name);
   if( !strcmp(solution_property,"pressure") || !strcmp(solution_property,"Pressure") ) _TestIfPressure[index]=1;
-  else if( !strcmp(solution_property,"displacement") || !strcmp(solution_property,"Displacement") ) _TestIfDisplacement[index]=1;
+//   else if( !strcmp(solution_property,"displacement") || !strcmp(solution_property,"Displacement") ) _TestIfDisplacement[index]=1;
   else if( !strcmp(solution_property,"default") || !strcmp(solution_property,"Default") ) {
     _TestIfPressure[index]=0;
-    _TestIfDisplacement[index]=0;
+//     _TestIfDisplacement[index]=0;
   }
   else {
     cout<<"Error invalid property in function MultiLevelProblem::AssociatePropertyToSolution"<<endl;
@@ -965,7 +969,7 @@ void MultiLevelProblem::Initialize(const char name[], initfunc func) {
   
   double value;
   for (unsigned i=i_start; i<i_end; i++) {
-    //CheckVectorSize(i);
+//     //CheckVectorSize(i);
     unsigned sol_type = SolType[i];
     for (unsigned ig=0; ig<_gridn; ig++) {
       unsigned num_el = _msh[ig]->GetElementNumber();
@@ -1010,25 +1014,25 @@ void MultiLevelProblem::Initialize(const char name[], initfunc func) {
 }
   
   
-void MultiLevelProblem::AddPde(const char pdename[]){
-  unsigned n=_PdeName.size();
-  _PdeName.resize(n+1u);
-  _PdeName[n]  = new char [30];
-  strcpy(_PdeName[n],pdename);
-}
+// void MultiLevelProblem::AddPde(const char pdename[]){
+//   unsigned n=_PdeName.size();
+//   _PdeName.resize(n+1u);
+//   _PdeName[n]  = new char [30];
+//   strcpy(_PdeName[n],pdename);
+// }
   
 // *******************************************************************  
-unsigned MultiLevelProblem::GetPdeIndex(const char pdename[]) const{
-  unsigned index=0;
-  while (strcmp(_PdeName[index],pdename)) {
-    index++;
-    if (index==_PdeName.size()) {
-      cout<<"error! invalid Pde name ("<< pdename<<") in function GetPdeIndex(...)"<<endl;
-      exit(0);
-    }
-  }
-  return index; 
-}
+// unsigned MultiLevelProblem::GetPdeIndex(const char pdename[]) const{
+//   unsigned index=0;
+//   while (strcmp(_PdeName[index],pdename)) {
+//     index++;
+//     if (index==_PdeName.size()) {
+//       cout<<"error! invalid Pde name ("<< pdename<<") in function GetPdeIndex(...)"<<endl;
+//       exit(0);
+//     }
+//   }
+//   return index; 
+// }
 // *******************************************************
 unsigned MultiLevelProblem::GetIndex(const char name[]) const {
   unsigned index=0;
@@ -1056,218 +1060,218 @@ unsigned MultiLevelProblem::GetSolType(const char name[]) {
 }
 
 // *******************************************************
-void MultiLevelProblem::ClearSolPdeIndex() {
-  for(unsigned i=0;i<_SolPdeIndex.size();i++){
-    _SolPdeIndex[i].clear();
-  }
-  _SolPdeIndex.clear();
-  _PdeIndex.clear(); 
-}
+// void MultiLevelProblem::ClearSolPdeIndex() {
+//   for(unsigned i=0;i<_SolPdeIndex.size();i++){
+//     _SolPdeIndex[i].clear();
+//   }
+//   _SolPdeIndex.clear();
+//   _PdeIndex.clear(); 
+// }
 
 // *******************************************************
-void MultiLevelProblem::AddSolutionToSolPdeIndex( const char pdename[], const char solname[]){
-  int ipde=-1;
-  for(unsigned i=0;i<_PdeIndex.size();i++){
-    if(!strcmp(_PdeName[_PdeIndex[i]],pdename)) {
-      ipde=i;
-      break;
-    }
-  }
-  if(ipde==-1){
-    ipde=_PdeIndex.size();
-    _PdeIndex.resize(ipde+1u);
-    _PdeIndex[ipde]=GetPdeIndex(pdename);
-    _SolPdeIndex.resize(ipde+1u);
-  }
-  unsigned jsol=0;
-  for(unsigned j=0;j<_SolPdeIndex[ipde].size();j++){
-    if(strcmp(SolName[_SolPdeIndex[ipde][j]],solname)) jsol++;
-  }
-  if(jsol==_SolPdeIndex[ipde].size()){
-    _SolPdeIndex[ipde].resize(jsol+1u);
-    _SolPdeIndex[ipde][jsol]=GetIndex(solname);
-  }
-}
+// void MultiLevelProblem::AddSolutionToSolPdeIndex( const char pdename[], const char solname[]){
+//   int ipde=-1;
+//   for(unsigned i=0;i<_PdeIndex.size();i++){
+//     if(!strcmp(_PdeName[_PdeIndex[i]],pdename)) {
+//       ipde=i;
+//       break;
+//     }
+//   }
+//   if(ipde==-1){
+//     ipde=_PdeIndex.size();
+//     _PdeIndex.resize(ipde+1u);
+//     _PdeIndex[ipde]=GetPdeIndex(pdename);
+//     _SolPdeIndex.resize(ipde+1u);
+//   }
+//   unsigned jsol=0;
+//   for(unsigned j=0;j<_SolPdeIndex[ipde].size();j++){
+//     if(strcmp(SolName[_SolPdeIndex[ipde][j]],solname)) jsol++;
+//   }
+//   if(jsol==_SolPdeIndex[ipde].size()){
+//     _SolPdeIndex[ipde].resize(jsol+1u);
+//     _SolPdeIndex[ipde][jsol]=GetIndex(solname);
+//   }
+// }
 
 // *******************************************************
-unsigned MultiLevelProblem::GetSolPdeIndex(const char pdename[], const char solname[]) {
-  unsigned ipde=GetPdeIndex(pdename);  
-  unsigned index=0;
-  while (strcmp(SolName[_SolPdeIndex[ipde][index]],solname)) {
-    index++;
-    if (index==_SolPdeIndex[ipde].size()) {
-      cout<<"error! invalid name entry MultiLevelProblem::GetSolPdeIndex(const char pdename[], const char solname[])"<<endl;
-      exit(0);
-    }
-  }
-  return index;
-}
+// unsigned MultiLevelProblem::GetSolPdeIndex(const char pdename[], const char solname[]) {
+//   unsigned ipde=GetPdeIndex(pdename);  
+//   unsigned index=0;
+//   while (strcmp(SolName[_SolPdeIndex[ipde][index]],solname)) {
+//     index++;
+//     if (index==_SolPdeIndex[ipde].size()) {
+//       cout<<"error! invalid name entry MultiLevelProblem::GetSolPdeIndex(const char pdename[], const char solname[])"<<endl;
+//       exit(0);
+//     }
+//   }
+//   return index;
+// }
 
 // *******************************************************
-void MultiLevelProblem::ClearVankaIndex() {
-  VankaIndex.clear();
-};
+// void MultiLevelProblem::ClearVankaIndex() {
+//   VankaIndex.clear();
+// };
 
 // *******************************************************
-void MultiLevelProblem::AddToVankaIndex(const char pdename[], const char solname[]) {
-  unsigned ipde=GetPdeIndex(pdename);
-  unsigned n=VankaIndex.size();
-  VankaIndex.resize(n+1u);
-  unsigned varind=GetIndex(solname);
-
-  for (unsigned i=0; i<_SolPdeIndex[ipde].size(); i++) {
-    if (_SolPdeIndex[ipde][i]==varind) {
-      VankaIndex[n]=i;
-      break;
-    }
-    if (i==_SolPdeIndex[ipde].size()-1u) {
-      cout<<"Error! the Vanka variable "<<solname<<" is not included in the Pde variables."<<endl;
-      exit(0);
-    }
-  }
-};
-
-// *******************************************************
-
-
-void MultiLevelProblem::Restrictor(const unsigned &ipde, const unsigned &gridf, const unsigned &gridn, 
-					    const unsigned &non_linear_iteration, const unsigned &linear_iteration, const bool &full_cycle){
-    
-  _LinSolver[ipde][gridf-1u]->SetEpsZero();
-  _LinSolver[ipde][gridf-1u]->SetResZero();
-   
-  bool assemble_matrix = (linear_iteration == 0) ? true : false;  //Be carefull!!!! this is needed in the _assemble_function      
-  if (gridf>=_gridr) {
-    _assemble_function(*this,gridf-1,gridn-1u,ipde, assemble_matrix);
-  }
-  
-  bool matrix_reuse=true;
-  if(assemble_matrix){
-    if (gridf>=_gridr) {
-      if (!_LinSolver[ipde][gridf-1]->_CC_flag) {
-	_LinSolver[ipde][gridf-1]->_CC_flag=1;
-	//_LinSolver[ipde][gridf-1]->_CC->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,!matrix_reuse);
-	_LinSolver[ipde][gridf-1]->_CC->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,!matrix_reuse);
-      } 
-      else{
-	//_LinSolver[ipde][gridf-1]->_CC->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,matrix_reuse);
-	_LinSolver[ipde][gridf-1]->_CC->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,matrix_reuse);
-      }
-      _LinSolver[ipde][gridf-1u]->_KK->matrix_add(1.,*_LinSolver[ipde][gridf-1u]->_CC,"different_nonzero_pattern");
-    } 
-    else { //Projection of the Matrix on the lower level
-      if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
-	//_LinSolver[ipde][gridf-1]->_KK->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,!matrix_reuse);
-	_LinSolver[ipde][gridf-1]->_KK->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,!matrix_reuse);
-      }
-      else{ 
-	//_LinSolver[ipde][gridf-1]->_KK->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,matrix_reuse);
-	_LinSolver[ipde][gridf-1]->_KK->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,matrix_reuse);
-
-      }	    
-    }
-  }
-      
-  //_LinSolver[ipde][gridf-1u]->_RESC->matrix_mult_transpose(*_LinSolver[ipde][gridf]->_RES, *_LinSolver[ipde][gridf]->_PP);
-  //*_LinSolver[ipde][gridf-1u]->_RES += *_LinSolver[ipde][gridf-1u]->_RESC;
-  
-  _LinSolver[ipde][gridf-1u]->_RESC->matrix_mult(*_LinSolver[ipde][gridf]->_RES, *_LinSolver[ipde][gridf]->_RR);
-  *_LinSolver[ipde][gridf-1u]->_RES += *_LinSolver[ipde][gridf-1u]->_RESC;
-  
-}
+// void MultiLevelProblem::AddToVankaIndex(const char pdename[], const char solname[]) {
+//   unsigned ipde=GetPdeIndex(pdename);
+//   unsigned n=VankaIndex.size();
+//   VankaIndex.resize(n+1u);
+//   unsigned varind=GetIndex(solname);
+// 
+//   for (unsigned i=0; i<_SolPdeIndex[ipde].size(); i++) {
+//     if (_SolPdeIndex[ipde][i]==varind) {
+//       VankaIndex[n]=i;
+//       break;
+//     }
+//     if (i==_SolPdeIndex[ipde].size()-1u) {
+//       cout<<"Error! the Vanka variable "<<solname<<" is not included in the Pde variables."<<endl;
+//       exit(0);
+//     }
+//   }
+// };
 
 // *******************************************************
-void MultiLevelProblem::Prolongator(const unsigned &ipde, const unsigned &gridf) {
-  _LinSolver[ipde][gridf]->_EPSC->matrix_mult(*_LinSolver[ipde][gridf-1]->_EPS,*_LinSolver[ipde][gridf]->_PP);
-  _LinSolver[ipde][gridf]->UpdateResidual();
-  _LinSolver[ipde][gridf]->SumEpsCToEps();
-}
+
+
+// void MultiLevelProblem::Restrictor(const unsigned &ipde, const unsigned &gridf, const unsigned &gridn, 
+// 					    const unsigned &non_linear_iteration, const unsigned &linear_iteration, const bool &full_cycle){
+//     
+//   _LinSolver[ipde][gridf-1u]->SetEpsZero();
+//   _LinSolver[ipde][gridf-1u]->SetResZero();
+//    
+//   bool assemble_matrix = (linear_iteration == 0) ? true : false;  //Be carefull!!!! this is needed in the _assemble_function      
+//   if (gridf>=_gridr) {
+//     _assemble_function(*this,gridf-1,gridn-1u,ipde, assemble_matrix);
+//   }
+//   
+//   bool matrix_reuse=true;
+//   if(assemble_matrix){
+//     if (gridf>=_gridr) {
+//       if (!_LinSolver[ipde][gridf-1]->_CC_flag) {
+// 	_LinSolver[ipde][gridf-1]->_CC_flag=1;
+// 	//_LinSolver[ipde][gridf-1]->_CC->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,!matrix_reuse);
+// 	_LinSolver[ipde][gridf-1]->_CC->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,!matrix_reuse);
+//       } 
+//       else{
+// 	//_LinSolver[ipde][gridf-1]->_CC->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,matrix_reuse);
+// 	_LinSolver[ipde][gridf-1]->_CC->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,matrix_reuse);
+//       }
+//       _LinSolver[ipde][gridf-1u]->_KK->matrix_add(1.,*_LinSolver[ipde][gridf-1u]->_CC,"different_nonzero_pattern");
+//     } 
+//     else { //Projection of the Matrix on the lower level
+//       if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
+// 	//_LinSolver[ipde][gridf-1]->_KK->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,!matrix_reuse);
+// 	_LinSolver[ipde][gridf-1]->_KK->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,!matrix_reuse);
+//       }
+//       else{ 
+// 	//_LinSolver[ipde][gridf-1]->_KK->matrix_PtAP(*_LinSolver[ipde][gridf]->_PP,*_LinSolver[ipde][gridf]->_KK,matrix_reuse);
+// 	_LinSolver[ipde][gridf-1]->_KK->matrix_ABC(*_LinSolver[ipde][gridf]->_RR,*_LinSolver[ipde][gridf]->_KK,*_LinSolver[ipde][gridf]->_PP,matrix_reuse);
+// 
+//       }	    
+//     }
+//   }
+//       
+//   //_LinSolver[ipde][gridf-1u]->_RESC->matrix_mult_transpose(*_LinSolver[ipde][gridf]->_RES, *_LinSolver[ipde][gridf]->_PP);
+//   //*_LinSolver[ipde][gridf-1u]->_RES += *_LinSolver[ipde][gridf-1u]->_RESC;
+//   
+//   _LinSolver[ipde][gridf-1u]->_RESC->matrix_mult(*_LinSolver[ipde][gridf]->_RES, *_LinSolver[ipde][gridf]->_RR);
+//   *_LinSolver[ipde][gridf-1u]->_RES += *_LinSolver[ipde][gridf-1u]->_RESC;
+//   
+// }
 
 // *******************************************************
-void MultiLevelProblem::ProlongatorSol(const char pdename[], unsigned gridf) {
-  
-  unsigned ipde = GetPdeIndex(pdename);
-  
-  for (unsigned k=0; k<_SolPdeIndex[ipde].size(); k++) {
-    unsigned SolIndex=_SolPdeIndex[ipde][k];
-    unsigned Typeindex=SolType[SolIndex];
-    _solution[gridf]->_Sol[SolIndex]->matrix_mult(*_solution[gridf-1]->_Sol[SolIndex],*_solution[gridf]->_ProjMat[Typeindex]);
-    _solution[gridf]->_Sol[SolIndex]->close(); 
-    
-  }
-}
+// void MultiLevelProblem::Prolongator(const unsigned &ipde, const unsigned &gridf) {
+//   _LinSolver[ipde][gridf]->_EPSC->matrix_mult(*_LinSolver[ipde][gridf-1]->_EPS,*_LinSolver[ipde][gridf]->_PP);
+//   _LinSolver[ipde][gridf]->UpdateResidual();
+//   _LinSolver[ipde][gridf]->SumEpsCToEps();
+// }
+
+// *******************************************************
+// void MultiLevelProblem::ProlongatorSol(const char pdename[], unsigned gridf) {
+//   
+//   unsigned ipde = GetPdeIndex(pdename);
+//   
+//   for (unsigned k=0; k<_SolPdeIndex[ipde].size(); k++) {
+//     unsigned SolIndex=_SolPdeIndex[ipde][k];
+//     unsigned Typeindex=SolType[SolIndex];
+//     _solution[gridf]->_Sol[SolIndex]->matrix_mult(*_solution[gridf-1]->_Sol[SolIndex],*_solution[gridf]->_ProjMat[Typeindex]);
+//     _solution[gridf]->_Sol[SolIndex]->close(); 
+//     
+//   }
+// }
 
 //---------------------------------------------------------------------------------------------------
 // This routine generates the matrix for the projection of the FE matrix to finer grids 
 //---------------------------------------------------------------------------------------------------
 
-void MultiLevelProblem::BuildProlongatorMatrix(unsigned gridf, const char pdename[]) {
-
-  unsigned ipde = GetPdeIndex(pdename);
-      
-  if (gridf<1) {
-    cout<<"Error! In function \"BuildProlongatorMatrix\" argument less then 1"<<endl;
-    exit(0);
-  }
-  
-  
-  int nf= _LinSolver[ipde][gridf]->KKIndex[_LinSolver[ipde][gridf]->KKIndex.size()-1u];
-  int nc= _LinSolver[ipde][gridf-1]->KKIndex[_LinSolver[ipde][gridf-1]->KKIndex.size()-1u];
-  int nf_loc = _LinSolver[ipde][gridf]->KKoffset[_LinSolver[ipde][gridf]->KKIndex.size()-1][_iproc]-_LinSolver[ipde][gridf]->KKoffset[0][_iproc];
-  int nc_loc = _LinSolver[ipde][gridf-1]->KKoffset[_LinSolver[ipde][gridf-1]->KKIndex.size()-1][_iproc]-_LinSolver[ipde][gridf-1]->KKoffset[0][_iproc];
-  _LinSolver[ipde][gridf]->_PP = SparseMatrix::build().release();
-  _LinSolver[ipde][gridf]->_PP->init(nf,nc,nf_loc,nc_loc,27,27);
-  _LinSolver[ipde][gridf]->_RR = SparseMatrix::build().release();
-  _LinSolver[ipde][gridf]->_RR->init(nc,nf,nc_loc,nf_loc,27,27);    
-  
-  SparseMatrix *RRt;
-  if( _TestIfPdeHasDisplacement[ipde]){
-    RRt = SparseMatrix::build().release();
-    RRt->init(nf,nc,nf_loc,nc_loc,27,27);
-  }
- 
-  
-  
-  
-  
-  for (unsigned k=0; k<_SolPdeIndex[ipde].size(); k++) {
-    unsigned SolIndex=_SolPdeIndex[ipde][k];
-    bool TestDisp=0;
-    if( _TestIfPdeHasDisplacement[ipde] && _TestIfDisplacement[SolIndex] )   TestDisp=1;
-    //TestDisp=0;
-    
-    // loop on the coarse grid 
-    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-      for (int iel_mts=_msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom]; 
-	   iel_mts < _msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = _msh[gridf-1]->IS_Mts2Gmt_elem[iel_mts];
-	if(_msh[gridf-1]->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
-    
-	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
-	  
-	  if( _TestIfPdeHasDisplacement[ipde]){
-	    type_elem[ielt][SolType[SolIndex]]->BuildRestrictionTranspose(*_LinSolver[ipde][gridf],*_LinSolver[ipde][gridf-1],iel,
-									  RRt,SolIndex,k, TestDisp);
-	  }
-	  
-	  type_elem[ielt][SolType[SolIndex]]->BuildProlongation(*_LinSolver[ipde][gridf],*_LinSolver[ipde][gridf-1],iel,
-								 _LinSolver[ipde][gridf]->_PP,SolIndex,k);
-	
-	}
-      }
-    }
-  }
-  _LinSolver[ipde][gridf]->_PP->close();
-  if( _TestIfPdeHasDisplacement[ipde]){
-    RRt->close();
-    RRt->get_transpose( *_LinSolver[ipde][gridf]->_RR);
-    delete RRt;
-  }
-  else{
-    _LinSolver[ipde][gridf]->_PP->get_transpose( *_LinSolver[ipde][gridf]->_RR);
-  }
-  
-}
+// void MultiLevelProblem::BuildProlongatorMatrix(unsigned gridf, const char pdename[]) {
+// 
+//   unsigned ipde = GetPdeIndex(pdename);
+//       
+//   if (gridf<1) {
+//     cout<<"Error! In function \"BuildProlongatorMatrix\" argument less then 1"<<endl;
+//     exit(0);
+//   }
+//   
+//   
+//   int nf= _LinSolver[ipde][gridf]->KKIndex[_LinSolver[ipde][gridf]->KKIndex.size()-1u];
+//   int nc= _LinSolver[ipde][gridf-1]->KKIndex[_LinSolver[ipde][gridf-1]->KKIndex.size()-1u];
+//   int nf_loc = _LinSolver[ipde][gridf]->KKoffset[_LinSolver[ipde][gridf]->KKIndex.size()-1][_iproc]-_LinSolver[ipde][gridf]->KKoffset[0][_iproc];
+//   int nc_loc = _LinSolver[ipde][gridf-1]->KKoffset[_LinSolver[ipde][gridf-1]->KKIndex.size()-1][_iproc]-_LinSolver[ipde][gridf-1]->KKoffset[0][_iproc];
+//   _LinSolver[ipde][gridf]->_PP = SparseMatrix::build().release();
+//   _LinSolver[ipde][gridf]->_PP->init(nf,nc,nf_loc,nc_loc,27,27);
+//   _LinSolver[ipde][gridf]->_RR = SparseMatrix::build().release();
+//   _LinSolver[ipde][gridf]->_RR->init(nc,nf,nc_loc,nf_loc,27,27);    
+//   
+//   SparseMatrix *RRt;
+//   if( _TestIfPdeHasDisplacement[ipde]){
+//     RRt = SparseMatrix::build().release();
+//     RRt->init(nf,nc,nf_loc,nc_loc,27,27);
+//   }
+//  
+//   
+//   
+//   
+//   
+//   for (unsigned k=0; k<_SolPdeIndex[ipde].size(); k++) {
+//     unsigned SolIndex=_SolPdeIndex[ipde][k];
+//     bool TestDisp=0;
+//     if( _TestIfPdeHasDisplacement[ipde] && _TestIfDisplacement[SolIndex] )   TestDisp=1;
+//     //TestDisp=0;
+//     
+//     // loop on the coarse grid 
+//     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+//       for (int iel_mts=_msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom]; 
+// 	   iel_mts < _msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+// 	unsigned iel = _msh[gridf-1]->IS_Mts2Gmt_elem[iel_mts];
+// 	if(_msh[gridf-1]->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+//     
+// 	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
+// 	  
+// 	  if( _TestIfPdeHasDisplacement[ipde]){
+// 	    type_elem[ielt][SolType[SolIndex]]->BuildRestrictionTranspose(*_LinSolver[ipde][gridf],*_LinSolver[ipde][gridf-1],iel,
+// 									  RRt,SolIndex,k, TestDisp);
+// 	  }
+// 	  
+// 	  type_elem[ielt][SolType[SolIndex]]->BuildProlongation(*_LinSolver[ipde][gridf],*_LinSolver[ipde][gridf-1],iel,
+// 								 _LinSolver[ipde][gridf]->_PP,SolIndex,k);
+// 	
+// 	}
+//       }
+//     }
+//   }
+//   _LinSolver[ipde][gridf]->_PP->close();
+//   if( _TestIfPdeHasDisplacement[ipde]){
+//     RRt->close();
+//     RRt->get_transpose( *_LinSolver[ipde][gridf]->_RR);
+//     delete RRt;
+//   }
+//   else{
+//     _LinSolver[ipde][gridf]->_PP->get_transpose( *_LinSolver[ipde][gridf]->_RR);
+//   }
+//   
+// }
 
 
 //---------------------------------------------------------------------------------------------------
@@ -1602,6 +1606,11 @@ void MultiLevelProblem::UpdateBdc(const double time) {
 //------------------------------------------------------------------------------------------------------------
 void MultiLevelProblem::printsol_xdmf_archive(const char type[]) const {
   
+  // to add--> _time_step0, _ntime_steps
+  int time_step0 = 0;
+  int ntime_steps = 1;
+  int print_step = 1;
+  
   char *filename= new char[60];
   // Print The Xdmf transient wrapper
   sprintf(filename,"./output/mesh.level%d.%s.xmf",_gridn,type);
@@ -1618,8 +1627,8 @@ void MultiLevelProblem::printsol_xdmf_archive(const char type[]) const {
   ftr_out << "<Domain> " << endl;
   ftr_out << "<Grid Name=\"Mesh\" GridType=\"Collection\" CollectionType=\"Temporal\"> \n";
   // time loop for grid sequence
-  for ( unsigned time_step = _time_step0; time_step < _time_step0 + _ntime_steps; time_step++) {
-    if ( !(time_step%_print_step) ) {
+  for ( unsigned time_step = time_step0; time_step < time_step0 + ntime_steps; time_step++) {
+    if ( !(time_step%print_step) ) {
       sprintf(filename,"./mesh.level%d.%d.%s.xmf",_gridn,time_step,type);
       ftr_out << "<xi:include href=\"" << filename << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid["<< 1 <<"])\">\n";
       ftr_out << "<xi:fallback/>\n";
@@ -1640,6 +1649,9 @@ void MultiLevelProblem::printsol_xdmf_archive(const char type[]) const {
 // *******************************************************************
 void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, bool debug) const {
  
+  // to add _time_step
+  int time_step = 0;
+  
   if (igridn==0) igridn=_gridn;
   
   unsigned igridr=(_gridr <= igridn)?_gridr:igridn;
@@ -1648,7 +1660,7 @@ void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, 
   unsigned index=(strcmp(type,"linear"))?1:0;
 
   char *filename = new char[60];
-  sprintf(filename,"./output/mesh.level%d.%d.%s.gmv",igridn,_time_step,type);
+  sprintf(filename,"./output/mesh.level%d.%d.%s.gmv",igridn,time_step,type);
 
   std::ofstream fout;
   
@@ -2373,6 +2385,8 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
 
 void  MultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vector<std::string>& vars) const {
   
+  // to add time_step
+  int time_step = 0;
   
   if(_iproc!=0) return;
   
@@ -2431,7 +2445,7 @@ void  MultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vector<std::
   
   //--------------------------------------------------------------------------------------------------
   // Print The Xdmf wrapper
-  sprintf(filename,"./output/mesh.level%d.%d.%s.xmf",_gridn,_time_step,type);
+  sprintf(filename,"./output/mesh.level%d.%d.%s.xmf",_gridn,time_step,type);
   //std::ofstream fout;
   fout.open(filename);
   if (!fout) {
@@ -2440,14 +2454,14 @@ void  MultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vector<std::
   }
   
   // Print The HDF5 file
-  sprintf(filename,"./mesh.level%d.%d.%s.h5",_gridn,_time_step,type);
+  sprintf(filename,"./mesh.level%d.%d.%s.h5",_gridn,time_step,type);
   // haed ************************************************
   fout<<"<?xml version=\"1.0\" ?>" << endl;
   fout<<"<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd []\">"<<endl;
   fout<<"<Xdmf>"<<endl;
   fout<<"<Domain>"<<endl;
   fout<<"<Grid Name=\"Mesh\">"<<endl;
-  fout<<"<Time Value =\""<< _time_step<< "\" />"<<endl;
+  fout<<"<Time Value =\""<< time_step<< "\" />"<<endl;
   fout<<"<Topology TopologyType=\""<< type_elem <<"\" NumberOfElements=\""<< nel <<"\">"<<endl;
   //Connectivity
   fout<<"<DataStructure DataType=\"Int\" Dimensions=\""<< nel*el_dof_number <<"\"" << "  Format=\"HDF\">" << endl;
@@ -2502,7 +2516,7 @@ void  MultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vector<std::
   
   //----------------------------------------------------------------------------------------------------------
   hid_t file_id;
-  sprintf(filename,"./output/mesh.level%d.%d.%s.h5",_gridn,_time_step,type);
+  sprintf(filename,"./output/mesh.level%d.%d.%s.h5",_gridn,time_step,type);
   file_id = H5Fcreate(filename,H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
   hsize_t dimsf[2];
   herr_t status;
@@ -2664,16 +2678,4 @@ void  MultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vector<std::
   delete [] var_nd_f;
   
 }
-
-// hid_t MultiLevelProblem::print_Dhdf5(hid_t file,const std::string & name, hsize_t dimsf[],double data[]) {
-//   hid_t dataspace = H5Screate_simple(2,dimsf, NULL);
-//   hid_t dataset   = H5Dcreate(file,name.c_str(),H5T_NATIVE_DOUBLE,
-// 			      dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-//   hid_t  status   = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,H5P_DEFAULT,data);
-//   H5Sclose(dataspace);
-//   H5Dclose(dataset);
-//   return status;
-// }
-
-
 
