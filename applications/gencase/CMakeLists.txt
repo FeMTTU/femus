@@ -9,7 +9,6 @@ set(CMAKE_VERBOSE_MAKEFILE on)
 ADD_EXECUTABLE(${THIS_APPLICATION}
 ${CMAKE_PROJECT_DIR}main.cpp 
 ${CMAKE_PROJECT_DIR}GenCase.cpp
-${CMAKE_PROJECT_DIR}salome_io.cpp
 )
 
 # have to reproduce this in CMake syntax
