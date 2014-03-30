@@ -26,7 +26,7 @@ NonLinearImplicitSystem::NonLinearImplicitSystem (MultiLevelProblem& ml_probl,
   _n_nonlinear_iterations   (0),
   _n_max_nonlinear_iterations (15),
   _final_nonlinear_residual (1.e20),
-  _max_nonlinear_convergence_tolerance(1.e-4)
+  _max_nonlinear_convergence_tolerance(1.e-8)
 {
 }
 
@@ -119,9 +119,9 @@ void NonLinearImplicitSystem::solve() {
  	_final_linear_residual = solver_info.second;
 	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
  	if(_final_linear_residual < _absolute_convergence_tolerance) 
-	   break;
+	  break;
       }
-      
+      std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
       // ============== Update Solution ( ig = igridn )==============
       _equation_systems._solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
 							 _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
