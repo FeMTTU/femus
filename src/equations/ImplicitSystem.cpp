@@ -22,11 +22,6 @@ ImplicitSystem::ImplicitSystem (MultiLevelProblem& ml_probl,
 				const unsigned int number_in) :
   ExplicitSystem (ml_probl, name_in, number_in)
 {
-  _npre = 1;
-  _npost = 1;
-  _VankaIsSet = false;
-  _NSchurVar = 1;
-  _Schur = false;
 }
 
 ImplicitSystem::~ImplicitSystem() {

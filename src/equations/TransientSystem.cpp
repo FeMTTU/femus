@@ -75,6 +75,8 @@ void TransientSystem<Base>::solve() {
   //update time step
   _time_step++;
   
+  std::cout << " Time: " << _time << "   TimeStep: " << _time_step << std::endl;
+  
    //update boundary condition
   _equation_systems.UpdateBdc(_time);
   

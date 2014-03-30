@@ -22,6 +22,8 @@
 #include "ImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
 #include "MgTypeEnum.hpp"
+#include "DirichletBCTypeEnum.hpp"
+#include "MgSmootherEnum.hpp"
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -83,7 +85,47 @@ public:
    /** Set the type of multigrid */
    void SetMgType(const MgType mgtype) {_mg_type = mgtype;};
  
+   /** Set the modality of handling the BC boundary condition (penalty or elimination)*/
+   void SetDirichletBCsHandling(const DirichletBCType DirichletMode);
+   
+   /** Add the variable solname to the variable set to be solved by using the Vanka smoother */
+   void AddVariableToVankaIndex(const char solname[]);
+   
+   /** Clear the Vanka index */
+   void ClearVankaIndex();
 
+   /** Set the multigrid smoother, gmres or Vanka (in future AMS (additive schwartz preconditioner))*/
+   void SetMgSmoother(const MgSmoother mgsmoother);
+   
+   /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
+   void SetDimVankaBlock(unsigned const dim_vanka_block);
+   
+   /** Set the Ksp smoother solver on the fine grids. At the coarse solver we always use the LU (Mumps) direct solver */
+   void SetSolverFineGrids(const SolverType solvertype);
+   
+   /** Set the preconditioner for the Ksp smoother solver on the fine grids */
+   void SetPreconditionerFineGrids(const PreconditionerType preconditioner_type);
+   
+   /** Set the tolerances for the ksp solver on fine grids: rtol, atol, divtol, maxits */
+   void SetTolerances(const double rtol, const double atol,
+					       const double divtol, const unsigned maxits);
+   
+   /** Set the tolerances for the ksp solver of the Schur-Vanka on fine grids: rtol, atol, divtol, maxits */
+   void SetSchurTolerances(const double rtol, const double atol,
+						    const double divtol, const unsigned maxits);
+   
+   /** Set the options of the Schur-Vanka smoother */
+   void SetVankaSchurOptions(bool Schur, short unsigned NSchurVar);
+   
+   /** Set the number of pre-smoothing step of a Multigrid cycle */
+   void SetNumberPreSmoothingStep(const unsigned int npre) {_npre = npre;};
+   
+   /** Set the number of post-smoothing step of a Multigrid cycle */
+   void SetNumberPostSmoothingStep(const unsigned int npost) {_npost = npost;};
+   
+   /** Add the Stabilization Matrix D to the Vanka Solver */ 
+   void AddStabilization(const bool stab=false, const double compressibility=0.);
+   
 protected:
   
   /** The number of linear iterations required to solve the linear system Ax=b. */
@@ -113,6 +155,18 @@ protected:
   
   /** Create the Prolongator Matrix in order to get the coarser matrix for the Algebraic Multigrid Solver */ 
   void BuildProlongatorMatrix(unsigned gridf, const char pdename[]);
+  
+  int _npre;
+  
+  int _npost;
+  
+  bool _VankaIsSet;
+  
+  short unsigned _NSchurVar;
+  
+  bool _Schur;
+  
+  vector <unsigned> _VankaIndex;
   
   
 private:
