@@ -77,7 +77,7 @@ int main(int argc,char **args) {
   ml_prob.AddSolution("U","biquadratic");
   ml_prob.AddSolution("V","biquadratic");
   // the pressure variable should be the last for the Schur decomposition
-  nl_ml_prob.AddSolution("P","disc_linear");
+  ml_prob.AddSolution("P","disc_linear");
   //nl_ml_prob.AssociatePropertyToSolution("P","Pressure");
 
  
@@ -161,7 +161,7 @@ int main(int argc,char **args) {
   ml_prob.printsol_vtu_inline("biquadratic",print_vars);
   
   
-  nl_ml_prob.printsol_gmv_binary("biquadratic",0,1);
+  ml_prob.printsol_gmv_binary("biquadratic",0,1);
   
   
   // Destroy all the new systems
