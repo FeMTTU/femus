@@ -3,24 +3,17 @@
 
 #include "TransientSystem.hpp"
 
- void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
-// void AssembleMatrixResFSI(MultiLevelProblem &ml_prob2, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
 
+void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+    
   clock_t AssemblyTime=0;
   clock_t start_time, end_time;
   PetscErrorCode ierr;
   
-  //Static conversion from the Base class (NonLinearMultiLevelProblem) to the Derived class (NonLinearMultiLevelProblemTimeLoop)
-//   NonLinearTimeDependentMultiLevelProblem& ml_prob = static_cast<NonLinearTimeDependentMultiLevelProblem&>(ml_prob2);
-  
-  
+  //pointers and references
   Solution*	 mysolution  	                      = ml_prob._solution[level];
   TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem>("Fluid-Structure-Interaction");
   LinearEquationSolver*  mylsyspde	              = my_nnlin_impl_sys._LinSolver[level];   
-
-  //pointers and references
-//   Solution	*mysolution	=  ml_prob._solution[level];
-//   LinearEquationSolver	*mylsyspde =  ml_prob._LinSolver[ipde][level];
   mesh		*mymsh		=  ml_prob._msh[level];
   elem		*myel		=  mymsh->el;
   SparseMatrix	*myKK		=  mylsyspde->_KK;
@@ -141,8 +134,7 @@
   // -----------------------------------------------------------------
 
   // time discretization algorithm paramters
-   double dt =  my_nnlin_impl_sys.GetIntervalTime(); 
-//   double dt =  0.005; //ml_prob.GetTimeStep();
+  double dt =  my_nnlin_impl_sys.GetIntervalTime(); 
   
   const double gamma = 0.5;
   const double gammaratio = (1.-gamma)/gamma;
@@ -179,13 +171,9 @@
     SolType[ivar]=ml_prob.GetSolType(&varname[ivar][0]);
     SolType[ivar+dim]=ml_prob.GetSolType(&varname[ivar+3][0]);
     SolType[ivar+2*dim+1]=ml_prob.GetSolType(&varname[ivar+7][0]);
-    
-//     indexVAR[ivar]=ml_prob.GetSolPdeIndex("FSI",&varname[ivar][0]);
     indexVAR[ivar]=my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar][0]);
-//     indexVAR[ivar+dim]=ml_prob.GetSolPdeIndex("FSI",&varname[ivar+3][0]);
     indexVAR[ivar+dim]=my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar+3][0]);
   }
-//   indexVAR[2*dim]=ml_prob.GetSolPdeIndex("FSI",&varname[6][0]);
   indexVAR[2*dim]=my_nnlin_impl_sys.GetSolPdeIndex(&varname[6][0]);
   indVAR[2*dim]=ml_prob.GetIndex(&varname[6][0]);
   SolType[2*dim]=ml_prob.GetSolType(&varname[6][0]);

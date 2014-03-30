@@ -53,9 +53,9 @@ private:
   int _moving_mesh;
   std::vector<std::string> _moving_vars;
   
-  unsigned _non_linear_algorithm;
-  bool _is_nonlinear;
-  double _non_linear_toll;
+//   unsigned _non_linear_algorithm;
+//   bool _is_nonlinear;
+//   double _non_linear_toll;
   
   bool _init_func_set;
   bool _bdc_func_set;
@@ -66,27 +66,27 @@ protected:
   int _nprocs;
   int _iproc;
   unsigned short _gridn, _gridr;
-  bool _test_time;
-  unsigned _time_step;
-  unsigned _ntime_steps;
-  double _dt;
-  double _time;
-  unsigned _time_step0;
-  bool _Schur;
-  bool _VankaIsSet;
-  short unsigned _NSchurVar;
+//   bool _test_time;
+//   unsigned _time_step;
+//   unsigned _ntime_steps;
+//   double _dt;
+//   double _time;
+//   unsigned _time_step0;
+//   bool _Schur;
+//   bool _VankaIsSet;
+//   short unsigned _NSchurVar;
   
-  unsigned int _print_step;
+//   unsigned int _print_step;
  
   vector <int> SolTmorder;
   vector <char*> BdcType;
   vector <bool> _TestIfPressure;
-  vector <bool> _TestIfDisplacement;
-  vector <bool> _TestIfPdeHasDisplacement;
+//   vector <bool> _TestIfDisplacement;
+//   vector <bool> _TestIfPdeHasDisplacement;
   
   
   //pointer function to the assemble function
-  void (*_assemble_function)(MultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+//   void (*_assemble_function)(MultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
   
   bool (*_SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
                             double &value, const int FaceName, const double time);
@@ -102,10 +102,10 @@ protected:
   /** Typedef for constatnt system iterators */
   typedef std::map<std::string, System*>::const_iterator const_system_iterator; 
    
-  vector <char*> _PdeName;
-  vector <unsigned> _PdeIndex;
-  void AddPde(const char name[]);
-  unsigned GetPdeIndex(const char name[]) const; 
+//   vector <char*> _PdeName;
+//   vector <unsigned> _PdeIndex;
+//   void AddPde(const char name[]);
+//   unsigned GetPdeIndex(const char name[]) const; 
   
   /** Add the system of type \p system_type named \p name to the systems array. */
   virtual System & add_system (const std::string& system_type, const std::string& name);
@@ -181,8 +181,8 @@ protected:
 
   vector <char*> SolName;
   vector <int> SolType;
-  vector< vector <unsigned> > _SolPdeIndex;
-  vector <unsigned> VankaIndex;
+//   vector< vector <unsigned> > _SolPdeIndex;
+//   vector <unsigned> VankaIndex;
   const elem_type *type_elem[6][5]; 
 
   /** Array of linear solver */
@@ -207,14 +207,14 @@ protected:
 
   //Attaching Functions
   /** Provides a method for filling the Matrix and the Residual vector */
-  void AttachAssembleFunction ( void (*function)(MultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix));
+//   void AttachAssembleFunction ( void (*function)(MultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix));
   
   void AttachSetBoundaryConditionFunction ( bool (* SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
                             double &value, const int FaceName, const double time) );
   
   //utilities
   void MarkStructureNode();
-  bool GetConvergence(const char pdename[],const unsigned gridn);
+//   bool GetConvergence(const char pdename[],const unsigned gridn);
 
   int ComputeBdIntegral(const char pdename[],const char var_name[], const unsigned & kel, 
                          const unsigned & jface, unsigned level, unsigned dir);
@@ -223,55 +223,55 @@ protected:
 
   
   // Config
-  void SetMatrixProperties(const char pdename[], const char property[]);
-  void AddStabilization(const char pdename[], const bool stab=false, const double compressibility=0.);
-  void SetNonLinearAlgorithm(bool isnonlinear=false, const char nnlinalg[]="Linear", const double nl_toll=1.e-03);
-  unsigned GetNonLinearAlgorithm();
-  bool GetNonLinearCase();
+//   void SetMatrixProperties(const char pdename[], const char property[]);
+//   void AddStabilization(const char pdename[], const bool stab=false, const double compressibility=0.);
+//   void SetNonLinearAlgorithm(bool isnonlinear=false, const char nnlinalg[]="Linear", const double nl_toll=1.e-03);
+//   unsigned GetNonLinearAlgorithm();
+//   bool GetNonLinearCase();
 
   //Boundary conditions
   void GenerateBdc(const char name[], const char bdc_type[]="Steady");
   void UpdateBdc(const double time);
-  void SetDirichletBCsHandling(const char pdename[],const char DirichletMode[]);
+//   void SetDirichletBCsHandling(const char pdename[],const char DirichletMode[]);
 
   //* Multigrid Solver  */
-  void Solve(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
-             const char mg_type[]="F-Cycle", const bool &linear=0);
-  void FreeMultigrid();
-  void SetSmoother(const char smoothername[]);
-  void SetVankaSchurOptions(bool Schur=0, short unsigned NSchurVar=0);
-  void SetTolerances(const char pdename[],const double rtol,const double atol,const double divtol, const unsigned maxits);
-  void SetSchurTolerances(const char pdename[], const double rtol,const double atol,const double divtol, const unsigned maxits);
-  void SetSolverFineGrids(const char pdename[], const char solvertype[] = "GMRES");
-  void SetPreconditionerFineGrids(const char pdename[], const char preconditionertype[] = "LU");
-  void SetDimVankaBlock(const char pdename[], unsigned const dim_vanka_block);
-  void SetDimVankaBlock(const char pdename[], const char dim_vanka_block[] = "All");
+//   void Solve(const char pdename[], unsigned const &ncycle,  unsigned const &npost, unsigned const &npre, 
+//              const char mg_type[]="F-Cycle", const bool &linear=0);
+//   void FreeMultigrid();
+//   void SetSmoother(const char smoothername[]);
+//   void SetVankaSchurOptions(bool Schur=0, short unsigned NSchurVar=0);
+//   void SetTolerances(const char pdename[],const double rtol,const double atol,const double divtol, const unsigned maxits);
+//   void SetSchurTolerances(const char pdename[], const double rtol,const double atol,const double divtol, const unsigned maxits);
+//   void SetSolverFineGrids(const char pdename[], const char solvertype[] = "GMRES");
+//   void SetPreconditionerFineGrids(const char pdename[], const char preconditionertype[] = "LU");
+//   void SetDimVankaBlock(const char pdename[], unsigned const dim_vanka_block);
+//   void SetDimVankaBlock(const char pdename[], const char dim_vanka_block[] = "All");
   
   // Vector handling functions
   void AddSolution(const char name[], const char type[],unsigned tmorder=0, const bool &Pde_type=1);
   void AssociatePropertyToSolution(const char solution_name[], const char solution_property[]);
   void ResizeSolutionVector( const char name[]);
-  void CheckVectorSize(const unsigned &i);
+//   void CheckVectorSize(const unsigned &i);
   void Initialize(const char name[], initfunc func = NULL);
   unsigned GetIndex(const char name[]) const;
-  unsigned GetTmOrder(const unsigned i);
+//   unsigned GetTmOrder(const unsigned i);
 
   //Index
-  void CreatePdeStructure();
-  void DeletePdeStructure();
-  void ClearSolPdeIndex();
-  void AddSolutionToSolPdeIndex(const char pdename[], const char solname[]);
-  unsigned GetSolPdeIndex(const char pdename[], const char name[]);
+//   void CreatePdeStructure();
+//   void DeletePdeStructure();
+//   void ClearSolPdeIndex();
+//   void AddSolutionToSolPdeIndex(const char pdename[], const char solname[]);
+//   unsigned GetSolPdeIndex(const char pdename[], const char name[]);
   unsigned GetSolType(const char name[]) ;
-  void ClearVankaIndex();
-  void AddToVankaIndex( const char pdename[], const char solname[]);
+//   void ClearVankaIndex();
+//   void AddToVankaIndex( const char pdename[], const char solname[]);
 
   //MultiGrid tools
-  void Restrictor(const unsigned &ig, const unsigned &ipde, const unsigned &igridn, 
-                  const unsigned &nlcycle,const unsigned &lcycle, const bool &flagmc);
-  void Prolongator(const unsigned &gridf, const unsigned &ipde);
-  void ProlongatorSol(const char pdename[], unsigned gridf);
-  void BuildProlongatorMatrix(unsigned gridf,const char pdename[]);
+//   void Restrictor(const unsigned &ig, const unsigned &ipde, const unsigned &igridn, 
+//                   const unsigned &nlcycle,const unsigned &lcycle, const bool &flagmc);
+//   void Prolongator(const unsigned &gridf, const unsigned &ipde);
+//   void ProlongatorSol(const char pdename[], unsigned gridf);
+//   void BuildProlongatorMatrix(unsigned gridf,const char pdename[]);
   void BuildProlongatorMatrix(unsigned gridf, unsigned SolIndex);
   void BuildProlongatorMatrices();
 
@@ -282,7 +282,7 @@ protected:
   void SetMovingMesh(std::vector<std::string>& myss);
   void printsol_xdmf_archive(const char type[]) const;
  
-  char* GetThisPdeName(const unsigned &ipde){ return _PdeName[ipde];}
+//   char* GetThisPdeName(const unsigned &ipde){ return _PdeName[ipde];}
 };
 
 template <typename T_sys>

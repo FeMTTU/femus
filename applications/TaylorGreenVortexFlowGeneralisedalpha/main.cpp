@@ -136,9 +136,6 @@ int main(int argc,char **args) {
   // Destroy all the new systems
   ml_prob.clear();
    
-  /// Destroy the last PETSC objects
-  ml_prob.FreeMultigrid(); 
-   
   delete[] infile;
   return 0;
 }
