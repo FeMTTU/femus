@@ -251,15 +251,18 @@ FM_LIBMESH_INSTALL=install
 echo =========== Remove previous installations
 rm   -rf $FM_LIBMESH_DIR_REL/
 mkdir -p $FM_LIBMESH_DIR_REL/${FM_LIBMESH_BUILD}
-echo =========== Download from git repository
-git clone git://github.com/libMesh/libmesh.git ${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_BUILD}
+echo =========== Download from git repository, my fork in github
+git clone https://github.com/giorgiobornia/libmesh.git  ${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_BUILD}
+# git clone git://github.com/libMesh/libmesh.git ${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_BUILD}
 for i in 0 1
 do
 mkdir -p ${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_INSTALL}-petsc-${myarchs[i]}
 cd  ${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_BUILD}
+git checkout gambit_format
 export PETSC_ARCH=${myarchs[i]}
 echo =========== Compile
-./configure --prefix=$SOFTWARE_DIR/${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_INSTALL}-petsc-${myarchs[i]}  --disable-hdf5
+./bootstrap
+./configure --prefix=$SOFTWARE_DIR/${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_INSTALL}-petsc-${myarchs[i]}
 # this script should be clever enough to find the external packages in petsc
 make -j $(( $(nproc)-1 ))
 make install
