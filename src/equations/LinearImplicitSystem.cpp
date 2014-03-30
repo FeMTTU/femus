@@ -159,7 +159,7 @@ void LinearImplicitSystem::solve() {
             
      
       std::cout << std::endl;
-      std::cout << "COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+      std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
 
     // ==============  Solution Prolongation ==============
     if (igridn < _equation_systems.GetNumberOfGrid()) {
@@ -230,11 +230,20 @@ void LinearImplicitSystem::Prolongator(const unsigned &gridf) {
 void LinearImplicitSystem::ProlongatorSol(unsigned gridf) {
 
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
+    
+    
     unsigned SolIndex=_SolSystemPdeIndex[k];
     unsigned Typeindex=_equation_systems.SolType[SolIndex];
-    _equation_systems._solution[gridf]->_Sol[SolIndex]->matrix_mult(*_equation_systems._solution[gridf-1]->_Sol[SolIndex],*_equation_systems._solution[gridf]->_ProjMat[Typeindex]);
-    _equation_systems._solution[gridf]->_Sol[SolIndex]->close(); 
     
+    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<_equation_systems._solution[gridf]->_Sol[SolIndex]->linfty_norm()<<std::endl;
+    
+    
+    _equation_systems._solution[gridf]->_Sol[SolIndex]->matrix_mult(*_equation_systems._solution[gridf-1]->_Sol[SolIndex],*_equation_systems._solution[gridf]->_ProjMat[Typeindex]);
+    _equation_systems._solution[gridf]->_Sol[SolIndex]->close();
+    
+    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<_equation_systems._solution[gridf-1]->_Sol[SolIndex]->linfty_norm()<<std::endl;
+    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<_equation_systems._solution[gridf]->_Sol[SolIndex]->linfty_norm()<<std::endl;
+        
   }
 
   
