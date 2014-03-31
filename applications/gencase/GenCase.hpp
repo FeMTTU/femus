@@ -22,12 +22,10 @@ class Domain;
 class FEElemBase;
 
 
-//TODO if I touch this file the make is not affected, why?
-//Also if I touch a .h in my application it seems like he doesnt see that...
 
 class GenCase {
 
-protected:
+private:
 
     // Basic data ==========
     Utils& _utils;

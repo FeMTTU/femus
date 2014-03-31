@@ -88,6 +88,8 @@ return;
 ////////
 std::string get(std::string name) {
   
+  if (_cmdline.find(name) == _cmdline.end()) { std::cout << "Flag " << name << " missing, please provide it" << std::endl; abort(); }
+  
  return _cmdline.find(name)->second; 
 
 }
