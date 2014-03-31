@@ -76,6 +76,8 @@ int main(int argc,char **args) {
   //Start System Variables
   ml_prob.AddSolution("DX","biquadratic",2);
   ml_prob.AddSolution("DY","biquadratic",2);
+  ml_prob.AssociatePropertyToSolution("DX","Displacement"); // Add this line
+  ml_prob.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
   ml_prob.AddSolution("U","biquadratic",2);
   ml_prob.AddSolution("V","biquadratic",2);
   ml_prob.AddSolution("AX","biquadratic",1,0);
@@ -97,10 +99,16 @@ int main(int argc,char **args) {
   ml_prob.GenerateBdc("AY","Steady");
   ml_prob.GenerateBdc("P","Steady");
 
+  std::vector<std::string> mov_vars;
+  mov_vars.push_back("DX");
+  mov_vars.push_back("DY");
+  ml_prob.SetMovingMesh(mov_vars);
+  ml_prob.MarkStructureNode();
   
-    //create systems
+  
+  //create systems
   // add the system FSI to the MultiLevel problem
-  TransientNonlinearImplicitSystem & system = ml_prob.add_system<TransientNonlinearImplicitSystem> ("Fluid-Structure-Interaction");
+  TransientMonolithicFSINonlinearImplicitSystem & system = ml_prob.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction");
   system.AddSolutionToSytemPDE("DX");
   system.AddSolutionToSytemPDE("DY");
   system.AddSolutionToSytemPDE("U");
@@ -109,21 +117,18 @@ int main(int argc,char **args) {
   
   // init all the systems
   ml_prob.init();
-  
-  std::vector<std::string> mov_vars;
-  mov_vars.push_back("DX");
-  mov_vars.push_back("DY");
-  ml_prob.SetMovingMesh(mov_vars);
-  ml_prob.MarkStructureNode();
- 
+   
   // System Fluid-Structure-Interaction
   system.AttachAssembleFunction(AssembleMatrixResFSI);  
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteConvergenceTolerance(1.e-8);  
   system.SetMgType(V_CYCLE);
   system.SetMaxNumberOfNonLinearIterations(4);
-  system.SetDirichletBCsHandling(ELIMINATION);
-
+  system.SetNonLinearConvergenceTolerance(1.e-5);
+  system.SetDirichletBCsHandling(PENALTY);
+  
+  //system.SetDirichletBCsHandling(ELIMINATION);
+  
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
   const unsigned int n_timesteps = 5;
@@ -134,13 +139,13 @@ int main(int argc,char **args) {
     // Solving Fluid-Structure-Interaction system
     std::cout << std::endl;
     std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
-    ml_prob.get_system<TransientNonlinearImplicitSystem>("Fluid-Structure-Interaction").solve();
+    system.solve();
    
     //The update of the acceleration must be done before the update of the other variables
-    ml_prob.get_system<TransientNonlinearImplicitSystem>("Fluid-Structure-Interaction").NewmarkAccUpdate();
+    system.NewmarkAccUpdate();
     
     //update Solution
-    ml_prob.get_system<TransientNonlinearImplicitSystem>("Fluid-Structure-Interaction").UpdateSolution();
+    system.UpdateSolution();
 
     // print solution
     if ( !(time_step%write_interval) ) {
