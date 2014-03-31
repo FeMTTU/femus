@@ -103,7 +103,6 @@ int main(int argc,char **args) {
   ml_probl.GenerateBdc("AX","Steady");
   ml_probl.GenerateBdc("AY","Steady");
   ml_probl.GenerateBdc("P","Steady");
-
   
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -111,7 +110,7 @@ int main(int argc,char **args) {
   ml_probl.SetMovingMesh(mov_vars);
   ml_probl.MarkStructureNode();
   
-    //create systems
+  //create systems
   // add the system FSI to the MultiLevel problem
   TransientMonolithicFSINonlinearImplicitSystem & system = ml_probl.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction");
   system.AddSolutionToSytemPDE("DX");
@@ -122,17 +121,13 @@ int main(int argc,char **args) {
   
   // init all the systems
   ml_probl.init();
-  
-
  
   // System Navier-Stokes
   system.AttachAssembleFunction(AssembleMatrixResFSI);  
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteConvergenceTolerance(1.e-8);  
-  system.SetMaxNumberOfNonLinearIterations(15);  
+  system.SetMaxNumberOfNonLinearIterations(5);  
   system.SetNonLinearConvergenceTolerance(1.e-4);
- // system.SetDirichletBCsHandling(ELIMINATION);
- 
   system.SetDirichletBCsHandling(PENALTY);
   
   system.SetMgType(F_CYCLE);
