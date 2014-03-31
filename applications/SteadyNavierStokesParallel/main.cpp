@@ -25,15 +25,16 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
 int main(int argc,char **args) {
+
   bool linear=1;
-  bool vanka=0;
-//   if(argc == 2) {
-//     if( strcmp("vanka",args[1])) vanka=0;
-//   }
-//   else {
-//     cout << "No input arguments!" << endl;
-//     exit(0);
-//   }
+  bool vanka=1;
+  if(argc == 2) {
+    if( strcmp("vanka",args[1])) vanka=0;
+  }
+  else {
+    cout << "No input arguments!" << endl;
+    exit(0);
+  }
   
   /// Init Petsc-MPI communicator
   FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
@@ -41,10 +42,10 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=5;
+  nm=2;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
-  nr=0;
+  nr=2;
   std::cout<<"MAX_REFINEMENT levels: " << nr << endl<< endl;
   
   int tmp=nm;  nm+=nr;  nr=tmp;
@@ -78,7 +79,7 @@ int main(int argc,char **args) {
   ml_prob.AddSolution("V","biquadratic");
   // the pressure variable should be the last for the Schur decomposition
   ml_prob.AddSolution("P","disc_linear");
-  //nl_ml_prob.AssociatePropertyToSolution("P","Pressure");
+  ml_prob.AssociatePropertyToSolution("P","Pressure");
 
  
   //Initialize (update Init(...) function)
@@ -110,46 +111,48 @@ int main(int argc,char **args) {
    
   // System Navier-Stokes
   system1.AttachAssembleFunction(AssembleMatrixResNS);  
-  system1.SetMaxNumberOfNonLinearIterations(10);
+  system1.SetMaxNumberOfNonLinearIterations(3);
   system1.SetMaxNumberOfLinearIterations(1);
   system1.SetAbsoluteConvergenceTolerance(1.e-10);  
   system1.SetMgType(F_CYCLE);
-
-  system1.SetMaxNumberOfNonLinearIterations(3);
-  
   system1.SetNumberPreSmoothingStep(1);
   system1.SetNumberPostSmoothingStep(1);
-  system1.SetMgSmoother(GMRES_SMOOTHER);
-//   system1.AddStabilization(true);
-//   system1.ClearVankaIndex();
-//   system1.AddVariableToVankaIndex("U");
-//   system1.AddVariableToVankaIndex("V");
-//   system1.AddVariableToVankaIndex("P");
-//   system1.SetSolverFineGrids(GMRES);
-//   system1.SetPreconditionerFineGrids(ILU_PRECOND);
-//   system1.SetVankaSchurOptions(false,1);
-  system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
-//   system1.SetSchurTolerances(1.e-12,1.e-20,1.e+50,4);
-//   system1.SetDimVankaBlock(3);
-
-   
+ 
+  if(!vanka){
+    system1.SetMgSmoother(GMRES_SMOOTHER);
+    system1.SetTolerances(1.e-12,1.e-20,1.e+50,10);
+  }
+  else{
+    system1.SetMgSmoother(VANKA_SMOOTHER);
+    system1.AddStabilization(true);
+    system1.ClearVankaIndex();
+    system1.AddVariableToVankaIndex("U");
+    system1.AddVariableToVankaIndex("V");
+    system1.AddVariableToVankaIndex("P");
+    system1.SetSolverFineGrids(GMRES);
+    system1.SetPreconditionerFineGrids(ILU_PRECOND); 
+    system1.SetVankaSchurOptions(false,1);
+    system1.SetTolerances(1.e-12,1.e-20,1.e+50,10);
+    //system1.SetSchurTolerances(1.e-12,1.e-20,1.e+50,1);
+    system1.SetDimVankaBlock(3);                
+  }
+  
+  // Solving Navier-Stokes system
+  std::cout << std::endl;
+  std::cout << " *********** Navier-Stokes ************  " << std::endl;
+  ml_prob.get_system("Navier-Stokes").solve();
+  
+  
   // System Temperature
   system2.AttachAssembleFunction(AssembleMatrixResT);
   system2.SetMaxNumberOfLinearIterations(6);
   system2.SetAbsoluteConvergenceTolerance(1.e-10);  
   system2.SetMgType(F_CYCLE);
-  
-  
-  // Solving
-  // System Navier-Stokes system
-  std::cout << std::endl;
-  std::cout << " *********** Navier-Stokes ************  " << std::endl;
-  ml_prob.get_system("Navier-Stokes").solve();
-  
-  // System Temperature system
+   
+  // Solving Temperature system
   std::cout << std::endl;
   std::cout << " *********** Temperature ************* " << std::endl;
-//   ml_prob.get_system("Temperature").solve();
+  ml_prob.get_system("Temperature").solve();
    
   /// Print all solutions
   std::vector<std::string> print_vars;
@@ -159,8 +162,7 @@ int main(int argc,char **args) {
   print_vars.push_back("T");
   
   ml_prob.printsol_vtu_inline("biquadratic",print_vars);
-  
-  
+    
   ml_prob.printsol_gmv_binary("biquadratic",0,1);
   
   
@@ -179,7 +181,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
   if(ElemGroupNumber==5 ) {
     refine=1;
   }
-  if(ElemGroupNumber==6 ){//&& level<2) {
+  if(ElemGroupNumber==6 && level<2) {
     refine=1;
   }
   if(ElemGroupNumber==7 ) {
@@ -328,8 +330,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   bool penalty = true; //mylsyspde->GetStabilization();
   const bool symm_mat = false;//mylsyspde->GetMatrixProperties();
   const bool NavierStokes = true; 
-  unsigned nwtn_alg = 1; 
-  bool newton = true; 
+  unsigned nwtn_alg = 2; 
+  bool newton = (nwtn_alg==0) ? 0:1; 
   
   // solution and coordinate variables
   const char Solname[4][2] = {"U","V","W","P"};
@@ -507,8 +509,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	      Lap_rhs += gradphi2[i*dim+ivar2]*gradSolVAR[ivar][ivar2];
 	      Adv_rhs += SolVAR[ivar2]*gradSolVAR[ivar][ivar2];
 	    }
-	    F[SolPdeIndex[ivar]][i]+= (-IRe*Lap_rhs-NavierStokes*Adv_rhs*phi2[i]+IRe*SolVAR[dim]*gradphi2[i*dim+ivar])*Weight2;
-	    //F[SolPdeIndex[ivar]][i]+= (-IRe*Lap_rhs+ IRe*SolVAR[dim]*gradphi2[i*dim+ivar])*Weight2; 
+	    F[SolPdeIndex[ivar]][i]+= (-IRe*Lap_rhs-NavierStokes*Adv_rhs*phi2[i]+SolVAR[dim]*gradphi2[i*dim+ivar])*Weight2;
 	  }
 	  //END RESIDUALS A block ===========================
 	  
@@ -527,20 +528,20 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 
 	      for(unsigned ivar=0; ivar<dim; ivar++) {    
 		B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j] += IRe*Lap+ NavierStokes*newton*Adv1;
-// 		if(nwtn_alg==2){
-// 		  // Advection term II
-// 		  B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j]       += Adv2*gradSolVAR[ivar][ivar];
-// 		  for(unsigned ivar2=1; ivar2<dim; ivar2++) {
-// 		    B[SolPdeIndex[ivar]][SolPdeIndex[(ivar+ivar2)%dim]][i*nve2+j] += Adv2*gradSolVAR[ivar][(ivar+ivar2)%dim];
-// 		  }
-// 		}
+		if(nwtn_alg==2){
+		  // Advection term II
+		  B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j]       += Adv2*gradSolVAR[ivar][ivar];
+		  for(unsigned ivar2=1; ivar2<dim; ivar2++) {
+		    B[SolPdeIndex[ivar]][SolPdeIndex[(ivar+ivar2)%dim]][i*nve2+j] += Adv2*gradSolVAR[ivar][(ivar+ivar2)%dim];
+		  }
+		}
 	      }
   	    } //end phij loop
 	    
 	    // *** phi1_j loop ***
 	    for(unsigned j=0; j<nve1; j++){
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		B[SolPdeIndex[ivar]][SolPdeIndex[dim]][i*nve1+j] -= IRe*gradphi2[i*dim+ivar]*phi1[j]*Weight2;
+		B[SolPdeIndex[ivar]][SolPdeIndex[dim]][i*nve1+j] -= gradphi2[i*dim+ivar]*phi1[j]*Weight2;
 	      }
 	    } //end phi1_j loop
 	  } // endif assembe_matrix

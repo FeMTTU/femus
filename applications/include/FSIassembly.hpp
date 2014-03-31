@@ -87,7 +87,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   vector< vector< int > > dofsVAR(2*dim+1); 
   
   // algorithm parameters
-  double eps_pen 	= 1.e40;  // previous 1
+  double eps_pen 	= 1.;  // previous 1
   bool   newton		= 0;
   
   // ------------------------------------------------------------------------
