@@ -41,7 +41,7 @@ public:
 
   void CheckDir(const std::string& dir_name_in, const std::string& my_name_in) const;
   void CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in) const;  //TODO isn't this very similar to the previous one?
-  void CheckDirOrAbort(const std::string& dir_name_in, const std::string& my_name_in) const;
+  static void CheckDirOrAbort(const std::string& dir_name_in, const std::string& my_name_in);
 
   void CheckIODirectories();
   void RedirectCout(std::streambuf* sbuf,  std::ofstream& file_in);

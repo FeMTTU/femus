@@ -70,9 +70,10 @@ int main(int argc, char** argv) {
   std::cout << "**************************************************************" << std::endl;
   std::cout << "***** The application I will generate the case for is  ****** " << chosen_app << std::endl;
   std::cout << "**************************************************************" << std::endl;
-  std::string basepath = "../" + chosen_app + "/";
 
   // ======= Files =====
+  Files::CheckDirOrAbort("../",chosen_app);
+  std::string basepath = "../" + chosen_app + "/";
   Files files(/*"../mhdopt/"*/basepath);
    std::cout << "******The basepath starting from the gencase directory is ***** " << files.get_basepath() << std::endl;
 //   files.CheckDirOrAbort(files.get_basepath(),DEFAULT_CONFIGDIR); 
@@ -128,6 +129,3 @@ std::vector<FEElemBase*> FEElements(QL); //these are basically used only for the
   
   return 0;  
 }
-
-//=======you dont need the solver library for gencase
-// gencase needs mpi somewhere

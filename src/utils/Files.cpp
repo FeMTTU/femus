@@ -64,7 +64,8 @@ void Files::CloseCaseData() {
 /// The first argument reads the absolute path of the parent directory,
 /// the second argument reads the name (no absolute path) of the directory to be checked
 ///The sum of the first + the second is absolute, as it should be in order to do the check
-void Files::CheckDirOrAbort(const std::string& dir_name_in, const std::string& my_name_in) const {
+// TODO this function works if the second argument is EMPTY, I want to BLOCK also this case!!!
+void Files::CheckDirOrAbort(const std::string& dir_name_in, const std::string& my_name_in) {
 //can be done by all processes
   
   // input directory ---------------------------------
