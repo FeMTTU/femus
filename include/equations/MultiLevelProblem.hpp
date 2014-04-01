@@ -60,6 +60,8 @@ private:
   bool _init_func_set;
   bool _bdc_func_set;
   
+  void GenerateBdc(const unsigned int k, const double time);
+  
     
 protected:
   
