@@ -900,9 +900,9 @@ void MultiLevelProblem::AddSolution(const char name[], const char order[],
   BdcType.resize(n+1u);
   SolTmorder.resize(n+1u);
   _TestIfPressure.resize(n+1u);
-//   _TestIfDisplacement.resize(n+1u);
+  _TestIfDisplacement.resize(n+1u);
 
-//   _TestIfDisplacement[n]=0;
+  _TestIfDisplacement[n]=0;
   _TestIfPressure[n]=0;
   if (!strcmp(order,"linear")) {
     SolType[n]=0;
@@ -935,10 +935,10 @@ void MultiLevelProblem::AddSolution(const char name[], const char order[],
 void MultiLevelProblem::AssociatePropertyToSolution(const char solution_name[], const char solution_property[]){
   unsigned index=GetIndex(solution_name);
   if( !strcmp(solution_property,"pressure") || !strcmp(solution_property,"Pressure") ) _TestIfPressure[index]=1;
-//   else if( !strcmp(solution_property,"displacement") || !strcmp(solution_property,"Displacement") ) _TestIfDisplacement[index]=1;
+  else if( !strcmp(solution_property,"displacement") || !strcmp(solution_property,"Displacement") ) _TestIfDisplacement[index]=1;
   else if( !strcmp(solution_property,"default") || !strcmp(solution_property,"Default") ) {
     _TestIfPressure[index]=0;
-//     _TestIfDisplacement[index]=0;
+    _TestIfDisplacement[index]=0;
   }
   else {
     cout<<"Error invalid property in function MultiLevelProblem::AssociatePropertyToSolution"<<endl;

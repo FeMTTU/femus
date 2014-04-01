@@ -147,14 +147,14 @@ protected:
   void Prolongator(const unsigned &gridf);
   
   /** Create the Restrictor matrix for the Multigrid solver */
-  void Restrictor(const unsigned &gridf, const unsigned &gridn, 
-					    const unsigned &non_linear_iteration, const unsigned &linear_iteration, const bool &full_cycle);
+  virtual void Restrictor(const unsigned &gridf, const unsigned &gridn, 
+			  const unsigned &non_linear_iteration, const unsigned &linear_iteration, const bool &full_cycle);
   
   /** Prolongate the solution to a finer level */
   void ProlongatorSol(unsigned gridf);
   
-  /** Create the Prolongator Matrix in order to get the coarser matrix for the Algebraic Multigrid Solver */ 
-  void BuildProlongatorMatrix(unsigned gridf, const char pdename[]);
+  /** Create the Prolongator Operator in order to get the coarser matrix for the Algebraic Multigrid Solver */ 
+  virtual void BuildProlongatorMatrix(unsigned gridf, const char pdename[]);
   
   int _npre;
   

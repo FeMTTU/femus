@@ -54,6 +54,8 @@ void LinearImplicitSystem::init() {
   CreateSystemPDEStructure();
 }
 
+//-----------------------------------------------------------------
+
 void LinearImplicitSystem::CreateSystemPDEStructure() {
     _LinSolver.resize(_equation_systems.GetNumberOfGrid());
     for(unsigned i=0;i<_equation_systems.GetNumberOfGrid();i++){
@@ -70,6 +72,7 @@ void LinearImplicitSystem::CreateSystemPDEStructure() {
     }
 }
 
+//---------------------------------------------------------------------------------------------------
 
 void LinearImplicitSystem::solve() {
   
@@ -155,9 +158,8 @@ void LinearImplicitSystem::solve() {
       
       // ============== Update Solution ( ig = igridn )==============
       _equation_systems._solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
-							 _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
-            
-     
+					    _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
+   
       std::cout << std::endl;
       std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
 
@@ -171,9 +173,12 @@ void LinearImplicitSystem::solve() {
   
 }
 
+//---------------------------------------------------------------------------------------------
+// This is a virtual function overloaded in the class MonolithicFSINonLinearImplicitSystem.
+//---------------------------------------------------------------------------------------------
 void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gridn, 
 					    const unsigned &non_linear_iteration, const unsigned &linear_iteration, const bool &full_cycle){
-    
+      
   _LinSolver[gridf-1u]->SetEpsZero();
   _LinSolver[gridf-1u]->SetResZero();
   
@@ -188,31 +193,24 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
       if (!_LinSolver[gridf-1]->_CC_flag) {
 	_LinSolver[gridf-1]->_CC_flag=1;
 	_LinSolver[gridf-1]->_CC->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,!matrix_reuse);
-	//_LinSolver[gridf-1]->_CC->matrix_ABC(*_LinSolver[gridf]->_RR,*_LinSolver[gridf]->_KK,*_LinSolver[gridf]->_PP,!matrix_reuse);
       } 
       else{
 	_LinSolver[gridf-1]->_CC->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,matrix_reuse);
-	//_LinSolver[gridf-1]->_CC->matrix_ABC(*_LinSolver[gridf]->_RR,*_LinSolver[gridf]->_KK,*_LinSolver[gridf]->_PP,matrix_reuse);
       }
       _LinSolver[gridf-1u]->_KK->matrix_add(1.,*_LinSolver[gridf-1u]->_CC,"different_nonzero_pattern");
     } 
     else { //Projection of the Matrix on the lower level
       if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
 	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,!matrix_reuse);
-	//_LinSolver[gridf-1]->_KK->matrix_ABC(*_LinSolver[gridf]->_RR,*_LinSolver[gridf]->_KK,*_LinSolver[gridf]->_PP,!matrix_reuse);
       }
       else{ 
 	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,matrix_reuse);
-	//_LinSolver[gridf-1]->_KK->matrix_ABC(*_LinSolver[gridf]->_RR,*_LinSolver[gridf]->_KK,*_LinSolver[gridf]->_PP,matrix_reuse);
       }    
     }
   }
       
   _LinSolver[gridf-1u]->_RESC->matrix_mult_transpose(*_LinSolver[gridf]->_RES, *_LinSolver[gridf]->_PP);
   *_LinSolver[gridf-1u]->_RES += *_LinSolver[gridf-1u]->_RESC;
-  
-//   _LinSolver[gridf-1u]->_RESC->matrix_mult(*_LinSolver[gridf]->_RES, *_LinSolver[gridf]->_RR);
-//   *_LinSolver[gridf-1u]->_RES += *_LinSolver[gridf-1u]->_RESC;
   
 }
 
@@ -226,32 +224,24 @@ void LinearImplicitSystem::Prolongator(const unsigned &gridf) {
   
 }
 
-
+// *******************************************************
 void LinearImplicitSystem::ProlongatorSol(unsigned gridf) {
 
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     
-    
     unsigned SolIndex=_SolSystemPdeIndex[k];
     unsigned Typeindex=_equation_systems.SolType[SolIndex];
     
-//     std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<_equation_systems._solution[gridf]->_Sol[SolIndex]->linfty_norm()<<std::endl;
-    
-    
     _equation_systems._solution[gridf]->_Sol[SolIndex]->matrix_mult(*_equation_systems._solution[gridf-1]->_Sol[SolIndex],*_equation_systems._solution[gridf]->_ProjMat[Typeindex]);
     _equation_systems._solution[gridf]->_Sol[SolIndex]->close();
-    
-//     std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<_equation_systems._solution[gridf-1]->_Sol[SolIndex]->linfty_norm()<<std::endl;
-//     std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<_equation_systems._solution[gridf]->_Sol[SolIndex]->linfty_norm()<<std::endl;
         
   }
-
   
 }
 
-
 //---------------------------------------------------------------------------------------------------
-// This routine generates the matrix for the projection of the FE matrix to finer grids 
+// This routine generates the matrix for the projection of the FE matrix to finer grids.
+// This is a virtual function overloaded in the class MonolithicFSINonLinearImplicitSystem.
 //---------------------------------------------------------------------------------------------------
 
 void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pdename[]) {
@@ -273,20 +263,8 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pde
   _LinSolver[gridf]->_PP = SparseMatrix::build().release();
   _LinSolver[gridf]->_PP->init(nf,nc,nf_loc,nc_loc,27,27);
   
-/*  _LinSolver[gridf]->_RR = SparseMatrix::build().release();
-  _LinSolver[gridf]->_RR->init(nc,nf,nc_loc,nf_loc,27,27); */   
-   
-//   SparseMatrix *RRt;
-//   if( _TestIfPdeHasDisplacement[ipde]){
-//     RRt = SparseMatrix::build().release();
-//     RRt->init(nf,nc,nf_loc,nc_loc,27,27);
-//   }
-  
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned SolIndex=_SolSystemPdeIndex[k];
-//     bool TestDisp=0;
-//     if( _TestIfPdeHasDisplacement[ipde] && _TestIfDisplacement[SolIndex] )   TestDisp=1;
-    //TestDisp=0;
     
     // loop on the coarse grid 
     for(int isdom=iproc; isdom<iproc+1; isdom++) {
@@ -297,11 +275,6 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pde
     
 	  short unsigned ielt=_equation_systems._msh[gridf-1]->el->GetElementType(iel);
 	  
-// 	  if( _TestIfPdeHasDisplacement[ipde]){
-// 	    _equation_systems.type_elem[ielt][SolType[SolIndex]]->BuildRestrictionTranspose(*_LinSolver[ipde][gridf],*_LinSolver[ipde][gridf-1],iel,
-// 									  RRt,SolIndex,k, TestDisp);
-// 	  }
-	  
 	  _equation_systems.type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
 								 _LinSolver[gridf]->_PP,SolIndex,k);
 	
@@ -311,15 +284,6 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pde
   }
   
   _LinSolver[gridf]->_PP->close();
-  
-//   if( _TestIfPdeHasDisplacement[ipde]){
-//     RRt->close();
-//     RRt->get_transpose( *_LinSolver[ipde][gridf]->_RR);
-//     delete RRt;
-//   }
-//   else{
-//  _LinSolver[gridf]->_PP->get_transpose( *_LinSolver[gridf]->_RR);
-//   }
   
 }
 
