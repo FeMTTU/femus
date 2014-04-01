@@ -1367,14 +1367,14 @@ void MultiLevelProblem::GenerateBdc(const char name[], const char bdc_type[]) {
     exit(1); 
   }
   
-  const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
-  
-  unsigned indX=GetIndex("X");
-  unsigned indY=GetIndex("Y");
-  unsigned indZ=GetIndex("Z");
-  double xx;
-  double yy;
-  double zz;
+//   const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
+//   
+//   unsigned indX=GetIndex("X");
+//   unsigned indY=GetIndex("Y");
+//   unsigned indZ=GetIndex("Z");
+//   double xx;
+//   double yy;
+//   double zz;
 
   unsigned i_start;
   unsigned i_end;
@@ -1416,85 +1416,88 @@ void MultiLevelProblem::GenerateBdc(const char name[], const char bdc_type[]) {
   // 2 Default Neumann
   // 1 DD Dirichlet
   // 0 Dirichlet
-  for (unsigned igridn=0; igridn<_gridn; igridn++) {
-    for (unsigned i=i_start; i<i_end; i++) {
-      if(_solution[igridn]->_ResEpsBdcFlag[i]){
-	for (unsigned j=_msh[igridn]->MetisOffset[SolType[i]][_iproc]; j<_msh[igridn]->MetisOffset[SolType[i]][_iproc+1]; j++) {
-	  _solution[igridn]->_Bdc[i]->set(j,2.);
-	}
-	if (SolType[i]<3) {  
-	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
-	    for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-		 iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	      unsigned iel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
-	      for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt); jface++) {
-		if (_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)==0) { //Domain Decomposition Dirichlet
-		  short unsigned ielt=_msh[igridn]->el->GetElementType(iel_gmt);
-		  unsigned nv1=(!_TestIfPressure[i])?
-		    NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt,0)]: //non-pressure type
-		    _msh[igridn]->el->GetElementDofNumber(iel,_msh[igridn]->GetEndIndex(SolType[i]) ); //pressure type
-		  for (unsigned iv=0; iv<nv1; iv++) {
-		    unsigned inode=(!_TestIfPressure[i])? 
-		      _msh[igridn]->el->GetFaceVertexIndex(iel_gmt,jface,iv)-1u: //non-pressure type
-		      _msh[igridn]->el->GetElementVertexIndex(iel_gmt,iv)-1u;    //pressure type
-		    unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[i]);
-		    _solution[igridn]->_Bdc[i]->set(inode_Metis,1.);
-		  }
-		}
-	      }
-	    }
-	  }
-	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {  // 0 Dirichlet
-	    for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-		 iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	      unsigned iel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
-	      for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt); jface++) {
-		if (_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)<0) { //Dirichlet
-		  short unsigned ielt=_msh[igridn]->el->GetElementType(iel_gmt);
-		  unsigned nv1=NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt,0)];
-		  for (unsigned iv=0; iv<nv1; iv++) {
-		    unsigned inode=_msh[igridn]->el->GetFaceVertexIndex(iel_gmt,jface,iv)-1u;
-		    unsigned inode_coord_Metis=_msh[igridn]->GetMetisDof(inode,2);
-		    double value;
-		    xx=(*_solution[igridn]->_Sol[indX])(inode_coord_Metis);  
-		    yy=(*_solution[igridn]->_Sol[indY])(inode_coord_Metis);
-		    zz=(*_solution[igridn]->_Sol[indZ])(inode_coord_Metis);
-		    bool test=_SetBoundaryConditionFunction(xx,yy,zz,SolName[i],value,-(_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)+1),0.);
-		    if (test) {
-		      unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[i]);
-		      _solution[igridn]->_Bdc[i]->set(inode_Metis,0.);
-		      _solution[igridn]->_Sol[i]->set(inode_Metis,value);
-		    }
-		  }
-		}
-	      }
-	    }
-	  }
-	}
-	else if(_TestIfPressure[i]){ // 1 DD Dirichlet for pressure types only
-	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   
-	    unsigned nel=_msh[igridn]->GetElementNumber();
-	    for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-		 iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	      unsigned iel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
-	      for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt); jface++) {
-		if (_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)==0) { //Domain Decomposition Dirichlet
-		  short unsigned ielt=_msh[igridn]->el->GetElementType(iel_gmt);
-		  unsigned nv1=_msh[igridn]->el->GetElementDofNumber(iel_gmt,_msh[igridn]->GetEndIndex(SolType[i]));
-	  	  for (unsigned iv=0; iv<nv1; iv++) {
-		    unsigned inode=(iel_gmt+iv*nel);
-		    unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[i]);
-		    _solution[igridn]->_Bdc[i]->set(inode_Metis,1.);
-		  }
-		}
-	      }
-	    }
-	  }
-	}	
-	_solution[igridn]->_Sol[i]->close();
-	_solution[igridn]->_Bdc[i]->close();
-      }
-    }
+  for (unsigned i=i_start; i<i_end; i++) {
+    
+    GenerateBdc(i,0.);
+    
+//     for (unsigned igridn=0; igridn<_gridn; igridn++) {
+//       if(_solution[igridn]->_ResEpsBdcFlag[i]){
+// 	for (unsigned j=_msh[igridn]->MetisOffset[SolType[i]][_iproc]; j<_msh[igridn]->MetisOffset[SolType[i]][_iproc+1]; j++) {
+// 	  _solution[igridn]->_Bdc[i]->set(j,2.);
+// 	}
+// 	if (SolType[i]<3) {  
+// 	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
+// 	    for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+// 		 iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+// 	      unsigned iel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
+// 	      for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt); jface++) {
+// 		if (_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+// 		  short unsigned ielt=_msh[igridn]->el->GetElementType(iel_gmt);
+// 		  unsigned nv1=(!_TestIfPressure[i])?
+// 		    NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt,0)]: //non-pressure type
+// 		    _msh[igridn]->el->GetElementDofNumber(iel,_msh[igridn]->GetEndIndex(SolType[i]) ); //pressure type
+// 		  for (unsigned iv=0; iv<nv1; iv++) {
+// 		    unsigned inode=(!_TestIfPressure[i])? 
+// 		      _msh[igridn]->el->GetFaceVertexIndex(iel_gmt,jface,iv)-1u: //non-pressure type
+// 		      _msh[igridn]->el->GetElementVertexIndex(iel_gmt,iv)-1u;    //pressure type
+// 		    unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[i]);
+// 		    _solution[igridn]->_Bdc[i]->set(inode_Metis,1.);
+// 		  }
+// 		}
+// 	      }
+// 	    }
+// 	  }
+// 	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {  // 0 Dirichlet
+// 	    for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+// 		 iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+// 	      unsigned iel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
+// 	      for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt); jface++) {
+// 		if (_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)<0) { //Dirichlet
+// 		  short unsigned ielt=_msh[igridn]->el->GetElementType(iel_gmt);
+// 		  unsigned nv1=NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt,0)];
+// 		  for (unsigned iv=0; iv<nv1; iv++) {
+// 		    unsigned inode=_msh[igridn]->el->GetFaceVertexIndex(iel_gmt,jface,iv)-1u;
+// 		    unsigned inode_coord_Metis=_msh[igridn]->GetMetisDof(inode,2);
+// 		    double value;
+// 		    xx=(*_solution[igridn]->_Sol[indX])(inode_coord_Metis);  
+// 		    yy=(*_solution[igridn]->_Sol[indY])(inode_coord_Metis);
+// 		    zz=(*_solution[igridn]->_Sol[indZ])(inode_coord_Metis);
+// 		    bool test=_SetBoundaryConditionFunction(xx,yy,zz,SolName[i],value,-(_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)+1),0.);
+// 		    if (test) {
+// 		      unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[i]);
+// 		      _solution[igridn]->_Bdc[i]->set(inode_Metis,0.);
+// 		      _solution[igridn]->_Sol[i]->set(inode_Metis,value);
+// 		    }
+// 		  }
+// 		}
+// 	      }
+// 	    }
+// 	  }
+// 	}
+// 	else if(_TestIfPressure[i]){ // 1 DD Dirichlet for pressure types only
+// 	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   
+// 	    unsigned nel=_msh[igridn]->GetElementNumber();
+// 	    for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+// 		 iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+// 	      unsigned iel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
+// 	      for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(iel_gmt); jface++) {
+// 		if (_msh[igridn]->el->GetFaceElementIndex(iel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+// 		  short unsigned ielt=_msh[igridn]->el->GetElementType(iel_gmt);
+// 		  unsigned nv1=_msh[igridn]->el->GetElementDofNumber(iel_gmt,_msh[igridn]->GetEndIndex(SolType[i]));
+// 	  	  for (unsigned iv=0; iv<nv1; iv++) {
+// 		    unsigned inode=(iel_gmt+iv*nel);
+// 		    unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[i]);
+// 		    _solution[igridn]->_Bdc[i]->set(inode_Metis,1.);
+// 		  }
+// 		}
+// 	      }
+// 	    }
+// 	  }
+// 	}	
+// 	_solution[igridn]->_Sol[i]->close();
+// 	_solution[igridn]->_Bdc[i]->close();
+//       }
+//     }
   }
 }
 
@@ -1502,22 +1505,121 @@ void MultiLevelProblem::GenerateBdc(const char name[], const char bdc_type[]) {
 
 void MultiLevelProblem::UpdateBdc(const double time) {
 
-  const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
-  unsigned dim = _msh[0]->GetDimension() - 1u;
-  unsigned indX=GetIndex("X");
-  unsigned indY=GetIndex("Y");
-  unsigned indZ=GetIndex("Z");
-  double xx;
-  double yy;
-  double zz;
+//   const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
+//   unsigned dim = _msh[0]->GetDimension() - 1u;
+//   unsigned indX=GetIndex("X");
+//   unsigned indY=GetIndex("Y");
+//   unsigned indZ=GetIndex("Z");
+//   double xx;
+//   double yy;
+//   double zz;
 
   for (int k=0; k<SolName.size(); k++) {
     if (!strcmp(BdcType[k],"Time_dependent")) {
-      unsigned i_start = k;
-      unsigned i_end;
-      i_end=i_start+1u;
+//       unsigned i_start = k;
+//       unsigned i_end;
+//       i_end=i_start+1u;
       
       
+      GenerateBdc(k,time);
+      
+      // 2 Default Neumann
+      // 1 DD Dirichlet
+      // 0 Dirichlet
+//       for (unsigned igridn=0; igridn<_gridn; igridn++) {
+// 	if(_solution[igridn]->_ResEpsBdcFlag[k]){
+// 	  for (unsigned j=_msh[igridn]->MetisOffset[SolType[k]][_iproc]; j<_msh[igridn]->MetisOffset[SolType[k]][_iproc+1]; j++) {
+// 	    _solution[igridn]->_Bdc[k]->set(j,2.);
+// 	  }
+// 	  if (SolType[k]<3) {  
+// 	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
+// 	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+// 		   iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+// 		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
+// 		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
+// 		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+// 		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
+// 		    unsigned nv1=(!_TestIfPressure[k])?
+// 		      NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt,0)]:
+// 		      _msh[igridn]->el->GetElementDofNumber(iel,_msh[igridn]->GetEndIndex(SolType[k]));
+// 		    for (unsigned iv=0; iv<nv1; iv++) {
+// 		      unsigned inode=(!_TestIfPressure[k])? 
+// 			_msh[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
+// 			_msh[igridn]->el->GetElementVertexIndex(kel_gmt,iv)-1u;
+// 		      unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
+// 		      _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
+// 		    }
+// 		  }
+// 		}
+// 	      }
+// 	    }
+// 	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {  // 0 Dirichlet
+// 	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+// 		   iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+// 		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
+// 		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
+// 		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)<0) { //Dirichlet
+// 		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
+// 		    unsigned nv1=NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt,0)];
+// 		    for (unsigned iv=0; iv<nv1; iv++) {
+// 		      unsigned inode=_msh[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u;
+// 		      unsigned inode_coord_Metis=_msh[igridn]->GetMetisDof(inode,2);
+// 		      double value;
+// 		      xx=(*_solution[igridn]->_Sol[indX])(inode_coord_Metis);  
+// 		      yy=(*_solution[igridn]->_Sol[indY])(inode_coord_Metis);
+// 		      zz=(*_solution[igridn]->_Sol[indZ])(inode_coord_Metis);
+// 		      bool test=_SetBoundaryConditionFunction(xx,yy,zz,SolName[k],value,-(_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)+1),time);
+// 		      if (test) {
+// 			unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
+// 			_solution[igridn]->_Bdc[k]->set(inode_Metis,0.);
+// 			_solution[igridn]->_Sol[k]->set(inode_Metis,value);
+// 		      }
+// 		    }
+// 		  }
+// 		}
+// 	      }
+// 	    }
+// 	  }
+// 	  else if(_TestIfPressure[k]){
+// 	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
+// 	      unsigned nel=_msh[igridn]->GetElementNumber();
+// 	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+// 		   iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+// 		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
+// 		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
+// 		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+// 		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
+// 		    unsigned nv1=_msh[igridn]->el->GetElementDofNumber(kel_gmt,_msh[igridn]->GetEndIndex(SolType[k]));
+// 		    for (unsigned iv=0; iv<nv1; iv++) {
+// 		      unsigned inode=(kel_gmt+iv*nel);
+// 		      unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
+// 		      _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
+// 		    }
+// 		  }
+// 		}
+// 	      }
+// 	    }
+// 	  }	
+// 	  _solution[igridn]->_Sol[k]->close();
+// 	  _solution[igridn]->_Bdc[k]->close();
+// 	}
+//       }
+    }
+  }
+}
+
+
+void MultiLevelProblem::GenerateBdc(const unsigned int k, const double time) {
+  
+      const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
+  
+      unsigned indX=GetIndex("X");
+      unsigned indY=GetIndex("Y");
+      unsigned indZ=GetIndex("Z");
+      double xx;
+      double yy;
+      double zz;
+       
       // 2 Default Neumann
       // 1 DD Dirichlet
       // 0 Dirichlet
@@ -1599,9 +1701,9 @@ void MultiLevelProblem::UpdateBdc(const double time) {
 	  _solution[igridn]->_Bdc[k]->close();
 	}
       }
-    }
-  }
+  
 }
+
 
 //------------------------------------------------------------------------------------------------------------
 void MultiLevelProblem::printsol_xdmf_archive(const char type[]) const {

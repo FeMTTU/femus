@@ -63,6 +63,10 @@ mesh/Mesh.cpp
 mesh/MeshTwo.cpp
 physics/Fluid.cpp
 physics/Material.cpp
+equations/Output.cpp
+equations/VTKOutput.cpp
+equations/GMVOutput.cpp
+equations/XDMFOutput.cpp
 physics/Parameter.cpp
 physics/Physics.cpp
 physics/Solid.cpp
