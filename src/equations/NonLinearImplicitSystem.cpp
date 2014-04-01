@@ -26,7 +26,7 @@ NonLinearImplicitSystem::NonLinearImplicitSystem (MultiLevelProblem& ml_probl,
   _n_nonlinear_iterations   (0),
   _n_max_nonlinear_iterations (15),
   _final_nonlinear_residual (1.e20),
-  _max_nonlinear_convergence_tolerance(1.e-8)
+  _max_nonlinear_convergence_tolerance(1.e-6)
 {
 }
 

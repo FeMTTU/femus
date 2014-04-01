@@ -62,6 +62,9 @@ public:
   /** Set the max number of non-linear iterations for the nonlinear system solve. */
   void SetMaxNumberOfNonLinearIterations(unsigned int max_nonlin_it) {_n_max_nonlinear_iterations = max_nonlin_it;};
   
+  /** Set the max nonlinear convergence tolerance */
+   void SetNonLinearConvergenceTolerance(double nonlin_convergence_tolerance) { _max_nonlinear_convergence_tolerance = nonlin_convergence_tolerance;};
+    
   /** Checks for the non the linear convergence */
   bool CheckConvergence(const char pdename[], const unsigned gridn);
     

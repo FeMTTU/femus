@@ -83,7 +83,6 @@ protected:
   vector <int> SolTmorder;
   vector <char*> BdcType;
   vector <bool> _TestIfPressure;
-//   vector <bool> _TestIfDisplacement;
 //   vector <bool> _TestIfPdeHasDisplacement;
   
   
@@ -94,6 +93,7 @@ protected:
                             double &value, const int FaceName, const double time);
   
  public:
+  vector <bool> _TestIfDisplacement;
    
    /** Data structure holding the systems. */
   std::map<std::string, System*> _systems;

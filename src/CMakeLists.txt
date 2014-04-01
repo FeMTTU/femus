@@ -24,6 +24,7 @@ equations/EquationsMap.cpp
 equations/ExplicitSystem.cpp
 equations/ImplicitSystem.cpp
 equations/LinearImplicitSystem.cpp
+equations/MonolithicFSINonLinearImplicitSystem.cpp
 equations/NonLinearImplicitSystem.cpp
 equations/MultiLevelProblem.cpp
 equations/Quantity.cpp

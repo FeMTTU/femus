@@ -200,6 +200,7 @@ void TransientSystem<Base>::AttachGetTimeIntervalFunction (double (* get_time_in
 // TransientSystem instantiations
 template class TransientSystem<LinearImplicitSystem>;
 template class TransientSystem<NonLinearImplicitSystem>;
+template class TransientSystem<MonolithicFSINonLinearImplicitSystem>;
 template class TransientSystem<ExplicitSystem>;
 template class TransientSystem<System>;
 

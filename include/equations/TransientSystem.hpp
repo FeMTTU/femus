@@ -20,12 +20,14 @@
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
+class MonolithicFSINonLinearImplicitSystem;
 class LinearImplicitSystem;
 class NonLinearImplicitSystem;
 class ExplicitSystem;
 class MultiLevelProblem;
 
-#include "NonLinearImplicitSystem.hpp"
+#include "MonolithicFSINonLinearImplicitSystem.hpp"
+//#include "NonLinearImplicitSystem.hpp"
 
 /**
  * This class provides a specific system class.  It aims
@@ -113,6 +115,7 @@ private:
  typedef TransientSystem<LinearImplicitSystem> TransientImplicitSystem;
  typedef TransientSystem<LinearImplicitSystem> TransientLinearImplicitSystem;
  typedef TransientSystem<NonLinearImplicitSystem> TransientNonlinearImplicitSystem;
+ typedef TransientSystem<MonolithicFSINonLinearImplicitSystem> TransientMonolithicFSINonlinearImplicitSystem;
  typedef TransientSystem<ExplicitSystem> TransientExplicitSystem;
  typedef TransientSystem<System> TransientBaseSystem;
 
