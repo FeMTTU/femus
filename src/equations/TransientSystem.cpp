@@ -30,7 +30,6 @@ TransientSystem<Base>::TransientSystem (MultiLevelProblem& ml_probl,
 					const unsigned int number_in) :
 
   Base (ml_probl, name_in, number_in),
-  _equation_systems(ml_probl),
   _is_selective_timestep(false),
   _time(0.),
   _time_step(0),
@@ -56,8 +55,8 @@ void TransientSystem<Base>::clear ()
 template <class Base>
 void TransientSystem<Base>::UpdateSolution() {
  
-  for (int ig=0; ig<_equation_systems.GetNumberOfGrid(); ig++) {   
-    _equation_systems._solution[ig]->UpdateSolution();
+  for (int ig=0; ig< this->_gridn; ig++) {   
+    this->_solution[ig]->UpdateSolution();
   }
   
 }
@@ -78,7 +77,7 @@ void TransientSystem<Base>::solve() {
   std::cout << " Time: " << _time << "   TimeStep: " << _time_step << std::endl;
   
    //update boundary condition
-  _equation_systems.UpdateBdc(_time);
+  this->_equation_systems.UpdateBdc(_time);
   
   // call the parent solver
   Base::solve();
@@ -96,7 +95,7 @@ void TransientSystem<Base>::NewmarkAccUpdate() {
   const double a1    = 1./(gamma*_dt);
   const double a2    = -1./(gamma*_dt);
   
-  unsigned dim = _equation_systems._msh[0]->GetDimension();
+  unsigned dim = this->_msh[0]->GetDimension();
  
   unsigned axyz[3];
   unsigned vxyz[3];
@@ -104,15 +103,15 @@ void TransientSystem<Base>::NewmarkAccUpdate() {
   const char velname[3][2] = {"U","V","W"};
    
   for(unsigned i=0; i<dim; i++) {
-     axyz[i] = _equation_systems.GetIndex(&accname[i][0]);
-     vxyz[i] = _equation_systems.GetIndex(&velname[i][0]);
+     axyz[i] = this->_equation_systems.GetIndex(&accname[i][0]);
+     vxyz[i] = this->_equation_systems.GetIndex(&velname[i][0]);
   }
    
-  for (int ig=0;ig<_equation_systems.GetNumberOfGrid();ig++) {
+  for (int ig=0;ig< this->_gridn;ig++) {
     for(unsigned i=0; i<dim; i++) {
-      _equation_systems._solution[ig]->_Sol[axyz[i]]->scale(a5);
-      _equation_systems._solution[ig]->_Sol[axyz[i]]->add(a1,*(_equation_systems._solution[ig]->_Sol[vxyz[i]]));
-      _equation_systems._solution[ig]->_Sol[axyz[i]]->add(a2,*(_equation_systems._solution[ig]->_SolOld[vxyz[i]]));
+      this->_solution[ig]->_Sol[axyz[i]]->scale(a5);
+      this->_solution[ig]->_Sol[axyz[i]]->add(a1,*(this->_solution[ig]->_Sol[vxyz[i]]));
+      this->_solution[ig]->_Sol[axyz[i]]->add(a2,*(this->_solution[ig]->_SolOld[vxyz[i]]));
     }
   }
 }

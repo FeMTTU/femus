@@ -16,7 +16,6 @@
 #ifndef __transient_system_h__
 #define __transient_system_h__
 
-
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -27,7 +26,6 @@ class ExplicitSystem;
 class MultiLevelProblem;
 
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
-//#include "NonLinearImplicitSystem.hpp"
 
 /**
  * This class provides a specific system class.  It aims
@@ -95,8 +93,6 @@ protected:
 
 private:
   
-  MultiLevelProblem& _equation_systems;
-
   bool _is_selective_timestep;
   
   double _time;

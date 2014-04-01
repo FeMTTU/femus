@@ -405,7 +405,7 @@ unsigned MultiLevelProblem::GetNumberOfGrid() {
 }
 
 //---------------------------------------------------------------------------------------------------
-unsigned MultiLevelProblem::GetNumberOfGridNotRefined() {
+unsigned MultiLevelProblem::GetNumberOfGridTotallyRefined() {
   return _gridr;
 }
 

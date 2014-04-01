@@ -20,9 +20,17 @@
   _equation_systems                 (ml_probl),
 //  _mesh                           (es.get_mesh()),
   _sys_name                         (name_in),
-  _sys_number                       (number_in)
-  {   
+  _sys_number                       (number_in),
+  _gridn(_equation_systems.GetNumberOfGrid()), 
+  _gridr(_equation_systems.GetNumberOfGridTotallyRefined())
+{
+  _msh.resize(_gridn);
+  _solution.resize(_gridn);
+  for(unsigned i=0;i<_gridn;i++){
+    _msh[i]=_equation_systems._msh[i];
+    _solution[i]=_equation_systems._solution[i];
   }
+}
   
   
 System::~System() {

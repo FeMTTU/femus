@@ -76,8 +76,16 @@ protected:
   /** Constant reference to the \p EquationSystems object used for the simulation. */
   MultiLevelProblem& _equation_systems;
   
+  vector<mesh*> _msh;
+  
+  vector<Solution*> _solution;
+  
   vector <unsigned> _SolSystemPdeIndex;
-
+ 
+  unsigned _gridn;
+  
+  unsigned _gridr;
+  
   /** Function that assembles the system. */
   void (* _assemble_system_function) (MultiLevelProblem &ml_prob, unsigned level, 
 				      const unsigned &gridn, const bool &assembe_matrix);
