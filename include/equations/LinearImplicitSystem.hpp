@@ -155,7 +155,7 @@ protected:
   
   /** Create the Prolongator Operator in order to get the coarser matrix for the Algebraic Multigrid Solver */ 
   virtual void BuildProlongatorMatrix(unsigned gridf, const char pdename[]);
-  
+    
   int _npre;
   
   int _npost;
@@ -168,6 +168,7 @@ protected:
   
   vector <unsigned> _VankaIndex;
   
+ 
   
 private:
 

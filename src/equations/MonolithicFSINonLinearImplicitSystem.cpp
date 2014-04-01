@@ -48,13 +48,13 @@ void MonolithicFSINonLinearImplicitSystem::Restrictor(const unsigned &gridf, con
   _LinSolver[gridf-1u]->SetResZero();
   
   bool assemble_matrix = (linear_iteration == 0) ? true : false;  //Be carefull!!!! this is needed in the _assemble_function      
-  if (gridf>=_equation_systems.GetNumberOfGridNotRefined()) {   //_gridr
+  if (gridf>=_gridr) {   //_gridr
     _assemble_system_function(_equation_systems, gridf-1, gridn-1u, assemble_matrix);
   }
   
   bool matrix_reuse=true;
   if(assemble_matrix){
-    if (gridf>=_equation_systems.GetNumberOfGridNotRefined()) {  //_gridr
+    if (gridf>=_gridr) {  //_gridr
       if (!_LinSolver[gridf-1]->_CC_flag) {
 	_LinSolver[gridf-1]->_CC_flag=1;
 	_LinSolver[gridf-1]->_CC->matrix_ABC(*_LinSolver[gridf]->_RR,*_LinSolver[gridf]->_KK,*_LinSolver[gridf]->_PP,!matrix_reuse);
@@ -119,12 +119,12 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
         
     // loop on the coarse grid 
     for(int isdom=iproc; isdom<iproc+1; isdom++) {
-      for (int iel_mts=_equation_systems._msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom]; 
-	   iel_mts < _equation_systems._msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = _equation_systems._msh[gridf-1]->IS_Mts2Gmt_elem[iel_mts];
-	if(_equation_systems._msh[gridf-1]->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+      for (int iel_mts=_msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom]; 
+	   iel_mts < _msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	unsigned iel = _msh[gridf-1]->IS_Mts2Gmt_elem[iel_mts];
+	if(_msh[gridf-1]->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
     
-	  short unsigned ielt=_equation_systems._msh[gridf-1]->el->GetElementType(iel);
+	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
 	  if(TestDisp){
 	    _equation_systems.type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildRestrictionTranspose(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
  													      RRt,SolIndex,k, TestDisp);

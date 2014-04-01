@@ -54,16 +54,16 @@ void NonLinearImplicitSystem::solve() {
   }
   else if(_mg_type == V_CYCLE){
     full_cycle=0;
-    igrid0=_equation_systems.GetNumberOfGrid();
+    igrid0=_gridn;
   }
   else {
     full_cycle=0;
-    igrid0=_equation_systems.GetNumberOfGridNotRefined();
+    igrid0=_gridr;
   }
   
   std::pair<int, double> solver_info;
      
-  for ( unsigned igridn=igrid0; igridn <= _equation_systems.GetNumberOfGrid(); igridn++) {   //_igridn
+  for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {   //_igridn
     
     std::cout << std::endl << "    ************* Level Max: " << igridn << " *************\n" << std::endl;
 
@@ -112,8 +112,8 @@ void NonLinearImplicitSystem::solve() {
  	  }
  	}
  	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
- 	for (unsigned ig = _equation_systems.GetNumberOfGridNotRefined()-1; ig < igridn-1; ig++) {  // _gridr
- 	  _equation_systems._solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
+ 	for (unsigned ig = _gridr-1; ig < igridn-1; ig++) {  // _gridr
+ 	  _solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
  	}
  	
  	_final_linear_residual = solver_info.second;
@@ -123,7 +123,7 @@ void NonLinearImplicitSystem::solve() {
       }
       std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
       // ============== Update Solution ( ig = igridn )==============
-      _equation_systems._solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
+      _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
 							 _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
       // ============== Test for non-linear Convergence ==============
       bool conv = CheckConvergence(_sys_name.c_str(), igridn-1);
@@ -133,7 +133,7 @@ void NonLinearImplicitSystem::solve() {
       std::cout << "COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
     }
     // ==============  Solution Prolongation ==============
-    if (igridn < _equation_systems.GetNumberOfGrid()) {
+    if (igridn < _gridn) {
       ProlongatorSol(igridn);
     }
   }
@@ -144,23 +144,22 @@ void NonLinearImplicitSystem::solve() {
 
 
 
-bool NonLinearImplicitSystem::CheckConvergence(const char pdename[], const unsigned gridn){
+bool NonLinearImplicitSystem::CheckConvergence(const char pdename[], const unsigned igridn){
 
-  //unsigned ipde=_equation_systems.GetPdeIndex(pdename);
   bool conv=true;
   double ResMax;
   double L2normEps;
-  Solution *solution=_equation_systems._solution[gridn];
+ 
   
   //for debugging purpose
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned indexSol=_SolSystemPdeIndex[k];
     
-    L2normEps    = solution->_Eps[indexSol]->l2_norm();
-    ResMax       = solution->_Res[indexSol]->linfty_norm();
+    L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
+    ResMax       = _solution[igridn]->_Res[indexSol]->linfty_norm();
 
-    std::cout << "level=" << gridn<< "\tLinftynormRes" << _equation_systems.SolName[indexSol] << "=" << ResMax    <<std::endl;
-    std::cout << "level=" << gridn<< "\tL2normEps"     << _equation_systems.SolName[indexSol] << "=" << L2normEps <<std::endl;
+    std::cout << "level=" << igridn<< "\tLinftynormRes" << _equation_systems.SolName[indexSol] << "=" << ResMax    <<std::endl;
+    std::cout << "level=" << igridn<< "\tL2normEps"     << _equation_systems.SolName[indexSol] << "=" << L2normEps <<std::endl;
     
     if (L2normEps <_max_nonlinear_convergence_tolerance && conv==true) {
       conv=true;

@@ -219,7 +219,7 @@ protected:
   int ComputeBdIntegral(const char pdename[],const char var_name[], const unsigned & kel, 
                          const unsigned & jface, unsigned level, unsigned dir);
   unsigned GetNumberOfGrid();
-  unsigned GetNumberOfGridNotRefined();
+  unsigned GetNumberOfGridTotallyRefined();
 
   
   // Config

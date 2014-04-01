@@ -36,15 +36,16 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   _VankaIsSet(false),
   _NSchurVar(1),
   _Schur(false)
-{
-}
+  {
+    
+  }
 
 LinearImplicitSystem::~LinearImplicitSystem() {
    this->clear(); 
 }
 
 void LinearImplicitSystem::clear() {
-    for (unsigned ig=0; ig<_equation_systems.GetNumberOfGrid(); ig++) {
+    for (unsigned ig=0; ig<_gridr; ig++) {
       _LinSolver[ig]->DeletePde();
       delete _LinSolver[ig];
     }  
@@ -57,17 +58,17 @@ void LinearImplicitSystem::init() {
 //-----------------------------------------------------------------
 
 void LinearImplicitSystem::CreateSystemPDEStructure() {
-    _LinSolver.resize(_equation_systems.GetNumberOfGrid());
-    for(unsigned i=0;i<_equation_systems.GetNumberOfGrid();i++){
-      _LinSolver[i]=LinearEquationSolver::build(i,_equation_systems._msh[i]).release();
+    _LinSolver.resize(_gridn);
+    for(unsigned i=0;i<_gridn;i++){
+      _LinSolver[i]=LinearEquationSolver::build(i,_msh[i]).release();
     }
     
-    for (unsigned i=0; i<_equation_systems.GetNumberOfGrid(); i++) {
+    for (unsigned i=0; i<_gridn; i++) {
       //_LinSolver[i]->InitPde(_SolPdeIndex[ipde],SolType,SolName,&_solution[i]->_Bdc,_gridr,_gridn);
-      _LinSolver[i]->InitPde(_SolSystemPdeIndex,_equation_systems.SolType,_equation_systems.SolName,&_equation_systems._solution[i]->_Bdc,_equation_systems.GetNumberOfGridNotRefined(),_equation_systems.GetNumberOfGrid());
+      _LinSolver[i]->InitPde(_SolSystemPdeIndex,_equation_systems.SolType,_equation_systems.SolName,&_solution[i]->_Bdc,_gridr,_gridn);
     }  
     
-    for (unsigned ig=1; ig<_equation_systems.GetNumberOfGrid(); ig++) {
+    for (unsigned ig=1; ig<_gridn; ig++) {
       BuildProlongatorMatrix(ig,_sys_name.c_str());
     }
 }
@@ -87,16 +88,16 @@ void LinearImplicitSystem::solve() {
   }
   else if(_mg_type == V_CYCLE){
     full_cycle=0;
-    igrid0=_equation_systems.GetNumberOfGrid();
+    igrid0=_gridn;
   }
   else {
     full_cycle=0;
-    igrid0=_equation_systems.GetNumberOfGridNotRefined();
+    igrid0=_gridr;
   }
     
   std::pair<int, double> solver_info;
      
-  for ( unsigned igridn=igrid0; igridn <= _equation_systems.GetNumberOfGrid(); igridn++) {   //_igridn
+  for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {   //_igridn
     
     std::cout << std::endl << "    ************* Level Max: " << igridn << " *************\n" << std::endl;
 
@@ -145,8 +146,8 @@ void LinearImplicitSystem::solve() {
  	  }
  	}
  	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
- 	for (unsigned ig = _equation_systems.GetNumberOfGridNotRefined()-1; ig < igridn-1; ig++) {  // _gridr
- 	  _equation_systems._solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
+ 	for (unsigned ig = _gridr-1; ig < igridn-1; ig++) {  // _gridr
+ 	  _solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
  	}
  	
  	_final_linear_residual = solver_info.second;
@@ -157,14 +158,14 @@ void LinearImplicitSystem::solve() {
       }
       
       // ============== Update Solution ( ig = igridn )==============
-      _equation_systems._solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
+      _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
 					    _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
    
       std::cout << std::endl;
       std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
 
     // ==============  Solution Prolongation ==============
-    if (igridn < _equation_systems.GetNumberOfGrid()) {
+    if (igridn < _gridn) {
       ProlongatorSol(igridn);
     }
   }
@@ -183,13 +184,13 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
   _LinSolver[gridf-1u]->SetResZero();
   
   bool assemble_matrix = (linear_iteration == 0) ? true : false;  //Be carefull!!!! this is needed in the _assemble_function      
-  if (gridf>=_equation_systems.GetNumberOfGridNotRefined()) {   //_gridr
+  if (gridf>=_gridr) {   //_gridr
     _assemble_system_function(_equation_systems, gridf-1, gridn-1u, assemble_matrix);
   }
   
   bool matrix_reuse=true;
   if(assemble_matrix){
-    if (gridf>=_equation_systems.GetNumberOfGridNotRefined()) {  //_gridr
+    if (gridf>=_gridr) {  //_gridr
       if (!_LinSolver[gridf-1]->_CC_flag) {
 	_LinSolver[gridf-1]->_CC_flag=1;
 	_LinSolver[gridf-1]->_CC->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,!matrix_reuse);
@@ -232,8 +233,8 @@ void LinearImplicitSystem::ProlongatorSol(unsigned gridf) {
     unsigned SolIndex=_SolSystemPdeIndex[k];
     unsigned Typeindex=_equation_systems.SolType[SolIndex];
     
-    _equation_systems._solution[gridf]->_Sol[SolIndex]->matrix_mult(*_equation_systems._solution[gridf-1]->_Sol[SolIndex],*_equation_systems._solution[gridf]->_ProjMat[Typeindex]);
-    _equation_systems._solution[gridf]->_Sol[SolIndex]->close();
+    _solution[gridf]->_Sol[SolIndex]->matrix_mult(*_solution[gridf-1]->_Sol[SolIndex],*_solution[gridf]->_ProjMat[Typeindex]);
+    _solution[gridf]->_Sol[SolIndex]->close();
         
   }
   
@@ -268,12 +269,12 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pde
     
     // loop on the coarse grid 
     for(int isdom=iproc; isdom<iproc+1; isdom++) {
-      for (int iel_mts=_equation_systems._msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom]; 
-	   iel_mts < _equation_systems._msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = _equation_systems._msh[gridf-1]->IS_Mts2Gmt_elem[iel_mts];
-	if(_equation_systems._msh[gridf-1]->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+      for (int iel_mts=_msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom]; 
+	   iel_mts < _msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	unsigned iel = _msh[gridf-1]->IS_Mts2Gmt_elem[iel_mts];
+	if(_msh[gridf-1]->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
     
-	  short unsigned ielt=_equation_systems._msh[gridf-1]->el->GetElementType(iel);
+	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
 	  
 	  _equation_systems.type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
 								 _LinSolver[gridf]->_PP,SolIndex,k);
@@ -299,7 +300,7 @@ void LinearImplicitSystem::SetDirichletBCsHandling(const DirichletBCType Dirichl
     DirichletBCsHandlingMode = 1;   
   } 
   
-  for (unsigned i=0; i<_equation_systems.GetNumberOfGrid(); i++) {
+  for (unsigned i=0; i<_gridn; i++) {
     _LinSolver[i]->set_dirichletBCsHandling(DirichletBCsHandlingMode);
   }
 }
@@ -338,26 +339,26 @@ void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
 
 void LinearImplicitSystem::SetDimVankaBlock(unsigned const dim_vanka_block) {
   
-  const unsigned dim = _equation_systems._msh[0]->GetDimension();
+  const unsigned dim = _msh[0]->GetDimension();
   const unsigned base = pow(2,dim);
   unsigned num_vanka_block = pow(base,dim_vanka_block);
 
-  for (unsigned i=1; i<_equation_systems.GetNumberOfGrid(); i++) {
-    unsigned num_vanka_block2 = std::min(num_vanka_block,_equation_systems._msh[i]->GetElementNumber());
+  for (unsigned i=1; i<_gridn; i++) {
+    unsigned num_vanka_block2 = std::min(num_vanka_block,_msh[i]->GetElementNumber());
     _LinSolver[i]->set_num_elem_vanka_block(num_vanka_block2);
   }
 }
 
 
 void LinearImplicitSystem::SetSolverFineGrids(const SolverType solvertype) {
-  for (unsigned i=1; i<_equation_systems.GetNumberOfGrid(); i++) {
+  for (unsigned i=1; i<_gridn; i++) {
     _LinSolver[i]->set_solver_type(solvertype);
   }
 }
 
 
 void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType preconditioner_type) {
-  for (unsigned i=1; i<_equation_systems.GetNumberOfGrid(); i++) {
+  for (unsigned i=1; i<_gridn; i++) {
     _LinSolver[i]->set_preconditioner_type(preconditioner_type);
   }
 }
@@ -365,14 +366,14 @@ void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType p
 
 void LinearImplicitSystem::SetTolerances(const double rtol, const double atol,
 					       const double divtol, const unsigned maxits) {       
-  for (unsigned i=1; i<_equation_systems.GetNumberOfGrid(); i++) {
+  for (unsigned i=1; i<_gridn; i++) {
     _LinSolver[i]->set_tolerances(rtol,atol,divtol,maxits,0);
   }
 }
 
 void LinearImplicitSystem::SetSchurTolerances(const double rtol, const double atol,
 						    const double divtol, const unsigned maxits) {
-  for (unsigned i=1; i<_equation_systems.GetNumberOfGrid(); i++) {
+  for (unsigned i=1; i<_gridn; i++) {
     _LinSolver[i]->set_tolerances(rtol,atol,divtol,maxits,1);
   }
 }
@@ -387,7 +388,7 @@ void LinearImplicitSystem::SetVankaSchurOptions(bool Schur, short unsigned NSchu
 }
 
 void LinearImplicitSystem::AddStabilization(const bool stab, const double compressibility) {
-  for (unsigned i=0; i<_equation_systems.GetNumberOfGrid(); i++) {
+  for (unsigned i=0; i<_gridn; i++) {
     _LinSolver[i]->AddStabilization(stab, compressibility);
   }
 }
