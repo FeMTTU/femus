@@ -151,7 +151,7 @@ int main(int argc,char **args) {
   // time loop parameter
   system.SetIntervalTime(0.005);
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 1;
+  const unsigned int n_timesteps = 2;
   const unsigned int write_interval = 1;
   
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
