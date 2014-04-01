@@ -45,7 +45,7 @@ LinearImplicitSystem::~LinearImplicitSystem() {
 }
 
 void LinearImplicitSystem::clear() {
-    for (unsigned ig=0; ig<_gridr; ig++) {
+    for (unsigned ig=0; ig<_gridn; ig++) {
       _LinSolver[ig]->DeletePde();
       delete _LinSolver[ig];
     }  
