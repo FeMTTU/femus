@@ -40,16 +40,15 @@ public:
   virtual ~Output();
   
   /** write output function */
-  virtual void write_system_solutions() = 0;
+  virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step = 0) = 0;
   
+  /** set moving mesh */
+  void SetMovingMesh(std::vector<std::string>& movvars_in);
   
 protected:
   
-  /** Build the prolongation matrices */ 
-  void BuildProlongationMatrices();
-  
   /** a set of matrix for the projection of the solution */ 
-  static std::vector<SparseMatrix*> _ProlQitoQj_[3][3];
+  static std::vector<SparseMatrix*> _ProlQitoQj[3][3];
   
   /** a flag to move the output mesh */
   int _moving_mesh;
@@ -59,9 +58,20 @@ protected:
   
   /** the multilevelproblem reference */
   MultiLevelProblem& _ml_probl;
+  
+  int _iproc;
 
+  int _nprocs;
+  
+  int _gridn;
+  
+  int _gridr;
+  
   
 private:  
+  
+  /** This routine generates the matrices for the projection of the solutions from different FE spaces */
+  void BuildProlongatorMatrices();
   
 };
   

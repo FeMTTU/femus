@@ -8,6 +8,7 @@
 #include "SparseMatrix.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearImplicitSystem.hpp"
+#include "VTKOutput.hpp"
 
 using std::cout;
 using std::endl;
@@ -161,10 +162,15 @@ int main(int argc,char **args) {
   print_vars.push_back("P");
   print_vars.push_back("T");
   
-  ml_prob.printsol_vtu_inline("biquadratic",print_vars);
-    
-  ml_prob.printsol_gmv_binary("biquadratic",0,1);
+//   ml_prob.printsol_vtu_inline("biquadratic",print_vars);
+//     
+//   ml_prob.printsol_gmv_binary("biquadratic",0,1);
   
+  VTKOutput vtkio(ml_prob);
+  vtkio.write_system_solutions("biquadratic",print_vars);
+  
+  VTKOutput vtkio2(ml_prob);
+  vtkio2.write_system_solutions("biquadratic",print_vars);
   
   // Destroy all the new systems
   ml_prob.clear();

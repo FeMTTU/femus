@@ -28,7 +28,7 @@ GMVOutput::~GMVOutput()
   
 }
 
-void GMVOutput::write_system_solutions() 
+void GMVOutput::write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
 //   // to add _time_step
 //   int time_step = 0;
