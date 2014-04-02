@@ -22,13 +22,21 @@
 #include "Elem.hpp"
 #include "vector"
 #include "metis.h"
+#include "Solution.hpp"
+#include "ElemType.hpp"
+
 using std::vector;
+class Solution;
 
 /** 
  * The mesh class 
 */
 
 class mesh {
+  
+public:  
+  Solution* _coordinate;
+  
   
 private:
   unsigned nvt,grid;
@@ -43,8 +51,6 @@ public:
   vector< vector<int> > ghost_nd_mts[5];
   vector <unsigned> ghost_size[5];
   int nel;
-  
-public:
   static unsigned _ref_index;
   int _nprocs;
   int _iproc;
@@ -63,14 +69,8 @@ public:
   elem *el;  // elements
   // Constructor - destructor *****************************
   mesh(const char [], vector < vector < double> > &vt,const double Lref);
-  mesh(const unsigned &igrid,elem *elc);
-  ~mesh() {
-    delete el;
-    if(_nprocs>=1){
-      delete [] epart;
-      delete [] npart;
-    }
-  }
+  mesh(const unsigned &igrid,mesh *mshc, const elem_type* type_elem[6][5]);
+  ~mesh();
 
   // functions ***************************************
   void generate_metis_mesh_partition();

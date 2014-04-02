@@ -28,13 +28,15 @@
 #include "Mesh.hpp"
 #include "petscmat.h"
 
+using std::vector;
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
 class elem_type;
 class NumericVector;
 class SparseMatrix;
-
+class mesh;
 
 class Solution {
   
