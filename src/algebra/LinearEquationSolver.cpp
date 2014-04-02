@@ -81,5 +81,17 @@ void LinearEquationSolver::attach_preconditioner(Preconditioner * preconditioner
 }
 
 
+// =============================================================
+unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol, 
+				  const unsigned &idof_gmt) const {
+  
+   //return KKIndex[kkindex_sol]+idof_gmt;
+     
+   unsigned soltype =  _SolType[index_sol]; 
+   unsigned isubdom = (soltype<3)?_msh->npart[idof_gmt]:(_msh->epart[idof_gmt % _msh->GetElementNumber()]);
+   unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);   
+   return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
+}
+
 
 

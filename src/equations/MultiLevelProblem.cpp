@@ -24,8 +24,8 @@
 #include "System.hpp"
 #include "ElemType.hpp"
 #include "Elem.hpp"
-#include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
+#include "NumericVector.hpp"
 #include "LinearEquationSolver.hpp"
 #include "FEMTTUConfig.h"
 #include "Parameter.hpp"
@@ -156,8 +156,9 @@ MultiLevelProblem::MultiLevelProblem(const unsigned short &igridn,const unsigned
   unsigned indZ=GetIndex("Z");
     
   for (unsigned i=1; i<_gridr; i++) {
-    _solution[i-1u]->SetElementRefiniement(1);
-    _msh[i] = new mesh(i,_msh[i-1]->el); 
+    _msh[i-1u]->_coordinate->SetElementRefiniement(1);
+    //_solution[i-1u]->SetElementRefiniement(1);
+    _msh[i] = new mesh(i,_msh[i-1],type_elem); 
         
     _solution[i]=new Solution(_msh[i]);
     _solution[i]->AddSolution("X","biquadratic",1,0);
@@ -185,9 +186,10 @@ MultiLevelProblem::MultiLevelProblem(const unsigned short &igridn,const unsigned
     }
     else {
       mesh::_SetRefinementFlag = SetRefinementFlag;
-      _solution[i-1u]->SetElementRefiniement(2);
+      _msh[i-1u]->_coordinate->SetElementRefiniement(2);
+     // _solution[i-1u]->SetElementRefiniement(2);
     }
-    _msh[i] = new mesh(i,_msh[i-1]->el); 
+    _msh[i] = new mesh(i,_msh[i-1],type_elem); 
     
     _solution[i]=new Solution(_msh[i]);
     _solution[i]->AddSolution("X","biquadratic",1,0);
@@ -208,7 +210,8 @@ MultiLevelProblem::MultiLevelProblem(const unsigned short &igridn,const unsigned
     _solution[i]->_Sol[indZ]->close();
         
   }
-  _solution[_gridn-1u]->SetElementRefiniement(0);	
+  _msh[_gridn-1u]->_coordinate->SetElementRefiniement(0);
+  //_solution[_gridn-1u]->SetElementRefiniement(0);	
   elr_old.resize(_msh[_gridr-1u]->GetElementNumber());
     
   unsigned refindex = _msh[0]->GetRefIndex();
@@ -1812,7 +1815,7 @@ void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, 
    
   for (int i=0; i<3; i++) {
     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-      Mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indXYZ[i]],*ProlQitoQj_[index][SolType[indXYZ[i]]][ig]);
+      Mysol[ig]->matrix_mult(*_msh[ig]->_coordinate->_Sol[i],*ProlQitoQj_[index][2][ig]);
       vector <double> v_local;
       Mysol[ig]->localize_to_one(v_local,0);
       unsigned nvt_ig=_msh[ig]->MetisOffset[index][_nprocs];      
@@ -2133,7 +2136,7 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
     std::vector<double> v_local;
     unsigned nvt_ig=_msh[ig]->MetisOffset[index_nd][_nprocs];
     for(int kk=0;kk<3;kk++) {
-      mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indXYZ[kk]],*ProlQitoQj_[index_nd][SolType[indXYZ[kk]]][ig]);
+      mysol[ig]->matrix_mult(*_msh[ig]->_coordinate->_Sol[kk],*ProlQitoQj_[index_nd][2][ig]);
       mysol[ig]->localize_to_one(v_local,0);
       if(_iproc==0) { 
 	for (unsigned i=0; i<nvt_ig; i++) {
