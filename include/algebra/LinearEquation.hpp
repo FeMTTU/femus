@@ -28,7 +28,7 @@
 class elem_type;
 class NumericVector;
 class SparseMatrix;
-
+class mesh;
 /**
  This class is a container that holds linear operators and other structure for solving a linear equation system
 */
@@ -94,17 +94,16 @@ protected:
   unsigned GetIndex(const char name[]);
 };
 
-
-inline unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol, 
-				  const unsigned &idof_gmt) const {
-  
-   //return KKIndex[kkindex_sol]+idof_gmt;
-     
-   unsigned soltype =  _SolType[index_sol]; 
-   unsigned isubdom = (soltype<3)?_msh->npart[idof_gmt]:(_msh->epart[idof_gmt % _msh->GetElementNumber()]);
-   unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);   
-   return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
-}
+// unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol, 
+// 				  const unsigned &idof_gmt) const {
+//   
+//    //return KKIndex[kkindex_sol]+idof_gmt;
+//      
+//    unsigned soltype =  _SolType[index_sol]; 
+//    unsigned isubdom = (soltype<3)?_msh->npart[idof_gmt]:(_msh->epart[idof_gmt % _msh->GetElementNumber()]);
+//    unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);   
+//    return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
+// }
 
 
 #endif
