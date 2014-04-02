@@ -38,7 +38,7 @@ public:
   virtual ~GMVOutput();
   
   /** write output function */
-  virtual void write_system_solutions();
+  virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step=0);
   
 };
 

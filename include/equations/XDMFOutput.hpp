@@ -38,7 +38,7 @@ public:
   virtual ~XDMFOutput();
   
   /** write output function */
-  virtual void write_system_solutions();
+  virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step = 0);
   
   /** write a wrapper file for paraview to open all the files of an history toghether */
   void write_solution_wrapper(const char type[]) const;

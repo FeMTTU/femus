@@ -28,7 +28,7 @@ XDMFOutput::~XDMFOutput()
   
 }
 
-void XDMFOutput::write_system_solutions() 
+void XDMFOutput::write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
 //     // to add time_step
 //   int time_step = 0;
