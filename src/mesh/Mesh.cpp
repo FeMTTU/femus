@@ -24,6 +24,9 @@
 #include <cstring>
 #include "mpi.h"
 #include <algorithm>
+#include "SparseMatrix.hpp"
+#include "NumericVector.hpp"
+
 using std::cout;
 using std::endl;
 using std::min;
@@ -75,7 +78,312 @@ mesh::mesh(const char infile[], vector < vector < double> > &vt, const double Lr
       vt[i][GetMetisDof(j,2)]=vt_temp[j];
     }
   }
+  
+  _coordinate = new Solution(this);
+  _coordinate->AddSolution("X","biquadratic",1,0); 
+  _coordinate->AddSolution("Y","biquadratic",1,0); 
+  _coordinate->AddSolution("Z","biquadratic",1,0); 
+  
+  _coordinate->ResizeSolutionVector("X");
+  _coordinate->ResizeSolutionVector("Y");
+  _coordinate->ResizeSolutionVector("Z");
+    
+  _coordinate->SetCoarseCoordinates(vt);
+  
+  
 };
+
+/**
+ *  This constructur generates a fine mesh level, $l_i$, from a coarse mesh level $l_{i-1}$, $i>0$
+ **/
+//------------------------------------------------------------------------------------------------------
+mesh::mesh(const unsigned & igrid,mesh *mshc, const elem_type* type_elem[6][5]) {
+  
+  elem *elc=mshc->el;
+  
+  MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
+  MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
+  
+  const unsigned vertex_index[6][8][8]= {{{1,9,25,12,17,21,27,24},{9,2,10,25,21,18,22,27},
+      {25,10,3,11,27,22,19,23},{12,25,11,4,24,27,23,20},
+      {17,21,27,24,5,13,26,16},{21,18,22,27,13,6,14,26},
+      {27,22,19,23,26,14,7,15},{24,27,23,20,16,26,15,8}
+    },
+    { {1,5,7,8},{2,6,5,9},{3,7,6,10},{8,9,10,4},
+      {5,6,8,9},{6,10,8,9},{5,8,6,7},{6,8,10,7}
+    },
+    { {1,7,9,13,16,18},{2,8,7,14,17,16},
+      {3,9,8,15,18,17},{7,8,9,16,17,18},
+      {13,16,18,4,10,12},{14,17,16,5,11,10},
+      {15,18,17,6,12,11},{16,17,18,10,11,12}
+    },
+    {{1,5,9,8},{5,2,6,9},{9,6,3,7},{8,9,7,4}},
+    {{1,4,6},{2,5,4},{3,6,5},{4,5,6}},
+    {{1,3},{3,2}}
+  };
+
+  const unsigned face_index[6][6][4][2]= {{{{0,0},{1,0},{4,0},{5,0}},
+      {{1,1},{2,1},{5,1},{6,1}},
+      {{2,2},{3,2},{6,2},{7,2}},
+      {{3,3},{0,3},{7,3},{4,3}},
+      {{0,4},{1,4},{2,4},{3,4}},
+      {{4,5},{5,5},{6,5},{7,5}}
+    },
+    { {{0,0},{1,0},{2,0},{6,3}},
+      {{0,1},{1,3},{3,1},{4,3}},
+      {{1,1},{2,3},{3,2},{5,1}},
+      {{2,1},{0,3},{3,3},{7,2}}
+    },
+    { {{0,0},{1,2},{4,0},{5,2}},
+      {{1,0},{2,2},{5,0},{6,2}},
+      {{2,0},{0,2},{6,0},{4,2}},
+      {{0,3},{1,3},{2,3},{3,3}},
+      {{4,4},{5,4},{6,4},{7,4}}
+    },
+    { {{0,0},{1,0}},
+      {{1,1},{2,1}},
+      {{2,2},{3,2}},
+      {{3,3},{0,3}}
+    },
+    { {{0,0},{1,2}},
+      {{1,0},{2,2}},
+      {{2,0},{0,2}}
+    },
+    { {{0,0}},
+      {{1,1}}
+    }
+  };
+
+  const unsigned midpoint_index[6][12][2]= {{{0,1},{1,2},{2,3},{3,0},
+      {4,5},{5,6},{6,7},{7,4},
+      {0,4},{1,5},{2,6},{3,7}
+    },
+    { {0,1},{1,2},{2,0},
+      {0,3},{1,3},{2,3}
+    },
+    { {0,1},{1,2},{2,0},
+      {3,4},{4,5},{5,3},
+      {0,3},{1,4},{2,5}
+    },
+    {{0,1},{1,2},{2,3},{3,0}},
+    {{0,1},{1,2},{2,0}},
+    {{0,1}}
+  };
+
+  const unsigned midpoint_index2[6][7][8]= {{{0,8,0,11,16},
+      {0,0,9,0,0,17},
+      {0,0,0,10,0,0,18},
+      {0,0,0,0,0,0,0,19},
+      {0,0,0,0,0,12,0,15},
+      {0,0,0,0,0,0,13},
+      {0,0,0,0,0,0,0,14}
+    },
+    { {0,4,6,7},
+      {0,0,5,8},
+      {0,0,0,9}
+    },
+    { {0,6,8,12},
+      {0,0,7,0,13},
+      {0,0,0,0,0,14},
+      {0,0,0,0,9,11},
+      {0,0,0,0,0,10}
+    },
+    { {0,4,0,7},
+      {0,0,5},
+      {0,0,0,6}
+    },
+    { {0,3,5},
+      {0,0,4}
+    },
+    {{0,2}}
+  };
+  grid=igrid;
+
+//   nel=elc->GetRefinedElementNumber()*REF_INDEX;
+  nel=elc->GetRefinedElementNumber()*_ref_index;
+  el=new elem(elc,mesh::_ref_index);
+
+
+
+  unsigned jel=0;
+  //divide each coarse element in 8(3D), 4(2D) or 2(1D) fine elemets and find all the vertices
+
+  el->SetElementGroupNumber(elc->GetElementGroupNumber());
+  el->SetNumberElementFather(elc->GetElementNumber());
+
+  for (unsigned iel=0; iel<elc->GetElementNumber(); iel++) {
+    if ( elc->GetRefinedElementIndex(iel) ) {
+      elc->SetRefinedElementIndex(iel,jel+1u);
+      unsigned elt=elc->GetElementType(iel);
+      // project element type
+//       for(unsigned j=0;j<REF_INDEX;j++){
+      for (unsigned j=0; j<_ref_index; j++) {
+        el->SetElementType(jel+j,elt);
+        el->SetElementFather(jel+j,iel);
+	elc->SetChildElement(iel,j,jel+j);
+      }
+
+      unsigned elg=elc->GetElementGroup(iel);
+      unsigned elmat=elc->GetElementMaterial(iel);
+      // project element group
+//       for(unsigned j=0;j<REF_INDEX;j++){
+      for (unsigned j=0; j<_ref_index; j++) {
+        el->SetElementGroup(jel+j,elg);
+	el->SetElementMaterial(jel+j,elmat);
+      }
+
+      // project vertex indeces
+//       for(unsigned j=0;j<REF_INDEX;j++)
+      for (unsigned j=0; j<_ref_index; j++)
+        for (unsigned inode=0; inode<elc->GetElementDofNumber(iel,0); inode++)
+          el->SetElementVertexIndex(jel+j,inode,elc->GetElementVertexIndex(iel,vertex_index[elt][j][inode]-1u));
+      // project face indeces
+      for (unsigned iface=0; iface<elc->GetElementFaceNumber(iel); iface++) {
+        int value=elc->GetFaceElementIndex(iel,iface);
+        if (0>value)
+// 	  for(unsigned jface=0;jface<FACE_INDEX;jface++)
+          for (unsigned jface=0; jface<_face_index; jface++)
+            el->SetFaceElementIndex(jel+face_index[elt][iface][jface][0],face_index[elt][iface][jface][1], value);
+      }
+      // update element numbers
+//       jel+=REF_INDEX;
+      jel+=_ref_index;
+//       el->AddToElementNumber(REF_INDEX,elt);
+      el->AddToElementNumber(_ref_index,elt);
+    }
+  }
+
+  nvt=elc->GetNodeNumber();
+  el->SetVertexNodeNumber(nvt);
+
+  
+  //find all the elements near each vertex
+  BuildAdjVtx();
+  //initialize to zero all the middle edge points
+  for (unsigned iel=0; iel<nel; iel++)
+    for (unsigned inode=el->GetElementDofNumber(iel,0); inode<el->GetElementDofNumber(iel,1); inode++)
+      el->SetElementVertexIndex(iel,inode,0);
+  //find all the middle edge points
+  for (unsigned iel=0; iel<nel; iel++) {
+    unsigned ielt=el->GetElementType(iel);
+    unsigned istart=el->GetElementDofNumber(iel,0);
+    unsigned iend=el->GetElementDofNumber(iel,1);
+    for (unsigned inode=istart; inode<iend; inode++)
+      if (0==el->GetElementVertexIndex(iel,inode)) {
+        nvt++;
+        el->SetElementVertexIndex(iel,inode,nvt);
+        unsigned im=el->GetElementVertexIndex(iel,midpoint_index[ielt][inode-istart][0]);
+        unsigned ip=el->GetElementVertexIndex(iel,midpoint_index[ielt][inode-istart][1]);
+        //find all the near elements which share the same middle edge point
+        for (unsigned j=0; j<el->GetVertexElementNumber(im-1u); j++) {
+          unsigned jel=el->GetVertexElementIndex(im-1u,j)-1u;
+          if (jel>iel) {
+            unsigned jm=0,jp=0;
+            unsigned jelt=el->GetElementType(jel);
+            for (unsigned jnode=0; jnode<el->GetElementDofNumber(jel,0); jnode++) {
+              if (el->GetElementVertexIndex(jel,jnode)==im) {
+                jm=jnode+1u;
+                break;
+              }
+            }
+            if (jm!=0) {
+              for (unsigned jnode=0; jnode<el->GetElementDofNumber(jel,0); jnode++) {
+                if (el->GetElementVertexIndex(jel,jnode)==ip) {
+                  jp=jnode+1u;
+                  break;
+                }
+              }
+              if (jp!=0) {
+                if (jp<jm) {
+                  unsigned tp=jp;
+                  jp=jm;
+                  jm=tp;
+                }
+                el->SetElementVertexIndex(jel,midpoint_index2[jelt][--jm][--jp],nvt);
+              }
+            }
+          }
+        }
+      }
+  }
+  el->SetMidpointNodeNumber(nvt - el->GetVertexNodeNumber());
+  // Now build kmid
+  Buildkmid();
+  Buildkel();
+  
+  //for parallel computations
+  cout << "  start partioning " << endl;
+  if (_nprocs>=1) generate_metis_mesh_partition();
+  cout << " end partitioning " << endl;
+  // some output
+  cout <<"grid\tnel\tnvt"<< endl;
+  cout <<grid<<"\t"<<nel<<"\t"<<nvt<<endl;
+  cout <<"nv0\tnv1\tnv2"<< endl;
+  cout <<el->GetVertexNodeNumber()<<"\t"
+       <<el->GetMidpointNodeNumber()<<"\t"
+       <<el->GetCentralNodeNumber()<<endl
+       <<"-------------------------"<<endl;
+       
+       
+  _coordinate = new Solution(this);
+  _coordinate->AddSolution("X","biquadratic",1,0); 
+  _coordinate->AddSolution("Y","biquadratic",1,0); 
+  _coordinate->AddSolution("Z","biquadratic",1,0); 
+  
+  _coordinate->ResizeSolutionVector("X");
+  _coordinate->ResizeSolutionVector("Y");
+  _coordinate->ResizeSolutionVector("Z");    
+   
+   
+  unsigned TypeIndex=2;
+    
+  if(_coordinate->_ProjMatFlag[TypeIndex]==0){
+    _coordinate->_ProjMatFlag[TypeIndex]=1;
+
+    int nf     = MetisOffset[TypeIndex][_nprocs];
+    int nc     = mshc->MetisOffset[TypeIndex][_nprocs];
+    int nf_loc = own_size[TypeIndex][_iproc];
+    int nc_loc = mshc->own_size[TypeIndex][_iproc]; 
+
+    _coordinate->_ProjMat[TypeIndex] = SparseMatrix::build().release();
+    _coordinate->_ProjMat[TypeIndex]->init(nf,nc,nf_loc,nc_loc,27,27);
+ 
+    // loop on the coarse grid 
+    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+      for (int iel_mts=mshc->IS_Mts2Gmt_elem_offset[isdom]; 
+	   iel_mts < mshc->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
+	if( mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+	  short unsigned ielt= mshc->el->GetElementType(iel);
+	  type_elem[ielt][TypeIndex]->prolongation(*this,*mshc,iel,_coordinate->_ProjMat[TypeIndex]); 
+	}
+      }
+    }
+    _coordinate->_ProjMat[TypeIndex]->close();
+  }
+      
+  _coordinate->_Sol[0]->matrix_mult(*mshc->_coordinate->_Sol[0],*_coordinate->_ProjMat[TypeIndex]);
+  _coordinate->_Sol[1]->matrix_mult(*mshc->_coordinate->_Sol[1],*_coordinate->_ProjMat[TypeIndex]);
+  _coordinate->_Sol[2]->matrix_mult(*mshc->_coordinate->_Sol[2],*_coordinate->_ProjMat[TypeIndex]);
+  _coordinate->_Sol[0]->close();
+  _coordinate->_Sol[1]->close();
+  _coordinate->_Sol[2]->close();     
+         
+}
+
+//------------------------------------------------------------------------------------------------------
+
+ mesh::~mesh(){
+    delete el;
+    _coordinate->FreeSolutionVectors(); 
+    delete _coordinate;
+    if(_nprocs>=1){
+      delete [] epart;
+      delete [] npart;
+    }
+  }
+
+
 
 //------------------------------------------------------------------------------------------------------
 void mesh::generate_metis_mesh_partition(){
@@ -620,235 +928,10 @@ void mesh::generate_metis_mesh_partition(){
   
 }
 
-/**
- *  This constructur generates a fine mesh level, $l_i$, from a coarse mesh level $l_{i-1}$, $i>0$
- **/
-//------------------------------------------------------------------------------------------------------
-mesh::mesh(const unsigned & igrid,elem *elc) {
-  
-  MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
-  MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
-  
-  const unsigned vertex_index[6][8][8]= {{{1,9,25,12,17,21,27,24},{9,2,10,25,21,18,22,27},
-      {25,10,3,11,27,22,19,23},{12,25,11,4,24,27,23,20},
-      {17,21,27,24,5,13,26,16},{21,18,22,27,13,6,14,26},
-      {27,22,19,23,26,14,7,15},{24,27,23,20,16,26,15,8}
-    },
-    { {1,5,7,8},{2,6,5,9},{3,7,6,10},{8,9,10,4},
-      {5,6,8,9},{6,10,8,9},{5,8,6,7},{6,8,10,7}
-    },
-    { {1,7,9,13,16,18},{2,8,7,14,17,16},
-      {3,9,8,15,18,17},{7,8,9,16,17,18},
-      {13,16,18,4,10,12},{14,17,16,5,11,10},
-      {15,18,17,6,12,11},{16,17,18,10,11,12}
-    },
-    {{1,5,9,8},{5,2,6,9},{9,6,3,7},{8,9,7,4}},
-    {{1,4,6},{2,5,4},{3,6,5},{4,5,6}},
-    {{1,3},{3,2}}
-  };
-
-  const unsigned face_index[6][6][4][2]= {{{{0,0},{1,0},{4,0},{5,0}},
-      {{1,1},{2,1},{5,1},{6,1}},
-      {{2,2},{3,2},{6,2},{7,2}},
-      {{3,3},{0,3},{7,3},{4,3}},
-      {{0,4},{1,4},{2,4},{3,4}},
-      {{4,5},{5,5},{6,5},{7,5}}
-    },
-    { {{0,0},{1,0},{2,0},{6,3}},
-      {{0,1},{1,3},{3,1},{4,3}},
-      {{1,1},{2,3},{3,2},{5,1}},
-      {{2,1},{0,3},{3,3},{7,2}}
-    },
-    { {{0,0},{1,2},{4,0},{5,2}},
-      {{1,0},{2,2},{5,0},{6,2}},
-      {{2,0},{0,2},{6,0},{4,2}},
-      {{0,3},{1,3},{2,3},{3,3}},
-      {{4,4},{5,4},{6,4},{7,4}}
-    },
-    { {{0,0},{1,0}},
-      {{1,1},{2,1}},
-      {{2,2},{3,2}},
-      {{3,3},{0,3}}
-    },
-    { {{0,0},{1,2}},
-      {{1,0},{2,2}},
-      {{2,0},{0,2}}
-    },
-    { {{0,0}},
-      {{1,1}}
-    }
-  };
-
-  const unsigned midpoint_index[6][12][2]= {{{0,1},{1,2},{2,3},{3,0},
-      {4,5},{5,6},{6,7},{7,4},
-      {0,4},{1,5},{2,6},{3,7}
-    },
-    { {0,1},{1,2},{2,0},
-      {0,3},{1,3},{2,3}
-    },
-    { {0,1},{1,2},{2,0},
-      {3,4},{4,5},{5,3},
-      {0,3},{1,4},{2,5}
-    },
-    {{0,1},{1,2},{2,3},{3,0}},
-    {{0,1},{1,2},{2,0}},
-    {{0,1}}
-  };
-
-  const unsigned midpoint_index2[6][7][8]= {{{0,8,0,11,16},
-      {0,0,9,0,0,17},
-      {0,0,0,10,0,0,18},
-      {0,0,0,0,0,0,0,19},
-      {0,0,0,0,0,12,0,15},
-      {0,0,0,0,0,0,13},
-      {0,0,0,0,0,0,0,14}
-    },
-    { {0,4,6,7},
-      {0,0,5,8},
-      {0,0,0,9}
-    },
-    { {0,6,8,12},
-      {0,0,7,0,13},
-      {0,0,0,0,0,14},
-      {0,0,0,0,9,11},
-      {0,0,0,0,0,10}
-    },
-    { {0,4,0,7},
-      {0,0,5},
-      {0,0,0,6}
-    },
-    { {0,3,5},
-      {0,0,4}
-    },
-    {{0,2}}
-  };
-  grid=igrid;
-
-//   nel=elc->GetRefinedElementNumber()*REF_INDEX;
-  nel=elc->GetRefinedElementNumber()*_ref_index;
-  el=new elem(elc,mesh::_ref_index);
 
 
 
-  unsigned jel=0;
-  //divide each coarse element in 8(3D), 4(2D) or 2(1D) fine elemets and find all the vertices
 
-  el->SetElementGroupNumber(elc->GetElementGroupNumber());
-  el->SetNumberElementFather(elc->GetElementNumber());
-
-  for (unsigned iel=0; iel<elc->GetElementNumber(); iel++) {
-    if ( elc->GetRefinedElementIndex(iel) ) {
-      elc->SetRefinedElementIndex(iel,jel+1u);
-      unsigned elt=elc->GetElementType(iel);
-      // project element type
-//       for(unsigned j=0;j<REF_INDEX;j++){
-      for (unsigned j=0; j<_ref_index; j++) {
-        el->SetElementType(jel+j,elt);
-        el->SetElementFather(jel+j,iel);
-	elc->SetChildElement(iel,j,jel+j);
-      }
-
-      unsigned elg=elc->GetElementGroup(iel);
-      unsigned elmat=elc->GetElementMaterial(iel);
-      // project element group
-//       for(unsigned j=0;j<REF_INDEX;j++){
-      for (unsigned j=0; j<_ref_index; j++) {
-        el->SetElementGroup(jel+j,elg);
-	el->SetElementMaterial(jel+j,elmat);
-      }
-
-      // project vertex indeces
-//       for(unsigned j=0;j<REF_INDEX;j++)
-      for (unsigned j=0; j<_ref_index; j++)
-        for (unsigned inode=0; inode<elc->GetElementDofNumber(iel,0); inode++)
-          el->SetElementVertexIndex(jel+j,inode,elc->GetElementVertexIndex(iel,vertex_index[elt][j][inode]-1u));
-      // project face indeces
-      for (unsigned iface=0; iface<elc->GetElementFaceNumber(iel); iface++) {
-        int value=elc->GetFaceElementIndex(iel,iface);
-        if (0>value)
-// 	  for(unsigned jface=0;jface<FACE_INDEX;jface++)
-          for (unsigned jface=0; jface<_face_index; jface++)
-            el->SetFaceElementIndex(jel+face_index[elt][iface][jface][0],face_index[elt][iface][jface][1], value);
-      }
-      // update element numbers
-//       jel+=REF_INDEX;
-      jel+=_ref_index;
-//       el->AddToElementNumber(REF_INDEX,elt);
-      el->AddToElementNumber(_ref_index,elt);
-    }
-  }
-
-  nvt=elc->GetNodeNumber();
-  el->SetVertexNodeNumber(nvt);
-
-  
-  //find all the elements near each vertex
-  BuildAdjVtx();
-  //initialize to zero all the middle edge points
-  for (unsigned iel=0; iel<nel; iel++)
-    for (unsigned inode=el->GetElementDofNumber(iel,0); inode<el->GetElementDofNumber(iel,1); inode++)
-      el->SetElementVertexIndex(iel,inode,0);
-  //find all the middle edge points
-  for (unsigned iel=0; iel<nel; iel++) {
-    unsigned ielt=el->GetElementType(iel);
-    unsigned istart=el->GetElementDofNumber(iel,0);
-    unsigned iend=el->GetElementDofNumber(iel,1);
-    for (unsigned inode=istart; inode<iend; inode++)
-      if (0==el->GetElementVertexIndex(iel,inode)) {
-        nvt++;
-        el->SetElementVertexIndex(iel,inode,nvt);
-        unsigned im=el->GetElementVertexIndex(iel,midpoint_index[ielt][inode-istart][0]);
-        unsigned ip=el->GetElementVertexIndex(iel,midpoint_index[ielt][inode-istart][1]);
-        //find all the near elements which share the same middle edge point
-        for (unsigned j=0; j<el->GetVertexElementNumber(im-1u); j++) {
-          unsigned jel=el->GetVertexElementIndex(im-1u,j)-1u;
-          if (jel>iel) {
-            unsigned jm=0,jp=0;
-            unsigned jelt=el->GetElementType(jel);
-            for (unsigned jnode=0; jnode<el->GetElementDofNumber(jel,0); jnode++) {
-              if (el->GetElementVertexIndex(jel,jnode)==im) {
-                jm=jnode+1u;
-                break;
-              }
-            }
-            if (jm!=0) {
-              for (unsigned jnode=0; jnode<el->GetElementDofNumber(jel,0); jnode++) {
-                if (el->GetElementVertexIndex(jel,jnode)==ip) {
-                  jp=jnode+1u;
-                  break;
-                }
-              }
-              if (jp!=0) {
-                if (jp<jm) {
-                  unsigned tp=jp;
-                  jp=jm;
-                  jm=tp;
-                }
-                el->SetElementVertexIndex(jel,midpoint_index2[jelt][--jm][--jp],nvt);
-              }
-            }
-          }
-        }
-      }
-  }
-  el->SetMidpointNodeNumber(nvt - el->GetVertexNodeNumber());
-  // Now build kmid
-  Buildkmid();
-  Buildkel();
-  
-  //for parallel computations
-  cout << "  start partioning " << endl;
-  if (_nprocs>=1) generate_metis_mesh_partition();
-  cout << " end partitioning " << endl;
-  // some output
-  cout <<"grid\tnel\tnvt"<< endl;
-  cout <<grid<<"\t"<<nel<<"\t"<<nvt<<endl;
-  cout <<"nv0\tnv1\tnv2"<< endl;
-  cout <<el->GetVertexNodeNumber()<<"\t"
-       <<el->GetMidpointNodeNumber()<<"\t"
-       <<el->GetCentralNodeNumber()<<endl
-       <<"-------------------------"<<endl;
-}
 
 /**
  * This function read the data form the custom 1D file.

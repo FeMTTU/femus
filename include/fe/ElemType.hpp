@@ -32,6 +32,7 @@
 // Forward declarations
 //------------------------------------------------------------------------------
 class elem;
+class LinearEquation;
 
 class elem_type {
   
