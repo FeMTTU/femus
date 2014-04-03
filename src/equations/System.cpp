@@ -27,7 +27,7 @@
   _msh.resize(_gridn);
   _solution.resize(_gridn);
   for(unsigned i=0;i<_gridn;i++){
-    _msh[i]=_equation_systems._msh[i];
+    _msh[i]=_equation_systems._ml_msh->_level[i];
     _solution[i]=_equation_systems._solution[i];
   }
 }

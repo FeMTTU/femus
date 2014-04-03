@@ -19,6 +19,7 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
+#include "MultiLevelMesh.hpp"
 #include "LinearEquation.hpp"
 #include "Solution.hpp"
 #include "Parameters.hpp"
@@ -61,7 +62,7 @@ private:
   bool _bdc_func_set;
   
   void GenerateBdc(const unsigned int k, const double time);
-  
+
     
 protected:
   
@@ -193,16 +194,15 @@ protected:
   /** Array of solution */
   vector <Solution*>  _solution;
   
-  /** Array of mesh */
-  vector <mesh*> _msh;
+  /** Multilevel mesh */
+  MultiLevelMesh *_ml_msh;
   
   /** Data structure holding arbitrary parameters. */
   Parameters parameters;
 
   /** Constructor */
-  MultiLevelProblem(const unsigned short &igridn, const unsigned short &igridr, const char mesh_file[],
-            const char GaussOrder[], const double Lref=1., bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, 
-                                   const int &ElemGroupNumber,const int &level)=NULL );
+  MultiLevelProblem( MultiLevelMesh *ml_msh, const unsigned short &igridn,const unsigned short &igridr,
+				     const char GaussOrder[]);
 
   /** Destructor */
   ~MultiLevelProblem();

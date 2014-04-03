@@ -75,20 +75,20 @@ void Output::BuildProlongatorMatrices() {
   
   for (unsigned igridn=0; igridn<_gridn; igridn++) {
     for(int itype=0;itype<3;itype++){
-      int ni = _ml_probl._msh[igridn]->MetisOffset[itype][_nprocs];
+      int ni = _ml_probl._ml_msh->_level[igridn]->MetisOffset[itype][_nprocs];
       bool *testnode=new bool [ni];
       for (int jtype=0; jtype<3; jtype++) {
-        int nj = _ml_probl._msh[igridn]->MetisOffset[jtype][_nprocs];
+        int nj = _ml_probl._ml_msh->_level[igridn]->MetisOffset[jtype][_nprocs];
 	memset(testnode,0,ni*sizeof(bool));
 	Output::_ProlQitoQj[itype][jtype][igridn] = SparseMatrix::build().release();
-	Output::_ProlQitoQj[itype][jtype][igridn]->init(ni,nj,_ml_probl._msh[igridn]->own_size[itype][_iproc],_ml_probl._msh[igridn]->own_size[jtype][_iproc],27,27);
+	Output::_ProlQitoQj[itype][jtype][igridn]->init(ni,nj,_ml_probl._ml_msh->_level[igridn]->own_size[itype][_iproc],_ml_probl._ml_msh->_level[igridn]->own_size[jtype][_iproc],27,27);
 
 	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-	  for (int iel_mts=_ml_probl._msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-	       iel_mts < _ml_probl._msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	    unsigned iel = _ml_probl._msh[igridn]->IS_Mts2Gmt_elem[iel_mts];
-	    short unsigned ielt=_ml_probl._msh[igridn]->el->GetElementType(iel);
-            _ml_probl.type_elem[ielt][jtype]->ProlQitoQj(*_ml_probl._msh[igridn],iel,Output::_ProlQitoQj[itype][jtype][igridn],testnode,itype);	  
+	  for (int iel_mts=_ml_probl._ml_msh->_level[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+	       iel_mts < _ml_probl._ml_msh->_level[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	    unsigned iel = _ml_probl._ml_msh->_level[igridn]->IS_Mts2Gmt_elem[iel_mts];
+	    short unsigned ielt=_ml_probl._ml_msh->_level[igridn]->el->GetElementType(iel);
+            _ml_probl.type_elem[ielt][jtype]->ProlQitoQj(*_ml_probl._ml_msh->_level[igridn],iel,Output::_ProlQitoQj[itype][jtype][igridn],testnode,itype);	  
 	  }
 	}
 	Output::_ProlQitoQj[itype][jtype][igridn]->close();
