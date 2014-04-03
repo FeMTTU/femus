@@ -45,11 +45,14 @@ unsigned mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
 /**
  *  This constructur generates the coarse mesh level, $l_0$, from the gambit data file
  **/
-mesh::mesh(const char infile[], vector < vector < double> > &vt, const double Lref) {
+mesh::mesh(const char infile[],  const double Lref) {
   
   MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
   MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
   
+  vector <vector <double> > vt;  
+  vt.resize(3);
+    
   grid=0;
   // mesh
   //now we are reading only 2D or 3D
@@ -89,8 +92,7 @@ mesh::mesh(const char infile[], vector < vector < double> > &vt, const double Lr
   _coordinate->ResizeSolutionVector("Z");
     
   _coordinate->SetCoarseCoordinates(vt);
-  
-  
+    
 };
 
 /**
