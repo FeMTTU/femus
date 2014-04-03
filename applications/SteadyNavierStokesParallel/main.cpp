@@ -164,7 +164,7 @@ int main(int argc,char **args) {
   
 //   ml_prob.printsol_vtu_inline("biquadratic",print_vars);
 //     
-//   ml_prob.printsol_gmv_binary("biquadratic",0,1);
+  ml_prob.printsol_gmv_binary("biquadratic",0,1);
   
   VTKOutput vtkio(ml_prob);
   vtkio.write_system_solutions("biquadratic",print_vars);
@@ -344,14 +344,14 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   vector < unsigned > SolPdeIndex(dim+1);
   vector < unsigned > SolIndex(dim+1);  
   
-  const char coordinate_name[3][2] = {"X","Y","Z"};
-  vector < unsigned > coordinate_Index(dim);
+  //const char coordinate_name[3][2] = {"X","Y","Z"};
+  //vector < unsigned > coordinate_Index(dim);
   vector< vector < double> > coordinates(dim);
   
   for(unsigned ivar=0; ivar<dim; ivar++) {
     SolPdeIndex[ivar]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[ivar][0]);
     SolIndex[ivar]=ml_prob.GetIndex(&Solname[ivar][0]);
-    coordinate_Index[ivar]=ml_prob.GetIndex(&coordinate_name[ivar][0]);
+    //coordinate_Index[ivar]=ivar;//ml_prob.GetIndex(&coordinate_name[ivar][0]);
   }
   SolPdeIndex[dim]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[3][0]);
   SolIndex[dim]=ml_prob.GetIndex(&Solname[3][0]);       
@@ -460,7 +460,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       unsigned inode_metis=mymsh->GetMetisDof(inode,2);
       metis_node2[i]=inode_metis;
       for(unsigned ivar=0; ivar<dim; ivar++) {
-	coordinates[ivar][i]=(*mysolution->_Sol[coordinate_Index[ivar]])(inode_metis);
+	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_metis);
 	KK_dof[ivar][i]=mylsyspde->GetKKDof(SolIndex[ivar],SolPdeIndex[ivar],inode);
       }
     }
@@ -662,11 +662,11 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   
   //coordinates
   vector< vector < double> > coordinates(dim); 
-  const char coordinate_name[3][2] = {"X","Y","Z"};
-  vector < unsigned > coordinate_Index(dim);
-  for(unsigned ivar=0; ivar<dim; ivar++) {
-    coordinate_Index[ivar]=ml_prob.GetIndex(coordinate_name[ivar]);
-  }
+  //const char coordinate_name[3][2] = {"X","Y","Z"};
+  //vector < unsigned > coordinate_Index(dim);
+//   for(unsigned ivar=0; ivar<dim; ivar++) {
+//     coordinate_Index[ivar]=ivar;//ml_prob.GetIndex(coordinate_name[ivar]);
+//   }
   
   // declare 
   vector< int > metis_node;
@@ -722,7 +722,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
       unsigned inode_metis=mymsh->GetMetisDof(inode,2);
       metis_node[i]=inode_metis;
       for(unsigned ivar=0; ivar<dim; ivar++) {
-	coordinates[ivar][i]=(*mysolution->_Sol[coordinate_Index[ivar]])(inode_metis);
+	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_metis);
       }
       KK_dof[i]=mylsyspde->GetKKDof(SolIndex,SolPdeIndex,inode);
     }

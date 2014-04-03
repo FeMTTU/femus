@@ -120,11 +120,6 @@ MultiLevelProblem::MultiLevelProblem(const unsigned short &igridn,const unsigned
 
   cout << "MESH DATA: " << endl;
 
-  //Steady State simulation
-//   _test_time = 0;
-  
-//   _print_step    = 100000;
-
   //Temporary coordinates vector
   vector <vector <double> > vt;  
   vt.resize(3);
@@ -134,49 +129,11 @@ MultiLevelProblem::MultiLevelProblem(const unsigned short &igridn,const unsigned
   
   _msh[0]=new mesh(mesh_file, vt,Lref);
   _solution[0]=new Solution(_msh[0]);
-  
-  unsigned gridn_temp=_gridn;
-  _gridn=1;
-  AddSolution("X","biquadratic",1,0);
-  AddSolution("Y","biquadratic",1,0);
-  AddSolution("Z","biquadratic",1,0);
-  sprintf(BdcType[0],"Steady");
-  sprintf(BdcType[1],"Steady");
-  sprintf(BdcType[2],"Steady");
-    
-  _solution[0]->ResizeSolutionVector("X");
-  _solution[0]->ResizeSolutionVector("Y");
-  _solution[0]->ResizeSolutionVector("Z");
-    
-  _gridn=gridn_temp;
-  _solution[0]->SetCoarseCoordinates(vt);
-    
-  unsigned indX=GetIndex("X");
-  unsigned indY=GetIndex("Y");
-  unsigned indZ=GetIndex("Z");
     
   for (unsigned i=1; i<_gridr; i++) {
     _msh[i-1u]->_coordinate->SetElementRefiniement(1);
-    //_solution[i-1u]->SetElementRefiniement(1);
     _msh[i] = new mesh(i,_msh[i-1],type_elem); 
-        
     _solution[i]=new Solution(_msh[i]);
-    _solution[i]->AddSolution("X","biquadratic",1,0);
-    _solution[i]->AddSolution("Y","biquadratic",1,0);
-    _solution[i]->AddSolution("Z","biquadratic",1,0);
-    _solution[i]->ResizeSolutionVector("X");
-    _solution[i]->ResizeSolutionVector("Y");
-    _solution[i]->ResizeSolutionVector("Z");
-             
-    BuildProlongatorMatrix(i, indX);
-    unsigned TypeIndex=SolType[indX];
-    
-    _solution[i]->_Sol[indX]->matrix_mult(*_solution[i-1]->_Sol[indX],*_solution[i]->_ProjMat[TypeIndex]);
-    _solution[i]->_Sol[indY]->matrix_mult(*_solution[i-1]->_Sol[indY],*_solution[i]->_ProjMat[TypeIndex]);
-    _solution[i]->_Sol[indZ]->matrix_mult(*_solution[i-1]->_Sol[indZ],*_solution[i]->_ProjMat[TypeIndex]);
-    _solution[i]->_Sol[indX]->close();
-    _solution[i]->_Sol[indY]->close();
-    _solution[i]->_Sol[indZ]->close(); 
   }
   
   for (unsigned i=_gridr; i<_gridn; i++) {
@@ -187,31 +144,12 @@ MultiLevelProblem::MultiLevelProblem(const unsigned short &igridn,const unsigned
     else {
       mesh::_SetRefinementFlag = SetRefinementFlag;
       _msh[i-1u]->_coordinate->SetElementRefiniement(2);
-     // _solution[i-1u]->SetElementRefiniement(2);
     }
     _msh[i] = new mesh(i,_msh[i-1],type_elem); 
-    
-    _solution[i]=new Solution(_msh[i]);
-    _solution[i]->AddSolution("X","biquadratic",1,0);
-    _solution[i]->AddSolution("Y","biquadratic",1,0);
-    _solution[i]->AddSolution("Z","biquadratic",1,0);
-    _solution[i]->ResizeSolutionVector("X");
-    _solution[i]->ResizeSolutionVector("Y");
-    _solution[i]->ResizeSolutionVector("Z");
-     
-    BuildProlongatorMatrix(i, indX);
-    unsigned TypeIndex=SolType[indX];
-    
-    _solution[i]->_Sol[indX]->matrix_mult(*_solution[i-1]->_Sol[indX],*_solution[i]->_ProjMat[TypeIndex]);
-    _solution[i]->_Sol[indY]->matrix_mult(*_solution[i-1]->_Sol[indY],*_solution[i]->_ProjMat[TypeIndex]);
-    _solution[i]->_Sol[indZ]->matrix_mult(*_solution[i-1]->_Sol[indZ],*_solution[i]->_ProjMat[TypeIndex]);
-    _solution[i]->_Sol[indX]->close();
-    _solution[i]->_Sol[indY]->close();
-    _solution[i]->_Sol[indZ]->close();
-        
+    _solution[i]=new Solution(_msh[i]);       
   }
+  
   _msh[_gridn-1u]->_coordinate->SetElementRefiniement(0);
-  //_solution[_gridn-1u]->SetElementRefiniement(0);	
   elr_old.resize(_msh[_gridr-1u]->GetElementNumber());
     
   unsigned refindex = _msh[0]->GetRefIndex();
@@ -219,20 +157,9 @@ MultiLevelProblem::MultiLevelProblem(const unsigned short &igridn,const unsigned
   elem_type::_refindex=refindex;
 
   cout << endl;
-//   _ntime_steps=0;
-//   _dt=1.;
-//   _time_step0 = 1;
-//   _time=0.;
-//   _time_step=0;
   _moving_mesh=0;
-//   _Schur=0;
-//   _NSchurVar=1;
-//   _is_nonlinear = false;
-//   _non_linear_toll = 1.e-04;
-//   _non_linear_algorithm = 0;
   _init_func_set=false;
   _bdc_func_set=false;
-//   _VankaIsSet = true;
 
   BuildProlongatorMatrices();
 }
@@ -955,24 +882,16 @@ void MultiLevelProblem::Initialize(const char name[], initfunc func) {
   unsigned i_start;
   unsigned i_end;
   if (!strcmp(name,"All")) {
-    i_start=3;
+    i_start=0;
     i_end=SolType.size();
   } else {
     i_start=GetIndex(name);
     i_end=i_start+1u;
   }
-
-  unsigned indX=GetIndex("X");
-  unsigned indY=GetIndex("Y");
-  unsigned indZ=GetIndex("Z");
-  double xx=0;
-  double yy=0;
-  double zz=0;
-  
   
   double value;
   for (unsigned i=i_start; i<i_end; i++) {
-//     //CheckVectorSize(i);
+    //CheckVectorSize(i);
     unsigned sol_type = SolType[i];
     for (unsigned ig=0; ig<_gridn; ig++) {
       unsigned num_el = _msh[ig]->GetElementNumber();
@@ -990,9 +909,9 @@ void MultiLevelProblem::Initialize(const char name[], initfunc func) {
 	      unsigned inode=(sol_type<3)?(_msh[ig]->el->GetElementVertexIndex(kel_gmt,j)-1u):(kel_gmt+j*num_el);
 	      int inode_Metis=_msh[ig]->GetMetisDof(inode,sol_type);
 	      unsigned icoord_Metis=_msh[ig]->GetMetisDof(inode,2);
-	      xx=(*_solution[ig]->_Sol[indX])(icoord_Metis);  
-	      yy=(*_solution[ig]->_Sol[indY])(icoord_Metis);
-	      zz=(*_solution[ig]->_Sol[indZ])(icoord_Metis);
+	      double xx=(*_msh[ig]->_coordinate->_Sol[0])(icoord_Metis);  
+	      double yy=(*_msh[ig]->_coordinate->_Sol[1])(icoord_Metis);
+	      double zz=(*_msh[ig]->_coordinate->_Sol[2])(icoord_Metis);
 	      
 	      if(func) {
 		value = (sol_type<3)?func(xx,yy,zz):0;
@@ -1372,12 +1291,7 @@ void MultiLevelProblem::GenerateBdc(const char name[], const char bdc_type[]) {
   
 //   const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
 //   
-//   unsigned indX=GetIndex("X");
-//   unsigned indY=GetIndex("Y");
-//   unsigned indZ=GetIndex("Z");
-//   double xx;
-//   double yy;
-//   double zz;
+
 
   unsigned i_start;
   unsigned i_end;
@@ -1421,7 +1335,7 @@ void MultiLevelProblem::GenerateBdc(const char name[], const char bdc_type[]) {
   // 0 Dirichlet
   for (unsigned i=i_start; i<i_end; i++) {
     
-    GenerateBdc(i,0.);
+  GenerateBdc(i,0.);
     
 //     for (unsigned igridn=0; igridn<_gridn; igridn++) {
 //       if(_solution[igridn]->_ResEpsBdcFlag[i]){
@@ -1510,12 +1424,6 @@ void MultiLevelProblem::UpdateBdc(const double time) {
 
 //   const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
 //   unsigned dim = _msh[0]->GetDimension() - 1u;
-//   unsigned indX=GetIndex("X");
-//   unsigned indY=GetIndex("Y");
-//   unsigned indZ=GetIndex("Z");
-//   double xx;
-//   double yy;
-//   double zz;
 
   for (int k=0; k<SolName.size(); k++) {
     if (!strcmp(BdcType[k],"Time_dependent")) {
@@ -1616,12 +1524,6 @@ void MultiLevelProblem::GenerateBdc(const unsigned int k, const double time) {
   
       const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
   
-      unsigned indX=GetIndex("X");
-      unsigned indY=GetIndex("Y");
-      unsigned indZ=GetIndex("Z");
-      double xx;
-      double yy;
-      double zz;
        
       // 2 Default Neumann
       // 1 DD Dirichlet
@@ -1665,9 +1567,9 @@ void MultiLevelProblem::GenerateBdc(const unsigned int k, const double time) {
 		      unsigned inode=_msh[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u;
 		      unsigned inode_coord_Metis=_msh[igridn]->GetMetisDof(inode,2);
 		      double value;
-		      xx=(*_solution[igridn]->_Sol[indX])(inode_coord_Metis);  
-		      yy=(*_solution[igridn]->_Sol[indY])(inode_coord_Metis);
-		      zz=(*_solution[igridn]->_Sol[indZ])(inode_coord_Metis);
+		      double xx=(*_msh[igridn]->_coordinate->_Sol[0])(inode_coord_Metis);  
+		      double yy=(*_msh[igridn]->_coordinate->_Sol[1])(inode_coord_Metis);
+		      double zz=(*_msh[igridn]->_coordinate->_Sol[2])(inode_coord_Metis);
 		      bool test=_SetBoundaryConditionFunction(xx,yy,zz,SolName[k],value,-(_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)+1),time);
 		      if (test) {
 			unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
@@ -1808,11 +1710,6 @@ void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, 
   fout.write((char *)det,sizeof(char)*8);
   fout.write((char *)&nvt,sizeof(unsigned));
     
-  unsigned indXYZ[3];
-  indXYZ[0]=GetIndex("X");
-  indXYZ[1]=GetIndex("Y");
-  indXYZ[2]=GetIndex("Z");
-   
   for (int i=0; i<3; i++) {
     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
       Mysol[ig]->matrix_mult(*_msh[ig]->_coordinate->_Sol[i],*ProlQitoQj_[index][2][ig]);
@@ -2115,11 +2012,6 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
   // print coordinates *********************************************Solu*******************************************
   fout << "   <Points>" << endl;
   fout << "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\">" << endl;
-  
-  unsigned indXYZ[3];
-  indXYZ[0]=GetIndex("X");
-  indXYZ[1]=GetIndex("Y");
-  indXYZ[2]=GetIndex("Z");
   
   vector <NumericVector*> mysol(_gridn);
   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {

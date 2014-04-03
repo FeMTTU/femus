@@ -156,14 +156,14 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   //----------------------------------------------------------------------------------
   //variable-name handling
   const char varname[10][3] = {"DX","DY","DZ","U","V","W","P","AX","AY","AZ"};
-  const char coordname[3][2] = {"X","Y","Z"};
+  //const char coordname[3][2] = {"X","Y","Z"};
   vector <unsigned> indexVAR(2*dim+1);
-  vector <unsigned> indCOORD(dim);
+  //vector <unsigned> indCOORD(dim);
   vector <unsigned> indVAR(3*dim+1);  
   vector <unsigned> SolType(3*dim+1);  
   
   for(unsigned ivar=0; ivar<dim; ivar++) {
-    indCOORD[ivar]=ml_prob.GetIndex(&coordname[ivar][0]);
+    //indCOORD[ivar]=ml_prob.GetIndex(&coordname[ivar][0]);
     indVAR[ivar]=ml_prob.GetIndex(&varname[ivar][0]);
     indVAR[ivar+dim]=ml_prob.GetIndex(&varname[ivar+3][0]);
     indVAR[ivar+2*dim+1]=ml_prob.GetIndex(&varname[ivar+7][0]);
@@ -287,11 +287,11 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
       solidmark[i]=myel->GetNodeRegion(inode); // to check
       for(int j=0; j<dim; j++) {
 	//Updated coordinates (Moving frame)
-        vx[j][i]= (*mysolution->_Sol[indCOORD[j]])(inode_Metis) + (*mysolution->_Sol[indVAR[j]])(inode_Metis);
+        vx[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + (*mysolution->_Sol[indVAR[j]])(inode_Metis);
 	//Old coordinates (Moving frame)
-        vx_old[j][i]= (*mysolution->_Sol[indCOORD[j]])(inode_Metis) + (*mysolution->_SolOld[indVAR[j]])(inode_Metis);
+        vx_old[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + (*mysolution->_SolOld[indVAR[j]])(inode_Metis);
 	//Fixed coordinates (Reference frame)
-	vx_hat[j][i]= (*mysolution->_Sol[indCOORD[j]])(inode_Metis);  
+	vx_hat[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis);  
 	// displacement dofs
 	dofsVAR[j][i]= mylsyspde->GetKKDof(indVAR[j],indexVAR[j],inode); 
 	// velocity dofs

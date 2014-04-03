@@ -254,14 +254,12 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   
   const char AccSolname[3][3] = {"AX","AY","AZ"};
   
-  const char coordinate_name[3][2] = {"X","Y","Z"};
-  vector < unsigned > coordinate_Index(dim);
+ 
   vector< vector < double> > coordinates(dim);
   
   for(unsigned ivar=0; ivar<dim; ivar++) {
     SolPdeIndex[ivar]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[ivar][0]);
     SolIndex[ivar]=ml_prob.GetIndex(&Solname[ivar][0]);
-    coordinate_Index[ivar]=ml_prob.GetIndex(&coordinate_name[ivar][0]);
   }
   SolPdeIndex[dim]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[3][0]);
   SolIndex[dim]=ml_prob.GetIndex(&Solname[3][0]);       
@@ -377,7 +375,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       unsigned inode_metis=mymsh->GetMetisDof(inode,2);
       metis_node2[i]=inode_metis;
       for(unsigned ivar=0; ivar<dim; ivar++) {
-	coordinates[ivar][i]=(*mysolution->_Sol[coordinate_Index[ivar]])(inode_metis);
+	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_metis);
 	KK_dof[ivar][i]=mylsyspde->GetKKDof(SolIndex[ivar],SolPdeIndex[ivar],inode);
       }
     }

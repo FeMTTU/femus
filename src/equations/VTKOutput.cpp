@@ -132,10 +132,10 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
   fout << "   <Points>" << std::endl;
   fout << "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\">" << std::endl;
   
-  unsigned indXYZ[3];
-  indXYZ[0]=_ml_probl.GetIndex("X");
-  indXYZ[1]=_ml_probl.GetIndex("Y");
-  indXYZ[2]=_ml_probl.GetIndex("Z");
+//   unsigned indXYZ[3];
+//   indXYZ[0]=_ml_probl.GetIndex("X");
+//   indXYZ[1]=_ml_probl.GetIndex("Y");
+//   indXYZ[2]=_ml_probl.GetIndex("Z");
   
   vector <NumericVector*> mysol(_gridn);
   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
@@ -151,7 +151,7 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
     std::vector<double> v_local;
     unsigned nvt_ig=_ml_probl._msh[ig]->MetisOffset[index_nd][_nprocs];
     for(int kk=0;kk<3;kk++) {
-      mysol[ig]->matrix_mult(*_ml_probl._solution[ig]->_Sol[indXYZ[kk]],*_ProlQitoQj[index_nd][_ml_probl.SolType[indXYZ[kk]]][ig]);
+      mysol[ig]->matrix_mult(*_ml_probl._msh[ig]->_coordinate->_Sol[kk],*_ProlQitoQj[index_nd][2][ig]);
       mysol[ig]->localize_to_one(v_local,0);
       if(_iproc==0) { 
 	for (unsigned i=0; i<nvt_ig; i++) {
