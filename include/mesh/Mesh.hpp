@@ -68,7 +68,7 @@ public:
   //unsigned grid;
   elem *el;  // elements
   // Constructor - destructor *****************************
-  mesh(const char [], vector < vector < double> > &vt,const double Lref);
+  mesh(const char [], const double Lref);
   mesh(const unsigned &igrid,mesh *mshc, const elem_type* type_elem[6][5]);
   ~mesh();
 

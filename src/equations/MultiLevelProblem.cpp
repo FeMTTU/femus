@@ -120,22 +120,22 @@ MultiLevelProblem::MultiLevelProblem(const unsigned short &igridn,const unsigned
 
   cout << "MESH DATA: " << endl;
 
-  //Temporary coordinates vector
-  vector <vector <double> > vt;  
-  vt.resize(3);
-
   _msh.resize(_gridn);
   _solution.resize(_gridn);
   
-  _msh[0]=new mesh(mesh_file, vt,Lref);
+  //coarse mesh
+  
+  _msh[0]=new mesh(mesh_file, Lref);
   _solution[0]=new Solution(_msh[0]);
     
+  //totally refined meshes
   for (unsigned i=1; i<_gridr; i++) {
     _msh[i-1u]->_coordinate->SetElementRefiniement(1);
     _msh[i] = new mesh(i,_msh[i-1],type_elem); 
     _solution[i]=new Solution(_msh[i]);
   }
   
+  //partially refined meshes
   for (unsigned i=_gridr; i<_gridn; i++) {
     if(SetRefinementFlag==NULL) {
       cout << "Set Refinement Region flag is not defined! " << endl;
@@ -148,10 +148,8 @@ MultiLevelProblem::MultiLevelProblem(const unsigned short &igridn,const unsigned
     _msh[i] = new mesh(i,_msh[i-1],type_elem); 
     _solution[i]=new Solution(_msh[i]);       
   }
-  
   _msh[_gridn-1u]->_coordinate->SetElementRefiniement(0);
-  elr_old.resize(_msh[_gridr-1u]->GetElementNumber());
-    
+      
   unsigned refindex = _msh[0]->GetRefIndex();
   // cout << "******" << refindex << endl;
   elem_type::_refindex=refindex;

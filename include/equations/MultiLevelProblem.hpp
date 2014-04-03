@@ -49,7 +49,7 @@ class MultiLevelProblem {
 private:
   vector < SparseMatrix* > ProlQitoQj_[3][3];
   vector < map <unsigned,bool> > index;
-  vector <unsigned> elr_old;
+  
   int _moving_mesh;
   std::vector<std::string> _moving_vars;
   
