@@ -14,7 +14,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   Solution*	 mysolution  	                      = ml_prob._solution[level];
   TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem>("Fluid-Structure-Interaction");
   LinearEquationSolver*  mylsyspde	              = my_nnlin_impl_sys._LinSolver[level];   
-  mesh		*mymsh		=  ml_prob._msh[level];
+  mesh		*mymsh		=  ml_prob._ml_msh->_level[level];
   elem		*myel		=  mymsh->el;
   SparseMatrix	*myKK		=  mylsyspde->_KK;
   NumericVector *myRES		=  mylsyspde->_RES;

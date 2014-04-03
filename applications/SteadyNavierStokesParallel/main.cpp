@@ -1,5 +1,6 @@
 #include "ElemType.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelMesh.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
@@ -60,7 +61,11 @@ int main(int argc,char **args) {
   double Uref = 1.;
   
   //Steadystate NonLinearMultiLevelProblem  
-  MultiLevelProblem ml_prob(nm,nr,infile,"seventh",Lref,SetRefinementFlag);
+  
+  
+  
+  MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,SetRefinementFlag);  
+  MultiLevelProblem ml_prob(&ml_msh,nm,nr,"seventh");
   
   // add fluid material
   Parameter parameter(Lref,Uref);
@@ -320,7 +325,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   LinearEquationSolver*  mylsyspde	     = my_nnlin_impl_sys._LinSolver[level];   
   const char* pdename                        = my_nnlin_impl_sys.name().c_str();
   
-  mesh*		 mymsh    	= ml_prob._msh[level];
+  mesh*		 mymsh    	= ml_prob._ml_msh->_level[level];
   elem*		 myel		= mymsh->el;
   SparseMatrix*	 myKK		= mylsyspde->_KK;
   NumericVector* myRES 		= mylsyspde->_RES;
@@ -639,7 +644,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   Solution*      mysolution	       = ml_prob._solution[level];
   LinearImplicitSystem& mylin_impl_sys = ml_prob.get_system<LinearImplicitSystem>("Temperature");
   LinearEquationSolver*  mylsyspde     = mylin_impl_sys._LinSolver[level];   
-  mesh*          mymsh		       = ml_prob._msh[level];
+  mesh*          mymsh		       = ml_prob._ml_msh->_level[level];
   elem*          myel		       = mymsh->el;
   SparseMatrix*  myKK		       = mylsyspde->_KK;
   NumericVector* myRES		       = mylsyspde->_RES;

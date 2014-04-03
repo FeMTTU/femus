@@ -52,7 +52,6 @@ MultiLevelProblem::~MultiLevelProblem() {
 
   for (unsigned i=0; i<_gridn; i++) {
     delete _solution[i];
-    delete _msh[i];
   }
 
   for (unsigned i=0; i<3; i++)
@@ -80,10 +79,12 @@ MultiLevelProblem::~MultiLevelProblem() {
 };
 
 //---------------------------------------------------------------------------------------------------
-MultiLevelProblem::MultiLevelProblem(const unsigned short &igridn,const unsigned short &igridr,
-						       const char mesh_file[], const char GaussOrder[],
-						       const double Lref, bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, 
-												     const int &ElemGroupNumber,const int &level)):_gridn(igridn), _gridr(igridr) {
+MultiLevelProblem::MultiLevelProblem( MultiLevelMesh *ml_msh, const unsigned short &igridn,const unsigned short &igridr,
+				     const char GaussOrder[]):
+				      _gridn(igridn),
+				      _gridr(igridr),
+				      _ml_msh(ml_msh)
+				      {
 		       
   MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
   MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
@@ -118,40 +119,16 @@ MultiLevelProblem::MultiLevelProblem(const unsigned short &igridn,const unsigned
   type_elem[5][1]=new const elem_type("line","biquadratic",GaussOrder);
   type_elem[5][2]=type_elem[5][1];
 
-  cout << "MESH DATA: " << endl;
-
-  _msh.resize(_gridn);
+  
   _solution.resize(_gridn);
   
-  //coarse mesh
+  for (unsigned i=0; i<_gridn; i++) {
   
-  _msh[0]=new mesh(mesh_file, Lref);
-  _solution[0]=new Solution(_msh[0]);
-    
-  //totally refined meshes
-  for (unsigned i=1; i<_gridr; i++) {
-    _msh[i-1u]->_coordinate->SetElementRefiniement(1);
-    _msh[i] = new mesh(i,_msh[i-1],type_elem); 
-    _solution[i]=new Solution(_msh[i]);
+    _solution[i]=new Solution(_ml_msh->_level[i]);
   }
+       
+  unsigned refindex = _ml_msh->_level[0]->GetRefIndex();
   
-  //partially refined meshes
-  for (unsigned i=_gridr; i<_gridn; i++) {
-    if(SetRefinementFlag==NULL) {
-      cout << "Set Refinement Region flag is not defined! " << endl;
-      exit(1);
-    }
-    else {
-      mesh::_SetRefinementFlag = SetRefinementFlag;
-      _msh[i-1u]->_coordinate->SetElementRefiniement(2);
-    }
-    _msh[i] = new mesh(i,_msh[i-1],type_elem); 
-    _solution[i]=new Solution(_msh[i]);       
-  }
-  _msh[_gridn-1u]->_coordinate->SetElementRefiniement(0);
-      
-  unsigned refindex = _msh[0]->GetRefIndex();
-  // cout << "******" << refindex << endl;
   elem_type::_refindex=refindex;
 
   cout << endl;
@@ -324,7 +301,7 @@ void MultiLevelProblem::init()
 
 //---------------------------------------------------------------------------------------------------
 void MultiLevelProblem::MarkStructureNode() {
-  for (unsigned i=0; i<_gridn; i++) _msh[i]->AllocateAndMarkStructureNode();
+  for (unsigned i=0; i<_gridn; i++) _ml_msh->_level[i]->AllocateAndMarkStructureNode();
 }
 
 //---------------------------------------------------------------------------------------------------
@@ -892,24 +869,24 @@ void MultiLevelProblem::Initialize(const char name[], initfunc func) {
     //CheckVectorSize(i);
     unsigned sol_type = SolType[i];
     for (unsigned ig=0; ig<_gridn; ig++) {
-      unsigned num_el = _msh[ig]->GetElementNumber();
+      unsigned num_el = _ml_msh->_level[ig]->GetElementNumber();
       _solution[ig]->ResizeSolutionVector(SolName[i]);
       if (ig>0) BuildProlongatorMatrix(ig,i);     
       //for parallel
       for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-        for (int iel=_msh[ig]->IS_Mts2Gmt_elem_offset[isdom]; 
-	     iel < _msh[ig]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	  unsigned kel_gmt = _msh[ig]->IS_Mts2Gmt_elem[iel];    
-	  unsigned sol_ord = _msh[ig]->GetEndIndex(SolType[i]);
-	  unsigned nloc_dof= _msh[ig]->el->GetElementDofNumber(kel_gmt,sol_ord);
+        for (int iel=_ml_msh->_level[ig]->IS_Mts2Gmt_elem_offset[isdom]; 
+	     iel < _ml_msh->_level[ig]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	  unsigned kel_gmt = _ml_msh->_level[ig]->IS_Mts2Gmt_elem[iel];    
+	  unsigned sol_ord = _ml_msh->_level[ig]->GetEndIndex(SolType[i]);
+	  unsigned nloc_dof= _ml_msh->_level[ig]->el->GetElementDofNumber(kel_gmt,sol_ord);
 	  if(sol_type<3) {
             for(int j=0; j<nloc_dof; j++) {
-	      unsigned inode=(sol_type<3)?(_msh[ig]->el->GetElementVertexIndex(kel_gmt,j)-1u):(kel_gmt+j*num_el);
-	      int inode_Metis=_msh[ig]->GetMetisDof(inode,sol_type);
-	      unsigned icoord_Metis=_msh[ig]->GetMetisDof(inode,2);
-	      double xx=(*_msh[ig]->_coordinate->_Sol[0])(icoord_Metis);  
-	      double yy=(*_msh[ig]->_coordinate->_Sol[1])(icoord_Metis);
-	      double zz=(*_msh[ig]->_coordinate->_Sol[2])(icoord_Metis);
+	      unsigned inode=(sol_type<3)?(_ml_msh->_level[ig]->el->GetElementVertexIndex(kel_gmt,j)-1u):(kel_gmt+j*num_el);
+	      int inode_Metis=_ml_msh->_level[ig]->GetMetisDof(inode,sol_type);
+	      unsigned icoord_Metis=_ml_msh->_level[ig]->GetMetisDof(inode,2);
+	      double xx=(*_ml_msh->_level[ig]->_coordinate->_Sol[0])(icoord_Metis);  
+	      double yy=(*_ml_msh->_level[ig]->_coordinate->_Sol[1])(icoord_Metis);
+	      double zz=(*_ml_msh->_level[ig]->_coordinate->_Sol[2])(icoord_Metis);
 	      
 	      if(func) {
 		value = (sol_type<3)?func(xx,yy,zz):0;
@@ -1210,22 +1187,22 @@ void MultiLevelProblem::BuildProlongatorMatrix(unsigned gridf, unsigned SolIndex
   if(_solution[gridf]->_ProjMatFlag[TypeIndex]==0){
     _solution[gridf]->_ProjMatFlag[TypeIndex]=1;
 
-    int nf     = _msh[gridf]->MetisOffset[SolType[SolIndex]][_nprocs];
-    int nc     = _msh[gridf-1]->MetisOffset[SolType[SolIndex]][_nprocs];
-    int nf_loc = _msh[gridf]->own_size[SolType[SolIndex]][_iproc];
-    int nc_loc = _msh[gridf-1]->own_size[SolType[SolIndex]][_iproc]; 
+    int nf     = _ml_msh->_level[gridf]->MetisOffset[SolType[SolIndex]][_nprocs];
+    int nc     = _ml_msh->_level[gridf-1]->MetisOffset[SolType[SolIndex]][_nprocs];
+    int nf_loc = _ml_msh->_level[gridf]->own_size[SolType[SolIndex]][_iproc];
+    int nc_loc = _ml_msh->_level[gridf-1]->own_size[SolType[SolIndex]][_iproc]; 
 
     _solution[gridf]->_ProjMat[TypeIndex] = SparseMatrix::build().release();
     _solution[gridf]->_ProjMat[TypeIndex]->init(nf,nc,nf_loc,nc_loc,27,27);
  
     // loop on the coarse grid 
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-      for (int iel_mts=_msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom]; 
-	   iel_mts < _msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = _msh[gridf-1]->IS_Mts2Gmt_elem[iel_mts];
-	if(_msh[gridf-1]->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
-	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
-	  type_elem[ielt][SolType[SolIndex]]->prolongation(*_msh[gridf],*_msh[gridf-1],iel,
+      for (int iel_mts=_ml_msh->_level[gridf-1]->IS_Mts2Gmt_elem_offset[isdom]; 
+	   iel_mts < _ml_msh->_level[gridf-1]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	unsigned iel = _ml_msh->_level[gridf-1]->IS_Mts2Gmt_elem[iel_mts];
+	if(_ml_msh->_level[gridf-1]->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+	  short unsigned ielt=_ml_msh->_level[gridf-1]->el->GetElementType(iel);
+	  type_elem[ielt][SolType[SolIndex]]->prolongation(*_ml_msh->_level[gridf],*_ml_msh->_level[gridf-1],iel,
 							   _solution[gridf]->_ProjMat[TypeIndex]); 
 	}
       }
@@ -1254,21 +1231,21 @@ void MultiLevelProblem::BuildProlongatorMatrices() {
   
   for (unsigned igridn=0; igridn<_gridn; igridn++) {
     for(int itype=0;itype<3;itype++){
-      int ni = _msh[igridn]->MetisOffset[itype][_nprocs];
+      int ni = _ml_msh->_level[igridn]->MetisOffset[itype][_nprocs];
       bool *testnode=new bool [ni];
       for (int jtype=0; jtype<3; jtype++) {
-        int nj = _msh[igridn]->MetisOffset[jtype][_nprocs];
+        int nj = _ml_msh->_level[igridn]->MetisOffset[jtype][_nprocs];
 	memset(testnode,0,ni*sizeof(bool));
 	ProlQitoQj_[itype][jtype][igridn] = SparseMatrix::build().release();
-	ProlQitoQj_[itype][jtype][igridn]->init(ni,nj,_msh[igridn]->own_size[itype][_iproc],
-						_msh[igridn]->own_size[jtype][_iproc],27,27);
+	ProlQitoQj_[itype][jtype][igridn]->init(ni,nj,_ml_msh->_level[igridn]->own_size[itype][_iproc],
+						_ml_msh->_level[igridn]->own_size[jtype][_iproc],27,27);
 		
 	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-	  for (int iel_mts=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-	       iel_mts < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	    unsigned iel = _msh[igridn]->IS_Mts2Gmt_elem[iel_mts];
-	    short unsigned ielt=_msh[igridn]->el->GetElementType(iel);
-            type_elem[ielt][jtype]->ProlQitoQj(*_msh[igridn],iel,ProlQitoQj_[itype][jtype][igridn],testnode,itype);	  
+	  for (int iel_mts=_ml_msh->_level[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+	       iel_mts < _ml_msh->_level[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	    unsigned iel = _ml_msh->_level[igridn]->IS_Mts2Gmt_elem[iel_mts];
+	    short unsigned ielt=_ml_msh->_level[igridn]->el->GetElementType(iel);
+            type_elem[ielt][jtype]->ProlQitoQj(*_ml_msh->_level[igridn],iel,ProlQitoQj_[itype][jtype][igridn],testnode,itype);	  
 	  }
 	}
 	ProlQitoQj_[itype][jtype][igridn]->close();
@@ -1528,25 +1505,25 @@ void MultiLevelProblem::GenerateBdc(const unsigned int k, const double time) {
       // 0 Dirichlet
       for (unsigned igridn=0; igridn<_gridn; igridn++) {
 	if(_solution[igridn]->_ResEpsBdcFlag[k]){
-	  for (unsigned j=_msh[igridn]->MetisOffset[SolType[k]][_iproc]; j<_msh[igridn]->MetisOffset[SolType[k]][_iproc+1]; j++) {
+	  for (unsigned j=_ml_msh->_level[igridn]->MetisOffset[SolType[k]][_iproc]; j<_ml_msh->_level[igridn]->MetisOffset[SolType[k]][_iproc+1]; j++) {
 	    _solution[igridn]->_Bdc[k]->set(j,2.);
 	  }
 	  if (SolType[k]<3) {  
 	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
-	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-		   iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
-		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
-		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
-		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
+	      for (int iel=_ml_msh->_level[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+		   iel < _ml_msh->_level[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+		unsigned kel_gmt = _ml_msh->_level[igridn]->IS_Mts2Gmt_elem[iel];
+		for (unsigned jface=0; jface<_ml_msh->_level[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
+		  if (_ml_msh->_level[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+		    short unsigned ielt=_ml_msh->_level[igridn]->el->GetElementType(kel_gmt);
 		    unsigned nv1=(!_TestIfPressure[k])?
-		      NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt,0)]:
-		      _msh[igridn]->el->GetElementDofNumber(iel,_msh[igridn]->GetEndIndex(SolType[k]));
+		      NV1[ielt][jface<_ml_msh->_level[igridn]->el->GetElementFaceNumber(kel_gmt,0)]:
+		      _ml_msh->_level[igridn]->el->GetElementDofNumber(iel,_ml_msh->_level[igridn]->GetEndIndex(SolType[k]));
 		    for (unsigned iv=0; iv<nv1; iv++) {
 		      unsigned inode=(!_TestIfPressure[k])? 
-			_msh[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
-			_msh[igridn]->el->GetElementVertexIndex(kel_gmt,iv)-1u;
-		      unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
+			_ml_msh->_level[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
+			_ml_msh->_level[igridn]->el->GetElementVertexIndex(kel_gmt,iv)-1u;
+		      unsigned inode_Metis=_ml_msh->_level[igridn]->GetMetisDof(inode,SolType[k]);
 		      _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
 		    }
 		  }
@@ -1554,23 +1531,23 @@ void MultiLevelProblem::GenerateBdc(const unsigned int k, const double time) {
 	      }
 	    }
 	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {  // 0 Dirichlet
-	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-		   iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
-		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
-		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)<0) { //Dirichlet
-		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
-		    unsigned nv1=NV1[ielt][jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt,0)];
+	      for (int iel=_ml_msh->_level[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+		   iel < _ml_msh->_level[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+		unsigned kel_gmt = _ml_msh->_level[igridn]->IS_Mts2Gmt_elem[iel];
+		for (unsigned jface=0; jface<_ml_msh->_level[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
+		  if (_ml_msh->_level[igridn]->el->GetFaceElementIndex(kel_gmt,jface)<0) { //Dirichlet
+		    short unsigned ielt=_ml_msh->_level[igridn]->el->GetElementType(kel_gmt);
+		    unsigned nv1=NV1[ielt][jface<_ml_msh->_level[igridn]->el->GetElementFaceNumber(kel_gmt,0)];
 		    for (unsigned iv=0; iv<nv1; iv++) {
-		      unsigned inode=_msh[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u;
-		      unsigned inode_coord_Metis=_msh[igridn]->GetMetisDof(inode,2);
+		      unsigned inode=_ml_msh->_level[igridn]->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u;
+		      unsigned inode_coord_Metis=_ml_msh->_level[igridn]->GetMetisDof(inode,2);
 		      double value;
-		      double xx=(*_msh[igridn]->_coordinate->_Sol[0])(inode_coord_Metis);  
-		      double yy=(*_msh[igridn]->_coordinate->_Sol[1])(inode_coord_Metis);
-		      double zz=(*_msh[igridn]->_coordinate->_Sol[2])(inode_coord_Metis);
-		      bool test=_SetBoundaryConditionFunction(xx,yy,zz,SolName[k],value,-(_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)+1),time);
+		      double xx=(*_ml_msh->_level[igridn]->_coordinate->_Sol[0])(inode_coord_Metis);  
+		      double yy=(*_ml_msh->_level[igridn]->_coordinate->_Sol[1])(inode_coord_Metis);
+		      double zz=(*_ml_msh->_level[igridn]->_coordinate->_Sol[2])(inode_coord_Metis);
+		      bool test=_SetBoundaryConditionFunction(xx,yy,zz,SolName[k],value,-(_ml_msh->_level[igridn]->el->GetFaceElementIndex(kel_gmt,jface)+1),time);
 		      if (test) {
-			unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
+			unsigned inode_Metis=_ml_msh->_level[igridn]->GetMetisDof(inode,SolType[k]);
 			_solution[igridn]->_Bdc[k]->set(inode_Metis,0.);
 			_solution[igridn]->_Sol[k]->set(inode_Metis,value);
 		      }
@@ -1582,17 +1559,17 @@ void MultiLevelProblem::GenerateBdc(const unsigned int k, const double time) {
 	  }
 	  else if(_TestIfPressure[k]){
 	    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
-	      unsigned nel=_msh[igridn]->GetElementNumber();
-	      for (int iel=_msh[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
-		   iel < _msh[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-		unsigned kel_gmt = _msh[igridn]->IS_Mts2Gmt_elem[iel];
-		for (unsigned jface=0; jface<_msh[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
-		  if (_msh[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
-		    short unsigned ielt=_msh[igridn]->el->GetElementType(kel_gmt);
-		    unsigned nv1=_msh[igridn]->el->GetElementDofNumber(kel_gmt,_msh[igridn]->GetEndIndex(SolType[k]));
+	      unsigned nel=_ml_msh->_level[igridn]->GetElementNumber();
+	      for (int iel=_ml_msh->_level[igridn]->IS_Mts2Gmt_elem_offset[isdom]; 
+		   iel < _ml_msh->_level[igridn]->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+		unsigned kel_gmt = _ml_msh->_level[igridn]->IS_Mts2Gmt_elem[iel];
+		for (unsigned jface=0; jface<_ml_msh->_level[igridn]->el->GetElementFaceNumber(kel_gmt); jface++) {
+		  if (_ml_msh->_level[igridn]->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+		    short unsigned ielt=_ml_msh->_level[igridn]->el->GetElementType(kel_gmt);
+		    unsigned nv1=_ml_msh->_level[igridn]->el->GetElementDofNumber(kel_gmt,_ml_msh->_level[igridn]->GetEndIndex(SolType[k]));
 		    for (unsigned iv=0; iv<nv1; iv++) {
 		      unsigned inode=(kel_gmt+iv*nel);
-		      unsigned inode_Metis=_msh[igridn]->GetMetisDof(inode,SolType[k]);
+		      unsigned inode_Metis=_ml_msh->_level[igridn]->GetMetisDof(inode,SolType[k]);
 		      _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
 		    }
 		  }
@@ -1684,7 +1661,7 @@ void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, 
   unsigned nvt=0;
   unsigned nvt_max=0;
   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    unsigned nvt_ig=_msh[ig]->MetisOffset[index][_nprocs];
+    unsigned nvt_ig=_ml_msh->_level[ig]->MetisOffset[index][_nprocs];
     nvt_max=(nvt_max>nvt_ig)?nvt_max:nvt_ig;
     nvt+=nvt_ig;
   }
@@ -1693,7 +1670,7 @@ void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, 
   vector <NumericVector*> Mysol(igridn);
   for(unsigned ig=igridr-1u; ig<_gridn; ig++) {
     Mysol[ig] = NumericVector::build().release();
-    Mysol[ig]->init(_msh[ig]->MetisOffset[index][_nprocs],_msh[ig]->own_size[index][_iproc],true,AUTOMATIC);
+    Mysol[ig]->init(_ml_msh->_level[ig]->MetisOffset[index][_nprocs],_ml_msh->_level[ig]->own_size[index][_iproc],true,AUTOMATIC);
   }
      
   // ********** Header **********
@@ -1710,10 +1687,10 @@ void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, 
     
   for (int i=0; i<3; i++) {
     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-      Mysol[ig]->matrix_mult(*_msh[ig]->_coordinate->_Sol[i],*ProlQitoQj_[index][2][ig]);
+      Mysol[ig]->matrix_mult(*_ml_msh->_level[ig]->_coordinate->_Sol[i],*ProlQitoQj_[index][2][ig]);
       vector <double> v_local;
       Mysol[ig]->localize_to_one(v_local,0);
-      unsigned nvt_ig=_msh[ig]->MetisOffset[index][_nprocs];      
+      unsigned nvt_ig=_ml_msh->_level[ig]->MetisOffset[index][_nprocs];      
       if(_iproc==0){ 
 	for (unsigned ii=0; ii<nvt_ig; ii++) 
 	  var_nd[ii]= v_local[ii];
@@ -1722,7 +1699,7 @@ void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, 
 	unsigned indDXDYDZ=GetIndex(_moving_vars[i].c_str());
 	Mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indDXDYDZ],*ProlQitoQj_[index][SolType[indDXDYDZ]][ig]);
 	Mysol[ig]->localize_to_one(v_local,0);
-	unsigned nvt_ig=_msh[ig]->MetisOffset[index][_nprocs];      
+	unsigned nvt_ig=_ml_msh->_level[ig]->MetisOffset[index][_nprocs];      
 	if(_iproc==0){ 
 	  for (unsigned ii=0; ii<nvt_ig; ii++) 
 	    var_nd[ii]+= v_local[ii];
@@ -1740,17 +1717,17 @@ void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, 
 
   unsigned nel=0;
   for (unsigned ig=igridr-1u; ig<igridn-1u; ig++)
-    nel+=( _msh[ig]->GetElementNumber() - _msh[ig]->el->GetRefinedElementNumber());
-  nel+=_msh[igridn-1u]->GetElementNumber();
+    nel+=( _ml_msh->_level[ig]->GetElementNumber() - _ml_msh->_level[ig]->el->GetRefinedElementNumber());
+  nel+=_ml_msh->_level[igridn-1u]->GetElementNumber();
   fout.write((char *)&nel,sizeof(unsigned));
 
   unsigned topology[27];
   unsigned offset=1;
   
   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
-      if ( ig==igridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
-        short unsigned ielt=_msh[ig]->el->GetElementType(ii);
+    for (unsigned ii=0; ii<_ml_msh->_level[ig]->GetElementNumber(); ii++) {
+      if ( ig==igridn-1u || 0==_ml_msh->_level[ig]->el->GetRefinedElementIndex(ii)) {
+        short unsigned ielt=_ml_msh->_level[ig]->el->GetElementType(ii);
         if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
         else if (ielt==1) sprintf(det,"ptet%d",eltp[index][1]);
         else if (ielt==2) sprintf(det,"pprism%d",eltp[index][2]);
@@ -1768,15 +1745,15 @@ void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, 
         fout.write((char *)&NVE[ielt][index],sizeof(unsigned));
 	for(unsigned j=0;j<NVE[ielt][index];j++){
 	  
-	  unsigned jnode=_msh[ig]->el->GetElementVertexIndex(ii,j)-1u;
-	  unsigned jnode_Metis = _msh[ig]->GetMetisDof(jnode,index);
+	  unsigned jnode=_ml_msh->_level[ig]->el->GetElementVertexIndex(ii,j)-1u;
+	  unsigned jnode_Metis = _ml_msh->_level[ig]->GetMetisDof(jnode,index);
 	  	  
 	  topology[j]=jnode_Metis+offset;
 	}
 	fout.write((char *)topology,sizeof(unsigned)*NVE[ielt][index]);
       }
     }
-    offset+=_msh[ig]->MetisOffset[index][_nprocs];
+    offset+=_ml_msh->_level[ig]->MetisOffset[index][_nprocs];
   }
   // ********** End printing cell connectivity  **********
   
@@ -1795,9 +1772,9 @@ void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, 
 
   int icount=0;
   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
-      if ( ig==igridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
-	var_el[icount]=_msh[ig]->el->GetElementGroup(ii);
+    for (unsigned ii=0; ii<_ml_msh->_level[ig]->GetElementNumber(); ii++) {
+      if ( ig==igridn-1u || 0==_ml_msh->_level[ig]->el->GetRefinedElementIndex(ii)) {
+	var_el[icount]=_ml_msh->_level[ig]->el->GetElementGroup(ii);
         icount++;
       }
     }
@@ -1811,9 +1788,9 @@ void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, 
 
     int icount=0;
     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-      for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
-	if ( ig==igridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
-	  var_el[icount]=_msh[ig]->epart[ii];
+      for (unsigned ii=0; ii<_ml_msh->_level[ig]->GetElementNumber(); ii++) {
+	if ( ig==igridn-1u || 0==_ml_msh->_level[ig]->el->GetRefinedElementIndex(ii)) {
+	  var_el[icount]=_ml_msh->_level[ig]->epart[ii];
 	  icount++;
 	}
       }
@@ -1878,9 +1855,9 @@ void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, 
 	    else{
 	      _solution[ig]->_Eps[i]->localize_to_one(v_local,0);
 	    }
-	    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
-	      if ( ig==igridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
-		unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,SolType[i]);
+	    for (unsigned ii=0; ii<_ml_msh->_level[ig]->GetElementNumber(); ii++) {
+	      if ( ig==igridn-1u || 0==_ml_msh->_level[ig]->el->GetRefinedElementIndex(ii)) {
+		unsigned iel_Metis = _ml_msh->_level[ig]->GetMetisDof(ii,SolType[i]);
 		var_el[icount]=v_local[iel_Metis];
 		icount++;
 	      }
@@ -1962,28 +1939,28 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
   
   unsigned nvt=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    unsigned nvt_ig=_msh[ig]->MetisOffset[index_nd][_nprocs];
+    unsigned nvt_ig=_ml_msh->_level[ig]->MetisOffset[index_nd][_nprocs];
     nvt+=nvt_ig;
   }  
 
   unsigned nel=0;
   unsigned counter=0;
   for (unsigned ig=_gridr-1u; ig<_gridn-1u; ig++) {
-    nel+=( _msh[ig]->GetElementNumber() - _msh[ig]->el->GetRefinedElementNumber());
-    counter+=(_msh[ig]->el->GetElementNumber("Hex")-_msh[ig]->el->GetRefinedElementNumber("Hex"))*NVE[0][index];
-    counter+=(_msh[ig]->el->GetElementNumber("Tet")-_msh[ig]->el->GetRefinedElementNumber("Tet"))*NVE[1][index];
-    counter+=(_msh[ig]->el->GetElementNumber("Wedge")-_msh[ig]->el->GetRefinedElementNumber("Wedge"))*NVE[2][index];
-    counter+=(_msh[ig]->el->GetElementNumber("Quad")-_msh[ig]->el->GetRefinedElementNumber("Quad"))*NVE[3][index];
-    counter+=(_msh[ig]->el->GetElementNumber("Triangle")-_msh[ig]->el->GetRefinedElementNumber("Triangle"))*NVE[4][index];
-    counter+=(_msh[ig]->el->GetElementNumber("Line")-_msh[ig]->el->GetRefinedElementNumber("Line"))*NVE[5][index];
+    nel+=( _ml_msh->_level[ig]->GetElementNumber() - _ml_msh->_level[ig]->el->GetRefinedElementNumber());
+    counter+=(_ml_msh->_level[ig]->el->GetElementNumber("Hex")-_ml_msh->_level[ig]->el->GetRefinedElementNumber("Hex"))*NVE[0][index];
+    counter+=(_ml_msh->_level[ig]->el->GetElementNumber("Tet")-_ml_msh->_level[ig]->el->GetRefinedElementNumber("Tet"))*NVE[1][index];
+    counter+=(_ml_msh->_level[ig]->el->GetElementNumber("Wedge")-_ml_msh->_level[ig]->el->GetRefinedElementNumber("Wedge"))*NVE[2][index];
+    counter+=(_ml_msh->_level[ig]->el->GetElementNumber("Quad")-_ml_msh->_level[ig]->el->GetRefinedElementNumber("Quad"))*NVE[3][index];
+    counter+=(_ml_msh->_level[ig]->el->GetElementNumber("Triangle")-_ml_msh->_level[ig]->el->GetRefinedElementNumber("Triangle"))*NVE[4][index];
+    counter+=(_ml_msh->_level[ig]->el->GetElementNumber("Line")-_ml_msh->_level[ig]->el->GetRefinedElementNumber("Line"))*NVE[5][index];
   }
-  nel+=_msh[_gridn-1u]->GetElementNumber();
-  counter+=_msh[_gridn-1u]->el->GetElementNumber("Hex")*NVE[0][index];
-  counter+=_msh[_gridn-1u]->el->GetElementNumber("Tet")*NVE[1][index];
-  counter+=_msh[_gridn-1u]->el->GetElementNumber("Wedge")*NVE[2][index];
-  counter+=_msh[_gridn-1u]->el->GetElementNumber("Quad")*NVE[3][index];
-  counter+=_msh[_gridn-1u]->el->GetElementNumber("Triangle")*NVE[4][index];
-  counter+=_msh[_gridn-1u]->el->GetElementNumber("Line")*NVE[5][index]; 
+  nel+=_ml_msh->_level[_gridn-1u]->GetElementNumber();
+  counter+=_ml_msh->_level[_gridn-1u]->el->GetElementNumber("Hex")*NVE[0][index];
+  counter+=_ml_msh->_level[_gridn-1u]->el->GetElementNumber("Tet")*NVE[1][index];
+  counter+=_ml_msh->_level[_gridn-1u]->el->GetElementNumber("Wedge")*NVE[2][index];
+  counter+=_ml_msh->_level[_gridn-1u]->el->GetElementNumber("Quad")*NVE[3][index];
+  counter+=_ml_msh->_level[_gridn-1u]->el->GetElementNumber("Triangle")*NVE[4][index];
+  counter+=_ml_msh->_level[_gridn-1u]->el->GetElementNumber("Line")*NVE[5][index]; 
   
   const unsigned dim_array_coord [] = { nvt*3*sizeof(float) };  
   const unsigned dim_array_conn[]   = { counter*sizeof(int) };
@@ -2014,7 +1991,7 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
   vector <NumericVector*> mysol(_gridn);
   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     mysol[ig] = NumericVector::build().release();
-    mysol[ig]->init(_msh[ig]->MetisOffset[index_nd][_nprocs],_msh[ig]->own_size[index_nd][_iproc],
+    mysol[ig]->init(_ml_msh->_level[ig]->MetisOffset[index_nd][_nprocs],_ml_msh->_level[ig]->own_size[index_nd][_iproc],
 		    true,AUTOMATIC);
   }
   
@@ -2024,9 +2001,9 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
   unsigned offset_nvt3=0;
   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     std::vector<double> v_local;
-    unsigned nvt_ig=_msh[ig]->MetisOffset[index_nd][_nprocs];
+    unsigned nvt_ig=_ml_msh->_level[ig]->MetisOffset[index_nd][_nprocs];
     for(int kk=0;kk<3;kk++) {
-      mysol[ig]->matrix_mult(*_msh[ig]->_coordinate->_Sol[kk],*ProlQitoQj_[index_nd][2][ig]);
+      mysol[ig]->matrix_mult(*_ml_msh->_level[ig]->_coordinate->_Sol[kk],*ProlQitoQj_[index_nd][2][ig]);
       mysol[ig]->localize_to_one(v_local,0);
       if(_iproc==0) { 
 	for (unsigned i=0; i<nvt_ig; i++) {
@@ -2043,14 +2020,14 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
     unsigned indDXDYDZ[3];
     indDXDYDZ[0]=GetIndex(_moving_vars[0].c_str());
     indDXDYDZ[1]=GetIndex(_moving_vars[1].c_str());
-    if(_msh[0]->GetDimension() == 3) {
+    if(_ml_msh->_level[0]->GetDimension() == 3) {
       indDXDYDZ[2]=GetIndex(_moving_vars[2].c_str());
     }
       
     for(unsigned ig=_gridr-1u; ig<_gridn; ig++){
       std::vector<double> v_local;
-      unsigned nvt_ig=_msh[ig]->MetisOffset[index_nd][_nprocs];
-      for(int kk=0;kk<_msh[0]->GetDimension();kk++) {
+      unsigned nvt_ig=_ml_msh->_level[ig]->MetisOffset[index_nd][_nprocs];
+      for(int kk=0;kk<_ml_msh->_level[0]->GetDimension();kk++) {
 	mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indDXDYDZ[kk]],*ProlQitoQj_[index_nd][SolType[indDXDYDZ[kk]]][ig]);
         mysol[ig]->localize_to_one(v_local,0);
 	if(_iproc==0) { 
@@ -2094,17 +2071,17 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
   icount = 0;
   unsigned offset_nvt=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_msh[ig]->GetElementNumber(); iel++) {
-      if (_msh[ig]->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-        for (unsigned j=0; j<_msh[ig]->el->GetElementDofNumber(iel,index); j++) {
-	  unsigned jnode=_msh[ig]->el->GetElementVertexIndex(iel,j)-1u;
-	  unsigned jnode_Metis = _msh[ig]->GetMetisDof(jnode,index_nd);
+    for (unsigned iel=0; iel<_ml_msh->_level[ig]->GetElementNumber(); iel++) {
+      if (_ml_msh->_level[ig]->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
+        for (unsigned j=0; j<_ml_msh->_level[ig]->el->GetElementDofNumber(iel,index); j++) {
+	  unsigned jnode=_ml_msh->_level[ig]->el->GetElementVertexIndex(iel,j)-1u;
+	  unsigned jnode_Metis = _ml_msh->_level[ig]->GetMetisDof(jnode,index_nd);
 	  var_conn[icount] = offset_nvt+jnode_Metis;
 	  icount++;
 	}
       }
     }
-    offset_nvt+=_msh[ig]->MetisOffset[index_nd][_nprocs];
+    offset_nvt+=_ml_msh->_level[ig]->MetisOffset[index_nd][_nprocs];
   }
   
   //print connectivity dimension
@@ -2134,10 +2111,10 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
   int offset_el=0;
   //print offset array
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_msh[ig]->GetElementNumber(); iel++) {
-      if (_msh[ig]->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-	unsigned iel_Metis = _msh[ig]->GetMetisDof(iel,3);
-        offset_el += _msh[ig]->el->GetElementDofNumber(iel_Metis,index);
+    for (unsigned iel=0; iel<_ml_msh->_level[ig]->GetElementNumber(); iel++) {
+      if (_ml_msh->_level[ig]->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
+	unsigned iel_Metis = _ml_msh->_level[ig]->GetMetisDof(iel,3);
+        offset_el += _ml_msh->_level[ig]->el->GetElementDofNumber(iel_Metis,index);
         var_off[icount] = offset_el;
 	icount++;
       }
@@ -2169,10 +2146,10 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
   unsigned short *var_type = static_cast <unsigned short*> (buffer_void);
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
-      if (_msh[ig]->el->GetRefinedElementIndex(ii)==0 || ig==_gridn-1u) {
-	unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
-        short unsigned ielt=_msh[ig]->el->GetElementType(iel_Metis);
+    for (unsigned ii=0; ii<_ml_msh->_level[ig]->GetElementNumber(); ii++) {
+      if (_ml_msh->_level[ig]->el->GetRefinedElementIndex(ii)==0 || ig==_gridn-1u) {
+	unsigned iel_Metis = _ml_msh->_level[ig]->GetMetisDof(ii,3);
+        short unsigned ielt=_ml_msh->_level[ig]->el->GetElementType(iel_Metis);
 	var_type[icount] = (short unsigned)(eltp[index][ielt]);
 	icount++;
       }
@@ -2211,10 +2188,10 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
   unsigned short* var_reg=static_cast <unsigned short*> (buffer_void);
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
-      if ( ig==_gridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
-	var_reg[icount]= _msh[ig]->el->GetElementGroup(ii);
+    for (unsigned ii=0; ii<_ml_msh->_level[ig]->GetElementNumber(); ii++) {
+      if ( ig==_gridn-1u || 0==_ml_msh->_level[ig]->el->GetRefinedElementIndex(ii)) {
+	unsigned iel_Metis = _ml_msh->_level[ig]->GetMetisDof(ii,3);
+	var_reg[icount]= _ml_msh->_level[ig]->el->GetElementGroup(ii);
 	icount++;
       }
     }
@@ -2243,10 +2220,10 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
   unsigned short* var_proc=static_cast <unsigned short*> (buffer_void);
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
-      if ( ig==_gridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
-	var_proc[icount]=(unsigned short)(_msh[ig]->epart[ii]);
+    for (unsigned ii=0; ii<_ml_msh->_level[ig]->GetElementNumber(); ii++) {
+      if ( ig==_gridn-1u || 0==_ml_msh->_level[ig]->el->GetRefinedElementIndex(ii)) {
+	unsigned iel_Metis = _ml_msh->_level[ig]->GetMetisDof(ii,3);
+	var_proc[icount]=(unsigned short)(_ml_msh->_level[ig]->epart[ii]);
 	icount++;
       }
     }
@@ -2280,9 +2257,9 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
       for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
 	vector<double> sol_local;
 	_solution[ig]->_Sol[indx]->localize_to_one(sol_local,0);
-	for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
-	  if (ig==_gridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
-	    unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,SolType[indx]);
+	for (unsigned ii=0; ii<_ml_msh->_level[ig]->GetElementNumber(); ii++) {
+	  if (ig==_gridn-1u || 0==_ml_msh->_level[ig]->el->GetRefinedElementIndex(ii)) {
+	    unsigned iel_Metis = _ml_msh->_level[ig]->GetMetisDof(ii,SolType[indx]);
 	    var_el[icount]=sol_local[iel_Metis];
 	    icount++;
 	  }
@@ -2332,7 +2309,7 @@ void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std:
 	mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indx],*ProlQitoQj_[index_nd][SolType[indx]][ig]);
 	vector<double> sol_local;
 	mysol[ig]->localize_to_one(sol_local,0);
-	unsigned nvt_ig=_msh[ig]->MetisOffset[index_nd][_nprocs];
+	unsigned nvt_ig=_ml_msh->_level[ig]->MetisOffset[index_nd][_nprocs];
 	for (unsigned ii=0; ii<nvt_ig; ii++) {
 	  var_nd[ii+offset_nvt] = sol_local[ii];
 	}
@@ -2412,25 +2389,25 @@ void  MultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vector<std::
   
   //I assume that the mesh is not mixed
   string type_elem;
-  type_elem = type_el[index][_msh[_gridn-1u]->el->GetElementType(0)];
+  type_elem = type_el[index][_ml_msh->_level[_gridn-1u]->el->GetElementType(0)];
   
   if (type_elem.compare("Not_implemented") == 0) exit(1);
   
   unsigned nvt=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    unsigned nvt_ig=_msh[ig]->GetDofNumber(index_nd);
+    unsigned nvt_ig=_ml_msh->_level[ig]->GetDofNumber(index_nd);
     nvt+=nvt_ig;
   } 
   
   // Printing connectivity
   unsigned nel=0;
   for(unsigned ig=0;ig<_gridn-1u;ig++) {
-    nel+=( _msh[ig]->GetElementNumber() - _msh[ig]->el->GetRefinedElementNumber());
+    nel+=( _ml_msh->_level[ig]->GetElementNumber() - _ml_msh->_level[ig]->el->GetRefinedElementNumber());
   }
-  nel+=_msh[_gridn-1u]->GetElementNumber();
+  nel+=_ml_msh->_level[_gridn-1u]->GetElementNumber();
   
   unsigned icount;
-  unsigned el_dof_number  = _msh[_gridn-1u]->el->GetElementDofNumber(0,index);
+  unsigned el_dof_number  = _ml_msh->_level[_gridn-1u]->el->GetElementDofNumber(0,index);
   int *var_int             = new int [nel*el_dof_number];
   float *var_el_f         = new float [nel];
   float *var_nd_f         = new float [nvt];
@@ -2533,9 +2510,9 @@ void  MultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vector<std::
     for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
       NumericVector* mysol;
       mysol = NumericVector::build().release();
-      mysol->init(_msh[ig]->GetDofNumber(index_nd),_msh[ig]->GetDofNumber(index_nd),true,SERIAL);
+      mysol->init(_ml_msh->_level[ig]->GetDofNumber(index_nd),_ml_msh->_level[ig]->GetDofNumber(index_nd),true,SERIAL);
       mysol->matrix_mult(*_solution[ig]->_Sol[varind[i]],*ProlQitoQj_[index_nd][SolType[varind[i]]][ig]);
-      unsigned nvt_ig=_msh[ig]->GetDofNumber(index_nd);
+      unsigned nvt_ig=_ml_msh->_level[ig]->GetDofNumber(index_nd);
       for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
       if (_moving_mesh) {
 	unsigned varind_DXDYDZ=GetIndex(_moving_vars[i].c_str());
@@ -2564,17 +2541,17 @@ void  MultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vector<std::
   icount = 0;
   unsigned offset_conn=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_msh[ig]->GetElementNumber(); iel++) {
-      if (_msh[ig]->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-        for (unsigned j=0; j<_msh[ig]->el->GetElementDofNumber(iel,index); j++) {
-	  unsigned jnode=_msh[ig]->el->GetElementVertexIndex(iel,j)-1u;
-	  unsigned jnode_Metis = _msh[ig]->GetMetisDof(jnode,index_nd);
+    for (unsigned iel=0; iel<_ml_msh->_level[ig]->GetElementNumber(); iel++) {
+      if (_ml_msh->_level[ig]->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
+        for (unsigned j=0; j<_ml_msh->_level[ig]->el->GetElementDofNumber(iel,index); j++) {
+	  unsigned jnode=_ml_msh->_level[ig]->el->GetElementVertexIndex(iel,j)-1u;
+	  unsigned jnode_Metis = _ml_msh->_level[ig]->GetMetisDof(jnode,index_nd);
 	  var_int[icount] = offset_conn + jnode_Metis;
 	  icount++;
 	}
       }
     }
-    offset_conn += _msh[ig]->GetDofNumber(index_nd);
+    offset_conn += _ml_msh->_level[ig]->GetDofNumber(index_nd);
   }
   
   dimsf[0] = nel*el_dof_number ;  dimsf[1] = 1;
@@ -2591,10 +2568,10 @@ void  MultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vector<std::
   // print regions
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
-      if (ig==_gridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,3);
-	var_int[icount] = _msh[ig]->el->GetElementGroup(iel_Metis);
+    for (unsigned ii=0; ii<_ml_msh->_level[ig]->GetElementNumber(); ii++) {
+      if (ig==_gridn-1u || 0==_ml_msh->_level[ig]->el->GetRefinedElementIndex(ii)) {
+	unsigned iel_Metis = _ml_msh->_level[ig]->GetMetisDof(ii,3);
+	var_int[icount] = _ml_msh->_level[ig]->el->GetElementGroup(iel_Metis);
 	icount++;
       }
     }
@@ -2615,9 +2592,9 @@ void  MultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vector<std::
     if (SolType[indx]>=3) {
       icount=0;
       for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	for (unsigned ii=0; ii<_msh[ig]->GetElementNumber(); ii++) {
-	  if (ig==_gridn-1u || 0==_msh[ig]->el->GetRefinedElementIndex(ii)) {
-	    unsigned iel_Metis = _msh[ig]->GetMetisDof(ii,SolType[indx]);
+	for (unsigned ii=0; ii<_ml_msh->_level[ig]->GetElementNumber(); ii++) {
+	  if (ig==_gridn-1u || 0==_ml_msh->_level[ig]->el->GetRefinedElementIndex(ii)) {
+	    unsigned iel_Metis = _ml_msh->_level[ig]->GetMetisDof(ii,SolType[indx]);
 	    var_el_f[icount]=(*_solution[ig]->_Sol[indx])(iel_Metis);
 	    icount++;
 	  }
@@ -2644,9 +2621,9 @@ void  MultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vector<std::
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
         NumericVector* mysol;
 	mysol = NumericVector::build().release();
-        mysol->init(_msh[ig]->GetDofNumber(index_nd),_msh[ig]->GetDofNumber(index_nd),true,SERIAL);
+        mysol->init(_ml_msh->_level[ig]->GetDofNumber(index_nd),_ml_msh->_level[ig]->GetDofNumber(index_nd),true,SERIAL);
 	mysol->matrix_mult(*_solution[ig]->_Sol[indx],*ProlQitoQj_[index_nd][SolType[indx]][ig]);
-	unsigned nvt_ig=_msh[ig]->GetDofNumber(index_nd);
+	unsigned nvt_ig=_ml_msh->_level[ig]->GetDofNumber(index_nd);
 	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
 	offset_nvt+=nvt_ig;
 	delete mysol;

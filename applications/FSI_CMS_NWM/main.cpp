@@ -1,5 +1,6 @@
 #include "ElemType.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelMesh.hpp"
 // Timedependent MultiGrid Header
 #include "NonLinearTimeDependentMultiLevelProblem.hpp"
 #include "NumericVector.hpp"
@@ -58,7 +59,9 @@ int main(int argc,char **args) {
   double ni = 0.3;
   double E = 200000;
   
-  MultiLevelProblem ml_probl(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
+  MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
+  MultiLevelProblem ml_probl(&ml_msh,nm,nr,"fifth");
+  
 
   Parameter par(Lref,Uref);
   
