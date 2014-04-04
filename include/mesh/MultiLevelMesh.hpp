@@ -31,14 +31,15 @@ class MultiLevelMesh {
 
 private:
   const elem_type *type_elem[6][5]; 
-  unsigned short _gridn, _gridr;  
+  unsigned short _gridn, _gridr;
+  /** Array of mesh */
+  std::vector <mesh*> _level;
 protected:
   
   
  public:
     
-  /** Array of mesh */
-  std::vector <mesh*> _level;
+  
  
   /** Constructor */
   MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr,
@@ -49,6 +50,8 @@ protected:
   /** Destructor */
   ~MultiLevelMesh();
 
+  mesh* GetLevel(const unsigned i) {return _level[i];};
+  
   unsigned GetNumberOfGrid();
   unsigned GetNumberOfGridTotallyRefined();
 };
