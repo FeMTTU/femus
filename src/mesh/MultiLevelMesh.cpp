@@ -112,12 +112,6 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
   _type_elem[5][1]=new const elem_type("line","biquadratic",GaussOrder);
   _type_elem[5][2]=_type_elem[5][1];
   
-  
-  
-  
-  
-  
-    
   //totally refined meshes
   for (unsigned i=1; i<_gridr; i++) {
     _level[i-1u]->_coordinate->SetElementRefiniement(1);
@@ -142,3 +136,20 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
   elem_type::_refindex=refindex;
     
 }
+
+
+void MultiLevelMesh::EraseCoarseLevels(unsigned levels_to_be_erased){
+  if(levels_to_be_erased >= _gridr){
+    levels_to_be_erased = _gridr-1;
+    cout<<"Warning the number of levels to be erased has been reduced to"<<levels_to_be_erased;
+  }
+  for (unsigned i=0; i<levels_to_be_erased; i++) {
+    delete _level[i];
+  }
+  _level.erase(_level.begin(),_level.begin()+levels_to_be_erased);
+  _gridr -= levels_to_be_erased;
+  _gridn -= levels_to_be_erased;
+}
+  
+  
+

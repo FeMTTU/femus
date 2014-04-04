@@ -61,8 +61,9 @@ int main(int argc,char **args) {
   double Uref = 1.;
   
   //Steadystate NonLinearMultiLevelProblem  
-  MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,SetRefinementFlag);  
-  MultiLevelProblem ml_prob(&ml_msh,nm,nr,"seventh");
+  MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,SetRefinementFlag); 
+  //ml_msh.EraseCoarseLevels(1);
+  MultiLevelProblem ml_prob(&ml_msh);
   
   // add fluid material
   Parameter parameter(Lref,Uref);

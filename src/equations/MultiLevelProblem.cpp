@@ -61,10 +61,9 @@ MultiLevelProblem::~MultiLevelProblem() {
 };
 
 //---------------------------------------------------------------------------------------------------
-MultiLevelProblem::MultiLevelProblem( MultiLevelMesh *ml_msh, const unsigned short &igridn,const unsigned short &igridr,
-				     const char GaussOrder[]):
-				      _gridn(igridn),
-				      _gridr(igridr),
+MultiLevelProblem::MultiLevelProblem( MultiLevelMesh *ml_msh):
+				      _gridn(ml_msh->GetNumberOfGrid()),
+				      _gridr(ml_msh->GetNumberOfGridTotallyRefined()),
 				      _ml_msh(ml_msh)
 				      {
 		       
