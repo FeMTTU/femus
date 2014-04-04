@@ -126,15 +126,15 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
     
 	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
 	  if(TestDisp){
-	    _equation_systems.type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildRestrictionTranspose(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
+	    _equation_systems._ml_msh->_type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildRestrictionTranspose(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
  													      RRt,SolIndex,k, TestDisp);
 	  }
 	  else{
-	    _equation_systems.type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
+	    _equation_systems._ml_msh->_type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
 												      RRt,SolIndex,k);
 	  }
 	  
-	  _equation_systems.type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
+	  _equation_systems._ml_msh->_type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
 												    _LinSolver[gridf]->_PP,SolIndex,k);
 	}
       }

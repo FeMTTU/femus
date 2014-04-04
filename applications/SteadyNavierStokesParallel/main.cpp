@@ -61,9 +61,6 @@ int main(int argc,char **args) {
   double Uref = 1.;
   
   //Steadystate NonLinearMultiLevelProblem  
-  
-  
-  
   MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,SetRefinementFlag);  
   MultiLevelProblem ml_prob(&ml_msh,nm,nr,"seventh");
   
@@ -478,10 +475,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
    
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
       // *** Gauss poit loop ***
-      for(unsigned ig=0;ig < ml_prob.type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
-	(ml_prob.type_elem[kelt][order_ind2]->*(ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(coordinates,ig,Weight2,phi2,gradphi2);
-	phi1=ml_prob.type_elem[kelt][order_ind1]->GetPhi(ig);
+	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(coordinates,ig,Weight2,phi2,gradphi2);
+	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
 
 	//velocity variable
 	for(unsigned ivar=0; ivar<dim; ivar++) {
@@ -734,9 +731,9 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
         
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
       // *** Gauss poit loop ***
-      for(unsigned ig=0;ig < ml_prob.type_elem[kelt][order_ind]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
-	(ml_prob.type_elem[kelt][order_ind]->*(ml_prob.type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi);
+	(ml_prob._ml_msh->_type_elem[kelt][order_ind]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi);
 	//Temperature and velocity current solution
 	double SolT=0;
 	vector < double > gradSolT(dim,0.);

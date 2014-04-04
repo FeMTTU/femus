@@ -309,14 +309,14 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
        
     if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
       /// *** Gauss point loop ***
-      for (unsigned ig=0;ig < ml_prob.type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
 
 	// *** get Jacobian and test function and test function derivatives in the moving frame***
-	(ml_prob.type_elem[kelt][order_ind2]->*(ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
-	(ml_prob.type_elem[kelt][order_ind2]->*(ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_old,ig,Weight_old,phi_old,gradphi_old);
-	(ml_prob.type_elem[kelt][order_ind2]->*(ml_prob.type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
-	phi1=ml_prob.type_elem[kelt][order_ind1]->GetPhi(ig);
-	if (flag_mat==2) Weight_nojac = ml_prob.type_elem[kelt][order_ind2]->GetGaussWeight(ig);
+	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
+	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_old,ig,Weight_old,phi_old,gradphi_old);
+	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
+	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
+	if (flag_mat==2) Weight_nojac = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
 
 	// ---------------------------------------------------------------------------
 	// displacement and velocity

@@ -30,15 +30,16 @@ class mesh;
 class MultiLevelMesh {
 
 private:
-  const elem_type *type_elem[6][5]; 
+ 
   unsigned short _gridn, _gridr;
   /** Array of mesh */
   std::vector <mesh*> _level;
+  std::vector <bool> _type_elem_flag;
 protected:
   
   
  public:
-    
+     const elem_type *_type_elem[6][5]; 
   
  
   /** Constructor */

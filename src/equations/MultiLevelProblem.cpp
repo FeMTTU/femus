@@ -54,24 +54,6 @@ MultiLevelProblem::~MultiLevelProblem() {
     delete _solution[i];
   }
 
-  for (unsigned i=0; i<3; i++)
-    for (unsigned j=0; j<3; j++)
-      if (1!=i || 2!=j) delete type_elem[i][j];
-
-  for (unsigned i=3; i<5; i++)
-    for (unsigned j=0; j<3; j++)
-      if (4!=i || 2!=j) delete type_elem[i][j];
-
-  delete type_elem[5][0];
-  delete type_elem[5][1];
-
-  delete type_elem[0][3];
-  delete type_elem[0][4];
-
-  delete type_elem[3][3];
-  delete type_elem[3][4];
-
-
   for (unsigned i=0; i<SolName.size(); i++) delete [] SolName[i];
   for (unsigned i=0; i<SolName.size(); i++) delete [] BdcType[i];
 
@@ -88,50 +70,12 @@ MultiLevelProblem::MultiLevelProblem( MultiLevelMesh *ml_msh, const unsigned sho
 		       
   MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
   MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
-
-  type_elem[0][0]=new const elem_type("hex","linear",GaussOrder);
-  type_elem[0][1]=new const elem_type("hex","quadratic",GaussOrder);
-  type_elem[0][2]=new const elem_type("hex","biquadratic",GaussOrder);
-  type_elem[0][3]=new const elem_type("hex","constant",GaussOrder);
-  type_elem[0][4]=new const elem_type("hex","disc_linear",GaussOrder);
-
-
-  type_elem[1][0]=new const elem_type("tet","linear",GaussOrder);
-  type_elem[1][1]=new const elem_type("tet","biquadratic",GaussOrder);
-  type_elem[1][2]=type_elem[1][1];
-
-  type_elem[2][0]=new const elem_type("wedge","linear",GaussOrder);
-  type_elem[2][1]=new const elem_type("wedge","quadratic",GaussOrder);
-  type_elem[2][2]=new const elem_type("wedge","biquadratic",GaussOrder);
-
-  type_elem[3][0]=new const elem_type("quad","linear",GaussOrder);
-  type_elem[3][1]=new const elem_type("quad","quadratic",GaussOrder);
-  type_elem[3][2]=new const elem_type("quad","biquadratic",GaussOrder);
-  type_elem[3][3]=new const elem_type("quad","constant",GaussOrder);
-  type_elem[3][4]=new const elem_type("quad","disc_linear",GaussOrder);
-
-
-  type_elem[4][0]=new const elem_type("tri","linear",GaussOrder);
-  type_elem[4][1]=new const elem_type("tri","biquadratic",GaussOrder);
-  type_elem[4][2]=type_elem[4][1];
-
-  type_elem[5][0]=new const elem_type("line","linear",GaussOrder);
-  type_elem[5][1]=new const elem_type("line","biquadratic",GaussOrder);
-  type_elem[5][2]=type_elem[5][1];
-
-  
   _solution.resize(_gridn);
   
   for (unsigned i=0; i<_gridn; i++) {
-  
     _solution[i]=new Solution(_ml_msh->GetLevel(i));
   }
-       
-  unsigned refindex = _ml_msh->GetLevel(0)->GetRefIndex();
-  
-  elem_type::_refindex=refindex;
-
-  cout << endl;
+    
   _moving_mesh=0;
   _init_func_set=false;
   _bdc_func_set=false;
@@ -1202,7 +1146,7 @@ void MultiLevelProblem::BuildProlongatorMatrix(unsigned gridf, unsigned SolIndex
 	unsigned iel = _ml_msh->GetLevel(gridf-1)->IS_Mts2Gmt_elem[iel_mts];
 	if(_ml_msh->GetLevel(gridf-1)->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
 	  short unsigned ielt=_ml_msh->GetLevel(gridf-1)->el->GetElementType(iel);
-	  type_elem[ielt][SolType[SolIndex]]->prolongation(*_ml_msh->GetLevel(gridf),*_ml_msh->GetLevel(gridf-1),iel,
+	  _ml_msh->_type_elem[ielt][SolType[SolIndex]]->prolongation(*_ml_msh->GetLevel(gridf),*_ml_msh->GetLevel(gridf-1),iel,
 							   _solution[gridf]->_ProjMat[TypeIndex]); 
 	}
       }
@@ -1245,7 +1189,7 @@ void MultiLevelProblem::BuildProlongatorMatrices() {
 	       iel_mts < _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
 	    unsigned iel = _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel_mts];
 	    short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(iel);
-            type_elem[ielt][jtype]->ProlQitoQj(*_ml_msh->GetLevel(igridn),iel,ProlQitoQj_[itype][jtype][igridn],testnode,itype);	  
+            _ml_msh->_type_elem[ielt][jtype]->ProlQitoQj(*_ml_msh->GetLevel(igridn),iel,ProlQitoQj_[itype][jtype][igridn],testnode,itype);	  
 	  }
 	}
 	ProlQitoQj_[itype][jtype][igridn]->close();

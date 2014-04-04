@@ -68,7 +68,7 @@ public:
   //unsigned grid;
   elem *el;  // elements
   // Constructor - destructor *****************************
-  mesh(const char [], const double Lref);
+  mesh(const char [], const double Lref, std::vector<bool> &_type_elem_flag);
   mesh(const unsigned &igrid,mesh *mshc, const elem_type* type_elem[6][5]);
   ~mesh();
 
@@ -76,7 +76,7 @@ public:
   void generate_metis_mesh_partition();
     
   void Read1D(const char infile [], vector < vector < double> > &vt);
-  void ReadGambit(const char infile [], vector < vector < double> > &vt,const double Lref);
+  void ReadGambit(const char infile [], vector < vector < double> > &vt,const double Lref,std::vector<bool> &type_elem_flag);
   unsigned GetProcID() const;
   unsigned GetNumProcs() const;
   
