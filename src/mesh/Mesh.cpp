@@ -45,7 +45,7 @@ unsigned mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
 /**
  *  This constructur generates the coarse mesh level, $l_0$, from the gambit data file
  **/
-mesh::mesh(const char infile[],  const double Lref) {
+mesh::mesh(const char infile[],  const double Lref, std::vector<bool> &type_elem_flag) {
   
   MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
   MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
@@ -59,7 +59,7 @@ mesh::mesh(const char infile[],  const double Lref) {
   //   if(DIM[0]==1)
   //     Read1D(infile,vt);
   //   else
-  ReadGambit(infile,vt,Lref);
+  ReadGambit(infile,vt,Lref,type_elem_flag);
 
   // connectivity: find all the element near the vertices
   BuildAdjVtx();
@@ -1024,7 +1024,7 @@ void mesh::Read1D(const char infile [], vector < vector < double> > &vt) {
  * This function read the data form the gambit file.
  * It is used in the constructor of the coarse mesh.
  **/
-void mesh::ReadGambit(const char infile [], vector < vector < double> > &vt, const double Lref) {
+void mesh::ReadGambit(const char infile [], vector < vector < double> > &vt, const double Lref, std::vector<bool> &type_elem_flag) {
   // set the file
   const unsigned GambitVertexIndex[6][27]= {{
       4,16,0,15,23,11,7,19,3,
@@ -1099,24 +1099,27 @@ void mesh::ReadGambit(const char infile [], vector < vector < double> > &vt, con
     unsigned nve;
     inf >> str2 >> str2 >> nve;
     if (nve==27) {
+      type_elem_flag[0]=type_elem_flag[3]=true;
       el->AddToElementNumber(1,"Hex");
       el->SetElementType(iel,0);
     } else if (nve==10) {
+      type_elem_flag[1]=type_elem_flag[4]=true;
       el->AddToElementNumber(1,"Tet");
       el->SetElementType(iel,1);
     } else if (nve==18) {
+      type_elem_flag[2]=type_elem_flag[3]=type_elem_flag[4]=true;
       el->AddToElementNumber(1,"Wedge");
       el->SetElementType(iel,2);
     } else if (nve==9) {
+      type_elem_flag[3]=true;
       el->AddToElementNumber(1,"Quad");
       el->SetElementType(iel,3);
     }
-//     else if(nve==6 && DIM[1]==1){
     else if (nve==6 && mesh::_dimension==2) {
+      type_elem_flag[4]=true;
       el->AddToElementNumber(1,"Triangle");
       el->SetElementType(iel,4);
     }
-//     else if(nve==3 && DIM[0]==1){
     else if (nve==3 && mesh::_dimension==1) {
       el->AddToElementNumber(1,"Line");
       el->SetElementType(iel,5);

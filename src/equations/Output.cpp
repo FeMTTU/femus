@@ -88,7 +88,7 @@ void Output::BuildProlongatorMatrices() {
 	       iel_mts < _ml_probl._ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
 	    unsigned iel = _ml_probl._ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel_mts];
 	    short unsigned ielt=_ml_probl._ml_msh->GetLevel(igridn)->el->GetElementType(iel);
-            _ml_probl.type_elem[ielt][jtype]->ProlQitoQj(*_ml_probl._ml_msh->GetLevel(igridn),iel,Output::_ProlQitoQj[itype][jtype][igridn],testnode,itype);	  
+            _ml_probl._ml_msh->_type_elem[ielt][jtype]->ProlQitoQj(*_ml_probl._ml_msh->GetLevel(igridn),iel,Output::_ProlQitoQj[itype][jtype][igridn],testnode,itype);	  
 	  }
 	}
 	Output::_ProlQitoQj[itype][jtype][igridn]->close();

@@ -185,8 +185,7 @@ protected:
   vector <char*> SolName;
   vector <int> SolType;
 //   vector< vector <unsigned> > _SolPdeIndex;
-//   vector <unsigned> VankaIndex;
-  const elem_type *type_elem[6][5]; 
+//   vector <unsigned> VankaIndex; 
 
   /** Array of linear solver */
   vector<vector <LinearEquationSolver*> > _LinSolver;

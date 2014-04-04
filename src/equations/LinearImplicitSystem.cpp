@@ -276,7 +276,7 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pde
     
 	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
 	  
-	  _equation_systems.type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
+	  _equation_systems._ml_msh->_type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
 								 _LinSolver[gridf]->_PP,SolIndex,k);
 	
 	}
