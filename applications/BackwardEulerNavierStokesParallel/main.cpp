@@ -43,7 +43,7 @@ int main(int argc,char **args) {
   double Uref = 1.;
   
   MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,SetRefinementFlag);
-  MultiLevelProblem ml_prob(&ml_msh,nm,nr,"seventh");
+  MultiLevelProblem ml_prob(&ml_msh);
 
   Parameter parameter(Lref,Uref);
   

@@ -53,8 +53,10 @@ protected:
 
   mesh* GetLevel(const unsigned i) {return _level[i];};
   
-  unsigned GetNumberOfGrid();
-  unsigned GetNumberOfGridTotallyRefined();
+  unsigned GetNumberOfGrid(){return _gridn;};
+  unsigned GetNumberOfGridTotallyRefined(){return _gridr;};
+  void EraseCoarseLevels(unsigned meshes_to_be_erased);
+  
 };
 
 #endif

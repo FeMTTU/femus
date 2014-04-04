@@ -47,7 +47,7 @@ int main(int argc,char **args) {
   double Ladimref = 1./(2.*3.1415926535897932);
   double Uref = 1.0;
   MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Ladimref,SetRefinementFlag);
-  MultiLevelProblem ml_prob(&ml_msh,nm,nr,"seventh");
+  MultiLevelProblem ml_prob(&ml_msh);
   
   Parameter parameter(Lref,Uref);
   

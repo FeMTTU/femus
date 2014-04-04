@@ -54,7 +54,7 @@ int main(int argc,char **args) {
   double E = 5600000;
   
   MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
-  MultiLevelProblem ml_prob(&ml_msh,nm,nr,"fifth");
+  MultiLevelProblem ml_prob(&ml_msh);
   
 
   Parameter par(Lref,Uref);

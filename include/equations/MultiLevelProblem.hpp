@@ -200,8 +200,7 @@ protected:
   Parameters parameters;
 
   /** Constructor */
-  MultiLevelProblem( MultiLevelMesh *ml_msh, const unsigned short &igridn,const unsigned short &igridr,
-				     const char GaussOrder[]);
+  MultiLevelProblem( MultiLevelMesh *ml_msh);
 
   /** Destructor */
   ~MultiLevelProblem();
