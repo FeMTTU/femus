@@ -36,6 +36,7 @@ MARK_AS_ADVANCED (
 # Find Petsc Library 
 FIND_PACKAGE(PETSc REQUIRED)
 
+SET(HAVE_PETSC 0)
 IF(PETSC_FOUND)
   SET(HAVE_PETSC 1)
 ENDIF(PETSC_FOUND) 
@@ -43,9 +44,18 @@ ENDIF(PETSC_FOUND)
 # Find MPI (optional) 
 FIND_PACKAGE(MPI)
 
+SET(HAVE_MPI 0)
 IF(MPI_FOUND)
   SET(HAVE_MPI 1)
 ENDIF(MPI_FOUND) 
+
+# Find HDF5 (optional) 
+#FIND_PACKAGE (HDF5 NAMES hdf5)
+
+#SET(HAVE_HDF5 0)
+#IF(HDF5_FOUND)
+  SET(HAVE_HDF5 1)
+#ENDIF(HDF5_FOUND)
 
 # configure a header file to pass some of the CMake settings
 # to the source code

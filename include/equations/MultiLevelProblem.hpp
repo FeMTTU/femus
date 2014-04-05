@@ -20,12 +20,12 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MultiLevelMesh.hpp"
-#include "LinearEquation.hpp"
+// #include "LinearEquation.hpp"
 #include "Solution.hpp"
 #include "Parameters.hpp"
-#include "Fluid.hpp"
-#include "Solid.hpp"
-#include <b64/b64.h>
+// #include "Fluid.hpp"
+// #include "Solid.hpp"
+// #include <b64/b64.h>
 
 #include <vector>
 #include <map>
@@ -48,11 +48,11 @@ typedef double (*initfunc) (const double &x, const double &y, const double &z);
 class MultiLevelProblem {
 
 private:
-  vector < SparseMatrix* > ProlQitoQj_[3][3];
+//   vector < SparseMatrix* > ProlQitoQj_[3][3];
   vector < map <unsigned,bool> > index;
   
-  int _moving_mesh;
-  std::vector<std::string> _moving_vars;
+//   int _moving_mesh;
+//   std::vector<std::string> _moving_vars;
   
 //   unsigned _non_linear_algorithm;
 //   bool _is_nonlinear;
@@ -188,7 +188,7 @@ protected:
 //   vector <unsigned> VankaIndex; 
 
   /** Array of linear solver */
-  vector<vector <LinearEquationSolver*> > _LinSolver;
+//   vector<vector <LinearEquationSolver*> > _LinSolver;
   
   /** Array of solution */
   vector <Solution*>  _solution;
@@ -273,14 +273,14 @@ protected:
 //   void ProlongatorSol(const char pdename[], unsigned gridf);
 //   void BuildProlongatorMatrix(unsigned gridf,const char pdename[]);
   void BuildProlongatorMatrix(unsigned gridf, unsigned SolIndex);
-  void BuildProlongatorMatrices();
+//   void BuildProlongatorMatrices();
 
   //printing and reading solution Functions 
-  void printsol_gmv_binary(const char name[]="linear",unsigned igridn=0, bool debug=0) const;
-  void printsol_vtu_inline(const char name[], std::vector<std::string>& vars, const unsigned time_step=0) const;
-  void printsol_xdmf_hdf5(const char name[],std::vector<std::string>& vars)const;
-  void SetMovingMesh(std::vector<std::string>& myss);
-  void printsol_xdmf_archive(const char type[]) const;
+//   void printsol_gmv_binary(const char name[]="linear",unsigned igridn=0, bool debug=0) const;
+//   void printsol_vtu_inline(const char name[], std::vector<std::string>& vars, const unsigned time_step=0) const;
+//   void printsol_xdmf_hdf5(const char name[],std::vector<std::string>& vars)const;
+//   void SetMovingMesh(std::vector<std::string>& myss);
+//   void printsol_xdmf_archive(const char type[]) const;
  
 //   char* GetThisPdeName(const unsigned &ipde){ return _PdeName[ipde];}
 };

@@ -7,6 +7,7 @@
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
 #include "SparseMatrix.hpp"
+#include "VTKOutput.hpp"
 using std::cout;
 using std::endl;
    
@@ -104,6 +105,8 @@ int main(int argc,char **args) {
   const unsigned int n_timesteps = 5;
   const unsigned int write_interval = 1;
   
+  VTKOutput vtkio(ml_prob);
+  
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
    
     // Solving Navier-Stokes system
@@ -128,7 +131,8 @@ int main(int argc,char **args) {
       print_vars.push_back("AX");
       print_vars.push_back("AY");
       
-      ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
+//       ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
+      vtkio.write_system_solutions("biquadratic",print_vars,time_step);
     }
   
   } //end loop timestep

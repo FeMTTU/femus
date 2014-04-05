@@ -75,11 +75,11 @@ MultiLevelProblem::MultiLevelProblem( MultiLevelMesh *ml_msh):
     _solution[i]=new Solution(_ml_msh->GetLevel(i));
   }
     
-  _moving_mesh=0;
+//   _moving_mesh=0;
   _init_func_set=false;
   _bdc_func_set=false;
 
-  BuildProlongatorMatrices();
+//   BuildProlongatorMatrices();
 }
 
 
@@ -204,11 +204,11 @@ void MultiLevelProblem::clear ()
 
   // clear multilevel data
   for (int igridn=0; igridn<_gridn; igridn++) {
-    for (int itype=0; itype<3; itype++) {
-      for (int jtype=0; jtype<3; jtype++) {
- 	delete ProlQitoQj_[itype][jtype][igridn];
-      }
-    }
+//     for (int itype=0; itype<3; itype++) {
+//       for (int jtype=0; jtype<3; jtype++) {
+//  	delete ProlQitoQj_[itype][jtype][igridn];
+//       }
+//     }
     _solution[igridn]->FreeSolutionVectors();
   }
   
@@ -446,10 +446,10 @@ unsigned MultiLevelProblem::GetNumberOfGridTotallyRefined() {
 // }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::SetMovingMesh(std::vector<std::string>& movvars_in) {
-  _moving_mesh = 1;
-  _moving_vars = movvars_in;
-}
+// void MultiLevelProblem::SetMovingMesh(std::vector<std::string>& movvars_in) {
+//   _moving_mesh = 1;
+//   _moving_vars = movvars_in;
+// }
 
 // 
 // This function computes the integral on the boundary of a Pde like Navier-stokes or Heat equation
@@ -1154,49 +1154,49 @@ void MultiLevelProblem::BuildProlongatorMatrix(unsigned gridf, unsigned SolIndex
   }
 }
 
-//---------------------------------------------------------------------------------------------------
-// This routine generates the matrices for the projection of the solutions from different FE spaces 
-//---------------------------------------------------------------------------------------------------
-
-void MultiLevelProblem::BuildProlongatorMatrices() {
-
-  ProlQitoQj_[0][0].resize(_gridn);
-  ProlQitoQj_[0][1].resize(_gridn);
-  ProlQitoQj_[0][2].resize(_gridn);
-  
-  ProlQitoQj_[1][0].resize(_gridn);
-  ProlQitoQj_[1][1].resize(_gridn);
-  ProlQitoQj_[1][2].resize(_gridn);
-  
-  ProlQitoQj_[2][0].resize(_gridn);
-  ProlQitoQj_[2][1].resize(_gridn);
-  ProlQitoQj_[2][2].resize(_gridn);
-  
-  for (unsigned igridn=0; igridn<_gridn; igridn++) {
-    for(int itype=0;itype<3;itype++){
-      int ni = _ml_msh->GetLevel(igridn)->MetisOffset[itype][_nprocs];
-      bool *testnode=new bool [ni];
-      for (int jtype=0; jtype<3; jtype++) {
-        int nj = _ml_msh->GetLevel(igridn)->MetisOffset[jtype][_nprocs];
-	memset(testnode,0,ni*sizeof(bool));
-	ProlQitoQj_[itype][jtype][igridn] = SparseMatrix::build().release();
-	ProlQitoQj_[itype][jtype][igridn]->init(ni,nj,_ml_msh->GetLevel(igridn)->own_size[itype][_iproc],
-						_ml_msh->GetLevel(igridn)->own_size[jtype][_iproc],27,27);
-		
-	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-	  for (int iel_mts=_ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom]; 
-	       iel_mts < _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	    unsigned iel = _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel_mts];
-	    short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(iel);
-            _ml_msh->_type_elem[ielt][jtype]->ProlQitoQj(*_ml_msh->GetLevel(igridn),iel,ProlQitoQj_[itype][jtype][igridn],testnode,itype);	  
-	  }
-	}
-	ProlQitoQj_[itype][jtype][igridn]->close();
-      }
-      delete [] testnode;
-    }
-  }
-}
+// // //---------------------------------------------------------------------------------------------------
+// // // This routine generates the matrices for the projection of the solutions from different FE spaces 
+// // //---------------------------------------------------------------------------------------------------
+// // 
+// // void MultiLevelProblem::BuildProlongatorMatrices() {
+// // 
+// //   ProlQitoQj_[0][0].resize(_gridn);
+// //   ProlQitoQj_[0][1].resize(_gridn);
+// //   ProlQitoQj_[0][2].resize(_gridn);
+// //   
+// //   ProlQitoQj_[1][0].resize(_gridn);
+// //   ProlQitoQj_[1][1].resize(_gridn);
+// //   ProlQitoQj_[1][2].resize(_gridn);
+// //   
+// //   ProlQitoQj_[2][0].resize(_gridn);
+// //   ProlQitoQj_[2][1].resize(_gridn);
+// //   ProlQitoQj_[2][2].resize(_gridn);
+// //   
+// //   for (unsigned igridn=0; igridn<_gridn; igridn++) {
+// //     for(int itype=0;itype<3;itype++){
+// //       int ni = _ml_msh->GetLevel(igridn)->MetisOffset[itype][_nprocs];
+// //       bool *testnode=new bool [ni];
+// //       for (int jtype=0; jtype<3; jtype++) {
+// //         int nj = _ml_msh->GetLevel(igridn)->MetisOffset[jtype][_nprocs];
+// // 	memset(testnode,0,ni*sizeof(bool));
+// // 	ProlQitoQj_[itype][jtype][igridn] = SparseMatrix::build().release();
+// // 	ProlQitoQj_[itype][jtype][igridn]->init(ni,nj,_ml_msh->GetLevel(igridn)->own_size[itype][_iproc],
+// // 						_ml_msh->GetLevel(igridn)->own_size[jtype][_iproc],27,27);
+// // 		
+// // 	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+// // 	  for (int iel_mts=_ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom]; 
+// // 	       iel_mts < _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+// // 	    unsigned iel = _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel_mts];
+// // 	    short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(iel);
+// //             _ml_msh->_type_elem[ielt][jtype]->ProlQitoQj(*_ml_msh->GetLevel(igridn),iel,ProlQitoQj_[itype][jtype][igridn],testnode,itype);	  
+// // 	  }
+// // 	}
+// // 	ProlQitoQj_[itype][jtype][igridn]->close();
+// //       }
+// //       delete [] testnode;
+// //     }
+// //   }
+// // }
 
 // *******************************************************************
 void MultiLevelProblem::GenerateBdc(const char name[], const char bdc_type[]) {
@@ -1528,1069 +1528,1069 @@ void MultiLevelProblem::GenerateBdc(const unsigned int k, const double time) {
 }
 
 
-//------------------------------------------------------------------------------------------------------------
-void MultiLevelProblem::printsol_xdmf_archive(const char type[]) const {
-  
-  // to add--> _time_step0, _ntime_steps
-  int time_step0 = 0;
-  int ntime_steps = 1;
-  int print_step = 1;
-  
-  char *filename= new char[60];
-  // Print The Xdmf transient wrapper
-  sprintf(filename,"./output/mesh.level%d.%s.xmf",_gridn,type);
-  std::ofstream ftr_out;
-  ftr_out.open(filename);
-  if (!ftr_out) {
-    cout << "Transient Output mesh file "<<filename<<" cannot be opened.\n";
-    exit(0);
-  }
-  
-  ftr_out << "<?xml version=\"1.0\" ?> \n";
-  ftr_out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd []\">"<<endl;
-  ftr_out << "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.2\"> " << endl;
-  ftr_out << "<Domain> " << endl;
-  ftr_out << "<Grid Name=\"Mesh\" GridType=\"Collection\" CollectionType=\"Temporal\"> \n";
-  // time loop for grid sequence
-  for ( unsigned time_step = time_step0; time_step < time_step0 + ntime_steps; time_step++) {
-    if ( !(time_step%print_step) ) {
-      sprintf(filename,"./mesh.level%d.%d.%s.xmf",_gridn,time_step,type);
-      ftr_out << "<xi:include href=\"" << filename << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid["<< 1 <<"])\">\n";
-      ftr_out << "<xi:fallback/>\n";
-      ftr_out << "</xi:include>\n";
-    }
-  }
-  ftr_out << "</Grid> \n";
-  ftr_out << "</Domain> \n";
-  ftr_out << "</Xdmf> \n";
-  ftr_out.close();
-  ftr_out.close();  
-  //----------------------------------------------------------------------------------------------------------
-  delete [] filename;
- 
-}
+// // //------------------------------------------------------------------------------------------------------------
+// // void MultiLevelProblem::printsol_xdmf_archive(const char type[]) const {
+// //   
+// //   // to add--> _time_step0, _ntime_steps
+// //   int time_step0 = 0;
+// //   int ntime_steps = 1;
+// //   int print_step = 1;
+// //   
+// //   char *filename= new char[60];
+// //   // Print The Xdmf transient wrapper
+// //   sprintf(filename,"./output/mesh.level%d.%s.xmf",_gridn,type);
+// //   std::ofstream ftr_out;
+// //   ftr_out.open(filename);
+// //   if (!ftr_out) {
+// //     cout << "Transient Output mesh file "<<filename<<" cannot be opened.\n";
+// //     exit(0);
+// //   }
+// //   
+// //   ftr_out << "<?xml version=\"1.0\" ?> \n";
+// //   ftr_out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd []\">"<<endl;
+// //   ftr_out << "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.2\"> " << endl;
+// //   ftr_out << "<Domain> " << endl;
+// //   ftr_out << "<Grid Name=\"Mesh\" GridType=\"Collection\" CollectionType=\"Temporal\"> \n";
+// //   // time loop for grid sequence
+// //   for ( unsigned time_step = time_step0; time_step < time_step0 + ntime_steps; time_step++) {
+// //     if ( !(time_step%print_step) ) {
+// //       sprintf(filename,"./mesh.level%d.%d.%s.xmf",_gridn,time_step,type);
+// //       ftr_out << "<xi:include href=\"" << filename << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid["<< 1 <<"])\">\n";
+// //       ftr_out << "<xi:fallback/>\n";
+// //       ftr_out << "</xi:include>\n";
+// //     }
+// //   }
+// //   ftr_out << "</Grid> \n";
+// //   ftr_out << "</Domain> \n";
+// //   ftr_out << "</Xdmf> \n";
+// //   ftr_out.close();
+// //   ftr_out.close();  
+// //   //----------------------------------------------------------------------------------------------------------
+// //   delete [] filename;
+// //  
+// // }
 
 
-// *******************************************************************
-void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, bool debug) const {
- 
-  // to add _time_step
-  int time_step = 0;
-  
-  if (igridn==0) igridn=_gridn;
-  
-  unsigned igridr=(_gridr <= igridn)?_gridr:igridn;
-
-  // ********** linear -> index==0 *** quadratic -> index==1 **********
-  unsigned index=(strcmp(type,"linear"))?1:0;
-
-  char *filename = new char[60];
-  sprintf(filename,"./output/mesh.level%d.%d.%s.gmv",igridn,time_step,type);
-
-  std::ofstream fout;
-  
-  if(_iproc!=0) {
-    fout.rdbuf();   //redirect to dev_null
-  }
-  else {
-    fout.open(filename);
-    if (!fout) {
-      cout << "Output mesh file "<<filename<<" cannot be opened.\n";
-      exit(0);
-    }
-  }
-
-
-  unsigned nvt=0;
-  unsigned nvt_max=0;
-  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs];
-    nvt_max=(nvt_max>nvt_ig)?nvt_max:nvt_ig;
-    nvt+=nvt_ig;
-  }
-  
-  double *var_nd=new double [nvt_max+1]; //TO FIX Valgrind complaints! In reality it should be only nvt
-  vector <NumericVector*> Mysol(igridn);
-  for(unsigned ig=igridr-1u; ig<_gridn; ig++) {
-    Mysol[ig] = NumericVector::build().release();
-    Mysol[ig]->init(_ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs],_ml_msh->GetLevel(ig)->own_size[index][_iproc],true,AUTOMATIC);
-  }
-     
-  // ********** Header **********
-  char *det= new char[10];
-  sprintf(det,"%s","gmvinput");
-  fout.write((char *)det,sizeof(char)*8);
-  sprintf(det,"%s","ieeei4r8");
-  fout.write((char *)det,sizeof(char)*8);
-
-  // ********** Start printing node coordinates  **********
-  sprintf(det,"%s","nodes");
-  fout.write((char *)det,sizeof(char)*8);
-  fout.write((char *)&nvt,sizeof(unsigned));
-    
-  for (int i=0; i<3; i++) {
-    for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-      Mysol[ig]->matrix_mult(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[i],*ProlQitoQj_[index][2][ig]);
-      vector <double> v_local;
-      Mysol[ig]->localize_to_one(v_local,0);
-      unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs];      
-      if(_iproc==0){ 
-	for (unsigned ii=0; ii<nvt_ig; ii++) 
-	  var_nd[ii]= v_local[ii];
-      }
-      if (_moving_mesh) {
-	unsigned indDXDYDZ=GetIndex(_moving_vars[i].c_str());
-	Mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indDXDYDZ],*ProlQitoQj_[index][SolType[indDXDYDZ]][ig]);
-	Mysol[ig]->localize_to_one(v_local,0);
-	unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs];      
-	if(_iproc==0){ 
-	  for (unsigned ii=0; ii<nvt_ig; ii++) 
-	    var_nd[ii]+= v_local[ii];
-	}
-      }
-      fout.write((char *)&var_nd[0],nvt_ig*sizeof(double)); 
-    }
-  }
-  // ********** End printing node coordinates  **********
-
-  // ********** Start printing cell connectivity  **********
-  const int eltp[2][6]= {{8,4,6,4,3,2},{20,10,15,8,6,3}};
-  sprintf(det,"%s","cells");
-  fout.write((char *)det,sizeof(char)*8);
-
-  unsigned nel=0;
-  for (unsigned ig=igridr-1u; ig<igridn-1u; ig++)
-    nel+=( _ml_msh->GetLevel(ig)->GetElementNumber() - _ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
-  nel+=_ml_msh->GetLevel(igridn-1u)->GetElementNumber();
-  fout.write((char *)&nel,sizeof(unsigned));
-
-  unsigned topology[27];
-  unsigned offset=1;
-  
-  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-      if ( ig==igridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-        short unsigned ielt=_ml_msh->GetLevel(ig)->el->GetElementType(ii);
-        if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
-        else if (ielt==1) sprintf(det,"ptet%d",eltp[index][1]);
-        else if (ielt==2) sprintf(det,"pprism%d",eltp[index][2]);
-        else if (ielt==3) {
-          if (eltp[index][3]==8) sprintf(det,"%dquad",eltp[index][3]);
-          else sprintf(det,"quad");
-        } else if (ielt==4) {
-          if (eltp[index][4]==6) sprintf(det,"%dtri",eltp[index][4]);
-          else sprintf(det,"tri");
-        } else if (ielt==5) {
-          if (eltp[index][5]==3) sprintf(det,"%dline",eltp[index][5]);
-          else sprintf(det,"line");
-        }
-        fout.write((char *)det,sizeof(char)*8);
-        fout.write((char *)&NVE[ielt][index],sizeof(unsigned));
-	for(unsigned j=0;j<NVE[ielt][index];j++){
-	  
-	  unsigned jnode=_ml_msh->GetLevel(ig)->el->GetElementVertexIndex(ii,j)-1u;
-	  unsigned jnode_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(jnode,index);
-	  	  
-	  topology[j]=jnode_Metis+offset;
-	}
-	fout.write((char *)topology,sizeof(unsigned)*NVE[ielt][index]);
-      }
-    }
-    offset+=_ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs];
-  }
-  // ********** End printing cell connectivity  **********
-  
-  double *var_el=new double [nel+1]; //TO FIX Valgrind complaints! In reality it should be only nel
-  
-  // ********** Start printing Variables **********
-  const unsigned zero=0u;
-  const unsigned one=1u;
-  sprintf(det,"%s","variable");
-  fout.write((char *)det,sizeof(char)*8);
-
-  // ********** Start printing Regions **********
-  strcpy(det,"Regions");
-  fout.write((char *)det,sizeof(char)*8);
-  fout.write((char *)&zero,sizeof(unsigned));
-
-  int icount=0;
-  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-      if ( ig==igridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	var_el[icount]=_ml_msh->GetLevel(ig)->el->GetElementGroup(ii);
-        icount++;
-      }
-    }
-  }
-  fout.write((char *)&var_el[0],nel*sizeof(double));
-  
-  if(_nprocs>=1){
-    strcpy(det,"Reg_proc");
-    fout.write((char *)det,sizeof(char)*8);
-    fout.write((char *)&zero,sizeof(unsigned));
-
-    int icount=0;
-    for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-      for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-	if ( ig==igridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	  var_el[icount]=_ml_msh->GetLevel(ig)->epart[ii];
-	  icount++;
-	}
-      }
-    }
-    fout.write((char *)&var_el[0],nel*sizeof(double));
-  }
-  
-  // ********** End printing Regions **********
-  
-  // ********** Start printing Solution **********
-  for (unsigned i=0; i<SolType.size(); i++) {
-    for(int name=0;name<4;name++){
-      if (name==0){
-	sprintf(det,"%s %s","Sol",SolName[i]);
-      }
-      else if (name==1){
-	sprintf(det,"%s %s","Bdc",SolName[i]);
-      }
-      else if (name==2){
-	sprintf(det,"%s %s","Res",SolName[i]);
-      }
-      else{
-	sprintf(det,"%s %s","Eps",SolName[i]);
-      }
-      if(name==0 || (debug && _solution[igridn-1u]->_ResEpsBdcFlag[i])){
-	if (SolType[i]<3) {  // **********  on the nodes **********
-	  fout.write((char *)det,sizeof(char)*8);
-	  fout.write((char *)&one,sizeof(unsigned));
-	  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-	    if (name==0){
-	      Mysol[ig]->matrix_mult(*_solution[ig]->_Sol[i],*ProlQitoQj_[index][SolType[i]][ig]);  
-	    }
-	    else if (name==1){
-	      Mysol[ig]->matrix_mult(*_solution[ig]->_Bdc[i],*ProlQitoQj_[index][SolType[i]][ig]);
-	    }
-	    else if (name==2){
-	      Mysol[ig]->matrix_mult(*_solution[ig]->_Res[i],*ProlQitoQj_[index][SolType[i]][ig]);
-	    }
-	    else{
-	      Mysol[ig]->matrix_mult(*_solution[ig]->_Eps[i],*ProlQitoQj_[index][SolType[i]][ig]);
-	    }
-	    std::vector<double> v_local;
-	    Mysol[ig]->localize_to_one(v_local,0);
-	    fout.write((char *)&v_local[0],v_local.size()*sizeof(double));
-	  }
-	}
-	else { // ********** on the elements **********
-	  fout.write((char *)det,sizeof(char)*8);
-	  fout.write((char *)&zero,sizeof(unsigned));
-	  int icount=0;
-	  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-	    std::vector<double> v_local;
-	    if (name==0){
-	      _solution[ig]->_Sol[i]->localize_to_one(v_local,0); 
-	    }
-	    else if (name==1){
-	      _solution[ig]->_Bdc[i]->localize_to_one(v_local,0); 
-	    }
-	    else if (name==2){
-	      _solution[ig]->_Res[i]->localize_to_one(v_local,0);
-	    }
-	    else{
-	      _solution[ig]->_Eps[i]->localize_to_one(v_local,0);
-	    }
-	    for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-	      if ( ig==igridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-		unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,SolType[i]);
-		var_el[icount]=v_local[iel_Metis];
-		icount++;
-	      }
-	    }
-	  }
-	  fout.write((char *)&var_el[0],nel*sizeof(double));
-	}	
-      }
-    }
-  }
-  // ********** End printing Solution **********
-  sprintf(det,"%s","endvars");
-  fout.write((char *)det,sizeof(char)*8);
-  
-  // ********** End printing Variables **********
-  sprintf(det,"%s","endgmv");
-  fout.write((char *)det,sizeof(char)*8);
-  fout.close();
-  // ********** End printing file **********
-  
-  // Free memory
-  delete [] var_el;
-  delete [] var_nd;
-  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    delete Mysol[ig];
-  }
-  delete [] det;
-  delete [] filename;
-
-}
-
-
-
-// *************************************************************************
-// This function prints the solution in vtu binary (64-encoded) format
-// *************************************************************************
-
-void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std::string>& vars, const unsigned time_step) const {
-  
-  bool test_all=!(vars[0].compare("All"));
-  
-  int icount;
-  unsigned index=0;
-  unsigned index_nd=0;
-  if (!strcmp(type,"linear")) {   //linear
-    index=0;
-    index_nd=0;
-  } else if (!strcmp(type,"quadratic")) { //quadratic
-    index=1;
-    index_nd=1;
-  } else if (!strcmp(type,"biquadratic")) { //biquadratic
-    index=3;
-    index_nd=2;
-  }
-
-  const int eltp[4][6]= {{12,10,13,9,5,3},{25,24,26,23,22,21},{},{29,1,1,28,22,1}};
-  
-  char *filename= new char[60];
-  sprintf(filename,"./output/mesh.level%d.%d.%s.vtu",_gridn,time_step,type);
-  std::ofstream fout;
-  
-  if(_iproc!=0) {
-    fout.rdbuf();   //redirect to dev_null
-  }
-  else {
-    fout.open(filename);
-    if (!fout) {
-      cout << "Output mesh file "<<filename<<" cannot be opened.\n";
-      exit(0);
-    }
-  }
-  // haed ************************************************
-  fout<<"<?xml version=\"1.0\"?>" << endl;
-  fout<<"<VTKFile type = \"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
-  fout << " <UnstructuredGrid>" << endl;
-  //-----------------------------------------------------------------------------------------------------------
-
-  //----------------------------------------------------------------------------------------------------------
-  
-  unsigned nvt=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
-    nvt+=nvt_ig;
-  }  
-
-  unsigned nel=0;
-  unsigned counter=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn-1u; ig++) {
-    nel+=( _ml_msh->GetLevel(ig)->GetElementNumber() - _ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
-    counter+=(_ml_msh->GetLevel(ig)->el->GetElementNumber("Hex")-_ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Hex"))*NVE[0][index];
-    counter+=(_ml_msh->GetLevel(ig)->el->GetElementNumber("Tet")-_ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Tet"))*NVE[1][index];
-    counter+=(_ml_msh->GetLevel(ig)->el->GetElementNumber("Wedge")-_ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Wedge"))*NVE[2][index];
-    counter+=(_ml_msh->GetLevel(ig)->el->GetElementNumber("Quad")-_ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Quad"))*NVE[3][index];
-    counter+=(_ml_msh->GetLevel(ig)->el->GetElementNumber("Triangle")-_ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Triangle"))*NVE[4][index];
-    counter+=(_ml_msh->GetLevel(ig)->el->GetElementNumber("Line")-_ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Line"))*NVE[5][index];
-  }
-  nel+=_ml_msh->GetLevel(_gridn-1u)->GetElementNumber();
-  counter+=_ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Hex")*NVE[0][index];
-  counter+=_ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Tet")*NVE[1][index];
-  counter+=_ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Wedge")*NVE[2][index];
-  counter+=_ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Quad")*NVE[3][index];
-  counter+=_ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Triangle")*NVE[4][index];
-  counter+=_ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Line")*NVE[5][index]; 
-  
-  const unsigned dim_array_coord [] = { nvt*3*sizeof(float) };  
-  const unsigned dim_array_conn[]   = { counter*sizeof(int) };
-  const unsigned dim_array_off []   = { nel*sizeof(int) };
-  const unsigned dim_array_type []  = { nel*sizeof(short unsigned) };
-  const unsigned dim_array_reg []   = { nel*sizeof(short unsigned) };
-  const unsigned dim_array_elvar [] = { nel*sizeof(float) };
-  const unsigned dim_array_ndvar [] = { nvt*sizeof(float) };
-
-  // initialize common buffer_void memory 
-  unsigned buffer_size=(dim_array_coord[0]>dim_array_conn[0])?dim_array_coord[0]:dim_array_conn[0];
-  void *buffer_void=new char [buffer_size];
-  char *buffer_char=static_cast <char *>(buffer_void);
-  
-  size_t cch;
-  cch = b64::b64_encode(&buffer_char[0], buffer_size , NULL, 0);  
-  vector <char> enc;
-  enc.resize(cch);
-  char *pt_char;
-  
-  fout << "  <Piece NumberOfPoints= \"" << nvt << "\" NumberOfCells= \"" << nel << "\" >" << endl;
-  
-  //-----------------------------------------------------------------------------------------------
-  // print coordinates *********************************************Solu*******************************************
-  fout << "   <Points>" << endl;
-  fout << "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\">" << endl;
-  
-  vector <NumericVector*> mysol(_gridn);
-  for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    mysol[ig] = NumericVector::build().release();
-    mysol[ig]->init(_ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],_ml_msh->GetLevel(ig)->own_size[index_nd][_iproc],
-		    true,AUTOMATIC);
-  }
-  
-  // point pointer to common mamory area buffer of void type;
-  float *var_coord= static_cast<float*>(buffer_void);
-
-  unsigned offset_nvt3=0;
-  for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    std::vector<double> v_local;
-    unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
-    for(int kk=0;kk<3;kk++) {
-      mysol[ig]->matrix_mult(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[kk],*ProlQitoQj_[index_nd][2][ig]);
-      mysol[ig]->localize_to_one(v_local,0);
-      if(_iproc==0) { 
-	for (unsigned i=0; i<nvt_ig; i++) {
-	  var_coord[offset_nvt3+i*3+kk] = v_local[i];
-	}
-      } //if iproc
-    } //loop over dimension
-    offset_nvt3+=3*nvt_ig;
-  }
-  
-  if (_moving_mesh) {
-    
-    unsigned offset_nvt3=0;
-    unsigned indDXDYDZ[3];
-    indDXDYDZ[0]=GetIndex(_moving_vars[0].c_str());
-    indDXDYDZ[1]=GetIndex(_moving_vars[1].c_str());
-    if(_ml_msh->GetLevel(0)->GetDimension() == 3) {
-      indDXDYDZ[2]=GetIndex(_moving_vars[2].c_str());
-    }
-      
-    for(unsigned ig=_gridr-1u; ig<_gridn; ig++){
-      std::vector<double> v_local;
-      unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
-      for(int kk=0;kk<_ml_msh->GetLevel(0)->GetDimension();kk++) {
-	mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indDXDYDZ[kk]],*ProlQitoQj_[index_nd][SolType[indDXDYDZ[kk]]][ig]);
-        mysol[ig]->localize_to_one(v_local,0);
-	if(_iproc==0) { 
-	  for (unsigned i=0; i<nvt_ig; i++) {
-	    var_coord[offset_nvt3+i*3+kk] += v_local[i];
-	  }
-	} //if iproc
-      } //loop over dimension
-      offset_nvt3+=3*nvt_ig;
-    }
-  }
-  
-  if(_iproc==0) {
-    //print coordinates dimension
-    cch = b64::b64_encode(&dim_array_coord[0], sizeof(dim_array_coord), NULL, 0);  
-    b64::b64_encode(&dim_array_coord[0], sizeof(dim_array_coord), &enc[0], cch);
-    pt_char=&enc[0];
-    for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-    
-    //print coordinates array
-    cch = b64::b64_encode(&var_coord[0], dim_array_coord[0] , NULL, 0);  
-    b64::b64_encode(&var_coord[0], dim_array_coord[0], &enc[0], cch);
-    pt_char=&enc[0];
-    for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-    fout << endl;
-  }
-  fout << "    </DataArray>" << endl;
-  fout << "   </Points>" << endl;
-  //-----------------------------------------------------------------------------------------------
-  
-  //-----------------------------------------------------------------------------------------------
-  // Printing of element connectivity - offset - format type  *
-  fout << "   <Cells>" << endl;
-  
-  //-----------------------------------------------------------------------------------------------
-  //print connectivity
-  fout << "    <DataArray type=\"Int32\" Name=\"connectivity\" format=\"binary\">" << endl;
-  
-  // point pointer to common mamory area buffer of void type;
-  int *var_conn = static_cast <int*> (buffer_void);
-  icount = 0;
-  unsigned offset_nvt=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
-      if (_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-        for (unsigned j=0; j<_ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
-	  unsigned jnode=_ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,j)-1u;
-	  unsigned jnode_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
-	  var_conn[icount] = offset_nvt+jnode_Metis;
-	  icount++;
-	}
-      }
-    }
-    offset_nvt+=_ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
-  }
-  
-  //print connectivity dimension
-  cch = b64::b64_encode(&dim_array_conn[0], sizeof(dim_array_conn), NULL, 0);  
-  b64::b64_encode(&dim_array_conn[0], sizeof(dim_array_conn), &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-    
-  //print connectivity array
-  cch = b64::b64_encode(&var_conn[0], dim_array_conn[0] , NULL, 0);  
-  b64::b64_encode(&var_conn[0], dim_array_conn[0], &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-    
-  fout << endl;
-  
-  fout << "    </DataArray>" << endl;
-  //------------------------------------------------------------------------------------------------
-  
-  //-------------------------------------------------------------------------------------------------
-  //printing offset
-  fout << "    <DataArray type=\"Int32\" Name=\"offsets\" format=\"binary\">" << endl;
- 
-  // point pointer to common mamory area buffer of void type;
-  int *var_off=static_cast <int*>(buffer_void);
-  icount = 0;
-  int offset_el=0;
-  //print offset array
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
-      if (_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-	unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(iel,3);
-        offset_el += _ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel_Metis,index);
-        var_off[icount] = offset_el;
-	icount++;
-      }
-    }
-  }
-  
-  //print offset dimension
-  cch = b64::b64_encode(&dim_array_off[0], sizeof(dim_array_off), NULL, 0);
-  b64::b64_encode(&dim_array_off[0], sizeof(dim_array_off), &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-    
-  //print offset array
-  cch = b64::b64_encode(&var_off[0], dim_array_off[0] , NULL, 0);  
-  b64::b64_encode(&var_off[0], dim_array_off[0], &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-    
-  fout << endl;
-  
-  fout << "    </DataArray>" << endl;
-  //--------------------------------------------------------------------------------------------------
-  
-  //--------------------------------------------------------------------------------------------------
-  //Element format type : 23:Serendipity(8-nodes)  28:Quad9-Biquadratic
-  fout << "    <DataArray type=\"UInt16\" Name=\"types\" format=\"binary\">" << endl;
-   
-  // point pointer to common mamory area buffer of void type;
-  unsigned short *var_type = static_cast <unsigned short*> (buffer_void);
-  icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-      if (_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)==0 || ig==_gridn-1u) {
-	unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
-        short unsigned ielt=_ml_msh->GetLevel(ig)->el->GetElementType(iel_Metis);
-	var_type[icount] = (short unsigned)(eltp[index][ielt]);
-	icount++;
-      }
-    }
-  }
-  
-  //print element format dimension
-  cch = b64::b64_encode(&dim_array_type[0], sizeof(dim_array_type), NULL, 0);  
-  b64::b64_encode(&dim_array_type[0], sizeof(dim_array_type), &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-    
-  //print element format array
-  cch = b64::b64_encode(&var_type[0], dim_array_type[0] , NULL, 0);  
-  b64::b64_encode(&var_type[0], dim_array_type[0], &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-    
-  fout << endl;
-  fout << "    </DataArray>" << endl;
-  //----------------------------------------------------------------------------------------------------
-  
-  fout << "   </Cells>" << endl;
-  //--------------------------------------------------------------------------------------------------
-
-  
-  
-  // /Print Cell Data ****************************************************************************
-  fout << "   <CellData Scalars=\"scalars\">" << endl;
-
-  //--------------------------------------------------------------------------------------------
-  // Print Regions
-  fout << "    <DataArray type=\"UInt16\" Name=\"Regions\" format=\"binary\">" << endl;
-  
-  // point pointer to common mamory area buffer of void type;
-  unsigned short* var_reg=static_cast <unsigned short*> (buffer_void);
-  icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-      if ( ig==_gridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
-	var_reg[icount]= _ml_msh->GetLevel(ig)->el->GetElementGroup(ii);
-	icount++;
-      }
-    }
-  }
-  
-  //print regions dimension
-  cch = b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), NULL, 0);  
-  b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-    
-  
-  //print regions array
-  cch = b64::b64_encode(&var_reg[0], dim_array_reg[0] , NULL, 0);  
-  b64::b64_encode(&var_reg[0], dim_array_reg[0], &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-    
-  fout << endl;
-  fout << "    </DataArray>" << endl;
-  //-----------------------------------------------------------------------------------------------------   
-  // Print Metis Partitioning
-  fout << "    <DataArray type=\"UInt16\" Name=\"Domain_partition\" format=\"binary\">" << endl;
-  
-  // point pointer to common mamory area buffer of void type;
-  unsigned short* var_proc=static_cast <unsigned short*> (buffer_void);
-  icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-      if ( ig==_gridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
-	var_proc[icount]=(unsigned short)(_ml_msh->GetLevel(ig)->epart[ii]);
-	icount++;
-      }
-    }
-  }
-  
-  //print regions dimension
-  cch = b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), NULL, 0);  
-  b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-    
-  
-  //print regions array
-  cch = b64::b64_encode(&var_proc[0], dim_array_reg[0] , NULL, 0);  
-  b64::b64_encode(&var_proc[0], dim_array_reg[0], &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-    
-  fout << endl;
-  fout << "    </DataArray>" << endl;
-  
-
-  //Print Solution (on element) ***************************************************************
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*SolName.size(); i++) {
-    unsigned indx=(test_all==0)?GetIndex(vars[i].c_str()):i;
-    if (3 <= SolType[indx]) {
-      fout << "    <DataArray type=\"Float32\" Name=\"" << SolName[indx] <<"\" format=\"binary\">" << endl;
-      // point pointer to common memory area buffer of void type;
-      float *var_el = static_cast< float*> (buffer_void);
-      icount=0;
-      for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	vector<double> sol_local;
-	_solution[ig]->_Sol[indx]->localize_to_one(sol_local,0);
-	for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-	  if (ig==_gridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	    unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,SolType[indx]);
-	    var_el[icount]=sol_local[iel_Metis];
-	    icount++;
-	  }
-	}
-      }
-      
-      if(_iproc==0) {
-        //print solution on element dimension
-        cch = b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), NULL, 0);  
-        b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), &enc[0], cch);
-        pt_char=&enc[0];
-        for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-    
-        //print solution on element array
-        cch = b64::b64_encode(&var_el[0], dim_array_elvar[0] , NULL, 0);  
-        b64::b64_encode(&var_el[0], dim_array_elvar[0], &enc[0], cch);
-        pt_char=&enc[0];
-        for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-        fout << endl;
-        fout << "    </DataArray>" << endl;
-      }
-      //----------------------------------------------------------------------------------------------------
-    }
-  }
-  fout << "   </CellData>" << endl;
-  //   //------------------------------------------------------------------------------------------------
-  // 
-  //   //------------------------------------------------------------------------------------------------
-  // / Print Solution (on nodes) ********************************************************************
-  fout<< " <PointData Scalars=\"scalars\"> " << endl;
-  //Loop on variables
-   
-  // point pointer to common mamory area buffer of void type;
-  float* var_nd = static_cast<float*>(buffer_void);
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*SolName.size(); i++) {
-    unsigned indx=(test_all==0)?GetIndex(vars[i].c_str()):i;
-    if (SolType[indx]<3) {
-      fout << " <DataArray type=\"Float32\" Name=\"" << SolName[indx] <<"\" format=\"binary\">" << endl;
-      //print solutions on nodes dimension
-      cch = b64::b64_encode(&dim_array_ndvar[0], sizeof(dim_array_ndvar), NULL, 0);  
-      b64::b64_encode(&dim_array_ndvar[0], sizeof(dim_array_ndvar), &enc[0], cch);
-      pt_char=&enc[0];
-      for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-      
-      unsigned offset_nvt=0;
-      for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indx],*ProlQitoQj_[index_nd][SolType[indx]][ig]);
-	vector<double> sol_local;
-	mysol[ig]->localize_to_one(sol_local,0);
-	unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
-	for (unsigned ii=0; ii<nvt_ig; ii++) {
-	  var_nd[ii+offset_nvt] = sol_local[ii];
-	}
-	offset_nvt+=nvt_ig;
-      }
-      
-      if(_iproc==0) {
-        cch = b64::b64_encode(&var_nd[0], dim_array_ndvar [0], NULL, 0);  
-        b64::b64_encode(&var_nd[0], dim_array_ndvar [0], &enc[0], cch);
-        pt_char=&enc[0];
-        for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
-        fout << endl;
-
-        fout << "    </DataArray>" << endl;
-      }
-    } //endif
-  } // end for sol
-  fout << "   </PointData>" << endl;
-  
-  //------------------------------------------------------------------------------------------------
-  
-
-  fout << "  </Piece>" << endl;
-  fout << " </UnstructuredGrid>" << endl;
-  fout << "</VTKFile>" << endl;
-  fout.close();
-
-  
-  
-  //-----------------------------------------------------------------------------------------------------
-  //free memory
-  for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    delete mysol[ig];
-  }
-  delete [] filename;
-  delete [] var_nd;  
-  
-  //--------------------------------------------------------------------------------------------------------
-}
+// // // *******************************************************************
+// // void  MultiLevelProblem::printsol_gmv_binary(const char type[],unsigned igridn, bool debug) const {
+// //  
+// //   // to add _time_step
+// //   int time_step = 0;
+// //   
+// //   if (igridn==0) igridn=_gridn;
+// //   
+// //   unsigned igridr=(_gridr <= igridn)?_gridr:igridn;
+// // 
+// //   // ********** linear -> index==0 *** quadratic -> index==1 **********
+// //   unsigned index=(strcmp(type,"linear"))?1:0;
+// // 
+// //   char *filename = new char[60];
+// //   sprintf(filename,"./output/mesh.level%d.%d.%s.gmv",igridn,time_step,type);
+// // 
+// //   std::ofstream fout;
+// //   
+// //   if(_iproc!=0) {
+// //     fout.rdbuf();   //redirect to dev_null
+// //   }
+// //   else {
+// //     fout.open(filename);
+// //     if (!fout) {
+// //       cout << "Output mesh file "<<filename<<" cannot be opened.\n";
+// //       exit(0);
+// //     }
+// //   }
+// // 
+// // 
+// //   unsigned nvt=0;
+// //   unsigned nvt_max=0;
+// //   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+// //     unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs];
+// //     nvt_max=(nvt_max>nvt_ig)?nvt_max:nvt_ig;
+// //     nvt+=nvt_ig;
+// //   }
+// //   
+// //   double *var_nd=new double [nvt_max+1]; //TO FIX Valgrind complaints! In reality it should be only nvt
+// //   vector <NumericVector*> Mysol(igridn);
+// //   for(unsigned ig=igridr-1u; ig<_gridn; ig++) {
+// //     Mysol[ig] = NumericVector::build().release();
+// //     Mysol[ig]->init(_ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs],_ml_msh->GetLevel(ig)->own_size[index][_iproc],true,AUTOMATIC);
+// //   }
+// //      
+// //   // ********** Header **********
+// //   char *det= new char[10];
+// //   sprintf(det,"%s","gmvinput");
+// //   fout.write((char *)det,sizeof(char)*8);
+// //   sprintf(det,"%s","ieeei4r8");
+// //   fout.write((char *)det,sizeof(char)*8);
+// // 
+// //   // ********** Start printing node coordinates  **********
+// //   sprintf(det,"%s","nodes");
+// //   fout.write((char *)det,sizeof(char)*8);
+// //   fout.write((char *)&nvt,sizeof(unsigned));
+// //     
+// //   for (int i=0; i<3; i++) {
+// //     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+// //       Mysol[ig]->matrix_mult(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[i],*ProlQitoQj_[index][2][ig]);
+// //       vector <double> v_local;
+// //       Mysol[ig]->localize_to_one(v_local,0);
+// //       unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs];      
+// //       if(_iproc==0){ 
+// // 	for (unsigned ii=0; ii<nvt_ig; ii++) 
+// // 	  var_nd[ii]= v_local[ii];
+// //       }
+// //       if (_moving_mesh) {
+// // 	unsigned indDXDYDZ=GetIndex(_moving_vars[i].c_str());
+// // 	Mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indDXDYDZ],*ProlQitoQj_[index][SolType[indDXDYDZ]][ig]);
+// // 	Mysol[ig]->localize_to_one(v_local,0);
+// // 	unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs];      
+// // 	if(_iproc==0){ 
+// // 	  for (unsigned ii=0; ii<nvt_ig; ii++) 
+// // 	    var_nd[ii]+= v_local[ii];
+// // 	}
+// //       }
+// //       fout.write((char *)&var_nd[0],nvt_ig*sizeof(double)); 
+// //     }
+// //   }
+// //   // ********** End printing node coordinates  **********
+// // 
+// //   // ********** Start printing cell connectivity  **********
+// //   const int eltp[2][6]= {{8,4,6,4,3,2},{20,10,15,8,6,3}};
+// //   sprintf(det,"%s","cells");
+// //   fout.write((char *)det,sizeof(char)*8);
+// // 
+// //   unsigned nel=0;
+// //   for (unsigned ig=igridr-1u; ig<igridn-1u; ig++)
+// //     nel+=( _ml_msh->GetLevel(ig)->GetElementNumber() - _ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
+// //   nel+=_ml_msh->GetLevel(igridn-1u)->GetElementNumber();
+// //   fout.write((char *)&nel,sizeof(unsigned));
+// // 
+// //   unsigned topology[27];
+// //   unsigned offset=1;
+// //   
+// //   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+// //     for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+// //       if ( ig==igridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+// //         short unsigned ielt=_ml_msh->GetLevel(ig)->el->GetElementType(ii);
+// //         if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
+// //         else if (ielt==1) sprintf(det,"ptet%d",eltp[index][1]);
+// //         else if (ielt==2) sprintf(det,"pprism%d",eltp[index][2]);
+// //         else if (ielt==3) {
+// //           if (eltp[index][3]==8) sprintf(det,"%dquad",eltp[index][3]);
+// //           else sprintf(det,"quad");
+// //         } else if (ielt==4) {
+// //           if (eltp[index][4]==6) sprintf(det,"%dtri",eltp[index][4]);
+// //           else sprintf(det,"tri");
+// //         } else if (ielt==5) {
+// //           if (eltp[index][5]==3) sprintf(det,"%dline",eltp[index][5]);
+// //           else sprintf(det,"line");
+// //         }
+// //         fout.write((char *)det,sizeof(char)*8);
+// //         fout.write((char *)&NVE[ielt][index],sizeof(unsigned));
+// // 	for(unsigned j=0;j<NVE[ielt][index];j++){
+// // 	  
+// // 	  unsigned jnode=_ml_msh->GetLevel(ig)->el->GetElementVertexIndex(ii,j)-1u;
+// // 	  unsigned jnode_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(jnode,index);
+// // 	  	  
+// // 	  topology[j]=jnode_Metis+offset;
+// // 	}
+// // 	fout.write((char *)topology,sizeof(unsigned)*NVE[ielt][index]);
+// //       }
+// //     }
+// //     offset+=_ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs];
+// //   }
+// //   // ********** End printing cell connectivity  **********
+// //   
+// //   double *var_el=new double [nel+1]; //TO FIX Valgrind complaints! In reality it should be only nel
+// //   
+// //   // ********** Start printing Variables **********
+// //   const unsigned zero=0u;
+// //   const unsigned one=1u;
+// //   sprintf(det,"%s","variable");
+// //   fout.write((char *)det,sizeof(char)*8);
+// // 
+// //   // ********** Start printing Regions **********
+// //   strcpy(det,"Regions");
+// //   fout.write((char *)det,sizeof(char)*8);
+// //   fout.write((char *)&zero,sizeof(unsigned));
+// // 
+// //   int icount=0;
+// //   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+// //     for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+// //       if ( ig==igridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+// // 	var_el[icount]=_ml_msh->GetLevel(ig)->el->GetElementGroup(ii);
+// //         icount++;
+// //       }
+// //     }
+// //   }
+// //   fout.write((char *)&var_el[0],nel*sizeof(double));
+// //   
+// //   if(_nprocs>=1){
+// //     strcpy(det,"Reg_proc");
+// //     fout.write((char *)det,sizeof(char)*8);
+// //     fout.write((char *)&zero,sizeof(unsigned));
+// // 
+// //     int icount=0;
+// //     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+// //       for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+// // 	if ( ig==igridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+// // 	  var_el[icount]=_ml_msh->GetLevel(ig)->epart[ii];
+// // 	  icount++;
+// // 	}
+// //       }
+// //     }
+// //     fout.write((char *)&var_el[0],nel*sizeof(double));
+// //   }
+// //   
+// //   // ********** End printing Regions **********
+// //   
+// //   // ********** Start printing Solution **********
+// //   for (unsigned i=0; i<SolType.size(); i++) {
+// //     for(int name=0;name<4;name++){
+// //       if (name==0){
+// // 	sprintf(det,"%s %s","Sol",SolName[i]);
+// //       }
+// //       else if (name==1){
+// // 	sprintf(det,"%s %s","Bdc",SolName[i]);
+// //       }
+// //       else if (name==2){
+// // 	sprintf(det,"%s %s","Res",SolName[i]);
+// //       }
+// //       else{
+// // 	sprintf(det,"%s %s","Eps",SolName[i]);
+// //       }
+// //       if(name==0 || (debug && _solution[igridn-1u]->_ResEpsBdcFlag[i])){
+// // 	if (SolType[i]<3) {  // **********  on the nodes **********
+// // 	  fout.write((char *)det,sizeof(char)*8);
+// // 	  fout.write((char *)&one,sizeof(unsigned));
+// // 	  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+// // 	    if (name==0){
+// // 	      Mysol[ig]->matrix_mult(*_solution[ig]->_Sol[i],*ProlQitoQj_[index][SolType[i]][ig]);  
+// // 	    }
+// // 	    else if (name==1){
+// // 	      Mysol[ig]->matrix_mult(*_solution[ig]->_Bdc[i],*ProlQitoQj_[index][SolType[i]][ig]);
+// // 	    }
+// // 	    else if (name==2){
+// // 	      Mysol[ig]->matrix_mult(*_solution[ig]->_Res[i],*ProlQitoQj_[index][SolType[i]][ig]);
+// // 	    }
+// // 	    else{
+// // 	      Mysol[ig]->matrix_mult(*_solution[ig]->_Eps[i],*ProlQitoQj_[index][SolType[i]][ig]);
+// // 	    }
+// // 	    std::vector<double> v_local;
+// // 	    Mysol[ig]->localize_to_one(v_local,0);
+// // 	    fout.write((char *)&v_local[0],v_local.size()*sizeof(double));
+// // 	  }
+// // 	}
+// // 	else { // ********** on the elements **********
+// // 	  fout.write((char *)det,sizeof(char)*8);
+// // 	  fout.write((char *)&zero,sizeof(unsigned));
+// // 	  int icount=0;
+// // 	  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+// // 	    std::vector<double> v_local;
+// // 	    if (name==0){
+// // 	      _solution[ig]->_Sol[i]->localize_to_one(v_local,0); 
+// // 	    }
+// // 	    else if (name==1){
+// // 	      _solution[ig]->_Bdc[i]->localize_to_one(v_local,0); 
+// // 	    }
+// // 	    else if (name==2){
+// // 	      _solution[ig]->_Res[i]->localize_to_one(v_local,0);
+// // 	    }
+// // 	    else{
+// // 	      _solution[ig]->_Eps[i]->localize_to_one(v_local,0);
+// // 	    }
+// // 	    for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+// // 	      if ( ig==igridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+// // 		unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,SolType[i]);
+// // 		var_el[icount]=v_local[iel_Metis];
+// // 		icount++;
+// // 	      }
+// // 	    }
+// // 	  }
+// // 	  fout.write((char *)&var_el[0],nel*sizeof(double));
+// // 	}	
+// //       }
+// //     }
+// //   }
+// //   // ********** End printing Solution **********
+// //   sprintf(det,"%s","endvars");
+// //   fout.write((char *)det,sizeof(char)*8);
+// //   
+// //   // ********** End printing Variables **********
+// //   sprintf(det,"%s","endgmv");
+// //   fout.write((char *)det,sizeof(char)*8);
+// //   fout.close();
+// //   // ********** End printing file **********
+// //   
+// //   // Free memory
+// //   delete [] var_el;
+// //   delete [] var_nd;
+// //   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+// //     delete Mysol[ig];
+// //   }
+// //   delete [] det;
+// //   delete [] filename;
+// // 
+// // }
 
 
-// *************************************************************************
-// This function prints the solution in Xdmf - hdf5 format
-// *************************************************************************
 
-void  MultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vector<std::string>& vars) const {
-  
-  // to add time_step
-  int time_step = 0;
-  
-  if(_iproc!=0) return;
-  
-  bool test_all=!(vars[0].compare("All"));
-    
-  unsigned index=0;
-  unsigned index_nd=0;
-  if(!strcmp(type,"linear")) {    //linear
-    index=0;
-    index_nd=0;
-  }
-  else if(!strcmp(type,"quadratic")) {  //quadratic
-    index=1;
-    index_nd=1;
-  }
-  else if(!strcmp(type,"biquadratic")) { //biquadratic
-    index=3;
-    index_nd=2;
-  }
-
-  const string type_el[4][6] = {{"Hexahedron","Tetrahedron","Wedge","Quadrilateral","Triangle","Edge"},
-                                {"Hexahedron_20","Tetrahedron_10","Not_implemented","Quadrilateral_8","Triangle_6","Edge_3"},
-			        {"Not_implemented","Not_implemented","Not_implemented","Not_implemented",
-				 "Not_implemented","Not_implemented"},
-                                {"Not_implemented","Not_implemented","Not_implemented","Quadrilateral_9",
-				 "Not_implemented","Not_implemented"}};
-			 
-  
-  //I assume that the mesh is not mixed
-  string type_elem;
-  type_elem = type_el[index][_ml_msh->GetLevel(_gridn-1u)->el->GetElementType(0)];
-  
-  if (type_elem.compare("Not_implemented") == 0) exit(1);
-  
-  unsigned nvt=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    unsigned nvt_ig=_ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
-    nvt+=nvt_ig;
-  } 
-  
-  // Printing connectivity
-  unsigned nel=0;
-  for(unsigned ig=0;ig<_gridn-1u;ig++) {
-    nel+=( _ml_msh->GetLevel(ig)->GetElementNumber() - _ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
-  }
-  nel+=_ml_msh->GetLevel(_gridn-1u)->GetElementNumber();
-  
-  unsigned icount;
-  unsigned el_dof_number  = _ml_msh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index);
-  int *var_int             = new int [nel*el_dof_number];
-  float *var_el_f         = new float [nel];
-  float *var_nd_f         = new float [nvt];
-
-  char *filename= new char[60];
-  std::ofstream fout;
-  
-  //--------------------------------------------------------------------------------------------------
-  // Print The Xdmf wrapper
-  sprintf(filename,"./output/mesh.level%d.%d.%s.xmf",_gridn,time_step,type);
-  //std::ofstream fout;
-  fout.open(filename);
-  if (!fout) {
-    cout << "Output mesh file "<<filename<<" cannot be opened.\n";
-    exit(0);
-  }
-  
-  // Print The HDF5 file
-  sprintf(filename,"./mesh.level%d.%d.%s.h5",_gridn,time_step,type);
-  // haed ************************************************
-  fout<<"<?xml version=\"1.0\" ?>" << endl;
-  fout<<"<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd []\">"<<endl;
-  fout<<"<Xdmf>"<<endl;
-  fout<<"<Domain>"<<endl;
-  fout<<"<Grid Name=\"Mesh\">"<<endl;
-  fout<<"<Time Value =\""<< time_step<< "\" />"<<endl;
-  fout<<"<Topology TopologyType=\""<< type_elem <<"\" NumberOfElements=\""<< nel <<"\">"<<endl;
-  //Connectivity
-  fout<<"<DataStructure DataType=\"Int\" Dimensions=\""<< nel*el_dof_number <<"\"" << "  Format=\"HDF\">" << endl;
-  fout << filename << ":CONNECTIVITY" << endl;
-  fout <<"</DataStructure>" << endl;
-  fout << "</Topology>" << endl;
-  fout << "<Geometry Type=\"X_Y_Z\">" << endl;
-  //Node_X
-  fout<<"<DataStructure DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << endl;
-  fout << filename << ":NODES_X1" << endl;
-  fout <<"</DataStructure>" << endl;
-  //Node_Y
-  fout<<"<DataStructure DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << endl;
-  fout << filename << ":NODES_X2" << endl;
-  fout <<"</DataStructure>" << endl;
-  //Node_Z
-  fout<<"<DataStructure DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << endl;
-  fout << filename << ":NODES_X3" << endl;
-  fout <<"</DataStructure>" << endl;
-  fout <<"</Geometry>" << endl;
-  //Regions
-  fout << "<Attribute Name=\""<< "Regions"<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << endl;
-  fout << "<DataItem DataType=\"Int\" Dimensions=\""<< nel << "\"" << "  Format=\"HDF\">" << endl;
-  fout << filename << ":REGIONS" << endl;
-  fout << "</DataItem>" << endl;
-  fout << "</Attribute>" << endl;
-  // Solution Variables
-  for (unsigned i=0; i<vars.size(); i++) {
-    unsigned indx=GetIndex(vars[i].c_str());  
-    //Printing biquadratic solution on the nodes
-    if(SolType[indx]<3) {  
-      fout << "<Attribute Name=\""<< SolName[indx]<<"\" AttributeType=\"Scalar\" Center=\"Node\">" << endl;
-      fout << "<DataItem DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << endl;
-      fout << filename << ":" << SolName[indx] << endl;
-      fout << "</DataItem>" << endl;
-      fout << "</Attribute>" << endl;
-    }
-    else if (SolType[indx]>=3) {  //Printing picewise constant solution on the element
-      fout << "<Attribute Name=\""<< SolName[indx]<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << endl;
-      fout << "<DataItem DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nel << "\"  Format=\"HDF\">" << endl;
-      fout << filename << ":" << SolName[indx] << endl;
-      fout << "</DataItem>" << endl;
-      fout << "</Attribute>" << endl;
-    }
-  }
-
-  fout <<"</Grid>" << endl;
-  fout <<"</Domain>" << endl;
-  fout <<"</Xdmf>" << endl;
-  fout.close();
-  //----------------------------------------------------------------------------------------------------------
-  
-  //----------------------------------------------------------------------------------------------------------
-  hid_t file_id;
-  sprintf(filename,"./output/mesh.level%d.%d.%s.h5",_gridn,time_step,type);
-  file_id = H5Fcreate(filename,H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
-  hsize_t dimsf[2];
-  herr_t status;
-  hid_t dataspace;
-  hid_t dataset;
-  
-  //-----------------------------------------------------------------------------------------------------------
-  // Printing nodes coordinates 
-  
-  PetscScalar *MYSOL[1]; //TODO
-  unsigned varind[3];
-  varind[0]=GetIndex("X");
-  varind[1]=GetIndex("Y");
-  varind[2]=GetIndex("Z");
-
-  
-  for (int i=0; i<3; i++) {
-    unsigned offset_nvt=0;
-    for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-      NumericVector* mysol;
-      mysol = NumericVector::build().release();
-      mysol->init(_ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,SERIAL);
-      mysol->matrix_mult(*_solution[ig]->_Sol[varind[i]],*ProlQitoQj_[index_nd][SolType[varind[i]]][ig]);
-      unsigned nvt_ig=_ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
-      for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
-      if (_moving_mesh) {
-	unsigned varind_DXDYDZ=GetIndex(_moving_vars[i].c_str());
-	mysol->matrix_mult(*_solution[ig]->_Sol[varind_DXDYDZ],*ProlQitoQj_[index_nd][SolType[varind_DXDYDZ]][ig]);
-	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] += (*mysol)(ii);
-      }
-      offset_nvt+=nvt_ig;
-      delete mysol;
-    }
-    
-    dimsf[0] = nvt ;  dimsf[1] = 1;
-    std::ostringstream Name; Name << "/NODES_X" << i+1;
-    dataspace = H5Screate_simple(2,dimsf, NULL);
-    dataset   = H5Dcreate(file_id,Name.str().c_str(),H5T_NATIVE_FLOAT,
-			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    status = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_nd_f[0]);
-    H5Sclose(dataspace);
-    H5Dclose(dataset);
-    
-  }
-  
-  //-------------------------------------------------------------------------------------------------------------
-
-  //------------------------------------------------------------------------------------------------------
-  //connectivity
-  icount = 0;
-  unsigned offset_conn=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
-      if (_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-        for (unsigned j=0; j<_ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
-	  unsigned jnode=_ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,j)-1u;
-	  unsigned jnode_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
-	  var_int[icount] = offset_conn + jnode_Metis;
-	  icount++;
-	}
-      }
-    }
-    offset_conn += _ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
-  }
-  
-  dimsf[0] = nel*el_dof_number ;  dimsf[1] = 1;
-  dataspace = H5Screate_simple(2,dimsf, NULL);
-  dataset   = H5Dcreate(file_id,"/CONNECTIVITY",H5T_NATIVE_INT,
-			dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_int[0]);
-  H5Sclose(dataspace);
-  H5Dclose(dataset);
-  //------------------------------------------------------------------------------------------------------
-  
-  
-  //-------------------------------------------------------------------------------------------------------
-  // print regions
-  icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-      if (ig==_gridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
-	var_int[icount] = _ml_msh->GetLevel(ig)->el->GetElementGroup(iel_Metis);
-	icount++;
-      }
-    }
-  } 
-   
-  dimsf[0] = nel;  dimsf[1] = 1;
-  dataspace = H5Screate_simple(2,dimsf, NULL);
-  dataset   = H5Dcreate(file_id,"/REGIONS",H5T_NATIVE_INT,
-			dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_int[0]);
-  H5Sclose(dataspace);
-  H5Dclose(dataset);
-  
-  //-------------------------------------------------------------------------------------------------------
-  // printing element variables
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*SolName.size(); i++) {
-    unsigned indx=(test_all==0)?GetIndex(vars[i].c_str()):i;
-    if (SolType[indx]>=3) {
-      icount=0;
-      for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-	  if (ig==_gridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	    unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,SolType[indx]);
-	    var_el_f[icount]=(*_solution[ig]->_Sol[indx])(iel_Metis);
-	    icount++;
-	  }
-	}
-      } 
-     
-      dimsf[0] = nel;  dimsf[1] = 1;
-      dataspace = H5Screate_simple(2,dimsf, NULL);
-      dataset   = H5Dcreate(file_id,SolName[indx],H5T_NATIVE_FLOAT,
-			    dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_el_f[0]);
-      H5Sclose(dataspace);
-      H5Dclose(dataset);
-     
-    }
-  }
-  
-  //-------------------------------------------------------------------------------------------------------
-  // printing nodes variables
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*SolName.size(); i++) {
-    unsigned indx=(test_all==0)?GetIndex(vars[i].c_str()):i;
-    if (SolType[indx] < 3) {
-      unsigned offset_nvt=0;
-      for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-        NumericVector* mysol;
-	mysol = NumericVector::build().release();
-        mysol->init(_ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,SERIAL);
-	mysol->matrix_mult(*_solution[ig]->_Sol[indx],*ProlQitoQj_[index_nd][SolType[indx]][ig]);
-	unsigned nvt_ig=_ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
-	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
-	offset_nvt+=nvt_ig;
-	delete mysol;
-      }
-     
-      dimsf[0] = nvt;  dimsf[1] = 1;
-      dataspace = H5Screate_simple(2,dimsf, NULL);
-      dataset   = H5Dcreate(file_id,SolName[indx],H5T_NATIVE_FLOAT,
-			    dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_nd_f[0]);
-      H5Sclose(dataspace);
-      H5Dclose(dataset);
-    }
-  }
-  //-------------------------------------------------------------------------------------------------------
-    
-  // Close the file -------------
-  H5Fclose(file_id);
- 
-  //free memory
-  delete [] filename;
-  delete [] var_int;
-  delete [] var_el_f;
-  delete [] var_nd_f;
-  
-}
+// // // *************************************************************************
+// // // This function prints the solution in vtu binary (64-encoded) format
+// // // *************************************************************************
+// // 
+// // void  MultiLevelProblem::printsol_vtu_inline(const char type[], std::vector<std::string>& vars, const unsigned time_step) const {
+// //   
+// //   bool test_all=!(vars[0].compare("All"));
+// //   
+// //   int icount;
+// //   unsigned index=0;
+// //   unsigned index_nd=0;
+// //   if (!strcmp(type,"linear")) {   //linear
+// //     index=0;
+// //     index_nd=0;
+// //   } else if (!strcmp(type,"quadratic")) { //quadratic
+// //     index=1;
+// //     index_nd=1;
+// //   } else if (!strcmp(type,"biquadratic")) { //biquadratic
+// //     index=3;
+// //     index_nd=2;
+// //   }
+// // 
+// //   const int eltp[4][6]= {{12,10,13,9,5,3},{25,24,26,23,22,21},{},{29,1,1,28,22,1}};
+// //   
+// //   char *filename= new char[60];
+// //   sprintf(filename,"./output/mesh.level%d.%d.%s.vtu",_gridn,time_step,type);
+// //   std::ofstream fout;
+// //   
+// //   if(_iproc!=0) {
+// //     fout.rdbuf();   //redirect to dev_null
+// //   }
+// //   else {
+// //     fout.open(filename);
+// //     if (!fout) {
+// //       cout << "Output mesh file "<<filename<<" cannot be opened.\n";
+// //       exit(0);
+// //     }
+// //   }
+// //   // haed ************************************************
+// //   fout<<"<?xml version=\"1.0\"?>" << endl;
+// //   fout<<"<VTKFile type = \"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
+// //   fout << " <UnstructuredGrid>" << endl;
+// //   //-----------------------------------------------------------------------------------------------------------
+// // 
+// //   //----------------------------------------------------------------------------------------------------------
+// //   
+// //   unsigned nvt=0;
+// //   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //     unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+// //     nvt+=nvt_ig;
+// //   }  
+// // 
+// //   unsigned nel=0;
+// //   unsigned counter=0;
+// //   for (unsigned ig=_gridr-1u; ig<_gridn-1u; ig++) {
+// //     nel+=( _ml_msh->GetLevel(ig)->GetElementNumber() - _ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
+// //     counter+=(_ml_msh->GetLevel(ig)->el->GetElementNumber("Hex")-_ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Hex"))*NVE[0][index];
+// //     counter+=(_ml_msh->GetLevel(ig)->el->GetElementNumber("Tet")-_ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Tet"))*NVE[1][index];
+// //     counter+=(_ml_msh->GetLevel(ig)->el->GetElementNumber("Wedge")-_ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Wedge"))*NVE[2][index];
+// //     counter+=(_ml_msh->GetLevel(ig)->el->GetElementNumber("Quad")-_ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Quad"))*NVE[3][index];
+// //     counter+=(_ml_msh->GetLevel(ig)->el->GetElementNumber("Triangle")-_ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Triangle"))*NVE[4][index];
+// //     counter+=(_ml_msh->GetLevel(ig)->el->GetElementNumber("Line")-_ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Line"))*NVE[5][index];
+// //   }
+// //   nel+=_ml_msh->GetLevel(_gridn-1u)->GetElementNumber();
+// //   counter+=_ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Hex")*NVE[0][index];
+// //   counter+=_ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Tet")*NVE[1][index];
+// //   counter+=_ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Wedge")*NVE[2][index];
+// //   counter+=_ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Quad")*NVE[3][index];
+// //   counter+=_ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Triangle")*NVE[4][index];
+// //   counter+=_ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Line")*NVE[5][index]; 
+// //   
+// //   const unsigned dim_array_coord [] = { nvt*3*sizeof(float) };  
+// //   const unsigned dim_array_conn[]   = { counter*sizeof(int) };
+// //   const unsigned dim_array_off []   = { nel*sizeof(int) };
+// //   const unsigned dim_array_type []  = { nel*sizeof(short unsigned) };
+// //   const unsigned dim_array_reg []   = { nel*sizeof(short unsigned) };
+// //   const unsigned dim_array_elvar [] = { nel*sizeof(float) };
+// //   const unsigned dim_array_ndvar [] = { nvt*sizeof(float) };
+// // 
+// //   // initialize common buffer_void memory 
+// //   unsigned buffer_size=(dim_array_coord[0]>dim_array_conn[0])?dim_array_coord[0]:dim_array_conn[0];
+// //   void *buffer_void=new char [buffer_size];
+// //   char *buffer_char=static_cast <char *>(buffer_void);
+// //   
+// //   size_t cch;
+// //   cch = b64::b64_encode(&buffer_char[0], buffer_size , NULL, 0);  
+// //   vector <char> enc;
+// //   enc.resize(cch);
+// //   char *pt_char;
+// //   
+// //   fout << "  <Piece NumberOfPoints= \"" << nvt << "\" NumberOfCells= \"" << nel << "\" >" << endl;
+// //   
+// //   //-----------------------------------------------------------------------------------------------
+// //   // print coordinates *********************************************Solu*******************************************
+// //   fout << "   <Points>" << endl;
+// //   fout << "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\">" << endl;
+// //   
+// //   vector <NumericVector*> mysol(_gridn);
+// //   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //     mysol[ig] = NumericVector::build().release();
+// //     mysol[ig]->init(_ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],_ml_msh->GetLevel(ig)->own_size[index_nd][_iproc],
+// // 		    true,AUTOMATIC);
+// //   }
+// //   
+// //   // point pointer to common mamory area buffer of void type;
+// //   float *var_coord= static_cast<float*>(buffer_void);
+// // 
+// //   unsigned offset_nvt3=0;
+// //   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //     std::vector<double> v_local;
+// //     unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+// //     for(int kk=0;kk<3;kk++) {
+// //       mysol[ig]->matrix_mult(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[kk],*ProlQitoQj_[index_nd][2][ig]);
+// //       mysol[ig]->localize_to_one(v_local,0);
+// //       if(_iproc==0) { 
+// // 	for (unsigned i=0; i<nvt_ig; i++) {
+// // 	  var_coord[offset_nvt3+i*3+kk] = v_local[i];
+// // 	}
+// //       } //if iproc
+// //     } //loop over dimension
+// //     offset_nvt3+=3*nvt_ig;
+// //   }
+// //   
+// //   if (_moving_mesh) {
+// //     
+// //     unsigned offset_nvt3=0;
+// //     unsigned indDXDYDZ[3];
+// //     indDXDYDZ[0]=GetIndex(_moving_vars[0].c_str());
+// //     indDXDYDZ[1]=GetIndex(_moving_vars[1].c_str());
+// //     if(_ml_msh->GetLevel(0)->GetDimension() == 3) {
+// //       indDXDYDZ[2]=GetIndex(_moving_vars[2].c_str());
+// //     }
+// //       
+// //     for(unsigned ig=_gridr-1u; ig<_gridn; ig++){
+// //       std::vector<double> v_local;
+// //       unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+// //       for(int kk=0;kk<_ml_msh->GetLevel(0)->GetDimension();kk++) {
+// // 	mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indDXDYDZ[kk]],*ProlQitoQj_[index_nd][SolType[indDXDYDZ[kk]]][ig]);
+// //         mysol[ig]->localize_to_one(v_local,0);
+// // 	if(_iproc==0) { 
+// // 	  for (unsigned i=0; i<nvt_ig; i++) {
+// // 	    var_coord[offset_nvt3+i*3+kk] += v_local[i];
+// // 	  }
+// // 	} //if iproc
+// //       } //loop over dimension
+// //       offset_nvt3+=3*nvt_ig;
+// //     }
+// //   }
+// //   
+// //   if(_iproc==0) {
+// //     //print coordinates dimension
+// //     cch = b64::b64_encode(&dim_array_coord[0], sizeof(dim_array_coord), NULL, 0);  
+// //     b64::b64_encode(&dim_array_coord[0], sizeof(dim_array_coord), &enc[0], cch);
+// //     pt_char=&enc[0];
+// //     for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //     
+// //     //print coordinates array
+// //     cch = b64::b64_encode(&var_coord[0], dim_array_coord[0] , NULL, 0);  
+// //     b64::b64_encode(&var_coord[0], dim_array_coord[0], &enc[0], cch);
+// //     pt_char=&enc[0];
+// //     for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //     fout << endl;
+// //   }
+// //   fout << "    </DataArray>" << endl;
+// //   fout << "   </Points>" << endl;
+// //   //-----------------------------------------------------------------------------------------------
+// //   
+// //   //-----------------------------------------------------------------------------------------------
+// //   // Printing of element connectivity - offset - format type  *
+// //   fout << "   <Cells>" << endl;
+// //   
+// //   //-----------------------------------------------------------------------------------------------
+// //   //print connectivity
+// //   fout << "    <DataArray type=\"Int32\" Name=\"connectivity\" format=\"binary\">" << endl;
+// //   
+// //   // point pointer to common mamory area buffer of void type;
+// //   int *var_conn = static_cast <int*> (buffer_void);
+// //   icount = 0;
+// //   unsigned offset_nvt=0;
+// //   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //     for (unsigned iel=0; iel<_ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
+// //       if (_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
+// //         for (unsigned j=0; j<_ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
+// // 	  unsigned jnode=_ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,j)-1u;
+// // 	  unsigned jnode_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
+// // 	  var_conn[icount] = offset_nvt+jnode_Metis;
+// // 	  icount++;
+// // 	}
+// //       }
+// //     }
+// //     offset_nvt+=_ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+// //   }
+// //   
+// //   //print connectivity dimension
+// //   cch = b64::b64_encode(&dim_array_conn[0], sizeof(dim_array_conn), NULL, 0);  
+// //   b64::b64_encode(&dim_array_conn[0], sizeof(dim_array_conn), &enc[0], cch);
+// //   pt_char=&enc[0];
+// //   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //     
+// //   //print connectivity array
+// //   cch = b64::b64_encode(&var_conn[0], dim_array_conn[0] , NULL, 0);  
+// //   b64::b64_encode(&var_conn[0], dim_array_conn[0], &enc[0], cch);
+// //   pt_char=&enc[0];
+// //   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //     
+// //   fout << endl;
+// //   
+// //   fout << "    </DataArray>" << endl;
+// //   //------------------------------------------------------------------------------------------------
+// //   
+// //   //-------------------------------------------------------------------------------------------------
+// //   //printing offset
+// //   fout << "    <DataArray type=\"Int32\" Name=\"offsets\" format=\"binary\">" << endl;
+// //  
+// //   // point pointer to common mamory area buffer of void type;
+// //   int *var_off=static_cast <int*>(buffer_void);
+// //   icount = 0;
+// //   int offset_el=0;
+// //   //print offset array
+// //   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //     for (unsigned iel=0; iel<_ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
+// //       if (_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
+// // 	unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(iel,3);
+// //         offset_el += _ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel_Metis,index);
+// //         var_off[icount] = offset_el;
+// // 	icount++;
+// //       }
+// //     }
+// //   }
+// //   
+// //   //print offset dimension
+// //   cch = b64::b64_encode(&dim_array_off[0], sizeof(dim_array_off), NULL, 0);
+// //   b64::b64_encode(&dim_array_off[0], sizeof(dim_array_off), &enc[0], cch);
+// //   pt_char=&enc[0];
+// //   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //     
+// //   //print offset array
+// //   cch = b64::b64_encode(&var_off[0], dim_array_off[0] , NULL, 0);  
+// //   b64::b64_encode(&var_off[0], dim_array_off[0], &enc[0], cch);
+// //   pt_char=&enc[0];
+// //   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //     
+// //   fout << endl;
+// //   
+// //   fout << "    </DataArray>" << endl;
+// //   //--------------------------------------------------------------------------------------------------
+// //   
+// //   //--------------------------------------------------------------------------------------------------
+// //   //Element format type : 23:Serendipity(8-nodes)  28:Quad9-Biquadratic
+// //   fout << "    <DataArray type=\"UInt16\" Name=\"types\" format=\"binary\">" << endl;
+// //    
+// //   // point pointer to common mamory area buffer of void type;
+// //   unsigned short *var_type = static_cast <unsigned short*> (buffer_void);
+// //   icount=0;
+// //   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //     for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+// //       if (_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)==0 || ig==_gridn-1u) {
+// // 	unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
+// //         short unsigned ielt=_ml_msh->GetLevel(ig)->el->GetElementType(iel_Metis);
+// // 	var_type[icount] = (short unsigned)(eltp[index][ielt]);
+// // 	icount++;
+// //       }
+// //     }
+// //   }
+// //   
+// //   //print element format dimension
+// //   cch = b64::b64_encode(&dim_array_type[0], sizeof(dim_array_type), NULL, 0);  
+// //   b64::b64_encode(&dim_array_type[0], sizeof(dim_array_type), &enc[0], cch);
+// //   pt_char=&enc[0];
+// //   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //     
+// //   //print element format array
+// //   cch = b64::b64_encode(&var_type[0], dim_array_type[0] , NULL, 0);  
+// //   b64::b64_encode(&var_type[0], dim_array_type[0], &enc[0], cch);
+// //   pt_char=&enc[0];
+// //   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //     
+// //   fout << endl;
+// //   fout << "    </DataArray>" << endl;
+// //   //----------------------------------------------------------------------------------------------------
+// //   
+// //   fout << "   </Cells>" << endl;
+// //   //--------------------------------------------------------------------------------------------------
+// // 
+// //   
+// //   
+// //   // /Print Cell Data ****************************************************************************
+// //   fout << "   <CellData Scalars=\"scalars\">" << endl;
+// // 
+// //   //--------------------------------------------------------------------------------------------
+// //   // Print Regions
+// //   fout << "    <DataArray type=\"UInt16\" Name=\"Regions\" format=\"binary\">" << endl;
+// //   
+// //   // point pointer to common mamory area buffer of void type;
+// //   unsigned short* var_reg=static_cast <unsigned short*> (buffer_void);
+// //   icount=0;
+// //   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //     for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+// //       if ( ig==_gridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+// // 	unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
+// // 	var_reg[icount]= _ml_msh->GetLevel(ig)->el->GetElementGroup(ii);
+// // 	icount++;
+// //       }
+// //     }
+// //   }
+// //   
+// //   //print regions dimension
+// //   cch = b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), NULL, 0);  
+// //   b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), &enc[0], cch);
+// //   pt_char=&enc[0];
+// //   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //     
+// //   
+// //   //print regions array
+// //   cch = b64::b64_encode(&var_reg[0], dim_array_reg[0] , NULL, 0);  
+// //   b64::b64_encode(&var_reg[0], dim_array_reg[0], &enc[0], cch);
+// //   pt_char=&enc[0];
+// //   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //     
+// //   fout << endl;
+// //   fout << "    </DataArray>" << endl;
+// //   //-----------------------------------------------------------------------------------------------------   
+// //   // Print Metis Partitioning
+// //   fout << "    <DataArray type=\"UInt16\" Name=\"Domain_partition\" format=\"binary\">" << endl;
+// //   
+// //   // point pointer to common mamory area buffer of void type;
+// //   unsigned short* var_proc=static_cast <unsigned short*> (buffer_void);
+// //   icount=0;
+// //   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //     for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+// //       if ( ig==_gridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+// // 	unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
+// // 	var_proc[icount]=(unsigned short)(_ml_msh->GetLevel(ig)->epart[ii]);
+// // 	icount++;
+// //       }
+// //     }
+// //   }
+// //   
+// //   //print regions dimension
+// //   cch = b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), NULL, 0);  
+// //   b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), &enc[0], cch);
+// //   pt_char=&enc[0];
+// //   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //     
+// //   
+// //   //print regions array
+// //   cch = b64::b64_encode(&var_proc[0], dim_array_reg[0] , NULL, 0);  
+// //   b64::b64_encode(&var_proc[0], dim_array_reg[0], &enc[0], cch);
+// //   pt_char=&enc[0];
+// //   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //     
+// //   fout << endl;
+// //   fout << "    </DataArray>" << endl;
+// //   
+// // 
+// //   //Print Solution (on element) ***************************************************************
+// //   for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*SolName.size(); i++) {
+// //     unsigned indx=(test_all==0)?GetIndex(vars[i].c_str()):i;
+// //     if (3 <= SolType[indx]) {
+// //       fout << "    <DataArray type=\"Float32\" Name=\"" << SolName[indx] <<"\" format=\"binary\">" << endl;
+// //       // point pointer to common memory area buffer of void type;
+// //       float *var_el = static_cast< float*> (buffer_void);
+// //       icount=0;
+// //       for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// // 	vector<double> sol_local;
+// // 	_solution[ig]->_Sol[indx]->localize_to_one(sol_local,0);
+// // 	for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+// // 	  if (ig==_gridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+// // 	    unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,SolType[indx]);
+// // 	    var_el[icount]=sol_local[iel_Metis];
+// // 	    icount++;
+// // 	  }
+// // 	}
+// //       }
+// //       
+// //       if(_iproc==0) {
+// //         //print solution on element dimension
+// //         cch = b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), NULL, 0);  
+// //         b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), &enc[0], cch);
+// //         pt_char=&enc[0];
+// //         for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //     
+// //         //print solution on element array
+// //         cch = b64::b64_encode(&var_el[0], dim_array_elvar[0] , NULL, 0);  
+// //         b64::b64_encode(&var_el[0], dim_array_elvar[0], &enc[0], cch);
+// //         pt_char=&enc[0];
+// //         for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //         fout << endl;
+// //         fout << "    </DataArray>" << endl;
+// //       }
+// //       //----------------------------------------------------------------------------------------------------
+// //     }
+// //   }
+// //   fout << "   </CellData>" << endl;
+// //   //   //------------------------------------------------------------------------------------------------
+// //   // 
+// //   //   //------------------------------------------------------------------------------------------------
+// //   // / Print Solution (on nodes) ********************************************************************
+// //   fout<< " <PointData Scalars=\"scalars\"> " << endl;
+// //   //Loop on variables
+// //    
+// //   // point pointer to common mamory area buffer of void type;
+// //   float* var_nd = static_cast<float*>(buffer_void);
+// //   for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*SolName.size(); i++) {
+// //     unsigned indx=(test_all==0)?GetIndex(vars[i].c_str()):i;
+// //     if (SolType[indx]<3) {
+// //       fout << " <DataArray type=\"Float32\" Name=\"" << SolName[indx] <<"\" format=\"binary\">" << endl;
+// //       //print solutions on nodes dimension
+// //       cch = b64::b64_encode(&dim_array_ndvar[0], sizeof(dim_array_ndvar), NULL, 0);  
+// //       b64::b64_encode(&dim_array_ndvar[0], sizeof(dim_array_ndvar), &enc[0], cch);
+// //       pt_char=&enc[0];
+// //       for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //       
+// //       unsigned offset_nvt=0;
+// //       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// // 	mysol[ig]->matrix_mult(*_solution[ig]->_Sol[indx],*ProlQitoQj_[index_nd][SolType[indx]][ig]);
+// // 	vector<double> sol_local;
+// // 	mysol[ig]->localize_to_one(sol_local,0);
+// // 	unsigned nvt_ig=_ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+// // 	for (unsigned ii=0; ii<nvt_ig; ii++) {
+// // 	  var_nd[ii+offset_nvt] = sol_local[ii];
+// // 	}
+// // 	offset_nvt+=nvt_ig;
+// //       }
+// //       
+// //       if(_iproc==0) {
+// //         cch = b64::b64_encode(&var_nd[0], dim_array_ndvar [0], NULL, 0);  
+// //         b64::b64_encode(&var_nd[0], dim_array_ndvar [0], &enc[0], cch);
+// //         pt_char=&enc[0];
+// //         for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
+// //         fout << endl;
+// // 
+// //         fout << "    </DataArray>" << endl;
+// //       }
+// //     } //endif
+// //   } // end for sol
+// //   fout << "   </PointData>" << endl;
+// //   
+// //   //------------------------------------------------------------------------------------------------
+// //   
+// // 
+// //   fout << "  </Piece>" << endl;
+// //   fout << " </UnstructuredGrid>" << endl;
+// //   fout << "</VTKFile>" << endl;
+// //   fout.close();
+// // 
+// //   
+// //   
+// //   //-----------------------------------------------------------------------------------------------------
+// //   //free memory
+// //   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //     delete mysol[ig];
+// //   }
+// //   delete [] filename;
+// //   delete [] var_nd;  
+// //   
+// //   //--------------------------------------------------------------------------------------------------------
+// // }
+// // 
+// // 
+// // // *************************************************************************
+// // // This function prints the solution in Xdmf - hdf5 format
+// // // *************************************************************************
+// // 
+// // void  MultiLevelProblem::printsol_xdmf_hdf5(const char type[], std::vector<std::string>& vars) const {
+// //   
+// //   // to add time_step
+// //   int time_step = 0;
+// //   
+// //   if(_iproc!=0) return;
+// //   
+// //   bool test_all=!(vars[0].compare("All"));
+// //     
+// //   unsigned index=0;
+// //   unsigned index_nd=0;
+// //   if(!strcmp(type,"linear")) {    //linear
+// //     index=0;
+// //     index_nd=0;
+// //   }
+// //   else if(!strcmp(type,"quadratic")) {  //quadratic
+// //     index=1;
+// //     index_nd=1;
+// //   }
+// //   else if(!strcmp(type,"biquadratic")) { //biquadratic
+// //     index=3;
+// //     index_nd=2;
+// //   }
+// // 
+// //   const string type_el[4][6] = {{"Hexahedron","Tetrahedron","Wedge","Quadrilateral","Triangle","Edge"},
+// //                                 {"Hexahedron_20","Tetrahedron_10","Not_implemented","Quadrilateral_8","Triangle_6","Edge_3"},
+// // 			        {"Not_implemented","Not_implemented","Not_implemented","Not_implemented",
+// // 				 "Not_implemented","Not_implemented"},
+// //                                 {"Not_implemented","Not_implemented","Not_implemented","Quadrilateral_9",
+// // 				 "Not_implemented","Not_implemented"}};
+// // 			 
+// //   
+// //   //I assume that the mesh is not mixed
+// //   string type_elem;
+// //   type_elem = type_el[index][_ml_msh->GetLevel(_gridn-1u)->el->GetElementType(0)];
+// //   
+// //   if (type_elem.compare("Not_implemented") == 0) exit(1);
+// //   
+// //   unsigned nvt=0;
+// //   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //     unsigned nvt_ig=_ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+// //     nvt+=nvt_ig;
+// //   } 
+// //   
+// //   // Printing connectivity
+// //   unsigned nel=0;
+// //   for(unsigned ig=0;ig<_gridn-1u;ig++) {
+// //     nel+=( _ml_msh->GetLevel(ig)->GetElementNumber() - _ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
+// //   }
+// //   nel+=_ml_msh->GetLevel(_gridn-1u)->GetElementNumber();
+// //   
+// //   unsigned icount;
+// //   unsigned el_dof_number  = _ml_msh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index);
+// //   int *var_int             = new int [nel*el_dof_number];
+// //   float *var_el_f         = new float [nel];
+// //   float *var_nd_f         = new float [nvt];
+// // 
+// //   char *filename= new char[60];
+// //   std::ofstream fout;
+// //   
+// //   //--------------------------------------------------------------------------------------------------
+// //   // Print The Xdmf wrapper
+// //   sprintf(filename,"./output/mesh.level%d.%d.%s.xmf",_gridn,time_step,type);
+// //   //std::ofstream fout;
+// //   fout.open(filename);
+// //   if (!fout) {
+// //     cout << "Output mesh file "<<filename<<" cannot be opened.\n";
+// //     exit(0);
+// //   }
+// //   
+// //   // Print The HDF5 file
+// //   sprintf(filename,"./mesh.level%d.%d.%s.h5",_gridn,time_step,type);
+// //   // haed ************************************************
+// //   fout<<"<?xml version=\"1.0\" ?>" << endl;
+// //   fout<<"<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd []\">"<<endl;
+// //   fout<<"<Xdmf>"<<endl;
+// //   fout<<"<Domain>"<<endl;
+// //   fout<<"<Grid Name=\"Mesh\">"<<endl;
+// //   fout<<"<Time Value =\""<< time_step<< "\" />"<<endl;
+// //   fout<<"<Topology TopologyType=\""<< type_elem <<"\" NumberOfElements=\""<< nel <<"\">"<<endl;
+// //   //Connectivity
+// //   fout<<"<DataStructure DataType=\"Int\" Dimensions=\""<< nel*el_dof_number <<"\"" << "  Format=\"HDF\">" << endl;
+// //   fout << filename << ":CONNECTIVITY" << endl;
+// //   fout <<"</DataStructure>" << endl;
+// //   fout << "</Topology>" << endl;
+// //   fout << "<Geometry Type=\"X_Y_Z\">" << endl;
+// //   //Node_X
+// //   fout<<"<DataStructure DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << endl;
+// //   fout << filename << ":NODES_X1" << endl;
+// //   fout <<"</DataStructure>" << endl;
+// //   //Node_Y
+// //   fout<<"<DataStructure DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << endl;
+// //   fout << filename << ":NODES_X2" << endl;
+// //   fout <<"</DataStructure>" << endl;
+// //   //Node_Z
+// //   fout<<"<DataStructure DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << endl;
+// //   fout << filename << ":NODES_X3" << endl;
+// //   fout <<"</DataStructure>" << endl;
+// //   fout <<"</Geometry>" << endl;
+// //   //Regions
+// //   fout << "<Attribute Name=\""<< "Regions"<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << endl;
+// //   fout << "<DataItem DataType=\"Int\" Dimensions=\""<< nel << "\"" << "  Format=\"HDF\">" << endl;
+// //   fout << filename << ":REGIONS" << endl;
+// //   fout << "</DataItem>" << endl;
+// //   fout << "</Attribute>" << endl;
+// //   // Solution Variables
+// //   for (unsigned i=0; i<vars.size(); i++) {
+// //     unsigned indx=GetIndex(vars[i].c_str());  
+// //     //Printing biquadratic solution on the nodes
+// //     if(SolType[indx]<3) {  
+// //       fout << "<Attribute Name=\""<< SolName[indx]<<"\" AttributeType=\"Scalar\" Center=\"Node\">" << endl;
+// //       fout << "<DataItem DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << endl;
+// //       fout << filename << ":" << SolName[indx] << endl;
+// //       fout << "</DataItem>" << endl;
+// //       fout << "</Attribute>" << endl;
+// //     }
+// //     else if (SolType[indx]>=3) {  //Printing picewise constant solution on the element
+// //       fout << "<Attribute Name=\""<< SolName[indx]<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << endl;
+// //       fout << "<DataItem DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nel << "\"  Format=\"HDF\">" << endl;
+// //       fout << filename << ":" << SolName[indx] << endl;
+// //       fout << "</DataItem>" << endl;
+// //       fout << "</Attribute>" << endl;
+// //     }
+// //   }
+// // 
+// //   fout <<"</Grid>" << endl;
+// //   fout <<"</Domain>" << endl;
+// //   fout <<"</Xdmf>" << endl;
+// //   fout.close();
+// //   //----------------------------------------------------------------------------------------------------------
+// //   
+// //   //----------------------------------------------------------------------------------------------------------
+// //   hid_t file_id;
+// //   sprintf(filename,"./output/mesh.level%d.%d.%s.h5",_gridn,time_step,type);
+// //   file_id = H5Fcreate(filename,H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
+// //   hsize_t dimsf[2];
+// //   herr_t status;
+// //   hid_t dataspace;
+// //   hid_t dataset;
+// //   
+// //   //-----------------------------------------------------------------------------------------------------------
+// //   // Printing nodes coordinates 
+// //   
+// //   PetscScalar *MYSOL[1]; //TODO
+// // //   unsigned varind[3];
+// // //   varind[0]=GetIndex("X");
+// // //   varind[1]=GetIndex("Y");
+// // //   varind[2]=GetIndex("Z");
+// // 
+// //   
+// //   for (int i=0; i<3; i++) {
+// //     unsigned offset_nvt=0;
+// //     for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //       NumericVector* mysol;
+// //       mysol = NumericVector::build().release();
+// //       mysol->init(_ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,SERIAL);
+// //       mysol->matrix_mult(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[i],*ProlQitoQj_[index_nd][2][ig]);
+// //       unsigned nvt_ig=_ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+// //       for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
+// //       if (_moving_mesh) {
+// // 	unsigned varind_DXDYDZ=GetIndex(_moving_vars[i].c_str());
+// // 	mysol->matrix_mult(*_solution[ig]->_Sol[varind_DXDYDZ],*ProlQitoQj_[index_nd][SolType[varind_DXDYDZ]][ig]);
+// // 	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] += (*mysol)(ii);
+// //       }
+// //       offset_nvt+=nvt_ig;
+// //       delete mysol;
+// //     }
+// //     
+// //     dimsf[0] = nvt ;  dimsf[1] = 1;
+// //     std::ostringstream Name; Name << "/NODES_X" << i+1;
+// //     dataspace = H5Screate_simple(2,dimsf, NULL);
+// //     dataset   = H5Dcreate(file_id,Name.str().c_str(),H5T_NATIVE_FLOAT,
+// // 			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+// //     status = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_nd_f[0]);
+// //     H5Sclose(dataspace);
+// //     H5Dclose(dataset);
+// //     
+// //   }
+// //   
+// //   //-------------------------------------------------------------------------------------------------------------
+// // 
+// //   //------------------------------------------------------------------------------------------------------
+// //   //connectivity
+// //   icount = 0;
+// //   unsigned offset_conn=0;
+// //   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //     for (unsigned iel=0; iel<_ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
+// //       if (_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
+// //         for (unsigned j=0; j<_ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
+// // 	  unsigned jnode=_ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,j)-1u;
+// // 	  unsigned jnode_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
+// // 	  var_int[icount] = offset_conn + jnode_Metis;
+// // 	  icount++;
+// // 	}
+// //       }
+// //     }
+// //     offset_conn += _ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+// //   }
+// //   
+// //   dimsf[0] = nel*el_dof_number ;  dimsf[1] = 1;
+// //   dataspace = H5Screate_simple(2,dimsf, NULL);
+// //   dataset   = H5Dcreate(file_id,"/CONNECTIVITY",H5T_NATIVE_INT,
+// // 			dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+// //   status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_int[0]);
+// //   H5Sclose(dataspace);
+// //   H5Dclose(dataset);
+// //   //------------------------------------------------------------------------------------------------------
+// //   
+// //   
+// //   //-------------------------------------------------------------------------------------------------------
+// //   // print regions
+// //   icount=0;
+// //   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //     for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+// //       if (ig==_gridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+// // 	unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
+// // 	var_int[icount] = _ml_msh->GetLevel(ig)->el->GetElementGroup(iel_Metis);
+// // 	icount++;
+// //       }
+// //     }
+// //   } 
+// //    
+// //   dimsf[0] = nel;  dimsf[1] = 1;
+// //   dataspace = H5Screate_simple(2,dimsf, NULL);
+// //   dataset   = H5Dcreate(file_id,"/REGIONS",H5T_NATIVE_INT,
+// // 			dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+// //   status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_int[0]);
+// //   H5Sclose(dataspace);
+// //   H5Dclose(dataset);
+// //   
+// //   //-------------------------------------------------------------------------------------------------------
+// //   // printing element variables
+// //   for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*SolName.size(); i++) {
+// //     unsigned indx=(test_all==0)?GetIndex(vars[i].c_str()):i;
+// //     if (SolType[indx]>=3) {
+// //       icount=0;
+// //       for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// // 	for (unsigned ii=0; ii<_ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+// // 	  if (ig==_gridn-1u || 0==_ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+// // 	    unsigned iel_Metis = _ml_msh->GetLevel(ig)->GetMetisDof(ii,SolType[indx]);
+// // 	    var_el_f[icount]=(*_solution[ig]->_Sol[indx])(iel_Metis);
+// // 	    icount++;
+// // 	  }
+// // 	}
+// //       } 
+// //      
+// //       dimsf[0] = nel;  dimsf[1] = 1;
+// //       dataspace = H5Screate_simple(2,dimsf, NULL);
+// //       dataset   = H5Dcreate(file_id,SolName[indx],H5T_NATIVE_FLOAT,
+// // 			    dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+// //       status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_el_f[0]);
+// //       H5Sclose(dataspace);
+// //       H5Dclose(dataset);
+// //      
+// //     }
+// //   }
+// //   
+// //   //-------------------------------------------------------------------------------------------------------
+// //   // printing nodes variables
+// //   for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*SolName.size(); i++) {
+// //     unsigned indx=(test_all==0)?GetIndex(vars[i].c_str()):i;
+// //     if (SolType[indx] < 3) {
+// //       unsigned offset_nvt=0;
+// //       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// //         NumericVector* mysol;
+// // 	mysol = NumericVector::build().release();
+// //         mysol->init(_ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,SERIAL);
+// // 	mysol->matrix_mult(*_solution[ig]->_Sol[indx],*ProlQitoQj_[index_nd][SolType[indx]][ig]);
+// // 	unsigned nvt_ig=_ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+// // 	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
+// // 	offset_nvt+=nvt_ig;
+// // 	delete mysol;
+// //       }
+// //      
+// //       dimsf[0] = nvt;  dimsf[1] = 1;
+// //       dataspace = H5Screate_simple(2,dimsf, NULL);
+// //       dataset   = H5Dcreate(file_id,SolName[indx],H5T_NATIVE_FLOAT,
+// // 			    dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+// //       status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_nd_f[0]);
+// //       H5Sclose(dataspace);
+// //       H5Dclose(dataset);
+// //     }
+// //   }
+// //   //-------------------------------------------------------------------------------------------------------
+// //     
+// //   // Close the file -------------
+// //   H5Fclose(file_id);
+// //  
+// //   //free memory
+// //   delete [] filename;
+// //   delete [] var_int;
+// //   delete [] var_el_f;
+// //   delete [] var_nd_f;
+// //   
+// // }
 

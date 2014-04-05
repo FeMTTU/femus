@@ -2,7 +2,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelMesh.hpp"
 // Timedependent MultiGrid Header
-#include "NonLinearTimeDependentMultiLevelProblem.hpp"
+// #include "NonLinearTimeDependentMultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "PetscVector.hpp"
 #include "LinearEquationSolver.hpp"
@@ -11,6 +11,7 @@
 #include "Parameter.hpp"
 #include <iostream>
 #include "FemTTUInit.hpp"
+#include "VTKOutput.hpp"
 
 #include "../include/FSIassembly.hpp"
 
@@ -37,11 +38,11 @@ int main(int argc,char **args) {
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
-  nm=3;
+  nm=1;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
-  nr=1;
+  nr=0;
   int tmp=nm;
   nm+=nr;
   nr=tmp;
@@ -107,10 +108,10 @@ int main(int argc,char **args) {
   ml_probl.GenerateBdc("AY","Steady");
   ml_probl.GenerateBdc("P","Steady");
   
-  std::vector<std::string> mov_vars;
-  mov_vars.push_back("DX");
-  mov_vars.push_back("DY");
-  ml_probl.SetMovingMesh(mov_vars);
+//   std::vector<std::string> mov_vars;
+//   mov_vars.push_back("DX");
+//   mov_vars.push_back("DY");
+//   ml_probl.SetMovingMesh(mov_vars);
   ml_probl.MarkStructureNode();
   
   //create systems
@@ -154,8 +155,15 @@ int main(int argc,char **args) {
   // time loop parameter
   system.SetIntervalTime(0.005);
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 5;
+  const unsigned int n_timesteps = 30;
   const unsigned int write_interval = 1;
+  
+  std::vector<std::string> mov_vars;
+  mov_vars.push_back("DX");
+  mov_vars.push_back("DY");
+//   ml_probl.SetMovingMesh(mov_vars);
+  VTKOutput vtkio(ml_probl);
+  vtkio.SetMovingMesh(mov_vars);
   
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
    
@@ -181,7 +189,8 @@ int main(int argc,char **args) {
       print_vars.push_back("V");
       print_vars.push_back("P");
       
-      ml_probl.printsol_vtu_inline("biquadratic",print_vars,time_step);
+//       ml_probl.printsol_vtu_inline("biquadratic",print_vars,time_step);
+      vtkio.write_system_solutions("biquadratic",print_vars,time_step);
     }
   
   } //end loop timestep
