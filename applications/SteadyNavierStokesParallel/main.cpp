@@ -10,6 +10,8 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "VTKOutput.hpp"
+#include "XDMFOutput.hpp"
+#include "GMVOutput.hpp"
 
 using std::cout;
 using std::endl;
@@ -62,7 +64,7 @@ int main(int argc,char **args) {
   
   //Steadystate NonLinearMultiLevelProblem  
   MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,SetRefinementFlag); 
-  ml_msh.EraseCoarseLevels(2);
+//   ml_msh.EraseCoarseLevels(2);
   MultiLevelProblem ml_prob(&ml_msh);
   
   // add fluid material
@@ -165,15 +167,15 @@ int main(int argc,char **args) {
   print_vars.push_back("P");
   print_vars.push_back("T");
   
-//   ml_prob.printsol_vtu_inline("biquadratic",print_vars);
-//     
-  ml_prob.printsol_gmv_binary("biquadratic",0,1);
-  
+     
   VTKOutput vtkio(ml_prob);
   vtkio.write_system_solutions("biquadratic",print_vars);
   
-  VTKOutput vtkio2(ml_prob);
-  vtkio2.write_system_solutions("biquadratic",print_vars);
+//   XDMFOutput xdmfio(ml_prob);
+//   xdmfio.write_system_solutions("biquadratic",print_vars);
+  
+  GMVOutput gmvio(ml_prob);
+  gmvio.write_system_solutions("biquadratic",print_vars);
   
   // Destroy all the new systems
   ml_prob.clear();

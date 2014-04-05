@@ -8,6 +8,7 @@
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
 #include "SparseMatrix.hpp"
+#include "VTKOutput.hpp"
 using std::cout;
 using std::endl;
 
@@ -112,7 +113,9 @@ int main(int argc,char **args) {
       print_vars.push_back("V");
       print_vars.push_back("P");
       
-      ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
+//       ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
+      VTKOutput vtkio(ml_prob);
+      vtkio.write_system_solutions("biquadratic",print_vars,time_step);
     }
   
   } //end loop timestep

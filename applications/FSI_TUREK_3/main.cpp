@@ -10,6 +10,7 @@
 #include <iostream>
 #include "FemTTUInit.hpp"
 #include "../include/FSIassembly.hpp"
+#include "VTKOutput.hpp"
 
 
 using std::cout;
@@ -101,10 +102,7 @@ int main(int argc,char **args) {
   ml_prob.GenerateBdc("AY","Steady");
   ml_prob.GenerateBdc("P","Steady");
 
-  std::vector<std::string> mov_vars;
-  mov_vars.push_back("DX");
-  mov_vars.push_back("DY");
-  ml_prob.SetMovingMesh(mov_vars);
+
   ml_prob.MarkStructureNode();
   
   
@@ -136,6 +134,12 @@ int main(int argc,char **args) {
   const unsigned int n_timesteps = 5;
   const unsigned int write_interval = 1;
   
+  std::vector<std::string> mov_vars;
+  mov_vars.push_back("DX");
+  mov_vars.push_back("DY");
+  VTKOutput vtkio(ml_prob);
+  vtkio.SetMovingMesh(mov_vars);
+  
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
    
     // Solving Fluid-Structure-Interaction system
@@ -160,7 +164,8 @@ int main(int argc,char **args) {
       print_vars.push_back("V");
       print_vars.push_back("P");
       
-      ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
+//       ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
+      vtkio.write_system_solutions("biquadratic",print_vars,time_step);
     }
   
   } //end loop timestep

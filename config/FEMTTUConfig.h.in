@@ -10,6 +10,10 @@
 
 #define HAVE_PETSC @HAVE_PETSC@
 
+//HDF5 library
+
+#define HAVE_HDF5 @HAVE_HDF5@
+
 #ifdef HAVE_PETSC
   #undef  LSOLVER
   #define LSOLVER  PETSC_SOLVERS
