@@ -88,6 +88,7 @@ public:
   unsigned GetDofNumber(const unsigned type) const;
   unsigned GetElementNumber() const;
   unsigned GetGridNumber() const;
+  unsigned SetGridNumber(unsigned i){ grid=i; }; 
   void AllocateAndMarkStructureNode();
   unsigned GetDimension();
   unsigned GetRefIndex();

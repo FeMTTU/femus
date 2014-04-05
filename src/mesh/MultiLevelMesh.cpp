@@ -32,8 +32,8 @@ using std::string;
 
 MultiLevelMesh::~MultiLevelMesh() {
 
-  for (unsigned i=0; i<_gridn; i++) {
-    delete _level[i];
+  for (unsigned i=0; i<_gridn0; i++) {
+    delete _level0[i];
   }
 
   for (unsigned i=0; i<3; i++){
@@ -68,16 +68,16 @@ MultiLevelMesh::~MultiLevelMesh() {
 MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr, const char mesh_file[], const char GaussOrder[],
 						       const double Lref, bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, 
 												     const int &ElemGroupNumber,const int &level)):
-			       _gridn(igridn), 
-			       _gridr(igridr){
+			       _gridn0(igridn), 
+			       _gridr0(igridr){
 		       
   cout << "MESH DATA: " << endl;
 
-  _level.resize(_gridn);
+  _level0.resize(_gridn0);
     
   //coarse mesh
   _type_elem_flag.resize(5,false);
-  _level[0]=new mesh(mesh_file, Lref,_type_elem_flag);
+  _level0[0]=new mesh(mesh_file, Lref,_type_elem_flag);
   
   if(_type_elem_flag[0]){
     _type_elem[0][0]=new const elem_type("hex","linear",GaussOrder);
@@ -113,28 +113,35 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
   _type_elem[5][2]=_type_elem[5][1];
   
   //totally refined meshes
-  for (unsigned i=1; i<_gridr; i++) {
-    _level[i-1u]->_coordinate->SetElementRefiniement(1);
-    _level[i] = new mesh(i,_level[i-1],_type_elem); 
+  for (unsigned i=1; i<_gridr0; i++) {
+    _level0[i-1u]->_coordinate->SetElementRefiniement(1);
+    _level0[i] = new mesh(i,_level0[i-1],_type_elem); 
   }
   
   //partially refined meshes
-  for (unsigned i=_gridr; i<_gridn; i++) {
+  for (unsigned i=_gridr0; i<_gridn0; i++) {
     if(SetRefinementFlag==NULL) {
       cout << "Set Refinement Region flag is not defined! " << endl;
       exit(1);
     }
     else {
       mesh::_SetRefinementFlag = SetRefinementFlag;
-      _level[i-1u]->_coordinate->SetElementRefiniement(2);
+      _level0[i-1u]->_coordinate->SetElementRefiniement(2);
     }
-    _level[i] = new mesh(i,_level[i-1],_type_elem); 
+    _level0[i] = new mesh(i,_level0[i-1],_type_elem); 
   }
-  _level[_gridn-1u]->_coordinate->SetElementRefiniement(0);
+  _level0[_gridn0-1u]->_coordinate->SetElementRefiniement(0);
       
-  unsigned refindex = _level[0]->GetRefIndex();
+  unsigned refindex = _level0[0]->GetRefIndex();
   elem_type::_refindex=refindex;
-    
+  
+  
+  _gridn=_gridn0;
+  _gridr=_gridr0;
+  _level.resize(_gridn);
+  for(int i=0;i<_gridn;i++)
+    _level[i]=_level0[i];
+  
 }
 
 
@@ -143,12 +150,12 @@ void MultiLevelMesh::EraseCoarseLevels(unsigned levels_to_be_erased){
     levels_to_be_erased = _gridr-1;
     cout<<"Warning the number of levels to be erased has been reduced to"<<levels_to_be_erased;
   }
-  for (unsigned i=0; i<levels_to_be_erased; i++) {
-    delete _level[i];
-  }
-  _level.erase(_level.begin(),_level.begin()+levels_to_be_erased);
   _gridr -= levels_to_be_erased;
   _gridn -= levels_to_be_erased;
+   for(int i=0;i<_gridn;i++){
+    _level[i]=_level0[i+levels_to_be_erased];
+    _level[i]->SetGridNumber(i);
+   }
 }
   
   
