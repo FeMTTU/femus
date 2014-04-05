@@ -30,13 +30,13 @@ int main(int argc,char **args) {
 
   bool linear=1;
   bool vanka=1;
-  if(argc == 2) {
-    if( strcmp("vanka",args[1])) vanka=0;
-  }
-  else {
-    cout << "No input arguments!" << endl;
-    exit(0);
-  }
+//   if(argc == 2) {
+//     if( strcmp("vanka",args[1])) vanka=0;
+//   }
+//   else {
+//     cout << "No input arguments!" << endl;
+//     exit(0);
+//   }
   
   /// Init Petsc-MPI communicator
   FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
@@ -44,10 +44,10 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=2;
+  nm=4;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
-  nr=2;
+  nr=0;
   std::cout<<"MAX_REFINEMENT levels: " << nr << endl<< endl;
   
   int tmp=nm;  nm+=nr;  nr=tmp;
@@ -62,7 +62,7 @@ int main(int argc,char **args) {
   
   //Steadystate NonLinearMultiLevelProblem  
   MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,SetRefinementFlag); 
-  //ml_msh.EraseCoarseLevels(1);
+  ml_msh.EraseCoarseLevels(2);
   MultiLevelProblem ml_prob(&ml_msh);
   
   // add fluid material

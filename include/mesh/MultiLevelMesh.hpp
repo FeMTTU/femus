@@ -31,8 +31,10 @@ class MultiLevelMesh {
 
 private:
  
+  unsigned short _gridn0, _gridr0;
   unsigned short _gridn, _gridr;
   /** Array of mesh */
+  std::vector <mesh*> _level0;
   std::vector <mesh*> _level;
   std::vector <bool> _type_elem_flag;
 protected:
@@ -55,7 +57,7 @@ protected:
   
   unsigned GetNumberOfGrid(){return _gridn;};
   unsigned GetNumberOfGridTotallyRefined(){return _gridr;};
-  void EraseCoarseLevels(unsigned meshes_to_be_erased);
+  void EraseCoarseLevels(unsigned levels_to_be_erased);
   
 };
 
