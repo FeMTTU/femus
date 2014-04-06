@@ -96,7 +96,7 @@
 # It is also good for setting the environment for 
 # the installation of the external libraries.
 
-#launch this script from where it is (because of $PWD)
+#launch this script from where it is (because of $PWD)  # Now i am REMOVING THIS CONSTRAINT, EVENTUALLY!!!
 #source configure_femus.sh
 
 #which one?
@@ -118,32 +118,73 @@
    
 # these are like GLOBAL variables after you do "source"
 # 
-export FM_EXTERNAL=../../external/
-for FM_ARG in $*
-do
- echo $FM_ARG
+
+
+# # i=0
+# # for FM_ARG in $*
+# # do
+# #  echo $FM_ARG
+# # if (test $FM_ARG = "--prefix")
+# # then
+# # echo "Trovata" $i
+# # fi
+# # (( i += 1 ))
+# # echo  ${i}
+# # echo $1
+# # done
+
+echo  "I am sourcing"
+
+
+while getopts ":a" opt; do
+  case $opt in
+    a)
+      echo "-a was triggered, Parameter: $OPTARG" >&2
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+#       exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+#       exit 1
+      ;;
+  esac
 done
-echo "==============================================================
-Attention! Now you have to launch the function fm_set_femus from the top-level femus directory!!!
-Therefore cd to that directory!!!! ==================";
+
+
 
 ##########################################
 ##########################################
 ##########################################
 # This can be used also as independent MPI configuration
 function fm_set_mpi() {
+# $1 --prefix-basepath
+# $2 value
+
+if test "$1" = "--help"; then
+echo " --prefix-basepath ABSOLUTE_PATH ";
+return;
+fi
+
+
+if test "$1" != "--prefix-basepath"; then
+echo "The first argument must be --prefix-basepath"; return 18;
+fi
+
+ EXTERNAL_BASEPATH=$2
 
 ############# MACHINE DEPENDENT ###################
-export FM_BASEPATH_TO_MPI=$PWD/$FM_EXTERNAL/
-export FM_MPI_FOLDER=openmpi-1.6.5
-export FM_MPI_BIN=bin
-export FM_MPI_LIB=lib64
-export FM_MPI_MAN=share/man
+ FM_BASEPATH_TO_MPI=$EXTERNAL_BASEPATH    #NOW ALL THESE VARIABLES will APPEAR IN THE ENVIRONMENT... even if you don't put EXPORT... TODO see if i can improve this
+ FM_MPI_FOLDER=openmpi-1.6.5
+ FM_MPI_BIN=bin
+ FM_MPI_LIB=lib64
+ FM_MPI_MAN=share/man
 ############# END MACHINE DEPENDENT ###################
 
 
 ###################
-export FM_MPI_DIR=$FM_BASEPATH_TO_MPI/$FM_MPI_FOLDER
+ FM_MPI_DIR=$FM_BASEPATH_TO_MPI/$FM_MPI_FOLDER
 #these recursive commands are those for which you should not re-run this script
 # you should just check if $FM_BASEPATH_TO_MPI/$FM_MPI_BIN is already in the PATH variable
 # if [[ "$PATH" =~ "*$FM_BASEPATH_TO_MPI/$FM_MPI_BIN*" ]]
@@ -152,7 +193,7 @@ export PATH=$FM_MPI_DIR/$FM_MPI_BIN:$PATH
 # else
 #    echo "Avoid rewriting"
 # fi
-   export LD_LIBRARY_PATH=$FM_MPI_DIR/$FM_MPI_LIB:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$FM_MPI_DIR/$FM_MPI_LIB:$LD_LIBRARY_PATH
    # is this one really needed?!?
 ########################
 
@@ -171,6 +212,7 @@ export MANPATH=$FM_MPI_DIR/$FM_MPI_MAN:$MANPATH
 # This function is only oriented to the FEMuS makefile
 function fm_set_hdf5() {
 
+echo "This function has to be updated"; return;
 
 ############## MACHINE DEPENDENT ###################
 #HDF5
@@ -183,7 +225,7 @@ function fm_set_hdf5() {
 # export FM_HDF5_INCLUDE=include
 # export FM_HDF5_LIB=lib64
 #user package
-export FM_BASEPATH_TO_HDF5=$PWD/$FM_EXTERNAL/
+export FM_BASEPATH_TO_HDF5=
 export FM_HDF5_FOLDER=hdf5-1.8.12-linux-x86_64-shared
 #compiled version: hdf5-1.8.10-patch1/hdf5/
 export FM_HDF5_INCLUDE=include
@@ -218,18 +260,43 @@ export HDF5_ROOT=$FM_HDF5_DIR
 # This function is oriented both to the FEMuS makefile and for PETSc standalone
 # alright inside here you realize you have to 
 function fm_set_petsc() {
+# $1 --prefix-basepath
+# $2 value
+# $3 --method
+# $4 value
+
+if test "$1" = "--help"; then
+echo " --prefix-basepath ABSOLUTE_PATH --method {opt,dbg} ";
+return;
+fi
+
+if test "$1" != "--prefix-basepath"; then
+echo "The first argument must be --prefix-basepath"; return 18;
+fi
+
+if test "$3" != "--method"; then
+echo "The third argument must be --method"; return 18;
+fi
+
+EXTERNAL_BASEPATH=$2
+PETSC_METHOD=$4
+
+
+echo "The method for petsc is " $PETSC_METHOD
+
 
 #First you have to set mpi
-fm_set_mpi
+fm_set_mpi --prefix-basepath $EXTERNAL_BASEPATH
 
-if test "$FM_PETSC_METHOD" = ""; then
-  echo "Set the compiling mode for PETSc first: FM_PETSC_METHOD ";  return;
+
+if [ "$PETSC_METHOD" != "opt" ] &&  [ "$PETSC_METHOD" != "dbg" ] ; then
+  echo "Petsc method not supported";  return;
 fi
 
 ############ MACHINE DEPENDENT ###################
-export FM_BASEPATH_TO_PETSC=$PWD/$FM_EXTERNAL/
-export FM_PETSC_FOLDER=petsc-3.4.3
-export PETSC_ARCH=linux-$FM_PETSC_METHOD
+       FM_BASEPATH_TO_PETSC=$EXTERNAL_BASEPATH
+       FM_PETSC_FOLDER=petsc-3.4.3
+export PETSC_ARCH=linux-$PETSC_METHOD
 ############ END MACHINE DEPENDENT ###################
 
 export PETSC_DIR=$FM_BASEPATH_TO_PETSC/$FM_PETSC_FOLDER
@@ -246,37 +313,69 @@ export PETSC_DIR=$FM_BASEPATH_TO_PETSC/$FM_PETSC_FOLDER
 ####################################################################################
 # this is oriented to configuring LibMesh FOR Femus
 function fm_set_libmesh() {
+# $1 --prefix-basepath
+# $2 value
+# $3 --method
+# $4 value
+# $5 --method-petsc
+# $6 value
 
-if test "$FM_PETSC_METHOD" = ""; then
-  echo "Set the compiling mode for PETSc first: FM_PETSC_METHOD ";  return;
+if test "$1" = "--help"; then
+echo " --prefix-basepath ABSOLUTE_PATH --method {opt,dbg,pro} --method-petsc {opt,dbg}";
+return;
 fi
 
-if test "$FM_LIBMESH_METHOD" = ""; then
-  echo "Set the compiling mode for LibMesh first: FM_LIBMESH_METHOD ";  return;
+
+
+
+if test "$1" != "--prefix-basepath"; then
+echo "Use --method "; return;
 fi
+
+if test "$3" != "--method"; then
+echo "Use --method "; return;
+fi
+
+if test "$5" != "--method-petsc"; then
+echo "Use --method-petsc for Petsc method "; return;
+fi
+
+EXTERNAL_BASEPATH=$2
+LIBMESH_METHOD=$4
+PETSC_METHOD=$6
+
+
+if [ "$LIBMESH_METHOD" != "opt" ] &&  [ "$LIBMESH_METHOD" != "dbg" ] &&  [ "$LIBMESH_METHOD" != "pro" ] ; then
+  echo "Libmesh method not supported";  return;
+fi
+
+if [ "$PETSC_METHOD" != "opt" ] &&  [ "$PETSC_METHOD" != "dbg" ] ; then
+  echo "Petsc method not supported";  return;
+fi
+
 
 
 ############## MACHINE DEPENDENT ###################
 FM_LIBMESH_DIR_REL=libmesh
 FM_LIBMESH_INSTALL=install
-export FM_BASEPATH_TO_LM=$PWD/$FM_EXTERNAL/
-export FM_LM_FOLDER=$FM_LIBMESH_DIR_REL/$FM_LIBMESH_INSTALL-petsc-linux-$FM_PETSC_METHOD
+export FM_BASEPATH_TO_LM=$EXTERNAL_BASEPATH                                                       #soon we'll avoid this export 
+export FM_LM_FOLDER=$FM_LIBMESH_DIR_REL/$FM_LIBMESH_INSTALL-petsc-linux-$PETSC_METHOD    #soon we'll avoid this export
 ############## END MACHINE DEPENDENT ###################
 
 
 ######## LIBMESH #######
 ########################
 # conversion from the femus-libmesh wrapper variable to libmesh METHOD
-  if test "$FM_LIBMESH_METHOD" = "opt"; then
+  if test "$LIBMESH_METHOD" = "opt"; then
 export   METHOD=opt
-elif test "$FM_LIBMESH_METHOD" = "dbg"; then
+elif test "$LIBMESH_METHOD" = "dbg"; then
 export   METHOD=dbg
-elif test "$FM_LIBMESH_METHOD" = "pro"; then
+elif test "$LIBMESH_METHOD" = "pro"; then
 export   METHOD=pro
 fi
 
 # === check ===
-if test $FM_LIBMESH_METHOD != $METHOD; then
+if test $LIBMESH_METHOD != $METHOD; then
 echo "Not correctly setting LibMesh compile mode"; return;
 fi
 
@@ -290,18 +389,51 @@ fi
 
 
 function fm_set_femus() {
+#$1 --prefix                                             
+#$2 full path of the prefix for femus                    
+#$3 --prefix-external                                             
+#$4 value
+#$5 --method-petsc
+#$6 values: {opt,dbg}
+#$7 --method-libmesh
+#$8  values: {opt,dbg}
+
+
+if test "$1" = "--help"; then
+echo " --prefix ABSOLUTE_PATH --prefix-external ABSOLUTE_PATH_2 --method-petsc {opt,dbg} --method-libmesh {opt,dbg,pro} ";
+return;
+fi
+
+FEMUS_PREFIX=$2
+EXTERNAL_PREFIX=$4
+PETSC_METHOD=$6
+LIBMESH_METHOD=$8
+
+if test "$1" != "--prefix"; then
+echo "Use --prefix for femus source dir"; return;
+fi
+if test "$3" != "--prefix-external"; then
+echo "Use --prefix-external for external packages"; return;
+fi
+if test "$5" != "--method-petsc"; then
+echo "Use --method-petsc for Petsc"; return;
+fi
+if test "$7" != "--method-libmesh"; then
+echo "Use --method-libmesh for Libmesh"; return;
+fi
+
 
 #fm_set_mpi      # should be first because hdf5 may need it
 
 # fm_set_hdf5     # let me remove this now, i'll take it from petsc so far
 
-fm_set_petsc    #needs FM_PETSC_METHOD; fm_set_mpi is set within here
+fm_set_petsc   --prefix-basepath $EXTERNAL_PREFIX --method  $PETSC_METHOD                 #needs FM_PETSC_METHOD; fm_set_mpi is set within here
 
-fm_set_libmesh  #needs FM_PETSC_METHOD and FM_LIBMESH_METHOD
+fm_set_libmesh --prefix-basepath $EXTERNAL_PREFIX --method  $LIBMESH_METHOD --method-petsc $PETSC_METHOD #needs FM_PETSC_METHOD and FM_LIBMESH_METHOD
 
 
 ######## FEMUS #########
-export FEMUS_DIR=$PWD
+export FEMUS_DIR=$FEMUS_PREFIX
 ########################
 
 
@@ -312,8 +444,8 @@ echo -e \
 ============================================================
 ================ Welcome to FEMuS =========================  
 ===== The method for FEMuS will be given by CMake \n
-===== The method for LibMesh is $FM_LIBMESH_METHOD \n
-===== The method for PETSc is  $FM_PETSC_METHOD \n
+===== The method for LibMesh is $LIBMESH_METHOD \n
+===== The method for PETSc is  $PETSC_METHOD \n
 "
 
 echo -e "======== BEWARE !!! ============
