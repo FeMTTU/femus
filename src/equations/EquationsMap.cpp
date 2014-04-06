@@ -241,7 +241,7 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) {
             for (int fe=0; fe<QL; fe++)  {
                 for (uint ivar=0;ivar< mgsol->_nvars[fe]; ivar++)   {
                    std::ostringstream var_name; var_name << mgsol->_var_names[ OffVarNames[fe] + ivar] << "_LEVEL" << l;
-                    _utils.PrintXDMFAttribute(out,hdf_file.str(),var_name.str(),var_name.str(),"Scalar",DofType[fe],"Float",NGeomObjOnWhichToPrint[fe],1);
+                   IO::PrintXDMFAttribute(out,hdf_file.str(),var_name.str(),var_name.str(),"Scalar",DofType[fe],"Float",NGeomObjOnWhichToPrint[fe],1);
                 }
             } // end fe
         }
@@ -464,7 +464,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) {
 
 	// ===== PID ======
         std::ostringstream  pid_name; pid_name << "PID" << "_LEVEL" << l;
-	_utils.PrintXDMFAttribute(out,hdf_file.str(),pid_name.str(),pid_name.str(),"Scalar",DofType[KK],"Int",NGeomObjOnWhichToPrint[KK],1);
+	IO::PrintXDMFAttribute(out,hdf_file.str(),pid_name.str(),pid_name.str(),"Scalar",DofType[KK],"Int",NGeomObjOnWhichToPrint[KK],1);
 
         // ATTRIBUTES FOR EACH SYSTEM ===========
         EquationsMap::const_iterator pos1=_equations.begin();
@@ -483,7 +483,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) {
                     var_name[BB] = var_name[VV] + bdry_suffix;
                     var_type[BB] = "Int";
                     for (int vb=0;vb<VB; vb++) {
-                        _utils.PrintXDMFAttribute(out,hdf_file.str(),var_name[vb],var_name[vb],"Scalar",DofType[fe],var_type[vb],NGeomObjOnWhichToPrint[fe],1);
+                        IO::PrintXDMFAttribute(out,hdf_file.str(),var_name[vb],var_name[vb],"Scalar",DofType[fe],var_type[vb],NGeomObjOnWhichToPrint[fe],1);
                     }
                 }
             } //end fe
@@ -519,9 +519,9 @@ void EquationsMap::PrintXDMFTopologyGeometry(std::ofstream& out, const uint Leve
     //coordinates
     std::ostringstream coord_file; coord_file <<  basemesh <<  ext_h5;
     
-    _utils.PrintXDMFTopology(out,connfile.str(),hdf5_field.str(),_mesh._GeomEl.pname[vb],n_elements*_mesh._GeomEl.n_se[vb],n_elements*_mesh._GeomEl.n_se[vb],_mesh._GeomEl._elnds[vb][LL]);
+    IO::PrintXDMFTopology(out,connfile.str(),hdf5_field.str(),_mesh._GeomEl.pname[vb],n_elements*_mesh._GeomEl.n_se[vb],n_elements*_mesh._GeomEl.n_se[vb],_mesh._GeomEl._elnds[vb][LL]);
     std::ostringstream coord_lev; coord_lev << "_L" << Level; 
-    _utils.PrintXDMFGeometry(out,coord_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",_mesh._NoNodesXLev[Level],1);
+    IO::PrintXDMFGeometry(out,coord_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",_mesh._NoNodesXLev[Level],1);
 
     return;
 }

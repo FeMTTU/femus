@@ -27,9 +27,9 @@
   
   }
 
-
+namespace IO {
 // =============================================================
-hid_t Utils::read_Dhdf5(hid_t file,const std::string & name,double* data) {
+hid_t read_Dhdf5(hid_t file,const std::string & name,double* data) {
 
   hid_t  dataset = H5Dopen(file,name.c_str(), H5P_DEFAULT);
   hid_t status=H5Dread(dataset,H5T_NATIVE_DOUBLE,H5S_ALL,H5S_ALL,H5P_DEFAULT,data);
@@ -38,7 +38,7 @@ hid_t Utils::read_Dhdf5(hid_t file,const std::string & name,double* data) {
 }
 
 // ===========================================================================
-hid_t Utils::read_Ihdf5(hid_t file,const std::string & name,int* data) {
+hid_t read_Ihdf5(hid_t file,const std::string & name,int* data) {
 
   hid_t  dataset = H5Dopen(file,name.c_str(), H5P_DEFAULT);
   hid_t status=H5Dread(dataset,H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,data);
@@ -47,7 +47,7 @@ hid_t Utils::read_Ihdf5(hid_t file,const std::string & name,int* data) {
 }
 
 //=========================================
-hid_t Utils::print_Dhdf5(hid_t file,const std::string & name, hsize_t dimsf[],double* data) {
+hid_t print_Dhdf5(hid_t file,const std::string & name, hsize_t dimsf[],double* data) {
 
   hid_t dataspace = H5Screate_simple(2,dimsf, NULL);
   hid_t dataset = H5Dcreate(file,name.c_str(),H5T_NATIVE_DOUBLE,
@@ -61,7 +61,7 @@ hid_t Utils::print_Dhdf5(hid_t file,const std::string & name, hsize_t dimsf[],do
 /// Print int data into dhdf5 file
 //TODO can we make a TEMPLATE function that takes either "double" or "int" and uses
 //either H5T_NATIVE_DOUBLE or H5T_NATIVE_INT? Everything else is the same
-hid_t Utils::print_Ihdf5(hid_t file,const std::string & name, hsize_t dimsf[],int* data) {
+hid_t print_Ihdf5(hid_t file,const std::string & name, hsize_t dimsf[],int* data) {
 
   hid_t dataspace = H5Screate_simple(2,dimsf, NULL);
   hid_t dataset = H5Dcreate(file,name.c_str(),H5T_NATIVE_INT,
@@ -73,7 +73,7 @@ hid_t Utils::print_Ihdf5(hid_t file,const std::string & name, hsize_t dimsf[],in
 }
 
 
-void Utils::PrintXDMFAttribute(std::ofstream& outstream, 
+void PrintXDMFAttribute(std::ofstream& outstream, 
 				      std::string hdf5_filename, 
 				      std::string hdf5_field,
 				      std::string attr_name,
@@ -98,7 +98,7 @@ void Utils::PrintXDMFAttribute(std::ofstream& outstream,
 }
 
 
-void Utils::PrintXDMFTopology(std::ofstream& outfstream,
+void PrintXDMFTopology(std::ofstream& outfstream,
 				     std::string hdf5_file,
 				     std::string hdf5_field,
 				     std::string top_type,
@@ -120,7 +120,7 @@ void Utils::PrintXDMFTopology(std::ofstream& outfstream,
 }
 
 
-void Utils::PrintXDMFGeometry(std::ofstream& outfstream,
+void PrintXDMFGeometry(std::ofstream& outfstream,
 				     std::string hdf5_file,
 				     std::string hdf5_field,
 			             std::string coord_lev,
@@ -142,3 +142,5 @@ void Utils::PrintXDMFGeometry(std::ofstream& outfstream,
 
   return;
 }
+
+} //end namespace IO

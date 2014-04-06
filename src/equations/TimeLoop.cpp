@@ -53,7 +53,7 @@
 //print from time t_idx_in to t_idx_final
 //I will print a separate time sequence for each LEVEL
 //TODO see if there is a way to read multiple sol collections, defined on different grids, in the SAME time file
-      void TimeLoop::transient_print_xmf(const uint t_idx_in,const uint t_idx_final)  {
+      void TimeLoop::transient_print_xmf(const uint t_idx_in,const uint t_idx_final) const {
 
 	//multigrid
 	uint NoLevels = _utils._urtmap.get("nolevels");

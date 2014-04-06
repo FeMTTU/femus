@@ -420,10 +420,10 @@ void Mesh::PrintXDMFGridVB(std::ofstream& out,
 
     out << "<Grid Name=\"" << grid_mesh[vb].c_str() << "_L" << Level << "\"> \n";
     
-   _utils.PrintXDMFTopology(out,top_file.str(),hdf_field.str(),_GeomEl.pname[vb],nel*_GeomEl.n_se[vb],nel*_GeomEl.n_se[vb],_GeomEl._elnds[vb][LL]);    
+   IO::PrintXDMFTopology(out,top_file.str(),hdf_field.str(),_GeomEl.pname[vb],nel*_GeomEl.n_se[vb],nel*_GeomEl.n_se[vb],_GeomEl._elnds[vb][LL]);    
 
    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
-   _utils.PrintXDMFGeometry(out,geom_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[Level],1);
+   IO::PrintXDMFGeometry(out,geom_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[Level],1);
     
     out << "</Grid> \n";  
 
@@ -643,7 +643,7 @@ void Mesh::PrintSubdomFlagOnLinCells(std::string filename) const {
   hsize_t dimsf[2]; dimsf[0] = n_elements*n_children; dimsf[1] = 1;
   std::ostringstream pidname; pidname << "PID" << "_LEVEL" << l;
   
-  _utils.print_Ihdf5(file_id,pidname.str(),dimsf,ucoord);
+  IO::print_Ihdf5(file_id,pidname.str(),dimsf,ucoord);
   
      } //end levels
   

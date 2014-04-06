@@ -972,7 +972,7 @@ void EqnBase::GenBc() {
             // nodes for boundary elements
             int el_nodes=el_nnodes_b; /*  if (ivar >= _nvars[0]) el_nodes=NDOF_PB;*/ /*TODO check here*/
             // read
-            _utils.read_Ihdf5(file,"/"+_var_names[ivar] + bdry_suffix,data);// from hdf5 file
+            IO::read_Ihdf5(file,"/"+_var_names[ivar] + bdry_suffix,data);// from hdf5 file
 
             // storage boundary conditions <- data <- hdf5 file
             for (uint isubd=0;isubd<_mesh._NoSubdom;++isubd) {
@@ -1129,7 +1129,7 @@ void EqnBase::PrintBc(std::string namefile) {
 
        std::ostringstream var_name; var_name << _var_names[ ivar + _VarOff[QQ] ] << "_" << grname.str() << bdry_suffix;
        hsize_t dimsf[2];  dimsf[0] = NGeomObjOnWhichToPrint[QQ];  dimsf[1] = 1;
-       _utils.print_Ihdf5(file_id,var_name.str(),dimsf,sol_on_Qnodes);
+       IO::print_Ihdf5(file_id,var_name.str(),dimsf,sol_on_Qnodes);
     }
 
     // ===================================
@@ -1186,7 +1186,7 @@ void EqnBase::PrintBc(std::string namefile) {
 
        std::ostringstream var_name; var_name << _var_names[ ivar + _VarOff[LL] ] << "_" << grname.str() << bdry_suffix;
        hsize_t  dimsf[2];  dimsf[0] = NGeomObjOnWhichToPrint[LL];  dimsf[1] = 1;
-       _utils.print_Ihdf5(file_id,var_name.str(),dimsf,sol_on_Qnodes);
+       IO::print_Ihdf5(file_id,var_name.str(),dimsf,sol_on_Qnodes);
     } // ivar
     
     delete [] elsol_c;
@@ -1218,7 +1218,7 @@ void EqnBase::PrintBc(std::string namefile) {
   
   std::ostringstream var_name; var_name << _var_names[ ivar + _VarOff[KK] ] << "_" << grname.str() << bdry_suffix;
   hsize_t dimsf[2]; dimsf[0] = NGeomObjOnWhichToPrint[KK]; dimsf[1] = 1;
-  _utils.print_Ihdf5(file_id,var_name.str(),dimsf,sol_on_cells);   
+  IO::print_Ihdf5(file_id,var_name.str(),dimsf,sol_on_cells);   
       
       delete [] sol_on_cells;
       
@@ -3171,7 +3171,7 @@ void EqnBase::PrintVector(std::string namefile) {
 
      std::ostringstream var_name;  var_name << _var_names[ ivar + _VarOff[QQ] ] << "_" << grname.str(); 	 //         std::string var_name = grname.str() + "/" + _var_names[ivar];
      hsize_t  dimsf[2];  dimsf[0] = NGeomObjOnWhichToPrint[QQ];  dimsf[1] = 1;
-     _utils.print_Dhdf5(file_id,var_name.str(),dimsf,sol_on_Qnodes);   //TODO VALGRIND
+     IO::print_Dhdf5(file_id,var_name.str(),dimsf,sol_on_Qnodes);   //TODO VALGRIND
 
      }
 
@@ -3243,7 +3243,7 @@ void EqnBase::PrintVector(std::string namefile) {
         
      std::ostringstream var_name; var_name << _var_names[ ivar + _VarOff[LL] ] << "_" << grname.str();
      hsize_t  dimsf[2]; dimsf[0] = NGeomObjOnWhichToPrint[LL];  dimsf[1] = 1;
-    _utils.print_Dhdf5(file_id,var_name.str(),dimsf,sol_on_Qnodes);
+     IO::print_Dhdf5(file_id,var_name.str(),dimsf,sol_on_Qnodes);
      
     } // ivar linear
 
@@ -3278,7 +3278,7 @@ void EqnBase::PrintVector(std::string namefile) {
   
   std::ostringstream varname; varname << _var_names[ ivar + _VarOff[KK] ] << "_" << grname.str();         //   std::string varname = grname.str() + "/" + _var_names[_nvars[QQ]+_nvars[LL]+ivar];
   hsize_t dimsf[2]; dimsf[0] = NGeomObjOnWhichToPrint[KK]; dimsf[1] = 1;
-  _utils.print_Dhdf5(file_id,varname.str(),dimsf,sol_on_cells);   
+  IO::print_Dhdf5(file_id,varname.str(),dimsf,sol_on_cells);   
       
     } //end KK
 
@@ -3317,7 +3317,7 @@ void EqnBase::ReadVector(std::string namefile) {
         if (ivar >= _nvars[QQ]) el_nds = _mesh._GeomEl._elnds[VV][LL]; // quad and linear
         // reading ivar param
        std::ostringstream grname; grname << _var_names[ivar] << "_" << "LEVEL" << Level;
-        _utils.read_Dhdf5(file_id,grname.str(),sol);
+        IO::read_Dhdf5(file_id,grname.str(),sol);
         double Irefval = 1./_refvalue[ivar]; // units
 
         // storing  ivar variables (in parallell)
