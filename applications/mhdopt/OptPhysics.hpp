@@ -14,7 +14,7 @@ class OptPhysics : public Physics {
 public:
   
 //constructor
-OptPhysics(Utils& mgutils_in); 
+OptPhysics( RunTimeMap<double> & map_in); 
   
   
  // =========== Nondimensional groups and ref values ========

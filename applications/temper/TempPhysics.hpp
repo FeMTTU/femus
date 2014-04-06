@@ -5,6 +5,7 @@
 // this function is fully user
 
 #include "Physics.hpp"
+#include "RunTimeMap.hpp"
 class EquationsMap;
 
 
@@ -16,7 +17,7 @@ class TempPhysics : public Physics {
 public:
   
 //constructor
-TempPhysics(Utils& mgutils_in); 
+TempPhysics(  RunTimeMap<double> & map_in); 
   
   
  // =========== Nondimensional groups and ref values ========

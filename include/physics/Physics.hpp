@@ -22,10 +22,6 @@ class Mesh;
 
 class Physics {
 
-protected:
-  
-  Utils&                         _utils;   ///< Utils pointer
-  
 public:
 
   RunTimeMap<double>     _physrtmap;
@@ -35,7 +31,7 @@ public:
   inline void   set_mesh(Mesh * mgmesh_in){    _mesh = mgmesh_in;   return;  }   /// Set mesh pointer
 
   // Costructor and destructor ----------------------------
-   Physics(Utils& mgutils_in); ///< Constructor
+   Physics(RunTimeMap<double> & physmap_in); ///< Constructor
   ~Physics(){};                                     ///< Destructor
    
 };

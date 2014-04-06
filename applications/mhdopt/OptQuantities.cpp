@@ -181,7 +181,7 @@ void Velocity::Function_txyz(const double t,const double* xp, double* func) cons
   //if there is no domain shape, we dont need the domain.
   
     //=====ROTATION of the Function
-  const double thetaz = box->_boxrtmap.get("thetaz");
+  const double thetaz = box->_domain_rtmap.get("thetaz");
   
   //====== Physics
   OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&(_qtymap._phys));
@@ -387,7 +387,7 @@ void Temperature::heatflux_txyz(const double t, const double* xyz, double* qflux
 
 std::cout << "Temperature: Heatflux, check which coordinates are passed in here" << std::endl;
   Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
-  const double thetaz = box->_boxrtmap.get("thetaz");
+  const double thetaz = box->_domain_rtmap.get("thetaz");
 
      qflux[0]=+700.*cos(thetaz);
      qflux[1]=+700.*sin(thetaz);
@@ -409,7 +409,7 @@ void MagnFieldExt::Function_txyz(const double t,const double* xp, double* func) 
   
   //=====ROTATION of the Function
   Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
-  const double thetaz = box->_boxrtmap.get("thetaz");
+  const double thetaz = box->_domain_rtmap.get("thetaz");
 
   //============== PICK THE REQUIRED REFERENCE VALUES for the FUNCTION
   const double Bref   = _qtymap._phys._physrtmap.get("Bref");      //Uref*sqrt(rhof*MUMHD);   //in order to make S=1
@@ -492,7 +492,7 @@ void MagnFieldHom::Function_txyz(const double t, const double* xp, double* func)
   
    const double LHm =2.;  //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
 
-   const double thetaz = box->_boxrtmap.get("thetaz");
+   const double thetaz = box->_domain_rtmap.get("thetaz");
  
    const double magnitude = 0.*DpDzad/S*Lhalf/Lref*(sinh(Hm/LHm*Lref/Lhalf*xtr) - xtr*Lref/Lhalf*sinh(Hm/LHm)) / sinh(Hm/LHm);
 
@@ -566,7 +566,7 @@ void DesVelocity::Function_txyz(const double t, const double* xp,double* func) c
 
   double xtr = xp[0] - Lmid;
 
-  const double thetaz = box->_boxrtmap.get("thetaz");
+  const double thetaz = box->_domain_rtmap.get("thetaz");
 
   //constant for the real reference length in the Hartmann number
   const double LHm =2.;   //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
