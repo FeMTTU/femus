@@ -75,7 +75,6 @@ int main(int argc, char** argv) {
 // >>>>>>>>>>>>> END REDIRECT COUT
 
    files.CopyGencaseFiles();
-   files.PrintRun(DEFAULT_NEW_RUN);
    files.InitCaseData();
 
  // =========================================

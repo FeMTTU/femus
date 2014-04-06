@@ -62,7 +62,6 @@
 // >>>>>>>>>>>>> END REDIRECT COUT
 
    files.CopyGencaseFiles();
-   files.PrintRun(DEFAULT_NEW_RUN);  /*(iproc==0)*/ //output dir: print the new run, for the restart 
    files.InitCaseData();                  /*(iproc==0)*/              // outtime dir
 
   // ======= Utils ========================
