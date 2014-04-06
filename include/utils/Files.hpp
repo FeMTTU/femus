@@ -44,7 +44,8 @@ public:
   
 // LOG ==========================
 // Stream redirect to file ======
-  void RedirectCout(std::streambuf* sbuf,  std::ofstream& file_in) const;
+         void RedirectCout(std::streambuf* sbuf,  std::ofstream& file_in) const;
+  static void RedirectCoutFinalize(std::streambuf* sbuf);
 
 private:
   

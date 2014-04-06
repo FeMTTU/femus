@@ -290,11 +290,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 
   for (int fe=0; fe<QL; fe++) delete FEElements[fe];
   
-// >>>>>>>>>>>>> END REDIRECT COUT
-  std::cout.rdbuf(sbuf);  //it seems like you have to give the stream buffer
-                          //back to cout !!!
-                         // http://wordaligned.org/articles/cpp-streambufs
-// >>>>>>>>>>>>> END REDIRECT COUT
+  files.RedirectCoutFinalize(sbuf);
   
   return 0;
 }
