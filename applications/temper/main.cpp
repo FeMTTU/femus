@@ -217,11 +217,7 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
   equations_map.clean();  //deallocates the map of equations
   for (int fe=0; fe<QL; fe++)  {  delete FEElements[fe]; }
   
- //>>>>>>>>> END REDIRECT COUT
-  std::cout.rdbuf(sbuf);  //it seems like you have to give the stream buffer
-                          //back to cout !!!
-                         // http://wordaligned.org/articles/cpp-streambufs
- //>>>>>>>>> END REDIRECT COUT
+  files.RedirectCoutFinalize(sbuf);
 
   return 0;
 }

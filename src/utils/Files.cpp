@@ -520,3 +520,14 @@ std::cout << "The number of processors is " << paral::get_size() << std::endl;
     
    return; 
   }
+
+
+  void Files::RedirectCoutFinalize(std::streambuf* sbuf) {
+      
+    std::cout.rdbuf(sbuf);  //it seems like you have to give the stream buffer
+                          //back to cout !!!
+                         // http://wordaligned.org/articles/cpp-streambufs
+  
+   return; 
+     
+  }
