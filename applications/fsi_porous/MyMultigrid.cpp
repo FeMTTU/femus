@@ -1,6 +1,7 @@
 #include "MyMultigrid.hpp"
 #include "main.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelMesh.hpp"
 #include "ElemType.hpp"
 #include "LinearEquationSolver.hpp"
 #include "Elem.hpp"
@@ -10,11 +11,8 @@
 #include "PetscMatrix.hpp"
 #include "Parameter.hpp"
 
-MyMultiGrid::MyMultiGrid(const unsigned short &igridn,const unsigned short &igridr,
-                         const char mesh_file[], const char GaussOrder[],
-                         const double Lref, 
-			 bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level)) 
-:   MultiLevelProblem(igridn,igridr,mesh_file,GaussOrder,Lref,SetRefinementFlag) {  
+MyMultiGrid::MyMultiGrid(MultiLevelMesh * mlmesh_in ) 
+:   MultiLevelProblem(mlmesh_in) {  
       
       _qty_idx[0] = IDX_P;
       _qty_idx[1] = IDX_D;

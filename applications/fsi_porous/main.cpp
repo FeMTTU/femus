@@ -5,8 +5,10 @@
 #include "PetscVector.hpp"
 #include "LinearEquationSolver.hpp" //linear_solver
 #include "Fluid.hpp"
+#include "Solid.hpp"
 #include "Parameter.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelMesh.hpp"
 #include "RunTimeMap.hpp"
 
 // application includes and prototypes
@@ -89,7 +91,9 @@ int main(int argc,char **args) {
 // In this case we are not actually using those numbers, but PAY ATTENTION!  
   
 //Steadystate MultiGrid
-  MyMultiGrid  mg(nm,nr,infile,"fifth",Lref,SetRefinementFlag);   //this has become the multilevel problem
+  MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag); 
+//   ml_msh.EraseCoarseLevels(2);
+  MyMultiGrid  mg(&ml_msh);
 
 //i wanted to print the mesh without variables, we need to add a function for that
 //   std::vector<std::string> print_vars_tmp;
