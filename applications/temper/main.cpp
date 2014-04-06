@@ -63,6 +63,13 @@
 
    files.CopyGencaseFiles();
 
+  // ======= MyPhysics ========================
+  RunTimeMap<double> physics_map("Physics",files.get_basepath());
+  physics_map.read();
+  physics_map.print();
+  TempPhysics phys(physics_map);   //instantiated as father
+              phys.set_nondimgroups(); //implement it
+
   // ======= Mesh =====
   RunTimeMap<double> mesh_map("Mesh",files.get_basepath());
      mesh_map.read();
@@ -71,13 +78,6 @@
   Utils utils(files);
         utils._urtmap.read();  
         utils._urtmap.print();
-
-  // ======= MyPhysics ========================
-  RunTimeMap<double> physics_map("Physics",files.get_basepath());
-  physics_map.read();
-  physics_map.print();
-  TempPhysics phys(physics_map);   //instantiated as father
-              phys.set_nondimgroups(); //implement it
 
   // ======= MyDomainShape ====================
   const double Lref  =  phys._physrtmap.get("Lref");     // reference L
@@ -94,7 +94,7 @@
 // ======  Mesh ================================
   uint geomel_type = (uint) utils._urtmap.get("geomel_type");  // must do in such a way that it is picked from the geomel throughout the code
   GeomEl geomel(dimension,geomel_type);           /*VB based*/
-  Mesh     mesh(utils,geomel,Lref,&mybox);        /*VB based*/
+  Mesh     mesh(files,mesh_map,geomel,Lref,&mybox);        /*VB based*/
   mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/
 
   phys.set_mesh(&mesh);
