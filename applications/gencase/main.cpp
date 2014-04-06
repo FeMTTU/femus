@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
 
   
   // ======= Mesh =====
-     RunTimeMap<double> mesh_map("Mesh",files.get_basepath());  //here you don't need to instantiate a TimeLoop object, but only to read its RUNTIME MAP
+     RunTimeMap<double> mesh_map("Mesh",files.get_basepath());
      mesh_map.read();
      mesh_map.print();
 
