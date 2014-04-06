@@ -1084,12 +1084,12 @@ void GenCase::PrintMultimeshXdmf() {
 
             std::ostringstream hdf5_field;
             hdf5_field << _elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
-            _utils.PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),_GeomEl.name[vb],_n_elements_lev_vb[vb][ilev],_n_elements_lev_vb[vb][ilev],_elnodes[vb][QQ]);
+            IO::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),_GeomEl.name[vb],_n_elements_lev_vb[vb][ilev],_n_elements_lev_vb[vb][ilev],_elnodes[vb][QQ]);
             std::ostringstream coord_lev; coord_lev << "_L" << ilev; 
-	    _utils.PrintXDMFGeometry(out,top_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[ilev],1);
+	    IO::PrintXDMFGeometry(out,top_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[ilev],1);
             std::ostringstream pid_field;
             pid_field << "PID/PID_VB"<< vb <<"_L"<< ilev;
-            _utils.PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",_n_elements_lev_vb[vb][ilev],1);
+            IO::PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",_n_elements_lev_vb[vb][ilev],1);
 
             out << "</Grid> \n";
 	    
@@ -1137,7 +1137,7 @@ void GenCase::PrintMeshHDF5()   {
     hsize_t dimsf[2];
     dimsf[0] = 4;
     dimsf[1] = 1;
-    _utils.print_Ihdf5(file,"DFLS", dimsf,tdata);
+    IO::print_Ihdf5(file,"DFLS", dimsf,tdata);
     delete [] tdata;
 
 //==================================
@@ -1150,7 +1150,7 @@ void GenCase::PrintMeshHDF5()   {
 
     dimsf[0] = VB;
     dimsf[1] = 1;
-    _utils.print_Ihdf5(file,"ELNODES_VB", dimsf,ttype_FEM);
+    IO::print_Ihdf5(file,"ELNODES_VB", dimsf,ttype_FEM);
 
 // ===========================================
 // ===========================================
@@ -1166,7 +1166,7 @@ void GenCase::PrintMeshHDF5()   {
     std::string ndxlev =  ndmap + "/NDxLEV";
     dimsf[0] = _NoLevels+1;
     dimsf[1] = 1;
-    _utils.print_Ihdf5(file, ndxlev.c_str(), dimsf,_NoNodesXLev);
+    IO::print_Ihdf5(file, ndxlev.c_str(), dimsf,_NoNodesXLev);
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // node map (XL, extended levels)
@@ -1177,7 +1177,7 @@ void GenCase::PrintMeshHDF5()   {
     for (int ilev= 0;ilev < _NoLevels+1; ilev++) {
         name.str("");
         name << ndmap << "/MAP"<< "_XL" << ilev;
-        _utils.print_Ihdf5(file,name.str(),dimsf,_Qnode_fine_Qnode_lev[ilev]);
+        IO::print_Ihdf5(file,name.str(),dimsf,_Qnode_fine_Qnode_lev[ilev]);
     }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1188,7 +1188,7 @@ void GenCase::PrintMeshHDF5()   {
     for (int fe=0;fe < QL_NODES; fe++) {
         std::ostringstream namefe;
         namefe <<  ndmap << "/OFF_ND" << "_F" << fe;
-        _utils.print_Ihdf5(file, namefe.str(),dimsf,_off_nd[fe]);
+        IO::print_Ihdf5(file, namefe.str(),dimsf,_off_nd[fe]);
     }
 
     H5Gclose(subgroup_id);
@@ -1234,7 +1234,7 @@ void GenCase::PrintMeshHDF5()   {
         dimsf[1] = 1;
         name.str("");
         name << ndcoords << "/X" << kc+1<< "_L" << l;
-        _utils.print_Dhdf5(file,name.str(), dimsf,xcoord);
+        IO::print_Dhdf5(file,name.str(), dimsf,xcoord);
     }
 
     delete [] xcoord;
@@ -1276,7 +1276,7 @@ void GenCase::PrintMeshHDF5()   {
         bname << _elems_name << "/BDRY_TO_VOL_L" << lev;
         dimsf[0] = _n_elements_lev_vb[BB][lev];
         dimsf[1] = 1;
-        _utils.print_Ihdf5(file,bname.str(), dimsf,_el_child_to_fath[lev]);
+        IO::print_Ihdf5(file,bname.str(), dimsf,_el_child_to_fath[lev]);
     }
 
 
@@ -1347,15 +1347,15 @@ void GenCase::PrintElemVB(hid_t file,const uint vb , int* nd_libm_fm , ElemStoBa
     int ndofm[2];
     ndofm[0]=_elnodes[vb][QQ];
     ndofm[1]=_elnodes[vb][LL];
-    _utils.print_Ihdf5(file,(elems_fem_vb + "/NDOF_FO_F1"), dimsf,ndofm);
+    IO::print_Ihdf5(file,(elems_fem_vb + "/NDOF_FO_F1"), dimsf,ndofm);
     // NoElements ------------------------------------
     dimsf[0] = _NoLevels;
     dimsf[1] = 1;
-    _utils.print_Ihdf5(file,(elems_fem_vb + "/NExLEV"), dimsf,_n_elements_lev_vb[vb]);
+    IO::print_Ihdf5(file,(elems_fem_vb + "/NExLEV"), dimsf,_n_elements_lev_vb[vb]);
     // offset
     dimsf[0] = _NoSubdom*_NoLevels+1;
     dimsf[1] = 1;
-    _utils.print_Ihdf5(file,(elems_fem_vb + "/OFF_EL"), dimsf,_off_el[vb]);
+    IO::print_Ihdf5(file,(elems_fem_vb + "/OFF_EL"), dimsf,_off_el[vb]);
 
     // Mesh 1 Volume at all levels  packaging data  (volume) ----------
     //here you pick all the elements at all levels,
@@ -1372,7 +1372,7 @@ void GenCase::PrintElemVB(hid_t file,const uint vb , int* nd_libm_fm , ElemStoBa
     // global mesh hdf5 storage ------------------------------
     dimsf[0] = _n_elements_sum_levs[vb]*_elnodes[vb][QQ];
     dimsf[1] = 1;
-    _utils.print_Ihdf5(file,(elems_fem_vb + "/CONN"), dimsf,tempconn);
+    IO::print_Ihdf5(file,(elems_fem_vb + "/CONN"), dimsf,tempconn);
 
     // level connectivity ---------------------------------
     for (int ilev=0;ilev <_NoLevels; ilev++) {
@@ -1396,7 +1396,7 @@ void GenCase::PrintElemVB(hid_t file,const uint vb , int* nd_libm_fm , ElemStoBa
 
         name.str("");
         name << elems_fem_vb << "/CONN" << "_L" << ilev ;
-        _utils.print_Ihdf5(file,name.str(), dimsf,conn_lev);
+        IO::print_Ihdf5(file,name.str(), dimsf,conn_lev);
         //clean
         delete []conn_lev;
 
@@ -1442,7 +1442,7 @@ void GenCase::PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std::st
         std::ostringstream name;
         name << "/PID/PID_VB" << vb << "_L" << Level;
 
-        _utils.print_Ihdf5(file_id,name.str(),dimsf,ucoord);
+        IO::print_Ihdf5(file_id,name.str(),dimsf,ucoord);
 
         H5Fclose(file_id);
 
@@ -1484,25 +1484,25 @@ void GenCase::PrintOneVarMatrixHDF5(std::string name, std::string groupname, int
     int rowcln[2];
     rowcln[0]=n_dofs_lev_fe[fe_row][FELevel[fe_row]]; //row dimension
     rowcln[1]=n_dofs_lev_fe[fe_col][FELevel[fe_col]]; //column dimension
-    _utils.print_Ihdf5(file,name0.str().c_str(),dimsf,rowcln);
+    IO::print_Ihdf5(file,name0.str().c_str(),dimsf,rowcln);
 
     //===== POS =======
     std::ostringstream name1;
     name1 << groupname << "/"  << "POS" << fe_couple.str();
     dimsf[0]=count;
-    _utils.print_Ihdf5(file,name1.str().c_str(),dimsf,Mat);
+    IO::print_Ihdf5(file,name1.str().c_str(),dimsf,Mat);
 
     //===== LEN =======
     std::ostringstream name2;
     name2 << groupname << "/"  << "LEN" << fe_couple.str();
     dimsf[0]=rowcln[0]+1;
-    _utils.print_Ihdf5(file,name2.str().c_str(),dimsf,len);
+    IO::print_Ihdf5(file,name2.str().c_str(),dimsf,len);
 
     //==== OFFLEN ========
     std::ostringstream name3;
     name3 << groupname << "/"  << "OFFLEN" << fe_couple.str();
     dimsf[0]= rowcln[0]+1;
-    _utils.print_Ihdf5(file,name3.str().c_str(),dimsf,len_off);
+    IO::print_Ihdf5(file,name3.str().c_str(),dimsf,len_off);
 
     H5Fclose(file);  //TODO this file seems to be closed TWICE, here and in the calling function
     //you open and close the file for every (FE_ROW,FE_COL) couple
@@ -1533,27 +1533,27 @@ void GenCase::PrintOneVarMGOperatorHDF5(std::string filename, std::string groupn
         rowcln[0] = n_dofs_lev[FELevel_row];
         rowcln[1] = n_dofs_lev[FELevel_col];
 	
-    _utils.print_Ihdf5(file,name0.str().c_str(),dimsf,rowcln);
+    IO::print_Ihdf5(file,name0.str().c_str(),dimsf,rowcln);
     //===== POS =======
     std::ostringstream name1;
     name1 << groupname << "/" << "POS" << fe_family.str();
     dimsf[0] = count;
-    _utils.print_Ihdf5(file,name1.str().c_str(),dimsf,Op_pos);
+    IO::print_Ihdf5(file,name1.str().c_str(),dimsf,Op_pos);
     //===== VAL =======
     std::ostringstream name1b;
     name1b << groupname << "/" << "VAL" << fe_family.str();
     dimsf[0] = count;
-    _utils.print_Dhdf5(file,name1b.str().c_str(),dimsf,Op_val);
+    IO::print_Dhdf5(file,name1b.str().c_str(),dimsf,Op_val);
     //===== LEN =======
     std::ostringstream name2;
     name2 << groupname << "/" << "LEN" << fe_family.str();
     dimsf[0] = rowcln[0] + 1;
-    _utils.print_Ihdf5(file,name2.str().c_str(),dimsf,len);
+    IO::print_Ihdf5(file,name2.str().c_str(),dimsf,len);
     //==== OFFLEN ========
     std::ostringstream name3;
     name3 << groupname << "/" << "OFFLEN" << fe_family.str();
     dimsf[0] = rowcln[0] + 1;
-    _utils.print_Ihdf5(file,name3.str().c_str(),dimsf,len_off);
+    IO::print_Ihdf5(file,name3.str().c_str(),dimsf,len_off);
 
 
     //TODO Attenzione!!! Per scrivere una matrice HDF5 la vuole TUTTA INSIEME!!!
@@ -1587,7 +1587,7 @@ void GenCase::PrintOneVarMGOperatorHDF5(std::string filename, std::string groupn
     dimsf[0] = rowcln[0];    dimsf[1] = n_cols;
     std::ostringstream name4;
     name4 << groupname << "/" << "POS_MAT" << fe_family.str();
-    _utils.print_Ihdf5(file,name4.str().c_str(),dimsf,&mat_op[0][0]);
+    IO::print_Ihdf5(file,name4.str().c_str(),dimsf,&mat_op[0][0]);
 
      delete [] mat_op[0];
      delete [] mat_op;
@@ -1610,7 +1610,7 @@ void GenCase::PrintOneVarMGOperatorHDF5(std::string filename, std::string groupn
     dimsf[0] = rowcln[0];    dimsf[1] = n_cols;
     std::ostringstream name5;
     name5 << groupname << "/" << "VAL_MAT" << fe_family.str();
-    _utils.print_Dhdf5(file,name5.str().c_str(),dimsf,&mat[0][0]);
+    IO::print_Dhdf5(file,name5.str().c_str(),dimsf,&mat[0][0]);
 
      delete [] mat[0];
      delete [] mat;
