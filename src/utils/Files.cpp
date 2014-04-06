@@ -33,33 +33,6 @@
   Files::~Files() { } ///< Destructor
 
 
-//=============================================
-void Files::InitCaseData() {
-  
-  //construct the common output file stream for the data
-  //first,build its name
-   std::ostringstream data_name;
-   data_name << get_basepath() << "/" << get_frtmap().get("OUTPUT_DIR") << get_frtmap().get("OUTTIME_DIR") << DEFAULT_CASE_DATA;
-
-   //open the common output file stream
-     if (paral::get_rank() == 0 )   {
-   _case_data.open(data_name.str().c_str());  //I'll close it in the Files destructor
-
-     }
-     //Is this open in parallel?
-   //It seems like it's working even without proc==0. I'll put it to be safe.
-  
-  
-  
-  return;
-}
-
-void Files::CloseCaseData() { 
-  _case_data.close();
-   return;
-  }
-
-
 /// This function just checks if the directory is there
 /// The first argument reads the absolute path of the parent directory,
 /// the second argument reads the name (no absolute path) of the directory to be checked
@@ -546,4 +519,15 @@ std::cout << "The number of processors is " << paral::get_size() << std::endl;
      
     
    return; 
+  }
+
+
+  void Files::RedirectCoutFinalize(std::streambuf* sbuf) {
+      
+    std::cout.rdbuf(sbuf);  //it seems like you have to give the stream buffer
+                          //back to cout !!!
+                         // http://wordaligned.org/articles/cpp-streambufs
+  
+   return; 
+     
   }
