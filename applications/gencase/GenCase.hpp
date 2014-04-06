@@ -16,7 +16,7 @@
 #include "ElemSto.hpp"
 
 // Forwarding classes
-class Utils;
+class Files;
 class GeomEl;
 class Domain;
 class FEElemBase;
@@ -28,7 +28,8 @@ class GenCase {
 private:
 
     // Basic data ==========
-    Utils& _utils;
+    RunTimeMap<double> _mesh_rtmap;
+    Files& _files;
     int _NoSubdom;       ///< number of subdomain (one for each processor)
     int _NoLevels;       ///< number of levels (multigrid)
 
@@ -75,7 +76,7 @@ private:
 
 public:
 
-     GenCase(Utils& mgutils_in,GeomEl& mggeomel_in,std::vector<FEElemBase*>& feelems_in); ///<  Constructor
+     GenCase(Files& files_in,RunTimeMap<double>& map_in, GeomEl& mggeomel_in,std::vector<FEElemBase*>& feelems_in); ///<  Constructor
     ~GenCase();                                       ///<  Destructor
 
     void ComputeMatrix();

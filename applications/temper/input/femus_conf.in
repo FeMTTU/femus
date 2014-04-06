@@ -1,5 +1,5 @@
 
-<Utils>
+<Mesh>
 # double # mesh file consistency
 
 # ------<Mesh>---------------------------------------
@@ -11,14 +11,14 @@ numgeomels    1           # quadrilateral,triangular,pyramidal,...        # ====
 geomel_type   0           # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
 dimension     2              
 domain        0           # Box, or whatever SHAPE...  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # 0=Box# 1=Cylinder# Whatever the rest
+bdry_toll   0.0000001    # ==== not in library routines, but library-type
 
 
 # ----<BCHandling>-----------------
 ibc_gen     0            # ==== in library routines
-bdry_toll   0.0000001    # ==== not in library routines, but library-type
 penalty_val 1.e10        # ==== not in library routines, but library-type
 
-</Utils>
+</Mesh>
 
 
 <Files>

@@ -74,22 +74,33 @@ int main(int argc, char** argv) {
   // ======= Files =====
   Files::CheckDirOrAbort("../",chosen_app);
   std::string basepath = "../" + chosen_app + "/";
-  Files files(/*"../mhdopt/"*/basepath);
+  Files files(basepath);
    std::cout << "******The basepath starting from the gencase directory is ***** " << files.get_basepath() << std::endl;
 //   files.CheckDirOrAbort(files.get_basepath(),DEFAULT_CONFIGDIR); 
 //   files.get_frtmap_ptr()->read(); // THE ERROR IS IN HERE.. BUT NOT IN THE APPS... WHAT IS DIFFERENT WRT THEM ?!? ... LIBMESH...! but... ONLY IN DEBUG MODE!!!!
   files.get_frtmap().read();
   files.get_frtmap().print();
   files.CheckDir(files.get_basepath(),files.get_frtmap().get("INPUT_DIR")); //here, we must check if the input directory where gencase writes is there  //if not, we make it
+
+//======== first of all, check for restart ======      
+//======== don't rerun gencase in that case, to avoid spending time on rebuilding the operators and so on ======      
+//======== actually we will change the logic, we will read EVERYTHING from THE PREVIOUS RUN ======      
+     RunTimeMap<double> timemap("TimeLoop",files.get_basepath());  //here you don't need to instantiate a TimeLoop object, but only to read its RUNTIME MAP
+     timemap.read();
+     timemap.print();
+     TimeLoop::check_time_par(timemap);
+     const uint restart      = (uint) timemap.get("restart");    // restart param
+     if (restart)  {std::cout << "No GenCase because of restart flag !=0 " << std::endl; abort();}
+
   
-  // ======= Utils =====
-  Utils utils(files);
-  utils._urtmap.read();
-  utils._urtmap.print();
+  // ======= Mesh =====
+     RunTimeMap<double> mesh_map("Mesh",files.get_basepath());  //here you don't need to instantiate a TimeLoop object, but only to read its RUNTIME MAP
+     mesh_map.read();
+     mesh_map.print();
 
   // =======GeomEl =====
-  uint geomel_type = (uint) utils._urtmap.get("geomel_type");
-  uint dimension   = (uint) utils._urtmap.get("dimension");
+  uint geomel_type = (uint) mesh_map.get("geomel_type");
+  uint dimension   = (uint) mesh_map.get("dimension");
   GeomEl geomel(dimension,geomel_type);
 
   // =======FEElems =====
@@ -106,17 +117,8 @@ std::vector<FEElemBase*> FEElements(QL); //these are basically used only for the
   //the Mesh than the Doamin shape.
   //anyway, now we do like this
       
-//======== check for restart ======      
-     RunTimeMap<double> timemap("TimeLoop",files.get_basepath());  //here you don't need to instantiate a TimeLoop object, but only to read its RUNTIME MAP
-     timemap.read();
-     timemap.print();
-     TimeLoop::check_time_par(timemap);
-     const uint restart      = (uint) timemap.get("restart");    // restart param
-     if (restart)  {std::cout << "No GenCase because of restart flag !=0 " << std::endl; abort();}
-
-    
   // ========= GenCase =====
-      GenCase gencase(utils,geomel,FEElements);
+      GenCase gencase(files,mesh_map,geomel,FEElements);
       gencase.GenerateCase();
 
   std::cout << "=======End of GenCase========" << std::endl;

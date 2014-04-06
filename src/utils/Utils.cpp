@@ -23,7 +23,7 @@
 /// Constructor
    Utils::Utils( Files& mg_files_in  // Files class pointer
   )  : _files(mg_files_in),
-      _urtmap("Utils",mg_files_in.get_basepath())  {
+      _urtmap("Mesh",mg_files_in.get_basepath())  {
   
   }
 

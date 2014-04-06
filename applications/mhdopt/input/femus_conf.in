@@ -1,5 +1,5 @@
 
-<Utils>
+<Mesh>
 # double
 
 # ------<Mesh>---------------------------------------
@@ -18,7 +18,7 @@ bdry_toll   0.0000001    # ==== not in library routines, but library-type
 penalty_val 1.e10        # ==== not in library routines, but library-type
 
 
-</Utils>
+</Mesh>
 
 
 <Files>
