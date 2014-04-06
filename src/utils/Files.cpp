@@ -103,7 +103,7 @@ void Files::CheckDirOrAbort(const std::string& dir_name_in, const std::string& m
 //on the other hand, if only one processor does that, the other processes must be synchronized,
 //otherwise the check may not be 
 
-void Files::CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in) const {
+void Files::CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in) {
   
   if (paral::get_rank() == 0 )   {
   
@@ -159,7 +159,7 @@ return;
 
 ///if the directory isnt there, create it
 ///if the directory is there, nothing wrong
-void Files::CheckDir(const std::string& dir_name_in, const std::string& my_name_in) const {
+void Files::CheckDir(const std::string& dir_name_in, const std::string& my_name_in) {
   
   if (paral::get_rank() == 0 )   {
   
@@ -504,7 +504,7 @@ void Files::CheckIODirectories() {
 //A global variable is still an instantiation but not associated to any class
 //to be passed to the constructor
 
-  void Files::RedirectCout(std::streambuf* /*sbuf*/,  std::ofstream& file_in) {
+  void Files::RedirectCout(std::streambuf* /*sbuf*/,  std::ofstream& file_in) const {
 //this redirects the standard output to file, only for processor 0
 //I dont like the fact that all these functions must be modified
 //whenever I change the absolute path,

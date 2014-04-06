@@ -11,46 +11,57 @@
 
 // =======================================
 //    Files Class
+// This class handles all the necessary filenames for any application.
+// It takes care of the mesh filename
+// It takes care of generating the output directory for every instant of time
+// It takes care of the RESTART procedure
+// 
 // =======================================
 class Files {
 
-private:
-  
-  RunTimeMap<std::string>           _frtmap;   //this map cannot be declared as CONST because at some point it is FILLED and it is not in the initialization in the constructor!!!
-
 public:
   
-  std::ofstream _case_data;
+   Files(const std::string &/*  = DEFAULT_BASEPATH*/);  //TODO seems like it doesn't work with ONE DEFAULT PARAMETER
+  ~Files();
 
-  // Constructor-Destructor ------------------------
-   Files(const std::string &/*  = DEFAULT_BASEPATH*/);  ///< Constructor //TODO seems like it doesn't work with ONE DEFAULT PARAMETER
-  ~Files(); ///< Destructor
 
-  // Return functions ---------------------------------
+// RunTimeMap ===================
   inline       RunTimeMap<std::string> * get_frtmap_ptr()       {return  &_frtmap;} 
   inline       RunTimeMap<std::string> & get_frtmap()       {return  _frtmap;}   //trying to return the pointer instead of the reference //non-const version //WHO DECIDES whether to use THIS FUNCTION or the OTHER ONE? TODO OVERLOADING
   inline const RunTimeMap<std::string> & get_frtmap() const {return  _frtmap;}    // I WANT THIS TO RETURN a REFERENCE, because this is going to call the READ FUNCTION which modifies the object //THIS FUNCTION WILL BE CALLED by functions inside the class basically, which have the "const this" as well
   inline const std::string             get_basepath() const {return  _frtmap.get_rbasepath(); }  //THIS RETURNS a COPY
 
-
-  void PrintRun(const std::string run_name_in) const;   //for restart
-
-  void ComposeOutdirName();
-  void InitCaseData();
-  void CloseCaseData();
-
-  void CheckDir(const std::string& dir_name_in, const std::string& my_name_in) const;
-  void CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in) const;  //TODO isn't this very similar to the previous one?
+// Directory management =========
+         void CheckIODirectories();
+  static void CheckDir(const std::string& dir_name_in, const std::string& my_name_in);
   static void CheckDirOrAbort(const std::string& dir_name_in, const std::string& my_name_in);
-
-  void CheckIODirectories();
-  void RedirectCout(std::streambuf* sbuf,  std::ofstream& file_in);
-
-  void CopyFile(std::string  f_in,std::string  f_out) const;
+  
+// Copy ========================= 
   void CopyGencaseFiles() const;
 
+// LOG ==========================
+// Stream redirect to file ======
+  void RedirectCout(std::streambuf* sbuf,  std::ofstream& file_in) const;
+// Log for Restart ======================
+  std::ofstream _case_data;
+  void InitCaseData();
+  void CloseCaseData();
+  void PrintRun(const std::string run_name_in) const;
+  
+  
+private:
+  
+  RunTimeMap<std::string>           _frtmap;   //this map cannot be declared as CONST because at some point it is FILLED and it is not in the initialization in the constructor!!!
+
+// Directory management
+         void ComposeOutdirName();
+  static void CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in);  //TODO isn't this very similar to the previous one?
+
+// Copy 
+  void CopyFile(std::string  f_in,std::string  f_out) const;
+
+  
 };
 
 
 #endif
-
