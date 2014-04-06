@@ -28,15 +28,6 @@ public:
   ~Utils() {};                 ///< Destructor
 
 
- // Operations ---------------------------------
-  static inline void zeroN(double* x,const uint N); 
-  static inline double dotN(const double* x,const double* y,const uint N);  //TODO this will be deleted 
-  static inline double dot(const double* x,const double* y, const uint spacedim);
-  static inline  void cross(const double* a,const double* b, double* res);
-  static inline void extend(const double* a, double* a3D, const uint spacedim);
-  static inline void extend_nds(const uint,const double*, double*, const uint spacedim);
-  static inline void normalize(double* x,const double fac, const uint spacedim);
-
   //hdf5 ------------------------------------
   static hid_t print_Dhdf5(hid_t file,const std::string & name, hsize_t dimsf[],double data[]);
   static hid_t print_Ihdf5(hid_t file,const std::string & name, hsize_t dimsf[],int data[]);
@@ -75,8 +66,20 @@ public:
 
 
 
+
+
+namespace Math {
+ // Operations ---------------------------------
+  static inline void zeroN(double* x,const uint N); 
+  static inline double dotN(const double* x,const double* y,const uint N);  //TODO this will be deleted 
+  static inline double dot(const double* x,const double* y, const uint spacedim);
+  static inline  void cross(const double* a,const double* b, double* res);
+  static inline void extend(const double* a, double* a3D, const uint spacedim);
+  static inline void extend_nds(const uint,const double*, double*, const uint spacedim);
+  static inline void normalize(double* x,const double fac, const uint spacedim);
+
 /// set to zero - n components
-inline void Utils::zeroN(double* x,const uint N)  {
+inline void zeroN(double* x,const uint N)  {
 
   for (uint i=0; i< N; i++)  x[i]=0.;
   return;
@@ -85,27 +88,27 @@ inline void Utils::zeroN(double* x,const uint N)  {
 
 //  useful  functions --------------------------------------------
 /// dot product
-inline void Utils::normalize(double* x,const double fac, const uint spacedim)  {
+inline void normalize(double* x,const double fac, const uint spacedim)  {
   for (uint idim=0; idim< spacedim; idim++)  x[idim] /= fac;
   return;
 }
 
 /// dot product - n components
-inline double Utils::dotN(const double* x,const double* y,const uint N)  {
+inline double dotN(const double* x,const double* y,const uint N)  {
   double dotprod=0.;
   for (uint idim=0; idim< N; idim++)  dotprod += x[idim]*y[idim];
   return dotprod;
 }
 
 /// dot product
-inline double Utils::dot(const double* x,const double* y, const uint spacedim) {
+inline double dot(const double* x,const double* y, const uint spacedim) {
   double dotprod=0.;
   for (uint idim=0; idim < spacedim; idim++)  dotprod += x[idim]*y[idim];
   return dotprod;
 }
 
 /// Cross product
-inline void Utils::cross(const double* a,const double* b, double* res) {
+inline void cross(const double* a,const double* b, double* res) {
 //a,b,res are 3D vectors
 //clean then fill
   for (uint i=0; i<3; i++) res[i]=0.;
@@ -114,14 +117,14 @@ inline void Utils::cross(const double* a,const double* b, double* res) {
 }
 
 /// extend to a 3D vector a vector with dimension 
-inline void Utils::extend(const double* a, double* a3D, const uint spacedim)  {
+inline void extend(const double* a, double* a3D, const uint spacedim)  {
   for (uint i=0; i<3; i++) a3D[i]=0.;
   for (uint i=0; i< spacedim; i++)  a3D[i]=a[i];
   return;
 }
 
 /// extend to 3D an element dof vector
-void Utils::extend_nds(const uint el_ndofs,const double* a_nds, double* a_nds3D, const uint spacedim)  {
+inline void extend_nds(const uint el_ndofs,const double* a_nds, double* a_nds3D, const uint spacedim)  {
 
 //AAA: valid from spacedim to 3
 
@@ -140,6 +143,14 @@ void Utils::extend_nds(const uint el_ndofs,const double* a_nds, double* a_nds3D,
 
   return;
 }
+
+
+
+} //end namespace Math
+
+
+
+
 
 
 

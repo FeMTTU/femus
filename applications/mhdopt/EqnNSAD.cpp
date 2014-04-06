@@ -246,7 +246,7 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
 
  
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
-    _utils.zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof[vb]);
+    Math::zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof[vb]);
 
     for (uint ivarq=0; ivarq < Bmag._dim; ivarq++)    { //ivarq is like idim
           for (uint d=0; d < Bmag._ndof[vb]; d++)    {
@@ -286,8 +286,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
          Vel.grad_g(vb);
 
 //vector product
-        _utils.extend(Bmag._val_g,Bmag._val_g3D,space_dim);
-        _utils.cross(BhomAdj._curl_g3D,Bmag._val_g3D,curlxiXB_g3D);
+        Math::extend(Bmag._val_g,Bmag._val_g3D,space_dim);
+        Math::cross(BhomAdj._curl_g3D,Bmag._val_g3D,curlxiXB_g3D);
 
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================
@@ -321,8 +321,8 @@ if (_Dir_pen_fl == 0)  {
            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][VelAdjOld._FEord][j+idim*VelAdjOld._ndof[vb]];
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
 
-          double     Lap_g = _utils.dot(dphijdx_g,dphiidx_g,space_dim);
-	  double Advphii_g = _utils.dot(Vel._val_g,dphiidx_g,space_dim);   //TODO can put it outside
+          double     Lap_g = Math::dot(dphijdx_g,dphiidx_g,space_dim);
+	  double Advphii_g = Math::dot(Vel._val_g,dphiidx_g,space_dim);   //TODO can put it outside
           
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
             int irowq = i+idim*VelAdjOld._ndof[vb];

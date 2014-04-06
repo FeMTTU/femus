@@ -340,8 +340,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
         for (uint idim = 0; idim < space_dim; idim++)  dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][j+idim*Tempold._ndof[vb]]; 
            
    
-          double Lap_g   = _utils.dot(dphijdx_g,dphiidx_g,space_dim);
-          double Advection = _utils.dot(vel._val_g,dphijdx_g,space_dim);
+          double Lap_g   = Math::dot(dphijdx_g,dphiidx_g,space_dim);
+          double Advection = Math::dot(vel._val_g,dphijdx_g,space_dim);
 
 	    int ip1 = i + Tempold._ndof[vb];
 	    int jp1 = j + Tempold._ndof[vb];
@@ -508,7 +508,7 @@ int el_Neum_flag=0;
    
 	Tempold.val_g(vb); //For the penalty Dirichlet //i need this for interpolating the old function at the gauss point
 
-	   double QfluxDn_g=_utils.dot( Qflux_g,currgp.get_normal_ptr(),space_dim );
+	   double QfluxDn_g=Math::dot( Qflux_g,currgp.get_normal_ptr(),space_dim );
 	 
         for (uint i=0; i<Tempold._ndof[vb]; i++) {
    	const double phii_g =  currgp._phi_ndsQLVB_g[vb][Tempold._FEord][i]; 

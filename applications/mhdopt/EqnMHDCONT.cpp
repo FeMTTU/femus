@@ -282,11 +282,11 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
      BhomAdj.grad_g(vb);
 
 // vector product
-      _utils.extend(   Vel._val_g,   Vel._val_g3D,space_dim);
-      _utils.extend(VelAdj._val_g,VelAdj._val_g3D,space_dim);
+      Math::extend(   Vel._val_g,   Vel._val_g3D,space_dim);
+      Math::extend(VelAdj._val_g,VelAdj._val_g3D,space_dim);
 
-    _utils.cross(BhomAdj._curl_g3D,   Vel._val_g3D,curlxiXvel_g3D ); 
-    _utils.cross(   Bhom._curl_g3D,VelAdj._val_g3D,curlbXlambda_g3D );
+      Math::cross(BhomAdj._curl_g3D,   Vel._val_g3D,curlxiXvel_g3D ); 
+      Math::cross(   Bhom._curl_g3D,VelAdj._val_g3D,curlbXlambda_g3D );
 //========end preparation for things that are independent of (i,j) dofs of test and shape =====================
   
 //================================
@@ -305,11 +305,11 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
         const double                             phii_g       =      currgp._phi_ndsQLVB_g[vb][BeOld._FEord][i];
         for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BeOld._FEord][i+idim*BeOld._ndof[vb]];
 
-	 _utils.extend(dphiidx_g,dphiidx_g3D,space_dim);
-	 _utils.cross(BhomAdj._curl_g3D,dphiidx_g3D,curlxiXdphii_g3D);
+	 Math::extend(dphiidx_g,dphiidx_g3D,space_dim);
+	 Math::cross(BhomAdj._curl_g3D,dphiidx_g3D,curlxiXdphii_g3D);
 
-	  double bDdphii_g      = _utils.dot(  Bhom._val_g,dphiidx_g,space_dim);
-	  double lambdaDdphii_g = _utils.dot(VelAdj._val_g,dphiidx_g,space_dim);
+	  double bDdphii_g      = Math::dot(  Bhom._val_g,dphiidx_g,space_dim);
+	  double lambdaDdphii_g = Math::dot(VelAdj._val_g,dphiidx_g,space_dim);
 
 	  for (uint idim=0; idim<space_dim; idim++) Lapxi_g[idim]=0.;
 	  for (uint idim=0; idim<space_dim; idim++)  {
@@ -348,9 +348,9 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
           double                                  phij_g       =      currgp._phi_ndsQLVB_g[vb][BeOld._FEord][j];
           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BeOld._FEord][j+idim*BeOld._ndof[vb]];
 
-	  double Lap_g=_utils.dot(dphijdx_g,dphiidx_g,space_dim);
-	  double lambdaDdphii_g=_utils.dot(VelAdj._val_g,dphiidx_g,space_dim);  //TODO why did i recompute it?
-	  double lambdaDdphij_g=_utils.dot(VelAdj._val_g,dphijdx_g,space_dim);
+	  double Lap_g = Math::dot(dphijdx_g,dphiidx_g,space_dim);
+	  double lambdaDdphii_g = Math::dot(VelAdj._val_g,dphiidx_g,space_dim);  //TODO why did i recompute it?
+	  double lambdaDdphij_g = Math::dot(VelAdj._val_g,dphijdx_g,space_dim);
 //============ end preparation for (j) ============
 
           for (uint idim=0; idim<space_dim; idim++) {
