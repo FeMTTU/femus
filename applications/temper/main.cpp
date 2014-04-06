@@ -62,7 +62,6 @@
 // >>>>>>>>>>>>> END REDIRECT COUT
 
    files.CopyGencaseFiles();
-   files.InitCaseData();                  /*(iproc==0)*/              // outtime dir
 
   // ======= Utils ========================
   Utils utils(files);
@@ -218,7 +217,6 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
   equations_map.clean();  //deallocates the map of equations
   for (int fe=0; fe<QL; fe++)  {  delete FEElements[fe]; }
   
-  files.CloseCaseData();
  //>>>>>>>>> END REDIRECT COUT
   std::cout.rdbuf(sbuf);  //it seems like you have to give the stream buffer
                           //back to cout !!!

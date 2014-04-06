@@ -577,14 +577,13 @@ void EquationsMap::TransientSetup()  {
     //------initial data
     if (restart) {
         _timeloop._t_idx_in  = restart;
-        _utils._files._case_data << std::cout
-            << "We wish to restart from time step " << _timeloop._t_idx_in << std::endl;
+        std::cout << "We wish to restart from time step " << _timeloop._t_idx_in << std::endl;
         std::cout << "\n *+*+* TimeLoop::transient_setup: RESTART  " << std::endl;
 
 
         if (paral::get_rank() == 0) {
 
-            _utils._files._case_data << std::cout << " Reading the  output dir to from run_to_restart_from file (fill it with what you want)" << std::endl;
+            std::cout << " Reading the  output dir to from run_to_restart_from file (fill it with what you want)" << std::endl;
             //check if last_run is there
             std::string lastone;
             std::ifstream last_run;
@@ -598,7 +597,7 @@ void EquationsMap::TransientSetup()  {
             //AAA output is there
             stringstream tidxin;
             tidxin << setw(ndigits) << setfill('0') << _timeloop._t_idx_in;
-            _utils._files._case_data <<	std::cout << " Restarting from run: " << lastone << std::endl;
+            std::cout << " Restarting from run: " << lastone << std::endl;
 	    std::ostringstream cp_src_xmf_stream;
 	    cp_src_xmf_stream << basepath << "/" << output_dir << "/" << lastone << "/" << basesol << "." << tidxin.str() << "_l" << (_mesh._NoLevels - 1) << ext_xdmf;
             std::string cp_src_xmf = cp_src_xmf_stream.str();
