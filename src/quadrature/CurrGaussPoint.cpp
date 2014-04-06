@@ -226,8 +226,8 @@ void CurrGaussPoint<2>::ComputeJacBB() {
   _tangent_g[0][0] = _dxyzdxieta_g[0][0]; //dxdxi
   _tangent_g[0][1] = _dxyzdxieta_g[0][1]; //dydxi
 
-double fact = sqrt(_eqnmap._utils.dot(_tangent_g[0],_tangent_g[0],dim_in)); //the vector length is dimension
-_eqnmap._utils.normalize(_tangent_g[0],fact,dim_in);
+double fact = sqrt(Math::dot(_tangent_g[0],_tangent_g[0],dim_in)); //the vector length is dimension
+Math::normalize(_tangent_g[0],fact,dim_in);
   
   return;
 }
@@ -249,10 +249,10 @@ void CurrGaussPoint<3>::ComputeJacBB() {
    _tangent_g[1][1] = _dxyzdxieta_g[1][1]; //dydeta
    _tangent_g[1][2] = _dxyzdxieta_g[1][2]; //dzdeta
 
-   double fact0 = sqrt(_eqnmap._utils.dot(_tangent_g[0],_tangent_g[0],dim_in)); //the vector length is dimension
-   double fact1 = sqrt(_eqnmap._utils.dot(_tangent_g[1],_tangent_g[1],dim_in)); //the vector length is dimension
-   _eqnmap._utils.normalize(_tangent_g[0],fact0,dim_in);
-   _eqnmap._utils.normalize(_tangent_g[1],fact1,dim_in);
+   double fact0 = sqrt(Math::dot(_tangent_g[0],_tangent_g[0],dim_in)); //the vector length is dimension
+   double fact1 = sqrt(Math::dot(_tangent_g[1],_tangent_g[1],dim_in)); //the vector length is dimension
+   Math::normalize(_tangent_g[0],fact0,dim_in);
+   Math::normalize(_tangent_g[1],fact1,dim_in);
 
 //if i normalize the tangent first then i can use it to compute the normal without normalizing the normal again
 //TODO WRONG!!! if the tangents are normalized then the normal need not be normalized!!!
@@ -261,7 +261,7 @@ void CurrGaussPoint<3>::ComputeJacBB() {
 //so, beware that if you have a non straight boundary element in 3D
 //then the two tangent vectors need not be ORTHOGONAL TO EACH OTHER!!!
 
-   _eqnmap._utils.cross(_dxyzdxieta_g[0],_dxyzdxieta_g[1],_normal_g);
+   Math::cross(_dxyzdxieta_g[0],_dxyzdxieta_g[1],_normal_g);
 
 ///print the tangent vectors 
 //clearly for the computations in the matrix i'll need its components WRT the PHYSICAL FRAME (x,y,z)
@@ -314,8 +314,8 @@ double CurrGaussPoint<FM_DIM>::JacVectBB_g(const uint vb, QuantityLocal& xyz )/*
     ComputeJacBB(); //notice that here you don't have to put the angle brackets
 
     
-        JacSur = sqrt(_eqnmap._utils.dot(_normal_g,_normal_g,FM_DIM));
-	_eqnmap._utils.normalize(_normal_g,JacSur,FM_DIM);
+        JacSur = sqrt(Math::dot(_normal_g,_normal_g,FM_DIM));
+	Math::normalize(_normal_g,JacSur,FM_DIM);
    
    return JacSur;
 

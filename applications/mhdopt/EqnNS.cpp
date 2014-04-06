@@ -364,7 +364,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 
   #if (BMAG_QTY==1)   
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
-    _utils.zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof[vb]);
+    Math::zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof[vb]);
 
     for (uint ivarq=0; ivarq < Bmag._dim; ivarq++)    { //ivarq is like idim
           for (uint d=0; d <  Bmag._ndof[vb]; d++)    {
@@ -469,11 +469,11 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
      Bmag.val_g(vb);
 
 //compute curlBxB
-          _utils.extend(Bmag._val_g,Bmag._val_g3D,space_dim);                    //fills _val_g3D
-           _utils.cross(Bmag._curl_g3D,Bmag._val_g3D,curlBXB_g3D);
+          Math::extend(Bmag._val_g,Bmag._val_g3D,space_dim);                    //fills _val_g3D
+          Math::cross(Bmag._curl_g3D,Bmag._val_g3D,curlBXB_g3D);
 
 //compute JxB
-           _utils.cross(Jext_g3D,Bmag._val_g3D,JextXB_g3D);
+          Math::cross(Jext_g3D,Bmag._val_g3D,JextXB_g3D);
 #endif
 
 #if (TEMP_QTY==1)
@@ -537,8 +537,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][qtyzero_ord][j+idim*qtyzero_ndof];
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
   
-          double Lap_g=_utils.dot(dphijdx_g,dphiidx_g,space_dim);
-	  double Adv_g=_utils.dot(VelOld._val_g,dphijdx_g,space_dim);
+          double Lap_g=Math::dot(dphijdx_g,dphiidx_g,space_dim);
+	  double Adv_g=Math::dot(VelOld._val_g,dphijdx_g,space_dim);
           
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
             int irowq = i+idim*qtyzero_ndof;      //(i) is still the dof of the tEST functions

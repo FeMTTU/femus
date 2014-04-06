@@ -343,8 +343,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][qtyzero_ord][j+idim*qtyzero_ndof];
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
   
-          double Lap_g=_utils.dot(dphijdx_g,dphiidx_g,space_dim);
-	  double Adv_g=_utils.dot(VelOld._val_g,dphijdx_g,space_dim);
+          double Lap_g=Math::dot(dphijdx_g,dphiidx_g,space_dim);
+	  double Adv_g=Math::dot(VelOld._val_g,dphijdx_g,space_dim);
           
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
             int irowq = i+idim*qtyzero_ndof;      //(i) is still the dof of the tEST functions

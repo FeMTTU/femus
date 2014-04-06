@@ -219,7 +219,7 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
     else                            Bext._qtyptr->FunctionDof(vb,Bext,time,xyz_refbox._val_dofs);
 
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
-    _utils.zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof[vb]);
+    Math::zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof[vb]);
 
     for (uint ivarq=0; ivarq < Bmag._dim; ivarq++)    { //ivarq is like idim
           for (uint d=0; d < Bmag._ndof[vb]; d++)    {
@@ -250,8 +250,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
       VelAdj.val_g(vb);
 
  //vector product
-          _utils.extend(VelAdj._val_g,VelAdj._val_g3D,space_dim);
-          _utils.cross(Bmag._curl_g3D,VelAdj._val_g3D,curlBXlambda_g3D);
+          Math::extend(VelAdj._val_g,VelAdj._val_g3D,space_dim);
+          Math::cross(Bmag._curl_g3D,VelAdj._val_g3D,curlBXlambda_g3D);
 
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================
@@ -263,8 +263,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
         for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BhomAdjOld._FEord][i+idim*BhomAdjOld._ndof[vb]];
 //======= END "COMMON tEST PART for QTYZERO" ==========
 
-   	  double BDdphii_g      = _utils.dot(  Bmag._val_g,dphiidx_g,space_dim);
-	  double lambdaDdphii_g = _utils.dot(VelAdj._val_g,dphiidx_g,space_dim);
+   	  double BDdphii_g      = Math::dot(  Bmag._val_g,dphiidx_g,space_dim);
+	  double lambdaDdphii_g = Math::dot(VelAdj._val_g,dphiidx_g,space_dim);
 	  
          for (uint idim=0; idim<space_dim; idim++) {
             const uint irowq = i+idim*BhomAdjOld._ndof[vb];
@@ -290,8 +290,8 @@ if (_Dir_pen_fl == 0)  {
            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BhomAdjOld._FEord][j+idim*BhomAdjOld._ndof[vb]];
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
 
-           double Lap_g    = _utils.dot(dphijdx_g,dphiidx_g,space_dim);
-	  double Advphij_g = _utils.dot(Vel._val_g,dphijdx_g,space_dim);
+           double Lap_g    = Math::dot(dphijdx_g,dphiidx_g,space_dim);
+	  double Advphij_g = Math::dot(Vel._val_g,dphijdx_g,space_dim);
           
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
             int irowq = i+idim*BhomAdjOld._ndof[vb];
