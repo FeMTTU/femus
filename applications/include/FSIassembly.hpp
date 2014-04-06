@@ -2,6 +2,7 @@
 #define __FSIassembly_hpp__
 
 #include "TransientSystem.hpp"
+#include "MonolithicFSINonLinearImplicitSystem.hpp"
 
 
 void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {

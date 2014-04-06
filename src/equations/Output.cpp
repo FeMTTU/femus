@@ -28,8 +28,6 @@ std::vector<SparseMatrix*> Output::_ProlQitoQj[3][3];
 Output::Output(MultiLevelProblem& ml_probl):
   _ml_probl(ml_probl)
 {
-  MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
-  MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
   _gridn = ml_probl.GetNumberOfGrid();
   _gridr = ml_probl.GetNumberOfGridTotallyRefined();
   

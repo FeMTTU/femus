@@ -33,6 +33,7 @@ equations/Solution.cpp
 equations/System.cpp
 equations/TimeLoop.cpp
 equations/TransientSystem.cpp
+equations/NewmarkTransientSystem.cpp
 fe/ElemType.cpp
 fe/FEElemBase.cpp
 fe/FEHex1.cpp

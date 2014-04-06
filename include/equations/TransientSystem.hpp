@@ -24,8 +24,9 @@ class LinearImplicitSystem;
 class NonLinearImplicitSystem;
 class ExplicitSystem;
 class MultiLevelProblem;
+class System;
 
-#include "MonolithicFSINonLinearImplicitSystem.hpp"
+#include "string"
 
 /**
  * This class provides a specific system class.  It aims
@@ -90,7 +91,8 @@ public:
 
 protected:
   
-
+  double _dt;
+  
 private:
   
   bool _is_selective_timestep;
@@ -98,8 +100,6 @@ private:
   double _time;
   
   unsigned int _time_step;
-  
-  double _dt;
   
   //pointer function to the set time step function
   double (* _get_time_interval_function)(const double time);

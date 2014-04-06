@@ -22,6 +22,8 @@
 #include "LinearImplicitSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
+#include "MonolithicFSINonLinearImplicitSystem.hpp"
+
 // ------------------------------------------------------------
 // TransientSystem implementation
 template <class Base>
