@@ -20,12 +20,9 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MultiLevelMesh.hpp"
-// #include "LinearEquation.hpp"
 #include "Solution.hpp"
 #include "Parameters.hpp"
-// #include "Fluid.hpp"
-// #include "Solid.hpp"
-// #include <b64/b64.h>
+#include "ParallelObject.hpp"
 
 #include <vector>
 #include <map>
@@ -45,7 +42,7 @@ typedef double (*initfunc) (const double &x, const double &y, const double &z);
 * This class is a black box container to handle multilevel problems.
 */
 
-class MultiLevelProblem {
+class MultiLevelProblem : public ParallelObject {
 
 private:
 //   vector < SparseMatrix* > ProlQitoQj_[3][3];
@@ -66,8 +63,8 @@ private:
     
 protected:
   
-  int _nprocs;
-  int _iproc;
+//   int _nprocs;
+//   int _iproc;
   unsigned short _gridn, _gridr;
 //   bool _test_time;
 //   unsigned _time_step;
@@ -90,11 +87,14 @@ protected:
   //pointer function to the assemble function
 //   void (*_assemble_function)(MultiLevelProblem &mg, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
   
-  bool (*_SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
-                            double &value, const int FaceName, const double time);
+//   bool (*_SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
+//                             double &value, const int FaceName, const double time);
   
  public:
   vector <bool> _TestIfDisplacement;
+  
+  bool (*_SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
+                                         double &value, const int FaceName, const double time);
    
    /** Data structure holding the systems. */
   std::map<std::string, System*> _systems;

@@ -126,6 +126,7 @@ public:
    /** Add the Stabilization Matrix D to the Vanka Solver */ 
    void AddStabilization(const bool stab=false, const double compressibility=0.);
    
+   
 protected:
   
   /** The number of linear iterations required to solve the linear system Ax=b. */

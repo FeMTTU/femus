@@ -8,6 +8,7 @@
 #include "FemTTUInit.hpp"
 #include "SparseMatrix.hpp"
 #include "VTKOutput.hpp"
+#include "NonLinearImplicitSystem.hpp"
 using std::cout;
 using std::endl;
    

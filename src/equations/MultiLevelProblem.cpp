@@ -65,21 +65,16 @@ MultiLevelProblem::MultiLevelProblem( MultiLevelMesh *ml_msh):
 				      _gridn(ml_msh->GetNumberOfGrid()),
 				      _gridr(ml_msh->GetNumberOfGridTotallyRefined()),
 				      _ml_msh(ml_msh)
-				      {
-		       
-  MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
-  MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
+{
   _solution.resize(_gridn);
   
   for (unsigned i=0; i<_gridn; i++) {
     _solution[i]=new Solution(_ml_msh->GetLevel(i));
   }
     
-//   _moving_mesh=0;
   _init_func_set=false;
   _bdc_func_set=false;
 
-//   BuildProlongatorMatrices();
 }
 
 

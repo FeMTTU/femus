@@ -21,6 +21,8 @@
 //----------------------------------------------------------------------------
 #include <vector>
 #include <string>
+#include "ParallelObject.hpp"
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -29,7 +31,7 @@ class SparseMatrix;
 class Vector;
 
 
-class Output {
+class Output : public ParallelObject {
 
 public:
 
@@ -58,10 +60,6 @@ protected:
   
   /** the multilevelproblem reference */
   MultiLevelProblem& _ml_probl;
-  
-  int _iproc;
-
-  int _nprocs;
   
   int _gridn;
   
