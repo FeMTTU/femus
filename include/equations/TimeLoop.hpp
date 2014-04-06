@@ -1,12 +1,11 @@
 #ifndef __mgtimeloop_h__
 #define __mgtimeloop_h__
 
-// configure files  --------------------
 #include "Typedefs.hpp"
+#include "RunTimeMap.hpp"
 
 // Forward class
-class Utils;
-#include "RunTimeMap.hpp"
+class Files;
 
 // ===============================================
 //                  TimeLoop class
@@ -16,7 +15,7 @@ class TimeLoop  {
 /*  protected:*///TODO make protected use get/set
 public:
     // Data ---------------------------
-    Utils&              _utils; ///< Utils pointer
+    Files&              _files; ///< Utils pointer
     RunTimeMap<double>  _timemap; 
 
   uint      _t_idx_in;  //initial time step index
@@ -31,14 +30,14 @@ public:
 // public:
   // Constructor -------------------------------
 //  TimeLoop(Utils& mgutils_in, EquationsMap& mgeqmap_in);///< Constructor
-  TimeLoop(Utils& mgutils_in);///< Constructor
+  TimeLoop(Files& files_in);///< Constructor
 
   ~TimeLoop(){}; ///< Destructor
    
 // print -------------------------------------------
    //this function is ok here because it doesn't involve the map 
    //of the EQUATIONS, it is just a print of a time sequence to a .xmf file
-   void transient_print_xmf ( const uint t_idx_in,const uint t_idx_final) const;
+   void transient_print_xmf ( const uint t_idx_in,const uint t_idx_final, const uint nolevels) const;
 
  // i did it "static" so that it can be used regardless of the specific instantiation;
  // since it is static it cannot act on the class runtime map which is not static datum;

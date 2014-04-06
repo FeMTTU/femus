@@ -694,7 +694,7 @@ void EquationsMap::TransientSetup()  {
     //this happens when the output dir is already set
     //at this point this is already true
     PrintCase(_timeloop._t_idx_in);       //print caseN.xmf&h5 = IC + BC flags
-    _timeloop.transient_print_xmf(_timeloop._t_idx_in,_timeloop._t_idx_final); //print timeN.xmf
+    _timeloop.transient_print_xmf(_timeloop._t_idx_in,_timeloop._t_idx_final,_mesh._NoLevels); //print timeN.xmf
 
     return;
 }

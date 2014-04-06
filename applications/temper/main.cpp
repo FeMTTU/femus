@@ -63,6 +63,10 @@
 
    files.CopyGencaseFiles();
 
+  // ======= Mesh =====
+  RunTimeMap<double> mesh_map("Mesh",files.get_basepath());
+     mesh_map.read();
+     mesh_map.print();
   // ======= Utils ========================
   Utils utils(files);
         utils._urtmap.read();  
@@ -76,8 +80,8 @@
               phys.set_nondimgroups(); //implement it
 
   // ======= MyDomainShape ====================
-  const double Lref  = phys._physrtmap.get("Lref");     // reference L
-  uint   dimension = (uint) utils._urtmap.get("dimension");
+  const double Lref  =  phys._physrtmap.get("Lref");     // reference L
+  uint     dimension = (uint) utils._urtmap.get("dimension");
   RunTimeMap<double> box_map("Box",files.get_basepath());
   box_map.read();
   box_map.print();
@@ -113,7 +117,7 @@
   }
 
   // ======== TimeLoop ===================================
-  TimeLoop time_loop(utils); 
+  TimeLoop time_loop(files); 
            time_loop._timemap.read();
            time_loop._timemap.print();
  

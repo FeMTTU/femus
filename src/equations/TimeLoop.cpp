@@ -32,9 +32,9 @@
 // ==================================================================
 /// Constructor
  
- TimeLoop::TimeLoop(Utils& mgutils_in):
- _utils(mgutils_in),
- _timemap("TimeLoop",mgutils_in._files.get_basepath())   {
+ TimeLoop::TimeLoop(Files& files_in):
+ _files(files_in),
+ _timemap("TimeLoop",_files.get_basepath())   {
 
  //inizialize to zero   
    _t_idx_in  = 0;  
@@ -53,18 +53,18 @@
 //print from time t_idx_in to t_idx_final
 //I will print a separate time sequence for each LEVEL
 //TODO see if there is a way to read multiple sol collections, defined on different grids, in the SAME time file
-      void TimeLoop::transient_print_xmf(const uint t_idx_in,const uint t_idx_final) const {
+      void TimeLoop::transient_print_xmf(const uint t_idx_in,const uint t_idx_final, const uint nolevels_in) const {
 
 	//multigrid
-	uint NoLevels = _utils._urtmap.get("nolevels");
+	uint NoLevels = nolevels_in;
 
         // time parameters
         const uint ndigits     = _timemap.get("ndigits");
         const int print_step   = _timemap.get("printstep");
         // dir names
-        std::string    basepath     = _utils._files.get_basepath();
-        std::string    output_dir   = _utils._files.get_frtmap().get("OUTPUT_DIR");
-        std::string    outtime_dir  = _utils._files.get_frtmap().get("OUTTIME_DIR");
+        std::string    basepath     = _files.get_basepath();
+        std::string    output_dir   = _files.get_frtmap().get("OUTPUT_DIR");
+        std::string    outtime_dir  = _files.get_frtmap().get("OUTTIME_DIR");
         std::string    basetime     = DEFAULT_BASETIME;
         std::string    ext_xdmf     = DEFAULT_EXT_XDMF;
         std::string    basesol      = DEFAULT_BASESOL;
