@@ -248,7 +248,7 @@ void EqnNS::ic_read(double xp[],double u_value[], double el_xm[]) {
 //at this point, the coordinates are transformed into the REFERENCE BOX, so you can pass them to the Pressure function
 
 //rotation of the function  
-  const double thetaz = box->_boxrtmap.get("thetaz");
+  const double thetaz = box->_domain_rtmap.get("thetaz");
 
   
 #if (DIMENSION==2)

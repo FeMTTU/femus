@@ -4,7 +4,6 @@
 #include <cmath>
 
 //library
-#include "Utils.hpp"
 #include "MeshTwo.hpp"
 #include "Box.hpp"
 #include "VBTypeEnum.hpp"
@@ -13,8 +12,8 @@
 #include "Opt_conf.hpp"
 
 
-OptPhysics::OptPhysics(Utils& utils_in):
-  Physics(utils_in) { } 
+OptPhysics::OptPhysics( RunTimeMap<double> & map_in):
+  Physics(map_in) { } 
 
  // ========================================================
  //the Box must already be initialized here

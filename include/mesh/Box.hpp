@@ -5,7 +5,6 @@
 #include "Domain.hpp"
 #include "RunTimeMap.hpp"
 
-class Utils;
 
 //------------ BOX -----------  
 //------------ BOX ----------- 
@@ -14,13 +13,11 @@ class Utils;
  class Box : public Domain {
  
  public:
-   
-   RunTimeMap<double> _boxrtmap;  //TODO maybe later put this in the Domain father class...
-   
+      
     double* _lb;
     double* _le;
  
-   Box(Utils & utils_in);
+   Box(const uint spacedim_in, RunTimeMap<double> & map_in);
    ~Box();
    
    void init(double Lref_in);

@@ -5,13 +5,12 @@
 #include "Utils.hpp"
 #include "Files.hpp"
 
-Box::Box(Utils & utils_in) : Domain(utils_in),_boxrtmap("Box",utils_in._files.get_basepath()) {
+Box::Box(const uint spacedim_in, RunTimeMap<double> & map_in) : Domain(spacedim_in,map_in) {
 
   _name = "Box";
   
    _lb = new double[_spacedim];
    _le = new double[_spacedim];
-
   
 }
 
@@ -27,13 +26,13 @@ void Box::init(double Lref_in)     {
 
    _Lref = Lref_in;
    double ILref = 1./_Lref;
-   _lb[0] = _boxrtmap.get("lxb")*ILref;
-   _le[0] = _boxrtmap.get("lxe")*ILref;
-   _lb[1] = _boxrtmap.get("lyb")*ILref;
-   _le[1] = _boxrtmap.get("lye")*ILref;
+   _lb[0] = _domain_rtmap.get("lxb")*ILref;
+   _le[0] = _domain_rtmap.get("lxe")*ILref;
+   _lb[1] = _domain_rtmap.get("lyb")*ILref;
+   _le[1] = _domain_rtmap.get("lye")*ILref;
    if (_spacedim == 3) {
-   _lb[2] = _boxrtmap.get("lzb")*ILref;
-   _le[2] = _boxrtmap.get("lze")*ILref;
+   _lb[2] = _domain_rtmap.get("lzb")*ILref;
+   _le[2] = _domain_rtmap.get("lze")*ILref;
    }
  
   return;
@@ -68,8 +67,8 @@ void Box::init(double Lref_in)     {
 //related only to the Box as <Box> </Box>
 void Box::TransformPointToRef(const double* x_in,double* x_out) const {
 
-  double thetaz  = _boxrtmap.get("thetaz");
-  double transfl = _boxrtmap.get("transflag");
+  double thetaz  = _domain_rtmap.get("thetaz");
+  double transfl = _domain_rtmap.get("transflag");
 
     double        xpr[3]={0.,0.,0.};
     double         Dx[3]={0.,0.,0.};

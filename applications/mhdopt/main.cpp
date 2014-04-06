@@ -85,22 +85,24 @@ int main(int argc, char** argv) {
         utils._urtmap.read();  
         utils._urtmap.print();
       
-  OptPhysics phys(utils);
-             phys._physrtmap.read();
+  RunTimeMap<double> physics_map("Physics",files.get_basepath());
+  physics_map.read();
+  physics_map.print();
+  OptPhysics phys(physics_map);
              phys.set_nondimgroups();
-             phys._physrtmap.print();
 
 //===========================================
   const double Lref  = phys._physrtmap.get("Lref");     // reference L
-  Box mybox(utils);
-      mybox._boxrtmap.read();
-      mybox._boxrtmap.print();
+  uint     dimension = (uint) utils._urtmap.get("dimension");
+  RunTimeMap<double> box_map("Box",files.get_basepath());
+  box_map.read();
+  box_map.print();
+  Box mybox(dimension,box_map);
       mybox.init(Lref);
 
 // ====== GeomEl ================================
 // ======  Mesh ================================
   uint geomel_type = (uint) utils._urtmap.get("geomel_type");
-  uint dimension   = (uint) utils._urtmap.get("dimension");
   GeomEl geomel(dimension,geomel_type);
   Mesh mesh(utils,geomel,Lref,&mybox); 
   mesh.PrintForVisualizationAllLEVAllVB();

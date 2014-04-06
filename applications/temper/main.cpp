@@ -69,22 +69,26 @@
         utils._urtmap.print();
 
   // ======= MyPhysics ========================
-  TempPhysics phys(utils);   //instantiated as father
-              phys._physrtmap.read();
+  RunTimeMap<double> physics_map("Physics",files.get_basepath());
+  physics_map.read();
+  physics_map.print();
+  TempPhysics phys(physics_map);   //instantiated as father
               phys.set_nondimgroups(); //implement it
-              phys._physrtmap.print();
 
   // ======= MyDomainShape ====================
   const double Lref  = phys._physrtmap.get("Lref");     // reference L
-  Box mybox(utils);
-      mybox._boxrtmap.read();
-      mybox._boxrtmap.print();
+  uint   dimension = (uint) utils._urtmap.get("dimension");
+  RunTimeMap<double> box_map("Box",files.get_basepath());
+  box_map.read();
+  box_map.print();
+  Box mybox(dimension,box_map);
+      mybox._domain_rtmap.read();
+      mybox._domain_rtmap.print();
       mybox.init(Lref);
 
 // ====== GeomEl ================================
 // ======  Mesh ================================
   uint geomel_type = (uint) utils._urtmap.get("geomel_type");  // must do in such a way that it is picked from the geomel throughout the code
-  uint   dimension = (uint) utils._urtmap.get("dimension");
   GeomEl geomel(dimension,geomel_type);           /*VB based*/
   Mesh     mesh(utils,geomel,Lref,&mybox);        /*VB based*/
   mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/

@@ -140,17 +140,18 @@ void GenCase::GenerateCoarseMesh(Mesh* msh_coarse)  {
 //    while in the case of external mesh it should be given consistently
             //TODO think of Domain before or after Mesh
 
-            Box box(_utils);
-            box._boxrtmap.read();
-            box._boxrtmap.print();
-            box.init(1.);  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
+            RunTimeMap<double> box_map("Box",_utils._files.get_basepath());
+            box_map.read();
+            box_map.print();
+            Box box(_dimension,box_map);
+                box.init(1.);  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
 //i guess we could do this instantiation also INSIDE the gencase class
 
 //---Meshing -------
             uint* ninterv = new uint[_dimension];
-	    ninterv[0] = box._boxrtmap.get("nintervx");
-            ninterv[1] = box._boxrtmap.get("nintervy");
-            if ( _dimension == 3 ) ninterv[2] = box._boxrtmap.get("nintervz");
+	    ninterv[0] = box._domain_rtmap.get("nintervx");
+            ninterv[1] = box._domain_rtmap.get("nintervy");
+            if ( _dimension == 3 ) ninterv[2] = box._domain_rtmap.get("nintervz");
 
             // fem element definition --------------------------------
             libMesh::ElemType libmname; //convert the _geomel name into the libmesh geom el name

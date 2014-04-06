@@ -12,8 +12,8 @@
 #include "TempPhysics.hpp"
 #include "EqnT.hpp"
 
-TempPhysics::TempPhysics(Utils& utils_in):
-  Physics(utils_in) { 
+TempPhysics::TempPhysics( RunTimeMap<double> & map_in):
+  Physics(map_in) { 
   
   
 } 
