@@ -39,16 +39,14 @@ public:
 // Copy ========================= 
   void CopyGencaseFiles() const;
 
-// LOG ==========================
-// Stream redirect to file ======
-  void RedirectCout(std::streambuf* sbuf,  std::ofstream& file_in) const;
-// Log for Restart ======================
-  std::ofstream _case_data;
-  void InitCaseData();
-  void CloseCaseData();
+// Restart ======================
   void PrintRun(const std::string run_name_in) const;
   
-  
+// LOG ==========================
+// Stream redirect to file ======
+         void RedirectCout(std::streambuf* sbuf,  std::ofstream& file_in) const;
+  static void RedirectCoutFinalize(std::streambuf* sbuf);
+
 private:
   
   RunTimeMap<std::string>           _frtmap;   //this map cannot be declared as CONST because at some point it is FILLED and it is not in the initialization in the constructor!!!
