@@ -80,17 +80,22 @@ int main(int argc, char** argv) {
   // ======= END OF THE INITIALIZATION PART ========================
   // =========================================
  
-  // ======= Utils ========================
-  Utils utils(files);
-        utils._urtmap.read();  
-        utils._urtmap.print();
-      
+  // ======= Physics ========================
   RunTimeMap<double> physics_map("Physics",files.get_basepath());
   physics_map.read();
   physics_map.print();
   OptPhysics phys(physics_map);
              phys.set_nondimgroups();
 
+  // ======= Mesh =====
+  RunTimeMap<double> mesh_map("Mesh",files.get_basepath());
+     mesh_map.read();
+     mesh_map.print();
+  // ======= Utils ========================
+  Utils utils(files);
+        utils._urtmap.read();  
+        utils._urtmap.print();
+      
 //===========================================
   const double Lref  = phys._physrtmap.get("Lref");     // reference L
   uint     dimension = (uint) utils._urtmap.get("dimension");
@@ -104,7 +109,7 @@ int main(int argc, char** argv) {
 // ======  Mesh ================================
   uint geomel_type = (uint) utils._urtmap.get("geomel_type");
   GeomEl geomel(dimension,geomel_type);
-  Mesh mesh(utils,geomel,Lref,&mybox); 
+  Mesh mesh(files,mesh_map,geomel,Lref,&mybox); 
   mesh.PrintForVisualizationAllLEVAllVB();
 
   phys.set_mesh(&mesh);

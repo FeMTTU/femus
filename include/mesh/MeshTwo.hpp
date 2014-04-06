@@ -12,9 +12,9 @@
 
 #include "Typedefs.hpp"
 #include "FEMTTUConfig.h"
+#include "RunTimeMap.hpp"
 
-
-class Utils;
+class Files;
 class GeomEl;
 class QuantityLocal;
 class Domain;
@@ -26,8 +26,9 @@ protected:
     const double _Lref;          ///Reference length for non-dimensionalization
 
 public:
-
-    Utils&  _utils;
+  
+    Files& _files; 
+    RunTimeMap<double>  _mesh_rtmap;
     uint _dim;               ///< spatial dimension
     uint _meshVB;          /// Number of FEM "manifold" Families (VB)  F
 
@@ -63,18 +64,18 @@ public:
                                      // on the fine node numbering, the nodes corresponding to linear dofs are numbered FIRST... or not?
 
 //===== Constructors/ Destructor ===========
-     Mesh (Utils& mgutils, GeomEl& geomel,const double Lref, Domain* domain_in=NULL);
+     Mesh (Files& files_in, RunTimeMap<double>& map_in, GeomEl& geomel, const double Lref, Domain* domain_in=NULL);
     ~Mesh ();			  ///<  Level Mesh Destructor
     void clear ();		  ///<  substructure Destructor
 
     //======= Print/read functions =======
-    void PrintForVisualizationAllLEVAllVB();
+    void PrintForVisualizationAllLEVAllVB() const;
     void PrintSubdomFlagOnLinCells(std::string filename) const;
-    void PrintXDMFAllLEVAllVB();
-    void PrintConnLinAllLEVAllVB();
-    void PrintXDMFGridVB(std::ofstream& out, std::ostringstream& top_file, std::ostringstream& geom_file,const uint Level, const uint vb);
-    void PrintConnLinVB(hid_t file, const uint Level, const uint vb); 
-    void PrintMeshFile(const std::string & namefile);
+    void PrintXDMFAllLEVAllVB() const;
+    void PrintConnLinAllLEVAllVB() const;
+    void PrintXDMFGridVB(std::ofstream& out, std::ostringstream& top_file, std::ostringstream& geom_file,const uint Level, const uint vb) const;
+    void PrintConnLinVB(hid_t file, const uint Level, const uint vb) const; 
+    void PrintMeshFile(const std::string & namefile) const;
     void ReadMeshFile();
     
 };

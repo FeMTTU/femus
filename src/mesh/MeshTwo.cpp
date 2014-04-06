@@ -18,11 +18,12 @@
 
 
 // ========================================================
-Mesh::Mesh (Utils& mgutils_in, GeomEl& geomel_in,const double Lref,Domain* domain_in)
-    :          _Lref(Lref),
-         _utils(mgutils_in),
+Mesh::Mesh (Files& files_in, RunTimeMap<double>& map_in, GeomEl& geomel_in,const double Lref,Domain* domain_in) :
+         _files(files_in),
+         _mesh_rtmap(map_in),
+         _Lref(Lref),
          _GeomEl(geomel_in),
-         _n_GeomEl(mgutils_in._urtmap.get("numgeomels")),
+         _n_GeomEl(_mesh_rtmap.get("numgeomels")),
          _domain(domain_in)
          {
       
@@ -80,7 +81,7 @@ void Mesh::clear ()  {
    
    double*   x_in = new double[_dim];
    double*   x_out = new double[_dim];
-  const uint mesh_ord = (int) _utils._urtmap.get("mesh_ord");
+  const uint mesh_ord = (int) _mesh_rtmap.get("mesh_ord");
   const uint el_nds = _GeomEl._elnds[vb][mesh_ord];
 
       for (uint n=0;n < el_nds ;n++) {
@@ -123,9 +124,9 @@ void Mesh::clear ()  {
 // TODO do we need the leading "/" for opening a dataset?
 void Mesh::ReadMeshFile()   {
 
-  std::string    basepath = _utils._files.get_basepath();
-  std::string  output_dir = _utils._files.get_frtmap().get("OUTPUT_DIR");
-  std::string outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
+  std::string    basepath = _files.get_basepath();
+  std::string  output_dir = _files.get_frtmap().get("OUTPUT_DIR");
+  std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
   std::string    basemesh = DEFAULT_BASEMESH;
   std::string      ext_h5 = DEFAULT_EXT_H5;
   
@@ -168,8 +169,8 @@ void Mesh::ReadMeshFile()   {
 //in fact it is that file that sets the space in which we are simulating...
 //I'll put a check 
 
-if (_dim != _utils._urtmap.get("dimension") ) {std::cout << "Mesh::read_c. Mismatch: the mesh dimension is " << _dim
-                                   << " while the dimension in the configuration file is " << _utils._urtmap.get("dimension")
+if (_dim != _mesh_rtmap.get("dimension") ) {std::cout << "Mesh::read_c. Mismatch: the mesh dimension is " << _dim
+                                   << " while the dimension in the configuration file is " << _mesh_rtmap.get("dimension")
                                    << ". Recompile either gencase or your application appropriately" << std::endl;abort();}
 //it seems like it doesn't print to file if I don't put the endline "<< std::endl".
 //Also, "\n" seems to have no effect, "<< std::endl" must be used
@@ -186,7 +187,7 @@ if (_meshVB !=  VB )  {std::cout << "Mesh::read_c. Mismatch: the number of integ
 //the point is: what if you already have a mesh in external format?
 //then you have to either read the mesh order from the external file, if such
 //information can be retrieved, or provide it explicitly
-    const uint mesh_ord = (int) _utils._urtmap.get("mesh_ord");    
+    const uint mesh_ord = (int) _mesh_rtmap.get("mesh_ord");    
 
 //==================================
 // FEM element DoF number
@@ -337,7 +338,7 @@ for (int vb=0; vb < VB; vb++)    {
 /// Write mesh to hdf5 file (namefile) 
 ///              as Mesh class (Mesh.h): 
 
-void Mesh::PrintMeshFile (const std::string & /*namefile*/)
+void Mesh::PrintMeshFile (const std::string & /*namefile*/) const
 { 
 
   std::cout << "Implement it following the Gencase print mesh function" << std::endl; abort();
@@ -348,7 +349,7 @@ void Mesh::PrintMeshFile (const std::string & /*namefile*/)
 
 // ========================================================
 /// It manages the printing in Xdmf format
-void Mesh::PrintForVisualizationAllLEVAllVB()  {
+void Mesh::PrintForVisualizationAllLEVAllVB()  const {
   
     const uint iproc=_iproc;
    if (iproc==0) {
@@ -368,11 +369,11 @@ void Mesh::PrintForVisualizationAllLEVAllVB()  {
  //but if you put ALL THE DATA in THE SAME FOLDER as the READER(s)
  //then they are always independent and the data will always be readable
 
- void Mesh::PrintXDMFAllLEVAllVB()  {
+ void Mesh::PrintXDMFAllLEVAllVB() const {
 
-  std::string     basepath = _utils._files.get_basepath();
-  std::string   output_dir = _utils._files.get_frtmap().get("OUTPUT_DIR");
-  std::string  outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
+  std::string     basepath = _files.get_basepath();
+  std::string   output_dir = _files.get_frtmap().get("OUTPUT_DIR");
+  std::string  outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
   std::string     basemesh = DEFAULT_BASEMESH;
   std::string     ext_xdmf = DEFAULT_EXT_XDMF;
   std::string       ext_h5 = DEFAULT_EXT_H5;
@@ -408,7 +409,7 @@ void Mesh::PrintForVisualizationAllLEVAllVB()  {
 // ========================================================
 void Mesh::PrintXDMFGridVB(std::ofstream& out,
 			      std::ostringstream& top_file,
-			      std::ostringstream& geom_file, const uint Level, const uint vb)   {
+			      std::ostringstream& geom_file, const uint Level, const uint vb) const  {
 
   std::string grid_mesh[VB];
   grid_mesh[VV]="Volume";
@@ -436,12 +437,12 @@ void Mesh::PrintXDMFGridVB(std::ofstream& out,
 /// It prints the connectivity in hdf5 format
 /// The changes are only for visualization of quadratic FEM
 
-void Mesh::PrintConnLinAllLEVAllVB()  { 
+void Mesh::PrintConnLinAllLEVAllVB() const { 
 
-    std::string    basepath = _utils._files.get_basepath();
+    std::string    basepath = _files.get_basepath();
     std::string    basemesh = DEFAULT_BASEMESH;
-    std::string  output_dir = _utils._files.get_frtmap().get("OUTPUT_DIR");
-    std::string outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
+    std::string  output_dir = _files.get_frtmap().get("OUTPUT_DIR");
+    std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
  
     std::string    ext_h5   = DEFAULT_EXT_H5;
     std::string    connlin  = DEFAULT_CONNLIN;
@@ -465,7 +466,7 @@ void Mesh::PrintConnLinAllLEVAllVB()  {
 
 
 
-void Mesh::PrintConnLinVB(hid_t file, const uint Level, const uint vb)  {
+void Mesh::PrintConnLinVB(hid_t file, const uint Level, const uint vb) const {
   
    int conn[8][8];   uint *gl_conn;
   
