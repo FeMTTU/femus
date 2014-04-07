@@ -6,7 +6,6 @@
 #include "EquationsMap.hpp"
 #include "EqnBase.hpp"
 #include "MeshTwo.hpp"
-#include "Utils.hpp"
 #include "TimeLoop.hpp"
 #include "Files.hpp"
 

@@ -1,6 +1,5 @@
 #include "Quantity.hpp"
 #include "Physics.hpp"
-#include "Utils.hpp"
 
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
@@ -120,7 +119,6 @@ if (dof_off > offset) {std::cout << "Use a quadratic mesh for FunctionDof comput
 }  
   
   
-#include "Utils.hpp"
   
   ////////////////QTY MAP ////////////
   QuantityMap::QuantityMap(Physics& phys_in): _phys(phys_in) { }
