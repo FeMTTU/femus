@@ -593,7 +593,7 @@ void EquationsMap::TransientSetup()  {
                 abort();
             }
             //read from last_run
-            last_run >> lastone >> lastone;  //"run_to_restart_from" is the STRING i use in the file...
+            last_run >> lastone >> lastone;  //"run_to_restart_from" is the STRING i use in the file, so there is one intermediate "buffer"...
             //AAA output is there
             stringstream tidxin;
             tidxin << setw(ndigits) << setfill('0') << _timeloop._t_idx_in;

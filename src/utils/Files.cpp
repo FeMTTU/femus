@@ -27,6 +27,35 @@
 	  
 	    if (string_in == "")  { std::cout << " Set the basepath in the command line" << std::endl;    abort(); }
 
+//         if (paral::get_rank() == 0) { //QUESTA LETTURA LA POSSONO FARE TUTTI I PROCESSORI!
+            std::cout << " Reading the  run_to_restart_from file to determine restart status or not" << std::endl;
+
+    std::string lastrun_str;
+    lastrun_str = string_in + "/" + DEFAULT_OUTPUTDIR + "/" + DEFAULT_LAST_RUN;
+
+    //check if last_run is there, if it's not there go ahead and set restart = FALSE
+            std::string lastone;
+            std::ifstream last_run;
+            last_run.open(lastrun_str.c_str());
+            if (!last_run.is_open()) {
+                std::cout << "There is no last_run file, it means that someone deleted it or it is the first run. No problem, go ahead. " << std::endl;
+   // If the user wants to start he knows that he has to check that file so this procedure is SAFE
+	    }
+
+            last_run >> lastone >> lastone;  //"run_to_restart_from" is the STRING i use in the file, so there is one intermediate "buffer"...
+
+            std::string restart_flag_string;
+            last_run >> restart_flag_string >> restart_flag_string;
+	    _restart_flag = atoi(restart_flag_string.c_str());   //TODO CONVERT STRING TO BOOLEAN
+	    std::cout << "The restart flag is " << _restart_flag << std::endl;
+	    
+// 	}
+
+// maybe excess of safety... but it never hurts
+#ifdef HAVE_MPI
+        MPI_Barrier(MPI_COMM_WORLD);
+#endif
+		
 	}  ///< Constructor
 
 	
@@ -191,7 +220,7 @@ void Files::PrintRunForRestart(const std::string run_name_in) const {
    run_file << get_frtmap().get("OUTTIME_DIR");
   
       run_file << std::endl;
-      run_file << "flag_for_restart " << 0;
+      run_file << "flag_for_restart " << 0;  //TODO if you printed 1 here it would turn out to be a NONSTOPPING CHAIN OF SIMULATIONS!!!!
       
    
    run_file.close();

@@ -20,6 +20,8 @@
 class Files {
 
 public:
+
+  bool _restart_flag; 
   
    Files(const std::string &/*  = DEFAULT_BASEPATH*/);  //TODO seems like it doesn't work with ONE DEFAULT PARAMETER
   ~Files();
@@ -50,7 +52,7 @@ public:
 private:
   
   RunTimeMap<std::string>           _frtmap;   //this map cannot be declared as CONST because at some point it is FILLED and it is not in the initialization in the constructor!!!
-
+  
 // Directory management
          void ComposeOutdirName();
   static void CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in);
