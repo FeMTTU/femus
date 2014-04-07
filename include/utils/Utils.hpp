@@ -1,45 +1,23 @@
 #ifndef __utils_h__
 #define __utils_h__
 
-// external libs
 #include <map>
 #include <string>
 #include "hdf5.h"
 
-// Femus
 #include "Typedefs.hpp"
-#include "RunTimeMap.hpp"
 
 
-class Files;
-
-// =========================================
-//              Utils
-// =========================================
-
-class Utils  {
-
-public:
-    Files&                 _files;     ///< Files class pointer
-    RunTimeMap<double>     _urtmap;
-  
-  // Constructor-Destructor --------------------
-  Utils(Files& mgfiles_in);  ///< Constructor
-  ~Utils() {};                 ///< Destructor
-
-
-};
-
-
-namespace Math {
  // Operations ---------------------------------
-  static inline void zeroN(double* x,const uint N); 
-  static inline double dotN(const double* x,const double* y,const uint N);  //TODO this will be deleted 
-  static inline double dot(const double* x,const double* y, const uint spacedim);
-  static inline  void cross(const double* a,const double* b, double* res);
-  static inline void extend(const double* a, double* a3D, const uint spacedim);
-  static inline void extend_nds(const uint,const double*, double*, const uint spacedim);
-  static inline void normalize(double* x,const double fac, const uint spacedim);
+namespace Math {
+  
+   inline void zeroN(double* x,const uint N); 
+   inline double dotN(const double* x,const double* y,const uint N);  //TODO this will be deleted 
+   inline double dot(const double* x,const double* y, const uint spacedim);
+   inline  void cross(const double* a,const double* b, double* res);
+   inline void extend(const double* a, double* a3D, const uint spacedim);
+   inline void extend_nds(const uint,const double*, double*, const uint spacedim);
+   inline void normalize(double* x,const double fac, const uint spacedim);
 
 /// set to zero - n components
 inline void zeroN(double* x,const uint N)  {

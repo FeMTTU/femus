@@ -135,10 +135,6 @@ void FEElemBase::AssociateQRule(QRule* qrule_in)  {
 void FEElemBase::SetOrder(uint fe)  {
   _order = fe;
 }
-void FEElemBase::SetUtils(Utils * utils_in)  {
-  _utils = utils_in;
-}
-
 
 
 void FEElemBase::init() {

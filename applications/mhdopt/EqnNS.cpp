@@ -159,11 +159,11 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
   //AAAAAAA! // is this the SPACE dimension, or the UNKNOWN dimension, or the INTEGRATION dimension?
   //well, it depends. The fact is that some operators are defined only for certain dimensions of the vector
   //for instance, divergence acts on vectors whose dimension is like the domain dimension
-  const uint mesh_ord = (int) _utils._urtmap.get("mesh_ord");
-  const uint meshql = (int) _utils._urtmap.get("meshql"); //======== ELEMENT MAPPING =======
+  const uint mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
+  const uint meshql   = (int) _mesh._mesh_rtmap.get("meshql"); //======== ELEMENT MAPPING =======
   
 //========= BCHandling =========
-  const double penalty_val = _utils._urtmap.get("penalty_val");    
+  const double penalty_val  = _mesh._mesh_rtmap.get("penalty_val");    
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     QuantityLocal VelOld(currgp,currelem);
@@ -893,9 +893,9 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
   // processor index
   const uint myproc = _iproc;
   // geometry -----
-  const uint  space_dim = _mesh._dim;
-  const uint   mesh_ord = (int) _utils._urtmap.get("mesh_ord");  
-  const uint     meshql = (int) _utils._urtmap.get("meshql");    //======== ELEMENT MAPPING =======
+  const uint  space_dim =       _mesh._dim;
+  const uint   mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");  
+  const uint     meshql = (int) _mesh._mesh_rtmap.get("meshql");    //======== ELEMENT MAPPING =======
   
 //======Functions in the integrand ============
   

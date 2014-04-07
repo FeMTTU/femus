@@ -39,7 +39,7 @@ EqnBase::EqnBase(std::vector<Quantity*> int_map_in,
                  EquationsMap& e_map_in,
                  std::string eqname_in,
                  std::string varname_in):
-        _utils(e_map_in._utils),
+        _files(e_map_in._files),
         _phys(e_map_in._phys),
         _mesh(e_map_in._mesh),
         _AbstractFE(e_map_in._AbstractFE),
@@ -176,7 +176,7 @@ void EqnBase::initNVars()  {
   
     
 //CHECK LINEAR MESH WITH QUADRATIC SHAPES
-    const uint mesh_ord = (int) _utils._urtmap.get("mesh_ord");
+    const uint mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
     if (mesh_ord == 1 && _nvars[QQ]>0) {
         std::cout << "Can't handle linear mesh with quadratic variables, do a quadratic mesh" << std::endl;
         abort();
@@ -838,8 +838,8 @@ void EqnBase::initVectors() {
 
 void EqnBase::GenBc() {
   
-    std::string     basepath = _utils._files.get_basepath();
-    std::string    input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
+    std::string     basepath = _files.get_basepath();
+    std::string    input_dir = _files.get_frtmap().get("INPUT_DIR");
     std::string          ibc = DEFAULT_IBC;
     std::string     ext_xdmf = DEFAULT_EXT_XDMF;
     std::string       ext_h5 = DEFAULT_EXT_H5;
@@ -854,7 +854,7 @@ void EqnBase::GenBc() {
     
  //************************************************   
  //******** NODE BASED ****************************   
-    const uint mesh_ord    = (int) _utils._urtmap.get("mesh_ord");
+    const uint mesh_ord    = (int) _mesh._mesh_rtmap.get("mesh_ord");
     const uint offset      = _mesh._NoNodesXLev[_NoLevels-1];
     const uint el_nnodes_b = _mesh._GeomEl._elnds[BB][mesh_ord];
     double* normal = new double[_mesh._dim];  //TODO remove this, it is useless
@@ -1521,10 +1521,10 @@ void EqnBase::clearElBc() {
 /// This function generates the initial conditions:
 void EqnBase::GenIc() {
 
-    const uint mesh_ord    = (int) _utils._urtmap.get("mesh_ord");
+    const uint mesh_ord    = (int) _mesh._mesh_rtmap.get("mesh_ord");
   
-    std::string   basepath = _utils._files.get_basepath();
-    std::string  input_dir = _utils._files.get_frtmap().get("INPUT_DIR");
+    std::string   basepath = _files.get_basepath();
+    std::string  input_dir = _files.get_frtmap().get("INPUT_DIR");
     std::string        ibc = DEFAULT_IBC;
     std::string     ext_h5 = DEFAULT_EXT_H5;
     std::ostringstream ibc_filexmf;
@@ -2028,9 +2028,9 @@ void EqnBase::MGCheck(int Level) const {
 
 void EqnBase::initMGOps() {
 
-    std::string     basepath = _utils._files.get_basepath();
-    std::string   output_dir = _utils._files.get_frtmap().get("OUTPUT_DIR");
-    std::string  outtime_dir = _utils._files.get_frtmap().get("OUTTIME_DIR");
+    std::string     basepath = _files.get_basepath();
+    std::string   output_dir = _files.get_frtmap().get("OUTPUT_DIR");
+    std::string  outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
     std::string     f_matrix = DEFAULT_F_MATRIX;
     std::string       f_rest = DEFAULT_F_REST;
     std::string       f_prol = DEFAULT_F_PROL;
@@ -3304,8 +3304,8 @@ void EqnBase::ReadVector(std::string namefile) {
   
     const uint Level = _NoLevels-1;
     
-    const uint mesh_ord = (int) _utils._urtmap.get("mesh_ord");
-    const uint offset=_mesh._NoNodesXLev[_NoLevels-1];
+    const uint mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
+    const uint offset   =       _mesh._NoNodesXLev[_NoLevels-1];
 
     // file to read
     double *sol=new double[offset]; // temporary vector
@@ -3832,7 +3832,7 @@ const uint myproc= _iproc;
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh._dim);
 
   //======== ELEMENT MAPPING =======
-  const uint meshql = (int) _utils._urtmap.get("meshql");  
+  const uint meshql = (int) _mesh._mesh_rtmap.get("meshql");  
  
 //========= DOMAIN MAPPING
     QuantityLocal xyz(currgp,currelem);

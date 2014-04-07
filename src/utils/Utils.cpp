@@ -1,31 +1,13 @@
-// Class includes ---------------
+// Class includes
 #include "Utils.hpp"
 
-// std libraries ----------------
+// std libraries 
 #include <iomanip>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <fstream>
 
-// class includes ----------------
-#include "Files.hpp"
-
-#include "FEMTTUConfig.h"
-#ifdef HAVE_MPI  
-#include "mpi.h"
-#endif
-// ===============================
-//  Utils Class functions
-// ===============================
-
-// ===================================================
-/// Constructor
-   Utils::Utils( Files& mg_files_in  // Files class pointer
-  )  : _files(mg_files_in),
-      _urtmap("Mesh",mg_files_in.get_basepath())  {
-  
-  }
 
 namespace IO {
 // =============================================================

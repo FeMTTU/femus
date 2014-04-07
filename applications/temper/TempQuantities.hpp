@@ -96,8 +96,6 @@ class Velocity : public Quantity {
 //multi-dimensional arrays must have bounds for all dimensions except the first
     void strain_txyz(const double t, const double* xp,double strain[][DIMENSION]) const;  //TODO convert this double array
 
-  
-
 };
 
 #endif

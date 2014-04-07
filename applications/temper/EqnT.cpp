@@ -116,12 +116,12 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
   const uint Nonstat = myphys->_physrtmap.get("NonStatTEMP");
   
 //========= BCHandling =========
-  const double penalty_val = _utils._urtmap.get("penalty_val");    
+  const double penalty_val = _mesh._mesh_rtmap.get("penalty_val");    
 
   //======== ELEMENT MAPPING =======
-  const uint space_dim = _mesh._dim;
-  const uint  meshql   = (int) _utils._urtmap.get("meshql");
-  const uint  mesh_ord = (int) _utils._urtmap.get("mesh_ord");
+  const uint space_dim =       _mesh._dim;
+  const uint  meshql   = (int) _mesh._mesh_rtmap.get("meshql");
+  const uint  mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
 
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
@@ -659,9 +659,9 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
 
   //====== processor index
   const uint myproc = _iproc;
-  const uint           space_dim = _mesh._dim;
-  const uint mesh_ord = (int) _utils._urtmap.get("mesh_ord");  
-  const uint meshql   = (int) _utils._urtmap.get("meshql");   //======== ELEMENT MAPPING =======
+  const uint space_dim =      _mesh._dim;
+  const uint mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");  
+  const uint meshql   = (int) _mesh._mesh_rtmap.get("meshql");   //======== ELEMENT MAPPING =======
  
   //========== 
     QuantityLocal Tempold(currgp,currelem);
@@ -776,14 +776,14 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
     ///////// let us also print the functional value in a unique file,
     /////////so that we explore the variation wrt alpha
     
-    std::string intgr_fname = _eqnmap._utils._files.get_basepath() + "/" +
-                              _eqnmap._utils._files.get_frtmap().get("OUTPUT_DIR") + "/" + "alpha";
+    std::string intgr_fname = _eqnmap._files.get_basepath() + "/" +
+                              _eqnmap._files.get_frtmap().get("OUTPUT_DIR") + "/" + "alpha";
   
 	std::ofstream intgr_fstream;
     
     if (paral::get_rank() ==0 ){ 
       intgr_fstream.open(intgr_fname.c_str(),ios_base::app); 
-      intgr_fstream << _eqnmap._utils._files.get_frtmap().get("OUTTIME_DIR") << " " << optphys->_physrtmap.get("alphaT") << " " << optphys->_physrtmap.get("injsuc")<< " "  << J << " " << std::endl ; 
+      intgr_fstream << _eqnmap._files.get_frtmap().get("OUTTIME_DIR") << " " << optphys->_physrtmap.get("alphaT") << " " << optphys->_physrtmap.get("injsuc")<< " "  << J << " " << std::endl ; 
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
 }
  
@@ -805,9 +805,9 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
   
   // processor index
   const uint myproc = _iproc;
-  const uint space_dim = _mesh._dim;
-  const uint mesh_ord = (int) _utils._urtmap.get("mesh_ord");  
-  const uint meshql   = (int) _utils._urtmap.get("meshql");    //======== ELEMENT MAPPING =======
+  const uint space_dim =       _mesh._dim;
+  const uint mesh_ord  = (int) _mesh._mesh_rtmap.get("mesh_ord");  
+  const uint meshql    = (int) _mesh._mesh_rtmap.get("meshql");    //======== ELEMENT MAPPING =======
 
   
 //======Functions in the integrand ============

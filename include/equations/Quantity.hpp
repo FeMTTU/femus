@@ -49,8 +49,6 @@ public:
 #include <iostream>
 #include <cstdlib>
 
-class Utils;
-
 ///This class is the GLOBAL QuantityMap of my simulation,
 ///i.e. it holds the list of all the involved physical quantities
 
@@ -59,10 +57,9 @@ class QuantityMap {
 public:
 
   std::map<std::string,Quantity*> _QuantMap;   // system map
-   Utils& _utils;
  Physics& _phys; 
   
-   QuantityMap(Utils&, Physics& phys_in);
+   QuantityMap(Physics& phys_in);
   ~QuantityMap(){};
 
   

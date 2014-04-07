@@ -25,10 +25,6 @@ public:
     FEElemBase(GeomEl* geomel_in);
     virtual ~FEElemBase();
 
-// Utils ==========
-    Utils*    _utils;   //needed for file reading  // TODO WILL REMOVE IT SOON
-    void SetUtils(Utils*);
-    
 // GeomEl ======
     GeomEl*  _geomel;   //TODO putting the REFERENCE is not the same as putting the POINTER!!!
 

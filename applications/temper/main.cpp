@@ -63,6 +63,10 @@
 
    files.CopyGencaseFiles();
 
+  // =========================================
+  // ======= END OF THE INITIALIZATION PART ========================
+  // =========================================
+   
   // ======= MyPhysics ========================
   RunTimeMap<double> physics_map("Physics",files.get_basepath());
   physics_map.read();
@@ -74,25 +78,19 @@
   RunTimeMap<double> mesh_map("Mesh",files.get_basepath());
      mesh_map.read();
      mesh_map.print();
-  // ======= Utils ========================
-  Utils utils(files);
-        utils._urtmap.read();  
-        utils._urtmap.print();
 
   // ======= MyDomainShape ====================
   const double Lref  =  phys._physrtmap.get("Lref");     // reference L
-  uint     dimension = (uint) utils._urtmap.get("dimension");
+  uint     dimension = (uint) mesh_map.get("dimension");
   RunTimeMap<double> box_map("Box",files.get_basepath());
   box_map.read();
   box_map.print();
   Box mybox(dimension,box_map);
-      mybox._domain_rtmap.read();
-      mybox._domain_rtmap.print();
       mybox.init(Lref);
 
 // ====== GeomEl ================================
 // ======  Mesh ================================
-  uint geomel_type = (uint) utils._urtmap.get("geomel_type");  // must do in such a way that it is picked from the geomel throughout the code
+  uint geomel_type = (uint) mesh_map.get("geomel_type");  // must do in such a way that it is picked from the geomel throughout the code
   GeomEl geomel(dimension,geomel_type);           /*VB based*/
   Mesh     mesh(files,mesh_map,geomel,Lref,&mybox);        /*VB based*/
   mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/
@@ -110,7 +108,6 @@
 //sort of constructor
     FEElements[fe]->SetOrder(fe);
     FEElements[fe]->AssociateQRule(&qrule);
-    FEElements[fe]->SetUtils(&utils);
 //end sort of constructor
     FEElements[fe]->init();
     FEElements[fe]->init_switch();
@@ -122,7 +119,7 @@
            time_loop._timemap.print();
  
   // ===== QuantityMap =========================================
-  QuantityMap  qty_map(utils,phys);
+  QuantityMap  qty_map(phys);
 
   Temperature temperature("Qty_Temperature",qty_map,1,FE_TEMPERATURE);     qty_map.set_qty(&temperature);
   TempLift       templift("Qty_TempLift",qty_map,1,FE_TEMPERATURE);        qty_map.set_qty(&templift);  
@@ -138,7 +135,7 @@
   // ===== end QuantityMap =========================================
 
   // ====== EquationsMap =================================
-  EquationsMap equations_map(utils,phys,qty_map,mesh,FEElements,qrule,time_loop);  //here everything is passed as BASE STUFF, like it should!
+  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,qrule,time_loop);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
   
 //===============================================
