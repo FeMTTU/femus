@@ -18,11 +18,8 @@ Restart feature
 
 
 ######## How to choose the COMPILE MODE for the library AND external packages ###########
-export FM_LIBMESH_METHOD={opt,dbg}
-export FM_PETSC_METHOD={opt,dbg}
-
 source configure_femus.sh
-fm_set_femus
+fm_set_femus --help
 
 ######## IF YOU WANT TO CHANGE the COMPILE MODE ###############
 You have to open another shell and set new values 
@@ -33,14 +30,14 @@ You have to open another shell and set new values
 ##############################
 
 ###### How to set the parameters for an application ###########
-- See the files in the config/ directory
+- See the files in the input/ directory
 
 ###### How to change the mesh file of an application ###########
-- Put the mesh file in the config/ directory 
+- Put the mesh file in the input/ directory
 - Set the filename in the femus_conf.in file
 - Set libmesh_gen to 0
 
-###### IF YOU WANT TO REVERT TO LIBMESH GENERATED MESH ###########
+###### IF YOU WANT TO REVERT TO LIBMESH-GENERATED MESH ###########
 - Set libmesh_gen back to 1
 - Don't have to move any mesh file
 
@@ -63,7 +60,14 @@ You have to open another shell and set new values
    Yeah, in the constructor of such an object we must put the check "if the file isn't there, abort"
    
 ####### How to RESTART a run of an application ##########
-- Here, we must be very careful.
+- NOW I AM DOING EVERYTHING IN SUCH A WAY THAT THE WHOLE RUN WILL BE in the OUTTIME/ DIRECTORY... 
+  so to restart we will EXCLUSIVELY READ from THAT DIRECTORY
+
+- Set the folder from which to restart in the file run_to_restart_from
+- set the ITERATION NUMBER in the "restart" variable in the configuration file IN THE FOLDER OF THE CONSIDERED RUN!
+- set the other parameters like "nsteps"
+
+- We must be very careful.
 - We must change ALMOST NOTHING
 - Do not rerun GENCASE
 - Do not change NUMBER OF PROCESSORS

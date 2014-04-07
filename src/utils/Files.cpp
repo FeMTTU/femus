@@ -177,7 +177,7 @@ return;
    //print this string to /base_output/new_run
   //Files does not have Utils yet
 
-void Files::PrintRun(const std::string run_name_in) const {
+void Files::PrintRunForRestart(const std::string run_name_in) const {
 
 
    if (paral::get_rank() == 0 )   {
@@ -187,8 +187,13 @@ void Files::PrintRun(const std::string run_name_in) const {
    std::cout << "Print the run " << run << "to file" << std::endl;
 
    std::ofstream run_file; run_file.open(run.c_str());
+   run_file << DEFAULT_LAST_RUN << " ";
    run_file << get_frtmap().get("OUTTIME_DIR");
   
+      run_file << std::endl;
+      run_file << "flag_for_restart " << 0;
+      
+   
    run_file.close();
   
    }
@@ -341,12 +346,13 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
 }
 
 
-/// ========== Copy Gencase Files ==========
+/// ========== Copy Input Files ==========
 //it copies the mesh files to the outtime dir
-//the multigrid files are not copied here
-    /*TODO fileIO*/
-  void Files::CopyGencaseFiles() const { 
+// TODO this function is performed by ALL PROCESSORS but we should do it only for the FIRST ONE...
+  void Files::CopyInputFiles() const { 
 
+ std::cout << "TODO: MUST FIND A WAY TO COPY A WHOLE DIRECTORY AND NOT THE SINGLE FILES" << std::endl;
+    
    std::string app_basepath = get_basepath() + "/"; 
 
     // >>>>>>> outtime dir: COPY FILES   //needs the BASEPATH of the APPLICATION
@@ -373,9 +379,14 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
    op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_F_PROL + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
+// we try to resemble the original directory structure in view of restart...
+
+CheckDirOrMake(app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" ,
+	       DEFAULT_CONFIGDIR);
+
 //copy configuration file
    op_in  = app_basepath + "/" + DEFAULT_CONFIGDIR + "/" + DEFAULT_RUNTIMECONF;
-   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_RUNTIMECONF;
+   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_CONFIGDIR + "/" +  DEFAULT_RUNTIMECONF;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
 //barrier so that all the processors will have mesh.h5 and else to read from

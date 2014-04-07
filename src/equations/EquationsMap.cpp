@@ -593,7 +593,7 @@ void EquationsMap::TransientSetup()  {
                 abort();
             }
             //read from last_run
-            last_run >> lastone;
+            last_run >> lastone >> lastone;  //"run_to_restart_from" is the STRING i use in the file...
             //AAA output is there
             stringstream tidxin;
             tidxin << setw(ndigits) << setfill('0') << _timeloop._t_idx_in;
@@ -688,7 +688,7 @@ void EquationsMap::TransientSetup()  {
     //now you can update last_run with new_run for a following run
     //well,actually before putting the last_run you should be sure that this run was completely finished.
     //That is why I'd better put this call at the end of the main program
-//   _utils._files.PrintRun(DEFAULT_LAST_RUN);
+//   _utils._files.PrintRunForRestart(DEFAULT_LAST_RUN);
 
 //------- print
     //this happens when the output dir is already set
