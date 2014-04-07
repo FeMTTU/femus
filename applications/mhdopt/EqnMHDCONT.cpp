@@ -111,12 +111,12 @@ void EqnMHDCONT::init_equation_data() {
   const double        dt   = _eqnmap._timeloop._timemap.get("dt");
 
 //======== GEOMETRICAL ELEMENT =======
-  const uint space_dim = _mesh._dim;
-  const uint mesh_ord = (int) _utils._urtmap.get("mesh_ord");
-  const uint meshql = (int) _utils._urtmap.get("meshql"); //======== ELEMENT MAPPING =======
+  const uint space_dim =       _mesh._dim;
+  const uint mesh_ord  = (int) _mesh._mesh_rtmap.get("mesh_ord");
+  const uint meshql    = (int) _mesh._mesh_rtmap.get("meshql"); //======== ELEMENT MAPPING =======
 
   //========= BCHandling =========
-  const double penalty_val = _utils._urtmap.get("penalty_val");    
+  const double penalty_val = _mesh._mesh_rtmap.get("penalty_val");    
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
   //QTYZERO

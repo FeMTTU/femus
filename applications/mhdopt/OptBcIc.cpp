@@ -44,7 +44,7 @@ void EqnNS::ic_read(double xp[],double u_value[], double el_xm[]) {
   //====== Physics
   OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&_phys);
   double pref = optphys->_pref;
-  const double bdry_toll = _utils._urtmap.get("bdry_toll");
+  const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
 
   double udes = _phys._physrtmap.get("udes");
   
@@ -131,7 +131,7 @@ u_value[3]= 0.*press_tmp[0];
 void EqnNS::elem_bc_read(double el_xm[],int& surf_id, double value[],int el_flag[]) {
 //el_xm[] is the NON-DIMENSIONAL node coordinate // lb,le are NONDIMENSIONALIZED
 
-const double bdry_toll = _utils._urtmap.get("bdry_toll");
+const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
 
   
 
@@ -288,7 +288,7 @@ surf_id=77;
 void EqnNS::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
 //xp[] is the NON-DIMENSIONAL node coordinate
 
-  const double bdry_toll = _utils._urtmap.get("bdry_toll");
+  const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
 
   //Pick the positions of the scalar quantities
   int pos_ux = _eqnmap._qtymap.get_qty("Qty_Velocity")->_pos;
@@ -474,7 +474,7 @@ void EqnMHD::elem_bc_read(double el_xm[],int& surf_id, double value[],int el_fla
 // lb,le are NONDIMENSIONALIZED
   //in this way lb,le,el_xm,x_rotshift are ALL nondimensional, so you can compare them!
 
-const double bdry_toll = _utils._urtmap.get("bdry_toll");
+const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
       
   
 
@@ -646,7 +646,7 @@ surf_id=77;
  //Bexn = either FIXED or CONTROLLED value
 void EqnMHD::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
 
-    const double bdry_toll = _utils._urtmap.get("bdry_toll");
+    const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
   
     
 Box* box = static_cast<Box*>(_mesh.GetDomain());
@@ -770,7 +770,7 @@ void EqnNSAD::ic_read(double xp[],double u_value[], double el_xm[]) {
 void EqnNSAD::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
 //xp[] is the NON-DIMENSIONAL node coordinate
 
-  const double bdry_toll = _utils._urtmap.get("bdry_toll");
+  const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
   
 
   
@@ -876,7 +876,7 @@ if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  
 void EqnNSAD::elem_bc_read(double el_xm[],int& surf_id, double value[],int el_flag[]) {
 //el_xm[] is the NON-DIMENSIONAL node coordinate
 
-const double bdry_toll = _utils._urtmap.get("bdry_toll");
+const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
       
   
 
@@ -1044,7 +1044,7 @@ void EqnMHDAD::ic_read(double xp[],double u_value[], double el_xm[]) {
 void EqnMHDAD::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
 //xp[] is the NON-DIMENSIONAL node coordinate
 
-  const double bdry_toll = _utils._urtmap.get("bdry_toll");
+  const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
   
   
 Box* box = static_cast<Box*>(_mesh.GetDomain());
@@ -1147,7 +1147,7 @@ void EqnMHDAD::elem_bc_read(double el_xm[],int& surf_id, double value[],int el_f
 // lb,le are NONDIMENSIONALIZED
   //in this way lb,le,el_xm,x_rotshift are ALL nondimensional, so you can compare them!
 
-const double bdry_toll = _utils._urtmap.get("bdry_toll");
+const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
       
 
 Box* box = static_cast<Box*>(_mesh.GetDomain());
@@ -1314,7 +1314,7 @@ void EqnMHDCONT::elem_bc_read(double el_xm[],int& surf_id, double value[],int el
 // lb,le are NONDIMENSIONALIZED
   //in this way lb,le,el_xm,x_rotshift are ALL nondimensional, so you can compare them!
 
-const double bdry_toll = _utils._urtmap.get("bdry_toll");
+const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
       
   
 
@@ -1463,7 +1463,7 @@ surf_id=77;
 
 void EqnMHDCONT::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
 
-  const double bdry_toll = _utils._urtmap.get("bdry_toll");
+  const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
 
   
 Box* box= static_cast<Box*>(_mesh.GetDomain());

@@ -21,7 +21,7 @@
 void EqnT::ic_read(double xp[],double u_value[], double el_xm[]) {
 
 //     const double Tref = _phys._physrtmap.get("Tref");
-  const double bdry_toll = _utils._urtmap.get("bdry_toll");
+  const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
 
 
   Box* box= static_cast<Box*>(_mesh.GetDomain());
@@ -66,7 +66,7 @@ void EqnT::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
 // T' and its adjoint must be Dirichlet homogeneous everywhere on the boundary, by definition.
 
 
-  const double bdry_toll = _utils._urtmap.get("bdry_toll");
+  const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
   
 
 Box* box= static_cast<Box*>(_mesh.GetDomain());
@@ -238,7 +238,7 @@ void EqnNS::ic_read(double xp[],double u_value[], double el_xm[]) {
    const double Uref = _phys._physrtmap.get("Uref");
 //   double pref = optphys->_pref;
   TempPhysics *optphys; optphys = static_cast<TempPhysics*>(&_phys);
-  const double bdry_toll = _utils._urtmap.get("bdry_toll");
+  const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
 
  
   Box* box= static_cast<Box*>(_mesh.GetDomain());
@@ -345,7 +345,7 @@ u_value[3]=press_tmp[0];
 void EqnNS::elem_bc_read(double el_xm[],int& surf_id, double value[],int el_flag[]) {
 //el_xm[] is the NON-dimensional node coordinate // lb,le are NONdimensionalized
 
-const double bdry_toll = _utils._urtmap.get("bdry_toll");
+const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
 
   
 
@@ -498,7 +498,7 @@ surf_id=77;
 void EqnNS::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
 //xp[] is the NON-dimensional node coordinate
 
-  const double bdry_toll = _utils._urtmap.get("bdry_toll");
+  const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
   
   
 Box* box = static_cast<Box*>(_mesh.GetDomain());

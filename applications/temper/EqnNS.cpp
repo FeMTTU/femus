@@ -89,7 +89,7 @@
   const double     dt = _eqnmap._timeloop._timemap.get("dt");
 
 //========= BCHandling =========
-  const double penalty_val = _utils._urtmap.get("penalty_val");    
+  const double penalty_val = _mesh._mesh_rtmap.get("penalty_val");    
 
 
   //========== GEOMETRIC ELEMENT ========
@@ -97,8 +97,8 @@
   //AAAAAAA! // is this the SPACE dimension, or the UNKNOWN dimension, or the INTEGRATION (MANIFOLD) dimension?
   //well, it depends. The fact is that some operators are defined only for certain dimensions of the vector
   //for instance, divergence acts on vectors whose dimension is like the domain dimension
-  const uint mesh_ord = (int) _utils._urtmap.get("mesh_ord");
-  const uint meshql   = (int) _utils._urtmap.get("meshql"); //======== ELEMENT MAPPING =======
+  const uint mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
+  const uint meshql   = (int) _mesh._mesh_rtmap.get("meshql"); //======== ELEMENT MAPPING =======
 
 
   

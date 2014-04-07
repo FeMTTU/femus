@@ -18,7 +18,7 @@
     {
     
 //========== ELEMENT: Current Geometric Element (SERVICE)  ========================
-   const uint mesh_ord = (int) _eqnmap._utils._urtmap.get("mesh_ord");
+   const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");
   _el_conn   = new uint*[VB];
   _xx_nds    = new double*[VB];
   _el_xm     = new double*[VB];
@@ -147,7 +147,7 @@ for (uint ivar=0; ivar < _eqn._nvars[fe]; ivar++)    {
 ///It is for debugging purposes
 void CurrElem::get_el_orient(const uint vb) const {
   
-      const uint mesh_ord = (int) _eqnmap._utils._urtmap.get("mesh_ord");
+      const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");
       const uint el_nnodes   = _eqnmap._mesh._GeomEl._elnds[vb][mesh_ord];
       const uint mydim = _eqnmap._mesh._dim;
 
@@ -217,7 +217,7 @@ void CurrElem::get_el_orient(const uint vb) const {
 
   void CurrElem::get_el_ctr(const uint vb) const {
 
-    const uint mesh_ord = (int) _eqnmap._utils._urtmap.get("mesh_ord");    
+    const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
     const uint el_nnodes   = _eqnmap._mesh._GeomEl._elnds[vb][mesh_ord];
     const uint mydim = _eqnmap._mesh._dim;
 
@@ -238,7 +238,7 @@ void CurrElem::get_el_orient(const uint vb) const {
    // =====================================================================================
   void CurrElem::get_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) const {
 
-    const uint mesh_ord = (int) _eqnmap._utils._urtmap.get("mesh_ord");    
+    const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
     const uint el_nnodes   = _eqnmap._mesh._GeomEl._elnds[vb][mesh_ord];
     const uint mydim = _eqnmap._mesh._dim;
           
@@ -282,7 +282,7 @@ void CurrElem::ConvertElemCoordsToMappingOrd(const uint vb,QuantityLocal& myvect
   
   const uint  elndof = myvect._ndof[vb];
   const uint vectdim = myvect._dim;
-  const uint mesh_ord = (int) _eqnmap._utils._urtmap.get("mesh_ord");    
+  const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
   const uint offset = _eqnmap._mesh._GeomEl._elnds[vb][mesh_ord];
  
  //TODO ASSERT

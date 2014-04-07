@@ -26,7 +26,7 @@ class EquationsMap  {
 
     map<string,EqnBase*> _equations;   // system map
 public:  
-    Utils&       _utils;  // Utils class  pointer
+    Files&       _files;  // Files class  pointer
     Physics&     _phys;   // Physics class pointer
     QuantityMap& _qtymap;
     Mesh&        _mesh;   // Mesh  class  pointer
@@ -35,7 +35,7 @@ public:
     TimeLoop&    _timeloop;
 
   /// Constructor
-    EquationsMap( Utils& mgutils_in,
+    EquationsMap( Files& files_in,
 		  Physics& mgphys_in,
 		  QuantityMap& qtymap_in,
 		  Mesh& mgmesh_in,

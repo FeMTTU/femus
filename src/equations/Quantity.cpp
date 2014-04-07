@@ -92,8 +92,8 @@ void Quantity::FunctionDof(const uint bdry, QuantityLocal& myvect, const double 
 //====the Domain
   const uint space_dim = _qtymap._phys._mesh->_dim;
   double* xp = new double[space_dim]; 
-  const uint mesh_ord = (int) _qtymap._utils._urtmap.get("mesh_ord");    
-  const uint offset =  _qtymap._phys._mesh->_GeomEl._elnds[bdry][mesh_ord];
+  const uint mesh_ord = (int) _qtymap._phys._mesh->_mesh_rtmap.get("mesh_ord");    
+  const uint offset   =       _qtymap._phys._mesh->_GeomEl._elnds[bdry][mesh_ord];
 
 //=====the Function
   double* func = new double[myvect._dim];
@@ -123,6 +123,6 @@ if (dof_off > offset) {std::cout << "Use a quadratic mesh for FunctionDof comput
 #include "Utils.hpp"
   
   ////////////////QTY MAP ////////////
-  QuantityMap::QuantityMap(Utils & utils_in,Physics& phys_in): _utils(utils_in), _phys(phys_in) { }
+  QuantityMap::QuantityMap(Physics& phys_in): _phys(phys_in) { }
   
 

@@ -15,7 +15,7 @@
 #include "VBTypeEnum.hpp"
 
 
-class Utils        ;
+class Files        ;
 class Physics      ;
 class EquationsMap ;
 class Mesh         ;
@@ -36,7 +36,7 @@ protected:
 //=======================================================================
 // ====== data pointer ==========
 //=======================================================================
-  Utils                     & _utils;        ///<  utility class pointer
+  Files                     & _files;        ///<  file class pointer
   Physics                   & _phys;         ///<  parameter class pointer
   Mesh                      & _mesh;         ///<  mesh pointer
   std::vector<FEElemBase*>  &  _AbstractFE;  ///<  FE

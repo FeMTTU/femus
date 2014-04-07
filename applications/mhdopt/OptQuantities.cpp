@@ -236,7 +236,7 @@ void Velocity::strain_txyz(const double t, const double* xyz,double strain[][DIM
   
     const double Lref = _qtymap._phys._physrtmap.get("Lref");
       double ILref = 1./Lref;
-      const double lye = _qtymap._utils._urtmap.get("lye");
+      const double lye = _qtymap._phys._mesh->GetDomain()->_domain_rtmap.get("lye");
   const double x=xyz[0];
   const double y=xyz[1];
 #if DIMENSION==3

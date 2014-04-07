@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
 
    files.CopyGencaseFiles();
 
- // =========================================
+  // =========================================
   // ======= END OF THE INITIALIZATION PART ========================
   // =========================================
  
@@ -91,14 +91,10 @@ int main(int argc, char** argv) {
   RunTimeMap<double> mesh_map("Mesh",files.get_basepath());
      mesh_map.read();
      mesh_map.print();
-  // ======= Utils ========================
-  Utils utils(files);
-        utils._urtmap.read();  
-        utils._urtmap.print();
       
 //===========================================
   const double Lref  = phys._physrtmap.get("Lref");     // reference L
-  uint     dimension = (uint) utils._urtmap.get("dimension");
+  uint     dimension = (uint) mesh_map.get("dimension");
   RunTimeMap<double> box_map("Box",files.get_basepath());
   box_map.read();
   box_map.print();
@@ -107,7 +103,7 @@ int main(int argc, char** argv) {
 
 // ====== GeomEl ================================
 // ======  Mesh ================================
-  uint geomel_type = (uint) utils._urtmap.get("geomel_type");
+  uint geomel_type = (uint) mesh_map.get("geomel_type");
   GeomEl geomel(dimension,geomel_type);
   Mesh mesh(files,mesh_map,geomel,Lref,&mybox); 
   mesh.PrintForVisualizationAllLEVAllVB();
@@ -125,14 +121,13 @@ int main(int argc, char** argv) {
 //sort of constructor
     FEElements[fe]->SetOrder(fe);
     FEElements[fe]->AssociateQRule(&qrule);
-    FEElements[fe]->SetUtils(&utils);
 //end sort of constructor
     FEElements[fe]->init();
     FEElements[fe]->init_switch();
   }
   
   // ===== QuantityMap =========================================
-  QuantityMap  qty_map(utils,phys);
+  QuantityMap  qty_map(phys);
 
 //================================
 // ======= Add QUANTITIES ========  
@@ -179,7 +174,7 @@ int main(int argc, char** argv) {
   time_loop._timemap.print();
   
   // ====== EquationsMap =================================
-  EquationsMap equations_map(utils,phys,qty_map,mesh,FEElements,qrule,time_loop);
+  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,qrule,time_loop);
   
 //===============================================
 //================== Add EQUATIONS  AND ======================
