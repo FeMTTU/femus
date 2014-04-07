@@ -7,7 +7,7 @@
 #include "NumericVector.hpp"
 #include "LinearSolverM.hpp"
 
-#include "Utils.hpp"
+#include "Math.hpp"
 #include "Physics.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
