@@ -135,11 +135,3 @@ namespace IO {
 
 
 #endif
-
-
-//  std::map<std::string,double>& get_utils_map() const   {return _utilsmap;}
-// error: invalid initialization of reference of type ‘std::__debug::map<std::basic_string<char>, double>&’ from expression of type ‘const std::__debug::map<std::basic_string<char>, double>’
-//this function must return a REFERENCE to the object _utilsmap in this class, NOT A COPY...
-//libmesh does like that:
-//   std::map<std::string,double>& get_utils_map()    {return _utilsmap;}
-// in this case you give a reference,so if something changes in the origin then you can get it

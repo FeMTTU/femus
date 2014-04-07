@@ -34,6 +34,10 @@ equations/System.cpp
 equations/TimeLoop.cpp
 equations/TransientSystem.cpp
 equations/NewmarkTransientSystem.cpp
+equations/Output.cpp
+equations/VTKOutput.cpp
+equations/GMVOutput.cpp
+equations/XDMFOutput.cpp
 fe/ElemType.cpp
 fe/FEElemBase.cpp
 fe/FEHex1.cpp
@@ -65,10 +69,6 @@ mesh/MeshTwo.cpp
 mesh/MultiLevelMesh.cpp
 physics/Fluid.cpp
 physics/Material.cpp
-equations/Output.cpp
-equations/VTKOutput.cpp
-equations/GMVOutput.cpp
-equations/XDMFOutput.cpp
 physics/Parameter.cpp
 physics/Physics.cpp
 physics/Solid.cpp
@@ -78,7 +78,7 @@ quadrature/QRule.cpp
 utils/FemTTUInit.cpp
 utils/FemusInit.cpp
 utils/Files.cpp
-utils/Utils.cpp
+utils/IO.cpp
 )
 
 IF (NOT LIBRARY_OUTPUT_PATH)
