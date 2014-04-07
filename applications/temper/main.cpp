@@ -60,7 +60,7 @@
    files.RedirectCout(sbuf,file);
 // >>>>>>>>>>>>> END REDIRECT COUT
 
-   files.CopyGencaseFiles();
+   files.CopyInputFiles();
 
   // =========================================
   // ======= END OF THE INITIALIZATION PART ========================
@@ -200,7 +200,7 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 
 //============= prepare default for next restart ==========  
 // at this point, the run has been completed 
-/*(iproc==0)*/  files.PrintRun(DEFAULT_LAST_RUN);
+/*(iproc==0)*/  files.PrintRunForRestart(DEFAULT_LAST_RUN);
 
   // ============  log ================================
 #if HAVE_PETSC == 1

@@ -37,10 +37,10 @@ public:
   static void CheckDirOrAbort(const std::string& dir_name_in, const std::string& my_name_in);
   
 // Copy ========================= 
-  void CopyGencaseFiles() const;
+  void CopyInputFiles() const;
 
 // Restart ======================
-  void PrintRun(const std::string run_name_in) const;
+  void PrintRunForRestart(const std::string run_name_in) const;
   
 // LOG ==========================
 // Stream redirect to file ======
@@ -53,7 +53,7 @@ private:
 
 // Directory management
          void ComposeOutdirName();
-  static void CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in);  //TODO isn't this very similar to the previous one?
+  static void CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in);
 
 // Copy 
   void CopyFile(std::string  f_in,std::string  f_out) const;
