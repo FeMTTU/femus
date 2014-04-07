@@ -1,5 +1,3 @@
-// launch it with sthg like 'mpiexec -n 6 main-dbg --dt 1 --alphaVel 55 --udes 3 --Bref 0.001'
-
 //C++ includes ============
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -7,7 +5,7 @@
 #include <cstdlib>
 #include <sstream>
 
-// External library include ( LibMesh, PETSc...) ------------------------------
+// External library include 
 #include "FEMTTUConfig.h"
 
 
@@ -92,7 +90,7 @@ int main(int argc, char** argv) {
      mesh_map.read();
      mesh_map.print();
       
-//===========================================
+//=========== Domain ================================
   const double Lref  = phys._physrtmap.get("Lref");     // reference L
   uint     dimension = (uint) mesh_map.get("dimension");
   RunTimeMap<double> box_map("Box",files.get_basepath());
