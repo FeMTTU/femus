@@ -118,7 +118,6 @@ void Mesh::clear ()  {
 
 // ========================================================
 /// Read mesh from hdf5 file (namefile) 
-///           as Mesh class (Mesh.h): 
 //is this function for ALL PROCESSORS 
 // or only for PROC==0? Seems to be for all processors
 // TODO do we need the leading "/" for opening a dataset?
@@ -131,7 +130,7 @@ void Mesh::ReadMeshFile()   {
   std::string      ext_h5 = DEFAULT_EXT_H5;
   
   std::ostringstream meshname;
-  meshname << basepath  << "/" << output_dir << "/" << outtime_dir << "/" << basemesh << ext_h5;
+  meshname << basepath  << "/" << output_dir << "/" << outtime_dir << "/" << _files.get_frtmap().get("INPUT_DIR") << "/" << basemesh  << ext_h5;
 
 //==================================
 // OPEN FILE 

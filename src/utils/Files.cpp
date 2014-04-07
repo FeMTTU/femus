@@ -407,22 +407,31 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
    std::string  mmesh_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_MULTIMESH + DEFAULT_EXT_XDMF;
 /*(iproc==0)*/ CopyFile(mmesh_in,mmesh_out); 
 
+CheckDirOrMake(app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" ,
+	       get_frtmap().get("INPUT_DIR"));
+
+//I AM COPYING THIS TWICE BECAUSE I NEED IT BOTH FOR THE INPUT AND FOR THE OUTPUT FILES
+ //copy mesh.h5
+   std::string  mesh_in_twice = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
+   std::string  mesh_out_twice =  app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + get_frtmap().get("INPUT_DIR") + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
+/*(iproc==0)*/ CopyFile(mesh_in_twice,mesh_out_twice); 
+
 //copy MG files
    std::string  op_in = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
-   std::string  op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
+   std::string  op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + get_frtmap().get("INPUT_DIR") +  DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
    op_in  = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_F_REST + DEFAULT_EXT_H5;
-   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_F_REST + DEFAULT_EXT_H5;
+   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + get_frtmap().get("INPUT_DIR") +  DEFAULT_F_REST + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
    op_in  = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_F_PROL + DEFAULT_EXT_H5;
-   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_F_PROL + DEFAULT_EXT_H5;
+   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + get_frtmap().get("INPUT_DIR") +  DEFAULT_F_PROL + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
 // we try to resemble the original directory structure in view of restart...
 
-CheckDirOrMake(app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" ,
+CheckDirOrMake(app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" ,
 	       DEFAULT_CONFIGDIR);
 
 //copy configuration file

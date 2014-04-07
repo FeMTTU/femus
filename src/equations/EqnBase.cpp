@@ -2038,7 +2038,7 @@ void EqnBase::initMGOps() {
 
     std::ostringstream filename;
     std::string filename_base;
-    filename_base =  basepath + "/" + output_dir + "/" + outtime_dir + "/";
+    filename_base =  basepath + "/" + output_dir + "/" + outtime_dir + "/" + _files.get_frtmap().get("INPUT_DIR") + "/";
     
         filename.str("");     filename << filename_base << f_rest << ext_h5;
         ReadRest(filename.str());
