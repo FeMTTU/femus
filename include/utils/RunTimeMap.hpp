@@ -17,11 +17,12 @@ class RunTimeMap   {
 
 private:
 
-  const std::string               _basepath;
   const std::string               _tag_name;
   
 public:
-  
+
+  std::string               _basepath; //TODO let me put it public just because I don't want to do the SET function right now...
+                                       //TODO siccome lo posso MODIFICARE in base al RESTART non posso piu' metterlo CONST
   std::map<std::string, T > _rtmap;
 
 

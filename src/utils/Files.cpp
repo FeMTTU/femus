@@ -51,6 +51,18 @@
 	    
 // 	}
 
+	    if (_restart_flag) {
+	      std::cout << "*** RESTART is activated *****" << std::endl; 
+	      //we must set the basepath accordingly
+	    
+	    _frtmap._basepath = string_in + "/" + DEFAULT_OUTPUTDIR + "/" + lastone;
+
+	      std::cout << "*** The new basepath is *****" << _frtmap._basepath << std::endl; 
+	    
+	    }
+	    else { std::cout << "Normal simulation without restart" << std::endl; }
+
+	    
 // maybe excess of safety... but it never hurts
 #ifdef HAVE_MPI
         MPI_Barrier(MPI_COMM_WORLD);
