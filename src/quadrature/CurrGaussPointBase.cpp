@@ -2,9 +2,7 @@
 
 #include "QRule.hpp"
 #include "EquationsMap.hpp"
-#include "Utils.hpp"
 #include "FEElemBase.hpp"
-// #include "QuantityLocal.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 

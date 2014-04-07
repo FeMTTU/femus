@@ -7,7 +7,6 @@
 // FEMuS
 #include "FemusDefault.hpp"
 #include "Files.hpp"
-#include "Utils.hpp"
 #include "GeomEl.hpp"
 #include "Box.hpp"
 

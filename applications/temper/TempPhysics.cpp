@@ -1,7 +1,6 @@
 #include <cmath>
 
 //library
-#include "Utils.hpp"
 #include "EquationsMap.hpp"
 #include "TimeLoop.hpp"
 #include "MeshTwo.hpp"

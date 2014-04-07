@@ -2,7 +2,6 @@
 
 #include <cmath>
 
-#include "Utils.hpp"
 #include "Files.hpp"
 
 Box::Box(const uint spacedim_in, RunTimeMap<double> & map_in) : Domain(spacedim_in,map_in) {
