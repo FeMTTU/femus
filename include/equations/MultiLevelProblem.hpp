@@ -20,6 +20,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MultiLevelMesh.hpp"
+#include "MultiLevelSolution.hpp"
 #include "Solution.hpp"
 #include "Parameters.hpp"
 #include "ParallelObject.hpp"
@@ -55,12 +56,18 @@ private:
 //   bool _is_nonlinear;
 //   double _non_linear_toll;
   
-  bool _init_func_set;
+ // bool _init_func_set;
   bool _bdc_func_set;
   
   void GenerateBdc(const unsigned int k, const double time);
 
-    
+  
+public:  
+  /** Multilevel solution pointer */
+  MultiLevelSolution *_ml_sol;
+  /** Multilevel mesh pointer */
+  MultiLevelMesh *_ml_msh;
+  
 protected:
   
 //   int _nprocs;
@@ -193,14 +200,14 @@ protected:
   /** Array of solution */
   vector <Solution*>  _solution;
   
-  /** Multilevel mesh */
-  MultiLevelMesh *_ml_msh;
-  
+//   /** Multilevel mesh */
+//   MultiLevelMesh *_ml_msh;
+//   
   /** Data structure holding arbitrary parameters. */
   Parameters parameters;
 
   /** Constructor */
-  MultiLevelProblem( MultiLevelMesh *ml_msh);
+  MultiLevelProblem( MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
 
   /** Destructor */
   ~MultiLevelProblem();

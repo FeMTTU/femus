@@ -1,6 +1,7 @@
 #include "ElemType.hpp"
-#include "MultiLevelProblem.hpp"
 #include "MultiLevelMesh.hpp"
+#include "MultiLevelSolution.hpp"
+#include "MultiLevelProblem.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
@@ -46,10 +47,10 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=4;
+  nm=2;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
-  nr=0;
+  nr=2;
   std::cout<<"MAX_REFINEMENT levels: " << nr << endl<< endl;
   
   int tmp=nm;  nm+=nr;  nr=tmp;
@@ -65,7 +66,31 @@ int main(int argc,char **args) {
   //Steadystate NonLinearMultiLevelProblem  
   MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,SetRefinementFlag); 
 //   ml_msh.EraseCoarseLevels(2);
-  MultiLevelProblem ml_prob(&ml_msh);
+  
+  MultiLevelSolution ml_sol(&ml_msh);
+  
+  // generate solution vector
+  ml_sol.AddSolution("T","biquadratic");
+  ml_sol.AddSolution("U","biquadratic");
+  ml_sol.AddSolution("V","biquadratic");
+  // the pressure variable should be the last for the Schur decomposition
+  ml_sol.AddSolution("P","disc_linear");
+  ml_sol.AssociatePropertyToSolution("P","Pressure");
+ 
+  //Initialize (update Init(...) function)
+  ml_sol.Initialize("U",InitVariableU);
+  ml_sol.Initialize("V");
+  ml_sol.Initialize("P");
+  ml_sol.Initialize("T");
+  
+  //Set Boundary (update Dirichlet(...) function)
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.GenerateBdc("U");
+  ml_sol.GenerateBdc("V");
+  ml_sol.GenerateBdc("P");
+  ml_sol.GenerateBdc("T");
+  
+  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
   
   // add fluid material
   Parameter parameter(Lref,Uref);
