@@ -51,7 +51,6 @@ thetaz    0.
 <Files>
 # std::string  # mesh file consistency
 
-INPUT_DIR     case/
 F_MESH_READ    inclQ2D2x2.gam
 # ======== this last one is Only Gencase # we recognize the file format from the extension: .gam=gambit, .med=salome
 
