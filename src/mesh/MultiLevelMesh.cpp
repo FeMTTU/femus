@@ -3,32 +3,17 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MultiLevelMesh.hpp"
-#include "ExplicitSystem.hpp"
-#include "LinearImplicitSystem.hpp"
-#include "NonLinearImplicitSystem.hpp"
-#include "TransientSystem.hpp"
-#include "System.hpp"
 #include "ElemType.hpp"
 #include "Elem.hpp"
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
-#include "LinearEquationSolver.hpp"
 #include "FEMTTUConfig.h"
-#include "Parameter.hpp"
-#include "hdf5.h"
 
 
 //C++ include
-#include <ctime>
 #include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <algorithm>   
-#include <string.h>
 using std::cout;
 using std::endl;
-using std::min;
-using std::string;
 
 MultiLevelMesh::~MultiLevelMesh() {
 
@@ -64,7 +49,7 @@ MultiLevelMesh::~MultiLevelMesh() {
   
 };
 
-// //---------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------
 MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr, const char mesh_file[], const char GaussOrder[],
 						       const double Lref, bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, 
 												     const int &ElemGroupNumber,const int &level)):
@@ -144,6 +129,7 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
   
 }
 
+//---------------------------------------------------------------------------------------------
 
 void MultiLevelMesh::EraseCoarseLevels(unsigned levels_to_be_erased){
   if(levels_to_be_erased >= _gridr){
@@ -158,5 +144,8 @@ void MultiLevelMesh::EraseCoarseLevels(unsigned levels_to_be_erased){
    }
 }
   
-  
+//---------------------------------------------------------------------------------------------
 
+void MultiLevelMesh::MarkStructureNode(){
+    for (unsigned i=0; i<_gridn0; i++) _level0[i]->AllocateAndMarkStructureNode();
+  }

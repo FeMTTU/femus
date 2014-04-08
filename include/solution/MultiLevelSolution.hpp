@@ -43,7 +43,8 @@ private:
   vector <int>    _SolTmorder;
   vector <bool>   _TestIfPressure;
   vector <bool>   _TestIfDisplacement;
-   /** Array of solution */
+  
+  /** Array of solution */
   vector <Solution*>  _solution;
 
 public:

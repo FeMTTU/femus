@@ -1,16 +1,12 @@
-#include "ElemType.hpp"
+
 #include "MultiLevelProblem.hpp"
-#include "MultiLevelMesh.hpp"
-// Timedependent MultiGrid Header
-// #include "NonLinearTimeDependentMultiLevelProblem.hpp"
+#include "TransientSystem.hpp"
 #include "NumericVector.hpp"
-#include "PetscVector.hpp"
-#include "LinearEquationSolver.hpp"
-#include "Solid.hpp"
 #include "Fluid.hpp"
+#include "Solid.hpp"
 #include "Parameter.hpp"
-#include <iostream>
 #include "FemTTUInit.hpp"
+#include "SparseMatrix.hpp"
 #include "VTKOutput.hpp"
 
 #include "../include/FSIassembly.hpp"
@@ -61,7 +57,39 @@ int main(int argc,char **args) {
   double E = 200000;
   
   MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
-  MultiLevelProblem ml_probl(&ml_msh);
+  
+  MultiLevelSolution ml_sol(&ml_msh);
+  
+   //Start System Variables
+  ml_sol.AddSolution("DX","biquadratic",2);
+  ml_sol.AddSolution("DY","biquadratic",2);
+  ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
+  ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
+  ml_sol.AddSolution("U","biquadratic",2);
+  ml_sol.AddSolution("V","biquadratic",2);
+  ml_sol.AddSolution("AX","biquadratic",1,0);
+  ml_sol.AddSolution("AY","biquadratic",1,0);
+  // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
+  ml_sol.AddSolution("P","disc_linear",1);
+  ml_sol.AssociatePropertyToSolution("P","Pressure"); // Add this line
+
+  //Initialize (update Init(...) function)
+  ml_sol.Initialize("All");
+
+  //Set Boundary (update Dirichlet(...) function)
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.GenerateBdc("DX","Steady");
+  ml_sol.GenerateBdc("DY","Steady");
+  ml_sol.GenerateBdc("U","Time_dependent");
+  ml_sol.GenerateBdc("V","Steady");
+  ml_sol.GenerateBdc("AX","Steady");
+  ml_sol.GenerateBdc("AY","Steady");
+  ml_sol.GenerateBdc("P","Steady");
+  
+  
+  
+  
+  MultiLevelProblem ml_probl(&ml_msh, &ml_sol);
   
 
   Parameter par(Lref,Uref);
@@ -82,37 +110,13 @@ int main(int argc,char **args) {
   // Add Solid Object
   ml_probl.parameters.set<Solid>("Solid") = solid;
 
-  //Start System Variables
-  ml_probl.AddSolution("DX","biquadratic",2);
-  ml_probl.AddSolution("DY","biquadratic",2);
-  ml_probl.AssociatePropertyToSolution("DX","Displacement"); // Add this line
-  ml_probl.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
-  ml_probl.AddSolution("U","biquadratic",2);
-  ml_probl.AddSolution("V","biquadratic",2);
-  ml_probl.AddSolution("AX","biquadratic",1,0);
-  ml_probl.AddSolution("AY","biquadratic",1,0);
-  // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_probl.AddSolution("P","disc_linear",1);
-  ml_probl.AssociatePropertyToSolution("P","Pressure"); // Add this line
-
-  //Initialize (update Init(...) function)
-  ml_probl.Initialize("All");
-
-  //Set Boundary (update Dirichlet(...) function)
-  ml_probl.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  ml_probl.GenerateBdc("DX","Steady");
-  ml_probl.GenerateBdc("DY","Steady");
-  ml_probl.GenerateBdc("U","Time_dependent");
-  ml_probl.GenerateBdc("V","Steady");
-  ml_probl.GenerateBdc("AX","Steady");
-  ml_probl.GenerateBdc("AY","Steady");
-  ml_probl.GenerateBdc("P","Steady");
+ 
   
 //   std::vector<std::string> mov_vars;
 //   mov_vars.push_back("DX");
 //   mov_vars.push_back("DY");
 //   ml_probl.SetMovingMesh(mov_vars);
-  ml_probl.MarkStructureNode();
+  ml_msh.MarkStructureNode();
   
   //create systems
   // add the system FSI to the MultiLevel problem
@@ -162,7 +166,7 @@ int main(int argc,char **args) {
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
 //   ml_probl.SetMovingMesh(mov_vars);
-  VTKOutput vtkio(ml_probl);
+  VTKOutput vtkio(ml_sol);
   vtkio.SetMovingMesh(mov_vars);
   
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {

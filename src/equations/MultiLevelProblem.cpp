@@ -191,11 +191,6 @@ void MultiLevelProblem::init()
 }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelProblem::MarkStructureNode() {
-  for (unsigned i=0; i<_gridn; i++) _ml_msh->GetLevel(i)->AllocateAndMarkStructureNode();
-}
-
-//---------------------------------------------------------------------------------------------------
 unsigned MultiLevelProblem::GetNumberOfGrid() {
   return _gridn;
 }

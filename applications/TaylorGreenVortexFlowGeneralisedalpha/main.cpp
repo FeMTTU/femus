@@ -1,14 +1,14 @@
-#include "ElemType.hpp"
+
 #include "MultiLevelProblem.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
-#include "LinearEquationSolver.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
 #include "SparseMatrix.hpp"
 #include "VTKOutput.hpp"
 #include "NonLinearImplicitSystem.hpp"
+
 using std::cout;
 using std::endl;
    
@@ -49,7 +49,34 @@ int main(int argc,char **args) {
   double Ladimref = 1./(2.*3.1415926535897932);
   double Uref = 1.0;
   MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Ladimref,SetRefinementFlag);
-  MultiLevelProblem ml_prob(&ml_msh);
+  
+  MultiLevelSolution ml_sol(&ml_msh);
+  
+  MultiLevelProblem ml_prob(&ml_msh, &ml_sol);
+  
+  // generate solution vector
+  ml_sol.AddSolution("U","biquadratic",2);
+  ml_sol.AddSolution("V","biquadratic",2);
+  ml_sol.AddSolution("AX","biquadratic",1,0);
+  ml_sol.AddSolution("AY","biquadratic",1,0);
+  // the pressure variable should be the last for the Schur decomposition
+  ml_sol.AddSolution("P","linear",1);
+  
+  //Initialize (update Init(...) function)
+  ml_sol.Initialize("U",InitVariableU);
+  ml_sol.Initialize("V",InitVariableV);
+  ml_sol.Initialize("AX");
+  ml_sol.Initialize("AY");  
+  ml_sol.Initialize("P",InitVariableP);  
+  
+  //Set Boundary (update Dirichlet(...) function)
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.GenerateBdc("U","Time_dependent");
+  ml_sol.GenerateBdc("V","Time_dependent");
+  ml_sol.GenerateBdc("P","Time_dependent");
+  ml_sol.GenerateBdc("AX","Steady");
+  ml_sol.GenerateBdc("AY","Steady"); 
+  
   
   Parameter parameter(Lref,Uref);
   
@@ -61,28 +88,7 @@ int main(int argc,char **args) {
   // add fluid material
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   
-  // generate solution vector
-  ml_prob.AddSolution("U","biquadratic",2);
-  ml_prob.AddSolution("V","biquadratic",2);
-  ml_prob.AddSolution("AX","biquadratic",1,0);
-  ml_prob.AddSolution("AY","biquadratic",1,0);
-  // the pressure variable should be the last for the Schur decomposition
-  ml_prob.AddSolution("P","linear",1);
   
-  //Initialize (update Init(...) function)
-  ml_prob.Initialize("U",InitVariableU);
-  ml_prob.Initialize("V",InitVariableV);
-  ml_prob.Initialize("AX");
-  ml_prob.Initialize("AY");  
-  ml_prob.Initialize("P",InitVariableP);  
-  
-  //Set Boundary (update Dirichlet(...) function)
-  ml_prob.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  ml_prob.GenerateBdc("U","Time_dependent");
-  ml_prob.GenerateBdc("V","Time_dependent");
-  ml_prob.GenerateBdc("P","Time_dependent");
-  ml_prob.GenerateBdc("AX","Steady");
-  ml_prob.GenerateBdc("AY","Steady"); 
   
   //create systems
   // add the system Navier-Stokes to the MultiLevel problem
@@ -106,7 +112,7 @@ int main(int argc,char **args) {
   const unsigned int n_timesteps = 5;
   const unsigned int write_interval = 1;
   
-  VTKOutput vtkio(ml_prob);
+  VTKOutput vtkio(ml_sol);
   
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
    
@@ -226,7 +232,8 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
      
   //pointers 
-  Solution*	 mysolution  	                      = ml_prob._solution[level];
+  MultiLevelSolution *ml_sol			      = ml_prob._ml_sol;
+  Solution*	 mysolution  	                      = ml_sol->GetSolutionLevel(level);
   TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes");
   LinearEquationSolver*  mylsyspde	              = my_nnlin_impl_sys._LinSolver[level];   
   const char* pdename                                 = my_nnlin_impl_sys.name().c_str();
@@ -237,7 +244,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   NumericVector* myRES 		= mylsyspde->_RES;
     
   //data
-   double dt = my_nnlin_impl_sys.GetIntervalTime();
+  double dt = my_nnlin_impl_sys.GetIntervalTime();
   double theta = 0.5;
   const unsigned dim = mymsh->GetDimension();
   unsigned nel= mymsh->GetElementNumber();
@@ -264,14 +271,14 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   
   for(unsigned ivar=0; ivar<dim; ivar++) {
     SolPdeIndex[ivar]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[ivar][0]);
-    SolIndex[ivar]=ml_prob.GetIndex(&Solname[ivar][0]);
+    SolIndex[ivar]=ml_sol->GetIndex(&Solname[ivar][0]);
   }
   SolPdeIndex[dim]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[3][0]);
-  SolIndex[dim]=ml_prob.GetIndex(&Solname[3][0]);       
+  SolIndex[dim]=ml_sol->GetIndex(&Solname[3][0]);       
   //solution order
-  unsigned order_ind2 = ml_prob.SolType[SolIndex[0]];
+  unsigned order_ind2 = ml_sol->GetSolutionType(SolIndex[0]);
   unsigned end_ind2   = mymsh->GetEndIndex(order_ind2);
-  unsigned order_ind1 = ml_prob.SolType[SolIndex[dim]];
+  unsigned order_ind1 = ml_sol->GetSolutionType(SolIndex[dim]);
   unsigned end_ind1   = mymsh->GetEndIndex(order_ind1);
   
   // declare 
@@ -407,9 +414,9 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    gradSol[ivar][ivar2]=0;
 	    gradSolOld[ivar][ivar2]=0;
 	  }
-	  unsigned SolIndex=ml_prob.GetIndex(&Solname[ivar][0]);
-	  unsigned SolType =ml_prob.GetSolType(&Solname[ivar][0]);
-	  unsigned AccSolIndex=ml_prob.GetIndex(&AccSolname[ivar][0]);
+	  unsigned SolIndex=ml_sol->GetIndex(&Solname[ivar][0]);
+	  unsigned SolType =ml_sol->GetSolutionType(&Solname[ivar][0]);
+	  unsigned AccSolIndex=ml_sol->GetIndex(&AccSolname[ivar][0]);
 	  for(unsigned i=0; i<nve2; i++) {
 	    double soli    = (*mysolution->_Sol[SolIndex])(metis_node2[i]);
 	    double sololdi = (*mysolution->_SolOld[SolIndex])(metis_node2[i]);
@@ -425,8 +432,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	}
 	//pressure variable
 	Sol[dim]=0;
-	unsigned SolIndex=ml_prob.GetIndex(&Solname[3][0]);
-	unsigned SolType=ml_prob.GetSolType(&Solname[3][0]);
+	unsigned SolIndex=ml_sol->GetIndex(&Solname[3][0]);
+	unsigned SolType=ml_sol->GetSolutionType(&Solname[3][0]);
 	for(unsigned i=0; i<nve1; i++){
 	  unsigned sol_dof = mymsh->GetMetisDof(node1[i],SolType);
 	  double soli = (*mysolution->_Sol[SolIndex])(sol_dof);

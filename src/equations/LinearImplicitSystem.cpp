@@ -17,7 +17,6 @@
 #include "LinearEquationSolver.hpp"
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
-#include "string.h"
 #include "ElemType.hpp"
 
 // ------------------------------------------------------------
@@ -64,7 +63,6 @@ void LinearImplicitSystem::CreateSystemPDEStructure() {
     }
     
     for (unsigned i=0; i<_gridn; i++) {
-      //_LinSolver[i]->InitPde(_SolPdeIndex[ipde],SolType,SolName,&_solution[i]->_Bdc,_gridr,_gridn);
       _LinSolver[i]->InitPde(_SolSystemPdeIndex,_ml_sol->GetSolType(),
 			     _ml_sol->GetSolName(),&_solution[i]->_Bdc,_gridr,_gridn);
     }  
@@ -222,8 +220,6 @@ void LinearImplicitSystem::Prolongator(const unsigned &gridf) {
   _LinSolver[gridf]->_EPSC->matrix_mult(*_LinSolver[gridf-1]->_EPS,*_LinSolver[gridf]->_PP);
   _LinSolver[gridf]->UpdateResidual();
   _LinSolver[gridf]->SumEpsCToEps();
-
-  
 }
 
 // *******************************************************
@@ -235,10 +231,8 @@ void LinearImplicitSystem::ProlongatorSol(unsigned gridf) {
     unsigned Typeindex=_ml_sol->GetSolutionType(SolIndex);
     
     _solution[gridf]->_Sol[SolIndex]->matrix_mult(*_solution[gridf-1]->_Sol[SolIndex],*_solution[gridf]->_ProjMat[Typeindex]);
-    _solution[gridf]->_Sol[SolIndex]->close();
-        
+    _solution[gridf]->_Sol[SolIndex]->close();     
   }
-  
 }
 
 //---------------------------------------------------------------------------------------------------
@@ -284,9 +278,7 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pde
       }
     }
   }
-  
   _LinSolver[gridf]->_PP->close();
-  
 }
 
 
