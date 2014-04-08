@@ -29,7 +29,6 @@ equations/NonLinearImplicitSystem.cpp
 equations/MultiLevelProblem.cpp
 equations/Quantity.cpp
 equations/QuantityLocal.cpp
-equations/Solution.cpp
 equations/System.cpp
 equations/TimeLoop.cpp
 equations/TransientSystem.cpp
@@ -75,6 +74,8 @@ physics/Solid.cpp
 quadrature/CurrGaussPoint.cpp
 quadrature/CurrGaussPointBase.cpp
 quadrature/QRule.cpp
+solution/MultiLevelSolution.cpp
+solution/Solution.cpp
 utils/FemTTUInit.cpp
 utils/FemusInit.cpp
 utils/Files.cpp

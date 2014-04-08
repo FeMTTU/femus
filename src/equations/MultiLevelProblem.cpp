@@ -61,10 +61,11 @@ MultiLevelProblem::~MultiLevelProblem() {
 };
 
 //---------------------------------------------------------------------------------------------------
-MultiLevelProblem::MultiLevelProblem( MultiLevelMesh *ml_msh):
+MultiLevelProblem::MultiLevelProblem( MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol):
 				      _gridn(ml_msh->GetNumberOfGrid()),
 				      _gridr(ml_msh->GetNumberOfGridTotallyRefined()),
-				      _ml_msh(ml_msh)
+				      _ml_msh(ml_msh),
+				      _ml_sol(ml_sol)
 {
   _solution.resize(_gridn);
   
@@ -72,7 +73,7 @@ MultiLevelProblem::MultiLevelProblem( MultiLevelMesh *ml_msh):
     _solution[i]=new Solution(_ml_msh->GetLevel(i));
   }
     
-  _init_func_set=false;
+  //_init_func_set=false;
   _bdc_func_set=false;
 
 }
