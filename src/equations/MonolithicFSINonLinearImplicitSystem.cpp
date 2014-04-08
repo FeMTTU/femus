@@ -115,7 +115,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned SolIndex=_SolSystemPdeIndex[k];
     bool TestDisp=0;
-    if(_equation_systems._TestIfDisplacement[SolIndex] )   TestDisp=1;
+    if(_ml_sol->TestIfSolutionIsDisplacemenet(SolIndex) )   TestDisp=1;
         
     // loop on the coarse grid 
     for(int isdom=iproc; isdom<iproc+1; isdom++) {
@@ -126,15 +126,15 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
     
 	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
 	  if(TestDisp){
-	    _equation_systems._ml_msh->_type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildRestrictionTranspose(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
+	    _equation_systems._ml_msh->_type_elem[ielt][_ml_sol->GetSolutionType(SolIndex)]->BuildRestrictionTranspose(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
  													      RRt,SolIndex,k, TestDisp);
 	  }
 	  else{
-	    _equation_systems._ml_msh->_type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
+	    _equation_systems._ml_msh->_type_elem[ielt][_ml_sol->GetSolutionType(SolIndex)]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
 												      RRt,SolIndex,k);
 	  }
 	  
-	  _equation_systems._ml_msh->_type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
+	  _equation_systems._ml_msh->_type_elem[ielt][_ml_sol->GetSolutionType(SolIndex)]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
 												    _LinSolver[gridf]->_PP,SolIndex,k);
 	}
       }

@@ -65,7 +65,8 @@ void LinearImplicitSystem::CreateSystemPDEStructure() {
     
     for (unsigned i=0; i<_gridn; i++) {
       //_LinSolver[i]->InitPde(_SolPdeIndex[ipde],SolType,SolName,&_solution[i]->_Bdc,_gridr,_gridn);
-      _LinSolver[i]->InitPde(_SolSystemPdeIndex,_equation_systems.SolType,_equation_systems.SolName,&_solution[i]->_Bdc,_gridr,_gridn);
+      _LinSolver[i]->InitPde(_SolSystemPdeIndex,_ml_sol->GetSolType(),
+			     _ml_sol->GetSolName(),&_solution[i]->_Bdc,_gridr,_gridn);
     }  
     
     for (unsigned ig=1; ig<_gridn; ig++) {
@@ -231,7 +232,7 @@ void LinearImplicitSystem::ProlongatorSol(unsigned gridf) {
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     
     unsigned SolIndex=_SolSystemPdeIndex[k];
-    unsigned Typeindex=_equation_systems.SolType[SolIndex];
+    unsigned Typeindex=_ml_sol->GetSolutionType(SolIndex);
     
     _solution[gridf]->_Sol[SolIndex]->matrix_mult(*_solution[gridf-1]->_Sol[SolIndex],*_solution[gridf]->_ProjMat[Typeindex]);
     _solution[gridf]->_Sol[SolIndex]->close();
@@ -276,7 +277,7 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pde
     
 	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
 	  
-	  _equation_systems._ml_msh->_type_elem[ielt][_equation_systems.SolType[SolIndex]]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
+	  _equation_systems._ml_msh->_type_elem[ielt][_ml_sol->GetSolutionType(SolIndex)]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
 								 _LinSolver[gridf]->_PP,SolIndex,k);
 	
 	}
@@ -309,7 +310,7 @@ void LinearImplicitSystem::SetDirichletBCsHandling(const DirichletBCType Dirichl
 void LinearImplicitSystem::AddVariableToVankaIndex(const char solname[]) {
   unsigned n=_VankaIndex.size();
   _VankaIndex.resize(n+1u);
-  unsigned varind=_equation_systems.GetIndex(solname);
+  unsigned varind=_ml_sol->GetIndex(solname);
 
   for (unsigned i=0; i<_SolSystemPdeIndex.size(); i++) {
     if (_SolSystemPdeIndex[i]==varind) {

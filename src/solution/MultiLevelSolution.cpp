@@ -60,7 +60,6 @@ MultiLevelSolution::MultiLevelSolution( MultiLevelMesh *ml_msh):
     _solution[i]=new Solution(_ml_msh->GetLevel(i));
   }
 
-  _init_func_set=false;
   _bdc_func_set=false;
 
   
@@ -195,7 +194,7 @@ unsigned MultiLevelSolution::GetIndex(const char name[]) const {
 }
 
 // *******************************************************
-unsigned MultiLevelSolution::GetSolType(const char name[]) {
+unsigned MultiLevelSolution::GetSolutionType(const char name[]) {
   unsigned index=0;
   while (strcmp(_SolName[index],name)) {
     index++;

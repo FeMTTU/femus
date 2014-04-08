@@ -32,31 +32,24 @@ typedef double (*initfunc) (const double &x, const double &y, const double &z);
  */
 
 class MultiLevelSolution : public ParallelObject {
-
+  
 private:
+ 
   bool _bdc_func_set;
-  bool _init_func_set;
-  
-
- 
-    
-private:
-  
   unsigned short  _gridn;
- 
+  vector <int>    _SolType;  
   vector <char*>  _SolName;
-  vector <int>    _SolType;
   vector <char*>  _BdcType;
   vector <int>    _SolTmorder;
   vector <bool>   _TestIfPressure;
   vector <bool>   _TestIfDisplacement;
-  
+   /** Array of solution */
+  vector <Solution*>  _solution;
 
 public:
  
-  /** Array of solution */
-  vector <Solution*>  _solution;
-  
+  Solution* GetSolutionLevel(const unsigned i) {return _solution[i];};
+   
   /** Multilevel mesh */
   MultiLevelMesh* _ml_msh;
   
@@ -73,6 +66,10 @@ public:
   void Initialize(const char name[], initfunc func = NULL);
   unsigned GetIndex(const char name[]) const;
   unsigned GetSolType(const char name[]);
+  unsigned GetSolutionSize(){ return _SolType.size();};
+  vector <char*>  GetSolName(){return _SolName;};
+  vector <int>  GetSolType(){return _SolType;};
+  
   void BuildProlongatorMatrix(unsigned gridf, unsigned SolIndex);
   
   
@@ -86,14 +83,14 @@ public:
   void GenerateBdc(const char name[], const char bdc_type[]="Steady");
   void UpdateBdc(const double time);
   void GenerateBdc(const unsigned int k, const double time);
-  
-  
+   
   char* GetSolutionName(unsigned i){return _SolName[i];};
   int   GetSolutionType(unsigned i){return _SolType[i];};
+  unsigned GetSolutionType(const char name[]);
   char* GetBdcType(unsigned i){return _BdcType[i];};
   int   GetSolutionTimeOrder(unsigned i){return _SolTmorder[i];};
-  bool  TestIfSolutionIsPressureType(unsigned i){return _TestIfPressure[i];};
-  bool  TestIfSolutionIsDisplacemenetType(unsigned i){return _TestIfDisplacement[i];};
+  bool  TestIfSolutionIsPressure(unsigned i){return _TestIfPressure[i];};
+  bool  TestIfSolutionIsDisplacemenet(unsigned i){return _TestIfDisplacement[i];};
   
 };
 

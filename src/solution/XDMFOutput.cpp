@@ -31,7 +31,7 @@
 #endif
 
 
-XDMFOutput::XDMFOutput(MultiLevelProblem& ml_probl): Output(ml_probl)
+XDMFOutput::XDMFOutput(MultiLevelSolution& ml_probl): Output(ml_probl)
 {
   
 }
@@ -74,25 +74,25 @@ void XDMFOutput::write_system_solutions(const char order[], std::vector<std::str
   
   //I assume that the mesh is not mixed
   std::string type_elem;
-  type_elem = type_el[index][_ml_probl._ml_msh->GetLevel(_gridn-1u)->el->GetElementType(0)];
+  type_elem = type_el[index][_ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementType(0)];
   
   if (type_elem.compare("Not_implemented") == 0) exit(1);
   
   unsigned nvt=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    unsigned nvt_ig=_ml_probl._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+    unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
     nvt+=nvt_ig;
   } 
   
   // Printing connectivity
   unsigned nel=0;
   for(unsigned ig=0;ig<_gridn-1u;ig++) {
-    nel+=( _ml_probl._ml_msh->GetLevel(ig)->GetElementNumber() - _ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
+    nel+=( _ml_sol._ml_msh->GetLevel(ig)->GetElementNumber() - _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
   }
-  nel+=_ml_probl._ml_msh->GetLevel(_gridn-1u)->GetElementNumber();
+  nel+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->GetElementNumber();
   
   unsigned icount;
-  unsigned el_dof_number  = _ml_probl._ml_msh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index);
+  unsigned el_dof_number  = _ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index);
   int *var_int            = new int [nel*el_dof_number];
   float *var_el_f         = new float [nel];
   float *var_nd_f         = new float [nvt];
@@ -147,19 +147,19 @@ void XDMFOutput::write_system_solutions(const char order[], std::vector<std::str
   fout << "</Attribute>" << std::endl;
   // Solution Variables
   for (unsigned i=0; i<vars.size(); i++) {
-    unsigned indx=_ml_probl.GetIndex(vars[i].c_str());  
+    unsigned indx=_ml_sol.GetIndex(vars[i].c_str());  
     //Printing biquadratic solution on the nodes
-    if(_ml_probl.SolType[indx]<3) {  
-      fout << "<Attribute Name=\""<< _ml_probl.SolName[indx]<<"\" AttributeType=\"Scalar\" Center=\"Node\">" << std::endl;
+    if(_ml_sol.GetSolutionType(indx)<3) {  
+      fout << "<Attribute Name=\""<< _ml_sol.GetSolutionName(indx)<<"\" AttributeType=\"Scalar\" Center=\"Node\">" << std::endl;
       fout << "<DataItem DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
-      fout << filename << ":" << _ml_probl.SolName[indx] << std::endl;
+      fout << filename << ":" << _ml_sol.GetSolutionName(indx) << std::endl;
       fout << "</DataItem>" << std::endl;
       fout << "</Attribute>" << std::endl;
     }
-    else if (_ml_probl.SolType[indx]>=3) {  //Printing picewise constant solution on the element
-      fout << "<Attribute Name=\""<< _ml_probl.SolName[indx]<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
+    else if (_ml_sol.GetSolutionType(indx)>=3) {  //Printing picewise constant solution on the element
+      fout << "<Attribute Name=\""<< _ml_sol.GetSolutionName(indx)<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
       fout << "<DataItem DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nel << "\"  Format=\"HDF\">" << std::endl;
-      fout << filename << ":" << _ml_probl.SolName[indx] << std::endl;
+      fout << filename << ":" << _ml_sol.GetSolutionName(indx) << std::endl;
       fout << "</DataItem>" << std::endl;
       fout << "</Attribute>" << std::endl;
     }
@@ -190,13 +190,13 @@ void XDMFOutput::write_system_solutions(const char order[], std::vector<std::str
     for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
       NumericVector* mysol;
       mysol = NumericVector::build().release();
-      mysol->init(_ml_probl._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_probl._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,SERIAL);
-      mysol->matrix_mult(*_ml_probl._ml_msh->GetLevel(ig)->_coordinate->_Sol[i],*Output::_ProlQitoQj[index_nd][2][ig]);
-      unsigned nvt_ig=_ml_probl._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+      mysol->init(_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,SERIAL);
+      mysol->matrix_mult(*_ml_sol._ml_msh->GetLevel(ig)->_coordinate->_Sol[i],*Output::_ProlQitoQj[index_nd][2][ig]);
+      unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
       for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
       if (_moving_mesh) {
-	unsigned varind_DXDYDZ=_ml_probl.GetIndex(_moving_vars[i].c_str());
-	mysol->matrix_mult(*_ml_probl._solution[ig]->_Sol[varind_DXDYDZ],*Output::_ProlQitoQj[index_nd][_ml_probl.SolType[varind_DXDYDZ]][ig]);
+	unsigned varind_DXDYDZ=_ml_sol.GetIndex(_moving_vars[i].c_str());
+	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[varind_DXDYDZ],*Output::_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(varind_DXDYDZ)][ig]);
 	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] += (*mysol)(ii);
       }
       offset_nvt+=nvt_ig;
@@ -221,17 +221,17 @@ void XDMFOutput::write_system_solutions(const char order[], std::vector<std::str
   icount = 0;
   unsigned offset_conn=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_ml_probl._ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
-      if (_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-        for (unsigned j=0; j<_ml_probl._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
-	  unsigned jnode=_ml_probl._ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,j)-1u;
-	  unsigned jnode_Metis = _ml_probl._ml_msh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
+    for (unsigned iel=0; iel<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
+      if (_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
+        for (unsigned j=0; j<_ml_sol._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
+	  unsigned jnode=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,j)-1u;
+	  unsigned jnode_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
 	  var_int[icount] = offset_conn + jnode_Metis;
 	  icount++;
 	}
       }
     }
-    offset_conn += _ml_probl._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+    offset_conn += _ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
   }
   
   dimsf[0] = nel*el_dof_number ;  dimsf[1] = 1;
@@ -248,10 +248,10 @@ void XDMFOutput::write_system_solutions(const char order[], std::vector<std::str
   // print regions
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_probl._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-      if (ig==_gridn-1u || 0==_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _ml_probl._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
-	var_int[icount] = _ml_probl._ml_msh->GetLevel(ig)->el->GetElementGroup(iel_Metis);
+    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+      if (ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
+	var_int[icount] = _ml_sol._ml_msh->GetLevel(ig)->el->GetElementGroup(iel_Metis);
 	icount++;
       }
     }
@@ -267,15 +267,15 @@ void XDMFOutput::write_system_solutions(const char order[], std::vector<std::str
   
   //-------------------------------------------------------------------------------------------------------
   // printing element variables
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_probl.SolName.size(); i++) {
-    unsigned indx=(test_all==0)?_ml_probl.GetIndex(vars[i].c_str()):i;
-    if (_ml_probl.SolType[indx]>=3) {
+  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_sol.GetSolutionSize(); i++) {
+    unsigned indx=(test_all==0)?_ml_sol.GetIndex(vars[i].c_str()):i;
+    if (_ml_sol.GetSolutionType(indx)>=3) {
       icount=0;
       for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	for (unsigned ii=0; ii<_ml_probl._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-	  if (ig==_gridn-1u || 0==_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	    unsigned iel_Metis = _ml_probl._ml_msh->GetLevel(ig)->GetMetisDof(ii,_ml_probl.SolType[indx]);
-	    var_el_f[icount]=(*_ml_probl._solution[ig]->_Sol[indx])(iel_Metis);
+	for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+	  if (ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	    unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,_ml_sol.GetSolutionType(indx));
+	    var_el_f[icount]=(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx])(iel_Metis);
 	    icount++;
 	  }
 	}
@@ -283,7 +283,7 @@ void XDMFOutput::write_system_solutions(const char order[], std::vector<std::str
      
       dimsf[0] = nel;  dimsf[1] = 1;
       dataspace = H5Screate_simple(2,dimsf, NULL);
-      dataset   = H5Dcreate(file_id,_ml_probl.SolName[indx],H5T_NATIVE_FLOAT,
+      dataset   = H5Dcreate(file_id,_ml_sol.GetSolutionName(indx),H5T_NATIVE_FLOAT,
 			    dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
       status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_el_f[0]);
       H5Sclose(dataspace);
@@ -294,16 +294,16 @@ void XDMFOutput::write_system_solutions(const char order[], std::vector<std::str
   
   //-------------------------------------------------------------------------------------------------------
   // printing nodes variables
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_probl.SolName.size(); i++) {
-    unsigned indx=(test_all==0)?_ml_probl.GetIndex(vars[i].c_str()):i;
-    if (_ml_probl.SolType[indx] < 3) {
+  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_sol.GetSolutionSize(); i++) {
+    unsigned indx=(test_all==0)?_ml_sol.GetIndex(vars[i].c_str()):i;
+    if (_ml_sol.GetSolutionType(indx) < 3) {
       unsigned offset_nvt=0;
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
         NumericVector* mysol;
 	mysol = NumericVector::build().release();
-        mysol->init(_ml_probl._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_probl._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,SERIAL);
-	mysol->matrix_mult(*_ml_probl._solution[ig]->_Sol[indx],*_ProlQitoQj[index_nd][_ml_probl.SolType[indx]][ig]);
-	unsigned nvt_ig=_ml_probl._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+        mysol->init(_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,SERIAL);
+	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx],*_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(indx)][ig]);
+	unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
 	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
 	offset_nvt+=nvt_ig;
 	delete mysol;
@@ -311,7 +311,7 @@ void XDMFOutput::write_system_solutions(const char order[], std::vector<std::str
      
       dimsf[0] = nvt;  dimsf[1] = 1;
       dataspace = H5Screate_simple(2,dimsf, NULL);
-      dataset   = H5Dcreate(file_id,_ml_probl.SolName[indx],H5T_NATIVE_FLOAT,
+      dataset   = H5Dcreate(file_id,_ml_sol.GetSolutionName(indx),H5T_NATIVE_FLOAT,
 			    dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
       status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_nd_f[0]);
       H5Sclose(dataspace);

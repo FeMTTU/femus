@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: GMVOutput
+ Module: VTKOutput
  Authors: Eugenio Aulisa, Simone Bnà
  
  Copyright (c) FEMTTU
@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __gmvoutput_h_
-#define __gmvoutput_h_
+#ifndef __vtkoutput_h_
+#define __vtkoutput_h_
 
 //----------------------------------------------------------------------------
 // includes :
@@ -27,15 +27,15 @@
 class MultiLevelProblem;
 
 
-class GMVOutput : public Output {
+class VTKOutput : public Output {
 
 public:
 
   /** Constructor. */
-  GMVOutput(MultiLevelProblem& ml_probl);
+  VTKOutput(MultiLevelSolution& ml_sol);
 
   /** Destructor */
-  virtual ~GMVOutput();
+  virtual ~VTKOutput();
   
   /** write output function */
   virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step=0);

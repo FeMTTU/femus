@@ -33,10 +33,6 @@ equations/System.cpp
 equations/TimeLoop.cpp
 equations/TransientSystem.cpp
 equations/NewmarkTransientSystem.cpp
-equations/Output.cpp
-equations/VTKOutput.cpp
-equations/GMVOutput.cpp
-equations/XDMFOutput.cpp
 fe/ElemType.cpp
 fe/FEElemBase.cpp
 fe/FEHex1.cpp
@@ -76,6 +72,10 @@ quadrature/CurrGaussPointBase.cpp
 quadrature/QRule.cpp
 solution/MultiLevelSolution.cpp
 solution/Solution.cpp
+solution/Output.cpp
+solution/VTKOutput.cpp
+solution/GMVOutput.cpp
+solution/XDMFOutput.cpp
 utils/FemTTUInit.cpp
 utils/FemusInit.cpp
 utils/Files.cpp

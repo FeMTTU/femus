@@ -25,11 +25,11 @@
 
 std::vector<SparseMatrix*> Output::_ProlQitoQj[3][3];
 
-Output::Output(MultiLevelProblem& ml_probl):
-  _ml_probl(ml_probl)
+Output::Output(MultiLevelSolution& ml_sol):
+  _ml_sol(ml_sol)
 {
-  _gridn = ml_probl.GetNumberOfGrid();
-  _gridr = ml_probl.GetNumberOfGridTotallyRefined();
+  _gridn = ml_sol._ml_msh->GetNumberOfGrid();
+  _gridr = ml_sol._ml_msh->GetNumberOfGridTotallyRefined();
   
   if(Output::_ProlQitoQj[0][0].size() == 0)
   {
@@ -73,20 +73,20 @@ void Output::BuildProlongatorMatrices() {
   
   for (unsigned igridn=0; igridn<_gridn; igridn++) {
     for(int itype=0;itype<3;itype++){
-      int ni = _ml_probl._ml_msh->GetLevel(igridn)->MetisOffset[itype][_nprocs];
+      int ni = _ml_sol._ml_msh->GetLevel(igridn)->MetisOffset[itype][_nprocs];
       bool *testnode=new bool [ni];
       for (int jtype=0; jtype<3; jtype++) {
-        int nj = _ml_probl._ml_msh->GetLevel(igridn)->MetisOffset[jtype][_nprocs];
+        int nj = _ml_sol._ml_msh->GetLevel(igridn)->MetisOffset[jtype][_nprocs];
 	memset(testnode,0,ni*sizeof(bool));
 	Output::_ProlQitoQj[itype][jtype][igridn] = SparseMatrix::build().release();
-	Output::_ProlQitoQj[itype][jtype][igridn]->init(ni,nj,_ml_probl._ml_msh->GetLevel(igridn)->own_size[itype][_iproc],_ml_probl._ml_msh->GetLevel(igridn)->own_size[jtype][_iproc],27,27);
+	Output::_ProlQitoQj[itype][jtype][igridn]->init(ni,nj,_ml_sol._ml_msh->GetLevel(igridn)->own_size[itype][_iproc],_ml_sol._ml_msh->GetLevel(igridn)->own_size[jtype][_iproc],27,27);
 
 	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-	  for (int iel_mts=_ml_probl._ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom]; 
-	       iel_mts < _ml_probl._ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	    unsigned iel = _ml_probl._ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel_mts];
-	    short unsigned ielt=_ml_probl._ml_msh->GetLevel(igridn)->el->GetElementType(iel);
-            _ml_probl._ml_msh->_type_elem[ielt][jtype]->ProlQitoQj(*_ml_probl._ml_msh->GetLevel(igridn),iel,Output::_ProlQitoQj[itype][jtype][igridn],testnode,itype);	  
+	  for (int iel_mts=_ml_sol._ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom]; 
+	       iel_mts < _ml_sol._ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	    unsigned iel = _ml_sol._ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel_mts];
+	    short unsigned ielt=_ml_sol._ml_msh->GetLevel(igridn)->el->GetElementType(iel);
+            _ml_sol._ml_msh->_type_elem[ielt][jtype]->ProlQitoQj(*_ml_sol._ml_msh->GetLevel(igridn),iel,Output::_ProlQitoQj[itype][jtype][igridn],testnode,itype);	  
 	  }
 	}
 	Output::_ProlQitoQj[itype][jtype][igridn]->close();

@@ -80,6 +80,8 @@ protected:
   
   vector<Solution*> _solution;
   
+  MultiLevelSolution* _ml_sol;
+    
   vector <unsigned> _SolSystemPdeIndex;
  
   unsigned _gridn;
@@ -95,12 +97,6 @@ protected:
   
   /** A name associated with this system. */
   const std::string _sys_name;
-  
-private:
-  
-
-
-
   
 };
 
