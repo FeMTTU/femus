@@ -62,7 +62,7 @@
         const int print_step   = _timemap.get("printstep");
         // dir names
         std::string    basepath     = _files.get_basepath();
-        std::string    output_dir   = _files.get_frtmap().get("OUTPUT_DIR");
+        std::string    output_dir   = DEFAULT_OUTPUTDIR;
         std::string    outtime_dir  = _files.get_frtmap().get("OUTTIME_DIR");
         std::string    basetime     = DEFAULT_BASETIME;
         std::string    ext_xdmf     = DEFAULT_EXT_XDMF;

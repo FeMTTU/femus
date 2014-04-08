@@ -206,7 +206,7 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 #if HAVE_PETSC == 1
   std::string petsc_femus_log = "petsc_main.log";
   std::ostringstream petsc_log;
-  petsc_log <<  files.get_basepath() + "/" + files.get_frtmap().get("OUTPUT_DIR")
+  petsc_log <<  files.get_basepath() + "/" + DEFAULT_OUTPUTDIR
             << "/" << files.get_frtmap().get("OUTTIME_DIR") << "/" << petsc_femus_log;
 
    PetscViewer my_viewer;

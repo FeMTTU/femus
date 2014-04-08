@@ -53,7 +53,6 @@ thetaz    0.
 # std::string
 
 INPUT_DIR     case/
-OUTPUT_DIR    output/
 F_MESH_READ   straightQ3D2x2x2ZERO.gam
 
 </Files>

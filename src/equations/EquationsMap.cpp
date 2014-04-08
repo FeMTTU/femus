@@ -125,7 +125,7 @@ void EquationsMap::PrintSolHDF5(const uint t_flag ) {
         const uint ndigits  = _timeloop._timemap.get("ndigits");
 
         std::string    basepath = _files.get_basepath();
-        std::string output_dir  = _files.get_frtmap().get("OUTPUT_DIR");
+        std::string output_dir  = DEFAULT_OUTPUTDIR;
         std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
         std::string    basesol  = DEFAULT_BASESOL;
         std::string     ext_h5  = DEFAULT_EXT_H5;
@@ -184,7 +184,7 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) {
         DofType[KK] = "Cell";
 
         std::string    basepath = _files.get_basepath();
-        std::string output_dir  = _files.get_frtmap().get("OUTPUT_DIR");
+        std::string output_dir  = DEFAULT_OUTPUTDIR;
         std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
         std::string basesol     = DEFAULT_BASESOL;
         std::string basemesh    = DEFAULT_BASEMESH;
@@ -266,7 +266,7 @@ void EquationsMap::ReadSol(const uint t_step, double& time_out) {
 
     const uint ndigits      = _timeloop._timemap.get("ndigits");
     std::string    basepath = _files.get_basepath();
-    std::string output_dir  = _files.get_frtmap().get("OUTPUT_DIR");
+    std::string output_dir  = DEFAULT_OUTPUTDIR;
     std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
     std::string    basesol  = DEFAULT_BASESOL;
     std::string   ext_xdmf  = DEFAULT_EXT_XDMF;
@@ -355,7 +355,7 @@ void EquationsMap::PrintCaseHDF5(const uint t_init) {
 
         const uint ndigits      = _timeloop._timemap.get("ndigits");
         std::string    basepath = _files.get_basepath();
-        std::string output_dir  = _files.get_frtmap().get("OUTPUT_DIR");
+        std::string output_dir  = DEFAULT_OUTPUTDIR;
         std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
         std::string    basecase = DEFAULT_BASECASE;
         std::string   ext_xdmf  = DEFAULT_EXT_XDMF;
@@ -406,7 +406,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) {
 
         std::string     basepath = _files.get_basepath();
         std::string    input_dir = _files.get_frtmap().get("INPUT_DIR");
-        std::string   output_dir = _files.get_frtmap().get("OUTPUT_DIR");
+        std::string   output_dir = DEFAULT_OUTPUTDIR;
         std::string  outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
         std::string     basecase = DEFAULT_BASECASE;
         std::string     basemesh = DEFAULT_BASEMESH;
@@ -535,7 +535,7 @@ void EquationsMap::TransientSetup()  {
     const uint ndigits  = _timeloop._timemap.get("ndigits");
 
     std::string    basepath = _files.get_basepath();
-    std::string  output_dir = _files.get_frtmap().get("OUTPUT_DIR");
+    std::string  output_dir = DEFAULT_OUTPUTDIR;
     std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
     std::string   lastrun_f = DEFAULT_LAST_RUN;
     std::string     basesol = DEFAULT_BASESOL;
@@ -556,7 +556,7 @@ void EquationsMap::TransientSetup()  {
 //So, if you restart, you have to copy sol.N.h5 and sol.N.xmf
 //to the new output directory
 //just a raw copy, nothing more, because the file paths in sol.N.xmf
-// DO NOT DEPEND ON THE OUTPUT_DIR, only on the INPUT_DIR for now.
+// DO NOT DEPEND ON THE OUTPUTDIR, only on the INPUT_DIR for now.
 //the problem is that you have to know the PREVIOUS output_dir
 // to automatically copy the files...
 //let us just try by hand now...no we cant, because we will not know

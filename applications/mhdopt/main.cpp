@@ -275,7 +275,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 #if HAVE_PETSC == 1
   std::string petsc_femus_log = "petsc_main.log";
   std::ostringstream petsc_log;
-  petsc_log <<  files.get_basepath() + "/" + files.get_frtmap().get("OUTPUT_DIR")
+  petsc_log <<  files.get_basepath() + "/" + DEFAULT_OUTPUTDIR
             << "/" << files.get_frtmap().get("OUTTIME_DIR") << "/" << petsc_femus_log;
   PetscViewer my_viewer;
   PetscViewerCreate(MPI_COMM_WORLD, &my_viewer);
