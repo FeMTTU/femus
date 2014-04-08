@@ -158,8 +158,8 @@ bool NonLinearImplicitSystem::CheckConvergence(const char pdename[], const unsig
     L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
     ResMax       = _solution[igridn]->_Res[indexSol]->linfty_norm();
 
-    std::cout << "level=" << igridn<< "\tLinftynormRes" << _equation_systems.SolName[indexSol] << "=" << ResMax    <<std::endl;
-    std::cout << "level=" << igridn<< "\tL2normEps"     << _equation_systems.SolName[indexSol] << "=" << L2normEps <<std::endl;
+    std::cout << "level=" << igridn<< "\tLinftynormRes" << _ml_sol->GetSolutionName(indexSol) << "=" << ResMax    <<std::endl;
+    std::cout << "level=" << igridn<< "\tL2normEps"     << _ml_sol->GetSolutionName(indexSol) << "=" << L2normEps <<std::endl;
     
     if (L2normEps <_max_nonlinear_convergence_tolerance && conv==true) {
       conv=true;

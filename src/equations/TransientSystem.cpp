@@ -79,7 +79,7 @@ void TransientSystem<Base>::solve() {
   std::cout << " Time: " << _time << "   TimeStep: " << _time_step << std::endl;
   
    //update boundary condition
-  this->_equation_systems.UpdateBdc(_time);
+  this->_ml_sol->UpdateBdc(_time);
   
   // call the parent solver
   Base::solve();
@@ -105,8 +105,8 @@ void TransientSystem<Base>::NewmarkAccUpdate() {
   const char velname[3][2] = {"U","V","W"};
    
   for(unsigned i=0; i<dim; i++) {
-     axyz[i] = this->_equation_systems.GetIndex(&accname[i][0]);
-     vxyz[i] = this->_equation_systems.GetIndex(&velname[i][0]);
+     axyz[i] = this->_ml_sol->GetIndex(&accname[i][0]);
+     vxyz[i] = this->_ml_sol->GetIndex(&velname[i][0]);
   }
    
   for (int ig=0;ig< this->_gridn;ig++) {

@@ -26,7 +26,7 @@
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
-class MultiLevelProblem;
+class MultiLevelSolution;
 class SparseMatrix;
 class Vector;
 
@@ -36,7 +36,7 @@ class Output : public ParallelObject {
 public:
 
   /** Constructor. */
-  Output(MultiLevelProblem& ml_probl);
+  Output(MultiLevelSolution& ml_probl);
 
   /** Destructor */
   virtual ~Output();
@@ -59,7 +59,7 @@ protected:
   std::vector<std::string> _moving_vars;  
   
   /** the multilevelproblem reference */
-  MultiLevelProblem& _ml_probl;
+  MultiLevelSolution& _ml_sol;
   
   int _gridn;
   

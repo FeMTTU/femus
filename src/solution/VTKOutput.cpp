@@ -28,7 +28,7 @@
 #include <algorithm>   
 
 
-VTKOutput::VTKOutput(MultiLevelProblem& ml_probl): Output(ml_probl)
+VTKOutput::VTKOutput(MultiLevelSolution& ml_probl): Output(ml_probl)
 {
   
 }
@@ -83,28 +83,28 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
   
   unsigned nvt=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    unsigned nvt_ig=_ml_probl._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+    unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
     nvt+=nvt_ig;
   }  
 
   unsigned nel=0;
   unsigned counter=0;
   for (unsigned ig=_gridr-1u; ig<_gridn-1u; ig++) {
-    nel+=( _ml_probl._ml_msh->GetLevel(ig)->GetElementNumber() - _ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
-    counter+=(_ml_probl._ml_msh->GetLevel(ig)->el->GetElementNumber("Hex")-_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Hex"))*NVE[0][index];
-    counter+=(_ml_probl._ml_msh->GetLevel(ig)->el->GetElementNumber("Tet")-_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Tet"))*NVE[1][index];
-    counter+=(_ml_probl._ml_msh->GetLevel(ig)->el->GetElementNumber("Wedge")-_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Wedge"))*NVE[2][index];
-    counter+=(_ml_probl._ml_msh->GetLevel(ig)->el->GetElementNumber("Quad")-_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Quad"))*NVE[3][index];
-    counter+=(_ml_probl._ml_msh->GetLevel(ig)->el->GetElementNumber("Triangle")-_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Triangle"))*NVE[4][index];
-    counter+=(_ml_probl._ml_msh->GetLevel(ig)->el->GetElementNumber("Line")-_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Line"))*NVE[5][index];
+    nel+=( _ml_sol._ml_msh->GetLevel(ig)->GetElementNumber() - _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
+    counter+=(_ml_sol._ml_msh->GetLevel(ig)->el->GetElementNumber("Hex")-_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Hex"))*NVE[0][index];
+    counter+=(_ml_sol._ml_msh->GetLevel(ig)->el->GetElementNumber("Tet")-_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Tet"))*NVE[1][index];
+    counter+=(_ml_sol._ml_msh->GetLevel(ig)->el->GetElementNumber("Wedge")-_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Wedge"))*NVE[2][index];
+    counter+=(_ml_sol._ml_msh->GetLevel(ig)->el->GetElementNumber("Quad")-_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Quad"))*NVE[3][index];
+    counter+=(_ml_sol._ml_msh->GetLevel(ig)->el->GetElementNumber("Triangle")-_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Triangle"))*NVE[4][index];
+    counter+=(_ml_sol._ml_msh->GetLevel(ig)->el->GetElementNumber("Line")-_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Line"))*NVE[5][index];
   }
-  nel+=_ml_probl._ml_msh->GetLevel(_gridn-1u)->GetElementNumber();
-  counter+=_ml_probl._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Hex")*NVE[0][index];
-  counter+=_ml_probl._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Tet")*NVE[1][index];
-  counter+=_ml_probl._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Wedge")*NVE[2][index];
-  counter+=_ml_probl._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Quad")*NVE[3][index];
-  counter+=_ml_probl._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Triangle")*NVE[4][index];
-  counter+=_ml_probl._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Line")*NVE[5][index]; 
+  nel+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->GetElementNumber();
+  counter+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Hex")*NVE[0][index];
+  counter+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Tet")*NVE[1][index];
+  counter+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Wedge")*NVE[2][index];
+  counter+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Quad")*NVE[3][index];
+  counter+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Triangle")*NVE[4][index];
+  counter+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Line")*NVE[5][index]; 
   
   const unsigned dim_array_coord [] = { nvt*3*sizeof(float) };  
   const unsigned dim_array_conn[]   = { counter*sizeof(int) };
@@ -133,14 +133,14 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
   fout << "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\">" << std::endl;
   
 //   unsigned indXYZ[3];
-//   indXYZ[0]=_ml_probl.GetIndex("X");
-//   indXYZ[1]=_ml_probl.GetIndex("Y");
-//   indXYZ[2]=_ml_probl.GetIndex("Z");
+//   indXYZ[0]=_ml_sol.GetIndex("X");
+//   indXYZ[1]=_ml_sol.GetIndex("Y");
+//   indXYZ[2]=_ml_sol.GetIndex("Z");
   
   vector <NumericVector*> mysol(_gridn);
   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     mysol[ig] = NumericVector::build().release();
-    mysol[ig]->init(_ml_probl._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],_ml_probl._ml_msh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
+    mysol[ig]->init(_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],_ml_sol._ml_msh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
   }
   
   // point pointer to common mamory area buffer of void type;
@@ -149,9 +149,9 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
   unsigned offset_nvt3=0;
   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     std::vector<double> v_local;
-    unsigned nvt_ig=_ml_probl._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+    unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
     for(int kk=0;kk<3;kk++) {
-      mysol[ig]->matrix_mult(*_ml_probl._ml_msh->GetLevel(ig)->_coordinate->_Sol[kk],*_ProlQitoQj[index_nd][2][ig]);
+      mysol[ig]->matrix_mult(*_ml_sol._ml_msh->GetLevel(ig)->_coordinate->_Sol[kk],*_ProlQitoQj[index_nd][2][ig]);
       mysol[ig]->localize_to_one(v_local,0);
       if(_iproc==0) { 
 	for (unsigned i=0; i<nvt_ig; i++) {
@@ -166,17 +166,17 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
     
     unsigned offset_nvt3=0;
     unsigned indDXDYDZ[3];
-    indDXDYDZ[0]=_ml_probl.GetIndex(_moving_vars[0].c_str());
-    indDXDYDZ[1]=_ml_probl.GetIndex(_moving_vars[1].c_str());
-    if(_ml_probl._ml_msh->GetLevel(0)->GetDimension() == 3) {
-      indDXDYDZ[2]=_ml_probl.GetIndex(_moving_vars[2].c_str());
+    indDXDYDZ[0]=_ml_sol.GetIndex(_moving_vars[0].c_str());
+    indDXDYDZ[1]=_ml_sol.GetIndex(_moving_vars[1].c_str());
+    if(_ml_sol._ml_msh->GetLevel(0)->GetDimension() == 3) {
+      indDXDYDZ[2]=_ml_sol.GetIndex(_moving_vars[2].c_str());
     }
       
     for(unsigned ig=_gridr-1u; ig<_gridn; ig++){
       std::vector<double> v_local;
-      unsigned nvt_ig=_ml_probl._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
-      for(int kk=0;kk<_ml_probl._ml_msh->GetLevel(0)->GetDimension();kk++) {
-	mysol[ig]->matrix_mult(*_ml_probl._solution[ig]->_Sol[indDXDYDZ[kk]],*_ProlQitoQj[index_nd][_ml_probl.SolType[indDXDYDZ[kk]]][ig]);
+      unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+      for(int kk=0;kk<_ml_sol._ml_msh->GetLevel(0)->GetDimension();kk++) {
+	mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indDXDYDZ[kk]],*_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(indDXDYDZ[kk])][ig]);
         mysol[ig]->localize_to_one(v_local,0);
 	if(_iproc==0) { 
 	  for (unsigned i=0; i<nvt_ig; i++) {
@@ -219,17 +219,17 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
   icount = 0;
   unsigned offset_nvt=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_ml_probl._ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
-      if (_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-        for (unsigned j=0; j<_ml_probl._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
-	  unsigned jnode=_ml_probl._ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,j)-1u;
-	  unsigned jnode_Metis = _ml_probl._ml_msh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
+    for (unsigned iel=0; iel<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
+      if (_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
+        for (unsigned j=0; j<_ml_sol._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
+	  unsigned jnode=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,j)-1u;
+	  unsigned jnode_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
 	  var_conn[icount] = offset_nvt+jnode_Metis;
 	  icount++;
 	}
       }
     }
-    offset_nvt+=_ml_probl._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+    offset_nvt+=_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
   }
   
   //print connectivity dimension
@@ -259,10 +259,10 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
   int offset_el=0;
   //print offset array
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_ml_probl._ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
-      if (_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-	unsigned iel_Metis = _ml_probl._ml_msh->GetLevel(ig)->GetMetisDof(iel,3);
-        offset_el += _ml_probl._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel_Metis,index);
+    for (unsigned iel=0; iel<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
+      if (_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
+	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(iel,3);
+        offset_el += _ml_sol._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel_Metis,index);
         var_off[icount] = offset_el;
 	icount++;
       }
@@ -294,10 +294,10 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
   unsigned short *var_type = static_cast <unsigned short*> (buffer_void);
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_probl._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-      if (_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)==0 || ig==_gridn-1u) {
-	unsigned iel_Metis = _ml_probl._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
-        short unsigned ielt= _ml_probl._ml_msh->GetLevel(ig)->el->GetElementType(iel_Metis);
+    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+      if (_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)==0 || ig==_gridn-1u) {
+	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
+        short unsigned ielt= _ml_sol._ml_msh->GetLevel(ig)->el->GetElementType(iel_Metis);
 	var_type[icount] = (short unsigned)(eltp[index][ielt]);
 	icount++;
       }
@@ -334,10 +334,10 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
   unsigned short* var_reg=static_cast <unsigned short*> (buffer_void);
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_probl._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-      if ( ig==_gridn-1u || 0==_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _ml_probl._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
-	var_reg[icount]= _ml_probl._ml_msh->GetLevel(ig)->el->GetElementGroup(ii);
+    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+      if ( ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
+	var_reg[icount]= _ml_sol._ml_msh->GetLevel(ig)->el->GetElementGroup(ii);
 	icount++;
       }
     }
@@ -366,10 +366,10 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
   unsigned short* var_proc=static_cast <unsigned short*> (buffer_void);
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_probl._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-      if ( ig==_gridn-1u || 0==_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _ml_probl._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
-	var_proc[icount]=(unsigned short)(_ml_probl._ml_msh->GetLevel(ig)->epart[ii]);
+    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+      if ( ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
+	var_proc[icount]=(unsigned short)(_ml_sol._ml_msh->GetLevel(ig)->epart[ii]);
 	icount++;
       }
     }
@@ -393,19 +393,19 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
   
 
   //Print Solution (on element) ***************************************************************
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_probl.SolName.size(); i++) {
-    unsigned indx=(test_all==0)?_ml_probl.GetIndex(vars[i].c_str()):i;
-    if (3 <= _ml_probl.SolType[indx]) {
-      fout << "    <DataArray type=\"Float32\" Name=\"" << _ml_probl.SolName[indx] <<"\" format=\"binary\">" << std::endl;
+  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_sol.GetSolutionSize(); i++) {
+    unsigned indx=(test_all==0)?_ml_sol.GetIndex(vars[i].c_str()):i;
+    if (3 <= _ml_sol.GetSolutionType(indx)) {
+      fout << "    <DataArray type=\"Float32\" Name=\"" << _ml_sol.GetSolutionName(indx) <<"\" format=\"binary\">" << std::endl;
       // point pointer to common memory area buffer of void type;
       float *var_el = static_cast< float*> (buffer_void);
       icount=0;
       for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
 	vector<double> sol_local;
-	_ml_probl._solution[ig]->_Sol[indx]->localize_to_one(sol_local,0);
-	for (unsigned ii=0; ii<_ml_probl._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-	  if (ig==_gridn-1u || 0==_ml_probl._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	    unsigned iel_Metis = _ml_probl._ml_msh->GetLevel(ig)->GetMetisDof(ii,_ml_probl.SolType[indx]);
+	_ml_sol.GetSolutionLevel(ig)->_Sol[indx]->localize_to_one(sol_local,0);
+	for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+	  if (ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	    unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,_ml_sol.GetSolutionType(indx));
 	    var_el[icount]=sol_local[iel_Metis];
 	    icount++;
 	  }
@@ -440,10 +440,10 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
    
   // point pointer to common mamory area buffer of void type;
   float* var_nd = static_cast<float*>(buffer_void);
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_probl.SolName.size(); i++) {
-    unsigned indx=(test_all==0)?_ml_probl.GetIndex(vars[i].c_str()):i;
-    if (_ml_probl.SolType[indx]<3) {
-      fout << " <DataArray type=\"Float32\" Name=\"" << _ml_probl.SolName[indx] <<"\" format=\"binary\">" << std::endl;
+  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_sol.GetSolutionSize(); i++) {
+    unsigned indx=(test_all==0)?_ml_sol.GetIndex(vars[i].c_str()):i;
+    if (_ml_sol.GetSolutionType(indx)<3) {
+      fout << " <DataArray type=\"Float32\" Name=\"" << _ml_sol.GetSolutionName(indx) <<"\" format=\"binary\">" << std::endl;
       //print solutions on nodes dimension
       cch = b64::b64_encode(&dim_array_ndvar[0], sizeof(dim_array_ndvar), NULL, 0);  
       b64::b64_encode(&dim_array_ndvar[0], sizeof(dim_array_ndvar), &enc[0], cch);
@@ -452,10 +452,10 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
       
       unsigned offset_nvt=0;
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	mysol[ig]->matrix_mult(*_ml_probl._solution[ig]->_Sol[indx],*_ProlQitoQj[index_nd][_ml_probl.SolType[indx]][ig]);
+	mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx],*_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(indx)][ig]);
 	vector<double> sol_local;
 	mysol[ig]->localize_to_one(sol_local,0);
-	unsigned nvt_ig=_ml_probl._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+	unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
 	for (unsigned ii=0; ii<nvt_ig; ii++) {
 	  var_nd[ii+offset_nvt] = sol_local[ii];
 	}

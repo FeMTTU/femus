@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: XDMFOutput
+ Module: GMVOutput
  Authors: Eugenio Aulisa, Simone Bnà
  
  Copyright (c) FEMTTU
@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __xdmfoutput_h_
-#define __xdmfoutput_h_
+#ifndef __gmvoutput_h_
+#define __gmvoutput_h_
 
 //----------------------------------------------------------------------------
 // includes :
@@ -27,21 +27,18 @@
 class MultiLevelProblem;
 
 
-class XDMFOutput : public Output {
+class GMVOutput : public Output {
 
 public:
 
   /** Constructor. */
-  XDMFOutput(MultiLevelProblem& ml_probl);
+  GMVOutput(MultiLevelSolution& ml_sol);
 
   /** Destructor */
-  virtual ~XDMFOutput();
+  virtual ~GMVOutput();
   
   /** write output function */
-  virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step = 0);
-  
-  /** write a wrapper file for paraview to open all the files of an history toghether */
-  void write_solution_wrapper(const char type[]) const;
+  virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step=0);
   
 };
 
