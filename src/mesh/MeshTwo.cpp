@@ -124,7 +124,7 @@ void Mesh::clear ()  {
 void Mesh::ReadMeshFile()   {
 
   std::string    basepath = _files.get_basepath();
-  std::string  output_dir = _files.get_frtmap().get("OUTPUT_DIR");
+  std::string  output_dir = DEFAULT_OUTPUTDIR;
   std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
   std::string    basemesh = DEFAULT_BASEMESH;
   std::string      ext_h5 = DEFAULT_EXT_H5;
@@ -371,7 +371,7 @@ void Mesh::PrintForVisualizationAllLEVAllVB()  const {
  void Mesh::PrintXDMFAllLEVAllVB() const {
 
   std::string     basepath = _files.get_basepath();
-  std::string   output_dir = _files.get_frtmap().get("OUTPUT_DIR");
+  std::string   output_dir = DEFAULT_OUTPUTDIR;
   std::string  outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
   std::string     basemesh = DEFAULT_BASEMESH;
   std::string     ext_xdmf = DEFAULT_EXT_XDMF;
@@ -440,7 +440,7 @@ void Mesh::PrintConnLinAllLEVAllVB() const {
 
     std::string    basepath = _files.get_basepath();
     std::string    basemesh = DEFAULT_BASEMESH;
-    std::string  output_dir = _files.get_frtmap().get("OUTPUT_DIR");
+    std::string  output_dir = DEFAULT_OUTPUTDIR;
     std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
  
     std::string    ext_h5   = DEFAULT_EXT_H5;

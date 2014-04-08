@@ -211,7 +211,7 @@ return;
   //the goal of this routine is to print a file with the current OUTTIME_DIR in it
   //it should be called "print outtime dir"
     //here you have to pass the RELATIVE_NAME of the file to be printed, 
-  //it composes it wrt the OUTPUT_DIR
+  //it composes it wrt the OUTPUTDIR
   //call this function when the OUTPUT DIR is already created
   //and also after OUTTIME_DIR is composed
   
@@ -224,7 +224,7 @@ void Files::PrintRunForRestart(const std::string run_name_in) const {
    if (paral::get_rank() == 0 )   {
 
    std::string run("");
-   run = get_basepath() + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + run_name_in; //AAA BASE OUTPUT
+   run = get_basepath() + "/" + DEFAULT_OUTPUTDIR + "/" + run_name_in; //AAA BASE OUTPUT
    std::cout << "Print the run " << run << "to file" << std::endl;
 
    std::ofstream run_file; run_file.open(run.c_str());
@@ -363,7 +363,7 @@ MPI_Bcast(out_char,outchar_size,MPI_CHAR,0,MPI_COMM_WORLD);
 
  get_frtmap().set("OUTTIME_DIR",new_out);
 
- std::cout << "iproc = " << paral::get_rank() << " ***** The output dir of this run will be: " << get_frtmap().get("OUTPUT_DIR") << get_frtmap().get("OUTTIME_DIR") << std::endl;
+ std::cout << "iproc = " << paral::get_rank() << " ***** The output dir of this run will be: " << DEFAULT_OUTPUTDIR << get_frtmap().get("OUTTIME_DIR") << std::endl;
 
  return; 
 
@@ -399,12 +399,12 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
     // >>>>>>> outtime dir: COPY FILES   //needs the BASEPATH of the APPLICATION
   //copy mesh.h5
    std::string  mesh_in = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
-   std::string  mesh_out =  app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
+   std::string  mesh_out =  app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(mesh_in,mesh_out); 
    
 //copy multimesh.xmf
    std::string  mmesh_in = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_MULTIMESH + DEFAULT_EXT_XDMF;
-   std::string  mmesh_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_MULTIMESH + DEFAULT_EXT_XDMF;
+   std::string  mmesh_out = app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_MULTIMESH + DEFAULT_EXT_XDMF;
 /*(iproc==0)*/ CopyFile(mmesh_in,mmesh_out); 
 
 CheckDirOrMake(app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" ,
@@ -418,15 +418,15 @@ CheckDirOrMake(app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("
 
 //copy MG files
    std::string  op_in = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
-   std::string  op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + get_frtmap().get("INPUT_DIR") +  DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
+   std::string  op_out = app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + get_frtmap().get("INPUT_DIR") +  DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
    op_in  = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_F_REST + DEFAULT_EXT_H5;
-   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + get_frtmap().get("INPUT_DIR") +  DEFAULT_F_REST + DEFAULT_EXT_H5;
+   op_out = app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + get_frtmap().get("INPUT_DIR") +  DEFAULT_F_REST + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
    op_in  = app_basepath + "/" + get_frtmap().get("INPUT_DIR") + "/" + DEFAULT_F_PROL + DEFAULT_EXT_H5;
-   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + get_frtmap().get("INPUT_DIR") +  DEFAULT_F_PROL + DEFAULT_EXT_H5;
+   op_out = app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + get_frtmap().get("INPUT_DIR") +  DEFAULT_F_PROL + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
 // we try to resemble the original directory structure in view of restart...
@@ -436,7 +436,7 @@ CheckDirOrMake(app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("
 
 //copy configuration file
    op_in  = app_basepath + "/" + DEFAULT_CONFIGDIR + "/" + DEFAULT_RUNTIMECONF;
-   op_out = app_basepath + "/" + get_frtmap().get("OUTPUT_DIR") + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_CONFIGDIR + "/" +  DEFAULT_RUNTIMECONF;
+   op_out = app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_CONFIGDIR + "/" +  DEFAULT_RUNTIMECONF;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
 //barrier so that all the processors will have mesh.h5 and else to read from
@@ -470,7 +470,7 @@ MPI_Barrier(MPI_COMM_WORLD);
 // 'config_dir': set param*.in
                //set the right file names in param_files.in
 // INPUT_DIR:  run the gencase
-// OUTPUT_DIR: set the run_to_restart_from (could rewrite _utilsmap.in...)
+// OUTPUTDIR: set the run_to_restart_from (could rewrite _utilsmap.in...)
 
 //All the processors can do this check
 // I think it is better to program with as few "if proc==0" as possible.
@@ -510,9 +510,9 @@ void Files::CheckIODirectories() {
 /*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_CONFIGDIR);
 /*all procs*/   CheckDirOrAbort(abs_app,get_frtmap().get("INPUT_DIR"));
 
-/*all procs*/   CheckDir(abs_app,get_frtmap().get("OUTPUT_DIR"));
+/*all procs*/   CheckDir(abs_app,DEFAULT_OUTPUTDIR);
 
-   std::string abs_outputdir = abs_app + "/" + get_frtmap().get("OUTPUT_DIR");
+   std::string abs_outputdir = abs_app + "/" + DEFAULT_OUTPUTDIR;
 /*(iproc==0)*/  ComposeOutdirName();  //this adds an element to the Files map, so the SetupAll function cannot be constant
 /*(iproc==0)*/  CheckDirOrMake(abs_outputdir, get_frtmap().get("OUTTIME_DIR"));
 
@@ -544,7 +544,7 @@ void Files::CheckIODirectories() {
 //whenever I change the absolute path,
 //I'd prefer passing the file name explicitly
 
-    std::string abs_runlog = get_basepath() + "/" + get_frtmap().get("OUTPUT_DIR") 
+    std::string abs_runlog = get_basepath() + "/" + DEFAULT_OUTPUTDIR 
     + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_RUN_LOG;
 
 //  std::ofstream file;  //if a filestream dies, then also its stream-buffer dies ?!? 

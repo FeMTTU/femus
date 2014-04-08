@@ -2029,7 +2029,7 @@ void EqnBase::MGCheck(int Level) const {
 void EqnBase::initMGOps() {
 
     std::string     basepath = _files.get_basepath();
-    std::string   output_dir = _files.get_frtmap().get("OUTPUT_DIR");
+    std::string   output_dir = DEFAULT_OUTPUTDIR;
     std::string  outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
     std::string     f_matrix = DEFAULT_F_MATRIX;
     std::string       f_rest = DEFAULT_F_REST;
