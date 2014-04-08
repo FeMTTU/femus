@@ -839,7 +839,7 @@ void EqnBase::initVectors() {
 void EqnBase::GenBc() {
   
     std::string     basepath = _files.get_basepath();
-    std::string    input_dir = _files.get_frtmap().get("INPUT_DIR");
+    std::string    input_dir = DEFAULT_CASEDIR;
     std::string          ibc = DEFAULT_IBC;
     std::string     ext_xdmf = DEFAULT_EXT_XDMF;
     std::string       ext_h5 = DEFAULT_EXT_H5;
@@ -1524,7 +1524,7 @@ void EqnBase::GenIc() {
     const uint mesh_ord    = (int) _mesh._mesh_rtmap.get("mesh_ord");
   
     std::string   basepath = _files.get_basepath();
-    std::string  input_dir = _files.get_frtmap().get("INPUT_DIR");
+    std::string  input_dir = DEFAULT_CASEDIR;
     std::string        ibc = DEFAULT_IBC;
     std::string     ext_h5 = DEFAULT_EXT_H5;
     std::ostringstream ibc_filexmf;
@@ -2038,7 +2038,7 @@ void EqnBase::initMGOps() {
 
     std::ostringstream filename;
     std::string filename_base;
-    filename_base =  basepath + "/" + output_dir + "/" + outtime_dir + "/" + _files.get_frtmap().get("INPUT_DIR") + "/";
+    filename_base =  basepath + "/" + output_dir + "/" + outtime_dir + "/" + DEFAULT_CASEDIR + "/";
     
         filename.str("");     filename << filename_base << f_rest << ext_h5;
         ReadRest(filename.str());

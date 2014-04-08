@@ -130,7 +130,7 @@ void Mesh::ReadMeshFile()   {
   std::string      ext_h5 = DEFAULT_EXT_H5;
   
   std::ostringstream meshname;
-  meshname << basepath  << "/" << output_dir << "/" << outtime_dir << "/" << _files.get_frtmap().get("INPUT_DIR") << "/" << basemesh  << ext_h5;
+  meshname << basepath  << "/" << output_dir << "/" << outtime_dir << "/" << DEFAULT_CASEDIR << "/" << basemesh  << ext_h5;
 
 //==================================
 // OPEN FILE 

@@ -21,7 +21,8 @@ private:
   
 public:
 
-  std::string               _basepath; //TODO let me put it public just because I don't want to do the SET function right now...
+  std::string               _basepath; // questo e' il basepath da cui parte la COPIA dei file di input e cosi' via
+                                       //TODO let me put it public just because I don't want to do the SET function right now...
                                        //TODO siccome lo posso MODIFICARE in base al RESTART non posso piu' metterlo CONST
   std::map<std::string, T > _rtmap;
 

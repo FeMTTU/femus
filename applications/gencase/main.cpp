@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 //   files.get_frtmap_ptr()->read(); // THE ERROR IS IN HERE.. BUT NOT IN THE APPS... WHAT IS DIFFERENT WRT THEM ?!? ... LIBMESH...! but... ONLY IN DEBUG MODE!!!!
   files.get_frtmap().read();
   files.get_frtmap().print();
-  files.CheckDir(files.get_basepath(),files.get_frtmap().get("INPUT_DIR")); //here, we must check if the input directory where gencase writes is there  //if not, we make it
+  files.CheckDir(files.get_basepath(),DEFAULT_CASEDIR); //here, we must check if the input directory where gencase writes is there  //if not, we make it
 
 //======== first of all, check for restart ======      
 //======== don't rerun gencase in that case, to avoid spending time on rebuilding the operators and so on ======      

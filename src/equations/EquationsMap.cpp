@@ -405,7 +405,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) {
         const uint ndigits  = _timeloop._timemap.get("ndigits");
 
         std::string     basepath = _files.get_basepath();
-        std::string    input_dir = _files.get_frtmap().get("INPUT_DIR");
+        std::string    input_dir = DEFAULT_CASEDIR;
         std::string   output_dir = DEFAULT_OUTPUTDIR;
         std::string  outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
         std::string     basecase = DEFAULT_BASECASE;
