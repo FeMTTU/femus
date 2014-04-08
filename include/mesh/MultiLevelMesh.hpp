@@ -59,6 +59,10 @@ protected:
   unsigned GetNumberOfGridTotallyRefined(){return _gridr;};
   void EraseCoarseLevels(unsigned levels_to_be_erased);
   
+  
+  void MarkStructureNode(); 
+  
+  
 };
 
 #endif

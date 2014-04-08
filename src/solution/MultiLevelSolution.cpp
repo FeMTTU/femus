@@ -24,16 +24,10 @@ PURPOSE.  See the above copyright notice for more information.
 
 
 //C++ include
-#include <ctime>
 #include <iostream>
-#include <fstream>
 #include <iomanip>
-#include <algorithm>   
-#include <string.h>
 using std::cout;
 using std::endl;
-using std::min;
-using std::string;
 
 //---------------------------------------------------------------------------------------------------
 MultiLevelSolution::~MultiLevelSolution() {

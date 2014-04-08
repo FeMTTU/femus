@@ -12,7 +12,8 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   PetscErrorCode ierr;
   
   //pointers and references
-  Solution*	 mysolution  	                      = ml_prob._solution[level];
+  MultiLevelSolution*	 ml_sol	                      = ml_prob._ml_sol;
+  Solution*	 mysolution  	                      = ml_sol->GetSolutionLevel(level);
   TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem>("Fluid-Structure-Interaction");
   LinearEquationSolver*  mylsyspde	              = my_nnlin_impl_sys._LinSolver[level];   
   mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(level);
@@ -142,10 +143,10 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   double _theta_ns=1.0;
   
   // space discretization parameters
-  unsigned order_ind2 = ml_prob.SolType[ml_prob.GetIndex("U")];  
+  unsigned order_ind2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));  
   unsigned end_ind2   = mymsh->GetEndIndex(order_ind2);
 
-  unsigned order_ind1 = ml_prob.SolType[ml_prob.GetIndex("P")];  
+  unsigned order_ind1 = ml_sol->GetSolutionType(ml_sol->GetIndex("P"));  
   unsigned end_ind1   = mymsh->GetEndIndex(order_ind1);
 
   // mesh and procs
@@ -165,19 +166,19 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   
   for(unsigned ivar=0; ivar<dim; ivar++) {
     //indCOORD[ivar]=ml_prob.GetIndex(&coordname[ivar][0]);
-    indVAR[ivar]=ml_prob.GetIndex(&varname[ivar][0]);
-    indVAR[ivar+dim]=ml_prob.GetIndex(&varname[ivar+3][0]);
-    indVAR[ivar+2*dim+1]=ml_prob.GetIndex(&varname[ivar+7][0]);
+    indVAR[ivar]=ml_sol->GetIndex(&varname[ivar][0]);
+    indVAR[ivar+dim]=ml_sol->GetIndex(&varname[ivar+3][0]);
+    indVAR[ivar+2*dim+1]=ml_sol->GetIndex(&varname[ivar+7][0]);
     
-    SolType[ivar]=ml_prob.GetSolType(&varname[ivar][0]);
-    SolType[ivar+dim]=ml_prob.GetSolType(&varname[ivar+3][0]);
-    SolType[ivar+2*dim+1]=ml_prob.GetSolType(&varname[ivar+7][0]);
+    SolType[ivar]=ml_sol->GetSolutionType(&varname[ivar][0]);
+    SolType[ivar+dim]=ml_sol->GetSolutionType(&varname[ivar+3][0]);
+    SolType[ivar+2*dim+1]=ml_sol->GetSolutionType(&varname[ivar+7][0]);
     indexVAR[ivar]=my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar][0]);
     indexVAR[ivar+dim]=my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar+3][0]);
   }
   indexVAR[2*dim]=my_nnlin_impl_sys.GetSolPdeIndex(&varname[6][0]);
-  indVAR[2*dim]=ml_prob.GetIndex(&varname[6][0]);
-  SolType[2*dim]=ml_prob.GetSolType(&varname[6][0]);
+  indVAR[2*dim]=ml_sol->GetIndex(&varname[6][0]);
+  SolType[2*dim]=ml_sol->GetSolutionType(&varname[6][0]);
   //----------------------------------------------------------------------------------
   
   start_time=clock();

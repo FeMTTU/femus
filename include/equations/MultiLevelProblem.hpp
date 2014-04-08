@@ -32,10 +32,7 @@ using std::map;
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
-class elem_type;
-class LinearEquationSolver;
 class System;
-
 
 typedef double (*initfunc) (const double &x, const double &y, const double &z);
 
@@ -46,8 +43,8 @@ typedef double (*initfunc) (const double &x, const double &y, const double &z);
 class MultiLevelProblem : public ParallelObject {
 
 private:
-
   vector < map <unsigned,bool> > index;
+  unsigned short _gridn, _gridr;
   
 public:  
   /** Multilevel solution pointer */
@@ -55,12 +52,6 @@ public:
   /** Multilevel mesh pointer */
   MultiLevelMesh *_ml_msh;
   
-protected:
-
-  unsigned short _gridn, _gridr;
-  
- public:
-   
    /** Data structure holding the systems. */
   std::map<std::string, System*> _systems;
 
@@ -150,9 +141,6 @@ protected:
 
   /** Destructor */
   ~MultiLevelProblem(){};
-
-  //utilities
-  void MarkStructureNode();
 
   int ComputeBdIntegral(const char pdename[],const char var_name[], const unsigned & kel, 
                          const unsigned & jface, unsigned level, unsigned dir);
