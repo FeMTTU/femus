@@ -1043,7 +1043,7 @@ void GenCase::ComputeNodeMapExtLevels() {
 void GenCase::PrintMultimeshXdmf() {
 
     std::string basepath  = _files.get_basepath();
-    std::string input_dir = _files.get_frtmap().get("INPUT_DIR");
+    std::string input_dir = DEFAULT_CASEDIR;
     std::string multimesh = DEFAULT_MULTIMESH;
     std::string ext_xdmf  = DEFAULT_EXT_XDMF;
     std::string basemesh  = DEFAULT_BASEMESH;
@@ -1112,7 +1112,7 @@ void GenCase::PrintMeshHDF5()   {
     std::ostringstream name;
 
     std::string basepath  = _files.get_basepath();
-    std::string input_dir = _files.get_frtmap().get("INPUT_DIR");
+    std::string input_dir = DEFAULT_CASEDIR;
     std::string basemesh  = DEFAULT_BASEMESH;
     std::string ext_h5    = DEFAULT_EXT_H5;
 
@@ -1645,7 +1645,7 @@ void GenCase::ComputeProl()  {
   double   PseudoZero = 1.e-8;
   
     std::string basepath  = _files.get_basepath();
-    std::string input_dir = _files.get_frtmap().get("INPUT_DIR");
+    std::string input_dir = DEFAULT_CASEDIR;
     std::string f_prol    = DEFAULT_F_PROL;
     std::string ext_h5    = DEFAULT_EXT_H5;
 
@@ -2248,7 +2248,7 @@ void GenCase::ComputeMatrix() {
 
 //========= CREATE THE FILE ============================
     std::string basepath  = _files.get_basepath();
-    std::string input_dir = _files.get_frtmap().get("INPUT_DIR");
+    std::string input_dir = DEFAULT_CASEDIR;
     std::string f_matrix  = DEFAULT_F_MATRIX;
     std::string ext_h5    = DEFAULT_EXT_H5;
 
@@ -2569,7 +2569,7 @@ void GenCase::ComputeRest( ) {
   double   PseudoZero = 1.e-8;
   
         std::string basepath  = _files.get_basepath();
-        std::string input_dir = _files.get_frtmap().get("INPUT_DIR");
+        std::string input_dir = DEFAULT_CASEDIR;
         std::string f_rest    = DEFAULT_F_REST;
         std::string ext_h5    = DEFAULT_EXT_H5;
 
