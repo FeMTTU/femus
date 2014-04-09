@@ -21,7 +21,7 @@
 
  void TimeLoop::check_time_par(RunTimeMap<double>& time_in) {
   
-  if (time_in.get("restart") < 0.) {std::cout << " negative restart ;;;;;;;;;;;;;;;;;;;" << std::endl  ; abort();}
+  if (time_in.get("initial_step") < 0.) {std::cout << " negative restart ;;;;;;;;;;;;;;;;;;;" << std::endl  ; abort();}
  
   return;
 }
