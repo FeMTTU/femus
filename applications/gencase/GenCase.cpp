@@ -1040,7 +1040,7 @@ void GenCase::ComputeNodeMapExtLevels() {
 
 
 // ==================================================================
-void GenCase::PrintMultimeshXdmf() {
+void GenCase::PrintMultimeshXdmf() const {
 
     std::string basepath  = _files.get_basepath();
     std::string input_dir = DEFAULT_CASEDIR;
@@ -1107,7 +1107,7 @@ void GenCase::PrintMultimeshXdmf() {
 
 // ===============================================================
 //   print_mesh_h5(_nd_fm_libm, _nd_libm_fm, _el_fm_libm, _el_fm_libm_b);
-void GenCase::PrintMeshHDF5()   {
+void GenCase::PrintMeshHDF5() const  {
 
     std::ostringstream name;
 
@@ -1330,7 +1330,7 @@ void GenCase::PrintMeshHDF5()   {
 //then you pick the nodes of that element in LIBMESH numbering,
 //then you pick the nodes in femus NUMBERING,
 //and that's it
-void GenCase::PrintElemVB(hid_t file,const uint vb , int* nd_libm_fm , ElemStoBase** el_sto_in, std::vector<std::pair<int,int> > el_fm_libm_in ) {
+void GenCase::PrintElemVB(hid_t file,const uint vb , int* nd_libm_fm , ElemStoBase** el_sto_in, std::vector<std::pair<int,int> > el_fm_libm_in ) const {
 
     std::ostringstream name;
 
@@ -1467,7 +1467,7 @@ void GenCase::PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std::st
 
 void GenCase::PrintOneVarMatrixHDF5(std::string name, std::string groupname, int** n_dofs_lev_fe,int count,
                                int* Mat,int* len,int* len_off,
-                               int fe_row, int fe_col, int* FELevel) {
+                               int fe_row, int fe_col, int* FELevel) const {
 
 
     hid_t file = H5Fopen(name.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
@@ -1516,7 +1516,7 @@ void GenCase::PrintOneVarMatrixHDF5(std::string name, std::string groupname, int
 // ===============================================================
 // here pay attention, the EXTENDED LEVELS are not used for distinguishing
 //
-void GenCase::PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, int* n_dofs_lev, int count, int* Op_pos,double* Op_val,int* len,int* len_off, int FELevel_row, int FELevel_col, int fe) {
+void GenCase::PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, int* n_dofs_lev, int count, int* Op_pos,double* Op_val,int* len,int* len_off, int FELevel_row, int FELevel_col, int fe) const {
 
     hid_t file = H5Fopen(filename.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);  //TODO questo apri interno e' per assicurarsi che il file sia aperto... quello fuori credo che non serva...
                                                                        // e invece credo che quello serva per CREARE il file, altrimenti non esiste

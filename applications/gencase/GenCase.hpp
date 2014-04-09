@@ -82,8 +82,8 @@ public:
     void ComputeMatrix();
     void ComputeProl();
     void ComputeRest();
-    void PrintOneVarMatrixHDF5(std::string name, std::string groupname, int** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel );
-    void PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, int* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe);
+    void PrintOneVarMatrixHDF5(std::string name, std::string groupname, int** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel ) const;
+    void PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, int* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe) const;
 
     void GenerateCase();
     void GenerateCoarseMesh(libMesh::Mesh* msh_coarse);
@@ -92,10 +92,10 @@ public:
     void GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh* bd_mesht, libMesh::Mesh* msht, libMesh::Mesh* msh);
     void CreateStructuresLevSubd();
 
-    void PrintElemVB( hid_t file, const uint vb , int* v_inv_nd , ElemStoBase** elem_sto, std::vector<std::pair<int,int> > v_el   ) ;
+    void PrintElemVB( hid_t file, const uint vb , int* v_inv_nd , ElemStoBase** elem_sto, std::vector<std::pair<int,int> > v_el   ) const;
     void PrintSubdomFlagOnQuadrCells(const int vb, const int Level,std::string filename) const;
-    void PrintMultimeshXdmf();
-    void PrintMeshHDF5();
+    void PrintMultimeshXdmf() const;
+    void PrintMeshHDF5() const;
 
     void ElemChildToFather();
     void ReorderElementBySubdLev_VV();

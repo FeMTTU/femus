@@ -59,8 +59,12 @@
    files.RedirectCout(sbuf,file);
 // >>>>>>>>>>>>> END REDIRECT COUT
    files.CopyInputFiles();
-   files.get_frtmap().read();
+   // at this point we can decide where to read the femusconf file!!! !!!!
+   files.get_frtmap()._basepath = files._output_path;
+
+   files.get_frtmap().read(); //TODO what happens to the variables that were added in here? see OUTTIME_DIR
    files.get_frtmap().print();
+exit(3);
 
   // =========================================
   // ======= END OF THE INITIALIZATION PART ========================

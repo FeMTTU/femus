@@ -69,6 +69,9 @@ int main(int argc, char** argv) {
    files.RedirectCout(sbuf,file);
 // >>>>>>>>>>>>> END REDIRECT COUT
    files.CopyInputFiles();
+
+   files.get_frtmap()._basepath = files._output_path;
+
    files.get_frtmap().read();
    files.get_frtmap().print();
    
