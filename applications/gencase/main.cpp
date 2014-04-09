@@ -59,6 +59,8 @@
 // that holds the MPI Rank... the problem is that it would exist after a command
 // of the type "mpiexec  > file$MYPROC.txt" would be launched...
 //TODO see what happens with libmesh in debug mode
+//TODO so far Gencase is only reading the tags <Mesh> <Box> and <Files>. Probably soon we'll remove <Files>
+// and perhaps merge <Mesh> and <Box>
 
 int main(int argc, char** argv) {
 

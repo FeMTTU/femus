@@ -63,10 +63,10 @@ F_MESH_READ   straightQ3D2x2x2ZERO.gam
 
 dt          1. 
 itime       0.0 
+initial_step  0   
 nsteps      5   
 printstep   1   
 ndigits     4   
-restart     0   
 
 </TimeLoop>
 

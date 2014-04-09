@@ -63,10 +63,10 @@ F_MESH_READ    inclQ2D2x2.gam
 
 dt          0.1  
 itime       0.0  
+initial_step 0
 nsteps      5    
 printstep   1    
 ndigits     4    
-restart     0    # ==== both for the App and for Gencase ======
 
 </TimeLoop>
 

@@ -531,7 +531,7 @@ void EquationsMap::PrintXDMFTopologyGeometry(std::ofstream& out, const uint Leve
 
 void EquationsMap::TransientSetup()  {
 
-    const uint restart  = _timeloop._timemap.get("restart");
+    const uint restart  = _timeloop._timemap.get("initial_step");
     const uint ndigits  = _timeloop._timemap.get("ndigits");
 
     std::string    basepath = _files.get_basepath();
