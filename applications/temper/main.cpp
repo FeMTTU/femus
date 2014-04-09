@@ -96,7 +96,6 @@
   GeomEl geomel(dimension,geomel_type);           /*VB based*/
   Mesh     mesh(files,mesh_map,geomel,Lref,&mybox);        /*VB based*/
   mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/
-exit(3);
   
   phys.set_mesh(&mesh);
   
@@ -120,7 +119,7 @@ exit(3);
   TimeLoop time_loop(files); 
            time_loop._timemap.read();
            time_loop._timemap.print();
- 
+
   // ===== QuantityMap =========================================
   QuantityMap  qty_map(phys);
 
@@ -198,6 +197,8 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 //================================
 	 
   equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
+  return 7;
+	   
   equations_map.TransientSetup();  // reset the initial state (if restart) and print the Case
   
   phys.transient_loopPlusJ(equations_map);

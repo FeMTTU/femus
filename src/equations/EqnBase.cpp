@@ -2028,9 +2028,6 @@ void EqnBase::MGCheck(int Level) const {
 
 void EqnBase::initMGOps() {
 
-    std::string     basepath = _files.get_basepath();
-    std::string   output_dir = DEFAULT_OUTPUTDIR;
-    std::string  outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
     std::string     f_matrix = DEFAULT_F_MATRIX;
     std::string       f_rest = DEFAULT_F_REST;
     std::string       f_prol = DEFAULT_F_PROL;
@@ -2038,7 +2035,7 @@ void EqnBase::initMGOps() {
 
     std::ostringstream filename;
     std::string filename_base;
-    filename_base =  basepath + "/" + output_dir + "/" + outtime_dir + "/" + DEFAULT_CASEDIR + "/";
+    filename_base = _files._output_path + "/" + DEFAULT_CASEDIR + "/";
     
         filename.str("");     filename << filename_base << f_rest << ext_h5;
         ReadRest(filename.str());
