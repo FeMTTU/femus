@@ -58,7 +58,7 @@
 // to redirecting std output INSIDE C++ instead of FROM SHELL... maybe there is a shell variable
 // that holds the MPI Rank... the problem is that it would exist after a command
 // of the type "mpiexec  > file$MYPROC.txt" would be launched...
-
+//TODO see what happens with libmesh in debug mode
 
 int main(int argc, char** argv) {
 
@@ -75,23 +75,15 @@ int main(int argc, char** argv) {
   std::string basepath = "../" + chosen_app + "/";
   Files files(basepath);
    std::cout << "******The basepath starting from the gencase directory is ***** " << files.get_basepath() << std::endl;
-//   files.CheckDirOrAbort(files.get_basepath(),DEFAULT_CONFIGDIR); 
-//   files.get_frtmap_ptr()->read(); // THE ERROR IS IN HERE.. BUT NOT IN THE APPS... WHAT IS DIFFERENT WRT THEM ?!? ... LIBMESH...! but... ONLY IN DEBUG MODE!!!!
+
+//======== first of all, check for restart ======      
+//======== don't rerun gencase in that case, to avoid spending time on rebuilding the operators and so on ======      
+  files.ConfigureRestart();
+  if (files._restart_flag == true) { std::cout << "Do not rerun gencase in case of restart" << std::endl; abort(); }
   files.get_frtmap().read();
   files.get_frtmap().print();
   files.CheckDir(files.get_basepath(),DEFAULT_CASEDIR); //here, we must check if the input directory where gencase writes is there  //if not, we make it
 
-//======== first of all, check for restart ======      
-//======== don't rerun gencase in that case, to avoid spending time on rebuilding the operators and so on ======      
-//======== actually we will change the logic, we will read EVERYTHING from THE PREVIOUS RUN ======      
-     RunTimeMap<double> timemap("TimeLoop",files.get_basepath());  //here you don't need to instantiate a TimeLoop object, but only to read its RUNTIME MAP
-     timemap.read();
-     timemap.print();
-     TimeLoop::check_time_par(timemap);
-     const uint restart      = (uint) timemap.get("restart");    // restart param
-     if (restart)  {std::cout << "No GenCase because of restart flag !=0 " << std::endl; abort();}
-
-  
   // ======= Mesh =====
      RunTimeMap<double> mesh_map("Mesh",files.get_basepath());
      mesh_map.read();
