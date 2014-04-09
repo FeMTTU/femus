@@ -64,7 +64,6 @@
 
    files.get_frtmap().read(); //TODO what happens to the variables that were added in here? see OUTTIME_DIR
    files.get_frtmap().print();
-exit(3);
 
   // =========================================
   // ======= END OF THE INITIALIZATION PART ========================
@@ -96,8 +95,10 @@ exit(3);
   uint geomel_type = (uint) mesh_map.get("geomel_type");  // must do in such a way that it is picked from the geomel throughout the code
   GeomEl geomel(dimension,geomel_type);           /*VB based*/
   Mesh     mesh(files,mesh_map,geomel,Lref,&mybox);        /*VB based*/
+exit(3);
   mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/
 
+  
   phys.set_mesh(&mesh);
   
 // ======  QRule ================================ //so far we have ONLY ONE quadrature rule for all the equations
