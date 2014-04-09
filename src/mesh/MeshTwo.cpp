@@ -123,14 +123,11 @@ void Mesh::clear ()  {
 // TODO do we need the leading "/" for opening a dataset?
 void Mesh::ReadMeshFile()   {
 
-  std::string    basepath = _files.get_basepath();
-  std::string  output_dir = DEFAULT_OUTPUTDIR;
-  std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
   std::string    basemesh = DEFAULT_BASEMESH;
   std::string      ext_h5 = DEFAULT_EXT_H5;
   
   std::ostringstream meshname;
-  meshname << basepath  << "/" << output_dir << "/" << outtime_dir << "/" << DEFAULT_CASEDIR << "/" << basemesh  << ext_h5;
+  meshname << _files._output_path << "/" << DEFAULT_CASEDIR << "/" << basemesh  << ext_h5;
 
 //==================================
 // OPEN FILE 
