@@ -11,7 +11,7 @@
 
 // =======================================
 //    Files Class
-// This class handles all the necessary filenames for any application.
+// This class handles all the interactions of an application with the FILESYSTEM.
 // It takes care of the mesh filename
 // It takes care of generating the output directory for every instant of time
 // It takes care of the RESTART procedure
@@ -21,6 +21,8 @@ class Files {
 
 public:
 
+  std::string  _input_path;
+  std::string _output_path;
   bool _restart_flag; 
   
    Files(const std::string &/*  = DEFAULT_BASEPATH*/);  //TODO seems like it doesn't work with ONE DEFAULT PARAMETER
@@ -42,6 +44,7 @@ public:
   void CopyInputFiles() const;
 
 // Restart ======================
+  void ConfigureRestart();
   void PrintRunForRestart(const std::string run_name_in) const;
   
 // LOG ==========================

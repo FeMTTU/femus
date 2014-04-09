@@ -61,18 +61,17 @@ int main(int argc, char** argv) {
 
 // ======= Files ========================
   Files files("./");
-  files.get_frtmap().read();
-  files.get_frtmap().print();
+  files.ConfigureRestart();
   files.CheckIODirectories();
-
  //>>>>>>>>> REDIRECT COUT
    std::ofstream file; //if a filestream dies, then also its stream-buffer dies ?!? //So I have to declare it outside? Yes. This seems to work.
    std::streambuf* sbuf = std::cout.rdbuf();  //get the current buffer for cout
    files.RedirectCout(sbuf,file);
 // >>>>>>>>>>>>> END REDIRECT COUT
-
    files.CopyInputFiles();
-
+   files.get_frtmap().read();
+   files.get_frtmap().print();
+   
   // =========================================
   // ======= END OF THE INITIALIZATION PART ========================
   // =========================================

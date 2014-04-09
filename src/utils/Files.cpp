@@ -27,11 +27,20 @@
 	  
 	    if (string_in == "")  { std::cout << " Set the basepath in the command line" << std::endl;    abort(); }
 
+	}  ///< Constructor
+
+	
+  Files::~Files() { } ///< Destructor
+
+    void Files::ConfigureRestart() {
+      
+      std::string mybasepath = get_basepath();
+
 //         if (paral::get_rank() == 0) { //QUESTA LETTURA LA POSSONO FARE TUTTI I PROCESSORI!
             std::cout << " Reading the  run_to_restart_from file to determine restart status or not" << std::endl;
 
     std::string lastrun_str;
-    lastrun_str = string_in + "/" + DEFAULT_OUTPUTDIR + "/" + DEFAULT_LAST_RUN;
+    lastrun_str = mybasepath + "/" + DEFAULT_OUTPUTDIR + "/" + DEFAULT_LAST_RUN;
 
     //check if last_run is there, if it's not there go ahead and set restart = FALSE
             std::string lastone;
@@ -55,13 +64,13 @@
 	      std::cout << "*** RESTART is activated *****" << std::endl; 
 	      //we must set the basepath accordingly
 	    
-	    _frtmap._basepath = string_in + "/" + DEFAULT_OUTPUTDIR + "/" + lastone;
+	    _frtmap._basepath = mybasepath + "/" + DEFAULT_OUTPUTDIR + "/" + lastone;
 
 	      std::cout << "*** The new basepath is *****" << _frtmap._basepath << std::endl; 
 	    
 	    }
 	    else { std::cout << "Normal simulation without restart" << std::endl; 
-	    
+	    //Notice that the basepath in this case was set by the ARGUMENT of the CONSTRUCTOR
 	    
 	    }
 
@@ -69,13 +78,13 @@
 // maybe excess of safety... but it never hurts
 #ifdef HAVE_MPI
         MPI_Barrier(MPI_COMM_WORLD);
-#endif
-		
-	}  ///< Constructor
+#endif      
+     
+     return; 
+    }
 
-	
-  Files::~Files() { } ///< Destructor
-
+  
+  
 
 /// This function just checks if the directory is there
 /// The first argument reads the absolute path of the parent directory,
