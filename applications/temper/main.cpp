@@ -95,9 +95,8 @@
   uint geomel_type = (uint) mesh_map.get("geomel_type");  // must do in such a way that it is picked from the geomel throughout the code
   GeomEl geomel(dimension,geomel_type);           /*VB based*/
   Mesh     mesh(files,mesh_map,geomel,Lref,&mybox);        /*VB based*/
-exit(3);
   mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/
-
+exit(3);
   
   phys.set_mesh(&mesh);
   

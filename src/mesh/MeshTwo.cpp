@@ -367,9 +367,6 @@ void Mesh::PrintForVisualizationAllLEVAllVB()  const {
 
  void Mesh::PrintXDMFAllLEVAllVB() const {
 
-  std::string     basepath = _files.get_basepath();
-  std::string   output_dir = DEFAULT_OUTPUTDIR;
-  std::string  outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
   std::string     basemesh = DEFAULT_BASEMESH;
   std::string     ext_xdmf = DEFAULT_EXT_XDMF;
   std::string       ext_h5 = DEFAULT_EXT_H5;
@@ -379,7 +376,7 @@ void Mesh::PrintForVisualizationAllLEVAllVB()  const {
   std::ostringstream geom_file; geom_file << basemesh << ext_h5;
 
   std::ostringstream namefile;
-  namefile << basepath << "/" << output_dir << "/" << outtime_dir << "/" << basemesh << ext_xdmf;
+  namefile << _files._output_path << "/" << basemesh << ext_xdmf;
  
   std::ofstream out (namefile.str().c_str());
 
@@ -435,16 +432,12 @@ void Mesh::PrintXDMFGridVB(std::ofstream& out,
 
 void Mesh::PrintConnLinAllLEVAllVB() const { 
 
-    std::string    basepath = _files.get_basepath();
     std::string    basemesh = DEFAULT_BASEMESH;
-    std::string  output_dir = DEFAULT_OUTPUTDIR;
-    std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
- 
     std::string    ext_h5   = DEFAULT_EXT_H5;
     std::string    connlin  = DEFAULT_CONNLIN;
 
   std::ostringstream namefile;
-  namefile << basepath << "/" << output_dir << "/" << outtime_dir << "/" << basemesh << connlin << ext_h5; 
+  namefile << _files._output_path << "/" << basemesh << connlin << ext_h5; 
 
   std::cout << namefile.str() << std::endl;
   hid_t file = H5Fcreate (namefile.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);  //TODO VALGRIND
