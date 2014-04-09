@@ -23,7 +23,9 @@
 // =================================================
 
   Files::Files(const std::string &  string_in) : 
-        _frtmap("Files",string_in)   { 
+        _frtmap("Files",string_in)   {  //TODO here is where we have to change because the path for the map is determined later, after configure restart and outtime generation... 
+	  
+	  _app_path = string_in;
 	  
 	    if (string_in == "")  { std::cout << " Set the basepath in the command line" << std::endl;    abort(); }
 
@@ -32,7 +34,9 @@
 	
   Files::~Files() { } ///< Destructor
 
-    void Files::ConfigureRestart() {
+  
+  
+  void Files::ConfigureRestart() {
       
       std::string mybasepath = get_basepath();
 
@@ -66,11 +70,15 @@
 	    
 	    _frtmap._basepath = mybasepath + "/" + DEFAULT_OUTPUTDIR + "/" + lastone;
 
+	    _input_path = mybasepath + "/" + DEFAULT_OUTPUTDIR + "/" + lastone + "/";
+	    
 	      std::cout << "*** The new basepath is *****" << _frtmap._basepath << std::endl; 
 	    
 	    }
 	    else { std::cout << "Normal simulation without restart" << std::endl; 
 	    //Notice that the basepath in this case was set by the ARGUMENT of the CONSTRUCTOR
+	    
+	    _input_path = mybasepath + "/";
 	    
 	    }
 
@@ -377,6 +385,13 @@ MPI_Bcast(out_char,outchar_size,MPI_CHAR,0,MPI_COMM_WORLD);
 
  std::cout << "iproc = " << paral::get_rank() << " ***** The output dir of this run will be: " << DEFAULT_OUTPUTDIR << get_frtmap().get("OUTTIME_DIR") << std::endl;
 
+ //************************
+ //set the input and output_path variables
+ _output_path = get_basepath() + "/"  + DEFAULT_OUTPUTDIR + "/"  + get_frtmap().get("OUTTIME_DIR") + "/";
+ 
+ 
+ 
+ 
  return; 
 
 }
@@ -408,48 +423,48 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
     
    std::string app_basepath = get_basepath() + "/"; 
 
-    // >>>>>>> outtime dir: COPY FILES   //needs the BASEPATH of the APPLICATION
+//these two files are copied here because they are useful for the visualization   
+
+   // >>>>>>> outtime dir: COPY FILES   //needs the BASEPATH of the APPLICATION
   //copy mesh.h5
-   std::string  mesh_in = app_basepath + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
-   std::string  mesh_out =  app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
+   std::string  mesh_in  =   _input_path + "/" + DEFAULT_CASEDIR  + "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
+   std::string  mesh_out =  _output_path + "/" +                          DEFAULT_BASEMESH + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(mesh_in,mesh_out); 
    
 //copy multimesh.xmf
-   std::string  mmesh_in = app_basepath + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_MULTIMESH + DEFAULT_EXT_XDMF;
-   std::string  mmesh_out = app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" +  DEFAULT_MULTIMESH + DEFAULT_EXT_XDMF;
+   std::string  mmesh_in  =   _input_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_MULTIMESH + DEFAULT_EXT_XDMF;
+   std::string  mmesh_out =  _output_path + "/" +                         DEFAULT_MULTIMESH + DEFAULT_EXT_XDMF;
 /*(iproc==0)*/ CopyFile(mmesh_in,mmesh_out); 
 
-CheckDirOrMake(app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" ,
-	       DEFAULT_CASEDIR);
+CheckDirOrMake(_output_path, DEFAULT_CASEDIR);
 
 //I AM COPYING THIS TWICE BECAUSE I NEED IT BOTH FOR THE INPUT AND FOR THE OUTPUT FILES
  //copy mesh.h5
-   std::string  mesh_in_twice = app_basepath + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
-   std::string  mesh_out_twice =  app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_CASEDIR + "/"  + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
+   std::string  mesh_in_twice  =  _input_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
+   std::string  mesh_out_twice = _output_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(mesh_in_twice,mesh_out_twice); 
 
 //copy MG files
-   std::string  op_in = app_basepath + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
-   std::string  op_out = app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_CASEDIR + "/" +  DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
+   std::string  op_in  =  _input_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
+   std::string  op_out = _output_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
-   op_in  = app_basepath + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_REST + DEFAULT_EXT_H5;
-   op_out = app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_CASEDIR +  "/" +  DEFAULT_F_REST + DEFAULT_EXT_H5;
+   op_in  =   _input_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_REST + DEFAULT_EXT_H5;
+   op_out =  _output_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_REST + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
-   op_in  = app_basepath + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_PROL + DEFAULT_EXT_H5;
-   op_out = app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_CASEDIR + "/" +  DEFAULT_F_PROL + DEFAULT_EXT_H5;
+   op_in  =   _input_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_PROL + DEFAULT_EXT_H5;
+   op_out =  _output_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_PROL + DEFAULT_EXT_H5;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
-// we try to resemble the original directory structure in view of restart...
-
-CheckDirOrMake(app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" ,
-	       DEFAULT_CONFIGDIR);
+CheckDirOrMake(_output_path,DEFAULT_CONFIGDIR);
 
 //copy configuration file
-   op_in  = app_basepath + "/" + DEFAULT_CONFIGDIR + "/" + DEFAULT_RUNTIMECONF;
-   op_out = app_basepath + "/" + DEFAULT_OUTPUTDIR + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_CONFIGDIR + "/" +  DEFAULT_RUNTIMECONF;
+   op_in  =   _input_path + "/" + DEFAULT_CONFIGDIR + "/" + DEFAULT_RUNTIMECONF;
+   op_out =  _output_path + "/" + DEFAULT_CONFIGDIR + "/" + DEFAULT_RUNTIMECONF;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
+
+//TODO here we should also copy the mesh file from the mesh generator... but we need to know the filename...
 
 //barrier so that all the processors will have mesh.h5 and else to read from
 //if you copy ALL THE I/O you need into the run, then the restart will read ONLY FROM THAT RUN.
@@ -519,14 +534,16 @@ void Files::CheckIODirectories() {
  
 //INPUT
                     std::string abs_app = get_basepath() + "/";
-/*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_CONFIGDIR);
-/*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_CASEDIR);
+/*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_CONFIGDIR); //it must be there only to be COPIED (and we don't even need the check in restart case)
+/*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_CASEDIR);   //it must be there only to be COPIED
 
 /*all procs*/   CheckDir(abs_app,DEFAULT_OUTPUTDIR);
 
    std::string abs_outputdir = abs_app + "/" + DEFAULT_OUTPUTDIR;
 /*(iproc==0)*/  ComposeOutdirName();  //this adds an element to the Files map, so the SetupAll function cannot be constant
 /*(iproc==0)*/  CheckDirOrMake(abs_outputdir, get_frtmap().get("OUTTIME_DIR"));
+
+// at this point we should copy the input files in the outtime directory
 
  return; 
 }
