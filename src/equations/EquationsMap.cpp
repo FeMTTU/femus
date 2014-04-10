@@ -107,7 +107,7 @@ void EquationsMap::OneTimestepEqnLoop(
 
 // =================================================================
 /// This function prints xdmf and hdf5 file
-void EquationsMap::PrintSol(const uint t_step, const double curr_time) {
+void EquationsMap::PrintSol(const uint t_step, const double curr_time) const {
 
     PrintSolHDF5(t_step);
     PrintSolXDMF(t_step,curr_time);
@@ -117,21 +117,16 @@ void EquationsMap::PrintSol(const uint t_step, const double curr_time) {
 
 // =================================================================
 /// This function prints the attributes into the corresponding hdf5 file
-void EquationsMap::PrintSolHDF5(const uint t_flag ) {
+void EquationsMap::PrintSolHDF5(const uint t_flag ) const {
 
     const uint    iproc =_mesh._iproc;
     if (iproc==0) {
 
-        const uint ndigits  = _timeloop._timemap.get("ndigits");
-
-        std::string    basepath = _files.get_basepath();
-        std::string output_dir  = DEFAULT_OUTPUTDIR;
-        std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
+        const uint     ndigits  = _timeloop._timemap.get("ndigits");
         std::string    basesol  = DEFAULT_BASESOL;
         std::string     ext_h5  = DEFAULT_EXT_H5;
         std::ostringstream filename;
-        filename << basepath << "/" << output_dir << outtime_dir
-        << basesol << "." << setw(ndigits) << setfill('0') << t_flag << ext_h5;
+        filename << _files._output_path  << "/" << basesol << "." << setw(ndigits) << setfill('0') << t_flag << ext_h5;
 
         hid_t   file= H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
         H5Fclose(file);
@@ -168,7 +163,7 @@ void EquationsMap::PrintSolHDF5(const uint t_flag ) {
 //So you should do  in reverse order:  for (int l=NoLevels-1; l >= 0; l--) 
 // I DO NOT WANT TO SEPARATE the HDF5 file, because it works fine as a single file with no problems
 
-void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) {
+void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) const {
 
     const uint    iproc =_mesh._iproc;
     if (iproc==0) {
@@ -183,9 +178,6 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) {
         DofType[LL] = "Node";
         DofType[KK] = "Cell";
 
-        std::string    basepath = _files.get_basepath();
-        std::string output_dir  = DEFAULT_OUTPUTDIR;
-        std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
         std::string basesol     = DEFAULT_BASESOL;
         std::string basemesh    = DEFAULT_BASEMESH;
         std::string aux_xdmf    = DEFAULT_AUX_XDMF;
@@ -200,8 +192,7 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) {
 	for (uint l=0; l < NoLevels; l++) {
 	
 	std::ostringstream filename_xdmf;
-        filename_xdmf << basepath << "/" << output_dir << outtime_dir
-        << basesol << "." << setw(ndigits) << setfill('0') << t_step << "_l" << l << ext_xdmf;
+        filename_xdmf << _files._output_path << "/" << basesol << "." << setw(ndigits) << setfill('0') << t_step << "_l" << l << ext_xdmf;
         std::ostringstream hdf_file; hdf_file << basesol << "." << setw(ndigits) << setfill('0') << t_step << ext_h5;
 
 	std::ofstream out(filename_xdmf.str().c_str());
@@ -213,7 +204,7 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) {
         //  ++++++++++++ Header ++++++++++++++
         out << "<?xml version=\"1.0\" ?> \n";
         out << "<!DOCTYPE Xdmf SYSTEM ";
-        out <<  "\"" << basepath << "/" << output_dir << outtime_dir << "/" << aux_xdmf << "\" \n";
+        out <<  "\"" << _files._output_path << "/" << aux_xdmf << "\" \n";
 //   out << " [ <!ENTITY HeavyData \"\"> ] ";
         out << ">\n";
         out << "<Xdmf> \n" << "<Domain> \n";
@@ -265,9 +256,6 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) {
 void EquationsMap::ReadSol(const uint t_step, double& time_out) {
 
     const uint ndigits      = _timeloop._timemap.get("ndigits");
-    std::string    basepath = _files.get_basepath();
-    std::string output_dir  = DEFAULT_OUTPUTDIR;
-    std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
     std::string    basesol  = DEFAULT_BASESOL;
     std::string   ext_xdmf  = DEFAULT_EXT_XDMF;
     std::string     ext_h5  = DEFAULT_EXT_H5;
@@ -276,7 +264,7 @@ void EquationsMap::ReadSol(const uint t_step, double& time_out) {
     // ---------------------------------------------------
     // open file -----------------------------
     std::ostringstream namefile;
-    namefile << basepath << "/" << output_dir << outtime_dir
+    namefile << _files._output_path << "/" 
     << basesol << "." << setw(ndigits) << setfill('0') << t_step << "_l" << (_mesh._NoLevels - 1) << ext_xdmf;  //TODO here we should avoid doing this process TWICE because we already do it in the TransientSetup calling function
 
 #ifdef DEFAULT_PRINT_INFO // --------  info ------------------ 
@@ -311,7 +299,7 @@ void EquationsMap::ReadSol(const uint t_step, double& time_out) {
     // ---------------------------------------------------
     // file name -----------------------------------------
     namefile.str("");  //empty string
-    namefile << basepath << "/" << output_dir << outtime_dir
+    namefile << _files._output_path << "/"
     << basesol << "." << setw(ndigits) << setfill('0') << t_step << ext_h5;
     //if i put the path of this file to be relative, will the read depend on where I launched the executable...
     // or where the executable is I think... no, the path is given by where the executable is LAUNCHED
@@ -336,7 +324,9 @@ void EquationsMap::ReadSol(const uint t_step, double& time_out) {
 // we should do a routine that for a given field prints both the hdf5 dataset
 // and the  xdmf tag... well it's not so automatic, because you need to know
 // what is the grid on which to print, bla bla bla
-void EquationsMap::PrintCase(const uint t_init) {
+void EquationsMap::PrintCase(const uint t_init) const {
+  
+  
   
      PrintCaseHDF5(t_init);
      PrintCaseXDMF(t_init);
@@ -348,22 +338,18 @@ void EquationsMap::PrintCase(const uint t_init) {
 // =============================================================================
 /// This function prints initial and boundary data in hdf5 fromat
 /// in the file case.h5
-void EquationsMap::PrintCaseHDF5(const uint t_init) {
+void EquationsMap::PrintCaseHDF5(const uint t_init) const {
 
     const uint    iproc =_mesh._iproc;
     if (iproc==0) {
 
         const uint ndigits      = _timeloop._timemap.get("ndigits");
-        std::string    basepath = _files.get_basepath();
-        std::string output_dir  = DEFAULT_OUTPUTDIR;
-        std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
         std::string    basecase = DEFAULT_BASECASE;
         std::string   ext_xdmf  = DEFAULT_EXT_XDMF;
         std::string     ext_h5  = DEFAULT_EXT_H5;
 
         std::ostringstream filename;
-        filename << basepath << "/" << output_dir << outtime_dir
-        << basecase << "." << setw(ndigits) << setfill('0') << t_init << ext_h5;
+        filename << _files._output_path << "/" << basecase << "." << setw(ndigits) << setfill('0') << t_init << ext_h5;
 
         hid_t file = H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
         _mesh.PrintSubdomFlagOnLinCells(filename.str());
@@ -396,7 +382,7 @@ void EquationsMap::PrintCaseHDF5(const uint t_init) {
 //but, inside the lines of this file, you dont need to put the absolute paths,
 //because you already know you'll not separate .xmf and .h5
 
-void EquationsMap::PrintCaseXDMF(const uint t_init) {
+void EquationsMap::PrintCaseXDMF(const uint t_init) const {
 
     const uint    iproc =_mesh._iproc;
     if (iproc==0) {
@@ -404,10 +390,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) {
         const uint NoLevels = _mesh._NoLevels;
         const uint ndigits  = _timeloop._timemap.get("ndigits");
 
-        std::string     basepath = _files.get_basepath();
         std::string    input_dir = DEFAULT_CASEDIR;
-        std::string   output_dir = DEFAULT_OUTPUTDIR;
-        std::string  outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
         std::string     basecase = DEFAULT_BASECASE;
         std::string     basemesh = DEFAULT_BASEMESH;
         std::string       ext_h5 = DEFAULT_EXT_H5;
@@ -432,7 +415,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) {
 	for (uint l=0; l < NoLevels; l++) {
 	  
         std::ostringstream filename_xdmf;
-        filename_xdmf << basepath << "/" << output_dir << outtime_dir
+        filename_xdmf << _files._output_path << "/"
         << basecase  << "." << setw(ndigits) << setfill('0') << t_init << "_l" << l << ext_xdmf;
         std::ostringstream hdf_file;
         hdf_file <<  basecase << "." << setw(ndigits) << setfill('0') << t_init << ext_h5;
@@ -446,7 +429,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) {
         // BEGIN XDMF =======
         out << "<?xml version=\"1.0\" ?> \n";
         out << "<!DOCTYPE Xdmf SYSTEM ";
-        out <<  "\"" << basepath << output_dir << outtime_dir << "/" << aux_xdmf << "\" \n";
+        out <<  "\"" << _files._output_path << "/" << aux_xdmf << "\" \n";
 //    out << " [ <!ENTITY HeavyData \"\"> ] ";
         out << ">\n";
         out << "<Xdmf> \n" << "<Domain> \n";
@@ -504,7 +487,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) {
 
 
 //print topology and geometry, useful for both case.xmf and sol.xmf
-void EquationsMap::PrintXDMFTopologyGeometry(std::ofstream& out, const uint Level, const uint vb) {
+void EquationsMap::PrintXDMFTopologyGeometry(std::ofstream& out, const uint Level, const uint vb) const {
 
     //Mesh
     uint n_elements = _mesh._NoElements[vb][Level];
@@ -531,12 +514,9 @@ void EquationsMap::PrintXDMFTopologyGeometry(std::ofstream& out, const uint Leve
 
 void EquationsMap::TransientSetup()  {
 
-    const uint restart  = _timeloop._timemap.get("initial_step");
+    const uint initial_step  = _timeloop._timemap.get("initial_step");
     const uint ndigits  = _timeloop._timemap.get("ndigits");
 
-    std::string    basepath = _files.get_basepath();
-    std::string  output_dir = DEFAULT_OUTPUTDIR;
-    std::string outtime_dir = _files.get_frtmap().get("OUTTIME_DIR");
     std::string   lastrun_f = DEFAULT_LAST_RUN;
     std::string     basesol = DEFAULT_BASESOL;
     std::string    ext_xdmf = DEFAULT_EXT_XDMF;
@@ -548,9 +528,6 @@ void EquationsMap::TransientSetup()  {
     std::string  aux_xdmf   = DEFAULT_AUX_XDMF;
     std::string  connlin    = DEFAULT_CONNLIN;
 
-
-    std::string lastrun_str;
-    lastrun_str = basepath + "/" + output_dir + "/" + lastrun_f;
 
 //now, every run, restart or not, has a new output dir.
 //So, if you restart, you have to copy sol.N.h5 and sol.N.xmf
@@ -575,48 +552,36 @@ void EquationsMap::TransientSetup()  {
 //We will distinguish them later.
 
     //------initial data
-    if (restart) {
-        _timeloop._t_idx_in  = restart;
+    if (_files._restart_flag) {
+        _timeloop._t_idx_in  = initial_step;
         std::cout << "We wish to restart from time step " << _timeloop._t_idx_in << std::endl;
         std::cout << "\n *+*+* TimeLoop::transient_setup: RESTART  " << std::endl;
 
 
         if (paral::get_rank() == 0) {
 
-            std::cout << " Reading the  output dir to from run_to_restart_from file (fill it with what you want)" << std::endl;
-            //check if last_run is there
-            std::string lastone;
-            std::ifstream last_run;
-            last_run.open(lastrun_str.c_str());
-            if (!last_run.is_open()) {
-                std::cout << "There is no last_run file" << std::endl;
-                abort();
-            }
-            //read from last_run
-            last_run >> lastone >> lastone;  //"run_to_restart_from" is the STRING i use in the file, so there is one intermediate "buffer"...
-            //AAA output is there
             stringstream tidxin;
             tidxin << setw(ndigits) << setfill('0') << _timeloop._t_idx_in;
-            std::cout << " Restarting from run: " << lastone << std::endl;
+            std::cout << " Restarting from run: " << _files._input_path << std::endl;
 	    std::ostringstream cp_src_xmf_stream;
-	    cp_src_xmf_stream << basepath << "/" << output_dir << "/" << lastone << "/" << basesol << "." << tidxin.str() << "_l" << (_mesh._NoLevels - 1) << ext_xdmf;
+	    cp_src_xmf_stream << _files._input_path << "/" << basesol << "." << tidxin.str() << "_l" << (_mesh._NoLevels - 1) << ext_xdmf;
             std::string cp_src_xmf = cp_src_xmf_stream.str();
             fstream file_cp_xmf(cp_src_xmf.c_str());
             if (!file_cp_xmf.is_open()) {
-                std::cout <<"No xmf file"<< std::endl;
+                std::cout << "No xmf file" << std::endl;
                 abort();
             }
 
 	    std::ostringstream cp_src_h5_stream;
-	    cp_src_h5_stream << basepath << "/" << output_dir << "/" << lastone << "/" << basesol << "." << tidxin.str() /*<< "_l" << (_mesh._NoLevels - 1)*/ << ext_h5;
+	    cp_src_h5_stream << _files._input_path << "/" << basesol << "." << tidxin.str() /*<< "_l" << (_mesh._NoLevels - 1)*/ << ext_h5;
             std::string cp_src_h5 = cp_src_h5_stream.str();
             fstream file_cp_h5(cp_src_h5.c_str());
             if (!file_cp_h5.is_open()) {
-                std::cout <<"No h5 file"<< std::endl;
+                std::cout << "No h5 file" << std::endl;
                 abort();
             }
 
-            std::string cp_dest_dir =  basepath + "/" + output_dir + "/" +  outtime_dir;
+            std::string cp_dest_dir = _files._output_path;
 
             std::string cp_cmd_xmf = "cp " + cp_src_xmf  + " " +  cp_dest_dir;
             std::string cp_cmd_h5  = "cp " + cp_src_h5   + " " +  cp_dest_dir;
@@ -629,6 +594,7 @@ void EquationsMap::TransientSetup()  {
             system(cp_cmd_xmf.c_str() );
             system(cp_cmd_h5.c_str() );
 
+	    //TODO why did I not the CopyFile function from Files?
         }
 
 //here you should wait so that you are sure that sol.N.xmf and sol.N.h5 have been copied to the new directory

@@ -834,11 +834,11 @@ void EqnBase::initVectors() {
 //Questo vettore servira' per RETRIEVE THE DOFS FOR THE TRUE VALUES FOR ANY EQUATION,
 // and to PRINT ALL THE VARIABLES, node or cell.
 
-
+//
 
 void EqnBase::GenBc() {
   
-    std::string     basepath = _files.get_basepath();
+    std::string     basepath = _files._app_path;
     std::string    input_dir = DEFAULT_CASEDIR;
     std::string          ibc = DEFAULT_IBC;
     std::string     ext_xdmf = DEFAULT_EXT_XDMF;
@@ -1523,7 +1523,7 @@ void EqnBase::GenIc() {
 
     const uint mesh_ord    = (int) _mesh._mesh_rtmap.get("mesh_ord");
   
-    std::string   basepath = _files.get_basepath();
+    std::string   basepath = _files._app_path;
     std::string  input_dir = DEFAULT_CASEDIR;
     std::string        ibc = DEFAULT_IBC;
     std::string     ext_h5 = DEFAULT_EXT_H5;

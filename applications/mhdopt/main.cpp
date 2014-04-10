@@ -80,21 +80,21 @@ int main(int argc, char** argv) {
   // =========================================
  
   // ======= Physics ========================
-  RunTimeMap<double> physics_map("Physics",files.get_basepath());
+  RunTimeMap<double> physics_map("Physics",files._output_path);
   physics_map.read();
   physics_map.print();
   OptPhysics phys(physics_map);
              phys.set_nondimgroups();
 
   // ======= Mesh =====
-  RunTimeMap<double> mesh_map("Mesh",files.get_basepath());
+  RunTimeMap<double> mesh_map("Mesh",files._output_path);
      mesh_map.read();
      mesh_map.print();
       
 //=========== Domain ================================
   const double Lref  = phys._physrtmap.get("Lref");     // reference L
   uint     dimension = (uint) mesh_map.get("dimension");
-  RunTimeMap<double> box_map("Box",files.get_basepath());
+  RunTimeMap<double> box_map("Box",files._output_path);
   box_map.read();
   box_map.print();
   Box mybox(dimension,box_map);
@@ -277,8 +277,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 #if HAVE_PETSC == 1
   std::string petsc_femus_log = "petsc_main.log";
   std::ostringstream petsc_log;
-  petsc_log <<  files.get_basepath() + "/" + DEFAULT_OUTPUTDIR
-            << "/" << files.get_frtmap().get("OUTTIME_DIR") << "/" << petsc_femus_log;
+  petsc_log <<  files._output_path << "/" << petsc_femus_log;
   PetscViewer my_viewer;
   PetscViewerCreate(MPI_COMM_WORLD, &my_viewer);
   PetscViewerSetType(my_viewer, PETSCVIEWERASCII);
