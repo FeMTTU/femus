@@ -626,7 +626,7 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const vector <unsigned>
     ierr = VecDestroy(&Pr); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
     ierr = VecDestroy(&res); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
     ierr = MatDestroy(&PA); 							CHKERRABORT(MPI_COMM_WORLD,ierr);
-    ierr = KSPDestroy(&_ksp[0]); 						CHKERRABORT(MPI_COMM_WORLD,ierr);
+    this->clear();		//ierr = KSPDestroy(&_ksp[0]); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
     clock_t end_time=clock();
     UpdateTime+=(end_time-start_time);
     // ***************** END UPDATING AND CLEANING *******************
@@ -712,7 +712,7 @@ std::pair< int, double> PetscLinearEquationSolver::solve() {
       SolveTime = clock()-start_time;
       // ***************** END SOLVE ******************
 
-      // ***************** UPDATE and Restore Matrix ******************
+      // ***************** UPDATE RES ******************
       start_time=clock();
 
       *_EPS += *_EPSC;
@@ -729,7 +729,8 @@ std::pair< int, double> PetscLinearEquationSolver::solve() {
       // Get the norm of the final residual to return to the user.
       ierr = KSPGetResidualNorm(_ksp[0], &final_resid); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-      ierr = KSPDestroy(&_ksp[0]);				CHKERRABORT(MPI_COMM_WORLD,ierr);
+      this->clear();		//ierr = KSPDestroy(&_ksp[0]);				CHKERRABORT(MPI_COMM_WORLD,ierr);
+      //this->_is_initialized=false;
 
       UpdateTime = clock() - start_time;
       // ***************** END UPDATE ******************
@@ -783,7 +784,8 @@ std::pair< int, double> PetscLinearEquationSolver::solve() {
     // Get the norm of the final residual to return to the user.
     ierr = KSPGetResidualNorm(_ksp[0], &final_resid); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
  
-    ierr = KSPDestroy(&_ksp[0]);				        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    this->clear();		//ierr = KSPDestroy(&_ksp[0]);				        CHKERRABORT(MPI_COMM_WORLD,ierr);
+    //this->_is_initialized = false;
     ierr = MatDestroy(&A);					        CHKERRABORT(MPI_COMM_WORLD,ierr);
     ierr = VecRestoreSubVector(RES,isA,&Pr);				CHKERRABORT(MPI_COMM_WORLD,ierr);
     ierr = VecDestroy(&Pr);					        CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -833,28 +835,18 @@ std::pair< int, double> PetscLinearEquationSolver::solve() {
 }
 
 void PetscLinearEquationSolver::clear() {
-  
-  for(unsigned i=0;i<_isA.size();i++){
-    ISDestroy(&_isA[i]); 	
-  }
-  
-  for(unsigned i=0;i<_isB.size();i++){
-    ISDestroy(&_isB[i]); 	
-  }
-  
-  
-  if (this->initialized()) {
+   if (this->initialized()) {
     this->_is_initialized = false;
     int ierr=0;
     ierr = KSPDestroy(&_ksp[0]);	CHKERRABORT(MPI_COMM_WORLD,ierr);
     // Mimic PETSc default solver and preconditioner
-    this->_solver_type  = GMRES;
-    if (!this->_preconditioner)      {
-      int i;
-      MPI_Comm_size(MPI_COMM_WORLD,&i);
-      if (i == 1) this->_preconditioner_type = ILU_PRECOND;
-      else this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
-    }
+//     this->_solver_type  = GMRES;
+//     if (!this->_preconditioner)      {
+//       int i;
+//       MPI_Comm_size(MPI_COMM_WORLD,&i);
+//       if (i == 1) this->_preconditioner_type = ILU_PRECOND;
+//       else this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
+//     }
   }
 }
 
@@ -973,64 +965,65 @@ void PetscLinearEquationSolver::init(Mat& Amat, Mat& Pmat) {
   
   
   // Initialize the data structures if not done so already.
-  //if (!this->initialized())    {
-  this->_is_initialized = true;
-  int ierr=0;
-  // Create the linear solver context
-  ierr = KSPCreate(MPI_COMM_WORLD, &_ksp[0]);					CHKERRABORT(MPI_COMM_WORLD,ierr);
-  //ierr = PCCreate (MPI_COMM_WORLD, &_pc); CHKERRABORT(MPI_COMM_WORLD,ierr);
-  // Create the preconditioner context
-  ierr = KSPGetPC(_ksp[0], &_pc);						CHKERRABORT(MPI_COMM_WORLD,ierr);
-  // Set operators. The input matrix works as the preconditioning matrix
-  ierr = KSPSetOperators(_ksp[0], Amat, Pmat, SAME_NONZERO_PATTERN);	CHKERRABORT(MPI_COMM_WORLD,ierr);
-  // Have the Krylov subspace method use our good initial guess rather than 0
-  ierr = KSPSetInitialGuessNonzero(_ksp[0], PETSC_TRUE);			CHKERRABORT(MPI_COMM_WORLD,ierr);
-  // Set user-specified  solver and preconditioner types
-  this->set_petsc_solver_type();
+  if (!this->initialized())    {
+    this->_is_initialized = true;
+    int ierr=0;
+    // Create the linear solver context
+    ierr = KSPCreate(MPI_COMM_WORLD, &_ksp[0]);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+    //ierr = PCCreate (MPI_COMM_WORLD, &_pc); CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Create the preconditioner context
+    ierr = KSPGetPC(_ksp[0], &_pc);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Set operators. The input matrix works as the preconditioning matrix
+    //ierr = KSPSetOperators(_ksp[0], Amat, Pmat, SAME_NONZERO_PATTERN);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Have the Krylov subspace method use our good initial guess rather than 0
+    ierr = KSPSetInitialGuessNonzero(_ksp[0], PETSC_TRUE);			CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Set user-specified  solver and preconditioner types
+    this->set_petsc_solver_type();
     
-  if (!this->same_preconditioner)  {
-    ierr = KSPSetOperators(_ksp[0], Amat, Pmat, SAME_NONZERO_PATTERN);	CHKERRABORT(MPI_COMM_WORLD,ierr);
-  } else {
-    ierr = KSPSetOperators(_ksp[0], Amat, Pmat, SAME_PRECONDITIONER);	CHKERRABORT(MPI_COMM_WORLD,ierr);
-  }
+    if (!this->same_preconditioner)  {
+      ierr = KSPSetOperators(_ksp[0], Amat, Pmat, SAME_NONZERO_PATTERN);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+    } 
+    else {
+      ierr = KSPSetOperators(_ksp[0], Amat, Pmat, SAME_PRECONDITIONER);		CHKERRABORT(MPI_COMM_WORLD,ierr);
+    }
 
-  // Set the tolerances for the iterative solver.  Use the user-supplied
-  // tolerance for the relative residual & leave the others at default values.
-  ierr = KSPSetTolerances(_ksp[0],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);	CHKERRABORT(MPI_COMM_WORLD,ierr);
-  //   ierr = KSPSetTolerances(_ksp[0], , PETSC_DEFAULT,PETSC_DEFAULT, max_its);CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Set the tolerances for the iterative solver.  Use the user-supplied
+    // tolerance for the relative residual & leave the others at default values.
+    ierr = KSPSetTolerances(_ksp[0],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+    //   ierr = KSPSetTolerances(_ksp[0], , PETSC_DEFAULT,PETSC_DEFAULT, max_its);CHKERRABORT(MPI_COMM_WORLD,ierr);
   
     
-  // Set the options from user-input
-  // Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
-  //  These options will override those specified above as long as
-  //  KSPSetFromOptions() is called _after_ any other customization  routines.
-  ierr = KSPSetFromOptions(_ksp[0]);						CHKERRABORT(MPI_COMM_WORLD,ierr);
-  // Not sure if this is necessary, or if it is already handled by KSPSetFromOptions?
-  //ierr = PCSetFromOptions (_pc);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Set the options from user-input
+    // Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
+    //  These options will override those specified above as long as
+    //  KSPSetFromOptions() is called _after_ any other customization  routines.
+    ierr = KSPSetFromOptions(_ksp[0]);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Not sure if this is necessary, or if it is already handled by KSPSetFromOptions?
+    //ierr = PCSetFromOptions (_pc);	CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-  // Notify PETSc of location to store residual history.
-  // This needs to be called before any solves, since
-  // it sets the residual history length to zero.  The default
-  // behavior is for PETSc to allocate (internally) an array
-  // of size 1000 to hold the residual norm history.
-  ierr = KSPSetResidualHistory(_ksp[0],
-			       PETSC_NULL,   // pointer to the array which holds the history
-			       PETSC_DECIDE, // size of the array holding the history
-			       PETSC_TRUE);  // Whether or not to reset the history for each solve.
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Notify PETSc of location to store residual history.
+    // This needs to be called before any solves, since
+    // it sets the residual history length to zero.  The default
+    // behavior is for PETSc to allocate (internally) an array
+    // of size 1000 to hold the residual norm history.
+    ierr = KSPSetResidualHistory(_ksp[0],
+				PETSC_NULL,   // pointer to the array which holds the history
+				PETSC_DECIDE, // size of the array holding the history
+				PETSC_TRUE);  // Whether or not to reset the history for each solve.
+    CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-  PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
-  PetscReal zero = 1.e-16;
-  PCFactorSetZeroPivot(_pc,zero);
-  PCFactorSetShiftType(_pc,MAT_SHIFT_NONZERO);
-  //     if (this->_preconditioner) {
-  //       this->_preconditioner->set_matrix(*matrix);
-  //       PCShellSetContext(_pc,(void*)this->_preconditioner);
-  //       PCShellSetSetUp(_pc,__libmesh_petsc_preconditioner_setup);
-  //       PCShellSetApply(_pc,__libmesh_petsc_preconditioner_apply);
-  //     }
-  //}
-}
+    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
+    PetscReal zero = 1.e-16;
+    PCFactorSetZeroPivot(_pc,zero);
+    PCFactorSetShiftType(_pc,MAT_SHIFT_NONZERO);
+    //     if (this->_preconditioner) {
+    //       this->_preconditioner->set_matrix(*matrix);
+    //       PCShellSetContext(_pc,(void*)this->_preconditioner);
+    //       PCShellSetSetUp(_pc,__libmesh_petsc_preconditioner_setup);
+    //       PCShellSetApply(_pc,__libmesh_petsc_preconditioner_apply);
+    //     }
+  }
+}	
 
 
 

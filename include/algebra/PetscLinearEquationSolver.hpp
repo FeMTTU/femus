@@ -177,6 +177,15 @@ inline PetscLinearEquationSolver::PetscLinearEquationSolver (const unsigned &igr
 // =============================================
 inline PetscLinearEquationSolver::~PetscLinearEquationSolver () {
   this->clear ();
+  
+  for(unsigned i=0;i<_isA.size();i++){
+    ISDestroy(&_isA[i]); 	
+  }
+  
+  for(unsigned i=0;i<_isB.size();i++){
+    ISDestroy(&_isB[i]); 	
+  }
+  
 }
 
 #endif 
