@@ -68,7 +68,7 @@ public:
   /// Initialize data structures if not done so already.
   void init ();
   /// Initialize data structures if not done so already plus much more
-  void init (Mat& matrix);
+  void init (Mat& Amat, Mat &Pmat);
 
   void init(Mat& matrix, const bool pc_flag, const bool Schur);
 
