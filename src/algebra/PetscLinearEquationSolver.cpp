@@ -675,25 +675,35 @@ std::pair< int, double> PetscLinearEquationSolver::solve() {
       Vec RES=RESp->vec(); //TODO
       PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); //TODO
       Mat KK=KKp->mat(); //TODO
+            
       
       // ***************** ASSEMBLE matrix to set Dirichlet BCs by penalty *******************
       start_time=clock();
-        
-      vector <double>  value(_indexai[0].size());
-      _KK->matrix_get_diagonal_values(_indexai[0],value);
-
-      double penalty=1.0e20;
-      _KK->matrix_set_diagonal_values(_indexai[0],penalty);
-      _KK->close();
-
+     
+      Mat Pmat;
+      MatDuplicate(KK,MAT_COPY_VALUES,&Pmat);
+      MatSetOption(Pmat,MAT_NO_OFF_PROC_ZERO_ROWS,PETSC_TRUE);
+      MatZeroRows(Pmat,_indexai[0].size(),&_indexai[0][0],1.e40,0,0);
+          
       AssemblyTime = clock()-start_time;
+            
+      //vector <double>  value(_indexai[0].size());
+      //_KK->matrix_get_diagonal_values(_indexai[0],value);
+
+      //double penalty=1.0e20;
+      //_KK->matrix_set_diagonal_values(_indexai[0],penalty);
+      //_KK->close();
+               
+      //for(int i=0;i<_indexai[0].size();i++){ 
+      //  int ierr = MatSetValuesBlocked(Pmat,1,&_indexai[0][i],1,&_indexai[0][i],&penalty,INSERT_VALUES);  CHKERRABORT(MPI_COMM_WORLD,ierr);
+      //}
+            
       // ***************** END ASSEMBLE ******************
 
       // ***************** SOLVE ******************
       start_time=clock();
 
-      this->init(KK);  //as before
-
+      this->init(KK,Pmat);  //Pmat has penaly diagonal on the Dirichlet Nodes
       _EPSC->zero();
 
       // Solve the linear system
@@ -707,12 +717,12 @@ std::pair< int, double> PetscLinearEquationSolver::solve() {
 
       *_EPS += *_EPSC;
 
-      _KK->matrix_set_diagonal_values(_indexai[0],value);
-      _KK->close();
+      //_KK->matrix_set_diagonal_values(_indexai[0],value);
+      //_KK->close();
 
       _RESC->matrix_mult(*_EPSC,*_KK);
       *_RES -= *_RESC;
-      
+                  
       // Get the number of iterations required for convergence
       ierr = KSPGetIterationNumber(_ksp[0], &its);		CHKERRABORT(MPI_COMM_WORLD,ierr);
 
@@ -724,6 +734,7 @@ std::pair< int, double> PetscLinearEquationSolver::solve() {
       UpdateTime = clock() - start_time;
       // ***************** END UPDATE ******************
 
+      MatDestroy(&Pmat);
   }
   else if(_DirichletBCsHandlingMode==1) { // By elimination
 
@@ -957,7 +968,7 @@ void PetscLinearEquationSolver::init_schur(Mat& matrix) {
 }
 
 // ========================================================
-void PetscLinearEquationSolver::init(Mat& matrix) {
+void PetscLinearEquationSolver::init(Mat& Amat, Mat& Pmat) {
   
   
   
@@ -971,16 +982,16 @@ void PetscLinearEquationSolver::init(Mat& matrix) {
   // Create the preconditioner context
   ierr = KSPGetPC(_ksp[0], &_pc);						CHKERRABORT(MPI_COMM_WORLD,ierr);
   // Set operators. The input matrix works as the preconditioning matrix
-  ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_NONZERO_PATTERN);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = KSPSetOperators(_ksp[0], Amat, Pmat, SAME_NONZERO_PATTERN);	CHKERRABORT(MPI_COMM_WORLD,ierr);
   // Have the Krylov subspace method use our good initial guess rather than 0
   ierr = KSPSetInitialGuessNonzero(_ksp[0], PETSC_TRUE);			CHKERRABORT(MPI_COMM_WORLD,ierr);
   // Set user-specified  solver and preconditioner types
   this->set_petsc_solver_type();
     
   if (!this->same_preconditioner)  {
-    ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_NONZERO_PATTERN);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetOperators(_ksp[0], Amat, Pmat, SAME_NONZERO_PATTERN);	CHKERRABORT(MPI_COMM_WORLD,ierr);
   } else {
-    ierr = KSPSetOperators(_ksp[0], matrix, matrix, SAME_PRECONDITIONER);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = KSPSetOperators(_ksp[0], Amat, Pmat, SAME_PRECONDITIONER);	CHKERRABORT(MPI_COMM_WORLD,ierr);
   }
 
   // Set the tolerances for the iterative solver.  Use the user-supplied
