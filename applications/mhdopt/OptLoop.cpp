@@ -88,15 +88,12 @@ void optimization_loop(EquationsMap& e_map_in)  {
   #ifdef MHDAD_EQUATIONS
       EqnMHDAD* mgMHDAD = static_cast<EqnMHDAD*>(e_map_in.get_eqs("Eqn_MHDAD"));
   #endif
-#ifdef MHDCONT_EQUATIONS
+  #ifdef MHDCONT_EQUATIONS
       EqnMHDCONT* mgMHDCONT = static_cast<EqnMHDCONT*>(e_map_in.get_eqs("Eqn_MHDCONT"));
   #endif
 
 
-std::string intgr_fname = e_map_in._files.get_basepath()     + "/" +
-                          DEFAULT_OUTPUTDIR  + "/" +
-                          e_map_in._files.get_frtmap().get("OUTTIME_DIR") + "/" +
-			  "integral.txt";
+std::string intgr_fname = e_map_in._files._output_path + "/" + "integral.txt";
 
  std::ofstream intgr_fstream;
 
