@@ -33,7 +33,7 @@
  
  TimeLoop::TimeLoop(Files& files_in):
  _files(files_in),
- _timemap("TimeLoop",_files.get_basepath())   {
+ _timemap("TimeLoop",_files._output_path)   {
 
  //inizialize to zero   
    _t_idx_in  = 0;  
@@ -61,9 +61,6 @@
         const uint ndigits     = _timemap.get("ndigits");
         const int print_step   = _timemap.get("printstep");
         // dir names
-        std::string    basepath     = _files.get_basepath();
-        std::string    output_dir   = DEFAULT_OUTPUTDIR;
-        std::string    outtime_dir  = _files.get_frtmap().get("OUTTIME_DIR");
         std::string    basetime     = DEFAULT_BASETIME;
         std::string    ext_xdmf     = DEFAULT_EXT_XDMF;
         std::string    basesol      = DEFAULT_BASESOL;
@@ -77,7 +74,7 @@
 
 	// file 
         std::ostringstream Name;
-        Name << basepath << "/" << output_dir << outtime_dir << basetime << "."
+        Name << _files._output_path << "/" << basetime << "."
              << std::setw(ndigits) << std::setfill('0') << t_idx_in << "-"
              << std::setw(ndigits) << std::setfill('0') << t_idx_final  << "_l" << l
              << ext_xdmf;
@@ -90,7 +87,7 @@
         //   Mesh -----------------------------------
         out << "<?xml version=\"1.0\" ?> \n";
         out << "<!DOCTYPE Xdmf SYSTEM "
-        <<  "\"" << basepath << "/" << output_dir << outtime_dir << "/" << aux_xdmf << "\"" << "[]>\n";
+        <<  "\"" << _files._output_path << "/" << aux_xdmf << "\"" << "[]>\n";
         out << "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.2\"> \n";
         out << "<Domain> \n";
         for (uint kp=0;kp< nprt; kp++)    {

@@ -70,21 +70,21 @@
   // =========================================
    
   // ======= MyPhysics ========================
-  RunTimeMap<double> physics_map("Physics",files.get_basepath());
+  RunTimeMap<double> physics_map("Physics",files._output_path);
   physics_map.read();
   physics_map.print();
   TempPhysics phys(physics_map);   //instantiated as father
               phys.set_nondimgroups(); //implement it
 
   // ======= Mesh =====
-  RunTimeMap<double> mesh_map("Mesh",files.get_basepath());
+  RunTimeMap<double> mesh_map("Mesh",files._output_path);
      mesh_map.read();
      mesh_map.print();
 
   // ======= MyDomainShape ====================
   const double Lref  =  phys._physrtmap.get("Lref");     // reference L
   uint     dimension = (uint) mesh_map.get("dimension");
-  RunTimeMap<double> box_map("Box",files.get_basepath());
+  RunTimeMap<double> box_map("Box",files._output_path);
   box_map.read();
   box_map.print();
   Box mybox(dimension,box_map);
@@ -197,8 +197,6 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 //================================
 	 
   equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
-  return 7;
-	   
   equations_map.TransientSetup();  // reset the initial state (if restart) and print the Case
   
   phys.transient_loopPlusJ(equations_map);
@@ -211,8 +209,7 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 #if HAVE_PETSC == 1
   std::string petsc_femus_log = "petsc_main.log";
   std::ostringstream petsc_log;
-  petsc_log <<  files.get_basepath() + "/" + DEFAULT_OUTPUTDIR
-            << "/" << files.get_frtmap().get("OUTTIME_DIR") << "/" << petsc_femus_log;
+  petsc_log <<  files._output_path << "/" << petsc_femus_log;
 
    PetscViewer my_viewer;
    PetscViewerCreate(MPI_COMM_WORLD, &my_viewer);
