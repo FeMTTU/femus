@@ -22,14 +22,12 @@ class QuantityMap;
 
 class EquationsMap  {
 
-  protected:
-
-    map<string,EqnBase*> _equations;   // system map
-public:  
-    Files&       _files;  // Files class  pointer
-    Physics&     _phys;   // Physics class pointer
+public:
+  
+    Files&       _files;
+    Physics&     _phys;
     QuantityMap& _qtymap;
-    Mesh&        _mesh;   // Mesh  class  pointer
+    Mesh&        _mesh;
     std::vector<FEElemBase*>&  _AbstractFE;
     QRule&       _qrule;
     TimeLoop&    _timeloop;
@@ -47,6 +45,7 @@ public:
     
     /// Destructor
   ~EquationsMap(){};
+  
   void clean(); ///< Clean all substructures
 
   // equation get/set
@@ -71,19 +70,21 @@ public:
 
 
   // read-print functions -------------------------------------------
-  void PrintSol(const uint t_step,const double curr_time); ///< Print solution 
-  void PrintCase(const uint t_init); ///< Print ic and bc
+  void PrintSol(const uint t_step,const double curr_time) const; ///< Print solution 
   void ReadSol(const uint t_step,double& time_out);  ///< Read solution //TODO must be updated
   
 private:
   
- void PrintSolXDMF(const uint t_step,const double curr_time);
- void PrintSolHDF5(const uint t_flag);
+ map<string,EqnBase*> _equations;   // system map
+    
+ void PrintSolXDMF(const uint t_step,const double curr_time) const;
+ void PrintSolHDF5(const uint t_flag) const;
  
- void PrintCaseXDMF(const uint t_init);
- void PrintCaseHDF5(const uint t_init);
+ void PrintCase(const uint t_init) const; ///< Print ic and bc
+ void PrintCaseXDMF(const uint t_init) const;
+ void PrintCaseHDF5(const uint t_init) const;
 
- void PrintXDMFTopologyGeometry(std::ofstream& out,const uint Level, const uint vb);
+ void PrintXDMFTopologyGeometry(std::ofstream& out,const uint Level, const uint vb) const;
 
  
 };
