@@ -21,9 +21,9 @@ class Files {
 
 public:
 
-  std::string  _input_path; //this is where the input files are located BEFORE YOU COPY THEM to the OUTTIME DIR!!!!!
-  std::string _output_path; //this is the OUTTIME DIR!!!
-  std::string    _app_path;
+  std::string  _input_path; //this is where the input files are located BEFORE YOU COPY THEM to the OUTTIME DIR!!!!! it has to alternatives in case of restart or not
+  std::string _output_path; //this is the OUTTIME DIR!!! it's always the same
+  std::string    _app_path; //path of the application
   bool _restart_flag; 
   
    Files(const std::string &/*  = DEFAULT_BASEPATH*/);  //TODO seems like it doesn't work with ONE DEFAULT PARAMETER
