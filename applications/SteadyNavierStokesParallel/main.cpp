@@ -151,7 +151,8 @@ int main(int argc,char **args) {
   system2.SetMaxNumberOfLinearIterations(6);
   system2.SetAbsoluteConvergenceTolerance(1.e-10);  
   system2.SetMgType(F_CYCLE);
-   
+  //system2.SetDirichletBCsHandling(PENALTY); 
+  system2.SetDirichletBCsHandling(ELIMINATION); 
   // Solving Temperature system
   std::cout << std::endl;
   std::cout << " *********** Temperature ************* " << std::endl;
