@@ -55,7 +55,9 @@ private:
   
   vector <IS> _isA;
   vector <IS> _isB;
-      
+  
+  Mat _Pmat;
+  bool _Pmat_is_initialized;  
 public:
   // Constructor --------------------------------------
   /**  Constructor. Initializes Petsc data structures */
@@ -85,7 +87,7 @@ public:
   std::pair< int, double> solve(const vector <unsigned> &VankaIndex,
 				const short unsigned &NSchurVar,const bool &Schur);
   /// Call the Gmres smoother-solver
-  std::pair< int, double> solve();
+  std::pair< int, double> solve( const bool &clean = true);
 
 //   /// Call the Petsc solver.  This function calls the method below, using the
 //   /// same matrix for the system and preconditioner matrices.
@@ -171,6 +173,8 @@ inline PetscLinearEquationSolver::PetscLinearEquationSolver (const unsigned &igr
   _maxits.resize(2,10);
   
   _indexai_init=0;
+  
+  _Pmat_is_initialized = false;
 
 }
 

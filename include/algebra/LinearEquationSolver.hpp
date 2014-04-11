@@ -129,7 +129,7 @@ public:
   /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.
   virtual std::pair< int, double> solve(const vector <unsigned> &VankaIndex, const short unsigned &NSchurVar,const bool &Schur) = 0;
   /// Call the Gmres smoother-solver
-  virtual std::pair< int, double> solve() = 0;
+  virtual std::pair< int, double> solve( const bool &clean = true) = 0;
   
 //   /// This function calls the solver
 //   virtual std::pair< int, double> solve (SparseMatrix&,  // System Matrix
