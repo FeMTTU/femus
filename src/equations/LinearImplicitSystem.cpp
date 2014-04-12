@@ -122,7 +122,7 @@ void LinearImplicitSystem::solve() {
 	  
 	  // ============== Presmoothing ============== 
 	  for (unsigned k = 0; k < _npre; k++) {
-	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur) : _LinSolver[ig]->solve(ksp_clean+k);
+	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur) : _LinSolver[ig]->solve(ksp_clean*(!k));
 	  }
 	  // ============== Non-Standard Multigrid Restriction ==============
 	  start_time = clock();
@@ -143,7 +143,7 @@ void LinearImplicitSystem::solve() {
  
  	  // ============== PostSmoothing ==============    
  	  for (unsigned k = 0; k < _npost; k++) {
- 	    solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur) : _LinSolver[ig]->solve(ksp_clean + _npre);
+ 	    solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur) : _LinSolver[ig]->solve(ksp_clean * (!_npre) * (!k) );
  	  }
  	}
  	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============

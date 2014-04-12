@@ -118,8 +118,8 @@ int main(int argc,char **args) {
   system1.SetMaxNumberOfLinearIterations(1);
   system1.SetAbsoluteConvergenceTolerance(1.e-10);  
   system1.SetMgType(F_CYCLE);
-  system1.SetNumberPreSmoothingStep(1);
-  system1.SetNumberPostSmoothingStep(1);
+  system1.SetNumberPreSmoothingStep(2);
+  system1.SetNumberPostSmoothingStep(2);
  
   if(!vanka){
     system1.SetMgSmoother(GMRES_SMOOTHER);
@@ -151,8 +151,10 @@ int main(int argc,char **args) {
   system2.SetMaxNumberOfLinearIterations(6);
   system2.SetAbsoluteConvergenceTolerance(1.e-10);  
   system2.SetMgType(F_CYCLE);
-  //system2.SetDirichletBCsHandling(PENALTY); 
-  system2.SetDirichletBCsHandling(ELIMINATION); 
+  system2.SetNumberPreSmoothingStep(2);
+  system2.SetNumberPostSmoothingStep(2);
+  system2.SetDirichletBCsHandling(PENALTY); 
+  //system2.SetDirichletBCsHandling(ELIMINATION); 
   // Solving Temperature system
   std::cout << std::endl;
   std::cout << " *********** Temperature ************* " << std::endl;
