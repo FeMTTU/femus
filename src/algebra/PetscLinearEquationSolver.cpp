@@ -654,7 +654,7 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const vector <unsigned>
 
 // ********************************************************************************
 
-std::pair< int, double> PetscLinearEquationSolver::solve(const bool &clean) {
+std::pair< int, double> PetscLinearEquationSolver::solve(const bool &ksp_clean) {
     
   clock_t SearchTime, AssemblyTime, SolveTime, UpdateTime;
   int its;
@@ -669,31 +669,30 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const bool &clean) {
     
   if(_DirichletBCsHandlingMode==0) // By penalty
     {
-      PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  //TODO
-      Vec EPSC=EPSCp->vec(); //TODO
-      PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
-      Vec RES=RESp->vec(); //TODO
-      PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); //TODO
-      Mat KK=KKp->mat(); //TODO
+      PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  
+      Vec EPSC=EPSCp->vec(); 
+      PetscVector* RESp=static_cast<PetscVector*> (_RES);  
+      Vec RES=RESp->vec();
+      PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK); 
+      Mat KK=KKp->mat(); 
       
       // ***************** ASSEMBLE matrix to set Dirichlet BCs by penalty *******************
       start_time=clock();
             
-      if(clean) this->clear();
-      // initialize Pmat
-      if(!_Pmat_is_initialized){
-	MatDuplicate(KK,MAT_COPY_VALUES,&_Pmat);
+      if(ksp_clean){
+	this->clear();
+	// initialize Pmat wiwth penaly diagonal on the Dirichlet Nodes
+      	MatDuplicate(KK,MAT_COPY_VALUES,&_Pmat);
 	MatSetOption(_Pmat,MAT_NO_OFF_PROC_ZERO_ROWS,PETSC_TRUE);
 	MatZeroRows(_Pmat,_indexai[0].size(),&_indexai[0][0],1.e40,0,0);
 	_Pmat_is_initialized = true;
+	this->init(KK,_Pmat);
       }
       AssemblyTime = clock()-start_time;      
       // ***************** END ASSEMBLE ******************
 
       // ***************** SOLVE ******************
       start_time=clock();
-
-      if(clean) this->init(KK,_Pmat);  //Pmat has penaly diagonal on the Dirichlet Nodes
 
       // Solve the linear system
       ierr = KSPSolve(_ksp[0], RES, EPSC);			CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -740,11 +739,11 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const bool &clean) {
     ierr = VecDuplicate(Pr,&Pw);			        	CHKERRABORT(MPI_COMM_WORLD,ierr);
 
     // initialize Pmat
-    if(clean) this->clear();
-    
-    if(!_Pmat_is_initialized){
+    if(ksp_clean){
+      this->clear();
       ierr = MatGetSubMatrix(KK,isA,isA,MAT_INITIAL_MATRIX,&_Pmat); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
       _Pmat_is_initialized = true;
+      this->init(_Pmat,_Pmat);
     }
 
     AssemblyTime = clock()-start_time;
@@ -752,9 +751,7 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const bool &clean) {
 
     // ***************** SOLVE ******************
     start_time=clock();
-    
-    if(clean) this->init(_Pmat,_Pmat);
-      
+          
     // Solve the linear system
     ierr = KSPSolve(_ksp[0],Pr,Pw);					CHKERRABORT(MPI_COMM_WORLD,ierr);
 
@@ -803,7 +800,7 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const bool &clean) {
   // *** Computational info ***
   cout << "Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:              " <<
     static_cast<double>( SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
-    "  ITS: " << its << endl;
+    "  ITS: " << its  << "\t ksp_clean = "<< ksp_clean<<endl;
 
   return std::make_pair(its,final_resid);
     
