@@ -68,16 +68,18 @@
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
 
   // ======= MyDomainShape ====================
+  RunTimeMap<double> box_map("Box",files._output_path);
   const double Lref  =  phys._physrtmap.get("Lref");     // reference L
   uint     dimension = (uint) mesh_map.get("dimension");
-  RunTimeMap<double> box_map("Box",files._output_path);
   Box mybox(dimension,box_map);
       mybox.init(Lref);
 
 // ====== GeomEl ================================
 // ======  Mesh ================================
-  Mesh     mesh(files,mesh_map,Lref,&mybox);        /*VB based*/
-  mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/
+  Mesh mesh(files,mesh_map,Lref);        /*VB based*/
+       mesh.ReadMeshFile(); 
+       mesh.SetDomain(&mybox);
+       mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/
   
   phys.set_mesh(&mesh);
   

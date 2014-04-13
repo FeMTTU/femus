@@ -33,8 +33,9 @@ public:
     uint*      _type_FEM;         //just for check
 
 // ====== DOMAIN SHAPE (TODO optional => pointer) ----- //if I put it as reference I'd have to initialize it
-    Domain* _domain;
-    Domain* GetDomain();
+    Domain* _domain;      //TODO You must remember to ALLOCATE this POINTER BEFORE USING IT!
+    Domain* GetDomain() const;
+    void    SetDomain(Domain* );
     void TransformElemNodesToRef(const uint vb,const double* xx_qnds,double* refbox_xyz) const;
 
 // ==== PARALLEL ===
@@ -59,7 +60,7 @@ public:
                                      // on the fine node numbering, the nodes corresponding to linear dofs are numbered FIRST... or not?
 
 //===== Constructors/ Destructor ===========
-     Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref, Domain* domain_in=NULL);
+     Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref);
     ~Mesh ();			  ///<  Level Mesh Destructor
     void clear ();		  ///<  substructure Destructor
 
