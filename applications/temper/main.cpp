@@ -76,21 +76,19 @@
 
 // ====== GeomEl ================================
 // ======  Mesh ================================
-  uint geomel_type = (uint) mesh_map.get("geomel_type");  // must do in such a way that it is picked from the geomel throughout the code
-  GeomEl geomel(dimension,geomel_type);           /*VB based*/
-  Mesh     mesh(files,mesh_map,geomel,Lref,&mybox);        /*VB based*/
+  Mesh     mesh(files,mesh_map,Lref,&mybox);        /*VB based*/
   mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/
   
   phys.set_mesh(&mesh);
   
 // ======  QRule ================================ //so far we have ONLY ONE quadrature rule for all the equations
-  QRule   qrule(&geomel);
+  QRule   qrule(&(mesh._GeomEl));
 
   // =======Abstract FEElems =====  //remember to delete the FE at the end
   std::vector<FEElemBase*> FEElements(QL);  //TODO what if we dont want to call the default constructor?!? AAA here no constructor is called!!! If you have a pointer the constructor is not called!
                                                      
   for (int fe=0; fe<QL; fe++) {
-    FEElements[fe] = FEElemBase::build(&geomel,fe);       /*VB based*/  //The order of the fe is established by the library
+    FEElements[fe] = FEElemBase::build(&(mesh._GeomEl),fe);       /*VB based*/  //The order of the fe is established by the library
 //sort of constructor
     FEElements[fe]->SetOrder(fe);
     FEElements[fe]->AssociateQRule(&qrule);
