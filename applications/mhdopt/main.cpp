@@ -78,15 +78,17 @@ int main(int argc, char** argv) {
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
       
 //=========== Domain ================================
+  RunTimeMap<double> box_map("Box",files._output_path);
   const double Lref  = phys._physrtmap.get("Lref");     // reference L
   uint     dimension = (uint) mesh_map.get("dimension");
-  RunTimeMap<double> box_map("Box",files._output_path);
   Box mybox(dimension,box_map);
       mybox.init(Lref);
 
 // ======  Mesh ================================
-  Mesh mesh(files,mesh_map,Lref,&mybox); 
-  mesh.PrintForVisualizationAllLEVAllVB();
+  Mesh mesh(files,mesh_map,Lref); 
+       mesh.ReadMeshFile(); 
+       mesh.SetDomain(&mybox);
+       mesh.PrintForVisualizationAllLEVAllVB();
 
   phys.set_mesh(&mesh);
 

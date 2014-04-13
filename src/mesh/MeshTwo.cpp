@@ -18,16 +18,14 @@
 
 
 // ========================================================
-Mesh::Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref,Domain* domain_in) :
+Mesh::Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref) :
          _files(files_in),
          _mesh_rtmap(map_in),
          _Lref(Lref),
          _GeomEl( (uint) _mesh_rtmap.get("dimension"), (uint) _mesh_rtmap.get("geomel_type") ),
-         _n_GeomEl(_mesh_rtmap.get("numgeomels")),
-         _domain(domain_in)
+         _n_GeomEl(_mesh_rtmap.get("numgeomels"))
          {
       
-  this->ReadMeshFile(); 
 
   _iproc = paral::get_rank();
 
@@ -100,16 +98,16 @@ void Mesh::clear ()  {
  }
 
 
- // ========================================================
-//   void Mesh::SetDomain(Domain& domain_in)  {
-//     
-//     _domain = domain_in;
-//     
-//    return ; 
-//   }
+// ========================================================
+  void Mesh::SetDomain(Domain* domain_in)  {
+    
+    _domain = domain_in;
+    
+   return; 
+  }
   
  // ========================================================
-  Domain* Mesh::GetDomain()  {
+  Domain* Mesh::GetDomain() const {
     
    return _domain; 
    
