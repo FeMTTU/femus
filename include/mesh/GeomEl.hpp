@@ -193,7 +193,6 @@ public:
 
 };
 
-#endif
 
 //every FE must have its own prol like it has its own embedding matrix. Then the print routine asks to each variable how to be printed
 //(whether to be prolongated or not)
@@ -209,3 +208,4 @@ public:
 //the question is still: do we have to associate it to the MATH part
 //or to the GEOM part
 //We give it to the math part and we say: for a given geom el part, what do you give us, my dear math part?
+#endif
