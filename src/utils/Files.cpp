@@ -13,7 +13,7 @@
 #include "Files.hpp"
 
 #include "FEMTTUConfig.h" //for log_petsc
-#if HAVE_PETSC == 1
+#ifdef HAVE_PETSC
 #include "petsc.h"
 #endif
 #include "FemusDefault.hpp"
@@ -631,7 +631,7 @@ std::cout << "The number of processors is " << paral::get_size() << std::endl;
   std::ostringstream petsc_log;
   petsc_log << _output_path << "/" << petsc_femus_log;
 
-#if HAVE_PETSC == 1
+#ifdef HAVE_PETSC
    PetscViewer my_viewer;
    PetscViewerCreate(MPI_COMM_WORLD, &my_viewer);
    PetscViewerSetType(my_viewer, PETSCVIEWERASCII);
