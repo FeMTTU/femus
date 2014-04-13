@@ -9,7 +9,6 @@
 //FEMuS includes 
 #include "FemusDefault.hpp"
 #include "FEMTTUConfig.h"
-
 #include "Typedefs.hpp"
 #include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"

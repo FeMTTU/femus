@@ -74,7 +74,6 @@
   Box mybox(dimension,box_map);
       mybox.init(Lref);
 
-// ====== GeomEl ================================
 // ======  Mesh ================================
   Mesh mesh(files,mesh_map,Lref);        /*VB based*/
        mesh.ReadMeshFile(); 

@@ -18,6 +18,8 @@ class Files;
 class QuantityLocal;
 class Domain;
 
+
+  
 class Mesh  {
 
 public:
@@ -78,6 +80,8 @@ protected:
 
     const double _Lref;          ///Reference length for non-dimensionalization
 
-};
+ };
+
+
 
 #endif
