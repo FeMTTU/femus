@@ -49,12 +49,11 @@ template <typename T>
 RunTimeMap<T>::RunTimeMap(const std::string class_name_in, const std::string basepath_in) : 
 _basepath(basepath_in),
 _tag_name(class_name_in)
-{ 
-  //_tag_name = class_name; 
-  //fill it in the initialization list instead of here;
-  //    you may also put it here because it is not a reference nor a const;
-  //    but in the initialization list you avoid calling for an empty constructor, IIRC
+{
   
+     read();
+     print();
+
   // I AM ALMOST SURE THAT THERE IS SOME PROBLEM WITH THE CONSTRUCTION of the _rtmap object...
   // it sounds like it's not well initialized
   //clearly the object is not const, so we need to find some other way to "sort of initialize" it

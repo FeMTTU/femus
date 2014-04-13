@@ -87,13 +87,9 @@ int main(int argc, char** argv) {
 
   // ======= Files =====
      RunTimeMap<std::string> files_map("Files",files._app_path);
-     files_map.read();
-     files_map.print();
 
   // ======= Mesh =====
      RunTimeMap<double> mesh_map("Mesh",files._app_path);
-     mesh_map.read();
-     mesh_map.print();
 
   // =======GeomEl =====
   uint geomel_type = (uint) mesh_map.get("geomel_type");

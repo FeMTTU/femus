@@ -71,22 +71,16 @@ int main(int argc, char** argv) {
  
   // ======= Physics ========================
   RunTimeMap<double> physics_map("Physics",files._output_path);
-  physics_map.read();
-  physics_map.print();
   OptPhysics phys(physics_map);
              phys.set_nondimgroups();
 
   // ======= Mesh =====
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
-     mesh_map.read();
-     mesh_map.print();
       
 //=========== Domain ================================
   const double Lref  = phys._physrtmap.get("Lref");     // reference L
   uint     dimension = (uint) mesh_map.get("dimension");
   RunTimeMap<double> box_map("Box",files._output_path);
-  box_map.read();
-  box_map.print();
   Box mybox(dimension,box_map);
       mybox.init(Lref);
 
@@ -159,8 +153,6 @@ int main(int argc, char** argv) {
 
   // ======== TimeLoop ===================================
   TimeLoop time_loop(files); 
-  time_loop._timemap.read();
-  time_loop._timemap.print();
   
   // ====== EquationsMap =================================
   EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,qrule,time_loop);
