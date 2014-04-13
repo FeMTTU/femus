@@ -61,22 +61,16 @@
    
   // ======= MyPhysics ========================
   RunTimeMap<double> physics_map("Physics",files._output_path);
-  physics_map.read();
-  physics_map.print();
   TempPhysics phys(physics_map);   //instantiated as father
               phys.set_nondimgroups(); //implement it
 
   // ======= Mesh =====
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
-     mesh_map.read();
-     mesh_map.print();
 
   // ======= MyDomainShape ====================
   const double Lref  =  phys._physrtmap.get("Lref");     // reference L
   uint     dimension = (uint) mesh_map.get("dimension");
   RunTimeMap<double> box_map("Box",files._output_path);
-  box_map.read();
-  box_map.print();
   Box mybox(dimension,box_map);
       mybox.init(Lref);
 
