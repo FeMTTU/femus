@@ -12,7 +12,10 @@
 // class
 #include "Files.hpp"
 
-// configuration includes
+#include "FEMTTUConfig.h" //for log_petsc
+#if HAVE_PETSC == 1
+#include "petsc.h"
+#endif
 #include "FemusDefault.hpp"
 #include "paral.hpp"//to get iproc HAVE_MPI is inside here
 
@@ -617,4 +620,24 @@ std::cout << "The number of processors is " << paral::get_size() << std::endl;
   
    return; 
      
+  }
+  
+  
+  
+//==========================================
+  void Files::log_petsc() const {
+    
+  std::string petsc_femus_log = "petsc_main.log";
+  std::ostringstream petsc_log;
+  petsc_log << _output_path << "/" << petsc_femus_log;
+
+#if HAVE_PETSC == 1
+   PetscViewer my_viewer;
+   PetscViewerCreate(MPI_COMM_WORLD, &my_viewer);
+   PetscViewerSetType(my_viewer, PETSCVIEWERASCII);
+   PetscViewerFileSetName(my_viewer, petsc_log.str().c_str());   
+   PetscLogView(my_viewer);
+#endif
+   
+   return;
   }

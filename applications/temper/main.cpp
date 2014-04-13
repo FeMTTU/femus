@@ -8,12 +8,6 @@
 // External library include ( LibMesh, PETSc...) ------------------------------
 #include "FEMTTUConfig.h"
 
-// Petsc  //TODO remove it later, this is here only for the LOG at the end
-#if HAVE_PETSC == 1
-#include "petsc.h"
-#endif
-
-
 // FEMuS
 #include "paral.hpp" 
 #include "FemusInit.hpp"
@@ -202,18 +196,8 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 /*(iproc==0)*/  files.PrintRunForRestart(DEFAULT_LAST_RUN);
 
   // ============  log ================================
-#if HAVE_PETSC == 1
-  std::string petsc_femus_log = "petsc_main.log";
-  std::ostringstream petsc_log;
-  petsc_log <<  files._output_path << "/" << petsc_femus_log;
-
-   PetscViewer my_viewer;
-   PetscViewerCreate(MPI_COMM_WORLD, &my_viewer);
-   PetscViewerSetType(my_viewer, PETSCVIEWERASCII);
-   PetscViewerFileSetName(my_viewer, petsc_log.str().c_str());   
-   PetscLogView(my_viewer);
-#endif
-
+  files.log_petsc();
+  
 // ============  clean ================================
   // here we clean all that we allocated as new in the main
   equations_map.clean();  //deallocates the map of equations
