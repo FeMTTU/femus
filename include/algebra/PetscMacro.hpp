@@ -4,7 +4,7 @@
 // #include "SolverlibConf.hpp"
 #include "FEMTTUConfig.h"
 
-#if HAVE_PETSC == 1
+#ifdef HAVE_PETSC
 
 // A convenient macro for comparing PETSc versions.  Returns 1 if the
 // current PETSc version is < major.minor.subminor and zero otherwise.

@@ -26,6 +26,7 @@
 #include "PetscPreconditioner.hpp"
 #include "PetscVector.hpp"
 #include "PetscMatrix.hpp"
+#include <iomanip>
 
 using namespace std;
 
@@ -634,11 +635,12 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const vector <unsigned>
     //  } //end loop over vanka block
   } //loop over subdomain
 
+#ifdef DEBUG
   // *** Computational info ***
-  cout << "Grid: "<<_msh->GetGridNumber()<< "      SOLVER TIME:              " <<
+  cout << "Grid: "<<_msh->GetGridNumber()<< "      SOLVER TIME:              " << std::setw(11) << std::setprecision(6) << std::fixed <<
     static_cast<double>(SearchTime + AssemblyTime + SolveTime0 + SolveTime1 + SolveTime2 + UpdateTime)/ CLOCKS_PER_SEC<<
     "  ITS: " << its_A + its_C << endl;
-
+#endif
 
   //    cout <<  " SearchTime: " << static_cast<double>(SearchTime)/ CLOCKS_PER_SEC << endl;
   //    cout << " AssemblyTime: " << static_cast<double>(AssemblyTime)/ CLOCKS_PER_SEC << endl;
@@ -798,9 +800,11 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const bool &ksp_clean) 
   }
   
   // *** Computational info ***
-  cout << "Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:              " <<
+#ifdef DEBUG  
+  cout << "Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:              "  << std::setw(11) << std::setprecision(6) << std::fixed <<
     static_cast<double>( SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
     "  ITS: " << its  << "\t ksp_clean = "<< ksp_clean<<endl;
+#endif
 
   return std::make_pair(its,final_resid);
     
@@ -948,7 +952,7 @@ void PetscLinearEquationSolver::init(Mat& Amat, Mat& Pmat) {
     // Set operators. The input matrix works as the preconditioning matrix
     //ierr = KSPSetOperators(_ksp[0], Amat, Pmat, SAME_NONZERO_PATTERN);	CHKERRABORT(MPI_COMM_WORLD,ierr);
     // Have the Krylov subspace method use our good initial guess rather than 0
-    ierr = KSPSetInitialGuessNonzero(_ksp[0], PETSC_FALSE);			CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     ierr = KSPSetInitialGuessNonzero(_ksp[0], PETSC_FALSE);			CHKERRABORT(MPI_COMM_WORLD,ierr);
     // Set user-specified  solver and preconditioner types
     this->set_petsc_solver_type();
     
@@ -965,6 +969,12 @@ void PetscLinearEquationSolver::init(Mat& Amat, Mat& Pmat) {
     // Set the tolerances for the iterative solver.  Use the user-supplied
     // tolerance for the relative residual & leave the others at default values.
     ierr = KSPSetTolerances(_ksp[0],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+    
+    if(_msh->GetGridNumber()!=0)
+      KSPSetInitialGuessKnoll(_ksp[0], PETSC_TRUE);
+
+    if(_msh->GetGridNumber()!=0)
+      KSPSetNormType(_ksp[0],KSP_NORM_NONE);
      
     // Set the options from user-input
     // Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>

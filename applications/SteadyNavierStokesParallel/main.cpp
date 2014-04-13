@@ -9,6 +9,7 @@
 #include "VTKOutput.hpp"
 #include "GMVOutput.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "../../include/enums/SolvertypeEnum.hpp"
 
 using std::cout;
 using std::endl;
@@ -29,7 +30,7 @@ int main(int argc,char **args) {
 
   bool linear=1;
   bool vanka=1;
-  if(argc == 2) {
+  if(argc >= 2) {
     if( strcmp("vanka",args[1])) vanka=0;
   }
   else {
@@ -43,10 +44,10 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=2;
+  nm=4;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
-  nr=2;
+  nr=0;
   std::cout<<"MAX_REFINEMENT levels: " << nr << endl<< endl;
   
   int tmp=nm;  nm+=nr;  nr=tmp;
@@ -116,14 +117,15 @@ int main(int argc,char **args) {
   system1.AttachAssembleFunction(AssembleMatrixResNS);  
   system1.SetMaxNumberOfNonLinearIterations(3);
   system1.SetMaxNumberOfLinearIterations(1);
-  system1.SetAbsoluteConvergenceTolerance(1.e-10);  
+  system1.SetAbsoluteConvergenceTolerance(1.e-10);
+  system1.SetNonLinearConvergenceTolerance(1.e-04);
   system1.SetMgType(F_CYCLE);
   system1.SetNumberPreSmoothingStep(2);
   system1.SetNumberPostSmoothingStep(2);
  
   if(!vanka){
     system1.SetMgSmoother(GMRES_SMOOTHER);
-    system1.SetTolerances(1.e-12,1.e-20,1.e+50,10);
+    system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
   }
   else{
     system1.SetMgSmoother(VANKA_SMOOTHER);
@@ -149,8 +151,11 @@ int main(int argc,char **args) {
   // System Temperature
   system2.AttachAssembleFunction(AssembleMatrixResT);
   system2.SetMaxNumberOfLinearIterations(6);
-  system2.SetAbsoluteConvergenceTolerance(1.e-10);  
-  system2.SetMgType(F_CYCLE);
+  system2.SetAbsoluteConvergenceTolerance(1.e-9);  
+  system2.SetSolverFineGrids(GMRES);
+  system2.SetPreconditionerFineGrids(ILU_PRECOND); 
+  system2.SetTolerances(1.e-12,1.e-20,1.e+50,4);
+  system2.SetMgType(V_CYCLE);
   system2.SetNumberPreSmoothingStep(2);
   system2.SetNumberPostSmoothingStep(2);
   system2.SetDirichletBCsHandling(PENALTY); 

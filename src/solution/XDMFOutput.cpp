@@ -26,7 +26,7 @@
 #include <algorithm>  
 #include <cstring>
 
-#if HAVE_HDF5 == 1
+#ifdef HAVE_HDF5
   #include "hdf5.h"
 #endif
 
@@ -43,7 +43,7 @@ XDMFOutput::~XDMFOutput()
 
 void XDMFOutput::write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
-#if HAVE_HDF5 == 1
+#ifdef HAVE_HDF5
   
   if(_iproc!=0) return;
   
@@ -336,7 +336,7 @@ void XDMFOutput::write_system_solutions(const char order[], std::vector<std::str
 
 void XDMFOutput::write_solution_wrapper(const char type[]) const {
   
-#if HAVE_HDF5 == 1 
+#ifdef HAVE_HDF5 
   
   // to add--> _time_step0, _ntime_steps
   int time_step0 = 0;

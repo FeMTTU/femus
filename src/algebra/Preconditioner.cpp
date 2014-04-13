@@ -29,12 +29,12 @@ Preconditioner::build(const SolverPackage solver_package) {
   // Build the appropriate solver
   switch (solver_package) {
 
-#if HAVE_PETSC == 1
+#ifdef HAVE_PETSC
   case PETSC_SOLVERS: {
     return new PetscPreconditioner();
   }
 #endif
-#if HAVE_TRILINOS == 1
+#ifdef HAVE_TRILINOS
       case TRILINOS_SOLVERS:
         {
   	AutoPtr<Preconditioner > ap(new AztecPreconditioner);

@@ -16,6 +16,7 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
 #include "NumericVector.hpp"
+#include "iomanip"
 
 // ------------------------------------------------------------
 // NonLinearImplicitSystem implementation
@@ -77,10 +78,11 @@ void NonLinearImplicitSystem::solve() {
       bool assemble_matrix = true; //Be carefull!!!! this is needed in the _assemble_function
       
       /// Be careful !!!! adesso stiamo usando _sys_number invece che ipde, da togliere al + presto
-      _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix);    
+      _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix); 
       
+#ifdef DEBUG     
       std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
- 
+#endif
       for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
 	
 	bool ksp_clean=!_n_linear_iterations;
@@ -94,7 +96,9 @@ void NonLinearImplicitSystem::solve() {
 	  // ============== Non-Standard Multigrid Restriction ==============
 	  start_time = clock();
 	  Restrictor(ig, igridn, _n_nonlinear_iterations, _n_linear_iterations, full_cycle);
+#ifdef DEBUG
 	  std::cout << "Grid: " << ig << "-->" << ig-1 << "  RESTRICTION TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+#endif
 	}
        
  	// ============== Coarse Direct Solver ==============
@@ -106,8 +110,9 @@ void NonLinearImplicitSystem::solve() {
  	  // ============== Standard Prolongation ==============
  	  start_time=clock();
  	  Prolongator(ig);
+#ifdef DEBUG
  	  std::cout << "Grid: " << ig-1 << "-->" << ig << " PROLUNGATION TIME:\t" << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
- 
+#endif
  	  // ============== PostSmoothing ==============    
  	  for (unsigned k = 0; k < _npost; k++) {
  	    solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur) : _LinSolver[ig]->solve(ksp_clean*(!_npre)*(!k));
@@ -123,16 +128,18 @@ void NonLinearImplicitSystem::solve() {
  	if(_final_linear_residual < _absolute_convergence_tolerance) 
 	  break;
       }
-      std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
+      std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< std::setw(11) << std::setprecision(6) << std::scientific << _final_linear_residual << std::endl;
       // ============== Update Solution ( ig = igridn )==============
       _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
 							 _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
       // ============== Test for non-linear Convergence ==============
       bool conv = CheckConvergence(_sys_name.c_str(), igridn-1);
       if (conv == true) _n_nonlinear_iterations = _n_max_nonlinear_iterations+1;
-     
+
+#ifdef DEBUG
       std::cout << std::endl;
       std::cout << "COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+#endif
     }
     // ==============  Solution Prolongation ==============
     if (igridn < _gridn) {
@@ -140,7 +147,8 @@ void NonLinearImplicitSystem::solve() {
     }
   }
 
-  std::cout << "SOLVER TIME:   \t\t\t"<<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
+  std::cout << "SOLVER TIME:   \t\t\t"<< std::setw(11) << std::setprecision(6) << std::fixed << 
+  static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
   
 }
 
@@ -152,7 +160,7 @@ bool NonLinearImplicitSystem::CheckConvergence(const char pdename[], const unsig
   double ResMax;
   double L2normEps;
  
-  
+  std::cout << std::endl;
   //for debugging purpose
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned indexSol=_SolSystemPdeIndex[k];
@@ -160,8 +168,8 @@ bool NonLinearImplicitSystem::CheckConvergence(const char pdename[], const unsig
     L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
     ResMax       = _solution[igridn]->_Res[indexSol]->linfty_norm();
 
-    std::cout << "level=" << igridn<< "\tLinftynormRes" << _ml_sol->GetSolutionName(indexSol) << "=" << ResMax    <<std::endl;
-    std::cout << "level=" << igridn<< "\tL2normEps"     << _ml_sol->GetSolutionName(indexSol) << "=" << L2normEps <<std::endl;
+    std::cout << "level=" << igridn<< "\tLinftynormRes" << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << ResMax    <<std::endl;
+    std::cout << "level=" << igridn<< "\tL2normEps"     << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normEps <<std::endl;
     
     if (L2normEps <_max_nonlinear_convergence_tolerance && conv==true) {
       conv=true;
@@ -170,6 +178,7 @@ bool NonLinearImplicitSystem::CheckConvergence(const char pdename[], const unsig
       conv=false;
     }
   }
+  std::cout << std::endl;
   return conv;
 }
 

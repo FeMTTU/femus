@@ -36,13 +36,13 @@ std::auto_ptr<SparseMatrix > SparseMatrix::build( // -----
 ) { // =================================================================================
   // Build the appropriate vector
   switch (solver_package) {
-#if HAVE_PETSC == 1 // ------------------------------
+#ifdef HAVE_PETSC // ------------------------------
   case PETSC_SOLVERS: {
     std::auto_ptr<SparseMatrix > ap(new PetscMatrix);
     return ap;
   }
 #endif
-#if HAVE_TRILINOS == 1 // ----------------------------
+#ifdef HAVE_TRILINOS // ----------------------------
   case TRILINOS_SOLVERSM: {
     std::auto_ptr<SparseMatrix > ap(new EpetraMatrix<double>);
     return ap;

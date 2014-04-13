@@ -2,17 +2,20 @@
 #define FEMTTU_VERSION_MAJOR @FEMTTU_VERSION_MAJOR@
 #define FEMTTU_VERSION_MINOR @FEMTTU_VERSION_MINOR@
 
+#cmakedefine DEBUG
+
 //MPI library
 
-#define HAVE_MPI @HAVE_MPI@
+#cmakedefine HAVE_MPI
 
 //PETSc solver library
 
-#define HAVE_PETSC @HAVE_PETSC@
+#cmakedefine HAVE_PETSC
 
 //HDF5 library
 
-#define HAVE_HDF5 @HAVE_HDF5@
+#cmakedefine HAVE_HDF5
+
 
 #ifdef HAVE_PETSC
   #undef  LSOLVER
