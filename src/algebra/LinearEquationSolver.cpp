@@ -35,13 +35,13 @@ using namespace std;
 std::auto_ptr<LinearEquationSolver> LinearEquationSolver::build(const unsigned &igrid, mesh *other_mesh, const SolverPackage solver_package) {
   // Build the appropriate solver
   switch (solver_package)  {
-#if HAVE_PETSC == 1
+#ifdef HAVE_PETSC
   case PETSC_SOLVERS:      {
     std::auto_ptr<LinearEquationSolver> ap(new PetscLinearEquationSolver(igrid, other_mesh));
     return ap;
   }
 #endif
-#if HAVE_TRILINOS == 1
+#ifdef HAVE_TRILINOS
   case TRILINOS_SOLVERS:  {
     std::auto_ptr<LinearEquationSolver> ap(new AztecLinearEquationSolver);
     return ap;

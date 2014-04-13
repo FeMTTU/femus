@@ -1,6 +1,6 @@
 #include "FEMTTUConfig.h"
 
-#if HAVE_PETSC == 1
+#ifdef HAVE_PETSC
 
 #include "Typedefs.hpp"
 

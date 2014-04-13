@@ -10,7 +10,7 @@
 #endif
 
 
-#if HAVE_PETSC == 1
+#ifdef HAVE_PETSC
 # include "PetscMacro.hpp"
 EXTERN_C_FOR_PETSC_BEGIN
 # include "petsc.h"
@@ -41,7 +41,7 @@ FemusInit::FemusInit(int & argc, char** & argv/*, MPI_Comm comm_world_in*/) {
 //           _rank = static_cast<unsigned int>(i);
 #endif	  
 
-#if HAVE_PETSC == 1
+#ifdef HAVE_PETSC
 std::cout << "PETSC_COMM_WORLD first " << PETSC_COMM_WORLD << std::endl;
 
 //      PETSC_COMM_WORLD = comm_world_in;
@@ -91,7 +91,7 @@ std::cout << "PETSC_COMM_WORLD first " << PETSC_COMM_WORLD << std::endl;
 FemusInit::~FemusInit() {
 
 
-#if HAVE_PETSC == 1
+#ifdef HAVE_PETSC
       PetscFinalize();
 #endif
 

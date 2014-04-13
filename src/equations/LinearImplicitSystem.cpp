@@ -18,6 +18,7 @@
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
 #include "ElemType.hpp"
+#include <iomanip>
 
 // ------------------------------------------------------------
 // LinearImplicitSystem implementation
@@ -110,11 +111,16 @@ void LinearImplicitSystem::solve() {
       bool assemble_matrix = true; //Be carefull!!!! this is needed in the _assemble_function
       
       /// Be careful !!!! adesso stiamo usando _sys_number invece che ipde, da togliere al + presto
-      _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix);    
+      _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix);  
       
+#ifdef DEBUG       
       std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+#endif
  
       for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
+	
+	std::cout << std::endl;
+	std::cout << "   ************* Linear Cycle "<< _n_linear_iterations + 1 << " *************" << std::endl << std::endl;
 	
 	bool ksp_clean=!_n_linear_iterations;
 	
@@ -127,7 +133,11 @@ void LinearImplicitSystem::solve() {
 	  // ============== Non-Standard Multigrid Restriction ==============
 	  start_time = clock();
 	  Restrictor(ig, igridn, nonlinear_cycle, _n_linear_iterations, full_cycle);
-	  std::cout << "Grid: " << ig << "-->" << ig-1 << "  RESTRICTION TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+	  
+#ifdef DEBUG
+	  std::cout << "Grid: " << ig << "-->" << ig-1 << "  RESTRICTION TIME:\t       "<< std::setw(11) << std::setprecision(6) << std::fixed
+	  << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+#endif
 	}
        
  	// ============== Coarse Direct Solver ==============
@@ -139,8 +149,12 @@ void LinearImplicitSystem::solve() {
  	  // ============== Standard Prolongation ==============
  	  start_time=clock();
  	  Prolongator(ig);
- 	  std::cout << "Grid: " << ig-1 << "-->" << ig << " PROLUNGATION TIME:\t" << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
- 
+
+#ifdef DEBUG 
+ 	  std::cout << "Grid: " << ig-1 << "-->" << ig << "  PROLUNGATION TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
+ 	  << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+#endif 
+	  
  	  // ============== PostSmoothing ==============    
  	  for (unsigned k = 0; k < _npost; k++) {
  	    solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur) : _LinSolver[ig]->solve(ksp_clean * (!_npre) * (!k) );
@@ -152,6 +166,10 @@ void LinearImplicitSystem::solve() {
  	}
  	
  	_final_linear_residual = solver_info.second;
+	
+	std::cout << std::endl;
+	std::cout << "Grid: " << igridn-1 << "      RESIDUAL:\t\t      " << std::setw(11) << std::setprecision(6) << std::scientific << 
+	_final_linear_residual << std::endl;
 	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
  	if(_final_linear_residual < _absolute_convergence_tolerance) 
 	  
@@ -162,8 +180,8 @@ void LinearImplicitSystem::solve() {
       _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
 					    _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
    
-      std::cout << std::endl;
-      std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
+//       std::cout << std::endl;
+//       std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
 
     // ==============  Solution Prolongation ==============
     if (igridn < _gridn) {
@@ -171,7 +189,9 @@ void LinearImplicitSystem::solve() {
     }
   }
 
-  std::cout << "SOLVER TIME:   \t\t\t"<<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
+  std::cout << std::endl;
+  std::cout << "\t     SOLVER TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed 
+  <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
   
 }
 

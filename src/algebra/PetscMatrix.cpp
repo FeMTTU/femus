@@ -18,7 +18,7 @@
 //----------------------------------------------------------------------------
 #include "FEMTTUConfig.h"
 
-#if HAVE_PETSC == 1
+#ifdef HAVE_PETSC 
 
 // Local includes
 #include "Parallel.hpp"

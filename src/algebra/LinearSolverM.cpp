@@ -19,7 +19,7 @@ std::auto_ptr<LinearSolverM > LinearSolverM::build(const SolverPackage solver_pa
 {
   // Build the appropriate solver
   switch (solver_package)  {
-#if HAVE_PETSC == 1
+#ifdef HAVE_PETSC
     case PETSC_SOLVERS:      {
 	std::auto_ptr<LinearSolverM > ap(new PetscLinearSolverM);
 	return ap;

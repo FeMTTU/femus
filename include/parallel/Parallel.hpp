@@ -21,7 +21,7 @@
 //----------------------------------------------------------------------------
 #include "FEMTTUConfig.h"
 
-#if HAVE_MPI == 1
+#ifdef HAVE_MPI
   # include <mpi.h>
 #endif
 

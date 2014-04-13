@@ -18,9 +18,9 @@
 
 #include "FEMTTUConfig.h"
 
-#if HAVE_PETSC == 1
+#ifdef HAVE_PETSC
 
-#if HAVE_MPI == 1
+#ifdef HAVE_MPI
   #include <mpi.h> 
 #endif
 
@@ -150,6 +150,7 @@ inline PetscLinearEquationSolver::PetscLinearEquationSolver (const unsigned &igr
         
   if(igrid==0){
     this->_preconditioner_type = MLU_PRECOND;
+    this->_solver_type         = PREONLY;
     _num_elem_vanka_block = _msh->el->GetElementNumber();  
   }
   else{
