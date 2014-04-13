@@ -33,4 +33,10 @@
   #ifndef FEMTTU_DETECTED_PETSC_VERSION_SUBMINOR
     #define FEMTTU_DETECTED_PETSC_VERSION_SUBMINOR  @PETSC_VERSION_SUBMINOR@
   #endif
+  
+    //namespace
+#define BEGIN_NAMESPACE_FEMUS namespace femus {
+#define   END_NAMESPACE_FEMUS   }
+  
+
 #endif
