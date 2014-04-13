@@ -23,6 +23,8 @@
 #include "FEElemBase.hpp"
 #include "Files.hpp"
 #include "CurrElem.hpp"
+#include "CurrElem.hpp"
+#include "CurrGaussPoint.hpp"
 
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
@@ -3797,8 +3799,6 @@ return;
 // // // // }
 
 
-#include "CurrElem.hpp"
-#include "CurrGaussPoint.hpp"
 //=================================================================
 //=================================================================
 //this function computes the integral of some function
