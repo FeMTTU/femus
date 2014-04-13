@@ -782,7 +782,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
     
     if (paral::get_rank() ==0 ){ 
       intgr_fstream.open(intgr_fname.c_str(),ios_base::app); 
-      intgr_fstream << _eqnmap._files.get_frtmap().get("OUTTIME_DIR") << " " << optphys->_physrtmap.get("alphaT") << " " << optphys->_physrtmap.get("injsuc")<< " "  << J << " " << std::endl ; 
+      intgr_fstream << _eqnmap._files._output_time << " " << optphys->_physrtmap.get("alphaT") << " " << optphys->_physrtmap.get("injsuc")<< " "  << J << " " << std::endl ; 
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
 }
  

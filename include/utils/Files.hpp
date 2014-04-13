@@ -22,19 +22,14 @@ class Files {
 public:
 
   std::string  _input_path; //this is where the input files are located BEFORE YOU COPY THEM to the OUTTIME DIR!!!!! it has to alternatives in case of restart or not
-  std::string _output_path; //this is the OUTTIME DIR!!! it's always the same
+  std::string _output_path;
+  std::string _output_time; //this is the OUTTIME DIR!!!
   std::string    _app_path; //path of the application
+
   bool _restart_flag; 
   
    Files(const std::string &/*  = DEFAULT_BASEPATH*/);  //TODO seems like it doesn't work with ONE DEFAULT PARAMETER
   ~Files();
-
-
-// RunTimeMap ===================
-  inline       RunTimeMap<std::string> * get_frtmap_ptr()       {return  &_frtmap;} 
-  inline       RunTimeMap<std::string> & get_frtmap()       {return  _frtmap;}   //trying to return the pointer instead of the reference //non-const version //WHO DECIDES whether to use THIS FUNCTION or the OTHER ONE? TODO OVERLOADING
-  inline const RunTimeMap<std::string> & get_frtmap() const {return  _frtmap;}    // I WANT THIS TO RETURN a REFERENCE, because this is going to call the READ FUNCTION which modifies the object //THIS FUNCTION WILL BE CALLED by functions inside the class basically, which have the "const this" as well
-  inline const std::string             get_basepath() const {return  _frtmap.get_rbasepath(); }  //THIS RETURNS a COPY
 
 // Directory management =========
          void CheckIODirectories();
@@ -52,10 +47,9 @@ public:
 // Stream redirect to file ======
          void RedirectCout(std::streambuf* sbuf,  std::ofstream& file_in) const;
   static void RedirectCoutFinalize(std::streambuf* sbuf);
+         void log_petsc() const;
 
 private:
-  
-  RunTimeMap<std::string>           _frtmap;   //this map cannot be declared as CONST because at some point it is FILLED and it is not in the initialization in the constructor!!!
   
 // Directory management
          void ComposeOutdirName();
@@ -63,7 +57,6 @@ private:
 
 // Copy 
   void CopyFile(std::string  f_in,std::string  f_out) const;
-
   
 };
 

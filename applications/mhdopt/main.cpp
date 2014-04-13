@@ -8,12 +8,7 @@
 // External library include 
 #include "FEMTTUConfig.h"
 
-
-#if HAVE_PETSC == 1  // Petsc   //TODO remove it later, this is here only for the LOG at the end
-#include "petsc.h"
-#endif
-
-// library includes
+// FEMuS
 #include "paral.hpp"
 #include "FemusDefault.hpp"
 #include "FemusInit.hpp"
@@ -70,53 +65,41 @@ int main(int argc, char** argv) {
 // >>>>>>>>>>>>> END REDIRECT COUT
    files.CopyInputFiles();
 
-   files.get_frtmap()._basepath = files._output_path;
-
-   files.get_frtmap().read();
-   files.get_frtmap().print();
-   
   // =========================================
   // ======= END OF THE INITIALIZATION PART ========================
   // =========================================
  
   // ======= Physics ========================
   RunTimeMap<double> physics_map("Physics",files._output_path);
-  physics_map.read();
-  physics_map.print();
   OptPhysics phys(physics_map);
              phys.set_nondimgroups();
 
   // ======= Mesh =====
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
-     mesh_map.read();
-     mesh_map.print();
       
 //=========== Domain ================================
+  RunTimeMap<double> box_map("Box",files._output_path);
   const double Lref  = phys._physrtmap.get("Lref");     // reference L
   uint     dimension = (uint) mesh_map.get("dimension");
-  RunTimeMap<double> box_map("Box",files._output_path);
-  box_map.read();
-  box_map.print();
   Box mybox(dimension,box_map);
       mybox.init(Lref);
 
-// ====== GeomEl ================================
 // ======  Mesh ================================
-  uint geomel_type = (uint) mesh_map.get("geomel_type");
-  GeomEl geomel(dimension,geomel_type);
-  Mesh mesh(files,mesh_map,geomel,Lref,&mybox); 
-  mesh.PrintForVisualizationAllLEVAllVB();
+  Mesh mesh(files,mesh_map,Lref); 
+       mesh.ReadMeshFile(); 
+       mesh.SetDomain(&mybox);
+       mesh.PrintForVisualizationAllLEVAllVB();
 
   phys.set_mesh(&mesh);
 
 // ======  QRule ================================ //so far we have ONLY ONE quadrature rule for all the equations
-  QRule   qrule(&geomel);
+  QRule   qrule(&(mesh._GeomEl));
   
   // =======FEElems =====  //remember to delete the FE at the end
   std::vector<FEElemBase*> FEElements(QL);
  
   for (int fe=0; fe<QL; fe++) {
-    FEElements[fe] = FEElemBase::build(&geomel,fe);       /*VB based*/  //The order of the fe is established by the library
+    FEElements[fe] = FEElemBase::build(&(mesh._GeomEl),fe);       /*VB based*/  //The order of the fe is established by the library
 //sort of constructor
     FEElements[fe]->SetOrder(fe);
     FEElements[fe]->AssociateQRule(&qrule);
@@ -169,8 +152,6 @@ int main(int argc, char** argv) {
 
   // ======== TimeLoop ===================================
   TimeLoop time_loop(files); 
-  time_loop._timemap.read();
-  time_loop._timemap.print();
   
   // ====== EquationsMap =================================
   EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,qrule,time_loop);
@@ -274,16 +255,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 /*(iproc==0)*/  files.PrintRunForRestart(DEFAULT_LAST_RUN);  /*TODO fileIO*/
 
   // ============  log ================================
-#if HAVE_PETSC == 1
-  std::string petsc_femus_log = "petsc_main.log";
-  std::ostringstream petsc_log;
-  petsc_log <<  files._output_path << "/" << petsc_femus_log;
-  PetscViewer my_viewer;
-  PetscViewerCreate(MPI_COMM_WORLD, &my_viewer);
-  PetscViewerSetType(my_viewer, PETSCVIEWERASCII);
-  PetscViewerFileSetName(my_viewer, petsc_log.str().c_str());   
-  PetscLogView(my_viewer);
-#endif
+  files.log_petsc();
 
 // ============  clean ================================
   equations_map.clean();  //deallocates the map of equations
