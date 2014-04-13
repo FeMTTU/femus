@@ -8,12 +8,7 @@
 // External library include 
 #include "FEMTTUConfig.h"
 
-
-#if HAVE_PETSC == 1  // Petsc   //TODO remove it later, this is here only for the LOG at the end
-#include "petsc.h"
-#endif
-
-// library includes
+// FEMuS
 #include "paral.hpp"
 #include "FemusDefault.hpp"
 #include "FemusInit.hpp"
@@ -269,16 +264,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 /*(iproc==0)*/  files.PrintRunForRestart(DEFAULT_LAST_RUN);  /*TODO fileIO*/
 
   // ============  log ================================
-#if HAVE_PETSC == 1
-  std::string petsc_femus_log = "petsc_main.log";
-  std::ostringstream petsc_log;
-  petsc_log <<  files._output_path << "/" << petsc_femus_log;
-  PetscViewer my_viewer;
-  PetscViewerCreate(MPI_COMM_WORLD, &my_viewer);
-  PetscViewerSetType(my_viewer, PETSCVIEWERASCII);
-  PetscViewerFileSetName(my_viewer, petsc_log.str().c_str());   
-  PetscLogView(my_viewer);
-#endif
+  files.log_petsc();
 
 // ============  clean ================================
   equations_map.clean();  //deallocates the map of equations

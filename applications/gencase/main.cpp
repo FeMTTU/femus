@@ -38,7 +38,7 @@
 //If you want to read it from an external file: 
 // - set libmesh_gen=0,
 // - put the external file (e.g. mesh.gam) into the CONFIG directory
-// - and set the file name in F_MESH_READ in "param_files.in"
+// - and set the file name in F_MESH_READ in the runtime file
 // Only, beware that "dimension" is the same as the mesh dimension in the file
 // (anyway we have a check for that)
 

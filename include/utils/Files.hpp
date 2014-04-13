@@ -47,6 +47,7 @@ public:
 // Stream redirect to file ======
          void RedirectCout(std::streambuf* sbuf,  std::ofstream& file_in) const;
   static void RedirectCoutFinalize(std::streambuf* sbuf);
+         void log_petsc() const;
 
 private:
   
