@@ -70,11 +70,6 @@ int main(int argc, char** argv) {
 // >>>>>>>>>>>>> END REDIRECT COUT
    files.CopyInputFiles();
 
-   files.get_frtmap()._basepath = files._output_path;
-
-   files.get_frtmap().read();
-   files.get_frtmap().print();
-   
   // =========================================
   // ======= END OF THE INITIALIZATION PART ========================
   // =========================================

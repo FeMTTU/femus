@@ -25,11 +25,46 @@ class FEElemBase;
 
 class GenCase {
 
+public:
+
+     GenCase(Files& files_in,RunTimeMap<double>& map_in, GeomEl& mggeomel_in,std::vector<FEElemBase*>& feelems_in, std::string mesh_file);
+    ~GenCase();                                      
+
+    void ComputeMatrix();
+    void ComputeProl();
+    void ComputeRest();
+    void PrintOneVarMatrixHDF5(std::string name, std::string groupname, int** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel ) const;
+    void PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, int* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe) const;
+
+    void GenerateCase();
+    void GenerateCoarseMesh(libMesh::Mesh* msh_coarse);
+    void RefineMesh(libMesh::Mesh* msh_all_levs);
+    void GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs);
+    void GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh* bd_mesht, libMesh::Mesh* msht, libMesh::Mesh* msh);
+    void CreateStructuresLevSubd();
+
+    void PrintElemVB( hid_t file, const uint vb , int* v_inv_nd , ElemStoBase** elem_sto, std::vector<std::pair<int,int> > v_el   ) const;
+    void PrintSubdomFlagOnQuadrCells(const int vb, const int Level,std::string filename) const;
+    void PrintMultimeshXdmf() const;
+    void PrintMeshHDF5() const;
+
+    void ElemChildToFather();
+    void ReorderElementBySubdLev_VV();
+    void ReorderElementBySubdLev_BB();
+    void ComputeElemOffsetsBySubdLevel();
+
+    void FillNodeSto();
+    void ReorderNodesBySubdLev();
+    void ComputeNodeOffsetsBySubdLevel();
+    void ComputeMaxElXNode();
+    void ComputeNodeMapExtLevels();
+  
 private:
 
     // Basic data ==========
     RunTimeMap<double> _mesh_rtmap;
     Files& _files;
+    std::string _mesh_file;
     int _NoSubdom;       ///< number of subdomain (one for each processor)
     int _NoLevels;       ///< number of levels (multigrid)
 
@@ -73,40 +108,6 @@ private:
 //     std::string _nd_coord_folder;  //TODO why seg fault if I use them?!?
 //     std::string _el_pid_name;
 //     std::string _nd_map_FineToLev;
-
-public:
-
-     GenCase(Files& files_in,RunTimeMap<double>& map_in, GeomEl& mggeomel_in,std::vector<FEElemBase*>& feelems_in); ///<  Constructor
-    ~GenCase();                                       ///<  Destructor
-
-    void ComputeMatrix();
-    void ComputeProl();
-    void ComputeRest();
-    void PrintOneVarMatrixHDF5(std::string name, std::string groupname, int** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel ) const;
-    void PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, int* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe) const;
-
-    void GenerateCase();
-    void GenerateCoarseMesh(libMesh::Mesh* msh_coarse);
-    void RefineMesh(libMesh::Mesh* msh_all_levs);
-    void GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs);
-    void GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh* bd_mesht, libMesh::Mesh* msht, libMesh::Mesh* msh);
-    void CreateStructuresLevSubd();
-
-    void PrintElemVB( hid_t file, const uint vb , int* v_inv_nd , ElemStoBase** elem_sto, std::vector<std::pair<int,int> > v_el   ) const;
-    void PrintSubdomFlagOnQuadrCells(const int vb, const int Level,std::string filename) const;
-    void PrintMultimeshXdmf() const;
-    void PrintMeshHDF5() const;
-
-    void ElemChildToFather();
-    void ReorderElementBySubdLev_VV();
-    void ReorderElementBySubdLev_BB();
-    void ComputeElemOffsetsBySubdLevel();
-
-    void FillNodeSto();
-    void ReorderNodesBySubdLev();
-    void ComputeNodeOffsetsBySubdLevel();
-    void ComputeMaxElXNode();
-    void ComputeNodeMapExtLevels();
     
 };
 

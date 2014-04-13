@@ -22,8 +22,9 @@
 //         Files Class functions
 // =================================================
 
-  Files::Files(const std::string &  string_in) : 
-        _frtmap("Files",string_in)   {  //TODO here is where we have to change because the path for the map is determined later, after configure restart and outtime generation... 
+  Files::Files(const std::string &  string_in)  
+
+  {  //TODO here is where we have to change because the path for the map is determined later, after configure restart and outtime generation... 
 	  
 	  _app_path = string_in;
 	  
@@ -38,7 +39,7 @@
   
   void Files::ConfigureRestart() {
       
-      std::string mybasepath = get_basepath();
+      std::string mybasepath = _app_path;
 
 //         if (paral::get_rank() == 0) { //QUESTA LETTURA LA POSSONO FARE TUTTI I PROCESSORI!
             std::cout << " Reading the  run_to_restart_from file to determine restart status or not" << std::endl;
@@ -68,11 +69,9 @@
 	      std::cout << "*** RESTART is activated *****" << std::endl; 
 	      //we must set the basepath accordingly
 	    
-	    _frtmap._basepath = mybasepath + "/" + DEFAULT_OUTPUTDIR + "/" + lastone;
-
 	    _input_path = mybasepath + "/" + DEFAULT_OUTPUTDIR + "/" + lastone + "/";
 	    
-	      std::cout << "*** The new basepath is *****" << _frtmap._basepath << std::endl; 
+	      std::cout << "*** The new input path is *****" << _input_path << std::endl; 
 	    
 	    }
 	    else { std::cout << "Normal simulation without restart" << std::endl; 
@@ -228,12 +227,12 @@ return;
 
 
 
-  //the goal of this routine is to print a file with the current OUTTIME_DIR in it
+  //the goal of this routine is to print a file with the current OUTTIMEDIR in it
   //it should be called "print outtime dir"
     //here you have to pass the RELATIVE_NAME of the file to be printed, 
   //it composes it wrt the OUTPUTDIR
   //call this function when the OUTPUT DIR is already created
-  //and also after OUTTIME_DIR is composed
+  //and also after OUTTIMEDIR is composed
   
    //print this string to /base_output/new_run
   //Files does not have Utils yet
@@ -244,12 +243,12 @@ void Files::PrintRunForRestart(const std::string run_name_in) const {
    if (paral::get_rank() == 0 )   {
 
    std::string run("");
-   run = get_basepath() + "/" + DEFAULT_OUTPUTDIR + "/" + run_name_in; //AAA BASE OUTPUT
+   run = _app_path + "/" + DEFAULT_OUTPUTDIR + "/" + run_name_in; //AAA BASE OUTPUT
    std::cout << "Print the run " << run << "to file" << std::endl;
 
    std::ofstream run_file; run_file.open(run.c_str());
    run_file << DEFAULT_LAST_RUN << " ";
-   run_file << get_frtmap().get("OUTTIME_DIR");
+   run_file << _output_time;
   
       run_file << std::endl;
       run_file << "flag_for_restart " << 0;  //TODO if you printed 1 here it would turn out to be a NONSTOPPING CHAIN OF SIMULATIONS!!!!
@@ -381,13 +380,13 @@ MPI_Bcast(out_char,outchar_size,MPI_CHAR,0,MPI_COMM_WORLD);
 
  delete [] out_char;
 
- get_frtmap().set("OUTTIME_DIR",new_out);
-
- std::cout << "iproc = " << paral::get_rank() << " ***** The output dir of this run will be: " << DEFAULT_OUTPUTDIR << get_frtmap().get("OUTTIME_DIR") << std::endl;
+ _output_time = new_out;
+ 
+ std::cout << "iproc = " << paral::get_rank() << " ***** The output dir of this run will be: " << DEFAULT_OUTPUTDIR << "/" << _output_time << std::endl;
 
  //************************
  //set the input and output_path variables
- _output_path = get_basepath() + "/"  + DEFAULT_OUTPUTDIR + "/"  + get_frtmap().get("OUTTIME_DIR") + "/";
+ _output_path = _app_path + "/"  + DEFAULT_OUTPUTDIR + "/" + _output_time + "/";
  
  
  
@@ -421,8 +420,6 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
 
  std::cout << "TODO: MUST FIND A WAY TO COPY A WHOLE DIRECTORY AND NOT THE SINGLE FILES" << std::endl;
     
-   std::string app_basepath = get_basepath() + "/"; 
-
 //these two files are copied here because they are useful for the visualization   
 
    // >>>>>>> outtime dir: COPY FILES   //needs the BASEPATH of the APPLICATION
@@ -533,7 +530,7 @@ MPI_Barrier(MPI_COMM_WORLD);
 void Files::CheckIODirectories() {
  
 //INPUT
-                    std::string abs_app = get_basepath() + "/";
+                    std::string abs_app = _app_path + "/";
 /*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_CONFIGDIR); //it must be there only to be COPIED (and we don't even need the check in restart case)
 /*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_CASEDIR);   //it must be there only to be COPIED
 
@@ -541,7 +538,7 @@ void Files::CheckIODirectories() {
 
    std::string abs_outputdir = abs_app + "/" + DEFAULT_OUTPUTDIR;
 /*(iproc==0)*/  ComposeOutdirName();  //this adds an element to the Files map, so the SetupAll function cannot be constant
-/*(iproc==0)*/  CheckDirOrMake(abs_outputdir, get_frtmap().get("OUTTIME_DIR"));
+/*(iproc==0)*/  CheckDirOrMake(abs_outputdir,_output_time);
 
 // at this point we should copy the input files in the outtime directory
 
@@ -573,8 +570,8 @@ void Files::CheckIODirectories() {
 //whenever I change the absolute path,
 //I'd prefer passing the file name explicitly
 
-    std::string abs_runlog = get_basepath() + "/" + DEFAULT_OUTPUTDIR 
-    + "/" + get_frtmap().get("OUTTIME_DIR") +  "/" + DEFAULT_RUN_LOG;
+    std::string abs_runlog = _app_path + "/" + DEFAULT_OUTPUTDIR 
+    + "/" + _output_time +  "/" + DEFAULT_RUN_LOG;
 
 //  std::ofstream file;  //if a filestream dies, then also its stream-buffer dies ?!? 
 //                       //So I have to declare it outside? Yes. This seems to work.

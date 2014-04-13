@@ -28,12 +28,13 @@
 
 // ========================================================
 GenCase::GenCase(Files& files_in, RunTimeMap<double> & map_in, GeomEl& geomel_in,
-                 std::vector<FEElemBase*>& feelems_in):
+                 std::vector<FEElemBase*>& feelems_in, std::string mesh_file_in):
         _files(files_in),
         _mesh_rtmap(map_in),
         _dimension( (uint) _mesh_rtmap.get("dimension")),
         _GeomEl(geomel_in),
-        _feelems(feelems_in)  {
+        _feelems(feelems_in),
+        _mesh_file(mesh_file_in)  {
 
     const uint mesh_ord = (uint) _mesh_rtmap.get("mesh_ord");
     if (mesh_ord != 0) {
@@ -141,7 +142,7 @@ void GenCase::GenerateCoarseMesh(Mesh* msh_coarse)  {
 //    while in the case of external mesh it should be given consistently
             //TODO think of Domain before or after Mesh
 
-            RunTimeMap<double> box_map("Box",_files.get_basepath());
+            RunTimeMap<double> box_map("Box",_files._app_path);
             box_map.read();
             box_map.print();
             Box box(_dimension,box_map);
@@ -177,9 +178,9 @@ void GenCase::GenerateCoarseMesh(Mesh* msh_coarse)  {
     case 0: {
         std::cout << " Reading Mesh File at level 0 \n";
 
-        std::string basepath    = _files.get_basepath();
+        std::string basepath    = _files._app_path;
         std::string config_dir  = DEFAULT_CONFIGDIR;
-        std::string f_mesh_read = _files.get_frtmap().get("F_MESH_READ");
+        std::string f_mesh_read = _mesh_file;
 
         std::ostringstream mesh_infile;
         mesh_infile << basepath << "/" << config_dir << f_mesh_read;
@@ -1042,7 +1043,7 @@ void GenCase::ComputeNodeMapExtLevels() {
 // ==================================================================
 void GenCase::PrintMultimeshXdmf() const {
 
-    std::string basepath  = _files.get_basepath();
+    std::string basepath  = _files._app_path;
     std::string input_dir = DEFAULT_CASEDIR;
     std::string multimesh = DEFAULT_MULTIMESH;
     std::string ext_xdmf  = DEFAULT_EXT_XDMF;
@@ -1111,7 +1112,7 @@ void GenCase::PrintMeshHDF5() const  {
 
     std::ostringstream name;
 
-    std::string basepath  = _files.get_basepath();
+    std::string basepath  = _files._app_path;
     std::string input_dir = DEFAULT_CASEDIR;
     std::string basemesh  = DEFAULT_BASEMESH;
     std::string ext_h5    = DEFAULT_EXT_H5;
@@ -1644,7 +1645,7 @@ void GenCase::ComputeProl()  {
   int NegativeOneFlag = -1;
   double   PseudoZero = 1.e-8;
   
-    std::string basepath  = _files.get_basepath();
+    std::string basepath  = _files._app_path;
     std::string input_dir = DEFAULT_CASEDIR;
     std::string f_prol    = DEFAULT_F_PROL;
     std::string ext_h5    = DEFAULT_EXT_H5;
@@ -2247,7 +2248,7 @@ void GenCase::ComputeMatrix() {
     int *** memG;
 
 //========= CREATE THE FILE ============================
-    std::string basepath  = _files.get_basepath();
+    std::string basepath  = _files._app_path;
     std::string input_dir = DEFAULT_CASEDIR;
     std::string f_matrix  = DEFAULT_F_MATRIX;
     std::string ext_h5    = DEFAULT_EXT_H5;
@@ -2568,7 +2569,7 @@ void GenCase::ComputeRest( ) {
   int NegativeOneFlag = -1;
   double   PseudoZero = 1.e-8;
   
-        std::string basepath  = _files.get_basepath();
+        std::string basepath  = _files._app_path;
         std::string input_dir = DEFAULT_CASEDIR;
         std::string f_rest    = DEFAULT_F_REST;
         std::string ext_h5    = DEFAULT_EXT_H5;

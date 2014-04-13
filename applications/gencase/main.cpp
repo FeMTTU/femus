@@ -76,18 +76,22 @@ int main(int argc, char** argv) {
   Files::CheckDirOrAbort("../",chosen_app);
   std::string basepath = "../" + chosen_app + "/";
   Files files(basepath);
-   std::cout << "******The basepath starting from the gencase directory is ***** " << files.get_basepath() << std::endl;
+   std::cout << "******The basepath starting from the gencase directory is ***** " << files._app_path << std::endl;
 
 //======== first of all, check for restart ======      
 //======== don't rerun gencase in that case, to avoid spending time on rebuilding the operators and so on ======      
   files.ConfigureRestart();
   if (files._restart_flag == true) { std::cout << "Do not rerun gencase in case of restart" << std::endl; abort(); }
-  files.get_frtmap().read();
-  files.get_frtmap().print();
-  files.CheckDir(files.get_basepath(),DEFAULT_CASEDIR); //here, we must check if the input directory where gencase writes is there  //if not, we make it
+  
+  files.CheckDir(files._app_path,DEFAULT_CASEDIR); //here, we must check if the input directory where gencase writes is there  //if not, we make it
+
+  // ======= Files =====
+     RunTimeMap<std::string> files_map("Files",files._app_path);
+     files_map.read();
+     files_map.print();
 
   // ======= Mesh =====
-     RunTimeMap<double> mesh_map("Mesh",files.get_basepath());
+     RunTimeMap<double> mesh_map("Mesh",files._app_path);
      mesh_map.read();
      mesh_map.print();
 
@@ -111,7 +115,7 @@ std::vector<FEElemBase*> FEElements(QL); //these are basically used only for the
   //anyway, now we do like this
       
   // ========= GenCase =====
-      GenCase gencase(files,mesh_map,geomel,FEElements);
+      GenCase gencase(files,mesh_map,geomel,FEElements,files_map.get("F_MESH_READ"));
       gencase.GenerateCase();
 
   std::cout << "=======End of GenCase========" << std::endl;
