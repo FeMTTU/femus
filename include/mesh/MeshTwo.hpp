@@ -13,17 +13,14 @@
 #include "Typedefs.hpp"
 #include "FEMTTUConfig.h"
 #include "RunTimeMap.hpp"
-
+#include "GeomEl.hpp"
 class Files;
-class GeomEl;
 class QuantityLocal;
 class Domain;
 
+
+  
 class Mesh  {
-
-protected:
-
-    const double _Lref;          ///Reference length for non-dimensionalization
 
 public:
   
@@ -33,13 +30,14 @@ public:
     uint _meshVB;          /// Number of FEM "manifold" Families (VB)  F
 
 // ===== ABSTRACT GEOMEL(S) =====
-    GeomEl&    _GeomEl;
+    GeomEl    _GeomEl;
     const uint _n_GeomEl;         //number of geom elem types
     uint*      _type_FEM;         //just for check
 
 // ====== DOMAIN SHAPE (TODO optional => pointer) ----- //if I put it as reference I'd have to initialize it
-    Domain* _domain;
-    Domain* GetDomain();
+    Domain* _domain;      //TODO You must remember to ALLOCATE this POINTER BEFORE USING IT!
+    Domain* GetDomain() const;
+    void    SetDomain(Domain* );
     void TransformElemNodesToRef(const uint vb,const double* xx_qnds,double* refbox_xyz) const;
 
 // ==== PARALLEL ===
@@ -64,7 +62,7 @@ public:
                                      // on the fine node numbering, the nodes corresponding to linear dofs are numbered FIRST... or not?
 
 //===== Constructors/ Destructor ===========
-     Mesh (Files& files_in, RunTimeMap<double>& map_in, GeomEl& geomel, const double Lref, Domain* domain_in=NULL);
+     Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref);
     ~Mesh ();			  ///<  Level Mesh Destructor
     void clear ();		  ///<  substructure Destructor
 
@@ -78,6 +76,12 @@ public:
     void PrintMeshFile(const std::string & namefile) const;
     void ReadMeshFile();
     
-};
+protected:
+
+    const double _Lref;          ///Reference length for non-dimensionalization
+
+ };
+
+
 
 #endif

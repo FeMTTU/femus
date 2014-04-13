@@ -1,15 +1,15 @@
 #ifndef __mg_system2__
 #define __mg_system2__
 
-// std libraries ---------------
+// c/c++
 #include <map>
 #include <string>
 
-// configure files ----------------
+// configure files
 #include "Typedefs.hpp"
 #include "RunTimeMap.hpp"
 
-// Forward class -------------
+// Forward class
 class Utils;
 class Mesh;
 

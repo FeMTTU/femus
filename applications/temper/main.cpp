@@ -8,12 +8,6 @@
 // External library include ( LibMesh, PETSc...) ------------------------------
 #include "FEMTTUConfig.h"
 
-// Petsc  //TODO remove it later, this is here only for the LOG at the end
-#if HAVE_PETSC == 1
-#include "petsc.h"
-#endif
-
-
 // FEMuS
 #include "paral.hpp" 
 #include "FemusInit.hpp"
@@ -59,11 +53,7 @@
    files.RedirectCout(sbuf,file);
 // >>>>>>>>>>>>> END REDIRECT COUT
    files.CopyInputFiles();
-   // at this point we can decide where to read the femusconf file!!! !!!!
-   files.get_frtmap()._basepath = files._output_path;
-
-   files.get_frtmap().read(); //TODO what happens to the variables that were added in here? see OUTTIME_DIR
-   files.get_frtmap().print();
+   // at this point everything is in the folder of the current run!!!!
 
   // =========================================
   // ======= END OF THE INITIALIZATION PART ========================
@@ -71,42 +61,35 @@
    
   // ======= MyPhysics ========================
   RunTimeMap<double> physics_map("Physics",files._output_path);
-  physics_map.read();
-  physics_map.print();
   TempPhysics phys(physics_map);   //instantiated as father
               phys.set_nondimgroups(); //implement it
 
   // ======= Mesh =====
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
-     mesh_map.read();
-     mesh_map.print();
 
   // ======= MyDomainShape ====================
+  RunTimeMap<double> box_map("Box",files._output_path);
   const double Lref  =  phys._physrtmap.get("Lref");     // reference L
   uint     dimension = (uint) mesh_map.get("dimension");
-  RunTimeMap<double> box_map("Box",files._output_path);
-  box_map.read();
-  box_map.print();
   Box mybox(dimension,box_map);
       mybox.init(Lref);
 
-// ====== GeomEl ================================
 // ======  Mesh ================================
-  uint geomel_type = (uint) mesh_map.get("geomel_type");  // must do in such a way that it is picked from the geomel throughout the code
-  GeomEl geomel(dimension,geomel_type);           /*VB based*/
-  Mesh     mesh(files,mesh_map,geomel,Lref,&mybox);        /*VB based*/
-  mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/
+  Mesh mesh(files,mesh_map,Lref);        /*VB based*/
+       mesh.ReadMeshFile(); 
+       mesh.SetDomain(&mybox);
+       mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/
   
   phys.set_mesh(&mesh);
   
 // ======  QRule ================================ //so far we have ONLY ONE quadrature rule for all the equations
-  QRule   qrule(&geomel);
+  QRule   qrule(&(mesh._GeomEl));
 
   // =======Abstract FEElems =====  //remember to delete the FE at the end
   std::vector<FEElemBase*> FEElements(QL);  //TODO what if we dont want to call the default constructor?!? AAA here no constructor is called!!! If you have a pointer the constructor is not called!
                                                      
   for (int fe=0; fe<QL; fe++) {
-    FEElements[fe] = FEElemBase::build(&geomel,fe);       /*VB based*/  //The order of the fe is established by the library
+    FEElements[fe] = FEElemBase::build(&(mesh._GeomEl),fe);       /*VB based*/  //The order of the fe is established by the library
 //sort of constructor
     FEElements[fe]->SetOrder(fe);
     FEElements[fe]->AssociateQRule(&qrule);
@@ -206,18 +189,8 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 /*(iproc==0)*/  files.PrintRunForRestart(DEFAULT_LAST_RUN);
 
   // ============  log ================================
-#if HAVE_PETSC == 1
-  std::string petsc_femus_log = "petsc_main.log";
-  std::ostringstream petsc_log;
-  petsc_log <<  files._output_path << "/" << petsc_femus_log;
-
-   PetscViewer my_viewer;
-   PetscViewerCreate(MPI_COMM_WORLD, &my_viewer);
-   PetscViewerSetType(my_viewer, PETSCVIEWERASCII);
-   PetscViewerFileSetName(my_viewer, petsc_log.str().c_str());   
-   PetscLogView(my_viewer);
-#endif
-
+  files.log_petsc();
+  
 // ============  clean ================================
   // here we clean all that we allocated as new in the main
   equations_map.clean();  //deallocates the map of equations
