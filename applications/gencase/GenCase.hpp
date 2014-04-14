@@ -48,7 +48,6 @@ public:
 
     void PrintElemVB( hid_t file, const uint vb , int* v_inv_nd , ElemStoBase** elem_sto, std::vector<std::pair<int,int> > v_el   ) const;
     void PrintSubdomFlagOnQuadrCells(const int vb, const int Level,std::string filename) const;
-    void PrintMultimeshXdmf() const;
     void PrintMeshHDF5() const;
 
     void ElemChildToFather();
@@ -66,13 +65,10 @@ private:
 
     // Basic data ==========
     std::string _mesh_file;
-    int _NoSubdom;       ///< number of subdomain (one for each processor)
-    int _NoLevels;       ///< number of levels (multigrid)
 
     // Element ===========
     const uint _dimension;
     std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
-    uint _elnodes[VB][QL];
 
     // NODES ===============
     int    _n_nodes;       //of the WHOLE REFINEMENT! i.e. the FINE ones!

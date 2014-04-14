@@ -38,6 +38,7 @@ public:
     GeomEl    _GeomEl;
     const uint _n_GeomEl;         //number of geom elem types
     uint*      _type_FEM;         //just for check
+    uint _elnodes[VB][QL];
 
 // ====== DOMAIN SHAPE (TODO optional => pointer) ----- //if I put it as reference I'd have to initialize it
     Domain* _domain;      //TODO You must remember to ALLOCATE this POINTER BEFORE USING IT!
@@ -74,6 +75,7 @@ public:
     //======= Print/read functions =======
     void PrintForVisualizationAllLEVAllVB() const;
     void PrintSubdomFlagOnLinCells(std::string filename) const;
+    void PrintMultimeshXdmf() const;
     void PrintXDMFAllLEVAllVB() const;
     void PrintConnLinAllLEVAllVB() const;
     void PrintXDMFGridVB(std::ofstream& out, std::ostringstream& top_file, std::ostringstream& geom_file,const uint Level, const uint vb) const;
