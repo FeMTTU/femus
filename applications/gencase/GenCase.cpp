@@ -30,17 +30,16 @@ namespace femus {
 
 // ========================================================
 GenCase::GenCase(Files& files_in, RunTimeMap<double>  map_in, const double Lref, std::string mesh_file_in):
-        Mesh(files_in,map_in,Lref),
-        _mesh_file(mesh_file_in)
+        Mesh(files_in,map_in,Lref)
+        
  {
 
+   _mesh_file = mesh_file_in;
+   
    _feelems.resize(QL);
   for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(&_GeomEl,fe);
 
    
-
-    _NoSubdom = libMesh::global_n_processors();
-
 
     return;
 }

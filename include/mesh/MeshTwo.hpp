@@ -99,12 +99,20 @@ public:
     void ComputeMaxElXNode();
     void ComputeNodeMapExtLevels();
   
+//must be public right now
+    std::vector< std::pair<int,int> > _el_fm_libm; //because the EQUATION needs it for the SPARSITY PATTERN
+    int *                             _el_libm_fm;
+    ElemStoVol**  _el_sto;                 //FILLED ACCORDING TO "how the Libmesh mesh iterator runs" which may not be id in general i think...
+    int *                             _nd_libm_fm; //from FINE LIBMESH NODE ORDERING to FINE FEMUS NODE ORDERING
+    int    _maxelxnode;
     
     
 protected:
 
     const double _Lref;          ///Reference length for non-dimensionalization
     
+    std::string _mesh_file;    //mesh file name from the mesh generator
+
     // HDF5 FIELDS ===============
     std::string _nodes_name; //name for the HDF5 dataset
     std::string _elems_name;   //name for the HDF5 dataset
@@ -120,24 +128,19 @@ protected:
     int    _n_nodes;       //of the WHOLE REFINEMENT! i.e. the FINE ones! //LMFILLS 
     int ** _n_nodes_sl_ql; 
     int *  _elxnode;              //number of elements per node of the fine mesh
-    int    _maxelxnode;
     double *    _nd_coords_libm;  //node coordinates  //FILLED ACCORDING TO LIBMESH NODE ID ORDERING; then I'll print them according to my FEMUS ordering
     NodeSto**   _nd_sto;                       //FILLED ACCORDING TO LIBMESH NODE ID ORDERING
 
     std::vector< std::pair<int,int> > _nd_fm_libm; //from FINE FEMUS NODE ORDERING to FINE LIBMESH NODE ORDERING
-    int *                             _nd_libm_fm; //from FINE LIBMESH NODE ORDERING to FINE FEMUS NODE ORDERING
 
     
     // ELEMENTS =============
     int ** _n_elements_sl_vb;
     int    _n_elements_sum_levs[VB];    //of the WHOLE REFINEMENT! //LMFILLS 
     int ** _el_child_to_fath;              //for every level, it gives you the father
-    ElemStoVol**  _el_sto;                 //FILLED ACCORDING TO "how the Libmesh mesh iterator runs" which may not be id in general i think...
     ElemStoBdry** _el_sto_b;               //FILLED with OUR ORDERING, "as we find them during the volume elem loop"
     
-    std::vector< std::pair<int,int> > _el_fm_libm;
     std::vector< std::pair<int,int> > _el_fm_libm_b;
-    int *                             _el_libm_fm;
 
 
  };

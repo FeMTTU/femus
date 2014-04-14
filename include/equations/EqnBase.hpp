@@ -122,10 +122,16 @@ public:
 //=======================================================================
 //========= MULTIGRID FUNCTIONS (Vectors + A,R,P) ======== (procs,levels) 
 //=======================================================================
-          void initMGOps();                                           ///initialize A, R, P and read
-          void ReadMatrix(const std::string& name);  ///< Reading matrix A
-          void ReadProl(const std::string& name);    ///< Reading Prolongation
-          void ReadRest(const std::string& name);    ///< Reading Restriction
+    void initMGOps();                                           ///initialize A, R, P and read
+    void ReadMatrix(const std::string& name);  ///< Reading matrix A
+    void ReadProl(const std::string& name);    ///< Reading Prolongation
+    void ReadRest(const std::string& name);    ///< Reading Restriction
+    void ComputeMatrix();
+    void ComputeProl();
+    void ComputeRest();
+    void PrintOneVarMatrixHDF5(std::string name, std::string groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel ) const;
+    void PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, uint* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe) const;
+
   //TODO these three functions must be syncronized with the GENCASE application
  virtual  void GenMatRhsVB(const uint vb,const double time,const uint Level) = 0;  //every equation must have one, explicitly!
         double MGTimeStep(const double time,const uint iter);                    ///< MG time step solver (backward Euler)
