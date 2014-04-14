@@ -46,10 +46,6 @@ public:
     void GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh* bd_mesht, libMesh::Mesh* msht, libMesh::Mesh* msh);
     void CreateStructuresLevSubd();
 
-    void PrintElemVB( hid_t file, const uint vb , int* v_inv_nd , ElemStoBase** elem_sto, std::vector<std::pair<int,int> > v_el   ) const;
-    void PrintSubdomFlagOnQuadrCells(const int vb, const int Level,std::string filename) const;
-    void PrintMeshHDF5() const;
-
     void ElemChildToFather();
     void ReorderElementBySubdLev_VV();
     void ReorderElementBySubdLev_BB();
@@ -70,31 +66,13 @@ private:
     std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
 
     // NODES ===============
-    int    _n_nodes;       //of the WHOLE REFINEMENT! i.e. the FINE ones!
     int ** _n_nodes_sl_ql; 
-    int ** _off_nd;               //node offsets, QL (Quadratic and Linear)
-    int ** _Qnode_fine_Qnode_lev; // was _gindexL  //node map  // from QUADRATIC NODE FINE, to QUADRATIC NODE of that LEVEL
-    int ** _Qnode_lev_Qnode_fine;                                 
     int *  _elxnode;              //number of elements per node of the fine mesh
     int    _maxelxnode;
-    NodeSto**   _nd_sto;                       //FILLED ACCORDING TO LIBMESH NODE ID ORDERING
-    double *    _nd_coords_libm;  //node coordinates  //FILLED ACCORDING TO LIBMESH NODE ID ORDERING; then I'll print them according to my FEMUS ordering
-
-    std::vector< std::pair<int,int> > _nd_fm_libm; //from FINE FEMUS NODE ORDERING to FINE LIBMESH NODE ORDERING
-    int *                             _nd_libm_fm; //from FINE LIBMESH NODE ORDERING to FINE FEMUS NODE ORDERING
+    
     
     // ELEMENTS =============
-    int    _n_elements_sum_levs[VB];    //of the WHOLE REFINEMENT!
     int ** _n_elements_sl_vb;
-    int ** _off_el;   //TODO same name as mesh
-    int ** _el_child_to_fath;              //for every level, it gives you the father
-    ElemStoVol**  _el_sto;                 //FILLED ACCORDING TO "how the Libmesh mesh iterator runs" which may not be id in general i think...
-    ElemStoBdry** _el_sto_b;               //FILLED with OUR ORDERING, "as we find them during the volume elem loop"
-    
-    std::vector< std::pair<int,int> > _el_fm_libm;
-    std::vector< std::pair<int,int> > _el_fm_libm_b;
-    int *                             _el_libm_fm;
-
     
 };
 

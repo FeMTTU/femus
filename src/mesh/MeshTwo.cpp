@@ -350,6 +350,224 @@ for (int vb=0; vb < VB; vb++)    {
 }
 
 
+// ===============================================================
+//   print_mesh_h5(_nd_fm_libm, _nd_libm_fm, _el_fm_libm, _el_fm_libm_b);
+void Mesh::PrintMeshHDF5() const  {
+
+    std::ostringstream name;
+
+    std::string basepath  = _files._app_path;
+    std::string input_dir = DEFAULT_CASEDIR;
+    std::string basemesh  = DEFAULT_BASEMESH;
+    std::string ext_h5    = DEFAULT_EXT_H5;
+
+    std::ostringstream inmesh;
+    inmesh << basepath << "/" << input_dir << basemesh << ext_h5;
+
+//==================================
+// OPEN FILE
+//==================================
+    hid_t file = H5Fcreate(inmesh.str().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
+
+//==================================
+// DFLS (Dimension, VB, Levels, Subdomains)
+// =====================
+    int *tdata;
+
+    tdata    = new int[4];
+    tdata[0] = _dim;
+    tdata[1] = VB;
+    tdata[2] = _NoLevels;
+    tdata[3] = _NoSubdom;
+
+    hsize_t dimsf[2];
+    dimsf[0] = 4;
+    dimsf[1] = 1;
+    IO::print_Ihdf5(file,"DFLS", dimsf,tdata);
+    delete [] tdata;
+
+//==================================
+// FEM element DoF number
+// =====================
+    int *ttype_FEM;
+    ttype_FEM=new int[VB];
+
+    for (uint vb=0; vb< VB;vb++)   ttype_FEM[vb]=_GeomEl._elnds[vb][QQ];
+
+    dimsf[0] = VB;
+    dimsf[1] = 1;
+    IO::print_Ihdf5(file,"ELNODES_VB", dimsf,ttype_FEM);
+
+// ===========================================
+// ===========================================
+//  NODES
+// ===========================================
+// ===========================================
+    hid_t group_id = H5Gcreate(file, _nodes_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+// ++++ NODES/MAP ++++++++++++++++++++++++++++++++++++++++++++++
+    std::string ndmap = _nodes_name + "/MAP";
+    hid_t subgroup_id = H5Gcreate(file, ndmap.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+// nodes X lev
+    std::string ndxlev =  ndmap + "/NDxLEV";
+    dimsf[0] = _NoLevels+1;
+    dimsf[1] = 1;
+    IO::print_UIhdf5(file, ndxlev.c_str(), dimsf,_NoNodesXLev);
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++
+// node map (XL, extended levels)
+// ++++++++++++++++++++++++++++++++++++++++++++++++++
+    dimsf[0] = _n_nodes;
+    dimsf[1] = 1;
+
+    for (int ilev= 0;ilev < _NoLevels+1; ilev++) {
+        name.str("");
+        name << ndmap << "/MAP"<< "_XL" << ilev;
+        IO::print_Ihdf5(file,name.str(),dimsf,_Qnode_fine_Qnode_lev[ilev]);
+    }
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++
+//   OFF_ND: node offset quadratic and linear
+// ++++++++++++++++++++++++++++++++++++++++++++++++++
+    dimsf[0] = _NoSubdom*_NoLevels+1;
+    dimsf[1] = 1;
+    for (int fe=0;fe < QL_NODES; fe++) {
+        std::ostringstream namefe;
+        namefe <<  ndmap << "/OFF_ND" << "_F" << fe;
+        IO::print_Ihdf5(file, namefe.str(),dimsf,_off_nd[fe]);
+    }
+
+    H5Gclose(subgroup_id);
+
+// ===========================================
+//  COORDINATES  (COORD)
+// ===========================================
+    //ok, we need to print the coordinates of the nodes for each LEVEL
+    //The array _nod_coords holds the coordinates of the FINE Qnodes
+    //how do we take the Qnodes of each level?
+    //Well, I'd say we need to use  _off_nd for the quadratics
+    //Ok, the map _nd_fm_libm goes from FINE FEMUS NODE ORDERING to FINE LIBMESH NODE ORDERING
+    //I need to go from the QNODE NUMBER at LEVEL 
+    //to the QNODE NUMBER at FINE LEVEL according to FEMUS,
+    //and finally to the number at fine level according to LIBMESH.
+    //The fine level is the only one where the Qnode numbering is CONTIGUOUS
+    
+    
+    
+    std::string ndcoords = _nodes_name + "/COORD";
+    subgroup_id = H5Gcreate(file, ndcoords.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    // nodes are PRINTED ACCORDING to FEMUS ordering, which is inode, i.e. the INVERSE of v[inode].second
+    //you use this because you do DIRECTLY a NODE LOOP
+    //now let us loop coordinates over ALL LEVELS
+    for (int l=0; l<_NoLevels; l++)  {
+    double * xcoord = new double[_NoNodesXLev[l]];
+    for (int kc=0;kc<3;kc++) {
+      
+      int Qnode_lev=0; 
+      for (uint isubdom=0; isubdom<_NoSubdom; isubdom++) {
+            uint off_proc=isubdom*_NoLevels;
+               for (int k1 = _off_nd[QQ][off_proc];
+                        k1 < _off_nd[QQ][off_proc + l+1 ]; k1++) {
+		 int Qnode_fine_fm = _Qnode_lev_Qnode_fine[l][Qnode_lev];
+		 xcoord[Qnode_lev] = _nd_coords_libm[ _nd_fm_libm[Qnode_fine_fm].second + kc*_n_nodes ];
+		  Qnode_lev++; 
+		 }
+	      } //end subdomain
+	    
+// old        for (int inode=0; inode <_n_nodes_lev[l];inode++)  xcoord[inode] = _nod_coords[_nd_fm_libm[inode].second+kc*_n_nodes]; //the offset is fine
+        dimsf[0] = _NoNodesXLev[l];
+        dimsf[1] = 1;
+        name.str("");
+        name << ndcoords << "/X" << kc+1<< "_L" << l;
+        IO::print_Dhdf5(file,name.str(), dimsf,xcoord);
+    }
+
+    delete [] xcoord;
+     }  //levels
+    
+    H5Gclose(subgroup_id);
+
+    H5Gclose(group_id);
+
+// ===========================================
+// ===========================================
+//   /ELEMS
+// ===========================================
+// ===========================================
+
+    group_id = H5Gcreate(file, _elems_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    ElemStoBase** elsto_out;   //TODO delete it!
+    elsto_out = new ElemStoBase*[_n_elements_sum_levs[VV]];
+    for (int i=0;i<_n_elements_sum_levs[VV];i++) {
+        elsto_out[i]= static_cast<ElemStoBase*>(_el_sto[i]);
+    }
+
+    ElemStoBase** elstob_out;
+    elstob_out = new ElemStoBase*[_n_elements_sum_levs[BB]];
+    for (int i=0; i<_n_elements_sum_levs[BB]; i++) {
+        elstob_out[i]= static_cast<ElemStoBase*>(_el_sto_b[i]);
+    }
+
+    PrintElemVB(file,VV,_nd_libm_fm, elsto_out,_el_fm_libm);
+    PrintElemVB(file,BB,_nd_libm_fm, elstob_out,_el_fm_libm_b);
+
+    // ===============
+    // print child to father map for all levels for BOUNDARY ELEMENTS
+    // ===============
+
+    for (int lev=0;lev<_NoLevels; lev++)  {
+        std::ostringstream   bname;
+        bname << _elems_name << "/BDRY_TO_VOL_L" << lev;
+        dimsf[0] = _n_elements_vb_lev[BB][lev];
+        dimsf[1] = 1;
+        IO::print_Ihdf5(file,bname.str(), dimsf,_el_child_to_fath[lev]);
+    }
+
+
+
+
+//             std::cout <<  "==================" << std::endl;
+//          for (int i=0;i<_n_elements_vb_lev[BB][lev];i++)  {
+//              std::cout <<  _el_child_to_fath[lev][i] << std::endl;
+//        }
+// 	 }
+
+
+
+// ok, so, i had to do two cast vectors so i could pass them both to the print_elem_vb routine
+//now i have to be careful in destroying these, in relation with their fathers...
+
+    //delete temp  //I AM HERE TODO
+//     for (int i=0;i< _n_elements_sum_levs_vb[BB];i++) {   delete /*[]*/ elstob_out[i]; } // delete [] el_sto[i]; with [] it doesnt work
+//    delete [] elstob_out;
+//     for (int i=0;i< _n_elements_sum_levs_vb[VV];i++) {   delete /*[]*/ elsto_out[i]; } // delete [] el_sto[i]; with [] it doesnt work
+//    delete [] elsto_out;
+    H5Gclose(group_id);
+
+// ===========================================
+//   PID
+// ===========================================
+    group_id = H5Gcreate(file, "/PID", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    for (int  vb= 0; vb< VB;vb++) {
+        for (int  ilev= 0;ilev< _NoLevels; ilev++)   PrintSubdomFlagOnQuadrCells(vb,ilev,inmesh.str().c_str());
+    }
+
+    H5Gclose(group_id);
+
+// ===========================================
+//  CLOSE FILE
+// ===========================================
+    H5Fclose(file);
+
+    //============
+    delete [] ttype_FEM;
+
+    return;
+}
+
+
 // ========================================================
 /// Write mesh to hdf5 file (namefile) 
 ///              as Mesh class (Mesh.h): 
@@ -361,6 +579,138 @@ void Mesh::PrintMeshFile (const std::string & /*namefile*/) const
   
   return; 
 }
+
+
+
+// ==========================================================
+//prints conn and stuff for either vol or bdry mesh
+//When you have to construct the connectivity,
+//you go back to the libmesh elem ordering,
+//then you pick the nodes of that element in LIBMESH numbering,
+//then you pick the nodes in femus NUMBERING,
+//and that's it
+void Mesh::PrintElemVB(hid_t file,const uint vb , int* nd_libm_fm , ElemStoBase** el_sto_in, std::vector<std::pair<int,int> > el_fm_libm_in ) const {
+
+    std::ostringstream name;
+
+    std::string auxvb[VB];
+    auxvb[0]="0";
+    auxvb[1]="1";
+    std::string elems_fem = _elems_name;
+    std::string elems_fem_vb = elems_fem + "/VB" + auxvb[vb];  //VV later
+
+    hid_t subgroup_id = H5Gcreate(file, elems_fem_vb.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    hsize_t dimsf[2];
+    dimsf[0] = 2;
+    dimsf[1] = 1;
+    int ndofm[2];
+    ndofm[0]=_elnodes[vb][QQ];
+    ndofm[1]=_elnodes[vb][LL];
+    IO::print_Ihdf5(file,(elems_fem_vb + "/NDOF_FO_F1"), dimsf,ndofm);
+    // NoElements ------------------------------------
+    dimsf[0] = _NoLevels;
+    dimsf[1] = 1;
+    IO::print_UIhdf5(file,(elems_fem_vb + "/NExLEV"), dimsf,_n_elements_vb_lev[vb]);
+    // offset
+    dimsf[0] = _NoSubdom*_NoLevels+1;
+    dimsf[1] = 1;
+    IO::print_Ihdf5(file,(elems_fem_vb + "/OFF_EL"), dimsf,_off_el[vb]);
+
+    // Mesh 1 Volume at all levels  packaging data  (volume) ----------
+    //here you pick all the elements at all levels,
+    //and you print their connectivities according to the libmesh ordering
+    int *tempconn;
+    tempconn=new int[_n_elements_sum_levs[vb]*_elnodes[vb][QQ]]; //connectivity of all levels
+    for (int ielem=0;ielem<_n_elements_sum_levs[vb];ielem++) {
+        for (uint inode=0;inode<_elnodes[vb][QQ];inode++) {
+            int el_libm =   el_fm_libm_in[ielem].second;
+            int nd_libm = el_sto_in[el_libm]->_elnds[inode];
+            tempconn[inode+ielem*_elnodes[vb][QQ]] = nd_libm_fm[nd_libm];
+        }
+    }
+    // global mesh hdf5 storage ------------------------------
+    dimsf[0] = _n_elements_sum_levs[vb]*_elnodes[vb][QQ];
+    dimsf[1] = 1;
+    IO::print_Ihdf5(file,(elems_fem_vb + "/CONN"), dimsf,tempconn);
+
+    // level connectivity ---------------------------------
+    for (int ilev=0;ilev <_NoLevels; ilev++) {
+
+        int *conn_lev=new int[_n_elements_vb_lev[vb][ilev]*_elnodes[vb][QQ]];  //connectivity of ilev
+
+        int ltot=0;
+        for (int iproc=0;iproc <_NoSubdom; iproc++) {
+            for (int iel = _off_el[vb][iproc*_NoLevels+ilev];
+                     iel < _off_el[vb][iproc*_NoLevels+ilev+1]; iel++) {
+                for (uint inode=0;inode<_elnodes[vb][QQ];inode++) {
+                    conn_lev[ltot*_elnodes[vb][QQ]+inode]=
+                        tempconn[  iel*_elnodes[vb][QQ]+inode];
+                }
+                ltot++;
+            }
+        }
+        // hdf5 storage     ----------------------------------
+        dimsf[0] = _n_elements_vb_lev[vb][ilev]*_elnodes[vb][QQ];
+        dimsf[1] = 1;
+
+        name.str("");
+        name << elems_fem_vb << "/CONN" << "_L" << ilev ;
+        IO::print_Ihdf5(file,name.str(), dimsf,conn_lev);
+        //clean
+        delete []conn_lev;
+
+    }
+
+
+    delete []tempconn;
+
+    H5Gclose(subgroup_id);
+
+    return;
+
+
+}
+
+//=============================================
+//this is different from the Mesh class function
+//because we are using quadratic elements
+void Mesh::PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std::string filename) const {
+
+    if (_iproc==0)   {
+
+        //   const uint Level = /*_NoLevels*/_n_levels-1;
+        const uint n_children = /*4*(_dim-1)*/1;  /*here we have quadratic cells*/
+
+        uint      n_elements = _n_elements_vb_lev[vb][Level];
+        int *ucoord;
+        ucoord=new int[n_elements*n_children];
+        int cel=0;
+        for (int iproc=0; iproc<_NoSubdom; iproc++) {
+            for (int iel = _off_el[vb][Level  + iproc*_NoLevels];
+                     iel < _off_el[vb][Level+1 + iproc*_NoLevels]; iel++) {
+                for (uint is=0; is< n_children; is++)
+                    ucoord[cel*n_children + is]=iproc;
+                cel++;
+            }
+        }
+
+        hid_t file_id = H5Fopen(filename.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
+        hsize_t dimsf[2];
+        dimsf[0] = n_elements*n_children;
+        dimsf[1] = 1;
+        std::ostringstream name;
+        name << "/PID/PID_VB" << vb << "_L" << Level;
+
+        IO::print_Ihdf5(file_id,name.str(),dimsf,ucoord);
+
+        H5Fclose(file_id);
+
+    }
+
+    return;
+}
+
 
 
 // ========================================================

@@ -7,6 +7,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
+#include <vector>
 
 #include "hdf5.h"
 
@@ -14,13 +15,13 @@
 #include "FEMTTUConfig.h"
 #include "RunTimeMap.hpp"
 #include "GeomEl.hpp"
+#include "ElemSto.hpp"
 
 
 namespace femus {
 
 
 class Files;
-class QuantityLocal;
 class Domain;
 
 
@@ -80,8 +81,12 @@ public:
     void PrintConnLinAllLEVAllVB() const;
     void PrintXDMFGridVB(std::ofstream& out, std::ostringstream& top_file, std::ostringstream& geom_file,const uint Level, const uint vb) const;
     void PrintConnLinVB(hid_t file, const uint Level, const uint vb) const; 
-    void PrintMeshFile(const std::string & namefile) const;
     void ReadMeshFile();
+    void PrintMeshFile(const std::string & namefile) const;
+    void PrintMeshHDF5() const;
+    void PrintElemVB( hid_t file, const uint vb , int* v_inv_nd , ElemStoBase** elem_sto, std::vector<std::pair<int,int> > v_el   ) const;
+    void PrintSubdomFlagOnQuadrCells(const int vb, const int Level,std::string filename) const;
+
     
 protected:
 
@@ -93,6 +98,30 @@ protected:
 //     std::string _nd_coord_folder;  //TODO why seg fault if I use them?!?
 //     std::string _el_pid_name;
 //     std::string _nd_map_FineToLev;
+
+//====================================
+//filled by child only  (gencase)
+//====================================
+
+    // NODES ===============
+    int    _n_nodes;       //of the WHOLE REFINEMENT! i.e. the FINE ones! //LMFILLS 
+    double *    _nd_coords_libm;  //node coordinates  //FILLED ACCORDING TO LIBMESH NODE ID ORDERING; then I'll print them according to my FEMUS ordering
+    NodeSto**   _nd_sto;                       //FILLED ACCORDING TO LIBMESH NODE ID ORDERING
+
+    std::vector< std::pair<int,int> > _nd_fm_libm; //from FINE FEMUS NODE ORDERING to FINE LIBMESH NODE ORDERING
+    int *                             _nd_libm_fm; //from FINE LIBMESH NODE ORDERING to FINE FEMUS NODE ORDERING
+
+    
+    // ELEMENTS =============
+    int    _n_elements_sum_levs[VB];    //of the WHOLE REFINEMENT! //LMFILLS 
+    int ** _el_child_to_fath;              //for every level, it gives you the father
+    ElemStoVol**  _el_sto;                 //FILLED ACCORDING TO "how the Libmesh mesh iterator runs" which may not be id in general i think...
+    ElemStoBdry** _el_sto_b;               //FILLED with OUR ORDERING, "as we find them during the volume elem loop"
+    
+    std::vector< std::pair<int,int> > _el_fm_libm;
+    std::vector< std::pair<int,int> > _el_fm_libm_b;
+    int *                             _el_libm_fm;
+
 
  };
 
