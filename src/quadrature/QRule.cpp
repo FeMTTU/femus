@@ -5,6 +5,11 @@
  
 #include "GeomElTypeEnum.hpp"
 #include "GeomEl.hpp"
+
+
+namespace femus {
+
+
  
 
   QRule::~QRule()  {
@@ -223,4 +228,9 @@ _weightVB[BB][2] =   0.888888888888888888888888888889    ;
  
  
  
+
+
+} //end namespace femus
+
+
  

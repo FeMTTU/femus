@@ -32,6 +32,11 @@
 #include "PetscMacro.hpp"
 #include "Casts.hpp"  
 
+
+namespace femus {
+
+
+
 // ============================================
 ///< This function returns the sum of values in a vector
 double PetscVector::sum() const {
@@ -822,5 +827,10 @@ void PetscVector::create_subvector(
   CHKERRABORT(MPI_COMM_WORLD,ierr);
   return;
 }
+
+
+} //end namespace femus
+
+
 
 #endif 

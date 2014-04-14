@@ -9,6 +9,9 @@
 #include <fstream>
 
 
+namespace femus {
+
+
 namespace IO {
 // =============================================================
 hid_t read_Dhdf5(hid_t file,const std::string & name,double* data) {
@@ -126,3 +129,8 @@ void PrintXDMFGeometry(std::ofstream& outfstream,
 }
 
 } //end namespace IO
+
+
+} //end namespace femus
+
+

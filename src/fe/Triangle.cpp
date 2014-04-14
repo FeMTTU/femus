@@ -19,6 +19,11 @@
 #include "Basis.hpp"
 
 
+namespace femus {
+
+
+
+
 double tri1::eval_phi(const int *I,const double* x) const {
   return tri1a(x[0],x[1],I[0],I[1]);
 }
@@ -164,4 +169,9 @@ double tri2::dtri2dy(const double& x, const double& y, const int& i,const int& j
   }
   return f;
 }
+
+
+
+} //end namespace femus
+
 

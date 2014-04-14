@@ -16,6 +16,11 @@
 #ifndef __MultiLevelMesh_hpp__
 #define __MultiLevelMesh_hpp__
 #include <vector>
+
+
+namespace femus {
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -64,5 +69,10 @@ protected:
   
   
 };
+
+
+} //end namespace femus
+
+
 
 #endif

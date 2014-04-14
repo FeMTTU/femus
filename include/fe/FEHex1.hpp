@@ -8,6 +8,11 @@
 
 #include "FEElemBase.hpp"
 
+
+namespace femus {
+
+
+
 class FEHex1 : public FEElemBase  {
 
 public:
@@ -23,5 +28,10 @@ public:
 //        static const double _Prol[/*NNDS*/27*8/*NNDSL*/];
 
 };
+
+
+} //end namespace femus
+
+
 
 #endif

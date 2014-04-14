@@ -5,6 +5,11 @@
 #include "VBTypeEnum.hpp"
 #include "CurrGaussPoint.hpp"
 
+
+namespace femus {
+
+
+
 // The main difference to consider is  Vect WITH    Quantity
 //                                 and Vect WITHOUT Quantity 
 // Once you have the Quantity, everything else comes from that association 
@@ -89,5 +94,10 @@
     
   };
   
+
+
+} //end namespace femus
+
+
 
 #endif

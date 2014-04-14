@@ -19,6 +19,11 @@
 #include "Basis.hpp"
 
 
+namespace femus {
+
+
+
+
 double wedge1::eval_phi(const int *I,const double* x) const {
   return tri1(x[0],x[1],I[0],I[1])*lag1(x[2],I[2]);
 }
@@ -628,3 +633,9 @@ double wedgeth::dwed_thdz(const double& x, const double& y, const double &z, con
 //   }
 //   return f;
 // }
+
+
+
+} //end namespace femus
+
+

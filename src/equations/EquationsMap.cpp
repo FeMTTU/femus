@@ -19,6 +19,11 @@
 
 #include "paral.hpp"
 
+
+namespace femus {
+
+
+
 // ====================================================
 /// This function constructs the equation map
 
@@ -714,4 +719,9 @@ void EquationsMap::TransientLoop()  {
 
     return;
 }
+
+
+} //end namespace femus
+
+
 

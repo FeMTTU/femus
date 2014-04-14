@@ -10,6 +10,11 @@
 
 #include <cmath>
 
+
+namespace femus {
+
+
+
 //I need to hold the equations map pointer, because i also need a mesh pointer
 // for the geometric element
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
@@ -492,5 +497,10 @@ const uint elnshape = _AbsFEVect[Order]->_ndof[vb];
 //****************************************
 template class CurrGaussPoint<2>;
 template class CurrGaussPoint<3>;
+
+
+
+
+} //end namespace femus
 
 

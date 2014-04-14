@@ -26,6 +26,11 @@
 #include <cassert>
 #include <cmath>
 
+
+namespace femus {
+
+
+
 /**
  * Defines a dense vector for use in Finite Element-type computations.
  * This class is to basically compliment the \p DenseMatix class.  It
@@ -303,6 +308,11 @@ inline void DenseVector::get_principal_subvector (unsigned int sub_n,
   dest.resize(sub_n);
   for(unsigned int i=0; i<sub_n; i++)  dest(i) = (*this)(i);
 }
+
+
+} //end namespace femus
+
+
 
 #endif // #ifndef __dense_vector_h__
 

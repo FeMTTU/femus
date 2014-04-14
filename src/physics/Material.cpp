@@ -20,6 +20,11 @@
 #include "Material.hpp"
 #include "Parameter.hpp"
 
+
+namespace femus {
+
+
+
 Material::Material() {
   _parameter = NULL;
   _density = 1.;
@@ -86,3 +91,9 @@ Material& Material::operator=(const Material &mat) {
   this->_thermal_expansion_coefficient = mat._thermal_expansion_coefficient;
   return *this;  // Return a reference to myself.
 }
+
+
+
+} //end namespace femus
+
+

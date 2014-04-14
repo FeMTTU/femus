@@ -12,6 +12,11 @@
 
 #include "FemusDefault.hpp"
 
+
+namespace femus {
+
+
+
 template <typename T>
 class RunTimeMap   {
 
@@ -166,6 +171,11 @@ void RunTimeMap<T>::print() const {
   
   return;
 }
+
+
+
+} //end namespace femus
+
 
 
 #endif

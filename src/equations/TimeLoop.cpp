@@ -19,6 +19,11 @@
 #include "paral.hpp"
 
 
+namespace femus {
+
+
+
+
  void TimeLoop::check_time_par(RunTimeMap<double>& time_in) {
   
   if (time_in.get("initial_step") < 0.) {std::cout << " negative restart ;;;;;;;;;;;;;;;;;;;" << std::endl  ; abort();}
@@ -111,3 +116,7 @@
 	
       return;
     }
+
+
+} //end namespace femus
+

@@ -30,6 +30,11 @@
 #include <vector>
 #include <cassert>
 
+
+namespace femus {
+
+
+
 // Macro to identify and debug functions which should only be called in
 // parallel on every processor at once
 
@@ -1775,5 +1780,10 @@ inline void broadcast(std::vector<T> &, const unsigned int) {}
 
 
 }
+
+
+} //end namespace femus
+
+
 
 #endif // #define __parallel_h__

@@ -27,6 +27,11 @@
 
 #include <vector>
 #include <map>
+
+
+namespace femus {
+
+
 using std::map;
 
 //------------------------------------------------------------------------------
@@ -246,6 +251,11 @@ unsigned int MultiLevelProblem::n_systems () const
 {
   return static_cast<unsigned int>(_systems.size());  //libmesh static_cast_int
 }
+
+
+} //end namespace femus
+
+
 
 #endif
 

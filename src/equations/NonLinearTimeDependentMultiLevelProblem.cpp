@@ -1,6 +1,11 @@
 // // // /*=========================================================================
 // // // 
 // // //  Program: FEMUS
+
+
+} //end namespace femus
+
+
 // // //  Module: NonLinearTimeDependentMultiLevelProblem
 // // //  Authors: Simone Bnà
 // // //  
@@ -24,6 +29,11 @@
 // // // 
 // // // #include <iostream>
 // // // #include <fstream>
+
+
+namespace femus {
+
+
 // // // using std::cout;
 // // // using std::endl;
 // // // 

@@ -8,6 +8,11 @@
 #include "VBTypeEnum.hpp"
 
 
+namespace femus {
+
+
+
+
 
 
 //the choice of the quadrature rule depends on the 
@@ -55,5 +60,10 @@ class QRule  {
     
     
 };
+
+
+} //end namespace femus
+
+
 
 #endif

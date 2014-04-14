@@ -38,7 +38,7 @@
 #include "EqnMHDAD.hpp"
 #include "EqnMHDCONT.hpp"
 
-
+using namespace femus;
 
 //***************** functions for this application
 void optimization_loop(EquationsMap& e_map_in);

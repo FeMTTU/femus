@@ -6,6 +6,11 @@
 
 #include "FEElemBase.hpp"
 
+
+namespace femus {
+
+
+
 class  FEHex8 : public FEElemBase  {
 
 public:
@@ -20,5 +25,10 @@ public:
        double get_prol(const uint j) {return _Prol[j];};
        static const double _Prol[/*NNDS*/27*8/*NNDSL*/];
 };
+
+
+} //end namespace femus
+
+
 
 #endif

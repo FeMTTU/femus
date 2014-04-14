@@ -21,6 +21,10 @@
 #ifndef __basis_h___
 #define __basis_h___
 
+
+namespace femus {
+  
+  
 class basis {
 public:
   virtual double eval_phi(const int *I,const double* x) const = 0;
@@ -267,6 +271,10 @@ public:
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
 };
+
+
+
+} //end namespace femus
 
 
 #endif

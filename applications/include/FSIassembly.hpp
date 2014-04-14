@@ -4,6 +4,7 @@
 #include "TransientSystem.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 
+namespace femus {
 
 void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
     
@@ -831,5 +832,8 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   AssemblyTime+=(end_time-start_time);
   // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
 
-} 
+}
+
+} //end namespace femus
+
 #endif 

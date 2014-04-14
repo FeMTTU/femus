@@ -47,6 +47,11 @@ EXTERN_C_FOR_PETSC_END
 #ifndef NDEBUG
 #include <cstring>
 
+
+namespace femus {
+
+
+
 #define semiparallel_onlyM() do { if (this->initialized()) { const char *mytype; \
     MatGetType(_mat,&mytype); \
     if (!strcmp(mytype, MATSEQAIJ)) \
@@ -460,6 +465,11 @@ inline void PetscMatrix::insert_row(const int row, const int ncols,
  
 }
 
+
+
+
+
+} //end namespace femus
 
 
 #endif // #ifdef LIBMESH_HAVE_PETSC

@@ -2,9 +2,16 @@
 #define __quantity_h
 
 #include <string>
+#include <map>
+#include <iostream>
+#include <cstdlib>
 
 #include "Typedefs.hpp"
 #include "QuantityLocal.hpp"
+
+
+namespace femus {
+
 
 class EqnBase;
 class Physics;
@@ -42,12 +49,6 @@ public:
 };
 
 
-////////////////////////
-//C++ includes
-#include <map>
-#include <string>
-#include <iostream>
-#include <cstdlib>
 
 ///This class is the GLOBAL QuantityMap of my simulation,
 ///i.e. it holds the list of all the involved physical quantities
@@ -104,6 +105,11 @@ return /*_QuantMap.find(name)*/myit->second;
 };
 
 
+
+
+
+
+} //end namespace femus
 
 
 

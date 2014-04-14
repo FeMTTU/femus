@@ -20,6 +20,11 @@
 #include "ElemType.hpp"
 
 
+namespace femus {
+
+
+
+
 
 // ------------------------------------------------------------
 // NonLinearImplicitSystem implementation
@@ -151,5 +156,5 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
 
 
 
-
+} //end namespace femus
 

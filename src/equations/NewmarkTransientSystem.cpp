@@ -16,6 +16,11 @@
 #include "NewmarkTransientSystem.hpp"
 #include "assert.h"
 
+
+namespace femus {
+
+
+
 template <class Base>
 NewmarkTransientSystem<Base>::NewmarkTransientSystem(MultiLevelProblem& ml_probl,
 		   const std::string& name,
@@ -79,6 +84,11 @@ void NewmarkTransientSystem<Base>::SetNewmarkParameters(const double gamma, cons
   _a2 = -1./(_gamma*this->_dt);
   
 }
+
+
+
+} //end namespace femus
+
 
 
 

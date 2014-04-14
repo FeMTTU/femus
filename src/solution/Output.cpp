@@ -23,6 +23,11 @@
 #include "SparseMatrix.hpp"
 #include "ElemType.hpp"
 
+
+namespace femus {
+
+
+
 std::vector<SparseMatrix*> Output::_ProlQitoQj[3][3];
 
 Output::Output(MultiLevelSolution& ml_sol):
@@ -95,5 +100,10 @@ void Output::BuildProlongatorMatrices() {
     }
   }
 }
+
+
+
+
+} //end namespace femus
 
 

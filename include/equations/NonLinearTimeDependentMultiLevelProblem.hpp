@@ -20,6 +20,11 @@
 // // // // includes :
 // // // //----------------------------------------------------------------------------
 // // // #include "MultiLevelProblem.hpp"
+
+
+namespace femus {
+
+
 // // // 
 // // // /**
 // // // * This class is a black box container to handle time-dependent multilevel problems
@@ -86,5 +91,10 @@
 // // // 
 // // // 
 // // // };
+
+
+} //end namespace femus
+
+
 // // // 
 // // // #endif

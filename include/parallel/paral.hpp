@@ -6,6 +6,11 @@
 
 #ifdef HAVE_MPI
  #include "mpi.h" 
+
+
+namespace femus {
+
+
 #endif
 
 ///This namespace will hold global data and functions for parallel purposes
@@ -60,6 +65,11 @@ return  proc_size;
 
 
 }
+
+
+
+
+} //end namespace femus
 
 
 

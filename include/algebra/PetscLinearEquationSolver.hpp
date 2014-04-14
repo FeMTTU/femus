@@ -32,6 +32,11 @@
 #include "PetscMatrix.hpp"
 #include "PetscMacro.hpp"
 
+
+namespace femus {
+
+
+
 /**
 * This class inherits the abstract class LinearEquationSolver. In this class the solver is implemented using the PETSc package
 */
@@ -192,6 +197,11 @@ inline PetscLinearEquationSolver::~PetscLinearEquationSolver () {
   }
   
 }
+
+
+
+} //end namespace femus
+
 
 #endif 
 #endif 

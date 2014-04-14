@@ -16,6 +16,11 @@
 #include "paral.hpp"
 
 
+namespace femus {
+
+
+
+
 // ========================================================
 Mesh::Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref) :
          _files(files_in),
@@ -640,3 +645,9 @@ void Mesh::PrintSubdomFlagOnLinCells(std::string filename) const {
   
 return;
 }
+
+
+
+} //end namespace femus
+
+

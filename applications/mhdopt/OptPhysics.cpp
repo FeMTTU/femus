@@ -12,6 +12,9 @@
 #include "Opt_conf.hpp"
 
 
+namespace femus {
+
+
 OptPhysics::OptPhysics( RunTimeMap<double> & map_in):
   Physics(map_in) { } 
 
@@ -79,3 +82,9 @@ void OptPhysics::set_nondimgroups() {
 
   return;
 }
+
+
+} //end namespace femus
+
+
+

@@ -28,6 +28,11 @@
 #include "PetscMatrix.hpp"
 #include <iomanip>
 
+
+namespace femus {
+
+
+
 using namespace std;
 
 // ==========================================================
@@ -1163,6 +1168,11 @@ void PetscLinearEquationSolver::print_converged_reason() {
   KSPGetConvergedReason(_ksp[0], &reason);
   std::cout << "Linear solver convergence/divergence reason: " << KSPConvergedReasons[reason] << std::endl;
 }
+
+
+} //end namespace femus
+
+
 
 #endif 
 

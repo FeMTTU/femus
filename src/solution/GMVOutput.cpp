@@ -25,6 +25,11 @@
 #include <algorithm>  
 #include <cstring>
 
+
+namespace femus {
+
+
+
 GMVOutput::GMVOutput(MultiLevelSolution& ml_probl): Output(ml_probl)
 {
   
@@ -296,3 +301,8 @@ void GMVOutput::write_system_solutions(const char order[], std::vector<std::stri
   
   return;   
 }
+
+
+} //end namespace femus
+
+

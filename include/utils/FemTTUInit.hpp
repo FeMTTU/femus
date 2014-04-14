@@ -38,6 +38,11 @@
 /// Class FemTTUInit
 // ========================================
 
+
+namespace femus {
+
+
+
 class FemTTUInit { 
 public:
 /// Constructor
@@ -45,5 +50,10 @@ public:
 /// Destructor
  ~FemTTUInit();
 };
+
+
+} //end namespace femus
+
+
 
 #endif // end _femus_init ----------------------

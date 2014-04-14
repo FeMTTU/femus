@@ -7,6 +7,11 @@
 
 #include "FEElemBase.hpp"
 
+
+namespace femus {
+
+
+
 class FEQuad1 : public FEElemBase  {
 
 public:
@@ -22,5 +27,10 @@ public:
                 double get_prol(const uint /*j*/) {/*return _Prol[j];*/std::cout << "FEQuad1: no prolongation needed\n"; abort();};
 //      static const double _Prol[/*NNDS*/9*4/*NNDSL*/];
 };
+
+
+} //end namespace femus
+
+
 
 #endif

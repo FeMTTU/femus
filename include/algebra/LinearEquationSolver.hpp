@@ -27,6 +27,11 @@
 #include "vector"
 #include <memory>
 #include <cstdio>
+
+
+namespace femus {
+
+
 using std::vector;
 
 //------------------------------------------------------------------------------
@@ -171,5 +176,10 @@ inline LinearEquationSolver::LinearEquationSolver(const unsigned &igrid, mesh* o
 inline LinearEquationSolver::~LinearEquationSolver() {
   this->clear();
 }
+
+
+} //end namespace femus
+
+
 
 #endif 

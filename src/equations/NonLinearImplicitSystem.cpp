@@ -18,6 +18,11 @@
 #include "NumericVector.hpp"
 #include "iomanip"
 
+
+namespace femus {
+
+
+
 // ------------------------------------------------------------
 // NonLinearImplicitSystem implementation
 NonLinearImplicitSystem::NonLinearImplicitSystem (MultiLevelProblem& ml_probl,
@@ -183,4 +188,5 @@ bool NonLinearImplicitSystem::CheckConvergence(const char pdename[], const unsig
 }
 
 
+} //end namespace femus
 

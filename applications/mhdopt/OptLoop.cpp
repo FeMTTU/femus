@@ -21,6 +21,8 @@
 #include "EqnMHDAD.hpp"
 
 
+using namespace femus;
+
  //INITIALIZE FSTREAM FOR INTEGRAL
    //  create an ofstream integral.txt
    //the question is: who creates it? if one processor creates it,

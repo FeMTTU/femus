@@ -21,6 +21,11 @@
 #include "cmath"
 
 
+namespace femus {
+
+
+
+
 double quad0::eval_phi(const int *I,const double* x) const {
   return 1;
 }
@@ -147,4 +152,9 @@ double quadth::th2(const double& x, const int& i) const {
 double quadth::dth2(const double& x, const int& i) const {
   return -1.*(!i) + !(i-1)*(-2.*x) + !(i-2);
 }
+
+
+
+} //end namespace femus
+
 

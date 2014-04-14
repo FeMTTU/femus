@@ -21,6 +21,11 @@
 //----------------------------------------------------------------------------
 #include "Output.hpp"
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -41,5 +46,10 @@ public:
   virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step=0);
   
 };
+
+
+} //end namespace femus
+
+
 
 #endif

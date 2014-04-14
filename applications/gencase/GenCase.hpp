@@ -15,6 +15,8 @@
 #include "RunTimeMap.hpp"
 #include "ElemSto.hpp"
 
+namespace femus {
+
 // Forwarding classes
 class Files;
 class GeomEl;
@@ -110,6 +112,11 @@ private:
 //     std::string _nd_map_FineToLev;
     
 };
+
+
+
+} //end namespace femus
+
 
 
 #endif

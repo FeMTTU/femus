@@ -1,6 +1,11 @@
 /*=========================================================================
 
  Program: FEMUS
+
+
+} //end namespace femus
+
+
  Module: DenseVectorBase
  Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
  
@@ -20,6 +25,11 @@
 #include <iomanip>
 #include "DenseVectorBase.hpp"
 
+
+namespace femus {
+
+
+
 // ===============================================================
 void DenseVectorBase::print_scientific (std::ostream& os) const {
   // save the initial format flags
@@ -36,4 +46,9 @@ void DenseVectorBase::print_scientific (std::ostream& os) const {
 void DenseVectorBase::print (std::ostream& os) const {
   for (unsigned int i=0; i<this->size(); i++)  os << std::setw(8) << this->el(i)  << std::endl;
 }
+
+
+
+} //end namespace femus
+
 

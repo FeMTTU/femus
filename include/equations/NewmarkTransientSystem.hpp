@@ -20,8 +20,13 @@
 // includes
 //------------------------------------------------------------------------------
 #include "TransientSystem.hpp"
-#include "string"
-#include "vector"
+#include <string>
+#include <vector>
+
+
+namespace femus {
+
+
 
 /**
  * This class provides a specific system class for the time integration of system PDE 
@@ -68,6 +73,11 @@ private:
  typedef NewmarkTransientSystem<MonolithicFSINonLinearImplicitSystem> NewmarkTransientMonolithicFSINonlinearImplicitSystem;
  typedef NewmarkTransientSystem<ExplicitSystem> NewmarkTransientExplicitSystem;
  typedef NewmarkTransientSystem<System> NewmarkTransientBaseSystem;
+
+
+
+} //end namespace femus
+
 
 
 #endif

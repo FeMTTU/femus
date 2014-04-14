@@ -20,6 +20,11 @@
 #include "Basis.hpp"
 
 
+namespace femus {
+
+
+
+
 double tet1::eval_phi(const int *I,const double* x) const {
   return tet_1(x[0],x[1],x[2],I[0],I[1],I[2]);
 }
@@ -302,3 +307,9 @@ double tet2::dtet_2dz(const double& x, const double& y, const double &z, const i
   }
   return f;
 }
+
+
+
+} //end namespace femus
+
+

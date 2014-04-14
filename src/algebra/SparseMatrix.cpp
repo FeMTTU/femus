@@ -24,6 +24,11 @@
 #include "NumericVector.hpp"
 #include "PetscMatrix.hpp"
 
+
+namespace femus {
+
+
+
 // ====================================================================
 //            SparseMatrix Methods: Constructor/Destructor/init/build
 // ===================================================================
@@ -46,6 +51,11 @@ std::auto_ptr<SparseMatrix > SparseMatrix::build( // -----
   case TRILINOS_SOLVERSM: {
     std::auto_ptr<SparseMatrix > ap(new EpetraMatrix<double>);
     return ap;
+
+
+} //end namespace femus
+
+
   }
 #endif
   default:
@@ -257,5 +267,6 @@ void SparseMatrix::read_dim_hdf5(const std::string namefile, // file name
 }
 
 
+} //end namespace femus
 
-//------------------------------------------------------------------
+

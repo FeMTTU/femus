@@ -4,6 +4,8 @@
 
 #include "EqnBase.hpp"
 
+namespace femus {
+
 //Forward declarations
 class EquationsMap;
 
@@ -31,6 +33,11 @@ class EqnMHD : public EqnBase {
    
   
 };
+
+
+
+} //end namespace femus
+
 
 
 #endif

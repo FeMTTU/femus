@@ -31,7 +31,7 @@
 #include "EqnMHDCONT.hpp"
 #include "OptPhysics.hpp"
 
-
+namespace femus {
 
 /// Constructor.
   EqnMHDAD::EqnMHDAD(std::vector<Quantity*> int_map_in,
@@ -501,4 +501,9 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 
   return;
 }
+
+
+
+} //end namespace femus
+
 

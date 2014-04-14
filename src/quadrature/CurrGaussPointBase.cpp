@@ -9,6 +9,11 @@
 #include "CurrGaussPoint.hpp"
 
 
+namespace femus {
+
+
+
+
 
 //I need to hold the equations map pointer, because i also need a mesh pointer
 // for the geometric element
@@ -84,3 +89,8 @@ CurrGaussPointBase::~CurrGaussPointBase() {
       
       
     }
+
+
+} //end namespace femus
+
+

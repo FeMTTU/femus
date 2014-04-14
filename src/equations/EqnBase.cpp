@@ -32,6 +32,11 @@
 #include "DenseMatrix.hpp"
 
 
+namespace femus {
+
+
+
+
 
 //the most important things for an EqnBase are:
 //the number of variables
@@ -3900,3 +3905,8 @@ double myval_g = pt2func(time,xyz._val_g);
   return J;  
   
 }
+
+
+} //end namespace femus
+
+

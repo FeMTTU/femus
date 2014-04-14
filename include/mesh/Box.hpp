@@ -6,6 +6,11 @@
 #include "RunTimeMap.hpp"
 
 
+namespace femus {
+
+
+
+
 //------------ BOX -----------  
 //------------ BOX ----------- 
 //------------ BOX ----------- 
@@ -50,6 +55,11 @@
 //So, we'll do another constructor that has no need for Lref.
 //Then, since the Domain is needed, we'll have to do another constructor
 //for the Domain
+
+
+
+
+} //end namespace femus
 
 
 

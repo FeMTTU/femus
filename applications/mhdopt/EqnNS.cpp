@@ -32,6 +32,8 @@
 #include "OptPhysics.hpp"
 
 
+namespace femus {
+
 //==========================
 void EqnNS::ConvertMyselfToChild(EqnBase* mybase)  {
   //I overwrite the pointer so that i get the child members as well!
@@ -996,3 +998,8 @@ for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel._val_g[j] - VelDe
   return integral;  
   
 }
+
+
+} //end namespace femus
+
+

@@ -11,7 +11,7 @@
 #include "Opt_conf.hpp"
 
 
-
+namespace femus {
 
 
 class Temperature : public Quantity {
@@ -241,6 +241,13 @@ class SpecificHeatP : public Quantity {
 void Temp_dep(const double temp_in, double& mu_out) const {mu_out = 1.;return;} 
 
 };
+
+
+
+} //end namespace femus
+
+
+
 
 
 #endif

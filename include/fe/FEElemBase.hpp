@@ -6,6 +6,11 @@
 #include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
 
+
+namespace femus {
+
+
+
 class Utils;
 class GeomEl;
 class QRule;
@@ -67,5 +72,10 @@ public:
 //what is the difference between a STATIC function within a class 
 //and a static function outside?
 //in this way the class is like a "namespace" for the function...
+
+
+} //end namespace femus
+
+
 
 #endif

@@ -28,6 +28,11 @@
 #include <algorithm>   
 
 
+namespace femus {
+
+
+
+
 VTKOutput::VTKOutput(MultiLevelSolution& ml_probl): Output(ml_probl)
 {
   
@@ -493,6 +498,9 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
   //--------------------------------------------------------------------------------------------------------
   return;   
 }
-  
-  
+
+
+} //end namespace femus
+
+
   

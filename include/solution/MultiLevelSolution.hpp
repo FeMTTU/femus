@@ -25,6 +25,11 @@ PURPOSE.  See the above copyright notice for more information.
 
 #include <vector>
 
+
+namespace femus {
+
+
+
 typedef double (*initfunc) (const double &x, const double &y, const double &z);
 
 /**
@@ -94,6 +99,11 @@ public:
   bool  TestIfSolutionIsDisplacemenet(unsigned i){return _TestIfDisplacement[i];};
   
 };
+
+
+} //end namespace femus
+
+
 
 #endif
 

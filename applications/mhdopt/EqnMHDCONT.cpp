@@ -33,7 +33,7 @@
 #include "EqnNSAD.hpp"
 #include "EqnMHDAD.hpp"
 
-
+namespace femus {
 
 //now, the idea is this:
 //if you have specific data for this equation, then you may 
@@ -632,3 +632,8 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 
   return;
 }
+
+
+} //end namespace femus
+
+

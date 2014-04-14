@@ -28,6 +28,11 @@
 
 #ifdef HAVE_HDF5
   #include "hdf5.h"
+
+
+namespace femus {
+
+
 #endif
 
 
@@ -374,6 +379,11 @@ void XDMFOutput::write_solution_wrapper(const char type[]) const {
   ftr_out.close();  
   //----------------------------------------------------------------------------------------------------------
   delete [] filename;
+
+
+} //end namespace femus
+
+
   
 #endif
  

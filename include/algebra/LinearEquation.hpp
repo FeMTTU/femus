@@ -22,6 +22,11 @@
 #include "Mesh.hpp"
 #include "petscmat.h"
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -104,6 +109,11 @@ protected:
 //    unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);   
 //    return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
 // }
+
+
+
+} //end namespace femus
+
 
 
 #endif

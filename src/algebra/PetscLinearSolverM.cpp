@@ -12,6 +12,11 @@
 #include "PetscMatrix.hpp"
 
 
+namespace femus {
+
+
+
+
 
 // ==========================================================
 extern "C" {
@@ -894,6 +899,11 @@ void PetscLinearSolverM::print_converged_reason() {
 //------------------------------------------------------------------
 // Explicit instantiations
 // template class PetscLinearSolver<Number>;
+
+
+
+
+} //end namespace femus
 
 
 

@@ -15,6 +15,11 @@
 #include <typeinfo>
 #include <vector>
 
+
+namespace femus {
+
+
+
   /**
    * Helper functions for printing scalar and vector types.  Called from Parameters::Parameter<T>::print(...).
    */
@@ -524,5 +529,10 @@ void print_helper(std::ostream& os, const std::vector<P>* param)
   for (unsigned int i=0; i<param->size(); ++i)
     os << (*param)[i] << " ";
 }
+
+
+} //end namespace femus
+
+
 
  #endif 

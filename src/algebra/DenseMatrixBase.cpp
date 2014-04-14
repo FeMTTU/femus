@@ -1,6 +1,11 @@
 /*=========================================================================
 
  Program: FEMUS
+
+
+} //end namespace femus
+
+
  Module: DenseMatrixBase
  Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
  
@@ -19,6 +24,11 @@
 #include "DenseMatrixBase.hpp"
 #include "DenseVectorBase.hpp"
 #include <iomanip> 
+
+
+namespace femus {
+
+
 
 // ===========================================================
 void DenseMatrixBase::multiply (DenseMatrixBase& M1,
@@ -95,5 +105,7 @@ void DenseMatrixBase::print (std::ostream& os) const {
   return;
 }
 
+
+} //end namespace femus
 
 

@@ -6,6 +6,11 @@
 
 #include "FEElemBase.hpp"
 
+
+namespace femus {
+
+
+
 class FEQuad4 : public FEElemBase  {
 
 public:
@@ -26,5 +31,10 @@ public:
      //quadrature rules... beh, intanto possiamo fare la porcata e fare una routine di lettura con tutti gli switch nella classe padre
      
 };
+
+
+} //end namespace femus
+
+
 
 #endif

@@ -26,6 +26,11 @@
 //----------------------------------------------------------------------------
 #include "DenseMatrixBase.hpp"
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -463,6 +468,11 @@ inline double DenseMatrix::transpose (const int i,const int j) const {
 //   (*this)(iv,jv) = 1.;  rhs(iv) = val;
 //   return;
 // }
+
+
+
+} //end namespace femus
+
 
 
 #endif // #ifndef __dense_matrix_h__

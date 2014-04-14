@@ -6,6 +6,9 @@
 
 #include "Physics.hpp"
 #include "RunTimeMap.hpp"
+
+namespace femus {
+
 class EquationsMap;
 
 
@@ -36,6 +39,11 @@ TempPhysics(  RunTimeMap<double> & map_in);
   
 
 };
+
+
+
+} //end namespace femus
+
 
   
 #endif

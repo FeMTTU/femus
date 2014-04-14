@@ -7,6 +7,9 @@
 // Local Includes
 #include "EqnBase.hpp"
 
+
+namespace femus {
+  
 // Forwarded classes
 class NumericVector;
 
@@ -37,6 +40,10 @@ EqnMHDCONT(  std::vector<Quantity*> int_map_in,
   void init_equation_data();
 
 };
+
+
+
+} //end namespace femus
 
 
 #endif

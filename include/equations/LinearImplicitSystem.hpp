@@ -24,6 +24,11 @@
 #include "MgTypeEnum.hpp"
 #include "DirichletBCTypeEnum.hpp"
 #include "MgSmootherEnum.hpp"
+
+
+namespace femus {
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -184,5 +189,10 @@ inline void LinearImplicitSystem::SetMatrixOption(MatOption op, bool flag)
 //     MatSetOption(_LinSolver[ig]->_KK->mat(),op,flag);
 //   }
 }
+
+
+} //end namespace femus
+
+
 
 #endif

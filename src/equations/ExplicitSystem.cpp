@@ -1,6 +1,11 @@
 /*=========================================================================
 
  Program: FEMUS
+
+
+} //end namespace femus
+
+
  Module: ExplicitSystem
  Authors: Simone Bnà
  
@@ -14,6 +19,11 @@
 =========================================================================*/
 
 #include "ExplicitSystem.hpp"
+
+
+namespace femus {
+
+
 
 // ------------------------------------------------------------
 // ExplicitSystem implementation
@@ -35,3 +45,9 @@ void ExplicitSystem::clear() {
 void ExplicitSystem::init() {
   
 }
+
+
+
+} //end namespace femus
+
+
