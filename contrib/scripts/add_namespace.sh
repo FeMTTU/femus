@@ -2,6 +2,15 @@
 
 #put this script at the include/ or src/ level (modify .hpp or .cpp accordingly)
 
+# This script is an attempt "to the best you can" of inserting 
+# the begin and end of a namespace in the library source files
+# The criterion for the BEGIN is: insert it AFTER the LAST #include directive
+# The criterion for the END is: insert it BEFORE the LAST #endif directive
+# While the first criterion was quite reliable (though still there have been flaws),
+# the second criterion basically only works fairly well (but not even exactly) 
+# only on .hpp, which have the include guard. For the .cpp it clearly doesn't work at all
+# and so the intervention by hand is mandatory.
+
 hand_files=( ) #initialize array of dynamic length
 endfile_risky=( )
 
@@ -33,6 +42,7 @@ endfile_risky+=($file)
 fi
 # echo "Start from row " $START_ROW_BEGIN; 
 sed  -e  ''$START_ROW_BEGIN'i\\n\nnamespace femus {\n\n'  $file #-i for infile
+START_ROW_END=$(( ${START_ROW_END}   + 5 ))  # this is because 5 lines have just been inserted!!!
 sed  -e    ''$START_ROW_END'i\\n\n} //end namespace femus\n\n' $file #-i for infile
 
 elif (test $NUM_LINES_TMP_BEGIN -eq 0); 

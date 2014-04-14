@@ -26,8 +26,8 @@ Mesh::Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref) :
          _files(files_in),
          _mesh_rtmap(map_in),
          _Lref(Lref),
-         _GeomEl( (uint) _mesh_rtmap.get("dimension"), (uint) _mesh_rtmap.get("geomel_type") ),
-         _n_GeomEl(_mesh_rtmap.get("numgeomels"))
+         _GeomEl( (uint) map_in.get("dimension"), (uint) map_in.get("geomel_type") ),
+         _n_GeomEl(map_in.get("numgeomels"))
          {
       
 
@@ -39,16 +39,6 @@ Mesh::Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref) :
 // ========================================================
 Mesh::~Mesh ()  {
   
-    clear ();
-    
-    delete[] _NoElements;
-    delete[] _off_el;
-    delete[] _el_map;
-    delete[] _xyz;
-    delete[] _NoNodesXLev;
-    delete[] _off_nd;
-    delete[] _type_FEM;
-    
 }
 
 // ========================================================
@@ -73,6 +63,14 @@ void Mesh::clear ()  {
    for (uint lev=0; lev < _NoLevels; lev++) delete [] _el_bdry_to_vol[lev]; 
    delete []  _el_bdry_to_vol;
   
+    delete[] _NoElements;
+    delete[] _off_el;
+    delete[] _el_map;
+    delete[] _xyz;
+    delete[] _NoNodesXLev;
+    delete[] _off_nd;
+    delete[] _type_FEM;
+    
   return;
 }
 
