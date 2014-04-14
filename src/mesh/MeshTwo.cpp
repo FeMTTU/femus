@@ -29,9 +29,29 @@ Mesh::Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref) :
          _GeomEl( (uint) map_in.get("dimension"), (uint) map_in.get("geomel_type") ),
          _n_GeomEl(map_in.get("numgeomels"))
          {
-      
+	   
+    _iproc    = paral::get_rank();
+    _NoSubdom = paral::get_size();   
+    _NoLevels = _mesh_rtmap.get("nolevels");
+    _dim      = _mesh_rtmap.get("dimension");
+    
+    const uint mesh_ord = (uint) _mesh_rtmap.get("mesh_ord");
+    if (mesh_ord != 0) {
+        std::cout << "Linear mesh not yet implemented" << std::endl;
+        abort();
+    }
+    if (VB != 2) {
+        std::cout << " NoFamFEM is not 2: to do! ";
+        abort();
+    }
 
-  _iproc = paral::get_rank();
+    for (int vb=0;vb < VB; vb++) {
+        _elnodes[vb][QQ]=_GeomEl._elnds[vb][mesh_ord];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
+        _elnodes[vb][LL]=_GeomEl._elnds[vb][LL];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
+        _elnodes[vb][KK]=1;
+    }
+    //i do not want to use the linear part actually!!
+
   
     _nodes_name = "/NODES";
     _elems_name = "/ELEMS";
@@ -148,10 +168,6 @@ void Mesh::ReadMeshFile()   {
 // =====================
   uint topdata[4];
   H5Dread(H5Dopen(file_id, "/DFLS", H5P_DEFAULT),H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,topdata);
-       _dim = topdata[0];   //dimension
-    _meshVB = topdata[1];   //VB
-  _NoLevels = topdata[2];   //number of levels
-  _NoSubdom = topdata[3];   //number of subdomains
 
 //check to be made: if the number of subdomain read from the mesh file is 
 //different from the proc size of the program, then i cannot continue.
@@ -161,8 +177,12 @@ void Mesh::ReadMeshFile()   {
 
 //==================================
 // CHECKS 
-// =====================
- if (_NoSubdom !=  (uint) paral::get_size())  {std::cout << "Mesh::read_c. Mismatch: the number of mesh subdomains is " << _NoSubdom
+// ===================== 
+ if (_NoLevels !=  topdata[2]/*number of levels*/)  {std::cout << "Mesh::read_c. Mismatch: the number of mesh levels is " <<
+   "different in the mesh file and in the configuration file" << std::endl;abort(); }
+
+
+ if (_NoSubdom != /*number of subdomains*/ topdata[3])  {std::cout << "Mesh::read_c. Mismatch: the number of mesh subdomains is " << _NoSubdom
                                    << " while the processor size of this run is " << paral::get_size()
                                    << ". Re-run gencase and your application with the same number of processors" << std::endl;abort(); }
   
@@ -171,14 +191,14 @@ void Mesh::ReadMeshFile()   {
 //in fact it is that file that sets the space in which we are simulating...
 //I'll put a check 
 
-if (_dim != _mesh_rtmap.get("dimension") ) {std::cout << "Mesh::read_c. Mismatch: the mesh dimension is " << _dim
+if (_dim != topdata[0] /*dimension*/ ) {std::cout << "Mesh::read_c. Mismatch: the mesh dimension is " << _dim
                                    << " while the dimension in the configuration file is " << _mesh_rtmap.get("dimension")
                                    << ". Recompile either gencase or your application appropriately" << std::endl;abort();}
 //it seems like it doesn't print to file if I don't put the endline "<< std::endl".
 //Also, "\n" seems to have no effect, "<< std::endl" must be used
 //This fact doesn't seem to be related to PARALLEL processes that abort sooner than the others
 
-if (_meshVB !=  VB )  {std::cout << "Mesh::read_c. Mismatch: the number of integration dimensions is " << _meshVB
+if ( VB !=  topdata[1] /*VB*/  )  {std::cout << "Mesh::read_c. Mismatch: the number of integration dimensions is " << _meshVB
                                    << " while we have VB= " << VB 
                                    << ". Re-run gencase and your application appropriately " << std::endl;abort(); }
 
@@ -360,6 +380,72 @@ void Mesh::PrintForVisualizationAllLEVAllVB()  const {
     }
    
    return;
+}
+
+
+// ==================================================================
+void Mesh::PrintMultimeshXdmf() const {
+
+    std::string basepath  = _files._app_path;
+    std::string input_dir = DEFAULT_CASEDIR;
+    std::string multimesh = DEFAULT_MULTIMESH;
+    std::string ext_xdmf  = DEFAULT_EXT_XDMF;
+    std::string basemesh  = DEFAULT_BASEMESH;
+    std::string ext_h5    = DEFAULT_EXT_H5;
+
+    std::ostringstream inmesh_xmf;
+    inmesh_xmf << basepath << "/" << input_dir << multimesh << ext_xdmf;
+    std::ofstream out(inmesh_xmf.str().c_str());
+
+    std::ostringstream top_file;
+    top_file << basemesh << ext_h5;
+
+    if (out.fail()) {
+        std::cout << "GenCase::PrintMultimeshXdmf: The file is not open" << std::endl;
+        abort();
+    }
+
+//it seems that there is no control on this, if the directory isn't there
+//it doesnt give problems
+
+    //strings for VB
+    std::string  meshname[VB];
+    meshname[VV]="VolumeMesh";
+    meshname[BB]="BoundaryMesh";
+
+    out << "<?xml version=\"1.0\" ?> \n";
+    out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" \n";
+//   out << "[ <!ENTITY HeavyData \"mesh.h5\"> ] ";
+    out << "> \n";
+    out << " \n";
+    out << "<Xdmf> \n";
+    out << "<Domain> \n";
+
+    for (int vb=0;vb< VB;vb++) {
+
+        for (int ilev=0; ilev<_NoLevels; ilev++) {
+	  
+            out << "<Grid Name=\"" << meshname[vb] << ilev <<"\"> \n";
+
+            std::ostringstream hdf5_field;
+            hdf5_field << _elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
+            IO::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),_GeomEl.name[vb],_n_elements_vb_lev[vb][ilev],_n_elements_vb_lev[vb][ilev],_elnodes[vb][QQ]);
+            std::ostringstream coord_lev; coord_lev << "_L" << ilev; 
+	    IO::PrintXDMFGeometry(out,top_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[ilev],1);
+            std::ostringstream pid_field;
+            pid_field << "PID/PID_VB"<< vb <<"_L"<< ilev;
+            IO::PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",_n_elements_vb_lev[vb][ilev],1);
+
+            out << "</Grid> \n";
+	    
+        }
+    }
+
+    out << "</Domain> \n";
+    out << "</Xdmf> \n";
+    out.close();
+
+    return;
 }
 
 // ========================================================
