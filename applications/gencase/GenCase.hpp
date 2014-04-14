@@ -48,9 +48,6 @@ public:
 
 private:
 
-    // Basic data ==========
-    std::string _mesh_file;
-
     // Element ===========
     std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
 
