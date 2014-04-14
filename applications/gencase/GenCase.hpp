@@ -46,17 +46,6 @@ public:
     void GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh* bd_mesht, libMesh::Mesh* msht, libMesh::Mesh* msh);
     void CreateStructuresLevSubd();
 
-    void ElemChildToFather();
-    void ReorderElementBySubdLev_VV();
-    void ReorderElementBySubdLev_BB();
-    void ComputeElemOffsetsBySubdLevel();
-
-    void FillNodeSto();
-    void ReorderNodesBySubdLev();
-    void ComputeNodeOffsetsBySubdLevel();
-    void ComputeMaxElXNode();
-    void ComputeNodeMapExtLevels();
-  
 private:
 
     // Basic data ==========
@@ -65,15 +54,6 @@ private:
     // Element ===========
     std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
 
-    // NODES ===============
-    int ** _n_nodes_sl_ql; 
-    int *  _elxnode;              //number of elements per node of the fine mesh
-    int    _maxelxnode;
-    
-    
-    // ELEMENTS =============
-    int ** _n_elements_sl_vb;
-    
 };
 
 
