@@ -91,14 +91,7 @@ int main(int argc, char** argv) {
   // ======= Mesh =====
      RunTimeMap<double> mesh_map("Mesh",files._app_path);
 
-  // =======GeomEl =====
-  uint geomel_type = (uint) mesh_map.get("geomel_type");
-  uint dimension   = (uint) mesh_map.get("dimension");
-  GeomEl geomel(dimension,geomel_type);
-
   // =======FEElems =====
-std::vector<FEElemBase*> FEElements(QL); //these are basically used only for the embedding matrix
-  for (int fe=0; fe<QL; fe++) FEElements[fe] = FEElemBase::build(&geomel,fe);
 
   // ======= Domain =====
   //here we miss the "service" nature of the gencase program
@@ -111,16 +104,10 @@ std::vector<FEElemBase*> FEElements(QL); //these are basically used only for the
   //anyway, now we do like this
       
   // ========= GenCase =====
-      GenCase gencase(files,mesh_map,geomel,FEElements,files_map.get("F_MESH_READ"));
+      GenCase gencase(files,mesh_map,files_map.get("F_MESH_READ"));
       gencase.GenerateCase();
 
   std::cout << "=======End of GenCase========" << std::endl;
 
-//clean
-  //remember that the CHILD destructor is not called here. This is because 
-  //these things are of FEElemBase type
-  //TODO Do I have to put a delete [] or only delete? Do standard vectors have an overloading of the "delete" operator?
-  for (int fe=0; fe<QL; fe++) delete FEElements[fe];
-  
   return 0;  
 }
