@@ -167,22 +167,16 @@ void Mesh::ReadMeshFile()   {
 // DFLS (Dimension, VB, Levels, Subdomains)
 // =====================
   uint topdata[4];
-  H5Dread(H5Dopen(file_id, "/DFLS", H5P_DEFAULT),H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,topdata);
-
-//check to be made: if the number of subdomain read from the mesh file is 
-//different from the proc size of the program, then i cannot continue.
- 
-//if you pick the number of levels from the mesh file, you dont need to pick it directly from the femus_conf.in!
-
+  IO::read_UIhdf5(file_id,"/DFLS",topdata);
 
 //==================================
 // CHECKS 
 // ===================== 
- if (_NoLevels !=  topdata[2]/*number of levels*/)  {std::cout << "Mesh::read_c. Mismatch: the number of mesh levels is " <<
+ if (_NoLevels !=  topdata[2])  {std::cout << "Mesh::read_c. Mismatch: the number of mesh levels is " <<
    "different in the mesh file and in the configuration file" << std::endl;abort(); }
 
 
- if (_NoSubdom != /*number of subdomains*/ topdata[3])  {std::cout << "Mesh::read_c. Mismatch: the number of mesh subdomains is " << _NoSubdom
+ if (_NoSubdom != topdata[3])  {std::cout << "Mesh::read_c. Mismatch: the number of mesh subdomains is " << _NoSubdom
                                    << " while the processor size of this run is " << paral::get_size()
                                    << ". Re-run gencase and your application with the same number of processors" << std::endl;abort(); }
   
@@ -191,14 +185,14 @@ void Mesh::ReadMeshFile()   {
 //in fact it is that file that sets the space in which we are simulating...
 //I'll put a check 
 
-if (_dim != topdata[0] /*dimension*/ ) {std::cout << "Mesh::read_c. Mismatch: the mesh dimension is " << _dim
+if (_dim != topdata[0] ) {std::cout << "Mesh::read_c. Mismatch: the mesh dimension is " << _dim
                                    << " while the dimension in the configuration file is " << _mesh_rtmap.get("dimension")
                                    << ". Recompile either gencase or your application appropriately" << std::endl;abort();}
 //it seems like it doesn't print to file if I don't put the endline "<< std::endl".
 //Also, "\n" seems to have no effect, "<< std::endl" must be used
 //This fact doesn't seem to be related to PARALLEL processes that abort sooner than the others
 
-if ( VB !=  topdata[1] /*VB*/  )  {std::cout << "Mesh::read_c. Mismatch: the number of integration dimensions is " << _meshVB
+if ( VB !=  topdata[1] )  {std::cout << "Mesh::read_c. Mismatch: the number of integration dimensions is " << _meshVB
                                    << " while we have VB= " << VB 
                                    << ". Re-run gencase and your application appropriately " << std::endl;abort(); }
 
@@ -216,7 +210,7 @@ if ( VB !=  topdata[1] /*VB*/  )  {std::cout << "Mesh::read_c. Mismatch: the num
 // =====================
 //Reading this is not very useful... well, it may be a check  
   _type_FEM=new uint[VB];
-  H5Dread(H5Dopen(file_id, "/ELNODES_VB", H5P_DEFAULT),H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,_type_FEM);
+  IO::read_UIhdf5(file_id, "/ELNODES_VB",_type_FEM);
 
   for (int vb=0; vb<VB;vb++) {
 if (_type_FEM[vb] !=  _GeomEl._elnds[vb][QQ] )  {std::cout << "Mesh::read_c. Mismatch: the element type of the mesh is" <<
@@ -233,7 +227,7 @@ if (_type_FEM[vb] !=  _GeomEl._elnds[vb][QQ] )  {std::cout << "Mesh::read_c. Mis
  // nodes X lev
  // ++++++++++++++++++++++++++++++++++++++++++++++++++
   _NoNodesXLev=new uint[_NoLevels+1];
-  H5Dread(H5Dopen(file_id, "/NODES/MAP/NDxLEV", H5P_DEFAULT),H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,_NoNodesXLev);
+  IO::read_UIhdf5(file_id, "/NODES/MAP/NDxLEV",_NoNodesXLev);
 
 // ===========================================
 //  COORDINATES  (COORD)
@@ -246,7 +240,7 @@ if (_type_FEM[vb] !=  _GeomEl._elnds[vb][QQ] )  {std::cout << "Mesh::read_c. Mis
   double *coord;coord=new double[n_nodes];
   for (uint kc=0;kc<_dim;kc++) {
     std::ostringstream Name; Name << "NODES/COORD/X" << kc+1 << "_L" << lev_for_coords;
-    H5Dread(H5Dopen(file_id,Name.str().c_str(), H5P_DEFAULT),H5T_NATIVE_DOUBLE,H5S_ALL,H5S_ALL,H5P_DEFAULT,coord);
+    IO::read_Dhdf5(file_id,Name.str().c_str(),coord);
     for (uint inode=0;inode<n_nodes;inode++) _xyz[inode+kc*n_nodes]=coord[inode]*ILref; //NONdimensionalization!!!
   }
   delete []coord;
@@ -259,7 +253,7 @@ _off_nd=new int*[QL_NODES];
 for (int fe=0;fe < QL_NODES; fe++)    {
   _off_nd[fe]=new int[_NoSubdom*_NoLevels+1];
   std::ostringstream namefe; namefe << "/NODES/MAP/OFF_ND" << "_F" << fe;
-  H5Dread(H5Dopen(file_id,namefe.str().c_str(),H5P_DEFAULT),H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,_off_nd[fe]);
+   IO::read_Ihdf5(file_id,namefe.str().c_str(),_off_nd[fe]);
   }
   
   
@@ -284,13 +278,13 @@ for (int fe=0;fe < QL_NODES; fe++)    {
   
   uint n_nodes_top=_NoNodesXLev[_NoLevels-1];
   _Qnode_lev_Qnode_fine = new uint *[_NoLevels+1];
-  _Qnode_fine_Qnode_lev = new uint *[_NoLevels+1];
+  _Qnode_fine_Qnode_lev = new int *[_NoLevels+1];
 
   for (uint ilev=0;ilev<=_NoLevels;ilev++) { //loop on Extended levels 
     _Qnode_lev_Qnode_fine[ilev] = new uint [_NoNodesXLev[ilev]];
-    _Qnode_fine_Qnode_lev[ilev] = new uint [n_nodes_top];
+    _Qnode_fine_Qnode_lev[ilev] = new int [n_nodes_top];  //THIS HAS TO BE INT because it has -1!!!
     std::ostringstream Name; Name << "/NODES/MAP/MAP" << "_XL" << ilev;
-    H5Dread(H5Dopen(file_id, Name.str().c_str(), H5P_DEFAULT),H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,_Qnode_fine_Qnode_lev[ilev]);  //TODO when you read you do not have to specify the LENGTH OF WHAT YOU READ?!?
+    IO::read_Ihdf5(file_id,Name.str().c_str(),_Qnode_fine_Qnode_lev[ilev]);
     for (uint inode=0;inode<n_nodes_top;inode++) {
          int val_lev = _Qnode_fine_Qnode_lev[ilev][inode];
       if ( val_lev != -1 ) _Qnode_lev_Qnode_fine[ilev][ val_lev ] = inode; //this doesnt have -1 numbers
@@ -312,7 +306,7 @@ for (int fe=0;fe < QL_NODES; fe++)    {
   for (uint vb=0;vb< VB;vb++) {
     _n_elements_vb_lev[vb]=new uint[_NoLevels];
     std::ostringstream Name; Name << "/ELEMS/VB" << vb  <<"/NExLEV";
-    H5Dread(H5Dopen(file_id,Name.str().c_str(),H5P_DEFAULT),H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,_n_elements_vb_lev[vb]);
+    IO::read_UIhdf5(file_id,Name.str().c_str(),_n_elements_vb_lev[vb]);
   }
 
 // ===========================================
@@ -323,7 +317,7 @@ for (int fe=0;fe < QL_NODES; fe++)    {
 for (int vb=0; vb < VB; vb++)    {
   _off_el[vb] = new int [_NoSubdom*_NoLevels+1];
   std::ostringstream offname; offname << "/ELEMS/VB" << vb << "/OFF_EL";
-  H5Dread(H5Dopen(file_id, offname.str().c_str(), H5P_DEFAULT),H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,_off_el[vb]);
+    IO::read_Ihdf5(file_id,offname.str().c_str(),_off_el[vb]);
 }
 
 // ===========================================
@@ -333,7 +327,7 @@ for (int vb=0; vb < VB; vb++)    {
 for (int vb=0; vb < VB; vb++)    {
   _el_map[vb]=new uint [_off_el[vb][_NoSubdom*_NoLevels]*_GeomEl._elnds[vb][mesh_ord]];
   std::ostringstream elName; elName << "/ELEMS/VB" << vb  <<"/CONN";
-  H5Dread(H5Dopen(file_id, elName.str().c_str(), H5P_DEFAULT),H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,_el_map[vb]);
+  IO::read_UIhdf5(file_id,elName.str().c_str(),_el_map[vb]);
 }
 
 // ===========================================
@@ -343,7 +337,7 @@ for (int vb=0; vb < VB; vb++)    {
   for (uint lev=0; lev < _NoLevels; lev++)    {
   _el_bdry_to_vol[lev] = new int[_n_elements_vb_lev[BB][lev]];
     std::ostringstream btov; btov << "/ELEMS/BDRY_TO_VOL_L" << lev;
-  H5Dread(H5Dopen(file_id, btov.str().c_str(), H5P_DEFAULT),H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,_el_bdry_to_vol[lev]);
+  IO::read_Ihdf5(file_id, btov.str().c_str(),_el_bdry_to_vol[lev]);
   }
   
  // ===========================================

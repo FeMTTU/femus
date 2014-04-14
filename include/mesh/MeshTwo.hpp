@@ -63,7 +63,7 @@ public:
     uint*   _NoNodesXLev;            ///VOLUME, at the EXTENDED LEVELS
     double* _xyz;                    ///< node coordinates
     uint**  _Qnode_lev_Qnode_fine;   ///ONLY USED FOR THE EQUATION /// FROM DOF TO NODE: Q or L dofs by using an add aux level [_NoLevels+1][NoNodes[L]] //ONLY VOLUME  //NO PROC info, these are DOFS in the "SERIALIZED NUMBERING"
-    uint**  _Qnode_fine_Qnode_lev;   ///Un nodo fine puo' o non appartenere ad un certo livello... quindi devo continuare a mantenere i -1, altrimenti dovrei fare un search che fa perdere tempo
+    int**  _Qnode_fine_Qnode_lev;   ///Un nodo fine puo' o non appartenere ad un certo livello... quindi devo continuare a mantenere i -1, altrimenti dovrei fare un search che fa perdere tempo
     int**   _off_nd;                 ///ONLY USED FOR THE EQUATION /// FROM DOF TO NODE: offsets for dofs  [QL][L+P*_NoLevels]                     //ONLY VOLUME
                                      // on the fine node numbering, the nodes corresponding to linear dofs are numbered FIRST... or not?
 

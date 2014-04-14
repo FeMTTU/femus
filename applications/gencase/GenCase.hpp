@@ -67,7 +67,6 @@ private:
     std::string _mesh_file;
 
     // Element ===========
-    const uint _dimension;
     std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
 
     // NODES ===============
