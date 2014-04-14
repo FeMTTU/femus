@@ -29,15 +29,16 @@
 namespace femus {
 
 // ========================================================
-GenCase::GenCase(Files& files_in, RunTimeMap<double>  map_in, GeomEl& geomel_in,
-                 std::vector<FEElemBase*>& feelems_in, std::string mesh_file_in):
+GenCase::GenCase(Files& files_in, RunTimeMap<double>  map_in, std::string mesh_file_in):
         Mesh(files_in,map_in,1.),
         _dimension( (uint) map_in.get("dimension")),
-        _GeomEl(geomel_in),
-        _feelems(feelems_in),
         _mesh_file(mesh_file_in)
  {
 
+   _feelems.resize(QL);
+  for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(&_GeomEl,fe);
+
+   
     const uint mesh_ord = (uint) _mesh_rtmap.get("mesh_ord");
     if (mesh_ord != 0) {
         std::cout << "GenCase: linear mesh not yet implemented" << std::endl;
@@ -77,6 +78,11 @@ GenCase::~GenCase() {
 //   delete _el_libm_fm; //TODO how come i cant delete this one here? when i'm serial yes, but not when i'm parallel
     // Oh well YES, because i put this INSIDE an IFPROC==0 !!!!!!!!!
 
+    //clean
+  //remember that the CHILD destructor is not called here. This is because 
+  //these things are of FEElemBase type
+  //TODO Do I have to put a delete [] or only delete? Do standard vectors have an overloading of the "delete" operator?
+  for (int fe=0; fe<QL; fe++) delete _feelems[fe];
 }
 
 

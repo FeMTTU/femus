@@ -30,7 +30,7 @@ class GenCase : public Mesh {
 
 public:
 
-     GenCase(Files& files_in,RunTimeMap<double> map_in, GeomEl& mggeomel_in,std::vector<FEElemBase*>& feelems_in, std::string mesh_file);
+     GenCase(Files& files_in,RunTimeMap<double> map_in, std::string mesh_file);
     ~GenCase();                                      
 
     void ComputeMatrix();
@@ -71,8 +71,7 @@ private:
 
     // Element ===========
     const uint _dimension;
-    GeomEl&  _GeomEl; ///<  GeomEl class pointer
-    std::vector<FEElemBase*>& _feelems;
+    std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
     uint _elnodes[VB][QL];
 
     // NODES ===============
