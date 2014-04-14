@@ -32,8 +32,18 @@
 // Petsc include files
 EXTERN_C_FOR_PETSC_BEGIN
 #include <petsc.h>
+
+
+namespace femus {
+
+
 EXTERN_C_FOR_PETSC_END
 
 #endif // HAVE_PETSC
+
+
+} //end namespace femus
+
+
 
 #endif // __petsc_macro_h__

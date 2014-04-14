@@ -20,6 +20,11 @@
 #include "ElemType.hpp"
 #include <iomanip>
 
+
+namespace femus {
+
+
+
 // ------------------------------------------------------------
 // LinearImplicitSystem implementation
 LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
@@ -409,6 +414,8 @@ void LinearImplicitSystem::AddStabilization(const bool stab, const double compre
 }
 
 
+
+} //end namespace femus
 
 
 

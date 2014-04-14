@@ -7,6 +7,11 @@
 #include "CurrGaussPointBase.hpp"
 
 
+namespace femus {
+
+
+
+
 
 //TODO maybe this gausspoint needs the CurrElement also
 //Basically we will have 
@@ -43,5 +48,10 @@ void ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag/*, const uin
   
   //se metto alcune funzioni inline QUI queste potrebbero avere una IMPLICIT INSTANTIATION... ma se ne metto almeno una nel SOURCE 
   //allora devo per forza fare una EXPLICIT INSTANTIATION...
+
+
+} //end namespace femus
+
+
 
 #endif

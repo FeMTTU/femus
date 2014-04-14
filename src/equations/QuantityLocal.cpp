@@ -11,6 +11,11 @@
 #include "NumericVector.hpp"  //TODO this is needed for x_old
 
 
+namespace femus {
+
+
+
+
      QuantityLocal::QuantityLocal(CurrGaussPointBase & currgp_in, CurrElem & currel_in)
      : _currGP(currgp_in),_currEl(currel_in) {  }
 
@@ -311,3 +316,9 @@ void QuantityLocal::GetElDofsVect(const uint vbfl, const uint Level)  {
 //   return;
 // 
 //  }
+
+
+
+} //end namespace femus
+
+

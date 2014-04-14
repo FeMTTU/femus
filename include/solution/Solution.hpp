@@ -28,6 +28,11 @@
 #include "Mesh.hpp"
 #include "petscmat.h"
 
+
+namespace femus {
+
+
+
 using std::vector;
 
 //------------------------------------------------------------------------------
@@ -74,5 +79,10 @@ public:
   void SetElementRefiniement(const unsigned &test=0);
 
 };
+
+
+} //end namespace femus
+
+
 
 #endif

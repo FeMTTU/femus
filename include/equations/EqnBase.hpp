@@ -14,6 +14,11 @@
 #include "VBTypeEnum.hpp"
 
 
+namespace femus {
+
+
+
+
 class Files        ;
 class Physics      ;
 class EquationsMap ;
@@ -167,6 +172,11 @@ double FunctionIntegral (const uint vb, double (*pt2func)(double, const double* 
 
 
 };
+
+
+
+} //end namespace femus
+
 
 
 #endif

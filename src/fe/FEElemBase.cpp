@@ -26,6 +26,11 @@
 
 #include "ElemType.hpp"
 
+
+namespace femus {
+
+
+
 FEElemBase::FEElemBase(GeomEl* geomel_in ) {
 
   _geomel = geomel_in;
@@ -590,3 +595,9 @@ void FEElemBase::init_switch() {
 
   return;
 }
+
+
+
+} //end namespace femus
+
+

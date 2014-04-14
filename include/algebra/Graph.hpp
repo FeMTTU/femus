@@ -5,6 +5,11 @@
 
 #include <vector>
 
+
+namespace femus {
+
+
+
 typedef std::vector<unsigned int> Row;
 
 class Graph : public std::vector<Row> {
@@ -24,5 +29,10 @@ class Graph : public std::vector<Row> {
   void print();
   
 };
+
+
+} //end namespace femus
+
+
 
 #endif

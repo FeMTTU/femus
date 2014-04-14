@@ -22,6 +22,11 @@
 #include "MultiLevelProblem.hpp"
 
 
+namespace femus {
+
+
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -112,5 +117,10 @@ unsigned int System::number() const
 {
   return _sys_number;
 }
+
+
+} //end namespace femus
+
+
 
 #endif

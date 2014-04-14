@@ -25,6 +25,11 @@
 #include "Solution.hpp"
 #include "ElemType.hpp"
 
+
+namespace femus {
+
+
+
 using std::vector;
 class Solution;
 
@@ -115,5 +120,10 @@ inline unsigned mesh::GetProcID() const {
 inline unsigned mesh::GetNumProcs() const {
   return _nprocs; 
 }
+
+
+} //end namespace femus
+
+
 
 #endif

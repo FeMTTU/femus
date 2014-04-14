@@ -6,6 +6,11 @@
 
 #ifdef HAVE_MPI
 #include "mpi.h"  //For MPI_COMM_WORLD
+
+
+namespace femus {
+
+
 #endif
 
 class FemusInit { 
@@ -19,6 +24,11 @@ FemusInit(int & argc, char** & argv/*, MPI_Comm comm_world_in = MPI_COMM_WORLD*/
 
 
 };
+
+
+
+
+} //end namespace femus
 
 
 

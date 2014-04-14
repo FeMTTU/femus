@@ -26,6 +26,11 @@ PURPOSE.  See the above copyright notice for more information.
 //C++ include
 #include <iostream>
 #include <iomanip>
+
+
+namespace femus {
+
+
 using std::cout;
 using std::endl;
 
@@ -399,3 +404,9 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const double time) {
   }
   
 }
+
+
+
+} //end namespace femus
+
+

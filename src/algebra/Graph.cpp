@@ -1,7 +1,11 @@
 
 #include <iostream>
-
 #include "Graph.hpp"
+
+
+namespace femus {
+
+
 
 
 
@@ -19,3 +23,8 @@ void Graph::print() {
 
 
 }
+
+
+} //end namespace femus
+
+

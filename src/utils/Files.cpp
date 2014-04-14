@@ -20,6 +20,11 @@
 #include "paral.hpp"//to get iproc HAVE_MPI is inside here
 
 
+namespace femus {
+
+
+
+
 
 // =================================================
 //         Files Class functions
@@ -641,3 +646,8 @@ std::cout << "The number of processors is " << paral::get_size() << std::endl;
    
    return;
   }
+
+
+} //end namespace femus
+
+

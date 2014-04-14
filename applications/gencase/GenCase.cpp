@@ -26,6 +26,8 @@
 #include "FEElemBase.hpp"
 
 
+namespace femus {
+
 // ========================================================
 GenCase::GenCase(Files& files_in, RunTimeMap<double> & map_in, GeomEl& geomel_in,
                  std::vector<FEElemBase*>& feelems_in, std::string mesh_file_in):
@@ -2818,3 +2820,8 @@ void GenCase::ComputeRest( ) {
 
     return;
 }
+
+
+} //end namespace femus
+
+

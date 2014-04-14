@@ -24,6 +24,11 @@
 #include "NumericVector.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 
+
+namespace femus {
+
+
+
 // ------------------------------------------------------------
 // TransientSystem implementation
 template <class Base>
@@ -204,4 +209,9 @@ template class TransientSystem<NonLinearImplicitSystem>;
 template class TransientSystem<MonolithicFSINonLinearImplicitSystem>;
 template class TransientSystem<ExplicitSystem>;
 template class TransientSystem<System>;
+
+
+
+} //end namespace femus
+
 

@@ -26,6 +26,11 @@
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 
+
+namespace femus {
+
+
+
 using std::cout;
 using std::endl;
 
@@ -254,6 +259,11 @@ void LinearEquation::DeletePde() {
     delete _RESC;
   
 }
-//-------------------------------------------------------------------------------------------
+
+
+
+} //end namespace femus
+
+
 
 

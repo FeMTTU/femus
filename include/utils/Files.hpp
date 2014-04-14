@@ -9,6 +9,11 @@
 #include "FemusDefault.hpp"
 #include "RunTimeMap.hpp"
 
+
+namespace femus {
+
+
+
 // =======================================
 //    Files Class
 // This class handles all the interactions of an application with the FILESYSTEM.
@@ -59,6 +64,11 @@ private:
   void CopyFile(std::string  f_in,std::string  f_out) const;
   
 };
+
+
+
+} //end namespace femus
+
 
 
 #endif

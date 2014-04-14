@@ -18,7 +18,7 @@
 #include "EqnMHDAD.hpp"
 #include "EqnMHDCONT.hpp"
 
-
+namespace femus {
 
 
 /// This function generates the initial conditions for the NS system:
@@ -1570,3 +1570,8 @@ Box* box= static_cast<Box*>(_mesh.GetDomain());
 
   return;
 }
+
+
+} //end namespace femus
+
+

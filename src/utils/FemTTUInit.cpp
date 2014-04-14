@@ -19,6 +19,11 @@
 #include <iostream>
 #include "FemTTUInit.hpp"
 
+
+namespace femus {
+
+
+
 // =======================================================
 /// This function initializes the libraries if it is parallel
 FemTTUInit::FemTTUInit(
@@ -73,8 +78,12 @@ FemTTUInit::~FemTTUInit() { // ========================
 //       MPI_Comm_free (MPI_COMM_WORLD);
 //       MPI_Finalize();
 //   std::cout << " ~FemTTUInit(): MPI_COMM_WORLD ends \n";  
-
 #endif
   
  return;
 } 
+
+
+} //end namespace femus
+
+

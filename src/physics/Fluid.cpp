@@ -18,10 +18,15 @@
 //----------------------------------------------------------------------------
 #include "Fluid.hpp"
 #include "Material.hpp"
-#include "iostream"
-#include "cstdlib"
-#include "cstring"
+#include <iostream>
+#include <cstdlib>
+#include <cstring>
 #include "Parameter.hpp"
+
+
+namespace femus {
+
+
 using namespace std;
 
 Fluid::Fluid() : Material() {
@@ -151,3 +156,9 @@ Fluid& Fluid::operator=(const Fluid &fluid) {
   this->_model = fluid._model;
   return *this;  // Return a reference to myself.
 }
+
+
+
+} //end namespace femus
+
+

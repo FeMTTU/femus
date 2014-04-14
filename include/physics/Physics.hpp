@@ -9,6 +9,11 @@
 #include "Typedefs.hpp"
 #include "RunTimeMap.hpp"
 
+
+namespace femus {
+
+
+
 // Forward class
 class Utils;
 class Mesh;
@@ -35,5 +40,10 @@ public:
   ~Physics(){};                                     ///< Destructor
    
 };
+
+
+} //end namespace femus
+
+
 
 #endif

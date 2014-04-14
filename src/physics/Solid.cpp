@@ -23,6 +23,11 @@
 #include "cstring"
 #include "Parameter.hpp"
 
+
+namespace femus {
+
+
+
 using namespace std;
 
 Solid::Solid() : Material() {
@@ -130,3 +135,9 @@ Solid& Solid::operator=(const Solid &solid) {
   this->_model = solid._model;
   return *this;  // Return a reference to myself.
 }
+
+
+
+} //end namespace femus
+
+

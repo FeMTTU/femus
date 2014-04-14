@@ -1,6 +1,4 @@
 #include "CurrElem.hpp"
-
-
 #include "EqnBase.hpp"
 #include "EquationsMap.hpp"
 #include "MeshTwo.hpp"
@@ -10,6 +8,11 @@
 #include "FEElemBase.hpp"
 
 #include "QuantityLocal.hpp"
+
+
+namespace femus {
+
+
 
     CurrElem::CurrElem(EqnBase & eqn_in, EquationsMap & e_map_in ):
     _eqn(eqn_in),
@@ -302,4 +305,9 @@ void CurrElem::ConvertElemCoordsToMappingOrd(const uint vb,QuantityLocal& myvect
 
  }   
    
+
+
+} //end namespace femus
+
+
   

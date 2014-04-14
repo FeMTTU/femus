@@ -28,6 +28,11 @@
 
 #include <mpi.h>  
 
+
+namespace femus {
+
+
+
 // =============================================================================
 void PetscPreconditioner::apply(const NumericVector & x, NumericVector & y) {
   PetscVector & x_pvec = static_cast<PetscVector&>(const_cast<NumericVector&>(x));
@@ -245,5 +250,10 @@ void PetscPreconditioner::set_petsc_subpreconditioner_type(const PCType type, PC
 
 
 //------------------------------------------------------------------
+
+
+} //end namespace femus
+
+
 
 #endif // #ifdef LIBMESH_HAVE_PETSC

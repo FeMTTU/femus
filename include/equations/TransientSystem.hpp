@@ -16,6 +16,12 @@
 #ifndef __transient_system_h__
 #define __transient_system_h__
 
+#include <string>
+
+
+namespace femus {
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -26,7 +32,6 @@ class ExplicitSystem;
 class MultiLevelProblem;
 class System;
 
-#include "string"
 
 /**
  * This class provides a specific system class.  It aims
@@ -127,5 +132,10 @@ std::string TransientSystem<Base>::system_type () const
 
   return type;
 }
+
+
+} //end namespace femus
+
+
 
 #endif 

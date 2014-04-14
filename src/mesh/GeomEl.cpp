@@ -4,6 +4,11 @@
 #include <iostream>
 #include <cstdlib>
 
+
+namespace femus {
+
+
+
 //This class was badly constructed 
 //because there were things only quadratic and things both quadratic and linear
 
@@ -885,6 +890,11 @@ else {std::cout << "ELtype not recognized\n"; abort();}
 //       {0.5, 0.0, 0.0, 0.5}  // 3
 //     }
 //   };
+
+
+} //end namespace femus
+
+
 // #endif
 // #endif
 

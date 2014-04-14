@@ -6,6 +6,11 @@
 
 #include"FEElemBase.hpp"
 
+
+namespace femus {
+
+
+
 class FETet1 : public FEElemBase  {
 
 public:
@@ -23,5 +28,10 @@ public:
 
   
 };
+
+
+} //end namespace femus
+
+
 
 #endif

@@ -25,6 +25,11 @@
 
 //C++ include
 #include <iostream>
+
+
+namespace femus {
+
+
 using std::cout;
 using std::endl;
 
@@ -268,4 +273,9 @@ int MultiLevelProblem::ComputeBdIntegral(const char pdename[],const char var_nam
 //   }
   return ierr;
 }
+
+
+
+} //end namespace femus
+
 

@@ -5,6 +5,11 @@
 #include <cassert>
 
 #include <typeinfo>
+
+
+namespace femus {
+
+
 using std::bad_cast;
 
 //TODO
@@ -45,6 +50,11 @@ void iota (ForwardIter first, ForwardIter last, T value) {
     ++first;
   }
 }
+
+
+
+} //end namespace femus
+
 
 
 #endif

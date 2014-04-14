@@ -8,6 +8,11 @@
 #include "Typedefs.hpp"
 
 
+namespace femus {
+
+
+
+
 namespace IO {
   
   //hdf5 ------------------------------------
@@ -48,6 +53,11 @@ namespace IO {
   
   
 }//end namespace IO
+
+
+
+
+} //end namespace femus
 
 
 

@@ -17,6 +17,8 @@
 #include "OptPhysics.hpp"
 
 
+namespace femus {
+  
 //=================== BEGIN CONSTRUCTORS ================================
 // ==================================================================
 // ==================================================================
@@ -641,4 +643,9 @@ void MagnFieldHomAdj::Function_txyz(const double t, const double* xp,double* fun
     return;
   }
   
+
+
+} //end namespace femus
+
+
   

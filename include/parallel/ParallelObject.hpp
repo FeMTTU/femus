@@ -18,6 +18,11 @@
 
 #include "mpi.h"
 
+
+namespace femus {
+
+
+
 /**
    * This class forms the base class for all other classes
    * that are expected to be implemented in paralel. 
@@ -49,5 +54,10 @@ protected:
   int _iproc;
 
 };
+
+
+} //end namespace femus
+
+
 
 #endif

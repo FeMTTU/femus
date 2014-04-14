@@ -29,6 +29,11 @@
 #include "PetscLinearEquationSolver.hpp"
 #include "Preconditioner.hpp"
 
+
+namespace femus {
+
+
+
 using namespace std;
 
 // =============================================================
@@ -45,6 +50,11 @@ std::auto_ptr<LinearEquationSolver> LinearEquationSolver::build(const unsigned &
   case TRILINOS_SOLVERS:  {
     std::auto_ptr<LinearEquationSolver> ap(new AztecLinearEquationSolver);
     return ap;
+
+
+} //end namespace femus
+
+
   }
 #endif
 
@@ -92,6 +102,12 @@ unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kki
    unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);   
    return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
 }
+
+
+
+
+
+} //end namespace femus
 
 
 

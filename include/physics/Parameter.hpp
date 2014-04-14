@@ -16,6 +16,10 @@
 #ifndef __parameter_hpp__
 #define __parameter_hpp__
 
+
+namespace femus {
+  
+
 class Parameter {
 
 private:
@@ -30,5 +34,9 @@ public:
   double Get_reference_temperature();
 
 };
+
+
+} //end namespace femus
+
 
 #endif

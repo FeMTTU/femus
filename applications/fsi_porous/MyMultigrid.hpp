@@ -3,6 +3,8 @@
 #include "RunTimeMap.hpp"
 #include "main.hpp"
 
+using namespace femus;
+
 class MyMultiGrid: public MultiLevelProblem {
   
 public:

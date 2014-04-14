@@ -5,6 +5,9 @@
 // Local Includes -----------------
 #include "EqnBase.hpp"
 
+
+namespace femus {
+
 // Forward declarations ----------
 class EquationsMap;
 
@@ -32,5 +35,10 @@ public:
  double ComputeNormControl (const uint vb, const uint Level, const uint reg_ord );
 
 };
+
+
+} //end namespace femus
+
+
 
 #endif

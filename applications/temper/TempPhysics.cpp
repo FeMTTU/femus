@@ -11,6 +11,8 @@
 #include "TempPhysics.hpp"
 #include "EqnT.hpp"
 
+namespace femus {
+
 TempPhysics::TempPhysics( RunTimeMap<double> & map_in):
   Physics(map_in) { 
   
@@ -162,5 +164,10 @@ J = eqnT->ComputeNormControl (0, eqmap_in._mesh._NoLevels - 1,1 );
     return;
   }
   
+
+
+} //end namespace femus
+
+
   
 

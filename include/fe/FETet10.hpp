@@ -7,6 +7,11 @@
 
 #include "FEElemBase.hpp"
 
+
+namespace femus {
+
+
+
 class FETet10 : public FEElemBase  {
 
 public:
@@ -21,5 +26,10 @@ public:
          double get_prol(const uint /*j*/) {std::cout << "Tet10: no prolongation needed\n"; abort();};
 
 };
+
+
+} //end namespace femus
+
+
 
 #endif

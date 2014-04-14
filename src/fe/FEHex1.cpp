@@ -1,6 +1,11 @@
 #include "FEHex1.hpp"
 
 
+namespace femus {
+
+
+
+
 // =======================
 FEHex1::FEHex1(GeomEl* geomel_in) : FEElemBase(geomel_in) {
 	    
@@ -74,3 +79,10 @@ FEHex1::FEHex1(GeomEl* geomel_in) : FEElemBase(geomel_in) {
     {1.0}
   }
 };
+
+
+
+} //end namespace femus
+
+
+

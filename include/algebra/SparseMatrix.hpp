@@ -28,6 +28,11 @@
 #include "SolverPackageEnum.hpp"// solver package
 #include "Graph.hpp"
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -212,5 +217,10 @@ inline std::ostream& operator << (std::ostream& os, const SparseMatrix& m) {
   m.print(os);
   return os;
 }
+
+
+} //end namespace femus
+
+
 
 #endif

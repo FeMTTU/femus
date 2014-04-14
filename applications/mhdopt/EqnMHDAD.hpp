@@ -5,6 +5,8 @@
 //inherited classes
 #include "EqnBase.hpp"
 
+namespace femus {
+
 // Forwarded classes
 class EquationsMap;
 
@@ -30,6 +32,10 @@ EqnMHDAD(  std::vector<Quantity*> int_map_in,
 
 
 };
+
+
+
+} //end namespace femus
 
 
 #endif

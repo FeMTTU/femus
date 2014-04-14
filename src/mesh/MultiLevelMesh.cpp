@@ -12,6 +12,11 @@
 
 //C++ include
 #include <iostream>
+
+
+namespace femus {
+
+
 using std::cout;
 using std::endl;
 
@@ -149,3 +154,9 @@ void MultiLevelMesh::EraseCoarseLevels(unsigned levels_to_be_erased){
 void MultiLevelMesh::MarkStructureNode(){
     for (unsigned i=0; i<_gridn0; i++) _level0[i]->AllocateAndMarkStructureNode();
   }
+
+  
+
+} //end namespace femus
+
+

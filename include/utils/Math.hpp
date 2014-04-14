@@ -4,6 +4,11 @@
 
 #include "Typedefs.hpp"
 
+
+namespace femus {
+
+
+
  // Operations ---------------------------------
 
 namespace Math {
@@ -88,5 +93,10 @@ inline void extend_nds(const uint el_ndofs,const double* a_nds, double* a_nds3D,
 
 
 } //end namespace Math
+
+
+} //end namespace femus
+
+
 
 #endif

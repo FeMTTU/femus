@@ -10,6 +10,7 @@
 
 #include "Temp_conf.hpp"
 
+using namespace femus;
 
 class Temperature : public Quantity {
 

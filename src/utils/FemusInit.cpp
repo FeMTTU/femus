@@ -21,6 +21,11 @@ EXTERN_C_FOR_PETSC_END
 
 #include "paral.hpp"
 
+
+namespace femus {
+
+
+
 FemusInit::FemusInit(int & argc, char** & argv/*, MPI_Comm comm_world_in*/) {
  
 #ifdef HAVE_MPI
@@ -97,6 +102,11 @@ FemusInit::~FemusInit() {
 
 #ifdef HAVE_MPI
 //       MPI_Comm_free (MPI_COMM_WORLD);
+
+
+} //end namespace femus
+
+
 //       MPI_Finalize();
 #endif
 

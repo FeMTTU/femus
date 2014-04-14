@@ -4,6 +4,11 @@
 #include "Typedefs.hpp"
 #include "RunTimeMap.hpp"
 
+
+namespace femus {
+
+
+
 // Forward class
 class Files;
 
@@ -45,5 +50,10 @@ public:
 static void check_time_par(RunTimeMap<double>&  time_in);
 
 };
+
+
+} //end namespace femus
+
+
 
 #endif //  ---------  end header -------------------------

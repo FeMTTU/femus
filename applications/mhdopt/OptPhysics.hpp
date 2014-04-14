@@ -6,6 +6,10 @@
 #include <vector>
 #include "Physics.hpp"
 
+
+namespace femus {
+
+
 class Utils;
 class Mesh;
 
@@ -36,6 +40,11 @@ OptPhysics( RunTimeMap<double> & map_in);
    
 };
   
+
+
+} //end namespace femus
+
+
   
   
 #endif

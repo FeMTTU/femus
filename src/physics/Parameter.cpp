@@ -18,6 +18,11 @@
 //----------------------------------------------------------------------------
 #include "Parameter.hpp"
 
+
+namespace femus {
+
+
+
 Parameter::Parameter(const double Lref,const double Uref,const double DeltaTref) {
   _Lref = Lref;
   _Uref = Uref;
@@ -35,4 +40,10 @@ double Parameter::Get_reference_velocity() {
 double Parameter::Get_reference_temperature() {
   return _DeltaTref;
 }
+
+
+
+
+} //end namespace femus
+
 

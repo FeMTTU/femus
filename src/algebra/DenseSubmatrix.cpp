@@ -1,6 +1,11 @@
 /*=========================================================================
 
  Program: FEMUS
+
+
+} //end namespace femus
+
+
  Module: DenseSubMatrix
  Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
  
@@ -17,6 +22,11 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "DenseSubmatrix.hpp"
+
+
+namespace femus {
+
+
 
 
 // =================================================
@@ -36,4 +46,8 @@ void DenseSubMatrix::right_multiply (const DenseMatrixBase& M3) {
   // Call the multiply function in the base class
   this->multiply(*this, M2, M3);
 }
+
+
+} //end namespace femus
+
 

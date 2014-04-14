@@ -26,7 +26,7 @@
 #include "TimeLoop.hpp"
 #include "CmdLine.hpp"
 
-
+using namespace femus;
 // ==========================================
 //         GENCASE
 // ==========================================

@@ -28,6 +28,10 @@ EXTERN_C_FOR_PETSC_BEGIN
 EXTERN_C_FOR_PETSC_END
 #endif
 
+
+namespace femus {
+
+
 // ------------------------------------------------------------
 // Dense Matrix member functions
 
@@ -635,6 +639,11 @@ void DenseMatrix::_multiply_blas(const DenseMatrixBase& ,
   std::cerr << "No PETSc-provided BLAS available!" << std::endl;
   exit(0);
 }
+
+
+} //end namespace femus
+
+
 
 #endif
 

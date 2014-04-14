@@ -7,6 +7,11 @@
 #include <cstring>
 #include <sstream>
 
+
+namespace femus {
+
+
+
 //the advantage of adding a namespace is that you dont have to INSTANTIATE OBJECTS.
 //So, if you need to pass data or functions to some class, you dont have to INSTANTIATE an EXTERNAL object
 //containing those data or those functions and then PASS that EXTERNAL OBJECT to the target object:
@@ -101,6 +106,11 @@ std::string get(std::string name) {
 
 
 
+
+
+
+
+} //end namespace femus
 
 
 

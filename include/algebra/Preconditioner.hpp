@@ -27,6 +27,11 @@
 #include <memory>
 #include <iostream>
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -113,5 +118,10 @@ inline void Preconditioner::set_type (const PreconditionerType pct) {
   _is_initialized = false;
   _preconditioner_type = pct;
 }
+
+
+} //end namespace femus
+
+
 
 #endif

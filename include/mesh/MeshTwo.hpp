@@ -14,6 +14,11 @@
 #include "FEMTTUConfig.h"
 #include "RunTimeMap.hpp"
 #include "GeomEl.hpp"
+
+
+namespace femus {
+
+
 class Files;
 class QuantityLocal;
 class Domain;
@@ -81,6 +86,11 @@ protected:
     const double _Lref;          ///Reference length for non-dimensionalization
 
  };
+
+
+
+
+} //end namespace femus
 
 
 

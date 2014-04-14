@@ -1,8 +1,12 @@
 #include "Box.hpp"
 
 #include <cmath>
-
 #include "Files.hpp"
+
+
+namespace femus {
+
+
 
 Box::Box(const uint spacedim_in, RunTimeMap<double> & map_in) : Domain(spacedim_in,map_in) {
 
@@ -88,4 +92,10 @@ void Box::TransformPointToRef(const double* x_in,double* x_out) const {
        
   return;
 }
+
+
+
+} //end namespace femus
+
+
 

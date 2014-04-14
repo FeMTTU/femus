@@ -6,6 +6,11 @@
 #include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"
 
+
+namespace femus {
+
+
+
 class FEElemBase;
 class QRule;
 class QuantityLocal;
@@ -61,6 +66,11 @@ virtual void ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag/*, c
 inline double** CurrGaussPointBase::get_tangent_ptr() { return _tangent_g;}
 
 inline double*  CurrGaussPointBase::get_normal_ptr() { return _normal_g;}
+
+
+
+} //end namespace femus
+
 
 
 #endif

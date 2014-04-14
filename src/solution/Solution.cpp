@@ -26,6 +26,11 @@
 #include "NumericVector.hpp"
 
 
+namespace femus {
+
+
+
+
 
 using std::cout;
 using std::endl;
@@ -407,4 +412,9 @@ void Solution::SetElementRefiniement(const unsigned &test) {
   }
   _msh->el->AllocateChildrenElement(_msh->_ref_index);
 }
+
+
+
+} //end namespace femus
+
 

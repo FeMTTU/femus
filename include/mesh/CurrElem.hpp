@@ -8,6 +8,11 @@
 #include "DenseVector.hpp"
 #include "DenseMatrix.hpp"
 
+
+namespace femus {
+
+
+
 class EqnBase;
 class EquationsMap;
 class QuantityLocal;
@@ -101,5 +106,10 @@ class QuantityLocal;
    
   };
   
+
+
+} //end namespace femus
+
+
 
 #endif

@@ -64,6 +64,11 @@
 
 #if DEFAULT_PRINT_TIME==1
 #include <ctime>
+
+
+namespace femus {
+
+
 #endif
 //*********************************************
 
@@ -93,6 +98,11 @@
 #define DEFAULT_NC_POST   8 //16 
 #define DEFAULT_REST_SIMPLE  0   //no simple restrictor
 //**************************************************************************************
+
+
+
+} //end namespace femus
+
 
 
 #endif

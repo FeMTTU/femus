@@ -40,6 +40,11 @@ EXTERN_C_FOR_PETSC_END
 
 #include <mpi.h>
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -807,6 +812,11 @@ inline void PetscVector::_restore_array(void) const {
     _array_is_present = false;
   }
 }
+
+
+
+} //end namespace femus
+
 
 #endif
 #endif

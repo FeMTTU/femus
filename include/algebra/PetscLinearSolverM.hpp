@@ -12,6 +12,11 @@
 #include "PetscMatrix.hpp"
 #include "PetscMacro.hpp"
 
+
+namespace femus {
+
+
+
 // Petsc include files. 
 EXTERN_C_FOR_PETSC_BEGIN
 // #if PETSC_VERSION_LESS_THAN(2,2,0)
@@ -160,6 +165,11 @@ inline PetscLinearSolverM::PetscLinearSolverM (){
 }
 // =============================================
 inline PetscLinearSolverM::~PetscLinearSolverM (){this->clear ();}
+
+
+
+} //end namespace femus
+
 
 #endif // #ifdef LIBMESH_HAVE_PETSC
 #endif // #ifdef __petsc_linear_solver_h__

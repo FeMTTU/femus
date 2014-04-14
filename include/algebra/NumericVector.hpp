@@ -31,6 +31,11 @@
 #include <cassert>
 #include <iostream>
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -406,5 +411,10 @@ inline void NumericVector::print_global(std::ostream& os) const {
   os << "#\tValue" << std::endl;
   for (unsigned int i=0; i!=v.size(); i++) os << i << "\t" << v[i] << std::endl;
 }
+
+
+} //end namespace femus
+
+
 
 #endif  // #ifdef __numeric_vector_h__

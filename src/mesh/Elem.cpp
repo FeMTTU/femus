@@ -23,6 +23,11 @@
 #include <cstring>
 #include <iostream>
 
+
+namespace femus {
+
+
+
 using std::cout;
 using std::endl;
 
@@ -564,3 +569,8 @@ void elem::SetChildElement(const unsigned &iel,const unsigned &json, const unsig
 unsigned elem::GetChildElement(const unsigned &iel,const unsigned &json) const{
   return _child_elem[iel][json];
 }
+
+
+} //end namespace femus
+
+

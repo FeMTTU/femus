@@ -1,6 +1,11 @@
 #include "FEQuad1.hpp"
 
 
+namespace femus {
+
+
+
+
 // =======================
 FEQuad1::FEQuad1(GeomEl* geomel_in) : FEElemBase(geomel_in) {
   
@@ -48,3 +53,8 @@ FEQuad1::FEQuad1(GeomEl* geomel_in) : FEElemBase(geomel_in) {
     {1.0}, // 0
   }
 };
+
+
+} //end namespace femus
+
+

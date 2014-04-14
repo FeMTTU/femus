@@ -21,6 +21,11 @@
 #include "ElemType.hpp"
 #include "Elem.hpp"
 
+
+namespace femus {
+
+
+
 unsigned elem_type::_refindex=1;
 
 //hex const vectors
@@ -1133,3 +1138,8 @@ void elem_type::GetArea(const double *vtx,const double *vty, const double *vtz, 
     *other_phi=*fi;
   }
 }
+
+
+} //end namespace femus
+
+

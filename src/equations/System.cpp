@@ -15,6 +15,11 @@
 
 #include "System.hpp"
 
+
+namespace femus {
+
+
+
   /** Constructor.  Optionally initializes required data structures. */
   System::System (MultiLevelProblem& ml_probl, const std::string& name_in, const unsigned int number_in) :
   _equation_systems                 (ml_probl),
@@ -78,3 +83,8 @@ unsigned System::GetSolPdeIndex(const char solname[]) {
   }
   return index;
 }
+
+
+} //end namespace femus
+
+

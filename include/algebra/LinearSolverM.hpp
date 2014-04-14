@@ -13,6 +13,11 @@
 #include "SolvertypeEnum.hpp"         // #include "enum_solver_type.h"
 
 
+namespace femus {
+
+
+
+
 
 // forward declarations
 template <typename T> class AutoPtr;
@@ -135,5 +140,10 @@ inline LinearSolverM::LinearSolverM() :
     same_preconditioner(false) {}
 // ========================================================
 inline LinearSolverM::~LinearSolverM() {  this->clear();}
+
+
+} //end namespace femus
+
+
 
 #endif // #ifdef __solver_h__

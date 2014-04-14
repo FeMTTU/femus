@@ -1,6 +1,11 @@
 #include "FETet1.hpp"
 
 
+namespace femus {
+
+
+
+
 // =======================
 FETet1::FETet1(GeomEl* geomel_in) : FEElemBase(geomel_in) {
 	    
@@ -60,4 +65,9 @@ FETet1::FETet1(GeomEl* geomel_in) : FEElemBase(geomel_in) {
     }
   };
  
+
+
+} //end namespace femus
+
+
    

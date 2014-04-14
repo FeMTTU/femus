@@ -23,6 +23,11 @@
 #include <string>
 #include "ParallelObject.hpp"
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -73,5 +78,10 @@ private:
   
 };
   
+
+
+} //end namespace femus
+
+
   
 #endif

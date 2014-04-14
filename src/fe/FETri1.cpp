@@ -1,6 +1,11 @@
 #include "FETri1.hpp"
 
 
+namespace femus {
+
+
+
+
 // =======================
 FETri1::FETri1(GeomEl* geomel_in) : FEElemBase(geomel_in) {
 	    
@@ -46,5 +51,10 @@ FETri1::FETri1(GeomEl* geomel_in) : FEElemBase(geomel_in) {
     {1.0}, // 0
   }
 };
+
+
+
+
+} //end namespace femus
 
 

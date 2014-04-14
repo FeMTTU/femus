@@ -10,6 +10,11 @@ using namespace std;
 
 #include "EqnBase.hpp"
 
+
+namespace femus {
+
+
+
 class Utils;
 class Physics;
 class Mesh;
@@ -88,5 +93,10 @@ private:
 
  
 };
+
+
+} //end namespace femus
+
+
 
 #endif

@@ -28,6 +28,11 @@
 #include <mpi.h>
 #include <hdf5.h>
 #include <sstream>
+
+
+namespace femus {
+
+
 using namespace std;
 
 //-----------------------------------------------------------------------
@@ -705,5 +710,10 @@ void PetscMatrix::get_transpose(
   petsc_dest._is_initialized = true;
   petsc_dest.close();
 }
+
+
+} //end namespace femus
+
+
 
 #endif // #ifdef LIBMESH_HAVE_PETSC

@@ -22,6 +22,11 @@
 #include <cassert>
 #include <iostream>
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -124,6 +129,11 @@ void DenseMatrixBase::add (const double factor,const DenseMatrixBase& mat) {
     for ( int i=0; i<this->m(); i++)
       this->el(i,j) += factor*mat.el(i,j);
 }
+
+
+
+} //end namespace femus
+
 
 
 #endif // #ifndef __dense_matrix_base_h__

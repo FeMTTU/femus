@@ -15,6 +15,8 @@
 #include "main.hpp"
 #include "MyMultigrid.hpp"
 
+using namespace femus;
+
 //===============================
 int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
 int AssembleMatrixResD(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
@@ -28,199 +30,199 @@ RunTimeMap<double> * runtime_double; //per ora devo usarla cosi' global... dovre
 
 int main(int argc,char **args) {
 
-  bool linear=1;
-  bool vanka=1;
-  if(argc == 2) {
-    if( strcmp("vanka",args[1])) vanka=0;
-  }
-  else {
-    cout << "No input arguments!" << endl;
-    exit(0);
-  }
-  
-  /// Init Petsc-MPI communicator
-  FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
-  
- //READ STRING of TIME FROM SHELL;
-  std::string outfolder = "output"; //was getenv(OUTFOLDER);
-    
-  // READ DOUBLES FROM FILE ======== WAS declared as GLOBAL SCOPE, now NO MORE
-//   RunTimeMap<double> * runtime_double; //this line is not needed, it works nevertheless but it's not needed //so the brutal way to make it visible everywhere is to put the declaration OUTSIDE the function and to declare it with extern in all the files where it's needed
-                                          //non serve il singleton pattern per questo! serve solo chiamare il costruttore QUI NEL MAIN e non OUTSIDE
-  runtime_double = new RunTimeMap<double>("Doubles","./");
-  runtime_double->read();
-  runtime_double->print();
-
-  // READ STRINGS FROM FILE ========
-  RunTimeMap<std::string> * runtime_string = new RunTimeMap<std::string>("Strings","./");  
-  runtime_string->read();
-  runtime_string->print();
-  
-  
-   //  OPEN BIG TABLE ========
-  std::ofstream ofs;
-  ofs.open("./output/BigTable.txt",std::fstream::app);
-  ofs /*<< outfolder << " =============="*/ << std::endl;
-  ofs  << std::left << std::setw(15) << std::setprecision(12) << outfolder << "   " << "E_frac" << "  " << "E_well" << "  "  << "K_frac" << "  " << "K_well" << "  " << "nlevs" << " *** " << "NUM_FLUX"  << "  " << "DEN_AVG_PRESS"  << "  "  << "P.I."  << "  "  <<  std::endl;
-  
-  unsigned short nm,nr;
-  std::cout << "#MULTIGRID levels? (>=1) \n";
-  nm = (int) runtime_double->get("nlevs");
-
-  std::cout << "#MAX_REFINEMENT levels? (>=0) \n";
-  nr = (int) runtime_double->get("nrefins");
-  int tmp = nm;
-  nm += nr;
-  nr = tmp;
-
-  cout << "nm  ==== " << nm << " nr ==== " << nr << std::endl;
-  
-  char *infile = new char [50];
-  std::ostringstream meshfile; meshfile << "./input/" << runtime_string->get("mesh_name");
-  sprintf(infile, meshfile.str().c_str() );
-
-  //Adimensional quantity (Lref,Uref)
-  double Lref = 1.0;
-  double Uref = 1.0;
-  Parameter parameter(Lref,Uref);
-
-  // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,1.,1.,"Newtonian");
-  Solid solid(parameter,runtime_double->get("young_well"),0.4,1000.,"Linear_elastic");
-//AAAAAAA: HERE you are setting 1 kg/m^3 for the FLUID DENSITY and 1000 for the SOLID DENSITY!!!
-// In this case we are not actually using those numbers, but PAY ATTENTION!  
-  
-//Steadystate MultiGrid
-  MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag); 
-//   ml_msh.EraseCoarseLevels(2);
-  MyMultiGrid  mg(&ml_msh);
-
-//i wanted to print the mesh without variables, we need to add a function for that
-//   std::vector<std::string> print_vars_tmp;
-//   print_vars_tmp.resize(1);
-//   print_vars_tmp[0] = "TMP";
-//   mg.printsol_vtu_inline("biquadratic",print_vars_tmp);
-// // //   // END MESH =================================
-
-// PHYSICS ===========================
-  mg.AddParameters(runtime_double);  //TODO where do i need this?
-  mg.parameters.set<Fluid>("Fluid") = fluid;
-  mg.parameters.set<Solid>("Solid") = solid;
-
-//Start System Variables;===========================
-  std::vector<std::string> varnames_p(NVAR_P);
-  varnames_p[0] = "p";
-  std::vector<std::string> varnames_d(NVAR_D);
-  varnames_d[0] = "DX";
-  varnames_d[1] = "DY";
-  varnames_d[2] = "DZ";
-  std::vector<std::string> varnames_u(NVAR_VEL);
-  varnames_u[0] = "UX";
-  varnames_u[1] = "UY";
-  varnames_u[2] = "UZ";
-  //all these variables are added to the vector that is "spanned" by INDEX
-  for (int i=0; i<NVAR_P; ++i)     mg.AddSolution(varnames_p[i].c_str(),"biquadratic");
-  for (int i=0; i<NVAR_D; ++i)     mg.AddSolution(varnames_d[i].c_str(),"biquadratic");
-  for (int i=0; i<NVAR_VEL; ++i)   mg.AddSolution(varnames_u[i].c_str(),"biquadratic");
-
-  for (int i=0; i<NVAR_P; ++i)     mg.Initialize(varnames_p[i].c_str());
-  for (int i=0; i<NVAR_D; ++i)     mg.Initialize(varnames_d[i].c_str());
-  for (int i=0; i<NVAR_VEL; ++i)   mg.Initialize(varnames_u[i].c_str());
-//  mg.Initialize("All"); //TODO would this "All" still be working?
-
-  mg.AttachSetBoundaryConditionFunction(BoundaryND);
-  
-  //Set Boundary (update Dirichlet(...) function)
-  for (int i=0; i<NVAR_P; ++i)   mg.GenerateBdc(varnames_p[i].c_str());
-  for (int i=0; i<NVAR_D; ++i)   mg.GenerateBdc(varnames_d[i].c_str());
-  for (int i=0; i<NVAR_VEL; ++i) mg.GenerateBdc(varnames_u[i].c_str());
-      //TODO do i have to generate them also for the velocity? by default they do nothing?
-      //it seems like it was necessary... so the default is not neumann "do nothing"?!
-   
-  //End System Variables; ==============================
-
-  // START EQUATIONS =================================
-  //TODO use the new system-based-framework
-//   mg.AddPde("EQN_P");
-//   mg.AddPde("EQN_D");
-//   mg.AddPde("EQN_VEL");
-  
-//   mg.ClearSolPdeIndex();
-//   for (int i=0; i<NVAR_P; ++i)       mg.AddSolutionToSolPdeIndex("EQN_P",varnames_p[i].c_str());
-//   for (int i=0; i<NVAR_D; ++i)       mg.AddSolutionToSolPdeIndex("EQN_D",varnames_d[i].c_str());
-//   for (int i=0; i<NVAR_VEL; ++i)     mg.AddSolutionToSolPdeIndex("EQN_VEL",varnames_u[i].c_str());
-  
-//   mg.CreatePdeStructure();
-// // //   mg.BuildSparsityPattern();  //TODO this will not be needed now
-  
- for (unsigned nonlin = 0; nonlin < runtime_double->get("nonlin_iter"); nonlin++) {
-   
-// // //   mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
-// // //   mg.AttachAssembleFunction(AssembleMatrixResP);
-// // //   for (int i=0; i<NVAR_P; ++i)       mg.AddToVankaIndex(varnames_p[i].c_str());
-// // //   mg.SetVankaSchurOptions(false);//(true,true,1);
-// // //   mg.SetSolverFineGrids("GMRES");
-// // //   mg.SetPreconditionerFineGrids("LU");
-// // //   mg.SetTolerances(1.e-12,1.e-20,1.e+50,20);
-// // //   mg.SetDimVankaBlock("All"/*3*/);                //2^lev 1D 4^lev 2D 8^lev 3D
-// // //   mg.FullMultiGrid(7,1,1);
-// // // 
-// // //   
-// // //   mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
-// // //   mg.AttachAssembleFunction(AssembleMatrixResD);
-// // //   mg.AddToVankaIndex("DX");
-// // //   mg.AddToVankaIndex("DY");
-// // //   mg.AddToVankaIndex("DZ");  //remember it must be in MGIndex first //i dont solve 3d comp in 2D
-// // //   mg.SetVankaSchurOptions(false);
-// // //   mg.SetSolverFineGrids("GMRES");
-// // //   mg.SetPreconditionerFineGrids("LU");
-// // //   mg.SetTolerances(1.e-12,1.e-20,1.e+50,20);
-// // //   mg.SetDimVankaBlock("All"/*3*/);                //2^lev 1D 4^lev 2D 8^lev 3D     //No DD:pass "All"
-// // //   mg.FullMultiGrid(7,1,1);
-// // //   
-// // // 
-// // //   mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
-// // //   mg.AttachAssembleFunction(AssembleMatrixResVel);
-// // //   mg.AddToVankaIndex("UX");
-// // //   mg.AddToVankaIndex("UY");
-// // //   mg.AddToVankaIndex("UZ");  //remember it must be in MGIndex first //i dont solve 3d comp in 2D
-// // //   mg.SetVankaSchurOptions(false);
-// // //   //Solver configuration for Temperature problem
-// // //   mg.SetSolverFineGrids("GMRES");
-// // //   mg.SetPreconditionerFineGrids("LU");
-// // //   mg.SetTolerances(1.e-12,1.e-20,1.e+50,20);
-// // //   mg.SetDimVankaBlock("All"/*3*/);                //2^lev 1D 4^lev 2D 8^lev 3D     //No DD:pass "All"
-// // //   mg.FullMultiGrid(7,1,1);
-// // // 
-// // //  
-// // //   double Num = mg.ComputeProductivityIndexNum( (int) runtime_double->get("inner") );  //face 1
-// // //   std::vector<double> integrals(mg.ComputeProductivityIndexDen(2));
-// // // 
-// // //   double Den = (integrals[0]/integrals[1] - runtime_double->get("p_in")  );  
-// // //   
-// // //   std::cout << " The productivity index is " << Num / Den << std::endl;
-// // //   
-// // // //move mesh according to displacement
-// // //   std::vector<std::string> mov_vars(varnames_d);  //copy constructor
-// // //   mg.SetMovingMesh(mov_vars);
-// // //   mg.IncreaseStep(nonlin);
-// // //   mg.printsol_vtu_binary(outfolder,"biquadratic");
-// // //
-   
-// // // //   if (nonlin == runtime_double.get("nonlin_iter") -1 ) {
-// // //   ofs  << std::left << std::setw(15) << std::setprecision(12) << outfolder << "   " << runtime_double->get("young_frac") << "  " << runtime_double->get("young_well") << "  " << runtime_double->get("kappa_frac") << "  "  << runtime_double->get("kappa_well") << "  "  << runtime_double->get("nlevs") << " *** " << Num << "   " << Den << "  " <<  Num / Den <<  "   " << std::endl;
-// // // //   }
-  
-}
-   
-   ofs << std::endl;
-   
-
-  mg.clear();
-//   mg.FreeMultigrid(); //it does not exit anymore
-  delete [] infile;
-//   delete [] runtime_double; //check seg fault on these two... the global variable may not help
-//   delete [] runtime_string;
+// // // // //   bool linear=1;
+// // // // //   bool vanka=1;
+// // // // //   if(argc == 2) {
+// // // // //     if( strcmp("vanka",args[1])) vanka=0;
+// // // // //   }
+// // // // //   else {
+// // // // //     cout << "No input arguments!" << endl;
+// // // // //     exit(0);
+// // // // //   }
+// // // // //   
+// // // // //   /// Init Petsc-MPI communicator
+// // // // //   FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
+// // // // //   
+// // // // //  //READ STRING of TIME FROM SHELL;
+// // // // //   std::string outfolder = "output"; //was getenv(OUTFOLDER);
+// // // // //     
+// // // // //   // READ DOUBLES FROM FILE ======== WAS declared as GLOBAL SCOPE, now NO MORE
+// // // // // //   RunTimeMap<double> * runtime_double; //this line is not needed, it works nevertheless but it's not needed //so the brutal way to make it visible everywhere is to put the declaration OUTSIDE the function and to declare it with extern in all the files where it's needed
+// // // // //                                           //non serve il singleton pattern per questo! serve solo chiamare il costruttore QUI NEL MAIN e non OUTSIDE
+// // // // //   runtime_double = new RunTimeMap<double>("Doubles","./");
+// // // // //   runtime_double->read();
+// // // // //   runtime_double->print();
+// // // // // 
+// // // // //   // READ STRINGS FROM FILE ========
+// // // // //   RunTimeMap<std::string> * runtime_string = new RunTimeMap<std::string>("Strings","./");  
+// // // // //   runtime_string->read();
+// // // // //   runtime_string->print();
+// // // // //   
+// // // // //   
+// // // // //    //  OPEN BIG TABLE ========
+// // // // //   std::ofstream ofs;
+// // // // //   ofs.open("./output/BigTable.txt",std::fstream::app);
+// // // // //   ofs /*<< outfolder << " =============="*/ << std::endl;
+// // // // //   ofs  << std::left << std::setw(15) << std::setprecision(12) << outfolder << "   " << "E_frac" << "  " << "E_well" << "  "  << "K_frac" << "  " << "K_well" << "  " << "nlevs" << " *** " << "NUM_FLUX"  << "  " << "DEN_AVG_PRESS"  << "  "  << "P.I."  << "  "  <<  std::endl;
+// // // // //   
+// // // // //   unsigned short nm,nr;
+// // // // //   std::cout << "#MULTIGRID levels? (>=1) \n";
+// // // // //   nm = (int) runtime_double->get("nlevs");
+// // // // // 
+// // // // //   std::cout << "#MAX_REFINEMENT levels? (>=0) \n";
+// // // // //   nr = (int) runtime_double->get("nrefins");
+// // // // //   int tmp = nm;
+// // // // //   nm += nr;
+// // // // //   nr = tmp;
+// // // // // 
+// // // // //   cout << "nm  ==== " << nm << " nr ==== " << nr << std::endl;
+// // // // //   
+// // // // //   char *infile = new char [50];
+// // // // //   std::ostringstream meshfile; meshfile << "./input/" << runtime_string->get("mesh_name");
+// // // // //   sprintf(infile, meshfile.str().c_str() );
+// // // // // 
+// // // // //   //Adimensional quantity (Lref,Uref)
+// // // // //   double Lref = 1.0;
+// // // // //   double Uref = 1.0;
+// // // // //   Parameter parameter(Lref,Uref);
+// // // // // 
+// // // // //   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
+// // // // //   Fluid fluid(parameter,1.,1.,"Newtonian");
+// // // // //   Solid solid(parameter,runtime_double->get("young_well"),0.4,1000.,"Linear_elastic");
+// // // // // //AAAAAAA: HERE you are setting 1 kg/m^3 for the FLUID DENSITY and 1000 for the SOLID DENSITY!!!
+// // // // // // In this case we are not actually using those numbers, but PAY ATTENTION!  
+// // // // //   
+// // // // // //Steadystate MultiGrid
+// // // // //   MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag); 
+// // // // // //   ml_msh.EraseCoarseLevels(2);
+// // // // //   MyMultiGrid  mg(&ml_msh);
+// // // // // 
+// // // // // //i wanted to print the mesh without variables, we need to add a function for that
+// // // // // //   std::vector<std::string> print_vars_tmp;
+// // // // // //   print_vars_tmp.resize(1);
+// // // // // //   print_vars_tmp[0] = "TMP";
+// // // // // //   mg.printsol_vtu_inline("biquadratic",print_vars_tmp);
+// // // // // // // //   // END MESH =================================
+// // // // // 
+// // // // // // PHYSICS ===========================
+// // // // //   mg.AddParameters(runtime_double);  //TODO where do i need this?
+// // // // //   mg.parameters.set<Fluid>("Fluid") = fluid;
+// // // // //   mg.parameters.set<Solid>("Solid") = solid;
+// // // // // 
+// // // // // //Start System Variables;===========================
+// // // // //   std::vector<std::string> varnames_p(NVAR_P);
+// // // // //   varnames_p[0] = "p";
+// // // // //   std::vector<std::string> varnames_d(NVAR_D);
+// // // // //   varnames_d[0] = "DX";
+// // // // //   varnames_d[1] = "DY";
+// // // // //   varnames_d[2] = "DZ";
+// // // // //   std::vector<std::string> varnames_u(NVAR_VEL);
+// // // // //   varnames_u[0] = "UX";
+// // // // //   varnames_u[1] = "UY";
+// // // // //   varnames_u[2] = "UZ";
+// // // // // // // //   //all these variables are added to the vector that is "spanned" by INDEX
+// // // // // // // //   for (int i=0; i<NVAR_P; ++i)     mg.AddSolution(varnames_p[i].c_str(),"biquadratic"); //Add Solution does not exist anymore
+// // // // // // // //   for (int i=0; i<NVAR_D; ++i)     mg.AddSolution(varnames_d[i].c_str(),"biquadratic");
+// // // // // // // //   for (int i=0; i<NVAR_VEL; ++i)   mg.AddSolution(varnames_u[i].c_str(),"biquadratic");
+// // // // // // // // 
+// // // // // // // //   for (int i=0; i<NVAR_P; ++i)     mg.Initialize(varnames_p[i].c_str());
+// // // // // // // //   for (int i=0; i<NVAR_D; ++i)     mg.Initialize(varnames_d[i].c_str());
+// // // // // // // //   for (int i=0; i<NVAR_VEL; ++i)   mg.Initialize(varnames_u[i].c_str());
+// // // // // // // // //  mg.Initialize("All"); //TODO would this "All" still be working?
+// // // // // // // // 
+// // // // // // // //   mg.AttachSetBoundaryConditionFunction(BoundaryND);
+// // // // // // // //   
+// // // // // // // //   //Set Boundary (update Dirichlet(...) function)
+// // // // // // // //   for (int i=0; i<NVAR_P; ++i)   mg.GenerateBdc(varnames_p[i].c_str());
+// // // // // // // //   for (int i=0; i<NVAR_D; ++i)   mg.GenerateBdc(varnames_d[i].c_str());
+// // // // // // // //   for (int i=0; i<NVAR_VEL; ++i) mg.GenerateBdc(varnames_u[i].c_str());
+// // // // //       //TODO do i have to generate them also for the velocity? by default they do nothing?
+// // // // //       //it seems like it was necessary... so the default is not neumann "do nothing"?!
+// // // // //    
+// // // // //   //End System Variables; ==============================
+// // // // // 
+// // // // //   // START EQUATIONS =================================
+// // // // //   //TODO use the new system-based-framework
+// // // // // //   mg.AddPde("EQN_P");
+// // // // // //   mg.AddPde("EQN_D");
+// // // // // //   mg.AddPde("EQN_VEL");
+// // // // //   
+// // // // // //   mg.ClearSolPdeIndex();
+// // // // // //   for (int i=0; i<NVAR_P; ++i)       mg.AddSolutionToSolPdeIndex("EQN_P",varnames_p[i].c_str());
+// // // // // //   for (int i=0; i<NVAR_D; ++i)       mg.AddSolutionToSolPdeIndex("EQN_D",varnames_d[i].c_str());
+// // // // // //   for (int i=0; i<NVAR_VEL; ++i)     mg.AddSolutionToSolPdeIndex("EQN_VEL",varnames_u[i].c_str());
+// // // // //   
+// // // // // //   mg.CreatePdeStructure();
+// // // // // // // //   mg.BuildSparsityPattern();  //TODO this will not be needed now
+// // // // //   
+// // // // //  for (unsigned nonlin = 0; nonlin < runtime_double->get("nonlin_iter"); nonlin++) {
+// // // // //    
+// // // // // // // //   mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
+// // // // // // // //   mg.AttachAssembleFunction(AssembleMatrixResP);
+// // // // // // // //   for (int i=0; i<NVAR_P; ++i)       mg.AddToVankaIndex(varnames_p[i].c_str());
+// // // // // // // //   mg.SetVankaSchurOptions(false);//(true,true,1);
+// // // // // // // //   mg.SetSolverFineGrids("GMRES");
+// // // // // // // //   mg.SetPreconditionerFineGrids("LU");
+// // // // // // // //   mg.SetTolerances(1.e-12,1.e-20,1.e+50,20);
+// // // // // // // //   mg.SetDimVankaBlock("All"/*3*/);                //2^lev 1D 4^lev 2D 8^lev 3D
+// // // // // // // //   mg.FullMultiGrid(7,1,1);
+// // // // // // // // 
+// // // // // // // //   
+// // // // // // // //   mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
+// // // // // // // //   mg.AttachAssembleFunction(AssembleMatrixResD);
+// // // // // // // //   mg.AddToVankaIndex("DX");
+// // // // // // // //   mg.AddToVankaIndex("DY");
+// // // // // // // //   mg.AddToVankaIndex("DZ");  //remember it must be in MGIndex first //i dont solve 3d comp in 2D
+// // // // // // // //   mg.SetVankaSchurOptions(false);
+// // // // // // // //   mg.SetSolverFineGrids("GMRES");
+// // // // // // // //   mg.SetPreconditionerFineGrids("LU");
+// // // // // // // //   mg.SetTolerances(1.e-12,1.e-20,1.e+50,20);
+// // // // // // // //   mg.SetDimVankaBlock("All"/*3*/);                //2^lev 1D 4^lev 2D 8^lev 3D     //No DD:pass "All"
+// // // // // // // //   mg.FullMultiGrid(7,1,1);
+// // // // // // // //   
+// // // // // // // // 
+// // // // // // // //   mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
+// // // // // // // //   mg.AttachAssembleFunction(AssembleMatrixResVel);
+// // // // // // // //   mg.AddToVankaIndex("UX");
+// // // // // // // //   mg.AddToVankaIndex("UY");
+// // // // // // // //   mg.AddToVankaIndex("UZ");  //remember it must be in MGIndex first //i dont solve 3d comp in 2D
+// // // // // // // //   mg.SetVankaSchurOptions(false);
+// // // // // // // //   //Solver configuration for Temperature problem
+// // // // // // // //   mg.SetSolverFineGrids("GMRES");
+// // // // // // // //   mg.SetPreconditionerFineGrids("LU");
+// // // // // // // //   mg.SetTolerances(1.e-12,1.e-20,1.e+50,20);
+// // // // // // // //   mg.SetDimVankaBlock("All"/*3*/);                //2^lev 1D 4^lev 2D 8^lev 3D     //No DD:pass "All"
+// // // // // // // //   mg.FullMultiGrid(7,1,1);
+// // // // // // // // 
+// // // // // // // //  
+// // // // // // // //   double Num = mg.ComputeProductivityIndexNum( (int) runtime_double->get("inner") );  //face 1
+// // // // // // // //   std::vector<double> integrals(mg.ComputeProductivityIndexDen(2));
+// // // // // // // // 
+// // // // // // // //   double Den = (integrals[0]/integrals[1] - runtime_double->get("p_in")  );  
+// // // // // // // //   
+// // // // // // // //   std::cout << " The productivity index is " << Num / Den << std::endl;
+// // // // // // // //   
+// // // // // // // // //move mesh according to displacement
+// // // // // // // //   std::vector<std::string> mov_vars(varnames_d);  //copy constructor
+// // // // // // // //   mg.SetMovingMesh(mov_vars);
+// // // // // // // //   mg.IncreaseStep(nonlin);
+// // // // // // // //   mg.printsol_vtu_binary(outfolder,"biquadratic");
+// // // // // // // //
+// // // // //    
+// // // // // // // // //   if (nonlin == runtime_double.get("nonlin_iter") -1 ) {
+// // // // // // // //   ofs  << std::left << std::setw(15) << std::setprecision(12) << outfolder << "   " << runtime_double->get("young_frac") << "  " << runtime_double->get("young_well") << "  " << runtime_double->get("kappa_frac") << "  "  << runtime_double->get("kappa_well") << "  "  << runtime_double->get("nlevs") << " *** " << Num << "   " << Den << "  " <<  Num / Den <<  "   " << std::endl;
+// // // // // // // // //   }
+// // // // //   
+// // // // // }
+// // // // //    
+// // // // //    ofs << std::endl;
+// // // // //    
+// // // // // 
+// // // // //   mg.clear();
+// // // // // //   mg.FreeMultigrid(); //it does not exit anymore
+// // // // //   delete [] infile;
+// // // // // //   delete [] runtime_double; //check seg fault on these two... the global variable may not help
+// // // // // //   delete [] runtime_string;
   
   return 0;
 }

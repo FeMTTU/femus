@@ -5,6 +5,10 @@
 //Inherited classes
 #include "EqnBase.hpp"
 
+
+namespace femus {
+
+
 // Forwarded classes
 class EquationsMap;
 
@@ -43,6 +47,8 @@ class EqnNS : public EqnBase {
  
 };
 
+
+} //end namespace femus
 
 
 #endif

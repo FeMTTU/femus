@@ -32,6 +32,8 @@
 #include "FemusDefault.hpp"
 
 
+namespace femus {
+
 ///Constructor
   EqnMHD::EqnMHD(  std::vector<Quantity*> int_map_in,
 	           EquationsMap& mg_equations_map_in,
@@ -644,3 +646,9 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 
   return;
 }
+
+
+
+} //end namespace femus
+
+

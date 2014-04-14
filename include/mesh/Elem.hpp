@@ -17,6 +17,9 @@
 #define __elem_hpp__
 
 
+namespace femus {
+
+
 //vertexes,edges,faces,interior,element,element+derivatives
 const unsigned NVE[6][6]= {{8,20,26,27,1,4},  //hex
   {4,10,10,10,1,4},   //tet
@@ -153,6 +156,10 @@ public:
   unsigned GetChildElement(const unsigned &iel,const unsigned &json) const;
   
 };
+
+
+} //end namespace femus
+
 
 #endif
 

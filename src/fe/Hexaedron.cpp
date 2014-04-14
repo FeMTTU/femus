@@ -21,6 +21,11 @@
 #include <cmath>
 
 
+namespace femus {
+
+
+
+
 double hex0::eval_phi(const int *I,const double* x) const {
   return 1;
 }
@@ -145,4 +150,9 @@ double hexth::th2(const double& x, const int& i) const {
 double hexth::dth2(const double& x, const int& i) const {
   return -1.*(!i) + !(i-1)*(-2.*x) + !(i-2);
 }
+
+
+
+} //end namespace femus
+
 

@@ -20,6 +20,11 @@
 // includes :
 //----------------------------------------------------------------------------
 #include <iostream>
+
+
+namespace femus {
+
+
 // Local Includes
 
 // =====================================================
@@ -67,6 +72,11 @@ public:
   void print_scientific(std::ostream& os) const;
 };
 
+
+
+
+
+} //end namespace femus
 
 
 

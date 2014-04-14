@@ -1,6 +1,11 @@
 #include "ElemSto.hpp"
 
 
+namespace femus {
+
+
+
+
 //=====================
   ElemStoBase::ElemStoBase(int nnds_in, uint spacedim_in) {
     
@@ -71,4 +76,5 @@ ElemStoVol::~ElemStoVol() {  }
 
 
 
+} //end namespace femus
 

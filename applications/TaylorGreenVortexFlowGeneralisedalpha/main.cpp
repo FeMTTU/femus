@@ -11,7 +11,7 @@
 
 using std::cout;
 using std::endl;
-   
+using namespace femus;   
 
 void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
 

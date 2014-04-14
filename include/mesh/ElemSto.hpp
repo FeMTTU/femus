@@ -21,6 +21,11 @@
 
 #include "Typedefs.hpp"
 
+
+namespace femus {
+
+
+
 //===========================
 class ElemStoBase  {
 
@@ -146,6 +151,11 @@ public:
 // you can a static array of 100 POINTERS to elem sto. in this way you DONT CALL ANY CONSTRUCTOR!
 //then LATER you call the constructors with "new"
 //BOTH for double and for Classes, variable length arrays are forbidden by ISO C++!!!
+
+
+
+
+} //end namespace femus
 
 
 

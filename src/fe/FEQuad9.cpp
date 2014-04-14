@@ -1,6 +1,11 @@
 #include "FEQuad9.hpp"
 
 
+namespace femus {
+
+
+
+
 // =======================
 FEQuad9::FEQuad9(GeomEl* geomel_in) : FEElemBase(geomel_in) {
   
@@ -81,3 +86,9 @@ FEQuad9::FEQuad9(GeomEl* geomel_in) : FEElemBase(geomel_in) {
     {  0.0156250, -0.0468750,   0.140625, -0.0468750, -0.0937500,   0.281250,   0.281250, -0.0937500,   0.562500 }  // 8
   }
 };
+
+
+
+} //end namespace femus
+
+

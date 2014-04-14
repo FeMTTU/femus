@@ -26,6 +26,11 @@
 #include "DenseMatrix.hpp"
 #include "DenseSubvector.hpp"
 
+
+namespace femus {
+
+
+
 /**
  * Defines a dense submatrix for use in Finite Element-type computations.
  * Useful for storing element stiffness matrices before summation
@@ -183,6 +188,11 @@ void DenseSubMatrix::reposition(const int ioff,
   assert ((this->j_off() + this->n()) <= _parent_matrix.n());
 }
 
+
+
+
+
+} //end namespace femus
 
 
 

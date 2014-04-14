@@ -5,6 +5,9 @@
 // Local Includes
 #include "EqnBase.hpp"
 
+namespace femus {
+
+
 // Forwarded classes
 class EquationsMap;
 
@@ -34,6 +37,9 @@ class EqnNSAD : public EqnBase {
 
 };
 
+
+
+} //end namespace femus
 
 
 #endif

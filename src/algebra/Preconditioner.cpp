@@ -21,6 +21,11 @@
 #include <cstdlib>  
 #include "FEMTTUConfig.h"
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------
 // Preconditioner members
 
@@ -39,6 +44,11 @@ Preconditioner::build(const SolverPackage solver_package) {
         {
   	AutoPtr<Preconditioner > ap(new AztecPreconditioner);
   	return ap;
+
+
+} //end namespace femus
+
+
         }
 #endif
 
@@ -51,6 +61,12 @@ Preconditioner::build(const SolverPackage solver_package) {
 
   return NULL;
 }
+
+
+
+} //end namespace femus
+
+
 
 
 

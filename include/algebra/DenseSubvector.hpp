@@ -21,6 +21,11 @@
 //----------------------------------------------------------------------------
 #include "DenseVector.hpp"
 
+
+namespace femus {
+
+
+
 // ===========================================
 // Defines a dense subvector for use in Finite Element-type computations.
 // Useful for storing element load vectors  before summation
@@ -135,6 +140,11 @@ inline double & DenseSubVector::operator () (const unsigned int i) {
 
   return _parent_vector (i + this->i_off());
 }
+
+
+
+
+} //end namespace femus
 
 
 

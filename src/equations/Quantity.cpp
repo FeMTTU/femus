@@ -6,6 +6,11 @@
 
 #include <vector>
 
+
+namespace femus {
+
+
+
 //  EquationsMap equations_map(utils,phys, phys_usr,mesh,femap,time_loop);
 //What does the Quantity need? 
 //The Physics? Yes, for the ref values, and so on
@@ -123,4 +128,10 @@ if (dof_off > offset) {std::cout << "Use a quadratic mesh for FunctionDof comput
   ////////////////QTY MAP ////////////
   QuantityMap::QuantityMap(Physics& phys_in): _phys(phys_in) { }
   
+
+
+
+
+} //end namespace femus
+
 

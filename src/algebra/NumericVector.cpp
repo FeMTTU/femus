@@ -23,6 +23,11 @@
 #include <cmath> 
 #include <memory>
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------
 // NumericVector methods
 std::auto_ptr<NumericVector >
@@ -39,6 +44,11 @@ NumericVector::build(const SolverPackage solver_package) {
   case TRILINOS_SOLVERS: {
     std::auto_ptr<NumericVector > ap(new EpetraVector<double>);
     return ap;
+
+
+} //end namespace femus
+
+
   }
 #endif
   default:
@@ -105,4 +115,9 @@ double NumericVector::subset_linfty_norm (const std::set< int> & indices) {
 
   return norm;
 }
+
+
+
+} //end namespace femus
+
 

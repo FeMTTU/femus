@@ -13,6 +13,7 @@
 
 using std::cout;
 using std::endl;
+using namespace femus;
 
 // User defined functions
 //int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);

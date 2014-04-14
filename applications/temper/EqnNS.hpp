@@ -5,6 +5,8 @@
 //Inherited classes
 #include "EqnBase.hpp"
 
+namespace femus {
+
 // Forwarded classes
 class EquationsMap;
 
@@ -37,6 +39,11 @@ class EqnNS : public EqnBase {
  double ComputeIntegral (const uint vb, const uint Level) ;  //cannot make it const because of set_phi_nds
  
 };
+
+
+} //end namespace femus
+
+
 
 
 

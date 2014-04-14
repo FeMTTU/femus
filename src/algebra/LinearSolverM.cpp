@@ -11,6 +11,11 @@
 #include "PetscLinearSolverM.hpp"
 #include "Preconditioner.hpp"
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------
 // LinearSolver members
 
@@ -29,6 +34,11 @@ std::auto_ptr<LinearSolverM > LinearSolverM::build(const SolverPackage solver_pa
     case TRILINOS_SOLVERSM:  {
 	std::auto_ptr<LinearSolverM > ap(new AztecLinearSolverM);
 	return ap;
+
+
+} //end namespace femus
+
+
       }
 #endif
 
@@ -67,9 +77,6 @@ void LinearSolverM::attach_preconditioner(Preconditioner * preconditioner)
   _preconditioner = preconditioner;
 }
 
-//------------------------------------------------------------------
-// Explicit instantiations
-// template class LinearSolver<Number>;
 
-
+} //end namespace femus
 

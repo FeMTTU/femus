@@ -9,6 +9,11 @@
 #include "FETypeEnum.hpp"
 
 
+namespace femus {
+
+
+
+
 //here, we must do in such a way that we dont need the "false dynamic" initializer
 //Prol is the vector that holds the matrix for passing 
 //   from LINEAR to QUADRATIC NODES,
@@ -207,5 +212,10 @@ public:
 // and another prol for  FEELemQuad4 to GeomElemQuad9
 //the question is still: do we have to associate it to the MATH part
 //or to the GEOM part
+
+
+} //end namespace femus
+
+
 //We give it to the math part and we say: for a given geom el part, what do you give us, my dear math part?
 #endif

@@ -30,6 +30,11 @@
 // Petsc includes
 #include "petscpc.h"
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -93,6 +98,11 @@ private:
 /*
 inline PetscPreconditioner::PetscPreconditioner () :  Preconditioner(){}
 inline PetscPreconditioner::~PetscPreconditioner ()*/
+
+
+
+} //end namespace femus
+
 
 #endif // #ifdef LIBMESH_HAVE_PETSC
 #endif // #ifdef __petsc_linear_solver_h__

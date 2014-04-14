@@ -28,6 +28,11 @@
 #include "Mesh.hpp"
 #include "LinearEquation.hpp"
 
+
+namespace femus {
+
+
+
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -145,6 +150,11 @@ public:
     return GaussPoints;
   };
 };
+
+
+} //end namespace femus
+
+
 
 #endif
 

@@ -5,6 +5,11 @@
 #include "Typedefs.hpp"
 #include "RunTimeMap.hpp"
 
+
+namespace femus {
+
+
+
 //----------------------------- 
 //------------ BASE DOMAIN class -----------  
 //------------------------------ 
@@ -35,6 +40,11 @@
    virtual void TransformPointToRef(const double* x_in, double* x_out) const = 0;
    
   };
+
+
+
+} //end namespace femus
+
 
 
 #endif
