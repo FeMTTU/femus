@@ -31,6 +31,15 @@ hid_t read_Ihdf5(hid_t file,const std::string & name,int* data) {
   return status;
 }
 
+// ===========================================================================
+hid_t read_UIhdf5(hid_t file,const std::string & name,uint* data) {
+
+  hid_t  dataset = H5Dopen(file,name.c_str(), H5P_DEFAULT);
+  hid_t status=H5Dread(dataset,H5T_NATIVE_UINT,H5S_ALL,H5S_ALL,H5P_DEFAULT,data);
+  H5Dclose(dataset);
+  return status;
+}
+
 //=========================================
 hid_t print_Dhdf5(hid_t file,const std::string & name, hsize_t dimsf[],double* data) {
 
@@ -52,6 +61,18 @@ hid_t print_Ihdf5(hid_t file,const std::string & name, hsize_t dimsf[],int* data
   hid_t dataset = H5Dcreate(file,name.c_str(),H5T_NATIVE_INT,
                             dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   hid_t  status = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,data);
+  H5Dclose(dataset);
+  H5Sclose(dataspace);
+  return status;
+}
+
+//H5T_NATIVE_UINT
+hid_t print_UIhdf5(hid_t file,const std::string & name, hsize_t dimsf[],uint* data) {
+
+  hid_t dataspace = H5Screate_simple(2,dimsf, NULL);
+  hid_t dataset = H5Dcreate(file,name.c_str(),H5T_NATIVE_UINT,
+                            dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t  status = H5Dwrite(dataset, H5T_NATIVE_UINT, H5S_ALL, H5S_ALL,H5P_DEFAULT,data);
   H5Dclose(dataset);
   H5Sclose(dataspace);
   return status;

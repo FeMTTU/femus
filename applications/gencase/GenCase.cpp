@@ -29,8 +29,8 @@
 namespace femus {
 
 // ========================================================
-GenCase::GenCase(Files& files_in, RunTimeMap<double>  map_in, std::string mesh_file_in):
-        Mesh(files_in,map_in,1.),
+GenCase::GenCase(Files& files_in, RunTimeMap<double>  map_in, const double Lref, std::string mesh_file_in):
+        Mesh(files_in,map_in,Lref),
         _dimension( (uint) map_in.get("dimension")),
         _mesh_file(mesh_file_in)
  {
@@ -59,11 +59,6 @@ GenCase::GenCase(Files& files_in, RunTimeMap<double>  map_in, std::string mesh_f
     _NoSubdom = libMesh::global_n_processors();
     _NoLevels = _mesh_rtmap.get("nolevels");
 
-    _nodes_name = "/NODES";
-    _elems_name = "/ELEMS";
-//    _nd_coord_folder = "COORD";
-//      _el_pid_name = "PID";
-//     _nd_map_FineToLev = "MAP";
 
     return;
 }
@@ -152,7 +147,7 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse)  {
 
             RunTimeMap<double> box_map("Box",_files._app_path);
             Box box(_dimension,box_map);
-                box.init(1.);  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
+                box.init(_Lref);  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
 //i guess we could do this instantiation also INSIDE the gencase class
 
 //---Meshing -------
@@ -313,14 +308,14 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
         const libMesh::Mesh::const_element_iterator   end_tr = msht->elements_end();
         libMesh::Mesh::const_element_iterator it_el = msht->elements_begin();
 // counting
-        _n_elements_lev_vb     = new int*[VB];
-        _n_elements_lev_vb[VV] = new int[_NoLevels];
-        _n_elements_lev_vb[BB] = new int[_NoLevels];
-        _NoNodesXLev           = new int[_NoLevels + 1];
+        _n_elements_vb_lev     = new uint*[VB];
+        _n_elements_vb_lev[VV] = new uint[_NoLevels];
+        _n_elements_vb_lev[BB] = new uint[_NoLevels];
+        _NoNodesXLev           = new uint[_NoLevels + 1];
 
         for (int ilev=0; ilev<_NoLevels; ilev++) {
-            _n_elements_lev_vb[VV][ilev] = 0;
-            _n_elements_lev_vb[BB][ilev] = 0;
+            _n_elements_vb_lev[VV][ilev] = 0;
+            _n_elements_vb_lev[BB][ilev] = 0;
         }
         for (int ilev=0; ilev<_NoLevels+1; ilev++) _NoNodesXLev[ilev] = 0;
 
@@ -379,7 +374,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
 	    /*CHECK*/ if (count_e != elem->id()) { std::cout << " The elements are not ordered by id ====== " << std::endl; abort();}
             _el_sto[count_e]->_lev  = elem->level();
 //             _el_sto[count_e]->_subd = elem->processor_id();
-            _n_elements_lev_vb[VV][elem->level()]++;
+            _n_elements_vb_lev[VV][elem->level()]++;
 
             for (uint inode=0; inode < _elnodes[VV][QQ];inode++) {
                 int knode=elem->node(inode);      //libmesh node numbering
@@ -412,7 +407,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
                     _el_sto_b[count_eb]->_vol_id= elem->id();
                     _el_sto_b[count_eb]->_lev  = elem->level();
 //                     _el_sto_b[count_eb]->_subd = elem->processor_id();
-                    _n_elements_lev_vb[BB][elem->level()]++;
+                    _n_elements_vb_lev[BB][elem->level()]++;
                     _el_sto_b[count_eb]->_nside= s;
                     AutoPtr<Elem> side(elem->build_side(s));
                     for (uint ns=0; ns< side->n_nodes(); ns++)  _el_sto_b[count_eb]->_elnds[ns]=side->node(ns);
@@ -647,8 +642,8 @@ void GenCase::CreateStructuresLevSubd() {
 //=====================================
 
         //==== ELEMENTS =========
-        for (int i=0;i<VB;i++)     delete [] _n_elements_lev_vb[i];
-        delete [] _n_elements_lev_vb;
+        for (int i=0;i<VB;i++)     delete [] _n_elements_vb_lev[i];
+        delete [] _n_elements_vb_lev;
 
         for (int vb=0;vb < VB; vb++)    delete [] _n_elements_sl_vb[vb];
         delete [] _n_elements_sl_vb;
@@ -715,7 +710,7 @@ void GenCase::ElemChildToFather() {
     _el_child_to_fath = new int*[_NoLevels];
     for (int lev=0; lev<_NoLevels; lev++)  {
         std::cout << "Level=== " << lev << std::endl;
-        _el_child_to_fath[lev] =  new int[_n_elements_lev_vb[BB][lev]];
+        _el_child_to_fath[lev] =  new int[_n_elements_vb_lev[BB][lev]];
         int ielem = 0;
         for (int isub=0;isub<_NoSubdom;isub++) {
             std::cout << "Subdomain= " << isub << std::endl;
@@ -745,7 +740,7 @@ void GenCase::ElemChildToFather() {
                 // the LIBMESH and FEMUS orderings COINCIDE?
                 //I guess I will build the INVERSE of the ELEMENT ORDERING
                 /*CHECK*/
-                if (ielem >= _n_elements_lev_vb[BB][lev]  ) {
+                if (ielem >= _n_elements_vb_lev[BB][lev]  ) {
                     std::cout << ielem << " Something wrong with number of elems" << std::endl;
                     abort();
                 }
@@ -1092,12 +1087,12 @@ void GenCase::PrintMultimeshXdmf() const {
 
             std::ostringstream hdf5_field;
             hdf5_field << _elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
-            IO::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),_GeomEl.name[vb],_n_elements_lev_vb[vb][ilev],_n_elements_lev_vb[vb][ilev],_elnodes[vb][QQ]);
+            IO::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),_GeomEl.name[vb],_n_elements_vb_lev[vb][ilev],_n_elements_vb_lev[vb][ilev],_elnodes[vb][QQ]);
             std::ostringstream coord_lev; coord_lev << "_L" << ilev; 
 	    IO::PrintXDMFGeometry(out,top_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[ilev],1);
             std::ostringstream pid_field;
             pid_field << "PID/PID_VB"<< vb <<"_L"<< ilev;
-            IO::PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",_n_elements_lev_vb[vb][ilev],1);
+            IO::PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",_n_elements_vb_lev[vb][ilev],1);
 
             out << "</Grid> \n";
 	    
@@ -1174,7 +1169,7 @@ void GenCase::PrintMeshHDF5() const  {
     std::string ndxlev =  ndmap + "/NDxLEV";
     dimsf[0] = _NoLevels+1;
     dimsf[1] = 1;
-    IO::print_Ihdf5(file, ndxlev.c_str(), dimsf,_NoNodesXLev);
+    IO::print_UIhdf5(file, ndxlev.c_str(), dimsf,_NoNodesXLev);
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++
 // node map (XL, extended levels)
@@ -1282,7 +1277,7 @@ void GenCase::PrintMeshHDF5() const  {
     for (int lev=0;lev<_NoLevels; lev++)  {
         std::ostringstream   bname;
         bname << _elems_name << "/BDRY_TO_VOL_L" << lev;
-        dimsf[0] = _n_elements_lev_vb[BB][lev];
+        dimsf[0] = _n_elements_vb_lev[BB][lev];
         dimsf[1] = 1;
         IO::print_Ihdf5(file,bname.str(), dimsf,_el_child_to_fath[lev]);
     }
@@ -1291,7 +1286,7 @@ void GenCase::PrintMeshHDF5() const  {
 
 
 //             std::cout <<  "==================" << std::endl;
-//          for (int i=0;i<_n_elements_lev_vb[BB][lev];i++)  {
+//          for (int i=0;i<_n_elements_vb_lev[BB][lev];i++)  {
 //              std::cout <<  _el_child_to_fath[lev][i] << std::endl;
 //        }
 // 	 }
@@ -1359,7 +1354,7 @@ void GenCase::PrintElemVB(hid_t file,const uint vb , int* nd_libm_fm , ElemStoBa
     // NoElements ------------------------------------
     dimsf[0] = _NoLevels;
     dimsf[1] = 1;
-    IO::print_Ihdf5(file,(elems_fem_vb + "/NExLEV"), dimsf,_n_elements_lev_vb[vb]);
+    IO::print_UIhdf5(file,(elems_fem_vb + "/NExLEV"), dimsf,_n_elements_vb_lev[vb]);
     // offset
     dimsf[0] = _NoSubdom*_NoLevels+1;
     dimsf[1] = 1;
@@ -1385,7 +1380,7 @@ void GenCase::PrintElemVB(hid_t file,const uint vb , int* nd_libm_fm , ElemStoBa
     // level connectivity ---------------------------------
     for (int ilev=0;ilev <_NoLevels; ilev++) {
 
-        int *conn_lev=new int[_n_elements_lev_vb[vb][ilev]*_elnodes[vb][QQ]];  //connectivity of ilev
+        int *conn_lev=new int[_n_elements_vb_lev[vb][ilev]*_elnodes[vb][QQ]];  //connectivity of ilev
 
         int ltot=0;
         for (int iproc=0;iproc <_NoSubdom; iproc++) {
@@ -1399,7 +1394,7 @@ void GenCase::PrintElemVB(hid_t file,const uint vb , int* nd_libm_fm , ElemStoBa
             }
         }
         // hdf5 storage     ----------------------------------
-        dimsf[0] = _n_elements_lev_vb[vb][ilev]*_elnodes[vb][QQ];
+        dimsf[0] = _n_elements_vb_lev[vb][ilev]*_elnodes[vb][QQ];
         dimsf[1] = 1;
 
         name.str("");
@@ -1430,7 +1425,7 @@ void GenCase::PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std::st
         //   const uint Level = /*_NoLevels*/_n_levels-1;
         const uint n_children = /*4*(_dimension-1)*/1;  /*here we have quadratic cells*/
 
-        uint      n_elements = _n_elements_lev_vb[vb][Level];
+        uint      n_elements = _n_elements_vb_lev[vb][Level];
         int *ucoord;
         ucoord=new int[n_elements*n_children];
         int cel=0;
@@ -1472,7 +1467,7 @@ void GenCase::PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std::st
 // the dimension of LEN (len)        is "n_dofs_lev_fe[fe_row]+1"
 // the dimension of OFFLEN (len_off) is "n_dofs_lev_fe[fe_row]+1"
 
-void GenCase::PrintOneVarMatrixHDF5(std::string name, std::string groupname, int** n_dofs_lev_fe,int count,
+void GenCase::PrintOneVarMatrixHDF5(std::string name, std::string groupname, uint** n_dofs_lev_fe,int count,
                                int* Mat,int* len,int* len_off,
                                int fe_row, int fe_col, int* FELevel) const {
 
@@ -1523,7 +1518,7 @@ void GenCase::PrintOneVarMatrixHDF5(std::string name, std::string groupname, int
 // ===============================================================
 // here pay attention, the EXTENDED LEVELS are not used for distinguishing
 //
-void GenCase::PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, int* n_dofs_lev, int count, int* Op_pos,double* Op_val,int* len,int* len_off, int FELevel_row, int FELevel_col, int fe) const {
+void GenCase::PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, uint* n_dofs_lev, int count, int* Op_pos,double* Op_val,int* len,int* len_off, int FELevel_row, int FELevel_col, int fe) const {
 
     hid_t file = H5Fopen(filename.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);  //TODO questo apri interno e' per assicurarsi che il file sia aperto... quello fuori credo che non serva...
                                                                        // e invece credo che quello serva per CREARE il file, altrimenti non esiste
@@ -1678,11 +1673,11 @@ void GenCase::ComputeProl()  {
         FEXLevel_f[LL] = Level1-1;                                // AAA look at the symmetry, this is exactly (_n_levels + Level1 + 1)%(_n_levels + 1); ! //FINE Level for LINEAR:   Level1=0 means coarse linear, a finer linear is the first coarse quadratic, and so on and so on
         FEXLevel_f[KK] = Lev_f;   
 
-        int** n_dofs_fe_lev;
-        n_dofs_fe_lev = new int*[QL];
+        uint** n_dofs_fe_lev;
+        n_dofs_fe_lev = new uint*[QL];
         n_dofs_fe_lev[QQ] = _NoNodesXLev;            //equal the pointers
         n_dofs_fe_lev[LL] = _NoNodesXLev;            //equal the pointers
-        n_dofs_fe_lev[KK] = _n_elements_lev_vb[VV];  //equal the pointers
+        n_dofs_fe_lev[KK] = _n_elements_vb_lev[VV];  //equal the pointers
 
 
       int **     Prol_pos = new int*[QL];
@@ -2025,7 +2020,7 @@ void GenCase::ComputeProl()  {
 // - delete the arrays
 
 //===========================
-// Pay attention because  _n_elements_lev_vb[VV]
+// Pay attention because  _n_elements_vb_lev[VV]
 //     and _n_nodes_lev
 //     are defined on two different levels
 //   the nodes are on n_levels+1
@@ -2281,11 +2276,11 @@ void GenCase::ComputeMatrix() {
         FELevel[QQ] = Level1;
         FELevel[LL] = (Level1+_NoLevels)%(_NoLevels+1);
         FELevel[KK] = Level1;
-        int** n_dofs_lev_fe;
-        n_dofs_lev_fe = new int*[QL];
+        uint** n_dofs_lev_fe;
+        n_dofs_lev_fe = new uint*[QL];
         n_dofs_lev_fe[QQ] = _NoNodesXLev;            //equal the pointers
         n_dofs_lev_fe[LL] = _NoNodesXLev;            //equal the pointers
-        n_dofs_lev_fe[KK] = _n_elements_lev_vb[VV];  //equal the pointers
+        n_dofs_lev_fe[KK] = _n_elements_vb_lev[VV];  //equal the pointers
 
         lenG       = new int**[QL];
         lenoffG    = new int**[QL];
@@ -2602,11 +2597,11 @@ void GenCase::ComputeRest( ) {
         FEXLevel_f[LL] = Level1;                                // AAA look at the symmetry, this is exactly (_n_levels + Level1 + 1)%(_n_levels + 1); ! //FINE Level for LINEAR:   Level1=0 means coarse linear, a finer linear is the first coarse quadratic, and so on and so on
         FEXLevel_f[KK] = Level1+1;                                  //FINE Level for CONSTANT
 
-        int** n_dofs_fe_lev;
-        n_dofs_fe_lev = new int*[QL];
+        uint** n_dofs_fe_lev;
+        n_dofs_fe_lev = new uint*[QL];
         n_dofs_fe_lev[QQ] = _NoNodesXLev;            //equal the pointers
         n_dofs_fe_lev[LL] = _NoNodesXLev;            //equal the pointers
-        n_dofs_fe_lev[KK] = _n_elements_lev_vb[VV];  //equal the pointers
+        n_dofs_fe_lev[KK] = _n_elements_vb_lev[VV];  //equal the pointers
 
         int**     Rest_pos = new    int*[QL];
         double**  Rest_val = new double*[QL];

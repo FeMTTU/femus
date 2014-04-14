@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
   //anyway, now we do like this
       
   // ========= GenCase =====
-      GenCase gencase(files,mesh_map,files_map.get("F_MESH_READ"));
+      GenCase gencase(files,mesh_map,1.,files_map.get("F_MESH_READ"));
       gencase.GenerateCase();
 
   std::cout << "=======End of GenCase========" << std::endl;

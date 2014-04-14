@@ -245,7 +245,7 @@ void QuantityLocal::GetElDofsVect(const uint vbfl, const uint Level)  {
   int length_nodedof [QL];  
   length_nodedof[QQ] = _currEl._eqnmap._mesh._NoNodesXLev[_eqnptr->_NoLevels-1];
   length_nodedof[LL] = _currEl._eqnmap._mesh._NoNodesXLev[_eqnptr->_NoLevels-1];
-  length_nodedof[KK] = _currEl._eqnmap._mesh._NoElements[VV][Level];
+  length_nodedof[KK] = _currEl._eqnmap._mesh._n_elements_vb_lev[VV][Level];
 
    int off_total = 0;
    for (uint i = 0; i < _qtyptr->_pos; i++) off_total += _eqnptr->_QtyInternalVector[i]->_dim * _eqnptr->_DofNumLevFE[ Level ][ _eqnptr->_QtyInternalVector[i]->_FEord ];

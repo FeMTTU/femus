@@ -16,10 +16,12 @@ namespace femus {
 namespace IO {
   
   //hdf5 ------------------------------------
-   hid_t print_Dhdf5(hid_t file,const std::string & name, hsize_t dimsf[],double data[]);
-   hid_t print_Ihdf5(hid_t file,const std::string & name, hsize_t dimsf[],int data[]);
-   hid_t read_Dhdf5(hid_t file,const std::string & name,double data[]);
-   hid_t read_Ihdf5(hid_t file,const std::string & name,int data[]);
+   hid_t print_Dhdf5(hid_t file,const std::string & name, hsize_t* dimsf,double* data);
+   hid_t print_Ihdf5(hid_t file,const std::string & name, hsize_t* dimsf,int* data);
+   hid_t print_UIhdf5(hid_t file,const std::string & name, hsize_t* dimsf,uint* data);
+   hid_t read_Dhdf5(hid_t file,const std::string & name,double* data);
+   hid_t read_Ihdf5(hid_t file,const std::string & name,int* data);
+   hid_t read_UIhdf5(hid_t file,const std::string & name,uint* data);
 
   //XDMF  
    void PrintXDMFAttribute(std::ofstream& outstream, 
