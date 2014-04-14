@@ -32,6 +32,12 @@ Mesh::Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref) :
       
 
   _iproc = paral::get_rank();
+  
+    _nodes_name = "/NODES";
+    _elems_name = "/ELEMS";
+//    _nd_coord_folder = "COORD";
+//      _el_pid_name = "PID";
+//     _nd_map_FineToLev = "MAP";
 
 
 }
@@ -56,14 +62,14 @@ void Mesh::clear ()  {
     for (uint imesh =0; imesh < VB; imesh++) {
     delete [] _el_map[imesh];
     delete [] _off_el[imesh];
-    delete [] _NoElements[imesh];
+    delete [] _n_elements_vb_lev[imesh];
   }
 
 
    for (uint lev=0; lev < _NoLevels; lev++) delete [] _el_bdry_to_vol[lev]; 
    delete []  _el_bdry_to_vol;
   
-    delete[] _NoElements;
+    delete[] _n_elements_vb_lev;
     delete[] _off_el;
     delete[] _el_map;
     delete[] _xyz;
@@ -282,11 +288,11 @@ for (int fe=0;fe < QL_NODES; fe++)    {
 // ===========================================
 //   NUMBER EL
 // ===========================================
-  _NoElements=new uint*[VB];
+  _n_elements_vb_lev=new uint*[VB];
   for (uint vb=0;vb< VB;vb++) {
-    _NoElements[vb]=new uint[_NoLevels];
+    _n_elements_vb_lev[vb]=new uint[_NoLevels];
     std::ostringstream Name; Name << "/ELEMS/VB" << vb  <<"/NExLEV";
-    H5Dread(H5Dopen(file_id,Name.str().c_str(),H5P_DEFAULT),H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,_NoElements[vb]);
+    H5Dread(H5Dopen(file_id,Name.str().c_str(),H5P_DEFAULT),H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,_n_elements_vb_lev[vb]);
   }
 
 // ===========================================
@@ -315,7 +321,7 @@ for (int vb=0; vb < VB; vb++)    {
 // ===========================================
    _el_bdry_to_vol = new int*[_NoLevels];
   for (uint lev=0; lev < _NoLevels; lev++)    {
-  _el_bdry_to_vol[lev] = new int[_NoElements[BB][lev]];
+  _el_bdry_to_vol[lev] = new int[_n_elements_vb_lev[BB][lev]];
     std::ostringstream btov; btov << "/ELEMS/BDRY_TO_VOL_L" << lev;
   H5Dread(H5Dopen(file_id, btov.str().c_str(), H5P_DEFAULT),H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT,_el_bdry_to_vol[lev]);
   }
@@ -410,7 +416,7 @@ void Mesh::PrintXDMFGridVB(std::ofstream& out,
   
   std::ostringstream hdf_field; hdf_field << "MSHCONN_VB_" << vb << "_LEV_" << Level;
   
-    uint nel = _NoElements[vb][Level];
+    uint nel = _n_elements_vb_lev[vb][Level];
 
     out << "<Grid Name=\"" << grid_mesh[vb].c_str() << "_L" << Level << "\"> \n";
     
@@ -461,7 +467,7 @@ void Mesh::PrintConnLinVB(hid_t file, const uint Level, const uint vb) const {
   
     uint icount=0;
     uint mode = _GeomEl._elnds[vb][QQ];
-    uint n_elements = _NoElements[vb][Level];
+    uint n_elements = _n_elements_vb_lev[vb][Level];
     uint nsubel, nnodes;
 
     switch(_dim)   {
@@ -618,7 +624,7 @@ void Mesh::PrintSubdomFlagOnLinCells(std::string filename) const {
   for (uint l=0; l<_NoLevels; l++) {
     
   const uint n_children = 4*(_dim-1);
-  uint n_elements = _NoElements[VV][l];
+  uint n_elements = _n_elements_vb_lev[VV][l];
   int *ucoord;   ucoord=new int[n_elements*n_children];
   int cel=0;
   for (uint iproc=0; iproc < _NoSubdom; iproc++) {

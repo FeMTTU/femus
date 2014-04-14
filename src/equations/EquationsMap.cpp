@@ -218,7 +218,7 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) const 
         int NGeomObjOnWhichToPrint[QL];
         NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[l];
         NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[KK] = _mesh._NoElements[VV][l]*_mesh._GeomEl.n_se[VV];
+        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*_mesh._GeomEl.n_se[VV];
 	  
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
@@ -443,7 +443,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) const {
         int NGeomObjOnWhichToPrint[QL];
         NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[l];
         NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[KK] = _mesh._NoElements[VV][l]*_mesh._GeomEl.n_se[VV];
+        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*_mesh._GeomEl.n_se[VV];
 
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
@@ -495,7 +495,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) const {
 void EquationsMap::PrintXDMFTopologyGeometry(std::ofstream& out, const uint Level, const uint vb) const {
 
     //Mesh
-    uint n_elements = _mesh._NoElements[vb][Level];
+    uint n_elements = _mesh._n_elements_vb_lev[vb][Level];
 
     std::string basemesh   = DEFAULT_BASEMESH;
     std::string connlin    = DEFAULT_CONNLIN;

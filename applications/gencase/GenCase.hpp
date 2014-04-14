@@ -30,14 +30,14 @@ class GenCase : public Mesh {
 
 public:
 
-     GenCase(Files& files_in,RunTimeMap<double> map_in, std::string mesh_file);
+     GenCase(Files& files_in,RunTimeMap<double> map_in, const double lref, std::string mesh_file);
     ~GenCase();                                      
 
     void ComputeMatrix();
     void ComputeProl();
     void ComputeRest();
-    void PrintOneVarMatrixHDF5(std::string name, std::string groupname, int** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel ) const;
-    void PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, int* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe) const;
+    void PrintOneVarMatrixHDF5(std::string name, std::string groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel ) const;
+    void PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, uint* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe) const;
 
     void GenerateCase();
     void GenerateCoarseMesh(libMesh::Mesh* msh_coarse);
@@ -76,7 +76,6 @@ private:
 
     // NODES ===============
     int    _n_nodes;       //of the WHOLE REFINEMENT! i.e. the FINE ones!
-    int *  _NoNodesXLev;
     int ** _n_nodes_sl_ql; 
     int ** _off_nd;               //node offsets, QL (Quadratic and Linear)
     int ** _Qnode_fine_Qnode_lev; // was _gindexL  //node map  // from QUADRATIC NODE FINE, to QUADRATIC NODE of that LEVEL
@@ -91,9 +90,8 @@ private:
     
     // ELEMENTS =============
     int    _n_elements_sum_levs[VB];    //of the WHOLE REFINEMENT!
-    int ** _n_elements_lev_vb;
     int ** _n_elements_sl_vb;
-    int ** _off_el;
+    int ** _off_el;   //TODO same name as mesh
     int ** _el_child_to_fath;              //for every level, it gives you the father
     ElemStoVol**  _el_sto;                 //FILLED ACCORDING TO "how the Libmesh mesh iterator runs" which may not be id in general i think...
     ElemStoBdry** _el_sto_b;               //FILLED with OUR ORDERING, "as we find them during the volume elem loop"
@@ -102,12 +100,6 @@ private:
     std::vector< std::pair<int,int> > _el_fm_libm_b;
     int *                             _el_libm_fm;
 
-    // HDF5 FIELDS ===============
-    std::string _nodes_name; //name for the HDF5 dataset
-    std::string _elems_name;   //name for the HDF5 dataset
-//     std::string _nd_coord_folder;  //TODO why seg fault if I use them?!?
-//     std::string _el_pid_name;
-//     std::string _nd_map_FineToLev;
     
 };
 

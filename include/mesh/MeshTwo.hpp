@@ -53,7 +53,7 @@ public:
     uint _NoLevels;          /// Number of Levels (L)
 
 // ==== ELEMENTS ====
-    uint** _NoElements;        /// Number of Elements        [VB][L]                                     
+    uint** _n_elements_vb_lev;        /// Number of Elements        [VB][L]                                     
     int**  _off_el;            /// offset of element numbers [VB][L+P*_NoLevels]         
     uint** _el_map;            /// Connectivity map         [VB][L+P*_NoLevels]
     int**  _el_bdry_to_vol;
@@ -68,8 +68,8 @@ public:
 
 //===== Constructors/ Destructor ===========
      Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref);
-    ~Mesh ();			  ///<  Level Mesh Destructor
-    void clear ();		  ///<  substructure Destructor
+    ~Mesh ();
+    void clear ();
 
     //======= Print/read functions =======
     void PrintForVisualizationAllLEVAllVB() const;
@@ -84,6 +84,13 @@ public:
 protected:
 
     const double _Lref;          ///Reference length for non-dimensionalization
+    
+    // HDF5 FIELDS ===============
+    std::string _nodes_name; //name for the HDF5 dataset
+    std::string _elems_name;   //name for the HDF5 dataset
+//     std::string _nd_coord_folder;  //TODO why seg fault if I use them?!?
+//     std::string _el_pid_name;
+//     std::string _nd_map_FineToLev;
 
  };
 

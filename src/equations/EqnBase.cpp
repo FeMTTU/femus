@@ -455,7 +455,7 @@ void EqnBase::ComputeMeshToDof() {
       ndof_onevar[QQ] = _mesh._NoNodesXLev[Level];
       ndof_onevar[LL] = _mesh._NoNodesXLev[_NoLevels];
       if (Level>0) ndof_onevar[LL] = _mesh._NoNodesXLev[Level-1];
-      ndof_onevar[KK] =  _mesh._NoElements[VV][Level];
+      ndof_onevar[KK] =  _mesh._n_elements_vb_lev[VV][Level];
 
       _Dim[Level] = 0;
       for (uint fe=0;fe<QL;fe++) _Dim[Level] += _nvars[fe]*ndof_onevar[fe];
@@ -488,7 +488,7 @@ void EqnBase::ComputeMeshToDof() {
   _DofNumLevFE[Level] = new uint[QL];
   _DofNumLevFE[Level][QQ] = _mesh._NoNodesXLev[_NoLevels-1];
   _DofNumLevFE[Level][LL] = _mesh._NoNodesXLev[_NoLevels-1];
-  _DofNumLevFE[Level][KK] = _mesh._NoElements[VV][Level];
+  _DofNumLevFE[Level][KK] = _mesh._n_elements_vb_lev[VV][Level];
    }
       
   _DofOffLevFE = new uint*[_NoLevels];
@@ -1110,7 +1110,7 @@ void EqnBase::PrintBc(std::string namefile) {
    int NGeomObjOnWhichToPrint[QL];
     NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[Level];
     NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[Level];
-    NGeomObjOnWhichToPrint[KK] = _mesh._NoElements[VV][Level]*_mesh._GeomEl.n_se[VV];
+    NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][Level]*_mesh._GeomEl.n_se[VV];
   
     const uint n_nodes_lev = _mesh._NoNodesXLev[Level];
     int* sol_on_Qnodes = new int[n_nodes_lev];  //this vector will contain the values of ONE variable on ALL the QUADRATIC nodes
@@ -1217,7 +1217,7 @@ void EqnBase::PrintBc(std::string namefile) {
               iel <    _mesh._off_el[VV][off_proc + Level+1]
                      - _mesh._off_el[VV][off_proc + Level]; iel++) {
       for (uint is=0; is< _mesh._GeomEl.n_se[VV]; is++) {      
-	sol_on_cells[cel*_mesh._GeomEl.n_se[VV] + is] = _bc_fe_kk[Level][iel + sum_elems_prev_sd_at_lev + ivar*_mesh._NoElements[VV][Level]]; //this depends on level!
+	sol_on_cells[cel*_mesh._GeomEl.n_se[VV] + is] = _bc_fe_kk[Level][iel + sum_elems_prev_sd_at_lev + ivar*_mesh._n_elements_vb_lev[VV][Level]]; //this depends on level!
       }
       cel++;
     }
@@ -1318,19 +1318,19 @@ void EqnBase::GenElBc()  {
 
     for (uint Level=0; Level <_NoLevels;Level++)   { //loop over the levels
 
-        _elem_bc[Level]       = new int*[_mesh._NoSubdom];//4*_mesh._NoElements[BB][Level] this was wrong, actually it is L + P*NoLevels, i wasnt considering the others but it was working! For instance in two D the numbers for the two procs are the same, here's why!
-        _elem_val_norm[Level] = new double*[_mesh._NoSubdom];//_mesh._NoElements[BB][Level]
-        _elem_val_tg[Level]   = new double*[_mesh._NoSubdom];//_mesh._NoElements[BB][Level]
+        _elem_bc[Level]       = new int*[_mesh._NoSubdom];//4*_mesh._n_elements_vb_lev[BB][Level] this was wrong, actually it is L + P*NoLevels, i wasnt considering the others but it was working! For instance in two D the numbers for the two procs are the same, here's why!
+        _elem_val_norm[Level] = new double*[_mesh._NoSubdom];//_mesh._n_elements_vb_lev[BB][Level]
+        _elem_val_tg[Level]   = new double*[_mesh._NoSubdom];//_mesh._n_elements_vb_lev[BB][Level]
 
         for (uint isubd=0;isubd<_mesh._NoSubdom;++isubd) {  //loop over the subdomains
 
             uint iel_b=_mesh._off_el[BB][ _NoLevels*isubd +  Level];
             uint iel_e=_mesh._off_el[BB][ _NoLevels*isubd +  Level+1];
 
-            _elem_bc[Level][isubd]  = new int[/*4*/2*(iel_e-iel_b)]; /*normal and tangential*/ //4*_mesh._NoElements[BB][Level+isubd*_NoLevels] that was not correct
-            _elem_val_norm[Level][isubd]  = new double[ 1*(iel_e-iel_b) ];  //_mesh._NoElements[BB][Level+isubd*_NoLevels]
+            _elem_bc[Level][isubd]  = new int[/*4*/2*(iel_e-iel_b)]; /*normal and tangential*/ //4*_mesh._n_elements_vb_lev[BB][Level+isubd*_NoLevels] that was not correct
+            _elem_val_norm[Level][isubd]  = new double[ 1*(iel_e-iel_b) ];  //_mesh._n_elements_vb_lev[BB][Level+isubd*_NoLevels]
 
-            _elem_val_tg[Level][isubd]  = new double[ _number_tang_comps[space_dim - 1]*(iel_e-iel_b) ];   //_mesh._NoElements[BB][Level+isubd*_NoLevels]
+            _elem_val_tg[Level][isubd]  = new double[ _number_tang_comps[space_dim - 1]*(iel_e-iel_b) ];   //_mesh._n_elements_vb_lev[BB][Level+isubd*_NoLevels]
 
             for (uint iel=0;iel < (iel_e - iel_b); iel++) {  //loop over the elems of that level&subdomain
 
@@ -2332,7 +2332,7 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
     int off_onevar[QL];
     off_onevar[QQ] = _mesh._NoNodesXLev[_NoLevels-1];
     off_onevar[LL] = _mesh._NoNodesXLev[_NoLevels-1];
-    off_onevar[KK] = _mesh._NoElements[VV][Level];
+    off_onevar[KK] = _mesh._n_elements_vb_lev[VV][Level];
     
     uint  off_EachFEFromStart[QL];
     off_EachFEFromStart[QQ] = 0;
@@ -3141,7 +3141,7 @@ void EqnBase::PrintVector(std::string namefile) {
     int NGeomObjOnWhichToPrint[QL];
     NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[Level];
     NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[Level];
-    NGeomObjOnWhichToPrint[KK] = _mesh._NoElements[VV][Level]*_mesh._GeomEl.n_se[VV];
+    NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][Level]*_mesh._GeomEl.n_se[VV];
     
     const uint n_nodes_lev = _mesh._NoNodesXLev[Level];
     double* sol_on_Qnodes  = new double[n_nodes_lev];  //TODO VALGRIND //this is QUADRATIC because it has to hold  either quadratic or linear variables and print them on a QUADRATIC mesh

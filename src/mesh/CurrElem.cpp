@@ -79,7 +79,7 @@ for (int vb = 0; vb < VB; vb++) {
 
 void CurrElem::GetElDofsBc(const uint vbfl, const uint Level)  {
 
-/*CHECK*/   if (_vol_iel_DofObj[vbfl] >= _eqnmap._mesh._NoElements[VV][Level] ) { std::cout << "Out of the node_dof map FE KK range" << std::endl; abort();}
+/*CHECK*/   if (_vol_iel_DofObj[vbfl] >= _eqnmap._mesh._n_elements_vb_lev[VV][Level] ) { std::cout << "Out of the node_dof map FE KK range" << std::endl; abort();}
 
   const uint Lev_pick_bc_dof = _eqnmap._mesh._NoLevels -1;  //we use the FINE Level as reference
   
