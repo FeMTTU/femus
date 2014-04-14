@@ -196,6 +196,8 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
   equations_map.clean();  //deallocates the map of equations
   for (int fe=0; fe<QL; fe++)  {  delete FEElements[fe]; }
   
+  mesh.clear();
+  
   files.RedirectCoutFinalize(sbuf);
 
   return 0;

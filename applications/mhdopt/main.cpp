@@ -262,6 +262,8 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 
   for (int fe=0; fe<QL; fe++) delete FEElements[fe];
   
+  mesh.clear();
+  
   files.RedirectCoutFinalize(sbuf);
   
   return 0;

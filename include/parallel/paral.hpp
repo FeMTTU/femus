@@ -6,12 +6,12 @@
 
 #ifdef HAVE_MPI
  #include "mpi.h" 
+#endif
 
 
 namespace femus {
 
 
-#endif
 
 ///This namespace will hold global data and functions for parallel purposes
 ///In this way you dont have to pass these values through a particular instantiation of a class,

@@ -29,14 +29,14 @@
 namespace femus {
 
 // ========================================================
-GenCase::GenCase(Files& files_in, RunTimeMap<double> & map_in, GeomEl& geomel_in,
+GenCase::GenCase(Files& files_in, RunTimeMap<double>  map_in, GeomEl& geomel_in,
                  std::vector<FEElemBase*>& feelems_in, std::string mesh_file_in):
-        _files(files_in),
-        _mesh_rtmap(map_in),
-        _dimension( (uint) _mesh_rtmap.get("dimension")),
+        Mesh(files_in,map_in,1.),
+        _dimension( (uint) map_in.get("dimension")),
         _GeomEl(geomel_in),
         _feelems(feelems_in),
-        _mesh_file(mesh_file_in)  {
+        _mesh_file(mesh_file_in)
+ {
 
     const uint mesh_ord = (uint) _mesh_rtmap.get("mesh_ord");
     if (mesh_ord != 0) {
@@ -126,7 +126,7 @@ void GenCase::GenerateCase()   {
 //===============================================================================
 //================= LIBMESH coarse Mesh OBJECT from FILE or FUNCTION ============
 //===============================================================================
-void GenCase::GenerateCoarseMesh(Mesh* msh_coarse)  {
+void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse)  {
 
     const uint libmesh_gen = _mesh_rtmap.get("libmesh_gen");
 
@@ -145,8 +145,6 @@ void GenCase::GenerateCoarseMesh(Mesh* msh_coarse)  {
             //TODO think of Domain before or after Mesh
 
             RunTimeMap<double> box_map("Box",_files._app_path);
-            box_map.read();
-            box_map.print();
             Box box(_dimension,box_map);
                 box.init(1.);  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
 //i guess we could do this instantiation also INSIDE the gencase class

@@ -27,18 +27,17 @@
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
 
-using std::cout;
-using std::endl;
-using std::min;
-
 #include "Mesh.hpp"
 #include "metis.h"
 
 
 namespace femus {
 
-
+using std::cout;
+using std::endl;
+using std::min;
 using std::sort;
+
 
 const unsigned mesh::_END_IND[5]= {0,1,3,4,5};
 

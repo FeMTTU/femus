@@ -14,6 +14,7 @@
 #include "FETypeEnum.hpp"
 #include "RunTimeMap.hpp"
 #include "ElemSto.hpp"
+#include "MeshTwo.hpp"
 
 namespace femus {
 
@@ -25,11 +26,11 @@ class FEElemBase;
 
 
 
-class GenCase {
+class GenCase : public Mesh {
 
 public:
 
-     GenCase(Files& files_in,RunTimeMap<double>& map_in, GeomEl& mggeomel_in,std::vector<FEElemBase*>& feelems_in, std::string mesh_file);
+     GenCase(Files& files_in,RunTimeMap<double> map_in, GeomEl& mggeomel_in,std::vector<FEElemBase*>& feelems_in, std::string mesh_file);
     ~GenCase();                                      
 
     void ComputeMatrix();
@@ -64,8 +65,6 @@ public:
 private:
 
     // Basic data ==========
-    RunTimeMap<double> _mesh_rtmap;
-    Files& _files;
     std::string _mesh_file;
     int _NoSubdom;       ///< number of subdomain (one for each processor)
     int _NoLevels;       ///< number of levels (multigrid)
