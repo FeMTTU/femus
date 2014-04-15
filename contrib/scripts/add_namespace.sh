@@ -30,8 +30,8 @@ if (test $NUM_LINES_TMP_BEGIN -gt 0) then #we use the opening criterion to treat
 
 export START_ROW_BEGIN=`tail -n 1 tmp_begin.txt`;
 export START_ROW_END=`tail -n 1 tmp_end.txt`;
-START_ROW_BEGIN=$(( ${START_ROW_BEGIN} + 1 ))
-  START_ROW_END=$(( ${START_ROW_END}   - 1 ))
+START_ROW_BEGIN=$(( ${START_ROW_BEGIN} + 2 ))
+  START_ROW_END=$(( ${START_ROW_END}   - 2 ))
 
 TOTAL_ROWS=`wc -l $file | cut -d " " -f 1`;
 ENDFILE_GAP=$(( $TOTAL_ROWS - $START_ROW_END + 1)); 

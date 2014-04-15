@@ -12,11 +12,6 @@
 #include "PetscMatrix.hpp"
 #include "PetscMacro.hpp"
 
-
-namespace femus {
-
-
-
 // Petsc include files. 
 EXTERN_C_FOR_PETSC_BEGIN
 // #if PETSC_VERSION_LESS_THAN(2,2,0)
@@ -52,7 +47,11 @@ extern "C"
 #endif
 } // end extern "C"
 
-		
+
+
+namespace femus {
+
+
 // ==========================================
 /// This class provides an interface to PETSc iterative solvers 
 class PetscLinearSolverM : public LinearSolverM

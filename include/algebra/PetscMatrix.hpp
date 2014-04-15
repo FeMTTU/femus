@@ -47,11 +47,6 @@ EXTERN_C_FOR_PETSC_END
 #ifndef NDEBUG
 #include <cstring>
 
-
-namespace femus {
-
-
-
 #define semiparallel_onlyM() do { if (this->initialized()) { const char *mytype; \
     MatGetType(_mat,&mytype); \
     if (!strcmp(mytype, MATSEQAIJ)) \
@@ -59,6 +54,11 @@ namespace femus {
 #else
 #define semiparallel_onlyM()
 #endif
+
+
+
+namespace femus {
+
 
 
 

@@ -6,12 +6,12 @@
 
 #ifdef HAVE_MPI
 #include "mpi.h"  //For MPI_COMM_WORLD
+#endif
 
 
 namespace femus {
 
 
-#endif
 
 class FemusInit { 
 
