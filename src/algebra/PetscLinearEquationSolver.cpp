@@ -613,6 +613,9 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const vector <unsigned>
       ierr = PCSetType(_subpc,PCILU);						    CHKERRABORT(MPI_COMM_WORLD,ierr);
       ierr = KSPSetType(_subksp[i],KSPGMRES);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
       ierr = KSPSetTolerances(_subksp[i],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);  CHKERRABORT(MPI_COMM_WORLD,ierr);
+      PetscReal zero = 1.e-16;
+      PCFactorSetZeroPivot(_subpc,zero);
+      PCFactorSetShiftType(_subpc,MAT_SHIFT_NONZERO);
     }
   }
    
