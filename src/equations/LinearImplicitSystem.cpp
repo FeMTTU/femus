@@ -328,18 +328,27 @@ void LinearImplicitSystem::SetDirichletBCsHandling(const DirichletBCType Dirichl
 
 
 void LinearImplicitSystem::AddVariableToVankaIndex(const char solname[]) {
-  unsigned n=_VankaIndex.size();
-  _VankaIndex.resize(n+1u);
-  unsigned varind=_ml_sol->GetIndex(solname);
-
-  for (unsigned i=0; i<_SolSystemPdeIndex.size(); i++) {
-    if (_SolSystemPdeIndex[i]==varind) {
-      _VankaIndex[n]=i;
-      break;
+  
+  if(!strcmp(solname,"All") || !strcmp(solname,"ALL") || !strcmp(solname,"all")){
+    _VankaIndex.resize(_SolSystemPdeIndex.size());
+    for (unsigned i=0; i<_SolSystemPdeIndex.size(); i++) {
+      _VankaIndex[i]=i;
     }
-    if (_SolSystemPdeIndex.size()-1u==i) {
-      std::cout<<"Error! The variable "<<solname<<" cannot be added to VankaIndex because it is not included in the solution variable set."<<std::endl;
-      std::exit(0);
+  }
+  else{
+    unsigned n=_VankaIndex.size();
+    _VankaIndex.resize(n+1u);
+    unsigned varind=_ml_sol->GetIndex(solname);
+
+    for (unsigned i=0; i<_SolSystemPdeIndex.size(); i++) {
+      if (_SolSystemPdeIndex[i]==varind) {
+	_VankaIndex[n]=i;
+	break;
+      }
+      if (_SolSystemPdeIndex.size()-1u==i) {
+	std::cout<<"Error! The variable "<<solname<<" cannot be added to VankaIndex because it is not included in the solution variable set."<<std::endl;
+	std::exit(0);
+      }
     }
   }
 }

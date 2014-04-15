@@ -46,10 +46,10 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=2;
+  nm=4;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
-  nr=2;
+  nr=0;
   std::cout<<"MAX_REFINEMENT levels: " << nr << endl<< endl;
   
   int tmp=nm;  nm+=nr;  nr=tmp;
@@ -133,14 +133,11 @@ int main(int argc,char **args) {
     system1.SetMgSmoother(VANKA_SMOOTHER);
     system1.AddStabilization(true);
     system1.ClearVankaIndex();
-    system1.AddVariableToVankaIndex("U");
-    system1.AddVariableToVankaIndex("V");
-    system1.AddVariableToVankaIndex("P");
+    system1.AddVariableToVankaIndex("All");
     system1.SetSolverFineGrids(GMRES);
     system1.SetPreconditionerFineGrids(ASM_PRECOND); 
     system1.SetVankaSchurOptions(false,1);
     system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
-    //system1.SetSchurTolerances(1.e-12,1.e-20,1.e+50,1);
     system1.SetDimVankaBlock(3);                
   }
   
@@ -154,14 +151,29 @@ int main(int argc,char **args) {
   system2.AttachAssembleFunction(AssembleMatrixResT);
   system2.SetMaxNumberOfLinearIterations(6);
   system2.SetAbsoluteConvergenceTolerance(1.e-9);  
-  system2.SetSolverFineGrids(GMRES);
-  system2.SetPreconditionerFineGrids(ILU_PRECOND); 
+  system2.SetSolverFineGrids(GMRES); 
   system2.SetTolerances(1.e-12,1.e-20,1.e+50,4);
   system2.SetMgType(V_CYCLE);
   system2.SetNumberPreSmoothingStep(2);
   system2.SetNumberPostSmoothingStep(2);
   system2.SetDirichletBCsHandling(PENALTY); 
   //system2.SetDirichletBCsHandling(ELIMINATION); 
+   
+  if(!vanka){
+    system2.SetPreconditionerFineGrids(ILU_PRECOND);
+    system2.SetMgSmoother(GMRES_SMOOTHER);
+  }
+  else{
+    system2.SetMgSmoother(VANKA_SMOOTHER);
+    system2.AddStabilization(true);
+    system2.ClearVankaIndex();
+    system2.AddVariableToVankaIndex("T");
+    system2.SetSolverFineGrids(GMRES);
+    system2.SetPreconditionerFineGrids(ASM_PRECOND); 
+    system2.SetVankaSchurOptions(false,1);
+    system2.SetDimVankaBlock(3);                
+  }
+  
   // Solving Temperature system
   std::cout << std::endl;
   std::cout << " *********** Temperature ************* " << std::endl;
