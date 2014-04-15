@@ -133,7 +133,7 @@ void LinearImplicitSystem::solve() {
 	  
 	  // ============== Presmoothing ============== 
 	  for (unsigned k = 0; k < _npre; k++) {
-	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur) : _LinSolver[ig]->solve(ksp_clean*(!k));
+	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!k));
 	  }
 	  // ============== Non-Standard Multigrid Restriction ==============
 	  start_time = clock();
@@ -146,8 +146,8 @@ void LinearImplicitSystem::solve() {
 	}
        
  	// ============== Coarse Direct Solver ==============
- 	solver_info = ( _VankaIsSet ) ? _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur) : _LinSolver[0]->solve(ksp_clean);
- 	
+ 	//solver_info = ( _VankaIsSet ) ? _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean) : _LinSolver[0]->solve(ksp_clean);
+ 	solver_info = _LinSolver[0]->solve(ksp_clean);
              
  	for (unsigned ig = 1; ig < igridn; ig++) {
  	  
@@ -162,7 +162,7 @@ void LinearImplicitSystem::solve() {
 	  
  	  // ============== PostSmoothing ==============    
  	  for (unsigned k = 0; k < _npost; k++) {
- 	    solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur) : _LinSolver[ig]->solve(ksp_clean * (!_npre) * (!k) );
+ 	    solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur,ksp_clean * (!_npre) * (!k)) : _LinSolver[ig]->solve(ksp_clean * (!_npre) * (!k) );
  	  }
  	}
  	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
@@ -176,9 +176,10 @@ void LinearImplicitSystem::solve() {
 	std::cout << "Grid: " << igridn-1 << "      RESIDUAL:\t\t      " << std::setw(11) << std::setprecision(6) << std::scientific << 
 	_final_linear_residual << std::endl;
 	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
- 	if(_final_linear_residual < _absolute_convergence_tolerance) 
-	  
-	  break;
+ 	
+	if(_final_linear_residual < _absolute_convergence_tolerance) 
+	break;
+	
       }
       
       // ============== Update Solution ( ig = igridn )==============
