@@ -98,7 +98,7 @@ void MultiLevelSolution::AddSolution(const char name[], const char order[],
   _SolTmorder[n]=tmorder;
  
   cout << "Add variable " << std::setw(3) << _SolName[n] << " discretized with FE type "
-       << std::setw(12) << order << " and time discretzation order " << tmorder-1 << endl;
+       << std::setw(12) << order << " and time discretzation order " << tmorder << endl;
 
   for (unsigned ig=0; ig<_gridn; ig++) {
     _solution[ig]->AddSolution(name,order,tmorder,Pde_type);

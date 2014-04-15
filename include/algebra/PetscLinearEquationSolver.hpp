@@ -53,14 +53,26 @@ private:
   vector< PetscInt >  _maxits;
   unsigned _num_elem_vanka_block;
   
-  
   vector< vector <PetscInt> > _indexai;
+  
   vector< vector <unsigned> > _Psize;
   bool _indexai_init;
   
   vector <IS> _isA;
   vector <IS> _isB;
   
+  
+  
+  vector< vector <PetscInt> > _is_ovl_idx;
+  vector< vector <PetscInt> > _is_loc_idx;
+  
+  vector <IS> _is_ovl;
+  vector <IS> _is_loc;
+   
+  KSP       *_subksp;  							
+  PetscInt  _nlocal,_first;   						
+  PC        _subpc;   		
+    
   Mat _Pmat;
   bool _Pmat_is_initialized;  
 public:
@@ -90,7 +102,8 @@ public:
   // ========================================================
   /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.
   std::pair< int, double> solve(const vector <unsigned> &VankaIndex,
-				const short unsigned &NSchurVar,const bool &Schur);
+				const short unsigned &NSchurVar,const bool &Schur,
+       			       const bool &ksp_clean);
   /// Call the Gmres smoother-solver
   std::pair< int, double> solve( const bool &clean = true);
 
@@ -146,7 +159,7 @@ private:
 
   clock_t BuildIndex(const vector <unsigned> &VankaIndex, const short unsigned &NSchurVar);
   clock_t BuildIndex();
-  
+  clock_t BuildAMSIndex(const vector <unsigned> &VankaIndex,const short unsigned &NSchurVar);
   
 };
 
@@ -194,6 +207,14 @@ inline PetscLinearEquationSolver::~PetscLinearEquationSolver () {
   
   for(unsigned i=0;i<_isB.size();i++){
     ISDestroy(&_isB[i]); 	
+  }
+  
+  for(unsigned i=0;i<_is_loc.size();i++){
+    ISDestroy(&_is_loc[i]); 	
+  }
+  
+  for(unsigned i=0;i<_is_ovl.size();i++){
+    ISDestroy(&_is_ovl[i]); 	
   }
   
 }

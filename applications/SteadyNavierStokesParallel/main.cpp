@@ -46,10 +46,10 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=4;
+  nm=2;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
-  nr=0;
+  nr=2;
   std::cout<<"MAX_REFINEMENT levels: " << nr << endl<< endl;
   
   int tmp=nm;  nm+=nr;  nr=tmp;
@@ -118,12 +118,12 @@ int main(int argc,char **args) {
   // System Navier-Stokes
   system1.AttachAssembleFunction(AssembleMatrixResNS);  
   system1.SetMaxNumberOfNonLinearIterations(3);
-  system1.SetMaxNumberOfLinearIterations(1);
+  system1.SetMaxNumberOfLinearIterations(2);
   system1.SetAbsoluteConvergenceTolerance(1.e-10);
   system1.SetNonLinearConvergenceTolerance(1.e-04);
   system1.SetMgType(F_CYCLE);
-  system1.SetNumberPreSmoothingStep(2);
-  system1.SetNumberPostSmoothingStep(2);
+  system1.SetNumberPreSmoothingStep(1);
+  system1.SetNumberPostSmoothingStep(1);
  
   if(!vanka){
     system1.SetMgSmoother(GMRES_SMOOTHER);
@@ -137,9 +137,9 @@ int main(int argc,char **args) {
     system1.AddVariableToVankaIndex("V");
     system1.AddVariableToVankaIndex("P");
     system1.SetSolverFineGrids(GMRES);
-    system1.SetPreconditionerFineGrids(ILU_PRECOND); 
+    system1.SetPreconditionerFineGrids(ASM_PRECOND); 
     system1.SetVankaSchurOptions(false,1);
-    system1.SetTolerances(1.e-12,1.e-20,1.e+50,10);
+    system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
     //system1.SetSchurTolerances(1.e-12,1.e-20,1.e+50,1);
     system1.SetDimVankaBlock(3);                
   }
