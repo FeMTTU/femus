@@ -610,8 +610,8 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const vector <unsigned>
   
     for (int i=0; i<_nlocal; i++) {
       ierr = KSPGetPC(_subksp[i],&_subpc);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = PCSetType(_subpc,PCILU);						    CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = KSPSetType(_subksp[i],KSPGMRES);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = PCSetType(_subpc,PCLU);						    CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(_subksp[i],KSPPREONLY);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
       ierr = KSPSetTolerances(_subksp[i],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);  CHKERRABORT(MPI_COMM_WORLD,ierr);
       PetscReal zero = 1.e-16;
       PCFactorSetZeroPivot(_subpc,zero);

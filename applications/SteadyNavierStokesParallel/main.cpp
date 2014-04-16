@@ -171,7 +171,8 @@ int main(int argc,char **args) {
     system2.SetSolverFineGrids(GMRES);
     system2.SetPreconditionerFineGrids(ASM_PRECOND); 
     system2.SetVankaSchurOptions(false,1);
-    system2.SetDimVankaBlock(3);                
+    system2.SetTolerances(1.e-12,1.e-20,1.e+50,2);
+    system2.SetDimVankaBlock(1);                
   }
   
   // Solving Temperature system
