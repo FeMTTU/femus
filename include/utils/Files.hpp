@@ -25,7 +25,8 @@ namespace femus {
 class Files {
 
 public:
-
+  
+  static std::ofstream file_sbuf;  //needed for I/O purposes
   std::string  _input_path; //this is where the input files are located BEFORE YOU COPY THEM to the OUTTIME DIR!!!!! it has to alternatives in case of restart or not
   std::string _output_path;
   std::string _output_time; //this is the OUTTIME DIR!!!
@@ -50,7 +51,7 @@ public:
   
 // LOG ==========================
 // Stream redirect to file ======
-         void RedirectCout(std::streambuf* sbuf,  std::ofstream& file_in) const;
+         void RedirectCout() const;
   static void RedirectCoutFinalize(std::streambuf* sbuf);
          void log_petsc() const;
 

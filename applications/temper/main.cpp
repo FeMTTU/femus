@@ -26,7 +26,7 @@
 #include "Box.hpp"  //for the DOMAIN
 
 
-// application ==============================
+// application 
 #include "Temp_conf.hpp"
 #include "TempQuantities.hpp"
 #include "TempPhysics.hpp"
@@ -45,14 +45,10 @@
   
  // ======= Files ========================
   Files files("./"); 
-  files.ConfigureRestart();
-  files.CheckIODirectories();
- //>>>>>>>>> REDIRECT COUT
-   std::ofstream file; //if a filestream dies, then also its stream-buffer dies ?!? //So I have to declare it outside? Yes. This seems to work.
-   std::streambuf* sbuf = std::cout.rdbuf();  //get the current buffer for cout
-   files.RedirectCout(sbuf,file);
-// >>>>>>>>>>>>> END REDIRECT COUT
-   files.CopyInputFiles();
+        files.ConfigureRestart();
+        files.CheckIODirectories();
+        files.RedirectCout();
+        files.CopyInputFiles();
    // at this point everything is in the folder of the current run!!!!
 
   // =========================================
@@ -132,9 +128,8 @@
 //   so this operation of set_eqn could be done right away in the moment when you put the quantity in the equation
  
 #if NS_EQUATIONS==1
-  //to retrieve a quantity i can take it from the qtymap of the problem
-  //but here, in the main, i can take that quantity directly...
-// std::vector<Quantity*> InternalVect_NS;  //TODO if I don't put parentheses, what constructor does it call?!?
+  //to retrieve a quantity i can take it from the qtymap of the problem  //but here, in the main, i can take that quantity directly...
+// std::vector<Quantity*> InternalVect_NS;
 // InternalVect_NS.push_back(&velocity);      
 // InternalVect_NS.push_back(&pressure);        
 std::vector<Quantity*> InternalVect_NS(2); 
@@ -181,24 +176,20 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 	 
   equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
   equations_map.TransientSetup();  // reset the initial state (if restart) and print the Case
-  
+
   phys.transient_loopPlusJ(equations_map);
 
-//============= prepare default for next restart ==========  
 // at this point, the run has been completed 
-/*(iproc==0)*/  files.PrintRunForRestart(DEFAULT_LAST_RUN);
-
-  // ============  log ================================
+  files.PrintRunForRestart(DEFAULT_LAST_RUN);/*(iproc==0)*/  //============= prepare default for next restart ==========  
   files.log_petsc();
   
 // ============  clean ================================
   // here we clean all that we allocated as new in the main
   equations_map.clean();  //deallocates the map of equations
   for (int fe=0; fe<QL; fe++)  {  delete FEElements[fe]; }
-  
+
   mesh.clear();
   
-  files.RedirectCoutFinalize(sbuf);
-
+  
   return 0;
 }
