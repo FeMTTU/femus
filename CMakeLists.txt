@@ -157,6 +157,18 @@ IF(BUILD_FSI_CMS_NWM)
   ${PROJECT_BINARY_DIR}/applications/FSI_CMS_NWM/input/)
 ENDIF(BUILD_FSI_CMS_NWM)
 
+OPTION(BUILD_FSI_TUREK_1 "Build the FSI Turek 1 Benchmark" ON)
+
+IF(BUILD_FSI_TUREK_1)
+       ADD_SUBDIRECTORY(applications/FSI_TUREK_1/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_1/output/)
+    FILE(MAKE_DIRECTORY applications/FSI_TUREK_1/input/)
+    FILE(COPY           applications/FSI_TUREK_1/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_1/input/)
+ENDIF(BUILD_FSI_TUREK_1)
+
+OPTION(BUILD_GENCASE "Build the case generator" ON)
+
 OPTION(BUILD_FSI_TUREK_3 "Build the FSI Turek 3 Benchmark" ON)
 
 IF(BUILD_FSI_TUREK_3)

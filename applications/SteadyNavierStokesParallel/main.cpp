@@ -46,7 +46,7 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=4;
+  nm=5;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
   nr=0;
@@ -137,8 +137,8 @@ int main(int argc,char **args) {
     system1.SetSolverFineGrids(GMRES);
     system1.SetPreconditionerFineGrids(ASM_PRECOND); 
     system1.SetVankaSchurOptions(false,1);
-    system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
-    system1.SetDimVankaBlock(3);                
+    system1.SetTolerances(1.e-12,1.e-20,1.e+50,2);
+    system1.SetDimVankaBlock(4);                
   }
   
   // Solving Navier-Stokes system
@@ -154,8 +154,8 @@ int main(int argc,char **args) {
   system2.SetSolverFineGrids(GMRES); 
   system2.SetTolerances(1.e-12,1.e-20,1.e+50,4);
   system2.SetMgType(V_CYCLE);
-  system2.SetNumberPreSmoothingStep(2);
-  system2.SetNumberPostSmoothingStep(2);
+  system2.SetNumberPreSmoothingStep(1);
+  system2.SetNumberPostSmoothingStep(1);
   system2.SetDirichletBCsHandling(PENALTY); 
   //system2.SetDirichletBCsHandling(ELIMINATION); 
    
@@ -169,10 +169,10 @@ int main(int argc,char **args) {
     system2.ClearVankaIndex();
     system2.AddVariableToVankaIndex("T");
     system2.SetSolverFineGrids(GMRES);
+    system2.SetTolerances(1.e-12,1.e-20,1.e+50,1);
     system2.SetPreconditionerFineGrids(ASM_PRECOND); 
     system2.SetVankaSchurOptions(false,1);
-    system2.SetTolerances(1.e-12,1.e-20,1.e+50,2);
-    system2.SetDimVankaBlock(1);                
+    system2.SetDimVankaBlock(4);                
   }
   
   // Solving Temperature system
