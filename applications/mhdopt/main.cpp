@@ -1,4 +1,4 @@
-//C++ includes ============
+//C++ includes 
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <iostream>
@@ -28,7 +28,7 @@
 #include "Box.hpp"  //for the DOMAIN
 
 
-// application includes ==============================
+// application includes
 #include "Opt_conf.hpp"
 #include "OptQuantities.hpp"
 #include "OptPhysics.hpp"
@@ -56,14 +56,10 @@ int main(int argc, char** argv) {
 
 // ======= Files ========================
   Files files("./");
-  files.ConfigureRestart();
-  files.CheckIODirectories();
- //>>>>>>>>> REDIRECT COUT
-   std::ofstream file; //if a filestream dies, then also its stream-buffer dies ?!? //So I have to declare it outside? Yes. This seems to work.
-   std::streambuf* sbuf = std::cout.rdbuf();  //get the current buffer for cout
-   files.RedirectCout(sbuf,file);
-// >>>>>>>>>>>>> END REDIRECT COUT
-   files.CopyInputFiles();
+        files.ConfigureRestart();
+        files.CheckIODirectories();
+        files.RedirectCout();
+        files.CopyInputFiles();
 
   // =========================================
   // ======= END OF THE INITIALIZATION PART ========================
@@ -252,9 +248,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 // well, we do not know whether for the whole time range time.N-M.xmf
 // or the optimization loop stopped before
 // we could also print the last step number
-/*(iproc==0)*/  files.PrintRunForRestart(DEFAULT_LAST_RUN);  /*TODO fileIO*/
-
-  // ============  log ================================
+  files.PrintRunForRestart(DEFAULT_LAST_RUN); /*(iproc==0)*/ 
   files.log_petsc();
 
 // ============  clean ================================
@@ -263,8 +257,6 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   for (int fe=0; fe<QL; fe++) delete FEElements[fe];
   
   mesh.clear();
-  
-  files.RedirectCoutFinalize(sbuf);
   
   return 0;
 }

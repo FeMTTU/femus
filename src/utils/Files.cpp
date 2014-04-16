@@ -23,12 +23,11 @@
 namespace femus {
 
 
+  //static data ===================================
+  std::ofstream Files::file_sbuf;
 
-
-
-// =================================================
-//         Files Class functions
-// =================================================
+  
+  
 
   Files::Files(const std::string &  string_in)  
 
@@ -41,7 +40,7 @@ namespace femus {
 	}  ///< Constructor
 
 	
-  Files::~Files() { } ///< Destructor
+  Files::~Files() { }
 
   
   
@@ -572,7 +571,7 @@ void Files::CheckIODirectories() {
 //A global variable is still an instantiation but not associated to any class
 //to be passed to the constructor
 
-  void Files::RedirectCout(std::streambuf* /*sbuf*/,  std::ofstream& file_in) const {
+  void Files::RedirectCout() const {
 //this redirects the standard output to file, only for processor 0
 //I dont like the fact that all these functions must be modified
 //whenever I change the absolute path,
@@ -594,8 +593,8 @@ void Files::CheckIODirectories() {
     
     abs_runlog = runlogproc.str();
     
-     file_in.open(abs_runlog.c_str());
-    std::streambuf* fbuf = file_in.rdbuf();  //get the current buffer for the file
+     Files::file_sbuf.open(abs_runlog.c_str());
+    std::streambuf* fbuf = Files::file_sbuf.rdbuf();  //get the current buffer for the file
       std::cout << "Printing to file run_log ..." << std::endl;
       std::cout.rdbuf(fbuf);   //set the buffer of cout to the buffer of the file 
 // 
@@ -617,12 +616,13 @@ std::cout << "The number of processors is " << paral::get_size() << std::endl;
   }
 
 
-  void Files::RedirectCoutFinalize(std::streambuf* sbuf) {
+ //it seems like you have to give the stream buffer back to cout !!!
+ // http://wordaligned.org/articles/cpp-streambufs
+ //well, now I tried to comment this function and EVERYTHING WORKS FINE... so maybe now it is not needed anymore...
+ void Files::RedirectCoutFinalize(std::streambuf* sbuf) {
       
-    std::cout.rdbuf(sbuf);  //it seems like you have to give the stream buffer
-                          //back to cout !!!
-                         // http://wordaligned.org/articles/cpp-streambufs
-  
+     std::cout.rdbuf(sbuf);  //this is a SET function that acts on sbuf
+
    return; 
      
   }
