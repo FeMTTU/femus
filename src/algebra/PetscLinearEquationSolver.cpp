@@ -607,12 +607,24 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const vector <unsigned>
     ierr = KSPSetUp(_ksp[0]);							    CHKERRABORT(MPI_COMM_WORLD,ierr);
     
     ierr = PCASMGetSubKSP(_pc,&_nlocal,&_first,&_subksp);			    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    
+    ierr = PCASMSetType(_pc,PC_ASM_RESTRICT); 					    CHKERRABORT(MPI_COMM_WORLD,ierr);
   
     for (int i=0; i<_nlocal; i++) {
       ierr = KSPGetPC(_subksp[i],&_subpc);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = PCSetType(_subpc,PCLU);						    CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = KSPSetType(_subksp[i],KSPPREONLY);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = PCSetType(_subpc,PCILU);						    CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(_subksp[i],KSPGMRES);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
       ierr = KSPSetTolerances(_subksp[i],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);  CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetNormType(_subksp[i],KSP_NORM_NONE);
+      
+//       if(_msh->GetGridNumber()!=0)
+        KSPSetInitialGuessKnoll(_subksp[i], PETSC_TRUE);
+
+//       if(_msh->GetGridNumber()!=0)
+        KSPSetNormType(_subksp[i],KSP_NORM_NONE);
+
+      ierr = KSPSetFromOptions(_subksp[i]);
+      
       PetscReal zero = 1.e-16;
       PCFactorSetZeroPivot(_subpc,zero);
       PCFactorSetShiftType(_subpc,MAT_SHIFT_NONZERO);

@@ -1,0 +1,15 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+PROJECT(FSI_TUREK_1)
+
+# Build the executable
+ADD_EXECUTABLE(fsitrk1 ${CMAKE_PROJECT_DIR}main.cpp)
+
+# Link the executable to the petsc anf femttu libs
+TARGET_LINK_LIBRARIES(fsitrk1 femlib)
+TARGET_LINK_LIBRARIES(fsitrk1 ${PETSC_LIBRARIES})
+TARGET_LINK_LIBRARIES(fsitrk1 ${CMAKE_SOURCE_DIR}/ExternalLibraries/b64-1.4.2/lib/libb64.gcc47.a)
+
+IF(MPI_FOUND)
+  TARGET_LINK_LIBRARIES(fsitrk1 ${MPI_EXTRA_LIBRARY})
+ENDIF(MPI_FOUND)
