@@ -2251,29 +2251,25 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
             std::ostringstream dim_name;
             dim_name << groupname_lev.str() << "/" << "DIM" << fe_couple.str();
             rowcln[r][c] = new uint[2];
-            hid_t dataset=H5Dopen(file, dim_name.str().c_str(), H5P_DEFAULT);
-            H5Dread(dataset,H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,rowcln[r][c]);
+            IO::read_UIhdf5(file,dim_name.str().c_str(),rowcln[r][c]);
 
             //row length
             std::ostringstream len_name;
             len_name << groupname_lev.str() << "/" << "LEN" << fe_couple.str();
             length_row[r][c]=new uint[ rowcln[r][c][0]+1 ];
-            dataset=H5Dopen(file,len_name.str().c_str(), H5P_DEFAULT);
-            H5Dread(dataset,H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,length_row[r][c]);
+            IO::read_UIhdf5(file,len_name.str().c_str(),length_row[r][c]);
 
             // matrix off diagonal
             std::ostringstream offlen_name;
             offlen_name << groupname_lev.str() << "/" << "OFFLEN" << fe_couple.str();
             length_offrow[r][c]=new uint[ rowcln[r][c][0]+1 ];
-            dataset=H5Dopen(file,offlen_name.str().c_str(), H5P_DEFAULT);
-            H5Dread(dataset,H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,length_offrow[r][c]);
+            IO::read_UIhdf5(file,offlen_name.str().c_str(),length_offrow[r][c]);
 
             // matrix pos //must stay AFTER reading length_offrow
             std::ostringstream pos_name;
             pos_name << groupname_lev.str() << "/" << "POS" << fe_couple.str();
             pos_row[r][c]=new uint[ length_row[r][c][rowcln[r][c][0]] ];
-            dataset=H5Dopen(file,pos_name.str().c_str(), H5P_DEFAULT);
-            H5Dread(dataset,H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,pos_row[r][c]);
+            IO::read_UIhdf5(file,pos_name.str().c_str(),pos_row[r][c]);
 
         } //end col
     } //end row

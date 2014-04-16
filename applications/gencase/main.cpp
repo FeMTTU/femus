@@ -88,11 +88,6 @@ int main(int argc, char** argv) {
   // ======= Files =====
      RunTimeMap<std::string> files_map("Files",files._app_path);
 
-  // ======= Mesh =====
-     RunTimeMap<double> mesh_map("Mesh",files._app_path);
-
-  // =======FEElems =====
-
   // ======= Domain =====
   //here we miss the "service" nature of the gencase program
   //we must instantiate the domain explicitly
@@ -104,6 +99,7 @@ int main(int argc, char** argv) {
   //anyway, now we do like this
       
   // ========= GenCase =====
+      RunTimeMap<double> mesh_map("Mesh",files._app_path);
       GenCase gencase(files,mesh_map,1.,files_map.get("F_MESH_READ"));
       gencase.GenerateCase();
 

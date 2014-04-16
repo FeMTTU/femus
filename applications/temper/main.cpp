@@ -51,13 +51,9 @@
         files.CopyInputFiles();
    // at this point everything is in the folder of the current run!!!!
 
-  // =========================================
-  // ======= END OF THE INITIALIZATION PART ========================
-  // =========================================
-   
   // ======= MyPhysics ========================
   RunTimeMap<double> physics_map("Physics",files._output_path);
-  TempPhysics phys(physics_map);   //instantiated as father
+  TempPhysics phys(physics_map);
               phys.set_nondimgroups(); //implement it
 
   // ======= Mesh =====
@@ -173,6 +169,14 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 //========= End add EQUATIONS  and ========
 //========= associate an EQUATION to QUANTITIES ========
 //================================
+
+//Ok now that the mesh file is there i want to COMPUTE the MG OPERATORS... but I want to compute them ONCE and FOR ALL,
+//not for every equation... but the functions belong to the single equation... I need to make them EXTERNAL
+// then I'll have A from the equation, PRL and REST from a MG object.
+//So somehow i'll have to put these objects at a higher level... but so far let us see if we can COMPUTE and PRINT from HERE and not from the gencase
+	 
+//   eqnNS->ComputeMatrix();  //CLEARLY THIS FUNCTION DOES NOT WORK AT THIS POINT, because not all the data in the mesh class are filled here! 
+                           //In fact, part of them is only filled by gencase
 	 
   equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
   equations_map.TransientSetup();  // reset the initial state (if restart) and print the Case

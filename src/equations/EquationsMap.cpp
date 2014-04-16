@@ -96,19 +96,7 @@ void  EquationsMap::setDofBcOpIc() {
     return;
 }
 
-// ==========================================================================================
-/// This function performes all the Physics time step routines
-void EquationsMap::OneTimestepEqnLoop(
-    const double time,             // real time
-    const uint delta_t_step_in     // integer time
-) {
-    // loop for time steps
-    for (iterator eqn=_equations.begin(); eqn != _equations.end(); eqn++)  {
-        EqnBase* mgsol = eqn->second;
-        mgsol -> MGTimeStep(time,delta_t_step_in);
-    }
-    return;
-}
+
 
 // =================================================================
 /// This function prints xdmf and hdf5 file
@@ -717,6 +705,21 @@ void EquationsMap::TransientLoop()  {
 
     }   // end time loop
 
+    return;
+}
+
+
+// ==========================================================================================
+/// This function performes all the Physics time step routines
+void EquationsMap::OneTimestepEqnLoop(
+    const double time,             // real time
+    const uint delta_t_step_in     // integer time
+) {
+    // loop for time steps
+    for (iterator eqn=_equations.begin(); eqn != _equations.end(); eqn++)  {
+        EqnBase* mgsol = eqn->second;
+        mgsol -> MGTimeStep(time,delta_t_step_in);
+    }
     return;
 }
 
