@@ -27,13 +27,14 @@
 #include "PetscVector.hpp"
 #include "PetscMatrix.hpp"
 #include <iomanip>
-
+#include <map>
 
 namespace femus {
 
 
 
 using namespace std;
+
 
 // ==========================================================
 extern "C" {
@@ -185,6 +186,7 @@ clock_t PetscLinearEquationSolver::BuildAMSIndex(const vector <unsigned> &VankaI
   vector < unsigned > indexb(DofOffsetSize,DofOffsetSize);
   vector <bool> owned(DofOffsetSize,false);
  
+  map<int,bool> mymap;
    
   unsigned ElemOffset   = _msh->MetisOffset[3][iproc];
   unsigned ElemOffsetp1 = _msh->MetisOffset[3][iproc+1];
@@ -241,9 +243,10 @@ clock_t PetscLinearEquationSolver::BuildAMSIndex(const vector <unsigned> &VankaI
 		for (unsigned jj=0; jj<nvej; jj++) {
 		  unsigned jnode=(SolType<3)?(*(pt_un++)-1u):(jel+jj*nel);
 		  unsigned jnode_Metis = _msh->GetMetisDof(jnode,SolType);
+		  unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
 		  if(jnode_Metis >= _msh->MetisOffset[SolType][iproc] &&
 		    jnode_Metis <  _msh->MetisOffset[SolType][iproc+1]){
-		    unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
+		    //unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
 		    if(indexa[kkdof- DofOffset]==DofOffsetSize && owned[kkdof- DofOffset]==false) {
 		      owned[kkdof- DofOffset]=true;
 		      _is_loc_idx[vb_index][PAsize]=kkdof;
@@ -254,6 +257,7 @@ clock_t PetscLinearEquationSolver::BuildAMSIndex(const vector <unsigned> &VankaI
 		      indexb[kkdof-DofOffset]=PBsize++;
 		    }
 		  }
+		  else mymap[kkdof]=true;
 		}
 	      }
 	    }
@@ -272,9 +276,10 @@ clock_t PetscLinearEquationSolver::BuildAMSIndex(const vector <unsigned> &VankaI
 	  for (unsigned ii=0; ii<nvei; ii++) {
 	    unsigned inode=(SolType<3)?(*(pt_un++)-1u):(iel+ii*nel);
 	    unsigned inode_Metis = _msh->GetMetisDof(inode,SolType);
+	    unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, inode);
 	    if(inode_Metis >= _msh->MetisOffset[SolType][iproc] &&
 	      inode_Metis <  _msh->MetisOffset[SolType][iproc+1]){
-	      unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, inode);
+	      //unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, inode);
 	      if(indexa[kkdof- DofOffset]==DofOffsetSize && owned[kkdof- DofOffset]==false) {
 		owned[kkdof- DofOffset]=true;
 		_is_loc_idx[vb_index][PAsize]=kkdof;
@@ -285,6 +290,7 @@ clock_t PetscLinearEquationSolver::BuildAMSIndex(const vector <unsigned> &VankaI
 		 indexb[kkdof-DofOffset]=PBsize++;
 	      }		
 	    }
+	    else mymap[kkdof]=true;
 	  }
 	}
       }
@@ -304,8 +310,14 @@ clock_t PetscLinearEquationSolver::BuildAMSIndex(const vector <unsigned> &VankaI
     }
         
     _is_loc_idx[vb_index].resize(PAsize);
-    _is_ovl_idx[vb_index].resize(PBsize);
+    //_is_ovl_idx[vb_index].resize(PBsize);
+        
+    _is_ovl_idx[vb_index].resize(PBsize+mymap.size());
     
+    int i=0;
+    for (std::map<int,bool>::iterator it=mymap.begin(); it!=mymap.end(); ++it,++i){
+      _is_ovl_idx[vb_index][PBsize+i]= it->first;
+    }       
     
     std::sort(_is_loc_idx[vb_index].begin(), _is_loc_idx[vb_index].end());
     std::sort(_is_ovl_idx[vb_index].begin(), _is_ovl_idx[vb_index].end());
@@ -608,20 +620,22 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const vector <unsigned>
     
     ierr = PCASMGetSubKSP(_pc,&_nlocal,&_first,&_subksp);			    CHKERRABORT(MPI_COMM_WORLD,ierr);
     
-    ierr = PCASMSetType(_pc,PC_ASM_RESTRICT); 					    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    //ierr = PCASMSetType(_pc,PC_ASM_RESTRICT); 					    CHKERRABORT(MPI_COMM_WORLD,ierr);
   
     for (int i=0; i<_nlocal; i++) {
       ierr = KSPGetPC(_subksp[i],&_subpc);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
       ierr = PCSetType(_subpc,PCILU);						    CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = KSPSetType(_subksp[i],KSPGMRES);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = KSPSetTolerances(_subksp[i],_rtol[0],_abstol[0],_dtol[0],_maxits[0]);  CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = KSPSetNormType(_subksp[i],KSP_NORM_NONE);
+      //ierr = PCSetType(_subpc,PCLU);						    CHKERRABORT(MPI_COMM_WORLD,ierr);
+      //ierr = PCFactorSetMatSolverPackage(_subpc,MATSOLVERMUMPS);		    CHKERRABORT(MPI_COMM_WORLD,ierr);
+      //ierr = KSPSetType(_subksp[i],KSPGMRES);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetTolerances(_subksp[i],_rtol[0],_abstol[0],_dtol[0],1); 	    CHKERRABORT(MPI_COMM_WORLD,ierr);
+      //ierr = KSPSetNormType(_subksp[i],KSP_NORM_NONE);
       
-//       if(_msh->GetGridNumber()!=0)
-        KSPSetInitialGuessKnoll(_subksp[i], PETSC_TRUE);
-
-//       if(_msh->GetGridNumber()!=0)
-        KSPSetNormType(_subksp[i],KSP_NORM_NONE);
+      //if(_msh->GetGridNumber()!=0)
+      //KSPSetInitialGuessKnoll(_subksp[i], PETSC_TRUE);
+  
+      // if(_msh->GetGridNumber()!=0)
+      // KSPSetNormType(_subksp[i],KSP_NORM_NONE);
 
       ierr = KSPSetFromOptions(_subksp[i]);
       

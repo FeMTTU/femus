@@ -46,7 +46,7 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=5;
+  nm=4;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
   nr=0;
