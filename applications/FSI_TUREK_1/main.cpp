@@ -48,19 +48,19 @@ int main(int argc,char **args) {
   double muf = 1.;
   double rhos = 1000;
   double ni = 0.4;
-  double E = 5600000;
+  double E = 1400000;
   
   MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
   
   MultiLevelSolution ml_sol(&ml_msh);
   
   //Start System Variables
-  ml_sol.AddSolution("DX","biquadratic",2);
-  ml_sol.AddSolution("DY","biquadratic",2);
+  ml_sol.AddSolution("DX","biquadratic",1);
+  ml_sol.AddSolution("DY","biquadratic",1);
   ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
   ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
-  ml_sol.AddSolution("U","biquadratic",2);
-  ml_sol.AddSolution("V","biquadratic",2);
+  ml_sol.AddSolution("U","biquadratic",1);
+  ml_sol.AddSolution("V","biquadratic",1);
 //   ml_sol.AddSolution("AX","biquadratic",1,0);
 //   ml_sol.AddSolution("AY","biquadratic",1,0);
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
@@ -334,18 +334,18 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   
   // local objects
   vector<double> SolVAR(2*dim+1);
-  vector<double> SolOldVAR(2*dim+1);
+//   vector<double> SolOldVAR(2*dim+1);
   vector<vector<double> > GradSolVAR(2*dim);
-  vector<vector<double> > GradSolOldVAR(2*dim);
+//   vector<vector<double> > GradSolOldVAR(2*dim);
   for(int i=0;i<2*dim;i++){
     GradSolVAR[i].resize(dim);
-    GradSolOldVAR[i].resize(dim);
+//     GradSolOldVAR[i].resize(dim);
   }
   vector<vector<double> > GradSolhatVAR(dim);
-  vector<vector<double> > GradSolOldhatVAR(dim);
+//   vector<vector<double> > GradSolOldhatVAR(dim);
   for(int i=0;i<dim;i++){
     GradSolhatVAR[i].resize(dim);
-    GradSolOldhatVAR[i].resize(dim);
+//     GradSolOldhatVAR[i].resize(dim);
   }
     
   vector <int> metis_node1;
@@ -354,37 +354,37 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   
   vector <double > phi;
   vector <double > phi_hat;
-  vector <double > phi_old;
+//   vector <double > phi_old;
   
   vector <double> gradphi;
   vector <double> gradphi_hat;
-  vector <double> gradphi_old;
+//   vector <double> gradphi_old;
   
   metis_node1.reserve(max_size);
   metis_node2.reserve(max_size);
   solidmark.reserve(max_size);
   phi.reserve(max_size);
   phi_hat.reserve(max_size);
-  phi_old.reserve(max_size);
+//   phi_old.reserve(max_size);
   gradphi.reserve(max_size*dim);
   gradphi_hat.reserve(max_size*dim);
-  gradphi_old.reserve(max_size*dim);
+//   gradphi_old.reserve(max_size*dim);
   
   const double *phi1;
     
   double Weight=0.;
   double Weight_nojac=0.;
   double Weight_hat=0.;
-  double Weight_old=0.;
+//   double Weight_old=0.;
   
   vector <vector < double> > vx(dim);
   vector <vector < double> > vx_hat(dim);
-  vector <vector < double> > vx_old(dim);
+//   vector <vector < double> > vx_old(dim);
   
   for(int i=0;i<dim;i++){
     vx[i].reserve(max_size);
     vx_hat[i].reserve(max_size);
-    vx_old[i].reserve(max_size);
+//     vx_old[i].reserve(max_size);
   }
    
   vector< vector< double > > Rhs(2*dim+1);
@@ -442,11 +442,11 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   // -----------------------------------------------------------------
 
   // time discretization algorithm paramters
-  double dt = 1.; // my_nnlin_impl_sys.GetIntervalTime(); 
+//   double dt = 1.; // my_nnlin_impl_sys.GetIntervalTime(); 
   
-  const double gamma = 0.5;
-  const double gammaratio = (1.-gamma)/gamma;
-  double _theta_ns=1.0;
+//   const double gamma = 0.5;
+//   const double gammaratio = (1.-gamma)/gamma;
+//   double _theta_ns=1.0;
   
   // space discretization parameters
   unsigned order_ind2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));  
@@ -572,14 +572,14 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
     solidmark.resize(nve);
     phi.resize(nve);
     phi_hat.resize(nve);
-    phi_old.resize(nve);
+//     phi_old.resize(nve);
     gradphi.resize(nve*dim);
     gradphi_hat.resize(nve*dim);
-    gradphi_old.resize(nve*dim);
+//     gradphi_old.resize(nve*dim);
         
     for(int i=0;i<dim;i++){
       vx[i].resize(nve);
-      vx_old[i].resize(nve);
+//       vx_old[i].resize(nve);
       vx_hat[i].resize(nve);
     }
     
@@ -597,7 +597,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 	//Updated coordinates (Moving frame)
         vx[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + (*mysolution->_Sol[indVAR[j]])(inode_Metis);
 	//Old coordinates (Moving frame)
-        vx_old[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + (*mysolution->_SolOld[indVAR[j]])(inode_Metis);
+//         vx_old[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis);
 	//Fixed coordinates (Reference frame)
 	vx_hat[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis);  
 	// displacement dofs
@@ -621,7 +621,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 
 	// *** get Jacobian and test function and test function derivatives in the moving frame***
 	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_old,ig,Weight_old,phi_old,gradphi_old);
+// 	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_old,ig,Weight_old,phi_old,gradphi_old);
 	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
 	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
 	if (flag_mat==2) Weight_nojac = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
@@ -630,13 +630,13 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 	// displacement and velocity
 	for(int i=0; i<2*dim; i++){
 	  SolVAR[i]=0.;
-	  SolOldVAR[i]=0.;
+// 	  SolOldVAR[i]=0.;
 	  for(int j=0; j<dim; j++) {
 	    GradSolVAR[i][j]=0.;
-	    GradSolOldVAR[i][j]=0.;
+// 	    GradSolOldVAR[i][j]=0.;
 	    if(i<dim){
 	      GradSolhatVAR[i][j]=0.;
-	      GradSolOldhatVAR[i][j]=0.;
+// 	      GradSolOldhatVAR[i][j]=0.;
 	    }
 	  }
 	    
@@ -646,15 +646,15 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 	    double soli = (*mysolution->_Sol[indVAR[i]])(sol_dof);
 	    SolVAR[i]+=phi[inode]*soli;
 	      
-	    double soli_old = (*mysolution->_SolOld[indVAR[i]])(sol_dof);
-	    SolOldVAR[i]+=phi[inode]*soli_old;
+// 	    double soli_old = (*mysolution->_SolOld[indVAR[i]])(sol_dof);
+// 	    SolOldVAR[i]+=phi[inode]*soli_old;
 	      
 	    for(int j=0; j<dim; j++) {
 	      GradSolVAR[i][j]+=gradphi[inode*dim+j]*soli;
-	      GradSolOldVAR[i][j]+=gradphi[inode*dim+j]*soli_old;
+// 	      GradSolOldVAR[i][j]+=gradphi[inode*dim+j]*soli_old;
 	      if(i<dim){ 
 		GradSolhatVAR[i][j]   +=gradphi_hat[inode*dim+j]*soli;
-		GradSolOldhatVAR[i][j]+=gradphi_hat[inode*dim+j]*soli_old;
+// 		GradSolOldhatVAR[i][j]+=gradphi_hat[inode*dim+j]*soli_old;
 	      }
 	    }	      
 	  }
@@ -689,7 +689,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 	  double div_w=0.;
 	  for(int i=0; i<dim; i++) {
 	    div_vel+=GradSolVAR[dim+i][i];
-	    div_w+=(GradSolVAR[i][i]-GradSolOldVAR[i][i])*(1./dt);
+// 	    div_w+=(GradSolVAR[i][i]-GradSolOldVAR[i][i])*(1./dt);
 	  }
 	  
           { // Laplace operator + adection operator + Mass operator
@@ -704,7 +704,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
  	      double LapmapVAR[3] = {0., 0., 0.};
  	      for(int idim=0; idim<dim; idim++) {
  		for(int idim2=0; idim2<dim; idim2++) {
- 	          LapmapVAR[idim] += dt*( _mu_ale[idim2]*gradphi_hat[i*dim+idim2]*GradSolhatVAR[idim][idim2] );
+ 	          LapmapVAR[idim] += ( _mu_ale[idim2]*gradphi_hat[i*dim+idim2]*GradSolhatVAR[idim][idim2] );
  		}
  	      }
       
@@ -720,7 +720,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 	      for(int idim=0.; idim<dim; idim++) {
 		for(int idim2=0.; idim2<dim; idim2++) {
 		  LapvelVAR[idim]+=gradphi[i*dim+idim2]*GradSolVAR[dim+idim][idim2];
-		  AdvaleVAR[idim]+=((SolVAR[dim+idim2]*dt - 0.*(SolVAR[idim2]-SolOldVAR[idim2]))*GradSolVAR[dim+idim][idim2])*phi[i];;
+		  AdvaleVAR[idim]+=SolVAR[dim+idim2]*GradSolVAR[dim+idim][idim2]*phi[i];;
 		}
 	      }
 	      // Residual Momentum equations 
@@ -728,11 +728,11 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 		Rhs[indexVAR[dim+idim]][i]+= (
 // 					      -phi[i]*betans*SolVAR[dim+idim]*Weight
 // 					      +phi[i]*betans*SolOldVAR[dim+idim]*Weight_old
-					      -AdvaleVAR[idim]*0.5*(Weight+0.*Weight_old)
-					      -0.5*dt*div_vel*SolVAR[dim+idim]*phi[i]*0.5*(Weight+0.*Weight_old)
-					      +dt*div_w*SolVAR[dim+idim]*phi[i]*0.5*(Weight+0.*Weight_old)
-					      -dt*IRe*LapvelVAR[idim]*Weight
-					      +dt*SolVAR[2*dim]*gradphi[i*dim+idim]*Weight
+					      -AdvaleVAR[idim]*Weight
+// 					      -0.5*div_vel*SolVAR[dim+idim]*phi[i]*(Weight)
+// 					      +div_w*SolVAR[dim+idim]*phi[i]*(Weight)
+					      -IRe*LapvelVAR[idim]*Weight
+					      +SolVAR[2*dim]*gradphi[i*dim+idim]*Weight
 					      );
 	      }
 	      //END RESIDUALS A block ===========================
@@ -752,17 +752,17 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
                 //advection term I
 		double Adv1=0.;
 		for(int idim=0; idim<dim; idim++) {
-		  Adv1+= ((SolVAR[dim+idim]*dt - (SolVAR[idim]-SolOldVAR[idim]))*(*(gradfj+idim))*(*(fi)))*0.5*(Weight+Weight_old);
+		  Adv1+= SolVAR[dim+idim]*(*(gradfj+idim))*(*(fi))*Weight;
 		}
 				
-		double div_stab = 0.5*div_vel*((*fi))*((*fj))*0.5*(Weight+Weight_old);
+		double div_stab = 0.*0.5*div_vel*((*fi))*((*fj))*(Weight);
 		
-		double div_ale = div_w*((*fi))*((*fj))*0.5*(Weight+Weight_old);
+		double div_ale = 0.*div_w*((*fi))*((*fj))*(Weight);
 
-                double Mass = ((*fi))*((*fj))*Weight;
+//                 double Mass = ((*fi))*((*fj))*Weight;
 
 		for(int idim=0; idim<dim; idim++) {
-		  B[indexVAR[dim+idim]][indexVAR[dim+idim]][i*nve+j] += dt*IRe*LapXweight + Adv1 + dt*div_stab - dt*div_ale + 0.*betans*Mass;
+		  B[indexVAR[dim+idim]][indexVAR[dim+idim]][i*nve+j] += IRe*LapXweight + Adv1 + div_stab - div_ale;
 		}
 		
 //                 for(int idim=0; idim<dim; idim++) {
@@ -778,7 +778,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 		  
 		// Laplacian ALE map
 		for(int idim=0; idim<dim; idim++) {
-		  B[indexVAR[0+idim]][indexVAR[idim]][i*nve+j] += (!solidmark[i])*dt*Lap_ale*Weight_nojac;  
+		  B[indexVAR[0+idim]][indexVAR[idim]][i*nve+j] += (!solidmark[i])*Lap_ale*Weight_nojac;  
 		}
 
               } // end phi_j loop
@@ -797,7 +797,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
               /// *** phi_j loop ***
               for (unsigned j=0; j<nve1; j++,fj++) {
                 for(int idim=0; idim<dim; idim++) {
-		  B[indexVAR[dim+idim]][indexVAR[2*dim]][i*nve1+j] -= dt*((*(gradfi+idim))*(*fj))*Weight;
+		  B[indexVAR[dim+idim]][indexVAR[2*dim]][i*nve1+j] -= ((*(gradfi+idim))*(*fj))*Weight;
 		}
               } // end phi_j loop
             } // end phi_i loop
@@ -836,7 +836,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 	    for(int i=0;i<dim;i++){
 	      for(int j=0;j<dim;j++){
 		e[i][j]=0.5*(GradSolhatVAR[i][j]+GradSolhatVAR[j][i]);
-		e_old[i][j]=0.5*(GradSolOldhatVAR[i][j]+GradSolOldhatVAR[j][i]);
+// 		e_old[i][j]=0.5*(GradSolOldhatVAR[i][j]+GradSolOldhatVAR[j][i]);
 	      }
 	    }
 	    I_e=0;
@@ -952,7 +952,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 	        Rhs[indexVAR[idim]][i] += (
 					   -phi[i]*eps_pen*(
 // 							    +SolVAR[idim] - 0.*SolOldVAR[idim]
-							    -dt*gamma*SolVAR[dim+idim]
+							    -SolVAR[dim+idim]
 // 							    -dt*(1.-gamma)*SolOldVAR[dim+idim]
 							    )
 					   )*Weight_hat;
@@ -968,11 +968,11 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
               // Residual Momentum equations
               for(int idim=0; idim<dim; idim++) {
 	        Rhs[indexVAR[dim+idim]][i] += (
-					       phi[i]*dt*_gravity[idim]*Weight_hat
+					       phi[i]*_gravity[idim]*Weight_hat
 // 					       -phi[i]*betafsi*(SolVAR[dim+idim] - SolOldVAR[dim+idim])*Weight_hat*(1./gamma)
 // 					       +phi[i]*betafsi*SolVAR[2*dim+1+idim]*Weight_hat*gammaratio*dt
-					       -dt*CauchyDIR[idim]*Weight
-					       +dt*SolVAR[2*dim]*gradphi[i*dim+idim]*Weight
+					       -CauchyDIR[idim]*Weight
+					       +SolVAR[2*dim]*gradphi[i*dim+idim]*Weight
 					       );
 
               }
@@ -988,9 +988,9 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
                 /// Mass term
                 // (v_n+1,psi)
                 //gamma = 1 Backward Euler
-		for(int idim=0; idim<dim; idim++) {
-		  B[indexVAR[dim+idim]][indexVAR[dim+idim]][i*nve+j] += 0.*betafsi*(*(fi))*(*(fj))*Weight_hat*(1./gamma);
-		}
+// 		for(int idim=0; idim<dim; idim++) {
+// 		  B[indexVAR[dim+idim]][indexVAR[dim+idim]][i*nve+j] += 0.*betafsi*(*(fi))*(*(fj))*Weight_hat*(1./gamma);
+// 		}
 
                 //Da collaudare il 3D
                 for (int icount=0; icount<dim; ++icount) {
@@ -1017,9 +1017,9 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 
                 /// Stiffness operator -- Elasticity equation (Linear or not)
                 for(int idim=0; idim<dim; idim++) {
-		  B[indexVAR[dim+idim]][indexVAR[0+idim]][i*nve+j] += dt*geom_tg_stiff_matrx*Weight;
+		  B[indexVAR[dim+idim]][indexVAR[0+idim]][i*nve+j] += geom_tg_stiff_matrx*Weight;
  		  for(int idim2=0; idim2<dim; idim2++) {
- 		    B[indexVAR[dim+idim]][indexVAR[0+idim2]][i*nve+j] += dt*tg_stiff_matrix[0+idim][0+idim2]*Weight;
+ 		    B[indexVAR[dim+idim]][indexVAR[0+idim2]][i*nve+j] += tg_stiff_matrix[0+idim][0+idim2]*Weight;
  		  }
  		}
 
@@ -1027,7 +1027,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
                 //   -_theta*dt*(v_n+1,eta)
 		for(int idim=0; idim<dim; idim++) {
 		  //   -_theta*dt*(v_n+1,eta)
-		  B[indexVAR[0+idim]][indexVAR[dim+idim]][i*nve+j] -= eps_pen*gamma*dt*(*(fi))*(*(fj))*Weight_hat;
+		  B[indexVAR[0+idim]][indexVAR[dim+idim]][i*nve+j] -= eps_pen*(*(fi))*(*(fj))*Weight_hat;
 		  // (u_n+1,eta)
 		  B[indexVAR[0+idim]][indexVAR[0+idim]][i*nve+j] += eps_pen*(*(fi))*(*(fj))*Weight_hat;
 		}
@@ -1043,7 +1043,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
               // *** phi_j loop ***
               for (unsigned j=0; j<nve1; j++,fj++) {
 		for(int idim=0; idim<dim; idim++) {
-		  B[indexVAR[dim+idim]][indexVAR[2*dim]][i*nve1+j] -= dt*((*(gradfi+idim))*(*fj))*Weight;
+		  B[indexVAR[dim+idim]][indexVAR[2*dim]][i*nve1+j] -= ((*(gradfi+idim))*(*fj))*Weight;
 		}
               }
             }
