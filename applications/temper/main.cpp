@@ -51,7 +51,7 @@
         files.CopyInputFiles();
    // at this point everything is in the folder of the current run!!!!
 
-  // ======= MyPhysics ========================
+  // ======= MyPhysics (implemented as child of Physics) ========================
   RunTimeMap<double> physics_map("Physics",files._output_path);
   TempPhysics phys(physics_map);
               phys.set_nondimgroups(); //implement it
@@ -59,16 +59,17 @@
 
   // ======= Mesh =====
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
-  Mesh mesh(files,mesh_map,Lref);        /*VB based*/
+  Mesh mesh(files,mesh_map,Lref);
   
-  // ======= MyDomainShape ====================
+  // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
   RunTimeMap<double> box_map("Box",files._output_path);
   Box mybox(mesh.get_dim(),box_map);
       mybox.init(mesh.get_Lref());
   
-  mesh.SetDomain(&mybox);     //this may or may not be called, depending if the domain has an "important shape" or not
+  mesh.SetDomain(&mybox);    
+  
   mesh.ReadMeshFile(); 
-  mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/
+  mesh.PrintForVisualizationAllLEVAllVB();
   
   phys.set_mesh(&mesh);
   
@@ -79,7 +80,7 @@
   std::vector<FEElemBase*> FEElements(QL);  //TODO what if we dont want to call the default constructor?!? AAA here no constructor is called!!! If you have a pointer the constructor is not called!
                                                      
   for (int fe=0; fe<QL; fe++) {
-    FEElements[fe] = FEElemBase::build(&(mesh._GeomEl),fe);       /*VB based*/  //The order of the fe is established by the library
+    FEElements[fe] = FEElemBase::build(&(mesh._GeomEl),fe);  //The order of the fe is established by the library
 //sort of constructor
     FEElements[fe]->SetOrder(fe);
     FEElements[fe]->AssociateQRule(&qrule);

@@ -30,7 +30,7 @@ class Mesh  {
 
 public:
   
-    Files& _files; 
+    const Files& _files; 
     RunTimeMap<double>  _mesh_rtmap;
     uint _meshVB;          /// Number of FEM "manifold" Families (VB)  F
 
@@ -68,7 +68,7 @@ public:
                                      // on the fine node numbering, the nodes corresponding to linear dofs are numbered FIRST... or not?
 
 //===== Constructors/ Destructor ===========
-     Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref);
+     Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref);
     ~Mesh ();
     void clear ();
 

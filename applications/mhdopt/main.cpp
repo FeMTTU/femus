@@ -69,22 +69,21 @@ int main(int argc, char** argv) {
   RunTimeMap<double> physics_map("Physics",files._output_path);
   OptPhysics phys(physics_map);
              phys.set_nondimgroups();
+  const double Lref  =  phys._physrtmap.get("Lref");
 
   // ======= Mesh =====
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
+  Mesh mesh(files,mesh_map,Lref); 
       
 //=========== Domain ================================
   RunTimeMap<double> box_map("Box",files._output_path);
-  const double Lref  = phys._physrtmap.get("Lref");     // reference L
-  uint     dimension = (uint) mesh_map.get("dimension");
-  Box mybox(dimension,box_map);
-      mybox.init(Lref);
+  Box mybox(mesh.get_dim(),box_map);
+      mybox.init(mesh.get_Lref());
 
-// ======  Mesh ================================
-  Mesh mesh(files,mesh_map,Lref); 
-       mesh.SetDomain(&mybox);
-       mesh.ReadMeshFile(); 
-       mesh.PrintForVisualizationAllLEVAllVB();
+  mesh.SetDomain(&mybox);
+  
+  mesh.ReadMeshFile(); 
+  mesh.PrintForVisualizationAllLEVAllVB();
 
   phys.set_mesh(&mesh);
 
@@ -110,8 +109,8 @@ int main(int argc, char** argv) {
 //================================
 // ======= Add QUANTITIES ========  
 //================================
-  MagnFieldHom bhom("Qty_MagnFieldHom",qty_map,dimension,FE_MAGNFIELDHOM);     qty_map.set_qty(&bhom);  
-  MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,dimension,FE_MAGNFIELDEXT);     qty_map.set_qty(&Bext);  
+  MagnFieldHom bhom("Qty_MagnFieldHom",qty_map,mesh.get_dim(),FE_MAGNFIELDHOM);     qty_map.set_qty(&bhom);  
+  MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,mesh.get_dim(),FE_MAGNFIELDEXT);     qty_map.set_qty(&Bext);  
 
 //consistency check
  if (bhom._dim !=  Bext._dim)     {std::cout << "main: inconsistency" << std::endl;abort();}
@@ -119,15 +118,15 @@ int main(int argc, char** argv) {
 
  MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,FE_MAGNFIELDHOMLAGMULT);     qty_map.set_qty(&bhom_lag_mult);
  MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,FE_MAGNFIELDEXTLAGMULT);     qty_map.set_qty(&Bext_lag_mult);
- MagnFieldHomAdj                  bhom_adj("Qty_MagnFieldHomAdj",qty_map,dimension,FE_MAGNFIELDHOM);        qty_map.set_qty(&bhom_adj);
+ MagnFieldHomAdj                  bhom_adj("Qty_MagnFieldHomAdj",qty_map,mesh.get_dim(),FE_MAGNFIELDHOM);        qty_map.set_qty(&bhom_adj);
  MagnFieldHomLagMultAdj  bhom_lag_mult_adj("Qty_MagnFieldHomLagMultAdj",qty_map,1,FE_MAGNFIELDHOMLAGMULT);  qty_map.set_qty(&bhom_lag_mult_adj);
 
   Pressure  pressure("Qty_Pressure",qty_map,1,FE_PRESSURE);            qty_map.set_qty(&pressure);
-  Velocity  velocity("Qty_Velocity",qty_map,dimension,FE_VELOCITY);   qty_map.set_qty(&velocity);  
+  Velocity  velocity("Qty_Velocity",qty_map,mesh.get_dim(),FE_VELOCITY);   qty_map.set_qty(&velocity);  
 
-  VelocityAdj  velocity_adj("Qty_VelocityAdj",qty_map,dimension,FE_VELOCITY);         qty_map.set_qty(&velocity_adj);  
+  VelocityAdj  velocity_adj("Qty_VelocityAdj",qty_map,mesh.get_dim(),FE_VELOCITY);         qty_map.set_qty(&velocity_adj);  
   PressureAdj pressure_adj("Qty_PressureAdj",qty_map,1,FE_PRESSURE);                  qty_map.set_qty(&pressure_adj);
-  DesVelocity des_velocity("Qty_DesVelocity",qty_map,dimension,FE_DESVELOCITY);       qty_map.set_qty(&des_velocity);
+  DesVelocity des_velocity("Qty_DesVelocity",qty_map,mesh.get_dim(),FE_DESVELOCITY);       qty_map.set_qty(&des_velocity);
  
 //consistency check
  if (velocity._dim !=  des_velocity._dim) {std::cout << "main: inconsistency" << std::endl;abort();}
