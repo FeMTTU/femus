@@ -22,8 +22,8 @@ namespace femus {
 CurrGaussPointBase::CurrGaussPointBase( EquationsMap& e_map_in ):
     _eqnmap(e_map_in),_qrule(e_map_in._qrule) {
   
-  _IntDim[VV] = _eqnmap._mesh._dim;
-  _IntDim[BB] = _eqnmap._mesh._dim - 1; 
+  _IntDim[VV] = _eqnmap._mesh.get_dim();
+  _IntDim[BB] = _eqnmap._mesh.get_dim() - 1; 
   
   //TODO probabilmente anche qui si puo' fare del TEMPLATING!!!
   //BISOGNA STARE ATTENTI CHE SE FAI DEL TEMPLATING con le ALLOCAZIONI STATICHE allora ti diverti poco con i DOPPI o TRIPLI ARRAY

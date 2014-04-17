@@ -92,7 +92,7 @@ return;
   void EqnNS::GenMatRhsVB(const uint vb,const double time,const uint Level)  {  ///< VB Assemblying.
 
     CurrElem       currelem(*this,_eqnmap);    
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh._dim);
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
   
   
 //========== PROCESSOR INDEX
@@ -157,7 +157,7 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
   
   
 //========== GEOMETRIC ELEMENT ========
-  const uint           space_dim = _mesh._dim /*_IntDim[vb]*/;
+  const uint           space_dim = _mesh.get_dim() /*_IntDim[vb]*/;
   //AAAAAAA! // is this the SPACE dimension, or the UNKNOWN dimension, or the INTEGRATION dimension?
   //well, it depends. The fact is that some operators are defined only for certain dimensions of the vector
   //for instance, divergence acts on vectors whose dimension is like the domain dimension
@@ -885,7 +885,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
 
     CurrElem       currelem(*this,_eqnmap);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh._dim);
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
   
   
     //====== Physics cast
@@ -895,7 +895,7 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
   // processor index
   const uint myproc = _iproc;
   // geometry -----
-  const uint  space_dim =       _mesh._dim;
+  const uint  space_dim =       _mesh.get_dim();
   const uint   mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");  
   const uint     meshql = (int) _mesh._mesh_rtmap.get("meshql");    //======== ELEMENT MAPPING =======
   

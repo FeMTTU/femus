@@ -78,8 +78,7 @@ int main(int argc, char** argv) {
   Files files(basepath);
    std::cout << "******The basepath starting from the gencase directory is ***** " << files._app_path << std::endl;
 
-//======== first of all, check for restart ======      
-//======== don't rerun gencase in that case, to avoid spending time on rebuilding the operators and so on ======      
+//======== first of all, check for restart ======  //======== don't rerun gencase in that case, to avoid spending time on rebuilding the operators and so on ======      
   files.ConfigureRestart();
   if (files._restart_flag == true) { std::cout << "Do not rerun gencase in case of restart" << std::endl; abort(); }
   
@@ -88,20 +87,10 @@ int main(int argc, char** argv) {
   // ======= Files =====
      RunTimeMap<std::string> files_map("Files",files._app_path);
 
-  // ======= Domain =====
-  //here we miss the "service" nature of the gencase program
-  //we must instantiate the domain explicitly
-  //we should do the ifdefs here for all types of Domains...
-  //the Domain is not related to the MESH ORDER.
-  //it may be related to the MESH MAPPING if we have curved elements or not
-  //but the fact of having curved elements might be more dependent on 
-  //the Mesh than the Doamin shape.
-  //anyway, now we do like this
-      
-  // ========= GenCase =====
+// ========= GenCase =====
       RunTimeMap<double> mesh_map("Mesh",files._app_path);
       GenCase gencase(files,mesh_map,1.,files_map.get("F_MESH_READ"));
-      gencase.GenerateCase();
+              gencase.GenerateCase();
 
   std::cout << "=======End of GenCase========" << std::endl;
 

@@ -25,7 +25,7 @@ void EqnT::ic_read(double xp[],double u_value[], double el_xm[]) {
 
   Box* box= static_cast<Box*>(_mesh.GetDomain());
   
-  double* x_rotshift = new double[_mesh._dim];
+  double* x_rotshift = new double[_mesh.get_dim()];
   _mesh._domain->TransformPointToRef(xp,x_rotshift); 
 
 #if (DIMENSION==2)
@@ -70,18 +70,18 @@ void EqnT::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
 
 Box* box= static_cast<Box*>(_mesh.GetDomain());
 
-  double* lb = new double[_mesh._dim];
-  double* le = new double[_mesh._dim];
+  double* lb = new double[_mesh.get_dim()];
+  double* le = new double[_mesh.get_dim()];
   lb[0] = box->_lb[0];  //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-   if ( _mesh._dim == 3 ) {
+   if ( _mesh.get_dim() == 3 ) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
    }
   
-  double* x_rotshift = new double[_mesh._dim];
+  double* x_rotshift = new double[_mesh.get_dim()];
   _mesh._domain->TransformPointToRef(xp,x_rotshift);
   
   
@@ -242,7 +242,7 @@ void EqnNS::ic_read(double xp[],double u_value[], double el_xm[]) {
  
   Box* box= static_cast<Box*>(_mesh.GetDomain());
   
-  double* x_rotshift = new double[_mesh._dim];
+  double* x_rotshift = new double[_mesh.get_dim()];
   _mesh._domain->TransformPointToRef(xp,x_rotshift); 
 //at this point, the coordinates are transformed into the REFERENCE BOX, so you can pass them to the Pressure function
 
@@ -350,18 +350,18 @@ const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
 
 Box* box= static_cast<Box*>(_mesh.GetDomain());
 
-  double* lb = new double[_mesh._dim];
-  double* le = new double[_mesh._dim];
+  double* lb = new double[_mesh.get_dim()];
+  double* le = new double[_mesh.get_dim()];
   lb[0] = box->_lb[0];//already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_mesh._dim == 3) {
+  if (_mesh.get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  double* x_rotshift = new double[_mesh._dim];
+  double* x_rotshift = new double[_mesh.get_dim()];
   _mesh._domain->TransformPointToRef(el_xm,x_rotshift);
 
  
@@ -502,18 +502,18 @@ void EqnNS::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
   
 Box* box = static_cast<Box*>(_mesh.GetDomain());
 
-  double* lb = new double[_mesh._dim];
-  double* le = new double[_mesh._dim];
+  double* lb = new double[_mesh.get_dim()];
+  double* le = new double[_mesh.get_dim()];
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_mesh._dim == 3) {
+  if (_mesh.get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  double* x_rotshift = new double[_mesh._dim];
+  double* x_rotshift = new double[_mesh.get_dim()];
   _mesh._domain->TransformPointToRef(xp,x_rotshift);
   
   

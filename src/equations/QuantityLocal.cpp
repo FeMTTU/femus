@@ -152,7 +152,7 @@ void QuantityLocal::ExtendDofs(const uint vb) {
   
   //AAA: valid from ndim to 3
 
-  const uint ndim = _currEl._eqnmap._mesh._dim;
+  const uint ndim = _currEl._eqnmap._mesh.get_dim();
   const uint el_ndofs = _ndof[vb];
   //set to zero
   for (uint eln=0; eln<el_ndofs; eln++)  {

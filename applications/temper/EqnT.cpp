@@ -104,7 +104,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
 
   CurrElem       currelem(*this,_eqnmap);
 //   CurrGaussPoint   currgp(_eqnmap);    
-  CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh._dim);
+  CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
   
   TempPhysics* myphys; myphys = static_cast<TempPhysics*>(&_phys);
 
@@ -119,7 +119,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
   const double penalty_val = _mesh._mesh_rtmap.get("penalty_val");    
 
   //======== ELEMENT MAPPING =======
-  const uint space_dim =       _mesh._dim;
+  const uint space_dim =       _mesh.get_dim();
   const uint  meshql   = (int) _mesh._mesh_rtmap.get("meshql");
   const uint  mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
 
@@ -652,14 +652,14 @@ else {   std::cout << " No line integrals yet... " << std::endl; abort();}
 double EqnT::ComputeIntegral (const uint vb, const uint Level) {
 
     CurrElem       currelem(*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh._dim);
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
 
   //====== Physics cast
   TempPhysics *optphys; optphys = static_cast<TempPhysics*>(&_phys);
 
   //====== processor index
   const uint myproc = _iproc;
-  const uint space_dim =      _mesh._dim;
+  const uint space_dim =      _mesh.get_dim();
   const uint mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");  
   const uint meshql   = (int) _mesh._mesh_rtmap.get("meshql");   //======== ELEMENT MAPPING =======
  
@@ -800,11 +800,11 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
   //reg_ord = 1: H1
 
     CurrElem       currelem(*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh._dim);
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
   
   // processor index
   const uint myproc = _iproc;
-  const uint space_dim =       _mesh._dim;
+  const uint space_dim =       _mesh.get_dim();
   const uint mesh_ord  = (int) _mesh._mesh_rtmap.get("mesh_ord");  
   const uint meshql    = (int) _mesh._mesh_rtmap.get("meshql");    //======== ELEMENT MAPPING =======
 

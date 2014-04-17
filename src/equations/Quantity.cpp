@@ -94,7 +94,7 @@ namespace femus {
 void Quantity::FunctionDof(const uint bdry, QuantityLocal& myvect, const double t, const double* refbox_xyz) const {
 
 //====the Domain
-  const uint space_dim = _qtymap._phys._mesh->_dim;
+  const uint space_dim = _qtymap._phys._mesh->get_dim();
   double* xp = new double[space_dim]; 
   const uint mesh_ord = (int) _qtymap._phys._mesh->_mesh_rtmap.get("mesh_ord");    
   const uint offset   =       _qtymap._phys._mesh->_GeomEl._elnds[bdry][mesh_ord];

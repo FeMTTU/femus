@@ -76,7 +76,7 @@ EqnMHDAD::~EqnMHDAD() {}
   void EqnMHDAD::GenMatRhsVB(const uint vb,const double time,const uint Level)  {
 
     CurrElem       currelem(*this,_eqnmap);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh._dim);
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
    
     
 //======= TIME - STATIONARY OR NOT =======
@@ -84,7 +84,7 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
   const double   dt = _eqnmap._timeloop._timemap.get("dt");
 
 //======== GEOMETRICAL ELEMENT =======
-  const uint space_dim =       _mesh._dim;
+  const uint space_dim =       _mesh.get_dim();
   const uint  mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
   const uint    meshql = (int) _mesh._mesh_rtmap.get("meshql");  //======== ELEMENT MAPPING =======
 

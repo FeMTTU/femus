@@ -82,8 +82,8 @@ int main(int argc, char** argv) {
 
 // ======  Mesh ================================
   Mesh mesh(files,mesh_map,Lref); 
-       mesh.ReadMeshFile(); 
        mesh.SetDomain(&mybox);
+       mesh.ReadMeshFile(); 
        mesh.PrintForVisualizationAllLEVAllVB();
 
   phys.set_mesh(&mesh);

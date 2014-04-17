@@ -864,7 +864,7 @@ void EqnBase::GenBc() {
     const uint mesh_ord    = (int) _mesh._mesh_rtmap.get("mesh_ord");
     const uint offset      = _mesh._NoNodesXLev[_NoLevels-1];
     const uint el_nnodes_b = _mesh._GeomEl._elnds[BB][mesh_ord];
-    double* normal = new double[_mesh._dim];  //TODO remove this, it is useless
+    double* normal = new double[_mesh.get_dim()];  //TODO remove this, it is useless
 
     int  *bc_flag = new int[_n_vars];
 
@@ -1310,7 +1310,7 @@ void EqnBase::GenElBc()  {
 
      CurrElem       currelem(*this,_eqnmap);  
   
-      uint space_dim = _mesh._dim;
+      uint space_dim = _mesh.get_dim();
 
     _elem_bc       =  new int**[_NoLevels];
     _elem_val_norm =  new double**[_NoLevels];
@@ -1380,7 +1380,7 @@ void EqnBase::elem_bc_read(double */*el_xm*/,int& surf_id, double *value,int* el
 
   std::cout << "AAAAAAAAAA you are using the default elem_bc_read which is basically MEANINGLESS" << std::endl;
 
-  uint space_dim = _mesh._dim;
+  uint space_dim = _mesh.get_dim();
 
   surf_id=0;  
 
@@ -1413,7 +1413,7 @@ void EqnBase::Bc_GetElFlagValLevSubd(const uint Level,const uint isubd,const uin
         el_flag[3] =        _elem_bc[Level][isubd][4*iel+3] ;*/
     el_value[0] =  _elem_val_norm[Level][isubd][iel]   ;
 
-  uint space_dim = _mesh._dim;
+  uint space_dim = _mesh.get_dim();
 
   for (uint i=0; i < _number_tang_comps[space_dim - 1]; i++) el_value[1+i] = _elem_val_tg[Level][isubd][ _number_tang_comps[space_dim - 1]*iel + i ];
     
@@ -1544,7 +1544,7 @@ void EqnBase::GenIc() {
      
         const uint  coords_fine_offset = _mesh._NoNodesXLev[_NoLevels-1];
         const uint  el_nnodes = _mesh._GeomEl._elnds[mesh_ord][VV];
-        double*      xp = new double[_mesh._dim];
+        double*      xp = new double[_mesh.get_dim()];
         double* u_value = new double[_n_vars];
 
        std::cout << "\n====================== GenIc:  Now we are setting them for all levels! ========================" << "\n \n";
@@ -1562,7 +1562,7 @@ void EqnBase::GenIc() {
             // we are looping over the mesh nodes, but it's a fake loop because we do not depend on "i" for the elements
             for (uint i=0; i < el_nnodes ; i++) {
                 int fine_node = _mesh._el_map[VV][ i + ( iel + iel_b )*el_nnodes ];
-                for (uint idim=0; idim<_mesh._dim; idim++) xp[idim] = _mesh._xyz[ fine_node + idim*coords_fine_offset ];
+                for (uint idim=0; idim<_mesh.get_dim(); idim++) xp[idim] = _mesh._xyz[ fine_node + idim*coords_fine_offset ];
                 for (uint ivar=0; ivar<_n_vars; ivar++) u_value[ivar] = 0.;
 
                 // ===================================================
@@ -4049,10 +4049,10 @@ void EqnBase::ComputeRest( ) {
 
 	    }
 	    else if (fe == KK)  {  //you dont need excess of space for L2 elements
-            Rest_pos[fe]   = new    int [ n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(_mesh._dim-1) /**_elnodes[VV][fe]*/]; //here I have to put the number of childs
-            Rest_val[fe]   = new double [ n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(_mesh._dim-1) /**_elnodes[VV][fe]*/];
+            Rest_pos[fe]   = new    int [ n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(_mesh.get_dim()-1) /**_elnodes[VV][fe]*/]; //here I have to put the number of childs
+            Rest_val[fe]   = new double [ n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(_mesh.get_dim()-1) /**_elnodes[VV][fe]*/];
             mult_cols[fe]  = new    int [ n_dofs_fe_lev[fe][FEXLevel_c[fe]] ];  //TODO unused
-            for (uint i=0; i < n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(_mesh._dim-1) /**_elnodes[VV][fe]*/; i++) {
+            for (uint i=0; i < n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(_mesh.get_dim()-1) /**_elnodes[VV][fe]*/; i++) {
                 Rest_pos[fe][i] = NegativeOneFlag;
                 Rest_val[fe][i] = 0.;
                }
@@ -4134,8 +4134,8 @@ void EqnBase::ComputeRest( ) {
                             for (int sd=0;sd<pr;sd++) sum_previous_sd += _mesh._off_el[VV][sd*_NoLevels+Lev_f+1] - _mesh._off_el[VV][sd*_NoLevels+Lev_f];
                             int dof_pos_f = el_child_fm - _mesh._off_el[VV][pr*_NoLevels+Lev_f] + sum_previous_sd;
 
-                             Rest_pos[fe][ dof_pos_c*4*(_mesh._dim-1) + i_ch ] = dof_pos_f;
-                             Rest_val[fe][ dof_pos_c*4*(_mesh._dim-1) + i_ch ] = 1;
+                             Rest_pos[fe][ dof_pos_c*4*(_mesh.get_dim()-1) + i_ch ] = dof_pos_f;
+                             Rest_val[fe][ dof_pos_c*4*(_mesh.get_dim()-1) + i_ch ] = 1;
                             mult_cols[fe][ dof_pos_c ]++;
 			 
 		       }
@@ -4199,7 +4199,7 @@ void EqnBase::ComputeRest( ) {
                     }
 		} //end temporary fe
 		else if (fe == KK) {
-		   for (uint k_ch = 0; k_ch < 4*(_mesh._dim-1); k_ch++) {
+		   for (uint k_ch = 0; k_ch < 4*(_mesh.get_dim()-1); k_ch++) {
 //                   Rest_pos  //dont need compression i think
 //                  Rest_val		  
                   // you also dont need mult_cols
@@ -5196,14 +5196,14 @@ const uint myproc= _iproc;
   
     CurrElem       currelem(*this,_eqnmap);
 //     CurrGaussPoint   currgp(_eqnmap);    
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh._dim);
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
 
   //======== ELEMENT MAPPING =======
   const uint meshql = (int) _mesh._mesh_rtmap.get("meshql");  
  
 //========= DOMAIN MAPPING
     QuantityLocal xyz(currgp,currelem);
-    xyz._dim      = _mesh._dim;
+    xyz._dim      = _mesh.get_dim();
     xyz._FEord    = meshql;
     xyz._ndof[VV] = _AbstractFE[xyz._FEord]->_ndof[VV];
     xyz._ndof[BB] = _AbstractFE[xyz._FEord]->_ndof[BB];

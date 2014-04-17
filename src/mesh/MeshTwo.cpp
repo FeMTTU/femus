@@ -28,13 +28,13 @@ Mesh::Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref) :
          _mesh_rtmap(map_in),
          _Lref(Lref),
          _GeomEl( (uint) map_in.get("dimension"), (uint) map_in.get("geomel_type") ),
-         _n_GeomEl(map_in.get("numgeomels"))
+         _n_GeomEl(map_in.get("numgeomels")),
+         _dim(_mesh_rtmap.get("dimension"))
          {
 	   
     _iproc    = paral::get_rank();
     _NoSubdom = paral::get_size();   
     _NoLevels = _mesh_rtmap.get("nolevels");
-    _dim      = _mesh_rtmap.get("dimension");
     
     const uint mesh_ord = (uint) _mesh_rtmap.get("mesh_ord");
     if (mesh_ord != 0) {
