@@ -32,7 +32,6 @@ public:
   
     Files& _files; 
     RunTimeMap<double>  _mesh_rtmap;
-    uint _dim;               ///< spatial dimension
     uint _meshVB;          /// Number of FEM "manifold" Families (VB)  F
 
 // ===== ABSTRACT GEOMEL(S) =====
@@ -106,10 +105,14 @@ public:
     int *                             _nd_libm_fm; //from FINE LIBMESH NODE ORDERING to FINE FEMUS NODE ORDERING
     int    _maxelxnode;
     
+    //get functions
+    inline const double get_Lref() const {return _Lref;}
+    inline const uint   get_dim()  const {return _dim;}
     
 protected:
 
     const double _Lref;          ///Reference length for non-dimensionalization
+    const uint _dim;               ///< spatial dimension
     
     std::string _mesh_file;    //mesh file name from the mesh generator
 

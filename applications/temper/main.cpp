@@ -55,22 +55,20 @@
   RunTimeMap<double> physics_map("Physics",files._output_path);
   TempPhysics phys(physics_map);
               phys.set_nondimgroups(); //implement it
+  const double Lref  =  phys._physrtmap.get("Lref");     // reference L
 
   // ======= Mesh =====
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
-
+  Mesh mesh(files,mesh_map,Lref);        /*VB based*/
+  
   // ======= MyDomainShape ====================
   RunTimeMap<double> box_map("Box",files._output_path);
-  const double Lref  =  phys._physrtmap.get("Lref");     // reference L
-  uint     dimension = (uint) mesh_map.get("dimension");
-  Box mybox(dimension,box_map);
-      mybox.init(Lref);
-
-// ======  Mesh ================================
-  Mesh mesh(files,mesh_map,Lref);        /*VB based*/
-       mesh.ReadMeshFile(); 
-       mesh.SetDomain(&mybox);
-       mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/
+  Box mybox(mesh.get_dim(),box_map);
+      mybox.init(mesh.get_Lref());
+  
+  mesh.SetDomain(&mybox);     //this may or may not be called, depending if the domain has an "important shape" or not
+  mesh.ReadMeshFile(); 
+  mesh.PrintForVisualizationAllLEVAllVB();        /*VB based*/
   
   phys.set_mesh(&mesh);
   
@@ -103,7 +101,7 @@
   TempAdj         tempadj("Qty_TempAdj",qty_map,1,FE_TEMPERATURE);         qty_map.set_qty(&tempadj);  
   TempDes         tempdes("Qty_TempDes",qty_map,1,FE_TEMPERATURE);         qty_map.set_qty(&tempdes);  
   Pressure       pressure("Qty_Pressure",qty_map,1,FE_PRESSURE);           qty_map.set_qty(&pressure);
-  Velocity       velocity("Qty_Velocity",qty_map,dimension,FE_VELOCITY);   qty_map.set_qty(&velocity);  
+  Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),FE_VELOCITY);   qty_map.set_qty(&velocity);  
 
 #if FOURTH_ROW==1
   Pressure pressure_2("Qty_Pressure_2",qty_map,1,T4_ORD);            qty_map.set_qty(&pressure_2);

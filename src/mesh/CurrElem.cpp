@@ -27,8 +27,8 @@ namespace femus {
  for (int vb = 0; vb < VB; vb++) {
   uint elnodes = _eqnmap._mesh._GeomEl._elnds[vb][mesh_ord];     //TODO the mesh is quadratic
   _el_conn[vb] = new uint[ elnodes ];   
-   _xx_nds[vb] = new double[_eqnmap._mesh._dim*elnodes ];
-    _el_xm[vb] = new double[_eqnmap._mesh._dim];
+   _xx_nds[vb] = new double[_eqnmap._mesh.get_dim()*elnodes ];
+    _el_xm[vb] = new double[_eqnmap._mesh.get_dim()];
  }  
 //========== ELEMENT: Current Geometric Element (SERVICE)  ========================
 
@@ -151,7 +151,7 @@ void CurrElem::get_el_orient(const uint vb) const {
   
       const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");
       const uint el_nnodes   = _eqnmap._mesh._GeomEl._elnds[vb][mesh_ord];
-      const uint mydim = _eqnmap._mesh._dim;
+      const uint mydim = _eqnmap._mesh.get_dim();
 
        std::vector<double>   xi(mydim,0.);
        std::vector<double>  eta(mydim,0.);
@@ -221,7 +221,7 @@ void CurrElem::get_el_orient(const uint vb) const {
 
     const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
     const uint el_nnodes   = _eqnmap._mesh._GeomEl._elnds[vb][mesh_ord];
-    const uint mydim = _eqnmap._mesh._dim;
+    const uint mydim = _eqnmap._mesh.get_dim();
 
        for (uint idim=0; idim< mydim; idim++)  _el_xm[vb][idim]=0.;
 
@@ -242,7 +242,7 @@ void CurrElem::get_el_orient(const uint vb) const {
 
     const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
     const uint el_nnodes   = _eqnmap._mesh._GeomEl._elnds[vb][mesh_ord];
-    const uint mydim = _eqnmap._mesh._dim;
+    const uint mydim = _eqnmap._mesh.get_dim();
           
    for (uint n=0; n<el_nnodes; n++)    {
 

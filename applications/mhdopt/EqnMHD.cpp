@@ -80,7 +80,7 @@ namespace femus {
   void EqnMHD::GenMatRhsVB(const uint vb,const double time,const uint Level)  {
 
     CurrElem       currelem(*this,_eqnmap);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh._dim);
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
     
     
 //======= TIME - STATIONARY OR NOT =======
@@ -91,7 +91,7 @@ namespace femus {
   const double penalty_val = _mesh._mesh_rtmap.get("penalty_val");    
   
 //======== GEOMETRICAL ELEMENT =======
-  const uint space_dim =       _mesh._dim;
+  const uint space_dim =       _mesh.get_dim();
   const uint  mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
   const uint  meshql   = (int) _mesh._mesh_rtmap.get("meshql");   //======== ELEMENT MAPPING =======
      

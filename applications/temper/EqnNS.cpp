@@ -48,14 +48,14 @@
 //=======  _var_names[]  ===========
                           _var_names[0] = "ux"; //variable names
                           _var_names[1] = "uy";
-   if ( _mesh._dim == 3 ) _var_names[2] = "uz";
-                 _var_names[_mesh._dim] = "up";
+   if ( _mesh.get_dim() == 3 ) _var_names[2] = "uz";
+                 _var_names[_mesh.get_dim()] = "up";
      
 //=======  _refvalue[] ==============   
                           _refvalue[0] =  _QtyInternalVector[0]->_refvalue[0]; 
                           _refvalue[1] =  _QtyInternalVector[0]->_refvalue[1]; 
-   if ( _mesh._dim == 3 ) _refvalue[2] =  _QtyInternalVector[0]->_refvalue[2]; 
-                 _refvalue[_mesh._dim] =  _QtyInternalVector[1]->_refvalue[0];
+   if ( _mesh.get_dim() == 3 ) _refvalue[2] =  _QtyInternalVector[0]->_refvalue[2]; 
+                 _refvalue[_mesh.get_dim()] =  _QtyInternalVector[1]->_refvalue[0];
 
 //========= MG solver ===================
   for(uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(SOLVERNS);
@@ -78,7 +78,7 @@
     CurrElem       currelem(*this,_eqnmap);
 //     CurrGaussPoint   currgp(_eqnmap);
 //here, I have to put the BASE, because that is my RUN-TIME DIMENSION-INDEPENDENT GaussPoint interface!!!!    
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh._dim);
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
 
 
 //========== PROCESSOR INDEX
@@ -93,7 +93,7 @@
 
 
   //========== GEOMETRIC ELEMENT ========
-  const uint           space_dim = _mesh._dim /*_IntDim[vb]*/;
+  const uint           space_dim = _mesh.get_dim(); /*_IntDim[vb]*/
   //AAAAAAA! // is this the SPACE dimension, or the UNKNOWN dimension, or the INTEGRATION (MANIFOLD) dimension?
   //well, it depends. The fact is that some operators are defined only for certain dimensions of the vector
   //for instance, divergence acts on vectors whose dimension is like the domain dimension
