@@ -23,7 +23,7 @@ namespace femus {
 
 
 // ========================================================
-Mesh::Mesh (Files& files_in, RunTimeMap<double>& map_in, const double Lref) :
+Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref) :
          _files(files_in),
          _mesh_rtmap(map_in),
          _Lref(Lref),

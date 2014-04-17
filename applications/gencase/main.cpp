@@ -78,20 +78,33 @@ int main(int argc, char** argv) {
   Files files(basepath);
    std::cout << "******The basepath starting from the gencase directory is ***** " << files._app_path << std::endl;
 
-//======== first of all, check for restart ======  //======== don't rerun gencase in that case, to avoid spending time on rebuilding the operators and so on ======      
+  //======== first of all, check for restart ======  //======== don't rerun gencase in that case, to avoid spending time on rebuilding the operators and so on ======      
   files.ConfigureRestart();
   if (files._restart_flag == true) { std::cout << "Do not rerun gencase in case of restart" << std::endl; abort(); }
   
   files.CheckDir(files._app_path,DEFAULT_CASEDIR); //here, we must check if the input directory where gencase writes is there  //if not, we make it
 
-  // ======= Files =====
-     RunTimeMap<std::string> files_map("Files",files._app_path);
+  RunTimeMap<std::string> files_map("Files",files._app_path);
 
 // ========= GenCase =====
-      RunTimeMap<double> mesh_map("Mesh",files._app_path);
-      GenCase gencase(files,mesh_map,1.,files_map.get("F_MESH_READ"));
-              gencase.GenerateCase();
+  RunTimeMap<double> mesh_map("Mesh",files._app_path);
+  GenCase gencase(files,mesh_map,1.,files_map.get("F_MESH_READ"));
+  
+// if domain is a Box, instantiate it
+// After that, the generation of the coarse mesh DOES depend on the DOMAIN SHAPE. in fact, the parameters of the box contain info for generating the COARSE mesh
+//but now, imagine you read from mesh files...
+// so, if you have a domain shape, then it should be involved in the coarse mesh generation
+// if you DONT have a domain shape, then the generation of the coarse mesh should only be file-dependent  
+//Ok so even though we have a shape, its mesh may come from a mesh file
+// also, if you want to rotate/translate ecc, you should not do it  AFTER refining the mesh, but right after coarse generation
+// i should put things together with FindCmake
+// anyway, the idea is mesh.generateCoarseMesh(OptionalShape);  // if the optionalshape is there, use its function to generate the coarse mesh
+                                                                // otherwise
+  
+          gencase.GenerateCase();
 
+
+  
   std::cout << "=======End of GenCase========" << std::endl;
 
   return 0;  
