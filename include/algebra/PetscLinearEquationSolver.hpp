@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __PetscLinearSolver_hpp__
-#define __PetscLinearSolver_hpp__
+#ifndef __PetscLinearEquationSolver_hpp__
+#define __PetscLinearEquationSolver_hpp__
 
 #include "FEMTTUConfig.h"
 
@@ -35,53 +35,21 @@
 
 namespace femus {
 
-
-
 /**
 * This class inherits the abstract class LinearEquationSolver. In this class the solver is implemented using the PETSc package
 */
 
 class PetscLinearEquationSolver : public LinearEquationSolver {
 
-private:
-  // data ---------------------------------
-  PC _pc;      ///< Preconditioner context
-  vector <KSP> _ksp;    ///< Krylov subspace context
-  vector< PetscReal > _rtol;
-  vector< PetscReal > _abstol;
-  vector< PetscReal > _dtol;
-  vector< PetscInt >  _maxits;
-  unsigned _num_elem_vanka_block;
-  
-  vector< vector <PetscInt> > _indexai;
-  
-  vector< vector <unsigned> > _Psize;
-  bool _indexai_init;
-  
-  vector <IS> _isA;
-  vector <IS> _isB;
-  
-  
-  
-  vector< vector <PetscInt> > _is_ovl_idx;
-  vector< vector <PetscInt> > _is_loc_idx;
-  
-  vector <IS> _is_ovl;
-  vector <IS> _is_loc;
-   
-  KSP       *_subksp;  							
-  PetscInt  _nlocal,_first;   						
-  PC        _subpc;   		
-    
-  Mat _Pmat;
-  bool _Pmat_is_initialized;  
 public:
+  
   // Constructor --------------------------------------
   /**  Constructor. Initializes Petsc data structures */
   PetscLinearEquationSolver (const unsigned &igrid, mesh *other_mesh);
   
   /// Destructor.
   ~PetscLinearEquationSolver ();
+
   /// Release all memory and clear data structures.
   void clear ();
   /// Initialize data structures if not done so already.
@@ -150,9 +118,39 @@ public:
   // Print ----------------------------------------
   /// Prints a useful message about why the latest linear solve con(di)verged.
   virtual void print_converged_reason();
+  
+private:
+  // data ---------------------------------
+  PC _pc;      ///< Preconditioner context
+  vector <KSP> _ksp;    ///< Krylov subspace context
+  vector< PetscReal > _rtol;
+  vector< PetscReal > _abstol;
+  vector< PetscReal > _dtol;
+  vector< PetscInt >  _maxits;
+  unsigned _num_elem_vanka_block;
+  
+  vector< vector <PetscInt> > _indexai;
+  
+  vector< vector <unsigned> > _Psize;
+  bool _indexai_init;
+  
+  vector <IS> _isA;
+  vector <IS> _isB;
+   
+  vector< vector <PetscInt> > _is_ovl_idx;
+  vector< vector <PetscInt> > _is_loc_idx;
+  
+  vector <IS> _is_ovl;
+  vector <IS> _is_loc;
+   
+  KSP       *_subksp;  							
+  PetscInt  _nlocal,_first;   						
+  PC        _subpc;   		
+    
+  Mat _Pmat;
+  bool _Pmat_is_initialized;  
 
   // Setting --------------------------------------------
-private:
   ///  Set the user-specified solver stored in \p _solver_type
   void set_petsc_solver_type ();
   void set_petsc_solver_type2 ();

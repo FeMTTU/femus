@@ -42,8 +42,8 @@ class System;
 // ------------------------------------------------------------
 // TransientSystem class definition
 template <class Base>
-class TransientSystem : public Base
-{
+class TransientSystem : public Base {
+  
 public:
 
   /** Constructor.  Initializes required data structures.  */
@@ -108,6 +108,7 @@ private:
   
   //pointer function to the set time step function
   double (* _get_time_interval_function)(const double time);
+  
 };
 
 

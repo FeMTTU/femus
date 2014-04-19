@@ -678,7 +678,7 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const vector <unsigned>
   // **************** END RES/EPS UPDATE RES ***************
   
   // *** Computational info ***
-#ifdef DEBUG  
+#ifndef NDEBUG   
   cout << "Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:              "  << std::setw(11) << std::setprecision(6) << std::fixed <<
     static_cast<double>( SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
     "  ITS: " << its  << "\t ksp_clean = "<< ksp_clean<<endl;
@@ -834,7 +834,7 @@ std::pair< int, double> PetscLinearEquationSolver::solve(const bool &ksp_clean) 
   }
   
   // *** Computational info ***
-#ifdef DEBUG  
+#ifndef NDEBUG  
   cout << "Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:              "  << std::setw(11) << std::setprecision(6) << std::fixed <<
     static_cast<double>( SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
     "  ITS: " << its  << "\t ksp_clean = "<< ksp_clean<<endl;
@@ -1040,7 +1040,7 @@ void PetscLinearEquationSolver::init(Mat& Amat, Mat& Pmat) {
     //       PCShellSetApply(_pc,__libmesh_petsc_preconditioner_apply);
     //     }
   }
-}	
+}
 
 
 

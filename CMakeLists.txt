@@ -22,11 +22,6 @@ ELSE()
 options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
 ENDIF()
 
-SET(DEBUG 0)
-IF(${CMAKE_BUILD_TYPE} MATCHES "Debug")
-    SET(DEBUG 1)
-ENDIF()    
-
 # where to place output binaries
 SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib64/ CACHE INTERNAL
      "Single output directory for building all libraries.")

@@ -21,22 +21,15 @@
 #include "TransientSystem.hpp"
 #include "FEMTTUConfig.h"
 #include "Parameter.hpp"
-
-
-//C++ include
 #include <iostream>
 
-
 namespace femus {
-
 
 using std::cout;
 using std::endl;
 
 bool (* mesh::_SetRefinementFlag)(const double &x, const double &y, const double &z, 
 				  const int &ElemGroupNumber,const int &level) = NULL;
-
-
 
 //---------------------------------------------------------------------------------------------------
 MultiLevelProblem::MultiLevelProblem( MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol):
@@ -57,9 +50,9 @@ System & MultiLevelProblem::add_system (const std::string& sys_type,
   // non-standard derived system classes, and if their restart file
   // has some non-standard sys_type we won't throw an error.
   if (_systems.count(name))
-    {
+  {
       return this->get_system(name);
-    }
+  }
   // Build a basic System
   else if (sys_type == "Basic")
     this->add_system<System> (name);
@@ -100,14 +93,11 @@ System & MultiLevelProblem::add_system (const std::string& sys_type,
     this->add_system<NonLinearImplicitSystem> (name);
 
   else
-    {
-      std::cerr << "ERROR: Unknown system type: "
-		    << sys_type
-		    << std::endl;
-   }
+  {
+    std::cerr << "ERROR: Unknown system type: " << sys_type << std::endl;
+  }
 
   // Return a reference to the new system
-  //return (*this)(name);
   return this->get_system(name);
 }
 
@@ -118,7 +108,6 @@ const T_sys & MultiLevelProblem::get_system (const unsigned int num) const
 {
   assert(num < this->n_systems());
 
-
   const_system_iterator       pos = _systems.begin();
   const const_system_iterator end = _systems.end();
 
@@ -128,11 +117,9 @@ const T_sys & MultiLevelProblem::get_system (const unsigned int num) const
 
   // Check for errors
   if (pos == end)
-    {
-      std::cerr << "ERROR: no system number " << num << " found!"
-                    << std::endl;
-      //libmesh_error();
-    }
+  {
+    std::cerr << "ERROR: no system number " << num << " found!" << std::endl;
+  }
 
   // Attempt dynamic cast
   return *static_cast<T_sys*>(pos->second);
@@ -153,11 +140,9 @@ T_sys & MultiLevelProblem::get_system (const unsigned int num)
 
   // Check for errors
   if (pos == end)
-    {
-      std::cerr << "ERROR: no system number " << num << " found!"
-                    << std::endl;
-  //    libmesh_error();
-    }
+  {
+    std::cerr << "ERROR: no system number " << num << " found!" << std::endl;
+  }
 
   // Attempt dynamic cast
   return *static_cast<T_sys*>(pos->second);
@@ -171,15 +156,15 @@ void MultiLevelProblem::clear ()
   // clear the systems.  We must delete them
   // since we newed them!
   while (!_systems.empty())
-    {
-      system_iterator pos = _systems.begin();
+  {
+    system_iterator pos = _systems.begin();
 
-       System *sys = pos->second;
-       delete sys;
-       sys = NULL;
+    System *sys = pos->second;
+    delete sys;
+    sys = NULL;
 
-      _systems.erase (pos);
-    }
+    _systems.erase (pos);
+  }
 }
 
 
@@ -189,20 +174,8 @@ void MultiLevelProblem::init()
 
   assert(n_sys != 0);
 
-  // init mesh???
-  
   for (unsigned int i=0; i != this->n_systems(); ++i)
     this->get_system(i).init();
-}
-
-//---------------------------------------------------------------------------------------------------
-unsigned MultiLevelProblem::GetNumberOfGrid() {
-  return _gridn;
-}
-
-//---------------------------------------------------------------------------------------------------
-unsigned MultiLevelProblem::GetNumberOfGridTotallyRefined() {
-  return _gridr;
 }
 
 //---------------------------------------------------------------------------------------------------

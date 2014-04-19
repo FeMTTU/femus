@@ -85,7 +85,7 @@ void NonLinearImplicitSystem::solve() {
       /// Be careful !!!! adesso stiamo usando _sys_number invece che ipde, da togliere al + presto
       _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix); 
       
-#ifdef DEBUG     
+#ifndef NDEBUG     
       std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
       for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
@@ -102,7 +102,7 @@ void NonLinearImplicitSystem::solve() {
 	  // ============== Non-Standard Multigrid Restriction ==============
 	  start_time = clock();
 	  Restrictor(ig, igridn, _n_nonlinear_iterations, _n_linear_iterations, full_cycle);
-#ifdef DEBUG
+#ifndef NDEBUG 
 	  std::cout << "Grid: " << ig << "-->" << ig-1 << "  RESTRICTION TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
 	}
@@ -115,7 +115,7 @@ void NonLinearImplicitSystem::solve() {
  	  // ============== Standard Prolongation ==============
  	  start_time=clock();
  	  Prolongator(ig);
-#ifdef DEBUG
+#ifndef NDEBUG 
  	  std::cout << "Grid: " << ig-1 << "-->" << ig << " PROLUNGATION TIME:\t" << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
  	  // ============== PostSmoothing ==============    
@@ -143,7 +143,7 @@ void NonLinearImplicitSystem::solve() {
       bool conv = CheckConvergence(_sys_name.c_str(), igridn-1);
       if (conv == true) _n_nonlinear_iterations = _n_max_nonlinear_iterations+1;
 
-#ifdef DEBUG
+#ifndef NDEBUG 
       std::cout << std::endl;
       std::cout << "COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif

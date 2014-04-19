@@ -29,7 +29,7 @@ int main(int argc,char **args) {
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
-  nm=4;
+  nm=5;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
@@ -61,8 +61,6 @@ int main(int argc,char **args) {
   ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
   ml_sol.AddSolution("U","biquadratic",1);
   ml_sol.AddSolution("V","biquadratic",1);
-//   ml_sol.AddSolution("AX","biquadratic",1,0);
-//   ml_sol.AddSolution("AY","biquadratic",1,0);
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P","disc_linear",1);
   ml_sol.AssociatePropertyToSolution("P","Pressure"); // Add this line
@@ -296,18 +294,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
       value=0.;
     }
   }
-//   else if (!strcmp(name,"AX")) {
-//     test=0;
-//     value=0;
-//   }
-//   else if (!strcmp(name,"AY")) {
-//     test=0;
-//     value=0;
-//   }
-//   else if (!strcmp(name,"AZ")) {
-//     test=0;
-//     value=0;
-//   }
+
   return test;
 }
 
@@ -315,37 +302,30 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
     
   clock_t AssemblyTime=0;
   clock_t start_time, end_time;
-  PetscErrorCode ierr;
   
   //pointers and references
   MultiLevelSolution*	 ml_sol	                      = ml_prob._ml_sol;
   Solution*	 mysolution  	                      = ml_sol->GetSolutionLevel(level);
   MonolithicFSINonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<MonolithicFSINonLinearImplicitSystem>("Fluid-Structure-Interaction");
-  LinearEquationSolver*  mylsyspde	              = my_nnlin_impl_sys._LinSolver[level];   
+  LinearEquationSolver*  myLinEqSolver	              = my_nnlin_impl_sys._LinSolver[level];   
   mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(level);
   elem		*myel		=  mymsh->el;
-  SparseMatrix	*myKK		=  mylsyspde->_KK;
-  NumericVector *myRES		=  mylsyspde->_RES;
-  vector <int>	&myKKIndex	=  mylsyspde->KKIndex;
-  
-  
+  SparseMatrix	*myKK		=  myLinEqSolver->_KK;
+  NumericVector *myRES		=  myLinEqSolver->_RES;
+  vector <int>	&myKKIndex	=  myLinEqSolver->KKIndex;
+    
   const unsigned dim = mymsh->GetDimension();
   const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
   
   // local objects
   vector<double> SolVAR(2*dim+1);
-//   vector<double> SolOldVAR(2*dim+1);
   vector<vector<double> > GradSolVAR(2*dim);
-//   vector<vector<double> > GradSolOldVAR(2*dim);
   for(int i=0;i<2*dim;i++){
     GradSolVAR[i].resize(dim);
-//     GradSolOldVAR[i].resize(dim);
   }
   vector<vector<double> > GradSolhatVAR(dim);
-//   vector<vector<double> > GradSolOldhatVAR(dim);
   for(int i=0;i<dim;i++){
     GradSolhatVAR[i].resize(dim);
-//     GradSolOldhatVAR[i].resize(dim);
   }
     
   vector <int> metis_node1;
@@ -354,37 +334,30 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   
   vector <double > phi;
   vector <double > phi_hat;
-//   vector <double > phi_old;
   
   vector <double> gradphi;
   vector <double> gradphi_hat;
-//   vector <double> gradphi_old;
   
   metis_node1.reserve(max_size);
   metis_node2.reserve(max_size);
   solidmark.reserve(max_size);
   phi.reserve(max_size);
   phi_hat.reserve(max_size);
-//   phi_old.reserve(max_size);
   gradphi.reserve(max_size*dim);
   gradphi_hat.reserve(max_size*dim);
-//   gradphi_old.reserve(max_size*dim);
   
   const double *phi1;
     
   double Weight=0.;
   double Weight_nojac=0.;
   double Weight_hat=0.;
-//   double Weight_old=0.;
   
   vector <vector < double> > vx(dim);
   vector <vector < double> > vx_hat(dim);
-//   vector <vector < double> > vx_old(dim);
   
   for(int i=0;i<dim;i++){
     vx[i].reserve(max_size);
     vx_hat[i].reserve(max_size);
-//     vx_old[i].reserve(max_size);
   }
    
   vector< vector< double > > Rhs(2*dim+1);
@@ -394,22 +367,18 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   }
   vector< vector< int > > dofsVAR(2*dim+1); 
   
-  // algorithm parameters
-  double eps_pen 	= 1.;  // previous 1
-  bool   newton		= 0;
-  
   // ------------------------------------------------------------------------
   // Physical parameters
-  double rhof	 	= ml_prob.parameters.get<Fluid>("Fluid").get_density();            // ml_prob._fluid->get_density();
-  double rhos 		= ml_prob.parameters.get<Solid>("Solid").get_density();            // ml_prob._solid->get_density();
-  double mu_lame 	= ml_prob.parameters.get<Solid>("Solid").get_lame_shear_modulus(); // ml_prob._solid->get_lame_shear_modulus();
-  double lambda_lame 	= ml_prob.parameters.get<Solid>("Solid").get_lame_lambda();        // ml_prob._solid->get_lame_lambda();
+  double rhof	 	= ml_prob.parameters.get<Fluid>("Fluid").get_density();            
+  double rhos 		= ml_prob.parameters.get<Solid>("Solid").get_density();            
+  double mu_lame 	= ml_prob.parameters.get<Solid>("Solid").get_lame_shear_modulus(); 
+  double lambda_lame 	= ml_prob.parameters.get<Solid>("Solid").get_lame_lambda();        
   double mus		= mu_lame/rhof;
-  double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();   // ml_prob._fluid->get_IReynolds_number();
+  double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();   
   double lambda		= lambda_lame / rhof;
   double betafsi	= rhos / rhof;
   double betans		= 1.;
-  int    solid_model	= ml_prob.parameters.get<Solid>("Solid").get_physical_model();     // ml_prob._solid->get_physical_model();
+  int    solid_model	= ml_prob.parameters.get<Solid>("Solid").get_physical_model();     
 
   //physical quantity
   double Jnp1_hat;
@@ -440,14 +409,6 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   double _gravity[3]={0.,0.,0.};
 
   // -----------------------------------------------------------------
-
-  // time discretization algorithm paramters
-//   double dt = 1.; // my_nnlin_impl_sys.GetIntervalTime(); 
-  
-//   const double gamma = 0.5;
-//   const double gammaratio = (1.-gamma)/gamma;
-//   double _theta_ns=1.0;
-  
   // space discretization parameters
   unsigned order_ind2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));  
   unsigned end_ind2   = mymsh->GetEndIndex(order_ind2);
@@ -464,21 +425,15 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   //----------------------------------------------------------------------------------
   //variable-name handling
   const char varname[7][3] = {"DX","DY","DZ","U","V","W","P"};
-  //const char coordname[3][2] = {"X","Y","Z"};
   vector <unsigned> indexVAR(2*dim+1);
-  //vector <unsigned> indCOORD(dim);
   vector <unsigned> indVAR(2*dim+1);  
   vector <unsigned> SolType(2*dim+1);  
   
   for(unsigned ivar=0; ivar<dim; ivar++) {
-    //indCOORD[ivar]=ml_prob.GetIndex(&coordname[ivar][0]);
     indVAR[ivar]=ml_sol->GetIndex(&varname[ivar][0]);
     indVAR[ivar+dim]=ml_sol->GetIndex(&varname[ivar+3][0]);
-//     indVAR[ivar+2*dim+1]=ml_sol->GetIndex(&varname[ivar+7][0]);
-    
     SolType[ivar]=ml_sol->GetSolutionType(&varname[ivar][0]);
     SolType[ivar+dim]=ml_sol->GetSolutionType(&varname[ivar+3][0]);
-//     SolType[ivar+2*dim+1]=ml_sol->GetSolutionType(&varname[ivar+7][0]);
     indexVAR[ivar]=my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar][0]);
     indexVAR[ivar+dim]=my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar+3][0]);
   }
@@ -572,14 +527,11 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
     solidmark.resize(nve);
     phi.resize(nve);
     phi_hat.resize(nve);
-//     phi_old.resize(nve);
     gradphi.resize(nve*dim);
     gradphi_hat.resize(nve*dim);
-//     gradphi_old.resize(nve*dim);
         
     for(int i=0;i<dim;i++){
       vx[i].resize(nve);
-//       vx_old[i].resize(nve);
       vx_hat[i].resize(nve);
     }
     
@@ -596,14 +548,12 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
       for(int j=0; j<dim; j++) {
 	//Updated coordinates (Moving frame)
         vx[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + (*mysolution->_Sol[indVAR[j]])(inode_Metis);
-	//Old coordinates (Moving frame)
-//         vx_old[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis);
 	//Fixed coordinates (Reference frame)
 	vx_hat[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis);  
 	// displacement dofs
-	dofsVAR[j][i]= mylsyspde->GetKKDof(indVAR[j],indexVAR[j],inode); 
+	dofsVAR[j][i]= myLinEqSolver->GetKKDof(indVAR[j],indexVAR[j],inode); 
 	// velocity dofs
-	dofsVAR[j+dim][i]= mylsyspde->GetKKDof(indVAR[j+dim],indexVAR[j+dim],inode);   
+	dofsVAR[j+dim][i]= myLinEqSolver->GetKKDof(indVAR[j+dim],indexVAR[j+dim],inode);   
       }
     }
 
@@ -611,7 +561,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
     for (unsigned i=0;i<nve1;i++) {
       unsigned inode=(order_ind1<3)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
       metis_node1[i]=mymsh->GetMetisDof(inode,SolType[2*dim]);
-      dofsVAR[2*dim][i]=mylsyspde->GetKKDof(indVAR[2*dim],indexVAR[2*dim],inode);
+      dofsVAR[2*dim][i]=myLinEqSolver->GetKKDof(indVAR[2*dim],indexVAR[2*dim],inode);
     }
     // ----------------------------------------------------------------------------------------
        
@@ -621,7 +571,6 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 
 	// *** get Jacobian and test function and test function derivatives in the moving frame***
 	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
-// 	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_old,ig,Weight_old,phi_old,gradphi_old);
 	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
 	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
 	if (flag_mat==2) Weight_nojac = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
@@ -630,13 +579,10 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 	// displacement and velocity
 	for(int i=0; i<2*dim; i++){
 	  SolVAR[i]=0.;
-// 	  SolOldVAR[i]=0.;
 	  for(int j=0; j<dim; j++) {
 	    GradSolVAR[i][j]=0.;
-// 	    GradSolOldVAR[i][j]=0.;
 	    if(i<dim){
 	      GradSolhatVAR[i][j]=0.;
-// 	      GradSolOldhatVAR[i][j]=0.;
 	    }
 	  }
 	    
@@ -646,15 +592,10 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 	    double soli = (*mysolution->_Sol[indVAR[i]])(sol_dof);
 	    SolVAR[i]+=phi[inode]*soli;
 	      
-// 	    double soli_old = (*mysolution->_SolOld[indVAR[i]])(sol_dof);
-// 	    SolOldVAR[i]+=phi[inode]*soli_old;
-	      
 	    for(int j=0; j<dim; j++) {
 	      GradSolVAR[i][j]+=gradphi[inode*dim+j]*soli;
-// 	      GradSolOldVAR[i][j]+=gradphi[inode*dim+j]*soli_old;
 	      if(i<dim){ 
 		GradSolhatVAR[i][j]   +=gradphi_hat[inode*dim+j]*soli;
-// 		GradSolOldhatVAR[i][j]+=gradphi_hat[inode*dim+j]*soli_old;
 	      }
 	    }	      
 	  }
@@ -666,17 +607,6 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 	  double soli = (*mysolution->_Sol[indVAR[2*dim]])(metis_node1[inode]);
 	  SolVAR[2*dim]+=phi1[inode]*soli;
 	}
-  
-// 	// acceleration (solid only)  
-// 	if(flag_mat!=2){
-// 	  for(int i=2*dim+1; i<3*dim+1; i++){
-// 	    SolVAR[i]=0.;
-// 	    for (unsigned inode=0; inode<nve; inode++) {
-// 	      double soli = (*mysolution->_Sol[indVAR[i]])(metis_node2[inode]);
-// 	      SolVAR[i]+=phi[i]*soli;  
-// 	    }
-// 	  }
-// 	}
   
 	// ---------------------------------------------------------------------------
 	 	  
@@ -726,8 +656,6 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 	      // Residual Momentum equations 
 	      for(int idim=0; idim<dim; idim++) {
 		Rhs[indexVAR[dim+idim]][i]+= (
-// 					      -phi[i]*betans*SolVAR[dim+idim]*Weight
-// 					      +phi[i]*betans*SolOldVAR[dim+idim]*Weight_old
 					      -AdvaleVAR[idim]*Weight
 // 					      -0.5*div_vel*SolVAR[dim+idim]*phi[i]*(Weight)
 // 					      +div_w*SolVAR[dim+idim]*phi[i]*(Weight)
@@ -758,8 +686,6 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 		double div_stab = 0.*0.5*div_vel*((*fi))*((*fj))*(Weight);
 		
 		double div_ale = 0.*div_w*((*fi))*((*fj))*(Weight);
-
-//                 double Mass = ((*fi))*((*fj))*Weight;
 
 		for(int idim=0; idim<dim; idim++) {
 		  B[indexVAR[dim+idim]][indexVAR[dim+idim]][i*nve+j] += IRe*LapXweight + Adv1 + div_stab - div_ale;
@@ -836,7 +762,6 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 	    for(int i=0;i<dim;i++){
 	      for(int j=0;j<dim;j++){
 		e[i][j]=0.5*(GradSolhatVAR[i][j]+GradSolhatVAR[j][i]);
-// 		e_old[i][j]=0.5*(GradSolOldhatVAR[i][j]+GradSolOldhatVAR[j][i]);
 	      }
 	    }
 	    I_e=0;
@@ -949,13 +874,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 	      
 	      // Residual ALE equations
  	      for(int idim=0; idim<dim; idim++) {
-	        Rhs[indexVAR[idim]][i] += (
-					   -phi[i]*eps_pen*(
-// 							    +SolVAR[idim] - 0.*SolOldVAR[idim]
-							    -SolVAR[dim+idim]
-// 							    -dt*(1.-gamma)*SolOldVAR[dim+idim]
-							    )
-					   )*Weight_hat;
+	        Rhs[indexVAR[idim]][i] += (-phi[i]*(-SolVAR[dim+idim] ))*Weight_hat;
               }
               
               double CauchyDIR[3]={0.,0.,0.};
@@ -969,8 +888,6 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
               for(int idim=0; idim<dim; idim++) {
 	        Rhs[indexVAR[dim+idim]][i] += (
 					       phi[i]*_gravity[idim]*Weight_hat
-// 					       -phi[i]*betafsi*(SolVAR[dim+idim] - SolOldVAR[dim+idim])*Weight_hat*(1./gamma)
-// 					       +phi[i]*betafsi*SolVAR[2*dim+1+idim]*Weight_hat*gammaratio*dt
 					       -CauchyDIR[idim]*Weight
 					       +SolVAR[2*dim]*gradphi[i*dim+idim]*Weight
 					       );
@@ -985,14 +902,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
               const double *fj=&phi[0];
               // *** phi_j loop ***
               for (unsigned j=0; j<nve; j++,gradfj+=dim,fj++) {
-                /// Mass term
-                // (v_n+1,psi)
-                //gamma = 1 Backward Euler
-// 		for(int idim=0; idim<dim; idim++) {
-// 		  B[indexVAR[dim+idim]][indexVAR[dim+idim]][i*nve+j] += 0.*betafsi*(*(fi))*(*(fj))*Weight_hat*(1./gamma);
-// 		}
 
-                //Da collaudare il 3D
                 for (int icount=0; icount<dim; ++icount) {
                   for (int jcount=0; jcount<dim; ++jcount) {
                     tg_stiff_matrix[icount][jcount] = 0.;
@@ -1023,13 +933,13 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
  		  }
  		}
 
-                /// Kinematic equation v = du/dt
-                //   -_theta*dt*(v_n+1,eta)
+                /// Kinematic equation v = du/dt --> In the steady state we write \deltau^n+1 - \deltav^n+1 = v - 0
+                //   
 		for(int idim=0; idim<dim; idim++) {
-		  //   -_theta*dt*(v_n+1,eta)
-		  B[indexVAR[0+idim]][indexVAR[dim+idim]][i*nve+j] -= eps_pen*(*(fi))*(*(fj))*Weight_hat;
-		  // (u_n+1,eta)
-		  B[indexVAR[0+idim]][indexVAR[0+idim]][i*nve+j] += eps_pen*(*(fi))*(*(fj))*Weight_hat;
+		  // -(v_n+1,eta)
+		  B[indexVAR[0+idim]][indexVAR[dim+idim]][i*nve+j] -= (*(fi))*(*(fj))*Weight_hat;
+		  //  (u_n+1,eta)
+		  B[indexVAR[0+idim]][indexVAR[0+idim]][i*nve+j] += (*(fi))*(*(fj))*Weight_hat;
 		}
 	      }
             }
