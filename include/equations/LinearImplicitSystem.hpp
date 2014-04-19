@@ -160,7 +160,7 @@ protected:
   void ProlongatorSol(unsigned gridf);
   
   /** Create the Prolongator Operator in order to get the coarser matrix for the Algebraic Multigrid Solver */ 
-  virtual void BuildProlongatorMatrix(unsigned gridf, const char pdename[]);
+  virtual void BuildProlongatorMatrix(unsigned gridf);
     
   int _npre;
   

@@ -2,8 +2,6 @@
 #define FEMTTU_VERSION_MAJOR @FEMTTU_VERSION_MAJOR@
 #define FEMTTU_VERSION_MINOR @FEMTTU_VERSION_MINOR@
 
-#cmakedefine DEBUG
-
 //MPI library
 
 #cmakedefine HAVE_MPI

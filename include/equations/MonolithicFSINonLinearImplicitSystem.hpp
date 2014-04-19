@@ -62,7 +62,7 @@ protected:
                  const unsigned &linear_iteration, const bool &full_cycle);
  
  /** Create the Prolongator and Restrictor Operators for the Algebraic Multigrid Solver */ 
- void BuildProlongatorMatrix(unsigned gridf, const char pdename[]);
+ void BuildProlongatorMatrix(unsigned gridf);
   
 private:
  

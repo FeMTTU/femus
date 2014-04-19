@@ -24,13 +24,11 @@
 #include "Solution.hpp"
 #include "Parameters.hpp"
 #include "ParallelObject.hpp"
-
 #include <vector>
 #include <map>
 
 
 namespace femus {
-
 
 using std::map;
 
@@ -45,17 +43,24 @@ typedef double (*initfunc) (const double &x, const double &y, const double &z);
 * This class is a black box container to handle multilevel problems.
 */
 
-class MultiLevelProblem : public ParallelObject {
+class MultiLevelProblem {
 
-private:
-  vector < map <unsigned,bool> > index;
-  unsigned short _gridn, _gridr;
-  
 public:  
+
+  /** Constructor */
+  MultiLevelProblem(MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
+
+  /** Destructor */
+  ~MultiLevelProblem() {};
+  
   /** Multilevel solution pointer */
   MultiLevelSolution *_ml_sol;
+  
   /** Multilevel mesh pointer */
   MultiLevelMesh *_ml_msh;
+  
+  /** Data structure holding arbitrary parameters. */
+  Parameters parameters;
   
    /** Data structure holding the systems. */
   std::map<std::string, System*> _systems;
@@ -127,8 +132,7 @@ public:
    * @returns a writeable referene to the system number \p num.
    */
   System & get_system (const unsigned int num);
-  
-  
+    
   /** @returns the number of equation systems. */
   unsigned int n_systems() const;
   
@@ -137,21 +141,25 @@ public:
   
   /** init the system pde structures */
   void init();
+  
+  /** Get the total number of grid, both totally refined and partial refined for DomainDecomposition */
+  const unsigned GetNumberOfGrid() const {return _gridn; };
+  
+  /** Get the number of grid totally refined; it is a subset of _gridn */
+  const unsigned GetNumberOfGridTotallyRefined() const {return _gridr; };
 
-  /** Data structure holding arbitrary parameters. */
-  Parameters parameters;
-
-  /** Constructor */
-  MultiLevelProblem( MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
-
-  /** Destructor */
-  ~MultiLevelProblem(){};
-
+  /** This function is not supposed to be placed here!!! */
   int ComputeBdIntegral(const char pdename[],const char var_name[], const unsigned & kel, 
                          const unsigned & jface, unsigned level, unsigned dir);
-  unsigned GetNumberOfGrid();
-  unsigned GetNumberOfGridTotallyRefined();
+  
 
+private:
+    
+  vector < map <unsigned,bool> > index;
+  
+  unsigned short _gridn;
+  
+  unsigned short _gridr;
   
 };
 

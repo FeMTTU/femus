@@ -74,7 +74,7 @@ void LinearImplicitSystem::CreateSystemPDEStructure() {
     }  
     
     for (unsigned ig=1; ig<_gridn; ig++) {
-      BuildProlongatorMatrix(ig,_sys_name.c_str());
+      BuildProlongatorMatrix(ig);
     }
 }
 
@@ -118,7 +118,7 @@ void LinearImplicitSystem::solve() {
       /// Be careful !!!! adesso stiamo usando _sys_number invece che ipde, da togliere al + presto
       _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix);  
       
-#ifdef DEBUG       
+#ifndef NDEBUG       
       std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
  
@@ -139,7 +139,7 @@ void LinearImplicitSystem::solve() {
 	  start_time = clock();
 	  Restrictor(ig, igridn, nonlinear_cycle, _n_linear_iterations, full_cycle);
 	  
-#ifdef DEBUG
+#ifndef NDEBUG 
 	  std::cout << "Grid: " << ig << "-->" << ig-1 << "  RESTRICTION TIME:\t       "<< std::setw(11) << std::setprecision(6) << std::fixed
 	  << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
@@ -155,7 +155,7 @@ void LinearImplicitSystem::solve() {
  	  start_time=clock();
  	  Prolongator(ig);
 
-#ifdef DEBUG 
+#ifndef NDEBUG 
  	  std::cout << "Grid: " << ig-1 << "-->" << ig << "  PROLUNGATION TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
  	  << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif 
@@ -268,10 +268,8 @@ void LinearImplicitSystem::ProlongatorSol(unsigned gridf) {
 // This is a virtual function overloaded in the class MonolithicFSINonLinearImplicitSystem.
 //---------------------------------------------------------------------------------------------------
 
-void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pdename[]) {
+void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
 
-  unsigned ipde = _sys_number;   //_equation_systems.GetPdeIndex(pdename);
-      
   if (gridf<1) {
     std::cout<<"Error! In function \"BuildProlongatorMatrix\" argument less then 1"<<std::endl;
     exit(0);

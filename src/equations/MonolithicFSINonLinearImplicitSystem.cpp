@@ -91,10 +91,8 @@ void MonolithicFSINonLinearImplicitSystem::Restrictor(const unsigned &gridf, con
 // This routine generates the matrix for the projection of the FE matrix to finer grids 
 //---------------------------------------------------------------------------------------------------
 
-void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf, const char pdename[]) {
+void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
 
-  unsigned ipde = _sys_number;   //_equation_systems.GetPdeIndex(pdename);
-       
   if (gridf<1) {
     std::cout<<"Error! In function \"BuildProlongatorMatrix\" argument less then 1"<<std::endl;
     exit(0);
