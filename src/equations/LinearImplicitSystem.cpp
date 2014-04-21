@@ -57,12 +57,7 @@ void LinearImplicitSystem::clear() {
 }
 
 void LinearImplicitSystem::init() {
-  CreateSystemPDEStructure();
-}
-
-//-----------------------------------------------------------------
-
-void LinearImplicitSystem::CreateSystemPDEStructure() {
+  
     _LinSolver.resize(_gridn);
     for(unsigned i=0;i<_gridn;i++){
       _LinSolver[i]=LinearEquationSolver::build(i,_msh[i]).release();

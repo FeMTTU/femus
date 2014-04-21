@@ -174,13 +174,6 @@ protected:
   
   vector <unsigned> _VankaIndex;
   
- 
-  
-private:
-
-  /** Initialize the PDE system structure */
-  void CreateSystemPDEStructure();
-
 };
 
 inline void LinearImplicitSystem::SetMatrixOption(MatOption op, bool flag)
