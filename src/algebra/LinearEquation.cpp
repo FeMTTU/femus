@@ -80,12 +80,12 @@ void LinearEquation::AddStabilization(const bool stab, const double compressibil
 //--------------------------------------------------------------------------------
 double LinearEquation::GetCompressibility() {
   return _compressibility;
-};
+}
 
 //--------------------------------------------------------------------------------
 bool LinearEquation::GetStabilization() {
   return _stabilization;
-};
+}
 
 //--------------------------------------------------------------------------------
 unsigned LinearEquation::GetIndex(const char name[]) {
@@ -100,8 +100,18 @@ unsigned LinearEquation::GetIndex(const char name[]) {
   return index;
 }
 
+
+unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol, 
+				  const unsigned &idof_gmt) const {
+  
+   unsigned soltype =  _SolType[index_sol]; 
+   unsigned isubdom = (soltype<3)?_msh->npart[idof_gmt]:(_msh->epart[idof_gmt % _msh->GetElementNumber()]);
+   unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);   
+   return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
+}
+
 //--------------------------------------------------------------------------------
-int LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  vector <int> &SolType_other,  
+void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  vector <int> &SolType_other,  
 		     const vector <char*> &SolName_other, vector <NumericVector*> *Bdc_other, 
 		     const unsigned &other_gridr, const unsigned &other_gridn) {
   _SolPdeIndex=SolPdeIndex_other;
@@ -201,7 +211,7 @@ int LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  v
     _CC = SparseMatrix::build().release();
     _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
   }
-  return 1;
+
 }
 
 //--------------------------------------------------------------------------------
