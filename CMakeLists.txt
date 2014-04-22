@@ -57,6 +57,15 @@ ENDIF(MPI_FOUND)
   SET(HAVE_HDF5 1)
 #ENDIF(HDF5_FOUND)
 
+# Find Libmesh (optional)
+##FIND_PACKAGE(LibMesh)
+SET (LIBMESH_FOUND 1)
+SET (HAVE_LIBMESH 0)
+IF(LIBMESH_FOUND)
+  SET(HAVE_LIBMESH 1)
+ENDIF(LIBMESH_FOUND)
+
+
 # configure a header file to pass some of the CMake settings
 # to the source code
 CONFIGURE_FILE(

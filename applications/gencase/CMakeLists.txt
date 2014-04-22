@@ -16,6 +16,7 @@ ${CMAKE_PROJECT_DIR}GenCase.cpp
 # libmesh_CPPFLAGS := $(shell ${FM_LM_DIR}/bin/libmesh-config --cppflags)
 # libmesh_LIBS     := $(shell ${FM_LM_DIR}/bin/libmesh-config --libs)
 
+IF(LIBMESH_FOUND)
 execute_process(COMMAND $ENV{FM_BASEPATH_TO_LM}/$ENV{FM_LM_FOLDER}/bin/libmesh-config --cppflags
                 COMMAND tr "\n" " " OUTPUT_VARIABLE LIBMESH_CPP)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LIBMESH_CPP}")
@@ -25,6 +26,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LIBMESH_INC}")
 execute_process(COMMAND $ENV{FM_BASEPATH_TO_LM}/$ENV{FM_LM_FOLDER}/bin/libmesh-config --libs
                 COMMAND tr "\n" " " OUTPUT_VARIABLE LIBMESH_LIBS)
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LIBMESH_LIBS}")
+ENDIF(LIBMESH_FOUND)
 
 
 TARGET_LINK_LIBRARIES(${THIS_APPLICATION} femlib)

@@ -3,17 +3,9 @@
 // C++
 #include <sstream>
 #include <cassert>
-
-// LibMesh
-#include "libmesh/enum_elem_type.h"
-#include "libmesh/boundary_mesh.h"
-#include "libmesh/mesh.h"
-#include "libmesh/mesh_refinement.h"
-#include "libmesh/elem.h"
-#include "libmesh/mesh_generation.h"
-#include "libmesh/boundary_info.h"
-
+#include <cmath>
 // FEMuS
+#include "FEMTTUConfig.h"
 #include "FemusDefault.hpp"
 
 #include "Domain.hpp"
@@ -24,6 +16,17 @@
 #include "IO.hpp"
 #include "GeomEl.hpp"
 #include "FEElemBase.hpp"
+
+// LibMesh
+#ifdef HAVE_LIBMESH
+#include "libmesh/enum_elem_type.h"
+#include "libmesh/boundary_mesh.h"
+#include "libmesh/mesh.h"
+#include "libmesh/mesh_refinement.h"
+#include "libmesh/elem.h"
+#include "libmesh/mesh_generation.h"
+#include "libmesh/boundary_info.h"
+#endif
 
 
 namespace femus {
@@ -65,7 +68,9 @@ GenCase::~GenCase() {
 
 // =======================================================
 void GenCase::GenerateCase()   {
-
+#ifdef HAVE_LIBMESH //i am putting this inside because there are no libmesh dependent arguments
+  
+  
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t start_timeA=std::clock();
 #endif
@@ -102,9 +107,13 @@ void GenCase::GenerateCase()   {
     std::cout << " +*+*+* Total time ="<< double(end_timeC- start_timeA) / CLOCKS_PER_SEC << std::endl;
 #endif
 
+    
+#endif //end have_libmesh    
     return;
 }
 
+
+#ifdef HAVE_LIBMESH
 //===============================================================================
 //================= LIBMESH coarse Mesh OBJECT from FILE or FUNCTION ============
 //===============================================================================
@@ -187,8 +196,9 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse)  {
 
     return;
 }
+#endif //end have_libmesh
 
-
+#ifdef HAVE_LIBMESH
 //==============================================================================
 //=============== GENERATE all the LEVELS for the LIBMESH Mesh OBJECT ==========
 //==============================================================================
@@ -220,8 +230,10 @@ void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) {
 
     return;
 }
+#endif //end have_libmesh
 
 
+#ifdef HAVE_LIBMESH
 //==============================================================================
 //=============== GENERATE BOUNDARY MESH =======================================
 //==============================================================================
@@ -243,7 +255,9 @@ void GenCase::GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh
 
     return;
 }
+#endif //end have_libmesh
 
+#ifdef HAVE_LIBMESH
 //==============================================================================
 //=============== GRAB MESH INFORMATION from LIBMESH (only proc0) ==============
 //==============================================================================
@@ -260,7 +274,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
         libMesh::Mesh* msht,
         libMesh::Mesh* msh0 ) {
 
-    if (libMesh::global_processor_id() == 0)  {  //serial function
+    if (_iproc == 0)  {  //serial function
 
 //   msht contains ALL LEVELS
 //  msh0 contains THE COARSE
@@ -485,6 +499,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
     } //end proc==0
     return;
 }
+#endif //end have_libmesh
 
 
 // =======================================================
@@ -565,7 +580,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
 //==============================================================================
 void GenCase::CreateStructuresLevSubd() {
 
-    if (libMesh::global_processor_id() == 0)   {  //serial function
+    if (_iproc == 0)   {  //serial function
 //================================================
 // AT THIS POINT ALL THE LIBMESH CALLS are over, we are only FEMuS
 //=====================================
