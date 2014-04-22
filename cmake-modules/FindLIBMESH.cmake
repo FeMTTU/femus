@@ -14,8 +14,10 @@ find_package(PkgConfig QUIET)
 
 set(LIBMESH_DIR LIBMESH_DIR-NOTFOUND CACHE PATH "Libmesh installation directory")
 
+set(LIB_FOLDER_NAME lib64/)  #this is system-dependent
+
 if(LIBMESH_DIR)
-  set(ENV{PKG_CONFIG_PATH} ${LIBMESH_DIR}/lib/pkgconfig)
+  set(ENV{PKG_CONFIG_PATH} ${LIBMESH_DIR}/${LIB_FOLDER_NAME}/pkgconfig)
 endif()
 
 pkg_check_modules(PC_LIBMESH QUIET libmesh-${METHOD})
@@ -41,7 +43,7 @@ find_path(LIBMESH_INCLUDE_DIR libmesh/libmesh.h
 
 find_library(LIBMESH_LIBRARY
   NAMES mesh_${METHOD} libmesh
-  HINTS ${PC_LIBMESH_LIBDIR} ${PC_LIBMESH_LIBARY_DIRS}
+  HINTS ${PC_LIBMESH_LIBDIR} ${PC_LIBMESH_LIBRARY_DIRS}
 )
 
 set(LIBMESH_LIBRARIES ${LIBMESH_LIBRARY})
