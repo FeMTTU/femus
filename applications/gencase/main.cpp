@@ -1,10 +1,8 @@
 // C++
 #include <iostream>
 
-// Libmesh
-#include "libmesh/libmesh.h" //for libmeshinit
-
 // FEMuS
+#include "FEMTTUConfig.h"
 #include "FemusDefault.hpp"
 #include "Files.hpp"
 #include "GeomEl.hpp"
@@ -25,6 +23,11 @@
 #include "RunTimeMap.hpp"
 #include "TimeLoop.hpp"
 #include "CmdLine.hpp"
+
+// Libmesh
+#ifdef HAVE_LIBMESH
+#include "libmesh/libmesh.h" //for libmeshinit
+#endif
 
 using namespace femus;
 // ==========================================
@@ -64,7 +67,11 @@ using namespace femus;
 
 int main(int argc, char** argv) {
 
+#ifdef HAVE_LIBMESH  
   LibMeshInit init(argc, argv);   // Initialize libMesh
+#else
+  std:: cout << "Cannot run gencase without libmesh right now" << std::endl; abort();  
+#endif
 
   CmdLine::parse(argc,argv);
   std::string chosen_app = CmdLine::get("--app"); 
