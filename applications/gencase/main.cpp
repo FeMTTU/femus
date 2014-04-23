@@ -8,8 +8,6 @@
 #include "GeomEl.hpp"
 #include "Box.hpp"
 
-#include "GenCase.hpp"
-
 #include "FEElemBase.hpp"
 #include "FEQuad4.hpp"
 #include "FEQuad9.hpp"
@@ -29,7 +27,11 @@
 #include "libmesh/libmesh.h" //for libmeshinit
 #endif
 
+//application
+#include "GenCase.hpp"
+
 using namespace femus;
+
 // ==========================================
 //         GENCASE
 // ==========================================

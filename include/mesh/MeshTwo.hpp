@@ -31,7 +31,7 @@ class Mesh  {
 public:
   
     const Files& _files; 
-    RunTimeMap<double>  _mesh_rtmap;
+    RunTimeMap<double> _mesh_rtmap;
     uint _meshVB;          /// Number of FEM "manifold" Families (VB)  F
 
 // ===== ABSTRACT GEOMEL(S) =====
