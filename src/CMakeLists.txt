@@ -1,8 +1,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-PROJECT(femlib)
+PROJECT(femus)
 
-SET(femlib_src 
+SET(femus_src 
 algebra/DenseMatrixBase.cpp
 algebra/DenseMatrix.cpp
 algebra/DenseSubmatrix.cpp
@@ -88,5 +88,5 @@ IF (NOT LIBRARY_OUTPUT_PATH)
   MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH)
 ENDIF (NOT LIBRARY_OUTPUT_PATH)
 
-ADD_LIBRARY(${PROJECT_NAME} SHARED ${femlib_src})
+ADD_LIBRARY(${PROJECT_NAME} SHARED ${femus_src})
 
