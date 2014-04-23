@@ -38,7 +38,7 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   _mg_type(F_CYCLE),
   _npre(1),
   _npost(1),
-  _VankaIsSet(false),
+  //_VankaIsSet(false),
   _NSchurVar(1),
   _Schur(false),
   _SmootherType(smoother_type)
@@ -139,7 +139,7 @@ void LinearImplicitSystem::solve() {
 	  Restrictor(ig, igridn, nonlinear_cycle, _n_linear_iterations, full_cycle);
 	  
 #ifndef NDEBUG 
-	  std::cout << "Grid: " << ig << "-->" << ig-1 << "  RESTRICTION TIME:\t       "<< std::setw(11) << std::setprecision(6) << std::fixed
+	  std::cout << "Grid: " << ig << "-->" << ig-1 << "   RESTRICTION TIME:\t       "<< std::setw(11) << std::setprecision(6) << std::fixed
 	  << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
 	}
@@ -187,7 +187,7 @@ void LinearImplicitSystem::solve() {
 					    _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
    
 //       std::cout << std::endl;
-//       std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
+//       std::cout <<"GRID: "<<igridn-1<< "\t    EAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
 
     // ==============  Solution Prolongation ==============
     if (igridn < _gridn) {
@@ -356,13 +356,13 @@ void LinearImplicitSystem::ClearVankaIndex() {
 }
 
 
-void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
-  if (mgsmoother == VANKA_SMOOTHER) {
-    _VankaIsSet = true;
-  } else {
-    _VankaIsSet = false;
-  } 
-}
+// void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
+//   if (mgsmoother == VANKA_SMOOTHER) {
+//     _VankaIsSet = true;
+//   } else {
+//     _VankaIsSet = false;
+//   } 
+// }
 
 
 void LinearImplicitSystem::SetDimVankaBlock(unsigned const dim_vanka_block) {
