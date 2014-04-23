@@ -31,8 +31,7 @@ class Mesh  {
 public:
   
     const Files& _files; 
-    RunTimeMap<double> _mesh_rtmap;
-    uint _meshVB;          /// Number of FEM "manifold" Families (VB)  F
+    const RunTimeMap<double> & _mesh_rtmap;
 
 // ===== ABSTRACT GEOMEL(S) =====
     GeomEl    _GeomEl;
@@ -109,13 +108,12 @@ public:
     inline const double get_Lref() const {return _Lref;}
     inline const uint   get_dim()  const {return _dim;}
     
+    std::string _mesh_file;    //mesh file name from the mesh generator
+
 protected:
 
     const double _Lref;          ///Reference length for non-dimensionalization
-    const uint _dim;               ///< spatial dimension
     
-    std::string _mesh_file;    //mesh file name from the mesh generator
-
     // HDF5 FIELDS ===============
     std::string _nodes_name; //name for the HDF5 dataset
     std::string _elems_name;   //name for the HDF5 dataset
@@ -145,6 +143,9 @@ protected:
     
     std::vector< std::pair<int,int> > _el_fm_libm_b;
 
+private:   
+    const uint _dim;               ///< spatial dimension
+    
 
  };
 

@@ -5,9 +5,7 @@
 #include <algorithm>
 
 #include "Domain.hpp"
-
 #include "Typedefs.hpp"
-
 #include "Files.hpp"
 #include "IO.hpp"
 #include "GeomEl.hpp"
@@ -34,6 +32,7 @@ Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const doubl
 	   
     _iproc    = paral::get_rank();
     _NoSubdom = paral::get_size();   
+//     _NoLevels =      map_in.get("nolevels");  //this one does not enter in safe_base, line 89...
     _NoLevels = _mesh_rtmap.get("nolevels");
     
     const uint mesh_ord = (uint) map_in.get("mesh_ord");
@@ -193,7 +192,7 @@ if (_dim != topdata[0] ) {std::cout << "Mesh::read_c. Mismatch: the mesh dimensi
 //Also, "\n" seems to have no effect, "<< std::endl" must be used
 //This fact doesn't seem to be related to PARALLEL processes that abort sooner than the others
 
-if ( VB !=  topdata[1] )  {std::cout << "Mesh::read_c. Mismatch: the number of integration dimensions is " << _meshVB
+if ( VB !=  topdata[1] )  {std::cout << "Mesh::read_c. Mismatch: the number of integration dimensions is " << topdata[1]
                                    << " while we have VB= " << VB 
                                    << ". Re-run gencase and your application appropriately " << std::endl;abort(); }
 
