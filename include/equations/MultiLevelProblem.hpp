@@ -24,6 +24,7 @@
 #include "Solution.hpp"
 #include "Parameters.hpp"
 #include "ParallelObject.hpp"
+#include "MgSmootherEnum.hpp"
 #include <vector>
 #include <map>
 
@@ -75,7 +76,7 @@ public:
   virtual System & add_system (const std::string& system_type, const std::string& name);
 
   /** Add the system named \p name to the systems array. */
-  template <typename T_sys> T_sys & add_system (const std::string& name);
+  template <typename T_sys> T_sys & add_system (const std::string& name, const MgSmoother & smoother_type = GMRES_SMOOTHER);
   
   /**
    * @returns a constant reference to the system named \p name.
@@ -165,13 +166,13 @@ private:
 
 template <typename T_sys>
 inline
-T_sys & MultiLevelProblem::add_system (const std::string& name)
+T_sys & MultiLevelProblem::add_system (const std::string& name,const MgSmoother & smoother_type )
 {
   T_sys* ptr = NULL;
 
   if (!_systems.count(name))
     {
-      ptr = new T_sys(*this, name, this->n_systems());
+      ptr = new T_sys(*this, name, this->n_systems(),smoother_type);
 
       _systems.insert (std::make_pair(name, ptr));
 

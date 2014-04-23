@@ -36,7 +36,7 @@ class ExplicitSystem : public System {
 public:
   
   /** Constructor.  Optionally initializes required data structures. */
-  ExplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number);
+  ExplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number,const MgSmoother & smoother_type);
 
   virtual ~ExplicitSystem();
   

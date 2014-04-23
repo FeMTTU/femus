@@ -27,8 +27,8 @@ namespace femus {
 // NonLinearImplicitSystem implementation
 NonLinearImplicitSystem::NonLinearImplicitSystem (MultiLevelProblem& ml_probl,
 				const std::string& name_in,
-				const unsigned int number_in) :
-  LinearImplicitSystem (ml_probl, name_in, number_in),
+				const unsigned int number_in, const MgSmoother & smoother_type) :
+  LinearImplicitSystem (ml_probl, name_in, number_in, smoother_type),
   _n_nonlinear_iterations   (0),
   _n_max_nonlinear_iterations (15),
   _final_nonlinear_residual (1.e20),
@@ -97,7 +97,8 @@ void NonLinearImplicitSystem::solve() {
 	  
 	  // ============== Presmoothing ============== 
 	  for (unsigned k = 0; k < _npre; k++) {
-	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!k));
+// 	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!k));
+	    solver_info = _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k));
 	  }
 	  // ============== Non-Standard Multigrid Restriction ==============
 	  start_time = clock();
@@ -108,7 +109,7 @@ void NonLinearImplicitSystem::solve() {
 	}
         // ============== Coarse Direct Solver ==============
  	//solver_info = ( _VankaIsSet ) ? _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur) : _LinSolver[0]->solve(ksp_clean);
- 	solver_info = _LinSolver[0]->solve(ksp_clean);
+ 	solver_info = _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur,ksp_clean);
              
  	for (unsigned ig = 1; ig < igridn; ig++) {
  	  
@@ -120,7 +121,8 @@ void NonLinearImplicitSystem::solve() {
 #endif
  	  // ============== PostSmoothing ==============    
  	  for (unsigned k = 0; k < _npost; k++) {
-	    solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!_npre)*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!_npre)*(!k));
+// 	    solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!_npre)*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!_npre)*(!k));
+	    solver_info =  _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!_npre)*(!k));
 	  }
  	}
  	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
@@ -130,10 +132,10 @@ void NonLinearImplicitSystem::solve() {
  	
  	_final_linear_residual = solver_info.second;
 	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
- 	
-	if(_final_linear_residual < _absolute_convergence_tolerance) 
-	break;
-	
+ 	if(_SmootherType != VANKA_SMOOTHER){
+	  if(_final_linear_residual < _absolute_convergence_tolerance) 
+	  break;
+	}
       }
       std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< std::setw(11) << std::setprecision(6) << std::scientific << _final_linear_residual << std::endl;
       // ============== Update Solution ( ig = igridn )==============

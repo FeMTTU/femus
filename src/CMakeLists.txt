@@ -3,6 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(femlib)
 
 SET(femlib_src 
+algebra/AsmPetscLinearEquationSolver.cpp
 algebra/DenseMatrixBase.cpp
 algebra/DenseMatrix.cpp
 algebra/DenseSubmatrix.cpp
@@ -12,13 +13,14 @@ algebra/LinearEquation.cpp
 algebra/LinearEquationSolver.cpp
 algebra/LinearSolverM.cpp
 algebra/NumericVector.cpp
-algebra/PetscLinearEquationSolver.cpp
+algebra/GmresPetscLinearEquationSolver.cpp
 algebra/PetscLinearSolverM.cpp
 algebra/PetscMatrix.cpp
 algebra/PetscPreconditioner.cpp
 algebra/PetscVector.cpp
 algebra/Preconditioner.cpp
 algebra/SparseMatrix.cpp
+algebra/VankaPetscLinearEquationSolver.cpp
 equations/EqnBase.cpp
 equations/EquationsMap.cpp
 equations/ExplicitSystem.cpp

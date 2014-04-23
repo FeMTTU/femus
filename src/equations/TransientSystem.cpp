@@ -24,7 +24,6 @@
 #include "NumericVector.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 
-
 namespace femus {
 
 
@@ -34,9 +33,9 @@ namespace femus {
 template <class Base>
 TransientSystem<Base>::TransientSystem (MultiLevelProblem& ml_probl,
 					const std::string& name_in,
-					const unsigned int number_in) :
+					const unsigned int number_in,const MgSmoother & smoother_type) :
 
-  Base (ml_probl, name_in, number_in),
+  Base (ml_probl, name_in, number_in,smoother_type),
   _is_selective_timestep(false),
   _time(0.),
   _time_step(0),

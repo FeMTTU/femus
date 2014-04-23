@@ -30,15 +30,15 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 int main(int argc,char **args) {
 
-  bool linear=1;
-  bool vanka=1;
-  if(argc >= 2) {
-    if( strcmp("vanka",args[1])) vanka=0;
-  }
-  else {
-    cout << "No input arguments!" << endl;
-    exit(0);
-  }
+//   bool linear=1;
+//   bool vanka=1;
+//   if(argc >= 2) {
+//     if( strcmp("vanka",args[1])) vanka=0;
+//   }
+//   else {
+//     cout << "No input arguments!" << endl;
+//     exit(0);
+//   }
   
   /// Init Petsc-MPI communicator
   FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
@@ -103,7 +103,7 @@ int main(int argc,char **args) {
    
   //create systems
   // add the system Navier-Stokes to the MultiLevel problem
-  NonLinearImplicitSystem & system1 = ml_prob.add_system<NonLinearImplicitSystem> ("Navier-Stokes");
+  NonLinearImplicitSystem & system1 = ml_prob.add_system<NonLinearImplicitSystem> ("Navier-Stokes",ASM_SMOOTHER);
   system1.AddSolutionToSytemPDE("U");
   system1.AddSolutionToSytemPDE("V");
   system1.AddSolutionToSytemPDE("P");
@@ -125,21 +125,21 @@ int main(int argc,char **args) {
   system1.SetNumberPreSmoothingStep(1);
   system1.SetNumberPostSmoothingStep(1);
  
-  if(!vanka){
-    system1.SetMgSmoother(GMRES_SMOOTHER);
-    system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
-  }
-  else{
+//   if(!vanka){
+//     system1.SetMgSmoother(GMRES_SMOOTHER);
+//     system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
+//   }
+//   else{
     system1.SetMgSmoother(VANKA_SMOOTHER);
     system1.AddStabilization(true);
     system1.ClearVankaIndex();
     system1.AddVariableToVankaIndex("All");
     system1.SetSolverFineGrids(GMRES);
-    system1.SetPreconditionerFineGrids(ASM_PRECOND); 
+    system1.SetPreconditionerFineGrids(ILU_PRECOND); 
     system1.SetVankaSchurOptions(false,1);
     system1.SetTolerances(1.e-12,1.e-20,1.e+50,2);
     system1.SetDimVankaBlock(4);                
-  }
+  //}
   
   // Solving Navier-Stokes system
   std::cout << std::endl;
@@ -159,21 +159,21 @@ int main(int argc,char **args) {
   system2.SetDirichletBCsHandling(PENALTY); 
   //system2.SetDirichletBCsHandling(ELIMINATION); 
    
-  if(!vanka){
+ //if(!vanka){
     system2.SetPreconditionerFineGrids(ILU_PRECOND);
     system2.SetMgSmoother(GMRES_SMOOTHER);
-  }
-  else{
-    system2.SetMgSmoother(VANKA_SMOOTHER);
-    system2.AddStabilization(true);
-    system2.ClearVankaIndex();
-    system2.AddVariableToVankaIndex("T");
-    system2.SetSolverFineGrids(GMRES);
-    system2.SetTolerances(1.e-12,1.e-20,1.e+50,1);
-    system2.SetPreconditionerFineGrids(ASM_PRECOND); 
-    system2.SetVankaSchurOptions(false,1);
-    system2.SetDimVankaBlock(4);                
-  }
+ // }
+//   else{
+//     system2.SetMgSmoother(VANKA_SMOOTHER);
+//     system2.AddStabilization(true);
+//     system2.ClearVankaIndex();
+//     system2.AddVariableToVankaIndex("T");
+//     system2.SetSolverFineGrids(GMRES);
+//     system2.SetTolerances(1.e-12,1.e-20,1.e+50,1);
+//     system2.SetPreconditionerFineGrids(ASM_PRECOND); 
+//     system2.SetVankaSchurOptions(false,1);
+//     system2.SetDimVankaBlock(4);                
+//   }
   
   // Solving Temperature system
   std::cout << std::endl;
