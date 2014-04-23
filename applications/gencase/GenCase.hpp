@@ -25,11 +25,7 @@
 namespace femus {
 
 // Forwarding classes
-class Files;
-class GeomEl;
-class Domain;
 class FEElemBase;
-
 
 
 class GenCase : public Mesh {

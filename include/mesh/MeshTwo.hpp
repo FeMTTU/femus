@@ -30,41 +30,6 @@ class Mesh  {
 
 public:
   
-    const Files& _files; 
-    const RunTimeMap<double> & _mesh_rtmap;
-
-// ===== ABSTRACT GEOMEL(S) =====
-    GeomEl    _GeomEl;
-    const uint _n_GeomEl;         //number of geom elem types
-    uint*      _type_FEM;         //just for check
-    uint _elnodes[VB][QL];
-
-// ====== DOMAIN SHAPE (TODO optional => pointer) ----- //if I put it as reference I'd have to initialize it
-    Domain* _domain;      //TODO You must remember to ALLOCATE this POINTER BEFORE USING IT!
-    Domain* GetDomain() const;
-    void    SetDomain(Domain* );
-    void TransformElemNodesToRef(const uint vb,const double* xx_qnds,double* refbox_xyz) const;
-
-// ==== PARALLEL ===
-    uint _iproc;       /// current subdomain
-    uint _NoSubdom;    /// Number of subdomains (subdomain P)
-
-// ==== MULTIGRID ====
-    uint _NoLevels;          /// Number of Levels (L)
-
-// ==== ELEMENTS ====
-    uint** _n_elements_vb_lev;        /// Number of Elements        [VB][L]                                     
-    int**  _off_el;            /// offset of element numbers [VB][L+P*_NoLevels]         
-    uint** _el_map;            /// Connectivity map         [VB][L+P*_NoLevels]
-    int**  _el_bdry_to_vol;
-
-// ===== NODES ======
-    uint*   _NoNodesXLev;            ///VOLUME, at the EXTENDED LEVELS
-    double* _xyz;                    ///< node coordinates
-    uint**  _Qnode_lev_Qnode_fine;   ///ONLY USED FOR THE EQUATION /// FROM DOF TO NODE: Q or L dofs by using an add aux level [_NoLevels+1][NoNodes[L]] //ONLY VOLUME  //NO PROC info, these are DOFS in the "SERIALIZED NUMBERING"
-    int**  _Qnode_fine_Qnode_lev;   ///Un nodo fine puo' o non appartenere ad un certo livello... quindi devo continuare a mantenere i -1, altrimenti dovrei fare un search che fa perdere tempo
-    int**   _off_nd;                 ///ONLY USED FOR THE EQUATION /// FROM DOF TO NODE: offsets for dofs  [QL][L+P*_NoLevels]                     //ONLY VOLUME
-                                     // on the fine node numbering, the nodes corresponding to linear dofs are numbered FIRST... or not?
 
 //===== Constructors/ Destructor ===========
      Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref);
@@ -96,7 +61,48 @@ public:
     void ComputeNodeOffsetsBySubdLevel();
     void ComputeMaxElXNode();
     void ComputeNodeMapExtLevels();
-  
+
+//attributes    ************************************
+    
+    const Files& _files; 
+    const RunTimeMap<double> & _mesh_rtmap;
+
+// ===== ABSTRACT GEOMEL(S) =====
+    GeomEl    _GeomEl;
+    const uint _n_GeomEl;         //number of geom elem types
+    uint*      _type_FEM;         //just for check
+    uint _elnodes[VB][QL];
+    const uint _dim;               ///< spatial dimension
+    const double _Lref;          ///Reference length for non-dimensionalization
+    
+
+// ====== DOMAIN SHAPE (TODO optional => pointer) ----- //if I put it as reference I'd have to initialize it
+    Domain* _domain;      //TODO You must remember to ALLOCATE this POINTER BEFORE USING IT!
+    Domain* GetDomain() const;
+    void    SetDomain(Domain* );
+    void TransformElemNodesToRef(const uint vb,const double* xx_qnds,double* refbox_xyz) const;
+
+// ==== PARALLEL ===
+    uint _iproc;       /// current subdomain
+    uint _NoSubdom;    /// Number of subdomains (subdomain P)
+
+// ==== MULTIGRID ====
+    uint _NoLevels;          /// Number of Levels (L)
+
+// ==== ELEMENTS ====
+    uint** _n_elements_vb_lev;        /// Number of Elements        [VB][L]                                     
+    int**  _off_el;            /// offset of element numbers [VB][L+P*_NoLevels]         
+    uint** _el_map;            /// Connectivity map         [VB][L+P*_NoLevels]
+    int**  _el_bdry_to_vol;
+
+// ===== NODES ======
+    uint*   _NoNodesXLev;            ///VOLUME, at the EXTENDED LEVELS
+    double* _xyz;                    ///< node coordinates
+    uint**  _Qnode_lev_Qnode_fine;   ///ONLY USED FOR THE EQUATION /// FROM DOF TO NODE: Q or L dofs by using an add aux level [_NoLevels+1][NoNodes[L]] //ONLY VOLUME  //NO PROC info, these are DOFS in the "SERIALIZED NUMBERING"
+    int**  _Qnode_fine_Qnode_lev;   ///Un nodo fine puo' o non appartenere ad un certo livello... quindi devo continuare a mantenere i -1, altrimenti dovrei fare un search che fa perdere tempo
+    int**   _off_nd;                 ///ONLY USED FOR THE EQUATION /// FROM DOF TO NODE: offsets for dofs  [QL][L+P*_NoLevels]                     //ONLY VOLUME
+                                     // on the fine node numbering, the nodes corresponding to linear dofs are numbered FIRST... or not?
+    
 //must be public right now
     std::vector< std::pair<int,int> > _el_fm_libm; //because the EQUATION needs it for the SPARSITY PATTERN
     int *                             _el_libm_fm;
@@ -106,7 +112,7 @@ public:
     
     //get functions
     inline const double get_Lref() const {return _Lref;}
-  virtual  inline const uint   get_dim()  const {return _dim;}
+    inline const uint   get_dim()  const {return _dim;}
 
 protected:
     
@@ -138,12 +144,7 @@ protected:
     ElemStoBdry** _el_sto_b;               //FILLED with OUR ORDERING, "as we find them during the volume elem loop"
     
     std::vector< std::pair<int,int> > _el_fm_libm_b;
-
-private:   
   
-    const uint _dim;               ///< spatial dimension
-    const double _Lref;          ///Reference length for non-dimensionalization
-    
 
  };
 
