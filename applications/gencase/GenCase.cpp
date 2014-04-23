@@ -32,20 +32,20 @@
 namespace femus {
 
 // ========================================================
-GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const double Lref, const std::string mesh_file_in):
-        Mesh(files_in,map_in,Lref)
-        
- {
+GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const double Lref, const std::string mesh_file_in)
+     : Mesh(files_in,map_in,Lref)
+{
 
    std::cout << mesh_file_in << std::endl;
-   _mesh_file.assign(mesh_file_in);  //it seems like moving from protected to public in Mesh changed the RUNTIME behaviour also!!!!!
+   std::cout << get_dim() << std::endl;
+   std::cout << Mesh::get_dim() << std::endl;
+   std::cout << _elnodes[0][LL]<< std::endl;
+   std::cout << &_elnodes[0][LL]<< std::endl;
+  _mesh_file.assign(mesh_file_in);  //it seems like moving from protected to public in Mesh changed the RUNTIME behaviour also!!!!!
                                      //now I moved it to gencase and it works   
    _feelems.resize(QL);
   for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(&_GeomEl,fe);
-
-   
-
-    return;
+ 
 }
 
 GenCase::~GenCase() {
@@ -92,7 +92,7 @@ void GenCase::GenerateCase()   {
     std::clock_t start_timeC=std::clock();
 #endif
 
-    GrabMeshinfoFromLibmesh(bd_msht,msh_all_levs,msh_coarse);  //only proc==0
+    GrabMeshinfoFromLibmesh(msh_all_levs,msh_coarse);  //only proc==0
 
     delete bd_msht;
     delete msh_all_levs;
@@ -271,7 +271,7 @@ void GenCase::GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh
 /// together with the _nod_coords[] array
 ///once you have this interface with libmesh, you do the rest only in FEMuS.
 
-void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
+void  GenCase::GrabMeshinfoFromLibmesh(
         libMesh::Mesh* msht,
         libMesh::Mesh* msh0 ) {
 
