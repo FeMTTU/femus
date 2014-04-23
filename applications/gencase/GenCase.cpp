@@ -32,7 +32,7 @@
 namespace femus {
 
 // ========================================================
-GenCase::GenCase(const Files& files_in,const RunTimeMap<double>  map_in, const double Lref, const std::string mesh_file_in):
+GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const double Lref, const std::string mesh_file_in):
         Mesh(files_in,map_in,Lref)
         
  {

@@ -29,14 +29,14 @@ Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const doubl
          _Lref(Lref),
          _GeomEl( (uint) map_in.get("dimension"), (uint) map_in.get("geomel_type") ),
          _n_GeomEl(map_in.get("numgeomels")),
-         _dim(_mesh_rtmap.get("dimension"))
+         _dim(map_in.get("dimension"))
          {
 	   
     _iproc    = paral::get_rank();
     _NoSubdom = paral::get_size();   
     _NoLevels = _mesh_rtmap.get("nolevels");
     
-    const uint mesh_ord = (uint) _mesh_rtmap.get("mesh_ord");
+    const uint mesh_ord = (uint) map_in.get("mesh_ord");
     if (mesh_ord != 0) {
         std::cout << "Linear mesh not yet implemented" << std::endl;
         abort();
