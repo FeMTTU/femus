@@ -29,8 +29,8 @@ namespace femus {
 // LinearImplicitSystem implementation
 LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
 				const std::string& name_in,
-				const unsigned int number_in) :
-  ImplicitSystem (ml_probl, name_in, number_in),
+				const unsigned int number_in, const MgSmoother & smoother_type) :
+  ImplicitSystem (ml_probl, name_in, number_in, smoother_type),
   _n_linear_iterations   (0),
   _n_max_linear_iterations (3),
   _final_linear_residual (1.e20),
@@ -40,7 +40,8 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   _npost(1),
   _VankaIsSet(false),
   _NSchurVar(1),
-  _Schur(false)
+  _Schur(false),
+  _SmootherType(smoother_type)
   {
     
   }
@@ -59,8 +60,10 @@ void LinearImplicitSystem::clear() {
 void LinearImplicitSystem::init() {
   
     _LinSolver.resize(_gridn);
-    for(unsigned i=0;i<_gridn;i++){
-      _LinSolver[i]=LinearEquationSolver::build(i,_msh[i]).release();
+    
+    _LinSolver[0]=LinearEquationSolver::build(0,_msh[0],GMRES_SMOOTHER).release();
+    for(unsigned i=1;i<_gridn;i++){
+      _LinSolver[i]=LinearEquationSolver::build(i,_msh[i],_SmootherType).release();
     }
     
     for (unsigned i=0; i<_gridn; i++) {
@@ -128,7 +131,8 @@ void LinearImplicitSystem::solve() {
 	  
 	  // ============== Presmoothing ============== 
 	  for (unsigned k = 0; k < _npre; k++) {
-	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!k));
+// 	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!k));
+	    solver_info = _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k));
 	  }
 	  // ============== Non-Standard Multigrid Restriction ==============
 	  start_time = clock();
@@ -142,7 +146,7 @@ void LinearImplicitSystem::solve() {
        
  	// ============== Coarse Direct Solver ==============
  	//solver_info = ( _VankaIsSet ) ? _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean) : _LinSolver[0]->solve(ksp_clean);
- 	solver_info = _LinSolver[0]->solve(ksp_clean);
+ 	solver_info = _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean);
              
  	for (unsigned ig = 1; ig < igridn; ig++) {
  	  
@@ -157,7 +161,8 @@ void LinearImplicitSystem::solve() {
 	  
  	  // ============== PostSmoothing ==============    
  	  for (unsigned k = 0; k < _npost; k++) {
- 	    solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur,ksp_clean * (!_npre) * (!k)) : _LinSolver[ig]->solve(ksp_clean * (!_npre) * (!k) );
+ 	    //solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur,ksp_clean * (!_npre) * (!k)) : _LinSolver[ig]->solve(ksp_clean * (!_npre) * (!k) );
+	    solver_info = _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur,ksp_clean * (!_npre) * (!k));
  	  }
  	}
  	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
@@ -171,10 +176,10 @@ void LinearImplicitSystem::solve() {
 	std::cout << "Grid: " << igridn-1 << "      RESIDUAL:\t\t      " << std::setw(11) << std::setprecision(6) << std::scientific << 
 	_final_linear_residual << std::endl;
 	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
- 	
-	if(_final_linear_residual < _absolute_convergence_tolerance) 
-	break;
-	
+ 	if(_SmootherType != VANKA_SMOOTHER){
+	  if(_final_linear_residual < _absolute_convergence_tolerance) 
+	  break;
+	}
       }
       
       // ============== Update Solution ( ig = igridn )==============
@@ -368,7 +373,7 @@ void LinearImplicitSystem::SetDimVankaBlock(unsigned const dim_vanka_block) {
 
   for (unsigned i=1; i<_gridn; i++) {
     unsigned num_vanka_block2 = std::min(num_vanka_block,_msh[i]->GetElementNumber());
-    _LinSolver[i]->set_num_elem_vanka_block(num_vanka_block2);
+    _LinSolver[i]->SetElementBlockNumber(num_vanka_block2);
   }
 }
 

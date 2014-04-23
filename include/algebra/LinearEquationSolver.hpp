@@ -24,6 +24,7 @@
 #include "PrecondtypeEnum.hpp"
 #include "SolvertypeEnum.hpp"
 #include "LinearEquation.hpp"
+#include "MgSmootherEnum.hpp"
 #include "vector"
 #include <memory>
 #include <cstdio>
@@ -84,10 +85,10 @@ public:
   virtual void clear() {}
 
   /// Initialize data structures if not done so already.
-  virtual void init() = 0;
+  //virtual void init() = 0;
 
   /** Builds a \p LinearEquationSolver using the linear solver in \p solver_package */
-  static std::auto_ptr<LinearEquationSolver> build(const unsigned &igrid, mesh* other_msh,const SolverPackage solver_package =LSOLVER);
+  static std::auto_ptr<LinearEquationSolver> build(const unsigned &igrid, mesh* other_msh,const MgSmoother & smoother_type, const SolverPackage solver_package =LSOLVER);
   
   // =================================
   // SETTING FUNCTIONS
@@ -129,13 +130,13 @@ public:
   // ================================
 
   /// Set the number of elements of the Vanka Block
-  virtual void set_num_elem_vanka_block(const unsigned num_elem_vanka_block)=0;
+  virtual void SetElementBlockNumber(const unsigned & block_elemet_number){};
   
   /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.
   virtual std::pair< int, double> solve(const vector <unsigned> &VankaIndex, const short unsigned &NSchurVar,
 					const bool &Schur, const bool &ksp_clean) = 0;
   /// Call the Gmres smoother-solver
-  virtual std::pair< int, double> solve( const bool &clean = true) = 0;
+  // virtual std::pair< int, double> solve( const bool &clean = true) = 0;
   
 //   /// This function calls the solver
 //   virtual std::pair< int, double> solve (SparseMatrix&,  // System Matrix
@@ -153,7 +154,7 @@ public:
 //                                          const  int) = 0; // N. Iteration
 
   /// Prints a useful message about why the latest linear solve con(di)verged.
-  virtual void print_converged_reason() = 0;
+ // virtual void print_converged_reason() = 0;
 };
 
 // -------------------- inline functions ---------

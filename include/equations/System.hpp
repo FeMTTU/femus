@@ -40,7 +40,7 @@ class System {
 public:
 
   /** Constructor.  Optionally initializes required data structures. */
-  System (MultiLevelProblem& ml_prob, const std::string& name, const unsigned int number);
+  System (MultiLevelProblem& ml_prob, const std::string& name, const unsigned int number, const MgSmoother & smoother_type);
 
   /** destructor */
   virtual ~System();

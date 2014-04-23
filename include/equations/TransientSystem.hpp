@@ -18,6 +18,7 @@
 
 #include <string>
 
+#include "MgSmootherEnum.hpp"
 
 namespace femus {
 
@@ -49,7 +50,7 @@ public:
   /** Constructor.  Initializes required data structures.  */
   TransientSystem (MultiLevelProblem& ml_probl,
 		   const std::string& name,
-		   const unsigned int number);
+		   const unsigned int number, const MgSmoother & smoother_type);
 
   /** Destructor. */
   virtual ~TransientSystem ();

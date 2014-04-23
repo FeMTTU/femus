@@ -38,7 +38,7 @@ class LinearImplicitSystem : public ImplicitSystem {
 public:
 
   /** Constructor.  Optionally initializes required data structures. */
-  LinearImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number);
+  LinearImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number,const MgSmoother & smoother_type);
 
   /** Destructor */
   virtual ~LinearImplicitSystem();
@@ -167,7 +167,7 @@ protected:
   int _npost;
   
   bool _VankaIsSet;
-  
+  MgSmoother _SmootherType;
   short unsigned _NSchurVar;
   
   bool _Schur;
