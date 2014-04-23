@@ -6,7 +6,7 @@ PROJECT(TaylorVortex)
 ADD_EXECUTABLE(taylorvortex ${CMAKE_PROJECT_DIR}main.cpp)
 
 # Link the executable to the petsc anf femttu libs
-TARGET_LINK_LIBRARIES(taylorvortex femlib)
+TARGET_LINK_LIBRARIES(taylorvortex femus)
 TARGET_LINK_LIBRARIES(taylorvortex ${PETSC_LIBRARIES})
 TARGET_LINK_LIBRARIES(taylorvortex b64)
 
