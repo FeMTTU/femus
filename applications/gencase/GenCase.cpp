@@ -37,7 +37,7 @@ GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const 
         
  {
 
-   _mesh_file = mesh_file_in;
+   _mesh_file.assign(mesh_file_in);  //it seems like moving from protected to public changed the RUNTIME behaviour also!!!!!
    
    _feelems.resize(QL);
   for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(&_GeomEl,fe);
@@ -75,7 +75,7 @@ void GenCase::GenerateCase()   {
     std::clock_t start_timeA=std::clock();
 #endif
 
-    libMesh::Mesh* msh_coarse = new libMesh::Mesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD,_dim);
+    libMesh::Mesh* msh_coarse = new libMesh::Mesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD,get_dim());
 
     GenerateCoarseMesh(msh_coarse);
 
@@ -136,26 +136,26 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse)  {
             //TODO think of Domain before or after Mesh
 
             RunTimeMap<double> box_map("Box",_files._app_path);
-            Box box(_dim,box_map);
+            Box box(get_dim(),box_map);
                 box.init(_Lref);  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
 //i guess we could do this instantiation also INSIDE the gencase class
 
 //---Meshing -------
-            uint* ninterv = new uint[_dim];
+            uint* ninterv = new uint[get_dim()];
 	    ninterv[0] = box._domain_rtmap.get("nintervx");
             ninterv[1] = box._domain_rtmap.get("nintervy");
-            if ( _dim == 3 ) ninterv[2] = box._domain_rtmap.get("nintervz");
+            if ( get_dim() == 3 ) ninterv[2] = box._domain_rtmap.get("nintervz");
 
             // fem element definition --------------------------------
             libMesh::ElemType libmname; //convert the _geomel name into the libmesh geom el name
 
-            if ( _dim == 2 ) {
+            if ( get_dim() == 2 ) {
             if (     _GeomEl.name[0] == "Quad_9") libmname = QUAD9;
             else if (_GeomEl.name[0] == "Tri_6")  libmname = TRI6;
             libMesh::MeshTools::Generation::build_square
             (*msh_coarse, ninterv[0], ninterv[1], box._lb[0], box._le[0], box._lb[1], box._le[1],libmname);
 	    }
-	    else if ( _dim == 3 ) {
+	    else if ( get_dim() == 3 ) {
             if (     _GeomEl.name[0] == "Hex_27")  libmname = HEX27;
             else if (_GeomEl.name[0] == "Tet_10")  libmname = TET10;
             libMesh::MeshTools::Generation::build_cube
@@ -321,7 +321,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
 //===== store VV elem info
         // this one is initialized to all -1
         _el_sto = new ElemStoVol*[_n_elements_sum_levs[VV]];
-        for (int i=0;i<_n_elements_sum_levs[VV];i++)     _el_sto[i] = new ElemStoVol(_elnodes[VV][QQ],_dim);
+        for (int i=0;i<_n_elements_sum_levs[VV];i++)     _el_sto[i] = new ElemStoVol(_elnodes[VV][QQ],get_dim());
 
 //===== compute the number of boundary elements
         int n_el_bdry_all_levs = 0;
@@ -338,7 +338,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
 //===== store BB elem info
         // this one is initialized to all 0
         _el_sto_b = new ElemStoBdry*[_n_elements_sum_levs[BB]];
-        for (int i=0; i<_n_elements_sum_levs[BB];i++)    _el_sto_b[i]= new ElemStoBdry(_elnodes[BB][QQ],_dim);
+        for (int i=0; i<_n_elements_sum_levs[BB];i++)    _el_sto_b[i]= new ElemStoBdry(_elnodes[BB][QQ],get_dim());
 
 
         //============= all the "new" done so far are deleted in the other routine, TODO check that
@@ -375,7 +375,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
                 int knode=elem->node(inode);      //libmesh node numbering
                 _el_sto[count_e]->_elnds[inode]=knode;
             // coordinates storage
-                for (int idim=0; idim<_dim; idim++) {
+                for (int idim=0; idim<get_dim(); idim++) {
                     double xyz=  msht->point(knode)(idim);
                     _nd_coords_libm[knode+idim*_n_nodes]=xyz;
                 }
@@ -1857,10 +1857,10 @@ void GenCase::ComputeRest( ) {
 
 	    }
 	    else if (fe == KK)  {  //you dont need excess of space for L2 elements
-            Rest_pos[fe]   = new    int [ n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(_dim-1) /**_elnodes[VV][fe]*/]; //here I have to put the number of childs
-            Rest_val[fe]   = new double [ n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(_dim-1) /**_elnodes[VV][fe]*/];
+            Rest_pos[fe]   = new    int [ n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(get_dim()-1) /**_elnodes[VV][fe]*/]; //here I have to put the number of childs
+            Rest_val[fe]   = new double [ n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(get_dim()-1) /**_elnodes[VV][fe]*/];
             mult_cols[fe]  = new    int [ n_dofs_fe_lev[fe][FEXLevel_c[fe]] ];  //TODO unused
-            for (uint i=0; i < n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(_dim-1) /**_elnodes[VV][fe]*/; i++) {
+            for (uint i=0; i < n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(get_dim()-1) /**_elnodes[VV][fe]*/; i++) {
                 Rest_pos[fe][i] = NegativeOneFlag;
                 Rest_val[fe][i] = 0.;
                }
@@ -1942,8 +1942,8 @@ void GenCase::ComputeRest( ) {
                             for (int sd=0;sd<pr;sd++) sum_previous_sd += _off_el[VV][sd*_NoLevels+Lev_f+1] - _off_el[VV][sd*_NoLevels+Lev_f];
                             int dof_pos_f = el_child_fm - _off_el[VV][pr*_NoLevels+Lev_f] + sum_previous_sd;
 
-                             Rest_pos[fe][ dof_pos_c*4*(_dim-1) + i_ch ] = dof_pos_f;
-                             Rest_val[fe][ dof_pos_c*4*(_dim-1) + i_ch ] = 1;
+                             Rest_pos[fe][ dof_pos_c*4*(get_dim()-1) + i_ch ] = dof_pos_f;
+                             Rest_val[fe][ dof_pos_c*4*(get_dim()-1) + i_ch ] = 1;
                             mult_cols[fe][ dof_pos_c ]++;
 			 
 		       }
@@ -2007,7 +2007,7 @@ void GenCase::ComputeRest( ) {
                     }
 		} //end temporary fe
 		else if (fe == KK) {
-		   for (uint k_ch = 0; k_ch < 4*(_dim-1); k_ch++) {
+		   for (uint k_ch = 0; k_ch < 4*(get_dim()-1); k_ch++) {
 //                   Rest_pos  //dont need compression i think
 //                  Rest_val		  
                   // you also dont need mult_cols
