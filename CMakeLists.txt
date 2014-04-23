@@ -57,6 +57,15 @@ ENDIF(MPI_FOUND)
   SET(HAVE_HDF5 1)
 #ENDIF(HDF5_FOUND)
 
+# Find Libmesh (optional)
+FIND_PACKAGE(LIBMESH)
+message(STATUS "LIBMESH_FOUND = ${LIBMESH_FOUND}")
+SET (HAVE_LIBMESH 0)
+IF(LIBMESH_FOUND)
+  SET(HAVE_LIBMESH 1)
+ENDIF(LIBMESH_FOUND)
+
+
 # configure a header file to pass some of the CMake settings
 # to the source code
 CONFIGURE_FILE(
@@ -109,6 +118,10 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/ExternalLibraries/b64-1.4.2/include/)
 
 # Build the FEMTTUlib library
 ADD_SUBDIRECTORY(src)
+
+# Build the b64 library
+ADD_SUBDIRECTORY(ExternalLibraries/b64-1.4.2)
+
 
 # Ask the user which executable have to be built
 OPTION(BUILD_STEADYNAVIERSTOKES "Build the Steady NavierStokes application" ON)

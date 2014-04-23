@@ -3,12 +3,12 @@
 
 //C++
 #include <string>
+
 // HDF5
 #include "hdf5.h"
-// libmesh
-#include "libmesh/boundary_mesh.h"
-#include "libmesh/mesh.h"
+
 // FEMuS
+#include "FEMTTUConfig.h"
 #include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"
@@ -16,21 +16,23 @@
 #include "ElemSto.hpp"
 #include "MeshTwo.hpp"
 
+// libmesh
+#ifdef HAVE_LIBMESH
+#include "libmesh/boundary_mesh.h"
+#include "libmesh/mesh.h"
+#endif
+
 namespace femus {
 
 // Forwarding classes
-class Files;
-class GeomEl;
-class Domain;
 class FEElemBase;
-
 
 
 class GenCase : public Mesh {
 
 public:
 
-     GenCase(const Files& files_in, const RunTimeMap<double> map_in, const double lref,const std::string mesh_file);
+     GenCase(const Files& files_in, const RunTimeMap<double> & map_in, const double lref,const std::string mesh_file);
     ~GenCase();                                      
 
     void ComputeMatrix();
@@ -40,16 +42,21 @@ public:
     void PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, uint* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe) const;
 
     void GenerateCase();
-    void GenerateCoarseMesh(libMesh::Mesh* msh_coarse);
-    void RefineMesh(libMesh::Mesh* msh_all_levs);
-    void GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs);
-    void GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh* bd_mesht, libMesh::Mesh* msht, libMesh::Mesh* msh);
     void CreateStructuresLevSubd();
-
+#ifdef HAVE_LIBMESH
+    void GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const;
+    void RefineMesh(libMesh::Mesh* msh_all_levs) const;
+    void GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs) const;
+    void GrabMeshinfoFromLibmesh(libMesh::Mesh* msht, libMesh::Mesh* msh);
+#endif
+    
 private:
 
     // Element ===========
     std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
+    
+    std::string _mesh_file;    //mesh file name from the mesh generator
+
 
 };
 

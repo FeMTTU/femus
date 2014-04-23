@@ -3,17 +3,9 @@
 // C++
 #include <sstream>
 #include <cassert>
-
-// LibMesh
-#include "libmesh/enum_elem_type.h"
-#include "libmesh/boundary_mesh.h"
-#include "libmesh/mesh.h"
-#include "libmesh/mesh_refinement.h"
-#include "libmesh/elem.h"
-#include "libmesh/mesh_generation.h"
-#include "libmesh/boundary_info.h"
-
+#include <cmath>
 // FEMuS
+#include "FEMTTUConfig.h"
 #include "FemusDefault.hpp"
 
 #include "Domain.hpp"
@@ -25,23 +17,35 @@
 #include "GeomEl.hpp"
 #include "FEElemBase.hpp"
 
+// LibMesh
+#ifdef HAVE_LIBMESH
+#include "libmesh/enum_elem_type.h"
+#include "libmesh/boundary_mesh.h"
+#include "libmesh/mesh.h"
+#include "libmesh/mesh_refinement.h"
+#include "libmesh/elem.h"
+#include "libmesh/mesh_generation.h"
+#include "libmesh/boundary_info.h"
+#endif
+
 
 namespace femus {
 
 // ========================================================
-GenCase::GenCase(const Files& files_in,const RunTimeMap<double>  map_in, const double Lref, const std::string mesh_file_in):
-        Mesh(files_in,map_in,Lref)
-        
- {
+GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const double Lref, const std::string mesh_file_in)
+     : Mesh(files_in,map_in,Lref)
+{
 
-   _mesh_file = mesh_file_in;
-   
+   std::cout << mesh_file_in << std::endl;
+   std::cout << get_dim() << std::endl;
+   std::cout << Mesh::get_dim() << std::endl;
+   std::cout << _elnodes[0][LL]<< std::endl;
+   std::cout << &_elnodes[0][LL]<< std::endl;
+  _mesh_file.assign(mesh_file_in);  //it seems like moving from protected to public in Mesh changed the RUNTIME behaviour also!!!!!
+                                     //now I moved it to gencase and it works   
    _feelems.resize(QL);
   for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(&_GeomEl,fe);
-
-   
-
-    return;
+ 
 }
 
 GenCase::~GenCase() {
@@ -65,12 +69,14 @@ GenCase::~GenCase() {
 
 // =======================================================
 void GenCase::GenerateCase()   {
-
+#ifdef HAVE_LIBMESH //i am putting this inside because there are no libmesh dependent arguments
+  
+  
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t start_timeA=std::clock();
 #endif
 
-    libMesh::Mesh* msh_coarse = new libMesh::Mesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD,_dim);
+    libMesh::Mesh* msh_coarse = new libMesh::Mesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD,get_dim());
 
     GenerateCoarseMesh(msh_coarse);
 
@@ -86,7 +92,7 @@ void GenCase::GenerateCase()   {
     std::clock_t start_timeC=std::clock();
 #endif
 
-    GrabMeshinfoFromLibmesh(bd_msht,msh_all_levs,msh_coarse);  //only proc==0
+    GrabMeshinfoFromLibmesh(msh_all_levs,msh_coarse);  //only proc==0
 
     delete bd_msht;
     delete msh_all_levs;
@@ -102,13 +108,17 @@ void GenCase::GenerateCase()   {
     std::cout << " +*+*+* Total time ="<< double(end_timeC- start_timeA) / CLOCKS_PER_SEC << std::endl;
 #endif
 
+    
+#endif //end have_libmesh    
     return;
 }
 
+
+#ifdef HAVE_LIBMESH
 //===============================================================================
 //================= LIBMESH coarse Mesh OBJECT from FILE or FUNCTION ============
 //===============================================================================
-void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse)  {
+void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
 
     const uint libmesh_gen = _mesh_rtmap.get("libmesh_gen");
 
@@ -127,26 +137,26 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse)  {
             //TODO think of Domain before or after Mesh
 
             RunTimeMap<double> box_map("Box",_files._app_path);
-            Box box(_dim,box_map);
-                box.init(_Lref);  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
+            Box box(get_dim(),box_map);
+                box.init(get_Lref());  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
 //i guess we could do this instantiation also INSIDE the gencase class
 
 //---Meshing -------
-            uint* ninterv = new uint[_dim];
+            uint* ninterv = new uint[get_dim()];
 	    ninterv[0] = box._domain_rtmap.get("nintervx");
             ninterv[1] = box._domain_rtmap.get("nintervy");
-            if ( _dim == 3 ) ninterv[2] = box._domain_rtmap.get("nintervz");
+            if ( get_dim() == 3 ) ninterv[2] = box._domain_rtmap.get("nintervz");
 
             // fem element definition --------------------------------
             libMesh::ElemType libmname; //convert the _geomel name into the libmesh geom el name
 
-            if ( _dim == 2 ) {
+            if ( get_dim() == 2 ) {
             if (     _GeomEl.name[0] == "Quad_9") libmname = QUAD9;
             else if (_GeomEl.name[0] == "Tri_6")  libmname = TRI6;
             libMesh::MeshTools::Generation::build_square
             (*msh_coarse, ninterv[0], ninterv[1], box._lb[0], box._le[0], box._lb[1], box._le[1],libmname);
 	    }
-	    else if ( _dim == 3 ) {
+	    else if ( get_dim() == 3 ) {
             if (     _GeomEl.name[0] == "Hex_27")  libmname = HEX27;
             else if (_GeomEl.name[0] == "Tet_10")  libmname = TET10;
             libMesh::MeshTools::Generation::build_cube
@@ -187,8 +197,9 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse)  {
 
     return;
 }
+#endif //end have_libmesh
 
-
+#ifdef HAVE_LIBMESH
 //==============================================================================
 //=============== GENERATE all the LEVELS for the LIBMESH Mesh OBJECT ==========
 //==============================================================================
@@ -202,7 +213,7 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse)  {
 // and making this distinction is not trivial, one must check everywhere what to use
 //   const uint mesh_refine = _utils.get_par("mesh_refine");
 //   if (mesh_refine) {
-void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) {
+void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) const {
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t start_timeB=std::clock();
@@ -220,8 +231,10 @@ void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) {
 
     return;
 }
+#endif //end have_libmesh
 
 
+#ifdef HAVE_LIBMESH
 //==============================================================================
 //=============== GENERATE BOUNDARY MESH =======================================
 //==============================================================================
@@ -235,7 +248,7 @@ void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) {
 //TODO can we exploit the fact that BoundaryInfo is useful for containing boundary conditions
 //to READ from GAMBIT and ASSOCIATE FLAGS From Gambit to Libmesh, AND THEN from LIBMESH to FEMUS?
 
-void GenCase::GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs) {
+void GenCase::GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs) const {
 
     std::cout << " LibMesh BOUNDARY generation --------- \n";
     msh_all_levs->boundary_info->sync(*bd_msht);
@@ -243,7 +256,9 @@ void GenCase::GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh
 
     return;
 }
+#endif //end have_libmesh
 
+#ifdef HAVE_LIBMESH
 //==============================================================================
 //=============== GRAB MESH INFORMATION from LIBMESH (only proc0) ==============
 //==============================================================================
@@ -256,11 +271,11 @@ void GenCase::GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh
 /// together with the _nod_coords[] array
 ///once you have this interface with libmesh, you do the rest only in FEMuS.
 
-void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
+void  GenCase::GrabMeshinfoFromLibmesh(
         libMesh::Mesh* msht,
         libMesh::Mesh* msh0 ) {
 
-    if (libMesh::global_processor_id() == 0)  {  //serial function
+    if (_iproc == 0)  {  //serial function
 
 //   msht contains ALL LEVELS
 //  msh0 contains THE COARSE
@@ -307,7 +322,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
 //===== store VV elem info
         // this one is initialized to all -1
         _el_sto = new ElemStoVol*[_n_elements_sum_levs[VV]];
-        for (int i=0;i<_n_elements_sum_levs[VV];i++)     _el_sto[i] = new ElemStoVol(_elnodes[VV][QQ],_dim);
+        for (int i=0;i<_n_elements_sum_levs[VV];i++)     _el_sto[i] = new ElemStoVol(_elnodes[VV][QQ],get_dim());
 
 //===== compute the number of boundary elements
         int n_el_bdry_all_levs = 0;
@@ -324,7 +339,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
 //===== store BB elem info
         // this one is initialized to all 0
         _el_sto_b = new ElemStoBdry*[_n_elements_sum_levs[BB]];
-        for (int i=0; i<_n_elements_sum_levs[BB];i++)    _el_sto_b[i]= new ElemStoBdry(_elnodes[BB][QQ],_dim);
+        for (int i=0; i<_n_elements_sum_levs[BB];i++)    _el_sto_b[i]= new ElemStoBdry(_elnodes[BB][QQ],get_dim());
 
 
         //============= all the "new" done so far are deleted in the other routine, TODO check that
@@ -361,7 +376,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
                 int knode=elem->node(inode);      //libmesh node numbering
                 _el_sto[count_e]->_elnds[inode]=knode;
             // coordinates storage
-                for (int idim=0; idim<_dim; idim++) {
+                for (int idim=0; idim<get_dim(); idim++) {
                     double xyz=  msht->point(knode)(idim);
                     _nd_coords_libm[knode+idim*_n_nodes]=xyz;
                 }
@@ -485,6 +500,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
     } //end proc==0
     return;
 }
+#endif //end have_libmesh
 
 
 // =======================================================
@@ -565,7 +581,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh *bd_msht,
 //==============================================================================
 void GenCase::CreateStructuresLevSubd() {
 
-    if (libMesh::global_processor_id() == 0)   {  //serial function
+    if (_iproc == 0)   {  //serial function
 //================================================
 // AT THIS POINT ALL THE LIBMESH CALLS are over, we are only FEMuS
 //=====================================
@@ -1842,10 +1858,10 @@ void GenCase::ComputeRest( ) {
 
 	    }
 	    else if (fe == KK)  {  //you dont need excess of space for L2 elements
-            Rest_pos[fe]   = new    int [ n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(_dim-1) /**_elnodes[VV][fe]*/]; //here I have to put the number of childs
-            Rest_val[fe]   = new double [ n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(_dim-1) /**_elnodes[VV][fe]*/];
+            Rest_pos[fe]   = new    int [ n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(get_dim()-1) /**_elnodes[VV][fe]*/]; //here I have to put the number of childs
+            Rest_val[fe]   = new double [ n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(get_dim()-1) /**_elnodes[VV][fe]*/];
             mult_cols[fe]  = new    int [ n_dofs_fe_lev[fe][FEXLevel_c[fe]] ];  //TODO unused
-            for (uint i=0; i < n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(_dim-1) /**_elnodes[VV][fe]*/; i++) {
+            for (uint i=0; i < n_dofs_fe_lev[fe][FEXLevel_c[fe]]*4*(get_dim()-1) /**_elnodes[VV][fe]*/; i++) {
                 Rest_pos[fe][i] = NegativeOneFlag;
                 Rest_val[fe][i] = 0.;
                }
@@ -1927,8 +1943,8 @@ void GenCase::ComputeRest( ) {
                             for (int sd=0;sd<pr;sd++) sum_previous_sd += _off_el[VV][sd*_NoLevels+Lev_f+1] - _off_el[VV][sd*_NoLevels+Lev_f];
                             int dof_pos_f = el_child_fm - _off_el[VV][pr*_NoLevels+Lev_f] + sum_previous_sd;
 
-                             Rest_pos[fe][ dof_pos_c*4*(_dim-1) + i_ch ] = dof_pos_f;
-                             Rest_val[fe][ dof_pos_c*4*(_dim-1) + i_ch ] = 1;
+                             Rest_pos[fe][ dof_pos_c*4*(get_dim()-1) + i_ch ] = dof_pos_f;
+                             Rest_val[fe][ dof_pos_c*4*(get_dim()-1) + i_ch ] = 1;
                             mult_cols[fe][ dof_pos_c ]++;
 			 
 		       }
@@ -1992,7 +2008,7 @@ void GenCase::ComputeRest( ) {
                     }
 		} //end temporary fe
 		else if (fe == KK) {
-		   for (uint k_ch = 0; k_ch < 4*(_dim-1); k_ch++) {
+		   for (uint k_ch = 0; k_ch < 4*(get_dim()-1); k_ch++) {
 //                   Rest_pos  //dont need compression i think
 //                  Rest_val		  
                   // you also dont need mult_cols
