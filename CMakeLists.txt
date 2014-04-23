@@ -119,6 +119,10 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/ExternalLibraries/b64-1.4.2/include/)
 # Build the FEMTTUlib library
 ADD_SUBDIRECTORY(src)
 
+# Build the b64 library
+ADD_SUBDIRECTORY(ExternalLibraries/b64-1.4.2)
+
+
 # Ask the user which executable have to be built
 OPTION(BUILD_STEADYNAVIERSTOKES "Build the Steady NavierStokes application" ON)
 
