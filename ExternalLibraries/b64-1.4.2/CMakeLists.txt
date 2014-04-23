@@ -1,0 +1,9 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+PROJECT(b64)
+ 
+SET(b64lib_src
+src/b64.c
+) 
+ 
+ADD_LIBRARY(${PROJECT_NAME} SHARED ${b64lib_src})

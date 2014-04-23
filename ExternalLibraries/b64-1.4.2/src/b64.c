@@ -56,7 +56,7 @@
  * Includes
  */
 
-#include <b64/b64.h>
+#include <b64.h>
 
 #if defined(B64_VARIANT_TEST) && \
     !defined(B64_NO_USE_XCONTRACT)
