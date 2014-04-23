@@ -104,7 +104,7 @@ void NonLinearImplicitSystem::solve() {
 	  start_time = clock();
 	  Restrictor(ig, igridn, _n_nonlinear_iterations, _n_linear_iterations, full_cycle);
 #ifndef NDEBUG 
-	  std::cout << "Grid: " << ig << "-->" << ig-1 << "  RESTRICTION TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+	  std::cout << "Grid: " << ig << "-->" << ig-1 << "   RESTRICTION TIME:\t          "<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
 	}
         // ============== Coarse Direct Solver ==============
@@ -117,7 +117,7 @@ void NonLinearImplicitSystem::solve() {
  	  start_time=clock();
  	  Prolongator(ig);
 #ifndef NDEBUG 
- 	  std::cout << "Grid: " << ig-1 << "-->" << ig << " PROLUNGATION TIME:\t" << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+ 	  std::cout << "Grid: " << ig-1 << "-->" << ig << "  PROLUNGATION TIME:\t          " << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
  	  // ============== PostSmoothing ==============    
  	  for (unsigned k = 0; k < _npost; k++) {
@@ -137,7 +137,9 @@ void NonLinearImplicitSystem::solve() {
 	  break;
 	}
       }
-      std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< std::setw(11) << std::setprecision(6) << std::scientific << _final_linear_residual << std::endl;
+      if(_SmootherType != VANKA_SMOOTHER){
+      	std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< std::setw(11) << std::setprecision(6) << std::scientific << _final_linear_residual << std::endl;
+      }
       // ============== Update Solution ( ig = igridn )==============
       _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
 							 _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );

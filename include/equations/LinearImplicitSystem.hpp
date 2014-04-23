@@ -166,7 +166,7 @@ protected:
   
   int _npost;
   
-  bool _VankaIsSet;
+  //bool _VankaIsSet;
   MgSmoother _SmootherType;
   short unsigned _NSchurVar;
   

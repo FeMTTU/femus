@@ -28,10 +28,6 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "LinearEquationSolver.hpp"
-#include "PetscVector.hpp"
-#include "PetscMatrix.hpp"
-#include "PetscMacro.hpp"
-
 
 namespace femus {
 
@@ -41,6 +37,23 @@ namespace femus {
 
   class GmresPetscLinearEquationSolver : public LinearEquationSolver {
 
+  private:
+    // data ---------------------------------
+    PC _pc;      ///< Preconditioner context
+    KSP _ksp;    ///< Krylov subspace context
+    PetscReal _rtol;
+    PetscReal _abstol;
+    PetscReal _dtol;
+    PetscInt  _maxits;
+    
+    vector< vector <PetscInt> > _indexai;
+    bool _indexai_init;
+    
+    vector <IS> _isA;
+    
+    Mat _Pmat;
+    bool _Pmat_is_initialized;  
+    
   public:
   
     // Constructor --------------------------------------
@@ -66,32 +79,14 @@ namespace femus {
     std::pair< int, double> solve(const vector <unsigned> &VankaIndex,
 				  const short unsigned &NSchurVar,const bool &Schur,
 				  const bool &ksp_clean);
+  
  
-  
-  private:
-    // data ---------------------------------
-    PC _pc;      ///< Preconditioner context
-    KSP _ksp;    ///< Krylov subspace context
-    PetscReal _rtol;
-    PetscReal _abstol;
-    PetscReal _dtol;
-    PetscInt  _maxits;
-    
-    vector< vector <PetscInt> > _indexai;
-    bool _indexai_init;
-  
-    vector <IS> _isA;
-    vector <IS> _isB;
-    
-    Mat _Pmat;
-    bool _Pmat_is_initialized;  
 
     // Setting --------------------------------------------
     ///  Set the user-specified solver stored in \p _solver_type
     void set_petsc_solver_type ();
 
     clock_t BuildIndex();
-
   
   };
 
@@ -132,14 +127,8 @@ namespace femus {
     for(unsigned i=0;i<_isA.size();i++){
       ISDestroy(&_isA[i]); 	
     }
-  
-    for(unsigned i=0;i<_isB.size();i++){
-      ISDestroy(&_isB[i]); 	
-    }
-   
+    
   }
-
-
 
 } //end namespace femus
 

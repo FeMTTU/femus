@@ -121,7 +121,7 @@ int main(int argc,char **args) {
   
   //create systems
   // add the system FSI to the MultiLevel problem
-  TransientMonolithicFSINonlinearImplicitSystem & system = ml_probl.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction");
+  TransientMonolithicFSINonlinearImplicitSystem & system = ml_probl.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction",VANKA_SMOOTHER);
   system.AddSolutionToSytemPDE("DX");
   system.AddSolutionToSytemPDE("DY");
   system.AddSolutionToSytemPDE("U");
@@ -142,7 +142,7 @@ int main(int argc,char **args) {
   system.SetMgType(F_CYCLE);
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(3);
-  system.SetMgSmoother(VANKA_SMOOTHER);
+  //system.SetMgSmoother(VANKA_SMOOTHER);
   system.AddStabilization(true);
   system.ClearVankaIndex();
   system.AddVariableToVankaIndex("DX");

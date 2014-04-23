@@ -27,62 +27,10 @@
 #include "PetscVector.hpp"
 #include "PetscMatrix.hpp"
 #include <iomanip>
-#include <map>
 
 namespace femus {
 
-
-
   using namespace std;
-
-
-  // ==========================================================
-  extern "C" {
-#if PETSC_VERSION_LESS_THAN(2,2,1)
-    typedef int PetscErrorCode;
-    typedef int PetscInt;
-#endif
-
-#if PETSC_VERSION_LESS_THAN(3,0,1) && PETSC_VERSION_RELEASE
-    // ------------------------------------------------------------------
-    PetscErrorCode __libmesh_petsc_preconditioner_setup(void * ctx) {
-      Preconditioner * preconditioner = static_cast<Preconditioner*>(ctx);
-      preconditioner->init();
-      return 0;
-    }
-    // ------------------------------------------------------------------------------
-    PetscErrorCode __libmesh_petsc_preconditioner_apply(void *ctx, Vec x, Vec y)  {
-      Preconditioner * preconditioner = static_cast<Preconditioner*>(ctx);
-      PetscVector x_vec(x);
-      PetscVector y_vec(y);
-      preconditioner->apply(x_vec,y_vec);
-      return 0;
-    }
-#else
-    // ----------------------------------------------------------------
-    PetscErrorCode __libmesh_petsc_preconditioner_setup(PC pc) {
-      void *ctx;
-      PetscErrorCode ierr = PCShellGetContext(pc,&ctx);
-      CHKERRQ(ierr);
-      Preconditioner * preconditioner = static_cast<Preconditioner*>(ctx);
-      preconditioner->init();
-      return 0;
-    }
-    // --------------------------------------------------------------------------
-    PetscErrorCode __libmesh_petsc_preconditioner_apply(PC pc, Vec x, Vec y) {
-      void *ctx;
-      PetscErrorCode ierr = PCShellGetContext(pc,&ctx);
-      CHKERRQ(ierr);
-      Preconditioner * preconditioner = static_cast<Preconditioner*>(ctx);
-      PetscVector x_vec(x);
-      PetscVector y_vec(y);
-      preconditioner->apply(x_vec,y_vec);
-      return 0;
-    }
-#endif
-  } // end extern "C
-  // ================================================
-
 
   // ==============================================
   // ----------------------- functions ------
@@ -397,7 +345,7 @@ namespace femus {
       ierr = KSPSetType(_ksp, (char*) KSPCGS);						CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case BICG:
-      ierr = KSPSetType(_ksp, (char*) KSPBICG);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(_ksp, (char*) KSPBICG);					        CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case TCQMR:
       ierr = KSPSetType(_ksp, (char*) KSPTCQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -406,10 +354,10 @@ namespace femus {
       ierr = KSPSetType(_ksp, (char*) KSPTFQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case LSQR:
-      ierr = KSPSetType(_ksp, (char*) KSPLSQR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(_ksp, (char*) KSPLSQR);					        CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case BICGSTAB:
-      ierr = KSPSetType(_ksp, (char*) KSPBCGS);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(_ksp, (char*) KSPBCGS);					        CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case MINRES:
       ierr = KSPSetType(_ksp, (char*) KSPMINRES);					CHKERRABORT(MPI_COMM_WORLD,ierr);

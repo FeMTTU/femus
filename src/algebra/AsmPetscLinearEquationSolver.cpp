@@ -345,7 +345,7 @@ namespace femus {
     
     // *** Computational info ***
 #ifndef NDEBUG   
-    cout << "ASM Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:         "  << std::setw(11) << std::setprecision(6) << std::fixed <<
+    cout << "ASM Grid: " << _msh->GetGridNumber()<< "        SOLVER TIME:        "  << std::setw(11) << std::setprecision(6) << std::fixed <<
       static_cast<double>( SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
       "  ITS: " << its  << "\t ksp_clean = "<< ksp_clean<<endl;
 #endif

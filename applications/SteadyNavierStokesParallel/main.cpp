@@ -130,12 +130,12 @@ int main(int argc,char **args) {
 //     system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
 //   }
 //   else{
-    system1.SetMgSmoother(VANKA_SMOOTHER);
+    //system1.SetMgSmoother(VANKA_SMOOTHER);
     system1.AddStabilization(true);
     system1.ClearVankaIndex();
     system1.AddVariableToVankaIndex("All");
     system1.SetSolverFineGrids(GMRES);
-    system1.SetPreconditionerFineGrids(ILU_PRECOND); 
+    system1.SetPreconditionerFineGrids(LU_PRECOND); 
     system1.SetVankaSchurOptions(false,1);
     system1.SetTolerances(1.e-12,1.e-20,1.e+50,2);
     system1.SetDimVankaBlock(4);                
@@ -161,7 +161,7 @@ int main(int argc,char **args) {
    
  //if(!vanka){
     system2.SetPreconditionerFineGrids(ILU_PRECOND);
-    system2.SetMgSmoother(GMRES_SMOOTHER);
+    //system2.SetMgSmoother(GMRES_SMOOTHER);
  // }
 //   else{
 //     system2.SetMgSmoother(VANKA_SMOOTHER);
