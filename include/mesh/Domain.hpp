@@ -25,13 +25,13 @@ namespace femus {
 
  protected:
 
-    Domain(const uint spacedim_in, RunTimeMap<double> & map_in);
+    Domain(const uint spacedim_in, const RunTimeMap<double> & map_in);
  
  public: 
 
    ~Domain();
    
-   RunTimeMap<double> _domain_rtmap;  //TODO maybe later put this in the Domain father class...
+   const RunTimeMap<double> _domain_rtmap;
 
    std::string _name;
    double      _Lref;

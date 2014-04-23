@@ -24,12 +24,12 @@ namespace femus {
 Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref) :
          _files(files_in),
          _mesh_rtmap(map_in),
-         _Lref(Lref),
          _GeomEl( (uint) map_in.get("dimension"), (uint) map_in.get("geomel_type") ),
          _n_GeomEl(map_in.get("numgeomels")),
-         _dim(map_in.get("dimension"))
+         _dim(map_in.get("dimension")),
+         _Lref(Lref)
          {
-	   
+	  
     _iproc    = paral::get_rank();
     _NoSubdom = paral::get_size();   
 //     _NoLevels =      map_in.get("nolevels");  //this one does not enter in safe_base, line 89...
@@ -46,9 +46,9 @@ Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const doubl
     }
 
     for (int vb=0;vb < VB; vb++) {
-        _elnodes[vb][QQ]=_GeomEl._elnds[vb][mesh_ord];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
-        _elnodes[vb][LL]=_GeomEl._elnds[vb][LL];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
-        _elnodes[vb][KK]=1;
+        _elnodes[vb][QQ] = _GeomEl._elnds[vb][mesh_ord];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
+        _elnodes[vb][LL] = _GeomEl._elnds[vb][LL];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
+        _elnodes[vb][KK] = 1;
     }
     //i do not want to use the linear part actually!!
 

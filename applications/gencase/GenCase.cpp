@@ -32,20 +32,25 @@
 namespace femus {
 
 // ========================================================
-GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const double Lref, const std::string mesh_file_in):
-        Mesh(files_in,map_in,Lref)
-        
- {
+GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const double Lref, const std::string mesh_file_in)
+     : Mesh(files_in,map_in,Lref)
+{
 
    std::cout << mesh_file_in << std::endl;
-   _mesh_file.assign(mesh_file_in);  //it seems like moving from protected to public in Mesh changed the RUNTIME behaviour also!!!!!
+   std::cout << _dim << std::endl;
+   std::cout << Mesh::_dim << std::endl;
+   std::cout << get_dim() << std::endl;
+   std::cout << Mesh::get_dim() << std::endl;
+   std::cout << _elnodes[0][LL]<< std::endl;
+   std::cout << &_elnodes[0][LL]<< std::endl;
+//     std::cout << casamia << std::endl;
+  _mesh_file.assign(mesh_file_in);  //it seems like moving from protected to public in Mesh changed the RUNTIME behaviour also!!!!!
                                      //now I moved it to gencase and it works   
    _feelems.resize(QL);
   for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(&_GeomEl,fe);
+ 
+  std::cout << "===========================================";//exit(4);
 
-   
-
-    return;
 }
 
 GenCase::~GenCase() {
