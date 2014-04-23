@@ -37,8 +37,9 @@ GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const 
         
  {
 
-   _mesh_file.assign(mesh_file_in);  //it seems like moving from protected to public changed the RUNTIME behaviour also!!!!!
-   
+   std::cout << mesh_file_in << std::endl;
+   _mesh_file.assign(mesh_file_in);  //it seems like moving from protected to public in Mesh changed the RUNTIME behaviour also!!!!!
+                                     //now I moved it to gencase and it works   
    _feelems.resize(QL);
   for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(&_GeomEl,fe);
 
@@ -117,7 +118,7 @@ void GenCase::GenerateCase()   {
 //===============================================================================
 //================= LIBMESH coarse Mesh OBJECT from FILE or FUNCTION ============
 //===============================================================================
-void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse)  {
+void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
 
     const uint libmesh_gen = _mesh_rtmap.get("libmesh_gen");
 
@@ -137,7 +138,7 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse)  {
 
             RunTimeMap<double> box_map("Box",_files._app_path);
             Box box(get_dim(),box_map);
-                box.init(_Lref);  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
+                box.init(get_Lref());  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
 //i guess we could do this instantiation also INSIDE the gencase class
 
 //---Meshing -------
@@ -212,7 +213,7 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse)  {
 // and making this distinction is not trivial, one must check everywhere what to use
 //   const uint mesh_refine = _utils.get_par("mesh_refine");
 //   if (mesh_refine) {
-void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) {
+void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) const {
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t start_timeB=std::clock();
@@ -247,7 +248,7 @@ void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) {
 //TODO can we exploit the fact that BoundaryInfo is useful for containing boundary conditions
 //to READ from GAMBIT and ASSOCIATE FLAGS From Gambit to Libmesh, AND THEN from LIBMESH to FEMUS?
 
-void GenCase::GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs) {
+void GenCase::GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs) const {
 
     std::cout << " LibMesh BOUNDARY generation --------- \n";
     msh_all_levs->boundary_info->sync(*bd_msht);

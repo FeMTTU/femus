@@ -106,13 +106,9 @@ public:
     
     //get functions
     inline const double get_Lref() const {return _Lref;}
-    inline const uint   get_dim()  const {return _dim;}
-    
-    std::string _mesh_file;    //mesh file name from the mesh generator
+  virtual  inline const uint   get_dim()  const {return _dim;}
 
 protected:
-
-    const double _Lref;          ///Reference length for non-dimensionalization
     
     // HDF5 FIELDS ===============
     std::string _nodes_name; //name for the HDF5 dataset
@@ -144,7 +140,9 @@ protected:
     std::vector< std::pair<int,int> > _el_fm_libm_b;
 
 private:   
+  
     const uint _dim;               ///< spatial dimension
+    const double _Lref;          ///Reference length for non-dimensionalization
     
 
  };

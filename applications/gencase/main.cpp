@@ -97,7 +97,6 @@ int main(int argc, char** argv) {
 
 // ========= GenCase =====
   RunTimeMap<double> mesh_map("Mesh",files._app_path);
-  int prova =  mesh_map.get("nolevels");  //this one works. So I think the problem is in the COPY of the runtime map
   GenCase gencase(files,mesh_map,1.,files_map.get("F_MESH_READ"));
   
 // if domain is a Box, instantiate it

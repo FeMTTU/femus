@@ -48,9 +48,9 @@ public:
     void GenerateCase();
     void CreateStructuresLevSubd();
 #ifdef HAVE_LIBMESH
-    void GenerateCoarseMesh(libMesh::Mesh* msh_coarse);
-    void RefineMesh(libMesh::Mesh* msh_all_levs);
-    void GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs);
+    void GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const;
+    void RefineMesh(libMesh::Mesh* msh_all_levs) const;
+    void GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs) const;
     void GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh* bd_mesht, libMesh::Mesh* msht, libMesh::Mesh* msh);
 #endif
     
@@ -58,6 +58,9 @@ private:
 
     // Element ===========
     std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
+    
+    std::string _mesh_file;    //mesh file name from the mesh generator
+
 
 };
 
