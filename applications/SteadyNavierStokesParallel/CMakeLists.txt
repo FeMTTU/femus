@@ -6,7 +6,7 @@ PROJECT(SteadyNavierStokes)
 ADD_EXECUTABLE(steadyns ${CMAKE_PROJECT_DIR}main.cpp)
 
 # Link the executable to the petsc anf femttu libs
-TARGET_LINK_LIBRARIES(steadyns femlib)
+TARGET_LINK_LIBRARIES(steadyns femus)
 TARGET_LINK_LIBRARIES(steadyns ${PETSC_LIBRARIES})
 TARGET_LINK_LIBRARIES(steadyns b64)
 

@@ -6,7 +6,7 @@ PROJECT(FSI_TUREK_3)
 ADD_EXECUTABLE(fsitrk ${CMAKE_PROJECT_DIR}main.cpp)
 
 # Link the executable to the petsc anf femttu libs
-TARGET_LINK_LIBRARIES(fsitrk femlib)
+TARGET_LINK_LIBRARIES(fsitrk femus)
 TARGET_LINK_LIBRARIES(fsitrk ${PETSC_LIBRARIES})
 TARGET_LINK_LIBRARIES(fsitrk b64)
 

@@ -6,7 +6,7 @@ PROJECT(FSI_CMS_NWM)
 ADD_EXECUTABLE(fsicms ${CMAKE_PROJECT_DIR}main.cpp)
 
 # Link the executable to the petsc anf femttu libs
-TARGET_LINK_LIBRARIES(fsicms femlib)
+TARGET_LINK_LIBRARIES(fsicms femus)
 TARGET_LINK_LIBRARIES(fsicms ${PETSC_LIBRARIES})
 TARGET_LINK_LIBRARIES(fsicms b64)
 

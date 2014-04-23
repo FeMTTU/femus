@@ -6,7 +6,7 @@ PROJECT(TimedepNavierStokes)
 ADD_EXECUTABLE(backeuler ${CMAKE_PROJECT_DIR}main.cpp)
 
 # Link the executable to the petsc anf femttu libs
-TARGET_LINK_LIBRARIES(backeuler femlib)
+TARGET_LINK_LIBRARIES(backeuler femus)
 TARGET_LINK_LIBRARIES(backeuler ${PETSC_LIBRARIES})
 TARGET_LINK_LIBRARIES(backeuler b64)
 
