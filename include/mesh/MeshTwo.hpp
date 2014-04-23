@@ -62,26 +62,25 @@ public:
     void ComputeMaxElXNode();
     void ComputeNodeMapExtLevels();
 
+    //get functions
+    inline const double get_Lref() const {return _Lref;}
+    inline const uint   get_dim()  const {return _dim;}
+
 //attributes    ************************************
     
     const Files& _files; 
     const RunTimeMap<double> & _mesh_rtmap;
+    ElemStoVol**  _el_sto;                 //FILLED ACCORDING TO "how the Libmesh mesh iterator runs" which may not be id in general i think...
 
+    const uint _dim;               ///< spatial dimension
+    const double _Lref;          ///Reference length for non-dimensionalization
+    
 // ===== ABSTRACT GEOMEL(S) =====
     GeomEl    _GeomEl;
     const uint _n_GeomEl;         //number of geom elem types
     uint*      _type_FEM;         //just for check
     uint _elnodes[VB][QL];
-    const uint _dim;               ///< spatial dimension
-    const double _Lref;          ///Reference length for non-dimensionalization
     
-
-// ====== DOMAIN SHAPE (TODO optional => pointer) ----- //if I put it as reference I'd have to initialize it
-    Domain* _domain;      //TODO You must remember to ALLOCATE this POINTER BEFORE USING IT!
-    Domain* GetDomain() const;
-    void    SetDomain(Domain* );
-    void TransformElemNodesToRef(const uint vb,const double* xx_qnds,double* refbox_xyz) const;
-
 // ==== PARALLEL ===
     uint _iproc;       /// current subdomain
     uint _NoSubdom;    /// Number of subdomains (subdomain P)
@@ -94,6 +93,11 @@ public:
     int**  _off_el;            /// offset of element numbers [VB][L+P*_NoLevels]         
     uint** _el_map;            /// Connectivity map         [VB][L+P*_NoLevels]
     int**  _el_bdry_to_vol;
+// ELEMENTS =============
+    int ** _n_elements_sl_vb;
+    int    _n_elements_sum_levs[VB];    //of the WHOLE REFINEMENT! //LMFILLS 
+    int ** _el_child_to_fath;              //for every level, it gives you the father
+    ElemStoBdry** _el_sto_b;               //FILLED with OUR ORDERING, "as we find them during the volume elem loop"
 
 // ===== NODES ======
     uint*   _NoNodesXLev;            ///VOLUME, at the EXTENDED LEVELS
@@ -101,20 +105,14 @@ public:
     uint**  _Qnode_lev_Qnode_fine;   ///ONLY USED FOR THE EQUATION /// FROM DOF TO NODE: Q or L dofs by using an add aux level [_NoLevels+1][NoNodes[L]] //ONLY VOLUME  //NO PROC info, these are DOFS in the "SERIALIZED NUMBERING"
     int**  _Qnode_fine_Qnode_lev;   ///Un nodo fine puo' o non appartenere ad un certo livello... quindi devo continuare a mantenere i -1, altrimenti dovrei fare un search che fa perdere tempo
     int**   _off_nd;                 ///ONLY USED FOR THE EQUATION /// FROM DOF TO NODE: offsets for dofs  [QL][L+P*_NoLevels]                     //ONLY VOLUME
-                                     // on the fine node numbering, the nodes corresponding to linear dofs are numbered FIRST... or not?
-    
-//must be public right now
-    std::vector< std::pair<int,int> > _el_fm_libm; //because the EQUATION needs it for the SPARSITY PATTERN
-    int *                             _el_libm_fm;
-    ElemStoVol**  _el_sto;                 //FILLED ACCORDING TO "how the Libmesh mesh iterator runs" which may not be id in general i think...
-    int *                             _nd_libm_fm; //from FINE LIBMESH NODE ORDERING to FINE FEMUS NODE ORDERING
+                                   // on the fine node numbering, the nodes corresponding to linear dofs are numbered FIRST... or not?
+// NODES ===============
+    int    _n_nodes;       //of the WHOLE REFINEMENT! i.e. the FINE ones! //LMFILLS 
+    int ** _n_nodes_sl_ql; 
+    int *  _elxnode;              //number of elements per node of the fine mesh
+    double *    _nd_coords_libm;  //node coordinates  //FILLED ACCORDING TO LIBMESH NODE ID ORDERING; then I'll print them according to my FEMUS ordering
+    NodeSto**   _nd_sto;                       //FILLED ACCORDING TO LIBMESH NODE ID ORDERING
     int    _maxelxnode;
-    
-    //get functions
-    inline const double get_Lref() const {return _Lref;}
-    inline const uint   get_dim()  const {return _dim;}
-
-protected:
     
     // HDF5 FIELDS ===============
     std::string _nodes_name; //name for the HDF5 dataset
@@ -123,27 +121,28 @@ protected:
 //     std::string _el_pid_name;
 //     std::string _nd_map_FineToLev;
 
+
+    std::vector< std::pair<int,int> > _nd_fm_libm; //from FINE FEMUS NODE ORDERING to FINE LIBMESH NODE ORDERING
+    std::vector< std::pair<int,int> > _el_fm_libm; //because the EQUATION needs it for the SPARSITY PATTERN
+    int *                             _el_libm_fm;
+    int *                             _nd_libm_fm; //from FINE LIBMESH NODE ORDERING to FINE FEMUS NODE ORDERING  //TODO this is the one that is not correctly filled in debug mode
+
+    std::vector< std::pair<int,int> > _el_fm_libm_b;
+    
+protected:
+    
 //====================================
 //filled by child only  (gencase)
 //====================================
 
-    // NODES ===============
-    int    _n_nodes;       //of the WHOLE REFINEMENT! i.e. the FINE ones! //LMFILLS 
-    int ** _n_nodes_sl_ql; 
-    int *  _elxnode;              //number of elements per node of the fine mesh
-    double *    _nd_coords_libm;  //node coordinates  //FILLED ACCORDING TO LIBMESH NODE ID ORDERING; then I'll print them according to my FEMUS ordering
-    NodeSto**   _nd_sto;                       //FILLED ACCORDING TO LIBMESH NODE ID ORDERING
-
-    std::vector< std::pair<int,int> > _nd_fm_libm; //from FINE FEMUS NODE ORDERING to FINE LIBMESH NODE ORDERING
-
     
-    // ELEMENTS =============
-    int ** _n_elements_sl_vb;
-    int    _n_elements_sum_levs[VB];    //of the WHOLE REFINEMENT! //LMFILLS 
-    int ** _el_child_to_fath;              //for every level, it gives you the father
-    ElemStoBdry** _el_sto_b;               //FILLED with OUR ORDERING, "as we find them during the volume elem loop"
+public:    
+// ====== DOMAIN SHAPE (TODO optional => pointer) ----- //if I put it as reference I'd have to initialize it
+    Domain* _domain;      //TODO You must remember to ALLOCATE this POINTER BEFORE USING IT!
+    Domain* GetDomain() const;
+    void    SetDomain(Domain* );
+    void TransformElemNodesToRef(const uint vb,const double* xx_qnds,double* refbox_xyz) const;
     
-    std::vector< std::pair<int,int> > _el_fm_libm_b;
   
 
  };

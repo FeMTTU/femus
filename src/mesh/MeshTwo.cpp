@@ -32,7 +32,6 @@ Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const doubl
 	  
     _iproc    = paral::get_rank();
     _NoSubdom = paral::get_size();   
-//     _NoLevels =      map_in.get("nolevels");  //this one does not enter in safe_base, line 89...
     _NoLevels = _mesh_rtmap.get("nolevels");
     
     const uint mesh_ord = (uint) map_in.get("mesh_ord");

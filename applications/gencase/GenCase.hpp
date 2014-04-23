@@ -47,7 +47,7 @@ public:
     void GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const;
     void RefineMesh(libMesh::Mesh* msh_all_levs) const;
     void GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs) const;
-    void GrabMeshinfoFromLibmesh(libMesh::BoundaryMesh* bd_mesht, libMesh::Mesh* msht, libMesh::Mesh* msh);
+    void GrabMeshinfoFromLibmesh(libMesh::Mesh* msht, libMesh::Mesh* msh);
 #endif
     
 private:

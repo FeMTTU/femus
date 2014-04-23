@@ -31,7 +31,7 @@ namespace femus {
 
    ~Domain();
    
-   const RunTimeMap<double> _domain_rtmap;
+   const RunTimeMap<double> & _domain_rtmap;  //TODO if you dont put the reference it crashes in debug mode... I think it is a const-related thing
 
    std::string _name;
    double      _Lref;
