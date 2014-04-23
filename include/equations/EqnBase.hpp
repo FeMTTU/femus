@@ -35,29 +35,6 @@ class LinearSolverM;
 
 class EqnBase  {
 
-protected:
-  
-//=======================================================================
-// ====== data pointer ==========
-//=======================================================================
-  Files                     & _files;        ///<  file class pointer
-  Physics                   & _phys;         ///<  parameter class pointer
-  Mesh                      & _mesh;         ///<  mesh pointer
-  std::vector<FEElemBase*>  &  _AbstractFE;  ///<  FE
-  EquationsMap              & _eqnmap;       ///<  equation map  pointer
-
-//=======================================================================
-//======= MG: Linear Solvers for every Level ============
-//=======================================================================
-  LinearSolverM **_solver;     ///< linear system solver type (each level)
-
-//=======================================================================
-//======== MG Ops ============ (procs,levels) ====
-//=======================================================================
-  std::vector<SparseMatrix  *> _A;    ///< Matrix A
-  std::vector<SparseMatrix *> _Rst; ///< Restrictor
-  std::vector<SparseMatrix *> _Prl; ///< Prolongation
-
 public:
 
 //=======================================================================
@@ -175,6 +152,29 @@ public:
  //========== Miscellaneous, to be removed... ========================
 double FunctionIntegral (const uint vb, double (*pt2func)(double, const double* ) );  //TODO this function should not stay here, it is just because it needed integration stuff
 
+
+protected:
+  
+//=======================================================================
+// ====== data pointer ==========
+//=======================================================================
+  Files                     & _files;        ///<  file class pointer
+  Physics                   & _phys;         ///<  parameter class pointer
+  Mesh                      & _mesh;         ///<  mesh pointer
+  std::vector<FEElemBase*>  &  _AbstractFE;  ///<  FE
+  EquationsMap              & _eqnmap;       ///<  equation map  pointer
+
+//=======================================================================
+//======= MG: Linear Solvers for every Level ============
+//=======================================================================
+  LinearSolverM **_solver;     ///< linear system solver type (each level)
+
+//=======================================================================
+//======== MG Ops ============ (procs,levels) ====
+//=======================================================================
+  std::vector<SparseMatrix  *> _A;    ///< Matrix A
+  std::vector<SparseMatrix *> _Rst; ///< Restrictor
+  std::vector<SparseMatrix *> _Prl; ///< Prolongation
 
 };
 

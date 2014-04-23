@@ -39,7 +39,7 @@ public:
   void print() const;
 
   void   set(const std::string & name, const T & value);
-  T      get(const std::string & name) const;
+  const T      get(const std::string & name) const;  //TODO do const or not for the return... sembra che l'errore in debug mode fosse proprio qui!!!
 
   const std::string  get_rbasepath() const {return _basepath;}
   
@@ -86,7 +86,7 @@ template <typename T>
 
 //=========================================  
 template <typename T>
-    T RunTimeMap<T>::get(const std::string & name) const {
+  const  T RunTimeMap<T>::get(const std::string & name) const {
     return _rtmap.find(name)->second;
   }
   

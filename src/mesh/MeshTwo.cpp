@@ -5,9 +5,7 @@
 #include <algorithm>
 
 #include "Domain.hpp"
-
 #include "Typedefs.hpp"
-
 #include "Files.hpp"
 #include "IO.hpp"
 #include "GeomEl.hpp"
@@ -26,17 +24,17 @@ namespace femus {
 Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref) :
          _files(files_in),
          _mesh_rtmap(map_in),
-         _Lref(Lref),
          _GeomEl( (uint) map_in.get("dimension"), (uint) map_in.get("geomel_type") ),
          _n_GeomEl(map_in.get("numgeomels")),
-         _dim(_mesh_rtmap.get("dimension"))
+         _dim(map_in.get("dimension")),
+         _Lref(Lref)
          {
-	   
+	  
     _iproc    = paral::get_rank();
     _NoSubdom = paral::get_size();   
     _NoLevels = _mesh_rtmap.get("nolevels");
     
-    const uint mesh_ord = (uint) _mesh_rtmap.get("mesh_ord");
+    const uint mesh_ord = (uint) map_in.get("mesh_ord");
     if (mesh_ord != 0) {
         std::cout << "Linear mesh not yet implemented" << std::endl;
         abort();
@@ -47,9 +45,9 @@ Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const doubl
     }
 
     for (int vb=0;vb < VB; vb++) {
-        _elnodes[vb][QQ]=_GeomEl._elnds[vb][mesh_ord];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
-        _elnodes[vb][LL]=_GeomEl._elnds[vb][LL];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
-        _elnodes[vb][KK]=1;
+        _elnodes[vb][QQ] = _GeomEl._elnds[vb][mesh_ord];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
+        _elnodes[vb][LL] = _GeomEl._elnds[vb][LL];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
+        _elnodes[vb][KK] = 1;
     }
     //i do not want to use the linear part actually!!
 
@@ -193,7 +191,7 @@ if (_dim != topdata[0] ) {std::cout << "Mesh::read_c. Mismatch: the mesh dimensi
 //Also, "\n" seems to have no effect, "<< std::endl" must be used
 //This fact doesn't seem to be related to PARALLEL processes that abort sooner than the others
 
-if ( VB !=  topdata[1] )  {std::cout << "Mesh::read_c. Mismatch: the number of integration dimensions is " << _meshVB
+if ( VB !=  topdata[1] )  {std::cout << "Mesh::read_c. Mismatch: the number of integration dimensions is " << topdata[1]
                                    << " while we have VB= " << VB 
                                    << ". Re-run gencase and your application appropriately " << std::endl;abort(); }
 
