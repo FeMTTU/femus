@@ -168,15 +168,15 @@ void MultiLevelProblem::clear ()
 }
 
 
-void MultiLevelProblem::init()
-{
-  const unsigned int n_sys = this->n_systems();
-
-  assert(n_sys != 0);
-
-  for (unsigned int i=0; i != this->n_systems(); ++i)
-    this->get_system(i).init();
-}
+// void MultiLevelProblem::init()
+// {
+//   const unsigned int n_sys = this->n_systems();
+// 
+//   assert(n_sys != 0);
+// 
+//   for (unsigned int i=0; i != this->n_systems(); ++i)
+//     this->get_system(i).init();
+// }
 
 //---------------------------------------------------------------------------------------------------
 int MultiLevelProblem::ComputeBdIntegral(const char pdename[],const char var_name[], const unsigned & kel, const unsigned & jface, unsigned level, unsigned dir) {

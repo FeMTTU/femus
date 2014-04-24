@@ -39,8 +39,8 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   _npre(1),
   _npost(1),
   //_VankaIsSet(false),
-  _NSchurVar(1),
-  _Schur(false),
+  //_NSchurVar(1),
+  //_Schur(false),
   _SmootherType(smoother_type)
   {
     
@@ -132,7 +132,7 @@ void LinearImplicitSystem::solve() {
 	  // ============== Presmoothing ============== 
 	  for (unsigned k = 0; k < _npre; k++) {
 // 	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!k));
-	    solver_info = _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k));
+	    solver_info = _LinSolver[ig]->solve(_VankaIndex, ksp_clean*(!k));
 	  }
 	  // ============== Non-Standard Multigrid Restriction ==============
 	  start_time = clock();
@@ -146,7 +146,7 @@ void LinearImplicitSystem::solve() {
        
  	// ============== Coarse Direct Solver ==============
  	//solver_info = ( _VankaIsSet ) ? _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean) : _LinSolver[0]->solve(ksp_clean);
- 	solver_info = _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean);
+ 	solver_info = _LinSolver[0]->solve(_VankaIndex, ksp_clean);
              
  	for (unsigned ig = 1; ig < igridn; ig++) {
  	  
@@ -162,7 +162,7 @@ void LinearImplicitSystem::solve() {
  	  // ============== PostSmoothing ==============    
  	  for (unsigned k = 0; k < _npost; k++) {
  	    //solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur,ksp_clean * (!_npre) * (!k)) : _LinSolver[ig]->solve(ksp_clean * (!_npre) * (!k) );
-	    solver_info = _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur,ksp_clean * (!_npre) * (!k));
+	    solver_info = _LinSolver[ig]->solve(_VankaIndex, ksp_clean * (!_npre) * (!k));
  	  }
  	}
  	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
@@ -320,7 +320,7 @@ void LinearImplicitSystem::SetDirichletBCsHandling(const DirichletBCType Dirichl
   } 
   
   for (unsigned i=0; i<_gridn; i++) {
-    _LinSolver[i]->set_dirichletBCsHandling(DirichletBCsHandlingMode);
+    _LinSolver[i]->SetDirichletBCsHandling(DirichletBCsHandlingMode);
   }
 }
 
@@ -356,16 +356,13 @@ void LinearImplicitSystem::ClearVankaIndex() {
 }
 
 
-// void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
-//   if (mgsmoother == VANKA_SMOOTHER) {
-//     _VankaIsSet = true;
-//   } else {
-//     _VankaIsSet = false;
-//   } 
-// }
+void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
+  _SmootherType = mgsmoother;
+}
+  
+  
 
-
-void LinearImplicitSystem::SetDimVankaBlock(unsigned const dim_vanka_block) {
+  void LinearImplicitSystem::SetElementBlockNumber(unsigned const dim_vanka_block) {
   
   const unsigned dim = _msh[0]->GetDimension();
   const unsigned base = pow(2,dim);
@@ -399,20 +396,25 @@ void LinearImplicitSystem::SetTolerances(const double rtol, const double atol,
   }
 }
 
-void LinearImplicitSystem::SetSchurTolerances(const double rtol, const double atol,
-						    const double divtol, const unsigned maxits) {
-  for (unsigned i=1; i<_gridn; i++) {
-    _LinSolver[i]->set_tolerances(rtol,atol,divtol,maxits,1);
-  }
-}
+// void LinearImplicitSystem::SetSchurTolerances(const double rtol, const double atol,
+// 						    const double divtol, const unsigned maxits) {
+//   for (unsigned i=1; i<_gridn; i++) {
+//     _LinSolver[i]->set_tolerances(rtol,atol,divtol,maxits,1);
+//   }
+// }
 
-void LinearImplicitSystem::SetVankaSchurOptions(bool Schur, short unsigned NSchurVar) {
-  if(Schur==1 && NSchurVar ==0){
-    std::cout<<"Error incompatible options in SetVankaSchurOptions "<<std::endl;
-    std::exit(0);
-  }
-  _Schur=Schur;
-  _NSchurVar=NSchurVar;
+void LinearImplicitSystem::SetSchurVariableNumber(const unsigned short &NSchurVar){
+//   if(Schur==1 && NSchurVar ==0){
+//     std::cout<<"Error incompatible options in SetVankaSchurOptions "<<std::endl;
+//     std::exit(0);
+//   }
+//   _Schur=Schur;
+//   _NSchurVar=NSchurVar;
+   for (unsigned i=1; i<_gridn; i++) {
+     _LinSolver[i]->SetSchurVariableNumber(NSchurVar);
+   }
+   
+   
 }
 
 void LinearImplicitSystem::AddStabilization(const bool stab, const double compressibility) {

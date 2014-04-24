@@ -140,8 +140,8 @@ public:
   /** Clear all the Sytems PDE structures */
   void clear();
   
-  /** init the system pde structures */
-  void init();
+//   /** init the system pde structures */
+//   void init();
   
   /** Get the total number of grid, both totally refined and partial refined for DomainDecomposition */
   const unsigned GetNumberOfGrid() const {return _gridn; };

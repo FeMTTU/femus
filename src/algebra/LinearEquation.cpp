@@ -41,7 +41,6 @@ LinearEquation::LinearEquation(mesh *other_msh){
   _stabilization = false;
   _compressibility = 0.;
   _CC_flag=0;
-  _DirichletBCsHandlingMode = 0;
   _EPS = NULL;
   _EPSC = NULL;
   _RES = NULL;
@@ -55,10 +54,7 @@ LinearEquation::LinearEquation(mesh *other_msh){
 //--------------------------------------------------------------------------------
 LinearEquation::~LinearEquation() { }
 
-//--------------------------------------------------------------------------------
-void LinearEquation::set_dirichletBCsHandling(unsigned int DirichletBCsHandlingMode) {
-  _DirichletBCsHandlingMode = DirichletBCsHandlingMode;
-}
+
 
 
 //--------------------------------------------------------------------------------

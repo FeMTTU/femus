@@ -108,7 +108,7 @@ int main(int argc,char **args) {
   system.AddSolutionToSytemPDE("P");
   
   // init all the systems
-  ml_prob.init();
+  system.init();
    
   // System Fluid-Structure-Interaction
   system.AttachAssembleFunction(AssembleMatrixResFSI);  

@@ -99,16 +99,15 @@ namespace femus {
 
   // ==============================================
   
-  clock_t AsmPetscLinearEquationSolver::BuildAMSIndex(const vector <unsigned> &VankaIndex,
-						      const short unsigned &NSchurVar){
+  clock_t AsmPetscLinearEquationSolver::BuildAMSIndex(const vector <unsigned> &VankaIndex){
     clock_t SearchTime=0;
     clock_t start_time=clock();
     
     unsigned nel=_msh->GetElementNumber();
     
     bool FastVankaBlock=true;
-    if(NSchurVar==!0){
-      FastVankaBlock=(_SolType[_SolPdeIndex[VankaIndex[VankaIndex.size()-NSchurVar]]]<3)?false:true;
+    if(_NSchurVar==!0){
+      FastVankaBlock=(_SolType[_SolPdeIndex[VankaIndex[VankaIndex.size()-_NSchurVar]]]<3)?false:true;
     }
     
     unsigned iproc=_msh->_iproc;
@@ -167,7 +166,7 @@ namespace femus {
 		indexc[jel_Metis-ElemOffset]=Csize++;
 		//----------------------------------------------------------------------------------
 		//add non-schur node to be solved
-		for (unsigned iind=0; iind<VankaIndex.size()-NSchurVar; iind++) {
+		for (unsigned iind=0; iind<VankaIndex.size()-_NSchurVar; iind++) {
 		  unsigned indexSol=VankaIndex[iind];
 		  unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 		  unsigned SolType = _SolType[SolPdeIndex];
@@ -200,7 +199,7 @@ namespace femus {
 	//-----------------------------------------------------------------------------------------
 	//Add Schur nodes (generally pressure) to be solved
 	{
-	  for (unsigned iind=VankaIndex.size()-NSchurVar; iind<VankaIndex.size(); iind++) {
+	  for (unsigned iind=VankaIndex.size()-_NSchurVar; iind<VankaIndex.size(); iind++) {
 	    unsigned indexSol=VankaIndex[iind];
 	    unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 	    unsigned SolType = _SolType[SolPdeIndex];
@@ -277,9 +276,7 @@ namespace femus {
   
   // =================================================
   
-  std::pair< int, double> AsmPetscLinearEquationSolver::solve(const vector <unsigned> &VankaIndex,
-							      const short unsigned &NSchurVar,
-							      const bool &Schur,const bool &ksp_clean) {
+  std::pair< int, double> AsmPetscLinearEquationSolver::solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean) {
     PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  
     Vec EPSC=EPSCp->vec(); 
     PetscVector* RESp=static_cast<PetscVector*> (_RES);  
@@ -295,7 +292,7 @@ namespace femus {
     // ***************** NODE/ELEMENT SEARCH *******************
     clock_t start_time=clock();
     if(_indexai_init==0) {
-      BuildAMSIndex(VankaIndex,NSchurVar); 
+      BuildAMSIndex(VankaIndex); 
       BuildIndex();
     }
     SearchTime = start_time - clock();
