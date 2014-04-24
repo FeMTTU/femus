@@ -51,7 +51,7 @@ protected:
   vector <int> _SolType;  
   vector <char*> _SolName;
   const vector <NumericVector*> *_Bdc;
-  unsigned int _DirichletBCsHandlingMode; //* 0 Penalty method,  1 Elimination method */
+  
   
 public:   
   mesh *_msh; 
@@ -84,7 +84,6 @@ public:
   void DeletePde();
   unsigned GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,const unsigned &idof_gmt) const;
   
-  void set_dirichletBCsHandling(unsigned int DirichletBCsHandlingMode);
   void SetMatrixProperties(const bool property);
   bool GetMatrixProperties();
   void AddStabilization(const bool stab, const double compressibility);

@@ -51,7 +51,9 @@ namespace femus {
   
     vector< vector <PetscInt> > _indexai;
     bool _indexai_init;
-     
+   
+    unsigned short _NSchurVar;
+    
     vector< vector <PetscInt> > _is_ovl_idx;
     vector< vector <PetscInt> > _is_loc_idx;
   
@@ -84,13 +86,13 @@ namespace femus {
 			const double &divtol, const unsigned &maxits,const unsigned &index);
     
     void SetElementBlockNumber(const unsigned & block_elemet_number);
-  
+    void SetSchurVariableNumber(const unsigned short & NSchurVar){
+      _NSchurVar=NSchurVar;
+    }
     // Solvers ------------------------------------------------------
     // ========================================================
     /// Call the ASM smoother-solver using the PetscLibrary.
-    std::pair< int, double> solve(const vector <unsigned> &VankaIndex,
-				  const short unsigned &NSchurVar,const bool &Schur,
-				  const bool &ksp_clean);
+    std::pair< int, double> solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean);
     
     
     // Setting --------------------------------------------
@@ -99,7 +101,7 @@ namespace femus {
   
   
     clock_t BuildIndex();
-    clock_t BuildAMSIndex(const vector <unsigned> &VankaIndex,const short unsigned &NSchurVar);
+    clock_t BuildAMSIndex(const vector <unsigned> &VankaIndex);
   
   };
 
@@ -136,6 +138,7 @@ namespace femus {
     _indexai_init=0;
   
     _Pmat_is_initialized = false;
+    _NSchurVar=1;
 
   }
 

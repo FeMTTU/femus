@@ -62,13 +62,14 @@ namespace femus {
 			const double &divtol, const unsigned &maxits,const unsigned &index);
 
     void SetElementBlockNumber(const unsigned & block_elemet_number);
+    void SetSchurVariableNumber(const unsigned short & NSchurVar){
+      _NSchurVar=NSchurVar;
+    }
   
     // Solvers ------------------------------------------------------
     // ========================================================
     /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.
-    std::pair< int, double> solve(const vector <unsigned> &VankaIndex,
-				  const short unsigned &NSchurVar,const bool &Schur,
-				  const bool &ksp_clean);
+    std::pair< int, double> solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean);
   private:
     // data ---------------------------------
     PC _pc;      ///< Preconditioner context
@@ -78,6 +79,8 @@ namespace femus {
     vector< PetscReal > _dtol;
     vector< PetscInt >  _maxits;
     unsigned _block_element_number;
+    
+    short unsigned _NSchurVar;
   
     vector< vector <PetscInt> > _indexai;
   
@@ -92,7 +95,7 @@ namespace femus {
     void set_petsc_solver_type ();
     void set_petsc_solver_type2 ();
 
-    clock_t BuildIndex(const vector <unsigned> &VankaIndex, const short unsigned &NSchurVar);
+    clock_t BuildIndex(const vector <unsigned> &VankaIndex);
   
   };
 
@@ -125,6 +128,7 @@ namespace femus {
     _maxits.resize(2,10);
   
     _indexai_init=0;
+    _NSchurVar=1;
    
   }
 

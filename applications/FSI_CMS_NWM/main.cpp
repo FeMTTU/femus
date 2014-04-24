@@ -129,7 +129,7 @@ int main(int argc,char **args) {
   system.AddSolutionToSytemPDE("P");
   
   // init all the systems
-  ml_probl.init();
+  system.init();
  
   // System Navier-Stokes
   system.AttachAssembleFunction(AssembleMatrixResFSI);  
@@ -152,10 +152,10 @@ int main(int argc,char **args) {
   system.AddVariableToVankaIndex("P");
   system.SetSolverFineGrids(GMRES);
   system.SetPreconditionerFineGrids(MLU_PRECOND); // Use MLU_PRECOND (MumpsLU) instead LU_PRECOND (pestcLu), it's more robust!!!
-  system.SetVankaSchurOptions(false,1);
+  system.SetSchurVariableNumber(1);
   system.SetTolerances(1.e-12,1.e-20,1.e+50,1);
-  system.SetSchurTolerances(1.e-12,1.e-20,1.e+50,4);
-  system.SetDimVankaBlock(4);                
+  //system.SetSchurTolerances(1.e-12,1.e-20,1.e+50,4);
+  system.SetElementBlockNumber(4);                
 
   // time loop parameter
   system.SetIntervalTime(0.005);

@@ -130,11 +130,21 @@ public:
   // ================================
 
   /// Set the number of elements of the Vanka Block
-  virtual void SetElementBlockNumber(const unsigned & block_elemet_number){};
+  virtual void SetElementBlockNumber(const unsigned & block_elemet_number){
+    std::cout<<"Warning SetElementBlockNumber(...) is not available for this smoother\n"; 
+  };
+  
+  
+  virtual void SetSchurVariableNumber(const unsigned short & NSchurVar){
+    std::cout<<"Warning SetSchurVariableNumber(...) is not available for this smoother\n"; 
+  };
+  
+  virtual void SetDirichletBCsHandling(unsigned int DirichletBCsHandlingMode){
+    std::cout<<"Warning SetDirichletBCsHandling(...) is not available for this smoother\n"; 
+  };
   
   /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.
-  virtual std::pair< int, double> solve(const vector <unsigned> &VankaIndex, const short unsigned &NSchurVar,
-					const bool &Schur, const bool &ksp_clean) = 0;
+  virtual std::pair< int, double> solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean) = 0;
   /// Call the Gmres smoother-solver
   // virtual std::pair< int, double> solve( const bool &clean = true) = 0;
   

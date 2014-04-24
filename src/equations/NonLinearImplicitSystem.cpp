@@ -98,7 +98,7 @@ void NonLinearImplicitSystem::solve() {
 	  // ============== Presmoothing ============== 
 	  for (unsigned k = 0; k < _npre; k++) {
 // 	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!k));
-	    solver_info = _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k));
+	    solver_info = _LinSolver[ig]->solve(_VankaIndex , ksp_clean*(!k));
 	  }
 	  // ============== Non-Standard Multigrid Restriction ==============
 	  start_time = clock();
@@ -109,7 +109,7 @@ void NonLinearImplicitSystem::solve() {
 	}
         // ============== Coarse Direct Solver ==============
  	//solver_info = ( _VankaIsSet ) ? _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur) : _LinSolver[0]->solve(ksp_clean);
- 	solver_info = _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur,ksp_clean);
+ 	solver_info = _LinSolver[0]->solve(_VankaIndex, ksp_clean);
              
  	for (unsigned ig = 1; ig < igridn; ig++) {
  	  
@@ -122,7 +122,7 @@ void NonLinearImplicitSystem::solve() {
  	  // ============== PostSmoothing ==============    
  	  for (unsigned k = 0; k < _npost; k++) {
 // 	    solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!_npre)*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!_npre)*(!k));
-	    solver_info =  _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!_npre)*(!k));
+	    solver_info =  _LinSolver[ig]->solve(_VankaIndex, ksp_clean*(!_npre)*(!k));
 	  }
  	}
  	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============

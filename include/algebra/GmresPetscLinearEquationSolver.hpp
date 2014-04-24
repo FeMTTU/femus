@@ -54,8 +54,14 @@ namespace femus {
     Mat _Pmat;
     bool _Pmat_is_initialized;  
     
+    unsigned int _DirichletBCsHandlingMode; //* 0 Penalty method,  1 Elimination method */
   public:
   
+    //--------------------------------------------------------------------------------
+    void SetDirichletBCsHandling(unsigned int DirichletBCsHandlingMode) {
+      _DirichletBCsHandlingMode = DirichletBCsHandlingMode;
+    }
+        
     // Constructor --------------------------------------
     /**  Constructor. Initializes Petsc data structures */
     GmresPetscLinearEquationSolver (const unsigned &igrid, mesh *other_mesh);
@@ -76,9 +82,7 @@ namespace femus {
     // Solvers ------------------------------------------------------
     // ========================================================
     /// Call the GMRES smoother-solver using the PetscLibrary.
-    std::pair< int, double> solve(const vector <unsigned> &VankaIndex,
-				  const short unsigned &NSchurVar,const bool &Schur,
-				  const bool &ksp_clean);
+    std::pair< int, double> solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean);
   
  
 
@@ -117,6 +121,8 @@ namespace femus {
     _indexai_init=0;
   
     _Pmat_is_initialized = false;
+    
+    _DirichletBCsHandlingMode = 0;
 
   }
 

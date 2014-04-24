@@ -103,7 +103,7 @@ public:
    void SetMgSmoother(const MgSmoother mgsmoother);
    
    /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
-   void SetDimVankaBlock(unsigned const dim_vanka_block);
+   void SetElementBlockNumber(unsigned const dim_vanka_block);
    
    /** Set the Ksp smoother solver on the fine grids. At the coarse solver we always use the LU (Mumps) direct solver */
    void SetSolverFineGrids(const SolverType solvertype);
@@ -115,12 +115,14 @@ public:
    void SetTolerances(const double rtol, const double atol,
 					       const double divtol, const unsigned maxits);
    
-   /** Set the tolerances for the ksp solver of the Schur-Vanka on fine grids: rtol, atol, divtol, maxits */
-   void SetSchurTolerances(const double rtol, const double atol,
-						    const double divtol, const unsigned maxits);
+   // /** Set the tolerances for the ksp solver of the Schur-Vanka on fine grids: rtol, atol, divtol, maxits */
+   // void SetSchurTolerances(const double rtol, const double atol,
+   //						    const double divtol, const unsigned maxits);
    
    /** Set the options of the Schur-Vanka smoother */
-   void SetVankaSchurOptions(bool Schur, short unsigned NSchurVar);
+   //void SetVankaSchurOptions(bool Schur, short unsigned NSchurVar);
+   void SetSchurVariableNumber(const unsigned short &NSchurVar);
+   
    
    /** Set the number of pre-smoothing step of a Multigrid cycle */
    void SetNumberPreSmoothingStep(const unsigned int npre) {_npre = npre;};
@@ -168,9 +170,9 @@ protected:
   
   //bool _VankaIsSet;
   MgSmoother _SmootherType;
-  short unsigned _NSchurVar;
+  //short unsigned _NSchurVar;
   
-  bool _Schur;
+  //bool _Schur;
   
   vector <unsigned> _VankaIndex;
   

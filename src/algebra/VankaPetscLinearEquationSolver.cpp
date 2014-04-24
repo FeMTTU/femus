@@ -62,15 +62,14 @@ namespace femus {
 
   // ========================================================
 
-  clock_t VankaPetscLinearEquationSolver::BuildIndex(const vector <unsigned> &VankaIndex,
-						     const short unsigned &NSchurVar){
+  clock_t VankaPetscLinearEquationSolver::BuildIndex(const vector <unsigned> &VankaIndex){
     clock_t SearchTime=0;
     clock_t start_time=clock();
     _indexai_init=1;
     unsigned nel=_msh->GetElementNumber();
     bool FastVankaBlock=true;
-    if(NSchurVar==!0){
-      FastVankaBlock=(_SolType[_SolPdeIndex[VankaIndex[VankaIndex.size()-NSchurVar]]]<3)?false:true;
+    if(_NSchurVar==!0){
+      FastVankaBlock=(_SolType[_SolPdeIndex[VankaIndex[VankaIndex.size()-_NSchurVar]]]<3)?false:true;
     }
  
     unsigned IndexaOffset = KKoffset[0][_msh->_iproc];
@@ -138,7 +137,7 @@ namespace femus {
 		  indexc[jel_Metis-IndexcOffset]=Csize++;
 		}
 		//add non-schur node to be solved
-		for (unsigned iind=0; iind<VankaIndex.size()-NSchurVar; iind++) {
+		for (unsigned iind=0; iind<VankaIndex.size()-_NSchurVar; iind++) {
 		  unsigned indexSol=VankaIndex[iind];
 		  unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 		  unsigned SolType = _SolType[SolPdeIndex];
@@ -202,7 +201,7 @@ namespace femus {
 	  //Add Schur nodes (generally pressure) to be solved
 	  //if(iel_mts >= _msh->IS_Mts2Gmt_elem_offset[_msh->_iproc] && iel_mts < _msh->IS_Mts2Gmt_elem_offset[_msh->_iproc+1])
 	  {
-	    for (unsigned iind=VankaIndex.size()-NSchurVar; iind<VankaIndex.size(); iind++) {
+	    for (unsigned iind=VankaIndex.size()-_NSchurVar; iind<VankaIndex.size(); iind++) {
 	      unsigned indexSol=VankaIndex[iind];
 	      unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 	      unsigned SolType = _SolType[SolPdeIndex];
@@ -289,7 +288,6 @@ namespace femus {
   // ========================================================
 
   std::pair< int, double> VankaPetscLinearEquationSolver::solve(const vector <unsigned> &VankaIndex,
-								const short unsigned &NSchurVar,const bool &Schur,
 								const bool &ksp_clean) {
   
     PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
@@ -308,7 +306,7 @@ namespace femus {
   
     // ***************** NODE/ELEMENT SEARCH *******************
     if(_indexai_init==0) {
-      SearchTime += BuildIndex(VankaIndex,NSchurVar); 
+      SearchTime += BuildIndex(VankaIndex); 
     }
     // ***************** END NODE/ELEMENT SEARCH *******************  
   
@@ -336,7 +334,7 @@ namespace femus {
       ierr = MatGetSubMatrix(KK,isPA,isPA,MAT_INITIAL_MATRIX,&PA); CHKERRABORT(MPI_COMM_WORLD,ierr);
       IS isPB;  
       const PetscInt *ind,*ind2;
-      if (!Schur || _msh->GetGridNumber()==0) { // ******** IF NON-SCHUR COMPLEMENT ***************
+      if (1 || _msh->GetGridNumber()==0) { // ******** IF NON-SCHUR COMPLEMENT ***************
 	ierr = VecCopy(res,Pr); 				CHKERRABORT(MPI_COMM_WORLD,ierr);
 	clock_t end_time=clock();
 	AssemblyTime+=(end_time-start_time);

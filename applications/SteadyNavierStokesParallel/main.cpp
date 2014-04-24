@@ -30,15 +30,21 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 int main(int argc,char **args) {
 
-//   bool linear=1;
-//   bool vanka=1;
-//   if(argc >= 2) {
-//     if( strcmp("vanka",args[1])) vanka=0;
-//   }
-//   else {
-//     cout << "No input arguments!" << endl;
-//     exit(0);
-//   }
+  bool Vanka=0, Gmres=0, Asm=0;
+  if(argc >= 2) {
+    if( !strcmp("vanka",args[1])) 	Vanka=1;
+    else if( !strcmp("gmres",args[1])) 	Gmres=1;
+    else if( !strcmp("asm",args[1])) 	Asm=1;
+    
+    if(Vanka+Gmres+Asm==0) {
+      cout << "wrong input arguments!" << endl;
+      exit(0);
+    }
+  }
+  else {
+    cout << "No input argument set default smoother = Gmres" << endl;
+    Gmres=1;
+  }
   
   /// Init Petsc-MPI communicator
   FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
@@ -101,21 +107,17 @@ int main(int argc,char **args) {
   
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
    
-  //create systems
-  // add the system Navier-Stokes to the MultiLevel problem
-  NonLinearImplicitSystem & system1 = ml_prob.add_system<NonLinearImplicitSystem> ("Navier-Stokes",ASM_SMOOTHER);
+  
+  //BEGIN Navier-Stokes Multilevel Problem
+  std::cout << std::endl;
+  std::cout << " *********** Navier-Stokes ************  " << std::endl;
+    
+  NonLinearImplicitSystem & system1 = ml_prob.add_system<NonLinearImplicitSystem> ("Navier-Stokes");
   system1.AddSolutionToSytemPDE("U");
   system1.AddSolutionToSytemPDE("V");
   system1.AddSolutionToSytemPDE("P");
   
-  // add the system Temperature to the MultiLevel problem
-  LinearImplicitSystem & system2 = ml_prob.add_system<LinearImplicitSystem> ("Temperature");
-  system2.AddSolutionToSytemPDE("T");
-
-  // init all the systems
-  ml_prob.init();
-   
-  // System Navier-Stokes
+  // Set MG Options
   system1.AttachAssembleFunction(AssembleMatrixResNS);  
   system1.SetMaxNumberOfNonLinearIterations(3);
   system1.SetMaxNumberOfLinearIterations(2);
@@ -124,62 +126,69 @@ int main(int argc,char **args) {
   system1.SetMgType(F_CYCLE);
   system1.SetNumberPreSmoothingStep(1);
   system1.SetNumberPostSmoothingStep(1);
- 
-//   if(!vanka){
-//     system1.SetMgSmoother(GMRES_SMOOTHER);
-//     system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
-//   }
-//   else{
-    //system1.SetMgSmoother(VANKA_SMOOTHER);
-    system1.AddStabilization(true);
-    system1.ClearVankaIndex();
-    system1.AddVariableToVankaIndex("All");
-    system1.SetSolverFineGrids(GMRES);
-    system1.SetPreconditionerFineGrids(LU_PRECOND); 
-    system1.SetVankaSchurOptions(false,1);
-    system1.SetTolerances(1.e-12,1.e-20,1.e+50,2);
-    system1.SetDimVankaBlock(4);                
-  //}
+      
+  //Set Smoother Options
+  if(Gmres) 		system1.SetMgSmoother(GMRES_SMOOTHER);
+  else if(Asm) 		system1.SetMgSmoother(ASM_SMOOTHER);
+  else if(Vanka)	system1.SetMgSmoother(VANKA_SMOOTHER);
   
-  // Solving Navier-Stokes system
-  std::cout << std::endl;
-  std::cout << " *********** Navier-Stokes ************  " << std::endl;
+  system1.init();
+  //common smoother options
+  system1.AddStabilization(true);
+  system1.SetSolverFineGrids(GMRES);
+  system1.SetPreconditionerFineGrids(ILU_PRECOND); 
+  system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
+  //for Vanka and ASM smoothers
+  system1.ClearVankaIndex();
+  system1.AddVariableToVankaIndex("All");
+  system1.SetSchurVariableNumber(1);
+  system1.SetElementBlockNumber(4);                
+  //for Gmres smoother
+  system1.SetDirichletBCsHandling(PENALTY); 
+   
+  // Solve Navier-Stokes system
   ml_prob.get_system("Navier-Stokes").solve();
+  //END Navier-Stokes Multilevel Problem
   
   
-  // System Temperature
+  //BEGIN Temperature MultiLevel Problem
+  std::cout << std::endl;
+  std::cout << " *********** Temperature ************* " << std::endl;
+    
+  LinearImplicitSystem & system2 = ml_prob.add_system<LinearImplicitSystem> ("Temperature");
+  system2.AddSolutionToSytemPDE("T");
+  
+  
+  // Set MG Options
   system2.AttachAssembleFunction(AssembleMatrixResT);
   system2.SetMaxNumberOfLinearIterations(6);
-  system2.SetAbsoluteConvergenceTolerance(1.e-9);  
-  system2.SetSolverFineGrids(GMRES); 
-  system2.SetTolerances(1.e-12,1.e-20,1.e+50,4);
   system2.SetMgType(V_CYCLE);
   system2.SetNumberPreSmoothingStep(1);
   system2.SetNumberPostSmoothingStep(1);
-  system2.SetDirichletBCsHandling(PENALTY); 
-  //system2.SetDirichletBCsHandling(ELIMINATION); 
    
- //if(!vanka){
-    system2.SetPreconditionerFineGrids(ILU_PRECOND);
-    //system2.SetMgSmoother(GMRES_SMOOTHER);
- // }
-//   else{
-//     system2.SetMgSmoother(VANKA_SMOOTHER);
-//     system2.AddStabilization(true);
-//     system2.ClearVankaIndex();
-//     system2.AddVariableToVankaIndex("T");
-//     system2.SetSolverFineGrids(GMRES);
-//     system2.SetTolerances(1.e-12,1.e-20,1.e+50,1);
-//     system2.SetPreconditionerFineGrids(ASM_PRECOND); 
-//     system2.SetVankaSchurOptions(false,1);
-//     system2.SetDimVankaBlock(4);                
-//   }
+  //Set Smoother Options
+  if(Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
+  else if(Asm) 		system2.SetMgSmoother(ASM_SMOOTHER);
+  else if(Vanka)	system2.SetMgSmoother(VANKA_SMOOTHER);
   
-  // Solving Temperature system
-  std::cout << std::endl;
-  std::cout << " *********** Temperature ************* " << std::endl;
+  system2.init(); 
+  //common smoother option
+  system2.SetAbsoluteConvergenceTolerance(1.e-9);  
+  system2.SetSolverFineGrids(GMRES); 
+  system2.SetTolerances(1.e-12,1.e-20,1.e+50,4);
+  system2.SetPreconditionerFineGrids(ILU_PRECOND);
+  //for Vanka and ASM smoothers
+  system2.ClearVankaIndex();
+  system2.AddVariableToVankaIndex("All");
+  system2.SetSchurVariableNumber(0);
+  system2.SetElementBlockNumber(4);                
+  //for Gmres smoother
+  system2.SetDirichletBCsHandling(PENALTY); 
+  
+  // Solve Temperature system
   ml_prob.get_system("Temperature").solve();
-   
+  //END Temperature Multilevel Problem
+    
   /// Print all solutions
   std::vector<std::string> print_vars;
   print_vars.push_back("U");

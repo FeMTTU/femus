@@ -102,10 +102,7 @@ namespace femus {
 
   // ================================================
 
-  std::pair< int, double> GmresPetscLinearEquationSolver::solve(const vector <unsigned> &VankaIndex,
-								const short unsigned &NSchurVar,
-								const bool &Schur, 
-								const bool &ksp_clean) {
+  std::pair< int, double> GmresPetscLinearEquationSolver::solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean) {
     
     clock_t SearchTime, AssemblyTime, SolveTime, UpdateTime;
     int its;
