@@ -104,6 +104,8 @@ public:
    
    /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
    void SetElementBlockNumber(unsigned const dim_vanka_block);
+   /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
+   void SetElementBlockNumber(const char all[],const unsigned & overlap = 1);
    
    /** Set the Ksp smoother solver on the fine grids. At the coarse solver we always use the LU (Mumps) direct solver */
    void SetSolverFineGrids(const SolverType solvertype);

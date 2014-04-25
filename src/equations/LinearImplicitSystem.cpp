@@ -362,7 +362,7 @@ void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
   
   
 
-  void LinearImplicitSystem::SetElementBlockNumber(unsigned const dim_vanka_block) {
+void LinearImplicitSystem::SetElementBlockNumber(unsigned const dim_vanka_block) {
   
   const unsigned dim = _msh[0]->GetDimension();
   const unsigned base = pow(2,dim);
@@ -373,6 +373,13 @@ void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
     _LinSolver[i]->SetElementBlockNumber(num_vanka_block2);
   }
 }
+
+void LinearImplicitSystem::SetElementBlockNumber(const char all[], const unsigned & overlap) {
+  for (unsigned i=1; i<_gridn; i++) {
+    _LinSolver[i]->SetElementBlockNumber(all, overlap);
+  }
+}
+
 
 
 void LinearImplicitSystem::SetSolverFineGrids(const SolverType solvertype) {
