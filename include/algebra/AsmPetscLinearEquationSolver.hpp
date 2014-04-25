@@ -64,6 +64,9 @@ namespace femus {
     PetscInt  _nlocal,_first;   						
     PC        _subpc;   		
     
+    bool _standard_ASM;
+    unsigned _overlap;
+    
     Mat _Pmat;
     bool _Pmat_is_initialized;
       
@@ -86,9 +89,12 @@ namespace femus {
 			const double &divtol, const unsigned &maxits,const unsigned &index);
     
     void SetElementBlockNumber(const unsigned & block_elemet_number);
-    void SetSchurVariableNumber(const unsigned short & NSchurVar){
-      _NSchurVar=NSchurVar;
+    void SetElementBlockNumber(const char all[], const unsigned & overlap=1){
+      _standard_ASM=1;
+      _overlap=overlap;
     }
+      
+    void SetSchurVariableNumber(const unsigned short & NSchurVar){ _NSchurVar=NSchurVar; };
     // Solvers ------------------------------------------------------
     // ========================================================
     /// Call the ASM smoother-solver using the PetscLibrary.
@@ -100,7 +106,7 @@ namespace femus {
     void set_petsc_solver_type ();
   
   
-    clock_t BuildIndex();
+    clock_t BuildIndex(const vector <unsigned> &VankaIndex);
     clock_t BuildAMSIndex(const vector <unsigned> &VankaIndex);
   
   };
@@ -139,6 +145,9 @@ namespace femus {
   
     _Pmat_is_initialized = false;
     _NSchurVar=1;
+    
+    _standard_ASM=1;
+    _overlap=1;
 
   }
 

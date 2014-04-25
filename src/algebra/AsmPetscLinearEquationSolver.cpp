@@ -51,34 +51,49 @@ namespace femus {
   void AsmPetscLinearEquationSolver::SetElementBlockNumber(const unsigned& block_elemet_number) {
     _element_block_number = block_elemet_number;
     _indexai_init=0;
+    _standard_ASM=0;
   }
 
   // ==============================================
-  clock_t AsmPetscLinearEquationSolver::BuildIndex(){
+  clock_t AsmPetscLinearEquationSolver::BuildIndex(const vector <unsigned> &VankaIndex){
     
     clock_t SearchTime = 0;
     clock_t start_time = clock();
-    _indexai_init = 1;
     
     unsigned IndexaSize=KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
     _indexai.resize(2);
+    
+    _indexai[0].clear();
+    _indexai[1].clear();
+        
     _indexai[0].resize(IndexaSize);
     _indexai[1].resize(IndexaSize);
     
     unsigned count0=0;
     unsigned count1=0;
+    
+    
+    vector <bool> ThisSolutionIsIncluded(_SolPdeIndex.size(),false);
+    for (unsigned iind=0; iind<VankaIndex.size(); iind++) {
+      unsigned PdeIndexSol=VankaIndex[iind];
+      ThisSolutionIsIncluded[PdeIndexSol]=true;
+    }
+    
+    for(int k=0; k < _SolPdeIndex.size(); k++) {
+      std::cout<<ThisSolutionIsIncluded[k]<<std::endl;
+    }
+        
     for(int k=0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       unsigned soltype = _SolType[indexSol];
-      for(unsigned inode_mts = _msh->MetisOffset[soltype][_msh->_iproc]; 
-	  inode_mts < _msh->MetisOffset[soltype][_msh->_iproc+1]; inode_mts++) {
+      for(unsigned inode_mts = _msh->MetisOffset[soltype][_msh->_iproc]; inode_mts < _msh->MetisOffset[soltype][_msh->_iproc+1]; inode_mts++) {
 	int local_mts = inode_mts-_msh->MetisOffset[soltype][_msh->_iproc];
-        int idof_kk = KKoffset[k][_msh->_iproc] +local_mts; 
-        if((*(*_Bdc)[indexSol])(inode_mts) < 1.9) {
+	int idof_kk = KKoffset[k][_msh->_iproc] +local_mts; 
+	if( !ThisSolutionIsIncluded[k] || (*(*_Bdc)[indexSol])(inode_mts) < 1.9) {
 	  _indexai[0][count0] = idof_kk;
 	  count0++;
-        }
-        else{
+	}
+	else{
 	  _indexai[1][count1] = idof_kk;
 	  count1++;
 	}
@@ -292,8 +307,10 @@ namespace femus {
     // ***************** NODE/ELEMENT SEARCH *******************
     clock_t start_time=clock();
     if(_indexai_init==0) {
-      BuildAMSIndex(VankaIndex); 
-      BuildIndex();
+      _indexai_init = 1;
+      if(!_standard_ASM)
+      	BuildAMSIndex(VankaIndex); 
+      BuildIndex(VankaIndex);
     }
     SearchTime = start_time - clock();
     // ***************** END NODE/ELEMENT SEARCH *******************  
@@ -415,8 +432,13 @@ namespace femus {
       PetscReal zero = 1.e-16;
       PCFactorSetZeroPivot(_pc,zero);
       PCFactorSetShiftType(_pc,MAT_SHIFT_NONZERO);
+      if(!_standard_ASM){
+      	ierr = PCASMSetLocalSubdomains(_pc,_is_loc_idx.size(),&_is_ovl[0],&_is_loc[0]); CHKERRABORT(MPI_COMM_WORLD,ierr);
+      }
+      else{
+	ierr = PCASMSetOverlap(_pc,_overlap); CHKERRABORT(MPI_COMM_WORLD,ierr);
+      }
       
-      ierr = PCASMSetLocalSubdomains(_pc,_is_loc_idx.size(),&_is_ovl[0],&_is_loc[0]); CHKERRABORT(MPI_COMM_WORLD,ierr);
       ierr = KSPSetUp(_ksp);							    CHKERRABORT(MPI_COMM_WORLD,ierr);
       
       ierr = PCASMGetSubKSP(_pc,&_nlocal,&_first,&_subksp);			    CHKERRABORT(MPI_COMM_WORLD,ierr);

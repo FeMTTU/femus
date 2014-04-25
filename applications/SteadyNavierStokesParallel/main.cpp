@@ -141,8 +141,11 @@ int main(int argc,char **args) {
   //for Vanka and ASM smoothers
   system1.ClearVankaIndex();
   system1.AddVariableToVankaIndex("All");
+  //system1.AddVariableToVankaIndex("U");
+  //system1.AddVariableToVankaIndex("V");
   system1.SetSchurVariableNumber(1);
-  system1.SetElementBlockNumber(4);                
+  system1.SetElementBlockNumber(4);   
+  system1.SetElementBlockNumber("All");     
   //for Gmres smoother
   system1.SetDirichletBCsHandling(PENALTY); 
    

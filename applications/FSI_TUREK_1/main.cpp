@@ -117,7 +117,12 @@ int main(int argc,char **args) {
   system.SetMgType(F_CYCLE);
   system.SetMaxNumberOfNonLinearIterations(4);
   system.SetNonLinearConvergenceTolerance(1.e-5);
+  
   system.SetDirichletBCsHandling(PENALTY);
+  system.SetSolverFineGrids(GMRES);
+  system.SetPreconditionerFineGrids(ILU_PRECOND); 
+  system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
+  
   
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
