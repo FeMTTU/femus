@@ -29,7 +29,6 @@ class Domain;
 class Mesh  {
 
 public:
-  
 
 //===== Constructors/ Destructor ===========
      Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref);
@@ -46,18 +45,13 @@ public:
     void PrintXDMFGridVB(std::ofstream& out, std::ostringstream& top_file, std::ostringstream& geom_file,const uint Level, const uint vb) const;
     void PrintConnLinVB(hid_t file, const uint Level, const uint vb) const; 
     void PrintMeshFile(const std::string & namefile) const;
-    void PrintMeshHDF5() const;
-    void PrintElemVB( hid_t file, const uint vb , int* v_inv_nd , ElemStoBase** elem_sto, std::vector<std::pair<int,int> > v_el   ) const;
     void PrintSubdomFlagOnQuadrCells(const int vb, const int Level,std::string filename) const;
 
     //======= mesh generation functions ====
     void ElemChildToFather();
-    void ReorderElementBySubdLev_VV();
-    void ReorderElementBySubdLev_BB();
     void ComputeElemOffsetsBySubdLevel();
 
     void FillNodeSto();
-    void ReorderNodesBySubdLev();
     void ComputeNodeOffsetsBySubdLevel();
     void ComputeMaxElXNode();
     void ComputeNodeMapExtLevels();
@@ -120,21 +114,7 @@ public:
 //     std::string _nd_coord_folder;  //TODO why seg fault if I use them?!?
 //     std::string _el_pid_name;
 //     std::string _nd_map_FineToLev;
-
-
-    std::vector< std::pair<int,int> > _nd_fm_libm; //from FINE FEMUS NODE ORDERING to FINE LIBMESH NODE ORDERING
-    std::vector< std::pair<int,int> > _el_fm_libm; //because the EQUATION needs it for the SPARSITY PATTERN
-    int *                             _el_libm_fm;
-    int *                             _nd_libm_fm; //from FINE LIBMESH NODE ORDERING to FINE FEMUS NODE ORDERING  //TODO this is the one that is not correctly filled in debug mode
-
-    std::vector< std::pair<int,int> > _el_fm_libm_b;
-    
-protected:
-    
-//====================================
-//filled by child only  (gencase)
-//====================================
-
+  
     
 public:    
 // ====== DOMAIN SHAPE (TODO optional => pointer) ----- //if I put it as reference I'd have to initialize it
