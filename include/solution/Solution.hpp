@@ -76,7 +76,7 @@ public:
   void SetCoarseCoordinates( vector < vector < double> > &vt);
   void SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
   void UpdateSolution();
-  void SetElementRefiniement(const unsigned &test=0);
+  void SetElementRefinement(const unsigned &test=0);
 
 };
 
