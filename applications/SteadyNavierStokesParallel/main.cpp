@@ -1,5 +1,6 @@
 
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelMesh.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
 #include "Fluid.hpp"
@@ -69,7 +70,11 @@ int main(int argc,char **args) {
   double Uref = 1.;
   
   //Steadystate NonLinearMultiLevelProblem  
-  MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,SetRefinementFlag); 
+  //MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,SetRefinementFlag); 
+  MultiLevelMesh ml_msh;
+  ml_msh.ReadCoarseMesh(infile,"seventh",Lref);
+  ml_msh.RefineMesh(nm,nr,SetRefinementFlag);
+  
   // ml_msh.EraseCoarseLevels(2);
   
   MultiLevelSolution ml_sol(&ml_msh);
@@ -209,7 +214,7 @@ int main(int argc,char **args) {
   GMVOutput gmvio(ml_sol);
   gmvio.write_system_solutions("biquadratic",print_vars);
   
-  // Destroy all the new systems
+  //Destroy all the new systems
   ml_prob.clear();
   
   delete [] infile;

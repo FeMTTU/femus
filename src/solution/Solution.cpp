@@ -357,7 +357,7 @@ void Solution::UpdateSolution() {
  * Flag the elements to be refined
  **/
 //-------------------------------------------------------------------
-void Solution::SetElementRefiniement(const unsigned &test) {
+void Solution::SetElementRefinement(const unsigned &test) {
  
   _msh->el->InitRefinedToZero();
   
