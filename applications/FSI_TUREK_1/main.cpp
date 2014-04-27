@@ -29,7 +29,7 @@ int main(int argc,char **args) {
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
-  nm=5;
+  nm=4;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
@@ -412,6 +412,9 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
  
   // gravity
   double _gravity[3]={0.,0.,0.};
+  
+  // newton algorithm
+  bool nwtn_alg = false;
 
   // -----------------------------------------------------------------
   // space discretization parameters
@@ -485,6 +488,9 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
       for(int j=0; j<dim; j++) {
 	B[indexVAR[dim+i]][indexVAR[j]].resize(nve*nve);
 	memset(&B[indexVAR[dim+i]][indexVAR[j]][0],0,nve*nve*sizeof(double));
+	
+// 	B[indexVAR[dim+i]][indexVAR[dim+j]].resize(nve*nve);
+// 	memset(&B[indexVAR[dim+i]][indexVAR[dim+j]][0],0,nve*nve*sizeof(double));
       }
     }
       
@@ -492,6 +498,12 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
     for(int i=0; i<dim; i++) {
       B[indexVAR[dim+i]][indexVAR[dim+i]].resize(nve*nve);
       memset(&B[indexVAR[dim+i]][indexVAR[dim+i]][0],0,nve*nve*sizeof(double));
+      if(nwtn_alg== true) {
+	for(int idim2=1; idim2<dim; idim2++) {
+	  B[indexVAR[dim+i]][indexVAR[dim+(i+idim2)%dim]].resize(nve*nve);
+	  memset(&B[indexVAR[dim+i]][indexVAR[dim+(i+idim2)%dim]][0],0,nve*nve*sizeof(double));
+	}
+      }
     }
 
     //Pressure gradient (fluid and solid)
@@ -683,7 +695,8 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
                 double LapXweight = Lap*Weight;
 
                 //advection term I
-		double Adv1=0.;
+		double Adv1 = 0.;
+		double Adv2 = ((*fi))*((*fj))*Weight;
 		for(int idim=0; idim<dim; idim++) {
 		  Adv1+= SolVAR[dim+idim]*(*(gradfj+idim))*(*(fi))*Weight;
 		}
@@ -692,15 +705,17 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 		
 		double div_ale = 0.*div_w*((*fi))*((*fj))*(Weight);
 
-		for(int idim=0; idim<dim; idim++) {
+                for(int idim=0; idim<dim; idim++) {
 		  B[indexVAR[dim+idim]][indexVAR[dim+idim]][i*nve+j] += IRe*LapXweight + Adv1 + div_stab - div_ale;
-		}
+		  // Advection term II
+                  if(nwtn_alg== true) {
+		    B[indexVAR[dim+idim]][indexVAR[dim+idim]][i*nve+j]  += Adv2*GradSolVAR[dim+idim][idim];
+		    for(unsigned idim2=1; idim2<dim; idim2++) {
+		      B[indexVAR[dim+idim]][indexVAR[dim + (idim+idim2)%dim]][i*nve+j] += Adv2*GradSolVAR[dim+idim][(idim+idim2)%dim];
+		    }
+		  }
+	        }
 		
-//                 for(int idim=0; idim<dim; idim++) {
-// 		  for(int idim2=0; idim2<dim; idim2++) {
-// 		    B[indexVAR[dim+idim]][indexVAR[idim2]][i*nve+j] += betans*SolVAR[dim+idim]*((*fi))*(*(gradfi+idim2))*Weight;
-// 		  }
-// 		}
 
 		double Lap_ale=0.;
 		for(int idim=0; idim<dim; idim++) {
@@ -1021,6 +1036,11 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
     for(int i=0; i<dim; i++) {
       myRES->add_vector_blocked(Rhs[indexVAR[dim+i]],dofsVAR[dim+i]);
       myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[dim+i]],dofsVAR[dim+i],dofsVAR[dim+i]);
+      if(nwtn_alg== true){
+	for(unsigned idim2=1; idim2<dim; idim2++) {
+	  myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[dim+(i+idim2)%dim]],dofsVAR[dim+i],dofsVAR[dim+(i+idim2)%dim]);  
+	}
+      }
       myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[2*dim]],dofsVAR[dim+i],dofsVAR[2*dim]);
       for(int j=0; j<dim; j++) {
 	myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[j]],dofsVAR[dim+i],dofsVAR[j]);
