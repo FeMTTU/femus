@@ -58,7 +58,7 @@ namespace femus {
   public:
   
     //--------------------------------------------------------------------------------
-    void SetDirichletBCsHandling(unsigned int DirichletBCsHandlingMode) {
+    void SetDirichletBCsHandling(const unsigned int &DirichletBCsHandlingMode) {
       _DirichletBCsHandlingMode = DirichletBCsHandlingMode;
     }
         

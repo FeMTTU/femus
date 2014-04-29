@@ -131,20 +131,20 @@ public:
 
   /// Set the number of elements of the Vanka Block
   virtual void SetElementBlockNumber(const unsigned & block_elemet_number){
-    std::cout<<"Warning SetElementBlockNumber(...) is not available for this smoother\n"; 
+    std::cout<<"Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n"; 
   };
   
   virtual void SetElementBlockNumber(const char all[], const unsigned & overlap=1){
-    std::cout<<"Warning SetElementBlockNumber(...) is not available for this smoother\n"; 
+    std::cout<<"Warning SetElementBlockNumber(const char [], const unsigned & ) is not available for this smoother\n"; 
   };
   
   
-  virtual void SetSchurVariableNumber(const unsigned short & NSchurVar){
-    std::cout<<"Warning SetSchurVariableNumber(...) is not available for this smoother\n"; 
+  virtual void SetNumberOfSchurVariables(const unsigned short & NSchurVar){
+    std::cout<<"Warning SetNumberOfSchurVariables(const unsigned short &) is not available for this smoother\n"; 
   };
   
-  virtual void SetDirichletBCsHandling(unsigned int DirichletBCsHandlingMode){
-    std::cout<<"Warning SetDirichletBCsHandling(...) is not available for this smoother\n"; 
+  virtual void SetDirichletBCsHandling(const unsigned int &DirichletBCsHandlingMode){
+    std::cout<<"Warning SetDirichletBCsHandling(const unsigned int &) is not available for this smoother\n"; 
   };
   
   /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.

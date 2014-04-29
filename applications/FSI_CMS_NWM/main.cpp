@@ -144,15 +144,15 @@ int main(int argc,char **args) {
   system.SetNumberPostSmoothingStep(3);
   //system.SetMgSmoother(VANKA_SMOOTHER);
   system.AddStabilization(true);
-  system.ClearVankaIndex();
-  system.AddVariableToVankaIndex("DX");
-  system.AddVariableToVankaIndex("DY");
+  system.ClearVariablesToBeSolved();
+  system.AddVariableToBeSolved("All");
+  /*system.AddVariableToVankaIndex("DY");
   system.AddVariableToVankaIndex("U");
   system.AddVariableToVankaIndex("V");
-  system.AddVariableToVankaIndex("P");
+  system.AddVariableToVankaIndex("P");*/
   system.SetSolverFineGrids(GMRES);
   system.SetPreconditionerFineGrids(MLU_PRECOND); // Use MLU_PRECOND (MumpsLU) instead LU_PRECOND (pestcLu), it's more robust!!!
-  system.SetSchurVariableNumber(1);
+  system.SetNumberOfSchurVariables(1);
   system.SetTolerances(1.e-12,1.e-20,1.e+50,1);
   //system.SetSchurTolerances(1.e-12,1.e-20,1.e+50,4);
   system.SetElementBlockNumber(4);                

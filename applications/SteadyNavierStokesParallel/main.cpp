@@ -139,13 +139,14 @@ int main(int argc,char **args) {
   system1.SetPreconditionerFineGrids(ILU_PRECOND); 
   system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
   //for Vanka and ASM smoothers
-  system1.ClearVankaIndex();
-  system1.AddVariableToVankaIndex("All");
-  //system1.AddVariableToVankaIndex("U");
-  //system1.AddVariableToVankaIndex("V");
-  system1.SetSchurVariableNumber(1);
-  system1.SetElementBlockNumber(4);   
-  system1.SetElementBlockNumber("All");     
+  system1.ClearVariablesToBeSolved();
+  system1.AddVariableToBeSolved("All");
+  //system1.AddVariableToBeSolved("U");
+  //system1.AddVariableToBeSolved("V");
+  //system1.AddVariableToBeSolved("P");
+  system1.SetNumberOfSchurVariables(1);
+  //system1.SetElementBlockNumber(4);   
+  system1.SetElementBlockNumber("All",1);     
   //for Gmres smoother
   system1.SetDirichletBCsHandling(PENALTY); 
    
@@ -165,6 +166,7 @@ int main(int argc,char **args) {
   // Set MG Options
   system2.AttachAssembleFunction(AssembleMatrixResT);
   system2.SetMaxNumberOfLinearIterations(6);
+  system2.SetAbsoluteConvergenceTolerance(1.e-9);  
   system2.SetMgType(V_CYCLE);
   system2.SetNumberPreSmoothingStep(1);
   system2.SetNumberPostSmoothingStep(1);
@@ -176,14 +178,13 @@ int main(int argc,char **args) {
   
   system2.init(); 
   //common smoother option
-  system2.SetAbsoluteConvergenceTolerance(1.e-9);  
   system2.SetSolverFineGrids(GMRES); 
   system2.SetTolerances(1.e-12,1.e-20,1.e+50,4);
   system2.SetPreconditionerFineGrids(ILU_PRECOND);
   //for Vanka and ASM smoothers
-  system2.ClearVankaIndex();
-  system2.AddVariableToVankaIndex("All");
-  system2.SetSchurVariableNumber(0);
+  system2.ClearVariablesToBeSolved();
+  system2.AddVariableToBeSolved("All");
+  system2.SetNumberOfSchurVariables(0);
   system2.SetElementBlockNumber(4);                
   //for Gmres smoother
   system2.SetDirichletBCsHandling(PENALTY); 

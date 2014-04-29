@@ -132,7 +132,7 @@ void LinearImplicitSystem::solve() {
 	  // ============== Presmoothing ============== 
 	  for (unsigned k = 0; k < _npre; k++) {
 // 	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!k));
-	    solver_info = _LinSolver[ig]->solve(_VankaIndex, ksp_clean*(!k));
+	    solver_info = _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean*(!k));
 	  }
 	  // ============== Non-Standard Multigrid Restriction ==============
 	  start_time = clock();
@@ -146,7 +146,7 @@ void LinearImplicitSystem::solve() {
        
  	// ============== Coarse Direct Solver ==============
  	//solver_info = ( _VankaIsSet ) ? _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean) : _LinSolver[0]->solve(ksp_clean);
- 	solver_info = _LinSolver[0]->solve(_VankaIndex, ksp_clean);
+ 	solver_info = _LinSolver[0]->solve(_VariablesToBeSolvedIndex, ksp_clean);
              
  	for (unsigned ig = 1; ig < igridn; ig++) {
  	  
@@ -162,7 +162,7 @@ void LinearImplicitSystem::solve() {
  	  // ============== PostSmoothing ==============    
  	  for (unsigned k = 0; k < _npost; k++) {
  	    //solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur,ksp_clean * (!_npre) * (!k)) : _LinSolver[ig]->solve(ksp_clean * (!_npre) * (!k) );
-	    solver_info = _LinSolver[ig]->solve(_VankaIndex, ksp_clean * (!_npre) * (!k));
+	    solver_info = _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean * (!_npre) * (!k));
  	  }
  	}
  	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
@@ -325,34 +325,35 @@ void LinearImplicitSystem::SetDirichletBCsHandling(const DirichletBCType Dirichl
 }
 
 
-void LinearImplicitSystem::AddVariableToVankaIndex(const char solname[]) {
+void LinearImplicitSystem::AddVariableToBeSolved(const char solname[]) {
   
   if(!strcmp(solname,"All") || !strcmp(solname,"ALL") || !strcmp(solname,"all")){
-    _VankaIndex.resize(_SolSystemPdeIndex.size());
+    _VariablesToBeSolvedIndex.resize(_SolSystemPdeIndex.size());
     for (unsigned i=0; i<_SolSystemPdeIndex.size(); i++) {
-      _VankaIndex[i]=i;
+      _VariablesToBeSolvedIndex[i]=i;
     }
   }
   else{
-    unsigned n=_VankaIndex.size();
-    _VankaIndex.resize(n+1u);
+    unsigned n=_VariablesToBeSolvedIndex.size();
+    _VariablesToBeSolvedIndex.resize(n+1u);
     unsigned varind=_ml_sol->GetIndex(solname);
 
     for (unsigned i=0; i<_SolSystemPdeIndex.size(); i++) {
       if (_SolSystemPdeIndex[i]==varind) {
-	_VankaIndex[n]=i;
+	_VariablesToBeSolvedIndex[n]=i;
 	break;
       }
       if (_SolSystemPdeIndex.size()-1u==i) {
-	std::cout<<"Error! The variable "<<solname<<" cannot be added to VankaIndex because it is not included in the solution variable set."<<std::endl;
+	std::cout<<"Error! The variable "<<solname<<" cannot be added to AddVariableToBeSolved" 
+		<<" Index because it is not included in the solution variable set."<<std::endl;
 	std::exit(0);
       }
     }
   }
 }
 
-void LinearImplicitSystem::ClearVankaIndex() {
-  _VankaIndex.clear();
+void LinearImplicitSystem::ClearVariablesToBeSolved() {
+  _VariablesToBeSolvedIndex.clear();
 }
 
 
@@ -410,15 +411,9 @@ void LinearImplicitSystem::SetTolerances(const double rtol, const double atol,
 //   }
 // }
 
-void LinearImplicitSystem::SetSchurVariableNumber(const unsigned short &NSchurVar){
-//   if(Schur==1 && NSchurVar ==0){
-//     std::cout<<"Error incompatible options in SetVankaSchurOptions "<<std::endl;
-//     std::exit(0);
-//   }
-//   _Schur=Schur;
-//   _NSchurVar=NSchurVar;
+void LinearImplicitSystem::SetNumberOfSchurVariables(const unsigned short &NSchurVar){
    for (unsigned i=1; i<_gridn; i++) {
-     _LinSolver[i]->SetSchurVariableNumber(NSchurVar);
+     _LinSolver[i]->SetNumberOfSchurVariables(NSchurVar);
    }
    
    
