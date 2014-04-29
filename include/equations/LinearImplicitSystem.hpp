@@ -94,10 +94,10 @@ public:
    void SetDirichletBCsHandling(const DirichletBCType DirichletMode);
    
    /** Add the variable solname to the variable set to be solved by using the Vanka smoother */
-   void AddVariableToVankaIndex(const char solname[]);
+   void AddVariableToBeSolved(const char solname[]);
    
    /** Clear the Vanka index */
-   void ClearVankaIndex();
+   void ClearVariablesToBeSolved();
 
    /** Set the multigrid smoother, gmres or Vanka (in future AMS (additive schwartz preconditioner))*/
    void SetMgSmoother(const MgSmoother mgsmoother);
@@ -123,7 +123,7 @@ public:
    
    /** Set the options of the Schur-Vanka smoother */
    //void SetVankaSchurOptions(bool Schur, short unsigned NSchurVar);
-   void SetSchurVariableNumber(const unsigned short &NSchurVar);
+   void SetNumberOfSchurVariables(const unsigned short &NSchurVar);
    
    
    /** Set the number of pre-smoothing step of a Multigrid cycle */
@@ -176,7 +176,7 @@ protected:
   
   //bool _Schur;
   
-  vector <unsigned> _VankaIndex;
+  vector <unsigned> _VariablesToBeSolvedIndex;
   
 };
 

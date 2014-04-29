@@ -55,7 +55,7 @@ namespace femus {
   }
 
   // ==============================================
-  clock_t AsmPetscLinearEquationSolver::BuildIndex(const vector <unsigned> &VankaIndex){
+  clock_t AsmPetscLinearEquationSolver::BuildBDCIndex(const vector <unsigned> &variable_to_be_solved){
     
     clock_t SearchTime = 0;
     clock_t start_time = clock();
@@ -74,15 +74,11 @@ namespace femus {
     
     
     vector <bool> ThisSolutionIsIncluded(_SolPdeIndex.size(),false);
-    for (unsigned iind=0; iind<VankaIndex.size(); iind++) {
-      unsigned PdeIndexSol=VankaIndex[iind];
+    for (unsigned iind=0; iind<variable_to_be_solved.size(); iind++) {
+      unsigned PdeIndexSol=variable_to_be_solved[iind];
       ThisSolutionIsIncluded[PdeIndexSol]=true;
     }
-    
-    for(int k=0; k < _SolPdeIndex.size(); k++) {
-      std::cout<<ThisSolutionIsIncluded[k]<<std::endl;
-    }
-        
+          
     for(int k=0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       unsigned soltype = _SolType[indexSol];
@@ -114,7 +110,7 @@ namespace femus {
 
   // ==============================================
   
-  clock_t AsmPetscLinearEquationSolver::BuildAMSIndex(const vector <unsigned> &VankaIndex){
+  clock_t AsmPetscLinearEquationSolver::BuildAMSIndex(const vector <unsigned> &variable_to_be_solved){
     clock_t SearchTime=0;
     clock_t start_time=clock();
     
@@ -122,7 +118,7 @@ namespace femus {
     
     bool FastVankaBlock=true;
     if(_NSchurVar==!0){
-      FastVankaBlock=(_SolType[_SolPdeIndex[VankaIndex[VankaIndex.size()-_NSchurVar]]]<3)?false:true;
+      FastVankaBlock=(_SolType[_SolPdeIndex[variable_to_be_solved[variable_to_be_solved.size()-_NSchurVar]]]<3)?false:true;
     }
     
     unsigned iproc=_msh->_iproc;
@@ -141,6 +137,12 @@ namespace femus {
     vector <PetscInt> indexci(ElemOffsetSize);
     vector < unsigned > indexc(ElemOffsetSize,ElemOffsetSize);
     
+    
+    vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(),true);
+    for (unsigned iind=variable_to_be_solved.size()-_NSchurVar; iind<variable_to_be_solved.size(); iind++) {
+      unsigned PdeIndexSol=variable_to_be_solved[iind];
+      ThisVaribaleIsNonSchur[PdeIndexSol]=false;
+    }
     
     // *** Start Vanka Block ***
     bool test_end=0;
@@ -181,30 +183,34 @@ namespace femus {
 		indexc[jel_Metis-ElemOffset]=Csize++;
 		//----------------------------------------------------------------------------------
 		//add non-schur node to be solved
-		for (unsigned iind=0; iind<VankaIndex.size()-_NSchurVar; iind++) {
-		  unsigned indexSol=VankaIndex[iind];
-		  unsigned SolPdeIndex = _SolPdeIndex[indexSol];
-		  unsigned SolType = _SolType[SolPdeIndex];
-		  const unsigned *pt_un=_msh->el->GetElementVertexAddress(jel,0);
-		  unsigned nvej=_msh->el->GetElementDofNumber(jel,_msh->_END_IND[SolType]);
-		  for (unsigned jj=0; jj<nvej; jj++) {
-		    unsigned jnode=(SolType<3)?(*(pt_un++)-1u):(jel+jj*nel);
-		    unsigned jnode_Metis = _msh->GetMetisDof(jnode,SolType);
-		    unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
-		    if(jnode_Metis >= _msh->MetisOffset[SolType][iproc] &&
-		       jnode_Metis <  _msh->MetisOffset[SolType][iproc+1]){
-		      //unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
-		      if(indexa[kkdof- DofOffset]==DofOffsetSize && owned[kkdof- DofOffset]==false) {
-			owned[kkdof- DofOffset]=true;
-			_is_loc_idx[vb_index][PAsize]=kkdof;
-			indexa[kkdof-DofOffset]=PAsize++;
+		
+		//for (unsigned iind=0; iind<variable_to_be_solved.size()-_NSchurVar; iind++) {
+		// unsigned indexSol=variable_to_be_solved[iind];
+		for(int indexSol=0; indexSol < _SolPdeIndex.size(); indexSol++){ 
+		  if(ThisVaribaleIsNonSchur[indexSol]){
+		    unsigned SolPdeIndex = _SolPdeIndex[indexSol];
+		    unsigned SolType = _SolType[SolPdeIndex];
+		    const unsigned *pt_un=_msh->el->GetElementVertexAddress(jel,0);
+		    unsigned nvej=_msh->el->GetElementDofNumber(jel,_msh->_END_IND[SolType]);
+		    for (unsigned jj=0; jj<nvej; jj++) {
+		      unsigned jnode=(SolType<3)?(*(pt_un++)-1u):(jel+jj*nel);
+		      unsigned jnode_Metis = _msh->GetMetisDof(jnode,SolType);
+		      unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
+		      if(jnode_Metis >= _msh->MetisOffset[SolType][iproc] &&
+			jnode_Metis <  _msh->MetisOffset[SolType][iproc+1]){
+			//unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
+			if(indexa[kkdof- DofOffset]==DofOffsetSize && owned[kkdof- DofOffset]==false) {
+			  owned[kkdof- DofOffset]=true;
+			  _is_loc_idx[vb_index][PAsize]=kkdof;
+			  indexa[kkdof-DofOffset]=PAsize++;
+			}
+			if(indexb[kkdof- DofOffset]==DofOffsetSize) {
+			  _is_ovl_idx[vb_index][PBsize]=kkdof;
+			  indexb[kkdof-DofOffset]=PBsize++;
+			}
 		      }
-		      if(indexb[kkdof- DofOffset]==DofOffsetSize) {
-			_is_ovl_idx[vb_index][PBsize]=kkdof;
-			indexb[kkdof-DofOffset]=PBsize++;
-		      }
+		      else mymap[kkdof]=true;
 		    }
-		    else mymap[kkdof]=true;
 		  }
 		}
 	      }
@@ -214,30 +220,32 @@ namespace femus {
 	//-----------------------------------------------------------------------------------------
 	//Add Schur nodes (generally pressure) to be solved
 	{
-	  for (unsigned iind=VankaIndex.size()-_NSchurVar; iind<VankaIndex.size(); iind++) {
-	    unsigned indexSol=VankaIndex[iind];
-	    unsigned SolPdeIndex = _SolPdeIndex[indexSol];
-	    unsigned SolType = _SolType[SolPdeIndex];
-	    const unsigned *pt_un=_msh->el->GetElementVertexAddress(iel,0);
-	    unsigned nvei=_msh->el->GetElementDofNumber(iel,_msh->_END_IND[SolType]);
-	    for (unsigned ii=0; ii<nvei; ii++) {
-	      unsigned inode=(SolType<3)?(*(pt_un++)-1u):(iel+ii*nel);
-	      unsigned inode_Metis = _msh->GetMetisDof(inode,SolType);
-	      unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, inode);
-	      if(inode_Metis >= _msh->MetisOffset[SolType][iproc] &&
-		 inode_Metis <  _msh->MetisOffset[SolType][iproc+1]){
-		//unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, inode);
-		if(indexa[kkdof- DofOffset]==DofOffsetSize && owned[kkdof- DofOffset]==false) {
-		  owned[kkdof- DofOffset]=true;
-		  _is_loc_idx[vb_index][PAsize]=kkdof;
-		  indexa[kkdof-DofOffset]=PAsize++;
+	  //for (unsigned iind=variable_to_be_solved.size()-_NSchurVar; iind<variable_to_be_solved.size(); iind++) {
+	  //  unsigned indexSol=variable_to_be_solved[iind];
+	  for(int indexSol=0; indexSol < _SolPdeIndex.size(); indexSol++){ 
+	    if(!ThisVaribaleIsNonSchur[indexSol]){
+	      unsigned SolPdeIndex = _SolPdeIndex[indexSol];
+	      unsigned SolType = _SolType[SolPdeIndex];
+	      const unsigned *pt_un=_msh->el->GetElementVertexAddress(iel,0);
+	      unsigned nvei=_msh->el->GetElementDofNumber(iel,_msh->_END_IND[SolType]);
+	      for (unsigned ii=0; ii<nvei; ii++) {
+		unsigned inode=(SolType<3)?(*(pt_un++)-1u):(iel+ii*nel);
+		unsigned inode_Metis = _msh->GetMetisDof(inode,SolType);
+		unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, inode);
+		if(inode_Metis >= _msh->MetisOffset[SolType][iproc] &&
+		  inode_Metis <  _msh->MetisOffset[SolType][iproc+1]){
+		  if(indexa[kkdof- DofOffset]==DofOffsetSize && owned[kkdof- DofOffset]==false) {
+		    owned[kkdof- DofOffset]=true;
+		    _is_loc_idx[vb_index][PAsize]=kkdof;
+		    indexa[kkdof-DofOffset]=PAsize++;
+		  }
+		  if(indexb[kkdof- DofOffset]==DofOffsetSize ) {
+		    _is_ovl_idx[vb_index][PBsize]=kkdof;
+		    indexb[kkdof-DofOffset]=PBsize++;
+		  }		
 		}
-		if(indexb[kkdof- DofOffset]==DofOffsetSize ) {
-		  _is_ovl_idx[vb_index][PBsize]=kkdof;
-		  indexb[kkdof-DofOffset]=PBsize++;
-		}		
+		else mymap[kkdof]=true;
 	      }
-	      else mymap[kkdof]=true;
 	    }
 	  }
 	}
@@ -291,7 +299,7 @@ namespace femus {
   
   // =================================================
   
-  std::pair< int, double> AsmPetscLinearEquationSolver::solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean) {
+  std::pair< int, double> AsmPetscLinearEquationSolver::solve(const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean) {
     PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  
     Vec EPSC=EPSCp->vec(); 
     PetscVector* RESp=static_cast<PetscVector*> (_RES);  
@@ -309,8 +317,8 @@ namespace femus {
     if(_indexai_init==0) {
       _indexai_init = 1;
       if(!_standard_ASM)
-      	BuildAMSIndex(VankaIndex); 
-      BuildIndex(VankaIndex);
+      	BuildAMSIndex(variable_to_be_solved); 
+      BuildBDCIndex(variable_to_be_solved);
     }
     SearchTime = start_time - clock();
     // ***************** END NODE/ELEMENT SEARCH *******************  

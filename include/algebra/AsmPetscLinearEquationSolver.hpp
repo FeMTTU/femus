@@ -94,11 +94,13 @@ namespace femus {
       _overlap=overlap;
     }
       
-    void SetSchurVariableNumber(const unsigned short & NSchurVar){ _NSchurVar=NSchurVar; };
+    void SetNumberOfSchurVariables(const unsigned short & NSchurVar){ 
+      _NSchurVar=NSchurVar;      
+    };
     // Solvers ------------------------------------------------------
     // ========================================================
     /// Call the ASM smoother-solver using the PetscLibrary.
-    std::pair< int, double> solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean);
+    std::pair< int, double> solve(const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean);
     
     
     // Setting --------------------------------------------
@@ -106,8 +108,8 @@ namespace femus {
     void set_petsc_solver_type ();
   
   
-    clock_t BuildIndex(const vector <unsigned> &VankaIndex);
-    clock_t BuildAMSIndex(const vector <unsigned> &VankaIndex);
+    clock_t BuildBDCIndex(const vector <unsigned> &variable_to_be_solved);
+    clock_t BuildAMSIndex(const vector <unsigned> &variable_to_be_solved);
   
   };
 

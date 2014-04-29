@@ -62,7 +62,7 @@ namespace femus {
 			const double &divtol, const unsigned &maxits,const unsigned &index);
 
     void SetElementBlockNumber(const unsigned & block_elemet_number);
-    void SetSchurVariableNumber(const unsigned short & NSchurVar){
+    void SetNumberOfSchurVariables(const unsigned short & NSchurVar){
       _NSchurVar=NSchurVar;
     }
   
