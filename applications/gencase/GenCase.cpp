@@ -4,6 +4,7 @@
 #include <sstream>
 #include <cassert>
 #include <cmath>
+#include <algorithm> 
 // FEMuS
 #include "FEMTTUConfig.h"
 #include "FemusDefault.hpp"

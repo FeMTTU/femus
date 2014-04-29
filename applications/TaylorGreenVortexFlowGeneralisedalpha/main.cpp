@@ -1,4 +1,4 @@
-
+#include "ElemTypeEnum.hpp"
 #include "MultiLevelProblem.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
@@ -48,7 +48,12 @@ int main(int argc,char **args) {
   double Lref = 1.0;
   double Ladimref = 1./(2.*3.1415926535897932);
   double Uref = 1.0;
-  MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Ladimref,SetRefinementFlag);
+  //MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Ladimref,SetRefinementFlag);
+  
+  MultiLevelMesh ml_msh;
+  //ml_msh.ReadCoarseMesh(infile,"seventh",Lref);
+  ml_msh.BuildBrickCoarseMesh(4,4,0,0.,2.*3.1415926535897932,0.,2.*3.1415926535897932,0.,0.,QUAD9,"seventh");
+  ml_msh.RefineMesh(nm,nr,SetRefinementFlag);
   
   MultiLevelSolution ml_sol(&ml_msh);
   
@@ -188,40 +193,19 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
   value=0.;
 
   if(!strcmp(name,"U")) {
-    if (1==FaceName) { //inflow
-      test=1;
-      value=sin(x)*cos(y)*exp(-2.*0.01*time); 
-    }
-    else if(2==FaceName ){  //outflow
-      test=1;
-      value=sin(x)*cos(y)*exp(-2.*0.01*time);
-    }
+    test=1;
+    value=sin(x)*cos(y)*exp(-2.*0.01*time); 
   }  
-  else if(!strcmp(name,"V")){
-    if(1==FaceName){            //inflow
-      test=1;
-      value=-cos(x)*sin(y)*exp(-2.*0.01*time);
-    }  
-    else if(2==FaceName ){      //outflow
-      test=1;
-      value=-cos(x)*sin(y)*exp(-2.*0.01*time);
-    }
+  else if(!strcmp(name,"V")) {
+    test=1;
+    value=-cos(x)*sin(y)*exp(-2.*0.01*time);
   }
-  else if(!strcmp(name,"P")){
-    if(1==FaceName){
-      value=0.;
-      if(x < 1.e-08 && y < 1.e-08) {
-        test=1;
-        value = 1.*0.25*(cos(2.*x)+cos(2.*y))*exp(-4.*0.01*time);
-      }
-      else {
-	test=0;
-	value=0.;
-      }
-    }  
-    else if(2==FaceName ){  
-      test=0;
-      value=0.;
+  else if(!strcmp(name,"P")) {
+    test=0;
+    value=0.;
+    if(x < 1.e-08 && y < 1.e-08) {
+      test=1;
+      value = 1.*0.25*(cos(2.*x)+cos(2.*y))*exp(-4.*0.01*time);
     }
   }
   

@@ -24,6 +24,7 @@
 #include "metis.h"
 #include "Solution.hpp"
 #include "ElemType.hpp"
+#include "ElemTypeEnum.hpp"
 
 
 namespace femus {
@@ -50,6 +51,9 @@ private:
   vector <unsigned> IS_Gmt2Mts_dof[5];  // dof map 
   vector <unsigned> IS_Gmt2Mts_dof_offset[5]; // map offset 
   
+  /** Local to global map for built-in mesh generator */
+  unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int i, const unsigned int j);
+  
 public:
   static const unsigned _END_IND[5];  
   vector< vector<unsigned> > ghost_nd[5];
@@ -72,16 +76,46 @@ public:
       
   //unsigned grid;
   elem *el;  // elements
-  // Constructor - destructor *****************************
-  mesh(const char [], const double Lref, std::vector<bool> &_type_elem_flag);
-  mesh(const unsigned &igrid,mesh *mshc, const elem_type* type_elem[6][5]);
+  
+  /** Constructor */
+  mesh();
+  
+  /** destructor */
   ~mesh();
 
-  // functions ***************************************
+  // Reading 
+  
+  /**
+  *  This function generates the coarse mesh level, $l_0$, from an input mesh file 
+  **/
+  void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_type_elem_flag);
+  
+  void Read1D(const char infile [], vector < vector < double> > &vt);
+  
+  /** Read the coarse-mesh from a neutral Gambit File */
+  void ReadGambit(const std::string& name, vector < vector < double> > &vt,const double Lref,std::vector<bool> &type_elem_flag);
+  
+  /** Built-in cube-structured mesh generator */ 
+  void BuildBrick ( const unsigned int nx,
+	            const unsigned int ny,
+	            const unsigned int nz,
+		    const double xmin, const double xmax,
+		    const double ymin, const double ymax,
+		    const double zmin, const double zmax,
+		    const ElemType type,
+		    std::vector<bool> &type_elem_flag );
+  
+  /**
+  *  This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$
+  **/
+  void RefineMesh(const unsigned &igrid, mesh *mshc, const elem_type* type_elem[6][5]);
+  
+  
+  // partitioning 
+  
   void generate_metis_mesh_partition();
     
-  void Read1D(const char infile [], vector < vector < double> > &vt);
-  void ReadGambit(const char infile [], vector < vector < double> > &vt,const double Lref,std::vector<bool> &type_elem_flag);
+  
   unsigned GetProcID() const;
   unsigned GetNumProcs() const;
   
