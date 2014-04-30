@@ -51,6 +51,12 @@ namespace femus {
     
     vector <IS> _isA;
     
+    Vec _Pw;
+    bool _Pw_is_initialized;  
+    
+    VecScatter _scat;
+    bool _scat_is_initialized;  
+        
     Mat _Pmat;
     bool _Pmat_is_initialized;  
     
@@ -90,7 +96,7 @@ namespace femus {
     ///  Set the user-specified solver stored in \p _solver_type
     void set_petsc_solver_type ();
 
-    clock_t BuildIndex();
+    clock_t BuildIndex(const vector <unsigned> &variable_to_be_solved);
   
   };
 
@@ -121,6 +127,8 @@ namespace femus {
     _indexai_init=0;
   
     _Pmat_is_initialized = false;
+    _Pw_is_initialized = false;
+    _scat_is_initialized = false;
     
     _DirichletBCsHandlingMode = 0;
 
