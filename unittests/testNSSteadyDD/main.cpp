@@ -52,10 +52,10 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=4;
+  nm=2;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
-  nr=0;
+  nr=2;
   std::cout<<"MAX_REFINEMENT levels: " << nr << endl<< endl;
   
   int tmp=nm;  nm+=nr;  nr=tmp;
@@ -197,46 +197,46 @@ int main(int argc,char **args) {
   ml_prob.get_system("Temperature").solve();
   //END Temperature Multilevel Problem
   
-  double l2normvarU = ml_sol.GetSolutionLevel(nm-1)->GetSolutionName("U")->l2_norm(); 
+  double l2normvarU = ml_sol.GetSolutionLevel(3)->GetSolutionName("U")->l2_norm(); 
   
-  double l2normvarUStored = 35.68179309960567;
+  double l2normvarUStored = 16.313927822836003;
   
   std::cout << "Solution U l2norm: " << l2normvarU << std::endl; 
   
-  if( fabs(l2normvarU - l2normvarUStored ) > 1.e-14) 
+  if( fabs(l2normvarU - l2normvarUStored ) > 1.e-16) 
   {
     exit(1);
   }
   
-  double l2normvarV = ml_sol.GetSolutionLevel(nm-1)->GetSolutionName("V")->l2_norm(); 
+  double l2normvarV = ml_sol.GetSolutionLevel(3)->GetSolutionName("V")->l2_norm(); 
   
-  double l2normvarVStored = 6.8674940670299032;
+  double l2normvarVStored = 6.0644257018060355;
   
   std::cout << "Solution V l2norm: " << l2normvarV << std::endl; 
   
-  if( fabs(l2normvarV - l2normvarVStored ) > 1.e-14) 
+  if( fabs(l2normvarV - l2normvarVStored ) > 1.e-16) 
   {
     exit(1);
   }
   
-  double l2normvarP = ml_sol.GetSolutionLevel(nm-1)->GetSolutionName("P")->l2_norm(); 
+  double l2normvarP = ml_sol.GetSolutionLevel(3)->GetSolutionName("P")->l2_norm(); 
   
-  double l2normvarPStored = 3.1022275065521083;
+  double l2normvarPStored = 1.8202105018866834;
   
   std::cout << "Solution P l2norm: " << l2normvarP << std::endl; 
   
-  if( fabs(l2normvarP - l2normvarPStored ) > 1.e-14) 
+  if( fabs(l2normvarP - l2normvarPStored ) > 1.e-16) 
   {
     exit(1);
   }
   
-  double l2normvarT = ml_sol.GetSolutionLevel(nm-1)->GetSolutionName("T")->l2_norm(); 
+  double l2normvarT = ml_sol.GetSolutionLevel(3)->GetSolutionName("T")->l2_norm(); 
   
-  double l2normvarTStored = 305.75558051378823;
+  double l2normvarTStored = 219.68194612060503;
   
   std::cout << "Solution T l2norm: " << l2normvarT << std::endl; 
   
-  if( fabs(l2normvarT - l2normvarTStored ) > 1.e-14) 
+  if( fabs(l2normvarT - l2normvarTStored ) > 1.e-16) 
   {
     exit(1);
   }
