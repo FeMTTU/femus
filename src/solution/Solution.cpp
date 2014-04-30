@@ -343,6 +343,7 @@ void Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector
 /**
  * Set _SolOld=_Sol
  **/
+
 // ------------------------------------------------------------------
 void Solution::UpdateSolution() {
   for (unsigned i=0; i<_Sol.size(); i++) {

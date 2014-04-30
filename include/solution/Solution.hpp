@@ -77,6 +77,9 @@ public:
   void SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
   void UpdateSolution();
   void SetElementRefinement(const unsigned &test=0);
+  
+  /** Get the solution (Numeric Vector) by name */
+  const NumericVector* GetSolutionName(const char* var) { return _Sol[GetIndex(var)]; };
 
 };
 

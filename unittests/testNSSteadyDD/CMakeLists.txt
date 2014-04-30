@@ -1,0 +1,19 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+PROJECT(TestNSSteadyDD)
+
+# Build the executable
+ADD_EXECUTABLE(testNSSteadyDD ${CMAKE_PROJECT_DIR}main.cpp)
+ADD_TEST(NAME testNSSteadyDD COMMAND testNSSteadyDD)
+
+# Link the executable to the petsc anf femttu libs
+TARGET_LINK_LIBRARIES(testNSSteadyDD femus)
+TARGET_LINK_LIBRARIES(testNSSteadyDD ${PETSC_LIBRARIES})
+TARGET_LINK_LIBRARIES(testNSSteadyDD b64)
+
+IF(MPI_FOUND)
+  TARGET_LINK_LIBRARIES(testNSSteadyDD ${MPI_EXTRA_LIBRARY})
+ENDIF(MPI_FOUND)
+
+
+ 
