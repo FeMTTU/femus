@@ -48,7 +48,7 @@ namespace femus {
 
   // ================================================
 
-  clock_t GmresPetscLinearEquationSolver::BuildIndex(){
+  clock_t GmresPetscLinearEquationSolver::BuildIndex(const vector <unsigned> &variable_to_be_solved){
   
     clock_t SearchTime = 0;
     clock_t start_time = clock();
@@ -59,6 +59,12 @@ namespace femus {
     _indexai[0].resize(IndexaSize);
     _indexai[1].resize(IndexaSize);
     
+    vector <bool> ThisSolutionIsIncluded(_SolPdeIndex.size(),false);
+    for (unsigned iind=0; iind<variable_to_be_solved.size(); iind++) {
+      unsigned PdeIndexSol=variable_to_be_solved[iind];
+      ThisSolutionIsIncluded[PdeIndexSol]=true;
+    }
+        
     unsigned count0=0;
     unsigned count1=0;
     for(int k=0; k < _SolPdeIndex.size(); k++) {
@@ -68,7 +74,7 @@ namespace femus {
 	  inode_mts < _msh->MetisOffset[soltype][_msh->_iproc+1]; inode_mts++) {
 	int local_mts = inode_mts-_msh->MetisOffset[soltype][_msh->_iproc];
 	int idof_kk = KKoffset[k][_msh->_iproc] +local_mts; 
-	if((*(*_Bdc)[indexSol])(inode_mts) < 1.9) {
+      	if( !ThisSolutionIsIncluded[k] || (*(*_Bdc)[indexSol])(inode_mts) < 1.9) {
 	  _indexai[0][count0] = idof_kk;
 	  count0++;
 	}
@@ -102,7 +108,7 @@ namespace femus {
 
   // ================================================
 
-  std::pair< int, double> GmresPetscLinearEquationSolver::solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean) {
+  std::pair< int, double> GmresPetscLinearEquationSolver::solve(const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean) {
     
     clock_t SearchTime, AssemblyTime, SolveTime, UpdateTime;
     int its;
@@ -111,10 +117,10 @@ namespace femus {
     
     // ***************** NODE/ELEMENT SEARCH *******************
     clock_t start_time=clock();
-    if(_indexai_init==0) BuildIndex();
+    if(_indexai_init==0) BuildIndex(variable_to_be_solved);
     SearchTime = clock() - start_time;
     // ***************** END NODE/ELEMENT SEARCH *******************  
-    
+            
     if(_DirichletBCsHandlingMode==0) // By penalty
       {
 	PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  
@@ -173,27 +179,31 @@ namespace femus {
       Vec RES=RESp->vec();
       PetscMatrix* KKp=static_cast<PetscMatrix*>(_KK);
       Mat KK=KKp->mat();
+      PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);
+      Vec EPSC = EPSCp->vec();
+      PetscVector* EPSp=static_cast<PetscVector*> (_EPS);
+      Vec EPS = EPSp->vec();
               
       // ***************** ASSEMBLE *******************
       clock_t start_time=clock();
- 
-      PetscInt Asize=_indexai[1].size();
-
+      
       IS &isA=_isA[0];
+      
       Vec Pr;
       ierr = VecGetSubVector(RES,isA,&Pr);				CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-      Vec Pw;
-      ierr = VecDuplicate(Pr,&Pw);			        	CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-      // initialize Pmat
+      
+      // initialize _Pmat,_Ksp,_pc,_Pw,
       if(ksp_clean){
 	this->clear();
 	ierr = MatGetSubMatrix(KK,isA,isA,MAT_INITIAL_MATRIX,&_Pmat); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
 	_Pmat_is_initialized = true;
 	this->init(_Pmat,_Pmat);
+	ierr = VecDuplicate(Pr,&_Pw);			        	CHKERRABORT(MPI_COMM_WORLD,ierr);
+	_Pw_is_initialized=true;
+	ierr = VecScatterCreate(RES,isA,_Pw,NULL,&_scat);		CHKERRABORT(MPI_COMM_WORLD,ierr);
+	_scat_is_initialized=true;
       }
-
+      
       AssemblyTime = clock()-start_time;
       // ***************** END ASSEMBLE ******************
 
@@ -201,14 +211,12 @@ namespace femus {
       start_time=clock();
           
       // Solve the linear system
-      ierr = KSPSolve(_ksp,Pr,Pw);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSolve(_ksp,Pr,_Pw);					CHKERRABORT(MPI_COMM_WORLD,ierr);
 
       // Get the number of iterations required for convergence
-      ierr = KSPGetIterationNumber(_ksp, &its);			CHKERRABORT(MPI_COMM_WORLD,ierr);
-
+      ierr = KSPGetIterationNumber(_ksp, &its);				CHKERRABORT(MPI_COMM_WORLD,ierr);
       // Get the norm of the final residual to return to the user.
       ierr = KSPGetResidualNorm(_ksp, &final_resid); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
- 
     
       ierr = VecRestoreSubVector(RES,isA,&Pr);				CHKERRABORT(MPI_COMM_WORLD,ierr);
       ierr = VecDestroy(&Pr);					        CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -220,26 +228,15 @@ namespace femus {
       start_time=clock();
 
       _EPSC->zero();
-      PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);
-      Vec EPSC = EPSCp->vec();
-
-      const PetscInt *ind;
-      ierr = ISGetIndices(isA,&ind);				        CHKERRABORT(MPI_COMM_WORLD,ierr);
-      PetscScalar *W[1];
-      ierr = VecGetArray(Pw,W);						CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = VecSetValues(EPSC,Asize,ind,W[0],ADD_VALUES);	        CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = VecRestoreArray(Pw,W);				        CHKERRABORT(MPI_COMM_WORLD,ierr);
-      ierr = ISRestoreIndices(isA,&ind);					CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-      ierr = VecDestroy(&Pw);					        CHKERRABORT(MPI_COMM_WORLD,ierr);
-    
-      *_EPS += *_EPSC;
-
+           
+      ierr = VecScatterBegin(_scat,_Pw,EPSC,INSERT_VALUES,SCATTER_REVERSE);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = VecScatterEnd(_scat,_Pw,EPSC,INSERT_VALUES,SCATTER_REVERSE);	CHKERRABORT(MPI_COMM_WORLD,ierr);
+      
+      ierr = VecScatterBegin(_scat,_Pw,EPS,ADD_VALUES,SCATTER_REVERSE);		CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = VecScatterEnd(_scat,_Pw,EPS,ADD_VALUES,SCATTER_REVERSE);		CHKERRABORT(MPI_COMM_WORLD,ierr);
+      
       _RESC->matrix_mult(*_EPSC,*_KK);
       *_RES -= *_RESC;
-
-      _RES->close();
-      _EPS->close();
 
       UpdateTime = clock() - start_time;
       // ***************** END RES/EPS UPDATE ******************
@@ -259,11 +256,21 @@ namespace femus {
   // ================================================
 
   void GmresPetscLinearEquationSolver::clear() {
-  
+   
+    int ierr;
     if(_Pmat_is_initialized){
       _Pmat_is_initialized = false;
-      MatDestroy(&_Pmat);
+      ierr = MatDestroy(&_Pmat);		CHKERRABORT(MPI_COMM_WORLD,ierr);
     }
+    if(_scat_is_initialized){
+      _scat_is_initialized = false;
+      ierr = VecScatterDestroy(&_scat);		CHKERRABORT(MPI_COMM_WORLD,ierr);
+    }
+    if(_Pw_is_initialized){
+      _Pw_is_initialized = false;
+      ierr = VecDestroy(&_Pw);			CHKERRABORT(MPI_COMM_WORLD,ierr);
+    }
+    
     
     if (this->initialized()) {
       this->_is_initialized = false;
@@ -319,7 +326,8 @@ namespace femus {
 				   PETSC_DECIDE, // size of the array holding the history
 				   PETSC_TRUE);  // Whether or not to reset the history for each solve.
       CHKERRABORT(MPI_COMM_WORLD,ierr);
-
+      
+      //PCSetType(_pc,PCREDISTRIBUTE);
       PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
       PetscReal zero = 1.e-16;
       PCFactorSetZeroPivot(_pc,zero);
