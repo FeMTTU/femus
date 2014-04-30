@@ -217,3 +217,13 @@ IF(BUILD_FSIPOROUS)
     FILE(MAKE_DIRECTORY applications/fsi_porous/input/)
     FILE(COPY           applications/fsi_porous/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/fsi_porous/input/)
 ENDIF(BUILD_FSIPOROUS)
+
+
+## --------------- Unit tests -------------------
+
+ENABLE_TESTING()
+INCLUDE(Dart)
+
+ADD_SUBDIRECTORY(unittests/testNSSteadyDD/)
+    FILE(MAKE_DIRECTORY unittests/testNSSteadyDD/input/)
+    FILE(COPY           unittests/testNSSteadyDD/input/ DESTINATION  ${PROJECT_BINARY_DIR}/unittests/testNSSteadyDD/input/)
