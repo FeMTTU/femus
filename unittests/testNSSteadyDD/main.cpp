@@ -9,7 +9,7 @@
 #include "VTKOutput.hpp"
 #include "GMVOutput.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "../../include/enums/SolvertypeEnum.hpp"
+#include "SolvertypeEnum.hpp"
 
 using std::cout;
 using std::endl;
