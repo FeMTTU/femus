@@ -95,7 +95,7 @@ public:
   // ================================
   ///Set the tolerance for the solver
   virtual void set_tolerances(const double &rtol, const double &atol,
-                              const double &divtol, const unsigned &maxits, const unsigned &index) = 0;
+                              const double &divtol, const unsigned &maxits) = 0;
 
   /// Sets the type of solver to use.
   void set_solver_type (const SolverType st)  {

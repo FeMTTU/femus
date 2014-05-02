@@ -86,7 +86,7 @@ namespace femus {
     void init (Mat& Amat, Mat &Pmat);
 
     void set_tolerances(const double &rtol, const double &atol,
-			const double &divtol, const unsigned &maxits,const unsigned &index);
+			const double &divtol, const unsigned &maxits);
     
     void SetElementBlockNumber(const unsigned & block_elemet_number);
     void SetElementBlockNumber(const char all[], const unsigned & overlap=1){

@@ -83,7 +83,7 @@ namespace femus {
 
 
     void set_tolerances(const double &rtol, const double &atol,
-			const double &divtol, const unsigned &maxits,const unsigned &index);
+			const double &divtol, const unsigned &maxits);
  
     // Solvers ------------------------------------------------------
     // ========================================================

@@ -145,17 +145,17 @@ int main(int argc,char **args) {
   system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
  
   system1.ClearVariablesToBeSolved();
-  system1.AddVariableToBeSolved("All");
-  //system1.AddVariableToBeSolved("U");
-  //system1.AddVariableToBeSolved("V");
-  //system1.AddVariableToBeSolved("P");
+  //system1.AddVariableToBeSolved("All");
+  system1.AddVariableToBeSolved("U");
+  system1.AddVariableToBeSolved("V");
+  system1.AddVariableToBeSolved("P");
   //for Vanka and ASM smoothers
-  system1.SetNumberOfSchurVariables(1);
-  //system1.SetElementBlockNumber(4);   
-  system1.SetElementBlockNumber("All",1);     
+  system1.SetNumberOfSchurVariables(0);
+  system1.SetElementBlockNumber(4);   
+  //system1.SetElementBlockNumber("All",1);     
   //for Gmres smoother
-  //system1.SetDirichletBCsHandling(PENALTY); 
-  system1.SetDirichletBCsHandling(ELIMINATION); 
+  system1.SetDirichletBCsHandling(PENALTY); 
+  //system1.SetDirichletBCsHandling(ELIMINATION); 
    
   // Solve Navier-Stokes system
   ml_prob.get_system("Navier-Stokes").solve();

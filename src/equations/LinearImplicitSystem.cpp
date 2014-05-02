@@ -400,7 +400,7 @@ void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType p
 void LinearImplicitSystem::SetTolerances(const double rtol, const double atol,
 					       const double divtol, const unsigned maxits) {       
   for (unsigned i=1; i<_gridn; i++) {
-    _LinSolver[i]->set_tolerances(rtol,atol,divtol,maxits,0);
+    _LinSolver[i]->set_tolerances(rtol,atol,divtol,maxits);
   }
 }
 
