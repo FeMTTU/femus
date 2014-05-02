@@ -37,7 +37,7 @@ namespace femus {
   // ====================================================
 
   void AsmPetscLinearEquationSolver::set_tolerances(const double &rtol, const double &atol,
-						    const double &divtol, const unsigned &maxits, const unsigned &index) {
+						    const double &divtol, const unsigned &maxits) {
 
     _rtol   = static_cast<PetscReal>(rtol);
     _abstol = static_cast<PetscReal>(atol);

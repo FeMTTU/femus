@@ -37,66 +37,76 @@ namespace femus {
 
   /**
    * This class inherits the abstract class LinearEquationSolver. In this class the solver is implemented using the PETSc package
-   */
+   **/
 
   class VankaPetscLinearEquationSolver : public LinearEquationSolver {
 
+  private:
+    // data ---------------------------------
+    vector <PC>  _pc;      ///< Preconditioner context
+    vector <KSP> _ksp;    ///< Krylov subspace context
+    
+    vector <Mat> _A;
+    vector <Mat> _B;
+    
+    vector <Vec> _r;
+    vector <Vec> _w;
+    vector <VecScatter> _scatA;
+    
+    vector <Vec> _s;
+    vector <VecScatter> _scatB;
+    
+    PetscReal _rtol;
+    PetscReal _abstol;
+    PetscReal _dtol;
+    PetscInt  _maxits;
+    unsigned _block_element_number;
+    short unsigned _NSchurVar;
+    
+    vector< vector <PetscInt> > _indexai;
+    
+    vector< vector <unsigned> > _Psize;
+    bool _indexai_init;
+    vector <IS> _isA;
+    vector <IS> _isB;
+    
+    
   public:
-  
     // Constructor --------------------------------------
     /**  Constructor. Initializes Petsc data structures */
     VankaPetscLinearEquationSolver (const unsigned &igrid, mesh *other_mesh);
   
     /// Destructor.
     ~VankaPetscLinearEquationSolver ();
-
+  private:
     /// Release all memory and clear data structures.
     void clear ();
 
-    /// Initialize data structures if not done so already plus much more
-    void init (Mat& Amat, Mat &Pmat);
+    /// Initialize the ksp and pc object
+    void init (Mat& Amat, Mat &Pmat, KSP &ksp, PC &pc);
     // void init(Mat& matrix, const bool pc_flag, const bool Schur);
-    //  void init_schur(Mat& matrix);
+    // void init_schur(Mat& matrix);
 
     void set_tolerances(const double &rtol, const double &atol,
-			const double &divtol, const unsigned &maxits,const unsigned &index);
+			const double &divtol, const unsigned &maxits);
 
     void SetElementBlockNumber(const unsigned & block_elemet_number);
-    void SetNumberOfSchurVariables(const unsigned short & NSchurVar){
+    
+    /// Set the number of Schur variables to be considered
+    inline void SetNumberOfSchurVariables(const unsigned short & NSchurVar){
       _NSchurVar=NSchurVar;
     }
   
-    // Solvers ------------------------------------------------------
-    // ========================================================
-    /// Call the Vanka(Schur) smoother-solver using the PetscLibrary.
+    /// Call the Vanka smoother-solver using the PetscLibrary.
     std::pair< int, double> solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean);
-  private:
-    // data ---------------------------------
-    PC _pc;      ///< Preconditioner context
-    vector <KSP> _ksp;    ///< Krylov subspace context
-    vector< PetscReal > _rtol;
-    vector< PetscReal > _abstol;
-    vector< PetscReal > _dtol;
-    vector< PetscInt >  _maxits;
-    unsigned _block_element_number;
-    
-    short unsigned _NSchurVar;
-  
-    vector< vector <PetscInt> > _indexai;
-  
-    vector< vector <unsigned> > _Psize;
-    bool _indexai_init;
-  
-    vector <IS> _isA;
-    vector <IS> _isB;
-  
-    // Setting --------------------------------------------
-    ///  Set the user-specified solver stored in \p _solver_type
-    void set_petsc_solver_type ();
-    void set_petsc_solver_type2 ();
 
-    clock_t BuildIndex(const vector <unsigned> &VankaIndex);
-  
+    
+    ///  Set the user-specified solver stored in _solver_type
+    void set_petsc_solver_type (KSP &skp);
+    //void set_petsc_solver_type2 ();
+    
+    clock_t BuildIndex(const vector <unsigned> &VankaIndex);  
+   
   };
 
   inline VankaPetscLinearEquationSolver::VankaPetscLinearEquationSolver (const unsigned &igrid, mesh* other_msh)
@@ -119,13 +129,11 @@ namespace femus {
       unsigned exponent = 5 - dim;
       _block_element_number = pow(base,exponent);
     }
-
-    _ksp.resize(2);  
-  
-    _rtol.resize(2,1.e-8);
-    _abstol.resize(2, 1.e-40);
-    _dtol.resize(2, 1.e+50);
-    _maxits.resize(2,10);
+     
+    _rtol = 1.e-8;
+    _abstol = 1.e-40;
+    _dtol = 1.e+50;
+    _maxits = 10;
   
     _indexai_init=0;
     _NSchurVar=1;
