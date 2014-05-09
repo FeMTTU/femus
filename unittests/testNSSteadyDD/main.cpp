@@ -203,7 +203,7 @@ int main(int argc,char **args) {
   
   std::cout << "Solution U l2norm: " << l2normvarU << std::endl; 
   
-  if( fabs(l2normvarU - l2normvarUStored ) > 1.e-16) 
+  if( fabs(l2normvarU - l2normvarUStored ) > 1.e-12) 
   {
     exit(1);
   }
