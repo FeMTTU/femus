@@ -4,7 +4,7 @@ PROJECT(TestNSSteadyDD)
 
 # Build the executable
 ADD_EXECUTABLE(testNSSteadyDD ${CMAKE_PROJECT_DIR}main.cpp)
-ADD_TEST(NAME testNSSteadyDD COMMAND testNSSteadyDD)
+ADD_TEST(NAME testNSSteadyDD COMMAND ./testNSSteadyDD)
 
 # Link the executable to the petsc anf femttu libs
 TARGET_LINK_LIBRARIES(testNSSteadyDD femus)
