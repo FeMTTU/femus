@@ -194,8 +194,8 @@ int main(int argc,char **args) {
   system2.SetNumberOfSchurVariables(0);
   system2.SetElementBlockNumber(4);                
   //for Gmres smoother
-  //system2.SetDirichletBCsHandling(PENALTY); 
-  system2.SetDirichletBCsHandling(ELIMINATION); 
+  system2.SetDirichletBCsHandling(PENALTY); 
+  //system2.SetDirichletBCsHandling(ELIMINATION); 
   
   
   // Solve Temperature system
