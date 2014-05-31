@@ -1,4 +1,4 @@
-femus
+FEMuS
 ======
 
 Multiphysics Finite Element Multigrid Solver with selective mesh refinement. 
