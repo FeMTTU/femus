@@ -221,8 +221,8 @@ ENDIF(BUILD_FSIPOROUS)
 
 ## --------------- Unit tests -------------------
 
+INCLUDE(CTest)
 ENABLE_TESTING()
-INCLUDE(Dart)
 
 ADD_SUBDIRECTORY(unittests/testNSSteadyDD/)
     FILE(MAKE_DIRECTORY unittests/testNSSteadyDD/input/)
