@@ -1,0 +1,20 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+PROJECT(testFSISteady)
+
+INCLUDE(CTest)
+
+# Build the executable
+ADD_EXECUTABLE(testFSISteady ${CMAKE_PROJECT_DIR}main.cpp)
+
+# Link the executable to the petsc anf femttu libs
+TARGET_LINK_LIBRARIES(testFSISteady femus)
+TARGET_LINK_LIBRARIES(testFSISteady ${PETSC_LIBRARIES})
+TARGET_LINK_LIBRARIES(testFSISteady b64)
+
+IF(MPI_FOUND)
+  TARGET_LINK_LIBRARIES(testFSISteady ${MPI_EXTRA_LIBRARY})
+ENDIF(MPI_FOUND)
+
+
+ADD_TEST(NAME testFSISteady COMMAND testFSISteady)

@@ -74,6 +74,10 @@ void LinearImplicitSystem::init() {
     for (unsigned ig=1; ig<_gridn; ig++) {
       BuildProlongatorMatrix(ig);
     }
+    
+    // By default we solved for all the PDE variables
+    ClearVariablesToBeSolved();
+    AddVariableToBeSolved("All");
 }
 
 //---------------------------------------------------------------------------------------------------
