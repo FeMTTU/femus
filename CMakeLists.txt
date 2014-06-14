@@ -227,3 +227,7 @@ ENABLE_TESTING()
 ADD_SUBDIRECTORY(unittests/testNSSteadyDD/)
     FILE(MAKE_DIRECTORY unittests/testNSSteadyDD/input/)
     FILE(COPY           unittests/testNSSteadyDD/input/ DESTINATION  ${PROJECT_BINARY_DIR}/unittests/testNSSteadyDD/input/)
+    
+ADD_SUBDIRECTORY(unittests/testFSISteady/)
+    FILE(MAKE_DIRECTORY unittests/testFSISteady/input/)
+    FILE(COPY           unittests/testFSISteady/input/ DESTINATION  ${PROJECT_BINARY_DIR}/unittests/testFSISteady/input/)
