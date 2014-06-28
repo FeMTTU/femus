@@ -116,6 +116,9 @@ INCLUDE_DIRECTORIES(${PROJECT_BINARY_DIR}/config)
 #include b64 files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/ExternalLibraries/b64-1.4.2/include/)
 
+
+#INCLUDE_DIRECTORIES(/home/simone/Software/jsoncpp-src-0.5.0/include/)
+
 # Build the FEMTTUlib library
 ADD_SUBDIRECTORY(src)
 
@@ -217,6 +220,24 @@ IF(BUILD_FSIPOROUS)
     FILE(MAKE_DIRECTORY applications/fsi_porous/input/)
     FILE(COPY           applications/fsi_porous/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/fsi_porous/input/)
 ENDIF(BUILD_FSIPOROUS)
+
+OPTION(BUILD_NSPROJECTION "Build the Navier Stokes solved with the Projection Method" OFF)
+
+IF(BUILD_NSPROJECTION)
+       ADD_SUBDIRECTORY(applications/NSProjection/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NSProjection/output/)
+    FILE(MAKE_DIRECTORY applications/NSProjection/input/)
+    FILE(COPY           applications/NSProjection/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/NSProjection/input/)
+ENDIF(BUILD_NSPROJECTION)
+
+OPTION(BUILD_POISSON "Build the Poisson problem" OFF)
+
+IF(BUILD_POISSON)
+       ADD_SUBDIRECTORY(applications/Poisson/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/Poisson/output/)
+    FILE(MAKE_DIRECTORY applications/Poisson/input/)
+    FILE(COPY           applications/Poisson/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/Poisson/input/)
+ENDIF(BUILD_POISSON)
 
 
 ## --------------- Unit tests -------------------

@@ -22,6 +22,7 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <assert.h>
 
 
 namespace femus {
@@ -50,7 +51,8 @@ const unsigned NFC[6][2]= {{6,6},
 /**
  * Node ordering for each element face(3D), edge(2D) or point-extrema(1D) position for each considered element
  **/
-const unsigned ig[6][6][9]= {{{0,1,5,4,8,17,12,16,20},
+const unsigned ig[6][6][9]= {
+  { {0,1,5,4,8,17,12,16,20},
     {1,2,6,5,9,18,13,17,21},
     {2,3,7,6,10,19,14,18,22},
     {3,0,4,7,11,16,15,19,23},
@@ -82,6 +84,39 @@ const unsigned ig[6][6][9]= {{{0,1,5,4,8,17,12,16,20},
   }
 };
 
+const unsigned NFACENODES[6][6][3] = 
+{
+  { {4,8,9},  // Hex
+    {4,8,9},
+    {4,8,9},
+    {4,8,9},
+    {4,8,9},
+    {4,8,9}
+  },
+  { {3,6,7},  // Tet
+    {3,6,7},
+    {3,6,7},
+    {3,6,7}
+  },
+  { {4,8,9},  // Wedge
+    {4,8,9},
+    {4,8,9},
+    {3,6,7},
+    {3,6,7}
+  },
+  { {2,3,3},
+    {2,3,3},  // Quad
+    {2,3,3},
+    {2,3,3}
+  },
+  { {2,3,3},  // Tri
+    {2,3,3},
+    {2,3,3}
+  },
+  { {1,1,1},  // Line
+    {1,1,1}
+  }
+};
 
 /**
  * This constructor allocates the memory for the \textit{coarsest elem}
@@ -183,6 +218,10 @@ unsigned elem::GetElementDofNumber(const unsigned &iel,const unsigned &type) con
   return NVE[elt[iel]][type];
 }
 
+unsigned elem::GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const {
+  assert(type<3);
+  return NFACENODES[elt[iel]][jface][type];
+}
 
 /**
  * Return the local to global dof
