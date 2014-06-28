@@ -26,8 +26,8 @@ const unsigned NVE[6][6]= {{8,20,26,27,1,4},  //hex
   {6,15,18,18,1,4},   //wedge
   {4, 8, 8, 9,1,3},   //quad
   {3, 6, 6, 6,1,3},   //tri
-  {2, 3, 3, 3,1,2}
-};  //line
+  {2, 3, 3, 3,1,2}    //line
+};  
 
 /**
  * The elem class
@@ -87,6 +87,7 @@ public:
   unsigned GetDof(const unsigned iel,const unsigned &inode,const unsigned &type)const;
   unsigned GetDofCoarse(const unsigned iel,const unsigned &inode,const unsigned &type)const;
   unsigned GetElementDofNumber(const unsigned &iel,const unsigned &type=3) const;
+  unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type=2) const;
   /**
   * Return the local->global node number
   **/
