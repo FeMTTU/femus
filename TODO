@@ -2,4 +2,3 @@ TODO LIST
 
 - See how to wildcard .cpp files in src/CmakeLists.txt (this should avoid re-running cmake after file addition/deletion)
 
-- Rename src/ into lib/ or lib64/ (machine-dependent) for compiled library folder
