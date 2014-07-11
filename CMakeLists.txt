@@ -100,7 +100,7 @@ endif()
 INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
 ADD_DEFINITIONS(${PETSC_DEFINITIONS})
 
-#include femttu files
+#include femus include files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/algebra)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/utils)
@@ -113,18 +113,21 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/fe)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/physics)
 INCLUDE_DIRECTORIES(${PROJECT_BINARY_DIR}/config)
 
-#include b64 files
+#include b64 include files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/ExternalLibraries/b64-1.4.2/include/)
 
+#include jsoncpp include files
+INCLUDE_DIRECTORIES(ExternalLibraries/jsoncpp-src-0.5.0/include/)
 
-#INCLUDE_DIRECTORIES(/home/simone/Software/jsoncpp-src-0.5.0/include/)
 
-# Build the FEMTTUlib library
+# Build the femus library
 ADD_SUBDIRECTORY(src)
 
 # Build the b64 library
 ADD_SUBDIRECTORY(ExternalLibraries/b64-1.4.2)
 
+# Build the jsoncpp library
+ADD_SUBDIRECTORY(ExternalLibraries/jsoncpp-src-0.5.0)
 
 # Ask the user which executable have to be built
 OPTION(BUILD_STEADYNAVIERSTOKES "Build the Steady NavierStokes application" ON)
@@ -230,7 +233,7 @@ IF(BUILD_NSPROJECTION)
     FILE(COPY           applications/NSProjection/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/NSProjection/input/)
 ENDIF(BUILD_NSPROJECTION)
 
-OPTION(BUILD_POISSON "Build the Poisson problem" OFF)
+OPTION(BUILD_POISSON "Build the Poisson problem" ON)
 
 IF(BUILD_POISSON)
        ADD_SUBDIRECTORY(applications/Poisson/)

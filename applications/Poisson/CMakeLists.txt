@@ -9,7 +9,7 @@ ADD_EXECUTABLE(Poisson ${CMAKE_PROJECT_DIR}main.cpp)
 TARGET_LINK_LIBRARIES(Poisson femus)
 TARGET_LINK_LIBRARIES(Poisson ${PETSC_LIBRARIES})
 TARGET_LINK_LIBRARIES(Poisson b64)
-TARGET_LINK_LIBRARIES(Poisson /home/simone/Software/jsoncpp-src-0.5.0/libs/linux-gcc-4.8/libjson_linux-gcc-4.8_libmt.so)
+TARGET_LINK_LIBRARIES(Poisson jsoncpp)
 
 IF(MPI_FOUND)
   TARGET_LINK_LIBRARIES(Poisson ${MPI_EXTRA_LIBRARY})
