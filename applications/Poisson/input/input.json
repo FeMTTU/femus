@@ -1,15 +1,5 @@
 // Configuration options
 {
-    // Default encoding for text
-    "encoding" : "UTF-8",
-    
-    // Plug-ins loaded at start-up
-    "plug-ins" : [
-        "python",
-        "c++",
-        "ruby"
-        ],
-        
     // mesh
     "mesh" : {
                 "box" : {

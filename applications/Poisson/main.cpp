@@ -50,26 +50,55 @@ readInputTestFile( const char *path )
    return text;
 }
 
+static void show_usage()
+{
+  std::cout << "Use --inputfile variable to set the input file" << endl;
+  std::cout << "e.g.: ./Poisson --inputfile ./input/input.json" << std::endl;
+}
 
-int main(int argc,char **args) {
+
+int main(int argc,char **argv) {
   
-    std::string path = "/home/simone/Software/Devel/femus/applications/Poisson/input/input.json";
-//    Json::Features features;
-//    bool parseOnly;
-//    int exitCode = parseCommandLine( argc, argv, features, path, parseOnly );
-//    if ( exitCode != 0 )
-//    {
-//       return exitCode;
-//    }
-
-   std::string input = readInputTestFile( path.c_str() );
-   if ( input.empty() )
-   {
-      printf( "Failed to read input or empty input: %s\n", path.c_str() );
-      return 3;
-   }
-
+  std::string path;
+    
+  if(argc < 2) 
+  {
+    std::cout << "Error: no input file specified!" << std::endl;
+    show_usage();
+    return 1;  
+  }
   
+  for (int count = 1; count < argc; ++count)
+  {
+    std::string arg = argv[count];
+
+    if ((arg == "-h") || (arg == "--help")) {
+      show_usage();
+      return 0;
+    }
+    else if ((arg == "-i") || (arg == "--inputfile"))
+    {
+      if (count + 1 < argc) {
+      path = argv[++count];
+    }
+    else
+    {
+      std::cerr << "--input file option requires one argument." << std::endl;
+      return 1;
+    }
+    }
+  } 
+  
+  // start reading input from file
+  //-----------------------------------------------------------------------------------------------
+  
+  std::string input = readInputTestFile( path.c_str() );
+  if ( input.empty() )
+  {
+    printf( "Failed to read input or empty input: %s\n", path.c_str() );
+    return 1;
+  }
+
   Json::Value root;   // will contains the root value after parsing.
   Json::Reader reader;
   bool parsingSuccessful = reader.parse(input, root );
@@ -80,18 +109,6 @@ int main(int argc,char **args) {
      return 1;
   }
 
-  // Get the value of the member of root named 'encoding', return 'UTF-8' if there is no
-  // such member.
-  std::string encoding = root.get("encoding", "UTF-8" ).asString(); 
-  // Get the value of the member of root named 'encoding', return a 'null' value if
-  // there is no such member.
-  const Json::Value plugins = root["plug-ins"];
-  for ( int index = 0; index < plugins.size(); ++index )  // Iterates over the sequence elements.
-    std::cout << plugins[index].asString() << std::endl;
-     
-  std::cout << root["indent"].get("length", 3).asInt() << std::endl;
-  std::cout << root["indent"].get("use_space", true).asBool() << std::endl;
- 
   std::string filename = root["mesh"].get("filename", "").asString();
   
   int numelemx;
@@ -165,7 +182,7 @@ int main(int argc,char **args) {
   //-----------------------------------------------------------------------------------------------
   
   /// Init Petsc-MPI communicator
-  FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
+  FemTTUInit mpinit(argc,argv,MPI_COMM_WORLD);
   
   /// INIT MESH =================================  
   
@@ -272,7 +289,6 @@ int main(int argc,char **args) {
   //Destroy all the new systems
   ml_prob.clear();
   
-  //delete [] infile;
   return 0;
 }
 
