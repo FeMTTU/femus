@@ -1371,7 +1371,7 @@ unsigned int mesh::idx(const ElemType type, const unsigned int nx, const unsigne
 // 
 // 	  case QUAD8:
 	  case QUAD9:
-// 	  case TRI6:
+ 	  case TRI6:
 	    {
 	      return i + j*(2*nx+1);
 	      break;
@@ -1755,13 +1755,6 @@ void mesh::BuildBrick(const unsigned int nx,
  	assert (xmin < xmax);
  	assert (ymin < ymax);
  
-	//from gambit
-// 	  while (str2.compare("NDFVL") != 0) inf >> str2;
-//   inf >> nvt >> nel >>  ngroup >> nbcd >> dim >> str2 ;
-//   mesh::_dimension = dim;
-//   mesh::_ref_index = pow(2,mesh::_dimension);  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
-//   mesh::_face_index = pow(2,mesh::_dimension-1u); // 4*DIM[2]+2*DIM[1]+1*DIM[0];
-	
  	switch (type)
  	  {
 // 	  case INVALID_ELEM:
@@ -1779,11 +1772,16 @@ void mesh::BuildBrick(const unsigned int nx,
  	    }
 // 
 // 	  case TRI3:
-// 	  case TRI6:
-// 	    {
-// 	      mesh.reserve_elem (2*nx*ny);
-// 	      break;
-// 	    }
+ 	  case TRI6:
+ 	    {
+	      nel    =  2*nx*ny;
+	      
+	      ngroup = 1;
+	      nbcd   = 4;
+	      mesh::_ref_index = pow(2,mesh::_dimension);
+	      mesh::_face_index = pow(2,mesh::_dimension-1u);
+ 	      break;
+ 	    }
 // 
  	  default:
  	    {
@@ -1806,7 +1804,7 @@ void mesh::BuildBrick(const unsigned int nx,
 // 
 // 	  case QUAD8:
  	  case QUAD9:
-// 	  case TRI6:
+	  case TRI6:
  	    {
  	      nvt = (2*nx+1)*(2*ny+1) ;
  	      break;
@@ -1853,7 +1851,7 @@ void mesh::BuildBrick(const unsigned int nx,
 // 
 // 	  case QUAD8:
  	  case QUAD9:
-// 	  case TRI6:
+ 	  case TRI6:
  	    {
 	      vt[0].resize(nvt);
               vt[1].resize(nvt);
@@ -1898,14 +1896,11 @@ void mesh::BuildBrick(const unsigned int nx,
 
 
 // 		    else
-// 		      mesh.add_point (Point(static_cast<double>(i)/static_cast<double>(2*nx),
-// 					    static_cast<double>(j)/static_cast<double>(2*ny),
-// 					    0), node_id++);
 		          vt[0][node_id] = (static_cast<double>(i)/static_cast<double>(2*nx))*(xmax-xmin) + xmin;
                           vt[1][node_id] = (static_cast<double>(j)/static_cast<double>(2*ny))*(ymax-ymin) + ymin;
                           vt[2][node_id] = 0.;
 			  
-			  std::cout << "inode: " << node_id <<  " x: " << vt[0][node_id] << "   y: " << vt[1][node_id] << std::endl;
+//			  std::cout << "inode: " << node_id <<  " x: " << vt[0][node_id] << "   y: " << vt[1][node_id] << std::endl;
 			  
 			  node_id++;
  
@@ -2012,8 +2007,6 @@ void mesh::BuildBrick(const unsigned int nx,
                   el->AddToElementNumber(1,"Quad");
                   el->SetElementType(iel,3);
   
-		  
-
 		  LocalToGlobalNodePerElement[0] = idx(type,nx,i,j) + 1; 
 		  LocalToGlobalNodePerElement[1] = idx(type,nx,i+2,j) + 1;
 		  LocalToGlobalNodePerElement[2] = idx(type,nx,i+2,j+2) + 1;
@@ -2028,115 +2021,95 @@ void mesh::BuildBrick(const unsigned int nx,
                   for (unsigned iloc=0; iloc<9; iloc++) {
                     el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
                   }
-                    
-                    
+                                   
                   if (j == 0)
 		    el->SetFaceElementIndex(iel,0,-2);
-// 		      mesh.boundary_info->add_side(elem, 0, 0);  0 --> 1 --> -2
 
                   if (j == 2*(ny-1))
 		    el->SetFaceElementIndex(iel,2,-4);
-// 		      mesh.boundary_info->add_side(elem, 2, 2);  2 --> 3 --> -4
  
                   if (i == 0)
 		    el->SetFaceElementIndex(iel,3,-5);
-// 		      mesh.boundary_info->add_side(elem, 3, 3);  3 --> 4 --> -5
 
                   if (i == 2*(nx-1))
 		    el->SetFaceElementIndex(iel,1,-3);
-// 		      mesh.boundary_info->add_side(elem, 1, 1);  1 --> 2 --> -3
                     
-                    
-                    
-                    
-                    iel++;
+                  iel++;
                }
                   
-  // end read boundary **************** D                  
-	      
-	      
-	      
-	      
-// 	      for (unsigned int j=0; j<(2*ny); j += 2)
-// 		for (unsigned int i=0; i<(2*nx); i += 2)
-// 		  {
-// 		    Elem* elem = (type == QUAD8) ?
-// 		      mesh.add_elem(new Quad8) :
-// 		      mesh.add_elem(new Quad9);
-// 
-// 
-// 		    elem->set_node(0) = mesh.node_ptr(idx(type,nx,i,j)    );
-// 		    elem->set_node(1) = mesh.node_ptr(idx(type,nx,i+2,j)  );
-// 		    elem->set_node(2) = mesh.node_ptr(idx(type,nx,i+2,j+2));
-// 		    elem->set_node(3) = mesh.node_ptr(idx(type,nx,i,j+2)  );
-// 		    elem->set_node(4) = mesh.node_ptr(idx(type,nx,i+1,j)  );
-// 		    elem->set_node(5) = mesh.node_ptr(idx(type,nx,i+2,j+1));
-// 		    elem->set_node(6) = mesh.node_ptr(idx(type,nx,i+1,j+2));
-// 		    elem->set_node(7) = mesh.node_ptr(idx(type,nx,i,j+1)  );
-// 		    if (type == QUAD9)
-// 		      elem->set_node(8) = mesh.node_ptr(idx(type,nx,i+1,j+1));
-// 
-// 
-// 		    if (j == 0)
-// 		      mesh.boundary_info->add_side(elem, 0, 0);
-// 
-// 		    if (j == 2*(ny-1))
-// 		      mesh.boundary_info->add_side(elem, 2, 2);
-// 
-// 		    if (i == 0)
-// 		      mesh.boundary_info->add_side(elem, 3, 3);
-// 
-// 		    if (i == 2*(nx-1))
-// 		      mesh.boundary_info->add_side(elem, 1, 1);
-// 		  }
-		  
-		  
 	      break;
 	    }
-// 
-// 
-// 	  case TRI6:
-// 	    {
-// 	      for (unsigned int j=0; j<(2*ny); j += 2)
-// 		for (unsigned int i=0; i<(2*nx); i += 2)
-// 		  {
-// 		    Elem* elem = NULL;
-// 
-// 		    // Add first Tri6
-// 		    elem = mesh.add_elem(new Tri6);
-// 
-// 		    elem->set_node(0) = mesh.node_ptr(idx(type,nx,i,j)    );
-// 		    elem->set_node(1) = mesh.node_ptr(idx(type,nx,i+2,j)  );
-// 		    elem->set_node(2) = mesh.node_ptr(idx(type,nx,i+2,j+2));
-// 		    elem->set_node(3) = mesh.node_ptr(idx(type,nx,i+1,j)  );
-// 		    elem->set_node(4) = mesh.node_ptr(idx(type,nx,i+2,j+1));
-// 		    elem->set_node(5) = mesh.node_ptr(idx(type,nx,i+1,j+1));
-// 
-// 		    if (j == 0)
-// 		      mesh.boundary_info->add_side(elem, 0, 0);
-// 
-// 		    if (i == 2*(nx-1))
-// 		      mesh.boundary_info->add_side(elem, 1, 1);
-// 
-// 		    // Add second Tri6
-// 		    elem = mesh.add_elem(new Tri6);
-// 
-// 		    elem->set_node(0) = mesh.node_ptr(idx(type,nx,i,j)    );
-// 		    elem->set_node(1) = mesh.node_ptr(idx(type,nx,i+2,j+2));
-// 		    elem->set_node(2) = mesh.node_ptr(idx(type,nx,i,j+2)  );
-// 		    elem->set_node(3) = mesh.node_ptr(idx(type,nx,i+1,j+1));
-// 		    elem->set_node(4) = mesh.node_ptr(idx(type,nx,i+1,j+2));
-// 		    elem->set_node(5) = mesh.node_ptr(idx(type,nx,i,j+1)  );
-// 
-// 		    if (j == 2*(ny-1))
+
+	  case TRI6:
+	    {
+	      
+	      	unsigned LocalToGlobalNodePerElement[6];
+		
+		for (unsigned int j=0; j<(2*ny); j += 2)
+ 		  for (unsigned int i=0; i<(2*nx); i += 2)
+ 		  {
+		  
+		  // Add first Tri6  
+                  el->SetElementGroup(iel,1);
+		  el->SetElementMaterial(iel, 2); // 2 == fluid
+ 		  type_elem_flag[4]=true;
+                  el->AddToElementNumber(1,"Triangle");
+                  el->SetElementType(iel,4);
+
+		
+		  LocalToGlobalNodePerElement[0] = idx(type,nx,i,j) + 1;
+		  LocalToGlobalNodePerElement[1] = idx(type,nx,i+2,j) + 1; 
+		  LocalToGlobalNodePerElement[2] = idx(type,nx,i+2,j+2) + 1;
+		  LocalToGlobalNodePerElement[3] = idx(type,nx,i+1,j) + 1; 
+		  LocalToGlobalNodePerElement[4] = idx(type,nx,i+2,j+1) + 1;
+		  LocalToGlobalNodePerElement[5] = idx(type,nx,i+1,j+1) + 1;
+
+                  // connectivity
+                  for (unsigned iloc=0; iloc<6; iloc++) {
+                    el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
+                  }
+                    
+                  if (j == 0)
+		    el->SetFaceElementIndex(iel,0,-2);
+ 
+ 		  if (i == 2*(nx-1))
+		    el->SetFaceElementIndex(iel,1,-3);
+
+                  iel++;
+		    
+		    // Add second Tri6  
+		    
+		    el->SetElementGroup(iel,1);
+		    el->SetElementMaterial(iel, 2); // 2 == fluid
+ 		    type_elem_flag[4]=true;
+                    el->AddToElementNumber(1,"Triangle");
+                    el->SetElementType(iel,4);
+  
+		    LocalToGlobalNodePerElement[0] = idx(type,nx,i,j) + 1;
+		    LocalToGlobalNodePerElement[1] = idx(type,nx,i+2,j+2) + 1;
+		    LocalToGlobalNodePerElement[2] = idx(type,nx,i,j+2) + 1;
+		    LocalToGlobalNodePerElement[3] = idx(type,nx,i+1,j+1) + 1;
+		    LocalToGlobalNodePerElement[4] = idx(type,nx,i+1,j+2) + 1;
+		    LocalToGlobalNodePerElement[5] = idx(type,nx,i,j+1) + 1;
+		    
+		    // connectivity
+                    for (unsigned iloc=0; iloc<6; iloc++) {
+                      el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
+                    }
+	    
+		    if (j == 2*(ny-1))
+		      el->SetFaceElementIndex(iel,1,-4);
 // 		      mesh.boundary_info->add_side(elem, 1, 2);
 // 
-// 		    if (i == 0)
-// 		      mesh.boundary_info->add_side(elem, 2, 3);
-// 
-//		  }
-// 	      break;
-// 	    };
+                    if (i == 0)
+		      el->SetFaceElementIndex(iel,2,-5);
+		    
+		    iel++;
+		    
+		  }
+	      
+	      break;
+	    }
 
 
 	  default:
@@ -2146,13 +2119,7 @@ void mesh::BuildBrick(const unsigned int nx,
 	    }
 	  }
  
-// 	// Scale the nodal positions
-// 	for (unsigned int p=0; p<mesh.n_nodes(); p++)
-// 	  {
-// 	    mesh.node(p)(0) = (mesh.node(p)(0))*(xmax-xmin) + xmin;
-// 	    mesh.node(p)(1) = (mesh.node(p)(1))*(ymax-ymin) + ymin;
-// 	  }
-// 
+ 
 //         // Add sideset names to boundary info
 //         mesh.boundary_info->sideset_name(0) = "bottom";
 //         mesh.boundary_info->sideset_name(1) = "right";

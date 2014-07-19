@@ -12,18 +12,13 @@
                           "yb" : 2.,
                           "za" : 0.,
                           "zb" : 0.,
-                          "elem_type" : "Quad9"
+                          "elem_type" : "Tri6"
                          }
              },
         
-    // Tab indent size
-    "indent" : { "length" : 3, 
-                 "use_space": true 
-               },
-    
     // Properties
     "variable" : { "name" : "T", 
-                   "fe_order" : "biquadratic"
+                   "fe_order" : "linear"
                  },
     
     // MG Solver properties

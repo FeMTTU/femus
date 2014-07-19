@@ -119,7 +119,6 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/ExternalLibraries/b64-1.4.2/include/)
 #include jsoncpp include files
 INCLUDE_DIRECTORIES(ExternalLibraries/jsoncpp-src-0.5.0/include/)
 
-
 # Build the femus library
 ADD_SUBDIRECTORY(src)
 
@@ -128,6 +127,7 @@ ADD_SUBDIRECTORY(ExternalLibraries/b64-1.4.2)
 
 # Build the jsoncpp library
 ADD_SUBDIRECTORY(ExternalLibraries/jsoncpp-src-0.5.0)
+
 
 # Ask the user which executable have to be built
 OPTION(BUILD_STEADYNAVIERSTOKES "Build the Steady NavierStokes application" ON)
