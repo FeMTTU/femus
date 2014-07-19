@@ -84,6 +84,7 @@ const unsigned ig[6][6][9]= {
   }
 };
 
+
 const unsigned NFACENODES[6][6][3] = 
 {
   { {4,8,9},  // Hex
@@ -254,8 +255,15 @@ void elem::SetElementVertexIndex(const unsigned &iel,const unsigned &inode, cons
 /**
  * Return the local->global face node number
  **/
-unsigned elem::GetFaceVertexIndex(const unsigned &iel,const unsigned &iface, const unsigned &inode)const {
+unsigned elem::GetFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &inode)const {
   return kvert[iel][ig[elt[iel]][iface][inode]];
+}
+
+/**
+ * Return the local(edge/face)->local(surface/volume) node number
+ **/
+unsigned elem::GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &iedgenode) const {
+  return ig[elt[iel]][iface][iedgenode];
 }
 
 /**

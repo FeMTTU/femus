@@ -98,6 +98,7 @@ public:
   void SetElementVertexIndex(const unsigned &iel,const unsigned &inode, const unsigned &value);
   // ******************************
   unsigned GetFaceVertexIndex(const unsigned &iel,const unsigned &iface, const unsigned &inode) const;
+  unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &iedgenode) const;
   // ******************************
   short unsigned GetElementType(const unsigned &iel) const;
   void SetElementType(const unsigned &iel, const short unsigned &value);
