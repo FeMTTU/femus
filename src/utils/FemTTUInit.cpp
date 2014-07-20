@@ -47,7 +47,7 @@ FemTTUInit::FemTTUInit(
 #ifdef HAVE_PETSC  
   int ierr = PetscInitialize (&argc, &argv, NULL, NULL); CHKERRABORT(PETSC_COMM_WORLD,ierr);
       
-std::cout << " FemTTUInit: PETSC_COMM_WORLD initialized \n";	      
+std::cout << " FemTTUInit(): PETSC_COMM_WORLD initialized" << std::endl << std::endl;      
 
 #endif 
 
@@ -71,7 +71,7 @@ FemTTUInit::~FemTTUInit() { // ========================
 // 1 proc= nothing to do
 #ifdef HAVE_PETSC 
   PetscFinalize();
-  std::cout << " ~FemTTUInit(): PETSC_COMM_WORLD ends \n";    
+  std::cout << std::endl << " ~FemTTUInit(): PETSC_COMM_WORLD ends" << std::endl;    
 #endif
  
 #ifdef HAVE_MPI

@@ -61,14 +61,12 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
 			       _gridn0(igridn), 
 			       _gridr0(igridr){
 		       
-  cout << "MESH DATA: " << endl;
-
   _level0.resize(_gridn0);
     
   //coarse mesh
   _type_elem_flag.resize(5,false);
-  //_level0[0]=new mesh(mesh_file, Lref,_type_elem_flag);
   _level0[0] = new mesh();
+  std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
   _level0[0]->ReadCoarseMesh(mesh_file, Lref,_type_elem_flag);
   
   if(_type_elem_flag[0]){
@@ -143,8 +141,6 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
 
 void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref)
 {
-  cout << "MESH DATA: " << endl;
-
   _gridn0 = 1; 
   _gridr0 = 1;
   
@@ -153,6 +149,7 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
   //coarse mesh
   _type_elem_flag.resize(5,false);
   _level0[0] = new mesh();
+  std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
   _level0[0]->ReadCoarseMesh(mesh_file, Lref,_type_elem_flag);
   
   if(_type_elem_flag[0]){
@@ -205,8 +202,6 @@ void MultiLevelMesh::BuildBrickCoarseMesh( const unsigned int nx,
 					  const char GaussOrder[]
 			                 )
 {
-  cout << "MESH DATA: " << endl;
-
   _gridn0 = 1; 
   _gridr0 = 1;
   
@@ -215,6 +210,7 @@ void MultiLevelMesh::BuildBrickCoarseMesh( const unsigned int nx,
   //coarse mesh
   _type_elem_flag.resize(5,false);
   _level0[0] = new mesh();
+  std::cout << " Building brick mesh using the built-in mesh generator" << std::endl;
   _level0[0]->BuildBrick(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_type_elem_flag);
   
   if(_type_elem_flag[0]){
@@ -341,6 +337,15 @@ void MultiLevelMesh::MarkStructureNode(){
     for (unsigned i=0; i<_gridn0; i++) _level0[i]->AllocateAndMarkStructureNode();
   }
 
+  
+//---------------------------------------------------------------------------------------------
+  
+void MultiLevelMesh::print_info() {
+  std::cout << " Number of uniform mesh refinement: " << _gridn << std::endl;  
+    for(int i=0;i<_gridn;i++) {
+       _level[i]->print_info();
+    }
+}
   
 
 } //end namespace femus

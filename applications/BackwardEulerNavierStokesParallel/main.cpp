@@ -6,7 +6,7 @@
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
 #include "SparseMatrix.hpp"
-#include "VTKOutput.hpp"
+#include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 using std::cout;
 using std::endl;
@@ -123,7 +123,7 @@ int main(int argc,char **args) {
       print_vars.push_back("P");
       
 //       ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
-      VTKOutput vtkio(ml_sol);
+      VTKWriter vtkio(ml_sol);
       vtkio.write_system_solutions("biquadratic",print_vars,time_step);
     }
   

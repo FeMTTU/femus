@@ -6,8 +6,8 @@
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
 #include "SparseMatrix.hpp"
-#include "VTKOutput.hpp"
-#include "GMVOutput.hpp"
+#include "VTKWriter.hpp"
+#include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "SolvertypeEnum.hpp"
 #include <json/json.h>
@@ -139,6 +139,10 @@ int main(int argc,char **argv) {
         {
             elemtype = TRI6;
         }
+        else if(elemtypestr == "Edge3")
+        {
+            elemtype = EDGE3;
+        }
         else
 	{
 	    elemtype = INVALID_ELEM;
@@ -147,13 +151,9 @@ int main(int argc,char **argv) {
     }
 
     std::string variableName = root["variable"].get("name", "Q").asString();
-    std::cout << variableName << std::endl;
 
     std::string fe_order = root["variable"].get("fe_order", "biquadratic").asString();
-    std::cout << fe_order << std::endl;
 
-    std::string source_term = root["source_term"].get("func", "1").asString();
-    std::cout << source_term << std::endl;
     
     unsigned int nlevels = root["mgsolver"].get("nlevels", 1).asInt();
     unsigned int npresmoothing = root["mgsolver"].get("npresmoothing", 1).asUInt();
@@ -202,10 +202,8 @@ int main(int argc,char **argv) {
 
     unsigned short nm,nr;
     nm=nlevels;
-    std::cout<<"MULTIGRID levels: "<< nm << endl;
 
     nr=0;
-    std::cout<<"MAX_REFINEMENT levels: " << nr << endl<< endl;
 
     int tmp=nm;
     nm+=nr;
@@ -229,6 +227,8 @@ int main(int argc,char **argv) {
     ml_msh.RefineMesh(nm,nr,SetRefinementFlag);
 
     // ml_msh.EraseCoarseLevels(2);
+    
+    ml_msh.print_info();
 
     MultiLevelSolution ml_sol(&ml_msh);
 
@@ -249,7 +249,7 @@ int main(int argc,char **argv) {
 
     //BEGIN Poisson MultiLevel Problem
     std::cout << std::endl;
-    std::cout << " *********** Poisson ************* " << std::endl;
+    std::cout << " PDE problem to solve: Poisson " << std::endl;
 
     LinearImplicitSystem & system2 = ml_prob.add_system<LinearImplicitSystem>("Poisson");
     system2.AddSolutionToSytemPDE("Sol");
@@ -275,8 +275,11 @@ int main(int argc,char **argv) {
     //for Vanka and ASM smoothers
     system2.ClearVariablesToBeSolved();
     system2.AddVariableToBeSolved("All");
-    system2.SetNumberOfSchurVariables(0);
-    system2.SetElementBlockNumber(4);
+    if(Asm || Vanka)
+    {
+      system2.SetNumberOfSchurVariables(0);
+      system2.SetElementBlockNumber(4);
+    }
     //for Gmres smoother
     system2.SetDirichletBCsHandling(PENALTY);
 
@@ -288,7 +291,7 @@ int main(int argc,char **argv) {
     std::vector<std::string> print_vars;
     print_vars.push_back("Sol");
 
-    VTKOutput vtkio(ml_sol);
+    VTKWriter vtkio(ml_sol);
     vtkio.write_system_solutions("biquadratic",print_vars);
 
     //GMVOutput gmvio(ml_sol);
@@ -339,8 +342,8 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
             value=1;
         }
         else if(2==FaceName ) { // right face
-            test=0;
-            value=0.05;
+             test=0;
+             value=0.;
         }
         else if(3==FaceName ) { // top face
             test=0;
@@ -413,7 +416,9 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
     if(assembe_matrix) myKK->zero();
 
     // *** element loop ***
-
+    double length = 0.;
+    
+    
     for (int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
 
         unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
@@ -475,7 +480,9 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                         Lap_rhs += gradphi[i*dim+ivar]*gradSolT[ivar];
                     }
 
-                    F[i]+= (-Lap_rhs + 0.*phi[i] )*weight;
+                    F[i]+= (-Lap_rhs + 1.*phi[i] )*weight;
+		    
+		    length += phi[i]*weight;
 
                     //END RESIDUALS A block ===========================
                     if(assembe_matrix) {
@@ -512,7 +519,7 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
 
                     if(!test) {
 			unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,order_ind);
-                        const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5}};
+                        const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
                         unsigned felt = FELT[kelt][jface<mymsh->el->GetElementFaceNumber(kel,0)];
 
                         for(unsigned i=0; i<nve; i++) {
@@ -525,7 +532,9 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                             vx[2][i]=(*mymsh->_coordinate->_Sol[2])(inode_Metis);
                         }
 
-                        for(unsigned igs=0; igs < ml_prob._ml_msh->_type_elem[felt][order_ind]->GetGaussPointNumber(); igs++) {
+                        if(felt != 6) 
+			{
+                          for(unsigned igs=0; igs < ml_prob._ml_msh->_type_elem[felt][order_ind]->GetGaussPointNumber(); igs++) {
                             (ml_prob._ml_msh->_type_elem[felt][order_ind]->*ml_prob._ml_msh->_type_elem[felt][order_ind]->Jacobian_sur_ptr)(vx,igs,Weight,phi,gradphi,normal);
 
                             for(unsigned i=0; i<nve; i++) {
@@ -534,7 +543,15 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                                 unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
                                 F[ilocalnode] += bdintegral;
                             }
-                        }
+                          }
+			}
+			else // 1D : the side elems are points and does not still exist the point elem
+			{
+			  SetBoundaryCondition(vx[0][0],vx[1][0],vx[2][0],"Sol",tau,-(mymsh->el->GetFaceElementIndex(kel,jface)+1),time);
+			  double bdintegral = tau;
+			  unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, 0);
+                          F[ilocalnode] += bdintegral;
+			}
                     }
                 }
             }

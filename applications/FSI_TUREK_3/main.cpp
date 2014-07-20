@@ -7,7 +7,7 @@
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
 #include "SparseMatrix.hpp"
-#include "VTKOutput.hpp"
+#include "VTKWriter.hpp"
 
 #include "../include/FSIassembly.hpp"
 
@@ -140,7 +140,7 @@ int main(int argc,char **args) {
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
-  VTKOutput vtkio(ml_sol);
+  VTKWriter vtkio(ml_sol);
   vtkio.SetMovingMesh(mov_vars);
   
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {

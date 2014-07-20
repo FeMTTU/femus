@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: VTKOutput
+ Module: GMVWriter
  Authors: Eugenio Aulisa, Simone Bnà
  
  Copyright (c) FEMTTU
@@ -13,13 +13,13 @@
 
 =========================================================================*/
 
-#ifndef __vtkoutput_h_
-#define __vtkoutput_h_
+#ifndef __gmvwriter_h_
+#define __gmvwriter_h_
 
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "Output.hpp"
+#include "Writer.hpp"
 
 
 namespace femus {
@@ -32,15 +32,15 @@ namespace femus {
 class MultiLevelProblem;
 
 
-class VTKOutput : public Output {
+class GMVWriter : public Writer {
 
 public:
 
   /** Constructor. */
-  VTKOutput(MultiLevelSolution& ml_sol);
+  GMVWriter(MultiLevelSolution& ml_sol);
 
   /** Destructor */
-  virtual ~VTKOutput();
+  virtual ~GMVWriter();
   
   /** write output function */
   virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step=0);

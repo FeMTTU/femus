@@ -99,6 +99,8 @@ protected:
   void EraseCoarseLevels(unsigned levels_to_be_erased);
     
   void MarkStructureNode(); 
+  
+  void print_info();
     
 };
 

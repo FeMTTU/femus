@@ -106,7 +106,7 @@ void LinearImplicitSystem::solve() {
      
   for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {   //_igridn
     
-    std::cout << std::endl << "    ************* Level Max: " << igridn << " *************\n" << std::endl;
+    std::cout << std::endl << " ************* Level : " << igridn -1 << " *************\n" << std::endl;
 
      
     int nonlinear_cycle = 0; // da eliminare anche questo parametro!!!!
@@ -126,8 +126,8 @@ void LinearImplicitSystem::solve() {
  
       for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
 	
-	std::cout << std::endl;
-	std::cout << "   ************* Linear Cycle "<< _n_linear_iterations + 1 << " *************" << std::endl << std::endl;
+	//std::cout << std::endl;
+	std::cout << " ************* V-Cycle : "<< _n_linear_iterations << " *************" << std::endl;
 	
 	bool ksp_clean=!_n_linear_iterations;
 	
@@ -176,9 +176,9 @@ void LinearImplicitSystem::solve() {
  	
  	_final_linear_residual = solver_info.second;
 	
-	std::cout << std::endl;
+	//std::cout << std::endl;
 	std::cout << "Grid: " << igridn-1 << "      RESIDUAL:\t\t      " << std::setw(11) << std::setprecision(6) << std::scientific << 
-	_final_linear_residual << std::endl;
+	_final_linear_residual << std::endl << std::endl;
 	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
  	if(_SmootherType != VANKA_SMOOTHER){
 	  if(_final_linear_residual < _absolute_convergence_tolerance) 
@@ -199,7 +199,7 @@ void LinearImplicitSystem::solve() {
     }
   }
 
-  std::cout << std::endl;
+  //std::cout << std::endl;
   std::cout << "\t     SOLVER TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed 
   <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
   

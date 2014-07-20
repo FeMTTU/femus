@@ -1,4 +1,3 @@
-
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelMesh.hpp"
 #include "TransientSystem.hpp"
@@ -7,8 +6,8 @@
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
 #include "SparseMatrix.hpp"
-#include "VTKOutput.hpp"
-#include "GMVOutput.hpp"
+#include "VTKWriter.hpp"
+#include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "SolvertypeEnum.hpp"
 
@@ -210,13 +209,13 @@ int main(int argc,char **args) {
   print_vars.push_back("T");
   
      
-  VTKOutput vtkio(ml_sol);
+  VTKWriter vtkio(ml_sol);
   vtkio.write_system_solutions("biquadratic",print_vars);
   
-//   XDMFOutput xdmfio(ml_prob);
+//   XDMFWriter xdmfio(ml_prob);
 //   xdmfio.write_system_solutions("biquadratic",print_vars);
   
-  GMVOutput gmvio(ml_sol);
+  GMVWriter gmvio(ml_sol);
   gmvio.write_system_solutions("biquadratic",print_vars);
   
   //Destroy all the new systems

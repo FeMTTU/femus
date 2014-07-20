@@ -6,7 +6,7 @@
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
 #include "SparseMatrix.hpp"
-#include "VTKOutput.hpp"
+#include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 
 using std::cout;
@@ -117,7 +117,7 @@ int main(int argc,char **args) {
   const unsigned int n_timesteps = 5;
   const unsigned int write_interval = 1;
   
-  VTKOutput vtkio(ml_sol);
+  VTKWriter vtkio(ml_sol);
   
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
    

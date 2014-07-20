@@ -83,14 +83,14 @@ public:
   /** destructor */
   ~mesh();
 
+  // printing
+  
+  void print_info();
+  
   // Reading 
   
-  /**
-  *  This function generates the coarse mesh level, $l_0$, from an input mesh file 
-  **/
+  /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
   void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_type_elem_flag);
-  
-  void Read1D(const char infile [], vector < vector < double> > &vt);
   
   /** Read the coarse-mesh from a neutral Gambit File */
   void ReadGambit(const std::string& name, vector < vector < double> > &vt,const double Lref,std::vector<bool> &type_elem_flag);
@@ -105,14 +105,11 @@ public:
 		    const ElemType type,
 		    std::vector<bool> &type_elem_flag );
   
-  /**
-  *  This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$
-  **/
+  /** This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$ */
   void RefineMesh(const unsigned &igrid, mesh *mshc, const elem_type* type_elem[6][5]);
   
   
   // partitioning 
-  
   void generate_metis_mesh_partition();
     
   

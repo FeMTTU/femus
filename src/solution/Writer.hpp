@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: Output
+ Module: Writer
  Authors: Eugenio Aulisa, Simone Bnà
  
  Copyright (c) FEMTTU
@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __output_h_
-#define __output_h_
+#ifndef __writer_h_
+#define __writer_h_
 
 //----------------------------------------------------------------------------
 // includes :
@@ -36,15 +36,15 @@ class SparseMatrix;
 class Vector;
 
 
-class Output : public ParallelObject {
+class Writer : public ParallelObject {
 
 public:
 
   /** Constructor. */
-  Output(MultiLevelSolution& ml_probl);
+  Writer(MultiLevelSolution& ml_probl);
 
   /** Destructor */
-  virtual ~Output();
+  virtual ~Writer();
   
   /** write output function */
   virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step = 0) = 0;
