@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: GMVOutput
+ Module: GMVWriter
  Authors: Eugenio Aulisa, Simone Bnà
  
  Copyright (c) FEMTTU
@@ -16,7 +16,7 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "GMVOutput.hpp"
+#include "GMVWriter.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "stdio.h"
@@ -30,17 +30,17 @@ namespace femus {
 
 
 
-GMVOutput::GMVOutput(MultiLevelSolution& ml_probl): Output(ml_probl)
+GMVWriter::GMVWriter(MultiLevelSolution& ml_probl): Writer(ml_probl)
 {
   
 }
 
-GMVOutput::~GMVOutput()
+GMVWriter::~GMVWriter()
 {
   
 }
 
-void GMVOutput::write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step) 
+void GMVWriter::write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
   unsigned igridn = _gridn; // aggiunta da me
   
@@ -64,8 +64,11 @@ void GMVOutput::write_system_solutions(const char order[], std::vector<std::stri
   else {
     fout.open(filename);
     if (!fout) {
-      std::cout << "Output mesh file "<<filename<<" cannot be opened.\n";
+      std::cout << std::endl << " The output file "<<filename<<" cannot be opened.\n";
       exit(0);
+    }
+    else {
+      std::cout << std::endl << " The output is printed to file " << filename << " in GMV format" << std::endl;   
     }
   }
 

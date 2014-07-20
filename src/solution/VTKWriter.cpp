@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: VTKOutput
+ Module: VTKWriter
  Authors: Eugenio Aulisa, Simone Bnà
  
  Copyright (c) FEMTTU
@@ -16,7 +16,7 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "VTKOutput.hpp"
+#include "VTKWriter.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include <b64.h>
@@ -33,18 +33,18 @@ namespace femus {
 
 
 
-VTKOutput::VTKOutput(MultiLevelSolution& ml_probl): Output(ml_probl)
+VTKWriter::VTKWriter(MultiLevelSolution& ml_probl): Writer(ml_probl)
 {
   
 }
 
-VTKOutput::~VTKOutput()
+VTKWriter::~VTKWriter()
 {
   
 }
 
 
-void VTKOutput::write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step) 
+void VTKWriter::write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
   bool test_all=!(vars[0].compare("All"));
   
@@ -74,8 +74,11 @@ void VTKOutput::write_system_solutions(const char order[], std::vector<std::stri
   else {
     fout.open(filename);
     if (!fout) {
-      std::cout << "Output mesh file "<<filename<<" cannot be opened.\n";
+      std::cout << std::endl << " The output file "<<filename<<" cannot be opened.\n";
       exit(0);
+    }
+    else {
+      std::cout << std::endl << " The output is printed to file " << filename << " in VTK-XML (64-based) format" << std::endl;   
     }
   }
   // haed ************************************************

@@ -97,7 +97,7 @@ void MultiLevelSolution::AddSolution(const char name[], const char order[],
   strcpy(_SolName[n],name);
   _SolTmorder[n]=tmorder;
  
-  cout << "Add variable " << std::setw(3) << _SolName[n] << " discretized with FE type "
+  cout << " Add variable " << std::setw(3) << _SolName[n] << " discretized with FE type "
        << std::setw(12) << order << " and time discretzation order " << tmorder << endl;
 
   for (unsigned ig=0; ig<_gridn; ig++) {
@@ -270,7 +270,7 @@ void MultiLevelSolution::GenerateBdc(const char name[], const char bdc_type[]) {
     for (unsigned k=i_start; k<i_end; k++) {
       if(_solution[0]->_ResEpsBdcFlag[k]){
 	sprintf(_BdcType[k],"Steady");
-	cout << "Set " << std::setw(15) << _BdcType[k] << " Boundary_condition"
+	cout << " Set " << std::setw(15) << _BdcType[k] << " Boundary_condition"
 	     << " for variable " << std::setw(3) << _SolName[k] << endl;
       }
       else {
@@ -292,7 +292,7 @@ void MultiLevelSolution::GenerateBdc(const char name[], const char bdc_type[]) {
 	     << " in GenerateBdc function" << endl;
 	exit(1);
       }
-      cout << "Set " << std::setw(14) <<_BdcType[i_start] << " Boundary_condition"
+      cout << " Set " << std::setw(14) <<_BdcType[i_start] << " Boundary_condition"
 	   << " for variable " << std::setw(3) << _SolName[i_start] << endl;
     }
     else {

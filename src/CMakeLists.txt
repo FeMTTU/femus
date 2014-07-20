@@ -75,10 +75,10 @@ quadrature/CurrGaussPointBase.cpp
 quadrature/QRule.cpp
 solution/MultiLevelSolution.cpp
 solution/Solution.cpp
-solution/Output.cpp
-solution/VTKOutput.cpp
-solution/GMVOutput.cpp
-solution/XDMFOutput.cpp
+solution/Writer.cpp
+solution/VTKWriter.cpp
+solution/GMVWriter.cpp
+solution/XDMFWriter.cpp
 utils/FemTTUInit.cpp
 utils/FemusInit.cpp
 utils/Files.cpp

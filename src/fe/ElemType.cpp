@@ -1067,13 +1067,15 @@ void elem_type::Jacobian1D(const vector < vector < double > > &vt,const unsigned
                            double &Weight, vector < double > &other_phi, vector < double > &gradphi) const {
 
   double Jac=0.;
+  double h;
 
   const double *dfx=dphidxi[ig];
   const double *vx=&vt[0][0];
-
-  for (int inode=0; inode<nc_; inode++,dfx++,vx++) {
-    Jac+=(*dfx)*(*vx);
-  }
+//   Jac = fabs((*(vx++)) - (*vx));
+  
+   for (int inode=0; inode<nc_; inode++,dfx++,vx++) {
+     Jac+=(*dfx)*(*vx);
+   }
   Weight=Jac*GaussWeight[ig];
 
   double *other_f=&other_phi[0];
@@ -1082,9 +1084,7 @@ void elem_type::Jacobian1D(const vector < vector < double > > &vt,const unsigned
   dfx=dphidxi[ig];
   for (int inode=0; inode<nc_; inode++,other_f++,fi++,dfx++) {
     *other_f=*fi;
-    *(gradf++)=(*dfx);
-    //*(gradf++)=0.;
-    //*(gradf++)=0.;
+    *(gradf++)=(*dfx)*(1./Jac);
   }
 }
 

@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: XDMFOutput
+ Module: XDMFWriter
  Authors: Eugenio Aulisa, Simone Bnà
  
  Copyright (c) FEMTTU
@@ -17,7 +17,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "FEMTTUConfig.h"
-#include "XDMFOutput.hpp"
+#include "XDMFWriter.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "stdio.h"
@@ -36,17 +36,17 @@ namespace femus {
 #endif
 
 
-XDMFOutput::XDMFOutput(MultiLevelSolution& ml_probl): Output(ml_probl)
+XDMFWriter::XDMFWriter(MultiLevelSolution& ml_probl): Writer(ml_probl)
 {
   
 }
 
-XDMFOutput::~XDMFOutput()
+XDMFWriter::~XDMFWriter()
 {
   
 }
 
-void XDMFOutput::write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step) 
+void XDMFWriter::write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
 #ifdef HAVE_HDF5
   
@@ -111,9 +111,13 @@ void XDMFOutput::write_system_solutions(const char order[], std::vector<std::str
   //std::ofstream fout;
   fout.open(filename);
   if (!fout) {
-    std::cout << "Output mesh file "<<filename<<" cannot be opened.\n";
+    std::cout << std::endl << " The output mesh file "<<filename<<" cannot be opened.\n";
     exit(0);
   }
+  else {
+    std::cout << std::endl << " The output is printed to file " << filename << " in XDMF-HDF5 format" << std::endl;   
+  }
+ 
   
   // Print The HDF5 file
   sprintf(filename,"./mesh.level%d.%d.%s.h5",_gridn,time_step,order);
@@ -196,12 +200,12 @@ void XDMFOutput::write_system_solutions(const char order[], std::vector<std::str
       NumericVector* mysol;
       mysol = NumericVector::build().release();
       mysol->init(_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,SERIAL);
-      mysol->matrix_mult(*_ml_sol._ml_msh->GetLevel(ig)->_coordinate->_Sol[i],*Output::_ProlQitoQj[index_nd][2][ig]);
+      mysol->matrix_mult(*_ml_sol._ml_msh->GetLevel(ig)->_coordinate->_Sol[i],*Writer::_ProlQitoQj[index_nd][2][ig]);
       unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
       for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
       if (_moving_mesh) {
 	unsigned varind_DXDYDZ=_ml_sol.GetIndex(_moving_vars[i].c_str());
-	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[varind_DXDYDZ],*Output::_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(varind_DXDYDZ)][ig]);
+	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[varind_DXDYDZ],*Writer::_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(varind_DXDYDZ)][ig]);
 	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] += (*mysol)(ii);
       }
       offset_nvt+=nvt_ig;
@@ -339,7 +343,7 @@ void XDMFOutput::write_system_solutions(const char order[], std::vector<std::str
   return;   
 }
 
-void XDMFOutput::write_solution_wrapper(const char type[]) const {
+void XDMFWriter::write_solution_wrapper(const char type[]) const {
   
 #ifdef HAVE_HDF5 
   

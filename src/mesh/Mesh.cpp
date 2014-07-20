@@ -80,15 +80,7 @@ void mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   // connectivity: find all the element near the vertices
   BuildAdjVtx();
   Buildkel();
-  // some output
-  cout <<"grid\tnel\tnvt"<< endl;
-  cout <<grid<<"\t"<<nel<<"\t"<<nvt<<endl;
-  cout <<"nv0\tnv1\tnv2"<< endl;
-  cout <<el->GetVertexNodeNumber()<<"\t"
-       <<el->GetMidpointNodeNumber()<<"\t"
-       <<el->GetCentralNodeNumber()<<endl
-       <<"-------------------------"<<endl;
-       
+  
  if (_nprocs>=1) generate_metis_mesh_partition();
   vector <double> vt_temp;
   for(int i=0;i<3;i++){
@@ -330,18 +322,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type* type_
   Buildkel();
   
   //for parallel computations
-  cout << "  start partioning " << endl;
   if (_nprocs>=1) generate_metis_mesh_partition();
-  cout << " end partitioning " << endl;
-  // some output
-  cout <<"grid\tnel\tnvt"<< endl;
-  cout <<grid<<"\t"<<nel<<"\t"<<nvt<<endl;
-  cout <<"nv0\tnv1\tnv2"<< endl;
-  cout <<el->GetVertexNodeNumber()<<"\t"
-       <<el->GetMidpointNodeNumber()<<"\t"
-       <<el->GetCentralNodeNumber()<<endl
-       <<"-------------------------"<<endl;
-       
        
   _coordinate = new Solution(this);
   _coordinate->AddSolution("X","biquadratic",1,0); 
@@ -401,6 +382,14 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type* type_
     }
   }
 
+/// print mesh info
+void mesh::print_info() {
+  
+ std::cout << " Mesh Level        : " << grid << std::endl; 
+ std::cout << "   Number of elements: " << nel << std::endl; 
+ std::cout << "   Number of nodes   : " << nvt << std::endl;
+  
+}
 
 
 //------------------------------------------------------------------------------------------------------
@@ -468,17 +457,11 @@ void mesh::generate_metis_mesh_partition(){
   for (unsigned iel=0; iel<nel; iel++) {
     unsigned ielt=el->GetElementType(iel);
     eptr[iel+1]=eptr[iel]+NVE[ielt][3];
-//     cout << eptr[iel+1] << " ";
     for (unsigned inode=0; inode<el->GetElementDofNumber(iel,3); inode++){
       eind[counter]=el->GetElementVertexIndex(iel,inode)-1;
-//       cout << eind[counter] << " ";
       counter ++;
    }
   }
-  
-  printf("NEL : %d \n",nel);
-  printf("NVT : %d \n",nvt);
-  cout << "NVT : " << nvt << endl;
   
   idx_t mnel = nel; 
   idx_t mnvt = nvt;
@@ -596,89 +579,6 @@ void mesh::generate_metis_mesh_partition(){
     }
   }  
    
- cout << " 1 " << endl; 
-   
-//  // a lot of time!!!!!!!!!!!!!!!!!
-//  
-//  
-//   counter=0;
-//  
-//   // reorder the vertices and midpoints vs the central nodes    
-//   for(int isdom=0;isdom<nsubdom;isdom++){
-//     for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
-//       unsigned iel=IS_Mts2Gmt_elem[i]; 
-//       // cout << "i: " << i << "  dof_map: " << iel << endl;
-//       for (unsigned inode=0; inode<el->GetElementDofNumber(iel,3); inode++) {
-// // 	unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
-// // 	 if(npart[ii]==isdom){
-// //  	   unsigned i0=IS_Gmt2Mts_dof[2][ii];
-// // 	   if(i0>counter){
-// // 	     IS_Gmt2Mts_dof[2][ii]=counter;
-// // 	     IS_Gmt2Mts_dof[2][counter]=i0; 
-// // 	     counter++;
-// // 	   }
-// // 	 }
-// 	
-// 	for(unsigned j=IS_Mts2Gmt_elem_offset[isdom];j<IS_Mts2Gmt_elem_offset[isdom+1];j++){
-// 	  unsigned jel=IS_Mts2Gmt_elem[j];
-// 	  for (unsigned jnode=el->GetElementDofNumber(jel,1); jnode<el->GetElementDofNumber(jel,3); jnode++) { 
-// 	    unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
-// 	    unsigned jj=el->GetElementVertexIndex(jel,jnode)-1;
-// 	    if(npart[ii]==isdom && npart[jj]==isdom){
-// 	      unsigned i0=IS_Gmt2Mts_dof[2][ii];
-// 	      unsigned i1=IS_Gmt2Mts_dof[2][jj];
-// 	      if(i0>i1){
-// 		IS_Gmt2Mts_dof[2][ii]=i1;
-// 		IS_Gmt2Mts_dof[2][jj]=i0; 
-// 	      }
-// 	    }
-// 	  }
-// 	}
-//       }
-//     }
-//   }
-// 
-//   cout << " 2 " << endl; 
-//   
-//   
-//   // a lot of time!!!!!!!!!!!!!!!!!
-//   
-//   // reoreder the vertices vs the midpoints
-//   for(int isdom=0;isdom<nsubdom;isdom++){
-//     for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
-//       unsigned iel=IS_Mts2Gmt_elem[i]; 
-//       for (unsigned inode=0; inode<el->GetElementDofNumber(iel,0); inode++) {
-// 	for(unsigned j=IS_Mts2Gmt_elem_offset[isdom];j<IS_Mts2Gmt_elem_offset[isdom+1];j++){
-// 	  unsigned jel=IS_Mts2Gmt_elem[j];
-// 	  for (unsigned jnode=el->GetElementDofNumber(jel,0); jnode<el->GetElementDofNumber(jel,1); jnode++) { 
-// 	    unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
-// 	    unsigned jj=el->GetElementVertexIndex(jel,jnode)-1;
-// 	    if(npart[ii]==isdom && npart[jj]==isdom){
-// 	      { // for quadratic
-// 		unsigned i0=IS_Gmt2Mts_dof[1][ii];
-// 		unsigned i1=IS_Gmt2Mts_dof[1][jj];
-// 		if(i0>i1){
-// 		  IS_Gmt2Mts_dof[1][ii]=i1;
-// 		  IS_Gmt2Mts_dof[1][jj]=i0; 
-// 		}
-// 	      }
-// 	      { // for biquadratic
-// 		unsigned i0=IS_Gmt2Mts_dof[2][ii];
-// 		unsigned i1=IS_Gmt2Mts_dof[2][jj];
-// 		if(i0>i1){
-// 		  IS_Gmt2Mts_dof[2][ii]=i1;
-// 		  IS_Gmt2Mts_dof[2][jj]=i0; 
-// 		}
-// 	      }  
-// 	    }
-// 	  }
-// 	}
-//       }
-//     }
-//   }
-//    
-//   cout << " 3 " << endl;  
-   
   // ghost vs own nodes
   vector <unsigned short> node_count(nvt,0);
   
@@ -686,7 +586,6 @@ void mesh::generate_metis_mesh_partition(){
     ghost_size[k].assign(nsubdom,0);
     own_size[k].assign(nsubdom,0);
   }
-  //unsigned ghost_counter[5]={0,0,0,0,0};
   
   for(int isdom=0;isdom<nsubdom;isdom++){
     
@@ -831,209 +730,9 @@ void mesh::generate_metis_mesh_partition(){
     
   }
   
-//   for(int i=0;i<5;i++){
-//     for(int j=0;j<=nsubdom;j++){
-//       cout<<MetisOffset[i][j]<<" ";
-//     }
-//     cout<<endl;
-//   }
-  
-  /*
-   for(unsigned i=0;i<3*nel;i++){
-     IS_Gmt2Mts_dof[4][i]=i;
-   }*/
-  
-//   for(int isdom=0;isdom<nsubdom;isdom++){
-//     cout <<"nel: "<< IS_Mts2Gmt_elem_offset[isdom+1]-IS_Mts2Gmt_elem_offset[isdom] << endl;
-//     cout<<"linear\n";
-//     cout<<"ghost size: "<<ghost_size[0][isdom]<<endl;
-//     cout<<"own size: "<<own_size[0][isdom]<<endl;
-//     sort(&ghost_nd[0][isdom][0],&ghost_nd[0][isdom][ghost_size[0][isdom]]);
-//     cout << "ghost nodes: ";
-//     for(unsigned i=0;i<ghost_size[0][isdom];i++){
-//       cout<<  ghost_nd_mts[0][isdom][i] <<" ";
-//     }
-//     cout<<endl;
-//     for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
-//       unsigned iel=IS_Mts2Gmt_elem[i];
-//       for (unsigned inode=0; inode<el->GetElementDofNumber(iel,0); inode++) {
-// 	unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
-// 	cout<<IS_Gmt2Mts_dof[0][ii]<<" ";
-//       }
-//       cout<<endl;
-//     }
-//     cout<<"quadratic\n";
-//     cout<<"ghost size: "<<ghost_size[1][isdom]<<endl;
-//     cout<<"own size: "<<own_size[1][isdom]<<endl;
-//     sort(&ghost_nd[1][isdom][0],&ghost_nd[1][isdom][ghost_size[1][isdom]]);
-//     cout << "ghost nodes: ";
-//     for(unsigned i=0;i<ghost_size[1][isdom];i++){
-//       cout<<  ghost_nd_mts[1][isdom][i] <<" ";
-//     }
-//     cout<<endl;
-//     for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
-//       unsigned iel=IS_Mts2Gmt_elem[i];
-//       for (unsigned inode=0; inode<el->GetElementDofNumber(iel,1); inode++) {
-// 	unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
-// 	cout<<IS_Gmt2Mts_dof[1][ii]<<" ";
-//       }
-//       cout<<endl;
-//     }
-//    
-//     
-//     cout<<"biquadratic\n";
-// 
-//     cout<<"ghost size: "<<ghost_size[2][isdom]<<endl;
-//     cout<<"own size: "<<own_size[2][isdom]<<endl;
-//     sort(&ghost_nd[2][isdom][0],&ghost_nd[2][isdom][ghost_size[2][isdom]]);
-//     cout << "ghost nodes: ";
-//     for(unsigned i=0;i<ghost_size[2][isdom];i++){
-//       //cout<<isdom<<" "<<i<<endl;
-//       cout<<  ghost_nd_mts[2][isdom][i] <<" ";
-//     }
-//     cout<<endl;
-//     
-//     for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
-//       unsigned iel=IS_Mts2Gmt_elem[i];
-//       for (unsigned inode=0; inode<el->GetElementDofNumber(iel,3); inode++) {
-// 	unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
-// 	cout<<IS_Gmt2Mts_dof[2][ii]<<" ";
-//       }
-//       cout<<endl;
-//     }
-//     cout<<endl;
-//   }
-    
-//   cout<<nel<<" "<<counter_el<<endl;
-//   for(unsigned i=0;i<3*nel;i++){
-//     cout<<IS_Gmt2Mts_dof[4][i]<<" ";
-//   }
-//   cout<<endl;
-  
-// /*  
-//   for(unsigned i=0;i<nel;i++){
-//     cout<<IS_Gmt2Mts_dof[3][IS_Mts2Gmt_elem[i]]<<" ";
-//   }
-//   cout<<endl;*/
-//   
-//    for(unsigned i=0;i<nel;i++){
-//     cout<<IS_Mts2Gmt_elem[IS_Gmt2Mts_dof[3][i]]<<" ";
-//   }
-//   cout<<endl;
-//   
-//   for(int isdom=0;isdom<nsubdom;isdom++){
-//     for(unsigned k_dim=0;k_dim<_dimension+1;k_dim++){
-//       for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
-// 	cout<<IS_Gmt2Mts_dof[4][nel*k_dim+IS_Mts2Gmt_elem[i]]<<" ";
-//       }
-//     }
-//   }
-//   cout<<endl;
-//   
-//   
-//   for(int isdom=0;isdom<nsubdom;isdom++){
-//     for(unsigned k_dim=0;k_dim<_dimension+1;k_dim++){
-//       for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
-// 	cout<<IS_Gmt2Mts_dof[4][nel*k_dim+IS_Mts2Gmt_elem[i]]<<" ";
-//       }
-//     }
-//   }
-//   cout<<endl;
-//   
-  
-  //exit(0);
   return; 
   
 }
-
-
-
-
-
-
-/**
- * This function read the data form the custom 1D file.
- * It is used in the constructor of the coarse mesh.
- **/
-void mesh::Read1D(const char infile [], vector < vector < double> > &vt) {
-  // set the file
-  std::ifstream inf;
-  std::string str2;
-
-  grid=0;
-  // read NUMBER OF ELEMENTS ******************** A
-  inf.open(infile);
-  if (!inf) {
-    cout<<"Generic-mesh file "<<infile<< " can not read parameters\n";
-    exit(0);
-  }
-  str2="0";
-  while (str2.compare("NEL") != 0) inf >> str2;
-  inf >> nel;
-  inf.close();
-
-  nvt=2*nel+1;
-  el= new elem(nel);
-  el->AddToElementNumber(nel,"Line");
-
-  el->SetElementGroupNumber(1);
-  for (unsigned iel=0; iel<nel; iel++) {
-    el->SetElementGroup(iel,0);
-    el->SetElementType(iel,5);
-    el->SetElementVertexIndex(iel,0,iel+1);
-    el->SetElementVertexIndex(iel,1,iel+2);
-    el->SetElementVertexIndex(iel,2,(nel+1)+(iel+1));
-  }
-  // end read NUMBER OF ELEMENTS **************** A
-
-  // read NODAL COORDINATES **************** B
-  inf.open(infile);
-  if (!inf) {
-    cout<<"Generic-mesh file "<<infile<< " cannot read nodes\n";
-    exit(0);
-  }
-  double x0,x1,h;
-  while (str2.compare("COORDINATES") != 0) inf >> str2;
-  inf >> x0>>x1;
-  inf.close();
-
-  if (x1<x0) {
-    double temp=x1;
-    x1=x0;
-    x0=temp;
-  }
-  vt[0].resize(nvt);
-  vt[1].resize(nvt);
-  vt[2].resize(nvt);
-
-    
-  h=(x1-x0)/nel;
-  for (unsigned iel=0; iel<nel; iel++) {
-    vt[0][iel]=x0+iel*h;
-    vt[1][iel]=0.;
-    vt[2][iel]=0.;
-    vt[0][nel+(iel+1)]=vt[0][iel]+h/2.;
-    vt[1][nel+(iel+1)]=0.;
-    vt[2][nel+(iel+1)]=0.;
-  }
-  vt[0][nel]=x1;
-  vt[1][nel]=0.;
-  vt[2][nel]=0.;
-  // end read NODAL COORDINATES ************* B
-
-  // set boundary **************** C
-  el->SetFaceElementIndex(0,0,-2);
-  el->SetFaceElementIndex(nel-1,1,-3);
-  // end set boundary ****************
-  el->SetNodeNumber(nvt);
-  el->SetVertexNodeNumber(nel+1);
-  el->SetMidpointNodeNumber(nel);
-  el->SetCentralNodeNumber(0);
-  
- 
-  
-}
-
 
 
 /**
@@ -1465,55 +1164,42 @@ void mesh::BuildBrick(const unsigned int nx,
 
   switch (_dimension)
     {
-      //---------------------------------------------------------------------
-      // Build a 0D point
-     case 0:
-       {
-// 	libmesh_assert_equal_to (nx, 0);
-// 	libmesh_assert_equal_to (ny, 0);
-// 	libmesh_assert_equal_to (nz, 0);
-// 
-//         libmesh_assert (type == INVALID_ELEM || type == NODEELEM);
-// 
-//         // Build one nodal element for the mesh
-//         mesh.add_point (Point(0, 0, 0), 0);
-//         Elem* elem = mesh.add_elem (new NodeElem);
-//         elem->set_node(0) = mesh.node_ptr(0);
-          std::cout << "Error: NotImplemented " << std::endl;
-          break;
-       }
 
-       //---------------------------------------------------------------------
+      //---------------------------------------------------------------------
        // Build a 1D line
      case 1:
        {
-// 	libmesh_assert_not_equal_to (nx, 0);
-// 	libmesh_assert_equal_to (ny, 0);
-// 	libmesh_assert_equal_to (nz, 0);
-// 	libmesh_assert_less (xmin, xmax);
-// 
-//         // Reserve elements
-//         switch (type)
-//           {
+        assert(nx!=0);
+	assert(ny==0);
+	assert(nz==0);
+	assert(xmin<xmax);
+
+         // Reserve elements
+         switch (type)
+         {
 //           case INVALID_ELEM:
 //           case EDGE2:
-//           case EDGE3:
+           case EDGE3:
 //           case EDGE4:
-//             {
-// 	      mesh.reserve_elem (nx);
-//               break;
-//             }
+             {
+	       nel    =  nx;
+	      
+	       ngroup = 1;
+	       nbcd   = 2;
+	       mesh::_ref_index = pow(2,mesh::_dimension);
+	       mesh::_face_index = pow(2,mesh::_dimension-1u);
+ 	       break;
+             }
 // 
-//           default:
-//             {
-// 	      libMesh::err << "ERROR: Unrecognized 1D element type." << std::endl;
-// 	      libmesh_error();
-// 	    }
-// 	  }
-// 
-//         // Reserve nodes
-//         switch (type)
-//           {
+            default:
+            {
+ 	      std::cerr << "ERROR: Unrecognized 1D element type." << std::endl;
+ 	    }
+ 	  }
+ 
+         // Reserve nodes
+         switch (type)
+           {
 //           case INVALID_ELEM:
 //           case EDGE2:
 //             {
@@ -1521,11 +1207,11 @@ void mesh::BuildBrick(const unsigned int nx,
 //               break;
 //             }
 // 
-//           case EDGE3:
-//             {
-//               mesh.reserve_nodes(2*nx+1);
-//               break;
-//             }
+           case EDGE3:
+             {
+	       nvt = (2*nx+1);
+ 	       break;
+             }
 // 
 //           case EDGE4:
 //             {
@@ -1533,19 +1219,18 @@ void mesh::BuildBrick(const unsigned int nx,
 //               break;
 //             }
 // 
-//           default:
-//             {
-//               libMesh::err << "ERROR: Unrecognized 1D element type." << std::endl;
-//               libmesh_error();
-//             }
-//           }
-// 
-// 
-//         // Build the nodes, depends on whether we're using linears,
-//         // quadratics or cubics and whether using uniform grid or Gauss-Lobatto
-//         unsigned int node_id = 0;
-//         switch(type)
-//         {
+           default:
+             {
+               std::cerr << "ERROR: Unrecognized 1D element type." << std::endl;
+             }
+           }
+
+
+        // Build the nodes, depends on whether we're using linears,
+        // quadratics or cubics and whether using uniform grid or Gauss-Lobatto
+        unsigned int node_id = 0;
+         switch(type)
+         {
 //           case INVALID_ELEM:
 //           case EDGE2:
 //             {
@@ -1563,10 +1248,14 @@ void mesh::BuildBrick(const unsigned int nx,
 //               break;
 //             }
 // 
-//           case EDGE3:
-//             {
-//               for (unsigned int i=0; i<=2*nx; i++)
-//               {
+           case EDGE3:
+             {
+	      vt[0].resize(nvt);
+              vt[1].resize(nvt);
+              vt[2].resize(nvt);
+	       
+               for (unsigned int i=0; i<=2*nx; i++)
+               {
 //                 if (gauss_lobatto_grid)
 //                 {
 //                   // The x location of the point.
@@ -1593,80 +1282,30 @@ void mesh::BuildBrick(const unsigned int nx,
 //                   mesh.add_point (Point(x,0.,0.), node_id++);
 //                 }
 //                 else
-//                   mesh.add_point (Point(static_cast<double>(i)/static_cast<double>(2*nx),
-//                         0,
-//                         0), node_id++);
-//               }
-//               break;
-//             }
-// 
-//           case EDGE4:
-//             {
-//               for (unsigned int i=0; i<=3*nx; i++)
-//               {
-//                 if (gauss_lobatto_grid)
-//                 {
-//                   // The x location of the point
-//                   double x=0.;
-// 
-//                   // Shortcut quantities
-//                   const double c = std::cos( libMesh::pi*i / static_cast<double>(3*nx) );
-// 
-//                   // If i is multiple of 3, compute a normal Gauss-Lobatto point
-//                   if (i%3 == 0)
-//                     x = 0.5*(1.0 - c);
-// 
-//                   // Otherwise, distribute points evenly within the element
-//                   else
-//                   {
-//                     if(i%3 == 1)
-//                     {
-//                       double cmin = std::cos( libMesh::pi*(i-1) / static_cast<double>(3*nx) );
-//                       double cmax = std::cos( libMesh::pi*(i+2) / static_cast<double>(3*nx) );
-// 
-//                       double gl_xmin = 0.5*(1.0 - cmin);
-//                       double gl_xmax = 0.5*(1.0 - cmax);
-// 
-//                       x = (2.*gl_xmin + gl_xmax)/3.;
-//                     }
-//                     else
-//                     if(i%3 == 2)
-//                     {
-//                       double cmin = std::cos( libMesh::pi*(i-2) / static_cast<double>(3*nx) );
-//                       double cmax = std::cos( libMesh::pi*(i+1) / static_cast<double>(3*nx) );
-// 
-//                       double gl_xmin = 0.5*(1.0 - cmin);
-//                       double gl_xmax = 0.5*(1.0 - cmax);
-// 
-//                       x = (gl_xmin + 2.*gl_xmax)/3.;
-//                     }
-// 
-//                   }
-// 
-//                   mesh.add_point (Point(x,0.,0.), node_id++);
-//                 }
-//                 else
-//                 mesh.add_point (Point(static_cast<double>(i)/static_cast<double>(3*nx),
-//                         0,
-//                         0), node_id++);
-//               }
-// 
-// 
-// 
-//               break;
-//             }
-// 
-//           default:
-//             {
-//               libMesh::err << "ERROR: Unrecognized 1D element type." << std::endl;
-//               libmesh_error();
-//             }
-// 
-//         }
-// 
-//         // Build the elements of the mesh
-//         switch(type)
-//           {
+		   vt[0][node_id] = (static_cast<double>(i)/static_cast<double>(2*nx))*(xmax-xmin) + xmin;
+                   vt[1][node_id] = 0.;
+                   vt[2][node_id] = 0.;
+  
+                   node_id++;
+
+               }
+               break;
+             }
+ 
+           default:
+             {
+               std::cerr << "ERROR: Unrecognized 1D element type." << std::endl;
+             }
+ 
+         }
+ 
+         // Build the elements of the mesh
+       unsigned iel = 0;
+	 el= new elem(nel);
+	 el->SetElementGroupNumber(1);
+         // Build the elements.  Each one is a bit different.
+         switch(type)
+           {
 //             case INVALID_ELEM:
 //             case EDGE2:
 //               {
@@ -1685,50 +1324,48 @@ void mesh::BuildBrick(const unsigned int nx,
 //               break;
 //               }
 // 
-//             case EDGE3:
-//               {
-//                 for (unsigned int i=0; i<nx; i++)
-//                 {
-//                   Elem* elem = mesh.add_elem (new Edge3);
-//                   elem->set_node(0) = mesh.node_ptr(2*i);
-//                   elem->set_node(2) = mesh.node_ptr(2*i+1);
-//                   elem->set_node(1) = mesh.node_ptr(2*i+2);
-// 
-//                   if (i == 0)
-//                     mesh.boundary_info->add_side(elem, 0, 0);
-// 
-//                   if (i == (nx-1))
-//                     mesh.boundary_info->add_side(elem, 1, 1);
-//                 }
-//               break;
-//               }
-// 
-//             case EDGE4:
-//               {
-//                 for (unsigned int i=0; i<nx; i++)
-//                 {
-//                   Elem* elem = mesh.add_elem (new Edge4);
-//                   elem->set_node(0) = mesh.node_ptr(3*i);
-//                   elem->set_node(2) = mesh.node_ptr(3*i+1);
-//                   elem->set_node(3) = mesh.node_ptr(3*i+2);
-//                   elem->set_node(1) = mesh.node_ptr(3*i+3);
-// 
-//                   if (i == 0)
-//                     mesh.boundary_info->add_side(elem, 0, 0);
-// 
-//                   if (i == (nx-1))
-//                     mesh.boundary_info->add_side(elem, 1, 1);
-//                 }
-//               break;
-//               }
-// 
-//             default:
-//               {
-//                 libMesh::err << "ERROR: Unrecognized 1D element type." << std::endl;
-//                 libmesh_error();
-//               }
-//           }
-// 
+             case EDGE3:
+               {
+		 
+		 
+		unsigned LocalToGlobalNodePerElement[3];
+		
+		for (unsigned int i=0; i<nx; i++)
+ 		  {
+		  
+                  el->SetElementGroup(iel,1);
+		  el->SetElementMaterial(iel, 2); 
+ 		  type_elem_flag[5]=true;
+                  el->AddToElementNumber(1,"Line");
+                  el->SetElementType(iel,5);
+  
+		  LocalToGlobalNodePerElement[0] = 2*i   + 1; 
+		  LocalToGlobalNodePerElement[1] = 2*i+2 + 1;
+		  LocalToGlobalNodePerElement[2] = 2*i+1 + 1;
+		  
+                  // connectivity
+                  for (unsigned iloc=0; iloc<3; iloc++) {
+                    el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
+                  }
+                                   
+                  if (i == 0)
+		    el->SetFaceElementIndex(iel,0,-2);
+
+		  if (i == (nx-1))
+		    el->SetFaceElementIndex(iel,1,-3);
+                    
+                  iel++;
+		  }
+
+               break;
+               }
+ 
+             default:
+               {
+                 std::cerr << "ERROR: Unrecognized 1D element type." << std::endl;
+               }
+           }
+
 // 	// Scale the nodal positions
 // 	for (unsigned int p=0; p<mesh.n_nodes(); p++)
 // 	  mesh.node(p)(0) = (mesh.node(p)(0))*(xmax-xmin) + xmin;
@@ -2002,7 +1639,7 @@ void mesh::BuildBrick(const unsigned int nx,
  		  {
 		  
                   el->SetElementGroup(iel,1);
-		  el->SetElementMaterial(iel, 2); // 2 == fluid
+		  el->SetElementMaterial(iel, 2); 
  		  type_elem_flag[3]=true;
                   el->AddToElementNumber(1,"Quad");
                   el->SetElementType(iel,3);
@@ -2839,15 +2476,7 @@ void mesh::BuildBrick(const unsigned int nx,
   // connectivity: find all the element near the vertices
   BuildAdjVtx();
   Buildkel();
-  // some output
-  cout <<"grid\tnel\tnvt"<< endl;
-  cout <<grid<<"\t"<<nel<<"\t"<<nvt<<endl;
-  cout <<"nv0\tnv1\tnv2"<< endl;
-  cout <<el->GetVertexNodeNumber()<<"\t"
-       <<el->GetMidpointNodeNumber()<<"\t"
-       <<el->GetCentralNodeNumber()<<endl
-       <<"-------------------------"<<endl;
-       
+  
  if (_nprocs>=1) generate_metis_mesh_partition();
   vector <double> vt_temp2;
   for(int i=0;i<3;i++){
@@ -3001,7 +2630,7 @@ unsigned mesh::GetRefIndex() {
  * This function returns the number of mesh nodes for different type of elemets
  **/
 unsigned mesh::GetDofNumber(const unsigned type) const {
-// cout << "Dim:" << DIMENSION << "   " << mesh::_dimension-1 << endl;
+
 // if(mesh::_dimension != 2) exit(1);
   switch (type) {
   case 0:
@@ -3044,12 +2673,9 @@ void mesh::copy_elr(vector <unsigned> &other_vec) const {
 void mesh::AllocateAndMarkStructureNode() {
   el->AllocateNodeRegion();
   for (unsigned iel=0; iel<nel; iel++) {
-//     bool structure = MarkStructureNode( el->GetElementGroup(iel) );
+
     int flag_mat = el->GetElementMaterial(iel);
 
-//     cout << "structure: " << structure << "   flag_mat: " << flag_mat << endl;  
-    
-//     if (structure==1) {
     if (flag_mat==4) {
       unsigned nve=el->GetElementDofNumber(iel);
       for ( unsigned i=0; i<nve; i++) {

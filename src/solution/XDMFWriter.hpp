@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: GMVOutput
+ Module: XDMFWriter
  Authors: Eugenio Aulisa, Simone Bnà
  
  Copyright (c) FEMTTU
@@ -13,13 +13,13 @@
 
 =========================================================================*/
 
-#ifndef __gmvoutput_h_
-#define __gmvoutput_h_
+#ifndef __xdmfwriter_h_
+#define __xdmfwriter_h_
 
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "Output.hpp"
+#include "Writer.hpp"
 
 
 namespace femus {
@@ -32,18 +32,21 @@ namespace femus {
 class MultiLevelProblem;
 
 
-class GMVOutput : public Output {
+class XDMFWriter : public Writer {
 
 public:
 
   /** Constructor. */
-  GMVOutput(MultiLevelSolution& ml_sol);
+  XDMFWriter(MultiLevelSolution& ml_sol);
 
   /** Destructor */
-  virtual ~GMVOutput();
+  virtual ~XDMFWriter();
   
   /** write output function */
-  virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step=0);
+  virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step = 0);
+  
+  /** write a wrapper file for paraview to open all the files of an history toghether */
+  void write_solution_wrapper(const char type[]) const;
   
 };
 

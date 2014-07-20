@@ -6,8 +6,8 @@
 #include "Parameter.hpp"
 #include "FemTTUInit.hpp"
 #include "SparseMatrix.hpp"
-#include "VTKOutput.hpp"
-#include "GMVOutput.hpp"
+#include "VTKWriter.hpp"
+#include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "SolvertypeEnum.hpp"
 

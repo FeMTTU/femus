@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: XDMFOutput
+ Module: VTKWriter
  Authors: Eugenio Aulisa, Simone Bnà
  
  Copyright (c) FEMTTU
@@ -13,13 +13,13 @@
 
 =========================================================================*/
 
-#ifndef __xdmfoutput_h_
-#define __xdmfoutput_h_
+#ifndef __vtkwriter_h_
+#define __vtkwriter_h_
 
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "Output.hpp"
+#include "Writer.hpp"
 
 
 namespace femus {
@@ -32,21 +32,18 @@ namespace femus {
 class MultiLevelProblem;
 
 
-class XDMFOutput : public Output {
+class VTKWriter : public Writer {
 
 public:
 
   /** Constructor. */
-  XDMFOutput(MultiLevelSolution& ml_sol);
+  VTKWriter(MultiLevelSolution& ml_sol);
 
   /** Destructor */
-  virtual ~XDMFOutput();
+  virtual ~VTKWriter();
   
   /** write output function */
-  virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step = 0);
-  
-  /** write a wrapper file for paraview to open all the files of an history toghether */
-  void write_solution_wrapper(const char type[]) const;
+  virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step=0);
   
 };
 
