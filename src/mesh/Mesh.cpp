@@ -91,9 +91,9 @@ void mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   }
   
   _coordinate = new Solution(this);
-  _coordinate->AddSolution("X","biquadratic",1,0); 
-  _coordinate->AddSolution("Y","biquadratic",1,0); 
-  _coordinate->AddSolution("Z","biquadratic",1,0); 
+  _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0); 
   
   _coordinate->ResizeSolutionVector("X");
   _coordinate->ResizeSolutionVector("Y");
@@ -325,9 +325,9 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type* type_
   if (_nprocs>=1) generate_metis_mesh_partition();
        
   _coordinate = new Solution(this);
-  _coordinate->AddSolution("X","biquadratic",1,0); 
-  _coordinate->AddSolution("Y","biquadratic",1,0); 
-  _coordinate->AddSolution("Z","biquadratic",1,0); 
+  _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0); 
   
   _coordinate->ResizeSolutionVector("X");
   _coordinate->ResizeSolutionVector("Y");
@@ -1087,16 +1087,16 @@ unsigned int mesh::idx(const ElemType type, const unsigned int nx, const unsigne
 }
       
 
-//       // Same as the function above, but for 3D elements
-//       unsigned int mesh::idx(const ElemType type,
-// 		       const unsigned int nx,
-// 		       const unsigned int ny,
-// 		       const unsigned int i,
-// 		       const unsigned int j,
-// 		       const unsigned int k)
-//       {
-// 	switch(type)
-// 	  {
+      // Same as the function above, but for 3D elements
+      unsigned int mesh::idx(const ElemType type,
+		       const unsigned int nx,
+		       const unsigned int ny,
+		       const unsigned int i,
+		       const unsigned int j,
+		       const unsigned int k)
+      {
+	switch(type)
+	  {
 // 	  case INVALID_ELEM:
 // 	  case HEX8:
 // 	  case PRISM6:
@@ -1104,28 +1104,28 @@ unsigned int mesh::idx(const ElemType type, const unsigned int nx, const unsigne
 // 	      return i + (nx+1)*(j + k*(ny+1));
 // 	      break;
 // 	    }
-// 
+
 // 	  case HEX20:
-// 	  case HEX27:
+	  case HEX27:
 // 	  case TET4:  // TET4's are created from an initial HEX27 discretization
 // 	  case TET10: // TET10's are created from an initial HEX27 discretization
 // 	  case PYRAMID5: // PYRAMID5's are created from an initial HEX27 discretization
 // 	  case PRISM15:
 // 	  case PRISM18:
-// 	    {
-// 	      return i + (2*nx+1)*(j + k*(2*ny+1));
-// 	      break;
-// 	    }
-// 
-// 	  default:
-// 	    {
-// 	      std::cout << "ERROR: Unrecognized element type." << std::endl;
-// 	      exit(1);
-// 	    }
-// 	  }
-// 
-// 	return -1;
-//  }
+	    {
+	      return i + (2*nx+1)*(j + k*(2*ny+1));
+	      break;
+	    }
+
+	  default:
+	    {
+	      std::cout << "ERROR: Unrecognized element type." << std::endl;
+	      exit(1);
+	    }
+	  }
+
+	return -1;
+ }
 
 // ------------------------------------------------------------
 // MeshTools::Generation function for mesh generation
@@ -1782,23 +1782,33 @@ void mesh::BuildBrick(const unsigned int nx,
 // 	libmesh_assert_less (xmin, xmax);
 // 	libmesh_assert_less (ymin, ymax);
 // 	libmesh_assert_less (zmin, zmax);
-// 
-// 
-// 	// Reserve elements.  Meshes with prismatic elements require
-// 	// twice as many elements.
-// 	switch (type)
-// 	  {
+
+	assert(nx!=0);
+	assert(ny!=0);
+	assert(nz!=0);
+	assert(xmin<xmax);
+	assert(ymin<ymax);
+	assert(zmin<zmax);
+ 
+ 	// Reserve elements.  Meshes with prismatic elements require
+ 	// twice as many elements.
+ 	switch (type)
+ 	  {
 // 	  case INVALID_ELEM:
 // 	  case HEX8:
 // 	  case HEX20:
-// 	  case HEX27:
+ 	  case HEX27:
 // 	  case TET4:  // TET4's are created from an initial HEX27 discretization
 // 	  case TET10: // TET10's are created from an initial HEX27 discretization
 // 	  case PYRAMID5: // PYRAMID5's are created from an initial HEX27 discretization
-// 	    {
-// 	      mesh.reserve_elem(nx*ny*nz);
-// 	      break;
-// 	    }
+	    {
+	      nel    =  nx*ny*nz;
+	      ngroup = 1;
+	      nbcd   = 6;
+	      mesh::_ref_index = pow(2,mesh::_dimension);
+	      mesh::_face_index = pow(2,mesh::_dimension-1u);
+              break;
+            }
 // 
 // 	  case PRISM6:
 // 	  case PRISM15:
@@ -1808,20 +1818,17 @@ void mesh::BuildBrick(const unsigned int nx,
 // 	      break;
 // 	    }
 // 
-// 	  default:
-// 	    {
-// 	      libMesh::err << "ERROR: Unrecognized 3D element type." << std::endl;
-// 	      libmesh_error();
-// 	    }
-// 	  }
-// 
-// 
-// 
-// 
-// 
-// 	// Reserve nodes.  Quadratic elements need twice as many nodes as linear elements.
-// 	switch (type)
-// 	  {
+ 	  default:
+ 	    {
+ 	      std::cerr << "ERROR: Unrecognized 3D element type." << std::endl;
+ 	      exit(1);
+ 	    }
+ 	  }
+
+
+ 	// Reserve nodes.  Quadratic elements need twice as many nodes as linear elements.
+ 	switch (type)
+ 	  {
 // 	  case INVALID_ELEM:
 // 	  case HEX8:
 // 	  case PRISM6:
@@ -1831,35 +1838,40 @@ void mesh::BuildBrick(const unsigned int nx,
 // 	    }
 // 
 // 	  case HEX20:
-// 	  case HEX27:
+ 	  case HEX27:
 // 	  case TET4: // TET4's are created from an initial HEX27 discretization
 // 	  case TET10: // TET10's are created from an initial HEX27 discretization
 // 	  case PYRAMID5: // PYRAMID5's are created from an initial HEX27 discretization
 // 	  case PRISM15:
 // 	  case PRISM18:
-// 	    {
+ 	    {
 // 	      // FYI: The resulting TET4 mesh will have exactly
 // 	      // 5*(nx*ny*nz) + 2*(nx*ny + nx*nz + ny*nz) + (nx+ny+nz) + 1
 // 	      // nodes once the additional mid-edge nodes for the HEX27 discretization
 // 	      // have been deleted.
-// 	      mesh.reserve_nodes( (2*nx+1)*(2*ny+1)*(2*nz+1) );
-// 	      break;
-// 	    }
-// 
-// 	  default:
-// 	    {
-// 	      libMesh::err << "ERROR: Unrecognized 3D element type." << std::endl;
-// 	      libmesh_error();
-// 	    }
-// 	  }
-// 
-// 
-// 
-// 
-// 	// Build the nodes.
-//         unsigned int node_id = 0;
-// 	switch (type)
-// 	  {
+ 	      
+	      //mesh.reserve_nodes( (2*nx+1)*(2*ny+1)*(2*nz+1) );
+	      nvt = (2*nx+1)*(2*ny+1)*(2*nz+1); 
+ 	      break;
+ 	    }
+
+ 	  default:
+ 	    {
+ 	      std::cerr << "ERROR: Unrecognized 3D element type." << std::endl;
+ 	      exit(1);
+ 	    }
+ 	  }
+ 
+ 
+ 	// Build the nodes.
+        unsigned int node_id = 0;
+	
+	vt[0].resize(nvt);
+        vt[1].resize(nvt);
+        vt[2].resize(nvt);
+	
+ 	switch (type)
+ 	  {
 // 	  case INVALID_ELEM:
 // 	  case HEX8:
 // 	  case PRISM6:
@@ -1884,17 +1896,17 @@ void mesh::BuildBrick(const unsigned int nx,
 // 	    }
 // 
 // 	  case HEX20:
-// 	  case HEX27:
+ 	  case HEX27:
 // 	  case TET4: // TET4's are created from an initial HEX27 discretization
 // 	  case TET10: // TET10's are created from an initial HEX27 discretization
 // 	  case PYRAMID5: // PYRAMID5's are created from an initial HEX27 discretization
 // 	  case PRISM15:
 // 	  case PRISM18:
-// 	    {
-// 	      for (unsigned int k=0; k<=(2*nz); k++)
-// 		for (unsigned int j=0; j<=(2*ny); j++)
-// 		  for (unsigned int i=0; i<=(2*nx); i++)
-// 		    {
+ 	    {
+	      for (unsigned int k=0; k<=(2*nz); k++)
+ 		for (unsigned int j=0; j<=(2*ny); j++)
+ 		  for (unsigned int i=0; i<=(2*nx); i++)
+ 		    {
 // 		      if (gauss_lobatto_grid)
 // 			{
 // 			  // The x,y locations of the point.
@@ -1944,24 +1956,34 @@ void mesh::BuildBrick(const unsigned int nx,
 // 			mesh.add_point(Point(static_cast<double>(i)/static_cast<double>(2*nx),
 // 					     static_cast<double>(j)/static_cast<double>(2*ny),
 // 					     static_cast<double>(k)/static_cast<double>(2*nz)), node_id++);
-// 		    }
-// 	      break;
-// 	    }
-// 
-// 
-// 	  default:
-// 	    {
-// 	      libMesh::err << "ERROR: Unrecognized 3D element type." << std::endl;
-// 	      libmesh_error();
-// 	    }
-// 	  }
-// 
-// 
-// 
-// 
-// 	// Build the elements.
-// 	switch (type)
-// 	  {
+		          vt[0][node_id] = (static_cast<double>(i)/static_cast<double>(2*nx))*(xmax-xmin) + xmin;
+                          vt[1][node_id] = (static_cast<double>(j)/static_cast<double>(2*ny))*(ymax-ymin) + ymin;
+                          vt[2][node_id] = (static_cast<double>(k)/static_cast<double>(2*nz))*(zmax-zmin) + zmin;;
+			  
+//			  std::cout << "inode: " << node_id <<  " x: " << vt[0][node_id] << "   y: " << vt[1][node_id] << std::endl;
+			  
+			  node_id++;
+ 		    }
+	      
+ 	      break;
+ 	    }
+ 
+ 
+ 	  default:
+ 	    {
+ 	      std::cerr << "ERROR: Unrecognized 3D element type." << std::endl;
+ 	      exit(1);
+ 	    }
+ 	  }
+ 
+ 
+ 
+ 	// Build the elements.
+        unsigned iel = 0;
+	el= new elem(nel);
+	el->SetElementGroupNumber(1);
+ 	switch (type)
+ 	  {
 // 	  case INVALID_ELEM:
 // 	  case HEX8:
 // 	    {
@@ -2066,32 +2088,115 @@ void mesh::BuildBrick(const unsigned int nx,
 // 
 // 
 // 	  case HEX20:
-// 	  case HEX27:
+ 	  case HEX27:
 // 	  case TET4: // TET4's are created from an initial HEX27 discretization
 // 	  case TET10: // TET10's are created from an initial HEX27 discretization
 // 	  case PYRAMID5: // PYRAMID5's are created from an initial HEX27 discretization
-// 	    {
-// 	      for (unsigned int k=0; k<(2*nz); k += 2)
-// 		for (unsigned int j=0; j<(2*ny); j += 2)
-// 		  for (unsigned int i=0; i<(2*nx); i += 2)
-// 		    {
+ 	    {
+	      double LocalToGlobalNodePerElement[27];
+	      
+ 	      for (unsigned int k=0; k<(2*nz); k += 2)
+ 		for (unsigned int j=0; j<(2*ny); j += 2)
+ 		  for (unsigned int i=0; i<(2*nx); i += 2)
+ 		    {
 // 		      Elem* elem = (type == HEX20) ?
 // 			mesh.add_elem(new Hex20) :
 // 			mesh.add_elem(new Hex27);
+		      
+		      el->SetElementGroup(iel,1);
+		      el->SetElementMaterial(iel, 2); 
+ 		      type_elem_flag[0]=true; // hex
+		      type_elem_flag[3]=true; // quad face
+                      el->AddToElementNumber(1,"Hex");
+                      el->SetElementType(iel,0);
+  
+		      LocalToGlobalNodePerElement[0] = idx(type,nx,ny,i,  j,  k) + 1; 
+		      LocalToGlobalNodePerElement[1] = idx(type,nx,ny,i+2,j,  k) + 1;
+		      LocalToGlobalNodePerElement[2] = idx(type,nx,ny,i+2,j+2,k) + 1;
+		      LocalToGlobalNodePerElement[3] = idx(type,nx,ny,i,  j+2,k) + 1;
+		      LocalToGlobalNodePerElement[4] = idx(type,nx,ny,i,  j,  k+2) + 1;
+		      LocalToGlobalNodePerElement[5] = idx(type,nx,ny,i+2,j,  k+2) + 1;
+		      LocalToGlobalNodePerElement[6] = idx(type,nx,ny,i+2,j+2,k+2) + 1;
+		      LocalToGlobalNodePerElement[7] = idx(type,nx,ny,i,  j+2,k+2) + 1;
+		      LocalToGlobalNodePerElement[8] = idx(type,nx,ny,i+1,j,  k) + 1;
+		      LocalToGlobalNodePerElement[9] = idx(type,nx,ny,i+2,j+1,k) + 1; 
+		      LocalToGlobalNodePerElement[10] = idx(type,nx,ny,i+1,j+2,k) + 1;
+		      LocalToGlobalNodePerElement[11] = idx(type,nx,ny,i,  j+1,k) + 1;
+		      
+		      // mid-point - up
+		      LocalToGlobalNodePerElement[12] = idx(type,nx,ny,i+1,j,  k+2) + 1;
+		      LocalToGlobalNodePerElement[13] = idx(type,nx,ny,i+2,j+1,k+2) + 1;
+		      LocalToGlobalNodePerElement[14] = idx(type,nx,ny,i+1,j+2,k+2) + 1;
+		      LocalToGlobalNodePerElement[15] = idx(type,nx,ny,i,  j+1,k+2) + 1 ;
+		      
+		      // vertices - middle
+		      LocalToGlobalNodePerElement[16] = idx(type,nx,ny,i,  j,  k+1) + 1;
+		      LocalToGlobalNodePerElement[17] = idx(type,nx,ny,i+2,j,  k+1) + 1;
+		      LocalToGlobalNodePerElement[18] = idx(type,nx,ny,i+2,j+2,k+1) + 1;
+		      LocalToGlobalNodePerElement[19] = idx(type,nx,ny,i,  j+2,k+1) + 1;
+		      
+		      // mid-point - middle
+		      LocalToGlobalNodePerElement[20] = idx(type,nx,ny,i+1,j,  k+1) + 1;
+		      LocalToGlobalNodePerElement[21] = idx(type,nx,ny,i+2,j+1,k+1) + 1;
+		      LocalToGlobalNodePerElement[22] = idx(type,nx,ny,i+1,j+2,k+1) + 1;
+		      LocalToGlobalNodePerElement[23] = idx(type,nx,ny,i,  j+1,k+1) + 1;
+		      
+		      // center - bottom
+		      LocalToGlobalNodePerElement[24] = idx(type,nx,ny,i+1,j+1,k) + 1;
+		      
+		      // center - top
+		      LocalToGlobalNodePerElement[25] = idx(type,nx,ny,i+1,j+1,k+2) + 1;
+		      
+		      // center - middle
+		      LocalToGlobalNodePerElement[26] = idx(type,nx,ny,i+1,j+1,k+1) + 1;
+		      
+                      // connectivity
+                      for (unsigned iloc=0; iloc<27; iloc++) {
+                        el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
+                      }
+                      
+                      if (k == 0)
+			el->SetFaceElementIndex(iel,0,-1);
+// 			mesh.boundary_info->add_side(elem, 0, 0);
+ 
+ 		      if (k == 2*(nz-1))
+			el->SetFaceElementIndex(iel,5,-6);
+// 			mesh.boundary_info->add_side(elem, 5, 5);
 // 
+ 		      if (j == 0)
+			el->SetFaceElementIndex(iel,1,-2);
+// 			mesh.boundary_info->add_side(elem, 1, 1);
+ 
+ 		      if (j == 2*(ny-1))
+			el->SetFaceElementIndex(iel,3,-4);
+// 			mesh.boundary_info->add_side(elem, 3, 3);
+
+ 		      if (i == 0)
+			el->SetFaceElementIndex(iel,4,-5);
+// 			mesh.boundary_info->add_side(elem, 4, 4);
+
+ 		      if (i == 2*(nx-1))
+			el->SetFaceElementIndex(iel,2,-3);
+// 			mesh.boundary_info->add_side(elem, 2, 2);
+                      
+		      iel++;
+ 
 // 		      elem->set_node(0)  = mesh.node_ptr(idx(type,nx,ny,i,  j,  k)  );
 // 		      elem->set_node(1)  = mesh.node_ptr(idx(type,nx,ny,i+2,j,  k)  );
 // 		      elem->set_node(2)  = mesh.node_ptr(idx(type,nx,ny,i+2,j+2,k)  );
 // 		      elem->set_node(3)  = mesh.node_ptr(idx(type,nx,ny,i,  j+2,k)  );
+		      
 // 		      elem->set_node(4)  = mesh.node_ptr(idx(type,nx,ny,i,  j,  k+2));
 // 		      elem->set_node(5)  = mesh.node_ptr(idx(type,nx,ny,i+2,j,  k+2));
 // 		      elem->set_node(6)  = mesh.node_ptr(idx(type,nx,ny,i+2,j+2,k+2));
 // 		      elem->set_node(7)  = mesh.node_ptr(idx(type,nx,ny,i,  j+2,k+2));
 // 		      elem->set_node(8)  = mesh.node_ptr(idx(type,nx,ny,i+1,j,  k)  );
+		      
 // 		      elem->set_node(9)  = mesh.node_ptr(idx(type,nx,ny,i+2,j+1,k)  );
 // 		      elem->set_node(10) = mesh.node_ptr(idx(type,nx,ny,i+1,j+2,k)  );
 // 		      elem->set_node(11) = mesh.node_ptr(idx(type,nx,ny,i,  j+1,k)  );
 // 		      elem->set_node(12) = mesh.node_ptr(idx(type,nx,ny,i,  j,  k+1));
+		      
 // 		      elem->set_node(13) = mesh.node_ptr(idx(type,nx,ny,i+2,j,  k+1));
 // 		      elem->set_node(14) = mesh.node_ptr(idx(type,nx,ny,i+2,j+2,k+1));
 // 		      elem->set_node(15) = mesh.node_ptr(idx(type,nx,ny,i,  j+2,k+1));
@@ -2128,9 +2233,9 @@ void mesh::BuildBrick(const unsigned int nx,
 // 
 // 		      if (i == 2*(nx-1))
 // 			mesh.boundary_info->add_side(elem, 2, 2);
-// 		    }
-// 	      break;
-// 	    }
+  		    }
+ 	      break;
+ 	    }
 // 
 // 
 // 
@@ -2224,24 +2329,18 @@ void mesh::BuildBrick(const unsigned int nx,
 // 		      if (k == 2*(nz-1))
 // 			mesh.boundary_info->add_side(elem, 4, 5);
 // 
-// 		    }
-// 	      break;
-// 	    }
+//  		    }
+//  	      break;
+//  	    }
 // 
-// 
-// 
-// 
-// 
-// 	  default:
-// 	    {
-// 	      libMesh::err << "ERROR: Unrecognized 3D element type." << std::endl;
-// 	      libmesh_error();
-// 	    }
-// 	  }
-// 
-// 
-// 
-// 
+
+ 	  default:
+ 	    {
+ 	      std::cerr << "ERROR: Unrecognized 3D element type." << std::endl;
+ 	      exit(1);
+ 	    }
+ 	  }
+
 // 	//.......................................
 // 	// Scale the nodal positions
 // 	for (unsigned int p=0; p<mesh.n_nodes(); p++)
@@ -2381,8 +2480,7 @@ void mesh::BuildBrick(const unsigned int nx,
 // 	mesh.boundary_info->nodeset_name(3) = "top";
 // 	mesh.boundary_info->nodeset_name(4) = "left";
 // 	mesh.boundary_info->nodeset_name(5) = "front";
-// 
-	std::cout << "Error: NotImplemented " << std::endl; 
+
         break;
       } // end case dim==3
 
@@ -2487,9 +2585,9 @@ void mesh::BuildBrick(const unsigned int nx,
   }
   
   _coordinate = new Solution(this);
-  _coordinate->AddSolution("X","biquadratic",1,0); 
-  _coordinate->AddSolution("Y","biquadratic",1,0); 
-  _coordinate->AddSolution("Z","biquadratic",1,0); 
+  _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0); 
   
   _coordinate->ResizeSolutionVector("X");
   _coordinate->ResizeSolutionVector("Y");

@@ -7,6 +7,7 @@
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
+#include "FElemTypeEnum.hpp"
 
 using std::cout;
 using std::endl;
@@ -55,14 +56,14 @@ int main(int argc,char **args) {
   MultiLevelSolution ml_sol(&ml_msh);
   
   //Start System Variables
-  ml_sol.AddSolution("DX","biquadratic",1);
-  ml_sol.AddSolution("DY","biquadratic",1);
+  ml_sol.AddSolution("DX",LAGRANGE,SECOND,1);
+  ml_sol.AddSolution("DY",LAGRANGE,SECOND,1);
   ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
   ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
-  ml_sol.AddSolution("U","biquadratic",1);
-  ml_sol.AddSolution("V","biquadratic",1);
+  ml_sol.AddSolution("U",LAGRANGE,SECOND,1);
+  ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("P","disc_linear",1);
+  ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
   ml_sol.AssociatePropertyToSolution("P","Pressure"); // Add this line
 
   //Initialize (update Init(...) function)
