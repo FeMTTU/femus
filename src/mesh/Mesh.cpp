@@ -2149,38 +2149,6 @@ void mesh::BuildBrick(const unsigned int nx,
 		      // center - middle
 		      LocalToGlobalNodePerElement[26] = idx(type,nx,ny,i+1,j+1,k+1) + 1;
 		      
-		      
-		      
-		      
-		      
-		      //vertices - middle
-// // //  		      LocalToGlobalNodePerElement[12] = idx(type,nx,ny,i,  j,  k+1) + 1;
-// // //  		      LocalToGlobalNodePerElement[13] = idx(type,nx,ny,i+2,j,  k+1) + 1;
-// // //  		      LocalToGlobalNodePerElement[14] = idx(type,nx,ny,i+2,j+2,k+1) + 1;
-// // //  		      LocalToGlobalNodePerElement[15] = idx(type,nx,ny,i,  j+2,k+1) + 1;
-		      
-// // // 		      //mid-point - up
-// // // 		      LocalToGlobalNodePerElement[16] = idx(type,nx,ny,i+1,j,  k+2) + 1;
-// // // 		      LocalToGlobalNodePerElement[17] = idx(type,nx,ny,i+2,j+1,k+2) + 1;
-// // // 		      LocalToGlobalNodePerElement[18] = idx(type,nx,ny,i+1,j+2,k+2) + 1;
-// // // 		      LocalToGlobalNodePerElement[19] = idx(type,nx,ny,i,  j+1,k+2) + 1;
-		      
-		      // center - down
-// // // 		      LocalToGlobalNodePerElement[20] = idx(type,nx,ny,i+1,j+1,k) + 1;
-		      
-// // // 		      //mid-point - middle
-// // // 		      LocalToGlobalNodePerElement[21] = idx(type,nx,ny,i+1,j,  k+1) + 1;
-// // // 		      LocalToGlobalNodePerElement[22] = idx(type,nx,ny,i+2,j+1,k+1) + 1;
-// // // 		      LocalToGlobalNodePerElement[23] = idx(type,nx,ny,i+1,j+2,k+1) + 1;
-// // // 		      LocalToGlobalNodePerElement[24] = idx(type,nx,ny,i,  j+1,k+1) + 1;
-		      
-		      //center - up
-// // 		      LocalToGlobalNodePerElement[25] = idx(type,nx,ny,i+1,j+1,k+2) + 1;
-		      
-		      // center - center
-// // 		      LocalToGlobalNodePerElement[26] = idx(type,nx,ny,i+1,j+1,k+1) + 1;
-
-		      
                       // connectivity
                       for (unsigned iloc=0; iloc<27; iloc++) {
                         el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
@@ -2511,8 +2479,7 @@ void mesh::BuildBrick(const unsigned int nx,
 // 	mesh.boundary_info->nodeset_name(3) = "top";
 // 	mesh.boundary_info->nodeset_name(4) = "left";
 // 	mesh.boundary_info->nodeset_name(5) = "front";
-// 
-	std::cout << "Error: NotImplemented " << std::endl; 
+
         break;
       } // end case dim==3
 

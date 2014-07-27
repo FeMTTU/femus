@@ -50,8 +50,6 @@ void XDMFWriter::write_system_solutions(const char order[], std::vector<std::str
 { 
 #ifdef HAVE_HDF5
   
-  if(_iproc!=0) return;
-  
   bool test_all=!(vars[0].compare("All"));
     
   unsigned index=0;
@@ -72,7 +70,7 @@ void XDMFWriter::write_system_solutions(const char order[], std::vector<std::str
   const std::string type_el[4][6] = {{"Hexahedron","Tetrahedron","Wedge","Quadrilateral","Triangle","Edge"},
                                 {"Hexahedron_20","Tetrahedron_10","Not_implemented","Quadrilateral_8","Triangle_6","Edge_3"},
 			        {"Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented"},
-                                {"Hexahedron_27","Not_implemented","Not_implemented","Quadrilateral_9","Triangle_6","Not_implemented"}};
+                                {"Hexahedron_27","Not_implemented","Not_implemented","Quadrilateral_9","Triangle_6","Edge_3"}};
 			 
   
   //I assume that the mesh is not mixed
@@ -111,17 +109,21 @@ void XDMFWriter::write_system_solutions(const char order[], std::vector<std::str
   //--------------------------------------------------------------------------------------------------
   // Print The Xdmf wrapper
   sprintf(filename,"./output/mesh.level%d.%d.%s.xmf",_gridn,time_step,order);
-  //std::ofstream fout;
-  fout.open(filename);
-  if (!fout) {
-    std::cout << std::endl << " The output mesh file "<<filename<<" cannot be opened.\n";
-    exit(0);
+  
+  if(_iproc!=0) {
+    fout.rdbuf();   //redirect to dev_null
   }
   else {
-    std::cout << std::endl << " The output is printed to file " << filename << " in XDMF-HDF5 format" << std::endl;   
+    fout.open(filename);
+    if (!fout) {
+      std::cout << std::endl << " The output mesh file "<<filename<<" cannot be opened.\n";
+      exit(0);
+    }
+    else {
+      std::cout << std::endl << " The output is printed to file " << filename << " in XDMF-HDF5 format" << std::endl;   
+    }
   }
- 
-  
+
   // Print The HDF5 file
   sprintf(filename,"./mesh.level%d.%d.%s.h5",_gridn,time_step,order);
   // haed ************************************************
@@ -196,13 +198,14 @@ void XDMFWriter::write_system_solutions(const char order[], std::vector<std::str
   // Printing nodes coordinates 
   
   PetscScalar *MYSOL[1]; //TODO
-  
+
   for (int i=0; i<3; i++) {
     unsigned offset_nvt=0;
     for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
       NumericVector* mysol;
       mysol = NumericVector::build().release();
-      mysol->init(_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,SERIAL);
+      //mysol->init(_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
+      mysol->init(_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],_ml_sol._ml_msh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
       mysol->matrix_mult(*_ml_sol._ml_msh->GetLevel(ig)->_coordinate->_Sol[i],*Writer::_ProlQitoQj[index_nd][2][ig]);
       unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
       for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
@@ -225,7 +228,7 @@ void XDMFWriter::write_system_solutions(const char order[], std::vector<std::str
     H5Dclose(dataset);
     
   }
-  
+
   //-------------------------------------------------------------------------------------------------------------
 
   //------------------------------------------------------------------------------------------------------
@@ -314,7 +317,8 @@ void XDMFWriter::write_system_solutions(const char order[], std::vector<std::str
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
         NumericVector* mysol;
 	mysol = NumericVector::build().release();
-        mysol->init(_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,SERIAL);
+        //mysol->init(_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
+	mysol->init(_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],_ml_sol._ml_msh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
 	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx],*_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(indx)][ig]);
 	unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
 	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);

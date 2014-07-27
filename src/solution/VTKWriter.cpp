@@ -62,7 +62,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
     index_nd=2;
   }
 
-  const int eltp[4][6]= {{12,10,13,9,5,3},{25,24,26,23,22,21},{},{29,1,1,28,22,1}};
+  const int eltp[4][6]= {{12,10,13,9,5,3},{25,24,26,23,22,21},{},{29,1,1,28,22,21}};
   
   char *filename= new char[60];
   sprintf(filename,"./output/mesh.level%d.%d.%s.vtu",_gridn,time_step,order);
