@@ -71,17 +71,20 @@ void XDMFWriter::write_system_solutions(const char order[], std::vector<std::str
 
   const std::string type_el[4][6] = {{"Hexahedron","Tetrahedron","Wedge","Quadrilateral","Triangle","Edge"},
                                 {"Hexahedron_20","Tetrahedron_10","Not_implemented","Quadrilateral_8","Triangle_6","Edge_3"},
-			        {"Not_implemented","Not_implemented","Not_implemented","Not_implemented",
-				 "Not_implemented","Not_implemented"},
-                                {"Not_implemented","Not_implemented","Not_implemented","Quadrilateral_9",
-				 "Not_implemented","Not_implemented"}};
+			        {"Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented"},
+                                {"Hexahedron_27","Not_implemented","Not_implemented","Quadrilateral_9","Triangle_6","Not_implemented"}};
 			 
   
   //I assume that the mesh is not mixed
   std::string type_elem;
-  type_elem = type_el[index][_ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementType(0)];
+  unsigned elemtype = _ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementType(0);
+  type_elem = type_el[index][elemtype];
   
-  if (type_elem.compare("Not_implemented") == 0) exit(1);
+  if (type_elem.compare("Not_implemented") == 0) 
+  {
+    std::cerr << "XDMF-Writer error: element type not supported!" << std::endl;
+    exit(1);
+  }
   
   unsigned nvt=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
@@ -233,7 +236,8 @@ void XDMFWriter::write_system_solutions(const char order[], std::vector<std::str
     for (unsigned iel=0; iel<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
       if (_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
         for (unsigned j=0; j<_ml_sol._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
-	  unsigned jnode=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,j)-1u;
+	  unsigned vtk_loc_conn = map_pr[j];
+	  unsigned jnode=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
 	  unsigned jnode_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
 	  var_int[icount] = offset_conn + jnode_Metis;
 	  icount++;

@@ -4,15 +4,15 @@
     "mesh" : {
                 "box" : {
                           "nx" : 6,
-                          "ny" : 0,
-                          "nz" : 0,
+                          "ny" : 6,
+                          "nz" : 6,
                           "xa" : 0.,
                           "xb" : 2.,
                           "ya" : 0.,
-                          "yb" : 0.,
+                          "yb" : 2.,
                           "za" : 0.,
-                          "zb" : 0.,
-                          "elem_type" : "Edge3"
+                          "zb" : 2.,
+                          "elem_type" : "Hex27"
                          }
              },
         
@@ -22,7 +22,7 @@
                  },
     
     // MG Solver properties
-    "mgsolver" : { "nlevels" : 4, 
+    "mgsolver" : { "nlevels" : 1, 
                    "npresmoothing" : 1, 
                    "npostsmoothing" : 1, 
                    "smoother_type" : "gmres", 

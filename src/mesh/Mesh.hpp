@@ -53,6 +53,8 @@ private:
   
   /** Local to global map for built-in mesh generator */
   unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int i, const unsigned int j);
+  unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int ny, const unsigned int i,
+		       const unsigned int j, const unsigned int k);
   
 public:
   static const unsigned _END_IND[5];  
