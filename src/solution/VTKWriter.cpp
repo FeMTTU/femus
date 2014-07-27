@@ -230,7 +230,8 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
     for (unsigned iel=0; iel<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
       if (_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
         for (unsigned j=0; j<_ml_sol._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
-	  unsigned jnode=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,j)-1u;
+	  unsigned loc_vtk_conn = map_pr[j];
+	  unsigned jnode=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,loc_vtk_conn)-1u;
 	  unsigned jnode_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
 	  var_conn[icount] = offset_nvt+jnode_Metis;
 	  icount++;

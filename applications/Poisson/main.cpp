@@ -8,6 +8,7 @@
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
+#include "XDMFWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "SolvertypeEnum.hpp"
 #include <json/json.h>
@@ -142,6 +143,10 @@ int main(int argc,char **argv) {
         else if(elemtypestr == "Edge3")
         {
             elemtype = EDGE3;
+        }
+        else if(elemtypestr == "Hex27")
+        {
+            elemtype = HEX27;
         }
         else
 	{
@@ -294,9 +299,12 @@ int main(int argc,char **argv) {
     VTKWriter vtkio(ml_sol);
     vtkio.write_system_solutions("biquadratic",print_vars);
 
-    //GMVOutput gmvio(ml_sol);
-    //gmvio.write_system_solutions("biquadratic",print_vars);
+    GMVWriter gmvio(ml_sol);
+    gmvio.write_system_solutions("biquadratic",print_vars);
 
+    XDMFWriter xdmfio(ml_sol);
+    xdmfio.write_system_solutions("biquadratic",print_vars);
+    
     //Destroy all the new systems
     ml_prob.clear();
 
@@ -413,12 +421,10 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
     B.reserve(max_size*max_size);
 
     // Set to zeto all the entries of the Global Matrix
-    if(assembe_matrix) myKK->zero();
+    if(assembe_matrix) 
+      myKK->zero();
 
     // *** element loop ***
-    double length = 0.;
-    
-    
     for (int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
 
         unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
@@ -482,8 +488,6 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
 
                     F[i]+= (-Lap_rhs + 1.*phi[i] )*weight;
 		    
-		    length += phi[i]*weight;
-
                     //END RESIDUALS A block ===========================
                     if(assembe_matrix) {
                         // *** phi_j loop ***
