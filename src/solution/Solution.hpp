@@ -27,6 +27,7 @@
 //----------------------------------------------------------------------------
 #include "Mesh.hpp"
 #include "petscmat.h"
+#include "FElemTypeEnum.hpp"
 
 
 namespace femus {
@@ -45,11 +46,13 @@ class mesh;
 
 class Solution {
   
-  //member data
+ //member data
 private:
   vector <int> _SolType;  
   vector <char*> _SolName;
   vector <unsigned> _SolTmOrder;
+  vector <FEFamily> _family;
+  vector <FEOrder> _order; 
   mesh *_msh;
 public:
   vector <NumericVector*> _Sol;      //one for every variable
@@ -66,16 +69,26 @@ public:
   Solution(mesh *other_msh);
   ~Solution();
   
-  // functions
+// functions
 private:
+  
   unsigned GetIndex(const char name[]) const;
+  
 public:
-  void AddSolution( const char name[], const char order[],const unsigned& tmorder, const bool &Pde_type=1);
+
+  /** Add a new variable called 'name' */
+  void AddSolution( const char name[], const FEFamily fefamily, const FEOrder order, const unsigned& tmorder=0, const bool &Pde_type=1);
+  
   void ResizeSolutionVector(const char name[]);
+  
   void FreeSolutionVectors();
+  
   void SetCoarseCoordinates( vector < vector < double> > &vt);
+  
   void SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
+  
   void UpdateSolution();
+  
   void SetElementRefinement(const unsigned &test=0);
   
   /** Get the solution (Numeric Vector) by name */

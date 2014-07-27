@@ -10,6 +10,7 @@
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "SolvertypeEnum.hpp"
+#include "FElemTypeEnum.hpp"
 
 using std::cout;
 using std::endl;
@@ -79,11 +80,11 @@ int main(int argc,char **args) {
   MultiLevelSolution ml_sol(&ml_msh);
   
   // generate solution vector
-  ml_sol.AddSolution("T","biquadratic");
-  ml_sol.AddSolution("U","biquadratic");
-  ml_sol.AddSolution("V","biquadratic");
+  ml_sol.AddSolution("T",LAGRANGE,SECOND);
+  ml_sol.AddSolution("U",LAGRANGE,SECOND);
+  ml_sol.AddSolution("V",LAGRANGE,SECOND);
   // the pressure variable should be the last for the Schur decomposition
-  ml_sol.AddSolution("P","disc_linear");
+  ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
   ml_sol.AssociatePropertyToSolution("P","Pressure");
  
   //Initialize (update Init(...) function)

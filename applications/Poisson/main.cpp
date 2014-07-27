@@ -11,6 +11,7 @@
 #include "XDMFWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "SolvertypeEnum.hpp"
+#include "FElemTypeEnum.hpp"
 #include <json/json.h>
 #include <json/value.h>
 
@@ -157,8 +158,26 @@ int main(int argc,char **argv) {
 
     std::string variableName = root["variable"].get("name", "Q").asString();
 
-    std::string fe_order = root["variable"].get("fe_order", "biquadratic").asString();
-
+    FEOrder fe_order;
+    std::string fe_order_str = root["variable"].get("fe_order", "first").asString();
+    if (!strcmp(fe_order_str.c_str(),"first"))
+    {
+        fe_order = FIRST;
+    }
+    else if (!strcmp(fe_order_str.c_str(),"serendipity"))
+    {
+        fe_order = SERENDIPITY;
+    }
+    else if (!strcmp(fe_order_str.c_str(),"second"))
+    {
+      fe_order = SECOND;
+    }
+    else
+    {
+      std::cerr << " Error: Lagrange finite element order not supported!" << std::endl;
+      exit(1);
+    }
+    
     
     unsigned int nlevels = root["mgsolver"].get("nlevels", 1).asInt();
     unsigned int npresmoothing = root["mgsolver"].get("npresmoothing", 1).asUInt();
@@ -238,7 +257,7 @@ int main(int argc,char **argv) {
     MultiLevelSolution ml_sol(&ml_msh);
 
     // generate solution vector
-    ml_sol.AddSolution("Sol", fe_order.c_str());
+    ml_sol.AddSolution("Sol", LAGRANGE, fe_order);
 
     //Initialize (update Init(...) function)
     ml_sol.Initialize("Sol");
@@ -338,20 +357,20 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 // }
 
 // 2D benchmark Full Dirichlet solution = sin^2(pi*x)*sin^2(pi*y)
-double Source(const double* xyz) {
-    const double pi = 3.1415926535897932;
-    double value = -2.*pi*pi*( cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1]) + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1]) ) ;
-    return value;
-}
+// double Source(const double* xyz) {
+//     const double pi = 3.1415926535897932;
+//     double value = -2.*pi*pi*( cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1]) + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1]) ) ;
+//     return value;
+// }
 
 // 3D benchmark sin^2(pi*x)*sin^2(pi*y)*sin^2(pi*z)
-//  double Source(const double* xyz) {
-//      const double pi = 3.1415926535897932;
-//      double value = -2.*pi*pi*(  cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1])*sin(pi*xyz[2])*sin(pi*xyz[2]) 
-//                                + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1])*sin(pi*xyz[2])*sin(pi*xyz[2]) 
-// 			       + sin(pi*xyz[0])*sin(pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1])*cos(2.*pi*xyz[2]) );
-//      return value;
-// }
+ double Source(const double* xyz) {
+     const double pi = 3.1415926535897932;
+     double value = -2.*pi*pi*(  cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1])*sin(pi*xyz[2])*sin(pi*xyz[2]) 
+                               + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1])*sin(pi*xyz[2])*sin(pi*xyz[2]) 
+			       + sin(pi*xyz[0])*sin(pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1])*cos(2.*pi*xyz[2]) );
+     return value;
+}
 
 // 1D benchmark 
 // double Source(const double* xyz) {
