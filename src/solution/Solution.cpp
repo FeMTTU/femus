@@ -57,52 +57,40 @@ Solution::~Solution() {
 }
 
 /**
- * Add new varible called name
- **/
-// ------------------------------------------------------------------
-void Solution::AddSolution( const char name[], const char order[],
-                                const unsigned& tmorder, const bool &Pde_type) {
+ * Add a new variable called 'name'
+ */
+void Solution::AddSolution( const char name[], const FEFamily fefamily, const FEOrder order, 
+			    const unsigned& tmorder, const bool &Pde_type) {
+
   unsigned n=_Sol.size();
 
   _SolType.resize(n+1u);
   _SolName.resize(n+1u);
   _SolTmOrder.resize(n+1u);
+  _family.resize(n+1u);
+  _order.resize(n+1u);
   
-
   _Sol.resize(n+1u);
   _Res.resize(n+1u);
   _Eps.resize(n+1u);
   
   _Bdc.resize(n+1u);
   _ResEpsBdcFlag.resize(n+1u);
+ 
   _ResEpsBdcFlag[n]=Pde_type;
-  
-  
+  _family[n] = fefamily;
+  _order[n] = order;
+  _SolType[n] = order - ((fefamily==LAGRANGE)?1:0) + fefamily*3;
   _SolTmOrder[n]=tmorder;
   _SolOld.resize(n+1u);
-
-  if (!strcmp(order,"linear")) {
-    _SolType[n]=0;
-  } else if (!strcmp(order,"quadratic")) {
-    _SolType[n]=1;
-  } else if (!strcmp(order,"biquadratic")) {
-    _SolType[n]=2;
-  } else if (!strcmp(order,"constant")) {
-    _SolType[n]=3;
-  } else if (!strcmp(order,"disc_linear")) {
-    _SolType[n]=4;
-  } else {
-    cout<<"error! invalid order entry in AddSolution(...)"<<endl;
-    exit(0);
-  }
   _SolName[n]=new char [8];
-  strcpy(_SolName[n],name);
+  strcpy(_SolName[n],name);  
+  
 }
 
 /**
  * Get the solution index for the variable called name
  **/
-
 //-------------------------------------------------------------------
 unsigned Solution::GetIndex(const char name[]) const {
   unsigned index=0;

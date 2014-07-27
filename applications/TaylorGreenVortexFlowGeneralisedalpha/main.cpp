@@ -8,6 +8,7 @@
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "FElemTypeEnum.hpp"
 
 using std::cout;
 using std::endl;
@@ -60,12 +61,12 @@ int main(int argc,char **args) {
   MultiLevelProblem ml_prob(&ml_msh, &ml_sol);
   
   // generate solution vector
-  ml_sol.AddSolution("U","biquadratic",2);
-  ml_sol.AddSolution("V","biquadratic",2);
-  ml_sol.AddSolution("AX","biquadratic",1,0);
-  ml_sol.AddSolution("AY","biquadratic",1,0);
+  ml_sol.AddSolution("U",LAGRANGE,SECOND,2);
+  ml_sol.AddSolution("V",LAGRANGE,SECOND,2);
+  ml_sol.AddSolution("AX",LAGRANGE,SECOND,1,0);
+  ml_sol.AddSolution("AY",LAGRANGE,SECOND,1,0);
   // the pressure variable should be the last for the Schur decomposition
-  ml_sol.AddSolution("P","linear",1);
+  ml_sol.AddSolution("P",LAGRANGE,FIRST,1);
   
   //Initialize (update Init(...) function)
   ml_sol.Initialize("U",InitVariableU);

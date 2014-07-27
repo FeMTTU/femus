@@ -8,8 +8,10 @@
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
+#include "XDMFWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "SolvertypeEnum.hpp"
+#include "FElemTypeEnum.hpp"
 #include <json/json.h>
 #include <json/value.h>
 
@@ -143,6 +145,10 @@ int main(int argc,char **argv) {
         {
             elemtype = EDGE3;
         }
+        else if(elemtypestr == "Hex27")
+        {
+            elemtype = HEX27;
+        }
         else
 	{
 	    elemtype = INVALID_ELEM;
@@ -152,8 +158,26 @@ int main(int argc,char **argv) {
 
     std::string variableName = root["variable"].get("name", "Q").asString();
 
-    std::string fe_order = root["variable"].get("fe_order", "biquadratic").asString();
-
+    FEOrder fe_order;
+    std::string fe_order_str = root["variable"].get("fe_order", "first").asString();
+    if (!strcmp(fe_order_str.c_str(),"first"))
+    {
+        fe_order = FIRST;
+    }
+    else if (!strcmp(fe_order_str.c_str(),"serendipity"))
+    {
+        fe_order = SERENDIPITY;
+    }
+    else if (!strcmp(fe_order_str.c_str(),"second"))
+    {
+      fe_order = SECOND;
+    }
+    else
+    {
+      std::cerr << " Error: Lagrange finite element order not supported!" << std::endl;
+      exit(1);
+    }
+    
     
     unsigned int nlevels = root["mgsolver"].get("nlevels", 1).asInt();
     unsigned int npresmoothing = root["mgsolver"].get("npresmoothing", 1).asUInt();
@@ -233,7 +257,7 @@ int main(int argc,char **argv) {
     MultiLevelSolution ml_sol(&ml_msh);
 
     // generate solution vector
-    ml_sol.AddSolution("Sol", fe_order.c_str());
+    ml_sol.AddSolution("Sol", LAGRANGE, fe_order);
 
     //Initialize (update Init(...) function)
     ml_sol.Initialize("Sol");
@@ -294,9 +318,12 @@ int main(int argc,char **argv) {
     VTKWriter vtkio(ml_sol);
     vtkio.write_system_solutions("biquadratic",print_vars);
 
-    //GMVOutput gmvio(ml_sol);
-    //gmvio.write_system_solutions("biquadratic",print_vars);
+    GMVWriter gmvio(ml_sol);
+    gmvio.write_system_solutions("biquadratic",print_vars);
 
+    XDMFWriter xdmfio(ml_sol);
+    xdmfio.write_system_solutions("biquadratic",print_vars);
+    
     //Destroy all the new systems
     ml_prob.clear();
 
@@ -329,6 +356,28 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 //    return value;
 // }
 
+// 2D benchmark Full Dirichlet solution = sin^2(pi*x)*sin^2(pi*y)
+// double Source(const double* xyz) {
+//     const double pi = 3.1415926535897932;
+//     double value = -2.*pi*pi*( cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1]) + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1]) ) ;
+//     return value;
+// }
+
+// 3D benchmark sin^2(pi*x)*sin^2(pi*y)*sin^2(pi*z)
+ double Source(const double* xyz) {
+     const double pi = 3.1415926535897932;
+     double value = -2.*pi*pi*(  cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1])*sin(pi*xyz[2])*sin(pi*xyz[2]) 
+                               + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1])*sin(pi*xyz[2])*sin(pi*xyz[2]) 
+			       + sin(pi*xyz[0])*sin(pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1])*cos(2.*pi*xyz[2]) );
+     return value;
+}
+
+// 1D benchmark 
+// double Source(const double* xyz) {
+//     double value = 1. - 2.*xyz[0]*xyz[0] ;
+//     return value;
+// }
+
 //-------------------------------------------------------------------------------------------------------------------
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[],
@@ -339,19 +388,19 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
     if(!strcmp(name,"Sol")) {
         if(1==FaceName) {       // bottom face
             test=1;
-            value=1;
+            value=0;
         }
         else if(2==FaceName ) { // right face
              test=0;
              value=0.;
         }
         else if(3==FaceName ) { // top face
-            test=0;
+            test=1;
             value=0.;
         }
         else if(4==FaceName ) { // left face
             test=1;
-            value=1.;
+            value=0.;
         }
     }
 
@@ -413,12 +462,10 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
     B.reserve(max_size*max_size);
 
     // Set to zeto all the entries of the Global Matrix
-    if(assembe_matrix) myKK->zero();
+    if(assembe_matrix) 
+      myKK->zero();
 
     // *** element loop ***
-    double length = 0.;
-    
-    
     for (int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
 
         unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
@@ -465,12 +512,17 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                     gradSolT[ivar]=0;
                 }
 
+                double xyz[3] = {0.,0.,0.};
                 unsigned SolType=ml_sol->GetSolutionType("Sol");
                 for(unsigned i=0; i<nve; i++) {
                     double soli = (*mysolution->_Sol[SolIndex])(metis_node[i]);
+		    for(unsigned ivar=0; ivar<dim; ivar++) {
+		      xyz[ivar] += coordinates[ivar][i]*phi[i]; 
+		    }
                     SolT+=phi[i]*soli;
                     for(unsigned ivar2=0; ivar2<dim; ivar2++) gradSolT[ivar2] += gradphi[i*dim+ivar2]*soli;
                 }
+                  
                 // *** phi_i loop ***
                 for(unsigned i=0; i<nve; i++) {
                     //BEGIN RESIDUALS A block ===========================
@@ -479,11 +531,11 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                     for(unsigned ivar=0; ivar<dim; ivar++) {
                         Lap_rhs += gradphi[i*dim+ivar]*gradSolT[ivar];
                     }
+                    
+                    double src = Source(xyz);
 
-                    F[i]+= (-Lap_rhs + 1.*phi[i] )*weight;
+                    F[i]+= (-Lap_rhs + src*phi[i] )*weight;
 		    
-		    length += phi[i]*weight;
-
                     //END RESIDUALS A block ===========================
                     if(assembe_matrix) {
                         // *** phi_j loop ***

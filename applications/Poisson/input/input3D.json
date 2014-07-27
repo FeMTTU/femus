@@ -4,25 +4,25 @@
     "mesh" : {
                 "box" : {
                           "nx" : 6,
-                          "ny" : 0,
-                          "nz" : 0,
+                          "ny" : 6,
+                          "nz" : 6,
                           "xa" : 0.,
                           "xb" : 1.,
                           "ya" : 0.,
-                          "yb" : 0.,
+                          "yb" : 1.,
                           "za" : 0.,
-                          "zb" : 0.,
-                          "elem_type" : "Edge3"
+                          "zb" : 1.,
+                          "elem_type" : "Hex27"
                          }
              },
         
     // Properties
     "variable" : { "name" : "T", 
-                   "fe_order" : "linear"
+                   "fe_order" : "first"
                  },
     
     // MG Solver properties
-    "mgsolver" : { "nlevels" : 3, 
+    "mgsolver" : { "nlevels" : 4, 
                    "npresmoothing" : 1, 
                    "npostsmoothing" : 1, 
                    "smoother_type" : "gmres", 

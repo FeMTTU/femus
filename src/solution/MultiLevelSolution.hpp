@@ -22,7 +22,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include "MultiLevelMesh.hpp"
 #include "Solution.hpp"
 #include "ParallelObject.hpp"
-
+#include "FElemTypeEnum.hpp"
 #include <vector>
 
 
@@ -42,7 +42,9 @@ private:
  
   bool _bdc_func_set;
   unsigned short  _gridn;
-  vector <int>    _SolType;  
+  vector <int>    _SolType;
+  vector <FEFamily> _family;
+  vector <FEOrder> _order; 
   vector <char*>  _SolName;
   vector <char*>  _BdcType;
   vector <int>    _SolTmorder;
@@ -60,24 +62,31 @@ public:
   MultiLevelMesh* _ml_msh;
   
   /** Constructor */
-  MultiLevelSolution( MultiLevelMesh *ml_msh);
+  MultiLevelSolution(MultiLevelMesh *ml_msh);
 
   /** Destructor */
   ~MultiLevelSolution();
      
   // Vector handling functions
-  void AddSolution(const char name[], const char type[],unsigned tmorder=0, const bool &Pde_type=1);
+  void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order, unsigned tmorder=0, const bool &Pde_type=1);
+  
   void AssociatePropertyToSolution(const char solution_name[], const char solution_property[]);
+
   void ResizeSolutionVector( const char name[]);
+
   void Initialize(const char name[], initfunc func = NULL);
+
   unsigned GetIndex(const char name[]) const;
+
   unsigned GetSolType(const char name[]);
+
   unsigned GetSolutionSize(){ return _SolType.size();};
+
   vector <char*>  GetSolName(){return _SolName;};
+
   vector <int>  GetSolType(){return _SolType;};
   
   void BuildProlongatorMatrix(unsigned gridf, unsigned SolIndex);
-  
   
   // boundary condition function pointer
   bool (*_SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
