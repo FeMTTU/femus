@@ -7,22 +7,22 @@
                           "ny" : 6,
                           "nz" : 6,
                           "xa" : 0.,
-                          "xb" : 2.,
+                          "xb" : 1.,
                           "ya" : 0.,
-                          "yb" : 2.,
+                          "yb" : 1.,
                           "za" : 0.,
-                          "zb" : 2.,
+                          "zb" : 1.,
                           "elem_type" : "Hex27"
                          }
              },
         
     // Properties
     "variable" : { "name" : "T", 
-                   "fe_order" : "linear"
+                   "fe_order" : "first"
                  },
     
     // MG Solver properties
-    "mgsolver" : { "nlevels" : 1, 
+    "mgsolver" : { "nlevels" : 4, 
                    "npresmoothing" : 1, 
                    "npostsmoothing" : 1, 
                    "smoother_type" : "gmres", 

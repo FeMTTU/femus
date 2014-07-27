@@ -65,11 +65,13 @@ MultiLevelSolution::MultiLevelSolution( MultiLevelMesh *ml_msh):
 }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelSolution::AddSolution(const char name[], const char order[],
+void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily, const FEOrder order,
 				     unsigned tmorder, const bool &Pde_type) {
   
   unsigned n=_SolType.size();
   _SolType.resize(n+1u);
+  _family.resize(n+1u);
+  _order.resize(n+1u);
   _SolName.resize(n+1u);
   _BdcType.resize(n+1u);
   _SolTmorder.resize(n+1u);
@@ -78,20 +80,9 @@ void MultiLevelSolution::AddSolution(const char name[], const char order[],
 
   _TestIfDisplacement[n]=0;
   _TestIfPressure[n]=0;
-  if (!strcmp(order,"linear")) {
-    _SolType[n]=0;
-  } else if (!strcmp(order,"quadratic")) {
-    _SolType[n]=1;
-  } else if (!strcmp(order,"biquadratic")) {
-    _SolType[n]=2;
-  } else if (!strcmp(order,"constant")) {
-    _SolType[n]=3;
-  } else if (!strcmp(order,"disc_linear")) {
-    _SolType[n]=4;
-  } else {
-    cout<<"Error! Invalid Finite Element entry for variable " << name << " in AddSolution function"<<endl;
-    exit(0);
-  }
+  _family[n] = fefamily;
+  _order[n] = order;
+  _SolType[n] = order - ((fefamily==LAGRANGE)?1:0) + fefamily*3;     
   _SolName[n]  = new char [8];
   _BdcType[n]  = new char [20];
   strcpy(_SolName[n],name);
@@ -101,7 +92,7 @@ void MultiLevelSolution::AddSolution(const char name[], const char order[],
        << std::setw(12) << order << " and time discretzation order " << tmorder << endl;
 
   for (unsigned ig=0; ig<_gridn; ig++) {
-    _solution[ig]->AddSolution(name,order,tmorder,Pde_type);
+    _solution[ig]->AddSolution(name,fefamily,order,tmorder,Pde_type);
   }
 }
 

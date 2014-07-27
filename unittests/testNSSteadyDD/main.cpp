@@ -10,10 +10,10 @@
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "SolvertypeEnum.hpp"
+#include "FElemTypeEnum.hpp"
 
 using std::cout;
 using std::endl;
-
 using namespace femus;
 
 void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
@@ -79,11 +79,11 @@ int main(int argc,char **args) {
   MultiLevelSolution ml_sol(&ml_msh);
   
   // generate solution vector
-  ml_sol.AddSolution("T","biquadratic");
-  ml_sol.AddSolution("U","biquadratic");
-  ml_sol.AddSolution("V","biquadratic");
+  ml_sol.AddSolution("T",LAGRANGE,SECOND);
+  ml_sol.AddSolution("U",LAGRANGE,SECOND);
+  ml_sol.AddSolution("V",LAGRANGE,SECOND);
   // the pressure variable should be the last for the Schur decomposition
-  ml_sol.AddSolution("P","disc_linear");
+  ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
   ml_sol.AssociatePropertyToSolution("P","Pressure");
  
   //Initialize (update Init(...) function)

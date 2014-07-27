@@ -91,9 +91,9 @@ void mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   }
   
   _coordinate = new Solution(this);
-  _coordinate->AddSolution("X","biquadratic",1,0); 
-  _coordinate->AddSolution("Y","biquadratic",1,0); 
-  _coordinate->AddSolution("Z","biquadratic",1,0); 
+  _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0); 
   
   _coordinate->ResizeSolutionVector("X");
   _coordinate->ResizeSolutionVector("Y");
@@ -325,9 +325,9 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type* type_
   if (_nprocs>=1) generate_metis_mesh_partition();
        
   _coordinate = new Solution(this);
-  _coordinate->AddSolution("X","biquadratic",1,0); 
-  _coordinate->AddSolution("Y","biquadratic",1,0); 
-  _coordinate->AddSolution("Z","biquadratic",1,0); 
+  _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0); 
   
   _coordinate->ResizeSolutionVector("X");
   _coordinate->ResizeSolutionVector("Y");
@@ -2105,7 +2105,8 @@ void mesh::BuildBrick(const unsigned int nx,
 		      
 		      el->SetElementGroup(iel,1);
 		      el->SetElementMaterial(iel, 2); 
- 		      type_elem_flag[0]=true;
+ 		      type_elem_flag[0]=true; // hex
+		      type_elem_flag[3]=true; // quad face
                       el->AddToElementNumber(1,"Hex");
                       el->SetElementType(iel,0);
   
@@ -2584,9 +2585,9 @@ void mesh::BuildBrick(const unsigned int nx,
   }
   
   _coordinate = new Solution(this);
-  _coordinate->AddSolution("X","biquadratic",1,0); 
-  _coordinate->AddSolution("Y","biquadratic",1,0); 
-  _coordinate->AddSolution("Z","biquadratic",1,0); 
+  _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0); 
   
   _coordinate->ResizeSolutionVector("X");
   _coordinate->ResizeSolutionVector("Y");

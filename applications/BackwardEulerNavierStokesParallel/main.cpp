@@ -1,4 +1,3 @@
-
 #include "MultiLevelProblem.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
@@ -8,6 +7,8 @@
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "FElemTypeEnum.hpp"
+
 using std::cout;
 using std::endl;
 using namespace femus;
@@ -47,13 +48,11 @@ int main(int argc,char **args) {
    
   MultiLevelSolution ml_sol(&ml_msh);
    
-
-  
   // generate solution vector
-  ml_sol.AddSolution("U","biquadratic",2);
-  ml_sol.AddSolution("V","biquadratic",2);
+  ml_sol.AddSolution("U",LAGRANGE,SECOND,2);
+  ml_sol.AddSolution("V",LAGRANGE,SECOND,2);
   // the pressure variable should be the last for the Schur decomposition
-  ml_sol.AddSolution("P","disc_linear",1);
+  ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
   ml_sol.AssociatePropertyToSolution("P","Pressure");
   
   //Initialize (update Init(...) function)

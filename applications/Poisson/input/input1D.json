@@ -7,7 +7,7 @@
                           "ny" : 0,
                           "nz" : 0,
                           "xa" : 0.,
-                          "xb" : 2.,
+                          "xb" : 1.,
                           "ya" : 0.,
                           "yb" : 0.,
                           "za" : 0.,
@@ -22,7 +22,7 @@
                  },
     
     // MG Solver properties
-    "mgsolver" : { "nlevels" : 4, 
+    "mgsolver" : { "nlevels" : 3, 
                    "npresmoothing" : 1, 
                    "npostsmoothing" : 1, 
                    "smoother_type" : "gmres", 
