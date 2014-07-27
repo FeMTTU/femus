@@ -337,6 +337,28 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 //    return value;
 // }
 
+// 2D benchmark Full Dirichlet solution = sin^2(pi*x)*sin^2(pi*y)
+double Source(const double* xyz) {
+    const double pi = 3.1415926535897932;
+    double value = -2.*pi*pi*( cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1]) + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1]) ) ;
+    return value;
+}
+
+// 3D benchmark sin^2(pi*x)*sin^2(pi*y)*sin^2(pi*z)
+//  double Source(const double* xyz) {
+//      const double pi = 3.1415926535897932;
+//      double value = -2.*pi*pi*(  cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1])*sin(pi*xyz[2])*sin(pi*xyz[2]) 
+//                                + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1])*sin(pi*xyz[2])*sin(pi*xyz[2]) 
+// 			       + sin(pi*xyz[0])*sin(pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1])*cos(2.*pi*xyz[2]) );
+//      return value;
+// }
+
+// 1D benchmark 
+// double Source(const double* xyz) {
+//     double value = 1. - 2.*xyz[0]*xyz[0] ;
+//     return value;
+// }
+
 //-------------------------------------------------------------------------------------------------------------------
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[],
@@ -347,19 +369,19 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
     if(!strcmp(name,"Sol")) {
         if(1==FaceName) {       // bottom face
             test=1;
-            value=1;
+            value=0;
         }
         else if(2==FaceName ) { // right face
              test=0;
              value=0.;
         }
         else if(3==FaceName ) { // top face
-            test=0;
+            test=1;
             value=0.;
         }
         else if(4==FaceName ) { // left face
             test=1;
-            value=1.;
+            value=0.;
         }
     }
 
@@ -471,12 +493,17 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                     gradSolT[ivar]=0;
                 }
 
+                double xyz[3] = {0.,0.,0.};
                 unsigned SolType=ml_sol->GetSolutionType("Sol");
                 for(unsigned i=0; i<nve; i++) {
                     double soli = (*mysolution->_Sol[SolIndex])(metis_node[i]);
+		    for(unsigned ivar=0; ivar<dim; ivar++) {
+		      xyz[ivar] += coordinates[ivar][i]*phi[i]; 
+		    }
                     SolT+=phi[i]*soli;
                     for(unsigned ivar2=0; ivar2<dim; ivar2++) gradSolT[ivar2] += gradphi[i*dim+ivar2]*soli;
                 }
+                  
                 // *** phi_i loop ***
                 for(unsigned i=0; i<nve; i++) {
                     //BEGIN RESIDUALS A block ===========================
@@ -485,8 +512,10 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                     for(unsigned ivar=0; ivar<dim; ivar++) {
                         Lap_rhs += gradphi[i*dim+ivar]*gradSolT[ivar];
                     }
+                    
+                    double src = Source(xyz);
 
-                    F[i]+= (-Lap_rhs + 1.*phi[i] )*weight;
+                    F[i]+= (-Lap_rhs + src*phi[i] )*weight;
 		    
                     //END RESIDUALS A block ===========================
                     if(assembe_matrix) {
