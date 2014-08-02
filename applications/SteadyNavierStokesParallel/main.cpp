@@ -80,11 +80,17 @@ int main(int argc,char **args) {
   MultiLevelSolution ml_sol(&ml_msh);
   
   // generate solution vector
-  ml_sol.AddSolution("T",LAGRANGE,SECOND);
-  ml_sol.AddSolution("U",LAGRANGE,SECOND);
-  ml_sol.AddSolution("V",LAGRANGE,SECOND);
+//   ml_sol.AddSolution("T",LAGRANGE,SECOND);
+//   ml_sol.AddSolution("U",LAGRANGE,SECOND);
+//   ml_sol.AddSolution("V",LAGRANGE,SECOND);
+//   // the pressure variable should be the last for the Schur decomposition
+//   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
+  
+  ml_sol.AddSolution("T",LAGRANGE,FIRST);
+  ml_sol.AddSolution("U",LAGRANGE,FIRST);
+  ml_sol.AddSolution("V",LAGRANGE,FIRST);
   // the pressure variable should be the last for the Schur decomposition
-  ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
+  ml_sol.AddSolution("P",LAGRANGE,FIRST);
   ml_sol.AssociatePropertyToSolution("P","Pressure");
  
   //Initialize (update Init(...) function)
@@ -406,10 +412,16 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   SolPdeIndex[dim]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[3][0]);
   SolIndex[dim]=ml_sol->GetIndex(&Solname[3][0]);       
   //solution order
-  unsigned order_ind2 = ml_sol->GetSolutionType(SolIndex[0]);
-  unsigned end_ind2   = mymsh->GetEndIndex(order_ind2);
-  unsigned order_ind1 = ml_sol->GetSolutionType(SolIndex[dim]);
-  unsigned end_ind1   = mymsh->GetEndIndex(order_ind1);
+  unsigned order_ind_vel = ml_sol->GetSolutionType(SolIndex[0]);
+  unsigned end_ind2   = mymsh->GetEndIndex(order_ind_vel);
+  unsigned order_ind_p = ml_sol->GetSolutionType(SolIndex[dim]);
+  unsigned end_ind1   = mymsh->GetEndIndex(order_ind_p);
+  
+  double alpha = 0.;
+  if(order_ind_p == order_ind_vel && order_ind_vel == 0) // if pressure and velocity are both linear, we need stabilization 
+  {
+    alpha = 0.005; 
+  }
   
   // declare 
   vector < int > metis_node2; 
@@ -507,27 +519,31 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     
     for( unsigned i=0;i<nve2;i++){
       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
-      unsigned inode_metis=mymsh->GetMetisDof(inode,2);
-      metis_node2[i]=inode_metis;
+      unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
+      metis_node2[i]=mymsh->GetMetisDof(inode,order_ind_vel);
       for(unsigned ivar=0; ivar<dim; ivar++) {
-	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_metis);
+	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
 	KK_dof[ivar][i]=mylsyspde->GetKKDof(SolIndex[ivar],SolPdeIndex[ivar],inode);
       }
     }
     
+    double hk = sqrt( (coordinates[0][2] - coordinates[0][0])*(coordinates[0][2] - coordinates[0][0]) + 
+      (coordinates[1][2] - coordinates[1][0])*(coordinates[1][2] - coordinates[1][0]) );
+    
     for(unsigned i=0;i<nve1;i++) {
-      unsigned inode=(order_ind1<dim)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
+      unsigned inode=(order_ind_p<dim)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
       node1[i]=inode;
       KK_dof[dim][i]=mylsyspde->GetKKDof(SolIndex[dim],SolPdeIndex[dim],inode);
     }
    
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
       // *** Gauss poit loop ***
-      for(unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind_vel]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(coordinates,ig,Weight2,phi2,gradphi2);
-	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
+	(ml_prob._ml_msh->_type_elem[kelt][order_ind_vel]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind_vel])->Jacobian_ptr)(coordinates,ig,Weight2,phi2,gradphi2);
+	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind_p]->GetPhi(ig);
 
+	double GradSolP[3] = {0.,0.,0.};
 	//velocity variable
 	for(unsigned ivar=0; ivar<dim; ivar++) {
 	  SolVAR[ivar]=0;
@@ -552,8 +568,13 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	  unsigned sol_dof = mymsh->GetMetisDof(node1[i],SolType);
 	  double soli = (*mysolution->_Sol[SolIndex])(sol_dof);
 	  SolVAR[dim]+=phi1[i]*soli;
+	  for(unsigned ivar2=0; ivar2<dim; ivar2++){
+	    GradSolP[ivar2] += gradphi2[i*dim+ivar2]*soli;
+	  }
 	}
 
+	//std::cout << "   0: " << GradSolP[0] << "    1: " << GradSolP[1] << std::endl;
+	
 	// *** phi_i loop ***
 	for(unsigned i=0; i<nve2; i++){
 	
@@ -611,7 +632,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	  for(unsigned ivar=0; ivar<dim; ivar++) {
 	    div += gradSolVAR[ivar][ivar];
 	  }
-	  F[SolPdeIndex[dim]][i]+= (phi1[i]*div +penalty*ILambda*phi1[i]*SolVAR[dim])*Weight2;
+	  F[SolPdeIndex[dim]][i]+= (phi1[i]*div + /*penalty*ILambda*phi1[i]*SolVAR[dim]*/ 
+	                             + hk*hk*(1./0.001)*alpha*(GradSolP[0]*gradphi2[i*dim + 0] + GradSolP[1]*gradphi2[i*dim + 1]) )*Weight2;
+				     
+           
 	  //END RESIDUALS  B block ===========================
 	  
 	  if(assembe_matrix){
@@ -629,7 +653,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	  for(unsigned i=0; i<nve1; i++){
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve1; j++){
-	      B[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nve1+j]-= ILambda*phi1[i]*phi1[j]*Weight2;
+	      //B[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nve1+j]-= ILambda*phi1[i]*phi1[j]*Weight2;
+	      for(unsigned ivar=0; ivar<dim; ivar++) {
+	        B[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nve1+j] -= hk*hk*(1./0.001)*alpha*(gradphi2[i*dim + ivar]*gradphi2[j*dim + ivar])*Weight2; 
+	      }
 	    }
 	  }
 	}   //end if penalty
@@ -771,10 +798,10 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
     // get local to global mappings
     for( unsigned i=0;i<nve;i++){
       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;	
-      unsigned inode_metis=mymsh->GetMetisDof(inode,2);
-      metis_node[i]=inode_metis;
+      unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
+      metis_node[i]=mymsh->GetMetisDof(inode,order_ind);
       for(unsigned ivar=0; ivar<dim; ivar++) {
-	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_metis);
+	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
       }
       KK_dof[i]=mylsyspde->GetKKDof(SolIndex,SolPdeIndex,inode);
     }
