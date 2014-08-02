@@ -15,6 +15,8 @@
 #include <json/json.h>
 #include <json/value.h>
 
+#include "fparser.hh"
+
 
 using std::cout;
 using std::endl;
@@ -219,6 +221,66 @@ int main(int argc,char **argv) {
     // end reading input from file
     //-----------------------------------------------------------------------------------------------
 
+    
+    //
+    
+    std::string function;
+    function = root["variable"].get("func_source", "0.").asString();
+//     double minx, maxx, step;
+    FunctionParserBase<double> fpsource;
+    fpsource.AddConstant("pi", std::acos(-1.));
+    fpsource.AddConstant("e", std::exp(1.));
+    std::string variables = "x";
+    variables += ",y";
+    variables += ",z";
+    variables += ",t";
+    
+    // Parse (and optimize if possible) the subexpression.
+    // Add some basic constants, to Real precision.
+    int res = fpsource.Parse(function, variables);
+    if(res >= 0) {
+      std::cout << std::string(res+7, ' ') << "^\n"
+                << fpsource.ErrorMsg() << "\n\n";
+      exit(1);
+    }
+    
+    fpsource.Optimize();
+ 
+//     while(true)
+//     {
+//         std::cout << "f(x,y,z,t) = ";
+//         std::getline(std::cin, function);
+//         if(std::cin.fail()) return 0;
+// 
+// 	 // Parse (and optimize if possible) the subexpression.
+//         // Add some basic constants, to Real precision.
+//         int res = fp.Parse(function, variables);
+// 	if(res < 0) break;
+//         fp.Optimize();
+// 
+//         std::cout << std::string(res+7, ' ') << "^\n"
+//                   << fp.ErrorMsg() << "\n\n";
+//     }
+// 
+//     std::cout << "min x: ";
+//     std::cin >> minx;
+//     std::cout << "max x: ";
+//     std::cin >> maxx;
+//     std::cout << "step: ";
+//     std::cin >> step;
+//     if(std::cin.fail()) return 0;
+// 
+//     double vals[] = { 0, 1. , 0., 0. };
+//     for(vals[0] = minx; vals[0] <= maxx; vals[0] += step)
+//     {
+//         std::cout << "f(" << vals[0] << ",0,0,0 " << ") = " << fp.Eval(vals)
+//                   << std::endl;
+//     }
+//     
+//     return 0;
+    
+    //
+    
     /// Init Petsc-MPI communicator
     FemTTUInit mpinit(argc,argv,MPI_COMM_WORLD);
 
@@ -267,6 +329,9 @@ int main(int argc,char **argv) {
     ml_sol.GenerateBdc("Sol");
 
     MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
+    
+    
+//     ml_prob.parameters.set<func>("func_source") = fpsource;
 
     // add fluid material
     Parameter parameter(Lref,Uref);
@@ -364,11 +429,11 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 // }
 
 // 3D benchmark sin^2(pi*x)*sin^2(pi*y)*sin^2(pi*z)
- double Source(const double* xyz) {
+ double Source(const double* xyzt) {
      const double pi = 3.1415926535897932;
-     double value = -2.*pi*pi*(  cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1])*sin(pi*xyz[2])*sin(pi*xyz[2]) 
-                               + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1])*sin(pi*xyz[2])*sin(pi*xyz[2]) 
-			       + sin(pi*xyz[0])*sin(pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1])*cos(2.*pi*xyz[2]) );
+     double value = -2.*pi*pi*(  cos(2.*pi*xyzt[0])*sin(pi*xyzt[1])*sin(pi*xyzt[1])*sin(pi*xyzt[2])*sin(pi*xyzt[2]) 
+                               + sin(pi*xyzt[0])*sin(pi*xyzt[0])*cos(2.*pi*xyzt[1])*sin(pi*xyzt[2])*sin(pi*xyzt[2]) 
+			       + sin(pi*xyzt[0])*sin(pi*xyzt[0])*sin(pi*xyzt[1])*sin(pi*xyzt[1])*cos(2.*pi*xyzt[2]) );
      return value;
 }
 
@@ -512,12 +577,12 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                     gradSolT[ivar]=0;
                 }
 
-                double xyz[3] = {0.,0.,0.};
+                double xyzt[4] = {0.,0.,0.,0.};
                 unsigned SolType=ml_sol->GetSolutionType("Sol");
                 for(unsigned i=0; i<nve; i++) {
                     double soli = (*mysolution->_Sol[SolIndex])(metis_node[i]);
 		    for(unsigned ivar=0; ivar<dim; ivar++) {
-		      xyz[ivar] += coordinates[ivar][i]*phi[i]; 
+		      xyzt[ivar] += coordinates[ivar][i]*phi[i]; 
 		    }
                     SolT+=phi[i]*soli;
                     for(unsigned ivar2=0; ivar2<dim; ivar2++) gradSolT[ivar2] += gradphi[i*dim+ivar2]*soli;
@@ -532,8 +597,9 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                         Lap_rhs += gradphi[i*dim+ivar]*gradSolT[ivar];
                     }
                     
-                    double src = Source(xyz);
-
+                    double src = Source(xyzt);
+                    //double src = fpsource.Eval(xyzt);
+                    
                     F[i]+= (-Lap_rhs + src*phi[i] )*weight;
 		    
                     //END RESIDUALS A block ===========================

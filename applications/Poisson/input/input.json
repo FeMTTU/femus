@@ -18,7 +18,7 @@
         
     // Properties
     "variable" : { "name" : "T", 
-                   "fe_order" : "linear"
+                   "fe_order" : "first"
                  },
     
     // MG Solver properties
