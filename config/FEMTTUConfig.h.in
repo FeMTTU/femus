@@ -14,6 +14,10 @@
 
 #cmakedefine HAVE_HDF5
 
+//FParser library
+
+#cmakedefine HAVE_FPARSER
+
 //libMesh library
 
 #cmakedefine HAVE_LIBMESH
