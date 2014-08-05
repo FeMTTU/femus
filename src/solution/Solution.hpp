@@ -28,7 +28,7 @@
 #include "Mesh.hpp"
 #include "petscmat.h"
 #include "FElemTypeEnum.hpp"
-
+#include "ParallelObject.hpp"
 
 namespace femus {
 
@@ -42,7 +42,7 @@ class mesh;
 
 using std::vector;
 
-class Solution {
+class Solution : public ParallelObject {
 
 public:
 

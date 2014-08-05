@@ -54,7 +54,7 @@ namespace femus {
     clock_t start_time = clock();
     _indexai_init = 1;
    
-    unsigned IndexaSize=KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
+    unsigned IndexaSize=KKoffset[KKIndex.size()-1][processor_id()] - KKoffset[0][processor_id()];
     _indexai.resize(2);
     _indexai[0].resize(IndexaSize);
     _indexai[1].resize(IndexaSize);
@@ -70,10 +70,10 @@ namespace femus {
     for(int k=0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       unsigned soltype = _SolType[indexSol];
-      for(unsigned inode_mts = _msh->MetisOffset[soltype][_msh->_iproc]; 
-	  inode_mts < _msh->MetisOffset[soltype][_msh->_iproc+1]; inode_mts++) {
-	int local_mts = inode_mts-_msh->MetisOffset[soltype][_msh->_iproc];
-	int idof_kk = KKoffset[k][_msh->_iproc] +local_mts; 
+      for(unsigned inode_mts = _msh->MetisOffset[soltype][processor_id()]; 
+	  inode_mts < _msh->MetisOffset[soltype][processor_id()+1]; inode_mts++) {
+	int local_mts = inode_mts-_msh->MetisOffset[soltype][processor_id()];
+	int idof_kk = KKoffset[k][processor_id()] +local_mts; 
       	if( !ThisSolutionIsIncluded[k] || (*(*_Bdc)[indexSol])(inode_mts) < 1.9) {
 	  _indexai[0][count0] = idof_kk;
 	  count0++;

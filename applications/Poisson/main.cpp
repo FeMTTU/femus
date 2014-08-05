@@ -492,7 +492,7 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
     const unsigned	dim	= mymsh->GetDimension();
     unsigned 		nel	= mymsh->GetElementNumber();
     unsigned 		igrid	= mymsh->GetGridNumber();
-    unsigned 		iproc	= mymsh->GetProcID();
+    unsigned 		iproc	= mymsh->processor_id();
 
     //solution variable
     unsigned SolIndex;

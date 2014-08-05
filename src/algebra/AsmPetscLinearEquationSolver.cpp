@@ -60,7 +60,7 @@ namespace femus {
     clock_t SearchTime = 0;
     clock_t start_time = clock();
     
-    unsigned IndexaSize=KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
+    unsigned IndexaSize=KKoffset[KKIndex.size()-1][processor_id()] - KKoffset[0][processor_id()];
     _indexai.resize(2);
     
     _indexai[0].clear();
@@ -82,9 +82,9 @@ namespace femus {
     for(int k=0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       unsigned soltype = _SolType[indexSol];
-      for(unsigned inode_mts = _msh->MetisOffset[soltype][_msh->_iproc]; inode_mts < _msh->MetisOffset[soltype][_msh->_iproc+1]; inode_mts++) {
-	int local_mts = inode_mts-_msh->MetisOffset[soltype][_msh->_iproc];
-	int idof_kk = KKoffset[k][_msh->_iproc] +local_mts; 
+      for(unsigned inode_mts = _msh->MetisOffset[soltype][processor_id()]; inode_mts < _msh->MetisOffset[soltype][processor_id()+1]; inode_mts++) {
+	int local_mts = inode_mts-_msh->MetisOffset[soltype][processor_id()];
+	int idof_kk = KKoffset[k][processor_id()] +local_mts; 
 	if( !ThisSolutionIsIncluded[k] || (*(*_Bdc)[indexSol])(inode_mts) < 1.9) {
 	  _indexai[0][count0] = idof_kk;
 	  count0++;
@@ -121,7 +121,7 @@ namespace femus {
       FastVankaBlock=(_SolType[_SolPdeIndex[variable_to_be_solved[variable_to_be_solved.size()-_NSchurVar]]]<3)?false:true;
     }
     
-    unsigned iproc=_msh->_iproc;
+    unsigned iproc=processor_id();
     
     unsigned DofOffset = KKoffset[0][iproc];
     unsigned DofOffsetSize=KKoffset[KKIndex.size()-1][iproc] - KKoffset[0][iproc];

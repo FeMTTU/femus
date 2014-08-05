@@ -1,10 +1,10 @@
 /*=========================================================================
 
- Program: FEMUS
+ Program: FEMuS
  Module: LinearEquation
  Authors: Eugenio Aulisa, Simone Bnà
  
- Copyright (c) FEMTTU
+ Copyright (c) FEMuS
  All rights reserved. 
 
  This software is distributed WITHOUT ANY WARRANTY; without even
@@ -21,6 +21,7 @@
 //----------------------------------------------------------------------------
 #include "Mesh.hpp"
 #include "petscmat.h"
+#include "ParallelObject.hpp"
 
 
 namespace femus {
@@ -38,7 +39,7 @@ class mesh;
  This class is a container that holds linear operators and other structure for solving a linear equation system
 */
 
-class LinearEquation {
+class LinearEquation : public ParallelObject {
 
   //Data 
 private:

@@ -1,10 +1,10 @@
 /*=========================================================================
 
- Program: FEMUS
+ Program: FEMuS
  Module: LinearEquationSolver
  Authors: Eugenio Aulisa, Simone Bnà
  
- Copyright (c) FEMTTU
+ Copyright (c) FEMuS
  All rights reserved. 
 
  This software is distributed WITHOUT ANY WARRANTY; without even

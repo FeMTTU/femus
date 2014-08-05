@@ -109,23 +109,23 @@ void Solution::ResizeSolutionVector(const char name[]) {
   unsigned i=GetIndex(name);
   
   _Sol[i] = NumericVector::build().release();
-  if(_msh->_nprocs==1) { // IF SERIAL
-    _Sol[i]->init(_msh->MetisOffset[_SolType[i]][_msh->_nprocs],_msh->own_size[_SolType[i]][_msh->_iproc],false,SERIAL);
+  if(n_processors()==1) { // IF SERIAL
+    _Sol[i]->init(_msh->MetisOffset[_SolType[i]][n_processors()],_msh->own_size[_SolType[i]][processor_id()],false,SERIAL);
   } 
   else { // IF PARALLEL
     if(_SolType[i]<3) {
-      if(_msh->ghost_size[_SolType[i]][_msh->_iproc]!=0) { 
-	_Sol[i]->init(_msh->MetisOffset[_SolType[i]][_msh->_nprocs],_msh->own_size[_SolType[i]][_msh->_iproc],
-		      _msh->ghost_nd_mts[_SolType[i]][_msh->_iproc],false,GHOSTED);
+      if(_msh->ghost_size[_SolType[i]][processor_id()]!=0) { 
+	_Sol[i]->init(_msh->MetisOffset[_SolType[i]][n_processors()],_msh->own_size[_SolType[i]][processor_id()],
+		      _msh->ghost_nd_mts[_SolType[i]][processor_id()],false,GHOSTED);
       } 
       else { 
-	std::vector <int> fake_ghost(1,_msh->own_size[_SolType[i]][_msh->_iproc]);
-	_Sol[i]->init(_msh->MetisOffset[_SolType[i]][_msh->_nprocs],_msh->own_size[_SolType[i]][_msh->_iproc],
+	std::vector <int> fake_ghost(1,_msh->own_size[_SolType[i]][processor_id()]);
+	_Sol[i]->init(_msh->MetisOffset[_SolType[i]][n_processors()],_msh->own_size[_SolType[i]][processor_id()],
 		      fake_ghost,false,GHOSTED);
       }
     }
     else { //discontinuous pressure has no ghost nodes
-      _Sol[i]->init(_msh->MetisOffset[_SolType[i]][_msh->_nprocs],_msh->own_size[_SolType[i]][_msh->_iproc],false,PARALLEL); 
+      _Sol[i]->init(_msh->MetisOffset[_SolType[i]][n_processors()],_msh->own_size[_SolType[i]][processor_id()],false,PARALLEL); 
     }
   }
   
@@ -201,20 +201,20 @@ void Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector
     unsigned soltype =  _SolType[indexSol];
 
     int loc_size   = _Eps[indexSol]->local_size();
-    int loc_offset_EPS = KKoffset[k][_msh->_iproc];// - KKoffset[0][_msh->_iproc]; //?????????
+    int loc_offset_EPS = KKoffset[k][processor_id()];// - KKoffset[0][processor_id()]; //?????????
 
-    int glob_offset_eps = _msh->MetisOffset[soltype][_msh->_iproc];
+    int glob_offset_eps = _msh->MetisOffset[soltype][processor_id()];
 
-    vector <int> index(_msh->own_size[soltype][_msh->_iproc]);
-    for(int i=0; i<_msh->own_size[soltype][_msh->_iproc]; i++) {
+    vector <int> index(_msh->own_size[soltype][processor_id()]);
+    for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
       index[i]=loc_offset_EPS+i;
     }
-    vector <double> valueEPS(_msh->own_size[soltype][_msh->_iproc]);
+    vector <double> valueEPS(_msh->own_size[soltype][processor_id()]);
     _EPS->get(index,valueEPS);
-    vector <double> valueRES(_msh->own_size[soltype][_msh->_iproc]);
+    vector <double> valueRES(_msh->own_size[soltype][processor_id()]);
     _RES->get(index,valueRES);
 
-    for(int i=0; i<_msh->own_size[soltype][_msh->_iproc]; i++) {
+    for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
       _Eps[indexSol]->set(i+glob_offset_eps,valueEPS[i]);
       if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) _Res[indexSol]->set(i+glob_offset_eps,valueRES[i]);
       else _Res[indexSol]->set(i+glob_offset_eps,zero);

@@ -401,8 +401,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   const unsigned dim = mymsh->GetDimension();
   unsigned nel= mymsh->GetElementNumber();
   unsigned igrid= mymsh->GetGridNumber();
-  unsigned iproc = mymsh->GetProcID();
-  unsigned nprocs = mymsh->GetNumProcs();
+  unsigned iproc = mymsh->processor_id();
   double ILambda= 0; 
   double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
   bool penalty = true; //mylsyspde->GetStabilization();
@@ -658,23 +657,23 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       }  // end gauss point loop
       
       //--------------------------------------------------------------------------------------------------------
-      // Boundary Integral
+      // Boundary Integral --> to be addded
       //number of faces for each type of element
-      if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
-     
-	unsigned nfaces = myel->GetElementFaceNumber(kel);
-
-	// loop on faces
-	for(unsigned jface=0;jface<nfaces;jface++){ 
-	  
-	  // look for boundary faces
-	  if(myel->GetFaceElementIndex(kel,jface)<0){
-	    for(unsigned ivar=0; ivar<dim; ivar++) {
-	      ml_prob.ComputeBdIntegral(pdename, &Solname[ivar][0], kel, jface, level, ivar);
-	    }
-	  }
-	}	
-      }
+//       if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
+//      
+// 	unsigned nfaces = myel->GetElementFaceNumber(kel);
+// 
+// 	// loop on faces
+// 	for(unsigned jface=0;jface<nfaces;jface++){ 
+// 	  
+// 	  // look for boundary faces
+// 	  if(myel->GetFaceElementIndex(kel,jface)<0){
+// 	    for(unsigned ivar=0; ivar<dim; ivar++) {
+// 	      ml_prob.ComputeBdIntegral(pdename, &Solname[ivar][0], kel, jface, level, ivar);
+// 	    }
+// 	  }
+// 	}	
+//       }
       //--------------------------------------------------------------------------------------------------------
     } // endif single element not refined or fine grid loop
     //--------------------------------------------------------------------------------------------------------
@@ -722,7 +721,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   const unsigned	dim	= mymsh->GetDimension();
   unsigned 		nel	= mymsh->GetElementNumber();
   unsigned 		igrid	= mymsh->GetGridNumber();
-  unsigned 		iproc	= mymsh->GetProcID();
+  unsigned 		iproc	= mymsh->processor_id();
   double		IPe	= 1./(ml_prob.parameters.get<Fluid>("Fluid").get_Peclet_number());  
   
   //solution variable
