@@ -422,20 +422,20 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 // }
 
 // 2D benchmark Full Dirichlet solution = sin^2(pi*x)*sin^2(pi*y)
-// double Source(const double* xyz) {
-//     const double pi = 3.1415926535897932;
-//     double value = -2.*pi*pi*( cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1]) + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1]) ) ;
-//     return value;
-// }
+double Source(const double* xyz) {
+    const double pi = 3.1415926535897932;
+    double value = -2.*pi*pi*( cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1]) + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1]) ) ;
+    return value;
+}
 
 // 3D benchmark sin^2(pi*x)*sin^2(pi*y)*sin^2(pi*z)
- double Source(const double* xyzt) {
-     const double pi = 3.1415926535897932;
-     double value = -2.*pi*pi*(  cos(2.*pi*xyzt[0])*sin(pi*xyzt[1])*sin(pi*xyzt[1])*sin(pi*xyzt[2])*sin(pi*xyzt[2]) 
-                               + sin(pi*xyzt[0])*sin(pi*xyzt[0])*cos(2.*pi*xyzt[1])*sin(pi*xyzt[2])*sin(pi*xyzt[2]) 
-			       + sin(pi*xyzt[0])*sin(pi*xyzt[0])*sin(pi*xyzt[1])*sin(pi*xyzt[1])*cos(2.*pi*xyzt[2]) );
-     return value;
-}
+//  double Source(const double* xyzt) {
+//      const double pi = 3.1415926535897932;
+//      double value = -2.*pi*pi*(  cos(2.*pi*xyzt[0])*sin(pi*xyzt[1])*sin(pi*xyzt[1])*sin(pi*xyzt[2])*sin(pi*xyzt[2]) 
+//                                + sin(pi*xyzt[0])*sin(pi*xyzt[0])*cos(2.*pi*xyzt[1])*sin(pi*xyzt[2])*sin(pi*xyzt[2]) 
+// 			       + sin(pi*xyzt[0])*sin(pi*xyzt[0])*sin(pi*xyzt[1])*sin(pi*xyzt[1])*cos(2.*pi*xyzt[2]) );
+//      return value;
+// }
 
 // 1D benchmark 
 // double Source(const double* xyz) {

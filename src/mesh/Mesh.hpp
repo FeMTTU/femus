@@ -56,6 +56,7 @@ private:
   unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int ny, const unsigned int i,
 		       const unsigned int j, const unsigned int k);
   
+  
 public:
   static const unsigned _END_IND[5];  
   vector< vector<unsigned> > ghost_nd[5];
@@ -134,6 +135,10 @@ public:
   unsigned GetMetisDof(unsigned inode, short unsigned SolType) const;
   unsigned GetEndIndex(const unsigned i) const;
   
+  void SetAllElementsToBeRefined();
+  void SetNoneElementsToBeRefined();
+  void SetOnlyEvenElementsToBeRefined();
+  void SetElementsToBeRefinedByUserDefinedFunction();
   
 };
 

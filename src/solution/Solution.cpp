@@ -28,10 +28,6 @@
 
 namespace femus {
 
-
-
-
-
 using std::cout;
 using std::endl;
 
@@ -233,104 +229,8 @@ void Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector
     _Sol[indexSol]->close();
   }
     
-  /*
-//   PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
-//   Vec EPS=EPSp->vec(); //TODO
-//   PetscVector* RESp=static_cast<PetscVector*> (_RES);  //TODO
-//   Vec RES=RESp->vec(); //TODO
-// 
-// 
-//   PetscScalar* R;
-//   PetscScalar* E;
-   PetscScalar zero=0.;
-//   int ierr;
-//   PetscScalar value;
-//   
-//   Vec RESloc;
-//   Vec EPSloc;
-//   
-//   if(_msh->_nprocs==1) {
-//     ierr = VecGetArray(RES,&R);
-//     CHKERRQ(ierr);
-//     ierr = VecGetArray(EPS,&E);
-//     CHKERRQ(ierr);
-//   } 
-//   else {
-//     ierr=VecGhostGetLocalForm(RES,&RESloc);
-//     CHKERRQ(ierr);
-//     ierr=VecGhostGetLocalForm(EPS,&EPSloc);
-//     CHKERRQ(ierr);
-//     ierr = VecGetArray(RESloc,&R);
-//     CHKERRQ(ierr);
-//     ierr = VecGetArray(EPSloc,&E);
-//     CHKERRQ(ierr);
-//   }
-  
-  for (unsigned k=0; k<_SolPdeIndex.size(); k++) {
-    unsigned indexSol=_SolPdeIndex[k];
-    unsigned soltype =  _SolType[indexSol];
-
-    int loc_size   = _Eps[indexSol]->local_size();
-    int loc_offset_EPS = KKoffset[k][_msh->_iproc];// - KKoffset[0][_msh->_iproc];
-
-    int glob_offset_eps = _msh->MetisOffset[soltype][_msh->_iproc];
-
-    vector <int> index(_msh->own_size[soltype][_msh->_iproc]);
-    vector <double> valueEPS(_msh->own_size[soltype][_msh->_iproc]);
-    vector <double> valueRES(_msh->own_size[soltype][_msh->_iproc]);
-    for(int i=0; i<_msh->own_size[soltype][_msh->_iproc]; i++) {
-      index[i]=loc_offset_EPS+i;
-    }
-
-   _EPS->get(index,valueEPS);
-   _RES->get(index,valueRES);
-
-    for(int i=0; i<_msh->own_size[soltype][_msh->_iproc]; i++) {
-      _Eps[indexSol]->set(i+glob_offset_eps,valueEPS[i]);
-      if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) _Res[indexSol]->set(i+glob_offset_eps,valueRES[i]);
-      else _Res[indexSol]->set(i+glob_offset_eps,zero);
-    }
-    
-     
-     
-     
-//      for(int i=0; i<_msh->own_size[soltype][_msh->_iproc]; i++) {
-//        _Eps[indexSol]->set(i+glob_offset_eps,E[loc_offset_EPS+i]);
-//        if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) _Res[indexSol]->set(i+glob_offset_eps,R[loc_offset_EPS+i]);
-//        else _Res[indexSol]->set(i+glob_offset_eps,zero);
-//     }
-    _Res[indexSol]->close();
-    _Eps[indexSol]->close();
-  }
-
-//   if(_msh->_nprocs==1) {
-//     ierr = VecRestoreArray(RES,&R);
-//     CHKERRQ(ierr);
-//     ierr = VecRestoreArray(EPS,&E);
-//     CHKERRQ(ierr);
-//   } else {
-//     ierr = VecRestoreArray(RESloc,&R);
-//     CHKERRQ(ierr);
-//     ierr = VecRestoreArray(EPSloc,&E);
-//     CHKERRQ(ierr);
-//     ierr=VecGhostRestoreLocalForm(RES,&RESloc);
-//     CHKERRQ(ierr);
-//     ierr=VecGhostRestoreLocalForm(EPS,&EPSloc);
-//     CHKERRQ(ierr);
-//   }
-
-  for (unsigned k=0; k<_SolPdeIndex.size(); k++) {
-    unsigned indexSol=_SolPdeIndex[k];
-    _Sol[indexSol]->add(*_Eps[indexSol]);
-    _Sol[indexSol]->close();
-  }
-  
-  return 1;*/
 }
 
-/**
- * Set _SolOld=_Sol
- **/
 
 // ------------------------------------------------------------------
 void Solution::UpdateSolution() {
@@ -341,67 +241,6 @@ void Solution::UpdateSolution() {
     }
   }
 }
-
-/**
- * Flag the elements to be refined
- **/
-//-------------------------------------------------------------------
-void Solution::SetElementRefinement(const unsigned &test) {
- 
-  _msh->el->InitRefinedToZero();
-  
-  unsigned grid = _msh->GetGridNumber();
-  unsigned nel = _msh->GetElementNumber();
-   
-  if (test==1) { //refine all next grid elements
-    for (unsigned iel=0; iel<nel; iel++) {
-      _msh->el->SetRefinedElementIndex(iel,1);
-      _msh->el->AddToRefinedElementNumber(1);
-      short unsigned elt=_msh->el->GetElementType(iel);
-      _msh->el->AddToRefinedElementNumber(1,elt);
-    }
-  } 
-  else if (test==2) { //refine based on the function SetRefinementFlag defined in the main;
-    //serial loop
-    std::vector<double> X_local;
-    std::vector<double> Y_local;
-    std::vector<double> Z_local;
-    _Sol[0]->localize_to_one(X_local,0);
-    _Sol[1]->localize_to_one(Y_local,0);
-    _Sol[2]->localize_to_one(Z_local,0);
-  
-    for (unsigned iel=0; iel<nel; iel+=1) {
-      unsigned nve=_msh->el->GetElementDofNumber(iel,0);
-      double vtx=0.,vty=0.,vtz=0.;
-      for ( unsigned i=0; i<nve; i++) {
-        unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
-	unsigned inode_Metis=_msh->GetMetisDof(inode,2);
-	vtx+=X_local[inode_Metis];  
-	vty+=Y_local[inode_Metis]; 
-	vtz+=Z_local[inode_Metis]; 
-      }
-      vtx/=nve;
-      vty/=nve;
-      vtz/=nve;
-      if (_msh->_SetRefinementFlag(vtx,vty,vtz,_msh->el->GetElementGroup(iel),grid)) {
-        _msh->el->SetRefinedElementIndex(iel,1);
-        _msh->el->AddToRefinedElementNumber(1);
-        short unsigned elt=_msh->el->GetElementType(iel);
-        _msh->el->AddToRefinedElementNumber(1,elt);
-      }
-    }
-  } 
-  else if (test==3) { //refine all next grid even elements
-    for (unsigned iel=0; iel<nel; iel+=2) {
-      _msh->el->SetRefinedElementIndex(iel,1);
-      _msh->el->AddToRefinedElementNumber(1);
-      short unsigned elt=_msh->el->GetElementType(iel);
-      _msh->el->AddToRefinedElementNumber(1,elt);
-    }
-  }
-  _msh->el->AllocateChildrenElement(_msh->_ref_index);
-}
-
 
 
 } //end namespace femus
