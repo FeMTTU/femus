@@ -104,7 +104,7 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
 
     //totally refined meshes
     for (unsigned i=1; i<_gridr0; i++) {
-        _level0[i-1u]->SetAllElementsToBeRefined();
+        _level0[i-1u]->FlagAllElementsToBeRefined();
         _level0[i] = new mesh();
         _level0[i]->RefineMesh(i,_level0[i-1],_type_elem);
     }
@@ -117,7 +117,7 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
         }
         else {
             mesh::_SetRefinementFlag = SetRefinementFlag;
-            _level0[i-1u]->SetElementsToBeRefinedByUserDefinedFunction();
+            _level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
         }
         _level0[i] = new mesh();
         _level0[i]->RefineMesh(i,_level0[i-1],_type_elem);
@@ -277,7 +277,7 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
 
     //totally refined meshes
     for (unsigned i=1; i<_gridr0; i++) {
-        _level0[i-1u]->SetAllElementsToBeRefined();
+        _level0[i-1u]->FlagAllElementsToBeRefined();
         _level0[i] = new mesh();
         _level0[i]->RefineMesh(i,_level0[i-1],_type_elem);
     }
@@ -290,7 +290,7 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
         }
         else {
             mesh::_SetRefinementFlag = SetRefinementFlag;
-            _level0[i-1u]->SetElementsToBeRefinedByUserDefinedFunction();
+            _level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
         }
         _level0[i] = new mesh();
         _level0[i]->RefineMesh(i,_level0[i-1],_type_elem);

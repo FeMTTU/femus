@@ -124,7 +124,7 @@ namespace femus {
       _element_block_number = _msh->el->GetElementNumber();  
     }
     else{
-      if(_msh->_nprocs==1) {  
+      if(_msh->n_processors()==1) {  
 	this->_preconditioner_type = ILU_PRECOND;
       } 
       else {

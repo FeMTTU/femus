@@ -108,7 +108,7 @@ namespace femus {
       this->_solver_type         = PREONLY;
     }
     else{
-      if(_msh->_nprocs==1) {  
+      if(_msh->n_processors()==1) {  
 	this->_preconditioner_type = ILU_PRECOND;
       } 
       else {

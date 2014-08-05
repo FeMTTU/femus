@@ -103,11 +103,9 @@ void mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
     
 };
 
-/**
- * Flag the elements to be refined
- **/
+
 //-------------------------------------------------------------------
-void mesh::SetAllElementsToBeRefined() {
+void mesh::FlagAllElementsToBeRefined() {
   
    el->InitRefinedToZero();
    
@@ -122,7 +120,8 @@ void mesh::SetAllElementsToBeRefined() {
    el->AllocateChildrenElement(_ref_index);
 }
 
-void mesh::SetElementsToBeRefinedByUserDefinedFunction() {
+//-------------------------------------------------------------------
+void mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
      el->InitRefinedToZero();
    
     //refine based on the function SetRefinementFlag defined in the main;
@@ -157,7 +156,8 @@ void mesh::SetElementsToBeRefinedByUserDefinedFunction() {
    el->AllocateChildrenElement(_ref_index);
 }
 
-void mesh::SetOnlyEvenElementsToBeRefined() {
+//-------------------------------------------------------------------
+void mesh::FlagOnlyEvenElementsToBeRefined() {
   
    el->InitRefinedToZero();
 
@@ -168,11 +168,6 @@ void mesh::SetOnlyEvenElementsToBeRefined() {
      short unsigned elt=el->GetElementType(iel);
      el->AddToRefinedElementNumber(1,elt);
    }
-   el->AllocateChildrenElement(_ref_index);
-}
-
-void mesh::SetNoneElementsToBeRefined() {
-   el->InitRefinedToZero();
    el->AllocateChildrenElement(_ref_index);
 }
 

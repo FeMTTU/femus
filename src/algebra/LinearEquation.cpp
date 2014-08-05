@@ -122,7 +122,7 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
   KKIndex.resize(_SolPdeIndex.size()+1u);
   KKIndex[0]=0;
   for (unsigned i=1; i<KKIndex.size(); i++)
-  KKIndex[i]=KKIndex[i-1]+_msh->MetisOffset[_SolType[_SolPdeIndex[i-1]]][_msh->_nprocs];
+  KKIndex[i]=KKIndex[i-1]+_msh->MetisOffset[_SolType[_SolPdeIndex[i-1]]][n_processors()];
 
   //-----------------------------------------------------------------------------------------------
   KKoffset.resize(_SolPdeIndex.size()+1);
@@ -177,12 +177,12 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
   //-----------------------------------------------------------------------------------------------
   int EPSsize= KKIndex[KKIndex.size()-1];
   _EPS = NumericVector::build().release();
-  if(_msh->_nprocs==1) { // IF SERIAL
+  if(n_processors()==1) { // IF SERIAL
     _EPS->init(EPSsize,EPSsize,false,SERIAL);
   } 
   else { // IF PARALLEL
-    int EPS_local_size =KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
-    _EPS->init(EPSsize,EPS_local_size, KKghost_nd[_msh->_iproc], false,GHOSTED);
+    int EPS_local_size =KKoffset[KKIndex.size()-1][processor_id()] - KKoffset[0][processor_id()];
+    _EPS->init(EPSsize,EPS_local_size, KKghost_nd[processor_id()], false,GHOSTED);
   }
     
   _RES = NumericVector::build().release();
@@ -197,7 +197,7 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
   const unsigned dim = _msh->GetDimension();
   int KK_UNIT_SIZE_ = pow(5,dim);
   int KK_size=KKIndex[KKIndex.size()-1u];
-  int KK_local_size =KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
+  int KK_local_size =KKoffset[KKIndex.size()-1][processor_id()] - KKoffset[0][processor_id()];
     
  _KK = SparseMatrix::build().release();
  _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
