@@ -1,10 +1,10 @@
 /*=========================================================================
 
- Program: FEMUS
+ Program: FEMuS
  Module: ElemType
  Authors: Eugenio Aulisa
  
- Copyright (c) FEMTTU
+ Copyright (c) FEMuS
  All rights reserved. 
 
  This software is distributed WITHOUT ANY WARRANTY; without even

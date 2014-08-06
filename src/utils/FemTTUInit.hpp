@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: FemTTUInit
  Authors: Simone Bnà
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -43,12 +43,16 @@ namespace femus {
 
 
 
-class FemTTUInit { 
+class FemTTUInit {
+  
 public:
-/// Constructor
- FemTTUInit(int & argc,char** & argv,MPI_Comm comm_world_in=MPI_COMM_WORLD);
-/// Destructor
- ~FemTTUInit();
+  
+    /// Constructor
+    FemTTUInit(int & argc,char** & argv,MPI_Comm comm_world_in=MPI_COMM_WORLD);
+
+    /// Destructor
+    ~FemTTUInit();
+    
 };
 
 
