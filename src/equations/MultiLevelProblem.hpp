@@ -156,6 +156,7 @@ public:
 
 private:
 
+    // member data
     vector < map <unsigned,bool> > index;
     unsigned short _gridn;
     unsigned short _gridr;
