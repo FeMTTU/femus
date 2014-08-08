@@ -7,9 +7,9 @@
                           "ny" : 6,
                           "nz" : 0,
                           "xa" : 0.,
-                          "xb" : 2.,
+                          "xb" : 1.,
                           "ya" : 0.,
-                          "yb" : 2.,
+                          "yb" : 1.,
                           "za" : 0.,
                           "zb" : 0.,
                           "elem_type" : "Tri6"
@@ -18,8 +18,25 @@
         
     // Properties
     "variable" : { "name" : "T", 
-                   "fe_order" : "first"
+                   "fe_order" : "second",
+                   "func_source" : "0."
                  },
+                 
+    // Boundary conditions
+    "boundary_conditions" : [
+                             {
+                               "facename" : "top",
+                               "bdc_type" : "dirichlet"
+                             },
+                             {
+                               "facename" : "right",
+                               "bdc_type" : "neumann",
+                               "is_homogeneous" : false,
+                               "bdc_func" : "0.2"
+                             }
+                            ],
+                 
+    // "func_source" : "-2.*pi*pi*( cos(2.*pi*x)*sin(pi*y)*sin(pi*y) + sin(pi*x)*sin(pi*x)*cos(2.*pi*y))"
     
     // MG Solver properties
     "mgsolver" : { "nlevels" : 4, 
