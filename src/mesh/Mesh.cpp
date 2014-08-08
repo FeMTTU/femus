@@ -1417,11 +1417,16 @@ void mesh::BuildBrick(const unsigned int nx,
                     el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
                   }
                                    
-                  if (i == 0)
+                  if (i == 0) {
 		    el->SetFaceElementIndex(iel,0,-2);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(0,"left"));
+		  }
 
-		  if (i == (nx-1))
+		  if (i == (nx-1)) {
 		    el->SetFaceElementIndex(iel,1,-3);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(1,"right")); 
+		  }
+		  
                     
                   iel++;
 		  }
@@ -1728,17 +1733,25 @@ void mesh::BuildBrick(const unsigned int nx,
                     el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
                   }
                                    
-                  if (j == 0)
+                  if (j == 0) {
 		    el->SetFaceElementIndex(iel,0,-2);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(0,"bottom"));
+		  }
 
-                  if (j == 2*(ny-1))
+                  if (j == 2*(ny-1)) {
 		    el->SetFaceElementIndex(iel,2,-4);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(2,"top"));
+		  }
  
-                  if (i == 0)
+                  if (i == 0) {
 		    el->SetFaceElementIndex(iel,3,-5);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(3,"left"));
+		  }
 
-                  if (i == 2*(nx-1))
+                  if (i == 2*(nx-1)) {
 		    el->SetFaceElementIndex(iel,1,-3);
+		    _boundaryinfo.insert(std::pair<unsigned int, std::string>(1,"right"));
+		  }
                     
                   iel++;
                }
@@ -1775,11 +1788,15 @@ void mesh::BuildBrick(const unsigned int nx,
                     el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
                   }
                     
-                  if (j == 0)
+                  if (j == 0) {
 		    el->SetFaceElementIndex(iel,0,-2);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(0,"bottom")); 
+		  }
  
- 		  if (i == 2*(nx-1))
+ 		  if (i == 2*(nx-1)) {
 		    el->SetFaceElementIndex(iel,1,-3);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(1,"right"));
+		  }
 
                   iel++;
 		    
@@ -1803,12 +1820,15 @@ void mesh::BuildBrick(const unsigned int nx,
                       el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
                     }
 	    
-		    if (j == 2*(ny-1))
+		    if (j == 2*(ny-1)) {
 		      el->SetFaceElementIndex(iel,1,-4);
-// 		      mesh.boundary_info->add_side(elem, 1, 2);
-// 
-                    if (i == 0)
+		      _boundaryinfo.insert( std::pair<unsigned int, std::string>(2,"top"));
+		    }
+		    
+                    if (i == 0) {
 		      el->SetFaceElementIndex(iel,2,-5);
+		      _boundaryinfo.insert( std::pair<unsigned int, std::string>(3,"left"));
+		    }
 		    
 		    iel++;
 		    
@@ -2224,29 +2244,41 @@ void mesh::BuildBrick(const unsigned int nx,
                         el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
                       }
                       
-                      if (k == 0)
+                      if (k == 0) {
 			el->SetFaceElementIndex(iel,0,-1);
-// 			mesh.boundary_info->add_side(elem, 0, 0);
+			_boundaryinfo.insert( std::pair<unsigned int, std::string>(0,"bottom"));
+		      }
+
  
- 		      if (k == 2*(nz-1))
+ 		      if (k == 2*(nz-1)) {
 			el->SetFaceElementIndex(iel,5,-6);
-// 			mesh.boundary_info->add_side(elem, 5, 5);
-// 
- 		      if (j == 0)
+			_boundaryinfo.insert( std::pair<unsigned int, std::string>(5,"top"));
+		      }
+
+
+ 		      if (j == 0) {
 			el->SetFaceElementIndex(iel,1,-2);
-// 			mesh.boundary_info->add_side(elem, 1, 1);
+			_boundaryinfo.insert( std::pair<unsigned int, std::string>(1,"front"));
+		      }
+
  
- 		      if (j == 2*(ny-1))
+ 		      if (j == 2*(ny-1)) {
 			el->SetFaceElementIndex(iel,3,-4);
-// 			mesh.boundary_info->add_side(elem, 3, 3);
+			_boundaryinfo.insert( std::pair<unsigned int, std::string>(3,"behind"));
+		      }
 
- 		      if (i == 0)
+
+ 		      if (i == 0) {
 			el->SetFaceElementIndex(iel,4,-5);
-// 			mesh.boundary_info->add_side(elem, 4, 4);
+			_boundaryinfo.insert( std::pair<unsigned int, std::string>(4,"left"));
+		      }
 
- 		      if (i == 2*(nx-1))
+
+ 		      if (i == 2*(nx-1)) {
 			el->SetFaceElementIndex(iel,2,-3);
-// 			mesh.boundary_info->add_side(elem, 2, 2);
+			_boundaryinfo.insert( std::pair<unsigned int, std::string>(2,"right"));
+		      }
+
                       
 		      iel++;
  

@@ -142,6 +142,8 @@ public:
     static const unsigned _END_IND[5];
     static bool (* _SetRefinementFlag)(const double &x, const double &y, const double &z,
                                        const int &ElemGroupNumber,const int &level);
+    
+    std::map<unsigned int, std::string> _boundaryinfo;
 
 private:
 

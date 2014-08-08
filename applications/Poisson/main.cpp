@@ -15,8 +15,11 @@
 #include <json/json.h>
 #include <json/value.h>
 
-#include "fparser.hh"
+#include "ParsedFunction.hpp"
 
+// #ifdef HAVE_FPARSER
+// #include "fparser.hh"
+// #endif
 
 using std::cout;
 using std::endl;
@@ -24,16 +27,16 @@ using std::endl;
 using namespace femus;
 
 
-void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
 
 
 // double InitVariableU(const double &x, const double &y, const double &z);
 
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[],
-                          double &value, const int FaceName, const double time);
+// bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[],
+//                           double &value, const int FaceName, const double time);
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
+// bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
 
 
@@ -62,6 +65,10 @@ static void show_usage()
     std::cout << "e.g.: ./Poisson --inputfile ./input/input.json" << std::endl;
 }
 
+#ifdef HAVE_FPARSER
+// FunctionParserBase<double> fpsource;
+  ParsedFunction fpsource;
+#endif
 
 int main(int argc,char **argv) {
 
@@ -222,64 +229,71 @@ int main(int argc,char **argv) {
     //-----------------------------------------------------------------------------------------------
 
     
-    //
+    // reading function
+#ifdef HAVE_FPARSER    
+     std::string function;
+     function = root["variable"].get("func_source", "0.").asString();
+    //FunctionParserBase<double> fpsource;
+//     fpsource.AddConstant("pi", std::acos(-1.));
+//     fpsource.AddConstant("e", std::exp(1.));
+     std::string variables = "x";
+     variables += ",y";
+     variables += ",z";
+     variables += ",t";
     
-    std::string function;
-    function = root["variable"].get("func_source", "0.").asString();
-//     double minx, maxx, step;
-    FunctionParserBase<double> fpsource;
-    fpsource.AddConstant("pi", std::acos(-1.));
-    fpsource.AddConstant("e", std::exp(1.));
-    std::string variables = "x";
-    variables += ",y";
-    variables += ",z";
-    variables += ",t";
-    
-    // Parse (and optimize if possible) the subexpression.
-    // Add some basic constants, to Real precision.
-    int res = fpsource.Parse(function, variables);
-    if(res >= 0) {
-      std::cout << std::string(res+7, ' ') << "^\n"
-                << fpsource.ErrorMsg() << "\n\n";
-      exit(1);
-    }
-    
-    fpsource.Optimize();
- 
-//     while(true)
-//     {
-//         std::cout << "f(x,y,z,t) = ";
-//         std::getline(std::cin, function);
-//         if(std::cin.fail()) return 0;
-// 
-// 	 // Parse (and optimize if possible) the subexpression.
-//         // Add some basic constants, to Real precision.
-//         int res = fp.Parse(function, variables);
-// 	if(res < 0) break;
-//         fp.Optimize();
-// 
-//         std::cout << std::string(res+7, ' ') << "^\n"
-//                   << fp.ErrorMsg() << "\n\n";
-//     }
-// 
-//     std::cout << "min x: ";
-//     std::cin >> minx;
-//     std::cout << "max x: ";
-//     std::cin >> maxx;
-//     std::cout << "step: ";
-//     std::cin >> step;
-//     if(std::cin.fail()) return 0;
-// 
-//     double vals[] = { 0, 1. , 0., 0. };
-//     for(vals[0] = minx; vals[0] <= maxx; vals[0] += step)
-//     {
-//         std::cout << "f(" << vals[0] << ",0,0,0 " << ") = " << fp.Eval(vals)
-//                   << std::endl;
+//     // Parse (and optimize if possible) the subexpression.
+//     // Add some basic constants, to Real precision.
+//     int res = fpsource.Parse(function, variables);
+//     if(res >= 0) {
+//       std::cout << std::string(res+7, ' ') << "^\n"
+//                 << fpsource.ErrorMsg() << "\n\n";
+//       exit(1);
 //     }
 //     
-//     return 0;
-    
-    //
+//     fpsource.Optimize();
+     
+       fpsource.SetExpression(function);
+       fpsource.SetIndependentVariables(variables);
+       fpsource.Parse();
+       
+       ParsedFunction bdcfunc("0.01","x,y,z,t");
+       
+       std::vector<std::string> facenamearray;
+       std::vector<bool> ishomogeneousarray;
+       std::vector<ParsedFunction> parsedfunctionarray;
+       std::vector<BDCType> bdctypearray;
+       
+       const Json::Value boundary_conditions = root["boundary_conditions"];
+       for(unsigned int index=0; index<boundary_conditions.size(); ++index) {
+	 
+	 std::string facename = boundary_conditions[index].get("facename","to").asString();
+         facenamearray.push_back(facename);
+	 
+	 std::string bdctypestr = boundary_conditions[index].get("bdc_type","to").asString(); 
+         BDCType bdctype = DIRICHLET;
+	 if (bdctypestr.compare("dirichlet") == 0) {
+	     bdctype = DIRICHLET;
+	 }
+	 else if(bdctypestr.compare("neumann") == 0) {
+	      bdctype = NEUMANN;
+	 }
+         else {
+	       std::cout << "Boundary condition not implemented! Default one (Dirichlet) is set." << std::endl;
+         }
+         bdctypearray.push_back(bdctype);
+
+	 bool ishomo = boundary_conditions[index].get("is_homogeneous",true).asBool(); 
+	 ishomogeneousarray.push_back(ishomo);
+	 
+	 std::string bdcfuncstr = boundary_conditions[index].get("bdc_func","0.").asString();
+	 ParsedFunction pfunc(bdcfuncstr, "x,y,z,t");
+	 parsedfunctionarray.push_back(pfunc);
+       }
+       
+       
+#endif 
+    //---------------------------------------------------------------------------
+
     
     /// Init Petsc-MPI communicator
     FemTTUInit mpinit(argc,argv,MPI_COMM_WORLD);
@@ -310,9 +324,7 @@ int main(int argc,char **argv) {
     {
         ml_msh.BuildBrickCoarseMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
     }
-    ml_msh.RefineMesh(nm,nr,SetRefinementFlag);
-
-    // ml_msh.EraseCoarseLevels(2);
+    ml_msh.RefineMesh(nm,nr, NULL);
     
     ml_msh.print_info();
 
@@ -325,8 +337,22 @@ int main(int argc,char **argv) {
     ml_sol.Initialize("Sol");
 
     //Set Boundary (update Dirichlet(...) function)
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-    ml_sol.GenerateBdc("Sol");
+    ml_sol.InitializeBdc();
+    
+//     ml_sol.SetBoundaryCondition("Sol","right", NEUMANN, false, false, &bdcfunc);
+//     ml_sol.SetBoundaryCondition("Sol","top", NEUMANN);
+    
+    for(int i=0; i<boundary_conditions.size(); ++i) {
+      ml_sol.SetBoundaryCondition("Sol",facenamearray[i],bdctypearray[i],ishomogeneousarray[i],false,&parsedfunctionarray[i]);
+    }
+    
+    ml_sol.GenerateBdc();
+    
+    
+    //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+    //ml_sol.GenerateBdc("Sol");
+    
+    
 
     MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
     
@@ -344,7 +370,7 @@ int main(int argc,char **argv) {
     system2.AddSolutionToSytemPDE("Sol");
 
     // Set MG Options
-    system2.AttachAssembleFunction(AssembleMatrixResPoisson);
+    system2.AttachAssembleFunction(AssemblePoissonMatrixandRhs);
     system2.SetMaxNumberOfLinearIterations(max_number_linear_iteration);
     system2.SetAbsoluteConvergenceTolerance(abs_conv_tol);
     system2.SetMgType(mgtype);
@@ -385,9 +411,9 @@ int main(int argc,char **argv) {
 
     GMVWriter gmvio(ml_sol);
     gmvio.write_system_solutions("biquadratic",print_vars);
-
-    XDMFWriter xdmfio(ml_sol);
-    xdmfio.write_system_solutions("biquadratic",print_vars);
+// 
+//     XDMFWriter xdmfio(ml_sol);
+//     xdmfio.write_system_solutions("biquadratic",print_vars);
     
     //Destroy all the new systems
     ml_prob.clear();
@@ -397,21 +423,21 @@ int main(int argc,char **argv) {
 
 //-----------------------------------------------------------------------------------------------------------------
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
-    bool refine=0;
-    // refinemenet based on Elemen Group Number
-    if(ElemGroupNumber==5 ) {
-        refine=1;
-    }
-    if(ElemGroupNumber==6 && level<2) {
-        refine=1;
-    }
-    if(ElemGroupNumber==7 ) {
-        refine=0;
-    }
-
-    return refine;
-}
+// bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
+//     bool refine=0;
+//     // refinemenet based on Elemen Group Number
+//     if(ElemGroupNumber==5 ) {
+//         refine=1;
+//     }
+//     if(ElemGroupNumber==6 && level<2) {
+//         refine=1;
+//     }
+//     if(ElemGroupNumber==7 ) {
+//         refine=0;
+//     }
+// 
+//     return refine;
+// }
 
 //--------------------------------------------------------------------------------------------------------------
 
@@ -422,11 +448,11 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 // }
 
 // 2D benchmark Full Dirichlet solution = sin^2(pi*x)*sin^2(pi*y)
-double Source(const double* xyz) {
-    const double pi = 3.1415926535897932;
-    double value = -2.*pi*pi*( cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1]) + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1]) ) ;
-    return value;
-}
+// double Source(const double* xyz) {
+//     const double pi = 3.1415926535897932;
+//     double value = -2.*pi*pi*( cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1]) + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1]) ) ;
+//     return value;
+// }
 
 // 3D benchmark sin^2(pi*x)*sin^2(pi*y)*sin^2(pi*z)
 //  double Source(const double* xyzt) {
@@ -445,38 +471,40 @@ double Source(const double* xyz) {
 
 //-------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[],
-                          double &value, const int FaceName, const double time) {
-    bool test=1; //Dirichlet
-    value=0.;
-
-    if(!strcmp(name,"Sol")) {
-        if(1==FaceName) {       // bottom face
-            test=1;
-            value=0;
-        }
-        else if(2==FaceName ) { // right face
-             test=0;
-             value=0.;
-        }
-        else if(3==FaceName ) { // top face
-            test=1;
-            value=0.;
-        }
-        else if(4==FaceName ) { // left face
-            test=1;
-            value=0.;
-        }
-    }
-
-    return test;
-}
+// bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[],
+//                           double &value, const int FaceName, const double time) {
+//     bool test=1; //Dirichlet
+//     value=0.;
+//     
+//     std::cout << FaceName << std:: endl;
+// 
+//     if(!strcmp(name,"Sol")) {
+//         if(1==FaceName) {       // bottom face
+//             test=1;
+//             value=0;
+//         }
+//         else if(2==FaceName ) { // right face
+//              test=0;
+//              value=0.;
+//         }
+//         else if(3==FaceName ) { // top face
+//             test=1;
+//             value=0.;
+//         }
+//         else if(4==FaceName ) { // left face
+//             test=1;
+//             value=0.;
+//         }
+//     }
+// 
+//     return test;
+// }
 
 // //------------------------------------------------------------------------------------------------------------
 
 
 //------------------------------------------------------------------------------------------------------------
-void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
 
     //pointers and references
     Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
@@ -514,6 +542,7 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
     double weight;
     vector< double > F;
     vector< double > B;
+    double src_term = 0.;
 
     // reserve
     const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
@@ -597,10 +626,14 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                         Lap_rhs += gradphi[i*dim+ivar]*gradSolT[ivar];
                     }
                     
-                    double src = Source(xyzt);
-                    //double src = fpsource.Eval(xyzt);
+             
+                   //src_term = Source(xyzt);
+#ifdef HAVE_FPARSER
+                   // src_term = fpsource.Eval(xyzt);
+                   src_term = fpsource(xyzt);
+#endif
                     
-                    F[i]+= (-Lap_rhs + src*phi[i] )*weight;
+                    F[i]+= (-Lap_rhs + src_term*phi[i] )*weight;
 		    
                     //END RESIDUALS A block ===========================
                     if(assembe_matrix) {
@@ -633,9 +666,15 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                     double vx[3][27];
                     double phi[27],gradphi[27][3],Weight;
                     double normal[3];
-                    bool test = SetBoundaryCondition(0.,0.,0.,"Sol",tau,-(mymsh->el->GetFaceElementIndex(kel,jface)+1),time);
+		    double xyzt[4] = {0.,0.,0.,0.};
+		    ParsedFunction* bdcfunc;
+		    
+		    
+		    unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1) - 1;
+		    
+		    if(ml_sol->GetBoundaryCondition("Sol",face) == NEUMANN && !ml_sol->Ishomogeneous("Sol",face)) {
 
-                    if(!test) {
+		        bdcfunc = (ParsedFunction* )(ml_sol->GetBdcFunction("Sol", face));
 			unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,order_ind);
                         const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
                         unsigned felt = FELT[kelt][jface<mymsh->el->GetElementFaceNumber(kel,0)];
@@ -656,7 +695,13 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                             (ml_prob._ml_msh->_type_elem[felt][order_ind]->*ml_prob._ml_msh->_type_elem[felt][order_ind]->Jacobian_sur_ptr)(vx,igs,Weight,phi,gradphi,normal);
 
                             for(unsigned i=0; i<nve; i++) {
-                                SetBoundaryCondition(vx[0][i],vx[1][i],vx[2][i],"Sol",tau,-(mymsh->el->GetFaceElementIndex(kel,jface)+1),time);
+			        xyzt[0] = vx[0][i];
+				xyzt[1] = vx[1][i];
+				xyzt[2] = vx[2][i];
+				xyzt[3] = time;
+
+ 				double tau = (*bdcfunc)(xyzt);
+                                //SetBoundaryCondition(vx[0][i],vx[1][i],vx[2][i],"Sol",tau,-(mymsh->el->GetFaceElementIndex(kel,jface)+1),time);
                                 double bdintegral = phi[i]*tau*Weight;
                                 unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
                                 F[ilocalnode] += bdintegral;
@@ -665,8 +710,13 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
 			}
 			else // 1D : the side elems are points and does not still exist the point elem
 			{
-			  SetBoundaryCondition(vx[0][0],vx[1][0],vx[2][0],"Sol",tau,-(mymsh->el->GetFaceElementIndex(kel,jface)+1),time);
-			  double bdintegral = tau;
+			  xyzt[0] = vx[0][0];
+		          xyzt[1] = vx[1][0];
+			  xyzt[2] = vx[2][0];
+			  xyzt[3] = time;
+				
+			  //SetBoundaryCondition(vx[0][0],vx[1][0],vx[2][0],"Sol",tau,-(mymsh->el->GetFaceElementIndex(kel,jface)+1),time);
+			  double bdintegral = (*bdcfunc)(xyzt);;
 			  unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, 0);
                           F[ilocalnode] += bdintegral;
 			}

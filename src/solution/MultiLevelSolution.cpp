@@ -21,6 +21,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
 #include "FEMTTUConfig.h"
+#include "ParsedFunction.hpp"
 
 
 //C++ include
@@ -243,6 +244,173 @@ void MultiLevelSolution::AttachSetBoundaryConditionFunction ( bool (* SetBoundar
   _SetBoundaryConditionFunction = SetBoundaryConditionFunction;
   return;
 }
+
+//---------------------------------------------------------------------------------------------------
+void MultiLevelSolution::InitializeBdc() {
+  int nvars = _SolType.size();
+  int nfaces = _ml_msh->GetLevel(0)->_boundaryinfo.size();
+  _boundaryconditions.resize(nvars);
+  _ishomogeneous.resize(nvars);
+  _nonhomogeneousbcfunction.resize(nvars);
+  for(int i=0; i<nvars; i++) {
+    _boundaryconditions[i].resize(nfaces);
+    _ishomogeneous[i].resize(nfaces);
+    _nonhomogeneousbcfunction[i].resize(nfaces);
+    for(int j=0; j<nfaces; j++) {
+       _boundaryconditions[i][j] = DIRICHLET;
+       _ishomogeneous[i][j] = true;
+       _nonhomogeneousbcfunction[i][j] = NULL;
+    }
+  }
+}
+
+//---------------------------------------------------------------------------------------------------
+void MultiLevelSolution::SetBoundaryCondition(const std::string name, const std::string facename, 
+					      const BDCType bdctype, const bool ishomogeneous, 
+					      const bool istimedependent, FunctionBase* func) {
+  
+  if(ishomogeneous == false && func == NULL) {
+    std::cout << " Error: you have set a non-homogeneous boundary condition withtout passing a valid function pointer" << std::endl;
+    exit(1);  
+  }
+  
+  unsigned int ivar = GetIndex(name.c_str());
+  unsigned int iface = 0;
+  
+  std::map<unsigned int, std::string>::iterator iter;
+  iter = _ml_msh->GetLevel(0)->_boundaryinfo.begin();
+  
+  for (iter = _ml_msh->GetLevel(0)->_boundaryinfo.begin(); iter != _ml_msh->GetLevel(0)->_boundaryinfo.end(); ++iter) {
+    if( iter->second.compare(facename) == 0) {
+      iface = iter->first; 
+      break;
+    }
+  }
+  if(iter == _ml_msh->GetLevel(0)->_boundaryinfo.end()) {
+    std::cout << " Error: the facename " << facename << " does not exist!" << std::endl;
+    exit(1);    
+  }
+  
+  _boundaryconditions[ivar][iface]       = bdctype;
+  _ishomogeneous[ivar][iface]            = ishomogeneous;
+  _nonhomogeneousbcfunction[ivar][iface] = func;
+   
+}
+
+
+
+
+void MultiLevelSolution::GenerateBdc() {
+  
+  const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
+  
+  int nvars = _SolType.size();
+  
+  double time = 0;
+  
+  // 2 Default Neumann
+  // 1 DD Dirichlet
+  // 0 Dirichlet
+  for (unsigned k=0; k<nvars; k++) {
+  for (unsigned igridn=0; igridn<_gridn; igridn++) {
+    if(_solution[igridn]->_ResEpsBdcFlag[k]){
+      for (unsigned j=_ml_msh->GetLevel(igridn)->MetisOffset[_SolType[k]][_iproc]; j<_ml_msh->GetLevel(igridn)->MetisOffset[_SolType[k]][_iproc+1]; j++) {
+	_solution[igridn]->_Bdc[k]->set(j,2.);
+      }
+      if (_SolType[k]<3) {  
+	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
+	  for (int iel=_ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom]; 
+	       iel < _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	    unsigned kel_gmt = _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel];
+	    for (unsigned jface=0; jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt); jface++) {
+	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+		short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
+		unsigned nv1=(!_TestIfPressure[k])?
+		  NV1[ielt][jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt,0)]:
+		  _ml_msh->GetLevel(igridn)->el->GetElementDofNumber(iel,_ml_msh->GetLevel(igridn)->GetEndIndex(_SolType[k]));
+		for (unsigned iv=0; iv<nv1; iv++) {
+		  unsigned inode=(!_TestIfPressure[k])? 
+		    _ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
+		    _ml_msh->GetLevel(igridn)->el->GetElementVertexIndex(kel_gmt,iv)-1u;
+		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
+		  _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
+		}
+	      }
+	    }
+	  }
+	}
+	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {  // 0 Dirichlet
+	  for (int iel=_ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom]; 
+	       iel < _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	    unsigned kel_gmt = _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel];
+	    for (unsigned jface=0; jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt); jface++) {
+	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)<0) { 
+		short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
+		// unsigned nv1=NV1[ielt][jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt,0)];
+		unsigned nv1 = _ml_msh->GetLevel(igridn)->el->GetElementFaceDofNumber(kel_gmt,jface,_SolType[k]); 
+		for (unsigned iv=0; iv<nv1; iv++) {
+		  unsigned inode=_ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u;
+		  unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,2);
+		  double value = 0.;
+		  double xx=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[0])(inode_coord_Metis);  
+		  double yy=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[1])(inode_coord_Metis);
+		  double zz=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[2])(inode_coord_Metis);
+		  unsigned int face = -(_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)+1)-1 ;
+		  if(GetBoundaryCondition(k,face) == DIRICHLET) {
+		     unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
+		    _solution[igridn]->_Bdc[k]->set(inode_Metis,0.);   
+		    if(!Ishomogeneous(k,face)) {
+		      ParsedFunction* bdcfunc = (ParsedFunction*)(GetBdcFunction(k,face));
+		      double xyzt[4];
+		      xyzt[0] = xx;
+		      xyzt[1] = yy;
+		      xyzt[2] = zz;
+		      xyzt[3] = time;
+		      value = (*bdcfunc)(xyzt);
+		      _solution[igridn]->_Sol[k]->set(inode_Metis,value); 
+		    }
+		    else {
+		      _solution[igridn]->_Sol[k]->set(inode_Metis,0.);  
+		    }    
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+      else if(_TestIfPressure[k]){
+	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
+	  unsigned nel=_ml_msh->GetLevel(igridn)->GetElementNumber();
+	  for (int iel=_ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom]; 
+	       iel < _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	    unsigned kel_gmt = _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel];
+	    for (unsigned jface=0; jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt); jface++) {
+	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+		short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
+		unsigned nv1=_ml_msh->GetLevel(igridn)->el->GetElementDofNumber(kel_gmt,_ml_msh->GetLevel(igridn)->GetEndIndex(_SolType[k]));
+		for (unsigned iv=0; iv<nv1; iv++) {
+		  unsigned inode=(kel_gmt+iv*nel);
+		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
+		  _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
+		}
+	      }
+	    }
+	  }
+	}
+      }	
+      _solution[igridn]->_Sol[k]->close();
+      _solution[igridn]->_Bdc[k]->close();
+    }
+   }
+  }
+  
+  
+  
+}
+
+
+
 
 //---------------------------------------------------------------------------------------------------
 void MultiLevelSolution::GenerateBdc(const char name[], const char bdc_type[]) {
