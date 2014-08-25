@@ -254,6 +254,15 @@ IF(BUILD_POISSON)
     FILE(COPY           applications/Poisson/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/Poisson/input/)
 ENDIF(BUILD_POISSON)
 
+OPTION(BUILD_POISSON_AMR "Build the Poisson_AMR problem" ON)
+
+IF(BUILD_POISSON_AMR)
+       ADD_SUBDIRECTORY(applications/Poisson_AMR/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/Poisson_AMR/output/)
+    FILE(MAKE_DIRECTORY applications/Poisson_AMR/input/)
+    FILE(COPY           applications/Poisson_AMR/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/Poisson_AMR/input/)
+ENDIF(BUILD_POISSON_AMR)
+
 
 ## --------------- Unit tests -------------------
 
