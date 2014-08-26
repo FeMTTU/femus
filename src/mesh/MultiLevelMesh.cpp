@@ -310,6 +310,36 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
 }
 
 
+void MultiLevelMesh::AddMeshLevel( bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
+                                  const int &ElemGroupNumber,const int &level))
+{
+ 
+  _level0.resize(_gridn0+1u);
+
+    
+  //AMR refine mesh
+            
+  if(SetRefinementFlag==NULL) {
+    cout << "Set Refinement Region flag is not defined! " << endl;
+    exit(1);
+  }
+  
+  mesh::_SetRefinementFlag = SetRefinementFlag;
+  _level0[_gridn0-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
+  
+  _level0[_gridn0] = new mesh();
+  _level0[_gridn0]->RefineMesh(_gridn0,_level0[_gridn0-1u],_type_elem);
+    
+  _level.resize(_gridn+1u);
+  _level[_gridn]=_level0[_gridn0];
+
+  _gridn0++;
+  _gridn++;
+}
+
+
+
+
 //---------------------------------------------------------------------------------------------
 
 void MultiLevelMesh::EraseCoarseLevels(unsigned levels_to_be_erased) {

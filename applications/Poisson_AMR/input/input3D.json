@@ -22,7 +22,8 @@
                  },
     
     // MG Solver properties
-    "mgsolver" : { "nlevels" : 4, 
+    "mgsolver" : { "nlevels" : 3, 
+		   "AMRlevels" : 3, 
                    "npresmoothing" : 1, 
                    "npostsmoothing" : 1, 
                    "smoother_type" : "gmres", 

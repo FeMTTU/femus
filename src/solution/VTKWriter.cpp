@@ -228,7 +228,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   unsigned offset_nvt=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     for (unsigned iel=0; iel<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
-      if (_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
+      if (ig==_gridn-1u || _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0) {
         for (unsigned j=0; j<_ml_sol._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
 	  unsigned loc_vtk_conn = map_pr[j];
 	  unsigned jnode=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,loc_vtk_conn)-1u;
@@ -269,8 +269,8 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   //print offset array
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     for (unsigned iel=0; iel<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
-      if (_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(iel,3);
+      if ( ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
+  	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(iel,3);
         offset_el += _ml_sol._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel_Metis,index);
         var_off[icount] = offset_el;
 	icount++;
@@ -304,7 +304,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
-      if (_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)==0 || ig==_gridn-1u) {
+      if (ig==_gridn-1u || _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)==0) {
 	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
         short unsigned ielt= _ml_sol._ml_msh->GetLevel(ig)->el->GetElementType(iel_Metis);
 	var_type[icount] = (short unsigned)(eltp[index][ielt]);

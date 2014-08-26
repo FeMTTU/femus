@@ -16,6 +16,8 @@
 #include <json/value.h>
 
 #include "ParsedFunction.hpp"
+#include <stdlib.h>
+
 
 // #ifdef HAVE_FPARSER
 // #include "fparser.hh"
@@ -36,7 +38,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 // bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[],
 //                           double &value, const int FaceName, const double time);
 
-// bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
+bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
 
 
@@ -62,7 +64,7 @@ readInputTestFile( const char *path )
 static void show_usage()
 {
     std::cout << "Use --inputfile variable to set the input file" << endl;
-    std::cout << "e.g.: ./Poisson --inputfile ./input/input.json" << std::endl;
+    std::cout << "e.g.: ./Poisson_AMR --inputfile ./input/input.json" << std::endl;
 }
 
 #ifdef HAVE_FPARSER
@@ -189,6 +191,8 @@ int main(int argc,char **argv) {
     
     
     unsigned int nlevels = root["mgsolver"].get("nlevels", 1).asInt();
+    unsigned int SMRlevels=root["mgsolver"].get("SMRlevels", 0).asInt();
+    unsigned int AMRlevels=root["mgsolver"].get("AMRlevels", 0).asInt();
     unsigned int npresmoothing = root["mgsolver"].get("npresmoothing", 1).asUInt();
     unsigned int npostmoothing = root["mgsolver"].get("npostsmoothing", 1).asUInt();
     std::string smoother_type  = root["mgsolver"].get("smoother_type", "gmres").asString();
@@ -302,9 +306,9 @@ int main(int argc,char **argv) {
 
     unsigned short nm,nr;
     nm=nlevels;
-
-    nr=0;
-
+    nr=SMRlevels;
+  
+    
     int tmp=nm;
     nm+=nr;
     nr=tmp;
@@ -325,6 +329,7 @@ int main(int argc,char **argv) {
         ml_msh.BuildBrickCoarseMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
     }
     ml_msh.RefineMesh(nm,nr, NULL);
+    //ml_msh.AddMeshLevel(SetRefinementFlag);
     
     ml_msh.print_info();
 
@@ -379,7 +384,7 @@ int main(int argc,char **argv) {
 
     //Set Smoother Options
     if(Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
-    else if(Asm) 		system2.SetMgSmoother(ASM_SMOOTHER);
+    else if(Asm) 	system2.SetMgSmoother(ASM_SMOOTHER);
     else if(Vanka)	system2.SetMgSmoother(VANKA_SMOOTHER);
 
     system2.init();
@@ -423,7 +428,7 @@ int main(int argc,char **argv) {
 
 //-----------------------------------------------------------------------------------------------------------------
 
-// bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
+bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
 //     bool refine=0;
 //     // refinemenet based on Elemen Group Number
 //     if(ElemGroupNumber==5 ) {
@@ -437,7 +442,10 @@ int main(int argc,char **argv) {
 //     }
 // 
 //     return refine;
-// }
+  double dtest = static_cast<double>(rand())/RAND_MAX;
+  int itest=(dtest<0.5)?1:0;
+  return itest;
+}
 
 //--------------------------------------------------------------------------------------------------------------
 
