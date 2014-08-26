@@ -77,6 +77,11 @@ public:
                     bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
                             const int &ElemGroupNumber,const int &level));
 
+    /** Add a partially refined mesh level in the AMR alghorithm **/
+    void AddMeshLevel( bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
+                      const int &ElemGroupNumber,const int &level));
+    
+    
     /** Get the mesh pointer to level i */
     mesh* GetLevel(const unsigned i) {
         return _level[i];
