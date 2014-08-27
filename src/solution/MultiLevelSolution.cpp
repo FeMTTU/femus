@@ -65,9 +65,31 @@ MultiLevelSolution::MultiLevelSolution( MultiLevelMesh *ml_msh):
   
 }
 
+void MultiLevelSolution::AddSolutionLevel(){
+  // add level solution
+  _solution.resize(_gridn+1);
+  _solution[_gridn]=new Solution(_ml_msh->GetLevel(_gridn));
+  // add all current solutions and initialize to zero
+  for(unsigned i=0;i<_SolName.size();i++){
+    _solution[_gridn]->AddSolution(_SolName[i],_family[i],_order[i],_SolTmorder[i],_PdeType[i]);
+  }
+  for(unsigned i=0;i<_SolName.size();i++){
+    _solution[_gridn]->ResizeSolutionVector(_SolName[i]);
+    BuildProlongatorMatrix(_gridn,i);   
+        
+    _solution[_gridn]->_Sol[i]->zero();
+    if (_SolTmorder[i]==2) {
+      _solution[_gridn]->_SolOld[i]->zero();
+    }
+  }
+  _gridn++;
+  unsigned  grid0=_gridn-1;
+  GenerateBdc(grid0);
+}
+
 //---------------------------------------------------------------------------------------------------
 void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily, const FEOrder order,
-				     unsigned tmorder, const bool &Pde_type) {
+				     unsigned tmorder, const bool &PdeType) {
   
   unsigned n=_SolType.size();
   _SolType.resize(n+1u);
@@ -76,6 +98,7 @@ void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily,
   _SolName.resize(n+1u);
   _BdcType.resize(n+1u);
   _SolTmorder.resize(n+1u);
+  _PdeType.resize(n+1u);
   _TestIfPressure.resize(n+1u);
   _TestIfDisplacement.resize(n+1u);
 
@@ -88,12 +111,14 @@ void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily,
   _BdcType[n]  = new char [20];
   strcpy(_SolName[n],name);
   _SolTmorder[n]=tmorder;
+  _PdeType[n]=PdeType;
  
   cout << " Add variable " << std::setw(3) << _SolName[n] << " discretized with FE type "
        << std::setw(12) << order << " and time discretzation order " << tmorder << endl;
 
   for (unsigned ig=0; ig<_gridn; ig++) {
-    _solution[ig]->AddSolution(name,fefamily,order,tmorder,Pde_type);
+    _solution[ig]->AddSolution(_SolName[n],_family[n],_order[n],_SolTmorder[n],_PdeType[n]);
+    //_solution[ig]->AddSolution(name,fefamily,order,tmorder,Pde_type);
   }
 }
 
@@ -300,7 +325,7 @@ void MultiLevelSolution::SetBoundaryCondition(const std::string name, const std:
 
 
 
-void MultiLevelSolution::GenerateBdc() {
+void MultiLevelSolution::GenerateBdc(const unsigned &grid0) {
   
   const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
   
@@ -312,7 +337,7 @@ void MultiLevelSolution::GenerateBdc() {
   // 1 DD Dirichlet
   // 0 Dirichlet
   for (unsigned k=0; k<nvars; k++) {
-  for (unsigned igridn=0; igridn<_gridn; igridn++) {
+  for (unsigned igridn=grid0; igridn<_gridn; igridn++) {
     if(_solution[igridn]->_ResEpsBdcFlag[k]){
       for (unsigned j=_ml_msh->GetLevel(igridn)->MetisOffset[_SolType[k]][_iproc]; j<_ml_msh->GetLevel(igridn)->MetisOffset[_SolType[k]][_iproc+1]; j++) {
 	_solution[igridn]->_Bdc[k]->set(j,2.);
@@ -497,7 +522,8 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const double time) {
 	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
 		short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
 		unsigned nv1=(!_TestIfPressure[k])?
-		  NV1[ielt][jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt,0)]:
+		  //NV1[ielt][jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt,0)]:
+		  _ml_msh->GetLevel(igridn)->el->GetElementFaceDofNumber(kel_gmt,jface,_SolType[k]):
 		  _ml_msh->GetLevel(igridn)->el->GetElementDofNumber(iel,_ml_msh->GetLevel(igridn)->GetEndIndex(_SolType[k]));
 		for (unsigned iv=0; iv<nv1; iv++) {
 		  unsigned inode=(!_TestIfPressure[k])? 

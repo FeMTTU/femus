@@ -328,8 +328,8 @@ int main(int argc,char **argv) {
     {
         ml_msh.BuildBrickCoarseMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
     }
-    ml_msh.RefineMesh(nm,nr, NULL);
-    //ml_msh.AddMeshLevel(SetRefinementFlag);
+    ml_msh.RefineMesh(nm,nr, SetRefinementFlag);
+   
     
     ml_msh.print_info();
 
@@ -357,6 +357,11 @@ int main(int argc,char **argv) {
     //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
     //ml_sol.GenerateBdc("Sol");
     
+    
+  
+    
+   // ml_msh.AddMeshLevel(SetRefinementFlag);
+   // ml_sol.AddSolutionLevel();
     
 
     MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
@@ -388,6 +393,7 @@ int main(int argc,char **argv) {
     else if(Vanka)	system2.SetMgSmoother(VANKA_SMOOTHER);
 
     system2.init();
+    
     //common smoother option
     system2.SetSolverFineGrids(GMRES);
     system2.SetTolerances(1.e-12,1.e-20,1.e+50,4);
@@ -403,6 +409,12 @@ int main(int argc,char **argv) {
     //for Gmres smoother
     system2.SetDirichletBCsHandling(PENALTY);
 
+    
+    ml_msh.AddMeshLevel(SetRefinementFlag);
+    ml_sol.AddSolutionLevel();
+    system2.AddSystemLevel();
+    
+       
     // Solve Temperature system
     ml_prob.get_system("Poisson").solve();
     //END Temperature Multilevel Problem
@@ -429,7 +441,12 @@ int main(int argc,char **argv) {
 //-----------------------------------------------------------------------------------------------------------------
 
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
-//     bool refine=0;
+  bool refine=0;
+   
+  if(x>=0.55){
+   // cout<<x<<" "<<y<<" "<<z<<endl;
+     refine=1; 
+  }		
 //     // refinemenet based on Elemen Group Number
 //     if(ElemGroupNumber==5 ) {
 //         refine=1;
@@ -440,11 +457,11 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 //     if(ElemGroupNumber==7 ) {
 //         refine=0;
 //     }
-// 
-//     return refine;
-  double dtest = static_cast<double>(rand())/RAND_MAX;
-  int itest=(dtest<0.5)?1:0;
-  return itest;
+
+  return refine;
+//   double dtest = static_cast<double>(rand())/RAND_MAX;
+//   int itest=(dtest<0.5)?1:0;
+//   return itest;
 }
 
 //--------------------------------------------------------------------------------------------------------------

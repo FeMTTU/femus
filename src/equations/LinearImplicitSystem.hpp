@@ -54,7 +54,9 @@ public:
 
     /** Init the system PDE structures */
     virtual void init();
-
+    
+    /** Add a system level */
+    void AddSystemLevel();
     /**
      * @returns \p "LinearImplicit".  Helps in identifying
      * the system type in an equation system file.
@@ -196,6 +198,25 @@ protected:
 
     /** To be Added */
     vector <unsigned> _VariablesToBeSolvedIndex;
+    
+    
+    SolverType _finegridsolvertype;
+    unsigned int _DirichletBCsHandlingMode;
+    double _rtol,_atol,_divtol,_maxits;
+    PreconditionerType _finegridpreconditioner;
+    
+    bool _numblock_test;   
+    unsigned _num_block;
+    
+    bool _numblock_all_test;
+    bool _overlap;
+    
+    bool _NSchurVar_test;
+    unsigned short _NSchurVar;
+    bool _stabilization_test;
+    bool _stab;
+    double _compressibility;
+    
 
 };
 

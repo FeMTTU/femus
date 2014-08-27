@@ -153,7 +153,12 @@ public:
         return _gridr;
     };
 
-
+    /** Increase of one the number of levels */
+    void AddLevel(){
+        _gridn++;
+    };
+    
+    
 private:
 
     // member data
