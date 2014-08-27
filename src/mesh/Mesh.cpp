@@ -126,27 +126,27 @@ void mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
    
     //refine based on the function SetRefinementFlag defined in the main;
     // the mesh is serial, we cannot in parallel use the coordinates to selectively refine
-//     std::vector<double> X_local;
-//     std::vector<double> Y_local;
-//     std::vector<double> Z_local;
-//     _Sol[0]->localize_to_one(X_local,0);
-//     _Sol[1]->localize_to_one(Y_local,0);
-//     _Sol[2]->localize_to_one(Z_local,0);
+    std::vector<double> X_local;
+    std::vector<double> Y_local;
+    std::vector<double> Z_local;
+    _coordinate->_Sol[0]->localize_to_one(X_local,0);
+    _coordinate->_Sol[1]->localize_to_one(Y_local,0);
+    _coordinate->_Sol[2]->localize_to_one(Z_local,0);
   
     for (unsigned iel=0; iel<nel; iel+=1) {
       unsigned nve=el->GetElementDofNumber(iel,0);
-//       double vtx=0.,vty=0.,vtz=0.;
-//       for ( unsigned i=0; i<nve; i++) {
-//         unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
-// 	unsigned inode_Metis=_msh->GetMetisDof(inode,2);
-// 	vtx+=X_local[inode_Metis];  
-// 	vty+=Y_local[inode_Metis]; 
-// 	vtz+=Z_local[inode_Metis]; 
-//       }
-//       vtx/=nve;
-//       vty/=nve;
-//       vtz/=nve;
-       if (_SetRefinementFlag(0.,0.,0.,el->GetElementGroup(iel),grid)) {
+       double vtx=0.,vty=0.,vtz=0.;
+       for ( unsigned i=0; i<nve; i++) {
+         unsigned inode=el->GetElementVertexIndex(iel,i)-1u;
+ 	unsigned inode_Metis=GetMetisDof(inode,2);
+ 	vtx+=X_local[inode_Metis];  
+ 	vty+=Y_local[inode_Metis]; 
+ 	vtz+=Z_local[inode_Metis]; 
+       }
+       vtx/=nve;
+       vty/=nve;
+       vtz/=nve;
+       if (_SetRefinementFlag(vtx,vty,vtz,el->GetElementGroup(iel),grid)) {
          el->SetRefinedElementIndex(iel,1);
          el->AddToRefinedElementNumber(1);
          short unsigned elt=el->GetElementType(iel);

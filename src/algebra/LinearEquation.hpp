@@ -89,6 +89,9 @@ public:
   /** To be Added */
   void UpdateResidual();
   
+  /** AddLevel */
+  void AddLevel();
+  
   // member data
   mesh *_msh; 
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;

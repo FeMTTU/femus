@@ -53,10 +53,10 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=4;
+  nm=3;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
-  nr=0;
+  nr=1;
   std::cout<<"MAX_REFINEMENT levels: " << nr << endl<< endl;
   
   int tmp=nm;  nm+=nr;  nr=tmp;

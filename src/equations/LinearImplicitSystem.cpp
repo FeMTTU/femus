@@ -55,6 +55,11 @@ void LinearImplicitSystem::clear() {
       _LinSolver[ig]->DeletePde();
       delete _LinSolver[ig];
     }  
+    
+    _NSchurVar_test=0;
+    _stabilization_test=0;
+    _numblock_test=0;
+    _numblock_all_test=0;
 }
 
 void LinearImplicitSystem::init() {
@@ -75,10 +80,58 @@ void LinearImplicitSystem::init() {
       BuildProlongatorMatrix(ig);
     }
     
+    _NSchurVar_test=0;
+    _stabilization_test=0;
+    _numblock_test=0;   
+    _numblock_all_test=0;
+    
     // By default we solved for all the PDE variables
     ClearVariablesToBeSolved();
     AddVariableToBeSolved("All");
 }
+
+
+void LinearImplicitSystem::AddSystemLevel() {
+  
+    _equation_systems.AddLevel();
+    
+    
+    _msh.resize(_gridn+1);
+    _solution.resize(_gridn+1);
+    _msh[_gridn]=_equation_systems._ml_msh->GetLevel(_gridn);
+    _solution[_gridn]=_ml_sol->GetSolutionLevel(_gridn);
+        
+    for(int i=0;i<_gridn;i++){
+      _LinSolver[i]->AddLevel();
+    }
+    _LinSolver.resize(_gridn+1);
+    
+    _LinSolver[_gridn]=LinearEquationSolver::build(_gridn,_msh[_gridn],_SmootherType).release();
+    
+    _LinSolver[_gridn]->InitPde(_SolSystemPdeIndex,_ml_sol->GetSolType(),
+				_ml_sol->GetSolName(),&_solution[_gridn]->_Bdc,_gridr,_gridn+1);    
+    BuildProlongatorMatrix(_gridn);
+   
+    
+    _LinSolver[_gridn]->set_solver_type(_finegridsolvertype);
+    _LinSolver[_gridn]->set_tolerances(_rtol,_atol,_divtol,_maxits);  
+    _LinSolver[_gridn]->set_preconditioner_type(_finegridpreconditioner);
+    _LinSolver[_gridn]->SetDirichletBCsHandling(_DirichletBCsHandlingMode);
+    
+    if(_numblock_test){
+      unsigned num_block2 = std::min(_num_block,_msh[_gridn]->GetElementNumber());
+      _LinSolver[_gridn]->SetElementBlockNumber(num_block2);
+    }
+    else if(_numblock_all_test){
+      _LinSolver[_gridn]->SetElementBlockNumber("All", _overlap);
+    }
+    
+    if(_NSchurVar_test) _LinSolver[_gridn]->SetNumberOfSchurVariables(_NSchurVar);
+    if(_stabilization_test)  _LinSolver[_gridn]->AddStabilization(_stab, _compressibility);
+    _gridn++;
+}
+
+
 
 //---------------------------------------------------------------------------------------------------
 
@@ -313,18 +366,16 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
 
 
 void LinearImplicitSystem::SetDirichletBCsHandling(const DirichletBCType DirichletMode) {
-  
-  unsigned int DirichletBCsHandlingMode;
-  
+    
   if (DirichletMode == PENALTY) {
-    DirichletBCsHandlingMode = 0;   
+    _DirichletBCsHandlingMode = 0;   
   }
   else { // elimination
-    DirichletBCsHandlingMode = 1;   
+    _DirichletBCsHandlingMode = 1;   
   } 
   
   for (unsigned i=0; i<_gridn; i++) {
-    _LinSolver[i]->SetDirichletBCsHandling(DirichletBCsHandlingMode);
+    _LinSolver[i]->SetDirichletBCsHandling(_DirichletBCsHandlingMode);
   }
 }
 
@@ -367,19 +418,21 @@ void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
   
   
 
-void LinearImplicitSystem::SetElementBlockNumber(unsigned const dim_vanka_block) {
-  
+void LinearImplicitSystem::SetElementBlockNumber(unsigned const dim_block) {
+  _numblock_test=1;
   const unsigned dim = _msh[0]->GetDimension();
   const unsigned base = pow(2,dim);
-  unsigned num_vanka_block = pow(base,dim_vanka_block);
+  _num_block = pow(base,dim_block);
 
   for (unsigned i=1; i<_gridn; i++) {
-    unsigned num_vanka_block2 = std::min(num_vanka_block,_msh[i]->GetElementNumber());
-    _LinSolver[i]->SetElementBlockNumber(num_vanka_block2);
+    unsigned num_block2 = std::min(_num_block,_msh[i]->GetElementNumber());
+    _LinSolver[i]->SetElementBlockNumber(num_block2);
   }
 }
 
 void LinearImplicitSystem::SetElementBlockNumber(const char all[], const unsigned & overlap) {
+  _numblock_all_test=1;
+  _overlap=overlap;
   for (unsigned i=1; i<_gridn; i++) {
     _LinSolver[i]->SetElementBlockNumber(all, overlap);
   }
@@ -387,24 +440,30 @@ void LinearImplicitSystem::SetElementBlockNumber(const char all[], const unsigne
 
 
 
-void LinearImplicitSystem::SetSolverFineGrids(const SolverType solvertype) {
+void LinearImplicitSystem::SetSolverFineGrids(const SolverType finegridsolvertype) {
+  _finegridsolvertype=finegridsolvertype;
   for (unsigned i=1; i<_gridn; i++) {
-    _LinSolver[i]->set_solver_type(solvertype);
+    _LinSolver[i]->set_solver_type(_finegridsolvertype);
   }
 }
 
 
-void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType preconditioner_type) {
+void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType finegridpreconditioner) {
+  _finegridpreconditioner=finegridpreconditioner;
   for (unsigned i=1; i<_gridn; i++) {
-    _LinSolver[i]->set_preconditioner_type(preconditioner_type);
+    _LinSolver[i]->set_preconditioner_type(_finegridpreconditioner);
   }
 }
 
 
 void LinearImplicitSystem::SetTolerances(const double rtol, const double atol,
-					       const double divtol, const unsigned maxits) {       
+					       const double divtol, const unsigned maxits) {     
+  _rtol=rtol;
+  _atol=atol;
+  _divtol=divtol;
+  _maxits=maxits;  
   for (unsigned i=1; i<_gridn; i++) {
-    _LinSolver[i]->set_tolerances(rtol,atol,divtol,maxits);
+    _LinSolver[i]->set_tolerances(_rtol,_atol,_divtol,_maxits);  
   }
 }
 
@@ -416,16 +475,21 @@ void LinearImplicitSystem::SetTolerances(const double rtol, const double atol,
 // }
 
 void LinearImplicitSystem::SetNumberOfSchurVariables(const unsigned short &NSchurVar){
-   for (unsigned i=1; i<_gridn; i++) {
-     _LinSolver[i]->SetNumberOfSchurVariables(NSchurVar);
+   _NSchurVar_test=1;
+   _NSchurVar=NSchurVar;
+    for (unsigned i=1; i<_gridn; i++) {
+     _LinSolver[i]->SetNumberOfSchurVariables(_NSchurVar);
    }
    
    
 }
 
 void LinearImplicitSystem::AddStabilization(const bool stab, const double compressibility) {
+  _stabilization_test=1;
+  _stab=stab;
+  _compressibility=compressibility;
   for (unsigned i=0; i<_gridn; i++) {
-    _LinSolver[i]->AddStabilization(stab, compressibility);
+    _LinSolver[i]->AddStabilization(_stab, _compressibility);
   }
 }
 

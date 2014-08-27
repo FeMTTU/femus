@@ -52,6 +52,9 @@ public:
     void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order, unsigned tmorder=0, const bool &Pde_type=1);
 
     /** To be Added */
+    void AddSolutionLevel();
+    
+    /** To be Added */
     void AssociatePropertyToSolution(const char solution_name[], const char solution_property[]);
 
     /** To be Added */
@@ -101,7 +104,7 @@ public:
     void GenerateBdc(const unsigned int k, const double time);
     
     /** To be Added */
-    void GenerateBdc();
+    void GenerateBdc(const unsigned &grid0=0);
     
     /** To be Added */
     BDCType GetBoundaryCondition(const std::string varname, const unsigned int facename) const;
@@ -186,6 +189,7 @@ private:
     vector <char*>  _SolName;
     vector <char*>  _BdcType;
     vector <int>    _SolTmorder;
+    vector <bool>   _PdeType;
     vector <bool>   _TestIfPressure;
     vector <bool>   _TestIfDisplacement;
 
