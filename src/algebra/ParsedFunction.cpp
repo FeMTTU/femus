@@ -13,6 +13,9 @@ PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
 
+#include "FEMTTUConfig.h"
+
+#ifdef HAVE_FPARSER
 
 //----------------------------------------------------------------------------
 // includes :
@@ -82,3 +85,5 @@ namespace femus {
  
  
 }
+
+#endif
