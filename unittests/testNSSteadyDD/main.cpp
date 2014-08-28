@@ -203,9 +203,9 @@ int main(int argc,char **args) {
   
   std::cout << "Solution U l2norm: " << l2normvarU << std::endl; 
   
-  if( fabs(l2normvarU - l2normvarUStored ) > 1.e-12) 
+  if( fabs((l2normvarU - l2normvarUStored )/l2normvarUStored) > 1.e-6) 
   {
-    //exit(1);
+    exit(1);
   }
   
   double l2normvarV = ml_sol.GetSolutionLevel(3)->GetSolutionName("V")->l2_norm(); 
@@ -214,9 +214,9 @@ int main(int argc,char **args) {
   
   std::cout << "Solution V l2norm: " << l2normvarV << std::endl; 
   
-  if( fabs(l2normvarV - l2normvarVStored ) > 1.e-16) 
+  if( fabs((l2normvarV - l2normvarVStored )/l2normvarVStored )> 1.e-6) 
   {
-    //exit(1);
+    exit(1);
   }
   
   double l2normvarP = ml_sol.GetSolutionLevel(3)->GetSolutionName("P")->l2_norm(); 
@@ -225,30 +225,30 @@ int main(int argc,char **args) {
   
   std::cout << "Solution P l2norm: " << l2normvarP << std::endl; 
   
-  if( fabs(l2normvarP - l2normvarPStored ) > 1.e-16) 
+  if( fabs((l2normvarP - l2normvarPStored )/l2normvarPStored) > 1.e-6) 
   {
-    //exit(1);
+    exit(1);
   }
   
   double l2normvarT = ml_sol.GetSolutionLevel(3)->GetSolutionName("T")->l2_norm(); 
   
   double l2normvarTStored = 219.68194612060503;
   
-  std::cout << "Solution T l2norm: " << l2normvarT << std::endl; 
+  std::cout << "Solution T l2norm: " << l2normvarT <<std::endl; 
   
-  if( fabs(l2normvarT - l2normvarTStored ) > 1.e-16) 
+  if( fabs((l2normvarT - l2normvarTStored )/l2normvarTStored) > 1.e-6) 
   {
-    //exit(1);
+    exit(1);
   }
   
-  std::vector<std::string> print_vars;
-  print_vars.push_back("U");
-  print_vars.push_back("V");
-  print_vars.push_back("P");
-  print_vars.push_back("T");
+//   std::vector<std::string> print_vars;
+//   print_vars.push_back("U");
+//   print_vars.push_back("V");
+//   print_vars.push_back("P");
+//   print_vars.push_back("T");
   
-  GMVWriter gmvio(ml_sol);
-  gmvio.write_system_solutions("biquadratic",print_vars);
+//   GMVWriter gmvio(ml_sol);
+//   gmvio.write_system_solutions("biquadratic",print_vars);
   
   
   
