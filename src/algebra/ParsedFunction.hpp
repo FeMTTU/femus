@@ -18,14 +18,14 @@ PURPOSE.  See the above copyright notice for more information.
 
 #include "FEMTTUConfig.h"
 
-#ifdef HAVE_FPARSER
-
-#include "fparser.hh"
-
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
 #include "FunctionBase.hpp"
+
+#ifdef HAVE_FPARSER
+
+#include "fparser.hh"
 
 namespace femus {
 
@@ -35,12 +35,12 @@ public:
 
     /** Constructor */
     ParsedFunction();
-    
+
     ParsedFunction(std::string expression, std::string independent_variables);
 
     /** Destructor */
     ~ParsedFunction() {};
-    
+
     /** set the epression of the mathematical function */
     void SetExpression(const std::string expression);
 
@@ -49,19 +49,51 @@ public:
 
     /** Parse the expression */
     void Parse();
-   
+
     virtual double operator() (double* x)
     {
-      return _pfunc.Eval(x);
+        return _pfunc.Eval(x);
     }
-    
-private: 
-  
+
+private:
+
     FunctionParserBase<double> _pfunc;
     std::string _independent_variables;
     std::string _expression;
+
+
+};
+
+}
+
+#else
+
+namespace femus {
+
+class ParsedFunction : public FunctionBase
+
+{
+
+public:
+
+    /** constructors */
+    ParsedFunction() : _dummy(0) {};
+
     
-    
+    ParsedFunction(std::string expression, std::string independent_variables) {};
+
+    /** Destructor */
+    ~ParsedFunction() {};
+
+    /** () operator */
+    virtual double operator() (double* x)
+    {
+        return _dummy;
+    }
+
+private:
+    double _dummy;
+
 };
 
 }

@@ -14,14 +14,9 @@
 #include "FElemTypeEnum.hpp"
 #include <json/json.h>
 #include <json/value.h>
-
 #include "ParsedFunction.hpp"
 #include <stdlib.h>
 
-
-// #ifdef HAVE_FPARSER
-// #include "fparser.hh"
-// #endif
 
 using std::cout;
 using std::endl;
@@ -67,10 +62,8 @@ static void show_usage()
     std::cout << "e.g.: ./Poisson_AMR --inputfile ./input/input.json" << std::endl;
 }
 
-#ifdef HAVE_FPARSER
-// FunctionParserBase<double> fpsource;
-  ParsedFunction fpsource;
-#endif
+ParsedFunction fpsource;
+
 
 int main(int argc,char **argv) {
 
@@ -234,33 +227,19 @@ int main(int argc,char **argv) {
 
     
     // reading function
-#ifdef HAVE_FPARSER    
      std::string function;
      function = root["variable"].get("func_source", "0.").asString();
-    //FunctionParserBase<double> fpsource;
-//     fpsource.AddConstant("pi", std::acos(-1.));
-//     fpsource.AddConstant("e", std::exp(1.));
      std::string variables = "x";
      variables += ",y";
      variables += ",z";
      variables += ",t";
-    
-//     // Parse (and optimize if possible) the subexpression.
-//     // Add some basic constants, to Real precision.
-//     int res = fpsource.Parse(function, variables);
-//     if(res >= 0) {
-//       std::cout << std::string(res+7, ' ') << "^\n"
-//                 << fpsource.ErrorMsg() << "\n\n";
-//       exit(1);
-//     }
-//     
-//     fpsource.Optimize();
-     
+
+
+#ifdef HAVE_FPARSER       
        fpsource.SetExpression(function);
        fpsource.SetIndependentVariables(variables);
        fpsource.Parse();
-       
-       ParsedFunction bdcfunc("0.01","x,y,z,t");
+#endif
        
        std::vector<std::string> facenamearray;
        std::vector<bool> ishomogeneousarray;
@@ -294,8 +273,6 @@ int main(int argc,char **argv) {
 	 parsedfunctionarray.push_back(pfunc);
        }
        
-       
-#endif 
     //---------------------------------------------------------------------------
 
     
