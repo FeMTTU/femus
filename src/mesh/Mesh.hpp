@@ -161,6 +161,8 @@ private:
     unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int ny, const unsigned int i,
                      const unsigned int j, const unsigned int k);
 
+protected:
+    int _nprocs;
 };
 
 /*----------------------- functions ----------------------------------*/

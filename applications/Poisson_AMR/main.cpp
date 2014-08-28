@@ -306,7 +306,7 @@ int main(int argc,char **argv) {
 
     unsigned short nm,nr;
     nm=nlevels;
-    nr=SMRlevels;
+    nr=0;//SMRlevels;
   
     
     int tmp=nm;
@@ -414,6 +414,11 @@ int main(int argc,char **argv) {
     ml_sol.AddSolutionLevel();
     system2.AddSystemLevel();
     
+    
+    ml_msh.AddMeshLevel(SetRefinementFlag);
+    ml_sol.AddSolutionLevel();
+    system2.AddSystemLevel();
+    
        
     // Solve Temperature system
     ml_prob.get_system("Poisson").solve();
@@ -441,12 +446,12 @@ int main(int argc,char **argv) {
 //-----------------------------------------------------------------------------------------------------------------
 
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
-  bool refine=0;
+  //bool refine=0;
    
-  if(x>=0.55){
+  //if(x>=0.55){
    // cout<<x<<" "<<y<<" "<<z<<endl;
-     refine=1; 
-  }		
+  //   refine=1; 
+ // }		
 //     // refinemenet based on Elemen Group Number
 //     if(ElemGroupNumber==5 ) {
 //         refine=1;
@@ -458,10 +463,10 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 //         refine=0;
 //     }
 
-  return refine;
-//   double dtest = static_cast<double>(rand())/RAND_MAX;
-//   int itest=(dtest<0.5)?1:0;
-//   return itest;
+ // return refine;
+  double dtest = static_cast<double>(rand())/RAND_MAX;
+  int itest=(dtest<0.1)?1:0;
+  return itest;
 }
 
 //--------------------------------------------------------------------------------------------------------------

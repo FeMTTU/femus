@@ -129,31 +129,35 @@ void mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
     std::vector<double> X_local;
     std::vector<double> Y_local;
     std::vector<double> Z_local;
-    _coordinate->_Sol[0]->localize_to_one(X_local,0);
-    _coordinate->_Sol[1]->localize_to_one(Y_local,0);
-    _coordinate->_Sol[2]->localize_to_one(Z_local,0);
+    for(int i=0;i<_nprocs;i++){
+      _coordinate->_Sol[0]->localize_to_one(X_local,i);
+      _coordinate->_Sol[1]->localize_to_one(Y_local,i);
+      _coordinate->_Sol[2]->localize_to_one(Z_local,i);
   
-    for (unsigned iel=0; iel<nel; iel+=1) {
-      unsigned nve=el->GetElementDofNumber(iel,0);
-       double vtx=0.,vty=0.,vtz=0.;
-       for ( unsigned i=0; i<nve; i++) {
-         unsigned inode=el->GetElementVertexIndex(iel,i)-1u;
- 	unsigned inode_Metis=GetMetisDof(inode,2);
- 	vtx+=X_local[inode_Metis];  
- 	vty+=Y_local[inode_Metis]; 
- 	vtz+=Z_local[inode_Metis]; 
-       }
-       vtx/=nve;
-       vty/=nve;
-       vtz/=nve;
-       if (_SetRefinementFlag(vtx,vty,vtz,el->GetElementGroup(iel),grid)) {
-         el->SetRefinedElementIndex(iel,1);
-         el->AddToRefinedElementNumber(1);
-         short unsigned elt=el->GetElementType(iel);
-         el->AddToRefinedElementNumber(1,elt);
-       }
-   }
-   el->AllocateChildrenElement(_ref_index);
+      for (unsigned iel=0; iel<nel; iel+=1) {
+	unsigned nve=el->GetElementDofNumber(iel,0);
+	double vtx=0.,vty=0.,vtz=0.;
+	for ( unsigned i=0; i<nve; i++) {
+	  unsigned inode=el->GetElementVertexIndex(iel,i)-1u;
+	  unsigned inode_Metis=GetMetisDof(inode,2);
+	  vtx+=X_local[inode_Metis];  
+	  vty+=Y_local[inode_Metis]; 
+	  vtz+=Z_local[inode_Metis]; 
+	}
+	vtx/=nve;
+	vty/=nve;
+	vtz/=nve;
+	if(!el->GetRefinedElementIndex(iel)){
+	  if (_SetRefinementFlag(vtx,vty,vtz,el->GetElementGroup(iel),grid)) {
+	    el->SetRefinedElementIndex(iel,1);
+	    el->AddToRefinedElementNumber(1);
+	    short unsigned elt=el->GetElementType(iel);
+	    el->AddToRefinedElementNumber(1,elt);
+	  }
+	}
+      }
+    }
+    el->AllocateChildrenElement(_ref_index);
 }
 
 //-------------------------------------------------------------------
@@ -506,37 +510,40 @@ void mesh::generate_metis_mesh_partition(){
 //   options[METIS_OPTION_NCUTS]   = params->ncuts;
   
      
-     options[METIS_OPTION_CTYPE]    = METIS_CTYPE_SHEM; 
-     //cout<<options[METIS_OPTION_CTYPE]; 
-     options[METIS_OPTION_PTYPE]= METIS_PTYPE_KWAY;
-     //cout<<options[METIS_OPTION_PTYPE]<<endl; //exit(0);
+  options[METIS_OPTION_CTYPE]    = METIS_CTYPE_SHEM; 
+  //cout<<options[METIS_OPTION_CTYPE]; 
+  options[METIS_OPTION_PTYPE]= METIS_PTYPE_KWAY;
+  //cout<<options[METIS_OPTION_PTYPE]<<endl; //exit(0);
   
-     //options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_VOL;
+  //options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_VOL;
   
-     options[METIS_OPTION_IPTYPE]   = METIS_IPTYPE_RANDOM;
-     //cout<<options[METIS_OPTION_IPTYPE]<<endl; 
-     options[METIS_OPTION_CONTIG]  = 1;//params->contig;
-     //cout<< options[METIS_OPTION_CONTIG]<<endl; //exit(0);
-     options[METIS_OPTION_MINCONN] = 1;
-     options[METIS_OPTION_NITER]   = 10;
-     options[METIS_OPTION_UFACTOR] = 100;
+  options[METIS_OPTION_IPTYPE]   = METIS_IPTYPE_RANDOM;
+  //cout<<options[METIS_OPTION_IPTYPE]<<endl; 
+  options[METIS_OPTION_CONTIG]  = 0;//params->contig;
+  //cout<< options[METIS_OPTION_CONTIG]<<endl; //exit(0);
+  options[METIS_OPTION_MINCONN] = 1;
+  options[METIS_OPTION_NITER]   = 10;
+  options[METIS_OPTION_UFACTOR] = 100;
   
   eptr[0]=0;
   unsigned counter=0;
   for (unsigned iel=0; iel<nel; iel++) {
     unsigned ielt=el->GetElementType(iel);
     eptr[iel+1]=eptr[iel]+NVE[ielt][3];
+    
     for (unsigned inode=0; inode<el->GetElementDofNumber(iel,3); inode++){
       eind[counter]=el->GetElementVertexIndex(iel,inode)-1;
-      counter ++;
-   }
+    
+      counter++;
+    }
+    
   }
   
   idx_t mnel = nel; 
   idx_t mnvt = nvt;
   idx_t ncommon = _dimension+1;
   nsubdom = _nprocs;
-  
+      
   if(nsubdom!=1) {
   //I call the mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
   int err = METIS_PartMeshDual(&mnel, &mnvt, eptr, eind, NULL, NULL, &ncommon, &nsubdom, NULL, options, &objval, epart, npart);
@@ -568,7 +575,7 @@ void mesh::generate_metis_mesh_partition(){
   delete [] eind;
   delete [] aux_vec;
 
-  //dof map: piecewise liner 0, quadratic 1, biquadratic 2, piecewise constant 3, picewise discontinous linear 4 
+   //dof map: piecewise liner 0, quadratic 1, biquadratic 2, piecewise constant 3, picewise discontinous linear 4 
   
   //resize the vector IS_Gmt2Mts_dof and dof
   for(int k=0;k<5;k++) {
@@ -799,6 +806,7 @@ void mesh::generate_metis_mesh_partition(){
     
   }
   
+   
   return; 
   
 }
@@ -2695,7 +2703,9 @@ void mesh::BuildBrick(const unsigned int nx,
   _coordinate->ResizeSolutionVector("Z");
     
   _coordinate->SetCoarseCoordinates(vt);
+ 
   
+ 
 }
 
 
