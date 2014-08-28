@@ -18,7 +18,7 @@
 //----------------------------------------------------------------------------
 #include "FEMTTUConfig.h"
 
-#ifdef HAVE_PETSC
+#ifdef HAVE_PETSC 
 
 // Local Includes
 #include "AsmPetscLinearEquationSolver.hpp"
