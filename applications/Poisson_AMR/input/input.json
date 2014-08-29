@@ -3,8 +3,8 @@
     // mesh
     "mesh" : {
                 "box" : {
-                          "nx" : 2,
-                          "ny" : 2,
+                          "nx" : 8,
+                          "ny" : 8,
                           "nz" : 0,
                           "xa" : 0.,
                           "xb" : 1.,
@@ -12,7 +12,7 @@
                           "yb" : 1.,
                           "za" : 0.,
                           "zb" : 0.,
-                          "elem_type" : "Tri6"
+                          "elem_type" : "Quad9"
                          }
              },
         
@@ -39,8 +39,8 @@
     // "func_source" : "-2.*pi*pi*( cos(2.*pi*x)*sin(pi*y)*sin(pi*y) + sin(pi*x)*sin(pi*x)*cos(2.*pi*y))"
     
     // MG Solver properties
-    "mgsolver" : { "nlevels" : 1, 
-		   "AMRlevels" : 3,
+    "mgsolver" : { "nlevels" : 4, 
+		   "AMRlevels" : 0,
                    "npresmoothing" : 1, 
                    "npostsmoothing" : 1, 
                    "smoother_type" : "gmres", 
