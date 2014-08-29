@@ -132,7 +132,10 @@ public:
     /** Set the tolerances for the ksp solver on fine grids: rtol, atol, divtol, maxits */
     void SetTolerances(const double rtol, const double atol,
                        const double divtol, const unsigned maxits);
-
+    
+    void SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels);
+    
+    
     // /** Set the tolerances for the ksp solver of the Schur-Vanka on fine grids: rtol, atol, divtol, maxits */
     // void SetSchurTolerances(const double rtol, const double atol,
     //						    const double divtol, const unsigned maxits);
@@ -217,7 +220,9 @@ protected:
     bool _stab;
     double _compressibility;
     
-
+    bool _AMRtest;
+    unsigned _AMRlevels;
+    
 };
 
 inline void LinearImplicitSystem::SetMatrixOption(MatOption op, bool flag)

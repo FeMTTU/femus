@@ -183,13 +183,14 @@ int main(int argc,char **argv) {
     }
     
     
-    unsigned int nlevels = root["mgsolver"].get("nlevels", 1).asInt();
-    unsigned int SMRlevels=root["mgsolver"].get("SMRlevels", 0).asInt();
-    unsigned int AMRlevels=root["mgsolver"].get("AMRlevels", 0).asInt();
-    unsigned int npresmoothing = root["mgsolver"].get("npresmoothing", 1).asUInt();
-    unsigned int npostmoothing = root["mgsolver"].get("npostsmoothing", 1).asUInt();
-    std::string smoother_type  = root["mgsolver"].get("smoother_type", "gmres").asString();
-    std::string mg_type        = root["mgsolver"].get("mg_type", "V_cycle").asString();
+    unsigned int nlevels 	= root["mgsolver"].get("nlevels", 1).asInt();
+    unsigned int SMRlevels 	= root["mgsolver"].get("SMRlevels", 0).asInt();
+    std::string  AMR       	= root["mgsolver"].get("AMR", "no").asString();
+    unsigned int AMRlevels 	= root["mgsolver"].get("AMRlevels", 0).asInt();
+    unsigned int npresmoothing 	= root["mgsolver"].get("npresmoothing", 1).asUInt();
+    unsigned int npostmoothing 	= root["mgsolver"].get("npostsmoothing", 1).asUInt();
+    std::string smoother_type  	= root["mgsolver"].get("smoother_type", "gmres").asString();
+    std::string mg_type        	= root["mgsolver"].get("mgtype", "V_cycle").asString();
     unsigned int max_number_linear_iteration = root["mgsolver"].get("max_number_linear_iteration", 6).asUInt();
     double abs_conv_tol        = root["mgsolver"].get("abs_conv_tol", 1.e-09).asDouble();
 
@@ -210,7 +211,7 @@ int main(int argc,char **argv) {
         cout << "The selected MG cycle does not exist!" << endl;
         exit(1);
     }
-
+    
     bool Vanka=0, Gmres=0, Asm=0;
 
     if( !strcmp("vanka",smoother_type.c_str()))          Vanka=1;
@@ -371,6 +372,8 @@ int main(int argc,char **argv) {
 
     system2.init();
     
+    system2.SetAMRSetOptions(AMR,AMRlevels);
+    
     //common smoother option
     system2.SetSolverFineGrids(GMRES);
     system2.SetTolerances(1.e-12,1.e-20,1.e+50,4);
@@ -387,15 +390,18 @@ int main(int argc,char **argv) {
     system2.SetDirichletBCsHandling(PENALTY);
 
     
-    ml_msh.AddMeshLevel(SetRefinementFlag);
-    ml_sol.AddSolutionLevel();
-    system2.AddSystemLevel();
-    
-    
-    ml_msh.AddMeshLevel(SetRefinementFlag);
-    ml_sol.AddSolutionLevel();
-    system2.AddSystemLevel();
-    
+//     ml_msh.AddMeshLevel();
+//     ml_sol.AddSolutionLevel();
+//     system2.AddSystemLevel();
+//     
+//     ml_msh.AddMeshLevel();
+//     ml_sol.AddSolutionLevel();
+//     system2.AddSystemLevel();
+//     
+//     ml_msh.AddMeshLevel();
+//     ml_sol.AddSolutionLevel();
+//     system2.AddSystemLevel();
+//     
        
     // Solve Temperature system
     ml_prob.get_system("Poisson").solve();

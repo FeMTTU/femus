@@ -39,12 +39,13 @@
     // "func_source" : "-2.*pi*pi*( cos(2.*pi*x)*sin(pi*y)*sin(pi*y) + sin(pi*x)*sin(pi*x)*cos(2.*pi*y))"
     
     // MG Solver properties
-    "mgsolver" : { "nlevels" : 4, 
-		   "AMRlevels" : 0,
+    "mgsolver" : { "nlevels" : 3,
+		   "AMR" : "yes",
+		   "AMRlevels" : 3,
                    "npresmoothing" : 1, 
                    "npostsmoothing" : 1, 
                    "smoother_type" : "gmres", 
-                   "mgtype" : "V_cycle", 
+                   "mgtype" : "F_cycle", 
                    "max_number_linear_iteration" : 6, 
                    "abs_conv_tol" : 1.e-09 
                  },

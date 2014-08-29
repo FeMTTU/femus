@@ -109,19 +109,25 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
         _level0[i]->RefineMesh(i,_level0[i-1],_type_elem);
     }
 
+    if(SetRefinementFlag==NULL){    
+    }
+    else{
+      mesh::_SetRefinementFlag = SetRefinementFlag;
+      mesh::_TestSetRefinementFlag=1;
+    }
+    
+    
     //partially refined meshes
     for (unsigned i=_gridr0; i<_gridn0; i++) {
-        if(SetRefinementFlag==NULL) {
-            cout << "Set Refinement Region flag is not defined! " << endl;
-            exit(1);
-        }
-        else {
-            mesh::_SetRefinementFlag = SetRefinementFlag;
-            _level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
-        }
-        _level0[i] = new mesh();
-        _level0[i]->RefineMesh(i,_level0[i-1],_type_elem);
-
+      if(!mesh::_TestSetRefinementFlag) {
+        cout << "Set Refinement Region flag is not defined! " << endl;
+        exit(1);
+      }
+      else {
+	_level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
+      }
+      _level0[i] = new mesh();
+      _level0[i]->RefineMesh(i,_level0[i-1],_type_elem);
     }
 
     unsigned refindex = _level0[0]->GetRefIndex();
@@ -283,18 +289,26 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
     }
 
     //partially refined meshes
+    
+    if(SetRefinementFlag==NULL){ 
+      
+    }
+    else{
+      mesh::_SetRefinementFlag = SetRefinementFlag;
+      mesh::_TestSetRefinementFlag=1;
+    }
+    
     for (unsigned i=_gridr0; i<_gridn0; i++) {
-        if(SetRefinementFlag==NULL) {
-            cout << "Set Refinement Region flag is not defined! " << endl;
-            exit(1);
-        }
-        else {
-            mesh::_SetRefinementFlag = SetRefinementFlag;
-            _level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
-        }
-        _level0[i] = new mesh();
-        _level0[i]->RefineMesh(i,_level0[i-1],_type_elem);
-
+      if(mesh::_TestSetRefinementFlag==0) {
+        cout << "Set Refinement Region flag is not defined! " << endl;
+        exit(1);
+      }
+      else {
+        //mesh::_SetRefinementFlag = SetRefinementFlag;
+        _level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
+      }
+      _level0[i] = new mesh();
+      _level0[i]->RefineMesh(i,_level0[i-1],_type_elem);
     }
 
     unsigned refindex = _level0[0]->GetRefIndex();
@@ -310,21 +324,17 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
 }
 
 
-void MultiLevelMesh::AddMeshLevel( bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
-                                  const int &ElemGroupNumber,const int &level))
+void MultiLevelMesh::AddMeshLevel()
 {
  
-  _level0.resize(_gridn0+1u);
-
-    
   //AMR refine mesh
+   _level0.resize(_gridn0+1u);
             
-  if(SetRefinementFlag==NULL) {
-    cout << "Set Refinement Region flag is not defined! " << endl;
-    exit(1);
+  if(mesh::_TestSetRefinementFlag==0) {
+     cout << "Set Refinement Region flag is not defined! " << endl;
+     exit(1);
   }
-  
-  mesh::_SetRefinementFlag = SetRefinementFlag;
+
   _level0[_gridn0-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
   
   _level0[_gridn0] = new mesh();

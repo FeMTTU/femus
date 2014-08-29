@@ -185,7 +185,7 @@ int main(int argc,char **argv) {
     unsigned int npresmoothing = root["mgsolver"].get("npresmoothing", 1).asUInt();
     unsigned int npostmoothing = root["mgsolver"].get("npostsmoothing", 1).asUInt();
     std::string smoother_type  = root["mgsolver"].get("smoother_type", "gmres").asString();
-    std::string mg_type        = root["mgsolver"].get("mg_type", "V_cycle").asString();
+    std::string mg_type        = root["mgsolver"].get("mgtype", "V_cycle").asString();
     unsigned int max_number_linear_iteration = root["mgsolver"].get("max_number_linear_iteration", 6).asUInt();
     double abs_conv_tol        = root["mgsolver"].get("abs_conv_tol", 1.e-09).asDouble();
 

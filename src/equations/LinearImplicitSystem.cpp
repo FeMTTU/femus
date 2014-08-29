@@ -38,13 +38,15 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   _mg_type(F_CYCLE),
   _npre(1),
   _npost(1),
+  _AMRtest(0),
+  _AMRlevels(0),
   //_VankaIsSet(false),
   //_NSchurVar(1),
   //_Schur(false),
   _SmootherType(smoother_type)
-  {
-    
-  }
+ {
+  
+ }
 
 LinearImplicitSystem::~LinearImplicitSystem() {
    this->clear(); 
@@ -55,7 +57,6 @@ void LinearImplicitSystem::clear() {
       _LinSolver[ig]->DeletePde();
       delete _LinSolver[ig];
     }  
-    
     _NSchurVar_test=0;
     _stabilization_test=0;
     _numblock_test=0;
@@ -84,7 +85,6 @@ void LinearImplicitSystem::init() {
     _stabilization_test=0;
     _numblock_test=0;   
     _numblock_all_test=0;
-    
     // By default we solved for all the PDE variables
     ClearVariablesToBeSolved();
     AddVariableToBeSolved("All");
@@ -154,7 +154,9 @@ void LinearImplicitSystem::solve() {
     full_cycle=0;
     igrid0=_gridr;
   }
-    
+  
+  unsigned AMR_counter=0;
+  
   std::pair<int, double> solver_info;
      
   for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {   //_igridn
@@ -247,6 +249,14 @@ void LinearImplicitSystem::solve() {
 //       std::cout <<"GRID: "<<igridn-1<< "\t    EAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
 
     // ==============  Solution Prolongation ==============
+       
+    if(_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_AMRlevels && igridn==_gridn){
+      AMR_counter++;
+      _ml_msh->AddMeshLevel();
+      _ml_sol->AddSolutionLevel();
+      AddSystemLevel();      
+    }
+      
     if (igridn < _gridn) {
       ProlongatorSol(igridn);
     }
@@ -256,6 +266,17 @@ void LinearImplicitSystem::solve() {
   std::cout << "\t     SOLVER TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed 
   <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
   
+}
+
+//---------------------------------------------------------------------------------------------
+// This is function sets the AMR options
+//---------------------------------------------------------------------------------------------
+
+void LinearImplicitSystem::SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels){
+  if ( !strcmp("yes",AMR.c_str()) || !strcmp("YES",AMR.c_str()) || !strcmp("Yes",AMR.c_str()) ) {
+    _AMRtest=1;
+  }
+  _AMRlevels=AMRlevels;  
 }
 
 //---------------------------------------------------------------------------------------------
@@ -271,7 +292,7 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
   if (gridf>=_gridr) {   //_gridr
     _assemble_system_function(_equation_systems, gridf-1, gridn-1u, assemble_matrix);
   }
-  
+     
   bool matrix_reuse=true;
   if(assemble_matrix){
     if (gridf>=_gridr) {  //_gridr
@@ -285,10 +306,10 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
       _LinSolver[gridf-1u]->_KK->matrix_add(1.,*_LinSolver[gridf-1u]->_CC,"different_nonzero_pattern");
     } 
     else { //Projection of the Matrix on the lower level
-      if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
+      if (non_linear_iteration==0 ){//&& ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
 	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,!matrix_reuse);
       }
-      else{ 
+      else{
 	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,matrix_reuse);
       }    
     }
