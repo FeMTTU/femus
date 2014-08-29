@@ -49,10 +49,26 @@ MultiLevelMesh::~MultiLevelMesh() {
         delete _type_elem[3][4];
     }
 
-    delete _type_elem[5][0];
-    delete _type_elem[5][1];
+    if(_type_elem[5][0])
+      delete _type_elem[5][0];
+    
+    if(_type_elem[5][1])
+      delete _type_elem[5][1];
 
 };
+
+//---------------------------------------------------------------------------------------------------
+MultiLevelMesh::MultiLevelMesh() {
+  
+  _type_elem_flag.resize(5,false);
+  
+  for(int i=0; i<6; i++) {
+    for(int j=0; j<5; j++) {
+      _type_elem[i][j] = NULL;  
+    }
+  }
+  
+}
 
 //---------------------------------------------------------------------------------------------------
 MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr, const char mesh_file[], const char GaussOrder[],
