@@ -39,7 +39,7 @@ class MultiLevelMesh {
 public:
 
     /** Constructors */
-    MultiLevelMesh() {};
+    MultiLevelMesh();
 
     MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr,
                    const char mesh_file[], const char GaussOrder[], const double Lref,
