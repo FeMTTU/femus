@@ -123,18 +123,18 @@ int main(int argc,char **argv) {
     double xa, xb, ya, yb, za, zb;
     ElemType elemtype;
 
-    bool isBox = root["mesh"].get("box", false).asBool();
+    bool isBox = root["mesh"].get("first", "first").get("type", "type").get("box", false).asBool();
     if(isBox) {
-        numelemx = root["mesh"].get("box","").get("nx", 2).asUInt();
-        numelemy = root["mesh"].get("box","").get("ny", 2).asUInt();
-        numelemz = root["mesh"].get("box","").get("nz", 2).asUInt();
-        xa = root["mesh"].get("box","").get("xa", 0.).asDouble();
-        xb = root["mesh"].get("box","").get("xb", 1.).asDouble();
-        ya = root["mesh"].get("box","").get("ya", 0.).asDouble();
-        yb = root["mesh"].get("box","").get("yb", 1.).asDouble();
-        za = root["mesh"].get("box","").get("za", 0.).asDouble();
-        zb = root["mesh"].get("box","").get("zb", 0.).asDouble();
-        std::string elemtypestr = root["mesh"].get("box","").get("elem_type", "Quad9").asString();
+        numelemx = root["mesh"].get("first", "first").get("type", "type").get("box","").get("nx", 2).asUInt();
+        numelemy = root["mesh"].get("first", "first").get("type", "type").get("box","").get("ny", 2).asUInt();
+        numelemz = root["mesh"].get("first", "first").get("type", "type").get("box","").get("nz", 2).asUInt();
+        xa = root["mesh"].get("first", "first").get("type", "type").get("box","").get("xa", 0.).asDouble();
+        xb = root["mesh"].get("first", "first").get("type", "type").get("box","").get("xb", 1.).asDouble();
+        ya = root["mesh"].get("first", "first").get("type", "type").get("box","").get("ya", 0.).asDouble();
+        yb = root["mesh"].get("first", "first").get("type", "type").get("box","").get("yb", 1.).asDouble();
+        za = root["mesh"].get("first", "first").get("type", "type").get("box","").get("za", 0.).asDouble();
+        zb = root["mesh"].get("first", "first").get("type", "type").get("box","").get("zb", 0.).asDouble();
+        std::string elemtypestr = root["mesh"].get("first", "first").get("type", "type").get("box","").get("elem_type", "Quad9").asString();
         if(elemtypestr == "Quad9")
         {
             elemtype = QUAD9;
@@ -158,38 +158,52 @@ int main(int argc,char **argv) {
         
     }
 
-    std::string variableName = root["variable"].get("name", "Q").asString();
-
+    bool isVarFirst = root["solution"].get("mesh", "mesh").get("first", "first").get("first", false).asBool();
+    std::string variableName;
     FEOrder fe_order;
-    std::string fe_order_str = root["variable"].get("fe_order", "first").asString();
-    if (!strcmp(fe_order_str.c_str(),"first"))
-    {
+    if(isVarFirst) {
+      variableName = root["solution"].get("mesh", "mesh").get("first", "first").get("first", "first").get("name", "Q").asString(); 
+      
+      std::string fe_order_str = root["solution"].get("mesh", "mesh").get("first", "first").get("first", "first").get("fe_order", "first").asString();
+      if (!strcmp(fe_order_str.c_str(),"first"))
+      {
         fe_order = FIRST;
-    }
-    else if (!strcmp(fe_order_str.c_str(),"serendipity"))
-    {
+      }
+      else if (!strcmp(fe_order_str.c_str(),"serendipity"))
+      {
         fe_order = SERENDIPITY;
+      }
+      else if (!strcmp(fe_order_str.c_str(),"second"))
+      {
+        fe_order = SECOND;
+      }
+      else
+      {
+        std::cerr << " Error: Lagrange finite element order not supported!" << std::endl;
+        exit(1);
+      }
     }
-    else if (!strcmp(fe_order_str.c_str(),"second"))
-    {
-      fe_order = SECOND;
-    }
-    else
-    {
-      std::cerr << " Error: Lagrange finite element order not supported!" << std::endl;
-      exit(1);
+    else {
+      std::cout << "no var specified" << std::endl;
+      return 1; 
     }
     
-    
-    unsigned int nlevels = root["mgsolver"].get("nlevels", 1).asInt();
-    unsigned int npresmoothing = root["mgsolver"].get("npresmoothing", 1).asUInt();
-    unsigned int npostmoothing = root["mgsolver"].get("npostsmoothing", 1).asUInt();
-    std::string smoother_type  = root["mgsolver"].get("smoother_type", "gmres").asString();
-    std::string mg_type        = root["mgsolver"].get("mg_type", "V_cycle").asString();
-    unsigned int max_number_linear_iteration = root["mgsolver"].get("max_number_linear_iteration", 6).asUInt();
-    double abs_conv_tol        = root["mgsolver"].get("abs_conv_tol", 1.e-09).asDouble();
+
+    // solver
+    unsigned int nlevels = root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
+                           .get("type", "type").get("multigrid", "multigrid").get("nlevels", 1).asInt();
+    unsigned int npresmoothing = root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
+                                 .get("type", "type").get("multigrid", "multigrid").get("npresmoothing", 1).asUInt();
+    unsigned int npostmoothing = root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
+                                 .get("type", "type").get("multigrid", "multigrid").get("npostsmoothing", 1).asUInt();
+    unsigned int max_number_linear_iteration = root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson")
+                                              .get("linear_solver", "linear_solver").get("max_number_linear_iteration", 6).asUInt();
+    double abs_conv_tol        = root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
+                                 .get("abs_conv_tol", 1.e-09).asDouble();
 
     MgType mgtype;
+    std::string mg_type        = root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
+                                 .get("type", "type").get("multigrid", "multigrid").get("mg_type", "V_cycle").asString();
     if (!strcmp("V_cycle",mg_type.c_str()))
     {
         mgtype = V_CYCLE;
@@ -209,9 +223,14 @@ int main(int argc,char **argv) {
 
     bool Vanka=0, Gmres=0, Asm=0;
 
-    if( !strcmp("vanka",smoother_type.c_str()))          Vanka=1;
-    else if( !strcmp("gmres",smoother_type.c_str()))     Gmres=1;
-    else if( !strcmp("asm",smoother_type.c_str()))       Asm=1;
+    if( root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
+        .get("type", "type").get("multigrid", "multigrid").get("smoother", "smoother").get("type", "type").get("vanka", false).asBool() ) {
+      Vanka=1;
+    }
+    else if( root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
+        .get("type", "type").get("multigrid", "multigrid").get("smoother", "smoother").get("type", "type").get("gmres", false).asBool() )     Gmres=1;
+    else if( root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
+        .get("type", "type").get("multigrid", "multigrid").get("smoother", "smoother").get("type", "type").get("asm", false).asBool() )       Asm=1;
 
     if(Vanka+Gmres+Asm==0) {
         cout << "The selected MG smoother does not exist!" << endl;
@@ -224,7 +243,7 @@ int main(int argc,char **argv) {
     
     // reading function
      std::string function;
-     function = root["variable"].get("func_source", "0.").asString();
+     function = root["solution"].get("func_source", "0.").asString();
      std::string variables = "x";
      variables += ",y";
      variables += ",z";
@@ -241,7 +260,7 @@ int main(int argc,char **argv) {
        std::vector<ParsedFunction> parsedfunctionarray;
        std::vector<BDCType> bdctypearray;
        
-       const Json::Value boundary_conditions = root["boundary_conditions"];
+       const Json::Value boundary_conditions = root["solution"].get("mesh", "mesh").get("first", "first").get("first", "first").get("boundary_conditions", "boundary_conditions");
        for(unsigned int index=0; index<boundary_conditions.size(); ++index) {
 	 
 	 std::string facename = boundary_conditions[index].get("facename","to").asString();
@@ -296,9 +315,14 @@ int main(int argc,char **argv) {
     {
         ml_msh.ReadCoarseMesh(filename.c_str(),"seventh",Lref);
     }
-    else
+    else if(isBox)
     {
         ml_msh.BuildBrickCoarseMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+    }
+    else
+    {
+        std::cout << "no input mesh specified. Please check to have added the keyword mesh in the input json file" << std::endl;
+        return 1;
     }
     ml_msh.RefineMesh(nm,nr, NULL);
     
