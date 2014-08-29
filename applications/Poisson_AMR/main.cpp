@@ -59,7 +59,7 @@ readInputTestFile( const char *path )
 static void show_usage()
 {
     std::cout << "Use --inputfile variable to set the input file" << endl;
-    std::cout << "e.g.: ./Poisson_AMR --inputfile ./input/input.json" << std::endl;
+    std::cout << "e.g.: ./Poisson_AMR --inputfile $FEMUS_DIR/applications/Poisson_AMR/input/input.json" << std::endl;
 }
 
 ParsedFunction fpsource;
