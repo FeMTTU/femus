@@ -27,7 +27,8 @@ namespace femus {
   _sys_number                       (number_in),
   _gridn(ml_probl.GetNumberOfGrid()), 
   _gridr(ml_probl.GetNumberOfGridTotallyRefined()),
-  _ml_sol(ml_probl._ml_sol)
+  _ml_sol(ml_probl._ml_sol),
+  _ml_msh(ml_probl._ml_msh)
 { 
   _msh.resize(_gridn);
   _solution.resize(_gridn);

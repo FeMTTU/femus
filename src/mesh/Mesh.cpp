@@ -32,12 +32,14 @@
 
 
 namespace femus {
-
+  
 using std::cout;
 using std::endl;
 using std::min;
 using std::sort;
 
+
+bool mesh::_TestSetRefinementFlag=0;
 
 const unsigned mesh::_END_IND[5]= {0,1,3,4,5};
 

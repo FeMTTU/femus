@@ -90,6 +90,7 @@ protected:
     vector<Solution*> _solution;
 
     MultiLevelSolution* _ml_sol;
+    MultiLevelMesh* _ml_msh;
 
     vector <unsigned> _SolSystemPdeIndex;
 
