@@ -163,6 +163,33 @@ void mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
     el->AllocateChildrenElement(_ref_index);
 }
 
+
+
+//-------------------------------------------------------------------
+void mesh::FlagAMRElementsToBeRefinedByAMR() {
+    el->InitRefinedToZero();
+       
+    std::vector<double> AMR_local;
+    _coordinate->_Sol[3]->localize_to_all(AMR_local);
+  
+    for (unsigned iel_metis=0; iel_metis<nel; iel_metis++) {
+      if(AMR_local[iel_metis]>0.5){
+	unsigned iel=IS_Mts2Gmt_elem[iel_metis];
+	el->SetRefinedElementIndex(iel,1);
+	el->AddToRefinedElementNumber(1);
+	short unsigned elt=el->GetElementType(iel);
+	el->AddToRefinedElementNumber(1,elt);
+      }   
+    }
+    el->AllocateChildrenElement(_ref_index);
+}
+
+
+
+
+
+
+
 //-------------------------------------------------------------------
 void mesh::FlagOnlyEvenElementsToBeRefined() {
   

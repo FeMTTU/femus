@@ -231,26 +231,24 @@ void Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector
     
 }
 
-void Solution::FlagAMRRegionBasedOnRes(const vector <unsigned> &SolIndex){
+void Solution::FlagAMRRegionBasedOnEps(const vector <unsigned> &SolIndex,const unsigned &gridn){
     
-  vector <double> ResMax(SolIndex.size());
+  vector <double> EpsMax(SolIndex.size());
   vector <unsigned> SolType(SolIndex.size());
   vector <unsigned> SolEndInd(SolIndex.size());
-  vector <unsigned> nve(SolIndex.size());  
   for (unsigned k=0; k<SolIndex.size(); k++) {
-    ResMax[k] = _Res[SolIndex[k]]->linfty_norm ();
+    EpsMax[k] = 0.01/gridn*_Eps[SolIndex[k]]->linfty_norm ();
     SolType[k] = _SolType[SolIndex[k]];
     SolEndInd[k]   = _msh->GetEndIndex(SolType[k]);
-    std::cout<< "ResMax of "   << _SolName[SolIndex[k]] << " = " << ResMax[k]<<std::endl;
-    std::cout<< "orderInd of " << _SolName[SolIndex[k]] << " = " << SolType[k]<<std::endl;
-    std::cout<< "endInd of "   << _SolName[SolIndex[k]] << " = " << SolEndInd[k]<<std::endl;
+//     std::cout<< "EpsMax of "   << _SolName[SolIndex[k]] << " = " << EpsMax[k]<<std::endl;
+//     std::cout<< "orderInd of " << _SolName[SolIndex[k]] << " = " << SolType[k]<<std::endl;
+//     std::cout<< "endInd of "   << _SolName[SolIndex[k]] << " = " << SolEndInd[k]<<std::endl;
   }
   
   Solution* AMR = _msh->_coordinate;
   unsigned  AMRIndex= AMR->GetIndex("AMR");
-  unsigned  AMRType = AMR->_SolType[AMRIndex];
-  unsigned  AMREndInd = _msh->GetEndIndex(AMRType);
   
+  AMR->_Sol[AMRIndex]->zero();
   
   unsigned nel= _msh->GetElementNumber();
   
@@ -260,15 +258,20 @@ void Solution::FlagAMRRegionBasedOnRes(const vector <unsigned> &SolIndex){
     short unsigned kelt=_msh->el->GetElementType(kel);
     
     for (unsigned k=0; k<SolIndex.size(); k++) {
-      nve[k]=_msh->el->GetElementDofNumber(kel,SolEndInd[k]);
-      for(unsigned i=0; i<nve[k]; i++) {
+      unsigned nve=_msh->el->GetElementDofNumber(kel,SolEndInd[k]);
+      for(unsigned i=0; i<nve; i++) {
 	unsigned inode=(SolType[k]<3)?(_msh->el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
 	unsigned inode_metis=_msh->GetMetisDof(inode,SolType[k]);
-	double soli = (*_Res[SolIndex[k]])(inode_metis);
+	double value = (*_Eps[SolIndex[k]])(inode_metis);
+	if(fabs(value)>EpsMax[k]){
+	  AMR->_Sol[AMRIndex]->set(iel,1.);
+	  k=SolIndex.size();
+	  i=nve;
+	}
       } 
     }
   }
-  
+  AMR->_Sol[AMRIndex]->close();
 }
 
 
