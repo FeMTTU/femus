@@ -448,7 +448,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
  // return refine;
   double dtest = static_cast<double>(rand())/RAND_MAX;
-  int itest=(dtest<0.1)?1:0;
+  int itest=(dtest<0.5)?1:0;
   return itest;
 }
 

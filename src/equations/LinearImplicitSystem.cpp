@@ -251,10 +251,11 @@ void LinearImplicitSystem::solve() {
     // ==============  Solution Prolongation ==============
        
     if(_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_AMRlevels && igridn==_gridn){
-      AMR_counter++;
+      _solution[_gridn-1]->FlagAMRRegionBasedOnRes(_SolSystemPdeIndex);
       _ml_msh->AddMeshLevel();
       _ml_sol->AddSolutionLevel();
-      AddSystemLevel();      
+      AddSystemLevel();   
+      AMR_counter++;
     }
       
     if (igridn < _gridn) {

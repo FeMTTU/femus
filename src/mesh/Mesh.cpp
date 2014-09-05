@@ -102,6 +102,9 @@ void mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _coordinate->ResizeSolutionVector("Z");
     
   _coordinate->SetCoarseCoordinates(vt);
+  
+  _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
+  _coordinate->ResizeSolutionVector("AMR");
     
 };
 
@@ -131,31 +134,29 @@ void mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
     std::vector<double> X_local;
     std::vector<double> Y_local;
     std::vector<double> Z_local;
-    for(int i=0;i<_nprocs;i++){
-      _coordinate->_Sol[0]->localize_to_one(X_local,i);
-      _coordinate->_Sol[1]->localize_to_one(Y_local,i);
-      _coordinate->_Sol[2]->localize_to_one(Z_local,i);
+    _coordinate->_Sol[0]->localize_to_all(X_local);
+    _coordinate->_Sol[1]->localize_to_all(Y_local);
+    _coordinate->_Sol[2]->localize_to_all(Z_local);
   
-      for (unsigned iel=0; iel<nel; iel+=1) {
-	unsigned nve=el->GetElementDofNumber(iel,0);
-	double vtx=0.,vty=0.,vtz=0.;
-	for ( unsigned i=0; i<nve; i++) {
-	  unsigned inode=el->GetElementVertexIndex(iel,i)-1u;
-	  unsigned inode_Metis=GetMetisDof(inode,2);
-	  vtx+=X_local[inode_Metis];  
-	  vty+=Y_local[inode_Metis]; 
-	  vtz+=Z_local[inode_Metis]; 
-	}
-	vtx/=nve;
-	vty/=nve;
-	vtz/=nve;
-	if(!el->GetRefinedElementIndex(iel)){
-	  if (_SetRefinementFlag(vtx,vty,vtz,el->GetElementGroup(iel),grid)) {
-	    el->SetRefinedElementIndex(iel,1);
-	    el->AddToRefinedElementNumber(1);
-	    short unsigned elt=el->GetElementType(iel);
-	    el->AddToRefinedElementNumber(1,elt);
-	  }
+    for (unsigned iel=0; iel<nel; iel+=1) {
+      unsigned nve=el->GetElementDofNumber(iel,0);
+      double vtx=0.,vty=0.,vtz=0.;
+      for ( unsigned i=0; i<nve; i++) {
+	unsigned inode=el->GetElementVertexIndex(iel,i)-1u;
+	unsigned inode_Metis=GetMetisDof(inode,2);
+	vtx+=X_local[inode_Metis];  
+	vty+=Y_local[inode_Metis]; 
+	vtz+=Z_local[inode_Metis]; 
+      }
+      vtx/=nve;
+      vty/=nve;
+      vtz/=nve;
+      if(!el->GetRefinedElementIndex(iel)){
+	if (_SetRefinementFlag(vtx,vty,vtz,el->GetElementGroup(iel),grid)) {
+	  el->SetRefinedElementIndex(iel,1);
+	  el->AddToRefinedElementNumber(1);
+	  short unsigned elt=el->GetElementType(iel);
+	  el->AddToRefinedElementNumber(1,elt);
 	}
       }
     }
@@ -407,6 +408,9 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type* type_
   _coordinate->ResizeSolutionVector("X");
   _coordinate->ResizeSolutionVector("Y");
   _coordinate->ResizeSolutionVector("Z");    
+  
+  _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
+  _coordinate->ResizeSolutionVector("AMR");
    
    
   unsigned TypeIndex=2;
@@ -2706,6 +2710,8 @@ void mesh::BuildBrick(const unsigned int nx,
     
   _coordinate->SetCoarseCoordinates(vt);
  
+  _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
+  _coordinate->ResizeSolutionVector("AMR");
   
  
 }
