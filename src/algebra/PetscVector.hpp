@@ -259,7 +259,7 @@ public:
   void localize_to_one (std::vector<double>& v_local,
                         const int proc_id=0) const;
 
-
+  void localize_to_all (std::vector<double>& v_local) const;
 
   /// Creates a "subvector" from this vector using the rows indices of the "rows" array.
   void create_subvector(NumericVector& subvector,

@@ -312,6 +312,8 @@ public:
   /// Creates a local copy of the global vector
   virtual void localize_to_one (std::vector<double>& v_local,
                                 const  int proc_id=0) const = 0;
+  /// Creates a local copy of the global vector
+  virtual void localize_to_all (std::vector<double>& v_local) const = 0;
   /// @returns \p -1 when \p this is equivalent to \p other_vector,
   virtual int compare (const NumericVector &other_vector,
                        const double threshold = 1.e-20) const;
