@@ -74,8 +74,8 @@ public:
     const NumericVector* GetSolutionName(const char* var) {
         return _Sol[GetIndex(var)];
     };
-     /** Flag the elemets to be refined in the AMR alghorithm based on the residual*/
-    void FlagAMRRegionBasedOnRes(const vector <unsigned> &_SolPdeIndex);
+     /** Flag the elemets to be refined in the AMR alghorithm based on the epsilon*/
+    void FlagAMRRegionBasedOnEps(const vector <unsigned> &_SolPdeIndex, const unsigned &gridn);
     
     
     /** member data - one for each variable - */

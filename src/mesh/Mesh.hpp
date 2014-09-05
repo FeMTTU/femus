@@ -124,6 +124,9 @@ public:
     /** Flag the elements to be refined in according to a user-defined function */
     void FlagElementsToBeRefinedByUserDefinedFunction();
 
+    /** Flag the elements to be refined in according to AMR criteria */
+    void FlagAMRElementsToBeRefinedByAMR();
+    
     // member data
     Solution* _coordinate;
     vector <unsigned> IS_Mts2Gmt_elem_offset;
