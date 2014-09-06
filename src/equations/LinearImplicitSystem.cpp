@@ -251,7 +251,7 @@ void LinearImplicitSystem::solve() {
     // ==============  Solution Prolongation ==============
        
     if(_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_AMRlevels && igridn==_gridn){
-      _solution[_gridn-1]->FlagAMRRegionBasedOnEps(_SolSystemPdeIndex,_gridn);
+      _solution[_gridn-1]->FlagAMRRegionBasedOnSolGrad(_SolSystemPdeIndex,_gridn);
       _ml_msh->AddAMRMeshLevel();
       _ml_sol->AddSolutionLevel();
       AddSystemLevel();   
@@ -307,7 +307,7 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
       _LinSolver[gridf-1u]->_KK->matrix_add(1.,*_LinSolver[gridf-1u]->_CC,"different_nonzero_pattern");
     } 
     else { //Projection of the Matrix on the lower level
-      if (non_linear_iteration==0 ){//&& ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
+      if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
 	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,!matrix_reuse);
       }
       else{
