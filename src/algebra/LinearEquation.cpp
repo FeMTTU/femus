@@ -218,9 +218,6 @@ void LinearEquation::AddLevel(){
     int KK_UNIT_SIZE_ = pow(5,dim);
     int KK_size=KKIndex[KKIndex.size()-1u];
     int KK_local_size =KKoffset[KKIndex.size()-1][processor_id()] - KKoffset[0][processor_id()];
-    
-  _KK = SparseMatrix::build().release();
-  _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
    
     unsigned igrid=_msh->GetGridNumber()+1;
     if(igrid>=_gridr && igrid<_gridn){
