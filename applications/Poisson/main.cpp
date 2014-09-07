@@ -15,6 +15,8 @@
 #include <json/json.h>
 #include <json/value.h>
 #include "ParsedFunction.hpp"
+#include "InputParser.hpp"
+#include <memory>
 
 using std::cout;
 using std::endl;
@@ -98,6 +100,11 @@ int main(int argc,char **argv) {
     // start reading input from file
     //-----------------------------------------------------------------------------------------------
 
+    std::auto_ptr<InputParser> inputparser = InputParser::build(path.c_str(), 0);
+//     ii->printInfo();
+    //ii->isTrue("mesh.first.type","box");
+    inputparser->getValue("aA", 4);
+    
     std::string input = readInputTestFile( path.c_str() );
     if ( input.empty() )
     {
@@ -117,23 +124,24 @@ int main(int argc,char **argv) {
 
     std::string filename = root["mesh"].get("filename", "").asString();
 
-    int numelemx;
-    int numelemy;
-    int numelemz;
-    double xa, xb, ya, yb, za, zb;
+//     int numelemx;
+//     int numelemy;
+//     int numelemz;
+//     double xa, xb, ya, yb, za, zb;
     ElemType elemtype;
 
     bool isBox = root["mesh"].get("first", "first").get("type", "type").get("box", false).asBool();
     if(isBox) {
-        numelemx = root["mesh"].get("first", "first").get("type", "type").get("box","").get("nx", 2).asUInt();
-        numelemy = root["mesh"].get("first", "first").get("type", "type").get("box","").get("ny", 2).asUInt();
-        numelemz = root["mesh"].get("first", "first").get("type", "type").get("box","").get("nz", 2).asUInt();
-        xa = root["mesh"].get("first", "first").get("type", "type").get("box","").get("xa", 0.).asDouble();
-        xb = root["mesh"].get("first", "first").get("type", "type").get("box","").get("xb", 1.).asDouble();
-        ya = root["mesh"].get("first", "first").get("type", "type").get("box","").get("ya", 0.).asDouble();
-        yb = root["mesh"].get("first", "first").get("type", "type").get("box","").get("yb", 1.).asDouble();
-        za = root["mesh"].get("first", "first").get("type", "type").get("box","").get("za", 0.).asDouble();
-        zb = root["mesh"].get("first", "first").get("type", "type").get("box","").get("zb", 0.).asDouble();
+//         numelemx = root["mesh"].get("first", "first").get("type", "type").get("box","").get("nx", 2).asUInt();
+// 	numelemx = inputparser->getValue("mesh.first.type.box.nx", 3);
+//         numelemy = root["mesh"].get("first", "first").get("type", "type").get("box","").get("ny", 2).asUInt();
+//         numelemz = root["mesh"].get("first", "first").get("type", "type").get("box","").get("nz", 2).asUInt();
+//         xa = root["mesh"].get("first", "first").get("type", "type").get("box","").get("xa", 0.).asDouble();
+//         xb = root["mesh"].get("first", "first").get("type", "type").get("box","").get("xb", 1.).asDouble();
+//         ya = root["mesh"].get("first", "first").get("type", "type").get("box","").get("ya", 0.).asDouble();
+//         yb = root["mesh"].get("first", "first").get("type", "type").get("box","").get("yb", 1.).asDouble();
+//         za = root["mesh"].get("first", "first").get("type", "type").get("box","").get("za", 0.).asDouble();
+//         zb = root["mesh"].get("first", "first").get("type", "type").get("box","").get("zb", 0.).asDouble();
         std::string elemtypestr = root["mesh"].get("first", "first").get("type", "type").get("box","").get("elem_type", "Quad9").asString();
         if(elemtypestr == "Quad9")
         {
@@ -309,17 +317,27 @@ int main(int argc,char **argv) {
     //Steadystate NonLinearMultiLevelProblem
     MultiLevelMesh ml_msh;
 
-    if(filename != "")
+    if(inputparser->isTrue("mesh.first.type","filename"))
     {
         ml_msh.ReadCoarseMesh(filename.c_str(),"seventh",Lref);
     }
-    else if(isBox)
+    else if(inputparser->isTrue("mesh.first.type","box"))
     {
-        ml_msh.BuildBrickCoarseMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+      int numelemx = inputparser->getValue("mesh.first.type.box.nx", 2);
+      int numelemy = inputparser->getValue("mesh.first.type.box.ny", 2);
+      int numelemz = inputparser->getValue("mesh.first.type.box.nz", 0);
+      double xa = inputparser->getValue("mesh.first.type.box.xa", 0.);
+      double xb = inputparser->getValue("mesh.first.type.box.xb", 1.);
+      double ya = inputparser->getValue("mesh.first.type.box.ya", 0.);
+      double yb = inputparser->getValue("mesh.first.type.box.yb", 1.);
+      double za = inputparser->getValue("mesh.first.type.box.za", 0.);
+      double zb = inputparser->getValue("mesh.first.type.box.zb", 0.);
+
+      ml_msh.BuildBrickCoarseMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
     }
     else
     {
-        std::cout << "no input mesh specified. Please check to have added the keyword mesh in the input json file" << std::endl;
+        std::cerr << "Error: no input mesh specified. Please check to have added the keyword mesh in the input json file! " << std::endl;
         return 1;
     }
     ml_msh.RefineMesh(nm,nr, NULL);

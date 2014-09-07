@@ -85,6 +85,8 @@ utils/FemTTUInit.cpp
 utils/FemusInit.cpp
 utils/Files.cpp
 utils/IO.cpp
+utils/InputParser.cpp
+utils/JsonInputParser.cpp
 )
 
 IF (NOT LIBRARY_OUTPUT_PATH)
