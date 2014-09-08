@@ -75,10 +75,10 @@ public:
         return _Sol[GetIndex(var)];
     };
      /** Flag the elemets to be refined in the AMR alghorithm based on the epsilon*/
-    void FlagAMRRegionBasedOnEps(const vector <unsigned> &_SolPdeIndex, const unsigned &gridn);
+    void FlagAMRRegionBasedOnl2(const vector <unsigned> &_SolPdeIndex, const double &AMRthreshold);
     
      /** Flag the elemets to be refined in the AMR alghorithm based on the solution gradient*/
-    void FlagAMRRegionBasedOnSolGrad(const vector <unsigned> &SolIndex,const unsigned &gridn);
+    void FlagAMRRegionBasedOnSeminorm(const vector <unsigned> &SolIndex,const double &AMRthreshold);
     
     /** Build Grad Matrix structure for SolType 0,1,2 */
     void BuildGradMatrixStructure(unsigned SolType);
@@ -91,7 +91,7 @@ public:
     vector <NumericVector*> _Bdc;
     vector <bool> _ResEpsBdcFlag;
     
-    vector < vector <NumericVector*> > _GradSol;
+    vector < vector <NumericVector*> > _GradVec;
 
     /** one for every type of variable */
     SparseMatrix* _ProjMat[5];

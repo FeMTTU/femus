@@ -47,7 +47,7 @@ readInputTestFile( const char *path )
     long size = ftell( file );
     fseek( file, 0, SEEK_SET );
     std::string text;
-    char *buffer = new char[size+1];
+    char *buffer = new char[size+1000];
     buffer[size] = 0;
     if ( fread( buffer, 1, size, file ) == (unsigned long)size )
         text = buffer;
@@ -187,6 +187,8 @@ int main(int argc,char **argv) {
     unsigned int SMRlevels 	= root["mgsolver"].get("SMRlevels", 0).asInt();
     std::string  AMR       	= root["mgsolver"].get("AMR", "no").asString();
     unsigned int AMRlevels 	= root["mgsolver"].get("AMRlevels", 0).asInt();
+    std::string  AMRnorm 	= root["mgsolver"].get("AMRnorm", "l2").asString();
+    double       AMRthreshold 	= root["mgsolver"].get("AMRthreshold", "0.001").asDouble();
     unsigned int npresmoothing 	= root["mgsolver"].get("npresmoothing", 1).asUInt();
     unsigned int npostmoothing 	= root["mgsolver"].get("npostsmoothing", 1).asUInt();
     std::string smoother_type  	= root["mgsolver"].get("smoother_type", "gmres").asString();
@@ -372,7 +374,7 @@ int main(int argc,char **argv) {
 
     system2.init();
     
-    system2.SetAMRSetOptions(AMR,AMRlevels);
+    system2.SetAMRSetOptions(AMR,AMRlevels,AMRnorm,AMRthreshold);
     
     //common smoother option
     system2.SetSolverFineGrids(GMRES);

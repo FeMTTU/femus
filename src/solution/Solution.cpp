@@ -71,8 +71,8 @@ void Solution::AddSolution( const char name[], const FEFamily fefamily, const FE
   _Res.resize(n+1u);
   _Eps.resize(n+1u);
   
-  _GradSol.resize(n+1u);
-  _GradSol[n].resize(_msh->GetDimension());
+  _GradVec.resize(n+1u);
+  _GradVec[n].resize(_msh->GetDimension());
     
   _Bdc.resize(n+1u);
   _ResEpsBdcFlag.resize(n+1u);
@@ -168,8 +168,8 @@ void Solution::FreeSolutionVectors() {
     }
     
     for(int j=0;j<_msh->GetDimension();j++){
-      if(_GradSol[i][j]){	
-	delete _GradSol[i][j];
+      if(_GradVec[i][j]){	
+	delete _GradVec[i][j];
       }
     }
   }
@@ -246,13 +246,13 @@ void Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector
     
 }
 
-void Solution::FlagAMRRegionBasedOnEps(const vector <unsigned> &SolIndex,const unsigned &gridn){
+void Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const double &AMRthreshold){
     
   vector <double> EpsMax(SolIndex.size());
   vector <unsigned> SolType(SolIndex.size());
   vector <unsigned> SolEndInd(SolIndex.size());
   for (unsigned k=0; k<SolIndex.size(); k++) {
-    EpsMax[k] = 0.005*gridn*_Eps[SolIndex[k]]->linfty_norm ();
+    EpsMax[k] = AMRthreshold*_Eps[SolIndex[k]]->linfty_norm ();
     SolType[k] = _SolType[SolIndex[k]];
     SolEndInd[k]   = _msh->GetEndIndex(SolType[k]);
 //     std::cout<< "EpsMax of "   << _SolName[SolIndex[k]] << " = " << EpsMax[k]<<std::endl;
@@ -291,9 +291,9 @@ void Solution::FlagAMRRegionBasedOnEps(const vector <unsigned> &SolIndex,const u
 
 
 
-void Solution::FlagAMRRegionBasedOnSolGrad(const vector <unsigned> &SolIndex,const unsigned &gridn){
+void Solution::FlagAMRRegionBasedOnSeminorm(const vector <unsigned> &SolIndex,const double &AMRthreshold){
     
-  vector <double> GradSolMax(SolIndex.size());
+  vector <double> GradEpsMax(SolIndex.size());
   vector <unsigned> SolType(SolIndex.size());
   vector <unsigned> SolEndInd(SolIndex.size());
   unsigned dim=_msh->GetDimension();
@@ -308,24 +308,24 @@ void Solution::FlagAMRRegionBasedOnSolGrad(const vector <unsigned> &SolIndex,con
            
       BuildGradMatrixStructure(SolType[k]);
       
-      GradSolMax[k]=0.;
+      GradEpsMax[k]=0.;
       for(int i=0;i<dim;i++){
         
-	if(_GradSol[SolIndex[k]][i]==0){
-	  _GradSol[SolIndex[k]][i] = NumericVector::build().release();
+	if(_GradVec[SolIndex[k]][i]==0){
+	  _GradVec[SolIndex[k]][i] = NumericVector::build().release();
 	  if(n_processors()==1) { // IF SERIAL
-	    _GradSol[SolIndex[k]][i]->init(_msh->MetisOffset[3][n_processors()],_msh->own_size[3][processor_id()],false,SERIAL);
+	    _GradVec[SolIndex[k]][i]->init(_msh->MetisOffset[3][n_processors()],_msh->own_size[3][processor_id()],false,SERIAL);
 	  } 
 	  else { //discontinuous pressure has no ghost nodes
-	    _GradSol[SolIndex[k]][i]->init(_msh->MetisOffset[3][n_processors()],_msh->own_size[3][processor_id()],false,PARALLEL); 
+	    _GradVec[SolIndex[k]][i]->init(_msh->MetisOffset[3][n_processors()],_msh->own_size[3][processor_id()],false,PARALLEL); 
 	
 	  }
 	}
-	_GradSol[SolIndex[k]][i]->matrix_mult(*_Sol[SolIndex[k]],*_GradMat[SolType[k]][i]);
-	double GradSolMaxi=0.1*gridn*_GradSol[SolIndex[k]][i]->linfty_norm();
-	GradSolMax[k] =GradSolMaxi*GradSolMaxi; 
+	_GradVec[SolIndex[k]][i]->matrix_mult(*_Eps[SolIndex[k]],*_GradMat[SolType[k]][i]);
+	double GradSolMaxi=AMRthreshold*_GradVec[SolIndex[k]][i]->linfty_norm();
+	GradEpsMax[k] =GradSolMaxi*GradSolMaxi; 
       }
-      GradSolMax[k]=sqrt(GradSolMax[k]);
+      GradEpsMax[k]=sqrt(GradEpsMax[k]);
     }
   }
  
@@ -343,11 +343,11 @@ void Solution::FlagAMRRegionBasedOnSolGrad(const vector <unsigned> &SolIndex,con
       if(SolType[k]<3){  
 	double value=0.;
 	for(int i=0;i<dim;i++){
-	  double valuei = (*_GradSol[SolIndex[k]][i])(iel);
+	  double valuei = (*_GradVec[SolIndex[k]][i])(iel);
 	  value+=valuei*valuei;
 	}
 	value=sqrt(value);
-	if(fabs(value)>GradSolMax[k]){
+	if(fabs(value)>GradEpsMax[k]){
 	  AMR->_Sol[AMRIndex]->set(iel,1.);
 	  k=SolIndex.size();
 	}
