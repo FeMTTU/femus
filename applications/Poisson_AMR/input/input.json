@@ -41,7 +41,9 @@
     // MG Solver properties
     "mgsolver" : { "nlevels" : 1,
 		   "AMR" : "yes",
-		   "AMRlevels" : 8,
+		   "AMRlevels" : 9,
+		   "AMRnorm" : "seminorm",
+		   "AMRthreshold": 0.001,
                    "npresmoothing" : 1, 
                    "npostsmoothing" : 1, 
                    "smoother_type" : "gmres", 

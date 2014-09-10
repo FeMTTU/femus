@@ -40,6 +40,8 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   _npost(1),
   _AMRtest(0),
   _AMRlevels(0),
+  _AMRnorm(0),
+  _AMRthreshold(0.01),
   //_VankaIsSet(false),
   //_NSchurVar(1),
   //_Schur(false),
@@ -251,7 +253,12 @@ void LinearImplicitSystem::solve() {
     // ==============  Solution Prolongation ==============
        
     if(_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_AMRlevels && igridn==_gridn){
-      _solution[_gridn-1]->FlagAMRRegionBasedOnEps(_SolSystemPdeIndex,_gridn);
+      if(_AMRnorm==0){
+	_solution[_gridn-1]->FlagAMRRegionBasedOnl2(_SolSystemPdeIndex,_AMRthreshold);
+      }
+      else if (_AMRnorm==1){
+	_solution[_gridn-1]->FlagAMRRegionBasedOnSeminorm(_SolSystemPdeIndex,_AMRthreshold);
+      }
       _ml_msh->AddAMRMeshLevel();
       _ml_sol->AddSolutionLevel();
       AddSystemLevel();   
@@ -273,11 +280,22 @@ void LinearImplicitSystem::solve() {
 // This is function sets the AMR options
 //---------------------------------------------------------------------------------------------
 
-void LinearImplicitSystem::SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels){
+void LinearImplicitSystem::SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels,const std::string& AMRnorm, const double &AMRthreshold){
   if ( !strcmp("yes",AMR.c_str()) || !strcmp("YES",AMR.c_str()) || !strcmp("Yes",AMR.c_str()) ) {
     _AMRtest=1;
   }
-  _AMRlevels=AMRlevels;  
+  _AMRlevels = AMRlevels;  
+  _AMRthreshold = AMRthreshold;
+  if ( !strcmp("l2",AMRnorm.c_str()) ){
+    _AMRnorm=0;
+  }
+  else if ( !strcmp("seminorm",AMRnorm.c_str()) ){
+    _AMRnorm=1;
+  }
+  else {
+    std::cout<<AMRnorm<<" invalid AMRnorm type \n set to default l2 norm" <<std::endl;
+    _AMRnorm=0;
+  }
 }
 
 //---------------------------------------------------------------------------------------------
@@ -307,7 +325,7 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
       _LinSolver[gridf-1u]->_KK->matrix_add(1.,*_LinSolver[gridf-1u]->_CC,"different_nonzero_pattern");
     } 
     else { //Projection of the Matrix on the lower level
-      if (non_linear_iteration==0 ){//&& ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
+      if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
 	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,!matrix_reuse);
       }
       else{
