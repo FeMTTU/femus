@@ -133,7 +133,8 @@ public:
     void SetTolerances(const double rtol, const double atol,
                        const double divtol, const unsigned maxits);
     
-    void SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels);
+     /** Set AMR options */
+    void SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels,const std::string& AMRnorm, const double &AMRthreshold);
     
     
     // /** Set the tolerances for the ksp solver of the Schur-Vanka on fine grids: rtol, atol, divtol, maxits */
@@ -222,6 +223,8 @@ protected:
     
     bool _AMRtest;
     unsigned _AMRlevels;
+    short _AMRnorm;
+    double _AMRthreshold;
     
 };
 
