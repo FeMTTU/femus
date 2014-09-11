@@ -51,7 +51,7 @@ MultiLevelSolution::~MultiLevelSolution() {
 
 //---------------------------------------------------------------------------------------------------
 MultiLevelSolution::MultiLevelSolution( MultiLevelMesh *ml_msh):
-  _gridn(ml_msh->GetNumberOfGrid()),
+  _gridn(ml_msh->GetNumberOfLevels()),
   _ml_msh(ml_msh)
 {
   _solution.resize(_gridn);

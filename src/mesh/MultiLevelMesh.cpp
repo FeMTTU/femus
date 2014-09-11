@@ -369,12 +369,12 @@ void MultiLevelMesh::AddAMRMeshLevel()
   //AMR refine mesh
    _level0.resize(_gridn0+1u);
             
-  if(mesh::_TestSetRefinementFlag==0) {
-     cout << "Set Refinement Region flag is not defined! " << endl;
-     exit(1);
-  }
+//   if(mesh::_TestSetRefinementFlag==0) {
+//      cout << "Set Refinement Region flag is not defined! " << endl;
+//      exit(1);
+//   }
 
-  _level0[_gridn0-1u]->FlagAMRElementsToBeRefinedByAMR();
+  _level0[_gridn0-1u]->FlagElementsToBeRefinedByAMR();
   
   _level0[_gridn0] = new mesh();
   _level0[_gridn0]->RefineMesh(_gridn0,_level0[_gridn0-1u],_type_elem);

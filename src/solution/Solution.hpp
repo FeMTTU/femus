@@ -75,10 +75,10 @@ public:
         return _Sol[GetIndex(var)];
     };
      /** Flag the elemets to be refined in the AMR alghorithm based on the epsilon*/
-    void FlagAMRRegionBasedOnl2(const vector <unsigned> &_SolPdeIndex, const double &AMRthreshold);
+    bool FlagAMRRegionBasedOnl2(const vector <unsigned> &_SolPdeIndex, const double &AMRthreshold);
     
      /** Flag the elemets to be refined in the AMR alghorithm based on the solution gradient*/
-    void FlagAMRRegionBasedOnSeminorm(const vector <unsigned> &SolIndex,const double &AMRthreshold);
+    bool FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,const double &AMRthreshold);
     
     /** Build Grad Matrix structure for SolType 0,1,2 */
     void BuildGradMatrixStructure(unsigned SolType);

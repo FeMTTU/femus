@@ -33,7 +33,7 @@ bool (* mesh::_SetRefinementFlag)(const double &x, const double &y, const double
 
 //---------------------------------------------------------------------------------------------------
 MultiLevelProblem::MultiLevelProblem( MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol):
-				      _gridn(ml_msh->GetNumberOfGrid()),
+				      _gridn(ml_msh->GetNumberOfLevels()),
 				      _gridr(ml_msh->GetNumberOfGridTotallyRefined()),
 				      _ml_msh(ml_msh),
 				      _ml_sol(ml_sol)

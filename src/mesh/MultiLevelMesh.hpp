@@ -88,7 +88,7 @@ public:
     };
 
     /** Get the number of grid */
-    unsigned GetNumberOfGrid() {
+    unsigned GetNumberOfLevels() {
         return _gridn;
     };
 

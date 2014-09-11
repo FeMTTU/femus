@@ -39,7 +39,7 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   _npre(1),
   _npost(1),
   _AMRtest(0),
-  _AMRlevels(0),
+  _maxAMRlevels(0),
   _AMRnorm(0),
   _AMRthreshold(0.01),
   //_VankaIsSet(false),
@@ -252,17 +252,24 @@ void LinearImplicitSystem::solve() {
 
     // ==============  Solution Prolongation ==============
        
-    if(_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_AMRlevels && igridn==_gridn){
+    if(_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_maxAMRlevels && igridn==_gridn){
+      bool conv_test=0;
       if(_AMRnorm==0){
-	_solution[_gridn-1]->FlagAMRRegionBasedOnl2(_SolSystemPdeIndex,_AMRthreshold);
+	conv_test=_solution[_gridn-1]->FlagAMRRegionBasedOnl2(_SolSystemPdeIndex,_AMRthreshold);
       }
       else if (_AMRnorm==1){
-	_solution[_gridn-1]->FlagAMRRegionBasedOnSeminorm(_SolSystemPdeIndex,_AMRthreshold);
+	conv_test=_solution[_gridn-1]->FlagAMRRegionBasedOnSemiNorm(_SolSystemPdeIndex,_AMRthreshold);
       }
-      _ml_msh->AddAMRMeshLevel();
-      _ml_sol->AddSolutionLevel();
-      AddSystemLevel();   
-      AMR_counter++;
+      if(conv_test==0){
+	_ml_msh->AddAMRMeshLevel();
+	_ml_sol->AddSolutionLevel();
+	AddSystemLevel();   
+	AMR_counter++;
+      }
+      else{
+	_maxAMRlevels=AMR_counter;
+	std::cout<<"The AMR solver has converged after "<<AMR_counter<<" refinements.\n";
+      }
     }
       
     if (igridn < _gridn) {
@@ -280,11 +287,14 @@ void LinearImplicitSystem::solve() {
 // This is function sets the AMR options
 //---------------------------------------------------------------------------------------------
 
-void LinearImplicitSystem::SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels,const std::string& AMRnorm, const double &AMRthreshold){
+void LinearImplicitSystem::SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels,
+					    const std::string& AMRnorm, const double &AMRthreshold,
+					    bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
+                                       const int &ElemGroupNumber,const int &level)){
   if ( !strcmp("yes",AMR.c_str()) || !strcmp("YES",AMR.c_str()) || !strcmp("Yes",AMR.c_str()) ) {
     _AMRtest=1;
   }
-  _AMRlevels = AMRlevels;  
+  _maxAMRlevels = AMRlevels;  
   _AMRthreshold = AMRthreshold;
   if ( !strcmp("l2",AMRnorm.c_str()) ){
     _AMRnorm=0;
@@ -296,6 +306,14 @@ void LinearImplicitSystem::SetAMRSetOptions(const std::string& AMR, const unsign
     std::cout<<AMRnorm<<" invalid AMRnorm type \n set to default l2 norm" <<std::endl;
     _AMRnorm=0;
   }
+  
+  if(SetRefinementFlag==NULL){    
+    }
+    else{
+      _msh[0]->mesh::_SetRefinementFlag = SetRefinementFlag;
+      _msh[0]->mesh::_TestSetRefinementFlag=1;
+    }
+  
 }
 
 //---------------------------------------------------------------------------------------------

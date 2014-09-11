@@ -125,7 +125,7 @@ public:
     void FlagElementsToBeRefinedByUserDefinedFunction();
 
     /** Flag the elements to be refined in according to AMR criteria */
-    void FlagAMRElementsToBeRefinedByAMR();
+    void FlagElementsToBeRefinedByAMR();
     
     // member data
     Solution* _coordinate;

@@ -246,13 +246,22 @@ void Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector
     
 }
 
-void Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const double &AMRthreshold){
+bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const double &AMRthreshold){
     
+  unsigned nel= _msh->GetElementNumber();
+  
   vector <double> EpsMax(SolIndex.size());
   vector <unsigned> SolType(SolIndex.size());
   vector <unsigned> SolEndInd(SolIndex.size());
   for (unsigned k=0; k<SolIndex.size(); k++) {
-    EpsMax[k] = AMRthreshold*_Eps[SolIndex[k]]->linfty_norm ();
+    //EpsMax[k] = AMRthreshold*_Eps[SolIndex[k]]->linfty_norm ();
+    double x=_Eps[SolIndex[k]]->linfty_norm () / _Sol[SolIndex[k]]->linfty_norm ();
+    cout <<"xxxxxxxxxxxxxxxx="<<x<<endl;
+    //EpsMax[k] = (1. - 2./acos(-1)*atan(x*100000.))*_Eps[SolIndex[k]]->linfty_norm ();
+    
+    EpsMax[k] = AMRthreshold * _Sol[SolIndex[k]]->linfty_norm ();
+    
+    
     SolType[k] = _SolType[SolIndex[k]];
     SolEndInd[k]   = _msh->GetEndIndex(SolType[k]);
 //     std::cout<< "EpsMax of "   << _SolName[SolIndex[k]] << " = " << EpsMax[k]<<std::endl;
@@ -265,8 +274,21 @@ void Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
   
   AMR->_Sol[AMRIndex]->zero();
   
-  unsigned nel= _msh->GetElementNumber();
+  //unsigned nel= _msh->GetElementNumber();
   
+  
+  
+  NumericVector *counter_vec;
+  counter_vec = NumericVector::build().release();
+  
+  if(_nprocs==1) { 
+    counter_vec->init(_nprocs,1,false,SERIAL); 
+  } 
+  else { 
+    counter_vec->init(_nprocs,1,false,PARALLEL); 	   
+  }
+  counter_vec->zero();
+ 
   for (int iel=_msh->IS_Mts2Gmt_elem_offset[_iproc]; iel < _msh->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
 
     unsigned kel = _msh->IS_Mts2Gmt_elem[iel];
@@ -279,6 +301,7 @@ void Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
 	unsigned inode_metis=_msh->GetMetisDof(inode,SolType[k]);
 	double value = (*_Eps[SolIndex[k]])(inode_metis);
 	if(fabs(value)>EpsMax[k]){
+	  counter_vec->add(_iproc,1.);
 	  AMR->_Sol[AMRIndex]->set(iel,1.);
 	  k=SolIndex.size();
 	  i=nve;
@@ -287,11 +310,27 @@ void Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
     }
   }
   AMR->_Sol[AMRIndex]->close();
+  
+  
+  counter_vec->close();
+  
+  std::vector<double> counter_vec_local;
+  counter_vec->localize_to_all(counter_vec_local);
+  
+  unsigned counter=0;
+  for(int i=0;i<_nprocs;i++){
+    counter+=counter_vec_local[i];
+  }
+  
+  
+  bool test=(counter<=_nprocs)?1:0;
+  return test;
+    
 }
 
 
 
-void Solution::FlagAMRRegionBasedOnSeminorm(const vector <unsigned> &SolIndex,const double &AMRthreshold){
+bool Solution::FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,const double &AMRthreshold){
     
   vector <double> GradEpsMax(SolIndex.size());
   vector <unsigned> SolType(SolIndex.size());
@@ -355,6 +394,7 @@ void Solution::FlagAMRRegionBasedOnSeminorm(const vector <unsigned> &SolIndex,co
     }
   }
   AMR->_Sol[AMRIndex]->close();
+  return 0;
 }
 
 
