@@ -12,9 +12,9 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "SolvertypeEnum.hpp"
 #include "FElemTypeEnum.hpp"
-#include <json/json.h>
-#include <json/value.h>
 #include "ParsedFunction.hpp"
+#include "InputParser.hpp"
+
 
 using std::cout;
 using std::endl;
@@ -35,24 +35,24 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
 
 
-static std::string
-readInputTestFile( const char *path )
-{
-    FILE *file = fopen( path, "rb" );
-    if ( !file )
-        return std::string("");
-    fseek( file, 0, SEEK_END );
-    long size = ftell( file );
-    fseek( file, 0, SEEK_SET );
-    std::string text;
-    char *buffer = new char[size+1];
-    buffer[size] = 0;
-    if ( fread( buffer, 1, size, file ) == (unsigned long)size )
-        text = buffer;
-    fclose( file );
-    delete[] buffer;
-    return text;
-}
+// static std::string
+// readInputTestFile( const char *path )
+// {
+//     FILE *file = fopen( path, "rb" );
+//     if ( !file )
+//         return std::string("");
+//     fseek( file, 0, SEEK_END );
+//     long size = ftell( file );
+//     fseek( file, 0, SEEK_SET );
+//     std::string text;
+//     char *buffer = new char[size+1];
+//     buffer[size] = 0;
+//     if ( fread( buffer, 1, size, file ) == (unsigned long)size )
+//         text = buffer;
+//     fclose( file );
+//     delete[] buffer;
+//     return text;
+// }
 
 static void show_usage()
 {
@@ -98,202 +98,40 @@ int main(int argc,char **argv) {
     // start reading input from file
     //-----------------------------------------------------------------------------------------------
 
-    std::string input = readInputTestFile( path.c_str() );
-    if ( input.empty() )
-    {
-        printf( "Failed to read input or empty input: %s\n", path.c_str() );
-        return 1;
-    }
 
-    Json::Value root;   // will contains the root value after parsing.
-    Json::Reader reader;
-    bool parsingSuccessful = reader.parse(input, root );
-    if ( !parsingSuccessful )
-    {
-        // report to the user the failure and their locations in the document.
-        std::cout  << "Failed to parse configuration\n" << reader.getFormatedErrorMessages();
-        return 1;
-    }
-
-    std::string filename = root["mesh"].get("filename", "").asString();
-
-    int numelemx;
-    int numelemy;
-    int numelemz;
-    double xa, xb, ya, yb, za, zb;
-    ElemType elemtype;
-
-    bool isBox = root["mesh"].get("first", "first").get("type", "type").get("box", false).asBool();
-    if(isBox) {
-        numelemx = root["mesh"].get("first", "first").get("type", "type").get("box","").get("nx", 2).asUInt();
-        numelemy = root["mesh"].get("first", "first").get("type", "type").get("box","").get("ny", 2).asUInt();
-        numelemz = root["mesh"].get("first", "first").get("type", "type").get("box","").get("nz", 2).asUInt();
-        xa = root["mesh"].get("first", "first").get("type", "type").get("box","").get("xa", 0.).asDouble();
-        xb = root["mesh"].get("first", "first").get("type", "type").get("box","").get("xb", 1.).asDouble();
-        ya = root["mesh"].get("first", "first").get("type", "type").get("box","").get("ya", 0.).asDouble();
-        yb = root["mesh"].get("first", "first").get("type", "type").get("box","").get("yb", 1.).asDouble();
-        za = root["mesh"].get("first", "first").get("type", "type").get("box","").get("za", 0.).asDouble();
-        zb = root["mesh"].get("first", "first").get("type", "type").get("box","").get("zb", 0.).asDouble();
-        std::string elemtypestr = root["mesh"].get("first", "first").get("type", "type").get("box","").get("elem_type", "Quad9").asString();
-        if(elemtypestr == "Quad9")
-        {
-            elemtype = QUAD9;
-        }
-        else if(elemtypestr == "Tri6")
-        {
-            elemtype = TRI6;
-        }
-        else if(elemtypestr == "Edge3")
-        {
-            elemtype = EDGE3;
-        }
-        else if(elemtypestr == "Hex27")
-        {
-            elemtype = HEX27;
-        }
-        else
-	{
-	    elemtype = INVALID_ELEM;
-	}
-        
-    }
-
-    bool isVarFirst = root["solution"].get("mesh", "mesh").get("first", "first").get("first", false).asBool();
-    std::string variableName;
-    FEOrder fe_order;
-    if(isVarFirst) {
-      variableName = root["solution"].get("mesh", "mesh").get("first", "first").get("first", "first").get("name", "Q").asString(); 
-      
-      std::string fe_order_str = root["solution"].get("mesh", "mesh").get("first", "first").get("first", "first").get("fe_order", "first").asString();
-      if (!strcmp(fe_order_str.c_str(),"first"))
-      {
-        fe_order = FIRST;
-      }
-      else if (!strcmp(fe_order_str.c_str(),"serendipity"))
-      {
-        fe_order = SERENDIPITY;
-      }
-      else if (!strcmp(fe_order_str.c_str(),"second"))
-      {
-        fe_order = SECOND;
-      }
-      else
-      {
-        std::cerr << " Error: Lagrange finite element order not supported!" << std::endl;
-        exit(1);
-      }
-    }
-    else {
-      std::cout << "no var specified" << std::endl;
-      return 1; 
-    }
-
-    // solver
-    unsigned int nlevels = root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
-                           .get("type", "type").get("multigrid", "multigrid").get("nlevels", 1).asInt();
-    unsigned int npresmoothing = root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
-                                 .get("type", "type").get("multigrid", "multigrid").get("npresmoothing", 1).asUInt();
-    unsigned int npostmoothing = root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
-                                 .get("type", "type").get("multigrid", "multigrid").get("npostsmoothing", 1).asUInt();
-    unsigned int max_number_linear_iteration = root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson")
-                                              .get("linear_solver", "linear_solver").get("max_number_linear_iteration", 6).asUInt();
-    double abs_conv_tol        = root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
-                                 .get("abs_conv_tol", 1.e-09).asDouble();
-    MgType mgtype;
-    std::string mg_type        = root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
-                                 .get("type", "type").get("multigrid", "multigrid").get("mg_type", "V_cycle").asString();
-    if (!strcmp("V_cycle",mg_type.c_str()))
-    {
-        mgtype = V_CYCLE;
-    }
-    else if(!strcmp("F_cycle",mg_type.c_str()))
-    {
-        mgtype = F_CYCLE;
-    }
-    else if(!strcmp("F_cycle",mg_type.c_str()))
-    {
-        mgtype = F_CYCLE;
-    }
-    else {
-        cout << "The selected MG cycle does not exist!" << endl;
-        exit(1);
-    }
-
-    bool Vanka=0, Gmres=0, Asm=0;
-
-    if( root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
-        .get("type", "type").get("multigrid", "multigrid").get("smoother", "smoother").get("type", "type").get("vanka", false).asBool() ) {
-      Vanka=1;
-    }
-    else if( root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
-        .get("type", "type").get("multigrid", "multigrid").get("smoother", "smoother").get("type", "type").get("gmres", false).asBool() )     Gmres=1;
-    else if( root["multilevel_problem"].get("mesh", "mesh").get("first", "first").get("poisson", "poisson").get("linear_solver", "linear_solver")
-        .get("type", "type").get("multigrid", "multigrid").get("smoother", "smoother").get("type", "type").get("asm", false).asBool() )       Asm=1;
-
-    if(Vanka+Gmres+Asm==0) {
-        cout << "The selected MG smoother does not exist!" << endl;
-        exit(1);
-    }
-
-    // end reading input from file
-    //-----------------------------------------------------------------------------------------------
 
     
-    // reading function
-     std::string function;
-     function = root["solution"].get("func_source", "0.").asString();
-     std::string variables = "x";
-     variables += ",y";
-     variables += ",z";
-     variables += ",t";
-     
-#ifdef HAVE_FPARSER       
-       fpsource.SetExpression(function);
-       fpsource.SetIndependentVariables(variables);
-       fpsource.Parse();
-#endif
-       
-       std::vector<std::string> facenamearray;
-       std::vector<bool> ishomogeneousarray;
-       std::vector<ParsedFunction> parsedfunctionarray;
-       std::vector<BDCType> bdctypearray;
-       
-       const Json::Value boundary_conditions = root["solution"].get("mesh", "mesh").get("first", "first").get("first", "first").get("boundary_conditions", "boundary_conditions");
-       for(unsigned int index=0; index<boundary_conditions.size(); ++index) {
-	 
-	 std::string facename = boundary_conditions[index].get("facename","to").asString();
-         facenamearray.push_back(facename);
-	 
-	 std::string bdctypestr = boundary_conditions[index].get("bdc_type","to").asString(); 
-         BDCType bdctype = DIRICHLET;
-	 if (bdctypestr.compare("dirichlet") == 0) {
-	     bdctype = DIRICHLET;
-	 }
-	 else if(bdctypestr.compare("neumann") == 0) {
-	      bdctype = NEUMANN;
-	 }
-         else {
-	       std::cout << "Boundary condition not implemented! Default one (Dirichlet) is set." << std::endl;
-         }
-         bdctypearray.push_back(bdctype);
+//     std::string input = readInputTestFile( path.c_str() );
+//     if ( input.empty() )
+//     {
+//         printf( "Failed to read input or empty input: %s\n", path.c_str() );
+//         return 1;
+//     }
+// 
+//     Json::Value root;   // will contains the root value after parsing.
+//     Json::Reader reader;
+//     bool parsingSuccessful = reader.parse(input, root );
+//     if ( !parsingSuccessful )
+//     {
+//         // report to the user the failure and their locations in the document.
+//         std::cout  << "Failed to parse configuration\n" << reader.getFormatedErrorMessages();
+//         return 1;
+//     }
+// 
+//     // end reading input from file
+//     //-----------------------------------------------------------------------------------------------
 
-	 bool ishomo = boundary_conditions[index].get("is_homogeneous",true).asBool(); 
-	 ishomogeneousarray.push_back(ishomo);
-	 
-	 std::string bdcfuncstr = boundary_conditions[index].get("bdc_func","0.").asString();
-	 ParsedFunction pfunc(bdcfuncstr, "x,y,z,t");
-	 parsedfunctionarray.push_back(pfunc);
-       }
-       
-    //---------------------------------------------------------------------------
-
-    
+ 
     /// Init Petsc-MPI communicator
     FemTTUInit mpinit(argc,argv,MPI_COMM_WORLD);
+    
+    // input parser pointer
+    std::auto_ptr<InputParser> inputparser = InputParser::build(path.c_str(), 0);
 
     /// INIT MESH =================================
 
     unsigned short nm,nr;
+    unsigned int nlevels = inputparser->getValue("multilevel_problem.mesh.first.poisson.linear_solver.type.multigrid.nlevels",1);   
     nm=nlevels;
 
     nr=0;
@@ -309,17 +147,28 @@ int main(int argc,char **argv) {
     //Steadystate NonLinearMultiLevelProblem
     MultiLevelMesh ml_msh;
 
-    if(filename != "")
+    if(inputparser->isTrue("mesh.first.type","filename"))
     {
-        ml_msh.ReadCoarseMesh(filename.c_str(),"seventh",Lref);
+      std::string filename = inputparser->getValue("mesh.first.type.box.filename", "./input/input.neu"); 
+      ml_msh.ReadCoarseMesh(filename.c_str(),"seventh",Lref);
     }
-    else if(isBox)
+    else if(inputparser->isTrue("mesh.first.type","box"))
     {
-        ml_msh.BuildBrickCoarseMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+      int numelemx = inputparser->getValue("mesh.first.type.box.nx", 2);
+      int numelemy = inputparser->getValue("mesh.first.type.box.ny", 2);
+      int numelemz = inputparser->getValue("mesh.first.type.box.nz", 0);
+      double xa = inputparser->getValue("mesh.first.type.box.xa", 0.);
+      double xb = inputparser->getValue("mesh.first.type.box.xb", 1.);
+      double ya = inputparser->getValue("mesh.first.type.box.ya", 0.);
+      double yb = inputparser->getValue("mesh.first.type.box.yb", 1.);
+      double za = inputparser->getValue("mesh.first.type.box.za", 0.);
+      double zb = inputparser->getValue("mesh.first.type.box.zb", 0.);
+      ElemType elemtype = inputparser->getValue("mesh.first.type.box.elem_type", QUAD9);
+      ml_msh.BuildBrickCoarseMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
     }
     else
     {
-        std::cout << "no input mesh specified. Please check to have added the keyword mesh in the input json file" << std::endl;
+        std::cerr << "Error: no input mesh specified. Please check to have added the keyword mesh in the input json file! " << std::endl;
         return 1;
     }
     ml_msh.RefineMesh(nm,nr, NULL);
@@ -329,6 +178,7 @@ int main(int argc,char **argv) {
     MultiLevelSolution ml_sol(&ml_msh);
 
     // generate solution vector
+    FEOrder fe_order = inputparser->getValue("solution.mesh.first.first.fe_order",FIRST);
     ml_sol.AddSolution("Sol", LAGRANGE, fe_order);
 
     //Initialize (update Init(...) function)
@@ -337,49 +187,84 @@ int main(int argc,char **argv) {
     //Set Boundary (update Dirichlet(...) function)
     ml_sol.InitializeBdc();
     
-//     ml_sol.SetBoundaryCondition("Sol","right", NEUMANN, false, false, &bdcfunc);
-//     ml_sol.SetBoundaryCondition("Sol","top", NEUMANN);
-    
-    for(int i=0; i<boundary_conditions.size(); ++i) {
-      ml_sol.SetBoundaryCondition("Sol",facenamearray[i],bdctypearray[i],ishomogeneousarray[i],false,&parsedfunctionarray[i]);
+    std::vector<std::string> facenamearray;
+    std::vector<ParsedFunction> parsedfunctionarray;
+    std::vector<BDCType> bdctypearray;
+       
+    unsigned int bdcsize = inputparser->getSize("solution.mesh.first.first.boundary_conditions");
+    for(unsigned int index=0; index<bdcsize; ++index) {
+      std::string facename = inputparser->getValueFromArray("solution.mesh.first.first.boundary_conditions", index, "facename", "top");
+      facenamearray.push_back(facename);
+ 
+      BDCType bdctype = inputparser->getValueFromArray("solution.mesh.first.first.boundary_conditions", index, "bdc_type", DIRICHLET);
+      bdctypearray.push_back(bdctype);
+
+      std::string bdcfuncstr = inputparser->getValueFromArray("solution.mesh.first.first.boundary_conditions", index, "bdc_func", "0.");
+      ParsedFunction pfunc(bdcfuncstr, "x,y,z,t");
+      parsedfunctionarray.push_back(pfunc);
+    }
+      
+    for(int i=0; i<bdcsize; ++i) {
+      ml_sol.SetBoundaryCondition("Sol",facenamearray[i],bdctypearray[i],false,&parsedfunctionarray[i]);
     }
     
     ml_sol.GenerateBdc();
     
     
-    //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-    //ml_sol.GenerateBdc("Sol");
-    
-    
-
     MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
     
-    
-//     ml_prob.parameters.set<func>("func_source") = fpsource;
-
     // add fluid material
     Parameter parameter(Lref,Uref);
-
+    
     //BEGIN Poisson MultiLevel Problem
     std::cout << std::endl;
     std::cout << " PDE problem to solve: Poisson " << std::endl;
 
     LinearImplicitSystem & system2 = ml_prob.add_system<LinearImplicitSystem>("Poisson");
     system2.AddSolutionToSytemPDE("Sol");
+    
+    // reading source function
+    std::string function;
+    function = inputparser->getValue("func_source", "0.");
+    std::string variables = "x";
+    variables += ",y";
+    variables += ",z";
+    variables += ",t";
+     
+#ifdef HAVE_FPARSER       
+    fpsource.SetExpression(function);
+    fpsource.SetIndependentVariables(variables);
+    fpsource.Parse();
+#endif
 
     // Set MG Options
     system2.AttachAssembleFunction(AssemblePoissonMatrixandRhs);
+    
+    unsigned int max_number_linear_iteration = inputparser->getValue("multilevel_problem.mesh.first.poisson.linear_solver.max_number_linear_iteration",6);
     system2.SetMaxNumberOfLinearIterations(max_number_linear_iteration);
+    
+    double abs_conv_tol = inputparser->getValue("multilevel_problem.mesh.first.poisson.linear_solver.abs_conv_tol",1.e-08);
     system2.SetAbsoluteConvergenceTolerance(abs_conv_tol);
+    
+    MgType mgtype = inputparser->getValue("multilevel_problem.mesh.first.poisson.linear_solver.type.multigrid.mgtype",V_CYCLE);
     system2.SetMgType(mgtype);
+    
+    unsigned int npresmoothing = inputparser->getValue("multilevel_problem.mesh.first.poisson.linear_solver.type.multigrid.npresmoothing",1); 
     system2.SetNumberPreSmoothingStep(npresmoothing);
+    
+    unsigned int npostmoothing = inputparser->getValue("multilevel_problem.mesh.first.poisson.linear_solver.type.multigrid.npostmoothing",1); 
     system2.SetNumberPostSmoothingStep(npostmoothing);
 
-    //Set Smoother Options
-    if(Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
-    else if(Asm) 		system2.SetMgSmoother(ASM_SMOOTHER);
-    else if(Vanka)	system2.SetMgSmoother(VANKA_SMOOTHER);
-
+    if(inputparser->isTrue("multilevel_problem.mesh.first.poisson.linear_solver.type.multigrid.smoother.type","gmres")) {
+      system2.SetMgSmoother(GMRES_SMOOTHER);
+    }
+    else if(inputparser->isTrue("multilevel_problem.mesh.first.poisson.linear_solver.type.multigrid.smoother.type","asm")) {
+      system2.SetMgSmoother(ASM_SMOOTHER);
+    }
+    else if(inputparser->isTrue("multilevel_problem.mesh.first.poisson.linear_solver.type.multigrid.smoother.type","vanka")) {
+      system2.SetMgSmoother(VANKA_SMOOTHER);
+    }
+    
     system2.init();
     //common smoother option
     system2.SetSolverFineGrids(GMRES);
@@ -388,8 +273,8 @@ int main(int argc,char **argv) {
     //for Vanka and ASM smoothers
     system2.ClearVariablesToBeSolved();
     system2.AddVariableToBeSolved("All");
-    if(Asm || Vanka)
-    {
+    if(inputparser->isTrue("multilevel_problem.mesh.first.poisson.linear_solver.type.multigrid.smoother.type","asm") ||
+       inputparser->isTrue("multilevel_problem.mesh.first.poisson.linear_solver.type.multigrid.smoother.type","vanka")) {
       system2.SetNumberOfSchurVariables(0);
       system2.SetElementBlockNumber(4);
     }
@@ -624,12 +509,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
                         Lap_rhs += gradphi[i*dim+ivar]*gradSolT[ivar];
                     }
                     
-             
-                   //src_term = Source(xyzt);
-#ifdef HAVE_FPARSER
-                   // src_term = fpsource.Eval(xyzt);
                    src_term = fpsource(xyzt);
-#endif
                     
                     F[i]+= (-Lap_rhs + src_term*phi[i] )*weight;
 		    
