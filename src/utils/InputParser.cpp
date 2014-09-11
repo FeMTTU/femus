@@ -25,7 +25,7 @@
 
 namespace femus {
   
-inline InputParser::InputParser(const std::string& infile) {
+InputParser::InputParser(const std::string& infile) {
   
     _infile = readInputTestFile( infile.c_str() );
     if ( _infile.empty() )
@@ -36,7 +36,7 @@ inline InputParser::InputParser(const std::string& infile) {
 
 }
 
-inline InputParser::~InputParser() {
+InputParser::~InputParser() {
 
 }  
 

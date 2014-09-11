@@ -47,11 +47,27 @@ public:
 
     void printInfo() {std::cout << "I'm Json" << std::endl;};
     
-    bool isTrue(const std::string& base, const std::string& type);
+    const bool isTrue(const std::string& base, const std::string& type);
+    
+    const unsigned int getSize(const std::string& base);
     
     const int getValue(const std::string& fullpath, const int defaultvalue);
     
     const double getValue(const std::string& fullpath, const double defaultvalue);
+    
+    const ElemType getValue(const std::string& fullpath, const ElemType defaultvalue);
+    
+    const std::string getValue(const std::string& fullpath, const std::string defaultvalue);
+    
+    const FEOrder getValue(const std::string& fullpath, const FEOrder defaultvalue);
+    
+    const MgType getValue(const std::string& fullpath, const MgType defaultvalue);
+    
+    const std::string getValueFromArray(const std::string& basepath, const unsigned int index, 
+					const std::string entry, const std::string defaultvalue);
+    
+    const BDCType getValueFromArray(const std::string& basepath, const unsigned int index, 
+			         const std::string entry, const BDCType defaultvalue);
     
 private:    
     
