@@ -24,6 +24,10 @@ PURPOSE.  See the above copyright notice for more information.
 #include <string>
 #include <iostream>
 #include <cstdlib>
+#include "ElemTypeEnum.hpp"
+#include "FElemTypeEnum.hpp"
+#include "MgTypeEnum.hpp"
+#include "BDCTypeEnum.hpp"
 
 //------------------------------------------------------------------------------
 // Forward declarations
@@ -50,12 +54,28 @@ public:
     
     virtual void printInfo() = 0;
     
-    virtual bool isTrue(const std::string& base, const std::string& type) = 0;
+    virtual const bool isTrue(const std::string& basepath, const std::string& type ) = 0;
+    
+    virtual const unsigned int getSize(const std::string& fullpath) = 0;
     
     virtual const int getValue(const std::string& fullpath, const int defaultvalue) = 0;
     
     virtual const double getValue(const std::string& fullpath, const double defaultvalue) = 0;
-
+    
+    virtual const ElemType getValue(const std::string& fullpath, const ElemType defaultvalue) = 0;
+    
+    virtual const FEOrder getValue(const std::string& fullpath, const FEOrder defaultvalue) = 0;
+    
+    virtual const std::string getValue(const std::string& fullpath, const std::string defaultvalue) = 0;
+    
+    virtual const MgType getValue(const std::string& fullpath, const MgType defaultvalue) = 0;
+    
+    virtual const std::string getValueFromArray(const std::string& basepath, const unsigned int index, 
+					        const std::string entry, const std::string defaultvalue) = 0;
+					   
+    virtual const BDCType getValueFromArray(const std::string& basepath, const unsigned int index, 
+ 					 const std::string entry, const BDCType defaultvalue) = 0;
+					 
 protected:
   
     std::string readInputTestFile(const char *path);    

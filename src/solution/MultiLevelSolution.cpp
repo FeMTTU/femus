@@ -291,16 +291,14 @@ void MultiLevelSolution::InitializeBdc() {
 
 //---------------------------------------------------------------------------------------------------
 void MultiLevelSolution::SetBoundaryCondition(const std::string name, const std::string facename, 
-					      const BDCType bdctype, const bool ishomogeneous, 
-					      const bool istimedependent, FunctionBase* func) {
-  
-  if(ishomogeneous == false && func == NULL) {
-    std::cout << " Error: you have set a non-homogeneous boundary condition withtout passing a valid function pointer" << std::endl;
-    exit(1);  
-  }
+					      const BDCType bdctype, const bool istimedependent, FunctionBase* func) {
   
   unsigned int ivar = GetIndex(name.c_str());
   unsigned int iface = 0;
+  bool ishomogeneous = true;
+  if(func != NULL) {
+    ishomogeneous = false; 
+  }
   
   std::map<unsigned int, std::string>::iterator iter;
   iter = _ml_msh->GetLevel(0)->_boundaryinfo.begin();
