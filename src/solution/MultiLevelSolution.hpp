@@ -114,7 +114,7 @@ public:
     
     /** To be Added */
     void SetBoundaryCondition(const std::string name, const std::string facename, const BDCType bdctype = DIRICHLET, 
-                              const bool ishomogeneous = true, const bool istimedependent = false, FunctionBase* func = NULL);
+                              const bool istimedependent = false, FunctionBase* func = NULL);
     
     /** To be Added */
     FunctionBase* GetBdcFunction(const std::string varname, const unsigned int facename) const;

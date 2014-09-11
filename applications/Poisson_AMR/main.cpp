@@ -245,7 +245,6 @@ int main(int argc,char **argv) {
 #endif
        
        std::vector<std::string> facenamearray;
-       std::vector<bool> ishomogeneousarray;
        std::vector<ParsedFunction> parsedfunctionarray;
        std::vector<BDCType> bdctypearray;
        
@@ -268,9 +267,6 @@ int main(int argc,char **argv) {
          }
          bdctypearray.push_back(bdctype);
 
-	 bool ishomo = boundary_conditions[index].get("is_homogeneous",true).asBool(); 
-	 ishomogeneousarray.push_back(ishomo);
-	 
 	 std::string bdcfuncstr = boundary_conditions[index].get("bdc_func","0.").asString();
 	 ParsedFunction pfunc(bdcfuncstr, "x,y,z,t");
 	 parsedfunctionarray.push_back(pfunc);
@@ -328,7 +324,7 @@ int main(int argc,char **argv) {
 //     ml_sol.SetBoundaryCondition("Sol","top", NEUMANN);
     
     for(int i=0; i<boundary_conditions.size(); ++i) {
-      ml_sol.SetBoundaryCondition("Sol",facenamearray[i],bdctypearray[i],ishomogeneousarray[i],false,&parsedfunctionarray[i]);
+      ml_sol.SetBoundaryCondition("Sol",facenamearray[i],bdctypearray[i],false,&parsedfunctionarray[i]);
     }
     
     ml_sol.GenerateBdc();
