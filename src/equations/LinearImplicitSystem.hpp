@@ -134,7 +134,10 @@ public:
                        const double divtol, const unsigned maxits);
     
      /** Set AMR options */
-    void SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels,const std::string& AMRnorm, const double &AMRthreshold);
+    void SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels,
+			  const std::string& AMRnorm, const double &AMRthreshold, 
+			  bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
+                                       const int &ElemGroupNumber,const int &level)=NULL);
     
     
     // /** Set the tolerances for the ksp solver of the Schur-Vanka on fine grids: rtol, atol, divtol, maxits */
@@ -222,7 +225,7 @@ protected:
     double _compressibility;
     
     bool _AMRtest;
-    unsigned _AMRlevels;
+    unsigned _maxAMRlevels;
     short _AMRnorm;
     double _AMRthreshold;
     

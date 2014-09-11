@@ -166,12 +166,38 @@ void mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
 
 
 //-------------------------------------------------------------------
-void mesh::FlagAMRElementsToBeRefinedByAMR() {
-    el->InitRefinedToZero();
+void mesh::FlagElementsToBeRefinedByAMR() {
+    
+       
+    if(_TestSetRefinementFlag){
+      for (int iel_metis=IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
+	unsigned kel = IS_Mts2Gmt_elem[iel_metis];
+	short unsigned kelt=el->GetElementType(kel);
+        unsigned nve=el->GetElementDofNumber(kel,0);
+	double vtx=0.,vty=0.,vtz=0.;
+	for(unsigned i=0; i<nve; i++) {
+	  unsigned inode=el->GetElementVertexIndex(kel,i)-1u;
+	  unsigned inode_metis=GetMetisDof(inode,2);
+      	  vtx+= (*_coordinate->_Sol[0])(inode_metis);
+	  vty+= (*_coordinate->_Sol[1])(inode_metis);
+	  vtz+= (*_coordinate->_Sol[2])(inode_metis);
+	}
+	vtx/=nve;
+	vty/=nve;
+	vtz/=nve;
+	if( (*_coordinate->_Sol[3])(iel_metis) < 0.5 &&
+	    _SetRefinementFlag(vtx,vty,vtz,el->GetElementGroup(kel),grid) ) {
+	    _coordinate->_Sol[3]->set(iel_metis,1.);
+	}
+      }
+      _coordinate->_Sol[3]->close();
+    }
        
     std::vector<double> AMR_local;
     _coordinate->_Sol[3]->localize_to_all(AMR_local);
   
+    el->InitRefinedToZero();
+    
     for (unsigned iel_metis=0; iel_metis<nel; iel_metis++) {
       if(AMR_local[iel_metis]>0.5){
 	unsigned iel=IS_Mts2Gmt_elem[iel_metis];

@@ -19,7 +19,7 @@
     // Properties
     "variable" : { "name" : "T", 
                    "fe_order" : "second",
-                   "func_source" : "0."
+                   "func_source" : "2.*exp(10*x)*(-10.*pi*cos(pi*x)+(pi*pi-50.)*sin(pi*x))*sin(pi*y)"
                  },
                  
     // Boundary conditions
@@ -27,13 +27,13 @@
                              {
                                "facename" : "top",
                                "bdc_type" : "dirichlet"
-                             },
-                             {
-                               "facename" : "right",
-                               "bdc_type" : "neumann",
-                               "is_homogeneous" : false,
-                               "bdc_func" : "0.2"
-                             }
+                             }//,
+                             //{
+                             //  "facename" : "right",
+                             //  "bdc_type" : "neumann",
+                             //  "is_homogeneous" : false,
+                             //  "bdc_func" : "0.2"
+                             // }
                             ],
                  
     // "func_source" : "-2.*pi*pi*( cos(2.*pi*x)*sin(pi*y)*sin(pi*y) + sin(pi*x)*sin(pi*x)*cos(2.*pi*y))"
@@ -41,9 +41,9 @@
     // MG Solver properties
     "mgsolver" : { "nlevels" : 1,
 		   "AMR" : "yes",
-		   "AMRlevels" : 9,
-		   "AMRnorm" : "seminorm",
-		   "AMRthreshold": 0.001,
+		   "maxAMRlevels" : 10,
+		   "AMRnorm" : "l2",
+		   "AMRthreshold": 0.000001,
                    "npresmoothing" : 1, 
                    "npostsmoothing" : 1, 
                    "smoother_type" : "gmres", 

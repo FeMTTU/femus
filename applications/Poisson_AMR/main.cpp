@@ -35,7 +35,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
-
+double GetError(MultiLevelSolution &ml_sol);
 
 static std::string
 readInputTestFile( const char *path )
@@ -186,7 +186,7 @@ int main(int argc,char **argv) {
     unsigned int nlevels 	= root["mgsolver"].get("nlevels", 1).asInt();
     unsigned int SMRlevels 	= root["mgsolver"].get("SMRlevels", 0).asInt();
     std::string  AMR       	= root["mgsolver"].get("AMR", "no").asString();
-    unsigned int AMRlevels 	= root["mgsolver"].get("AMRlevels", 0).asInt();
+    unsigned int maxAMRlevels 	= root["mgsolver"].get("maxAMRlevels", 0).asInt();
     std::string  AMRnorm 	= root["mgsolver"].get("AMRnorm", "l2").asString();
     double       AMRthreshold 	= root["mgsolver"].get("AMRthreshold", "0.001").asDouble();
     unsigned int npresmoothing 	= root["mgsolver"].get("npresmoothing", 1).asUInt();
@@ -308,8 +308,8 @@ int main(int argc,char **argv) {
     {
         ml_msh.BuildBrickCoarseMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
     }
-    ml_msh.RefineMesh(nm,nr, SetRefinementFlag);
-   
+    //ml_msh.RefineMesh(nm,nr, SetRefinementFlag);
+    ml_msh.RefineMesh(nm,nr, NULL);
     
     ml_msh.print_info();
 
@@ -374,7 +374,8 @@ int main(int argc,char **argv) {
 
     system2.init();
     
-    system2.SetAMRSetOptions(AMR,AMRlevels,AMRnorm,AMRthreshold);
+    //system2.SetAMRSetOptions(AMR,AMRlevels,AMRnorm,AMRthreshold,SetRefinementFlag);
+    system2.SetAMRSetOptions(AMR,maxAMRlevels,AMRnorm,AMRthreshold);
     
     //common smoother option
     system2.SetSolverFineGrids(GMRES);
@@ -422,6 +423,16 @@ int main(int argc,char **argv) {
 //     XDMFWriter xdmfio(ml_sol);
 //     xdmfio.write_system_solutions("biquadratic",print_vars);
     
+    
+    //std::cout.precision(14);
+    //std::cout<<"l2 Error = "<<GetError(ml_sol)<<std::endl;
+    
+    int  iproc;
+    MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+    double l2error = GetError(ml_sol);
+    if(iproc==0) printf("l2 Error = %g \n",l2error);
+    
+    
     //Destroy all the new systems
     ml_prob.clear();
 
@@ -431,12 +442,12 @@ int main(int argc,char **argv) {
 //-----------------------------------------------------------------------------------------------------------------
 
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
-  //bool refine=0;
+  bool refine=0;
    
-  //if(x>=0.55){
+  if(x<0.05/level){
    // cout<<x<<" "<<y<<" "<<z<<endl;
-  //   refine=1; 
- // }		
+   refine=1; 
+  }		
 //     // refinemenet based on Elemen Group Number
 //     if(ElemGroupNumber==5 ) {
 //         refine=1;
@@ -448,10 +459,10 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 //         refine=0;
 //     }
 
- // return refine;
-  double dtest = static_cast<double>(rand())/RAND_MAX;
-  int itest=(dtest<0.5)?1:0;
-  return itest;
+  return refine;
+ // double dtest = static_cast<double>(rand())/RAND_MAX;
+ // int itest=(dtest<0.5)?1:0;
+ // return itest;
 }
 
 //--------------------------------------------------------------------------------------------------------------
@@ -644,7 +655,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
              
                    //src_term = Source(xyzt);
 #ifdef HAVE_FPARSER
-                   // src_term = fpsource.Eval(xyzt);
+                   //src_term = fpsource.Eval(xyzt);
                    src_term = fpsource(xyzt);
 #endif
                     
@@ -754,4 +765,132 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
 }
 
+double GetError(MultiLevelSolution &ml_sol){
+  
+  int  iproc, nprocs;
+  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  
+  
+  NumericVector *error_vec;
+  NumericVector *solution_vec;
+  error_vec = NumericVector::build().release();
+  solution_vec = NumericVector::build().release();
+  
+  if(nprocs==1) { 
+    error_vec->init(nprocs,1,false,SERIAL); 
+    solution_vec->init(nprocs,1,false,SERIAL); 
+  } 
+  else { 
+    error_vec->init(nprocs,1,false,PARALLEL); 	   
+    solution_vec->init(nprocs,1,false,PARALLEL); 	   
+  }
+  error_vec->zero();
+  solution_vec->zero();    
+  
+  unsigned gridn=ml_sol._ml_msh->GetNumberOfLevels();
+  for(int ilevel=0;ilevel<gridn;ilevel++){
+    Solution*      solution  = ml_sol.GetSolutionLevel(ilevel);
+    mesh*          msh	     = ml_sol._ml_msh->GetLevel(ilevel);
+    unsigned 	   iproc     = msh->processor_id();
+    
+    
+    const unsigned	dim	= msh->GetDimension();
+    vector< vector < double> > coordinates(dim);
+    
+    vector< int > metis_node;
+    
+    vector <double> phi;
+    vector <double> gradphi;
+    double weight;
+    
+    // reserve
+    const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
+    metis_node.reserve(max_size);
+    for(int i=0; i<dim; i++)
+      coordinates[i].reserve(max_size);
+    phi.reserve(max_size);
+    gradphi.reserve(max_size*dim);
+        
+    
+    unsigned SolIndex;
+    SolIndex=ml_sol.GetIndex("Sol");
+    unsigned order_ind = ml_sol.GetSolutionType(SolIndex);
+    unsigned end_ind   = msh->GetEndIndex(order_ind);
+        
+    for (int iel_metis=msh->IS_Mts2Gmt_elem_offset[iproc]; iel_metis < msh->IS_Mts2Gmt_elem_offset[iproc+1]; iel_metis++) {
+      unsigned kel = msh->IS_Mts2Gmt_elem[iel_metis];
+      if(ilevel==gridn-1 || !msh->el->GetRefinedElementIndex(kel)) {
+        short unsigned kelt= msh->el->GetElementType(kel);
+	unsigned nve= msh->el->GetElementDofNumber(kel,end_ind);
+      
+	// resize
+	metis_node.resize(nve);
+	phi.resize(nve);
+	gradphi.resize(nve*dim);
+	for(int i=0; i<dim; i++) {
+	  coordinates[i].resize(nve);
+	}
 
+	// get local to global mappings
+	for( unsigned i=0; i<nve; i++) {
+	  unsigned inode=msh->el->GetElementVertexIndex(kel,i)-1u;
+	  unsigned inode_coord_metis=msh->GetMetisDof(inode,2);
+	  metis_node[i]=msh->GetMetisDof(inode,order_ind);
+	  for(unsigned idim=0; idim<dim; idim++) {
+	    coordinates[idim][i]=(*msh->_coordinate->_Sol[idim])(inode_coord_metis);
+	  }
+	}
+	
+	for(unsigned ig=0; ig < ml_sol._ml_msh->_type_elem[kelt][order_ind]->GetGaussPointNumber(); ig++) {
+          // *** get Jacobian and test function and test function derivatives ***
+          (ml_sol._ml_msh->_type_elem[kelt][order_ind]->*(ml_sol._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi);
+          //current solution
+          double SolT=0;
+          vector < double > gradSolT(dim,0.);
+          for(unsigned ivar=0; ivar<dim; ivar++) {
+            gradSolT[ivar]=0;
+          }
+	  double pi=acos(-1.);
+          double x[4] = {0.,0.,0.,0.};
+          unsigned SolType=ml_sol.GetSolutionType("Sol");
+          for(unsigned i=0; i<nve; i++) {
+	    double soli = (*solution->_Sol[SolIndex])(metis_node[i]);
+	    for(unsigned ivar=0; ivar<dim; ivar++) {
+	      x[ivar] += coordinates[ivar][i]*phi[i]; 
+	    }
+	    SolT+=phi[i]*soli;
+	    for(unsigned ivar2=0; ivar2<dim; ivar2++){
+	      gradSolT[ivar2] += gradphi[i*dim+ivar2]*soli;
+	    }
+	  }
+	  double SolExact=exp(10.*x[0])*sin(pi*x[0])*sin(pi*x[1]);
+	  error_vec->add(iproc,(SolT-SolExact)*(SolT-SolExact)*weight);
+	  solution_vec->add(iproc,SolExact*SolExact*weight);
+	}
+      }
+    }
+  }
+ 
+  error_vec->close();
+  solution_vec->close();
+  
+  std::vector<double> error_vec_local;
+  error_vec->localize_to_one(error_vec_local);
+  
+  std::vector<double> solution_vec_local;
+  solution_vec->localize_to_one(solution_vec_local);
+  
+  double l2_error=0.;
+  double l2_solution=0.;
+  for(int i=0;i<nprocs;i++){
+    l2_error+=error_vec_local[i];
+    l2_solution+=solution_vec_local[i];
+  }
+  
+  delete error_vec;
+  delete solution_vec;
+  
+  return sqrt(l2_error/l2_solution); 
+  
+}
