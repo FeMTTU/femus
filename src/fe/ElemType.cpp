@@ -842,8 +842,8 @@ void elem_type::ProlQitoQj(const mesh& mymesh,const int& iel, SparseMatrix* Proj
 }
 
 //---------------------------------------------------------------------------------------------------------
-void elem_type::JacobianSur2D(const double vt[][27],const unsigned &ig,
-                              double &Weight, double *other_phi, double gradphi[][3], double normal[3]) const {
+void elem_type::JacobianSur2D(const vector < vector < double > > &vt, const unsigned &ig,
+                              double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const {
 
     double Jac[3][3];
     double JacI[3][3];
@@ -860,9 +860,9 @@ void elem_type::JacobianSur2D(const double vt[][27],const unsigned &ig,
     const double *dfx=dphidxi[ig];
     const double *dfy=dphideta[ig];
 
-    const double *vx=vt[0];
-    const double *vy=vt[1];
-    const double *vz=vt[2];
+    const double *vx=&vt[0][0];
+    const double *vy=&vt[1][0];
+    const double *vz=&vt[2][0];
   
    for(int inode=0;inode<nc_;inode++,dfx++,dfy++,vx++,vy++,vz++){
        
@@ -899,14 +899,15 @@ void elem_type::JacobianSur2D(const double vt[][27],const unsigned &ig,
 
    double *fi=phi[ig];
 
-   for(int inode=0;inode<nc_;inode++,other_phi++,fi++){
-     *other_phi=*fi;
+   double *other_f=&other_phi[0];
+   for(int inode=0;inode<nc_;inode++,other_f++,fi++){
+     *other_f=*fi;
    }
 }
 
 //---------------------------------------------------------------------------------------------------------
-void elem_type::JacobianSur1D(const double vt[][27],const unsigned &ig,
-                              double &Weight, double *other_phi, double gradphi[][3], double normal[3]) const {
+void elem_type::JacobianSur1D(const vector < vector < double > > &vt, const unsigned &ig,
+                              double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const {
 
 //      cout << "Calling 1d surface jacobian" << endl;
   double Jac[2][2];
@@ -916,8 +917,8 @@ void elem_type::JacobianSur1D(const double vt[][27],const unsigned &ig,
   Jac[1][0] = 0.;
 
   const double *dfeta=dphidxi[ig];
-  const double *vx=vt[0];
-  const double *vy=vt[1];
+  const double *vx=&vt[0][0];
+  const double *vy=&vt[1][0];
 
   for (int inode=0; inode<nc_; inode++,dfeta++,vx++,vy++) {
     Jac[0][0] += (*dfeta)*(*vx);
@@ -949,11 +950,12 @@ void elem_type::JacobianSur1D(const double vt[][27],const unsigned &ig,
 
   Weight = det*GaussWeight[ig];
 
-  double *gradf=gradphi[0];
+  double *gradf=&gradphi[0];
+  double *other_f=&other_phi[0];
   double *fi=phi[ig];
   dfeta=dphidxi[ig];
-  for (int inode=0; inode<nc_; inode++,other_phi++,fi++,dfeta++) {
-    *other_phi=*fi;
+  for (int inode=0; inode<nc_; inode++,other_f++,fi++,dfeta++) {
+    *other_f=*fi;
     //the derivative computed in this way are wrong
     *(gradf++)=(*dfeta)*JacI[0][0];
     *(gradf++)=(*dfeta)*JacI[0][1];
@@ -964,7 +966,7 @@ void elem_type::JacobianSur1D(const double vt[][27],const unsigned &ig,
 }
 
 //---------------------------------------------------------------------------------------------------------
-void elem_type::Jacobian3D(const vector < vector < double > > &vt,const unsigned &ig,
+void elem_type::Jacobian3D(const vector < vector < double > > &vt, const unsigned &ig,
                            double &Weight, vector < double > &other_phi, vector < double > &gradphi) const {
   double Jac[3][3];
   double JacI[3][3];

@@ -139,7 +139,6 @@ int main(int argc,char **args) {
   
   system1.init();
   //common smoother options
-  system1.AddStabilization(true);
   system1.SetSolverFineGrids(GMRES);
   system1.SetPreconditionerFineGrids(ILU_PRECOND); 
   system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);

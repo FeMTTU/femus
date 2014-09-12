@@ -98,9 +98,6 @@ public:
         _absolute_convergence_tolerance = absolute_convergence_tolerance;
     };
 
-    /** Set a parameter option for the SparseMatrix A */
-    virtual void SetMatrixOption(MatOption op, bool flag);
-
     /** Set the type of multigrid */
     void SetMgType(const MgType mgtype) {
         _mg_type = mgtype;
@@ -139,11 +136,6 @@ public:
 			  bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
                                        const int &ElemGroupNumber,const int &level)=NULL);
     
-    
-    // /** Set the tolerances for the ksp solver of the Schur-Vanka on fine grids: rtol, atol, divtol, maxits */
-    // void SetSchurTolerances(const double rtol, const double atol,
-    //						    const double divtol, const unsigned maxits);
-
     /** Set the options of the Schur-Vanka smoother */
     //void SetVankaSchurOptions(bool Schur, short unsigned NSchurVar);
     void SetNumberOfSchurVariables(const unsigned short &NSchurVar);
@@ -158,10 +150,6 @@ public:
     void SetNumberPostSmoothingStep(const unsigned int npost) {
         _npost = npost;
     };
-
-    /** Add the Stabilization Matrix D to the Vanka Solver */
-    void AddStabilization(const bool stab=false, const double compressibility=0.);
-
 
 protected:
 
@@ -220,10 +208,6 @@ protected:
     
     bool _NSchurVar_test;
     unsigned short _NSchurVar;
-    bool _stabilization_test;
-    bool _stab;
-    double _compressibility;
-    
     bool _AMRtest;
     unsigned _maxAMRlevels;
     short _AMRnorm;
@@ -231,16 +215,6 @@ protected:
     
 };
 
-inline void LinearImplicitSystem::SetMatrixOption(MatOption op, bool flag)
-{
-//   for (unsigned ig=0; ig<_equation_systems.GetNumberOfGrid(); ig++) {
-//     MatSetOption(_LinSolver[ig]->_KK->mat(),op,flag);
-//   }
-}
-
-
 } //end namespace femus
-
-
 
 #endif

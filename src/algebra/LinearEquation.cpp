@@ -37,9 +37,6 @@ using std::endl;
 //--------------------------------------------------------------------------------
 LinearEquation::LinearEquation(mesh *other_msh){    
   _msh = other_msh;
-  _is_symmetric = false;
-  _stabilization = false;
-  _compressibility = 0.;
   _CC_flag=0;
   _EPS = NULL;
   _EPSC = NULL;
@@ -54,34 +51,6 @@ LinearEquation::LinearEquation(mesh *other_msh){
 //--------------------------------------------------------------------------------
 LinearEquation::~LinearEquation() { }
 
-
-
-
-//--------------------------------------------------------------------------------
-void LinearEquation::SetMatrixProperties(const bool property) {
-  _is_symmetric = property;
-}
-
-//--------------------------------------------------------------------------------
-bool LinearEquation::GetMatrixProperties() {
-  return _is_symmetric;
-}
-
-//--------------------------------------------------------------------------------
-void LinearEquation::AddStabilization(const bool stab, const double compressibility) {
-  _stabilization = stab;
-  _compressibility = compressibility;
-}
-
-//--------------------------------------------------------------------------------
-double LinearEquation::GetCompressibility() {
-  return _compressibility;
-}
-
-//--------------------------------------------------------------------------------
-bool LinearEquation::GetStabilization() {
-  return _stabilization;
-}
 
 //--------------------------------------------------------------------------------
 unsigned LinearEquation::GetIndex(const char name[]) {

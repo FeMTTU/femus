@@ -145,7 +145,7 @@ int main(int argc,char **args) {
   
   system1.init();
   //common smoother options
-  system1.AddStabilization(true);
+//   system1.AddStabilization(true);
   system1.SetSolverFineGrids(GMRES);
   system1.SetPreconditionerFineGrids(ILU_PRECOND); 
   system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
@@ -388,8 +388,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   unsigned iproc = mymsh->processor_id();
   double ILambda= 0; 
   double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
-  bool penalty = true; //mylsyspde->GetStabilization();
-  const bool symm_mat = false;//mylsyspde->GetMatrixProperties();
+  bool penalty = true; 
+  const bool symm_mat = false;
   const bool NavierStokes = true; 
   unsigned nwtn_alg = 2; 
   bool newton = (nwtn_alg==0) ? 0:1; 
