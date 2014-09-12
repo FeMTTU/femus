@@ -35,7 +35,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
-double GetError(MultiLevelSolution &ml_sol);
+double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1);
 
 static std::string
 readInputTestFile( const char *path )
@@ -425,8 +425,13 @@ int main(int argc,char **argv) {
     
     int  iproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-    double l2error = GetError(ml_sol);
-    if(iproc==0) printf("l2 Error = %g \n",l2error);
+    bool H1=false;
+    double l2error = GetRelativeError(ml_sol,H1);
+    if(iproc==0) printf("\n||Sol_h-Sol||_L2 / ||Sol||_L2  = %g \n",l2error);
+    
+    H1=true;
+    double H1error = GetRelativeError(ml_sol,H1);
+    if(iproc==0) printf("\n||Sol_h-Sol||_H1 / ||Sol||_H1  = %g \n",H1error);
     
     
     //Destroy all the new systems
@@ -761,7 +766,9 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
 }
 
-double GetError(MultiLevelSolution &ml_sol){
+// ***********************************************
+
+double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
   
   int  iproc, nprocs;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
@@ -861,8 +868,14 @@ double GetError(MultiLevelSolution &ml_sol){
 	    }
 	  }
 	  double SolExact=exp(10.*x[0])*sin(pi*x[0])*sin(pi*x[1]);
-	  error_vec->add(iproc,(SolT-SolExact)*(SolT-SolExact)*weight);
-	  solution_vec->add(iproc,SolExact*SolExact*weight);
+	  double dSolExactdx=exp(10.*x[0])*(10.*sin(pi*x[0])+pi*cos(pi*x[0]))*sin(pi*x[1]);
+    	  double dSolExactdy=exp(10.*x[0])*sin(pi*x[0])*pi*cos(pi*x[1]);
+	  error_vec->add(iproc,((SolT-SolExact)*(SolT-SolExact)+
+				H1*((gradSolT[0]-dSolExactdx)*(gradSolT[0]-dSolExactdx)+
+				    (gradSolT[1]-dSolExactdy)*(gradSolT[1]-dSolExactdy))
+				)*weight );
+	  solution_vec->add(iproc,(SolExact*SolExact+
+				   H1*(dSolExactdx*dSolExactdx+dSolExactdy*dSolExactdy))*weight);
 	}
       }
     }
@@ -870,19 +883,9 @@ double GetError(MultiLevelSolution &ml_sol){
  
   error_vec->close();
   solution_vec->close();
-  
-  std::vector<double> error_vec_local;
-  error_vec->localize_to_one(error_vec_local);
-  
-  std::vector<double> solution_vec_local;
-  solution_vec->localize_to_one(solution_vec_local);
-  
-  double l2_error=0.;
-  double l2_solution=0.;
-  for(int i=0;i<nprocs;i++){
-    l2_error+=error_vec_local[i];
-    l2_solution+=solution_vec_local[i];
-  }
+    
+  double l2_error=error_vec->l1_norm();
+  double l2_solution=solution_vec->l1_norm();
   
   delete error_vec;
   delete solution_vec;
