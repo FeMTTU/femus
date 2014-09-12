@@ -65,12 +65,12 @@ public:
                   bool testnode[],const unsigned &itype) const;
 
   /** To be Added */ 
-  void JacobianSur2D(const double vt[][27],const unsigned &ig,
-                     double &Weight, double *other_phi, double gradphi[][3], double normal[3])const;
+  void JacobianSur2D(const vector < vector < double > > &vt, const unsigned &ig,
+                     double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal)const;
    
   /** To be Added */
-  void JacobianSur1D(const double vt[][27],const unsigned &ig,
-                     double &Weight, double *other_phi,double gradphi[][3], double normal[3]) const;
+  void JacobianSur1D(const vector < vector < double > > &vt, const unsigned &ig,
+                     double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
 
   /** To be Added */
   void Jacobian3D(const vector < vector < double > > &vt,const unsigned &ig,
@@ -113,11 +113,11 @@ public:
   // member data
   static unsigned _refindex;
  
-  void (elem_type::*Jacobian_ptr)(const vector < vector < double > > &vt,const unsigned &ig,
+  void (elem_type::*Jacobian_ptr)(const vector < vector < double > > &vt, const unsigned &ig,
                                   double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
   
-  void (elem_type::*Jacobian_sur_ptr)(const double vtx[][27],const unsigned &ig,
-                                      double &Weight, double *other_phi, double gradphi[][3], double normal[3]) const;
+  void (elem_type::*Jacobian_sur_ptr)(const vector < vector < double > > &vt, const unsigned &ig,
+                                      double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
   
 private:
   

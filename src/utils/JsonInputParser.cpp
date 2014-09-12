@@ -25,6 +25,7 @@
 
 namespace femus {
 
+//-----------------------------------------------------------------------------------------
 JsonInputParser::JsonInputParser(const std::string& infile) : InputParser(infile) {
 
     bool parsingSuccessful = _reader.parse(_infile, _root );
@@ -37,11 +38,12 @@ JsonInputParser::JsonInputParser(const std::string& infile) : InputParser(infile
 
 }
 
+//-----------------------------------------------------------------------------------------
 JsonInputParser::~JsonInputParser() {
 
 }
 
-
+//-----------------------------------------------------------------------------------------
 const bool JsonInputParser::isTrue(const std::string& base, const std::string& type) {
 
     Json::Value jsonvalue = getJsonValue(base, "");
@@ -52,7 +54,7 @@ const bool JsonInputParser::isTrue(const std::string& base, const std::string& t
 
 }
 
-
+//-----------------------------------------------------------------------------------------
 const unsigned int JsonInputParser::getSize(const std::string& fullpath) {
 
     unsigned int size;
@@ -62,8 +64,7 @@ const unsigned int JsonInputParser::getSize(const std::string& fullpath) {
     return size;
 }
 
-
-
+//-----------------------------------------------------------------------------------------
 const int JsonInputParser::getValue(const std::string& fullpath, const int defaultvalue) {
 
     int value = defaultvalue;
@@ -74,6 +75,7 @@ const int JsonInputParser::getValue(const std::string& fullpath, const int defau
     return value;
 }
 
+//-----------------------------------------------------------------------------------------
 const double JsonInputParser::getValue(const std::string& fullpath, const double defaultvalue) {
 
     double value = defaultvalue;
@@ -84,7 +86,7 @@ const double JsonInputParser::getValue(const std::string& fullpath, const double
     return value;
 }
 
-
+//-----------------------------------------------------------------------------------------
 const ElemType JsonInputParser::getValue(const std::string& fullpath, const ElemType defaultvalue) {
 
     ElemType value = defaultvalue;
@@ -118,7 +120,7 @@ const ElemType JsonInputParser::getValue(const std::string& fullpath, const Elem
 
 }
 
-
+//-----------------------------------------------------------------------------------------
 const std::string JsonInputParser::getValue(const std::string& fullpath, const std::string defaultvalue) {
 
     std::string value = "";
@@ -130,7 +132,7 @@ const std::string JsonInputParser::getValue(const std::string& fullpath, const s
 
 }
 
-
+//-----------------------------------------------------------------------------------------
 const FEOrder JsonInputParser::getValue(const std::string& fullpath, const FEOrder defaultvalue) {
 
     FEOrder value = defaultvalue;
@@ -160,7 +162,7 @@ const FEOrder JsonInputParser::getValue(const std::string& fullpath, const FEOrd
     return value;
 }
 
-
+//-----------------------------------------------------------------------------------------
 const MgType JsonInputParser::getValue(const std::string& fullpath, const MgType defaultvalue) {
 
     MgType value = defaultvalue;
@@ -186,6 +188,7 @@ const MgType JsonInputParser::getValue(const std::string& fullpath, const MgType
 
 }
 
+//-----------------------------------------------------------------------------------------
 const std::string JsonInputParser::getValueFromArray(const std::string& basepath, const unsigned int index,
         const std::string entry, const std::string defaultvalue) {
 
@@ -198,6 +201,7 @@ const std::string JsonInputParser::getValueFromArray(const std::string& basepath
     return value;
 }
 
+//-----------------------------------------------------------------------------------------
 const BDCType JsonInputParser::getValueFromArray(const std::string& basepath, const unsigned int index,
         const std::string entry, const BDCType defaultvalue) {
 
@@ -223,6 +227,7 @@ const BDCType JsonInputParser::getValueFromArray(const std::string& basepath, co
 
 }
 
+//-----------------------------------------------------------------------------------------
 template <typename T_sys>
 const Json::Value JsonInputParser::getJsonValue(const std::string& basepath, const T_sys defaultvalue) {
 

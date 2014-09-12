@@ -62,9 +62,6 @@ public:
     /** Build the concrete class using the Factory Method pattern */
     static std::auto_ptr<InputParser> build(const std::string& infile);
 
-    /** Who I am? */
-    virtual void printInfo() = 0;
-
     /** return true if the argument type is equal to the basepath.type value in the json input file */
     virtual const bool isTrue(const std::string& basepath, const std::string& type ) = 0;
 

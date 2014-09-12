@@ -45,10 +45,6 @@ public:
     /** Destructor. */
     ~JsonInputParser ();
 
-    void printInfo() {
-        std::cout << "I'm Json" << std::endl;
-    };
-
     /** See father class */
     const bool isTrue(const std::string& base, const std::string& type);
 

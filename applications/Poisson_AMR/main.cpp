@@ -564,7 +564,10 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     double weight;
     vector< double > F;
     vector< double > B;
+    vector<double> normal(3.0);
     double src_term = 0.;
+    vector<double> xyzt(4,0.);
+    ParsedFunction* bdcfunc = NULL;
 
     // reserve
     const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
@@ -628,7 +631,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
                     gradSolT[ivar]=0;
                 }
 
-                double xyzt[4] = {0.,0.,0.,0.};
+                xyzt.assign(4,0.);
                 unsigned SolType=ml_sol->GetSolutionType("Sol");
                 for(unsigned i=0; i<nve; i++) {
                     double soli = (*mysolution->_Sol[SolIndex])(metis_node[i]);
@@ -652,7 +655,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
                    //src_term = Source(xyzt);
 #ifdef HAVE_FPARSER
                    //src_term = fpsource.Eval(xyzt);
-                   src_term = fpsource(xyzt);
+                   src_term = fpsource(&xyzt[0]);
 #endif
                     
                     F[i]+= (-Lap_rhs + src_term*phi[i] )*weight;
@@ -674,6 +677,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
             } // end gauss point loop
 
             //number of faces for each type of element
+            //number of faces for each type of element
             unsigned nfaces = myel->GetElementFaceNumber(kel);
 
             // loop on faces
@@ -681,17 +685,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
                 // look for boundary faces
                 if(myel->GetFaceElementIndex(kel,jface)<0) {
-
-                    double tau = 0.;
-                    double time = 0.;
-                    int node[27];
-                    double vx[3][27];
-                    double phi[27],gradphi[27][3],Weight;
-                    double normal[3];
-		    double xyzt[4] = {0.,0.,0.,0.};
-		    ParsedFunction* bdcfunc;
-		    
-		    
+    
 		    unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1) - 1;
 		    
 		    if(ml_sol->GetBoundaryCondition("Sol",face) == NEUMANN && !ml_sol->Ishomogeneous("Sol",face)) {
@@ -703,42 +697,45 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
                         for(unsigned i=0; i<nve; i++) {
                             unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-                            node[i] = inode + mylsyspde->KKIndex[0];
-                            unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+			    metis_node[i] = inode + mylsyspde->KKIndex[0];
+                            unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
 
-                            vx[0][i]=(*mymsh->_coordinate->_Sol[0])(inode_Metis);
-                            vx[1][i]=(*mymsh->_coordinate->_Sol[1])(inode_Metis);
-                            vx[2][i]=(*mymsh->_coordinate->_Sol[2])(inode_Metis);
+			    for(unsigned ivar=0; ivar<dim; ivar++) {
+                              coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
+                            }
                         }
 
                         if(felt != 6) 
 			{
                           for(unsigned igs=0; igs < ml_prob._ml_msh->_type_elem[felt][order_ind]->GetGaussPointNumber(); igs++) {
-                            (ml_prob._ml_msh->_type_elem[felt][order_ind]->*ml_prob._ml_msh->_type_elem[felt][order_ind]->Jacobian_sur_ptr)(vx,igs,Weight,phi,gradphi,normal);
+                            (ml_prob._ml_msh->_type_elem[felt][order_ind]->*ml_prob._ml_msh->_type_elem[felt][order_ind]->Jacobian_sur_ptr)(coordinates,igs,weight,phi,gradphi,normal);
 
+			    xyzt.assign(4,0.);
                             for(unsigned i=0; i<nve; i++) {
-			        xyzt[0] = vx[0][i];
-				xyzt[1] = vx[1][i];
-				xyzt[2] = vx[2][i];
-				xyzt[3] = time;
-
- 				double tau = (*bdcfunc)(xyzt);
-                                //SetBoundaryCondition(vx[0][i],vx[1][i],vx[2][i],"Sol",tau,-(mymsh->el->GetFaceElementIndex(kel,jface)+1),time);
-                                double bdintegral = phi[i]*tau*Weight;
-                                unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
-                                F[ilocalnode] += bdintegral;
+                              double soli = (*mysolution->_Sol[SolIndex])(metis_node[i]);
+		              for(unsigned ivar=0; ivar<dim; ivar++) {
+		               xyzt[ivar] += coordinates[ivar][i]*phi[i]; 
+		              }
+                            }
+			    
+			    // *** phi_i loop ***
+                            for(unsigned i=0; i<nve; i++) {
+                              double surfterm_g = (*bdcfunc)(&xyzt[0]);
+                              double bdintegral = phi[i]*surfterm_g*weight;
+                              unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
+                              F[ilocalnode] += bdintegral;
                             }
                           }
 			}
 			else // 1D : the side elems are points and does not still exist the point elem
 			{
-			  xyzt[0] = vx[0][0];
-		          xyzt[1] = vx[1][0];
-			  xyzt[2] = vx[2][0];
-			  xyzt[3] = time;
-				
-			  //SetBoundaryCondition(vx[0][0],vx[1][0],vx[2][0],"Sol",tau,-(mymsh->el->GetFaceElementIndex(kel,jface)+1),time);
-			  double bdintegral = (*bdcfunc)(xyzt);;
+			  // in 1D it is only one point
+ 			  xyzt[0] = coordinates[0][0];
+ 		          xyzt[1] = 0.;
+ 			  xyzt[2] = 0.;
+ 			  xyzt[3] = 0.;
+
+			  double bdintegral = (*bdcfunc)(&xyzt[0]);
 			  unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, 0);
                           F[ilocalnode] += bdintegral;
 			}
