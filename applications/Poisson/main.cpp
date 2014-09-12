@@ -24,36 +24,6 @@ using namespace femus;
 
 void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
 
-
-// double InitVariableU(const double &x, const double &y, const double &z);
-
-
-// bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[],
-//                           double &value, const int FaceName, const double time);
-
-// bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
-
-
-
-// static std::string
-// readInputTestFile( const char *path )
-// {
-//     FILE *file = fopen( path, "rb" );
-//     if ( !file )
-//         return std::string("");
-//     fseek( file, 0, SEEK_END );
-//     long size = ftell( file );
-//     fseek( file, 0, SEEK_SET );
-//     std::string text;
-//     char *buffer = new char[size+1];
-//     buffer[size] = 0;
-//     if ( fread( buffer, 1, size, file ) == (unsigned long)size )
-//         text = buffer;
-//     fclose( file );
-//     delete[] buffer;
-//     return text;
-// }
-
 static void show_usage()
 {
     std::cout << "Use --inputfile variable to set the input file" << endl;
@@ -95,38 +65,11 @@ int main(int argc,char **argv) {
         }
     }
 
-    // start reading input from file
-    //-----------------------------------------------------------------------------------------------
-
-
-
-    
-//     std::string input = readInputTestFile( path.c_str() );
-//     if ( input.empty() )
-//     {
-//         printf( "Failed to read input or empty input: %s\n", path.c_str() );
-//         return 1;
-//     }
-// 
-//     Json::Value root;   // will contains the root value after parsing.
-//     Json::Reader reader;
-//     bool parsingSuccessful = reader.parse(input, root );
-//     if ( !parsingSuccessful )
-//     {
-//         // report to the user the failure and their locations in the document.
-//         std::cout  << "Failed to parse configuration\n" << reader.getFormatedErrorMessages();
-//         return 1;
-//     }
-// 
-//     // end reading input from file
-//     //-----------------------------------------------------------------------------------------------
-
- 
     /// Init Petsc-MPI communicator
     FemTTUInit mpinit(argc,argv,MPI_COMM_WORLD);
     
     // input parser pointer
-    std::auto_ptr<InputParser> inputparser = InputParser::build(path.c_str(), 0);
+    std::auto_ptr<InputParser> inputparser = InputParser::build(path.c_str());
 
     /// INIT MESH =================================
 

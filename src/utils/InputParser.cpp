@@ -41,8 +41,25 @@ InputParser::~InputParser() {
 }  
 
 //----------------------------------------------------------------------------------------------
-std::auto_ptr<InputParser> InputParser::build(const std::string& infile, const int format) {
+std::auto_ptr<InputParser> InputParser::build(const std::string& infile) {
    
+   int format = 0;
+   
+   if(infile.rfind(".json") < infile.size()) {
+     format = 0;
+   }
+   else if (infile.rfind(".html") < infile.size()) {
+     format = 1; 
+   }
+   else {
+    std::cerr << " ERROR: Unrecognized file extension: " << infile
+	      << "\n   I understand the following:\n\n"
+	      << "     *.json -- JSon File\n"
+	      << "     *.html -- HTML File (not yet implemented)\n"
+              << std::endl;
+     exit(1);
+   }
+  
    switch (format)  {
 
     case 0:  {
@@ -50,8 +67,10 @@ std::auto_ptr<InputParser> InputParser::build(const std::string& infile, const i
       return ap;
     }
     case 1:  {
-      std::auto_ptr<InputParser> ap(new HtmlInputParser(infile));
-      return ap;
+      std::cerr << "Error: HTMLInput parser not yet implemented! " << std::endl;
+      exit(1);
+//       std::auto_ptr<InputParser> ap(new HtmlInputParser(infile));
+//       return ap;
     } 
     default:
       std::cerr << "ERROR:  format not implemented: " << std::endl;

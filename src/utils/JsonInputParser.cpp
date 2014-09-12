@@ -44,29 +44,9 @@ JsonInputParser::~JsonInputParser() {
 
 const bool JsonInputParser::isTrue(const std::string& base, const std::string& type) {
 
-    std::string str1 = extractWord(base, 1);
-    int numWords = howManyWords(base);
+    Json::Value jsonvalue = getJsonValue(base, "");
 
-    Json::Value pippo = _root[str1];
-
-    for(int i=2; i<=numWords; i++) {
-
-        std::string str_i = extractWord(base, i);
-
-        if(pippo.get(str_i,false).asBool()) {
-            pippo = pippo.get(str_i,str_i);
-        }
-        else
-        {
-            std::cerr << "Error: json input parsing failed" << std::endl;
-            std::cerr << "The entry path is: " << base << std::endl;
-            std::cerr << "The parser didn't find the word: " << str_i << std::endl;
-            std::cerr << "Check the input file for misprinting error!" << std::endl;
-            exit(1);
-        }
-    }
-
-    bool boolflag = pippo.get(type, false).asBool();
+    bool boolflag = jsonvalue.get(type, false).asBool();
 
     return boolflag;
 
@@ -74,35 +54,11 @@ const bool JsonInputParser::isTrue(const std::string& base, const std::string& t
 
 
 const unsigned int JsonInputParser::getSize(const std::string& fullpath) {
-  
+
     unsigned int size;
-    std::string str1 = extractWord(fullpath, 1);
-    std::string str_i;
-    int numWords = howManyWords(fullpath);
+    Json::Value jsonvalue = getJsonValue(fullpath, 0);
 
-    Json::Value pippo = _root[str1];
-
-    for(int i=2; i<numWords; i++) {
-
-        str_i = extractWord(fullpath, i);
-
-        if(pippo.get(str_i,false).asBool()) {
-            pippo = pippo.get(str_i,str_i);
-        }
-        else
-        {
-            std::cerr << "Error: json input parsing failed" << std::endl;
-            std::cerr << "The entry path is: " << fullpath << std::endl;
-            std::cerr << "The parser didn't find the word: " << str_i << std::endl;
-            std::cerr << "Check the input file for misprinting error!" << std::endl;
-            exit(1);
-        }
-    }
-
-    str_i = extractWord(fullpath, numWords);
-    pippo = pippo.get(str_i,"");
-    
-    size = pippo.size();
+    size = jsonvalue.size();
     return size;
 }
 
@@ -111,34 +67,9 @@ const unsigned int JsonInputParser::getSize(const std::string& fullpath) {
 const int JsonInputParser::getValue(const std::string& fullpath, const int defaultvalue) {
 
     int value = defaultvalue;
+    Json::Value jsonvalue = getJsonValue(fullpath, defaultvalue);
 
-    std::string str1 = extractWord(fullpath, 1);
-    std::string str_i;
-    int numWords = howManyWords(fullpath);
-
-    Json::Value pippo = _root[str1];
-
-    for(int i=2; i<numWords; i++) {
-
-        str_i = extractWord(fullpath, i);
-
-        if(pippo.get(str_i,false).asBool()) {
-            pippo = pippo.get(str_i,str_i);
-        }
-        else
-        {
-            std::cerr << "Error: json input parsing failed" << std::endl;
-            std::cerr << "The entry path is: " << fullpath << std::endl;
-            std::cerr << "The parser didn't find the word: " << str_i << std::endl;
-            std::cerr << "Check the input file for misprinting error!" << std::endl;
-            exit(1);
-        }
-    }
-
-    str_i = extractWord(fullpath, numWords);
-    pippo = pippo.get(str_i,defaultvalue);
-    
-    value = pippo.asInt();
+    value = jsonvalue.asInt();
 
     return value;
 }
@@ -146,71 +77,21 @@ const int JsonInputParser::getValue(const std::string& fullpath, const int defau
 const double JsonInputParser::getValue(const std::string& fullpath, const double defaultvalue) {
 
     double value = defaultvalue;
+    Json::Value jsonvalue = getJsonValue(fullpath, defaultvalue);
 
-    std::string str1 = extractWord(fullpath, 1);
-    std::string str_i;
-    int numWords = howManyWords(fullpath);
-
-    Json::Value pippo = _root[str1];
-
-    for(int i=2; i<numWords; i++) {
-
-        str_i = extractWord(fullpath, i);
-
-        if(pippo.get(str_i,false).asBool()) {
-            pippo = pippo.get(str_i,str_i);
-        }
-        else
-        {
-            std::cerr << "Error: json input parsing failed" << std::endl;
-            std::cerr << "The entry path is: " << fullpath << std::endl;
-            std::cerr << "The parser didn't find the word: " << str_i << std::endl;
-            std::cerr << "Check the input file for misprinting error!" << std::endl;
-            exit(1);
-        }
-    }
-
-    str_i = extractWord(fullpath, numWords);
-    pippo = pippo.get(str_i,defaultvalue);
-    
-    value = pippo.asDouble();
+    value = jsonvalue.asDouble();
 
     return value;
 }
 
 
 const ElemType JsonInputParser::getValue(const std::string& fullpath, const ElemType defaultvalue) {
-  
+
     ElemType value = defaultvalue;
     std::string valuestr = "";
+    Json::Value jsonvalue = getJsonValue(fullpath, "");
 
-    std::string str1 = extractWord(fullpath, 1);
-    std::string str_i;
-    int numWords = howManyWords(fullpath);
-
-    Json::Value pippo = _root[str1];
-
-    for(int i=2; i<numWords; i++) {
-
-        str_i = extractWord(fullpath, i);
-
-        if(pippo.get(str_i,false).asBool()) {
-            pippo = pippo.get(str_i,str_i);
-        }
-        else
-        {
-            std::cerr << "Error: json input parsing failed" << std::endl;
-            std::cerr << "The entry path is: " << fullpath << std::endl;
-            std::cerr << "The parser didn't find the word: " << str_i << std::endl;
-            std::cerr << "Check the input file for misprinting error!" << std::endl;
-            exit(1);
-        }
-    }
-
-    str_i = extractWord(fullpath, numWords);
-    pippo = pippo.get(str_i,"Quad9");
-
-    valuestr = pippo.asString();
+    valuestr = jsonvalue.asString();
 
     if(valuestr == "Quad9")
     {
@@ -233,136 +114,60 @@ const ElemType JsonInputParser::getValue(const std::string& fullpath, const Elem
         value = INVALID_ELEM;
     }
 
- 
     return value;
 
 }
 
 
 const std::string JsonInputParser::getValue(const std::string& fullpath, const std::string defaultvalue) {
+
     std::string value = "";
+    Json::Value jsonvalue = getJsonValue(fullpath, defaultvalue);
 
-    std::string str1 = extractWord(fullpath, 1);
-    std::string str_i;
-    int numWords = howManyWords(fullpath);
+    value = jsonvalue.asString();
 
-    Json::Value pippo = _root[str1];
-
-    for(int i=2; i<numWords; i++) {
-
-        str_i = extractWord(fullpath, i);
-
-        if(pippo.get(str_i,false).asBool()) {
-            pippo = pippo.get(str_i,str_i);
-        }
-        else
-        {
-            std::cerr << "Error: json input parsing failed" << std::endl;
-            std::cerr << "The entry path is: " << fullpath << std::endl;
-            std::cerr << "The parser didn't find the word: " << str_i << std::endl;
-            std::cerr << "Check the input file for misprinting error!" << std::endl;
-            exit(1);
-        }
-    }
-
-    str_i = extractWord(fullpath, numWords);
-    pippo = pippo.get(str_i,defaultvalue);
-    value = pippo.asString();
-   
     return value;
-   
+
 }
 
 
 const FEOrder JsonInputParser::getValue(const std::string& fullpath, const FEOrder defaultvalue) {
-  
+
     FEOrder value = defaultvalue;
     std::string valuestr = "";
+    Json::Value jsonvalue = getJsonValue(fullpath, "");
 
-    std::string str1 = extractWord(fullpath, 1);
-    std::string str_i;
-    int numWords = howManyWords(fullpath);
+    valuestr = jsonvalue.asString();
 
-    Json::Value pippo = _root[str1];
-
-    for(int i=2; i<numWords; i++) {
-
-        str_i = extractWord(fullpath, i);
-
-        if(pippo.get(str_i,false).asBool()) {
-            pippo = pippo.get(str_i,str_i);
-        }
-        else
-        {
-            std::cerr << "Error: json input parsing failed" << std::endl;
-            std::cerr << "The entry path is: " << fullpath << std::endl;
-            std::cerr << "The parser didn't find the word: " << str_i << std::endl;
-            std::cerr << "Check the input file for misprinting error!" << std::endl;
-            exit(1);
-        }
-    }
-
-    str_i = extractWord(fullpath, numWords);
-    pippo = pippo.get(str_i,"first");
-
-    valuestr = pippo.asString();
-    
     if (valuestr == "first")
     {
-      value = FIRST;
+        value = FIRST;
     }
     else if (valuestr == "serendipity")
     {
-      value = SERENDIPITY;
+        value = SERENDIPITY;
     }
     else if (valuestr == "second")
     {
-      value = SECOND;
+        value = SECOND;
     }
     else
     {
-      std::cerr << " Error: finite element order not supported!" << std::endl;
-      exit(1);
+        std::cerr << " Error: finite element order not supported!" << std::endl;
+        exit(1);
     }
-    
-   
+
     return value;
 }
 
 
 const MgType JsonInputParser::getValue(const std::string& fullpath, const MgType defaultvalue) {
-  
+
     MgType value = defaultvalue;
     std::string valuestr = "";
+    Json::Value jsonvalue = getJsonValue(fullpath, "");
 
-    std::string str1 = extractWord(fullpath, 1);
-    std::string str_i;
-    int numWords = howManyWords(fullpath);
-
-    Json::Value pippo = _root[str1];
-
-    for(int i=2; i<numWords; i++) {
-
-        str_i = extractWord(fullpath, i);
-
-        if(pippo.get(str_i,false).asBool()) {
-            pippo = pippo.get(str_i,str_i);
-        }
-        else
-        {
-            std::cerr << "Error: json input parsing failed" << std::endl;
-            std::cerr << "The entry path is: " << fullpath << std::endl;
-            std::cerr << "The parser didn't find the word: " << str_i << std::endl;
-            std::cerr << "Check the input file for misprinting error!" << std::endl;
-            exit(1);
-        }
-    }
-
-    str_i = extractWord(fullpath, numWords);
-    pippo = pippo.get(str_i,"V_cycle");
-
-    valuestr = pippo.asString();
-  
+    valuestr = jsonvalue.asString();
 
     if ( valuestr == "V_cycle" )
     {
@@ -376,94 +181,78 @@ const MgType JsonInputParser::getValue(const std::string& fullpath, const MgType
         std::cout << "The selected MG cycle does not exist!" << std::endl;
         exit(1);
     }
-    
+
     return value;
 
 }
 
-const std::string JsonInputParser::getValueFromArray(const std::string& basepath, const unsigned int index, 
-					             const std::string entry, const std::string defaultvalue) {
-      
-    std::string value = defaultvalue;  
-    std::string str1 = extractWord(basepath, 1);
-    std::string str_i;
-    int numWords = howManyWords(basepath);
+const std::string JsonInputParser::getValueFromArray(const std::string& basepath, const unsigned int index,
+        const std::string entry, const std::string defaultvalue) {
 
-    Json::Value pippo = _root[str1];
+    std::string value = defaultvalue;
+    Json::Value jsonvalue = getJsonValue(basepath, "");
 
-    for(int i=2; i<numWords; i++) {
+    jsonvalue = jsonvalue[index].get(entry,defaultvalue);
+    value = jsonvalue.asString();
 
-        str_i = extractWord(basepath, i);
-
-        if(pippo.get(str_i,false).asBool()) {
-            pippo = pippo.get(str_i,str_i);
-        }
-        else
-        {
-            std::cerr << "Error: json input parsing failed" << std::endl;
-            std::cerr << "The entry path is: " << basepath << std::endl;
-            std::cerr << "The parser didn't find the word: " << str_i << std::endl;
-            std::cerr << "Check the input file for misprinting error!" << std::endl;
-            exit(1);
-        }
-    }
-
-    str_i = extractWord(basepath, numWords);
-    pippo = pippo.get(str_i,"");
-  
-    pippo = pippo[index].get(entry,defaultvalue);
-    value = pippo.asString();
-  
     return value;
 }
 
-const BDCType JsonInputParser::getValueFromArray(const std::string& basepath, const unsigned int index, 
-					 const std::string entry, const BDCType defaultvalue) {
-  
-    BDCType value = defaultvalue;  
+const BDCType JsonInputParser::getValueFromArray(const std::string& basepath, const unsigned int index,
+        const std::string entry, const BDCType defaultvalue) {
+
+    BDCType value = defaultvalue;
     std::string valuestr = "";
-    std::string str1 = extractWord(basepath, 1);
-    std::string str_i;
-    int numWords = howManyWords(basepath);
+    Json::Value jsonvalue = getJsonValue(basepath, "");
 
-    Json::Value pippo = _root[str1];
+    jsonvalue = jsonvalue[index].get(entry,defaultvalue);
+    valuestr = jsonvalue.asString();
 
-    for(int i=2; i<numWords; i++) {
-
-        str_i = extractWord(basepath, i);
-
-        if(pippo.get(str_i,false).asBool()) {
-            pippo = pippo.get(str_i,str_i);
-        }
-        else
-        {
-            std::cerr << "Error: json input parsing failed" << std::endl;
-            std::cerr << "The entry path is: " << basepath << std::endl;
-            std::cerr << "The parser didn't find the word: " << str_i << std::endl;
-            std::cerr << "Check the input file for misprinting error!" << std::endl;
-            exit(1);
-        }
-    }
-
-    str_i = extractWord(basepath, numWords);
-    pippo = pippo.get(str_i,"");
-  
-    pippo = pippo[index].get(entry,defaultvalue);
-    valuestr = pippo.asString();
-  
     if ( valuestr == "dirichlet") {
-       value = DIRICHLET;
+        value = DIRICHLET;
     }
     else if( valuestr == "neumann") {
-       value = NEUMANN;
+        value = NEUMANN;
     }
     else {
-       std::cout << "Boundary condition not implemented!" << std::endl;
-       exit(1);
+        std::cout << "Boundary condition not implemented!" << std::endl;
+        exit(1);
     }
-        
+
     return value;
-    
+
+}
+
+template <typename T_sys>
+const Json::Value JsonInputParser::getJsonValue(const std::string& basepath, const T_sys defaultvalue) {
+
+    std::string str1 = extractWord(basepath, 1);
+    std::string str_i;
+    int numWords = howManyWords(basepath);
+
+    Json::Value jsonvalue = _root[str1];
+
+    for(int i=2; i<numWords; i++) {
+
+        str_i = extractWord(basepath, i);
+
+        if(jsonvalue.get(str_i,false).asBool()) {
+            jsonvalue = jsonvalue.get(str_i,str_i);
+        }
+        else
+        {
+            std::cerr << "Error: json input parsing failed" << std::endl;
+            std::cerr << "The entry path is: " << basepath << std::endl;
+            std::cerr << "The parser didn't find the word: " << str_i << std::endl;
+            std::cerr << "Check the input file for misprinting error!" << std::endl;
+            exit(1);
+        }
+    }
+
+    str_i = extractWord(basepath, numWords);
+    jsonvalue = jsonvalue.get(str_i,defaultvalue);
+
+    return jsonvalue;
 }
 
 
