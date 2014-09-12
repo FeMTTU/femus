@@ -42,9 +42,6 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   _maxAMRlevels(0),
   _AMRnorm(0),
   _AMRthreshold(0.01),
-  //_VankaIsSet(false),
-  //_NSchurVar(1),
-  //_Schur(false),
   _SmootherType(smoother_type)
  {
   
@@ -60,7 +57,6 @@ void LinearImplicitSystem::clear() {
       delete _LinSolver[ig];
     }  
     _NSchurVar_test=0;
-    _stabilization_test=0;
     _numblock_test=0;
     _numblock_all_test=0;
 }
@@ -84,7 +80,6 @@ void LinearImplicitSystem::init() {
     }
     
     _NSchurVar_test=0;
-    _stabilization_test=0;
     _numblock_test=0;   
     _numblock_all_test=0;
     // By default we solved for all the PDE variables
@@ -128,8 +123,10 @@ void LinearImplicitSystem::AddSystemLevel() {
       _LinSolver[_gridn]->SetElementBlockNumber("All", _overlap);
     }
     
-    if(_NSchurVar_test) _LinSolver[_gridn]->SetNumberOfSchurVariables(_NSchurVar);
-    if(_stabilization_test)  _LinSolver[_gridn]->AddStabilization(_stab, _compressibility);
+    if(_NSchurVar_test) {
+      _LinSolver[_gridn]->SetNumberOfSchurVariables(_NSchurVar);
+    }
+
     _gridn++;
 }
 
@@ -525,12 +522,6 @@ void LinearImplicitSystem::SetTolerances(const double rtol, const double atol,
   }
 }
 
-// void LinearImplicitSystem::SetSchurTolerances(const double rtol, const double atol,
-// 						    const double divtol, const unsigned maxits) {
-//   for (unsigned i=1; i<_gridn; i++) {
-//     _LinSolver[i]->set_tolerances(rtol,atol,divtol,maxits,1);
-//   }
-// }
 
 void LinearImplicitSystem::SetNumberOfSchurVariables(const unsigned short &NSchurVar){
    _NSchurVar_test=1;
@@ -541,17 +532,6 @@ void LinearImplicitSystem::SetNumberOfSchurVariables(const unsigned short &NSchu
    
    
 }
-
-void LinearImplicitSystem::AddStabilization(const bool stab, const double compressibility) {
-  _stabilization_test=1;
-  _stab=stab;
-  _compressibility=compressibility;
-  for (unsigned i=0; i<_gridn; i++) {
-    _LinSolver[i]->AddStabilization(_stab, _compressibility);
-  }
-}
-
-
 
 } //end namespace femus
 

@@ -142,7 +142,6 @@ int main(int argc,char **args) {
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(3);
   //system.SetMgSmoother(VANKA_SMOOTHER);
-  system.AddStabilization(true);
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   /*system.AddVariableToVankaIndex("DY");

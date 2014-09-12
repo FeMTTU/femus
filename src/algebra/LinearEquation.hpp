@@ -63,21 +63,6 @@ public:
   unsigned GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,const unsigned &idof_gmt) const;
   
   /** To be Added */
-  void SetMatrixProperties(const bool property);
-  
-  /** To be Added */
-  bool GetMatrixProperties();
-  
-  /** To be Added */
-  void AddStabilization(const bool stab, const double compressibility);
-  
-  /** To be Added */
-  double GetCompressibility();
-  
-  /** To be Added */
-  bool GetStabilization();
-  
-  /** To be Added */
   void SetResZero();
   
   /** To be Added */
@@ -114,13 +99,6 @@ protected:
   vector <char*> _SolName;
   const vector <NumericVector*> *_Bdc;
     
-private:
-  
-  // member data 
-  bool _is_symmetric;
-  bool _stabilization;
-  double _compressibility;
-  
 };
 
 } //end namespace femus
