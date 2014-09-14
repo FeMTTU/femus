@@ -248,14 +248,20 @@ void Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector
 
 bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const double &AMRthreshold){
     
-  vector <double> EpsMax(SolIndex.size());
+  vector <double> SolMax(SolIndex.size());
   vector <unsigned> SolType(SolIndex.size());
   vector <unsigned> SolEndInd(SolIndex.size());
   
+  unsigned END_IND[5]= {0,1,1,4,5};
+  
   for (unsigned k=0; k<SolIndex.size(); k++) {
-    EpsMax[k] = AMRthreshold * _Sol[SolIndex[k]]->linfty_norm ();
+    double EPSMAX = _Eps[SolIndex[k]]->linfty_norm ();
+    double SOLMAX = _Sol[SolIndex[k]]->linfty_norm ();
+    cout << "Current maximum relative change = " <<EPSMAX/SOLMAX << endl << endl;
+    SolMax[k] = AMRthreshold * SOLMAX;
     SolType[k] = _SolType[SolIndex[k]];
-    SolEndInd[k]   = _msh->GetEndIndex(SolType[k]);
+    //SolEndInd[k]   = _msh->GetEndIndex(SolType[k]);
+    SolEndInd[k]   = END_IND[SolType[k]];
   }
  
   Solution* AMR = _msh->_coordinate;
@@ -275,9 +281,9 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
   }
   counter_vec->zero();
  
-  for (int iel=_msh->IS_Mts2Gmt_elem_offset[_iproc]; iel < _msh->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
+  for (int iel_metis=_msh->IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _msh->IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
 
-    unsigned kel = _msh->IS_Mts2Gmt_elem[iel];
+    unsigned kel = _msh->IS_Mts2Gmt_elem[iel_metis];
     short unsigned kelt=_msh->el->GetElementType(kel);
     
     for (unsigned k=0; k<SolIndex.size(); k++) {
@@ -286,9 +292,9 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
 	unsigned inode=(SolType[k]<3)?(_msh->el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
 	unsigned inode_metis=_msh->GetMetisDof(inode,SolType[k]);
 	double value = (*_Eps[SolIndex[k]])(inode_metis);
-	if(fabs(value)>EpsMax[k]){
+	if(fabs(value)>SolMax[k]){
 	  counter_vec->add(_iproc,1.);
-	  AMR->_Sol[AMRIndex]->set(iel,1.);
+	  AMR->_Sol[AMRIndex]->set(iel_metis,1.);
 	  k=SolIndex.size();
 	  i=nve;
 	}
@@ -365,20 +371,20 @@ bool Solution::FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,co
   }
   counter_vec->zero();  
   
-  for (int iel=_msh->IS_Mts2Gmt_elem_offset[_iproc]; iel < _msh->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
+  for (int iel_metis=_msh->IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _msh->IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
     
     for (unsigned k=0; k<SolIndex.size(); k++) {
       
       if(SolType[k]<3){  
 	double value=0.;
 	for(int i=0;i<dim;i++){
-	  double valuei = (*_GradVec[SolIndex[k]][i])(iel);
+	  double valuei = (*_GradVec[SolIndex[k]][i])(iel_metis);
 	  value+=valuei*valuei;
 	}
 	value=sqrt(value);
 	if(fabs(value)>GradSolMax[k]){
 	  counter_vec->add(_iproc,1.);
-	  AMR->_Sol[AMRIndex]->set(iel,1.);
+	  AMR->_Sol[AMRIndex]->set(iel_metis,1.);
 	  k=SolIndex.size();
 	}
       }
