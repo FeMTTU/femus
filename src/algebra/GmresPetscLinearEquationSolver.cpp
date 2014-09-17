@@ -108,11 +108,9 @@ namespace femus {
 
   // ================================================
 
-  std::pair< int, double> GmresPetscLinearEquationSolver::solve(const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean) {
+  void GmresPetscLinearEquationSolver::solve(const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean) {
     
     clock_t SearchTime, AssemblyTime, SolveTime, UpdateTime;
-    int its;
-    double final_resid;
     PetscErrorCode ierr; 
     
     // ***************** NODE/ELEMENT SEARCH *******************
@@ -162,14 +160,6 @@ namespace femus {
 	_RESC->matrix_mult(*_EPSC,*_KK);
 	*_RES -= *_RESC;
                   
-	// Get the number of iterations required for convergence
-	ierr = KSPGetIterationNumber(_ksp, &its);		CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-	// Get the norm of the final residual to return to the user.
-	ierr = KSPGetResidualNorm(_ksp, &final_resid); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-	//this->clear();	
-
 	UpdateTime = clock() - start_time;
 	// ***************** END RES/EPS UPDATE ******************
       }
@@ -213,11 +203,6 @@ namespace femus {
       // Solve the linear system
       ierr = KSPSolve(_ksp,Pr,_Pw);					CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-      // Get the number of iterations required for convergence
-      ierr = KSPGetIterationNumber(_ksp, &its);				CHKERRABORT(MPI_COMM_WORLD,ierr);
-      // Get the norm of the final residual to return to the user.
-      ierr = KSPGetResidualNorm(_ksp, &final_resid); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-    
       ierr = VecRestoreSubVector(RES,isA,&Pr);				CHKERRABORT(MPI_COMM_WORLD,ierr);
       ierr = VecDestroy(&Pr);					        CHKERRABORT(MPI_COMM_WORLD,ierr);
         
@@ -246,10 +231,8 @@ namespace femus {
 #ifndef NDEBUG  
     cout << "GMRES Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:        "  << std::setw(11) << std::setprecision(6) << std::fixed <<
       static_cast<double>( SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
-      "  ITS: " << its  << "\t ksp_clean = "<< ksp_clean<<endl;
+      "  ITS: " << _maxits  << "\t ksp_clean = "<< ksp_clean<<endl;
 #endif
-
-    return std::make_pair(its,final_resid);
    
   }
 
@@ -304,11 +287,11 @@ namespace femus {
       // tolerance for the relative residual & leave the others at default values.
       ierr = KSPSetTolerances(_ksp,_rtol,_abstol,_dtol,_maxits);	CHKERRABORT(MPI_COMM_WORLD,ierr);
     
-//       if(_msh->GetGridNumber()!=0)
-// 	KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
+      if(_msh->GetGridNumber()!=0)
+	KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
 
-//       if(_msh->GetGridNumber()!=0)
-//  	KSPSetNormType(_ksp,KSP_NORM_NONE);
+      if(_msh->GetGridNumber()!=0)
+ 	KSPSetNormType(_ksp,KSP_NORM_NONE);
      
       // Set the options from user-input
       // Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
@@ -321,11 +304,11 @@ namespace femus {
       // it sets the residual history length to zero.  The default
       // behavior is for PETSc to allocate (internally) an array
       // of size 1000 to hold the residual norm history.
-      ierr = KSPSetResidualHistory(_ksp,
-				   PETSC_NULL,   // pointer to the array which holds the history
-				   PETSC_DECIDE, // size of the array holding the history
-				   PETSC_TRUE);  // Whether or not to reset the history for each solve.
-      CHKERRABORT(MPI_COMM_WORLD,ierr);
+//       ierr = KSPSetResidualHistory(_ksp,
+// 				   PETSC_NULL,   // pointer to the array which holds the history
+// 				   PETSC_DECIDE, // size of the array holding the history
+// 				   PETSC_TRUE);  // Whether or not to reset the history for each solve.
+//       CHKERRABORT(MPI_COMM_WORLD,ierr);
       
       //PCSetType(_pc,PCREDISTRIBUTE);
       PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);

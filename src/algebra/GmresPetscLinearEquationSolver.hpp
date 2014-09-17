@@ -63,7 +63,7 @@ public:
     // Solvers ------------------------------------------------------
     // ========================================================
     /// Call the GMRES smoother-solver using the PetscLibrary.
-    std::pair< int, double> solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean);
+    void solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean);
 
     // Setting --------------------------------------------
     ///  Set the user-specified solver stored in \p _solver_type
