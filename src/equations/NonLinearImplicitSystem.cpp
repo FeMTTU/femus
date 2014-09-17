@@ -130,22 +130,30 @@ void NonLinearImplicitSystem::solve() {
  	  _solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
  	}
  	
- 	_final_linear_residual = solver_info.second;
-	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
- 	if(_SmootherType != VANKA_SMOOTHER){
-	  if(_final_linear_residual < _absolute_convergence_tolerance) 
+//  	_final_linear_residual = solver_info.second;
+// 	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
+//  	if(_SmootherType != VANKA_SMOOTHER){
+// 	  if(_final_linear_residual < _absolute_convergence_tolerance) 
+// 	  break;
+// 	}
+	
+	_solution[igridn-1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
+	bool islinearconverged = IsLinearConverged(igridn-1);
+// 	if(_final_linear_residual < _absolute_convergence_tolerance) 
+	if(islinearconverged)
 	  break;
-	}
+	
       }
-      if(_SmootherType != VANKA_SMOOTHER){
-      	std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< std::setw(11) << std::setprecision(6) << std::scientific << _final_linear_residual << std::endl;
-      }
+//       if(_SmootherType != VANKA_SMOOTHER){
+//       	std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< std::setw(11) << std::setprecision(6) << std::scientific << _final_linear_residual << std::endl;
+//       }
       // ============== Update Solution ( ig = igridn )==============
       _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
 							 _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
       // ============== Test for non-linear Convergence ==============
-      bool conv = CheckConvergence(_sys_name.c_str(), igridn-1);
-      if (conv == true) _n_nonlinear_iterations = _n_max_nonlinear_iterations+1;
+      bool isnonlinearconverged = IsNonLinearConverged(igridn-1);
+      if (isnonlinearconverged)
+	_n_nonlinear_iterations = _n_max_nonlinear_iterations+1;
 
 #ifndef NDEBUG 
       std::cout << std::endl;
@@ -165,7 +173,7 @@ void NonLinearImplicitSystem::solve() {
 
 
 
-bool NonLinearImplicitSystem::CheckConvergence(const char pdename[], const unsigned igridn){
+bool NonLinearImplicitSystem::IsNonLinearConverged(const unsigned igridn){
 
   bool conv=true;
   double ResMax;

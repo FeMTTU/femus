@@ -142,7 +142,7 @@ int main(int argc,char **args) {
   
   std::cout << "Solution DX l2norm: " << l2normvarDX << std::endl; 
   
-  if( fabs(l2normvarDX - l2normvarDXStored ) > 1.e-16) 
+  if( fabs(l2normvarDX - l2normvarDXStored ) > 1.e-07) 
   {
      exit(1);
   }
@@ -153,7 +153,7 @@ int main(int argc,char **args) {
   
   std::cout << "Solution DY l2norm: " << l2normvarDY << std::endl; 
   
-  if( fabs(l2normvarDY - l2normvarDYStored ) > 1.e-16) 
+  if( fabs(l2normvarDY - l2normvarDYStored ) > 1.e-07) 
   {
     exit(1);
   }
@@ -165,7 +165,7 @@ int main(int argc,char **args) {
   
   std::cout << "Solution U l2norm: " << l2normvarU << std::endl; 
   
-  if( fabs(l2normvarU - l2normvarUStored ) > 1.e-16) 
+  if( fabs(l2normvarU - l2normvarUStored ) > 1.e-06) 
   {
     exit(1);
   }
@@ -176,7 +176,7 @@ int main(int argc,char **args) {
   
   std::cout << "Solution V l2norm: " << l2normvarV << std::endl; 
   
-  if( fabs(l2normvarV - l2normvarVStored ) > 1.e-16) 
+  if( fabs(l2normvarV - l2normvarVStored ) > 1.e-06) 
   {
     exit(1);
   }
@@ -187,7 +187,7 @@ int main(int argc,char **args) {
   
   std::cout << "Solution P l2norm: " << l2normvarP << std::endl; 
   
-  if( fabs(l2normvarP - l2normvarPStored ) > 1.e-16) 
+  if( fabs(l2normvarP - l2normvarPStored ) > 1.e-05) 
   {
     exit(1);
   }

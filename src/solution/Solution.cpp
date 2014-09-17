@@ -246,6 +246,42 @@ void Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector
     
 }
 
+/**
+ * Update _Res 
+ **/
+//--------------------------------------------------------------------------------
+void Solution::UpdateRes(const vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const vector <vector <unsigned> > &KKoffset) {
+ 
+  PetscScalar zero=0.;
+  for (unsigned k=0; k<_SolPdeIndex.size(); k++) {
+    unsigned indexSol=_SolPdeIndex[k];
+    unsigned soltype =  _SolType[indexSol];
+
+    int loc_offset_EPS = KKoffset[k][processor_id()];// - KKoffset[0][processor_id()]; //?????????
+
+    int glob_offset_eps = _msh->MetisOffset[soltype][processor_id()];
+
+    vector <int> index(_msh->own_size[soltype][processor_id()]);
+    for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
+      index[i]=loc_offset_EPS+i;
+    }
+
+    vector <double> valueRES(_msh->own_size[soltype][processor_id()]);
+    _RES->get(index,valueRES);
+
+    for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
+      if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) {
+	_Res[indexSol]->set(i+glob_offset_eps,valueRES[i]);
+      }
+      else {
+	_Res[indexSol]->set(i+glob_offset_eps,zero);
+      }
+    }
+    _Res[indexSol]->close();
+  }
+
+}
+
 bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const double &AMRthreshold){
     
   vector <double> EpsMax(SolIndex.size());

@@ -59,11 +59,11 @@ int main(int argc,char **argv) {
                 return 1;
             }
         }
-        else {
-	  std::cerr << argv[count] << " : command line argument not recognized" << std::endl;
-	  show_usage();
-	  return 1;
-	}
+//         else {
+// 	  std::cerr << argv[count] << " : command line argument not recognized" << std::endl;
+// 	  show_usage();
+// 	  return 1;
+// 	}
     }
 
     /// Init Petsc-MPI communicator
@@ -211,9 +211,9 @@ int main(int argc,char **argv) {
     
     system2.init();
     //common smoother option
-    system2.SetSolverFineGrids(GMRES);
+    system2.SetSolverFineGrids(RICHARDSON);
     system2.SetTolerances(1.e-12,1.e-20,1.e+50,4);
-    system2.SetPreconditionerFineGrids(ILU_PRECOND);
+    system2.SetPreconditionerFineGrids(SOR_PRECOND);
     //for Vanka and ASM smoothers
     system2.ClearVariablesToBeSolved();
     system2.AddVariableToBeSolved("All");
@@ -410,7 +410,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 		    unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1) - 1;
 		    
 		    if(ml_sol->GetBoundaryCondition("Sol",face) == NEUMANN && !ml_sol->Ishomogeneous("Sol",face)) {
-
+		      
 		        bdcfunc = (ParsedFunction* )(ml_sol->GetBdcFunction("Sol", face));
 			unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,order_ind);
                         const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
@@ -418,7 +418,6 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
                         for(unsigned i=0; i<nve; i++) {
                             unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-			    metis_node[i] = inode + mylsyspde->KKIndex[0];
                             unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
 
 			    for(unsigned ivar=0; ivar<dim; ivar++) {
@@ -433,7 +432,6 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
 			    xyzt.assign(4,0.);
                             for(unsigned i=0; i<nve; i++) {
-                              double soli = (*mysolution->_Sol[SolIndex])(metis_node[i]);
 		              for(unsigned ivar=0; ivar<dim; ivar++) {
 		               xyzt[ivar] += coordinates[ivar][i]*phi[i]; 
 		              }

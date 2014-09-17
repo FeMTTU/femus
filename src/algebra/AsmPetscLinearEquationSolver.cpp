@@ -414,8 +414,8 @@ namespace femus {
       if(_msh->GetGridNumber()!=0)
 	KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
       
-      if(_msh->GetGridNumber()!=0)
-	KSPSetNormType(_ksp,KSP_NORM_NONE);
+//       if(_msh->GetGridNumber()!=0)
+// 	KSPSetNormType(_ksp,KSP_NORM_NONE);
       
       // Set the options from user-input
       // Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
@@ -452,6 +452,15 @@ namespace femus {
       ierr = PCASMGetSubKSP(_pc,&_nlocal,&_first,&_subksp);			    CHKERRABORT(MPI_COMM_WORLD,ierr);
       
       for (int i=0; i<_nlocal; i++) {
+	
+	ierr = KSPSetType(_subksp[i], (char*) KSPRICHARDSON);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+	
+//         if(_msh->GetGridNumber()!=0)
+// 	  KSPSetInitialGuessKnoll(_subksp[i], PETSC_TRUE);
+//       
+//         if(_msh->GetGridNumber()!=0)
+// 	  KSPSetNormType(_subksp[1],KSP_NORM_NONE);
+      
 	ierr = KSPGetPC(_subksp[i],&_subpc);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
 	
 	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_subpc); 

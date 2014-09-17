@@ -83,7 +83,7 @@ public:
     };
 
     /** Checks for the non the linear convergence */
-    bool CheckConvergence(const char pdename[], const unsigned gridn);
+    bool IsNonLinearConverged(const unsigned gridn);
 
 protected:
 
