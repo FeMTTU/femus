@@ -263,6 +263,14 @@ IF(BUILD_POISSON_AMR)
     FILE(COPY           applications/Poisson_AMR/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/Poisson_AMR/input/)
 ENDIF(BUILD_POISSON_AMR)
 
+OPTION(BULID_NVR-STKS-TMP_AMR "Build the Navier-Stokes-Temp_AMR problem" ON)
+
+IF(BULID_NVR-STKS-TMP_AMR)
+       ADD_SUBDIRECTORY(applications/NavierStokesTemp_AMR/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesTemp_AMR/output/)
+    FILE(MAKE_DIRECTORY applications/NavierStokesTemp_AMR/input/)
+    FILE(COPY           applications/NavierStokesTemp_AMR/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/NavierStokesTemp_AMR/input/)
+ENDIF(BULID_NVR-STKS-TMP_AMR)
 
 ## --------------- Unit tests -------------------
 
