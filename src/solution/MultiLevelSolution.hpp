@@ -101,10 +101,10 @@ public:
     void UpdateBdc(const double time);
 
     /** To be Added */
-    void GenerateBdc(const unsigned int k, const double time);
+    void GenerateBdc(const unsigned int k, const unsigned grid0, const double time);
     
     /** To be Added */
-    void GenerateBdc(const unsigned &grid0=0);
+    void GenerateBdc_new(const unsigned int k, const unsigned grid0, const double time);
     
     /** To be Added */
     BDCType GetBoundaryCondition(const std::string varname, const unsigned int facename) const;
@@ -113,7 +113,7 @@ public:
     bool Ishomogeneous(const std::string varname, const unsigned int facename) const;
     
     /** To be Added */
-    void SetBoundaryCondition(const std::string name, const std::string facename, const BDCType bdctype = DIRICHLET, 
+    void SetBoundaryCondition_new(const std::string name, const std::string facename, const BDCType bdctype = DIRICHLET, 
                               const bool istimedependent = false, FunctionBase* func = NULL);
     
     /** To be Added */
@@ -181,6 +181,8 @@ private:
     vector< vector <bool> > _ishomogeneous;
     vector< vector <FunctionBase *> > _nonhomogeneousbcfunction; 
 
+    bool _Use_GenerateBdc_new;
+    
     bool _bdc_func_set;
     unsigned short  _gridn;
     vector <int>    _SolType;

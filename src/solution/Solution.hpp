@@ -83,11 +83,15 @@ public:
     /** Build Grad Matrix structure for SolType 0,1,2 */
     void BuildGradMatrixStructure(unsigned SolType);
     
+    /** Init and set to zero The AMR Eps vector */
+    void InitAMREps();
     /** member data - one for each variable - */
     vector <NumericVector*> _Sol;
     vector <NumericVector*> _SolOld;
     vector <NumericVector*> _Res;
     vector <NumericVector*> _Eps;
+    vector <NumericVector*> _AMREps;
+    bool _AMR_flag;
     vector <NumericVector*> _Bdc;
     vector <bool> _ResEpsBdcFlag;
     

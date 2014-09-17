@@ -162,94 +162,96 @@ void LinearImplicitSystem::solve() {
     
     std::cout << std::endl << " ************* Level : " << igridn -1 << " *************\n" << std::endl;
 
-     
+    bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_maxAMRlevels && igridn==_gridn)?1:0;
+    if(ThisIsAMR) _solution[igridn-1]->InitAMREps();
+    
     int nonlinear_cycle = 0; // da eliminare anche questo parametro!!!!
     
-      // ============== Fine level Assembly ==============
-      clock_t start_time = clock();
-      _LinSolver[igridn-1u]->SetResZero();
-      _LinSolver[igridn-1u]->SetEpsZero();
-      bool assemble_matrix = true; //Be carefull!!!! this is needed in the _assemble_function
+    // ============== Fine level Assembly ==============
+    clock_t start_time = clock();
+    _LinSolver[igridn-1u]->SetResZero();
+    _LinSolver[igridn-1u]->SetEpsZero();
+    bool assemble_matrix = true; //Be carefull!!!! this is needed in the _assemble_function
       
-      /// Be careful !!!! adesso stiamo usando _sys_number invece che ipde, da togliere al + presto
-      _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix);  
+    /// Be careful !!!! adesso stiamo usando _sys_number invece che ipde, da togliere al + presto
+    _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix);  
       
 #ifndef NDEBUG       
-      std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+    std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
  
-      for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
+    for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
 	
-	//std::cout << std::endl;
-	std::cout << " ************* V-Cycle : "<< _n_linear_iterations << " *************" << std::endl;
+      //std::cout << std::endl;
+      std::cout << " ************* V-Cycle : "<< _n_linear_iterations << " *************" << std::endl;
 	
-	bool ksp_clean=!_n_linear_iterations;
+      bool ksp_clean=!_n_linear_iterations;
 	
-	for (unsigned ig = igridn-1u; ig > 0; ig--) {
+      for (unsigned ig = igridn-1u; ig > 0; ig--) {
 	  
-	  // ============== Presmoothing ============== 
-	  for (unsigned k = 0; k < _npre; k++) {
-// 	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!k));
-	    solver_info = _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean*(!k));
-	  }
-	  // ============== Non-Standard Multigrid Restriction ==============
-	  start_time = clock();
-	  Restrictor(ig, igridn, nonlinear_cycle, _n_linear_iterations, full_cycle);
+	// ============== Presmoothing ============== 
+	for (unsigned k = 0; k < _npre; k++) {
+// 	  solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!k));
+	  solver_info = _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean*(!k));
+	}
+	// ============== Non-Standard Multigrid Restriction ==============
+	start_time = clock();
+	Restrictor(ig, igridn, nonlinear_cycle, _n_linear_iterations, full_cycle);
 	  
 #ifndef NDEBUG 
-	  std::cout << "Grid: " << ig << "-->" << ig-1 << "   RESTRICTION TIME:\t       "<< std::setw(11) << std::setprecision(6) << std::fixed
-	  << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+	std::cout << "Grid: " << ig << "-->" << ig-1 << "   RESTRICTION TIME:\t       "<< std::setw(11) << std::setprecision(6) << std::fixed
+	<< static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
-	}
+      }
        
- 	// ============== Coarse Direct Solver ==============
- 	//solver_info = ( _VankaIsSet ) ? _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean) : _LinSolver[0]->solve(ksp_clean);
- 	solver_info = _LinSolver[0]->solve(_VariablesToBeSolvedIndex, ksp_clean);
+      // ============== Coarse Direct Solver ==============
+      //solver_info = ( _VankaIsSet ) ? _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean) : _LinSolver[0]->solve(ksp_clean);
+      solver_info = _LinSolver[0]->solve(_VariablesToBeSolvedIndex, ksp_clean);
              
- 	for (unsigned ig = 1; ig < igridn; ig++) {
+      for (unsigned ig = 1; ig < igridn; ig++) {
  	  
- 	  // ============== Standard Prolongation ==============
- 	  start_time=clock();
- 	  Prolongator(ig);
+ 	// ============== Standard Prolongation ==============
+ 	start_time=clock();
+ 	Prolongator(ig);
 
 #ifndef NDEBUG 
- 	  std::cout << "Grid: " << ig-1 << "-->" << ig << "  PROLUNGATION TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
- 	  << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+ 	std::cout << "Grid: " << ig-1 << "-->" << ig << "  PROLUNGATION TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
+ 	<< static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif 
 	  
- 	  // ============== PostSmoothing ==============    
- 	  for (unsigned k = 0; k < _npost; k++) {
- 	    //solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur,ksp_clean * (!_npre) * (!k)) : _LinSolver[ig]->solve(ksp_clean * (!_npre) * (!k) );
-	    solver_info = _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean * (!_npre) * (!k));
- 	  }
+ 	// ============== PostSmoothing ==============    
+ 	for (unsigned k = 0; k < _npost; k++) {
+ 	  //solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur,ksp_clean * (!_npre) * (!k)) : _LinSolver[ig]->solve(ksp_clean * (!_npre) * (!k) );
+	  solver_info = _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean * (!_npre) * (!k));
  	}
- 	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
- 	for (unsigned ig = _gridr-1; ig < igridn-1; ig++) {  // _gridr
- 	  _solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
- 	}
- 	
- 	_final_linear_residual = solver_info.second;
-	
-	//std::cout << std::endl;
-	std::cout << "Grid: " << igridn-1 << "      RESIDUAL:\t\t      " << std::setw(11) << std::setprecision(6) << std::scientific << 
-	_final_linear_residual << std::endl << std::endl;
-	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
- 	if(_SmootherType != VANKA_SMOOTHER){
-	  if(_final_linear_residual < _absolute_convergence_tolerance) 
-	  break;
-	}
       }
+      // ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
+      for (unsigned ig = _gridr-1; ig < igridn-1; ig++) {  // _gridr
+ 	_solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
+      }
+ 	
+      _final_linear_residual = solver_info.second;
+	
+      //std::cout << std::endl;
+      std::cout << "Grid: " << igridn-1 << "      RESIDUAL:\t\t      " << std::setw(11) << std::setprecision(6) << std::scientific << 
+      _final_linear_residual << std::endl << std::endl;
+      // ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
+      if(_SmootherType != VANKA_SMOOTHER){
+	if(_final_linear_residual < _absolute_convergence_tolerance) 
+	break;
+      }
+    }
       
-      // ============== Update Solution ( ig = igridn )==============
-      _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
-					    _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
+    // ============== Update Solution ( ig = igridn )==============
+    _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
+				      _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
    
 //       std::cout << std::endl;
 //       std::cout <<"GRID: "<<igridn-1<< "\t    EAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
 
     // ==============  Solution Prolongation ==============
        
-    if(_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_maxAMRlevels && igridn==_gridn){
+    if(ThisIsAMR){
       bool conv_test=0;
       if(_AMRnorm==0){
 	conv_test=_solution[_gridn-1]->FlagAMRRegionBasedOnl2(_SolSystemPdeIndex,_AMRthreshold);
@@ -296,7 +298,7 @@ void LinearImplicitSystem::SetAMRSetOptions(const std::string& AMR, const unsign
   if ( !strcmp("l2",AMRnorm.c_str()) ){
     _AMRnorm=0;
   }
-  else if ( !strcmp("seminorm",AMRnorm.c_str()) ){
+  else if ( !strcmp("seminorm",AMRnorm.c_str()) || !strcmp("semi-norm",AMRnorm.c_str()) ){
     _AMRnorm=1;
   }
   else {
@@ -305,12 +307,11 @@ void LinearImplicitSystem::SetAMRSetOptions(const std::string& AMR, const unsign
   }
   
   if(SetRefinementFlag==NULL){    
-    }
-    else{
-      _msh[0]->mesh::_SetRefinementFlag = SetRefinementFlag;
-      _msh[0]->mesh::_TestSetRefinementFlag=1;
-    }
-  
+  }
+  else{
+    _msh[0]->mesh::_SetRefinementFlag = SetRefinementFlag;
+    _msh[0]->mesh::_TestSetRefinementFlag=1;
+  }
 }
 
 //---------------------------------------------------------------------------------------------
