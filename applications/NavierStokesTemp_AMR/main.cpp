@@ -55,7 +55,7 @@ int main(int argc,char **args) {
   nm=2;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
-  nr=2;
+  nr=0;
   std::cout<<"MAX_REFINEMENT levels: " << nr << endl<< endl;
   
   int tmp=nm;  nm+=nr;  nr=tmp;
@@ -72,7 +72,7 @@ int main(int argc,char **args) {
   //MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,SetRefinementFlag); 
   MultiLevelMesh ml_msh;
   ml_msh.ReadCoarseMesh(infile,"seventh",Lref);
-  ml_msh.RefineMesh(nm,nr,SetRefinementFlag);
+  ml_msh.RefineMesh(nm,nr,NULL);
   
   // ml_msh.EraseCoarseLevels(2);
   
@@ -137,6 +137,14 @@ int main(int argc,char **args) {
   else if(Vanka)	system1.SetMgSmoother(VANKA_SMOOTHER);
   
   system1.init();
+  
+  std::string  AMR  = "yes";
+  unsigned int maxAMRlevels 	= 6;
+  std::string  AMRnorm="l2";
+  double       AMRthreshold 	=0.001;
+ 
+  system1.SetAMRSetOptions(AMR,maxAMRlevels,AMRnorm,AMRthreshold);
+  
   //common smoother options
   system1.SetSolverFineGrids(GMRES);
   system1.SetPreconditionerFineGrids(ILU_PRECOND); 
@@ -158,96 +166,96 @@ int main(int argc,char **args) {
   //END Navier-Stokes Multilevel Problem
   
   
-  //BEGIN Temperature MultiLevel Problem
-  std::cout << std::endl;
-  std::cout << " *********** Temperature ************* " << std::endl;
-    
-  LinearImplicitSystem & system2 = ml_prob.add_system<LinearImplicitSystem> ("Temperature");
-  system2.AddSolutionToSytemPDE("T");
+//   //BEGIN Temperature MultiLevel Problem
+//   std::cout << std::endl;
+//   std::cout << " *********** Temperature ************* " << std::endl;
+//     
+//   LinearImplicitSystem & system2 = ml_prob.add_system<LinearImplicitSystem> ("Temperature");
+//   system2.AddSolutionToSytemPDE("T");
+//   
+//   
+//   // Set MG Options
+//   system2.AttachAssembleFunction(AssembleMatrixResT);
+//   system2.SetMaxNumberOfLinearIterations(6);
+//   system2.SetAbsoluteConvergenceTolerance(1.e-9);  
+//   system2.SetMgType(V_CYCLE);
+//   system2.SetNumberPreSmoothingStep(1);
+//   system2.SetNumberPostSmoothingStep(1);
+//    
+//   //Set Smoother Options
+//   if(Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
+//   else if(Asm) 		system2.SetMgSmoother(ASM_SMOOTHER);
+//   else if(Vanka)	system2.SetMgSmoother(VANKA_SMOOTHER);
+//   
+//   system2.init(); 
+//   //common smoother option
+//   system2.SetSolverFineGrids(GMRES); 
+//   system2.SetTolerances(1.e-12,1.e-20,1.e+50,4);
+//   system2.SetPreconditionerFineGrids(ILU_PRECOND);
+//   //for Vanka and ASM smoothers
+//   system2.ClearVariablesToBeSolved();
+//   system2.AddVariableToBeSolved("All");
+//   system2.SetNumberOfSchurVariables(0);
+//   system2.SetElementBlockNumber(4);                
+//   //for Gmres smoother
+//   system2.SetDirichletBCsHandling(PENALTY); 
+//   
+//   // Solve Temperature system
+//   ml_prob.get_system("Temperature").solve();
+//   //END Temperature Multilevel Problem
+//   
+//   double l2normvarU = ml_sol.GetSolutionLevel(3)->GetSolutionName("U")->l2_norm(); 
+//   
+//   double l2normvarUStored = 16.313927822836003;
+//   
+//   std::cout << "Solution U l2norm: " << l2normvarU << std::endl; 
+//   
+//   if( fabs((l2normvarU - l2normvarUStored )/l2normvarUStored) > 1.e-6) 
+//   {
+//     exit(1);
+//   }
+//   
+//   double l2normvarV = ml_sol.GetSolutionLevel(3)->GetSolutionName("V")->l2_norm(); 
+//   
+//   double l2normvarVStored = 6.0644257018060355;
+//   
+//   std::cout << "Solution V l2norm: " << l2normvarV << std::endl; 
+//   
+//   if( fabs((l2normvarV - l2normvarVStored )/l2normvarVStored )> 1.e-6) 
+//   {
+//     exit(1);
+//   }
+//   
+//   double l2normvarP = ml_sol.GetSolutionLevel(3)->GetSolutionName("P")->l2_norm(); 
+//   
+//   double l2normvarPStored = 1.8202105018866834;
+//   
+//   std::cout << "Solution P l2norm: " << l2normvarP << std::endl; 
+//   
+//   if( fabs((l2normvarP - l2normvarPStored )/l2normvarPStored) > 1.e-6) 
+//   {
+//     exit(1);
+//   }
+//   
+//   double l2normvarT = ml_sol.GetSolutionLevel(3)->GetSolutionName("T")->l2_norm(); 
+//   
+//   double l2normvarTStored = 219.68194612060503;
+//   
+//   std::cout << "Solution T l2norm: " << l2normvarT <<std::endl; 
+//   
+//   if( fabs((l2normvarT - l2normvarTStored )/l2normvarTStored) > 1.e-6) 
+//   {
+//     exit(1);
+//   }
   
+  std::vector<std::string> print_vars;
+  print_vars.push_back("U");
+  print_vars.push_back("V");
+  print_vars.push_back("P");
+  print_vars.push_back("T");
   
-  // Set MG Options
-  system2.AttachAssembleFunction(AssembleMatrixResT);
-  system2.SetMaxNumberOfLinearIterations(6);
-  system2.SetAbsoluteConvergenceTolerance(1.e-9);  
-  system2.SetMgType(V_CYCLE);
-  system2.SetNumberPreSmoothingStep(1);
-  system2.SetNumberPostSmoothingStep(1);
-   
-  //Set Smoother Options
-  if(Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
-  else if(Asm) 		system2.SetMgSmoother(ASM_SMOOTHER);
-  else if(Vanka)	system2.SetMgSmoother(VANKA_SMOOTHER);
-  
-  system2.init(); 
-  //common smoother option
-  system2.SetSolverFineGrids(GMRES); 
-  system2.SetTolerances(1.e-12,1.e-20,1.e+50,4);
-  system2.SetPreconditionerFineGrids(ILU_PRECOND);
-  //for Vanka and ASM smoothers
-  system2.ClearVariablesToBeSolved();
-  system2.AddVariableToBeSolved("All");
-  system2.SetNumberOfSchurVariables(0);
-  system2.SetElementBlockNumber(4);                
-  //for Gmres smoother
-  system2.SetDirichletBCsHandling(PENALTY); 
-  
-  // Solve Temperature system
-  ml_prob.get_system("Temperature").solve();
-  //END Temperature Multilevel Problem
-  
-  double l2normvarU = ml_sol.GetSolutionLevel(3)->GetSolutionName("U")->l2_norm(); 
-  
-  double l2normvarUStored = 16.313927822836003;
-  
-  std::cout << "Solution U l2norm: " << l2normvarU << std::endl; 
-  
-  if( fabs((l2normvarU - l2normvarUStored )/l2normvarUStored) > 1.e-6) 
-  {
-    exit(1);
-  }
-  
-  double l2normvarV = ml_sol.GetSolutionLevel(3)->GetSolutionName("V")->l2_norm(); 
-  
-  double l2normvarVStored = 6.0644257018060355;
-  
-  std::cout << "Solution V l2norm: " << l2normvarV << std::endl; 
-  
-  if( fabs((l2normvarV - l2normvarVStored )/l2normvarVStored )> 1.e-6) 
-  {
-    exit(1);
-  }
-  
-  double l2normvarP = ml_sol.GetSolutionLevel(3)->GetSolutionName("P")->l2_norm(); 
-  
-  double l2normvarPStored = 1.8202105018866834;
-  
-  std::cout << "Solution P l2norm: " << l2normvarP << std::endl; 
-  
-  if( fabs((l2normvarP - l2normvarPStored )/l2normvarPStored) > 1.e-6) 
-  {
-    exit(1);
-  }
-  
-  double l2normvarT = ml_sol.GetSolutionLevel(3)->GetSolutionName("T")->l2_norm(); 
-  
-  double l2normvarTStored = 219.68194612060503;
-  
-  std::cout << "Solution T l2norm: " << l2normvarT <<std::endl; 
-  
-  if( fabs((l2normvarT - l2normvarTStored )/l2normvarTStored) > 1.e-6) 
-  {
-    exit(1);
-  }
-  
-//   std::vector<std::string> print_vars;
-//   print_vars.push_back("U");
-//   print_vars.push_back("V");
-//   print_vars.push_back("P");
-//   print_vars.push_back("T");
-  
-//   GMVWriter gmvio(ml_sol);
-//   gmvio.write_system_solutions("biquadratic",print_vars);
+  GMVWriter gmvio(ml_sol);
+  gmvio.write_system_solutions("biquadratic",print_vars);
   
   
   

@@ -311,6 +311,9 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
     short unsigned kelt=_msh->el->GetElementType(kel);
     
     for (unsigned k=0; k<SolIndex.size(); k++) {
+      
+      if(SolType[k]<3){
+      
       unsigned nve=_msh->el->GetElementDofNumber(kel,SolEndInd[k]);
       for(unsigned i=0; i<nve; i++) {
 	unsigned inode=(SolType[k]<3)?(_msh->el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
@@ -323,6 +326,7 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
 	  i=nve;
 	}
       } 
+    }
     }
   }
   AMR->_Sol[AMRIndex]->close();
