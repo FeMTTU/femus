@@ -61,6 +61,8 @@ MultiLevelSolution::MultiLevelSolution( MultiLevelMesh *ml_msh):
   }
 
   _bdc_func_set=false;
+  
+  _Use_GenerateBdc_new=false;
 
   
 }
@@ -84,7 +86,14 @@ void MultiLevelSolution::AddSolutionLevel(){
   }
   _gridn++;
   unsigned  grid0=_gridn-1;
-  GenerateBdc(grid0);
+  
+  for (int k=0; k<_SolName.size(); k++) {
+    if(!_Use_GenerateBdc_new) GenerateBdc(k, grid0, 0.);
+    else GenerateBdc_new(k,grid0, 0.);  
+  }
+  
+  
+  
 }
 
 //---------------------------------------------------------------------------------------------------
@@ -272,6 +281,8 @@ void MultiLevelSolution::AttachSetBoundaryConditionFunction ( bool (* SetBoundar
 
 //---------------------------------------------------------------------------------------------------
 void MultiLevelSolution::InitializeBdc() {
+  _Use_GenerateBdc_new=true;
+  
   int nvars = _SolType.size();
   int nfaces = _ml_msh->GetLevel(0)->_boundaryinfo.size();
   _boundaryconditions.resize(nvars);
@@ -290,8 +301,10 @@ void MultiLevelSolution::InitializeBdc() {
 }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelSolution::SetBoundaryCondition(const std::string name, const std::string facename, 
+void MultiLevelSolution::SetBoundaryCondition_new(const std::string name, const std::string facename, 
 					      const BDCType bdctype, const bool istimedependent, FunctionBase* func) {
+  
+  
   
   unsigned int ivar = GetIndex(name.c_str());
   unsigned int iface = 0;
@@ -323,18 +336,16 @@ void MultiLevelSolution::SetBoundaryCondition(const std::string name, const std:
 
 
 
-void MultiLevelSolution::GenerateBdc(const unsigned &grid0) {
+void MultiLevelSolution::GenerateBdc_new(const unsigned k, const unsigned grid0, const double time) {
   
   const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
   
-  int nvars = _SolType.size();
-  
-  double time = 0;
-  
+ // int nvars = _SolType.size();
+      
   // 2 Default Neumann
   // 1 DD Dirichlet
   // 0 Dirichlet
-  for (unsigned k=0; k<nvars; k++) {
+  //for (unsigned k=0; k<nvars; k++) {
   for (unsigned igridn=grid0; igridn<_gridn; igridn++) {
     if(_solution[igridn]->_ResEpsBdcFlag[k]){
       for (unsigned j=_ml_msh->GetLevel(igridn)->MetisOffset[_SolType[k]][_iproc]; j<_ml_msh->GetLevel(igridn)->MetisOffset[_SolType[k]][_iproc+1]; j++) {
@@ -426,7 +437,7 @@ void MultiLevelSolution::GenerateBdc(const unsigned &grid0) {
       _solution[igridn]->_Bdc[k]->close();
     }
    }
-  }
+  //}
   
   
   
@@ -437,12 +448,13 @@ void MultiLevelSolution::GenerateBdc(const unsigned &grid0) {
 
 //---------------------------------------------------------------------------------------------------
 void MultiLevelSolution::GenerateBdc(const char name[], const char bdc_type[]) {
-
-  if(_bdc_func_set==false) {
-    cout << "Error: The boundary condition user-function is not set! Please call the AttachSetBoundaryConditionFunction routine" 
-         << endl;
-    exit(1); 
-  }
+  
+  if(_Use_GenerateBdc_new==0 && _bdc_func_set==false) {
+     cout << "Error: The boundary condition user-function is not set! Please call the AttachSetBoundaryConditionFunction routine" 
+          << endl;
+  	  
+     exit(1); 
+   }
 
   unsigned i_start;
   unsigned i_end;
@@ -482,7 +494,8 @@ void MultiLevelSolution::GenerateBdc(const char name[], const char bdc_type[]) {
     }
   }
   for (unsigned i=i_start; i<i_end; i++) {
-    GenerateBdc(i,0.);
+    if(!_Use_GenerateBdc_new)GenerateBdc(i,0,0.);
+    else GenerateBdc_new(i,0,0.);   
   }
 }
 
@@ -491,14 +504,14 @@ void MultiLevelSolution::UpdateBdc(const double time) {
 
   for (int k=0; k<_SolName.size(); k++) {
     if (!strcmp(_BdcType[k],"Time_dependent")) {
-      GenerateBdc(k,time);
-
+      if(!_Use_GenerateBdc_new)GenerateBdc(k,0,time);
+      else GenerateBdc_new(k,0,time);  
     }
   }
 }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelSolution::GenerateBdc(const unsigned int k, const double time) {
+void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int grid0, const double time) {
   
   const short unsigned NV1[6][2]= {{9,9},{6,6},{9,6},{3,3},{3,3},{1,1}};
   
@@ -506,7 +519,7 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const double time) {
   // 2 Default Neumann
   // 1 DD Dirichlet
   // 0 Dirichlet
-  for (unsigned igridn=0; igridn<_gridn; igridn++) {
+  for (unsigned igridn=grid0; igridn<_gridn; igridn++) {
     if(_solution[igridn]->_ResEpsBdcFlag[k]){
       for (unsigned j=_ml_msh->GetLevel(igridn)->MetisOffset[_SolType[k]][_iproc]; j<_ml_msh->GetLevel(igridn)->MetisOffset[_SolType[k]][_iproc+1]; j++) {
 	_solution[igridn]->_Bdc[k]->set(j,2.);

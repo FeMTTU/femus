@@ -344,10 +344,10 @@ int main(int argc,char **argv) {
 //     ml_sol.SetBoundaryCondition("Sol","top", NEUMANN);
     
     for(int i=0; i<boundary_conditions.size(); ++i) {
-      ml_sol.SetBoundaryCondition("Sol",facenamearray[i],bdctypearray[i],false,&parsedfunctionarray[i]);
+      ml_sol.SetBoundaryCondition_new("Sol",facenamearray[i],bdctypearray[i],false,&parsedfunctionarray[i]);
     }
     
-    ml_sol.GenerateBdc();
+    ml_sol.GenerateBdc("All");
     
     
     //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
