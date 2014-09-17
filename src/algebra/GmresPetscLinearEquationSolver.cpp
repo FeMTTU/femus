@@ -304,11 +304,11 @@ namespace femus {
       // tolerance for the relative residual & leave the others at default values.
       ierr = KSPSetTolerances(_ksp,_rtol,_abstol,_dtol,_maxits);	CHKERRABORT(MPI_COMM_WORLD,ierr);
     
-      if(_msh->GetGridNumber()!=0)
-	KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
+//       if(_msh->GetGridNumber()!=0)
+// 	KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
 
-      if(_msh->GetGridNumber()!=0)
-	KSPSetNormType(_ksp,KSP_NORM_NONE);
+//       if(_msh->GetGridNumber()!=0)
+//  	KSPSetNormType(_ksp,KSP_NORM_NONE);
      
       // Set the options from user-input
       // Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>

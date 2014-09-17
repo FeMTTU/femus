@@ -228,16 +228,19 @@ void LinearImplicitSystem::solve() {
  	  _solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
  	}
  	
- 	_final_linear_residual = solver_info.second;
+//  	_final_linear_residual = solver_info.second;
 	
 	//std::cout << std::endl;
-	std::cout << "Grid: " << igridn-1 << "      RESIDUAL:\t\t      " << std::setw(11) << std::setprecision(6) << std::scientific << 
-	_final_linear_residual << std::endl << std::endl;
+// 	std::cout << "Grid: " << igridn-1 << "      RESIDUAL:\t\t      " << std::setw(11) << std::setprecision(6) << std::scientific << 
+// 	_final_linear_residual << std::endl << std::endl;
 	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
- 	if(_SmootherType != VANKA_SMOOTHER){
-	  if(_final_linear_residual < _absolute_convergence_tolerance) 
-	  break;
-	}
+//  	if(_SmootherType != VANKA_SMOOTHER){
+	  _solution[igridn-1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
+	  bool islinearconverged = IsLinearConverged(igridn-1);
+// 	  if(_final_linear_residual < _absolute_convergence_tolerance) 
+	  if(islinearconverged)
+	    break;
+// 	}
       }
       
       // ============== Update Solution ( ig = igridn )==============
@@ -278,6 +281,34 @@ void LinearImplicitSystem::solve() {
   std::cout << "\t     SOLVER TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed 
   <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
   
+}
+
+bool LinearImplicitSystem::IsLinearConverged(const unsigned igridn) {
+  
+  bool conv=true;
+  double L2normRes;
+//   double L2normEps;
+  std::cout << std::endl;
+  //for debugging purpose
+  for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
+    unsigned indexSol=_SolSystemPdeIndex[k];
+    
+//     L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
+
+    L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
+
+    std::cout << "level=" << igridn<< "\tL2normRes" << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normRes    <<std::endl;
+//     std::cout << "level=" << igridn<< "\tL2normEps"     << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normEps <<std::endl;
+    
+    if (L2normRes < _absolute_convergence_tolerance && conv==true) {
+      conv=true;
+    } 
+    else {
+      conv=false;
+    }
+  }
+  std::cout << std::endl;
+  return conv;
 }
 
 //---------------------------------------------------------------------------------------------
