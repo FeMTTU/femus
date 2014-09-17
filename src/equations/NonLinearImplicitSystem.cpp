@@ -67,12 +67,17 @@ void NonLinearImplicitSystem::solve() {
     igrid0=_gridr;
   }
   
+  unsigned AMR_counter=0;
+  
   std::pair<int, double> solver_info;
      
   for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {   //_igridn
     
     std::cout << std::endl << "    ************* Level Max: " << igridn << " *************\n" << std::endl;
 
+    bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_maxAMRlevels && igridn==_gridn)?1:0;
+    if(ThisIsAMR) _solution[igridn-1]->InitAMREps();
+    
      
     for ( _n_nonlinear_iterations = 0; _n_nonlinear_iterations < _n_max_nonlinear_iterations; _n_nonlinear_iterations++ ) { //non linear cycle
       clock_t start_time = clock();
@@ -149,7 +154,7 @@ void NonLinearImplicitSystem::solve() {
 //       }
       // ============== Update Solution ( ig = igridn )==============
       _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
-							 _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
+				       _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
       // ============== Test for non-linear Convergence ==============
       bool isnonlinearconverged = IsNonLinearConverged(igridn-1);
       if (isnonlinearconverged)
@@ -160,6 +165,27 @@ void NonLinearImplicitSystem::solve() {
       std::cout << "COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
     }
+        
+    if(ThisIsAMR){
+      bool conv_test=0;
+      if(_AMRnorm==0){
+	conv_test=_solution[_gridn-1]->FlagAMRRegionBasedOnl2(_SolSystemPdeIndex,_AMRthreshold);
+      }
+      else if (_AMRnorm==1){
+	conv_test=_solution[_gridn-1]->FlagAMRRegionBasedOnSemiNorm(_SolSystemPdeIndex,_AMRthreshold);
+      }
+      if(conv_test==0){
+	_ml_msh->AddAMRMeshLevel();
+	_ml_sol->AddSolutionLevel();
+	AddSystemLevel();   
+	AMR_counter++;
+      }
+      else{
+	_maxAMRlevels=AMR_counter;
+	std::cout<<"The AMR solver has converged after "<<AMR_counter<<" refinements.\n";
+      }
+    }
+        
     // ==============  Solution Prolongation ==============
     if (igridn < _gridn) {
       ProlongatorSol(igridn);

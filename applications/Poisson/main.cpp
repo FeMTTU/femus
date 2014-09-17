@@ -149,10 +149,10 @@ int main(int argc,char **argv) {
     }
       
     for(int i=0; i<bdcsize; ++i) {
-      ml_sol.SetBoundaryCondition("Sol",facenamearray[i],bdctypearray[i],false,&parsedfunctionarray[i]);
+      ml_sol.SetBoundaryCondition_new("Sol",facenamearray[i],bdctypearray[i],false,&parsedfunctionarray[i]);
     }
     
-    ml_sol.GenerateBdc();
+    ml_sol.GenerateBdc("All");
     
     
     MultiLevelProblem ml_prob(&ml_msh,&ml_sol);

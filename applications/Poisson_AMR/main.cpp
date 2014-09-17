@@ -63,6 +63,9 @@ static void show_usage()
 }
 
 ParsedFunction fpsource;
+ParsedFunction fp_sol;
+ParsedFunction fp_dsoldx;
+ParsedFunction fp_dsoldy;
 
 
 int main(int argc,char **argv) {
@@ -230,18 +233,35 @@ int main(int argc,char **argv) {
 
     
     // reading function
-     std::string function;
-     function = root["variable"].get("func_source", "0.").asString();
      std::string variables = "x";
      variables += ",y";
      variables += ",z";
      variables += ",t";
+     std::string function;
 
-
-#ifdef HAVE_FPARSER       
-       fpsource.SetExpression(function);
-       fpsource.SetIndependentVariables(variables);
-       fpsource.Parse();
+#ifdef HAVE_FPARSER 
+      
+     function = root["variable"].get("func_source2", "0.").asString();
+     fpsource.SetExpression(function);
+     fpsource.SetIndependentVariables(variables);
+     fpsource.Parse();
+     
+     function = root["func_sol2"].get("sol", "0.").asString();
+     fp_sol.SetExpression(function);
+     fp_sol.SetIndependentVariables(variables);
+     fp_sol.Parse();
+          
+     function = root["func_sol2"].get("dsoldx", "0.").asString();
+     fp_dsoldx.SetExpression(function);
+     fp_dsoldx.SetIndependentVariables(variables);
+     fp_dsoldx.Parse();
+     
+     function = root["func_sol2"].get("dsoldy", "0.").asString();
+     fp_dsoldy.SetExpression(function);
+     fp_dsoldy.SetIndependentVariables(variables);
+     fp_dsoldy.Parse();
+     
+     
 #endif
        
        std::vector<std::string> facenamearray;
@@ -324,10 +344,10 @@ int main(int argc,char **argv) {
 //     ml_sol.SetBoundaryCondition("Sol","top", NEUMANN);
     
     for(int i=0; i<boundary_conditions.size(); ++i) {
-      ml_sol.SetBoundaryCondition("Sol",facenamearray[i],bdctypearray[i],false,&parsedfunctionarray[i]);
+      ml_sol.SetBoundaryCondition_new("Sol",facenamearray[i],bdctypearray[i],false,&parsedfunctionarray[i]);
     }
     
-    ml_sol.GenerateBdc();
+    ml_sol.GenerateBdc("All");
     
     
     //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -388,20 +408,6 @@ int main(int argc,char **argv) {
     //for Gmres smoother
     system2.SetDirichletBCsHandling(PENALTY);
 
-    
-//     ml_msh.AddMeshLevel();
-//     ml_sol.AddSolutionLevel();
-//     system2.AddSystemLevel();
-//     
-//     ml_msh.AddMeshLevel();
-//     ml_sol.AddSolutionLevel();
-//     system2.AddSystemLevel();
-//     
-//     ml_msh.AddMeshLevel();
-//     ml_sol.AddSolutionLevel();
-//     system2.AddSystemLevel();
-//     
-       
     // Solve Temperature system
     ml_prob.get_system("Poisson").solve();
     //END Temperature Multilevel Problem
@@ -415,14 +421,11 @@ int main(int argc,char **argv) {
 
     GMVWriter gmvio(ml_sol);
     gmvio.write_system_solutions("biquadratic",print_vars);
-// 
-//     XDMFWriter xdmfio(ml_sol);
-//     xdmfio.write_system_solutions("biquadratic",print_vars);
-    
-    
-    //std::cout.precision(14);
-    //std::cout<<"l2 Error = "<<GetError(ml_sol)<<std::endl;
-    
+
+  // 
+  //     XDMFWriter xdmfio(ml_sol);
+  //     xdmfio.write_system_solutions("biquadratic",print_vars);
+        
     int  iproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
     bool H1=false;
@@ -815,14 +818,14 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
     
     unsigned SolIndex;
     SolIndex=ml_sol.GetIndex("Sol");
-    unsigned order_ind = ml_sol.GetSolutionType(SolIndex);
-    unsigned end_ind   = msh->GetEndIndex(order_ind);
+    unsigned SolOrder = ml_sol.GetSolutionType(SolIndex);
+    unsigned SolEndIndex   = msh->GetEndIndex(SolOrder);
         
     for (int iel_metis=msh->IS_Mts2Gmt_elem_offset[iproc]; iel_metis < msh->IS_Mts2Gmt_elem_offset[iproc+1]; iel_metis++) {
       unsigned kel = msh->IS_Mts2Gmt_elem[iel_metis];
       if(ilevel==gridn-1 || !msh->el->GetRefinedElementIndex(kel)) {
         short unsigned kelt= msh->el->GetElementType(kel);
-	unsigned nve= msh->el->GetElementDofNumber(kel,end_ind);
+	unsigned nve= msh->el->GetElementDofNumber(kel,SolEndIndex);
       
 	// resize
 	metis_node.resize(nve);
@@ -836,15 +839,15 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
 	for( unsigned i=0; i<nve; i++) {
 	  unsigned inode=msh->el->GetElementVertexIndex(kel,i)-1u;
 	  unsigned inode_coord_metis=msh->GetMetisDof(inode,2);
-	  metis_node[i]=msh->GetMetisDof(inode,order_ind);
+	  metis_node[i]=msh->GetMetisDof(inode,SolOrder);
 	  for(unsigned idim=0; idim<dim; idim++) {
 	    coordinates[idim][i]=(*msh->_coordinate->_Sol[idim])(inode_coord_metis);
 	  }
 	}
 	
-	for(unsigned ig=0; ig < ml_sol._ml_msh->_type_elem[kelt][order_ind]->GetGaussPointNumber(); ig++) {
+	for(unsigned ig=0; ig < ml_sol._ml_msh->_type_elem[kelt][SolOrder]->GetGaussPointNumber(); ig++) {
           // *** get Jacobian and test function and test function derivatives ***
-          (ml_sol._ml_msh->_type_elem[kelt][order_ind]->*(ml_sol._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi);
+          (ml_sol._ml_msh->_type_elem[kelt][SolOrder]->*(ml_sol._ml_msh->_type_elem[kelt][SolOrder])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi);
           //current solution
           double SolT=0;
           vector < double > gradSolT(dim,0.);
@@ -853,8 +856,9 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
           }
 	  double pi=acos(-1.);
           double x[4] = {0.,0.,0.,0.};
-          unsigned SolType=ml_sol.GetSolutionType("Sol");
-          for(unsigned i=0; i<nve; i++) {
+          
+	  unsigned SolType=ml_sol.GetSolutionType("Sol");
+	  for(unsigned i=0; i<nve; i++) {
 	    double soli = (*solution->_Sol[SolIndex])(metis_node[i]);
 	    for(unsigned ivar=0; ivar<dim; ivar++) {
 	      x[ivar] += coordinates[ivar][i]*phi[i]; 
@@ -864,13 +868,19 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
 	      gradSolT[ivar2] += gradphi[i*dim+ivar2]*soli;
 	    }
 	  }
-	  double SolExact=exp(10.*x[0])*sin(pi*x[0])*sin(pi*x[1]);
-	  double dSolExactdx=exp(10.*x[0])*(10.*sin(pi*x[0])+pi*cos(pi*x[0]))*sin(pi*x[1]);
-    	  double dSolExactdy=exp(10.*x[0])*sin(pi*x[0])*pi*cos(pi*x[1]);
+	  
+	  double SolExact, dSolExactdx, dSolExactdy;
+#ifdef HAVE_FPARSER
+          SolExact    = fp_sol(x);
+	  dSolExactdx = fp_dsoldx(x);
+	  dSolExactdy = fp_dsoldy(x);
+#endif	  
+	  
 	  error_vec->add(iproc,((SolT-SolExact)*(SolT-SolExact)+
 				H1*((gradSolT[0]-dSolExactdx)*(gradSolT[0]-dSolExactdx)+
 				    (gradSolT[1]-dSolExactdy)*(gradSolT[1]-dSolExactdy))
 				)*weight );
+	  
 	  solution_vec->add(iproc,(SolExact*SolExact+
 				   H1*(dSolExactdx*dSolExactdx+dSolExactdy*dSolExactdy))*weight);
 	}
