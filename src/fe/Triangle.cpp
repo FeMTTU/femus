@@ -22,7 +22,37 @@
 namespace femus {
 
 
+double tri0::eval_phi(const int *I,const double* x) const {
+  return tri0a(x[0],x[1],I[0],I[1]);
+}
 
+double tri0::eval_dphidx(const int *I,const double* x) const {
+  return dtri0dx(x[0],x[1],I[0],I[1]);
+}
+
+double tri0::eval_dphidy(const int *I,const double* x) const {
+  return dtri0dy(x[0],x[1],I[0],I[1]);
+}
+
+double tri0::eval_dphidz(const int *I,const double* x) const {
+  return 0;
+}
+
+double tri0::tri0a(const double& x, const double& y, const int& i,const int& j) const {
+  return 1.;
+}
+
+double tri0::dtri0dx(const double& x, const double& y, const int& i,const int& j) const {
+  return 0.;
+}
+
+double tri0::dtri0dy(const double& x, const double& y, const int& i,const int& j) const {
+  return 0.;
+}
+
+
+
+//************************************************************
 
 double tri1::eval_phi(const int *I,const double* x) const {
   return tri1a(x[0],x[1],I[0],I[1]);

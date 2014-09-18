@@ -79,6 +79,7 @@ private:
   quad1 quad_1;
   quadth quad_th;
   quad2 quad_2;
+  tri0 tri_0;
   tri1 tri_1;
   tri2 tri_2;
   line0 line_0;
