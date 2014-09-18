@@ -560,6 +560,11 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       nc_=6;
       nf_=15;
       pt_basis = & tri_2;
+    } else if (!strcmp(order,"constant")) {
+      type_=13; // TODO is the choice of this number ok ?????
+      nc_=1;
+      nf_=4;
+      pt_basis = & tri_0;
     } else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -598,9 +603,9 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       nf_=5;
       pt_basis = & line_2;
     } else if (!strcmp(order,"constant")) {
-      type_=15;  //????????????????????
-      nc_=1;   //????????????????????????
-      nf_=2;   //???????????????????????
+      type_=15;  // TODO is the choice of this number ok ?????
+      nc_=1;   
+      nf_=2;   
       pt_basis = & line_0;
     }
     else {

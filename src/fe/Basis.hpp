@@ -226,6 +226,19 @@ public:
 
 //************************************************************
 
+class tri0: public basis {
+  double tri0a(const double& x,const double& y, const int& j,const int& i) const;
+  double dtri0dx(const double& x,const double& y, const int& j,const int& i) const;
+  double dtri0dy(const double& x,const double& y, const int& j,const int& i) const;
+public:
+  double eval_phi(const int *I,const double* x) const;
+  double eval_dphidx(const int *I,const double* x) const;
+  double eval_dphidy(const int *I,const double* x) const;
+  double eval_dphidz(const int *I,const double* x) const;
+};
+
+//************************************************************
+
 class tri1: public basis {
   double tri1a(const double& x,const double& y, const int& j,const int& i) const;
   double dtri1dx(const double& x,const double& y, const int& j,const int& i) const;
