@@ -189,7 +189,33 @@ void FEElemBase::init() {
     std::cout << "FE::init: FE order " << _order << " not supported" << std::endl;
     abort();
   }
+  
+  
+  
+  ///// LOOP to PRINT and CHECK the DIFFERENT VALUES  ===============================
+  
+  
+  for (int vb=0; vb<VB; vb++) {
+          uint dim = space_dim - vb;
 
+  for (uint ig=0; ig<_qrule->_NoGaussVB[vb]; ig++) {
+
+    for (uint idof=0; idof< _ndof[vb]; idof++) {
+//       infile >> dummy;
+//       _phi_mapVB[vb][idof*ngss+ig]=dummy;
+      for (uint idim=0; idim< dim; idim++) {
+          std::cout << "****************************************" << vb << " " << ig << " " << idof << " " << idim << " dphi " <<  _dphidxez_mapVB[vb][ idim*_ndof[vb]*_qrule->_NoGaussVB[vb] +idof*_qrule->_NoGaussVB[vb] + ig ] << std::endl;
+      }
+    }
+  }
+  
+  
+  
+  } //end VB for
+  
+  
+    ///// LOOP to PRINT and CHECK the DIFFERENT VALUES ===============================
+  
   return;
 }
 
