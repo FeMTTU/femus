@@ -250,6 +250,20 @@ public:
   double eval_dphidz(const int *I,const double* x) const;
 };
 
+//************************************************************
+
+class line0: public basis {
+  double lag0(const double& x, const int& i) const;
+  double dlag0(const double& x, const int& i) const;
+public:
+  double eval_phi(const int *I,const double* x) const;
+  double eval_dphidx(const int *I,const double* x) const;
+  double eval_dphidy(const int *I,const double* x) const;
+  double eval_dphidz(const int *I,const double* x) const;
+};
+
+//************************************************************
+
 class line1: public basis {
   double lag1(const double& x, const int& i) const;
   double dlag1(const double& x, const int& i) const;
@@ -271,6 +285,10 @@ public:
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
 };
+
+
+
+
 
 
 

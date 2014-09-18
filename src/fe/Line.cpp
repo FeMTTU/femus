@@ -23,7 +23,33 @@
 namespace femus {
 
 
+//************************************************************
 
+double line0::eval_phi(const int *I,const double* x) const {
+  return lag0(x[0],I[0]);
+}
+
+double line0::eval_dphidx(const int *I,const double* x) const {
+  return dlag0(x[0],I[0]);
+}
+
+double line0::eval_dphidy(const int *I,const double* x) const {
+  return 0;
+}
+
+double line0::eval_dphidz(const int *I,const double* x) const {
+  return 0.;
+}
+
+double line0::lag0(const double& x, const int& i) const {
+  return 1.;
+}
+double line0::dlag0(const double& x, const int& i) const {
+  return 0.;
+}
+
+
+//************************************************************
 
 double line1::eval_phi(const int *I,const double* x) const {
   return lag1(x[0],I[0]);

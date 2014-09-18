@@ -204,7 +204,7 @@ void FEElemBase::init() {
 //       infile >> dummy;
 //       _phi_mapVB[vb][idof*ngss+ig]=dummy;
       for (uint idim=0; idim< dim; idim++) {
-          std::cout << "****************************************" << vb << " " << ig << " " << idof << " " << idim << " dphi " <<  _dphidxez_mapVB[vb][ idim*_ndof[vb]*_qrule->_NoGaussVB[vb] +idof*_qrule->_NoGaussVB[vb] + ig ] << std::endl;
+          std::cout << "****************************************" << vb << " " << ig << " " << idof << " " << idim << " dphi " <<  _dphidxez_mapVB[vb][ idim*_ndof[vb]*_qrule->_NoGaussVB[vb] +idof*_qrule->_NoGaussVB[vb] + ig ]  << "                       " << std::endl;
       }
     }
   }
@@ -525,8 +525,7 @@ void FEElemBase::init_switch() {
 
       case(QUADR): {  //QUADR-2D-KK
         myelems[VV] = new elem_type("quad","constant",gauss_ord.c_str());
-	myelems[BB] = new elem_type("line","linear",gauss_ord.c_str()); 
-	std::cout << " line constant not implemented... I put this only to make the program run!!!" << std::endl;  //TODO 
+	myelems[BB] = new elem_type("line","constant",gauss_ord.c_str());  
         break;
       } //end //QUADR-2D-KK
 
@@ -609,7 +608,7 @@ void FEElemBase::init_switch() {
 // 		 double* temp =  ( myelems[vb]->*(myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
           double* tempTwo =  ( myelems[vb]->*(DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
           _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]] =  tempTwo[idof];
-          std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]] << std::endl;
+          std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]]  << "                                      "  << std::endl;
 
         }
 

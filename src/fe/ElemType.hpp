@@ -81,6 +81,7 @@ private:
   quad2 quad_2;
   tri1 tri_1;
   tri2 tri_2;
+  line0 line_0;
   line1 line_1;
   line2 line_2;
 
