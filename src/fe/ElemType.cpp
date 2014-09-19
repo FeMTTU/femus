@@ -467,6 +467,11 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       nc_=10;
       nf_=35;
       pt_basis = & tet_2;
+    } else if (!strcmp(order,"constant")) {
+      type_=8;
+      nc_=1;
+      nf_=8;
+      pt_basis = & tet_0;
     } else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
