@@ -72,6 +72,7 @@ private:
   wedge1 wedge_1;
   wedgeth wedge_th;
   wedge2 wedge_2;
+  tet0 tet_0;
   tet1 tet_1;
   tet2 tet_2;
   quad0 quad_0;

@@ -548,10 +548,8 @@ void FEElemBase::init_switch() {
       } //end  //QUADR-3D-KK
 
       case(TRIANG): {  //TRIANG-3D-KK
-//      myelems[VV] = new elem_type
-//      myelems[BB] = new elem_type
-	std::cout << "Not implemented yet TRIANG-3D-KK" << std::endl;
-        abort();
+      myelems[VV] = new elem_type("tet","constant",gauss_ord.c_str());
+      myelems[BB] = new elem_type("tri","constant",gauss_ord.c_str());
         break;
       }  //end //TRIANG-3D-KK
 

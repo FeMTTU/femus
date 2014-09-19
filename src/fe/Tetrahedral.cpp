@@ -25,6 +25,41 @@ namespace femus {
 
 
 
+//************************************************************
+
+double tet0::eval_phi(const int *I,const double* x) const {
+  return tet_0(x[0],x[1],x[2],I[0],I[1],I[2]);
+}
+
+double tet0::eval_dphidx(const int *I,const double* x) const {
+  return dtet_0dx(x[0],x[1],x[2],I[0],I[1],I[2]);
+}
+
+double tet0::eval_dphidy(const int *I,const double* x) const {
+  return dtet_0dy(x[0],x[1],x[2],I[0],I[1],I[2]);
+}
+
+double tet0::eval_dphidz(const int *I,const double* x) const {
+  return dtet_0dz(x[0],x[1],x[2],I[0],I[1],I[2]);
+}
+
+double tet0::tet_0(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const {
+  return 1.;
+}
+
+double tet0::dtet_0dx(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const {
+  return 0.;
+}
+
+double tet0::dtet_0dy(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const {
+  return 0.;
+}
+
+double tet0::dtet_0dz(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const {
+  return 0.;
+}
+//************************************************************
+
 double tet1::eval_phi(const int *I,const double* x) const {
   return tet_1(x[0],x[1],x[2],I[0],I[1],I[2]);
 }

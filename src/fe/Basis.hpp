@@ -137,6 +137,21 @@ public:
 
 //************************************************************
 
+class tet0: public basis {
+private:
+  double tet_0(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const;
+  double dtet_0dx(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const;
+  double dtet_0dy(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const;
+  double dtet_0dz(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const;
+public:
+  double eval_phi(const int *I,const double* x) const;
+  double eval_dphidx(const int *I,const double* x) const;
+  double eval_dphidy(const int *I,const double* x) const;
+  double eval_dphidz(const int *I,const double* x) const;
+};
+
+//************************************************************
+
 class tet1: public basis {
 private:
   double tet_1(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const;
