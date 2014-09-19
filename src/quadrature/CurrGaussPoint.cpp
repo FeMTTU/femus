@@ -67,7 +67,7 @@ void CurrGaussPoint<FM_DIM>::SetPhiElDofsFEVB_g(const uint vbflag,const uint qlf
    
     for (uint eln=0; eln<el_nnodes; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
-              _phi_ndsQLVB_g[vbflag][qlflag][eln] = _AbsFEVect[qlflag]->_phi_mapVB[vbflag][lqp];
+              _phi_ndsQLVB_g[vbflag][qlflag][eln] = _AbsFEVect[qlflag]/*->_phi_mapVBGD[vbflag][qp][eln];*/ ->_phi_mapVB[vbflag][lqp];
          }
 
 return;
@@ -100,7 +100,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const ui
          for (uint eln=0; eln<el_nnodes; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
   
-           for (uint idim=0; idim<ndim; idim++)  dphidxi_g[idim] = _AbsFEVect[qlflag]->_dphidxez_mapVB[vbflag][lqp+idim*goffset];//  ((qlflag==0 )?2.:1.)*
+           for (uint idim=0; idim<ndim; idim++)  dphidxi_g[idim] = _AbsFEVect[qlflag]/*->_dphidxez_mapVBGD[vbflag][qp][eln + idim*el_nnodes]; */   ->_dphidxez_mapVB[vbflag][lqp+idim*goffset];
 	    
 	    for (uint idim=0; idim<ndim; idim++) {
 	    double sum = 0.;
@@ -170,8 +170,8 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const
          for (uint eln=0; eln<elndof; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
   
-	         _dphidxezeta_ndsQLVB_g[vbflag][qlflag][eln+idim*elndof] = _AbsFEVect[qlflag]->_dphidxez_mapVB[vbflag][lqp+idim*goffset];  }
-
+	         _dphidxezeta_ndsQLVB_g[vbflag][qlflag][eln+idim*elndof] = _AbsFEVect[qlflag]/*->_dphidxez_mapVBGD[vbflag][qp][eln + idim*elndof];*/->_dphidxez_mapVB[vbflag][lqp+idim*goffset];  
+	   }
 	 }
 
 //here you set _is_ready_for_Jac
@@ -308,7 +308,7 @@ double CurrGaussPoint<FM_DIM>::JacVectBB_g(const uint vb, QuantityLocal& xyz )/*
       for (uint i=0; i< FM_DIM; i++){
 	for (uint j=0; j<FM_DIM - 1; j++){
           for (uint s=0;s<elnshape;s++) {
-	  _dxyzdxieta_g[j][i] += xyz._val_dofs[s +i*xoff]*_dphidxezeta_ndsQLVB_g[vb][Order][s+j*(elnshape)];/*_fe[Order]->_dphidxez_mapVB[vb][sng+j*offset]*/ //_dphidxez2D_map
+	  _dxyzdxieta_g[j][i] += xyz._val_dofs[s +i*xoff]*_dphidxezeta_ndsQLVB_g[vb][Order][s+j*(elnshape)];   /*_fe[Order]->_dphidxez_mapVB[vb][sng+j*offset]*/ //_dphidxez2D_map
 	  }
 	}
       }
