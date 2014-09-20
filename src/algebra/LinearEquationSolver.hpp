@@ -114,7 +114,7 @@ public:
     };
 
     /** Call the smoother-solver using the PetscLibrary. */
-    virtual std::pair< int, double> solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean) = 0;
+    virtual void solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean) = 0;
 
 protected:
 

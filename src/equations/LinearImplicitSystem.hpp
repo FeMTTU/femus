@@ -97,6 +97,9 @@ public:
     void SetAbsoluteConvergenceTolerance(double absolute_convergence_tolerance) {
         _absolute_convergence_tolerance = absolute_convergence_tolerance;
     };
+    
+    /** */
+    bool IsLinearConverged(const unsigned igridn);
 
     /** Set the type of multigrid */
     void SetMgType(const MgType mgtype) {

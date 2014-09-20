@@ -299,7 +299,7 @@ namespace femus {
   
   // =================================================
   
-  std::pair< int, double> AsmPetscLinearEquationSolver::solve(const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean) {
+  void AsmPetscLinearEquationSolver::solve(const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean) {
     PetscVector* EPSCp=static_cast<PetscVector*> (_EPSC);  
     Vec EPSC=EPSCp->vec(); 
     PetscVector* RESp=static_cast<PetscVector*> (_RES);  
@@ -309,8 +309,6 @@ namespace femus {
     
     PetscErrorCode ierr;
     clock_t SearchTime, AssemblyTime, SolveTime, UpdateTime;
-    int its;
-    double final_resid;
     
     // ***************** NODE/ELEMENT SEARCH *******************
     clock_t start_time=clock();
@@ -344,12 +342,6 @@ namespace femus {
     
     ierr = KSPSolve(_ksp, RES, EPSC);			CHKERRABORT(MPI_COMM_WORLD,ierr);
     
-    // Get the number of iterations required for convergence
-    ierr = KSPGetIterationNumber(_ksp, &its);		CHKERRABORT(MPI_COMM_WORLD,ierr);
-    
-    // Get the norm of the final residual to return to the user.
-    ierr = KSPGetResidualNorm(_ksp, &final_resid); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
-    
     SolveTime = clock()-start_time;
     // ***************** END SOLVE ******************
     
@@ -369,10 +361,9 @@ namespace femus {
 #ifndef NDEBUG   
     cout << "ASM Grid: " << _msh->GetGridNumber()<< "        SOLVER TIME:        "  << std::setw(11) << std::setprecision(6) << std::fixed <<
       static_cast<double>( SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
-      "  ITS: " << its  << "\t ksp_clean = "<< ksp_clean<<endl;
+      "  ITS: " << _maxits  << "\t ksp_clean = "<< ksp_clean<<endl;
 #endif
     
-    return std::make_pair(its,final_resid);
   }
   
   
@@ -430,11 +421,11 @@ namespace femus {
       // it sets the residual history length to zero.  The default
       // behavior is for PETSc to allocate (internally) an array
       // of size 1000 to hold the residual norm history.
-      ierr = KSPSetResidualHistory(_ksp,
-				   PETSC_NULL,   // pointer to the array which holds the history
-				   PETSC_DECIDE, // size of the array holding the history
-				   PETSC_TRUE);  // Whether or not to reset the history for each solve.
-      CHKERRABORT(MPI_COMM_WORLD,ierr);
+//       ierr = KSPSetResidualHistory(_ksp,
+// 				   PETSC_NULL,   // pointer to the array which holds the history
+// 				   PETSC_DECIDE, // size of the array holding the history
+// 				   PETSC_TRUE);  // Whether or not to reset the history for each solve.
+//       CHKERRABORT(MPI_COMM_WORLD,ierr);
       
       PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND,_pc);
       PetscReal zero = 1.e-16;
@@ -452,12 +443,19 @@ namespace femus {
       ierr = PCASMGetSubKSP(_pc,&_nlocal,&_first,&_subksp);			    CHKERRABORT(MPI_COMM_WORLD,ierr);
       
       for (int i=0; i<_nlocal; i++) {
-	ierr = KSPGetPC(_subksp[i],&_subpc);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
 	
-	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_subpc); 
+	ierr = KSPSetType(_subksp[i], (char*) this->_solver_type);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+       
+	if(_msh->GetGridNumber()!=0)
+          KSPSetNormType(_subksp[i],KSP_NORM_NONE);
+
 	ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 	    CHKERRABORT(MPI_COMM_WORLD,ierr);          
 	
 	ierr = KSPSetFromOptions(_subksp[i]);
+	
+	ierr = KSPGetPC(_subksp[i],&_subpc);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
+	
+	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_subpc); 
 	PetscReal zero = 1.e-16;
 	PCFactorSetZeroPivot(_subpc,zero);
 	PCFactorSetShiftType(_subpc,MAT_SHIFT_NONZERO);
