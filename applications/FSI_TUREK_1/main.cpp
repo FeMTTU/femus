@@ -155,11 +155,11 @@ int main(int argc,char **args) {
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   //for Vanka and ASM smoothers
-  system.SetNumberOfSchurVariables(1);
+  system.SetNumberOfSchurVariables(0);
   system.SetElementBlockNumber(3);   
   //for Gmres smoother
-  system.SetDirichletBCsHandling(PENALTY); 
-  //system.SetDirichletBCsHandling(ELIMINATION);   
+  //system.SetDirichletBCsHandling(PENALTY); 
+  system.SetDirichletBCsHandling(ELIMINATION);   
    
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");

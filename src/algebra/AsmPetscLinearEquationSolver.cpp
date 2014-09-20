@@ -444,16 +444,16 @@ namespace femus {
       
       for (int i=0; i<_nlocal; i++) {
 	
-	ierr = KSPSetType(_subksp[i], (char*) this->_solver_type);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+	//ierr = KSPSetType(_subksp[i], (char*) this->_solver_type);		    CHKERRABORT(MPI_COMM_WORLD,ierr);
        
-	if(_msh->GetGridNumber()!=0)
-          KSPSetNormType(_subksp[i],KSP_NORM_NONE);
-
-	ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 	    CHKERRABORT(MPI_COMM_WORLD,ierr);          
-	
-	ierr = KSPSetFromOptions(_subksp[i]);
+	//if(_msh->GetGridNumber()!=0)
+        //  KSPSetNormType(_subksp[i],KSP_NORM_NONE);
 	
 	ierr = KSPGetPC(_subksp[i],&_subpc);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
+	
+	ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
+	
+	ierr = KSPSetFromOptions(_subksp[i]);
 	
 	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_subpc); 
 	PetscReal zero = 1.e-16;
