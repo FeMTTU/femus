@@ -156,7 +156,7 @@ int main(int argc,char **args) {
   system.AddVariableToBeSolved("All");
   //for Vanka and ASM smoothers
   system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber("All",2);   
+  system.SetElementBlockNumber(3);   
   //for Gmres smoother
   system.SetDirichletBCsHandling(PENALTY); 
   //system.SetDirichletBCsHandling(ELIMINATION);   
@@ -806,7 +806,7 @@ void AssembleMatrixResFSI_new(MultiLevelProblem &ml_prob, unsigned level, const 
 	  
 	else{
 	  //------------------------------------------------------------------------------------------------------------
-          if (solid_model==0) {
+          if (solid_model==0) { //incompressible Neo-Hookean material
 	    double e[3][3];
 	    //computation of the stress tensor
 	    for(int i=0;i<dim;i++){
@@ -836,10 +836,6 @@ void AssembleMatrixResFSI_new(MultiLevelProblem &ml_prob, unsigned level, const 
 		F[i][j]+=GradSolhatVAR[i][j];
 	      }
 	    }
-	      	    	    
-	    Jnp1_hat =  F[0][0]*F[1][1]*F[2][2] + F[0][1]*F[1][2]*F[2][0] + F[0][2]*F[1][0]*F[2][1]
-		      - F[2][0]*F[1][1]*F[0][2] - F[2][1]*F[1][2]*F[0][0] - F[2][2]*F[1][0]*F[0][1];		      
-	   
 	    // computation of the the three deformation tensor b
 	    for (int I=0; I<3; ++I) {
 	      for (int J=0; J<3; ++J) {
@@ -848,10 +844,10 @@ void AssembleMatrixResFSI_new(MultiLevelProblem &ml_prob, unsigned level, const 
 		  //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
 		  b_left[I][J] += F[I][K]*F[J][K];
 		}
-		Cauchy[I][J] = (mus/Jnp1_hat)*(b_left[I][J] - Id2th[I][J]);
+		Cauchy[I][J] = mus*(b_left[I][J] - Id2th[I][J]);
 	      }
 	    }
-
+	    // C_Mat: newton-raphson variation for Cauchy,  to be used as  gradfj_jj*C_mat[jdim][jj][idim][ii]*gradfi_ii
 	    C_mat[0][0][0][0]= 2.*F[0][0]; C_mat[0][0][0][1]= 1.*F[1][0]; C_mat[0][0][0][2]= 1.*F[2][0];
 	    C_mat[0][0][1][0]= 1.*F[1][0]; C_mat[0][0][1][1]= 0.;	  C_mat[0][0][1][2]= 0.;
 	    C_mat[0][0][2][0]= 1.*F[2][0]; C_mat[0][0][2][1]= 0.;	  C_mat[0][0][2][2]= 0.;
@@ -892,42 +888,11 @@ void AssembleMatrixResFSI_new(MultiLevelProblem &ml_prob, unsigned level, const 
 	      for (int jj=0; jj<3; ++jj) {
 	    	for (int kk=0; kk<3; ++kk) {
 	    	  for (int ll=0; ll<3; ++ll) {
-		    C_mat[ii][jj][kk][ll]*=(mus/Jnp1_hat);
+		    C_mat[ii][jj][kk][ll]*=mus;
 		  }
 		}
 	      }
 	    }
-	    
-// 	    I_bleft = b_left[0][0] + b_left[1][1] + b_left[2][2];
-// 	    
-// 	    //compressible case
-// 	    //             for (int ii=0; ii<3; ++ii) {
-// 	    //               for (int jj=0; jj<3; ++jj) {
-// 	    //                 //Cauchy stress tensor
-// 	    //                 Cauchy[ii][jj] = (_mus/Jnp1_hat)*(b_left[ii][jj] - Id2th[ii][jj]) + (_lambda/Jnp1_hat)*log(Jnp1_hat)*Id2th[ii][jj];
-// 	    //                 for (int k=0; k<3; ++k) {
-// 	    //                   for (int l=0; l<3; ++l) {
-// 	    //                   }
-// 	    //                 }
-// 	    //               }
-// 	    //             }
-// 	    
-// 	    //for the incompressible(nearly incompressible) case
-// 	    for (int ii=0; ii<3; ++ii) {
-// 	      for (int jj=0; jj<3; ++jj) {
-// 		for (int kk=0; kk<3; ++kk) {
-// 		  for (int ll=0; ll<3; ++ll) {
-// 		    C_mat[ii][jj][kk][ll] = 2.*mus*pow(Jnp1_hat,-1.6666666666666)*(
-// 										  0.333333333333*I_bleft*Id2th[ii][kk]*Id2th[jj][ll]              //1/3*I_c*i
-// 										  // 	                        +0.111111111111*I_C*Id2th[i][j]*Id2th[k][l]             //1/9*I_b*IxI
-// 										  // 				-0.333333333333*b_left[i][j]*Id2th[k][l]                //-1/3*b*I
-// 										  // 				-0.333333333333*Id2th[i][j]*b_left[k][l]                //-1/3*b*I
-// 										  )
-// 		      -SolVAR[2*dim]*(Id2th[ii][jj]*Id2th[kk][ll]-2.*Id2th[ii][kk]*Id2th[jj][ll] );  // -p(IxI-2i)
-// 		  }
-// 		}
-// 	      }
-// 	    }
 	  }
           //----------------------------------------------------------------------------------------------------------------------------
 
@@ -941,12 +906,11 @@ void AssembleMatrixResFSI_new(MultiLevelProblem &ml_prob, unsigned level, const 
             /// *** phi_i loop ***
             for (unsigned i=0; i<nve; i++,gradfi+=dim,fi++) {
 
-
               //BEGIN RESIDUALS A + Bt block ===========================
 	      
 	      // Residual ALE equations
  	      for(int idim=0; idim<dim; idim++) {
-	        Rhs[indexVAR[idim]][i] += (-phi[i]*(-SolVAR[dim+idim] ))*Weight_hat;
+	        Rhs[indexVAR[idim]][i] += (-phi[i]*(-SolVAR[dim+idim] ))*Weight;
               }
               
               double CauchyDIR[3]={0.,0.,0.};
@@ -959,11 +923,9 @@ void AssembleMatrixResFSI_new(MultiLevelProblem &ml_prob, unsigned level, const 
               // Residual Momentum equations
               for(int idim=0; idim<dim; idim++) {
 	        Rhs[indexVAR[dim+idim]][i] += (
-					       phi[i]*_gravity[idim]*Weight_hat
 					       -CauchyDIR[idim]*Weight
 					       +SolVAR[2*dim]*gradphi[i*dim+idim]*Weight
 					       );
-
               }
               
               //---------------------------------------------------------------------------------------------------------------------------------
@@ -974,46 +936,29 @@ void AssembleMatrixResFSI_new(MultiLevelProblem &ml_prob, unsigned level, const 
               const double *fj=&phi[0];
               // *** phi_j loop ***
               for (unsigned j=0; j<nve; j++,gradfj+=dim,fj++) {
-
-                for (int idim=0; idim<dim; ++idim) {
-                  for (int jdim=0; jdim<dim; ++jdim) {
-                    tg_stiff_matrix[idim][jdim] = 0.;
-                    for (int kdim=0; kdim<dim; ++kdim) {
-                      for (int ldim=0; ldim<dim; ++ldim) {
-                        tg_stiff_matrix[idim][jdim] += (*(gradfj+kdim))*(C_mat[idim][kdim][jdim][ldim])*(*(gradfi+ldim));
-                      }
-                    }
-                  }
-                }
-                
-                //geometric tangent stiffness matrix
-//                 double geom_tg_stiff_matrix = 0.;
-//                 for(int idim=0; idim<dim; ++idim) {
-//                   for(int jdim=0; jdim<dim; ++jdim) {
-//                     geom_tg_stiff_matrix += (*(gradfi+idim))*Cauchy[idim][jdim]*(*(gradfj+jdim));
-//                   }
-//                 }
-
                 /// Stiffness operator -- Elasticity equation (Linear or not)
                 for(int idim=0; idim<dim; idim++) {
-		  //B[indexVAR[dim+idim]][indexVAR[idim]][i*nve+j] += geom_tg_stiff_matrix*Weight;
- 		  for(int jdim=0; jdim<dim; jdim++) {
- 		    B[indexVAR[dim+idim]][indexVAR[jdim]][i*nve+j] += tg_stiff_matrix[idim][jdim]*Weight;
- 		  }
- 		}
-
+		  for(int jdim=0; jdim<dim; jdim++) {
+		    double cauchy_newton = 0.;
+		    for (int ii=0; ii<dim; ++ii) {
+		      for (int jj=0; jj<dim; ++jj) {
+			cauchy_newton += (*(gradfj+jj))*(C_mat[jdim][jj][idim][ii])*(*(gradfi+ii));
+		      }
+		    }
+		    B[indexVAR[dim+idim]][indexVAR[jdim]][i*nve+j] += cauchy_newton*Weight;
+		  }
+		}
                 /// Kinematic equation v = du/dt --> In the steady state we write \deltau^n+1 - \deltav^n+1 = v - 0
-                //   
-		for(int idim=0; idim<dim; idim++) {
+                for(int idim=0; idim<dim; idim++) {
 		  // -(v_n+1,eta)
-		  B[indexVAR[0+idim]][indexVAR[dim+idim]][i*nve+j] -= (*(fi))*(*(fj))*Weight_hat;
+		  B[indexVAR[0+idim]][indexVAR[dim+idim]][i*nve+j] -= (*(fi))*(*(fj))*Weight;
 		  //  (u_n+1,eta)
-		  B[indexVAR[0+idim]][indexVAR[0+idim]][i*nve+j] += (*(fi))*(*(fj))*Weight_hat;
+		  B[indexVAR[0+idim]][indexVAR[0+idim]][i*nve+j] += (*(fi))*(*(fj))*Weight;
 		}
 	      }
             }
           }
-          ////////////
+          // ********************************************
           { ///Gradient of Pressure
             const double *gradfi=&gradphi[0];
             // *** phi_i loop ***
@@ -1029,17 +974,22 @@ void AssembleMatrixResFSI_new(MultiLevelProblem &ml_prob, unsigned level, const 
           }
           ////////////
           { ///Divergence of the Displacement
+            double div_disp=0.;
+	    for(int i=0; i<dim; i++) {
+	      div_disp+=GradSolVAR[i][i];
+	    }
+          
             const double *fi=phi1;
-            // *** phi_i loop ***
+	    // *** phi_i loop ***
             for (unsigned i=0; i<nve1; i++,fi++) {
-
+	    
               //BEGIN RESIDUALS B block ===========================
 
               if (solid_model==0) {
                 Rhs[indexVAR[2*dim]][i] += -(-((*fi))*(I_e + (1./lambda)*SolVAR[2*dim] ) )*Weight_hat;
               }
               else if (solid_model==1) {
-                Rhs[indexVAR[2*dim]][i] += -(-((*fi))*( log(Jnp1_hat)/Jnp1_hat + (1./lambda)*SolVAR[2*dim] ) )*Weight_hat;
+                Rhs[indexVAR[2*dim]][i] +=  -(-((*fi))*(div_disp))*Weight;
               }
 
               //END RESIDUALS B block ===========================
@@ -1061,7 +1011,7 @@ void AssembleMatrixResFSI_new(MultiLevelProblem &ml_prob, unsigned level, const 
               const double *fj=phi1;
               // *** phi_j loop ***
               for (unsigned j=0; j<nve1; j++,fj++) {
-                B[indexVAR[2*dim]][indexVAR[2*dim]][i*nve1+j] -= (1./lambda)*((*fi)*(*fj))*Weight_hat;
+                B[indexVAR[2*dim]][indexVAR[2*dim]][i*nve1+j] -= 0.;
               }
             }
           }  //end pressure mass term
@@ -1865,4 +1815,3 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
 
 }
-
