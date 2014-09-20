@@ -71,7 +71,7 @@ private:
     }
 
     /** Call the Vanka smoother-solver using the PetscLibrary */
-    std::pair< int, double> solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean);
+    void solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean);
 
     /**  Set the user-specified solver stored in _solver_type */
     void set_petsc_solver_type (KSP &skp);

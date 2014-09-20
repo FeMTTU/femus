@@ -66,6 +66,9 @@ public:
 
     /** Sum to Solution vector the Epsilon vector. It is used inside the multigrid cycle */
     void SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
+    
+    /** */
+    void UpdateRes(const vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const vector <vector <unsigned> > &KKoffset);
 
     /** Update the solution */
     void UpdateSolution();

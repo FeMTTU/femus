@@ -73,7 +73,7 @@ private:
     };
 
     /** Call the ASM smoother-solver using the PetscLibrary */
-    std::pair< int, double> solve(const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean);
+    void solve(const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean);
 
     /**  Set the user-specified solver stored in \p _solver_type */
     void set_petsc_solver_type ();

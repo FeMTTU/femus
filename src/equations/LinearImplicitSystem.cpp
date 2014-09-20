@@ -156,8 +156,6 @@ void LinearImplicitSystem::solve() {
   
   unsigned AMR_counter=0;
   
-  std::pair<int, double> solver_info;
-     
   for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {   //_igridn
     
     std::cout << std::endl << " ************* Level : " << igridn -1 << " *************\n" << std::endl;
@@ -191,8 +189,7 @@ void LinearImplicitSystem::solve() {
 	  
 	// ============== Presmoothing ============== 
 	for (unsigned k = 0; k < _npre; k++) {
-// 	  solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!k));
-	  solver_info = _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean*(!k));
+	  _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean*(!k));
 	}
 	// ============== Non-Standard Multigrid Restriction ==============
 	start_time = clock();
@@ -205,8 +202,7 @@ void LinearImplicitSystem::solve() {
       }
        
       // ============== Coarse Direct Solver ==============
-      //solver_info = ( _VankaIsSet ) ? _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean) : _LinSolver[0]->solve(ksp_clean);
-      solver_info = _LinSolver[0]->solve(_VariablesToBeSolvedIndex, ksp_clean);
+      _LinSolver[0]->solve(_VariablesToBeSolvedIndex, ksp_clean);
              
       for (unsigned ig = 1; ig < igridn; ig++) {
  	  
@@ -221,25 +217,18 @@ void LinearImplicitSystem::solve() {
 	  
  	// ============== PostSmoothing ==============    
  	for (unsigned k = 0; k < _npost; k++) {
- 	  //solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur,ksp_clean * (!_npre) * (!k)) : _LinSolver[ig]->solve(ksp_clean * (!_npre) * (!k) );
-	  solver_info = _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean * (!_npre) * (!k));
+ 	  _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean * (!_npre) * (!k));
  	}
       }
       // ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
       for (unsigned ig = _gridr-1; ig < igridn-1; ig++) {  // _gridr
  	_solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
       }
- 	
-      _final_linear_residual = solver_info.second;
-	
-      //std::cout << std::endl;
-      std::cout << "Grid: " << igridn-1 << "      RESIDUAL:\t\t      " << std::setw(11) << std::setprecision(6) << std::scientific << 
-      _final_linear_residual << std::endl << std::endl;
-      // ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
-      if(_SmootherType != VANKA_SMOOTHER){
-	if(_final_linear_residual < _absolute_convergence_tolerance) 
-	break;
-      }
+ 
+      _solution[igridn-1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
+      bool islinearconverged = IsLinearConverged(igridn-1);
+      if(islinearconverged)
+        break;
     }
       
     // ============== Update Solution ( ig = igridn )==============
@@ -280,6 +269,34 @@ void LinearImplicitSystem::solve() {
   std::cout << "\t     SOLVER TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed 
   <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
   
+}
+
+bool LinearImplicitSystem::IsLinearConverged(const unsigned igridn) {
+  
+  bool conv=true;
+  double L2normRes;
+//   double L2normEps;
+  std::cout << std::endl;
+  //for debugging purpose
+  for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
+    unsigned indexSol=_SolSystemPdeIndex[k];
+    
+//     L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
+
+    L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
+
+    std::cout << "level=" << igridn<< "\tL2normRes" << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normRes    <<std::endl;
+//     std::cout << "level=" << igridn<< "\tL2normEps"     << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normEps <<std::endl;
+    
+    if (L2normRes < _absolute_convergence_tolerance && conv==true) {
+      conv=true;
+    } 
+    else {
+      conv=false;
+    }
+  }
+  std::cout << std::endl;
+  return conv;
 }
 
 //---------------------------------------------------------------------------------------------
