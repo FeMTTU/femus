@@ -51,7 +51,7 @@ int main(int argc,char **args) {
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
-  nm=4;
+  nm=2;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
@@ -133,12 +133,15 @@ int main(int argc,char **args) {
    
   // System Fluid-Structure-Interaction
   system.AttachAssembleFunction(AssembleMatrixResFSI_new);  
-  system.SetMaxNumberOfLinearIterations(1);
-  system.SetAbsoluteConvergenceTolerance(1.e-8);  
+  
+  system.SetMaxNumberOfLinearIterations(2);
   system.SetMgType(F_CYCLE);
   system.SetMaxNumberOfNonLinearIterations(4);
-  system.SetNonLinearConvergenceTolerance(1.e-5);
-  
+  system.SetAbsoluteConvergenceTolerance(1.e-10);
+  system.SetNonLinearConvergenceTolerance(1.e-05);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
+   
   //Set Smoother Options
   if(Gmres) 		system.SetMgSmoother(GMRES_SMOOTHER);
   else if(Asm) 		system.SetMgSmoother(ASM_SMOOTHER);
@@ -147,15 +150,26 @@ int main(int argc,char **args) {
   // init all the systems
   system.init();
   
-  system.SetSolverFineGrids(GMRES);
-  system.SetPreconditionerFineGrids(LU_PRECOND); 
-  system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
   
+  system.SetSolverFineGrids(GMRES);
+  system.SetPreconditionerFineGrids(MLU_PRECOND); 
+  system.SetTolerances(1.e-12,1.e-20,1.e+50,10);
+  
+  
+//   system.SetSolverFineGrids(GMRES);
+//   system.SetPreconditionerFineGrids(LU_PRECOND); 
+//   system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
   
   system.ClearVariablesToBeSolved();
-  system.AddVariableToBeSolved("All");
+  //system.AddVariableToBeSolved("All");
+  system.AddVariableToBeSolved("DX");
+  system.AddVariableToBeSolved("DY");
+  system.AddVariableToBeSolved("U");
+  system.AddVariableToBeSolved("V");
+  system.AddVariableToBeSolved("P");
+  
   //for Vanka and ASM smoothers
-  system.SetNumberOfSchurVariables(0);
+  system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(3);   
   //for Gmres smoother
   //system.SetDirichletBCsHandling(PENALTY); 
@@ -391,7 +405,7 @@ void AssembleMatrixResFSI_new(MultiLevelProblem &ml_prob, unsigned level, const 
   const double *phi1;
     
   double Weight=0.;
-  double Weight_nojac=0.;
+  //double Weight_nojac=0.;
   double Weight_hat=0.;
   
   vector <vector < double> > vx(dim);
@@ -626,7 +640,7 @@ void AssembleMatrixResFSI_new(MultiLevelProblem &ml_prob, unsigned level, const 
 	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
 	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
 	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
-	if (flag_mat==2) Weight_nojac = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
+	//if (flag_mat==2) Weight_nojac = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
 
 	// ---------------------------------------------------------------------------
 	// displacement and velocity
@@ -685,7 +699,7 @@ void AssembleMatrixResFSI_new(MultiLevelProblem &ml_prob, unsigned level, const 
  		}
  	      }
       	      for(int idim=0; idim<dim; idim++) {
- 	        Rhs[indexVAR[idim]][i]+=(!solidmark[i])*(-LapmapVAR[idim]*Weight_nojac);
+ 	        Rhs[indexVAR[idim]][i]+=(!solidmark[i])*(-LapmapVAR[idim]*Weight);
  	      }
 	      // end redidual Laplacian ALE map
 
@@ -720,7 +734,7 @@ void AssembleMatrixResFSI_new(MultiLevelProblem &ml_prob, unsigned level, const 
 		  Lap_ale+=_mu_ale[jdim]*(*(gradfi+jdim))*(*(gradfj+jdim));
 		}	
 		for(int idim=0; idim<dim; idim++) {
-		  B[indexVAR[idim]][indexVAR[idim]][i*nve+j] += (!solidmark[i])*Lap_ale*Weight_nojac;  
+		  B[indexVAR[idim]][indexVAR[idim]][i*nve+j] += (!solidmark[i])*Lap_ale*Weight;  
 		}
 		// end Laplacian ALE map
 		
