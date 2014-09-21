@@ -149,7 +149,7 @@ int main(int argc,char **args) {
   
   system.SetMaxNumberOfLinearIterations(2);
   system.SetMgType(F_CYCLE);
-  system.SetMaxNumberOfNonLinearIterations(6);
+  system.SetMaxNumberOfNonLinearIterations(10);
   system.SetAbsoluteConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-05);
   system.SetNumberPreSmoothingStep(1);

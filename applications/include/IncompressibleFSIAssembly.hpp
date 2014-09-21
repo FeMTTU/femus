@@ -56,7 +56,7 @@ namespace femus {
     const double *phi1;
     
     double Weight=0.;
-    //double Weight_nojac=0.;
+    double Weight_nojac=0.;
     double Weight_hat=0.;
   
     vector <vector < double> > vx(dim);
@@ -291,7 +291,7 @@ namespace femus {
 	    (ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
 	    (ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
 	    phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
-	    //if (flag_mat==2) Weight_nojac = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
+	    if (flag_mat==2) Weight_nojac = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
 
 	    // ---------------------------------------------------------------------------
 	    // displacement and velocity
@@ -347,13 +347,12 @@ namespace femus {
 		  for(int idim=0; idim<dim; idim++) {
 		    for(int jdim=0; jdim<dim; jdim++) {
 		      LapmapVAR[idim] += _mu_ale[jdim]*(
-							GradSolVAR[idim][jdim]*gradphi[i*dim+jdim] +
-							-0.*GradSolVAR[jdim][jdim]*gradphi[i*dim+idim]
+							GradSolVAR[idim][jdim]*gradphi[i*dim+jdim]
 						       ) ;
 		    }
 		  }
 		  for(int idim=0; idim<dim; idim++) {
-		    Rhs[indexVAR[idim]][i]+=(!solidmark[i])*(-LapmapVAR[idim]*Weight);
+		    Rhs[indexVAR[idim]][i]+=(!solidmark[i])*(-LapmapVAR[idim]*Weight_nojac*Weight/Weight_hat);
 		  }
 		  // end redidual Laplacian ALE map
 
@@ -388,7 +387,7 @@ namespace femus {
 		      Lap_ale+=_mu_ale[jdim]*(*(gradfi+jdim))*(*(gradfj+jdim));
 		    }	
 		    for(int idim=0; idim<dim; idim++) {
-		      B[indexVAR[idim]][indexVAR[idim]][i*nve+j] += (!solidmark[i])*Lap_ale*Weight;  
+		      B[indexVAR[idim]][indexVAR[idim]][i*nve+j] += (!solidmark[i])*Lap_ale*Weight_nojac*Weight/Weight_hat;  
 		    }
 		    // end Laplacian ALE map
 		
@@ -469,9 +468,10 @@ namespace femus {
 	      //END B block ===========================
 	    }   
 	    //END FLUID ASSEMBLY ============
+	    
 	    //*******************************************************************************************************
-		//BEGIN SOLID ASSEMBLY ============
-	  
+	    
+	    //BEGIN SOLID ASSEMBLY ============
 	    else{
 	      //------------------------------------------------------------------------------------------------------------
 	      if (solid_model==0) { //incompressible Neo-Hookean material
@@ -622,7 +622,7 @@ namespace femus {
 			    // -(v_n+1,eta)
 			    B[indexVAR[0+idim]][indexVAR[dim+idim]][i*nve+j] -= (*(fi))*(*(fj))*Weight;
 			    //  (u_n+1,eta)
-			    B[indexVAR[0+idim]][indexVAR[0+idim]][i*nve+j] += (*(fi))*(*(fj))*Weight;
+			    B[indexVAR[0+idim]][indexVAR[0+idim]][i*nve+j] += 1.* (*(fi))*(*(fj))*Weight;
 			  }
 		      }
 		    }
