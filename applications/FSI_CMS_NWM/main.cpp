@@ -9,6 +9,8 @@
 #include "VTKWriter.hpp"
 #include "FElemTypeEnum.hpp"
 #include "../include/FSIassembly.hpp"
+#include "../include/IncompressibleFSIAssembly.hpp"
+
 
 using std::cout;
 using std::endl;
@@ -27,14 +29,31 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 //------------------------------------------------------------------------------------------------------------------
 
 int main(int argc,char **args) {
+    
+  bool Vanka=0, Gmres=0, Asm=0;
+  if(argc >= 2) {
+    if( !strcmp("vanka",args[1])) 	Vanka=1;
+    else if( !strcmp("gmres",args[1])) 	Gmres=1;
+    else if( !strcmp("asm",args[1])) 	Asm=1;
+    
+    if(Vanka+Gmres+Asm==0) {
+      cout << "wrong input arguments!" << endl;
+      exit(0);
+    }
+  }
+  else {
+    cout << "No input argument set default smoother = Gmres" << endl;
+    Gmres=1;
+  }
   
+   
   /// Init Petsc-MPI communicator
   FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
 
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
-  nm=1;
+  nm=4;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
@@ -44,9 +63,9 @@ int main(int argc,char **args) {
   nr=tmp;
 
   char *infile = new char [50];
-
+  
   //input file
-  sprintf(infile,"./input/mesh.comsolbenchmark");
+  sprintf(infile,"./input/mesh.comsolbenchmark.neu");
 
   const double Lref = 1.;
   double Uref = 1.;
@@ -56,19 +75,27 @@ int main(int argc,char **args) {
   double ni = 0.3;
   double E = 200000;
   
+//   sprintf(infile,"./input/fsifirst.neu");
+// 
+//   double Lref = 1.;
+//   double Uref = 1.;
+//   double rhof = 1000.;
+//   double muf = 1.;
+//   double rhos = 1000;
+//   double ni = 0.4;
+//   double E = 1400000;
+  
   MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
   
   MultiLevelSolution ml_sol(&ml_msh);
   
-   //Start System Variables
-  ml_sol.AddSolution("DX",LAGRANGE,SECOND,2);
-  ml_sol.AddSolution("DY",LAGRANGE,SECOND,2);
+  //Start System Variables
+  ml_sol.AddSolution("DX",LAGRANGE,SECOND,1);
+  ml_sol.AddSolution("DY",LAGRANGE,SECOND,1);
   ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
   ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
-  ml_sol.AddSolution("U",LAGRANGE,SECOND,2);
-  ml_sol.AddSolution("V",LAGRANGE,SECOND,2);
-  ml_sol.AddSolution("AX",LAGRANGE,SECOND,1,0);
-  ml_sol.AddSolution("AY",LAGRANGE,SECOND,1,0);
+  ml_sol.AddSolution("U",LAGRANGE,SECOND,1);
+  ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
   ml_sol.AssociatePropertyToSolution("P","Pressure"); // Add this line
@@ -80,17 +107,11 @@ int main(int argc,char **args) {
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   ml_sol.GenerateBdc("DX","Steady");
   ml_sol.GenerateBdc("DY","Steady");
-  ml_sol.GenerateBdc("U","Time_dependent");
+  ml_sol.GenerateBdc("U","Steady");
   ml_sol.GenerateBdc("V","Steady");
-  ml_sol.GenerateBdc("AX","Steady");
-  ml_sol.GenerateBdc("AY","Steady");
   ml_sol.GenerateBdc("P","Steady");
   
-  
-  
-  
-  MultiLevelProblem ml_probl(&ml_msh, &ml_sol);
-  
+  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
 
   Parameter par(Lref,Uref);
   
@@ -99,112 +120,291 @@ int main(int argc,char **args) {
   cout << "Solid properties: " << endl;
   cout << solid << endl;
   
-  //Generate Fluid Object
+  // Generate Fluid Object
   Fluid fluid(par,muf,rhof,"Newtonian");
   cout << "Fluid properties: " << endl;
   cout << fluid << endl;
 
   // Add fluid object
-  ml_probl.parameters.set<Fluid>("Fluid") = fluid;
+  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   
   // Add Solid Object
-  ml_probl.parameters.set<Solid>("Solid") = solid;
+  ml_prob.parameters.set<Solid>("Solid") = solid;
 
- 
-  
-//   std::vector<std::string> mov_vars;
-//   mov_vars.push_back("DX");
-//   mov_vars.push_back("DY");
-//   ml_probl.SetMovingMesh(mov_vars);
   ml_msh.MarkStructureNode();
-  
+   
   //create systems
   // add the system FSI to the MultiLevel problem
-  TransientMonolithicFSINonlinearImplicitSystem & system = ml_probl.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction",VANKA_SMOOTHER);
+  MonolithicFSINonLinearImplicitSystem & system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");
   system.AddSolutionToSytemPDE("DX");
   system.AddSolutionToSytemPDE("DY");
   system.AddSolutionToSytemPDE("U");
   system.AddSolutionToSytemPDE("V");
   system.AddSolutionToSytemPDE("P");
   
+  
+   
+  // System Fluid-Structure-Interaction
+  system.AttachAssembleFunction(IncompressibleFSIAssembly);  
+  
+  system.SetMaxNumberOfLinearIterations(2);
+  system.SetMgType(F_CYCLE);
+  system.SetMaxNumberOfNonLinearIterations(6);
+  system.SetAbsoluteConvergenceTolerance(1.e-10);
+  system.SetNonLinearConvergenceTolerance(1.e-05);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
+   
+  //Set Smoother Options
+  if(Gmres) 		system.SetMgSmoother(GMRES_SMOOTHER);
+  else if(Asm) 		system.SetMgSmoother(ASM_SMOOTHER);
+  else if(Vanka)	system.SetMgSmoother(VANKA_SMOOTHER);
+  
   // init all the systems
   system.init();
- 
-  // System Navier-Stokes
-  system.AttachAssembleFunction(AssembleMatrixResFSI);  
-  system.SetMaxNumberOfLinearIterations(1);
-  system.SetAbsoluteConvergenceTolerance(1.e-8);  
-  system.SetMaxNumberOfNonLinearIterations(5);  
-  system.SetNonLinearConvergenceTolerance(1.e-4);
-  system.SetDirichletBCsHandling(PENALTY);
   
-  system.SetMgType(F_CYCLE);
-  system.SetNumberPreSmoothingStep(0);
-  system.SetNumberPostSmoothingStep(3);
-  //system.SetMgSmoother(VANKA_SMOOTHER);
-  system.ClearVariablesToBeSolved();
-  system.AddVariableToBeSolved("All");
-  /*system.AddVariableToVankaIndex("DY");
-  system.AddVariableToVankaIndex("U");
-  system.AddVariableToVankaIndex("V");
-  system.AddVariableToVankaIndex("P");*/
+  
   system.SetSolverFineGrids(GMRES);
-  system.SetPreconditionerFineGrids(MLU_PRECOND); // Use MLU_PRECOND (MumpsLU) instead LU_PRECOND (pestcLu), it's more robust!!!
-  system.SetNumberOfSchurVariables(1);
-  system.SetTolerances(1.e-12,1.e-20,1.e+50,1);
-  //system.SetSchurTolerances(1.e-12,1.e-20,1.e+50,4);
-  system.SetElementBlockNumber(4);                
-
-  // time loop parameter
-  system.SetIntervalTime(0.005);
-  system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 30;
-  const unsigned int write_interval = 1;
+  system.SetPreconditionerFineGrids(MLU_PRECOND); 
+  system.SetTolerances(1.e-12,1.e-20,1.e+50,10);
   
+  
+//   system.SetSolverFineGrids(GMRES);
+//   system.SetPreconditionerFineGrids(LU_PRECOND); 
+//   system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
+  
+  system.ClearVariablesToBeSolved();
+  //system.AddVariableToBeSolved("All");
+  system.AddVariableToBeSolved("DX");
+  system.AddVariableToBeSolved("DY");
+  system.AddVariableToBeSolved("U");
+  system.AddVariableToBeSolved("V");
+  system.AddVariableToBeSolved("P");
+  
+  //for Vanka and ASM smoothers
+  system.SetNumberOfSchurVariables(1);
+  system.SetElementBlockNumber(3);   
+  //for Gmres smoother
+  //system.SetDirichletBCsHandling(PENALTY); 
+  system.SetDirichletBCsHandling(ELIMINATION);   
+   
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
-//   ml_probl.SetMovingMesh(mov_vars);
   VTKWriter vtkio(ml_sol);
   vtkio.SetMovingMesh(mov_vars);
   
-  for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+  // Solving Fluid-Structure-Interaction system
+  std::cout << std::endl;
+  std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
+  system.solve();
    
-    // Solving Fluid-Structure-Interaction system
-    std::cout << std::endl;
-    std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
-    system.solve();
-   
-    //The update of the acceleration must be done before the update of the other variables
-    system.NewmarkAccUpdate();
-    
-    //update Solution
-    system.UpdateSolution();
-
-    // print solution
-    if ( !(time_step%write_interval) ) {
-        
-      //print solution 
-      std::vector<std::string> print_vars;
-      print_vars.push_back("DX");
-      print_vars.push_back("DY");
-      print_vars.push_back("U");
-      print_vars.push_back("V");
-      print_vars.push_back("P");
+  //print solution 
+  std::vector<std::string> print_vars;
+  print_vars.push_back("DX");
+  print_vars.push_back("DY");
+  print_vars.push_back("U");
+  print_vars.push_back("V");
+  print_vars.push_back("P");
       
-//       ml_probl.printsol_vtu_inline("biquadratic",print_vars,time_step);
-      vtkio.write_system_solutions("biquadratic",print_vars,time_step);
-    }
-  
-  } //end loop timestep
-  
+  vtkio.write_system_solutions("biquadratic",print_vars);
 
   // Destroy all the new systems
-  ml_probl.clear();
+  ml_prob.clear();
    
-  delete[] infile;
+  delete [] infile;
   return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+// int main(int argc,char **args) {
+//   
+//   /// Init Petsc-MPI communicator
+//   FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
+// 
+//   unsigned short nm,nr;
+//   std::cout<<"#MULTIGRID levels? (>=1) \n";
+//   //std::cin>>nm;
+//   nm=1;
+// 
+//   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
+//   //std::cin>>nr;
+//   nr=0;
+//   int tmp=nm;
+//   nm+=nr;
+//   nr=tmp;
+// 
+//   char *infile = new char [50];
+// 
+//   //input file
+//   sprintf(infile,"./input/mesh.comsolbenchmark.neu");
+// 
+//   const double Lref = 1.;
+//   double Uref = 1.;
+//   double rhof = 1000.;
+//   double muf = 0.001;
+//   double rhos = 7850;
+//   double ni = 0.3;
+//   double E = 200000;
+//   
+//   MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
+//   
+//   MultiLevelSolution ml_sol(&ml_msh);
+//   
+//    //Start System Variables
+//   ml_sol.AddSolution("DX",LAGRANGE,SECOND,2);
+//   ml_sol.AddSolution("DY",LAGRANGE,SECOND,2);
+//   ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
+//   ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
+//   ml_sol.AddSolution("U",LAGRANGE,SECOND,2);
+//   ml_sol.AddSolution("V",LAGRANGE,SECOND,2);
+//   ml_sol.AddSolution("AX",LAGRANGE,SECOND,1,0);
+//   ml_sol.AddSolution("AY",LAGRANGE,SECOND,1,0);
+//   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
+//   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
+//   ml_sol.AssociatePropertyToSolution("P","Pressure"); // Add this line
+// 
+//   //Initialize (update Init(...) function)
+//   ml_sol.Initialize("All");
+// 
+//   //Set Boundary (update Dirichlet(...) function)
+//   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+//   ml_sol.GenerateBdc("DX","Steady");
+//   ml_sol.GenerateBdc("DY","Steady");
+//   ml_sol.GenerateBdc("U","Time_dependent");
+//   ml_sol.GenerateBdc("V","Steady");
+//   ml_sol.GenerateBdc("AX","Steady");
+//   ml_sol.GenerateBdc("AY","Steady");
+//   ml_sol.GenerateBdc("P","Steady");
+//   
+//   
+//   
+//   
+//   MultiLevelProblem ml_probl(&ml_msh, &ml_sol);
+//   
+// 
+//   Parameter par(Lref,Uref);
+//   
+//   // Generate Solid Object
+//   Solid solid(par,E,ni,rhos,"Neo-Hookean");
+//   cout << "Solid properties: " << endl;
+//   cout << solid << endl;
+//   
+//   //Generate Fluid Object
+//   Fluid fluid(par,muf,rhof,"Newtonian");
+//   cout << "Fluid properties: " << endl;
+//   cout << fluid << endl;
+// 
+//   // Add fluid object
+//   ml_probl.parameters.set<Fluid>("Fluid") = fluid;
+//   
+//   // Add Solid Object
+//   ml_probl.parameters.set<Solid>("Solid") = solid;
+// 
+//  
+//   
+// //   std::vector<std::string> mov_vars;
+// //   mov_vars.push_back("DX");
+// //   mov_vars.push_back("DY");
+// //   ml_probl.SetMovingMesh(mov_vars);
+//   ml_msh.MarkStructureNode();
+//   
+//   //create systems
+//   // add the system FSI to the MultiLevel problem
+//   TransientMonolithicFSINonlinearImplicitSystem & system = ml_probl.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction",VANKA_SMOOTHER);
+//   system.AddSolutionToSytemPDE("DX");
+//   system.AddSolutionToSytemPDE("DY");
+//   system.AddSolutionToSytemPDE("U");
+//   system.AddSolutionToSytemPDE("V");
+//   system.AddSolutionToSytemPDE("P");
+//   
+//   // init all the systems
+//   system.init();
+//  
+//   // System Navier-Stokes
+//   system.AttachAssembleFunction(AssembleMatrixResFSI);  
+//   system.SetMaxNumberOfLinearIterations(1);
+//   system.SetAbsoluteConvergenceTolerance(1.e-8);  
+//   system.SetMaxNumberOfNonLinearIterations(5);  
+//   system.SetNonLinearConvergenceTolerance(1.e-4);
+//   system.SetDirichletBCsHandling(PENALTY);
+//   
+//   system.SetMgType(F_CYCLE);
+//   system.SetNumberPreSmoothingStep(0);
+//   system.SetNumberPostSmoothingStep(3);
+//   //system.SetMgSmoother(VANKA_SMOOTHER);
+//   system.ClearVariablesToBeSolved();
+//   system.AddVariableToBeSolved("All");
+//   /*system.AddVariableToVankaIndex("DY");
+//   system.AddVariableToVankaIndex("U");
+//   system.AddVariableToVankaIndex("V");
+//   system.AddVariableToVankaIndex("P");*/
+//   system.SetSolverFineGrids(GMRES);
+//   system.SetPreconditionerFineGrids(MLU_PRECOND); // Use MLU_PRECOND (MumpsLU) instead LU_PRECOND (pestcLu), it's more robust!!!
+//   system.SetNumberOfSchurVariables(1);
+//   system.SetTolerances(1.e-12,1.e-20,1.e+50,1);
+//   //system.SetSchurTolerances(1.e-12,1.e-20,1.e+50,4);
+//   system.SetElementBlockNumber(4);                
+// 
+//   // time loop parameter
+//   system.SetIntervalTime(0.005);
+//   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
+//   const unsigned int n_timesteps = 30;
+//   const unsigned int write_interval = 1;
+//   
+//   std::vector<std::string> mov_vars;
+//   mov_vars.push_back("DX");
+//   mov_vars.push_back("DY");
+// //   ml_probl.SetMovingMesh(mov_vars);
+//   VTKWriter vtkio(ml_sol);
+//   vtkio.SetMovingMesh(mov_vars);
+//   
+//   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+//    
+//     // Solving Fluid-Structure-Interaction system
+//     std::cout << std::endl;
+//     std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
+//     system.solve();
+//    
+//     //The update of the acceleration must be done before the update of the other variables
+//     system.NewmarkAccUpdate();
+//     
+//     //update Solution
+//     system.UpdateSolution();
+// 
+//     // print solution
+//     if ( !(time_step%write_interval) ) {
+//         
+//       //print solution 
+//       std::vector<std::string> print_vars;
+//       print_vars.push_back("DX");
+//       print_vars.push_back("DY");
+//       print_vars.push_back("U");
+//       print_vars.push_back("V");
+//       print_vars.push_back("P");
+//       
+// //       ml_probl.printsol_vtu_inline("biquadratic",print_vars,time_step);
+//       vtkio.write_system_solutions("biquadratic",print_vars,time_step);
+//     }
+//   
+//   } //end loop timestep
+//   
+// 
+//   // Destroy all the new systems
+//   ml_probl.clear();
+//    
+//   delete[] infile;
+//   return 0;
+// }
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -240,7 +440,8 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
     if (1==FaceName) { //inflow
       test=1;
       //comsol Benchmark
-      value = (0.05*time*time)/(sqrt( (0.04 - time*time)*(0.04 - time*time) + (0.1*time)*(0.1*time) ))*y*(0.0001-y)*4.*100000000;
+      //value = (0.05*time*time)/(sqrt( (0.04 - time*time)*(0.04 - time*time) + (0.1*time)*(0.1*time) ))*y*(0.0001-y)*4.*100000000;
+      value = 0.05*y*(0.0001-y)*4.*100000000;
     }
     else if (2==FaceName ) {  //outflow
       test=0;
@@ -320,9 +521,9 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
       test=1;
       value=0.;
     }
-    else if (3==FaceName ) { // no-slip fluid wall
+    else if (3==FaceName ) { // no-slip Top fluid wall
       test=0;
-      value=0.;
+      value=0;
     }
     else if (4==FaceName ) { // no-slip solid wall
       test=1;
