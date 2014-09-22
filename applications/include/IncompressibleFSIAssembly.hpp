@@ -154,7 +154,7 @@ namespace femus {
     start_time=clock();
     
     myKK->zero();
-  
+     
     /// *** element loop ***
       for(int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
 
@@ -200,9 +200,9 @@ namespace femus {
 	  B[indexVAR[dim+i]][indexVAR[dim+i]].resize(nve*nve);
 	  memset(&B[indexVAR[dim+i]][indexVAR[dim+i]][0],0,nve*nve*sizeof(double));
 	  if(nwtn_alg== true) {
-	    for(int idim2=1; idim2<dim; idim2++) {
-	      B[indexVAR[dim+i]][indexVAR[dim+(i+idim2)%dim]].resize(nve*nve);
-	      memset(&B[indexVAR[dim+i]][indexVAR[dim+(i+idim2)%dim]][0],0,nve*nve*sizeof(double));
+	    for(int jdim=1; jdim<dim; jdim++) {
+	      B[indexVAR[dim+i]][indexVAR[dim+(i+jdim)%dim]].resize(nve*nve);
+	      memset(&B[indexVAR[dim+i]][indexVAR[dim+(i+jdim)%dim]][0],0,nve*nve*sizeof(double));
 	    }
 	  }
 	}
@@ -285,14 +285,22 @@ namespace femus {
        
 	if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
 	  /// *** Gauss point loop ***
+	  double area=1.;
 	  for (unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
 
 	    // *** get Jacobian and test function and test function derivatives in the moving frame***
 	    (ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
 	    (ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
 	    phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
-	    if (flag_mat==2) Weight_nojac = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
-
+	    if (flag_mat==2) {
+	      if(ig==0){
+		Weight_nojac = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
+		area=Weight_hat/Weight_nojac;
+	      }
+	      Weight_nojac = Weight_hat/area*1.0e-10;
+	    }
+	    
+	    //Weight_nojac=Weight_hat;
 	    // ---------------------------------------------------------------------------
 	    // displacement and velocity
 	    for(int i=0; i<2*dim; i++){
@@ -335,28 +343,27 @@ namespace femus {
 	      { // Laplace operator + adection operator + Mass operator
 
 		const double *gradfi=&gradphi[0];
+		const double *gradfi_hat=&gradphi_hat[0];
 		const double *fi=&phi[0];
 
 		// *** phi_i loop ***
-		for (unsigned i=0; i<nve; i++,gradfi+=dim,fi++) {
+		for (unsigned i=0; i<nve; i++,gradfi+=dim,gradfi_hat+=dim,fi++) {
 
 		  //BEGIN RESIDUALS A + Bt block ===========================
  	      
-		  // begin redidual Laplacian ALE map
+		  // begin redidual Laplacian ALE map in the reference domain
 		  double LapmapVAR[3] = {0., 0., 0.};
 		  for(int idim=0; idim<dim; idim++) {
 		    for(int jdim=0; jdim<dim; jdim++) {
-		      LapmapVAR[idim] += _mu_ale[jdim]*(
-							GradSolVAR[idim][jdim]*gradphi[i*dim+jdim]
-						       ) ;
+		      LapmapVAR[idim] += _mu_ale[jdim]*(GradSolhatVAR[idim][jdim]*gradphi_hat[i*dim+jdim]) ;
 		    }
 		  }
 		  for(int idim=0; idim<dim; idim++) {
-		    Rhs[indexVAR[idim]][i]+=(!solidmark[i])*(-LapmapVAR[idim]*Weight_nojac*Weight/Weight_hat);
+		    Rhs[indexVAR[idim]][i]+=(!solidmark[i])*(-LapmapVAR[idim]*Weight_nojac);
 		  }
 		  // end redidual Laplacian ALE map
 
-		  // begin redidual Navier-Stokes    
+		  // begin redidual Navier-Stokes in the moving domain   
 		  double LapvelVAR[3]={0.,0.,0.};
 		  double AdvaleVAR[3]={0.,0.,0.};
 		  for(int idim=0.; idim<dim; idim++) {
@@ -377,17 +384,18 @@ namespace femus {
 	      
 		  //BEGIN A block ===========================
 		  const double *gradfj=&gradphi[0];
+		  const double *gradfj_hat=&gradphi_hat[0];
 		  const double *fj=&phi[0];
 		  //  *** phi_j loop ***
-		  for (unsigned j=0; j<nve; j++,gradfj+=dim,fj++) {
+		  for (unsigned j=0; j<nve; j++,gradfj+=dim,gradfj_hat+=dim,fj++) {
 
 		    // begin Laplacian ALE map
 		    double Lap_ale=0.;
 		    for(int jdim=0; jdim<dim; jdim++) {
-		      Lap_ale+=_mu_ale[jdim]*(*(gradfi+jdim))*(*(gradfj+jdim));
+		      Lap_ale+=_mu_ale[jdim]*(*(gradfi_hat+jdim))*(*(gradfj_hat+jdim));
 		    }	
 		    for(int idim=0; idim<dim; idim++) {
-		      B[indexVAR[idim]][indexVAR[idim]][i*nve+j] += (!solidmark[i])*Lap_ale*Weight_nojac*Weight/Weight_hat;  
+		      B[indexVAR[idim]][indexVAR[idim]][i*nve+j] += (!solidmark[i])*Lap_ale*Weight_nojac;
 		    }
 		    // end Laplacian ALE map
 		
@@ -576,9 +584,9 @@ namespace femus {
 
 		      //BEGIN RESIDUALS A + Bt block ===========================
 	      
-		      // Residual ALE equations
+		      // Residual ALE equations in the reference domain (remeber that phi=phi_hat)
 		      for(int idim=0; idim<dim; idim++) {
-			Rhs[indexVAR[idim]][i] += (-phi[i]*(-SolVAR[dim+idim] ))*Weight;
+			Rhs[indexVAR[idim]][i] += (-phi[i]*(-SolVAR[dim+idim] ))*Weight_hat;
 		      }
               
 		      double CauchyDIR[3]={0.,0.,0.};
@@ -620,9 +628,9 @@ namespace femus {
 			/// Kinematic equation v = du/dt --> In the steady state we write \deltau^n+1 - \deltav^n+1 = v - 0
 			  for(int idim=0; idim<dim; idim++) {
 			    // -(v_n+1,eta)
-			    B[indexVAR[0+idim]][indexVAR[dim+idim]][i*nve+j] -= (*(fi))*(*(fj))*Weight;
+			    B[indexVAR[idim]][indexVAR[dim+idim]][i*nve+j] -= (*(fi))*(*(fj))*Weight_hat;
 			    //  (u_n+1,eta)
-			    B[indexVAR[0+idim]][indexVAR[0+idim]][i*nve+j] += 1.* (*(fi))*(*(fj))*Weight;
+			    B[indexVAR[idim]][indexVAR[idim]][i*nve+j] 	+=  (*(fi))*(*(fj))*Weight_hat;
 			  }
 		      }
 		    }
@@ -705,8 +713,8 @@ namespace femus {
 	  myRES->add_vector_blocked(Rhs[indexVAR[dim+i]],dofsVAR[dim+i]);
 	  myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[dim+i]],dofsVAR[dim+i],dofsVAR[dim+i]);
 	  if(nwtn_alg== true){
-	    for(unsigned idim2=1; idim2<dim; idim2++) {
-	      myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[dim+(i+idim2)%dim]],dofsVAR[dim+i],dofsVAR[dim+(i+idim2)%dim]);  
+	    for(unsigned jdim=1; jdim<dim; jdim++) {
+	      myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[dim+(i+jdim)%dim]],dofsVAR[dim+i],dofsVAR[dim+(i+jdim)%dim]);  
 	    }
 	  }
 	  myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[2*dim]],dofsVAR[dim+i],dofsVAR[2*dim]);
