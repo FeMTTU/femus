@@ -181,6 +181,39 @@ IF(BUILD_NAVIERSTOKESAPPS)
  
 ENDIF(BUILD_NAVIERSTOKESAPPS)
 
+# Ask the user which executable have to be built
+OPTION(BUILD_FSIAPPS "Build the FSI applications" ON)
+
+IF(BUILD_FSIAPPS)
+
+# FSI SteadyState Benchmark Comsol
+    ADD_SUBDIRECTORY(applications/FSIApps/FSI_CMS_NWM/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_CMS_NWM/output/)
+    FILE(MAKE_DIRECTORY applications/FSIApps/FSI_CMS_NWM/input/)
+    FILE(COPY           applications/FSIApps/FSI_CMS_NWM/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_CMS_NWM/input/)
+
+# FSI SteadyState Benchmark Turek1
+    ADD_SUBDIRECTORY(applications/FSIApps/FSI_TUREK_1/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_1/output/)
+    FILE(MAKE_DIRECTORY applications/FSIApps/FSI_TUREK_1/input/)
+    FILE(COPY           applications/FSIApps/FSI_TUREK_1/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_1/input/)
+
+# FSI SteadyState Benchmark Turek3
+    ADD_SUBDIRECTORY(applications/FSIApps/FSI_TUREK_3/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_3/output/)
+    FILE(MAKE_DIRECTORY applications/FSIApps/FSI_TUREK_3/input/)
+    FILE(COPY           applications/FSIApps/FSI_TUREK_3/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_3/input/)
+
+# FSI SteadyState in porous media
+    ADD_SUBDIRECTORY(applications/FSIApps/fsi_porous/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/fsi_porous/output/)
+    FILE(MAKE_DIRECTORY applications/FSIApps/fsi_porous/input/)
+    FILE(COPY           applications/FSIApps/fsi_porous/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/FSIApps/fsi_porous/input/)
+
+ENDIF(BUILD_FSIAPPS)
 
 # # Ask the user which executable have to be built
 # OPTION(BUILD_STEADYNAVIERSTOKES "Build the Steady NavierStokes application" ON)
@@ -214,37 +247,37 @@ ENDIF(BUILD_NAVIERSTOKESAPPS)
 #   ${PROJECT_BINARY_DIR}/applications/TaylorGreenVortexFlowGeneralisedalpha/input/)
 # ENDIF(BUILD_TAYLORVORTEX)   
 
-OPTION(BUILD_FSI_CMS_NWM "Build the FSI COMSOL Benchmark" ON)
+#OPTION(BUILD_FSI_CMS_NWM "Build the FSI COMSOL Benchmark" ON)
 
-IF(BUILD_FSI_CMS_NWM)
-       ADD_SUBDIRECTORY(applications/FSI_CMS_NWM/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_CMS_NWM/output/)
-    FILE(MAKE_DIRECTORY applications/FSI_CMS_NWM/input/)
-    FILE(COPY           applications/FSI_CMS_NWM/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/FSI_CMS_NWM/input/)
-ENDIF(BUILD_FSI_CMS_NWM)
+#IF(BUILD_FSI_CMS_NWM)
+#       ADD_SUBDIRECTORY(applications/FSI_CMS_NWM/)
+#    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_CMS_NWM/output/)
+#    FILE(MAKE_DIRECTORY applications/FSI_CMS_NWM/input/)
+#    FILE(COPY           applications/FSI_CMS_NWM/input/ DESTINATION 
+#  ${PROJECT_BINARY_DIR}/applications/FSI_CMS_NWM/input/)
+#ENDIF(BUILD_FSI_CMS_NWM)
 
-OPTION(BUILD_FSI_TUREK_1 "Build the FSI Turek 1 Benchmark" ON)
+#OPTION(BUILD_FSI_TUREK_1 "Build the FSI Turek 1 Benchmark" ON)
 
-IF(BUILD_FSI_TUREK_1)
-       ADD_SUBDIRECTORY(applications/FSI_TUREK_1/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_1/output/)
-    FILE(MAKE_DIRECTORY applications/FSI_TUREK_1/input/)
-    FILE(COPY           applications/FSI_TUREK_1/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_1/input/)
-ENDIF(BUILD_FSI_TUREK_1)
+#IF(BUILD_FSI_TUREK_1)
+#       ADD_SUBDIRECTORY(applications/FSI_TUREK_1/)
+#    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_1/output/)
+#    FILE(MAKE_DIRECTORY applications/FSI_TUREK_1/input/)
+#    FILE(COPY           applications/FSI_TUREK_1/input/ DESTINATION 
+#  ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_1/input/)
+#ENDIF(BUILD_FSI_TUREK_1)
 
-OPTION(BUILD_GENCASE "Build the case generator" ON)
+#OPTION(BUILD_GENCASE "Build the case generator" ON)
 
-OPTION(BUILD_FSI_TUREK_3 "Build the FSI Turek 3 Benchmark" ON)
+#OPTION(BUILD_FSI_TUREK_3 "Build the FSI Turek 3 Benchmark" ON)
 
-IF(BUILD_FSI_TUREK_3)
-       ADD_SUBDIRECTORY(applications/FSI_TUREK_3/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_3/output/)
-    FILE(MAKE_DIRECTORY applications/FSI_TUREK_3/input/)
-    FILE(COPY           applications/FSI_TUREK_3/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_3/input/)
-ENDIF(BUILD_FSI_TUREK_3)
+#IF(BUILD_FSI_TUREK_3)
+#       ADD_SUBDIRECTORY(applications/FSI_TUREK_3/)
+#    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_3/output/)
+#    FILE(MAKE_DIRECTORY applications/FSI_TUREK_3/input/)
+#    FILE(COPY           applications/FSI_TUREK_3/input/ DESTINATION 
+#  ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_3/input/)
+#ENDIF(BUILD_FSI_TUREK_3)
 
 OPTION(BUILD_GENCASE "Build the case generator" ON)
 
@@ -268,14 +301,14 @@ IF(BUILD_TEMPER)
     FILE(COPY applications/temper/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/temper/input/)
 ENDIF(BUILD_TEMPER)
 
-OPTION(BUILD_FSIPOROUS "Build the fsi problem in a porous medium" ON)
+#OPTION(BUILD_FSIPOROUS "Build the fsi problem in a porous medium" ON)
 
-IF(BUILD_FSIPOROUS)
-       ADD_SUBDIRECTORY(applications/fsi_porous/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/fsi_porous/output/)
-    FILE(MAKE_DIRECTORY applications/fsi_porous/input/)
-    FILE(COPY           applications/fsi_porous/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/fsi_porous/input/)
-ENDIF(BUILD_FSIPOROUS)
+#IF(BUILD_FSIPOROUS)
+#       ADD_SUBDIRECTORY(applications/fsi_porous/)
+#    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/fsi_porous/output/)
+#    FILE(MAKE_DIRECTORY applications/fsi_porous/input/)
+#    FILE(COPY           applications/fsi_porous/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/fsi_porous/input/)
+#ENDIF(BUILD_FSIPOROUS)
 
 # OPTION(BUILD_STEADYSTOKES "Build the Steady Stokes" ON)
 
