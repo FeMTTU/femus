@@ -18,7 +18,7 @@ namespace femus {
     mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(level);
     elem		*myel		=  mymsh->el;
     SparseMatrix	*myKK		=  myLinEqSolver->_KK;
-    NumericVector *myRES		=  myLinEqSolver->_RES;
+    NumericVector 	*myRES		=  myLinEqSolver->_RES;
     vector <int>	&myKKIndex	=  myLinEqSolver->KKIndex;
     
     const unsigned dim = mymsh->GetDimension();
@@ -150,13 +150,26 @@ namespace femus {
     indVAR[2*dim]=ml_sol->GetIndex(&varname[6][0]);
     SolType[2*dim]=ml_sol->GetSolutionType(&varname[6][0]);
     //----------------------------------------------------------------------------------
-  
+      
+    int nprocs=mymsh->n_processors();
+    NumericVector *area_elem_first;
+    area_elem_first = NumericVector::build().release();
+   
+    if(nprocs==1) { 
+      area_elem_first->init(nprocs,1,false,SERIAL);     
+    } 
+    else { 
+     area_elem_first->init(nprocs,1,false,PARALLEL); 	   	   
+    }
+    area_elem_first->zero();
+    double rapresentative_area=1.;
+    
     start_time=clock();
     
     myKK->zero();
-     
+    
     /// *** element loop ***
-      for(int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+    for(int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
 
 	unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
 	short unsigned kelt = myel->GetElementType(kel);
@@ -168,12 +181,12 @@ namespace femus {
     
 	    //initialization of everything is in common fluid and solid
     
-	    //Rhs
-	    for(int i=0; i<2*dim; i++) {
-	      dofsVAR[i].resize(nve);	
-	      Rhs[indexVAR[i]].resize(nve);
-	      memset(&Rhs[indexVAR[i]][0],0,nve*sizeof(double));
-	    }
+	//Rhs
+	for(int i=0; i<2*dim; i++) {
+	  dofsVAR[i].resize(nve);	
+	  Rhs[indexVAR[i]].resize(nve);
+	  memset(&Rhs[indexVAR[i]][0],0,nve*sizeof(double));
+	}
 	dofsVAR[2*dim].resize(nve1);
 	Rhs[indexVAR[2*dim]].resize(nve1);
 	memset(&Rhs[indexVAR[2*dim]][0],0,nve1*sizeof(double));
@@ -294,13 +307,16 @@ namespace femus {
 	    phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
 	    if (flag_mat==2) {
 	      if(ig==0){
-		Weight_nojac = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
-		area=Weight_hat/Weight_nojac;
+		double GaussWeight = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
+		area=Weight_hat/GaussWeight;
+		if(iel==mymsh->IS_Mts2Gmt_elem_offset[iproc]){
+		  area_elem_first->add(mymsh->processor_id(),area);
+		  area_elem_first->close();
+		  rapresentative_area=area_elem_first->l1_norm()/nprocs;
+		}
 	      }
-	      Weight_nojac = Weight_hat/area*1.0e-10;
+	      Weight_nojac = Weight_hat/area*rapresentative_area;
 	    }
-	    
-	    //Weight_nojac=Weight_hat;
 	    // ---------------------------------------------------------------------------
 	    // displacement and velocity
 	    for(int i=0; i<2*dim; i++){
@@ -512,6 +528,10 @@ namespace femus {
 		    F[i][j]+=GradSolhatVAR[i][j];
 		  }
 		}
+		
+		Jnp1_hat =  F[0][0]*F[1][1]*F[2][2] + F[0][1]*F[1][2]*F[2][0] + F[0][2]*F[1][0]*F[2][1]
+			  - F[2][0]*F[1][1]*F[0][2] - F[2][1]*F[1][2]*F[0][0] - F[2][2]*F[1][0]*F[0][1];	
+		
 		// computation of the the three deformation tensor b
 		for (int I=0; I<3; ++I) {
 		  for (int J=0; J<3; ++J) {
@@ -613,25 +633,29 @@ namespace femus {
 		      const double *fj=&phi[0];
 		      // *** phi_j loop ***
 		      for (unsigned j=0; j<nve; j++,gradfj+=dim,gradfj_hat+=dim,fj++) {
+			
+			/// Kinematic equation v = du/dt --> In the steady state we write \deltau^n+1 - \deltav^n+1 = v - 0
+			for(int idim=0; idim<dim; idim++) {
+			  // -(v_n+1,eta)
+			  B[indexVAR[idim]][indexVAR[dim+idim]][i*nve+j] -= (*(fi))*(*(fj))*Weight_hat;
+			  //  (u_n+1,eta)
+			  B[indexVAR[idim]][indexVAR[idim]][i*nve+j] 	+=  (*(fi))*(*(fj))*Weight_hat;
+			}
+			
+			
 			/// Stiffness operator -- Elasticity equation (Linear or not)
 			for(int idim=0; idim<dim; idim++) {
 			  for(int jdim=0; jdim<dim; jdim++) {
-			    double cauchy_newton = 0.;
+			    double tg_stiff_matrix = 0.;
 			    for (int ii=0; ii<dim; ++ii) {
 			      for (int jj=0; jj<dim; ++jj) {
-				cauchy_newton += (*(gradfj_hat+jj))*(C_mat[jdim][jj][idim][ii])*(*(gradfi+ii));
+				tg_stiff_matrix += (*(gradfj_hat+jj))*(C_mat[jdim][jj][idim][ii])*(*(gradfi+ii));
 			      }
 			    }
-			    B[indexVAR[dim+idim]][indexVAR[jdim]][i*nve+j] += cauchy_newton*Weight;
+			    B[indexVAR[dim+idim]][indexVAR[jdim]][i*nve+j] += tg_stiff_matrix*Weight;
 			  }
 			}
-			/// Kinematic equation v = du/dt --> In the steady state we write \deltau^n+1 - \deltav^n+1 = v - 0
-			  for(int idim=0; idim<dim; idim++) {
-			    // -(v_n+1,eta)
-			    B[indexVAR[idim]][indexVAR[dim+idim]][i*nve+j] -= (*(fi))*(*(fj))*Weight_hat;
-			    //  (u_n+1,eta)
-			    B[indexVAR[idim]][indexVAR[idim]][i*nve+j] 	+=  (*(fi))*(*(fj))*Weight_hat;
-			  }
+			
 		      }
 		    }
 		}
@@ -650,12 +674,7 @@ namespace femus {
 		  }
 		}
 		////////////
-		{ ///Divergence of the Displacement
-		  double div_disp=0.;
-		  for(int i=0; i<dim; i++) {
-		    div_disp+=GradSolVAR[i][i];
-		  }
-          
+		{           
 		  const double *fi=phi1;
 		  // *** phi_i loop ***
 		  for (unsigned i=0; i<nve1; i++,fi++) {
@@ -666,7 +685,7 @@ namespace femus {
 		      Rhs[indexVAR[2*dim]][i] += -(-((*fi))*(I_e + (1./lambda)*SolVAR[2*dim] ) )*Weight_hat;
 		    }
 		    else if (solid_model==1) {
-		      Rhs[indexVAR[2*dim]][i] +=  -(-((*fi))*(div_disp))*Weight;
+		      Rhs[indexVAR[2*dim]][i] +=(*fi)*(Jnp1_hat-1.)*Weight_hat;
 		    }
 
 		    //END RESIDUALS B block ===========================
@@ -675,7 +694,7 @@ namespace femus {
 		    // *** phi_j loop ***
 		    for (unsigned j=0; j<nve; j++,gradfj+=dim) {
 		      for(int idim=0; idim<dim; idim++) {
-			B[indexVAR[2*dim]][indexVAR[idim]][i*nve+j] -= ((*fi)*(*(gradfj+idim)))*Weight;
+			B[indexVAR[2*dim]][indexVAR[idim]][i*nve+j] -= (*fi)*(*(gradfj+idim))*Weight;
 		      }
 		    }
 		  }
@@ -743,17 +762,15 @@ namespace femus {
       myKK->close();
       myRES->close();
   
+      delete area_elem_first;
+       
       // *************************************
       end_time=clock();
       AssemblyTime+=(end_time-start_time);
       // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
 
   }  
-  
-  
-  
-  
-  
+    
 }
 
 #endif
