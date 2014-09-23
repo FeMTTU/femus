@@ -705,7 +705,6 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
                         for(unsigned i=0; i<nve; i++) {
                             unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-			    metis_node[i] = inode + mylsyspde->KKIndex[0];
                             unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
 
 			    for(unsigned ivar=0; ivar<dim; ivar++) {
@@ -720,7 +719,6 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
 			    xyzt.assign(4,0.);
                             for(unsigned i=0; i<nve; i++) {
-                              double soli = (*mysolution->_Sol[SolIndex])(metis_node[i]);
 		              for(unsigned ivar=0; ivar<dim; ivar++) {
 		               xyzt[ivar] += coordinates[ivar][i]*phi[i]; 
 		              }
