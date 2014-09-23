@@ -24,7 +24,6 @@
 #include "petscvec.h" 
 
 // C++ includes
-#include <memory>
 // Local Includes
 #include "AsmPetscLinearEquationSolver.hpp"
 #include "GmresPetscLinearEquationSolver.hpp"
@@ -32,8 +31,6 @@
 #include "Preconditioner.hpp"
 
 namespace femus {
-
-  using namespace std;
 
   // =============================================================
   std::auto_ptr<LinearEquationSolver> LinearEquationSolver::build(const unsigned &igrid, mesh *other_mesh,const MgSmoother & smoother_type, const SolverPackage solver_package) {

@@ -1,0 +1,20 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+PROJECT(TaylorVortex)
+
+# Build the executable
+ADD_EXECUTABLE(taylorvortex ${CMAKE_PROJECT_DIR}main.cpp)
+
+# Link the executable to the petsc anf femttu libs
+TARGET_LINK_LIBRARIES(taylorvortex femus)
+TARGET_LINK_LIBRARIES(taylorvortex ${PETSC_LIBRARIES})
+TARGET_LINK_LIBRARIES(taylorvortex b64)
+TARGET_LINK_LIBRARIES(taylorvortex jsoncpp)
+
+IF(FPARSER_FOUND)
+  TARGET_LINK_LIBRARIES(taylorvortex ${FPARSER_LIBRARY})
+ENDIF(FPARSER_FOUND)
+
+IF(MPI_FOUND)
+  TARGET_LINK_LIBRARIES(taylorvortex ${MPI_EXTRA_LIBRARY})
+ENDIF(MPI_FOUND)

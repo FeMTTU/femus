@@ -67,12 +67,15 @@ void NonLinearImplicitSystem::solve() {
     igrid0=_gridr;
   }
   
-  std::pair<int, double> solver_info;
+  unsigned AMR_counter=0;
      
   for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {   //_igridn
     
     std::cout << std::endl << "    ************* Level Max: " << igridn << " *************\n" << std::endl;
 
+    bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_maxAMRlevels && igridn==_gridn)?1:0;
+    if(ThisIsAMR) _solution[igridn-1]->InitAMREps();
+    
      
     for ( _n_nonlinear_iterations = 0; _n_nonlinear_iterations < _n_max_nonlinear_iterations; _n_nonlinear_iterations++ ) { //non linear cycle
       clock_t start_time = clock();
@@ -97,8 +100,7 @@ void NonLinearImplicitSystem::solve() {
 	  
 	  // ============== Presmoothing ============== 
 	  for (unsigned k = 0; k < _npre; k++) {
-// 	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!k));
-	    solver_info = _LinSolver[ig]->solve(_VariablesToBeSolvedIndex , ksp_clean*(!k));
+	    _LinSolver[ig]->solve(_VariablesToBeSolvedIndex , ksp_clean*(!k));
 	  }
 	  // ============== Non-Standard Multigrid Restriction ==============
 	  start_time = clock();
@@ -108,8 +110,7 @@ void NonLinearImplicitSystem::solve() {
 #endif
 	}
         // ============== Coarse Direct Solver ==============
- 	//solver_info = ( _VankaIsSet ) ? _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur) : _LinSolver[0]->solve(ksp_clean);
- 	solver_info = _LinSolver[0]->solve(_VariablesToBeSolvedIndex, ksp_clean);
+        _LinSolver[0]->solve(_VariablesToBeSolvedIndex, ksp_clean);
              
  	for (unsigned ig = 1; ig < igridn; ig++) {
  	  
@@ -121,8 +122,7 @@ void NonLinearImplicitSystem::solve() {
 #endif
  	  // ============== PostSmoothing ==============    
  	  for (unsigned k = 0; k < _npost; k++) {
-// 	    solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!_npre)*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!_npre)*(!k));
-	    solver_info =  _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean*(!_npre)*(!k));
+	    _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean*(!_npre)*(!k));
 	  }
  	}
  	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
@@ -130,28 +130,48 @@ void NonLinearImplicitSystem::solve() {
  	  _solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
  	}
  	
- 	_final_linear_residual = solver_info.second;
-	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
- 	if(_SmootherType != VANKA_SMOOTHER){
-	  if(_final_linear_residual < _absolute_convergence_tolerance) 
+	_solution[igridn-1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
+	bool islinearconverged = IsLinearConverged(igridn-1);
+// 	if(_final_linear_residual < _absolute_convergence_tolerance) 
+	if(islinearconverged)
 	  break;
-	}
+	
       }
-      if(_SmootherType != VANKA_SMOOTHER){
-      	std::cout <<"GRID: "<<igridn-1<< "\t    FINAL LINEAR RESIDUAL:\t"<< std::setw(11) << std::setprecision(6) << std::scientific << _final_linear_residual << std::endl;
-      }
+
       // ============== Update Solution ( ig = igridn )==============
       _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
-							 _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
+				       _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
       // ============== Test for non-linear Convergence ==============
-      bool conv = CheckConvergence(_sys_name.c_str(), igridn-1);
-      if (conv == true) _n_nonlinear_iterations = _n_max_nonlinear_iterations+1;
+      bool isnonlinearconverged = IsNonLinearConverged(igridn-1);
+      if (isnonlinearconverged)
+	_n_nonlinear_iterations = _n_max_nonlinear_iterations+1;
 
 #ifndef NDEBUG 
       std::cout << std::endl;
       std::cout << "COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
     }
+        
+    if(ThisIsAMR){
+      bool conv_test=0;
+      if(_AMRnorm==0){
+	conv_test=_solution[_gridn-1]->FlagAMRRegionBasedOnl2(_SolSystemPdeIndex,_AMRthreshold);
+      }
+      else if (_AMRnorm==1){
+	conv_test=_solution[_gridn-1]->FlagAMRRegionBasedOnSemiNorm(_SolSystemPdeIndex,_AMRthreshold);
+      }
+      if(conv_test==0){
+	_ml_msh->AddAMRMeshLevel();
+	_ml_sol->AddSolutionLevel();
+	AddSystemLevel();   
+	AMR_counter++;
+      }
+      else{
+	_maxAMRlevels=AMR_counter;
+	std::cout<<"The AMR solver has converged after "<<AMR_counter<<" refinements.\n";
+      }
+    }
+        
     // ==============  Solution Prolongation ==============
     if (igridn < _gridn) {
       ProlongatorSol(igridn);
@@ -165,7 +185,7 @@ void NonLinearImplicitSystem::solve() {
 
 
 
-bool NonLinearImplicitSystem::CheckConvergence(const char pdename[], const unsigned igridn){
+bool NonLinearImplicitSystem::IsNonLinearConverged(const unsigned igridn){
 
   bool conv=true;
   double ResMax;

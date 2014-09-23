@@ -714,6 +714,44 @@ void PetscVector::localize_to_one(
   }
 }
 
+//  ===========================================================
+void PetscVector::localize_to_all(
+  std::vector<double>& v_local) const {
+  this->_restore_array();
+  int ierr=0;
+  PetscScalar *values;
+  const int n  = size();
+  const int nl = local_size();
+  v_local.resize(n);
+  // only one processor
+  if (n == nl) {
+    ierr = VecGetArray(_vec, &values);
+    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    for (int i=0; i<n; i++) v_local[i] = static_cast<double>(values[i]);
+    ierr = VecRestoreArray(_vec, &values);
+    CHKERRABORT(MPI_COMM_WORLD,ierr);
+  }
+  // otherwise multiple processors
+  else {
+    int ioff = this->first_local_index();
+    std::vector<double> local_values(n, 0.);
+    {
+      ierr = VecGetArray(_vec, &values);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
+      for (int i=0; i<nl; i++) {
+	local_values[i+ioff] = static_cast<double>(values[i]);
+      }
+      ierr = VecRestoreArray(_vec, &values);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
+    }
+    int nprocs;
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    for(int iproc=0;iproc<nprocs;iproc++){
+      ierr = MPI_Reduce(&local_values[0], &v_local[0],n,MPI_DOUBLE,MPI_SUM,iproc,MPI_COMM_WORLD);
+    }
+  }
+}
+
 // =======================================================
 void PetscVector::pointwise_mult(const NumericVector& vec1,
                                   const NumericVector& vec2) {
