@@ -1,6 +1,6 @@
 # ignore generated files
 
-*.kdev4/
+*.kdev4
 *CMakeFiles/
 *.directory
 *CMakeCache.txt

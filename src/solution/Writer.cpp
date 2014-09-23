@@ -33,7 +33,7 @@ std::vector<SparseMatrix*> Writer::_ProlQitoQj[3][3];
 Writer::Writer(MultiLevelSolution& ml_sol):
   _ml_sol(ml_sol)
 {
-  _gridn = ml_sol._ml_msh->GetNumberOfGrid();
+  _gridn = ml_sol._ml_msh->GetNumberOfLevels();
   _gridr = ml_sol._ml_msh->GetNumberOfGridTotallyRefined();
   
   if(Writer::_ProlQitoQj[0][0].size() == 0)

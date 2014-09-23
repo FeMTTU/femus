@@ -36,6 +36,13 @@ MARK_AS_ADVANCED (
 # Find Petsc Library 
 FIND_PACKAGE(PETSc REQUIRED)
 
+FIND_PACKAGE(FParser REQUIRED)
+MESSAGE(STATUS "FPARSER_FOUND = ${FPARSER_FOUND}")
+SET (HAVE_FPARSER 0)
+IF(FPARSER_FOUND)
+  SET(HAVE_FPARSER 1)
+ENDIF(FPARSER_FOUND)
+
 SET(HAVE_PETSC 0)
 IF(PETSC_FOUND)
   SET(HAVE_PETSC 1)
@@ -59,7 +66,7 @@ ENDIF(MPI_FOUND)
 
 # Find Libmesh (optional)
 FIND_PACKAGE(LIBMESH)
-message(STATUS "LIBMESH_FOUND = ${LIBMESH_FOUND}")
+MESSAGE(STATUS "LIBMESH_FOUND = ${LIBMESH_FOUND}")
 SET (HAVE_LIBMESH 0)
 IF(LIBMESH_FOUND)
   SET(HAVE_LIBMESH 1)
@@ -119,6 +126,11 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/ExternalLibraries/b64-1.4.2/include/)
 #include jsoncpp include files
 INCLUDE_DIRECTORIES(ExternalLibraries/jsoncpp-src-0.5.0/include/)
 
+# Include Fparser files
+IF(FPARSER_FOUND)
+  INCLUDE_DIRECTORIES(${FPARSER_INCLUDE_DIR})
+ENDIF(FPARSER_FOUND)
+
 # Build the femus library
 ADD_SUBDIRECTORY(src)
 
@@ -130,68 +142,142 @@ ADD_SUBDIRECTORY(ExternalLibraries/jsoncpp-src-0.5.0)
 
 
 # Ask the user which executable have to be built
-OPTION(BUILD_STEADYNAVIERSTOKES "Build the Steady NavierStokes application" ON)
+OPTION(BUILD_NAVIERSTOKESAPPS "Build the NavierStokes-line applications" ON)
 
-# Build applications
-IF(BUILD_STEADYNAVIERSTOKES)
-       ADD_SUBDIRECTORY(applications/SteadyNavierStokesParallel)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/SteadyNavierStokesParallel/output/)
-    FILE(MAKE_DIRECTORY applications/SteadyNavierStokesParallel/input/)
-    FILE(COPY           applications/SteadyNavierStokesParallel/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/SteadyNavierStokesParallel/input/)
-ENDIF(BUILD_STEADYNAVIERSTOKES)  
+IF(BUILD_NAVIERSTOKESAPPS)
+  
+  # Steady NavierStokes
+  ADD_SUBDIRECTORY(applications/NavierStokesApps/SteadyNavierStokesParallel)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/SteadyNavierStokesParallel/output/)
+  FILE(MAKE_DIRECTORY applications/NavierStokesApps/SteadyNavierStokesParallel/input/)
+  FILE(COPY           applications/NavierStokesApps/SteadyNavierStokesParallel/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/SteadyNavierStokesParallel/input/)
 
-OPTION(BUILD_TIMEDEPNAVIERSTOKES "Build the Time dependent NavierStokes application" ON)
+  # Time-dependent BE NavierStokes
+  ADD_SUBDIRECTORY(applications/NavierStokesApps/BackwardEulerNavierStokesParallel/)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/BackwardEulerNavierStokesParallel/output/)
+  FILE(MAKE_DIRECTORY applications/NavierStokesApps/BackwardEulerNavierStokesParallel/input/)
+  FILE(COPY           applications/NavierStokesApps/BackwardEulerNavierStokesParallel/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/BackwardEulerNavierStokesParallel/input/)
+ 
+  # Time-dependent Generalized-alpha NavierStokes
+  ADD_SUBDIRECTORY(applications/NavierStokesApps/TaylorGreenVortexFlowGeneralisedalpha/)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/TaylorGreenVortexFlowGeneralisedalpha/output/)
+  FILE(MAKE_DIRECTORY applications/NavierStokesApps/TaylorGreenVortexFlowGeneralisedalpha/input/)
+  FILE(COPY           applications/NavierStokesApps/TaylorGreenVortexFlowGeneralisedalpha/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/TaylorGreenVortexFlowGeneralisedalpha/input/)
+ 
+  # Steady Stokes
+  ADD_SUBDIRECTORY(applications/NavierStokesApps/SteadyStokes/)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/SteadyStokes/output/)
+  FILE(MAKE_DIRECTORY applications/NavierStokesApps/SteadyStokes/input/)
+  FILE(COPY           applications/NavierStokesApps/SteadyStokes/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/SteadyStokes/input/)
 
-IF(BUILD_TIMEDEPNAVIERSTOKES)
-       ADD_SUBDIRECTORY(applications/BackwardEulerNavierStokesParallel/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/BackwardEulerNavierStokesParallel/output/)
-    FILE(MAKE_DIRECTORY applications/BackwardEulerNavierStokesParallel/input/)
-    FILE(COPY           applications/BackwardEulerNavierStokesParallel/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/BackwardEulerNavierStokesParallel/input/)
-ENDIF(BUILD_TIMEDEPNAVIERSTOKES)   
+  # Steady Navier Stokes steady
+  ADD_SUBDIRECTORY(applications/NavierStokesApps/NavierStokesTemp_AMR/)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/NavierStokesTemp_AMR/output/)
+  FILE(MAKE_DIRECTORY applications/NavierStokesApps/NavierStokesTemp_AMR/input/)
+  FILE(COPY           applications/NavierStokesApps/NavierStokesTemp_AMR/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/NavierStokesTemp_AMR/input/)
+ 
+ENDIF(BUILD_NAVIERSTOKESAPPS)
 
-OPTION(BUILD_TAYLORVORTEX "Build the Time dependent Taylor vortex application" ON)
+# Ask the user which executable have to be built
+OPTION(BUILD_FSIAPPS "Build the FSI applications" ON)
 
-IF(BUILD_TAYLORVORTEX)
-       ADD_SUBDIRECTORY(applications/TaylorGreenVortexFlowGeneralisedalpha/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/TaylorGreenVortexFlowGeneralisedalpha/output/)
-    FILE(MAKE_DIRECTORY applications/TaylorGreenVortexFlowGeneralisedalpha/input/)
-    FILE(COPY           applications/TaylorGreenVortexFlowGeneralisedalpha/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/TaylorGreenVortexFlowGeneralisedalpha/input/)
-ENDIF(BUILD_TAYLORVORTEX)   
+IF(BUILD_FSIAPPS)
 
-OPTION(BUILD_FSI_CMS_NWM "Build the FSI COMSOL Benchmark" ON)
+# FSI SteadyState Benchmark Comsol
+    ADD_SUBDIRECTORY(applications/FSIApps/FSI_CMS_NWM/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_CMS_NWM/output/)
+    FILE(MAKE_DIRECTORY applications/FSIApps/FSI_CMS_NWM/input/)
+    FILE(COPY           applications/FSIApps/FSI_CMS_NWM/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_CMS_NWM/input/)
 
-IF(BUILD_FSI_CMS_NWM)
-       ADD_SUBDIRECTORY(applications/FSI_CMS_NWM/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_CMS_NWM/output/)
-    FILE(MAKE_DIRECTORY applications/FSI_CMS_NWM/input/)
-    FILE(COPY           applications/FSI_CMS_NWM/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/FSI_CMS_NWM/input/)
-ENDIF(BUILD_FSI_CMS_NWM)
+# FSI SteadyState Benchmark Turek1
+    ADD_SUBDIRECTORY(applications/FSIApps/FSI_TUREK_1/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_1/output/)
+    FILE(MAKE_DIRECTORY applications/FSIApps/FSI_TUREK_1/input/)
+    FILE(COPY           applications/FSIApps/FSI_TUREK_1/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_1/input/)
 
-OPTION(BUILD_FSI_TUREK_1 "Build the FSI Turek 1 Benchmark" ON)
+# FSI SteadyState Benchmark Turek3
+    ADD_SUBDIRECTORY(applications/FSIApps/FSI_TUREK_3/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_3/output/)
+    FILE(MAKE_DIRECTORY applications/FSIApps/FSI_TUREK_3/input/)
+    FILE(COPY           applications/FSIApps/FSI_TUREK_3/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_3/input/)
 
-IF(BUILD_FSI_TUREK_1)
-       ADD_SUBDIRECTORY(applications/FSI_TUREK_1/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_1/output/)
-    FILE(MAKE_DIRECTORY applications/FSI_TUREK_1/input/)
-    FILE(COPY           applications/FSI_TUREK_1/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_1/input/)
-ENDIF(BUILD_FSI_TUREK_1)
+# FSI SteadyState in porous media
+    ADD_SUBDIRECTORY(applications/FSIApps/fsi_porous/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/fsi_porous/output/)
+    FILE(MAKE_DIRECTORY applications/FSIApps/fsi_porous/input/)
+    FILE(COPY           applications/FSIApps/fsi_porous/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/FSIApps/fsi_porous/input/)
 
-OPTION(BUILD_GENCASE "Build the case generator" ON)
+ENDIF(BUILD_FSIAPPS)
 
-OPTION(BUILD_FSI_TUREK_3 "Build the FSI Turek 3 Benchmark" ON)
+# # Ask the user which executable have to be built
+# OPTION(BUILD_STEADYNAVIERSTOKES "Build the Steady NavierStokes application" ON)
+# 
+# # Build applications
+# IF(BUILD_STEADYNAVIERSTOKES)
+#        ADD_SUBDIRECTORY(applications/SteadyNavierStokesParallel)
+#     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/SteadyNavierStokesParallel/output/)
+#     FILE(MAKE_DIRECTORY applications/SteadyNavierStokesParallel/input/)
+#     FILE(COPY           applications/SteadyNavierStokesParallel/input/ DESTINATION 
+#   ${PROJECT_BINARY_DIR}/applications/SteadyNavierStokesParallel/input/)
+# ENDIF(BUILD_STEADYNAVIERSTOKES)  
 
-IF(BUILD_FSI_TUREK_3)
-       ADD_SUBDIRECTORY(applications/FSI_TUREK_3/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_3/output/)
-    FILE(MAKE_DIRECTORY applications/FSI_TUREK_3/input/)
-    FILE(COPY           applications/FSI_TUREK_3/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_3/input/)
-ENDIF(BUILD_FSI_TUREK_3)
+# OPTION(BUILD_TIMEDEPNAVIERSTOKES "Build the Time dependent NavierStokes application" ON)
+# 
+# IF(BUILD_TIMEDEPNAVIERSTOKES)
+#        ADD_SUBDIRECTORY(applications/BackwardEulerNavierStokesParallel/)
+#     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/BackwardEulerNavierStokesParallel/output/)
+#     FILE(MAKE_DIRECTORY applications/BackwardEulerNavierStokesParallel/input/)
+#     FILE(COPY           applications/BackwardEulerNavierStokesParallel/input/ DESTINATION 
+#   ${PROJECT_BINARY_DIR}/applications/BackwardEulerNavierStokesParallel/input/)
+# ENDIF(BUILD_TIMEDEPNAVIERSTOKES)   
+
+# OPTION(BUILD_TAYLORVORTEX "Build the Time dependent Taylor vortex application" ON)
+# 
+# IF(BUILD_TAYLORVORTEX)
+#        ADD_SUBDIRECTORY(applications/TaylorGreenVortexFlowGeneralisedalpha/)
+#     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/TaylorGreenVortexFlowGeneralisedalpha/output/)
+#     FILE(MAKE_DIRECTORY applications/TaylorGreenVortexFlowGeneralisedalpha/input/)
+#     FILE(COPY           applications/TaylorGreenVortexFlowGeneralisedalpha/input/ DESTINATION 
+#   ${PROJECT_BINARY_DIR}/applications/TaylorGreenVortexFlowGeneralisedalpha/input/)
+# ENDIF(BUILD_TAYLORVORTEX)   
+
+#OPTION(BUILD_FSI_CMS_NWM "Build the FSI COMSOL Benchmark" ON)
+
+#IF(BUILD_FSI_CMS_NWM)
+#       ADD_SUBDIRECTORY(applications/FSI_CMS_NWM/)
+#    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_CMS_NWM/output/)
+#    FILE(MAKE_DIRECTORY applications/FSI_CMS_NWM/input/)
+#    FILE(COPY           applications/FSI_CMS_NWM/input/ DESTINATION 
+#  ${PROJECT_BINARY_DIR}/applications/FSI_CMS_NWM/input/)
+#ENDIF(BUILD_FSI_CMS_NWM)
+
+#OPTION(BUILD_FSI_TUREK_1 "Build the FSI Turek 1 Benchmark" ON)
+
+#IF(BUILD_FSI_TUREK_1)
+#       ADD_SUBDIRECTORY(applications/FSI_TUREK_1/)
+#    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_1/output/)
+#    FILE(MAKE_DIRECTORY applications/FSI_TUREK_1/input/)
+#    FILE(COPY           applications/FSI_TUREK_1/input/ DESTINATION 
+#  ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_1/input/)
+#ENDIF(BUILD_FSI_TUREK_1)
+
+#OPTION(BUILD_GENCASE "Build the case generator" ON)
+
+#OPTION(BUILD_FSI_TUREK_3 "Build the FSI Turek 3 Benchmark" ON)
+
+#IF(BUILD_FSI_TUREK_3)
+#       ADD_SUBDIRECTORY(applications/FSI_TUREK_3/)
+#    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_3/output/)
+#    FILE(MAKE_DIRECTORY applications/FSI_TUREK_3/input/)
+#    FILE(COPY           applications/FSI_TUREK_3/input/ DESTINATION 
+#  ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_3/input/)
+#ENDIF(BUILD_FSI_TUREK_3)
 
 OPTION(BUILD_GENCASE "Build the case generator" ON)
 
@@ -215,23 +301,23 @@ IF(BUILD_TEMPER)
     FILE(COPY applications/temper/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/temper/input/)
 ENDIF(BUILD_TEMPER)
 
-OPTION(BUILD_FSIPOROUS "Build the fsi problem in a porous medium" ON)
+#OPTION(BUILD_FSIPOROUS "Build the fsi problem in a porous medium" ON)
 
-IF(BUILD_FSIPOROUS)
-       ADD_SUBDIRECTORY(applications/fsi_porous/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/fsi_porous/output/)
-    FILE(MAKE_DIRECTORY applications/fsi_porous/input/)
-    FILE(COPY           applications/fsi_porous/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/fsi_porous/input/)
-ENDIF(BUILD_FSIPOROUS)
+#IF(BUILD_FSIPOROUS)
+#       ADD_SUBDIRECTORY(applications/fsi_porous/)
+#    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/fsi_porous/output/)
+#    FILE(MAKE_DIRECTORY applications/fsi_porous/input/)
+#    FILE(COPY           applications/fsi_porous/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/fsi_porous/input/)
+#ENDIF(BUILD_FSIPOROUS)
 
-OPTION(BUILD_NSPROJECTION "Build the Navier Stokes solved with the Projection Method" OFF)
+# OPTION(BUILD_STEADYSTOKES "Build the Steady Stokes" ON)
 
-IF(BUILD_NSPROJECTION)
-       ADD_SUBDIRECTORY(applications/NSProjection/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NSProjection/output/)
-    FILE(MAKE_DIRECTORY applications/NSProjection/input/)
-    FILE(COPY           applications/NSProjection/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/NSProjection/input/)
-ENDIF(BUILD_NSPROJECTION)
+# IF(BUILD_STEADYSTOKES)
+#        ADD_SUBDIRECTORY(applications/SteadyStokes/)
+#     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/SteadyStokes/output/)
+#     FILE(MAKE_DIRECTORY applications/SteadyStokes/input/)
+#     FILE(COPY           applications/SteadyStokes/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/SteadyStokes/input/)
+# ENDIF(BUILD_STEADYSTOKES)
 
 OPTION(BUILD_POISSON "Build the Poisson problem" ON)
 
@@ -242,6 +328,23 @@ IF(BUILD_POISSON)
     FILE(COPY           applications/Poisson/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/Poisson/input/)
 ENDIF(BUILD_POISSON)
 
+OPTION(BUILD_POISSON_AMR "Build the Poisson_AMR problem" ON)
+
+IF(BUILD_POISSON_AMR)
+       ADD_SUBDIRECTORY(applications/Poisson_AMR/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/Poisson_AMR/output/)
+    FILE(MAKE_DIRECTORY applications/Poisson_AMR/input/)
+    FILE(COPY           applications/Poisson_AMR/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/Poisson_AMR/input/)
+ENDIF(BUILD_POISSON_AMR)
+
+# OPTION(BULID_NVR-STKS-TMP_AMR "Build the NavierStokes-Temp_AMR problem" ON)
+# 
+# IF(BULID_NVR-STKS-TMP_AMR)
+#        ADD_SUBDIRECTORY(applications/NavierStokesTemp_AMR/)
+#     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesTemp_AMR/output/)
+#     FILE(MAKE_DIRECTORY applications/NavierStokesTemp_AMR/input/)
+#     FILE(COPY           applications/NavierStokesTemp_AMR/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/NavierStokesTemp_AMR/input/)
+# ENDIF(BULID_NVR-STKS-TMP_AMR)
 
 ## --------------- Unit tests -------------------
 

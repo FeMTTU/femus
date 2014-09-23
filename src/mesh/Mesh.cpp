@@ -32,12 +32,14 @@
 
 
 namespace femus {
-
+  
 using std::cout;
 using std::endl;
 using std::min;
 using std::sort;
 
+
+bool mesh::_TestSetRefinementFlag=0;
 
 const unsigned mesh::_END_IND[5]= {0,1,3,4,5};
 
@@ -100,8 +102,135 @@ void mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _coordinate->ResizeSolutionVector("Z");
     
   _coordinate->SetCoarseCoordinates(vt);
+  
+  _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
+  _coordinate->ResizeSolutionVector("AMR");
     
 };
+
+
+//-------------------------------------------------------------------
+void mesh::FlagAllElementsToBeRefined() {
+  
+   el->InitRefinedToZero();
+   
+   //refine all next grid elements
+   for (unsigned iel=0; iel<nel; iel++) {
+     el->SetRefinedElementIndex(iel,1);
+     el->AddToRefinedElementNumber(1);
+     short unsigned elt=el->GetElementType(iel);
+     el->AddToRefinedElementNumber(1,elt);
+   }
+
+   el->AllocateChildrenElement(_ref_index);
+}
+
+//-------------------------------------------------------------------
+void mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
+     el->InitRefinedToZero();
+   
+    //refine based on the function SetRefinementFlag defined in the main;
+    // the mesh is serial, we cannot in parallel use the coordinates to selectively refine
+    std::vector<double> X_local;
+    std::vector<double> Y_local;
+    std::vector<double> Z_local;
+    _coordinate->_Sol[0]->localize_to_all(X_local);
+    _coordinate->_Sol[1]->localize_to_all(Y_local);
+    _coordinate->_Sol[2]->localize_to_all(Z_local);
+  
+    for (unsigned iel=0; iel<nel; iel+=1) {
+      unsigned nve=el->GetElementDofNumber(iel,0);
+      double vtx=0.,vty=0.,vtz=0.;
+      for ( unsigned i=0; i<nve; i++) {
+	unsigned inode=el->GetElementVertexIndex(iel,i)-1u;
+	unsigned inode_Metis=GetMetisDof(inode,2);
+	vtx+=X_local[inode_Metis];  
+	vty+=Y_local[inode_Metis]; 
+	vtz+=Z_local[inode_Metis]; 
+      }
+      vtx/=nve;
+      vty/=nve;
+      vtz/=nve;
+      if(!el->GetRefinedElementIndex(iel)){
+	if (_SetRefinementFlag(vtx,vty,vtz,el->GetElementGroup(iel),grid)) {
+	  el->SetRefinedElementIndex(iel,1);
+	  el->AddToRefinedElementNumber(1);
+	  short unsigned elt=el->GetElementType(iel);
+	  el->AddToRefinedElementNumber(1,elt);
+	}
+      }
+    }
+    el->AllocateChildrenElement(_ref_index);
+}
+
+
+
+//-------------------------------------------------------------------
+void mesh::FlagElementsToBeRefinedByAMR() {
+    
+       
+    if(_TestSetRefinementFlag){
+      for (int iel_metis=IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
+	unsigned kel = IS_Mts2Gmt_elem[iel_metis];
+	short unsigned kelt=el->GetElementType(kel);
+        unsigned nve=el->GetElementDofNumber(kel,0);
+	double vtx=0.,vty=0.,vtz=0.;
+	for(unsigned i=0; i<nve; i++) {
+	  unsigned inode=el->GetElementVertexIndex(kel,i)-1u;
+	  unsigned inode_metis=GetMetisDof(inode,2);
+      	  vtx+= (*_coordinate->_Sol[0])(inode_metis);
+	  vty+= (*_coordinate->_Sol[1])(inode_metis);
+	  vtz+= (*_coordinate->_Sol[2])(inode_metis);
+	}
+	vtx/=nve;
+	vty/=nve;
+	vtz/=nve;
+	if( (*_coordinate->_Sol[3])(iel_metis) < 0.5 &&
+	    _SetRefinementFlag(vtx,vty,vtz,el->GetElementGroup(kel),grid) ) {
+	    _coordinate->_Sol[3]->set(iel_metis,1.);
+	}
+      }
+      _coordinate->_Sol[3]->close();
+    }
+       
+    std::vector<double> AMR_local;
+    _coordinate->_Sol[3]->localize_to_all(AMR_local);
+  
+    el->InitRefinedToZero();
+    
+    for (unsigned iel_metis=0; iel_metis<nel; iel_metis++) {
+      if(AMR_local[iel_metis]>0.5){
+	unsigned iel=IS_Mts2Gmt_elem[iel_metis];
+	el->SetRefinedElementIndex(iel,1);
+	el->AddToRefinedElementNumber(1);
+	short unsigned elt=el->GetElementType(iel);
+	el->AddToRefinedElementNumber(1,elt);
+      }   
+    }
+    el->AllocateChildrenElement(_ref_index);
+}
+
+
+
+
+
+
+
+//-------------------------------------------------------------------
+void mesh::FlagOnlyEvenElementsToBeRefined() {
+  
+   el->InitRefinedToZero();
+
+   //refine all next grid even elements
+   for (unsigned iel=0; iel<nel; iel+=2) {
+     el->SetRefinedElementIndex(iel,1);
+     el->AddToRefinedElementNumber(1);
+     short unsigned elt=el->GetElementType(iel);
+     el->AddToRefinedElementNumber(1,elt);
+   }
+   el->AllocateChildrenElement(_ref_index);
+}
+
 
 /**
  *  This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$
@@ -332,6 +461,9 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type* type_
   _coordinate->ResizeSolutionVector("X");
   _coordinate->ResizeSolutionVector("Y");
   _coordinate->ResizeSolutionVector("Z");    
+  
+  _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
+  _coordinate->ResizeSolutionVector("AMR");
    
    
   unsigned TypeIndex=2;
@@ -437,37 +569,40 @@ void mesh::generate_metis_mesh_partition(){
 //   options[METIS_OPTION_NCUTS]   = params->ncuts;
   
      
-     options[METIS_OPTION_CTYPE]    = METIS_CTYPE_SHEM; 
-     //cout<<options[METIS_OPTION_CTYPE]; 
-     options[METIS_OPTION_PTYPE]= METIS_PTYPE_KWAY;
-     //cout<<options[METIS_OPTION_PTYPE]<<endl; //exit(0);
+  options[METIS_OPTION_CTYPE]    = METIS_CTYPE_SHEM; 
+  //cout<<options[METIS_OPTION_CTYPE]; 
+  options[METIS_OPTION_PTYPE]= METIS_PTYPE_KWAY;
+  //cout<<options[METIS_OPTION_PTYPE]<<endl; //exit(0);
   
-     //options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_VOL;
+  //options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_VOL;
   
-     options[METIS_OPTION_IPTYPE]   = METIS_IPTYPE_RANDOM;
-     //cout<<options[METIS_OPTION_IPTYPE]<<endl; 
-     options[METIS_OPTION_CONTIG]  = 1;//params->contig;
-     //cout<< options[METIS_OPTION_CONTIG]<<endl; //exit(0);
-     options[METIS_OPTION_MINCONN] = 1;
-     options[METIS_OPTION_NITER]   = 10;
-     options[METIS_OPTION_UFACTOR] = 100;
+  options[METIS_OPTION_IPTYPE]   = METIS_IPTYPE_RANDOM;
+  //cout<<options[METIS_OPTION_IPTYPE]<<endl; 
+  options[METIS_OPTION_CONTIG]  = 0;//params->contig;
+  //cout<< options[METIS_OPTION_CONTIG]<<endl; //exit(0);
+  options[METIS_OPTION_MINCONN] = 1;
+  options[METIS_OPTION_NITER]   = 10;
+  options[METIS_OPTION_UFACTOR] = 100;
   
   eptr[0]=0;
   unsigned counter=0;
   for (unsigned iel=0; iel<nel; iel++) {
     unsigned ielt=el->GetElementType(iel);
     eptr[iel+1]=eptr[iel]+NVE[ielt][3];
+    
     for (unsigned inode=0; inode<el->GetElementDofNumber(iel,3); inode++){
       eind[counter]=el->GetElementVertexIndex(iel,inode)-1;
-      counter ++;
-   }
+    
+      counter++;
+    }
+    
   }
   
   idx_t mnel = nel; 
   idx_t mnvt = nvt;
   idx_t ncommon = _dimension+1;
   nsubdom = _nprocs;
-  
+      
   if(nsubdom!=1) {
   //I call the mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
   int err = METIS_PartMeshDual(&mnel, &mnvt, eptr, eind, NULL, NULL, &ncommon, &nsubdom, NULL, options, &objval, epart, npart);
@@ -499,7 +634,7 @@ void mesh::generate_metis_mesh_partition(){
   delete [] eind;
   delete [] aux_vec;
 
-  //dof map: piecewise liner 0, quadratic 1, biquadratic 2, piecewise constant 3, picewise discontinous linear 4 
+   //dof map: piecewise liner 0, quadratic 1, biquadratic 2, piecewise constant 3, picewise discontinous linear 4 
   
   //resize the vector IS_Gmt2Mts_dof and dof
   for(int k=0;k<5;k++) {
@@ -730,6 +865,7 @@ void mesh::generate_metis_mesh_partition(){
     
   }
   
+   
   return; 
   
 }
@@ -1348,11 +1484,16 @@ void mesh::BuildBrick(const unsigned int nx,
                     el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
                   }
                                    
-                  if (i == 0)
+                  if (i == 0) {
 		    el->SetFaceElementIndex(iel,0,-2);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(0,"left"));
+		  }
 
-		  if (i == (nx-1))
+		  if (i == (nx-1)) {
 		    el->SetFaceElementIndex(iel,1,-3);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(1,"right")); 
+		  }
+		  
                     
                   iel++;
 		  }
@@ -1659,17 +1800,25 @@ void mesh::BuildBrick(const unsigned int nx,
                     el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
                   }
                                    
-                  if (j == 0)
+                  if (j == 0) {
 		    el->SetFaceElementIndex(iel,0,-2);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(0,"bottom"));
+		  }
 
-                  if (j == 2*(ny-1))
+                  if (j == 2*(ny-1)) {
 		    el->SetFaceElementIndex(iel,2,-4);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(2,"top"));
+		  }
  
-                  if (i == 0)
+                  if (i == 0) {
 		    el->SetFaceElementIndex(iel,3,-5);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(3,"left"));
+		  }
 
-                  if (i == 2*(nx-1))
+                  if (i == 2*(nx-1)) {
 		    el->SetFaceElementIndex(iel,1,-3);
+		    _boundaryinfo.insert(std::pair<unsigned int, std::string>(1,"right"));
+		  }
                     
                   iel++;
                }
@@ -1706,11 +1855,15 @@ void mesh::BuildBrick(const unsigned int nx,
                     el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
                   }
                     
-                  if (j == 0)
+                  if (j == 0) {
 		    el->SetFaceElementIndex(iel,0,-2);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(0,"bottom")); 
+		  }
  
- 		  if (i == 2*(nx-1))
+ 		  if (i == 2*(nx-1)) {
 		    el->SetFaceElementIndex(iel,1,-3);
+		    _boundaryinfo.insert( std::pair<unsigned int, std::string>(1,"right"));
+		  }
 
                   iel++;
 		    
@@ -1734,12 +1887,15 @@ void mesh::BuildBrick(const unsigned int nx,
                       el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
                     }
 	    
-		    if (j == 2*(ny-1))
+		    if (j == 2*(ny-1)) {
 		      el->SetFaceElementIndex(iel,1,-4);
-// 		      mesh.boundary_info->add_side(elem, 1, 2);
-// 
-                    if (i == 0)
+		      _boundaryinfo.insert( std::pair<unsigned int, std::string>(2,"top"));
+		    }
+		    
+                    if (i == 0) {
 		      el->SetFaceElementIndex(iel,2,-5);
+		      _boundaryinfo.insert( std::pair<unsigned int, std::string>(3,"left"));
+		    }
 		    
 		    iel++;
 		    
@@ -2155,29 +2311,41 @@ void mesh::BuildBrick(const unsigned int nx,
                         el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
                       }
                       
-                      if (k == 0)
+                      if (k == 0) {
 			el->SetFaceElementIndex(iel,0,-1);
-// 			mesh.boundary_info->add_side(elem, 0, 0);
+			_boundaryinfo.insert( std::pair<unsigned int, std::string>(0,"bottom"));
+		      }
+
  
- 		      if (k == 2*(nz-1))
+ 		      if (k == 2*(nz-1)) {
 			el->SetFaceElementIndex(iel,5,-6);
-// 			mesh.boundary_info->add_side(elem, 5, 5);
-// 
- 		      if (j == 0)
+			_boundaryinfo.insert( std::pair<unsigned int, std::string>(5,"top"));
+		      }
+
+
+ 		      if (j == 0) {
 			el->SetFaceElementIndex(iel,1,-2);
-// 			mesh.boundary_info->add_side(elem, 1, 1);
+			_boundaryinfo.insert( std::pair<unsigned int, std::string>(1,"front"));
+		      }
+
  
- 		      if (j == 2*(ny-1))
+ 		      if (j == 2*(ny-1)) {
 			el->SetFaceElementIndex(iel,3,-4);
-// 			mesh.boundary_info->add_side(elem, 3, 3);
+			_boundaryinfo.insert( std::pair<unsigned int, std::string>(3,"behind"));
+		      }
 
- 		      if (i == 0)
+
+ 		      if (i == 0) {
 			el->SetFaceElementIndex(iel,4,-5);
-// 			mesh.boundary_info->add_side(elem, 4, 4);
+			_boundaryinfo.insert( std::pair<unsigned int, std::string>(4,"left"));
+		      }
 
- 		      if (i == 2*(nx-1))
+
+ 		      if (i == 2*(nx-1)) {
 			el->SetFaceElementIndex(iel,2,-3);
-// 			mesh.boundary_info->add_side(elem, 2, 2);
+			_boundaryinfo.insert( std::pair<unsigned int, std::string>(2,"right"));
+		      }
+
                       
 		      iel++;
  
@@ -2594,7 +2762,11 @@ void mesh::BuildBrick(const unsigned int nx,
   _coordinate->ResizeSolutionVector("Z");
     
   _coordinate->SetCoarseCoordinates(vt);
+ 
+  _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
+  _coordinate->ResizeSolutionVector("AMR");
   
+ 
 }
 
 

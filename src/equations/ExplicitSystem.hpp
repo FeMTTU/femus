@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: ExplicitSystem
  Authors: Simone Bnà
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -24,41 +24,47 @@
 
 namespace femus {
 
-
-
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
 
 
+/**
+ * The explicit system class
+ */
+
 class ExplicitSystem : public System {
 
 public:
-  
-  /** Constructor.  Optionally initializes required data structures. */
-  ExplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number,const MgSmoother & smoother_type);
 
-  virtual ~ExplicitSystem();
-  
-  /** The type of the parent. */
-  typedef System Parent;
-  
-  /** Solves the system. */
-  virtual void solve () {};
-  
-   /** Clear all the data structures associated with the system. */
-  virtual void clear();
+    /** Constructor.  Optionally initializes required data structures. */
+    ExplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number,const MgSmoother & smoother_type);
 
-  /** Init the system PDE structures */
-  virtual void init();
-  
-  /**
-   * @returns \p "Explicit".  Helps in identifying
-   * the system type in an equation system file.
-  */
-  virtual std::string system_type () const { return "Explicit"; }
-  
+    /** Destructor */
+    virtual ~ExplicitSystem();
+
+    /** The type of the parent. */
+    typedef System Parent;
+
+    /** Solves the system. */
+    virtual void solve () {};
+
+    /** Clear all the data structures associated with the system. */
+    virtual void clear();
+
+    /** Init the system PDE structures */
+    virtual void init();
+
+    /**
+     * @returns \p "Explicit".  Helps in identifying
+     * the system type in an equation system file.
+    */
+    virtual std::string system_type () const {
+        return "Explicit";
+    }
+
 protected:
+
 
 private:
 

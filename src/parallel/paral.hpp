@@ -5,7 +5,7 @@
 #include "FEMTTUConfig.h"
 
 #ifdef HAVE_MPI
- #include "mpi.h" 
+#include "mpi.h"
 #endif
 
 
@@ -47,19 +47,19 @@ namespace paral {
 //what can you do to have global DATA? extern, or sthg
 
 inline int get_rank() {
-  int proc_rank=0;
+    int proc_rank=0;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &proc_rank);
- #endif
-return proc_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &proc_rank);
+#endif
+    return proc_rank;
 }
 
 inline int get_size() {
-  int proc_size=1;
+    int proc_size=1;
 #ifdef HAVE_MPI
-  MPI_Comm_size(MPI_COMM_WORLD, &proc_size);
+    MPI_Comm_size(MPI_COMM_WORLD, &proc_size);
 #endif
-return  proc_size;
+    return  proc_size;
 }
 
 

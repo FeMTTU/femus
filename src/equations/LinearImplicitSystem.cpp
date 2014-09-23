@@ -38,13 +38,14 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   _mg_type(F_CYCLE),
   _npre(1),
   _npost(1),
-  //_VankaIsSet(false),
-  //_NSchurVar(1),
-  //_Schur(false),
+  _AMRtest(0),
+  _maxAMRlevels(0),
+  _AMRnorm(0),
+  _AMRthreshold(0.01),
   _SmootherType(smoother_type)
-  {
-    
-  }
+ {
+  
+ }
 
 LinearImplicitSystem::~LinearImplicitSystem() {
    this->clear(); 
@@ -55,6 +56,9 @@ void LinearImplicitSystem::clear() {
       _LinSolver[ig]->DeletePde();
       delete _LinSolver[ig];
     }  
+    _NSchurVar_test=0;
+    _numblock_test=0;
+    _numblock_all_test=0;
 }
 
 void LinearImplicitSystem::init() {
@@ -75,10 +79,58 @@ void LinearImplicitSystem::init() {
       BuildProlongatorMatrix(ig);
     }
     
+    _NSchurVar_test=0;
+    _numblock_test=0;   
+    _numblock_all_test=0;
     // By default we solved for all the PDE variables
     ClearVariablesToBeSolved();
     AddVariableToBeSolved("All");
 }
+
+
+void LinearImplicitSystem::AddSystemLevel() {
+  
+    _equation_systems.AddLevel();
+    
+    
+    _msh.resize(_gridn+1);
+    _solution.resize(_gridn+1);
+    _msh[_gridn]=_equation_systems._ml_msh->GetLevel(_gridn);
+    _solution[_gridn]=_ml_sol->GetSolutionLevel(_gridn);
+        
+    for(int i=0;i<_gridn;i++){
+      _LinSolver[i]->AddLevel();
+    }
+    _LinSolver.resize(_gridn+1);
+    
+    _LinSolver[_gridn]=LinearEquationSolver::build(_gridn,_msh[_gridn],_SmootherType).release();
+    
+    _LinSolver[_gridn]->InitPde(_SolSystemPdeIndex,_ml_sol->GetSolType(),
+				_ml_sol->GetSolName(),&_solution[_gridn]->_Bdc,_gridr,_gridn+1);    
+    BuildProlongatorMatrix(_gridn);
+   
+    
+    _LinSolver[_gridn]->set_solver_type(_finegridsolvertype);
+    _LinSolver[_gridn]->set_tolerances(_rtol,_atol,_divtol,_maxits);  
+    _LinSolver[_gridn]->set_preconditioner_type(_finegridpreconditioner);
+    _LinSolver[_gridn]->SetDirichletBCsHandling(_DirichletBCsHandlingMode);
+    
+    if(_numblock_test){
+      unsigned num_block2 = std::min(_num_block,_msh[_gridn]->GetElementNumber());
+      _LinSolver[_gridn]->SetElementBlockNumber(num_block2);
+    }
+    else if(_numblock_all_test){
+      _LinSolver[_gridn]->SetElementBlockNumber("All", _overlap);
+    }
+    
+    if(_NSchurVar_test) {
+      _LinSolver[_gridn]->SetNumberOfSchurVariables(_NSchurVar);
+    }
+
+    _gridn++;
+}
+
+
 
 //---------------------------------------------------------------------------------------------------
 
@@ -101,99 +153,113 @@ void LinearImplicitSystem::solve() {
     full_cycle=0;
     igrid0=_gridr;
   }
-    
-  std::pair<int, double> solver_info;
-     
+  
+  unsigned AMR_counter=0;
+  
   for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {   //_igridn
     
     std::cout << std::endl << " ************* Level : " << igridn -1 << " *************\n" << std::endl;
 
-     
+    bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_maxAMRlevels && igridn==_gridn)?1:0;
+    if(ThisIsAMR) _solution[igridn-1]->InitAMREps();
+    
     int nonlinear_cycle = 0; // da eliminare anche questo parametro!!!!
     
-      // ============== Fine level Assembly ==============
-      clock_t start_time = clock();
-      _LinSolver[igridn-1u]->SetResZero();
-      _LinSolver[igridn-1u]->SetEpsZero();
-      bool assemble_matrix = true; //Be carefull!!!! this is needed in the _assemble_function
+    // ============== Fine level Assembly ==============
+    clock_t start_time = clock();
+    _LinSolver[igridn-1u]->SetResZero();
+    _LinSolver[igridn-1u]->SetEpsZero();
+    bool assemble_matrix = true; //Be carefull!!!! this is needed in the _assemble_function
       
-      /// Be careful !!!! adesso stiamo usando _sys_number invece che ipde, da togliere al + presto
-      _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix);  
+    /// Be careful !!!! adesso stiamo usando _sys_number invece che ipde, da togliere al + presto
+    _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix);  
       
 #ifndef NDEBUG       
-      std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+    std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
  
-      for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
+    for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
 	
-	//std::cout << std::endl;
-	std::cout << " ************* V-Cycle : "<< _n_linear_iterations << " *************" << std::endl;
+      //std::cout << std::endl;
+      std::cout << " ************* V-Cycle : "<< _n_linear_iterations << " *************" << std::endl;
 	
-	bool ksp_clean=!_n_linear_iterations;
+      bool ksp_clean=!_n_linear_iterations;
 	
-	for (unsigned ig = igridn-1u; ig > 0; ig--) {
+      for (unsigned ig = igridn-1u; ig > 0; ig--) {
 	  
-	  // ============== Presmoothing ============== 
-	  for (unsigned k = 0; k < _npre; k++) {
-// 	    solver_info = (_VankaIsSet) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean*(!k)) : _LinSolver[ig]->solve(ksp_clean*(!k));
-	    solver_info = _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean*(!k));
-	  }
-	  // ============== Non-Standard Multigrid Restriction ==============
-	  start_time = clock();
-	  Restrictor(ig, igridn, nonlinear_cycle, _n_linear_iterations, full_cycle);
+	// ============== Presmoothing ============== 
+	for (unsigned k = 0; k < _npre; k++) {
+	  _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean*(!k));
+	}
+	// ============== Non-Standard Multigrid Restriction ==============
+	start_time = clock();
+	Restrictor(ig, igridn, nonlinear_cycle, _n_linear_iterations, full_cycle);
 	  
 #ifndef NDEBUG 
-	  std::cout << "Grid: " << ig << "-->" << ig-1 << "   RESTRICTION TIME:\t       "<< std::setw(11) << std::setprecision(6) << std::fixed
-	  << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+	std::cout << "Grid: " << ig << "-->" << ig-1 << "   RESTRICTION TIME:\t       "<< std::setw(11) << std::setprecision(6) << std::fixed
+	<< static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif
-	}
+      }
        
- 	// ============== Coarse Direct Solver ==============
- 	//solver_info = ( _VankaIsSet ) ? _LinSolver[0]->solve(_VankaIndex, _NSchurVar, _Schur, ksp_clean) : _LinSolver[0]->solve(ksp_clean);
- 	solver_info = _LinSolver[0]->solve(_VariablesToBeSolvedIndex, ksp_clean);
+      // ============== Coarse Direct Solver ==============
+      _LinSolver[0]->solve(_VariablesToBeSolvedIndex, ksp_clean);
              
- 	for (unsigned ig = 1; ig < igridn; ig++) {
+      for (unsigned ig = 1; ig < igridn; ig++) {
  	  
- 	  // ============== Standard Prolongation ==============
- 	  start_time=clock();
- 	  Prolongator(ig);
+ 	// ============== Standard Prolongation ==============
+ 	start_time=clock();
+ 	Prolongator(ig);
 
 #ifndef NDEBUG 
- 	  std::cout << "Grid: " << ig-1 << "-->" << ig << "  PROLUNGATION TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
- 	  << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+ 	std::cout << "Grid: " << ig-1 << "-->" << ig << "  PROLUNGATION TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
+ 	<< static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
 #endif 
 	  
- 	  // ============== PostSmoothing ==============    
- 	  for (unsigned k = 0; k < _npost; k++) {
- 	    //solver_info = ( _VankaIsSet ) ? _LinSolver[ig]->solve(_VankaIndex, _NSchurVar, _Schur,ksp_clean * (!_npre) * (!k)) : _LinSolver[ig]->solve(ksp_clean * (!_npre) * (!k) );
-	    solver_info = _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean * (!_npre) * (!k));
- 	  }
+ 	// ============== PostSmoothing ==============    
+ 	for (unsigned k = 0; k < _npost; k++) {
+ 	  _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean * (!_npre) * (!k));
  	}
- 	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
- 	for (unsigned ig = _gridr-1; ig < igridn-1; ig++) {  // _gridr
- 	  _solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
- 	}
- 	
- 	_final_linear_residual = solver_info.second;
-	
-	//std::cout << std::endl;
-	std::cout << "Grid: " << igridn-1 << "      RESIDUAL:\t\t      " << std::setw(11) << std::setprecision(6) << std::scientific << 
-	_final_linear_residual << std::endl << std::endl;
-	// ============== Test for linear Convergence (now we are using only the absolute convergence tolerance)==============
- 	if(_SmootherType != VANKA_SMOOTHER){
-	  if(_final_linear_residual < _absolute_convergence_tolerance) 
-	  break;
-	}
       }
+      // ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
+      for (unsigned ig = _gridr-1; ig < igridn-1; ig++) {  // _gridr
+ 	_solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );	
+      }
+ 
+      _solution[igridn-1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
+      bool islinearconverged = IsLinearConverged(igridn-1);
+      if(islinearconverged)
+        break;
+    }
       
-      // ============== Update Solution ( ig = igridn )==============
-      _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
-					    _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
+    // ============== Update Solution ( ig = igridn )==============
+    _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS, 
+				      _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
    
 //       std::cout << std::endl;
 //       std::cout <<"GRID: "<<igridn-1<< "\t    EAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
 
     // ==============  Solution Prolongation ==============
+       
+    if(ThisIsAMR){
+      bool conv_test=0;
+      if(_AMRnorm==0){
+	conv_test=_solution[_gridn-1]->FlagAMRRegionBasedOnl2(_SolSystemPdeIndex,_AMRthreshold);
+      }
+      else if (_AMRnorm==1){
+	conv_test=_solution[_gridn-1]->FlagAMRRegionBasedOnSemiNorm(_SolSystemPdeIndex,_AMRthreshold);
+      }
+      if(conv_test==0){
+	_ml_msh->AddAMRMeshLevel();
+	_ml_sol->AddSolutionLevel();
+	AddSystemLevel();   
+	AMR_counter++;
+      }
+      else{
+	_maxAMRlevels=AMR_counter;
+	std::cout<<"The AMR solver has converged after "<<AMR_counter<<" refinements.\n";
+      }
+    }
+      
     if (igridn < _gridn) {
       ProlongatorSol(igridn);
     }
@@ -203,6 +269,66 @@ void LinearImplicitSystem::solve() {
   std::cout << "\t     SOLVER TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed 
   <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
   
+}
+
+bool LinearImplicitSystem::IsLinearConverged(const unsigned igridn) {
+  
+  bool conv=true;
+  double L2normRes;
+//   double L2normEps;
+  std::cout << std::endl;
+  //for debugging purpose
+  for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
+    unsigned indexSol=_SolSystemPdeIndex[k];
+    
+//     L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
+
+    L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
+
+    std::cout << "level=" << igridn<< "\tL2normRes" << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normRes    <<std::endl;
+//     std::cout << "level=" << igridn<< "\tL2normEps"     << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normEps <<std::endl;
+    
+    if (L2normRes < _absolute_convergence_tolerance && conv==true) {
+      conv=true;
+    } 
+    else {
+      conv=false;
+    }
+  }
+  std::cout << std::endl;
+  return conv;
+}
+
+//---------------------------------------------------------------------------------------------
+// This is function sets the AMR options
+//---------------------------------------------------------------------------------------------
+
+void LinearImplicitSystem::SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels,
+					    const std::string& AMRnorm, const double &AMRthreshold,
+					    bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
+                                       const int &ElemGroupNumber,const int &level)){
+  if ( !strcmp("yes",AMR.c_str()) || !strcmp("YES",AMR.c_str()) || !strcmp("Yes",AMR.c_str()) ) {
+    _AMRtest=1;
+  }
+  _maxAMRlevels = AMRlevels;  
+  _AMRthreshold = AMRthreshold;
+  if ( !strcmp("l2",AMRnorm.c_str()) ){
+    _AMRnorm=0;
+  }
+  else if ( !strcmp("seminorm",AMRnorm.c_str()) || !strcmp("semi-norm",AMRnorm.c_str()) ){
+    _AMRnorm=1;
+  }
+  else {
+    std::cout<<AMRnorm<<" invalid AMRnorm type \n set to default l2 norm" <<std::endl;
+    _AMRnorm=0;
+  }
+  
+  if(SetRefinementFlag==NULL){    
+  }
+  else{
+    _msh[0]->mesh::_SetRefinementFlag = SetRefinementFlag;
+    _msh[0]->mesh::_TestSetRefinementFlag=1;
+  }
 }
 
 //---------------------------------------------------------------------------------------------
@@ -218,7 +344,7 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
   if (gridf>=_gridr) {   //_gridr
     _assemble_system_function(_equation_systems, gridf-1, gridn-1u, assemble_matrix);
   }
-  
+     
   bool matrix_reuse=true;
   if(assemble_matrix){
     if (gridf>=_gridr) {  //_gridr
@@ -235,7 +361,7 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
       if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
 	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,!matrix_reuse);
       }
-      else{ 
+      else{
 	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,matrix_reuse);
       }    
     }
@@ -313,18 +439,16 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
 
 
 void LinearImplicitSystem::SetDirichletBCsHandling(const DirichletBCType DirichletMode) {
-  
-  unsigned int DirichletBCsHandlingMode;
-  
+    
   if (DirichletMode == PENALTY) {
-    DirichletBCsHandlingMode = 0;   
+    _DirichletBCsHandlingMode = 0;   
   }
   else { // elimination
-    DirichletBCsHandlingMode = 1;   
+    _DirichletBCsHandlingMode = 1;   
   } 
   
   for (unsigned i=0; i<_gridn; i++) {
-    _LinSolver[i]->SetDirichletBCsHandling(DirichletBCsHandlingMode);
+    _LinSolver[i]->SetDirichletBCsHandling(_DirichletBCsHandlingMode);
   }
 }
 
@@ -367,19 +491,21 @@ void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
   
   
 
-void LinearImplicitSystem::SetElementBlockNumber(unsigned const dim_vanka_block) {
-  
+void LinearImplicitSystem::SetElementBlockNumber(unsigned const dim_block) {
+  _numblock_test=1;
   const unsigned dim = _msh[0]->GetDimension();
   const unsigned base = pow(2,dim);
-  unsigned num_vanka_block = pow(base,dim_vanka_block);
+  _num_block = pow(base,dim_block);
 
   for (unsigned i=1; i<_gridn; i++) {
-    unsigned num_vanka_block2 = std::min(num_vanka_block,_msh[i]->GetElementNumber());
-    _LinSolver[i]->SetElementBlockNumber(num_vanka_block2);
+    unsigned num_block2 = std::min(_num_block,_msh[i]->GetElementNumber());
+    _LinSolver[i]->SetElementBlockNumber(num_block2);
   }
 }
 
 void LinearImplicitSystem::SetElementBlockNumber(const char all[], const unsigned & overlap) {
+  _numblock_all_test=1;
+  _overlap=overlap;
   for (unsigned i=1; i<_gridn; i++) {
     _LinSolver[i]->SetElementBlockNumber(all, overlap);
   }
@@ -387,49 +513,43 @@ void LinearImplicitSystem::SetElementBlockNumber(const char all[], const unsigne
 
 
 
-void LinearImplicitSystem::SetSolverFineGrids(const SolverType solvertype) {
+void LinearImplicitSystem::SetSolverFineGrids(const SolverType finegridsolvertype) {
+  _finegridsolvertype=finegridsolvertype;
   for (unsigned i=1; i<_gridn; i++) {
-    _LinSolver[i]->set_solver_type(solvertype);
+    _LinSolver[i]->set_solver_type(_finegridsolvertype);
   }
 }
 
 
-void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType preconditioner_type) {
+void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType finegridpreconditioner) {
+  _finegridpreconditioner=finegridpreconditioner;
   for (unsigned i=1; i<_gridn; i++) {
-    _LinSolver[i]->set_preconditioner_type(preconditioner_type);
+    _LinSolver[i]->set_preconditioner_type(_finegridpreconditioner);
   }
 }
 
 
 void LinearImplicitSystem::SetTolerances(const double rtol, const double atol,
-					       const double divtol, const unsigned maxits) {       
+					       const double divtol, const unsigned maxits) {     
+  _rtol=rtol;
+  _atol=atol;
+  _divtol=divtol;
+  _maxits=maxits;  
   for (unsigned i=1; i<_gridn; i++) {
-    _LinSolver[i]->set_tolerances(rtol,atol,divtol,maxits);
+    _LinSolver[i]->set_tolerances(_rtol,_atol,_divtol,_maxits);  
   }
 }
 
-// void LinearImplicitSystem::SetSchurTolerances(const double rtol, const double atol,
-// 						    const double divtol, const unsigned maxits) {
-//   for (unsigned i=1; i<_gridn; i++) {
-//     _LinSolver[i]->set_tolerances(rtol,atol,divtol,maxits,1);
-//   }
-// }
 
 void LinearImplicitSystem::SetNumberOfSchurVariables(const unsigned short &NSchurVar){
-   for (unsigned i=1; i<_gridn; i++) {
-     _LinSolver[i]->SetNumberOfSchurVariables(NSchurVar);
+   _NSchurVar_test=1;
+   _NSchurVar=NSchurVar;
+    for (unsigned i=1; i<_gridn; i++) {
+     _LinSolver[i]->SetNumberOfSchurVariables(_NSchurVar);
    }
    
    
 }
-
-void LinearImplicitSystem::AddStabilization(const bool stab, const double compressibility) {
-  for (unsigned i=0; i<_gridn; i++) {
-    _LinSolver[i]->AddStabilization(stab, compressibility);
-  }
-}
-
-
 
 } //end namespace femus
 
