@@ -113,7 +113,7 @@ namespace femus {
     double _mu_ale[3] = {1.,1.,1.};
  
     // gravity
-    double _gravity[3]={0.,0.,0.};
+    double _gravity[3]={0.,-1.,0.};
   
     // newton algorithm
     bool nwtn_alg = true;
@@ -650,7 +650,7 @@ namespace femus {
 
 		      // Residual Momentum equations
 		      for(int idim=0; idim<dim; idim++) {
-			Rhs[indexVAR[dim+idim]][i] += (
+			Rhs[indexVAR[dim+idim]][i] += (	phi[i]*_gravity[idim]*Weight
 						       -CauchyDIR[idim]*Weight
 						       +SolVAR[2*dim]*gradphi[i*dim+idim]*Weight
 						       );
@@ -749,7 +749,12 @@ namespace femus {
 		      Rhs[indexVAR[2*dim]][i] += -(-((*fi))*(I_e + (1./lambda)*SolVAR[2*dim] ) )*Weight_hat;
 		    }
 		    else if (solid_model==1) {
-		      Rhs[indexVAR[2*dim]][i] +=(*fi)*(Jnp1_hat-1.)*Weight_hat;
+		      if(eugenio){
+			Rhs[indexVAR[2*dim]][i] +=(*fi)*(Jnp1_hat-1.)*Weight_hat;
+		      }
+		      else{
+			Rhs[indexVAR[2*dim]][i] += -(-((*fi))*( log(Jnp1_hat)/Jnp1_hat ) )*Weight_hat;
+		      }
 		    }
 
 		    //END RESIDUALS B block ===========================

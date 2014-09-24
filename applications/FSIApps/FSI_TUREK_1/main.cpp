@@ -59,7 +59,8 @@ int main(int argc,char **args) {
 
   char *infile = new char [50];
   
-  sprintf(infile,"./input/fsifirst.neu");
+  //sprintf(infile,"./input/fsifirst.neu");
+  sprintf(infile,"./input/beam.neu");
 
   double Lref = 1.;
   double Uref = 1.;
@@ -237,6 +238,10 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
       test=1;
       value=0.;
     }
+    else if(6==facename ){   // beam case zero stress
+      test=0;
+      value=0.;
+    }
   }  
   else if(!strcmp(name,"V")){
     if(1==facename){            //inflow
@@ -254,6 +259,10 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
     }
     else if(4==facename ){      // no-slip solid wall
       test=1;
+      value=0.;
+    }
+    else if(6==facename ){   // beam case zero stress
+      test=0;
       value=0.;
     }
   }
@@ -274,6 +283,10 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
       test=1;
       value=0.;
     }
+    else if(6==facename ){   // beam case zero stress
+      test=0;
+      value=0.;
+    }
   }
   else if(!strcmp(name,"P")){
     if(1==facename){
@@ -289,6 +302,10 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
       value=0.;
     }
     else if(4==facename ){  
+      test=0;
+      value=0.;
+    }
+    else if(6==facename ){   // beam case zero stress
       test=0;
       value=0.;
     }
@@ -310,6 +327,10 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
       test=1;
       value=0.;
     }
+    else if(6==facename ){   // beam case zero stress
+      test=0;
+      value=0.;
+    }
   }
   else if(!strcmp(name,"DY")){
     if(1==facename){         //inflow
@@ -328,6 +349,10 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
       test=1;
       value=0.;
     }
+    else if(6==facename ){   // beam case zero stress
+      test=0;
+      value=0.;
+    }
   }
   else if(!strcmp(name,"DZ")){
     if(1==facename){         //inflow
@@ -344,6 +369,10 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
     }
     else if(4==facename ){   // no-slip solid wall
       test=1;
+      value=0.;
+    }
+    else if(6==facename ){   // beam case zero stress
+      test=0;
       value=0.;
     }
   }
