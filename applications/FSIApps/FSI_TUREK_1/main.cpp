@@ -944,6 +944,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
               // *** phi_j loop ***
               for (unsigned j=0; j<nve; j++,gradfj+=dim,fj++) {
 
+		// tangent stiffness matrix
                 for (int idim=0; idim<dim; ++idim) {
                   for (int jdim=0; jdim<dim; ++jdim) {
                     tg_stiff_matrix[idim][jdim] = 0.;

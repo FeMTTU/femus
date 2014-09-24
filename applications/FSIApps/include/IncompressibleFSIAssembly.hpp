@@ -315,7 +315,7 @@ namespace femus {
 		  rapresentative_area=area_elem_first->l1_norm()/nprocs;
 		}
 	      }
-	      Weight_nojac = Weight_hat/area*rapresentative_area;
+	      Weight_nojac = Weight_hat;///area*rapresentative_area;
 	    }
 	    // ---------------------------------------------------------------------------
 	    // displacement and velocity
@@ -497,6 +497,8 @@ namespace femus {
 	    
 	    //BEGIN SOLID ASSEMBLY ============
 	    else{
+	      bool eugenio=1;
+	      
 	      //------------------------------------------------------------------------------------------------------------
 	      if (solid_model==0) { //incompressible Neo-Hookean material
 		double e[3][3];
@@ -531,64 +533,94 @@ namespace femus {
 		
 		Jnp1_hat =  F[0][0]*F[1][1]*F[2][2] + F[0][1]*F[1][2]*F[2][0] + F[0][2]*F[1][0]*F[2][1]
 			  - F[2][0]*F[1][1]*F[0][2] - F[2][1]*F[1][2]*F[0][0] - F[2][2]*F[1][0]*F[0][1];	
-		
-		// computation of the the three deformation tensor b
-		for (int I=0; I<3; ++I) {
-		  for (int J=0; J<3; ++J) {
-		    b_left[I][J]=0.;
-		    for (int K=0; K<3; ++K) {
-		      //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
-		      b_left[I][J] += F[I][K]*F[J][K];
+		if(eugenio){
+		  // computation of the the three deformation tensor b
+		  for (int I=0; I<3; ++I) {
+		    for (int J=0; J<3; ++J) {
+		      b_left[I][J]=0.;
+		      for (int K=0; K<3; ++K) {
+			//left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
+			b_left[I][J] += F[I][K]*F[J][K];
+		      }
+		      Cauchy[I][J] = mus*(b_left[I][J] - Id2th[I][J]);
 		    }
-		    Cauchy[I][J] = mus*(b_left[I][J] - Id2th[I][J]);
 		  }
-		}
-		// C_Mat: newton-raphson Jacobi for Cauchy, to be used as gradfj_jj*C_mat[jdim][jj][idim][ii]*gradfi_ii
-		C_mat[0][0][0][0]= 2.*F[0][0];	C_mat[0][0][0][1]= 1.*F[1][0]; 	C_mat[0][0][0][2]= 1.*F[2][0];
-		C_mat[0][0][1][0]= 1.*F[1][0]; 	C_mat[0][0][1][1]= 0.;	 	C_mat[0][0][1][2]= 0.;
-		C_mat[0][0][2][0]= 1.*F[2][0]; 	C_mat[0][0][2][1]= 0.;	  	C_mat[0][0][2][2]= 0.;
+		  // C_Mat: newton-raphson Jacobi for Cauchy, to be used as gradfj_jj*C_mat[jdim][jj][idim][ii]*gradfi_ii
+		  C_mat[0][0][0][0]= 2.*F[0][0];	C_mat[0][0][0][1]= 1.*F[1][0]; 	C_mat[0][0][0][2]= 1.*F[2][0];
+		  C_mat[0][0][1][0]= 1.*F[1][0]; 	C_mat[0][0][1][1]= 0.;	 	C_mat[0][0][1][2]= 0.;
+		  C_mat[0][0][2][0]= 1.*F[2][0]; 	C_mat[0][0][2][1]= 0.;	  	C_mat[0][0][2][2]= 0.;
 	    
-		C_mat[0][1][0][0]= 2.*F[0][1]; 	C_mat[0][1][0][1]= 1.*F[1][1]; 	C_mat[0][1][0][2]= 1.*F[2][1];
-		C_mat[0][1][1][0]= 1.*F[1][1]; 	C_mat[0][1][1][1]= 0.;	  	C_mat[0][1][1][2]= 0.;
-		C_mat[0][1][2][0]= 1.*F[2][1]; 	C_mat[0][1][2][1]= 0.;	  	C_mat[0][1][2][2]= 0.;
+		  C_mat[0][1][0][0]= 2.*F[0][1]; 	C_mat[0][1][0][1]= 1.*F[1][1]; 	C_mat[0][1][0][2]= 1.*F[2][1];
+		  C_mat[0][1][1][0]= 1.*F[1][1]; 	C_mat[0][1][1][1]= 0.;	  	C_mat[0][1][1][2]= 0.;
+		  C_mat[0][1][2][0]= 1.*F[2][1]; 	C_mat[0][1][2][1]= 0.;	  	C_mat[0][1][2][2]= 0.;
 	    
-		C_mat[0][2][0][0]= 2.*F[0][2]; 	C_mat[0][2][0][1]= 1.*F[1][2]; 	C_mat[0][2][0][2]= 1.*F[2][2];
-		C_mat[0][2][1][0]= 1.*F[1][2]; 	C_mat[0][2][1][1]= 0.;	  	C_mat[0][2][1][2]= 0.;
-		C_mat[0][2][2][0]= 1.*F[2][2]; 	C_mat[0][2][2][1]= 0.;	  	C_mat[0][2][2][2]= 0.;
+		  C_mat[0][2][0][0]= 2.*F[0][2]; 	C_mat[0][2][0][1]= 1.*F[1][2]; 	C_mat[0][2][0][2]= 1.*F[2][2];
+		  C_mat[0][2][1][0]= 1.*F[1][2]; 	C_mat[0][2][1][1]= 0.;	  	C_mat[0][2][1][2]= 0.;
+		  C_mat[0][2][2][0]= 1.*F[2][2]; 	C_mat[0][2][2][1]= 0.;	  	C_mat[0][2][2][2]= 0.;
 	    
-		C_mat[1][0][0][0]= 0.;	  	C_mat[1][0][0][1]= 1.*F[0][0]; 	C_mat[1][0][0][2]= 0.;
-		C_mat[1][0][1][0]= 1.*F[0][0]; 	C_mat[1][0][1][1]= 2.*F[1][0]; 	C_mat[1][0][1][2]= 1.*F[2][0];
-		C_mat[1][0][2][0]= 0.;	   	C_mat[1][0][2][1]= 1.*F[2][0]; 	C_mat[1][0][2][2]= 0.;
+		  C_mat[1][0][0][0]= 0.;	  	C_mat[1][0][0][1]= 1.*F[0][0]; 	C_mat[1][0][0][2]= 0.;
+		  C_mat[1][0][1][0]= 1.*F[0][0]; 	C_mat[1][0][1][1]= 2.*F[1][0]; 	C_mat[1][0][1][2]= 1.*F[2][0];
+		  C_mat[1][0][2][0]= 0.;	   	C_mat[1][0][2][1]= 1.*F[2][0]; 	C_mat[1][0][2][2]= 0.;
 	    	    
-		C_mat[1][1][0][0]= 0.;	   	C_mat[1][1][0][1]= 1.*F[0][1]; 	C_mat[1][1][0][2]= 0.;
-		C_mat[1][1][1][0]= 1.*F[0][1]; 	C_mat[1][1][1][1]= 2.*F[1][1]; 	C_mat[1][1][1][2]= 1.*F[2][1];
-		C_mat[1][1][2][0]= 0.;	   	C_mat[1][1][2][1]= 1.*F[2][1]; 	C_mat[1][1][2][2]= 0.;
+		  C_mat[1][1][0][0]= 0.;	   	C_mat[1][1][0][1]= 1.*F[0][1]; 	C_mat[1][1][0][2]= 0.;
+		  C_mat[1][1][1][0]= 1.*F[0][1]; 	C_mat[1][1][1][1]= 2.*F[1][1]; 	C_mat[1][1][1][2]= 1.*F[2][1];
+		  C_mat[1][1][2][0]= 0.;	   	C_mat[1][1][2][1]= 1.*F[2][1]; 	C_mat[1][1][2][2]= 0.;
 	    
-		C_mat[1][2][0][0]= 0.;	   	C_mat[1][2][0][1]= 1.*F[0][2]; 	C_mat[1][2][0][2]= 0.;
-		C_mat[1][2][1][0]= 1.*F[0][2]; 	C_mat[1][2][1][1]= 2.*F[1][2]; 	C_mat[1][2][1][2]= 1.*F[2][2];
-		C_mat[1][2][2][0]= 0.;	   	C_mat[1][2][2][1]= 1.*F[2][2]; 	C_mat[1][2][2][2]= 0.;
+		  C_mat[1][2][0][0]= 0.;	   	C_mat[1][2][0][1]= 1.*F[0][2]; 	C_mat[1][2][0][2]= 0.;
+		  C_mat[1][2][1][0]= 1.*F[0][2]; 	C_mat[1][2][1][1]= 2.*F[1][2]; 	C_mat[1][2][1][2]= 1.*F[2][2];
+		  C_mat[1][2][2][0]= 0.;	   	C_mat[1][2][2][1]= 1.*F[2][2]; 	C_mat[1][2][2][2]= 0.;
 	    
-		C_mat[2][0][0][0]= 0.;	   	C_mat[2][0][0][1]= 0.;	  	C_mat[2][0][0][2]= 1.*F[0][0];
-		C_mat[2][0][1][0]= 0.;	   	C_mat[2][0][1][1]= 0.;	  	C_mat[2][0][1][2]= 1.*F[1][0];
-		C_mat[2][0][2][0]= 1.*F[0][0]; 	C_mat[2][0][2][1]= 1.*F[1][0]; 	C_mat[2][0][2][2]= 2.*F[2][0];
+		  C_mat[2][0][0][0]= 0.;	   	C_mat[2][0][0][1]= 0.;	  	C_mat[2][0][0][2]= 1.*F[0][0];
+		  C_mat[2][0][1][0]= 0.;	   	C_mat[2][0][1][1]= 0.;	  	C_mat[2][0][1][2]= 1.*F[1][0];
+		  C_mat[2][0][2][0]= 1.*F[0][0]; 	C_mat[2][0][2][1]= 1.*F[1][0]; 	C_mat[2][0][2][2]= 2.*F[2][0];
 	    
-		C_mat[2][1][0][0]= 0.;	  	C_mat[2][1][0][1]= 0.;    	C_mat[2][1][0][2]= 1.*F[0][1];
-		C_mat[2][1][1][0]= 0.;	  	C_mat[2][1][1][1]= 0.; 	  	C_mat[2][1][1][2]= 1.*F[1][1];
-		C_mat[2][1][2][0]= 1.*F[0][1]; 	C_mat[2][1][2][1]= 1.*F[1][1];	C_mat[2][1][2][2]= 2.*F[2][1];
+		  C_mat[2][1][0][0]= 0.;	  	C_mat[2][1][0][1]= 0.;    	C_mat[2][1][0][2]= 1.*F[0][1];
+		  C_mat[2][1][1][0]= 0.;	  	C_mat[2][1][1][1]= 0.; 	  	C_mat[2][1][1][2]= 1.*F[1][1];
+		  C_mat[2][1][2][0]= 1.*F[0][1]; 	C_mat[2][1][2][1]= 1.*F[1][1];	C_mat[2][1][2][2]= 2.*F[2][1];
 	    
-		C_mat[2][2][0][0]= 0.;	   	C_mat[2][2][0][1]= 0.;    	C_mat[2][2][0][2]= 1.*F[0][2];
-		C_mat[2][2][1][0]= 0.;	   	C_mat[2][2][1][1]= 0.; 	  	C_mat[2][2][1][2]= 1.*F[1][2];
-		C_mat[2][2][2][0]= 1.*F[0][2]; 	C_mat[2][2][2][1]= 1.*F[1][2]; 	C_mat[2][2][2][2]= 2.*F[2][2];
+		  C_mat[2][2][0][0]= 0.;	   	C_mat[2][2][0][1]= 0.;    	C_mat[2][2][0][2]= 1.*F[0][2];
+		  C_mat[2][2][1][0]= 0.;	   	C_mat[2][2][1][1]= 0.; 	  	C_mat[2][2][1][2]= 1.*F[1][2];
+		  C_mat[2][2][2][0]= 1.*F[0][2]; 	C_mat[2][2][2][1]= 1.*F[1][2]; 	C_mat[2][2][2][2]= 2.*F[2][2];
 	    
-		for (int ii=0; ii<3; ++ii) {
-		  for (int jj=0; jj<3; ++jj) {
-		    for (int kk=0; kk<3; ++kk) {
-		      for (int ll=0; ll<3; ++ll) {
-			C_mat[ii][jj][kk][ll]*=mus;
+		  for (int ii=0; ii<3; ++ii) {
+		    for (int jj=0; jj<3; ++jj) {
+		      for (int kk=0; kk<3; ++kk) {
+			for (int ll=0; ll<3; ++ll) {
+			  C_mat[ii][jj][kk][ll]*=mus;
+			}
 		      }
 		    }
 		  }
 		}
+		else{ //simone		      
+		  // computation of the the three deformation tensor b
+		  for (int I=0; I<3; ++I) {
+		    for (int J=0; J<3; ++J) {
+		      b_left[I][J]=0.;
+		      for (int K=0; K<3; ++K) {
+		      //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
+			b_left[I][J] += F[I][K]*F[J][K];
+		      }
+		      Cauchy[I][J] = (mus/Jnp1_hat)*(b_left[I][J] - Id2th[I][J]);
+		    }
+		  }
+
+	    
+	    
+		  I_bleft = b_left[0][0] + b_left[1][1] + b_left[2][2];
+	    
+		  //for the incompressible(nearly incompressible) case
+		  for (int ii=0; ii<3; ++ii) {
+		    for (int jj=0; jj<3; ++jj) {
+		      for (int kk=0; kk<3; ++kk) {
+			for (int ll=0; ll<3; ++ll) {
+			  C_mat[ii][jj][kk][ll] = 2.*mus*pow(Jnp1_hat,-1.6666666666666)*(1./3.*I_bleft*Id2th[ii][kk]*Id2th[jj][ll])
+							  -SolVAR[2*dim]*(Id2th[ii][jj]*Id2th[kk][ll]-2.*Id2th[ii][kk]*Id2th[jj][ll] );  // -p(IxI-2i)
+			}
+		      }
+		    }
+		  }
+		}	  		
 	      }
 	      //----------------------------------------------------------------------------------------------------------------------------
 
@@ -642,20 +674,52 @@ namespace femus {
 			  B[indexVAR[idim]][indexVAR[idim]][i*nve+j] 	+=  (*(fi))*(*(fj))*Weight_hat;
 			}
 			
-			
-			/// Stiffness operator -- Elasticity equation (Linear or not)
-			for(int idim=0; idim<dim; idim++) {
-			  for(int jdim=0; jdim<dim; jdim++) {
-			    double tg_stiff_matrix = 0.;
-			    for (int ii=0; ii<dim; ++ii) {
-			      for (int jj=0; jj<dim; ++jj) {
-				tg_stiff_matrix += (*(gradfj_hat+jj))*(C_mat[jdim][jj][idim][ii])*(*(gradfi+ii));
+			if(eugenio){
+			  /// Stiffness operator -- Elasticity equation (Linear or not)
+			  for(int idim=0; idim<dim; idim++) {
+			    for(int jdim=0; jdim<dim; jdim++) {
+			      double tg_stiff_matrix = 0.;
+			      for (int ii=0; ii<dim; ++ii) {
+				for (int jj=0; jj<dim; ++jj) {
+				  tg_stiff_matrix += (*(gradfj_hat+jj))*(C_mat[jdim][jj][idim][ii])*(*(gradfi+ii));
+				}
 			      }
+			      B[indexVAR[dim+idim]][indexVAR[jdim]][i*nve+j] += tg_stiff_matrix*Weight;
 			    }
-			    B[indexVAR[dim+idim]][indexVAR[jdim]][i*nve+j] += tg_stiff_matrix*Weight;
 			  }
 			}
-			
+			else{// if simone
+			  // tangent stiffness matrix
+			  for (int idim=0; idim<dim; ++idim) {
+			    for (int jdim=0; jdim<dim; ++jdim) {
+			      tg_stiff_matrix[idim][jdim] = 0.;
+			      for (int kdim=0; kdim<dim; ++kdim) {
+				for (int ldim=0; ldim<dim; ++ldim) {
+				  tg_stiff_matrix[idim][jdim] += (*(gradfi+kdim))*0.25*(
+								    C_mat[idim][kdim][jdim][ldim]+C_mat[idim][kdim][ldim][jdim]
+								    +C_mat[kdim][idim][jdim][ldim]+C_mat[kdim][idim][ldim][jdim]
+								  )*(*(gradfj+ldim));
+				}	
+			      }
+			    }
+			  }
+                
+			  // geometric tangent stiffness matrix
+			  double geom_tg_stiff_matrix = 0.;
+			  for(int idim=0; idim<dim; ++idim) {
+			    for(int jdim=0; jdim<dim; ++jdim) {
+			      geom_tg_stiff_matrix += (*(gradfi+idim))*Cauchy[idim][jdim]*(*(gradfj+jdim));
+			    }
+			  }
+
+			  /// Stiffness operator -- Elasticity equation (Linear or not)
+			  for(int idim=0; idim<dim; idim++) {
+			    B[indexVAR[dim+idim]][indexVAR[idim]][i*nve+j] += geom_tg_stiff_matrix*Weight;
+			    for(int jdim=0; jdim<dim; jdim++) {
+			      B[indexVAR[dim+idim]][indexVAR[jdim]][i*nve+j] += tg_stiff_matrix[idim][jdim]*Weight;
+			    }
+			  }
+			}	
 		      }
 		    }
 		}
