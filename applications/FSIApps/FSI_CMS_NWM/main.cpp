@@ -72,7 +72,7 @@ int main(int argc,char **args) {
   double rhof = 1000.;
   double muf = 0.001;
   double rhos = 7850;
-  double ni = 0.3;
+  double ni = 0.5;
   double E = 200000;
   
 //   sprintf(infile,"./input/fsifirst.neu");
@@ -115,8 +115,11 @@ int main(int argc,char **args) {
 
   Parameter par(Lref,Uref);
   
-  // Generate Solid Object
+  // Generate Solid Object  
+  //Solid solid(par,E,ni,rhos,"Linear_elastic");
   Solid solid(par,E,ni,rhos,"Neo-Hookean");
+  //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
+  
   cout << "Solid properties: " << endl;
   cout << solid << endl;
   

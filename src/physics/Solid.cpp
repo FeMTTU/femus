@@ -56,19 +56,29 @@ Solid::Solid(Parameter& par, const double young_module, const double poisson_coe
     _model = 0;
   } else if (!strcmp(model,"Neo-Hookean")) {
     _model = 1;
+  }
+    else if (!strcmp(model,"Neo-Hookean-BW")) {
+    _model = 2;
   } else {
     cout<<"Error! This solid model is not implemented "<<endl;
     exit(1);
   }
 
-  if (poisson_coeff < 0.5 && poisson_coeff >= 0) {
+  if (poisson_coeff <= 0.5 && poisson_coeff >= 0) {
     _poisson_coeff = poisson_coeff;
   } else {
-    cout << "Error: the value for the Poisson coeffcient must be greater than 0 and lower than 0.5!" << endl;
+    cout << "Error: the value for the Poisson coeffcient must be greater than 0 and less equal than 0.5!" << endl;
     exit(1);
   }
-
-  _lambda_lame = (_young_module*_poisson_coeff)/((1.+_poisson_coeff)*(1.-2.*_poisson_coeff));
+  
+  if(poisson_coeff<0.5){
+    _lambda_lame = (_young_module*_poisson_coeff)/((1.+_poisson_coeff)*(1.-2.*_poisson_coeff));
+  }
+  else{
+    cout << "Warning: the value for the Poisson coeffcient is 0.5, the material is incompressible"<<endl
+	 << "The Lame constant is infinity and it has been set equal to 1.0e100" << endl;
+    _lambda_lame =1.0e100;
+  }
   _mu_lame     = _young_module/(2.*(1.+_poisson_coeff));
 
 //   cout << endl << "SOLID properties: " << endl;
