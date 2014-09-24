@@ -67,8 +67,8 @@ namespace femus {
       FastVankaBlock=(_SolType[_SolPdeIndex[VankaIndex[VankaIndex.size()-_NSchurVar]]]<3)?false:true;
     }
  
-    unsigned IndexaOffset = KKoffset[0][_msh->_iproc];
-    unsigned IndexaSize=KKoffset[KKIndex.size()-1][_msh->_iproc] - KKoffset[0][_msh->_iproc];
+    unsigned IndexaOffset = KKoffset[0][processor_id()];
+    unsigned IndexaSize=KKoffset[KKIndex.size()-1][processor_id()] - KKoffset[0][processor_id()];
     vector < unsigned > indexa(IndexaSize,IndexaSize);
     _Psize.resize(3);
   
@@ -77,15 +77,15 @@ namespace femus {
     vector <PetscInt> indexbi(IndexbSize);
     vector < unsigned > indexb(IndexbSize,IndexbSize);
   
-    unsigned IndexdOffset   =_msh->MetisOffset[3][_msh->_iproc];
-    unsigned IndexdOffsetp1 =_msh->MetisOffset[3][_msh->_iproc+1];
+    unsigned IndexdOffset   =_msh->MetisOffset[3][processor_id()];
+    unsigned IndexdOffsetp1 =_msh->MetisOffset[3][processor_id()+1];
     unsigned IndexdSize= IndexdOffsetp1 - IndexdOffset;
     vector <PetscInt> indexdi(IndexdSize);
     vector < unsigned > indexd(IndexdSize,IndexdSize);
     for(unsigned i=0;i<indexd.size();i++) indexd[i] = IndexdSize;
   
-    unsigned IndexcOffset   = _msh->MetisOffset[3][_msh->_iproc];
-    unsigned IndexcOffsetp1 = _msh->MetisOffset[3][_msh->_iproc+1];
+    unsigned IndexcOffset   = _msh->MetisOffset[3][processor_id()];
+    unsigned IndexcOffsetp1 = _msh->MetisOffset[3][processor_id()+1];
     unsigned IndexcSize= IndexcOffsetp1 - IndexcOffset;
     vector <PetscInt> indexci(IndexcSize);
     vector < unsigned > indexc(IndexcSize,IndexcSize);
@@ -142,8 +142,8 @@ namespace femus {
 		    unsigned jnode=(SolType<3)?(*(pt_un++)-1u):(jel+jj*nel);
 
 		    unsigned jnode_Metis = _msh->GetMetisDof(jnode,SolType);
-		    if(jnode_Metis >= _msh->MetisOffset[SolType][_msh->_iproc] &&
-		       jnode_Metis <  _msh->MetisOffset[SolType][_msh->_iproc+1]){
+		    if(jnode_Metis >= _msh->MetisOffset[SolType][processor_id()] &&
+		       jnode_Metis <  _msh->MetisOffset[SolType][processor_id()+1]){
 		      unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
 		      if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1 <(*(*_Bdc)[SolPdeIndex])(jnode_Metis) ) {
 			_indexai[vanka_block_index][Asize]=kkdof;
@@ -177,8 +177,8 @@ namespace femus {
 			  unsigned knode=(SolType<3)?(*(pt_un++)-1u):(kel+kk*nel);
 		
 			  unsigned knode_Metis = _msh->GetMetisDof(knode,SolType);
-			  if(knode_Metis >= _msh->MetisOffset[SolType][_msh->_iproc] &&
-			     knode_Metis <  _msh->MetisOffset[SolType][_msh->_iproc+1]){
+			  if(knode_Metis >= _msh->MetisOffset[SolType][processor_id()] &&
+			     knode_Metis <  _msh->MetisOffset[SolType][processor_id()+1]){
 			    unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, knode);
 			    if(indexb[kkdof- IndexbOffset]==IndexbSize && 0.1<(*(*_Bdc)[SolPdeIndex])(knode_Metis)) {
 			      indexbi[counterb]=kkdof;
@@ -194,7 +194,7 @@ namespace femus {
 	    }
 	  }
 	  //Add Schur nodes (generally pressure) to be solved
-	  //if(iel_mts >= _msh->IS_Mts2Gmt_elem_offset[_msh->_iproc] && iel_mts < _msh->IS_Mts2Gmt_elem_offset[_msh->_iproc+1])
+	  //if(iel_mts >= _msh->IS_Mts2Gmt_elem_offset[processor_id()] && iel_mts < _msh->IS_Mts2Gmt_elem_offset[processor_id()+1])
 	  {
 	    for (unsigned iind=VankaIndex.size()-_NSchurVar; iind<VankaIndex.size(); iind++) {
 	      unsigned indexSol=VankaIndex[iind];
@@ -205,8 +205,8 @@ namespace femus {
 	      for (unsigned ii=0; ii<nvei; ii++) {
 		unsigned inode=(SolType<3)?(*(pt_un++)-1u):(iel+ii*nel);
 		unsigned inode_Metis = _msh->GetMetisDof(inode,SolType);
-		if(inode_Metis >= _msh->MetisOffset[SolType][_msh->_iproc] &&
-		   inode_Metis <  _msh->MetisOffset[SolType][_msh->_iproc+1]){
+		if(inode_Metis >= _msh->MetisOffset[SolType][processor_id()] &&
+		   inode_Metis <  _msh->MetisOffset[SolType][processor_id()+1]){
 		  unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, inode);
 		  if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1<(*(*_Bdc)[SolPdeIndex])(inode_Metis) ) {
 		    _indexai[vanka_block_index][Asize]=kkdof;
@@ -282,7 +282,7 @@ namespace femus {
 
   // ========================================================
 
-  std::pair< int, double> VankaPetscLinearEquationSolver::solve(const vector <unsigned> &VankaIndex,
+  void VankaPetscLinearEquationSolver::solve(const vector <unsigned> &VankaIndex,
 								const bool &ksp_clean) {
   
     PetscVector* EPSp=static_cast<PetscVector*> (_EPS);  //TODO
@@ -295,9 +295,7 @@ namespace femus {
     PetscErrorCode ierr;
     clock_t SearchTime=0, AssemblyTime=0, SolveTime=0, UpdateTime=0;
   
-    int its=0;
-   
-  
+ 
     // ***************** NODE/ELEMENT SEARCH *******************
     if(_indexai_init==0) {
       SearchTime += BuildIndex(VankaIndex); 
@@ -355,8 +353,6 @@ namespace femus {
       // Solve
       ierr = KSPSolve(_ksp[vb_i],_r[vb_i],_w[vb_i]);  	CHKERRABORT(MPI_COMM_WORLD,ierr);
       
-      ierr = KSPGetIterationNumber(_ksp[vb_i],&its); 	CHKERRABORT(MPI_COMM_WORLD,ierr);
-           
       SolveTime += (clock() - start_time);
       // ***************** END SOLVE ******************
       
@@ -387,11 +383,8 @@ namespace femus {
     // *** Computational info ***
     cout << "VANKA Grid: "<<_msh->GetGridNumber()<< "      SOLVER TIME:        " << std::setw(11) << std::setprecision(6) << std::fixed <<
     static_cast<double>(SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
-      "  ITS: " << its << endl;
+      "  ITS: " << _maxits << endl;
 #endif
-
-    return std::make_pair(its, static_cast<double>(SearchTime + AssemblyTime 
-			       + SolveTime + UpdateTime)/ CLOCKS_PER_SEC);
 
   }
 
@@ -453,11 +446,11 @@ namespace femus {
       // it sets the residual history length to zero.  The default
       // behavior is for PETSc to allocate (internally) an array
       // of size 1000 to hold the residual norm history.
-      ierr = KSPSetResidualHistory(ksp,
-				   PETSC_NULL,   // pointer to the array which holds the history
-				   PETSC_DECIDE, // size of the array holding the history
-				   PETSC_TRUE);  // Whether or not to reset the history for each solve.
-      CHKERRABORT(MPI_COMM_WORLD,ierr);
+//       ierr = KSPSetResidualHistory(ksp,
+// 				   PETSC_NULL,   // pointer to the array which holds the history
+// 				   PETSC_DECIDE, // size of the array holding the history
+// 				   PETSC_TRUE);  // Whether or not to reset the history for each solve.
+//       CHKERRABORT(MPI_COMM_WORLD,ierr);
 
       PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,pc);
       PetscReal zero = 1.e-16;

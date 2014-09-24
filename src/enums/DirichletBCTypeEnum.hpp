@@ -2,8 +2,8 @@
 #define __dirichletBCtypeenum_h__
 
 enum DirichletBCType {
-  PENALTY=0,
-  ELIMINATION
+    PENALTY=0,
+    ELIMINATION
 };
 
 #endif
