@@ -315,7 +315,7 @@ namespace femus {
 		  rapresentative_area=area_elem_first->l1_norm()/nprocs;
 		}
 	      }
-	      Weight_nojac = Weight_hat;///area*rapresentative_area;
+	      Weight_nojac = Weight_hat/area*rapresentative_area;
 	    }
 	    // ---------------------------------------------------------------------------
 	    // displacement and velocity
