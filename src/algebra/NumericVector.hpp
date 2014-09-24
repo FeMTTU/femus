@@ -1,10 +1,10 @@
 /*=========================================================================
 
- Program: FEMUS
+ Program: FEMuS
  Module: NumericVector
  Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
  
- Copyright (c) FEMTTU
+ Copyright (c) FEMuS
  All rights reserved. 
 
  This software is distributed WITHOUT ANY WARRANTY; without even
@@ -35,7 +35,6 @@
 namespace femus {
 
 
-
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -43,94 +42,89 @@ class DenseVector;
 class DenseSubVector;
 class SparseMatrix;
 
-// ==========================================
-// Numeric vector. Provides a uniform interface
-// to vector storage schemes for different linear
-// algebra libraries.
-// ===============================================
+/**
+ * Numeric vector. Provides a uniform interface
+ * to vector storage schemes for different linear
+ * algebra libraries.
+ */
 
 class NumericVector {
-  // =====================================
-  // DATA
-  // =====================================
-protected:
 
-  /// Flag to see if the Numeric assemble routines have been called yet
-  bool _is_closed;
-  /// Flag to tell if init  has been called yet
-  bool _is_initialized;
-  /// Type of vector
-  ParallelType _type;
 
-  // =====================================
-  // Constructor /Destructor
-  // =====================================
 public:
-  /// Dummy-Constructor. Dimension=0
+  
+  /** Dummy-Constructor. Dimension=0 */
   explicit
   NumericVector (const ParallelType = AUTOMATIC);
 
-  /// Constructor. Set dimension to \p n and initialize all elements with zero.
+  /** Constructor. Set dimension to \p n and initialize all elements with zero. */
   explicit
   NumericVector (const  int n,
                   const ParallelType = AUTOMATIC);
 
-  /// Constructor. Set local dimension to \p n_local, the global dimension to \p n
+  /** Constructor. Set local dimension to \p n_local, the global dimension to \p n */
   NumericVector (const  int n,
                   const  int n_local,
                   const ParallelType = AUTOMATIC);
 
-  /// Constructor. Set local dimension to \p n_local, the global dimension to \p n
+  /** Constructor. Set local dimension to \p n_local, the global dimension to \p n */
   NumericVector (const  int N,
                   const  int n_local,
                   const std::vector< int>& ghost,
                   const ParallelType = AUTOMATIC);
 
-/// Builds a \p NumericVector using the linear solver package
-/// specified by \p solver_package
+  /** Builds a \p NumericVector using the linear solver package */
+  /** specified by \p solver_package */
   static std::auto_ptr<NumericVector>
   build(const SolverPackage solver_package = LSOLVER);
-  /// Creates a copy of this vector and returns it in an \p AutoPtr.
+  
+  /** Creates a copy of this vector and returns it in an \p AutoPtr. */
   virtual std::auto_ptr<NumericVector > clone () const = 0;
 
-  /// Destructor, deallocates memory.
+  /** Destructor, deallocates memory. */
   virtual ~NumericVector () {
     clear ();
   }
-  /// @returns the \p NumericalVectorM to a pristine state.
+  
+  /** @returns the \p NumericalVectorM to a pristine state. */
   virtual void clear () {
     _is_closed= false;
     _is_initialized = false;
   }
 
-/// Call the assemble functions
+  /** Call the assemble functions */
   virtual void close () = 0;
-  /// Change the dimension of the vector to \p N. The reserved memory for
-  /// this vector remains unchanged if possible, to make things faster, but
-  /// this may waste some memory, so take this in the back of your head.
-  /// However, if \p N==0 all memory is freed, i.e. if you want to resize
-  /// the vector and release the memory not needed, you have to first call
-  /// \p init(0) and then \p init(N).
+  
+  /**
+   * Change the dimension of the vector to \p N. The reserved memory for
+   * this vector remains unchanged if possible, to make things faster, but
+   * this may waste some memory, so take this in the back of your head.
+   * However, if \p N==0 all memory is freed, i.e. if you want to resize
+   * the vector and release the memory not needed, you have to first call
+   * \p init(0) and then \p init(N). 
+   */
   virtual void init (const  int,
                      const  int,
                      const bool = false,
                      const ParallelType = AUTOMATIC) = 0;
 
-  /// call init with n_local = N,
+  /** call init with n_local = N, */
   virtual void init (const  int,
                      const bool = false,
                      const ParallelType = AUTOMATIC) = 0;
 
-  /// Create a vector that holds tha local indices plus those specified
-  /// in the \p ghost argument.
+  /** Create a vector that holds tha local indices plus those specified
+   * in the \p ghost argument. 
+   */
   virtual void init (const  int /*N*/,
                      const  int /*n_local*/,
                      const std::vector< int>& /*ghost*/,
                      const bool /*fast*/ = false,
                      const ParallelType = AUTOMATIC) = 0;
 
-  /// Creates a vector that has the same dimension and storage type as
-  /// \p other, including ghost dofs.
+  /** Creates a vector that has the same dimension and storage type as
+   *\p other, including ghost dofs.
+   */
   virtual void init (const NumericVector& other,
                      const bool fast = false) = 0;
 
@@ -318,6 +312,8 @@ public:
   /// Creates a local copy of the global vector
   virtual void localize_to_one (std::vector<double>& v_local,
                                 const  int proc_id=0) const = 0;
+  /// Creates a local copy of the global vector
+  virtual void localize_to_all (std::vector<double>& v_local) const = 0;
   /// @returns \p -1 when \p this is equivalent to \p other_vector,
   virtual int compare (const NumericVector &other_vector,
                        const double threshold = 1.e-20) const;
@@ -326,27 +322,42 @@ public:
                                const NumericVector& vec2) = 0;
 
 
-  // =====================================
   // PRINTING FUNCTIONS
-  // =====================================
-  /// Prints the local contents of the vector to the screen.
+  /** Prints the local contents of the vector to the screen. */
   virtual void print(std::ostream& os=std::cout) const;
-  /// Prints the global contents of the vector to the screen.
+  
+  /** Prints the global contents of the vector to the screen. */
   virtual void print_global(std::ostream& os=std::cout) const;
-  /// Same as above but allows you to use stream syntax.
+  
+  /** Same as above but allows you to use stream syntax. */
   friend std::ostream& operator << (std::ostream& os, const NumericVector& v) {
     v.print_global(os);
     return os;
   }
+  
+protected:
+
+  // member data
+  /** Flag to see if the Numeric assemble routines have been called yet */
+  bool _is_closed;
+  
+  /** Flag to tell if init has been called yet */
+  bool _is_initialized;
+  
+  /** Type of vector */
+  ParallelType _type;
 
 };
 
-/*----------------------- Inline functions ----------------------------------*/
+/**
+ *----------------------- Inline functions ----------------------------------
+ */
 
-// ==============================================
+
 inline NumericVector::NumericVector (const ParallelType type) :
   _is_closed(false),  _is_initialized(false),  _type(type) {}
-// ==============================================
+  
+
 inline NumericVector::NumericVector (const  int /*n*/,
                                        const ParallelType type) :
   _is_closed(false),_is_initialized(false), _type(type) {
@@ -354,7 +365,7 @@ inline NumericVector::NumericVector (const  int /*n*/,
   exit(0); // Abstract base class!
 }
 
-// ==============================================
+
 inline NumericVector::NumericVector (const int /*n*/,const int /*n_local*/,
                                        const ParallelType type) :
   _is_closed(false),  _is_initialized(false),  _type(type) {
@@ -362,7 +373,7 @@ inline NumericVector::NumericVector (const int /*n*/,const int /*n_local*/,
   exit(0); // Abstract base class!
 }
 
-// ==============================================
+
 inline NumericVector::NumericVector (const int /*n*/,const int /*n_local*/,
                                        const std::vector<int>& /*ghost*/,
                                        const ParallelType type) :
@@ -372,7 +383,6 @@ inline NumericVector::NumericVector (const int /*n*/,const int /*n_local*/,
 }
 
 
-// ==============================================
 inline void NumericVector::get(const std::vector<int>& index,
                                 std::vector<double>& values) const {
   const  int num = index.size();
@@ -380,14 +390,14 @@ inline void NumericVector::get(const std::vector<int>& index,
   for( int i=0; i<num; i++) values[i] = (*this)(index[i]);
 }
 
-// ==============================================
+
 inline void  NumericVector::swap (NumericVector &v) {
   std::swap(_is_closed, v._is_closed);
   std::swap(_is_initialized, v._is_initialized);
   std::swap(_type, v._type);
 }
 
-// ==============================================
+
 inline void NumericVector::print(std::ostream& os) const {
   assert (this->initialized());
   os << "Size\tglobal =  " << this->size()
@@ -396,13 +406,14 @@ inline void NumericVector::print(std::ostream& os) const {
   for ( int i=this->first_local_index(); i<this->last_local_index(); i++)
     os << i << "\t" << (*this)(i) << std::endl;
 }
-// ==============================================
+
+
 inline void NumericVector::print_global(std::ostream& os) const {
   assert (this->initialized());
   std::vector<double> v(this->size());
   this->localize(v);
   // Right now we only want one copy of the output
-#ifdef HAVE_MPIM   //TODO
+#ifdef HAVE_MPIM   
   if(static_cast<int>(libMeshPrivateData::_processor_id)) return ;
 #else
   if(0)return;
@@ -410,6 +421,7 @@ inline void NumericVector::print_global(std::ostream& os) const {
   os << "Size\tglobal =  " << this->size() << std::endl;
   os << "#\tValue" << std::endl;
   for (unsigned int i=0; i!=v.size(); i++) os << i << "\t" << v[i] << std::endl;
+  
 }
 
 

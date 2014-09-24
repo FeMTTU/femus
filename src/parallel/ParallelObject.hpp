@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: ParallelObject
  Authors: Simone Bnà
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -25,33 +25,40 @@ namespace femus {
 
 /**
    * This class forms the base class for all other classes
-   * that are expected to be implemented in paralel. 
+   * that are expected to be implemented in paralel.
 */
 
 
-class ParallelObject 
+class ParallelObject
 {
 
 public:
-  
+
     /** Constructor. Requires a reference to the communicator
      * that defines the object's parallel decomposition. */
-    ParallelObject () { MPI_Comm_rank(MPI_COMM_WORLD, &_iproc); MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);}
-  
+    ParallelObject () {
+        MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
+        MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
+    }
+
     /** Destructor. Virtual because we are a base class. */
     virtual ~ParallelObject () {}
 
     /** @returns the number of processors in the group. */
-    int n_processors() const { return _nprocs; }
+    int n_processors() const {
+        return _nprocs;
+    }
 
     /** @returns the rank of this processor in the group. */
-    int processor_id() const { return _iproc; }
-  
+    int processor_id() const {
+        return _iproc;
+    }
+
 
 protected:
 
-  int _nprocs;
-  int _iproc;
+    int _nprocs;
+    int _iproc;
 
 };
 

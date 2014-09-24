@@ -138,7 +138,6 @@ int main(int argc,char **args) {
   
   system1.init();
   //common smoother options
-  system1.AddStabilization(true);
   system1.SetSolverFineGrids(GMRES);
   system1.SetPreconditionerFineGrids(ILU_PRECOND); 
   system1.SetTolerances(1.e-12,1.e-20,1.e+50,4);
@@ -203,7 +202,7 @@ int main(int argc,char **args) {
   
   std::cout << "Solution U l2norm: " << l2normvarU << std::endl; 
   
-  if( fabs(l2normvarU - l2normvarUStored ) > 1.e-12) 
+  if( fabs((l2normvarU - l2normvarUStored )/l2normvarUStored) > 1.e-6) 
   {
     exit(1);
   }
@@ -214,7 +213,7 @@ int main(int argc,char **args) {
   
   std::cout << "Solution V l2norm: " << l2normvarV << std::endl; 
   
-  if( fabs(l2normvarV - l2normvarVStored ) > 1.e-16) 
+  if( fabs((l2normvarV - l2normvarVStored )/l2normvarVStored )> 1.e-6) 
   {
     exit(1);
   }
@@ -225,7 +224,7 @@ int main(int argc,char **args) {
   
   std::cout << "Solution P l2norm: " << l2normvarP << std::endl; 
   
-  if( fabs(l2normvarP - l2normvarPStored ) > 1.e-16) 
+  if( fabs((l2normvarP - l2normvarPStored )/l2normvarPStored) > 1.e-6) 
   {
     exit(1);
   }
@@ -234,12 +233,23 @@ int main(int argc,char **args) {
   
   double l2normvarTStored = 219.68194612060503;
   
-  std::cout << "Solution T l2norm: " << l2normvarT << std::endl; 
+  std::cout << "Solution T l2norm: " << l2normvarT <<std::endl; 
   
-  if( fabs(l2normvarT - l2normvarTStored ) > 1.e-16) 
+  if( fabs((l2normvarT - l2normvarTStored )/l2normvarTStored) > 1.e-6) 
   {
     exit(1);
   }
+  
+//   std::vector<std::string> print_vars;
+//   print_vars.push_back("U");
+//   print_vars.push_back("V");
+//   print_vars.push_back("P");
+//   print_vars.push_back("T");
+  
+//   GMVWriter gmvio(ml_sol);
+//   gmvio.write_system_solutions("biquadratic",print_vars);
+  
+  
   
   //Destroy all the new systems
   ml_prob.clear();
@@ -401,8 +411,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   const unsigned dim = mymsh->GetDimension();
   unsigned nel= mymsh->GetElementNumber();
   unsigned igrid= mymsh->GetGridNumber();
-  unsigned iproc = mymsh->GetProcID();
-  unsigned nprocs = mymsh->GetNumProcs();
+  unsigned iproc = mymsh->processor_id();
   double ILambda= 0; 
   double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
   bool penalty = true; //mylsyspde->GetStabilization();
@@ -538,7 +547,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     }
     
     for(unsigned i=0;i<nve1;i++) {
-      unsigned inode=(order_ind1<dim)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
+      unsigned inode=(order_ind1<3)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
       node1[i]=inode;
       KK_dof[dim][i]=mylsyspde->GetKKDof(SolIndex[dim],SolPdeIndex[dim],inode);
     }
@@ -658,23 +667,23 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       }  // end gauss point loop
       
       //--------------------------------------------------------------------------------------------------------
-      // Boundary Integral
+      // Boundary Integral --> to be addded
       //number of faces for each type of element
-      if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
-     
-	unsigned nfaces = myel->GetElementFaceNumber(kel);
-
-	// loop on faces
-	for(unsigned jface=0;jface<nfaces;jface++){ 
-	  
-	  // look for boundary faces
-	  if(myel->GetFaceElementIndex(kel,jface)<0){
-	    for(unsigned ivar=0; ivar<dim; ivar++) {
-	      ml_prob.ComputeBdIntegral(pdename, &Solname[ivar][0], kel, jface, level, ivar);
-	    }
-	  }
-	}	
-      }
+//       if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
+//      
+// 	unsigned nfaces = myel->GetElementFaceNumber(kel);
+// 
+// 	// loop on faces
+// 	for(unsigned jface=0;jface<nfaces;jface++){ 
+// 	  
+// 	  // look for boundary faces
+// 	  if(myel->GetFaceElementIndex(kel,jface)<0){
+// 	    for(unsigned ivar=0; ivar<dim; ivar++) {
+// 	      ml_prob.ComputeBdIntegral(pdename, &Solname[ivar][0], kel, jface, level, ivar);
+// 	    }
+// 	  }
+// 	}	
+//       }
       //--------------------------------------------------------------------------------------------------------
     } // endif single element not refined or fine grid loop
     //--------------------------------------------------------------------------------------------------------
@@ -722,7 +731,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   const unsigned	dim	= mymsh->GetDimension();
   unsigned 		nel	= mymsh->GetElementNumber();
   unsigned 		igrid	= mymsh->GetGridNumber();
-  unsigned 		iproc	= mymsh->GetProcID();
+  unsigned 		iproc	= mymsh->processor_id();
   double		IPe	= 1./(ml_prob.parameters.get<Fluid>("Fluid").get_Peclet_number());  
   
   //solution variable

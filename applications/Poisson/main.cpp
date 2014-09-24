@@ -12,53 +12,21 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "SolvertypeEnum.hpp"
 #include "FElemTypeEnum.hpp"
-#include <json/json.h>
-#include <json/value.h>
-
-
-using std::cout;
-using std::endl;
+#include "ParsedFunction.hpp"
+#include "InputParser.hpp"
 
 using namespace femus;
 
 
-void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
 
-
-// double InitVariableU(const double &x, const double &y, const double &z);
-
-
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[],
-                          double &value, const int FaceName, const double time);
-
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
-
-
-
-static std::string
-readInputTestFile( const char *path )
+void show_usage()
 {
-    FILE *file = fopen( path, "rb" );
-    if ( !file )
-        return std::string("");
-    fseek( file, 0, SEEK_END );
-    long size = ftell( file );
-    fseek( file, 0, SEEK_SET );
-    std::string text;
-    char *buffer = new char[size+1];
-    buffer[size] = 0;
-    if ( fread( buffer, 1, size, file ) == (unsigned long)size )
-        text = buffer;
-    fclose( file );
-    delete[] buffer;
-    return text;
+    std::cout << "Use --inputfile variable to set the input file" << std::endl;
+    std::cout << "e.g.: ./Poisson --inputfile $FEMUS_DIR/applications/Poisson/input/input.json" << std::endl;
 }
 
-static void show_usage()
-{
-    std::cout << "Use --inputfile variable to set the input file" << endl;
-    std::cout << "e.g.: ./Poisson --inputfile ./input/input.json" << std::endl;
-}
+ParsedFunction fpsource;
 
 
 int main(int argc,char **argv) {
@@ -67,7 +35,7 @@ int main(int argc,char **argv) {
 
     if(argc < 2)
     {
-        std::cout << "Error: no input file specified!" << std::endl;
+        std::cout << argv[0] << ": You must specify the input file" << std::endl;
         show_usage();
         return 1;
     }
@@ -91,140 +59,23 @@ int main(int argc,char **argv) {
                 return 1;
             }
         }
+//         else {
+// 	  std::cerr << argv[count] << " : command line argument not recognized" << std::endl;
+// 	  show_usage();
+// 	  return 1;
+// 	}
     }
-
-    // start reading input from file
-    //-----------------------------------------------------------------------------------------------
-
-    std::string input = readInputTestFile( path.c_str() );
-    if ( input.empty() )
-    {
-        printf( "Failed to read input or empty input: %s\n", path.c_str() );
-        return 1;
-    }
-
-    Json::Value root;   // will contains the root value after parsing.
-    Json::Reader reader;
-    bool parsingSuccessful = reader.parse(input, root );
-    if ( !parsingSuccessful )
-    {
-        // report to the user the failure and their locations in the document.
-        std::cout  << "Failed to parse configuration\n" << reader.getFormatedErrorMessages();
-        return 1;
-    }
-
-    std::string filename = root["mesh"].get("filename", "").asString();
-
-    int numelemx;
-    int numelemy;
-    int numelemz;
-    double xa, xb, ya, yb, za, zb;
-    ElemType elemtype;
-
-    bool isBox = root["mesh"].get("box", false).asBool();
-    if(isBox) {
-        numelemx = root["mesh"].get("box","").get("nx", 2).asUInt();
-        numelemy = root["mesh"].get("box","").get("ny", 2).asUInt();
-        numelemz = root["mesh"].get("box","").get("nz", 2).asUInt();
-        xa = root["mesh"].get("box","").get("xa", 0.).asDouble();
-        xb = root["mesh"].get("box","").get("xb", 1.).asDouble();
-        ya = root["mesh"].get("box","").get("ya", 0.).asDouble();
-        yb = root["mesh"].get("box","").get("yb", 1.).asDouble();
-        za = root["mesh"].get("box","").get("za", 0.).asDouble();
-        zb = root["mesh"].get("box","").get("zb", 0.).asDouble();
-        std::string elemtypestr = root["mesh"].get("box","").get("elem_type", "Quad9").asString();
-        if(elemtypestr == "Quad9")
-        {
-            elemtype = QUAD9;
-        }
-        else if(elemtypestr == "Tri6")
-        {
-            elemtype = TRI6;
-        }
-        else if(elemtypestr == "Edge3")
-        {
-            elemtype = EDGE3;
-        }
-        else if(elemtypestr == "Hex27")
-        {
-            elemtype = HEX27;
-        }
-        else
-	{
-	    elemtype = INVALID_ELEM;
-	}
-        
-    }
-
-    std::string variableName = root["variable"].get("name", "Q").asString();
-
-    FEOrder fe_order;
-    std::string fe_order_str = root["variable"].get("fe_order", "first").asString();
-    if (!strcmp(fe_order_str.c_str(),"first"))
-    {
-        fe_order = FIRST;
-    }
-    else if (!strcmp(fe_order_str.c_str(),"serendipity"))
-    {
-        fe_order = SERENDIPITY;
-    }
-    else if (!strcmp(fe_order_str.c_str(),"second"))
-    {
-      fe_order = SECOND;
-    }
-    else
-    {
-      std::cerr << " Error: Lagrange finite element order not supported!" << std::endl;
-      exit(1);
-    }
-    
-    
-    unsigned int nlevels = root["mgsolver"].get("nlevels", 1).asInt();
-    unsigned int npresmoothing = root["mgsolver"].get("npresmoothing", 1).asUInt();
-    unsigned int npostmoothing = root["mgsolver"].get("npostsmoothing", 1).asUInt();
-    std::string smoother_type  = root["mgsolver"].get("smoother_type", "gmres").asString();
-    std::string mg_type        = root["mgsolver"].get("mg_type", "V_cycle").asString();
-    unsigned int max_number_linear_iteration = root["mgsolver"].get("max_number_linear_iteration", 6).asUInt();
-    double abs_conv_tol        = root["mgsolver"].get("abs_conv_tol", 1.e-09).asDouble();
-
-    MgType mgtype;
-    if (!strcmp("V_cycle",mg_type.c_str()))
-    {
-        mgtype = V_CYCLE;
-    }
-    else if(!strcmp("F_cycle",mg_type.c_str()))
-    {
-        mgtype = F_CYCLE;
-    }
-    else if(!strcmp("F_cycle",mg_type.c_str()))
-    {
-        mgtype = F_CYCLE;
-    }
-    else {
-        cout << "The selected MG cycle does not exist!" << endl;
-        exit(1);
-    }
-
-    bool Vanka=0, Gmres=0, Asm=0;
-
-    if( !strcmp("vanka",smoother_type.c_str()))          Vanka=1;
-    else if( !strcmp("gmres",smoother_type.c_str()))     Gmres=1;
-    else if( !strcmp("asm",smoother_type.c_str()))       Asm=1;
-
-    if(Vanka+Gmres+Asm==0) {
-        cout << "The selected MG smoother does not exist!" << endl;
-        exit(1);
-    }
-
-    // end reading input from file
-    //-----------------------------------------------------------------------------------------------
 
     /// Init Petsc-MPI communicator
     FemTTUInit mpinit(argc,argv,MPI_COMM_WORLD);
+    
+    // input parser pointer
+    std::auto_ptr<InputParser> inputparser = InputParser::build(path);
 
     /// INIT MESH =================================
 
     unsigned short nm,nr;
+    unsigned int nlevels = inputparser->getValue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.nlevels",1);   
     nm=nlevels;
 
     nr=0;
@@ -240,67 +91,134 @@ int main(int argc,char **argv) {
     //Steadystate NonLinearMultiLevelProblem
     MultiLevelMesh ml_msh;
 
-    if(filename != "")
+    if(inputparser->isTrue("multilevel_mesh.first.type","filename"))
     {
-        ml_msh.ReadCoarseMesh(filename.c_str(),"seventh",Lref);
+      std::string filename = inputparser->getValue("multilevel_mesh.first.type.box.filename", "./input/input.neu"); 
+      ml_msh.ReadCoarseMesh(filename.c_str(),"seventh",Lref);
+    }
+    else if(inputparser->isTrue("multilevel_mesh.first.type","box"))
+    {
+      int numelemx = inputparser->getValue("multilevel_mesh.first.type.box.nx", 2);
+      int numelemy = inputparser->getValue("multilevel_mesh.first.type.box.ny", 2);
+      int numelemz = inputparser->getValue("multilevel_mesh.first.type.box.nz", 0);
+      double xa = inputparser->getValue("multilevel_mesh.first.type.box.xa", 0.);
+      double xb = inputparser->getValue("multilevel_mesh.first.type.box.xb", 1.);
+      double ya = inputparser->getValue("multilevel_mesh.first.type.box.ya", 0.);
+      double yb = inputparser->getValue("multilevel_mesh.first.type.box.yb", 1.);
+      double za = inputparser->getValue("multilevel_mesh.first.type.box.za", 0.);
+      double zb = inputparser->getValue("multilevel_mesh.first.type.box.zb", 0.);
+      ElemType elemtype = inputparser->getValue("multilevel_mesh.first.type.box.elem_type", QUAD9);
+      ml_msh.BuildBrickCoarseMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
     }
     else
     {
-        ml_msh.BuildBrickCoarseMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+        std::cerr << "Error: no input mesh specified. Please check to have added the keyword mesh in the input json file! " << std::endl;
+        return 1;
     }
-    ml_msh.RefineMesh(nm,nr,SetRefinementFlag);
-
-    // ml_msh.EraseCoarseLevels(2);
+    ml_msh.RefineMesh(nm,nr, NULL);
     
     ml_msh.print_info();
 
     MultiLevelSolution ml_sol(&ml_msh);
 
     // generate solution vector
+    FEOrder fe_order = inputparser->getValue("multilevel_solution.multilevel_mesh.first.variable.first.fe_order",FIRST);
     ml_sol.AddSolution("Sol", LAGRANGE, fe_order);
 
     //Initialize (update Init(...) function)
     ml_sol.Initialize("Sol");
 
     //Set Boundary (update Dirichlet(...) function)
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-    ml_sol.GenerateBdc("Sol");
+    ml_sol.InitializeBdc();
+    
+    std::vector<std::string> facenamearray;
+    std::vector<ParsedFunction> parsedfunctionarray;
+    std::vector<BDCType> bdctypearray;
+       
+    unsigned int bdcsize = inputparser->getSize("multilevel_solution.multilevel_mesh.first.variable.first.boundary_conditions");
+    for(unsigned int index=0; index<bdcsize; ++index) {
+      std::string facename = inputparser->getValueFromArray("multilevel_solution.multilevel_mesh.first.variable.first.boundary_conditions", index, "facename", "top");
+      facenamearray.push_back(facename);
+ 
+      BDCType bdctype = inputparser->getValueFromArray("multilevel_solution.multilevel_mesh.first.variable.first.boundary_conditions", index, "bdc_type", DIRICHLET);
+      bdctypearray.push_back(bdctype);
 
+      std::string bdcfuncstr = inputparser->getValueFromArray("multilevel_solution.multilevel_mesh.first.variable.first.boundary_conditions", index, "bdc_func", "0.");
+      ParsedFunction pfunc(bdcfuncstr, "x,y,z,t");
+      parsedfunctionarray.push_back(pfunc);
+    }
+      
+    for(int i=0; i<bdcsize; ++i) {
+      ml_sol.SetBoundaryCondition_new("Sol",facenamearray[i],bdctypearray[i],false,&parsedfunctionarray[i]);
+    }
+    
+    ml_sol.GenerateBdc("All");
+    
+    
     MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
-
+    
     // add fluid material
     Parameter parameter(Lref,Uref);
-
+    
     //BEGIN Poisson MultiLevel Problem
     std::cout << std::endl;
     std::cout << " PDE problem to solve: Poisson " << std::endl;
 
     LinearImplicitSystem & system2 = ml_prob.add_system<LinearImplicitSystem>("Poisson");
     system2.AddSolutionToSytemPDE("Sol");
+    
+    // reading source function
+    std::string function;
+    function = inputparser->getValue("func_source", "0.");
+    std::string variables = "x";
+    variables += ",y";
+    variables += ",z";
+    variables += ",t";
+     
+#ifdef HAVE_FPARSER       
+    fpsource.SetExpression(function);
+    fpsource.SetIndependentVariables(variables);
+    fpsource.Parse();
+#endif
 
     // Set MG Options
-    system2.AttachAssembleFunction(AssembleMatrixResPoisson);
+    system2.AttachAssembleFunction(AssemblePoissonMatrixandRhs);
+    
+    unsigned int max_number_linear_iteration = inputparser->getValue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.max_number_linear_iteration",6);
     system2.SetMaxNumberOfLinearIterations(max_number_linear_iteration);
+    
+    double abs_conv_tol = inputparser->getValue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.abs_conv_tol",1.e-08);
     system2.SetAbsoluteConvergenceTolerance(abs_conv_tol);
+    
+    MgType mgtype = inputparser->getValue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.mgtype",V_CYCLE);
     system2.SetMgType(mgtype);
+    
+    unsigned int npresmoothing = inputparser->getValue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.npresmoothing",1); 
     system2.SetNumberPreSmoothingStep(npresmoothing);
+    
+    unsigned int npostmoothing = inputparser->getValue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.npostmoothing",1); 
     system2.SetNumberPostSmoothingStep(npostmoothing);
 
-    //Set Smoother Options
-    if(Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
-    else if(Asm) 		system2.SetMgSmoother(ASM_SMOOTHER);
-    else if(Vanka)	system2.SetMgSmoother(VANKA_SMOOTHER);
-
+    if(inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type","gmres")) {
+      system2.SetMgSmoother(GMRES_SMOOTHER);
+    }
+    else if(inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type","asm")) {
+      system2.SetMgSmoother(ASM_SMOOTHER);
+    }
+    else if(inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type","vanka")) {
+      system2.SetMgSmoother(VANKA_SMOOTHER);
+    }
+    
     system2.init();
     //common smoother option
-    system2.SetSolverFineGrids(GMRES);
+    system2.SetSolverFineGrids(RICHARDSON);
     system2.SetTolerances(1.e-12,1.e-20,1.e+50,4);
-    system2.SetPreconditionerFineGrids(ILU_PRECOND);
+    system2.SetPreconditionerFineGrids(SOR_PRECOND);
     //for Vanka and ASM smoothers
     system2.ClearVariablesToBeSolved();
     system2.AddVariableToBeSolved("All");
-    if(Asm || Vanka)
-    {
+    if(inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type","asm") ||
+       inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type","vanka")) {
       system2.SetNumberOfSchurVariables(0);
       system2.SetElementBlockNumber(4);
     }
@@ -320,9 +238,9 @@ int main(int argc,char **argv) {
 
     GMVWriter gmvio(ml_sol);
     gmvio.write_system_solutions("biquadratic",print_vars);
-
-    XDMFWriter xdmfio(ml_sol);
-    xdmfio.write_system_solutions("biquadratic",print_vars);
+// 
+//     XDMFWriter xdmfio(ml_sol);
+//     xdmfio.write_system_solutions("biquadratic",print_vars);
     
     //Destroy all the new systems
     ml_prob.clear();
@@ -332,86 +250,9 @@ int main(int argc,char **argv) {
 
 //-----------------------------------------------------------------------------------------------------------------
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
-    bool refine=0;
-    // refinemenet based on Elemen Group Number
-    if(ElemGroupNumber==5 ) {
-        refine=1;
-    }
-    if(ElemGroupNumber==6 && level<2) {
-        refine=1;
-    }
-    if(ElemGroupNumber==7 ) {
-        refine=0;
-    }
-
-    return refine;
-}
-
-//--------------------------------------------------------------------------------------------------------------
-
-// double InitVariableU(const double &x, const double &y, const double &z) {
-//    double um = 0.2;
-//    double  value=1.5*um*(4.0/(0.1681))*y*(0.41-y);
-//    return value;
-// }
-
-// 2D benchmark Full Dirichlet solution = sin^2(pi*x)*sin^2(pi*y)
-// double Source(const double* xyz) {
-//     const double pi = 3.1415926535897932;
-//     double value = -2.*pi*pi*( cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1]) + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1]) ) ;
-//     return value;
-// }
-
-// 3D benchmark sin^2(pi*x)*sin^2(pi*y)*sin^2(pi*z)
- double Source(const double* xyz) {
-     const double pi = 3.1415926535897932;
-     double value = -2.*pi*pi*(  cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1])*sin(pi*xyz[2])*sin(pi*xyz[2]) 
-                               + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1])*sin(pi*xyz[2])*sin(pi*xyz[2]) 
-			       + sin(pi*xyz[0])*sin(pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1])*cos(2.*pi*xyz[2]) );
-     return value;
-}
-
-// 1D benchmark 
-// double Source(const double* xyz) {
-//     double value = 1. - 2.*xyz[0]*xyz[0] ;
-//     return value;
-// }
-
-//-------------------------------------------------------------------------------------------------------------------
-
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[],
-                          double &value, const int FaceName, const double time) {
-    bool test=1; //Dirichlet
-    value=0.;
-
-    if(!strcmp(name,"Sol")) {
-        if(1==FaceName) {       // bottom face
-            test=1;
-            value=0;
-        }
-        else if(2==FaceName ) { // right face
-             test=0;
-             value=0.;
-        }
-        else if(3==FaceName ) { // top face
-            test=1;
-            value=0.;
-        }
-        else if(4==FaceName ) { // left face
-            test=1;
-            value=0.;
-        }
-    }
-
-    return test;
-}
-
-// //------------------------------------------------------------------------------------------------------------
-
 
 //------------------------------------------------------------------------------------------------------------
-void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
 
     //pointers and references
     Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
@@ -427,7 +268,7 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
     const unsigned	dim	= mymsh->GetDimension();
     unsigned 		nel	= mymsh->GetElementNumber();
     unsigned 		igrid	= mymsh->GetGridNumber();
-    unsigned 		iproc	= mymsh->GetProcID();
+    unsigned 		iproc	= mymsh->processor_id();
 
     //solution variable
     unsigned SolIndex;
@@ -449,6 +290,10 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
     double weight;
     vector< double > F;
     vector< double > B;
+    vector<double> normal(3.0);
+    double src_term = 0.;
+    vector<double> xyzt(4,0.);
+    ParsedFunction* bdcfunc = NULL;
 
     // reserve
     const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
@@ -460,7 +305,8 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
     gradphi.reserve(max_size*dim);
     F.reserve(max_size);
     B.reserve(max_size*max_size);
-
+ 
+    
     // Set to zeto all the entries of the Global Matrix
     if(assembe_matrix) 
       myKK->zero();
@@ -501,7 +347,7 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
         }
 
         if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
-            // *** Gauss poit loop ***
+            // *** Gauss point loop ***
             for(unsigned ig=0; ig < ml_prob._ml_msh->_type_elem[kelt][order_ind]->GetGaussPointNumber(); ig++) {
                 // *** get Jacobian and test function and test function derivatives ***
                 (ml_prob._ml_msh->_type_elem[kelt][order_ind]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi);
@@ -512,12 +358,12 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                     gradSolT[ivar]=0;
                 }
 
-                double xyz[3] = {0.,0.,0.};
+                xyzt.assign(4,0.);
                 unsigned SolType=ml_sol->GetSolutionType("Sol");
                 for(unsigned i=0; i<nve; i++) {
                     double soli = (*mysolution->_Sol[SolIndex])(metis_node[i]);
 		    for(unsigned ivar=0; ivar<dim; ivar++) {
-		      xyz[ivar] += coordinates[ivar][i]*phi[i]; 
+		      xyzt[ivar] += coordinates[ivar][i]*phi[i]; 
 		    }
                     SolT+=phi[i]*soli;
                     for(unsigned ivar2=0; ivar2<dim; ivar2++) gradSolT[ivar2] += gradphi[i*dim+ivar2]*soli;
@@ -532,9 +378,9 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
                         Lap_rhs += gradphi[i*dim+ivar]*gradSolT[ivar];
                     }
                     
-                    double src = Source(xyz);
-
-                    F[i]+= (-Lap_rhs + src*phi[i] )*weight;
+                   src_term = fpsource(&xyzt[0]);
+                    
+                    F[i]+= (-Lap_rhs + src_term*phi[i] )*weight;
 		    
                     //END RESIDUALS A block ===========================
                     if(assembe_matrix) {
@@ -560,47 +406,55 @@ void AssembleMatrixResPoisson(MultiLevelProblem &ml_prob, unsigned level, const 
 
                 // look for boundary faces
                 if(myel->GetFaceElementIndex(kel,jface)<0) {
-
-                    double tau = 0.;
-                    double time = 0.;
-                    int node[27];
-                    double vx[3][27];
-                    double phi[27],gradphi[27][3],Weight;
-                    double normal[3];
-                    bool test = SetBoundaryCondition(0.,0.,0.,"Sol",tau,-(mymsh->el->GetFaceElementIndex(kel,jface)+1),time);
-
-                    if(!test) {
+    
+		    unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1) - 1;
+		    
+		    if(ml_sol->GetBoundaryCondition("Sol",face) == NEUMANN && !ml_sol->Ishomogeneous("Sol",face)) {
+		      
+		        bdcfunc = (ParsedFunction* )(ml_sol->GetBdcFunction("Sol", face));
 			unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,order_ind);
                         const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
                         unsigned felt = FELT[kelt][jface<mymsh->el->GetElementFaceNumber(kel,0)];
 
                         for(unsigned i=0; i<nve; i++) {
                             unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-                            node[i] = inode + mylsyspde->KKIndex[0];
-                            unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+                            unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
 
-                            vx[0][i]=(*mymsh->_coordinate->_Sol[0])(inode_Metis);
-                            vx[1][i]=(*mymsh->_coordinate->_Sol[1])(inode_Metis);
-                            vx[2][i]=(*mymsh->_coordinate->_Sol[2])(inode_Metis);
+			    for(unsigned ivar=0; ivar<dim; ivar++) {
+                              coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
+                            }
                         }
 
                         if(felt != 6) 
 			{
                           for(unsigned igs=0; igs < ml_prob._ml_msh->_type_elem[felt][order_ind]->GetGaussPointNumber(); igs++) {
-                            (ml_prob._ml_msh->_type_elem[felt][order_ind]->*ml_prob._ml_msh->_type_elem[felt][order_ind]->Jacobian_sur_ptr)(vx,igs,Weight,phi,gradphi,normal);
+                            (ml_prob._ml_msh->_type_elem[felt][order_ind]->*ml_prob._ml_msh->_type_elem[felt][order_ind]->Jacobian_sur_ptr)(coordinates,igs,weight,phi,gradphi,normal);
 
+			    xyzt.assign(4,0.);
                             for(unsigned i=0; i<nve; i++) {
-                                SetBoundaryCondition(vx[0][i],vx[1][i],vx[2][i],"Sol",tau,-(mymsh->el->GetFaceElementIndex(kel,jface)+1),time);
-                                double bdintegral = phi[i]*tau*Weight;
-                                unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
-                                F[ilocalnode] += bdintegral;
+		              for(unsigned ivar=0; ivar<dim; ivar++) {
+		               xyzt[ivar] += coordinates[ivar][i]*phi[i]; 
+		              }
+                            }
+			    
+			    // *** phi_i loop ***
+                            for(unsigned i=0; i<nve; i++) {
+                              double surfterm_g = (*bdcfunc)(&xyzt[0]);
+                              double bdintegral = phi[i]*surfterm_g*weight;
+                              unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
+                              F[ilocalnode] += bdintegral;
                             }
                           }
 			}
 			else // 1D : the side elems are points and does not still exist the point elem
 			{
-			  SetBoundaryCondition(vx[0][0],vx[1][0],vx[2][0],"Sol",tau,-(mymsh->el->GetFaceElementIndex(kel,jface)+1),time);
-			  double bdintegral = tau;
+			  // in 1D it is only one point
+ 			  xyzt[0] = coordinates[0][0];
+ 		          xyzt[1] = 0.;
+ 			  xyzt[2] = 0.;
+ 			  xyzt[3] = 0.;
+
+			  double bdintegral = (*bdcfunc)(&xyzt[0]);
 			  unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, 0);
                           F[ilocalnode] += bdintegral;
 			}
