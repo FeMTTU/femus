@@ -59,15 +59,15 @@ int main(int argc,char **args) {
 
   char *infile = new char [50];
   
-  //sprintf(infile,"./input/fsifirst.neu");
-  sprintf(infile,"./input/beam.neu");
+  sprintf(infile,"./input/fsifirst.neu");
+  //sprintf(infile,"./input/beam.neu");
 
   double Lref = 1.;
   double Uref = 1.;
   double rhof = 1000.;
   double muf = 1.;
   double rhos = 1000;
-  double ni = 0.4;
+  double ni = 0.5;
   double E = 1400000;
   
   MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
@@ -101,7 +101,11 @@ int main(int argc,char **args) {
   Parameter par(Lref,Uref);
   
   // Generate Solid Object
+  
+  //Solid solid(par,E,ni,rhos,"Linear_elastic");
   Solid solid(par,E,ni,rhos,"Neo-Hookean");
+  //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
+  
   cout << "Solid properties: " << endl;
   cout << solid << endl;
   
@@ -131,6 +135,8 @@ int main(int argc,char **args) {
    
   // System Fluid-Structure-Interaction
   system.AttachAssembleFunction(IncompressibleFSIAssembly);  
+  //system.AttachAssembleFunction(AssembleMatrixResFSI);  
+  
   
   system.SetMaxNumberOfLinearIterations(2);
   system.SetMgType(F_CYCLE);
@@ -490,7 +496,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   double _mu_ale[3] = {1.,1.,1.};
  
   // gravity
-  double _gravity[3]={0.,0.,0.};
+  double _gravity[3]={0.,-1.,0.};
   
   // newton algorithm
   bool nwtn_alg = true;
