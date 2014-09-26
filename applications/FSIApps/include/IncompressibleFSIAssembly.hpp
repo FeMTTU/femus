@@ -116,7 +116,7 @@ namespace femus {
     double _mu_ale[3] = {1.,1.,1.};
  
     // gravity
-    double _gravity[3]={0.,-1.,0.};
+    double _gravity[3]={0.,0.,0.};
   
     // newton algorithm
     bool nwtn_alg = true;
@@ -493,6 +493,43 @@ namespace femus {
 		}
 	      }
 	      //END B block ===========================
+	      
+	      double tau=0.;
+	      unsigned nfaces = myel->GetElementFaceNumber(kel);
+
+	      // loop on faces
+	      for(unsigned jface=0; jface<nfaces; jface++) {
+		double weight;
+		vector<double> normal(3.0);
+		// look for boundary faces
+                if(myel->GetFaceElementIndex(kel,jface)<0) {
+		  unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1) - 1;	      
+		  if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,0.) && tau!=0.){
+		    //std::cout<<face<<" "<<tau<<std::endl;
+		    unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,order_ind2);
+                    const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
+                    unsigned felt = FELT[kelt][jface<mymsh->el->GetElementFaceNumber(kel,0)];
+		    
+		    for(unsigned i=0; i<nve; i++) {
+                            unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
+                            unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
+
+			    for(unsigned ivar=0; ivar<dim; ivar++) {
+                              vx[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
+                            }
+                        }
+		     for(unsigned igs=0; igs < ml_prob._ml_msh->_type_elem[felt][order_ind2]->GetGaussPointNumber(); igs++) {
+                      (ml_prob._ml_msh->_type_elem[felt][order_ind2]->*ml_prob._ml_msh->_type_elem[felt][order_ind2]->Jacobian_sur_ptr)(vx,igs,weight,phi,gradphi,normal);
+		      // *** phi_i loop ***
+                      for(unsigned i=0; i<nve; i++) {
+                        double bdintegral = phi[i]*tau*weight;
+                        unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
+                        Rhs[indexVAR[dim]][ilocalnode] += bdintegral;
+                      }
+		    }
+	          }
+		}
+	      }
 	    }   
 	    //END FLUID ASSEMBLY ============
 	    
