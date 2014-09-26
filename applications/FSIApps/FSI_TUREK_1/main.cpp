@@ -18,7 +18,9 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
 		double &value, const int FaceName, const double = 0.);
-
+bool SetBoundaryConditionCylinder(const double &x, const double &y, const double &z,const char name[], 
+				  double &value, const int facename, const double time);
+ 
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
 //------------------------------------------------------------------------------------------------------------------
@@ -48,7 +50,7 @@ int main(int argc,char **args) {
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
-  nm=4;
+  nm=2;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
@@ -59,16 +61,26 @@ int main(int argc,char **args) {
 
   char *infile = new char [50];
   
-  sprintf(infile,"./input/fsifirst.neu");
+  //sprintf(infile,"./input/fsifirst.neu");
   //sprintf(infile,"./input/beam.neu");
+  sprintf(infile,"./input/bathe_cylinder.neu");
 
+//   double Lref = 1.;	
+//   double Uref = 1.;
+//   double rhof = 1000.;
+//   double muf = 1.;
+//   double rhos = 1000;
+//   double ni = 0.5;
+//   double E = 1400000;  
+//   
+  
   double Lref = 1.;
   double Uref = 1.;
   double rhof = 1000.;
   double muf = 1.;
   double rhos = 1000;
   double ni = 0.5;
-  double E = 1400000;
+  double E = 200000;
   
   MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
   
@@ -77,10 +89,13 @@ int main(int argc,char **args) {
   //Start System Variables
   ml_sol.AddSolution("DX",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("DY",LAGRANGE,SECOND,1);
+  ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
   ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
   ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
+  ml_sol.AssociatePropertyToSolution("DZ","Displacement"); // Add this line 
   ml_sol.AddSolution("U",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
+  ml_sol.AddSolution("W",LAGRANGE,SECOND,1);
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
   ml_sol.AssociatePropertyToSolution("P","Pressure"); // Add this line
@@ -89,11 +104,15 @@ int main(int argc,char **args) {
   ml_sol.Initialize("All");
 
   //Set Boundary (update Dirichlet(...) function)
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionCylinder);
+
   ml_sol.GenerateBdc("DX","Steady");
   ml_sol.GenerateBdc("DY","Steady");
+  ml_sol.GenerateBdc("DZ","Steady");
   ml_sol.GenerateBdc("U","Steady");
   ml_sol.GenerateBdc("V","Steady");
+  ml_sol.GenerateBdc("W","Steady");
   ml_sol.GenerateBdc("P","Steady");
   
   MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
@@ -121,14 +140,19 @@ int main(int argc,char **args) {
   ml_prob.parameters.set<Solid>("Solid") = solid;
 
   ml_msh.MarkStructureNode();
+  
+  
+  std::cout<<"I finished to mark\n";
    
   //create systems
   // add the system FSI to the MultiLevel problem
   MonolithicFSINonLinearImplicitSystem & system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");
   system.AddSolutionToSytemPDE("DX");
   system.AddSolutionToSytemPDE("DY");
+  system.AddSolutionToSytemPDE("DZ");
   system.AddSolutionToSytemPDE("U");
   system.AddSolutionToSytemPDE("V");
+  system.AddSolutionToSytemPDE("W");
   system.AddSolutionToSytemPDE("P");
   
   
@@ -168,8 +192,10 @@ int main(int argc,char **args) {
   //system.AddVariableToBeSolved("All");
   system.AddVariableToBeSolved("DX");
   system.AddVariableToBeSolved("DY");
+  system.AddVariableToBeSolved("DZ");
   system.AddVariableToBeSolved("U");
   system.AddVariableToBeSolved("V");
+  system.AddVariableToBeSolved("W");
   system.AddVariableToBeSolved("P");
   
   //for Vanka and ASM smoothers
@@ -182,6 +208,7 @@ int main(int argc,char **args) {
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
+  mov_vars.push_back("DZ");
   VTKWriter vtkio(ml_sol);
   vtkio.SetMovingMesh(mov_vars);
   
@@ -194,8 +221,10 @@ int main(int argc,char **args) {
   std::vector<std::string> print_vars;
   print_vars.push_back("DX");
   print_vars.push_back("DY");
+  print_vars.push_back("DZ");
   print_vars.push_back("U");
   print_vars.push_back("V");
+  print_vars.push_back("W");
   print_vars.push_back("P");
       
   vtkio.write_system_solutions("biquadratic",print_vars);
@@ -385,6 +414,142 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 
   return test;
 }
+
+
+
+bool SetBoundaryConditionCylinder(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+  bool test=1; //dirichlet
+  value=0.;
+  if(!strcmp(name,"U")) {
+    if(1==facename){   //normal stess fluid
+      test=0;
+      value=0.0001*15*1.6;
+    }  
+    else if(2==facename ){  //normal stress fluid
+     test=0;
+     value=0.001*13*1.6;
+    }
+    else if(3==facename ){  // no-slip solid wall
+      test=1;
+      value=0.;	
+    }
+    else if(4==facename ){  // free stress solid
+      test=0;
+      value=0.;
+    } 
+  }  
+  else if(!strcmp(name,"V")){
+    if(1==facename){   //normal stess fluid
+      test=0;
+      value=0;
+    }  
+    else if(2==facename ){  //normal stress fluid
+     test=0;
+     value=0;
+    }
+    else if(3==facename ){  // no-slip solid wall
+      test=1;
+      value=0.;	
+    }
+    else if(4==facename ){  // free stress solid
+      test=0;
+      value=0.;
+    } 
+  }
+  else if(!strcmp(name,"W")){
+    if(1==facename){   //normal stess fluid
+      test=0;
+      value=0;
+    }  
+    else if(2==facename ){  //normal stress fluid
+     test=0;
+     value=0;
+    }
+    else if(3==facename ){  // no-slip solid wall
+      test=1;
+      value=0.;	
+    }
+    else if(4==facename ){  // free stress solid
+      test=0;
+      value=0.;
+    } 
+  }
+  else if(!strcmp(name,"P")){
+    if(1==facename){   //normal stess fluid
+      test=0;
+      value=0;
+    }  
+    else if(2==facename ){  //normal stress fluid
+     test=0;
+     value=0;
+    }
+    else if(3==facename ){  // no-slip solid wall
+      test=0;
+      value=0.;	
+    }
+    else if(4==facename ){  // free stress solid
+      test=0;
+      value=0.;
+    } 
+  }
+  else if(!strcmp(name,"DX")){
+    if(1==facename){   //normal stess fluid
+      test=1;
+      value=0;
+    }  
+    else if(2==facename ){  //normal stress fluid
+     test=1;
+     value=0;
+    }
+    else if(3==facename ){  // no-slip solid wall
+      test=1;
+      value=0.;	
+    }
+    else if(4==facename ){  // free stress solid
+      test=0;
+      value=0.;
+    } 
+  }
+  else if(!strcmp(name,"DY")){
+    if(1==facename){   //normal stess fluid
+      test=1;
+      value=0;
+    }  
+    else if(2==facename ){  //normal stress fluid
+     test=1;
+     value=0;
+    }
+    else if(3==facename ){  // no-slip solid wall
+      test=1;
+      value=0.;	
+    }
+    else if(4==facename ){  // free stress solid
+      test=0;
+      value=0.;
+    } 
+  }
+  else if(!strcmp(name,"DZ")){
+    if(1==facename){   //normal stess fluid
+      test=1;
+      value=0;
+    }  
+    else if(2==facename ){  //normal stress fluid
+     test=1;
+     value=0;
+    }
+    else if(3==facename ){  // no-slip solid wall
+      test=1;
+      value=0.;	
+    }
+    else if(4==facename ){  // free stress solid
+      test=0;
+      value=0.;
+    } 
+  }
+
+  return test;
+}
+
 
 
 
