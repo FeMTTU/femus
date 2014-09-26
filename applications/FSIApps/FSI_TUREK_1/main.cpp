@@ -50,7 +50,7 @@ int main(int argc,char **args) {
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
-  nm=2;
+  nm=1;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
@@ -423,18 +423,18 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
   if(!strcmp(name,"U")) {
     if(1==facename){   //normal stess fluid
       test=0;
-      value=0.0001*15*1.6;
+      value=15*1.6;
     }  
     else if(2==facename ){  //normal stress fluid
      test=0;
-     value=0.001*13*1.6;
+     value=13*1.6;
     }
     else if(3==facename ){  // no-slip solid wall
       test=1;
       value=0.;	
     }
     else if(4==facename ){  // free stress solid
-      test=0;
+      test=1;
       value=0.;
     } 
   }  
@@ -443,7 +443,7 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
       test=0;
       value=0;
     }  
-    else if(2==facename ){  //normal stress fluid
+    else if(2==facename ){  //tangential stress fluid
      test=0;
      value=0;
     }
@@ -452,7 +452,7 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
       value=0.;	
     }
     else if(4==facename ){  // free stress solid
-      test=0;
+      test=1;
       value=0.;
     } 
   }
@@ -461,7 +461,7 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
       test=0;
       value=0;
     }  
-    else if(2==facename ){  //normal stress fluid
+    else if(2==facename ){  //tangential stress fluid
      test=0;
      value=0;
     }
@@ -470,7 +470,7 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
       value=0.;	
     }
     else if(4==facename ){  // free stress solid
-      test=0;
+      test=1;
       value=0.;
     } 
   }

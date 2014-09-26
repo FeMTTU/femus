@@ -511,20 +511,22 @@ namespace femus {
                     unsigned felt = FELT[kelt][jface<mymsh->el->GetElementFaceNumber(kel,0)];
 		    
 		    for(unsigned i=0; i<nve; i++) {
-                            unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-                            unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
+                      unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
+                      unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
 
-			    for(unsigned ivar=0; ivar<dim; ivar++) {
-                              vx[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
-                            }
-                        }
+		      for(unsigned ivar=0; ivar<dim; ivar++) {
+                        vx[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
+			//std::cout<<vx[ivar][i]<<std::endl;
+                      }
+                     }
 		     for(unsigned igs=0; igs < ml_prob._ml_msh->_type_elem[felt][order_ind2]->GetGaussPointNumber(); igs++) {
                       (ml_prob._ml_msh->_type_elem[felt][order_ind2]->*ml_prob._ml_msh->_type_elem[felt][order_ind2]->Jacobian_sur_ptr)(vx,igs,weight,phi,gradphi,normal);
 		      // *** phi_i loop ***
                       for(unsigned i=0; i<nve; i++) {
-                        double bdintegral = phi[i]*tau*weight;
+                        double bdintegral = phi[i]*tau/rhof*weight;
                         unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
                         Rhs[indexVAR[dim]][ilocalnode] += bdintegral;
+			//std::cout<<indexVAR[dim]<<" "<< ilocalnode<<"     ";
                       }
 		    }
 	          }
