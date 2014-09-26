@@ -60,10 +60,12 @@ namespace femus {
     double Weight_hat=0.;
   
     vector <vector < double> > vx(dim);
+    vector <vector < double> > vx_face(dim);
     vector <vector < double> > vx_hat(dim);
   
     for(int i=0;i<dim;i++){
       vx[i].reserve(max_size);
+      vx_face[i].resize(9);
       vx_hat[i].reserve(max_size);
     }
    
@@ -77,13 +79,13 @@ namespace femus {
     // ------------------------------------------------------------------------
     // Physical parameters
     double rhof	 	= ml_prob.parameters.get<Fluid>("Fluid").get_density();            
-    double rhos 		= ml_prob.parameters.get<Solid>("Solid").get_density();            
+    //double rhos 		= ml_prob.parameters.get<Solid>("Solid").get_density();            
     double mu_lame 	= ml_prob.parameters.get<Solid>("Solid").get_lame_shear_modulus(); 
     double lambda_lame 	= ml_prob.parameters.get<Solid>("Solid").get_lame_lambda();        
     double mus		= mu_lame/rhof;
     double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();   
     double lambda		= lambda_lame / rhof;
-    double betafsi	= rhos / rhof;
+    //double betafsi	= rhos / rhof;
     double betans		= 1.;
     int    solid_model	= ml_prob.parameters.get<Solid>("Solid").get_physical_model();     
        
@@ -300,6 +302,62 @@ namespace femus {
 	// ----------------------------------------------------------------------------------------
        
 	if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
+	  
+	  {
+	    double tau=0.;
+	    vector<double> normal(3.0);
+	       
+	    // loop on faces
+	    for(unsigned jface=0; jface<myel->GetElementFaceNumber(kel); jface++) {
+		
+	      // look for boundary faces
+	      if(myel->GetFaceElementIndex(kel,jface)<0) {
+	      unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
+		if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,0.) && tau!=0.){
+		  //std::cout<<face<<" "<<tau<<std::endl;
+		  unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,order_ind2);
+		  //std::cout<<nve<<" ";
+		  const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
+		  unsigned felt = FELT[kelt][jface < mymsh->el->GetElementFaceNumber(kel,0)];
+		    
+		  for(unsigned i=0; i<nve; i++) {
+		    unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
+		    unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
+
+		    for(unsigned ivar=0; ivar<dim; ivar++) {
+		      vx_face[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
+		      //std::cout<<vx_face[ivar][i]<<" ";
+		    }
+		    //std::cout<<std::endl;
+		  }
+		  //std::cout<<kel<<" "<<face<<" "<<tau<<"\n";
+		  for(unsigned igs=0; igs < ml_prob._ml_msh->_type_elem[felt][order_ind2]->GetGaussPointNumber(); igs++) {
+		    (ml_prob._ml_msh->_type_elem[felt][order_ind2]->*ml_prob._ml_msh->_type_elem[felt][order_ind2]->Jacobian_sur_ptr)(vx_face,igs,Weight,phi,gradphi,normal);
+		    // *** phi_i loop ***
+		    double bdintegral1=0;
+		    for(unsigned i=0; i<nve; i++) {
+		      double bdintegral = phi[i]*tau/rhof*Weight;
+		      bdintegral1 += phi[i];///rhof*Weight;
+		      unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
+		      Rhs[indexVAR[dim]][ilocalnode] += bdintegral;
+		    }
+		    //std::cout<<Weight<<"     ";
+		  }
+		  //std::cout<<std::endl;
+		}
+	      }
+	    }	    
+	  }
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
 	  /// *** Gauss point loop ***
 	  double area=1.;
 	  for (unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
@@ -493,45 +551,6 @@ namespace femus {
 		}
 	      }
 	      //END B block ===========================
-	      
-	      double tau=0.;
-	      unsigned nfaces = myel->GetElementFaceNumber(kel);
-
-	      // loop on faces
-	      for(unsigned jface=0; jface<nfaces; jface++) {
-		double weight;
-		vector<double> normal(3.0);
-		// look for boundary faces
-                if(myel->GetFaceElementIndex(kel,jface)<0) {
-		  unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1) - 1;	      
-		  if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,0.) && tau!=0.){
-		    //std::cout<<face<<" "<<tau<<std::endl;
-		    unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,order_ind2);
-                    const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
-                    unsigned felt = FELT[kelt][jface<mymsh->el->GetElementFaceNumber(kel,0)];
-		    
-		    for(unsigned i=0; i<nve; i++) {
-                      unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-                      unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
-
-		      for(unsigned ivar=0; ivar<dim; ivar++) {
-                        vx[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
-			//std::cout<<vx[ivar][i]<<std::endl;
-                      }
-                     }
-		     for(unsigned igs=0; igs < ml_prob._ml_msh->_type_elem[felt][order_ind2]->GetGaussPointNumber(); igs++) {
-                      (ml_prob._ml_msh->_type_elem[felt][order_ind2]->*ml_prob._ml_msh->_type_elem[felt][order_ind2]->Jacobian_sur_ptr)(vx,igs,weight,phi,gradphi,normal);
-		      // *** phi_i loop ***
-                      for(unsigned i=0; i<nve; i++) {
-                        double bdintegral = phi[i]*tau/rhof*weight;
-                        unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
-                        Rhs[indexVAR[dim]][ilocalnode] += bdintegral;
-			//std::cout<<indexVAR[dim]<<" "<< ilocalnode<<"     ";
-                      }
-		    }
-	          }
-		}
-	      }
 	    }   
 	    //END FLUID ASSEMBLY ============
 	    

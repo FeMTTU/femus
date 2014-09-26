@@ -50,7 +50,7 @@ int main(int argc,char **args) {
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
-  nm=1;
+  nm=2;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
@@ -78,9 +78,9 @@ int main(int argc,char **args) {
   double Uref = 1.;
   double rhof = 1000.;
   double muf = 1.;
-  double rhos = 1000;
+  double rhos = 800;
   double ni = 0.5;
-  double E = 200000;
+  double E = 10000000;
   
   MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
   
@@ -164,7 +164,7 @@ int main(int argc,char **args) {
   
   system.SetMaxNumberOfLinearIterations(2);
   system.SetMgType(F_CYCLE);
-  system.SetMaxNumberOfNonLinearIterations(4);
+  system.SetMaxNumberOfNonLinearIterations(10);
   system.SetAbsoluteConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-05);
   system.SetNumberPreSmoothingStep(1);
@@ -200,7 +200,7 @@ int main(int argc,char **args) {
   
   //for Vanka and ASM smoothers
   system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(3);   
+  system.SetElementBlockNumber(5);   
   //for Gmres smoother
   //system.SetDirichletBCsHandling(PENALTY); 
   system.SetDirichletBCsHandling(ELIMINATION);   
@@ -420,128 +420,131 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 bool SetBoundaryConditionCylinder(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
+  
   if(!strcmp(name,"U")) {
-    if(1==facename){   //normal stess fluid
+    if(1==facename){   //outflow
       test=0;
-      value=15*1.6;
+      value=0;
     }  
-    else if(2==facename ){  //normal stress fluid
-     test=0;
-     value=13*1.6;
-    }
-    else if(3==facename ){  // no-slip solid wall
+    else if(2==facename){  //inflow
       test=1;
-      value=0.;	
+      double r=sqrt(y*y+z*z);
+      value=1000*(0.05-r)*(0.05+r);
+     
     }
-    else if(4==facename ){  // free stress solid
+    else if(3==facename || 4==facename ){  // clamped solid 
       test=1;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
+      test=0;
       value=0.;
     } 
   }  
   else if(!strcmp(name,"V")){
-    if(1==facename){   //normal stess fluid
+    if(1==facename){   //outflow
       test=0;
       value=0;
     }  
-    else if(2==facename ){  //tangential stress fluid
-     test=0;
-     value=0;
-    }
-    else if(3==facename ){  // no-slip solid wall
+    else if(2==facename){  //inflow
       test=1;
-      value=0.;	
+      value=0;
     }
-    else if(4==facename ){  // free stress solid
+    else if(3==facename || 4==facename ){  // clamped solid 
       test=1;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
+      test=0;
       value=0.;
     } 
   }
   else if(!strcmp(name,"W")){
-    if(1==facename){   //normal stess fluid
+    if(1==facename){   //outflow
       test=0;
       value=0;
     }  
-    else if(2==facename ){  //tangential stress fluid
-     test=0;
-     value=0;
-    }
-    else if(3==facename ){  // no-slip solid wall
+    else if(2==facename){  //inflow
       test=1;
-      value=0.;	
+      value=0;
     }
-    else if(4==facename ){  // free stress solid
+    else if(3==facename || 4==facename ){  // clamped solid 
       test=1;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
+      test=0;
       value=0.;
     } 
   }
   else if(!strcmp(name,"P")){
-    if(1==facename){   //normal stess fluid
+    if(1==facename){   //outflow
       test=0;
       value=0;
     }  
-    else if(2==facename ){  //normal stress fluid
-     test=0;
-     value=0;
-    }
-    else if(3==facename ){  // no-slip solid wall
+    else if(2==facename){  //inflow
       test=0;
-      value=0.;	
+      value=0;
     }
-    else if(4==facename ){  // free stress solid
+    else if(3==facename || 4==facename ){  // clamped solid 
+      test=0;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
       test=0;
       value=0.;
     } 
   }
   else if(!strcmp(name,"DX")){
-    if(1==facename){   //normal stess fluid
+   if(1==facename){   //outflow
       test=1;
       value=0;
     }  
-    else if(2==facename ){  //normal stress fluid
-     test=1;
-     value=0;
-    }
-    else if(3==facename ){  // no-slip solid wall
+    else if(2==facename){  //inflow
       test=1;
-      value=0.;	
+      value=0;
     }
-    else if(4==facename ){  // free stress solid
+    else if(3==facename || 4==facename ){  // clamped solid 
+      test=1;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
       test=0;
       value=0.;
     } 
   }
   else if(!strcmp(name,"DY")){
-    if(1==facename){   //normal stess fluid
+    if(1==facename){   //outflow
       test=1;
       value=0;
     }  
-    else if(2==facename ){  //normal stress fluid
-     test=1;
-     value=0;
-    }
-    else if(3==facename ){  // no-slip solid wall
+    else if(2==facename){  //inflow
       test=1;
-      value=0.;	
+      value=0;
     }
-    else if(4==facename ){  // free stress solid
+    else if(3==facename || 4==facename ){  // clamped solid 
+      test=1;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
       test=0;
       value=0.;
     } 
   }
   else if(!strcmp(name,"DZ")){
-    if(1==facename){   //normal stess fluid
+    if(1==facename){   //outflow
       test=1;
       value=0;
     }  
-    else if(2==facename ){  //normal stress fluid
-     test=1;
-     value=0;
-    }
-    else if(3==facename ){  // no-slip solid wall
+    else if(2==facename){  //inflow
       test=1;
-      value=0.;	
+      value=0;
     }
-    else if(4==facename ){  // free stress solid
+    else if(3==facename || 4==facename ){  // clamped solid 
+      test=1;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
       test=0;
       value=0.;
     } 
