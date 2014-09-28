@@ -63,8 +63,8 @@ int main(int argc,char **args) {
   
   //sprintf(infile,"./input/fsifirst.neu");
   //sprintf(infile,"./input/beam.neu");
-  // sprintf(infile,"./input/bathe_cylinder.neu");
-  sprintf(infile,"./input/empty_cylinder.neu");
+  sprintf(infile,"./input/bathe_cylinder.neu");
+  //sprintf(infile,"./input/empty_cylinder.neu");
   
 //   double Lref = 1.;	
 //   double Uref = 1.;
@@ -81,7 +81,7 @@ int main(int argc,char **args) {
   double muf = 1.;
   double rhos = 800;
   double ni = 0.5;
-  double E = 10000000;
+  double E = 15000000;
   
   MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
   
@@ -124,8 +124,8 @@ int main(int argc,char **args) {
   // Generate Solid Object
   
   //Solid solid(par,E,ni,rhos,"Linear_elastic");
-  //Solid solid(par,E,ni,rhos,"Neo-Hookean");
-  Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
+  Solid solid(par,E,ni,rhos,"Neo-Hookean");
+  //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
   
   cout << "Solid properties: " << endl;
   cout << solid << endl;
@@ -164,13 +164,13 @@ int main(int argc,char **args) {
   //system.AttachAssembleFunction(AssembleMatrixResFSI);  
   
   
-  system.SetMaxNumberOfLinearIterations(4);
+  system.SetMaxNumberOfLinearIterations(1);
   system.SetMgType(F_CYCLE);
-  system.SetMaxNumberOfNonLinearIterations(10);
+  system.SetMaxNumberOfNonLinearIterations(2);
   system.SetAbsoluteConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-10);
-  system.SetNumberPreSmoothingStep(3);
-  system.SetNumberPostSmoothingStep(3);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
    
   //Set Smoother Options
   if(Gmres) 		system.SetMgSmoother(GMRES_SMOOTHER);
@@ -434,11 +434,6 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
     else if(2==facename){  //outflow
       test=0;
       value=15*1.5*1000;   
-      
-      //test=1;
-      //double r=sqrt(y*y+z*z);
-      //value=-1000*(0.05-r)*(0.05+r);
-      
     }
     else if(3==facename || 4==facename ){  // clamped solid 
       test=1;
@@ -509,7 +504,7 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
       value=0;
     }  
     else if(2==facename){  //inflow
-      test=0;
+      test=1;
       value=0;
     }
     else if(3==facename || 4==facename ){  // clamped solid 
@@ -523,7 +518,7 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
   }
   else if(!strcmp(name,"DY")){
     if(1==facename){   //outflow
-      test=1;
+      test=0;
       value=0;
     }  
     else if(2==facename){  //inflow
@@ -541,7 +536,7 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
   }
   else if(!strcmp(name,"DZ")){
     if(1==facename){   //outflow
-      test=1;
+      test=0;
       value=0;
     }  
     else if(2==facename){  //inflow

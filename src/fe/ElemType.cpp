@@ -885,9 +885,9 @@ void elem_type::JacobianSur2D(const vector < vector < double > > &vt, const unsi
     normal[1] =  (ny)/modn;
     normal[2] =  (nz)/modn;
     
-    Jac[0][2] += normal[0];
-    Jac[1][2] += normal[1];
-    Jac[2][2] += normal[2];
+    Jac[0][2] = normal[0];
+    Jac[1][2] = normal[1];
+    Jac[2][2] = normal[2];
     
     
    //the determinant of the matrix is the area 

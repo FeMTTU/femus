@@ -40,19 +40,15 @@ namespace femus {
     vector <bool> solidmark;
   
     vector <double > phi;
-    vector <double > phi2;
     vector <double > phi_hat;
   
     vector <double> gradphi;
-    vector <double> gradphi2;
     vector <double> gradphi_hat;
   
     metis_node1.reserve(max_size);
     metis_node2.reserve(max_size);
     solidmark.reserve(max_size);
     phi.reserve(max_size);
-    phi2.resize(9);
-    gradphi2.resize(27);
     phi_hat.reserve(max_size);
     gradphi.reserve(max_size*dim);
     gradphi_hat.reserve(max_size*dim);
@@ -65,13 +61,11 @@ namespace femus {
   
     vector <vector < double> > vx(dim);
     vector <vector < double> > vx_face(dim);
-    vector <vector < double> > vx_face2(dim);
     vector <vector < double> > vx_hat(dim);
   
     for(int i=0;i<dim;i++){
       vx[i].reserve(max_size);
       vx_face[i].resize(9);
-      vx_face2[i].resize(9);
       vx_hat[i].reserve(max_size);
     }
    
@@ -309,6 +303,9 @@ namespace femus {
        
 	if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
 	  
+	  
+	  
+	  /// ********************************************************************************************
 	  {
 	    double tau=0.;
 	    vector<double> normal(3.0);
@@ -320,67 +317,34 @@ namespace femus {
 	      if(myel->GetFaceElementIndex(kel,jface)<0) {
 	      unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
 		if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,0.) && tau!=0.){
-		  //std::cout<<face<<" "<<tau<<std::endl;
 		  unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,order_ind2);
-		  //std::cout<<nve<<" ";
 		  const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
 		  unsigned felt = FELT[kelt][jface < mymsh->el->GetElementFaceNumber(kel,0)];
-		    
-		   //std::cout<<kel<<" "<<jface<<" "<<tau<<"\n";
-		  
+		  		  		  
 		  for(unsigned i=0; i<nve; i++) {
 		    unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-		    unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
-		    //std::cout<<i<<" -> "<<inode<<" -> "<<inode_coord_metis<<std::endl; 
-		    for(unsigned ivar=0; ivar<dim; ivar++) {
-		      vx_face[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
-		      vx_face2[(ivar+2)%dim][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
-		      //std::cout<<vx_face[ivar][i]<<" ";
+		    unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+		    for(unsigned idim=0; idim<dim; idim++) {
+		      vx_face[idim][i]=(*mymsh->_coordinate->_Sol[idim])(inode_Metis)+(*mysolution->_Sol[indVAR[idim]])(inode_Metis);;
 		    }
-		    //std::cout<<std::endl;
 		  }
-		  
 		  for(unsigned igs=0; igs < ml_prob._ml_msh->_type_elem[felt][order_ind2]->GetGaussPointNumber(); igs++) {
 		    (ml_prob._ml_msh->_type_elem[felt][order_ind2]->*(ml_prob._ml_msh->_type_elem[felt][order_ind2])->Jacobian_sur_ptr)(vx_face,igs,Weight,phi,gradphi,normal);
-		    //std::cout<<Weight<<" "<<normal[0];
-		    //for(unsigned i=0; i<nve; i++) 
-		     // std::cout<<phi[i]<<" ";
-		   
-		    double Weight2;
-		    (ml_prob._ml_msh->_type_elem[3][order_ind2]->*(ml_prob._ml_msh->_type_elem[3][order_ind2])->Jacobian_ptr)(vx_face2,igs,Weight2,phi2,gradphi2);
-		    // std::cout<<std::endl<<Weight<<" ";		     
-		      //for(unsigned i=0; i<nve; i++)
-			//std::cout<<phi[i]<<" ";
-		      //std::cout<<std::endl;
 		    // *** phi_i loop ***
-		    double bdintegral1=0;
 		    for(unsigned i=0; i<nve; i++) {
-		      double bdintegral = - phi[i]*tau/rhof*Weight;
-		      bdintegral1 += phi[i];///rhof*Weight;
-		      unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
-		      //std::cout<<ilocalnode<<"->"<<myel->GetElementVertexIndex(kel,ilocalnode)-1u<<" ";
-		      
-		      Rhs[indexVAR[dim]][ilocalnode]   += bdintegral*normal[0];
-		      Rhs[indexVAR[dim+1]][ilocalnode] += bdintegral*normal[1];
-		      Rhs[indexVAR[dim+2]][ilocalnode] += bdintegral*normal[2];
+		      double value = - phi[i]*tau/rhof*Weight;
+		      unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
+		      		      
+ 		      Rhs[indexVAR[dim]][ilocal]   += value*normal[0];
+ 		      Rhs[indexVAR[dim+1]][ilocal] += value*normal[1];
+ 		      Rhs[indexVAR[dim+2]][ilocal] += value*normal[2];
 		    }
-		    //std::cout<<Weight<<"     ";
-		    //std::cout<<std::endl;
 		  }
-		  //std::cout<<std::endl;
 		}
 	      }
-	    }	    
+	    }    
 	  }
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
+	  /// ********************************************************************************************
 	  
 	  /// *** Gauss point loop ***
 	  double area=1.;
@@ -824,7 +788,15 @@ namespace femus {
 		  }
 		}
 		////////////
-		{           
+		{       
+		  
+		  //divergence of the velocity
+// 		  double div_disp=0.;
+// 		  for(int i=0; i<dim; i++) {
+// 		    div_disp+=GradSolVAR[i][i];
+// 		  }
+		  
+		  
 		  const double *fi=phi1;
 		  // *** phi_i loop ***
 		  for (unsigned i=0; i<nve1; i++,fi++) {
@@ -836,6 +808,7 @@ namespace femus {
 		    }
 		    else if (1 == solid_model) {
 		      Rhs[indexVAR[2*dim]][i] +=(*fi)*(Jnp1_hat-1. + (!incompressible)/lambda*SolVAR[2*dim] )*Weight_hat;
+		      //Rhs[indexVAR[2*dim]][i] +=(*fi)*(div_disp + (!incompressible)/lambda*SolVAR[2*dim] )*Weight_hat;
 		    }
 		    else if (2 == solid_model){
 		      Rhs[indexVAR[2*dim]][i] += -(-((*fi))*( log(Jnp1_hat)/Jnp1_hat + (!incompressible)/lambda*SolVAR[2*dim] ) )*Weight_hat;
@@ -922,8 +895,9 @@ namespace femus {
       AssemblyTime+=(end_time-start_time);
       // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
 
+      //exit(0);
   }  
-    
+   
 }
 
 #endif
