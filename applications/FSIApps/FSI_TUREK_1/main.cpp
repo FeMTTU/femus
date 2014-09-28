@@ -50,7 +50,7 @@ int main(int argc,char **args) {
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
-  nm=2;
+  nm=1;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
@@ -63,8 +63,9 @@ int main(int argc,char **args) {
   
   //sprintf(infile,"./input/fsifirst.neu");
   //sprintf(infile,"./input/beam.neu");
-  sprintf(infile,"./input/bathe_cylinder.neu");
-
+  // sprintf(infile,"./input/bathe_cylinder.neu");
+  sprintf(infile,"./input/empty_cylinder.neu");
+  
 //   double Lref = 1.;	
 //   double Uref = 1.;
 //   double rhof = 1000.;
@@ -98,6 +99,7 @@ int main(int argc,char **args) {
   ml_sol.AddSolution("W",LAGRANGE,SECOND,1);
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
+  //ml_sol.AddSolution("P",LAGRANGE,FIRST,1);
   ml_sol.AssociatePropertyToSolution("P","Pressure"); // Add this line
 
   //Initialize (update Init(...) function)
@@ -122,8 +124,8 @@ int main(int argc,char **args) {
   // Generate Solid Object
   
   //Solid solid(par,E,ni,rhos,"Linear_elastic");
-  Solid solid(par,E,ni,rhos,"Neo-Hookean");
-  //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
+  //Solid solid(par,E,ni,rhos,"Neo-Hookean");
+  Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
   
   cout << "Solid properties: " << endl;
   cout << solid << endl;
@@ -162,13 +164,13 @@ int main(int argc,char **args) {
   //system.AttachAssembleFunction(AssembleMatrixResFSI);  
   
   
-  system.SetMaxNumberOfLinearIterations(2);
+  system.SetMaxNumberOfLinearIterations(4);
   system.SetMgType(F_CYCLE);
   system.SetMaxNumberOfNonLinearIterations(10);
   system.SetAbsoluteConvergenceTolerance(1.e-10);
-  system.SetNonLinearConvergenceTolerance(1.e-05);
-  system.SetNumberPreSmoothingStep(1);
-  system.SetNumberPostSmoothingStep(1);
+  system.SetNonLinearConvergenceTolerance(1.e-10);
+  system.SetNumberPreSmoothingStep(3);
+  system.SetNumberPostSmoothingStep(3);
    
   //Set Smoother Options
   if(Gmres) 		system.SetMgSmoother(GMRES_SMOOTHER);
@@ -181,7 +183,7 @@ int main(int argc,char **args) {
   
   system.SetSolverFineGrids(GMRES);
   system.SetPreconditionerFineGrids(MLU_PRECOND); 
-  system.SetTolerances(1.e-12,1.e-20,1.e+50,10);
+  system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
   
   
 //   system.SetSolverFineGrids(GMRES);
@@ -200,7 +202,7 @@ int main(int argc,char **args) {
   
   //for Vanka and ASM smoothers
   system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(5);   
+  system.SetElementBlockNumber(3);   
   //for Gmres smoother
   //system.SetDirichletBCsHandling(PENALTY); 
   system.SetDirichletBCsHandling(ELIMINATION);   
@@ -422,15 +424,21 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
   value=0.;
   
   if(!strcmp(name,"U")) {
-    if(1==facename){   //outflow
+    if(1==facename){   //inflow
+      //test=1;
+      //double r=sqrt(y*y+z*z);
+      //value=1000*(0.05-r)*(0.05+r);
       test=0;
-      value=0;
+      value=13*1.5*1000;
     }  
-    else if(2==facename){  //inflow
-      test=1;
-      double r=sqrt(y*y+z*z);
-      value=1000*(0.05-r)*(0.05+r);
-     
+    else if(2==facename){  //outflow
+      test=0;
+      value=15*1.5*1000;   
+      
+      //test=1;
+      //double r=sqrt(y*y+z*z);
+      //value=-1000*(0.05-r)*(0.05+r);
+      
     }
     else if(3==facename || 4==facename ){  // clamped solid 
       test=1;
@@ -442,12 +450,12 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
     } 
   }  
   else if(!strcmp(name,"V")){
-    if(1==facename){   //outflow
+    if(1==facename){   //inflow
       test=0;
       value=0;
     }  
-    else if(2==facename){  //inflow
-      test=1;
+    else if(2==facename){  //outflow
+      test=0;
       value=0;
     }
     else if(3==facename || 4==facename ){  // clamped solid 
@@ -460,12 +468,12 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
     } 
   }
   else if(!strcmp(name,"W")){
-    if(1==facename){   //outflow
+    if(1==facename){   //inflow
       test=0;
       value=0;
     }  
-    else if(2==facename){  //inflow
-      test=1;
+    else if(2==facename){  //outflow
+      test=0;
       value=0;
     }
     else if(3==facename || 4==facename ){  // clamped solid 
@@ -501,7 +509,7 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
       value=0;
     }  
     else if(2==facename){  //inflow
-      test=1;
+      test=0;
       value=0;
     }
     else if(3==facename || 4==facename ){  // clamped solid 
@@ -519,7 +527,7 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
       value=0;
     }  
     else if(2==facename){  //inflow
-      test=1;
+      test=0;
       value=0;
     }
     else if(3==facename || 4==facename ){  // clamped solid 
@@ -537,7 +545,7 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
       value=0;
     }  
     else if(2==facename){  //inflow
-      test=1;
+      test=0;
       value=0;
     }
     else if(3==facename || 4==facename ){  // clamped solid 
