@@ -85,7 +85,6 @@ namespace femus {
     double mus		= mu_lame/rhof;
     double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();   
     double lambda		= lambda_lame / rhof;
-    //double betafsi	= rhos / rhof;
     double betans		= 1.;
     int    solid_model	= ml_prob.parameters.get<Solid>("Solid").get_physical_model();     
        
