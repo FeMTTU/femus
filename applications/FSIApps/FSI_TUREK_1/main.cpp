@@ -16,10 +16,13 @@ using namespace femus;
 
 void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z,const char name[], 
 		double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionCylinder(const double &x, const double &y, const double &z,const char name[], 
-				  double &value, const int facename, const double time);
+bool SetBoundaryConditionBatheCylinder(const double &x, const double &y, const double &z,const char name[], 
+				       double &value, const int facename, const double time);
+
+bool SetBoundaryConditionBatheShell(const double &x, const double &y, const double &z,const char name[], 
+				       double &value, const int facename, const double time);
  
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
@@ -27,11 +30,50 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 int main(int argc,char **args) {
     
-  bool Vanka=0, Gmres=0, Asm=0;
+  unsigned simulation;
+  bool dimension2D;
+  
   if(argc >= 2) {
-    if( !strcmp("vanka",args[1])) 	Vanka=1;
-    else if( !strcmp("gmres",args[1])) 	Gmres=1;
-    else if( !strcmp("asm",args[1])) 	Asm=1;
+    if( !strcmp("turek",args[1])) {
+      simulation=1; 
+      dimension2D=1;  
+    }
+    else if( !strcmp("beam",args[1])) {
+      simulation=2; 
+      dimension2D=1;  
+    }
+    else if( !strcmp("bathe_FSI",args[1])){
+      simulation=3; 
+      dimension2D=0;  
+    }
+    else if( !strcmp("bathe_shell",args[1])) {
+      simulation=4; 
+      dimension2D=0;  
+    }
+    else if( !strcmp("bathe_cylinder",args[1])) {
+      simulation=5; 
+      dimension2D=0;  
+    }
+    else{    
+      cout << "wrong input arguments!\n";
+      cout << "please specify the simulation you want to run, options are\n";
+      cout << "turek\nbeam\nbathe_cylinder\nbathe_shell\n";
+      exit(0);
+    }
+  }
+  else {   
+    cout << "wrong input arguments!\n";
+    cout << "please specify the simulation you want to run, options are\n";
+    cout << "turek\nbeam\nbathe_FSI\nbathe_shell\nbathe_cylinder\n";
+    exit(0);
+  }
+   
+  
+  bool Vanka=0, Gmres=0, Asm=0;
+  if(argc >= 3) {
+    if( !strcmp("vanka",args[2])) 	Vanka=1;
+    else if( !strcmp("gmres",args[2])) 	Gmres=1;
+    else if( !strcmp("asm",args[2])) 	Asm=1;
     
     if(Vanka+Gmres+Asm==0) {
       cout << "wrong input arguments!" << endl;
@@ -39,8 +81,8 @@ int main(int argc,char **args) {
     }
   }
   else {
-    cout << "No input argument set default smoother = Gmres" << endl;
-    Gmres=1;
+    cout << "No input argument set default smoother = Asm" << endl;
+    Asm=1;
   }
   
    
@@ -50,7 +92,10 @@ int main(int argc,char **args) {
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
-  nm=1;
+  if(simulation<3)
+    nm=4;
+  else if(simulation<6)
+    nm=1;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
@@ -61,27 +106,49 @@ int main(int argc,char **args) {
 
   char *infile = new char [50];
   
-  //sprintf(infile,"./input/fsifirst.neu");
-  //sprintf(infile,"./input/beam.neu");
-  sprintf(infile,"./input/bathe_cylinder.neu");
-  //sprintf(infile,"./input/empty_cylinder.neu");
+  if(1 == simulation){
+    sprintf(infile,"./input/turek.neu");
+  }
+  else if(2 == simulation){
+    sprintf(infile,"./input/beam.neu");
+  }  
+  else if(3 == simulation) {
+    sprintf(infile,"./input/bathe_FSI.neu");
+  }
+  else if(4==simulation){
+    sprintf(infile,"./input/bathe_shell.neu");
+  }
+  else if(5==simulation){
+    sprintf(infile,"./input/bathe_cylinder.neu");
+  }
   
-//   double Lref = 1.;	
-//   double Uref = 1.;
-//   double rhof = 1000.;
-//   double muf = 1.;
-//   double rhos = 1000;
-//   double ni = 0.5;
-//   double E = 1400000;  
-//   
+   double Lref;	
+   double Uref;
+   double rhof;
+   double muf;
+   double rhos;
+   double ni;
+   double E; 
   
-  double Lref = 1.;
-  double Uref = 1.;
-  double rhof = 1000.;
-  double muf = 1.;
-  double rhos = 800;
-  double ni = 0.5;
-  double E = 15000000;
+  
+  if(simulation<3){
+    Lref = 1.;	
+    Uref = 1.;
+    rhof = 1000.;
+    muf = 1.;
+    rhos = 1000;
+    ni = 0.5;
+    E = 1400000; 
+  }
+  else if(simulation<6){
+    Lref = 1.;
+    Uref = 1.;
+    rhof = 1000.;
+    muf = 1.;
+    rhos = 800;
+    ni = 0.5;
+    E = 15000000;
+  }
   
   MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
   
@@ -90,13 +157,13 @@ int main(int argc,char **args) {
   //Start System Variables
   ml_sol.AddSolution("DX",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("DY",LAGRANGE,SECOND,1);
-  ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
+  if (!dimension2D) ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
   ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
   ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
-  ml_sol.AssociatePropertyToSolution("DZ","Displacement"); // Add this line 
+  if (!dimension2D) ml_sol.AssociatePropertyToSolution("DZ","Displacement"); // Add this line 
   ml_sol.AddSolution("U",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
-  ml_sol.AddSolution("W",LAGRANGE,SECOND,1);
+  if (!dimension2D) ml_sol.AddSolution("W",LAGRANGE,SECOND,1);
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
   //ml_sol.AddSolution("P",LAGRANGE,FIRST,1);
@@ -106,15 +173,19 @@ int main(int argc,char **args) {
   ml_sol.Initialize("All");
 
   //Set Boundary (update Dirichlet(...) function)
-  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionCylinder);
+  if(1==simulation || 2==simulation)
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek);
+  else if (3==simulation || 5==simulation)
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBatheCylinder);
+  else if (4==simulation)
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBatheShell);
 
   ml_sol.GenerateBdc("DX","Steady");
   ml_sol.GenerateBdc("DY","Steady");
-  ml_sol.GenerateBdc("DZ","Steady");
+  if (!dimension2D) ml_sol.GenerateBdc("DZ","Steady");
   ml_sol.GenerateBdc("U","Steady");
   ml_sol.GenerateBdc("V","Steady");
-  ml_sol.GenerateBdc("W","Steady");
+  if (!dimension2D) ml_sol.GenerateBdc("W","Steady");
   ml_sol.GenerateBdc("P","Steady");
   
   MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
@@ -151,10 +222,10 @@ int main(int argc,char **args) {
   MonolithicFSINonLinearImplicitSystem & system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");
   system.AddSolutionToSytemPDE("DX");
   system.AddSolutionToSytemPDE("DY");
-  system.AddSolutionToSytemPDE("DZ");
+  if (!dimension2D) system.AddSolutionToSytemPDE("DZ");
   system.AddSolutionToSytemPDE("U");
   system.AddSolutionToSytemPDE("V");
-  system.AddSolutionToSytemPDE("W");
+  if (!dimension2D) system.AddSolutionToSytemPDE("W");
   system.AddSolutionToSytemPDE("P");
   
   
@@ -164,9 +235,9 @@ int main(int argc,char **args) {
   //system.AttachAssembleFunction(AssembleMatrixResFSI);  
   
   
-  system.SetMaxNumberOfLinearIterations(1);
+  system.SetMaxNumberOfLinearIterations(2);
   system.SetMgType(F_CYCLE);
-  system.SetMaxNumberOfNonLinearIterations(2);
+  system.SetMaxNumberOfNonLinearIterations(10);
   system.SetAbsoluteConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-10);
   system.SetNumberPreSmoothingStep(1);
@@ -191,14 +262,7 @@ int main(int argc,char **args) {
 //   system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
   
   system.ClearVariablesToBeSolved();
-  //system.AddVariableToBeSolved("All");
-  system.AddVariableToBeSolved("DX");
-  system.AddVariableToBeSolved("DY");
-  system.AddVariableToBeSolved("DZ");
-  system.AddVariableToBeSolved("U");
-  system.AddVariableToBeSolved("V");
-  system.AddVariableToBeSolved("W");
-  system.AddVariableToBeSolved("P");
+  system.AddVariableToBeSolved("All");
   
   //for Vanka and ASM smoothers
   system.SetNumberOfSchurVariables(1);
@@ -223,10 +287,10 @@ int main(int argc,char **args) {
   std::vector<std::string> print_vars;
   print_vars.push_back("DX");
   print_vars.push_back("DY");
-  print_vars.push_back("DZ");
+  if (!dimension2D) print_vars.push_back("DZ");
   print_vars.push_back("U");
   print_vars.push_back("V");
-  print_vars.push_back("W");
+  if (!dimension2D) print_vars.push_back("W");
   print_vars.push_back("P");
       
   vtkio.write_system_solutions("biquadratic",print_vars);
@@ -253,7 +317,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(!strcmp(name,"U")) {
@@ -419,7 +483,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 
 
 
-bool SetBoundaryConditionCylinder(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBatheCylinder(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   
@@ -429,11 +493,11 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
       //double r=sqrt(y*y+z*z);
       //value=1000*(0.05-r)*(0.05+r);
       test=0;
-      value=13*1.5*1000;
+      value=15*1.5*1000;
     }  
     else if(2==facename){  //outflow
       test=0;
-      value=15*1.5*1000;   
+      value=13*1.5*1000;   
     }
     else if(3==facename || 4==facename ){  // clamped solid 
       test=1;
@@ -556,7 +620,111 @@ bool SetBoundaryConditionCylinder(const double &x, const double &y, const double
   return test;
 }
 
+bool SetBoundaryConditionBatheShell(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+  bool test=1; //dirichlet
+  value=0.;
+  
+  if(!strcmp(name,"U")) {
+    if(2==facename){  //stress
+      test=0;
+      value=15*1.5*1000;   
+    }
+    else if(3==facename || 4==facename ){  // clamped solid 
+      test=1;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
+      test=0;
+      value=0.;
+    } 
+  }  
+  else if(!strcmp(name,"V")){
+    if(2==facename){  //stress
+      test=0;
+      value=0;
+    }
+    else if(3==facename || 4==facename ){  // clamped solid 
+      test=1;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
+      test=0;
+      value=0.;
+    } 
+  }
+  else if(!strcmp(name,"W")){
+    if(2==facename){  //stress
+      test=0;
+      value=0;
+    }
+    else if(3==facename || 4==facename ){  // clamped solid 
+      test=1;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
+      test=0;
+      value=0.;
+    } 
+  }
+  else if(!strcmp(name,"P")){
+    if(2==facename){  //stress
+      test=0;
+      value=0;
+    }
+    else if(3==facename || 4==facename ){  // clamped solid 
+      test=0;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
+      test=0;
+      value=0.;
+    } 
+  }
+  else if(!strcmp(name,"DX")){
+   if(2==facename){  //stress
+      test=0;
+      value=0;
+    }
+    else if(3==facename || 4==facename ){  // clamped solid 
+      test=1;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
+      test=0;
+      value=0.;
+    } 
+  }
+  else if(!strcmp(name,"DY")){
+    if(2==facename){  //stress
+      test=0;
+      value=0;
+    }
+    else if(3==facename || 4==facename ){  // clamped solid 
+      test=1;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
+      test=0;
+      value=0.;
+    } 
+  }
+  else if(!strcmp(name,"DZ")){
+    if(2==facename){  //stress
+      test=0;
+      value=0;
+    }
+    else if(3==facename || 4==facename ){  // clamped solid 
+      test=1;
+      value=0.;
+    } 
+    else if(5==facename ){  // free solid
+      test=0;
+      value=0.;
+    } 
+  }
 
+  return test;
+}
 
 
 void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
