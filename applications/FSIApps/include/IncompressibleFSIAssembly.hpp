@@ -84,8 +84,8 @@ namespace femus {
     double lambda_lame 	= ml_prob.parameters.get<Solid>("Solid").get_lame_lambda();        
     double mus		= mu_lame/rhof;
     double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();   
-    double lambda		= lambda_lame / rhof;
-    double betans		= 1.;
+    double lambda	= lambda_lame / rhof;
+    double betans	= 1.;
     int    solid_model	= ml_prob.parameters.get<Solid>("Solid").get_physical_model();     
        
     bool incompressible=( 0.5 == ml_prob.parameters.get<Solid>("Solid").get_poisson_coeff() )?1:0;
@@ -106,7 +106,7 @@ namespace femus {
       for (int J=0; J<3; ++J) {
 	for (int K=0; K<3; ++K) {
 	  for (int L=0; L<3; ++L) {
-	    C_mat[I][J][K][L] = 2.*mus*Id2th[I][K]*Id2th[J][L];
+	    C_mat[I][J][K][L] = 2.*mus*Id2th[I][K]*Id2th[J][L]+lambda*Id2th[I][J]*Id2th[K][L];
 	  }
 	}
       }
@@ -375,7 +375,7 @@ namespace femus {
 		  GradSolhatVAR[i][j]=0.;
 		}
 	      }
-	    
+
 	      for (unsigned inode=0; inode<nve; inode++) {
 		unsigned sol_dof = metis_node2[inode];
 	      
@@ -385,27 +385,22 @@ namespace femus {
 		for(int j=0; j<dim; j++) {
 		  GradSolVAR[i][j]+=gradphi[inode*dim+j]*soli;
 		  if(i<dim){ 
-		    GradSolhatVAR[i][j]   +=gradphi_hat[inode*dim+j]*soli;
+		    GradSolhatVAR[i][j] += gradphi_hat[inode*dim+j]*soli;
 		  }
 		}	      
 	      }
-	    }  
-		  
+	    } 
 	    // pressure
 	    SolVAR[2*dim]=0.;
 	    for (unsigned inode=0; inode<nve1; inode++) {
 	      double soli = (*mysolution->_Sol[indVAR[2*dim]])(metis_node1[inode]);
 	      SolVAR[2*dim]+=phi1[inode]*soli;
 	    }
-  
-	    // ---------------------------------------------------------------------------
-	 	  
+  	    // ---------------------------------------------------------------------------
 	    //BEGIN FLUID ASSEMBLY ============
-	  
 	    if(flag_mat==2){
-	  
-	      { // Laplace operator + adection operator + Mass operator
 
+	      { // Laplace operator + adection operator + Mass operator
 		const double *gradfi=&gradphi[0];
 		const double *gradfi_hat=&gradphi_hat[0];
 		const double *fi=&phi[0];
@@ -480,7 +475,7 @@ namespace femus {
 				
 		    for(int idim=0; idim<dim; idim++) {
 		      B[indexVAR[dim+idim]][indexVAR[dim+idim]][i*nve+j] += (IRe*Lap + Adv1);
-		      // Advection term II
+		      //Advection term II
 		      if(nwtn_alg== true) {
 			B[indexVAR[dim+idim]][indexVAR[dim+idim]][i*nve+j]  += Adv2*GradSolVAR[dim+idim][idim];
 			for(unsigned jdim=1; jdim<dim; jdim++) {
@@ -561,7 +556,7 @@ namespace femus {
 	    	for (int i=0; i<dim; i++) {
 		  for (int j=0; j<dim; j++) {
 		    //incompressible
-		    Cauchy[i][j] = 2*mus*e[i][j];
+		    Cauchy[i][j] = 2*mus*e[i][j]+lambda*I_e*Id2th[i][j];
 		  }
 		}
 	      }
@@ -639,7 +634,37 @@ namespace femus {
 		  }
 		}
 		else if (2==solid_model){   // simone's newton formulation   
-		  // computation of the the three deformation tensor b
+// 		  // computation of the the three deformation tensor b
+// 		  for (int I=0; I<3; ++I) {
+// 		    for (int J=0; J<3; ++J) {
+// 		      b_left[I][J]=0.;
+// 		      for (int K=0; K<3; ++K) {
+// 		      //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
+// 			b_left[I][J] += F[I][K]*F[J][K];
+// 		      }
+// 		      Cauchy[I][J] = (mus/Jnp1_hat)*(b_left[I][J] - Id2th[I][J]);
+// 		    }
+// 		  }
+// 	    
+// 		  I_bleft = b_left[0][0] + b_left[1][1] + b_left[2][2];
+// 	    
+// 		  //for the incompressible(nearly incompressible) case
+// 		  for (int ii=0; ii<3; ++ii) {
+// 		    for (int jj=0; jj<3; ++jj) {
+// 		      for (int kk=0; kk<3; ++kk) {
+// 			for (int ll=0; ll<3; ++ll) {
+// 			  C_mat[ii][jj][kk][ll] = 2.*mus*pow(Jnp1_hat,-1.6666666666666)*(
+// 										  0.333333333333*I_bleft*Id2th[ii][kk]*Id2th[jj][ll]	//1/3*I_c*i
+// // 										  +0.111111111111*I_bleft*Id2th[ii][jj]*Id2th[kk][ll] 	//1/9*I_b*IxI
+// // 										  -0.333333333333*b_left[ii][jj]*Id2th[kk][ll]		//-1/3*b*I
+// // 										  -0.333333333333*Id2th[ii][jj]*b_left[kk][ll]		//-1/3*b*I
+// 										  )
+// 						  -SolVAR[2*dim]*(Id2th[ii][jj]*Id2th[kk][ll]-2.*Id2th[ii][kk]*Id2th[jj][ll] );  	// -p(IxI-2i)
+// 			}
+// 		      }
+// 		    }
+// 		  }
+		   // computation of the the three deformation tensor b
 		  for (int I=0; I<3; ++I) {
 		    for (int J=0; J<3; ++J) {
 		      b_left[I][J]=0.;
@@ -647,7 +672,7 @@ namespace femus {
 		      //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
 			b_left[I][J] += F[I][K]*F[J][K];
 		      }
-		      Cauchy[I][J] = (mus/Jnp1_hat)*(b_left[I][J] - Id2th[I][J]);
+		      Cauchy[I][J] = (mus/Jnp1_hat)*(b_left[I][J] - Id2th[I][J])+lambda/Jnp1_hat*log(Jnp1_hat)*Id2th[I][J];
 		    }
 		  }
 	    
@@ -658,13 +683,8 @@ namespace femus {
 		    for (int jj=0; jj<3; ++jj) {
 		      for (int kk=0; kk<3; ++kk) {
 			for (int ll=0; ll<3; ++ll) {
-			  C_mat[ii][jj][kk][ll] = 2.*mus*pow(Jnp1_hat,-1.6666666666666)*(
-										  0.333333333333*I_bleft*Id2th[ii][kk]*Id2th[jj][ll]	//1/3*I_c*i
-// 										  +0.111111111111*I_bleft*Id2th[ii][jj]*Id2th[kk][ll] 	//1/9*I_b*IxI
-// 										  -0.333333333333*b_left[ii][jj]*Id2th[kk][ll]		//-1/3*b*I
-// 										  -0.333333333333*Id2th[ii][jj]*b_left[kk][ll]		//-1/3*b*I
-										  )
-						  -SolVAR[2*dim]*(Id2th[ii][jj]*Id2th[kk][ll]-2.*Id2th[ii][kk]*Id2th[jj][ll] );  	// -p(IxI-2i)
+			  C_mat[ii][jj][kk][ll] = (lambda/Jnp1_hat)*Id2th[ii][jj]*Id2th[kk][ll]
+						  +2.*(mus-lambda*log(Jnp1_hat))/Jnp1_hat*Id2th[ii][kk]*Id2th[jj][ll];
 			}
 		      }
 		    }
@@ -803,14 +823,17 @@ namespace femus {
 		    //BEGIN RESIDUALS B block ===========================
 
 		    if (0 == solid_model) {
-		      Rhs[indexVAR[2*dim]][i] += -(-((*fi))*(I_e + (!incompressible)/lambda*SolVAR[2*dim] ) )*Weight_hat;
+		      //Rhs[indexVAR[2*dim]][i] += -(-((*fi))*(I_e + (!incompressible)/lambda*SolVAR[2*dim] ) )*Weight_hat;
+		      Rhs[indexVAR[2*dim]][i] += -(-((*fi))*(SolVAR[2*dim] ) )*Weight_hat;
 		    }
 		    else if (1 == solid_model) {
-		      Rhs[indexVAR[2*dim]][i] +=(*fi)*(Jnp1_hat-1. + (!incompressible)/lambda*SolVAR[2*dim] )*Weight_hat;
+		      //Rhs[indexVAR[2*dim]][i] +=(*fi)*(Jnp1_hat-1. + (!incompressible)/lambda*SolVAR[2*dim] )*Weight_hat;
+		      Rhs[indexVAR[2*dim]][i] +=(*fi)*( SolVAR[2*dim] )*Weight_hat;
 		      //Rhs[indexVAR[2*dim]][i] +=(*fi)*(div_disp + (!incompressible)/lambda*SolVAR[2*dim] )*Weight_hat;
 		    }
 		    else if (2 == solid_model){
-		      Rhs[indexVAR[2*dim]][i] += -(-((*fi))*( log(Jnp1_hat)/Jnp1_hat + (!incompressible)/lambda*SolVAR[2*dim] ) )*Weight_hat;
+		      //Rhs[indexVAR[2*dim]][i] += -(-((*fi))*( log(Jnp1_hat)/Jnp1_hat + (!incompressible)/lambda*SolVAR[2*dim] ) )*Weight_hat;
+		      Rhs[indexVAR[2*dim]][i] += -(-((*fi))*( SolVAR[2*dim] ) )*Weight_hat;
 		     }
 
 		    //END RESIDUALS B block ===========================
@@ -819,7 +842,7 @@ namespace femus {
 		    // *** phi_j loop ***
 		    for (unsigned j=0; j<nve; j++,gradfj+=dim) {
 		      for(int idim=0; idim<dim; idim++) {
-			B[indexVAR[2*dim]][indexVAR[idim]][i*nve+j] -= (*fi)*(*(gradfj+idim))*Weight;
+			//B[indexVAR[2*dim]][indexVAR[idim]][i*nve+j] -= (*fi)*(*(gradfj+idim))*Weight;
 		      }
 		    }
 		  }
@@ -832,7 +855,8 @@ namespace femus {
 		    const double *fj=phi1;
 		    // *** phi_j loop ***
 		    for (unsigned j=0; j<nve1; j++,fj++) {
-		      B[indexVAR[2*dim]][indexVAR[2*dim]][i*nve1+j] -= (!incompressible)/lambda*((*fi)*(*fj))*Weight_hat;
+		      //B[indexVAR[2*dim]][indexVAR[2*dim]][i*nve1+j] -= (!incompressible)/lambda*((*fi)*(*fj))*Weight_hat;
+		      B[indexVAR[2*dim]][indexVAR[2*dim]][i*nve1+j] -= ((*fi)*(*fj))*Weight_hat;
 		    }
 		  }
 		}  //end pressure mass term

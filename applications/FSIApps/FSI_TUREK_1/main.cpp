@@ -95,7 +95,7 @@ int main(int argc,char **args) {
   if(simulation<3)
     nm=4;
   else if(simulation<6)
-    nm=1;
+    nm=2;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
@@ -143,11 +143,11 @@ int main(int argc,char **args) {
   else if(simulation<6){
     Lref = 1.;
     Uref = 1.;
-    rhof = 1000.;
+    rhof = 100.;
     muf = 1.;
     rhos = 800;
-    ni = 0.5;
-    E = 15000000;
+    ni = 0.3;
+    E = 2000000;
   }
   
   MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
@@ -195,8 +195,8 @@ int main(int argc,char **args) {
   // Generate Solid Object
   
   //Solid solid(par,E,ni,rhos,"Linear_elastic");
-  Solid solid(par,E,ni,rhos,"Neo-Hookean");
-  //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
+  //Solid solid(par,E,ni,rhos,"Neo-Hookean");
+  Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
   
   cout << "Solid properties: " << endl;
   cout << solid << endl;
@@ -235,9 +235,9 @@ int main(int argc,char **args) {
   //system.AttachAssembleFunction(AssembleMatrixResFSI);  
   
   
-  system.SetMaxNumberOfLinearIterations(2);
+  system.SetMaxNumberOfLinearIterations(8);
   system.SetMgType(F_CYCLE);
-  system.SetMaxNumberOfNonLinearIterations(10);
+  system.SetMaxNumberOfNonLinearIterations(15);
   system.SetAbsoluteConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-10);
   system.SetNumberPreSmoothingStep(1);
@@ -264,9 +264,18 @@ int main(int argc,char **args) {
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   
+  system.AddVariableToBeSolved("DX");
+  system.AddVariableToBeSolved("DY");
+  if (!dimension2D)  system.AddVariableToBeSolved("DZ");
+  system.AddVariableToBeSolved("U");
+  system.AddVariableToBeSolved("V");
+  if (!dimension2D)  system.AddVariableToBeSolved("W");
+  system.AddVariableToBeSolved("P");
+  
+    
   //for Vanka and ASM smoothers
-  system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(3);   
+  system.SetNumberOfSchurVariables(0);
+  system.SetElementBlockNumber(2);   
   //for Gmres smoother
   //system.SetDirichletBCsHandling(PENALTY); 
   system.SetDirichletBCsHandling(ELIMINATION);   
