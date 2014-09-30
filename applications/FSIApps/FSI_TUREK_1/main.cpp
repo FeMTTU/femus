@@ -193,10 +193,19 @@ int main(int argc,char **args) {
   Parameter par(Lref,Uref);
   
   // Generate Solid Object
+  Solid solid;
+  if(simulation<3){
+    solid = Solid(par,E,ni,rhos,"Neo-Hookean");
+    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
+  }
+  else if(simulation < 6){	
+    solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
+  }
   
   //Solid solid(par,E,ni,rhos,"Linear_elastic");
   //Solid solid(par,E,ni,rhos,"Neo-Hookean");
-  Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
+  //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
+  //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
   
   cout << "Solid properties: " << endl;
   cout << solid << endl;
@@ -213,10 +222,7 @@ int main(int argc,char **args) {
   ml_prob.parameters.set<Solid>("Solid") = solid;
 
   ml_msh.MarkStructureNode();
-  
-  
-  std::cout<<"I finished to mark\n";
-   
+ 
   //create systems
   // add the system FSI to the MultiLevel problem
   MonolithicFSINonLinearImplicitSystem & system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");
@@ -228,16 +234,19 @@ int main(int argc,char **args) {
   if (!dimension2D) system.AddSolutionToSytemPDE("W");
   system.AddSolutionToSytemPDE("P");
   
-  
-   
   // System Fluid-Structure-Interaction
   system.AttachAssembleFunction(IncompressibleFSIAssembly);  
   //system.AttachAssembleFunction(AssembleMatrixResFSI);  
   
-  
-  system.SetMaxNumberOfLinearIterations(8);
+  if(simulation < 3){
+    system.SetMaxNumberOfLinearIterations(2);
+    system.SetMaxNumberOfNonLinearIterations(10);
+  }
+  else if(simulation < 6){	
+    system.SetMaxNumberOfLinearIterations(8);
+    system.SetMaxNumberOfNonLinearIterations(15); 
+  }
   system.SetMgType(F_CYCLE);
-  system.SetMaxNumberOfNonLinearIterations(15);
   system.SetAbsoluteConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-10);
   system.SetNumberPreSmoothingStep(1);
@@ -251,16 +260,10 @@ int main(int argc,char **args) {
   // init all the systems
   system.init();
   
-  
   system.SetSolverFineGrids(GMRES);
   system.SetPreconditionerFineGrids(MLU_PRECOND); 
   system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
-  
-  
-//   system.SetSolverFineGrids(GMRES);
-//   system.SetPreconditionerFineGrids(LU_PRECOND); 
-//   system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
-  
+ 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   
@@ -271,10 +274,9 @@ int main(int argc,char **args) {
   system.AddVariableToBeSolved("V");
   if (!dimension2D)  system.AddVariableToBeSolved("W");
   system.AddVariableToBeSolved("P");
-  
     
   //for Vanka and ASM smoothers
-  system.SetNumberOfSchurVariables(0);
+  system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(2);   
   //for Gmres smoother
   //system.SetDirichletBCsHandling(PENALTY); 
