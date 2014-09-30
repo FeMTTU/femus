@@ -72,6 +72,10 @@ Solid::Solid(Parameter& par, const double young_module, const double poisson_coe
     _model = 3;
     _penalty = true;
   }
+  else if (!strcmp(model,"Neo-Hookean-AB-Penalty")) {
+    _model = 4;
+    _penalty = true;
+  }
   else {
     cout<<"Error! This solid model is not implemented "<<endl;
     exit(1);

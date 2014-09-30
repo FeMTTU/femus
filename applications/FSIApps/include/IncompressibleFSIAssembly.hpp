@@ -574,7 +574,7 @@ namespace femus {
 		Jnp1_hat =  F[0][0]*F[1][1]*F[2][2] + F[0][1]*F[1][2]*F[2][0] + F[0][2]*F[1][0]*F[2][1]
 			  - F[2][0]*F[1][1]*F[0][2] - F[2][1]*F[1][2]*F[0][0] - F[2][2]*F[1][0]*F[0][1];
 			  
-		if(1 == solid_model){ // eugenio's newton formulation
+		if(1 == solid_model){ // eugenio's incompressible formulation
 		  // computation of the the three deformation tensor b
 		  for (int I=0; I<3; ++I) {
 		    for (int J=0; J<3; ++J) {
@@ -633,7 +633,7 @@ namespace femus {
 		    }
 		  }
 		}
-		else if(2 == solid_model){ // simone's newton formulation   
+		else if(2 == solid_model){ // Bonet and Wood nearly incompressible formulation   
 		  // computation of the the three deformation tensor b
 		  for (int I=0; I<3; ++I) {
 		    for (int J=0; J<3; ++J) {
@@ -663,7 +663,7 @@ namespace femus {
 		    }
 		  }
 		}
-		else if (3 == solid_model){  
+		else if (3 == solid_model){ //Bonet and Wood penalty formulation 
 		  //computation of the the three deformation tensor b
 		  for (int I=0; I<3; ++I) {
 		    for (int J=0; J<3; ++J) {
@@ -677,14 +677,52 @@ namespace femus {
 		  }
 	    
 		  I_bleft = b_left[0][0] + b_left[1][1] + b_left[2][2];
-	    
-		  //for the incompressible(nearly incompressible) case
+	    		  
+		  double mup = (mus-lambda*log(Jnp1_hat))/Jnp1_hat;
+		  double lambdap = (lambda/Jnp1_hat);
 		  for (int ii=0; ii<3; ++ii) {
 		    for (int jj=0; jj<3; ++jj) {
 		      for (int kk=0; kk<3; ++kk) {
 			for (int ll=0; ll<3; ++ll) {
-			  C_mat[ii][jj][kk][ll] = (lambda/Jnp1_hat)*Id2th[ii][jj]*Id2th[kk][ll]
-						  +2.*(mus-lambda*log(Jnp1_hat))/Jnp1_hat*Id2th[ii][kk]*Id2th[jj][ll];
+			  C_mat[ii][jj][kk][ll] = 2.*mup*Id2th[ii][kk]*Id2th[jj][ll]
+						 +lambdap*Id2th[ii][jj]*Id2th[kk][ll];						  
+			}
+		      }
+		    }
+		  }
+		}
+		else if (4 == solid_model){ //Allan Bower penalty formulation
+		  //computation of the the three deformation tensor b
+		  for (int I=0; I<3; ++I) {
+		    for (int J=0; J<3; ++J) {
+		      b_left[I][J]=0.;
+		      for (int K=0; K<3; ++K) {
+		      //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
+			b_left[I][J] += F[I][K]*F[J][K];
+		      }
+		    }
+		  }
+	    
+		  I_bleft = b_left[0][0] + b_left[1][1] + b_left[2][2];
+	    
+		  for (int I=0; I<3; ++I) {
+		    for (int J=0; J<3; ++J) {
+		      Cauchy[I][J] = mus /pow(Jnp1_hat,2./3.) *(b_left[I][J] - I_bleft*Id2th[I][J]/3.)
+				   + lambda*Jnp1_hat*(Jnp1_hat-1.)*Id2th[I][J];
+		    }
+		  }
+		  
+		  //for the incompressible(nearly incompressible) case
+		  for (int ii=0; ii<3; ++ii) {
+		    for (int jj=0; jj<3; ++jj) {
+		      for (int kk=0; kk<3; ++kk) {
+			for (int ll=0; ll<3; ++ll) {								  
+			  C_mat[ii][jj][kk][ll] =  mus/pow(Jnp1_hat,2./3.)*( 
+							Id2th[ii][kk]*b_left[jj][ll]+b_left[ii][ll]*Id2th[jj][kk]
+							-(2./3.)*(b_left[ii][jj]*Id2th[kk][ll]+Id2th[ii][jj]*b_left[kk][ll])
+							+(2./3.)*I_bleft*Id2th[ii][jj]*Id2th[kk][ll]/3.) 
+							+ lambda*(2.*Jnp1_hat-1.)*Jnp1_hat*Id2th[ii][jj]*Id2th[kk][ll];
+			  
 			}
 		      }
 		    }

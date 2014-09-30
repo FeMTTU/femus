@@ -122,13 +122,7 @@ int main(int argc,char **args) {
     sprintf(infile,"./input/bathe_cylinder.neu");
   }
   
-   double Lref;	
-   double Uref;
-   double rhof;
-   double muf;
-   double rhos;
-   double ni;
-   double E; 
+   double Lref, Uref, rhof, muf, rhos, ni, E; 
   
   
   if(simulation<3){
@@ -150,6 +144,32 @@ int main(int argc,char **args) {
     E = 2000000;
   }
   
+  Parameter par(Lref,Uref);
+  
+  // Generate Solid Object
+  Solid solid;
+  if(simulation<3){
+    solid = Solid(par,E,ni,rhos,"Neo-Hookean");
+    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
+  }
+  else if(simulation < 6){	
+    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
+    solid = Solid(par,E,ni,rhos,"Neo-Hookean-AB-Penalty"); //Allan Bower
+  }
+  
+  //Solid solid(par,E,ni,rhos,"Linear_elastic");
+  //Solid solid(par,E,ni,rhos,"Neo-Hookean");
+  //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
+  //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
+  
+  cout << "Solid properties: " << endl;
+  cout << solid << endl;
+  
+  // Generate Fluid Object
+  Fluid fluid(par,muf,rhof,"Newtonian");
+  cout << "Fluid properties: " << endl;
+  cout << fluid << endl;
+
   MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
   
   MultiLevelSolution ml_sol(&ml_msh);
@@ -189,38 +209,11 @@ int main(int argc,char **args) {
   ml_sol.GenerateBdc("P","Steady");
   
   MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
-
-  Parameter par(Lref,Uref);
-  
-  // Generate Solid Object
-  Solid solid;
-  if(simulation<3){
-    solid = Solid(par,E,ni,rhos,"Neo-Hookean");
-    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
-  }
-  else if(simulation < 6){	
-    solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
-  }
-  
-  //Solid solid(par,E,ni,rhos,"Linear_elastic");
-  //Solid solid(par,E,ni,rhos,"Neo-Hookean");
-  //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
-  //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
-  
-  cout << "Solid properties: " << endl;
-  cout << solid << endl;
-  
-  // Generate Fluid Object
-  Fluid fluid(par,muf,rhof,"Newtonian");
-  cout << "Fluid properties: " << endl;
-  cout << fluid << endl;
-
   // Add fluid object
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
-  
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
-
+  // mark Solid nodes
   ml_msh.MarkStructureNode();
  
   //create systems
