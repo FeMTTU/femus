@@ -73,6 +73,13 @@ IF(LIBMESH_FOUND)
 ENDIF(LIBMESH_FOUND)
 
 
+OPTION(BUILD_ADEPT "Build Adept for automatic differentiation library" ON)
+IF(BUILD_ADEPT)
+  #set(MAF_DEPENDENCIES ${MAF_DEPENDENCIES} PythonQt)
+  INCLUDE(${PROJECT_SOURCE_DIR}/ExternalLibraries/Adept/External_Adept.cmake)
+ENDIF(BUILD_ADEPT)
+
+
 # configure a header file to pass some of the CMake settings
 # to the source code
 CONFIGURE_FILE(

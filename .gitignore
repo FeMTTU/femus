@@ -50,7 +50,7 @@ codeblocks/
 
 
 # packages
-*.tar.*
+# *.tar.*
 
 # temporary files
 *~
