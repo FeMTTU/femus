@@ -67,6 +67,9 @@ public:
 
     /** To be Added */
     const unsigned get_physical_model() const;
+    
+    /** To be Added */
+    const bool get_if_penalty() const;
 
     /** printing operator */
     friend std::ostream & operator << (std::ostream & os, const Solid & solid);
@@ -85,6 +88,8 @@ private:
     double _mu_lame;
 
     unsigned _model;
+    
+    bool _penalty;
 
 };
 

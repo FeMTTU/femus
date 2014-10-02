@@ -1,8 +1,8 @@
         CONTROL INFO 2.3.16
 ** GAMBIT NEUTRAL FILE
-bathe5
+bathe_shell
 PROGRAM:                Gambit     VERSION:  2.3.16
-28 Sep 2014    06:28:40 
+29 Sep 2014    13:05:42 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
        432        32         1         4         3         3
 ENDOFSECTION
