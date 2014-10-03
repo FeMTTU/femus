@@ -4,6 +4,9 @@ PROJECT(FSI_CMS_NWM)
 
 # Build the executable
 ADD_EXECUTABLE(fsicms ${CMAKE_PROJECT_DIR}main.cpp)
+# 
+# SET (ADEPT_INCLUDE_DIRS ${ADEPT_UNPACK_PATH}/adept-${ADEPT_VERSION}/include)
+# SET (ADEPT_LIBRARIES ${ADEPT_UNPACK_PATH}/adept-${ADEPT_VERSION}/lib/libadept.a)
 
 # Link the executable to the petsc anf femttu libs
 TARGET_LINK_LIBRARIES(fsicms femus)
