@@ -4,6 +4,9 @@ PROJECT(FSI_TUREK_1)
 
 # Build the executable
 ADD_EXECUTABLE(fsitrk1 ${CMAKE_PROJECT_DIR}main.cpp)
+# 
+# SET (ADEPT_INCLUDE_DIRS ${ADEPT_UNPACK_PATH}/adept-${ADEPT_VERSION}/include)
+# SET (ADEPT_LIBRARIES ${ADEPT_UNPACK_PATH}/adept-${ADEPT_VERSION}/lib/libadept.a)
 
 # Link the executable to the petsc anf femttu libs
 TARGET_LINK_LIBRARIES(fsitrk1 femus)
@@ -11,6 +14,7 @@ TARGET_LINK_LIBRARIES(fsitrk1 ${PETSC_LIBRARIES})
 TARGET_LINK_LIBRARIES(fsitrk1 b64)
 TARGET_LINK_LIBRARIES(fsitrk1 jsoncpp)
 TARGET_LINK_LIBRARIES(fsitrk1 adept)
+
 
 IF(FPARSER_FOUND)
   TARGET_LINK_LIBRARIES(fsitrk1 ${FPARSER_LIBRARY})
