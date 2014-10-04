@@ -150,7 +150,7 @@ int main(int argc,char **args) {
   
    
   // System Fluid-Structure-Interaction
-  system.AttachAssembleFunction(IncompressibleFSIAssembly);  
+  system.AttachAssembleFunction(IncompressibleFSIAssemblyAD);  
   
   system.SetMaxNumberOfLinearIterations(2);
   system.SetMgType(F_CYCLE);

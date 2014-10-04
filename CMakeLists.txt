@@ -147,7 +147,6 @@ ADD_SUBDIRECTORY(ExternalLibraries/b64-1.4.2)
 # Build the jsoncpp library
 ADD_SUBDIRECTORY(ExternalLibraries/jsoncpp-src-0.5.0)
 
-
 # Ask the user which executable have to be built
 OPTION(BUILD_NAVIERSTOKESAPPS "Build the NavierStokes-line applications" ON)
 

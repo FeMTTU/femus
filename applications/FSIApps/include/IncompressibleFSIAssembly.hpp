@@ -7,15 +7,11 @@
 
 
 namespace femus {
- 
-   
-   
-   
-   
-  void IncompressibleFSIAssemblyAD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
     
-    adept::Stack s; 
-     
+  static adept::Stack s; 
+    
+  void IncompressibleFSIAssemblyAD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+         
     clock_t AssemblyTime=0;
     clock_t start_time, end_time;
   
@@ -51,7 +47,7 @@ namespace femus {
     vector <double > phi;
     vector <double > phi_hat;
   
-    vector <double> gradphi;
+    vector <adept::adouble> gradphi;
     vector <double> gradphi_hat;
   
     metis_node1.reserve(max_size);
@@ -64,11 +60,11 @@ namespace femus {
   
     const double *phi1;
     
-    double Weight=0.;
+    adept::adouble Weight=0.;
     double Weight_nojac=0.;
     double Weight_hat=0.;
   
-    vector <vector < double> > vx(dim);
+    vector <vector < adept::adouble> > vx(dim);
     vector <vector < double> > vx_face(dim);
     vector <vector < double> > vx_hat(dim);
   
@@ -95,7 +91,7 @@ namespace femus {
     }
     vector< vector< int > > dofsVAR(2*dim+1); 
   
-    double Jac[max_size*max_size];
+    double* Jac=new double [max_size*max_size*(2*dim+1)];
     
     // ------------------------------------------------------------------------
     // Physical parameters
@@ -118,10 +114,7 @@ namespace femus {
  
     // gravity
     double _gravity[3]={0.,0.,0.};
-  
-    // newton algorithm
-    bool nwtn_alg = true;
-
+     
     // -----------------------------------------------------------------
     // space discretization parameters
     unsigned order_ind2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));  
@@ -202,20 +195,11 @@ namespace femus {
 	B[indexVAR[i]][indexVAR[i]].resize(nve*nve);
       }
 
-      //Stiffness Matrix (solid)
+      //Stiffness (solid) / diffusive (solid) matrixes
       for(int i=0; i<dim; i++) {
 	for(int j=0; j<dim; j++) {
 	  B[indexVAR[dim+i]][indexVAR[j]].resize(nve*nve);
-	}
-      }
-      
-      //Mass Matrix (solid and fluid) and Diffusion Matrix (fluid only) 
-      for(int i=0; i<dim; i++) {
-	B[indexVAR[dim+i]][indexVAR[dim+i]].resize(nve*nve);
-	if(nwtn_alg== true) {
-	  for(int jdim=1; jdim<dim; jdim++) {
-	    B[indexVAR[dim+i]][indexVAR[dim+(i+jdim)%dim]].resize(nve*nve);
-	  }
+	  B[indexVAR[dim+i]][indexVAR[dim+j]].resize(nve*nve);
 	}
       }
 
@@ -276,9 +260,7 @@ namespace femus {
 	    	    
 	  aRhs[indVAR[j]][i]     = 0.;
 	  aRhs[indVAR[j+dim]][i] = 0.;
-	    
-	  //Updated coordinates (Moving frame)
-	  vx[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + Soli[indVAR[j]][i].value();//(*mysolution->_Sol[indVAR[j]])(inode_Metis);
+	   
 	  //Fixed coordinates (Reference frame)
 	  vx_hat[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis);  
 	  // displacement dofs
@@ -302,6 +284,14 @@ namespace femus {
       if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
 	  
 	s.new_recording();
+	
+	for (unsigned i=0;i<nve;i++) {
+	  unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
+	  unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+	  for(int j=0; j<dim; j++) {
+	    vx[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + Soli[indVAR[j]][i];
+	  }
+	}
 	  
 	// Boundary integral
 	{
@@ -325,14 +315,13 @@ namespace femus {
 		  unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
 		  for(unsigned idim=0; idim<dim; idim++) {
 		    vx_face[idim][i]=(*mymsh->_coordinate->_Sol[idim])(inode_Metis) + Soli[indVAR[idim]][ilocal].value();
-		    //(*mysolution->_Sol[indVAR[idim]])(inode_Metis);;
 		  }
 		}
 		for(unsigned igs=0; igs < ml_prob._ml_msh->_type_elem[felt][order_ind2]->GetGaussPointNumber(); igs++) {
-		  (ml_prob._ml_msh->_type_elem[felt][order_ind2]->*(ml_prob._ml_msh->_type_elem[felt][order_ind2])->Jacobian_sur_ptr)(vx_face,igs,Weight,phi,gradphi,normal);
+		  (ml_prob._ml_msh->_type_elem[felt][order_ind2]->*(ml_prob._ml_msh->_type_elem[felt][order_ind2])->Jacobian_sur_ptr)(vx_face,igs,Weight_hat,phi,gradphi_hat,normal);
 		  // *** phi_i loop ***
 		  for(unsigned i=0; i<nve; i++) {
-		    double value = - phi[i]*tau/rhof*Weight;
+		    double value = - phi[i]*tau/rhof*Weight_hat;
 		    unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
 		      		      
 		    aRhs[indexVAR[dim]][ilocal]   += value*normal[0];
@@ -351,7 +340,9 @@ namespace femus {
 	for (unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
 
 	  // *** get Jacobian and test function and test function derivatives in the moving frame***
-	  (ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
+	  //s.pause_recording();
+	  (ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_AD_ptr)(s,vx,ig,Weight,phi,gradphi);
+	  //s.continue_recording();
 	  (ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
 	  phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
 	  if (flag_mat==2) {
@@ -399,7 +390,7 @@ namespace femus {
 	  //BEGIN FLUID ASSEMBLY ============
 	  if(flag_mat==2){
 	    { // Laplace operator + adection operator + Mass operator
-	      const double *gradfi=&gradphi[0];
+	      const adept::adouble *gradfi=&gradphi[0];
 	      const double *gradfi_hat=&gradphi_hat[0];
 	      const double *fi=&phi[0];
 
@@ -457,7 +448,7 @@ namespace femus {
 	    
 	  //*******************************************************************************************************
 	    
-	      //BEGIN SOLID ASSEMBLY ============
+	  //BEGIN SOLID ASSEMBLY ============
 	  else{
 	    //physical quantity
 	    adept::adouble J_hat;
@@ -499,7 +490,7 @@ namespace femus {
 	      }
 		
 	      J_hat =   F[0][0]*F[1][1]*F[2][2] + F[0][1]*F[1][2]*F[2][0] + F[0][2]*F[1][0]*F[2][1]
-		- F[2][0]*F[1][1]*F[0][2] - F[2][1]*F[1][2]*F[0][0] - F[2][2]*F[1][0]*F[0][1];
+		      - F[2][0]*F[1][1]*F[0][2] - F[2][1]*F[1][2]*F[0][0] - F[2][2]*F[1][0]*F[0][1];
 			  
 	      if(3 >= solid_model){ // Wood-Bonet
 		// computation of the the three deformation tensor b
@@ -542,7 +533,7 @@ namespace femus {
 
 	    // Mass + Stiffness operator
 	    {
-	      const double *gradfi=&gradphi[0];
+	      const adept::adouble *gradfi=&gradphi[0];
 	      const double *fi=&phi[0];
 
 	      //  *** phi_i loop ***
@@ -614,30 +605,31 @@ namespace femus {
       for(int i=0; i<dim; i++) {
 	  
 	myRES->add_vector_blocked(Rhs[indexVAR[i]],dofsVAR[i]);
+	
 	s.dependent(&aRhs[indexVAR[i]][0], nve);   
-	  
 	s.independent(&Soli[indexVAR[i]][0], nve); 
+	if(flag_mat!=2){ 
+	  s.independent(&Soli[indexVAR[i+dim]][0], nve); 
+	}
+	
 	s.jacobian(Jac);
 	for (int inode=0;inode<nve;inode++){
 	  for (int jnode=0;jnode<nve;jnode++){
 	    B[indexVAR[i]][indexVAR[i]][inode*nve+jnode]=-Jac[jnode*nve+inode];
 	  }
 	}
-	s.clear_independents();
 	myKK ->add_matrix_blocked(B[indexVAR[i]][indexVAR[i]],dofsVAR[i],dofsVAR[i]);    
 	  	 	  
 	if(flag_mat!=2){ 
-	  s.independent(&Soli[indexVAR[i+dim]][0], nve); 
-	  s.jacobian(Jac);
 	  for (int inode=0;inode<nve;inode++){
 	    for (int jnode=0;jnode<nve;jnode++){
-	      B[indexVAR[i]][indexVAR[i+dim]][inode*nve+jnode]=-Jac[jnode*nve+inode];
+	      B[indexVAR[i]][indexVAR[i+dim]][inode*nve+jnode]=-Jac[nve*nve+jnode*nve+inode];
 	    }
 	  }
-	  s.clear_independents();
 	  myKK->add_matrix_blocked(B[indexVAR[i]][indexVAR[i+dim]],dofsVAR[i],dofsVAR[i+dim]);
 	}
-	  
+	
+	s.clear_independents();
 	s.clear_dependents();
       }
     
@@ -645,103 +637,75 @@ namespace femus {
       for(int i=0; i<dim; i++) {
 	myRES->add_vector_blocked(Rhs[indexVAR[dim+i]],dofsVAR[dim+i]);
 	s.dependent(&aRhs[indexVAR[dim+i]][0], nve);   	  	  
-	  
-	s.independent(&Soli[indexVAR[dim+i]][0], nve); 
-	s.jacobian(Jac);
-	for (int inode=0;inode<nve;inode++){
-	  for (int jnode=0;jnode<nve;jnode++){
-	    B[indexVAR[dim+i]][indexVAR[dim+i]][inode*nve+jnode]=-Jac[jnode*nve+inode];
-	  }
+	
+	for(int j=0; j<2*dim; j++) {  
+	  s.independent(&Soli[indexVAR[j]][0], nve); 
 	}
-	s.clear_independents();	  
-	myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[dim+i]],dofsVAR[dim+i],dofsVAR[dim+i]);
- 	 
-	 
-	if(nwtn_alg== true){
-	  for(unsigned jdim=1; jdim<dim; jdim++) {
-	    s.independent(&Soli[indexVAR[dim+(i+jdim)%dim]][0], nve);    
-	    s.jacobian(Jac);
-	    for (int inode=0;inode<nve;inode++){
-	      for (int jnode=0;jnode<nve;jnode++){
-		B[indexVAR[dim+i]][indexVAR[dim+(i+jdim)%dim]][inode*nve+jnode]=-Jac[jnode*nve+inode];
-	      }
-	    }
-	    s.clear_independents();
-	    myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[dim+(i+jdim)%dim]],dofsVAR[dim+i],dofsVAR[dim+(i+jdim)%dim]);  
-	     
-	  }
-	}
-	//pressure block
 	s.independent(&Soli[indexVAR[2*dim]][0], nve1);   
 	s.jacobian(Jac);
+	for(int j=0; j<2*dim; j++) {
+	  for (int inode=0;inode<nve;inode++){
+	    for (int jnode=0;jnode<nve;jnode++){
+	      B[indexVAR[dim+i]][indexVAR[j]][inode*nve+jnode]=-Jac[j*nve*nve+jnode*nve+inode];
+	    }
+	  }
+	  myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[j]],dofsVAR[dim+i],dofsVAR[j]);
+	}
+	
 	for (int inode=0;inode<nve;inode++){
 	  for (int jnode=0;jnode<nve1;jnode++){
-	    B[indexVAR[dim+i]][indexVAR[2*dim]][inode*nve1+jnode]=-Jac[jnode*nve+inode];
+	    B[indexVAR[dim+i]][indexVAR[2*dim]][inode*nve1+jnode]=-Jac[2*dim*nve*nve+jnode*nve+inode];
 	  }
 	}	  
 	myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[2*dim]],dofsVAR[dim+i],dofsVAR[2*dim]);
 	s.clear_independents();
-	//end pressure block
-	  
-	  
-	for(int j=0; j<dim; j++) {
-	    
-	  s.independent(&Soli[indexVAR[j]][0], nve); 
-	  s.jacobian(Jac);
-	  for (int inode=0;inode<nve;inode++){
-	    for (int jnode=0;jnode<nve;jnode++){
-	      B[indexVAR[dim+i]][indexVAR[j]][inode*nve+jnode]=-Jac[jnode*nve+inode];
-	    }
-	  }
-	  s.clear_independents();
-	    
-	  myKK->add_matrix_blocked(B[indexVAR[dim+i]][indexVAR[j]],dofsVAR[dim+i],dofsVAR[j]);
-	}
-	  
+		  
 	s.clear_dependents();
       }
    
       //P-continuity equation
       myRES->add_vector_blocked(Rhs[indexVAR[2*dim]],dofsVAR[2*dim]);
-      s.dependent(&aRhs[indexVAR[2*dim]][0], nve1);   
-	
+      
+      s.dependent(&aRhs[indexVAR[2*dim]][0], nve1);   	
       for(int i=0; i<dim; i++) {
 	if(flag_mat==2){ //Fluid only
 	  s.independent(&Soli[indexVAR[dim+i]][0], nve); 
-	  s.jacobian(Jac);
+	}
+	else{
+	   s.independent(&Soli[indexVAR[i]][0], nve); 
+	}
+      }
+      s.independent(&Soli[indexVAR[2*dim]][0], nve1);
+      s.jacobian(Jac);
+            
+      for(int i=0; i<dim; i++) {
+	if(flag_mat==2){ //Fluid only
 	  for (int inode=0;inode<nve1;inode++){
 	    for (int jnode=0;jnode<nve;jnode++){
-	      B[indexVAR[2*dim]][indexVAR[dim+i]][inode*nve+jnode]=-Jac[jnode*nve1+inode];
+	      B[indexVAR[2*dim]][indexVAR[dim+i]][inode*nve+jnode]=-Jac[nve*nve1*i+jnode*nve1+inode];
 	    }
 	  }
-	  s.clear_independents();	
 	  myKK->add_matrix_blocked(B[indexVAR[2*dim]][indexVAR[dim+i]],dofsVAR[2*dim],dofsVAR[dim+i]);
 	}
 	else{ //Solid only
-	  s.independent(&Soli[indexVAR[i]][0], nve); 
-	  s.jacobian(Jac);
 	  for (int inode=0;inode<nve1;inode++){
 	    for (int jnode=0;jnode<nve;jnode++){
-	      B[indexVAR[2*dim]][indexVAR[i]][inode*nve+jnode]=-Jac[jnode*nve1+inode];
+	      B[indexVAR[2*dim]][indexVAR[i]][inode*nve+jnode]=-Jac[nve*nve1*i+jnode*nve1+inode];
 	    }
 	  }
-	  s.clear_independents();
 	  myKK->add_matrix_blocked(B[indexVAR[2*dim]][indexVAR[i]],dofsVAR[2*dim],dofsVAR[i]);  
 	} 
       }
-	
-      s.independent(&Soli[indexVAR[2*dim]][0], nve1); 
-      s.jacobian(Jac);
       for (int inode=0;inode<nve1;inode++){
 	for (int jnode=0;jnode<nve1;jnode++){
-	  B[indexVAR[2*dim]][indexVAR[2*dim]][inode*nve1+jnode]=-Jac[jnode*nve1+inode];
+	  B[indexVAR[2*dim]][indexVAR[2*dim]][inode*nve1+jnode]=-Jac[nve*nve1*dim+jnode*nve1+inode];
 	}
       }
-      s.clear_independents();
       myKK->add_matrix_blocked(B[indexVAR[2*dim]][indexVAR[2*dim]],dofsVAR[2*dim],dofsVAR[2*dim]);
-	
-      s.clear_dependents();
-	
+      
+      s.clear_independents();	
+      s.clear_dependents();      
+      
       //END local to global assembly
    
     } //end list of elements loop
@@ -751,18 +715,30 @@ namespace femus {
     myKK->close();
     myRES->close();
   
-    delete area_elem_first;
-       
+    delete area_elem_first; 
+    delete [] Jac;
+	  
     // *************************************
     end_time=clock();
     AssemblyTime+=(end_time-start_time);
     // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
 
   }
-   
-   
-   
-   
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
    
    void IncompressibleFSIAssembly(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
     
