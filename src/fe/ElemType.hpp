@@ -27,7 +27,7 @@
 #include "SparseMatrix.hpp"
 #include "Mesh.hpp"
 #include "LinearEquation.hpp"
-
+#include "adept.h"
 
 namespace femus {
 
@@ -67,7 +67,7 @@ public:
   /** To be Added */ 
   void JacobianSur2D(const vector < vector < double > > &vt, const unsigned &ig,
                      double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal)const;
-   
+  
   /** To be Added */
   void JacobianSur1D(const vector < vector < double > > &vt, const unsigned &ig,
                      double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
@@ -80,6 +80,10 @@ public:
   void Jacobian2D(const vector < vector < double > > &vt,const unsigned &ig,
                   double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
 
+  void Jacobian2D_AD(adept::Stack &s, const vector < vector < adept::adouble > > &vt,const unsigned &ig,
+		     adept::adouble &Weight, vector < double > &other_phi, vector < adept::adouble > &gradphi) const;	  
+		  
+		  
   /** To be Added */
   void Jacobian1D(const vector < vector < double > > &vt,const unsigned &ig,
                   double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
@@ -116,6 +120,9 @@ public:
   void (elem_type::*Jacobian_ptr)(const vector < vector < double > > &vt, const unsigned &ig,
                                   double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
   
+  void (elem_type::*Jacobian_AD_ptr)(adept::Stack &s, const vector < vector < adept::adouble > > &vt, const unsigned &ig,
+				     adept::adouble &Weight, vector < double > &other_phi, vector < adept::adouble > &gradphi) const;				  
+				  
   void (elem_type::*Jacobian_sur_ptr)(const vector < vector < double > > &vt, const unsigned &ig,
                                       double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
   

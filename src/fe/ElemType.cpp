@@ -486,6 +486,7 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
     GaussPoints=GaussPointsTetrahedra[gauss_order];
   } else if (!strcmp(solid,"quad")) { //QUAD
     Jacobian_ptr=&elem_type::Jacobian2D;
+    Jacobian_AD_ptr=&elem_type::Jacobian2D_AD;
     Jacobian_sur_ptr=&elem_type::JacobianSur2D;
     ncf_[0]=4;
     ncf_[1]=8;
@@ -1063,6 +1064,43 @@ void elem_type::Jacobian2D(const vector < vector < double > > &vt,const unsigned
     //*(gradf++)=0.;
   }
 }
+
+
+//---------------------------------------------------------------------------------------------------------
+void elem_type::Jacobian2D_AD(adept::Stack &s, const vector < vector < adept::adouble > > &vt,const unsigned &ig,
+			      adept::adouble &Weight, vector < double > &other_phi, vector < adept::adouble > &gradphi) const {
+			
+  adept::adouble Jac[2][2]={{0,0},{0,0}};
+  adept::adouble JacI[2][2];
+  const double *dfx=dphidxi[ig];
+  const double *dfy=dphideta[ig];
+  for (int inode=0; inode<nc_; inode++,dfx++,dfy++){
+    Jac[0][0]+=(*dfx)*vt[0][inode];
+    Jac[0][1]+=(*dfx)*vt[1][inode];
+    Jac[1][0]+=(*dfy)*vt[0][inode];
+    Jac[1][1]+=(*dfy)*vt[1][inode];
+  }
+  adept::adouble det=(Jac[0][0]*Jac[1][1]-Jac[0][1]*Jac[1][0]);
+
+  JacI[0][0]= Jac[1][1]/det;
+  JacI[0][1]=-Jac[0][1]/det;
+  JacI[1][0]=-Jac[1][0]/det;
+  JacI[1][1]= Jac[0][0]/det;
+
+  Weight=det*GaussWeight[ig];
+
+  double *other_f=&other_phi[0];
+  double *fi=phi[ig];
+  dfx=dphidxi[ig];
+  dfy=dphideta[ig];
+  for (int inode=0; inode<nc_; inode++,other_f++,fi++,dfx++,dfy++) {
+    *other_f=*fi;
+    gradphi[2*inode+0]=(*dfx)*JacI[0][0] + (*dfy)*JacI[0][1];
+    gradphi[2*inode+1]=(*dfx)*JacI[1][0] + (*dfy)*JacI[1][1];
+    
+  }
+}
+
 
 //---------------------------------------------------------------------------------------------------------
 void elem_type::Jacobian1D(const vector < vector < double > > &vt,const unsigned &ig,
