@@ -141,7 +141,7 @@ int main(int argc,char **args) {
     muf = 1.;
     rhos = 800;
     ni = 0.5;
-    E = 2200000;
+    E = 1800000;
   }
   
   Parameter par(Lref,Uref);
