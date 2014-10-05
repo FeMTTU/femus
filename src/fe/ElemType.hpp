@@ -67,7 +67,10 @@ public:
   /** To be Added */ 
   void JacobianSur2D(const vector < vector < double > > &vt, const unsigned &ig,
                      double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal)const;
-  
+  /** To be Added */ 
+  void JacobianSur2D_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
+			adept::adouble &Weight, vector < adept::adouble > &gradphi, 
+			vector < adept::adouble > &normal) const;
   /** To be Added */
   void JacobianSur1D(const vector < vector < double > > &vt, const unsigned &ig,
                      double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
@@ -128,7 +131,11 @@ public:
 				  
   void (elem_type::*Jacobian_sur_ptr)(const vector < vector < double > > &vt, const unsigned &ig,
                                       double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
-  
+      
+  void (elem_type::*Jacobian_sur_AD_ptr)(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
+					 adept::adouble &Weight, vector < adept::adouble > &gradphi, 
+					 vector < adept::adouble > &normal) const;
+				      
 private:
   
   // member data

@@ -414,6 +414,7 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
     GaussPoints=GaussPointsCube[gauss_order];
   } else if (!strcmp(solid,"wedge")) { //WEDGE
     Jacobian_ptr=&elem_type::Jacobian3D;
+    Jacobian_AD_ptr=&elem_type::Jacobian3D_AD;
          
     ncf_[0]=6;
     ncf_[1]=15;
@@ -453,6 +454,7 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
     GaussPoints=GaussPointsWedge[gauss_order];
   } else if (!strcmp(solid,"tet")) { //TETRAHEDRA
     Jacobian_ptr=&elem_type::Jacobian3D;
+    Jacobian_AD_ptr=&elem_type::Jacobian3D_AD;
          
     ncf_[0]=4;
     ncf_[1]=10;
@@ -489,6 +491,7 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
     Jacobian_ptr=&elem_type::Jacobian2D;
     Jacobian_AD_ptr=&elem_type::Jacobian2D_AD;
     Jacobian_sur_ptr=&elem_type::JacobianSur2D;
+    Jacobian_sur_AD_ptr=&elem_type::JacobianSur2D_AD;
     ncf_[0]=4;
     ncf_[1]=8;
     ncf_[2]=9;
@@ -546,7 +549,9 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
     GaussPoints=GaussPointsSquare[gauss_order];
   } else if (!strcmp(solid,"tri")) { //TRIANGLE
     Jacobian_ptr=&elem_type::Jacobian2D;
+    Jacobian_AD_ptr=&elem_type::Jacobian2D_AD;
     Jacobian_sur_ptr=&elem_type::JacobianSur2D;
+    Jacobian_sur_AD_ptr=&elem_type::JacobianSur2D_AD;
     
     ncf_[0]=3;
     ncf_[1]=6;
@@ -898,6 +903,55 @@ void elem_type::JacobianSur2D(const vector < vector < double > > &vt, const unsi
      *other_f=*fi;
    }
 }
+
+
+
+
+void elem_type::JacobianSur2D_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
+				 adept::adouble &Weight, vector < adept::adouble > &gradphi, 
+				 vector < adept::adouble > &normal) const {
+
+  adept::adouble Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
+ 
+  const double *dfx=dphidxi[ig];
+  const double *dfy=dphideta[ig];
+  
+  for(int inode=0; inode<nc_; inode++,dfx++,dfy++){       
+    Jac[0][0] += (*dfx)*vt[0][inode];
+    Jac[1][0] += (*dfx)*vt[1][inode];
+    Jac[2][0] += (*dfx)*vt[2][inode];
+    
+    Jac[0][1] += (*dfy)*vt[0][inode];
+    Jac[1][1] += (*dfy)*vt[1][inode];
+    Jac[2][1] += (*dfy)*vt[2][inode];
+  }
+    
+    //   normal module
+  adept::adouble nx = Jac[1][0]*Jac[2][1] - Jac[1][1]*Jac[2][0];
+  adept::adouble ny = Jac[0][1]*Jac[2][0] - Jac[2][1]*Jac[0][0]; 
+  adept::adouble nz = Jac[0][0]*Jac[1][1] - Jac[0][1]*Jac[1][0];
+  adept::adouble invModn = 1./sqrt(nx*nx + ny*ny + nz*nz);
+
+  normal[0] =  (nx)*invModn;
+  normal[1] =  (ny)*invModn;
+  normal[2] =  (nz)*invModn;
+    
+  Jac[0][2] = normal[0];
+  Jac[1][2] = normal[1];
+  Jac[2][2] = normal[2];
+    
+  //the determinant of the matrix is the area 
+  adept::adouble det=(Jac[0][0]*(Jac[1][1]*Jac[2][2]-Jac[1][2]*Jac[2][1])+
+		      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
+		      Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
+
+  Weight=det*GaussWeight[ig];
+
+  //TODO warning the surface gradient is missing!!!!!!!!!!!!!!!
+}
+
+
+
 
 //---------------------------------------------------------------------------------------------------------
 void elem_type::JacobianSur1D(const vector < vector < double > > &vt, const unsigned &ig,
