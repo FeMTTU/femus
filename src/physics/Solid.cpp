@@ -76,6 +76,10 @@ Solid::Solid(Parameter& par, const double young_module, const double poisson_coe
     _model = 4;
     _penalty = true;
   }
+   else if (!strcmp(model,"Mooney-Rivlin")) {
+    _model = 5;
+    _penalty = false;
+  }
   else {
     cout<<"Error! This solid model is not implemented "<<endl;
     exit(1);

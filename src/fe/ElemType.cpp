@@ -354,6 +354,7 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
   
   if (!strcmp(solid,"hex")) {//HEX
     Jacobian_ptr=&elem_type::Jacobian3D;
+    Jacobian_AD_ptr=&elem_type::Jacobian3D_AD;
     
     ncf_[0]=8;
     ncf_[1]=20;
@@ -846,16 +847,8 @@ void elem_type::ProlQitoQj(const mesh& mymesh,const int& iel, SparseMatrix* Proj
 void elem_type::JacobianSur2D(const vector < vector < double > > &vt, const unsigned &ig,
                               double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const {
 
-    double Jac[3][3];
+    double Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
     double JacI[3][3];
-
-    Jac[0][0] = 0.;
-    Jac[1][0] = 0.;
-    Jac[2][0] = 0.;
-    
-    Jac[0][1] = 0.;
-    Jac[1][1] = 0.;
-    Jac[2][1] = 0.;
  
 //  for(double *pt_d=Jac[0]; pt_d<Jac[0]+9; pt_d++) *pt_d=0.;
     const double *dfx=dphidxi[ig];
@@ -911,11 +904,8 @@ void elem_type::JacobianSur1D(const vector < vector < double > > &vt, const unsi
                               double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const {
 
 //      cout << "Calling 1d surface jacobian" << endl;
-  double Jac[2][2];
+  double Jac[2][2]={{0.,0.},{0.,0.}};
   double JacI[2][2];
-
-  Jac[0][0] = 0.;
-  Jac[1][0] = 0.;
 
   const double *dfeta=dphidxi[ig];
   const double *vx=&vt[0][0];
@@ -969,7 +959,7 @@ void elem_type::JacobianSur1D(const vector < vector < double > > &vt, const unsi
 //---------------------------------------------------------------------------------------------------------
 void elem_type::Jacobian3D(const vector < vector < double > > &vt, const unsigned &ig,
                            double &Weight, vector < double > &other_phi, vector < double > &gradphi) const {
-  double Jac[3][3];
+  double Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
   double JacI[3][3];
   for (double *pt_d=Jac[0]; pt_d<Jac[0]+9; pt_d++) *pt_d=0.;
   const double *dfx=dphidxi[ig];
@@ -1022,11 +1012,60 @@ void elem_type::Jacobian3D(const vector < vector < double > > &vt, const unsigne
   }
 }
 
+
+//---------------------------------------------------------------------------------------------------------
+void elem_type::Jacobian3D_AD(adept::Stack &s, const vector < vector < adept::adouble > > &vt,const unsigned &ig,
+			      adept::adouble &Weight, vector < adept::adouble > &gradphi) const{
+  
+  adept::adouble Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
+  adept::adouble JacI[3][3];
+  
+  const double *dfx=dphidxi[ig];
+  const double *dfy=dphideta[ig];
+  const double *dfz=dphidzeta[ig];
+
+  for (int inode=0; inode<nc_; inode++,dfx++,dfy++,dfz++) {
+    Jac[0][0]+=(*dfx)*vt[0][inode];
+    Jac[0][1]+=(*dfx)*vt[1][inode];
+    Jac[0][2]+=(*dfx)*vt[2][inode];
+    Jac[1][0]+=(*dfy)*vt[0][inode];
+    Jac[1][1]+=(*dfy)*vt[1][inode];
+    Jac[1][2]+=(*dfy)*vt[2][inode];
+    Jac[2][0]+=(*dfz)*vt[0][inode];
+    Jac[2][1]+=(*dfz)*vt[1][inode];
+    Jac[2][2]+=(*dfz)*vt[2][inode];
+  } 
+  adept::adouble det=(Jac[0][0]*(Jac[1][1]*Jac[2][2]-Jac[1][2]*Jac[2][1])+
+		      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
+		      Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
+
+  JacI[0][0]= (-Jac[1][2]*Jac[2][1] + Jac[1][1]*Jac[2][2])/det;
+  JacI[0][1]= ( Jac[0][2]*Jac[2][1] - Jac[0][1]*Jac[2][2])/det;
+  JacI[0][2]= (-Jac[0][2]*Jac[1][1] + Jac[0][1]*Jac[1][2])/det;
+  JacI[1][0]= ( Jac[1][2]*Jac[2][0] - Jac[1][0]*Jac[2][2])/det;
+  JacI[1][1]= (-Jac[0][2]*Jac[2][0] + Jac[0][0]*Jac[2][2])/det;
+  JacI[1][2]= ( Jac[0][2]*Jac[1][0] - Jac[0][0]*Jac[1][2])/det;
+  JacI[2][0]= (-Jac[1][1]*Jac[2][0] + Jac[1][0]*Jac[2][1])/det;
+  JacI[2][1]= ( Jac[0][1]*Jac[2][0] - Jac[0][0]*Jac[2][1])/det;
+  JacI[2][2]= (-Jac[0][1]*Jac[1][0] + Jac[0][0]*Jac[1][1])/det;
+
+  Weight=det*GaussWeight[ig];
+ 
+  dfx=dphidxi[ig];
+  dfy=dphideta[ig];
+  dfz=dphidzeta[ig];
+  for (int inode=0; inode<nc_; inode++,dfx++,dfy++,dfz++) {
+    gradphi[3*inode+0]=(*dfx)*JacI[0][0] + (*dfy)*JacI[0][1] + (*dfz)*JacI[0][2];
+    gradphi[3*inode+1]=(*dfx)*JacI[1][0] + (*dfy)*JacI[1][1] + (*dfz)*JacI[1][2];
+    gradphi[3*inode+2]=(*dfx)*JacI[2][0] + (*dfy)*JacI[2][1] + (*dfz)*JacI[2][2];
+  }
+}
+
 //---------------------------------------------------------------------------------------------------------
 void elem_type::Jacobian2D(const vector < vector < double > > &vt,const unsigned &ig,
                            double &Weight, vector < double > &other_phi, vector < double > &gradphi) const {
 
-  double Jac[2][2];
+  double Jac[2][2]={{0.,0.},{0.,0.}};
   double JacI[2][2];
   for (double *pt_d=Jac[0]; pt_d<Jac[0]+4; pt_d++) *pt_d=0.;
   const double *dfx=dphidxi[ig];
@@ -1061,14 +1100,13 @@ void elem_type::Jacobian2D(const vector < vector < double > > &vt,const unsigned
       *(gradf++)=(*dfx)*(*pt_d)+(*dfy)*(*(pt_d+1));
       pt_d+=2;
     }
-    //*(gradf++)=0.;
   }
 }
 
 
 //---------------------------------------------------------------------------------------------------------
 void elem_type::Jacobian2D_AD(adept::Stack &s, const vector < vector < adept::adouble > > &vt,const unsigned &ig,
-			      adept::adouble &Weight, vector < double > &other_phi, vector < adept::adouble > &gradphi) const {
+			      adept::adouble &Weight, vector < adept::adouble > &gradphi) const {
 			
   adept::adouble Jac[2][2]={{0,0},{0,0}};
   adept::adouble JacI[2][2];
@@ -1088,13 +1126,11 @@ void elem_type::Jacobian2D_AD(adept::Stack &s, const vector < vector < adept::ad
   JacI[1][1]= Jac[0][0]/det;
 
   Weight=det*GaussWeight[ig];
-
-  double *other_f=&other_phi[0];
-  double *fi=phi[ig];
+     
   dfx=dphidxi[ig];
   dfy=dphideta[ig];
-  for (int inode=0; inode<nc_; inode++,other_f++,fi++,dfx++,dfy++) {
-    *other_f=*fi;
+  for (int inode=0; inode<nc_; inode++,dfx++,dfy++) {
+    
     gradphi[2*inode+0]=(*dfx)*JacI[0][0] + (*dfy)*JacI[0][1];
     gradphi[2*inode+1]=(*dfx)*JacI[1][0] + (*dfy)*JacI[1][1];
     
