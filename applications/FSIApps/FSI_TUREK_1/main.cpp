@@ -93,7 +93,7 @@ int main(int argc,char **args) {
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
   if(simulation<3)
-    nm=4;
+    nm=3;
   else if(simulation<6)
     nm=2;
 
@@ -140,8 +140,8 @@ int main(int argc,char **args) {
     rhof = 100.;
     muf = 1.;
     rhos = 800;
-    ni = 0.3;
-    E = 2000000;
+    ni = 0.5;
+    E = 2200000;
   }
   
   Parameter par(Lref,Uref);
@@ -153,8 +153,11 @@ int main(int argc,char **args) {
     //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
   }
   else if(simulation < 6){	
+    //solid = Solid(par,E,ni,rhos,"Neo-Hookean");
+    //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
     //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
-    solid = Solid(par,E,ni,rhos,"Neo-Hookean-AB-Penalty"); //Allan Bower
+    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-AB-Penalty"); //Allan Bower
+    solid = Solid(par,E,ni,rhos,"Mooney-Rivlin"); 
   }
   
   //Solid solid(par,E,ni,rhos,"Linear_elastic");
@@ -228,7 +231,7 @@ int main(int argc,char **args) {
   system.AddSolutionToSytemPDE("P");
   
   // System Fluid-Structure-Interaction
-  system.AttachAssembleFunction(IncompressibleFSIAssembly);  
+  system.AttachAssembleFunction(IncompressibleFSIAssemblyAD);  
   //system.AttachAssembleFunction(AssembleMatrixResFSI);  
   
   if(simulation < 3){
