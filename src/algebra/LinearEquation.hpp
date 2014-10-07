@@ -56,6 +56,8 @@ public:
                const vector <char*> &SolName, vector <NumericVector*> *Bdc_other, 
                const unsigned &other_gridr, const unsigned &other_gridn);
   
+  void GetSparsityPatternSize();
+  
   /** To be Added */
   void DeletePde();
   

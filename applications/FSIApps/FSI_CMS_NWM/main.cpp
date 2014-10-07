@@ -42,7 +42,7 @@ int main(int argc,char **args) {
     }
   }
   else {
-    cout << "No input argument set default smoother = Gmres" << endl;
+    cout << "No input argument set default smoother = Asm" << endl;
     Asm=1;
   }
   

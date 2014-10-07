@@ -163,6 +163,9 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
   _RESC = NumericVector::build().release();
   _RESC->init(*_EPS);
   
+  
+  GetSparsityPatternSize();
+  
   const unsigned dim = _msh->GetDimension();
   int KK_UNIT_SIZE_ = pow(5,dim);
   int KK_size=KKIndex[KKIndex.size()-1u];
@@ -251,10 +254,112 @@ void LinearEquation::DeletePde() {
     delete _RESC;
   
 }
+#include "vector"
+# include "map"
+  void LinearEquation::GetSparsityPatternSize() {
+    
+    const unsigned dim = _msh->GetDimension();
+   
+    const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
+   
+    vector < vector < unsigned > > dofsVAR(_SolPdeIndex.size());
+    vector < unsigned > end_ind(_SolPdeIndex.size());
+       
+    for(int i=0;i<_SolPdeIndex.size();i++){
+      dofsVAR[i].reserve(max_size);
+      end_ind[i] = _msh->GetEndIndex(_SolType[_SolPdeIndex[i]]);
+    }
+    
+    // mesh and procs
+    unsigned nel    = _msh->GetElementNumber();
+    unsigned igrid  = _msh->GetGridNumber();
+    unsigned iproc  = _msh->processor_id();
+    int nprocs=	      _msh->n_processors();
+     
+    // *** element loop ***
+    
+    unsigned IndexStart= KKoffset[0][iproc];
+    unsigned IndexEnd  = KKoffset[KKIndex.size()-1][iproc];
+    unsigned Offset    = IndexEnd-IndexStart;
+    
+    
+    
+    int KK_UNIT_SIZE_ = pow(5,dim);
+    
+    vector < std::map < int, bool > > BlgToMe_BlgToMe(Offset);
+    std::map < int, std::map <int, bool > > NnBlgToMe_BlgToMe;
+        
+    cout<<IndexStart<<" "<<IndexEnd<<" "<<Offset<<" "<<BlgToMe_BlgToMe[0].max_size()<<endl;
+    
+    for(int iel=_msh->IS_Mts2Gmt_elem_offset[iproc]; iel < _msh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
 
-
-
-} //end namespace femus
+      unsigned kel        = _msh->IS_Mts2Gmt_elem[iel]; 
+      short unsigned kelt = _msh->el->GetElementType(kel);
+      vector < unsigned > nve(_SolPdeIndex.size());
+      for(int i=0;i<_SolPdeIndex.size();i++){
+	nve[i] = _msh->el->GetElementDofNumber(kel,end_ind[i]);
+      }
+            
+      for(int i=0; i<_SolPdeIndex.size(); i++) {
+	dofsVAR[i].resize(nve[i]);
+      }
+      
+      for(int i=0; i<_SolPdeIndex.size(); i++) {
+	unsigned ThisSolType=_SolType[_SolPdeIndex[i]];
+	for (unsigned j=0;j<nve[i];j++) {
+	  unsigned inode=(ThisSolType<3)?(_msh->el->GetElementVertexIndex(kel,j)-1u):(kel+j*nel);
+	  unsigned inode_Metis=_msh->GetMetisDof(inode,ThisSolType);
+	  dofsVAR[i][j]= GetKKDof(i,i,inode); 
+	  //std::cout<<dofsVAR[i][j]<<" ";
+	}
+      }
+      //std::cout<<std::endl;
+      for(int i=0;i<_SolPdeIndex.size();i++){
+	for(int inode=0;inode<nve[i];inode++){
+	  unsigned idof_local=dofsVAR[i][inode] - IndexStart;
+	  for(int j=0;j<_SolPdeIndex.size();j++){
+	    for(int jnode=0;jnode<nve[j];jnode++){
+	      unsigned jdof_local=dofsVAR[j][jnode] - IndexStart;
+	      if(jdof_local >= 0 && jdof_local < Offset){ //jnode belongs to iproc 
+		if(idof_local >= 0 && idof_local < Offset){ // inode belogs to iporc		  
+ 		  BlgToMe_BlgToMe[ idof_local ][ jdof_local] = 1;
+		}
+		else{
+		  NnBlgToMe_BlgToMe[dofsVAR[i][inode]][jdof_local]=1.;
+		}
+	      }
+	    } 
+	  }
+	}
+      }     
+    }
+    
+    
+    
+   NumericVector  *_sizeNBM = NumericVector::build().release();
+   _sizeNBM->init(*_EPS);
+   _sizeNBM->zero();
+    
+    for (std::map < int, std::map <int, bool > >::iterator it=NnBlgToMe_BlgToMe.begin(); it!=NnBlgToMe_BlgToMe.end(); ++it){
+      _sizeNBM->set(it->first,it->second.size());
+    }
+    _sizeNBM->close();
+    
+    
+    
+    vector < int > d_nnz(Offset);
+    vector < int > o_nnz(Offset);
+    
+        
+    
+    for(int i=0; i<Offset;i++){
+     d_nnz[i]=BlgToMe_BlgToMe[i].size();
+     o_nnz[i]=(*_sizeNBM)(IndexStart+i);
+    }
+    
+    delete _sizeNBM;
+  }
+} 
 
 
 
