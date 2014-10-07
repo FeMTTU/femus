@@ -242,7 +242,14 @@ IF(BUILD_POISSON)
     FILE(COPY           applications/Poisson/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/Poisson/input/)
 ENDIF(BUILD_POISSON)
 
+OPTION(BUILD_TEMPERATURE "Build the Temperature problem" ON)
 
+IF(BUILD_TEMPERATURE)
+       ADD_SUBDIRECTORY(applications/temperature/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/temperature/output/)
+    FILE(MAKE_DIRECTORY applications/temperature/input/)
+    FILE(COPY           applications/temperature/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/temperature/input/)
+ENDIF(BUILD_TEMPERATURE)
 ## --------------- Unit tests -------------------
 
 INCLUDE(CTest)
