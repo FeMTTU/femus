@@ -18,7 +18,8 @@
 // In these files, just like in the equation file, you need to have an EXPLICIT KNOWLEDGE 
 // of the ORDER of the UNKNOWNS
 
-
+//If for a given equation you decide to change the NUMBER of UNKNOWNS then it is a little bit of a problem
+//in the sense that you cannot do it totally automatically, you need to revisit the EQUATION and the BC/IC.
 
 
 void EqnT::ic_read(double xp[],double u_value[], double el_xm[]) {
@@ -29,8 +30,8 @@ void EqnT::ic_read(double xp[],double u_value[], double el_xm[]) {
   _mesh._domain->TransformPointToRef(xp,x_rotshift); 
 
     u_value[0] = 3.; 
-    u_value[1] = 4.;  
-    u_value[2] = 5.;
+// // //     u_value[1] = 4.;  
+// // //     u_value[2] = 5.;
 
   delete[] x_rotshift;
   
@@ -66,16 +67,16 @@ void EqnT::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
 
   bc_flag[0]=0;
-  bc_flag[1]=0;  
-  bc_flag[2]=0;
+// // //   bc_flag[1]=0;  
+// // //   bc_flag[2]=0;
 
   }
 
  if ( (le[0]-lb[0])  - (x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll)  { //right of the RefBox
 
    bc_flag[0]=0;
-   bc_flag[1]=0; 
-   bc_flag[2]=0;
+// // //    bc_flag[1]=0; 
+// // //    bc_flag[2]=0;
    
    }
 

@@ -116,11 +116,12 @@
 //once you associate one quantity in the internal map of an equation, then it is immediately to be associated to that equation,
 //   so this operation of set_eqn could be done right away in the moment when you put the quantity in the equation
  
-std::vector<Quantity*> InternalVect_Temp(3); 
+// // // std::vector<Quantity*> InternalVect_Temp(3); 
+std::vector<Quantity*> InternalVect_Temp(1); 
 
 InternalVect_Temp[0] = &temperature;               temperature.SetPosInAssocEqn(0);
-InternalVect_Temp[1] = &temperature2;              temperature2.SetPosInAssocEqn(1);
-InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn(2);
+// InternalVect_Temp[1] = &temperature2;              temperature2.SetPosInAssocEqn(1);
+// InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn(2);
 
   EqnT* eqnT = new EqnT(InternalVect_Temp,equations_map);
   equations_map.set_eqs(eqnT);  
@@ -129,8 +130,8 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
     eqnT->_Dir_pen_fl = 0;  //no penalty BC
 
         temperature.set_eqn(eqnT);
-        temperature2.set_eqn(eqnT);
-        temperature3.set_eqn(eqnT);
+//         temperature2.set_eqn(eqnT);
+//         temperature3.set_eqn(eqnT);
 
 //================================ 
 //========= End add EQUATIONS  and ========
@@ -145,7 +146,8 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
   equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
   equations_map.TransientSetup();  // reset the initial state (if restart) and print the Case
 
-  phys.transient_loopPlusJ(equations_map);
+  equations_map.TransientLoop();
+//   phys.transient_loopPlusJ(equations_map);
 
 // at this point, the run has been completed 
   files.PrintRunForRestart(DEFAULT_LAST_RUN);/*(iproc==0)*/  //============= prepare default for next restart ==========  

@@ -116,19 +116,19 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     Tempold._val_dofs = new double[Tempold._dim*Tempold._ndof[vb]];
     Tempold._val_g    = new double[Tempold._dim];
 
-//=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    QuantityLocal Temp2(currgp,currelem);
-    Temp2._qtyptr   = _QtyInternalVector[1]; 
-    Temp2.VectWithQtyFillBasic();
-    Temp2._val_dofs = new double[Temp2._dim*Temp2._ndof[vb]];
-    Temp2._val_g    = new double[Temp2._dim];
-
-//=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    QuantityLocal Temp3(currgp,currelem);
-    Temp3._qtyptr   = _QtyInternalVector[2]; 
-    Temp3.VectWithQtyFillBasic();
-    Temp3._val_dofs = new double[Temp3._dim*Temp3._ndof[vb]];
-    Temp3._val_g    = new double[Temp3._dim];
+// //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
+//     QuantityLocal Temp2(currgp,currelem);
+//     Temp2._qtyptr   = _QtyInternalVector[1]; 
+//     Temp2.VectWithQtyFillBasic();
+//     Temp2._val_dofs = new double[Temp2._dim*Temp2._ndof[vb]];
+//     Temp2._val_g    = new double[Temp2._dim];
+// 
+// //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
+//     QuantityLocal Temp3(currgp,currelem);
+//     Temp3._qtyptr   = _QtyInternalVector[2]; 
+//     Temp3.VectWithQtyFillBasic();
+//     Temp3._val_dofs = new double[Temp3._dim*Temp3._ndof[vb]];
+//     Temp3._val_g    = new double[Temp3._dim];
     
     
     //=========EXTERNAL QUANTITIES (couplings) =====
@@ -195,8 +195,8 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     currelem.GetElDofsBc(vb,Level);
 
   Tempold.GetElDofsVect(vb,Level);
-    Temp2.GetElDofsVect(vb,Level);
-    Temp3.GetElDofsVect(vb,Level);
+//     Temp2.GetElDofsVect(vb,Level);
+//     Temp3.GetElDofsVect(vb,Level);
     
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs[vb]); //only the Qtyzero Part is modified!
 
@@ -231,8 +231,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //======= end of the "COMMON SHAPE PART"==================
 
  	Tempold.val_g(vb); 
- 	  Temp2.val_g(vb); 
- 	  Temp3.val_g(vb); 
+//  	  Temp2.val_g(vb); 
+//  	  Temp3.val_g(vb); 
 	   
 	   // always remember to get the dofs for the variables you use!
            // The point is that you fill the dofs with different functions...
@@ -242,56 +242,56 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
       for (uint i=0; i < Tempold._ndof[vb]/*the maximum number is for biquadratic*/; i++)     {
 
         const double phii_g   = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][i];
-        const double phii_gLL = currgp._phi_ndsQLVB_g[vb][Temp2._FEord][i];
-        const double phii_gKK = currgp._phi_ndsQLVB_g[vb][Temp3._FEord][i];
+//         const double phii_gLL = currgp._phi_ndsQLVB_g[vb][Temp2._FEord][i];
+//         const double phii_gKK = currgp._phi_ndsQLVB_g[vb][Temp3._FEord][i];
 
         for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][i+idim*Tempold._ndof[vb]];
 
 //=========== FIRST ROW ===============
         currelem._FeM[vb](i) +=      
            currelem._bc_eldofs[vb][i]*dtxJxW_g*( 
-                0.07*phii_g
+                7*phii_g
 	  )
 	   + (1-currelem._bc_eldofs[vb][i])*detb*(Tempold._val_dofs[i]);
         
         currelem._KeM[vb](i,i) +=  (1-currelem._bc_eldofs[vb][i])*detb;
 
-//========= SECOND ROW =====================
-	 int ip1 = i + Tempold._ndof[vb]; 
-	 
-	if (i < _AbstractFE[ Temp2._FEord ]->_ndof[vb]) { 
-	 currelem._FeM[vb](ip1) +=      
-           currelem._bc_eldofs[vb][ip1]*dtxJxW_g*( 
-                0.07*phii_gLL
-	  )
-	   + (1-currelem._bc_eldofs[vb][ip1])*detb*(Temp2._val_dofs[i]);
-        
-         currelem._KeM[vb](ip1,ip1) +=  (1-currelem._bc_eldofs[vb][ip1])*detb;
-	}
-	
-//======= THIRD ROW ===================================
-	 int ip2 = i + Tempold._ndof[vb] + Temp2._ndof[vb];
-	 
-	if (i < _AbstractFE[ Temp3._FEord ]->_ndof[vb]) { 
-           currelem._FeM[vb](ip2) +=      
-           currelem._bc_eldofs[vb][ip2]*dtxJxW_g*( 
-                0.07*phii_gKK
-	     )
-	   + (1-currelem._bc_eldofs[vb][ip2])*detb*(Temp3._val_dofs[i]);
-        
-        currelem._KeM[vb](ip2,ip2) +=  (1-currelem._bc_eldofs[vb][ip2])*detb;
-	}
+// // // //========= SECOND ROW =====================
+// // // 	 int ip1 = i + Tempold._ndof[vb]; 
+// // // 	 
+// // // 	if (i < _AbstractFE[ Temp2._FEord ]->_ndof[vb]) { 
+// // // 	 currelem._FeM[vb](ip1) +=      
+// // //            currelem._bc_eldofs[vb][ip1]*dtxJxW_g*( 
+// // //                 0.07*phii_gLL
+// // // 	  )
+// // // 	   + (1-currelem._bc_eldofs[vb][ip1])*detb*(Temp2._val_dofs[i]);
+// // //         
+// // //          currelem._KeM[vb](ip1,ip1) +=  (1-currelem._bc_eldofs[vb][ip1])*detb;
+// // // 	}
+// // // 	
+// // // //======= THIRD ROW ===================================
+// // // 	 int ip2 = i + Tempold._ndof[vb] + Temp2._ndof[vb];
+// // // 	 
+// // // 	if (i < _AbstractFE[ Temp3._FEord ]->_ndof[vb]) { 
+// // //            currelem._FeM[vb](ip2) +=      
+// // //            currelem._bc_eldofs[vb][ip2]*dtxJxW_g*( 
+// // //                 0.07*phii_gKK
+// // // 	     )
+// // // 	   + (1-currelem._bc_eldofs[vb][ip2])*detb*(Temp3._val_dofs[i]);
+// // //         
+// // //         currelem._KeM[vb](ip2,ip2) +=  (1-currelem._bc_eldofs[vb][ip2])*detb;
+// // // 	}
 	
 	 // Matrix Assemblying ---------------------------
         for (uint j=0; j<Tempold._ndof[vb]; j++) {
           double phij_g   = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][j];
-          double phij_gLL = currgp._phi_ndsQLVB_g[vb][Temp2._FEord][j];
-          double phij_gKK = currgp._phi_ndsQLVB_g[vb][Temp3._FEord][j];
+//           double phij_gLL = currgp._phi_ndsQLVB_g[vb][Temp2._FEord][j];
+//           double phij_gKK = currgp._phi_ndsQLVB_g[vb][Temp3._FEord][j];
 	  
         for (uint idim = 0; idim < space_dim; idim++)   {
 	  dphijdx_g  [idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][j+idim*Tempold._ndof[vb]]; 
-	  dphijdx_gLL[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Temp2._FEord]  [j+idim*Temp2._ndof[vb]]; 
-	  dphijdx_gKK[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Temp3._FEord]  [j+idim*Temp3._ndof[vb]]; 
+// // // 	  dphijdx_gLL[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Temp2._FEord]  [j+idim*Temp2._ndof[vb]]; 
+// // // 	  dphijdx_gKK[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Temp3._FEord]  [j+idim*Temp3._ndof[vb]]; 
           }
 	  
 	  
@@ -301,8 +301,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 
 	    int ip1 = i + Tempold._ndof[vb];
 	    int jp1 = j + Tempold._ndof[vb];
-	    int ip2 = i + Tempold._ndof[vb] + Temp2._ndof[vb];
-	    int jp2 = j + Tempold._ndof[vb] + Temp2._ndof[vb];
+// // // 	    int ip2 = i + Tempold._ndof[vb] + Temp2._ndof[vb];
+// // // 	    int jp2 = j + Tempold._ndof[vb] + Temp2._ndof[vb];
 
  
 //============ FIRST ROW state  delta T ===============
@@ -312,30 +312,30 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
              Lap_g  
             );
 
-//=========== SECOND ROW  =============
-//===== DIAGONAL ===========================
- 	if (i < _AbstractFE[ Temp2._FEord ]->_ndof[vb])  { 
-  	if (j < _AbstractFE[ Temp2._FEord ]->_ndof[vb]) { 
-       currelem._KeM[vb](ip1,jp1) +=        
-            currelem._bc_eldofs[vb][ip1]*
-            dtxJxW_g*( 
-              Lap_gLL
-            ); 
-	  }
-	}
-//============= THIRD ROW  =============
-//======= DIAGONAL ==================
-	if (i < _AbstractFE[ Temp3._FEord ]->_ndof[vb])  { 
-  	if (j < _AbstractFE[ Temp3._FEord ]->_ndof[vb]) { 
-          currelem._KeM[vb](ip2,jp2) +=        
-            currelem._bc_eldofs[vb][ip2]*
-              dtxJxW_g*( 
-              phij_gKK*phii_gKK
-            + Lap_gKK
-               
-            ); 
-	  }
-	}
+// // // //=========== SECOND ROW  =============
+// // // //===== DIAGONAL ===========================
+// // //  	if (i < _AbstractFE[ Temp2._FEord ]->_ndof[vb])  { 
+// // //   	if (j < _AbstractFE[ Temp2._FEord ]->_ndof[vb]) { 
+// // //        currelem._KeM[vb](ip1,jp1) +=        
+// // //             currelem._bc_eldofs[vb][ip1]*
+// // //             dtxJxW_g*( 
+// // //               Lap_gLL
+// // //             ); 
+// // // 	  }
+// // // 	}
+// // // //============= THIRD ROW  =============
+// // // //======= DIAGONAL ==================
+// // // 	if (i < _AbstractFE[ Temp3._FEord ]->_ndof[vb])  { 
+// // //   	if (j < _AbstractFE[ Temp3._FEord ]->_ndof[vb]) { 
+// // //           currelem._KeM[vb](ip2,jp2) +=        
+// // //             currelem._bc_eldofs[vb][ip2]*
+// // //               dtxJxW_g*( 
+// // //               phij_gKK*phii_gKK
+// // //             + Lap_gKK
+// // //                
+// // //             ); 
+// // // 	  }
+// // // 	}
 	
 	
 	    
@@ -367,8 +367,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
       currelem.GetElDofsBc(vb,Level);
       
        Tempold.GetElDofsVect(vb,Level);
-         Temp2.GetElDofsVect(vb,Level);
-         Temp3.GetElDofsVect(vb,Level);
+// // //          Temp2.GetElDofsVect(vb,Level);
+// // //          Temp3.GetElDofsVect(vb,Level);
 
      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs[vb]); //only the Quadratic Part is modified!
   
@@ -418,15 +418,15 @@ int el_Neum_flag=0;
    	const double phii_g =  currgp._phi_ndsQLVB_g[vb][Tempold._FEord][i]; 
 	
        currelem._FeM[vb](i) +=
-          currelem._bc_eldofs[vb][i]*
+          0.*(currelem._bc_eldofs[vb][i]*
          el_Neum_flag*dtxJxW_g*(-QfluxDn_g)*phii_g    // beware of the sign  //this integral goes in the first equation
-	 + el_penalty*dtxJxW_g*Tempold._val_g[0]*phii_g  //clearly, if you continue using bc=0 for setting nodal Dirichlet, this must go outside
+	 + el_penalty*dtxJxW_g*Tempold._val_g[0]*phii_g)  //clearly, if you continue using bc=0 for setting nodal Dirichlet, this must go outside
 	 ; 
 	 
          if (_Dir_pen_fl == 1) {
             for (uint j=0; j<Tempold._ndof[vb]; j++) {
                double phij_g = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][j];
-	       currelem._KeM[vb](i,j) += el_penalty*dtxJxW_g*phij_g*phii_g;
+	       currelem._KeM[vb](i,j) += 0.*el_penalty*dtxJxW_g*phij_g*phii_g;
 	    } 
           }
 
@@ -436,8 +436,8 @@ int el_Neum_flag=0;
     }
         // end BDRYelement gaussian integration loop
         
-        _A[Level]->add_matrix(currelem._KeM[vb],currelem._el_dof_indices[vb]);
-        _b[Level]->add_vector(currelem._FeM[vb],currelem._el_dof_indices[vb]);
+         _A[Level]->add_matrix(currelem._KeM[vb],currelem._el_dof_indices[vb]);
+         _b[Level]->add_vector(currelem._FeM[vb],currelem._el_dof_indices[vb]);
    
   }
       // end of BDRYelement loop
@@ -448,8 +448,8 @@ else {   std::cout << " No line integrals yet... " << std::endl; abort();}
 
  
 //=========== cleaning stage ==============
-  delete []  Temp3._val_g;    delete []  Temp3._val_dofs;
-  delete []  Temp2._val_g;    delete []  Temp2._val_dofs;
+// // //   delete []  Temp3._val_g;    delete []  Temp3._val_dofs;
+// // //   delete []  Temp2._val_g;    delete []  Temp2._val_dofs;
   delete []  Tempold._val_g;    delete []  Tempold._val_dofs;
   delete []  xyz._val_g;        delete []  xyz._val_dofs;
 
@@ -471,77 +471,6 @@ else {   std::cout << " No line integrals yet... " << std::endl; abort();}
 }
 
 
-//======================
-      //TODO here I have to put the right offset back
-     //This function must receive a BOUNDARY ELEMENT according to the common "FEMuS OFFSET NUMERATION LevxSubd",
-     //and it must yield the VOLUME ELEMENT NUMBER again according to the common "FEMuS OFFSET NUMERATION LevxSubd",
-     //so that it has embedded the information of "BELONGING TO SOME GIVEN SUBDOMAIN"
-     //We start from a Boundary element belonging to some subdomain, and we want to get the CORRESPONDING VOLUME ELEMENT NUMBER,
-     //which is the volume element number IN THE "FEMuS OFFSET NUMERATION LevxSubd" NUMERATION,
-     //so that once you have it you already know to which processor you belong!
-     // Now this vol_iel that we have is already ok, because it is in the ABSOLUTE FEMuS VOLUME ELEMENT ORDERING
-     // Actually, in the mesh file generated by GenCase we never wrote so far the list of numbers of the elements,
-     // we only needed to write the offsets,
-     //then we reconstruct the numbering later,
-     //then we reassociate that numbering to the connectivity.
-     //It is like the connectivities were "orphan" of their respective numbers, but actually the connectivities 
-     //were printed exactly in the new Femus ordering,
-     //(as a matter of fact, the FEMuS mesh file forgets about the libmesh ordering but only considers the femus one),
-     //so actually their order INTRINSICALLY GIVES the Femus ordering.
-     
-     //Now there is another story: the _el_bdry_to_vol returns an element number in the 
-     // Femus ABSOLUTE Element numbering.
-     // But, the ABSOLUTE element numbering is used to pick the CONNECTIVITIES.
-     //To go from the ABSOLUTE to the RELATIVE Femus element numbering,
-     //you have to do like this:
-     // first go from the RELATIVE boundary to the ABSOLUTE boundary
-     //then from the absolute boundary you get the ABSOLUTE VOLUME element number
-     //finally, from the ABSOLUTE VOLUME YOU WANT TO GET THE DofObject
-     //TODO the thing that does not seem very nice to me is that 
-     //there is an _el_bdry_to_vol map for every LEVEL, 
-     //but the elements are NOT numbered by level, but according to
-     //the ABSOLUTE element numbering
-     
-      
-      //this iel_femus is ABSOLUTE, but PER LEVEL
-     // the following is ABSOLUTE, not even per level, COMPLETELY ABSOLUTE
-     //maybe it would be better to have it absolute but per level
-//======================
-      
-      
-//======================
-// Now the dof indices on the boundary must match with the 
-//dofs on the volume
-//If with constant elements you do not have any dof on the boundary,
-//then you have to think like this:
-//What is the meaning of ENFORCING a BOUNDARY CONDITION VALUE?
-//The meaning is that you enforce the TRACE of the VOLUME SHAPE FUNCTIONS.
-//Then, of course, enforcing the TRACE means enforcing the VOLUME DOF, for constant FE.
-//With nodes on the boundary, you are enforcing the DOF ITSELF, because 
-//among all the nodes there are some which are ONLY BOUNDARY NODES.
-//Again, enforcing those boundary nodes can be seen as a form of ENFORCING the TRACE of the 
-//VOLUME SHAPE FUNCTIONS associated to those BOUNDARY NODES.
-//In fact, you enforce the DOF values so that you "stretch" your TRACE at the boundary.
-
-//Now, the point here is that we have a VOLUME DOF, iel, associated to the CONSTANT FE,
-//which may not belong to the current row actually
-//Wait, so, do we need to have the VOLUME iel in the list of BOUNDARY DOF INDICES?
-//"Boundary dof indices" are the 
-// "dof_indices that are involved in considering the current BOUNDARY ELEMENT"
-//DOF_INDICES means "ROWS and COLUMNS" of the matrix
-
-//I dont care if i am in a BOUNDARY INTEGRAL and the dofs I involve
-//are not "boundary dofs" strictly speaking...
-//I am only interested in INVOLVING ALL THE DOFS THAT ARE INVOLVED .
-//Now, I need a map that for every boundary element
-//gives me the corresponding VOLUME element in the mesh.
-//For every volume element,  i can give you the children, which can be one or two...
-//for every boundary element, there is only one father,
-//so let us do a simple map that goes from CHILDREN to FATHER.
-//That is not gonna be in terms of DOF but in terms of MESH.
-//So we go from BOUNDARY iel to VOLUME iel.
-//We need to do this in the Gencase because it is there
-//where we can use the Libmesh functions
 
 
 
@@ -758,156 +687,3 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
   return J;  
   
 }
-
-
-
-	 //on the other hand consider that the penalty term does not have to appear whenever we are inside the domain
-//the problem is that being inside the domain doesnt mean being Dirichlet, but here bc=0 may mean either being inside the domain
-//or being a Dirichlet node. We want to put the penalty term where bc=0,but not inside the domain!!!
-//so it takes a flag for setting dirichlet
-//a flag for setting that we are inside the domain...no,but we already know that we are on the boundary, because
-//the problem is that some nodes are BOTH VOLUME AND BOUNDARY. Or better, the SOME VOLUME NODES are also BOUNDARY NODES...
-//no no
-
-
- //this should be removed I think: yes it should,
- //I mean its useless. With the PENALTY APPROACH you dont have a flag 0-1, but 0-\infty!
- //therefore, you only have to distinguish two types of elements:
- // - the ELEMENTS in which penalty=\infty, where the Dirichlet integral dominates over everything
- // - the ELEMENTS with penalty=0, for which we know that bc=1 so the bc_alldofs in front is not needed!
- //in the first ones the Dirichlet integral, AND ONLY IT,
- //in the second ones the Neumann integral, TOGETHER WITH THE REST OF THE EQUATION
- //instead in the NODAL DIRICHLET BCs, Neumann is still ELEMENTAL, so we must implement it 
- //with Neum_flag, NOT WITH bc_alldofs again!
- //in conclusion, bc_alldofs must be eliminated FOREVER, because it's NODAL, and no nodal thing must be used for the boundary INTEGRALS!
- //what remains is Neum_flag when you dont use penalty
- //Well,actually we HAVE to use bc_alldofs[i] in case of NODAL DIRICHLET. In fact, in that case
- //ALL THE ROWS OF THE LINEAR SYSTEM must be multiplied by bc_alldofs, because
- // the bc_qldof flag means "in this row we are putting or not a Dirichlet nodal value"
- // instead, el_Neum_flag means "For the ELEMENT we consider we must compute the integral"
-//                                  (and this computation will involve more than one row, so we cannot isolate the rows)
-//clearly, this situation creates a little mismatch, because it may happen
-//that the nodal bc-s are 1-1-0,
-//but the integral should be computed over ALL the element
-//it seems like you have to interpolate with three functions but you stop the sum to 2 instead.
-//The missing term should appear in equation "i" in some column "j", but equation "i" in the nodal case
-//has all zero except 1 on the diagonal
-//Removing that node corresponds to TRUNCATING the INTERPOLATION of the SHAPE FUNCTIONS (i index) at that gauss point.
-//That doesnt give any problem because the "coefficient that doesn't multiply anything" would have multiplied 
-// a zero, so no fear!
-	 
-	 
-	 
-	 
-	 
-	 
-	 //PAY ATTENTION here because there may be a slight problem if some errors in the update of Tempold._val_g are there,
-//like it happened with p_old for pressure in NS, which suggested us to use a FUNCTION instead of the previous value
-
-//el_Neum_flag and el_penalty are clearly ALTERNATIVE: 
-// 	 el_Neum_flag == 1 el_penalty == 0
-// 	 el_Neum_flag == 0 el_penalty == 10e20
-//This means that you shouldnt need multiplying by el_Neum_flag in the Neumann integral.
-//Well actually I would like to keep some symmetry...
-//In practice, the basis is writing the general equation... Then the issue is enforcing Dirichlet.
-//In the NODAL case it is bc_alldofs that rules.
-//In the PENALTY case it is el_penalty that rules
-	//So, in both cases computing  el_Neum_flag is useless
-	 //in the nodal case, el_Neum_flag is 1 when bc is 1
-//You may want to use el_Neum_flag to avoid adding the small Neum integral to the 10e20 row, 
-//if you're very fond of symmetry...
-//yes, it is a minor thing but it is harmless
-//well, actually it might be also good when the numbers of the heat flux are very high...
-//So we'll leave it, it looks as stabilyzing...
-
-// T' should be equal to -T_0
-//The point is that T' is of course homogeneous at the boundary, by definition.
-//The part that takes into account the boundary conditions is only T_0:
-//now try to set the bc free for T': in this case you get exactly T' = -T_0;
-// but this is not what you should get.
-//Of course, if you have different boundary conditions for T' and T_0,
-//they can never be equal...
-//With the magnetic field we didnt have b' = - B_e
-//now try to solve for different T_0 (change the equation, put the laplacian, get sthg else...)
-//is it true that different T_0 of the SAME boundary conditions lead to the same solution T' + T_0 ?
-//Given different lifting functions of the same boudnarty conditions,
-//what is the condition sucj that we do not depend on the particular lifting function?
-// For the magnetic field we had div B = 0, and we claimed that in that case 
-//the final sum was the same
-//if we had div B != 0, the final result in terms of u and p was different
-//maybe that case was particular only for Hartmann, which is a linear, simplified, MHD problem?
-
-//our previous claim was: the NS + MHD operators where in such a form that their action 
-// on various B_e was leading to results that were only dependent on the boundary conditions.
-// We should check this thing more THEORETICALLY: considering how the operators act on the 
-//decomposition b+ B_e , where B_e  is or not divergence-free.
-
-//in order to find the equivalence, i think that we have to check the OPERATOR we have.
-//if the operator is not sensible to some class of functions, or better if the action of that 
-//operator does not "filter out" the particular choice of the lifting function 
-//                     and only retain the boundary condition values,
-//then that is not a good operator for us.
-// we need a sort of "independent operator", or "operator of boundary conditions"
-//LAPLACIAN
-//LAPLACIAN + TRNSPORT
-
-// The point is: if the solution of the operator for T is unique,
-// then whatever T_0 you set you get another T', but the sum (T' + T_0) is unique.
-// And, of course, if the boundary conditions are the same, the sum (T' + T_0) is the same. 
-
-//Now with the lifting of B you ALSO needed that the lifting function was DIVERGENCE-FREE:
-// otherwise, you were getting different solutions for (u,p).
-//But, in this case you dont have any particular constraint on T_0
-
-//For the temperature, you may say that if the solution of the state equations is unique
-//for a given boundary condition, then whatever T_0 you get, the sum T' + T_0 is unique.
-
-// Numerically speaking, the only point would be to be sure that the matrix is diagonal dominant
-// (coming from coercivity) for every lifting function: clearly we know that coercivity 
-// is fulfilled only for certain lifting functions, for a certain epsilon value wrt the viscosity.
-
-// PROBLEMA: Boundary conditions for the STATE, ADJOINT AND CONTROL variables
-// Secondo la mia teoria, sia per T' sia per la sua aggiunta le condizioni al boundary devono essere FISSE.
-
-// Come e' giusto per un controllo d boundary, l'effetto prevalente deve avvenire vicino al boundary. 
-// Quindi il controllo di boundary agisce sul boundary del dominio, pertanto non puo' spingere molto all'interno.
-
-//$$$$$$$$$$$$$$$$ Come posso aumentare la spinta all'interno?
-
-//$$$$$$$$$$$$$ Il ruolo delle boundary conditions: slego T_0 al boundary, pero' le altre non sono slegate 
-// al boundary. Non slegherei T', magari proverei a slegare l'aggiunta, 
-// che da la spinta al controllo, che da la spinta allo stato
-
-//$$$$$$$$$$$$$$$ Provare a cambiare con il target, o con la condizione iniziale di Stato/Controllo
-
-//$$$$$$$$$$ E' chiaro che il controllo di boundary non e' cosi' efficace come il controllo distribuito
-
-//CONDIZIONI di NEUMANN con il metodo del lifting: come si fanno a mettere?
-//Ad esempio nella parte non controllata vorrei poter mettere dei pezzi adiabatici.
-//Allora qual e' il punto: 
-//    l'imposizione del controllo e l'imposizione della condizione di neumann
-//    avverrebbero nello stesso modo,
-//    cioe' non fissando il valore in quel nodo.
-//    Allora come fa il sistema a capire se un pezzo di boundary della lifting function
-//    e' un pezzo di CONTROLLO o un pezzo di NEUMANN OMOGENEO ?
-
-// Aspetta: se tu nell'equazione della temperatura stai lasciando tutto libero e 
-// non stai fissando l'integrale di boundary, allora stai fissando tutto uguale a zero...
-//Poi pero' il pezzo dell'integrale di boundary per T_0 va a finire nell'equazione del controllo 
-// quando fai la variazione delta T_0, quindi nell'equazione del controllo avresti 
-//   l'integrale di boundary dell'aggiunta...
-// e allora la domanda e': Qual e' la condizione di Neumann dell'aggiunta?
-
-
-
-//Poi, come si fa a tenere la temperatura positiva? Un algoritmo serio dovrebbe evitare temperature negative...
-// Se pero' l'equazione e' adimensionale, i valori adimensionali possono venire anche negativi, 
-// dipende da come hai adimensionalizzato: l'importante e' che poi i valori finali siano positivi
-// SE IO AGGIUNGO AI VINCOLI ANCHE UN VINCOLO DI DISUGUAGLIANZA DICENDO CHE LA TEMPERATURA SIA POSITIVA?
-
-
-
-// Succede questo (quasi paradossale): se la regione di controllo e' vicino al boundary control,
-// converge fino ad alpha massimo molto piccolo.
-// Se la regione di controllo e' lontana dal boundary control, allora converge fino ad un alpha max molto piu' grande.
-
