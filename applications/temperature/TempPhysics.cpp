@@ -142,8 +142,7 @@ void TempPhysics::set_nondimgroups() {
 
 //=====functional evaluations=======
 
-#if T_EQUATIONS==1
-		EqnT* eqnT = static_cast<EqnT*>(eqmap_in.get_eqs("Eqn_T"));
+	EqnT* eqnT = static_cast<EqnT*>(eqmap_in.get_eqs("Eqn_T"));
 
 		
      double J = 0.;
@@ -156,7 +155,6 @@ J = eqnT->ComputeNormControl (0, eqmap_in._mesh._NoLevels - 1,1 );
 //====== Update bc ==============
 //eqnT->FillBcAfterAllocation();  //TODO TODO TODO what was this function?
 //====== Update bc ==============
-#endif
 
 
     }   // end time loop
