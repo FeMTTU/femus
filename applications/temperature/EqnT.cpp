@@ -110,10 +110,6 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
 //========== PROCESSOR INDEX
   const uint myproc = _iproc;
 
-//==========FLAG FOR STATIONARITY OR NOT
-  const double    dt = _eqnmap._timeloop._timemap.get("dt");
-  const uint Nonstat = myphys->_physrtmap.get("NonStatTEMP");
-  
 //========= BCHandling =========
   const double penalty_val = _mesh._mesh_rtmap.get("penalty_val");    
 
@@ -170,6 +166,10 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
   //==== AUXILIARY ==============
     double* dphijdx_g = new double[space_dim];
     double* dphiidx_g = new double[space_dim];
+    double* dphijdx_gLL = new double[space_dim];
+    double* dphiidx_gLL = new double[space_dim];
+    double* dphijdx_gKK = new double[space_dim];
+    double* dphiidx_gKK = new double[space_dim];
    //-----Nonhomogeneous Neumann------
  // Qflux = - k grad(T) by definition
 //  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
@@ -209,7 +209,9 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     currelem.GetElDofsBc(vb,Level);
 
   Tempold.GetElDofsVect(vb,Level);
-     
+  Temp2.GetElDofsVect(vb,Level);
+  Temp3.GetElDofsVect(vb,Level);
+    
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs[vb]); //only the Qtyzero Part is modified!
 
 // ===============      
@@ -235,7 +237,7 @@ for (uint fe = 0; fe < QL; fe++)   {
   currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp); 
 }
 	  
-const double      det = dt*currgp.JacVectVV_g(vb,xyz);
+const double      det = currgp.JacVectVV_g(vb,xyz);
 const double dtxJxW_g = det*_eqnmap._qrule._weightVB[vb][qp];
 const double     detb = det/el_ngauss;
 	  
@@ -251,137 +253,109 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
            // The point is that you fill the dofs with different functions...
            // you should need a flag to check if the dofs have been correctly filled
 
-      /// d) Local (element) assemblying energy equation
-      for (uint i=0; i < Tempold._ndof[vb]; i++)     {
+
+	  
+	  
+      for (uint i=0; i < Tempold._ndof[vb]/*the maximum number is for biquadratic*/; i++)     {
 
         const double phii_g = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][i];
+        const double phii_gLL = currgp._phi_ndsQLVB_g[vb][Temp2._FEord][i];
+        const double phii_gKK = currgp._phi_ndsQLVB_g[vb][Temp3._FEord][i];
 
         for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][i+idim*Tempold._ndof[vb]];
 
 //=========== FIRST ROW ===============
         currelem._FeM[vb](i) +=      
            currelem._bc_eldofs[vb][i]*dtxJxW_g*( 
-                Nonstat*Tempold._val_g[0]*phii_g/dt
+                Tempold._val_g[0]*phii_g
 	  )
 	   + (1-currelem._bc_eldofs[vb][i])*detb*(Tempold._val_dofs[i]);
         
         currelem._KeM[vb](i,i) +=  (1-currelem._bc_eldofs[vb][i])*detb;
 
-//========= SECOND ROW (CONTROL) =====================
-	 int ip1 = i + /* 1* */Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
+//========= SECOND ROW =====================
+	 int ip1 = i + Tempold._ndof[vb]; 
+	 
+	if (i < _AbstractFE[ Temp2._FEord ]->_ndof[vb]) { 
 	 currelem._FeM[vb](ip1) +=      
            currelem._bc_eldofs[vb][ip1]*dtxJxW_g*( 
-                Nonstat*Tempold._val_g[0]*phii_g/dt
+                Temp2._val_g[0]*phii_gLL
 	  )
 	   + (1-currelem._bc_eldofs[vb][ip1])*detb*(Temp2._val_dofs[i]);
         
          currelem._KeM[vb](ip1,ip1) +=  (1-currelem._bc_eldofs[vb][ip1])*detb;
-
-//======= THIRD ROW (ADJOINT) ===================================
-	 int ip2 = i + Tempold._ndof[vb] + Temp2._ndof[vb];   //suppose that T' T_0 T_adj have the same order
+	}
+	
+//======= THIRD ROW ===================================
+	 int ip2 = i + Tempold._ndof[vb] + Temp2._ndof[vb];
+	 
+	if (i < _AbstractFE[ Temp3._FEord ]->_ndof[vb]) { 
            currelem._FeM[vb](ip2) +=      
            currelem._bc_eldofs[vb][ip2]*dtxJxW_g*( 
-                Nonstat*Tempold._val_g[0]*phii_g/dt
+                Temp3._val_g[0]*phii_gKK
 	     )
-	   + (1-currelem._bc_eldofs[vb][ip2])*detb*(Tempold._val_dofs[i]);
+	   + (1-currelem._bc_eldofs[vb][ip2])*detb*(Temp3._val_dofs[i]);
         
         currelem._KeM[vb](ip2,ip2) +=  (1-currelem._bc_eldofs[vb][ip2])*detb;
-
-#if FOURTH_ROW==1
-	 int ip3 = i + 3 * Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
-	 
-	 if (i < _AbstractFE[T4_ord]->_ndof[vb]) { currelem._FeM[vb](ip3) +=  currelem._bc_eldofs[vb][ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[vb][T4_ord][i]) + (1-currelem._bc_eldofs[vb][ip3])*detb*1300.;
-	              currelem._KeM[vb](ip3,ip3)  += ( 1-currelem._bc_eldofs[vb][ip3] )*detb;  }
-#endif
+	}
+	
 	 // Matrix Assemblying ---------------------------
         for (uint j=0; j<Tempold._ndof[vb]; j++) {
           double phij_g = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][j];
+          double phij_gLL = currgp._phi_ndsQLVB_g[vb][Temp2._FEord][j];
+          double phij_gKK = currgp._phi_ndsQLVB_g[vb][Temp3._FEord][j];
 	  
-        for (uint idim = 0; idim < space_dim; idim++)  dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][j+idim*Tempold._ndof[vb]]; 
-           
+        for (uint idim = 0; idim < space_dim; idim++)   {
+	  dphijdx_g  [idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][j+idim*Tempold._ndof[vb]]; 
+	  dphijdx_gLL[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Temp2._FEord]  [j+idim*Temp2._ndof[vb]]; 
+	  dphijdx_gKK[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Temp3._FEord]  [j+idim*Temp3._ndof[vb]]; 
+          }
+	  
+	  
           double Lap_g   = Math::dot(dphijdx_g,dphiidx_g,space_dim);
+          double Lap_gLL   = Math::dot(dphijdx_gLL,dphiidx_gLL,space_dim);
+          double Lap_gKK   = Math::dot(dphijdx_gKK,dphiidx_gKK,space_dim);
 
 	    int ip1 = i + Tempold._ndof[vb];
 	    int jp1 = j + Tempold._ndof[vb];
-	    int ip2 = i + 2*Tempold._ndof[vb];
-	    int jp2 = j + 2*Tempold._ndof[vb];
+	    int ip2 = i + Tempold._ndof[vb] + Temp2._ndof[vb];
+	    int jp2 = j + Tempold._ndof[vb] + Temp2._ndof[vb];
 
-// 	           T     T_0     T_adj
-	    
-// 	    T      X      X       O
-	     
-// 	    T_0   
-	    
-// 	    T_adj
-	    
-	    
+ 
 //============ FIRST ROW state  delta T ===============
 //======= DIAGONAL =============================
 	   currelem._KeM[vb](i,j) +=        
             currelem._bc_eldofs[vb][i]*dtxJxW_g*( 
-              Nonstat*phij_g*phii_g/dt 
+              phij_g*phii_g 
             + IRe*IPr*Lap_g  
             );
 
-//===============================
-    //same operators for T and T_0
-	    currelem._KeM[vb](i,jp1) +=        
-            currelem._bc_eldofs[vb][i]*dtxJxW_g*(    
-              Nonstat*phij_g*phii_g/dt 
-            + IRe*IPr*Lap_g
-	    );
-
-//====================================
-	   currelem._KeM[vb](i,jp2) +=        
-            currelem._bc_eldofs[vb][i]*dtxJxW_g*( 
-                0.
-            );
-
-	    
-//============= SECOND ROW (LIFTING) delta T_0 =============
+//=========== SECOND ROW  =============
 //===== DIAGONAL ===========================
-         currelem._KeM[vb](ip1,jp1) +=        
+ 	if (i < _AbstractFE[ Temp2._FEord ]->_ndof[vb])  { 
+  	if (j < _AbstractFE[ Temp2._FEord ]->_ndof[vb]) { 
+       currelem._KeM[vb](ip1,jp1) +=        
             currelem._bc_eldofs[vb][ip1]*
             dtxJxW_g*( 
-              Nonstat*phij_g*phii_g/dt
+              phij_gLL*phii_gLL
             ); 
-//====================================
-	   currelem._KeM[vb](ip1,j) +=        
-            currelem._bc_eldofs[vb][ip1]*
-            dtxJxW_g*( 0.
-            );
-//====================================
-	   currelem._KeM[vb](ip1,jp2) +=        
-            currelem._bc_eldofs[vb][ip1]*
-             dtxJxW_g*( 
-                + IRe*IPr*Lap_g
-           );
-
-//============= THIRD ROW (ADJOINT) =============
+	  }
+	}
+//============= THIRD ROW  =============
 //======= DIAGONAL ==================
+	if (i < _AbstractFE[ Temp3._FEord ]->_ndof[vb])  { 
+  	if (j < _AbstractFE[ Temp3._FEord ]->_ndof[vb]) { 
           currelem._KeM[vb](ip2,jp2) +=        
             currelem._bc_eldofs[vb][ip2]*
               dtxJxW_g*( 
-              Nonstat*phij_g*phii_g/dt
-            + IRe*IPr*Lap_g
+              phij_gLL*phii_gKK
+            + IRe*IPr*Lap_gKK
                
             ); 
-//====================================
-	   currelem._KeM[vb](ip2,j) +=        
-            currelem._bc_eldofs[vb][ip2]*
-            dtxJxW_g*( 0.
-            );
-//====================================
-	   currelem._KeM[vb](ip2,jp1) +=        
-            currelem._bc_eldofs[vb][ip2]*
-            dtxJxW_g*( 0.
-            );
-
-#if FOURTH_ROW==1
-	 int ip3 = i + 3*Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
-// 	    int jp3 = j + 3*Tempold._ndof[vb];
-	   if (i < _AbstractFE[T4_ord]->_ndof[vb]) currelem._KeM[vb](ip3,ip3) += currelem._bc_eldofs[vb][ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[vb][ T4_ord ][/*j*/i]*currgp._phi_ndsQLVB_g[vb][ T4_ord ][i]);   
-#endif
+	  }
+	}
+	
+	
 	    
         }  //end j (col)
       }   //end i (row)
@@ -446,7 +420,7 @@ int el_Neum_flag=0;
     currgp.SetPhiElDofsFEVB_g (vb,fe,qp);
     currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp); 
   }
-        const double  det   = dt*currgp.JacVectBB_g(vb,xyz);
+        const double  det   = currgp.JacVectBB_g(vb,xyz);
         const double dtxJxW_g = det * _eqnmap._qrule._weightVB[vb][qp];
 //=======end "COMMON SHAPE PART"===================================
 
@@ -496,6 +470,15 @@ else {   std::cout << " No line integrals yet... " << std::endl; abort();}
   delete []  Temp2._val_g;    delete []  Temp2._val_dofs;
   delete []  Tempold._val_g;    delete []  Tempold._val_dofs;
   delete []  xyz._val_g;        delete []  xyz._val_dofs;
+
+  delete [] dphijdx_g;
+  delete [] dphiidx_g;
+  delete [] dphijdx_gLL;
+  delete [] dphiidx_gLL;
+  delete [] dphijdx_gKK;
+  delete [] dphiidx_gKK;
+
+
   
 #ifdef DEFAULT_PRINT_INFO
   std::cout << " Matrix and RHS assembled for equation " << _eqname

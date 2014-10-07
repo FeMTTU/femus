@@ -98,9 +98,9 @@
   // ===== QuantityMap =========================================
   QuantityMap  qty_map(phys);
 
-  Temperature temperature("Qty_Temperature",qty_map,1,0);     qty_map.set_qty(&temperature);
-  Temperature temperature2("Qty_Temperature2",qty_map,1,1);     qty_map.set_qty(&temperature2);
-  Temperature temperature3("Qty_Temperature3",qty_map,1,2);     qty_map.set_qty(&temperature3);
+  Temperature temperature("Qty_Temperature",qty_map,1,0/*biquadratic*/);     qty_map.set_qty(&temperature);
+  Temperature temperature2("Qty_Temperature2",qty_map,1,1/*linear*/);     qty_map.set_qty(&temperature2);
+  Temperature temperature3("Qty_Temperature3",qty_map,1,2/*constant*/);     qty_map.set_qty(&temperature3);
   // ===== end QuantityMap =========================================
 
   // ====== EquationsMap =================================
@@ -114,7 +114,6 @@
 //once you associate one quantity in the internal map of an equation, then it is immediately to be associated to that equation,
 //   so this operation of set_eqn could be done right away in the moment when you put the quantity in the equation
  
-#if T_EQUATIONS==1
 std::vector<Quantity*> InternalVect_Temp(3); 
 
 InternalVect_Temp[0] = &temperature;               temperature.SetPosInAssocEqn(0);
@@ -127,7 +126,6 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
         temperature.set_eqn(eqnT);
         temperature2.set_eqn(eqnT);
         temperature3.set_eqn(eqnT);
-#endif   
 
 //================================ 
 //========= End add EQUATIONS  and ========
