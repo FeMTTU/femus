@@ -152,12 +152,7 @@ J = eqnT->ComputeNormControl (0, eqmap_in._mesh._NoLevels - 1,1 );
 //=====functional evaluations =======
 
 
-//====== Update bc ==============
-//eqnT->FillBcAfterAllocation();  //TODO TODO TODO what was this function?
-//====== Update bc ==============
-
-
-    }   // end time loop
+   }   // end time loop
 
     return;
   }
