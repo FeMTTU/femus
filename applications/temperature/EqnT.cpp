@@ -130,25 +130,22 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     Tempold._val_dofs = new double[Tempold._dim*Tempold._ndof[vb]];
     Tempold._val_g    = new double[Tempold._dim];
 
-//====================================
-    QuantityLocal Tlift(currgp,currelem);
-    Tlift._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
-    Tlift.VectWithQtyFillBasic();
-    Tlift._val_dofs = new double[Tlift._dim*Tlift._ndof[vb]];
-    Tlift._val_g    = new double[Tlift._dim];
-    Tlift._grad_g   = new double*[Tlift._dim];
-    Tlift._grad_g[0]= new double[space_dim];
+//=========INTERNAL QUANTITIES (unknowns of the equation) =========     
+    QuantityLocal Temp2(currgp,currelem);
+    Temp2._qtyptr   = _QtyInternalVector[1]; 
+    Temp2.VectWithQtyFillBasic();
+    Temp2._val_dofs = new double[Temp2._dim*Temp2._ndof[vb]];
+    Temp2._val_g    = new double[Temp2._dim];
 
-//=====================================
-    QuantityLocal TAdj(currgp,currelem);
-    TAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
-    TAdj.VectWithQtyFillBasic();
-    TAdj._val_dofs = new double[TAdj._dim*TAdj._ndof[vb]];
-    TAdj._val_g    = new double[TAdj._dim];
-    TAdj._grad_g   = new double*[TAdj._dim];
-    TAdj._grad_g[0]= new double[space_dim];    
+//=========INTERNAL QUANTITIES (unknowns of the equation) =========     
+    QuantityLocal Temp3(currgp,currelem);
+    Temp3._qtyptr   = _QtyInternalVector[2]; 
+    Temp3.VectWithQtyFillBasic();
+    Temp3._val_dofs = new double[Temp3._dim*Temp3._ndof[vb]];
+    Temp3._val_g    = new double[Temp3._dim];
     
-//=========EXTERNAL QUANTITIES (couplings) =====
+    
+    //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
     QuantityLocal xyz(currgp,currelem);  //no quantity
     xyz._dim      = space_dim;
@@ -170,19 +167,6 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
   for (uint i=0; i<VB; i++)  xyz_refbox._el_average[i].resize(xyz_refbox._dim);
   //==================
 
-    QuantityLocal vel(currgp,currelem);
-    vel._qtyptr   = _eqnmap._qtymap.get_qty("Qty_Velocity"); 
-    vel.VectWithQtyFillBasic();
-    vel._val_dofs = new double[vel._dim*vel._ndof[vb]];
-    vel._val_g    = new double[vel._dim];   
-    
-//===============Tdes=====================
-    QuantityLocal Tdes(currgp,currelem);
-    Tdes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempDes"); 
-    Tdes.VectWithQtyFillBasic();
-    Tdes._val_dofs = new double[Tdes._dim*Tdes._ndof[vb]];
-    Tdes._val_g    = new double[Tdes._dim];
-
   //==== AUXILIARY ==============
     double* dphijdx_g = new double[space_dim];
     double* dphiidx_g = new double[space_dim];
@@ -194,11 +178,6 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
   //====== reference values ========================
   const double IRe = 1./myphys->_Re;
   const double IPr = 1./myphys->_Pr;
-  const double alphaT  = myphys->_physrtmap.get("alphaT");
-  const double alphaL2 = myphys->_physrtmap.get("alphaL2");
-  const double alphaH1 = myphys->_physrtmap.get("alphaH1");
-
-    int T4_ord = T4_ORD;
   
   /// b) Element  Loop over the volume (n_elem)
    const uint el_ngauss = _eqnmap._qrule._NoGaussVB[vb];
@@ -230,8 +209,6 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     currelem.GetElDofsBc(vb,Level);
 
   Tempold.GetElDofsVect(vb,Level);
-    Tlift.GetElDofsVect(vb,Level);
-     TAdj.GetElDofsVect(vb,Level);
      
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs[vb]); //only the Qtyzero Part is modified!
 
@@ -249,18 +226,6 @@ int domain_flag = myphys->ElFlagControl(xyz_refbox._el_average[vb]);
 //====================    
     
 //===== FILL the DOFS of the EXTERNAL QUANTITIES: you must assure that for every Vect the quantity is set correctly
-// for every Vect it must be clear if it belongs to an equation or not, and which equation it belongs to;
-// this is usually made clear by the related QUANTITY.
-// Now the main thing to check is the difference between Vect WITH QUANTITY and Vect WITHOUT QUANTITY.
-  // it is better to avoid using GetElDofs if the Vect is internal, only if external  
-  //Do not use GetElDofs if you want to pick an intermediate dof...
-      
-   if ( vel._eqnptr != NULL )  vel.GetElDofsVect(vb,Level);
-   else                        vel._qtyptr->FunctionDof(vb,vel,time,xyz_refbox._val_dofs);
-
-   if ( Tdes._eqnptr != NULL )  Tdes.GetElDofsVect(vb,Level);
-   else                         Tdes._qtyptr->FunctionDof(vb,Tdes,time,xyz_refbox._val_dofs);
-
 
     for (uint qp=0; qp< el_ngauss; qp++) {
 
@@ -279,10 +244,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //======= end of the "COMMON SHAPE PART"==================
 
  	Tempold.val_g(vb); 
-          Tlift.val_g(vb); 
-           TAdj.val_g(vb); 
-            vel.val_g(vb); 
-           Tdes.val_g(vb);
+ 	  Temp2.val_g(vb); 
+ 	  Temp3.val_g(vb); 
 	   
 	   // always remember to get the dofs for the variables you use!
            // The point is that you fill the dofs with different functions...
@@ -309,18 +272,16 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 	 currelem._FeM[vb](ip1) +=      
            currelem._bc_eldofs[vb][ip1]*dtxJxW_g*( 
                 Nonstat*Tempold._val_g[0]*phii_g/dt
-                     + alphaT*domain_flag*(Tdes._val_g[0])*phii_g // T_d delta T_0    /////// ADDED /////
 	  )
-	   + (1-currelem._bc_eldofs[vb][ip1])*detb*(Tlift._val_dofs[i]);
+	   + (1-currelem._bc_eldofs[vb][ip1])*detb*(Temp2._val_dofs[i]);
         
          currelem._KeM[vb](ip1,ip1) +=  (1-currelem._bc_eldofs[vb][ip1])*detb;
 
 //======= THIRD ROW (ADJOINT) ===================================
-	 int ip2 = i + 2 * Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
+	 int ip2 = i + Tempold._ndof[vb] + Temp2._ndof[vb];   //suppose that T' T_0 T_adj have the same order
            currelem._FeM[vb](ip2) +=      
            currelem._bc_eldofs[vb][ip2]*dtxJxW_g*( 
                 Nonstat*Tempold._val_g[0]*phii_g/dt
-                + alphaT*domain_flag*(Tdes._val_g[0])*phii_g // T_d delta T'
 	     )
 	   + (1-currelem._bc_eldofs[vb][ip2])*detb*(Tempold._val_dofs[i]);
         
@@ -338,9 +299,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 	  
         for (uint idim = 0; idim < space_dim; idim++)  dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][j+idim*Tempold._ndof[vb]]; 
            
-   
           double Lap_g   = Math::dot(dphijdx_g,dphiidx_g,space_dim);
-          double Advection = Math::dot(vel._val_g,dphijdx_g,space_dim);
 
 	    int ip1 = i + Tempold._ndof[vb];
 	    int jp1 = j + Tempold._ndof[vb];
@@ -361,7 +320,6 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 	   currelem._KeM[vb](i,j) +=        
             currelem._bc_eldofs[vb][i]*dtxJxW_g*( 
               Nonstat*phij_g*phii_g/dt 
-            + Advection*phii_g
             + IRe*IPr*Lap_g  
             );
 
@@ -370,7 +328,6 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 	    currelem._KeM[vb](i,jp1) +=        
             currelem._bc_eldofs[vb][i]*dtxJxW_g*(    
               Nonstat*phij_g*phii_g/dt 
-            + Advection*phii_g
             + IRe*IPr*Lap_g
 	    );
 
@@ -387,21 +344,16 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
             currelem._bc_eldofs[vb][ip1]*
             dtxJxW_g*( 
               Nonstat*phij_g*phii_g/dt
-             + alphaL2*phij_g*phii_g  //L_2 control norm
-             + alphaH1*Lap_g          //H_1 control norm
-              + alphaT*domain_flag*(phij_g)*phii_g  //T_0 delta T_0  //ADDED///////////////
             ); 
 //====================================
 	   currelem._KeM[vb](ip1,j) +=        
             currelem._bc_eldofs[vb][ip1]*
-            dtxJxW_g*( 
-                + alphaT*domain_flag*(phij_g)*phii_g  //T' delta T_0     //ADDED///////////////
+            dtxJxW_g*( 0.
             );
 //====================================
 	   currelem._KeM[vb](ip1,jp2) +=        
             currelem._bc_eldofs[vb][ip1]*
              dtxJxW_g*( 
-                 -Advection*phii_g
                 + IRe*IPr*Lap_g
            );
 
@@ -411,21 +363,18 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
             currelem._bc_eldofs[vb][ip2]*
               dtxJxW_g*( 
               Nonstat*phij_g*phii_g/dt
-            - Advection*phii_g  //minus sign
             + IRe*IPr*Lap_g
                
             ); 
 //====================================
 	   currelem._KeM[vb](ip2,j) +=        
             currelem._bc_eldofs[vb][ip2]*
-            dtxJxW_g*( 
-               + alphaT*domain_flag*(phij_g)*phii_g  //T' delta T'
+            dtxJxW_g*( 0.
             );
 //====================================
 	   currelem._KeM[vb](ip2,jp1) +=        
             currelem._bc_eldofs[vb][ip2]*
-            dtxJxW_g*( 
-               + alphaT*domain_flag*(phij_g)*phii_g  //T_0 delta T'     ///ADDED///////
+            dtxJxW_g*( 0.
             );
 
 #if FOURTH_ROW==1
@@ -462,8 +411,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
       currelem.GetElDofsBc(vb,Level);
       
        Tempold.GetElDofsVect(vb,Level);
-         Tlift.GetElDofsVect(vb,Level);
-          TAdj.GetElDofsVect(vb,Level);
+         Temp2.GetElDofsVect(vb,Level);
+         Temp3.GetElDofsVect(vb,Level);
 
      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs[vb]); //only the Quadratic Part is modified!
   
@@ -543,12 +492,10 @@ else {   std::cout << " No line integrals yet... " << std::endl; abort();}
 
  
 //=========== cleaning stage ==============
-  delete []  Tdes._val_g;    delete []  Tdes._val_dofs;
-  delete []  TAdj._val_g;    delete []  TAdj._val_dofs;
-  delete []  Tlift._val_g;    delete []  Tlift._val_dofs;
+  delete []  Temp3._val_g;    delete []  Temp3._val_dofs;
+  delete []  Temp2._val_g;    delete []  Temp2._val_dofs;
   delete []  Tempold._val_g;    delete []  Tempold._val_dofs;
   delete []  xyz._val_g;        delete []  xyz._val_dofs;
-  delete []  vel._val_g;        delete []  vel._val_dofs;
   
 #ifdef DEFAULT_PRINT_INFO
   std::cout << " Matrix and RHS assembled for equation " << _eqname

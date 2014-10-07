@@ -98,23 +98,14 @@
   // ===== QuantityMap =========================================
   QuantityMap  qty_map(phys);
 
-  Temperature temperature("Qty_Temperature",qty_map,1,FE_TEMPERATURE);     qty_map.set_qty(&temperature);
-  TempLift       templift("Qty_TempLift",qty_map,1,FE_TEMPERATURE);        qty_map.set_qty(&templift);  
-  TempAdj         tempadj("Qty_TempAdj",qty_map,1,FE_TEMPERATURE);         qty_map.set_qty(&tempadj);  
-  TempDes         tempdes("Qty_TempDes",qty_map,1,FE_TEMPERATURE);         qty_map.set_qty(&tempdes);  
-  Pressure       pressure("Qty_Pressure",qty_map,1,FE_PRESSURE);           qty_map.set_qty(&pressure);
-  Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),FE_VELOCITY);   qty_map.set_qty(&velocity);  
-
-#if FOURTH_ROW==1
-  Pressure pressure_2("Qty_Pressure_2",qty_map,1,T4_ORD);            qty_map.set_qty(&pressure_2);
-#endif 
-  
+  Temperature temperature("Qty_Temperature",qty_map,1,0);     qty_map.set_qty(&temperature);
+  Temperature temperature2("Qty_Temperature2",qty_map,1,1);     qty_map.set_qty(&temperature2);
+  Temperature temperature3("Qty_Temperature3",qty_map,1,2);     qty_map.set_qty(&temperature3);
   // ===== end QuantityMap =========================================
 
   // ====== EquationsMap =================================
   EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,qrule,time_loop);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
-  
 //===============================================
 //================== Add EQUATIONS AND ======================
 //========= associate an EQUATION to QUANTITIES ========
@@ -124,30 +115,18 @@
 //   so this operation of set_eqn could be done right away in the moment when you put the quantity in the equation
  
 #if T_EQUATIONS==1
-std::vector<Quantity*> InternalVect_Temp( 3 + FOURTH_ROW );  //of course this must be exactly equal to the following number of get_qty
-                                                             // can I do this dynamic? 
-                                                             // well, the following order is essential, because it is the same order 
-                                                             // as the BLOCKS in the MATRIX, but at least with add you can avoid setting also the SIZE explicitly.
-                                                             //The order in which you put the push_back instructions is essential and it gives you 
-                                                             //the order in the std::vector!!!
-InternalVect_Temp[0] = &temperature;       temperature.SetPosInAssocEqn(0);
-InternalVect_Temp[1] = &templift;             templift.SetPosInAssocEqn(1);
-InternalVect_Temp[2] = &tempadj;               tempadj.SetPosInAssocEqn(2);
+std::vector<Quantity*> InternalVect_Temp(3); 
 
-#if FOURTH_ROW==1
-InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
-#endif
+InternalVect_Temp[0] = &temperature;               temperature.SetPosInAssocEqn(0);
+InternalVect_Temp[1] = &temperature2;              temperature2.SetPosInAssocEqn(1);
+InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn(2);
 
   EqnT* eqnT = new EqnT(InternalVect_Temp,equations_map);
   equations_map.set_eqs(eqnT);  
 
         temperature.set_eqn(eqnT);
-           templift.set_eqn(eqnT);
-            tempadj.set_eqn(eqnT);
-   #if FOURTH_ROW==1
-         pressure_2.set_eqn(eqnT);
-   #endif
-
+        temperature2.set_eqn(eqnT);
+        temperature3.set_eqn(eqnT);
 #endif   
 
 //================================ 
