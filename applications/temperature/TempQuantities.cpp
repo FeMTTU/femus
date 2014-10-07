@@ -11,7 +11,6 @@
 #include "Box.hpp"
 
 //application
-#include "Temp_conf.hpp"
 #include "TempQuantities.hpp"
 #include "TempPhysics.hpp"
 
@@ -59,9 +58,6 @@ void Temperature::heatflux_txyz(const double /*t*/, const double* /*xyz*/, doubl
 
      qflux[0]=-2.1*0./**cos(thetaz)*/;
      qflux[1]=0./**sin(thetaz)*/;
- #if (DIMENSION==3)
-      qflux[2]=0.;
- #endif
 
   return;
   }

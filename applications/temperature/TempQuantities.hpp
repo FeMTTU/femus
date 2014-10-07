@@ -8,8 +8,6 @@
 #include "Quantity.hpp"
 #include "EquationsMap.hpp"
 
-#include "Temp_conf.hpp"
-
 using namespace femus;
 
 class Temperature : public Quantity {

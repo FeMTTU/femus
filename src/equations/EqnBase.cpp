@@ -906,9 +906,9 @@ void EqnBase::GenBc() {
     for (uint Level=0; Level <_NoLevels;Level++)   { //loop over the levels
 	
         for (uint isubd=0; isubd<_mesh._NoSubdom; ++isubd) {
-            uint iel0 = _mesh._off_el[BB][ _NoLevels*isubd + Level];
-            uint ielf = _mesh._off_el[BB][ _NoLevels*isubd + Level+1];
-            for (uint iel=0; iel < (ielf-iel0); iel++) {
+            uint iel_b = _mesh._off_el[BB][ _NoLevels*isubd + Level];
+            uint iel_e = _mesh._off_el[BB][ _NoLevels*isubd + Level+1];
+            for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 
 	        currelem.get_el_nod_conn_lev_subd(BB,Level,isubd,iel);
                 currelem.get_el_ctr(BB);
@@ -920,7 +920,7 @@ void EqnBase::GenBc() {
   //******************* ONLY FINE LEVEL, NODE VARS ***************** 
    if (Level == Lev_pick_bc_NODE_dof)  { 
                 for (uint i=0; i<  el_nnodes_b; i++)  {
-                        const uint fine_node = _mesh._el_map[BB][(iel+iel0)*el_nnodes_b+i];
+                        const uint fine_node = _mesh._el_map[BB][(iel+iel_b)*el_nnodes_b+i];
 
                     //Set the quadratic fields
                     if (i<_AbstractFE[QQ]->_ndof[BB])

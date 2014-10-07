@@ -24,10 +24,10 @@
 #include "Quantity.hpp"
 #include "QTYnumEnum.hpp"
 #include "Box.hpp"  //for the DOMAIN
+#include "LinearSolverM.hpp"
 
 
 // application 
-#include "Temp_conf.hpp"
 #include "TempQuantities.hpp"
 #include "TempPhysics.hpp"
 #include "EqnT.hpp"
@@ -53,7 +53,6 @@
   // ======= MyPhysics (implemented as child of Physics) ========================
   RunTimeMap<double> physics_map("Physics",files._output_path);
   TempPhysics phys(physics_map);
-              phys.set_nondimgroups(); //implement it
   const double Lref  =  phys._physrtmap.get("Lref");     // reference L
 
   // ======= Mesh =====
@@ -71,7 +70,6 @@
   mesh.PrintForVisualizationAllLEVAllVB();
   
   phys.set_mesh(&mesh);
-  
   
   
 // ======  QRule ================================ //so far we have ONLY ONE quadrature rule for all the equations
@@ -103,8 +101,8 @@
 //========================================================
   
   Temperature temperature("Qty_Temperature",qty_map,1,0/*biquadratic*/);     qty_map.set_qty(&temperature);
-  Temperature temperature2("Qty_Temperature2",qty_map,1,1/*linear*/);     qty_map.set_qty(&temperature2);
-  Temperature temperature3("Qty_Temperature3",qty_map,1,2/*constant*/);     qty_map.set_qty(&temperature3);
+  Temperature temperature2("Qty_Temperature2",qty_map,1,1/*linear*/);        qty_map.set_qty(&temperature2);
+  Temperature temperature3("Qty_Temperature3",qty_map,1,2/*constant*/);      qty_map.set_qty(&temperature3);
   // ===== end QuantityMap =========================================
 
   // ====== EquationsMap =================================
@@ -126,6 +124,9 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
 
   EqnT* eqnT = new EqnT(InternalVect_Temp,equations_map);
   equations_map.set_eqs(eqnT);  
+  
+    for (uint l=0; l< mesh._NoLevels; l++)  eqnT->_solver[l]->set_solver_type(GMRES);
+    eqnT->_Dir_pen_fl = 0;  //no penalty BC
 
         temperature.set_eqn(eqnT);
         temperature2.set_eqn(eqnT);
@@ -140,9 +141,6 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
 //not for every equation... but the functions belong to the single equation... I need to make them EXTERNAL
 // then I'll have A from the equation, PRL and REST from a MG object.
 //So somehow i'll have to put these objects at a higher level... but so far let us see if we can COMPUTE and PRINT from HERE and not from the gencase
-	 
-//   eqnNS->ComputeMatrix();  //CLEARLY THIS FUNCTION DOES NOT WORK AT THIS POINT, because not all the data in the mesh class are filled here! 
-                           //In fact, part of them is only filled by gencase
 	 
   equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
   equations_map.TransientSetup();  // reset the initial state (if restart) and print the Case

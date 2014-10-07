@@ -64,7 +64,7 @@ F_MESH_READ    inclQ2D2x2.gam
 dt          0.1  
 itime       0.0  
 initial_step 0
-nsteps      5    
+nsteps      1    
 printstep   1    
 ndigits     4    
 
@@ -80,6 +80,7 @@ ndigits     4
 # double
 
 # ReferenceValueForNon-dimensionalizationVelLenTemperature
+Lref      1.
 Tref      1.
 
 </Physics>

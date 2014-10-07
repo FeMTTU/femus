@@ -7,7 +7,6 @@
 #include "Box.hpp"
 
 //application
-#include "Temp_conf.hpp"
 #include "TempPhysics.hpp"
 #include "EqnT.hpp"
 
@@ -31,8 +30,8 @@ TempPhysics::TempPhysics( RunTimeMap<double> & map_in):
    
      int el_flagdom=0;
 
-///optimal control
-  #if DIMENSION==2
+     if ( _mesh->get_dim() == 2 ) {
+
 //============== OUTFLOW     
 //        if (   el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])
 // 	   && el_xm[0] < 0.75*(box->_le[0] - box->_lb[0])
@@ -60,8 +59,11 @@ TempPhysics::TempPhysics( RunTimeMap<double> & map_in):
 // 	   && el_xm[0] < 0.6*(box->_le[0] - box->_lb[0]) ) {
 //                  el_flagdom=1;
 //              }
+    
+     }
      
- #else
+   else if ( _mesh->get_dim() == 3 ) {
+ 
       if ( el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])  
 	&& el_xm[0] < 0.75*(box->_le[0] - box->_lb[0]) 
 	&& el_xm[1] > 0.75*(box->_le[1] - box->_lb[1])
@@ -69,30 +71,12 @@ TempPhysics::TempPhysics( RunTimeMap<double> & map_in):
 	&& el_xm[2] < 0.75*(box->_le[2] - box->_lb[2]) ) {
 	el_flagdom=1;
         }
- #endif
+ 
+   }
 
 return el_flagdom; 
 }
 
-
-
-// ====================================================
-/// This function sets the nondimensional groups
-void TempPhysics::set_nondimgroups() {
-
-  const double rhof   = _physrtmap.get("rho0");
-  const double Uref   = _physrtmap.get("Uref");
-  const double Lref   = _physrtmap.get("Lref");
-  const double  muf   = _physrtmap.get("mu0");
-
-  _pref = rhof*Uref*Uref;
-  _Re  = (rhof*Uref*Lref)/muf;
-  _Fr  = (Uref*Uref)/(9.81*Lref);
-  _Pr=muf/rhof;    ///< Prandl Number
-
-
-  return;
-}
 
 
  //=================
