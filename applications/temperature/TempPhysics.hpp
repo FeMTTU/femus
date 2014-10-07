@@ -22,14 +22,7 @@ public:
 //constructor
 TempPhysics(  RunTimeMap<double> & map_in); 
   
-  
  // =========== Nondimensional groups and ref values ========
-  double _pref;  ///< Reference pressure
-  double _Re;    ///< Reynolds number
-  double _Fr;    ///< Froud Number
-  double _Pr;    ///< Prandl Number
-   void set_nondimgroups();      /// set nondimensional groups and ref values
-  //======================================================
 
    //========= CONTROL ====================================
       int ElFlagControl(const std::vector<double> el_xm) const;

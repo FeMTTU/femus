@@ -28,7 +28,6 @@
 #include "paral.hpp"
 
 // application
-#include "Temp_conf.hpp"
 #include "TempQuantities.hpp"
 #include "TempPhysics.hpp"
 
@@ -56,12 +55,6 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
 
 //=======  _var_names: they are the names of the quantities which are unkwnowns to this equation  ===========
    for (uint i=0; i<int_map_in.size(); i++)  _var_names[i]=int_map_in[i]->_name;
-
-//========= MG solver ===================
-  for (uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(SOLVERT);
-  
-//============= DIR PENALTY===============
-   _Dir_pen_fl = TEMP_DIR_PENALTY;
   
 }
 
@@ -100,7 +93,6 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
 void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
 
   CurrElem       currelem(*this,_eqnmap);
-//   CurrGaussPoint   currgp(_eqnmap);    
   CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
   
   TempPhysics* myphys; myphys = static_cast<TempPhysics*>(&_phys);
@@ -173,10 +165,6 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
 //  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
     double* Qflux_g = new double[space_dim];
 
-  //====== reference values ========================
-  const double IRe = 1./myphys->_Re;
-  const double IPr = 1./myphys->_Pr;
-  
   /// b) Element  Loop over the volume (n_elem)
    const uint el_ngauss = _eqnmap._qrule._NoGaussVB[vb];
    const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
@@ -207,8 +195,8 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     currelem.GetElDofsBc(vb,Level);
 
   Tempold.GetElDofsVect(vb,Level);
-  Temp2.GetElDofsVect(vb,Level);
-  Temp3.GetElDofsVect(vb,Level);
+    Temp2.GetElDofsVect(vb,Level);
+    Temp3.GetElDofsVect(vb,Level);
     
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs[vb]); //only the Qtyzero Part is modified!
 
@@ -221,7 +209,6 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     //I could consider it as another element, but only with the geometrical part!
 
   xyz_refbox.SetElemAverage(vb);
-  
 int domain_flag = myphys->ElFlagControl(xyz_refbox._el_average[vb]);
 //====================    
     
@@ -250,13 +237,11 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 	   // always remember to get the dofs for the variables you use!
            // The point is that you fill the dofs with different functions...
            // you should need a flag to check if the dofs have been correctly filled
-
-
-	  
+ 
 	  
       for (uint i=0; i < Tempold._ndof[vb]/*the maximum number is for biquadratic*/; i++)     {
 
-        const double phii_g = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][i];
+        const double phii_g   = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][i];
         const double phii_gLL = currgp._phi_ndsQLVB_g[vb][Temp2._FEord][i];
         const double phii_gKK = currgp._phi_ndsQLVB_g[vb][Temp3._FEord][i];
 
@@ -265,7 +250,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //=========== FIRST ROW ===============
         currelem._FeM[vb](i) +=      
            currelem._bc_eldofs[vb][i]*dtxJxW_g*( 
-                Tempold._val_g[0]*phii_g
+                0.07*phii_g
 	  )
 	   + (1-currelem._bc_eldofs[vb][i])*detb*(Tempold._val_dofs[i]);
         
@@ -277,7 +262,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 	if (i < _AbstractFE[ Temp2._FEord ]->_ndof[vb]) { 
 	 currelem._FeM[vb](ip1) +=      
            currelem._bc_eldofs[vb][ip1]*dtxJxW_g*( 
-                Temp2._val_g[0]*phii_gLL
+                0.07*phii_gLL
 	  )
 	   + (1-currelem._bc_eldofs[vb][ip1])*detb*(Temp2._val_dofs[i]);
         
@@ -290,7 +275,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 	if (i < _AbstractFE[ Temp3._FEord ]->_ndof[vb]) { 
            currelem._FeM[vb](ip2) +=      
            currelem._bc_eldofs[vb][ip2]*dtxJxW_g*( 
-                Temp3._val_g[0]*phii_gKK
+                0.07*phii_gKK
 	     )
 	   + (1-currelem._bc_eldofs[vb][ip2])*detb*(Temp3._val_dofs[i]);
         
@@ -299,7 +284,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 	
 	 // Matrix Assemblying ---------------------------
         for (uint j=0; j<Tempold._ndof[vb]; j++) {
-          double phij_g = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][j];
+          double phij_g   = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][j];
           double phij_gLL = currgp._phi_ndsQLVB_g[vb][Temp2._FEord][j];
           double phij_gKK = currgp._phi_ndsQLVB_g[vb][Temp3._FEord][j];
 	  
@@ -311,8 +296,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 	  
 	  
           double Lap_g   = Math::dot(dphijdx_g,dphiidx_g,space_dim);
-          double Lap_gLL   = Math::dot(dphijdx_gLL,dphiidx_gLL,space_dim);
-          double Lap_gKK   = Math::dot(dphijdx_gKK,dphiidx_gKK,space_dim);
+          double Lap_gLL = Math::dot(dphijdx_gLL,dphiidx_gLL,space_dim);
+          double Lap_gKK = Math::dot(dphijdx_gKK,dphiidx_gKK,space_dim);
 
 	    int ip1 = i + Tempold._ndof[vb];
 	    int jp1 = j + Tempold._ndof[vb];
@@ -324,8 +309,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //======= DIAGONAL =============================
 	   currelem._KeM[vb](i,j) +=        
             currelem._bc_eldofs[vb][i]*dtxJxW_g*( 
-              phij_g*phii_g 
-            + IRe*IPr*Lap_g  
+             Lap_g  
             );
 
 //=========== SECOND ROW  =============
@@ -335,7 +319,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
        currelem._KeM[vb](ip1,jp1) +=        
             currelem._bc_eldofs[vb][ip1]*
             dtxJxW_g*( 
-              phij_gLL*phii_gLL
+              Lap_gLL
             ); 
 	  }
 	}
@@ -346,8 +330,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
           currelem._KeM[vb](ip2,jp2) +=        
             currelem._bc_eldofs[vb][ip2]*
               dtxJxW_g*( 
-              phij_gLL*phii_gKK
-            + IRe*IPr*Lap_gKK
+              phij_gKK*phii_gKK
+            + Lap_gKK
                
             ); 
 	  }
