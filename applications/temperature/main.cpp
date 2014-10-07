@@ -98,6 +98,10 @@
   // ===== QuantityMap =========================================
   QuantityMap  qty_map(phys);
 
+//===============================================
+//================== Add QUANTITIES ======================
+//========================================================
+  
   Temperature temperature("Qty_Temperature",qty_map,1,0/*biquadratic*/);     qty_map.set_qty(&temperature);
   Temperature temperature2("Qty_Temperature2",qty_map,1,1/*linear*/);     qty_map.set_qty(&temperature2);
   Temperature temperature3("Qty_Temperature3",qty_map,1,2/*constant*/);     qty_map.set_qty(&temperature3);

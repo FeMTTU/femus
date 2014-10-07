@@ -54,10 +54,8 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
              std::string varname_in):
     EqnBase(int_map_in,equations_map_in,eqname_in,varname_in) {
 
-//=======  _var_names[]  ===========
-  _var_names[0]="T";
-  _var_names[1]="Tlift";
-  _var_names[2]="Tadj";
+//=======  _var_names: they are the names of the quantities which are unkwnowns to this equation  ===========
+   for (uint i=0; i<int_map_in.size(); i++)  _var_names[i]=int_map_in[i]->_name;
 
 //========= MG solver ===================
   for (uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(SOLVERT);
@@ -592,27 +590,6 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
   const uint mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");  
   const uint meshql   = (int) _mesh._mesh_rtmap.get("meshql");   //======== ELEMENT MAPPING =======
  
-  //========== 
-    QuantityLocal Tempold(currgp,currelem);
-    Tempold._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature"); 
-    Tempold.VectWithQtyFillBasic();
-    Tempold._val_dofs = new double[Tempold._dim*Tempold._ndof[vb]];
-    Tempold._val_g    = new double[Tempold._dim];
-
-  //========== 
-    QuantityLocal Tlift(currgp,currelem);
-    Tlift._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_TempLift"); 
-    Tlift.VectWithQtyFillBasic();
-    Tlift._val_dofs = new double[Tlift._dim*Tlift._ndof[vb]];
-    Tlift._val_g    = new double[Tlift._dim];
-    
- //===========
-    QuantityLocal Tdes(currgp,currelem);
-         Tdes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempDes"); 
-    Tdes.VectWithQtyFillBasic();
-    Tdes._val_dofs = new double[Tdes._dim*Tdes._ndof[vb]];
-    Tdes._val_g    = new double[Tdes._dim];
-  
 //========= DOMAIN MAPPING
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
@@ -656,14 +633,6 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
       int el_flagdom = optphys->ElFlagControl(xyz_refbox._el_average[vb]);
 //====================     
  
-    if ( Tempold._eqnptr != NULL )   Tempold.GetElDofsVect(vb,Level);
-    else                             Tempold._qtyptr->FunctionDof(vb,Tempold,0.,xyz_refbox._val_dofs);
-    if ( Tlift._eqnptr != NULL )       Tlift.GetElDofsVect(vb,Level);
-    else                               Tlift._qtyptr->FunctionDof(vb,Tlift,0.,xyz_refbox._val_dofs);
-    if ( Tdes._eqnptr != NULL )         Tdes.GetElDofsVect(vb,Level);
-    else                                Tdes._qtyptr->FunctionDof(vb,Tdes,0.,xyz_refbox._val_dofs);    
-
-
 
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
@@ -674,15 +643,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
 
      for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (vb,fe,qp);  }
 
- Tempold.val_g(vb);
-   Tlift.val_g(vb);
-    Tdes.val_g(vb);
-
-  double deltau_squarenorm_g = 0.;
-   deltau_squarenorm_g += (Tempold._val_g[0] + Tlift._val_g[0] - Tdes._val_g[0])*
-                          (Tempold._val_g[0] + Tlift._val_g[0] - Tdes._val_g[0]); 
-
-  integral += el_flagdom*wgt_g*Jac_g*deltau_squarenorm_g;
+       integral += el_flagdom*wgt_g*Jac_g*1.;
    
     }//gauss loop
      
@@ -740,15 +701,6 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
   
 //======Functions in the integrand ============
 
-      //========== 
-    QuantityLocal Tlift(currgp,currelem);
-         Tlift._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_TempLift"); 
-    Tlift.VectWithQtyFillBasic();
-    Tlift._val_dofs = new double[Tlift._dim*Tlift._ndof[vb]];
-    Tlift._val_g    = new double[Tlift._dim];
-    Tlift._grad_g       = new double*[1];
-    Tlift._grad_g[0]    = new double[space_dim]; 
-
 //========= DOMAIN MAPPING
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
@@ -786,9 +738,6 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
       currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
       _mesh.TransformElemNodesToRef(vb,currelem._xx_nds[vb],xyz_refbox._val_dofs);
      
-     Tlift.GetElDofsVect(vb,Level);
-
-
   for (uint qp = 0; qp < el_ngauss; qp++) {
 
      for (uint fe = 0; fe < QL; fe++)     {
@@ -799,13 +748,11 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
       const double  Jac_g = currgp.JacVectVV_g(vb,xyz);  //not xyz_refbox!      
       const double  wgt_g = _eqnmap._qrule._weightVB[vb][qp];
 
-  Tlift.val_g(vb);
-  Tlift.grad_g(vb);
 
   double deltau_squarenorm_g = 0.;
-   deltau_squarenorm_g += (1-reg_ord) * (Tlift._val_g[0])*(Tlift._val_g[0]); 
+   deltau_squarenorm_g += (1-reg_ord) * 1.; 
 
-   for (uint idim = 0; idim < space_dim; idim++)  {   deltau_squarenorm_g  += reg_ord * (Tlift._grad_g[0][idim])*(Tlift._grad_g[0][idim])  ;   }
+   for (uint idim = 0; idim < space_dim; idim++)  {   deltau_squarenorm_g  += reg_ord * 1. ;   }
 
   integral += /*el_flagdom**/wgt_g*Jac_g*deltau_squarenorm_g;   //Do it over ALL THE DOMAIN!
    

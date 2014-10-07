@@ -91,3 +91,7 @@ You have to open another shell and set new values
 - then enter your application folder and run make to generate your executable
 
 ######## Critical part: understand for what parameters in the config file one has to RERUN GENCASE OR NOT #############
+
+
+######## When you change the input file in the repo folder (NOT IN THE BINARY FOLDER) then you have to RERUN CMAKE !!! #############
+
