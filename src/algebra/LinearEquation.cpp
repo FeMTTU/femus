@@ -171,13 +171,14 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
   int KK_size=KKIndex[KKIndex.size()-1u];
   int KK_local_size =KKoffset[KKIndex.size()-1][processor_id()] - KKoffset[0][processor_id()];
     
- _KK = SparseMatrix::build().release();
- _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
-   
+  _KK = SparseMatrix::build().release();
+  //_KK->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
+  _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,d_nnz,o_nnz);
   unsigned igrid=_msh->GetGridNumber()+1;
   if(igrid>=_gridr && igrid<_gridn){
     _CC = SparseMatrix::build().release();
-    _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
+    _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,d_nnz,o_nnz);
+    //_CC->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
   }
 
 }
@@ -194,7 +195,8 @@ void LinearEquation::AddLevel(){
     unsigned igrid=_msh->GetGridNumber()+1;
     if(igrid>=_gridr && igrid<_gridn){
       _CC = SparseMatrix::build().release();
-      _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
+      _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,d_nnz,o_nnz);
+      //_CC->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
     }
   }
 }
@@ -254,16 +256,17 @@ void LinearEquation::DeletePde() {
     delete _RESC;
   
 }
-#include "vector"
-# include "map"
+ 
+ 
+ 
   void LinearEquation::GetSparsityPatternSize() {
     
-    const unsigned dim = _msh->GetDimension();
+    const int dim = _msh->GetDimension();
    
-    const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
+    const int max_size = static_cast< int > (ceil(pow(3,dim)));
    
-    vector < vector < unsigned > > dofsVAR(_SolPdeIndex.size());
-    vector < unsigned > end_ind(_SolPdeIndex.size());
+    vector < vector < int > > dofsVAR(_SolPdeIndex.size());
+    vector < int > end_ind(_SolPdeIndex.size());
        
     for(int i=0;i<_SolPdeIndex.size();i++){
       dofsVAR[i].reserve(max_size);
@@ -271,93 +274,115 @@ void LinearEquation::DeletePde() {
     }
     
     // mesh and procs
-    unsigned nel    = _msh->GetElementNumber();
-    unsigned igrid  = _msh->GetGridNumber();
-    unsigned iproc  = _msh->processor_id();
+    int nel    = _msh->GetElementNumber();
+    int igrid  = _msh->GetGridNumber();
+    int this_proc  = _msh->processor_id();
     int nprocs=	      _msh->n_processors();
      
     // *** element loop ***
     
-    unsigned IndexStart= KKoffset[0][iproc];
-    unsigned IndexEnd  = KKoffset[KKIndex.size()-1][iproc];
-    unsigned Offset    = IndexEnd-IndexStart;
-    
-    
-    
-    int KK_UNIT_SIZE_ = pow(5,dim);
-    
-    vector < std::map < int, bool > > BlgToMe_BlgToMe(Offset);
-    std::map < int, std::map <int, bool > > NnBlgToMe_BlgToMe;
-        
-    cout<<IndexStart<<" "<<IndexEnd<<" "<<Offset<<" "<<BlgToMe_BlgToMe[0].max_size()<<endl;
-    
-    for(int iel=_msh->IS_Mts2Gmt_elem_offset[iproc]; iel < _msh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+    int IndexStart= KKoffset[0][this_proc];
+    int IndexEnd  = KKoffset[KKIndex.size()-1][this_proc];
+    int Offset    = IndexEnd-IndexStart;
+     
+    vector < std::map < int, bool > > BlgToMe_d(Offset);
+    vector < std::map < int, bool > > BlgToMe_o(Offset);
+    std::map < int, std::map <int, bool > > DnBlgToMe_o;
+    std::map < int, std::map <int, bool > > DnBlgToMe_d;
+          
+    for(int iel=_msh->IS_Mts2Gmt_elem_offset[this_proc]; iel < _msh->IS_Mts2Gmt_elem_offset[this_proc+1]; iel++) {
 
-      unsigned kel        = _msh->IS_Mts2Gmt_elem[iel]; 
-      short unsigned kelt = _msh->el->GetElementType(kel);
-      vector < unsigned > nve(_SolPdeIndex.size());
+      int kel        = _msh->IS_Mts2Gmt_elem[iel]; 
+      short int kelt = _msh->el->GetElementType(kel);
+      vector < int > nve(_SolPdeIndex.size());
       for(int i=0;i<_SolPdeIndex.size();i++){
 	nve[i] = _msh->el->GetElementDofNumber(kel,end_ind[i]);
       }
-            
       for(int i=0; i<_SolPdeIndex.size(); i++) {
 	dofsVAR[i].resize(nve[i]);
       }
       
       for(int i=0; i<_SolPdeIndex.size(); i++) {
-	unsigned ThisSolType=_SolType[_SolPdeIndex[i]];
-	for (unsigned j=0;j<nve[i];j++) {
-	  unsigned inode=(ThisSolType<3)?(_msh->el->GetElementVertexIndex(kel,j)-1u):(kel+j*nel);
-	  unsigned inode_Metis=_msh->GetMetisDof(inode,ThisSolType);
-	  dofsVAR[i][j]= GetKKDof(i,i,inode); 
-	  //std::cout<<dofsVAR[i][j]<<" ";
+	int ThisSolType=_SolType[_SolPdeIndex[i]];
+	for (int j=0;j<nve[i];j++) {
+	  int inode=(ThisSolType<3)?(_msh->el->GetElementVertexIndex(kel,j)-1u):(kel+j*nel);
+	  dofsVAR[i][j]= GetKKDof(_SolPdeIndex[i],i,inode); 
 	}
       }
-      //std::cout<<std::endl;
       for(int i=0;i<_SolPdeIndex.size();i++){
 	for(int inode=0;inode<nve[i];inode++){
-	  unsigned idof_local=dofsVAR[i][inode] - IndexStart;
+	  int idof_local=dofsVAR[i][inode] - IndexStart;
 	  for(int j=0;j<_SolPdeIndex.size();j++){
 	    for(int jnode=0;jnode<nve[j];jnode++){
-	      unsigned jdof_local=dofsVAR[j][jnode] - IndexStart;
-	      if(jdof_local >= 0 && jdof_local < Offset){ //jnode belongs to iproc 
-		if(idof_local >= 0 && idof_local < Offset){ // inode belogs to iporc		  
- 		  BlgToMe_BlgToMe[ idof_local ][ jdof_local] = 1;
+	      int jdof_local=dofsVAR[j][jnode] - IndexStart;
+	   
+	      if(idof_local >= 0){
+		if(jdof_local >= 0){
+		  BlgToMe_d[ idof_local ][ jdof_local ] = 1;
 		}
-		else{
-		  NnBlgToMe_BlgToMe[dofsVAR[i][inode]][jdof_local]=1.;
+	        else {
+		  BlgToMe_o[ idof_local ][ dofsVAR[j][jnode] ]=1;
 		}
+	      }
+	      else{
+		int iproc, jproc;
+		//////////////////
+		for(int l=0;l<this_proc;l++){
+		  if(dofsVAR[i][inode] >= KKoffset[0][l] &&  dofsVAR[i][inode] < KKoffset[KKIndex.size()-1][l]){
+		    iproc=l;
+		    break;
+		  }
+		}
+		/////////////////
+		for(int l=0;l<=this_proc;l++){
+		  if(dofsVAR[j][jnode] >= KKoffset[0][l] &&  dofsVAR[j][jnode] < KKoffset[KKIndex.size()-1][l]){
+		    jproc=l;
+		    break;
+		  }
+		}
+		if (iproc != jproc){
+		  DnBlgToMe_o[dofsVAR[i][inode]][dofsVAR[j][jnode]]=1;
+		}
+		else if (iproc == jproc){
+		  DnBlgToMe_d[dofsVAR[i][inode]][dofsVAR[j][jnode]]=1;
+		}
+		
 	      }
 	    } 
 	  }
 	}
       }     
     }
-    
-    
-    
-   NumericVector  *_sizeNBM = NumericVector::build().release();
-   _sizeNBM->init(*_EPS);
-   _sizeNBM->zero();
-    
-    for (std::map < int, std::map <int, bool > >::iterator it=NnBlgToMe_BlgToMe.begin(); it!=NnBlgToMe_BlgToMe.end(); ++it){
-      _sizeNBM->set(it->first,it->second.size());
+      
+    NumericVector  *_sizeDnBM_o = NumericVector::build().release();
+    _sizeDnBM_o->init(*_EPS);
+    _sizeDnBM_o->zero();
+    for (std::map < int, std::map <int, bool > >::iterator it=DnBlgToMe_o.begin(); it!=DnBlgToMe_o.end(); ++it){
+      _sizeDnBM_o->add(it->first,it->second.size());
     }
-    _sizeNBM->close();
+    _sizeDnBM_o->close(false);
+   
     
+    NumericVector  *_sizeDnBM_d = NumericVector::build().release();
+    _sizeDnBM_d->init(*_EPS);
+    _sizeDnBM_d->zero();
+    for (std::map < int, std::map <int, bool > >::iterator it=DnBlgToMe_d.begin(); it!=DnBlgToMe_d.end(); ++it){
+      _sizeDnBM_d->add(it->first,it->second.size());
+    }
+    _sizeDnBM_d->close();
     
-    
-    vector < int > d_nnz(Offset);
-    vector < int > o_nnz(Offset);
-    
-        
-    
+          
+    d_nnz.resize(Offset);
+    o_nnz.resize(Offset);
+       
     for(int i=0; i<Offset;i++){
-     d_nnz[i]=BlgToMe_BlgToMe[i].size();
-     o_nnz[i]=(*_sizeNBM)(IndexStart+i);
+     d_nnz[i]=static_cast <int> ((*_sizeDnBM_d)(IndexStart+i))+BlgToMe_d[i].size();
+     if(d_nnz[i] > Offset) d_nnz[i]=Offset;
+     o_nnz[i]=static_cast <int> ((*_sizeDnBM_o)(IndexStart+i))+BlgToMe_o[i].size();
     }
-    
-    delete _sizeNBM;
+     
+    delete _sizeDnBM_o;
+    delete _sizeDnBM_d;
   }
 } 
 

@@ -5,8 +5,8 @@
       "first" : {
         "type" : {
           "box" : {
-            "nx" : 6,
-            "ny" : 6,
+            "nx" : 4,
+            "ny" : 4,
             "nz" : 0,
             "xa" : 0.,
             "xb" : 1.,
@@ -14,7 +14,7 @@
             "yb" : 1.,
             "za" : 0.,
             "zb" : 0.,
-            "elem_type" : "Tri6"
+            "elem_type" : "Quad9"
                    }
                   }
                  }
@@ -27,7 +27,7 @@
           "variable" : {
             "first" : {
               "name" : "T", 
-              "fe_order" : "second",
+              "fe_order" : "first",
               "init_func" : "0.",
               "boundary_conditions" : [
                 {
@@ -57,7 +57,7 @@
                 "abs_conv_tol" : 1.e-09, 
                 "type" : {
                   "multigrid" : {
-                    "nlevels" : 4, 
+                    "nlevels" : 1, 
                     "npresmoothing" : 1, 
                     "npostsmoothing" : 1,                                                                                                 
                     "mgtype" : "V_cycle",

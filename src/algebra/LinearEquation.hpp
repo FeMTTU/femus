@@ -89,6 +89,9 @@ public:
   vector <int> KKIndex;
   bool _CC_flag; 
   unsigned _gridr,_gridn;
+  
+  vector < int > d_nnz;
+  vector < int > o_nnz;
 
 protected:
   
