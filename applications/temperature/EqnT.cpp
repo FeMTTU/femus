@@ -250,7 +250,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //=========== FIRST ROW ===============
         currelem._FeM[vb](i) +=      
            currelem._bc_eldofs[vb][i]*dtxJxW_g*( 
-                7*phii_g
+                7.*phii_g
 	  )
 	   + (1-currelem._bc_eldofs[vb][i])*detb*(Tempold._val_dofs[i]);
         

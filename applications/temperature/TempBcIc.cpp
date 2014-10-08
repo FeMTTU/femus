@@ -105,16 +105,16 @@ void EqnT::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
   if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
 
     bc_flag[0]=0;
-    bc_flag[1]=0;
-    bc_flag[2]=0; 
+//     bc_flag[1]=0;
+//     bc_flag[2]=0; 
     
   }
   
  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
 
     bc_flag[0]=0;
-    bc_flag[1]=0;
-    bc_flag[2]=0;
+//     bc_flag[1]=0;
+//     bc_flag[2]=0;
   
   }
   
