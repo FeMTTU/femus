@@ -88,7 +88,7 @@ public:
 
 
   /// Call the assemble functions
-  void close ();
+  void close (bool reverse = false);
   /// This function returns the \p PetscVector to a pristine state.
   void clear ();
 
@@ -579,7 +579,7 @@ inline void PetscVector::init(const NumericVector& other, const bool fast) {
 }
 
 
-inline void PetscVector::close () {
+inline void PetscVector::close (bool reverse) {
   this->_restore_array();
   int ierr=0;
 
@@ -588,10 +588,10 @@ inline void PetscVector::close () {
   ierr = VecAssemblyEnd(_vec);
   CHKERRABORT(MPI_COMM_WORLD,ierr);
   if (this->type() == GHOSTED) {
-    ierr = VecGhostUpdateBegin(_vec,INSERT_VALUES,SCATTER_FORWARD);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    ierr = VecGhostUpdateEnd(_vec,INSERT_VALUES,SCATTER_FORWARD);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+   
+    ierr = VecGhostUpdateBegin(_vec,INSERT_VALUES,SCATTER_FORWARD);  	CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecGhostUpdateEnd(_vec,INSERT_VALUES,SCATTER_FORWARD);  	CHKERRABORT(MPI_COMM_WORLD,ierr);  
+    
   }
   this->_is_closed = true;
 }
@@ -700,10 +700,16 @@ inline int PetscVector::map_global_to_local_index (const int i) const {
 inline double PetscVector::operator() (const int i) const {
   this->_get_array();
   const int local_index = this->map_global_to_local_index(i);
-// #ifndef NDEBUG
-//   if (this->type() == GHOSTED) assert(local_index<_local_size);
-// #endif
+#ifndef NDEBUG
+    if (this->type() == GHOSTED) assert(local_index<_local_size);
+#endif
   return static_cast<double>(_values[local_index]);
+  
+//   double value;
+//   VecGetValues(_vec,1,&i,&value);
+//   
+//   return value;
+  
 }
 
 

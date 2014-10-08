@@ -93,7 +93,7 @@ public:
   }
 
   /** Call the assemble functions */
-  virtual void close () = 0;
+  virtual void close ( bool reverse = false ) = 0;
   
   /**
    * Change the dimension of the vector to \p N. The reserved memory for
