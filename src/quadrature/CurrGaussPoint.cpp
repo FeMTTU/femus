@@ -23,21 +23,7 @@ template <unsigned int FM_DIM>
 CurrGaussPoint<FM_DIM>::CurrGaussPoint( EquationsMap& e_map_in ): 
         CurrGaussPointBase(e_map_in) {
   
-//   _IntDim[VV] = _eqnmap._mesh._dim;
-//   _IntDim[BB] = _eqnmap._mesh._dim - 1;
-// 
-//   for (int fe = 0; fe < QL; fe++)  _AbsFEVect[fe] = e_map_in._AbstractFE[fe];   
-// 
-//   for (int vb = 0; vb < VB; vb++) {
-//      for (int fe = 0; fe < QL; fe++) {
-//    _dphidxyz_ndsQLVB_g3D[vb][fe] =  new double[ 3 * _AbsFEVect[fe]->_ndof[vb]]; //both VV and BB are 3 in general (vector product, or ONE?!?)
-//      _dphidxyz_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _AbsFEVect[fe]->_ndof[vb]];   
-//   _dphidxezeta_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _AbsFEVect[fe]->_ndof[vb]];     
-//           _phi_ndsQLVB_g[vb][fe] =  new double[ _AbsFEVect[fe]->_ndof[vb]];     
-//    }
-//  }  
-//   
-  
+ 
 }
 
 
@@ -100,7 +86,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const ui
          for (uint eln=0; eln<el_nnodes; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
   
-           for (uint idim=0; idim<ndim; idim++)  dphidxi_g[idim] = _AbsFEVect[qlflag]/*->_dphidxez_mapVBGD[vbflag][qp][eln + idim*el_nnodes]; */   ->_dphidxez_mapVB[vbflag][lqp+idim*goffset];
+           for (uint idim=0; idim<ndim; idim++)  dphidxi_g[idim] = _AbsFEVect[qlflag]/*->_dphidxez_mapVBGD[vbflag][qp][eln + idim*el_nnodes];*/    ->_dphidxez_mapVB[vbflag][lqp+idim*goffset];
 	    
 	    for (uint idim=0; idim<ndim; idim++) {
 	    double sum = 0.;
@@ -170,7 +156,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const
          for (uint eln=0; eln<elndof; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
   
-	         _dphidxezeta_ndsQLVB_g[vbflag][qlflag][eln+idim*elndof] = _AbsFEVect[qlflag]/*->_dphidxez_mapVBGD[vbflag][qp][eln + idim*elndof];*/->_dphidxez_mapVB[vbflag][lqp+idim*goffset];  
+	         _dphidxezeta_ndsQLVB_g[vbflag][qlflag][eln+idim*elndof] = _AbsFEVect[qlflag]/*->_dphidxez_mapVBGD[vbflag][qp][eln + idim*elndof];*/  ->_dphidxez_mapVB[vbflag][lqp+idim*goffset];  
 	   }
 	 }
 
@@ -308,7 +294,7 @@ double CurrGaussPoint<FM_DIM>::JacVectBB_g(const uint vb, QuantityLocal& xyz )/*
       for (uint i=0; i< FM_DIM; i++){
 	for (uint j=0; j<FM_DIM - 1; j++){
           for (uint s=0;s<elnshape;s++) {
-	  _dxyzdxieta_g[j][i] += xyz._val_dofs[s +i*xoff]*_dphidxezeta_ndsQLVB_g[vb][Order][s+j*(elnshape)];   /*_fe[Order]->_dphidxez_mapVB[vb][sng+j*offset]*/ //_dphidxez2D_map
+	  _dxyzdxieta_g[j][i] += xyz._val_dofs[s +i*xoff]*_dphidxezeta_ndsQLVB_g[vb][Order][s+j*(elnshape)];
 	  }
 	}
       }
