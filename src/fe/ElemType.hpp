@@ -135,6 +135,10 @@ public:
   void (elem_type::*Jacobian_sur_AD_ptr)(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
 					 adept::adouble &Weight, vector < adept::adouble > &gradphi, 
 					 vector < adept::adouble > &normal) const;
+					 
+  unsigned GetSize(unsigned irow_local) const{
+    return _nnz[irow_local];
+  };					 
 				      
 private:
   
@@ -185,7 +189,7 @@ private:
   double **dphidzeta;
   double *dphidzeta_memory;
   const double *weight;
-  
+  vector < unsigned > _nnz;
 };
 
 

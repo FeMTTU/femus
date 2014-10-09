@@ -626,6 +626,8 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
     exit(0);
   }
 
+  _nnz.resize(nf_,0);
+  
   int counter=0;
   for (int i=0; i<nf_; i++) {
     for (int j=0; j<nc_; j++) {
@@ -634,8 +636,10 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
         if (i/4==1) phi=pt_basis->eval_dphidx(IND[j],X[i]);
         else if (i/4==2) phi=pt_basis->eval_dphidy(IND[j],X[i]);
       }
-      if (phi!=0)
+      if (phi!=0){
         counter++;
+	_nnz[i]++;
+      }
     }
   }
   double *pt_d;
@@ -672,6 +676,14 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       }
     }
   }
+  
+  
+  std::cout<<type_<<std::endl;
+  for (int i=0;i<nf_;i++){
+    std::cout<<_nnz[i]<<" ";
+  }
+  std::cout<<std::endl;
+  
   prol_val[nf_]=pt_d;
   prol_ind[nf_]=pt_i;
 
