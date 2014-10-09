@@ -343,6 +343,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
       }   //end i (row)
     } // end of the quadrature point qp-loop
 
+    currelem._KeM[vb].print_scientific(std::cout);
+    
        _A[Level]->add_matrix(currelem._KeM[vb],currelem._el_dof_indices[vb]);
        _b[Level]->add_vector(currelem._FeM[vb],currelem._el_dof_indices[vb]);
   } // end of element loop
