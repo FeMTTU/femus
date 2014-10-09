@@ -44,13 +44,9 @@ public:
 // Quadrature ==
     QRule* _qrule;
     void AssociateQRule(QRule* qrule_in);
-    double*      _phi_mapVB[VB];
-    double* _dphidxez_mapVB[VB];
     double**      _phi_mapVBGD[VB];
     double** _dphidxez_mapVBGD[VB];
-    void init();
     void init_switch();
-   void        readVB(const uint vb, const uint dim_in, std::istream& infile);
     
 // Multigrid ======
     uint _n_children;      //TODO this can be taken from the geometric element!
