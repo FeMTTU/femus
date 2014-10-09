@@ -84,6 +84,9 @@ public:
   /// Initialize a Petsc matrix
   void init(const int m,const int n,const int m_l,const int n_l,
             const int nnz=0, const int noz=0);
+  void init( const  int m, const  int n, const  int m_l, const  int n_l,
+			const std::vector< int > & n_nz, const std::vector< int > & n_oz);
+  
   void init (const int m,  const int n) {
     _m=m;
     _n=n;

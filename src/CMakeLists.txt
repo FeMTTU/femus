@@ -22,6 +22,8 @@ algebra/PetscVector.cpp
 algebra/Preconditioner.cpp
 algebra/SparseMatrix.cpp
 algebra/VankaPetscLinearEquationSolver.cpp
+algebra/FunctionBase.cpp
+algebra/ParsedFunction.cpp
 equations/EqnBase.cpp
 equations/EquationsMap.cpp
 equations/ExplicitSystem.cpp
@@ -83,6 +85,8 @@ utils/FemTTUInit.cpp
 utils/FemusInit.cpp
 utils/Files.cpp
 utils/IO.cpp
+utils/InputParser.cpp
+utils/JsonInputParser.cpp
 )
 
 IF (NOT LIBRARY_OUTPUT_PATH)

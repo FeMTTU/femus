@@ -43,56 +43,17 @@ EXTERN_C_FOR_PETSC_END
 
 namespace femus {
 
-
-
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
 class SparseMatrix;
 
-// ====================================================
-// Petsc vector. Provides a nice interface to the
-// Petsc C-based data structures for parallel vectors.
-// ===================================================
+/**
+ * Petsc vector. Provides a nice interface to the
+ * Petsc C-based data structures for parallel vectors.
+ */ 
 
 class PetscVector : public NumericVector {
-  // =====================================
-  // DATA
-  // =====================================
-private:
-
-  /// Actual Petsc vector datatype
-  Vec _vec;
-
-  /// If \p true, the actual Petsc array of the values of the vector is currently accessible.
-  /// doublehat means that the members \p _local_form and \p _values are valid.
-  mutable bool _array_is_present;
-
-  /// Petsc vector datatype to hold the local form of a ghosted vector.
-  /// doublehe contents of this field are only valid if the vector is
-  /// ghosted and \p _array_is_present is \p true.
-  mutable Vec _local_form;
-
-  /// Pointer to the actual Petsc array of the values of the vector.
-  /// doublehis pointer is only valid if \p _array_is_present is \p true.
-  mutable PetscScalar* _values;
-
-  /// doubleype for map that maps global to local ghost cells.
-  typedef std::map<int,int> GlobalToLocalMap;
-
-  /// Map that maps global to local ghost cells (will be empty if not in ghost cell mode
-  GlobalToLocalMap _global_to_local_map;
-
-  /// doublehis boolean value should only be set to false
-  /// for the constructor which takes a PETSc Vec object.
-  bool _destroy_vec_on_exit;
-
-#ifndef NDEBUG
-  ///Size of the local form, for being used in assertations.  doublehe
-  /// contents of this field are only valid if the vector is ghosted
-  /// and \p _array_is_present is \p true.
-  mutable int _local_size;
-#endif
 
 public:
   // =====================================
@@ -298,7 +259,7 @@ public:
   void localize_to_one (std::vector<double>& v_local,
                         const int proc_id=0) const;
 
-
+  void localize_to_all (std::vector<double>& v_local) const;
 
   /// Creates a "subvector" from this vector using the rows indices of the "rows" array.
   void create_subvector(NumericVector& subvector,
@@ -307,20 +268,55 @@ public:
   /// Swaps the raw PETSc vector context pointers.
   void swap (NumericVector &v);
 
-  // ===========================
-  // PROTECTED
-  // ===========================
 protected:
+  
   /// Queries the array (and the local form if the vector is ghosted) from Petsc.
   void _get_array(void) const;
   ///  Restores the array (and the local form if the vector is ghosted) to Petsc.
   void _restore_array(void) const;
+  
+private:
+
+  /// Actual Petsc vector datatype
+  Vec _vec;
+
+  /// If \p true, the actual Petsc array of the values of the vector is currently accessible.
+  /// doublehat means that the members \p _local_form and \p _values are valid.
+  mutable bool _array_is_present;
+
+  /// Petsc vector datatype to hold the local form of a ghosted vector.
+  /// doublehe contents of this field are only valid if the vector is
+  /// ghosted and \p _array_is_present is \p true.
+  mutable Vec _local_form;
+
+  /// Pointer to the actual Petsc array of the values of the vector.
+  /// doublehis pointer is only valid if \p _array_is_present is \p true.
+  mutable PetscScalar* _values;
+
+  /// doubleype for map that maps global to local ghost cells.
+  typedef std::map<int,int> GlobalToLocalMap;
+
+  /// Map that maps global to local ghost cells (will be empty if not in ghost cell mode
+  GlobalToLocalMap _global_to_local_map;
+
+  /// doublehis boolean value should only be set to false
+  /// for the constructor which takes a PETSc Vec object.
+  bool _destroy_vec_on_exit;
+
+#ifndef NDEBUG
+  ///Size of the local form, for being used in assertations.  doublehe
+  /// contents of this field are only valid if the vector is ghosted
+  /// and \p _array_is_present is \p true.
+  mutable int _local_size;
+#endif
+  
 };
 
 
-/*----------------------- Inline functions ----------------------------------*/
+/**
+ * ----------------------- Inline functions ----------------------------------
+ */
 
-// ===========================================================
 inline PetscVector::PetscVector (const ParallelType type)
   : _array_is_present(false),
     _local_form(NULL),
@@ -330,7 +326,6 @@ inline PetscVector::PetscVector (const ParallelType type)
   this->_type = type;
 }
 
-// =========================================================
 inline PetscVector::PetscVector (const int n,const ParallelType type)
   : _array_is_present(false),
     _local_form(NULL),
@@ -340,7 +335,6 @@ inline PetscVector::PetscVector (const int n,const ParallelType type)
   this->init(n, n, false, type);
 }
 
-// ===========================================================
 inline PetscVector::PetscVector (const int n,
                                  const int n_local,
                                  const ParallelType type)
@@ -352,7 +346,6 @@ inline PetscVector::PetscVector (const int n,
   this->init(n, n_local, false, type);
 }
 
-// ===========================================================
 inline PetscVector::PetscVector (const int n,
                                  const int n_local,
                                  const std::vector<int>& ghost,
@@ -365,7 +358,6 @@ inline PetscVector::PetscVector (const int n,
   this->init(n, n_local, ghost, false, type);
 }
 
-// ===========================================
 inline PetscVector::PetscVector (Vec v)
   : _array_is_present(false),
     _local_form(NULL),
@@ -455,12 +447,11 @@ inline PetscVector::PetscVector (Vec v)
   this->close();
 }
 
-// ======================================================
+
 inline PetscVector::~PetscVector () {
   this->clear ();
 }
 
-// =-=======================================================
 inline void PetscVector::init (const int n,
                                 const int n_local,
                                 const bool fast,
@@ -500,14 +491,14 @@ inline void PetscVector::init (const int n,
   if (fast == false)  this->zero ();
 }
 
-// ==================================================
+
 inline void PetscVector::init (const int n,
                                 const bool fast,
                                 const ParallelType type) {
   this->init(n,n,fast,type);
 }
 
-// ==================================================
+
 inline void PetscVector::init (const int n,
                                const int n_local,
                                const std::vector<int>& ghost,
@@ -564,7 +555,7 @@ inline void PetscVector::init (const int n,
     this->zero ();
 }
 
-// ==============================================================
+
 inline void PetscVector::init(const NumericVector& other, const bool fast) {
   // Clear initialized vectors
   if (this->initialized())   this->clear();
@@ -587,25 +578,23 @@ inline void PetscVector::init(const NumericVector& other, const bool fast) {
   if (fast == false)   this->zero ();
 }
 
-// ======================================
+
 inline void PetscVector::close () {
   this->_restore_array();
   int ierr=0;
 
-  ierr = VecAssemblyBegin(_vec);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr = VecAssemblyEnd(_vec);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = VecAssemblyBegin(_vec);  					CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = VecAssemblyEnd(_vec);  					CHKERRABORT(MPI_COMM_WORLD,ierr);
+  
   if (this->type() == GHOSTED) {
-    ierr = VecGhostUpdateBegin(_vec,INSERT_VALUES,SCATTER_FORWARD);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    ierr = VecGhostUpdateEnd(_vec,INSERT_VALUES,SCATTER_FORWARD);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecGhostUpdateBegin(_vec,INSERT_VALUES,SCATTER_FORWARD);  	CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = VecGhostUpdateEnd(_vec,INSERT_VALUES,SCATTER_FORWARD);  	CHKERRABORT(MPI_COMM_WORLD,ierr);  
+    
   }
   this->_is_closed = true;
 }
 
-// ===============================================
+
 inline void PetscVector::clear () {
   if (this->initialized())    this->_restore_array();
 
@@ -618,7 +607,7 @@ inline void PetscVector::clear () {
   _global_to_local_map.clear();
 }
 
-// =========================================
+
 inline void PetscVector::zero (){
     this->_restore_array();
     int ierr=0;
@@ -640,7 +629,7 @@ inline void PetscVector::zero (){
     }
 }
 
-// ========================================================
+
 inline std::auto_ptr<NumericVector > PetscVector::clone () const {
   std::auto_ptr<NumericVector> cloned_vector (new PetscVector);
   cloned_vector->init(*this, true);
@@ -648,7 +637,7 @@ inline std::auto_ptr<NumericVector > PetscVector::clone () const {
   return cloned_vector;
 }
 
-// ============================================
+
 inline int PetscVector::size () const {
   assert (this->initialized());
   int ierr=0, petsc_size=0;
@@ -658,7 +647,7 @@ inline int PetscVector::size () const {
   return static_cast<int>(petsc_size);
 }
 
-// ================================================
+
 inline
 int PetscVector::local_size () const {
   assert (this->initialized());
@@ -668,7 +657,7 @@ int PetscVector::local_size () const {
   return static_cast<int>(petsc_size);
 }
 
-// =======================================================
+
 inline int PetscVector::first_local_index () const {
   assert (this->initialized());
   int ierr=0, petsc_first=0, petsc_last=0;
@@ -677,7 +666,7 @@ inline int PetscVector::first_local_index () const {
   return static_cast<int>(petsc_first);
 }
 
-// =======================================================
+
 inline int PetscVector::last_local_index () const {
   assert (this->initialized());
   int ierr=0, petsc_first=0, petsc_last=0;
@@ -686,7 +675,7 @@ inline int PetscVector::last_local_index () const {
   return static_cast<int>(petsc_last);
 }
 
-// ============================================================
+
 inline int PetscVector::map_global_to_local_index (const int i) const {
   assert (this->initialized());
 
@@ -705,17 +694,23 @@ inline int PetscVector::map_global_to_local_index (const int i) const {
   return it->second+last-first;
 }
 
-// ====================================================
+
 inline double PetscVector::operator() (const int i) const {
   this->_get_array();
   const int local_index = this->map_global_to_local_index(i);
-// #ifndef NDEBUG
-//   if (this->type() == GHOSTED) assert(local_index<_local_size);
-// #endif
+#ifndef NDEBUG
+    if (this->type() == GHOSTED) assert(local_index<_local_size);
+#endif
   return static_cast<double>(_values[local_index]);
+  
+//   double value;
+//   VecGetValues(_vec,1,&i,&value);
+//   
+//   return value;
+  
 }
 
-// =====================================================================
+
 inline void PetscVector::get(const std::vector<int>& index, std::vector<double>& values) const {
   this->_get_array();
 
@@ -731,7 +726,6 @@ inline void PetscVector::get(const std::vector<int>& index, std::vector<double>&
   }
 }
 
-// ============================================
 inline double PetscVector::min () const {
   this->_restore_array();
   int index=0, ierr=0;
@@ -742,7 +736,7 @@ inline double PetscVector::min () const {
   return static_cast<double>(min);
 }
 
-// =======================================
+
 inline double PetscVector::max() const {
   this->_restore_array();
   int index=0, ierr=0;
@@ -753,7 +747,7 @@ inline double PetscVector::max() const {
   return static_cast<double>(max);
 }
 
-// =====================================================
+
 inline void PetscVector::swap (NumericVector &other) {
   NumericVector::swap(other);
   PetscVector& v = libmeshM_cast_ref<PetscVector&>(other);
@@ -765,7 +759,7 @@ inline void PetscVector::swap (NumericVector &other) {
   std::swap(_values, v._values);
 }
 
-// =================================================
+
 inline void PetscVector::_get_array(void) const {
   assert (this->initialized());
   if (!_array_is_present) {
@@ -789,7 +783,7 @@ inline void PetscVector::_get_array(void) const {
   }
 }
 
-// ====================================================
+
 inline void PetscVector::_restore_array(void) const {
   assert (this->initialized());
   if (_array_is_present) {
@@ -812,8 +806,6 @@ inline void PetscVector::_restore_array(void) const {
     _array_is_present = false;
   }
 }
-
-
 
 } //end namespace femus
 
