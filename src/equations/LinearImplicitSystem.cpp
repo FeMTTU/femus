@@ -61,6 +61,19 @@ void LinearImplicitSystem::clear() {
     _numblock_all_test=0;
 }
 
+
+    void LinearImplicitSystem::SetSparsityPattern(vector< bool > other_sparcity_pattern){
+      unsigned SolPdeSize2 = _SolSystemPdeIndex.size()*_SolSystemPdeIndex.size();
+      if(other_sparcity_pattern.size()!=SolPdeSize2){
+	std::cout<<"Error! Sparsity Pattern size ( "<< other_sparcity_pattern.size() <<" ) does not match system PDE size"<<std::endl; 
+	exit(0);
+      }
+      
+      _SparsityPattern.resize(SolPdeSize2);
+      for(int i=0;i<SolPdeSize2;i++) _SparsityPattern[i]=other_sparcity_pattern[i];
+    }
+
+
 void LinearImplicitSystem::init() {
   
     _LinSolver.resize(_gridn);
