@@ -53,7 +53,7 @@ void CurrGaussPoint<FM_DIM>::SetPhiElDofsFEVB_g(const uint vbflag,const uint qlf
    
     for (uint eln=0; eln<el_nnodes; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
-              _phi_ndsQLVB_g[vbflag][qlflag][eln] = _AbsFEVect[qlflag]/*->_phi_mapVBGD[vbflag][qp][eln];*/ ->_phi_mapVB[vbflag][lqp];
+              _phi_ndsQLVB_g[vbflag][qlflag][eln] = _AbsFEVect[qlflag]->_phi_mapVBGD[vbflag][qp][eln]; /*->_phi_mapVB[vbflag][lqp];*/
          }
 
 return;
@@ -86,7 +86,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const ui
          for (uint eln=0; eln<el_nnodes; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
   
-           for (uint idim=0; idim<ndim; idim++)  dphidxi_g[idim] = _AbsFEVect[qlflag]/*->_dphidxez_mapVBGD[vbflag][qp][eln + idim*el_nnodes];*/    ->_dphidxez_mapVB[vbflag][lqp+idim*goffset];
+           for (uint idim=0; idim<ndim; idim++)  dphidxi_g[idim] = _AbsFEVect[qlflag]->_dphidxez_mapVBGD[vbflag][qp][eln + idim*el_nnodes];    /*->_dphidxez_mapVB[vbflag][lqp+idim*goffset];*/
 	    
 	    for (uint idim=0; idim<ndim; idim++) {
 	    double sum = 0.;
@@ -156,7 +156,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const
          for (uint eln=0; eln<elndof; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
   
-	         _dphidxezeta_ndsQLVB_g[vbflag][qlflag][eln+idim*elndof] = _AbsFEVect[qlflag]/*->_dphidxez_mapVBGD[vbflag][qp][eln + idim*elndof];*/  ->_dphidxez_mapVB[vbflag][lqp+idim*goffset];  
+	         _dphidxezeta_ndsQLVB_g[vbflag][qlflag][eln+idim*elndof] = _AbsFEVect[qlflag]->_dphidxez_mapVBGD[vbflag][qp][eln + idim*elndof];  /*->_dphidxez_mapVB[vbflag][lqp+idim*goffset];*/  
 	   }
 	 }
 
