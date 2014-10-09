@@ -506,7 +506,7 @@ namespace femus {
 		  aRhs[indexVAR[idim]][i] += (-phi[i]*(-SolVAR[dim+idim]))*Weight_hat;
 		}
 		for (unsigned j=0; j<nve; j++) { //mass matrix preconditioner in the ALE equation
-		   Bmass[i*nve+j] += 0.*phi[i]*phi[j]*Weight_hat;
+		   Bmass[i*nve+j] += 0.5*phi[i]*phi[j]*Weight_hat;
 		}
                 //END redidual v=0 in fixed domain 
                 

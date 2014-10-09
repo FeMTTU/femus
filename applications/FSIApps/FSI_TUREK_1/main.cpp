@@ -93,7 +93,7 @@ int main(int argc,char **args) {
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
   if(simulation<3)
-    nm=3;
+    nm=2;
   else if(simulation<6)
     nm=2;
 
@@ -230,6 +230,27 @@ int main(int argc,char **args) {
   if (!dimension2D) system.AddSolutionToSytemPDE("W");
   system.AddSolutionToSytemPDE("P");
   
+  if(dimension2D){
+    bool sparsity_pattern_matrix[5][5]={{1, 0, 1, 0, 0},
+					{0, 1, 0, 1, 0},
+					{1, 1, 1, 1, 1},
+					{1, 1, 1, 1, 1},
+					{1, 1, 0, 0, 1}};
+    vector < bool > sparsity_pattern (sparsity_pattern_matrix[0],sparsity_pattern_matrix[0]+25*sizeof(bool));
+    system.SetSparsityPattern(sparsity_pattern);  
+  }
+  else{				   
+    bool sparsity_pattern_matrix[7][7]={{1, 0, 0, 1, 0, 0, 0},
+					{0, 1, 0, 0, 1, 0, 0},
+					{0, 0, 1, 0, 0, 1, 0},
+					{1, 1, 1, 1, 1, 1, 1},
+					{1, 1, 1, 1, 1, 1, 1},
+					{1, 1, 1, 1, 1, 1, 1},
+					{1, 1, 1, 0, 0, 0, 1}};
+    vector < bool > sparsity_pattern (sparsity_pattern_matrix[0],sparsity_pattern_matrix[0]+49*sizeof(bool));
+    system.SetSparsityPattern(sparsity_pattern);  
+  }
+   
   // System Fluid-Structure-Interaction
   system.AttachAssembleFunction(IncompressibleFSIAssemblyAD);  
   //system.AttachAssembleFunction(AssembleMatrixResFSI);  

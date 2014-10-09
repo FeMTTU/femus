@@ -88,7 +88,7 @@ public:
 
 
   /// Call the assemble functions
-  void close (bool reverse = false);
+  void close ();
   /// This function returns the \p PetscVector to a pristine state.
   void clear ();
 
@@ -579,16 +579,14 @@ inline void PetscVector::init(const NumericVector& other, const bool fast) {
 }
 
 
-inline void PetscVector::close (bool reverse) {
+inline void PetscVector::close () {
   this->_restore_array();
   int ierr=0;
 
-  ierr = VecAssemblyBegin(_vec);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
-  ierr = VecAssemblyEnd(_vec);
-  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = VecAssemblyBegin(_vec);  					CHKERRABORT(MPI_COMM_WORLD,ierr);
+  ierr = VecAssemblyEnd(_vec);  					CHKERRABORT(MPI_COMM_WORLD,ierr);
+  
   if (this->type() == GHOSTED) {
-   
     ierr = VecGhostUpdateBegin(_vec,INSERT_VALUES,SCATTER_FORWARD);  	CHKERRABORT(MPI_COMM_WORLD,ierr);
     ierr = VecGhostUpdateEnd(_vec,INSERT_VALUES,SCATTER_FORWARD);  	CHKERRABORT(MPI_COMM_WORLD,ierr);  
     

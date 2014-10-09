@@ -154,6 +154,18 @@ public:
         _npost = npost;
     };
 
+     /** enforce sparcity pattern **/
+    void SetSparsityPattern(vector < bool > other_sparcity_pattern){
+      unsigned SolPdeSize2 = _SolSystemPdeIndex.size()*_SolSystemPdeIndex.size();
+      if(other_sparcity_pattern.size()!=SolPdeSize2){
+	std::cout<<"Error! Sparsity Pattern size ( "<< other_sparcity_pattern.size() <<" ) does not match system PDE size"<<std::endl; 
+	exit(0);
+      }
+      
+      _SparsityPattern.resize(SolPdeSize2);
+      for(int i=0;i<SolPdeSize2;i++) _SparsityPattern[i]=other_sparcity_pattern[i];
+    };
+    
 protected:
 
     /** Create the Prolongator matrix for the Multigrid solver */
@@ -197,6 +209,8 @@ protected:
     /** To be Added */
     vector <unsigned> _VariablesToBeSolvedIndex;
     
+   
+    
     
     SolverType _finegridsolvertype;
     unsigned int _DirichletBCsHandlingMode;
@@ -215,6 +229,8 @@ protected:
     unsigned _maxAMRlevels;
     short _AMRnorm;
     double _AMRthreshold;
+    
+    vector <bool> _SparsityPattern;
     
 };
 
