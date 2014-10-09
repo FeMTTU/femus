@@ -252,9 +252,35 @@ void MultiLevelSolution::BuildProlongatorMatrix(unsigned gridf, unsigned SolInde
     int nf_loc = _ml_msh->GetLevel(gridf)->own_size[_SolType[SolIndex]][_iproc];
     int nc_loc = _ml_msh->GetLevel(gridf-1)->own_size[_SolType[SolIndex]][_iproc]; 
 
+    unsigned offset = _ml_msh->GetLevel(gridf)->MetisOffset[TypeIndex][_iproc];
+    
+    vector <int> nnz(nf_loc);
+    
+    unsigned end_ind = _ml_msh->GetLevel(gridf)->GetEndIndex(TypeIndex);
+    
+    int nel    = _ml_msh->GetLevel(gridf)->GetElementNumber();
+    
+    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+      for (int iel_mts=_ml_msh->GetLevel(gridf)->IS_Mts2Gmt_elem_offset[isdom]; 
+	       iel_mts < _ml_msh->GetLevel(gridf)->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	unsigned iel = _ml_msh->GetLevel(gridf)->IS_Mts2Gmt_elem[iel_mts];
+	short unsigned ielt=_ml_msh->GetLevel(gridf)->el->GetElementType(iel);
+	
+	unsigned nve = _ml_msh->GetLevel(gridf)->el->GetElementDofNumber(iel,end_ind);
+	for (int j=0;j<nve;j++) {
+	  unsigned inode=(TypeIndex<3)?(_ml_msh->GetLevel(gridf)->el->GetElementVertexIndex(iel,j)-1u):(iel+j*nel);
+	  unsigned inode_Metis=_ml_msh->GetLevel(gridf)->GetMetisDof(inode,TypeIndex);
+	  if(inode_Metis>=offset)
+	    nnz[inode_Metis-offset]=_ml_msh->_type_elem[ielt][TypeIndex]->GetSize(j);
+	}
+      }
+    }
+    
+    
     _solution[gridf]->_ProjMat[TypeIndex] = SparseMatrix::build().release();
     _solution[gridf]->_ProjMat[TypeIndex]->init(nf,nc,nf_loc,nc_loc,27,27);
- 
+    //_solution[gridf]->_ProjMat[TypeIndex]->init(nf,nc,nf_loc,nc_loc,nnz,nnz);
+    
     // loop on the coarse grid 
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
       for (int iel_mts=_ml_msh->GetLevel(gridf-1)->IS_Mts2Gmt_elem_offset[isdom]; 
