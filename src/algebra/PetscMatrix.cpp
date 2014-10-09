@@ -104,6 +104,43 @@ void PetscMatrix::init(const  int m,
   this->zero ();
 }
 
+void PetscMatrix::init(	const  int m, const  int n, const  int m_l, const  int n_l,
+			const std::vector< int > & n_nz,const std::vector< int > & n_oz){
+    // Set matrix dimension
+  _m=m;
+  _n=n;
+  _m_l=m_l;
+  _n_l=n_l;
+
+  // Clear initialized matrices
+  if (this->initialized())  
+    this->clear();
+  
+  this->_is_initialized = true;
+
+  // processor info
+  int n_procs;
+  MPI_Comm_size(MPI_COMM_WORLD,&n_procs);
+  
+  int ierr = 0;
+  
+// create a sequential matrix on one processor
+  if (n_procs == 1) {
+    assert ( n_nz.size() == _m_l);
+    ierr = MatCreateSeqAIJ (MPI_COMM_WORLD, _m, _n, 0, &n_nz[0], &_mat);CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = MatSetFromOptions (_mat); 	   				CHKERRABORT(MPI_COMM_WORLD,ierr);
+  }
+  else {
+    parallel_onlyM();
+    assert ( ( n_nz.size() == _m_l) && (n_oz.size() == _m_l) );
+    ierr = MatCreate(MPI_COMM_WORLD, &_mat);				CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = MatSetSizes(_mat, _m_l, _n_l, _m, _n);   			CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = MatSetType(_mat, MATMPIAIJ);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = MatMPIAIJSetPreallocation(_mat, 1, &n_nz[0], 100, &n_oz[0] );  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  }
+  this->zero ();
+} 
+
 // =====================================0
 void PetscMatrix::update_sparsity_pattern(
   int m_global,                          // # global rows
@@ -204,9 +241,9 @@ void PetscMatrix::update_sparsity_pattern(const Graph &sparsity_pattern) {
   // dimension
   const  int m   =  sparsity_pattern._m; // global rows;
   const  int n   =  sparsity_pattern._n; // global columns
-  const  int n_l =sparsity_pattern._nl;  // local rows
-  const  int m_l =sparsity_pattern._ml;  // local columns
-  const  int ml_start =sparsity_pattern._ml_start;
+  const  int n_l =  sparsity_pattern._nl;  // local rows
+  const  int m_l =  sparsity_pattern._ml;  // local columns
+  const  int ml_start = sparsity_pattern._ml_start;
 
   // vectors n_nz (diagonal) and n_oz (offset) -------------------------------
   std::vector< int> n_nz(m_l);   std::vector< int> n_oz(m_l);

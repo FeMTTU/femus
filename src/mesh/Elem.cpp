@@ -27,97 +27,8 @@
 
 namespace femus {
 
-
-
 using std::cout;
 using std::endl;
-
-/**
- * Number of elements obtained with one refinement
-**/
-const unsigned NRE[6]= {8,8,8,4,4,2};
-
-/**
- * Number of FACES(3D), edges(2D) or point-extrema(1D) for each considered element
- **/
-const unsigned NFC[6][2]= {{6,6},
-  {0,4},
-  {3,5},
-  {0,4},
-  {0,3},
-  {0,2}
-};
-
-/**
- * Node ordering for each element face(3D), edge(2D) or point-extrema(1D) position for each considered element
- **/
-const unsigned ig[6][6][9]= {
-  { {0,1,5,4,8,17,12,16,20},
-    {1,2,6,5,9,18,13,17,21},
-    {2,3,7,6,10,19,14,18,22},
-    {3,0,4,7,11,16,15,19,23},
-    {0,3,2,1,11,10,9,8,24},
-    {4,5,6,7,12,13,14,15,25}
-  },
-  { {0,2,1,6,5,4},
-    {0,1,3,4,8,7},
-    {1,2,3,5,9,8},
-    {2,0,3,6,7,9}
-  },
-  { {0,1,4,3,6,13,9,12,15},
-    {1,2,5,4,7,14,10,13,16},
-    {2,0,3,5,8,12,11,14,17},
-    {0,2,1,8,7,6},
-    {3,4,5,9,10,11}
-  },
-  { {0,1,4},
-    {1,2,5},
-    {2,3,6},
-    {3,0,7}
-  },
-  { {0,1,3},
-    {1,2,4},
-    {2,0,5}
-  },
-  { {0},
-    {1}
-  }
-};
-
-
-const unsigned NFACENODES[6][6][3] = 
-{
-  { {4,8,9},  // Hex
-    {4,8,9},
-    {4,8,9},
-    {4,8,9},
-    {4,8,9},
-    {4,8,9}
-  },
-  { {3,6,7},  // Tet
-    {3,6,7},
-    {3,6,7},
-    {3,6,7}
-  },
-  { {4,8,9},  // Wedge
-    {4,8,9},
-    {4,8,9},
-    {3,6,7},
-    {3,6,7}
-  },
-  { {2,3,3},
-    {2,3,3},  // Quad
-    {2,3,3},
-    {2,3,3}
-  },
-  { {2,3,3},  // Tri
-    {2,3,3},
-    {2,3,3}
-  },
-  { {1,1,1},  // Line
-    {1,1,1}
-  }
-};
 
 /**
  * This constructor allocates the memory for the \textit{coarsest elem}
@@ -212,6 +123,27 @@ elem::elem(const elem *elc, const unsigned refindex) {
   _child_elem_flag=false;
 }
 
+
+elem::~elem() {
+    delete [] kvert_memory;
+    delete [] kvert;
+    delete [] kel_memory;
+    delete [] kel;
+    delete [] elt;
+    delete [] elf;
+    delete [] elg;
+    delete [] elmat;
+    delete [] elr;
+    delete [] kvtel_memory;
+    delete [] kvtel;
+    delete [] nve;
+    if(_node_region_flag) delete [] _node_region;
+    if(_child_elem_flag){
+      delete [] _child_elem_memory;
+      delete [] _child_elem;
+    }
+  }
+  
 /**
  * Return the number of vertices(type=0) + midpoints(type=1) + facepoints(type=2) + interiorpoits(type=2)
  **/

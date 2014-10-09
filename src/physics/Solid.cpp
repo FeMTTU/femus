@@ -52,23 +52,60 @@ Solid::Solid(Parameter& par, const double young_module, const double poisson_coe
   _young_module = young_module;
 
 
-  if (!strcmp(model,"Linear_elastic")) {
+  if (!strcmp(model,"Linear_elastic") || !strcmp(model,"Saint-Venant")) {
     _model = 0;
-  } else if (!strcmp(model,"Neo-Hookean")) {
+    _penalty = false;
+  }
+  if (!strcmp(model,"Saint-Venant-Penalty")) {
+    _model = 0;
+    _penalty = true;
+  }
+  else if (!strcmp(model,"Neo-Hookean")) {
     _model = 1;
-  } else {
+    _penalty = false;
+  }
+  else if (!strcmp(model,"Neo-Hookean-BW")) {
+    _model = 2;
+    _penalty = false;
+  }
+  else if (!strcmp(model,"Neo-Hookean-BW-Penalty")) {
+    _model = 3;
+    _penalty = true;
+  }
+  else if (!strcmp(model,"Neo-Hookean-AB-Penalty")) {
+    _model = 4;
+    _penalty = true;
+  }
+   else if (!strcmp(model,"Mooney-Rivlin")) {
+    _model = 5;
+    _penalty = false;
+  }
+  else {
     cout<<"Error! This solid model is not implemented "<<endl;
     exit(1);
   }
 
-  if (poisson_coeff < 0.5 && poisson_coeff >= 0) {
+  if (poisson_coeff <= 0.5 && poisson_coeff >= 0) {
     _poisson_coeff = poisson_coeff;
-  } else {
-    cout << "Error: the value for the Poisson coeffcient must be greater than 0 and lower than 0.5!" << endl;
+  } 
+  else {
+    cout << "Error: the value for the Poisson coeffcient must be greater than 0 and less equal than 0.5!" << endl;
     exit(1);
   }
-
-  _lambda_lame = (_young_module*_poisson_coeff)/((1.+_poisson_coeff)*(1.-2.*_poisson_coeff));
+  
+  
+  if(poisson_coeff<0.5){
+    _lambda_lame = (_young_module*_poisson_coeff)/((1.+_poisson_coeff)*(1.-2.*_poisson_coeff));
+  }
+  else if (true == _penalty){
+    std::cout<<"Error this solid model requires a Poisson coeffcient strictly less than 0.5"<<endl;
+    exit(1);
+  }
+  else{
+    cout << "Warning: the value for the Poisson coeffcient is 0.5, the material is incompressible"<<endl
+	 << "The Lame constant is infinity and it has been set equal to 1.0e100" << endl;
+    _lambda_lame =1.0e100;
+  }
   _mu_lame     = _young_module/(2.*(1.+_poisson_coeff));
 
 //   cout << endl << "SOLID properties: " << endl;
@@ -108,6 +145,10 @@ const double Solid::get_lame_shear_modulus() const{
   return _mu_lame;
 }
 
+const bool Solid::get_if_penalty() const{ 
+  return _penalty;
+}
+
 std::ostream & operator << (std::ostream & os, const Solid & solid)
 {
   os << "Density: " << solid._density << std::endl;
@@ -123,16 +164,17 @@ std::ostream & operator << (std::ostream & os, const Solid & solid)
 // Take a const-reference to the right-hand side of the assignment.
 // Return a non-const reference to the left-hand side.
 Solid& Solid::operator=(const Solid &solid) {
-  this->_parameter = solid._parameter;
-  this->_density = solid._density;
-  this->_thermal_conductivity = solid._thermal_conductivity;
-  this->_heat_capacity = solid._heat_capacity;
-  this->_thermal_expansion_coefficient = solid._thermal_expansion_coefficient;
-  this->_young_module = solid._young_module;
-  this->_poisson_coeff = solid._poisson_coeff;
-  this->_lambda_lame = solid._lambda_lame;
-  this->_mu_lame = solid._mu_lame;
-  this->_model = solid._model;
+  this->_parameter 			= solid._parameter;
+  this->_density 			= solid._density;
+  this->_thermal_conductivity 		= solid._thermal_conductivity;
+  this->_heat_capacity 			= solid._heat_capacity;
+  this->_thermal_expansion_coefficient 	= solid._thermal_expansion_coefficient;
+  this->_young_module 			= solid._young_module;
+  this->_poisson_coeff 			= solid._poisson_coeff;
+  this->_lambda_lame 			= solid._lambda_lame;
+  this->_mu_lame 			= solid._mu_lame;
+  this->_model 				= solid._model;
+  this->_penalty 			= solid._penalty;
   return *this;  // Return a reference to myself.
 }
 

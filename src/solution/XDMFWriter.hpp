@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: XDMFWriter
  Authors: Eugenio Aulisa, Simone Bnà
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -36,18 +36,18 @@ class XDMFWriter : public Writer {
 
 public:
 
-  /** Constructor. */
-  XDMFWriter(MultiLevelSolution& ml_sol);
+    /** Constructor. */
+    XDMFWriter(MultiLevelSolution& ml_sol);
 
-  /** Destructor */
-  virtual ~XDMFWriter();
-  
-  /** write output function */
-  virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step = 0);
-  
-  /** write a wrapper file for paraview to open all the files of an history toghether */
-  void write_solution_wrapper(const char type[]) const;
-  
+    /** Destructor */
+    virtual ~XDMFWriter();
+
+    /** write output function */
+    virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step = 0);
+
+    /** write a wrapper file for paraview to open all the files of an history toghether */
+    void write_solution_wrapper(const char type[]) const;
+
 };
 
 

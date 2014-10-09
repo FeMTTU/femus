@@ -1,10 +1,10 @@
 /*=========================================================================
 
- Program: FEMUS
+ Program: FEMuS
  Module: ElemType
  Authors: Eugenio Aulisa
  
- Copyright (c) FEMTTU
+ Copyright (c) FEMuS
  All rights reserved. 
 
  This software is distributed WITHOUT ANY WARRANTY; without even
@@ -27,7 +27,7 @@
 #include "SparseMatrix.hpp"
 #include "Mesh.hpp"
 #include "LinearEquation.hpp"
-
+#include "adept.h"
 
 namespace femus {
 
@@ -41,29 +41,120 @@ class LinearEquation;
 
 class elem_type {
   
-private:
-  void test_prol_and_rest();
+public:
 
+  /** constructor */
+  elem_type(const char *solid,const char *order, const char* gauss_order);
+  
+  /** destructor */
+  ~elem_type();
+
+  /** To be Added */
+  void BuildProlongation(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
+                         const unsigned &index_sol, const unsigned &kkindex_sol) const;
+
+  /** To be Added */  
+  void BuildRestrictionTranspose(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
+                                 const unsigned &index_sol, const unsigned &kkindex_sol, const bool &TestDisp) const;		    
+
+  /** To be Added */
+  void prolongation(const mesh &meshf,const mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;
+  
+  /** To be Added */
+  void ProlQitoQj(const mesh& mymesh,const int& iel, SparseMatrix* Projmat, 
+                  bool testnode[],const unsigned &itype) const;
+
+  /** To be Added */ 
+  void JacobianSur2D(const vector < vector < double > > &vt, const unsigned &ig,
+                     double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal)const;
+  /** To be Added */ 
+  void JacobianSur2D_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
+			adept::adouble &Weight, vector < adept::adouble > &gradphi, 
+			vector < adept::adouble > &normal) const;
+  /** To be Added */
+  void JacobianSur1D(const vector < vector < double > > &vt, const unsigned &ig,
+                     double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
+
+  /** To be Added */
+  void Jacobian3D(const vector < vector < double > > &vt,const unsigned &ig,
+                  double &Weight, vector < double > &other_phi, vector < double > &gradphi)const;
+  
+  /** To be Added */
+  void Jacobian2D(const vector < vector < double > > &vt,const unsigned &ig,
+                  double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
+		  
+  /** To be Added */
+  void Jacobian2D_AD(adept::Stack &s, const vector < vector < adept::adouble > > &vt,const unsigned &ig,
+		     adept::adouble &Weight, vector < adept::adouble > &gradphi) const;	  
+		     
+  /** To be Added */
+  void Jacobian3D_AD(adept::Stack &s, const vector < vector < adept::adouble > > &vt,const unsigned &ig,
+		     adept::adouble &Weight, vector < adept::adouble > &gradphi) const;	 
+  /** To be Added */
+  void Jacobian1D(const vector < vector < double > > &vt,const unsigned &ig,
+                  double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
+
+  /** To be Added */
+  double* GetPhi(const unsigned &ig) const;
+  
+  /** To be Added */
+  double* GetDPhiDXi(const unsigned &ig) const;
+  
+  /** To be Added */
+  double* GetDPhiDEta(const unsigned &ig) const;
+  
+  /** To be Added */
+  double* GetDPhiDZeta(const unsigned &ig) const;
+  
+  /** To be Added */
+  void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
+               double &Weight, double *other_phi) const;
+
+  /** To be Added */
+  double  GetGaussWeight(const unsigned ig) const {
+    return GaussWeight[ig];
+  };
+  
+  /** To be Added */
+  unsigned GetGaussPointNumber() const {
+    return GaussPoints;
+  };
+  
+  // member data
+  static unsigned _refindex;
+ 
+  void (elem_type::*Jacobian_ptr)(const vector < vector < double > > &vt, const unsigned &ig,
+                                  double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
+  
+  void (elem_type::*Jacobian_AD_ptr)(adept::Stack &s, const vector < vector < adept::adouble > > &vt, const unsigned &ig,
+				     adept::adouble &Weight,  vector < adept::adouble > &gradphi) const;				  
+				  
+  void (elem_type::*Jacobian_sur_ptr)(const vector < vector < double > > &vt, const unsigned &ig,
+                                      double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
+      
+  void (elem_type::*Jacobian_sur_AD_ptr)(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
+					 adept::adouble &Weight, vector < adept::adouble > &gradphi, 
+					 vector < adept::adouble > &normal) const;
+				      
+private:
+  
+  // member data
+  void test_prol_and_rest();
   int nc_,nf_,ncf_[3];
   unsigned type_;
   unsigned SolType_;
-  
   const double **X;
   const int **IND;
   const int **KVERT_IND;
-
   double** rest_val;
   int** rest_ind;
   double* mem_rest_val;
   int * mem_rest_ind;
-
   double** prol_val;
   int** prol_ind;
   double* mem_prol_val;
   int * mem_prol_ind;
-
   basis *pt_basis;
-
   hex0 hex_0;
   hexpwl hex_pwl;
   hex1 hex_1;
@@ -86,10 +177,8 @@ private:
   line0 line_0;
   line1 line_1;
   line2 line_2;
-
   const double *GaussWeight;
   unsigned GaussPoints;
-
   double **phi;
   double *phi_memory;
   double **dphidxi;
@@ -99,59 +188,7 @@ private:
   double **dphidzeta;
   double *dphidzeta_memory;
   const double *weight;
-
-public:
-  static unsigned _refindex;
-  elem_type(const char *solid,const char *order, const char* gauss_order);
-  ~elem_type();
   
-//   int prolongation(const elem* el,const elem* elc, const int& ielc, 
-// 		   Mat &PP,const int& istart=0,const int& jstart=0) const ;
-		   
-  void BuildProlongation(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
-			 const unsigned &index_sol, const unsigned &kkindex_sol) const;
-		    
-		    
-  void BuildRestrictionTranspose(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
-				 const unsigned &index_sol, const unsigned &kkindex_sol, const bool &TestDisp) const;		    
-		   
-  void prolongation(const mesh &meshf,const mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;
-  
-  void ProlQitoQj(const mesh& mymesh,const int& iel, SparseMatrix* Projmat, 
-		  bool testnode[],const unsigned &itype) const;
-
-  // Jacobian over Riemaniann Manifold (2D or 3D)
-  void JacobianSur2D(const double vt[][27],const unsigned &ig,
-                     double &Weight, double *other_phi, double gradphi[][3], double normal[3])const;
-  void JacobianSur1D(const double vt[][27],const unsigned &ig,
-                     double &Weight, double *other_phi,double gradphi[][3], double normal[3]) const;
-  void (elem_type::*Jacobian_sur_ptr)(const double vtx[][27],const unsigned &ig,
-                                      double &Weight, double *other_phi, double gradphi[][3], double normal[3]) const;
-
-
-  void Jacobian3D(const vector < vector < double > > &vt,const unsigned &ig,
-                  double &Weight, vector < double > &other_phi, vector < double > &gradphi)const;
-  void Jacobian2D(const vector < vector < double > > &vt,const unsigned &ig,
-                  double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
-  void Jacobian1D(const vector < vector < double > > &vt,const unsigned &ig,
-                  double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
-  void (elem_type::*Jacobian_ptr)(const vector < vector < double > > &vt,const unsigned &ig,
-                                  double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
-
-  double* GetPhi(const unsigned &ig) const;
-  double* GetDPhiDXi(const unsigned &ig) const;
-  double* GetDPhiDEta(const unsigned &ig) const;
-  double* GetDPhiDZeta(const unsigned &ig) const;
-  
-  void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
-               double &Weight, double *other_phi) const;
-
-  double  GetGaussWeight(const unsigned ig) const {
-    return GaussWeight[ig];
-  };
-  unsigned GetGaussPointNumber() const {
-    return GaussPoints;
-  };
 };
 
 
