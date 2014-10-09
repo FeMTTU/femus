@@ -141,140 +141,6 @@ void FEElemBase::SetOrder(uint fe)  {
 }
 
 
-void FEElemBase::init() {
-
-  if ( _geomel->_geomel_type != QUADR && _geomel->_geomel_type != TRIANG  ) {
-    std::cout << "FE::FE: GeomEl type " << _geomel->_geomel_type << " not supported" << std::endl;
-    abort();
-  }
-
-  if ( _order != QQ && _order != LL && _order != KK ) {
-    std::cout << "FE::FE: FE family " << _order << " not supported" << std::endl;
-    abort();
-  }
-
-
-  std::cout << " Reading FE:: " << std::endl;
-
-  std::string femus_dir = getenv("FEMUS_DIR");  //TODO remove this asap
-  std::string    ext_in = DEFAULT_EXT_IN;
-  std::ostringstream file;
-
-  std::string    f_shape = "shape";
-  std::string  geomel[2];
-  geomel[QUADR]  =  "quadr_";
-  geomel[TRIANG] = "triang_";
-  uint space_dim = _geomel->_dim;
-
-  if ( _order == QQ || _order == LL || _order == KK) {
-
-    for (int vb=0; vb<VB; vb++) {
-
-      _phi_mapVB[vb] = new double[_qrule->_NoGaussVB[vb]*_ndof[vb]];
-      _dphidxez_mapVB[vb] = new double[_qrule->_NoGaussVB[vb]*_ndof[vb]*(space_dim-vb)];
-
-      uint dim = space_dim - vb;
-      file.str("");
-      file << femus_dir << "/" << DEFAULT_CONTRIBDIR << "/" << DEFAULT_FEMDIR << "/" << geomel[_geomel->_geomel_type]
-           << f_shape << dim << "D_" << _qrule->_NoGaussVB[vb] << "." << _ndof[vb] << ext_in;
-      std::ifstream infile(file.str().c_str());
-      readVB(vb,dim,infile);               //TODO    AAAAAAAAAAAAAAAAAAAAAAAAAA  notice that one dimension is the SPACE and another one is the MANIFOLD!!!
-
-
-    }
-
-  }
-
-  else {
-    std::cout << "FE::init: FE order " << _order << " not supported" << std::endl;
-    abort();
-  }
-  
-  
-  
-  ///// LOOP to PRINT and CHECK the DIFFERENT VALUES  ===============================
-  
-  
-  for (int vb=0; vb<VB; vb++) {
-          uint dim = space_dim - vb;
-
-  for (uint ig=0; ig<_qrule->_NoGaussVB[vb]; ig++) {
-
-    for (uint idof=0; idof< _ndof[vb]; idof++) {
-//       infile >> dummy;
-//       _phi_mapVB[vb][idof*ngss+ig]=dummy;
-      for (uint idim=0; idim< dim; idim++) {
-          std::cout << "****************************************" << vb << " " << ig << " " << idof << " " << idim << " dphi         " <<  _dphidxez_mapVB[vb][ idim*_ndof[vb]*_qrule->_NoGaussVB[vb] + idof*_qrule->_NoGaussVB[vb] + ig ]  << "                       " << std::endl;
-      }
-    }
-  }
-  
-  
-  
-  } //end VB for
-  
-  
-    ///// LOOP to PRINT and CHECK the DIFFERENT VALUES ===============================
-  
-  return;
-}
-
-
-
-
-//TODO OK, in this routine we have THE SAME dimension of the ELEMENT
-//as the SAME NUMBER OF DERIVATIVES
-//This is because  WE ARE NOT ON A MANIFOLD
-//If we were on a manifold we could consider CURVED SURFACE ELEMENTS and maybe
-//we would need to distinguish between the dimension of the manifold and the dimension
-//of the embedding space
-//Since we are in a single abstract element, this routine will be called twice, one for VV and one for BB
-
-//we have to fill the VV and BB arrays
-//so we have to pick the 3 and 2d, or the 2 and 1d
-
-void FEElemBase::readVB(const uint vb, const uint dim_in, std::istream& infile) {
-
-  if (!infile) {
-    std::cout << "Read: Gauss Input file "<< infile << " not opened."
-              << std::endl;
-    exit(3);
-  }
-  const int  bufLen = 256;
-  char  buf[bufLen+1];
-  sprintf(buf,"0");
-  uint ng;
-  double dummy;
-  uint ngss = _qrule->_NoGaussVB[vb];
-  uint nsh  = _ndof[vb];
-  std::cout << " Reading elem with vb = " << vb << " , " << ngss << " gaussian points and "
-            << nsh << " shape functions \n" << std::endl;
-  while (strncmp(buf,"gpoints",7) != 0)    infile >> buf;
-  infile >> ng;
-  if ( ngss != ng) {
-    std::cout << " We are reading from the wrong file" << std::endl;
-    abort();
-  }
-
-  // Reading 2d shape function at gauss points
-  for (uint k=0; k<ngss; k++) {
-    infile >> buf;
-    infile >> dummy;
-//     _qrule->_weightVB[vb][k] = dummy;  //TODO AAA if you read this again it doesnt work!!! do not read this again
-    for (uint s=0; s< nsh; s++) {
-      infile >> dummy;
-      _phi_mapVB[vb][s*ngss+k]=dummy;
-      for (uint idim=0; idim< dim_in; idim++) {
-        infile >> dummy;
-        _dphidxez_mapVB[vb][ idim*nsh*ngss +s*ngss +k ] = dummy;
-      }
-    }
-  }
-
-  return;
-}
-
-
 
 //======================
 // =======================
@@ -600,7 +466,8 @@ void FEElemBase::init_switch() {
 const unsigned map_hex27[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,24,20,21,22,23,25,26};
 
 if (vb == VV && _order == QQ && space_dim == 3  && _geomel->_geomel_type == QUADR) {
-  
+            std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "REMEMBER THAT ONLY HEX27 HAS A DIFFERENT CONNECTIVITY MAP"  << std::endl;
+
   
       for (int ig = 0; ig < _qrule->_NoGaussVB[vb]; ig++) {
 

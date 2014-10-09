@@ -87,7 +87,6 @@
     FEElements[fe]->SetOrder(fe);
     FEElements[fe]->AssociateQRule(&qrule);
 //end sort of constructor
-    FEElements[fe]->init();
     FEElements[fe]->init_switch();
   }
 
