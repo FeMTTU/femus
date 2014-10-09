@@ -78,7 +78,7 @@ unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kki
 //--------------------------------------------------------------------------------
 void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  vector <int> &SolType_other,  
 		     const vector <char*> &SolName_other, vector <NumericVector*> *Bdc_other, 
-		     const unsigned &other_gridr, const unsigned &other_gridn) {
+		     const unsigned &other_gridr, const unsigned &other_gridn, vector <bool> &SparsityPattern_other) {
   _SolPdeIndex=SolPdeIndex_other;
   _gridr=other_gridr;
   _gridn=other_gridn;
@@ -87,6 +87,8 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
   _SolName=SolName_other;
   _Bdc=Bdc_other;
   
+  _SparsityPattern=SparsityPattern_other;
+   
   int ierr;
   KKIndex.resize(_SolPdeIndex.size()+1u);
   KKIndex[0]=0;
@@ -257,10 +259,22 @@ void LinearEquation::DeletePde() {
   
 }
  
- 
- 
   void LinearEquation::GetSparsityPatternSize() {
     
+    unsigned SolPdeSize=_SolPdeIndex.size();
+    if(_SparsityPattern.size()==0){
+      _SparsityPattern.resize(SolPdeSize*SolPdeSize);
+      for(int i=0; i<SolPdeSize;i++){
+	for(int j=0; j<SolPdeSize;j++){
+	  _SparsityPattern[SolPdeSize*i+j]=1;
+	}
+      }
+    }
+    else if(_SparsityPattern.size()!=SolPdeSize*SolPdeSize){
+      std::cout<<"Sparsity Pattern size ( "<< _SparsityPattern.size() <<" ) does not match system PDE size"<<std::endl; 
+      exit(0);
+    }
+        
     const int dim = _msh->GetDimension();
    
     const int max_size = static_cast< int > (ceil(pow(3,dim)));
@@ -313,40 +327,41 @@ void LinearEquation::DeletePde() {
 	for(int inode=0;inode<nve[i];inode++){
 	  int idof_local=dofsVAR[i][inode] - IndexStart;
 	  for(int j=0;j<_SolPdeIndex.size();j++){
-	    for(int jnode=0;jnode<nve[j];jnode++){
-	      int jdof_local=dofsVAR[j][jnode] - IndexStart;
+	    if(_SparsityPattern[_SolPdeIndex.size()*i+j]){
+	      for(int jnode=0;jnode<nve[j];jnode++){
+	        int jdof_local=dofsVAR[j][jnode] - IndexStart;
 	   
-	      if(idof_local >= 0){
-		if(jdof_local >= 0){
-		  BlgToMe_d[ idof_local ][ jdof_local ] = 1;
-		}
-	        else {
-		  BlgToMe_o[ idof_local ][ dofsVAR[j][jnode] ]=1;
-		}
-	      }
-	      else{
-		int iproc, jproc;
-		//////////////////
-		for(int l=0;l<this_proc;l++){
-		  if(dofsVAR[i][inode] >= KKoffset[0][l] &&  dofsVAR[i][inode] < KKoffset[KKIndex.size()-1][l]){
-		    iproc=l;
-		    break;
+		if(idof_local >= 0){ // i-row belogns to this proc
+		  if(jdof_local >= 0){ // j-row belongs to this proc (diagonal)
+		    BlgToMe_d[ idof_local ][ jdof_local ] = 1;
+		  }
+		  else { // j-row does not belong to this proc (off-diagonal)
+		    BlgToMe_o[ idof_local ][ dofsVAR[j][jnode] ]=1;
 		  }
 		}
-		/////////////////
-		for(int l=0;l<=this_proc;l++){
-		  if(dofsVAR[j][jnode] >= KKoffset[0][l] &&  dofsVAR[j][jnode] < KKoffset[KKIndex.size()-1][l]){
-		    jproc=l;
-		    break;
+		else{ // i-row does not belong to this proc 
+		  int iproc, jproc;
+		  // identify the process the i-row belogns to
+		  for(int l=0;l<this_proc;l++){
+		    if(dofsVAR[i][inode] < KKoffset[KKIndex.size()-1][l]){
+		      iproc=l;
+		      break;
+		    }
+		  }
+		  // identify the process the j-column belogns to
+		  for(int l=0;l<=this_proc;l++){
+		    if(dofsVAR[j][jnode] < KKoffset[KKIndex.size()-1][l]){
+		      jproc=l;
+		      break;
+		    }
+		  }
+		  if (iproc != jproc){ // if diagonal
+		    DnBlgToMe_o[dofsVAR[i][inode]][dofsVAR[j][jnode]]=1;
+		  }
+		  else if (iproc == jproc){ // if off-diagonal
+		    DnBlgToMe_d[dofsVAR[i][inode]][dofsVAR[j][jnode]]=1;
 		  }
 		}
-		if (iproc != jproc){
-		  DnBlgToMe_o[dofsVAR[i][inode]][dofsVAR[j][jnode]]=1;
-		}
-		else if (iproc == jproc){
-		  DnBlgToMe_d[dofsVAR[i][inode]][dofsVAR[j][jnode]]=1;
-		}
-		
 	      }
 	    } 
 	  }
@@ -354,35 +369,39 @@ void LinearEquation::DeletePde() {
       }     
     }
       
-    NumericVector  *_sizeDnBM_o = NumericVector::build().release();
-    _sizeDnBM_o->init(*_EPS);
-    _sizeDnBM_o->zero();
+    NumericVector  *sizeDnBM_o = NumericVector::build().release();
+    sizeDnBM_o->init(*_EPS);
+    sizeDnBM_o->zero();
     for (std::map < int, std::map <int, bool > >::iterator it=DnBlgToMe_o.begin(); it!=DnBlgToMe_o.end(); ++it){
-      _sizeDnBM_o->add(it->first,it->second.size());
+      sizeDnBM_o->add(it->first,it->second.size());
     }
-    _sizeDnBM_o->close(false);
+    sizeDnBM_o->close();
    
     
-    NumericVector  *_sizeDnBM_d = NumericVector::build().release();
-    _sizeDnBM_d->init(*_EPS);
-    _sizeDnBM_d->zero();
+    NumericVector  *sizeDnBM_d = NumericVector::build().release();
+    sizeDnBM_d->init(*_EPS);
+    sizeDnBM_d->zero();
     for (std::map < int, std::map <int, bool > >::iterator it=DnBlgToMe_d.begin(); it!=DnBlgToMe_d.end(); ++it){
-      _sizeDnBM_d->add(it->first,it->second.size());
+      sizeDnBM_d->add(it->first,it->second.size());
     }
-    _sizeDnBM_d->close();
+    sizeDnBM_d->close();
     
           
     d_nnz.resize(Offset);
     o_nnz.resize(Offset);
        
+    int d_max=Offset;
+    int o_max=KKIndex[KKIndex.size()-1u]-Offset;
+    
     for(int i=0; i<Offset;i++){
-     d_nnz[i]=static_cast <int> ((*_sizeDnBM_d)(IndexStart+i))+BlgToMe_d[i].size();
-     if(d_nnz[i] > Offset) d_nnz[i]=Offset;
-     o_nnz[i]=static_cast <int> ((*_sizeDnBM_o)(IndexStart+i))+BlgToMe_o[i].size();
+     d_nnz[i]=static_cast <int> ((*sizeDnBM_d)(IndexStart+i))+BlgToMe_d[i].size();
+     if (d_nnz[i] > d_max) d_nnz[i] = d_max;
+     o_nnz[i]=static_cast <int> ((*sizeDnBM_o)(IndexStart+i))+BlgToMe_o[i].size();
+     if (o_nnz[i] > o_max) o_nnz[i] = o_max;
     }
      
-    delete _sizeDnBM_o;
-    delete _sizeDnBM_d;
+    delete sizeDnBM_o;
+    delete sizeDnBM_d;
   }
 } 
 

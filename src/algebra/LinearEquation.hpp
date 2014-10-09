@@ -54,7 +54,7 @@ public:
   /** To be Added */
   void InitPde(const vector <unsigned> &_SolPdeIndex,const  vector <int> &SolType,  
                const vector <char*> &SolName, vector <NumericVector*> *Bdc_other, 
-               const unsigned &other_gridr, const unsigned &other_gridn);
+               const unsigned &other_gridr, const unsigned &other_gridn, vector < bool > &SparsityPattern_other);
   
   void GetSparsityPatternSize();
   
@@ -103,6 +103,7 @@ protected:
   vector <int> _SolType;  
   vector <char*> _SolName;
   const vector <NumericVector*> *_Bdc;
+  vector <bool> _SparsityPattern;
     
 };
 

@@ -44,7 +44,7 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   _AMRthreshold(0.01),
   _SmootherType(smoother_type)
  {
-  
+  _SparsityPattern.resize(0);
  }
 
 LinearImplicitSystem::~LinearImplicitSystem() {
@@ -72,7 +72,7 @@ void LinearImplicitSystem::init() {
     
     for (unsigned i=0; i<_gridn; i++) {
       _LinSolver[i]->InitPde(_SolSystemPdeIndex,_ml_sol->GetSolType(),
-			     _ml_sol->GetSolName(),&_solution[i]->_Bdc,_gridr,_gridn);
+			     _ml_sol->GetSolName(),&_solution[i]->_Bdc,_gridr,_gridn,_SparsityPattern);
     }  
     
     for (unsigned ig=1; ig<_gridn; ig++) {
@@ -106,7 +106,7 @@ void LinearImplicitSystem::AddSystemLevel() {
     _LinSolver[_gridn]=LinearEquationSolver::build(_gridn,_msh[_gridn],_SmootherType).release();
     
     _LinSolver[_gridn]->InitPde(_SolSystemPdeIndex,_ml_sol->GetSolType(),
-				_ml_sol->GetSolName(),&_solution[_gridn]->_Bdc,_gridr,_gridn+1);    
+				_ml_sol->GetSolName(),&_solution[_gridn]->_Bdc,_gridr,_gridn+1,_SparsityPattern);    
     BuildProlongatorMatrix(_gridn);
    
     
