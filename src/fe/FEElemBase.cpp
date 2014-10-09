@@ -590,6 +590,48 @@ void FEElemBase::init_switch() {
       std::cout << "Wrong gauss points" << std::endl;
       abort();
     }
+ 
+ 
+// HEX 27 CASE ========================================== 
+// HEX 27 CASE ========================================== 
+// HEX 27 CASE ========================================== 
+// TRICK: for the HEX27 let me put the MAP for converting to my connectivity    
+// from eu connectivity to my (=libmesh) connectivity
+const unsigned map_hex27[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,24,20,21,22,23,25,26};
+
+if (vb == VV && _order == QQ && space_dim == 3  && _geomel->_geomel_type == QUADR) {
+  
+  
+      for (int ig = 0; ig < _qrule->_NoGaussVB[vb]; ig++) {
+
+      for (int idof=0; idof < _ndof[vb]; idof++) {
+//                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;
+        _phi_mapVBGD[vb][ig][idof] = myelems[vb]->GetPhi(ig)[ map_hex27[idof] ];
+// 	std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapVBGD[vb][ig][dof] << std::endl;
+
+// derivatives in canonical element
+        uint dim = space_dim - vb;
+        for (uint idim = 0; idim < dim; idim++) {
+// 		 double* temp =  ( myelems[vb]->*(myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
+          double* tempTwo =  ( myelems[vb]->*(DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
+          _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]] =  tempTwo[ map_hex27[idof] ];
+          std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]]  << "                                      "  << std::endl;
+
+        }
+
+      }
+      
+    }  // end gauss
+  
+  
+  
+}
+// HEX 27 CASE ========================================== 
+// HEX 27 CASE ========================================== 
+// HEX 27 CASE ========================================== 
+
+
+   else { 
 
     for (int ig = 0; ig < _qrule->_NoGaussVB[vb]; ig++) {
 
@@ -609,7 +651,12 @@ void FEElemBase::init_switch() {
         }
 
       }
-    }
+      
+    }  // end gauss
+    
+    
+  } //else trick 
+    
   } //end VB for
 // loop ===========================
 // loop  ===========================
