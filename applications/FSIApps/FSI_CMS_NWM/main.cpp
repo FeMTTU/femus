@@ -147,7 +147,13 @@ int main(int argc,char **args) {
   system.AddSolutionToSytemPDE("V");
   system.AddSolutionToSytemPDE("P");
   
-  
+  bool sparsity_pattern_matrix[5][5]={{1, 0, 1, 0, 0},
+				      {0, 1, 0, 1, 0},
+				      {1, 1, 1, 1, 1},
+				      {1, 1, 1, 1, 1},
+				      {1, 1, 0, 0, 1}};
+  vector < bool > sparsity_pattern (sparsity_pattern_matrix[0],sparsity_pattern_matrix[0]+25*sizeof(bool));
+  system.SetSparsityPattern(sparsity_pattern);  
    
   // System Fluid-Structure-Interaction
   system.AttachAssembleFunction(IncompressibleFSIAssemblyAD);  

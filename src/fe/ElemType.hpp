@@ -61,8 +61,7 @@ public:
   void prolongation(const mesh &meshf,const mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;
   
   /** To be Added */
-  void ProlQitoQj(const mesh& mymesh,const int& iel, SparseMatrix* Projmat, 
-                  bool testnode[],const unsigned &itype) const;
+  void prolongation(const mesh& mymesh,const int& iel, SparseMatrix* Projmat, const unsigned &itype) const;
 
   /** To be Added */ 
   void JacobianSur2D(const vector < vector < double > > &vt, const unsigned &ig,
@@ -135,8 +134,12 @@ public:
   void (elem_type::*Jacobian_sur_AD_ptr)(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
 					 adept::adouble &Weight, vector < adept::adouble > &gradphi, 
 					 vector < adept::adouble > &normal) const;
+  void GetSparsityPatternSize(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc,  
+			      NumericVector* NNZ_d, NumericVector* NNZ_o,
+			      const unsigned &index_sol, const unsigned &kkindex_sol) const; 
   void GetSparsityPatternSize(const mesh &meshf,const mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const;					 
   					 
+  void GetSparsityPatternSize(const mesh& mesh,const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned &itype) const;
 				      
 private:
   

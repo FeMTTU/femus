@@ -421,33 +421,69 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
   int iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
   
-  int nf= _LinSolver[gridf]->KKIndex[_LinSolver[gridf]->KKIndex.size()-1u];
-  int nc= _LinSolver[gridf-1]->KKIndex[_LinSolver[gridf-1]->KKIndex.size()-1u];
-  int nf_loc = _LinSolver[gridf]->KKoffset[_LinSolver[gridf]->KKIndex.size()-1][iproc]-_LinSolver[gridf]->KKoffset[0][iproc];
-  int nc_loc = _LinSolver[gridf-1]->KKoffset[_LinSolver[gridf-1]->KKIndex.size()-1][iproc]-_LinSolver[gridf-1]->KKoffset[0][iproc];
-  _LinSolver[gridf]->_PP = SparseMatrix::build().release();
-  _LinSolver[gridf]->_PP->init(nf,nc,nf_loc,nc_loc,27,27);
+  LinearEquationSolver* LinSolf=_LinSolver[gridf];
+  LinearEquationSolver* LinSolc=_LinSolver[gridf-1];
+  mesh* mshc = _msh[gridf-1];
+  int nf= LinSolf->KKIndex[LinSolf->KKIndex.size()-1u];
+  int nc= LinSolc->KKIndex[LinSolc->KKIndex.size()-1u];
+  int nf_loc = LinSolf->KKoffset[LinSolf->KKIndex.size()-1][iproc]-LinSolf->KKoffset[0][iproc];
+  int nc_loc = LinSolc->KKoffset[LinSolc->KKIndex.size()-1][iproc]-LinSolc->KKoffset[0][iproc];
+  
+  NumericVector *NNZ_d = NumericVector::build().release();
+  NNZ_d->init(*LinSolf->_EPS);
+  NNZ_d->zero();
+    
+  NumericVector *NNZ_o = NumericVector::build().release();
+  NNZ_o->init(*LinSolf->_EPS);
+  NNZ_o->zero();
   
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
-    unsigned SolIndex=_SolSystemPdeIndex[k];
-    
+    unsigned SolIndex = _SolSystemPdeIndex[k];
+    unsigned  SolType = _ml_sol->GetSolutionType(SolIndex);
     // loop on the coarse grid 
     for(int isdom=iproc; isdom<iproc+1; isdom++) {
-      for (int iel_mts=_msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom]; 
-	   iel_mts < _msh[gridf-1]->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = _msh[gridf-1]->IS_Mts2Gmt_elem[iel_mts];
-	if(_msh[gridf-1]->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
-    
-	  short unsigned ielt=_msh[gridf-1]->el->GetElementType(iel);
-	  
-	  _equation_systems._ml_msh->_type_elem[ielt][_ml_sol->GetSolutionType(SolIndex)]->BuildProlongation(*_LinSolver[gridf],*_LinSolver[gridf-1],iel,
-								 _LinSolver[gridf]->_PP,SolIndex,k);
-	
+      for (int iel_mts=mshc->IS_Mts2Gmt_elem_offset[isdom]; iel_mts < mshc->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
+	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+   	  short unsigned ielt=mshc->el->GetElementType(iel);
+	  _equation_systems._ml_msh->_type_elem[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
 	}
       }
     }
   }
-  _LinSolver[gridf]->_PP->close();
+  
+  NNZ_d->close();
+  NNZ_o->close();
+    
+  unsigned offset = LinSolf->KKoffset[0][iproc];
+  vector <int> nnz_d(nf_loc);
+  vector <int> nnz_o(nf_loc);
+  for(int i=0; i<nf_loc;i++){
+    nnz_d[i]=static_cast <int> ((*NNZ_d)(offset+i));
+    nnz_o[i]=static_cast <int> ((*NNZ_o)(offset+i));
+  }
+            
+  delete NNZ_d;
+  delete NNZ_o;
+    
+  LinSolf->_PP = SparseMatrix::build().release();
+  LinSolf->_PP->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
+  
+  for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
+    unsigned SolIndex = _SolSystemPdeIndex[k];
+    unsigned  SolType = _ml_sol->GetSolutionType(SolIndex);
+    // loop on the coarse grid 
+    for(int isdom=iproc; isdom<iproc+1; isdom++) {
+      for (int iel_mts=mshc->IS_Mts2Gmt_elem_offset[isdom]; iel_mts < mshc->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
+	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+    	  short unsigned ielt=mshc->el->GetElementType(iel);
+	  _equation_systems._ml_msh->_type_elem[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel,LinSolf->_PP,SolIndex,k);
+	}
+      }
+    }
+  }
+  LinSolf->_PP->close();
 }
 
 

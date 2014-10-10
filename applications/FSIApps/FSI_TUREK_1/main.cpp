@@ -93,7 +93,7 @@ int main(int argc,char **args) {
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
   if(simulation<3)
-    nm=2;
+    nm=3;
   else if(simulation<6)
     nm=2;
 
