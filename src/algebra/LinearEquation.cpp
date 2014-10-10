@@ -339,22 +339,13 @@ void LinearEquation::DeletePde() {
 		    BlgToMe_o[ idof_local ][ dofsVAR[j][jnode] ]=1;
 		  }
 		}
-		else{ // i-row does not belong to this proc 
-		  int iproc, jproc;
+		else{ // i-row does not belong to this proc 		  
 		  // identify the process the i-row belogns to
-		  for(int l=0;l<this_proc;l++){
-		    if(dofsVAR[i][inode] < KKoffset[KKIndex.size()-1][l]){
-		      iproc=l;
-		      break;
-		    }
-		  }
+		  int iproc=0;
+		  while (dofsVAR[i][inode] >= KKoffset[KKIndex.size()-1][iproc]) iproc++;
 		  // identify the process the j-column belogns to
-		  for(int l=0;l<=this_proc;l++){
-		    if(dofsVAR[j][jnode] < KKoffset[KKIndex.size()-1][l]){
-		      jproc=l;
-		      break;
-		    }
-		  }
+		  int jproc=0; 
+		  while (dofsVAR[j][jnode] >= KKoffset[KKIndex.size()-1][jproc]) jproc++;		
 		  if (iproc != jproc){ // if diagonal
 		    DnBlgToMe_o[dofsVAR[i][inode]][dofsVAR[j][jnode]]=1;
 		  }
