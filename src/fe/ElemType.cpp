@@ -20,7 +20,7 @@
 #include "GaussPoints.hpp"
 #include "ElemType.hpp"
 #include "Elem.hpp"
-
+#include "NumericVector.hpp"
 
 namespace femus {
 
@@ -650,8 +650,9 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
         if (i/4==1) phi=pt_basis->eval_dphidx(IND[j],X[i]);
         else if (i/4==2) phi=pt_basis->eval_dphidy(IND[j],X[i]);
       }
-      if (phi!=0)
+      if (phi!=0){
         counter++;
+      }
     }
   }
   double *pt_d;
@@ -688,6 +689,7 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       }
     }
   }
+  
   prol_val[nf_]=pt_d;
   prol_ind[nf_]=pt_i;
 
@@ -833,12 +835,43 @@ void elem_type::prolongation(const mesh &meshf,const mesh &meshc, const int& iel
     for (int k=0; k<ncols; k++) {
       int j=prol_ind[i][k]; 
       int jadd=meshc.el->GetDof(ielc,j,type_);
-      int jj=meshc.GetMetisDof(jadd,SolType_);
-      cols[k]=jj;
+      int jcolumn=meshc.GetMetisDof(jadd,SolType_);
+      cols[k]=jcolumn;
     }
+
     Projmat->insert_row(irow,ncols,cols,prol_val[i]);
   }
 }
+
+
+void elem_type::GetSparsityPattern(const mesh &meshf,const mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const {
+  vector<int> cols(27);
+  
+  for (int i=0; i<nf_; i++) {
+    int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
+    int ielf=meshc.el->GetChildElement(ielc,i0);
+    int i1=KVERT_IND[i][1]; //local id node on the subdivision of the fine element
+    int iadd=meshf.el->GetDof(ielf,i1,type_);
+    int irow=meshf.GetMetisDof(iadd,SolType_);  //  local-id to dof
+    int iproc=0;
+    while (irow < meshf.MetisOffset[SolType_][iproc] || irow >= meshf.MetisOffset[SolType_][iproc+1] ) iproc++;
+    int ncols=prol_ind[i+1]-prol_ind[i];
+    
+    unsigned counter_o=0;
+    
+    for (int k=0; k<ncols; k++) {
+      int j=prol_ind[i][k]; 
+      int jadd=meshc.el->GetDof(ielc,j,type_);
+      int jcolumn=meshc.GetMetisDof(jadd,SolType_);
+      if(jcolumn < meshc.MetisOffset[SolType_][iproc] || jcolumn >= meshc.MetisOffset[SolType_][iproc+1] ) counter_o++;
+    }
+       
+    NNZ_d->set(irow,ncols-counter_o);
+    NNZ_o->set(irow,counter_o);
+    
+  }
+}
+
 
 //----------------------------------------------------------------------------------------------------
 // prolungator for solution printing
