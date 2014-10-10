@@ -135,8 +135,7 @@ public:
   void (elem_type::*Jacobian_sur_AD_ptr)(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
 					 adept::adouble &Weight, vector < adept::adouble > &gradphi, 
 					 vector < adept::adouble > &normal) const;
-  void GetSparsityPattern(const mesh &meshf,const mesh &meshc, 
-			  const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const;					 
+  void GetSparsityPatternSize(const mesh &meshf,const mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const;					 
   					 
 				      
 private:

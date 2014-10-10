@@ -819,32 +819,10 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
 
 
 //----------------------------------------------------------------------------------------------------
-// prolungator for single solution
+// build matrix sparsity pattern size and build prolungator matrix for single solution
 //-----------------------------------------------------------------------------------------------------
-void elem_type::prolongation(const mesh &meshf,const mesh &meshc, const int& ielc,
-			    SparseMatrix* Projmat) const {
-  vector<int> cols(27);
-  for (int i=0; i<nf_; i++) {
-    int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
-    int ielf=meshc.el->GetChildElement(ielc,i0);
-    int i1=KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-    int iadd=meshf.el->GetDof(ielf,i1,type_);
-    int irow=meshf.GetMetisDof(iadd,SolType_);  //  local-id to dof 
-    int ncols=prol_ind[i+1]-prol_ind[i];
-    cols.assign(ncols,0);
-    for (int k=0; k<ncols; k++) {
-      int j=prol_ind[i][k]; 
-      int jadd=meshc.el->GetDof(ielc,j,type_);
-      int jcolumn=meshc.GetMetisDof(jadd,SolType_);
-      cols[k]=jcolumn;
-    }
 
-    Projmat->insert_row(irow,ncols,cols,prol_val[i]);
-  }
-}
-
-
-void elem_type::GetSparsityPattern(const mesh &meshf,const mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const {
+void elem_type::GetSparsityPatternSize(const mesh &meshf,const mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const {
   vector<int> cols(27);
   
   for (int i=0; i<nf_; i++) {
@@ -872,6 +850,27 @@ void elem_type::GetSparsityPattern(const mesh &meshf,const mesh &meshc, const in
   }
 }
 
+void elem_type::prolongation(const mesh &meshf,const mesh &meshc, const int& ielc,
+			    SparseMatrix* Projmat) const {
+  vector<int> cols(27);
+  for (int i=0; i<nf_; i++) {
+    int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
+    int ielf=meshc.el->GetChildElement(ielc,i0);
+    int i1=KVERT_IND[i][1]; //local id node on the subdivision of the fine element
+    int iadd=meshf.el->GetDof(ielf,i1,type_);
+    int irow=meshf.GetMetisDof(iadd,SolType_);  //  local-id to dof 
+    int ncols=prol_ind[i+1]-prol_ind[i];
+    cols.assign(ncols,0);
+    for (int k=0; k<ncols; k++) {
+      int j=prol_ind[i][k]; 
+      int jadd=meshc.el->GetDof(ielc,j,type_);
+      int jcolumn=meshc.GetMetisDof(jadd,SolType_);
+      cols[k]=jcolumn;
+    }
+
+    Projmat->insert_row(irow,ncols,cols,prol_val[i]);
+  }
+}
 
 //----------------------------------------------------------------------------------------------------
 // prolungator for solution printing
