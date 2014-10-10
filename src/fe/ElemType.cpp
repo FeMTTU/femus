@@ -755,8 +755,9 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
 
 
 //----------------------------------------------------------------------------------------------------
-// prolungator for LsysPde  Matrix 
-//----------------------------------------------------------------------------------------------------
+// build matrix sparsity pattern size and build prolungator matrix for the LsysPde  Matrix
+//-----------------------------------------------------------------------------------------------------
+
 void elem_type::BuildProlongation(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
 				  const unsigned &index_sol, const unsigned &kkindex_sol) const {
   vector<int> cols(27);
@@ -776,6 +777,36 @@ void elem_type::BuildProlongation(const LinearEquation &lspdef,const LinearEquat
       cols[k]=jj;
     }
     Projmat->insert_row(irow,ncols,cols,prol_val[i]);
+  }
+}
+
+
+void elem_type::GetSparsityPatternSize(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc,  
+				       NumericVector* NNZ_d, NumericVector* NNZ_o,
+				       const unsigned &index_sol, const unsigned &kkindex_sol) const {
+     
+  for (int i=0; i<nf_; i++) {
+    int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
+    int ielf=lspdec._msh->el->GetChildElement(ielc,i0);
+    int i1=KVERT_IND[i][1]; //local id node on the subdivision of the fine element
+    int iadd=lspdef._msh->el->GetDof(ielf,i1,type_);
+    int irow=lspdef.GetKKDof(index_sol,kkindex_sol,iadd);  //  local-id to dof 
+    
+    int iproc=0;
+    while (irow < lspdef.KKoffset[0][iproc] || irow >= lspdef.KKoffset[lspdef.KKIndex.size()-1][iproc] ) iproc++;
+    int ncols=prol_ind[i+1]-prol_ind[i];
+    
+    int counter_o=0;
+    for (int k=0; k<ncols; k++) {
+      int j=prol_ind[i][k]; 
+      int jadd=lspdec._msh->el->GetDof(ielc,j,type_);
+      int jcolumn=lspdec.GetKKDof(index_sol,kkindex_sol,jadd); 
+      if(jcolumn < lspdec.KKoffset[0][iproc] || jcolumn >= lspdec.KKoffset[lspdef.KKIndex.size()-1][iproc] ) counter_o++;
+    }
+       
+    NNZ_d->set(irow,ncols-counter_o);
+    NNZ_o->set(irow,counter_o);
+    
   }
 }
 
@@ -823,8 +854,7 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
 //-----------------------------------------------------------------------------------------------------
 
 void elem_type::GetSparsityPatternSize(const mesh &meshf,const mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const {
-  vector<int> cols(27);
-  
+   
   for (int i=0; i<nf_; i++) {
     int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
     int ielf=meshc.el->GetChildElement(ielc,i0);
@@ -833,10 +863,9 @@ void elem_type::GetSparsityPatternSize(const mesh &meshf,const mesh &meshc, cons
     int irow=meshf.GetMetisDof(iadd,SolType_);  //  local-id to dof
     int iproc=0;
     while (irow < meshf.MetisOffset[SolType_][iproc] || irow >= meshf.MetisOffset[SolType_][iproc+1] ) iproc++;
+    
     int ncols=prol_ind[i+1]-prol_ind[i];
-    
     unsigned counter_o=0;
-    
     for (int k=0; k<ncols; k++) {
       int j=prol_ind[i][k]; 
       int jadd=meshc.el->GetDof(ielc,j,type_);
@@ -874,25 +903,42 @@ void elem_type::prolongation(const mesh &meshf,const mesh &meshc, const int& iel
 
 //----------------------------------------------------------------------------------------------------
 // prolungator for solution printing
-//-----------------------------------------------------------------------------------------------------
-void elem_type::ProlQitoQj(const mesh& mymesh,const int& iel, SparseMatrix* Projmat, 
-			  bool testnode[],const unsigned &itype) const{
+//----------------------------------------------------------------------------------------------------
+
+void elem_type::GetSparsityPatternSize(const mesh& mesh,const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned &itype) const{
+  for (int i=0; i<ncf_[itype]; i++) {
+    int inode=mesh.el->GetDof(iel,i,type_);
+    int irow=mesh.GetMetisDof(inode,itype);
+    int iproc=0;
+    while (irow < mesh.MetisOffset[SolType_][iproc] || irow >= mesh.MetisOffset[SolType_][iproc+1] ) iproc++;
+    int ncols=prol_ind[i+1]-prol_ind[i];
+    unsigned counter_o=0;
+    for (int k=0; k<ncols; k++) {
+      int jj=prol_ind[i][k];
+      int jnode   = mesh.el->GetDof(iel,jj,type_);
+      int jcolumn = mesh.GetMetisDof(jnode,SolType_);
+      if(jcolumn < mesh.MetisOffset[SolType_][iproc] || jcolumn >= mesh.MetisOffset[SolType_][iproc+1] ) counter_o++;
+    }
+    NNZ_d->set(irow,ncols);
+    NNZ_o->set(irow,ncols);
+  }
+}
+
+
+void elem_type::prolongation(const mesh& mesh,const int& iel, SparseMatrix* Projmat,const unsigned &itype) const{
   vector<int> cols(27);
   for (int i=0; i<ncf_[itype]; i++) {
-    int inode=mymesh.el->GetDof(iel,i,type_);
-    int irow=mymesh.GetMetisDof(inode,itype);
-    if (testnode[irow]==0) {
-      testnode[irow]=1;
-      int ncols=prol_ind[i+1]-prol_ind[i];
-      cols.assign(ncols,0);
-      for (int k=0; k<ncols; k++) {
-        int jj=prol_ind[i][k];
-        int jnode=mymesh.el->GetDof(iel,jj,type_);
-	int jadd=mymesh.GetMetisDof(jnode,SolType_);
-        cols[k]=jadd;
-      }
-      Projmat->insert_row(irow,ncols,cols,prol_val[i]);
+    int inode=mesh.el->GetDof(iel,i,type_);
+    int irow=mesh.GetMetisDof(inode,itype);
+    int ncols=prol_ind[i+1]-prol_ind[i];
+    cols.assign(ncols,0);
+    for (int k=0; k<ncols; k++) {
+      int jj=prol_ind[i][k];
+      int jnode=mesh.el->GetDof(iel,jj,type_);
+      int jadd=mesh.GetMetisDof(jnode,SolType_);
+      cols[k]=jadd;
     }
+    Projmat->insert_row(irow,ncols,cols,prol_val[i]);
   }
 }
 
