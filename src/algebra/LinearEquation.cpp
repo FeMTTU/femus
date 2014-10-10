@@ -297,10 +297,10 @@ void LinearEquation::DeletePde() {
     
     int IndexStart= KKoffset[0][this_proc];
     int IndexEnd  = KKoffset[KKIndex.size()-1][this_proc];
-    int Offset    = IndexEnd-IndexStart;
+    int owned_dofs    = IndexEnd-IndexStart;
      
-    vector < std::map < int, bool > > BlgToMe_d(Offset);
-    vector < std::map < int, bool > > BlgToMe_o(Offset);
+    vector < std::map < int, bool > > BlgToMe_d(owned_dofs);
+    vector < std::map < int, bool > > BlgToMe_o(owned_dofs);
     std::map < int, std::map <int, bool > > DnBlgToMe_o;
     std::map < int, std::map <int, bool > > DnBlgToMe_d;
           
@@ -387,13 +387,13 @@ void LinearEquation::DeletePde() {
     sizeDnBM_d->close();
     
           
-    d_nnz.resize(Offset);
-    o_nnz.resize(Offset);
+    d_nnz.resize(owned_dofs);
+    o_nnz.resize(owned_dofs);
        
-    int d_max=Offset;
-    int o_max=KKIndex[KKIndex.size()-1u]-Offset;
+    int d_max=owned_dofs;
+    int o_max=KKIndex[KKIndex.size()-1u]-owned_dofs;
     
-    for(int i=0; i<Offset;i++){
+    for(int i=0; i<owned_dofs;i++){
      d_nnz[i]=static_cast <int> ((*sizeDnBM_d)(IndexStart+i))+BlgToMe_d[i].size();
      if (d_nnz[i] > d_max) d_nnz[i] = d_max;
      o_nnz[i]=static_cast <int> ((*sizeDnBM_o)(IndexStart+i))+BlgToMe_o[i].size();

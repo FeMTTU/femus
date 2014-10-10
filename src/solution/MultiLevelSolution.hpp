@@ -162,6 +162,7 @@ public:
 
     bool (*_SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[],
                                            double &value, const int FaceName, const double time); //< boundary condition function pointer
+    void build();
 
 private:
   
