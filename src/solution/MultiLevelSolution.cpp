@@ -300,7 +300,7 @@ void MultiLevelSolution::BuildProlongatorMatrix(unsigned gridf, unsigned SolInde
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
 	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _ml_msh->_type_elem[ielt][ThisSolType]->prolongation(*mshf,*mshc,iel, _solution[gridf]->_ProjMat[ThisSolType]); 
+	  _ml_msh->_type_elem[ielt][ThisSolType]->BuildProlongation(*mshf,*mshc,iel, _solution[gridf]->_ProjMat[ThisSolType]); 
 	}
       }
     }

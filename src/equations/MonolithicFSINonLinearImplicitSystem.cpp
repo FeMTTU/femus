@@ -153,7 +153,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
 
   SparseMatrix *RRt;
   RRt = SparseMatrix::build().release();
-  RRt->init(nf,nc,nf_loc,nc_loc,27,27);
+  RRt->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
   
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned SolIndex=_SolSystemPdeIndex[k];

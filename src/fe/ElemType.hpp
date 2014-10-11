@@ -58,10 +58,10 @@ public:
                                  const unsigned &index_sol, const unsigned &kkindex_sol, const bool &TestDisp) const;		    
 
   /** To be Added */
-  void prolongation(const mesh &meshf,const mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;
+  void BuildProlongation(const mesh &meshf, const mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;
   
   /** To be Added */
-  void prolongation(const mesh& mymesh,const int& iel, SparseMatrix* Projmat, const unsigned &itype) const;
+  void BuildProlongation(const mesh& mymesh, const int& iel, SparseMatrix* Projmat, const unsigned &itype) const;
 
   /** To be Added */ 
   void JacobianSur2D(const vector < vector < double > > &vt, const unsigned &ig,

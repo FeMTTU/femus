@@ -519,7 +519,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type* type_
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if( mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
 	  short unsigned ielt= mshc->el->GetElementType(iel);
-	  type_elem[ielt][thisSolType]->prolongation(*this,*mshc,iel,_coordinate->_ProjMat[thisSolType]); 
+	  type_elem[ielt][thisSolType]->BuildProlongation(*this,*mshc,iel,_coordinate->_ProjMat[thisSolType]); 
 	}
       }
     }
