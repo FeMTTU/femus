@@ -835,14 +835,13 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
     for (int k=0; k<ncols; k++) {
       int j=prol_ind[i][k]; 
       int jadd=lspdec._msh->el->GetDof(ielc,j,type_);
-      int jj=lspdec.GetKKDof(index_sol,kkindex_sol,jadd); 
-      cols[k]=jj;
+      int jcolumn=lspdec.GetKKDof(index_sol,kkindex_sol,jadd); 
+      cols[k]=jcolumn;
       
       bool jsolidmark=lspdef._msh->el->GetNodeRegion(jadd); 
       
       copy_prol_val[k]=(!TestDisp || !fluid_region || isolidmark==jsolidmark)?prol_val[i][k]:0.;
-    }
-      //Projmat->insert_row(irow,ncols,cols,prol_val[i]);
+    }    
     Projmat->insert_row(irow,ncols,cols,&copy_prol_val[0]);
   }
 }
@@ -879,8 +878,8 @@ void elem_type::GetSparsityPatternSize(const mesh &meshf,const mesh &meshc, cons
   }
 }
 
-void elem_type::prolongation(const mesh &meshf,const mesh &meshc, const int& ielc,
-			    SparseMatrix* Projmat) const {
+void elem_type::BuildProlongation(const mesh &meshf,const mesh &meshc, const int& ielc,
+				  SparseMatrix* Projmat) const {
   vector<int> cols(27);
   for (int i=0; i<nf_; i++) {
     int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
@@ -910,7 +909,7 @@ void elem_type::GetSparsityPatternSize(const mesh& mesh,const int& iel, NumericV
     int inode=mesh.el->GetDof(iel,i,type_);
     int irow=mesh.GetMetisDof(inode,itype);
     int iproc=0;
-    while (irow < mesh.MetisOffset[SolType_][iproc] || irow >= mesh.MetisOffset[SolType_][iproc+1] ) iproc++;
+    while (irow < mesh.MetisOffset[itype][iproc] || irow >= mesh.MetisOffset[itype][iproc+1] ) iproc++;
     int ncols=prol_ind[i+1]-prol_ind[i];
     unsigned counter_o=0;
     for (int k=0; k<ncols; k++) {
@@ -919,13 +918,13 @@ void elem_type::GetSparsityPatternSize(const mesh& mesh,const int& iel, NumericV
       int jcolumn = mesh.GetMetisDof(jnode,SolType_);
       if(jcolumn < mesh.MetisOffset[SolType_][iproc] || jcolumn >= mesh.MetisOffset[SolType_][iproc+1] ) counter_o++;
     }
-    NNZ_d->set(irow,ncols);
-    NNZ_o->set(irow,ncols);
+    NNZ_d->set(irow,ncols-counter_o);
+    NNZ_o->set(irow,counter_o);
   }
 }
 
 
-void elem_type::prolongation(const mesh& mesh,const int& iel, SparseMatrix* Projmat,const unsigned &itype) const{
+void elem_type::BuildProlongation(const mesh& mesh,const int& iel, SparseMatrix* Projmat,const unsigned &itype) const{
   vector<int> cols(27);
   for (int i=0; i<ncf_[itype]; i++) {
     int inode=mesh.el->GetDof(iel,i,type_);
@@ -935,8 +934,8 @@ void elem_type::prolongation(const mesh& mesh,const int& iel, SparseMatrix* Proj
     for (int k=0; k<ncols; k++) {
       int jj=prol_ind[i][k];
       int jnode=mesh.el->GetDof(iel,jj,type_);
-      int jadd=mesh.GetMetisDof(jnode,SolType_);
-      cols[k]=jadd;
+      int jcolumn=mesh.GetMetisDof(jnode,SolType_);
+      cols[k]=jcolumn;
     }
     Projmat->insert_row(irow,ncols,cols,prol_val[i]);
   }
