@@ -53,7 +53,7 @@ int main(int argc,char **args) {
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
-  nm=4;
+  nm=2;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
@@ -160,7 +160,7 @@ int main(int argc,char **args) {
   
   system.SetMaxNumberOfLinearIterations(2);
   system.SetMgType(F_CYCLE);
-  system.SetMaxNumberOfNonLinearIterations(10);
+  system.SetMaxNumberOfNonLinearIterations(1);
   system.SetAbsoluteConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-05);
   system.SetNumberPreSmoothingStep(1);
@@ -176,7 +176,7 @@ int main(int argc,char **args) {
   
   
   system.SetSolverFineGrids(GMRES);
-  system.SetPreconditionerFineGrids(MLU_PRECOND); 
+  system.SetPreconditionerFineGrids(ILU_PRECOND); 
   system.SetTolerances(1.e-12,1.e-20,1.e+50,10);
   
   

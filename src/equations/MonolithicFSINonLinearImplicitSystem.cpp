@@ -148,9 +148,6 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
   LinSolf->_PP = SparseMatrix::build().release();
   LinSolf->_PP->init(nf,nc,nf_loc,nc_loc,nnz_d, nnz_o);
   
-  LinSolf->_RR = SparseMatrix::build().release();
-  LinSolf->_RR->init(nc,nf,nc_loc,nf_loc,nnz_d,nnz_o); 
-
   SparseMatrix *RRt;
   RRt = SparseMatrix::build().release();
   RRt->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
@@ -182,8 +179,9 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
   }
   
   LinSolf->_PP->close();
-  
   RRt->close();
+  
+  LinSolf->_RR = SparseMatrix::build().release();
   RRt->get_transpose( *LinSolf->_RR);
   delete RRt;
   
