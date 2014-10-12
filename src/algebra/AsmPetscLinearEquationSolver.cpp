@@ -137,6 +137,11 @@ namespace femus {
     vector <PetscInt> indexci(ElemOffsetSize);
     vector < unsigned > indexc(ElemOffsetSize,ElemOffsetSize);
     
+    vector < vector < unsigned > > block_elements;
+    
+    
+    _msh->GenerateVankaPartitions_FSI( _element_block_number, block_elements, _block_element_type);
+    
     
     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(),true);
     for (unsigned iind=variable_to_be_solved.size()-_NSchurVar; iind<variable_to_be_solved.size(); iind++) {
@@ -145,27 +150,35 @@ namespace femus {
     }
     
     // *** Start Vanka Block ***
-    bool test_end=0;
-    int vb_index=0;
-    while (test_end==0){
-      
-      _is_loc_idx.resize(vb_index+1);
+//    bool test_end=0;
+//    int vb_index=0;
+//    while (test_end==0){
+
+    _is_loc_idx.resize(block_elements.size());
+    _is_ovl_idx.resize(block_elements.size());	
+  
+    for(int vb_index=0;vb_index<block_elements.size();vb_index++){  
+    //  _is_loc_idx.resize(vb_index+1);
       _is_loc_idx[vb_index].resize(DofOffsetSize);
       
-      _is_ovl_idx.resize(vb_index+1);	
+     // _is_ovl_idx.resize(vb_index+1);	
       _is_ovl_idx[vb_index].resize(DofOffsetSize);
       
       PetscInt PAsize=0;
       PetscInt PBsize=0;
       
       PetscInt Csize=0;
-      test_end=1;
       
-      int gel=_msh->IS_Mts2Gmt_elem_offset[iproc] + vb_index*_element_block_number;
       // ***************** NODE/ELEMENT SERCH *******************
-      
-      for (int iel_mts=gel; iel_mts<gel+_element_block_number && iel_mts< _msh->IS_Mts2Gmt_elem_offset[iproc+1]; iel_mts++) {
+      //test_end=1;
+      //   int gel=_msh->IS_Mts2Gmt_elem_offset[iproc] + vb_index*_element_block_number;
+      //      for (int iel_mts=gel; iel_mts<gel+_element_block_number && iel_mts< _msh->IS_Mts2Gmt_elem_offset[iproc+1]; iel_mts++) {
+
+      for(int kel=0;kel<block_elements[vb_index].size();kel++){
+	unsigned iel_mts = block_elements[vb_index][kel];
 	unsigned iel = _msh->IS_Mts2Gmt_elem[iel_mts];     
+	
+	//unsigned iel = _msh->IS_Mts2Gmt_elem[block_elements[vb_index][kel]];
 	
 	for (unsigned i=0; i<_msh->el->GetElementDofNumber(iel,0); i++) {
 	  unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
@@ -251,7 +264,7 @@ namespace femus {
 	}
 	//-----------------------------------------------------------------------------------------
       }
-      if(gel+_element_block_number <_msh->IS_Mts2Gmt_elem_offset[iproc+1] ) test_end=0;     
+     // if(gel+_element_block_number <_msh->IS_Mts2Gmt_elem_offset[iproc+1] ) test_end=0;     
       
       // *** re-initialize indeces(a,c,d)
       for (PetscInt i=0; i<PAsize; i++) {
@@ -276,7 +289,7 @@ namespace femus {
       std::sort(_is_loc_idx[vb_index].begin(), _is_loc_idx[vb_index].end());
       std::sort(_is_ovl_idx[vb_index].begin(), _is_ovl_idx[vb_index].end());
       
-      vb_index++;
+      //vb_index++;
     }
     
     //BEGIN Generate std::vector<IS> for vanka solve ***********
@@ -442,23 +455,25 @@ namespace femus {
       
       ierr = PCASMGetSubKSP(_pc,&_nlocal,&_first,&_subksp);			    CHKERRABORT(MPI_COMM_WORLD,ierr);
       
-      for (int i=0; i<_nlocal; i++) {
-	
-	//ierr = KSPSetType(_subksp[i], (char*) this->_solver_type);		    CHKERRABORT(MPI_COMM_WORLD,ierr);
-       
-	//if(_msh->GetGridNumber()!=0)
-        //  KSPSetNormType(_subksp[i],KSP_NORM_NONE);
-	
-	ierr = KSPGetPC(_subksp[i],&_subpc);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
-	
+      _subpc.resize(2);
+            
+      for (int i=0; i<_block_element_type[0]; i++) {
+	ierr = KSPGetPC(_subksp[i],&_subpc[0]);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
 	ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
-	
 	ierr = KSPSetFromOptions(_subksp[i]);
-	
-	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_subpc); 
+	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_subpc[0]); 
 	PetscReal zero = 1.e-16;
-	PCFactorSetZeroPivot(_subpc,zero);
-	PCFactorSetShiftType(_subpc,MAT_SHIFT_NONZERO);
+	PCFactorSetZeroPivot(_subpc[0],zero);
+	PCFactorSetShiftType(_subpc[0],MAT_SHIFT_NONZERO);
+      }
+      for (int i=_block_element_type[0]; i<_block_element_type[1]; i++) {
+	ierr = KSPGetPC(_subksp[i],&_subpc[1]);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
+	ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
+	ierr = KSPSetFromOptions(_subksp[i]);
+	PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND,_subpc[1]); 
+	PetscReal zero = 1.e-16;
+	PCFactorSetZeroPivot(_subpc[1],zero);
+	PCFactorSetShiftType(_subpc[1],MAT_SHIFT_NONZERO);
       }
     }
   }

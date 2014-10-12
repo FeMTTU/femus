@@ -56,6 +56,9 @@ public:
      * the system type in an equation system file.
     */
     virtual std::string system_type () const {
+        void RRt();
+        void RRt();
+        void RRt();
         return "MonolithicFSINonlinearImplicit";
     }
 

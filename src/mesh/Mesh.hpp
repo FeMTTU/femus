@@ -127,6 +127,14 @@ public:
     /** Flag the elements to be refined in according to AMR criteria */
     void FlagElementsToBeRefinedByAMR();
     
+    
+    void GenerateVankaPartitions_FAST( const unsigned &block_size, vector < vector< unsigned > > &blk_elements,
+				       vector <unsigned> &block_element_type);
+    void GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
+				      vector <unsigned> &block_element_type);
+    
+    void GenerateVankaPartitions_METIS( const unsigned &block_size, vector < vector< unsigned > > &blk_elements);
+    
     // member data
     Solution* _coordinate;
     vector <unsigned> IS_Mts2Gmt_elem_offset;

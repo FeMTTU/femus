@@ -102,11 +102,12 @@ private:
     vector <IS> _is_loc;
     KSP       *_subksp;
     PetscInt  _nlocal,_first;
-    PC        _subpc;
+    vector < PC >  _subpc;
     bool _standard_ASM;
     unsigned _overlap;
     Mat _Pmat;
     bool _Pmat_is_initialized;
+    vector <unsigned> _block_element_type;
 
 };
 

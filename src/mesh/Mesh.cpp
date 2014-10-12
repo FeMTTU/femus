@@ -559,10 +559,7 @@ void mesh::print_info() {
 
 //------------------------------------------------------------------------------------------------------
 void mesh::generate_metis_mesh_partition(){
-  
-  int *aux_vec = new int[nvt];
-  for(unsigned i=0; i<nvt; i++) aux_vec[i]=-1;
-  
+   
   unsigned eind_size = el->GetElementNumber("Hex")*NVE[0][3] + el->GetElementNumber("Tet")*NVE[1][3] 
                      + el->GetElementNumber("Wedge")*NVE[2][3] + el->GetElementNumber("Quad")*NVE[3][3] 
                      + el->GetElementNumber("Triangle")*NVE[4][3] + el->GetElementNumber("Line")*NVE[5][3];
@@ -570,52 +567,20 @@ void mesh::generate_metis_mesh_partition(){
   idx_t *eptr=new idx_t [nel+1];
   idx_t *eind=new idx_t [eind_size];
   
-  epart=new idx_t [nel];
-  npart=new idx_t [nvt];
-  
   idx_t objval;
-  
   idx_t options[METIS_NOPTIONS]; 
   
   METIS_SetDefaultOptions(options);
-  //for(int k=0;k<METIS_NOPTIONS;k++) cout<<options[k]<<endl;
-  
-  options[METIS_OPTION_NUMBERING]=0;
-  options[METIS_OPTION_DBGLVL]   =0;
-  
- 
-//   options[METIS_OPTION_CCORDER]  =0;   
-//   options[METIS_OPTION_CTYPE]    = METIS_CTYPE_RM; 
-//   options[METIS_OPTION_IPTYPE]   = METIS_IPTYPE_RANDOM;
-//   METIS_SetDefaultOptions(options);
-//   options[METIS_OPTION_PTYPE]   = params->ptype;
-//   options[METIS_OPTION_OBJTYPE] = params->objtype;
-//   options[METIS_OPTION_CTYPE]   = params->ctype;
-//   options[METIS_OPTION_IPTYPE]  = params->iptype;
-//   options[METIS_OPTION_RTYPE]   = params->rtype;
-//   options[METIS_OPTION_DBGLVL]  = params->dbglvl;
-//   options[METIS_OPTION_UFACTOR] = params->ufactor;
-//   options[METIS_OPTION_MINCONN] = params->minconn;
     
-//   options[METIS_OPTION_SEED]    = params->seed;
-//   options[METIS_OPTION_NITER]   = params->niter;
-//   options[METIS_OPTION_NCUTS]   = params->ncuts;
-  
-     
+  options[METIS_OPTION_NUMBERING]= 0;
+  options[METIS_OPTION_DBGLVL]   = 0;
   options[METIS_OPTION_CTYPE]    = METIS_CTYPE_SHEM; 
-  //cout<<options[METIS_OPTION_CTYPE]; 
-  options[METIS_OPTION_PTYPE]= METIS_PTYPE_KWAY;
-  //cout<<options[METIS_OPTION_PTYPE]<<endl; //exit(0);
-  
-  //options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_VOL;
-  
+  options[METIS_OPTION_PTYPE]	 = METIS_PTYPE_KWAY;
   options[METIS_OPTION_IPTYPE]   = METIS_IPTYPE_RANDOM;
-  //cout<<options[METIS_OPTION_IPTYPE]<<endl; 
-  options[METIS_OPTION_CONTIG]  = 0;//params->contig;
-  //cout<< options[METIS_OPTION_CONTIG]<<endl; //exit(0);
-  options[METIS_OPTION_MINCONN] = 1;
-  options[METIS_OPTION_NITER]   = 10;
-  options[METIS_OPTION_UFACTOR] = 100;
+  options[METIS_OPTION_CONTIG]   = 0;//params->contig;
+  options[METIS_OPTION_MINCONN]  = 1;
+  options[METIS_OPTION_NITER]    = 10;
+  options[METIS_OPTION_UFACTOR]  = 100;
   
   eptr[0]=0;
   unsigned counter=0;
@@ -635,7 +600,10 @@ void mesh::generate_metis_mesh_partition(){
   idx_t mnvt = nvt;
   idx_t ncommon = _dimension+1;
   nsubdom = _nprocs;
-      
+    
+  epart=new idx_t [nel];
+  npart=new idx_t [nvt];
+  
   if(nsubdom!=1) {
   //I call the mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
   int err = METIS_PartMeshDual(&mnel, &mnvt, eptr, eind, NULL, NULL, &ncommon, &nsubdom, NULL, options, &objval, epart, npart);
@@ -665,7 +633,6 @@ void mesh::generate_metis_mesh_partition(){
   
   delete [] eptr;
   delete [] eind;
-  delete [] aux_vec;
 
    //dof map: piecewise liner 0, quadratic 1, biquadratic 2, piecewise constant 3, picewise discontinous linear 4 
   
@@ -2993,6 +2960,234 @@ void mesh::AllocateAndMarkStructureNode() {
 unsigned mesh::GetEndIndex(const unsigned i) const{
   return _END_IND[i];
 };
+
+#include "map"
+using std::map;
+
+
+
+void mesh::GenerateVankaPartitions_FAST( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
+					 vector <unsigned> &block_element_type){
+  unsigned iproc=processor_id();
+  unsigned ElemOffset    = IS_Mts2Gmt_elem_offset[iproc];
+  unsigned ElemOffsetp1  = IS_Mts2Gmt_elem_offset[iproc+1];
+  unsigned OwnedElements = ElemOffsetp1 - ElemOffset;
+
+  unsigned nsubdom = (0 == OwnedElements % block_size)? OwnedElements/block_size : OwnedElements/block_size+1 ;
+    
+  vector < unsigned > size(nsubdom,0);
+  block_elements.resize(nsubdom);
+  
+  for(int i=0;i<block_elements.size()-1;i++) 
+    block_elements[i].resize(block_size);
+  if  (0 == OwnedElements % block_size ){
+    block_elements[block_elements.size()-1].resize(block_size);
+  }
+  else{
+    block_elements[block_elements.size()-1].resize(OwnedElements % block_size); 
+  }
+  
+  for (unsigned iel_mts=ElemOffset; iel_mts<ElemOffsetp1; iel_mts++) {
+    unsigned index = (iel_mts-ElemOffset)/block_size;
+    block_elements[index][(iel_mts-ElemOffset) % block_size]=iel_mts;
+  }
+  block_element_type.resize(2);
+  block_element_type[0]=block_elements.size();
+  block_element_type[1]=block_elements.size();
+} 
+
+void mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
+					vector <unsigned> &block_element_type){
+
+  unsigned iproc=processor_id();
+  unsigned ElemOffset    = IS_Mts2Gmt_elem_offset[iproc];
+  unsigned ElemOffsetp1  = IS_Mts2Gmt_elem_offset[iproc+1];
+  unsigned OwnedElements = ElemOffsetp1 - ElemOffset;
+
+  block_elements.resize(2); 
+  block_elements[0].resize(OwnedElements); 
+  block_elements[1].resize(OwnedElements); 
+  
+  block_element_type.resize(2);
+  block_element_type[0]=1;
+  block_element_type[1]=2;
+  
+  
+  unsigned counter_f=0;
+  unsigned counter_s=0;
+  for (unsigned iel_mts = ElemOffset; iel_mts < ElemOffsetp1; iel_mts++) {
+    unsigned kel        = IS_Mts2Gmt_elem[iel_mts]; 
+    unsigned flag_mat   = el->GetElementMaterial(kel);
+    if(2 == flag_mat){
+      block_elements[0][counter_f]=iel_mts;
+      counter_f++;
+      
+      
+//       bool test_brd=0;
+//       unsigned nve = el->GetElementDofNumber(kel,3);
+//       for (unsigned i=0;i<nve;i++) {
+// 	unsigned inode=el->GetElementVertexIndex(kel,i)-1u;
+// 	if( el->GetNodeRegion(inode) ){
+// 	  test_brd=1;
+// 	  break;
+// 	}
+//       }
+//       if(0==test_brd){
+// 	block_elements[0][counter_f]=iel_mts;
+// 	counter_f++;
+//       }
+//       else{
+// 	block_elements[1][counter_s]=iel_mts;
+// 	counter_s++;
+//       }
+    } 
+    else{
+      block_elements[1][counter_s]=iel_mts;
+      counter_s++;
+    }
+  }  
+  
+  if(counter_s==0){
+    block_elements.erase (block_elements.begin()+1);
+    block_element_type[1]=1;
+  }
+  else{
+    block_elements[1].resize(counter_s);
+  }
+  
+  if(counter_f==0){
+    block_elements.erase (block_elements.begin());
+    block_element_type[0]=0;
+    block_element_type[1]=1;
+  }
+  else{
+    block_elements[0].resize(counter_f); 
+  }
+  
+} 
+
+
+void mesh::GenerateVankaPartitions_METIS( const unsigned &vnk_blck, vector < vector< unsigned > > &block_elements){
+   
+ 
+  
+  unsigned iproc=processor_id();
+   
+  unsigned ElemOffset    = IS_Mts2Gmt_elem_offset[iproc];
+  unsigned ElemOffsetp1  = IS_Mts2Gmt_elem_offset[iproc+1];
+  unsigned OwnedElements = ElemOffsetp1 - ElemOffset;
+    
+  vector < idx_t > connectivity_index_size(OwnedElements+1);
+  vector < idx_t > connectivity(0); 
+  
+  connectivity.reserve(static_cast < int > (pow(3,_dimension)) * OwnedElements + 1);
+     
+  map <unsigned, unsigned> node_map;
+    
+  connectivity_index_size[0] = 0;
+  unsigned counter = 0;
+  unsigned node_counter = 0;
+  for (unsigned iel_metis = ElemOffset; iel_metis < ElemOffsetp1; iel_metis++) {
+    unsigned iel        = IS_Mts2Gmt_elem[iel_metis]; 
+    short unsigned ielt = el->GetElementType(iel);
+    unsigned nve        = el->GetElementDofNumber(iel,3);
+       
+    connectivity_index_size[ iel_metis - ElemOffset + 1 ]=connectivity_index_size[iel_metis - ElemOffset]+nve;
+    connectivity.resize( connectivity.size() + nve );
+    for (unsigned j = 0; j < nve; j++){
+      unsigned jnode = el->GetElementVertexIndex(iel,j)-1;
+      map <unsigned, unsigned>::iterator it = node_map.find(jnode);
+      if(it != node_map.end() ){
+	connectivity[counter] = it->second;
+      }
+      else{
+	node_map[jnode]       = node_counter;
+	connectivity[counter] = node_counter;
+	node_counter++;
+      }
+    }
+  }		     
+ 
+  //cout<<1<<endl;
+ 
+  idx_t objval;
+  idx_t options[METIS_NOPTIONS]; 
+  
+  METIS_SetDefaultOptions(options);
+    
+  options[METIS_OPTION_NUMBERING]= 0;
+  options[METIS_OPTION_DBGLVL]   = 0;
+  options[METIS_OPTION_CTYPE]    = METIS_CTYPE_SHEM; 
+  options[METIS_OPTION_PTYPE]	 = METIS_PTYPE_KWAY;
+  options[METIS_OPTION_IPTYPE]   = METIS_IPTYPE_RANDOM;
+  options[METIS_OPTION_CONTIG]   = 0;//params->contig;
+  options[METIS_OPTION_MINCONN]  = 1;
+  options[METIS_OPTION_NITER]    = 10;
+  options[METIS_OPTION_UFACTOR]  = 100;
+  
+  idx_t mnel = OwnedElements; 
+  idx_t mnvt = node_map.size();
+  idx_t ncommon = _dimension+1;
+  idx_t nsubdom = OwnedElements/vnk_blck;
+    
+  vector < idx_t > epart(OwnedElements);
+  vector < idx_t > npart(node_map.size());
+  
+  if(nsubdom!=1) {
+  //I call the mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
+  int err = METIS_PartMeshDual(&mnel, &mnvt, &connectivity_index_size[0], &connectivity[0], 
+			       NULL, NULL, &ncommon, &nsubdom, NULL, options, &objval, &epart[0], &npart[0]);
+  
+    if(err==METIS_OK) {
+      cout << " METIS PARTITIONING IS OK " << endl;
+    }
+    else if(err==METIS_ERROR_INPUT) {
+      cout << " METIS_ERROR_INPUT " << endl;
+      exit(1);
+    }
+    else if (err==METIS_ERROR_MEMORY) {
+      cout << " METIS_ERROR_MEMORY " << endl;
+      exit(2);
+    }
+    else {
+      cout << " METIS_GENERIC_ERROR " << endl;
+      exit(3);
+    }
+  }
+  else {
+    //serial computation
+    for(unsigned i=0;i<OwnedElements;i++) {
+      epart[i]=0;
+    } 
+  }
+  
+  //cout<<2<<endl;
+  
+  vector < unsigned > size(nsubdom,0);
+  block_elements.resize(nsubdom);
+  
+  //cout<<4<<endl;
+  for(int i=0;i<block_elements.size();i++) 
+    block_elements[i].resize(2 * vnk_blck );
+   //for(int i=0; i<block_elements.size(); i++) {
+    //cout<<i<<" "<<block_elements[i].size() << " "<< vnk_blck<<" "<< OwnedElements<<" "<<2 * OwnedElements / vnk_blck +1 << endl;
+   //}
+  for(int iel=0; iel<OwnedElements; iel++){
+    block_elements[ epart[iel] ] [size[epart[iel]]] = iel + ElemOffset;
+    (size[epart[iel]])++;
+  }
+  
+  //cout<<6<<endl;
+  
+  for(int i=0; i<block_elements.size(); i++) {
+    //cout<<size[i]<< " "<<block_elements[i].size() << endl;
+    block_elements[i].resize( size[i]);
+  }
+  //cout<<7<<endl;
+  
+}
+
+
 
 
 } //end namespace femus
