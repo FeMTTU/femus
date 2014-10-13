@@ -140,7 +140,7 @@ namespace femus {
     vector < vector < unsigned > > block_elements;
     
     
-    _msh->GenerateVankaPartitions_FSI( _element_block_number, block_elements, _block_element_type);
+    _msh->GenerateVankaPartitions_FAST( _element_block_number, block_elements, _block_element_type);
     
     
     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(),true);
