@@ -107,7 +107,7 @@ private:
     unsigned _overlap;
     Mat _Pmat;
     bool _Pmat_is_initialized;
-    vector <unsigned> _block_element_type;
+    vector <unsigned> _block_type_range;
 
 };
 

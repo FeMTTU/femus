@@ -118,7 +118,8 @@ int main(int argc,char **args) {
   // Generate Solid Object  
   //Solid solid(par,E,ni,rhos,"Linear_elastic");
   //Solid solid(par,E,ni,rhos,"Neo-Hookean");
-  Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
+  //Solid solid(par,E,ni,rhos,"Neo-Hookean");
+  Solid solid(par,E,ni,rhos,"Mooney-Rivlin");
   //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
   
   

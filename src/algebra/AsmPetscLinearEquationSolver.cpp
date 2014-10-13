@@ -140,7 +140,7 @@ namespace femus {
     vector < vector < unsigned > > block_elements;
     
     
-    _msh->GenerateVankaPartitions_FAST( _element_block_number, block_elements, _block_element_type);
+    _msh->GenerateVankaPartitions_FSI( _element_block_number, block_elements, _block_type_range);
     
     
     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(),true);
@@ -457,7 +457,7 @@ namespace femus {
       
       _subpc.resize(2);
             
-      for (int i=0; i<_block_element_type[0]; i++) {
+      for (int i=0; i<_block_type_range[0]; i++) {
 	ierr = KSPGetPC(_subksp[i],&_subpc[0]);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
 	ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
 	ierr = KSPSetFromOptions(_subksp[i]);
@@ -466,7 +466,7 @@ namespace femus {
 	PCFactorSetZeroPivot(_subpc[0],zero);
 	PCFactorSetShiftType(_subpc[0],MAT_SHIFT_NONZERO);
       }
-      for (int i=_block_element_type[0]; i<_block_element_type[1]; i++) {
+      for (int i=_block_type_range[0]; i<_block_type_range[1]; i++) {
 	ierr = KSPGetPC(_subksp[i],&_subpc[1]);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
 	ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
 	ierr = KSPSetFromOptions(_subksp[i]);
