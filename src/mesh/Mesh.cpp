@@ -2967,7 +2967,7 @@ using std::map;
 
 
 void mesh::GenerateVankaPartitions_FAST( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
-					 vector <unsigned> &block_element_type){
+					 vector <unsigned> &block_type_range){
   unsigned iproc=processor_id();
   unsigned ElemOffset    = IS_Mts2Gmt_elem_offset[iproc];
   unsigned ElemOffsetp1  = IS_Mts2Gmt_elem_offset[iproc+1];
@@ -2976,7 +2976,7 @@ void mesh::GenerateVankaPartitions_FAST( const unsigned &block_size, vector < ve
   
   unsigned nbloks = (0 == reminder)? OwnedElements/block_size : OwnedElements/block_size+1 ;
     
-  vector < unsigned > size(nbloks,0);
+  //vector < unsigned > size(nbloks,0);
   block_elements.resize(nbloks);
   
   for(int i = 0; i < block_elements.size(); i++) 
@@ -2988,13 +2988,13 @@ void mesh::GenerateVankaPartitions_FAST( const unsigned &block_size, vector < ve
   for (unsigned iel=0; iel<OwnedElements; iel++) {
     block_elements[iel/block_size][iel%block_size]=iel+ElemOffset;
   }
-  block_element_type.resize(2);
-  block_element_type[0]=block_elements.size();
-  block_element_type[1]=block_elements.size();
+  block_type_range.resize(2);
+  block_type_range[0]=block_elements.size();
+  block_type_range[1]=block_elements.size();
 } 
 
 void mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
-					vector <unsigned> &block_element_type){
+					vector <unsigned> &block_type_range){
 
   unsigned iproc=processor_id();
   unsigned ElemOffset    = IS_Mts2Gmt_elem_offset[iproc];
@@ -3005,9 +3005,9 @@ void mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vec
   block_elements[0].resize(OwnedElements); 
   block_elements[1].resize(OwnedElements); 
   
-  block_element_type.resize(2);
-  block_element_type[0]=1;
-  block_element_type[1]=2;
+  block_type_range.resize(2);
+  block_type_range[0]=1;
+  block_type_range[1]=2;
   
   
   unsigned counter_f=0;
@@ -3018,25 +3018,6 @@ void mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vec
     if(2 == flag_mat){
       block_elements[0][counter_f]=iel_mts;
       counter_f++;
-      
-      
-//       bool test_brd=0;
-//       unsigned nve = el->GetElementDofNumber(kel,3);
-//       for (unsigned i=0;i<nve;i++) {
-// 	unsigned inode=el->GetElementVertexIndex(kel,i)-1u;
-// 	if( el->GetNodeRegion(inode) ){
-// 	  test_brd=1;
-// 	  break;
-// 	}
-//       }
-//       if(0==test_brd){
-// 	block_elements[0][counter_f]=iel_mts;
-// 	counter_f++;
-//       }
-//       else{
-// 	block_elements[1][counter_s]=iel_mts;
-// 	counter_s++;
-//       }
     } 
     else{
       block_elements[1][counter_s]=iel_mts;
@@ -3044,9 +3025,36 @@ void mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vec
     }
   }  
   
+//   if( counter_f > block_size ){
+//     unsigned reminder = counterf % block_size;
+//     unsigned nbloks = (0 == reminder)? counterf/block_size : counterf/block_size+1 ;
+//    
+//     vector< vector < unsigned > > new_block_elements(nbloks+1);
+//     
+//     for(int i = 0; i < block_elements.size()-1; i++) 
+//       block_elements[i].resize(block_size); 
+//    
+//     
+//   
+//     for(int i = 0; i < block_elements.size(); i++) 
+//       block_elements[i].resize(block_size);
+//     if  (0 != reminder ){
+//       block_elements[ block_elements.size()-1].resize(reminder); 
+//     }
+//   
+//     for (unsigned iel=0; iel<OwnedElements; iel++) {
+//       block_elements[iel/block_size][iel%block_size]=iel+ElemOffset;
+//     }
+//     
+//     
+//     
+//     
+//   }
+    
+  
   if(counter_s==0){
     block_elements.erase (block_elements.begin()+1);
-    block_element_type[1]=1;
+    block_type_range[1]=1;
   }
   else{
     block_elements[1].resize(counter_s);
@@ -3054,8 +3062,8 @@ void mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vec
   
   if(counter_f==0){
     block_elements.erase (block_elements.begin());
-    block_element_type[0]=0;
-    block_element_type[1]=1;
+    block_type_range[0]=0;
+    block_type_range[1]=1;
   }
   else{
     block_elements[0].resize(counter_f); 
