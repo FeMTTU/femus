@@ -149,7 +149,8 @@ int main(int argc,char **args) {
   // Generate Solid Object
   Solid solid;
   if(simulation<3){
-    solid = Solid(par,E,ni,rhos,"Neo-Hookean");
+    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-MassPenalty");
+    solid = Solid(par,E,ni,rhos,"Mooney-Rivlin-MassPenalty"); 
     //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
   }
   else if(simulation < 6){	
@@ -278,7 +279,11 @@ int main(int argc,char **args) {
   system.init();
   
   system.SetSolverFineGrids(GMRES);
-  system.SetPreconditionerFineGrids(MLU_PRECOND); 
+  if(1==simulation || 2==simulation || 5==simulation)
+    system.SetPreconditionerFineGrids(ILU_PRECOND); 
+  else
+    system.SetPreconditionerFineGrids(MLU_PRECOND); 
+ 
   system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
  
   system.ClearVariablesToBeSolved();

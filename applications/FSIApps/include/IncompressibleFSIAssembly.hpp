@@ -112,6 +112,7 @@ namespace femus {
        
     bool incompressible=( 0.5 == ml_prob.parameters.get<Solid>("Solid").get_poisson_coeff() )?1:0;
     const bool penalty = ml_prob.parameters.get<Solid>("Solid").get_if_penalty();
+    const bool mass_penalty = ml_prob.parameters.get<Solid>("Solid").get_if_mass_penalty();
         
     // gravity
     double _gravity[3]={0.,0.,0.};
@@ -506,7 +507,7 @@ namespace femus {
 		  aRhs[indexVAR[idim]][i] += (-phi[i]*(-SolVAR[dim+idim]))*Weight_hat;
 		}
 		for (unsigned j=0; j<nve; j++) { //mass matrix preconditioner in the ALE equation
-		   Bmass[i*nve+j] += 0.*phi[i]*phi[j]*Weight_hat;
+		   Bmass[i*nve+j] += mass_penalty*phi[i]*phi[j]*Weight_hat;
 		}
                 //END redidual v=0 in fixed domain 
                 
