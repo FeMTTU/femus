@@ -70,6 +70,9 @@ public:
     
     /** To be Added */
     const bool get_if_penalty() const;
+    
+    /** To be Added */
+    const bool get_if_mass_penalty() const;
 
     /** printing operator */
     friend std::ostream & operator << (std::ostream & os, const Solid & solid);
@@ -90,6 +93,8 @@ private:
     unsigned _model;
     
     bool _penalty;
+    
+    bool _mass_penalty;
 
 };
 

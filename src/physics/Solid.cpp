@@ -55,30 +55,37 @@ Solid::Solid(Parameter& par, const double young_module, const double poisson_coe
   if (!strcmp(model,"Linear_elastic") || !strcmp(model,"Saint-Venant")) {
     _model = 0;
     _penalty = false;
+    _mass_penalty=false;
   }
   if (!strcmp(model,"Saint-Venant-Penalty")) {
     _model = 0;
     _penalty = true;
+    _mass_penalty=false;
   }
-  else if (!strcmp(model,"Neo-Hookean")) {
+  else if (!strcmp(model,"Neo-Hookean") || !strcmp(model,"Neo-Hookean-MassPenalty")) {
     _model = 1;
     _penalty = false;
+    _mass_penalty=!strcmp(model,"Neo-Hookean-MassPenalty")?true:false;
   }
   else if (!strcmp(model,"Neo-Hookean-BW")) {
     _model = 2;
     _penalty = false;
+    _mass_penalty=false;
   }
   else if (!strcmp(model,"Neo-Hookean-BW-Penalty")) {
     _model = 3;
     _penalty = true;
+    _mass_penalty=false;
   }
   else if (!strcmp(model,"Neo-Hookean-AB-Penalty")) {
     _model = 4;
     _penalty = true;
+    _mass_penalty = false;
   }
-   else if (!strcmp(model,"Mooney-Rivlin")) {
+   else if (!strcmp(model,"Mooney-Rivlin") || !strcmp(model,"Mooney-Rivlin-MassPenalty")) {
     _model = 5;
     _penalty = false;
+    _mass_penalty=(!strcmp(model,"Mooney-Rivlin-MassPenalty"))?true:false;
   }
   else {
     cout<<"Error! This solid model is not implemented "<<endl;
@@ -149,6 +156,10 @@ const bool Solid::get_if_penalty() const{
   return _penalty;
 }
 
+const bool Solid::get_if_mass_penalty() const{ 
+  return _mass_penalty;
+}
+
 std::ostream & operator << (std::ostream & os, const Solid & solid)
 {
   os << "Density: " << solid._density << std::endl;
@@ -175,6 +186,7 @@ Solid& Solid::operator=(const Solid &solid) {
   this->_mu_lame 			= solid._mu_lame;
   this->_model 				= solid._model;
   this->_penalty 			= solid._penalty;
+  this->_mass_penalty 			= solid._mass_penalty;
   return *this;  // Return a reference to myself.
 }
 

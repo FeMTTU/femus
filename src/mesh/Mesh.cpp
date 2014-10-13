@@ -2972,24 +2972,21 @@ void mesh::GenerateVankaPartitions_FAST( const unsigned &block_size, vector < ve
   unsigned ElemOffset    = IS_Mts2Gmt_elem_offset[iproc];
   unsigned ElemOffsetp1  = IS_Mts2Gmt_elem_offset[iproc+1];
   unsigned OwnedElements = ElemOffsetp1 - ElemOffset;
-
-  unsigned nsubdom = (0 == OwnedElements % block_size)? OwnedElements/block_size : OwnedElements/block_size+1 ;
+  unsigned reminder = OwnedElements % block_size;
+  
+  unsigned nbloks = (0 == reminder)? OwnedElements/block_size : OwnedElements/block_size+1 ;
     
-  vector < unsigned > size(nsubdom,0);
-  block_elements.resize(nsubdom);
+  vector < unsigned > size(nbloks,0);
+  block_elements.resize(nbloks);
   
-  for(int i=0;i<block_elements.size()-1;i++) 
+  for(int i = 0; i < block_elements.size(); i++) 
     block_elements[i].resize(block_size);
-  if  (0 == OwnedElements % block_size ){
-    block_elements[block_elements.size()-1].resize(block_size);
-  }
-  else{
-    block_elements[block_elements.size()-1].resize(OwnedElements % block_size); 
+  if  (0 != reminder ){
+    block_elements[ block_elements.size()-1].resize(reminder); 
   }
   
-  for (unsigned iel_mts=ElemOffset; iel_mts<ElemOffsetp1; iel_mts++) {
-    unsigned index = (iel_mts-ElemOffset)/block_size;
-    block_elements[index][(iel_mts-ElemOffset) % block_size]=iel_mts;
+  for (unsigned iel=0; iel<OwnedElements; iel++) {
+    block_elements[iel/block_size][iel%block_size]=iel+ElemOffset;
   }
   block_element_type.resize(2);
   block_element_type[0]=block_elements.size();
