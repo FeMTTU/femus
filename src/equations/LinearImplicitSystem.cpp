@@ -565,7 +565,11 @@ void LinearImplicitSystem::SetElementBlockNumberFluid(unsigned const dim_block) 
   }
 }
 
-void LinearImplicitSystem::SetElementBlockNumberSolid(unsigned const dim_block) {
+void LinearImplicitSystem::SetElementBlockNumberSolid(unsigned const &dim_block, unsigned const &overlap) {
+  
+  std::cout<<"Warning! With no second argument, the function SetElementBlockNumberSolid(...) sets overlap=1 in the ASM smoother\n";
+  std::cout<<"In 2D consider to call it with second arument=0: no overlapping\n";
+  std::cout<<"In 3D consider to use the function SetElementBlockSolidAll() instead\n";
   _numblock_test=1;
   const unsigned dim = _msh[0]->GetDimension();
   const unsigned base = pow(2,dim);
@@ -573,7 +577,7 @@ void LinearImplicitSystem::SetElementBlockNumberSolid(unsigned const dim_block) 
 
   for (unsigned i=1; i<_gridn; i++) {
     unsigned num_block2 = std::min(_num_block,_msh[i]->GetElementNumber());
-    _LinSolver[i]->SetElementBlockNumberSolid(num_block2);
+    _LinSolver[i]->SetElementBlockNumberSolid(num_block2,overlap);
   }
 }
 
@@ -586,7 +590,7 @@ void LinearImplicitSystem::SetElementBlockFluidAll() {
 
 void LinearImplicitSystem::SetElementBlockSolidAll() {
   for (unsigned i=1; i<_gridn; i++) {
-    _LinSolver[i]->SetElementBlockNumberSolid(_msh[i]->GetElementNumber());
+    _LinSolver[i]->SetElementBlockNumberSolid(_msh[i]->GetElementNumber(),0);
   }
 }
 

@@ -55,10 +55,11 @@ namespace femus {
     _standard_ASM=0;
   }
     
-  void AsmPetscLinearEquationSolver::SetElementBlockNumberSolid(const unsigned& block_elemet_number) {
+  void AsmPetscLinearEquationSolver::SetElementBlockNumberSolid(const unsigned& block_elemet_number,const unsigned &overlap) {
     _element_block_number[0] = block_elemet_number;
     _indexai_init=0;
     _standard_ASM=0;
+    _overlap=overlap;
   }
   
   void AsmPetscLinearEquationSolver::SetElementBlockNumberFluid(const unsigned& block_elemet_number) {
@@ -477,7 +478,8 @@ namespace femus {
       else{
 	ierr = PCASMSetOverlap(_pc,_overlap); CHKERRABORT(MPI_COMM_WORLD,ierr);
       }
-      ierr = PCASMSetOverlap(_pc,0); CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = PCASMSetOverlap(_pc,_overlap); CHKERRABORT(MPI_COMM_WORLD,ierr);
+      
       ierr = KSPSetUp(_ksp);							    CHKERRABORT(MPI_COMM_WORLD,ierr);
       
       ierr = PCASMGetSubKSP(_pc,&_nlocal,&_first,&_subksp);			    CHKERRABORT(MPI_COMM_WORLD,ierr);
