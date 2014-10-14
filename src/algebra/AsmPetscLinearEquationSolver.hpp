@@ -60,7 +60,7 @@ private:
 
     /** To be Added */
     void SetElementBlockNumber(const unsigned & block_elemet_number);
-    void SetElementBlockNumberSolid(const unsigned & block_elemet_number);
+    void SetElementBlockNumberSolid(const unsigned & block_elemet_number, const unsigned & overlap);
     void SetElementBlockNumberFluid(const unsigned & block_elemet_number);
 
     /** To be Added */
@@ -147,7 +147,7 @@ inline AsmPetscLinearEquationSolver::AsmPetscLinearEquationSolver (const unsigne
     _Pmat_is_initialized = false;
     _NSchurVar=1;
     _standard_ASM=1;
-    _overlap=1;
+    _overlap=0;
 
 }
 

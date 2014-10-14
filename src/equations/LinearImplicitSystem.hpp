@@ -121,7 +121,7 @@ public:
     /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
     void SetElementBlockNumber(unsigned const dim_vanka_block);
     void SetElementBlockNumberFluid(unsigned const dim_vanka_block);
-    void SetElementBlockNumberSolid(unsigned const dim_vanka_block);
+    void SetElementBlockNumberSolid(unsigned const &dim_vanka_block, unsigned const &overlap=1);
     void SetElementBlockFluidAll();
     void SetElementBlockSolidAll();
     

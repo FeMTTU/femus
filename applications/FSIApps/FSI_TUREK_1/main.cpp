@@ -282,7 +282,7 @@ int main(int argc,char **args) {
   if(1==simulation || 2==simulation || 5==simulation)
     system.SetPreconditionerFineGrids(ILU_PRECOND); 
   else
-    system.SetPreconditionerFineGrids(ILU_PRECOND); 
+    system.SetPreconditionerFineGrids(MLU_PRECOND); 
  
   system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
  
@@ -305,9 +305,9 @@ int main(int argc,char **args) {
   }
   if (!dimension2D){
     system.SetElementBlockNumberFluid(2);
-    //system.SetElementBlockNumberSolid(2);
+    //system.SetElementBlockNumberSolid(2,1); //to use for solid domain decomposition
     system.SetElementBlockSolidAll();
-    //system.SetElementBlockFluidAll();
+    
   }
   //for Gmres smoother
   //system.SetDirichletBCsHandling(PENALTY); 
