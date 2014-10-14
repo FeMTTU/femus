@@ -132,6 +132,9 @@ public:
 				       vector <unsigned> &block_element_type);
     void GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
 				      vector <unsigned> &block_element_type);
+    void GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < vector< unsigned > > &block_elements,
+					vector <unsigned> &block_type_range);
+    
     
     void GenerateVankaPartitions_METIS( const unsigned &block_size, vector < vector< unsigned > > &blk_elements);
     

@@ -282,7 +282,7 @@ int main(int argc,char **args) {
   if(1==simulation || 2==simulation || 5==simulation)
     system.SetPreconditionerFineGrids(ILU_PRECOND); 
   else
-    system.SetPreconditionerFineGrids(MLU_PRECOND); 
+    system.SetPreconditionerFineGrids(ILU_PRECOND); 
  
   system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
  
@@ -292,6 +292,7 @@ int main(int argc,char **args) {
   system.AddVariableToBeSolved("DX");
   system.AddVariableToBeSolved("DY");
   if (!dimension2D)  system.AddVariableToBeSolved("DZ");
+  
   system.AddVariableToBeSolved("U");
   system.AddVariableToBeSolved("V");
   if (!dimension2D)  system.AddVariableToBeSolved("W");
@@ -299,7 +300,15 @@ int main(int argc,char **args) {
     
   //for Vanka and ASM smoothers
   system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(2);   
+  if(dimension2D){
+    system.SetElementBlockNumber(2);
+  }
+  if (!dimension2D){
+    system.SetElementBlockNumberFluid(2);
+    //system.SetElementBlockNumberSolid(2);
+    system.SetElementBlockSolidAll();
+    //system.SetElementBlockFluidAll();
+  }
   //for Gmres smoother
   //system.SetDirichletBCsHandling(PENALTY); 
   system.SetDirichletBCsHandling(ELIMINATION);   

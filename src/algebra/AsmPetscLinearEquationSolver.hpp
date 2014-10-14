@@ -60,6 +60,8 @@ private:
 
     /** To be Added */
     void SetElementBlockNumber(const unsigned & block_elemet_number);
+    void SetElementBlockNumberSolid(const unsigned & block_elemet_number);
+    void SetElementBlockNumberFluid(const unsigned & block_elemet_number);
 
     /** To be Added */
     void SetElementBlockNumber(const char all[], const unsigned & overlap=1) {
@@ -92,7 +94,7 @@ private:
     PetscReal  _abstol;
     PetscReal  _dtol;
     PetscInt   _maxits;
-    unsigned _element_block_number;
+    unsigned _element_block_number[2];
     vector< vector <PetscInt> > _indexai;
     bool _indexai_init;
     unsigned short _NSchurVar;
@@ -119,7 +121,8 @@ inline AsmPetscLinearEquationSolver::AsmPetscLinearEquationSolver (const unsigne
     if(igrid==0) {
         this->_preconditioner_type = MLU_PRECOND;
         this->_solver_type         = PREONLY;
-        _element_block_number = _msh->el->GetElementNumber();
+        _element_block_number[0] = _msh->el->GetElementNumber();
+	_element_block_number[1] = _msh->el->GetElementNumber();
     }
     else {
         if(_msh->n_processors()==1) {
@@ -131,7 +134,8 @@ inline AsmPetscLinearEquationSolver::AsmPetscLinearEquationSolver (const unsigne
         unsigned dim = _msh->GetDimension();
         unsigned base = pow(2,dim);
         unsigned exponent = 5 - dim;
-        _element_block_number = pow(base,exponent);
+        _element_block_number[0] = pow(base,exponent);
+	_element_block_number[1] = pow(base,exponent);
     }
 
     _ksp;

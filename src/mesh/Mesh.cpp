@@ -3025,33 +3025,6 @@ void mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vec
     }
   }  
   
-//   if( counter_f > block_size ){
-//     unsigned reminder = counterf % block_size;
-//     unsigned nbloks = (0 == reminder)? counterf/block_size : counterf/block_size+1 ;
-//    
-//     vector< vector < unsigned > > new_block_elements(nbloks+1);
-//     
-//     for(int i = 0; i < block_elements.size()-1; i++) 
-//       block_elements[i].resize(block_size); 
-//    
-//     
-//   
-//     for(int i = 0; i < block_elements.size(); i++) 
-//       block_elements[i].resize(block_size);
-//     if  (0 != reminder ){
-//       block_elements[ block_elements.size()-1].resize(reminder); 
-//     }
-//   
-//     for (unsigned iel=0; iel<OwnedElements; iel++) {
-//       block_elements[iel/block_size][iel%block_size]=iel+ElemOffset;
-//     }
-//     
-//     
-//     
-//     
-//   }
-    
-  
   if(counter_s==0){
     block_elements.erase (block_elements.begin()+1);
     block_type_range[1]=1;
@@ -3070,6 +3043,99 @@ void mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vec
   }
   
 } 
+
+
+
+
+
+void mesh::GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < vector< unsigned > > &block_elements,
+					 vector <unsigned> &block_type_range){
+
+  unsigned iproc=processor_id();
+  unsigned ElemOffset    = IS_Mts2Gmt_elem_offset[iproc];
+  unsigned ElemOffsetp1  = IS_Mts2Gmt_elem_offset[iproc+1];
+  unsigned OwnedElements = ElemOffsetp1 - ElemOffset;
+
+  unsigned counter[2]={0,0};
+  for (unsigned iel_mts = ElemOffset; iel_mts < ElemOffsetp1; iel_mts++) {
+    unsigned kel        = IS_Mts2Gmt_elem[iel_mts]; 
+    unsigned flag_mat   = el->GetElementMaterial(kel);
+    if(4 == flag_mat){
+      counter[0]++;
+    } 
+  }
+  counter[1]=OwnedElements - counter[0];
+  
+  block_type_range.resize(2);
+ 
+  unsigned flag_block[2]={4,2};
+  
+  unsigned block_start=0;
+  unsigned iblock=0;
+  while(iblock < 2){
+    if(counter[iblock] !=0 ){
+      unsigned reminder = counter[iblock] % block_size[iblock];
+      unsigned blocks = (0 == reminder)? counter[iblock]/block_size[iblock] : counter[iblock]/block_size[iblock] + 1 ;
+      block_elements.resize(block_start+blocks);
+  
+      for(int i = 0; i < blocks; i++) 
+	block_elements[block_start + i].resize(block_size[iblock]);
+      if  (0 != reminder ){
+	block_elements[block_start + (blocks-1u)].resize(reminder); 
+      }
+      
+      unsigned counter=0;
+      for (unsigned iel_mts = ElemOffset; iel_mts < ElemOffsetp1; iel_mts++) {
+	unsigned kel        = IS_Mts2Gmt_elem[iel_mts]; 
+	unsigned flag_mat   = el->GetElementMaterial(kel);
+	if( flag_block[iblock] == flag_mat ){
+	  block_elements[ block_start + (counter / block_size[iblock]) ][ counter % block_size[iblock] ]=iel_mts;
+	  counter++;
+	}	 
+      }
+      block_type_range[iblock]=block_start+blocks;
+      block_start += blocks;
+    }
+    else{
+      block_type_range[iblock]=block_start;
+    }
+    iblock++;
+  }
+
+  
+  cout<<"solid\n";
+  for(int i=0;i<block_type_range[0];i++){
+    cout<<i<<"\t";
+    for(int j=0;j<block_elements[i].size();j++){
+      cout<<block_elements[i][j]<<" ";
+    }
+    cout<<endl;
+  }
+  
+  cout<<"fluid\n";
+  for(int i=block_type_range[0];i<block_type_range[1];i++){
+    cout<<i<<"\t";
+    for(int j=0;j<block_elements[i].size();j++){
+      cout<<block_elements[i][j]<<" ";
+    }
+    cout<<endl;
+  }
+  
+
+} 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 void mesh::GenerateVankaPartitions_METIS( const unsigned &vnk_blck, vector < vector< unsigned > > &block_elements){
