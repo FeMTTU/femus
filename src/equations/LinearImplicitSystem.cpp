@@ -552,6 +552,45 @@ void LinearImplicitSystem::SetElementBlockNumber(unsigned const dim_block) {
   }
 }
 
+
+void LinearImplicitSystem::SetElementBlockNumberFluid(unsigned const dim_block) {
+  _numblock_test=1;
+  const unsigned dim = _msh[0]->GetDimension();
+  const unsigned base = pow(2,dim);
+  _num_block = pow(base,dim_block);
+
+  for (unsigned i=1; i<_gridn; i++) {
+    unsigned num_block2 = std::min(_num_block,_msh[i]->GetElementNumber());
+    _LinSolver[i]->SetElementBlockNumberFluid(num_block2);
+  }
+}
+
+void LinearImplicitSystem::SetElementBlockNumberSolid(unsigned const dim_block) {
+  _numblock_test=1;
+  const unsigned dim = _msh[0]->GetDimension();
+  const unsigned base = pow(2,dim);
+  _num_block = pow(base,dim_block);
+
+  for (unsigned i=1; i<_gridn; i++) {
+    unsigned num_block2 = std::min(_num_block,_msh[i]->GetElementNumber());
+    _LinSolver[i]->SetElementBlockNumberSolid(num_block2);
+  }
+}
+
+
+void LinearImplicitSystem::SetElementBlockFluidAll() {
+  for (unsigned i=1; i<_gridn; i++) {
+    _LinSolver[i]->SetElementBlockNumberFluid(_msh[i]->GetElementNumber());
+  }
+}
+
+void LinearImplicitSystem::SetElementBlockSolidAll() {
+  for (unsigned i=1; i<_gridn; i++) {
+    _LinSolver[i]->SetElementBlockNumberSolid(_msh[i]->GetElementNumber());
+  }
+}
+
+
 void LinearImplicitSystem::SetElementBlockNumber(const char all[], const unsigned & overlap) {
   _numblock_all_test=1;
   _overlap=overlap;

@@ -49,7 +49,20 @@ namespace femus {
   // ==============================================
 
   void AsmPetscLinearEquationSolver::SetElementBlockNumber(const unsigned& block_elemet_number) {
-    _element_block_number = block_elemet_number;
+    _element_block_number[0] = block_elemet_number;
+    _element_block_number[1] = block_elemet_number;
+    _indexai_init=0;
+    _standard_ASM=0;
+  }
+    
+  void AsmPetscLinearEquationSolver::SetElementBlockNumberSolid(const unsigned& block_elemet_number) {
+    _element_block_number[0] = block_elemet_number;
+    _indexai_init=0;
+    _standard_ASM=0;
+  }
+  
+  void AsmPetscLinearEquationSolver::SetElementBlockNumberFluid(const unsigned& block_elemet_number) {
+    _element_block_number[1] = block_elemet_number;
     _indexai_init=0;
     _standard_ASM=0;
   }
@@ -140,8 +153,8 @@ namespace femus {
     vector < vector < unsigned > > block_elements;
     
     
-    _msh->GenerateVankaPartitions_FSI( _element_block_number, block_elements, _block_type_range);
-    
+    _msh->GenerateVankaPartitions_FSI1(_element_block_number, block_elements, _block_type_range);
+    //_msh->GenerateVankaPartitions_FSI( _element_block_number, block_elements, _block_type_range);
     
     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(),true);
     for (unsigned iind=variable_to_be_solved.size()-_NSchurVar; iind<variable_to_be_solved.size(); iind++) {
@@ -343,7 +356,18 @@ namespace femus {
       MatSetOption(_Pmat,MAT_NO_OFF_PROC_ZERO_ROWS,PETSC_TRUE);
       MatZeroRows(_Pmat,_indexai[0].size(),&_indexai[0][0],1.e40,0,0);
       _Pmat_is_initialized = true;
+      
+       
+      
+//       PetscViewer    viewer;
+//       ierr=PetscViewerDrawOpen(MPI_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);
+//       ierr= MatView(KK,viewer);
+//       double ff;
+//       std::cin>>ff;
+//       PetscViewerDestroy(&viewer);
+      
       init(KK,_Pmat);
+      
     }
     
     AssemblyTime = clock() - start_time;
@@ -440,7 +464,10 @@ namespace femus {
 // 				   PETSC_TRUE);  // Whether or not to reset the history for each solve.
 //       CHKERRABORT(MPI_COMM_WORLD,ierr);
       
+      
+      
       PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND,_pc);
+      //ierr = PCGASMSetType(_pc,PC_GASM_NONE);
       PetscReal zero = 1.e-16;
       PCFactorSetZeroPivot(_pc,zero);
       PCFactorSetShiftType(_pc,MAT_SHIFT_NONZERO);
@@ -450,7 +477,7 @@ namespace femus {
       else{
 	ierr = PCASMSetOverlap(_pc,_overlap); CHKERRABORT(MPI_COMM_WORLD,ierr);
       }
-      
+      ierr = PCASMSetOverlap(_pc,0); CHKERRABORT(MPI_COMM_WORLD,ierr);
       ierr = KSPSetUp(_ksp);							    CHKERRABORT(MPI_COMM_WORLD,ierr);
       
       ierr = PCASMGetSubKSP(_pc,&_nlocal,&_first,&_subksp);			    CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -461,7 +488,8 @@ namespace femus {
 	ierr = KSPGetPC(_subksp[i],&_subpc[0]);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
 	ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
 	ierr = KSPSetFromOptions(_subksp[i]);
-	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_subpc[0]); 
+	//ierr = PCGASMSetType(_subpc[0],PC_GASM_NONE);
+	PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND,_subpc[0]); 
 	PetscReal zero = 1.e-16;
 	PCFactorSetZeroPivot(_subpc[0],zero);
 	PCFactorSetShiftType(_subpc[0],MAT_SHIFT_NONZERO);
@@ -470,7 +498,7 @@ namespace femus {
 	ierr = KSPGetPC(_subksp[i],&_subpc[1]);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
 	ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
 	ierr = KSPSetFromOptions(_subksp[i]);
-	PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND,_subpc[1]); 
+	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_subpc[1]); 
 	PetscReal zero = 1.e-16;
 	PCFactorSetZeroPivot(_subpc[1],zero);
 	PCFactorSetShiftType(_subpc[1],MAT_SHIFT_NONZERO);
