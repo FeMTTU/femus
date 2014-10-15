@@ -67,10 +67,10 @@ Solid::Solid(Parameter& par, const double young_module, const double poisson_coe
     _penalty = false;
     _mass_penalty=!strcmp(model,"Neo-Hookean-MassPenalty")?true:false;
   }
-  else if (!strcmp(model,"Neo-Hookean-BW")) {
+  else if (!strcmp(model,"Neo-Hookean-BW") || !strcmp(model,"Neo-Hookean-BW-MassPenalty") ) {
     _model = 2;
     _penalty = false;
-    _mass_penalty=false;
+    _mass_penalty=!strcmp(model,"Neo-Hookean-BW-MassPenalty")?true:false;
   }
   else if (!strcmp(model,"Neo-Hookean-BW-Penalty")) {
     _model = 3;

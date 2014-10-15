@@ -417,6 +417,9 @@ namespace femus {
 	    adept::adouble Cauchy[3][3];
 	    adept::adouble Id2th[3][3]= {{ 1.,0.,0.}, { 0.,1.,0.}, { 0.,0.,1.}};
 	    
+	    adept::adouble I1_B=0.;
+	    adept::adouble I2_B=0.;
+	    
 	    if (solid_model==0) { // Saint-Venant
 	      adept::adouble e[3][3];
 	      //computation of the stress tensor
@@ -432,7 +435,8 @@ namespace femus {
 	      for (int i=0; i<dim; i++) {
 		for (int j=0; j<dim; j++) {
 		  //incompressible
-		  Cauchy[i][j] = 2*mus*e[i][j]+(penalty)*lambda*I_e*Id2th[i][j];
+		  Cauchy[i][j] = 2*mus*e[i][j]-2*mus*I_e*SolVAR[2*dim]*Id2th[i][j];
+		  //+(penalty)*lambda*I_e*Id2th[i][j];
 		}
 	      }
 	    }
@@ -459,13 +463,16 @@ namespace femus {
 		}
 	      }	  
 	      if( solid_model <=4 ){ // Neo-Hookean
-		adept::adouble I1_B = B[0][0] + B[1][1] + B[2][2];
+		I1_B = B[0][0] + B[1][1] + B[2][2];
+		
 	    	for (int I=0; I<3; ++I) {
 		  for (int J=0; J<3; ++J) {
-		    if	    ( 1 == solid_model ) Cauchy[I][J] = mus*(B[I][J] - 0*Id2th[I][J]); 		  //Wood-Bonet J_hat  =1;
-		    else if ( 2 == solid_model ) Cauchy[I][J] = mus*(B[I][J] - Id2th[I][J])/J_hat; 	  //Wood-Bonet J_hat !=1;
+		    if	    ( 1 == solid_model ) Cauchy[I][J] = mus*B[I][J] 
+							       -mus*I1_B*SolVAR[2*dim]*Id2th[I][J]; 	//Wood-Bonet J_hat  =1;
+		    else if ( 2 == solid_model ) Cauchy[I][J] = mus/J_hat*B[I][J] 
+							       -mus/J_hat*SolVAR[2*dim]*Id2th[I][J];    //Wood-Bonet J_hat !=1;
 		    else if ( 3 == solid_model ) Cauchy[I][J] = mus*(B[I][J] - Id2th[I][J])/J_hat
-							      + lambda/J_hat*log(J_hat)*Id2th[I][J]; 	  //Wood-Bonet penalty
+							      + lambda/J_hat*log(J_hat)*Id2th[I][J]; 	//Wood-Bonet penalty
 		    else if ( 4 == solid_model ) Cauchy[I][J] = mus*(B[I][J] - I1_B*Id2th[I][J]/3.)/pow(J_hat,5./3.)
 						              + lambda*(J_hat-1.)*Id2th[I][J];  	  //Allan-Bower
 		    
@@ -489,11 +496,18 @@ namespace femus {
 		invB[1][2] = -(B[0][0]*B[2][1]-B[2][0]*B[0][1])*invdetB;
 		invB[2][2] =  (B[0][0]*B[1][1]-B[1][0]*B[0][1])*invdetB;
 		
+		I1_B = B[0][0] + B[1][1] + B[2][2];
+		I2_B = B[0][0] * B[1][1] + B[1][1] * B[2][2] + B[2][2]*B[0][0]
+		      -B[0][1] * B[1][0] - B[1][2] * B[2][1] - B[2][0]*B[0][2];
+		
 		for (int I=0; I<3; ++I) {
 		  for (int J=0; J<3; ++J) {
-		    Cauchy[I][J] = mus*(2.*B[I][J] - invB[I][J] )/3.;
+		    Cauchy[I][J] = mus*(2.*B[I][J] - invB[I][J] )/3.
+				  -mus*(2.*I1_B - I2_B )/3.*SolVAR[2*dim]*Id2th[I][J];
+		    ;
 		  }
 		}
+		
 	      }	  		
 	    }
 	    //END build Chauchy Stress in moving domain
@@ -519,10 +533,7 @@ namespace femus {
 		  }
 		}
 		for(int idim=0; idim<dim; idim++) {
-		  aRhs[indexVAR[dim+idim]][i] += (phi[i]*_gravity[idim]*Weight
-						  -CauchyDIR[idim]*Weight
-						  +(!penalty)*SolVAR[2*dim]*gradphi[i*dim+idim]*Weight
-						  );			
+		  aRhs[indexVAR[dim+idim]][i] += (phi[i]*_gravity[idim] - CauchyDIR[idim])*Weight;			
 		} 
 		//END redidual Solid Momentum in moving domain 
 	      }
@@ -543,7 +554,7 @@ namespace femus {
 		    aRhs[indexVAR[2*dim]][i] += -(-phi1[i]*( log(J_hat)/J_hat + (!incompressible)/lambda*SolVAR[2*dim] ) )*Weight_hat;
 		  }
 		}
-		else if (3 == solid_model || 4 == solid_model){ // no pressure in the solid
+		else if (3 == solid_model || 4 == solid_model){ // pressure = 0 in the solid
 		  aRhs[indexVAR[2*dim]][i] += -(-phi1[i]*( SolVAR[2*dim] ) )*Weight_hat;
 		}
 	      }
