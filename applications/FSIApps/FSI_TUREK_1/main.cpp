@@ -93,9 +93,9 @@ int main(int argc,char **args) {
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
   if(simulation<3)
-    nm=3;
+    nm=4;
   else if(simulation<6)
-    nm=2;
+    nm=3;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
@@ -279,10 +279,10 @@ int main(int argc,char **args) {
   system.init();
   
   system.SetSolverFineGrids(GMRES);
-  if(1==simulation || 2==simulation || 5==simulation)
+  if(1 == simulation || 2 == simulation || 5 == simulation)
     system.SetPreconditionerFineGrids(ILU_PRECOND); 
   else
-    system.SetPreconditionerFineGrids(ILU_PRECOND); 
+    system.SetPreconditionerFineGrids(MLU_PRECOND); 
  
   system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
  
