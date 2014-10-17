@@ -3103,23 +3103,23 @@ void mesh::GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < ve
   }
 
   
-  cout<<"solid\n";
-  for(int i=0;i<block_type_range[0];i++){
-    cout<<i<<"\t";
-    for(int j=0;j<block_elements[i].size();j++){
-      cout<<block_elements[i][j]<<" ";
-    }
-    cout<<endl;
-  }
-  
-  cout<<"fluid\n";
-  for(int i=block_type_range[0];i<block_type_range[1];i++){
-    cout<<i<<"\t";
-    for(int j=0;j<block_elements[i].size();j++){
-      cout<<block_elements[i][j]<<" ";
-    }
-    cout<<endl;
-  }
+//   cout<<"solid\n";
+//   for(int i=0;i<block_type_range[0];i++){
+//     cout<<i<<"\t";
+//     for(int j=0;j<block_elements[i].size();j++){
+//       cout<<block_elements[i][j]<<" ";
+//     }
+//     cout<<endl;
+//   }
+//   
+//   cout<<"fluid\n";
+//   for(int i=block_type_range[0];i<block_type_range[1];i++){
+//     cout<<i<<"\t";
+//     for(int j=0;j<block_elements[i].size();j++){
+//       cout<<block_elements[i][j]<<" ";
+//     }
+//     cout<<endl;
+//   }
   
 
 } 

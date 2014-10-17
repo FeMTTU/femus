@@ -315,7 +315,7 @@ namespace femus {
 	  phi =ml_prob._ml_msh->_type_elem[kelt][SolType2]->GetPhi(ig);
 	  phi1=ml_prob._ml_msh->_type_elem[kelt][SolType1]->GetPhi(ig);
 	  
-	  if (flag_mat==2) {
+	  if (flag_mat==2 || iel == mymsh->IS_Mts2Gmt_elem_offset[iproc]) {
 	    if(ig==0){
 	      double GaussWeight = ml_prob._ml_msh->_type_elem[kelt][SolType2]->GetGaussWeight(ig);
 	      area=Weight_hat/GaussWeight;
