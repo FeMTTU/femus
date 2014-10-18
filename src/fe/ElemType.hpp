@@ -94,6 +94,10 @@ public:
                   double &Weight, vector < double > &other_phi, vector < double > &gradphi) const;
 
   /** To be Added */
+  void JacobianSur1D_AD( const vector < vector < adept::adouble > > &vt, const unsigned &ig,
+			 adept::adouble &Weight, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const; 		  
+		  
+  /** To be Added */
   double* GetPhi(const unsigned &ig) const;
   
   /** To be Added */

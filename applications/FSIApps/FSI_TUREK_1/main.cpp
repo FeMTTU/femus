@@ -10,6 +10,8 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "../include/IncompressibleFSIAssembly.hpp"
 
+double scale=1000.;
+
 using std::cout;
 using std::endl;
 using namespace femus;
@@ -17,6 +19,8 @@ using namespace femus;
 void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
 
 bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z,const char name[], 
+		double &value, const int FaceName, const double = 0.);
+bool SetBoundaryConditionDrum(const double &x, const double &y, const double &z,const char name[], 
 		double &value, const int FaceName, const double = 0.);
 bool SetBoundaryConditionBatheCylinder(const double &x, const double &y, const double &z,const char name[], 
 				       double &value, const int facename, const double time);
@@ -42,22 +46,26 @@ int main(int argc,char **args) {
       simulation=2; 
       dimension2D=1;  
     }
-    else if( !strcmp("bathe_FSI",args[1])){
+     else if( !strcmp("drum",args[1])){
       simulation=3; 
-      dimension2D=0;  
+      dimension2D=1;  
     }
-    else if( !strcmp("bathe_shell",args[1])) {
+    else if( !strcmp("bathe_FSI",args[1])){
       simulation=4; 
       dimension2D=0;  
     }
-    else if( !strcmp("bathe_cylinder",args[1])) {
+    else if( !strcmp("bathe_shell",args[1])) {
       simulation=5; 
+      dimension2D=0;  
+    }
+    else if( !strcmp("bathe_cylinder",args[1])) {
+      simulation=6; 
       dimension2D=0;  
     }
     else{    
       cout << "wrong input arguments!\n";
       cout << "please specify the simulation you want to run, options are\n";
-      cout << "turek\nbeam\nbathe_cylinder\nbathe_shell\n";
+      cout << "turek\nbeam\ndrum\nbathe_cylinder\nbathe_shell\n";
       exit(0);
     }
   }
@@ -93,9 +101,11 @@ int main(int argc,char **args) {
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
   if(simulation<3)
-    nm=4;
-  else if(simulation<6)
     nm=3;
+  else if(simulation==3)
+    nm=4;
+  else if(simulation<7)
+    nm=2;
 
   std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
   //std::cin>>nr;
@@ -112,20 +122,23 @@ int main(int argc,char **args) {
   else if(2 == simulation){
     sprintf(infile,"./input/beam.neu");
   }  
-  else if(3 == simulation) {
+  else if(3 == simulation){
+    sprintf(infile,"./input/drum.neu");
+  }  
+  else if(4 == simulation) {
     sprintf(infile,"./input/bathe_FSI.neu");
   }
-  else if(4==simulation){
+  else if(5==simulation){
     sprintf(infile,"./input/bathe_shell.neu");
   }
-  else if(5==simulation){
+  else if(6==simulation){
     sprintf(infile,"./input/bathe_cylinder.neu");
   }
   
    double Lref, Uref, rhof, muf, rhos, ni, E; 
   
   
-  if(simulation<3){
+  if(simulation<3){ //turek FSI
     Lref = 1.;	
     Uref = 1.;
     rhof = 1000.;
@@ -134,7 +147,16 @@ int main(int argc,char **args) {
     ni = 0.5;
     E = 1400000; 
   }
-  else if(simulation<6){
+  else if(simulation==3){ //bathe membrane
+    Lref = 1.;	
+    Uref = 1.;
+    rhof = 1000;
+    muf = 0.04;
+    rhos = 800;
+    ni = 0.5;
+    E = 140000000; 
+  }
+  else if(simulation<7){ //bathe cylinder
     Lref = 1.;
     Uref = 1.;
     rhof = 100.;
@@ -149,22 +171,23 @@ int main(int argc,char **args) {
   // Generate Solid Object
   Solid solid;
   if(simulation<3){
-    solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-MassPenalty");
-    //solid = Solid(par,E,ni,rhos,"Mooney-Rivlin-MassPenalty"); 
+    solid = Solid(par,E,ni,rhos,"Mooney-Rivlin-MassPenalty"); 
+    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-MassPenalty");
     //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
   }
-  else if(simulation < 6){	
+  else if(simulation==3){
+    solid = Solid(par,E,ni,rhos,"Mooney-Rivlin"); 
+    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-MassPenalty");
+    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
+  }
+  else if(simulation < 7){	
+    solid = Solid(par,E,ni,rhos,"Mooney-Rivlin"); 
     //solid = Solid(par,E,ni,rhos,"Neo-Hookean");
     //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
     //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
     //solid = Solid(par,E,ni,rhos,"Neo-Hookean-AB-Penalty"); //Allan Bower
-    solid = Solid(par,E,ni,rhos,"Mooney-Rivlin"); 
+   
   }
-  
-  //Solid solid(par,E,ni,rhos,"Linear_elastic");
-  //Solid solid(par,E,ni,rhos,"Neo-Hookean");
-  //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
-  //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
   
   cout << "Solid properties: " << endl;
   cout << solid << endl;
@@ -199,9 +222,11 @@ int main(int argc,char **args) {
   //Set Boundary (update Dirichlet(...) function)
   if(1==simulation || 2==simulation)
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek);
-  else if (3==simulation || 5==simulation)
+  else if( 3==simulation)
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionDrum);
+  else if (4==simulation || 6==simulation)
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBatheCylinder);
-  else if (4==simulation)
+  else if (5==simulation)
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBatheShell);
 
   ml_sol.GenerateBdc("DX","Steady");
@@ -231,36 +256,36 @@ int main(int argc,char **args) {
   if (!dimension2D) system.AddSolutionToSytemPDE("W");
   system.AddSolutionToSytemPDE("P");
   
-  if(dimension2D){
-    bool sparsity_pattern_matrix[5][5]={{1, 0, 1, 0, 0},
-					{0, 1, 0, 1, 0},
-					{1, 1, 1, 1, 1},
-					{1, 1, 1, 1, 1},
-					{1, 1, 0, 0, 1}};
-    vector < bool > sparsity_pattern (sparsity_pattern_matrix[0],sparsity_pattern_matrix[0]+25*sizeof(bool));
-    system.SetSparsityPattern(sparsity_pattern);  
-  }
-  else{				   
-    bool sparsity_pattern_matrix[7][7]={{1, 0, 0, 1, 0, 0, 0},
-					{0, 1, 0, 0, 1, 0, 0},
-					{0, 0, 1, 0, 0, 1, 0},
-					{1, 1, 1, 1, 1, 1, 1},
-					{1, 1, 1, 1, 1, 1, 1},
-					{1, 1, 1, 1, 1, 1, 1},
-					{1, 1, 1, 0, 0, 0, 1}};
-    vector < bool > sparsity_pattern (sparsity_pattern_matrix[0],sparsity_pattern_matrix[0]+49*sizeof(bool));
-    system.SetSparsityPattern(sparsity_pattern);  
-  }
+//   if(dimension2D){
+//     bool sparsity_pattern_matrix[5][5]={{1, 0, 1, 0, 0},
+// 					{0, 1, 0, 1, 0},
+// 					{1, 1, 1, 1, 1},
+// 					{1, 1, 1, 1, 1},
+// 					{1, 1, 0, 0, 1}};
+//     vector < bool > sparsity_pattern (sparsity_pattern_matrix[0],sparsity_pattern_matrix[0]+25*sizeof(bool));
+//     system.SetSparsityPattern(sparsity_pattern);  
+//   }
+//   else{				   
+//     bool sparsity_pattern_matrix[7][7]={{1, 0, 0, 1, 0, 0, 0},
+// 					{0, 1, 0, 0, 1, 0, 0},
+// 					{0, 0, 1, 0, 0, 1, 0},
+// 					{1, 1, 1, 1, 1, 1, 1},
+// 					{1, 1, 1, 1, 1, 1, 1},
+// 					{1, 1, 1, 1, 1, 1, 1},
+// 					{1, 1, 1, 0, 0, 0, 1}};
+//     vector < bool > sparsity_pattern (sparsity_pattern_matrix[0],sparsity_pattern_matrix[0]+49*sizeof(bool));
+//     system.SetSparsityPattern(sparsity_pattern);  
+//   }
    
   // System Fluid-Structure-Interaction
-  system.AttachAssembleFunction(IncompressibleFSIAssemblyAD);  
+  system.AttachAssembleFunction(IncompressibleFSIAssemblyAD_DD);  
   //system.AttachAssembleFunction(AssembleMatrixResFSI);  
   
   if(simulation < 3){
     system.SetMaxNumberOfLinearIterations(2);
     system.SetMaxNumberOfNonLinearIterations(10);
   }
-  else if(simulation < 6){	
+  else if(simulation < 7){	
     system.SetMaxNumberOfLinearIterations(8);
     system.SetMaxNumberOfNonLinearIterations(15); 
   }
@@ -279,7 +304,7 @@ int main(int argc,char **args) {
   system.init();
   
   system.SetSolverFineGrids(GMRES);
-  if(1 == simulation || 2 == simulation || 5 == simulation)
+  if(3 >= simulation || 6 == simulation)
     system.SetPreconditionerFineGrids(ILU_PRECOND); 
   else
     system.SetPreconditionerFineGrids(MLU_PRECOND); 
@@ -300,10 +325,10 @@ int main(int argc,char **args) {
     
   //for Vanka and ASM smoothers
   system.SetNumberOfSchurVariables(1);
-  if(dimension2D){
+  if(simulation < 3){
     system.SetElementBlockNumber(2);
   }
-  if (!dimension2D){
+  else if(simulation ==3 || !dimension2D){
     system.SetElementBlockNumberFluid(2);
     //system.SetElementBlockFluidAll();
     //system.SetElementBlockNumberSolid(2,1); //to use for solid domain decomposition
@@ -409,28 +434,6 @@ bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z
       value=0.;
     }
   }
-  else if(!strcmp(name,"W")){
-    if(1==facename){
-      test=1;
-      value=0.;
-    }  
-    else if(2==facename ){  
-      test=1;
-      value=0.;
-    }
-    else if(3==facename ){  
-      test=1;
-      value=0.;
-    }
-    else if(4==facename ){  
-      test=1;
-      value=0.;
-    }
-    else if(6==facename ){   // beam case zero stress
-      test=0;
-      value=0.;
-    }
-  }
   else if(!strcmp(name,"P")){
     if(1==facename){
       test=0;
@@ -497,26 +500,120 @@ bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z
       value=0.;
     }
   }
-  else if(!strcmp(name,"DZ")){
-    if(1==facename){         //inflow
-      test=1;
-      value=0.;
+  return test;
+}
+
+bool SetBoundaryConditionDrum(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+  bool test=1; //dirichlet
+  value=0.;
+  if(!strcmp(name,"U")) {
+    if(1==facename){   //top
+      test=0;
+      value=0;
     }  
-    else if(2==facename ){   //outflow
+    else if(2==facename ){  //top side
+     test=0;
+     value=0.;
+    }
+    else if(3==facename ){  //top bottom
+      test=1;
+      value=0;	
+    }
+    else if(4==facename ){  //solid side
+      test=1;
+      value=0;	
+    }
+    else if(5==facename ){  //bottom side
+      test=1;
+      value=0;	
+    }
+    else if(6==facename ){  //bottom 
+      test=0;
+      value=200000;	
+    }
+  }  
+  else if(!strcmp(name,"V")){
+     if(1==facename){   //top
+      test=0;
+      value=0;
+    }  
+    else if(2==facename ){  //top side
+     test=0;
+     value=0.;
+    }
+    else if(3==facename ){  //top bottom
+      test=1;
+      value=0;	
+    }
+    else if(4==facename ){  //solid side
+      test=1;
+      value=0;	
+    }
+    else if(5==facename ){  //bottom side
+      test=1;
+      value=0;	
+    }
+    else if(6==facename ){  //bottom 
+      test=0;
+      value=0;	
+    }
+  }
+  else if(!strcmp(name,"P")){
+    if(facename==facename){
+      test=0;
+      value=0.;
+    } 
+  }
+  else if(!strcmp(name,"DX")){
+    if(1==facename){   //top
+      test=0;
+      value=0;
+    }  
+    else if(2==facename ){  //top side
      test=1;
      value=0.;
     }
-    else if(3==facename ){   // no-slip fluid wall
-      test=1;
-      value=0.;	
-    }
-    else if(4==facename ){   // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-    else if(6==facename ){   // beam case zero stress
+    else if(3==facename ){  //top bottom
       test=0;
-      value=0.;
+      value=0;	
+    }
+    else if(4==facename ){  //solid side
+      test=1;
+      value=0;	
+    }
+    else if(5==facename ){  //bottom side
+      test=1;
+      value=0;	
+    }
+    else if(6==facename ){  //bottom 
+      test=0;
+      value=0;	
+    }
+  }
+  else if(!strcmp(name,"DY")){
+   if(1==facename){   //top
+      test=1;
+      value=0;
+    }  
+    else if(2==facename ){  //top side
+     test=0;
+     value=0.;
+    }
+    else if(3==facename ){  //top bottom
+      test=1;
+      value=0;	
+    }
+    else if(4==facename ){  //solid side
+      test=1;
+      value=0;	
+    }
+    else if(5==facename ){  //bottom side
+      test=1;
+      value=0;	
+    }
+    else if(6==facename ){  //bottom 
+      test=1;
+      value=0;	
     }
   }
 
