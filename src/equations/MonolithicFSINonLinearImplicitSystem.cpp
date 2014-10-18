@@ -155,9 +155,12 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned SolIndex=_SolSystemPdeIndex[k];
     unsigned  SolType = _ml_sol->GetSolutionType(SolIndex);
-    bool TestDisp=0;
-    if(_ml_sol->TestIfSolutionIsDisplacemenet(SolIndex) )   TestDisp=1;
-        
+    //bool TestDisp=0;
+    //if(_ml_sol->TestIfSolutionIsDisplacemenet(SolIndex) )   TestDisp=1;
+    bool TestDisp=1;
+    if(_ml_sol->TestIfSolutionIsPressure(SolIndex) )   TestDisp=0;
+    
+    
     // loop on the coarse grid 
     for(int isdom=iproc; isdom<iproc+1; isdom++) {
       for (int iel_mts=mshc->IS_Mts2Gmt_elem_offset[isdom]; 

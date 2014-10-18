@@ -599,6 +599,7 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
   else if (!strcmp(solid,"line")) { //line
     Jacobian_ptr=&elem_type::Jacobian1D;
     Jacobian_sur_ptr=&elem_type::JacobianSur1D;
+    Jacobian_sur_AD_ptr=&elem_type::JacobianSur1D_AD;
     
     ncf_[0]=2;
     ncf_[1]=3;
@@ -1048,7 +1049,8 @@ void elem_type::JacobianSur2D_AD(const vector < vector < adept::adouble > > &vt,
 
 //---------------------------------------------------------------------------------------------------------
 void elem_type::JacobianSur1D(const vector < vector < double > > &vt, const unsigned &ig,
-                              double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const {
+                              double &Weight, vector < double > &other_phi, vector < double > &gradphi, 
+			      vector < double > &normal) const {
 
 //      cout << "Calling 1d surface jacobian" << endl;
   double Jac[2][2]={{0.,0.},{0.,0.}};
@@ -1068,8 +1070,7 @@ void elem_type::JacobianSur1D(const vector < vector < double > > &vt, const unsi
 
   normal[0] =  Jac[1][0]/modn;
   normal[1] = -Jac[0][0]/modn;
-  normal[2] =  0.;
-
+  
   //The derivative of x with respect to eta (dx/deta) has the opposite sign with respect to the normal
   //obtained as cross product between (dx/deta , dy/deta, 0) x (0,0,1)
   //The Jacobian has the structure
@@ -1102,6 +1103,61 @@ void elem_type::JacobianSur1D(const vector < vector < double > > &vt, const unsi
   }
 
 }
+
+//---------------------------------------------------------------------------------------------------------
+void elem_type::JacobianSur1D_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
+                              adept::adouble &Weight, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const {
+
+//      cout << "Calling 1d surface jacobian" << endl;
+  adept::adouble Jac[2][2]={{0.,0.},{0.,0.}};
+  adept::adouble JacI[2][2];
+
+  const double *dfeta=dphidxi[ig];
+
+  for (int inode=0; inode<nc_; inode++,dfeta++) {
+    Jac[0][0] += (*dfeta)*vt[0][inode];
+    Jac[1][0] += (*dfeta)*vt[1][inode];
+  }
+
+//   normal module
+  adept::adouble modn = sqrt(Jac[0][0]*Jac[0][0] + Jac[1][0]*Jac[1][0]);
+
+  normal[0] =  Jac[1][0]/modn;
+  normal[1] = -Jac[0][0]/modn;
+  
+  //The derivative of x with respect to eta (dx/deta) has the opposite sign with respect to the normal
+  //obtained as cross product between (dx/deta , dy/deta, 0) x (0,0,1)
+  //The Jacobian has the structure
+  // |dx/deta  -nx|
+  // |dy/deta  -ny|
+  Jac[0][1] = -normal[0];
+  Jac[1][1] = -normal[1];
+
+  //The determinant of that matrix is the area
+  adept::adouble det= (Jac[0][0]*Jac[1][1]-Jac[0][1]*Jac[1][0]);
+
+  JacI[0][0] =  Jac[1][1]/det;
+  JacI[0][1] = -Jac[0][1]/det;
+  JacI[1][0] = -Jac[1][0]/det;
+  JacI[1][1] =  Jac[0][0]/det;
+
+  Weight = det*GaussWeight[ig];
+
+//   double *gradf=&gradphi[0];
+//   double *other_f=&other_phi[0];
+//   double *fi=phi[ig];
+//   dfeta=dphidxi[ig];
+//   for (int inode=0; inode<nc_; inode++,other_f++,fi++,dfeta++) {
+//     *other_f=*fi;
+//     //the derivative computed in this way are wrong
+//     *(gradf++)=(*dfeta)*JacI[0][0];
+//     *(gradf++)=(*dfeta)*JacI[0][1];
+//     *(gradf++)=0.;
+// 
+//   }
+
+}
+
 
 //---------------------------------------------------------------------------------------------------------
 void elem_type::Jacobian3D(const vector < vector < double > > &vt, const unsigned &ig,
