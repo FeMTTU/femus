@@ -25,6 +25,7 @@
 #include "iostream"
 #include <algorithm>  
 #include <cstring>
+#include <sstream>
 
 #ifdef HAVE_HDF5
   #include "hdf5.h"

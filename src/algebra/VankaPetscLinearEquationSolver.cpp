@@ -423,7 +423,9 @@ namespace femus {
       // Set user-specified  solver and preconditioner types
       this->set_petsc_solver_type(ksp);
         
-      ierr = KSPSetOperators(ksp, Amat, Pmat, SAME_PRECONDITIONER);		CHKERRABORT(MPI_COMM_WORLD,ierr);
+      //ierr = KSPSetOperators(ksp, Amat, Pmat, SAME_PRECONDITIONER);	
+      ierr = KSPSetOperators(ksp, Amat, Pmat); //PETSC3p5	
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
 
       // Set the tolerances for the iterative solver.  Use the user-supplied
       // tolerance for the relative residual & leave the others at default values.

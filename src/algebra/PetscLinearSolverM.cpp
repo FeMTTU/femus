@@ -257,7 +257,8 @@ void PetscLinearSolverM::init(PetscMatrix* matrix) {
     // Create the preconditioner context
     ierr = KSPGetPC(_ksp, &_pc);  CHKERRABORT(MPI_COMM_WORLD,ierr);
     // Set operators. The input matrix works as the preconditioning matrix
-    ierr = KSPSetOperators(_ksp, matrix->mat(), matrix->mat(),SAME_NONZERO_PATTERN);
+    //ierr = KSPSetOperators(_ksp, matrix->mat(), matrix->mat(),SAME_NONZERO_PATTERN);
+    ierr = KSPSetOperators(_ksp, matrix->mat(), matrix->mat()); //PETSC3p5
     CHKERRABORT(MPI_COMM_WORLD,ierr);
     // Have the Krylov subspace method use our good initial guess rather than 0
     ierr = KSPSetInitialGuessNonzero(_ksp, PETSC_TRUE);  CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -559,10 +560,12 @@ std::pair<unsigned int, double> PetscLinearSolverM::solve(SparseMatrix&  matrix_
   // 2.2.1 & newer style
   // Set operators. The input matrix works as the preconditioning matrix
   if (!this->same_preconditioner)  {
-    ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat(),SAME_NONZERO_PATTERN);
+    //ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat(),SAME_NONZERO_PATTERN);
+    ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat()); //PETSC3p5
     CHKERRABORT(MPI_COMM_WORLD,ierr);
   } else  {
-    ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat(),SAME_PRECONDITIONER);
+    //ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat(),SAME_PRECONDITIONER);
+    ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat()); //PETSC3p5
     CHKERRABORT(MPI_COMM_WORLD,ierr);
   }
   // Set the tolerances for the iterative solver.  Use the user-supplied

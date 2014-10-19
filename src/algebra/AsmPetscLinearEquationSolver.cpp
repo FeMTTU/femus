@@ -434,7 +434,8 @@ namespace femus {
       // Set operators. The input matrix works as the preconditioning matrix
       this->set_petsc_solver_type();
       
-      ierr = KSPSetOperators(_ksp, Amat, Pmat, SAME_PRECONDITIONER);		CHKERRABORT(MPI_COMM_WORLD,ierr);
+      //ierr = KSPSetOperators(_ksp, Amat, Pmat, SAME_PRECONDITIONER);		CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetOperators(_ksp, Amat, Pmat);		CHKERRABORT(MPI_COMM_WORLD,ierr); //PETSC3p5
       
       // Set the tolerances for the iterative solver.  Use the user-supplied
       // tolerance for the relative residual & leave the others at default values.
