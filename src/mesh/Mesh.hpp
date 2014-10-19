@@ -21,6 +21,7 @@
 //----------------------------------------------------------------------------
 #include "Elem.hpp"
 #include "vector"
+#include "map"
 #include "metis.h"
 #include "Solution.hpp"
 #include "ElemType.hpp"

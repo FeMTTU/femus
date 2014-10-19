@@ -60,7 +60,8 @@ void PetscPreconditioner::init () {
     PetscMatrix * pmatrix = libmeshM_cast_ptr<PetscMatrix*, SparseMatrix >(this->_matrix);
     _mat = pmatrix->mat();
   }
-  PCSetOperators(_pc,_mat,_mat,SAME_NONZERO_PATTERN);
+  //PCSetOperators(_pc,_mat,_mat,SAME_NONZERO_PATTERN);
+  PCSetOperators(_pc,_mat,_mat);//PETSC3p5
   this->_is_initialized = true;
 }
 
