@@ -47,7 +47,13 @@ namespace femus {
   }
 
   // ==============================================
-
+  void AsmPetscLinearEquationSolver::SetElementBlockNumber(const char all[], const unsigned & overlap) {
+    _element_block_number[0] = _msh->GetElementNumber();
+    _element_block_number[1] = _msh->GetElementNumber();
+    _standard_ASM=1;
+    _overlap=overlap;
+  }
+    
   void AsmPetscLinearEquationSolver::SetElementBlockNumber(const unsigned& block_elemet_number) {
     _element_block_number[0] = block_elemet_number;
     _element_block_number[1] = block_elemet_number;
@@ -62,10 +68,11 @@ namespace femus {
     _overlap=overlap;
   }
   
-  void AsmPetscLinearEquationSolver::SetElementBlockNumberFluid(const unsigned& block_elemet_number) {
+  void AsmPetscLinearEquationSolver::SetElementBlockNumberFluid(const unsigned& block_elemet_number,const unsigned &overlap) {
     _element_block_number[1] = block_elemet_number;
     _indexai_init=0;
     _standard_ASM=0;
+    _overlap=overlap;
   }
 
   // ==============================================
@@ -362,12 +369,12 @@ namespace femus {
       
 //       PetscViewer    viewer;
 //       ierr=PetscViewerDrawOpen(MPI_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);
-//       ierr= MatView(KK,viewer);
+//       ierr= MatView(_Pmat,viewer);
 //       double ff;
 //       std::cin>>ff;
 //       PetscViewerDestroy(&viewer);
-      
-      init(KK,_Pmat);
+//       
+       init(KK,_Pmat);
       
     }
     
@@ -476,35 +483,49 @@ namespace femus {
       if(!_standard_ASM){
       	ierr = PCASMSetLocalSubdomains(_pc,_is_loc_idx.size(),&_is_ovl[0],&_is_loc[0]); CHKERRABORT(MPI_COMM_WORLD,ierr);
       }
-      else{
-	ierr = PCASMSetOverlap(_pc,_overlap); CHKERRABORT(MPI_COMM_WORLD,ierr);
-      }
+//       else{
+// 	ierr = PCASMSetOverlap(_pc,_overlap); CHKERRABORT(MPI_COMM_WORLD,ierr);
+//       }
       ierr = PCASMSetOverlap(_pc,_overlap); CHKERRABORT(MPI_COMM_WORLD,ierr);
       
       ierr = KSPSetUp(_ksp);							    CHKERRABORT(MPI_COMM_WORLD,ierr);
       
       ierr = PCASMGetSubKSP(_pc,&_nlocal,&_first,&_subksp);			    CHKERRABORT(MPI_COMM_WORLD,ierr);
       
-      _subpc.resize(2);
-            
-      for (int i=0; i<_block_type_range[0]; i++) {
-	ierr = KSPGetPC(_subksp[i],&_subpc[0]);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
-	ierr = KSPSetFromOptions(_subksp[i]);
-	//ierr = PCGASMSetType(_subpc[0],PC_GASM_NONE);
-	PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND,_subpc[0]); 
-	PetscReal zero = 1.e-16;
-	PCFactorSetZeroPivot(_subpc[0],zero);
-	PCFactorSetShiftType(_subpc[0],MAT_SHIFT_NONZERO);
+      
+      if(!_standard_ASM){
+	_subpc.resize(2);
+	for (int i=0; i<_block_type_range[0]; i++) {
+	  ierr = KSPGetPC(_subksp[i],&_subpc[0]);				    CHKERRABORT(MPI_COMM_WORLD,ierr);
+	  ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
+	  ierr = KSPSetFromOptions(_subksp[i]);
+	  //ierr = PCGASMSetType(_subpc[0],PC_GASM_NONE);
+	  PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND,_subpc[0]); 
+	  PetscReal zero = 1.e-16;
+	  PCFactorSetZeroPivot(_subpc[0],zero);
+	  PCFactorSetShiftType(_subpc[0],MAT_SHIFT_NONZERO);
+	}
+	for (int i=_block_type_range[0]; i<_block_type_range[1]; i++) {
+	  ierr = KSPGetPC(_subksp[i],&_subpc[1]);				    CHKERRABORT(MPI_COMM_WORLD,ierr);
+	  ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
+	  ierr = KSPSetFromOptions(_subksp[i]);
+	  PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_subpc[1]); 
+	  PetscReal zero = 1.e-16;
+	  PCFactorSetZeroPivot(_subpc[1],zero);
+	  PCFactorSetShiftType(_subpc[1],MAT_SHIFT_NONZERO);
+	}
       }
-      for (int i=_block_type_range[0]; i<_block_type_range[1]; i++) {
-	ierr = KSPGetPC(_subksp[i],&_subpc[1]);					    CHKERRABORT(MPI_COMM_WORLD,ierr);
-	ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
-	ierr = KSPSetFromOptions(_subksp[i]);
-	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_subpc[1]); 
-	PetscReal zero = 1.e-16;
-	PCFactorSetZeroPivot(_subpc[1],zero);
-	PCFactorSetShiftType(_subpc[1],MAT_SHIFT_NONZERO);
+      else{
+	_subpc.resize(1);
+	for (int i=0; i<_nlocal; i++) {
+	  ierr = KSPGetPC(_subksp[i],&_subpc[0]);				    CHKERRABORT(MPI_COMM_WORLD,ierr);
+	  ierr = KSPSetTolerances(_subksp[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
+	  ierr = KSPSetFromOptions(_subksp[i]);
+	  PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_subpc[0]); 
+	  PetscReal zero = 1.e-16;
+	  PCFactorSetZeroPivot(_subpc[0],zero);
+	  PCFactorSetShiftType(_subpc[0],MAT_SHIFT_NONZERO);
+	}
       }
     }
   }

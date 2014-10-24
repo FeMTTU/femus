@@ -3044,7 +3044,17 @@ void mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vec
   
 } 
 
-
+unsigned mesh::GetElementMaterial(unsigned &kel){
+  unsigned flag_mat = el->GetElementMaterial(kel);
+  if(flag_mat==2){
+    unsigned nve = el->GetElementDofNumber(kel,2);
+    for(int i=0;i<nve;i++){
+      unsigned inode=el->GetElementVertexIndex(kel,i)-1u;
+      if(1 == el->GetNodeRegion(inode)) flag_mat=4;
+    }
+  }
+  return flag_mat;
+}
 
 
 
@@ -3060,11 +3070,12 @@ void mesh::GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < ve
   for (unsigned iel_mts = ElemOffset; iel_mts < ElemOffsetp1; iel_mts++) {
     unsigned kel        = IS_Mts2Gmt_elem[iel_mts]; 
     unsigned flag_mat   = el->GetElementMaterial(kel);
-    if(4 == flag_mat){
-      counter[0]++;
+//    unsigned flag_mat   = GetElementMaterial(kel);
+    if(2 == flag_mat){
+      counter[1]++;
     } 
   }
-  counter[1]=OwnedElements - counter[0];
+  counter[0]=OwnedElements - counter[1];
   
   block_type_range.resize(2);
  
@@ -3087,7 +3098,8 @@ void mesh::GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < ve
       unsigned counter=0;
       for (unsigned iel_mts = ElemOffset; iel_mts < ElemOffsetp1; iel_mts++) {
 	unsigned kel        = IS_Mts2Gmt_elem[iel_mts]; 
-	unsigned flag_mat   = el->GetElementMaterial(kel);
+ 	unsigned flag_mat   = el->GetElementMaterial(kel);
+//	unsigned flag_mat   = GetElementMaterial(kel);
 	if( flag_block[iblock] == flag_mat ){
 	  block_elements[ block_start + (counter / block_size[iblock]) ][ counter % block_size[iblock] ]=iel_mts;
 	  counter++;

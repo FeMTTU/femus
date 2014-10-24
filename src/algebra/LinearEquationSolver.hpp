@@ -97,7 +97,7 @@ public:
     virtual void SetElementBlockNumber(const unsigned & block_elemet_number) {
         std::cout<<"Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
     };
-    virtual void SetElementBlockNumberFluid(const unsigned & block_elemet_number) {
+    virtual void SetElementBlockNumberFluid(const unsigned & block_elemet_number,const unsigned &overlap) {
         std::cout<<"Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
     };
     virtual void SetElementBlockNumberSolid(const unsigned & block_elemet_number, const unsigned &overlap) {

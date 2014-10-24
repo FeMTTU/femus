@@ -329,9 +329,11 @@ int main(int argc,char **args) {
     system.SetElementBlockNumber(2);
   }
   else if(simulation ==3 || !dimension2D){
+    //system.SetElementBlockNumber("All");
+    //system.SetElementBlockNumber(2);
     system.SetElementBlockNumberFluid(2);
+    //system.SetElementBlockNumberSolid(2);
     //system.SetElementBlockFluidAll();
-    //system.SetElementBlockNumberSolid(2,1); //to use for solid domain decomposition
     system.SetElementBlockSolidAll();
   }
   //for Gmres smoother
