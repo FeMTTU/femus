@@ -736,8 +736,7 @@ namespace femus {
     elem		*myel		=  mymsh->el;
     SparseMatrix	*myKK		=  myLinEqSolver->_KK;
     NumericVector 	*myRES		=  myLinEqSolver->_RES;
-    vector <int>	&myKKIndex	=  myLinEqSolver->KKIndex;
-    
+        
     const unsigned dim = mymsh->GetDimension();
     const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
   
@@ -1304,6 +1303,37 @@ namespace femus {
    
     } //end list of elements loop
 
+    
+    
+//     vector < vector <unsigned> >	&KKoffset	=  myLinEqSolver->KKoffset;
+//     vector <int> &KKIndex = myLinEqSolver->KKIndex;
+//     
+//       
+//     
+//     unsigned sizeAll= KKoffset[KKIndex.size()-1][iproc]-KKoffset[0][iproc];
+//     unsigned sizeofpressure =  (mymsh->IS_Mts2Gmt_elem_offset[iproc+1] - mymsh->IS_Mts2Gmt_elem_offset[iproc])*(1+dim);
+//     dofsAll.resize(sizeAll);
+//     for(int i=0;i<sizeAll;i++){
+//       dofsAll[i]=KKoffset[0][iproc]+i;
+//     }
+//     
+//     vector <int> dofsPress(sizeofpressure);
+//     unsigned counter=0;
+//     for(int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+//       unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
+//       unsigned nve1       = myel->GetElementDofNumber(kel,end_ind1);
+//       for (unsigned i=0;i<nve1;i++) {
+// 	unsigned inode=(kel+i*nel);
+// 	dofsPress[counter] = myLinEqSolver->GetKKDof(indVAR[2*dim],indexVAR[2*dim],inode);
+// 	counter++;
+//       }
+//     }
+//     KKloc.resize(sizeAll*sizeofpressure);
+//     memset(&KKloc[0],0,sizeAll*sizeofpressure*sizeof(double));
+//     myKK->add_matrix_blocked(KKloc,dofsAll,dofsPress);
+//     
+//     myKK->add_matrix_blocked(KKloc,dofsPress,dofsAll);
+    
     myKK->close();
     myRES->close();
   

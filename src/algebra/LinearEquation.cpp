@@ -391,6 +391,24 @@ void LinearEquation::DeletePde() {
      if (o_nnz[i] > o_max) o_nnz[i] = o_max;
     }
      
+//      unsigned owndprsdofs = KKoffset[KKIndex.size()-1][this_proc]-KKoffset[KKIndex.size()-2][this_proc]; 
+//      for(int i=0; i<owned_dofs;i++)  {
+//        d_nnz[i] += owndprsdofs;
+//        if (d_nnz[i] > d_max) d_nnz[i] = d_max;
+//        o_nnz[i] += owndprsdofs;
+//        if (o_nnz[i] > o_max) o_nnz[i] = o_max;
+//     }
+//        
+//     for(int i=KKoffset[KKIndex.size()-2][this_proc]; i<KKoffset[KKIndex.size()-1][this_proc];i++)  {
+//        d_nnz[i] += owned_dofs;
+//        if (d_nnz[i] > d_max) d_nnz[i] = d_max;
+//        o_nnz[i] += owned_dofs;
+//        if (o_nnz[i] > o_max) o_nnz[i] = o_max;
+//     } 
+       
+       
+      
+     
     delete sizeDnBM_o;
     delete sizeDnBM_d;
   }
