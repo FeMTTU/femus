@@ -137,6 +137,8 @@ public:
 					vector <unsigned> &block_type_range);
     
     
+    unsigned GetElementMaterial(unsigned &kel);
+    
     void GenerateVankaPartitions_METIS( const unsigned &block_size, vector < vector< unsigned > > &blk_elements);
     
     // member data

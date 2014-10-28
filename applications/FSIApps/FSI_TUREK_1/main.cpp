@@ -101,7 +101,7 @@ int main(int argc,char **args) {
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
   if(simulation<3)
-    nm=3;
+    nm=2;
   else if(simulation==3)
     nm=4;
   else if(simulation<7)
@@ -283,7 +283,7 @@ int main(int argc,char **args) {
   
   if(simulation < 3){
     system.SetMaxNumberOfLinearIterations(2);
-    system.SetMaxNumberOfNonLinearIterations(10);
+    system.SetMaxNumberOfNonLinearIterations(1);
   }
   else if(simulation < 7){	
     system.SetMaxNumberOfLinearIterations(8);
@@ -329,9 +329,11 @@ int main(int argc,char **args) {
     system.SetElementBlockNumber(2);
   }
   else if(simulation ==3 || !dimension2D){
+    //system.SetElementBlockNumber("All");
+    //system.SetElementBlockNumber(2);
     system.SetElementBlockNumberFluid(2);
+    //system.SetElementBlockNumberSolid(2);
     //system.SetElementBlockFluidAll();
-    //system.SetElementBlockNumberSolid(2,1); //to use for solid domain decomposition
     system.SetElementBlockSolidAll();
   }
   //for Gmres smoother

@@ -61,13 +61,10 @@ private:
     /** To be Added */
     void SetElementBlockNumber(const unsigned & block_elemet_number);
     void SetElementBlockNumberSolid(const unsigned & block_elemet_number, const unsigned & overlap);
-    void SetElementBlockNumberFluid(const unsigned & block_elemet_number);
+    void SetElementBlockNumberFluid(const unsigned & block_elemet_number, const unsigned & overlap);
 
     /** To be Added */
-    void SetElementBlockNumber(const char all[], const unsigned & overlap=1) {
-        _standard_ASM=1;
-        _overlap=overlap;
-    }
+    void SetElementBlockNumber(const char all[], const unsigned & overlap=1);
 
     /** To be Added */
     void SetNumberOfSchurVariables(const unsigned short & NSchurVar) {
@@ -90,6 +87,12 @@ private:
 
     PC _pc;      ///< Preconditioner context
     KSP _ksp;    ///< Krylov subspace context
+    KSP       *_ksp_asm;
+    vector < PC >  _pc_asm;
+    
+    //vector < KSP*> _ksp_split;
+    //vector< vector < PC > >  _pc_split;
+    
     PetscReal  _rtol;
     PetscReal  _abstol;
     PetscReal  _dtol;
@@ -99,12 +102,14 @@ private:
     bool _indexai_init;
     unsigned short _NSchurVar;
     vector< vector <PetscInt> > _is_ovl_idx;
+    //vector< vector <PetscInt> > _is_ovl_u_idx;
+    //vector< vector <PetscInt> > _is_ovl_p_idx;
     vector< vector <PetscInt> > _is_loc_idx;
     vector <IS> _is_ovl;
+    //vector <IS> _is_ovl_u;
+    //vector <IS> _is_ovl_p;
     vector <IS> _is_loc;
-    KSP       *_subksp;
     PetscInt  _nlocal,_first;
-    vector < PC >  _subpc;
     bool _standard_ASM;
     unsigned _overlap;
     Mat _Pmat;
