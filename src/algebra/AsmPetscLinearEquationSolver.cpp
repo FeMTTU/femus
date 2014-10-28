@@ -535,6 +535,7 @@ namespace femus {
       ierr = PCASMGetSubKSP(_pc,&_nlocal,&_first,&_ksp_asm);			    CHKERRABORT(MPI_COMM_WORLD,ierr);
       
       
+
       if(!_standard_ASM){
 	_pc_asm.resize(2);
 	//_ksp_split.resize(_nlocal);
