@@ -540,7 +540,7 @@ void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
   
   
 
-void LinearImplicitSystem::SetElementBlockNumber(unsigned const dim_block) {
+void LinearImplicitSystem::SetElementBlockNumber(unsigned const &dim_block) {
   _numblock_test=1;
   const unsigned dim = _msh[0]->GetDimension();
   const unsigned base = pow(2,dim);
@@ -551,49 +551,6 @@ void LinearImplicitSystem::SetElementBlockNumber(unsigned const dim_block) {
     _LinSolver[i]->SetElementBlockNumber(num_block2);
   }
 }
-
-
-void LinearImplicitSystem::SetElementBlockNumberFluid(unsigned const dim_block) {
-  _numblock_test=1;
-  const unsigned dim = _msh[0]->GetDimension();
-  const unsigned base = pow(2,dim);
-  _num_block = pow(base,dim_block);
-
-  for (unsigned i=1; i<_gridn; i++) {
-    unsigned num_block2 = std::min(_num_block,_msh[i]->GetElementNumber());
-    _LinSolver[i]->SetElementBlockNumberFluid(num_block2);
-  }
-}
-
-void LinearImplicitSystem::SetElementBlockNumberSolid(unsigned const &dim_block, unsigned const &overlap) {
-  
-  std::cout<<"Warning! With no second argument, the function SetElementBlockNumberSolid(...) sets overlap=1 in the ASM smoother\n";
-  std::cout<<"In 2D consider to call it with second arument=0: no overlapping\n";
-  std::cout<<"In 3D consider to use the function SetElementBlockSolidAll() instead\n";
-  _numblock_test=1;
-  const unsigned dim = _msh[0]->GetDimension();
-  const unsigned base = pow(2,dim);
-  _num_block = pow(base,dim_block);
-
-  for (unsigned i=1; i<_gridn; i++) {
-    unsigned num_block2 = std::min(_num_block,_msh[i]->GetElementNumber());
-    _LinSolver[i]->SetElementBlockNumberSolid(num_block2,overlap);
-  }
-}
-
-
-void LinearImplicitSystem::SetElementBlockFluidAll() {
-  for (unsigned i=1; i<_gridn; i++) {
-    _LinSolver[i]->SetElementBlockNumberFluid(_msh[i]->GetElementNumber());
-  }
-}
-
-void LinearImplicitSystem::SetElementBlockSolidAll() {
-  for (unsigned i=1; i<_gridn; i++) {
-    _LinSolver[i]->SetElementBlockNumberSolid(_msh[i]->GetElementNumber(),0);
-  }
-}
-
 
 void LinearImplicitSystem::SetElementBlockNumber(const char all[], const unsigned & overlap) {
   _numblock_all_test=1;
