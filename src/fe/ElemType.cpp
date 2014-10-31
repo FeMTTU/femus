@@ -751,7 +751,41 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       dphidzeta[i][j]=pt_basis->eval_dphidz(IND[j],x);
     }
   }
-
+  
+  for (int i=0; i<nc_; i++) {
+    for (int j=0; j<nc_; j++) {
+      double phi=pt_basis->eval_phi(IND[j],X[i]);
+      cout<<phi<<" ";
+    }
+    cout<<endl;
+  }
+  cout<<endl;
+  for (int i=0; i<nc_; i++) {
+    for (int j=0; j<nc_; j++) {
+      double dphi=pt_basis->eval_dphidx(IND[j],X[i]);
+      cout<<dphi<<" ";
+    }
+    cout<<endl;
+  }
+   cout<<endl;
+   for (int i=0; i<nc_; i++) {
+    for (int j=0; j<nc_; j++) {
+      double dphi=pt_basis->eval_dphidy(IND[j],X[i]);
+      cout<<dphi<<" ";
+    }
+    cout<<endl;
+  }
+   cout<<endl;
+   for (int i=0; i<nc_; i++) {
+    for (int j=0; j<nc_; j++) {
+      double dphi=pt_basis->eval_dphidz(IND[j],X[i]);
+      cout<<dphi<<" ";
+    }
+    cout<<endl;
+  }
+   cout<<endl;
+  
+  //exit(0);
 }
 
 
