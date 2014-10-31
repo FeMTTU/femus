@@ -1081,10 +1081,10 @@ namespace femus {
 		  }
 		}
 		for(int idim=0; idim<dim; idim++) {
-		  adept::adouble value = (-AdvaleVAR[idim]      		// advection term	
-					    -IRe*LapvelVAR[idim]	       	// viscous dissipation
-					    +SolVAR[2*dim]*gradphi[i*dim+idim]	// pressure gradient
-					    )*Weight;
+		  adept::adouble value = (-AdvaleVAR[idim]      	     // advection term	
+					  -IRe*LapvelVAR[idim]	   	     // viscous dissipation
+					  +SolVAR[2*dim]*gradphi[i*dim+idim] // pressure gradient
+					  )*Weight;
 		  if((!solidmark[i])){
 		    aRhs[indexVAR[dim+idim]][i]+=value; 
 		  }

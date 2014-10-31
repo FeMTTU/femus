@@ -90,9 +90,6 @@ private:
     KSP       *_ksp_asm;
     vector < PC >  _pc_asm;
     
-    //vector < KSP*> _ksp_split;
-    //vector< vector < PC > >  _pc_split;
-    
     PetscReal  _rtol;
     PetscReal  _abstol;
     PetscReal  _dtol;
@@ -102,12 +99,9 @@ private:
     bool _indexai_init;
     unsigned short _NSchurVar;
     vector< vector <PetscInt> > _is_ovl_idx;
-    //vector< vector <PetscInt> > _is_ovl_u_idx;
-    //vector< vector <PetscInt> > _is_ovl_p_idx;
+    
     vector< vector <PetscInt> > _is_loc_idx;
     vector <IS> _is_ovl;
-    //vector <IS> _is_ovl_u;
-    //vector <IS> _is_ovl_p;
     vector <IS> _is_loc;
     PetscInt  _nlocal,_first;
     bool _standard_ASM;
@@ -116,6 +110,14 @@ private:
     bool _Pmat_is_initialized;
     vector <unsigned> _block_type_range;
 
+    
+    //vector < KSP*> _ksp_split;
+    //vector< vector < PC > >  _pc_split;
+    //vector< vector <PetscInt> > _is_ovl_u_idx;
+    //vector< vector <PetscInt> > _is_ovl_p_idx;
+    //vector <IS> _is_ovl_u;
+    //vector <IS> _is_ovl_p;
+       
 };
 
 // =================================================

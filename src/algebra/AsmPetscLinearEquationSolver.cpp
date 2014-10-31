@@ -495,47 +495,19 @@ namespace femus {
       
       if(_msh->GetGridNumber()!=0)
 	KSPSetNormType(_ksp,KSP_NORM_NONE);
-      
-      // Set the options from user-input
-      // Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
-      //  These options will override those specified above as long as
-      //  KSPSetFromOptions() is called _after_ any other customization  routines.
+     
       ierr = KSPSetFromOptions(_ksp);						CHKERRABORT(MPI_COMM_WORLD,ierr);
-      // Not sure if this is necessary, or if it is already handled by KSPSetFromOptions?
-      //ierr = PCSetFromOptions (_pc);	CHKERRABORT(MPI_COMM_WORLD,ierr);
-      
-      // Notify PETSc of location to store residual history.
-      // This needs to be called before any solves, since
-      // it sets the residual history length to zero.  The default
-      // behavior is for PETSc to allocate (internally) an array
-      // of size 1000 to hold the residual norm history.
-//       ierr = KSPSetResidualHistory(_ksp,
-// 				   PETSC_NULL,   // pointer to the array which holds the history
-// 				   PETSC_DECIDE, // size of the array holding the history
-// 				   PETSC_TRUE);  // Whether or not to reset the history for each solve.
-//       CHKERRABORT(MPI_COMM_WORLD,ierr);
-      
-      
-      
+          
       PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND,_pc);
-      //ierr = PCGASMSetType(_pc,PC_GASM_NONE);
-      //PetscReal zero = 1.e-16;
-      //PCFactorSetZeroPivot(_pc,zero);
-      //PCFactorSetShiftType(_pc,MAT_SHIFT_NONZERO);
       if(!_standard_ASM){
       	ierr = PCASMSetLocalSubdomains(_pc,_is_loc_idx.size(),&_is_ovl[0],&_is_loc[0]); CHKERRABORT(MPI_COMM_WORLD,ierr);
       }
-//       else{
-// 	ierr = PCASMSetOverlap(_pc,_overlap); CHKERRABORT(MPI_COMM_WORLD,ierr);
-//       }
       ierr = PCASMSetOverlap(_pc,_overlap); CHKERRABORT(MPI_COMM_WORLD,ierr);
-      
       ierr = KSPSetUp(_ksp);							    CHKERRABORT(MPI_COMM_WORLD,ierr);
-      
       ierr = PCASMGetSubKSP(_pc,&_nlocal,&_first,&_ksp_asm);			    CHKERRABORT(MPI_COMM_WORLD,ierr);
       
+       PetscReal epsilon = 1.e-16;	
       
-
       if(!_standard_ASM){
 	_pc_asm.resize(2);
 	//_ksp_split.resize(_nlocal);
@@ -543,8 +515,13 @@ namespace femus {
 	//_pc_split[0].resize(_nlocal);
 	//_pc_split[1].resize(_nlocal);
 	for (int i=0; i<_block_type_range[0]; i++) {
-	  ierr = KSPGetPC(_ksp_asm[i],&_pc_asm[0]);				    CHKERRABORT(MPI_COMM_WORLD,ierr);
-	  
+	  ierr = KSPGetPC(_ksp_asm[i],&_pc_asm[0]);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+	  ierr = KSPSetTolerances(_ksp_asm[i],_rtol,_abstol,_dtol,1); 		   	CHKERRABORT(MPI_COMM_WORLD,ierr);          
+	  ierr = KSPSetFromOptions(_ksp_asm[i]);				   	CHKERRABORT(MPI_COMM_WORLD,ierr); 
+	  PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND,_pc_asm[0]); 
+	  ierr = PCFactorSetZeroPivot(_pc_asm[0],epsilon);				CHKERRABORT(MPI_COMM_WORLD,ierr); 
+	  ierr = PCFactorSetShiftType(_pc_asm[0],MAT_SHIFT_NONZERO); 			CHKERRABORT(MPI_COMM_WORLD,ierr); 
+	    	  
 // 	  ierr = PCSetType(_pc_asm[i],PCFIELDSPLIT);				    CHKERRABORT(MPI_COMM_WORLD,ierr);	
 // 	  
 // 	  IS isu;
@@ -558,15 +535,10 @@ namespace femus {
 // 	  	  
 // 	  ierr = PCFieldSplitSetType(_pc_asm[i], PC_COMPOSITE_SCHUR  );
 // 	  ierr = PCFieldSplitSetSchurPre(_pc_asm[i],PC_FIELDSPLIT_SCHUR_PRE_A11,NULL);
-// 	  
-// 	  
 // 	  ierr = KSPSetUp(_ksp_asm[i]);	  	
-// 	  
 // 	  int n=2;
 // 	  ierr = PCFieldSplitGetSubKSP(_pc_asm[i],&n,&_ksp_split[i]);		    CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	  
 // 	  PetscReal zero = 1.e-16;
-// 	  
 // 	  ierr = KSPSetType(_ksp_split[i][0],KSPPREONLY);
 // 	  ierr = KSPGetPC(_ksp_split[i][0],&_pc_split[0][i]);                       CHKERRABORT(MPI_COMM_WORLD,ierr);
 // 	  ierr = KSPSetTolerances(_ksp_split[i][0],_rtol,_abstol,_dtol,10); 	    CHKERRABORT(MPI_COMM_WORLD,ierr);          
@@ -575,67 +547,25 @@ namespace femus {
 // 	  PCFactorSetZeroPivot(_pc_split[0][i],zero);
 // 	  PCFactorSetShiftType(_pc_split[0][i],MAT_SHIFT_NONZERO);
 	  
-	 
-	  
-	  
-	  
-
-/*		  
- 	  ierr = PCFieldSplitSetIS(_pc_asm[i],"u",isu);        	  		    CHKERRABORT(MPI_COMM_WORLD,ierr);
- 	  ierr = PCFieldSplitSetIS(_pc_asm[i],"p",isp);	            		    CHKERRABORT(MPI_COMM_WORLD,ierr);
- 	  
- 	  //ierr = PCFieldSplitSetSchurPre(_pc_asm[i],PC_FIELDSPLIT_SCHUR_PRE_FULL,NULL);
-	  
-	  ierr = KSPSetUp(_ksp_asm[i]);	  					    CHKERRABORT(MPI_COMM_WORLD,ierr);	*/  
-//  	  int n=2;
-//  	  ierr = PCFieldSplitGetSubKSP(_pc_asm[i],&n,&_ksp_split[i]);		    CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	  
-// 	  PetscReal zero = 1.e-16;
-// 	  
-// 	  ierr = KSPSetType(_ksp_split[i][0],KSPPREONLY);
-// 	  ierr = KSPGetPC(_ksp_split[i][0],&_pc_split[0][i]);                       CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	  ierr = KSPSetTolerances(_ksp_split[i][0],_rtol,_abstol,_dtol,10); 	    CHKERRABORT(MPI_COMM_WORLD,ierr);          
-// 	  ierr = KSPSetFromOptions(_ksp_split[i][0]);
-// 	  PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND,_pc_split[0][i]); 
-// 	  PCFactorSetZeroPivot(_pc_split[0][i],zero);
-// 	  PCFactorSetShiftType(_pc_split[0][i],MAT_SHIFT_NONZERO);
-// 	 
-// 	  ierr = KSPSetType(_ksp_split[i][1],KSPPREONLY);
-// 	  ierr = KSPGetPC(_ksp_split[i][1],&_pc_split[1][i]);                       CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	  ierr = KSPSetTolerances(_ksp_split[i][1],_rtol,_abstol,_dtol,1); 	    CHKERRABORT(MPI_COMM_WORLD,ierr);          
-// 	  ierr = KSPSetFromOptions(_ksp_split[i][1]);
-// 	  ierr = PCFieldSplitSetSchurPre(_pc_split[1][i],PC_FIELDSPLIT_SCHUR_PRE_FULL,NULL);
-// 	  //PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND,_pc_split[1][i]); 
-// 	  PCFactorSetZeroPivot(_pc_split[1][i],zero);
-// 	  PCFactorSetShiftType(_pc_split[1][i],MAT_SHIFT_NONZERO);
-	  
-	  ierr = KSPSetTolerances(_ksp_asm[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
-	  ierr = KSPSetFromOptions(_ksp_asm[i]);
-	  PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND,_pc_asm[0]); 
-	  PetscReal zero = 1.e-16;
-	  PCFactorSetZeroPivot(_pc_asm[0],zero);
-	  PCFactorSetShiftType(_pc_asm[0],MAT_SHIFT_NONZERO);
 	}
 	for (int i=_block_type_range[0]; i<_block_type_range[1]; i++) {
-	  ierr = KSPGetPC(_ksp_asm[i],&_pc_asm[1]);				    CHKERRABORT(MPI_COMM_WORLD,ierr);
-	  ierr = KSPSetTolerances(_ksp_asm[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
-	  ierr = KSPSetFromOptions(_ksp_asm[i]);
-	  PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc_asm[1]); 
-	  PetscReal zero = 1.e-16;
-	  PCFactorSetZeroPivot(_pc_asm[1],zero);
-	  PCFactorSetShiftType(_pc_asm[1],MAT_SHIFT_NONZERO);
+	  ierr = KSPGetPC(_ksp_asm[i],&_pc_asm[1]);				CHKERRABORT(MPI_COMM_WORLD,ierr);
+	  ierr = KSPSetTolerances(_ksp_asm[i],_rtol,_abstol,_dtol,1); 		CHKERRABORT(MPI_COMM_WORLD,ierr);          
+	  ierr = KSPSetFromOptions(_ksp_asm[i]);				CHKERRABORT(MPI_COMM_WORLD,ierr);    
+	  PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc_asm[1]);  				
+	  ierr = PCFactorSetZeroPivot(_pc_asm[1],epsilon);			CHKERRABORT(MPI_COMM_WORLD,ierr);    
+	  ierr = PCFactorSetShiftType(_pc_asm[1],MAT_SHIFT_NONZERO);		CHKERRABORT(MPI_COMM_WORLD,ierr);    
 	}
       }
       else{
 	_pc_asm.resize(1);
 	for (int i=0; i<_nlocal; i++) {
-	  ierr = KSPGetPC(_ksp_asm[i],&_pc_asm[0]);				    CHKERRABORT(MPI_COMM_WORLD,ierr);
-	  ierr = KSPSetTolerances(_ksp_asm[i],_rtol,_abstol,_dtol,1); 		    CHKERRABORT(MPI_COMM_WORLD,ierr);          
-	  ierr = KSPSetFromOptions(_ksp_asm[i]);
+	  ierr = KSPGetPC(_ksp_asm[i],&_pc_asm[0]);				CHKERRABORT(MPI_COMM_WORLD,ierr);
+	  ierr = KSPSetTolerances(_ksp_asm[i],_rtol,_abstol,_dtol,1); 		CHKERRABORT(MPI_COMM_WORLD,ierr);          
+	  ierr = KSPSetFromOptions(_ksp_asm[i]);				CHKERRABORT(MPI_COMM_WORLD,ierr);    
 	  PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc_asm[0]); 
-	  PetscReal zero = 1.e-16;
-	  PCFactorSetZeroPivot(_pc_asm[0],zero);
-	  PCFactorSetShiftType(_pc_asm[0],MAT_SHIFT_NONZERO);
+	  ierr = PCFactorSetZeroPivot(_pc_asm[0], epsilon);			CHKERRABORT(MPI_COMM_WORLD,ierr);    
+	  ierr = PCFactorSetShiftType(_pc_asm[0],MAT_SHIFT_NONZERO);		CHKERRABORT(MPI_COMM_WORLD,ierr);    
 	}
       }
     }

@@ -21,6 +21,8 @@
 #ifndef __basis_h___
 #define __basis_h___
 
+#include <iostream>
+#include <stdlib.h>  
 
 namespace femus {
   
@@ -31,6 +33,43 @@ public:
   virtual double eval_dphidx(const int *I,const double* x) const = 0;
   virtual double eval_dphidy(const int *I,const double* x) const = 0;
   virtual double eval_dphidz(const int *I,const double* x) const = 0;
+  virtual void PrintType() const = 0 ;
+  virtual double eval_d2phidx2(const int *I,const double* x) const {
+    std::cout<< "Warning second derivatives have not been implemented for this elemet type:";
+    this->PrintType();
+    std::cout<<"\n";
+    exit(0);
+  };
+  virtual double eval_d2phidy2(const int *I,const double* x) const {
+    std::cout<< "Warning second derivatives have not been implemented for this elemet type:";
+    this->PrintType();
+    std::cout<<"\n";
+    exit(0);
+  };
+  virtual double eval_d2phidz2(const int *I,const double* x) const {
+    std::cout<< "Warning second derivatives have not been implemented for this elemet type:";
+    this->PrintType();
+    std::cout<<"\n";
+    exit(0);
+  };
+  virtual double eval_d2phidxdy(const int *I,const double* x) const {
+    std::cout<< "Warning second derivatives have not been implemented for this elemet type:";
+    this->PrintType();
+    std::cout<<"\n";
+    exit(0);
+  };
+  virtual double eval_d2phidydz(const int *I,const double* x) const {
+    std::cout<< "Warning second derivatives have not been implemented for this elemet type:";
+    this->PrintType();
+    std::cout<<"\n";
+    exit(0);
+  };
+  virtual double eval_d2phidzdx(const int *I,const double* x) const {
+    std::cout<< "Warning second derivatives have not been implemented for this elemet type:";
+    this->PrintType();
+    std::cout<<"\n";
+    exit(0);
+  };
 };
 
 //************************************************************
@@ -40,10 +79,20 @@ private:
   double lag1(const double& x, const int& i) const;
   double dlag1(const double& x, const int& i) const;
 public:
+  void PrintType() const { std::cout<<" hex1 ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
+
+  
 };
 
 //************************************************************
@@ -53,10 +102,19 @@ private:
   double lag2(const double& x, const int& i) const;
   double dlag2(const double& x, const int& i) const;
 public:
+  void PrintType() const { std::cout<<" hex2 ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
+  
 };
 
 //************************************************************
@@ -66,28 +124,55 @@ private:
   double th2(const double& x,  const int& i) const;
   double dth2(const double& x,  const int& i) const;
 public:
+  void PrintType() const { std::cout<<" hexth ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
+  
 };
 
 class hex0: public basis {
 public:
+  void PrintType() const { std::cout<<" hex0 ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
+  
 };
 
 //******************************************************************************
 
 class hexpwl: public basis {
 public:
+  void PrintType() const { std::cout<<" hexpwl ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
+  
 };
 
 //************************************************************
@@ -100,10 +185,19 @@ class wedge1: public basis {
   double dtri1dx(const double& x,const double& y, const int& j,const int& i) const;
   double dtri1dy(const double& x,const double& y, const int& j,const int& i) const;
 public:
+  void PrintType() const { std::cout<<" wedge1 ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
+  
 };
 
 //************************************************************
@@ -115,10 +209,19 @@ class wedge2: public basis {
   double dtri2dx(const double& x,const double& y, const int& j,const int& i) const;
   double dtri2dy(const double& x,const double& y, const int& j,const int& i) const;
 public:
-  virtual double eval_phi(const int *I,const double* x) const;
+  void PrintType() const { std::cout<<" wedge2 ";};
+  double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
+  
 };
 
 //************************************************************
@@ -129,10 +232,19 @@ class wedgeth: public basis {
   double dwed_thdy(const double& x, const double& y, const double &z, const int& i,const int& j, const int & k) const;
   double dwed_thdz(const double& x, const double& y, const double &z, const int& i,const int& j, const int & k) const;
 public:
+  void PrintType() const { std::cout<<" wedgeth ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
+  
 };
 
 //************************************************************
@@ -144,10 +256,19 @@ private:
   double dtet_0dy(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const;
   double dtet_0dz(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const;
 public:
+  void PrintType() const { std::cout<<" tet0 ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
+  
 };
 
 //************************************************************
@@ -159,10 +280,18 @@ private:
   double dtet_1dy(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const;
   double dtet_1dz(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const;
 public:
+  void PrintType() const { std::cout<<" tet1 ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
 };
 
 //************************************************************
@@ -174,30 +303,54 @@ private:
   double dtet_2dy(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const;
   double dtet_2dz(const double& x, const double& y, const double& z, const int & i,const int & j,const int &k) const;
 public:
+  void PrintType() const { std::cout<<" tet2 ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
 };
 
 //******************************************************************************
 
 class quad0: public basis {
 public:
+  void PrintType() const { std::cout<<" quad0 ";};
   double eval_phi(const int *I,const double* x) const;
-  double eval_dphidx(const int *I,const double* x) const;
-  double eval_dphidy(const int *I,const double* x) const;
-  double eval_dphidz(const int *I,const double* x) const;
+  double eval_dphidx(const int *I,const double* x) const{ return 0.; };
+  double eval_dphidy(const int *I,const double* x) const{ return 0.; };
+  double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+  
+  double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
 };
 
 //******************************************************************************
 
 class quadpwl: public basis {
 public:
+  void PrintType() const { std::cout<<" quadpwl ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
-  double eval_dphidz(const int *I,const double* x) const;
+  double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+  
+  double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
 };
 
 //************************************************************
@@ -207,10 +360,18 @@ private:
   double lag1(const double& x, const int& i) const;
   double dlag1(const double& x, const int& i) const;
 public:
+  void PrintType() const { std::cout<<" quad1 ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
-  double eval_dphidz(const int *I,const double* x) const;
+  double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+  
+  double eval_d2phidx2(const int *I,const double* x) const{ return 0.; }
+  double eval_d2phidy2(const int *I,const double* x) const{ return 0.; }
+  double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidxdy(const int *I,const double* x) const;
+  double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
 };
 
 //************************************************************
@@ -219,11 +380,21 @@ class quad2: public basis {
 private:
   double lag2(const double& x, const int& i) const;
   double dlag2(const double& x, const int& i) const;
+  double d2lag2(const double& x, const int& i) const;
 public:
+  void PrintType() const { std::cout<<" quad2 ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
-  double eval_dphidz(const int *I,const double* x) const;
+  double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+  
+  double eval_d2phidx2(const int *I,const double* x) const;
+  double eval_d2phidy2(const int *I,const double* x) const;
+  double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidxdy(const int *I,const double* x) const;
+  double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
+  
 };
 
 //************************************************************
@@ -233,10 +404,18 @@ private:
   double th2(const double& x,  const int& i) const;
   double dth2(const double& x,  const int& i) const;
 public:
+  void PrintType() const { std::cout<<" quadth ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
 };
 
 //************************************************************
@@ -246,10 +425,18 @@ class tri0: public basis {
   double dtri0dx(const double& x,const double& y, const int& j,const int& i) const;
   double dtri0dy(const double& x,const double& y, const int& j,const int& i) const;
 public:
+  void PrintType() const { std::cout<<" tri0a ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
 };
 
 //************************************************************
@@ -259,10 +446,18 @@ class tri1: public basis {
   double dtri1dx(const double& x,const double& y, const int& j,const int& i) const;
   double dtri1dy(const double& x,const double& y, const int& j,const int& i) const;
 public:
+  void PrintType() const { std::cout<<" tri1 ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
 };
 
 //************************************************************
@@ -272,22 +467,37 @@ class tri2: public basis {
   double dtri2dx(const double& x,const double& y, const int& j,const int& i) const;
   double dtri2dy(const double& x,const double& y, const int& j,const int& i) const;
 public:
-  virtual double eval_phi(const int *I,const double* x) const;
+  void PrintType() const { std::cout<<" tri2 ";};
+  double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
   double eval_dphidy(const int *I,const double* x) const;
   double eval_dphidz(const int *I,const double* x) const;
+  
+//   double eval_d2phidx2(const int *I,const double* x) const;
+//   double eval_d2phidy2(const int *I,const double* x) const;
+//   double eval_d2phidz2(const int *I,const double* x) const;
+//   double eval_d2phidxdy(const int *I,const double* x) const;
+//   double eval_d2phidydz(const int *I,const double* x) const;
+//   double eval_d2phidzdx(const int *I,const double* x) const;
+  
 };
 
 //************************************************************
 
 class line0: public basis {
   double lag0(const double& x, const int& i) const;
-  double dlag0(const double& x, const int& i) const;
 public:
+  void PrintType() const { std::cout<<" line0 ";};
   double eval_phi(const int *I,const double* x) const;
-  double eval_dphidx(const int *I,const double* x) const;
-  double eval_dphidy(const int *I,const double* x) const;
-  double eval_dphidz(const int *I,const double* x) const;
+  double eval_dphidx(const int *I,const double* x) const{ return 0.; };
+  double eval_dphidy(const int *I,const double* x) const{ return 0.; };
+  double eval_dphidz(const int *I,const double* x) const{ return 0.; };  
+  double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
 };
 
 //************************************************************
@@ -296,28 +506,40 @@ class line1: public basis {
   double lag1(const double& x, const int& i) const;
   double dlag1(const double& x, const int& i) const;
 public:
+  void PrintType() const { std::cout<<" line1 ";};
   double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
-  double eval_dphidy(const int *I,const double* x) const;
-  double eval_dphidz(const int *I,const double* x) const;
+  double eval_dphidy(const int *I,const double* x) const{ return 0.; };
+  double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+  
+  double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
+  
 };
 
 //************************************************************
-
 class line2: public basis {
   double lag2(const double& x, const int& i) const;
   double dlag2(const double& x, const int& i) const;
+  double d2lag2(const double& x, const int& i) const;
 public:
-  virtual double eval_phi(const int *I,const double* x) const;
+  void PrintType() const { std::cout<<" line2 ";};
+  double eval_phi(const int *I,const double* x) const;
   double eval_dphidx(const int *I,const double* x) const;
-  double eval_dphidy(const int *I,const double* x) const;
-  double eval_dphidz(const int *I,const double* x) const;
+  double eval_dphidy(const int *I,const double* x) const{ return 0.; };
+  double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+  
+  double eval_d2phidx2(const int *I,const double* x) const;
+  double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+  double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
 };
-
-
-
-
-
 
 
 } //end namespace femus

@@ -101,7 +101,7 @@ int main(int argc,char **args) {
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
   if(simulation<3)
-    nm=2;
+    nm=3;
   else if(simulation==3)
     nm=4;
   else if(simulation<7)
@@ -283,7 +283,7 @@ int main(int argc,char **args) {
   
   if(simulation < 3){
     system.SetMaxNumberOfLinearIterations(2);
-    system.SetMaxNumberOfNonLinearIterations(1);
+    system.SetMaxNumberOfNonLinearIterations(10);
   }
   else if(simulation < 7){	
     system.SetMaxNumberOfLinearIterations(8);
