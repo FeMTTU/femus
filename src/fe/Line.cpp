@@ -33,11 +33,6 @@ double line0::lag0(const double& x, const int& i) const {
   return 1.;
 }
 
-
-
-
-
-
 //************************************************************
 
 double line1::eval_phi(const int *I,const double* x) const {
@@ -79,7 +74,7 @@ double line2::dlag2(const double& x, const int& i) const {
 }
 
 double line2::d2lag2(const double& x, const int& i) const {
-  return !i*1 + !(i-1)*-2. + !(i-2)*1;
+  return !i + !(i-1)*(-2.) + !(i-2);
 }
 
 
