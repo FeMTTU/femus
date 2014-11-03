@@ -744,46 +744,53 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
     x[0]=*ptx;
     x[1]=*pty;
     x[2]=*ptz;
+    double sum=0.;
+    double sumdx=0.;
+    double sumdy=0.;
+    double sumdz=0.;
+    
+    double sumd2x2=0.;
+    double sumd2y2=0.;
+    double sumd2z2=0.;
+    double sumd2xy=0.;
+    double sumd2yz=0.;
+    double sumd2zx=0.;
+    
+    
+    
+    
     for (int j=0; j<nc_; j++) {
-      phi[i][j]=pt_basis->eval_phi(IND[j],x);
-      dphidxi[i][j]=pt_basis->eval_dphidx(IND[j],x);
-      dphideta[i][j]=pt_basis->eval_dphidy(IND[j],x);
-      dphidzeta[i][j]=pt_basis->eval_dphidz(IND[j],x);
+      phi[i][j]=pt_basis->eval_phi(IND[j],x); 		sum   += phi[i][j];
+      dphidxi[i][j]=pt_basis->eval_dphidx(IND[j],x); 	sumdx += dphidxi[i][j];
+      dphideta[i][j]=pt_basis->eval_dphidy(IND[j],x); 	sumdy += dphideta[i][j];
+      dphidzeta[i][j]=pt_basis->eval_dphidz(IND[j],x); 	sumdz += dphidzeta[i][j];
+      sumd2x2+=pt_basis->eval_d2phidx2(IND[j],x);
+      sumd2y2+=pt_basis->eval_d2phidy2(IND[j],x);
+      sumd2z2+=pt_basis->eval_d2phidz2(IND[j],x);
+      sumd2xy+=pt_basis->eval_d2phidxdy(IND[j],x);
+      sumd2yz+=pt_basis->eval_d2phidydz(IND[j],x);
+      sumd2zx+=pt_basis->eval_d2phidzdx(IND[j],x);
     }
+    if(fabs(sumdx)<1.0e-12) sumdx=0.;
+    if(fabs(sumdy)<1.0e-12) sumdy=0.;
+    if(fabs(sumdz)<1.0e-12) sumdz=0.;
+    
+    if(fabs(sumd2x2)<1.0e-12) sumd2x2=0.;
+    if(fabs(sumd2y2)<1.0e-12) sumd2y2=0.;
+    if(fabs(sumd2z2)<1.0e-12) sumd2z2=0.;
+    
+    if(fabs(sumd2xy)<1.0e-12) sumd2xy=0.;
+    if(fabs(sumd2yz)<1.0e-12) sumd2yz=0.;
+    if(fabs(sumd2zx)<1.0e-12) sumd2zx=0.;
+    
+    cout<<sum<<" "<<sumdx<<" "<<sumdy<<" "<<sumdz<<" "<<sumd2x2<<" "<<sumd2y2<<" "<<sumd2z2<<" "<<sumd2xy<<" "<<sumd2yz<<" "<<sumd2zx<<endl;
   }
   
-  for (int i=0; i<nc_; i++) {
-    for (int j=0; j<nc_; j++) {
-      double phi=pt_basis->eval_phi(IND[j],X[i]);
-      cout<<phi<<" ";
-    }
-    cout<<endl;
-  }
   cout<<endl;
-  for (int i=0; i<nc_; i++) {
-    for (int j=0; j<nc_; j++) {
-      double dphi=pt_basis->eval_dphidx(IND[j],X[i]);
-      cout<<dphi<<" ";
-    }
-    cout<<endl;
-  }
-   cout<<endl;
-   for (int i=0; i<nc_; i++) {
-    for (int j=0; j<nc_; j++) {
-      double dphi=pt_basis->eval_dphidy(IND[j],X[i]);
-      cout<<dphi<<" ";
-    }
-    cout<<endl;
-  }
-   cout<<endl;
-   for (int i=0; i<nc_; i++) {
-    for (int j=0; j<nc_; j++) {
-      double dphi=pt_basis->eval_dphidz(IND[j],X[i]);
-      cout<<dphi<<" ";
-    }
-    cout<<endl;
-  }
-   cout<<endl;
+  
+  
+  
+  
   
   //exit(0);
 }

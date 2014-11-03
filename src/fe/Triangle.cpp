@@ -201,7 +201,7 @@ double tri2::d2tri2dy2(const double& x, const double& y, const int& i,const int&
 }
 
 double tri2::d2tri2dxdy(const double& x, const double& y, const int& i,const int& j) const {
-  return (!i*!j + !(i-1)*!(j-1))*4. + ((!i-1)*!j + !i*!(j-1))*(-4.);
+  return (!i*!j + !(i-1)*!(j-1))*4. + (!(i-1)*!j + !i*!(j-1))*(-4.);
 }
 
 } //end namespace femus

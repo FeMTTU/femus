@@ -34,6 +34,56 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 int main(int argc,char **args) {
     
+  
+  const elem_type *_type_elem[6][5];
+  
+//    _type_elem[0][0]=new const elem_type("hex","linear","fifth");
+//    _type_elem[0][1]=new const elem_type("hex","quadratic","fifth");
+//    _type_elem[0][2]=new const elem_type("hex","biquadratic","fifth");
+//    _type_elem[0][3]=new const elem_type("hex","constant","fifth");
+ //  _type_elem[0][4]=new const elem_type("hex","disc_linear","fifth");
+    
+    
+    _type_elem[1][0]=new const elem_type("tet","linear","fifth");
+    _type_elem[1][1]=new const elem_type("tet","biquadratic","fifth");
+    _type_elem[1][2]=_type_elem[1][1];
+    _type_elem[1][3]=new const elem_type("tet","constant","fifth");
+    
+    exit(0);
+    
+    _type_elem[2][0]=new const elem_type("wedge","linear","fifth");
+    _type_elem[2][1]=new const elem_type("wedge","quadratic","fifth");
+    _type_elem[2][2]=new const elem_type("wedge","biquadratic","fifth");
+     
+    
+    _type_elem[3][0]=new const elem_type("quad","linear","fifth");
+    _type_elem[3][1]=new const elem_type("quad","quadratic","fifth");
+    _type_elem[3][2]=new const elem_type("quad","biquadratic","fifth");
+    _type_elem[3][3]=new const elem_type("quad","constant","fifth");
+    //_type_elem[3][4]=new const elem_type("quad","disc_linear","fifth");
+    
+    _type_elem[4][0]=new const elem_type("tri","linear","fifth");
+    _type_elem[4][1]=new const elem_type("tri","biquadratic","fifth");
+    
+    
+    _type_elem[5][0]=new const elem_type("line","linear","fifth");
+    _type_elem[5][1]=new const elem_type("line","biquadratic","fifth");
+  
+  
+  
+    exit(0);
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   unsigned simulation;
   bool dimension2D;
   
