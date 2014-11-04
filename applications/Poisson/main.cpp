@@ -287,6 +287,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     vector< int > KK_dof;
     vector <double> phi;
     vector <double> gradphi;
+    vector <double> nablaphi;
     double weight;
     vector< double > F;
     vector< double > B;
@@ -300,9 +301,10 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     metis_node.reserve(max_size);
     KK_dof.reserve(max_size);
     for(int i=0; i<dim; i++)
-        coordinates[i].reserve(max_size);
+      coordinates[i].reserve(max_size);
     phi.reserve(max_size);
     gradphi.reserve(max_size*dim);
+    nablaphi.reserve(max_size*(3*(dim-1)+!(dim-1)));
     F.reserve(max_size);
     B.reserve(max_size*max_size);
  
@@ -323,6 +325,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
         KK_dof.resize(nve);
         phi.resize(nve);
         gradphi.resize(nve*dim);
+	nablaphi.resize( nve*(3*(dim-1)+!(dim-1)) );
         for(int i=0; i<dim; i++) {
             coordinates[i].resize(nve);
         }
@@ -350,7 +353,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
             // *** Gauss point loop ***
             for(unsigned ig=0; ig < ml_prob._ml_msh->_type_elem[kelt][order_ind]->GetGaussPointNumber(); ig++) {
                 // *** get Jacobian and test function and test function derivatives ***
-                (ml_prob._ml_msh->_type_elem[kelt][order_ind]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi);
+                (ml_prob._ml_msh->_type_elem[kelt][order_ind]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi,nablaphi);
                 //current solution
                 double SolT=0;
                 vector < double > gradSolT(dim,0.);
