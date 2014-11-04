@@ -29,17 +29,17 @@ namespace femus {
   class basis {
   public:
     virtual void PrintType() const = 0 ;
-    virtual double eval_phi(const int *I,const double* x) const = 0;
-    virtual double eval_dphidx(const int *I,const double* x) const = 0;
-    virtual double eval_dphidy(const int *I,const double* x) const = 0;
-    virtual double eval_dphidz(const int *I,const double* x) const = 0;
-    virtual double eval_d2phidx2(const int *I,const double* x) const =0;
-    virtual double eval_d2phidy2(const int *I,const double* x) const =0;
-    virtual double eval_d2phidz2(const int *I,const double* x) const =0;
-    virtual double eval_d2phidxdy(const int *I,const double* x) const =0;
-    virtual double eval_d2phidydz(const int *I,const double* x) const =0;
-    virtual double eval_d2phidzdx(const int *I,const double* x) const =0;
-
+    virtual double eval_phi(const int *I,const double* x) const{ return 1.; };
+    virtual double eval_dphidx(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_dphidy(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+       
+    virtual double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   protected:  
     //1D basis
     // linear lagrangian
@@ -192,18 +192,6 @@ namespace femus {
   class hex0: public basis {
   public:
     void PrintType() const { std::cout<<" hex0 ";};
-    double eval_phi(const int *I,const double* x) const;
-    double eval_dphidx(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
-  
-    double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
-  
   };
 
   //******************************************************************************
@@ -284,6 +272,12 @@ namespace femus {
   
   };
 
+  class wedge0: public basis {
+  public:
+    void PrintType() const { std::cout<<" wedge0 ";};
+  };
+  
+  
   //************************************************************
 
   class tet1: public basis {
@@ -326,18 +320,6 @@ namespace femus {
   class tet0: public basis {
   public:
     void PrintType() const { std::cout<<" tet0 ";};
-    double eval_phi(const int *I,const double* x) const;
-    double eval_dphidx(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
-  
-    double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
-  
   };
 
   //************************************************************
@@ -404,17 +386,6 @@ namespace femus {
   class quad0: public basis {
   public:
     void PrintType() const { std::cout<<" quad0 ";};
-    double eval_phi(const int *I,const double* x) const;
-    double eval_dphidx(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
-  
-    double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   };
 
   //******************************************************************************
@@ -478,17 +449,6 @@ namespace femus {
   class tri0: public basis {
   public:
     void PrintType() const { std::cout<<" tri0 ";};
-    double eval_phi(const int *I,const double* x) const;
-    double eval_dphidx(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
-  
-    double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   };
 
   //************************************************************
@@ -532,16 +492,6 @@ namespace femus {
   class line0: public basis {
   public:
     void PrintType() const { std::cout<<" line0 ";};
-    double eval_phi(const int *I,const double* x) const;
-    double eval_dphidx(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };  
-    double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   };
 
 } //end namespace femus

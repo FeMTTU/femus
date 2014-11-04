@@ -23,12 +23,6 @@
 
 namespace femus {
 
-  double quad0::eval_phi(const int *I,const double* x) const {
-    return 1;
-  }
-
-  //************************************************************
-  
   double quadpwl::eval_phi(const int *I,const double* x) const {
     return 1.*I[0]+x[0]*(1.-I[0])*I[1]+x[1]*(1.-I[0])*(1.-I[1]);
   }

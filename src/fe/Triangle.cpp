@@ -21,12 +21,6 @@
 
 namespace femus {
 
-  double tri0::eval_phi(const int *I,const double* x) const {
-    return 1.;
-  }
-
-  //************************************************************
-
   double tri1::eval_phi(const int *I,const double* x) const {
     return triangle1(x[0],x[1],I[0],I[1]);
   }

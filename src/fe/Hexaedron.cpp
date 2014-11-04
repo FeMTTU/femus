@@ -23,11 +23,6 @@
 
 namespace femus {
 
-  double hex0::eval_phi(const int *I,const double* x) const {
-    return 1;
-  }
-
-  //************************************************************
   double hexpwl::eval_phi(const int *I,const double* x) const {
     return I[0]+ x[0]*I[1] + x[1]*I[2] + x[2]*(1.-I[0])*(1.-I[1])*(1.-I[2]);
   }
