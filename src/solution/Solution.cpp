@@ -535,6 +535,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
     vector< int > row_dof;
     vector <double> phi;
     vector <double> gradphi;
+    vector <double> nablaphi;
     double weight;
     vector< vector< double> > B(dim);
     
@@ -549,6 +550,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
         
     phi.reserve(max_size);
     gradphi.reserve(max_size*dim);
+    nablaphi.reserve(max_size*(3*(dim-1)+!(dim-1)));
     for(int i=0;i<dim;i++){
       B[i].reserve(max_size);
     }
@@ -574,6 +576,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       column_dofs.resize(nve);
       phi.resize(nve);
       gradphi.resize(nve*dim);
+      nablaphi.resize(nve*(3*(dim-1)+!(dim-1)));
       for(int i=0; i<dim; i++) {
         coordinates[i].resize(nve);
       }
@@ -592,7 +595,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
           coordinates[ivar][i]=(*_msh->_coordinate->_Sol[ivar])(inode_coord_metis);
         }
       }
-      (type_elem[kelt]->*(type_elem[kelt])->Jacobian_ptr)(coordinates,0,weight,phi,gradphi);
+      (type_elem[kelt]->*(type_elem[kelt])->Jacobian_ptr)(coordinates,0,weight,phi,gradphi, nablaphi );
 
       
       for(int i=0;i<nve;i++){

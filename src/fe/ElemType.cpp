@@ -320,6 +320,22 @@ elem_type::~elem_type() {
   delete [] dphideta_memory;
   delete [] dphidzeta;
   delete [] dphidzeta_memory;
+  
+  delete [] d2phidxi2;
+  delete [] d2phidxi2_memory;
+  delete [] d2phideta2;
+  delete [] d2phideta2_memory;
+  delete [] d2phidzeta2;
+  delete [] d2phidzeta2_memory;
+  
+  delete [] d2phidxideta;
+  delete [] d2phidxideta_memory;
+  delete [] d2phidetadzeta;
+  delete [] d2phidetadzeta_memory;
+  delete [] d2phidzetadxi;
+  delete [] d2phidzetadxi_memory;
+  
+  
 };
 
 elem_type::elem_type(const char *solid, const char *order, const char *order_gauss) {
@@ -725,17 +741,42 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
   dphidxi  = new double*[GaussPoints];
   dphideta = new double*[GaussPoints];
   dphidzeta= new double*[GaussPoints];
+  
+  d2phidxi2  = new double*[GaussPoints];
+  d2phideta2 = new double*[GaussPoints];
+  d2phidzeta2= new double*[GaussPoints];
+  
+  d2phidxideta  = new double*[GaussPoints];
+  d2phidetadzeta = new double*[GaussPoints];
+  d2phidzetadxi= new double*[GaussPoints];
 
   phi_memory=new double [GaussPoints*nc_];
   dphidxi_memory  =new double [GaussPoints*nc_];
   dphideta_memory =new double [GaussPoints*nc_];
   dphidzeta_memory=new double [GaussPoints*nc_];
+  
+  d2phidxi2_memory  =new double [GaussPoints*nc_];
+  d2phideta2_memory =new double [GaussPoints*nc_];
+  d2phidzeta2_memory=new double [GaussPoints*nc_];
+  
+  d2phidxideta_memory  =new double [GaussPoints*nc_];
+  d2phidetadzeta_memory =new double [GaussPoints*nc_];
+  d2phidzetadxi_memory=new double [GaussPoints*nc_];
 
   for (unsigned i=0; i<GaussPoints; i++) {
     phi[i]=&phi_memory[i*nc_];
     dphidxi[i]  =&dphidxi_memory[i*nc_];
     dphideta[i] =&dphideta_memory[i*nc_];
     dphidzeta[i]=&dphidzeta_memory[i*nc_];
+    
+    d2phidxi2[i]  =&d2phidxi2_memory[i*nc_];
+    d2phideta2[i] =&d2phideta2_memory[i*nc_];
+    d2phidzeta2[i]=&d2phidzeta2_memory[i*nc_];
+    
+    d2phidxideta[i]  = &d2phidxideta_memory[i*nc_];
+    d2phidetadzeta[i]= &d2phidetadzeta_memory[i*nc_];
+    d2phidzetadxi[i] = &d2phidzetadxi_memory[i*nc_];
+    
   }
 
   const double *ptx=GaussWeight+GaussPoints,*pty=GaussWeight+2*GaussPoints,*ptz=GaussWeight+3*GaussPoints;
@@ -743,56 +784,21 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
     double x[3];
     x[0]=*ptx;
     x[1]=*pty;
-    x[2]=*ptz;
-    double sum=0.;
-    double sumdx=0.;
-    double sumdy=0.;
-    double sumdz=0.;
-    
-    double sumd2x2=0.;
-    double sumd2y2=0.;
-    double sumd2z2=0.;
-    double sumd2xy=0.;
-    double sumd2yz=0.;
-    double sumd2zx=0.;
-    
-    
-    
+    x[2]=*ptz;    
     
     for (int j=0; j<nc_; j++) {
-      phi[i][j]=pt_basis->eval_phi(IND[j],x); 		sum   += phi[i][j];
-      dphidxi[i][j]=pt_basis->eval_dphidx(IND[j],x); 	sumdx += dphidxi[i][j];
-      dphideta[i][j]=pt_basis->eval_dphidy(IND[j],x); 	sumdy += dphideta[i][j];
-      dphidzeta[i][j]=pt_basis->eval_dphidz(IND[j],x); 	sumdz += dphidzeta[i][j];
-      sumd2x2+=pt_basis->eval_d2phidx2(IND[j],x);
-      sumd2y2+=pt_basis->eval_d2phidy2(IND[j],x);
-      sumd2z2+=pt_basis->eval_d2phidz2(IND[j],x);
-      sumd2xy+=pt_basis->eval_d2phidxdy(IND[j],x);
-      sumd2yz+=pt_basis->eval_d2phidydz(IND[j],x);
-      sumd2zx+=pt_basis->eval_d2phidzdx(IND[j],x);
+      phi[i][j] = pt_basis->eval_phi(IND[j],x); 	
+      dphidxi[i][j] = pt_basis->eval_dphidx(IND[j],x); 	
+      dphideta[i][j] = pt_basis->eval_dphidy(IND[j],x); 	
+      dphidzeta[i][j] = pt_basis->eval_dphidz(IND[j],x); 	
+      d2phidxi2[i][j] = pt_basis->eval_d2phidx2(IND[j],x);
+      d2phideta2[i][j] = pt_basis->eval_d2phidy2(IND[j],x);
+      d2phidzeta2[i][j] = pt_basis->eval_d2phidz2(IND[j],x);
+      d2phidxideta[i][j] = pt_basis->eval_d2phidxdy(IND[j],x);
+      d2phidetadzeta[i][j] = pt_basis->eval_d2phidydz(IND[j],x);
+      d2phidzetadxi[i][j] = pt_basis->eval_d2phidzdx(IND[j],x);
     }
-    if(fabs(sumdx)<1.0e-12) sumdx=0.;
-    if(fabs(sumdy)<1.0e-12) sumdy=0.;
-    if(fabs(sumdz)<1.0e-12) sumdz=0.;
-    
-    if(fabs(sumd2x2)<1.0e-12) sumd2x2=0.;
-    if(fabs(sumd2y2)<1.0e-12) sumd2y2=0.;
-    if(fabs(sumd2z2)<1.0e-12) sumd2z2=0.;
-    
-    if(fabs(sumd2xy)<1.0e-12) sumd2xy=0.;
-    if(fabs(sumd2yz)<1.0e-12) sumd2yz=0.;
-    if(fabs(sumd2zx)<1.0e-12) sumd2zx=0.;
-    
-    cout<<sum<<" "<<sumdx<<" "<<sumdy<<" "<<sumdz<<" "<<sumd2x2<<" "<<sumd2y2<<" "<<sumd2z2<<" "<<sumd2xy<<" "<<sumd2yz<<" "<<sumd2zx<<endl;
   }
-  
-  cout<<endl;
-  
-  
-  
-  
-  
-  //exit(0);
 }
 
 
@@ -1040,8 +1046,6 @@ void elem_type::JacobianSur2D(const vector < vector < double > > &vt, const unsi
 }
 
 
-
-
 void elem_type::JacobianSur2D_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
 				 adept::adouble &Weight, vector < adept::adouble > &gradphi, 
 				 vector < adept::adouble > &normal) const {
@@ -1202,31 +1206,30 @@ void elem_type::JacobianSur1D_AD(const vector < vector < adept::adouble > > &vt,
 
 //---------------------------------------------------------------------------------------------------------
 void elem_type::Jacobian3D(const vector < vector < double > > &vt, const unsigned &ig,
-                           double &Weight, vector < double > &other_phi, vector < double > &gradphi) const {
+                           double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const {
+  
+			     
   double Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
   double JacI[3][3];
-  for (double *pt_d=Jac[0]; pt_d<Jac[0]+9; pt_d++) *pt_d=0.;
-  const double *dfx=dphidxi[ig];
-  const double *dfy=dphideta[ig];
-  const double *dfz=dphidzeta[ig];
-  const double *vx=&vt[0][0];
-  const double *vy=&vt[1][0];
-  const double *vz=&vt[2][0];
-  for (int inode=0; inode<nc_; inode++,dfx++,dfy++,dfz++,vx++,vy++,vz++) {
-    double *pt_d=Jac[0];
-    *(pt_d++)+=(*dfx)*(*vx);
-    *(pt_d++)+=(*dfx)*(*vy);
-    *(pt_d++)+=(*dfx)*(*vz);
-    *(pt_d++)+=(*dfy)*(*vx);
-    *(pt_d++)+=(*dfy)*(*vy);
-    *(pt_d++)+=(*dfy)*(*vz);
-    *(pt_d++)+=(*dfz)*(*vx);
-    *(pt_d++)+=(*dfz)*(*vy);
-    *(pt_d++)+=(*dfz)*(*vz);
-  }
+  
+  const double *dxi=dphidxi[ig];
+  const double *deta=dphideta[ig];
+  const double *dzeta=dphidzeta[ig];
+
+  for (int inode=0; inode<nc_; inode++,dxi++,deta++,dzeta++) {
+    Jac[0][0]+=(*dxi)*vt[0][inode];
+    Jac[0][1]+=(*dxi)*vt[1][inode];
+    Jac[0][2]+=(*dxi)*vt[2][inode];
+    Jac[1][0]+=(*deta)*vt[0][inode];
+    Jac[1][1]+=(*deta)*vt[1][inode];
+    Jac[1][2]+=(*deta)*vt[2][inode];
+    Jac[2][0]+=(*dzeta)*vt[0][inode];
+    Jac[2][1]+=(*dzeta)*vt[1][inode];
+    Jac[2][2]+=(*dzeta)*vt[2][inode];
+  } 
   double det=(Jac[0][0]*(Jac[1][1]*Jac[2][2]-Jac[1][2]*Jac[2][1])+
-              Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
-              Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
+	      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
+	      Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
 
   JacI[0][0]= (-Jac[1][2]*Jac[2][1] + Jac[1][1]*Jac[2][2])/det;
   JacI[0][1]= ( Jac[0][2]*Jac[2][1] - Jac[0][1]*Jac[2][2])/det;
@@ -1239,45 +1242,78 @@ void elem_type::Jacobian3D(const vector < vector < double > > &vt, const unsigne
   JacI[2][2]= (-Jac[0][1]*Jac[1][0] + Jac[0][0]*Jac[1][1])/det;
 
   Weight=det*GaussWeight[ig];
-
-  double *other_f=&other_phi[0];
-  double *gradf=&gradphi[0];
+ 
+  double *other_fi=&other_phi[0];
   double *fi=phi[ig];
-  dfx=dphidxi[ig];
-  dfy=dphideta[ig];
-  dfz=dphidzeta[ig];
-  for (int inode=0; inode<nc_; inode++,other_f++,fi++,dfx++,dfy++,dfz++) {
-    *other_f=*fi;
-    double *pt_d=JacI[0];
-    for (int j=0; j<3; j++) {
-      *(gradf++)=(*dfx)*(*pt_d)+(*dfy)*(*(pt_d+1))+(*dfz)*(*(pt_d+2));
-      pt_d+=3;
-    }
-  }
+  
+  dxi=dphidxi[ig];
+  deta=dphideta[ig];
+  dzeta=dphidzeta[ig];
+  
+  const double *dxi2=d2phidxi2[ig];
+  const double *deta2=d2phideta2[ig];
+  const double *dzeta2=d2phidzeta2[ig];
+  const double *dxideta=d2phidxideta[ig];
+  const double *detadzeta=d2phidetadzeta[ig];
+  const double *dzetadxi=d2phidzetadxi[ig];
+    
+  for (int inode=0; inode<nc_; inode++, fi++, other_fi++, dxi++, deta++, dzeta++, 
+			       dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++) {
+    *other_fi=*fi;
+  
+    gradphi[3*inode+0]=(*dxi)*JacI[0][0] + (*deta)*JacI[0][1] + (*dzeta)*JacI[0][2];
+    gradphi[3*inode+1]=(*dxi)*JacI[1][0] + (*deta)*JacI[1][1] + (*dzeta)*JacI[1][2];
+    gradphi[3*inode+2]=(*dxi)*JacI[2][0] + (*deta)*JacI[2][1] + (*dzeta)*JacI[2][2];
+    
+    nablaphi[6*inode+0]=
+      ( (*dxi2)    *JacI[0][0] + (*dxideta)  *JacI[0][1] + (*dzetadxi) *JacI[0][2] )*JacI[0][0]+
+      ( (*dxideta) *JacI[0][0] + (*deta2)    *JacI[0][1] + (*detadzeta)*JacI[0][2] )*JacI[0][1]+
+      ( (*dzetadxi)*JacI[0][0] + (*detadzeta)*JacI[0][1] + (*dzeta2)   *JacI[0][2] )*JacI[0][2];
+    nablaphi[6*inode+1]=
+      ( (*dxi2)    *JacI[1][0] + (*dxideta)  *JacI[1][1] + (*dzetadxi) *JacI[1][2] )*JacI[1][0]+
+      ( (*dxideta) *JacI[1][0] + (*deta2)    *JacI[1][1] + (*detadzeta)*JacI[1][2] )*JacI[1][1]+
+      ( (*dzetadxi)*JacI[1][0] + (*detadzeta)*JacI[1][1] + (*dzeta2)   *JacI[1][2] )*JacI[1][2];
+    nablaphi[6*inode+2]=
+      ( (*dxi2)    *JacI[2][0] + (*dxideta)  *JacI[2][1] + (*dzetadxi) *JacI[2][2] )*JacI[2][0]+
+      ( (*dxideta) *JacI[2][0] + (*deta2)    *JacI[2][1] + (*detadzeta)*JacI[2][2] )*JacI[2][1]+
+      ( (*dzetadxi)*JacI[2][0] + (*detadzeta)*JacI[2][1] + (*dzeta2)   *JacI[2][2] )*JacI[2][2];
+    nablaphi[6*inode+3]=
+      ( (*dxi2)    *JacI[0][0] + (*dxideta)  *JacI[0][1] + (*dzetadxi) *JacI[0][2] )*JacI[1][0]+
+      ( (*dxideta) *JacI[0][0] + (*deta2)    *JacI[0][1] + (*detadzeta)*JacI[0][2] )*JacI[1][1]+
+      ( (*dzetadxi)*JacI[0][0] + (*detadzeta)*JacI[0][1] + (*dzeta2)   *JacI[0][2] )*JacI[1][2];
+    nablaphi[6*inode+4]=
+      ( (*dxi2)    *JacI[1][0] + (*dxideta)  *JacI[1][1] + (*dzetadxi) *JacI[1][2] )*JacI[2][0]+
+      ( (*dxideta) *JacI[1][0] + (*deta2)    *JacI[1][1] + (*detadzeta)*JacI[1][2] )*JacI[2][1]+
+      ( (*dzetadxi)*JacI[1][0] + (*detadzeta)*JacI[1][1] + (*dzeta2)   *JacI[1][2] )*JacI[2][2];
+    nablaphi[6*inode+5]=
+      ( (*dxi2)    *JacI[2][0] + (*dxideta)  *JacI[2][1] + (*dzetadxi) *JacI[2][2] )*JacI[0][0]+
+      ( (*dxideta) *JacI[2][0] + (*deta2)    *JacI[2][1] + (*detadzeta)*JacI[2][2] )*JacI[0][1]+
+      ( (*dzetadxi)*JacI[2][0] + (*detadzeta)*JacI[2][1] + (*dzeta2)   *JacI[2][2] )*JacI[0][2];
+  }			     
 }
 
 
 //---------------------------------------------------------------------------------------------------------
 void elem_type::Jacobian3D_AD(adept::Stack &s, const vector < vector < adept::adouble > > &vt,const unsigned &ig,
-			      adept::adouble &Weight, vector < adept::adouble > &gradphi) const{
+			      adept::adouble &Weight, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const{
   
   adept::adouble Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
   adept::adouble JacI[3][3];
   
-  const double *dfx=dphidxi[ig];
-  const double *dfy=dphideta[ig];
-  const double *dfz=dphidzeta[ig];
+  const double *dxi=dphidxi[ig];
+  const double *deta=dphideta[ig];
+  const double *dzeta=dphidzeta[ig];
 
-  for (int inode=0; inode<nc_; inode++,dfx++,dfy++,dfz++) {
-    Jac[0][0]+=(*dfx)*vt[0][inode];
-    Jac[0][1]+=(*dfx)*vt[1][inode];
-    Jac[0][2]+=(*dfx)*vt[2][inode];
-    Jac[1][0]+=(*dfy)*vt[0][inode];
-    Jac[1][1]+=(*dfy)*vt[1][inode];
-    Jac[1][2]+=(*dfy)*vt[2][inode];
-    Jac[2][0]+=(*dfz)*vt[0][inode];
-    Jac[2][1]+=(*dfz)*vt[1][inode];
-    Jac[2][2]+=(*dfz)*vt[2][inode];
+  for (int inode=0; inode<nc_; inode++,dxi++,deta++,dzeta++) {
+    Jac[0][0]+=(*dxi)*vt[0][inode];
+    Jac[0][1]+=(*dxi)*vt[1][inode];
+    Jac[0][2]+=(*dxi)*vt[2][inode];
+    Jac[1][0]+=(*deta)*vt[0][inode];
+    Jac[1][1]+=(*deta)*vt[1][inode];
+    Jac[1][2]+=(*deta)*vt[2][inode];
+    Jac[2][0]+=(*dzeta)*vt[0][inode];
+    Jac[2][1]+=(*dzeta)*vt[1][inode];
+    Jac[2][2]+=(*dzeta)*vt[2][inode];
   } 
   adept::adouble det=(Jac[0][0]*(Jac[1][1]*Jac[2][2]-Jac[1][2]*Jac[2][1])+
 		      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
@@ -1295,33 +1331,63 @@ void elem_type::Jacobian3D_AD(adept::Stack &s, const vector < vector < adept::ad
 
   Weight=det*GaussWeight[ig];
  
-  dfx=dphidxi[ig];
-  dfy=dphideta[ig];
-  dfz=dphidzeta[ig];
-  for (int inode=0; inode<nc_; inode++,dfx++,dfy++,dfz++) {
-    gradphi[3*inode+0]=(*dfx)*JacI[0][0] + (*dfy)*JacI[0][1] + (*dfz)*JacI[0][2];
-    gradphi[3*inode+1]=(*dfx)*JacI[1][0] + (*dfy)*JacI[1][1] + (*dfz)*JacI[1][2];
-    gradphi[3*inode+2]=(*dfx)*JacI[2][0] + (*dfy)*JacI[2][1] + (*dfz)*JacI[2][2];
+  dxi=dphidxi[ig];
+  deta=dphideta[ig];
+  dzeta=dphidzeta[ig];
+  
+  const double *dxi2=d2phidxi2[ig];
+  const double *deta2=d2phideta2[ig];
+  const double *dzeta2=d2phidzeta2[ig];
+  const double *dxideta=d2phidxideta[ig];
+  const double *detadzeta=d2phidetadzeta[ig];
+  const double *dzetadxi=d2phidzetadxi[ig];
+   
+  for (int inode=0; inode<nc_; inode++,dxi++,deta++,dzeta++,dxi2++,deta2++,dzeta2++,dxideta++,detadzeta++,dzetadxi++) {
+    gradphi[3*inode+0]=(*dxi)*JacI[0][0] + (*deta)*JacI[0][1] + (*dzeta)*JacI[0][2];
+    gradphi[3*inode+1]=(*dxi)*JacI[1][0] + (*deta)*JacI[1][1] + (*dzeta)*JacI[1][2];
+    gradphi[3*inode+2]=(*dxi)*JacI[2][0] + (*deta)*JacI[2][1] + (*dzeta)*JacI[2][2];
+    
+    nablaphi[6*inode+0]=
+      ( (*dxi2)    *JacI[0][0] + (*dxideta)  *JacI[0][1] + (*dzetadxi) *JacI[0][2] )*JacI[0][0]+
+      ( (*dxideta) *JacI[0][0] + (*deta2)    *JacI[0][1] + (*detadzeta)*JacI[0][2] )*JacI[0][1]+
+      ( (*dzetadxi)*JacI[0][0] + (*detadzeta)*JacI[0][1] + (*dzeta2)   *JacI[0][2] )*JacI[0][2];
+    nablaphi[6*inode+1]=
+      ( (*dxi2)    *JacI[1][0] + (*dxideta)  *JacI[1][1] + (*dzetadxi) *JacI[1][2] )*JacI[1][0]+
+      ( (*dxideta) *JacI[1][0] + (*deta2)    *JacI[1][1] + (*detadzeta)*JacI[1][2] )*JacI[1][1]+
+      ( (*dzetadxi)*JacI[1][0] + (*detadzeta)*JacI[1][1] + (*dzeta2)   *JacI[1][2] )*JacI[1][2];
+    nablaphi[6*inode+2]=
+      ( (*dxi2)    *JacI[2][0] + (*dxideta)  *JacI[2][1] + (*dzetadxi) *JacI[2][2] )*JacI[2][0]+
+      ( (*dxideta) *JacI[2][0] + (*deta2)    *JacI[2][1] + (*detadzeta)*JacI[2][2] )*JacI[2][1]+
+      ( (*dzetadxi)*JacI[2][0] + (*detadzeta)*JacI[2][1] + (*dzeta2)   *JacI[2][2] )*JacI[2][2];
+    nablaphi[6*inode+3]=
+      ( (*dxi2)    *JacI[0][0] + (*dxideta)  *JacI[0][1] + (*dzetadxi) *JacI[0][2] )*JacI[1][0]+
+      ( (*dxideta) *JacI[0][0] + (*deta2)    *JacI[0][1] + (*detadzeta)*JacI[0][2] )*JacI[1][1]+
+      ( (*dzetadxi)*JacI[0][0] + (*detadzeta)*JacI[0][1] + (*dzeta2)   *JacI[0][2] )*JacI[1][2];
+    nablaphi[6*inode+4]=
+      ( (*dxi2)    *JacI[1][0] + (*dxideta)  *JacI[1][1] + (*dzetadxi) *JacI[1][2] )*JacI[2][0]+
+      ( (*dxideta) *JacI[1][0] + (*deta2)    *JacI[1][1] + (*detadzeta)*JacI[1][2] )*JacI[2][1]+
+      ( (*dzetadxi)*JacI[1][0] + (*detadzeta)*JacI[1][1] + (*dzeta2)   *JacI[1][2] )*JacI[2][2];
+    nablaphi[6*inode+5]=
+      ( (*dxi2)    *JacI[2][0] + (*dxideta)  *JacI[2][1] + (*dzetadxi) *JacI[2][2] )*JacI[0][0]+
+      ( (*dxideta) *JacI[2][0] + (*deta2)    *JacI[2][1] + (*detadzeta)*JacI[2][2] )*JacI[0][1]+
+      ( (*dzetadxi)*JacI[2][0] + (*detadzeta)*JacI[2][1] + (*dzeta2)   *JacI[2][2] )*JacI[0][2];
   }
+  
 }
 
 //---------------------------------------------------------------------------------------------------------
 void elem_type::Jacobian2D(const vector < vector < double > > &vt,const unsigned &ig,
-                           double &Weight, vector < double > &other_phi, vector < double > &gradphi) const {
-
-  double Jac[2][2]={{0.,0.},{0.,0.}};
+                           double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const {
+			     
+  double Jac[2][2]={{0,0},{0,0}};
   double JacI[2][2];
-  for (double *pt_d=Jac[0]; pt_d<Jac[0]+4; pt_d++) *pt_d=0.;
-  const double *dfx=dphidxi[ig];
-  const double *dfy=dphideta[ig];
-  const double *vx=&vt[0][0];
-  const double *vy=&vt[1][0];
-  for (int inode=0; inode<nc_; inode++,dfx++,dfy++,vx++,vy++) {
-    double *pt_d=Jac[0];
-    *(pt_d++)+=(*dfx)*(*vx);
-    *(pt_d++)+=(*dfx)*(*vy);
-    *(pt_d++)+=(*dfy)*(*vx);
-    *(pt_d++)+=(*dfy)*(*vy);
+  const double *dxi=dphidxi[ig];
+  const double *deta=dphideta[ig];
+  for (int inode=0; inode<nc_; inode++,dxi++,deta++){
+    Jac[0][0]+=(*dxi)*vt[0][inode];
+    Jac[0][1]+=(*dxi)*vt[1][inode];
+    Jac[1][0]+=(*deta)*vt[0][inode];
+    Jac[1][1]+=(*deta)*vt[1][inode];
   }
   double det=(Jac[0][0]*Jac[1][1]-Jac[0][1]*Jac[1][0]);
 
@@ -1331,36 +1397,50 @@ void elem_type::Jacobian2D(const vector < vector < double > > &vt,const unsigned
   JacI[1][1]= Jac[0][0]/det;
 
   Weight=det*GaussWeight[ig];
-
-  double *other_f=&other_phi[0];
-  double *gradf=&gradphi[0];
+     
+  dxi=dphidxi[ig];
+  deta=dphideta[ig];
+  
+  const double *dxi2=d2phidxi2[ig];
+  const double *deta2=d2phideta2[ig];
+  const double *dxideta=d2phidxideta[ig];
+  
+  double *other_fi=&other_phi[0];
   double *fi=phi[ig];
-  dfx=dphidxi[ig];
-  dfy=dphideta[ig];
-  for (int inode=0; inode<nc_; inode++,other_f++,fi++,dfx++,dfy++) {
-    *other_f=*fi;
-    double *pt_d=JacI[0];
-    for (int j=0; j<2; j++) {
-      *(gradf++)=(*dfx)*(*pt_d)+(*dfy)*(*(pt_d+1));
-      pt_d+=2;
-    }
-  }
+   
+  for (int inode=0; inode<nc_; inode++, fi++, other_fi++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
+    *other_fi=*fi;
+    
+    gradphi[2*inode+0]=(*dxi)*JacI[0][0] + (*deta)*JacI[0][1];
+    gradphi[2*inode+1]=(*dxi)*JacI[1][0] + (*deta)*JacI[1][1];
+    
+    nablaphi[3*inode+0]= 
+      ( (*dxi2)   *JacI[0][0] + (*dxideta)*JacI[0][1] ) * JacI[0][0] +
+      ( (*dxideta)*JacI[0][0] + (*deta2)  *JacI[0][1] ) * JacI[0][1]; 
+    nablaphi[3*inode+1]= 
+      ( (*dxi2)   *JacI[1][0] + (*dxideta)*JacI[1][1] ) * JacI[1][0] +
+      ( (*dxideta)*JacI[1][0] + (*deta2)  *JacI[1][1] ) * JacI[1][1]; 
+    nablaphi[3*inode+2]= 
+      ( (*dxi2)   *JacI[0][0] + (*dxideta)*JacI[0][1] ) * JacI[1][0] +
+      ( (*dxideta)*JacI[0][0] + (*deta2)  *JacI[0][1] ) * JacI[1][1]; 
+     
+  }			     
 }
 
 
 //---------------------------------------------------------------------------------------------------------
 void elem_type::Jacobian2D_AD(adept::Stack &s, const vector < vector < adept::adouble > > &vt,const unsigned &ig,
-			      adept::adouble &Weight, vector < adept::adouble > &gradphi) const {
+			      adept::adouble &Weight, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const {
 			
   adept::adouble Jac[2][2]={{0,0},{0,0}};
   adept::adouble JacI[2][2];
-  const double *dfx=dphidxi[ig];
-  const double *dfy=dphideta[ig];
-  for (int inode=0; inode<nc_; inode++,dfx++,dfy++){
-    Jac[0][0]+=(*dfx)*vt[0][inode];
-    Jac[0][1]+=(*dfx)*vt[1][inode];
-    Jac[1][0]+=(*dfy)*vt[0][inode];
-    Jac[1][1]+=(*dfy)*vt[1][inode];
+  const double *dxi=dphidxi[ig];
+  const double *deta=dphideta[ig];
+  for (int inode=0; inode<nc_; inode++,dxi++,deta++){
+    Jac[0][0]+=(*dxi)*vt[0][inode];
+    Jac[0][1]+=(*dxi)*vt[1][inode];
+    Jac[1][0]+=(*deta)*vt[0][inode];
+    Jac[1][1]+=(*deta)*vt[1][inode];
   }
   adept::adouble det=(Jac[0][0]*Jac[1][1]-Jac[0][1]*Jac[1][0]);
 
@@ -1371,20 +1451,35 @@ void elem_type::Jacobian2D_AD(adept::Stack &s, const vector < vector < adept::ad
 
   Weight=det*GaussWeight[ig];
      
-  dfx=dphidxi[ig];
-  dfy=dphideta[ig];
-  for (int inode=0; inode<nc_; inode++,dfx++,dfy++) {
+  dxi=dphidxi[ig];
+  deta=dphideta[ig];
+  
+  const double *dxi2=d2phidxi2[ig];
+  const double *deta2=d2phideta2[ig];
+  const double *dxideta=d2phidxideta[ig];
+  
+  for (int inode=0; inode<nc_; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
     
-    gradphi[2*inode+0]=(*dfx)*JacI[0][0] + (*dfy)*JacI[0][1];
-    gradphi[2*inode+1]=(*dfx)*JacI[1][0] + (*dfy)*JacI[1][1];
+    gradphi[2*inode+0]=(*dxi)*JacI[0][0] + (*deta)*JacI[0][1];
+    gradphi[2*inode+1]=(*dxi)*JacI[1][0] + (*deta)*JacI[1][1];
     
+    nablaphi[3*inode+0]= 
+      ( (*dxi2)   *JacI[0][0] + (*dxideta)*JacI[0][1] ) * JacI[0][0] +
+      ( (*dxideta)*JacI[0][0] + (*deta2)  *JacI[0][1] ) * JacI[0][1]; 
+    nablaphi[3*inode+1]= 
+      ( (*dxi2)   *JacI[1][0] + (*dxideta)*JacI[1][1] ) * JacI[1][0] +
+      ( (*dxideta)*JacI[1][0] + (*deta2)  *JacI[1][1] ) * JacI[1][1]; 
+    nablaphi[3*inode+2]= 
+      ( (*dxi2)   *JacI[0][0] + (*dxideta)*JacI[0][1] ) * JacI[1][0] +
+      ( (*dxideta)*JacI[0][0] + (*deta2)  *JacI[0][1] ) * JacI[1][1]; 
+     
   }
 }
 
 
 //---------------------------------------------------------------------------------------------------------
 void elem_type::Jacobian1D(const vector < vector < double > > &vt,const unsigned &ig,
-                           double &Weight, vector < double > &other_phi, vector < double > &gradphi) const {
+                           double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const {
 
   double Jac=0.;
   double h;
@@ -1401,10 +1496,12 @@ void elem_type::Jacobian1D(const vector < vector < double > > &vt,const unsigned
   double *other_f=&other_phi[0];
   double *gradf=&gradphi[0];
   double *fi=phi[ig];
-  dfx=dphidxi[ig];
-  for (int inode=0; inode<nc_; inode++,other_f++,fi++,dfx++) {
+  dfx = dphidxi[ig];
+  const double *dxi2 = d2phidxi2[ig];
+  for (int inode=0; inode<nc_; inode++,other_f++,fi++,dfx++, dxi2++) {
     *other_f=*fi;
     *(gradf++)=(*dfx)*(1./Jac);
+    nablaphi[inode] = (*dxi2)*(1./Jac)*(1./Jac);
   }
 }
 

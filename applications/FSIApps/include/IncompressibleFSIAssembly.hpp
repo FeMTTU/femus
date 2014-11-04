@@ -43,13 +43,17 @@ namespace femus {
     vector <bool> solidmark;
     vector <double > phi_hat;
     vector <adept::adouble> gradphi;
+    vector <adept::adouble> nablaphi;
     vector <double> gradphi_hat;
-   
+    vector <double> nablaphi_hat;
+    
     solidmark.reserve(max_size);
     phi_hat.reserve(max_size);
     gradphi.reserve(max_size*dim);
+    nablaphi.reserve(max_size*3*(dim-1));
     gradphi_hat.reserve(max_size*dim);
-  
+    nablaphi_hat.reserve(max_size*3*(dim-1));
+    
     const double *phi;
     const double *phi1;
     
@@ -209,8 +213,11 @@ namespace femus {
       solidmark.resize(nve);
       phi_hat.resize(nve);
       gradphi.resize(nve*dim);
+      nablaphi.resize(nve*3*(dim-1));
       gradphi_hat.resize(nve*dim);
-        
+      nablaphi_hat.resize(nve*3*(dim-1));
+      
+      
       for(int i=0;i<dim;i++){
 	vx[i].resize(nve);
 	vx_hat[i].resize(nve);
@@ -313,8 +320,8 @@ namespace femus {
 	double area=1.;
 	for (unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][SolType2]->GetGaussPointNumber(); ig++) {
 	  // *** get Jacobian and test function and test function derivatives in the moving frame***
-	  (ml_prob._ml_msh->_type_elem[kelt][SolType2]->*(ml_prob._ml_msh->_type_elem[kelt][SolType2])->Jacobian_AD_ptr)(s,vx,ig,Weight,gradphi);
-	  (ml_prob._ml_msh->_type_elem[kelt][SolType2]->*(ml_prob._ml_msh->_type_elem[kelt][SolType2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
+	  (ml_prob._ml_msh->_type_elem[kelt][SolType2]->*(ml_prob._ml_msh->_type_elem[kelt][SolType2])->Jacobian_AD_ptr)(s,vx,ig,Weight,gradphi,nablaphi);
+	  (ml_prob._ml_msh->_type_elem[kelt][SolType2]->*(ml_prob._ml_msh->_type_elem[kelt][SolType2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat,nablaphi_hat);
 	  phi =ml_prob._ml_msh->_type_elem[kelt][SolType2]->GetPhi(ig);
 	  phi1=ml_prob._ml_msh->_type_elem[kelt][SolType1]->GetPhi(ig);
 	  
@@ -754,13 +761,17 @@ namespace femus {
     vector <bool> solidmark;
     vector <double > phi_hat;
     vector <adept::adouble> gradphi;
+    vector <adept::adouble> nablaphi;
     vector <double> gradphi_hat;
+    vector <double> nablaphi_hat;
    
     solidmark.reserve(max_size);
     phi_hat.reserve(max_size);
     gradphi.reserve(max_size*dim);
+    nablaphi.reserve(max_size*3*(dim-1));
     gradphi_hat.reserve(max_size*dim);
-  
+    nablaphi_hat.reserve(max_size*3*(dim-1));
+    
     const double *phi;
     const double *phi1;
     
@@ -905,7 +916,9 @@ namespace femus {
       solidmark.resize(nve);
       phi_hat.resize(nve);
       gradphi.resize(nve*dim);
+      nablaphi.resize(nve*3*(dim-1));
       gradphi_hat.resize(nve*dim);
+      nablaphi_hat.resize(nve*3*(dim-1));
         
       for(int i=0;i<dim;i++){
 	vx[i].resize(nve);
@@ -1009,8 +1022,8 @@ namespace femus {
 	double area=1.;
 	for (unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][SolType2]->GetGaussPointNumber(); ig++) {
 	  // *** get Jacobian and test function and test function derivatives in the moving frame***
-	  (ml_prob._ml_msh->_type_elem[kelt][SolType2]->*(ml_prob._ml_msh->_type_elem[kelt][SolType2])->Jacobian_AD_ptr)(s,vx,ig,Weight,gradphi);
-	  (ml_prob._ml_msh->_type_elem[kelt][SolType2]->*(ml_prob._ml_msh->_type_elem[kelt][SolType2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
+	  (ml_prob._ml_msh->_type_elem[kelt][SolType2]->*(ml_prob._ml_msh->_type_elem[kelt][SolType2])->Jacobian_AD_ptr)(s,vx,ig,Weight,gradphi,nablaphi);
+	  (ml_prob._ml_msh->_type_elem[kelt][SolType2]->*(ml_prob._ml_msh->_type_elem[kelt][SolType2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat,nablaphi_hat);
 	  phi =ml_prob._ml_msh->_type_elem[kelt][SolType2]->GetPhi(ig);
 	  phi1=ml_prob._ml_msh->_type_elem[kelt][SolType1]->GetPhi(ig);
 	  
@@ -1390,6 +1403,9 @@ namespace femus {
   
     vector <double> gradphi;
     vector <double> gradphi_hat;
+    
+    vector <double> nablaphi;
+    vector <double> nablaphi_hat;
   
     metis_node1.reserve(max_size);
     metis_node2.reserve(max_size);
@@ -1398,6 +1414,9 @@ namespace femus {
     phi_hat.reserve(max_size);
     gradphi.reserve(max_size*dim);
     gradphi_hat.reserve(max_size*dim);
+    
+    nablaphi.reserve(max_size*3*(dim-1));
+    nablaphi_hat.reserve(max_size*3*(dim-1));
   
     const double *phi1;
     
@@ -1609,6 +1628,9 @@ namespace femus {
       phi_hat.resize(nve);
       gradphi.resize(nve*dim);
       gradphi_hat.resize(nve*dim);
+      nablaphi.resize(nve*3*(dim-1));
+      nablaphi_hat.resize(nve*3*(dim-1));
+      
         
       for(int i=0;i<dim;i++){
 	vx[i].resize(nve);
@@ -1695,8 +1717,8 @@ namespace femus {
 	for (unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][SolType2]->GetGaussPointNumber(); ig++) {
 
 	  // *** get Jacobian and test function and test function derivatives in the moving frame***
-	  (ml_prob._ml_msh->_type_elem[kelt][SolType2]->*(ml_prob._ml_msh->_type_elem[kelt][SolType2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
-	  (ml_prob._ml_msh->_type_elem[kelt][SolType2]->*(ml_prob._ml_msh->_type_elem[kelt][SolType2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
+	  (ml_prob._ml_msh->_type_elem[kelt][SolType2]->*(ml_prob._ml_msh->_type_elem[kelt][SolType2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi,nablaphi);
+	  (ml_prob._ml_msh->_type_elem[kelt][SolType2]->*(ml_prob._ml_msh->_type_elem[kelt][SolType2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat,nablaphi_hat);
 	  phi1=ml_prob._ml_msh->_type_elem[kelt][SolType1]->GetPhi(ig);
 	  if (flag_mat==2) {
 	    if(ig==0){
