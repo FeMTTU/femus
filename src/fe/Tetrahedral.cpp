@@ -24,12 +24,6 @@ namespace femus {
 
   //************************************************************
 
-  double tet0::eval_phi(const int *I,const double* x) const {
-    return 1;
-  }
-
-  //************************************************************
-
   double tet1::eval_phi(const int *I,const double* X) const {
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];

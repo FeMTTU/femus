@@ -22,14 +22,6 @@
 
 namespace femus {
 
-  //************************************************************
-
-  double line0::eval_phi(const int *I,const double* x) const {
-    return 1.;
-  }
-
-  //************************************************************
-
   double line1::eval_phi(const int *I,const double* x) const {
     return lag1(x[0],I[0]);
   }
