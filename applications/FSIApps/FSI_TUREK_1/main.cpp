@@ -37,10 +37,10 @@ int main(int argc,char **args) {
   
   const elem_type *_type_elem[6][5];
   
-//    _type_elem[0][0]=new const elem_type("hex","linear","fifth");
-//    _type_elem[0][1]=new const elem_type("hex","quadratic","fifth");
-//    _type_elem[0][2]=new const elem_type("hex","biquadratic","fifth");
-//    _type_elem[0][3]=new const elem_type("hex","constant","fifth");
+  _type_elem[0][0]=new const elem_type("hex","linear","fifth");
+  _type_elem[0][1]=new const elem_type("hex","quadratic","fifth");
+  _type_elem[0][2]=new const elem_type("hex","biquadratic","fifth");
+  _type_elem[0][3]=new const elem_type("hex","constant","fifth");
  //  _type_elem[0][4]=new const elem_type("hex","disc_linear","fifth");
     
     
@@ -49,7 +49,7 @@ int main(int argc,char **args) {
     _type_elem[1][2]=_type_elem[1][1];
     _type_elem[1][3]=new const elem_type("tet","constant","fifth");
     
-    exit(0);
+    //exit(0);
     
     _type_elem[2][0]=new const elem_type("wedge","linear","fifth");
     _type_elem[2][1]=new const elem_type("wedge","quadratic","fifth");
