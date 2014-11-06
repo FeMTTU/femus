@@ -357,6 +357,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
   vector< vector< int > > KK_dof(dim+1); 
   vector <double> phi2;
   vector <double> gradphi2;
+  vector <double> nablaphi2;
   const double *phi1;
   double Weight2;
   double normal[3];
@@ -371,7 +372,8 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
     coordinates[i].reserve(max_size);
   }
   phi2.reserve(max_size);
-  gradphi2.reserve(max_size*dim);	
+  gradphi2.reserve(max_size*dim);
+  nablaphi2.reserve(max_size*(3*(dim-1)));	
   for(int i=0;i<dim;i++) {
     KK_dof[i].reserve(max_size);
   }
@@ -410,6 +412,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
     node1.resize(nve1);
     phi2.resize(nve2);
     gradphi2.resize(nve2*dim);
+    nablaphi2.resize(nve2*(3*(dim-1)));
     for(int ivar=0; ivar<dim; ivar++) {
       coordinates[ivar].resize(nve2);
       KK_dof[ivar].resize(nve2);
@@ -459,7 +462,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
       // *** Gauss poit loop ***
       for(unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind_vel]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind_vel]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind_vel])->Jacobian_ptr)(coordinates,ig,Weight2,phi2,gradphi2);
+	(ml_prob._ml_msh->_type_elem[kelt][order_ind_vel]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind_vel])->Jacobian_ptr)(coordinates,ig,Weight2,phi2,gradphi2,nablaphi2);
 	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind_p]->GetPhi(ig);
 
 	double GradSolP[3] = {0.,0.,0.};
