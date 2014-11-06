@@ -73,19 +73,18 @@ IF(LIBMESH_FOUND)
 ENDIF(LIBMESH_FOUND)
 
 
-OPTION(BUILD_ADEPT "Build Adept for automatic differentiation library" ON)
-IF(BUILD_ADEPT)
-  #set(MAF_DEPENDENCIES ${MAF_DEPENDENCIES} PythonQt)
-  INCLUDE(${PROJECT_SOURCE_DIR}/ExternalLibraries/Adept/External_Adept.cmake)
-ENDIF(BUILD_ADEPT)
-
-
 # configure a header file to pass some of the CMake settings
 # to the source code
 CONFIGURE_FILE(
   "${PROJECT_SOURCE_DIR}/config/FEMTTUConfig.h.in"
   "${PROJECT_BINARY_DIR}/config/FEMTTUConfig.h" @ONLY IMMEDIATE
   )
+  
+#------------------------------------------------
+# options
+#-------------------------------------------------
+OPTION(BUILD_ADEPT "Build Adept for automatic differentiation library" ON)
+
 
 #-- Add an Option to toggle the generation of the API documentation
 OPTION(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
@@ -127,6 +126,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/fe)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/physics)
 INCLUDE_DIRECTORIES(${PROJECT_BINARY_DIR}/config)
 
+
 #include b64 include files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/ExternalLibraries/b64-1.4.2/include/)
 
@@ -137,6 +137,10 @@ INCLUDE_DIRECTORIES(ExternalLibraries/jsoncpp-src-0.5.0/include/)
 IF(FPARSER_FOUND)
   INCLUDE_DIRECTORIES(${FPARSER_INCLUDE_DIR})
 ENDIF(FPARSER_FOUND)
+
+IF(BUILD_ADEPT)
+  INCLUDE(${PROJECT_SOURCE_DIR}/ExternalLibraries/Adept/External_Adept.cmake)
+ENDIF(BUILD_ADEPT)
 
 # Build the femus library
 ADD_SUBDIRECTORY(src)
