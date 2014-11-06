@@ -750,26 +750,33 @@ namespace femus {
     // local objects
     vector<adept::adouble> SolVAR(2*dim+1);
     vector<vector<adept::adouble> > GradSolVAR(2*dim);
+    vector<vector<adept::adouble> > GradSolhatVAR(2*dim);
+    
+    vector<vector<adept::adouble> > NablaSolVAR(2*dim);
+    vector<vector<adept::adouble> > NablaSolhatVAR(2*dim);
+    
     for(int i=0;i<2*dim;i++){
       GradSolVAR[i].resize(dim);
-    }
-    vector<vector<adept::adouble> > GradSolhatVAR(dim);
-    for(int i=0;i<dim;i++){
       GradSolhatVAR[i].resize(dim);
+      
+      NablaSolVAR[i].resize(3*(dim-1));
+      NablaSolhatVAR[i].resize(3*(dim-1));
     }
+    
+ 
   
     vector <bool> solidmark;
     vector <double > phi_hat;
     vector <adept::adouble> gradphi;
-    vector <adept::adouble> nablaphi;
     vector <double> gradphi_hat;
+    vector <adept::adouble> nablaphi;
     vector <double> nablaphi_hat;
    
     solidmark.reserve(max_size);
     phi_hat.reserve(max_size);
     gradphi.reserve(max_size*dim);
-    nablaphi.reserve(max_size*3*(dim-1));
     gradphi_hat.reserve(max_size*dim);
+    nablaphi.reserve(max_size*3*(dim-1));
     nablaphi_hat.reserve(max_size*3*(dim-1));
     
     const double *phi;
@@ -916,8 +923,8 @@ namespace femus {
       solidmark.resize(nve);
       phi_hat.resize(nve);
       gradphi.resize(nve*dim);
-      nablaphi.resize(nve*3*(dim-1));
       gradphi_hat.resize(nve*dim);
+      nablaphi.resize(nve*3*(dim-1));
       nablaphi_hat.resize(nve*3*(dim-1));
         
       for(int i=0;i<dim;i++){
@@ -1045,18 +1052,22 @@ namespace femus {
 	    SolVAR[i]=0.;
 	    for(int j=0; j<dim; j++) {
 	      GradSolVAR[i][j]=0.;
-	      if(i<dim){
-		GradSolhatVAR[i][j]=0.;
-	      }
+	      GradSolhatVAR[i][j]=0.;
 	    }
-	    for (unsigned inode=0; inode<nve; inode++) {		
+	    for(int j=0; j<3*(dim-1); j++) {
+	      NablaSolVAR[i][j]=0.;
+	      NablaSolhatVAR[i][j]=0.;
+	    }
+	    for (unsigned inode=0; inode<nve; inode++) {
 	      SolVAR[i]+=phi[inode]*Soli[indexVAR[i]][inode];
 	      for(int j=0; j<dim; j++) {
 		GradSolVAR[i][j]+=gradphi[inode*dim+j]*Soli[indexVAR[i]][inode];
-		if(i<dim){ 
-		  GradSolhatVAR[i][j] += gradphi_hat[inode*dim+j]*Soli[indexVAR[i]][inode];
-		}
-	      }	      
+		GradSolhatVAR[i][j] += gradphi_hat[inode*dim+j]*Soli[indexVAR[i]][inode];
+	      }	 
+	      for(int j=0; j<3*(dim-1); j++) {
+		NablaSolVAR[i][j]+=nablaphi[inode*3*(dim-1)+j]*Soli[indexVAR[i]][inode];
+		NablaSolhatVAR[i][j]+=nablaphi_hat[inode*3*(dim-1)+j]*Soli[indexVAR[i]][inode];
+	      }
 	    }
 	  } 
 	  // pressure
