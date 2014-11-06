@@ -5,7 +5,7 @@
 SET(ADEPT_VERSION 1.0)
 SET(ADEPT_SOURCE_DIR ${PROJECT_SOURCE_DIR}/ExternalLibraries/Adept/adept-${ADEPT_VERSION})
 
-#look if there is a package for VTK
+#look if there is a package for adept
 IF (EXISTS "${ADEPT_SOURCE_DIR}")   
   MESSAGE(STATUS "ADEPT: Found ADEPT packages")
 ENDIF (EXISTS "${ADEPT_SOURCE_DIR}")

@@ -2,14 +2,22 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(femttu)
 
-# The FEMTTU library version number.
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake-modules")
+
+#############################################################################################
+### Femus library version
+#############################################################################################
+
 SET(FEMTTU_VERSION_MAJOR 1)
 SET(FEMTTU_VERSION_MINOR 0)
 SET(FEMTTU_BUILD_VERSION 0)
-SET(FEMTTU_VERSION
-    "${FEMTTU_MAJOR_VERSION}.${FEMTTU_MINOR_VERSION}.${FEMTTU_BUILD_VERSION}")
+SET(FEMTTU_VERSION "${FEMTTU_MAJOR_VERSION}.${FEMTTU_MINOR_VERSION}.${FEMTTU_BUILD_VERSION}")
 
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake-modules")
+
+
+#############################################################################################
+### Compilers
+#############################################################################################
 
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
 # and dump it in the cache along with proper documentation, otherwise set CMAKE_BUILD_TYPE
@@ -22,6 +30,12 @@ ELSE()
 options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
 ENDIF()
 
+
+
+#############################################################################################
+### Output libraries folder
+#############################################################################################
+
 # where to place output binaries
 SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib64/ CACHE INTERNAL
      "Single output directory for building all libraries.")
@@ -32,6 +46,12 @@ MARK_AS_ADVANCED (
   LIBRARY_OUTPUT_PATH 
   #EXECUTABLE_OUTPUT_PATH
 )
+
+
+
+#############################################################################################
+### Find packages
+#############################################################################################
 
 # Find Petsc Library 
 FIND_PACKAGE(PETSc REQUIRED)
@@ -73,21 +93,60 @@ IF(LIBMESH_FOUND)
 ENDIF(LIBMESH_FOUND)
 
 
+
+#############################################################################################
+### Configuration project file
+#############################################################################################
+
 # configure a header file to pass some of the CMake settings
 # to the source code
 CONFIGURE_FILE(
   "${PROJECT_SOURCE_DIR}/config/FEMTTUConfig.h.in"
   "${PROJECT_BINARY_DIR}/config/FEMTTUConfig.h" @ONLY IMMEDIATE
   )
-  
-#------------------------------------------------
-# options
-#-------------------------------------------------
-OPTION(BUILD_ADEPT "Build Adept for automatic differentiation library" ON)
 
+  
+  
+#############################################################################################
+### Build options
+#############################################################################################
+
+#-- build Adept package
+OPTION(BUILD_ADEPT "Build Adept for automatic differentiation library" ON)
 
 #-- Add an Option to toggle the generation of the API documentation
 OPTION(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
+
+# Ask the user which executable have to be built
+OPTION(BUILD_NAVIERSTOKESAPPS "Build the NavierStokes-line applications" ON)
+
+# Ask the user which executable have to be built
+OPTION(BUILD_FSIAPPS "Build the FSI applications" ON)
+
+# --
+OPTION(BUILD_GENCASE "Build the case generator" ON)
+
+# --
+OPTION(BUILD_MHDOPT "Build the MHD optimal control problem" ON)
+
+# --
+OPTION(BUILD_TEMPER "Build the temperature optimal control problem" ON)
+
+# --
+OPTION(BUILD_POISSON "Build the Poisson problem" ON)
+
+# --
+OPTION(BUILD_TEMPERATURE "Build the Temperature problem" ON)
+
+# --
+OPTION(BUILD_POISSON_AMR "Build the Poisson_AMR problem" ON)
+
+
+
+#############################################################################################
+### Build documentation (Doxygen)
+#############################################################################################
+
 if(BUILD_DOCUMENTATION)
   FIND_PACKAGE(Doxygen)
   if (NOT DOXYGEN_FOUND)
@@ -107,7 +166,12 @@ if(BUILD_DOCUMENTATION)
   # IF you do NOT want the documentation to be generated EVERY time you build the project
   # then leave out the 'ALL' keyword from the above command.
 endif()
- 
+
+
+
+#############################################################################################
+### Include files
+#############################################################################################
 
 # Include petsc files
 INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
@@ -126,7 +190,6 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/fe)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/physics)
 INCLUDE_DIRECTORIES(${PROJECT_BINARY_DIR}/config)
 
-
 #include b64 include files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/ExternalLibraries/b64-1.4.2/include/)
 
@@ -138,12 +201,11 @@ IF(FPARSER_FOUND)
   INCLUDE_DIRECTORIES(${FPARSER_INCLUDE_DIR})
 ENDIF(FPARSER_FOUND)
 
-IF(BUILD_ADEPT)
-  INCLUDE(${PROJECT_SOURCE_DIR}/ExternalLibraries/Adept/External_Adept.cmake)
-ENDIF(BUILD_ADEPT)
 
-# Build the femus library
-ADD_SUBDIRECTORY(src)
+
+#############################################################################################
+### Build femus and external libraries 
+#############################################################################################
 
 # Build the b64 library
 ADD_SUBDIRECTORY(ExternalLibraries/b64-1.4.2)
@@ -151,8 +213,16 @@ ADD_SUBDIRECTORY(ExternalLibraries/b64-1.4.2)
 # Build the jsoncpp library
 ADD_SUBDIRECTORY(ExternalLibraries/jsoncpp-src-0.5.0)
 
-# Ask the user which executable have to be built
-OPTION(BUILD_NAVIERSTOKESAPPS "Build the NavierStokes-line applications" ON)
+IF(BUILD_ADEPT)
+  INCLUDE(${PROJECT_SOURCE_DIR}/ExternalLibraries/Adept/External_Adept.cmake)
+ENDIF(BUILD_ADEPT)
+
+# Build the femus library
+ADD_SUBDIRECTORY(src)
+
+#############################################################################################
+### Build Applications 
+#############################################################################################
 
 IF(BUILD_NAVIERSTOKESAPPS)
   
@@ -191,8 +261,6 @@ IF(BUILD_NAVIERSTOKESAPPS)
  
 ENDIF(BUILD_NAVIERSTOKESAPPS)
 
-# Ask the user which executable have to be built
-OPTION(BUILD_FSIAPPS "Build the FSI applications" ON)
 
 IF(BUILD_FSIAPPS)
 
@@ -225,77 +293,11 @@ IF(BUILD_FSIAPPS)
 
 ENDIF(BUILD_FSIAPPS)
 
-# # Ask the user which executable have to be built
-# OPTION(BUILD_STEADYNAVIERSTOKES "Build the Steady NavierStokes application" ON)
-# 
-# # Build applications
-# IF(BUILD_STEADYNAVIERSTOKES)
-#        ADD_SUBDIRECTORY(applications/SteadyNavierStokesParallel)
-#     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/SteadyNavierStokesParallel/output/)
-#     FILE(MAKE_DIRECTORY applications/SteadyNavierStokesParallel/input/)
-#     FILE(COPY           applications/SteadyNavierStokesParallel/input/ DESTINATION 
-#   ${PROJECT_BINARY_DIR}/applications/SteadyNavierStokesParallel/input/)
-# ENDIF(BUILD_STEADYNAVIERSTOKES)  
-
-# OPTION(BUILD_TIMEDEPNAVIERSTOKES "Build the Time dependent NavierStokes application" ON)
-# 
-# IF(BUILD_TIMEDEPNAVIERSTOKES)
-#        ADD_SUBDIRECTORY(applications/BackwardEulerNavierStokesParallel/)
-#     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/BackwardEulerNavierStokesParallel/output/)
-#     FILE(MAKE_DIRECTORY applications/BackwardEulerNavierStokesParallel/input/)
-#     FILE(COPY           applications/BackwardEulerNavierStokesParallel/input/ DESTINATION 
-#   ${PROJECT_BINARY_DIR}/applications/BackwardEulerNavierStokesParallel/input/)
-# ENDIF(BUILD_TIMEDEPNAVIERSTOKES)   
-
-# OPTION(BUILD_TAYLORVORTEX "Build the Time dependent Taylor vortex application" ON)
-# 
-# IF(BUILD_TAYLORVORTEX)
-#        ADD_SUBDIRECTORY(applications/TaylorGreenVortexFlowGeneralisedalpha/)
-#     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/TaylorGreenVortexFlowGeneralisedalpha/output/)
-#     FILE(MAKE_DIRECTORY applications/TaylorGreenVortexFlowGeneralisedalpha/input/)
-#     FILE(COPY           applications/TaylorGreenVortexFlowGeneralisedalpha/input/ DESTINATION 
-#   ${PROJECT_BINARY_DIR}/applications/TaylorGreenVortexFlowGeneralisedalpha/input/)
-# ENDIF(BUILD_TAYLORVORTEX)   
-
-#OPTION(BUILD_FSI_CMS_NWM "Build the FSI COMSOL Benchmark" ON)
-
-#IF(BUILD_FSI_CMS_NWM)
-#       ADD_SUBDIRECTORY(applications/FSI_CMS_NWM/)
-#    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_CMS_NWM/output/)
-#    FILE(MAKE_DIRECTORY applications/FSI_CMS_NWM/input/)
-#    FILE(COPY           applications/FSI_CMS_NWM/input/ DESTINATION 
-#  ${PROJECT_BINARY_DIR}/applications/FSI_CMS_NWM/input/)
-#ENDIF(BUILD_FSI_CMS_NWM)
-
-#OPTION(BUILD_FSI_TUREK_1 "Build the FSI Turek 1 Benchmark" ON)
-
-#IF(BUILD_FSI_TUREK_1)
-#       ADD_SUBDIRECTORY(applications/FSI_TUREK_1/)
-#    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_1/output/)
-#    FILE(MAKE_DIRECTORY applications/FSI_TUREK_1/input/)
-#    FILE(COPY           applications/FSI_TUREK_1/input/ DESTINATION 
-#  ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_1/input/)
-#ENDIF(BUILD_FSI_TUREK_1)
-
-#OPTION(BUILD_GENCASE "Build the case generator" ON)
-
-#OPTION(BUILD_FSI_TUREK_3 "Build the FSI Turek 3 Benchmark" ON)
-
-#IF(BUILD_FSI_TUREK_3)
-#       ADD_SUBDIRECTORY(applications/FSI_TUREK_3/)
-#    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_3/output/)
-#    FILE(MAKE_DIRECTORY applications/FSI_TUREK_3/input/)
-#    FILE(COPY           applications/FSI_TUREK_3/input/ DESTINATION 
-#  ${PROJECT_BINARY_DIR}/applications/FSI_TUREK_3/input/)
-#ENDIF(BUILD_FSI_TUREK_3)
-
-OPTION(BUILD_GENCASE "Build the case generator" ON)
 
 IF(BUILD_GENCASE)
     ADD_SUBDIRECTORY(applications/gencase/)
 ENDIF(BUILD_GENCASE)
 
-OPTION(BUILD_MHDOPT "Build the MHD optimal control problem" ON)
 
 IF(BUILD_MHDOPT)
        ADD_SUBDIRECTORY(applications/mhdopt/)
@@ -303,7 +305,6 @@ IF(BUILD_MHDOPT)
     FILE(COPY applications/mhdopt/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/mhdopt/input/)
 ENDIF(BUILD_MHDOPT)
 
-OPTION(BUILD_TEMPER "Build the temperature optimal control problem" ON)
 
 IF(BUILD_TEMPER)
        ADD_SUBDIRECTORY(applications/temper/)
@@ -311,25 +312,6 @@ IF(BUILD_TEMPER)
     FILE(COPY applications/temper/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/temper/input/)
 ENDIF(BUILD_TEMPER)
 
-#OPTION(BUILD_FSIPOROUS "Build the fsi problem in a porous medium" ON)
-
-#IF(BUILD_FSIPOROUS)
-#       ADD_SUBDIRECTORY(applications/fsi_porous/)
-#    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/fsi_porous/output/)
-#    FILE(MAKE_DIRECTORY applications/fsi_porous/input/)
-#    FILE(COPY           applications/fsi_porous/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/fsi_porous/input/)
-#ENDIF(BUILD_FSIPOROUS)
-
-# OPTION(BUILD_STEADYSTOKES "Build the Steady Stokes" ON)
-
-# IF(BUILD_STEADYSTOKES)
-#        ADD_SUBDIRECTORY(applications/SteadyStokes/)
-#     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/SteadyStokes/output/)
-#     FILE(MAKE_DIRECTORY applications/SteadyStokes/input/)
-#     FILE(COPY           applications/SteadyStokes/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/SteadyStokes/input/)
-# ENDIF(BUILD_STEADYSTOKES)
-
-OPTION(BUILD_POISSON "Build the Poisson problem" ON)
 
 IF(BUILD_POISSON)
        ADD_SUBDIRECTORY(applications/Poisson/)
@@ -339,8 +321,6 @@ IF(BUILD_POISSON)
 ENDIF(BUILD_POISSON)
 
 
-OPTION(BUILD_TEMPERATURE "Build the Temperature problem" ON)
-
 IF(BUILD_TEMPERATURE)
        ADD_SUBDIRECTORY(applications/temperature/)
     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/temperature/output/)
@@ -348,7 +328,6 @@ IF(BUILD_TEMPERATURE)
     FILE(COPY           applications/temperature/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/temperature/input/)
 ENDIF(BUILD_TEMPERATURE)
 
-OPTION(BUILD_POISSON_AMR "Build the Poisson_AMR problem" ON)
 
 IF(BUILD_POISSON_AMR)
        ADD_SUBDIRECTORY(applications/Poisson_AMR/)
@@ -357,16 +336,11 @@ IF(BUILD_POISSON_AMR)
     FILE(COPY           applications/Poisson_AMR/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/Poisson_AMR/input/)
 ENDIF(BUILD_POISSON_AMR)
 
-# OPTION(BULID_NVR-STKS-TMP_AMR "Build the NavierStokes-Temp_AMR problem" ON)
-# 
-# IF(BULID_NVR-STKS-TMP_AMR)
-#        ADD_SUBDIRECTORY(applications/NavierStokesTemp_AMR/)
-#     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesTemp_AMR/output/)
-#     FILE(MAKE_DIRECTORY applications/NavierStokesTemp_AMR/input/)
-#     FILE(COPY           applications/NavierStokesTemp_AMR/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/NavierStokesTemp_AMR/input/)
-# ENDIF(BULID_NVR-STKS-TMP_AMR)
 
-## --------------- Unit tests -------------------
+
+#############################################################################################
+### Unit tests
+#############################################################################################
 
 INCLUDE(CTest)
 ENABLE_TESTING()
@@ -378,3 +352,6 @@ ADD_SUBDIRECTORY(unittests/testNSSteadyDD/)
 ADD_SUBDIRECTORY(unittests/testFSISteady/)
     FILE(MAKE_DIRECTORY unittests/testFSISteady/input/)
     FILE(COPY           unittests/testFSISteady/input/ DESTINATION  ${PROJECT_BINARY_DIR}/unittests/testFSISteady/input/)
+
+    
+    
