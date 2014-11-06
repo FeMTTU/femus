@@ -115,14 +115,14 @@ int main(int argc,char **args) {
     else{    
       cout << "wrong input arguments!\n";
       cout << "please specify the simulation you want to run, options are\n";
-      cout << "turek\nbeam\ndrum\nbathe_cylinder\nbathe_shell\n";
+      cout << "turek\nbeam\ndrum\nbathe_FSI\nbathe_cylinder\nbathe_shell\n";
       exit(0);
     }
   }
   else {   
     cout << "wrong input arguments!\n";
     cout << "please specify the simulation you want to run, options are\n";
-    cout << "turek\nbeam\nbathe_FSI\nbathe_shell\nbathe_cylinder\n";
+    cout << "turek\nbeam\ndrum\nbathe_FSI\nbathe_shell\nbathe_cylinder\n";
     exit(0);
   }
    
