@@ -456,6 +456,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   vector< vector< int > > KK_dof(dim+1); 
   vector <double> phi2;
   vector <double> gradphi2;
+  vector <double> nablaphi2;
   const double *phi1;
   double Weight2;
   double normal[3];
@@ -470,7 +471,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     coordinates[i].reserve(max_size);
   }
   phi2.reserve(max_size);
-  gradphi2.reserve(max_size*dim);	
+  gradphi2.reserve(max_size*dim);
+  nablaphi2.reserve(max_size*(3*(dim-1)));
   for(int i=0;i<dim;i++) {
     KK_dof[i].reserve(max_size);
   }
@@ -508,6 +510,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     metis_node2.resize(nve2);
     node1.resize(nve1);
     phi2.resize(nve2);
+    nablaphi2.resize(nve2*(3*(dim-1)));
     gradphi2.resize(nve2*dim);
     for(int ivar=0; ivar<dim; ivar++) {
       coordinates[ivar].resize(nve2);
@@ -564,7 +567,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       // *** Gauss poit loop ***
       for(unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(coordinates,ig,Weight2,phi2,gradphi2);
+	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(coordinates,ig,Weight2,phi2,gradphi2,nablaphi2);
 	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
 
 	//velocity variable
@@ -764,6 +767,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   vector< int > KK_dof;
   vector <double> phi;
   vector <double> gradphi;  
+  vector <double> nablaphi;
   double weight;
   vector< double > F;
   vector< double > B;
@@ -776,6 +780,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
     coordinates[i].reserve(max_size);
   phi.reserve(max_size);
   gradphi.reserve(max_size*dim);
+  nablaphi.reserve(max_size*(3*(dim-1)));
   F.reserve(max_size);
   B.reserve(max_size*max_size);
   
@@ -795,6 +800,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
     KK_dof.resize(nve);
     phi.resize(nve);
     gradphi.resize(nve*dim);	
+    nablaphi.resize(nve*(3*(dim-1)));
     for(int i=0;i<dim;i++){
       coordinates[i].resize(nve);
     }
@@ -822,7 +828,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
       // *** Gauss poit loop ***
       for(unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi);
+	(ml_prob._ml_msh->_type_elem[kelt][order_ind]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi,nablaphi);
 	//Temperature and velocity current solution
 	double SolT=0;
 	vector < double > gradSolT(dim,0.);

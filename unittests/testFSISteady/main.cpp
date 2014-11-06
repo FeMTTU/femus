@@ -391,6 +391,9 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   vector <double> gradphi;
   vector <double> gradphi_hat;
   
+  vector <double> nablaphi;
+  vector <double> nablaphi_hat;
+  
   metis_node1.reserve(max_size);
   metis_node2.reserve(max_size);
   solidmark.reserve(max_size);
@@ -398,6 +401,10 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   phi_hat.reserve(max_size);
   gradphi.reserve(max_size*dim);
   gradphi_hat.reserve(max_size*dim);
+  
+  
+  nablaphi.reserve(max_size*(3*(dim-1)) );
+  nablaphi_hat.reserve(max_size*(3*(dim-1)) );
   
   const double *phi1;
     
@@ -593,6 +600,8 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
     phi_hat.resize(nve);
     gradphi.resize(nve*dim);
     gradphi_hat.resize(nve*dim);
+    nablaphi.resize( nve*(3*(dim-1)) );
+    nablaphi_hat.resize( nve*(3*(dim-1)) );
         
     for(int i=0;i<dim;i++){
       vx[i].resize(nve);
@@ -634,8 +643,8 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
       for (unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
 
 	// *** get Jacobian and test function and test function derivatives in the moving frame***
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi);
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat);
+	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi,nablaphi);
+	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat,nablaphi_hat);
 	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
 	if (flag_mat==2) Weight_nojac = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
 

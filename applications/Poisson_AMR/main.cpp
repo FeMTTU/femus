@@ -569,6 +569,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     vector< int > KK_dof;
     vector <double> phi;
     vector <double> gradphi;
+    vector <double> nablaphi;
     double weight;
     vector< double > F;
     vector< double > B;
@@ -585,6 +586,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
         coordinates[i].reserve(max_size);
     phi.reserve(max_size);
     gradphi.reserve(max_size*dim);
+    nablaphi.reserve(max_size*( 3*(dim-1)+!(dim-1) ) );	
     F.reserve(max_size);
     B.reserve(max_size*max_size);
 
@@ -604,6 +606,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
         KK_dof.resize(nve);
         phi.resize(nve);
         gradphi.resize(nve*dim);
+	nablaphi.resize( nve*(3*(dim-1)+!(dim-1)) );	
         for(int i=0; i<dim; i++) {
             coordinates[i].resize(nve);
         }
@@ -631,7 +634,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
             // *** Gauss poit loop ***
             for(unsigned ig=0; ig < ml_prob._ml_msh->_type_elem[kelt][order_ind]->GetGaussPointNumber(); ig++) {
                 // *** get Jacobian and test function and test function derivatives ***
-                (ml_prob._ml_msh->_type_elem[kelt][order_ind]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi);
+                (ml_prob._ml_msh->_type_elem[kelt][order_ind]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi,nablaphi);
                 //current solution
                 double SolT=0;
                 vector < double > gradSolT(dim,0.);
@@ -803,6 +806,8 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
     
     vector <double> phi;
     vector <double> gradphi;
+    vector <double> nablaphi;
+    
     double weight;
     
     // reserve
@@ -812,6 +817,7 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
       coordinates[i].reserve(max_size);
     phi.reserve(max_size);
     gradphi.reserve(max_size*dim);
+    nablaphi.reserve(max_size*(3*(dim-1)+!(dim-1)) );	
         
     
     unsigned SolIndex;
@@ -829,6 +835,7 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
 	metis_node.resize(nve);
 	phi.resize(nve);
 	gradphi.resize(nve*dim);
+	nablaphi.resize( nve*(3*(dim-1)+!(dim-1)) );	
 	for(int i=0; i<dim; i++) {
 	  coordinates[i].resize(nve);
 	}
@@ -845,7 +852,7 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
 	
 	for(unsigned ig=0; ig < ml_sol._ml_msh->_type_elem[kelt][SolOrder]->GetGaussPointNumber(); ig++) {
           // *** get Jacobian and test function and test function derivatives ***
-          (ml_sol._ml_msh->_type_elem[kelt][SolOrder]->*(ml_sol._ml_msh->_type_elem[kelt][SolOrder])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi);
+          (ml_sol._ml_msh->_type_elem[kelt][SolOrder]->*(ml_sol._ml_msh->_type_elem[kelt][SolOrder])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi,nablaphi);
           //current solution
           double SolT=0;
           vector < double > gradSolT(dim,0.);
