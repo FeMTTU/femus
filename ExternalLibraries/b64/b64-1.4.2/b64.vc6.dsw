@@ -1,0 +1,134 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "b64.core"=.\projects\core\vc6\b64.core.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "example.c.1"=.\examples\c\example.c.1\vc6\example.c.1.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name b64.core
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "example.c.2"=.\examples\c\example.c.2\vc6\example.c.2.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name b64.core
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "example.cpp.1"=.\examples\cpp\example.cpp.1\vc6\example.cpp.1.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name b64.core
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "example.cpp.2"=.\examples\cpp\example.cpp.2\vc6\example.cpp.2.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name b64.core
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "test.scratch.c.1"=.\test\scratch\test.scratch.c.1\vc6\test.scratch.c.1.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name b64.core
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "test.unit.c.1"=.\test\unit\test.unit.c.1\vc6\test.unit.c.1.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name b64.core
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "test.unit.cpp.1"=.\test\unit\test.unit.cpp.1\vc6\test.unit.cpp.1.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name b64.core
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+

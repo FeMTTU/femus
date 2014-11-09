@@ -2,20 +2,5 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(TimedepNavierStokes)
 
-# Build the executable
-ADD_EXECUTABLE(backeuler ${CMAKE_PROJECT_DIR}main.cpp)
+femusMacroBuildApplication(NavierStokesApps/BackwardEulerNavierStokesParallel backeuler)
 
-# Link the executable to the petsc anf femttu libs
-TARGET_LINK_LIBRARIES(backeuler femus)
-TARGET_LINK_LIBRARIES(backeuler ${PETSC_LIBRARIES})
-TARGET_LINK_LIBRARIES(backeuler b64)
-TARGET_LINK_LIBRARIES(backeuler jsoncpp)
-TARGET_LINK_LIBRARIES(backeuler ${ADEPT_LIBRARIES})
-
-IF(FPARSER_FOUND)
-  TARGET_LINK_LIBRARIES(backeuler ${FPARSER_LIBRARY})
-ENDIF(FPARSER_FOUND)
-
-IF(MPI_FOUND)
-  TARGET_LINK_LIBRARIES(backeuler ${MPI_EXTRA_LIBRARY})
-ENDIF(MPI_FOUND)

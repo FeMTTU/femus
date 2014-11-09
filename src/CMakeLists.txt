@@ -2,6 +2,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(femus)
 
+#############################################################################################
+### Source files
+#############################################################################################
 
 SET(femus_src 
 algebra/AsmPetscLinearEquationSolver.cpp

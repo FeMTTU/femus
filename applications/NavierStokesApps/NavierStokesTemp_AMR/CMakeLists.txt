@@ -2,20 +2,6 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(NavierStokesTemp_AMR)
 
-# Build the executable
-ADD_EXECUTABLE(nst_amr ${CMAKE_PROJECT_DIR}main.cpp)
+femusMacroBuildApplication(NavierStokesApps/NavierStokesTemp_AMR nst_amr)
 
-# Link the executable to the petsc anf femttu libs
-TARGET_LINK_LIBRARIES(nst_amr femus)
-TARGET_LINK_LIBRARIES(nst_amr ${PETSC_LIBRARIES})
-TARGET_LINK_LIBRARIES(nst_amr b64)
-TARGET_LINK_LIBRARIES(nst_amr jsoncpp)
-TARGET_LINK_LIBRARIES(nst_amr ${ADEPT_LIBRARIES})
 
-IF(MPI_FOUND)
-  TARGET_LINK_LIBRARIES(nst_amr ${MPI_EXTRA_LIBRARY})
-ENDIF(MPI_FOUND)
-
-IF(FPARSER_FOUND)
-  TARGET_LINK_LIBRARIES(nst_amr ${FPARSER_LIBRARY})
-ENDIF(FPARSER_FOUND)

@@ -2,20 +2,5 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(stokes)
 
-# Build the executable
-ADD_EXECUTABLE(steadyst ${CMAKE_PROJECT_DIR}main.cpp)
+femusMacroBuildApplication(NavierStokesApps/SteadyStokes steadyst)
 
-# Link the executable to the petsc anf femttu libs
-TARGET_LINK_LIBRARIES(steadyst femus)
-TARGET_LINK_LIBRARIES(steadyst ${PETSC_LIBRARIES})
-TARGET_LINK_LIBRARIES(steadyst b64)
-TARGET_LINK_LIBRARIES(steadyst jsoncpp)
-TARGET_LINK_LIBRARIES(steadyst ${ADEPT_LIBRARIES})
-
-IF(FPARSER_FOUND)
-  TARGET_LINK_LIBRARIES(steadyst ${FPARSER_LIBRARY})
-ENDIF(FPARSER_FOUND)
-
-IF(MPI_FOUND)
-  TARGET_LINK_LIBRARIES(steadyst ${MPI_EXTRA_LIBRARY})
-ENDIF(MPI_FOUND)
