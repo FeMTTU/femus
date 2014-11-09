@@ -14,6 +14,18 @@
 
 #cmakedefine HAVE_HDF5
 
+//b64 library
+
+#cmakedefine HAVE_B64
+
+//jsoncpp library
+
+#cmakedefine HAVE_JSONCPP
+
+//adept library
+
+#cmakedefine HAVE_ADEPT
+
 //FParser library
 
 #cmakedefine HAVE_FPARSER

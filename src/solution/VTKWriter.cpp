@@ -19,7 +19,7 @@
 #include "VTKWriter.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
-#include <b64.h>
+#include <b64/b64.h>
 #include "iostream"
 #include <fstream>
 #include "string.h"
