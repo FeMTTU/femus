@@ -133,7 +133,7 @@
 # # echo $1
 # # done
 
-echo  "I am sourcing"
+echo  "Source script for setting the FEMuS environment"
 
 
 while getopts ":a" opt; do
@@ -176,10 +176,9 @@ fi
 
 ############# MACHINE DEPENDENT ###################
  FM_BASEPATH_TO_MPI=$EXTERNAL_BASEPATH    #NOW ALL THESE VARIABLES will APPEAR IN THE ENVIRONMENT... even if you don't put EXPORT... TODO see if i can improve this
- FM_MPI_FOLDER=openmpi-1.6.5
+ FM_MPI_FOLDER=petsc/$PETSC_ARCH
  FM_MPI_BIN=bin
  FM_MPI_LIB=lib64
- FM_MPI_MAN=share/man
 ############# END MACHINE DEPENDENT ###################
 
 
@@ -197,59 +196,6 @@ export LD_LIBRARY_PATH=$FM_MPI_DIR/$FM_MPI_LIB:$LD_LIBRARY_PATH
    # is this one really needed?!?
 ########################
 
-
-######## MAN PAGES  ###########
-export MANPATH=$FM_MPI_DIR/$FM_MPI_MAN:$MANPATH
-################################
-
-
-}
-
-
-##########################################
-##########################################
-##########################################
-# This function is only oriented to the FEMuS makefile
-function fm_set_hdf5() {
-
-echo "This function has to be updated"; return;
-
-############## MACHINE DEPENDENT ###################
-#HDF5
-#AAAA you may experience problems if you link against USER library 
-# but you include SYSTEM headers, or vice versa
-#the goal is to get both from the SAME part
-#system package
-# export FM_BASEPATH_TO_HDF5=/usr
-# export FM_HDF5_FOLDER=
-# export FM_HDF5_INCLUDE=include
-# export FM_HDF5_LIB=lib64
-#user package
-export FM_BASEPATH_TO_HDF5=
-export FM_HDF5_FOLDER=hdf5-1.8.12-linux-x86_64-shared
-#compiled version: hdf5-1.8.10-patch1/hdf5/
-export FM_HDF5_INCLUDE=include
-export FM_HDF5_LIB=lib
-#compiled version: lib64
-export FM_HDF5_BIN=bin
-############## END MACHINE DEPENDENT ###################
-
-export FM_HDF5_DIR=$FM_BASEPATH_TO_HDF5/$FM_HDF5_FOLDER
-export PATH=$FM_HDF5_DIR/$FM_HDF5_BIN:$PATH  
-# it seems like it doesnt find the includes, let us try adding LD_LIBRARY_PATH...
-export LD_LIBRARY_PATH=$FM_HDF5_DIR/$FM_HDF5_LIB:$LD_LIBRARY_PATH  
-export HDF5_ROOT=$FM_HDF5_DIR
-# AAA questo e' fondamentale per poter far trovare hdf5!!! senza questo lo script FindHDF5.cmake non trova le HDF5_INCLUDE_DIRS
-# if you dont set the PATH then he doesnt find HDF5_LIBRARIES HDF5_INCLUDE_DIRS; PATH is enough for finding the libraries,
-# so LD_LIBRARY_PATH doesnt seem to be needed in this case
-# If there are problems maybe it is the case to find some other FindHDF5.cmake on the web... then how would it be used?
-# Se pero' hdf5 e' di sistema, allora il concetto di HDF_ROOT non esiste!
-# HDF5_ROOT e' utile per cmake, PATH e LIBRARY PATH sono utili per TUTTO il SISTEMA
-# Usare l'hint era pero' qualcosa che volevo evitare se possibile... in modo che il sistema trovasse hdf5 automaticamente...
-# in realta' anche libmesh, per trovare i pacchetti ad esso esterni, a cui lui non contribuisce, ha bisogno di qualche hint.. 
-# tipo PETSC: dir e arch... Quindi alla fine ci sta dai...
-# Quello che magari non ci starebbe e' anche specificare i nomi delle cartelle include bin e lib... dovrebbe trovarsele da solo
-# una volta che ha il root... questo e' un primo obiettivo dell'usare Cmake.
 }
 
 
@@ -295,7 +241,7 @@ fi
 
 ############ MACHINE DEPENDENT ###################
        FM_BASEPATH_TO_PETSC=$EXTERNAL_BASEPATH
-       FM_PETSC_FOLDER=petsc-3.4.3
+       FM_PETSC_FOLDER=petsc
 export PETSC_ARCH=linux-$PETSC_METHOD
 ############ END MACHINE DEPENDENT ###################
 
