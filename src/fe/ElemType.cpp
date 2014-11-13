@@ -64,13 +64,6 @@ const double *GaussTriangle[5]= {
   GaussTriangle4[0]
 };
 
-const double *GaussCube[5]= {
-  GaussCube0[0],
-  GaussCube1[0],
-  GaussCube2[0],
-  GaussCube3[0],
-  GaussCube4[0]
-};
 
 const double *GaussWedge[5]= {
   GaussWedge0[0],
@@ -195,32 +188,8 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
     }
-//     //if (type_<15) {
-//       IND=new const int * [nc_];
-//       for (int i=0; i<nc_; i++)
-//         //IND[i]=HEX_IND[i];
-// 	IND[i]=pt_basis->getIND(i);
-//       KVERT_IND=new const int * [nf_];
-//       X=new const double * [nf_];
-//       for (int i=0; i<nf_; i++) {
-// //         KVERT_IND[i]=HEX_KVERT_IND[i];
-// //         X[i]=HEX_X[i];
-// 	KVERT_IND[i]=pt_basis->getKVERT_IND(i);
-//         X[i]=pt_basis->getX(i);
-//       }
-// //     } else {
-// //       IND=new const int * [nc_];
-// //       for (int i=0; i<nc_; i++)
-// //         IND[i]=HEX_IND0[i];
-// //       KVERT_IND=new const int * [nf_];
-// //       X=new const double * [nf_];
-// //       for (int i=0; i<nf_; i++) {
-// //         KVERT_IND[i]=HEX_KVERT_IND0[i];
-// //         X[i]=HEX_X0[i];
-// //       }
-// //     }
-    GaussWeight=GaussCube[gauss_order];
-    GaussPoints=GaussPointsCube[gauss_order];
+    GaussWeight=hex_gauss::Gauss[gauss_order];
+    GaussPoints=hex_gauss::GaussPoints[gauss_order];
   } else if (!strcmp(solid,"wedge")) { //WEDGE
          
     ncf_[0]=6;

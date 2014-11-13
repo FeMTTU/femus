@@ -2,7 +2,7 @@
 
   Program: FEMUS
   Module: basis
-  Authors: Eugenio Aulisa
+  Authors: Eugenio Aulisa, Giorgio Bornia
  
   Copyright (c) FEMTTU
   All rights reserved. 
@@ -135,7 +135,19 @@ namespace femus {
 
   //************************************************************
   
-  class hex_lag : public basis{
+  class hex_gauss {
+  public:
+    hex_gauss(){};
+    static const double *Gauss[5];  
+    static const double Gauss0[4][1];
+    static const double Gauss1[4][8];
+    static const double Gauss2[4][27];
+    static const double Gauss3[4][64];
+    static const double Gauss4[4][125];
+    static const unsigned GaussPoints[5];
+  };
+  
+  class hex_lag : public basis, hex_gauss {
   public:
     const double* getX(const int &i) const{return X[i];};
     const int* getIND(const int &i) const{return IND[i];};
@@ -206,7 +218,7 @@ namespace femus {
 
   //************************************************************
 
-  class hex_const : public basis{
+  class hex_const : public basis, hex_gauss{
   public:    
     const double* getX(const int &i) const{return X[i];};
     const int* getIND(const int &i) const{return IND[i];};
