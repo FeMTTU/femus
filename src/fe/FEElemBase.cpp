@@ -283,13 +283,13 @@ void FEElemBase::init_switch() {
       switch(_geomel->_geomel_type)  {
 
       case(QUADR): {  //QUADR-2D-QQ  ========
-        myelems[VV] = new elem_type("quad","biquadratic",gauss_ord.c_str()); //TODO valgrind
-        myelems[BB] = new elem_type("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        myelems[VV] = new elem_type_2D("quad","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        myelems[BB] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
         break;
       }
       case(TRIANG): {
-        myelems[VV] = new elem_type("tri","biquadratic",gauss_ord.c_str()); //TODO valgrind
-        myelems[BB] = new elem_type("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        myelems[VV] = new elem_type_2D("tri","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        myelems[BB] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
         break;
       }  //end TRIANG-2D-QQ  ======
 
@@ -303,14 +303,14 @@ void FEElemBase::init_switch() {
       switch(_geomel->_geomel_type)  {
 
       case(QUADR): {  //QUADR-3D-QQ
-        myelems[VV] = new elem_type("hex","biquadratic",gauss_ord.c_str());
-        myelems[BB] = new elem_type("quad","biquadratic",gauss_ord.c_str());
+        myelems[VV] = new elem_type_3D("hex","biquadratic",gauss_ord.c_str());
+        myelems[BB] = new elem_type_2D("quad","biquadratic",gauss_ord.c_str());
         break;
       } //end //QUADR-3D-QQ
 
       case(TRIANG): {  //TRIANG-3D-QQ
-        myelems[VV] = new elem_type("tet","biquadratic",gauss_ord.c_str());
-        myelems[BB] = new elem_type("tri","biquadratic",gauss_ord.c_str());
+        myelems[VV] = new elem_type_3D("tet","biquadratic",gauss_ord.c_str());
+        myelems[BB] = new elem_type_2D("tri","biquadratic",gauss_ord.c_str());
         break;
       }  //end TRIANG-3D-QQ
 
@@ -337,14 +337,14 @@ void FEElemBase::init_switch() {
     case(2): {
       switch(_geomel->_geomel_type)  {
       case(QUADR): {  //QUADR-2D-LL
-        myelems[VV] = new elem_type("quad","linear",gauss_ord.c_str());
-	myelems[BB] = new elem_type("line","linear",gauss_ord.c_str());
+        myelems[VV] = new elem_type_2D("quad","linear",gauss_ord.c_str());
+	myelems[BB] = new elem_type_1D("line","linear",gauss_ord.c_str());
         break;
       } //end //QUADR-2D-LL
 
       case(TRIANG): { //TRIANG-2D-LL
-        myelems[VV] = new elem_type("tri","linear",gauss_ord.c_str());
-	myelems[BB] = new elem_type("line","linear",gauss_ord.c_str());
+        myelems[VV] = new elem_type_2D("tri","linear",gauss_ord.c_str());
+	myelems[BB] = new elem_type_1D("line","linear",gauss_ord.c_str());
         break;
       }  //end TRIANG-2D-LL
 
@@ -354,14 +354,14 @@ void FEElemBase::init_switch() {
     case(3): {
       switch(_geomel->_geomel_type)  {
       case(QUADR): { //QUADR-3D-LL
-        myelems[VV] = new elem_type("hex","linear",gauss_ord.c_str());
-	myelems[BB] = new elem_type("quad","linear",gauss_ord.c_str());
+        myelems[VV] = new elem_type_3D("hex","linear",gauss_ord.c_str());
+	myelems[BB] = new elem_type_2D("quad","linear",gauss_ord.c_str());
         break;
       } //end //QUADR-3D-LL
 
       case(TRIANG): { //TRIANG-3D-LL
-        myelems[VV] = new elem_type("tet","linear",gauss_ord.c_str());
-	myelems[BB] = new elem_type("tri","linear",gauss_ord.c_str());
+        myelems[VV] = new elem_type_3D("tet","linear",gauss_ord.c_str());
+	myelems[BB] = new elem_type_2D("tri","linear",gauss_ord.c_str());
         break;
       }  //end //TRIANG-3D-LL
 
@@ -390,14 +390,14 @@ void FEElemBase::init_switch() {
       switch(_geomel->_geomel_type)  {
 
       case(QUADR): {  //QUADR-2D-KK
-        myelems[VV] = new elem_type("quad","constant",gauss_ord.c_str());
-	myelems[BB] = new elem_type("line","constant",gauss_ord.c_str());  
+        myelems[VV] = new elem_type_2D("quad","constant",gauss_ord.c_str());
+	myelems[BB] = new elem_type_1D("line","constant",gauss_ord.c_str());  
         break;
       } //end //QUADR-2D-KK
 
       case(TRIANG): { //TRIANG-2D-KK
-        myelems[VV] = new elem_type("tri","constant",gauss_ord.c_str());
-	myelems[BB] = new elem_type("line","constant",gauss_ord.c_str());
+        myelems[VV] = new elem_type_2D("tri","constant",gauss_ord.c_str());
+	myelems[BB] = new elem_type_1D("line","constant",gauss_ord.c_str());
         break;
       }  //end //TRIANG-2D-KK
 
@@ -408,14 +408,14 @@ void FEElemBase::init_switch() {
     case(3): {
       switch(_geomel->_geomel_type)  {
       case(QUADR): { //QUADR-3D-KK
-        myelems[VV] = new elem_type("hex","constant",gauss_ord.c_str());
-	myelems[BB] = new elem_type("quad","constant",gauss_ord.c_str());
+        myelems[VV] = new elem_type_3D("hex","constant",gauss_ord.c_str());
+	myelems[BB] = new elem_type_2D("quad","constant",gauss_ord.c_str());
         break;
       } //end  //QUADR-3D-KK
 
       case(TRIANG): {  //TRIANG-3D-KK
-      myelems[VV] = new elem_type("tet","constant",gauss_ord.c_str());
-      myelems[BB] = new elem_type("tri","constant",gauss_ord.c_str());
+      myelems[VV] = new elem_type_3D("tet","constant",gauss_ord.c_str());
+      myelems[BB] = new elem_type_2D("tri","constant",gauss_ord.c_str());
         break;
       }  //end //TRIANG-3D-KK
 

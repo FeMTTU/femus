@@ -40,6 +40,12 @@ namespace femus {
     virtual double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
     virtual double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
     virtual double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
+    
+    virtual const double* getX(const int &i) const{};
+    virtual const int* getIND(const int &i) const{};
+    virtual const int* getKVERT_IND(const int &i) const {};
+   
+    
   protected:  
     //1D basis
     // linear lagrangian
@@ -128,9 +134,33 @@ namespace femus {
   };
 
   //************************************************************
-
-
-  class hex1: public basis {
+  
+  class hex_lag : public basis{
+    public:
+    virtual void PrintType() const = 0 ;
+    virtual double eval_phi(const int *I,const double* x) const{ return 1.; };
+    virtual double eval_dphidx(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_dphidy(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+       
+    virtual double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
+    
+    const double* getX(const int &i) const{return HEX_X[i];};
+    const int* getIND(const int &i) const{return HEX_IND[i];};
+    const int* getKVERT_IND(const int &i) const {return HEX_KVERT_IND[i];};
+    
+    //hex const vectors
+    static const double HEX_X[125][3];
+    static const int HEX_IND[27][3];
+    static const int HEX_KVERT_IND[125][2];
+  };
+  
+  class hex1: public hex_lag {
   public:
     void PrintType() const { std::cout<<" hex1 ";};
     double eval_phi(const int *I,const double* x) const;
@@ -148,7 +178,7 @@ namespace femus {
 
   //************************************************************
 
-  class hexth: public basis {
+  class hexth: public hex_lag {
   
   public:
     void PrintType() const { std::cout<<" hexth ";};
@@ -168,7 +198,7 @@ namespace femus {
 
   //************************************************************
 
-  class hex2: public basis {
+  class hex2: public hex_lag {
   private:
   
   public:
@@ -494,7 +524,7 @@ namespace femus {
     void PrintType() const { std::cout<<" line0 ";};
   };
 
-} //end namespace femus
+}//end namespace femus
 
 
 #endif

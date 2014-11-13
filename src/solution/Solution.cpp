@@ -489,44 +489,44 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
     const elem_type *type_elem[6];
     if(dim==3){
       if(SolType==0){
-	type_elem[0]=new const elem_type("hex","linear","zero");
-	type_elem[1]=new const elem_type("tet","linear","zero");
-	type_elem[2]=new const elem_type("wedge","linear","zero");
+	type_elem[0]=new const elem_type_3D("hex","linear","zero");
+	type_elem[1]=new const elem_type_3D("tet","linear","zero");
+	type_elem[2]=new const elem_type_3D("wedge","linear","zero");
       }	 
       else if(SolType==1){
-	type_elem[0]=new const elem_type("hex","quadratic","zero");
-	type_elem[1]=new const elem_type("tet","quadratic","zero");
-	type_elem[2]=new const elem_type("wedge","quadratic","zero");
+	type_elem[0]=new const elem_type_3D("hex","quadratic","zero");
+	type_elem[1]=new const elem_type_3D("tet","quadratic","zero");
+	type_elem[2]=new const elem_type_3D("wedge","quadratic","zero");
       }	    
       else{
-	type_elem[0]=new const elem_type("hex","biquadratic","zero");
-	type_elem[1]=new const elem_type("tet","biquadratic","zero");
-	type_elem[2]=new const elem_type("wedge","biquadratic","zero");
+	type_elem[0]=new const elem_type_3D("hex","biquadratic","zero");
+	type_elem[1]=new const elem_type_3D("tet","biquadratic","zero");
+	type_elem[2]=new const elem_type_3D("wedge","biquadratic","zero");
       }
     }	
     else if(dim==2){
       if(SolType==0){
-	type_elem[3]=new const elem_type("quad","linear","zero");
-	type_elem[4]=new const elem_type("tri","linear","zero");
+	type_elem[3]=new const elem_type_2D("quad","linear","zero");
+	type_elem[4]=new const elem_type_2D("tri","linear","zero");
       }	 
       else if(SolType==1){
-	type_elem[3]=new const elem_type("quad","quadratic","zero");
-	type_elem[4]=new const elem_type("tri","quadratic","zero");
+	type_elem[3]=new const elem_type_2D("quad","quadratic","zero");
+	type_elem[4]=new const elem_type_2D("tri","quadratic","zero");
       }	    
       else{
-	type_elem[3]=new const elem_type("quad","biquadratic","zero");
-	type_elem[4]=new const elem_type("tri","biquadratic","zero");
+	type_elem[3]=new const elem_type_2D("quad","biquadratic","zero");
+	type_elem[4]=new const elem_type_2D("tri","biquadratic","zero");
       }
     }
     else if(dim==1){
       if(SolType==0){
-	type_elem[5]=new const elem_type("line","linear","zero");
+	type_elem[5]=new const elem_type_1D("line","linear","zero");
       }	 
       else if(SolType==1){
-	type_elem[5]=new const elem_type("line","quadratic","zero");
+	type_elem[5]=new const elem_type_1D("line","quadratic","zero");
       }	    
       else{
-	type_elem[5]=new const elem_type("line","biquadratic","zero");
+	type_elem[5]=new const elem_type_1D("line","biquadratic","zero");
       }
     }
     
@@ -595,7 +595,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
           coordinates[ivar][i]=(*_msh->_coordinate->_Sol[ivar])(inode_coord_metis);
         }
       }
-      (type_elem[kelt]->*(type_elem[kelt])->Jacobian_ptr)(coordinates,0,weight,phi,gradphi, nablaphi );
+      type_elem[kelt]->Jacobian(coordinates,0,weight,phi,gradphi, nablaphi );
 
       
       for(int i=0;i<nve;i++){

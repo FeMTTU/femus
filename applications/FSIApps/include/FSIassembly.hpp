@@ -320,9 +320,9 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
       for (unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
 
 	// *** get Jacobian and test function and test function derivatives in the moving frame***
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi,nablaphi);
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_old,ig,Weight_old,phi_old,gradphi_old,nablaphi);
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat,nablaphi);
+	ml_prob._ml_msh->_type_elem[kelt][order_ind2]->Jacobian(vx,ig,Weight,phi,gradphi,nablaphi);
+	ml_prob._ml_msh->_type_elem[kelt][order_ind2]->Jacobian(vx_old,ig,Weight_old,phi_old,gradphi_old,nablaphi);
+	ml_prob._ml_msh->_type_elem[kelt][order_ind2]->Jacobian(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat,nablaphi);
 	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
 	if (flag_mat==2) Weight_nojac = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
 

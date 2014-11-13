@@ -62,41 +62,19 @@ public:
   
   /** To be Added */
   void BuildProlongation(const mesh& mymesh, const int& iel, SparseMatrix* Projmat, const unsigned &itype) const;
-
-  /** To be Added */ 
-  void JacobianSur2D(const vector < vector < double > > &vt, const unsigned &ig,
-                     double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal)const;
-  /** To be Added */ 
-  void JacobianSur2D_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
-			adept::adouble &Weight, vector < adept::adouble > &gradphi, 
-			vector < adept::adouble > &normal) const;
-  /** To be Added */
-  void JacobianSur1D(const vector < vector < double > > &vt, const unsigned &ig,
-                     double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
-
-  /** To be Added */
-  void Jacobian3D(const vector < vector < double > > &vt,const unsigned &ig,
-                  double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi)const;
   
-  /** To be Added */
-  void Jacobian2D(const vector < vector < double > > &vt,const unsigned &ig,
-                  double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
-		  
-  /** To be Added */
-  void Jacobian2D_AD(adept::Stack &s, const vector < vector < adept::adouble > > &vt,const unsigned &ig,
-		     adept::adouble &Weight, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;	  
-		     
-  /** To be Added */
-  void Jacobian3D_AD(adept::Stack &s, const vector < vector < adept::adouble > > &vt,const unsigned &ig,
-		     adept::adouble &Weight, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;	 
-  /** To be Added */
-  void Jacobian1D(const vector < vector < double > > &vt,const unsigned &ig,
-                  double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
-
-  /** To be Added */
-  void JacobianSur1D_AD( const vector < vector < adept::adouble > > &vt, const unsigned &ig,
-			 adept::adouble &Weight, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const; 		  
-		  
+	
+  virtual void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
+			   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const = 0;			 
+			 
+  virtual void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
+			vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const = 0;
+			
+  virtual void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
+			      vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const = 0;
+			      
+  virtual void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
+			   vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const = 0;
   /** To be Added */
   double* GetPhi(const unsigned &ig) const;
   
@@ -125,19 +103,10 @@ public:
   
   // member data
   static unsigned _refindex;
- 
-  void (elem_type::*Jacobian_ptr)(const vector < vector < double > > &vt, const unsigned &ig,
-                                  double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
-  
-  void (elem_type::*Jacobian_AD_ptr)(adept::Stack &s, const vector < vector < adept::adouble > > &vt, const unsigned &ig,
-				     adept::adouble &Weight,  vector < adept::adouble > &gradphi, vector < adept::adouble > &nabla_phi) const;				  
 				  
   void (elem_type::*Jacobian_sur_ptr)(const vector < vector < double > > &vt, const unsigned &ig,
                                       double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
-      
-  void (elem_type::*Jacobian_sur_AD_ptr)(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
-					 adept::adouble &Weight, vector < adept::adouble > &gradphi, 
-					 vector < adept::adouble > &normal) const;
+
   void GetSparsityPatternSize(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc,  
 			      NumericVector* NNZ_d, NumericVector* NNZ_o,
 			      const unsigned &index_sol, const unsigned &kkindex_sol) const; 
@@ -145,7 +114,7 @@ public:
   					 
   void GetSparsityPatternSize(const mesh& mesh,const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned &itype) const;
 				      
-private:
+protected:
   
   // member data
   void test_prol_and_rest();
@@ -164,28 +133,7 @@ private:
   double* mem_prol_val;
   int * mem_prol_ind;
   basis *pt_basis;
-  hex0 hex_0;
-  hexpwl hex_pwl;
-  hex1 hex_1;
-  hexth hex_th;
-  hex2 hex_2;
-  wedge1 wedge_1;
-  wedgeth wedge_th;
-  wedge2 wedge_2;
-  tet0 tet_0;
-  tet1 tet_1;
-  tet2 tet_2;
-  quad0 quad_0;
-  quadpwl quad_pwl;
-  quad1 quad_1;
-  quadth quad_th;
-  quad2 quad_2;
-  tri0 tri_0;
-  tri1 tri_1;
-  tri2 tri_2;
-  line0 line_0;
-  line1 line_1;
-  line2 line_2;
+  
   const double *GaussWeight;
   unsigned GaussPoints;
   double **phi;
@@ -211,11 +159,69 @@ private:
   double **d2phidzetadxi;
   double *d2phidzetadxi_memory;
   
-  
-  
-  
   const double *weight;
 };
+
+
+class elem_type_1D : public elem_type {
+public:
+  /** constructor */
+  elem_type_1D(const char *solid,const char *order, const char* gauss_order):
+    elem_type(solid,order,gauss_order){};
+	
+  void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
+		   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;
+		   
+  void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
+		vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
+		
+  void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
+	              vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const;
+		      
+  void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
+	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
+};
+
+class elem_type_2D : public elem_type {
+public:
+  /** constructor */
+  elem_type_2D(const char *solid,const char *order, const char* gauss_order):
+	elem_type(solid,order,gauss_order){};
+	
+  void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
+		   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;	
+		   
+  void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
+		vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
+		
+  void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
+	              vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const;
+		      
+  void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
+	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
+};
+
+class elem_type_3D : public elem_type {
+public:
+  /** constructor */
+  elem_type_3D(const char *solid,const char *order, const char* gauss_order):
+	elem_type(solid,order,gauss_order){};
+	
+  void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
+		   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;
+		   
+  void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
+		vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
+		
+  void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
+	              vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const
+	              {};
+		      
+  void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
+	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const
+	           {};
+};
+
 
 
 } //end namespace femus

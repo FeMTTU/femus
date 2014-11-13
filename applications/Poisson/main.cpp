@@ -353,7 +353,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
             // *** Gauss point loop ***
             for(unsigned ig=0; ig < ml_prob._ml_msh->_type_elem[kelt][order_ind]->GetGaussPointNumber(); ig++) {
                 // *** get Jacobian and test function and test function derivatives ***
-                (ml_prob._ml_msh->_type_elem[kelt][order_ind]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi,nablaphi);
+                ml_prob._ml_msh->_type_elem[kelt][order_ind]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
                 //current solution
                 double SolT=0;
                 vector < double > gradSolT(dim,0.);

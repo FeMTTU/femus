@@ -542,7 +542,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       // *** Gauss poit loop ***
       for(unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind_vel]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind_vel]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind_vel])->Jacobian_ptr)(coordinates,ig,Weight2,phi2,gradphi2,nablaphi2);
+	ml_prob._ml_msh->_type_elem[kelt][order_ind_vel]->Jacobian(coordinates,ig,Weight2,phi2,gradphi2,nablaphi2);
 	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind_p]->GetPhi(ig);
 
 	double GradSolP[3] = {0.,0.,0.};
@@ -816,7 +816,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
       // *** Gauss poit loop ***
       for(unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi,nablaphi);
+	ml_prob._ml_msh->_type_elem[kelt][order_ind]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
 	//Temperature and velocity current solution
 	double SolT=0;
 	vector < double > gradSolT(dim,0.);

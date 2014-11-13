@@ -86,36 +86,36 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
     _level0[0]->ReadCoarseMesh(mesh_file, Lref,_type_elem_flag);
 
     if(_type_elem_flag[0]) {
-        _type_elem[0][0]=new const elem_type("hex","linear",GaussOrder);
-        _type_elem[0][1]=new const elem_type("hex","quadratic",GaussOrder);
-        _type_elem[0][2]=new const elem_type("hex","biquadratic",GaussOrder);
-        _type_elem[0][3]=new const elem_type("hex","constant",GaussOrder);
-        _type_elem[0][4]=new const elem_type("hex","disc_linear",GaussOrder);
+        _type_elem[0][0]=new const elem_type_3D("hex","linear",GaussOrder);
+        _type_elem[0][1]=new const elem_type_3D("hex","quadratic",GaussOrder);
+        _type_elem[0][2]=new const elem_type_3D("hex","biquadratic",GaussOrder);
+        _type_elem[0][3]=new const elem_type_3D("hex","constant",GaussOrder);
+        _type_elem[0][4]=new const elem_type_3D("hex","disc_linear",GaussOrder);
     }
     if(_type_elem_flag[1]) {
-        _type_elem[1][0]=new const elem_type("tet","linear",GaussOrder);
-        _type_elem[1][1]=new const elem_type("tet","biquadratic",GaussOrder);
+        _type_elem[1][0]=new const elem_type_3D("tet","linear",GaussOrder);
+        _type_elem[1][1]=new const elem_type_3D("tet","biquadratic",GaussOrder);
         _type_elem[1][2]=_type_elem[1][1];
     }
     if(_type_elem_flag[2]) {
-        _type_elem[2][0]=new const elem_type("wedge","linear",GaussOrder);
-        _type_elem[2][1]=new const elem_type("wedge","quadratic",GaussOrder);
-        _type_elem[2][2]=new const elem_type("wedge","biquadratic",GaussOrder);
+        _type_elem[2][0]=new const elem_type_3D("wedge","linear",GaussOrder);
+        _type_elem[2][1]=new const elem_type_3D("wedge","quadratic",GaussOrder);
+        _type_elem[2][2]=new const elem_type_3D("wedge","biquadratic",GaussOrder);
     }
     if(_type_elem_flag[3]) {
-        _type_elem[3][0]=new const elem_type("quad","linear",GaussOrder);
-        _type_elem[3][1]=new const elem_type("quad","quadratic",GaussOrder);
-        _type_elem[3][2]=new const elem_type("quad","biquadratic",GaussOrder);
-        _type_elem[3][3]=new const elem_type("quad","constant",GaussOrder);
-        _type_elem[3][4]=new const elem_type("quad","disc_linear",GaussOrder);
+        _type_elem[3][0]=new const elem_type_2D("quad","linear",GaussOrder);
+        _type_elem[3][1]=new const elem_type_2D("quad","quadratic",GaussOrder);
+        _type_elem[3][2]=new const elem_type_2D("quad","biquadratic",GaussOrder);
+        _type_elem[3][3]=new const elem_type_2D("quad","constant",GaussOrder);
+        _type_elem[3][4]=new const elem_type_2D("quad","disc_linear",GaussOrder);
     }
     if(_type_elem_flag[4]) {
-        _type_elem[4][0]=new const elem_type("tri","linear",GaussOrder);
-        _type_elem[4][1]=new const elem_type("tri","biquadratic",GaussOrder);
+        _type_elem[4][0]=new const elem_type_2D("tri","linear",GaussOrder);
+        _type_elem[4][1]=new const elem_type_2D("tri","biquadratic",GaussOrder);
         _type_elem[4][2]=_type_elem[4][1];
     }
-    _type_elem[5][0]=new const elem_type("line","linear",GaussOrder);
-    _type_elem[5][1]=new const elem_type("line","biquadratic",GaussOrder);
+    _type_elem[5][0]=new const elem_type_1D("line","linear",GaussOrder);
+    _type_elem[5][1]=new const elem_type_1D("line","biquadratic",GaussOrder);
     _type_elem[5][2]=_type_elem[5][1];
 
     //totally refined meshes
@@ -172,36 +172,36 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
     _level0[0]->ReadCoarseMesh(mesh_file, Lref,_type_elem_flag);
 
     if(_type_elem_flag[0]) {
-        _type_elem[0][0]=new const elem_type("hex","linear",GaussOrder);
-        _type_elem[0][1]=new const elem_type("hex","quadratic",GaussOrder);
-        _type_elem[0][2]=new const elem_type("hex","biquadratic",GaussOrder);
-        _type_elem[0][3]=new const elem_type("hex","constant",GaussOrder);
-        _type_elem[0][4]=new const elem_type("hex","disc_linear",GaussOrder);
+        _type_elem[0][0]=new const elem_type_3D("hex","linear",GaussOrder);
+        _type_elem[0][1]=new const elem_type_3D("hex","quadratic",GaussOrder);
+        _type_elem[0][2]=new const elem_type_3D("hex","biquadratic",GaussOrder);
+        _type_elem[0][3]=new const elem_type_3D("hex","constant",GaussOrder);
+        _type_elem[0][4]=new const elem_type_3D("hex","disc_linear",GaussOrder);
     }
     if(_type_elem_flag[1]) {
-        _type_elem[1][0]=new const elem_type("tet","linear",GaussOrder);
-        _type_elem[1][1]=new const elem_type("tet","biquadratic",GaussOrder);
+        _type_elem[1][0]=new const elem_type_3D("tet","linear",GaussOrder);
+        _type_elem[1][1]=new const elem_type_3D("tet","biquadratic",GaussOrder);
         _type_elem[1][2]=_type_elem[1][1];
     }
     if(_type_elem_flag[2]) {
-        _type_elem[2][0]=new const elem_type("wedge","linear",GaussOrder);
-        _type_elem[2][1]=new const elem_type("wedge","quadratic",GaussOrder);
-        _type_elem[2][2]=new const elem_type("wedge","biquadratic",GaussOrder);
+        _type_elem[2][0]=new const elem_type_3D("wedge","linear",GaussOrder);
+        _type_elem[2][1]=new const elem_type_3D("wedge","quadratic",GaussOrder);
+        _type_elem[2][2]=new const elem_type_3D("wedge","biquadratic",GaussOrder);
     }
     if(_type_elem_flag[3]) {
-        _type_elem[3][0]=new const elem_type("quad","linear",GaussOrder);
-        _type_elem[3][1]=new const elem_type("quad","quadratic",GaussOrder);
-        _type_elem[3][2]=new const elem_type("quad","biquadratic",GaussOrder);
-        _type_elem[3][3]=new const elem_type("quad","constant",GaussOrder);
-        _type_elem[3][4]=new const elem_type("quad","disc_linear",GaussOrder);
+        _type_elem[3][0]=new const elem_type_2D("quad","linear",GaussOrder);
+        _type_elem[3][1]=new const elem_type_2D("quad","quadratic",GaussOrder);
+        _type_elem[3][2]=new const elem_type_2D("quad","biquadratic",GaussOrder);
+        _type_elem[3][3]=new const elem_type_2D("quad","constant",GaussOrder);
+        _type_elem[3][4]=new const elem_type_2D("quad","disc_linear",GaussOrder);
     }
     if(_type_elem_flag[4]) {
-        _type_elem[4][0]=new const elem_type("tri","linear",GaussOrder);
-        _type_elem[4][1]=new const elem_type("tri","biquadratic",GaussOrder);
+        _type_elem[4][0]=new const elem_type_2D("tri","linear",GaussOrder);
+        _type_elem[4][1]=new const elem_type_2D("tri","biquadratic",GaussOrder);
         _type_elem[4][2]=_type_elem[4][1];
     }
-    _type_elem[5][0]=new const elem_type("line","linear",GaussOrder);
-    _type_elem[5][1]=new const elem_type("line","biquadratic",GaussOrder);
+    _type_elem[5][0]=new const elem_type_1D("line","linear",GaussOrder);
+    _type_elem[5][1]=new const elem_type_1D("line","biquadratic",GaussOrder);
     _type_elem[5][2]=_type_elem[5][1];
 
     _gridn=_gridn0;
@@ -233,36 +233,36 @@ void MultiLevelMesh::BuildBrickCoarseMesh( const unsigned int nx,
     _level0[0]->BuildBrick(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_type_elem_flag);
 
     if(_type_elem_flag[0]) {
-        _type_elem[0][0]=new const elem_type("hex","linear",GaussOrder);
-        _type_elem[0][1]=new const elem_type("hex","quadratic",GaussOrder);
-        _type_elem[0][2]=new const elem_type("hex","biquadratic",GaussOrder);
-        _type_elem[0][3]=new const elem_type("hex","constant",GaussOrder);
-        _type_elem[0][4]=new const elem_type("hex","disc_linear",GaussOrder);
+        _type_elem[0][0]=new const elem_type_3D("hex","linear",GaussOrder);
+        _type_elem[0][1]=new const elem_type_3D("hex","quadratic",GaussOrder);
+        _type_elem[0][2]=new const elem_type_3D("hex","biquadratic",GaussOrder);
+        _type_elem[0][3]=new const elem_type_3D("hex","constant",GaussOrder);
+        _type_elem[0][4]=new const elem_type_3D("hex","disc_linear",GaussOrder);
     }
     if(_type_elem_flag[1]) {
-        _type_elem[1][0]=new const elem_type("tet","linear",GaussOrder);
-        _type_elem[1][1]=new const elem_type("tet","biquadratic",GaussOrder);
+        _type_elem[1][0]=new const elem_type_3D("tet","linear",GaussOrder);
+        _type_elem[1][1]=new const elem_type_3D("tet","biquadratic",GaussOrder);
         _type_elem[1][2]=_type_elem[1][1];
     }
     if(_type_elem_flag[2]) {
-        _type_elem[2][0]=new const elem_type("wedge","linear",GaussOrder);
-        _type_elem[2][1]=new const elem_type("wedge","quadratic",GaussOrder);
-        _type_elem[2][2]=new const elem_type("wedge","biquadratic",GaussOrder);
+        _type_elem[2][0]=new const elem_type_3D("wedge","linear",GaussOrder);
+        _type_elem[2][1]=new const elem_type_3D("wedge","quadratic",GaussOrder);
+        _type_elem[2][2]=new const elem_type_3D("wedge","biquadratic",GaussOrder);
     }
     if(_type_elem_flag[3]) {
-        _type_elem[3][0]=new const elem_type("quad","linear",GaussOrder);
-        _type_elem[3][1]=new const elem_type("quad","quadratic",GaussOrder);
-        _type_elem[3][2]=new const elem_type("quad","biquadratic",GaussOrder);
-        _type_elem[3][3]=new const elem_type("quad","constant",GaussOrder);
-        _type_elem[3][4]=new const elem_type("quad","disc_linear",GaussOrder);
+        _type_elem[3][0]=new const elem_type_2D("quad","linear",GaussOrder);
+        _type_elem[3][1]=new const elem_type_2D("quad","quadratic",GaussOrder);
+        _type_elem[3][2]=new const elem_type_2D("quad","biquadratic",GaussOrder);
+        _type_elem[3][3]=new const elem_type_2D("quad","constant",GaussOrder);
+        _type_elem[3][4]=new const elem_type_2D("quad","disc_linear",GaussOrder);
     }
     if(_type_elem_flag[4]) {
-        _type_elem[4][0]=new const elem_type("tri","linear",GaussOrder);
-        _type_elem[4][1]=new const elem_type("tri","biquadratic",GaussOrder);
+        _type_elem[4][0]=new const elem_type_2D("tri","linear",GaussOrder);
+        _type_elem[4][1]=new const elem_type_2D("tri","biquadratic",GaussOrder);
         _type_elem[4][2]=_type_elem[4][1];
     }
-    _type_elem[5][0]=new const elem_type("line","linear",GaussOrder);
-    _type_elem[5][1]=new const elem_type("line","biquadratic",GaussOrder);
+    _type_elem[5][0]=new const elem_type_1D("line","linear",GaussOrder);
+    _type_elem[5][1]=new const elem_type_1D("line","biquadratic",GaussOrder);
     _type_elem[5][2]=_type_elem[5][1];
 
     _gridn=_gridn0;
