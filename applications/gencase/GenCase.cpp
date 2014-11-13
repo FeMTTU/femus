@@ -27,6 +27,8 @@
 #include "libmesh/elem.h"
 #include "libmesh/mesh_generation.h"
 #include "libmesh/boundary_info.h"
+
+using namespace libMesh;
 #endif
 
 
