@@ -230,11 +230,6 @@ PETSC_METHOD=$4
 
 echo "The method for petsc is " $PETSC_METHOD
 
-
-#First you have to set mpi
-fm_set_mpi --prefix-basepath $EXTERNAL_BASEPATH
-
-
 if [ "$PETSC_METHOD" != "opt" ] &&  [ "$PETSC_METHOD" != "dbg" ] ; then
   echo "Petsc method not supported";  return;
 fi
@@ -246,6 +241,10 @@ export PETSC_ARCH=linux-$PETSC_METHOD
 ############ END MACHINE DEPENDENT ###################
 
 export PETSC_DIR=$FM_BASEPATH_TO_PETSC/$FM_PETSC_FOLDER
+
+# set mpi
+fm_set_mpi --prefix-basepath $EXTERNAL_BASEPATH
+
 
 
 }
