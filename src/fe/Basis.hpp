@@ -29,21 +29,21 @@ namespace femus {
   class basis {
   public:
     virtual void PrintType() const = 0 ;
-    virtual double eval_phi(const int *I,const double* x) const{ return 1.; };
-    virtual double eval_dphidx(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_dphidy(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_phi(const int *I,const double* x) const = 0;
+    virtual double eval_dphidx(const int *I,const double* x) const = 0;
+    virtual double eval_dphidy(const int *I,const double* x) const = 0;
+    virtual double eval_dphidz(const int *I,const double* x) const = 0;
        
-    virtual double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
+    virtual double eval_d2phidx2(const int *I,const double* x) const = 0;
+    virtual double eval_d2phidy2(const int *I,const double* x) const = 0;
+    virtual double eval_d2phidz2(const int *I,const double* x) const = 0;
+    virtual double eval_d2phidxdy(const int *I,const double* x) const = 0;
+    virtual double eval_d2phidydz(const int *I,const double* x) const = 0;
+    virtual double eval_d2phidzdx(const int *I,const double* x) const = 0;
     
-    virtual const double* getX(const int &i) const{};
-    virtual const int* getIND(const int &i) const{};
-    virtual const int* getKVERT_IND(const int &i) const {};
+    virtual const double* getX(const int &i) const = 0;
+    virtual const int* getIND(const int &i) const = 0;
+    virtual const int* getKVERT_IND(const int &i) const = 0;
    
     
   protected:  
@@ -136,28 +136,15 @@ namespace femus {
   //************************************************************
   
   class hex_lag : public basis{
-    public:
-    virtual void PrintType() const = 0 ;
-    virtual double eval_phi(const int *I,const double* x) const{ return 1.; };
-    virtual double eval_dphidx(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_dphidy(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_dphidz(const int *I,const double* x) const{ return 0.; };
-       
-    virtual double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    virtual double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
+  public:
+    const double* getX(const int &i) const{return X[i];};
+    const int* getIND(const int &i) const{return IND[i];};
+    const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
-    const double* getX(const int &i) const{return HEX_X[i];};
-    const int* getIND(const int &i) const{return HEX_IND[i];};
-    const int* getKVERT_IND(const int &i) const {return HEX_KVERT_IND[i];};
-    
-    //hex const vectors
-    static const double HEX_X[125][3];
-    static const int HEX_IND[27][3];
-    static const int HEX_KVERT_IND[125][2];
+  protected: 
+    static const double X[125][3];
+    static const int IND[27][3];
+    static const int KVERT_IND[125][2];
   };
   
   class hex1: public hex_lag {
@@ -219,14 +206,38 @@ namespace femus {
 
   //************************************************************
 
-  class hex0: public basis {
+  class hex_const : public basis{
+  public:    
+    const double* getX(const int &i) const{return X[i];};
+    const int* getIND(const int &i) const{return IND[i];};
+    const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
+    
+  protected: 
+    static const double X[32][3];
+    static const int IND[4][3];
+    static const int KVERT_IND[32][2];
+  };
+  
+  
+  class hex0: public hex_const {
   public:
     void PrintType() const { std::cout<<" hex0 ";};
+    double eval_phi(const int *I,const double* x) const{ return 1.; };
+    double eval_dphidx(const int *I,const double* x) const{ return 0.; };
+    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
+    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+    
+    double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   };
 
   //******************************************************************************
 
-  class hexpwl: public basis {
+  class hexpwl: public hex_const {
   public:
     void PrintType() const { std::cout<<" hexpwl ";};
     double eval_phi(const int *I,const double* x) const;
@@ -244,9 +255,20 @@ namespace femus {
   };
 
   //************************************************************
+  
+  class wedge_lag : public basis{
+  public:
+    const double* getX(const int &i) const{return X[i];};
+    const int* getIND(const int &i) const{return IND[i];};
+    const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
+    
+  protected: 
+    static const double X[75][3];
+    static const int IND[18][3];
+    static const int KVERT_IND[75][2];
+  };
 
-
-  class wedge1: public basis {
+  class wedge1: public wedge_lag {
   public:
     void PrintType() const { std::cout<<" wedge1 ";};
     double eval_phi(const int *I,const double* x) const;
@@ -265,7 +287,7 @@ namespace femus {
 
   //************************************************************
 
-  class wedgeth: public basis {
+  class wedgeth: public wedge_lag {
   public:
     void PrintType() const { std::cout<<" wedgeth ";};
     double eval_phi(const int *I,const double* x) const;
@@ -284,7 +306,7 @@ namespace femus {
 
   //************************************************************
 
-  class wedge2: public basis {
+  class wedge2: public wedge_lag {
   
   public:
     void PrintType() const { std::cout<<" wedge2 ";};
@@ -304,13 +326,43 @@ namespace femus {
 
   class wedge0: public basis {
   public:
+    double eval_phi(const int *I,const double* x) const{ return 1.; };
+    double eval_dphidx(const int *I,const double* x) const{ return 0.; };
+    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
+    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+    
+    double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
+    
     void PrintType() const { std::cout<<" wedge0 ";};
+    const double* getX(const int &i) const{std::cout<<"Abort in Wedge0\n"; abort();};
+    const int* getIND(const int &i) const{std::cout<<"Abort in Wedge0\n"; abort();};
+    const int* getKVERT_IND(const int &i) const {std::cout<<"Abort in Wedge0\n"; abort();};
   };
   
   
   //************************************************************
 
-  class tet1: public basis {
+  class tet_lag : public basis{
+  
+  public:
+    const double* getX(const int &i) const{return X[i];};
+    const int* getIND(const int &i) const{return IND[i];};
+    const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
+  
+  protected: 
+    static const double X[35][3];
+    static const int IND[10][3];
+    static const int KVERT_IND[35][2];
+  };
+  
+  
+  
+  class tet1: public tet_lag {
   public:
     void PrintType() const { std::cout<<" tet1 ";};
     double eval_phi(const int *I,const double* x) const;
@@ -328,7 +380,7 @@ namespace femus {
 
   //************************************************************
 
-  class tet2: public basis {
+  class tet2: public tet_lag {
 
   public:
     void PrintType() const { std::cout<<" tet2 ";};
@@ -350,11 +402,42 @@ namespace femus {
   class tet0: public basis {
   public:
     void PrintType() const { std::cout<<" tet0 ";};
+    
+    double eval_phi(const int *I,const double* x) const{ return 1.; };
+    double eval_dphidx(const int *I,const double* x) const{ return 0.; };
+    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
+    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+    
+    double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
+    
+    
+    const double* getX(const int &i) const{std::cout<<"Abort in tet0\n"; abort();};
+    const int* getIND(const int &i) const{std::cout<<"Abort in tet0\n"; abort();};
+    const int* getKVERT_IND(const int &i) const {std::cout<<"Abort in tet0\n"; abort();};
   };
 
   //************************************************************
 
-  class quad1: public basis {
+  class quad_lag : public basis{
+  public:
+    const double* getX(const int &i) const{return X[i];};
+    const int* getIND(const int &i) const{return IND[i];};
+    const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
+    
+  protected: 
+    static const double X[25][3];
+    static const int IND[9][3];
+    static const int KVERT_IND[25][2];
+    
+  };
+  
+  
+  class quad1: public quad_lag {
   public:
     void PrintType() const { std::cout<<" quad1 ";};
     double eval_phi(const int *I,const double* x) const;
@@ -372,7 +455,7 @@ namespace femus {
 
   //************************************************************
 
-  class quadth: public basis {
+  class quadth: public quad_lag {
   private:
     double th2(const double& x,  const int& i) const;
     double dth2(const double& x,  const int& i) const;
@@ -394,7 +477,7 @@ namespace femus {
 
   //************************************************************
 
-  class quad2: public basis {
+  class quad2: public quad_lag {
   public:
     void PrintType() const { std::cout<<" quad2 ";};
     double eval_phi(const int *I,const double* x) const;
@@ -413,14 +496,41 @@ namespace femus {
 
   //******************************************************************************
 
-  class quad0: public basis {
+  class quad_const : public basis{
+  
+  public:
+    const double* getX(const int &i) const{return X[i];};
+    const int* getIND(const int &i) const{return IND[i];};
+    const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
+  
+  protected: 
+    static const double X[12][3];
+    static const int IND[3][3];
+    static const int KVERT_IND[12][2];
+  };
+  
+  
+  class quad0: public quad_const {
   public:
     void PrintType() const { std::cout<<" quad0 ";};
+    
+    double eval_phi(const int *I,const double* x) const{ return 1.; };
+    double eval_dphidx(const int *I,const double* x) const{ return 0.; };
+    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
+    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+    
+    double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
+    
   };
 
   //******************************************************************************
 
-  class quadpwl: public basis {
+  class quadpwl: public quad_const {
   public:
     void PrintType() const { std::cout<<" quadpwl ";};
     double eval_phi(const int *I,const double* x) const;
@@ -438,7 +548,21 @@ namespace femus {
 
   //************************************************************
 
-  class tri1: public basis {
+  class tri_lag : public basis{
+  
+  public:    
+    const double* getX(const int &i) const{return X[i];};
+    const int* getIND(const int &i) const{return IND[i];};
+    const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
+    
+  protected:
+    static const double X[15][3];
+    static const int IND[6][3];
+    static const int KVERT_IND[15][2];
+  };
+  
+  
+  class tri1: public tri_lag {
   public:
     void PrintType() const { std::cout<<" tri1 ";};
     double eval_phi(const int *I,const double* x) const;
@@ -456,7 +580,7 @@ namespace femus {
 
   //************************************************************
 
-  class tri2: public basis {
+  class tri2: public tri_lag {
   public:
     void PrintType() const { std::cout<<" tri2 ";};
     double eval_phi(const int *I,const double* x) const;
@@ -479,11 +603,40 @@ namespace femus {
   class tri0: public basis {
   public:
     void PrintType() const { std::cout<<" tri0 ";};
+    
+    double eval_phi(const int *I,const double* x) const{ return 1.; };
+    double eval_dphidx(const int *I,const double* x) const{ return 0.; };
+    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
+    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+    
+    double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
+        
+    const double* getX(const int &i) const{std::cout<<"Abort in tri0\n"; abort();};
+    const int* getIND(const int &i) const{std::cout<<"Abort in tri0\n"; abort();};
+    const int* getKVERT_IND(const int &i) const {std::cout<<"Abort in tri0\n"; abort();};
   };
 
   //************************************************************
 
-  class line1: public basis {
+  class line_lag : public basis{
+  
+  public:
+    const double* getX(const int &i) const{return X[i];};
+    const int* getIND(const int &i) const{return IND[i];};
+    const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
+    
+  protected:
+    static const double X[5][3];
+    static const int IND[3][3];
+    static const int KVERT_IND[5][2];
+  };
+  
+  class line1: public line_lag {
   public:
     void PrintType() const { std::cout<<" line1 ";};
     double eval_phi(const int *I,const double* x) const;
@@ -501,7 +654,7 @@ namespace femus {
   };
 
   //************************************************************
-  class line2: public basis {
+  class line2: public line_lag {
   public:
     void PrintType() const { std::cout<<" line2 ";};
     double eval_phi(const int *I,const double* x) const;
@@ -522,6 +675,24 @@ namespace femus {
   class line0: public basis {
   public:
     void PrintType() const { std::cout<<" line0 ";};
+    
+    double eval_phi(const int *I,const double* x) const{ return 1.; };
+    double eval_dphidx(const int *I,const double* x) const{ return 0.; };
+    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
+    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
+    
+    double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
+    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
+    
+    
+    const double* getX(const int &i) const{std::cout<<"Abort in line0\n"; abort();};
+    const int* getIND(const int &i) const{std::cout<<"Abort in line0\n"; abort();};
+    const int* getKVERT_IND(const int &i) const {std::cout<<"Abort in line0\n"; abort();};
+    
   };
 
 }//end namespace femus

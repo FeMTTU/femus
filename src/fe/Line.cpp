@@ -21,6 +21,17 @@
 
 
 namespace femus {
+  
+  // line const vectors
+  const double line_lag::X[5][3]= {{-1},{1},{0},{-0.5},{0.5}};
+
+
+  const int line_lag::IND[3][3]= {{0},{2},{1}};
+
+
+  const int line_lag::KVERT_IND[5][2]= {{0,0},{1,1},{0,1},{0,2},{1,2}};
+  
+  
 
   double line1::eval_phi(const int *I,const double* x) const {
     return lag1(x[0],I[0]);
