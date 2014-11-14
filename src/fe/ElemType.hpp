@@ -42,7 +42,7 @@ class elem_type {
 public:
 
   /** constructor */
-  elem_type(const char *solid,const char *order, const char* gauss_order);
+  elem_type(){};
   
   /** destructor */
   ~elem_type();
@@ -74,16 +74,22 @@ public:
   virtual void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
 			   vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const = 0;
   /** To be Added */
-  double* GetPhi(const unsigned &ig) const;
+  virtual double* GetPhi(const unsigned &ig) const = 0;
   
   /** To be Added */
-  double* GetDPhiDXi(const unsigned &ig) const;
+  virtual double* GetDPhiDXi(const unsigned &ig) const = 0;
   
   /** To be Added */
-  double* GetDPhiDEta(const unsigned &ig) const;
+  virtual double* GetDPhiDEta(const unsigned &ig) const{
+    std::cout<<"GetDPhiDEta does not apply for this element dimension\n"; 
+    abort();
+  }
   
   /** To be Added */
-  double* GetDPhiDZeta(const unsigned &ig) const;
+  virtual double* GetDPhiDZeta(const unsigned &ig) const{
+    std::cout<<"GetDPhiDZeta does not apply for this element dimension\n"; 
+    abort();
+  };
   
   /** To be Added */
   void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
@@ -134,6 +140,162 @@ protected:
   
   const double *GaussWeight;
   unsigned GaussPoints;
+  
+  const double *weight;
+};
+
+
+class elem_type_1D : public elem_type {
+public:
+  /** constructor */
+  elem_type_1D(const char *solid,const char *order, const char* gauss_order);
+  
+  /** destructor */
+  ~elem_type_1D(){
+    
+    delete [] phi;
+    delete [] phi_memory;
+    delete [] dphidxi;
+    delete [] dphidxi_memory;
+      
+    delete [] d2phidxi2;
+    delete [] d2phidxi2_memory;
+           
+  };
+   
+  void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
+		   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;	
+		   
+  void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
+		vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
+		
+  void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
+	              vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const;
+		      
+  void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
+	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
+		    
+  inline double* GetPhi(const unsigned &ig) const { return phi[ig]; }
+  inline double* GetDPhiDXi(const unsigned &ig) const { return dphidxi[ig]; }
+		   
+  double **phi;
+  double *phi_memory;
+  double **dphidxi;
+  double *dphidxi_memory;
+  
+  double **d2phidxi2;
+  double *d2phidxi2_memory;
+};
+
+class elem_type_2D : public elem_type {
+public:
+  /** constructor */
+  elem_type_2D(const char *solid,const char *order, const char* gauss_order);
+  
+  /** destructor */
+  ~elem_type_2D(){
+    
+    delete [] phi;
+    delete [] phi_memory;
+    delete [] dphidxi;
+    delete [] dphidxi_memory;
+    delete [] dphideta;
+    delete [] dphideta_memory;
+  
+    delete [] d2phidxi2;
+    delete [] d2phidxi2_memory;
+    delete [] d2phideta2;
+    delete [] d2phideta2_memory;
+  
+    delete [] d2phidxideta;
+    delete [] d2phidxideta_memory;
+    
+  };
+	
+  void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
+		   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;	
+		   
+  void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
+		vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
+		
+  void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
+	              vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const;
+		      
+  void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
+	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
+
+  inline double* GetPhi(const unsigned &ig) const { return phi[ig]; }
+  inline double* GetDPhiDXi(const unsigned &ig) const { return dphidxi[ig]; }
+  inline double* GetDPhiDEta(const unsigned &ig) const { return dphideta[ig]; }
+	   
+private:    
+  double **phi;
+  double *phi_memory;
+  double **dphidxi;
+  double *dphidxi_memory;
+  double **dphideta;
+  double *dphideta_memory;
+  
+  double **d2phidxi2;
+  double *d2phidxi2_memory;
+  double **d2phideta2;
+  double *d2phideta2_memory;
+  
+  double **d2phidxideta;
+  double *d2phidxideta_memory;
+};
+
+class elem_type_3D : public elem_type {
+public:
+  /** constructor */
+  elem_type_3D(const char *solid,const char *order, const char* gauss_order);
+   /** destructor */
+  ~elem_type_3D(){
+    delete [] phi;
+    delete [] phi_memory;
+    delete [] dphidxi;
+    delete [] dphidxi_memory;
+    delete [] dphideta;
+    delete [] dphideta_memory;
+    delete [] dphidzeta;
+    delete [] dphidzeta_memory;
+  
+    delete [] d2phidxi2;
+    delete [] d2phidxi2_memory;
+    delete [] d2phideta2;
+    delete [] d2phideta2_memory;
+    delete [] d2phidzeta2;
+    delete [] d2phidzeta2_memory;
+  
+    delete [] d2phidxideta;
+    delete [] d2phidxideta_memory;
+    delete [] d2phidetadzeta;
+    delete [] d2phidetadzeta_memory;
+    delete [] d2phidzetadxi;
+    delete [] d2phidzetadxi_memory;
+      
+  };
+	
+  void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
+		   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;
+		   
+  void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
+		vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
+		
+  void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
+	              vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const{};
+		      
+  void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
+	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const{};
+		   
+  
+  //---------------------------------------------------------------------------------------------------------
+  inline double* GetPhi(const unsigned &ig) const { return phi[ig]; }
+  inline double* GetDPhiDXi(const unsigned &ig) const { return dphidxi[ig]; }
+  inline double* GetDPhiDEta(const unsigned &ig) const { return dphideta[ig]; }
+  inline double* GetDPhiDZeta(const unsigned &ig) const { return dphidzeta[ig];}
+	
+private:	   		   
   double **phi;
   double *phi_memory;
   double **dphidxi;
@@ -156,68 +318,6 @@ protected:
   double *d2phidetadzeta_memory;
   double **d2phidzetadxi;
   double *d2phidzetadxi_memory;
-  
-  const double *weight;
-};
-
-
-class elem_type_1D : public elem_type {
-public:
-  /** constructor */
-  elem_type_1D(const char *solid,const char *order, const char* gauss_order):
-    elem_type(solid,order,gauss_order){};
-	
-  void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
-		   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;
-		   
-  void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
-		vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
-		
-  void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
-	              vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const;
-		      
-  void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
-	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
-};
-
-class elem_type_2D : public elem_type {
-public:
-  /** constructor */
-  elem_type_2D(const char *solid,const char *order, const char* gauss_order):
-	elem_type(solid,order,gauss_order){};
-	
-  void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
-		   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;	
-		   
-  void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
-		vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
-		
-  void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
-	              vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const;
-		      
-  void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
-	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
-};
-
-class elem_type_3D : public elem_type {
-public:
-  /** constructor */
-  elem_type_3D(const char *solid,const char *order, const char* gauss_order):
-	elem_type(solid,order,gauss_order){};
-	
-  void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
-		   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;
-		   
-  void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
-		vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
-		
-  void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
-	              vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const
-	              {};
-		      
-  void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
-	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const
-	           {};
 };
 
 

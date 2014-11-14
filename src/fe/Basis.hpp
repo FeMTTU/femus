@@ -29,17 +29,36 @@ namespace femus {
   class basis {
   public:
     virtual void PrintType() const = 0 ;
-    virtual double eval_phi(const int *I,const double* x) const = 0;
-    virtual double eval_dphidx(const int *I,const double* x) const = 0;
-    virtual double eval_dphidy(const int *I,const double* x) const = 0;
-    virtual double eval_dphidz(const int *I,const double* x) const = 0;
-       
-    virtual double eval_d2phidx2(const int *I,const double* x) const = 0;
-    virtual double eval_d2phidy2(const int *I,const double* x) const = 0;
-    virtual double eval_d2phidz2(const int *I,const double* x) const = 0;
-    virtual double eval_d2phidxdy(const int *I,const double* x) const = 0;
-    virtual double eval_d2phidydz(const int *I,const double* x) const = 0;
-    virtual double eval_d2phidzdx(const int *I,const double* x) const = 0;
+    virtual double eval_phi(const int *I,const double* x) const {
+      std::cout<<"Error this phi is not available for this element \n"; abort();
+    };
+    virtual double eval_dphidx(const int *I,const double* x) const {
+      std::cout<<"Error this dphidx is not available for this element dimension\n"; abort();
+    };
+    virtual double eval_dphidy(const int *I,const double* x) const {
+      std::cout<<"Error this dphidy is not available for this element dimension\n"; abort();
+    };
+    virtual double eval_dphidz(const int *I,const double* x) const {
+      std::cout<<"Error this dphidz is not available for this element dimension\n"; abort();
+    };
+    virtual double eval_d2phidx2(const int *I,const double* x) const {
+      std::cout<<"Error this d2phix2 is not available for this element dimension\n"; abort();
+    };
+    virtual double eval_d2phidy2(const int *I,const double* x) const {
+      std::cout<<"Error this d2phidy2 is not available for this element dimension\n"; abort();
+    };
+    virtual double eval_d2phidz2(const int *I,const double* x) const {
+      std::cout<<"Error this d2phidz2 is not available for this element dimension\n"; abort();
+    };
+    virtual double eval_d2phidxdy(const int *I,const double* x) const {
+      std::cout<<"Error this d2phidxdy is not available for this element dimension\n"; abort();
+    };
+    virtual double eval_d2phidydz(const int *I,const double* x) const {
+      std::cout<<"Error this d2phidydz is not available for this element dimension\n"; abort();
+    };
+    virtual double eval_d2phidzdx(const int *I,const double* x) const {
+      std::cout<<"Error this d2phidydz is not available for this element dimension\n"; abort();
+    };
     
     virtual const double* getX(const int &i) const = 0;
     virtual const int* getIND(const int &i) const = 0;
@@ -446,14 +465,10 @@ namespace femus {
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
     double eval_dphidy(const int *I,const double* x) const;
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
   
     double eval_d2phidx2(const int *I,const double* x) const{ return 0.; }
     double eval_d2phidy2(const int *I,const double* x) const{ return 0.; }
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
     double eval_d2phidxdy(const int *I,const double* x) const;
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   };
 
   //************************************************************
@@ -468,14 +483,10 @@ namespace femus {
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
     double eval_dphidy(const int *I,const double* x) const;
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
   
     double eval_d2phidx2(const int *I,const double* x) const;
     double eval_d2phidy2(const int *I,const double* x) const;
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
     double eval_d2phidxdy(const int *I,const double* x) const;
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   };
 
   //************************************************************
@@ -486,14 +497,10 @@ namespace femus {
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
     double eval_dphidy(const int *I,const double* x) const;
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
   
     double eval_d2phidx2(const int *I,const double* x) const;
     double eval_d2phidy2(const int *I,const double* x) const;
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
     double eval_d2phidxdy(const int *I,const double* x) const;
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   
   };
 
@@ -520,14 +527,10 @@ namespace femus {
     double eval_phi(const int *I,const double* x) const{ return 1.; };
     double eval_dphidx(const int *I,const double* x) const{ return 0.; };
     double eval_dphidy(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
     
     double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
     double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
     double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
     
   };
 
@@ -539,14 +542,10 @@ namespace femus {
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
     double eval_dphidy(const int *I,const double* x) const;
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
   
     double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
     double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
     double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   };
 
   //************************************************************
@@ -571,14 +570,10 @@ namespace femus {
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
     double eval_dphidy(const int *I,const double* x) const;
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
   
     double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
     double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
     double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   };
 
   //************************************************************
@@ -590,14 +585,9 @@ namespace femus {
     double eval_dphidx(const int *I,const double* x) const;
     double eval_dphidy(const int *I,const double* x) const;
   
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
-  
     double eval_d2phidx2(const int *I,const double* x) const;
     double eval_d2phidy2(const int *I,const double* x) const;
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
     double eval_d2phidxdy(const int *I,const double* x) const;
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   
   };
 
@@ -610,14 +600,10 @@ namespace femus {
     double eval_phi(const int *I,const double* x) const{ return 1.; };
     double eval_dphidx(const int *I,const double* x) const{ return 0.; };
     double eval_dphidy(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
     
     double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
     double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
     double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
         
     const double* getX(const int &i) const{std::cout<<"Abort in tri0\n"; abort();};
     const int* getIND(const int &i) const{std::cout<<"Abort in tri0\n"; abort();};
@@ -644,15 +630,7 @@ namespace femus {
     void PrintType() const { std::cout<<" line1 ";};
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
-    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
-  
     double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   
   };
 
@@ -662,15 +640,7 @@ namespace femus {
     void PrintType() const { std::cout<<" line2 ";};
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
-    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
-  
     double eval_d2phidx2(const int *I,const double* x) const;
-    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   };
 
   //************************************************************
@@ -681,16 +651,7 @@ namespace femus {
     
     double eval_phi(const int *I,const double* x) const{ return 1.; };
     double eval_dphidx(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidy(const int *I,const double* x) const{ return 0.; };
-    double eval_dphidz(const int *I,const double* x) const{ return 0.; };
-    
     double eval_d2phidx2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidy2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidz2(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
-    double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
-    
     
     const double* getX(const int &i) const{std::cout<<"Abort in line0\n"; abort();};
     const int* getIND(const int &i) const{std::cout<<"Abort in line0\n"; abort();};

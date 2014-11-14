@@ -39,436 +39,11 @@ elem_type::~elem_type() {
   delete [] prol_ind;
   delete [] mem_prol_val;
   delete [] mem_prol_ind;
-
-  delete [] phi;
-  delete [] phi_memory;
-  delete [] dphidxi;
-  delete [] dphidxi_memory;
-  delete [] dphideta;
-  delete [] dphideta_memory;
-  delete [] dphidzeta;
-  delete [] dphidzeta_memory;
-  
-  delete [] d2phidxi2;
-  delete [] d2phidxi2_memory;
-  delete [] d2phideta2;
-  delete [] d2phideta2_memory;
-  delete [] d2phidzeta2;
-  delete [] d2phidzeta2_memory;
-  
-  delete [] d2phidxideta;
-  delete [] d2phidxideta_memory;
-  delete [] d2phidetadzeta;
-  delete [] d2phidetadzeta_memory;
-  delete [] d2phidzetadxi;
-  delete [] d2phidzetadxi_memory;
   
   delete pt_basis;
   
   
 };
-
-elem_type::elem_type(const char *solid, const char *order, const char *order_gauss) {
-
-  //************ BEGIN GAUSS SETUP ******************	
-  // TODO: this part could be done in an external wrapper Quadrature class
-  //Gauss Point order
-  int gauss_order;
-  if (!strcmp(order_gauss,"zero")  || !strcmp(order_gauss,"first")) {
-    gauss_order=0;
-  } else if (!strcmp(order_gauss,"second") || !strcmp(order_gauss,"third") ) {
-    gauss_order=1;
-  } else if (!strcmp(order_gauss,"fourth") || !strcmp(order_gauss,"fifth") ) {
-    gauss_order=2;
-  } else if (!strcmp(order_gauss,"sixth")  || !strcmp(order_gauss,"seventh") ) {
-    gauss_order=3;
-  } else if (!strcmp(order_gauss,"eighth") || !strcmp(order_gauss,"ninth") ) {
-    gauss_order=4;
-  } else {
-    cout<<order_gauss<<"is not a valid option for the Gauss points of"<<solid<<endl;
-    exit(0);
-  }
-
-  if (!strcmp(solid,"hex")) {  
-        GaussWeight = hex_gauss::Gauss[gauss_order];
-        GaussPoints = hex_gauss::GaussPoints[gauss_order];  
-      }
-      else if (!strcmp(solid,"wedge")) {
-        GaussWeight = wedge_gauss::Gauss[gauss_order];
-        GaussPoints = wedge_gauss::GaussPoints[gauss_order];
-      }
-      else if (!strcmp(solid,"tet")) {
-        GaussWeight = tet_gauss::Gauss[gauss_order];
-        GaussPoints = tet_gauss::GaussPoints[gauss_order];
-      }
-      else if (!strcmp(solid,"quad")) {
-        GaussWeight = quad_gauss::Gauss[gauss_order];
-        GaussPoints = quad_gauss::GaussPoints[gauss_order];
-      }
-      else if (!strcmp(solid,"tri")) {
-        GaussWeight = tri_gauss::Gauss[gauss_order];
-        GaussPoints = tri_gauss::GaussPoints[gauss_order];
-      }	
-      else if (!strcmp(solid,"line")) {
-        GaussWeight = line_gauss::Gauss[gauss_order];
-        GaussPoints = line_gauss::GaussPoints[gauss_order];
-      }
-      else {
-        cout<<solid<<" is not a valid option"<<endl; abort();
-      }	
-	
-//************ END GAUSS SETUP ******************	
-	
-	
-  //************ BEGIN FE and MG SETUP ******************	
-	
-  if (!strcmp(order,"linear")) {
-    SolType_=0;   
-  } else if (!strcmp(order,"quadratic")) {
-    SolType_=1;   
-  } else if (!strcmp(order,"biquadratic")) {
-    SolType_=2;   
-  } else if (!strcmp(order,"constant")) {
-    SolType_=3;   
-  } else if (!strcmp(order,"disc_linear")) {
-    SolType_=4;   
-  }
-  
-  if (!strcmp(solid,"hex")) {//HEX
-    
-    ncf_[0]=8;
-    ncf_[1]=20;
-    ncf_[2]=27;
-    
-    if (!strcmp(order,"linear")) {
-      type_=0;
-      nc_=8;
-      nf_=27;
-      pt_basis = new hex1;//& hex_1;
-    } else if (!strcmp(order,"quadratic")) {
-      type_=1;
-      nc_=20;
-      nf_=81;
-      pt_basis = new hexth;//& hex_th;
-    } else if (!strcmp(order,"biquadratic")) {
-      type_=2;
-      nc_=27;
-      nf_=125;
-      pt_basis = new hex2;//& hex_2;
-    } else if (!strcmp(order,"constant")) {
-      type_=17;
-      nc_=1;
-      nf_=8;
-      pt_basis = new hex0;//& hex_0;
-    } else if (!strcmp(order,"disc_linear")) {
-      type_=18;
-      nc_=4;
-      nf_=32;
-      pt_basis = new hexpwl;//& hex_pwl;
-    } else {
-      cout<<order<<" is not a valid option for "<<solid<<endl;
-      exit(0);
-    }
-
-  } else if (!strcmp(solid,"wedge")) { //WEDGE
-         
-    ncf_[0]=6;
-    ncf_[1]=15;
-    ncf_[2]=18;
-       
-    if (!strcmp(order,"linear")) {
-      type_=3;
-      nc_=6;
-      nf_=18;
-      pt_basis = new wedge1;//& wedge_1;
-    } else if (!strcmp(order,"quadratic")) {
-      type_=4;
-      nc_=15;
-      nf_=57;
-      pt_basis = new wedgeth;//& wedge_th;
-    } else if (!strcmp(order,"biquadratic")) {
-      type_=5;
-      nc_=18;
-      nf_=75;
-      pt_basis = new wedge2;//& wedge_2;
-    } else {
-      cout<<order<<" is not a valid option for "<<solid<<endl;
-      exit(0);
-    }
-    
-  } else if (!strcmp(solid,"tet")) { //TETRAHEDRA
-         
-    ncf_[0]=4;
-    ncf_[1]=10;
-    ncf_[2]=10;
-    
-    if (!strcmp(order,"linear")) {
-      type_=6;
-      nc_=4;
-      nf_=10;
-      pt_basis = new tet1;//& tet_1;
-    } else if (!strcmp(order,"biquadratic")) {
-      type_=7;
-      nc_=10;
-      nf_=35;
-      pt_basis = new tet2;//& tet_2;
-    } else if (!strcmp(order,"constant")) {
-      type_=8;
-      nc_=1;
-      nf_=8;
-      pt_basis = new tet0;//& tet_0;
-    } else {
-      cout<<order<<" is not a valid option for "<<solid<<endl;
-      exit(0);
-    }
-
-  } else if (!strcmp(solid,"quad")) { //QUAD
-    ncf_[0]=4;
-    ncf_[1]=8;
-    ncf_[2]=9;
-    if (!strcmp(order,"linear")) {
-      type_=8;
-      nc_=4;
-      nf_=9;
-      pt_basis = new quad1;//& quad_1;
-    } else if (!strcmp(order,"quadratic")) {
-      type_=9;
-      nc_=8;
-      nf_=21;
-      pt_basis = new quadth;//& quad_th;
-    } else if (!strcmp(order,"biquadratic")) {
-      type_=10;
-      nc_=9;
-      nf_=25;
-      pt_basis = new quad2;//& quad_2;
-    } else if (!strcmp(order,"constant")) {
-      type_=15;
-      nc_=1;
-      nf_=4;
-      pt_basis = new quad0;//& quad_0;
-    } else if (!strcmp(order,"disc_linear")) {
-      type_=16;
-      nc_=3;
-      nf_=12;
-      pt_basis = new quadpwl;//& quad_pwl;
-    } else {
-      cout<<order<<" is not a valid option for "<<solid<<endl;
-      exit(0);
-    }
-    
- } else if (!strcmp(solid,"tri")) { //TRIANGLE
-    
-    ncf_[0]=3;
-    ncf_[1]=6;
-    ncf_[2]=6;
-    
-    if (!strcmp(order,"linear")) {
-      type_=11;
-      nc_=3;
-      nf_=6;
-      pt_basis = new tri1;//& tri_1;
-    } else if (!strcmp(order,"biquadratic")) {
-      type_=12;
-      nc_=6;
-      nf_=15;
-      pt_basis = new tri2;//& tri_2;
-    } else if (!strcmp(order,"constant")) {
-      type_=13; // TODO is the choice of this number ok ?????
-      nc_=1;
-      nf_=4;
-      pt_basis = new tri0;//& tri_0;
-    } else {
-      cout<<order<<" is not a valid option for "<<solid<<endl;
-      exit(0);
-    }
-   
-  }
-
-  else if (!strcmp(solid,"line")) { //line
-    
-    ncf_[0]=2;
-    ncf_[1]=3;
-    ncf_[2]=3;
-    
-    if (!strcmp(order,"linear")) {
-      type_=13;
-      nc_=2;
-      nf_=3;
-      pt_basis = new line1;//& line_1;
-    } else if (!strcmp(order,"biquadratic")) {
-      type_=14;
-      nc_=3;
-      nf_=5;
-      pt_basis = new line2;//& line_2;
-    } else if (!strcmp(order,"constant")) {
-      type_=15;  // TODO is the choice of this number ok ?????
-      nc_=1;   
-      nf_=2;   
-      pt_basis = new line0;//& line_0;
-    }
-    else {
-      cout<<order<<" is not a valid option for "<<solid<<endl;
-      exit(0);
-    }
-
-  } else {
-    cout<<solid<<" is not a valid option"<<endl;
-    exit(0);
-  }
-
-  IND=new const int * [nc_];
-  for (int i=0; i<nc_; i++){
-    IND[i]=pt_basis->getIND(i);
-  }
-  KVERT_IND=new const int * [nf_];
-  X=new const double * [nf_];
-  for (int i=0; i<nf_; i++) {
-    KVERT_IND[i]=pt_basis->getKVERT_IND(i);
-    X[i]=pt_basis->getX(i);
-  }
-    
-  int counter=0;
-  for (int i=0; i<nf_; i++) {
-    for (int j=0; j<nc_; j++) {
-      double phi=pt_basis->eval_phi(IND[j],X[i]);
-      if (type_==16) {
-        if (i/4==1) phi=pt_basis->eval_dphidx(IND[j],X[i]);
-        else if (i/4==2) phi=pt_basis->eval_dphidy(IND[j],X[i]);
-      }
-      if (phi!=0){
-        counter++;
-      }
-    }
-  }
-  double *pt_d;
-  int *pt_i;
-
-  prol_val=new double * [nf_+1];
-  prol_ind=new int * [nf_+1];
-  mem_prol_val=new double [counter];
-  mem_prol_ind=new int [counter];
-
-  pt_d=mem_prol_val;
-  pt_i= mem_prol_ind;
-  for (int i=0; i<nf_; i++) {
-    prol_val[i]=pt_d;
-    prol_ind[i]=pt_i;
-    for (int j=0; j<nc_; j++) {
-      double phi=pt_basis->eval_phi(IND[j],X[i]);
-      if (type_==16) {
-        if (i/4==1)
-          phi=pt_basis->eval_dphidx(IND[j],X[i])/2.;
-        else if (i/4==2)
-          phi=pt_basis->eval_dphidy(IND[j],X[i])/2.;
-      } else if (type_==18) {
-        if (i/8==1)
-          phi=pt_basis->eval_dphidx(IND[j],X[i])/2.;
-        else if (i/8==2)
-          phi=pt_basis->eval_dphidy(IND[j],X[i])/2.;
-        else if (i/8==3)
-          phi=pt_basis->eval_dphidz(IND[j],X[i])/2.;
-      }
-      if (phi!=0) {
-        *(pt_d++)=phi;
-        *(pt_i++)=j;
-      }
-    }
-  }
-  
-  prol_val[nf_]=pt_d;
-  prol_ind[nf_]=pt_i;
-
-
-//   rest_val=new double * [nc_+1];
-//   rest_ind=new int * [nc_+1];
-//   mem_rest_val=new double [counter];
-//   mem_rest_ind=new int [counter];
-//
-//   pt_d=mem_rest_val;
-//   pt_i=mem_rest_ind;
-//
-//   for(int i=0;i<nc_;i++){
-//     rest_val[i]=pt_d;
-//     rest_ind[i]=pt_i;
-//     for (int j=0;j<nf_;j++){
-//       double phi=pt_basis->eval_phi(IND[i],X[j]);
-//       if(type_==16){
-// 	if(j/4==1) phi=pt_basis->eval_dphidx(IND[i],X[j]);
-// 	else if(j/4==2) phi=pt_basis->eval_dphidy(IND[i],X[j]);
-//       }
-//       if(phi!=0){
-// 	*(pt_d++)=phi;
-// 	*(pt_i++)=j;
-//       }
-//     }
-//   }
-//   rest_val[nc_]=pt_d;
-//   rest_ind[nc_]=pt_i;
-
-  phi= new double*[GaussPoints];
-  dphidxi  = new double*[GaussPoints];
-  dphideta = new double*[GaussPoints];
-  dphidzeta= new double*[GaussPoints];
-  
-  d2phidxi2  = new double*[GaussPoints];
-  d2phideta2 = new double*[GaussPoints];
-  d2phidzeta2= new double*[GaussPoints];
-  
-  d2phidxideta  = new double*[GaussPoints];
-  d2phidetadzeta = new double*[GaussPoints];
-  d2phidzetadxi= new double*[GaussPoints];
-
-  phi_memory=new double [GaussPoints*nc_];
-  dphidxi_memory  =new double [GaussPoints*nc_];
-  dphideta_memory =new double [GaussPoints*nc_];
-  dphidzeta_memory=new double [GaussPoints*nc_];
-  
-  d2phidxi2_memory  =new double [GaussPoints*nc_];
-  d2phideta2_memory =new double [GaussPoints*nc_];
-  d2phidzeta2_memory=new double [GaussPoints*nc_];
-  
-  d2phidxideta_memory  =new double [GaussPoints*nc_];
-  d2phidetadzeta_memory =new double [GaussPoints*nc_];
-  d2phidzetadxi_memory=new double [GaussPoints*nc_];
-
-  for (unsigned i=0; i<GaussPoints; i++) {
-    phi[i]=&phi_memory[i*nc_];
-    dphidxi[i]  =&dphidxi_memory[i*nc_];
-    dphideta[i] =&dphideta_memory[i*nc_];
-    dphidzeta[i]=&dphidzeta_memory[i*nc_];
-    
-    d2phidxi2[i]  =&d2phidxi2_memory[i*nc_];
-    d2phideta2[i] =&d2phideta2_memory[i*nc_];
-    d2phidzeta2[i]=&d2phidzeta2_memory[i*nc_];
-    
-    d2phidxideta[i]  = &d2phidxideta_memory[i*nc_];
-    d2phidetadzeta[i]= &d2phidetadzeta_memory[i*nc_];
-    d2phidzetadxi[i] = &d2phidzetadxi_memory[i*nc_];
-    
-  }
-
-  const double *ptx=GaussWeight+GaussPoints,*pty=GaussWeight+2*GaussPoints,*ptz=GaussWeight+3*GaussPoints;
-  for (unsigned i=0; i<GaussPoints; i++,ptx++,pty++,ptz++) {
-    double x[3];
-    x[0]=*ptx;
-    x[1]=*pty;
-    x[2]=*ptz;    
-    
-    for (int j=0; j<nc_; j++) {
-      phi[i][j] = pt_basis->eval_phi(IND[j],x); 	
-      dphidxi[i][j] = pt_basis->eval_dphidx(IND[j],x); 	
-      dphideta[i][j] = pt_basis->eval_dphidy(IND[j],x); 	
-      dphidzeta[i][j] = pt_basis->eval_dphidz(IND[j],x); 	
-      d2phidxi2[i][j] = pt_basis->eval_d2phidx2(IND[j],x);
-      d2phideta2[i][j] = pt_basis->eval_d2phidy2(IND[j],x);
-      d2phidzeta2[i][j] = pt_basis->eval_d2phidz2(IND[j],x);
-      d2phidxideta[i][j] = pt_basis->eval_d2phidxdy(IND[j],x);
-      d2phidetadzeta[i][j] = pt_basis->eval_d2phidydz(IND[j],x);
-      d2phidzetadxi[i][j] = pt_basis->eval_d2phidzdx(IND[j],x);
-    }
-  }
-}
-
 
 //----------------------------------------------------------------------------------------------------
 // build matrix sparsity pattern size and build prolungator matrix for the LsysPde  Matrix
@@ -655,56 +230,8 @@ void elem_type::BuildProlongation(const mesh& mesh,const int& iel, SparseMatrix*
   }
 }
 
-//---------------------------------------------------------------------------------------------------------
-double* elem_type::GetPhi(const unsigned &ig) const {
-  return phi[ig];
-}
-
-double* elem_type::GetDPhiDXi(const unsigned &ig) const {
-  return dphidxi[ig];
-}
-
-double* elem_type::GetDPhiDEta(const unsigned &ig) const {
-  return dphideta[ig];
-}
-
-double* elem_type::GetDPhiDZeta(const unsigned &ig) const {
-  return dphidzeta[ig];
-}
-
 
 //---------------------------------------------------------------------------------------------------------
-void elem_type::GetArea(const double *vtx,const double *vty, const double *vtz, const unsigned &ig,
-                        double &Weight, double *other_phi) const {
-
-  double Jac[2][3];
-  for (double *pt_d=Jac[0]; pt_d<Jac[0]+6; pt_d++) *pt_d=0.;
-  const double *dfx=dphidxi[ig];
-  const double *dfy=dphideta[ig];
-  const double *vx=vtx;
-  const double *vy=vty;
-  const double *vz=vtz;
-  for (int inode=0; inode<nc_; inode++,dfx++,dfy++,vx++,vy++,vz++) {
-    double *pt_d=Jac[0];
-    *(pt_d++)+=(*dfx)*(*vx);
-    *(pt_d++)+=(*dfx)*(*vy);
-    *(pt_d++)+=(*dfx)*(*vz);
-    *(pt_d++)+=(*dfy)*(*vx);
-    *(pt_d++)+=(*dfy)*(*vy);
-    *(pt_d++)+=(*dfy)*(*vz);
-  }
-
-  double det1=Jac[0][1]*Jac[1][2]-Jac[1][1]*Jac[0][2];
-  double det2=Jac[0][0]*Jac[1][2]-Jac[1][0]*Jac[0][2];
-  double det3=Jac[0][0]*Jac[1][1]-Jac[1][0]*Jac[0][1];
-  double det=sqrt(det1*det1+det2*det2+det3*det3);
-
-  Weight=det*GaussWeight[ig];
-  double *fi=phi[ig];
-  for (int inode=0; inode<nc_; inode++,other_phi++,fi++) {
-    *other_phi=*fi;
-  }
-}
 
 
 void elem_type_1D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
@@ -1242,6 +769,615 @@ void elem_type_3D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,co
   }
   
 }
+
+
+elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *order_gauss) :
+	      elem_type(){
+
+  //************ BEGIN GAUSS SETUP ******************	
+  Gauss gauss(solid, order_gauss);
+  GaussWeight = gauss.GaussWeight;
+  GaussPoints = gauss.GaussPoints;
+  //************ END GAUSS SETUP ******************
+	
+  //************ BEGIN FE and MG SETUP ******************	
+  if (!strcmp(order,"linear")) {
+    SolType_=0;   
+  } 
+  else if (!strcmp(order,"quadratic")) {
+    SolType_=1;   
+  } 
+  else if (!strcmp(order,"biquadratic")) {
+    SolType_=2;   
+  } 
+  else if (!strcmp(order,"constant")) {
+    SolType_=3;   
+  } 
+  else if (!strcmp(order,"disc_linear")) {
+    SolType_=4;   
+  }
+  
+  if (!strcmp(solid,"line")) { //line
+    
+    ncf_[0]=2;
+    ncf_[1]=3;
+    ncf_[2]=3;
+    
+    if (!strcmp(order,"linear")) {
+      type_=13;
+      nc_=2;
+      nf_=3;
+      pt_basis = new line1;//& line_1;
+    } else if (!strcmp(order,"biquadratic")) {
+      type_=14;
+      nc_=3;
+      nf_=5;
+      pt_basis = new line2;//& line_2;
+    } else if (!strcmp(order,"constant")) {
+      type_=15;  // TODO is the choice of this number ok ?????
+      nc_=1;   
+      nf_=2;   
+      pt_basis = new line0;//& line_0;
+    }
+    else {
+      cout<<order<<" is not a valid option for "<<solid<<endl;
+      exit(0);
+    }
+
+  } else {
+    cout<<solid<<" is not a valid option"<<endl;
+    exit(0);
+  }
+
+  IND=new const int * [nc_];
+  for (int i=0; i<nc_; i++){
+    IND[i]=pt_basis->getIND(i);
+  }
+  KVERT_IND=new const int * [nf_];
+  X=new const double * [nf_];
+  for (int i=0; i<nf_; i++) {
+    KVERT_IND[i]=pt_basis->getKVERT_IND(i);
+    X[i]=pt_basis->getX(i);
+  }
+    
+  int counter=0;
+  for (int i=0; i<nf_; i++) {
+    for (int j=0; j<nc_; j++) {
+      double phi=pt_basis->eval_phi(IND[j],X[i]);
+      if (type_==16) {
+        if (i/4==1) phi=pt_basis->eval_dphidx(IND[j],X[i]);
+        else if (i/4==2) phi=pt_basis->eval_dphidy(IND[j],X[i]);
+      }
+      if (phi!=0){
+        counter++;
+      }
+    }
+  }
+  double *pt_d;
+  int *pt_i;
+
+  prol_val=new double * [nf_+1];
+  prol_ind=new int * [nf_+1];
+  mem_prol_val=new double [counter];
+  mem_prol_ind=new int [counter];
+
+  pt_d=mem_prol_val;
+  pt_i= mem_prol_ind;
+  for (int i=0; i<nf_; i++) {
+    prol_val[i]=pt_d;
+    prol_ind[i]=pt_i;
+    for (int j=0; j<nc_; j++) {
+      double phi=pt_basis->eval_phi(IND[j],X[i]);
+      if (type_==16) {
+        if (i/4==1)
+          phi=pt_basis->eval_dphidx(IND[j],X[i])/2.;
+        else if (i/4==2)
+          phi=pt_basis->eval_dphidy(IND[j],X[i])/2.;
+      } else if (type_==18) {
+        if (i/8==1)
+          phi=pt_basis->eval_dphidx(IND[j],X[i])/2.;
+        else if (i/8==2)
+          phi=pt_basis->eval_dphidy(IND[j],X[i])/2.;
+        else if (i/8==3)
+          phi=pt_basis->eval_dphidz(IND[j],X[i])/2.;
+      }
+      if (phi!=0) {
+        *(pt_d++)=phi;
+        *(pt_i++)=j;
+      }
+    }
+  }
+  
+  prol_val[nf_]=pt_d;
+  prol_ind[nf_]=pt_i;
+
+  phi= new double*[GaussPoints];
+  dphidxi  = new double*[GaussPoints];
+  d2phidxi2  = new double*[GaussPoints];
+
+  phi_memory=new double [GaussPoints*nc_];
+  dphidxi_memory  =new double [GaussPoints*nc_];
+  d2phidxi2_memory  =new double [GaussPoints*nc_];
+
+  for (unsigned i=0; i<GaussPoints; i++) {
+    phi[i]=&phi_memory[i*nc_];
+    dphidxi[i]  =&dphidxi_memory[i*nc_];
+    d2phidxi2[i]  =&d2phidxi2_memory[i*nc_];
+  }
+
+ const double *ptx[1]={GaussWeight+GaussPoints};
+  for (unsigned i=0; i<GaussPoints; i++){
+    double x[1];
+    for (unsigned j=0; j<1;j++) {
+      x[j] = *ptx[j];
+      ptx[j]++;
+    }  
+    
+    for (int j=0; j<nc_; j++) {
+      phi[i][j] = pt_basis->eval_phi(IND[j],x); 	
+      dphidxi[i][j] = pt_basis->eval_dphidx(IND[j],x); 		
+      d2phidxi2[i][j] = pt_basis->eval_d2phidx2(IND[j],x);
+    }
+  }
+}
+
+
+elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *order_gauss):
+	      elem_type(){
+
+  //************ BEGIN GAUSS SETUP ******************	
+  Gauss gauss(solid,order_gauss);
+  GaussWeight = gauss.GaussWeight;
+  GaussPoints = gauss.GaussPoints;
+  //************ END GAUSS SETUP ******************
+	
+  //************ BEGIN FE and MG SETUP ******************	
+  if (!strcmp(order,"linear")) {
+    SolType_=0;   
+  } 
+  else if (!strcmp(order,"quadratic")) {
+    SolType_=1;   
+  } 
+  else if (!strcmp(order,"biquadratic")) {
+    SolType_=2;   
+  } 
+  else if (!strcmp(order,"constant")) {
+    SolType_=3;   
+  } 
+  else if (!strcmp(order,"disc_linear")) {
+    SolType_=4;   
+  }
+  
+  if (!strcmp(solid,"quad")) { //QUAD
+    ncf_[0]=4;
+    ncf_[1]=8;
+    ncf_[2]=9;
+    if (!strcmp(order,"linear")) {
+      type_=8;
+      nc_=4;
+      nf_=9;
+      pt_basis = new quad1;//& quad_1;
+    } else if (!strcmp(order,"quadratic")) {
+      type_=9;
+      nc_=8;
+      nf_=21;
+      pt_basis = new quadth;//& quad_th;
+    } else if (!strcmp(order,"biquadratic")) {
+      type_=10;
+      nc_=9;
+      nf_=25;
+      pt_basis = new quad2;//& quad_2;
+    } else if (!strcmp(order,"constant")) {
+      type_=15;
+      nc_=1;
+      nf_=4;
+      pt_basis = new quad0;//& quad_0;
+    } else if (!strcmp(order,"disc_linear")) {
+      type_=16;
+      nc_=3;
+      nf_=12;
+      pt_basis = new quadpwl;//& quad_pwl;
+    } else {
+      cout<<order<<" is not a valid option for "<<solid<<endl;
+      exit(0);
+    }
+    
+ } else if (!strcmp(solid,"tri")) { //TRIANGLE
+    
+    ncf_[0]=3;
+    ncf_[1]=6;
+    ncf_[2]=6;
+    
+    if (!strcmp(order,"linear")) {
+      type_=11;
+      nc_=3;
+      nf_=6;
+      pt_basis = new tri1;//& tri_1;
+    } else if (!strcmp(order,"biquadratic")) {
+      type_=12;
+      nc_=6;
+      nf_=15;
+      pt_basis = new tri2;//& tri_2;
+    } else if (!strcmp(order,"constant")) {
+      type_=13; // TODO is the choice of this number ok ?????
+      nc_=1;
+      nf_=4;
+      pt_basis = new tri0;//& tri_0;
+    } else {
+      cout<<order<<" is not a valid option for "<<solid<<endl;
+      exit(0);
+    }
+   
+  } else {
+    cout<<solid<<" is not a valid option"<<endl;
+    exit(0);
+  }
+
+  IND=new const int * [nc_];
+  for (int i=0; i<nc_; i++){
+    IND[i]=pt_basis->getIND(i);
+  }
+  KVERT_IND=new const int * [nf_];
+  X=new const double * [nf_];
+  for (int i=0; i<nf_; i++) {
+    KVERT_IND[i]=pt_basis->getKVERT_IND(i);
+    X[i]=pt_basis->getX(i);
+  }
+    
+  int counter=0;
+  for (int i=0; i<nf_; i++) {
+    for (int j=0; j<nc_; j++) {
+      double phi=pt_basis->eval_phi(IND[j],X[i]);
+      if (type_==16) {
+        if (i/4==1) phi=pt_basis->eval_dphidx(IND[j],X[i]);
+        else if (i/4==2) phi=pt_basis->eval_dphidy(IND[j],X[i]);
+      }
+      if (phi!=0){
+        counter++;
+      }
+    }
+  }
+  double *pt_d;
+  int *pt_i;
+
+  prol_val=new double * [nf_+1];
+  prol_ind=new int * [nf_+1];
+  mem_prol_val=new double [counter];
+  mem_prol_ind=new int [counter];
+
+  pt_d=mem_prol_val;
+  pt_i= mem_prol_ind;
+  for (int i=0; i<nf_; i++) {
+    prol_val[i]=pt_d;
+    prol_ind[i]=pt_i;
+    for (int j=0; j<nc_; j++) {
+      double phi=pt_basis->eval_phi(IND[j],X[i]);
+      if (type_==16) {
+        if (i/4==1)
+          phi=pt_basis->eval_dphidx(IND[j],X[i])/2.;
+        else if (i/4==2)
+          phi=pt_basis->eval_dphidy(IND[j],X[i])/2.;
+      } else if (type_==18) {
+        if (i/8==1)
+          phi=pt_basis->eval_dphidx(IND[j],X[i])/2.;
+        else if (i/8==2)
+          phi=pt_basis->eval_dphidy(IND[j],X[i])/2.;
+        else if (i/8==3)
+          phi=pt_basis->eval_dphidz(IND[j],X[i])/2.;
+      }
+      if (phi!=0) {
+        *(pt_d++)=phi;
+        *(pt_i++)=j;
+      }
+    }
+  }
+  
+  prol_val[nf_]=pt_d;
+  prol_ind[nf_]=pt_i;
+
+
+  phi= new double*[GaussPoints];
+  dphidxi  = new double*[GaussPoints];
+  dphideta = new double*[GaussPoints];
+  
+  d2phidxi2  = new double*[GaussPoints];
+  d2phideta2 = new double*[GaussPoints];
+  
+  d2phidxideta  = new double*[GaussPoints];
+
+  phi_memory=new double [GaussPoints*nc_];
+  dphidxi_memory  =new double [GaussPoints*nc_];
+  dphideta_memory =new double [GaussPoints*nc_];
+  
+  d2phidxi2_memory  =new double [GaussPoints*nc_];
+  d2phideta2_memory =new double [GaussPoints*nc_];
+  
+  d2phidxideta_memory  =new double [GaussPoints*nc_];
+
+  for (unsigned i=0; i<GaussPoints; i++) {
+    phi[i]=&phi_memory[i*nc_];
+    dphidxi[i]  =&dphidxi_memory[i*nc_];
+    dphideta[i] =&dphideta_memory[i*nc_];
+    
+    d2phidxi2[i]  =&d2phidxi2_memory[i*nc_];
+    d2phideta2[i] =&d2phideta2_memory[i*nc_];
+    
+    d2phidxideta[i]  = &d2phidxideta_memory[i*nc_];
+    
+  }
+
+  const double *ptx[2]={GaussWeight+GaussPoints, GaussWeight+2*GaussPoints};
+  for (unsigned i=0; i<GaussPoints; i++){
+    double x[2];
+    for (unsigned j=0; j<2;j++) {
+      x[j] = *ptx[j];
+      ptx[j]++;
+    }
+    for (int j=0; j<nc_; j++) {
+      phi[i][j] = pt_basis->eval_phi(IND[j],x); 	
+      dphidxi[i][j] = pt_basis->eval_dphidx(IND[j],x); 	
+      dphideta[i][j] = pt_basis->eval_dphidy(IND[j],x); 	
+      d2phidxi2[i][j] = pt_basis->eval_d2phidx2(IND[j],x);
+      d2phideta2[i][j] = pt_basis->eval_d2phidy2(IND[j],x);
+      d2phidxideta[i][j] = pt_basis->eval_d2phidxdy(IND[j],x);
+    }
+  }
+}
+
+elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *order_gauss) :
+	      elem_type(){
+
+  //************ BEGIN GAUSS SETUP ******************	
+  Gauss gauss(solid,order_gauss);
+  GaussWeight = gauss.GaussWeight;
+  GaussPoints = gauss.GaussPoints;
+  //************ END GAUSS SETUP ******************
+	
+  //************ BEGIN FE and MG SETUP ******************	
+  if (!strcmp(order,"linear")) {
+    SolType_=0;   
+  } 
+  else if (!strcmp(order,"quadratic")) {
+    SolType_=1;   
+  } 
+  else if (!strcmp(order,"biquadratic")) {
+    SolType_=2;   
+  } 
+  else if (!strcmp(order,"constant")) {
+    SolType_=3;   
+  } 
+  else if (!strcmp(order,"disc_linear")) {
+    SolType_=4;   
+  }
+  
+  if (!strcmp(solid,"hex")) {//HEX
+    
+    ncf_[0]=8;
+    ncf_[1]=20;
+    ncf_[2]=27;
+    
+    if (!strcmp(order,"linear")) {
+      type_=0;
+      nc_=8;
+      nf_=27;
+      pt_basis = new hex1;//& hex_1;
+    } else if (!strcmp(order,"quadratic")) {
+      type_=1;
+      nc_=20;
+      nf_=81;
+      pt_basis = new hexth;//& hex_th;
+    } else if (!strcmp(order,"biquadratic")) {
+      type_=2;
+      nc_=27;
+      nf_=125;
+      pt_basis = new hex2;//& hex_2;
+    } else if (!strcmp(order,"constant")) {
+      type_=17;
+      nc_=1;
+      nf_=8;
+      pt_basis = new hex0;//& hex_0;
+    } else if (!strcmp(order,"disc_linear")) {
+      type_=18;
+      nc_=4;
+      nf_=32;
+      pt_basis = new hexpwl;//& hex_pwl;
+    } else {
+      cout<<order<<" is not a valid option for "<<solid<<endl;
+      exit(0);
+    }
+
+  } else if (!strcmp(solid,"wedge")) { //WEDGE
+         
+    ncf_[0]=6;
+    ncf_[1]=15;
+    ncf_[2]=18;
+       
+    if (!strcmp(order,"linear")) {
+      type_=3;
+      nc_=6;
+      nf_=18;
+      pt_basis = new wedge1;//& wedge_1;
+    } else if (!strcmp(order,"quadratic")) {
+      type_=4;
+      nc_=15;
+      nf_=57;
+      pt_basis = new wedgeth;//& wedge_th;
+    } else if (!strcmp(order,"biquadratic")) {
+      type_=5;
+      nc_=18;
+      nf_=75;
+      pt_basis = new wedge2;//& wedge_2;
+    } else {
+      cout<<order<<" is not a valid option for "<<solid<<endl;
+      exit(0);
+    }
+    
+  } else if (!strcmp(solid,"tet")) { //TETRAHEDRA
+         
+    ncf_[0]=4;
+    ncf_[1]=10;
+    ncf_[2]=10;
+    
+    if (!strcmp(order,"linear")) {
+      type_=6;
+      nc_=4;
+      nf_=10;
+      pt_basis = new tet1;//& tet_1;
+    } else if (!strcmp(order,"biquadratic")) {
+      type_=7;
+      nc_=10;
+      nf_=35;
+      pt_basis = new tet2;//& tet_2;
+    } else if (!strcmp(order,"constant")) {
+      type_=8;
+      nc_=1;
+      nf_=8;
+      pt_basis = new tet0;//& tet_0;
+    } else {
+      cout<<order<<" is not a valid option for "<<solid<<endl;
+      exit(0);
+    }
+
+  } else {
+    cout<<solid<<" is not a valid option"<<endl;
+    exit(0);
+  }
+
+  IND=new const int * [nc_];
+  for (int i=0; i<nc_; i++){
+    IND[i]=pt_basis->getIND(i);
+  }
+  KVERT_IND=new const int * [nf_];
+  X=new const double * [nf_];
+  for (int i=0; i<nf_; i++) {
+    KVERT_IND[i]=pt_basis->getKVERT_IND(i);
+    X[i]=pt_basis->getX(i);
+  }
+    
+  int counter=0;
+  for (int i=0; i<nf_; i++) {
+    for (int j=0; j<nc_; j++) {
+      double phi=pt_basis->eval_phi(IND[j],X[i]);
+      if (type_==16) {
+        if (i/4==1) phi=pt_basis->eval_dphidx(IND[j],X[i]);
+        else if (i/4==2) phi=pt_basis->eval_dphidy(IND[j],X[i]);
+      }
+      if (phi!=0){
+        counter++;
+      }
+    }
+  }
+  double *pt_d;
+  int *pt_i;
+
+  prol_val=new double * [nf_+1];
+  prol_ind=new int * [nf_+1];
+  mem_prol_val=new double [counter];
+  mem_prol_ind=new int [counter];
+
+  pt_d=mem_prol_val;
+  pt_i= mem_prol_ind;
+  for (int i=0; i<nf_; i++) {
+    prol_val[i]=pt_d;
+    prol_ind[i]=pt_i;
+    for (int j=0; j<nc_; j++) {
+      double phi=pt_basis->eval_phi(IND[j],X[i]);
+      if (type_==16) {
+        if (i/4==1)
+          phi=pt_basis->eval_dphidx(IND[j],X[i])/2.;
+        else if (i/4==2)
+          phi=pt_basis->eval_dphidy(IND[j],X[i])/2.;
+      } else if (type_==18) {
+        if (i/8==1)
+          phi=pt_basis->eval_dphidx(IND[j],X[i])/2.;
+        else if (i/8==2)
+          phi=pt_basis->eval_dphidy(IND[j],X[i])/2.;
+        else if (i/8==3)
+          phi=pt_basis->eval_dphidz(IND[j],X[i])/2.;
+      }
+      if (phi!=0) {
+        *(pt_d++)=phi;
+        *(pt_i++)=j;
+      }
+    }
+  }
+  
+  prol_val[nf_]=pt_d;
+  prol_ind[nf_]=pt_i;
+
+
+
+  phi= new double*[GaussPoints];
+  dphidxi  = new double*[GaussPoints];
+  dphideta = new double*[GaussPoints];
+  dphidzeta= new double*[GaussPoints];
+  
+  d2phidxi2  = new double*[GaussPoints];
+  d2phideta2 = new double*[GaussPoints];
+  d2phidzeta2= new double*[GaussPoints];
+  
+  d2phidxideta  = new double*[GaussPoints];
+  d2phidetadzeta = new double*[GaussPoints];
+  d2phidzetadxi= new double*[GaussPoints];
+
+  phi_memory=new double [GaussPoints*nc_];
+  dphidxi_memory  =new double [GaussPoints*nc_];
+  dphideta_memory =new double [GaussPoints*nc_];
+  dphidzeta_memory=new double [GaussPoints*nc_];
+  
+  d2phidxi2_memory  =new double [GaussPoints*nc_];
+  d2phideta2_memory =new double [GaussPoints*nc_];
+  d2phidzeta2_memory=new double [GaussPoints*nc_];
+  
+  d2phidxideta_memory  =new double [GaussPoints*nc_];
+  d2phidetadzeta_memory =new double [GaussPoints*nc_];
+  d2phidzetadxi_memory=new double [GaussPoints*nc_];
+
+  for (unsigned i=0; i<GaussPoints; i++) {
+    phi[i]=&phi_memory[i*nc_];
+    dphidxi[i]  =&dphidxi_memory[i*nc_];
+    dphideta[i] =&dphideta_memory[i*nc_];
+    dphidzeta[i]=&dphidzeta_memory[i*nc_];
+    
+    d2phidxi2[i]  =&d2phidxi2_memory[i*nc_];
+    d2phideta2[i] =&d2phideta2_memory[i*nc_];
+    d2phidzeta2[i]=&d2phidzeta2_memory[i*nc_];
+    
+    d2phidxideta[i]  = &d2phidxideta_memory[i*nc_];
+    d2phidetadzeta[i]= &d2phidetadzeta_memory[i*nc_];
+    d2phidzetadxi[i] = &d2phidzetadxi_memory[i*nc_];
+    
+  }
+
+  const double *ptx[3]={GaussWeight+GaussPoints, GaussWeight+2*GaussPoints, GaussWeight+3*GaussPoints};
+  for (unsigned i=0; i<GaussPoints; i++){
+    double x[3];
+    for (unsigned j=0; j<3;j++) {
+      x[j] = *ptx[j];
+      ptx[j]++;
+    }  
+    
+    for (int j=0; j<nc_; j++) {
+      phi[i][j] = pt_basis->eval_phi(IND[j],x); 	
+      dphidxi[i][j] = pt_basis->eval_dphidx(IND[j],x); 	
+      dphideta[i][j] = pt_basis->eval_dphidy(IND[j],x); 	
+      dphidzeta[i][j] = pt_basis->eval_dphidz(IND[j],x); 	
+      d2phidxi2[i][j] = pt_basis->eval_d2phidx2(IND[j],x);
+      d2phideta2[i][j] = pt_basis->eval_d2phidy2(IND[j],x);
+      d2phidzeta2[i][j] = pt_basis->eval_d2phidz2(IND[j],x);
+      d2phidxideta[i][j] = pt_basis->eval_d2phidxdy(IND[j],x);
+      d2phidetadzeta[i][j] = pt_basis->eval_d2phidydz(IND[j],x);
+      d2phidzetadxi[i][j] = pt_basis->eval_d2phidzdx(IND[j],x);
+    }
+  }
+}
+
+
+
+
+
+
+
 
 } //end namespace femus
 
