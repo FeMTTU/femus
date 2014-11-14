@@ -46,7 +46,7 @@ public:
     void AssociateQRule(QRule* qrule_in);
     double**      _phi_mapVBGD[VB];
     double** _dphidxez_mapVBGD[VB];
-    void init_switch();
+    void evaluate_shape_at_qp();
     
 // Multigrid ======
     uint _n_children;      //TODO this can be taken from the geometric element!

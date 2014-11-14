@@ -189,7 +189,7 @@ void FEElemBase::SetOrder(uint fe)  {
 // QUI c'e' un loop NGAUSS[vb,dim[vb],quadtri] x NDOFS[vb,dim[vb], feorder,quadtri]
 
 
-void FEElemBase::init_switch() {
+void FEElemBase::evaluate_shape_at_qp() {
 
   if ( _geomel->_geomel_type != QUADR && _geomel->_geomel_type != TRIANG  ) {
     std::cout << "FE::FE: GeomEl type " << _geomel->_geomel_type << " not supported" << std::endl;
