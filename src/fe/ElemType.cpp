@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: ElemType
- Authors: Eugenio Aulisa
+ Authors: Eugenio Aulisa, Giorgio Bornia
  
  Copyright (c) FEMTTU
  All rights reserved. 
@@ -65,21 +65,8 @@ const double *GaussTriangle[5]= {
 };
 
 
-const double *GaussWedge[5]= {
-  GaussWedge0[0],
-  GaussWedge1[0],
-  GaussWedge2[0],
-  GaussWedge3[0],
-  GaussWedge4[0]
-};
 
-const double *GaussTetrahedra[5]= {
-  GaussTetrahedra0[0],
-  GaussTetrahedra1[0],
-  GaussTetrahedra2[0],
-  GaussTetrahedra3[0],
-  GaussTetrahedra4[0]
-};
+
 
 
 using std::cout;
@@ -188,8 +175,9 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
     }
-    GaussWeight=hex_gauss::Gauss[gauss_order];
-    GaussPoints=hex_gauss::GaussPoints[gauss_order];
+    
+    GaussWeight = hex_gauss::Gauss[gauss_order];
+    GaussPoints = hex_gauss::GaussPoints[gauss_order];
   } else if (!strcmp(solid,"wedge")) { //WEDGE
          
     ncf_[0]=6;
@@ -216,19 +204,8 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       exit(0);
     }
     
-//     IND=new const int * [nc_];
-//     for (int i=0; i<nc_; i++){
-//       IND[i]=pt_basis->getIND(i);
-//     }
-//     KVERT_IND=new const int * [nf_];
-//     X=new const double * [nf_];
-//     for (int i=0; i<nf_; i++) {
-//       KVERT_IND[i]=pt_basis->getKVERT_IND(i);
-//       X[i]=pt_basis->getX(i);
-//     }
-     
-    GaussWeight=GaussWedge[gauss_order];
-    GaussPoints=GaussPointsWedge[gauss_order];
+    GaussWeight = wedge_gauss::Gauss[gauss_order];
+    GaussPoints = wedge_gauss::GaussPoints[gauss_order];
   } else if (!strcmp(solid,"tet")) { //TETRAHEDRA
          
     ncf_[0]=4;
@@ -255,19 +232,8 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       exit(0);
     }
 
-//     IND=new const int * [nc_];
-//     for (int i=0; i<nc_; i++){
-//       IND[i]=pt_basis->getIND(i);
-//     }
-//     KVERT_IND=new const int * [nf_];
-//     X=new const double * [nf_];
-//     for (int i=0; i<nf_; i++) {
-//       KVERT_IND[i]=pt_basis->getKVERT_IND(i);
-//       X[i]=pt_basis->getX(i);
-//     }
-    
-    GaussWeight=GaussTetrahedra[gauss_order];
-    GaussPoints=GaussPointsTetrahedra[gauss_order];
+    GaussWeight = tet_gauss::Gauss[gauss_order];
+    GaussPoints = tet_gauss::GaussPoints[gauss_order];
   } else if (!strcmp(solid,"quad")) { //QUAD
     ncf_[0]=4;
     ncf_[1]=8;
@@ -302,17 +268,6 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       exit(0);
     }
     
-//     IND=new const int * [nc_];
-//     for (int i=0; i<nc_; i++){
-//       IND[i]=pt_basis->getIND(i);
-//     }
-//     KVERT_IND=new const int * [nf_];
-//     X=new const double * [nf_];
-//     for (int i=0; i<nf_; i++) {
-//       KVERT_IND[i]=pt_basis->getKVERT_IND(i);
-//       X[i]=pt_basis->getX(i);
-//     }
-    
     GaussWeight=GaussSquare[gauss_order];
     GaussPoints=GaussPointsSquare[gauss_order];
   } else if (!strcmp(solid,"tri")) { //TRIANGLE
@@ -341,17 +296,6 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       exit(0);
     }
 
-//     IND=new const int * [nc_];
-//     for (int i=0; i<nc_; i++){
-//       IND[i]=pt_basis->getIND(i);
-//     }
-//     KVERT_IND=new const int * [nf_];
-//     X=new const double * [nf_];
-//     for (int i=0; i<nf_; i++) {
-//       KVERT_IND[i]=pt_basis->getKVERT_IND(i);
-//       X[i]=pt_basis->getX(i);
-//     }
-        
     GaussWeight=GaussTriangle[gauss_order];
     GaussPoints=GaussPointsTriangle[gauss_order];
   }
@@ -383,16 +327,6 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       exit(0);
     }
 
-//     IND=new const int * [nc_];
-//     for (int i=0; i<nc_; i++)
-//       IND[i]=LINE_IND[i];
-// 
-//     KVERT_IND=new const int * [nf_];
-//     X=new const double * [nf_];
-//     for (int i=0; i<nf_; i++) {
-//       KVERT_IND[i]=LINE_KVERT_IND[i];
-//       X[i]=LINE_X[i];
-//     }
     GaussWeight=GaussLine[gauss_order];
     GaussPoints=GaussPointsLine[gauss_order];
   } else {

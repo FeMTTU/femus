@@ -137,17 +137,41 @@ namespace femus {
   
   class hex_gauss {
   public:
-    hex_gauss(){};
+    static const unsigned GaussPoints[5];
     static const double *Gauss[5];  
     static const double Gauss0[4][1];
     static const double Gauss1[4][8];
     static const double Gauss2[4][27];
     static const double Gauss3[4][64];
     static const double Gauss4[4][125];
-    static const unsigned GaussPoints[5];
   };
   
-  class hex_lag : public basis, hex_gauss {
+  
+  class wedge_gauss {
+  public:
+    static const unsigned GaussPoints[5];
+    static const double *Gauss[5];  
+    static const double Gauss0[4][1];
+    static const double Gauss1[4][8];
+    static const double Gauss2[4][21];
+    static const double Gauss3[4][52];
+    static const double Gauss4[4][95];
+  };  
+  
+  
+  class tet_gauss {
+  public:
+    static const unsigned GaussPoints[5];
+    static const double *Gauss[5];  
+    static const double Gauss0[4][1];
+    static const double Gauss1[4][5];
+    static const double Gauss2[4][15];
+    static const double Gauss3[4][31];
+    static const double Gauss4[4][45];
+  };
+  
+  
+  class hex_lag : public basis {
   public:
     const double* getX(const int &i) const{return X[i];};
     const int* getIND(const int &i) const{return IND[i];};
@@ -218,7 +242,7 @@ namespace femus {
 
   //************************************************************
 
-  class hex_const : public basis, hex_gauss{
+  class hex_const : public basis {
   public:    
     const double* getX(const int &i) const{return X[i];};
     const int* getIND(const int &i) const{return IND[i];};
