@@ -76,11 +76,25 @@
     static const double Gauss4[4][19];
   };
   
-  //   class Quadrature {
+  
+  class line_gauss {
+  public:
+    static const unsigned GaussPoints[5];
+    static const double *Gauss[5];  
+    static const double Gauss0[4][1];
+    static const double Gauss1[4][2];
+    static const double Gauss2[4][3];
+    static const double Gauss3[4][4];
+    static const double Gauss4[4][5];
+  };  
+  
+  
+  
+  //   class Gauss {
 //     
 //   public: 
 //     
-//    Quadrature(unsigned int order, unsigned int geom_el);
+//    Gauss(unsigned int order, unsigned int geom_el);
 //    unsigned get_qpoints() { return n_qpoints;}; 
 //    unsigned get_order()   { return order;}; 
 // 
@@ -91,34 +105,6 @@
 //     std::vector< std::vector<double> >  qpoints;
 // 
 //   };
-
-
-// ************** LINE ***************
-//first row-weights, second row: x-coordinates
-const double GaussLine0[4][1]= {{2},
-  {0}
-};
-
-const double GaussLine1[4][2]= {{1,1},
-  {-0.57735026918963,0.57735026918963}
-};
-
-const double GaussLine2[4][3]= {{0.55555555555556,0.88888888888889,0.55555555555556},
-  {-0.77459666924148,0,0.77459666924148}
-};
-
-const double GaussLine3[4][4]= {{0.34785484513745,0.65214515486255,0.65214515486255,0.34785484513745},
-  {-0.86113631159405,-0.33998104358486,0.33998104358486,0.86113631159405}
-};
-
-const double GaussLine4[4][5]= {{0.23692688505619,0.47862867049937,0.56888888888889,0.47862867049937,0.23692688505619},
-  {-0.90617984593866,-0.53846931010568,0,0.53846931010568,0.90617984593866}
-};
-
-//number of gauss point for the previous  LINE vector
-const unsigned GaussPointsLine[5]= {1,2,3,4,5};
-
-
 
 
 

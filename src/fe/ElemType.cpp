@@ -22,42 +22,13 @@
 #include "Elem.hpp"
 #include "NumericVector.hpp"
 
-namespace femus {
-
-
-
-unsigned elem_type::_refindex=1;
-
-
-
-// square const vectors
-
-
-
-
-
-
-
-
-
-const double *GaussLine[5]= {
-  GaussLine0[0],
-  GaussLine1[0],
-  GaussLine2[0],
-  GaussLine3[0],
-  GaussLine4[0]
-};
-
-
-
-
-
-
-
-
-
 using std::cout;
 using std::endl;
+
+
+namespace femus {
+
+unsigned elem_type::_refindex=1;
 
 elem_type::~elem_type() {
   delete [] X;
@@ -98,6 +69,9 @@ elem_type::~elem_type() {
 };
 
 elem_type::elem_type(const char *solid, const char *order, const char *order_gauss) {
+
+  //************ BEGIN GAUSS SETUP ******************	
+  // TODO: this part could be done in an external wrapper Quadrature class
   //Gauss Point order
   int gauss_order;
   if (!strcmp(order_gauss,"zero")  || !strcmp(order_gauss,"first")) {
@@ -115,6 +89,39 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
     exit(0);
   }
 
+  if (!strcmp(solid,"hex")) {  
+        GaussWeight = hex_gauss::Gauss[gauss_order];
+        GaussPoints = hex_gauss::GaussPoints[gauss_order];  
+      }
+      else if (!strcmp(solid,"wedge")) {
+        GaussWeight = wedge_gauss::Gauss[gauss_order];
+        GaussPoints = wedge_gauss::GaussPoints[gauss_order];
+      }
+      else if (!strcmp(solid,"tet")) {
+        GaussWeight = tet_gauss::Gauss[gauss_order];
+        GaussPoints = tet_gauss::GaussPoints[gauss_order];
+      }
+      else if (!strcmp(solid,"quad")) {
+        GaussWeight = quad_gauss::Gauss[gauss_order];
+        GaussPoints = quad_gauss::GaussPoints[gauss_order];
+      }
+      else if (!strcmp(solid,"tri")) {
+        GaussWeight = tri_gauss::Gauss[gauss_order];
+        GaussPoints = tri_gauss::GaussPoints[gauss_order];
+      }	
+      else if (!strcmp(solid,"line")) {
+        GaussWeight = line_gauss::Gauss[gauss_order];
+        GaussPoints = line_gauss::GaussPoints[gauss_order];
+      }
+      else {
+        cout<<solid<<" is not a valid option"<<endl; abort();
+      }	
+	
+//************ END GAUSS SETUP ******************	
+	
+	
+  //************ BEGIN FE and MG SETUP ******************	
+	
   if (!strcmp(order,"linear")) {
     SolType_=0;   
   } else if (!strcmp(order,"quadratic")) {
@@ -162,9 +169,7 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
     }
-    
-    GaussWeight = hex_gauss::Gauss[gauss_order];
-    GaussPoints = hex_gauss::GaussPoints[gauss_order];
+
   } else if (!strcmp(solid,"wedge")) { //WEDGE
          
     ncf_[0]=6;
@@ -191,8 +196,6 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       exit(0);
     }
     
-    GaussWeight = wedge_gauss::Gauss[gauss_order];
-    GaussPoints = wedge_gauss::GaussPoints[gauss_order];
   } else if (!strcmp(solid,"tet")) { //TETRAHEDRA
          
     ncf_[0]=4;
@@ -219,8 +222,6 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       exit(0);
     }
 
-    GaussWeight = tet_gauss::Gauss[gauss_order];
-    GaussPoints = tet_gauss::GaussPoints[gauss_order];
   } else if (!strcmp(solid,"quad")) { //QUAD
     ncf_[0]=4;
     ncf_[1]=8;
@@ -255,9 +256,7 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       exit(0);
     }
     
-    GaussWeight = quad_gauss::Gauss[gauss_order];
-    GaussPoints = quad_gauss::GaussPoints[gauss_order];
-  } else if (!strcmp(solid,"tri")) { //TRIANGLE
+ } else if (!strcmp(solid,"tri")) { //TRIANGLE
     
     ncf_[0]=3;
     ncf_[1]=6;
@@ -282,9 +281,7 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
     }
-
-    GaussWeight = tri_gauss::Gauss[gauss_order];
-    GaussPoints = tri_gauss::GaussPoints[gauss_order];
+   
   }
 
   else if (!strcmp(solid,"line")) { //line
@@ -314,8 +311,6 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       exit(0);
     }
 
-    GaussWeight=GaussLine[gauss_order];
-    GaussPoints=GaussPointsLine[gauss_order];
   } else {
     cout<<solid<<" is not a valid option"<<endl;
     exit(0);
