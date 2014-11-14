@@ -807,17 +807,17 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
       type_=13;
       nc_=2;
       nf_=3;
-      pt_basis = new line1;//& line_1;
+      pt_basis = new line1;
     } else if (!strcmp(order,"biquadratic")) {
       type_=14;
       nc_=3;
       nf_=5;
-      pt_basis = new line2;//& line_2;
+      pt_basis = new line2;
     } else if (!strcmp(order,"constant")) {
       type_=15;  // TODO is the choice of this number ok ?????
       nc_=1;   
       nf_=2;   
-      pt_basis = new line0;//& line_0;
+      pt_basis = new line0;
     }
     else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
@@ -828,7 +828,7 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
     cout<<solid<<" is not a valid option"<<endl;
     exit(0);
   }
-
+  
   IND=new const int * [nc_];
   for (int i=0; i<nc_; i++){
     IND[i]=pt_basis->getIND(i);
@@ -839,7 +839,9 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
     KVERT_IND[i]=pt_basis->getKVERT_IND(i);
     X[i]=pt_basis->getX(i);
   }
-    
+
+  // local projection matrix evaluation
+  
   int counter=0;
   for (int i=0; i<nf_; i++) {
     for (int j=0; j<nc_; j++) {
@@ -890,6 +892,8 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
   
   prol_val[nf_]=pt_d;
   prol_ind[nf_]=pt_i;
+    
+  // shape function Gauss'point evaluation
 
   phi= new double*[GaussPoints];
   dphidxi  = new double*[GaussPoints];
@@ -956,27 +960,27 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
       type_=8;
       nc_=4;
       nf_=9;
-      pt_basis = new quad1;//& quad_1;
+      pt_basis = new quad1;
     } else if (!strcmp(order,"quadratic")) {
       type_=9;
       nc_=8;
       nf_=21;
-      pt_basis = new quadth;//& quad_th;
+      pt_basis = new quadth;
     } else if (!strcmp(order,"biquadratic")) {
       type_=10;
       nc_=9;
       nf_=25;
-      pt_basis = new quad2;//& quad_2;
+      pt_basis = new quad2;
     } else if (!strcmp(order,"constant")) {
       type_=15;
       nc_=1;
       nf_=4;
-      pt_basis = new quad0;//& quad_0;
+      pt_basis = new quad0;
     } else if (!strcmp(order,"disc_linear")) {
       type_=16;
       nc_=3;
       nf_=12;
-      pt_basis = new quadpwl;//& quad_pwl;
+      pt_basis = new quadpwl;
     } else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -992,17 +996,17 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
       type_=11;
       nc_=3;
       nf_=6;
-      pt_basis = new tri1;//& tri_1;
+      pt_basis = new tri1;
     } else if (!strcmp(order,"biquadratic")) {
       type_=12;
       nc_=6;
       nf_=15;
-      pt_basis = new tri2;//& tri_2;
+      pt_basis = new tri2;
     } else if (!strcmp(order,"constant")) {
-      type_=13; // TODO is the choice of this number ok ?????
+      type_=13; // TODO is the choice of this number ok ????? no
       nc_=1;
       nf_=4;
-      pt_basis = new tri0;//& tri_0;
+      pt_basis = new tri0;
     } else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -1023,6 +1027,8 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
     KVERT_IND[i]=pt_basis->getKVERT_IND(i);
     X[i]=pt_basis->getX(i);
   }
+  
+  // local projection matrix evaluation
     
   int counter=0;
   for (int i=0; i<nf_; i++) {
@@ -1075,7 +1081,8 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
   prol_val[nf_]=pt_d;
   prol_ind[nf_]=pt_i;
 
-
+  // shape function Gauss'point evaluation
+  
   phi= new double*[GaussPoints];
   dphidxi  = new double*[GaussPoints];
   dphideta = new double*[GaussPoints];
@@ -1160,27 +1167,27 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
       type_=0;
       nc_=8;
       nf_=27;
-      pt_basis = new hex1;//& hex_1;
+      pt_basis = new hex1;
     } else if (!strcmp(order,"quadratic")) {
       type_=1;
       nc_=20;
       nf_=81;
-      pt_basis = new hexth;//& hex_th;
+      pt_basis = new hexth;
     } else if (!strcmp(order,"biquadratic")) {
       type_=2;
       nc_=27;
       nf_=125;
-      pt_basis = new hex2;//& hex_2;
+      pt_basis = new hex2;
     } else if (!strcmp(order,"constant")) {
       type_=17;
       nc_=1;
       nf_=8;
-      pt_basis = new hex0;//& hex_0;
+      pt_basis = new hex0;
     } else if (!strcmp(order,"disc_linear")) {
       type_=18;
       nc_=4;
       nf_=32;
-      pt_basis = new hexpwl;//& hex_pwl;
+      pt_basis = new hexpwl;
     } else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -1196,17 +1203,17 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
       type_=3;
       nc_=6;
       nf_=18;
-      pt_basis = new wedge1;//& wedge_1;
+      pt_basis = new wedge1;
     } else if (!strcmp(order,"quadratic")) {
       type_=4;
       nc_=15;
       nf_=57;
-      pt_basis = new wedgeth;//& wedge_th;
+      pt_basis = new wedgeth;
     } else if (!strcmp(order,"biquadratic")) {
       type_=5;
       nc_=18;
       nf_=75;
-      pt_basis = new wedge2;//& wedge_2;
+      pt_basis = new wedge2;
     } else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -1222,17 +1229,17 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
       type_=6;
       nc_=4;
       nf_=10;
-      pt_basis = new tet1;//& tet_1;
+      pt_basis = new tet1;
     } else if (!strcmp(order,"biquadratic")) {
       type_=7;
       nc_=10;
       nf_=35;
-      pt_basis = new tet2;//& tet_2;
+      pt_basis = new tet2;
     } else if (!strcmp(order,"constant")) {
       type_=8;
       nc_=1;
       nf_=8;
-      pt_basis = new tet0;//& tet_0;
+      pt_basis = new tet0;
     } else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -1254,6 +1261,8 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
     X[i]=pt_basis->getX(i);
   }
     
+  // local projection matrix evaluation
+  
   int counter=0;
   for (int i=0; i<nf_; i++) {
     for (int j=0; j<nc_; j++) {
@@ -1305,7 +1314,7 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
   prol_val[nf_]=pt_d;
   prol_ind[nf_]=pt_i;
 
-
+  // shape function Gauss'point evaluation
 
   phi= new double*[GaussPoints];
   dphidxi  = new double*[GaussPoints];
