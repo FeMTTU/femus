@@ -48,21 +48,8 @@ const double *GaussLine[5]= {
   GaussLine4[0]
 };
 
-const double *GaussSquare[5]= {
-  GaussSquare0[0],
-  GaussSquare1[0],
-  GaussSquare2[0],
-  GaussSquare3[0],
-  GaussSquare4[0]
-};
 
-const double *GaussTriangle[5]= {
-  GaussTriangle0[0],
-  GaussTriangle1[0],
-  GaussTriangle2[0],
-  GaussTriangle3[0],
-  GaussTriangle4[0]
-};
+
 
 
 
@@ -268,8 +255,8 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       exit(0);
     }
     
-    GaussWeight=GaussSquare[gauss_order];
-    GaussPoints=GaussPointsSquare[gauss_order];
+    GaussWeight = quad_gauss::Gauss[gauss_order];
+    GaussPoints = quad_gauss::GaussPoints[gauss_order];
   } else if (!strcmp(solid,"tri")) { //TRIANGLE
     
     ncf_[0]=3;
@@ -296,8 +283,8 @@ elem_type::elem_type(const char *solid, const char *order, const char *order_gau
       exit(0);
     }
 
-    GaussWeight=GaussTriangle[gauss_order];
-    GaussPoints=GaussPointsTriangle[gauss_order];
+    GaussWeight = tri_gauss::Gauss[gauss_order];
+    GaussPoints = tri_gauss::GaussPoints[gauss_order];
   }
 
   else if (!strcmp(solid,"line")) { //line

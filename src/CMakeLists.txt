@@ -77,6 +77,7 @@ physics/Physics.cpp
 physics/Solid.cpp
 quadrature/CurrGaussPoint.cpp
 quadrature/CurrGaussPointBase.cpp
+quadrature/GaussPoints.cpp
 quadrature/QRule.cpp
 solution/MultiLevelSolution.cpp
 solution/Solution.cpp
