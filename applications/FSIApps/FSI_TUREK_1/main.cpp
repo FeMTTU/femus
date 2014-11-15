@@ -35,52 +35,63 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 int main(int argc,char **args) {
     
   
-//   const elem_type *_type_elem[6][5];
-//   
-//   _type_elem[0][0]=new const elem_type("hex","linear","fifth");
-//   _type_elem[0][1]=new const elem_type("hex","quadratic","fifth");
-//   _type_elem[0][2]=new const elem_type("hex","biquadratic","fifth");
-//   _type_elem[0][3]=new const elem_type("hex","constant","fifth");
-//  //  _type_elem[0][4]=new const elem_type("hex","disc_linear","fifth");
-//     
-//     
-//     _type_elem[1][0]=new const elem_type("tet","linear","fifth");
-//     _type_elem[1][1]=new const elem_type("tet","biquadratic","fifth");
-//     _type_elem[1][2]=_type_elem[1][1];
-//     _type_elem[1][3]=new const elem_type("tet","constant","fifth");
-//     
-//     //exit(0);
-//     
-//     _type_elem[2][0]=new const elem_type("wedge","linear","fifth");
-//     _type_elem[2][1]=new const elem_type("wedge","quadratic","fifth");
-//     _type_elem[2][2]=new const elem_type("wedge","biquadratic","fifth");
-//      
-//     
-//     _type_elem[3][0]=new const elem_type("quad","linear","fifth");
-//     _type_elem[3][1]=new const elem_type("quad","quadratic","fifth");
-//     _type_elem[3][2]=new const elem_type("quad","biquadratic","fifth");
-//     _type_elem[3][3]=new const elem_type("quad","constant","fifth");
-//     //_type_elem[3][4]=new const elem_type("quad","disc_linear","fifth");
-//     
-//     _type_elem[4][0]=new const elem_type("tri","linear","fifth");
-//     _type_elem[4][1]=new const elem_type("tri","biquadratic","fifth");
-//     
-//     
-//     _type_elem[5][0]=new const elem_type("line","linear","fifth");
-//     _type_elem[5][1]=new const elem_type("line","biquadratic","fifth");
-//   
-//   
-//   
-//     exit(0);
+  const elem_type *_type_elem[6][5];
   
+  _type_elem[0][0]=new const elem_type_3D("hex","linear","fifth");
+  _type_elem[0][1]=new const elem_type_3D("hex","quadratic","fifth");
+  _type_elem[0][2]=new const elem_type_3D("hex","biquadratic","fifth");
+  _type_elem[0][3]=new const elem_type_3D("hex","constant","fifth");
+  _type_elem[0][4]=new const elem_type_3D("hex","disc_linear","fifth");
+    
+  _type_elem[1][0]=new const elem_type_3D("tet","linear","fifth");
+  _type_elem[1][1]=new const elem_type_3D("tet","quadratic","fifth");
+  _type_elem[1][2]=new const elem_type_3D("tet","biquadratic","fifth");
+    
+  _type_elem[2][0]=new const elem_type_3D("wedge","linear","fifth");
+  _type_elem[2][1]=new const elem_type_3D("wedge","quadratic","fifth");
+  _type_elem[2][2]=new const elem_type_3D("wedge","biquadratic","fifth");
+     
+  _type_elem[3][0]=new const elem_type_2D("quad","linear","fifth");
+  _type_elem[3][1]=new const elem_type_2D("quad","quadratic","fifth");
+  _type_elem[3][2]=new const elem_type_2D("quad","biquadratic","fifth");
+  _type_elem[3][3]=new const elem_type_2D("quad","constant","fifth");
+  _type_elem[3][4]=new const elem_type_2D("quad","disc_linear","fifth");
+    
+  _type_elem[4][0]=new const elem_type_2D("tri","linear","fifth");
+  _type_elem[4][1]=new const elem_type_2D("tri","quadratic","fifth");
+  _type_elem[4][2]=new const elem_type_2D("tri","biquadratic","fifth");  
   
+  _type_elem[5][0]=new const elem_type_1D("line","linear","fifth");
+  _type_elem[5][1]=new const elem_type_1D("line","quadratic","fifth");
+  _type_elem[5][2]=new const elem_type_1D("line","biquadratic","fifth"); 
+   
+  delete _type_elem[0][0];
+  delete _type_elem[0][1];
+  delete _type_elem[0][2];
+  delete _type_elem[0][3];
+  delete _type_elem[0][4];  
+    
+  delete _type_elem[1][0];
+  delete _type_elem[1][1];
+  delete _type_elem[1][2];
+       
+  delete _type_elem[2][0];
+  delete _type_elem[2][1];
+  delete _type_elem[2][2];
   
+  delete _type_elem[3][0];
+  delete _type_elem[3][1];
+  delete _type_elem[3][2];
+  delete _type_elem[3][3];
+  delete _type_elem[3][4];
   
+  delete _type_elem[4][0];
+  delete _type_elem[4][1];
+  delete _type_elem[4][2];
   
-  
-  
-  
-  
+  delete _type_elem[5][0]; 
+  delete _type_elem[5][1];
+  delete _type_elem[5][2]; 
   
   
   
@@ -95,12 +106,12 @@ int main(int argc,char **args) {
     else if( !strcmp("beam",args[1])) {
       simulation=2; 
       dimension2D=1;  
-    }
-     else if( !strcmp("drum",args[1])){
+   }
+    else if( !strcmp("drum",args[1])){
       simulation=3; 
       dimension2D=1;  
-    }
-    else if( !strcmp("bathe_FSI",args[1])){
+   }
+   else if( !strcmp("bathe_FSI",args[1])){
       simulation=4; 
       dimension2D=0;  
     }

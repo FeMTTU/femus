@@ -45,7 +45,7 @@ public:
   elem_type(){};
   
   /** destructor */
-  ~elem_type();
+  virtual ~elem_type();
 
   /** To be Added */
   void BuildProlongation(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
@@ -124,14 +124,11 @@ protected:
   void test_prol_and_rest();
   int nc_,nf_,ncf_[3];
   unsigned type_;
-  unsigned SolType_;
+  unsigned _SolType;
   const double **X;
   const int **IND;
   const int **KVERT_IND;
-  double** rest_val;
-  int** rest_ind;
-  double* mem_rest_val;
-  int * mem_rest_ind;
+  
   double** prol_val;
   int** prol_ind;
   double* mem_prol_val;

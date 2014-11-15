@@ -185,18 +185,6 @@ const int quad_const::KVERT_IND[12][2]= {{0,0},{1,0},{2,0},{3,0},
       (-1.+ix*x[0]+jx*x[1])*dth2(x[0],I[0])*dth2(x[1],I[1]);
   }
 
-  double quadth::th2(const double& x, const int& i) const {
-    return !i*(0.5)*(1.-x) + !(i-1)*(1.-x)*(1.+x) + !(i-2)*(0.5)*(1.+x);
-  }
-
-  double quadth::dth2(const double& x, const int& i) const {
-    return (!i)*(-0.5) + !(i-1)*(-2.*x) + !(i-2)*(0.5);
-  }
-
-  double quadth::d2th2(const double& x, const int& i) const {
-    return  !(i-1)*(-2.);
-  }
-
 } //end namespace femus
 
 
