@@ -159,13 +159,8 @@ unsigned elem::GetElementFaceDofNumber(const unsigned &iel, const unsigned jface
 /**
  * Return the local to global dof
  **/
-unsigned elem::GetDof(const unsigned iel,const unsigned &inode,const unsigned &type)const {
-  unsigned Dof=(type<15)?GetElementVertexIndex(iel,inode)-1u:(nel*inode)+iel;
-  return Dof;
-}
-
-unsigned elem::GetDofCoarse(const unsigned iel,const unsigned &inode,const unsigned &type)const {
-  unsigned Dof=(type<15)?GetElementVertexIndex(iel,inode)-1u:(nelf*inode)+elf[iel];
+unsigned elem::GetMeshDof(const unsigned iel,const unsigned &inode,const unsigned &SolType)const {
+  unsigned Dof=(SolType<3)?GetElementVertexIndex(iel,inode)-1u:(nel*inode)+iel;
   return Dof;
 }
 

@@ -31,16 +31,16 @@ namespace femus {
 unsigned elem_type::_refindex=1;
 
 elem_type::~elem_type() {
-  delete [] X;
-  delete [] KVERT_IND;
-  delete [] IND;
+  delete [] _X;
+  delete [] _KVERT_IND;
+  delete [] _IND;
 
-  delete [] prol_val;
-  delete [] prol_ind;
-  delete [] mem_prol_val;
-  delete [] mem_prol_ind;
+  delete [] _prol_val;
+  delete [] _prol_ind;
+  delete [] _mem_prol_val;
+  delete [] _mem_prol_ind;
   
-  delete pt_basis;
+  delete _pt_basis;
   
 };
 
@@ -52,21 +52,21 @@ void elem_type::BuildProlongation(const LinearEquation &lspdef,const LinearEquat
 				  const unsigned &index_sol, const unsigned &kkindex_sol) const {
   vector<int> cols(27);
    
-  for (int i=0; i<nf_; i++) {
-    int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
+  for (int i=0; i<_nf; i++) {
+    int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
     int ielf=lspdec._msh->el->GetChildElement(ielc,i0);
-    int i1=KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-    int iadd=lspdef._msh->el->GetDof(ielf,i1,type_);
+    int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
+    int iadd=lspdef._msh->el->GetMeshDof(ielf,i1,_SolType);
     int irow=lspdef.GetKKDof(index_sol,kkindex_sol,iadd);  //  local-id to dof 
-    int ncols=prol_ind[i+1]-prol_ind[i];
+    int ncols=_prol_ind[i+1]-_prol_ind[i];
     cols.assign(ncols,0);
     for (int k=0; k<ncols; k++) {
-      int j=prol_ind[i][k]; 
-      int jadd=lspdec._msh->el->GetDof(ielc,j,type_);
+      int j=_prol_ind[i][k]; 
+      int jadd=lspdec._msh->el->GetMeshDof(ielc,j,_SolType);
       int jj=lspdec.GetKKDof(index_sol,kkindex_sol,jadd); 
       cols[k]=jj;
     }
-    Projmat->insert_row(irow,ncols,cols,prol_val[i]);
+    Projmat->insert_row(irow,ncols,cols,_prol_val[i]);
   }
 }
 
@@ -75,21 +75,21 @@ void elem_type::GetSparsityPatternSize(const LinearEquation &lspdef,const Linear
 				       NumericVector* NNZ_d, NumericVector* NNZ_o,
 				       const unsigned &index_sol, const unsigned &kkindex_sol) const {
      
-  for (int i=0; i<nf_; i++) {
-    int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
+  for (int i=0; i<_nf; i++) {
+    int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
     int ielf=lspdec._msh->el->GetChildElement(ielc,i0);
-    int i1=KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-    int iadd=lspdef._msh->el->GetDof(ielf,i1,type_);
+    int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
+    int iadd=lspdef._msh->el->GetMeshDof(ielf,i1,_SolType);
     int irow=lspdef.GetKKDof(index_sol,kkindex_sol,iadd);  //  local-id to dof 
     
     int iproc=0;
     while (irow < lspdef.KKoffset[0][iproc] || irow >= lspdef.KKoffset[lspdef.KKIndex.size()-1][iproc] ) iproc++;
-    int ncols=prol_ind[i+1]-prol_ind[i];
+    int ncols=_prol_ind[i+1]-_prol_ind[i];
     
     int counter_o=0;
     for (int k=0; k<ncols; k++) {
-      int j=prol_ind[i][k]; 
-      int jadd=lspdec._msh->el->GetDof(ielc,j,type_);
+      int j=_prol_ind[i][k]; 
+      int jadd=lspdec._msh->el->GetMeshDof(ielc,j,_SolType);
       int jcolumn=lspdec.GetKKDof(index_sol,kkindex_sol,jadd); 
       if(jcolumn < lspdec.KKoffset[0][iproc] || jcolumn >= lspdec.KKoffset[lspdef.KKIndex.size()-1][iproc] ) counter_o++;
     }
@@ -107,28 +107,28 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
   
   vector <double> copy_prol_val;
   copy_prol_val.reserve(27); 
-  for (int i=0; i<nf_; i++) {
-    int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
+  for (int i=0; i<_nf; i++) {
+    int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
     int ielf=lspdec._msh->el->GetChildElement(ielc,i0);
-    int i1=KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-    int iadd=lspdef._msh->el->GetDof(ielf,i1,type_);
+    int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
+    int iadd=lspdef._msh->el->GetMeshDof(ielf,i1,_SolType);
         
     int irow=lspdef.GetKKDof(index_sol,kkindex_sol,iadd);  //  local-id to dof 
-    int ncols=prol_ind[i+1]-prol_ind[i];
+    int ncols=_prol_ind[i+1]-_prol_ind[i];
     
     bool isolidmark=lspdef._msh->el->GetNodeRegion(iadd);
     
     cols.assign(ncols,0);
     copy_prol_val.resize(ncols);
     for (int k=0; k<ncols; k++) {
-      int j=prol_ind[i][k]; 
-      int jadd=lspdec._msh->el->GetDof(ielc,j,type_);
+      int j=_prol_ind[i][k]; 
+      int jadd=lspdec._msh->el->GetMeshDof(ielc,j,_SolType);
       int jcolumn=lspdec.GetKKDof(index_sol,kkindex_sol,jadd); 
       cols[k]=jcolumn;
       
       bool jsolidmark=lspdef._msh->el->GetNodeRegion(jadd); 
       
-      copy_prol_val[k]=(!TestDisp || !fluid_region || isolidmark==jsolidmark)?prol_val[i][k]:0.;
+      copy_prol_val[k]=(!TestDisp || !fluid_region || isolidmark==jsolidmark)?_prol_val[i][k]:0.;
     }    
     Projmat->insert_row(irow,ncols,cols,&copy_prol_val[0]);
   }
@@ -142,20 +142,20 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
 
 void elem_type::GetSparsityPatternSize(const mesh &meshf,const mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const {
    
-  for (int i=0; i<nf_; i++) {
-    int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
+  for (int i=0; i<_nf; i++) {
+    int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
     int ielf=meshc.el->GetChildElement(ielc,i0);
-    int i1=KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-    int iadd=meshf.el->GetDof(ielf,i1,type_);
+    int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
+    int iadd=meshf.el->GetMeshDof(ielf,i1,_SolType);
     int irow=meshf.GetMetisDof(iadd,_SolType);  //  local-id to dof
     int iproc=0;
     while (irow < meshf.MetisOffset[_SolType][iproc] || irow >= meshf.MetisOffset[_SolType][iproc+1] ) iproc++;
     
-    int ncols=prol_ind[i+1]-prol_ind[i];
+    int ncols=_prol_ind[i+1]-_prol_ind[i];
     unsigned counter_o=0;
     for (int k=0; k<ncols; k++) {
-      int j=prol_ind[i][k]; 
-      int jadd=meshc.el->GetDof(ielc,j,type_);
+      int j=_prol_ind[i][k]; 
+      int jadd=meshc.el->GetMeshDof(ielc,j,_SolType);
       int jcolumn=meshc.GetMetisDof(jadd,_SolType);
       if(jcolumn < meshc.MetisOffset[_SolType][iproc] || jcolumn >= meshc.MetisOffset[_SolType][iproc+1] ) counter_o++;
     }
@@ -169,22 +169,22 @@ void elem_type::GetSparsityPatternSize(const mesh &meshf,const mesh &meshc, cons
 void elem_type::BuildProlongation(const mesh &meshf,const mesh &meshc, const int& ielc,
 				  SparseMatrix* Projmat) const {
   vector<int> cols(27);
-  for (int i=0; i<nf_; i++) {
-    int i0=KVERT_IND[i][0]; //id of the subdivision of the fine element
+  for (int i=0; i<_nf; i++) {
+    int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
     int ielf=meshc.el->GetChildElement(ielc,i0);
-    int i1=KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-    int iadd=meshf.el->GetDof(ielf,i1,type_);
+    int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
+    int iadd=meshf.el->GetMeshDof(ielf,i1,_SolType);
     int irow=meshf.GetMetisDof(iadd,_SolType);  //  local-id to dof 
-    int ncols=prol_ind[i+1]-prol_ind[i];
+    int ncols=_prol_ind[i+1]-_prol_ind[i];
     cols.assign(ncols,0);
     for (int k=0; k<ncols; k++) {
-      int j=prol_ind[i][k]; 
-      int jadd=meshc.el->GetDof(ielc,j,type_);
+      int j=_prol_ind[i][k]; 
+      int jadd=meshc.el->GetMeshDof(ielc,j,_SolType);
       int jcolumn=meshc.GetMetisDof(jadd,_SolType);
       cols[k]=jcolumn;
     }
 
-    Projmat->insert_row(irow,ncols,cols,prol_val[i]);
+    Projmat->insert_row(irow,ncols,cols,_prol_val[i]);
   }
 }
 
@@ -193,16 +193,16 @@ void elem_type::BuildProlongation(const mesh &meshf,const mesh &meshc, const int
 //----------------------------------------------------------------------------------------------------
 
 void elem_type::GetSparsityPatternSize(const mesh& mesh,const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned &itype) const{
-  for (int i=0; i<ncf_[itype]; i++) {
-    int inode=mesh.el->GetDof(iel,i,type_);
+  for (int i=0; i<_nlag[itype]; i++) {
+    int inode=mesh.el->GetMeshDof(iel,i,_SolType);
     int irow=mesh.GetMetisDof(inode,itype);
     int iproc=0;
     while (irow < mesh.MetisOffset[itype][iproc] || irow >= mesh.MetisOffset[itype][iproc+1] ) iproc++;
-    int ncols=prol_ind[i+1]-prol_ind[i];
+    int ncols=_prol_ind[i+1]-_prol_ind[i];
     unsigned counter_o=0;
     for (int k=0; k<ncols; k++) {
-      int jj=prol_ind[i][k];
-      int jnode   = mesh.el->GetDof(iel,jj,type_);
+      int jj=_prol_ind[i][k];
+      int jnode   = mesh.el->GetMeshDof(iel,jj,_SolType);
       int jcolumn = mesh.GetMetisDof(jnode,_SolType);
       if(jcolumn < mesh.MetisOffset[_SolType][iproc] || jcolumn >= mesh.MetisOffset[_SolType][iproc+1] ) counter_o++;
     }
@@ -214,18 +214,18 @@ void elem_type::GetSparsityPatternSize(const mesh& mesh,const int& iel, NumericV
 
 void elem_type::BuildProlongation(const mesh& mesh,const int& iel, SparseMatrix* Projmat,const unsigned &itype) const{
   vector<int> cols(27);
-  for (int i=0; i<ncf_[itype]; i++) {
-    int inode=mesh.el->GetDof(iel,i,type_);
+  for (int i=0; i<_nlag[itype]; i++) {
+    int inode=mesh.el->GetMeshDof(iel,i,_SolType);
     int irow=mesh.GetMetisDof(inode,itype);
-    int ncols=prol_ind[i+1]-prol_ind[i];
+    int ncols=_prol_ind[i+1]-_prol_ind[i];
     cols.assign(ncols,0);
     for (int k=0; k<ncols; k++) {
-      int jj=prol_ind[i][k];
-      int jnode=mesh.el->GetDof(iel,jj,type_);
+      int jj=_prol_ind[i][k];
+      int jnode=mesh.el->GetMeshDof(iel,jj,_SolType);
       int jcolumn=mesh.GetMetisDof(jnode,_SolType);
       cols[k]=jcolumn;
     }
-    Projmat->insert_row(irow,ncols,cols,prol_val[i]);
+    Projmat->insert_row(irow,ncols,cols,_prol_val[i]);
   }
 }
 
@@ -234,8 +234,8 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
 
   //************ BEGIN GAUSS SETUP ******************	
   Gauss gauss(solid, order_gauss);
-  GaussWeight = gauss.GaussWeight;
-  GaussPoints = gauss.GaussPoints;
+  _GaussPointValues = gauss.GaussWeight;
+  _GaussPointNumber = gauss.GaussPoints;
   //************ END GAUSS SETUP ******************
 	
   //************ BEGIN FE and MG SETUP ******************	
@@ -246,10 +246,10 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
   else if (!strcmp(order,"disc_linear")) _SolType=4;   
    
   if (!strcmp(solid,"line")) { //line
-    if 	    (_SolType == 0) pt_basis = new line1;
-    else if (_SolType == 1) pt_basis = new line2;
-    else if (_SolType == 2) pt_basis = new line2;
-    else if (_SolType == 3) pt_basis = new line0;
+    if 	    (_SolType == 0) _pt_basis = new line1;
+    else if (_SolType == 1) _pt_basis = new line2;
+    else if (_SolType == 2) _pt_basis = new line2;
+    else if (_SolType == 3) _pt_basis = new line0;
     else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -261,30 +261,29 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
   }
   
   // get data from basis object
-  type_	  = pt_basis->_type; 
-  nc_ 	  = pt_basis->_nc;
-  nf_ 	  = pt_basis->_nf;
-  ncf_[0] = pt_basis->_ncf0;
-  ncf_[1] = pt_basis->_ncf1;
-  ncf_[2] = pt_basis->_ncf2;
+  _nc 	   = _pt_basis->_nc;
+  _nf 	   = _pt_basis->_nf;
+  _nlag[0] = _pt_basis->_nlag0;
+  _nlag[1] = _pt_basis->_nlag1;
+  _nlag[2] = _pt_basis->_nlag2;
   
   
-  IND=new const int * [nc_];
-  for (int i=0; i<nc_; i++){
-    IND[i]=pt_basis->getIND(i);
+  _IND=new const int * [_nc];
+  for (int i=0; i<_nc; i++){
+    _IND[i]=_pt_basis->getIND(i);
   }
-  KVERT_IND=new const int * [nf_];
-  X=new const double * [nf_];
-  for (int i=0; i<nf_; i++) {
-    KVERT_IND[i]=pt_basis->getKVERT_IND(i);
-    X[i]=pt_basis->getX(i);
+  _KVERT_IND=new const int * [_nf];
+  _X=new const double * [_nf];
+  for (int i=0; i<_nf; i++) {
+    _KVERT_IND[i]=_pt_basis->getKVERT_IND(i);
+    _X[i]=_pt_basis->getX(i);
   }
 
   // local projection matrix evaluation
   int counter=0;
-  for (int i=0; i<nf_; i++) {
-    for (int j=0; j<nc_; j++) {
-      double phi=pt_basis->eval_phi(IND[j],X[i]);
+  for (int i=0; i<_nf; i++) {
+    for (int j=0; j<_nc; j++) {
+      double phi=_pt_basis->eval_phi(_IND[j],_X[i]);
       if ( fabs(phi) >= 1.0e-14 ){
         counter++;
       }
@@ -293,18 +292,18 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
   double *pt_d;
   int *pt_i;
 
-  prol_val=new double * [nf_+1];
-  prol_ind=new int * [nf_+1];
-  mem_prol_val=new double [counter];
-  mem_prol_ind=new int [counter];
+  _prol_val=new double * [_nf+1];
+  _prol_ind=new int * [_nf+1];
+  _mem_prol_val=new double [counter];
+  _mem_prol_ind=new int [counter];
 
-  pt_d=mem_prol_val;
-  pt_i= mem_prol_ind;
-  for (int i=0; i<nf_; i++) {
-    prol_val[i]=pt_d;
-    prol_ind[i]=pt_i;
-    for (int j=0; j<nc_; j++) {
-      double phi=pt_basis->eval_phi(IND[j],X[i]);
+  pt_d= _mem_prol_val;
+  pt_i= _mem_prol_ind;
+  for (int i=0; i<_nf; i++) {
+    _prol_val[i]=pt_d;
+    _prol_ind[i]=pt_i;
+    for (int j=0; j<_nc; j++) {
+      double phi=_pt_basis->eval_phi(_IND[j],_X[i]);
       if ( fabs(phi) >= 1.0e-14 ){
         *(pt_d++)=phi;
         *(pt_i++)=j;
@@ -312,36 +311,36 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
     }
   }
   
-  prol_val[nf_]=pt_d;
-  prol_ind[nf_]=pt_i;
+  _prol_val[_nf]=pt_d;
+  _prol_ind[_nf]=pt_i;
     
   // shape function and its derivatives evaluated at Gauss'points
-  phi= new double*[GaussPoints];
-  dphidxi  = new double*[GaussPoints];
-  d2phidxi2  = new double*[GaussPoints];
+  _phi= new double*[_GaussPointNumber];
+  _dphidxi  = new double*[_GaussPointNumber];
+  _d2phidxi2  = new double*[_GaussPointNumber];
 
-  phi_memory=new double [GaussPoints*nc_];
-  dphidxi_memory  =new double [GaussPoints*nc_];
-  d2phidxi2_memory  =new double [GaussPoints*nc_];
+  _phi_memory=new double [_GaussPointNumber*_nc];
+  _dphidxi_memory  =new double [_GaussPointNumber*_nc];
+  _d2phidxi2_memory  =new double [_GaussPointNumber*_nc];
 
-  for (unsigned i=0; i<GaussPoints; i++) {
-    phi[i]=&phi_memory[i*nc_];
-    dphidxi[i]  =&dphidxi_memory[i*nc_];
-    d2phidxi2[i]  =&d2phidxi2_memory[i*nc_];
+  for (unsigned i=0; i<_GaussPointNumber; i++) {
+    _phi[i]=&_phi_memory[i*_nc];
+    _dphidxi[i]  =&_dphidxi_memory[i*_nc];
+    _d2phidxi2[i]  =&_d2phidxi2_memory[i*_nc];
   }
 
- const double *ptx[1]={GaussWeight+GaussPoints};
-  for (unsigned i=0; i<GaussPoints; i++){
+ const double *ptx[1]={_GaussPointValues+_GaussPointNumber};
+  for (unsigned i=0; i<_GaussPointNumber; i++){
     double x[1];
     for (unsigned j=0; j<1;j++) {
       x[j] = *ptx[j];
       ptx[j]++;
     }  
     
-    for (int j=0; j<nc_; j++) {
-      phi[i][j] = pt_basis->eval_phi(IND[j],x); 	
-      dphidxi[i][j] = pt_basis->eval_dphidx(IND[j],x); 		
-      d2phidxi2[i][j] = pt_basis->eval_d2phidx2(IND[j],x);
+    for (int j=0; j<_nc; j++) {
+      _phi[i][j] = _pt_basis->eval_phi(_IND[j],x); 	
+      _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j],x); 		
+      _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j],x);
     }
   }
 }
@@ -352,8 +351,8 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
 
   //************ BEGIN GAUSS SETUP ******************	
   Gauss gauss(solid,order_gauss);
-  GaussWeight = gauss.GaussWeight;
-  GaussPoints = gauss.GaussPoints;
+  _GaussPointValues = gauss.GaussWeight;
+  _GaussPointNumber = gauss.GaussPoints;
   //************ END GAUSS SETUP ******************
 	
   //************ BEGIN FE and MG SETUP ******************	
@@ -364,11 +363,11 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
   else if (!strcmp(order,"disc_linear")) _SolType=4;   
   
   if (!strcmp(solid,"quad")) { //QUAD
-    if 	    (_SolType == 0) pt_basis = new quad1;
-    else if (_SolType == 1) pt_basis = new quadth;
-    else if (_SolType == 2) pt_basis = new quad2;
-    else if (_SolType == 3) pt_basis = new quad0;
-    else if (_SolType == 4) pt_basis = new quadpwl;
+    if 	    (_SolType == 0) _pt_basis = new quad1;
+    else if (_SolType == 1) _pt_basis = new quadth;
+    else if (_SolType == 2) _pt_basis = new quad2;
+    else if (_SolType == 3) _pt_basis = new quad0;
+    else if (_SolType == 4) _pt_basis = new quadpwl;
     else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -376,10 +375,10 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
   }      
   else if (!strcmp(solid,"tri")) { //TRIANGLE
     
-    if 	    (_SolType == 0) pt_basis = new tri1;
-    else if (_SolType == 1) pt_basis = new tri2;
-    else if (_SolType == 2) pt_basis = new tri2;
-    else if (_SolType == 3) pt_basis = new tri0;
+    if 	    (_SolType == 0) _pt_basis = new tri1;
+    else if (_SolType == 1) _pt_basis = new tri2;
+    else if (_SolType == 2) _pt_basis = new tri2;
+    else if (_SolType == 3) _pt_basis = new tri0;
     else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -391,32 +390,31 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
   }
   
   // get data from basis object
-  type_	  = pt_basis->_type; 
-  nc_ 	  = pt_basis->_nc;
-  nf_ 	  = pt_basis->_nf;
-  ncf_[0] = pt_basis->_ncf0;
-  ncf_[1] = pt_basis->_ncf1;
-  ncf_[2] = pt_basis->_ncf2;
+  _nc 	   = _pt_basis->_nc;
+  _nf 	   = _pt_basis->_nf;
+  _nlag[0] = _pt_basis->_nlag0;
+  _nlag[1] = _pt_basis->_nlag1;
+  _nlag[2] = _pt_basis->_nlag2;
 
-  IND=new const int * [nc_];
-  for (int i=0; i<nc_; i++){
-    IND[i]=pt_basis->getIND(i);
+  _IND=new const int * [_nc];
+  for (int i=0; i<_nc; i++){
+    _IND[i]=_pt_basis->getIND(i);
   }
-  KVERT_IND=new const int * [nf_];
-  X=new const double * [nf_];
-  for (int i=0; i<nf_; i++) {
-    KVERT_IND[i]=pt_basis->getKVERT_IND(i);
-    X[i]=pt_basis->getX(i);
+  _KVERT_IND=new const int * [_nf];
+  _X=new const double * [_nf];
+  for (int i=0; i<_nf; i++) {
+    _KVERT_IND[i]=_pt_basis->getKVERT_IND(i);
+    _X[i]=_pt_basis->getX(i);
   }
   
   // local projection matrix evaluation   
   int counter=0;
-  for (int i=0; i<nf_; i++) {
-    for (int j=0; j<nc_; j++) {
-      double phi=pt_basis->eval_phi(IND[j],X[i]);
-      if (type_==16) {
-        if (i/4==1) phi=pt_basis->eval_dphidx(IND[j],X[i]);
-        else if (i/4==2) phi=pt_basis->eval_dphidy(IND[j],X[i]);
+  for (int i=0; i<_nf; i++) {
+    for (int j=0; j<_nc; j++) {
+      double phi=_pt_basis->eval_phi(_IND[j],_X[i]);
+      if ( _SolType==4 ) { //if piece_wise_linear
+        if (i/4==1) phi=_pt_basis->eval_dphidx(_IND[j],_X[i]);
+        else if (i/4==2) phi=_pt_basis->eval_dphidy(_IND[j],_X[i]);
       }
       if ( fabs(phi) >= 1.0e-14 ){
         counter++;
@@ -426,23 +424,23 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
   double *pt_d;
   int *pt_i;
 
-  prol_val=new double * [nf_+1];
-  prol_ind=new int * [nf_+1];
-  mem_prol_val=new double [counter];
-  mem_prol_ind=new int [counter];
+  _prol_val=new double * [_nf+1];
+  _prol_ind=new int * [_nf+1];
+  _mem_prol_val=new double [counter];
+  _mem_prol_ind=new int [counter];
 
-  pt_d=mem_prol_val;
-  pt_i= mem_prol_ind;
-  for (int i=0; i<nf_; i++) {
-    prol_val[i]=pt_d;
-    prol_ind[i]=pt_i;
-    for (int j=0; j<nc_; j++) {
-      double phi=pt_basis->eval_phi(IND[j],X[i]);
-      if (type_==16) {
+  pt_d=_mem_prol_val;
+  pt_i=_mem_prol_ind;
+  for (int i=0; i<_nf; i++) {
+    _prol_val[i]=pt_d;
+    _prol_ind[i]=pt_i;
+    for (int j=0; j<_nc; j++) {
+      double phi=_pt_basis->eval_phi(_IND[j],_X[i]);
+      if ( _SolType==4 ) { //if piece_wise_linear
         if (i/4==1)
-          phi=pt_basis->eval_dphidx(IND[j],X[i])/2.;
+          phi=_pt_basis->eval_dphidx(_IND[j],_X[i])/2.;
         else if (i/4==2)
-          phi=pt_basis->eval_dphidy(IND[j],X[i])/2.;
+          phi=_pt_basis->eval_dphidy(_IND[j],_X[i])/2.;
       } 
       if ( fabs(phi) >= 1.0e-14 ){
         *(pt_d++)=phi;
@@ -451,54 +449,54 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
     }
   }
   
-  prol_val[nf_]=pt_d;
-  prol_ind[nf_]=pt_i;
+  _prol_val[_nf]=pt_d;
+  _prol_ind[_nf]=pt_i;
 
   // shape function and its derivatives evaluated at Gauss'points
-  phi= new double*[GaussPoints];
-  dphidxi  = new double*[GaussPoints];
-  dphideta = new double*[GaussPoints];
+  _phi= new double*[_GaussPointNumber];
+  _dphidxi  = new double*[_GaussPointNumber];
+  _dphideta = new double*[_GaussPointNumber];
   
-  d2phidxi2  = new double*[GaussPoints];
-  d2phideta2 = new double*[GaussPoints];
+  _d2phidxi2  = new double*[_GaussPointNumber];
+  _d2phideta2 = new double*[_GaussPointNumber];
   
-  d2phidxideta  = new double*[GaussPoints];
+  _d2phidxideta  = new double*[_GaussPointNumber];
 
-  phi_memory=new double [GaussPoints*nc_];
-  dphidxi_memory  =new double [GaussPoints*nc_];
-  dphideta_memory =new double [GaussPoints*nc_];
+  _phi_memory=new double [_GaussPointNumber*_nc];
+  _dphidxi_memory  =new double [_GaussPointNumber*_nc];
+  _dphideta_memory =new double [_GaussPointNumber*_nc];
   
-  d2phidxi2_memory  =new double [GaussPoints*nc_];
-  d2phideta2_memory =new double [GaussPoints*nc_];
+  _d2phidxi2_memory  =new double [_GaussPointNumber*_nc];
+  _d2phideta2_memory =new double [_GaussPointNumber*_nc];
   
-  d2phidxideta_memory  =new double [GaussPoints*nc_];
+  _d2phidxideta_memory  =new double [_GaussPointNumber*_nc];
 
-  for (unsigned i=0; i<GaussPoints; i++) {
-    phi[i]=&phi_memory[i*nc_];
-    dphidxi[i]  =&dphidxi_memory[i*nc_];
-    dphideta[i] =&dphideta_memory[i*nc_];
+  for (unsigned i=0; i<_GaussPointNumber; i++) {
+    _phi[i]=&_phi_memory[i*_nc];
+    _dphidxi[i]  =&_dphidxi_memory[i*_nc];
+    _dphideta[i] =&_dphideta_memory[i*_nc];
     
-    d2phidxi2[i]  =&d2phidxi2_memory[i*nc_];
-    d2phideta2[i] =&d2phideta2_memory[i*nc_];
+    _d2phidxi2[i]  =&_d2phidxi2_memory[i*_nc];
+    _d2phideta2[i] =&_d2phideta2_memory[i*_nc];
     
-    d2phidxideta[i]  = &d2phidxideta_memory[i*nc_];
+    _d2phidxideta[i]  = &_d2phidxideta_memory[i*_nc];
     
   }
 
-  const double *ptx[2]={GaussWeight+GaussPoints, GaussWeight+2*GaussPoints};
-  for (unsigned i=0; i<GaussPoints; i++){
+  const double *ptx[2]={_GaussPointValues+_GaussPointNumber, _GaussPointValues+2*_GaussPointNumber};
+  for (unsigned i=0; i<_GaussPointNumber; i++){
     double x[2];
     for (unsigned j=0; j<2;j++) {
       x[j] = *ptx[j];
       ptx[j]++;
     }
-    for (int j=0; j<nc_; j++) {
-      phi[i][j] = pt_basis->eval_phi(IND[j],x); 	
-      dphidxi[i][j] = pt_basis->eval_dphidx(IND[j],x); 	
-      dphideta[i][j] = pt_basis->eval_dphidy(IND[j],x); 	
-      d2phidxi2[i][j] = pt_basis->eval_d2phidx2(IND[j],x);
-      d2phideta2[i][j] = pt_basis->eval_d2phidy2(IND[j],x);
-      d2phidxideta[i][j] = pt_basis->eval_d2phidxdy(IND[j],x);
+    for (int j=0; j<_nc; j++) {
+      _phi[i][j] = _pt_basis->eval_phi(_IND[j],x); 	
+      _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j],x); 	
+      _dphideta[i][j] = _pt_basis->eval_dphidy(_IND[j],x); 	
+      _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j],x);
+      _d2phideta2[i][j] = _pt_basis->eval_d2phidy2(_IND[j],x);
+      _d2phidxideta[i][j] = _pt_basis->eval_d2phidxdy(_IND[j],x);
     }
   }
 }
@@ -508,8 +506,8 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
 
   //************ BEGIN GAUSS SETUP ******************	
   Gauss gauss(solid,order_gauss);
-  GaussWeight = gauss.GaussWeight;
-  GaussPoints = gauss.GaussPoints;
+  _GaussPointValues = gauss.GaussWeight;
+  _GaussPointNumber = gauss.GaussPoints;
   //************ END GAUSS SETUP ******************
 	
   //************ BEGIN FE and MG SETUP ******************	
@@ -521,31 +519,31 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
   
   if (!strcmp(solid,"hex")) {//HEX
     
-    if 	    (_SolType == 0) pt_basis = new hex1;
-    else if (_SolType == 1) pt_basis = new hexth;
-    else if (_SolType == 2) pt_basis = new hex2;
-    else if (_SolType == 3) pt_basis = new hex0;
-    else if (_SolType == 4) pt_basis = new hexpwl;
+    if 	    (_SolType == 0) _pt_basis = new hex1;
+    else if (_SolType == 1) _pt_basis = new hexth;
+    else if (_SolType == 2) _pt_basis = new hex2;
+    else if (_SolType == 3) _pt_basis = new hex0;
+    else if (_SolType == 4) _pt_basis = new hexpwl;
     else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
     }
   }     
   else if (!strcmp(solid,"wedge")) { //WEDGE
-    if 	    (_SolType == 0) pt_basis = new wedge1;
-    else if (_SolType == 1) pt_basis = new wedgeth;
-    else if (_SolType == 2) pt_basis = new wedge2;
-    else if (_SolType == 3) pt_basis = new wedge0;     
+    if 	    (_SolType == 0) _pt_basis = new wedge1;
+    else if (_SolType == 1) _pt_basis = new wedgeth;
+    else if (_SolType == 2) _pt_basis = new wedge2;
+    else if (_SolType == 3) _pt_basis = new wedge0;     
     else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
     }
   } 
   else if (!strcmp(solid,"tet")) { //TETRAHEDRA
-    if 	    (_SolType == 0) pt_basis = new tet1;
-    else if (_SolType == 1) pt_basis = new tet2;
-    else if (_SolType == 2) pt_basis = new tet2;
-    else if (_SolType == 3) pt_basis = new tet0;     
+    if 	    (_SolType == 0) _pt_basis = new tet1;
+    else if (_SolType == 1) _pt_basis = new tet2;
+    else if (_SolType == 2) _pt_basis = new tet2;
+    else if (_SolType == 3) _pt_basis = new tet0;     
     else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -557,36 +555,35 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
   }
 
   // get data from basis object
-  type_	  = pt_basis->_type; 
-  nc_ 	  = pt_basis->_nc;
-  nf_ 	  = pt_basis->_nf;
-  ncf_[0] = pt_basis->_ncf0;
-  ncf_[1] = pt_basis->_ncf1;
-  ncf_[2] = pt_basis->_ncf2;
+  _nc 	   = _pt_basis->_nc;
+  _nf 	   = _pt_basis->_nf;
+  _nlag[0] = _pt_basis->_nlag0;
+  _nlag[1] = _pt_basis->_nlag1;
+  _nlag[2] = _pt_basis->_nlag2;
     
-  IND=new const int * [nc_];
-  for (int i=0; i<nc_; i++){
-    IND[i]=pt_basis->getIND(i);
+  _IND=new const int * [_nc];
+  for (int i=0; i<_nc; i++){
+    _IND[i]=_pt_basis->getIND(i);
   }
-  KVERT_IND=new const int * [nf_];
-  X=new const double * [nf_];
-  for (int i=0; i<nf_; i++) {
-    KVERT_IND[i]=pt_basis->getKVERT_IND(i);
-    X[i]=pt_basis->getX(i);
+  _KVERT_IND=new const int * [_nf];
+  _X=new const double * [_nf];
+  for (int i=0; i<_nf; i++) {
+    _KVERT_IND[i]=_pt_basis->getKVERT_IND(i);
+    _X[i]=_pt_basis->getX(i);
   }
     
   // local projection matrix evaluation
   int counter=0;
-  for (int i=0; i<nf_; i++) {
-    for (int j=0; j<nc_; j++) {
-      double phi=pt_basis->eval_phi(IND[j],X[i]);
-      if ( type_ == 18 ) {
+  for (int i=0; i<_nf; i++) {
+    for (int j=0; j<_nc; j++) {
+      double phi=_pt_basis->eval_phi(_IND[j],_X[i]);
+      if ( _SolType==4 ) { //if piece_wise_linear
         if ( i/8 == 1 )
-          phi=pt_basis->eval_dphidx(IND[j],X[i])/2.;
+          phi=_pt_basis->eval_dphidx(_IND[j],_X[i])/2.;
         else if ( i/8 == 2 )
-          phi=pt_basis->eval_dphidy(IND[j],X[i])/2.;
+          phi=_pt_basis->eval_dphidy(_IND[j],_X[i])/2.;
         else if ( i/8 == 3 )
-          phi=pt_basis->eval_dphidz(IND[j],X[i])/2.;
+          phi=_pt_basis->eval_dphidz(_IND[j],_X[i])/2.;
       }
       if ( fabs(phi) >= 1.0e-14 ){
         counter++;
@@ -596,25 +593,25 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
   double *pt_d;
   int *pt_i;
 
-  prol_val=new double * [nf_+1];
-  prol_ind=new int * [nf_+1];
-  mem_prol_val=new double [counter];
-  mem_prol_ind=new int [counter];
+  _prol_val=new double * [_nf+1];
+  _prol_ind=new int * [_nf+1];
+  _mem_prol_val=new double [counter];
+  _mem_prol_ind=new int [counter];
 
-  pt_d=mem_prol_val;
-  pt_i= mem_prol_ind;
-  for (int i=0; i<nf_; i++) {
-    prol_val[i] = pt_d;
-    prol_ind[i] = pt_i;
-    for (int j=0; j<nc_; j++) {
-      double phi=pt_basis->eval_phi(IND[j],X[i]);
-      if ( type_== 18 ) {
+  pt_d=_mem_prol_val;
+  pt_i=_mem_prol_ind;
+  for (int i=0; i<_nf; i++) {
+    _prol_val[i] = pt_d;
+    _prol_ind[i] = pt_i;
+    for (int j=0; j<_nc; j++) {
+      double phi=_pt_basis->eval_phi(_IND[j],_X[i]);
+      if ( _SolType==4 ) { //if piece_wise_linear
         if ( i/8 == 1 )
-          phi = pt_basis->eval_dphidx(IND[j],X[i])/2.;
+          phi = _pt_basis->eval_dphidx(_IND[j],_X[i])/2.;
         else if ( i/8 == 2 )
-          phi = pt_basis->eval_dphidy(IND[j],X[i])/2.;
+          phi = _pt_basis->eval_dphidy(_IND[j],_X[i])/2.;
         else if ( i/8 == 3 )
-          phi = pt_basis->eval_dphidz(IND[j],X[i])/2.;
+          phi = _pt_basis->eval_dphidz(_IND[j],_X[i])/2.;
       }
       if ( fabs(phi) >= 1.0e-14 ){
         *(pt_d++)=phi;
@@ -623,72 +620,72 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
     }
   }
   
-  prol_val[nf_]=pt_d;
-  prol_ind[nf_]=pt_i;
+  _prol_val[_nf]=pt_d;
+  _prol_ind[_nf]=pt_i;
 
   // shape function and its derivatives evaluated at Gauss'points
 
-  phi= new double*[GaussPoints];
-  dphidxi  = new double*[GaussPoints];
-  dphideta = new double*[GaussPoints];
-  dphidzeta= new double*[GaussPoints];
+  _phi= new double*[_GaussPointNumber];
+  _dphidxi  = new double*[_GaussPointNumber];
+  _dphideta = new double*[_GaussPointNumber];
+  _dphidzeta= new double*[_GaussPointNumber];
   
-  d2phidxi2  = new double*[GaussPoints];
-  d2phideta2 = new double*[GaussPoints];
-  d2phidzeta2= new double*[GaussPoints];
+  _d2phidxi2  = new double*[_GaussPointNumber];
+  _d2phideta2 = new double*[_GaussPointNumber];
+  _d2phidzeta2= new double*[_GaussPointNumber];
   
-  d2phidxideta  = new double*[GaussPoints];
-  d2phidetadzeta = new double*[GaussPoints];
-  d2phidzetadxi= new double*[GaussPoints];
+  _d2phidxideta  = new double*[_GaussPointNumber];
+  _d2phidetadzeta = new double*[_GaussPointNumber];
+  _d2phidzetadxi= new double*[_GaussPointNumber];
 
-  phi_memory=new double [GaussPoints*nc_];
-  dphidxi_memory  =new double [GaussPoints*nc_];
-  dphideta_memory =new double [GaussPoints*nc_];
-  dphidzeta_memory=new double [GaussPoints*nc_];
+  _phi_memory=new double [_GaussPointNumber*_nc];
+  _dphidxi_memory  =new double [_GaussPointNumber*_nc];
+  _dphideta_memory =new double [_GaussPointNumber*_nc];
+  _dphidzeta_memory=new double [_GaussPointNumber*_nc];
   
-  d2phidxi2_memory  =new double [GaussPoints*nc_];
-  d2phideta2_memory =new double [GaussPoints*nc_];
-  d2phidzeta2_memory=new double [GaussPoints*nc_];
+  _d2phidxi2_memory  =new double [_GaussPointNumber*_nc];
+  _d2phideta2_memory =new double [_GaussPointNumber*_nc];
+  _d2phidzeta2_memory=new double [_GaussPointNumber*_nc];
   
-  d2phidxideta_memory  =new double [GaussPoints*nc_];
-  d2phidetadzeta_memory =new double [GaussPoints*nc_];
-  d2phidzetadxi_memory=new double [GaussPoints*nc_];
+  _d2phidxideta_memory  =new double [_GaussPointNumber*_nc];
+  _d2phidetadzeta_memory =new double [_GaussPointNumber*_nc];
+  _d2phidzetadxi_memory=new double [_GaussPointNumber*_nc];
 
-  for (unsigned i=0; i<GaussPoints; i++) {
-    phi[i]=&phi_memory[i*nc_];
-    dphidxi[i]  =&dphidxi_memory[i*nc_];
-    dphideta[i] =&dphideta_memory[i*nc_];
-    dphidzeta[i]=&dphidzeta_memory[i*nc_];
+  for (unsigned i=0; i<_GaussPointNumber; i++) {
+    _phi[i]=&_phi_memory[i*_nc];
+    _dphidxi[i]  =&_dphidxi_memory[i*_nc];
+    _dphideta[i] =&_dphideta_memory[i*_nc];
+    _dphidzeta[i]=&_dphidzeta_memory[i*_nc];
     
-    d2phidxi2[i]  =&d2phidxi2_memory[i*nc_];
-    d2phideta2[i] =&d2phideta2_memory[i*nc_];
-    d2phidzeta2[i]=&d2phidzeta2_memory[i*nc_];
+    _d2phidxi2[i]  =&_d2phidxi2_memory[i*_nc];
+    _d2phideta2[i] =&_d2phideta2_memory[i*_nc];
+    _d2phidzeta2[i]=&_d2phidzeta2_memory[i*_nc];
     
-    d2phidxideta[i]  = &d2phidxideta_memory[i*nc_];
-    d2phidetadzeta[i]= &d2phidetadzeta_memory[i*nc_];
-    d2phidzetadxi[i] = &d2phidzetadxi_memory[i*nc_];
+    _d2phidxideta[i]  = &_d2phidxideta_memory[i*_nc];
+    _d2phidetadzeta[i]= &_d2phidetadzeta_memory[i*_nc];
+    _d2phidzetadxi[i] = &_d2phidzetadxi_memory[i*_nc];
     
   }
 
-  const double *ptx[3]={GaussWeight+GaussPoints, GaussWeight+2*GaussPoints, GaussWeight+3*GaussPoints};
-  for (unsigned i=0; i<GaussPoints; i++){
+  const double *ptx[3]={_GaussPointValues+_GaussPointNumber, _GaussPointValues+2*_GaussPointNumber, _GaussPointValues+3*_GaussPointNumber};
+  for (unsigned i=0; i<_GaussPointNumber; i++){
     double x[3];
     for (unsigned j=0; j<3;j++) {
       x[j] = *ptx[j];
       ptx[j]++;
     }  
     
-    for (int j=0; j<nc_; j++) {
-      phi[i][j] = pt_basis->eval_phi(IND[j],x); 	
-      dphidxi[i][j] = pt_basis->eval_dphidx(IND[j],x); 	
-      dphideta[i][j] = pt_basis->eval_dphidy(IND[j],x); 	
-      dphidzeta[i][j] = pt_basis->eval_dphidz(IND[j],x); 	
-      d2phidxi2[i][j] = pt_basis->eval_d2phidx2(IND[j],x);
-      d2phideta2[i][j] = pt_basis->eval_d2phidy2(IND[j],x);
-      d2phidzeta2[i][j] = pt_basis->eval_d2phidz2(IND[j],x);
-      d2phidxideta[i][j] = pt_basis->eval_d2phidxdy(IND[j],x);
-      d2phidetadzeta[i][j] = pt_basis->eval_d2phidydz(IND[j],x);
-      d2phidzetadxi[i][j] = pt_basis->eval_d2phidzdx(IND[j],x);
+    for (int j=0; j<_nc; j++) {
+      _phi[i][j] = _pt_basis->eval_phi(_IND[j],x); 	
+      _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j],x); 	
+      _dphideta[i][j] = _pt_basis->eval_dphidy(_IND[j],x); 	
+      _dphidzeta[i][j] = _pt_basis->eval_dphidz(_IND[j],x); 	
+      _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j],x);
+      _d2phideta2[i][j] = _pt_basis->eval_d2phidy2(_IND[j],x);
+      _d2phidzeta2[i][j] = _pt_basis->eval_d2phidz2(_IND[j],x);
+      _d2phidxideta[i][j] = _pt_basis->eval_d2phidxdy(_IND[j],x);
+      _d2phidetadzeta[i][j] = _pt_basis->eval_d2phidydz(_IND[j],x);
+      _d2phidzetadxi[i][j] = _pt_basis->eval_d2phidzdx(_IND[j],x);
     }
   }
 }
@@ -697,28 +694,28 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
 
 void elem_type_1D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
 			      vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const{
-  other_phi.resize(nc_);
-  gradphi.resize(nc_*1);
-  nablaphi.resize(nc_*1);				
+  other_phi.resize(_nc);
+  gradphi.resize(_nc*1);
+  nablaphi.resize(_nc*1);				
   
   adept::adouble Jac=0.;
   adept::adouble JacI;
   
-  const double *dxi=dphidxi[ig];
+  const double *dxi=_dphidxi[ig];
   
-  for (int inode=0; inode<nc_; inode++,dxi++) {
+  for (int inode=0; inode<_nc; inode++,dxi++) {
     Jac+=(*dxi)*vt[0][inode];
   }
     
-  Weight=Jac*GaussWeight[ig];
+  Weight=Jac*_GaussPointValues[ig];
 
   JacI=1/Jac;
   
-  dxi = dphidxi[ig];
-  const double *dxi2 = d2phidxi2[ig];
+  dxi = _dphidxi[ig];
+  const double *dxi2 = _d2phidxi2[ig];
   
-  for (int inode=0; inode<nc_; inode++,dxi++, dxi2++) {
-    other_phi[inode]=phi[ig][inode];
+  for (int inode=0; inode<_nc; inode++,dxi++, dxi2++) {
+    other_phi[inode]=_phi[ig][inode];
     gradphi[inode]=(*dxi)*JacI;
     nablaphi[inode] = (*dxi2)*JacI*JacI;
   }
@@ -727,28 +724,28 @@ void elem_type_1D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,co
 
 void elem_type_1D::Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
     			    vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const{
-  other_phi.resize(nc_);
-  gradphi.resize(nc_*1);
-  nablaphi.resize(nc_*1);				
+  other_phi.resize(_nc);
+  gradphi.resize(_nc*1);
+  nablaphi.resize(_nc*1);				
   
   double Jac=0.;
   double JacI;
   
-  const double *dxi=dphidxi[ig];
+  const double *dxi=_dphidxi[ig];
   
-  for (int inode=0; inode<nc_; inode++,dxi++) {
+  for (int inode=0; inode<_nc; inode++,dxi++) {
     Jac+=(*dxi)*vt[0][inode];
   }
     
-  Weight=Jac*GaussWeight[ig];
+  Weight=Jac*_GaussPointValues[ig];
 
   JacI=1/Jac;
   
-  dxi = dphidxi[ig];
-  const double *dxi2 = d2phidxi2[ig];
+  dxi = _dphidxi[ig];
+  const double *dxi2 = _d2phidxi2[ig];
   
-  for (int inode=0; inode<nc_; inode++,dxi++, dxi2++) {
-    other_phi[inode]=phi[ig][inode];
+  for (int inode=0; inode<_nc; inode++,dxi++, dxi2++) {
+    other_phi[inode]=_phi[ig][inode];
     gradphi[inode]=(*dxi)*JacI;
     nablaphi[inode] = (*dxi2)*JacI*JacI;
   }
@@ -758,15 +755,15 @@ void elem_type_1D::Jacobian(const vector < vector < double > > &vt,const unsigne
 void elem_type_1D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
 				  vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const {
 
-  other_phi.resize(nc_);
+  other_phi.resize(_nc);
   normal.resize(2);				
 			
   adept::adouble Jac[2][2]={{0.,0.},{0.,0.}};
   adept::adouble JacI[2][2];
 
-  const double *dfeta=dphidxi[ig];
+  const double *dfeta=_dphidxi[ig];
 
-  for (int inode=0; inode<nc_; inode++,dfeta++) {
+  for (int inode=0; inode<_nc; inode++,dfeta++) {
     Jac[0][0] += (*dfeta)*vt[0][inode];
     Jac[1][0] += (*dfeta)*vt[1][inode];
   }
@@ -793,10 +790,10 @@ void elem_type_1D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt
   JacI[1][0] = -Jac[1][0]/det;
   JacI[1][1] =  Jac[0][0]/det;
 
-  Weight = det*GaussWeight[ig];
+  Weight = det*_GaussPointValues[ig];
   
-  for(int inode=0;inode<nc_;inode++){
-    other_phi[inode]=phi[ig][inode];
+  for(int inode=0;inode<_nc;inode++){
+    other_phi[inode]=_phi[ig][inode];
   }
 
 }
@@ -804,15 +801,15 @@ void elem_type_1D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt
 void elem_type_1D::JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
 			       vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const {
 
-  other_phi.resize(nc_);
+  other_phi.resize(_nc);
   normal.resize(2);				
 			
   double Jac[2][2]={{0.,0.},{0.,0.}};
   double JacI[2][2];
 
-  const double *dfeta=dphidxi[ig];
+  const double *dfeta=_dphidxi[ig];
 
-  for (int inode=0; inode<nc_; inode++,dfeta++) {
+  for (int inode=0; inode<_nc; inode++,dfeta++) {
     Jac[0][0] += (*dfeta)*vt[0][inode];
     Jac[1][0] += (*dfeta)*vt[1][inode];
   }
@@ -839,10 +836,10 @@ void elem_type_1D::JacobianSur(const vector < vector < double > > &vt, const uns
   JacI[1][0] = -Jac[1][0]/det;
   JacI[1][1] =  Jac[0][0]/det;
 
-  Weight = det*GaussWeight[ig];
+  Weight = det*_GaussPointValues[ig];
   
-  for(int inode=0;inode<nc_;inode++){
-    other_phi[inode]=phi[ig][inode];
+  for(int inode=0;inode<_nc;inode++){
+    other_phi[inode]=_phi[ig][inode];
   }
 
 }
@@ -851,19 +848,19 @@ void elem_type_1D::JacobianSur(const vector < vector < double > > &vt, const uns
 void elem_type_2D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
 			      vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const{
 	
-  other_phi.resize(nc_);
-  gradphi.resize(nc_*2);
-  nablaphi.resize(nc_*3);
+  other_phi.resize(_nc);
+  gradphi.resize(_nc*2);
+  nablaphi.resize(_nc*3);
 				
   adept::adouble Jac[2][2]={{0,0},{0,0}};
   adept::adouble JacI[2][2];
-  const double *dxi=dphidxi[ig];
-  const double *deta=dphideta[ig];
-  for (int inode=0; inode<nc_; inode++,dxi++,deta++){
-    Jac[0][0]+=(*dxi)*vt[0][inode];
-    Jac[0][1]+=(*dxi)*vt[1][inode];
-    Jac[1][0]+=(*deta)*vt[0][inode];
-    Jac[1][1]+=(*deta)*vt[1][inode];
+  const double *dxi=_dphidxi[ig];
+  const double *deta=_dphideta[ig];
+  for (int inode=0; inode<_nc; inode++,dxi++,deta++){
+    Jac[0][0] += (*dxi)*vt[0][inode];
+    Jac[0][1] += (*dxi)*vt[1][inode];
+    Jac[1][0] += (*deta)*vt[0][inode];
+    Jac[1][1] += (*deta)*vt[1][inode];
   }
   adept::adouble det=(Jac[0][0]*Jac[1][1]-Jac[0][1]*Jac[1][0]);
 
@@ -872,18 +869,18 @@ void elem_type_2D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,co
   JacI[1][0]=-Jac[1][0]/det;
   JacI[1][1]= Jac[0][0]/det;
 
-  Weight=det*GaussWeight[ig];
+  Weight=det*_GaussPointValues[ig];
      
-  dxi=dphidxi[ig];
-  deta=dphideta[ig];
+  dxi=_dphidxi[ig];
+  deta=_dphideta[ig];
   
-  const double *dxi2=d2phidxi2[ig];
-  const double *deta2=d2phideta2[ig];
-  const double *dxideta=d2phidxideta[ig];
+  const double *dxi2=_d2phidxi2[ig];
+  const double *deta2=_d2phideta2[ig];
+  const double *dxideta=_d2phidxideta[ig];
     
-  for (int inode=0; inode<nc_; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
+  for (int inode=0; inode<_nc; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
     
-    other_phi[inode]=phi[ig][inode];
+    other_phi[inode]=_phi[ig][inode];
      
     gradphi[2*inode+0]=(*dxi)*JacI[0][0] + (*deta)*JacI[0][1];
     gradphi[2*inode+1]=(*dxi)*JacI[1][0] + (*deta)*JacI[1][1];
@@ -904,19 +901,19 @@ void elem_type_2D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,co
 void elem_type_2D::Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
 			    vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const{
 	
-  other_phi.resize(nc_);
-  gradphi.resize(nc_*2);
-  nablaphi.resize(nc_*3);
+  other_phi.resize(_nc);
+  gradphi.resize(_nc*2);
+  nablaphi.resize(_nc*3);
 				
   double Jac[2][2]={{0,0},{0,0}};
   double JacI[2][2];
-  const double *dxi=dphidxi[ig];
-  const double *deta=dphideta[ig];
-  for (int inode=0; inode<nc_; inode++,dxi++,deta++){
-    Jac[0][0]+=(*dxi)*vt[0][inode];
-    Jac[0][1]+=(*dxi)*vt[1][inode];
-    Jac[1][0]+=(*deta)*vt[0][inode];
-    Jac[1][1]+=(*deta)*vt[1][inode];
+  const double *dxi=_dphidxi[ig];
+  const double *deta=_dphideta[ig];
+  for (int inode=0; inode<_nc; inode++,dxi++,deta++){
+    Jac[0][0] += (*dxi)*vt[0][inode];
+    Jac[0][1] += (*dxi)*vt[1][inode];
+    Jac[1][0] += (*deta)*vt[0][inode];
+    Jac[1][1] += (*deta)*vt[1][inode];
   }
   double det=(Jac[0][0]*Jac[1][1]-Jac[0][1]*Jac[1][0]);
 
@@ -925,18 +922,18 @@ void elem_type_2D::Jacobian(const vector < vector < double > > &vt,const unsigne
   JacI[1][0]=-Jac[1][0]/det;
   JacI[1][1]= Jac[0][0]/det;
 
-  Weight=det*GaussWeight[ig];
+  Weight=det*_GaussPointValues[ig];
      
-  dxi=dphidxi[ig];
-  deta=dphideta[ig];
+  dxi=_dphidxi[ig];
+  deta=_dphideta[ig];
   
-  const double *dxi2=d2phidxi2[ig];
-  const double *deta2=d2phideta2[ig];
-  const double *dxideta=d2phidxideta[ig];
+  const double *dxi2=_d2phidxi2[ig];
+  const double *deta2=_d2phideta2[ig];
+  const double *dxideta=_d2phidxideta[ig];
     
-  for (int inode=0; inode<nc_; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
+  for (int inode=0; inode<_nc; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
     
-    other_phi[inode]=phi[ig][inode];
+    other_phi[inode]=_phi[ig][inode];
      
     gradphi[2*inode+0]=(*dxi)*JacI[0][0] + (*deta)*JacI[0][1];
     gradphi[2*inode+1]=(*dxi)*JacI[1][0] + (*deta)*JacI[1][1];
@@ -957,15 +954,15 @@ void elem_type_2D::Jacobian(const vector < vector < double > > &vt,const unsigne
 
 void elem_type_2D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
 				  vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const {
-  other_phi.resize(nc_);
+  other_phi.resize(_nc);
   normal.resize(3);
   
   adept::adouble Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
  
-  const double *dfx=dphidxi[ig];
-  const double *dfy=dphideta[ig];
+  const double *dfx=_dphidxi[ig];
+  const double *dfy=_dphideta[ig];
   
-  for(int inode=0; inode<nc_; inode++,dfx++,dfy++){       
+  for(int inode=0; inode<_nc; inode++,dfx++,dfy++){       
     Jac[0][0] += (*dfx)*vt[0][inode];
     Jac[1][0] += (*dfx)*vt[1][inode];
     Jac[2][0] += (*dfx)*vt[2][inode];
@@ -994,10 +991,10 @@ void elem_type_2D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt
 		      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
 		      Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
 
-  Weight=det*GaussWeight[ig];
+  Weight=det*_GaussPointValues[ig];
 
-  for(int inode=0;inode<nc_;inode++){
-    other_phi[inode]=phi[ig][inode];
+  for(int inode=0;inode<_nc;inode++){
+    other_phi[inode]=_phi[ig][inode];
   }
   
   //TODO warning the surface gradient is missing!!!!!!!!!!!!!!!
@@ -1005,15 +1002,15 @@ void elem_type_2D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt
 
 void elem_type_2D::JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
 			       vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const {
-  other_phi.resize(nc_);
+  other_phi.resize(_nc);
   normal.resize(3);
   
   double Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
  
-  const double *dfx=dphidxi[ig];
-  const double *dfy=dphideta[ig];
+  const double *dfx=_dphidxi[ig];
+  const double *dfy=_dphideta[ig];
   
-  for(int inode=0; inode<nc_; inode++,dfx++,dfy++){       
+  for(int inode=0; inode<_nc; inode++,dfx++,dfy++){       
     Jac[0][0] += (*dfx)*vt[0][inode];
     Jac[1][0] += (*dfx)*vt[1][inode];
     Jac[2][0] += (*dfx)*vt[2][inode];
@@ -1039,13 +1036,13 @@ void elem_type_2D::JacobianSur(const vector < vector < double > > &vt, const uns
     
   //the determinant of the matrix is the area 
   double det=(Jac[0][0]*(Jac[1][1]*Jac[2][2]-Jac[1][2]*Jac[2][1])+
-		      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
-		      Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
+	      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
+	      Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
 
-  Weight=det*GaussWeight[ig];
+  Weight=det*_GaussPointValues[ig];
 
-  for(int inode=0;inode<nc_;inode++){
-    other_phi[inode]=phi[ig][inode];
+  for(int inode=0;inode<_nc;inode++){
+    other_phi[inode]=_phi[ig][inode];
   }
   
   //TODO warning the surface gradient is missing!!!!!!!!!!!!!!!
@@ -1055,19 +1052,19 @@ void elem_type_2D::JacobianSur(const vector < vector < double > > &vt, const uns
 void elem_type_3D::Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
 			      vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const{
   
-  other_phi.resize(nc_);
-  gradphi.resize(nc_*3);
-  nablaphi.resize(nc_*6);
+  other_phi.resize(_nc);
+  gradphi.resize(_nc*3);
+  nablaphi.resize(_nc*6);
 				
 				
   double Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
   double JacI[3][3];
   
-  const double *dxi=dphidxi[ig];
-  const double *deta=dphideta[ig];
-  const double *dzeta=dphidzeta[ig];
+  const double *dxi=_dphidxi[ig];
+  const double *deta=_dphideta[ig];
+  const double *dzeta=_dphidzeta[ig];
 
-  for (int inode=0; inode<nc_; inode++,dxi++,deta++,dzeta++) {
+  for (int inode=0; inode<_nc; inode++,dxi++,deta++,dzeta++) {
     Jac[0][0]+=(*dxi)*vt[0][inode];
     Jac[0][1]+=(*dxi)*vt[1][inode];
     Jac[0][2]+=(*dxi)*vt[2][inode];
@@ -1092,22 +1089,22 @@ void elem_type_3D::Jacobian(const vector < vector < double > > &vt,const unsigne
   JacI[2][1]= ( Jac[0][1]*Jac[2][0] - Jac[0][0]*Jac[2][1])/det;
   JacI[2][2]= (-Jac[0][1]*Jac[1][0] + Jac[0][0]*Jac[1][1])/det;
 
-  Weight=det*GaussWeight[ig];
+  Weight=det*_GaussPointValues[ig];
  
-  dxi=dphidxi[ig];
-  deta=dphideta[ig];
-  dzeta=dphidzeta[ig];
+  dxi=_dphidxi[ig];
+  deta=_dphideta[ig];
+  dzeta=_dphidzeta[ig];
   
-  const double *dxi2=d2phidxi2[ig];
-  const double *deta2=d2phideta2[ig];
-  const double *dzeta2=d2phidzeta2[ig];
-  const double *dxideta=d2phidxideta[ig];
-  const double *detadzeta=d2phidetadzeta[ig];
-  const double *dzetadxi=d2phidzetadxi[ig];
+  const double *dxi2=_d2phidxi2[ig];
+  const double *deta2=_d2phideta2[ig];
+  const double *dzeta2=_d2phidzeta2[ig];
+  const double *dxideta=_d2phidxideta[ig];
+  const double *detadzeta=_d2phidetadzeta[ig];
+  const double *dzetadxi=_d2phidzetadxi[ig];
   
-  for (int inode=0; inode<nc_; inode++, dxi++,deta++,dzeta++,dxi2++,deta2++,dzeta2++,dxideta++,detadzeta++,dzetadxi++) {
+  for (int inode=0; inode<_nc; inode++, dxi++,deta++,dzeta++,dxi2++,deta2++,dzeta2++,dxideta++,detadzeta++,dzetadxi++) {
   
-    other_phi[inode]=phi[ig][inode];
+    other_phi[inode]=_phi[ig][inode];
     
     gradphi[3*inode+0]=(*dxi)*JacI[0][0] + (*deta)*JacI[0][1] + (*dzeta)*JacI[0][2];
     gradphi[3*inode+1]=(*dxi)*JacI[1][0] + (*deta)*JacI[1][1] + (*dzeta)*JacI[1][2];
@@ -1145,19 +1142,19 @@ void elem_type_3D::Jacobian(const vector < vector < double > > &vt,const unsigne
 void elem_type_3D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
 			      vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const{
   
-  other_phi.resize(nc_);
-  gradphi.resize(nc_*3);
-  nablaphi.resize(nc_*6);
+  other_phi.resize(_nc);
+  gradphi.resize(_nc*3);
+  nablaphi.resize(_nc*6);
 				
 				
   adept::adouble Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
   adept::adouble JacI[3][3];
   
-  const double *dxi=dphidxi[ig];
-  const double *deta=dphideta[ig];
-  const double *dzeta=dphidzeta[ig];
+  const double *dxi=_dphidxi[ig];
+  const double *deta=_dphideta[ig];
+  const double *dzeta=_dphidzeta[ig];
 
-  for (int inode=0; inode<nc_; inode++,dxi++,deta++,dzeta++) {
+  for (int inode=0; inode<_nc; inode++,dxi++,deta++,dzeta++) {
     Jac[0][0]+=(*dxi)*vt[0][inode];
     Jac[0][1]+=(*dxi)*vt[1][inode];
     Jac[0][2]+=(*dxi)*vt[2][inode];
@@ -1182,22 +1179,22 @@ void elem_type_3D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,co
   JacI[2][1]= ( Jac[0][1]*Jac[2][0] - Jac[0][0]*Jac[2][1])/det;
   JacI[2][2]= (-Jac[0][1]*Jac[1][0] + Jac[0][0]*Jac[1][1])/det;
 
-  Weight=det*GaussWeight[ig];
+  Weight=det*_GaussPointValues[ig];
  
-  dxi=dphidxi[ig];
-  deta=dphideta[ig];
-  dzeta=dphidzeta[ig];
+  dxi=_dphidxi[ig];
+  deta=_dphideta[ig];
+  dzeta=_dphidzeta[ig];
   
-  const double *dxi2=d2phidxi2[ig];
-  const double *deta2=d2phideta2[ig];
-  const double *dzeta2=d2phidzeta2[ig];
-  const double *dxideta=d2phidxideta[ig];
-  const double *detadzeta=d2phidetadzeta[ig];
-  const double *dzetadxi=d2phidzetadxi[ig];
+  const double *dxi2=_d2phidxi2[ig];
+  const double *deta2=_d2phideta2[ig];
+  const double *dzeta2=_d2phidzeta2[ig];
+  const double *dxideta=_d2phidxideta[ig];
+  const double *detadzeta=_d2phidetadzeta[ig];
+  const double *dzetadxi=_d2phidzetadxi[ig];
   
-  for (int inode=0; inode<nc_; inode++, dxi++,deta++,dzeta++,dxi2++,deta2++,dzeta2++,dxideta++,detadzeta++,dzetadxi++) {
+  for (int inode=0; inode<_nc; inode++, dxi++,deta++,dzeta++,dxi2++,deta2++,dzeta2++,dxideta++,detadzeta++,dzetadxi++) {
   
-    other_phi[inode]=phi[ig][inode];
+    other_phi[inode]=_phi[ig][inode];
     
     gradphi[3*inode+0]=(*dxi)*JacI[0][0] + (*deta)*JacI[0][1] + (*dzeta)*JacI[0][2];
     gradphi[3*inode+1]=(*dxi)*JacI[1][0] + (*deta)*JacI[1][1] + (*dzeta)*JacI[1][2];

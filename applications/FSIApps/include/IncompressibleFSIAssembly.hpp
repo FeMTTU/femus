@@ -213,7 +213,7 @@ namespace femus {
       }
     
       for (unsigned i=0;i<nve;i++) {
-	unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
+	unsigned inode=myel->GetMeshDof(kel,i,SolType2);
 	unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
 	// flag to know if the node "inode" lays on the fluid-solid interface
 	solidmark[i]=myel->GetNodeRegion(inode); // to check
@@ -235,7 +235,7 @@ namespace femus {
 
       // pressure dofs
       for (unsigned i=0;i<nve1;i++) {
-	unsigned inode=(SolType1<3)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
+	unsigned inode=myel->GetMeshDof(kel,i,SolType1);
 	unsigned inode_Metis =mymsh->GetMetisDof(inode,SolType[2*dim]);
 	dofsVAR[2*dim][i]=myLinEqSolver->GetKKDof(indVAR[2*dim],indexVAR[2*dim],inode);
 	Soli[indexVAR[2*dim]][i] = (*mysolution->_Sol[indVAR[2*dim]])(inode_Metis);

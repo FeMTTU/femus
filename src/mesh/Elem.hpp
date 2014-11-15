@@ -37,10 +37,7 @@ public:
     ~elem();
 
     /** To be Added */
-    unsigned GetDof(const unsigned iel,const unsigned &inode,const unsigned &type)const;
-
-    /** To be Added */
-    unsigned GetDofCoarse(const unsigned iel,const unsigned &inode,const unsigned &type)const;
+    unsigned GetMeshDof(const unsigned iel,const unsigned &inode,const unsigned &type)const;
 
     /** To be Added */
     unsigned GetElementDofNumber(const unsigned &iel,const unsigned &type=3) const;

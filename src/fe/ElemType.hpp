@@ -2,7 +2,7 @@
 
  Program: FEMuS
  Module: ElemType
- Authors: Eugenio Aulisa
+ Authors: Eugenio Aulisa, Giorgio Bornia
  
  Copyright (c) FEMuS
  All rights reserved. 
@@ -91,18 +91,18 @@ public:
     abort();
   };
   
-  /** To be Added */
-  void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
-               double &Weight, double *other_phi) const;
+//   /** To be Added */
+//   void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
+//                double &Weight, double *other_phi) const;
 
   /** To be Added */
   double  GetGaussWeight(const unsigned ig) const {
-    return GaussWeight[ig];
+    return _GaussPointValues[ig];
   };
   
   /** To be Added */
   unsigned GetGaussPointNumber() const {
-    return GaussPoints;
+    return _GaussPointNumber;
   };
   
   // member data
@@ -121,24 +121,20 @@ public:
 protected:
   
   // member data
-  void test_prol_and_rest();
-  int nc_,nf_,ncf_[3];
-  unsigned type_;
+  int _nc,_nf,_nlag[3];
   unsigned _SolType;
-  const double **X;
-  const int **IND;
-  const int **KVERT_IND;
+  const double **_X;
+  const int **_IND;
+  const int **_KVERT_IND;
   
-  double** prol_val;
-  int** prol_ind;
-  double* mem_prol_val;
-  int * mem_prol_ind;
-  basis *pt_basis;
+  double **_prol_val;
+  int **_prol_ind;
+  double *_mem_prol_val;
+  int *_mem_prol_ind;
+  basis *_pt_basis;
   
-  const double *GaussWeight;
-  unsigned GaussPoints;
-  
-  const double *weight;
+  const double *_GaussPointValues;
+  unsigned _GaussPointNumber;
 };
 
 
@@ -150,13 +146,13 @@ public:
   /** destructor */
   ~elem_type_1D(){
     
-    delete [] phi;
-    delete [] phi_memory;
-    delete [] dphidxi;
-    delete [] dphidxi_memory;
+    delete [] _phi;
+    delete [] _phi_memory;
+    delete [] _dphidxi;
+    delete [] _dphidxi_memory;
       
-    delete [] d2phidxi2;
-    delete [] d2phidxi2_memory;
+    delete [] _d2phidxi2;
+    delete [] _d2phidxi2_memory;
            
   };
    
@@ -172,16 +168,16 @@ public:
   void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
 	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
 		    
-  inline double* GetPhi(const unsigned &ig) const { return phi[ig]; }
-  inline double* GetDPhiDXi(const unsigned &ig) const { return dphidxi[ig]; }
+  inline double* GetPhi(const unsigned &ig) const { return _phi[ig]; }
+  inline double* GetDPhiDXi(const unsigned &ig) const { return _dphidxi[ig]; }
 		   
-  double **phi;
-  double *phi_memory;
-  double **dphidxi;
-  double *dphidxi_memory;
+  double **_phi;
+  double *_phi_memory;
+  double **_dphidxi;
+  double *_dphidxi_memory;
   
-  double **d2phidxi2;
-  double *d2phidxi2_memory;
+  double **_d2phidxi2;
+  double *_d2phidxi2_memory;
 };
 
 class elem_type_2D : public elem_type {
@@ -192,20 +188,20 @@ public:
   /** destructor */
   ~elem_type_2D(){
     
-    delete [] phi;
-    delete [] phi_memory;
-    delete [] dphidxi;
-    delete [] dphidxi_memory;
-    delete [] dphideta;
-    delete [] dphideta_memory;
+    delete [] _phi;
+    delete [] _phi_memory;
+    delete [] _dphidxi;
+    delete [] _dphidxi_memory;
+    delete [] _dphideta;
+    delete [] _dphideta_memory;
   
-    delete [] d2phidxi2;
-    delete [] d2phidxi2_memory;
-    delete [] d2phideta2;
-    delete [] d2phideta2_memory;
+    delete [] _d2phidxi2;
+    delete [] _d2phidxi2_memory;
+    delete [] _d2phideta2;
+    delete [] _d2phideta2_memory;
   
-    delete [] d2phidxideta;
-    delete [] d2phidxideta_memory;
+    delete [] _d2phidxideta;
+    delete [] _d2phidxideta_memory;
     
   };
 	
@@ -221,25 +217,25 @@ public:
   void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
 	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
 
-  inline double* GetPhi(const unsigned &ig) const { return phi[ig]; }
-  inline double* GetDPhiDXi(const unsigned &ig) const { return dphidxi[ig]; }
-  inline double* GetDPhiDEta(const unsigned &ig) const { return dphideta[ig]; }
+  inline double* GetPhi(const unsigned &ig) const { return _phi[ig]; }
+  inline double* GetDPhiDXi(const unsigned &ig) const { return _dphidxi[ig]; }
+  inline double* GetDPhiDEta(const unsigned &ig) const { return _dphideta[ig]; }
 	   
 private:    
-  double **phi;
-  double *phi_memory;
-  double **dphidxi;
-  double *dphidxi_memory;
-  double **dphideta;
-  double *dphideta_memory;
+  double **_phi;
+  double *_phi_memory;
+  double **_dphidxi;
+  double *_dphidxi_memory;
+  double **_dphideta;
+  double *_dphideta_memory;
   
-  double **d2phidxi2;
-  double *d2phidxi2_memory;
-  double **d2phideta2;
-  double *d2phideta2_memory;
+  double **_d2phidxi2;
+  double *_d2phidxi2_memory;
+  double **_d2phideta2;
+  double *_d2phideta2_memory;
   
-  double **d2phidxideta;
-  double *d2phidxideta_memory;
+  double **_d2phidxideta;
+  double *_d2phidxideta_memory;
 };
 
 class elem_type_3D : public elem_type {
@@ -248,28 +244,28 @@ public:
   elem_type_3D(const char *solid,const char *order, const char* gauss_order);
    /** destructor */
   ~elem_type_3D(){
-    delete [] phi;
-    delete [] phi_memory;
-    delete [] dphidxi;
-    delete [] dphidxi_memory;
-    delete [] dphideta;
-    delete [] dphideta_memory;
-    delete [] dphidzeta;
-    delete [] dphidzeta_memory;
+    delete [] _phi;
+    delete [] _phi_memory;
+    delete [] _dphidxi;
+    delete [] _dphidxi_memory;
+    delete [] _dphideta;
+    delete [] _dphideta_memory;
+    delete [] _dphidzeta;
+    delete [] _dphidzeta_memory;
   
-    delete [] d2phidxi2;
-    delete [] d2phidxi2_memory;
-    delete [] d2phideta2;
-    delete [] d2phideta2_memory;
-    delete [] d2phidzeta2;
-    delete [] d2phidzeta2_memory;
+    delete [] _d2phidxi2;
+    delete [] _d2phidxi2_memory;
+    delete [] _d2phideta2;
+    delete [] _d2phideta2_memory;
+    delete [] _d2phidzeta2;
+    delete [] _d2phidzeta2_memory;
   
-    delete [] d2phidxideta;
-    delete [] d2phidxideta_memory;
-    delete [] d2phidetadzeta;
-    delete [] d2phidetadzeta_memory;
-    delete [] d2phidzetadxi;
-    delete [] d2phidzetadxi_memory;
+    delete [] _d2phidxideta;
+    delete [] _d2phidxideta_memory;
+    delete [] _d2phidetadzeta;
+    delete [] _d2phidetadzeta_memory;
+    delete [] _d2phidzetadxi;
+    delete [] _d2phidzetadxi_memory;
       
   };
 	
@@ -287,34 +283,34 @@ public:
 		   
   
   //---------------------------------------------------------------------------------------------------------
-  inline double* GetPhi(const unsigned &ig) const { return phi[ig]; }
-  inline double* GetDPhiDXi(const unsigned &ig) const { return dphidxi[ig]; }
-  inline double* GetDPhiDEta(const unsigned &ig) const { return dphideta[ig]; }
-  inline double* GetDPhiDZeta(const unsigned &ig) const { return dphidzeta[ig];}
+  inline double* GetPhi(const unsigned &ig) const { return _phi[ig]; }
+  inline double* GetDPhiDXi(const unsigned &ig) const { return _dphidxi[ig]; }
+  inline double* GetDPhiDEta(const unsigned &ig) const { return _dphideta[ig]; }
+  inline double* GetDPhiDZeta(const unsigned &ig) const { return _dphidzeta[ig];}
 	
 private:	   		   
-  double **phi;
-  double *phi_memory;
-  double **dphidxi;
-  double *dphidxi_memory;
-  double **dphideta;
-  double *dphideta_memory;
-  double **dphidzeta;
-  double *dphidzeta_memory;
+  double **_phi;
+  double *_phi_memory;
+  double **_dphidxi;
+  double *_dphidxi_memory;
+  double **_dphideta;
+  double *_dphideta_memory;
+  double **_dphidzeta;
+  double *_dphidzeta_memory;
   
-  double **d2phidxi2;
-  double *d2phidxi2_memory;
-  double **d2phideta2;
-  double *d2phideta2_memory;
-  double **d2phidzeta2;
-  double *d2phidzeta2_memory;
+  double **_d2phidxi2;
+  double *_d2phidxi2_memory;
+  double **_d2phideta2;
+  double *_d2phideta2_memory;
+  double **_d2phidzeta2;
+  double *_d2phidzeta2_memory;
   
-  double **d2phidxideta;
-  double *d2phidxideta_memory;
-  double **d2phidetadzeta;
-  double *d2phidetadzeta_memory;
-  double **d2phidzetadxi;
-  double *d2phidzetadxi_memory;
+  double **_d2phidxideta;
+  double *_d2phidxideta_memory;
+  double **_d2phidetadzeta;
+  double *_d2phidetadzeta_memory;
+  double **_d2phidzetadxi;
+  double *_d2phidzetadxi_memory;
 };
 
 
