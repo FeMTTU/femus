@@ -14,7 +14,7 @@
             "yb" : 1.,
             "za" : 0.,
             "zb" : 0.,
-            "elem_type" : "Tri6"
+            "elem_type" : "Quad9"
                    }
                   }
                  }

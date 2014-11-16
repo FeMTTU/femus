@@ -22,7 +22,8 @@
 
 
 namespace femus {
-
+  
+  //************************************************************
   
   const double quad_lag::X[25][2]= { 
     {-1,-1},{1,-1},{1, 1},{-1, 1},
@@ -41,7 +42,6 @@ namespace femus {
     {1, 1}
   };
 
-
   const int quad_lag::KVERT_IND[25][2]= {
     {0,0},{1,1},{2,2},{3,3},
     {0,1},{1,2},{2,3},{3,0},{0,2},
@@ -52,13 +52,15 @@ namespace femus {
     {0,8},{1,8},{2,8},{3,8}
   };
   
+  //************************************************************
+  
   const double quad_const::X[12][2]={ 
     {-0.5,-0.5},{0.5, -0.5},{0.5, 0.5},{-0.5, 0.5},
     {-0.5,-0.5},{0.5, -0.5},{0.5, 0.5},{-0.5, 0.5},
     {-0.5,-0.5},{0.5, -0.5},{0.5, 0.5},{-0.5, 0.5}
   };
   
-  const int quad_const::IND[3][2]= {{1, 0},{0, 1},{0, 0}};
+  const int quad_const::IND[3][2]= {{0, 0},{1, 0},{0, 1}};
 
   const int quad_const::KVERT_IND[12][2]={ 
     {0,0},{1,0},{2,0},{3,0},
@@ -66,18 +68,20 @@ namespace femus {
     {0,2},{1,2},{2,2},{3,2}
   };
   
-  
+  //************************************************************
   
   double quadpwl::eval_phi(const int *I,const double* x) const {
-    return 1.*I[0]+x[0]*(1.-I[0])*I[1]+x[1]*(1.-I[0])*(1.-I[1]);
+    return (1.-I[0])*(1.-I[1]) + 
+	    x[0]*eval_dphidx(I,x) + 
+	    x[1]*eval_dphidy(I,x);
   }
 
   double quadpwl::eval_dphidx(const int *I,const double* x) const {
-    return (1.-I[0])*I[1];
+    return I[0];
   }
 
   double quadpwl::eval_dphidy(const int *I,const double* x) const {
-    return (1.-I[0])*(1.-I[1]);
+    return I[1];
   }
 
   //************************************************************

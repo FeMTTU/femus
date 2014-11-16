@@ -49,7 +49,7 @@ namespace femus {
     {0.166666666667,0.166666666667},{0.666666666667,0.166666666667},{0.166666666667,0.666666666667},{0.333333333333,0.333333333333},
   };
   
-  const int tri_const::IND[3][2]= {{1, 0},{0,1},{0,0}};
+  const int tri_const::IND[3][2]= {{0, 0},{1,0},{0,1}};
 
   const int tri_const::KVERT_IND[12][2]={ 
     {0,0},{1,0},{2,0},{3,0},
@@ -57,20 +57,22 @@ namespace femus {
     {0,2},{1,2},{2,2},{3,2}
   };
    
-  
+    
   double tripwl::eval_phi(const int *I,const double* x) const {
-    return 1.*I[0]+x[0]*(1.-I[0])*I[1]+x[1]*(1.-I[0])*(1.-I[1]);
+    return (1.-I[0])*(1.-I[1]) + 
+	    x[0]*eval_dphidx(I,x) + 
+	    x[1]*eval_dphidy(I,x);
   }
 
   double tripwl::eval_dphidx(const int *I,const double* x) const {
-    return (1.-I[0])*I[1];
+    return I[0];
   }
 
   double tripwl::eval_dphidy(const int *I,const double* x) const {
-    return (1.-I[0])*(1.-I[1]);
+    return I[1];
   }
   
-  
+   
   
   double tri1::eval_phi(const int *I,const double* x) const {
     return triangle1(x[0],x[1],I[0],I[1]);

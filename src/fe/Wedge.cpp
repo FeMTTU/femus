@@ -93,7 +93,7 @@ namespace femus {
     {0.166666666667,0.166666666667, 0.5},{0.666666666667,0.166666666667, 0.5},{0.166666666667,0.666666666667, 0.5},{0.333333333333,0.333333333333, 0.5}
   };
 
-  const int wedge_const::IND[4][3]= {{1,0,0},{0,1,0},{0,0,1},{0,0,0}};
+  const int wedge_const::IND[4][3]= { {0,0,0}, {1,0,0}, {0,1,0}, {0,0,1} };
 
   const int wedge_const::KVERT_IND[32][2]= {
     {0,0},{1,0},{2,0},{3,0},{4,0},{5,0},{6,0},{7,0},
@@ -105,19 +105,22 @@ namespace femus {
   //************************************************************
   
   double wedgepwl::eval_phi(const int *I,const double* x) const {
-    return I[0]+ x[0]*I[1] + x[1]*I[2] + x[2]*(1.-I[0])*(1.-I[1])*(1.-I[2]);
+    return (1.-I[0])*(1.-I[1])*(1.-I[2]) + 
+	    x[0]*eval_dphidx(I,x) + 
+	    x[1]*eval_dphidy(I,x) + 
+	    x[2]*eval_dphidz(I,x);
   }
 
   double wedgepwl::eval_dphidx(const int *I,const double* x) const {
-    return I[1];
+    return I[0];
   }
 
   double wedgepwl::eval_dphidy(const int *I,const double* x) const {
-    return I[2];
+    return I[1];
   }
 
   double wedgepwl::eval_dphidz(const int *I,const double* x) const {
-    return (1.-I[0])*(1.-I[1])*(1.-I[2]);
+    return I[2];
   }
 
   //************************************************************

@@ -67,7 +67,7 @@ namespace femus {
     {0.375,0.125,0.250},{0.250,0.250,0.375},{0.250,0.250,0.125},{0.125,0.375,0.250}
   };
 
-  const int tet_const::IND[4][3]= {{1,0,0},{0, 1,0},{0, 0,1},{0,0,0}};
+  const int tet_const::IND[4][3]= { {0,0,0}, {1,0,0}, {0,1,0}, {0,0,1} };
 
   const int tet_const::KVERT_IND[32][2]= {
     {0,0},{1,0},{2,0},{3,0},{4,0},{5,0},{6,0},{7,0},
@@ -76,21 +76,25 @@ namespace femus {
     {0,3},{1,3},{2,3},{3,3},{4,3},{5,3},{6,3},{7,3}
   };
   
+  // ************************************************************  
   
   double tetpwl::eval_phi(const int *I,const double* x) const {
-    return I[0]+ x[0]*I[1] + x[1]*I[2] + x[2]*(1.-I[0])*(1.-I[1])*(1.-I[2]);
+    return (1.-I[0])*(1.-I[1])*(1.-I[2]) + 
+	    x[0]*eval_dphidx(I,x) + 
+	    x[1]*eval_dphidy(I,x) + 
+	    x[2]*eval_dphidz(I,x);
   }
 
   double tetpwl::eval_dphidx(const int *I,const double* x) const {
-    return I[1];
+    return I[0];
   }
 
   double tetpwl::eval_dphidy(const int *I,const double* x) const {
-    return I[2];
+    return I[1];
   }
 
   double tetpwl::eval_dphidz(const int *I,const double* x) const {
-    return (1.-I[0])*(1.-I[1])*(1.-I[2]);
+    return I[2];
   }
 
   // ************************************************************  
