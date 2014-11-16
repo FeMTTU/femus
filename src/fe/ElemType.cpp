@@ -244,12 +244,17 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
   else if (!strcmp(order,"biquadratic")) _SolType=2;   
   else if (!strcmp(order,"constant"))    _SolType=3;   
   else if (!strcmp(order,"disc_linear")) _SolType=4;   
+  else {
+    cout<<order<<" is not a valid option for "<<solid<<endl;
+    exit(0);
+  }
    
   if (!strcmp(solid,"line")) { //line
     if 	    (_SolType == 0) _pt_basis = new line1;
     else if (_SolType == 1) _pt_basis = new line2;
     else if (_SolType == 2) _pt_basis = new line2;
     else if (_SolType == 3) _pt_basis = new line0;
+    else if (_SolType == 4) _pt_basis = new linepwl;
     else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -275,16 +280,19 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
   _KVERT_IND=new const int * [_nf];
   _X=new const double * [_nf];
   for (int i=0; i<_nf; i++) {
-    _KVERT_IND[i]=_pt_basis->getKVERT_IND(i);
-    _X[i]=_pt_basis->getX(i);
+    _KVERT_IND[i] = _pt_basis->getKVERT_IND(i);
+    _X[i] = _pt_basis->getX(i);
   }
 
   // local projection matrix evaluation
-  int counter=0;
-  for (int i=0; i<_nf; i++) {
-    for (int j=0; j<_nc; j++) {
-      double phi=_pt_basis->eval_phi(_IND[j],_X[i]);
-      if ( fabs(phi) >= 1.0e-14 ){
+  int counter = 0;
+  for (int i = 0; i < _nf; i++) {
+    for (int j = 0; j < _nc; j++) {
+      double phi = _pt_basis->eval_phi(_IND[j],_X[i]);
+      if ( _SolType == 4 ) { //if piece_wise_linear
+        if (i/2 == 1)  phi = _pt_basis->eval_dphidx(_IND[j],_X[i]);
+      }
+      if ( fabs( phi ) >= 1.0e-14 ){
         counter++;
       }
     }
@@ -292,27 +300,30 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
   double *pt_d;
   int *pt_i;
 
-  _prol_val=new double * [_nf+1];
-  _prol_ind=new int * [_nf+1];
-  _mem_prol_val=new double [counter];
-  _mem_prol_ind=new int [counter];
+  _prol_val = new double * [_nf+1];
+  _prol_ind = new int * [_nf+1];
+  _mem_prol_val = new double [counter];
+  _mem_prol_ind = new int [counter];
 
   pt_d= _mem_prol_val;
   pt_i= _mem_prol_ind;
   for (int i=0; i<_nf; i++) {
-    _prol_val[i]=pt_d;
-    _prol_ind[i]=pt_i;
+    _prol_val[i] = pt_d;
+    _prol_ind[i] = pt_i;
     for (int j=0; j<_nc; j++) {
-      double phi=_pt_basis->eval_phi(_IND[j],_X[i]);
+      double phi = _pt_basis->eval_phi(_IND[j],_X[i]);
+      if ( _SolType==4 ) { //if piece_wise_linear
+        if (i/2 == 1) phi = _pt_basis->eval_dphidx(_IND[j],_X[i])/2.;
+      }
       if ( fabs(phi) >= 1.0e-14 ){
-        *(pt_d++)=phi;
-        *(pt_i++)=j;
+        *(pt_d++) = phi;
+        *(pt_i++) = j;
       }
     }
   }
   
-  _prol_val[_nf]=pt_d;
-  _prol_ind[_nf]=pt_i;
+  _prol_val[_nf] = pt_d;
+  _prol_ind[_nf] = pt_i;
     
   // shape function and its derivatives evaluated at Gauss'points
   _phi= new double*[_GaussPointNumber];
@@ -360,7 +371,11 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
   else if (!strcmp(order,"quadratic")) 	 _SolType=1;   
   else if (!strcmp(order,"biquadratic")) _SolType=2;   
   else if (!strcmp(order,"constant"))    _SolType=3;   
-  else if (!strcmp(order,"disc_linear")) _SolType=4;   
+  else if (!strcmp(order,"disc_linear")) _SolType=4;
+  else {
+    cout<<order<<" is not a valid option for "<<solid<<endl;
+    exit(0);
+  }
   
   if (!strcmp(solid,"quad")) { //QUAD
     if 	    (_SolType == 0) _pt_basis = new quad1;
@@ -379,6 +394,7 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
     else if (_SolType == 1) _pt_basis = new tri2;
     else if (_SolType == 2) _pt_basis = new tri2;
     else if (_SolType == 3) _pt_basis = new tri0;
+    else if (_SolType == 4) _pt_basis = new tripwl;
     else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -413,7 +429,7 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
     for (int j=0; j<_nc; j++) {
       double phi=_pt_basis->eval_phi(_IND[j],_X[i]);
       if ( _SolType==4 ) { //if piece_wise_linear
-        if (i/4==1) phi=_pt_basis->eval_dphidx(_IND[j],_X[i]);
+        if 	(i/4==1) phi=_pt_basis->eval_dphidx(_IND[j],_X[i]);
         else if (i/4==2) phi=_pt_basis->eval_dphidy(_IND[j],_X[i]);
       }
       if ( fabs(phi) >= 1.0e-14 ){
@@ -437,10 +453,8 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
     for (int j=0; j<_nc; j++) {
       double phi=_pt_basis->eval_phi(_IND[j],_X[i]);
       if ( _SolType==4 ) { //if piece_wise_linear
-        if (i/4==1)
-          phi=_pt_basis->eval_dphidx(_IND[j],_X[i])/2.;
-        else if (i/4==2)
-          phi=_pt_basis->eval_dphidy(_IND[j],_X[i])/2.;
+        if 	(i/4==1)  phi=_pt_basis->eval_dphidx(_IND[j],_X[i])/2.;
+        else if (i/4==2)  phi=_pt_basis->eval_dphidy(_IND[j],_X[i])/2.;
       } 
       if ( fabs(phi) >= 1.0e-14 ){
         *(pt_d++)=phi;
@@ -516,6 +530,10 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
   else if (!strcmp(order,"biquadratic")) _SolType=2;   
   else if (!strcmp(order,"constant"))    _SolType=3;   
   else if (!strcmp(order,"disc_linear")) _SolType=4;  
+  else {
+    cout<<order<<" is not a valid option for "<<solid<<endl;
+    exit(0);
+  }
   
   if (!strcmp(solid,"hex")) {//HEX
     
@@ -533,7 +551,8 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
     if 	    (_SolType == 0) _pt_basis = new wedge1;
     else if (_SolType == 1) _pt_basis = new wedgeth;
     else if (_SolType == 2) _pt_basis = new wedge2;
-    else if (_SolType == 3) _pt_basis = new wedge0;     
+    else if (_SolType == 3) _pt_basis = new wedge0;  
+    else if (_SolType == 4) _pt_basis = new wedgepwl;     
     else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -543,7 +562,8 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
     if 	    (_SolType == 0) _pt_basis = new tet1;
     else if (_SolType == 1) _pt_basis = new tet2;
     else if (_SolType == 2) _pt_basis = new tet2;
-    else if (_SolType == 3) _pt_basis = new tet0;     
+    else if (_SolType == 3) _pt_basis = new tet0;
+    else if (_SolType == 4) _pt_basis = new tetpwl;      
     else {
       cout<<order<<" is not a valid option for "<<solid<<endl;
       exit(0);
@@ -578,12 +598,9 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
     for (int j=0; j<_nc; j++) {
       double phi=_pt_basis->eval_phi(_IND[j],_X[i]);
       if ( _SolType==4 ) { //if piece_wise_linear
-        if ( i/8 == 1 )
-          phi=_pt_basis->eval_dphidx(_IND[j],_X[i])/2.;
-        else if ( i/8 == 2 )
-          phi=_pt_basis->eval_dphidy(_IND[j],_X[i])/2.;
-        else if ( i/8 == 3 )
-          phi=_pt_basis->eval_dphidz(_IND[j],_X[i])/2.;
+        if 	( i/8 == 1 ) phi=_pt_basis->eval_dphidx(_IND[j],_X[i]);
+        else if ( i/8 == 2 ) phi=_pt_basis->eval_dphidy(_IND[j],_X[i]);
+        else if ( i/8 == 3 ) phi=_pt_basis->eval_dphidz(_IND[j],_X[i]);
       }
       if ( fabs(phi) >= 1.0e-14 ){
         counter++;
@@ -606,12 +623,9 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
     for (int j=0; j<_nc; j++) {
       double phi=_pt_basis->eval_phi(_IND[j],_X[i]);
       if ( _SolType==4 ) { //if piece_wise_linear
-        if ( i/8 == 1 )
-          phi = _pt_basis->eval_dphidx(_IND[j],_X[i])/2.;
-        else if ( i/8 == 2 )
-          phi = _pt_basis->eval_dphidy(_IND[j],_X[i])/2.;
-        else if ( i/8 == 3 )
-          phi = _pt_basis->eval_dphidz(_IND[j],_X[i])/2.;
+        if 	( i/8 == 1 ) phi = _pt_basis->eval_dphidx(_IND[j],_X[i])/2.;
+        else if ( i/8 == 2 ) phi = _pt_basis->eval_dphidy(_IND[j],_X[i])/2.;
+        else if ( i/8 == 3 ) phi = _pt_basis->eval_dphidz(_IND[j],_X[i])/2.;
       }
       if ( fabs(phi) >= 1.0e-14 ){
         *(pt_d++)=phi;

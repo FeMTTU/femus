@@ -46,10 +46,14 @@ int main(int argc,char **args) {
   _type_elem[1][0]=new const elem_type_3D("tet","linear","fifth");
   _type_elem[1][1]=new const elem_type_3D("tet","quadratic","fifth");
   _type_elem[1][2]=new const elem_type_3D("tet","biquadratic","fifth");
+  _type_elem[1][3]=new const elem_type_3D("tet","constant","fifth");
+  _type_elem[1][4]=new const elem_type_3D("tet","disc_linear","fifth");
     
   _type_elem[2][0]=new const elem_type_3D("wedge","linear","fifth");
   _type_elem[2][1]=new const elem_type_3D("wedge","quadratic","fifth");
   _type_elem[2][2]=new const elem_type_3D("wedge","biquadratic","fifth");
+  _type_elem[2][3]=new const elem_type_3D("wedge","constant","fifth");
+  _type_elem[2][4]=new const elem_type_3D("wedge","disc_linear","fifth");
      
   _type_elem[3][0]=new const elem_type_2D("quad","linear","fifth");
   _type_elem[3][1]=new const elem_type_2D("quad","quadratic","fifth");
@@ -60,10 +64,14 @@ int main(int argc,char **args) {
   _type_elem[4][0]=new const elem_type_2D("tri","linear","fifth");
   _type_elem[4][1]=new const elem_type_2D("tri","quadratic","fifth");
   _type_elem[4][2]=new const elem_type_2D("tri","biquadratic","fifth");  
+  _type_elem[4][3]=new const elem_type_2D("tri","constant","fifth");
+  _type_elem[4][4]=new const elem_type_2D("tri","disc_linear","fifth"); 
   
   _type_elem[5][0]=new const elem_type_1D("line","linear","fifth");
   _type_elem[5][1]=new const elem_type_1D("line","quadratic","fifth");
   _type_elem[5][2]=new const elem_type_1D("line","biquadratic","fifth"); 
+  _type_elem[5][3]=new const elem_type_1D("line","constant","fifth");
+  _type_elem[5][4]=new const elem_type_1D("line","disc_linear","fifth"); 
    
   delete _type_elem[0][0];
   delete _type_elem[0][1];
@@ -74,10 +82,14 @@ int main(int argc,char **args) {
   delete _type_elem[1][0];
   delete _type_elem[1][1];
   delete _type_elem[1][2];
+  delete _type_elem[1][3];
+  delete _type_elem[1][4];
        
   delete _type_elem[2][0];
   delete _type_elem[2][1];
   delete _type_elem[2][2];
+  delete _type_elem[2][3];
+  delete _type_elem[2][4];  
   
   delete _type_elem[3][0];
   delete _type_elem[3][1];
@@ -88,11 +100,16 @@ int main(int argc,char **args) {
   delete _type_elem[4][0];
   delete _type_elem[4][1];
   delete _type_elem[4][2];
+  delete _type_elem[4][3];
+  delete _type_elem[4][4];
   
   delete _type_elem[5][0]; 
   delete _type_elem[5][1];
   delete _type_elem[5][2]; 
+  delete _type_elem[5][3]; 
+  delete _type_elem[5][4]; 
   
+  //return 1;
   
   
   unsigned simulation;
