@@ -107,10 +107,7 @@ public:
   
   // member data
   static unsigned _refindex;
-				  
-  void (elem_type::*Jacobian_sur_ptr)(const vector < vector < double > > &vt, const unsigned &ig,
-                                      double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
-
+ 
   void GetSparsityPatternSize(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc,  
 			      NumericVector* NNZ_d, NumericVector* NNZ_o,
 			      const unsigned &index_sol, const unsigned &kkindex_sol) const; 

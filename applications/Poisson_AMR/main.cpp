@@ -718,7 +718,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
                         if(felt != 6) 
 			{
                           for(unsigned igs=0; igs < ml_prob._ml_msh->_type_elem[felt][order_ind]->GetGaussPointNumber(); igs++) {
-                            (ml_prob._ml_msh->_type_elem[felt][order_ind]->*ml_prob._ml_msh->_type_elem[felt][order_ind]->Jacobian_sur_ptr)(coordinates,igs,weight,phi,gradphi,normal);
+                            ml_prob._ml_msh->_type_elem[felt][order_ind]->JacobianSur(coordinates,igs,weight,phi,gradphi,normal);
 
 			    xyzt.assign(4,0.);
                             for(unsigned i=0; i<nve; i++) {
