@@ -107,19 +107,21 @@ public:
     void print_info();
 
     // data
-    const elem_type *_type_elem[6][5];
+    const elem_type *_finiteElement[6][5];
 
 protected:
 
 private:
 
+    void BuildElemType(const char GaussOrder[]);
+    
     // data
     unsigned short _gridn0, _gridr0;
     unsigned short _gridn, _gridr;
     /** Array of mesh */
     std::vector <mesh*> _level0;
     std::vector <mesh*> _level;
-    std::vector <bool> _type_elem_flag;
+    std::vector <bool> _finiteElementGeometryFlag;
 
 };
 

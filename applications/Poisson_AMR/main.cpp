@@ -632,9 +632,9 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
         if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
             // *** Gauss poit loop ***
-            for(unsigned ig=0; ig < ml_prob._ml_msh->_type_elem[kelt][order_ind]->GetGaussPointNumber(); ig++) {
+            for(unsigned ig=0; ig < ml_prob._ml_msh->_finiteElement[kelt][order_ind]->GetGaussPointNumber(); ig++) {
                 // *** get Jacobian and test function and test function derivatives ***
-                ml_prob._ml_msh->_type_elem[kelt][order_ind]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
+                ml_prob._ml_msh->_finiteElement[kelt][order_ind]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
                 //current solution
                 double SolT=0;
                 vector < double > gradSolT(dim,0.);
@@ -715,8 +715,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
                         if(felt != 6) 
 			{
-                          for(unsigned igs=0; igs < ml_prob._ml_msh->_type_elem[felt][order_ind]->GetGaussPointNumber(); igs++) {
-                            ml_prob._ml_msh->_type_elem[felt][order_ind]->JacobianSur(coordinates,igs,weight,phi,gradphi,normal);
+                          for(unsigned igs=0; igs < ml_prob._ml_msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
+                            ml_prob._ml_msh->_finiteElement[felt][order_ind]->JacobianSur(coordinates,igs,weight,phi,gradphi,normal);
 
 			    xyzt.assign(4,0.);
                             for(unsigned i=0; i<nve; i++) {
@@ -848,9 +848,9 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
 	  }
 	}
 	
-	for(unsigned ig=0; ig < ml_sol._ml_msh->_type_elem[kelt][SolOrder]->GetGaussPointNumber(); ig++) {
+	for(unsigned ig=0; ig < ml_sol._ml_msh->_finiteElement[kelt][SolOrder]->GetGaussPointNumber(); ig++) {
           // *** get Jacobian and test function and test function derivatives ***
-          ml_sol._ml_msh->_type_elem[kelt][SolOrder]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
+          ml_sol._ml_msh->_finiteElement[kelt][SolOrder]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
           //current solution
           double SolT=0;
           vector < double > gradSolT(dim,0.);

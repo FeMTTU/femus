@@ -270,7 +270,7 @@ void MultiLevelSolution::BuildProlongatorMatrix(unsigned gridf, unsigned SolInde
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
 	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _ml_msh->_type_elem[ielt][ThisSolType]->GetSparsityPatternSize(*mshf, *mshc, iel, NNZ_d, NNZ_o); 
+	  _ml_msh->_finiteElement[ielt][ThisSolType]->GetSparsityPatternSize(*mshf, *mshc, iel, NNZ_d, NNZ_o); 
 	}
       }
     }
@@ -300,7 +300,7 @@ void MultiLevelSolution::BuildProlongatorMatrix(unsigned gridf, unsigned SolInde
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
 	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _ml_msh->_type_elem[ielt][ThisSolType]->BuildProlongation(*mshf,*mshc,iel, _solution[gridf]->_ProjMat[ThisSolType]); 
+	  _ml_msh->_finiteElement[ielt][ThisSolType]->BuildProlongation(*mshf,*mshc,iel, _solution[gridf]->_ProjMat[ThisSolType]); 
 	}
       }
     }
@@ -374,10 +374,8 @@ void MultiLevelSolution::SetBoundaryCondition_new(const std::string name, const 
 
 
 void MultiLevelSolution::GenerateBdc_new(const unsigned k, const unsigned grid0, const double time) {
-  
- 
-  
- // int nvars = _SolType.size();
+   
+  // int nvars = _SolType.size();
       
   // 2 Default Neumann
   // 1 DD Dirichlet

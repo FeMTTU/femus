@@ -463,11 +463,6 @@ bool Solution::FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,co
 }
 
 
-
-
-
-
-
 void Solution::BuildGradMatrixStructure(unsigned SolType) {
   
  if(SolType<3 && _GradMat[SolType][0]==0){

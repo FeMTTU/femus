@@ -39,6 +39,7 @@ class elem_type;
 class NumericVector;
 class SparseMatrix;
 class mesh;
+class MultiLevelSolution;
 
 using std::vector;
 

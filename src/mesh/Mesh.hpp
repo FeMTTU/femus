@@ -51,7 +51,7 @@ public:
     ~mesh();
 
     /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
-    void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_type_elem_flag);
+    void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag);
 
     /** Read the coarse-mesh from a neutral Gambit File */
     void ReadGambit(const std::string& name, vector < vector < double> > &vt,const double Lref,std::vector<bool> &type_elem_flag);
