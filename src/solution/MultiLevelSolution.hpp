@@ -164,6 +164,8 @@ public:
                                            double &value, const int FaceName, const double time); //< boundary condition function pointer
     void build();
 
+    bool _Use_GenerateBdc_new;
+    
 private:
   
     /** To be Added */
@@ -182,7 +184,7 @@ private:
     vector< vector <bool> > _ishomogeneous;
     vector< vector <FunctionBase *> > _nonhomogeneousbcfunction; 
 
-    bool _Use_GenerateBdc_new;
+    
     
     bool _bdc_func_set;
     unsigned short  _gridn;

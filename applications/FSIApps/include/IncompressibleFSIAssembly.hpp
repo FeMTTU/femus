@@ -271,9 +271,7 @@ namespace femus {
 	      unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
 	      if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,0.) && tau!=0.){
 		unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,SolType2);
-		const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
-		unsigned felt = FELT[kelt][jface < mymsh->el->GetElementFaceNumber(kel,0)];
-		  		  		  
+		const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);  		  		  
 		for(unsigned i=0; i<nve; i++) {
 		  unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
 		  unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
@@ -928,8 +926,7 @@ namespace femus {
 	      unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
 	      if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,0.) && tau!=0.){
 		unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,SolType2);
-		const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
-		unsigned felt = FELT[kelt][jface < mymsh->el->GetElementFaceNumber(kel,0)];
+		const unsigned felt = mymsh->el->GetElementFaceType(kel, jface); 
 		  		  		  
 		for(unsigned i=0; i<nve; i++) {
 		  unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
@@ -1461,8 +1458,7 @@ namespace femus {
 	      unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
 	      if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,0.) && tau!=0.){
 		unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,SolType2);
-		const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
-		unsigned felt = FELT[kelt][jface < mymsh->el->GetElementFaceNumber(kel,0)];
+		const unsigned felt = mymsh->el->GetElementFaceType(kel, jface); 
 		  		  		  
 		for(unsigned i=0; i<nve; i++) {
 		  unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
@@ -2412,8 +2408,7 @@ namespace femus {
 	      unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
 	      if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,0.) && tau!=0.){
 		unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,SolType2);
-		const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
-		unsigned felt = FELT[kelt][jface < mymsh->el->GetElementFaceNumber(kel,0)];
+		const unsigned felt = mymsh->el->GetElementFaceType(kel, jface); 
 		  		  		  
 		for(unsigned i=0; i<nve; i++) {
 		  unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;

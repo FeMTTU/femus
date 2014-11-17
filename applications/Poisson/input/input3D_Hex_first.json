@@ -4,18 +4,7 @@
     "multilevel_mesh" : {
       "first" : {
         "type" : {
-          "box" : {
-            "nx" : 6,
-            "ny" : 6,
-            "nz" : 0,
-            "xa" : 0.,
-            "xb" : 1.,
-            "ya" : 0.,
-            "yb" : 1.,
-            "za" : 0.,
-            "zb" : 0.,
-            "elem_type" : "Quad9"
-                   }
+          "filename" : "input/cube_Hex.neu"
                   }
                  }
              },
@@ -27,8 +16,9 @@
           "variable" : {
             "first" : {
               "name" : "T", 
-              "fe_order" : "second",
+              "fe_order" : "first",
               "init_func" : "0.",
+              "func_source": "0.",
               "boundary_conditions" : [
                 {
                   "facename" : "top",
@@ -82,3 +72,13 @@
              }
            }
 }
+
+
+
+
+
+
+
+
+
+

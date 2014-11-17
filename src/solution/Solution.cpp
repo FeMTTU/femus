@@ -234,8 +234,7 @@ void Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector
     unsigned indexSol=_SolPdeIndex[k];
     unsigned soltype =  _SolType[indexSol];
 
-    int loc_size   = _Eps[indexSol]->local_size();
-    int loc_offset_EPS = KKoffset[k][processor_id()];// - KKoffset[0][processor_id()]; //?????????
+    int loc_offset_EPS = KKoffset[k][processor_id()];
 
     int glob_offset_eps = _msh->MetisOffset[soltype][processor_id()];
 
@@ -281,24 +280,24 @@ void Solution::UpdateRes(const vector <unsigned> &_SolPdeIndex, NumericVector* _
     unsigned indexSol=_SolPdeIndex[k];
     unsigned soltype =  _SolType[indexSol];
 
-    int loc_offset_EPS = KKoffset[k][processor_id()];// - KKoffset[0][processor_id()]; //?????????
+    int loc_offset_RES = KKoffset[k][processor_id()];
 
-    int glob_offset_eps = _msh->MetisOffset[soltype][processor_id()];
+    int glob_offset_res = _msh->MetisOffset[soltype][processor_id()];
 
     vector <int> index(_msh->own_size[soltype][processor_id()]);
     for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
-      index[i]=loc_offset_EPS+i;
+      index[i]=loc_offset_RES+i;
     }
 
     vector <double> valueRES(_msh->own_size[soltype][processor_id()]);
     _RES->get(index,valueRES);
 
     for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
-      if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) {
-	_Res[indexSol]->set(i+glob_offset_eps,valueRES[i]);
+      if ((*_Bdc[indexSol])(i+glob_offset_res)>1.1) {
+	_Res[indexSol]->set(i+glob_offset_res,valueRES[i]);
       }
       else {
-	_Res[indexSol]->set(i+glob_offset_eps,zero);
+	_Res[indexSol]->set(i+glob_offset_res,zero);
       }
     }
     _Res[indexSol]->close();

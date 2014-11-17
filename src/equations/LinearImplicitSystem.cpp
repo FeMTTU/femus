@@ -292,8 +292,10 @@ bool LinearImplicitSystem::IsLinearConverged(const unsigned igridn) {
   std::cout << std::endl;
   //for debugging purpose
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
+ 
     unsigned indexSol=_SolSystemPdeIndex[k];
-    
+ 
+       
 //     L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
 
     L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();

@@ -703,9 +703,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
 		        bdcfunc = (ParsedFunction* )(ml_sol->GetBdcFunction("Sol", face));
 			unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,order_ind);
-                        const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
-                        unsigned felt = FELT[kelt][jface<mymsh->el->GetElementFaceNumber(kel,0)];
-
+			const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);
                         for(unsigned i=0; i<nve; i++) {
                             unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
                             unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
