@@ -255,9 +255,9 @@ ADD_SUBDIRECTORY(applications)
 ### Unit tests
 #############################################################################################
 
+INCLUDE(CTest)
 # Add unit tests
 IF(BUILD_TESTING)
-  INCLUDE(CTest)
   ENABLE_TESTING()
   ADD_SUBDIRECTORY(unittests)
 ENDIF(BUILD_TESTING)
