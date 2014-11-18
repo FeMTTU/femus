@@ -67,8 +67,10 @@ public:
                       std::vector<bool> &type_elem_flag );
 
     /** This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$ */
-    void RefineMesh(const unsigned &igrid, mesh *mshc, const elem_type* type_elem[6][5]);
+    void RefineMesh(const unsigned &igrid, mesh *mshc, const elem_type* otheFiniteElement[6][5]);
 
+    void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
+    
     /** Partition the mesh using the METIS partitioner */
     void generate_metis_mesh_partition();
 
@@ -143,6 +145,7 @@ public:
     
     // member data
     Solution* _coordinate;
+    const elem_type *_finiteElement[6][5];
     vector <unsigned> IS_Mts2Gmt_elem_offset;
     vector <unsigned> IS_Mts2Gmt_elem;
     vector <unsigned> own_size[5];
@@ -163,7 +166,7 @@ public:
     std::map<unsigned int, std::string> _boundaryinfo;
 
 private:
-
+    
     //member-data
     unsigned nvt,grid;
     static unsigned _dimension;

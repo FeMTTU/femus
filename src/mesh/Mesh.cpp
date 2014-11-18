@@ -58,7 +58,7 @@ mesh::mesh()
  *  This function generates the coarse mesh level, $l_0$, from an input mesh file (Now only the Gambit Neutral File)
  **/
 void mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag) {
-  
+    
   MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
   MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
   
@@ -235,9 +235,19 @@ void mesh::FlagOnlyEvenElementsToBeRefined() {
 /**
  *  This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$
  **/
-//------------------------------------------------------------------------------------------------------
-void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type* type_elem[6][5]) {
+
+void mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]){
   
+  for(int i=0;i<6;i++)
+    for(int j=0;j<5;j++)
+      _finiteElement[i][j] = OtherFiniteElement[i][j];
+}
+
+//------------------------------------------------------------------------------------------------------
+void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *otherFiniteElement[6][5]) {
+  
+  SetFiniteElementPtr(otherFiniteElement);
+    
   elem *elc=mshc->el;
   
   MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
@@ -489,7 +499,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type* type_
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
 	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  type_elem[ielt][thisSolType]->GetSparsityPatternSize(*this, *mshc, iel, NNZ_d, NNZ_o); 
+	  _finiteElement[ielt][thisSolType]->GetSparsityPatternSize(*this, *mshc, iel, NNZ_d, NNZ_o); 
 	}
       }
     }
@@ -517,7 +527,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type* type_
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if( mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
 	  short unsigned ielt= mshc->el->GetElementType(iel);
-	  type_elem[ielt][thisSolType]->BuildProlongation(*this,*mshc,iel,_coordinate->_ProjMat[thisSolType]); 
+	  _finiteElement[ielt][thisSolType]->BuildProlongation(*this,*mshc,iel,_coordinate->_ProjMat[thisSolType]); 
 	}
       }
     }
@@ -1270,8 +1280,7 @@ void mesh::BuildBrick(const unsigned int nx,
 		      const double ymin, const double ymax,
 		      const double zmin, const double zmax,
 		      const ElemType type,
-		      std::vector<bool> &type_elem_flag ) 
-{
+		      std::vector<bool> &type_elem_flag){
   
   MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
   MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);

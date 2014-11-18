@@ -479,50 +479,50 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       _GradMat[SolType][i]->init(nr,nc,nr_loc,nc_loc,27,27);
     }
      
-    // Begin build elem type structure
-    const elem_type *type_elem[6];
-    if(dim==3){
-      if(SolType==0){
-	type_elem[0]=new const elem_type_3D("hex","linear","zero");
-	type_elem[1]=new const elem_type_3D("tet","linear","zero");
-	type_elem[2]=new const elem_type_3D("wedge","linear","zero");
-      }	 
-      else if(SolType==1){
-	type_elem[0]=new const elem_type_3D("hex","quadratic","zero");
-	type_elem[1]=new const elem_type_3D("tet","quadratic","zero");
-	type_elem[2]=new const elem_type_3D("wedge","quadratic","zero");
-      }	    
-      else{
-	type_elem[0]=new const elem_type_3D("hex","biquadratic","zero");
-	type_elem[1]=new const elem_type_3D("tet","biquadratic","zero");
-	type_elem[2]=new const elem_type_3D("wedge","biquadratic","zero");
-      }
-    }	
-    else if(dim==2){
-      if(SolType==0){
-	type_elem[3]=new const elem_type_2D("quad","linear","zero");
-	type_elem[4]=new const elem_type_2D("tri","linear","zero");
-      }	 
-      else if(SolType==1){
-	type_elem[3]=new const elem_type_2D("quad","quadratic","zero");
-	type_elem[4]=new const elem_type_2D("tri","quadratic","zero");
-      }	    
-      else{
-	type_elem[3]=new const elem_type_2D("quad","biquadratic","zero");
-	type_elem[4]=new const elem_type_2D("tri","biquadratic","zero");
-      }
-    }
-    else if(dim==1){
-      if(SolType==0){
-	type_elem[5]=new const elem_type_1D("line","linear","zero");
-      }	 
-      else if(SolType==1){
-	type_elem[5]=new const elem_type_1D("line","quadratic","zero");
-      }	    
-      else{
-	type_elem[5]=new const elem_type_1D("line","biquadratic","zero");
-      }
-    }
+//     // Begin build elem type structure
+//     const elem_type *type_elem[6];
+//     if(dim==3){
+//       if(SolType==0){
+// 	type_elem[0]=new const elem_type_3D("hex","linear","zero");
+// 	type_elem[1]=new const elem_type_3D("tet","linear","zero");
+// 	type_elem[2]=new const elem_type_3D("wedge","linear","zero");
+//       }	 
+//       else if(SolType==1){
+// 	type_elem[0]=new const elem_type_3D("hex","quadratic","zero");
+// 	type_elem[1]=new const elem_type_3D("tet","quadratic","zero");
+// 	type_elem[2]=new const elem_type_3D("wedge","quadratic","zero");
+//       }	    
+//       else{
+// 	type_elem[0]=new const elem_type_3D("hex","biquadratic","zero");
+// 	type_elem[1]=new const elem_type_3D("tet","biquadratic","zero");
+// 	type_elem[2]=new const elem_type_3D("wedge","biquadratic","zero");
+//       }
+//     }	
+//     else if(dim==2){
+//       if(SolType==0){
+// 	type_elem[3]=new const elem_type_2D("quad","linear","zero");
+// 	type_elem[4]=new const elem_type_2D("tri","linear","zero");
+//       }	 
+//       else if(SolType==1){
+// 	type_elem[3]=new const elem_type_2D("quad","quadratic","zero");
+// 	type_elem[4]=new const elem_type_2D("tri","quadratic","zero");
+//       }	    
+//       else{
+// 	type_elem[3]=new const elem_type_2D("quad","biquadratic","zero");
+// 	type_elem[4]=new const elem_type_2D("tri","biquadratic","zero");
+//       }
+//     }
+//     else if(dim==1){
+//       if(SolType==0){
+// 	type_elem[5]=new const elem_type_1D("line","linear","zero");
+//       }	 
+//       else if(SolType==1){
+// 	type_elem[5]=new const elem_type_1D("line","quadratic","zero");
+//       }	    
+//       else{
+// 	type_elem[5]=new const elem_type_1D("line","biquadratic","zero");
+//       }
+//     }
     
     vector< vector < double> > coordinates(dim);
     vector< int > column_dofs;
@@ -589,7 +589,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
           coordinates[ivar][i]=(*_msh->_coordinate->_Sol[ivar])(inode_coord_metis);
         }
       }
-      type_elem[kelt]->Jacobian(coordinates,0,weight,phi,gradphi, nablaphi );
+      _msh->_finiteElement[kelt][SolType]->Jacobian(coordinates,0,weight,phi,gradphi, nablaphi );
 
       
       for(int i=0;i<nve;i++){
@@ -609,20 +609,20 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       _GradMat[SolType][i]->close();
     }
     
-    // Begin free elem type structures
-    if(dim==3){ 
-      delete type_elem[0];
-      delete type_elem[1];
-      delete type_elem[2];
-    }
-    else if(dim==2){
-      delete type_elem[3];
-      delete type_elem[4];
-    }
-    else if(dim==1){ 
-      delete type_elem[5];
-    }
-    // End free elem type structures
+//     // Begin free elem type structures
+//     if(dim==3){ 
+//       delete type_elem[0];
+//       delete type_elem[1];
+//       delete type_elem[2];
+//     }
+//     else if(dim==2){
+//       delete type_elem[3];
+//       delete type_elem[4];
+//     }
+//     else if(dim==1){ 
+//       delete type_elem[5];
+//     }
+//     // End free elem type structures
     
     
   }

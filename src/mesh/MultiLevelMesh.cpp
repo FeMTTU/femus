@@ -87,6 +87,7 @@ MultiLevelMesh::MultiLevelMesh() {
     _finiteElement[5][2]=new const elem_type_1D("line","biquadratic",GaussOrder); 
     _finiteElement[5][3]=new const elem_type_1D("line","constant",GaussOrder);
     _finiteElement[5][4]=new const elem_type_1D("line","disc_linear",GaussOrder); 
+    _level0[0]->SetFiniteElementPtr(_finiteElement);
   }
 
 

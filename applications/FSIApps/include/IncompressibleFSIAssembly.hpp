@@ -280,9 +280,9 @@ namespace femus {
 		    vx_face[idim][i]=(*mymsh->_coordinate->_Sol[idim])(inode_Metis) + Soli[indexVAR[idim]][ilocal];
 		  }
 		}
-		for(unsigned igs=0; igs < ml_prob._ml_msh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {
-		  ml_prob._ml_msh->_finiteElement[felt][SolType2]->JacobianSur_AD(vx_face,igs,Weight,phi,gradphi,normal);
-		  //phi1 =ml_prob._ml_msh->_finiteElement[felt][SolType2]->GetPhi(igs);
+		for(unsigned igs=0; igs < mymsh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {
+		  mymsh->_finiteElement[felt][SolType2]->JacobianSur_AD(vx_face,igs,Weight,phi,gradphi,normal);
+		  //phi1 =mymsh->_finiteElement[felt][SolType2]->GetPhi(igs);
 		  // *** phi_i loop ***
 		  for(unsigned i=0; i<nve; i++) {
 		    adept::adouble value = - phi[i]*tau/rhof*Weight;
@@ -305,15 +305,15 @@ namespace femus {
 	  	  
 	// *** Gauss point loop ***
 	double area=1.;
-	for (unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelt][SolType2]->GetGaussPointNumber(); ig++) {
+	for (unsigned ig=0;ig < mymsh->_finiteElement[kelt][SolType2]->GetGaussPointNumber(); ig++) {
 	  // *** get Jacobian and test function and test function derivatives in the moving frame***
-	  ml_prob._ml_msh->_finiteElement[kelt][SolType2]->Jacobian_AD(vx,ig,Weight,phi,gradphi,nablaphi);
-	  ml_prob._ml_msh->_finiteElement[kelt][SolType2]->Jacobian(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat,nablaphi_hat);
-	  phi1=ml_prob._ml_msh->_finiteElement[kelt][SolType1]->GetPhi(ig);
+	  mymsh->_finiteElement[kelt][SolType2]->Jacobian_AD(vx,ig,Weight,phi,gradphi,nablaphi);
+	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat,nablaphi_hat);
+	  phi1=mymsh->_finiteElement[kelt][SolType1]->GetPhi(ig);
 	  
 	  if (flag_mat==2 || iel == mymsh->IS_Mts2Gmt_elem_offset[iproc]) {
 	    if(ig==0){
-	      double GaussWeight = ml_prob._ml_msh->_finiteElement[kelt][SolType2]->GetGaussWeight(ig);
+	      double GaussWeight = mymsh->_finiteElement[kelt][SolType2]->GetGaussWeight(ig);
 	      area=Weight_hat/GaussWeight;
 	      if(iel==mymsh->IS_Mts2Gmt_elem_offset[iproc]){
 		area_elem_first->add(mymsh->processor_id(),area);
