@@ -305,6 +305,7 @@ namespace femus {
 	  	  
 	// *** Gauss point loop ***
 	double area=1.;
+	adept::adouble supg_tau;
 	for (unsigned ig=0;ig < mymsh->_finiteElement[kelt][SolType2]->GetGaussPointNumber(); ig++) {
 	  // *** get Jacobian and test function and test function derivatives in the moving frame***
 	  mymsh->_finiteElement[kelt][SolType2]->Jacobian_AD(vx,ig,Weight,phi,gradphi,nablaphi);
@@ -315,8 +316,10 @@ namespace femus {
 	    if(ig==0){
 	      // Navier-Stokes stabilization bar_nu evaluation	      
 	      adept::adouble bar_nu=0.;
+	      adept::adouble v_l2norm2=0.;
 	      unsigned ir = referenceElementPoint[kelt];
 	      for(int i=0;i<dim;i++){
+		v_l2norm2 += Soli[indexVAR[i]][ir]*Soli[indexVAR[i]][ir];
 		unsigned ip = referenceElementDirection[kelt][i][1];
 		unsigned im = referenceElementDirection[kelt][i][0];
 		adept::adouble Vxi_hxi=0.;
@@ -333,6 +336,7 @@ namespace femus {
 		bar_nu += bar_xi * Vxi_hxi;
 	      }
 	      bar_nu/=dim;
+	      supg_tau = bar_nu/v_l2norm2;
 	      // End Navier-Stokes stabilization bar_nu evaluation
 	      	      
 	      double GaussWeight = mymsh->_finiteElement[kelt][SolType2]->GetGaussWeight(ig);
@@ -396,11 +400,20 @@ namespace femus {
 
 		//BEGIN redidual Navier-Stokes in moving domain   
 		adept::adouble LapvelVAR[3]={0.,0.,0.};
-		adept::adouble AdvaleVAR[3]={0.,0.,0.};
+		adept::adouble AdvaleVAR[3]={0.,0.,0.};/*
+		adept::adouble NablaSUPG[3]={0.,0.,0.};
+		adept::adouble AdvSUPG[3]={0.,0.,0.};
+		adept::adouble VDotGradPhi=0;*/
+		
+		
 		for(int idim=0.; idim<dim; idim++) {
 		  for(int jdim=0.; jdim<dim; jdim++) {
 		    LapvelVAR[idim]+=GradSolVAR[dim+idim][jdim]*gradphi[i*dim+jdim];
 		    AdvaleVAR[idim]+=SolVAR[dim+jdim]*GradSolVAR[dim+idim][jdim]*phi[i];
+// 		     VDotGradPhi += SolVAR[dim+jdim]*gradphi[i*dim+jdim];
+// 		     ResSUPG[idim] += SUPG_tau * (
+// 				      IRe*NablaSolVAR[dim+idim][jdim]
+		    
 		  }
 		}
 		for(int idim=0; idim<dim; idim++) {
