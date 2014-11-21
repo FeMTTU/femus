@@ -313,6 +313,28 @@ namespace femus {
 	  
 	  if (flag_mat==2 || iel == mymsh->IS_Mts2Gmt_elem_offset[iproc]) {
 	    if(ig==0){
+	      // Navier-Stokes stabilization bar_nu evaluation	      
+	      adept::adouble bar_nu=0.;
+	      unsigned ir = referenceElementPoint[kelt];
+	      for(int i=0;i<dim;i++){
+		unsigned ip = referenceElementDirection[kelt][i][1];
+		unsigned im = referenceElementDirection[kelt][i][0];
+		adept::adouble Vxi_hxi=0.;
+		for(int j=0;j<dim;j++){
+		  Vxi_hxi += (vx[j][ip]-vx[j][im]) * Soli[indexVAR[j]][ir];
+		}
+		adept::adouble Pe_xi=Vxi_hxi/(2.*IRe);
+		adept::adouble bar_xi; 
+		if(fabs( Pe_xi.value() ) < 1.0e-10) 
+		  bar_xi = 0.;
+		else 
+		  bar_xi = 1./tanh(Pe_xi)-1./Pe_xi;
+		
+		bar_nu += bar_xi * Vxi_hxi;
+	      }
+	      bar_nu/=dim;
+	      // End Navier-Stokes stabilization bar_nu evaluation
+	      	      
 	      double GaussWeight = mymsh->_finiteElement[kelt][SolType2]->GetGaussWeight(ig);
 	      area=Weight_hat/GaussWeight;
 	      if(iel==mymsh->IS_Mts2Gmt_elem_offset[iproc]){

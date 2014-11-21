@@ -253,7 +253,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
   MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
   MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
   
-  const unsigned vertex_index[6][8][8]= {
+  const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse mesh dof = f2CVM[element type][fine element][fine vertex]
     { {1,9,25,12,17,21,27,24},
       {9,2,10,25,21,18,22,27},
       {25,10,3,11,27,22,19,23},
@@ -290,7 +290,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
       {3,2} }
   };
 
-  const unsigned face_index[6][6][4][2]= {
+  const unsigned coarse2FineFaceMapping[6][6][4][2]= { // fine element,fine face=c2FFM[element type][coarse face][face split index][0,1]
     {
       { {0,0},{1,0},{4,0},{5,0} },
       { {1,1},{2,1},{5,1},{6,1} },
@@ -329,7 +329,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
     }
   };
 
-  const unsigned midpoint_index[6][12][2]= {
+  const unsigned edge2VerticesMapping[6][12][2]= { // vertex1,vertex2=e2VM[element type][edge][0,1]
     {
       {0,1},{1,2},{2,3},{3,0},
       {4,5},{5,6},{6,7},{7,4},
@@ -355,7 +355,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
     }
   };
 
-  const unsigned midpoint_index2[6][7][8]= {
+  const unsigned vertices2EdgeMapping[6][7][8]= { // edge =v2EM[element type][vertex1][vertex2] with vertex1<vertex2
     { {0,8,0,11,16},
       {0,0,9,0,0,17},
       {0,0,0,10,0,0,18},
@@ -428,14 +428,14 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
 //       for(unsigned j=0;j<REF_INDEX;j++)
       for (unsigned j=0; j<_ref_index; j++)
         for (unsigned inode=0; inode<elc->GetElementDofNumber(iel,0); inode++)
-          el->SetElementVertexIndex(jel+j,inode,elc->GetElementVertexIndex(iel,vertex_index[elt][j][inode]-1u));
+          el->SetElementVertexIndex(jel+j,inode,elc->GetElementVertexIndex(iel,fine2CoarseVertexMapping[elt][j][inode]-1u));
       // project face indeces
       for (unsigned iface=0; iface<elc->GetElementFaceNumber(iel); iface++) {
         int value=elc->GetFaceElementIndex(iel,iface);
         if (0>value)
 // 	  for(unsigned jface=0;jface<FACE_INDEX;jface++)
           for (unsigned jface=0; jface<_face_index; jface++)
-            el->SetFaceElementIndex(jel+face_index[elt][iface][jface][0],face_index[elt][iface][jface][1], value);
+            el->SetFaceElementIndex(jel+coarse2FineFaceMapping[elt][iface][jface][0],coarse2FineFaceMapping[elt][iface][jface][1], value);
       }
       // update element numbers
 //       jel+=REF_INDEX;
@@ -464,8 +464,8 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
       if (0==el->GetElementVertexIndex(iel,inode)) {
         nvt++;
         el->SetElementVertexIndex(iel,inode,nvt);
-        unsigned im=el->GetElementVertexIndex(iel,midpoint_index[ielt][inode-istart][0]);
-        unsigned ip=el->GetElementVertexIndex(iel,midpoint_index[ielt][inode-istart][1]);
+        unsigned im=el->GetElementVertexIndex(iel,edge2VerticesMapping[ielt][inode-istart][0]);
+        unsigned ip=el->GetElementVertexIndex(iel,edge2VerticesMapping[ielt][inode-istart][1]);
         //find all the near elements which share the same middle edge point
         for (unsigned j=0; j<el->GetVertexElementNumber(im-1u); j++) {
           unsigned jel=el->GetVertexElementIndex(im-1u,j)-1u;
@@ -491,7 +491,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
                   jp=jm;
                   jm=tp;
                 }
-                el->SetElementVertexIndex(jel,midpoint_index2[jelt][--jm][--jp],nvt);
+                el->SetElementVertexIndex(jel,vertices2EdgeMapping[jelt][--jm][--jp],nvt);
               }
             }
           }
