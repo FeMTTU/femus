@@ -25,12 +25,15 @@
 // Libmesh
 #ifdef HAVE_LIBMESH
 #include "libmesh/libmesh.h" //for libmeshinit
+
+using namespace libMesh;
 #endif
 
 //application
 #include "GenCase.hpp"
 
 using namespace femus;
+
 
 // ==========================================
 //         GENCASE
