@@ -32,7 +32,7 @@
               "boundary_conditions" : [
                 {
                   "facename" : "top",
-                  "bdc_type" : "dirichlet"
+                  "bdc_type" : "neumann"
                 },
                 {
                   "facename" : "right",

@@ -319,7 +319,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     coordinates[i].reserve(max_size);
   phi.reserve(max_size);
   gradphi.reserve(max_size*dim);
-  nablaphi.reserve(max_size*(3*(dim-1)+!(dim-1)));
+  unsigned nabla_dim=(3*(dim-1)+!(dim-1));
+  nablaphi.reserve(max_size*nabla_dim);
   F.reserve(max_size);
   B.reserve(max_size*max_size);
  
@@ -328,6 +329,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
   if(assembe_matrix) 
     myKK->zero();
 
+  
   // *** element loop ***
   for (int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
 
@@ -340,7 +342,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     KK_dof.resize(nve);
     phi.resize(nve);
     gradphi.resize(nve*dim);
-    nablaphi.resize( nve*(3*(dim-1)+!(dim-1)) );
+    nablaphi.resize( nve*nabla_dim );
     for(int i=0; i<dim; i++) {
       coordinates[i].resize(nve);
     }
@@ -363,19 +365,45 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
       }
       KK_dof[i]=mylsyspde->GetKKDof(SolIndex,SolPdeIndex,inode);
     }
-
+    
+   
+      
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
       // *** Gauss point loop ***
+                 
+      // Supg stabilization tau evaluation	
+      double V[3]={1.,0.,0.}; 
+      double nu=0.01;
+      double barNu=0.;
+      double vL2Norm2=0.;
+      unsigned ir = referenceElementPoint[kelt];
+      for(int i=0;i<dim;i++){
+	vL2Norm2 += V[i]*V[i];
+	unsigned ip = referenceElementDirection[kelt][i][1];
+	unsigned im = referenceElementDirection[kelt][i][0];
+	double VxiHxi=0.;
+	for(int j=0;j<dim;j++){
+	  VxiHxi += (coordinates[j][ip]-coordinates[j][im]) * V[j];
+	}	
+	double PeXi=VxiHxi/(2.*nu);
+	
+	double barXi = ( fabs( PeXi ) < 1.0e-10) ? 0. : 1./tanh(PeXi)-1./PeXi;
+	barNu += barXi * VxiHxi;
+      }
+      barNu /= dim;
+      double SupgTau = ( vL2Norm2 > 1.0e-15 ) ? barNu/vL2Norm2 : 0.;
+                 
+      std::cout<<SupgTau<<" "<<1./tanh(5)-1./5;
+      // End Stabilization stabilization bar_nu evaluation
+            
       for(unsigned ig=0; ig < mymsh->_finiteElement[kelt][order_ind]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
 	mymsh->_finiteElement[kelt][order_ind]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
 	//current solution
 	double SolT=0;
 	vector < double > gradSolT(dim,0.);
-	for(unsigned ivar=0; ivar<dim; ivar++) {
-	  gradSolT[ivar]=0;
-	}
-
+	vector < double > NablaSolT(dim,0.);
+	
 	xyzt.assign(4,0.);
 	unsigned SolType=ml_sol->GetSolutionType("Sol");
 	for(unsigned i=0; i<nve; i++) {
@@ -384,33 +412,44 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 	    xyzt[ivar] += coordinates[ivar][i]*phi[i]; 
 	  }
 	  SolT+=phi[i]*soli;
-	  for(unsigned ivar2=0; ivar2<dim; ivar2++) gradSolT[ivar2] += gradphi[i*dim+ivar2]*soli;
+	  for(unsigned ivar2=0; ivar2<dim; ivar2++) {
+	    gradSolT[ivar2] += gradphi[i*dim+ivar2]*soli;
+	    NablaSolT[ivar2] += nablaphi[i*nabla_dim+ivar2]*soli;
+	  }
 	}
                   
 	// *** phi_i loop ***
 	for(unsigned i=0; i<nve; i++) {
 	  //BEGIN RESIDUALS A block ===========================
-	  double Adv_rhs=0;
-	  double Lap_rhs=0;
+	  double AdvRhs=0.;
+	  double LapRhs=0.;
+	  double Residual=0.;
+	  double SupgPhi=0.;  
 	  for(unsigned ivar=0; ivar<dim; ivar++) {
-	    Lap_rhs += gradphi[i*dim+ivar]*gradSolT[ivar];
+	    LapRhs   += nu*gradphi[i*dim+ivar]*gradSolT[ivar];
+	    AdvRhs   += V[ivar]*gradSolT[ivar]*phi[i];
+	    Residual += -nu*NablaSolT[ivar] + V[ivar]*gradSolT[ivar];
+	    SupgPhi  += V[ivar] * gradphi[i*dim+ivar] * SupgTau;
 	  }
-                    
+	  
 	  src_term = fpsource(&xyzt[0]);
                     
-	  F[i]+= (-Lap_rhs + src_term*phi[i] )*weight;
+	  F[i]+= ( src_term*( phi[i] + SupgPhi ) 
+		   -LapRhs - AdvRhs - Residual * SupgPhi )*weight;
 		    
 	  //END RESIDUALS A block ===========================
 	  if(assembe_matrix) {
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve; j++) {
 	      double Lap=0;
-	      double Adv1=0;
+	      double Adv=0;
+	            
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		// Laplacian
-		Lap  += gradphi[i*dim+ivar]*gradphi[j*dim+ivar]*weight;
+		Lap += nu*( gradphi[i*dim+ivar] * gradphi[j*dim+ivar] 
+			   -nablaphi[j*nabla_dim + ivar] * SupgPhi )*weight;
+		Adv += V[ivar]*gradphi[j*dim+ivar]* (phi[i] + SupgPhi)*weight;
 	      }
-	      B[i*nve+j] += Lap;
+	      B[i*nve+j] += Lap + Adv ;
 	    } // end phij loop
 	  } // end phii loop
 	} // endif assembe_matrix

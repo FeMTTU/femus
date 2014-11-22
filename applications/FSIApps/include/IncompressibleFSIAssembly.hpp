@@ -326,17 +326,22 @@ namespace femus {
 		for(int j=0;j<dim;j++){
 		  Vxi_hxi += (vx[j][ip]-vx[j][im]) * Soli[indexVAR[j]][ir];
 		}
+		
 		adept::adouble Pe_xi=Vxi_hxi/(2.*IRe);
 		adept::adouble bar_xi; 
-		if(fabs( Pe_xi.value() ) < 1.0e-10) 
+		if( fabs( Pe_xi.value() ) < 1.0e-10) 
 		  bar_xi = 0.;
 		else 
 		  bar_xi = 1./tanh(Pe_xi)-1./Pe_xi;
-		
 		bar_nu += bar_xi * Vxi_hxi;
 	      }
+	      
 	      bar_nu/=dim;
-	      supg_tau = bar_nu/v_l2norm2;
+	      if( v_l2norm2.value() > 1.0e-15 )
+		supg_tau = bar_nu/v_l2norm2;
+	      else 
+		supg_tau =0.;
+	      
 	      // End Navier-Stokes stabilization bar_nu evaluation
 	      	      
 	      double GaussWeight = mymsh->_finiteElement[kelt][SolType2]->GetGaussWeight(ig);
@@ -400,26 +405,36 @@ namespace femus {
 
 		//BEGIN redidual Navier-Stokes in moving domain   
 		adept::adouble LapvelVAR[3]={0.,0.,0.};
-		adept::adouble AdvaleVAR[3]={0.,0.,0.};/*
-		adept::adouble NablaSUPG[3]={0.,0.,0.};
-		adept::adouble AdvSUPG[3]={0.,0.,0.};
-		adept::adouble VDotGradPhi=0;*/
+		adept::adouble AdvaleVAR[3]={0.,0.,0.};
+		adept::adouble SupgLaplace[3]={0.,0.,0.};
+		adept::adouble SupgAdvection[3]={0.,0.,0.};
+		adept::adouble SupgGradP[3]={0.,0.,0.};
+		adept::adouble VDotGradPhi=0;
+		
 		
 		
 		for(int idim=0.; idim<dim; idim++) {
 		  for(int jdim=0.; jdim<dim; jdim++) {
-		    LapvelVAR[idim]+=GradSolVAR[dim+idim][jdim]*gradphi[i*dim+jdim];
-		    AdvaleVAR[idim]+=SolVAR[dim+jdim]*GradSolVAR[dim+idim][jdim]*phi[i];
-// 		     VDotGradPhi += SolVAR[dim+jdim]*gradphi[i*dim+jdim];
-// 		     ResSUPG[idim] += SUPG_tau * (
-// 				      IRe*NablaSolVAR[dim+idim][jdim]
+		    LapvelVAR[idim]     += GradSolVAR[dim+idim][jdim]*gradphi[i*dim+jdim];
+		    AdvaleVAR[idim]	+= SolVAR[dim+jdim]*GradSolVAR[dim+idim][jdim]*phi[i];
+ 		    
+		    SupgLaplace[idim] 	+= NablaSolVAR[dim+idim][jdim];
+ 		    SupgAdvection[idim]	+= SolVAR[dim+jdim]*GradSolVAR[dim+idim][jdim];
+		    VDotGradPhi 	+= SolVAR[dim+jdim]*gradphi[i*dim+jdim];
 		    
 		  }
 		}
 		for(int idim=0; idim<dim; idim++) {
+		  std::cout<< supg_tau.value() <<" "<<(SupgAdvection[idim].value() - IRe*SupgLaplace[idim].value() + SupgGradP[idim].value())<<std::endl;
+		  std::cout<< SupgAdvection[idim].value()<<" "<< -IRe*SupgLaplace[idim].value()<<std::endl;
+		}
+		
+		for(int idim=0; idim<dim; idim++) {
 		  adept::adouble value = (-AdvaleVAR[idim]      	     // advection term	
 					  -IRe*LapvelVAR[idim]	   	     // viscous dissipation
 					  +SolVAR[2*dim]*gradphi[i*dim+idim] // pressure gradient
+// 					  -VDotGradPhi*supg_tau*
+// 					   (SupgAdvection[idim] - IRe*SupgLaplace[idim] + SupgGradP[idim])
 					  )*Weight;
 		  if((!solidmark[i])){
 		    aRhs[indexVAR[dim+idim]][i]+=value; 

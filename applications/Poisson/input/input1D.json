@@ -5,7 +5,7 @@
       "first" : {
         "type" : {
           "box" : {
-            "nx" : 6,
+            "nx" : 10,
             "ny" : 0,
             "nz" : 0,
             "xa" : 0.,
@@ -29,15 +29,17 @@
               "name" : "T", 
               "fe_order" : "first",
               "init_func" : "0.",
+              "func_source": "10.*exp(-5.*x) - 4.*exp(-x)",
               "boundary_conditions" : [
                 {
                   "facename" : "left",
-                  "bdc_type" : "dirichlet"
+                  "bdc_type" : "dirichlet",
+                  "bdc_func" : "0"
                 },
                 {
                   "facename" : "right",
-                  "bdc_type" : "neumann",
-                  "bdc_func" : "0.2"
+                  "bdc_type" : "dirichlet",
+                  "bdc_func" : "1"
                 }
                                     ]                                           
                                   }
@@ -57,7 +59,7 @@
                 "abs_conv_tol" : 1.e-09, 
                 "type" : {
                   "multigrid" : {
-                    "nlevels" : 4, 
+                    "nlevels" : 1, 
                     "npresmoothing" : 1, 
                     "npostsmoothing" : 1,                                                                                                 
                     "mgtype" : "V_cycle",
