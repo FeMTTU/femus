@@ -27,19 +27,17 @@
           "variable" : {
             "first" : {
               "name" : "T", 
-              "fe_order" : "first",
+              "fe_order" : "second",
               "init_func" : "0.",
               "func_source": "10.*exp(-5.*x) - 4.*exp(-x)",
               "boundary_conditions" : [
                 {
                   "facename" : "left",
-                  "bdc_type" : "dirichlet",
-                  "bdc_func" : "0"
+                  "bdc_type" : "dirichlet"
                 },
                 {
                   "facename" : "right",
-                  "bdc_type" : "dirichlet",
-                  "bdc_func" : "1"
+                  "bdc_type" : "neumann"
                 }
                                     ]                                           
                                   }

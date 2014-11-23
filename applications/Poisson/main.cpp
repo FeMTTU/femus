@@ -293,7 +293,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
   //solution order
   unsigned order_ind = ml_sol->GetSolutionType(SolIndex);
   unsigned end_ind   = mymsh->GetEndIndex(order_ind);
-
+  
+  unsigned end_ind2   = mymsh->GetEndIndex(2);
   //coordinates
   vector< vector < double> > coordinates(dim);
 
@@ -336,13 +337,11 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
     short unsigned kelt=myel->GetElementType(kel);
     unsigned nve=myel->GetElementDofNumber(kel,end_ind);
-
+    unsigned nve2=myel->GetElementDofNumber(kel,end_ind2);
     // resize
     metis_node.resize(nve);
     KK_dof.resize(nve);
-    phi.resize(nve);
-    gradphi.resize(nve*dim);
-    nablaphi.resize( nve*nabla_dim );
+    
     for(int i=0; i<dim; i++) {
       coordinates[i].resize(nve);
     }
@@ -356,14 +355,17 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     }
 
     // get local to global mappings
-    for( unsigned i=0; i<nve; i++) {
+    for( unsigned i=0; i<nve2; i++) {
       unsigned inode=myel->GetMeshDof(kel,i,order_ind);
       unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
-      metis_node[i]=mymsh->GetMetisDof(inode,order_ind);
+     
       for(unsigned ivar=0; ivar<dim; ivar++) {
 	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
       }
-      KK_dof[i]=mylsyspde->GetKKDof(SolIndex,SolPdeIndex,inode);
+      if(i<nve){
+	metis_node[i]=mymsh->GetMetisDof(inode,order_ind);
+	KK_dof[i]=mylsyspde->GetKKDof(SolIndex,SolPdeIndex,inode);
+      }
     }
     
    
@@ -372,11 +374,14 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
       // *** Gauss point loop ***
                  
       // Supg stabilization tau evaluation	
-      double V[3]={1.,0.,0.}; 
-      double nu=0.01;
+      double V[3]={sqrt(2)/2.,-sqrt(2)/2,0.}; 
+      double nu=0.0001;
+      if(dim==1){
+	V[0]=1.; 
+	nu=0.01;
+      }
       double barNu=0.;
       double vL2Norm2=0.;
-      unsigned ir = referenceElementPoint[kelt];
       for(int i=0;i<dim;i++){
 	vL2Norm2 += V[i]*V[i];
 	unsigned ip = referenceElementDirection[kelt][i][1];
@@ -385,16 +390,12 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 	for(int j=0;j<dim;j++){
 	  VxiHxi += (coordinates[j][ip]-coordinates[j][im]) * V[j];
 	}	
-	double PeXi=VxiHxi/(2.*nu);
-	
+	double PeXi=VxiHxi/(2.*nu);		
 	double barXi = ( fabs( PeXi ) < 1.0e-10) ? 0. : 1./tanh(PeXi)-1./PeXi;
-	barNu += barXi * VxiHxi;
+	barNu += barXi * VxiHxi /2.;
       }
-      barNu /= dim;
-      double SupgTau = ( vL2Norm2 > 1.0e-15 ) ? barNu/vL2Norm2 : 0.;
-                 
-      std::cout<<SupgTau<<" "<<1./tanh(5)-1./5;
-      // End Stabilization stabilization bar_nu evaluation
+      double supgTau = ( vL2Norm2 > 1.0e-15 ) ? barNu/vL2Norm2 : 0.;
+      // End Stabilization stabilization tau evaluation
             
       for(unsigned ig=0; ig < mymsh->_finiteElement[kelt][order_ind]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
@@ -417,39 +418,38 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 	    NablaSolT[ivar2] += nablaphi[i*nabla_dim+ivar2]*soli;
 	  }
 	}
-                  
-	// *** phi_i loop ***
+        // *** phi_i loop ***
 	for(unsigned i=0; i<nve; i++) {
 	  //BEGIN RESIDUALS A block ===========================
-	  double AdvRhs=0.;
-	  double LapRhs=0.;
-	  double Residual=0.;
-	  double SupgPhi=0.;  
+	  double advRhs=0.;
+	  double lapRhs=0.;
+	  double resRhs=0.;
+	  double supgPhi=0.;  
 	  for(unsigned ivar=0; ivar<dim; ivar++) {
-	    LapRhs   += nu*gradphi[i*dim+ivar]*gradSolT[ivar];
-	    AdvRhs   += V[ivar]*gradSolT[ivar]*phi[i];
-	    Residual += -nu*NablaSolT[ivar] + V[ivar]*gradSolT[ivar];
-	    SupgPhi  += V[ivar] * gradphi[i*dim+ivar] * SupgTau;
+	    lapRhs   +=  nu*gradphi[i*dim+ivar]*gradSolT[ivar];
+	    advRhs   +=  V[ivar]*gradSolT[ivar]*phi[i];
+	    resRhs   += -nu*NablaSolT[ivar] + V[ivar]*gradSolT[ivar];
+	    supgPhi  += (V[ivar] * gradphi[i*dim+ivar] + nu*nablaphi[i*nabla_dim + ivar] )* supgTau;
 	  }
 	  
 	  src_term = fpsource(&xyzt[0]);
-                    
-	  F[i]+= ( src_term*( phi[i] + SupgPhi ) 
-		   -LapRhs - AdvRhs - Residual * SupgPhi )*weight;
+            	  
+	  F[i]+= (  src_term* phi[i] -lapRhs - advRhs   
+		  +(src_term - resRhs) * supgPhi )*weight;
 		    
 	  //END RESIDUALS A block ===========================
 	  if(assembe_matrix) {
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve; j++) {
-	      double Lap=0;
-	      double Adv=0;
+	      double lap=0;
+	      double adv=0;
 	            
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		Lap += nu*( gradphi[i*dim+ivar] * gradphi[j*dim+ivar] 
-			   -nablaphi[j*nabla_dim + ivar] * SupgPhi )*weight;
-		Adv += V[ivar]*gradphi[j*dim+ivar]* (phi[i] + SupgPhi)*weight;
+		lap += nu*( gradphi[i*dim +ivar] * gradphi[j*dim+ivar] 
+			   -nablaphi[j*nabla_dim + ivar] * supgPhi )*weight;
+		adv += V[ivar]*gradphi[j*dim+ivar]* (phi[i] + supgPhi)*weight;
 	      }
-	      B[i*nve+j] += Lap + Adv ;
+	      B[i*nve+j] += lap + adv ;
 	    } // end phij loop
 	  } // end phii loop
 	} // endif assembe_matrix
@@ -495,8 +495,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 		  // *** phi_i loop ***
 		  for(unsigned i=0; i<nve; i++) {
 		    double surfterm_g = (*bdcfunc)(&xyzt[0]);
-		    //double bdintegral = phi[i]*surfterm_g*weight;
-		    double bdintegral = phi[i]*0.2*weight;
+		    double bdintegral = phi[i]*surfterm_g*weight;
 		    unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
 		    F[ilocalnode] += bdintegral;
 		  }
