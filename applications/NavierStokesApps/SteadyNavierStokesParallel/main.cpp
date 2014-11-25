@@ -580,6 +580,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     }
    
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
+      vector< double > V(dim,0.);
+      unsigned ir = referenceElementPoint[kelt];
       
       // *** Gauss poit loop ***
       for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelt][order_ind_vel]->GetGaussPointNumber(); ig++) {
@@ -599,6 +601,9 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	  unsigned SolType=ml_sol->GetSolutionType(&Solname[ivar][0]);
 	  for(unsigned i=0; i<nve2; i++) {
 	    double soli = (*mysolution->_Sol[SolIndex])(metis_node2[i]);
+	    
+	    if(i == ir) V[ivar]=soli;
+	    
 	    SolVAR[ivar]+=phi2[i]*soli;
 	    for(unsigned jvar=0; jvar<dim; jvar++){
 	      gradSolVAR[ivar][jvar]  += gradphi2[i*dim+jvar]*soli; 
@@ -621,9 +626,9 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	
 	// Supg stabilization tau evaluation
 	
-	vector< double > V(dim,0.);
-	for(int ivar=0;ivar<dim;ivar++) 
-	  V[ivar] = SolVAR[ivar];
+	//vector< double > V(dim,0.);
+// 	for(int ivar=0;ivar<dim;ivar++) 
+// 	  V[ivar] = SolVAR[ivar];
       	double nu=IRe;
 	double barNu=0.;
 	double vL2Norm2=0.;
@@ -641,27 +646,29 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	}
 	double supgTau = ( vL2Norm2 > 1.0e-15 ) ? barNu/vL2Norm2 : 0.;
 	// End Stabilization stabilization tau evaluation
-	
+	//std::cout<<V[0]<<" "<<V[1]<<" "<<supgTau<<"\n";
 	//std::cout << "   0: " << GradSolP[0] << "    1: " << GradSolP[1] << std::endl;
 	
 	// *** phi_i loop ***
 	for(unsigned i=0; i<nve2; i++){
 	
 	  //BEGIN RESIDUALS A block ===========================
+	  double supgPhi;
+	  vector <double> Adv_rhs(dim,0.); 
 	  for(unsigned ivar=0; ivar<dim; ivar++) {
-	    double Adv_rhs=0;
-	    double Lap_rhs=0;
-	    double resRhs=0.;
-	    double supgPhi=0.;  
+	    Adv_rhs[ivar]=0.;
+	    double Lap_rhs=0.;
+	    //double resRhs=0.;
+	    supgPhi=0.;
 	    for(unsigned jvar=0; jvar<dim; jvar++) {
 	      Lap_rhs += gradphi2[i*dim+jvar]*gradSolVAR[ivar][jvar];
-	      Adv_rhs += SolVAR[jvar]*gradSolVAR[ivar][jvar];
-	      resRhs   += -IRe*NablaSolVAR[ivar][ivar] + SolVAR[jvar]*gradSolVAR[ivar][jvar];
-	      //supgPhi  += (V[ivar] * gradphi[i*dim+ivar] + nu*nablaphi[i*nabla_dim + ivar] )* supgTau;
-	      
-	      
+	      Adv_rhs[ivar] += SolVAR[jvar]*gradSolVAR[ivar][jvar];
+	      //resRhs  += SolVAR[jvar]*gradSolVAR[ivar][jvar]-0*IRe*NablaSolVAR[ivar][jvar];
+	      supgPhi += (SolVAR[jvar]*gradphi2[i*dim+jvar])* supgTau; 
 	    }
-	    F[SolPdeIndex[ivar]][i]+= (-IRe*Lap_rhs-NavierStokes*Adv_rhs*phi2[i]+SolVAR[dim]*gradphi2[i*dim+ivar])*Weight2;
+	    //resRhs += GradSolP[ivar];
+	    F[SolPdeIndex[ivar]][i]+= ( -IRe*Lap_rhs-NavierStokes*Adv_rhs[ivar]*(phi2[i]+supgPhi)
+					+SolVAR[dim]*gradphi2[i*dim+ivar])*Weight2;
 	  }
 	  //END RESIDUALS A block ===========================
 	  
@@ -670,22 +677,35 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    for(unsigned j=0; j<nve2; j++) {
 	      double Lap=0;
 	      double Adv1=0;
-	      double Adv2 = phi2[i]*phi2[j]*Weight2;
+	      
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
 		// Laplacian
-		Lap  += gradphi2[i*dim+ivar]*gradphi2[j*dim+ivar]*Weight2;
+		Lap  += (gradphi2[i*dim+ivar]*gradphi2[j*dim+ivar]
+			 -0*nablaphi2[i*nabla_dim+ivar]*supgPhi)*Weight2;
 		// advection term I
-		Adv1 += SolVAR[ivar]*gradphi2[j*dim+ivar]*phi2[i]*Weight2;
+		Adv1 += SolVAR[ivar]*gradphi2[j*dim+ivar]*(phi2[i]+supgPhi)*Weight2;
 	      }
 
 	      for(unsigned ivar=0; ivar<dim; ivar++) {    
 		B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j] += IRe*Lap+ NavierStokes*newton*Adv1;
 		if(nwtn_alg==2){
 		  // Advection term II
-		  B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j]       += Adv2*gradSolVAR[ivar][ivar];
-		  for(unsigned jvar=1; jvar<dim; jvar++) {
-		    B[SolPdeIndex[ivar]][SolPdeIndex[(ivar+jvar)%dim]][i*nve2+j] += Adv2*gradSolVAR[ivar][(ivar+jvar)%dim];
+// 		  B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j]       += Adv2*gradSolVAR[ivar][ivar];
+// 		  for(unsigned jvar=1; jvar<dim; jvar++) {
+// 		    B[SolPdeIndex[ivar]][SolPdeIndex[(ivar+jvar)%dim]][i*nve2+j] += Adv2*gradSolVAR[ivar][(ivar+jvar)%dim];
+// 		  }
+		  
+		  double Adv2 = (phi2[i]+supgPhi)*phi2[j]*Weight2; 
+		  for(unsigned jvar=0; jvar<dim; jvar++) {
+		    B[SolPdeIndex[ivar]][SolPdeIndex[jvar]][i*nve2+j] += Adv2*gradSolVAR[ivar][jvar];
 		  }
+		  
+		  
+		  
+// 		  // Advection term III
+// 		  for(unsigned jvar=0; jvar<dim; jvar++) {
+// 		    B[SolPdeIndex[ivar]][SolPdeIndex[jvar]][i*nve2+j]  +=  phi2[j] * gradphi2[i*dim+jvar] * supgTau * Adv_rhs[ivar];
+// 		  }
 		}
 	      }
   	    } //end phij loop
