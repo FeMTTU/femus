@@ -115,7 +115,7 @@ int main(int argc,char **args) {
   Parameter parameter(Lref,Uref);
   
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,0.005,1,"Newtonian",0.001,1.);
+  Fluid fluid(parameter,0.0005,1,"Newtonian",0.001,1.);
   cout << "Fluid properties: " << endl;
   cout << fluid << endl;
   
@@ -387,7 +387,7 @@ bool SetBoundaryConditionCavityFlow(const double& x, const double& y, const doub
 
 
 
-
+static unsigned counter=0;
 
 
 // //------------------------------------------------------------------------------------------------------------
@@ -422,6 +422,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   const bool NavierStokes = true; 
   unsigned nwtn_alg = 2; 
   bool newton = (nwtn_alg==0) ? 0:1; 
+  
+  
+  if(counter==0) IRe=0.1;
+  counter++;
   
   // solution and coordinate variables
   const char Solname[4][2] = {"U","V","W","P"};
@@ -644,10 +648,9 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	  double barXi = ( fabs( PeXi ) < 1.0e-10) ? 0. : 1./tanh(PeXi)-1./PeXi;
 	  barNu += barXi * VxiHxi /2.;
 	}
-	double supgTau = ( vL2Norm2 > 1.0e-15 ) ? barNu/vL2Norm2 : 0.;
+	double supgTau = ( vL2Norm2 > 1.0e-15 ) ? 5*barNu/vL2Norm2 : 0.;
 	// End Stabilization stabilization tau evaluation
-	//std::cout<<V[0]<<" "<<V[1]<<" "<<supgTau<<"\n";
-	//std::cout << "   0: " << GradSolP[0] << "    1: " << GradSolP[1] << std::endl;
+	
 	
 	// *** phi_i loop ***
 	for(unsigned i=0; i<nve2; i++){
@@ -676,37 +679,21 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve2; j++) {
 	      double Lap=0;
-	      double Adv1=0;
 	      
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
 		// Laplacian
-		Lap  += (gradphi2[i*dim+ivar]*gradphi2[j*dim+ivar]
-			 -0*nablaphi2[i*nabla_dim+ivar]*supgPhi)*Weight2;
-		// advection term I
-		Adv1 += SolVAR[ivar]*gradphi2[j*dim+ivar]*(phi2[i]+supgPhi)*Weight2;
+		Lap  += (gradphi2[i*dim+ivar]*gradphi2[j*dim+ivar])*Weight2;
 	      }
-
 	      for(unsigned ivar=0; ivar<dim; ivar++) {    
-		B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j] += IRe*Lap+ NavierStokes*newton*Adv1;
-		if(nwtn_alg==2){
-		  // Advection term II
-// 		  B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j]       += Adv2*gradSolVAR[ivar][ivar];
-// 		  for(unsigned jvar=1; jvar<dim; jvar++) {
-// 		    B[SolPdeIndex[ivar]][SolPdeIndex[(ivar+jvar)%dim]][i*nve2+j] += Adv2*gradSolVAR[ivar][(ivar+jvar)%dim];
-// 		  }
-		  
-		  double Adv2 = (phi2[i]+supgPhi)*phi2[j]*Weight2; 
+		B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j] += IRe*Lap;
+		  		  		  
 		  for(unsigned jvar=0; jvar<dim; jvar++) {
-		    B[SolPdeIndex[ivar]][SolPdeIndex[jvar]][i*nve2+j] += Adv2*gradSolVAR[ivar][jvar];
+		    B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j] += (phi2[i]+supgPhi)*SolVAR[jvar]*gradphi2[j*dim+jvar]*Weight2;
+		    B[SolPdeIndex[ivar]][SolPdeIndex[jvar]][i*nve2+j] += (phi2[i]+supgPhi)*phi2[j]*gradSolVAR[ivar][jvar]*Weight2;
+		    B[SolPdeIndex[ivar]][SolPdeIndex[jvar]][i*nve2+j] +=  phi2[j]*gradphi2[i*dim+jvar]*supgTau*Adv_rhs[ivar]*Weight2;
 		  }
 		  
-		  
-		  
-// 		  // Advection term III
-// 		  for(unsigned jvar=0; jvar<dim; jvar++) {
-// 		    B[SolPdeIndex[ivar]][SolPdeIndex[jvar]][i*nve2+j]  +=  phi2[j] * gradphi2[i*dim+jvar] * supgTau * Adv_rhs[ivar];
-// 		  }
-		}
+		
 	      }
   	    } //end phij loop
 	    
