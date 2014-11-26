@@ -118,19 +118,13 @@ OPTION(BUILD_NAVIERSTOKESAPPS "Build the NavierStokes-line applications" ON)
 OPTION(BUILD_FSIAPPS "Build the FSI applications" ON)
 
 # --
+OPTION(BUILD_OPTCONTROLAPPS "Build the optimal control applications" ON)
+
+# --
 OPTION(BUILD_GENCASE "Build the case generator" ON)
 
 # --
-OPTION(BUILD_MHDOPT "Build the MHD optimal control problem" ON)
-
-# --
-OPTION(BUILD_TEMPER "Build the temperature optimal control problem" ON)
-
-# --
 OPTION(BUILD_POISSON "Build the Poisson problem" ON)
-
-# --
-OPTION(BUILD_TEMPERATURE "Build the Temperature problem" ON)
 
 # --
 OPTION(BUILD_POISSON_AMR "Build the Poisson_AMR problem" ON)
