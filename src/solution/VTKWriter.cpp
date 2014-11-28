@@ -22,6 +22,7 @@
 #include <b64/b64.h>
 #include "iostream"
 #include <fstream>
+#include <sstream>   
 #include "string.h"
 #include "stdio.h"
 #include <iomanip>
@@ -61,24 +62,22 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
     index=3;
     index_nd=2;
   }
-
-  const int eltp[4][6]= {{12,10,13,9,5,3},{25,24,26,23,22,21},{},{29,1,1,28,22,21}};
   
-  char *filename= new char[60];
-  sprintf(filename,"./output/mesh.level%d.%d.%s.vtu",_gridn,time_step,order);
-  std::ofstream fout;
+ 
+  std::ostringstream filename;
+  filename << "./output/mesh.level" << _gridn << "." << time_step << "." << order << ".vtu"; 
+  std::ofstream fout(filename.str().c_str());
   
   if(_iproc!=0) {
     fout.rdbuf();   //redirect to dev_null
   }
   else {
-    fout.open(filename);
-    if (!fout) {
-      std::cout << std::endl << " The output file "<<filename<<" cannot be opened.\n";
-      exit(0);
+    if (fout.is_open()) {
+      std::cout << std::endl << " The output is printed to file " << filename.str() << " in VTK-XML (64-based) format" << std::endl; 
     }
     else {
-      std::cout << std::endl << " The output is printed to file " << filename << " in VTK-XML (64-based) format" << std::endl;   
+      std::cout << std::endl << " The output file "<< filename.str() <<" cannot be opened.\n";
+      exit(0);
     }
   }
   // haed ************************************************
@@ -140,10 +139,6 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   fout << "   <Points>" << std::endl;
   fout << "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\">" << std::endl;
   
-//   unsigned indXYZ[3];
-//   indXYZ[0]=_ml_sol.GetIndex("X");
-//   indXYZ[1]=_ml_sol.GetIndex("Y");
-//   indXYZ[2]=_ml_sol.GetIndex("Z");
   
   vector <NumericVector*> mysol(_gridn);
   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
@@ -307,7 +302,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
       if (ig==_gridn-1u || _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)==0) {
 	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
         short unsigned ielt= _ml_sol._ml_msh->GetLevel(ig)->el->GetElementType(iel_Metis);
-	var_type[icount] = (short unsigned)(eltp[index][ielt]);
+	var_type[icount] = femusToVtkCellType[index][ielt];
 	icount++;
       }
     }
@@ -447,7 +442,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   fout<< " <PointData Scalars=\"scalars\"> " << std::endl;
   //Loop on variables
    
-  // point pointer to common mamory area buffer of void type;
+  // point pointer to common memory area buffer of void type;
   float* var_nd = static_cast<float*>(buffer_void);
   for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_sol.GetSolutionSize(); i++) {
     unsigned indx=(test_all==0)?_ml_sol.GetIndex(vars[i].c_str()):i;
@@ -496,8 +491,8 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     delete mysol[ig];
   }
-  delete [] filename;
-  delete [] var_nd;  
+
+  delete [] buffer_void;  
   
   //--------------------------------------------------------------------------------------------------------
   return;   
