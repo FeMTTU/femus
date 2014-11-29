@@ -374,12 +374,22 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
       // *** Gauss point loop ***
                  
       // Supg stabilization tau evaluation	
-      double V[3]={sqrt(2)/2.,-sqrt(2)/2,0.}; 
-      double nu=0.0001;
+      double V[3]={0.,0.,0.}; 
+      double nu=1.;
       if(dim==1){
 	V[0]=1.; 
 	nu=0.01;
       }
+      else if(dim==2){
+	nu=0.0001;
+	V[0]=sqrt(2)/2;
+	V[1]=-sqrt(2)/2;
+      }
+      else if(dim==3){
+	nu=1.;
+	V[0]=V[1]=V[2]=0.;
+      }
+      
       double barNu=0.;
       double vL2Norm2=0.;
       for(int i=0;i<dim;i++){
