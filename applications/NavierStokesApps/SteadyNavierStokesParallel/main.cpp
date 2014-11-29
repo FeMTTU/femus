@@ -668,10 +668,13 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	      SolVAR[i]+=phi[inode]*soli;
 	      for(int j=0; j<dim; j++) {
 		GradSolVAR[i][j]+=gradphi[inode*dim+j]*soli;
+		//std::cout<<nablaphi[inode*nabla_dim+j]<<" ";
 		NablaSolVAR[i][j]+=nablaphi[inode*nabla_dim+j]*soli;
-	      }	 
+	      }
+	      //std::cout<<endl;
 	    }
 	  } 
+	  //std::cout<<endl;
 	  // pressure, solution and gradient 
 	  SolVAR[dim]=0.;
 	  for(int j=0; j<dim; j++) {
@@ -706,7 +709,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    double barXi = ( fabs( PeXi ) < 1.0e-10) ? 0. : 1./tanh(PeXi)-1./PeXi;
 	    barNu += barXi * VxiHxi /2.;
 	  }
-	  double supgTau = ( vL2Norm2 > 1.0e-15 ) ? 5*barNu/vL2Norm2 : 0.;
+	  double supgTau = ( vL2Norm2 > 1.0e-15 ) ? 5.*barNu/vL2Norm2 : 0.;
 	  // End Stabilization stabilization tau evaluation
 	 // supgTau=0.;
 	  
@@ -738,8 +741,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	          supgPhi += SolVAR[jvar]*gradphi[i*dim+jvar]* supgTau; 
 		}
 	    
-		aRhs[indexVAR[ivar]][i]+= ( -IRe*Lap_rhs     - Adv_rhs*phi[i] + SolVAR[dim]*gradphi[i*dim+ivar]
-					   +(0*IRe*Nabla_rhs - Adv_rhs        - 0*GradSolVAR[dim][ivar] )*supgPhi
+		aRhs[indexVAR[ivar]][i]+= ( -IRe*Lap_rhs    - Adv_rhs*phi[i] + SolVAR[dim]*gradphi[i*dim+ivar]
+					   +(0*IRe*Nabla_rhs  - Adv_rhs        - 0*GradSolVAR[dim][ivar] )*supgPhi
 		)*Weight;
 	      
 	      }
@@ -750,10 +753,15 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    {  	    
 	      adept::adouble div_vel=0.;
 	      for(int i=0; i<dim; i++) {
-		div_vel+=GradSolVAR[i][i];
+		div_vel +=GradSolVAR[i][i];
 	      }
 	      for (unsigned i=0; i<nve1; i++) {
-		aRhs[indexVAR[dim]][i] += -(-phi1[i]*div_vel)*Weight;
+		
+		adept::adouble supgPhi=0.;
+		for(int ivar=0;ivar<dim;ivar++){
+		  supgPhi += SolVAR[ivar]*gradphi1[i*dim+ivar]*supgTau; 
+		}
+		aRhs[indexVAR[dim]][i] += -( (phi1[i]+0*supgPhi) * (-div_vel) )*Weight;
 	      }
 	    }
 	    //END continuity block ===========================

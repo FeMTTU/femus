@@ -492,7 +492,8 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
     delete mysol[ig];
   }
 
-  delete [] buffer_void;  
+  buffer_char=static_cast <char *>(buffer_void); 
+  delete [] buffer_char;  
   
   //--------------------------------------------------------------------------------------------------------
   return;   
