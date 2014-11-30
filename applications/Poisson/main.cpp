@@ -16,6 +16,7 @@
 #include "ParsedFunction.hpp"
 #include "InputParser.hpp"
 
+
 using namespace femus;
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
@@ -127,7 +128,7 @@ int main(int argc,char **argv) {
 	}
       ml_msh.RefineMesh(nm,nr, NULL);
     
-      ml_msh.print_info();
+      ml_msh.PrintInfo();
 
       MultiLevelSolution ml_sol(&ml_msh);
 
@@ -381,9 +382,12 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 	nu=0.01;
       }
       else if(dim==2){
-	nu=0.0001;
-	V[0]=sqrt(2)/2;
-	V[1]=-sqrt(2)/2;
+// 	nu=0.0001;
+// 	V[0]=sqrt(2)/2;
+// 	V[1]=-sqrt(2)/2;
+	nu=1.;
+ 	V[0]=0.;
+ 	V[1]=0.;
       }
       else if(dim==3){
 	nu=1.;

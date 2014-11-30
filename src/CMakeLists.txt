@@ -70,6 +70,7 @@ mesh/GeomEl.cpp
 mesh/Mesh.cpp
 mesh/MeshTwo.cpp
 mesh/MultiLevelMesh.cpp
+mesh/MeshGeneration.cpp
 physics/Fluid.cpp
 physics/Material.cpp
 physics/Parameter.cpp

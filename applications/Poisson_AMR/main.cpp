@@ -327,7 +327,7 @@ int main(int argc,char **argv) {
     //ml_msh.RefineMesh(nm,nr, SetRefinementFlag);
     ml_msh.RefineMesh(nm,nr, NULL);
     
-    ml_msh.print_info();
+    ml_msh.PrintInfo();
 
     MultiLevelSolution ml_sol(&ml_msh);
 

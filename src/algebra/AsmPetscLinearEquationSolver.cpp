@@ -235,7 +235,7 @@ namespace femus {
 		    unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 		    unsigned SolType = _SolType[SolPdeIndex];
 		    const unsigned *pt_un=_msh->el->GetElementVertexAddress(jel,0);
-		    unsigned nvej=_msh->el->GetElementDofNumber(jel,_msh->_END_IND[SolType]);
+		    unsigned nvej=_msh->el->GetElementDofNumber(jel,_msh->GetEndIndex(SolType));
 		    for (unsigned jj=0; jj<nvej; jj++) {
 		      unsigned jnode=(SolType<3)?(*(pt_un++)-1u):(jel+jj*nel);
 		      unsigned jnode_Metis = _msh->GetMetisDof(jnode,SolType);
@@ -276,7 +276,7 @@ namespace femus {
 	      unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 	      unsigned SolType = _SolType[SolPdeIndex];
 	      const unsigned *pt_un=_msh->el->GetElementVertexAddress(iel,0);
-	      unsigned nvei=_msh->el->GetElementDofNumber(iel,_msh->_END_IND[SolType]);
+	      unsigned nvei=_msh->el->GetElementDofNumber(iel,_msh->GetEndIndex(SolType));
 	      for (unsigned ii=0; ii<nvei; ii++) {
 		unsigned inode=(SolType<3)?(*(pt_un++)-1u):(iel+ii*nel);
 		unsigned inode_Metis = _msh->GetMetisDof(inode,SolType);
