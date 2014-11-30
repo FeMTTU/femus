@@ -8,7 +8,7 @@
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
 #include "FEMTTUConfig.h"
-
+#include "MeshGeneration.hpp"
 
 //C++ include
 #include <iostream>
@@ -189,7 +189,8 @@ void MultiLevelMesh::BuildBrickCoarseMesh( const unsigned int nx,
     //coarse mesh
     _level0[0] = new mesh();
     std::cout << " Building brick mesh using the built-in mesh generator" << std::endl;
-    _level0[0]->BuildBrick(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_finiteElementGeometryFlag);
+    //_level0[0]->BuildBrick(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_finiteElementGeometryFlag);
+    MeshTools::Generation::BuildBrick(*_level0[0],nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_finiteElementGeometryFlag);
 
     BuildElemType(GaussOrder);
     
@@ -339,10 +340,10 @@ void MultiLevelMesh::MarkStructureNode() {
 
 //---------------------------------------------------------------------------------------------
 
-void MultiLevelMesh::print_info() {
+void MultiLevelMesh::PrintInfo() {
     std::cout << " Number of uniform mesh refinement: " << _gridn << std::endl;
     for(int i=0; i<_gridn; i++) {
-        _level[i]->print_info();
+        _level[i]->PrintInfo();
     }
 }
 

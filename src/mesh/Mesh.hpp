@@ -45,7 +45,8 @@ class mesh : public ParallelObject {
 public:
 
     /** Constructor */
-    mesh();
+    explicit
+    mesh() {};
 
     /** destructor */
     ~mesh();
@@ -53,29 +54,17 @@ public:
     /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
     void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag);
 
-    /** Read the coarse-mesh from a neutral Gambit File */
-    void ReadGambit(const std::string& name, vector < vector < double> > &vt,const double Lref,std::vector<bool> &type_elem_flag);
-
-    /** Built-in cube-structured mesh generator */
-    void BuildBrick ( const unsigned int nx,
-                      const unsigned int ny,
-                      const unsigned int nz,
-                      const double xmin, const double xmax,
-                      const double ymin, const double ymax,
-                      const double zmin, const double zmax,
-                      const ElemType type,
-                      std::vector<bool> &type_elem_flag );
-
     /** This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$ */
     void RefineMesh(const unsigned &igrid, mesh *mshc, const elem_type* otheFiniteElement[6][5]);
 
+    /** To be Added */
     void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
     
     /** Partition the mesh using the METIS partitioner */
-    void generate_metis_mesh_partition();
+    void GenerateMetisMeshPartition();
 
     /** Print the mesh info for this level */
-    void print_info();
+    void PrintInfo();
 
     /** To be added */
     void BuildAdjVtx();
@@ -91,33 +80,71 @@ public:
 
     /** Get the dof number for the element -type- */
     unsigned GetDofNumber(const unsigned type) const;
+    
+    /** Set the number of nodes */
+    void SetNumberOfNodes(const unsigned nnodes) {
+      nvt = nnodes; 
+    };
+    
+    /** Get the number of nodes */
+    unsigned GetNumberOfNodes() const {
+      return nvt;
+    }
+    
+    /** Set the number of element */
+    void SetElementNumber(const unsigned numelem) {
+      nel = numelem; 
+    };
 
     /** Get the number of element */
-    unsigned GetElementNumber() const;
-
-    /** Get the grid number */
-    unsigned GetGridNumber() const;
+    unsigned GetElementNumber() const {
+      return nel;
+    }
 
     /** Set the grid number */
-    unsigned SetGridNumber(unsigned i) {
-        grid=i;
+    void SetGridNumber(const unsigned i) {
+        _grid=i;
     };
+
+    /** Get the grid number */
+    unsigned GetGridNumber() const {
+      return _grid;
+    }
 
     /** Allocate memory for adding fluid or solid mark */
     void AllocateAndMarkStructureNode();
+    
+    /** Set the dimension of the problem (1D, 2D, 3D) */
+    void SetDimension(const unsigned dim) {
+      mesh::_dimension = dim;
+      mesh::_ref_index = pow(2,mesh::_dimension);  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
+      mesh::_face_index = pow(2,mesh::_dimension-1u);
+    }
+    
 
     /** Get the dimension of the problem (1D, 2D, 3D) */
-    unsigned GetDimension();
+    const unsigned GetDimension() const {
+      return mesh::_dimension;
+    }
 
     /** To be added*/
-    unsigned GetRefIndex();
+    const unsigned GetRefIndex() const {
+      return mesh::_ref_index;
+    }
 
     /** Get the metis dof from the gambit dof */
-    unsigned GetMetisDof(unsigned inode, short unsigned SolType) const;
+    const unsigned GetMetisDof(unsigned inode, short unsigned SolType) const {
+      return IS_Gmt2Mts_dof[SolType][inode];
+    }
 
     /** To be added */
-    unsigned GetEndIndex(const unsigned i) const;
-
+    const unsigned GetEndIndex(const unsigned i) const {
+      return _END_IND[i];
+    }
+    
+    /** Get the material of the kel element */
+    const unsigned GetElementMaterial(unsigned &kel) const;
+    
     /** Flag all the elements to be refined */
     void FlagAllElementsToBeRefined();
 
@@ -130,17 +157,19 @@ public:
     /** Flag the elements to be refined in according to AMR criteria */
     void FlagElementsToBeRefinedByAMR();
     
-    
+    /** To be added */
     void GenerateVankaPartitions_FAST( const unsigned &block_size, vector < vector< unsigned > > &blk_elements,
 				       vector <unsigned> &block_element_type);
+    
+    /** To be added */
     void GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
 				      vector <unsigned> &block_element_type);
+    
+    /** To be added */
     void GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < vector< unsigned > > &block_elements,
 					vector <unsigned> &block_type_range);
     
-    
-    unsigned GetElementMaterial(unsigned &kel);
-    
+    /** To be added */    
     void GenerateVankaPartitions_METIS( const unsigned &block_size, vector < vector< unsigned > > &blk_elements);
     
     // member data
@@ -154,42 +183,29 @@ public:
     vector< vector<int> > ghost_nd_mts[5];
     vector <unsigned> ghost_size[5];
     elem *el;  //< elements
-    int nel;
-    static unsigned _ref_index;
     idx_t *epart;
     idx_t *npart;
     idx_t nsubdom;
-    static const unsigned _END_IND[5];
     static bool (* _SetRefinementFlag)(const double &x, const double &y, const double &z,
                                        const int &ElemGroupNumber,const int &level);
     static bool _TestSetRefinementFlag;
     std::map<unsigned int, std::string> _boundaryinfo;
+    
 
 private:
     
     //member-data
-    unsigned nvt,grid;
-    static unsigned _dimension;
+    int nel;                                   //< number of elements
+    unsigned nvt;                              //< number of nodes
+    unsigned _grid;                            //< level of mesh in the multilevel hierarchy
+    static unsigned _dimension;                //< dimension of the problem
+    static unsigned _ref_index;
     static unsigned _face_index;
     vector <unsigned> IS_Gmt2Mts_dof[5];        //< dof map
     vector <unsigned> IS_Gmt2Mts_dof_offset[5]; //< map offset
+    static const unsigned _END_IND[5];
 
-    /** 2D local-to-global map for built-in mesh generator */
-    unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int i, const unsigned int j);
-
-    /** 3D local-to-global map for built-in mesh generator */
-    unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int ny, const unsigned int i,
-                     const unsigned int j, const unsigned int k);
-
-protected:
-    int _nprocs;
 };
-
-/*----------------------- functions ----------------------------------*/
-//------------------------------------------------------------------------------------------------------
-inline unsigned mesh::GetMetisDof(unsigned inode, short unsigned SolType) const {
-    return IS_Gmt2Mts_dof[SolType][inode];
-}
 
 } //end namespace femus
 

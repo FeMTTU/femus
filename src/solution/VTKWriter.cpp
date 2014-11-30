@@ -66,12 +66,13 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
  
   std::ostringstream filename;
   filename << "./output/mesh.level" << _gridn << "." << time_step << "." << order << ".vtu"; 
-  std::ofstream fout(filename.str().c_str());
+  std::ofstream fout;
   
   if(_iproc!=0) {
     fout.rdbuf();   //redirect to dev_null
   }
   else {
+    fout.open(filename.str().c_str());
     if (fout.is_open()) {
       std::cout << std::endl << " The output is printed to file " << filename.str() << " in VTK-XML (64-based) format" << std::endl; 
     }
@@ -492,8 +493,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
     delete mysol[ig];
   }
 
-  buffer_char=static_cast <char *>(buffer_void); 
-  delete [] buffer_char;  
+  delete [] var_nd; 
   
   //--------------------------------------------------------------------------------------------------------
   return;   

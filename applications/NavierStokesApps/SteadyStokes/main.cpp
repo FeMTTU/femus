@@ -72,7 +72,7 @@ int main(int argc,char **args) {
   ml_msh.ReadCoarseMesh(infile,"seventh",Lref);
   ml_msh.RefineMesh(nm,nr,SetRefinementFlag);
   
-  ml_msh.print_info();
+  ml_msh.PrintInfo();
   
   MultiLevelSolution ml_sol(&ml_msh);
   

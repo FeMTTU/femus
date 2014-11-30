@@ -104,7 +104,7 @@ public:
     void MarkStructureNode();
 
     /** Print the mesh info for each level */
-    void print_info();
+    void PrintInfo();
 
     // data
     const elem_type *_finiteElement[6][5];
