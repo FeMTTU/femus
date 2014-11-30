@@ -45,7 +45,8 @@ class mesh : public ParallelObject {
 public:
 
     /** Constructor */
-    mesh();
+    explicit
+    mesh() {};
 
     /** destructor */
     ~mesh();
@@ -53,12 +54,10 @@ public:
     /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
     void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag);
 
-    /** Read the coarse-mesh from a neutral Gambit File */
-    void ReadGambit(const std::string& name, vector < vector < double> > &vt,const double Lref,std::vector<bool> &type_elem_flag);
-
     /** This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$ */
     void RefineMesh(const unsigned &igrid, mesh *mshc, const elem_type* otheFiniteElement[6][5]);
 
+    /** To be Added */
     void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
     
     /** Partition the mesh using the METIS partitioner */
