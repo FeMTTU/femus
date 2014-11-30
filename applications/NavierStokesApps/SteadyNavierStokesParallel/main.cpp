@@ -134,7 +134,7 @@ int main(int argc,char **args) {
   
   // Set MG Options
   system1.AttachAssembleFunction(AssembleMatrixResNS);  
-  system1.SetMaxNumberOfNonLinearIterations(10);
+  system1.SetMaxNumberOfNonLinearIterations(20);
   system1.SetMaxNumberOfLinearIterations(2);
   system1.SetAbsoluteConvergenceTolerance(1.e-10);
   system1.SetNonLinearConvergenceTolerance(1.e-8);
@@ -227,7 +227,7 @@ int main(int argc,char **args) {
 //   xdmfio.write_system_solutions("biquadratic",print_vars);
   
   GMVWriter gmvio(ml_sol);
-  gmvio.write_system_solutions("biquadratic",print_vars);
+  gmvio.write_system_solutions("linear",print_vars);
   
   //Destroy all the new systems
   ml_prob.clear();
@@ -403,7 +403,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     clock_t AssemblyTime=0;
     clock_t start_time, end_time;
   
-    static adept::Stack s; 
+    static adept::Stack adeptStack; 
     
     //pointers and references
     MultiLevelSolution*	 ml_sol	                      = ml_prob._ml_sol;
@@ -488,9 +488,9 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     // gravity
     double _gravity[3]={0.,0.,0.};
      
-    if(counter==0) IRe=0.1;
-      counter++;
-    
+    IRe =( 150*(counter+1) < 2000 )? 1./(150*(counter+1)):0.0005;
+    cout<<"iteration="<<counter<<" Inverse Reynolds = "<<IRe<<endl;
+    counter++;
     // -----------------------------------------------------------------
     // space discretization parameters
     unsigned SolType2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));  
@@ -596,7 +596,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
  
       if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {  
 	
-	s.new_recording();
+	adeptStack.new_recording();
 		
 // 	// Boundary integral
 // 	{
@@ -686,68 +686,75 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    for(int j=0; j<dim; j++) {
 	      GradSolVAR[dim][j]+=gradphi1[inode*dim+j]*soli;
 	    }
+	  } 
+	  
+	  // ********************************* Tau_Supg ******************************************
+	  // Computer Methods in Applied Mechanics and Engineering 95 (1992) 221-242 North-Holland
+	  // *************************************************************************************
+	  
+	  // velocity
+	  vector < double > u(dim);
+	  for(int ivar=0; ivar<dim; ivar++){
+	    u[ivar]=SolVAR[ivar].value();
 	  }
 	  
-	  
-	  vector< double > V(dim,0.);
-	  unsigned ir = referenceElementPoint[kelt];
-	  for(int i=0; i<dim; i++){
-	    V[i]=Soli[indexVAR[i]][ir].value();
-	  }
-	  double nu=IRe;
-	  double barNu=0.;
-	  double vL2Norm2=0.;
+	  // speed
+	  double uL2Norm=0.;
 	  for(int ivar=0;ivar<dim;ivar++){
-	    vL2Norm2 += V[ivar]*V[ivar];
-	    unsigned ip = referenceElementDirection[kelt][ivar][1];
-	    unsigned im = referenceElementDirection[kelt][ivar][0];
-	    double VxiHxi=0.;
-	    for(int j=0;j<dim;j++){
-	      VxiHxi += (vx[j][ip].value()-vx[j][im].value()) * V[j];
-	    }	
-	    double PeXi=VxiHxi/(2.*nu);		
-	    double barXi = ( fabs( PeXi ) < 1.0e-10) ? 0. : 1./tanh(PeXi)-1./PeXi;
-	    barNu += barXi * VxiHxi /2.;
+	    uL2Norm += u[ivar]*u[ivar];
 	  }
-	  double supgTau = ( vL2Norm2 > 1.0e-15 ) ? 5.*barNu/vL2Norm2 : 0.;
-	  // End Stabilization stabilization tau evaluation
-	 // supgTau=0.;
+	  uL2Norm=sqrt(uL2Norm);
 	  
+	  // velocity direction s = u/|u|
+	  vector < double > s(dim);
+	  for(int ivar=0;ivar<dim;ivar++)
+	    s[ivar]=u[ivar]/uL2Norm;
 	  
+	  // element lenght h(s) = 2. ( \sum_i |s . gradphi_i | )^(-1)
+	  double h=0;
+	  for (unsigned i=0; i<nve; i++) {
+	    double sDotGradphi=0.; 
+	    for(int ivar=0; ivar<dim; ivar++)
+	      sDotGradphi += s[ivar]*gradphi[i*dim+ivar].value();
+	    h += fabs(sDotGradphi);
+	  }
+	  h = 2./h;
 	  
-	  
-	  
-	  
-// 	  
+	  //tauSupg
+	  double Reu   = (uL2Norm*h)/(2*IRe);
+	  double zReu  = (Reu <= 3)? Reu/3.:1;
+	  double tauSupg = h / (2.*uL2Norm)*zReu;
 	 
-	  //adept::adouble supgTau = asupgTau;
 	  // ---------------------------------------------------------------------------
 	  //BEGIN FLUID ASSEMBLY ============
 	  { 
-	    //BEGIN redidual Navier-Stokes   
+	    
+	    vector < adept::adouble > ResSupg(dim,0.);
+	    for(unsigned ivar=0; ivar<dim; ivar++) {
+	      for(unsigned jvar=0; jvar<dim; jvar++) {
+		ResSupg[ivar] += SolVAR[jvar]*GradSolVAR[ivar][jvar] - IRe*NablaSolVAR[ivar][jvar];
+	      }
+	      ResSupg[ivar] += GradSolVAR[dim][ivar];
+	    }
+	    
+	    //BEGIN redidual momentum block  
 	    for (unsigned i=0; i<nve; i++){
    
 	      
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
 		adept::adouble Adv_rhs=0.;
 		adept::adouble Lap_rhs=0.;
-		adept::adouble Nabla_rhs=0.;
 		adept::adouble supgPhi=0.;
 		for(unsigned jvar=0; jvar<dim; jvar++) {
 		  Lap_rhs += gradphi[i*dim+jvar]*GradSolVAR[ivar][jvar];
 		  Adv_rhs += SolVAR[jvar]*GradSolVAR[ivar][jvar];
-		  
-		  Nabla_rhs += NablaSolVAR[ivar][jvar];
-	          supgPhi += SolVAR[jvar]*gradphi[i*dim+jvar]* supgTau; 
+		  supgPhi += SolVAR[jvar]*gradphi[i*dim+jvar]*tauSupg; 
 		}
-	    
-		aRhs[indexVAR[ivar]][i]+= ( -IRe*Lap_rhs    - Adv_rhs*phi[i] + SolVAR[dim]*gradphi[i*dim+ivar]
-					   +(0*IRe*Nabla_rhs  - Adv_rhs        - 0*GradSolVAR[dim][ivar] )*supgPhi
-		)*Weight;
-	      
+		aRhs[indexVAR[ivar]][i]+= ( -IRe*Lap_rhs - Adv_rhs*phi[i] + SolVAR[dim]*gradphi[i*dim+ivar]
+					    - ResSupg[ivar]*supgPhi )*Weight;	      
 	      }
 	    } 
-	    //END redidual Navier-Stokes     
+	    //END redidual momentum block     
 	    
 	    //BEGIN continuity block 
 	    {  	    
@@ -759,7 +766,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 		
 		adept::adouble supgPhi=0.;
 		for(int ivar=0;ivar<dim;ivar++){
-		  supgPhi += SolVAR[ivar]*gradphi1[i*dim+ivar]*supgTau; 
+		  supgPhi += SolVAR[ivar]*gradphi1[i*dim+ivar]*tauSupg; 
 		}
 		aRhs[indexVAR[dim]][i] += -( (phi1[i]+0*supgPhi) * (-div_vel) )*Weight;
 	      }
@@ -788,12 +795,12 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 
       //Store equations
       for(int i=0; i<dim; i++) {  
-	s.dependent(&aRhs[indexVAR[i]][0], nve);
-	s.independent(&Soli[indexVAR[i]][0], nve); 
+	adeptStack.dependent(&aRhs[indexVAR[i]][0], nve);
+	adeptStack.independent(&Soli[indexVAR[i]][0], nve); 
       }
-      s.dependent(&aRhs[indexVAR[dim]][0], nve1);
-      s.independent(&Soli[indexVAR[dim]][0], nve1);   
-      s.jacobian(&Jac[0]);	
+      adeptStack.dependent(&aRhs[indexVAR[dim]][0], nve1);
+      adeptStack.independent(&Soli[indexVAR[dim]][0], nve1);   
+      adeptStack.jacobian(&Jac[0]);	
       unsigned nveAll=(dim*nve+nve1);
       for (int inode=0;inode<nveAll;inode++){
 	for (int jnode=0;jnode<nveAll;jnode++){
@@ -801,8 +808,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	}
       }
       myKK->add_matrix_blocked(KKloc,dofsAll,dofsAll);
-      s.clear_independents();
-      s.clear_dependents();
+      adeptStack.clear_independents();
+      adeptStack.clear_dependents();
        
       //END local to global assembly
    
