@@ -74,6 +74,9 @@ public:
 
     /** To be added */
     void Buildkel();
+    
+    /** Reorder mesh nodes in the following order: vertices, face, center */
+    void ReorderMeshNodes(vector < vector < double> > &coords);
 
     /** To be added */
     void copy_elr(vector <unsigned> &other_vec) const;

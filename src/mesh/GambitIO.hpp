@@ -48,7 +48,7 @@ class GambitIO : public MeshInput<Mesh>
    * from the ASCII file given by name.
    *
    */
-  virtual void read (const std::string& name, vector < vector < double> > &vt, const double Lref, std::vector<bool> &type_elem_flag);
+  virtual void read (const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag);
 
  private:
    

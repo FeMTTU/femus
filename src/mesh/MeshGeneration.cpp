@@ -1504,88 +1504,10 @@ void BuildBrick(      Mesh& mesh,
       }
      }
     
-    //*************** start reorder mesh dofs **************
-  //(1)linear (2)quadratic (3)biquaratic
-  
-  vector <unsigned> dof_index;
-  dof_index.resize(mesh.GetNumberOfNodes());
-  for(unsigned i=0;i<mesh.GetNumberOfNodes();i++){
-    dof_index[i]=i+1;
-  }
-  //reorder vertices and mid-points vs central points
-  for (unsigned iel=0; iel<mesh.GetElementNumber(); iel++) {
-    for (unsigned inode=0; inode<mesh.el->GetElementDofNumber(iel,1); inode++) {
-      for (unsigned jel=0; jel<mesh.GetElementNumber(); jel++) {
-	for (unsigned jnode=mesh.el->GetElementDofNumber(jel,1); jnode<mesh.el->GetElementDofNumber(jel,3); jnode++) { 
-	  unsigned ii=mesh.el->GetElementVertexIndex(iel,inode)-1;
-	  unsigned jj=mesh.el->GetElementVertexIndex(jel,jnode)-1;
-	  unsigned i0=dof_index[ii];
-          unsigned i1=dof_index[jj];
-	  if(i0>i1){
-	    dof_index[ii]=i1;
-	    dof_index[jj]=i0; 
-	  }
-	}
-      }
-    }
-  }
-  //reorder vertices vs mid-points
-  for (unsigned iel=0; iel<mesh.GetElementNumber(); iel++) {
-    for (unsigned inode=0; inode<mesh.el->GetElementDofNumber(iel,0); inode++) {
-      for (unsigned jel=0; jel<mesh.GetElementNumber(); jel++) {
-        for (unsigned jnode=mesh.el->GetElementDofNumber(jel,0); jnode<mesh.el->GetElementDofNumber(jel,1); jnode++) {
-          unsigned ii=mesh.el->GetElementVertexIndex(iel,inode)-1;
-	  unsigned jj=mesh.el->GetElementVertexIndex(jel,jnode)-1;
-	  unsigned i0=dof_index[ii];
-          unsigned i1=dof_index[jj];
-	  if(i0>i1){
-	    dof_index[ii]=i1;
-	    dof_index[jj]=i0; 
-	  }
-	}
-      }
-    }
-  }
-  
-  // update all
-  for (unsigned iel=0; iel<mesh.GetElementNumber(); iel++) {
-    for (unsigned inode=0; inode<mesh.el->GetElementDofNumber(iel,3); inode++) {
-      unsigned ii=mesh.el->GetElementVertexIndex(iel,inode)-1;
-      mesh.el->SetElementVertexIndex(iel,inode,dof_index[ii]);
-    }
-  }
-  vector <double> vt_temp;
-  for(int i=0;i<3;i++){
-    vt_temp=vt[i];
-    for(unsigned j=0;j<mesh.GetNumberOfNodes();j++){
-      vt[i][dof_index[j]-1]=vt_temp[j];
-    }
-  }
-  // **************  end reoreder mesh dofs **************
- 
-  mesh.el->SetNodeNumber(mesh.GetNumberOfNodes());
- 
-  unsigned nv0=0;
-  for (unsigned iel=0; iel<mesh.GetElementNumber(); iel++)
-    for (unsigned inode=0; inode<mesh.el->GetElementDofNumber(iel,0); inode++) {
-      unsigned i0=mesh.el->GetElementVertexIndex(iel,inode);
-      if (nv0<i0) nv0=i0;
-  }
-  mesh.el->SetVertexNodeNumber(nv0);
+  mesh.ReorderMeshNodes(vt);
 
-  unsigned nv1=0;
-  for (unsigned iel=0; iel<mesh.GetElementNumber(); iel++)
-    for (unsigned inode=mesh.el->GetElementDofNumber(iel,0); inode<mesh.el->GetElementDofNumber(iel,1); inode++) {
-      unsigned i1=mesh.el->GetElementVertexIndex(iel,inode);
-      if (nv1<i1) nv1=i1;
-  }
-  mesh.el->SetMidpointNodeNumber(nv1-nv0);
-
-  mesh.el->SetCentralNodeNumber(mesh.GetNumberOfNodes()-nv1);
-
-  
-  //connectivity: find all the element near the vertices
   mesh.BuildAdjVtx();
+  
   mesh.Buildkel();
   
   if (mesh.n_processors()>=1) 
