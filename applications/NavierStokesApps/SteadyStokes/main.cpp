@@ -311,7 +311,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
   MultiLevelSolution* ml_sol=ml_prob._ml_sol;
   
   
-  mesh*		 mymsh    	= ml_prob._ml_msh->GetLevel(level);
+  Mesh*		 mymsh    	= ml_prob._ml_msh->GetLevel(level);
   elem*		 myel		= mymsh->el;
   SparseMatrix*	 myKK		= mylsyspde->_KK;
   NumericVector* myRES 		= mylsyspde->_RES;

@@ -102,7 +102,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
   
   LinearEquationSolver* LinSolf=_LinSolver[gridf];
   LinearEquationSolver* LinSolc=_LinSolver[gridf-1];
-  mesh* mshc = _msh[gridf-1];
+  Mesh* mshc = _msh[gridf-1];
   int nf= LinSolf->KKIndex[LinSolf->KKIndex.size()-1u];
   int nc= LinSolc->KKIndex[LinSolc->KKIndex.size()-1u];
   int nf_loc = LinSolf->KKoffset[LinSolf->KKIndex.size()-1][iproc]-LinSolf->KKoffset[0][iproc];

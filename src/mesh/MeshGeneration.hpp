@@ -23,8 +23,8 @@
 
 namespace femus {
 
-//using std::vector;
-class mesh;
+
+class Mesh;
 
 // ------------------------------------------------------------
 // MeshTools::Generation namespace
@@ -38,7 +38,7 @@ namespace MeshTools
   {
 
     /** Built-in cube-unstructured mesh generator */
-    void BuildBrick ( mesh& mesh, 
+    void BuildBrick ( Mesh& mesh, 
                       const unsigned int nx,
                       const unsigned int ny,
                       const unsigned int nz,
@@ -47,14 +47,6 @@ namespace MeshTools
                       const double zmin, const double zmax,
                       const ElemType type,
                       std::vector<bool> &type_elem_flag );
-
-
-    /** 2D local-to-global map for built-in mesh generator */
-    unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int i, const unsigned int j);
-
-    /** 3D local-to-global map for built-in mesh generator */
-    unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int ny, const unsigned int i,
-                     const unsigned int j, const unsigned int k);
 
   }
   

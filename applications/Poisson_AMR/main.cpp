@@ -540,7 +540,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
     LinearImplicitSystem& mylin_impl_sys = ml_prob.get_system<LinearImplicitSystem>("Poisson");
     LinearEquationSolver*  mylsyspde     = mylin_impl_sys._LinSolver[level];
-    mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
+    Mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
     elem*          myel		       = mymsh->el;
     SparseMatrix*  myKK		       = mylsyspde->_KK;
     NumericVector* myRES		       = mylsyspde->_RES;
@@ -793,7 +793,7 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
   unsigned gridn=ml_sol._ml_msh->GetNumberOfLevels();
   for(int ilevel=0;ilevel<gridn;ilevel++){
     Solution*      solution  = ml_sol.GetSolutionLevel(ilevel);
-    mesh*          msh	     = ml_sol._ml_msh->GetLevel(ilevel);
+    Mesh*          msh	     = ml_sol._ml_msh->GetLevel(ilevel);
     unsigned 	   iproc     = msh->processor_id();
     
     

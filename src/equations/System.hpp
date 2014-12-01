@@ -85,7 +85,7 @@ protected:
     /** Constant reference to the \p EquationSystems object used for the simulation. */
     MultiLevelProblem& _equation_systems;
 
-    vector<mesh*> _msh;
+    vector<Mesh*> _msh;
 
     vector<Solution*> _solution;
 

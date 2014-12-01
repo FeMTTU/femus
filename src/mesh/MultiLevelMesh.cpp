@@ -102,7 +102,7 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
     _finiteElementGeometryFlag.resize(5,false);
     
     //coarse mesh
-    _level0[0] = new mesh();
+    _level0[0] = new Mesh();
     std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
     _level0[0]->ReadCoarseMesh(mesh_file, Lref,_finiteElementGeometryFlag);
     
@@ -111,28 +111,28 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
     //totally refined meshes
     for (unsigned i=1; i<_gridr0; i++) {
         _level0[i-1u]->FlagAllElementsToBeRefined();
-        _level0[i] = new mesh();
+        _level0[i] = new Mesh();
         _level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
     }
 
     if(SetRefinementFlag==NULL){    
     }
     else{
-      mesh::_SetRefinementFlag = SetRefinementFlag;
-      mesh::_TestSetRefinementFlag=1;
+      Mesh::_SetRefinementFlag = SetRefinementFlag;
+      Mesh::_TestSetRefinementFlag=1;
     }
     
     
     //partially refined meshes
     for (unsigned i=_gridr0; i<_gridn0; i++) {
-      if(!mesh::_TestSetRefinementFlag) {
+      if(!Mesh::_TestSetRefinementFlag) {
         cout << "Set Refinement Region flag is not defined! " << endl;
         exit(1);
       }
       else {
 	_level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
       }
-      _level0[i] = new mesh();
+      _level0[i] = new Mesh();
       _level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
     }
 
@@ -157,7 +157,7 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
     _finiteElementGeometryFlag.resize(5,false);
     
     //coarse mesh
-    _level0[0] = new mesh();
+    _level0[0] = new Mesh();
     std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
     _level0[0]->ReadCoarseMesh(mesh_file, Lref,_finiteElementGeometryFlag);
 
@@ -187,7 +187,7 @@ void MultiLevelMesh::BuildBrickCoarseMesh( const unsigned int nx,
     _finiteElementGeometryFlag.resize(5,false);
     
     //coarse mesh
-    _level0[0] = new mesh();
+    _level0[0] = new Mesh();
     std::cout << " Building brick mesh using the built-in mesh generator" << std::endl;
     //_level0[0]->BuildBrick(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_finiteElementGeometryFlag);
     MeshTools::Generation::BuildBrick(*_level0[0],nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_finiteElementGeometryFlag);
@@ -229,7 +229,7 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
     //totally refined meshes
     for (unsigned i=1; i<_gridr0; i++) {
         _level0[i-1u]->FlagAllElementsToBeRefined();
-        _level0[i] = new mesh();
+        _level0[i] = new Mesh();
         _level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
     }
 
@@ -239,12 +239,12 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
       
     }
     else{
-      mesh::_SetRefinementFlag = SetRefinementFlag;
-      mesh::_TestSetRefinementFlag=1;
+      Mesh::_SetRefinementFlag = SetRefinementFlag;
+      Mesh::_TestSetRefinementFlag=1;
     }
     
     for (unsigned i=_gridr0; i<_gridn0; i++) {
-      if(mesh::_TestSetRefinementFlag==0) {
+      if(Mesh::_TestSetRefinementFlag==0) {
         cout << "Set Refinement Region flag is not defined! " << endl;
         exit(1);
       }
@@ -252,7 +252,7 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
         //mesh::_SetRefinementFlag = SetRefinementFlag;
         _level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
       }
-      _level0[i] = new mesh();
+      _level0[i] = new Mesh();
       _level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
     }
 
@@ -275,14 +275,14 @@ void MultiLevelMesh::AddMeshLevel()
   //AMR refine mesh
    _level0.resize(_gridn0+1u);
             
-  if(mesh::_TestSetRefinementFlag==0) {
+  if(Mesh::_TestSetRefinementFlag==0) {
      cout << "Set Refinement Region flag is not defined! " << endl;
      exit(1);
   }
 
   _level0[_gridn0-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
   
-  _level0[_gridn0] = new mesh();
+  _level0[_gridn0] = new Mesh();
   _level0[_gridn0]->RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
     
   _level.resize(_gridn+1u);
@@ -305,7 +305,7 @@ void MultiLevelMesh::AddAMRMeshLevel()
 
   _level0[_gridn0-1u]->FlagElementsToBeRefinedByAMR();
   
-  _level0[_gridn0] = new mesh();
+  _level0[_gridn0] = new Mesh();
   _level0[_gridn0]->RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
     
   _level.resize(_gridn+1u);

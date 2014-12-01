@@ -39,19 +39,19 @@ using std::min;
 using std::sort;
 using std::map;
 
-bool mesh::_TestSetRefinementFlag=0;
+bool Mesh::_TestSetRefinementFlag=0;
 
-const unsigned mesh::_END_IND[5]= {0,1,3,4,5};
+const unsigned Mesh::_END_IND[5]= {0,1,3,4,5};
 
-unsigned mesh::_dimension=2;
-unsigned mesh::_ref_index=4;  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
-unsigned mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
+unsigned Mesh::_dimension=2;
+unsigned Mesh::_ref_index=4;  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
+unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
 
 
 /**
- *  This function generates the coarse mesh level, $l_0$, from an input mesh file (Now only the Gambit Neutral File)
+ *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file (Now only the Gambit Neutral File)
  **/
-void mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag) {
+void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag) {
     
   MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
   MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
@@ -104,7 +104,7 @@ void mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
 
 
 //-------------------------------------------------------------------
-void mesh::FlagAllElementsToBeRefined() {
+void Mesh::FlagAllElementsToBeRefined() {
   
    el->InitRefinedToZero();
    
@@ -120,11 +120,11 @@ void mesh::FlagAllElementsToBeRefined() {
 }
 
 //-------------------------------------------------------------------
-void mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
+void Mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
      el->InitRefinedToZero();
    
     //refine based on the function SetRefinementFlag defined in the main;
-    // the mesh is serial, we cannot in parallel use the coordinates to selectively refine
+    // the Mesh is serial, we cannot in parallel use the coordinates to selectively refine
     std::vector<double> X_local;
     std::vector<double> Y_local;
     std::vector<double> Z_local;
@@ -160,7 +160,7 @@ void mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
 
 
 //-------------------------------------------------------------------
-void mesh::FlagElementsToBeRefinedByAMR() {
+void Mesh::FlagElementsToBeRefinedByAMR() {
     
        
     if(_TestSetRefinementFlag){
@@ -211,7 +211,7 @@ void mesh::FlagElementsToBeRefinedByAMR() {
 
 
 //-------------------------------------------------------------------
-void mesh::FlagOnlyEvenElementsToBeRefined() {
+void Mesh::FlagOnlyEvenElementsToBeRefined() {
   
    el->InitRefinedToZero();
 
@@ -227,10 +227,10 @@ void mesh::FlagOnlyEvenElementsToBeRefined() {
 
 
 /**
- *  This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$
+ *  This function generates a finer Mesh level, $l_i$, from a coarser Mesh level $l_{i-1}$, $i>0$
  **/
 
-void mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]){
+void Mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]){
   
   for(int i=0;i<6;i++)
     for(int j=0;j<5;j++)
@@ -238,7 +238,7 @@ void mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]){
 }
 
 //------------------------------------------------------------------------------------------------------
-void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *otherFiniteElement[6][5]) {
+void Mesh::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_type *otherFiniteElement[6][5]) {
   
   SetFiniteElementPtr(otherFiniteElement);
     
@@ -247,7 +247,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
   MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
   MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
   
-  const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse mesh dof = f2CVM[element type][fine element][fine vertex]
+  const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse Mesh dof = f2CVM[element type][fine element][fine vertex]
     { {1,9,25,12,17,21,27,24},
       {9,2,10,25,21,18,22,27},
       {25,10,3,11,27,22,19,23},
@@ -387,7 +387,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
 
 //   nel=elc->GetRefinedElementNumber()*REF_INDEX;
   nel=elc->GetRefinedElementNumber()*_ref_index;
-  el=new elem(elc,mesh::_ref_index);
+  el=new elem(elc,Mesh::_ref_index);
 
 
 
@@ -500,7 +500,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
   //for parallel computations
   if (_nprocs>=1) GenerateMetisMeshPartition();
     
-  // build mesh coordinates by projecting the coarse coordinats
+  // build Mesh coordinates by projecting the coarse coordinats
   _coordinate = new Solution(this);
   _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0); 
   _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0); 
@@ -584,7 +584,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
 
 //------------------------------------------------------------------------------------------------------
 
- mesh::~mesh(){
+ Mesh::~Mesh(){
     delete el;
     _coordinate->FreeSolutionVectors(); 
     delete _coordinate;
@@ -594,8 +594,8 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
     }
   }
 
-/// print mesh info
-void mesh::PrintInfo() {
+/// print Mesh info
+void Mesh::PrintInfo() {
   
  std::cout << " Mesh Level        : " << _grid << std::endl; 
  std::cout << "   Number of elements: " << nel << std::endl; 
@@ -605,7 +605,7 @@ void mesh::PrintInfo() {
 
 
 //------------------------------------------------------------------------------------------------------
-void mesh::GenerateMetisMeshPartition(){
+void Mesh::GenerateMetisMeshPartition(){
    
   unsigned eind_size = el->GetElementNumber("Hex")*NVE[0][3] + el->GetElementNumber("Tet")*NVE[1][3] 
                      + el->GetElementNumber("Wedge")*NVE[2][3] + el->GetElementNumber("Quad")*NVE[3][3] 
@@ -652,7 +652,7 @@ void mesh::GenerateMetisMeshPartition(){
   npart=new idx_t [nvt];
   
   if(nsubdom!=1) {
-  //I call the mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
+  //I call the Mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
   int err = METIS_PartMeshDual(&mnel, &mnvt, eptr, eind, NULL, NULL, &ncommon, &nsubdom, NULL, options, &objval, epart, npart);
   
   if(err==METIS_OK) {
@@ -920,7 +920,7 @@ void mesh::GenerateMetisMeshPartition(){
 /**
  * This function searches all the elements around all the vertices
  **/
-void mesh::BuildAdjVtx() {
+void Mesh::BuildAdjVtx() {
   el->AllocateVertexElementMemory();
   for (unsigned iel=0; iel<nel; iel++) {
     for (unsigned inode=0; inode < el->GetElementDofNumber(iel,0); inode++) {
@@ -936,7 +936,7 @@ void mesh::BuildAdjVtx() {
 /**
  * This function generates kmid for hex and wedge elements
  **/
-void mesh::Buildkmid() {
+void Mesh::Buildkmid() {
   for (unsigned iel=0; iel<el->GetElementNumber(); iel++)
     for (unsigned inode=el->GetElementDofNumber(iel,1); inode<el->GetElementDofNumber(iel,2); inode++)
       el->SetElementVertexIndex(iel,inode,0);
@@ -992,7 +992,7 @@ void mesh::Buildkmid() {
  * This function stores the element adiacent to the element face (iel,iface)
  * and stores it in kel[iel][iface]
  **/
-void mesh::Buildkel() {
+void Mesh::Buildkel() {
   for (unsigned iel=0; iel<el->GetElementNumber(); iel++) {
     for (unsigned iface=0; iface<el->GetElementFaceNumber(iel); iface++) {
       if ( el->GetFaceElementIndex(iel,iface) <= 0) {
@@ -1009,16 +1009,16 @@ void mesh::Buildkel() {
                 unsigned j3=el->GetFaceVertexIndex(jel,jface,2);
                 unsigned j4=el->GetFaceVertexIndex(jel,jface,3);
 // 		if((DIM[2]==1 &&
-                if ((mesh::_dimension==3 &&
+                if ((Mesh::_dimension==3 &&
                      (i1==j1 || i1==j2 || i1==j3 ||  i1==j4 )&&
                      (i2==j1 || i2==j2 || i2==j3 ||  i2==j4 )&&
                      (i3==j1 || i3==j2 || i3==j3 ||  i3==j4 ))||
 // 		   (DIM[1]==1 &&
-                    (mesh::_dimension==2 &&
+                    (Mesh::_dimension==2 &&
                      (i1==j1 || i1==j2 )&&
                      (i2==j1 || i2==j2 ))||
 // 		   (DIM[0]==1 &&
-                    (mesh::_dimension==1 &&
+                    (Mesh::_dimension==1 &&
                      (i1==j1))
                    ) {
                   el->SetFaceElementIndex(iel,iface,jel+1u);
@@ -1035,11 +1035,11 @@ void mesh::Buildkel() {
 
 
 /**
- * This function returns the number of mesh nodes for different type of elemets
+ * This function returns the number of Mesh nodes for different type of elemets
  **/
-unsigned mesh::GetDofNumber(const unsigned type) const {
+unsigned Mesh::GetDofNumber(const unsigned type) const {
 
-// if(mesh::_dimension != 2) exit(1);
+// if(Mesh::_dimension != 2) exit(1);
   switch (type) {
   case 0:
     return el->GetVertexNodeNumber();
@@ -1055,7 +1055,7 @@ unsigned mesh::GetDofNumber(const unsigned type) const {
     break;
   case 4:
 //     return nel*(2+DIMENSION);
-    return nel*(2+mesh::_dimension-1);
+    return nel*(2+Mesh::_dimension-1);
     break;
   }
   return 0;
@@ -1065,13 +1065,13 @@ unsigned mesh::GetDofNumber(const unsigned type) const {
 /**
  * This function copies the refined element index vector in other_vector
  **/
-void mesh::copy_elr(vector <unsigned> &other_vec) const {
+void Mesh::copy_elr(vector <unsigned> &other_vec) const {
   for (unsigned i=0; i<nel; i++)
     other_vec[i]=el->GetRefinedElementIndex(i);
 }
 
 
-void mesh::AllocateAndMarkStructureNode() {
+void Mesh::AllocateAndMarkStructureNode() {
   el->AllocateNodeRegion();
   for (unsigned iel=0; iel<nel; iel++) {
 
@@ -1089,7 +1089,7 @@ void mesh::AllocateAndMarkStructureNode() {
 }
 
 
-void mesh::GenerateVankaPartitions_FAST( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
+void Mesh::GenerateVankaPartitions_FAST( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
 					 vector <unsigned> &block_type_range){
   unsigned iproc=processor_id();
   unsigned ElemOffset    = IS_Mts2Gmt_elem_offset[iproc];
@@ -1116,7 +1116,7 @@ void mesh::GenerateVankaPartitions_FAST( const unsigned &block_size, vector < ve
   block_type_range[1]=block_elements.size();
 } 
 
-void mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
+void Mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
 					vector <unsigned> &block_type_range){
 
   unsigned iproc=processor_id();
@@ -1167,7 +1167,7 @@ void mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vec
   
 } 
 
-const unsigned mesh::GetElementMaterial(unsigned &kel) const {
+const unsigned Mesh::GetElementMaterial(unsigned &kel) const {
   unsigned flag_mat = el->GetElementMaterial(kel);
   if(flag_mat==2){
     unsigned nve = el->GetElementDofNumber(kel,2);
@@ -1181,7 +1181,7 @@ const unsigned mesh::GetElementMaterial(unsigned &kel) const {
 
 
 
-void mesh::GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < vector< unsigned > > &block_elements,
+void Mesh::GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < vector< unsigned > > &block_elements,
 					 vector <unsigned> &block_type_range){
 
   unsigned iproc=processor_id();
@@ -1239,7 +1239,7 @@ void mesh::GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < ve
 
 } 
 
-void mesh::GenerateVankaPartitions_METIS( const unsigned &vnk_blck, vector < vector< unsigned > > &block_elements){
+void Mesh::GenerateVankaPartitions_METIS( const unsigned &vnk_blck, vector < vector< unsigned > > &block_elements){
    
  
   
@@ -1306,7 +1306,7 @@ void mesh::GenerateVankaPartitions_METIS( const unsigned &vnk_blck, vector < vec
   vector < idx_t > npart(node_map.size());
   
   if(nsubdom!=1) {
-  //I call the mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
+  //I call the Mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
   int err = METIS_PartMeshDual(&mnel, &mnvt, &connectivity_index_size[0], &connectivity[0], 
 			       NULL, NULL, &ncommon, &nsubdom, NULL, options, &objval, &epart[0], &npart[0]);
   

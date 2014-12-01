@@ -35,7 +35,7 @@ using std::cout;
 using std::endl;
 
 //--------------------------------------------------------------------------------
-LinearEquation::LinearEquation(mesh *other_msh){    
+LinearEquation::LinearEquation(Mesh *other_msh){    
   _msh = other_msh;
   _CC_flag=0;
   _EPS = NULL;

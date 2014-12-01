@@ -23,12 +23,10 @@
 
 
 namespace femus {
-
   
-void GambitIO::read(const std::string& name, vector < vector < double> > &vt, const double Lref, std::vector<bool> &type_elem_flag) {
-  
- // set the file
-  const unsigned GambitVertexIndex[6][27]= {{
+ const unsigned GambitIO::GambitToFemusVertexIndex[6][27]= 
+   {
+    {
       4,16,0,15,23,11,7,19,3,
       12,20,8,25,26,24,14,22,10,
       5,17,1,13,21,9,6,18,2
@@ -47,15 +45,21 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &vt, co
     {0,2,1}
   };
 
-  const unsigned GambitFaceIndex[6][6]= {{0,4,2,5,3,1},
+  
+const unsigned GambitIO::GambitToFemusFaceIndex[6][6]= 
+  {
+    {0,4,2,5,3,1},
     {0,1,2,3},
     {2,1,0,4,3},
     {0,1,2,3},
     {0,1,2},
     {0,1}
   };
+
   
-  mesh& mesh = GetMesh();
+void GambitIO::read(const std::string& name, vector < vector < double> > &vt, const double Lref, std::vector<bool> &type_elem_flag) {
+  
+  Mesh& mesh = GetMesh();
 
   std::ifstream inf;
   std::string str2;
@@ -131,7 +135,7 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &vt, co
       exit(0);
     }
     for (unsigned i=0; i<nve; i++) {
-      unsigned inode=GambitVertexIndex[mesh.el->GetElementType(iel)][i];
+      unsigned inode=GambitIO::GambitToFemusVertexIndex[mesh.el->GetElementType(iel)][i];
       double value;
       inf>>value;
       mesh.el->SetElementVertexIndex(iel,inode,value);
@@ -205,9 +209,6 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &vt, co
     int mat;
     while (str2.compare("GROUP:") != 0) inf >> str2;
     inf >> str2 >> str2 >> ngel >> str2 >> mat >>str2 >> str2 >>name>> str2;
-//     std::cout<<ngel<<std::endl;
-//     std::cout<<name<<std::endl;
-//     std::cout << mat << std::endl;
     for (int i=0; i<ngel; i++) {
       int iel;
       inf >> iel;
@@ -240,7 +241,7 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &vt, co
       unsigned iel,iface;
       inf>>iel>>str2>>iface;
       iel--;
-      iface=GambitFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
+      iface=GambitIO::GambitToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
       mesh.el->SetFaceElementIndex(iel,iface,value);
     }
     inf >> str2;

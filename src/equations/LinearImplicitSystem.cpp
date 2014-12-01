@@ -341,8 +341,8 @@ void LinearImplicitSystem::SetAMRSetOptions(const std::string& AMR, const unsign
   if(SetRefinementFlag==NULL){    
   }
   else{
-    _msh[0]->mesh::_SetRefinementFlag = SetRefinementFlag;
-    _msh[0]->mesh::_TestSetRefinementFlag=1;
+    _msh[0]->Mesh::_SetRefinementFlag = SetRefinementFlag;
+    _msh[0]->Mesh::_TestSetRefinementFlag=1;
   }
 }
 
@@ -425,7 +425,7 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
   
   LinearEquationSolver* LinSolf=_LinSolver[gridf];
   LinearEquationSolver* LinSolc=_LinSolver[gridf-1];
-  mesh* mshc = _msh[gridf-1];
+  Mesh* mshc = _msh[gridf-1];
   int nf= LinSolf->KKIndex[LinSolf->KKIndex.size()-1u];
   int nc= LinSolc->KKIndex[LinSolc->KKIndex.size()-1u];
   int nf_loc = LinSolf->KKoffset[LinSolf->KKIndex.size()-1][iproc]-LinSolf->KKoffset[0][iproc];

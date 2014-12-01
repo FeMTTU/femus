@@ -34,7 +34,8 @@ namespace femus {
   
 
 namespace MeshTools {
-  namespace Generation {  
+  namespace Generation { 
+    namespace Private {
    
       /**
        * A useful inline function which replaces the #defines
@@ -43,8 +44,10 @@ namespace MeshTools {
        * the proper node number for 2D elements while the second
        * one returns the node number for 3D elements.
        */
-unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int i, const unsigned int j) {
-	switch(type)
+       inline
+       unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int i, const unsigned int j) {
+	
+          switch(type)
 	  {
 // 	  case INVALID_ELEM:
 // 	  case QUAD4:
@@ -74,6 +77,7 @@ unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int 
       
 
       // Same as the function above, but for 3D elements
+      inline
       unsigned int idx(const ElemType type,
 		       const unsigned int nx,
 		       const unsigned int ny,
@@ -111,11 +115,12 @@ unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int 
 	  }
 
 	return -1;
- }
+  }
+}
 
 // ------------------------------------------------------------
 // MeshTools::Generation function for mesh generation
-void BuildBrick(      mesh& mesh,
+void BuildBrick(      Mesh& mesh,
                       const unsigned int nx,
 	              const unsigned int ny,
 	              const unsigned int nz,
@@ -125,14 +130,16 @@ void BuildBrick(      mesh& mesh,
 		      const ElemType type,
 		      std::vector<bool> &type_elem_flag) {
   
+  using namespace MeshTools::Generation::Private;
+  
+  // Clear the mesh and start from scratch
+  //mesh.clear(); // to be added
+  
   vector <vector <double> > vt;  
   vt.resize(3);
     
   mesh.SetGridNumber(0);
-  
-  // Clear the mesh and start from scratch
-  //mesh.clear(); // to be added
-
+ 
   if (nz != 0)
     mesh.SetDimension(3);
   else if (ny != 0)

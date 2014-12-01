@@ -35,7 +35,7 @@ using std::endl;
  *  Contructor 
  **/
 // ------------------------------------------------------------------
-Solution::Solution(mesh *other_msh){    
+Solution::Solution(Mesh *other_msh){    
  _msh = other_msh;
   for(int i=0;i<5;i++){
     _ProjMatFlag[i]=0;
