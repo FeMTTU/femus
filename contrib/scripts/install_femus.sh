@@ -29,7 +29,7 @@
 ############## "Software" DIRECTORY ############
 # Now we can install the software that we need #
 ################################################################################################
-echo This script must be run with ./install_femus.sh from the main femus directory!!!
+echo This script must be run with ./install_femus.sh from any position
 EXTERNALDIR=external/
 mkdir -p $EXTERNALDIR
 cd $EXTERNALDIR
@@ -45,38 +45,41 @@ TARGZ=".tar.gz"
 
 
 #######################################################################
-echo Download, extract, compile an MPI implementation
-FM_MPI_DIR_REL=openmpi-1.6.5
-FM_MPI_DIR_ABS=$SOFTWARE_DIR/$FM_MPI_DIR_REL
 
-# One should see if a certain installation already present is CORRECT... what is the definition of correct?!
-# Probably the petsc configure does something like that... for us it's too much, we just start over.
-echo =========== Remove previous installations
-rm -rf $FM_MPI_DIR_REL/
-if [ ! -f $FM_MPI_DIR_REL$TARGZ ]
-then
-echo =========== Download
-wget http://www.open-mpi.org/software/ompi/v1.6/downloads/$FM_MPI_DIR_REL$TARGZ   #where will he put this
-else
-echo The file $FM_MPI_DIR_REL$TARGZ already exists and we assume it is not corrupted
-fi
-echo =========== Extract
-$EXTRACT_COMMAND $FM_MPI_DIR_REL$TARGZ
-echo =========== Compile
-cd $FM_MPI_DIR_REL
-./configure  --prefix=$PWD
-make -j all
-make install
-cd ..
-echo =========== Clean
-rm -f $FM_MPI_DIR_REL$TARGZ
+# We will take mpi directly from petsc
 
-
-echo =========== Configure environment variables
-export PATH=$FM_MPI_DIR_ABS/bin:$PATH
-export LD_LIBRARY_PATH=$FM_MPI_DIR_ABS/lib64:$LD_LIBRARY_PATH
-
-sleep 1
+# echo Download, extract, compile an MPI implementation
+# FM_MPI_DIR_REL=openmpi-1.6.5
+# FM_MPI_DIR_ABS=$SOFTWARE_DIR/$FM_MPI_DIR_REL
+# 
+# # One should see if a certain installation already present is CORRECT... what is the definition of correct?!
+# # Probably the petsc configure does something like that... for us it's too much, we just start over.
+# echo =========== Remove previous installations
+# rm -rf $FM_MPI_DIR_REL/
+# if [ ! -f $FM_MPI_DIR_REL$TARGZ ]
+# then
+# echo =========== Download
+# wget http://www.open-mpi.org/software/ompi/v1.6/downloads/$FM_MPI_DIR_REL$TARGZ   #where will he put this
+# else
+# echo The file $FM_MPI_DIR_REL$TARGZ already exists and we assume it is not corrupted
+# fi
+# echo =========== Extract
+# $EXTRACT_COMMAND $FM_MPI_DIR_REL$TARGZ
+# echo =========== Compile
+# cd $FM_MPI_DIR_REL
+# ./configure  --prefix=$PWD
+# make -j all
+# make install
+# cd ..
+# echo =========== Clean
+# rm -f $FM_MPI_DIR_REL$TARGZ
+# 
+# 
+# echo =========== Configure environment variables
+# export PATH=$FM_MPI_DIR_ABS/bin:$PATH
+# export LD_LIBRARY_PATH=$FM_MPI_DIR_ABS/lib64:$LD_LIBRARY_PATH
+# 
+# sleep 1
 
 
 #######################################################################
@@ -164,8 +167,7 @@ sleep 1
 
 #######################################################################
 echo Download, extract, compile PETSC
-FM_PETSC_DIR_REL=petsc-3.4.3
-# FM_PETSC_DIR_REL=petsc
+FM_PETSC_DIR_REL=petsc
 FM_PETSC_DIR_ABS=$SOFTWARE_DIR/$FM_PETSC_DIR_REL
 export PETSC_DIR=$FM_PETSC_DIR_ABS
 
@@ -175,29 +177,19 @@ debugflag=(0 1)
 
 echo =========== Remove previous installations
 rm -rf $FM_PETSC_DIR_REL/
-if [ ! -f $FM_PETSC_DIR_REL$TARGZ ]
-then
-echo =========== Download
-wget http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/$FM_PETSC_DIR_REL$TARGZ
-# git clone https://bitbucket.org/petsc/petsc $FM_PETSC_DIR_REL
-else
-echo =========== The file $FM_PETSC_DIR_REL$TARGZ already exists and we assume it is not corrupted
-fi
-# echo =========== Extract
-$EXTRACT_COMMAND $FM_PETSC_DIR_REL$TARGZ
-echo =========== Compile
+echo =========== Clone
+git clone -b maint https://bitbucket.org/petsc/petsc $FM_PETSC_DIR_REL
 
 cd $FM_PETSC_DIR_REL
-# git checkout v3.4.3
-# git branch petsc3.4.3
-# git checkout petsc3.4.3
-
 
 for i in 0 1
 do
 export PETSC_ARCH=${myarchs[i]}
- ./configure  --download-hdf5=yes              --with-mpi-dir=$FM_MPI_DIR_ABS --with-debugging=${debugflag[i]}  --with-clanguage=cxx  --with-shared-libraries=1  --with-x=1 --download-f-blas-lapack=1  --download-superlu_dist=1 --download-superlu=1 --download-blacs=1 --download-scalapack=1 --download-mumps=1  --download-metis=1 --download-parmetis=1
-#             --with-hdf5-dir=$FM_HDF5_DIR_ABS
+echo =========== Configure
+./configure  --with-debugging=${debugflag[i]}  --with-x=1  --with-cc=gcc --with-cxx=g++ --with-fc=gfortran --with-clanguage=cxx  COPTFLAGS='-O3 -march=native -mtune=native' CXXOPTFLAGS='-O3 -march=native -mtune=native' FOPTFLAGS='-O3 -march=native -mtune=native' --with-shared-libraries=1 --download-openmpi=1 --download-fblaslapack=1 --download-blacs=1 --download-scalapack=1 --download-metis=1 --download-parmetis=1 --download-mumps=1 --download-hdf5=1
+#   --with-mpi-dir=$FM_MPI_DIR_ABS 
+#   --with-hdf5-dir=$FM_HDF5_DIR_ABS
+echo =========== Make
 make all #don't put -j here because it gives error! it's automatically -j!
 make test
 done
@@ -206,9 +198,6 @@ done
 # i think that the script is already prepared for that because the next time it was much faster
 
 cd ..
-
-echo =========== Clean
-rm -f $FM_PETSC_DIR_REL$TARGZ
 
 
 
@@ -261,7 +250,6 @@ cd  ${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_BUILD}
 git checkout gambit_format
 export PETSC_ARCH=${myarchs[i]}
 echo =========== Compile
-./bootstrap
 ./configure --disable-cxx11  --prefix=$SOFTWARE_DIR/${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_INSTALL}-petsc-${myarchs[i]}
 # this script should be clever enough to find the external packages in petsc
 make -j $(( $(nproc)-1 ))
@@ -272,7 +260,7 @@ done
 
 
 sleep 1
-echo Download, extract, compile PRE and  POST UTILITIES:  paraview, hdfview
+echo Download, extract, compile PRE and  POST UTILITIES:  paraview, hdfview, gambit
 # how do i put in a command line something that is chosen with some alternatives with menus in .php page?!?
 # wget http://www.hdfgroup.org/ftp/HDF5/hdf-java/hdfview/hdfview_install_linux64.bin
 # sh hdfview_install_linux64.bin   #this will need graphical interface
@@ -285,14 +273,3 @@ sleep 1
 # also, you have to install libstdc++33 (libstdc++.so.5)
 # After that you have to put the license in the correct place
 # Then it works
-
-
-################# TO INSTALL FEMTTU #################
-# git clone "library"
-# mkdir applications
-# git clone "each application"
-
-# !!! Download from the libmesh git repository,
-# !!! and apply THE GIVEN PATCH for reading GAMBIT and SALOME files
-
-# Install FEMUS
