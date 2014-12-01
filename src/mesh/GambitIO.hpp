@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: GambitIO
- Authors: Simone Bnà
+ Authors: Eugenio Aulisa, Simone Bnà
  
  Copyright (c) FEMTTU
  All rights reserved. 

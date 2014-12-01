@@ -668,13 +668,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	      SolVAR[i]+=phi[inode]*soli;
 	      for(int j=0; j<dim; j++) {
 		GradSolVAR[i][j]+=gradphi[inode*dim+j]*soli;
-		//std::cout<<nablaphi[inode*nabla_dim+j]<<" ";
 		NablaSolVAR[i][j]+=nablaphi[inode*nabla_dim+j]*soli;
 	      }
-	      //std::cout<<endl;
 	    }
 	  } 
-	  //std::cout<<endl;
 	  // pressure, solution and gradient 
 	  SolVAR[dim]=0.;
 	  for(int j=0; j<dim; j++) {
@@ -688,10 +685,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    }
 	  } 
 	  
+	  //BEGIN TAU_SUPG EVALUATION ============
 	  // ********************************* Tau_Supg ******************************************
 	  // Computer Methods in Applied Mechanics and Engineering 95 (1992) 221-242 North-Holland
-	  // *************************************************************************************
-	  
+	  // *************************************************************************************	  
 	  // velocity
 	  vector < double > u(dim);
 	  for(int ivar=0; ivar<dim; ivar++){
@@ -704,31 +701,32 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    uL2Norm += u[ivar]*u[ivar];
 	  }
 	  uL2Norm=sqrt(uL2Norm);
+	  double tauSupg=0.;
+	  if( uL2Norm/(2.*IRe) > 1.0e-10){
+	    // velocity direction s = u/|u|
+	    vector < double > s(dim);
+	    for(int ivar=0;ivar<dim;ivar++)
+	      s[ivar]=u[ivar]/uL2Norm;
 	  
-	  // velocity direction s = u/|u|
-	  vector < double > s(dim);
-	  for(int ivar=0;ivar<dim;ivar++)
-	    s[ivar]=u[ivar]/uL2Norm;
+	    // element lenght h(s) = 2. ( \sum_i |s . gradphi_i | )^(-1)
+	    double h=0;
+	    for (unsigned i=0; i<nve; i++) {
+	      double sDotGradphi=0.; 
+	      for(int ivar=0; ivar<dim; ivar++)
+		sDotGradphi += s[ivar]*gradphi[i*dim+ivar].value();
+	      h += fabs(sDotGradphi);
+	    }
+	    h = 2./h;
 	  
-	  // element lenght h(s) = 2. ( \sum_i |s . gradphi_i | )^(-1)
-	  double h=0;
-	  for (unsigned i=0; i<nve; i++) {
-	    double sDotGradphi=0.; 
-	    for(int ivar=0; ivar<dim; ivar++)
-	      sDotGradphi += s[ivar]*gradphi[i*dim+ivar].value();
-	    h += fabs(sDotGradphi);
+	    //tauSupg
+	    double Reu   = (uL2Norm*h)/(2*IRe);
+	    double zReu  = (Reu <= 3)? Reu/3.:1;
+	    tauSupg = h / (2.*uL2Norm)*zReu;
 	  }
-	  h = 2./h;
+	  //END TAU_SUPG EVALUATION ============
 	  
-	  //tauSupg
-	  double Reu   = (uL2Norm*h)/(2*IRe);
-	  double zReu  = (Reu <= 3)? Reu/3.:1;
-	  double tauSupg = h / (2.*uL2Norm)*zReu;
-	 
-	  // ---------------------------------------------------------------------------
 	  //BEGIN FLUID ASSEMBLY ============
 	  { 
-	    
 	    vector < adept::adouble > ResSupg(dim,0.);
 	    for(unsigned ivar=0; ivar<dim; ivar++) {
 	      for(unsigned jvar=0; jvar<dim; jvar++) {
@@ -774,8 +772,6 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    //END continuity block ===========================
 	  }   
 	  //END FLUID ASSEMBLY ============
-	    
-	  //*******************************************************************************************************
 	}
       }
 	
@@ -826,13 +822,6 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   }  
   
   
-  
-  
-  
-  
-  
-  // //------------------------------------------------------------------------------------------------------------
-
 
 void AssembleMatrixResNS_old(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
      
