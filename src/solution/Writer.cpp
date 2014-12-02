@@ -75,7 +75,7 @@ void Writer::BuildProlongatorMatrices() {
   }  
   
   for (unsigned igridn=0; igridn<_gridn; igridn++){
-    mesh* msh = _ml_sol._ml_msh->GetLevel(igridn);
+    Mesh* msh = _ml_sol._ml_msh->GetLevel(igridn);
     for(int itype=0;itype<3;itype++){
       int ni = msh->MetisOffset[itype][_nprocs];
       int ni_loc = msh->own_size[itype][_iproc];

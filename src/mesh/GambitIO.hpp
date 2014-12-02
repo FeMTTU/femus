@@ -24,7 +24,7 @@ namespace femus
 {
 
 // Forward declarations
-class mesh;
+class Mesh;
 
 /**
  * This class implements writing meshes in the Gmsh format.
@@ -32,7 +32,7 @@ class mesh;
 
 // ------------------------------------------------------------
 // GMVIO class definition
-class GambitIO : public MeshInput<mesh>
+class GambitIO : public MeshInput<Mesh>
 {
  public:
 
@@ -41,21 +41,29 @@ class GambitIO : public MeshInput<mesh>
    * will fill up with elements via the read() command.
    */
   explicit
-  GambitIO (mesh& mesh);
+  GambitIO (Mesh& mesh);
 
   /**
    * Reads in a mesh in the neutral gambit *.neu format
    * from the ASCII file given by name.
    *
    */
-  virtual void read (const std::string& name, vector < vector < double> > &vt, const double Lref, std::vector<bool> &type_elem_flag);
+  virtual void read (const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag);
 
+ private:
+   
+   /** Map from Gambit vertex index to Femus vertex index */
+   static const unsigned GambitToFemusVertexIndex[6][27]; 
+ 
+   /** Map from Gambit face index to Femus face index */
+   static const unsigned GambitToFemusFaceIndex[6][6];
+  
 };
 
 
 inline
-GambitIO::GambitIO (mesh& meshinput) :
-   MeshInput<mesh>  (meshinput)
+GambitIO::GambitIO (Mesh& mesh) :
+   MeshInput<Mesh>  (mesh)
 {
 }
 

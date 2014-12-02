@@ -39,31 +39,51 @@ using std::min;
 using std::sort;
 using std::map;
 
-bool mesh::_TestSetRefinementFlag=0;
+bool Mesh::_TestSetRefinementFlag=0;
 
-const unsigned mesh::_END_IND[5]= {0,1,3,4,5};
+const unsigned Mesh::_END_IND[5]= {0,1,3,4,5};
 
-unsigned mesh::_dimension=2;
-unsigned mesh::_ref_index=4;  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
-unsigned mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
+unsigned Mesh::_dimension=2;
+unsigned Mesh::_ref_index=4;  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
+unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
 
+//------------------------------------------------------------------------------------------------------
+
+Mesh::~Mesh(){
+    delete el;
+    _coordinate->FreeSolutionVectors(); 
+    delete _coordinate;
+    if(_nprocs>=1){
+      delete [] epart;
+      delete [] npart;
+    }
+}
+
+/// print Mesh info
+void Mesh::PrintInfo() {
+  
+ std::cout << " Mesh Level        : " << _grid << std::endl; 
+ std::cout << "   Number of elements: " << nel << std::endl; 
+ std::cout << "   Number of nodes   : " << nvt << std::endl;
+  
+}
 
 /**
- *  This function generates the coarse mesh level, $l_0$, from an input mesh file (Now only the Gambit Neutral File)
+ *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file (Now only the Gambit Neutral File)
  **/
-void mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag) {
+void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag) {
     
   MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
   MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
   
-  vector <vector <double> > vt;  
-  vt.resize(3);
+  vector <vector <double> > coords;  
+  coords.resize(3);
     
   _grid=0;
 
   if(name.rfind(".neu") < name.size())
   {
-    GambitIO(*this).read(name,vt,Lref,type_elem_flag);
+    GambitIO(*this).read(name,coords,Lref,type_elem_flag);
   }
   else
   {
@@ -78,11 +98,11 @@ void mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   Buildkel();
   
  if (_nprocs>=1) GenerateMetisMeshPartition();
-  vector <double> vt_temp;
+  vector <double> coords_temp;
   for(int i=0;i<3;i++){
-    vt_temp=vt[i];
+    coords_temp=coords[i];
     for(unsigned j=0;j<nvt;j++) {
-      vt[i][GetMetisDof(j,2)]=vt_temp[j];
+      coords[i][GetMetisDof(j,2)]=coords_temp[j];
     }
   }
   
@@ -95,16 +115,293 @@ void mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _coordinate->ResizeSolutionVector("Y");
   _coordinate->ResizeSolutionVector("Z");
     
-  _coordinate->SetCoarseCoordinates(vt);
+  _coordinate->SetCoarseCoordinates(coords);
   
   _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
   _coordinate->ResizeSolutionVector("AMR");
     
 };
 
+//------------------------------------------------------------------------------------------------------
+void Mesh::ReorderMeshNodes(vector < vector < double> > &coords) {
+  
+  vector <unsigned> dof_index;
+  dof_index.resize(nvt);
+  for(unsigned i=0;i<nvt;i++){
+    dof_index[i]=i+1;
+  }
+  //reorder vertices and mid-points vs central points
+  for (unsigned iel=0; iel<nel; iel++) {
+    for (unsigned inode=0; inode<el->GetElementDofNumber(iel,1); inode++) {
+      for (unsigned jel=0; jel<nel; jel++) {
+	for (unsigned jnode=el->GetElementDofNumber(jel,1); jnode<el->GetElementDofNumber(jel,3); jnode++) { 
+	  unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
+	  unsigned jj=el->GetElementVertexIndex(jel,jnode)-1;
+	  unsigned i0=dof_index[ii];
+          unsigned i1=dof_index[jj];
+	  if(i0>i1){
+	    dof_index[ii]=i1;
+	    dof_index[jj]=i0; 
+	  }
+	}
+      }
+    }
+  }
+  //reorder vertices vs mid-points
+  for (unsigned iel=0; iel<nel; iel++) {
+    for (unsigned inode=0; inode<el->GetElementDofNumber(iel,0); inode++) {
+      for (unsigned jel=0; jel<nel; jel++) {
+        for (unsigned jnode=el->GetElementDofNumber(jel,0); jnode<el->GetElementDofNumber(jel,1); jnode++) {
+          unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
+	  unsigned jj=el->GetElementVertexIndex(jel,jnode)-1;
+	  unsigned i0=dof_index[ii];
+          unsigned i1=dof_index[jj];
+	  if(i0>i1){
+	    dof_index[ii]=i1;
+	    dof_index[jj]=i0; 
+	  }
+	}
+      }
+    }
+  }
+  
+  // update all
+  for (unsigned iel=0; iel<nel; iel++) {
+    for (unsigned inode=0; inode<el->GetElementDofNumber(iel,3); inode++) {
+      unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
+      el->SetElementVertexIndex(iel,inode,dof_index[ii]);
+    }
+  }
+  vector <double> coords_temp;
+  for(int i=0;i<3;i++){
+    coords_temp=coords[i];
+    for(unsigned j=0;j<nvt;j++){
+      coords[i][dof_index[j]-1]=coords_temp[j];
+    }
+  }
+  // **************  end reoreder mesh dofs **************
+ 
+  el->SetNodeNumber(nvt);
 
+  unsigned nv0=0;
+  for (unsigned iel=0; iel<nel; iel++)
+    for (unsigned inode=0; inode<el->GetElementDofNumber(iel,0); inode++) {
+      unsigned i0=el->GetElementVertexIndex(iel,inode);
+      if (nv0<i0) nv0=i0;
+  }
+  el->SetVertexNodeNumber(nv0);
+
+  unsigned nv1=0;
+  for (unsigned iel=0; iel<nel; iel++)
+    for (unsigned inode=el->GetElementDofNumber(iel,0); inode<el->GetElementDofNumber(iel,1); inode++) {
+      unsigned i1=el->GetElementVertexIndex(iel,inode);
+      if (nv1<i1) nv1=i1;
+  }
+  el->SetMidpointNodeNumber(nv1-nv0);
+
+  el->SetCentralNodeNumber(nvt-nv1);
+  
+}  
+
+/**
+ * This function searches all the elements around all the vertices
+ **/
+void Mesh::BuildAdjVtx() {
+  el->AllocateVertexElementMemory();
+  for (unsigned iel=0; iel<nel; iel++) {
+    for (unsigned inode=0; inode < el->GetElementDofNumber(iel,0); inode++) {
+      unsigned ii=el->GetElementVertexIndex(iel,inode)-1u;
+      unsigned jj=0;
+      while ( 0 != el->GetVertexElementIndex(ii,jj) ) jj++;
+      el->SetVertexElementIndex(ii,jj,iel+1u);
+    }
+  }
+}
+
+
+/**
+ * This function generates kmid for hex and wedge elements
+ **/
+void Mesh::Buildkmid() {
+  for (unsigned iel=0; iel<el->GetElementNumber(); iel++)
+    for (unsigned inode=el->GetElementDofNumber(iel,1); inode<el->GetElementDofNumber(iel,2); inode++)
+      el->SetElementVertexIndex(iel,inode,0);
+
+  for (unsigned iel=0; iel<el->GetElementNumber(); iel++) {
+    for (unsigned iface=0; iface<el->GetElementFaceNumber(iel,0); iface++) {
+      unsigned inode=el->GetElementDofNumber(iel,1)+iface;
+      if ( 0==el->GetElementVertexIndex(iel,inode) ) {
+        el->SetElementVertexIndex(iel,inode,++nvt);
+        unsigned i1=el->GetFaceVertexIndex(iel,iface,0);
+        unsigned i2=el->GetFaceVertexIndex(iel,iface,1);
+        unsigned i3=el->GetFaceVertexIndex(iel,iface,2);
+        for (unsigned j=0; j< el->GetVertexElementNumber(i1-1u); j++) {
+          unsigned jel= el->GetVertexElementIndex(i1-1u,j)-1u;
+          if (jel>iel) {
+            for (unsigned jface=0; jface<el->GetElementFaceNumber(jel,0); jface++) {
+              unsigned jnode=el->GetElementDofNumber(jel,1)+jface;
+              if ( 0==el->GetElementVertexIndex(jel,jnode) ) {
+                unsigned j1=el->GetFaceVertexIndex(jel,jface,0);
+                unsigned j2=el->GetFaceVertexIndex(jel,jface,1);
+                unsigned j3=el->GetFaceVertexIndex(jel,jface,2);
+                unsigned j4=el->GetFaceVertexIndex(jel,jface,3);
+                if ((i1==j1 || i1==j2 || i1==j3 ||  i1==j4 )&&
+                    (i2==j1 || i2==j2 || i2==j3 ||  i2==j4 )&&
+                    (i3==j1 || i3==j2 || i3==j3 ||  i3==j4 )) {
+                  el->SetElementVertexIndex(jel,jnode,nvt);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for (unsigned iel=0; iel<el->GetElementNumber(); iel++) {
+    if (0==el->GetElementType(iel)) {
+      el->SetElementVertexIndex(iel,26,++nvt);
+    }
+    if (3==el->GetElementType(iel)) {
+      el->SetElementVertexIndex(iel,8,++nvt);
+    }
+  }
+  el->SetNodeNumber(nvt);
+
+  unsigned nv0= el->GetVertexNodeNumber();
+  unsigned nv1= el->GetMidpointNodeNumber();
+  el->SetCentralNodeNumber(nvt-nv0-nv1);
+
+}
+
+/**
+ * This function stores the element adiacent to the element face (iel,iface)
+ * and stores it in kel[iel][iface]
+ **/
+void Mesh::Buildkel() {
+  for (unsigned iel=0; iel<el->GetElementNumber(); iel++) {
+    for (unsigned iface=0; iface<el->GetElementFaceNumber(iel); iface++) {
+      if ( el->GetFaceElementIndex(iel,iface) <= 0) {
+        unsigned i1=el->GetFaceVertexIndex(iel,iface,0);
+        unsigned i2=el->GetFaceVertexIndex(iel,iface,1);
+        unsigned i3=el->GetFaceVertexIndex(iel,iface,2);
+        for (unsigned j=0; j< el->GetVertexElementNumber(i1-1u); j++) {
+          unsigned jel= el->GetVertexElementIndex(i1-1u,j)-1u;
+          if (jel>iel) {
+            for (unsigned jface=0; jface<el->GetElementFaceNumber(jel); jface++) {
+              if ( el->GetFaceElementIndex(jel,jface) <= 0) {
+                unsigned j1=el->GetFaceVertexIndex(jel,jface,0);
+                unsigned j2=el->GetFaceVertexIndex(jel,jface,1);
+                unsigned j3=el->GetFaceVertexIndex(jel,jface,2);
+                unsigned j4=el->GetFaceVertexIndex(jel,jface,3);
+// 		if((DIM[2]==1 &&
+                if ((Mesh::_dimension==3 &&
+                     (i1==j1 || i1==j2 || i1==j3 ||  i1==j4 )&&
+                     (i2==j1 || i2==j2 || i2==j3 ||  i2==j4 )&&
+                     (i3==j1 || i3==j2 || i3==j3 ||  i3==j4 ))||
+// 		   (DIM[1]==1 &&
+                    (Mesh::_dimension==2 &&
+                     (i1==j1 || i1==j2 )&&
+                     (i2==j1 || i2==j2 ))||
+// 		   (DIM[0]==1 &&
+                    (Mesh::_dimension==1 &&
+                     (i1==j1))
+                   ) {
+                  el->SetFaceElementIndex(iel,iface,jel+1u);
+                  el->SetFaceElementIndex(jel,jface,iel+1u);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+/**
+ * This function returns the number of Mesh nodes for different type of elemets
+ **/
+unsigned Mesh::GetDofNumber(const unsigned type) const {
+
+// if(Mesh::_dimension != 2) exit(1);
+  switch (type) {
+  case 0:
+    return el->GetVertexNodeNumber();
+    break;
+  case 1:
+    return el->GetVertexNodeNumber()+el->GetMidpointNodeNumber();
+    break;
+  case 2:
+    return nvt;
+    break;
+  case 3:
+    return nel;
+    break;
+  case 4:
+//     return nel*(2+DIMENSION);
+    return nel*(2+Mesh::_dimension-1);
+    break;
+  }
+  return 0;
+}
+
+
+/**
+ * This function copies the refined element index vector in other_vector
+ **/
+void Mesh::copy_elr(vector <unsigned> &other_vec) const {
+  for (unsigned i=0; i<nel; i++)
+    other_vec[i]=el->GetRefinedElementIndex(i);
+}
+
+
+void Mesh::AllocateAndMarkStructureNode() {
+  el->AllocateNodeRegion();
+  for (unsigned iel=0; iel<nel; iel++) {
+
+    int flag_mat = el->GetElementMaterial(iel);
+
+    if (flag_mat==4) {
+      unsigned nve=el->GetElementDofNumber(iel);
+      for ( unsigned i=0; i<nve; i++) {
+        unsigned inode=el->GetElementVertexIndex(iel,i)-1u;
+        el->SetNodeRegion(inode, 1);
+      }
+    }
+  }
+  return;
+}
+
+
+/**
+ *  This function generates a finer Mesh level, $l_i$, from a coarser Mesh level $l_{i-1}$, $i>0$
+ **/
+
+void Mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]){
+  
+  for(int i=0;i<6;i++)
+    for(int j=0;j<5;j++)
+      _finiteElement[i][j] = OtherFiniteElement[i][j];
+}
+
+//-----------------------------------------------------------------
+const unsigned Mesh::GetElementMaterial(unsigned &kel) const {
+  unsigned flag_mat = el->GetElementMaterial(kel);
+  if(flag_mat==2){
+    unsigned nve = el->GetElementDofNumber(kel,2);
+    for(int i=0;i<nve;i++){
+      unsigned inode=el->GetElementVertexIndex(kel,i)-1u;
+      if(1 == el->GetNodeRegion(inode)) flag_mat=4;
+    }
+  }
+  return flag_mat;
+}
+
+//---------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------
-void mesh::FlagAllElementsToBeRefined() {
+void Mesh::FlagAllElementsToBeRefined() {
   
    el->InitRefinedToZero();
    
@@ -120,11 +417,11 @@ void mesh::FlagAllElementsToBeRefined() {
 }
 
 //-------------------------------------------------------------------
-void mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
+void Mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
      el->InitRefinedToZero();
    
     //refine based on the function SetRefinementFlag defined in the main;
-    // the mesh is serial, we cannot in parallel use the coordinates to selectively refine
+    // the Mesh is serial, we cannot in parallel use the coordinates to selectively refine
     std::vector<double> X_local;
     std::vector<double> Y_local;
     std::vector<double> Z_local;
@@ -160,7 +457,7 @@ void mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
 
 
 //-------------------------------------------------------------------
-void mesh::FlagElementsToBeRefinedByAMR() {
+void Mesh::FlagElementsToBeRefinedByAMR() {
     
        
     if(_TestSetRefinementFlag){
@@ -205,13 +502,8 @@ void mesh::FlagElementsToBeRefinedByAMR() {
 }
 
 
-
-
-
-
-
 //-------------------------------------------------------------------
-void mesh::FlagOnlyEvenElementsToBeRefined() {
+void Mesh::FlagOnlyEvenElementsToBeRefined() {
   
    el->InitRefinedToZero();
 
@@ -226,19 +518,8 @@ void mesh::FlagOnlyEvenElementsToBeRefined() {
 }
 
 
-/**
- *  This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$
- **/
-
-void mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]){
-  
-  for(int i=0;i<6;i++)
-    for(int j=0;j<5;j++)
-      _finiteElement[i][j] = OtherFiniteElement[i][j];
-}
-
 //------------------------------------------------------------------------------------------------------
-void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *otherFiniteElement[6][5]) {
+void Mesh::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_type *otherFiniteElement[6][5]) {
   
   SetFiniteElementPtr(otherFiniteElement);
     
@@ -247,7 +528,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
   MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
   MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
   
-  const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse mesh dof = f2CVM[element type][fine element][fine vertex]
+  const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse Mesh dof = f2CVM[element type][fine element][fine vertex]
     { {1,9,25,12,17,21,27,24},
       {9,2,10,25,21,18,22,27},
       {25,10,3,11,27,22,19,23},
@@ -387,7 +668,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
 
 //   nel=elc->GetRefinedElementNumber()*REF_INDEX;
   nel=elc->GetRefinedElementNumber()*_ref_index;
-  el=new elem(elc,mesh::_ref_index);
+  el=new elem(elc,Mesh::_ref_index);
 
 
 
@@ -500,7 +781,7 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
   //for parallel computations
   if (_nprocs>=1) GenerateMetisMeshPartition();
     
-  // build mesh coordinates by projecting the coarse coordinats
+  // build Mesh coordinates by projecting the coarse coordinats
   _coordinate = new Solution(this);
   _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0); 
   _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0); 
@@ -582,30 +863,10 @@ void mesh::RefineMesh(const unsigned & igrid, mesh *mshc, const elem_type *other
          
 }
 
+
+//-----------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------
-
- mesh::~mesh(){
-    delete el;
-    _coordinate->FreeSolutionVectors(); 
-    delete _coordinate;
-    if(_nprocs>=1){
-      delete [] epart;
-      delete [] npart;
-    }
-  }
-
-/// print mesh info
-void mesh::PrintInfo() {
-  
- std::cout << " Mesh Level        : " << _grid << std::endl; 
- std::cout << "   Number of elements: " << nel << std::endl; 
- std::cout << "   Number of nodes   : " << nvt << std::endl;
-  
-}
-
-
-//------------------------------------------------------------------------------------------------------
-void mesh::GenerateMetisMeshPartition(){
+void Mesh::GenerateMetisMeshPartition(){
    
   unsigned eind_size = el->GetElementNumber("Hex")*NVE[0][3] + el->GetElementNumber("Tet")*NVE[1][3] 
                      + el->GetElementNumber("Wedge")*NVE[2][3] + el->GetElementNumber("Quad")*NVE[3][3] 
@@ -652,7 +913,7 @@ void mesh::GenerateMetisMeshPartition(){
   npart=new idx_t [nvt];
   
   if(nsubdom!=1) {
-  //I call the mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
+  //I call the Mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
   int err = METIS_PartMeshDual(&mnel, &mnvt, eptr, eind, NULL, NULL, &ncommon, &nsubdom, NULL, options, &objval, epart, npart);
   
   if(err==METIS_OK) {
@@ -917,179 +1178,9 @@ void mesh::GenerateMetisMeshPartition(){
   
 }
 
-/**
- * This function searches all the elements around all the vertices
- **/
-void mesh::BuildAdjVtx() {
-  el->AllocateVertexElementMemory();
-  for (unsigned iel=0; iel<nel; iel++) {
-    for (unsigned inode=0; inode < el->GetElementDofNumber(iel,0); inode++) {
-      unsigned ii=el->GetElementVertexIndex(iel,inode)-1u;
-      unsigned jj=0;
-      while ( 0 != el->GetVertexElementIndex(ii,jj) ) jj++;
-      el->SetVertexElementIndex(ii,jj,iel+1u);
-    }
-  }
-}
 
-
-/**
- * This function generates kmid for hex and wedge elements
- **/
-void mesh::Buildkmid() {
-  for (unsigned iel=0; iel<el->GetElementNumber(); iel++)
-    for (unsigned inode=el->GetElementDofNumber(iel,1); inode<el->GetElementDofNumber(iel,2); inode++)
-      el->SetElementVertexIndex(iel,inode,0);
-
-  for (unsigned iel=0; iel<el->GetElementNumber(); iel++) {
-    for (unsigned iface=0; iface<el->GetElementFaceNumber(iel,0); iface++) {
-      unsigned inode=el->GetElementDofNumber(iel,1)+iface;
-      if ( 0==el->GetElementVertexIndex(iel,inode) ) {
-        el->SetElementVertexIndex(iel,inode,++nvt);
-        unsigned i1=el->GetFaceVertexIndex(iel,iface,0);
-        unsigned i2=el->GetFaceVertexIndex(iel,iface,1);
-        unsigned i3=el->GetFaceVertexIndex(iel,iface,2);
-        for (unsigned j=0; j< el->GetVertexElementNumber(i1-1u); j++) {
-          unsigned jel= el->GetVertexElementIndex(i1-1u,j)-1u;
-          if (jel>iel) {
-            for (unsigned jface=0; jface<el->GetElementFaceNumber(jel,0); jface++) {
-              unsigned jnode=el->GetElementDofNumber(jel,1)+jface;
-              if ( 0==el->GetElementVertexIndex(jel,jnode) ) {
-                unsigned j1=el->GetFaceVertexIndex(jel,jface,0);
-                unsigned j2=el->GetFaceVertexIndex(jel,jface,1);
-                unsigned j3=el->GetFaceVertexIndex(jel,jface,2);
-                unsigned j4=el->GetFaceVertexIndex(jel,jface,3);
-                if ((i1==j1 || i1==j2 || i1==j3 ||  i1==j4 )&&
-                    (i2==j1 || i2==j2 || i2==j3 ||  i2==j4 )&&
-                    (i3==j1 || i3==j2 || i3==j3 ||  i3==j4 )) {
-                  el->SetElementVertexIndex(jel,jnode,nvt);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  for (unsigned iel=0; iel<el->GetElementNumber(); iel++) {
-    if (0==el->GetElementType(iel)) {
-      el->SetElementVertexIndex(iel,26,++nvt);
-    }
-    if (3==el->GetElementType(iel)) {
-      el->SetElementVertexIndex(iel,8,++nvt);
-    }
-  }
-  el->SetNodeNumber(nvt);
-
-  unsigned nv0= el->GetVertexNodeNumber();
-  unsigned nv1= el->GetMidpointNodeNumber();
-  el->SetCentralNodeNumber(nvt-nv0-nv1);
-
-}
-
-/**
- * This function stores the element adiacent to the element face (iel,iface)
- * and stores it in kel[iel][iface]
- **/
-void mesh::Buildkel() {
-  for (unsigned iel=0; iel<el->GetElementNumber(); iel++) {
-    for (unsigned iface=0; iface<el->GetElementFaceNumber(iel); iface++) {
-      if ( el->GetFaceElementIndex(iel,iface) <= 0) {
-        unsigned i1=el->GetFaceVertexIndex(iel,iface,0);
-        unsigned i2=el->GetFaceVertexIndex(iel,iface,1);
-        unsigned i3=el->GetFaceVertexIndex(iel,iface,2);
-        for (unsigned j=0; j< el->GetVertexElementNumber(i1-1u); j++) {
-          unsigned jel= el->GetVertexElementIndex(i1-1u,j)-1u;
-          if (jel>iel) {
-            for (unsigned jface=0; jface<el->GetElementFaceNumber(jel); jface++) {
-              if ( el->GetFaceElementIndex(jel,jface) <= 0) {
-                unsigned j1=el->GetFaceVertexIndex(jel,jface,0);
-                unsigned j2=el->GetFaceVertexIndex(jel,jface,1);
-                unsigned j3=el->GetFaceVertexIndex(jel,jface,2);
-                unsigned j4=el->GetFaceVertexIndex(jel,jface,3);
-// 		if((DIM[2]==1 &&
-                if ((mesh::_dimension==3 &&
-                     (i1==j1 || i1==j2 || i1==j3 ||  i1==j4 )&&
-                     (i2==j1 || i2==j2 || i2==j3 ||  i2==j4 )&&
-                     (i3==j1 || i3==j2 || i3==j3 ||  i3==j4 ))||
-// 		   (DIM[1]==1 &&
-                    (mesh::_dimension==2 &&
-                     (i1==j1 || i1==j2 )&&
-                     (i2==j1 || i2==j2 ))||
-// 		   (DIM[0]==1 &&
-                    (mesh::_dimension==1 &&
-                     (i1==j1))
-                   ) {
-                  el->SetFaceElementIndex(iel,iface,jel+1u);
-                  el->SetFaceElementIndex(jel,jface,iel+1u);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-
-/**
- * This function returns the number of mesh nodes for different type of elemets
- **/
-unsigned mesh::GetDofNumber(const unsigned type) const {
-
-// if(mesh::_dimension != 2) exit(1);
-  switch (type) {
-  case 0:
-    return el->GetVertexNodeNumber();
-    break;
-  case 1:
-    return el->GetVertexNodeNumber()+el->GetMidpointNodeNumber();
-    break;
-  case 2:
-    return nvt;
-    break;
-  case 3:
-    return nel;
-    break;
-  case 4:
-//     return nel*(2+DIMENSION);
-    return nel*(2+mesh::_dimension-1);
-    break;
-  }
-  return 0;
-}
-
-
-/**
- * This function copies the refined element index vector in other_vector
- **/
-void mesh::copy_elr(vector <unsigned> &other_vec) const {
-  for (unsigned i=0; i<nel; i++)
-    other_vec[i]=el->GetRefinedElementIndex(i);
-}
-
-
-void mesh::AllocateAndMarkStructureNode() {
-  el->AllocateNodeRegion();
-  for (unsigned iel=0; iel<nel; iel++) {
-
-    int flag_mat = el->GetElementMaterial(iel);
-
-    if (flag_mat==4) {
-      unsigned nve=el->GetElementDofNumber(iel);
-      for ( unsigned i=0; i<nve; i++) {
-        unsigned inode=el->GetElementVertexIndex(iel,i)-1u;
-        el->SetNodeRegion(inode, 1);
-      }
-    }
-  }
-  return;
-}
-
-
-void mesh::GenerateVankaPartitions_FAST( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
+//----------------------------------------------------------------------------------------------------------------
+void Mesh::GenerateVankaPartitions_FAST( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
 					 vector <unsigned> &block_type_range){
   unsigned iproc=processor_id();
   unsigned ElemOffset    = IS_Mts2Gmt_elem_offset[iproc];
@@ -1116,7 +1207,8 @@ void mesh::GenerateVankaPartitions_FAST( const unsigned &block_size, vector < ve
   block_type_range[1]=block_elements.size();
 } 
 
-void mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
+//----------------------------------------------------------------------------------------------------------------
+void Mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
 					vector <unsigned> &block_type_range){
 
   unsigned iproc=processor_id();
@@ -1167,21 +1259,8 @@ void mesh::GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vec
   
 } 
 
-const unsigned mesh::GetElementMaterial(unsigned &kel) const {
-  unsigned flag_mat = el->GetElementMaterial(kel);
-  if(flag_mat==2){
-    unsigned nve = el->GetElementDofNumber(kel,2);
-    for(int i=0;i<nve;i++){
-      unsigned inode=el->GetElementVertexIndex(kel,i)-1u;
-      if(1 == el->GetNodeRegion(inode)) flag_mat=4;
-    }
-  }
-  return flag_mat;
-}
-
-
-
-void mesh::GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < vector< unsigned > > &block_elements,
+//----------------------------------------------------------------------------------------------------------------
+void Mesh::GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < vector< unsigned > > &block_elements,
 					 vector <unsigned> &block_type_range){
 
   unsigned iproc=processor_id();
@@ -1239,7 +1318,8 @@ void mesh::GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < ve
 
 } 
 
-void mesh::GenerateVankaPartitions_METIS( const unsigned &vnk_blck, vector < vector< unsigned > > &block_elements){
+//----------------------------------------------------------------------------------------------------------------
+void Mesh::GenerateVankaPartitions_METIS( const unsigned &vnk_blck, vector < vector< unsigned > > &block_elements){
    
  
   
@@ -1306,7 +1386,7 @@ void mesh::GenerateVankaPartitions_METIS( const unsigned &vnk_blck, vector < vec
   vector < idx_t > npart(node_map.size());
   
   if(nsubdom!=1) {
-  //I call the mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
+  //I call the Mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
   int err = METIS_PartMeshDual(&mnel, &mnvt, &connectivity_index_size[0], &connectivity[0], 
 			       NULL, NULL, &ncommon, &nsubdom, NULL, options, &objval, &epart[0], &npart[0]);
   

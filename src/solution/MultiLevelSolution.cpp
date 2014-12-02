@@ -247,8 +247,8 @@ void MultiLevelSolution::BuildProlongatorMatrix(unsigned gridf, unsigned SolInde
   if(_solution[gridf]->_ProjMatFlag[ThisSolType]==0){
     _solution[gridf]->_ProjMatFlag[ThisSolType]=1;
     
-    mesh* mshf = _ml_msh->GetLevel(gridf);
-    mesh* mshc = _ml_msh->GetLevel(gridf-1);
+    Mesh* mshf = _ml_msh->GetLevel(gridf);
+    Mesh* mshc = _ml_msh->GetLevel(gridf-1);
     
     int nf     = mshf->MetisOffset[ThisSolType][_nprocs];
     int nc     = mshc->MetisOffset[ThisSolType][_nprocs];

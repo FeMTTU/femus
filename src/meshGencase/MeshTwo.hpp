@@ -32,7 +32,7 @@ public:
 
 //===== Constructors/ Destructor ===========
      Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref);
-    ~Mesh ();
+//     ~Mesh ();
     void clear ();
 
     //======= Print/read functions =======

@@ -23,12 +23,10 @@
 
 
 namespace femus {
-
   
-void GambitIO::read(const std::string& name, vector < vector < double> > &vt, const double Lref, std::vector<bool> &type_elem_flag) {
-  
- // set the file
-  const unsigned GambitVertexIndex[6][27]= {{
+ const unsigned GambitIO::GambitToFemusVertexIndex[6][27]= 
+   {
+    {
       4,16,0,15,23,11,7,19,3,
       12,20,8,25,26,24,14,22,10,
       5,17,1,13,21,9,6,18,2
@@ -47,15 +45,21 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &vt, co
     {0,2,1}
   };
 
-  const unsigned GambitFaceIndex[6][6]= {{0,4,2,5,3,1},
+  
+const unsigned GambitIO::GambitToFemusFaceIndex[6][6]= 
+  {
+    {0,4,2,5,3,1},
     {0,1,2,3},
     {2,1,0,4,3},
     {0,1,2,3},
     {0,1,2},
     {0,1}
   };
+
   
-  mesh& mesh = GetMesh();
+void GambitIO::read(const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag) {
+  
+  Mesh& mesh = GetMesh();
 
   std::ifstream inf;
   std::string str2;
@@ -131,7 +135,7 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &vt, co
       exit(0);
     }
     for (unsigned i=0; i<nve; i++) {
-      unsigned inode=GambitVertexIndex[mesh.el->GetElementType(iel)][i];
+      unsigned inode=GambitIO::GambitToFemusVertexIndex[mesh.el->GetElementType(iel)][i];
       double value;
       inf>>value;
       mesh.el->SetElementVertexIndex(iel,inode,value);
@@ -154,34 +158,34 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &vt, co
   }
   while (str2.compare("COORDINATES") != 0) inf >> str2;
   inf >> str2;  // 2.0.4
-  vt[0].resize(nvt);
-  vt[1].resize(nvt);
-  vt[2].resize(nvt);
+  coords[0].resize(nvt);
+  coords[1].resize(nvt);
+  coords[2].resize(nvt);
 
   if (mesh.GetDimension()==3) {
     for (unsigned j=0; j<nvt; j++) {
       inf >> str2 >> x >> y >> z;
-      vt[0][j] = x/Lref;
-      vt[1][j] = y/Lref;
-      vt[2][j] = z/Lref;
+      coords[0][j] = x/Lref;
+      coords[1][j] = y/Lref;
+      coords[2][j] = z/Lref;
     }
   }
 
   else if (mesh.GetDimension()==2) {
     for (unsigned j=0; j<nvt; j++) {
       inf >> str2 >> x >> y;
-      vt[0][j] = x/Lref;
-      vt[1][j] = y/Lref;
-      vt[2][j] = 0.;
+      coords[0][j] = x/Lref;
+      coords[1][j] = y/Lref;
+      coords[2][j] = 0.;
     }
   }
 
   else if (mesh.GetDimension()==1) {
     for (unsigned j=0; j<nvt; j++) {
       inf >> str2 >> x;
-      vt[0][j] = x/Lref;
-      vt[1][j]=0.;
-      vt[2][j]=0.;
+      coords[0][j] = x/Lref;
+      coords[1][j]=0.;
+      coords[2][j]=0.;
     }
   }
   inf >> str2; // "ENDOFSECTION"
@@ -205,9 +209,6 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &vt, co
     int mat;
     while (str2.compare("GROUP:") != 0) inf >> str2;
     inf >> str2 >> str2 >> ngel >> str2 >> mat >>str2 >> str2 >>name>> str2;
-//     std::cout<<ngel<<std::endl;
-//     std::cout<<name<<std::endl;
-//     std::cout << mat << std::endl;
     for (int i=0; i<ngel; i++) {
       int iel;
       inf >> iel;
@@ -240,7 +241,7 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &vt, co
       unsigned iel,iface;
       inf>>iel>>str2>>iface;
       iel--;
-      iface=GambitFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
+      iface=GambitIO::GambitToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
       mesh.el->SetFaceElementIndex(iel,iface,value);
     }
     inf >> str2;
@@ -253,85 +254,8 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &vt, co
   // end read boundary **************** D
 
   
-  
-  //*************** start reorder mesh dofs **************
-  //(1)linear (2)quadratic (3)biquaratic
-  
-  vector <unsigned> dof_index;
-  dof_index.resize(nvt);
-  for(unsigned i=0;i<nvt;i++){
-    dof_index[i]=i+1;
-  }
-  //reorder vertices and mid-points vs central points
-  for (unsigned iel=0; iel<nel; iel++) {
-    for (unsigned inode=0; inode<mesh.el->GetElementDofNumber(iel,1); inode++) {
-      for (unsigned jel=0; jel<nel; jel++) {
-	for (unsigned jnode=mesh.el->GetElementDofNumber(jel,1); jnode<mesh.el->GetElementDofNumber(jel,3); jnode++) { 
-	  unsigned ii=mesh.el->GetElementVertexIndex(iel,inode)-1;
-	  unsigned jj=mesh.el->GetElementVertexIndex(jel,jnode)-1;
-	  unsigned i0=dof_index[ii];
-          unsigned i1=dof_index[jj];
-	  if(i0>i1){
-	    dof_index[ii]=i1;
-	    dof_index[jj]=i0; 
-	  }
-	}
-      }
-    }
-  }
-  //reorder vertices vs mid-points
-  for (unsigned iel=0; iel<nel; iel++) {
-    for (unsigned inode=0; inode<mesh.el->GetElementDofNumber(iel,0); inode++) {
-      for (unsigned jel=0; jel<nel; jel++) {
-        for (unsigned jnode=mesh.el->GetElementDofNumber(jel,0); jnode<mesh.el->GetElementDofNumber(jel,1); jnode++) {
-          unsigned ii=mesh.el->GetElementVertexIndex(iel,inode)-1;
-	  unsigned jj=mesh.el->GetElementVertexIndex(jel,jnode)-1;
-	  unsigned i0=dof_index[ii];
-          unsigned i1=dof_index[jj];
-	  if(i0>i1){
-	    dof_index[ii]=i1;
-	    dof_index[jj]=i0; 
-	  }
-	}
-      }
-    }
-  }
-  
-  // update all
-  for (unsigned iel=0; iel<nel; iel++) {
-    for (unsigned inode=0; inode<mesh.el->GetElementDofNumber(iel,3); inode++) {
-      unsigned ii=mesh.el->GetElementVertexIndex(iel,inode)-1;
-      mesh.el->SetElementVertexIndex(iel,inode,dof_index[ii]);
-    }
-  }
-  vector <double> vt_temp;
-  for(int i=0;i<3;i++){
-    vt_temp=vt[i];
-    for(unsigned j=0;j<nvt;j++){
-      vt[i][dof_index[j]-1]=vt_temp[j];
-    }
-  }
-  // **************  end reoreder mesh dofs **************
- 
-  mesh.el->SetNodeNumber(nvt);
+  mesh.ReorderMeshNodes(coords);
 
-  unsigned nv0=0;
-  for (unsigned iel=0; iel<nel; iel++)
-    for (unsigned inode=0; inode<mesh.el->GetElementDofNumber(iel,0); inode++) {
-      unsigned i0=mesh.el->GetElementVertexIndex(iel,inode);
-      if (nv0<i0) nv0=i0;
-  }
-  mesh.el->SetVertexNodeNumber(nv0);
-
-  unsigned nv1=0;
-  for (unsigned iel=0; iel<nel; iel++)
-    for (unsigned inode=mesh.el->GetElementDofNumber(iel,0); inode<mesh.el->GetElementDofNumber(iel,1); inode++) {
-      unsigned i1=mesh.el->GetElementVertexIndex(iel,inode);
-      if (nv1<i1) nv1=i1;
-  }
-  mesh.el->SetMidpointNodeNumber(nv1-nv0);
-
-  mesh.el->SetCentralNodeNumber(nvt-nv1);
   
 };
 

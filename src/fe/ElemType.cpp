@@ -140,7 +140,7 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
 // build matrix sparsity pattern size and build prolungator matrix for single solution
 //-----------------------------------------------------------------------------------------------------
 
-void elem_type::GetSparsityPatternSize(const mesh &meshf,const mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const {
+void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const {
    
   for (int i=0; i<_nf; i++) {
     int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
@@ -166,7 +166,7 @@ void elem_type::GetSparsityPatternSize(const mesh &meshf,const mesh &meshc, cons
   }
 }
 
-void elem_type::BuildProlongation(const mesh &meshf,const mesh &meshc, const int& ielc,
+void elem_type::BuildProlongation(const Mesh &meshf,const Mesh &meshc, const int& ielc,
 				  SparseMatrix* Projmat) const {
   vector<int> cols(27);
   for (int i=0; i<_nf; i++) {
@@ -192,7 +192,7 @@ void elem_type::BuildProlongation(const mesh &meshf,const mesh &meshc, const int
 // prolungator for solution printing
 //----------------------------------------------------------------------------------------------------
 
-void elem_type::GetSparsityPatternSize(const mesh& mesh,const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned &itype) const{
+void elem_type::GetSparsityPatternSize(const Mesh& mesh,const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned &itype) const{
   for (int i=0; i<_nlag[itype]; i++) {
     int inode=mesh.el->GetMeshDof(iel,i,_SolType);
     int irow=mesh.GetMetisDof(inode,itype);
@@ -212,7 +212,7 @@ void elem_type::GetSparsityPatternSize(const mesh& mesh,const int& iel, NumericV
 }
 
 
-void elem_type::BuildProlongation(const mesh& mesh,const int& iel, SparseMatrix* Projmat,const unsigned &itype) const{
+void elem_type::BuildProlongation(const Mesh& mesh,const int& iel, SparseMatrix* Projmat,const unsigned &itype) const{
   vector<int> cols(27);
   for (int i=0; i<_nlag[itype]; i++) {
     int inode=mesh.el->GetMeshDof(iel,i,_SolType);

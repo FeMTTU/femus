@@ -40,22 +40,22 @@ class Solution;
  * The mesh class
 */
 
-class mesh : public ParallelObject {
+class Mesh : public ParallelObject {
 
 public:
 
     /** Constructor */
     explicit
-    mesh() {};
+    Mesh() {};
 
     /** destructor */
-    ~mesh();
+    ~Mesh();
 
     /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
     void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag);
 
     /** This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$ */
-    void RefineMesh(const unsigned &igrid, mesh *mshc, const elem_type* otheFiniteElement[6][5]);
+    void RefineMesh(const unsigned &igrid, Mesh *mshc, const elem_type* otheFiniteElement[6][5]);
 
     /** To be Added */
     void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
@@ -74,6 +74,9 @@ public:
 
     /** To be added */
     void Buildkel();
+    
+    /** Reorder mesh nodes in the following order: vertices, face, center */
+    void ReorderMeshNodes(vector < vector < double> > &coords);
 
     /** To be added */
     void copy_elr(vector <unsigned> &other_vec) const;
@@ -116,20 +119,20 @@ public:
     
     /** Set the dimension of the problem (1D, 2D, 3D) */
     void SetDimension(const unsigned dim) {
-      mesh::_dimension = dim;
-      mesh::_ref_index = pow(2,mesh::_dimension);  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
-      mesh::_face_index = pow(2,mesh::_dimension-1u);
+      Mesh::_dimension = dim;
+      Mesh::_ref_index = pow(2,Mesh::_dimension);  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
+      Mesh::_face_index = pow(2,Mesh::_dimension-1u);
     }
     
 
     /** Get the dimension of the problem (1D, 2D, 3D) */
     const unsigned GetDimension() const {
-      return mesh::_dimension;
+      return Mesh::_dimension;
     }
 
     /** To be added*/
     const unsigned GetRefIndex() const {
-      return mesh::_ref_index;
+      return Mesh::_ref_index;
     }
 
     /** Get the metis dof from the gambit dof */

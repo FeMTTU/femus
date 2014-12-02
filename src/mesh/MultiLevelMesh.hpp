@@ -27,7 +27,7 @@ namespace femus {
 // Forward declarations
 //------------------------------------------------------------------------------
 class elem_type;
-class mesh;
+class Mesh;
 
 
 /**
@@ -83,7 +83,7 @@ public:
     
     
     /** Get the mesh pointer to level i */
-    mesh* GetLevel(const unsigned i) {
+    Mesh* GetLevel(const unsigned i) {
         return _level[i];
     };
 
@@ -119,8 +119,8 @@ private:
     unsigned short _gridn0, _gridr0;
     unsigned short _gridn, _gridr;
     /** Array of mesh */
-    std::vector <mesh*> _level0;
-    std::vector <mesh*> _level;
+    std::vector <Mesh*> _level0;
+    std::vector <Mesh*> _level;
     std::vector <bool> _finiteElementGeometryFlag;
 
 };
