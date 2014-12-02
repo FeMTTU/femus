@@ -12,15 +12,8 @@
 namespace femus {
 
 
-
 class Utils;
 
-
-//Basic finite element for VB
-//it is not quadratic and linear altogether, it is only quadratic or linear
-// The CONNECTION between GEOM ELEMENT, FE And QUADRATURE is to be cleared out
-// The generation of the sparsity pattern in particular starts with mesh - geom-element - feelem (nodetodof)
-// one understands that for instance if you have a Quad8 mesh and you want a Quad9 finite element
 
 class FEElemBase  {
 
