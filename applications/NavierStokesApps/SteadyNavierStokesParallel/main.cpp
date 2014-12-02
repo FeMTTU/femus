@@ -137,7 +137,7 @@ int main(int argc,char **args) {
   system1.SetMaxNumberOfNonLinearIterations(20);
   system1.SetMaxNumberOfLinearIterations(2);
   system1.SetAbsoluteConvergenceTolerance(1.e-10);
-  system1.SetNonLinearConvergenceTolerance(1.e-8);
+  system1.SetNonLinearConvergenceTolerance(1.e-10);
   system1.SetMgType(F_CYCLE);
   system1.SetNumberPreSmoothingStep(1);
   system1.SetNumberPostSmoothingStep(1);
@@ -488,7 +488,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     // gravity
     double _gravity[3]={0.,0.,0.};
      
-    IRe =( 150*(counter+1) < 2000 )? 1./(150*(counter+1)):0.0005;
+    IRe =( 100*(counter+1) < 400 )? 1./(100*(counter+1)):1./400.;
     cout<<"iteration="<<counter<<" Inverse Reynolds = "<<IRe<<endl;
     counter++;
     // -----------------------------------------------------------------
@@ -744,11 +744,11 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 		adept::adouble Lap_rhs=0.;
 		adept::adouble supgPhi=0.;
 		for(unsigned jvar=0; jvar<dim; jvar++) {
-		  Lap_rhs += gradphi[i*dim+jvar]*GradSolVAR[ivar][jvar];
-		  Adv_rhs += SolVAR[jvar]*GradSolVAR[ivar][jvar];
-		  supgPhi += SolVAR[jvar]*gradphi[i*dim+jvar]*tauSupg; 
+		  Lap_rhs += IRe*gradphi[i*dim+jvar]*GradSolVAR[ivar][jvar];
+		  Adv_rhs +=   SolVAR[jvar]*GradSolVAR[ivar][jvar]*phi[i];
+		  supgPhi += ( SolVAR[jvar]*gradphi[i*dim+jvar] + IRe * nablaphi[i*nabla_dim+jvar] ) * tauSupg; 
 		}
-		aRhs[indexVAR[ivar]][i]+= ( -IRe*Lap_rhs - Adv_rhs*phi[i] + SolVAR[dim]*gradphi[i*dim+ivar]
+		aRhs[indexVAR[ivar]][i]+= ( - Lap_rhs - Adv_rhs + SolVAR[dim]*gradphi[i*dim+ivar]
 					    - ResSupg[ivar]*supgPhi )*Weight;	      
 	      }
 	    } 
@@ -757,16 +757,15 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    //BEGIN continuity block 
 	    {  	    
 	      adept::adouble div_vel=0.;
-	      for(int i=0; i<dim; i++) {
-		div_vel +=GradSolVAR[i][i];
+	      for(int ivar=0; ivar<dim; ivar++) {
+		div_vel +=GradSolVAR[ivar][ivar];
 	      }
 	      for (unsigned i=0; i<nve1; i++) {
-		
-		adept::adouble supgPhi=0.;
+		adept::adouble MinusResDotGradq=0.;
 		for(int ivar=0;ivar<dim;ivar++){
-		  supgPhi += SolVAR[ivar]*gradphi1[i*dim+ivar]*tauSupg; 
+		  MinusResDotGradq += - ResSupg[ivar]*gradphi1[i*dim+ivar]*tauSupg; 
 		}
-		aRhs[indexVAR[dim]][i] += -( (phi1[i]+0*supgPhi) * (-div_vel) )*Weight;
+		aRhs[indexVAR[dim]][i] += ( -(-div_vel)*phi1[i] - MinusResDotGradq )*Weight;
 	      }
 	    }
 	    //END continuity block ===========================
