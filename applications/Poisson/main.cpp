@@ -119,7 +119,7 @@ int main(int argc,char **argv) {
 	  double za = inputparser->getValue("multilevel_mesh.first.type.box.za", 0.);
 	  double zb = inputparser->getValue("multilevel_mesh.first.type.box.zb", 0.);
 	  ElemType elemtype = inputparser->getValue("multilevel_mesh.first.type.box.elem_type", QUAD9);
-	  ml_msh.BuildBrickCoarseMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+	  ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
 	}
       else
 	{

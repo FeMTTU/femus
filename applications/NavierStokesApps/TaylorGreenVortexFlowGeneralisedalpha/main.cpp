@@ -53,7 +53,7 @@ int main(int argc,char **args) {
   
   MultiLevelMesh ml_msh;
   //ml_msh.ReadCoarseMesh(infile,"seventh",Lref);
-  ml_msh.BuildBrickCoarseMesh(4,4,0,0.,2.*3.1415926535897932,0.,2.*3.1415926535897932,0.,0.,QUAD9,"seventh");
+  ml_msh.GenerateCoarseBoxMesh(4,4,0,0.,2.*3.1415926535897932,0.,2.*3.1415926535897932,0.,0.,QUAD9,"seventh");
   ml_msh.RefineMesh(nm,nr,SetRefinementFlag);
   
   MultiLevelSolution ml_sol(&ml_msh);

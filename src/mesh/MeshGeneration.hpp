@@ -38,7 +38,8 @@ namespace MeshTools
   {
 
     /** Built-in cube-unstructured mesh generator */
-    void BuildBrick ( Mesh& mesh, 
+    void BuildBox ( Mesh& mesh,
+		      vector < vector < double> > &coords,
                       const unsigned int nx,
                       const unsigned int ny,
                       const unsigned int nz,
