@@ -7,14 +7,13 @@
 #include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
 #include "GeomEl.hpp"
+#include "QRule.hpp"
 
 namespace femus {
 
 
 
 class Utils;
-class QRule;
-class FE;
 
 
 //Basic finite element for VB
@@ -31,7 +30,7 @@ public:
     virtual ~FEElemBase();
 
 // GeomEl ======
-    std::vector<GeomEl>  _geomel;   //TODO putting the REFERENCE is not the same as putting the POINTER!!!
+    std::vector<GeomEl>  _geomel;   //VB
 
 // FE ==========
     uint         _order;
@@ -42,8 +41,8 @@ public:
     static  FEElemBase* build(std::vector<GeomEl> geomel_in, const uint order);
     
 // Quadrature ==
-    QRule* _qrule;
-    void AssociateQRule(QRule* qrule_in);
+    std::vector<QRule> _qrule;   //VB
+    void AssociateQRule(std::vector<QRule> qrule_in);
     double**      _phi_mapVBGD[VB];
     double** _dphidxez_mapVBGD[VB];
     void evaluate_shape_at_qp();

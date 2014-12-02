@@ -32,7 +32,7 @@ EquationsMap::EquationsMap(Files& files_in,         // Utils pointer
                            QuantityMap& qtymap_in,
                            Mesh& mgmesh_in,           // Mesh pointer
                            std::vector<FEElemBase*>& absfe_in,
-			   QRule&   qrule_in,
+			   std::vector<QRule>   qrule_in,
                            TimeLoop& timeloop_in ):
         _files(files_in),
         _phys(mgphys_in),

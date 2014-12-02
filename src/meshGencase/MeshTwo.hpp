@@ -70,8 +70,7 @@ public:
     const double _Lref;          ///Reference length for non-dimensionalization
     
 // ===== ABSTRACT GEOMEL(S) =====
-//     GeomEl    _GeomEl;
-    std::vector<GeomEl>  _GeomEl;
+    std::vector<GeomEl>  _GeomEl;   //[VB]
     const uint _n_GeomEl;         //number of geom elem types
     uint*      _type_FEM;         //just for check
     uint _elnodes[VB][QL];

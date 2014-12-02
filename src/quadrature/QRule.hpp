@@ -38,23 +38,21 @@ namespace femus {
 
 // I guess all of this happens in the function ATTACH_QUADRATURE_RULE, which takes the GeomEl from FE
 
-class GeomEl;
-
 
 class QRule  {
 
   public:
 
 //GeomEl =========
-   std::vector<GeomEl> _geomel;
+  GeomEl _geomel;
 
 //Quadrature =========
    std::string  _qrule_type;
-    uint         _NoGaussVB[VB];
-    double*       _weightVB[VB];
+    uint         _NoGaussVB;
+    double*       _weightVB;
     
     
-     QRule(std::vector<GeomEl> geomel_in);
+     QRule(GeomEl geomel_in);
     
     ~QRule();
     

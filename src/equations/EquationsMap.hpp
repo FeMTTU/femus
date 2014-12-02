@@ -9,6 +9,7 @@ using namespace std;
 
 
 #include "EqnBase.hpp"
+#include "QRule.hpp"
 
 
 namespace femus {
@@ -19,7 +20,6 @@ class Utils;
 class Physics;
 class Mesh;
 class FEElemBase;
-class QRule;
 class TimeLoop;
 
 class QuantityMap;
@@ -34,7 +34,7 @@ public:
     QuantityMap& _qtymap;
     Mesh&        _mesh;
     std::vector<FEElemBase*>&  _AbstractFE;
-    QRule&       _qrule;
+    std::vector<QRule>       _qrule;
     TimeLoop&    _timeloop;
 
   /// Constructor
@@ -43,7 +43,7 @@ public:
 		  QuantityMap& qtymap_in,
 		  Mesh& mgmesh_in,
 		  std::vector<FEElemBase*>&  absfe_in,
-		  QRule& qrule_in,
+		  std::vector<QRule> qrule_in,
 		  TimeLoop& timeloop_in
 		);
 

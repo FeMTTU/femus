@@ -133,7 +133,7 @@ FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order) {
 
 
 
-void FEElemBase::AssociateQRule(QRule* qrule_in)  {
+void FEElemBase::AssociateQRule(std::vector<QRule> qrule_in)  {
   _qrule = qrule_in;
 }
 
@@ -202,7 +202,7 @@ void FEElemBase::evaluate_shape_at_qp() {
     abort();
   }
 
-  if ( _qrule->_qrule_type != "Gauss5th") {
+  if ( _qrule[VV]._qrule_type != "Gauss5th") {
     std::cout << "Quadrature rule not implemented" << std::endl;
     abort();
   }
@@ -218,10 +218,10 @@ void FEElemBase::evaluate_shape_at_qp() {
 
     uint dim = space_dim - vb;
 
-    _phi_mapVBGD[vb] = new double*[_qrule->_NoGaussVB[vb]];// TODO valgrind, remember to DEALLOCATE THESE
-    _dphidxez_mapVBGD[vb] = new double*[_qrule->_NoGaussVB[vb]];
+    _phi_mapVBGD[vb] = new double*[_qrule[vb]._NoGaussVB];// TODO valgrind, remember to DEALLOCATE THESE
+    _dphidxez_mapVBGD[vb] = new double*[_qrule[vb]._NoGaussVB];
 
-    for (int g=0; g < _qrule->_NoGaussVB[vb]; g++) {
+    for (int g = 0; g < _qrule[vb]._NoGaussVB; g++) {
       _phi_mapVBGD[vb][g] = new double[_ndof[vb]];
       _dphidxez_mapVBGD[vb][g] = new double[_ndof[vb]*dim];
     }
@@ -453,7 +453,7 @@ void FEElemBase::evaluate_shape_at_qp() {
   // loop ===========================
   for (int vb=0; vb<VB; vb++) {
 
-    if ( myelems[vb]->GetGaussPointNumber() != _qrule->_NoGaussVB[vb]) {
+    if ( myelems[vb]->GetGaussPointNumber() != _qrule[vb]._NoGaussVB) {
       std::cout << "Wrong gauss points" << std::endl;
       abort();
     }
@@ -470,7 +470,7 @@ if (vb == VV && _order == QQ && space_dim == 3  && _geomel[VV]._geomel_type == Q
             std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "REMEMBER THAT ONLY HEX27 HAS A DIFFERENT CONNECTIVITY MAP"  << std::endl;
 
   
-      for (int ig = 0; ig < _qrule->_NoGaussVB[vb]; ig++) {
+      for (int ig = 0; ig < _qrule[vb]._NoGaussVB; ig++) {
 
       for (int idof=0; idof < _ndof[vb]; idof++) {
 //                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;
@@ -501,7 +501,7 @@ if (vb == VV && _order == QQ && space_dim == 3  && _geomel[VV]._geomel_type == Q
 
    else { 
 
-    for (int ig = 0; ig < _qrule->_NoGaussVB[vb]; ig++) {
+    for (int ig = 0; ig < _qrule[vb]._NoGaussVB; ig++) {
 
       for (int idof=0; idof < _ndof[vb]; idof++) {
 //                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;

@@ -48,7 +48,7 @@ template <unsigned int FM_DIM>
 void CurrGaussPoint<FM_DIM>::SetPhiElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp) {
   
     const uint el_nnodes =  _AbsFEVect[qlflag]->_ndof[vbflag];
-    const uint el_ngauss =  _qrule._NoGaussVB[vbflag];
+    const uint el_ngauss =  _qrule[vbflag]._NoGaussVB;
    
    
     for (uint eln=0; eln<el_nnodes; eln++)    { 
@@ -78,7 +78,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const ui
     
   const uint ndim      = _IntDim[vbflag];
   const uint el_nnodes = _AbsFEVect[qlflag]->_ndof[vbflag];
-  const uint el_ngauss = _qrule._NoGaussVB[vbflag];
+  const uint el_ngauss = _qrule[vbflag]._NoGaussVB;
   const uint goffset   = el_nnodes*el_ngauss;
 
   std::vector<double> dphidxi_g(ndim);  //the dimension of this should be _IntDim[vbflag], but we make it static like this, it doesnt hurt
@@ -147,7 +147,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const
     
            const uint ndim = _IntDim[vbflag];
          const uint elndof = _AbsFEVect[qlflag]->_ndof[vbflag];
-    const uint   el_ngauss = _qrule._NoGaussVB[vbflag];
+    const uint   el_ngauss = _qrule[vbflag]._NoGaussVB;
       const uint   goffset = elndof*el_ngauss;
 
 

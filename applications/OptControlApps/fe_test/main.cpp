@@ -73,7 +73,12 @@
   
   
 // ======  QRule ================================ //so far we have ONLY ONE quadrature rule for all the equations
-  QRule   qrule(mesh._GeomEl);
+  std::vector<QRule>   qrule;
+  qrule.reserve(VB);
+  for (int vb=0;vb < VB; vb++) { 
+          QRule qrule_temp(mesh._GeomEl[vb]); 
+         qrule.push_back(qrule_temp);
+  }
 
   // =======Abstract FEElems =====  //remember to delete the FE at the end
   std::vector<FEElemBase*> FEElements(QL);  //TODO what if we dont want to call the default constructor?!? AAA here no constructor is called!!! If you have a pointer the constructor is not called!
@@ -82,7 +87,7 @@
     FEElements[fe] = FEElemBase::build(mesh._GeomEl,fe);  //The order of the fe is established by the library
 //sort of constructor
     FEElements[fe]->SetOrder(fe);
-    FEElements[fe]->AssociateQRule(&qrule);
+    FEElements[fe]->AssociateQRule(qrule);
 //end sort of constructor
     FEElements[fe]->evaluate_shape_at_qp();
   }

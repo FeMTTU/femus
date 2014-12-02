@@ -206,7 +206,7 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     double    curlxiXB_g3D[3];
 
 
-   const uint el_ngauss = _eqnmap._qrule._NoGaussVB[vb];
+   const uint el_ngauss = _eqnmap._qrule[vb]._NoGaussVB;
     
     const uint nel_e = _mesh._off_el[vb][_NoLevels*_iproc+Level+1];
     const uint nel_b = _mesh._off_el[vb][_NoLevels*_iproc+Level];
@@ -271,7 +271,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }  
 	  
 const double      det = dt*currgp.JacVectVV_g(vb,xyz);   //InvJac: is the same for both QQ and LL!
-const double dtxJxW_g = det*_eqnmap._qrule._weightVB[vb][qp];
+const double dtxJxW_g = det*_eqnmap._qrule[vb]._weightVB[qp];
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { currgp.SetDPhiDxyzElDofsFEVB_g   (vb,fe,qp); }
@@ -460,7 +460,7 @@ if (_Dir_pen_fl == 1)  {
 for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);   }
 
         const double det   = dt * currgp.JacVectBB_g(vb,xyz);
-	const double dtxJxW_g = det * _eqnmap._qrule._weightVB[vb][qp];
+	const double dtxJxW_g = det * _eqnmap._qrule[vb]._weightVB[qp];
 //=======end "COMMON SHAPE PART"===================================   
       
    xyz_refbox.val_g(vb); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
