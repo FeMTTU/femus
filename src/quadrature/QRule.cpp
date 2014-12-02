@@ -14,7 +14,7 @@ namespace femus {
 
   QRule::~QRule()  {
     
-    delete  []  _weightVB;
+//      delete  []  _weightVB;
  
  }
  
@@ -219,6 +219,3 @@ _weightVB[2] =   0.555555555555555555555555555556    ;
 
 
 } //end namespace femus
-
-
- 

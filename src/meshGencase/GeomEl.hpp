@@ -13,6 +13,32 @@ namespace femus {
 
 
 
+class GeomEl  {
+
+public:
+
+     GeomEl(const uint dim_in,const uint geomel_type);
+    ~GeomEl();
+    
+    uint _geomel_type;   /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
+    uint _dim;           /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
+    uint _elnds[QL_NODES]; // I SWITCHED THIS ONE: VB first, QL next!!!   //number of nodes of one element [QL]
+    std::string name;             ///< element name 
+    std::string pname;            ///< print element name for XDMF print (linear)
+
+ //===== Multigrid   
+    uint n_se;                    ///< number of subelements 
+    
+    //from linear to quadratic
+//     static const double _Prol[NNDS*NNDSL];  //actually NNDSL should be NDOF_P: one part is geometric, one part is mathematic
+    //======embedding matrices
+//     static const float _embedding_matrix_q[NCHILDS][NNDS][NNDS];
+//     static const float _embedding_matrix_l[NCHILDS][NNDSL][NNDSL];
+
+};
+
+
+
 
 //here, we must do in such a way that we dont need the "false dynamic" initializer
 //Prol is the vector that holds the matrix for passing 
@@ -174,29 +200,7 @@ namespace femus {
 //So, i only want the geometric element to be EITHER QUADRATIC  or LINEAR, alright.
 
 
-class GeomEl  {
 
-public:
-
-     GeomEl(const uint dim_in,const uint geomel_type);
-    ~GeomEl();
-    
-    uint _geomel_type;   /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
-    uint _dim;           /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
-    uint _elnds[QL_NODES]; // I SWITCHED THIS ONE: VB first, QL next!!!   //number of nodes of one element [VB][QL]
-    std::string name;             ///< element name 
-    std::string pname;            ///< print element name for XDMF print (linear)
-
- //===== Multigrid   
-    uint n_se;                    ///< number of linear subelements 
-    
-    //from linear to quadratic
-//     static const double _Prol[NNDS*NNDSL];  //actually NNDSL should be NDOF_P: one part is geometric, one part is mathematic
-    //======embedding matrices
-//     static const float _embedding_matrix_q[NCHILDS][NNDS][NNDS];
-//     static const float _embedding_matrix_l[NCHILDS][NNDSL][NNDSL];
-
-};
 
 
 //every FE must have its own prol like it has its own embedding matrix. Then the print routine asks to each variable how to be printed

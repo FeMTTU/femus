@@ -50,19 +50,18 @@ if( dim_in == 1) {
           pname = "Polyline"; 
 }
 else if( dim_in == 2) {
-     _elnds[QQ]=6;
-     _elnds[LL]=3; 
-       n_se=4;
-      name="Tri_6"; 
-     pname="Triangle"; 
+     _elnds[QQ] = 6;
+     _elnds[LL] = 3; 
+           n_se = 4;
+           name = "Tri_6"; 
+          pname = "Triangle"; 
 }
 else if( dim_in == 3) {
-     _elnds[QQ]=10;
-     _elnds[LL]=4;
-       n_se=8;
-
-       name="Tet_10"; 
-      pname="Tetrahedron"; 
+     _elnds[QQ] = 10;
+     _elnds[LL] = 4;
+           n_se = 8;
+           name = "Tet_10"; 
+          pname = "Tetrahedron"; 
 }
 }
 else {std::cout << "ELtype not recognized\n"; abort();}

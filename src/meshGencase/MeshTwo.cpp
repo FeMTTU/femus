@@ -24,7 +24,6 @@ namespace femus {
 Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref) :
          _files(files_in),
          _mesh_rtmap(map_in),
-//          _GeomEl( (uint) map_in.get("dimension"), (uint) map_in.get("geomel_type") ),
          _n_GeomEl(map_in.get("numgeomels")),
          _dim(map_in.get("dimension")),
          _Lref(Lref)
@@ -33,8 +32,8 @@ Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const doubl
 //     How to initialize a std::vector of classes ==================
     _GeomEl.reserve(VB);
     for (int vb=0;vb < VB; vb++) { 
-          GeomEl ggg( (uint) map_in.get("dimension") - vb, (uint) map_in.get("geomel_type") ); 
-         _GeomEl.push_back(ggg); 
+          GeomEl geomel_temp( (uint) map_in.get("dimension") - vb, (uint) map_in.get("geomel_type") ); 
+         _GeomEl.push_back(geomel_temp); 
     }
 //     How to initialize a std::vector of classes ==================
 
