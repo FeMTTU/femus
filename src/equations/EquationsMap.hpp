@@ -33,7 +33,7 @@ public:
     Physics&     _phys;
     QuantityMap& _qtymap;
     Mesh&        _mesh;
-    std::vector<FEElemBase*>&  _AbstractFE;
+    std::vector< std::vector<FEElemBase*> > &  _AbstractFE;
     std::vector<QRule>       _qrule;
     TimeLoop&    _timeloop;
 
@@ -42,7 +42,7 @@ public:
 		  Physics& mgphys_in,
 		  QuantityMap& qtymap_in,
 		  Mesh& mgmesh_in,
-		  std::vector<FEElemBase*>&  absfe_in,
+		  std::vector< std::vector<FEElemBase*> > & absfe_in,
 		  std::vector<QRule> qrule_in,
 		  TimeLoop& timeloop_in
 		);

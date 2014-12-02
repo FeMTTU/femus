@@ -150,14 +150,14 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
             libMesh::ElemType libmname; //convert the _geomel name into the libmesh geom el name
 
             if ( get_dim() == 2 ) {
-            if (     _GeomEl[VV].name == "Quad_9") libmname = QUAD9;
-            else if (_GeomEl[VV].name == "Tri_6")  libmname = TRI6;
+            if (     _GeomEl[VV].name == "Quad_9") libmname = libMesh::QUAD9;
+            else if (_GeomEl[VV].name == "Tri_6")  libmname = libMesh::TRI6;
             libMesh::MeshTools::Generation::build_square
             (*msh_coarse, ninterv[0], ninterv[1], box._lb[0], box._le[0], box._lb[1], box._le[1],libmname);
 	    }
 	    else if ( get_dim() == 3 ) {
-            if (     _GeomEl[VV].name == "Hex_27")  libmname = HEX27;
-            else if (_GeomEl[VV].name == "Tet_10")  libmname = TET10;
+            if (     _GeomEl[VV].name == "Hex_27")  libmname = libMesh::HEX27;
+            else if (_GeomEl[VV].name == "Tet_10")  libmname = libMesh::TET10;
             libMesh::MeshTools::Generation::build_cube
             (*msh_coarse,  ninterv[0], ninterv[1],  ninterv[2], box._lb[0], box._le[0], box._lb[1], box._le[1], box._lb[2], box._le[2],libmname);
 	    }

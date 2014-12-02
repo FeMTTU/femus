@@ -280,7 +280,7 @@ double CurrGaussPoint<FM_DIM>::JacVectBB_g(const uint vb, QuantityLocal& xyz )/*
 
     const uint    Order = xyz._FEord;  //order of the coordinate transformation 
     const uint     xoff = _eqnmap._mesh._GeomEl[vb]._elnds[Order];
-    const uint elnshape = _eqnmap._AbstractFE[Order]->_ndof[vb];
+    const uint elnshape = _eqnmap._AbstractFE[VV][Order]->_ndof[vb];
 //     double dxyzdxieta_g[FM_DIM - 1][FM_DIM]; 
     //TODO TODO TODO NOW I'LL PUT IT  CLASS MEMBER, (IT SHOULD STAY TOGETHER WITH _normal, _tangent and _jacobian...) 
     // I don't know if it wins to have the STATIC ALLOCATION outside or not...

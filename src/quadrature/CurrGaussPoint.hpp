@@ -41,8 +41,8 @@ void ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag/*, const uin
         double  _dxyzdxieta_g[FM_DIM - 1][FM_DIM];  //TODO TODO TODO this should stay TOGETHER with ALL THE OTHER DATA that now are in the BASE gauss point CLASS!!!                                                   //IF YOU PUT all the allocations HERE as STATIC it should be faster (maybe...)
         double _dxyzdxezeta_g[FM_DIM][FM_DIM]; //first index: x, second index: csi
 
-      double ComputeJacVV();
-        void ComputeJacBB();
+      double ComputeJacVV();     //TODO should be only for VOLUME
+        void ComputeJacBB();     //TODO should be only for BOUNDARY 
 	
   };
   

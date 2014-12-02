@@ -96,6 +96,7 @@ int main(int argc, char** argv) {
   }  
   
   // =======FEElems =====  //remember to delete the FE at the end
+  std::vector< std::vector<FEElemBase*> >  FEElements_vec(VB); 
   std::vector<FEElemBase*> FEElements(QL);
  
   for (int fe=0; fe<QL; fe++) {
@@ -105,6 +106,11 @@ int main(int argc, char** argv) {
     FEElements[fe]->AssociateQRule(qrule);
 //end sort of constructor
     FEElements[fe]->evaluate_shape_at_qp();
+  }
+  
+
+  for (int vb=0;vb < VB; vb++) { 
+  FEElements_vec[vb] = FEElements;
   }
   
   // ===== QuantityMap =========================================
@@ -153,7 +159,7 @@ int main(int argc, char** argv) {
   TimeLoop time_loop(files); 
   
   // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,qrule,time_loop);
+  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements_vec,qrule,time_loop);
   
 //===============================================
 //================== Add EQUATIONS  AND ======================

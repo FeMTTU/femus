@@ -45,8 +45,8 @@ class EquationsMap;
     double*    _dphidxyz_ndsQLVB_g[VB][QL];  //physical derivatives
     double*  _dphidxyz_ndsQLVB_g3D[VB][QL];  //physical derivatives in 3D
 
- double**  get_tangent_ptr();
- double*   get_normal_ptr();
+ double**  get_tangent_ptr();   //TODO should be only for BOUNDARY 
+ double*   get_normal_ptr();   //TODO should be only for BOUNDARY 
 virtual double        JacVectVV_g(const uint vbflag, QuantityLocal& xyz )/*const*/ = 0;  //TODO should be only for VOLUME
 virtual double        JacVectBB_g(const uint vbflag, QuantityLocal& xyz )/* const*/ = 0;  //TODO should be only for BOUNDARY 
 

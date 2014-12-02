@@ -122,8 +122,8 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[xyz._FEord]->_ndof[VV];
-    xyz._ndof[BB] = _AbstractFE[xyz._FEord]->_ndof[BB];
+    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_ndof[VV];
+    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_ndof[BB];
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 
@@ -166,8 +166,8 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     QuantityLocal Bmag(currgp,currelem); //total
     Bmag._dim        = Bhom._dim;               //same as Bhom
     Bmag._FEord      = Bhom._FEord;             //same as Bhom
-    Bmag._ndof[VV]   = _AbstractFE[Bmag._FEord]->_ndof[VV];
-    Bmag._ndof[BB]   = _AbstractFE[Bmag._FEord]->_ndof[BB];
+    Bmag._ndof[VV]   = _AbstractFE[VV][Bmag._FEord]->_ndof[VV];
+    Bmag._ndof[BB]   = _AbstractFE[VV][Bmag._FEord]->_ndof[BB];
     Bmag._val_dofs   = new double[Bmag._dim*Bmag._ndof[vb]];
     Bmag._val_dofs3D = new double[        3*Bmag._ndof[vb]];
     Bmag._val_g      = new double[Bmag._dim];

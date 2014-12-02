@@ -24,7 +24,6 @@
 #include "FETet4.hpp"
 #include "FETet10.hpp"
 
-#include "ElemType.hpp"
 
 
 namespace femus {
@@ -35,6 +34,8 @@ FEElemBase::FEElemBase(std::vector<GeomEl> geomel_in ) {
 
   _geomel = geomel_in;
   _n_children = _geomel[VV].n_se;
+  
+  _myelems.resize(VB);  //cannot go in build function, because it is static
 
 }
 
@@ -232,8 +233,7 @@ void FEElemBase::evaluate_shape_at_qp() {
 //====== FUNCTION POINTERS SETUP ===========
 // initialize the function pointers outside, as well as everything that has to be accessible after all the "switch" things, so you have to only fill them inside
 
-  typedef double* (elem_type::*FunctionPointerTwo)(const unsigned & ig) const; //declaring the FunctionPointer type
-  std::vector< std::vector<FunctionPointerTwo> > DphiptrTwo(space_dim);  /// array of array of function pointers based on Volume and Boundary
+  std::vector< std::vector<_FunctionPointerTwo> > DphiptrTwo(VB);  /// array of array of function pointers based on Volume and Boundary
   DphiptrTwo[VV].resize(space_dim);
   DphiptrTwo[BB].resize(space_dim-1);
 
@@ -267,8 +267,7 @@ void FEElemBase::evaluate_shape_at_qp() {
 
   std::cout << " Read init FE order " << _order << std::endl;
   
-  elem_type* myelems[VB];
-
+ 
 // ================================================================================
 // ============================ begin switch fe order ===============================
 // ================================================================================
@@ -284,13 +283,13 @@ void FEElemBase::evaluate_shape_at_qp() {
       switch(_geomel[VV]._geomel_type)  {
 
       case(QUADR): {  //QUADR-2D-QQ  ========
-        myelems[VV] = new elem_type_2D("quad","biquadratic",gauss_ord.c_str()); //TODO valgrind
-        myelems[BB] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        _myelems[VV] = new elem_type_2D("quad","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        _myelems[BB] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
         break;
       }
       case(TRIANG): {
-        myelems[VV] = new elem_type_2D("tri","biquadratic",gauss_ord.c_str()); //TODO valgrind
-        myelems[BB] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        _myelems[VV] = new elem_type_2D("tri","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        _myelems[BB] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
         break;
       }  //end TRIANG-2D-QQ  ======
 
@@ -304,14 +303,14 @@ void FEElemBase::evaluate_shape_at_qp() {
       switch(_geomel[VV]._geomel_type)  {
 
       case(QUADR): {  //QUADR-3D-QQ
-        myelems[VV] = new elem_type_3D("hex","biquadratic",gauss_ord.c_str());
-        myelems[BB] = new elem_type_2D("quad","biquadratic",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_3D("hex","biquadratic",gauss_ord.c_str());
+        _myelems[BB] = new elem_type_2D("quad","biquadratic",gauss_ord.c_str());
         break;
       } //end //QUADR-3D-QQ
 
       case(TRIANG): {  //TRIANG-3D-QQ
-        myelems[VV] = new elem_type_3D("tet","biquadratic",gauss_ord.c_str());
-        myelems[BB] = new elem_type_2D("tri","biquadratic",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_3D("tet","biquadratic",gauss_ord.c_str());
+        _myelems[BB] = new elem_type_2D("tri","biquadratic",gauss_ord.c_str());
         break;
       }  //end TRIANG-3D-QQ
 
@@ -338,14 +337,14 @@ void FEElemBase::evaluate_shape_at_qp() {
     case(2): {
       switch(_geomel[VV]._geomel_type)  {
       case(QUADR): {  //QUADR-2D-LL
-        myelems[VV] = new elem_type_2D("quad","linear",gauss_ord.c_str());
-	myelems[BB] = new elem_type_1D("line","linear",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_2D("quad","linear",gauss_ord.c_str());
+	_myelems[BB] = new elem_type_1D("line","linear",gauss_ord.c_str());
         break;
       } //end //QUADR-2D-LL
 
       case(TRIANG): { //TRIANG-2D-LL
-        myelems[VV] = new elem_type_2D("tri","linear",gauss_ord.c_str());
-	myelems[BB] = new elem_type_1D("line","linear",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_2D("tri","linear",gauss_ord.c_str());
+	_myelems[BB] = new elem_type_1D("line","linear",gauss_ord.c_str());
         break;
       }  //end TRIANG-2D-LL
 
@@ -355,14 +354,14 @@ void FEElemBase::evaluate_shape_at_qp() {
     case(3): {
       switch(_geomel[VV]._geomel_type)  {
       case(QUADR): { //QUADR-3D-LL
-        myelems[VV] = new elem_type_3D("hex","linear",gauss_ord.c_str());
-	myelems[BB] = new elem_type_2D("quad","linear",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_3D("hex","linear",gauss_ord.c_str());
+	_myelems[BB] = new elem_type_2D("quad","linear",gauss_ord.c_str());
         break;
       } //end //QUADR-3D-LL
 
       case(TRIANG): { //TRIANG-3D-LL
-        myelems[VV] = new elem_type_3D("tet","linear",gauss_ord.c_str());
-	myelems[BB] = new elem_type_2D("tri","linear",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_3D("tet","linear",gauss_ord.c_str());
+	_myelems[BB] = new elem_type_2D("tri","linear",gauss_ord.c_str());
         break;
       }  //end //TRIANG-3D-LL
 
@@ -391,14 +390,14 @@ void FEElemBase::evaluate_shape_at_qp() {
       switch(_geomel[VV]._geomel_type)  {
 
       case(QUADR): {  //QUADR-2D-KK
-        myelems[VV] = new elem_type_2D("quad","constant",gauss_ord.c_str());
-	myelems[BB] = new elem_type_1D("line","constant",gauss_ord.c_str());  
+        _myelems[VV] = new elem_type_2D("quad","constant",gauss_ord.c_str());
+	_myelems[BB] = new elem_type_1D("line","constant",gauss_ord.c_str());  
         break;
       } //end //QUADR-2D-KK
 
       case(TRIANG): { //TRIANG-2D-KK
-        myelems[VV] = new elem_type_2D("tri","constant",gauss_ord.c_str());
-	myelems[BB] = new elem_type_1D("line","constant",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_2D("tri","constant",gauss_ord.c_str());
+	_myelems[BB] = new elem_type_1D("line","constant",gauss_ord.c_str());
         break;
       }  //end //TRIANG-2D-KK
 
@@ -409,14 +408,14 @@ void FEElemBase::evaluate_shape_at_qp() {
     case(3): {
       switch(_geomel[VV]._geomel_type)  {
       case(QUADR): { //QUADR-3D-KK
-        myelems[VV] = new elem_type_3D("hex","constant",gauss_ord.c_str());
-	myelems[BB] = new elem_type_2D("quad","constant",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_3D("hex","constant",gauss_ord.c_str());
+	_myelems[BB] = new elem_type_2D("quad","constant",gauss_ord.c_str());
         break;
       } //end  //QUADR-3D-KK
 
       case(TRIANG): {  //TRIANG-3D-KK
-      myelems[VV] = new elem_type_3D("tet","constant",gauss_ord.c_str());
-      myelems[BB] = new elem_type_2D("tri","constant",gauss_ord.c_str());
+      _myelems[VV] = new elem_type_3D("tet","constant",gauss_ord.c_str());
+      _myelems[BB] = new elem_type_2D("tri","constant",gauss_ord.c_str());
         break;
       }  //end //TRIANG-3D-KK
 
@@ -453,7 +452,7 @@ void FEElemBase::evaluate_shape_at_qp() {
   // loop ===========================
   for (int vb=0; vb<VB; vb++) {
 
-    if ( myelems[vb]->GetGaussPointNumber() != _qrule[vb]._NoGaussVB) {
+    if ( _myelems[vb]->GetGaussPointNumber() != _qrule[vb]._NoGaussVB) {
       std::cout << "Wrong gauss points" << std::endl;
       abort();
     }
@@ -474,14 +473,14 @@ if (vb == VV && _order == QQ && space_dim == 3  && _geomel[VV]._geomel_type == Q
 
       for (int idof=0; idof < _ndof[vb]; idof++) {
 //                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;
-        _phi_mapVBGD[vb][ig][idof] = myelems[vb]->GetPhi(ig)[ map_hex27[idof] ];
+        _phi_mapVBGD[vb][ig][idof] = _myelems[vb]->GetPhi(ig)[ map_hex27[idof] ];
 // 	std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapVBGD[vb][ig][dof] << std::endl;
 
 // derivatives in canonical element
         uint dim = space_dim - vb;
         for (uint idim = 0; idim < dim; idim++) {
-// 		 double* temp =  ( myelems[vb]->*(myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
-          double* tempTwo =  ( myelems[vb]->*(DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
+// 		 double* temp =  ( _myelems[vb]->*(_myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
+          double* tempTwo =  ( _myelems[vb]->*(DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
           _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]] =  tempTwo[ map_hex27[idof] ];
           std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]]  << "                                      "  << std::endl;
 
@@ -505,14 +504,14 @@ if (vb == VV && _order == QQ && space_dim == 3  && _geomel[VV]._geomel_type == Q
 
       for (int idof=0; idof < _ndof[vb]; idof++) {
 //                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;
-        _phi_mapVBGD[vb][ig][idof] = myelems[vb]->GetPhi(ig)[idof];
+        _phi_mapVBGD[vb][ig][idof] = _myelems[vb]->GetPhi(ig)[idof];
 // 	std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapVBGD[vb][ig][dof] << std::endl;
 
 // derivatives in canonical element
         uint dim = space_dim - vb;
         for (uint idim = 0; idim < dim; idim++) {
-// 		 double* temp =  ( myelems[vb]->*(myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
-          double* tempTwo =  ( myelems[vb]->*(DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
+// 		 double* temp =  ( _myelems[vb]->*(_myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
+          double* tempTwo =  ( _myelems[vb]->*(DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
           _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]] =  tempTwo[idof];
           std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]]  << "                                      "  << std::endl;
 

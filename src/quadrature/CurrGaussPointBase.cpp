@@ -28,7 +28,7 @@ CurrGaussPointBase::CurrGaussPointBase( EquationsMap& e_map_in ):
   //TODO probabilmente anche qui si puo' fare del TEMPLATING!!!
   //BISOGNA STARE ATTENTI CHE SE FAI DEL TEMPLATING con le ALLOCAZIONI STATICHE allora ti diverti poco con i DOPPI o TRIPLI ARRAY
 
-  for (int fe = 0; fe < QL; fe++)  _AbsFEVect[fe] = e_map_in._AbstractFE[fe];   
+  for (int fe = 0; fe < QL; fe++)  _AbsFEVect[fe] = e_map_in._AbstractFE[VV][fe];   
 
   for (int vb = 0; vb < VB; vb++) {
      for (int fe = 0; fe < QL; fe++) {

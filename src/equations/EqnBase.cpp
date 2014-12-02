@@ -923,13 +923,13 @@ void EqnBase::GenBc() {
                         const uint fine_node = _mesh._el_map[BB][(iel+iel_b)*el_nnodes_b+i];
 
                     //Set the quadratic fields
-                    if (i<_AbstractFE[QQ]->_ndof[BB])
+                    if (i<_AbstractFE[VV][QQ]->_ndof[BB])
 		      for (uint ivar=0; ivar<_nvars[QQ]; ivar++) {
                             int kdof = _node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_DofNumLevFE[Lev_pick_bc_NODE_dof][QQ] + _DofOffLevFE[Lev_pick_bc_NODE_dof][QQ] ];
                            if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _VarOff[QQ]];
                         }
                     // Set the linear fields
-                    if (i<_AbstractFE[LL]->_ndof[BB]) {
+                    if (i<_AbstractFE[VV][LL]->_ndof[BB]) {
                         for (uint ivar = 0; ivar < _nvars[LL]; ivar++) {
                             int kdof = _node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_DofNumLevFE[Lev_pick_bc_NODE_dof][LL] + _DofOffLevFE[Lev_pick_bc_NODE_dof][LL] ];
                            if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _VarOff[LL]];
@@ -1180,7 +1180,7 @@ void EqnBase::PrintBc(std::string namefile) {
 		  for (uint in=0; in < elnds[QQ]; in++) { // mid-points
                     double sum=0;
                     for (uint jn=0; jn<elnds[LL]; jn++) {
-                        sum += _AbstractFE[LL]->get_prol(in*elnds[LL]+jn)*elsol_c[jn];
+                        sum += _AbstractFE[VV][LL]->get_prol(in*elnds[LL]+jn)*elsol_c[jn];
                     }
                     
                     int pos_Qnode_fine = _mesh._el_map[VV][ (iel+iel_b)*elnds[QQ]+in ];
@@ -1572,21 +1572,21 @@ void EqnBase::GenIc() {
                 // ===================================================
 
                 // Set the quadratic fields
-                if ( i < _AbstractFE[QQ]->_ndof[VV] ) {
+                if ( i < _AbstractFE[VV][QQ]->_ndof[VV] ) {
                     for (uint ivar=0; ivar<_nvars[QQ]; ivar++) {
 		      int dof_pos_lev = _node_dof[Level][ fine_node + ivar*_DofNumLevFE[Level][QQ] + _DofOffLevFE[Level][QQ] ];
                         _x[Level]->set( dof_pos_lev, u_value[ivar + _VarOff[QQ]] );
 		    }
                 }
                 // Set the linear fields
-                if ( i < _AbstractFE[LL]->_ndof[VV] ) {
+                if ( i < _AbstractFE[VV][LL]->_ndof[VV] ) {
                     for (uint ivar=0; ivar<_nvars[LL]; ivar++) {
 		      int dof_pos_lev = _node_dof[Level][ fine_node + ivar*_DofNumLevFE[Level][LL] + _DofOffLevFE[Level][LL] ];
                         _x[Level]->set( dof_pos_lev, u_value[ivar + _VarOff[LL]] );
                         }
 		    }
 		    
-                if ( i < _AbstractFE[KK]->_ndof[VV] ) {
+                if ( i < _AbstractFE[VV][KK]->_ndof[VV] ) {
 		  
 		int sum_elems_prev_sd_at_lev = 0;
 	    for (uint pr = 0; pr < _iproc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*_NoLevels + Level + 1] - _mesh._off_el[VV][pr*_NoLevels + Level]; }
@@ -3399,7 +3399,7 @@ void EqnBase::PrintVector(std::string namefile) {
                 for (uint in=0; in < elnds[QQ]; in++) { //TODO this loop can be done from elnds[LL] instead of from 0
                     double sum=0.;
                     for (uint jn=0; jn<elnds[LL]; jn++) {
-                        sum += _AbstractFE[LL]->get_prol(in*elnds[LL]+jn)*elsol_c[jn];
+                        sum += _AbstractFE[VV][LL]->get_prol(in*elnds[LL]+jn)*elsol_c[jn];
                     }
                     
                     int pos_Qnode_fine = _mesh._el_map[VV][ (iel+iel_b)*elnds[QQ]+in ];       //Qnode in FINE NUMBERING
@@ -3788,7 +3788,7 @@ void EqnBase::ReadVector(std::string namefile) {
 //So, many functions here can be called CONST even if they are not!
   void EqnBase::Bc_ConvertToDirichletPenalty(const uint vb, const uint ql, uint* bc) const {
 
-    const uint ndof  = _AbstractFE[ql]->_ndof[vb];
+    const uint ndof  = _AbstractFE[VV][ql]->_ndof[vb];
     const uint nvars = _nvars[ql];
 
     for (uint ivarq=0; ivarq < nvars; ivarq++) {
@@ -4010,8 +4010,8 @@ const uint myproc= _iproc;
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = _mesh.get_dim();
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[xyz._FEord]->_ndof[VV];
-    xyz._ndof[BB] = _AbstractFE[xyz._FEord]->_ndof[BB];
+    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_ndof[VV];
+    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_ndof[BB];
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 

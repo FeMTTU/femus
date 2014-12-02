@@ -84,7 +84,8 @@
   }
   
   // =======Abstract FEElems =====  //remember to delete the FE at the end
-  std::vector<FEElemBase*> FEElements(QL);  //TODO what if we dont want to call the default constructor?!? AAA here no constructor is called!!! If you have a pointer the constructor is not called!
+  std::vector< std::vector<FEElemBase*> >  FEElements_vec(VB); 
+  std::vector<FEElemBase*> FEElements(QL);
                                                      
   for (int fe=0; fe<QL; fe++) {
     FEElements[fe] = FEElemBase::build(mesh._GeomEl,fe);  //The order of the fe is established by the library
@@ -95,6 +96,10 @@
     FEElements[fe]->evaluate_shape_at_qp();
   }
 
+  for (int vb=0;vb < VB; vb++) { 
+  FEElements_vec[vb] = FEElements;
+  }
+  
   // ======== TimeLoop ===================================
   TimeLoop time_loop(files); 
            time_loop._timemap.read();
@@ -117,7 +122,7 @@
   // ===== end QuantityMap =========================================
 
   // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,qrule,time_loop);  //here everything is passed as BASE STUFF, like it should!
+  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements_vec,qrule,time_loop);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
   
 //===============================================

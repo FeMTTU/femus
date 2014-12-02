@@ -8,6 +8,7 @@
 #include "VBTypeEnum.hpp"
 #include "GeomEl.hpp"
 #include "QRule.hpp"
+#include "ElemType.hpp"
 
 namespace femus {
 
@@ -52,6 +53,12 @@ public:
     virtual float get_embedding_matrix(const uint,const uint,const uint) = 0;
     virtual double get_prol(const uint) = 0;
 
+// ====================
+  std::vector<elem_type*> _myelems;
+  typedef double* (elem_type::*_FunctionPointerTwo)(const unsigned & ig) const; //declaring the FunctionPointer type
+  
+    
+    
 
 };
 

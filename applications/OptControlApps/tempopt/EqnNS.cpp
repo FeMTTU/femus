@@ -135,8 +135,8 @@
     QuantityLocal xyz(currgp,currelem); //domain
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[xyz._FEord]->_ndof[VV];
-    xyz._ndof[BB] = _AbstractFE[xyz._FEord]->_ndof[BB];
+    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_ndof[VV];
+    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_ndof[BB];
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 //=========
