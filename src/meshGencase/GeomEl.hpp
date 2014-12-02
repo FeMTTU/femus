@@ -181,8 +181,8 @@ public:
      GeomEl(const uint dim_in,const uint geomel_type);
     ~GeomEl();
     
-    const uint _geomel_type;
-    const uint _dim;
+    uint _geomel_type;   /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
+    uint _dim;           /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
     uint _elnds[VB][QL_NODES]; // I SWITCHED THIS ONE: VB first, QL next!!!   //number of nodes of one element [VB][QL]
     std::string name[VB];             ///< element name (volume+surface)
     std::string pname[VB];            ///< print element name (volume+surface) for XDMF print (linear)
@@ -217,5 +217,4 @@ public:
 } //end namespace femus
 
 
-//We give it to the math part and we say: for a given geom el part, what do you give us, my dear math part?
 #endif

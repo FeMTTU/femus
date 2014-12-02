@@ -71,6 +71,7 @@ public:
     
 // ===== ABSTRACT GEOMEL(S) =====
     GeomEl    _GeomEl;
+    std::vector<GeomEl>  _geomel;
     const uint _n_GeomEl;         //number of geom elem types
     uint*      _type_FEM;         //just for check
     uint _elnodes[VB][QL];

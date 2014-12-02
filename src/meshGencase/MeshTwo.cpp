@@ -29,7 +29,18 @@ Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const doubl
          _dim(map_in.get("dimension")),
          _Lref(Lref)
          {
-	  
+	   
+//     How to initialize a std::vector of classes ==================
+    _geomel.reserve(VB);
+    for (int vb=0;vb < VB; vb++) { 
+          GeomEl ggg( (uint) map_in.get("dimension") - vb, (uint) map_in.get("geomel_type") ); 
+         _geomel.push_back(ggg); 
+    }
+//     How to initialize a std::vector of classes ==================
+
+   std::cout << _geomel[BB].name[0] << std::endl;
+   std::cout << _geomel[BB].name[1] << std::endl;
+
     _iproc    = paral::get_rank();
     _NoSubdom = paral::get_size();   
     _NoLevels = _mesh_rtmap.get("nolevels");

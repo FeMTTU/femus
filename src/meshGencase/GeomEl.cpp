@@ -1,5 +1,5 @@
 #include "GeomEl.hpp"
-
+#include "GeomElTypeEnum.hpp"
 
 #include <iostream>
 #include <cstdlib>
@@ -18,7 +18,7 @@ namespace femus {
    {
 
     
-if( geomel_type_in == 0) {
+if( geomel_type_in == QUADR) {
 if( dim_in==2) {
      _elnds[VV][QQ]=9;
      _elnds[VV][LL]=4;
@@ -37,10 +37,10 @@ else if( dim_in==3) {
        n_se[VV]=8;
        n_se[BB]=4;
 
-  name[VV]="Hex_27"; name[BB]="Quad_9"; //DONE
+  name[VV]="Hex_27"; name[BB]="Quad_9";
   pname[VV]="Hexahedron"; pname[BB]="Quadrilateral"; } 
 }
-else if( geomel_type_in == 1) {
+else if( geomel_type_in == TRIANG) {
 if( dim_in==2) {
      _elnds[VV][QQ]=6;
      _elnds[VV][LL]=3; 
