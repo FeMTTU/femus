@@ -2,17 +2,17 @@
 #define __feelembase_h__
 
 #include <string>
+#include <vector>
 
 #include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
-
+#include "GeomEl.hpp"
 
 namespace femus {
 
 
 
 class Utils;
-class GeomEl;
 class QRule;
 class FE;
 
@@ -27,11 +27,11 @@ class FEElemBase  {
 
 public:
 
-    FEElemBase(GeomEl* geomel_in);
+    FEElemBase(std::vector<GeomEl> geomel_in);
     virtual ~FEElemBase();
 
 // GeomEl ======
-    GeomEl*  _geomel;   //TODO putting the REFERENCE is not the same as putting the POINTER!!!
+    std::vector<GeomEl>  _geomel;   //TODO putting the REFERENCE is not the same as putting the POINTER!!!
 
 // FE ==========
     uint         _order;
@@ -39,7 +39,7 @@ public:
     uint         _ndof[VB];
     std::string  _name[VB]; 
     std::string _pname[VB];  //TODO do we need this HERE? Printing is related to MESH  //in fact it seems like it is not needed!
-    static  FEElemBase* build(GeomEl* geomel_in, const uint order);
+    static  FEElemBase* build(std::vector<GeomEl> geomel_in, const uint order);
     
 // Quadrature ==
     QRule* _qrule;

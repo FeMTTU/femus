@@ -15,7 +15,7 @@ class FETet4 : public FEElemBase  {
 
 public:
   
-     FETet4(GeomEl* geomel_in);
+     FETet4(std::vector<GeomEl> geomel_in);
      
     ~FETet4();
   

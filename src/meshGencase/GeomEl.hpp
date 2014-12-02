@@ -183,12 +183,12 @@ public:
     
     uint _geomel_type;   /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
     uint _dim;           /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
-    uint _elnds[VB][QL_NODES]; // I SWITCHED THIS ONE: VB first, QL next!!!   //number of nodes of one element [VB][QL]
-    std::string name[VB];             ///< element name (volume+surface)
-    std::string pname[VB];            ///< print element name (volume+surface) for XDMF print (linear)
+    uint _elnds[QL_NODES]; // I SWITCHED THIS ONE: VB first, QL next!!!   //number of nodes of one element [VB][QL]
+    std::string name;             ///< element name 
+    std::string pname;            ///< print element name for XDMF print (linear)
 
  //===== Multigrid   
-    uint n_se[VB];                    ///< number of linear subelements (volume+surface)
+    uint n_se;                    ///< number of linear subelements 
     
     //from linear to quadratic
 //     static const double _Prol[NNDS*NNDSL];  //actually NNDSL should be NDOF_P: one part is geometric, one part is mathematic

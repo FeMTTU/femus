@@ -863,7 +863,7 @@ void EqnBase::GenBc() {
  //******** NODE BASED ****************************   
     const uint mesh_ord    = (int) _mesh._mesh_rtmap.get("mesh_ord");
     const uint offset      = _mesh._NoNodesXLev[_NoLevels-1];
-    const uint el_nnodes_b = _mesh._GeomEl._elnds[BB][mesh_ord];
+    const uint el_nnodes_b = _mesh._GeomEl[BB]._elnds[mesh_ord];
     double* normal = new double[_mesh.get_dim()];  //TODO remove this, it is useless
 
     int  *bc_flag = new int[_n_vars];
@@ -1110,7 +1110,7 @@ void EqnBase::PrintBc(std::string namefile) {
    int NGeomObjOnWhichToPrint[QL];
     NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[Level];
     NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[Level];
-    NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][Level]*_mesh._GeomEl.n_se[VV];
+    NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][Level]*_mesh._GeomEl[VV].n_se;
   
     const uint n_nodes_lev = _mesh._NoNodesXLev[Level];
     int* sol_on_Qnodes = new int[n_nodes_lev];  //this vector will contain the values of ONE variable on ALL the QUADRATIC nodes
@@ -1143,9 +1143,9 @@ void EqnBase::PrintBc(std::string namefile) {
     // ========= LINEAR ==================
     // ===================================
     uint elnds[QL_NODES];
-    elnds[QQ] =_mesh._GeomEl._elnds[VV][QQ];
-    elnds[LL] =_mesh._GeomEl._elnds[VV][LL];
-    double *elsol_c=new double[elnds[LL]];
+    elnds[QQ] =_mesh._GeomEl[VV]._elnds[QQ];
+    elnds[LL] =_mesh._GeomEl[VV]._elnds[LL];
+    double *elsol_c = new double[elnds[LL]];
 
     for (uint ivar=0; ivar<_nvars[LL]; ivar++)   {
 
@@ -1216,8 +1216,8 @@ void EqnBase::PrintBc(std::string namefile) {
 	    for (int iel = 0;
               iel <    _mesh._off_el[VV][off_proc + Level+1]
                      - _mesh._off_el[VV][off_proc + Level]; iel++) {
-      for (uint is=0; is< _mesh._GeomEl.n_se[VV]; is++) {      
-	sol_on_cells[cel*_mesh._GeomEl.n_se[VV] + is] = _bc_fe_kk[Level][iel + sum_elems_prev_sd_at_lev + ivar*_mesh._n_elements_vb_lev[VV][Level]]; //this depends on level!
+      for (uint is=0; is< _mesh._GeomEl[VV].n_se; is++) {      
+	sol_on_cells[cel*_mesh._GeomEl[VV].n_se + is] = _bc_fe_kk[Level][iel + sum_elems_prev_sd_at_lev + ivar*_mesh._n_elements_vb_lev[VV][Level]]; //this depends on level!
       }
       cel++;
     }
@@ -1543,7 +1543,7 @@ void EqnBase::GenIc() {
         CurrElem       currelem(*this,_eqnmap);  
      
         const uint  coords_fine_offset = _mesh._NoNodesXLev[_NoLevels-1];
-        const uint  el_nnodes = _mesh._GeomEl._elnds[mesh_ord][VV];
+        const uint  el_nnodes = _mesh._GeomEl[VV]._elnds[mesh_ord];
         double*      xp = new double[_mesh.get_dim()];
         double* u_value = new double[_n_vars];
 
@@ -3311,7 +3311,7 @@ void EqnBase::PrintVector(std::string namefile) {
     int NGeomObjOnWhichToPrint[QL];
     NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[Level];
     NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[Level];
-    NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][Level]*_mesh._GeomEl.n_se[VV];
+    NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][Level]*_mesh._GeomEl[VV].n_se;
     
     const uint n_nodes_lev = _mesh._NoNodesXLev[Level];
     double* sol_on_Qnodes  = new double[n_nodes_lev];  //TODO VALGRIND //this is QUADRATIC because it has to hold  either quadratic or linear variables and print them on a QUADRATIC mesh
@@ -3353,8 +3353,8 @@ void EqnBase::PrintVector(std::string namefile) {
     // ========= LINEAR ================
     // =================================
     uint elnds[QL_NODES];
-    elnds[QQ] = _mesh._GeomEl._elnds[VV][QQ];
-    elnds[LL] = _mesh._GeomEl._elnds[VV][LL];
+    elnds[QQ] = _mesh._GeomEl[VV]._elnds[QQ];
+    elnds[LL] = _mesh._GeomEl[VV]._elnds[LL];
     double* elsol_c = new double[elnds[LL]];
     
     for (uint ivar=0; ivar<_nvars[LL]; ivar++)        {
@@ -3443,8 +3443,8 @@ void EqnBase::PrintVector(std::string namefile) {
                       - _mesh._off_el[VV][off_proc + Level]; iel++) {
              int elem_lev = iel + sum_elems_prev_sd_at_lev;
 	  int dof_pos_lev = _node_dof[Level][ elem_lev + ivar*_DofNumLevFE[ Level ][KK] + _DofOffLevFE[ Level ][KK] ];   
-      for (uint is=0; is< _mesh._GeomEl.n_se[VV]; is++) {      
-	   sol_on_cells[cel*_mesh._GeomEl.n_se[VV] + is] = (*_x_old[Level])(dof_pos_lev) * _refvalue[ ivar + _VarOff[KK] ];
+      for (uint is=0; is< _mesh._GeomEl[VV].n_se; is++) {      
+	   sol_on_cells[cel*_mesh._GeomEl[VV].n_se + is] = (*_x_old[Level])(dof_pos_lev) * _refvalue[ ivar + _VarOff[KK] ];
       }
       cel++;
     }
@@ -3487,8 +3487,8 @@ void EqnBase::ReadVector(std::string namefile) {
 
     // reading loop over system varables
     for (uint ivar=0;ivar< _nvars[LL]+_nvars[QQ]; ivar++) {
-        uint el_nds=_mesh._GeomEl._elnds[VV][QQ];
-        if (ivar >= _nvars[QQ]) el_nds = _mesh._GeomEl._elnds[VV][LL]; // quad and linear
+        uint el_nds=_mesh._GeomEl[VV]._elnds[QQ];
+        if (ivar >= _nvars[QQ]) el_nds = _mesh._GeomEl[VV]._elnds[LL]; // quad and linear
         // reading ivar param
        std::ostringstream grname; grname << _var_names[ivar] << "_" << "LEVEL" << Level;
         IO::read_Dhdf5(file_id,grname.str(),sol);
@@ -3497,7 +3497,7 @@ void EqnBase::ReadVector(std::string namefile) {
         // storing  ivar variables (in parallell)
         for (int iel=0;iel <  _mesh._off_el[0][_iproc*_NoLevels+_NoLevels]
                 -_mesh._off_el[0][_iproc*_NoLevels+_NoLevels-1]; iel++) {
-            uint elem_gidx=(iel+_mesh._off_el[0][_iproc*_NoLevels+_NoLevels-1])*_mesh._GeomEl._elnds[VV][mesh_ord];
+            uint elem_gidx=(iel+_mesh._off_el[0][_iproc*_NoLevels+_NoLevels-1])*_mesh._GeomEl[VV]._elnds[mesh_ord];
             for (uint i=0; i<el_nds; i++) { // linear and quad
                 int k=_mesh._el_map[0][elem_gidx+i];   // the global node
                 _x[_NoLevels-1]->set(_node_dof[_NoLevels-1][k+ivar*offset],sol[k]*Irefval); // set the field

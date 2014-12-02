@@ -7,7 +7,7 @@ namespace femus {
 
 
 // =======================
-FEHex8::FEHex8(GeomEl* geomel_in) : FEElemBase(geomel_in) {
+FEHex8::FEHex8(std::vector<GeomEl> geomel_in) : FEElemBase(geomel_in) {
 	    
 	      _name[VV]="Hex_8";
 	      _name[BB]="Quad_4"; 

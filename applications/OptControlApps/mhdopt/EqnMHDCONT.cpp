@@ -148,8 +148,8 @@ void EqnMHDCONT::init_equation_data() {
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof[VV] = _mesh._GeomEl._elnds[VV][xyz_refbox._FEord];
-  xyz_refbox._ndof[BB] = _mesh._GeomEl._elnds[BB][xyz_refbox._FEord];
+  xyz_refbox._ndof[VV] = _mesh._GeomEl[VV]._elnds[xyz_refbox._FEord];
+  xyz_refbox._ndof[BB] = _mesh._GeomEl[BB]._elnds[xyz_refbox._FEord];
   xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof[vb]]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   

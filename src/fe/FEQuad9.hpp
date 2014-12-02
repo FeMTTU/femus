@@ -16,7 +16,7 @@ class FEQuad9 : public FEElemBase  {
 
 public:
   
-     FEQuad9(GeomEl* geomel_in);
+     FEQuad9(std::vector<GeomEl> geomel_in);
      
     ~FEQuad9();
   

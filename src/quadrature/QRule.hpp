@@ -3,10 +3,11 @@
 
 
 #include <string>
+#include <vector>
 
 #include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
-
+#include "GeomEl.hpp"
 
 namespace femus {
 
@@ -45,7 +46,7 @@ class QRule  {
   public:
 
 //GeomEl =========
-   GeomEl * _geomel;
+   std::vector<GeomEl> _geomel;
 
 //Quadrature =========
    std::string  _qrule_type;
@@ -53,7 +54,7 @@ class QRule  {
     double*       _weightVB[VB];
     
     
-     QRule(GeomEl* geomel_in);
+     QRule(std::vector<GeomEl> geomel_in);
     
     ~QRule();
     

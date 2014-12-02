@@ -19,48 +19,51 @@ namespace femus {
 
     
 if( geomel_type_in == QUADR) {
-if( dim_in==2) {
-     _elnds[VV][QQ]=9;
-     _elnds[VV][LL]=4;
-     _elnds[BB][QQ]=3; 
-     _elnds[BB][LL]=2; 
-       n_se[VV]=4;
-       n_se[BB]=2;
- 
-  name[VV]="Quad_9"; name[BB]="Edge_3"; 
-  pname[VV]="Quadrilateral"; pname[BB]="Polyline"; }
-else if( dim_in==3) {
-     _elnds[VV][QQ]=27;
-     _elnds[VV][LL]=8;
-     _elnds[BB][QQ]=9;
-     _elnds[BB][LL]=4; 
-       n_se[VV]=8;
-       n_se[BB]=4;
-
-  name[VV]="Hex_27"; name[BB]="Quad_9";
-  pname[VV]="Hexahedron"; pname[BB]="Quadrilateral"; } 
+  if( dim_in == 1) {
+     _elnds[QQ] = 3;
+     _elnds[LL] = 2;
+           n_se = 2;
+           name = "Edge_3"; 
+          pname = "Polyline"; 
+  }
+else if( dim_in == 2) {
+     _elnds[QQ] = 9;
+     _elnds[LL] = 4;
+           n_se = 4;
+           name = "Quad_9"; 
+          pname = "Quadrilateral"; 
+  }
+else if( dim_in == 3) {
+     _elnds[QQ] = 27;
+     _elnds[LL] = 8;
+           n_se = 8;
+           name = "Hex_27"; 
+          pname = "Hexahedron"; 
+  } 
 }
 else if( geomel_type_in == TRIANG) {
-if( dim_in==2) {
-     _elnds[VV][QQ]=6;
-     _elnds[VV][LL]=3; 
-     _elnds[BB][QQ]=3; 
-     _elnds[BB][LL]=2; 
-       n_se[VV]=4;
-       n_se[BB]=2;
+if( dim_in == 1) {
+     _elnds[QQ] = 3;
+     _elnds[LL] = 2;
+           n_se = 2;
+           name = "Edge_3"; 
+          pname = "Polyline"; 
+}
+else if( dim_in == 2) {
+     _elnds[QQ]=6;
+     _elnds[LL]=3; 
+       n_se=4;
+      name="Tri_6"; 
+     pname="Triangle"; 
+}
+else if( dim_in == 3) {
+     _elnds[QQ]=10;
+     _elnds[LL]=4;
+       n_se=8;
 
-  name[VV]="Tri_6"; name[BB]="Edge_3"; 
-  pname[VV]="Triangle"; pname[BB]="Polyline"; }
-else if( dim_in==3) {
-     _elnds[VV][QQ]=10;
-     _elnds[VV][LL]=4;
-     _elnds[BB][QQ]=6;
-     _elnds[BB][LL]=3; 
-       n_se[VV]=8;
-       n_se[BB]=4;
-
-  name[VV]="Tet_10"; name[BB]="Tri_6"; 
-  pname[VV]="Tetrahedron"; pname[BB]="Triangle"; }
+       name="Tet_10"; 
+      pname="Tetrahedron"; 
+}
 }
 else {std::cout << "ELtype not recognized\n"; abort();}
 

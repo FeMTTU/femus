@@ -88,13 +88,13 @@ int main(int argc, char** argv) {
   phys.set_mesh(&mesh);
 
 // ======  QRule ================================ //so far we have ONLY ONE quadrature rule for all the equations
-  QRule   qrule(&(mesh._GeomEl));
+  QRule   qrule(mesh._GeomEl);
   
   // =======FEElems =====  //remember to delete the FE at the end
   std::vector<FEElemBase*> FEElements(QL);
  
   for (int fe=0; fe<QL; fe++) {
-    FEElements[fe] = FEElemBase::build(&(mesh._GeomEl),fe);       /*VB based*/  //The order of the fe is established by the library
+    FEElements[fe] = FEElemBase::build(mesh._GeomEl,fe);       /*VB based*/  //The order of the fe is established by the library
 //sort of constructor
     FEElements[fe]->SetOrder(fe);
     FEElements[fe]->AssociateQRule(&qrule);

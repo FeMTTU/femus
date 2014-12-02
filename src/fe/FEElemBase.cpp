@@ -31,10 +31,10 @@ namespace femus {
 
 
 
-FEElemBase::FEElemBase(GeomEl* geomel_in ) {
+FEElemBase::FEElemBase(std::vector<GeomEl> geomel_in ) {
 
   _geomel = geomel_in;
-  _n_children = _geomel->n_se[VV];
+  _n_children = _geomel[VV].n_se;
 
 }
 
@@ -54,14 +54,14 @@ FEElemBase::~FEElemBase() {
 //static function: it cannot act on the data of each instantiation ...
 
 
-FEElemBase* FEElemBase::build(GeomEl* geomel_in, const uint order) {
+FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order) {
 
 
-  switch(geomel_in->_dim) {
+  switch(geomel_in[VV]._dim) {
 
   case(2): {
 
-    switch(geomel_in->_geomel_type) {
+    switch(geomel_in[VV]._geomel_type) {
     case(QUADR): {
       switch(order) {
       case(QQ):
@@ -88,7 +88,7 @@ FEElemBase* FEElemBase::build(GeomEl* geomel_in, const uint order) {
 
   case(3): {
 
-    switch(geomel_in->_geomel_type) {
+    switch(geomel_in[VV]._geomel_type) {
     case(QUADR): {
       switch(order) {
       case(QQ):
@@ -136,6 +136,7 @@ FEElemBase* FEElemBase::build(GeomEl* geomel_in, const uint order) {
 void FEElemBase::AssociateQRule(QRule* qrule_in)  {
   _qrule = qrule_in;
 }
+
 void FEElemBase::SetOrder(uint fe)  {
   _order = fe;
 }
@@ -191,8 +192,8 @@ void FEElemBase::SetOrder(uint fe)  {
 
 void FEElemBase::evaluate_shape_at_qp() {
 
-  if ( _geomel->_geomel_type != QUADR && _geomel->_geomel_type != TRIANG  ) {
-    std::cout << "FE::FE: GeomEl type " << _geomel->_geomel_type << " not supported" << std::endl;
+  if ( _geomel[VV]._geomel_type != QUADR && _geomel[VV]._geomel_type != TRIANG  ) {
+    std::cout << "FE::FE: GeomEl type " << _geomel[VV]._geomel_type << " not supported" << std::endl;
     abort();
   }
 
@@ -209,7 +210,7 @@ void FEElemBase::evaluate_shape_at_qp() {
   std::string  geomel[2];
   geomel[QUADR]  =  "quadr_";
   geomel[TRIANG] = "triang_";
-  uint space_dim = _geomel->_dim;
+  uint space_dim = _geomel[VV]._dim;
 
   std::string gauss_ord = "fifth";
 
@@ -280,7 +281,7 @@ void FEElemBase::evaluate_shape_at_qp() {
 
     case(2): {
 
-      switch(_geomel->_geomel_type)  {
+      switch(_geomel[VV]._geomel_type)  {
 
       case(QUADR): {  //QUADR-2D-QQ  ========
         myelems[VV] = new elem_type_2D("quad","biquadratic",gauss_ord.c_str()); //TODO valgrind
@@ -300,7 +301,7 @@ void FEElemBase::evaluate_shape_at_qp() {
     }  //end 2D
     case(3): {
 
-      switch(_geomel->_geomel_type)  {
+      switch(_geomel[VV]._geomel_type)  {
 
       case(QUADR): {  //QUADR-3D-QQ
         myelems[VV] = new elem_type_3D("hex","biquadratic",gauss_ord.c_str());
@@ -335,7 +336,7 @@ void FEElemBase::evaluate_shape_at_qp() {
   case(LL): {
     switch(space_dim) {
     case(2): {
-      switch(_geomel->_geomel_type)  {
+      switch(_geomel[VV]._geomel_type)  {
       case(QUADR): {  //QUADR-2D-LL
         myelems[VV] = new elem_type_2D("quad","linear",gauss_ord.c_str());
 	myelems[BB] = new elem_type_1D("line","linear",gauss_ord.c_str());
@@ -352,7 +353,7 @@ void FEElemBase::evaluate_shape_at_qp() {
       break;
     }  //end 2D
     case(3): {
-      switch(_geomel->_geomel_type)  {
+      switch(_geomel[VV]._geomel_type)  {
       case(QUADR): { //QUADR-3D-LL
         myelems[VV] = new elem_type_3D("hex","linear",gauss_ord.c_str());
 	myelems[BB] = new elem_type_2D("quad","linear",gauss_ord.c_str());
@@ -387,7 +388,7 @@ void FEElemBase::evaluate_shape_at_qp() {
   case(KK): {
     switch(space_dim) {
     case(2): {
-      switch(_geomel->_geomel_type)  {
+      switch(_geomel[VV]._geomel_type)  {
 
       case(QUADR): {  //QUADR-2D-KK
         myelems[VV] = new elem_type_2D("quad","constant",gauss_ord.c_str());
@@ -406,7 +407,7 @@ void FEElemBase::evaluate_shape_at_qp() {
       break;
     }  //end 2D
     case(3): {
-      switch(_geomel->_geomel_type)  {
+      switch(_geomel[VV]._geomel_type)  {
       case(QUADR): { //QUADR-3D-KK
         myelems[VV] = new elem_type_3D("hex","constant",gauss_ord.c_str());
 	myelems[BB] = new elem_type_2D("quad","constant",gauss_ord.c_str());
@@ -465,7 +466,7 @@ void FEElemBase::evaluate_shape_at_qp() {
 // from eu connectivity to my (=libmesh) connectivity
 const unsigned map_hex27[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,24,20,21,22,23,25,26};
 
-if (vb == VV && _order == QQ && space_dim == 3  && _geomel->_geomel_type == QUADR) {
+if (vb == VV && _order == QQ && space_dim == 3  && _geomel[VV]._geomel_type == QUADR) {
             std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "REMEMBER THAT ONLY HEX27 HAS A DIFFERENT CONNECTIVITY MAP"  << std::endl;
 
   

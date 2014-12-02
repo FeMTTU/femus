@@ -42,7 +42,7 @@ GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const 
   _mesh_file.assign(mesh_file_in);  //TODO it seems like moving from protected to public in Mesh changed the RUNTIME behaviour also!!!!!
                                      //now I moved it to gencase and it works   
    _feelems.resize(QL);
-  for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(&_GeomEl,fe);
+  for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(_GeomEl,fe);
  
 }
 
@@ -150,14 +150,14 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
             libMesh::ElemType libmname; //convert the _geomel name into the libmesh geom el name
 
             if ( get_dim() == 2 ) {
-            if (     _GeomEl.name[0] == "Quad_9") libmname = QUAD9;
-            else if (_GeomEl.name[0] == "Tri_6")  libmname = TRI6;
+            if (     _GeomEl[VV].name == "Quad_9") libmname = QUAD9;
+            else if (_GeomEl[VV].name == "Tri_6")  libmname = TRI6;
             libMesh::MeshTools::Generation::build_square
             (*msh_coarse, ninterv[0], ninterv[1], box._lb[0], box._le[0], box._lb[1], box._le[1],libmname);
 	    }
 	    else if ( get_dim() == 3 ) {
-            if (     _GeomEl.name[0] == "Hex_27")  libmname = HEX27;
-            else if (_GeomEl.name[0] == "Tet_10")  libmname = TET10;
+            if (     _GeomEl[VV].name == "Hex_27")  libmname = HEX27;
+            else if (_GeomEl[VV].name == "Tet_10")  libmname = TET10;
             libMesh::MeshTools::Generation::build_cube
             (*msh_coarse,  ninterv[0], ninterv[1],  ninterv[2], box._lb[0], box._le[0], box._lb[1], box._le[1], box._lb[2], box._le[2],libmname);
 	    }
@@ -2095,7 +2095,7 @@ void GenCase::PrintMeshHDF5() const  {
     int *ttype_FEM;
     ttype_FEM=new int[VB];
 
-    for (uint vb=0; vb< VB;vb++)   ttype_FEM[vb]=_GeomEl._elnds[vb][QQ];
+    for (uint vb=0; vb< VB;vb++)   ttype_FEM[vb]=_GeomEl[vb]._elnds[QQ];
 
     dimsf[0] = VB;
     dimsf[1] = 1;

@@ -24,22 +24,22 @@ namespace femus {
 Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref) :
          _files(files_in),
          _mesh_rtmap(map_in),
-         _GeomEl( (uint) map_in.get("dimension"), (uint) map_in.get("geomel_type") ),
+//          _GeomEl( (uint) map_in.get("dimension"), (uint) map_in.get("geomel_type") ),
          _n_GeomEl(map_in.get("numgeomels")),
          _dim(map_in.get("dimension")),
          _Lref(Lref)
          {
 	   
 //     How to initialize a std::vector of classes ==================
-    _geomel.reserve(VB);
+    _GeomEl.reserve(VB);
     for (int vb=0;vb < VB; vb++) { 
           GeomEl ggg( (uint) map_in.get("dimension") - vb, (uint) map_in.get("geomel_type") ); 
-         _geomel.push_back(ggg); 
+         _GeomEl.push_back(ggg); 
     }
 //     How to initialize a std::vector of classes ==================
 
-   std::cout << _geomel[BB].name[0] << std::endl;
-   std::cout << _geomel[BB].name[1] << std::endl;
+//    std::cout << _geomel[BB].name[0] << std::endl;
+//    std::cout << _geomel[BB].name[1] << std::endl;
 
     _iproc    = paral::get_rank();
     _NoSubdom = paral::get_size();   
@@ -56,8 +56,8 @@ Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const doubl
     }
 
     for (int vb=0;vb < VB; vb++) {
-        _elnodes[vb][QQ] = _GeomEl._elnds[vb][mesh_ord];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
-        _elnodes[vb][LL] = _GeomEl._elnds[vb][LL];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
+        _elnodes[vb][QQ] = _GeomEl[vb]._elnds[mesh_ord];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
+        _elnodes[vb][LL] = _GeomEl[vb]._elnds[LL];  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
         _elnodes[vb][KK] = 1;
     }
     //i do not want to use the linear part actually!!
@@ -118,7 +118,7 @@ void Mesh::clear ()  {
    double*   x_in = new double[_dim];
    double*   x_out = new double[_dim];
   const uint mesh_ord = (int) _mesh_rtmap.get("mesh_ord");
-  const uint el_nds = _GeomEl._elnds[vb][mesh_ord];
+  const uint el_nds = _GeomEl[vb]._elnds[mesh_ord];
 
       for (uint n=0;n < el_nds ;n++) {
 	
@@ -223,7 +223,7 @@ if ( VB !=  topdata[1] )  {std::cout << "Mesh::read_c. Mismatch: the number of i
   IO::read_UIhdf5(file_id, "/ELNODES_VB",_type_FEM);
 
   for (int vb=0; vb<VB;vb++) {
-if (_type_FEM[vb] !=  _GeomEl._elnds[vb][QQ] )  {std::cout << "Mesh::read_c. Mismatch: the element type of the mesh is" <<
+if (_type_FEM[vb] !=  _GeomEl[vb]._elnds[QQ] )  {std::cout << "Mesh::read_c. Mismatch: the element type of the mesh is" <<
    "different from the element type as given by the GeomEl" << std::endl; abort(); }
   }
   
@@ -335,7 +335,7 @@ for (int vb=0; vb < VB; vb++)    {
 // ===========================================
   _el_map=new uint*[VB];
 for (int vb=0; vb < VB; vb++)    {
-  _el_map[vb]=new uint [_off_el[vb][_NoSubdom*_NoLevels]*_GeomEl._elnds[vb][mesh_ord]];
+  _el_map[vb]=new uint [_off_el[vb][_NoSubdom*_NoLevels]*_GeomEl[vb]._elnds[mesh_ord]];
   std::ostringstream elName; elName << "/ELEMS/VB" << vb  <<"/CONN";
   IO::read_UIhdf5(file_id,elName.str().c_str(),_el_map[vb]);
 }
@@ -480,7 +480,7 @@ void Mesh::PrintMultimeshXdmf() const {
 
             std::ostringstream hdf5_field;
             hdf5_field << _elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
-            IO::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),_GeomEl.name[vb],_n_elements_vb_lev[vb][ilev],_n_elements_vb_lev[vb][ilev],_elnodes[vb][QQ]);
+            IO::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),_GeomEl[vb].name,_n_elements_vb_lev[vb][ilev],_n_elements_vb_lev[vb][ilev],_elnodes[vb][QQ]);
             std::ostringstream coord_lev; coord_lev << "_L" << ilev; 
 	    IO::PrintXDMFGeometry(out,top_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[ilev],1);
             std::ostringstream pid_field;
@@ -557,7 +557,7 @@ void Mesh::PrintXDMFGridVB(std::ofstream& out,
 
     out << "<Grid Name=\"" << grid_mesh[vb].c_str() << "_L" << Level << "\"> \n";
     
-   IO::PrintXDMFTopology(out,top_file.str(),hdf_field.str(),_GeomEl.pname[vb],nel*_GeomEl.n_se[vb],nel*_GeomEl.n_se[vb],_GeomEl._elnds[vb][LL]);    
+   IO::PrintXDMFTopology(out,top_file.str(),hdf_field.str(),_GeomEl[vb].pname,nel*_GeomEl[vb].n_se,nel*_GeomEl[vb].n_se,_GeomEl[vb]._elnds[LL]);    
 
    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
    IO::PrintXDMFGeometry(out,geom_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[Level],1);
@@ -603,7 +603,7 @@ void Mesh::PrintConnLinVB(hid_t file, const uint Level, const uint vb) const {
    int conn[8][8];   uint *gl_conn;
   
     uint icount=0;
-    uint mode = _GeomEl._elnds[vb][QQ];
+    uint mode = _GeomEl[vb]._elnds[QQ];
     uint n_elements = _n_elements_vb_lev[vb][Level];
     uint nsubel, nnodes;
 

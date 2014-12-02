@@ -21,13 +21,13 @@ namespace femus {
  }
  
  
- QRule::QRule(GeomEl* geomel_in)  : _geomel(geomel_in),_qrule_type("Gauss5th")  {
+ QRule::QRule(std::vector<GeomEl> geomel_in)  : _geomel(geomel_in),_qrule_type("Gauss5th")  {
    
    
-       switch(_geomel->_geomel_type) {
+       switch(_geomel[VV]._geomel_type) {
 	 case(QUADR) : {
 
-               switch(_geomel->_dim) {
+               switch(_geomel[VV]._dim) {
 		    
 		    case(3) : {
 		      _NoGaussVB[VV] = 27;
@@ -49,7 +49,7 @@ namespace femus {
          } //end case quadrilateral
       
 	 case(TRIANG) :  {
-               switch(_geomel->_dim) {
+               switch(_geomel[VV]._dim) {
 		    
 		    case(3) : {
 		      _NoGaussVB[VV] = 15;
@@ -80,10 +80,10 @@ for (uint vb=0; vb < VB; vb++)    _weightVB[vb] = new double[_NoGaussVB[vb]];
        
 
 
-        switch(_geomel->_geomel_type) {
+        switch(_geomel[VV]._geomel_type) {
 	 case(QUADR) : {
 
-               switch(_geomel->_dim) {
+               switch(_geomel[VV]._dim) {
 		    
 		    case(3) : {
 
@@ -161,7 +161,7 @@ _weightVB[BB][2] =   0.555555555555555555555555555556    ;
          } //end case quadrilateral
       
 	 case(TRIANG) :  {
-               switch(_geomel->_dim) {
+               switch(_geomel[VV]._dim) {
 		    
 		    case(3) : {
 		      
