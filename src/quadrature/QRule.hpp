@@ -47,16 +47,14 @@ class QRule  {
   GeomEl _geomel;
 
 //Quadrature =========
-   std::string  _qrule_type;
+    std::string  _qrule_type;
     uint         _NoGaussVB;
-    double*       _weightVB;
+    std::vector<double>   _weightVB;
     
     
      QRule(GeomEl geomel_in);
     
-    ~QRule();
-    
-    
+  
     
 };
 

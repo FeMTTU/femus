@@ -9,15 +9,6 @@
 
 namespace femus {
 
-
- 
-
-  QRule::~QRule()  {
-    
-//      delete  []  _weightVB;
- 
- }
- 
  
  QRule::QRule(GeomEl geomel_in)  : _geomel(geomel_in),_qrule_type("Gauss5th")  {
    
@@ -80,7 +71,7 @@ namespace femus {
        
 //now fill the weights =========================
 
-    _weightVB = new double[_NoGaussVB];
+    _weightVB.resize(_NoGaussVB);
        
 
 
