@@ -23,6 +23,9 @@
 #include "FETet1.hpp"
 #include "FETet4.hpp"
 #include "FETet10.hpp"
+#include "FEEdge1.hpp"
+#include "FEEdge2.hpp"
+#include "FEEdge3.hpp"
 
 
 
@@ -59,6 +62,19 @@ FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order) {
 
 
   switch(geomel_in[VV]._dim) {
+
+  case(1): {
+
+      switch(order) {
+      case(QQ):
+        return new  FEEdge3(geomel_in)  ;  //FELagrange2D order2 on quadr
+      case(LL):
+        return new  FEEdge2(geomel_in)  ;  //FELagrange2D order1 on quadr
+      case(KK):
+        return new  FEEdge1(geomel_in)  ;  //FELagrange2D order0 on quadr
+      }
+
+  } //dim 1
 
   case(2): {
 
