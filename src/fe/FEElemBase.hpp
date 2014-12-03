@@ -38,7 +38,6 @@ public:
     void SetOrder(uint fe);
     uint         _ndof[VB];
     std::string  _name[VB]; 
-    std::string _pname[VB];  //TODO do we need this HERE? Printing is related to MESH  //in fact it seems like it is not needed!
     static  FEElemBase* build(std::vector<GeomEl> geomel_in, const uint order);
     
 // Quadrature ==
@@ -49,7 +48,6 @@ public:
     void evaluate_shape_at_qp();
     
 // Multigrid ======
-    uint _n_children;      //TODO this can be taken from the geometric element!
     virtual float get_embedding_matrix(const uint,const uint,const uint) = 0;
     virtual double get_prol(const uint) = 0;
 

@@ -36,7 +36,6 @@ namespace femus {
 FEElemBase::FEElemBase(std::vector<GeomEl> geomel_in ) {
 
   _geomel = geomel_in;
-  _n_children = _geomel[VV].n_se;
   
   _myelems.resize(VB);  //cannot go in build function, because it is static
   

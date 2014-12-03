@@ -11,8 +11,6 @@ FETet10::FETet10(std::vector<GeomEl> geomel_in) : FEElemBase(geomel_in) {
 	    
 	      _name[VV]="Tet_10";
 	      _name[BB]="Tri_6"; 
-             _pname[VV]="Tetrahedron";
-	     _pname[BB]="Triangle"; 
 	     
               _ndof[VV]=10;    
 	      _ndof[BB]=6;

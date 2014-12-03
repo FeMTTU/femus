@@ -11,8 +11,6 @@ FETri1::FETri1(std::vector<GeomEl> geomel_in) : FEElemBase(geomel_in) {
 	    
 	      _name[VV]="Tri_1";
 	      _name[BB]="Edge_1"; 
-             _pname[VV]="Triangle";
-	     _pname[BB]="Polyline"; 
 
 	     _ndof[VV]=1;    
 	     _ndof[BB]=1;
