@@ -4,7 +4,10 @@
 namespace femus {
 
 // =======================
-FEHex27::FEHex27(std::vector<GeomEl> geomel_in) : FEElemBase(geomel_in) {
+FEHex27::FEHex27(std::vector<GeomEl> geomel_in) :
+       FEElemBase(geomel_in), 
+     elem_type_3D("hex","biquadratic","fifth")
+{
 	    
 	      _name[VV]="Hex_27";
 	      _name[BB]="Quad_9"; 

@@ -39,6 +39,42 @@ FEElemBase::FEElemBase(std::vector<GeomEl> geomel_in ) {
   _n_children = _geomel[VV].n_se;
   
   _myelems.resize(VB);  //cannot go in build function, because it is static
+  
+//====== FUNCTION POINTERS SETUP ===========
+// initialize the function pointers outside, as well as everything that has to be accessible after all the "switch" things, so you have to only fill them inside
+  uint space_dim = _geomel[VV]._dim;
+  _DphiptrTwo.resize(VB);
+  _DphiptrTwo[VV].resize(space_dim);
+  _DphiptrTwo[BB].resize(space_dim-1);
+
+  switch(space_dim) {
+
+  case(2): {
+    _DphiptrTwo[VV][0] = &elem_type::GetDPhiDXi;
+    _DphiptrTwo[VV][1] = &elem_type::GetDPhiDEta;
+    _DphiptrTwo[BB][0] = &elem_type::GetDPhiDXi;
+
+    break;
+  }
+
+  case(3): {
+    _DphiptrTwo[VV][0] = &elem_type::GetDPhiDXi;
+    _DphiptrTwo[VV][1] = &elem_type::GetDPhiDEta;
+    _DphiptrTwo[VV][2] = &elem_type::GetDPhiDZeta;
+    _DphiptrTwo[BB][0] = &elem_type::GetDPhiDXi;
+    _DphiptrTwo[BB][1] = &elem_type::GetDPhiDEta;
+
+    break;
+  }
+
+  default: {
+    std::cout << "Space_dim ONE not implemented" << std::endl;
+    abort();
+    break;
+  }
+  }
+//====== END FUNCTION POINTERS  SETUP ===========
+
 
 }
 
@@ -57,6 +93,11 @@ FEElemBase::~FEElemBase() {
 
 //static function: it cannot act on the data of each instantiation ...
 
+//this build class allows me to return a pointer to a child of this class
+//even if i am a father
+//inside this class the children must be INSTANTIATED, and then they are returned.
+//These instantiations are never destroyed until you explicitly delete them
+//the build() function returns a POINTER
 
 FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order) {
 
@@ -67,11 +108,11 @@ FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order) {
 
       switch(order) {
       case(QQ):
-        return new  FEEdge3(geomel_in)  ;  //FELagrange2D order2 on quadr
+        return new  FEEdge3(geomel_in)  ;
       case(LL):
-        return new  FEEdge2(geomel_in)  ;  //FELagrange2D order1 on quadr
+        return new  FEEdge2(geomel_in)  ;
       case(KK):
-        return new  FEEdge1(geomel_in)  ;  //FELagrange2D order0 on quadr
+        return new  FEEdge1(geomel_in)  ; 
       }
 
   } //dim 1
@@ -138,15 +179,19 @@ FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order) {
   } //dim
 
 
+
+  
+  
+  
+  
+  
+  
+  
+  
 }
 
 
 
-//this build class allows me to return a pointer to a child of this class
-//even if i am a father
-//inside this class the children must be INSTANTIATED, and then they are returned.
-//These instantiations are never destroyed until you explicitly delete them
-//the build() function returns a POINTER
 
 
 
@@ -246,42 +291,7 @@ void FEElemBase::evaluate_shape_at_qp() {
   } //end VB
 
 
-//====== FUNCTION POINTERS SETUP ===========
-// initialize the function pointers outside, as well as everything that has to be accessible after all the "switch" things, so you have to only fill them inside
 
-  std::vector< std::vector<_FunctionPointerTwo> > DphiptrTwo(VB);  /// array of array of function pointers based on Volume and Boundary
-  DphiptrTwo[VV].resize(space_dim);
-  DphiptrTwo[BB].resize(space_dim-1);
-
-  switch(space_dim) {
-
-  case(2): {
-    DphiptrTwo[VV][0] = &elem_type::GetDPhiDXi;
-    DphiptrTwo[VV][1] = &elem_type::GetDPhiDEta;
-    DphiptrTwo[BB][0] = &elem_type::GetDPhiDXi;
-
-    break;
-  }
-
-  case(3): {
-    DphiptrTwo[VV][0] = &elem_type::GetDPhiDXi;
-    DphiptrTwo[VV][1] = &elem_type::GetDPhiDEta;
-    DphiptrTwo[VV][2] = &elem_type::GetDPhiDZeta;
-    DphiptrTwo[BB][0] = &elem_type::GetDPhiDXi;
-    DphiptrTwo[BB][1] = &elem_type::GetDPhiDEta;
-
-    break;
-  }
-
-  default: {
-    std::cout << "Space_dim ONE not implemented" << std::endl;
-    abort();
-    break;
-  }
-  }
-//====== END FUNCTION POINTERS  SETUP ===========
-
-  std::cout << " Read init FE order " << _order << std::endl;
   
  
 // ================================================================================
@@ -496,7 +506,7 @@ if (vb == VV && _order == QQ && space_dim == 3  && _geomel[VV]._geomel_type == Q
         uint dim = space_dim - vb;
         for (uint idim = 0; idim < dim; idim++) {
 // 		 double* temp =  ( _myelems[vb]->*(_myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
-          double* tempTwo =  ( _myelems[vb]->*(DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
+          double* tempTwo =  ( _myelems[vb]->*(_DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
           _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]] =  tempTwo[ map_hex27[idof] ];
           std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]]  << "                                      "  << std::endl;
 
@@ -527,7 +537,7 @@ if (vb == VV && _order == QQ && space_dim == 3  && _geomel[VV]._geomel_type == Q
         uint dim = space_dim - vb;
         for (uint idim = 0; idim < dim; idim++) {
 // 		 double* temp =  ( _myelems[vb]->*(_myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
-          double* tempTwo =  ( _myelems[vb]->*(DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
+          double* tempTwo =  ( _myelems[vb]->*(_DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
           _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]] =  tempTwo[idof];
           std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]]  << "                                      "  << std::endl;
 

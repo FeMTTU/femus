@@ -56,7 +56,7 @@ public:
 // ====================
   std::vector<elem_type*> _myelems;
   typedef double* (elem_type::*_FunctionPointerTwo)(const unsigned & ig) const; //declaring the FunctionPointer type
-  
+  std::vector< std::vector<_FunctionPointerTwo> > _DphiptrTwo;
     
     
 

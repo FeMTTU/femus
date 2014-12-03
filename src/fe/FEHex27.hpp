@@ -7,13 +7,13 @@
 
 
 #include "FEElemBase.hpp"
-
+#include "ElemType.hpp"
 
 namespace femus {
 
 
 
-class FEHex27 : public FEElemBase  {
+class FEHex27 : public FEElemBase, elem_type_3D {
 
 public:
   
