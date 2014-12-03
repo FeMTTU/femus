@@ -37,7 +37,6 @@ public:
     uint         _order;
     void SetOrder(uint fe);
     uint         _ndof[VB];
-    std::string  _name[VB]; 
     static  FEElemBase* build(std::vector<GeomEl> geomel_in, const uint order);
     
 // Quadrature ==

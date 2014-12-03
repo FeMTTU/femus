@@ -9,9 +9,6 @@ namespace femus {
 // =======================
 FEQuad9::FEQuad9(std::vector<GeomEl> geomel_in) : FEElemBase(geomel_in) {
   
-  _name[VV]="Quad_9";
-  _name[BB]="Edge_3"; 
-    
   _ndof[VV]=9;    
   _ndof[BB]=3;
   

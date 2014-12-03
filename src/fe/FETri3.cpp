@@ -9,9 +9,6 @@ namespace femus {
 // =======================
 FETri3::FETri3(std::vector<GeomEl> geomel_in) : FEElemBase(geomel_in) {
 	    
-	      _name[VV]="Tri_3";
-	      _name[BB]="Edge_2"; 
-
 	     _ndof[VV]=3;    
 	     _ndof[BB]=2;
 	  }

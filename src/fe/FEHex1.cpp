@@ -9,9 +9,6 @@ namespace femus {
 // =======================
 FEHex1::FEHex1(std::vector<GeomEl> geomel_in) : FEElemBase(geomel_in) {
 	    
-	      _name[VV]="Hex_1";
-	      _name[BB]="Quad_1"; 
-	     
               _ndof[VV]=1;    
 	      _ndof[BB]=1;
 	  }

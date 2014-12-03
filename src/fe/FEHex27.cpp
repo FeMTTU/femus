@@ -9,9 +9,6 @@ FEHex27::FEHex27(std::vector<GeomEl> geomel_in) :
      elem_type_3D("hex","biquadratic","fifth")
 {
 	    
-	      _name[VV]="Hex_27";
-	      _name[BB]="Quad_9"; 
-	     
               _ndof[VV]=27;    
 	      _ndof[BB]=9;
 	  }
