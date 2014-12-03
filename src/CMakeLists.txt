@@ -56,6 +56,7 @@ fe/FETri1.cpp
 fe/FETri3.cpp
 fe/FETri6.cpp
 fe/FEEdge3.cpp
+fe/FEEdge2.cpp
 fe/Hexaedron.cpp
 fe/Line.cpp
 fe/Quadrilateral.cpp
