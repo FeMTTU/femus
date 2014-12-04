@@ -82,7 +82,7 @@ class QuantityLocal;
 // ========================================================================================
 //========== ELEMENT: Current Geometric Element (SERVICE)  ========================
      uint  **_el_conn;             /// vector of the global nodes for that element         [VB][NNDS];
-     uint    _vol_iel_DofObj[VB];  /// i need to put the element also. both VV and BB
+     uint    _vol_iel_DofObj[VB];  /// i need to put the element also. both VV and BB      [VB]
    double  **_xx_nds;              /// vector of the node coordinates for that element     [VB][_spacedimension*NNDS];
    double  **_el_xm;               /// element center point                               [VB][_spacedimension];
 

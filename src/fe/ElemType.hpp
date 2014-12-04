@@ -124,7 +124,7 @@ protected:
   
   // member data
   int _nc,_nf,_nlag[3];
-  unsigned _SolType;
+  unsigned _SolType;   /*Finite Element Family flag*/
   const double **_X;
   const int **_IND;
   const int **_KVERT_IND;

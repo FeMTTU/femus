@@ -11,7 +11,7 @@
 
 namespace femus {
 
-
+// Merge this in Elem
 
 class GeomEl  {
 
@@ -22,7 +22,7 @@ public:
     
     uint _geomel_type;   /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
     uint _dim;           /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
-    uint _elnds[QL_NODES]; // I SWITCHED THIS ONE: VB first, QL next!!!   //number of nodes of one element [QL]
+    uint _elnds[QL_NODES]; //number of nodes of one element [QL]
     std::string name;             ///< element name 
     std::string pname;            ///< print element name for XDMF print (linear)
 

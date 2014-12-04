@@ -197,11 +197,6 @@ void FEElemBase::AssociateQRule(std::vector<QRule> qrule_in)  {
   _qrule = qrule_in;
 }
 
-void FEElemBase::SetOrder(uint fe)  {
-  _order = fe;
-}
-
-
 
 //======================
 // =======================
@@ -250,15 +245,15 @@ void FEElemBase::SetOrder(uint fe)  {
 // QUI c'e' un loop NGAUSS[vb,dim[vb],quadtri] x NDOFS[vb,dim[vb], feorder,quadtri]
 
 
-void FEElemBase::evaluate_shape_at_qp() {
+void FEElemBase::evaluate_shape_at_qp(const uint order_in) {
 
   if ( _geomel[VV]._geomel_type != QUADR && _geomel[VV]._geomel_type != TRIANG  ) {
     std::cout << "FE::FE: GeomEl type " << _geomel[VV]._geomel_type << " not supported" << std::endl;
     abort();
   }
 
-  if ( _order != QQ && _order != LL && _order != KK ) {
-    std::cout << "FE::FE: FE family " << _order << " not supported" << std::endl;
+  if ( order_in != QQ && order_in != LL && order_in != KK ) {
+    std::cout << "FE::FE: FE family " << order_in << " not supported" << std::endl;
     abort();
   }
 
@@ -275,7 +270,7 @@ void FEElemBase::evaluate_shape_at_qp() {
 // ================================================================================
 // ============================ begin switch fe order ===============================
 // ================================================================================
-  switch(_order) {  //what leads is the FE ORDER, the quadrature rule is usually mathematically chosen with respect to that
+  switch(order_in) {  //what leads is the FE ORDER, the quadrature rule is usually mathematically chosen with respect to that
 
 // ================================================================================
   case(QQ):  {
@@ -486,7 +481,7 @@ for (int vb=0; vb<VB; vb++) {
 // from eu connectivity to my (=libmesh) connectivity
 const unsigned map_hex27[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,24,20,21,22,23,25,26};
 
-if (vb == VV && _order == QQ && space_dim == 3  && _geomel[VV]._geomel_type == QUADR) {
+if (vb == VV && order_in == QQ && space_dim == 3  && _geomel[VV]._geomel_type == QUADR) {
             std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "REMEMBER THAT ONLY HEX27 HAS A DIFFERENT CONNECTIVITY MAP"  << std::endl;
 
   

@@ -31,9 +31,6 @@ public:
     std::vector<GeomEl>  _geomel;   //VB
 
 // FE ==========
-    uint         _order;
-    void SetOrder(uint fe);
-//     uint         _ndof[VB];
     static  FEElemBase* build(std::vector<GeomEl> geomel_in, const uint order);
     
 // Quadrature ==
@@ -41,7 +38,7 @@ public:
     void AssociateQRule(std::vector<QRule> qrule_in);
     double**      _phi_mapVBGD[VB];
     double** _dphidxez_mapVBGD[VB];
-    void evaluate_shape_at_qp();
+    void evaluate_shape_at_qp(const uint order);  /*This argument will be removed*/
     
 // Multigrid ======
     virtual float get_embedding_matrix(const uint,const uint,const uint) = 0;

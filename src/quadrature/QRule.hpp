@@ -48,7 +48,7 @@ class QRule  {
 
 //Quadrature =========
     std::string  _qrule_type;
-    uint         _NoGaussVB;
+    uint                  _NoGaussVB;
     std::vector<double>   _weightVB;
     
     

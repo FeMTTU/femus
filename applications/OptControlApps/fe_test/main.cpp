@@ -82,15 +82,15 @@
 
   // =======Abstract FEElems =====  //remember to delete the FE at the end
   std::vector< std::vector<FEElemBase*> >  FEElements_vec(VB); 
-  std::vector<FEElemBase*> FEElements(QL);  //TODO what if we dont want to call the default constructor?!? AAA here no constructor is called!!! If you have a pointer the constructor is not called!
+  std::vector<FEElemBase*> FEElements(QL);
+  const std::string  FEFamily[QL] = {"biquadratic","linear","constant"}; 
                                                      
   for (int fe=0; fe<QL; fe++) {
     FEElements[fe] = FEElemBase::build(mesh._GeomEl,fe);  //The order of the fe is established by the library
 //sort of constructor
-    FEElements[fe]->SetOrder(fe);
     FEElements[fe]->AssociateQRule(qrule);
 //end sort of constructor
-    FEElements[fe]->evaluate_shape_at_qp();
+    FEElements[fe]->evaluate_shape_at_qp(fe);
   }
 
   for (int vb=0;vb < VB; vb++) { 
