@@ -100,7 +100,6 @@ FEElemBase::~FEElemBase() {
 
 FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order) {
 
-
   switch(geomel_in[VV]._dim) {
 
   case(1): {
@@ -268,31 +267,11 @@ void FEElemBase::evaluate_shape_at_qp() {
     abort();
   }
 
-  std::string  geomel[2];
-  geomel[QUADR]  =  "quadr_";
-  geomel[TRIANG] = "triang_";
   uint space_dim = _geomel[VV]._dim;
 
   std::string gauss_ord = "fifth";
 
-  for (int vb=0; vb<VB; vb++) {
 
-    uint dim = space_dim - vb;
-
-    _phi_mapVBGD[vb] = new double*[_qrule[vb]._NoGaussVB];// TODO valgrind, remember to DEALLOCATE THESE
-    _dphidxez_mapVBGD[vb] = new double*[_qrule[vb]._NoGaussVB];
-
-    for (int g = 0; g < _qrule[vb]._NoGaussVB; g++) {
-      _phi_mapVBGD[vb][g] = new double[_ndof[vb]];
-      _dphidxez_mapVBGD[vb][g] = new double[_ndof[vb]*dim];
-    }
-
-  } //end VB
-
-
-
-  
- 
 // ================================================================================
 // ============================ begin switch fe order ===============================
 // ================================================================================
@@ -473,6 +452,23 @@ void FEElemBase::evaluate_shape_at_qp() {
 // ================================================================================
 
 
+// ============== allocate canonical shape ==================================================================
+for (int vb=0; vb<VB; vb++) {
+
+    uint dim = space_dim - vb;
+
+    _phi_mapVBGD[vb] = new double*[_qrule[vb]._NoGaussVB];// TODO valgrind, remember to DEALLOCATE THESE
+    _dphidxez_mapVBGD[vb] = new double*[_qrule[vb]._NoGaussVB];
+
+    for (int g = 0; g < _qrule[vb]._NoGaussVB; g++) {
+      _phi_mapVBGD[vb][g] = new double[_myelems[vb]->GetNDofs()];
+      _dphidxez_mapVBGD[vb][g] = new double[_myelems[vb]->GetNDofs()*dim];
+    }
+
+  } //end VB
+// ============== allocate canonical shape ==================================================================
+
+
   // loop ===========================
   // loop ===========================
   for (int vb=0; vb<VB; vb++) {
@@ -496,7 +492,7 @@ if (vb == VV && _order == QQ && space_dim == 3  && _geomel[VV]._geomel_type == Q
   
       for (int ig = 0; ig < _qrule[vb]._NoGaussVB; ig++) {
 
-      for (int idof=0; idof < _ndof[vb]; idof++) {
+      for (int idof=0; idof < _myelems[vb]->GetNDofs(); idof++) {
 //                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;
         _phi_mapVBGD[vb][ig][idof] = _myelems[vb]->GetPhi(ig)[ map_hex27[idof] ];
 // 	std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapVBGD[vb][ig][dof] << std::endl;
@@ -506,8 +502,8 @@ if (vb == VV && _order == QQ && space_dim == 3  && _geomel[VV]._geomel_type == Q
         for (uint idim = 0; idim < dim; idim++) {
 // 		 double* temp =  ( _myelems[vb]->*(_myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
           double* tempTwo =  ( _myelems[vb]->*(_DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
-          _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]] =  tempTwo[ map_hex27[idof] ];
-          std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]]  << "                                      "  << std::endl;
+          _dphidxez_mapVBGD[vb][ig][ idof + idim*_myelems[vb]->GetNDofs()] =  tempTwo[ map_hex27[idof] ];
+          std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_myelems[vb]->GetNDofs()]  << "                                      "  << std::endl;
 
         }
 
@@ -527,7 +523,7 @@ if (vb == VV && _order == QQ && space_dim == 3  && _geomel[VV]._geomel_type == Q
 
     for (int ig = 0; ig < _qrule[vb]._NoGaussVB; ig++) {
 
-      for (int idof=0; idof < _ndof[vb]; idof++) {
+      for (int idof=0; idof < _myelems[vb]->GetNDofs(); idof++) {
 //                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;
         _phi_mapVBGD[vb][ig][idof] = _myelems[vb]->GetPhi(ig)[idof];
 // 	std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapVBGD[vb][ig][dof] << std::endl;
@@ -537,8 +533,8 @@ if (vb == VV && _order == QQ && space_dim == 3  && _geomel[VV]._geomel_type == Q
         for (uint idim = 0; idim < dim; idim++) {
 // 		 double* temp =  ( _myelems[vb]->*(_myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
           double* tempTwo =  ( _myelems[vb]->*(_DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
-          _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]] =  tempTwo[idof];
-          std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_ndof[vb]]  << "                                      "  << std::endl;
+          _dphidxez_mapVBGD[vb][ig][ idof + idim*_myelems[vb]->GetNDofs()] =  tempTwo[idof];
+          std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_myelems[vb]->GetNDofs()]  << "                                      "  << std::endl;
 
         }
 

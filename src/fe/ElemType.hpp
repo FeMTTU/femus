@@ -105,6 +105,11 @@ public:
     return _GaussPointNumber;
   };
   
+  /** Retrieve the number of dofs for this element */
+  inline int  GetNDofs() const {
+    return _nc;
+  };
+    
   // member data
   static unsigned _refindex;
  

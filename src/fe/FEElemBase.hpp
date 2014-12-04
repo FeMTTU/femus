@@ -14,9 +14,6 @@ namespace femus {
 
 
 
-class Utils;
-
-
 //Basic finite element for VB
 //it is not quadratic and linear altogether, it is only quadratic or linear
 // The CONNECTION between GEOM ELEMENT, FE And QUADRATURE is to be cleared out
@@ -36,7 +33,7 @@ public:
 // FE ==========
     uint         _order;
     void SetOrder(uint fe);
-    uint         _ndof[VB];
+//     uint         _ndof[VB];
     static  FEElemBase* build(std::vector<GeomEl> geomel_in, const uint order);
     
 // Quadrature ==
@@ -51,7 +48,7 @@ public:
     virtual double get_prol(const uint) = 0;
 
 // ====================
-  std::vector<elem_type*> _myelems;
+  std::vector<elem_type*> _myelems;    //VB
   typedef double* (elem_type::*_FunctionPointerTwo)(const unsigned & ig) const; //declaring the FunctionPointer type
   std::vector< std::vector<_FunctionPointerTwo> > _DphiptrTwo;
     

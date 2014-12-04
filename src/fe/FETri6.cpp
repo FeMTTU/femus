@@ -7,11 +7,7 @@ namespace femus {
 
 
 // =======================
-FETri6::FETri6(std::vector<GeomEl> geomel_in) : FEElemBase(geomel_in) {
-	    
-	     _ndof[VV]=6;    
-	     _ndof[BB]=3;
-	  }
+FETri6::FETri6(std::vector<GeomEl> geomel_in) : FEElemBase(geomel_in) {  }
 	  
 // =======================
           FETri6::~FETri6() {    }

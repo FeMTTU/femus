@@ -13,7 +13,7 @@ namespace femus {
 
 
 
-class FEHex27 : public FEElemBase, elem_type_3D {
+class FEHex27 : public FEElemBase {
 
 public:
   

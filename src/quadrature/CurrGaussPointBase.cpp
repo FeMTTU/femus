@@ -32,10 +32,10 @@ CurrGaussPointBase::CurrGaussPointBase( EquationsMap& e_map_in ):
 
   for (int vb = 0; vb < VB; vb++) {
      for (int fe = 0; fe < QL; fe++) {
-   _dphidxyz_ndsQLVB_g3D[vb][fe] =  new double[ 3 * _AbsFEVect[fe]->_ndof[vb]]; //both VV and BB are 3 in general (vector product, or ONE?!?)
-     _dphidxyz_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _AbsFEVect[fe]->_ndof[vb]];   
-  _dphidxezeta_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _AbsFEVect[fe]->_ndof[vb]];     
-          _phi_ndsQLVB_g[vb][fe] =  new double[ _AbsFEVect[fe]->_ndof[vb]];     
+   _dphidxyz_ndsQLVB_g3D[vb][fe] =  new double[ 3 * _AbsFEVect[fe]->_myelems[vb]->GetNDofs() ]; //both VV and BB are 3 in general (vector product, or ONE?!?)
+     _dphidxyz_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _AbsFEVect[fe]->_myelems[vb]->GetNDofs() ];   
+  _dphidxezeta_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _AbsFEVect[fe]->_myelems[vb]->GetNDofs() ];     
+          _phi_ndsQLVB_g[vb][fe] =  new double[ _AbsFEVect[fe]->_myelems[vb]->GetNDofs() ];     
    }
  }  
   

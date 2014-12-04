@@ -7,11 +7,7 @@ namespace femus {
 
 
 // =======================
-FEQuad1::FEQuad1(std::vector<GeomEl> geomel_in) : FEElemBase(geomel_in) {
-  
-   _ndof[VV]=1;    
-   _ndof[BB]=1;
-	  }
+FEQuad1::FEQuad1(std::vector<GeomEl> geomel_in) : FEElemBase(geomel_in) {   }
 	  
 // =======================
           FEQuad1::~FEQuad1() {    }

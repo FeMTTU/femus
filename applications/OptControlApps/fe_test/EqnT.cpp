@@ -136,8 +136,8 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     QuantityLocal xyz(currgp,currelem);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_ndof[VV];
-    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_ndof[BB];
+    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_myelems[VV]->GetNDofs();
+    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_myelems[BB]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 
@@ -509,8 +509,8 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_ndof[VV];
-    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_ndof[BB];
+    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_myelems[VV]->GetNDofs();
+    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_myelems[BB]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 
@@ -620,8 +620,8 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_ndof[VV];
-    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_ndof[BB];
+    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_myelems[VV]->GetNDofs();
+    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_myelems[BB]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 

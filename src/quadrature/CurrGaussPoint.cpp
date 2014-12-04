@@ -47,7 +47,7 @@ CurrGaussPoint<FM_DIM>::~CurrGaussPoint() {
 template <unsigned int FM_DIM>
 void CurrGaussPoint<FM_DIM>::SetPhiElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp) {
   
-    const uint el_nnodes =  _AbsFEVect[qlflag]->_ndof[vbflag];
+    const uint el_nnodes =  _AbsFEVect[qlflag]->_myelems[vbflag]->GetNDofs();
     const uint el_ngauss =  _qrule[vbflag]._NoGaussVB;
    
    
@@ -77,7 +77,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const ui
     
     
   const uint ndim      = _IntDim[vbflag];
-  const uint el_nnodes = _AbsFEVect[qlflag]->_ndof[vbflag];
+  const uint el_nnodes = _AbsFEVect[qlflag]->_myelems[vbflag]->GetNDofs();
   const uint el_ngauss = _qrule[vbflag]._NoGaussVB;
   const uint goffset   = el_nnodes*el_ngauss;
 
@@ -120,7 +120,7 @@ void  CurrGaussPoint<FM_DIM>::ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const
 
   //AAA: valid from dimension to 3
 
-  const uint el_ndofs = _AbsFEVect[qlflag]->_ndof[vbflag];
+  const uint el_ndofs = _AbsFEVect[qlflag]->_myelems[vbflag]->GetNDofs();
   const uint ndim     = _IntDim[vbflag]/*dimension*/;
 //set to zero  
    for (uint eln=0; eln<el_ndofs; eln++)  {
@@ -146,7 +146,7 @@ template <unsigned int FM_DIM>
 void  CurrGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp) {
     
            const uint ndim = _IntDim[vbflag];
-         const uint elndof = _AbsFEVect[qlflag]->_ndof[vbflag];
+         const uint elndof = _AbsFEVect[qlflag]->_myelems[vbflag]->GetNDofs();
     const uint   el_ngauss = _qrule[vbflag]._NoGaussVB;
       const uint   goffset = elndof*el_ngauss;
 
@@ -280,7 +280,7 @@ double CurrGaussPoint<FM_DIM>::JacVectBB_g(const uint vb, QuantityLocal& xyz )/*
 
     const uint    Order = xyz._FEord;  //order of the coordinate transformation 
     const uint     xoff = _eqnmap._mesh._GeomEl[vb]._elnds[Order];
-    const uint elnshape = _eqnmap._AbstractFE[VV][Order]->_ndof[vb];
+    const uint elnshape = _eqnmap._AbstractFE[VV][Order]->_myelems[vb]->GetNDofs();
 //     double dxyzdxieta_g[FM_DIM - 1][FM_DIM]; 
     //TODO TODO TODO NOW I'LL PUT IT  CLASS MEMBER, (IT SHOULD STAY TOGETHER WITH _normal, _tangent and _jacobian...) 
     // I don't know if it wins to have the STATIC ALLOCATION outside or not...
@@ -440,7 +440,7 @@ double CurrGaussPoint<FM_DIM>::JacVectVV_g(const uint vb, QuantityLocal& xyz )/*
 
 const uint Order    = xyz._FEord;  //order of the coordinate transformation
 const uint xoff     = _eqnmap._mesh._GeomEl[vb]._elnds[Order];
-const uint elnshape = _AbsFEVect[Order]->_ndof[vb]; 
+const uint elnshape = _AbsFEVect[Order]->_myelems[vb]->GetNDofs(); 
 // const uint space_dim = _eqnmap._mesh._dim;
 
   

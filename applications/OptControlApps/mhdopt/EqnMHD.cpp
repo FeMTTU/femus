@@ -118,8 +118,8 @@ namespace femus {
     QuantityLocal Phij(currgp,currelem); //TODO this is another Vect that doesnt have an associated quantity still
     Phij._dim      = 1;                                                         //scalar!
     Phij._FEord    = bhomOld._FEord;
-    Phij._ndof[VV] = _AbstractFE[VV][Phij._FEord]->_ndof[VV]; 
-    Phij._ndof[BB] = _AbstractFE[VV][Phij._FEord]->_ndof[BB];
+    Phij._ndof[VV] = _AbstractFE[VV][Phij._FEord]->_myelems[VV]->GetNDofs(); 
+    Phij._ndof[BB] = _AbstractFE[VV][Phij._FEord]->_myelems[BB]->GetNDofs();
     Phij._val_g    = new double [Phij._dim];
     Phij._grad_g   = new double*[Phij._dim];                                    //for VARIOUS Operators, like the grads and curls of the other Vects...
   for (uint i=0; i< Phij._dim;i++) {Phij._grad_g[i] = new double[DIMENSION];}
@@ -128,8 +128,8 @@ namespace femus {
     QuantityLocal Phii(currgp,currelem);
     Phii._dim      = 1;
     Phii._FEord    = bhomOld._FEord;
-    Phii._ndof[VV] = _AbstractFE[VV][Phii._FEord]->_ndof[VV]; 
-    Phii._ndof[BB] = _AbstractFE[VV][Phii._FEord]->_ndof[BB];
+    Phii._ndof[VV] = _AbstractFE[VV][Phii._FEord]->_myelems[VV]->GetNDofs(); 
+    Phii._ndof[BB] = _AbstractFE[VV][Phii._FEord]->_myelems[BB]->GetNDofs();
     Phii._val_g    = new double [Phii._dim];
     Phii._grad_g   = new double*[Phii._dim];
     for (uint i=0; i< Phii._dim;i++) {Phii._grad_g[i] = new double[DIMENSION];}    //for various Operators
@@ -140,16 +140,16 @@ namespace femus {
     QuantityLocal Psij(currgp,currelem);
     Psij._dim      = 1;
     Psij._FEord    = LagMultOld._FEord;
-    Psij._ndof[VV] = _AbstractFE[VV][Psij._FEord]->_ndof[VV]; 
-    Psij._ndof[BB] = _AbstractFE[VV][Psij._FEord]->_ndof[BB];
+    Psij._ndof[VV] = _AbstractFE[VV][Psij._FEord]->_myelems[VV]->GetNDofs(); 
+    Psij._ndof[BB] = _AbstractFE[VV][Psij._FEord]->_myelems[BB]->GetNDofs();
     Psij._val_g    = new double [Psij._dim];
     
 //QTYONE tEST: test of the second Unknown
     QuantityLocal Psii(currgp,currelem);
     Psii._dim      = 1;
     Psii._FEord    = LagMultOld._FEord;
-    Psii._ndof[VV] = _AbstractFE[VV][Psii._FEord]->_ndof[VV];
-    Psii._ndof[BB] = _AbstractFE[VV][Psii._FEord]->_ndof[BB];
+    Psii._ndof[VV] = _AbstractFE[VV][Psii._FEord]->_myelems[VV]->GetNDofs();
+    Psii._ndof[BB] = _AbstractFE[VV][Psii._FEord]->_myelems[BB]->GetNDofs();
     Psii._val_g    = new double [Psii._dim];
 
 //========= END tEST AND SHAPE FOR QTYZERO AND QTYONE =================
@@ -160,8 +160,8 @@ namespace femus {
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_ndof[VV];
-    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_ndof[BB];
+    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_myelems[VV]->GetNDofs();
+    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_myelems[BB]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
     
