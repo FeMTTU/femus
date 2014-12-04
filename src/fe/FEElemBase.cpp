@@ -98,13 +98,22 @@ FEElemBase::~FEElemBase() {
 //These instantiations are never destroyed until you explicitly delete them
 //the build() function returns a POINTER
 
-FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order) {
+FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order_in) {
 
+  if ( geomel_in[VV]._geomel_type != QUADR && geomel_in[VV]._geomel_type != TRIANG  ) {
+    std::cout << "FE::FE: GeomEl type " << geomel_in[VV]._geomel_type << " not supported" << std::endl;
+    abort();
+  }
+
+  if ( order_in != QQ && order_in != LL && order_in != KK ) {
+    std::cout << "FE::FE: FE family " << order_in << " not supported" << std::endl;
+    abort();
+  }  
   switch(geomel_in[VV]._dim) {
 
   case(1): {
 
-      switch(order) {
+      switch(order_in) {
       case(QQ):
         return new  FEEdge3(geomel_in)  ;
       case(LL):
@@ -119,7 +128,7 @@ FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order) {
 
     switch(geomel_in[VV]._geomel_type) {
     case(QUADR): {
-      switch(order) {
+      switch(order_in) {
       case(QQ):
         return new  FEQuad9(geomel_in)  ;  //FELagrange2D order2 on quadr
       case(LL):
@@ -129,7 +138,7 @@ FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order) {
       }
     }
     case(TRIANG): {
-      switch(order) {
+      switch(order_in) {
       case(QQ):
         return new  FETri6(geomel_in)  ;
       case(LL):
@@ -146,7 +155,7 @@ FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order) {
 
     switch(geomel_in[VV]._geomel_type) {
     case(QUADR): {
-      switch(order) {
+      switch(order_in) {
       case(QQ):
         return new  FEHex27(geomel_in)  ;
       case(LL):
@@ -156,7 +165,7 @@ FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order) {
       }
     }
     case(TRIANG): {
-      switch(order) {
+      switch(order_in) {
       case(QQ):
         return new  FETet10(geomel_in)  ;
       case(LL):
@@ -195,6 +204,13 @@ FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order) {
 
 void FEElemBase::AssociateQRule(std::vector<QRule> qrule_in)  {
   _qrule = qrule_in;
+  
+    if ( _qrule[VV]._qrule_type != "Gauss5th") {
+    std::cout << "Quadrature rule not implemented" << std::endl;
+    abort();
+  }
+  
+  return;
 }
 
 
@@ -246,21 +262,6 @@ void FEElemBase::AssociateQRule(std::vector<QRule> qrule_in)  {
 
 
 void FEElemBase::evaluate_shape_at_qp(const uint order_in) {
-
-  if ( _geomel[VV]._geomel_type != QUADR && _geomel[VV]._geomel_type != TRIANG  ) {
-    std::cout << "FE::FE: GeomEl type " << _geomel[VV]._geomel_type << " not supported" << std::endl;
-    abort();
-  }
-
-  if ( order_in != QQ && order_in != LL && order_in != KK ) {
-    std::cout << "FE::FE: FE family " << order_in << " not supported" << std::endl;
-    abort();
-  }
-
-  if ( _qrule[VV]._qrule_type != "Gauss5th") {
-    std::cout << "Quadrature rule not implemented" << std::endl;
-    abort();
-  }
 
   uint space_dim = _geomel[VV]._dim;
 
