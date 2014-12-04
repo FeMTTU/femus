@@ -57,7 +57,7 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=4;
+  nm=3;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
   nr=0;
@@ -88,15 +88,17 @@ int main(int argc,char **args) {
    ml_sol.AddSolution("U",LAGRANGE,SECOND);
    ml_sol.AddSolution("V",LAGRANGE,SECOND);
 //   // the pressure variable should be the last for the Schur decomposition
-//   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
+   //ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
   
-  ml_sol.AddSolution("T",LAGRANGE,FIRST);
+ 
 //  ml_sol.AddSolution("U",LAGRANGE,FIRST);
 //  ml_sol.AddSolution("V",LAGRANGE,FIRST);
   // the pressure variable should be the last for the Schur decomposition
   ml_sol.AddSolution("P",LAGRANGE,FIRST);
   ml_sol.AssociatePropertyToSolution("P","Pressure");
  
+   ml_sol.AddSolution("T",LAGRANGE,FIRST);
+  
   //Initialize (update Init(...) function)
   ml_sol.Initialize("U",InitVariableU);
   ml_sol.Initialize("V");
@@ -134,7 +136,7 @@ int main(int argc,char **args) {
   
   // Set MG Options
   system1.AttachAssembleFunction(AssembleMatrixResNS);  
-  system1.SetMaxNumberOfNonLinearIterations(20);
+  system1.SetMaxNumberOfNonLinearIterations(60);
   system1.SetMaxNumberOfLinearIterations(2);
   system1.SetAbsoluteConvergenceTolerance(1.e-10);
   system1.SetNonLinearConvergenceTolerance(1.e-10);
@@ -376,19 +378,17 @@ bool SetBoundaryConditionCavityFlow(const double& x, const double& y, const doub
       if(y<0.5 && y>-0.5) value=1.;//4*(0.5-y)*(y+0.5);
     }
   }  
+  
+  if(!strcmp(name,"P")){
+    test=0.;
+    value=0.;
+    if(x < -.5+1.e-08 && y < -.5+1.e-08) {
+      test=1;
+    }
+  }
+  
   return test;
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 // //------------------------------------------------------------------------------------------------------------
@@ -488,8 +488,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     // gravity
     double _gravity[3]={0.,0.,0.};
      
-    IRe =( 100*(counter+1) < 400 )? 1./(100*(counter+1)):1./400.;
-    cout<<"iteration="<<counter<<" Inverse Reynolds = "<<IRe<<endl;
+    IRe =( 150*(counter+1) < 5000 )? 1./(150*(counter+1)):1./5000.;
+    
+    
+    cout<<"iteration="<<counter<<" Reynolds Number = "<<1./IRe<<endl;
     counter++;
     // -----------------------------------------------------------------
     // space discretization parameters
@@ -565,26 +567,26 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     
       for (unsigned i=0;i<nve;i++) {
 	unsigned inode=myel->GetMeshDof(kel,i,SolType2);
-	unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+	unsigned inode_Metis=mymsh->GetMetisDof(inode,SolType2);
 	// flag to know if the node "inode" lays on the fluid-solid interface
 	
 	for(int j=0; j<dim; j++) {
 	  // velocity dofs
 	  Soli[indexVAR[j]][i] =  (*mysolution->_Sol[indVAR[j]])(inode_Metis);
-	  aRhs[indexVAR[j]][i] = 0.;
 	  dofsVAR[j][i] = myLinEqSolver->GetKKDof(indVAR[j],indexVAR[j],inode); 
+	  aRhs[indexVAR[j]][i] = 0.;
 	  //coordinates
 	  vx[j][i]=  (*mymsh->_coordinate->_Sol[j])(inode_Metis); 
 	  
 	}
       }
-
+      
       // pressure dofs
       for (unsigned i=0;i<nve1;i++) {
 	unsigned inode=myel->GetMeshDof(kel,i,SolType1);
-	unsigned inode_Metis =mymsh->GetMetisDof(inode,SolType[dim]);
-	dofsVAR[dim][i]=myLinEqSolver->GetKKDof(indVAR[dim],indexVAR[dim],inode);
+	unsigned inode_Metis =mymsh->GetMetisDof(inode,SolType1);
 	Soli[indexVAR[dim]][i] = (*mysolution->_Sol[indVAR[dim]])(inode_Metis);
+	dofsVAR[dim][i]=myLinEqSolver->GetKKDof(indVAR[dim],indexVAR[dim],inode);
 	aRhs[indexVAR[dim]][i] = 0.;
       }
       
@@ -650,11 +652,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	  // *** get Jacobian and test function and test function derivatives in the moving frame***
 	  mymsh->_finiteElement[kelt][SolType2]->Jacobian_AD(vx,ig,Weight,phi,gradphi,nablaphi);
 	  mymsh->_finiteElement[kelt][SolType1]->Jacobian_AD(vx,ig,Weight1,phi1,gradphi1,nablaphi1);  
-	  
-	 
-	 // vector< double > V(dim,0.);
-	  //unsigned ir = referenceElementPoint[kelt];
-	
+	  	
 	  //  velocity: solution, gradient and laplace
 	  for(int i=0; i<dim; i++){
 	    SolVAR[i]=0.;
@@ -709,7 +707,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	      s[ivar]=u[ivar]/uL2Norm;
 	  
 	    // element lenght h(s) = 2. ( \sum_i |s . gradphi_i | )^(-1)
-	    double h=0;
+	    double h=0.;
 	    for (unsigned i=0; i<nve; i++) {
 	      double sDotGradphi=0.; 
 	      for(int ivar=0; ivar<dim; ivar++)
@@ -717,7 +715,6 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	      h += fabs(sDotGradphi);
 	    }
 	    h = 2./h;
-	  
 	    //tauSupg
 	    double Reu   = (uL2Norm*h)/(2*IRe);
 	    double zReu  = (Reu <= 3)? Reu/3.:1;
@@ -765,7 +762,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 		for(int ivar=0;ivar<dim;ivar++){
 		  MinusResDotGradq += - ResSupg[ivar]*gradphi1[i*dim+ivar]*tauSupg; 
 		}
-		aRhs[indexVAR[dim]][i] += ( -(-div_vel)*phi1[i] - MinusResDotGradq )*Weight;
+		aRhs[indexVAR[dim]][i] += ( -(-div_vel)*phi1[i] )*Weight;
 	      }
 	    }
 	    //END continuity block ===========================
