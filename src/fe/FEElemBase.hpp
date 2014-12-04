@@ -7,7 +7,7 @@
 #include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
 #include "GeomEl.hpp"
-#include "QRule.hpp"
+#include "GaussPoints.hpp"
 #include "ElemType.hpp"
 
 namespace femus {
@@ -37,8 +37,8 @@ public:
     const GeomEl  _geomel;   //basically used only at construction  
 
 // Quadrature ==
-    std::vector<QRule> _qrule;   //VB
-    void AssociateQRule(std::vector<QRule> qrule_in);
+    std::vector<Gauss> _qrule;   //VB
+    void AssociateQRule(std::vector<Gauss> qrule_in);
     double**      _phi_mapVBGD[VB];
     double** _dphidxez_mapVBGD[VB];
     void evaluate_shape_at_qp(const uint order);  /*This argument will be removed*/

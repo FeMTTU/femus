@@ -4018,7 +4018,7 @@ const uint myproc= _iproc;
   double integral = 0.;
   
 //loop over the geom el types
-      const uint el_ngauss = _eqnmap._qrule[vb]._NoGaussVB;   //elem gauss points  
+      const uint el_ngauss = _eqnmap._qrule[vb].GetGaussPointsNumber();
 
 //parallel sum
     const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
@@ -4040,7 +4040,7 @@ double  Jac_g=0.;
           if (vb==0)   Jac_g = currgp.JacVectVV_g(vb,xyz);  //not xyz_refbox!      
      else if (vb==1)   Jac_g = currgp.JacVectBB_g(vb,xyz);  //not xyz_refbox!      
 
-   const double  wgt_g = _eqnmap._qrule[vb]._weightVB[qp];
+   const double  wgt_g = _eqnmap._qrule[vb].GetGaussWeight(qp);
 
      for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (vb,fe,qp);  }
 
@@ -4058,7 +4058,7 @@ double myval_g = pt2func(time,xyz._val_g);
          std::cout << std::endl << "vb = " << vb << " ^^^^^^^^^^^^^^^^^L'integrale sul processore "<< myproc << " vale: " << integral << std::endl;
 
     double weights_sum = 0.;
-    for (uint qp = 0; qp < el_ngauss; qp++)  weights_sum += _eqnmap._qrule[vb]._weightVB[qp];
+    for (uint qp = 0; qp < el_ngauss; qp++)  weights_sum += _eqnmap._qrule[vb].GetGaussWeight(qp);
        std::cout << std::endl << "vb = " << vb << " ^^^^^^^^^^^^^^^^^ La somma dei pesi  vale: " << weights_sum << std::endl;
 
        double J=0.;

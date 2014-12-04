@@ -178,7 +178,7 @@ FEElemBase* FEElemBase::build(const GeomEl & geomel_in, const uint fe_family_in)
 
 
 
-void FEElemBase::AssociateQRule(std::vector<QRule> qrule_in)  {
+void FEElemBase::AssociateQRule(std::vector<Gauss> qrule_in)  {
   _qrule = qrule_in;
   
   return;
@@ -374,10 +374,10 @@ for (int vb=0; vb<VB; vb++) {
 
     uint dim = space_dim - vb;
 
-    _phi_mapVBGD[vb] = new double*[_qrule[vb]._NoGaussVB];// TODO valgrind, remember to DEALLOCATE THESE
-    _dphidxez_mapVBGD[vb] = new double*[_qrule[vb]._NoGaussVB];
+    _phi_mapVBGD[vb] = new double*[_qrule[vb].GetGaussPointsNumber()];// TODO valgrind, remember to DEALLOCATE THESE
+    _dphidxez_mapVBGD[vb] = new double*[_qrule[vb].GetGaussPointsNumber()];
 
-    for (int g = 0; g < _qrule[vb]._NoGaussVB; g++) {
+    for (int g = 0; g < _qrule[vb].GetGaussPointsNumber(); g++) {
       _phi_mapVBGD[vb][g] = new double[_myelems[vb]->GetNDofs()];
       _dphidxez_mapVBGD[vb][g] = new double[_myelems[vb]->GetNDofs()*dim];
     }
@@ -390,7 +390,7 @@ for (int vb=0; vb<VB; vb++) {
   // loop ===========================
   for (int vb=0; vb<VB; vb++) {
 
-    if ( _myelems[vb]->GetGaussPointNumber() != _qrule[vb]._NoGaussVB) {
+    if ( _myelems[vb]->GetGaussPointNumber() != _qrule[vb].GetGaussPointsNumber()) {
       std::cout << "Wrong gauss points" << std::endl;
       abort();
     }
@@ -407,7 +407,7 @@ if ( vb == VV && fe_family_in == QQ && space_dim == 3  && (!strcmp(_geomel._geom
             std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "REMEMBER THAT ONLY HEX27 HAS A DIFFERENT CONNECTIVITY MAP"  << std::endl;
 
   
-      for (int ig = 0; ig < _qrule[vb]._NoGaussVB; ig++) {
+      for (int ig = 0; ig < _qrule[vb].GetGaussPointsNumber(); ig++) {
 
       for (int idof=0; idof < _myelems[vb]->GetNDofs(); idof++) {
 //                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;
@@ -438,7 +438,7 @@ if ( vb == VV && fe_family_in == QQ && space_dim == 3  && (!strcmp(_geomel._geom
 
    else { 
 
-    for (int ig = 0; ig < _qrule[vb]._NoGaussVB; ig++) {
+    for (int ig = 0; ig < _qrule[vb].GetGaussPointsNumber(); ig++) {
 
       for (int idof=0; idof < _myelems[vb]->GetNDofs(); idof++) {
 //                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;

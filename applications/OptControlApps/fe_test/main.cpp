@@ -72,11 +72,11 @@
   phys.set_mesh(&mesh);
   
   
-// ======  QRule ================================ //so far we have ONLY ONE quadrature rule for all the equations
-  std::vector<QRule>   qrule;
+// ======  QRule ================================
+  std::vector<Gauss>   qrule;
   qrule.reserve(VB);
   for (int vb=0;vb < VB; vb++) { 
-          QRule qrule_temp(mesh._GeomEl[vb]); 
+          Gauss qrule_temp(mesh._GeomEl[vb]._geomel_id.c_str(),"fifth"); 
          qrule.push_back(qrule_temp);
   }
 

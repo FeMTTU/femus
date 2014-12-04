@@ -93,16 +93,24 @@
   class Gauss {
      
   public:
-     
+
+  inline double  GetGaussWeight(const unsigned ig) const {
+    return GaussWeight[ig];
+  };
+  
+  inline unsigned GetGaussPointsNumber() const {
+      return GaussPoints;
+  };     
+
+   /*protected*/
+   
     int gauss_order;
     const double *GaussWeight;
     unsigned GaussPoints;  
     
     Gauss(const char *geom_elem, const char *order_gauss);
      
-     
-     
-     
+   
   };
      
      

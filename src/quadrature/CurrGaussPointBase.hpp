@@ -4,7 +4,7 @@
 #include "Typedefs.hpp"
 #include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"
-#include "QRule.hpp"
+#include "GaussPoints.hpp"
 
 
 namespace femus {
@@ -38,7 +38,7 @@ class EquationsMap;
  
     EquationsMap         & _eqnmap;
     FEElemBase*         _AbsFEVect[QL];
-    std::vector<QRule>   _qrule;
+    std::vector<Gauss>   _qrule;
     uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
     double*         _phi_ndsQLVB_g[VB][QL];  //canonical functions  //TODO here it seems to contain GAUSS x ELDOFS
     double* _dphidxezeta_ndsQLVB_g[VB][QL];  //canonical derivatives

@@ -202,7 +202,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     int T4_ord = T4_ORD;
   
   /// b) Element  Loop over the volume (n_elem)
-   const uint el_ngauss = _eqnmap._qrule[vb]._NoGaussVB;
+   const uint el_ngauss = _eqnmap._qrule[vb].GetGaussPointsNumber();
    const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
    const uint nel_b = _mesh._off_el[vb][_NoLevels*myproc+Level];
 
@@ -272,7 +272,7 @@ for (uint fe = 0; fe < QL; fe++)   {
 }
 	  
 const double      det = dt*currgp.JacVectVV_g(vb,xyz);
-const double dtxJxW_g = det*_eqnmap._qrule[vb]._weightVB[qp];
+const double dtxJxW_g = det*_eqnmap._qrule[vb].GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { currgp.SetDPhiDxyzElDofsFEVB_g   (vb,fe,qp); }
@@ -499,7 +499,7 @@ int el_Neum_flag=0;
     currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp); 
   }
         const double  det   = dt*currgp.JacVectBB_g(vb,xyz);
-        const double dtxJxW_g = det * _eqnmap._qrule[vb]._weightVB[qp];
+        const double dtxJxW_g = det * _eqnmap._qrule[vb].GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
        xyz.val_g(vb);
@@ -707,7 +707,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
     
    double integral = 0.;
 
-      const uint el_ngauss = _eqnmap._qrule[vb]._NoGaussVB;
+      const uint el_ngauss = _eqnmap._qrule[vb].GetGaussPointsNumber();
 
 //parallel sum
     const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
@@ -741,7 +741,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
      for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }  
      
    const double  Jac_g = currgp.JacVectVV_g(vb,xyz);  //not xyz_refbox!      
-   const double  wgt_g = _eqnmap._qrule[vb]._weightVB[qp];
+   const double  wgt_g = _eqnmap._qrule[vb].GetGaussWeight(qp);
 
      for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (vb,fe,qp);  }
 
@@ -842,7 +842,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
    double integral = 0.;
 
 //loop over the geom el types
-      const uint el_ngauss = _eqnmap._qrule[vb]._NoGaussVB;   //elem gauss points
+      const uint el_ngauss = _eqnmap._qrule[vb].GetGaussPointsNumber();
 
 //parallel sum
     const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
@@ -868,7 +868,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
     }  
      
       const double  Jac_g = currgp.JacVectVV_g(vb,xyz);  //not xyz_refbox!      
-      const double  wgt_g = _eqnmap._qrule[vb]._weightVB[qp];
+      const double  wgt_g = _eqnmap._qrule[vb].GetGaussWeight(qp);
 
   Tlift.val_g(vb);
   Tlift.grad_g(vb);
