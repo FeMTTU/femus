@@ -97,12 +97,17 @@ public:
 //                double &Weight, double *other_phi) const;
 
   /** To be Added */
-  double  GetGaussWeight(const unsigned ig) const {
+  inline const Gauss GetGaussRule() const {
+    return _gauss;
+  };
+  
+  /** To be Added */
+  inline double  GetGaussWeight(const unsigned ig) const {
     return _gauss.GetGaussWeightsPointer()[ig];
   };
   
   /** To be Added */
-  unsigned GetGaussPointNumber() const {
+  inline unsigned GetGaussPointNumber() const {
     return _gauss.GetGaussPointsNumber();
   };
   

@@ -86,8 +86,7 @@
                                                      
   for (int fe=0; fe<QL; fe++) {
     FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV],fe);  //The order of the fe is established by the library
-    FEElements[fe]->AssociateQRule(qrule);
-    FEElements[fe]->evaluate_shape_at_qp(fe);
+    FEElements[fe]->evaluate_shape_at_qp(fe,qrule[VV].GetGaussOrderString().c_str());
   }
 
   for (int vb=0;vb < VB; vb++) { 

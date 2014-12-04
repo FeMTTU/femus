@@ -101,8 +101,7 @@ int main(int argc, char** argv) {
  
   for (int fe=0; fe<QL; fe++) {
     FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV],fe);  
-    FEElements[fe]->AssociateQRule(qrule);
-    FEElements[fe]->evaluate_shape_at_qp(fe);
+    FEElements[fe]->evaluate_shape_at_qp(fe,qrule[VV].GetGaussOrderString().c_str());
   }
   
 

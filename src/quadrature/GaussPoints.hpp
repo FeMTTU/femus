@@ -101,15 +101,15 @@
     return GaussWeight;
   };
   
-  inline double  GetGaussWeight(const unsigned ig) const {
+  inline const double  GetGaussWeight(const unsigned ig) const {
     return GaussWeight[ig];
   };
   
-  inline unsigned GetGaussPointsNumber() const {
+  inline const unsigned GetGaussPointsNumber() const {
       return GaussPoints;
   };     
 
-  inline std::string  GetGaussOrderString() const {
+  inline const std::string  GetGaussOrderString() const {
     return _order;
   };
   
