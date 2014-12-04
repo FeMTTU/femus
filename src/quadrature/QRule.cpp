@@ -11,7 +11,7 @@
 namespace femus {
 
  
- QRule::QRule(const GeomEl & geomel_in)  : _geomel(geomel_in),_qrule_type("Gauss5th")  {
+ QRule::QRule(const GeomEl & geomel_in)  : _geomel(geomel_in),_qrule_type("fifth")  {
 
    
       if (!strcmp(_geomel._geomel_id.c_str(),"hex")) {  

@@ -181,11 +181,6 @@ FEElemBase* FEElemBase::build(const GeomEl & geomel_in, const uint fe_family_in)
 void FEElemBase::AssociateQRule(std::vector<QRule> qrule_in)  {
   _qrule = qrule_in;
   
-    if ( _qrule[VV]._qrule_type != "Gauss5th") {
-    std::cout << "Quadrature rule not implemented" << std::endl;
-    abort();
-  }
-  
   return;
 }
 
