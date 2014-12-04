@@ -17,7 +17,6 @@
 #include "MeshTwo.hpp"
 #include "FETypeEnum.hpp"
 #include "FEElemBase.hpp"
-#include "QRule.hpp"
 #include "EquationsMap.hpp"
 #include "TimeLoop.hpp"
 #include "Typedefs.hpp"

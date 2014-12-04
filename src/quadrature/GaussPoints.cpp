@@ -19,7 +19,7 @@
 #include <string.h> 
 
 
-Gauss::Gauss(const char *geom_elem, const char *order_gauss){
+Gauss::Gauss(const char *geom_elem, const char *order_gauss) : _order(order_gauss) {
       if (!strcmp(order_gauss,"zero")  || !strcmp(order_gauss,"first")) {
 	gauss_order=0;
       } 

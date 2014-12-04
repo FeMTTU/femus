@@ -17,6 +17,7 @@
 #define __gauss_points_hpp__
 
 #include <vector>
+#include <string>
 
   class hex_gauss {
   public:
@@ -94,6 +95,8 @@
      
   public:
 
+    Gauss(const char *geom_elem, const char *order_gauss);
+    
   inline double  GetGaussWeight(const unsigned ig) const {
     return GaussWeight[ig];
   };
@@ -102,40 +105,29 @@
       return GaussPoints;
   };     
 
+  inline std::string  GetGaussOrderString() const {
+    return _order;
+  };
+  
+  inline int  GetGaussOrderIdx() const {
+    return gauss_order;
+  };
+  
    /*protected*/
    
-    int gauss_order;
     const double *GaussWeight;
-    unsigned GaussPoints;  
     
-    Gauss(const char *geom_elem, const char *order_gauss);
-     
+  protected:
+    
+    int gauss_order;
+    std::string _order;
+    unsigned GaussPoints;  
    
   };
      
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-//     
-//    Gauss(unsigned int order, unsigned int geom_el);
-//    unsigned get_qpoints() { return n_qpoints;}; 
-//    unsigned get_order()   { return order;}; 
-// 
-//   private:      
-//     unsigned order;
-//     unsigned n_qpoints;
-//     std::vector<double>  weights;
-//     std::vector< std::vector<double> >  qpoints;
-// 
-//   };
 
+     
+     
 
 
 #endif

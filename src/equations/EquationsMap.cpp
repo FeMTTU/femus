@@ -14,7 +14,6 @@
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "FEElemBase.hpp"
-#include "QRule.hpp"
 #include "TimeLoop.hpp"
 
 #include "paral.hpp"

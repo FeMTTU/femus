@@ -1,6 +1,5 @@
 #include "CurrGaussPoint.hpp"
 
-#include "QRule.hpp"
 #include "EquationsMap.hpp"
 #include "Math.hpp"
 #include "FEElemBase.hpp"

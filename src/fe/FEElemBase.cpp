@@ -5,7 +5,6 @@
 #include <cstring>
 
 #include "Files.hpp"
-#include "QRule.hpp"
 
 #include "GeomElTypeEnum.hpp"
 #include "GeomEl.hpp"
@@ -236,9 +235,6 @@ void FEElemBase::evaluate_shape_at_qp(const uint fe_family_in) {
 
   uint space_dim = _geomel._dim;
 
-  std::string gauss_ord = "fifth";
-
-
 // ================================================================================
 // ============================ begin switch fe order ===============================
 // ================================================================================
@@ -248,27 +244,27 @@ void FEElemBase::evaluate_shape_at_qp(const uint fe_family_in) {
   case(QQ):  {  /*"biquadratic"*/
     
      if (!strcmp(_geomel._geomel_id.c_str(),"hex")) {  
-        _myelems[VV] = new elem_type_3D("hex","biquadratic",gauss_ord.c_str());
-        _myelems[BB] = new elem_type_2D("quad","biquadratic",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_3D("hex","biquadratic", _qrule[VV].GetGaussOrderString().c_str());
+        _myelems[BB] = new elem_type_2D("quad","biquadratic",_qrule[BB].GetGaussOrderString().c_str());
       }
       else if (!strcmp(_geomel._geomel_id.c_str(),"wedge")) {
            std::cout << "Not supported yet" << std::endl; abort();
       }
       else if (!strcmp(_geomel._geomel_id.c_str(),"tet")) {
-        _myelems[VV] = new elem_type_3D("tet","biquadratic",gauss_ord.c_str());
-        _myelems[BB] = new elem_type_2D("tri","biquadratic",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_3D("tet","biquadratic",_qrule[VV].GetGaussOrderString().c_str());
+        _myelems[BB] = new elem_type_2D("tri","biquadratic",_qrule[BB].GetGaussOrderString().c_str());
       }
       else if (!strcmp(_geomel._geomel_id.c_str(),"quad")) {
-        _myelems[VV] = new elem_type_2D("quad","biquadratic",gauss_ord.c_str()); //TODO valgrind
-        _myelems[BB] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        _myelems[VV] = new elem_type_2D("quad","biquadratic",_qrule[VV].GetGaussOrderString().c_str()); //TODO valgrind
+        _myelems[BB] = new elem_type_1D("line","biquadratic",_qrule[BB].GetGaussOrderString().c_str()); //TODO valgrind
       }
       else if (!strcmp(_geomel._geomel_id.c_str(),"tri")) {
-        _myelems[VV] = new elem_type_2D("tri","biquadratic",gauss_ord.c_str()); //TODO valgrind
-        _myelems[BB] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        _myelems[VV] = new elem_type_2D("tri","biquadratic", _qrule[VV].GetGaussOrderString().c_str()); //TODO valgrind
+        _myelems[BB] = new elem_type_1D("line","biquadratic",_qrule[BB].GetGaussOrderString().c_str()); //TODO valgrind
       }
       
       else if (!strcmp(_geomel._geomel_id.c_str(),"line")) { 
-        _myelems[VV] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        _myelems[VV] = new elem_type_1D("line","biquadratic",_qrule[VV].GetGaussOrderString().c_str()); //TODO valgrind
       }
       else {std::cout << "Geometric element not recognized" << std::endl; abort();}
     
@@ -284,29 +280,29 @@ void FEElemBase::evaluate_shape_at_qp(const uint fe_family_in) {
     
     
      if (!strcmp(_geomel._geomel_id.c_str(),"hex")) {  
-        _myelems[VV] = new elem_type_3D("hex","linear",gauss_ord.c_str());
-	_myelems[BB] = new elem_type_2D("quad","linear",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_3D("hex","linear", _qrule[VV].GetGaussOrderString().c_str());
+	_myelems[BB] = new elem_type_2D("quad","linear",_qrule[BB].GetGaussOrderString().c_str());
       }
       else if (!strcmp(_geomel._geomel_id.c_str(),"wedge")) {
            std::cout << "Not supported yet" << std::endl; abort();
       }
       else if (!strcmp(_geomel._geomel_id.c_str(),"tet")) {
-        _myelems[VV] = new elem_type_3D("tet","linear",gauss_ord.c_str());
-	_myelems[BB] = new elem_type_2D("tri","linear",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_3D("tet","linear",_qrule[VV].GetGaussOrderString().c_str());
+	_myelems[BB] = new elem_type_2D("tri","linear",_qrule[BB].GetGaussOrderString().c_str());
       }
       else if (!strcmp(_geomel._geomel_id.c_str(),"quad")) {
-        _myelems[VV] = new elem_type_2D("quad","linear",gauss_ord.c_str());
-	_myelems[BB] = new elem_type_1D("line","linear",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_2D("quad","linear",_qrule[VV].GetGaussOrderString().c_str());
+	_myelems[BB] = new elem_type_1D("line","linear",_qrule[BB].GetGaussOrderString().c_str());
 	
       
       }
       else if (!strcmp(_geomel._geomel_id.c_str(),"tri")) {
-        _myelems[VV] = new elem_type_2D("tri","linear",gauss_ord.c_str());
-	_myelems[BB] = new elem_type_1D("line","linear",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_2D("tri","linear", _qrule[VV].GetGaussOrderString().c_str());
+	_myelems[BB] = new elem_type_1D("line","linear",_qrule[BB].GetGaussOrderString().c_str());
       }
       
       else if (!strcmp(_geomel._geomel_id.c_str(),"line")) { 
-	_myelems[VV] = new elem_type_1D("line","linear",gauss_ord.c_str());
+	_myelems[VV] = new elem_type_1D("line","linear",_qrule[VV].GetGaussOrderString().c_str());
       }
       else {std::cout << "Geometric element not recognized" << std::endl; abort();}
     
@@ -325,29 +321,29 @@ void FEElemBase::evaluate_shape_at_qp(const uint fe_family_in) {
     
 
      if (!strcmp(_geomel._geomel_id.c_str(),"hex")) {  
-        _myelems[VV] = new elem_type_3D("hex","constant",gauss_ord.c_str());
-	_myelems[BB] = new elem_type_2D("quad","constant",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_3D("hex","constant", _qrule[VV].GetGaussOrderString().c_str());
+	_myelems[BB] = new elem_type_2D("quad","constant",_qrule[BB].GetGaussOrderString().c_str());
       }
       else if (!strcmp(_geomel._geomel_id.c_str(),"wedge")) {
            std::cout << "Not supported yet" << std::endl; abort();
       }
       else if (!strcmp(_geomel._geomel_id.c_str(),"tet")) {
-        _myelems[VV] = new elem_type_3D("tet","constant",gauss_ord.c_str());
-	_myelems[BB] = new elem_type_2D("tri","constant",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_3D("tet","constant",_qrule[VV].GetGaussOrderString().c_str());
+	_myelems[BB] = new elem_type_2D("tri","constant",_qrule[BB].GetGaussOrderString().c_str());
       }
       else if (!strcmp(_geomel._geomel_id.c_str(),"quad")) {
-        _myelems[VV] = new elem_type_2D("quad","constant",gauss_ord.c_str());
-	_myelems[BB] = new elem_type_1D("line","constant",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_2D("quad","constant",_qrule[VV].GetGaussOrderString().c_str());
+	_myelems[BB] = new elem_type_1D("line","constant",_qrule[BB].GetGaussOrderString().c_str());
 	
       
       }
       else if (!strcmp(_geomel._geomel_id.c_str(),"tri")) {
-        _myelems[VV] = new elem_type_2D("tri","constant",gauss_ord.c_str());
-	_myelems[BB] = new elem_type_1D("line","constant",gauss_ord.c_str());
+        _myelems[VV] = new elem_type_2D("tri","constant", _qrule[VV].GetGaussOrderString().c_str());
+	_myelems[BB] = new elem_type_1D("line","constant",_qrule[BB].GetGaussOrderString().c_str());
       }
       
       else if (!strcmp(_geomel._geomel_id.c_str(),"line")) { 
-	_myelems[VV] = new elem_type_1D("line","constant",gauss_ord.c_str());
+	_myelems[VV] = new elem_type_1D("line","constant",_qrule[VV].GetGaussOrderString().c_str());
       }
       else {std::cout << "Geometric element not recognized" << std::endl; abort();}
     

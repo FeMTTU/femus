@@ -235,7 +235,7 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
   //************ BEGIN GAUSS SETUP ******************	
   Gauss gauss(solid, order_gauss);
   _GaussPointValues = gauss.GaussWeight;
-  _GaussPointNumber = gauss.GaussPoints;
+  _GaussPointNumber = gauss.GetGaussPointsNumber();
   //************ END GAUSS SETUP ******************
 	
   //************ BEGIN FE and MG SETUP ******************	
@@ -363,7 +363,7 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
   //************ BEGIN GAUSS SETUP ******************	
   Gauss gauss(solid,order_gauss);
   _GaussPointValues = gauss.GaussWeight;
-  _GaussPointNumber = gauss.GaussPoints;
+  _GaussPointNumber = gauss.GetGaussPointsNumber();
   //************ END GAUSS SETUP ******************
 	
   //************ BEGIN FE and MG SETUP ******************	
@@ -515,13 +515,13 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
   }
 }
 
-elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *order_gauss) :
+elem_type_3D::elem_type_3D(const char *geom_elem, const char *order, const char *order_gauss) :
 	      elem_type(){
 
   //************ BEGIN GAUSS SETUP ******************	
-  Gauss gauss(solid,order_gauss);
+  Gauss gauss(geom_elem,order_gauss);
   _GaussPointValues = gauss.GaussWeight;
-  _GaussPointNumber = gauss.GaussPoints;
+  _GaussPointNumber = gauss.GetGaussPointsNumber();
   //************ END GAUSS SETUP ******************
 	
   //************ BEGIN FE and MG SETUP ******************	
@@ -531,11 +531,11 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
   else if (!strcmp(order,"constant"))    _SolType=3;   
   else if (!strcmp(order,"disc_linear")) _SolType=4;  
   else {
-    cout<<order<<" is not a valid option for "<<solid<<endl;
+    cout << order << " is not a valid option for " << geom_elem << endl;
     exit(0);
   }
   
-  if (!strcmp(solid,"hex")) {//HEX
+  if (!strcmp(geom_elem,"hex")) {//HEX
     
     if 	    (_SolType == 0) _pt_basis = new hex1;
     else if (_SolType == 1) _pt_basis = new hexth;
@@ -543,34 +543,34 @@ elem_type_3D::elem_type_3D(const char *solid, const char *order, const char *ord
     else if (_SolType == 3) _pt_basis = new hex0;
     else if (_SolType == 4) _pt_basis = new hexpwl;
     else {
-      cout<<order<<" is not a valid option for "<<solid<<endl;
+      cout << order << " is not a valid option for " << geom_elem << endl;
       exit(0);
     }
   }     
-  else if (!strcmp(solid,"wedge")) { //WEDGE
+  else if (!strcmp(geom_elem,"wedge")) { //WEDGE
     if 	    (_SolType == 0) _pt_basis = new wedge1;
     else if (_SolType == 1) _pt_basis = new wedgeth;
     else if (_SolType == 2) _pt_basis = new wedge2;
     else if (_SolType == 3) _pt_basis = new wedge0;  
     else if (_SolType == 4) _pt_basis = new wedgepwl;     
     else {
-      cout<<order<<" is not a valid option for "<<solid<<endl;
+      cout << order << " is not a valid option for " << geom_elem << endl;
       exit(0);
     }
   } 
-  else if (!strcmp(solid,"tet")) { //TETRAHEDRA
+  else if (!strcmp(geom_elem,"tet")) { //TETRAHEDRA
     if 	    (_SolType == 0) _pt_basis = new tet1;
     else if (_SolType == 1) _pt_basis = new tet2;
     else if (_SolType == 2) _pt_basis = new tet2;
     else if (_SolType == 3) _pt_basis = new tet0;
     else if (_SolType == 4) _pt_basis = new tetpwl;      
     else {
-      cout<<order<<" is not a valid option for "<<solid<<endl;
+      cout << order << " is not a valid option for " << geom_elem << endl;
       exit(0);
     }
   } 
   else {
-    cout<<solid<<" is not a valid option"<<endl;
+    cout << geom_elem << " is not a valid option" << endl;
     exit(0);
   }
 
