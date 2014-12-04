@@ -11,18 +11,18 @@
 
 namespace femus {
 
-// Merge this in Elem
+// Merge this in Elem... but wait, this is all ABSTRACT, what about Elem?
 
 class GeomEl  {
 
 public:
 
-     GeomEl(const uint dim_in,const uint geomel_type);
+     GeomEl(const std::string geomel_id);
     ~GeomEl();
     
-    uint _geomel_type;   /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
-    uint _dim;           /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
-    uint _elnds[QL_NODES]; //number of nodes of one element [QL]
+    uint _dim;                    /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
+    uint _elnds[QL_NODES];        //number of nodes of one element [QL]
+    std::string _geomel_id;      
     std::string name;             ///< element name 
     std::string pname;            ///< print element name for XDMF print (linear)
 

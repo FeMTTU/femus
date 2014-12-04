@@ -16,7 +16,7 @@ class FETri6 : public FEElemBase  {
 
 public:
   
-     FETri6(std::vector<GeomEl> geomel_in);
+     FETri6(const GeomEl & geomel_in);
      
     ~FETri6();
   

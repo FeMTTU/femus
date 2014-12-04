@@ -33,15 +33,13 @@ namespace femus {
 
 
 
-FEElemBase::FEElemBase(std::vector<GeomEl> geomel_in ) {
+FEElemBase::FEElemBase(const GeomEl & geomel_in )   : _geomel(geomel_in) {
 
-  _geomel = geomel_in;
-  
   _myelems.resize(VB);  //cannot go in build function, because it is static
   
 //====== FUNCTION POINTERS SETUP ===========
 // initialize the function pointers outside, as well as everything that has to be accessible after all the "switch" things, so you have to only fill them inside
-  uint space_dim = _geomel[VV]._dim;
+  uint space_dim = _geomel._dim;
   _DphiptrTwo.resize(VB);
   _DphiptrTwo[VV].resize(space_dim);
   _DphiptrTwo[BB].resize(space_dim-1);
@@ -98,64 +96,17 @@ FEElemBase::~FEElemBase() {
 //These instantiations are never destroyed until you explicitly delete them
 //the build() function returns a POINTER
 
-FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order_in) {
+FEElemBase* FEElemBase::build(const GeomEl & geomel_in, const uint fe_family_in) {
 
-  if ( geomel_in[VV]._geomel_type != QUADR && geomel_in[VV]._geomel_type != TRIANG  ) {
-    std::cout << "FE::FE: GeomEl type " << geomel_in[VV]._geomel_type << " not supported" << std::endl;
+  if ( fe_family_in != QQ && fe_family_in != LL && fe_family_in != KK ) {
+    std::cout << "FE::FE: FE family " << fe_family_in << " not supported" << std::endl;
     abort();
   }
-
-  if ( order_in != QQ && order_in != LL && order_in != KK ) {
-    std::cout << "FE::FE: FE family " << order_in << " not supported" << std::endl;
-    abort();
-  }  
-  switch(geomel_in[VV]._dim) {
-
-  case(1): {
-
-      switch(order_in) {
-      case(QQ):
-        return new  FEEdge3(geomel_in)  ;
-      case(LL):
-        return new  FEEdge2(geomel_in)  ;
-      case(KK):
-        return new  FEEdge1(geomel_in)  ; 
-      }
-
-  } //dim 1
-
-  case(2): {
-
-    switch(geomel_in[VV]._geomel_type) {
-    case(QUADR): {
-      switch(order_in) {
-      case(QQ):
-        return new  FEQuad9(geomel_in)  ;  //FELagrange2D order2 on quadr
-      case(LL):
-        return new  FEQuad4(geomel_in)  ;  //FELagrange2D order1 on quadr
-      case(KK):
-        return new  FEQuad1(geomel_in)  ;  //FELagrange2D order0 on quadr
-      }
-    }
-    case(TRIANG): {
-      switch(order_in) {
-      case(QQ):
-        return new  FETri6(geomel_in)  ;
-      case(LL):
-        return new  FETri3(geomel_in)  ;
-      case(KK):
-        return new  FETri1(geomel_in)  ;
-      }
-    }
-    }
-
-  } //dim 2
-
-  case(3): {
-
-    switch(geomel_in[VV]._geomel_type) {
-    case(QUADR): {
-      switch(order_in) {
+  
+  
+     if (!strcmp(geomel_in._geomel_id.c_str(),"hex")) {  
+       
+      switch(fe_family_in) {
       case(QQ):
         return new  FEHex27(geomel_in)  ;
       case(LL):
@@ -163,9 +114,14 @@ FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order_in
       case(KK):
         return new  FEHex1(geomel_in)  ;
       }
-    }
-    case(TRIANG): {
-      switch(order_in) {
+      
+      }
+      else if (!strcmp(geomel_in._geomel_id.c_str(),"wedge")) {
+           std::cout << "Not supported yet" << std::endl; abort();
+      }
+      else if (!strcmp(geomel_in._geomel_id.c_str(),"tet")) {
+	
+      switch(fe_family_in) {
       case(QQ):
         return new  FETet10(geomel_in)  ;
       case(LL):
@@ -173,26 +129,46 @@ FEElemBase* FEElemBase::build(std::vector<GeomEl> geomel_in, const uint order_in
       case(KK):
         return new  FETet1(geomel_in)  ;
       }
-    }
-    }
 
-  } //dim 3
-
-  default: {
-    std::cout << "FEElemBase: Mistaken build" << std::endl;
-    abort();
-  }
-
-  } //dim
-
-
-
-  
-  
-  
-  
-  
-  
+      }
+      else if (!strcmp(geomel_in._geomel_id.c_str(),"quad")) {
+	
+      switch(fe_family_in) {
+      case(QQ):
+        return new  FEQuad9(geomel_in)  ;  //FELagrange2D order2 on quadr
+      case(LL):
+        return new  FEQuad4(geomel_in)  ;  //FELagrange2D order1 on quadr
+      case(KK):
+        return new  FEQuad1(geomel_in)  ;  //FELagrange2D order0 on quadr
+      }
+      
+      }
+      else if (!strcmp(geomel_in._geomel_id.c_str(),"tri")) {
+	
+      switch(fe_family_in) {
+      case(QQ):
+        return new  FETri6(geomel_in)  ;
+      case(LL):
+        return new  FETri3(geomel_in)  ;
+      case(KK):
+        return new  FETri1(geomel_in)  ;
+      }
+	
+      }
+      
+      else if (!strcmp(geomel_in._geomel_id.c_str(),"line")) { 
+	
+      switch(fe_family_in) {
+      case(QQ):
+        return new  FEEdge3(geomel_in)  ;
+      case(LL):
+        return new  FEEdge2(geomel_in)  ;
+      case(KK):
+        return new  FEEdge1(geomel_in)  ; 
+      }
+      
+      }
+      else {std::cout << "Geometric element not recognized" << std::endl; abort();}
   
   
 }
@@ -261,9 +237,9 @@ void FEElemBase::AssociateQRule(std::vector<QRule> qrule_in)  {
 // QUI c'e' un loop NGAUSS[vb,dim[vb],quadtri] x NDOFS[vb,dim[vb], feorder,quadtri]
 
 
-void FEElemBase::evaluate_shape_at_qp(const uint order_in) {
+void FEElemBase::evaluate_shape_at_qp(const uint fe_family_in) {
 
-  uint space_dim = _geomel[VV]._dim;
+  uint space_dim = _geomel._dim;
 
   std::string gauss_ord = "fifth";
 
@@ -271,113 +247,79 @@ void FEElemBase::evaluate_shape_at_qp(const uint order_in) {
 // ================================================================================
 // ============================ begin switch fe order ===============================
 // ================================================================================
-  switch(order_in) {  //what leads is the FE ORDER, the quadrature rule is usually mathematically chosen with respect to that
+  switch(fe_family_in) {  //what leads is the FE ORDER, the quadrature rule is usually mathematically chosen with respect to that
 
 // ================================================================================
-  case(QQ):  {
-
-    switch(space_dim) {
-
-    case(2): {
-
-      switch(_geomel[VV]._geomel_type)  {
-
-      case(QUADR): {  //QUADR-2D-QQ  ========
-        _myelems[VV] = new elem_type_2D("quad","biquadratic",gauss_ord.c_str()); //TODO valgrind
-        _myelems[BB] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
-        break;
-      }
-      case(TRIANG): {
-        _myelems[VV] = new elem_type_2D("tri","biquadratic",gauss_ord.c_str()); //TODO valgrind
-        _myelems[BB] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
-        break;
-      }  //end TRIANG-2D-QQ  ======
-
-
-      } //end geomel_type
-
-      break;
-    }  //end 2D
-    case(3): {
-
-      switch(_geomel[VV]._geomel_type)  {
-
-      case(QUADR): {  //QUADR-3D-QQ
+  case(QQ):  {  /*"biquadratic"*/
+    
+     if (!strcmp(_geomel._geomel_id.c_str(),"hex")) {  
         _myelems[VV] = new elem_type_3D("hex","biquadratic",gauss_ord.c_str());
         _myelems[BB] = new elem_type_2D("quad","biquadratic",gauss_ord.c_str());
-        break;
-      } //end //QUADR-3D-QQ
-
-      case(TRIANG): {  //TRIANG-3D-QQ
+      }
+      else if (!strcmp(_geomel._geomel_id.c_str(),"wedge")) {
+           std::cout << "Not supported yet" << std::endl; abort();
+      }
+      else if (!strcmp(_geomel._geomel_id.c_str(),"tet")) {
         _myelems[VV] = new elem_type_3D("tet","biquadratic",gauss_ord.c_str());
         _myelems[BB] = new elem_type_2D("tri","biquadratic",gauss_ord.c_str());
-        break;
-      }  //end TRIANG-3D-QQ
-
-      } //end geomel_type
-
-      break;
-    }  //end 2D
-    default: {
-      std::cout << "Space_dim ONE not implemented" << std::endl;
-      abort();
-      break;
-    } //end 1D
-
-    }  //end switch dimension
-
+      }
+      else if (!strcmp(_geomel._geomel_id.c_str(),"quad")) {
+        _myelems[VV] = new elem_type_2D("quad","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        _myelems[BB] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
+      }
+      else if (!strcmp(_geomel._geomel_id.c_str(),"tri")) {
+        _myelems[VV] = new elem_type_2D("tri","biquadratic",gauss_ord.c_str()); //TODO valgrind
+        _myelems[BB] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
+      }
+      
+      else if (!strcmp(_geomel._geomel_id.c_str(),"line")) { 
+        _myelems[VV] = new elem_type_1D("line","biquadratic",gauss_ord.c_str()); //TODO valgrind
+      }
+      else {std::cout << "Geometric element not recognized" << std::endl; abort();}
+    
+    
+    
     break;
   } //end feorder QQ
 
 // ================================================================================
 
 // ================================================================================
-  case(LL): {
-    switch(space_dim) {
-    case(2): {
-      switch(_geomel[VV]._geomel_type)  {
-      case(QUADR): {  //QUADR-2D-LL
-        _myelems[VV] = new elem_type_2D("quad","linear",gauss_ord.c_str());
-	_myelems[BB] = new elem_type_1D("line","linear",gauss_ord.c_str());
-        break;
-      } //end //QUADR-2D-LL
-
-      case(TRIANG): { //TRIANG-2D-LL
-        _myelems[VV] = new elem_type_2D("tri","linear",gauss_ord.c_str());
-	_myelems[BB] = new elem_type_1D("line","linear",gauss_ord.c_str());
-        break;
-      }  //end TRIANG-2D-LL
-
-      } //end switch geomel_type
-      break;
-    }  //end 2D
-    case(3): {
-      switch(_geomel[VV]._geomel_type)  {
-      case(QUADR): { //QUADR-3D-LL
+  case(LL): {  /*"linear"*/
+    
+    
+     if (!strcmp(_geomel._geomel_id.c_str(),"hex")) {  
         _myelems[VV] = new elem_type_3D("hex","linear",gauss_ord.c_str());
 	_myelems[BB] = new elem_type_2D("quad","linear",gauss_ord.c_str());
-        break;
-      } //end //QUADR-3D-LL
-
-      case(TRIANG): { //TRIANG-3D-LL
+      }
+      else if (!strcmp(_geomel._geomel_id.c_str(),"wedge")) {
+           std::cout << "Not supported yet" << std::endl; abort();
+      }
+      else if (!strcmp(_geomel._geomel_id.c_str(),"tet")) {
         _myelems[VV] = new elem_type_3D("tet","linear",gauss_ord.c_str());
 	_myelems[BB] = new elem_type_2D("tri","linear",gauss_ord.c_str());
-        break;
-      }  //end //TRIANG-3D-LL
+      }
+      else if (!strcmp(_geomel._geomel_id.c_str(),"quad")) {
+        _myelems[VV] = new elem_type_2D("quad","linear",gauss_ord.c_str());
+	_myelems[BB] = new elem_type_1D("line","linear",gauss_ord.c_str());
+	
+      
+      }
+      else if (!strcmp(_geomel._geomel_id.c_str(),"tri")) {
+        _myelems[VV] = new elem_type_2D("tri","linear",gauss_ord.c_str());
+	_myelems[BB] = new elem_type_1D("line","linear",gauss_ord.c_str());
+      }
+      
+      else if (!strcmp(_geomel._geomel_id.c_str(),"line")) { 
+	_myelems[VV] = new elem_type_1D("line","linear",gauss_ord.c_str());
+      }
+      else {std::cout << "Geometric element not recognized" << std::endl; abort();}
+    
 
-      } //end geomel_type
-
-      break;
-    }  //end 3D
-
-    default: {
-      std::cout << "Space_dim ONE not implemented" << std::endl;
-      abort();
-      break;
-    }
-
-    }  //end switch dimension
-
+    
+    
+    
+    
     break;
   } //end feorder LL
 // ================================================================================
@@ -385,59 +327,43 @@ void FEElemBase::evaluate_shape_at_qp(const uint order_in) {
 
 // ================================================================================
   case(KK): {
-    switch(space_dim) {
-    case(2): {
-      switch(_geomel[VV]._geomel_type)  {
+    
 
-      case(QUADR): {  //QUADR-2D-KK
-        _myelems[VV] = new elem_type_2D("quad","constant",gauss_ord.c_str());
-	_myelems[BB] = new elem_type_1D("line","constant",gauss_ord.c_str());  
-        break;
-      } //end //QUADR-2D-KK
-
-      case(TRIANG): { //TRIANG-2D-KK
-        _myelems[VV] = new elem_type_2D("tri","constant",gauss_ord.c_str());
-	_myelems[BB] = new elem_type_1D("line","constant",gauss_ord.c_str());
-        break;
-      }  //end //TRIANG-2D-KK
-
-      } //end geomel_type
-
-      break;
-    }  //end 2D
-    case(3): {
-      switch(_geomel[VV]._geomel_type)  {
-      case(QUADR): { //QUADR-3D-KK
+     if (!strcmp(_geomel._geomel_id.c_str(),"hex")) {  
         _myelems[VV] = new elem_type_3D("hex","constant",gauss_ord.c_str());
 	_myelems[BB] = new elem_type_2D("quad","constant",gauss_ord.c_str());
-        break;
-      } //end  //QUADR-3D-KK
-
-      case(TRIANG): {  //TRIANG-3D-KK
-      _myelems[VV] = new elem_type_3D("tet","constant",gauss_ord.c_str());
-      _myelems[BB] = new elem_type_2D("tri","constant",gauss_ord.c_str());
-        break;
-      }  //end //TRIANG-3D-KK
-
-      } //end geomel_type
-
-      break;
-    }  //end 3D
-    default: {
-      std::cout << "Space_dim ONE not implemented" << std::endl;
-      abort();
-      break;
-    }
-
-
-    }  //end switch dimension
-
+      }
+      else if (!strcmp(_geomel._geomel_id.c_str(),"wedge")) {
+           std::cout << "Not supported yet" << std::endl; abort();
+      }
+      else if (!strcmp(_geomel._geomel_id.c_str(),"tet")) {
+        _myelems[VV] = new elem_type_3D("tet","constant",gauss_ord.c_str());
+	_myelems[BB] = new elem_type_2D("tri","constant",gauss_ord.c_str());
+      }
+      else if (!strcmp(_geomel._geomel_id.c_str(),"quad")) {
+        _myelems[VV] = new elem_type_2D("quad","constant",gauss_ord.c_str());
+	_myelems[BB] = new elem_type_1D("line","constant",gauss_ord.c_str());
+	
+      
+      }
+      else if (!strcmp(_geomel._geomel_id.c_str(),"tri")) {
+        _myelems[VV] = new elem_type_2D("tri","constant",gauss_ord.c_str());
+	_myelems[BB] = new elem_type_1D("line","constant",gauss_ord.c_str());
+      }
+      
+      else if (!strcmp(_geomel._geomel_id.c_str(),"line")) { 
+	_myelems[VV] = new elem_type_1D("line","constant",gauss_ord.c_str());
+      }
+      else {std::cout << "Geometric element not recognized" << std::endl; abort();}
+    
+    
+    
     break;
   }  //end feorder KK
 
 // ================================================================================
   default: {
-    std::cout << "FE order not implemented" << std::endl;
+    std::cout << "FE family not implemented" << std::endl;
     abort();
     break;
   }
@@ -482,7 +408,7 @@ for (int vb=0; vb<VB; vb++) {
 // from eu connectivity to my (=libmesh) connectivity
 const unsigned map_hex27[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,24,20,21,22,23,25,26};
 
-if (vb == VV && order_in == QQ && space_dim == 3  && _geomel[VV]._geomel_type == QUADR) {
+if ( vb == VV && fe_family_in == QQ && space_dim == 3  && (!strcmp(_geomel._geomel_id.c_str(),"hex")) ) {
             std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "REMEMBER THAT ONLY HEX27 HAS A DIFFERENT CONNECTIVITY MAP"  << std::endl;
 
   

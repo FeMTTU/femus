@@ -9,6 +9,7 @@
 #include "Files.hpp"
 #include "IO.hpp"
 #include "GeomEl.hpp"
+#include "GeomElTypeEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"
 
@@ -29,10 +30,35 @@ Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const doubl
          _Lref(Lref)
          {
 	   
+    std::string  geomelem[VB];
+    if (map_in.get("geomel_type") == QUADR)  {
+    if (map_in.get("dimension") == 3) {
+      geomelem[VV] = "hex";
+      geomelem[BB] = "quad";
+    }
+    else if (map_in.get("dimension") == 2) {
+      geomelem[VV] = "quad";
+      geomelem[BB] = "line";
+    }
+    
+    }
+    if (map_in.get("geomel_type") == TRIANG)  {
+    if (map_in.get("dimension") == 3) {
+      geomelem[VV] = "tet";
+      geomelem[BB] = "tri";
+    }
+    else if (map_in.get("dimension") == 2) {
+      geomelem[VV] = "tri";
+      geomelem[BB] = "line";
+    }
+    
+    }
+    
+    
 //     How to initialize a std::vector of classes ==================
     _GeomEl.reserve(VB);
     for (int vb=0;vb < VB; vb++) { 
-          GeomEl geomel_temp( (uint) map_in.get("dimension") - vb, (uint) map_in.get("geomel_type") ); 
+          GeomEl geomel_temp( geomelem[vb] ); 
          _GeomEl.push_back(geomel_temp); 
     }
 //     How to initialize a std::vector of classes ==================

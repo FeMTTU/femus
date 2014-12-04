@@ -17,7 +17,7 @@ class FEHex1 : public FEElemBase  {
 
 public:
   
-     FEHex1(std::vector<GeomEl> geomel_in);
+     FEHex1(const GeomEl &  geomel_in);
      
     ~FEHex1();
   

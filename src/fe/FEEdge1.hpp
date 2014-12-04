@@ -16,7 +16,7 @@ class FEEdge1 : public FEElemBase  {
 
 public:
   
-     FEEdge1(std::vector<GeomEl> geomel_in);
+     FEEdge1(const GeomEl &  geomel_in);
      
     ~FEEdge1();
   

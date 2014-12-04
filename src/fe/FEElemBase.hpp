@@ -24,18 +24,18 @@ class FEElemBase  {
 
 public:
 
-    FEElemBase(std::vector<GeomEl> geomel_in);
+    FEElemBase(const GeomEl &  geomel_in);
     virtual ~FEElemBase();
 
 // FE ==========
-    static  FEElemBase* build(std::vector<GeomEl> geomel_in, const uint order);
+    static  FEElemBase* build(const GeomEl & geomel_in, const uint fe_family);
     
   std::vector<elem_type*> _myelems;    //VB
   typedef double* (elem_type::*_FunctionPointerTwo)(const unsigned & ig) const; //declaring the FunctionPointer type
   std::vector< std::vector<_FunctionPointerTwo> > _DphiptrTwo;
 
 // GeomEl ======
-    std::vector<GeomEl>  _geomel;   //VB  
+    const GeomEl  _geomel;   //basically used only at construction  
 
 // Quadrature ==
     std::vector<QRule> _qrule;   //VB

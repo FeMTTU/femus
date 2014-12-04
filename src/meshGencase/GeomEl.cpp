@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <cstring>
 
 
 namespace femus {
@@ -12,59 +13,53 @@ namespace femus {
 //This class was badly constructed 
 //because there were things only quadratic and things both quadratic and linear
 
-  GeomEl::GeomEl(const uint dim_in,const uint geomel_type_in) :
-     _geomel_type(geomel_type_in),
-     _dim(dim_in)
-   {
+  GeomEl::GeomEl(const std::string geomel_id_in) :
+     _geomel_id(geomel_id_in)    {
 
-    
-if( geomel_type_in == QUADR) {
-  if( dim_in == 1) {
-     _elnds[QQ] = 3;
-     _elnds[LL] = 2;
-           n_se = 2;
-           name = "Edge_3"; 
-          pname = "Polyline"; 
-  }
-else if( dim_in == 2) {
-     _elnds[QQ] = 9;
-     _elnds[LL] = 4;
-           n_se = 4;
-           name = "Quad_9"; 
-          pname = "Quadrilateral"; 
-  }
-else if( dim_in == 3) {
+     if (!strcmp(_geomel_id.c_str(),"hex")) {  
+           _dim = 3;
      _elnds[QQ] = 27;
      _elnds[LL] = 8;
            n_se = 8;
            name = "Hex_27"; 
           pname = "Hexahedron"; 
-  } 
-}
-else if( geomel_type_in == TRIANG) {
-if( dim_in == 1) {
-     _elnds[QQ] = 3;
-     _elnds[LL] = 2;
-           n_se = 2;
-           name = "Edge_3"; 
-          pname = "Polyline"; 
-}
-else if( dim_in == 2) {
-     _elnds[QQ] = 6;
-     _elnds[LL] = 3; 
-           n_se = 4;
-           name = "Tri_6"; 
-          pname = "Triangle"; 
-}
-else if( dim_in == 3) {
+      }
+      else if (!strcmp(_geomel_id.c_str(),"wedge")) {
+           std::cout << "Not supported yet" << std::endl; abort();
+      }
+      else if (!strcmp(_geomel_id.c_str(),"tet")) {
+           _dim = 3;
      _elnds[QQ] = 10;
      _elnds[LL] = 4;
            n_se = 8;
            name = "Tet_10"; 
           pname = "Tetrahedron"; 
-}
-}
-else {std::cout << "ELtype not recognized\n"; abort();}
+      }
+      else if (!strcmp(_geomel_id.c_str(),"quad")) {
+           _dim = 2;
+     _elnds[QQ] = 9;
+     _elnds[LL] = 4;
+           n_se = 4;
+           name = "Quad_9"; 
+          pname = "Quadrilateral"; 
+      }
+      else if (!strcmp(_geomel_id.c_str(),"tri")) {
+           _dim = 2;
+     _elnds[QQ] = 6;
+     _elnds[LL] = 3; 
+           n_se = 4;
+           name = "Tri_6"; 
+          pname = "Triangle"; 
+      }	
+      else if (!strcmp(_geomel_id.c_str(),"line")) { 
+           _dim = 1;
+     _elnds[QQ] = 3;
+     _elnds[LL] = 2;
+           n_se = 2;
+           name = "Edge_3"; 
+          pname = "Polyline"; 
+      }
+      else {std::cout << "Geometric element not recognized\n"; abort(); }
 
 
   } 

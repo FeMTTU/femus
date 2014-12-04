@@ -98,7 +98,7 @@
     const double *GaussWeight;
     unsigned GaussPoints;  
     
-    Gauss(const char *solid, const char *order_gauss);
+    Gauss(const char *geom_elem, const char *order_gauss);
      
      
      

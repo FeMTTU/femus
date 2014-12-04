@@ -44,7 +44,7 @@ class QRule  {
   public:
 
 //GeomEl =========
-  GeomEl _geomel;
+   GeomEl _geomel;
 
 //Quadrature =========
     std::string  _qrule_type;
@@ -52,7 +52,7 @@ class QRule  {
     std::vector<double>   _weightVB;
     
     
-     QRule(GeomEl geomel_in);
+     QRule(const GeomEl & geomel_in);
     
   
     

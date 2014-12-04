@@ -19,7 +19,7 @@
 #include <string.h> 
 
 
-Gauss::Gauss(const char *solid, const char *order_gauss){
+Gauss::Gauss(const char *geom_elem, const char *order_gauss){
       if (!strcmp(order_gauss,"zero")  || !strcmp(order_gauss,"first")) {
 	gauss_order=0;
       } 
@@ -35,36 +35,36 @@ Gauss::Gauss(const char *solid, const char *order_gauss){
       else if (!strcmp(order_gauss,"eighth") || !strcmp(order_gauss,"ninth") ) {
 	gauss_order=4;
       } else {
-	std::cout<<order_gauss<<"is not a valid option for the Gauss points of"<<solid<<std::endl;
-	exit(0);
+	std::cout << order_gauss << "is not a valid option for the Gauss points of" << geom_elem << std::endl;
+	abort();
       }
 
-      if (!strcmp(solid,"hex")) {  
+      if (!strcmp(geom_elem,"hex")) {  
 	GaussWeight = hex_gauss::Gauss[gauss_order];
 	GaussPoints = hex_gauss::GaussPoints[gauss_order];  
       }
-      else if (!strcmp(solid,"wedge")) {
+      else if (!strcmp(geom_elem,"wedge")) {
 	GaussWeight = wedge_gauss::Gauss[gauss_order];
 	GaussPoints = wedge_gauss::GaussPoints[gauss_order];
       }
-      else if (!strcmp(solid,"tet")) {
+      else if (!strcmp(geom_elem,"tet")) {
 	GaussWeight = tet_gauss::Gauss[gauss_order];
 	GaussPoints = tet_gauss::GaussPoints[gauss_order];
       }
-      else if (!strcmp(solid,"quad")) {
+      else if (!strcmp(geom_elem,"quad")) {
 	GaussWeight = quad_gauss::Gauss[gauss_order];
 	GaussPoints = quad_gauss::GaussPoints[gauss_order];
       }
-      else if (!strcmp(solid,"tri")) {
+      else if (!strcmp(geom_elem,"tri")) {
 	GaussWeight = tri_gauss::Gauss[gauss_order];
 	GaussPoints = tri_gauss::GaussPoints[gauss_order];
       }	
-      else if (!strcmp(solid,"line")) {
+      else if (!strcmp(geom_elem,"line")) {
 	GaussWeight = line_gauss::Gauss[gauss_order];
 	GaussPoints = line_gauss::GaussPoints[gauss_order];
       }
       else {
-	std::cout<<solid<<" is not a valid option"<<std::endl; 
+	std::cout << geom_elem << " is not a valid option" << std::endl; 
 	abort();
       }
       

@@ -101,10 +101,8 @@ int main(int argc, char** argv) {
   const std::string  FEFamily[QL] = {"biquadratic","linear","constant"}; 
  
   for (int fe=0; fe<QL; fe++) {
-    FEElements[fe] = FEElemBase::build(mesh._GeomEl,fe);       /*VB based*/  //The order of the fe is established by the library
-//sort of constructor
+    FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV],fe);  
     FEElements[fe]->AssociateQRule(qrule);
-//end sort of constructor
     FEElements[fe]->evaluate_shape_at_qp(fe);
   }
   

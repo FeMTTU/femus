@@ -7,7 +7,7 @@ namespace femus {
 
 
 // =======================
-FEQuad4::FEQuad4(std::vector<GeomEl> geomel_in)  : FEElemBase(geomel_in) {  }
+FEQuad4::FEQuad4( const GeomEl & geomel_in)  : FEElemBase(geomel_in) {  }
 	  
 // =======================
           FEQuad4::~FEQuad4() {    }
