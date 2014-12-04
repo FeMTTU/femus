@@ -73,8 +73,6 @@
   
   phys.set_mesh(&mesh);
   
-  
-  
 // ======  QRule ================================ //so far we have ONLY ONE quadrature rule for all the equations
   std::vector<QRule>   qrule;
   qrule.reserve(VB);
