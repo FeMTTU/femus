@@ -24,6 +24,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "Basis.hpp"
+#include "../quadrature/GaussPoints.hpp"
 #include "SparseMatrix.hpp"
 #include "Mesh.hpp"
 #include "LinearEquation.hpp"
@@ -40,9 +41,9 @@ class LinearEquation;
 class elem_type {
   
 public:
-
-  /** constructor */
-  elem_type(){};
+  
+  /** constructor that receives Geometric Element and Gauss info */
+  elem_type(const char *geom_elem, const char *order_gauss);
   
   /** destructor */
   virtual ~elem_type();
@@ -97,12 +98,12 @@ public:
 
   /** To be Added */
   double  GetGaussWeight(const unsigned ig) const {
-    return _GaussPointValues[ig];
+    return _gauss.GetGaussWeightsPointer()[ig];
   };
   
   /** To be Added */
   unsigned GetGaussPointNumber() const {
-    return _GaussPointNumber;
+    return _gauss.GetGaussPointsNumber();
   };
   
   /** Retrieve the number of dofs for this element */
@@ -135,8 +136,8 @@ protected:
   int *_mem_prol_ind;
   basis *_pt_basis;
   
-  const double *_GaussPointValues;
-  unsigned _GaussPointNumber;
+//  Gauss
+  const Gauss _gauss;
 };
 
 

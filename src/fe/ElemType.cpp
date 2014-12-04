@@ -30,6 +30,10 @@ namespace femus {
 
 unsigned elem_type::_refindex=1;
 
+//   Constructor
+  elem_type::elem_type(const char *geom_elem, const char *order_gauss) : _gauss(geom_elem, order_gauss) {  }
+
+
 elem_type::~elem_type() {
   delete [] _X;
   delete [] _KVERT_IND;
@@ -229,14 +233,9 @@ void elem_type::BuildProlongation(const mesh& mesh,const int& iel, SparseMatrix*
   }
 }
 
-elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *order_gauss) :
-	      elem_type(){
+elem_type_1D::elem_type_1D(const char *geom_elem, const char *order, const char *order_gauss) :
+	      elem_type(geom_elem,order_gauss) {
 
-  //************ BEGIN GAUSS SETUP ******************	
-  Gauss gauss(solid, order_gauss);
-  _GaussPointValues = gauss.GaussWeight;
-  _GaussPointNumber = gauss.GetGaussPointsNumber();
-  //************ END GAUSS SETUP ******************
 	
   //************ BEGIN FE and MG SETUP ******************	
   if (!strcmp(order,"linear")) 		 _SolType=0;   
@@ -245,23 +244,23 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
   else if (!strcmp(order,"constant"))    _SolType=3;   
   else if (!strcmp(order,"disc_linear")) _SolType=4;   
   else {
-    cout<<order<<" is not a valid option for "<<solid<<endl;
+    cout<<order<<" is not a valid option for "<<geom_elem<<endl;
     exit(0);
   }
    
-  if (!strcmp(solid,"line")) { //line
+  if (!strcmp(geom_elem,"line")) { //line
     if 	    (_SolType == 0) _pt_basis = new line1;
     else if (_SolType == 1) _pt_basis = new line2;
     else if (_SolType == 2) _pt_basis = new line2;
     else if (_SolType == 3) _pt_basis = new line0;
     else if (_SolType == 4) _pt_basis = new linepwl;
     else {
-      cout<<order<<" is not a valid option for "<<solid<<endl;
+      cout<<order<<" is not a valid option for "<<geom_elem<<endl;
       exit(0);
     }
   } 
   else {
-    cout<<solid<<" is not a valid option"<<endl;
+    cout<<geom_elem<<" is not a valid option"<<endl;
     exit(0);
   }
   
@@ -326,22 +325,24 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
   _prol_ind[_nf] = pt_i;
     
   // shape function and its derivatives evaluated at Gauss'points
-  _phi= new double*[_GaussPointNumber];
-  _dphidxi  = new double*[_GaussPointNumber];
-  _d2phidxi2  = new double*[_GaussPointNumber];
+   int n_gauss = _gauss.GetGaussPointsNumber();
+   
+  _phi= new double*[n_gauss];
+  _dphidxi  = new double*[n_gauss];
+  _d2phidxi2  = new double*[n_gauss];
 
-  _phi_memory=new double [_GaussPointNumber*_nc];
-  _dphidxi_memory  =new double [_GaussPointNumber*_nc];
-  _d2phidxi2_memory  =new double [_GaussPointNumber*_nc];
+  _phi_memory=new double [n_gauss*_nc];
+  _dphidxi_memory  =new double [n_gauss*_nc];
+  _d2phidxi2_memory  =new double [n_gauss*_nc];
 
-  for (unsigned i=0; i<_GaussPointNumber; i++) {
+  for (unsigned i=0; i<n_gauss; i++) {
     _phi[i]=&_phi_memory[i*_nc];
     _dphidxi[i]  =&_dphidxi_memory[i*_nc];
     _d2phidxi2[i]  =&_d2phidxi2_memory[i*_nc];
   }
 
- const double *ptx[1]={_GaussPointValues+_GaussPointNumber};
-  for (unsigned i=0; i<_GaussPointNumber; i++){
+ const double *ptx[1]={_gauss.GetGaussWeightsPointer() + n_gauss};
+  for (unsigned i=0; i<n_gauss; i++){
     double x[1];
     for (unsigned j=0; j<1;j++) {
       x[j] = *ptx[j];
@@ -357,15 +358,9 @@ elem_type_1D::elem_type_1D(const char *solid, const char *order, const char *ord
 }
 
 
-elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *order_gauss):
-	      elem_type(){
+elem_type_2D::elem_type_2D(const char *geom_elem, const char *order, const char *order_gauss):
+	      elem_type(geom_elem,order_gauss){
 
-  //************ BEGIN GAUSS SETUP ******************	
-  Gauss gauss(solid,order_gauss);
-  _GaussPointValues = gauss.GaussWeight;
-  _GaussPointNumber = gauss.GetGaussPointsNumber();
-  //************ END GAUSS SETUP ******************
-	
   //************ BEGIN FE and MG SETUP ******************	
   if 	  (!strcmp(order,"linear")) 	 _SolType=0;   
   else if (!strcmp(order,"quadratic")) 	 _SolType=1;   
@@ -373,22 +368,22 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
   else if (!strcmp(order,"constant"))    _SolType=3;   
   else if (!strcmp(order,"disc_linear")) _SolType=4;
   else {
-    cout<<order<<" is not a valid option for "<<solid<<endl;
-    exit(0);
+    cout << order << " is not a valid option for " << geom_elem << endl;
+    abort();
   }
   
-  if (!strcmp(solid,"quad")) { //QUAD
+  if (!strcmp(geom_elem,"quad")) { //QUAD
     if 	    (_SolType == 0) _pt_basis = new quad1;
     else if (_SolType == 1) _pt_basis = new quadth;
     else if (_SolType == 2) _pt_basis = new quad2;
     else if (_SolType == 3) _pt_basis = new quad0;
     else if (_SolType == 4) _pt_basis = new quadpwl;
     else {
-      cout<<order<<" is not a valid option for "<<solid<<endl;
-      exit(0);
+      cout << order << " is not a valid option for " << geom_elem << endl;
+      abort();
     }
   }      
-  else if (!strcmp(solid,"tri")) { //TRIANGLE
+  else if (!strcmp(geom_elem,"tri")) { //TRIANGLE
     
     if 	    (_SolType == 0) _pt_basis = new tri1;
     else if (_SolType == 1) _pt_basis = new tri2;
@@ -396,13 +391,13 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
     else if (_SolType == 3) _pt_basis = new tri0;
     else if (_SolType == 4) _pt_basis = new tripwl;
     else {
-      cout<<order<<" is not a valid option for "<<solid<<endl;
-      exit(0);
+    cout << order << " is not a valid option for " << geom_elem << endl;
+    abort();
     } 
   } 
   else {
-    cout<<solid<<" is not a valid option"<<endl;
-    exit(0);
+    cout << geom_elem << " is not a valid option" << endl;
+    abort();
   }
   
   // get data from basis object
@@ -467,25 +462,27 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
   _prol_ind[_nf]=pt_i;
 
   // shape function and its derivatives evaluated at Gauss'points
-  _phi= new double*[_GaussPointNumber];
-  _dphidxi  = new double*[_GaussPointNumber];
-  _dphideta = new double*[_GaussPointNumber];
+   int n_gauss = _gauss.GetGaussPointsNumber();
+   
+  _phi= new double*[n_gauss];
+  _dphidxi  = new double*[n_gauss];
+  _dphideta = new double*[n_gauss];
   
-  _d2phidxi2  = new double*[_GaussPointNumber];
-  _d2phideta2 = new double*[_GaussPointNumber];
+  _d2phidxi2  = new double*[n_gauss];
+  _d2phideta2 = new double*[n_gauss];
   
-  _d2phidxideta  = new double*[_GaussPointNumber];
+  _d2phidxideta  = new double*[n_gauss];
 
-  _phi_memory=new double [_GaussPointNumber*_nc];
-  _dphidxi_memory  =new double [_GaussPointNumber*_nc];
-  _dphideta_memory =new double [_GaussPointNumber*_nc];
+  _phi_memory=new double [n_gauss*_nc];
+  _dphidxi_memory  =new double [n_gauss*_nc];
+  _dphideta_memory =new double [n_gauss*_nc];
   
-  _d2phidxi2_memory  =new double [_GaussPointNumber*_nc];
-  _d2phideta2_memory =new double [_GaussPointNumber*_nc];
+  _d2phidxi2_memory  =new double [n_gauss*_nc];
+  _d2phideta2_memory =new double [n_gauss*_nc];
   
-  _d2phidxideta_memory  =new double [_GaussPointNumber*_nc];
+  _d2phidxideta_memory  =new double [n_gauss*_nc];
 
-  for (unsigned i=0; i<_GaussPointNumber; i++) {
+  for (unsigned i=0; i<n_gauss; i++) {
     _phi[i]=&_phi_memory[i*_nc];
     _dphidxi[i]  =&_dphidxi_memory[i*_nc];
     _dphideta[i] =&_dphideta_memory[i*_nc];
@@ -497,8 +494,8 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
     
   }
 
-  const double *ptx[2]={_GaussPointValues+_GaussPointNumber, _GaussPointValues+2*_GaussPointNumber};
-  for (unsigned i=0; i<_GaussPointNumber; i++){
+  const double *ptx[2]={_gauss.GetGaussWeightsPointer() + n_gauss, _gauss.GetGaussWeightsPointer() + 2*n_gauss};
+  for (unsigned i=0; i<n_gauss; i++){
     double x[2];
     for (unsigned j=0; j<2;j++) {
       x[j] = *ptx[j];
@@ -516,13 +513,8 @@ elem_type_2D::elem_type_2D(const char *solid, const char *order, const char *ord
 }
 
 elem_type_3D::elem_type_3D(const char *geom_elem, const char *order, const char *order_gauss) :
-	      elem_type(){
+	      elem_type(geom_elem,order_gauss) {
 
-  //************ BEGIN GAUSS SETUP ******************	
-  Gauss gauss(geom_elem,order_gauss);
-  _GaussPointValues = gauss.GaussWeight;
-  _GaussPointNumber = gauss.GetGaussPointsNumber();
-  //************ END GAUSS SETUP ******************
 	
   //************ BEGIN FE and MG SETUP ******************	
   if 	  (!strcmp(order,"linear")) 	 _SolType=0;   
@@ -638,34 +630,35 @@ elem_type_3D::elem_type_3D(const char *geom_elem, const char *order, const char 
   _prol_ind[_nf]=pt_i;
 
   // shape function and its derivatives evaluated at Gauss'points
+   int n_gauss = _gauss.GetGaussPointsNumber();
+   
+  _phi= new double*[n_gauss];
+  _dphidxi  = new double*[n_gauss];
+  _dphideta = new double*[n_gauss];
+  _dphidzeta= new double*[n_gauss];
+  
+  _d2phidxi2  = new double*[n_gauss];
+  _d2phideta2 = new double*[n_gauss];
+  _d2phidzeta2= new double*[n_gauss];
+  
+  _d2phidxideta  = new double*[n_gauss];
+  _d2phidetadzeta = new double*[n_gauss];
+  _d2phidzetadxi= new double*[n_gauss];
 
-  _phi= new double*[_GaussPointNumber];
-  _dphidxi  = new double*[_GaussPointNumber];
-  _dphideta = new double*[_GaussPointNumber];
-  _dphidzeta= new double*[_GaussPointNumber];
+  _phi_memory=new double [n_gauss*_nc];
+  _dphidxi_memory  =new double [n_gauss*_nc];
+  _dphideta_memory =new double [n_gauss*_nc];
+  _dphidzeta_memory=new double [n_gauss*_nc];
   
-  _d2phidxi2  = new double*[_GaussPointNumber];
-  _d2phideta2 = new double*[_GaussPointNumber];
-  _d2phidzeta2= new double*[_GaussPointNumber];
+  _d2phidxi2_memory  =new double [n_gauss*_nc];
+  _d2phideta2_memory =new double [n_gauss*_nc];
+  _d2phidzeta2_memory=new double [n_gauss*_nc];
   
-  _d2phidxideta  = new double*[_GaussPointNumber];
-  _d2phidetadzeta = new double*[_GaussPointNumber];
-  _d2phidzetadxi= new double*[_GaussPointNumber];
+  _d2phidxideta_memory  =new double [n_gauss*_nc];
+  _d2phidetadzeta_memory =new double [n_gauss*_nc];
+  _d2phidzetadxi_memory=new double [n_gauss*_nc];
 
-  _phi_memory=new double [_GaussPointNumber*_nc];
-  _dphidxi_memory  =new double [_GaussPointNumber*_nc];
-  _dphideta_memory =new double [_GaussPointNumber*_nc];
-  _dphidzeta_memory=new double [_GaussPointNumber*_nc];
-  
-  _d2phidxi2_memory  =new double [_GaussPointNumber*_nc];
-  _d2phideta2_memory =new double [_GaussPointNumber*_nc];
-  _d2phidzeta2_memory=new double [_GaussPointNumber*_nc];
-  
-  _d2phidxideta_memory  =new double [_GaussPointNumber*_nc];
-  _d2phidetadzeta_memory =new double [_GaussPointNumber*_nc];
-  _d2phidzetadxi_memory=new double [_GaussPointNumber*_nc];
-
-  for (unsigned i=0; i<_GaussPointNumber; i++) {
+  for (unsigned i=0; i< n_gauss; i++) {
     _phi[i]=&_phi_memory[i*_nc];
     _dphidxi[i]  =&_dphidxi_memory[i*_nc];
     _dphideta[i] =&_dphideta_memory[i*_nc];
@@ -681,8 +674,10 @@ elem_type_3D::elem_type_3D(const char *geom_elem, const char *order, const char 
     
   }
 
-  const double *ptx[3]={_GaussPointValues+_GaussPointNumber, _GaussPointValues+2*_GaussPointNumber, _GaussPointValues+3*_GaussPointNumber};
-  for (unsigned i=0; i<_GaussPointNumber; i++){
+  const double *ptx[3]={_gauss.GetGaussWeightsPointer() +   n_gauss, 
+                        _gauss.GetGaussWeightsPointer() + 2*n_gauss,
+                        _gauss.GetGaussWeightsPointer() + 3*n_gauss};
+  for (unsigned i=0; i<n_gauss; i++){
     double x[3];
     for (unsigned j=0; j<3;j++) {
       x[j] = *ptx[j];
@@ -721,7 +716,7 @@ void elem_type_1D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,co
     Jac+=(*dxi)*vt[0][inode];
   }
     
-  Weight=Jac*_GaussPointValues[ig];
+  Weight=Jac*_gauss.GetGaussWeightsPointer()[ig];
 
   JacI=1/Jac;
   
@@ -751,7 +746,7 @@ void elem_type_1D::Jacobian(const vector < vector < double > > &vt,const unsigne
     Jac+=(*dxi)*vt[0][inode];
   }
     
-  Weight=Jac*_GaussPointValues[ig];
+  Weight=Jac*_gauss.GetGaussWeightsPointer()[ig];
 
   JacI=1/Jac;
   
@@ -804,7 +799,7 @@ void elem_type_1D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt
   JacI[1][0] = -Jac[1][0]/det;
   JacI[1][1] =  Jac[0][0]/det;
 
-  Weight = det*_GaussPointValues[ig];
+  Weight = det*_gauss.GetGaussWeightsPointer()[ig];
   
   for(int inode=0;inode<_nc;inode++){
     other_phi[inode]=_phi[ig][inode];
@@ -850,7 +845,7 @@ void elem_type_1D::JacobianSur(const vector < vector < double > > &vt, const uns
   JacI[1][0] = -Jac[1][0]/det;
   JacI[1][1] =  Jac[0][0]/det;
 
-  Weight = det*_GaussPointValues[ig];
+  Weight = det*_gauss.GetGaussWeightsPointer()[ig];
   
   for(int inode=0;inode<_nc;inode++){
     other_phi[inode]=_phi[ig][inode];
@@ -883,7 +878,7 @@ void elem_type_2D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,co
   JacI[1][0]=-Jac[1][0]/det;
   JacI[1][1]= Jac[0][0]/det;
 
-  Weight=det*_GaussPointValues[ig];
+  Weight=det*_gauss.GetGaussWeightsPointer()[ig];
      
   dxi=_dphidxi[ig];
   deta=_dphideta[ig];
@@ -936,7 +931,7 @@ void elem_type_2D::Jacobian(const vector < vector < double > > &vt,const unsigne
   JacI[1][0]=-Jac[1][0]/det;
   JacI[1][1]= Jac[0][0]/det;
 
-  Weight=det*_GaussPointValues[ig];
+  Weight=det*_gauss.GetGaussWeightsPointer()[ig];
      
   dxi=_dphidxi[ig];
   deta=_dphideta[ig];
@@ -1005,7 +1000,7 @@ void elem_type_2D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt
 		      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
 		      Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
 
-  Weight=det*_GaussPointValues[ig];
+  Weight=det*_gauss.GetGaussWeightsPointer()[ig];
 
   for(int inode=0;inode<_nc;inode++){
     other_phi[inode]=_phi[ig][inode];
@@ -1053,7 +1048,7 @@ void elem_type_2D::JacobianSur(const vector < vector < double > > &vt, const uns
 	      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
 	      Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
 
-  Weight=det*_GaussPointValues[ig];
+  Weight=det*_gauss.GetGaussWeightsPointer()[ig];
 
   for(int inode=0;inode<_nc;inode++){
     other_phi[inode]=_phi[ig][inode];
@@ -1103,7 +1098,7 @@ void elem_type_3D::Jacobian(const vector < vector < double > > &vt,const unsigne
   JacI[2][1]= ( Jac[0][1]*Jac[2][0] - Jac[0][0]*Jac[2][1])/det;
   JacI[2][2]= (-Jac[0][1]*Jac[1][0] + Jac[0][0]*Jac[1][1])/det;
 
-  Weight=det*_GaussPointValues[ig];
+  Weight=det*_gauss.GetGaussWeightsPointer()[ig];
  
   dxi=_dphidxi[ig];
   deta=_dphideta[ig];
@@ -1193,7 +1188,7 @@ void elem_type_3D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,co
   JacI[2][1]= ( Jac[0][1]*Jac[2][0] - Jac[0][0]*Jac[2][1])/det;
   JacI[2][2]= (-Jac[0][1]*Jac[1][0] + Jac[0][0]*Jac[1][1])/det;
 
-  Weight=det*_GaussPointValues[ig];
+  Weight=det*_gauss.GetGaussWeightsPointer()[ig];
  
   dxi=_dphidxi[ig];
   deta=_dphideta[ig];

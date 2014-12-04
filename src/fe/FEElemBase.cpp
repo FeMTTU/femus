@@ -317,7 +317,7 @@ void FEElemBase::evaluate_shape_at_qp(const uint fe_family_in) {
 
 
 // ================================================================================
-  case(KK): {
+  case(KK): {  /*"constant"*/
     
 
      if (!strcmp(_geomel._geomel_id.c_str(),"hex")) {  
@@ -386,11 +386,6 @@ for (int vb=0; vb<VB; vb++) {
   // loop ===========================
   for (int vb=0; vb<VB; vb++) {
 
-    if ( _myelems[vb]->GetGaussPointNumber() != _qrule[vb].GetGaussPointsNumber()) {
-      std::cout << "Wrong gauss points" << std::endl;
-      abort();
-    }
- 
  
 // HEX 27 CASE ========================================== 
 // HEX 27 CASE ========================================== 

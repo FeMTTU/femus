@@ -28,13 +28,15 @@ public:
 
 // FE ==========
     static  FEElemBase* build(const GeomEl & geomel_in, const uint fe_family);
+// GeomEl ======
+    const GeomEl  _geomel;   //basically used only at construction  
+// Multigrid ====   //only VV
+    virtual float get_embedding_matrix(const uint,const uint,const uint) = 0;
+    virtual double get_prol(const uint) = 0;
     
   std::vector<elem_type*> _myelems;    //VB
   typedef double* (elem_type::*_FunctionPointerTwo)(const unsigned & ig) const; //declaring the FunctionPointer type
   std::vector< std::vector<_FunctionPointerTwo> > _DphiptrTwo;
-
-// GeomEl ======
-    const GeomEl  _geomel;   //basically used only at construction  
 
 // Quadrature ==
     std::vector<Gauss> _qrule;   //VB
@@ -42,10 +44,6 @@ public:
     double**      _phi_mapVBGD[VB];
     double** _dphidxez_mapVBGD[VB];
     void evaluate_shape_at_qp(const uint order);  /*This argument will be removed*/
-    
-// Multigrid ====   //only VV
-    virtual float get_embedding_matrix(const uint,const uint,const uint) = 0;
-    virtual double get_prol(const uint) = 0;
     
 
 };

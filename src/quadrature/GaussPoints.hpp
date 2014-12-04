@@ -97,6 +97,10 @@
 
     Gauss(const char *geom_elem, const char *order_gauss);
     
+  inline const double *  GetGaussWeightsPointer() const {
+    return GaussWeight;
+  };
+  
   inline double  GetGaussWeight(const unsigned ig) const {
     return GaussWeight[ig];
   };
@@ -113,15 +117,12 @@
     return gauss_order;
   };
   
-   /*protected*/
-   
-    const double *GaussWeight;
-    
   protected:
     
     int gauss_order;
     std::string _order;
     unsigned GaussPoints;  
+    const double *GaussWeight;
    
   };
      
