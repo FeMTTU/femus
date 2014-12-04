@@ -53,7 +53,7 @@ public:
     void ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref);
 
     /** Built-in cube-structured mesh generator */
-    void BuildBrickCoarseMesh( const unsigned int nx,
+    void GenerateCoarseBoxMesh( const unsigned int nx,
                                const unsigned int ny,
                                const unsigned int nz,
                                const double xmin, const double xmax,
@@ -63,15 +63,6 @@ public:
                                const char GaussOrder[]
                              );
 
-    /** Built-in square-structured mesh generator */
-    void BuildRectangleCoarseMesh( const unsigned int nx,
-                                   const unsigned int ny,
-                                   const double xmin, const double xmax,
-                                   const double ymin, const double ymax,
-                                   const ElemType type,
-                                   const char GaussOrder[]
-                                 );
-
     /** Refine the coarse mesh (totally or selectively (in according to the SetRefinementFlag user-function) ) */
     void RefineMesh(const unsigned short &igridn, const unsigned short &igridr,
                     bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
@@ -79,6 +70,7 @@ public:
 
     /** Add a partially refined mesh level in the AMR alghorithm **/
     void AddMeshLevel();
+    
     void AddAMRMeshLevel();
     
     

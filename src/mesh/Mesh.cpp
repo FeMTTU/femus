@@ -28,6 +28,7 @@
 #include "NumericVector.hpp"
 #include "map"
 #include "Mesh.hpp"
+#include "MeshGeneration.hpp"
 #include "metis.h"
 #include "GambitIO.hpp"
 
@@ -63,8 +64,8 @@ Mesh::~Mesh(){
 void Mesh::PrintInfo() {
   
  std::cout << " Mesh Level        : " << _grid << std::endl; 
- std::cout << "   Number of elements: " << nel << std::endl; 
- std::cout << "   Number of nodes   : " << nvt << std::endl;
+ std::cout << "   Number of elements: " << _nelem << std::endl; 
+ std::cout << "   Number of nodes   : " << _nnodes << std::endl;
   
 }
 
@@ -73,11 +74,7 @@ void Mesh::PrintInfo() {
  **/
 void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag) {
     
-  MPI_Comm_rank(MPI_COMM_WORLD, &_iproc);
-  MPI_Comm_size(MPI_COMM_WORLD, &_nprocs);
-  
-  vector <vector <double> > coords;  
-  coords.resize(3);
+  vector <vector <double> > coords(3);  
     
   _grid=0;
 
@@ -93,20 +90,23 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
               << std::endl;
   }
   
-  // connectivity: find all the element near the vertices
+  RenumberNodes(coords);
+  
   BuildAdjVtx();
+  
   Buildkel();
   
  if (_nprocs>=1) GenerateMetisMeshPartition();
   vector <double> coords_temp;
   for(int i=0;i<3;i++){
     coords_temp=coords[i];
-    for(unsigned j=0;j<nvt;j++) {
+    for(unsigned j=0;j<_nnodes;j++) {
       coords[i][GetMetisDof(j,2)]=coords_temp[j];
     }
   }
   
   _coordinate = new Solution(this);
+ 
   _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0); 
   _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0); 
   _coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0); 
@@ -118,22 +118,73 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _coordinate->SetCoarseCoordinates(coords);
   
   _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
+  
   _coordinate->ResizeSolutionVector("AMR");
     
 };
 
+/**
+ *  This function generates the coarse Box Mesh level using the built-in generator
+ **/
+void Mesh::GenerateCoarseBoxMesh(
+        const unsigned int nx, const unsigned int ny, const unsigned int nz,
+        const double xmin, const double xmax,
+        const double ymin, const double ymax,
+        const double zmin, const double zmax,
+        const ElemType type, std::vector<bool> &type_elem_flag) {
+  
+  vector <vector <double> > coords(3);  
+    
+  _grid=0;
+    
+  MeshTools::Generation::BuildBox(*this,coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,type_elem_flag);
+  
+  RenumberNodes(coords);
+  
+  BuildAdjVtx();
+  
+  Buildkel();
+  
+ if (_nprocs>=1) GenerateMetisMeshPartition();
+  vector <double> coords_temp;
+  for(int i=0;i<3;i++){
+    coords_temp=coords[i];
+    for(unsigned j=0;j<_nnodes;j++) {
+      coords[i][GetMetisDof(j,2)]=coords_temp[j];
+    }
+  }
+  
+  _coordinate = new Solution(this);
+ 
+  _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0); 
+  _coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0); 
+  
+  _coordinate->ResizeSolutionVector("X");
+  _coordinate->ResizeSolutionVector("Y");
+  _coordinate->ResizeSolutionVector("Z");
+    
+  _coordinate->SetCoarseCoordinates(coords);
+  
+  _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
+  
+  _coordinate->ResizeSolutionVector("AMR");
+  
+}  
+  
+
 //------------------------------------------------------------------------------------------------------
-void Mesh::ReorderMeshNodes(vector < vector < double> > &coords) {
+void Mesh::RenumberNodes(vector < vector < double> > &coords) {
   
   vector <unsigned> dof_index;
-  dof_index.resize(nvt);
-  for(unsigned i=0;i<nvt;i++){
+  dof_index.resize(_nnodes);
+  for(unsigned i=0;i<_nnodes;i++){
     dof_index[i]=i+1;
   }
   //reorder vertices and mid-points vs central points
-  for (unsigned iel=0; iel<nel; iel++) {
+  for (unsigned iel=0; iel<_nelem; iel++) {
     for (unsigned inode=0; inode<el->GetElementDofNumber(iel,1); inode++) {
-      for (unsigned jel=0; jel<nel; jel++) {
+      for (unsigned jel=0; jel<_nelem; jel++) {
 	for (unsigned jnode=el->GetElementDofNumber(jel,1); jnode<el->GetElementDofNumber(jel,3); jnode++) { 
 	  unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
 	  unsigned jj=el->GetElementVertexIndex(jel,jnode)-1;
@@ -148,9 +199,9 @@ void Mesh::ReorderMeshNodes(vector < vector < double> > &coords) {
     }
   }
   //reorder vertices vs mid-points
-  for (unsigned iel=0; iel<nel; iel++) {
+  for (unsigned iel=0; iel<_nelem; iel++) {
     for (unsigned inode=0; inode<el->GetElementDofNumber(iel,0); inode++) {
-      for (unsigned jel=0; jel<nel; jel++) {
+      for (unsigned jel=0; jel<_nelem; jel++) {
         for (unsigned jnode=el->GetElementDofNumber(jel,0); jnode<el->GetElementDofNumber(jel,1); jnode++) {
           unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
 	  unsigned jj=el->GetElementVertexIndex(jel,jnode)-1;
@@ -166,7 +217,7 @@ void Mesh::ReorderMeshNodes(vector < vector < double> > &coords) {
   }
   
   // update all
-  for (unsigned iel=0; iel<nel; iel++) {
+  for (unsigned iel=0; iel<_nelem; iel++) {
     for (unsigned inode=0; inode<el->GetElementDofNumber(iel,3); inode++) {
       unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
       el->SetElementVertexIndex(iel,inode,dof_index[ii]);
@@ -175,16 +226,16 @@ void Mesh::ReorderMeshNodes(vector < vector < double> > &coords) {
   vector <double> coords_temp;
   for(int i=0;i<3;i++){
     coords_temp=coords[i];
-    for(unsigned j=0;j<nvt;j++){
+    for(unsigned j=0;j<_nnodes;j++){
       coords[i][dof_index[j]-1]=coords_temp[j];
     }
   }
   // **************  end reoreder mesh dofs **************
  
-  el->SetNodeNumber(nvt);
+  el->SetNodeNumber(_nnodes);
 
   unsigned nv0=0;
-  for (unsigned iel=0; iel<nel; iel++)
+  for (unsigned iel=0; iel<_nelem; iel++)
     for (unsigned inode=0; inode<el->GetElementDofNumber(iel,0); inode++) {
       unsigned i0=el->GetElementVertexIndex(iel,inode);
       if (nv0<i0) nv0=i0;
@@ -192,14 +243,14 @@ void Mesh::ReorderMeshNodes(vector < vector < double> > &coords) {
   el->SetVertexNodeNumber(nv0);
 
   unsigned nv1=0;
-  for (unsigned iel=0; iel<nel; iel++)
+  for (unsigned iel=0; iel<_nelem; iel++)
     for (unsigned inode=el->GetElementDofNumber(iel,0); inode<el->GetElementDofNumber(iel,1); inode++) {
       unsigned i1=el->GetElementVertexIndex(iel,inode);
       if (nv1<i1) nv1=i1;
   }
   el->SetMidpointNodeNumber(nv1-nv0);
 
-  el->SetCentralNodeNumber(nvt-nv1);
+  el->SetCentralNodeNumber(_nnodes-nv1);
   
 }  
 
@@ -208,7 +259,7 @@ void Mesh::ReorderMeshNodes(vector < vector < double> > &coords) {
  **/
 void Mesh::BuildAdjVtx() {
   el->AllocateVertexElementMemory();
-  for (unsigned iel=0; iel<nel; iel++) {
+  for (unsigned iel=0; iel<_nelem; iel++) {
     for (unsigned inode=0; inode < el->GetElementDofNumber(iel,0); inode++) {
       unsigned ii=el->GetElementVertexIndex(iel,inode)-1u;
       unsigned jj=0;
@@ -231,7 +282,7 @@ void Mesh::Buildkmid() {
     for (unsigned iface=0; iface<el->GetElementFaceNumber(iel,0); iface++) {
       unsigned inode=el->GetElementDofNumber(iel,1)+iface;
       if ( 0==el->GetElementVertexIndex(iel,inode) ) {
-        el->SetElementVertexIndex(iel,inode,++nvt);
+        el->SetElementVertexIndex(iel,inode,++_nnodes);
         unsigned i1=el->GetFaceVertexIndex(iel,iface,0);
         unsigned i2=el->GetFaceVertexIndex(iel,iface,1);
         unsigned i3=el->GetFaceVertexIndex(iel,iface,2);
@@ -248,7 +299,7 @@ void Mesh::Buildkmid() {
                 if ((i1==j1 || i1==j2 || i1==j3 ||  i1==j4 )&&
                     (i2==j1 || i2==j2 || i2==j3 ||  i2==j4 )&&
                     (i3==j1 || i3==j2 || i3==j3 ||  i3==j4 )) {
-                  el->SetElementVertexIndex(jel,jnode,nvt);
+                  el->SetElementVertexIndex(jel,jnode,_nnodes);
                 }
               }
             }
@@ -260,17 +311,17 @@ void Mesh::Buildkmid() {
 
   for (unsigned iel=0; iel<el->GetElementNumber(); iel++) {
     if (0==el->GetElementType(iel)) {
-      el->SetElementVertexIndex(iel,26,++nvt);
+      el->SetElementVertexIndex(iel,26,++_nnodes);
     }
     if (3==el->GetElementType(iel)) {
-      el->SetElementVertexIndex(iel,8,++nvt);
+      el->SetElementVertexIndex(iel,8,++_nnodes);
     }
   }
-  el->SetNodeNumber(nvt);
+  el->SetNodeNumber(_nnodes);
 
   unsigned nv0= el->GetVertexNodeNumber();
   unsigned nv1= el->GetMidpointNodeNumber();
-  el->SetCentralNodeNumber(nvt-nv0-nv1);
+  el->SetCentralNodeNumber(_nnodes-nv0-nv1);
 
 }
 
@@ -334,14 +385,14 @@ unsigned Mesh::GetDofNumber(const unsigned type) const {
     return el->GetVertexNodeNumber()+el->GetMidpointNodeNumber();
     break;
   case 2:
-    return nvt;
+    return _nnodes;
     break;
   case 3:
-    return nel;
+    return _nelem;
     break;
   case 4:
-//     return nel*(2+DIMENSION);
-    return nel*(2+Mesh::_dimension-1);
+//     return _nelem*(2+DIMENSION);
+    return _nelem*(2+Mesh::_dimension-1);
     break;
   }
   return 0;
@@ -352,14 +403,14 @@ unsigned Mesh::GetDofNumber(const unsigned type) const {
  * This function copies the refined element index vector in other_vector
  **/
 void Mesh::copy_elr(vector <unsigned> &other_vec) const {
-  for (unsigned i=0; i<nel; i++)
+  for (unsigned i=0; i<_nelem; i++)
     other_vec[i]=el->GetRefinedElementIndex(i);
 }
 
 
 void Mesh::AllocateAndMarkStructureNode() {
   el->AllocateNodeRegion();
-  for (unsigned iel=0; iel<nel; iel++) {
+  for (unsigned iel=0; iel<_nelem; iel++) {
 
     int flag_mat = el->GetElementMaterial(iel);
 
@@ -406,7 +457,7 @@ void Mesh::FlagAllElementsToBeRefined() {
    el->InitRefinedToZero();
    
    //refine all next grid elements
-   for (unsigned iel=0; iel<nel; iel++) {
+   for (unsigned iel=0; iel<_nelem; iel++) {
      el->SetRefinedElementIndex(iel,1);
      el->AddToRefinedElementNumber(1);
      short unsigned elt=el->GetElementType(iel);
@@ -429,7 +480,7 @@ void Mesh::FlagElementsToBeRefinedByUserDefinedFunction() {
     _coordinate->_Sol[1]->localize_to_all(Y_local);
     _coordinate->_Sol[2]->localize_to_all(Z_local);
   
-    for (unsigned iel=0; iel<nel; iel+=1) {
+    for (unsigned iel=0; iel<_nelem; iel+=1) {
       unsigned nve=el->GetElementDofNumber(iel,0);
       double vtx=0.,vty=0.,vtz=0.;
       for ( unsigned i=0; i<nve; i++) {
@@ -489,7 +540,7 @@ void Mesh::FlagElementsToBeRefinedByAMR() {
   
     el->InitRefinedToZero();
     
-    for (unsigned iel_metis=0; iel_metis<nel; iel_metis++) {
+    for (unsigned iel_metis=0; iel_metis<_nelem; iel_metis++) {
       if(AMR_local[iel_metis]>0.5){
 	unsigned iel=IS_Mts2Gmt_elem[iel_metis];
 	el->SetRefinedElementIndex(iel,1);
@@ -508,7 +559,7 @@ void Mesh::FlagOnlyEvenElementsToBeRefined() {
    el->InitRefinedToZero();
 
    //refine all next grid even elements
-   for (unsigned iel=0; iel<nel; iel+=2) {
+   for (unsigned iel=0; iel<_nelem; iel+=2) {
      el->SetRefinedElementIndex(iel,1);
      el->AddToRefinedElementNumber(1);
      short unsigned elt=el->GetElementType(iel);
@@ -666,8 +717,8 @@ void Mesh::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_type *other
   };
   _grid=igrid;
 
-//   nel=elc->GetRefinedElementNumber()*REF_INDEX;
-  nel=elc->GetRefinedElementNumber()*_ref_index;
+//   _nelem=elc->GetRefinedElementNumber()*REF_INDEX;
+  _nelem=elc->GetRefinedElementNumber()*_ref_index;
   el=new elem(elc,Mesh::_ref_index);
 
 
@@ -720,25 +771,25 @@ void Mesh::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_type *other
     }
   }
 
-  nvt=elc->GetNodeNumber();
-  el->SetVertexNodeNumber(nvt);
+  _nnodes=elc->GetNodeNumber();
+  el->SetVertexNodeNumber(_nnodes);
 
   
   //find all the elements near each vertex
   BuildAdjVtx();
   //initialize to zero all the middle edge points
-  for (unsigned iel=0; iel<nel; iel++)
+  for (unsigned iel=0; iel<_nelem; iel++)
     for (unsigned inode=el->GetElementDofNumber(iel,0); inode<el->GetElementDofNumber(iel,1); inode++)
       el->SetElementVertexIndex(iel,inode,0);
   //find all the middle edge points
-  for (unsigned iel=0; iel<nel; iel++) {
+  for (unsigned iel=0; iel<_nelem; iel++) {
     unsigned ielt=el->GetElementType(iel);
     unsigned istart=el->GetElementDofNumber(iel,0);
     unsigned iend=el->GetElementDofNumber(iel,1);
     for (unsigned inode=istart; inode<iend; inode++)
       if (0==el->GetElementVertexIndex(iel,inode)) {
-        nvt++;
-        el->SetElementVertexIndex(iel,inode,nvt);
+        _nnodes++;
+        el->SetElementVertexIndex(iel,inode,_nnodes);
         unsigned im=el->GetElementVertexIndex(iel,edge2VerticesMapping[ielt][inode-istart][0]);
         unsigned ip=el->GetElementVertexIndex(iel,edge2VerticesMapping[ielt][inode-istart][1]);
         //find all the near elements which share the same middle edge point
@@ -766,14 +817,14 @@ void Mesh::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_type *other
                   jp=jm;
                   jm=tp;
                 }
-                el->SetElementVertexIndex(jel,vertices2EdgeMapping[jelt][--jm][--jp],nvt);
+                el->SetElementVertexIndex(jel,vertices2EdgeMapping[jelt][--jm][--jp],_nnodes);
               }
             }
           }
         }
       }
   }
-  el->SetMidpointNodeNumber(nvt - el->GetVertexNodeNumber());
+  el->SetMidpointNodeNumber(_nnodes - el->GetVertexNodeNumber());
   // Now build kmid
   Buildkmid();
   Buildkel();
@@ -872,7 +923,7 @@ void Mesh::GenerateMetisMeshPartition(){
                      + el->GetElementNumber("Wedge")*NVE[2][3] + el->GetElementNumber("Quad")*NVE[3][3] 
                      + el->GetElementNumber("Triangle")*NVE[4][3] + el->GetElementNumber("Line")*NVE[5][3];
 
-  idx_t *eptr=new idx_t [nel+1];
+  idx_t *eptr=new idx_t [_nelem+1];
   idx_t *eind=new idx_t [eind_size];
   
   idx_t objval;
@@ -892,7 +943,7 @@ void Mesh::GenerateMetisMeshPartition(){
   
   eptr[0]=0;
   unsigned counter=0;
-  for (unsigned iel=0; iel<nel; iel++) {
+  for (unsigned iel=0; iel<_nelem; iel++) {
     unsigned ielt=el->GetElementType(iel);
     eptr[iel+1]=eptr[iel]+NVE[ielt][3];
     
@@ -904,13 +955,13 @@ void Mesh::GenerateMetisMeshPartition(){
     
   }
   
-  idx_t mnel = nel; 
-  idx_t mnvt = nvt;
+  idx_t mnel = _nelem; 
+  idx_t mnvt = _nnodes;
   idx_t ncommon = _dimension+1;
   nsubdom = _nprocs;
     
-  epart=new idx_t [nel];
-  npart=new idx_t [nvt];
+  epart=new idx_t [_nelem];
+  npart=new idx_t [_nnodes];
   
   if(nsubdom!=1) {
   //I call the Mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
@@ -934,7 +985,7 @@ void Mesh::GenerateMetisMeshPartition(){
   }
   else {
     //serial computation
-    for(unsigned i=0;i<nel;i++) {
+    for(unsigned i=0;i<_nelem;i++) {
       epart[i]=0;
     } 
   }
@@ -949,11 +1000,11 @@ void Mesh::GenerateMetisMeshPartition(){
     IS_Gmt2Mts_dof[k].resize(GetDofNumber(k)); 
     IS_Gmt2Mts_dof_offset[k].resize(nsubdom+1);
   }
-  IS_Mts2Gmt_elem.resize(nel);
+  IS_Mts2Gmt_elem.resize(_nelem);
   IS_Mts2Gmt_elem_offset.resize(nsubdom+1);
   
   // I 
-  for(unsigned i=0;i<nvt;i++) {
+  for(unsigned i=0;i<_nnodes;i++) {
     npart[i]=nsubdom;
   }
   
@@ -970,7 +1021,7 @@ void Mesh::GenerateMetisMeshPartition(){
   IS_Gmt2Mts_dof_counter[4]=0;
   
   for(int isdom=0;isdom<nsubdom;isdom++) {
-    for(unsigned iel=0;iel<nel;iel++){
+    for(unsigned iel=0;iel<_nelem;iel++){
       if(epart[iel]==isdom){
 	//filling the piecewise IS_Mts2Gmt_elem metis->gambit
 	IS_Mts2Gmt_elem[ IS_Gmt2Mts_dof_counter[3] ]=iel;
@@ -1013,9 +1064,9 @@ void Mesh::GenerateMetisMeshPartition(){
       }
     }
     for(unsigned k_dim=0;k_dim<_dimension+1;k_dim++){
-      for(unsigned iel=0;iel<nel;iel++){
+      for(unsigned iel=0;iel<_nelem;iel++){
      	if(epart[iel]==isdom){
-	  IS_Gmt2Mts_dof[4][iel+k_dim*nel]=IS_Gmt2Mts_dof_counter[4];
+	  IS_Gmt2Mts_dof[4][iel+k_dim*_nelem]=IS_Gmt2Mts_dof_counter[4];
 	  IS_Gmt2Mts_dof_counter[4]++;
 	}
       }
@@ -1023,7 +1074,7 @@ void Mesh::GenerateMetisMeshPartition(){
   }  
    
   // ghost vs own nodes
-  vector <unsigned short> node_count(nvt,0);
+  vector <unsigned short> node_count(_nnodes,0);
   
   for(unsigned k=0;k<5;k++){
     ghost_size[k].assign(nsubdom,0);
@@ -1096,7 +1147,7 @@ void Mesh::GenerateMetisMeshPartition(){
     }
   } 
   
-  node_count.assign (nvt,0);  
+  node_count.assign (_nnodes,0);  
   for(int k=0; k<5; k++) {
     ghost_size[k].assign(nsubdom,0);
   }

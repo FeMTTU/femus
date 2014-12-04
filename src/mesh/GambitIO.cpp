@@ -252,11 +252,7 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &coords
   }
   inf.close();
   // end read boundary **************** D
-
-  
-  mesh.ReorderMeshNodes(coords);
-
-  
+ 
 };
 
 }

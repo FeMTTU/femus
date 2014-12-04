@@ -51,57 +51,44 @@ public:
     /** destructor */
     ~Mesh();
 
+    /** Generate mesh functions */
+    
     /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
     void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag);
-
-    /** This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$ */
-    void RefineMesh(const unsigned &igrid, Mesh *mshc, const elem_type* otheFiniteElement[6][5]);
-
-    /** To be Added */
-    void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
     
-    /** Partition the mesh using the METIS partitioner */
-    void GenerateMetisMeshPartition();
+    /** This function generates a coarse box mesh */
+    void GenerateCoarseBoxMesh(const unsigned int nx,
+                                  const unsigned int ny,
+                                  const unsigned int nz,
+                                  const double xmin, const double xmax,
+                                  const double ymin, const double ymax,
+                                  const double zmin, const double zmax,
+                                  const ElemType type, std::vector<bool> &type_elem_flag);
 
     /** Print the mesh info for this level */
     void PrintInfo();
-
-    /** To be added */
-    void BuildAdjVtx();
-
-    /** To be added */
-    void Buildkmid();
-
-    /** To be added */
-    void Buildkel();
-    
-    /** Reorder mesh nodes in the following order: vertices, face, center */
-    void ReorderMeshNodes(vector < vector < double> > &coords);
-
-    /** To be added */
-    void copy_elr(vector <unsigned> &other_vec) const;
 
     /** Get the dof number for the element -type- */
     unsigned GetDofNumber(const unsigned type) const;
     
     /** Set the number of nodes */
     void SetNumberOfNodes(const unsigned nnodes) {
-      nvt = nnodes; 
+      _nnodes = nnodes; 
     };
     
     /** Get the number of nodes */
     unsigned GetNumberOfNodes() const {
-      return nvt;
+      return _nnodes;
     }
     
     /** Set the number of element */
-    void SetElementNumber(const unsigned numelem) {
-      nel = numelem; 
+    void SetElementNumber(const unsigned nelem) {
+      _nelem = nelem; 
     };
 
     /** Get the number of element */
     unsigned GetElementNumber() const {
-      return nel;
+      return _nelem;
     }
 
     /** Set the grid number */
@@ -114,9 +101,6 @@ public:
       return _grid;
     }
 
-    /** Allocate memory for adding fluid or solid mark */
-    void AllocateAndMarkStructureNode();
-    
     /** Set the dimension of the problem (1D, 2D, 3D) */
     void SetDimension(const unsigned dim) {
       Mesh::_dimension = dim;
@@ -145,8 +129,20 @@ public:
       return _END_IND[i];
     }
     
+    /** Allocate memory for adding fluid or solid mark */
+    void AllocateAndMarkStructureNode();
+    
     /** Get the material of the kel element */
     const unsigned GetElementMaterial(unsigned &kel) const;
+    
+    /** To be Added */
+    void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
+    
+    
+    /** Refinement functions */
+    
+    /** This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$ */
+    void RefineMesh(const unsigned &igrid, Mesh *mshc, const elem_type* otheFiniteElement[6][5]);
     
     /** Flag all the elements to be refined */
     void FlagAllElementsToBeRefined();
@@ -159,6 +155,8 @@ public:
 
     /** Flag the elements to be refined in according to AMR criteria */
     void FlagElementsToBeRefinedByAMR();
+    
+    /** Partition Functions */
     
     /** To be added */
     void GenerateVankaPartitions_FAST( const unsigned &block_size, vector < vector< unsigned > > &blk_elements,
@@ -174,6 +172,7 @@ public:
     
     /** To be added */    
     void GenerateVankaPartitions_METIS( const unsigned &block_size, vector < vector< unsigned > > &blk_elements);
+ 
     
     // member data
     Solution* _coordinate;
@@ -196,10 +195,31 @@ public:
     
 
 private:
+  
+    /** To be added */
+    void copy_elr(vector <unsigned> &other_vec) const;
+  
+    /** To be added */
+    void BuildAdjVtx();
+
+    /** To be added */
+    void Buildkmid();
+
+    /** To be added */
+    void Buildkel();
+    
+    /** Renumber nodes in the following order: vertices, face, center */
+    void RenumberNodes(vector < vector < double> > &coords);
+    
+    /** Partition functions */
+  
+    /** Partition the mesh using the METIS partitioner */
+    void GenerateMetisMeshPartition();
+
     
     //member-data
-    int nel;                                   //< number of elements
-    unsigned nvt;                              //< number of nodes
+    int _nelem;                                   //< number of elements
+    unsigned _nnodes;                              //< number of nodes
     unsigned _grid;                            //< level of mesh in the multilevel hierarchy
     static unsigned _dimension;                //< dimension of the problem
     static unsigned _ref_index;

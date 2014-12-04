@@ -8,7 +8,7 @@
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
 #include "FEMTTUConfig.h"
-#include "MeshGeneration.hpp"
+
 
 //C++ include
 #include <iostream>
@@ -170,15 +170,12 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
 
 }
 
-void MultiLevelMesh::BuildBrickCoarseMesh( const unsigned int nx,
-        const unsigned int ny,
-        const unsigned int nz,
+void MultiLevelMesh::GenerateCoarseBoxMesh(
+        const unsigned int nx, const unsigned int ny, const unsigned int nz,
         const double xmin, const double xmax,
         const double ymin, const double ymax,
         const double zmin, const double zmax,
-        const ElemType type,
-        const char GaussOrder[]
-                                         )
+        const ElemType type, const char GaussOrder[])
 {
     _gridn0 = 1;
     _gridr0 = 1;
@@ -189,8 +186,8 @@ void MultiLevelMesh::BuildBrickCoarseMesh( const unsigned int nx,
     //coarse mesh
     _level0[0] = new Mesh();
     std::cout << " Building brick mesh using the built-in mesh generator" << std::endl;
-    //_level0[0]->BuildBrick(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_finiteElementGeometryFlag);
-    MeshTools::Generation::BuildBrick(*_level0[0],nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_finiteElementGeometryFlag);
+    
+    _level0[0]->GenerateCoarseBoxMesh(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_finiteElementGeometryFlag);
 
     BuildElemType(GaussOrder);
     
@@ -198,20 +195,6 @@ void MultiLevelMesh::BuildBrickCoarseMesh( const unsigned int nx,
     _gridr=_gridr0;
     _level.resize(_gridn);
     _level[0] = _level0[0];
-
-}
-
-
-void MultiLevelMesh::BuildRectangleCoarseMesh( const unsigned int nx,
-        const unsigned int ny,
-        const double xmin, const double xmax,
-        const double ymin, const double ymax,
-        const ElemType type,
-        const char GaussOrder[]
-                                             )
-{
-
-    BuildBrickCoarseMesh(nx,ny,0,xmin,xmax,ymin,ymax,0.,0.,type,GaussOrder);
 
 }
 
