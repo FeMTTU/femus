@@ -2,8 +2,12 @@
 #define _geomeltype_enum
 
 
-enum  GeomElType { QUADR=0,
-                  TRIANG };
+enum  GeomElType { HEX=0, 
+                   TET,
+		   WEDGE,
+		   QUAD,
+		   TRI,
+		   LINE };
 
 
 

@@ -26,44 +26,51 @@ Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const doubl
          _files(files_in),
          _mesh_rtmap(map_in),
          _dim(map_in.get("dimension")),
-         _Lref(Lref)
-         {
+         _Lref(Lref)   {
+
 	   
     std::string  geomelem[VB];
-    if (map_in.get("geomel_type") == QUADR)  {
-    if (map_in.get("dimension") == 3) {
+    if (map_in.get("geomel_type") == HEX)  {
       geomelem[VV] = "hex";
       geomelem[BB] = "quad";
     }
-    else if (map_in.get("dimension") == 2) {
-      geomelem[VV] = "quad";
-      geomelem[BB] = "line";
-    }
-    
-    }
-    if (map_in.get("geomel_type") == TRIANG)  {
-    if (map_in.get("dimension") == 3) {
+    else if (map_in.get("geomel_type") == TET)  {
       geomelem[VV] = "tet";
       geomelem[BB] = "tri";
     }
-    else if (map_in.get("dimension") == 2) {
+    else if (map_in.get("geomel_type") == WEDGE)  {
+       std::cout << "Wedge not supported" << std::endl; abort(); 
+    }
+    else if (map_in.get("geomel_type") == QUAD)  {
+      geomelem[VV] = "quad";
+      geomelem[BB] = "line";
+    }
+    else if (map_in.get("geomel_type") == TRI)  {
       geomelem[VV] = "tri";
       geomelem[BB] = "line";
     }
-    
+    else if (map_in.get("geomel_type") == LINE)  {
+      geomelem[VV] = "line";
     }
+    else  {  std::cout << "Geom Elem not supported" << std::endl; abort();   }
     
+if ( _dim == 3  && (map_in.get("geomel_type") != HEX && map_in.get("geomel_type") != TET && map_in.get("geomel_type") != WEDGE) )
+        {  std::cout << "Inconsistent input file" << std::endl; abort();   }
     
-//     How to initialize a std::vector of classes ==================
+if ( _dim == 2  && (map_in.get("geomel_type") != QUAD && map_in.get("geomel_type") != TRI ) )
+        {  std::cout << "Inconsistent input file" << std::endl; abort();   }
+    
+if ( _dim == 1  && (map_in.get("geomel_type") != LINE ) )
+        {  std::cout << "Inconsistent input file" << std::endl; abort();   }
+
+    
+    //     How to initialize a std::vector of classes ==================
     _GeomEl.reserve(VB);
     for (int vb=0;vb < VB; vb++) { 
           GeomEl geomel_temp( geomelem[vb] ); 
          _GeomEl.push_back(geomel_temp); 
     }
 //     How to initialize a std::vector of classes ==================
-
-//    std::cout << _geomel[BB].name[0] << std::endl;
-//    std::cout << _geomel[BB].name[1] << std::endl;
 
     _iproc    = paral::get_rank();
     _NoSubdom = paral::get_size();   
