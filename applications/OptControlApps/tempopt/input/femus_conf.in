@@ -7,7 +7,6 @@ ibc_gen       0            # ==== in library routines # se c'e' un file per il m
 nolevels      3                 
 meshql        1           # ------<ElementMapping>------- # for THE APP # =MESH CONSISTENCY=== # ==== in library routines # depends on the kind of Mesh that is used# depends basically on the Boundary Mesh# 0=QUADRATIC Mapping  1=LINEAR Mapping
 mesh_ord      0           # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# 0=QUADRATIC GeomElements (Quad8,Quad9,Hex27,...)# 1=LINEAR GeomElements (Quad4,Hex8,...)
-numgeomels    1           # quadrilateral,triangular,pyramidal,...        # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# no support for hybrid mesh yet
 geomel_type   0           # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
 dimension     2              
 domain        0           # Box, or whatever SHAPE...  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # 0=Box# 1=Cylinder# Whatever the rest

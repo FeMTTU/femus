@@ -25,7 +25,6 @@ namespace femus {
 Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref) :
          _files(files_in),
          _mesh_rtmap(map_in),
-         _n_GeomEl(map_in.get("numgeomels")),
          _dim(map_in.get("dimension")),
          _Lref(Lref)
          {
