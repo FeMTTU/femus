@@ -502,7 +502,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     unsigned end_ind1   = mymsh->GetEndIndex(SolType1);
 
     // mesh and procs
-    unsigned nel    = mymsh->GetElementNumber();
+    unsigned nel    = mymsh->GetNumberOfElements();
     unsigned igrid  = mymsh->GetGridNumber();
     unsigned iproc  = mymsh->processor_id();
 
@@ -838,7 +838,7 @@ void AssembleMatrixResNS_old(MultiLevelProblem &ml_prob, unsigned level, const u
   //data
   const unsigned dim = mymsh->GetDimension();
   const unsigned nabla_dim = 3*(dim-1);
-  unsigned nel= mymsh->GetElementNumber();
+  unsigned nel= mymsh->GetNumberOfElements();
   unsigned igrid= mymsh->GetGridNumber();
   unsigned iproc = mymsh->processor_id();
   double ILambda= 0; 
@@ -1709,7 +1709,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   
   //data
   const unsigned	dim	= mymsh->GetDimension();
-  unsigned 		nel	= mymsh->GetElementNumber();
+  unsigned 		nel	= mymsh->GetNumberOfElements();
   unsigned 		igrid	= mymsh->GetGridNumber();
   unsigned 		iproc	= mymsh->processor_id();
   double		IPe	= 1./(ml_prob.parameters.get<Fluid>("Fluid").get_Peclet_number());  

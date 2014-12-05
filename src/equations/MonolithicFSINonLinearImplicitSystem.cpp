@@ -192,13 +192,13 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
 
   void MonolithicFSINonLinearImplicitSystem::SetElementBlockFluidAll() {
     for (unsigned i=1; i<_gridn; i++) {
-      _LinSolver[i]->SetElementBlockNumberFluid(_msh[i]->GetElementNumber(),0);
+      _LinSolver[i]->SetElementBlockNumberFluid(_msh[i]->GetNumberOfElements(),0);
     }
   }
 
   void MonolithicFSINonLinearImplicitSystem::SetElementBlockSolidAll() {
     for (unsigned i=1; i<_gridn; i++) {
-      _LinSolver[i]->SetElementBlockNumberSolid(_msh[i]->GetElementNumber(),0);
+      _LinSolver[i]->SetElementBlockNumberSolid(_msh[i]->GetNumberOfElements(),0);
     }
   }
 
@@ -210,7 +210,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
     _num_block = pow(base,dim_block);
 
     for (unsigned i=1; i<_gridn; i++) {
-      unsigned num_block2 = std::min(_num_block,_msh[i]->GetElementNumber());
+      unsigned num_block2 = std::min(_num_block,_msh[i]->GetNumberOfElements());
       _LinSolver[i]->SetElementBlockNumberFluid(num_block2, overlap);
     }
   }
@@ -222,7 +222,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
     _num_block = pow(base,dim_block);
 
     for (unsigned i=1; i<_gridn; i++) {
-      unsigned num_block2 = std::min(_num_block,_msh[i]->GetElementNumber());
+      unsigned num_block2 = std::min(_num_block,_msh[i]->GetNumberOfElements());
       _LinSolver[i]->SetElementBlockNumberSolid(num_block2,overlap);
     }
   }

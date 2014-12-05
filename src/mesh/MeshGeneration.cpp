@@ -173,7 +173,7 @@ void BuildBox(      Mesh& mesh,
            case EDGE3:
 //           case EDGE4:
              {
-	       mesh.SetElementNumber(nx);
+	       mesh.SetNumberOfElements(nx);
 	      
 	       ngroup = 1;
 	       nbcd   = 2;
@@ -290,7 +290,7 @@ void BuildBox(      Mesh& mesh,
  
          // Build the elements of the mesh
        unsigned iel = 0;
-	 mesh.el= new elem(mesh.GetElementNumber());
+	 mesh.el= new elem(mesh.GetNumberOfElements());
 	 mesh.el->SetElementGroupNumber(1);
          // Build the elements.  Each one is a bit different.
          switch(type)
@@ -393,7 +393,7 @@ void BuildBox(      Mesh& mesh,
 // 	  case QUAD8:
  	  case QUAD9:
  	    {
- 	      mesh.SetElementNumber(nx*ny);
+ 	      mesh.SetNumberOfElements(nx*ny);
 	      
 	      ngroup = 1;
 	      nbcd   = 4;
@@ -403,7 +403,7 @@ void BuildBox(      Mesh& mesh,
 // 	  case TRI3:
  	  case TRI6:
  	    {
-	      mesh.SetElementNumber(2*nx*ny);
+	      mesh.SetNumberOfElements(2*nx*ny);
 	      
 	      ngroup = 1;
 	      nbcd   = 4;
@@ -545,7 +545,7 @@ void BuildBox(      Mesh& mesh,
 
  	  	    
 	unsigned iel = 0;
-	mesh.el= new elem(mesh.GetElementNumber());
+	mesh.el= new elem(mesh.GetNumberOfElements());
 	mesh.el->SetElementGroupNumber(1);
  	// Build the elements.  Each one is a bit different.
  	switch (type)
@@ -807,7 +807,7 @@ void BuildBox(      Mesh& mesh,
 // 	  case TET10: // TET10's are created from an initial HEX27 discretization
 // 	  case PYRAMID5: // PYRAMID5's are created from an initial HEX27 discretization
 	    {
-	      mesh.SetElementNumber(nx*ny*nz);
+	      mesh.SetNumberOfElements(nx*ny*nz);
 	      ngroup = 1;
 	      nbcd   = 6;
               break;
@@ -983,7 +983,7 @@ void BuildBox(      Mesh& mesh,
  
  	// Build the elements.
         unsigned iel = 0;
-	mesh.el= new elem(mesh.GetElementNumber());
+	mesh.el= new elem(mesh.GetNumberOfElements());
 	mesh.el->SetElementGroupNumber(1);
  	switch (type)
  	  {

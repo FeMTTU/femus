@@ -70,7 +70,7 @@ unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kki
 				  const unsigned &idof_gmt) const {
   
    unsigned soltype =  _SolType[index_sol]; 
-   unsigned isubdom = (soltype<3)?_msh->npart[idof_gmt]:(_msh->epart[idof_gmt % _msh->GetElementNumber()]);
+   unsigned isubdom = (soltype<3)?_msh->npart[idof_gmt]:(_msh->epart[idof_gmt % _msh->GetNumberOfElements()]);
    unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);   
    return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
 }
@@ -288,7 +288,7 @@ void LinearEquation::DeletePde() {
     }
     
     // mesh and procs
-    int nel    = _msh->GetElementNumber();
+    int nel    = _msh->GetNumberOfElements();
     int igrid  = _msh->GetGridNumber();
     int this_proc  = _msh->processor_id();
     int nprocs=	      _msh->n_processors();
