@@ -84,20 +84,20 @@ int main(int argc,char **args) {
   MultiLevelSolution ml_sol(&ml_msh);
   
   // generate solution vector
-//   ml_sol.AddSolution("T",LAGRANGE,SECOND);
-   ml_sol.AddSolution("U",LAGRANGE,SECOND);
-   ml_sol.AddSolution("V",LAGRANGE,SECOND);
-//   // the pressure variable should be the last for the Schur decomposition
-   //ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
+  // ml_sol.AddSolution("T",LAGRANGE,SECOND);
+  ml_sol.AddSolution("U",LAGRANGE,SECOND);
+  ml_sol.AddSolution("V",LAGRANGE,SECOND);
+  // the pressure variable should be the last for the Schur decomposition
+  // ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
   
  
-//  ml_sol.AddSolution("U",LAGRANGE,FIRST);
-//  ml_sol.AddSolution("V",LAGRANGE,FIRST);
+  // ml_sol.AddSolution("U",LAGRANGE,FIRST);
+  // ml_sol.AddSolution("V",LAGRANGE,FIRST);
   // the pressure variable should be the last for the Schur decomposition
   ml_sol.AddSolution("P",LAGRANGE,FIRST);
   ml_sol.AssociatePropertyToSolution("P","Pressure");
  
-   ml_sol.AddSolution("T",LAGRANGE,FIRST);
+  ml_sol.AddSolution("T",LAGRANGE,FIRST);
   
   //Initialize (update Init(...) function)
   ml_sol.Initialize("U",InitVariableU);
@@ -727,9 +727,9 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    vector < adept::adouble > ResSupg(dim,0.);
 	    for(unsigned ivar=0; ivar<dim; ivar++) {
 	      for(unsigned jvar=0; jvar<dim; jvar++) {
-		ResSupg[ivar] += SolVAR[jvar]*GradSolVAR[ivar][jvar] - IRe*NablaSolVAR[ivar][jvar];
+		ResSupg[ivar] -= SolVAR[jvar]*GradSolVAR[ivar][jvar] - IRe*NablaSolVAR[ivar][jvar];
 	      }
-	      ResSupg[ivar] += GradSolVAR[dim][ivar];
+	      ResSupg[ivar] -= GradSolVAR[dim][ivar];
 	    }
 	    
 	    //BEGIN redidual momentum block  
@@ -746,7 +746,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 		  supgPhi += ( SolVAR[jvar]*gradphi[i*dim+jvar] + IRe * nablaphi[i*nabla_dim+jvar] ) * tauSupg; 
 		}
 		aRhs[indexVAR[ivar]][i]+= ( - Lap_rhs - Adv_rhs + SolVAR[dim]*gradphi[i*dim+ivar]
-					    - ResSupg[ivar]*supgPhi )*Weight;	      
+					    + ResSupg[ivar]*supgPhi )*Weight;	      
 	      }
 	    } 
 	    //END redidual momentum block     
@@ -758,11 +758,11 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 		div_vel +=GradSolVAR[ivar][ivar];
 	      }
 	      for (unsigned i=0; i<nve1; i++) {
-		adept::adouble MinusResDotGradq=0.;
+		adept::adouble ResDotMinusGradq=0.;
 		for(int ivar=0;ivar<dim;ivar++){
-		  MinusResDotGradq += - ResSupg[ivar]*gradphi1[i*dim+ivar]*tauSupg; 
+		  ResDotMinusGradq += ResSupg[ivar]*(-gradphi1[i*dim+ivar])*tauSupg; 
 		}
-		aRhs[indexVAR[dim]][i] += ( -(-div_vel)*phi1[i] )*Weight;
+		aRhs[indexVAR[dim]][i] += (-(-div_vel)*phi1[i] + ResDotMinusGradq )*Weight;
 	      }
 	    }
 	    //END continuity block ===========================
