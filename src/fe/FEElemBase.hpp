@@ -30,13 +30,13 @@ public:
     static  FEElemBase* build(const GeomEl & geomel_in, const uint fe_family);
 // GeomEl ======
     const GeomEl  _geomel;   //basically used only at construction  
-// Multigrid ====   //only VV
+// Multigrid ===   //only VV
     virtual float get_embedding_matrix(const uint,const uint,const uint) = 0;
     virtual double get_prol(const uint) = 0;
     
   std::vector<elem_type*> _myelems;    //VB
-  typedef double* (elem_type::*_FunctionPointerTwo)(const unsigned & ig) const; //declaring the FunctionPointer type
-  std::vector< std::vector<_FunctionPointerTwo> > _DphiptrTwo;
+  typedef double* (elem_type::*_FunctionPointerTwo)(const unsigned & ig) const; //this const seems to be essential
+  std::vector< std::vector<_FunctionPointerTwo> > _DphiptrTwo; //VB
 
 // Quadrature ==
     double**      _phi_mapVBGD[VB];

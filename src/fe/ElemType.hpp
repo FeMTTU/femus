@@ -24,10 +24,10 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "Basis.hpp"
-#include "../quadrature/GaussPoints.hpp"
 #include "SparseMatrix.hpp"
 #include "Mesh.hpp"
 #include "LinearEquation.hpp"
+#include "GaussPoints.hpp"
 #include "adept.h"
 
 namespace femus {
@@ -129,6 +129,7 @@ public:
 protected:
   
   // member data
+  unsigned _dim; /*Spatial dimension of the geometric element*/
   int _nc,_nf,_nlag[3];
   unsigned _SolType;   /*Finite Element Family flag*/
   const double **_X;
@@ -147,6 +148,7 @@ protected:
 
 
 class elem_type_1D : public elem_type {
+
 public:
   /** constructor */
   elem_type_1D(const char *solid,const char *order, const char* gauss_order);

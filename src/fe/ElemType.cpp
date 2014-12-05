@@ -235,7 +235,9 @@ void elem_type::BuildProlongation(const mesh& mesh,const int& iel, SparseMatrix*
 
 elem_type_1D::elem_type_1D(const char *geom_elem, const char *order, const char *order_gauss) :
 	      elem_type(geom_elem,order_gauss) {
-
+		
+  _dim = 1;
+  
 	
   //************ BEGIN FE and MG SETUP ******************	
   if (!strcmp(order,"linear")) 		 _SolType=0;   
@@ -359,7 +361,10 @@ elem_type_1D::elem_type_1D(const char *geom_elem, const char *order, const char 
 
 
 elem_type_2D::elem_type_2D(const char *geom_elem, const char *order, const char *order_gauss):
-	      elem_type(geom_elem,order_gauss){
+	      elem_type(geom_elem,order_gauss)
+	       {
+		 
+  _dim = 2;
 
   //************ BEGIN FE and MG SETUP ******************	
   if 	  (!strcmp(order,"linear")) 	 _SolType=0;   
@@ -513,8 +518,9 @@ elem_type_2D::elem_type_2D(const char *geom_elem, const char *order, const char 
 }
 
 elem_type_3D::elem_type_3D(const char *geom_elem, const char *order, const char *order_gauss) :
-	      elem_type(geom_elem,order_gauss) {
+	      elem_type(geom_elem,order_gauss)  {
 
+  _dim = 3;
 	
   //************ BEGIN FE and MG SETUP ******************	
   if 	  (!strcmp(order,"linear")) 	 _SolType=0;   
