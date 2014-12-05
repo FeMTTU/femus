@@ -37,9 +37,20 @@ public:
   std::vector<elem_type*> _myelems;    //VB
 
 // Quadrature ==
+    void evaluate_shape_at_qp(const uint order, const char* gauss_order);
+    
+    inline const double GetPhi(const uint vb, const uint qp, const uint dof ) const {
+     return _phi_mapVBGD[vb][qp][dof];
+    }
+    
+    inline const double GetDPhiDxez(const uint vb, const uint qp, const uint dof ) const {
+     return _dphidxez_mapVBGD[vb][qp][dof];
+    }
+    
+protected:
+  
     double**      _phi_mapVBGD[VB];
     double** _dphidxez_mapVBGD[VB];
-    void evaluate_shape_at_qp(const uint order, const char* gauss_order);
 
 };
 
