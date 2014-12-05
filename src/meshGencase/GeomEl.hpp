@@ -21,10 +21,9 @@ public:
     ~GeomEl();
     
     uint _dim;                    /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
-    uint _elnds[QL_NODES];        //number of nodes of one element [QL]
     std::string _geomel_id;      
-    std::string name;             ///< element name 
-    std::string pname;            ///< print element name for XDMF print (linear)
+    uint      _elnds[QL_NODES];        //number of nodes of one element
+    std::string name[QL_NODES];             ///< element name: quadratic and corresponding linear 
 
 //===== Multigrid   
     uint n_se;                    ///< number of subelements 

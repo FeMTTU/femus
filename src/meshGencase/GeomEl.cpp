@@ -21,8 +21,8 @@ namespace femus {
      _elnds[QQ] = 27;
      _elnds[LL] = 8;
            n_se = 8;
-           name = "Hex_27"; 
-          pname = "Hexahedron"; 
+       name[QQ] = "Hexahedron_27"; 
+       name[LL] = "Hexahedron";
       }
       else if (!strcmp(_geomel_id.c_str(),"wedge")) {
            std::cout << "Not supported yet" << std::endl; abort();
@@ -32,32 +32,32 @@ namespace femus {
      _elnds[QQ] = 10;
      _elnds[LL] = 4;
            n_se = 8;
-           name = "Tet_10"; 
-          pname = "Tetrahedron"; 
+       name[QQ] = "Tetrahedron_10"; 
+       name[LL] = "Tetrahedron";
       }
       else if (!strcmp(_geomel_id.c_str(),"quad")) {
            _dim = 2;
      _elnds[QQ] = 9;
      _elnds[LL] = 4;
            n_se = 4;
-           name = "Quad_9"; 
-          pname = "Quadrilateral"; 
+       name[QQ] = "Quadrilateral_9"; 
+       name[LL] = "Quadrilateral";
       }
       else if (!strcmp(_geomel_id.c_str(),"tri")) {
            _dim = 2;
      _elnds[QQ] = 6;
      _elnds[LL] = 3; 
            n_se = 4;
-           name = "Tri_6"; 
-          pname = "Triangle"; 
+       name[QQ] = "Triangle_6"; 
+       name[LL] = "Triangle";
       }	
       else if (!strcmp(_geomel_id.c_str(),"line")) { 
            _dim = 1;
      _elnds[QQ] = 3;
      _elnds[LL] = 2;
            n_se = 2;
-           name = "Edge_3"; 
-          pname = "Polyline"; 
+       name[QQ] = "Edge_3"; 
+       name[LL] = "Edge";
       }
       else {std::cout << "Geometric element not recognized\n"; abort(); }
 

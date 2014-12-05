@@ -511,7 +511,7 @@ void Mesh::PrintMultimeshXdmf() const {
 
             std::ostringstream hdf5_field;
             hdf5_field << _elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
-            IO::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),_GeomEl[vb].name,_n_elements_vb_lev[vb][ilev],_n_elements_vb_lev[vb][ilev],_elnodes[vb][QQ]);
+            IO::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),_GeomEl[vb].name[QQ],_n_elements_vb_lev[vb][ilev],_n_elements_vb_lev[vb][ilev],_elnodes[vb][QQ]);
             std::ostringstream coord_lev; coord_lev << "_L" << ilev; 
 	    IO::PrintXDMFGeometry(out,top_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[ilev],1);
             std::ostringstream pid_field;
@@ -588,7 +588,7 @@ void Mesh::PrintXDMFGridVB(std::ofstream& out,
 
     out << "<Grid Name=\"" << grid_mesh[vb].c_str() << "_L" << Level << "\"> \n";
     
-   IO::PrintXDMFTopology(out,top_file.str(),hdf_field.str(),_GeomEl[vb].pname,nel*_GeomEl[vb].n_se,nel*_GeomEl[vb].n_se,_GeomEl[vb]._elnds[LL]);    
+   IO::PrintXDMFTopology(out,top_file.str(),hdf_field.str(),_GeomEl[vb].name[LL],nel*_GeomEl[vb].n_se,nel*_GeomEl[vb].n_se,_GeomEl[vb]._elnds[LL]);    
 
    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
    IO::PrintXDMFGeometry(out,geom_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[Level],1);

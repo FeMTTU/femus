@@ -3,11 +3,13 @@
 
 
 enum  GeomElType { HEX=0, 
-                   TET,
-		   WEDGE,
-		   QUAD,
-		   TRI,
-		   LINE };
+                   TET,   //1
+		   WEDGE, //2
+		   QUAD,  //3
+		   TRI,   //4
+		   LINE   //5
+  
+                 };
 
 
 
