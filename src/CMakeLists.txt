@@ -72,6 +72,7 @@ mesh/Mesh.cpp
 mesh/MultiLevelMesh.cpp
 mesh/MeshGeneration.cpp
 mesh/GambitIO.cpp
+mesh/MeshRefinement.cpp
 physics/Fluid.cpp
 physics/Material.cpp
 physics/Parameter.cpp

@@ -8,6 +8,7 @@
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
 #include "FEMTTUConfig.h"
+#include "MeshRefinement.hpp"
 
 
 //C++ include
@@ -110,9 +111,14 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
 
     //totally refined meshes
     for (unsigned i=1; i<_gridr0; i++) {
-        _level0[i-1u]->FlagAllElementsToBeRefined();
-        _level0[i] = new Mesh();
-        _level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
+        MeshRefinement meshcoarser(*_level0[i-1u]);
+        meshcoarser.FlagAllElementsToBeRefined();
+        //_level0[i-1u]->FlagAllElementsToBeRefined();
+        
+	_level0[i] = new Mesh();
+	MeshRefinement meshfiner(*_level0[i]);
+        meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
+        //_level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
     }
 
     if(SetRefinementFlag==NULL){    
@@ -130,10 +136,14 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
         exit(1);
       }
       else {
-	_level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
+	MeshRefinement meshcoarser(*_level0[i-1u]);
+        meshcoarser.FlagElementsToBeRefinedByUserDefinedFunction();
+	//_level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
       }
       _level0[i] = new Mesh();
-      _level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
+      MeshRefinement meshfiner(*_level0[i]);
+      meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
+      //_level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
     }
 
     unsigned refindex = _level0[0]->GetRefIndex();
@@ -211,9 +221,14 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
 
     //totally refined meshes
     for (unsigned i=1; i<_gridr0; i++) {
-        _level0[i-1u]->FlagAllElementsToBeRefined();
-        _level0[i] = new Mesh();
-        _level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
+        MeshRefinement meshcoarser(*_level0[i-1u]);
+        meshcoarser.FlagAllElementsToBeRefined();
+        //_level0[i-1u]->FlagAllElementsToBeRefined();
+       
+	_level0[i] = new Mesh();
+	MeshRefinement meshfiner(*_level0[i]);
+        meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
+        //_level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
     }
 
     //partially refined meshes
@@ -232,11 +247,14 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
         exit(1);
       }
       else {
-        //mesh::_SetRefinementFlag = SetRefinementFlag;
-        _level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
+	MeshRefinement meshcoarser(*_level0[i-1u]);
+        meshcoarser.FlagElementsToBeRefinedByUserDefinedFunction();
+        //_level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
       }
       _level0[i] = new Mesh();
-      _level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
+      MeshRefinement meshfiner(*_level0[i]);
+      meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
+      //_level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
     }
 
     unsigned refindex = _level0[0]->GetRefIndex();
@@ -263,10 +281,14 @@ void MultiLevelMesh::AddMeshLevel()
      exit(1);
   }
 
-  _level0[_gridn0-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
+  MeshRefinement meshcoarser(*_level0[_gridn0-1u]);
+  meshcoarser.FlagElementsToBeRefinedByUserDefinedFunction();
+  //_level0[_gridn0-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
   
   _level0[_gridn0] = new Mesh();
-  _level0[_gridn0]->RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
+  MeshRefinement meshfiner(*_level0[_gridn0]);
+  meshfiner.RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
+  //_level0[_gridn0]->RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
     
   _level.resize(_gridn+1u);
   _level[_gridn]=_level0[_gridn0];
@@ -280,16 +302,15 @@ void MultiLevelMesh::AddAMRMeshLevel()
  
   //AMR refine mesh
    _level0.resize(_gridn0+1u);
-            
-//   if(mesh::_TestSetRefinementFlag==0) {
-//      cout << "Set Refinement Region flag is not defined! " << endl;
-//      exit(1);
-//   }
-
-  _level0[_gridn0-1u]->FlagElementsToBeRefinedByAMR();
+  
+  MeshRefinement meshcoarser(*_level0[_gridn0-1u]);
+  meshcoarser.FlagElementsToBeRefinedByAMR();
+  //_level0[_gridn0-1u]->FlagElementsToBeRefinedByAMR();
   
   _level0[_gridn0] = new Mesh();
-  _level0[_gridn0]->RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
+  MeshRefinement meshfiner(*_level0[_gridn0]);
+  meshfiner.RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
+  //_level0[_gridn0]->RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
     
   _level.resize(_gridn+1u);
   _level[_gridn]=_level0[_gridn0];
