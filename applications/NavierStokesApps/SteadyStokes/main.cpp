@@ -318,7 +318,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
     
   //data
   const unsigned dim = mymsh->GetDimension();
-  unsigned nel= mymsh->GetElementNumber();
+  unsigned nel= mymsh->GetNumberOfElements();
   unsigned igrid= mymsh->GetGridNumber();
   unsigned iproc = mymsh->processor_id();
   double ILambda= 0; 

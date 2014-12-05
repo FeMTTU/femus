@@ -327,7 +327,7 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
   unsigned  AMRIndex= AMR->GetIndex("AMR");
   AMR->_Sol[AMRIndex]->zero();
   
-  unsigned nel= _msh->GetElementNumber();
+  unsigned nel= _msh->GetNumberOfElements();
     
   NumericVector *counter_vec;
   counter_vec = NumericVector::build().release();
@@ -384,7 +384,7 @@ bool Solution::FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,co
   vector <unsigned> SolEndInd(SolIndex.size());
   unsigned dim=_msh->GetDimension();
   
-  unsigned nel= _msh->GetElementNumber();
+  unsigned nel= _msh->GetNumberOfElements();
   
   for (unsigned k=0; k<SolIndex.size(); k++) {
             
@@ -554,7 +554,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
     }
         
     unsigned SolEndInd   = _msh->GetEndIndex(SolType);
-    unsigned nel= _msh->GetElementNumber();    
+    unsigned nel= _msh->GetNumberOfElements();    
     
     for (int iel=_msh->IS_Mts2Gmt_elem_offset[_iproc]; iel < _msh->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
 

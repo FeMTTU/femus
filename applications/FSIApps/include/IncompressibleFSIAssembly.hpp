@@ -131,7 +131,7 @@ namespace femus {
     unsigned end_ind1   = mymsh->GetEndIndex(SolType1);
 
     // mesh and procs
-    unsigned nel    = mymsh->GetElementNumber();
+    unsigned nel    = mymsh->GetNumberOfElements();
     unsigned igrid  = mymsh->GetGridNumber();
     unsigned iproc  = mymsh->processor_id();
 

@@ -259,7 +259,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   double dt = my_nnlin_impl_sys.GetIntervalTime();
   double theta = 0.5;
   const unsigned dim = mymsh->GetDimension();
-  unsigned nel= mymsh->GetElementNumber();
+  unsigned nel= mymsh->GetNumberOfElements();
   unsigned igrid= mymsh->GetGridNumber();
   unsigned iproc = mymsh->processor_id();
   double ILambda = 0.; 

@@ -81,7 +81,7 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &coords
   while (str2.compare("NDFVL") != 0) inf >> str2;
   inf >> nvt >> nel >>  ngroup >> nbcd >> dim >> str2 ;
   mesh.SetDimension(dim);
-  mesh.SetElementNumber(nel);
+  mesh.SetNumberOfElements(nel);
   mesh.SetNumberOfNodes(nvt);
   inf >> str2;
   if (str2.compare("ENDOFSECTION") != 0) {

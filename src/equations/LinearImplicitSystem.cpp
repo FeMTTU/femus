@@ -129,7 +129,7 @@ void LinearImplicitSystem::AddSystemLevel() {
     _LinSolver[_gridn]->SetDirichletBCsHandling(_DirichletBCsHandlingMode);
     
     if(_numblock_test){
-      unsigned num_block2 = std::min(_num_block,_msh[_gridn]->GetElementNumber());
+      unsigned num_block2 = std::min(_num_block,_msh[_gridn]->GetNumberOfElements());
       _LinSolver[_gridn]->SetElementBlockNumber(num_block2);
     }
     else if(_numblock_all_test){
@@ -549,7 +549,7 @@ void LinearImplicitSystem::SetElementBlockNumber(unsigned const &dim_block) {
   _num_block = pow(base,dim_block);
 
   for (unsigned i=1; i<_gridn; i++) {
-    unsigned num_block2 = std::min(_num_block,_msh[i]->GetElementNumber());
+    unsigned num_block2 = std::min(_num_block,_msh[i]->GetNumberOfElements());
     _LinSolver[i]->SetElementBlockNumber(num_block2);
   }
 }
