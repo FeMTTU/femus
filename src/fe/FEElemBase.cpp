@@ -35,42 +35,6 @@ namespace femus {
 FEElemBase::FEElemBase(const GeomEl & geomel_in )   : _geomel(geomel_in) {
 
   _myelems.resize(VB);  //cannot go in build function, because it is static
-  
-//====== FUNCTION POINTERS SETUP ===========
-// initialize the function pointers outside, as well as everything that has to be accessible after all the "switch" things, so you have to only fill them inside
-  uint space_dim = _geomel._dim;
-  _DphiptrTwo.resize(VB);
-  _DphiptrTwo[VV].resize(space_dim);
-  _DphiptrTwo[BB].resize(space_dim-1);
-
-  switch(space_dim) {
-
-  case(2): {
-    _DphiptrTwo[VV][0] = &elem_type::GetDPhiDXi;
-    _DphiptrTwo[VV][1] = &elem_type::GetDPhiDEta;
-    _DphiptrTwo[BB][0] = &elem_type::GetDPhiDXi;
-
-    break;
-  }
-
-  case(3): {
-    _DphiptrTwo[VV][0] = &elem_type::GetDPhiDXi;
-    _DphiptrTwo[VV][1] = &elem_type::GetDPhiDEta;
-    _DphiptrTwo[VV][2] = &elem_type::GetDPhiDZeta;
-    _DphiptrTwo[BB][0] = &elem_type::GetDPhiDXi;
-    _DphiptrTwo[BB][1] = &elem_type::GetDPhiDEta;
-
-    break;
-  }
-
-  default: {
-    std::cout << "Space_dim ONE not implemented" << std::endl;
-    abort();
-    break;
-  }
-  }
-//====== END FUNCTION POINTERS  SETUP ===========
-
 
 }
 
@@ -399,7 +363,7 @@ if ( vb == VV && fe_family_in == QQ && space_dim == 3  && (!strcmp(_geomel._geom
         uint dim = space_dim - vb;
         for (uint idim = 0; idim < dim; idim++) {
 // 		 double* temp =  ( _myelems[vb]->*(_myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
-          double* tempTwo =  ( _myelems[vb]->*(_DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
+          double* tempTwo =  ( _myelems[vb]->*(_myelems[vb]->_DPhiXiEtaZetaPtr[idim]) )(ig);  //how to access a pointer to member function
           _dphidxez_mapVBGD[vb][ig][ idof + idim*_myelems[vb]->GetNDofs()] =  tempTwo[ map_hex27[idof] ];
           std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_myelems[vb]->GetNDofs()]  << "                                      "  << std::endl;
 
@@ -430,7 +394,7 @@ if ( vb == VV && fe_family_in == QQ && space_dim == 3  && (!strcmp(_geomel._geom
         uint dim = space_dim - vb;
         for (uint idim = 0; idim < dim; idim++) {
 // 		 double* temp =  ( _myelems[vb]->*(_myelems[vb]->Dphiptr[vb][idim]) )(ig);  //how to access a pointer to member function
-          double* tempTwo =  ( _myelems[vb]->*(_DphiptrTwo[vb][idim]) )(ig);  //how to access a pointer to member function
+          double* tempTwo =  ( _myelems[vb]->*(_myelems[vb]->_DPhiXiEtaZetaPtr[idim]) )(ig);  //how to access a pointer to member function
           _dphidxez_mapVBGD[vb][ig][ idof + idim*_myelems[vb]->GetNDofs()] =  tempTwo[idof];
           std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapVBGD[vb][ig][ idof + idim*_myelems[vb]->GetNDofs()]  << "                                      "  << std::endl;
 

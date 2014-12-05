@@ -237,8 +237,9 @@ elem_type_1D::elem_type_1D(const char *geom_elem, const char *order, const char 
 	      elem_type(geom_elem,order_gauss) {
 		
   _dim = 1;
+  _DPhiXiEtaZetaPtr.resize(_dim);
+  _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
   
-	
   //************ BEGIN FE and MG SETUP ******************	
   if (!strcmp(order,"linear")) 		 _SolType=0;   
   else if (!strcmp(order,"quadratic")) 	 _SolType=1;   
@@ -365,6 +366,9 @@ elem_type_2D::elem_type_2D(const char *geom_elem, const char *order, const char 
 	       {
 		 
   _dim = 2;
+  _DPhiXiEtaZetaPtr.resize(_dim);
+  _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
+  _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
 
   //************ BEGIN FE and MG SETUP ******************	
   if 	  (!strcmp(order,"linear")) 	 _SolType=0;   
@@ -521,6 +525,11 @@ elem_type_3D::elem_type_3D(const char *geom_elem, const char *order, const char 
 	      elem_type(geom_elem,order_gauss)  {
 
   _dim = 3;
+  _DPhiXiEtaZetaPtr.resize(_dim);
+  _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
+  _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
+  _DPhiXiEtaZetaPtr[2] = &elem_type::GetDPhiDZeta;
+
 	
   //************ BEGIN FE and MG SETUP ******************	
   if 	  (!strcmp(order,"linear")) 	 _SolType=0;   

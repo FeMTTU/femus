@@ -92,6 +92,9 @@ public:
     abort();
   };
   
+  typedef double* (elem_type::*_FunctionPointer)(const unsigned & ig) const;  //you need "elem_type::" for some reason
+  std::vector<_FunctionPointer> _DPhiXiEtaZetaPtr;
+  
 //   /** To be Added */
 //   void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
 //                double &Weight, double *other_phi) const;

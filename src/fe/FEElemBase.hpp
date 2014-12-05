@@ -35,14 +35,11 @@ public:
     virtual double get_prol(const uint) = 0;
     
   std::vector<elem_type*> _myelems;    //VB
-  typedef double* (elem_type::*_FunctionPointerTwo)(const unsigned & ig) const; //this const seems to be essential
-  std::vector< std::vector<_FunctionPointerTwo> > _DphiptrTwo; //VB
 
 // Quadrature ==
     double**      _phi_mapVBGD[VB];
     double** _dphidxez_mapVBGD[VB];
     void evaluate_shape_at_qp(const uint order, const char* gauss_order);
-    
 
 };
 
