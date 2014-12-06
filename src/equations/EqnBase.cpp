@@ -913,7 +913,7 @@ void EqnBase::GenBc() {
 		
  	    for (uint ivar=0; ivar< _n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!
 
-                 if (_n_vars >0) bc_read(currelem._el_xm[BB],normal,bc_flag);
+                 if (_n_vars >0) bc_read(currelem.GetMidpoint(BB),normal,bc_flag);
 
   //******************* ONLY FINE LEVEL, NODE VARS ***************** 
    if (Level == Lev_pick_bc_NODE_dof)  { 
@@ -1340,7 +1340,7 @@ void EqnBase::GenElBc()  {
                 currelem.get_el_ctr(BB);
 
                 //read the bc's //the read forgets all levels and subdomains, it is only based on the MIDDLE POINT
-                elem_bc_read(currelem._el_xm[BB],surf_id,&el_value[0],el_flag);
+                elem_bc_read(currelem.GetMidpoint(BB),surf_id,&el_value[0],el_flag);
 
                 std::cout << "Bdry " << surf_id << " normal: " <<  el_flag[0] << " tang: " <<  el_flag[1] << std::endl;
 
@@ -1565,7 +1565,7 @@ void EqnBase::GenIc() {
 
                 // ===================================================
                 // user definition reading function ----------------
-                ic_read(xp,u_value,currelem._el_xm[VV]);
+                ic_read(xp,u_value,currelem.GetMidpoint(VV));
                 // -------------------------------------------------
                 // ===================================================
 

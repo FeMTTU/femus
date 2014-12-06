@@ -79,19 +79,30 @@ class QuantityLocal;
    EqnBase & _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
    EquationsMap & _eqnmap;
 
-// ========================================================================================
-//========== ELEMENT: Current Geometric Element (SERVICE)  ========================
-     uint  **_el_conn;             /// vector of the global nodes for that element         [VB][NNDS];
-     uint    _vol_iel_DofObj[VB];  /// i need to put the element also. both VV and BB      [VB]
-   double  **_xx_nds;              /// vector of the node coordinates for that element     [VB][_spacedimension*NNDS];
-   double  **_el_xm;               /// element center point                               [VB][_spacedimension];
-
     //==== REAL ELEMENT properties: connectivity, coordinates, ...  need the MESH BASICALLY
+    inline double*  GetMidpoint(const uint vb) const {
+      return _el_xm[vb];
+    }
+    
+    inline uint*  GetConn(const uint vb) const {
+      return _el_conn[vb];
+    }
+    
+    inline uint  GetVolIel(const uint vb) const {
+      return _vol_iel_DofObj[vb];
+    }
+    
+    inline double*  GetNodeCoords(const uint vb) const {
+      return _xx_nds[vb];
+    }
+    
     void  get_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) const;
     void  get_el_DofObj_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel);  //TODO this is not const because _vol_iel_DofObj is NOT A POINTER! 
     void  get_el_ctr(const uint bdry) const;                                                          //TODO notice that this is not changing the POINTER , so it is const!
     void  get_el_orient(const uint vb) const;
     void  ConvertElemCoordsToMappingOrd(const uint vb,QuantityLocal& myvect) const;
+    
+    void GetElDofsBc(const uint vbfl, const uint Level);  //needs the EQUATION basically
    
 // ========================================================================================
 //========== ELEMENT: Current "EQUATION" Element (ql are TOGETHER ) ========================               
@@ -101,8 +112,14 @@ class QuantityLocal;
   DenseMatrix                 _KeM[VB]; 
   DenseVector                 _FeM[VB];
   
- void GetElDofsBc(const uint vbfl, const uint Level);  //needs the EQUATION basically
  
+  private:
+// ========================================================================================
+//========== ELEMENT: Current Geometric Element (SERVICE)  ========================
+     uint  **_el_conn;             /// vector of the global nodes for that element         [VB][NNDS];
+     uint    _vol_iel_DofObj[VB];  /// i need to put the element also. both VV and BB      [VB]
+   double  **_xx_nds;              /// vector of the node coordinates for that element     [VB][_spacedimension*NNDS];
+   double  **_el_xm;               /// element center point                               [VB][_spacedimension];
    
   };
   
