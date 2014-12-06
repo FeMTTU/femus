@@ -34,7 +34,7 @@ namespace femus {
 
 for (int vb = 0; vb < VB; vb++) {
   _el_n_dofs[vb] = 0;
-     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs[vb] += (_eqnmap._AbstractFE[VV][fe]->_myelems[vb]->GetNDofs() )*_eqn._nvars[fe]; }    //EQUATION-RELATED
+     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs[vb] += (_eqnmap._elem_type[vb][fe]->GetNDofs() )*_eqn._nvars[fe]; }    //EQUATION-RELATED
  }
 
 for (int vb = 0; vb < VB; vb++) {
@@ -85,19 +85,19 @@ void CurrElem::GetElDofsBc(const uint vbfl, const uint Level)  {
   
 int off_local_el[QL];
 off_local_el[QQ] = 0;
-off_local_el[LL] = _eqn._nvars[QQ]*(_eqnmap._AbstractFE[VV][QQ]->_myelems[vbfl]->GetNDofs() );
-off_local_el[KK] = _eqn._nvars[QQ]*(_eqnmap._AbstractFE[VV][QQ]->_myelems[vbfl]->GetNDofs() ) + _eqn._nvars[LL]*(_eqnmap._AbstractFE[VV][LL]->_myelems[vbfl]->GetNDofs() );
+off_local_el[LL] = _eqn._nvars[QQ]*(_eqnmap._elem_type[vbfl][QQ]->GetNDofs() );
+off_local_el[KK] = _eqn._nvars[QQ]*(_eqnmap._elem_type[vbfl][QQ]->GetNDofs() ) + _eqn._nvars[LL]*(_eqnmap._elem_type[vbfl][LL]->GetNDofs() );
   
 
  int DofObj = 0;
 for (int fe=0; fe < QL; fe++) {
 for (uint ivar=0; ivar < _eqn._nvars[fe]; ivar++)    {
-      for (uint d=0; d< _eqnmap._AbstractFE[VV][fe]->_myelems[vbfl]->GetNDofs(); d++)    {
+      for (uint d=0; d< _eqnmap._elem_type[vbfl][fe]->GetNDofs(); d++)    {
 	
 	     if (fe < KK )       DofObj =        _el_conn[vbfl][d];
 	     else if (fe == KK)  DofObj = _vol_iel_DofObj[vbfl];
 	     
-          const uint     indx  = d + ivar*_eqnmap._AbstractFE[VV][fe]->_myelems[vbfl]->GetNDofs() + off_local_el[fe];
+          const uint     indx  = d + ivar*_eqnmap._elem_type[vbfl][fe]->GetNDofs() + off_local_el[fe];
 	  _el_dof_indices[vbfl][indx] = _eqn._node_dof[Level][ DofObj + ivar*_eqn._DofNumLevFE[Level][fe] + _eqn._DofOffLevFE[Level][fe] ]; 
 
          if (fe < KK ) { const uint dofkivar = _eqn._node_dof[Lev_pick_bc_dof][ DofObj + ivar*_eqn._DofNumLevFE[Lev_pick_bc_dof][fe] + _eqn._DofOffLevFE[Lev_pick_bc_dof][fe] ]; 

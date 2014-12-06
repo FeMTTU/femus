@@ -199,8 +199,8 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_myelems[VV]->GetNDofs();
-    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_myelems[BB]->GetNDofs();
+    xyz._ndof[VV] = _eqnmap._elem_type[VV][xyz._FEord]->GetNDofs();
+    xyz._ndof[BB] = _eqnmap._elem_type[BB][xyz._FEord]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 
@@ -231,8 +231,8 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     QuantityLocal Bmag(currgp,currelem); //total
     Bmag._dim        = Bhom._dim;
     Bmag._FEord      = Bhom._FEord;
-    Bmag._ndof[VV]   = _AbstractFE[VV][Bmag._FEord]->_myelems[VV]->GetNDofs();
-    Bmag._ndof[BB]   = _AbstractFE[VV][Bmag._FEord]->_myelems[BB]->GetNDofs();
+    Bmag._ndof[VV]   = _eqnmap._elem_type[VV][Bmag._FEord]->GetNDofs();
+    Bmag._ndof[BB]   = _eqnmap._elem_type[BB][Bmag._FEord]->GetNDofs();
     Bmag._val_dofs   = new double[Bmag._dim*Bmag._ndof[vb]];
     Bmag._val_dofs3D = new double[        3*Bmag._ndof[vb]]; //when the user adds this, he knows that he's gonna have a curl_g call
     Bmag._val_g      = new double[Bmag._dim];
@@ -904,8 +904,8 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_myelems[VV]->GetNDofs();
-    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_myelems[BB]->GetNDofs();
+    xyz._ndof[VV] = _eqnmap._elem_type[VV][xyz._FEord]->GetNDofs();
+    xyz._ndof[BB] = _eqnmap._elem_type[BB][xyz._FEord]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 

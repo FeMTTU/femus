@@ -19,7 +19,9 @@ namespace femus {
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
 //by the way, with the EquationsMap I reach the Utils, the Mesh, and so the GeomEl, and so on...
 CurrGaussPointBase::CurrGaussPointBase( EquationsMap& e_map_in ):
-    _eqnmap(e_map_in),_qrule(e_map_in._qrule) {
+    _eqnmap(e_map_in),
+    _elem_type(e_map_in._elem_type),
+    _qrule(e_map_in._qrule) {
   
   _IntDim[VV] = _eqnmap._mesh.get_dim();
   _IntDim[BB] = _eqnmap._mesh.get_dim() - 1; 
@@ -27,14 +29,12 @@ CurrGaussPointBase::CurrGaussPointBase( EquationsMap& e_map_in ):
   //TODO probabilmente anche qui si puo' fare del TEMPLATING!!!
   //BISOGNA STARE ATTENTI CHE SE FAI DEL TEMPLATING con le ALLOCAZIONI STATICHE allora ti diverti poco con i DOPPI o TRIPLI ARRAY
 
-  for (int fe = 0; fe < QL; fe++)  _AbsFEVect[fe] = e_map_in._AbstractFE[VV][fe];   
-
   for (int vb = 0; vb < VB; vb++) {
      for (int fe = 0; fe < QL; fe++) {
-   _dphidxyz_ndsQLVB_g3D[vb][fe] =  new double[ 3 * _AbsFEVect[fe]->_myelems[vb]->GetNDofs() ]; //both VV and BB are 3 in general (vector product, or ONE?!?)
-     _dphidxyz_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _AbsFEVect[fe]->_myelems[vb]->GetNDofs() ];   
-  _dphidxezeta_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _AbsFEVect[fe]->_myelems[vb]->GetNDofs() ];     
-          _phi_ndsQLVB_g[vb][fe] =  new double[ _AbsFEVect[fe]->_myelems[vb]->GetNDofs() ];     
+   _dphidxyz_ndsQLVB_g3D[vb][fe] =  new double[ 3           * _elem_type[vb][fe]->GetNDofs() ]; //both VV and BB are 3 in general (vector product, or ONE?!?)
+     _dphidxyz_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _elem_type[vb][fe]->GetNDofs() ];   
+  _dphidxezeta_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _elem_type[vb][fe]->GetNDofs() ];     
+          _phi_ndsQLVB_g[vb][fe] =  new double[               _elem_type[vb][fe]->GetNDofs() ];     
    }
  }  
   

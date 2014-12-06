@@ -11,7 +11,7 @@ namespace femus {
 
 
 
-class FEElemBase;
+class elem_type;
 class QuantityLocal;
 class EquationsMap;
  
@@ -37,7 +37,7 @@ class EquationsMap;
    ~CurrGaussPointBase();
  
     EquationsMap         & _eqnmap;
-    FEElemBase*         _AbsFEVect[QL];
+    std::vector< std::vector<elem_type*> >  &  _elem_type;
     std::vector<Gauss>   _qrule;
     uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
     double*         _phi_ndsQLVB_g[VB][QL];  //canonical functions  //TODO here it seems to contain GAUSS x ELDOFS

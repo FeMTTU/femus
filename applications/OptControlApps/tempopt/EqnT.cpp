@@ -153,8 +153,8 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     QuantityLocal xyz(currgp,currelem);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_myelems[VV]->GetNDofs();
-    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_myelems[BB]->GetNDofs();
+    xyz._ndof[VV] = _eqnmap._elem_type[VV][xyz._FEord]->GetNDofs();
+    xyz._ndof[BB] = _eqnmap._elem_type[BB][xyz._FEord]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 
@@ -329,7 +329,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 #if FOURTH_ROW==1
 	 int ip3 = i + 3 * Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
 	 
-	 if (i < _AbstractFE[VV][T4_ord]->_myelems[vb]->GetNDofs()) { currelem._FeM[vb](ip3) +=  currelem._bc_eldofs[vb][ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[vb][T4_ord][i]) + (1-currelem._bc_eldofs[vb][ip3])*detb*1300.;
+	 if (i < _eqnmap._elem_type[vb][T4_ord]->GetNDofs()) { currelem._FeM[vb](ip3) +=  currelem._bc_eldofs[vb][ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[vb][T4_ord][i]) + (1-currelem._bc_eldofs[vb][ip3])*detb*1300.;
 	              currelem._KeM[vb](ip3,ip3)  += ( 1-currelem._bc_eldofs[vb][ip3] )*detb;  }
 #endif
 	 // Matrix Assemblying ---------------------------
@@ -431,7 +431,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 #if FOURTH_ROW==1
 	 int ip3 = i + 3*Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
 // 	    int jp3 = j + 3*Tempold._ndof[vb];
-	   if (i < _AbstractFE[VV][T4_ord]->_myelems[vb]->GetNDofs() ) currelem._KeM[vb](ip3,ip3) += currelem._bc_eldofs[vb][ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[vb][ T4_ord ][/*j*/i]*currgp._phi_ndsQLVB_g[vb][ T4_ord ][i]);   
+	   if (i < _eqnmap._elem_type[vb][T4_ord]->GetNDofs() ) currelem._KeM[vb](ip3,ip3) += currelem._bc_eldofs[vb][ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[vb][ T4_ord ][/*j*/i]*currgp._phi_ndsQLVB_g[vb][ T4_ord ][i]);   
 #endif
 	    
         }  //end j (col)
@@ -687,8 +687,8 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_myelems[VV]->GetNDofs();
-    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_myelems[BB]->GetNDofs();
+    xyz._ndof[VV] = _eqnmap._elem_type[VV][xyz._FEord]->GetNDofs();
+    xyz._ndof[BB] = _eqnmap._elem_type[BB][xyz._FEord]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 
@@ -823,8 +823,8 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_myelems[VV]->GetNDofs();
-    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_myelems[BB]->GetNDofs();
+    xyz._ndof[VV] = _eqnmap._elem_type[VV][xyz._FEord]->GetNDofs();
+    xyz._ndof[BB] = _eqnmap._elem_type[BB][xyz._FEord]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 
