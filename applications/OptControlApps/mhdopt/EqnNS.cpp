@@ -626,8 +626,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 //==============================================================
     
     ///  Add element matrix and rhs to the global ones.
-                   _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);//     std::cout << "KeM l1"<< vb << " " << currelem._KeM.l1_norm() << std::endl;
-                   _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);//     std::cout << "FeM l2"<< vb << " " << _FeM.l2_norm() << std::endl;
+                   _A[Level]->add_matrix(currelem._KeM,currelem.GetDofIndices());//     std::cout << "KeM l1"<< vb << " " << currelem._KeM.l1_norm() << std::endl;
+                   _b[Level]->add_vector(currelem._FeM,currelem.GetDofIndices());//     std::cout << "FeM l2"<< vb << " " << _FeM.l2_norm() << std::endl;
 
     
 /////////HERE, AT THE END OF THE ELEMENT, YOU CAN SEARCH FOR MY ROW in THIS ELEMENT
@@ -795,8 +795,8 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 //================== END GAUSS LOOP (qp loop) ======================
 //==================================================================
     
-    _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);   //      std::cout << "KeM "<< vb << " " << currelem._KeM.l1_norm() << std::endl;
-    _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);   //      std::cout << "FeM "<< vb << " " << currelem._FeM.l2_norm() << std::endl;
+    _A[Level]->add_matrix(currelem._KeM,currelem.GetDofIndices());   //      std::cout << "KeM "<< vb << " " << currelem._KeM.l1_norm() << std::endl;
+    _b[Level]->add_vector(currelem._FeM,currelem.GetDofIndices());   //      std::cout << "FeM "<< vb << " " << currelem._FeM.l2_norm() << std::endl;
 
     
   }

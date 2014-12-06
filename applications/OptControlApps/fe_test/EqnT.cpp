@@ -344,8 +344,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 
     currelem._KeM.print_scientific(std::cout);
     
-       _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);
-       _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);
+       _A[Level]->add_matrix(currelem._KeM,currelem.GetDofIndices());
+       _b[Level]->add_vector(currelem._FeM,currelem.GetDofIndices());
   } // end of element loop
   // *****************************************************************
 
@@ -437,8 +437,8 @@ int el_Neum_flag=0;
     }
         // end BDRYelement gaussian integration loop
         
-         _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);
-         _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);
+         _A[Level]->add_matrix(currelem._KeM,currelem.GetDofIndices());
+         _b[Level]->add_vector(currelem._FeM,currelem.GetDofIndices());
    
   }
       // end of BDRYelement loop

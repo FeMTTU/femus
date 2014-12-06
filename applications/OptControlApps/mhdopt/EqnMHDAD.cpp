@@ -354,8 +354,8 @@ if (_Dir_pen_fl == 0)  {
     // end element gaussian integration loop
     
     ///  Add element matrix and rhs to the global ones.
-    _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);
-    _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);
+    _A[Level]->add_matrix(currelem._KeM,currelem.GetDofIndices());
+    _b[Level]->add_vector(currelem._FeM,currelem.GetDofIndices());
     
   } 
   // end of element loop
@@ -483,8 +483,8 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
       
     }  //gauss
     
-    _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);
-    _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);
+    _A[Level]->add_matrix(currelem._KeM,currelem.GetDofIndices());
+    _b[Level]->add_vector(currelem._FeM,currelem.GetDofIndices());
 
  }//elem loop
 

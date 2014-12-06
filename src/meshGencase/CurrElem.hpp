@@ -96,6 +96,10 @@ class QuantityLocal;
       return _xx_nds;
     }
     
+    inline std::vector<uint>  GetDofIndices() const {
+      return _el_dof_indices;
+    }
+    
     void  get_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) const;
     void  get_el_DofObj_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel);  //TODO this is not const because _vol_iel_DofObj is NOT A POINTER! 
     void  get_el_ctr(const uint bdry) const;                                                          //TODO notice that this is not changing the POINTER , so it is const!
@@ -106,14 +110,17 @@ class QuantityLocal;
    
 // ========================================================================================
 //========== ELEMENT: Current "EQUATION" Element (ql are TOGETHER ) ========================               
-  uint                   _el_n_dofs;
-  std::vector<uint> _el_dof_indices;
   uint*                  _bc_eldofs; //So the element must be aware of the BC of the equation
   DenseMatrix                 _KeM; 
   DenseVector                 _FeM;
   
  
   private:
+    
+  uint                   _el_n_dofs;
+  std::vector<uint> _el_dof_indices;
+  
+  
 // ========================================================================================
 //========== ELEMENT: Current Geometric Element (SERVICE)  ========================
      uint  *_el_conn;             /// vector of the global nodes for that element         [VB][NNDS];
