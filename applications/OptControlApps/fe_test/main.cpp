@@ -88,7 +88,8 @@
     FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(),fe);
     FEElements[fe]->_myelems[VV] = elem_type::build(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(),fe, qrule[VV].GetGaussOrderString().c_str());
     FEElements[fe]->_myelems[BB] = elem_type::build(mesh._GeomEl[BB][mesh._mesh_order]._geomel_id.c_str(),fe, qrule[BB].GetGaussOrderString().c_str());
-    FEElements[fe]->evaluate_shape_at_qp(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(), fe, qrule[VV].GetGaussOrderString().c_str());
+    FEElements[fe]->_myelems[VV]->EvaluateShapeAtQP(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(),fe);
+    FEElements[fe]->_myelems[BB]->EvaluateShapeAtQP(mesh._GeomEl[BB][mesh._mesh_order]._geomel_id.c_str(),fe);
   }
 
   for (int vb=0;vb < VB; vb++) { 

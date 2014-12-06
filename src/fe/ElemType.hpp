@@ -95,14 +95,28 @@ public:
     abort();
   };
   
-  typedef double* (elem_type::*_FunctionPointer)(const unsigned & ig) const;  //you need "elem_type::" for some reason
-  std::vector<_FunctionPointer> _DPhiXiEtaZetaPtr;
-  
 //   /** To be Added */
 //   void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
 //                double &Weight, double *other_phi) const;
 
-  /** To be Added */
+  /** Function pointer for DPhiDXEZ */
+  typedef double* (elem_type::*_FunctionPointer)(const unsigned & ig) const;  //you need "elem_type::" for some reason
+  std::vector<_FunctionPointer> _DPhiXiEtaZetaPtr;
+  
+  /** Evaluate shape functions at all quadrature points */
+  virtual void EvaluateShapeAtQP(const std::string geomel_id_in, const uint fe_family_in);
+
+  /** Get shape functions */
+  inline const double GetPhi(const uint qp, const uint dof ) const {
+     return _phi_mapGD[qp][dof];
+    }
+    
+  /** Get shape function first derivatives */
+  inline const double GetDPhiDxez(const uint qp, const uint dof ) const {
+     return _dphidxez_mapGD[qp][dof];
+    }
+    
+      /** To be Added */
   inline const Gauss GetGaussRule() const {
     return _gauss;
   };
@@ -155,6 +169,8 @@ protected:
   
 //  Gauss
   const Gauss _gauss;
+  double**      _phi_mapGD;
+  double** _dphidxez_mapGD;
   
 };
 

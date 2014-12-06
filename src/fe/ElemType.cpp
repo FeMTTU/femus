@@ -50,7 +50,7 @@ elem_type::~elem_type() {
 };
 
 //----------------------------------------------------------------------------------------------------
-// build function
+// build function TODO DEALLOCATE at destructor TODO FEFamilies
 //-----------------------------------------------------------------------------------------------------
 
  elem_type*  elem_type::build(const std::string geomel_id_in, const uint fe_family_in, const char* gauss_order) {
@@ -149,6 +149,89 @@ elem_type::~elem_type() {
 
   }  //end switch fe order
 
+}
+
+//----------------------------------------------------------------------------------------------------
+// evaluate shape functions at all quadrature points  TODO DEALLOCATE at destructor TODO FEFamilies TODO change HEX27 connectivity
+//-----------------------------------------------------------------------------------------------------
+
+void elem_type::EvaluateShapeAtQP(const std::string geomel_id_in, const uint fe_family_in) {
+
+
+// ============== allocate canonical shape ==================================================================
+         _phi_mapGD = new double*[GetGaussRule().GetGaussPointsNumber()];// TODO valgrind, remember to DEALLOCATE THESE, e.g. with smart pointers
+    _dphidxez_mapGD = new double*[GetGaussRule().GetGaussPointsNumber()];
+
+    for (int g = 0; g < GetGaussRule().GetGaussPointsNumber(); g++) {
+           _phi_mapGD[g] = new double[GetNDofs()];
+      _dphidxez_mapGD[g] = new double[GetNDofs()*GetDim()];
+    }
+// ============== allocate canonical shape ==================================================================
+
+
+// HEX 27 CASE ========================================== 
+// HEX 27 CASE ========================================== 
+// HEX 27 CASE ==========================================     
+// from eu connectivity to my (=libmesh) connectivity
+const unsigned map_hex27[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,24,20,21,22,23,25,26};
+
+if ( fe_family_in == QQ && GetDim() == 3  && (!strcmp(geomel_id_in.c_str(),"hex")) ) {
+            std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "REMEMBER THAT ONLY HEX27 HAS A DIFFERENT CONNECTIVITY MAP"  << std::endl;
+
+      for (int ig = 0; ig < GetGaussRule().GetGaussPointsNumber(); ig++) {
+
+      for (int idof=0; idof < GetNDofs(); idof++) {
+//                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;
+        _phi_mapGD[ig][idof] = GetPhi(ig)[ map_hex27[idof] ];
+// 	std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapGD[vb][ig][dof] << std::endl;
+
+// derivatives in canonical element
+        for (uint idim = 0; idim < GetDim(); idim++) {
+          double* dphi_g =   ( this->*(_DPhiXiEtaZetaPtr[idim]) )(ig);  //how to access a pointer to member function
+          _dphidxez_mapGD[ig][ idof + idim*GetNDofs()] =  dphi_g[ map_hex27[idof] ];
+          std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapGD[ig][ idof + idim*GetNDofs()]  << "                                      "  << std::endl;
+
+        }
+
+      }
+      
+    }  // end gauss
+  
+  
+  
+}
+// HEX 27 CASE ========================================== 
+// HEX 27 CASE ========================================== 
+// HEX 27 CASE ========================================== 
+
+// ALL THE OTHERS ========================================== 
+// ALL THE OTHERS ========================================== 
+// ALL THE OTHERS ========================================== 
+
+   else { 
+
+    for (int ig = 0; ig < GetGaussRule().GetGaussPointsNumber(); ig++) {
+
+      for (int idof=0; idof < GetNDofs(); idof++) {
+        _phi_mapGD[ig][idof] = GetPhi(ig)[idof];
+
+// derivatives in canonical element
+        for (uint idim = 0; idim < GetDim(); idim++) {
+          double* dphi_g = (this->*(_DPhiXiEtaZetaPtr[idim]) )(ig);  //how to access a pointer to member function
+          _dphidxez_mapGD[ig][ idof + idim*GetNDofs()] =  dphi_g[idof];
+
+        }
+
+      }
+      
+    }  // end gauss
+    
+    
+  } //else HEX27 
+    
+
+
+  return;
 }
 
 
