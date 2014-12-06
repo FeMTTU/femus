@@ -236,7 +236,7 @@ void EqnMHDCONT::init_equation_data() {
          BeOld.GetElDofsVect(vb,Level);  
     LagMultOld.GetElDofsVect(vb,Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BeOld._FEord,currelem._bc_eldofs);  //only the Quadratic Part is modified!
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BeOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
  
     
     if ( Vel._eqnptr != NULL )        Vel.GetElDofsVect(vb,Level);
@@ -322,7 +322,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
          for (uint idim=0; idim<space_dim; idim++) {
             const uint irowq = i+idim*BeOld._ndof[vb];
             
-            currelem._FeM(irowq) += currelem._bc_eldofs[irowq]*dtxJxW_g*(
+            currelem._FeM(irowq) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                           NonStatMHDCONT*BeOld._val_g[idim]*phii_g/dt
                            -(1-LAP_MHD)*IRem*curlxiXdphii_g3D[idim]                 //from MHD  1
                                -LAP_MHD*IRem*Lapxi_g[idim]                              //from MHD  2
@@ -330,13 +330,13 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
                            - S*curlbXlambda_g3D[idim]*phii_g                             //from NS
                            + S*(bDdphii_g*VelAdj._val_g[idim] - lambdaDdphii_g*Bhom._val_g[idim])     //from NS
                          )
-                         +(1-currelem._bc_eldofs[irowq])*detb*BeOld._val_dofs[irowq]; //Dirichlet bc
+                         +(1-currelem.GetBCDofFlag()[irowq])*detb*BeOld._val_dofs[irowq]; //Dirichlet bc
 	   }
 //============ END QTYZERO rhs ============
 
         for (uint idim=0; idim<space_dim; idim++) { // filling diagonal for Dirichlet bc
           const uint irowq = i+idim*BeOld._ndof[vb];
-          currelem._KeM(irowq,irowq) += (1-currelem._bc_eldofs[irowq])*detb;
+          currelem._KeM(irowq,irowq) += (1-currelem.GetBCDofFlag()[irowq])*detb;
         }
                                            // end filling diagonal for Dirichlet bc
 
@@ -356,7 +356,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
             int irowq = i+idim*BeOld._ndof[vb];
             // diagonal blocks [1-5-9]
             currelem._KeM(irowq,j+idim*BeOld._ndof[vb])
-            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
+            += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                  NonStatMHDCONT*phij_g*phii_g/dt// time
                  + betaL2*phij_g*phii_g
                  + gammaLap*Lap_g
@@ -366,7 +366,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
             // block +1 [2-6-7]
             int idimp1=(idim+1)%space_dim;
             currelem._KeM(irowq,j+idimp1*BeOld._ndof[vb])
-            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
+            += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                  + S*phij_g*( -VelAdj._val_g[idim]*dphiidx_g[idimp1])
                  + S*phii_g*( -VelAdj._val_g[idimp1]*dphijdx_g[idim])
                );
@@ -374,7 +374,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
             // block +2 [3-4-8]
             int idimp2=(idim+2)%space_dim;
             currelem._KeM(irowq,j+idimp2*BeOld._ndof[vb])
-            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
+            += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                   + S*phij_g*( -VelAdj._val_g[idim]*dphiidx_g[idimp2]) 
                   + S*phii_g*( -VelAdj._val_g[idimp2]*dphijdx_g[idim])
                );
@@ -390,7 +390,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
           const int jclml = j+space_dim*BeOld._ndof[vb];
           for (uint idim=0; idim<space_dim; idim++) {
             uint irowq=i+idim*BeOld._ndof[vb];
-            currelem._KeM(irowq,jclml) += currelem._bc_eldofs[irowq]*dtxJxW_g*(-psij_g*dphiidx_g[idim]);
+            currelem._KeM(irowq,jclml) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(-psij_g*dphiidx_g[idim]);
            }
         }
 //============ END QTYZERO x QTYONE dofs matrix (B^T matrix) ============
@@ -470,7 +470,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
           BeOld.GetElDofsVect(vb,Level);
      LagMultOld.GetElDofsVect(vb,Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BeOld._FEord,currelem._bc_eldofs); //only the Quadratic Part is modified! /*OK DIR_PEN*/
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BeOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
 
 
 //============ BC =======
@@ -494,7 +494,7 @@ if (_Dir_pen_fl == 1)  {
 //TODO here i should check that the nodal bc dirichlet i put correspond to the element NT flags
 
        uint press_fl=0;
-       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(vb,currelem._bc_eldofs,BeOld,LagMultOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
+       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(vb,currelem.GetBCDofFlag(),BeOld,LagMultOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
  //only the LINEAR PART is USED!!
        
 //   if ( (1-el_flag[NN]) != press_fl)  {std::cout << "Sthg wrong with press elflags" << std::endl;abort();}
@@ -528,7 +528,7 @@ const double phii_g = currgp._phi_ndsQLVB_g[vb][BeOld._FEord][i];
                for (uint idim=0; idim< space_dim; idim++)    {
              uint irowq=i+idim*BeOld._ndof[vb];
             currelem._FeM(irowq)  += 
-          currelem._bc_eldofs[irowq]*           
+          currelem.GetBCDofFlag()[irowq]*           
            dtxJxW_g*(   -1.*/*press_fl*/(1-el_flag[NN])*LagMultOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g  //  //OLD VALUES //AAA multiplying int times uint!!!
 
 // // //             TODO STRAIN AT THE BOUNDARY            + /*stress_fl*/el_flag[1]*IRe*strainUtrDn_g[idim]*phii_g 

@@ -22,7 +22,7 @@
 //in the sense that you cannot do it totally automatically, you need to revisit the EQUATION and the BC/IC.
 
 
-void EqnT::ic_read(double xp[],double u_value[], double el_xm[]) {
+void EqnT::ic_read(const double xp[], double u_value[], const double el_xm[]) const {
 
   Box* box = static_cast<Box*>(_mesh.GetDomain());
   
@@ -41,7 +41,7 @@ void EqnT::ic_read(double xp[],double u_value[], double el_xm[]) {
 
 
 
-void EqnT::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
+void EqnT::bc_read(const double xp[],const double /*normal */[],int bc_flag[]) const {
 
   const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
   

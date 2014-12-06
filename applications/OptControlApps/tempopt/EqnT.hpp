@@ -26,9 +26,11 @@ public:
 
  void GenMatRhsVB(const uint vb,const double time,const uint Level);  ///< Volume Assemblying.
  
- void ic_read(double xp[],double u_value[], double el_xm[]);
+ void ic_read(const double * xp, double * u_value, const double * el_xm) const;
  
- void bc_read(double xp[],double normal[],int u_value[]);
+ void bc_read(const double * xp,const double * normal, int * bc) const;
+
+ void elem_bc_read(const double */*el_xm*/, int& surf_id, double *value,int* el_flag) const {};
 
  double ComputeIntegral (const uint vb, const uint Level);
 

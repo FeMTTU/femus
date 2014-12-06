@@ -1011,10 +1011,10 @@ void EqnBase::GenBc() {
 
 
 /// boundary conditions  from function
-void EqnBase::bc_read(double /*xp*/[],double /*normal*/[],int bc[]) {
-    for (uint ivar=0;ivar<_n_vars;ivar++) bc[ivar]=1;
-    return;
-}
+// void EqnBase::bc_read(const double /*xp*/[], const double /*normal*/[], int bc[]) const {
+//     for (uint ivar=0;ivar<_n_vars;ivar++) bc[ivar]=1;
+//     return;
+// }
 
 
 // =====================================================================
@@ -1374,34 +1374,6 @@ void EqnBase::GenElBc()  {
 }
 
 
-void EqnBase::elem_bc_read(double */*el_xm*/,int& surf_id, double *value,int* el_flag) {
-
-  std::cout << "AAAAAAAAAA you are using the default elem_bc_read which is basically MEANINGLESS" << std::endl;
-
-  uint space_dim = _mesh.get_dim();
-
-  surf_id=0;  
-
-  el_flag[NN]=1;    //yes normal component
-  el_flag[TT]=1;    //yes tang component
-     
-  value[NN]=0.;  //value of the normal 
-
-   for (uint i=0; i < _number_tang_comps[space_dim - 1]; i++) value[1+i] = 0.;
-
-// // //   WAS
-// // // #if dimension==2
-// // //   value[1]=0.;  //value of the tangential
-// // // #elif dimension==3
-// // //   value[1]=0.;  //value of the tangential
-// // //   value[2]=0.;  //value of the  tangential
-// // //   value[3]=0.;  //value of the tangential
-// // // #endif
-
-  return;
-}
-
-
 ///////////////////////////////
 void EqnBase::Bc_GetElFlagValLevSubd(const uint Level,const uint isubd,const uint iel,int* el_flag,double* el_value ) const {
 
@@ -1628,10 +1600,10 @@ void EqnBase::GenIc() {
 
 
 /// initial conditions  from function
-void EqnBase::ic_read(double /*xp*/[],double ic[], double /*el_xm*/[]) {
-    for (uint ivar=0;ivar<_n_vars;ivar++) ic[ivar]=0.;
-    return;
-}
+// void EqnBase::ic_read(const double * /*xp*/, double * ic, const double * /*el_xm*/) const {
+//     for (uint ivar=0;ivar<_n_vars;ivar++) ic[ivar]=0.;
+//     return;
+// }
 
 
 

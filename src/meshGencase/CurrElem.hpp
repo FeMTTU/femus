@@ -2,7 +2,6 @@
 #define __currelem_h__
 
 
-#include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"
 
 #include "DenseVector.hpp"
@@ -80,11 +79,11 @@ class QuantityLocal;
    EquationsMap & _eqnmap;
 
     //==== REAL ELEMENT properties: connectivity, coordinates, ...  need the MESH BASICALLY
-    inline double*  GetMidpoint(const uint vb) const {
+    inline const double*  GetMidpoint(const uint vb) const {
       return _el_xm;
     }
     
-    inline uint*  GetConn(const uint vb) const {
+    inline const uint*  GetConn(const uint vb) const {
       return _el_conn;
     }
     
@@ -92,7 +91,7 @@ class QuantityLocal;
       return _vol_iel_DofObj;
     }
     
-    inline double*  GetNodeCoords(const uint vb) const {
+    inline const double*  GetNodeCoords(const uint vb) const {
       return _xx_nds;
     }
     
@@ -100,17 +99,27 @@ class QuantityLocal;
       return _el_dof_indices;
     }
     
+    //TODO here i have to return non-const because of a function that i will change...
+    inline uint*  GetBCDofFlag() const {
+      return _bc_eldofs;
+    }
+    
     void  get_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) const;
-    void  get_el_DofObj_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel);  //TODO this is not const because _vol_iel_DofObj is NOT A POINTER! 
-    void  get_el_ctr(const uint bdry) const;                                                          //TODO notice that this is not changing the POINTER , so it is const!
+    
+    //TODO this is not const because _vol_iel_DofObj is NOT A POINTER! 
+    void  get_el_DofObj_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel);
+
+    //TODO notice that this is not changing the POINTER , so it is const!
+    void  get_el_ctr(const uint bdry) const;
+    
     void  get_el_orient(const uint vb) const;
+    
     void  ConvertElemCoordsToMappingOrd(const uint vb,QuantityLocal& myvect) const;
     
     void GetElDofsBc(const uint vbfl, const uint Level);  //needs the EQUATION basically
    
 // ========================================================================================
 //========== ELEMENT: Current "EQUATION" Element (ql are TOGETHER ) ========================               
-  uint*                  _bc_eldofs; //So the element must be aware of the BC of the equation
   DenseMatrix                 _KeM; 
   DenseVector                 _FeM;
   
@@ -119,6 +128,7 @@ class QuantityLocal;
     
   uint                   _el_n_dofs;
   std::vector<uint> _el_dof_indices;
+  uint*                  _bc_eldofs; //So the element must be aware of the BC of the equation
   
   
 // ========================================================================================

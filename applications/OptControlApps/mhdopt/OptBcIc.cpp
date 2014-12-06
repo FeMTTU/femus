@@ -37,7 +37,7 @@ namespace femus {
  //this law is given in the NON-DIMENSIONAL domain, with NON-DIMENSIONAL values
  //NONDIMENSIONAL pressure distribution, fundamental!!
  
-void EqnNS::ic_read(double xp[],double u_value[], double el_xm[]) {
+void EqnNS::ic_read(const double xp[],double u_value[], const double el_xm[]) const {
 
   const double Uref = _phys._physrtmap.get("Uref");
   //====== Physics
@@ -127,7 +127,7 @@ u_value[3]= 0.*press_tmp[0];
 //So i have to do a CAST from Domain to Box
 
 
-void EqnNS::elem_bc_read(double el_xm[],int& surf_id, double value[],int el_flag[]) {
+void EqnNS::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const {
 //el_xm[] is the NON-DIMENSIONAL node coordinate // lb,le are NONDIMENSIONALIZED
 
 const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
@@ -284,7 +284,7 @@ surf_id=77;
 //
 
 
-void EqnNS::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
+void EqnNS::bc_read(const double xp[], const double /*normal */[],int bc_flag[]) const {
 //xp[] is the NON-DIMENSIONAL node coordinate
 
   const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
@@ -445,7 +445,7 @@ Box* box = static_cast<Box*>(_mesh.GetDomain());
 ///********************MHD*******************
 
 //===============================================================
-void EqnMHD::ic_read(double xp[],double u_value[], double el_xm[]) {
+void EqnMHD::ic_read(const double xp[],double u_value[], const double el_xm[]) const {
 
   const double Uref = _phys._physrtmap.get("Uref");
   const double Bref = _phys._physrtmap.get("Bref");
@@ -468,7 +468,7 @@ void EqnMHD::ic_read(double xp[],double u_value[], double el_xm[]) {
 
 
 //===============================================================
-void EqnMHD::elem_bc_read(double el_xm[],int& surf_id, double value[],int el_flag[]) {
+void EqnMHD::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const {
 //el_xm[] is the NON-DIMENSIONAL node coordinate
 // lb,le are NONDIMENSIONALIZED
   //in this way lb,le,el_xm,x_rotshift are ALL nondimensional, so you can compare them!
@@ -643,7 +643,7 @@ surf_id=77;
 //however we have
  //bxn = 0
  //Bexn = either FIXED or CONTROLLED value
-void EqnMHD::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
+void EqnMHD::bc_read(const double xp[], const double /*normal */[],int bc_flag[]) const {
 
     const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
   
@@ -745,7 +745,7 @@ Box* box = static_cast<Box*>(_mesh.GetDomain());
 
 // ===============================
 
-void EqnNSAD::ic_read(double xp[],double u_value[], double el_xm[]) {
+void EqnNSAD::ic_read(const double xp[],double u_value[], const double el_xm[]) const {
 //xp[] is the NON-DIMENSIONAL node coordinate  //TODO: reference values
 
 #if (DIMENSION==2)
@@ -766,7 +766,7 @@ void EqnNSAD::ic_read(double xp[],double u_value[], double el_xm[]) {
 
 /// This function  defines the boundary conditions for the NS system:
 
-void EqnNSAD::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
+void EqnNSAD::bc_read(const double xp[], const double /*normal */[],int bc_flag[]) const {
 //xp[] is the NON-DIMENSIONAL node coordinate
 
   const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
@@ -872,7 +872,7 @@ if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  
 
 // // ===============================
 // TODO must always be in tune with the DIRECT Equation
-void EqnNSAD::elem_bc_read(double el_xm[],int& surf_id, double value[],int el_flag[]) {
+void EqnNSAD::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const {
 //el_xm[] is the NON-DIMENSIONAL node coordinate
 
 const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
@@ -1020,7 +1020,7 @@ surf_id=77;
 
 /// This function generates the initial conditions for the NS system:
 
-void EqnMHDAD::ic_read(double xp[],double u_value[], double el_xm[]) {
+void EqnMHDAD::ic_read(const double xp[],double u_value[], const double el_xm[]) const {
   
 #if (DIMENSION==2)
   u_value[0] = 0.;
@@ -1040,7 +1040,7 @@ void EqnMHDAD::ic_read(double xp[],double u_value[], double el_xm[]) {
 
 /// This function  defines the boundary conditions for the NS system:
 
-void EqnMHDAD::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
+void EqnMHDAD::bc_read(const double xp[], const double /*normal */[],int bc_flag[]) const {
 //xp[] is the NON-DIMENSIONAL node coordinate
 
   const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
@@ -1141,7 +1141,7 @@ if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //current
 
 // // ===============================
 // TODO must always be in tune with the DIRECT Equation
-void EqnMHDAD::elem_bc_read(double el_xm[],int& surf_id, double value[],int el_flag[]) {
+void EqnMHDAD::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const{
 //el_xm[] is the NON-DIMENSIONAL node coordinate
 // lb,le are NONDIMENSIONALIZED
   //in this way lb,le,el_xm,x_rotshift are ALL nondimensional, so you can compare them!
@@ -1286,7 +1286,7 @@ surf_id=77;
 ///************ MHDCONT_EQUATIONS
 ///************ MHDCONT_EQUATIONS
 
-void EqnMHDCONT::ic_read(double xp[],double u_value[], double el_xm[]) {
+void EqnMHDCONT::ic_read(const double xp[], double u_value[], const double el_xm[]) const {
 
   const double Uref = _phys._physrtmap.get("Uref");
   const double Bref = _phys._physrtmap.get("Bref");
@@ -1308,7 +1308,7 @@ void EqnMHDCONT::ic_read(double xp[],double u_value[], double el_xm[]) {
 }
 
 
-void EqnMHDCONT::elem_bc_read(double el_xm[],int& surf_id, double value[],int el_flag[]) {
+void EqnMHDCONT::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const {
 //el_xm[] is the NON-DIMENSIONAL node coordinate
 // lb,le are NONDIMENSIONALIZED
   //in this way lb,le,el_xm,x_rotshift are ALL nondimensional, so you can compare them!
@@ -1460,7 +1460,7 @@ surf_id=77;
 /// This function  defines the boundary conditions for the MHD system:
 
 
-void EqnMHDCONT::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
+void EqnMHDCONT::bc_read(const double xp[], const double /*normal */[],int bc_flag[]) const {
 
   const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
 

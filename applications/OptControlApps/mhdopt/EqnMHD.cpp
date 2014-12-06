@@ -235,7 +235,7 @@ namespace femus {
        bhomOld.GetElDofsVect(vb,Level);
     LagMultOld.GetElDofsVect(vb,Level);
   
-      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,bhomOld._FEord,currelem._bc_eldofs);  //only the Quadratic Part is modified!
+      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,bhomOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
 
 
 //===== "PHYSICAL" INVOLVEMENT
@@ -313,19 +313,19 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
          for (uint idim=0; idim<space_dim/*bhomOld._dim*/; idim++) {
             const uint irowq = i + idim*bhomOld._ndof[vb];
             
-            currelem._FeM(irowq) += currelem._bc_eldofs[irowq]*dtxJxW_g*(
+            currelem._FeM(irowq) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                            NonStatMHD*bhomOld._val_g[idim]*Phii._val_g[0]/dt //time
                            - LAP_MHD*IRem*LapBe_g[idim]
                             - (1-LAP_MHD)*IRem*curlBeXdphii_g3D[idim]              //phii of bhomOld /*CurlCurl(RHS,vb,Phij,Phii,idim,idimp1);*/
                            + ADV_MHD*           vXBeXdphii_g3D[idim]               //phii of bhomOld
                          )
-                         + (1-currelem._bc_eldofs[irowq])*detb*bhomOld._val_dofs[irowq]; //Dirichlet bc
+                         + (1-currelem.GetBCDofFlag()[irowq])*detb*bhomOld._val_dofs[irowq]; //Dirichlet bc
 	   }
 
 
         for (uint idim=0; idim<space_dim/*bhomOld._dim*/; idim++) { // filling diagonal block for Dirichlet bc
           const uint irowq = i + idim*bhomOld._ndof[vb];
-          currelem._KeM(irowq,irowq) += (1-currelem._bc_eldofs[irowq])*detb;
+          currelem._KeM(irowq,irowq) += (1-currelem.GetBCDofFlag()[irowq])*detb;
         }
                                            // end filling diagonal for Dirichlet bc
 	 
@@ -346,7 +346,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
             int irowq=i+idim*bhomOld._ndof[vb];   //idim gives the row index  //test of bhomOld
             // diagonal blocks [1-5-9]  idim = row index = column index  //shape of bhomOld
             currelem._KeM(irowq,j+idim*bhomOld._ndof[vb])
-            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
+            += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                 NonStatMHD*Phij._val_g[0]*Phii._val_g[0]/dt 
                  + LAP_MHD*IRem*(Lap_g) 
                  + (1-LAP_MHD)*IRem*(           Lap_g -  Phij._grad_g[0][idim]*Phii._grad_g[0][idim] )
@@ -357,7 +357,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 	    //idim: component of the SHAPE
 	    //idimp1: component of the tEST
             currelem._KeM(irowq,j+idimp1*bhomOld._ndof[vb])
-            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
+            += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                   + (1-LAP_MHD)*IRem*(        - Phij._grad_g[0][idim]*Phii._grad_g[0][idimp1] )       /*(i,j)*/    /*CurlCurl(MAT,vb,Phij,Phii,idim,idimp1);*/
                   - ADV_MHD * Phij._val_g[0]* ( -  Vel._val_g[idim]    *Phii._grad_g[0][idimp1] )       /*(i,j)*/    /*AdvCurl(MAT,Vel,Phij,Phii,idim,idimp1)*/
                );
@@ -366,7 +366,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
             // block +2 [3-4-8] 
 	    int idimp2=(idim+2)%space_dim;//idimp2 column index
             currelem._KeM(irowq,j+idimp2*bhomOld._ndof[vb])
-            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
+            += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                   + (1-LAP_MHD)*IRem*(       - Phij._grad_g[0][idim]*Phii._grad_g[0][idimp2] )               /*(i,j)*/
                   - ADV_MHD * Phij._val_g[0]* ( -  Vel._val_g[idim]    *Phii._grad_g[0][idimp2] )               /*(i,j)*/
                );
@@ -381,7 +381,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
           const int jclml= j+/*bhomOld._dim*/space_dim*bhomOld._ndof[vb];
           for (uint idim=0; idim<space_dim; idim++) {  //bhomOld._dim==spacedimension
             uint irowq=i+idim*bhomOld._ndof[vb];
-            currelem._KeM(irowq,jclml) += currelem._bc_eldofs[irowq]*dtxJxW_g*( - Psij._val_g[0]*Phii._grad_g[0][idim] );   /*(i,j)*/ /*PDiv(MAT,Psij,Phii,idim)*/
+            currelem._KeM(irowq,jclml) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*( - Psij._val_g[0]*Phii._grad_g[0][idim] );   /*(i,j)*/ /*PDiv(MAT,Psij,Phii,idim)*/
            }
         }
                                      // end B^T element matrix
@@ -442,7 +442,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
         bhomOld.GetElDofsVect(vb,Level);
      LagMultOld.GetElDofsVect(vb,Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,bhomOld._FEord,currelem._bc_eldofs); //only the Quadratic Part is modified! /*OK DIR_PEN*/
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,bhomOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
 
 //============ BC =======
@@ -465,7 +465,7 @@ if (_Dir_pen_fl == 1)  {
 //TODO here i should check that the nodal bc dirichlet i put correspond to the element NT flags
 
        uint press_fl=0;
-       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(vb,currelem._bc_eldofs,bhomOld,LagMultOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
+       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(vb,currelem.GetBCDofFlag(),bhomOld,LagMultOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
  //only the LINEAR PART is USED!!
        
 // // //   if ( (1-el_flag[NN]) != press_fl)  {std::cout << _eqname << ": sthg. wrong with press elflags" << std::endl;abort();}
@@ -523,7 +523,7 @@ if (_Dir_pen_fl == 1)  {
          for (uint idim=0; idim< space_dim; idim++)    {
              uint irowq=i+idim*bhomOld._ndof[vb];
             currelem._FeM(irowq)  +=
-            currelem._bc_eldofs[irowq]*
+            currelem.GetBCDofFlag()[irowq]*
             dtxJxW_g*(    -1.*(1-el_flag[NN])*LagMultOld._val_g[0]*currgp.get_normal_ptr()[idim]*Phii._val_g[0]   //AAA multiplying int times uint!!!   /*PDiv(RHS,(LagMultOld(Psiii),Phii,idim)*/
 // // //                            + Neum_fl*IRe*strainUtrDn_g[idim]*Phii._val_g[0]          // TODO: \tau \vect{n} on the boundary for the Laplacian
                            + velXBextXn_g3D[idim]*Phii._val_g[0]  //advection  //this type of advection has also a boundary integral, if integration by parts is performed in similar manner
@@ -573,7 +573,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
            uint irowq=i+1*el_ndof_q;
            uint jrowq=j+1*el_ndof_q;
 
-         currelem._KeM(irowq,jrowq) += currelem._bc_eldofs[irowq]*dtxJxW_g*(
+         currelem._KeM(irowq,jrowq) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                                   -CONDRATIO*phij_g*Phii._val_g[0]/*phii_g*/ //-
                           );
 

@@ -197,7 +197,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
 //     Temp2.GetElDofsVect(vb,Level);
 //     Temp3.GetElDofsVect(vb,Level);
     
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs); //only the Qtyzero Part is modified!
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
 
 // ===============      
 // Now the point is this: there are several functions of space
@@ -248,24 +248,24 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 
 //=========== FIRST ROW ===============
         currelem._FeM(i) +=      
-           currelem._bc_eldofs[i]*dtxJxW_g*( 
+           currelem.GetBCDofFlag()[i]*dtxJxW_g*( 
                 7.*phii_g
 	  )
-	   + (1-currelem._bc_eldofs[i])*detb*(Tempold._val_dofs[i]);
+	   + (1-currelem.GetBCDofFlag()[i])*detb*(Tempold._val_dofs[i]);
         
-        currelem._KeM(i,i) +=  (1-currelem._bc_eldofs[i])*detb;
+        currelem._KeM(i,i) +=  (1-currelem.GetBCDofFlag()[i])*detb;
 
 // // // //========= SECOND ROW =====================
 // // // 	 int ip1 = i + Tempold._ndof[vb]; 
 // // // 	 
 // // // 	if (i < _AbstractFE[ Temp2._FEord ]->_ndof[vb]) { 
 // // // 	 currelem._FeM(ip1) +=      
-// // //            currelem._bc_eldofs[ip1]*dtxJxW_g*( 
+// // //            currelem.GetBCDofFlag()[ip1]*dtxJxW_g*( 
 // // //                 0.07*phii_gLL
 // // // 	  )
-// // // 	   + (1-currelem._bc_eldofs[ip1])*detb*(Temp2._val_dofs[i]);
+// // // 	   + (1-currelem.GetBCDofFlag()[ip1])*detb*(Temp2._val_dofs[i]);
 // // //         
-// // //          currelem._KeM(ip1,ip1) +=  (1-currelem._bc_eldofs[ip1])*detb;
+// // //          currelem._KeM(ip1,ip1) +=  (1-currelem.GetBCDofFlag()[ip1])*detb;
 // // // 	}
 // // // 	
 // // // //======= THIRD ROW ===================================
@@ -273,12 +273,12 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 // // // 	 
 // // // 	if (i < _AbstractFE[ Temp3._FEord ]->_ndof[vb]) { 
 // // //            currelem._FeM(ip2) +=      
-// // //            currelem._bc_eldofs[ip2]*dtxJxW_g*( 
+// // //            currelem.GetBCDofFlag()[ip2]*dtxJxW_g*( 
 // // //                 0.07*phii_gKK
 // // // 	     )
-// // // 	   + (1-currelem._bc_eldofs[ip2])*detb*(Temp3._val_dofs[i]);
+// // // 	   + (1-currelem.GetBCDofFlag()[ip2])*detb*(Temp3._val_dofs[i]);
 // // //         
-// // //         currelem._KeM(ip2,ip2) +=  (1-currelem._bc_eldofs[ip2])*detb;
+// // //         currelem._KeM(ip2,ip2) +=  (1-currelem.GetBCDofFlag()[ip2])*detb;
 // // // 	}
 	
 	 // Matrix Assemblying ---------------------------
@@ -307,7 +307,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //============ FIRST ROW state  delta T ===============
 //======= DIAGONAL =============================
 	   currelem._KeM(i,j) +=        
-            currelem._bc_eldofs[i]*dtxJxW_g*( 
+            currelem.GetBCDofFlag()[i]*dtxJxW_g*( 
              Lap_g  
             );
 
@@ -316,7 +316,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 // // //  	if (i < _AbstractFE[ Temp2._FEord ]->_ndof[vb])  { 
 // // //   	if (j < _AbstractFE[ Temp2._FEord ]->_ndof[vb]) { 
 // // //        currelem._KeM(ip1,jp1) +=        
-// // //             currelem._bc_eldofs[ip1]*
+// // //             currelem.GetBCDofFlag()[ip1]*
 // // //             dtxJxW_g*( 
 // // //               Lap_gLL
 // // //             ); 
@@ -327,7 +327,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 // // // 	if (i < _AbstractFE[ Temp3._FEord ]->_ndof[vb])  { 
 // // //   	if (j < _AbstractFE[ Temp3._FEord ]->_ndof[vb]) { 
 // // //           currelem._KeM(ip2,jp2) +=        
-// // //             currelem._bc_eldofs[ip2]*
+// // //             currelem.GetBCDofFlag()[ip2]*
 // // //               dtxJxW_g*( 
 // // //               phij_gKK*phii_gKK
 // // //             + Lap_gKK
@@ -371,12 +371,12 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 // // //          Temp2.GetElDofsVect(vb,Level);
 // // //          Temp3.GetElDofsVect(vb,Level);
 
-     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs); //only the Quadratic Part is modified!
+     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified!
   
  //============ FLAGS ================
      double el_penalty = 0.;
      int pen_sum=0;
-     for (uint i=0; i< Tempold._ndof[vb]; i++)   pen_sum += currelem._bc_eldofs[i];
+     for (uint i=0; i< Tempold._ndof[vb]; i++)   pen_sum += currelem.GetBCDofFlag()[i];
 //pen_sum == 0: all the nodes must be zero, so that ALL THE NODES of that face are set properly, even if with a penalty integral and not with the nodes!
 //this is a "FALSE" NATURAL boundary condition, it is ESSENTIAL actually
      if (pen_sum == 0/*< el_n_dofs porcata*/) { el_penalty = penalty_val;   }  //strictly minor for Dirichlet penalty, i.e. AT LEAST ONE NODE to get THE WHOLE ELEMENT
@@ -390,8 +390,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //it only suffices that SOME OF THE NODES ARE with bc=1, AT LEAST ONE
 int el_Neum_flag=0;
      uint Neum_sum=0;
-     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem._bc_eldofs[i];
-     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem._bc_eldofs[i + Tempold._ndof[vb]];
+     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem.GetBCDofFlag()[i];
+     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem.GetBCDofFlag()[i + Tempold._ndof[vb]];
             if ( Neum_sum == 2*Tempold._ndof[vb] )  { el_Neum_flag=1;  }
 
 //====================================
@@ -419,7 +419,7 @@ int el_Neum_flag=0;
    	const double phii_g =  currgp._phi_ndsQLVB_g[vb][Tempold._FEord][i]; 
 	
        currelem._FeM(i) +=
-          0.*(currelem._bc_eldofs[i]*
+          0.*(currelem.GetBCDofFlag()[i]*
          el_Neum_flag*dtxJxW_g*(-QfluxDn_g)*phii_g    // beware of the sign  //this integral goes in the first equation
 	 + el_penalty*dtxJxW_g*Tempold._val_g[0]*phii_g)  //clearly, if you continue using bc=0 for setting nodal Dirichlet, this must go outside
 	 ; 

@@ -232,7 +232,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     Tlift.GetElDofsVect(vb,Level);
      TAdj.GetElDofsVect(vb,Level);
      
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs); //only the Qtyzero Part is modified!
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
 
 // ===============      
 // Now the point is this: there are several functions of space
@@ -296,40 +296,40 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 
 //=========== FIRST ROW ===============
         currelem._FeM(i) +=      
-           currelem._bc_eldofs[i]*dtxJxW_g*( 
+           currelem.GetBCDofFlag()[i]*dtxJxW_g*( 
                 Nonstat*Tempold._val_g[0]*phii_g/dt
 	  )
-	   + (1-currelem._bc_eldofs[i])*detb*(Tempold._val_dofs[i]);
+	   + (1-currelem.GetBCDofFlag()[i])*detb*(Tempold._val_dofs[i]);
         
-        currelem._KeM(i,i) +=  (1-currelem._bc_eldofs[i])*detb;
+        currelem._KeM(i,i) +=  (1-currelem.GetBCDofFlag()[i])*detb;
 
 //========= SECOND ROW (CONTROL) =====================
 	 int ip1 = i + /* 1* */Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
 	 currelem._FeM(ip1) +=      
-           currelem._bc_eldofs[ip1]*dtxJxW_g*( 
+           currelem.GetBCDofFlag()[ip1]*dtxJxW_g*( 
                 Nonstat*Tempold._val_g[0]*phii_g/dt
                      + alphaT*domain_flag*(Tdes._val_g[0])*phii_g // T_d delta T_0    /////// ADDED /////
 	  )
-	   + (1-currelem._bc_eldofs[ip1])*detb*(Tlift._val_dofs[i]);
+	   + (1-currelem.GetBCDofFlag()[ip1])*detb*(Tlift._val_dofs[i]);
         
-         currelem._KeM(ip1,ip1) +=  (1-currelem._bc_eldofs[ip1])*detb;
+         currelem._KeM(ip1,ip1) +=  (1-currelem.GetBCDofFlag()[ip1])*detb;
 
 //======= THIRD ROW (ADJOINT) ===================================
 	 int ip2 = i + 2 * Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
            currelem._FeM(ip2) +=      
-           currelem._bc_eldofs[ip2]*dtxJxW_g*( 
+           currelem.GetBCDofFlag()[ip2]*dtxJxW_g*( 
                 Nonstat*Tempold._val_g[0]*phii_g/dt
                 + alphaT*domain_flag*(Tdes._val_g[0])*phii_g // T_d delta T'
 	     )
-	   + (1-currelem._bc_eldofs[ip2])*detb*(Tempold._val_dofs[i]);
+	   + (1-currelem.GetBCDofFlag()[ip2])*detb*(Tempold._val_dofs[i]);
         
-        currelem._KeM(ip2,ip2) +=  (1-currelem._bc_eldofs[ip2])*detb;
+        currelem._KeM(ip2,ip2) +=  (1-currelem.GetBCDofFlag()[ip2])*detb;
 
 #if FOURTH_ROW==1
 	 int ip3 = i + 3 * Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
 	 
-	 if (i < _eqnmap._elem_type[vb][T4_ord]->GetNDofs()) { currelem._FeM(ip3) +=  currelem._bc_eldofs[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[vb][T4_ord][i]) + (1-currelem._bc_eldofs[ip3])*detb*1300.;
-	              currelem._KeM(ip3,ip3)  += ( 1-currelem._bc_eldofs[ip3] )*detb;  }
+	 if (i < _eqnmap._elem_type[vb][T4_ord]->GetNDofs()) { currelem._FeM(ip3) +=  currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[vb][T4_ord][i]) + (1-currelem.GetBCDofFlag()[ip3])*detb*1300.;
+	              currelem._KeM(ip3,ip3)  += ( 1-currelem.GetBCDofFlag()[ip3] )*detb;  }
 #endif
 	 // Matrix Assemblying ---------------------------
         for (uint j=0; j<Tempold._ndof[vb]; j++) {
@@ -358,7 +358,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //============ FIRST ROW state  delta T ===============
 //======= DIAGONAL =============================
 	   currelem._KeM(i,j) +=        
-            currelem._bc_eldofs[i]*dtxJxW_g*( 
+            currelem.GetBCDofFlag()[i]*dtxJxW_g*( 
               Nonstat*phij_g*phii_g/dt 
             + Advection*phii_g
             + IRe*IPr*Lap_g  
@@ -367,7 +367,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //===============================
     //same operators for T and T_0
 	    currelem._KeM(i,jp1) +=        
-            currelem._bc_eldofs[i]*dtxJxW_g*(    
+            currelem.GetBCDofFlag()[i]*dtxJxW_g*(    
               Nonstat*phij_g*phii_g/dt 
             + Advection*phii_g
             + IRe*IPr*Lap_g
@@ -375,7 +375,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 
 //====================================
 	   currelem._KeM(i,jp2) +=        
-            currelem._bc_eldofs[i]*dtxJxW_g*( 
+            currelem.GetBCDofFlag()[i]*dtxJxW_g*( 
                 0.
             );
 
@@ -383,7 +383,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //============= SECOND ROW (LIFTING) delta T_0 =============
 //===== DIAGONAL ===========================
          currelem._KeM(ip1,jp1) +=        
-            currelem._bc_eldofs[ip1]*
+            currelem.GetBCDofFlag()[ip1]*
             dtxJxW_g*( 
               Nonstat*phij_g*phii_g/dt
              + alphaL2*phij_g*phii_g  //L_2 control norm
@@ -392,13 +392,13 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
             ); 
 //====================================
 	   currelem._KeM(ip1,j) +=        
-            currelem._bc_eldofs[ip1]*
+            currelem.GetBCDofFlag()[ip1]*
             dtxJxW_g*( 
                 + alphaT*domain_flag*(phij_g)*phii_g  //T' delta T_0     //ADDED///////////////
             );
 //====================================
 	   currelem._KeM(ip1,jp2) +=        
-            currelem._bc_eldofs[ip1]*
+            currelem.GetBCDofFlag()[ip1]*
              dtxJxW_g*( 
                  -Advection*phii_g
                 + IRe*IPr*Lap_g
@@ -407,7 +407,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //============= THIRD ROW (ADJOINT) =============
 //======= DIAGONAL ==================
           currelem._KeM(ip2,jp2) +=        
-            currelem._bc_eldofs[ip2]*
+            currelem.GetBCDofFlag()[ip2]*
               dtxJxW_g*( 
               Nonstat*phij_g*phii_g/dt
             - Advection*phii_g  //minus sign
@@ -416,13 +416,13 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
             ); 
 //====================================
 	   currelem._KeM(ip2,j) +=        
-            currelem._bc_eldofs[ip2]*
+            currelem.GetBCDofFlag()[ip2]*
             dtxJxW_g*( 
                + alphaT*domain_flag*(phij_g)*phii_g  //T' delta T'
             );
 //====================================
 	   currelem._KeM(ip2,jp1) +=        
-            currelem._bc_eldofs[ip2]*
+            currelem.GetBCDofFlag()[ip2]*
             dtxJxW_g*( 
                + alphaT*domain_flag*(phij_g)*phii_g  //T_0 delta T'     ///ADDED///////
             );
@@ -430,7 +430,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 #if FOURTH_ROW==1
 	 int ip3 = i + 3*Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
 // 	    int jp3 = j + 3*Tempold._ndof[vb];
-	   if (i < _eqnmap._elem_type[vb][T4_ord]->GetNDofs() ) currelem._KeM(ip3,ip3) += currelem._bc_eldofs[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[vb][ T4_ord ][/*j*/i]*currgp._phi_ndsQLVB_g[vb][ T4_ord ][i]);   
+	   if (i < _eqnmap._elem_type[vb][T4_ord]->GetNDofs() ) currelem._KeM(ip3,ip3) += currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[vb][ T4_ord ][/*j*/i]*currgp._phi_ndsQLVB_g[vb][ T4_ord ][i]);   
 #endif
 	    
         }  //end j (col)
@@ -464,12 +464,12 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
          Tlift.GetElDofsVect(vb,Level);
           TAdj.GetElDofsVect(vb,Level);
 
-     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs); //only the Quadratic Part is modified!
+     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified!
   
  //============ FLAGS ================
      double el_penalty = 0.;
      int pen_sum=0;
-     for (uint i=0; i< Tempold._ndof[vb]; i++)   pen_sum += currelem._bc_eldofs[i];
+     for (uint i=0; i< Tempold._ndof[vb]; i++)   pen_sum += currelem.GetBCDofFlag()[i];
 //pen_sum == 0: all the nodes must be zero, so that ALL THE NODES of that face are set properly, even if with a penalty integral and not with the nodes!
 //this is a "FALSE" NATURAL boundary condition, it is ESSENTIAL actually
      if (pen_sum == 0/*< el_n_dofs porcata*/) { el_penalty = penalty_val;   }  //strictly minor for Dirichlet penalty, i.e. AT LEAST ONE NODE to get THE WHOLE ELEMENT
@@ -483,8 +483,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //it only suffices that SOME OF THE NODES ARE with bc=1, AT LEAST ONE
 int el_Neum_flag=0;
      uint Neum_sum=0;
-     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem._bc_eldofs[i];
-     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem._bc_eldofs[i + Tempold._ndof[vb]];
+     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem.GetBCDofFlag()[i];
+     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem.GetBCDofFlag()[i + Tempold._ndof[vb]];
             if ( Neum_sum == 2*Tempold._ndof[vb] )  { el_Neum_flag=1;  }
 
 //====================================
@@ -512,7 +512,7 @@ int el_Neum_flag=0;
    	const double phii_g =  currgp._phi_ndsQLVB_g[vb][Tempold._FEord][i]; 
 	
        currelem._FeM(i) +=
-          currelem._bc_eldofs[i]*
+          currelem.GetBCDofFlag()[i]*
          el_Neum_flag*dtxJxW_g*(-QfluxDn_g)*phii_g    // beware of the sign  //this integral goes in the first equation
 	 + el_penalty*dtxJxW_g*Tempold._val_g[0]*phii_g  //clearly, if you continue using bc=0 for setting nodal Dirichlet, this must go outside
 	 ; 

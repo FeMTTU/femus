@@ -17,7 +17,7 @@
 #include "EqnT.hpp"
 
 
-void EqnT::ic_read(double xp[],double u_value[], double el_xm[]) {
+void EqnT::ic_read(const double xp[],double u_value[],const double el_xm[]) const {
 
 //     const double Tref = _phys._physrtmap.get("Tref");
   const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
@@ -61,7 +61,7 @@ void EqnT::ic_read(double xp[],double u_value[], double el_xm[]) {
 
 
 
-void EqnT::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
+void EqnT::bc_read(const double xp[],const double /*normal */[],int bc_flag[]) const {
 // T' and its adjoint must be Dirichlet homogeneous everywhere on the boundary, by definition.
 
 
@@ -231,7 +231,7 @@ else if  ( (x_rotshift[0]) < 0.25*(le[0] - lb[0]) || ( x_rotshift[0]) > 0.75*(le
  //this law is given in the NON-dimensional domain, with NON-dimensional values
  //NONdimensional pressure distribution, fundamental!!
  
-void EqnNS::ic_read(double xp[],double u_value[], double el_xm[]) {
+void EqnNS::ic_read(const double xp[],double u_value[],const double el_xm[]) const {
 
   //====== Physics
    const double Uref = _phys._physrtmap.get("Uref");
@@ -341,7 +341,7 @@ u_value[3]=press_tmp[0];
 //So i have to do a CAST from Domain to Box
 
 
-void EqnNS::elem_bc_read(double el_xm[],int& surf_id, double value[],int el_flag[]) {
+void EqnNS::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const {
 //el_xm[] is the NON-dimensional node coordinate // lb,le are NONdimensionalized
 
 const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
@@ -494,7 +494,7 @@ surf_id=77;
 
 /// This function  defines the boundary conditions for the NS system:
 
-void EqnNS::bc_read(double xp[],double /*normal */[],int bc_flag[]) {
+void EqnNS::bc_read(const double xp[],const double /*normal */[],int bc_flag[]) const {
 //xp[] is the NON-dimensional node coordinate
 
   const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
