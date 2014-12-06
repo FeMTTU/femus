@@ -67,10 +67,11 @@ public:
     ElemStoVol**  _el_sto;                 //FILLED ACCORDING TO "how the Libmesh mesh iterator runs" which may not be id in general i think...
 
     const uint _dim;               ///< spatial dimension
+    const uint _mesh_order;
     const double _Lref;          ///Reference length for non-dimensionalization
-    
+
 // ===== ABSTRACT GEOMEL(S) =====
-    std::vector<GeomEl>  _GeomEl;   //[VB]
+    std::vector< std::vector<GeomEl> >  _GeomEl;   //[VB][QL_NODES] 
     uint*      _type_FEM;         //just for check
     uint _elnodes[VB][QL];
     

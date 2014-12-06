@@ -77,7 +77,7 @@
   std::vector<Gauss>   qrule;
   qrule.reserve(VB);
   for (int vb=0;vb < VB; vb++) { 
-          Gauss qrule_temp(mesh._GeomEl[vb]._geomel_id.c_str(),"fifth");
+          Gauss qrule_temp(mesh._GeomEl[vb][mesh._mesh_order]._geomel_id.c_str(),"fifth");
          qrule.push_back(qrule_temp);
   }
   
@@ -87,7 +87,7 @@
   const std::string  FEFamily[QL] = {"biquadratic","linear","constant"}; 
   
   for (int fe=0; fe<QL; fe++) {
-    FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV],fe);  //The order of the fe is established by the library
+    FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV][mesh._mesh_order],fe);  //The order of the fe is established by the library
     FEElements[fe]->evaluate_shape_at_qp(fe,qrule[VV].GetGaussOrderString().c_str());
   }
 

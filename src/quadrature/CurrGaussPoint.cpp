@@ -278,7 +278,7 @@ double CurrGaussPoint<FM_DIM>::JacVectBB_g(const uint vb, QuantityLocal& xyz )/*
 //     const uint spacedim = _eqnmap._mesh._dim;
 
     const uint    Order = xyz._FEord;  //order of the coordinate transformation 
-    const uint     xoff = _eqnmap._mesh._GeomEl[vb]._elnds[Order];
+    const uint     xoff = _eqnmap._mesh._GeomEl[vb][Order]._elnds;
     const uint elnshape = _eqnmap._AbstractFE[VV][Order]->_myelems[vb]->GetNDofs();
 //     double dxyzdxieta_g[FM_DIM - 1][FM_DIM]; 
     //TODO TODO TODO NOW I'LL PUT IT  CLASS MEMBER, (IT SHOULD STAY TOGETHER WITH _normal, _tangent and _jacobian...) 
@@ -438,7 +438,7 @@ template <unsigned int FM_DIM>
 double CurrGaussPoint<FM_DIM>::JacVectVV_g(const uint vb, QuantityLocal& xyz )/* const*/ {
 
 const uint Order    = xyz._FEord;  //order of the coordinate transformation
-const uint xoff     = _eqnmap._mesh._GeomEl[vb]._elnds[Order];
+const uint xoff     = _eqnmap._mesh._GeomEl[vb][Order]._elnds;
 const uint elnshape = _AbsFEVect[Order]->_myelems[vb]->GetNDofs(); 
 // const uint space_dim = _eqnmap._mesh._dim;
 

@@ -205,7 +205,7 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) const 
         int NGeomObjOnWhichToPrint[QL];
         NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[l];
         NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*_mesh._GeomEl[VV].n_se;
+        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*_mesh._GeomEl[VV][_mesh._mesh_order].n_se;
 	  
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
@@ -430,7 +430,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) const {
         int NGeomObjOnWhichToPrint[QL];
         NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[l];
         NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*_mesh._GeomEl[VV].n_se;
+        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*_mesh._GeomEl[VV][_mesh._mesh_order].n_se;
 
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
@@ -494,7 +494,7 @@ void EquationsMap::PrintXDMFTopologyGeometry(std::ofstream& out, const uint Leve
     //coordinates
     std::ostringstream coord_file; coord_file <<  basemesh <<  ext_h5;
     
-    IO::PrintXDMFTopology(out,connfile.str(),hdf5_field.str(),_mesh._GeomEl[vb].name[LL],n_elements*_mesh._GeomEl[vb].n_se,n_elements*_mesh._GeomEl[vb].n_se,_mesh._GeomEl[vb]._elnds[LL]);
+    IO::PrintXDMFTopology(out,connfile.str(),hdf5_field.str(),_mesh._GeomEl[vb][LL].name,n_elements*_mesh._GeomEl[vb][_mesh._mesh_order].n_se,n_elements*_mesh._GeomEl[vb][_mesh._mesh_order].n_se,_mesh._GeomEl[vb][LL]._elnds);
     std::ostringstream coord_lev; coord_lev << "_L" << Level; 
     IO::PrintXDMFGeometry(out,coord_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",_mesh._NoNodesXLev[Level],1);
 

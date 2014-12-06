@@ -13,52 +13,70 @@ namespace femus {
 //This class was badly constructed 
 //because there were things only quadratic and things both quadratic and linear
 
-  GeomEl::GeomEl(const std::string geomel_id_in) :
+  GeomEl::GeomEl(const std::string geomel_id_in, const uint mesh_order) :
      _geomel_id(geomel_id_in)    {
 
+     if (mesh_order != QQ && mesh_order != LL ) { std::cout << "Wrong mesh order" << std::endl; abort(); }  
+     
      if (!strcmp(_geomel_id.c_str(),"hex")) {  
            _dim = 3;
-     _elnds[QQ] = 27;
-     _elnds[LL] = 8;
            n_se = 8;
-       name[QQ] = "Hexahedron_27"; 
-       name[LL] = "Hexahedron";
-      }
+      switch(mesh_order) {
+      case(QQ):
+          _elnds = 27; name = "Hexahedron_27";  break;
+      case(LL):
+          _elnds = 8;  name = "Hexahedron";     break;
+        } 
+      } //end hex
+
       else if (!strcmp(_geomel_id.c_str(),"wedge")) {
            std::cout << "Not supported yet" << std::endl; abort();
-      }
+      } //end wedge
+      
       else if (!strcmp(_geomel_id.c_str(),"tet")) {
            _dim = 3;
-     _elnds[QQ] = 10;
-     _elnds[LL] = 4;
            n_se = 8;
-       name[QQ] = "Tetrahedron_10"; 
-       name[LL] = "Tetrahedron";
-      }
+      switch(mesh_order) {
+      case(QQ):
+          _elnds = 10; name = "Tetrahedron_10";  break;
+      case(LL):
+          _elnds = 4;  name = "Tetrahedron";     break;
+        } 
+      } //end tet
+      
       else if (!strcmp(_geomel_id.c_str(),"quad")) {
            _dim = 2;
-     _elnds[QQ] = 9;
-     _elnds[LL] = 4;
            n_se = 4;
-       name[QQ] = "Quadrilateral_9"; 
-       name[LL] = "Quadrilateral";
-      }
+      switch(mesh_order) {
+      case(QQ):
+          _elnds = 9; name = "Quadrilateral_9";  break;
+      case(LL):
+          _elnds = 4; name = "Quadrilateral";     break;
+        } 
+      }  //end quad
+      
       else if (!strcmp(_geomel_id.c_str(),"tri")) {
            _dim = 2;
-     _elnds[QQ] = 6;
-     _elnds[LL] = 3; 
            n_se = 4;
-       name[QQ] = "Triangle_6"; 
-       name[LL] = "Triangle";
-      }	
+      switch(mesh_order) {
+      case(QQ):
+          _elnds = 6; name = "Triangle_6";  break;
+      case(LL):
+          _elnds = 3; name = "Triangle";     break;
+        } 
+      }  //end tri
+      
       else if (!strcmp(_geomel_id.c_str(),"line")) { 
            _dim = 1;
-     _elnds[QQ] = 3;
-     _elnds[LL] = 2;
            n_se = 2;
-       name[QQ] = "Edge_3"; 
-       name[LL] = "Edge";
-      }
+      switch(mesh_order) {
+      case(QQ):
+          _elnds = 3; name = "Edge_3";  break;
+      case(LL):
+          _elnds = 2; name = "Edge";     break;
+        } 
+      }  //end line
+      
       else {std::cout << "Geometric element not recognized\n"; abort(); }
 
 
