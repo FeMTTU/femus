@@ -257,8 +257,8 @@ void QuantityLocal::GetElDofsVect(const uint vbfl, const uint Level)  {
          for (uint d = 0; d <  _ndof[vbfl]; d++)    {
                const uint     indx  = d + ivar * _ndof[vbfl];
 
-	     if (vect_ord < KK )       DofObj = _currEl.GetConn(vbfl)[d];
-	     else if (vect_ord == KK)  DofObj = _currEl.GetVolIel(vbfl);
+	     if (vect_ord < KK )       DofObj = _currEl.GetConn()[d];
+	     else if (vect_ord == KK)  DofObj = _currEl.GetVolIel();
 	       
 	const uint dofkivar = _eqnptr->_node_dof[Lev_pick_dof][ DofObj + ivar*length_nodedof[vect_ord] + off_total]; //FROM MESH TO DOF, at the finest level because you are using x_old
 

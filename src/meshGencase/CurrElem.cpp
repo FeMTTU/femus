@@ -14,7 +14,7 @@ namespace femus {
 
 
 
-    CurrElem::CurrElem(const uint vb,EqnBase & eqn_in, EquationsMap & e_map_in ):
+    CurrElem::CurrElem(const uint vb, const EqnBase & eqn_in, const EquationsMap & e_map_in ):
     _eqn(eqn_in),
     _eqnmap(e_map_in)
     {

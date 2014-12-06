@@ -150,7 +150,7 @@ public:
 
  //========== Miscellaneous, to be removed... ========================
  //TODO this function should not stay here, it is just because it needed integration stuff
-	  double FunctionIntegral (const uint vb, double (*pt2func)(double, const double* ) ); 
+	  double FunctionIntegral (const uint vb, const EquationsMap & eqmap_in, double (*pt2func)(double, const double* ) ) const; 
 
 
 //=======================================================================

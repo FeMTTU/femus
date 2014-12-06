@@ -216,7 +216,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     currelem.get_el_ctr(vb);
 
     currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
-    _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(vb),xyz_refbox._val_dofs);    
+    _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
 
     
 //MY EQUATION
@@ -456,7 +456,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
       currelem.get_el_ctr(vb); 
 
       currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
-    _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(vb),xyz_refbox._val_dofs);    
+    _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
      
       currelem.GetElDofsBc(vb,Level);
       
@@ -718,7 +718,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
       currelem.get_el_ctr(vb);
       
       currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
-      _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(vb),xyz_refbox._val_dofs);
+      _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
 
 // =============== 
       xyz_refbox.SetElemAverage(vb);
@@ -853,7 +853,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
       currelem.get_el_ctr(vb);
 
       currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
-      _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(vb),xyz_refbox._val_dofs);
+      _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
      
      Tlift.GetElDofsVect(vb,Level);
 
