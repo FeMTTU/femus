@@ -119,6 +119,11 @@ public:
     return _nc;
   };
     
+  /** Retrieve the dimension of the underlying geometric element */
+  inline unsigned  GetDim() const {
+    return _dim;
+  };
+
   // member data
   static unsigned _refindex;
  

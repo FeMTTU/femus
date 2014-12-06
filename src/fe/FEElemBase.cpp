@@ -187,8 +187,6 @@ FEElemBase* FEElemBase::build(const GeomEl & geomel_in, const uint fe_family_in)
 
 void FEElemBase::evaluate_shape_at_qp(const uint fe_family_in, const char* gauss_order) {
 
-  uint space_dim = _geomel._dim;
-
 // ================================================================================
 // ============================ begin switch fe order ===============================
 // ================================================================================
@@ -318,6 +316,7 @@ void FEElemBase::evaluate_shape_at_qp(const uint fe_family_in, const char* gauss
 // ============================ end switch fe order ===============================
 // ================================================================================
 
+  uint space_dim = _myelems[VV]->GetDim();
 
 // ============== allocate canonical shape ==================================================================
 for (int vb=0; vb<VB; vb++) {
