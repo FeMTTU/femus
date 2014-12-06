@@ -95,8 +95,6 @@ int main(int argc, char** argv) {
   }  
   
   // =======FEElems =====  //remember to delete the FE at the end
-  std::vector< std::vector<FEElemBase*> >  FEElements_vec(VB); 
-  std::vector<FEElemBase*> FEElements(QL);
   const std::string  FEFamily[QL] = {"biquadratic","linear","constant"}; 
   std::vector< std::vector<elem_type*> > FEElemType_vec(VB);
   for (int vb=0;vb < VB; vb++)    FEElemType_vec[vb].resize(QL);
@@ -107,12 +105,9 @@ int main(int argc, char** argv) {
      }
     }  
   
+  std::vector<FEElemBase*> FEElements(QL);
   for (int fe=0; fe<QL; fe++)    FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(),fe);  
 
-  for (int vb=0;vb < VB; vb++) { 
-  FEElements_vec[vb] = FEElements;
-  }
-  
   // ===== QuantityMap =========================================
   QuantityMap  qty_map(phys);
 
@@ -159,7 +154,7 @@ int main(int argc, char** argv) {
   TimeLoop time_loop(files); 
   
   // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements_vec,FEElemType_vec,qrule,time_loop);
+  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,FEElemType_vec,qrule,time_loop);
   
 //===============================================
 //================== Add EQUATIONS  AND ======================

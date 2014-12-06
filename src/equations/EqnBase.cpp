@@ -1178,7 +1178,7 @@ void EqnBase::PrintBc(std::string namefile) {
 		  for (uint in=0; in < elnds[QQ]; in++) { // mid-points
                     double sum=0;
                     for (uint jn=0; jn<elnds[LL]; jn++) {
-                        sum += _AbstractFE[VV][LL]->get_prol(in*elnds[LL]+jn)*elsol_c[jn];
+                        sum += _AbstractFE[LL]->get_prol(in*elnds[LL]+jn)*elsol_c[jn];
                     }
                     
                     int pos_Qnode_fine = _mesh._el_map[VV][ (iel+iel_b)*elnds[QQ]+in ];
@@ -3397,7 +3397,7 @@ void EqnBase::PrintVector(std::string namefile) {
                 for (uint in=0; in < elnds[QQ]; in++) { //TODO this loop can be done from elnds[LL] instead of from 0
                     double sum=0.;
                     for (uint jn=0; jn<elnds[LL]; jn++) {
-                        sum += _AbstractFE[VV][LL]->get_prol(in*elnds[LL]+jn)*elsol_c[jn];
+                        sum += _AbstractFE[LL]->get_prol(in*elnds[LL]+jn)*elsol_c[jn];
                     }
                     
                     int pos_Qnode_fine = _mesh._el_map[VV][ (iel+iel_b)*elnds[QQ]+in ];       //Qnode in FINE NUMBERING

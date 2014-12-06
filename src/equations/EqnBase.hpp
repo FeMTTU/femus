@@ -166,7 +166,7 @@ protected:
   Files                     & _files;        ///<  file class pointer
   Physics                   & _phys;         ///<  parameter class pointer
   Mesh                      & _mesh;         ///<  mesh pointer
-  std::vector< std::vector<FEElemBase*> > &  _AbstractFE;  ///<  FE
+  std::vector<FEElemBase*>  &  _AbstractFE;  ///<  FE
   EquationsMap              & _eqnmap;       ///<  equation map  pointer
 
 //=======================================================================

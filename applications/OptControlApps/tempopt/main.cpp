@@ -32,7 +32,6 @@
 #include "TempPhysics.hpp"
 #include "EqnNS.hpp"
 #include "EqnT.hpp"
-#include "../../../src/mesh/Elem.hpp"
 
  
 // =======================================
@@ -82,9 +81,7 @@
          qrule.push_back(qrule_temp);
   }
   
-  // =======Abstract FEElems =====  //remember to delete the FE at the end
-  std::vector< std::vector<FEElemBase*> >  FEElements_vec(VB); 
-  std::vector<FEElemBase*> FEElements(QL);
+  // =======Abstract FEElems =====  //remember to delete the FE at the end 
   const std::string  FEFamily[QL] = {"biquadratic","linear","constant"}; 
   std::vector< std::vector<elem_type*> > FEElemType_vec(VB);
   for (int vb=0;vb < VB; vb++)    FEElemType_vec[vb].resize(QL);
@@ -94,20 +91,11 @@
        FEElemType_vec[vb][fe] = elem_type::build(mesh._GeomEl[vb][mesh._mesh_order]._geomel_id.c_str(),fe, qrule[vb].GetGaussOrderString().c_str());
        FEElemType_vec[vb][fe]->EvaluateShapeAtQP(mesh._GeomEl[vb][mesh._mesh_order]._geomel_id.c_str(),fe);
      }
-    }
+   }
   
-  for (int fe=0; fe<QL; fe++) {
-    FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(),fe);
-//     FEElements[fe]->_myelems[VV] = elem_type::build(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(),fe, qrule[VV].GetGaussOrderString().c_str());
-//     FEElements[fe]->_myelems[BB] = elem_type::build(mesh._GeomEl[BB][mesh._mesh_order]._geomel_id.c_str(),fe, qrule[BB].GetGaussOrderString().c_str());
-//     FEElements[fe]->_myelems[VV]->EvaluateShapeAtQP(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(),fe);
-//     FEElements[fe]->_myelems[BB]->EvaluateShapeAtQP(mesh._GeomEl[BB][mesh._mesh_order]._geomel_id.c_str(),fe);
-  }
+  std::vector<FEElemBase*> FEElements(QL);
+  for (int fe=0; fe<QL; fe++)    FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(),fe);
 
-  for (int vb=0;vb < VB; vb++) { 
-  FEElements_vec[vb] = FEElements;
-  }
-  
   // ======== TimeLoop ===================================
   TimeLoop time_loop(files); 
            time_loop._timemap.read();
@@ -130,7 +118,7 @@
   // ===== end QuantityMap =========================================
 
   // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements_vec,FEElemType_vec,qrule,time_loop);  //here everything is passed as BASE STUFF, like it should!
+  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,FEElemType_vec,qrule,time_loop);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
   
 //===============================================

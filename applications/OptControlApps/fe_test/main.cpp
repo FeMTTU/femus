@@ -80,8 +80,6 @@
   }
 
   // =======Abstract FEElems =====  //remember to delete the FE at the end
-  std::vector< std::vector<FEElemBase*> >  FEElements_vec(VB); 
-  std::vector<FEElemBase*> FEElements(QL);
   const std::string  FEFamily[QL] = {"biquadratic","linear","constant"}; 
   std::vector< std::vector<elem_type*> > FEElemType_vec(VB);
   for (int vb=0;vb < VB; vb++)    FEElemType_vec[vb].resize(QL);
@@ -93,12 +91,9 @@
      }
     }
                                                      
+  std::vector<FEElemBase*> FEElements(QL);
   for (int fe=0; fe<QL; fe++)    FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(),fe);
 
-  for (int vb=0;vb < VB; vb++) { 
-  FEElements_vec[vb] = FEElements;
-  }
-  
   // ======== TimeLoop ===================================
   TimeLoop time_loop(files); 
            time_loop._timemap.read();
@@ -117,7 +112,7 @@
   // ===== end QuantityMap =========================================
 
   // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements_vec,FEElemType_vec,qrule,time_loop);  //here everything is passed as BASE STUFF, like it should!
+  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,FEElemType_vec,qrule,time_loop);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
 //===============================================
 //================== Add EQUATIONS AND ======================
