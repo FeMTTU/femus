@@ -19,6 +19,7 @@
 
 #include "GaussPoints.hpp"
 #include "ElemType.hpp"
+#include "FETypeEnum.hpp"
 #include "Elem.hpp"
 #include "NumericVector.hpp"
 
@@ -47,6 +48,109 @@ elem_type::~elem_type() {
   delete _pt_basis;
   
 };
+
+//----------------------------------------------------------------------------------------------------
+// build function
+//-----------------------------------------------------------------------------------------------------
+
+ elem_type*  elem_type::build(const std::string geomel_id_in, const uint fe_family_in, const char* gauss_order) {
+
+  switch(fe_family_in) {
+
+// ================================================================================
+  case(QQ):  {  /*"biquadratic"*/
+    
+     if (!strcmp(geomel_id_in.c_str(),"hex")) {  
+        return new elem_type_3D("hex","biquadratic", gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"wedge")) {
+        return new elem_type_3D("wedge","biquadratic", gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"tet")) {
+        return new elem_type_3D("tet","biquadratic", gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"quad")) {
+        return new elem_type_2D("quad","biquadratic", gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"tri")) {
+        return new elem_type_2D("tri","biquadratic", gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"line")) { 
+        return new elem_type_1D("line","biquadratic", gauss_order);
+      }
+      else {std::cout << "Geometric element not recognized" << std::endl; abort();}
+    
+    break;
+  } //end feorder QQ
+
+// ================================================================================
+
+// ================================================================================
+  case(LL): {  /*"linear"*/
+    
+    
+     if (!strcmp(geomel_id_in.c_str(),"hex")) {  
+        return new elem_type_3D("hex","linear", gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"wedge")) {
+        return new elem_type_3D("wedge","linear", gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"tet")) {
+        return new elem_type_3D("tet","linear", gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"quad")) {
+        return new elem_type_2D("quad","linear", gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"tri")) {
+        return new elem_type_2D("tri","linear",  gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"line")) { 
+        return new elem_type_1D("line","linear", gauss_order);
+      }
+      else {std::cout << "Geometric element not recognized" << std::endl; abort();}
+    
+    break;
+  } //end feorder LL
+// ================================================================================
+
+
+// ================================================================================
+  case(KK): {  /*"constant"*/
+    
+
+     if (!strcmp(geomel_id_in.c_str(),"hex")) {  
+        return new elem_type_3D("hex","constant", gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"wedge")) {
+        return new elem_type_3D("wedge","constant", gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"tet")) {
+        return new elem_type_3D("tet","constant", gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"quad")) {
+        return new elem_type_2D("quad","constant", gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"tri")) {
+        return new elem_type_2D("tri","constant",  gauss_order);
+      }
+      else if (!strcmp(geomel_id_in.c_str(),"line")) { 
+        return new elem_type_1D("line","constant", gauss_order);
+      }
+      else {std::cout << "Geometric element not recognized" << std::endl; abort();}
+    
+    break;
+  }  //end feorder KK
+
+// ================================================================================
+  default: {
+    std::cout << "FE family not implemented yet" << std::endl;
+    abort();
+  }
+
+  }  //end switch fe order
+
+}
+
 
 //----------------------------------------------------------------------------------------------------
 // build matrix sparsity pattern size and build prolungator matrix for the LsysPde  Matrix

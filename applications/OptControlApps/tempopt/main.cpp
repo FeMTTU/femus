@@ -84,10 +84,14 @@
   // =======Abstract FEElems =====  //remember to delete the FE at the end
   std::vector< std::vector<FEElemBase*> >  FEElements_vec(VB); 
   std::vector<FEElemBase*> FEElements(QL);
+//   std::vector<elem_type*> FEElemType(VB);  //coming soon
+
   const std::string  FEFamily[QL] = {"biquadratic","linear","constant"}; 
   
   for (int fe=0; fe<QL; fe++) {
     FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(),fe);  //The order of the fe is established by the library
+    FEElements[fe]->_myelems[VV] = elem_type::build(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(),fe, qrule[VV].GetGaussOrderString().c_str());
+    FEElements[fe]->_myelems[BB] = elem_type::build(mesh._GeomEl[BB][mesh._mesh_order]._geomel_id.c_str(),fe, qrule[BB].GetGaussOrderString().c_str());
     FEElements[fe]->evaluate_shape_at_qp(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(), fe, qrule[VV].GetGaussOrderString().c_str());
   }
 

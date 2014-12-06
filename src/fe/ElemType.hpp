@@ -48,6 +48,9 @@ public:
   /** destructor */
   virtual ~elem_type();
 
+  /** build function */
+  static  elem_type*  build(const std::string geomel_id_in, const uint fe_family_in, const char* gauss_order);
+  
   /** To be Added */
   void BuildProlongation(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
                          const unsigned &index_sol, const unsigned &kkindex_sol) const;

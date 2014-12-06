@@ -34,7 +34,7 @@ public:
     virtual float get_embedding_matrix(const uint,const uint,const uint) = 0;
     virtual double get_prol(const uint) = 0;
     
-  std::vector<elem_type*> _myelems;    //VB
+  std::vector<elem_type*> _myelems;
 
 // Quadrature ==
     void evaluate_shape_at_qp(const std::string geomel_id_in, const uint order, const char* gauss_order);
