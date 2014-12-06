@@ -20,6 +20,7 @@ class Utils;
 class Physics;
 class Mesh;
 class FEElemBase;
+class elem_type;
 class TimeLoop;
 
 class QuantityMap;
@@ -34,6 +35,7 @@ public:
     QuantityMap& _qtymap;
     Mesh&        _mesh;
     std::vector< std::vector<FEElemBase*> > &  _AbstractFE;
+    std::vector< std::vector<elem_type*> >  &  _elem_type;
     std::vector<Gauss>       _qrule;
     TimeLoop&    _timeloop;
 
@@ -43,6 +45,7 @@ public:
 		  QuantityMap& qtymap_in,
 		  Mesh& mgmesh_in,
 		  std::vector< std::vector<FEElemBase*> > & absfe_in,
+                  std::vector< std::vector<elem_type*> > & elem_type_in,
 		  std::vector<Gauss> qrule_in,
 		  TimeLoop& timeloop_in
 		);

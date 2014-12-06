@@ -32,11 +32,7 @@ namespace femus {
 
 
 
-FEElemBase::FEElemBase() {
-
-  _myelems.resize(VB);  //cannot go in build function, because it is static
-
-}
+FEElemBase::FEElemBase() { }
 
 FEElemBase::~FEElemBase() { }
 

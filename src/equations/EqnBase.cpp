@@ -921,13 +921,13 @@ void EqnBase::GenBc() {
                         const uint fine_node = _mesh._el_map[BB][(iel+iel_b)*el_nnodes_b+i];
 
                     //Set the quadratic fields
-                    if ( i<_AbstractFE[VV][QQ]->_myelems[BB]->GetNDofs() )
+                    if ( i < _eqnmap._elem_type[BB][QQ]->GetNDofs() )
 		      for (uint ivar=0; ivar<_nvars[QQ]; ivar++) {
                             int kdof = _node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_DofNumLevFE[Lev_pick_bc_NODE_dof][QQ] + _DofOffLevFE[Lev_pick_bc_NODE_dof][QQ] ];
                            if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _VarOff[QQ]];
                         }
                     // Set the linear fields
-                    if ( i<_AbstractFE[VV][LL]->_myelems[BB]->GetNDofs() ) {
+                    if ( i < _eqnmap._elem_type[BB][LL]->GetNDofs() ) {
                         for (uint ivar = 0; ivar < _nvars[LL]; ivar++) {
                             int kdof = _node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_DofNumLevFE[Lev_pick_bc_NODE_dof][LL] + _DofOffLevFE[Lev_pick_bc_NODE_dof][LL] ];
                            if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _VarOff[LL]];
@@ -1570,21 +1570,21 @@ void EqnBase::GenIc() {
                 // ===================================================
 
                 // Set the quadratic fields
-                if ( i < _AbstractFE[VV][QQ]->_myelems[VV]->GetNDofs() ) {
+                if ( i < _eqnmap._elem_type[VV][QQ]->GetNDofs() ) {
                     for (uint ivar=0; ivar<_nvars[QQ]; ivar++) {
 		      int dof_pos_lev = _node_dof[Level][ fine_node + ivar*_DofNumLevFE[Level][QQ] + _DofOffLevFE[Level][QQ] ];
                         _x[Level]->set( dof_pos_lev, u_value[ivar + _VarOff[QQ]] );
 		    }
                 }
                 // Set the linear fields
-                if ( i < _AbstractFE[VV][LL]->_myelems[VV]->GetNDofs() ) {
+                if ( i <  _eqnmap._elem_type[VV][LL]->GetNDofs() ) {
                     for (uint ivar=0; ivar<_nvars[LL]; ivar++) {
 		      int dof_pos_lev = _node_dof[Level][ fine_node + ivar*_DofNumLevFE[Level][LL] + _DofOffLevFE[Level][LL] ];
                         _x[Level]->set( dof_pos_lev, u_value[ivar + _VarOff[LL]] );
                         }
 		    }
 		    
-                if ( i < _AbstractFE[VV][KK]->_myelems[VV]->GetNDofs() ) {
+                if ( i < _eqnmap._elem_type[VV][KK]->GetNDofs() ) {
 		  
 		int sum_elems_prev_sd_at_lev = 0;
 	    for (uint pr = 0; pr < _iproc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*_NoLevels + Level + 1] - _mesh._off_el[VV][pr*_NoLevels + Level]; }
@@ -3786,7 +3786,7 @@ void EqnBase::ReadVector(std::string namefile) {
 //So, many functions here can be called CONST even if they are not!
   void EqnBase::Bc_ConvertToDirichletPenalty(const uint vb, const uint ql, uint* bc) const {
 
-    const uint ndof  = _AbstractFE[VV][ql]->_myelems[vb]->GetNDofs();
+    const uint ndof  = _eqnmap._elem_type[vb][ql]->GetNDofs();
     const uint nvars = _nvars[ql];
 
     for (uint ivarq=0; ivarq < nvars; ivarq++) {
@@ -4008,8 +4008,8 @@ const uint myproc= _iproc;
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = _mesh.get_dim();
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[VV][xyz._FEord]->_myelems[VV]->GetNDofs();
-    xyz._ndof[BB] = _AbstractFE[VV][xyz._FEord]->_myelems[BB]->GetNDofs();
+    xyz._ndof[VV] = _eqnmap._elem_type[VV][xyz._FEord]->GetNDofs();
+    xyz._ndof[BB] = _eqnmap._elem_type[BB][xyz._FEord]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 

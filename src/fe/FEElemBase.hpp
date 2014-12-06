@@ -29,8 +29,6 @@ public:
     virtual float get_embedding_matrix(const uint,const uint,const uint) = 0;  //should be geom_el
     virtual double get_prol(const uint) = 0;
     
-  std::vector<elem_type*> _myelems;
-
 };
 
 

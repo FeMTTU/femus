@@ -26,11 +26,12 @@ namespace femus {
 // ====================================================
 /// This function constructs the equation map
 
-EquationsMap::EquationsMap(Files& files_in,         // Utils pointer
-                           Physics& mgphys_in,        // Physics pointer
+EquationsMap::EquationsMap(Files& files_in,
+                           Physics& mgphys_in,
                            QuantityMap& qtymap_in,
-                           Mesh& mgmesh_in,           // Mesh pointer
+                           Mesh& mgmesh_in,
                            std::vector< std::vector<FEElemBase*> > & absfe_in,
+                           std::vector< std::vector<elem_type*> >  & elem_type_in,
 			   std::vector<Gauss>   qrule_in,
                            TimeLoop& timeloop_in ):
         _files(files_in),
@@ -38,6 +39,7 @@ EquationsMap::EquationsMap(Files& files_in,         // Utils pointer
         _qtymap(qtymap_in),
         _mesh(mgmesh_in),
         _AbstractFE(absfe_in),
+        _elem_type(elem_type_in),
         _qrule(qrule_in),
         _timeloop(timeloop_in)  {}
 
