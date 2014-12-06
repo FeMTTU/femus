@@ -7,7 +7,7 @@ namespace femus {
 
 
 // =======================
-FETri1::FETri1( const GeomEl &  geomel_in) : FEElemBase(geomel_in) {  }
+FETri1::FETri1() : FEElemBase() {  }
 	  
 // =======================
           FETri1::~FETri1() {    }

@@ -100,8 +100,8 @@ int main(int argc, char** argv) {
   const std::string  FEFamily[QL] = {"biquadratic","linear","constant"}; 
  
   for (int fe=0; fe<QL; fe++) {
-    FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV][mesh._mesh_order],fe);  
-    FEElements[fe]->evaluate_shape_at_qp(fe,qrule[VV].GetGaussOrderString().c_str());
+    FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(),fe);  
+    FEElements[fe]->evaluate_shape_at_qp(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(), fe, qrule[VV].GetGaussOrderString().c_str());
   }
   
 

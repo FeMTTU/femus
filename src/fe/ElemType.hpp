@@ -152,6 +152,7 @@ protected:
   
 //  Gauss
   const Gauss _gauss;
+  
 };
 
 

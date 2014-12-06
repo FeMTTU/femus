@@ -23,13 +23,13 @@ class FEElemBase  {
 
 public:
 
-    FEElemBase(const GeomEl &  geomel_in);
+    FEElemBase();
     virtual ~FEElemBase();
 
 // FE ==========
-    static  FEElemBase* build(const GeomEl & geomel_in, const uint fe_family);
+    static  FEElemBase* build(const std::string geomel_id_in, const uint fe_family);
 // GeomEl ======
-    const GeomEl  _geomel;   //basically used only at construction  
+    
 // Multigrid ===   //only VV
     virtual float get_embedding_matrix(const uint,const uint,const uint) = 0;
     virtual double get_prol(const uint) = 0;
@@ -37,7 +37,7 @@ public:
   std::vector<elem_type*> _myelems;    //VB
 
 // Quadrature ==
-    void evaluate_shape_at_qp(const uint order, const char* gauss_order);
+    void evaluate_shape_at_qp(const std::string geomel_id_in, const uint order, const char* gauss_order);
     
     inline const double GetPhi(const uint vb, const uint qp, const uint dof ) const {
      return _phi_mapVBGD[vb][qp][dof];

@@ -16,7 +16,7 @@ class FEEdge2 : public FEElemBase  {
 
 public:
   
-     FEEdge2(const GeomEl &  geomel_in);
+     FEEdge2();
      
     ~FEEdge2();
   

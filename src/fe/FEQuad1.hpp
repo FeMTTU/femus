@@ -16,7 +16,7 @@ class FEQuad1 : public FEElemBase  {
 
 public:
   
-     FEQuad1(const GeomEl & geomel_in);
+     FEQuad1();
      
     ~FEQuad1();
   

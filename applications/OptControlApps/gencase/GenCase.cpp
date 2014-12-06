@@ -42,7 +42,7 @@ GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const 
   _mesh_file.assign(mesh_file_in);  //TODO it seems like moving from protected to public in Mesh changed the RUNTIME behaviour also!!!!!
                                      //now I moved it to gencase and it works   
    _feelems.resize(QL);
-  for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(_GeomEl[VV][_mesh_order],fe);
+  for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(_GeomEl[VV][_mesh_order]._geomel_id.c_str(),fe);
  
 }
 

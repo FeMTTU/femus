@@ -17,7 +17,7 @@ class FEHex27 : public FEElemBase {
 
 public:
   
-     FEHex27(const GeomEl & geomel_in);
+     FEHex27();
      
     ~FEHex27();
   

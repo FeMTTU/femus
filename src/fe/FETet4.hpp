@@ -15,7 +15,7 @@ class FETet4 : public FEElemBase  {
 
 public:
   
-     FETet4(const GeomEl &  geomel_in);
+     FETet4();
      
     ~FETet4();
   
