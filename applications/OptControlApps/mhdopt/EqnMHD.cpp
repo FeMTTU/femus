@@ -78,7 +78,7 @@ namespace femus {
 
   void EqnMHD::GenMatRhsVB(const uint vb,const double time,const uint Level)  {
 
-    CurrElem       currelem(*this,_eqnmap);
+    CurrElem       currelem(vb,*this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
     
     
@@ -220,8 +220,8 @@ namespace femus {
  
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-    currelem._KeM[vb].zero();
-    currelem._FeM[vb].zero();
+    currelem._KeM.zero();
+    currelem._FeM.zero();
 
      currelem.get_el_nod_conn_lev_subd(vb,Level,_iproc,iel);
      currelem.get_el_DofObj_lev_subd(vb,Level,_iproc,iel);
@@ -235,7 +235,7 @@ namespace femus {
        bhomOld.GetElDofsVect(vb,Level);
     LagMultOld.GetElDofsVect(vb,Level);
   
-      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,bhomOld._FEord,currelem._bc_eldofs[vb]);  //only the Quadratic Part is modified!
+      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,bhomOld._FEord,currelem._bc_eldofs);  //only the Quadratic Part is modified!
 
 
 //===== "PHYSICAL" INVOLVEMENT
@@ -313,19 +313,19 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
          for (uint idim=0; idim<space_dim/*bhomOld._dim*/; idim++) {
             const uint irowq = i + idim*bhomOld._ndof[vb];
             
-            currelem._FeM[vb](irowq) += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(
+            currelem._FeM(irowq) += currelem._bc_eldofs[irowq]*dtxJxW_g*(
                            NonStatMHD*bhomOld._val_g[idim]*Phii._val_g[0]/dt //time
                            - LAP_MHD*IRem*LapBe_g[idim]
                             - (1-LAP_MHD)*IRem*curlBeXdphii_g3D[idim]              //phii of bhomOld /*CurlCurl(RHS,vb,Phij,Phii,idim,idimp1);*/
                            + ADV_MHD*           vXBeXdphii_g3D[idim]               //phii of bhomOld
                          )
-                         + (1-currelem._bc_eldofs[vb][irowq])*detb*bhomOld._val_dofs[irowq]; //Dirichlet bc
+                         + (1-currelem._bc_eldofs[irowq])*detb*bhomOld._val_dofs[irowq]; //Dirichlet bc
 	   }
 
 
         for (uint idim=0; idim<space_dim/*bhomOld._dim*/; idim++) { // filling diagonal block for Dirichlet bc
           const uint irowq = i + idim*bhomOld._ndof[vb];
-          currelem._KeM[vb](irowq,irowq) += (1-currelem._bc_eldofs[vb][irowq])*detb;
+          currelem._KeM(irowq,irowq) += (1-currelem._bc_eldofs[irowq])*detb;
         }
                                            // end filling diagonal for Dirichlet bc
 	 
@@ -345,8 +345,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
           for (uint idim=0; idim<space_dim/*bhomOld._dim*/; idim++) { //filled in as 1-2-3 // 5-6-4 // 9-7-8
             int irowq=i+idim*bhomOld._ndof[vb];   //idim gives the row index  //test of bhomOld
             // diagonal blocks [1-5-9]  idim = row index = column index  //shape of bhomOld
-            currelem._KeM[vb](irowq,j+idim*bhomOld._ndof[vb])
-            += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(
+            currelem._KeM(irowq,j+idim*bhomOld._ndof[vb])
+            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
                 NonStatMHD*Phij._val_g[0]*Phii._val_g[0]/dt 
                  + LAP_MHD*IRem*(Lap_g) 
                  + (1-LAP_MHD)*IRem*(           Lap_g -  Phij._grad_g[0][idim]*Phii._grad_g[0][idim] )
@@ -356,8 +356,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
             int idimp1=(idim+1)%space_dim;
 	    //idim: component of the SHAPE
 	    //idimp1: component of the tEST
-            currelem._KeM[vb](irowq,j+idimp1*bhomOld._ndof[vb])
-            += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(
+            currelem._KeM(irowq,j+idimp1*bhomOld._ndof[vb])
+            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
                   + (1-LAP_MHD)*IRem*(        - Phij._grad_g[0][idim]*Phii._grad_g[0][idimp1] )       /*(i,j)*/    /*CurlCurl(MAT,vb,Phij,Phii,idim,idimp1);*/
                   - ADV_MHD * Phij._val_g[0]* ( -  Vel._val_g[idim]    *Phii._grad_g[0][idimp1] )       /*(i,j)*/    /*AdvCurl(MAT,Vel,Phij,Phii,idim,idimp1)*/
                );
@@ -365,8 +365,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 #if (DIMENSION==3)
             // block +2 [3-4-8] 
 	    int idimp2=(idim+2)%space_dim;//idimp2 column index
-            currelem._KeM[vb](irowq,j+idimp2*bhomOld._ndof[vb])
-            += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(
+            currelem._KeM(irowq,j+idimp2*bhomOld._ndof[vb])
+            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
                   + (1-LAP_MHD)*IRem*(       - Phij._grad_g[0][idim]*Phii._grad_g[0][idimp2] )               /*(i,j)*/
                   - ADV_MHD * Phij._val_g[0]* ( -  Vel._val_g[idim]    *Phii._grad_g[0][idimp2] )               /*(i,j)*/
                );
@@ -381,7 +381,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
           const int jclml= j+/*bhomOld._dim*/space_dim*bhomOld._ndof[vb];
           for (uint idim=0; idim<space_dim; idim++) {  //bhomOld._dim==spacedimension
             uint irowq=i+idim*bhomOld._ndof[vb];
-            currelem._KeM[vb](irowq,jclml) += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*( - Psij._val_g[0]*Phii._grad_g[0][idim] );   /*(i,j)*/ /*PDiv(MAT,Psij,Phii,idim)*/
+            currelem._KeM(irowq,jclml) += currelem._bc_eldofs[irowq]*dtxJxW_g*( - Psij._val_g[0]*Phii._grad_g[0][idim] );   /*(i,j)*/ /*PDiv(MAT,Psij,Phii,idim)*/
            }
         }
                                      // end B^T element matrix
@@ -389,11 +389,11 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
           if (i < LagMultOld._ndof[vb]) {
            Psii._val_g[0]  = currgp._phi_ndsQLVB_g[vb][Psii._FEord][i];   /*double psii_g*/
 	  const uint irowl=i+space_dim*bhomOld._ndof[vb];
-          currelem._FeM[vb](irowl)=0.;
+          currelem._FeM(irowl)=0.;
 
           for (uint j=0; j<bhomOld._ndof[vb]; j++) { // B element matrix q*div(u)
             for (uint idim=0; idim<space_dim; idim++) Phij._grad_g[0][idim] =  currgp._dphidxyz_ndsQLVB_g[vb][Phij._FEord][j+idim*Phij._ndof[vb]];
-            for (uint idim=0; idim<space_dim; idim++) currelem._KeM[vb](irowl,j+idim*bhomOld._ndof[vb]) += - dtxJxW_g*Psii._val_g[0]*Phij._grad_g[0][idim];  /*(i,j)*/  /*PDiv(MAT,Psii,Phij,idim)*/
+            for (uint idim=0; idim<space_dim; idim++) currelem._KeM(irowl,j+idim*bhomOld._ndof[vb]) += - dtxJxW_g*Psii._val_g[0]*Phij._grad_g[0][idim];  /*(i,j)*/  /*PDiv(MAT,Psii,Phij,idim)*/
                 }
 
         }
@@ -404,8 +404,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
     // end element gaussian integration loop
     
     ///  Add element matrix and rhs to the global ones.
-                      _A[Level]->add_matrix(currelem._KeM[vb],currelem._el_dof_indices[vb]); //     std::cout << vb << " currelem._KeM[vb] l1 " << currelem._KeM[vb].l1_norm() << std::endl;
-                      _b[Level]->add_vector(currelem._FeM[vb],currelem._el_dof_indices[vb]); //     std::cout << vb << " currelem._FeM[vb] l2 " << currelem._FeM[vb].l2_norm() << std::endl;
+                      _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices); //     std::cout << vb << " currelem._KeM l1 " << currelem._KeM.l1_norm() << std::endl;
+                      _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices); //     std::cout << vb << " currelem._FeM l2 " << currelem._FeM.l2_norm() << std::endl;
 
 
   } 
@@ -427,8 +427,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
   
   for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
 
-     currelem._KeM[vb].zero();
-     currelem._FeM[vb].zero(); 
+     currelem._KeM.zero();
+     currelem._FeM.zero(); 
      
      currelem.get_el_nod_conn_lev_subd(vb,Level,_iproc,iel);
      currelem.get_el_DofObj_lev_subd(vb,Level,_iproc,iel); 
@@ -442,7 +442,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
         bhomOld.GetElDofsVect(vb,Level);
      LagMultOld.GetElDofsVect(vb,Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,bhomOld._FEord,currelem._bc_eldofs[vb]); //only the Quadratic Part is modified! /*OK DIR_PEN*/
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,bhomOld._FEord,currelem._bc_eldofs); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
 
 //============ BC =======
@@ -465,7 +465,7 @@ if (_Dir_pen_fl == 1)  {
 //TODO here i should check that the nodal bc dirichlet i put correspond to the element NT flags
 
        uint press_fl=0;
-       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(vb,currelem._bc_eldofs[vb],bhomOld,LagMultOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
+       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(vb,currelem._bc_eldofs,bhomOld,LagMultOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
  //only the LINEAR PART is USED!!
        
 // // //   if ( (1-el_flag[NN]) != press_fl)  {std::cout << _eqname << ": sthg. wrong with press elflags" << std::endl;abort();}
@@ -522,8 +522,8 @@ if (_Dir_pen_fl == 1)  {
           // rhs
          for (uint idim=0; idim< space_dim; idim++)    {
              uint irowq=i+idim*bhomOld._ndof[vb];
-            currelem._FeM[vb](irowq)  +=
-            currelem._bc_eldofs[vb][irowq]*
+            currelem._FeM(irowq)  +=
+            currelem._bc_eldofs[irowq]*
             dtxJxW_g*(    -1.*(1-el_flag[NN])*LagMultOld._val_g[0]*currgp.get_normal_ptr()[idim]*Phii._val_g[0]   //AAA multiplying int times uint!!!   /*PDiv(RHS,(LagMultOld(Psiii),Phii,idim)*/
 // // //                            + Neum_fl*IRe*strainUtrDn_g[idim]*Phii._val_g[0]          // TODO: \tau \vect{n} on the boundary for the Laplacian
                            + velXBextXn_g3D[idim]*Phii._val_g[0]  //advection  //this type of advection has also a boundary integral, if integration by parts is performed in similar manner
@@ -547,7 +547,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 	   for (uint j=0; j<bhomOld._ndof[vb]; j++) {
          Phij._val_g[0] = currgp._phi_ndsQLVB_g[vb][Phij._FEord][j];      /*const double phij_g*/
 
-     currelem._KeM[vb](irowq,j+jdim*bhomOld._ndof[vb]) +=                //projection over the physical (x,y,z) 
+     currelem._KeM(irowq,j+jdim*bhomOld._ndof[vb]) +=                //projection over the physical (x,y,z) 
          + /*_Dir_pen_fl**/dtxJxW_g*Phii._val_g[0]*Phij._val_g[0]*(dbl_pen[NN]*currgp.get_normal_ptr()[jdim]*currgp.get_normal_ptr()[idim]   //the PENALTY is BY ELEMENT, but the (n,t) is BY GAUSS because we cannot compute now a nodal normal
                                                          + dbl_pen[TT]*currgp.get_tangent_ptr()[0][jdim]*currgp.get_tangent_ptr()[0][idim]
                         #if DIMENSION==3
@@ -573,7 +573,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
            uint irowq=i+1*el_ndof_q;
            uint jrowq=j+1*el_ndof_q;
 
-         currelem._KeM[vb](irowq,jrowq) += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(
+         currelem._KeM(irowq,jrowq) += currelem._bc_eldofs[irowq]*dtxJxW_g*(
                                   -CONDRATIO*phij_g*Phii._val_g[0]/*phii_g*/ //-
                           );
 
@@ -586,8 +586,8 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
     } 
     // end BDRYelement gaussian integration loop
 
-   _A[Level]->add_matrix(currelem._KeM[vb],currelem._el_dof_indices[vb]); ////////////    std::cout << vb << " currelem._KeM[vb] l1 " << currelem._KeM[vb].l1_norm() << std::endl;
-   _b[Level]->add_vector(currelem._FeM[vb],currelem._el_dof_indices[vb]);  ///////////     std::cout << vb << " currelem._FeM[vb] l2 " << currelem._FeM[vb].l2_norm() << std::endl;
+   _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices); ////////////    std::cout << vb << " currelem._KeM l1 " << currelem._KeM.l1_norm() << std::endl;
+   _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);  ///////////     std::cout << vb << " currelem._FeM l2 " << currelem._FeM.l2_norm() << std::endl;
 
  
   }

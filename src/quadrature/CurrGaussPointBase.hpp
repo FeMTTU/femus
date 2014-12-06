@@ -25,20 +25,14 @@ class EquationsMap;
 
   class CurrGaussPointBase {
   
-  protected:
-    
-   double**  _InvJac_g;/*[FM_DIM][FM_DIM]*/   //gauss Current Geometric Element //no new is needed here //TODO this is only for VOLUME elements
-   double*  _normal_g;/*[FM_DIM]*/              //gauss Current Geometric Element //no new is needed here //TODO this should be only for a BOUNDARY GAUSS POINT
-   double** _tangent_g;/*[FM_DIM - 1][FM_DIM]*/   //gauss  Current Geometric Element //no new is needed here //TODO this should be only for a BOUNDARY GAUSS POINT
- 
   public:
     
     CurrGaussPointBase( EquationsMap& e_map_in );
    ~CurrGaussPointBase();
  
     EquationsMap         & _eqnmap;
-    std::vector< std::vector<elem_type*> >  &  _elem_type;
-    std::vector<Gauss>   _qrule;
+    std::vector< std::vector<elem_type*> >  &  _elem_type;  //[VB]
+    std::vector<Gauss>   _qrule;    //[VB]
     uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
     double*         _phi_ndsQLVB_g[VB][QL];  //canonical functions  //TODO here it seems to contain GAUSS x ELDOFS
     double* _dphidxezeta_ndsQLVB_g[VB][QL];  //canonical derivatives
@@ -58,6 +52,12 @@ virtual void ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag/*, c
 
   static CurrGaussPointBase& build(EquationsMap& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
 
+  protected:
+    
+   double**  _InvJac_g;/*[FM_DIM][FM_DIM]*/   //gauss Current Geometric Element //no new is needed here //TODO this is only for VOLUME elements
+   double*  _normal_g;/*[FM_DIM]*/              //gauss Current Geometric Element //no new is needed here //TODO this should be only for a BOUNDARY GAUSS POINT
+   double** _tangent_g;/*[FM_DIM - 1][FM_DIM]*/   //gauss  Current Geometric Element //no new is needed here //TODO this should be only for a BOUNDARY GAUSS POINT
+ 
   };
   
 

@@ -90,7 +90,7 @@ return;
 //or the corresponding Vect
   void EqnNS::GenMatRhsVB(const uint vb,const double time,const uint Level)  {  ///< VB Assemblying.
 
-    CurrElem       currelem(*this,_eqnmap);    
+    CurrElem       currelem(vb,*this,_eqnmap);    
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
   
   
@@ -326,8 +326,8 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
  
-    currelem._KeM[vb].zero();
-    currelem._FeM[vb].zero(); 
+    currelem._KeM.zero();
+    currelem._FeM.zero(); 
 
     currelem.get_el_nod_conn_lev_subd(vb,Level,myproc,iel);
     currelem.get_el_DofObj_lev_subd(vb,Level,myproc,iel);
@@ -342,7 +342,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
       VelOld.GetElDofsVect(vb,Level);
     pressOld.GetElDofsVect(vb,Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,qtyzero_ord,currelem._bc_eldofs[vb]); //only the Qtyzero Part is modified!
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,qtyzero_ord,currelem._bc_eldofs); //only the Qtyzero Part is modified!
 
    
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
@@ -394,7 +394,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
       mgcc->get_2surten(time,el_xm,ff,ord);
       for (int n=0; n<qtyzero_ndof; n++)    {
         for (int idim=0;idim<space_dim;idim++)
-          Fe[n+idim*qtyzero_ndof] +=dt*IWe*ff[map27[n]+idim*qtyzero_ndof]*currelem._bc_eldofs[vb][n+idim*qtyzero_ndof];
+          Fe[n+idim*qtyzero_ndof] +=dt*IWe*ff[map27[n]+idim*qtyzero_ndof]*currelem._bc_eldofs[n+idim*qtyzero_ndof];
       }
     }
 #endif
@@ -505,8 +505,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 	  for (uint idim=0; idim<space_dim; idim++) {
             const uint irowq=i+idim*qtyzero_ndof;  //  (i):       dof of the tEST function
                                                   //(idim): component of the tEST function
-           currelem._FeM[vb](irowq) += 
-         currelem._bc_eldofs[vb][irowq]*
+           currelem._FeM(irowq) += 
+         currelem._bc_eldofs[irowq]*
            dtxJxW_g*(          NonStatNS*rho_nd*     VelOld._val_g[idim]*phii_g/dt  //time
                             + _AdvNew_fl*rho_nd*          AdvRhs_g[idim]*phii_g     //TODO NONLIN
                             +            rho_nd*IFr*gravity._val_g[idim]*phii_g     // gravity
@@ -515,7 +515,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
                             +                           JextXB_g3D[idim]*phii_g  
 #endif                            
                                )
-            + (1-currelem._bc_eldofs[vb][irowq])*detb*VelOld._val_dofs[irowq] //Dirichlet bc    
+            + (1-currelem._bc_eldofs[irowq])*detb*VelOld._val_dofs[irowq] //Dirichlet bc    
 	;
           }
            // end filling element rhs u
@@ -526,7 +526,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 // Bc_ConvertToDirichletPenalty puts all ONE on the quadratic dofs
   for (uint idim=0; idim<space_dim; idim++) { // filling diagonal for Dirichlet bc
           const uint irowq = i+idim*qtyzero_ndof;
-          currelem._KeM[vb](irowq,irowq) += (1-currelem._bc_eldofs[vb][irowq])*detb;
+          currelem._KeM(irowq,irowq) += (1-currelem._bc_eldofs[irowq])*detb;
         }
 }                                         // end filling diagonal for Dirichlet bc
 
@@ -545,9 +545,9 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
             int irowq = i+idim*qtyzero_ndof;      //(i) is still the dof of the tEST functions
                                                   //(idim): component of the tEST functions
 
-            currelem._KeM[vb](irowq,j+idim*qtyzero_ndof)  // diagonal blocks [1-5-9] [idim(rows),idim(columns)]  //(idim): component of the SHAPE functions
+            currelem._KeM(irowq,j+idim*qtyzero_ndof)  // diagonal blocks [1-5-9] [idim(rows),idim(columns)]  //(idim): component of the SHAPE functions
                += 
-            currelem._bc_eldofs[vb][irowq]*    
+            currelem._bc_eldofs[irowq]*    
             dtxJxW_g*(
                    +NonStatNS*                           rho_nd*phij_g*phii_g/dt
                  + _AdvPic_fl*                           rho_nd* Adv_g*phii_g                //TODO NONLIN
@@ -557,9 +557,9 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
                );
 
             int idimp1=(idim+1)%space_dim;    // block +1 [2-6-7] [idim(rows),idim+1(columns)]  //(idimp1): component of the SHAPE functions
-            currelem._KeM[vb](irowq,j+idimp1*qtyzero_ndof)
+            currelem._KeM(irowq,j+idimp1*qtyzero_ndof)
                +=
-            currelem._bc_eldofs[vb][irowq]*
+            currelem._bc_eldofs[irowq]*
             dtxJxW_g*(
                    _AdvNew_fl*rho_nd*phij_g*VelOld._grad_g[idim][idimp1]*phii_g           //TODO NONLIN
                               +            mu_nd*IRe*(     dphijdx_g[idim]*dphiidx_g[idimp1])
@@ -567,9 +567,9 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 #if (DIMENSION==3)
 	    
             int idimp2=(idim+2)%space_dim;   // block +2 [3-4-8] [idim(rows),idim+2(columns)]  //(idimp2): component of the SHAPE functions
-            currelem._KeM[vb](irowq,j+idimp2*qtyzero_ndof)
+            currelem._KeM(irowq,j+idimp2*qtyzero_ndof)
                +=
-           currelem._bc_eldofs[vb][irowq]*           
+           currelem._bc_eldofs[irowq]*           
             dtxJxW_g*(
                    _AdvNew_fl*rho_nd*phij_g*VelOld._grad_g[idim][idimp2]*phii_g          //TODO NONLIN
                               +            mu_nd*IRe*(     dphijdx_g[idim]*dphiidx_g[idimp2])
@@ -589,8 +589,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
           const int jclml = j + qtyZeroToOne_DofOffset;   /* space_dim*qtyzero_ndof */
           for (uint idim=0; idim<space_dim; idim++) {
             uint irowq = i+idim*qtyzero_ndof;
-            currelem._KeM[vb](irowq,jclml) +=
-           currelem._bc_eldofs[vb][irowq]*                    
+            currelem._KeM(irowq,jclml) +=
+           currelem._bc_eldofs[irowq]*                    
             dtxJxW_g*(-psij_g*dphiidx_g[idim]);   /**   (-1.)*/
 	    
            } 
@@ -603,15 +603,15 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
           double psii_g = currgp._phi_ndsQLVB_g[vb][qtyone_ord][i];
 //======= "COMMON tEST PART for QTYONE" - END ============
 	  const uint irowl = i + qtyZeroToOne_DofOffset;   /* space_dim*qtyzero_ndof */
-          currelem._FeM[vb](irowl)=0.;  // rhs
- //             currelem._KeM[vb](irowl,j+space_dim*qtyzero_ndof)  += (1./dt)*dtxJxW_g*(psii_g*psij_g)*_Komp_fac/dt;  //no bc here (KOMP dp/dt=rho*div)
+          currelem._FeM(irowl)=0.;  // rhs
+ //             currelem._KeM(irowl,j+space_dim*qtyzero_ndof)  += (1./dt)*dtxJxW_g*(psii_g*psij_g)*_Komp_fac/dt;  //no bc here (KOMP dp/dt=rho*div)
 
           for (uint j=0; j<qtyzero_ndof; j++) { // B element matrix q*div(u)
 //======="COMMON SHAPE PART for QTYZERO" ==================
             for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][qtyzero_ord][j+idim*qtyzero_ndof];
 //======="COMMON SHAPE PART for QTYZERO" - END ============
 	    
-            for (uint idim=0; idim<space_dim; idim++) currelem._KeM[vb](irowl,j+idim*qtyzero_ndof) += -/*(1./dt)**/dtxJxW_g*psii_g*dphijdx_g[idim]; 
+            for (uint idim=0; idim<space_dim; idim++) currelem._KeM(irowl,j+idim*qtyzero_ndof) += -/*(1./dt)**/dtxJxW_g*psii_g*dphijdx_g[idim]; 
                 }
 
         }
@@ -626,8 +626,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 //==============================================================
     
     ///  Add element matrix and rhs to the global ones.
-                   _A[Level]->add_matrix(currelem._KeM[vb],currelem._el_dof_indices[vb]);//     std::cout << "KeM l1"<< vb << " " << currelem._KeM[vb].l1_norm() << std::endl;
-                   _b[Level]->add_vector(currelem._FeM[vb],currelem._el_dof_indices[vb]);//     std::cout << "FeM l2"<< vb << " " << _FeM[vb].l2_norm() << std::endl;
+                   _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);//     std::cout << "KeM l1"<< vb << " " << currelem._KeM.l1_norm() << std::endl;
+                   _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);//     std::cout << "FeM l2"<< vb << " " << _FeM.l2_norm() << std::endl;
 
     
 /////////HERE, AT THE END OF THE ELEMENT, YOU CAN SEARCH FOR MY ROW in THIS ELEMENT
@@ -651,7 +651,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
   for (uint iel=0; iel < (nel_e - nel_b) ; iel++) {
 
-         currelem._KeM[vb].zero();  currelem._FeM[vb].zero();
+         currelem._KeM.zero();  currelem._FeM.zero();
 
      currelem.get_el_nod_conn_lev_subd(vb,Level,myproc,iel);
      currelem.get_el_DofObj_lev_subd(vb,Level,myproc,iel);
@@ -665,7 +665,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
      VelOld.GetElDofsVect(vb,Level);
      pressOld.GetElDofsVect(vb,Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,qtyzero_ord,currelem._bc_eldofs[vb]); //only the Quadratic Part is modified! /*OK DIR_PEN*/
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,qtyzero_ord,currelem._bc_eldofs); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
 
 //============ BC =======
@@ -689,7 +689,7 @@ if (_Dir_pen_fl == 1)  {
 //TODO here i should check that the nodal bc dirichlet i put correspond to the element NT flags
 
        uint press_fl=0;
-       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(vb,currelem._bc_eldofs[vb],VelOld,pressOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
+       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(vb,currelem._bc_eldofs,VelOld,pressOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
  //only the LINEAR PART is USED!!
        
 // // TODO  if ( (1-el_flag[NN]) != press_fl)  {std::cout << "Sthg wrong with press elflags" << std::endl;abort();}
@@ -746,8 +746,8 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (v
 
          for (uint idim=0; idim< space_dim; idim++)    {
              uint irowq=i+idim*qtyzero_ndof;
-            currelem._FeM[vb](irowq)  += 
-          currelem._bc_eldofs[vb][irowq]*           
+            currelem._FeM(irowq)  += 
+          currelem._bc_eldofs[irowq]*           
            dtxJxW_g*(   -1.*/*press_fl*/(1-el_flag[NN])*pressOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g  //  //OLD VALUES //AAA multiplying int times uint!!!
 
 // // //             TODO STRAIN AT THE BOUNDARY            + /*stress_fl*/el_flag[1]*IRe*strainUtrDn_g[idim]*phii_g 
@@ -769,7 +769,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 	   for (uint j=0; j<qtyzero_ndof; j++) {
           const double phij_g = currgp._phi_ndsQLVB_g[vb][qtyzero_ord][j];
 
-  currelem._KeM[vb](irowq,j+jdim*qtyzero_ndof) +=                //projection over the physical (x,y,z) 
+  currelem._KeM(irowq,j+jdim*qtyzero_ndof) +=                //projection over the physical (x,y,z) 
       + /*_Dir_pen_fl**/dtxJxW_g*phii_g*phij_g*(dbl_pen[NN]*currgp.get_normal_ptr()[jdim]*currgp.get_normal_ptr()[idim]   //the PENALTY is BY ELEMENT, but the (n,t) is BY GAUSS because we cannot compute now a nodal normal
                                               + dbl_pen[TT]*currgp.get_tangent_ptr()[0][jdim]*currgp.get_tangent_ptr()[0][idim]
                  #if DIMENSION==3
@@ -795,8 +795,8 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 //================== END GAUSS LOOP (qp loop) ======================
 //==================================================================
     
-    _A[Level]->add_matrix(currelem._KeM[vb],currelem._el_dof_indices[vb]);   //      std::cout << "KeM "<< vb << " " << currelem._KeM[vb].l1_norm() << std::endl;
-    _b[Level]->add_vector(currelem._FeM[vb],currelem._el_dof_indices[vb]);   //      std::cout << "FeM "<< vb << " " << currelem._FeM[vb].l2_norm() << std::endl;
+    _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);   //      std::cout << "KeM "<< vb << " " << currelem._KeM.l1_norm() << std::endl;
+    _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);   //      std::cout << "FeM "<< vb << " " << currelem._FeM.l2_norm() << std::endl;
 
     
   }
@@ -883,7 +883,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 
 double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
 
-    CurrElem       currelem(*this,_eqnmap);
+    CurrElem       currelem(vb,*this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
   
   

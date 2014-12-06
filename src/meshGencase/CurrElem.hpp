@@ -73,7 +73,7 @@ class QuantityLocal;
 
   public:
     
-    CurrElem(EqnBase&,EquationsMap& e_map_in);
+    CurrElem(const uint vb, EqnBase&, EquationsMap& e_map_in);
    ~CurrElem();
 
    EqnBase & _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
@@ -81,19 +81,19 @@ class QuantityLocal;
 
     //==== REAL ELEMENT properties: connectivity, coordinates, ...  need the MESH BASICALLY
     inline double*  GetMidpoint(const uint vb) const {
-      return _el_xm[vb];
+      return _el_xm;
     }
     
     inline uint*  GetConn(const uint vb) const {
-      return _el_conn[vb];
+      return _el_conn;
     }
     
     inline uint  GetVolIel(const uint vb) const {
-      return _vol_iel_DofObj[vb];
+      return _vol_iel_DofObj;
     }
     
     inline double*  GetNodeCoords(const uint vb) const {
-      return _xx_nds[vb];
+      return _xx_nds;
     }
     
     void  get_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) const;
@@ -106,20 +106,20 @@ class QuantityLocal;
    
 // ========================================================================================
 //========== ELEMENT: Current "EQUATION" Element (ql are TOGETHER ) ========================               
-  uint                   _el_n_dofs[VB];
-  std::vector<uint> _el_dof_indices[VB];
-  uint*                  _bc_eldofs[VB]; //So the element must be aware of the BC of the equation
-  DenseMatrix                 _KeM[VB]; 
-  DenseVector                 _FeM[VB];
+  uint                   _el_n_dofs;
+  std::vector<uint> _el_dof_indices;
+  uint*                  _bc_eldofs; //So the element must be aware of the BC of the equation
+  DenseMatrix                 _KeM; 
+  DenseVector                 _FeM;
   
  
   private:
 // ========================================================================================
 //========== ELEMENT: Current Geometric Element (SERVICE)  ========================
-     uint  **_el_conn;             /// vector of the global nodes for that element         [VB][NNDS];
-     uint    _vol_iel_DofObj[VB];  /// i need to put the element also. both VV and BB      [VB]
-   double  **_xx_nds;              /// vector of the node coordinates for that element     [VB][_spacedimension*NNDS];
-   double  **_el_xm;               /// element center point                               [VB][_spacedimension];
+     uint  *_el_conn;             /// vector of the global nodes for that element         [VB][NNDS];
+     uint    _vol_iel_DofObj;  /// i need to put the element also. both VV and BB      [VB]
+   double  *_xx_nds;              /// vector of the node coordinates for that element     [VB][_spacedimension*NNDS];
+   double  *_el_xm;               /// element center point                                [VB][_spacedimension];
    
   };
   

@@ -14,57 +14,36 @@ namespace femus {
 
 
 
-    CurrElem::CurrElem(EqnBase & eqn_in, EquationsMap & e_map_in ):
+    CurrElem::CurrElem(const uint vb,EqnBase & eqn_in, EquationsMap & e_map_in ):
     _eqn(eqn_in),
     _eqnmap(e_map_in)
     {
     
 //========== ELEMENT: Current Geometric Element (SERVICE)  ========================
    const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");
-  _el_conn   = new uint*[VB];
-  _xx_nds    = new double*[VB];
-  _el_xm     = new double*[VB];
- for (int vb = 0; vb < VB; vb++) {
   uint elnodes = _eqnmap._mesh._GeomEl[vb][mesh_ord]._elnds;     //TODO the mesh is quadratic
-  _el_conn[vb] = new uint[ elnodes ];   
-   _xx_nds[vb] = new double[_eqnmap._mesh.get_dim()*elnodes ];
-    _el_xm[vb] = new double[_eqnmap._mesh.get_dim()];
- }  
+  _el_conn = new uint[ elnodes ];   
+   _xx_nds = new double[_eqnmap._mesh.get_dim()*elnodes ];
+    _el_xm = new double[_eqnmap._mesh.get_dim()];  
 //========== ELEMENT: Current Geometric Element (SERVICE)  ========================
 
-for (int vb = 0; vb < VB; vb++) {
-  _el_n_dofs[vb] = 0;
-     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs[vb] += (_eqnmap._elem_type[vb][fe]->GetNDofs() )*_eqn._nvars[fe]; }    //EQUATION-RELATED
- }
+  _el_n_dofs = 0;
+     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs += (_eqnmap._elem_type[vb][fe]->GetNDofs() )*_eqn._nvars[fe]; }    //EQUATION-RELATED
 
-for (int vb = 0; vb < VB; vb++) {
-  _el_dof_indices[vb].resize(_el_n_dofs[vb]);                  //EQUATION-RELATED
-  _bc_eldofs[vb] = new uint[_el_n_dofs[vb]];                   //EQUATION-RELATED
-  _KeM[vb].resize(_el_n_dofs[vb],_el_n_dofs[vb]);              //EQUATION-RELATED
-  _FeM[vb].resize(_el_n_dofs[vb]);                             //EQUATION-RELATED
-}
-
+  _el_dof_indices.resize(_el_n_dofs);                  //EQUATION-RELATED
+  _bc_eldofs = new uint[_el_n_dofs];                   //EQUATION-RELATED
+  _KeM.resize(_el_n_dofs,_el_n_dofs);                  //EQUATION-RELATED
+  _FeM.resize(_el_n_dofs);                             //EQUATION-RELATED
       
       
   }
-  
-  
+ 
 
     CurrElem::~CurrElem() {
       
-      
- for (int vb = 0; vb < VB; vb++) {
-  delete [] _el_conn[vb];
-  delete []  _xx_nds[vb];
-  delete []   _el_xm[vb];  
-}
-
  delete [] _el_conn;
  delete [] _xx_nds;
  delete []  _el_xm;     
-      
-      
-      
       
   }
     
@@ -79,7 +58,7 @@ for (int vb = 0; vb < VB; vb++) {
 
 void CurrElem::GetElDofsBc(const uint vbfl, const uint Level)  {
 
-/*CHECK*/   if (_vol_iel_DofObj[vbfl] >= _eqnmap._mesh._n_elements_vb_lev[VV][Level] ) { std::cout << "Out of the node_dof map FE KK range" << std::endl; abort();}
+/*CHECK*/   if (_vol_iel_DofObj >= _eqnmap._mesh._n_elements_vb_lev[VV][Level] ) { std::cout << "Out of the node_dof map FE KK range" << std::endl; abort();}
 
   const uint Lev_pick_bc_dof = _eqnmap._mesh._NoLevels -1;  //we use the FINE Level as reference
   
@@ -94,15 +73,15 @@ for (int fe=0; fe < QL; fe++) {
 for (uint ivar=0; ivar < _eqn._nvars[fe]; ivar++)    {
       for (uint d=0; d< _eqnmap._elem_type[vbfl][fe]->GetNDofs(); d++)    {
 	
-	     if (fe < KK )       DofObj =        _el_conn[vbfl][d];
-	     else if (fe == KK)  DofObj = _vol_iel_DofObj[vbfl];
+	     if (fe < KK )       DofObj =        _el_conn[d];
+	     else if (fe == KK)  DofObj = _vol_iel_DofObj;
 	     
           const uint     indx  = d + ivar*_eqnmap._elem_type[vbfl][fe]->GetNDofs() + off_local_el[fe];
-	  _el_dof_indices[vbfl][indx] = _eqn._node_dof[Level][ DofObj + ivar*_eqn._DofNumLevFE[Level][fe] + _eqn._DofOffLevFE[Level][fe] ]; 
+	  _el_dof_indices[indx] = _eqn._node_dof[Level][ DofObj + ivar*_eqn._DofNumLevFE[Level][fe] + _eqn._DofOffLevFE[Level][fe] ]; 
 
          if (fe < KK ) { const uint dofkivar = _eqn._node_dof[Lev_pick_bc_dof][ DofObj + ivar*_eqn._DofNumLevFE[Lev_pick_bc_dof][fe] + _eqn._DofOffLevFE[Lev_pick_bc_dof][fe] ]; 
-             _bc_eldofs[vbfl][indx] = _eqn._bc[dofkivar]; }
-         else if (fe == KK)    _bc_eldofs[vbfl][indx] = _eqn._bc_fe_kk[Level][ DofObj + ivar*_eqn._DofNumLevFE[Level][KK] ];
+             _bc_eldofs[indx] = _eqn._bc[dofkivar]; }
+         else if (fe == KK)    _bc_eldofs[indx] = _eqn._bc_fe_kk[Level][ DofObj + ivar*_eqn._DofNumLevFE[Level][KK] ];
 	 }
     } 
 } // end fe
@@ -158,9 +137,9 @@ void CurrElem::get_el_orient(const uint vb) const {
        std::vector<double> zeta(mydim,0.);  //TODO this should only be instantiated  in the 3D case, in any case we avoid USING IT 
 
       for (uint idim=0; idim< mydim; idim++) {
-                              xi[idim] = _xx_nds[vb][1+idim*el_nnodes]-_xx_nds[vb][0+idim*el_nnodes]; //1-0 xi axis
-                             eta[idim] = _xx_nds[vb][3+idim*el_nnodes]-_xx_nds[vb][0+idim*el_nnodes]; //3-0 eta axis
-        if ( mydim == 3 )   zeta[idim] = _xx_nds[vb][4+idim*el_nnodes]-_xx_nds[vb][0+idim*el_nnodes]; //4-0 zeta axis
+                              xi[idim] = _xx_nds[1+idim*el_nnodes]-_xx_nds[0+idim*el_nnodes]; //1-0 xi axis
+                             eta[idim] = _xx_nds[3+idim*el_nnodes]-_xx_nds[0+idim*el_nnodes]; //3-0 eta axis
+        if ( mydim == 3 )   zeta[idim] = _xx_nds[4+idim*el_nnodes]-_xx_nds[0+idim*el_nnodes]; //4-0 zeta axis
 
      }
 
@@ -223,16 +202,16 @@ void CurrElem::get_el_orient(const uint vb) const {
     const uint el_nnodes   = _eqnmap._mesh._GeomEl[vb][mesh_ord]._elnds;
     const uint mydim = _eqnmap._mesh.get_dim();
 
-       for (uint idim=0; idim< mydim; idim++)  _el_xm[vb][idim]=0.;
+       for (uint idim=0; idim< mydim; idim++)  _el_xm[idim]=0.;
 
     for (uint idim=0; idim< mydim; idim++) {
        for (uint eln=0; eln<el_nnodes; eln++)    { 
         const uint indxn = eln+idim*el_nnodes;
-	     _el_xm[vb][idim]   +=   _xx_nds[vb][indxn];
+	     _el_xm[idim]   +=   _xx_nds[indxn];
        }
      }
 
-  for (uint idim=0; idim< mydim; idim++)   _el_xm[vb][idim]= _el_xm[vb][idim]/el_nnodes;
+  for (uint idim=0; idim< mydim; idim++)   _el_xm[idim]= _el_xm[idim]/el_nnodes;
   
    return; 
   }
@@ -246,11 +225,11 @@ void CurrElem::get_el_orient(const uint vb) const {
           
    for (uint n=0; n<el_nnodes; n++)    {
 
-     _el_conn[vb][n] = _eqnmap._mesh._el_map[vb][( iel + _eqnmap._mesh._off_el[vb][_eqnmap._mesh._NoLevels*isubd_in + Level] )*el_nnodes+n];
+     _el_conn[n] = _eqnmap._mesh._el_map[vb][( iel + _eqnmap._mesh._off_el[vb][_eqnmap._mesh._NoLevels*isubd_in + Level] )*el_nnodes+n];
 
       for (uint idim=0; idim < mydim; idim++) {
         const uint indxn = n+idim*el_nnodes;
-          _xx_nds[vb][indxn] = _eqnmap._mesh._xyz[_el_conn[vb][n]+idim*_eqnmap._mesh._NoNodesXLev[_eqnmap._mesh._NoLevels-1]];
+          _xx_nds[indxn] = _eqnmap._mesh._xyz[_el_conn[n]+idim*_eqnmap._mesh._NoNodesXLev[_eqnmap._mesh._NoLevels-1]];
       }
    }
     
@@ -263,8 +242,8 @@ void CurrElem::get_el_DofObj_lev_subd(const uint vb,const uint Level,const uint 
      int sum_elems_prev_sd_at_lev = 0;
       for (uint pr = 0; pr< isubd_in; pr++) { sum_elems_prev_sd_at_lev += _eqnmap._mesh._off_el[vb][_eqnmap._mesh._NoLevels*pr + Level + 1] - _eqnmap._mesh._off_el[vb][ _eqnmap._mesh._NoLevels*pr + Level]; }
     uint iel_DofObj = iel + sum_elems_prev_sd_at_lev;
-    if       (vb == VV)  { _vol_iel_DofObj[vb] = iel_DofObj; }   
-    else if  (vb == BB)  { _vol_iel_DofObj[vb] = _eqnmap._mesh._el_bdry_to_vol[Level][iel_DofObj]; }
+    if       (vb == VV)  { _vol_iel_DofObj = iel_DofObj; }   
+    else if  (vb == BB)  { _vol_iel_DofObj = _eqnmap._mesh._el_bdry_to_vol[Level][iel_DofObj]; }
           
     return; 
 }
@@ -297,7 +276,7 @@ void CurrElem::ConvertElemCoordsToMappingOrd(const uint vb,QuantityLocal& myvect
       for (uint idim=0; idim < vectdim; idim++) {
           const uint     indxq  =    d + idim*elndof;
 
-	  myvect._val_dofs[indxq] = _xx_nds[vb][d+idim*offset];
+	  myvect._val_dofs[indxq] = _xx_nds[d+idim*offset];
       }
     }
 

@@ -80,7 +80,7 @@ namespace femus {
 
  void EqnNSAD::GenMatRhsVB(const uint vb,const double time,const uint Level)  {
 
-    CurrElem       currelem(*this,_eqnmap);
+    CurrElem       currelem(vb,*this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
    
    
@@ -214,8 +214,8 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-    currelem._KeM[vb].zero();
-    currelem._FeM[vb].zero(); 
+    currelem._KeM.zero();
+    currelem._FeM.zero(); 
 
     currelem.get_el_nod_conn_lev_subd(vb,Level,_iproc,iel);
     currelem.get_el_DofObj_lev_subd(vb,Level,_iproc,iel);
@@ -229,7 +229,7 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     VelAdjOld.GetElDofsVect(vb,Level);  
     PressAdjOld.GetElDofsVect(vb,Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,VelAdjOld._FEord,currelem._bc_eldofs[vb]);  //only the Quadratic Part is modified!
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,VelAdjOld._FEord,currelem._bc_eldofs);  //only the Quadratic Part is modified!
   
     
     if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(vb,Level);
@@ -299,18 +299,18 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 
          for (uint idim=0; idim<space_dim; idim++) {
             const uint irowq=i+idim*VelAdjOld._ndof[vb];  //quadratic rows index
-           currelem._FeM[vb](irowq) += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(
+           currelem._FeM(irowq) += currelem._bc_eldofs[irowq]*dtxJxW_g*(
                             NonStatNSAD*VelAdjOld._val_g[idim]*phii_g/dt  //time
                            - curlxiXB_g3D[idim]*phii_g                    //this is due to the variation of velocity in the MAGNETIC ADVECTION, so it is due to a   NONLINEAR COUPLING "u times B", "MY_STATE times OTHER_STATE"
                            - alphaVel*el_flagdom*(Vel._val_g[idim] - VelDes._val_g[idim])*phii_g    //this is the dependence that counts
                            )
-                           + (1-currelem._bc_eldofs[vb][irowq])*detb*VelAdjOld._val_dofs[irowq]; //Dirichlet bc
+                           + (1-currelem._bc_eldofs[irowq])*detb*VelAdjOld._val_dofs[irowq]; //Dirichlet bc
 	   }
 
 if (_Dir_pen_fl == 0)  { 
   for (uint idim=0; idim<space_dim; idim++) { // filling diagonal for Dirichlet bc
           const uint irowq = i+idim*VelAdjOld._ndof[vb];
-          currelem._KeM[vb](irowq,irowq) += (1-currelem._bc_eldofs[vb][irowq])*detb;
+          currelem._KeM(irowq,irowq) += (1-currelem._bc_eldofs[irowq])*detb;
         }// end filling diagonal for Dirichlet bc
 }
 	 
@@ -326,8 +326,8 @@ if (_Dir_pen_fl == 0)  {
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
             int irowq = i+idim*VelAdjOld._ndof[vb];
             // diagonal blocks [1-5-9]
-            currelem._KeM[vb](irowq,j+idim*VelAdjOld._ndof[vb])
-            += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(
+            currelem._KeM(irowq,j+idim*VelAdjOld._ndof[vb])
+            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
                    NonStatNSAD* phij_g*phii_g/dt // time
                    + IRe*(dphijdx_g[idim]*dphiidx_g[idim] + Lap_g)      //Adjoint of D is D, Adjoint of Laplacian is Laplacian
                    + phij_g*phii_g*/*dveldx_g*/Vel._grad_g[idim][idim]  //Adjoint of Advection 1 delta(u) DOT grad(u): adj of nonlinear stuff has 2 TERMS (well, not always)
@@ -335,16 +335,16 @@ if (_Dir_pen_fl == 0)  {
                );
             // block +1 [2-6-7]
             int idimp1=(idim+1)%space_dim;
-            currelem._KeM[vb](irowq,j+idimp1*VelAdjOld._ndof[vb])
-            += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(
+            currelem._KeM(irowq,j+idimp1*VelAdjOld._ndof[vb])
+            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
                    + IRe*(dphijdx_g[idim]*dphiidx_g[idimp1])
                    + phij_g*phii_g*/*dveldx_g*/Vel._grad_g[idimp1][idim]
                );
 #if (DIMENSION==3)
             // block +2 [3-4-8]
             int idimp2=(idim+2)%space_dim;
-            currelem._KeM[vb](irowq,j+idimp2*VelAdjOld._ndof[vb])
-            += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(
+            currelem._KeM(irowq,j+idimp2*VelAdjOld._ndof[vb])
+            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
                   + IRe*(dphijdx_g[idim]*dphiidx_g[idimp2])
                   + phij_g*phii_g*/*dveldx_g*/Vel._grad_g[idimp2][idim]
                );
@@ -359,7 +359,7 @@ if (_Dir_pen_fl == 0)  {
           const int jclml= j + space_dim*VelAdjOld._ndof[vb];
           for (uint idim=0; idim<space_dim; idim++) {
             uint irowq = i+idim*VelAdjOld._ndof[vb];
-            currelem._KeM[vb](irowq,jclml) += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(-psij_g*dphiidx_g[idim]);
+            currelem._KeM(irowq,jclml) += currelem._bc_eldofs[irowq]*dtxJxW_g*(-psij_g*dphiidx_g[idim]);
            }
         }
                                      // end B^T element matrix
@@ -367,12 +367,12 @@ if (_Dir_pen_fl == 0)  {
           if (i<PressAdjOld._ndof[vb]) {//  pressure equation (KOMP dp/dt=rho*div) 
           double psii_g = currgp._phi_ndsQLVB_g[vb][PressAdjOld._FEord][i];
 	  const uint irowl = i+space_dim*VelAdjOld._ndof[vb];  //vertical offset
-          currelem._FeM[vb](irowl)=0.;  // rhs
+          currelem._FeM(irowl)=0.;  // rhs
  //             KeM(irowl,j+space_dim*el_ndof_q)  += dtxJxW_g*(psii_g*psij_g)*_Komp_fac/dt;
 
           for (uint j=0; j<VelAdjOld._ndof[vb]; j++) { // B element matrix q*div(u)
             for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][VelAdjOld._FEord][j+idim*VelAdjOld._ndof[vb]];
-            for (uint idim=0; idim<space_dim; idim++) currelem._KeM[vb](irowl,j+idim*VelAdjOld._ndof[vb]) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
+            for (uint idim=0; idim<space_dim; idim++) currelem._KeM(irowl,j+idim*VelAdjOld._ndof[vb]) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
                 }
 
         }
@@ -386,8 +386,8 @@ if (_Dir_pen_fl == 0)  {
     // end element gaussian integration loop
     
     ///  Add element matrix and rhs to the global ones.
-    _A[Level]->add_matrix(currelem._KeM[vb],currelem._el_dof_indices[vb]);
-    _b[Level]->add_vector(currelem._FeM[vb],currelem._el_dof_indices[vb]);
+    _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);
+    _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);
     
   } 
   // end of element loop
@@ -404,8 +404,8 @@ if (_Dir_pen_fl == 0)  {
 
  for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
 
-         currelem._KeM[vb].zero();
-	 currelem._FeM[vb].zero();
+         currelem._KeM.zero();
+	 currelem._FeM.zero();
 
      currelem.get_el_nod_conn_lev_subd(vb,Level,_iproc,iel);
      currelem.get_el_DofObj_lev_subd(vb,Level,_iproc,iel);
@@ -419,7 +419,7 @@ if (_Dir_pen_fl == 0)  {
      VelAdjOld.GetElDofsVect(vb,Level);
      PressAdjOld.GetElDofsVect(vb,Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,VelAdjOld._FEord,currelem._bc_eldofs[vb]); //only the Quadratic Part is modified! /*OK DIR_PEN*/
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,VelAdjOld._FEord,currelem._bc_eldofs); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
 
 //============ BC =======
@@ -443,7 +443,7 @@ if (_Dir_pen_fl == 1)  {
 //TODO here i should check that the nodal bc dirichlet i put correspond to the element NT flags
 
        uint press_fl=0;
-       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(vb,currelem._bc_eldofs[vb],VelAdjOld,PressAdjOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
+       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(vb,currelem._bc_eldofs,VelAdjOld,PressAdjOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
  //only the LINEAR PART is USED!!
        
 //   if ( (1-el_flag[NN]) != press_fl)  {std::cout << "Sthg wrong with press elflags" << std::endl;abort();}
@@ -475,8 +475,8 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (v
 
          for (uint idim=0; idim< space_dim; idim++)    {
              uint irowq=i+idim*VelAdjOld._ndof[vb];
-          currelem._FeM[vb](irowq)  += 
-            currelem._bc_eldofs[vb][irowq]*           
+          currelem._FeM(irowq)  += 
+            currelem._bc_eldofs[irowq]*           
            dtxJxW_g*(   -1.*/*press_fl*/(1-el_flag[NN])*PressAdjOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g  //  //OLD VALUES //AAA multiplying int times uint!!!
 
 // // //             TODO STRAIN AT THE BOUNDARY            + /*stress_fl*/el_flag[1]*IRe*strainUtrDn_g[idim]*phii_g 
@@ -498,7 +498,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 	   for (uint j=0; j< VelAdjOld._ndof[vb]; j++) {
           const double phij_g = currgp._phi_ndsQLVB_g[vb][ VelAdjOld._FEord][j];
 
-  currelem._KeM[vb](irowq,j+jdim*VelAdjOld._ndof[vb]) +=                //projection over the physical (x,y,z) 
+  currelem._KeM(irowq,j+jdim*VelAdjOld._ndof[vb]) +=                //projection over the physical (x,y,z) 
       + /*_Dir_pen_fl**/dtxJxW_g*phii_g*phij_g*(dbl_pen[NN]*currgp.get_normal_ptr()[jdim]*currgp.get_normal_ptr()[idim]   //the PENALTY is BY ELEMENT, but the (n,t) is BY GAUSS because we cannot compute now a nodal normal
                                               + dbl_pen[TT]*currgp.get_tangent_ptr()[0][jdim]*currgp.get_tangent_ptr()[0][idim]
                  #if DIMENSION==3
@@ -522,8 +522,8 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
       
     }  //gauss
    
-    _A[Level]->add_matrix(currelem._KeM[vb],currelem._el_dof_indices[vb]);//      std::cout << "KeM "<< vb << " " << _KeM[vb].l1_norm() << std::endl;
-    _b[Level]->add_vector(currelem._FeM[vb],currelem._el_dof_indices[vb]);//      std::cout << "FeM "<< vb << " " << _FeM[vb].l2_norm() << std::endl;
+    _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);//      std::cout << "KeM "<< vb << " " << _KeM.l1_norm() << std::endl;
+    _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);//      std::cout << "FeM "<< vb << " " << _FeM.l2_norm() << std::endl;
 
  }//elem loop
    
@@ -552,7 +552,7 @@ return;
 
 // // //     // end BDRYelement gaussian integration loop
 // // // 
-// // // //   b[Level]->add_vector(_FeM[vb],el_dof_indices);////////////////////////////////
+// // // //   b[Level]->add_vector(_FeM,el_dof_indices);////////////////////////////////
 // // // 
 // // //   //// AAA putting this or not makes a lot of difference!
 // // //   //the code goes MUCH MUCH faster! 

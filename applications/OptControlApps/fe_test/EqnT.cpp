@@ -91,7 +91,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
 /// This function assembles the matrix and the rhs:
 void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
 
-  CurrElem       currelem(*this,_eqnmap);
+  CurrElem       currelem(vb,*this,_eqnmap);
   CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
   
   TempPhysics* myphys; myphys = static_cast<TempPhysics*>(&_phys);
@@ -173,8 +173,8 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
-    currelem._KeM[vb].zero();
-    currelem._FeM[vb].zero(); 
+    currelem._KeM.zero();
+    currelem._FeM.zero(); 
 
     currelem.get_el_nod_conn_lev_subd(vb,Level,myproc,iel);
     currelem.get_el_DofObj_lev_subd(vb,Level,myproc,iel);
@@ -197,7 +197,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
 //     Temp2.GetElDofsVect(vb,Level);
 //     Temp3.GetElDofsVect(vb,Level);
     
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs[vb]); //only the Qtyzero Part is modified!
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs); //only the Qtyzero Part is modified!
 
 // ===============      
 // Now the point is this: there are several functions of space
@@ -247,38 +247,38 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
         for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][i+idim*Tempold._ndof[vb]];
 
 //=========== FIRST ROW ===============
-        currelem._FeM[vb](i) +=      
-           currelem._bc_eldofs[vb][i]*dtxJxW_g*( 
+        currelem._FeM(i) +=      
+           currelem._bc_eldofs[i]*dtxJxW_g*( 
                 7.*phii_g
 	  )
-	   + (1-currelem._bc_eldofs[vb][i])*detb*(Tempold._val_dofs[i]);
+	   + (1-currelem._bc_eldofs[i])*detb*(Tempold._val_dofs[i]);
         
-        currelem._KeM[vb](i,i) +=  (1-currelem._bc_eldofs[vb][i])*detb;
+        currelem._KeM(i,i) +=  (1-currelem._bc_eldofs[i])*detb;
 
 // // // //========= SECOND ROW =====================
 // // // 	 int ip1 = i + Tempold._ndof[vb]; 
 // // // 	 
 // // // 	if (i < _AbstractFE[ Temp2._FEord ]->_ndof[vb]) { 
-// // // 	 currelem._FeM[vb](ip1) +=      
-// // //            currelem._bc_eldofs[vb][ip1]*dtxJxW_g*( 
+// // // 	 currelem._FeM(ip1) +=      
+// // //            currelem._bc_eldofs[ip1]*dtxJxW_g*( 
 // // //                 0.07*phii_gLL
 // // // 	  )
-// // // 	   + (1-currelem._bc_eldofs[vb][ip1])*detb*(Temp2._val_dofs[i]);
+// // // 	   + (1-currelem._bc_eldofs[ip1])*detb*(Temp2._val_dofs[i]);
 // // //         
-// // //          currelem._KeM[vb](ip1,ip1) +=  (1-currelem._bc_eldofs[vb][ip1])*detb;
+// // //          currelem._KeM(ip1,ip1) +=  (1-currelem._bc_eldofs[ip1])*detb;
 // // // 	}
 // // // 	
 // // // //======= THIRD ROW ===================================
 // // // 	 int ip2 = i + Tempold._ndof[vb] + Temp2._ndof[vb];
 // // // 	 
 // // // 	if (i < _AbstractFE[ Temp3._FEord ]->_ndof[vb]) { 
-// // //            currelem._FeM[vb](ip2) +=      
-// // //            currelem._bc_eldofs[vb][ip2]*dtxJxW_g*( 
+// // //            currelem._FeM(ip2) +=      
+// // //            currelem._bc_eldofs[ip2]*dtxJxW_g*( 
 // // //                 0.07*phii_gKK
 // // // 	     )
-// // // 	   + (1-currelem._bc_eldofs[vb][ip2])*detb*(Temp3._val_dofs[i]);
+// // // 	   + (1-currelem._bc_eldofs[ip2])*detb*(Temp3._val_dofs[i]);
 // // //         
-// // //         currelem._KeM[vb](ip2,ip2) +=  (1-currelem._bc_eldofs[vb][ip2])*detb;
+// // //         currelem._KeM(ip2,ip2) +=  (1-currelem._bc_eldofs[ip2])*detb;
 // // // 	}
 	
 	 // Matrix Assemblying ---------------------------
@@ -306,8 +306,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
  
 //============ FIRST ROW state  delta T ===============
 //======= DIAGONAL =============================
-	   currelem._KeM[vb](i,j) +=        
-            currelem._bc_eldofs[vb][i]*dtxJxW_g*( 
+	   currelem._KeM(i,j) +=        
+            currelem._bc_eldofs[i]*dtxJxW_g*( 
              Lap_g  
             );
 
@@ -315,8 +315,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 // // // //===== DIAGONAL ===========================
 // // //  	if (i < _AbstractFE[ Temp2._FEord ]->_ndof[vb])  { 
 // // //   	if (j < _AbstractFE[ Temp2._FEord ]->_ndof[vb]) { 
-// // //        currelem._KeM[vb](ip1,jp1) +=        
-// // //             currelem._bc_eldofs[vb][ip1]*
+// // //        currelem._KeM(ip1,jp1) +=        
+// // //             currelem._bc_eldofs[ip1]*
 // // //             dtxJxW_g*( 
 // // //               Lap_gLL
 // // //             ); 
@@ -326,8 +326,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 // // // //======= DIAGONAL ==================
 // // // 	if (i < _AbstractFE[ Temp3._FEord ]->_ndof[vb])  { 
 // // //   	if (j < _AbstractFE[ Temp3._FEord ]->_ndof[vb]) { 
-// // //           currelem._KeM[vb](ip2,jp2) +=        
-// // //             currelem._bc_eldofs[vb][ip2]*
+// // //           currelem._KeM(ip2,jp2) +=        
+// // //             currelem._bc_eldofs[ip2]*
 // // //               dtxJxW_g*( 
 // // //               phij_gKK*phii_gKK
 // // //             + Lap_gKK
@@ -342,10 +342,10 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
       }   //end i (row)
     } // end of the quadrature point qp-loop
 
-    currelem._KeM[vb].print_scientific(std::cout);
+    currelem._KeM.print_scientific(std::cout);
     
-       _A[Level]->add_matrix(currelem._KeM[vb],currelem._el_dof_indices[vb]);
-       _b[Level]->add_vector(currelem._FeM[vb],currelem._el_dof_indices[vb]);
+       _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);
+       _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);
   } // end of element loop
   // *****************************************************************
 
@@ -355,8 +355,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
     
      for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
 
-      currelem._KeM[vb].zero();
-      currelem._FeM[vb].zero();
+      currelem._KeM.zero();
+      currelem._FeM.zero();
 
       currelem.get_el_nod_conn_lev_subd(vb,Level,myproc,iel);
       currelem.get_el_DofObj_lev_subd(vb,Level,myproc,iel);
@@ -371,12 +371,12 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 // // //          Temp2.GetElDofsVect(vb,Level);
 // // //          Temp3.GetElDofsVect(vb,Level);
 
-     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs[vb]); //only the Quadratic Part is modified!
+     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem._bc_eldofs); //only the Quadratic Part is modified!
   
  //============ FLAGS ================
      double el_penalty = 0.;
      int pen_sum=0;
-     for (uint i=0; i< Tempold._ndof[vb]; i++)   pen_sum += currelem._bc_eldofs[vb][i];
+     for (uint i=0; i< Tempold._ndof[vb]; i++)   pen_sum += currelem._bc_eldofs[i];
 //pen_sum == 0: all the nodes must be zero, so that ALL THE NODES of that face are set properly, even if with a penalty integral and not with the nodes!
 //this is a "FALSE" NATURAL boundary condition, it is ESSENTIAL actually
      if (pen_sum == 0/*< el_n_dofs porcata*/) { el_penalty = penalty_val;   }  //strictly minor for Dirichlet penalty, i.e. AT LEAST ONE NODE to get THE WHOLE ELEMENT
@@ -390,8 +390,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //it only suffices that SOME OF THE NODES ARE with bc=1, AT LEAST ONE
 int el_Neum_flag=0;
      uint Neum_sum=0;
-     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem._bc_eldofs[vb][i];
-     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem._bc_eldofs[vb][i + Tempold._ndof[vb]];
+     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem._bc_eldofs[i];
+     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem._bc_eldofs[i + Tempold._ndof[vb]];
             if ( Neum_sum == 2*Tempold._ndof[vb] )  { el_Neum_flag=1;  }
 
 //====================================
@@ -418,8 +418,8 @@ int el_Neum_flag=0;
         for (uint i=0; i<Tempold._ndof[vb]; i++) {
    	const double phii_g =  currgp._phi_ndsQLVB_g[vb][Tempold._FEord][i]; 
 	
-       currelem._FeM[vb](i) +=
-          0.*(currelem._bc_eldofs[vb][i]*
+       currelem._FeM(i) +=
+          0.*(currelem._bc_eldofs[i]*
          el_Neum_flag*dtxJxW_g*(-QfluxDn_g)*phii_g    // beware of the sign  //this integral goes in the first equation
 	 + el_penalty*dtxJxW_g*Tempold._val_g[0]*phii_g)  //clearly, if you continue using bc=0 for setting nodal Dirichlet, this must go outside
 	 ; 
@@ -427,7 +427,7 @@ int el_Neum_flag=0;
          if (_Dir_pen_fl == 1) {
             for (uint j=0; j<Tempold._ndof[vb]; j++) {
                double phij_g = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][j];
-	       currelem._KeM[vb](i,j) += 0.*el_penalty*dtxJxW_g*phij_g*phii_g;
+	       currelem._KeM(i,j) += 0.*el_penalty*dtxJxW_g*phij_g*phii_g;
 	    } 
           }
 
@@ -437,8 +437,8 @@ int el_Neum_flag=0;
     }
         // end BDRYelement gaussian integration loop
         
-         _A[Level]->add_matrix(currelem._KeM[vb],currelem._el_dof_indices[vb]);
-         _b[Level]->add_vector(currelem._FeM[vb],currelem._el_dof_indices[vb]);
+         _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);
+         _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);
    
   }
       // end of BDRYelement loop
@@ -492,7 +492,7 @@ else {   std::cout << " No line integrals yet... " << std::endl; abort();}
 
 double EqnT::ComputeIntegral (const uint vb, const uint Level) {
 
-    CurrElem       currelem(*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
+    CurrElem       currelem(vb,*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
 
   //====== Physics cast
@@ -603,7 +603,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
   //reg_ord = 0: L2
   //reg_ord = 1: H1
 
-    CurrElem       currelem(*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
+    CurrElem       currelem(vb,*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
   
   // processor index

@@ -74,7 +74,7 @@ EqnMHDAD::~EqnMHDAD() {}
 
   void EqnMHDAD::GenMatRhsVB(const uint vb,const double time,const uint Level)  {
 
-    CurrElem       currelem(*this,_eqnmap);
+    CurrElem       currelem(vb,*this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
    
     
@@ -190,8 +190,8 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
  
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-    currelem._KeM[vb].zero();
-    currelem._FeM[vb].zero(); 
+    currelem._KeM.zero();
+    currelem._FeM.zero(); 
 
     currelem.get_el_nod_conn_lev_subd(vb,Level,_iproc,iel);
     currelem.get_el_DofObj_lev_subd(vb,Level,_iproc,iel);
@@ -205,7 +205,7 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
            BhomAdjOld.GetElDofsVect(vb,Level);
     BhomLagMultAdjOld.GetElDofsVect(vb,Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BhomAdjOld._FEord,currelem._bc_eldofs[vb]);  //only the Quadratic Part is modified!
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BhomAdjOld._FEord,currelem._bc_eldofs);  //only the Quadratic Part is modified!
     
     
      if ( Vel._eqnptr != NULL )      Vel.GetElDofsVect(vb,Level);
@@ -267,18 +267,18 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 	  
          for (uint idim=0; idim<space_dim; idim++) {
             const uint irowq = i+idim*BhomAdjOld._ndof[vb];
-           currelem._FeM[vb](irowq) += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(
+           currelem._FeM(irowq) += currelem._bc_eldofs[irowq]*dtxJxW_g*(
                              NonStatMHDAD*BhomAdjOld._val_g[idim]*phii_g/dt  //time
                             - S*curlBXlambda_g3D[idim]*phii_g                             //from NS
                             + S*(BDdphii_g*VelAdj._val_g[idim] - lambdaDdphii_g*Bmag._val_g[idim])     //from NS
                         )
-                           + (1-currelem._bc_eldofs[vb][irowq])*detb*BhomAdjOld._val_dofs[irowq]; //Dirichlet bc
+                           + (1-currelem._bc_eldofs[irowq])*detb*BhomAdjOld._val_dofs[irowq]; //Dirichlet bc
 	   }
 
 if (_Dir_pen_fl == 0)  {
         for (uint idim=0; idim<space_dim; idim++) { // filling diagonal for Dirichlet bc
           const uint irowq = i+idim*BhomAdjOld._ndof[vb];
-          currelem._KeM[vb](irowq,irowq) += (1-currelem._bc_eldofs[vb][irowq])*detb;
+          currelem._KeM(irowq,irowq) += (1-currelem._bc_eldofs[irowq])*detb;
         }        // end filling diagonal for Dirichlet bc
 }
                                            
@@ -295,8 +295,8 @@ if (_Dir_pen_fl == 0)  {
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
             int irowq = i+idim*BhomAdjOld._ndof[vb];
             // diagonal blocks [1-5-9]
-            currelem._KeM[vb](irowq,j+idim*BhomAdjOld._ndof[vb])
-            += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(
+            currelem._KeM(irowq,j+idim*BhomAdjOld._ndof[vb])
+            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
                    NonStatMHDAD*phij_g*phii_g/dt// time
                  + LAP_MHD*IRem*(Lap_g)
                  + (1-LAP_MHD)*IRem*(   Lap_g - dphijdx_g[idim]* dphiidx_g[idim] )
@@ -304,16 +304,16 @@ if (_Dir_pen_fl == 0)  {
                );
             // block +1 [2-6-7]
             int idimp1=(idim+1)%space_dim;
-            currelem._KeM[vb](irowq,j+idimp1*BhomAdjOld._ndof[vb])
-            += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(
+            currelem._KeM(irowq,j+idimp1*BhomAdjOld._ndof[vb])
+            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
                  + (1-LAP_MHD)*IRem*(  -dphijdx_g[idim]* dphiidx_g[idimp1] )
                  - phii_g*(            -dphijdx_g[idim]*Vel._val_g[idimp1] )
                );
 #if (DIMENSION==3)
             // block +2 [3-4-8]
             int idimp2=(idim+2)%space_dim;
-            currelem._KeM[vb](irowq,j+idimp2*BhomAdjOld._ndof[vb])
-            += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(
+            currelem._KeM(irowq,j+idimp2*BhomAdjOld._ndof[vb])
+            += currelem._bc_eldofs[irowq]*dtxJxW_g*(
                   + (1-LAP_MHD)*IRem*(-dphijdx_g[idim]* dphiidx_g[idimp2] )
                   - phii_g*(          -dphijdx_g[idim]*Vel._val_g[idimp2] )
                  );
@@ -328,7 +328,7 @@ if (_Dir_pen_fl == 0)  {
           const int jclml= j + space_dim*BhomAdjOld._ndof[vb];
           for (uint idim=0; idim<space_dim; idim++) {
             uint irowq = i+idim*BhomAdjOld._ndof[vb];
-            currelem._KeM[vb](irowq,jclml) += currelem._bc_eldofs[vb][irowq]*dtxJxW_g*(-psij_g*dphiidx_g[idim]);
+            currelem._KeM(irowq,jclml) += currelem._bc_eldofs[irowq]*dtxJxW_g*(-psij_g*dphiidx_g[idim]);
            }
         }
                                      // end B^T element matrix
@@ -336,12 +336,12 @@ if (_Dir_pen_fl == 0)  {
           if (i<BhomLagMultAdjOld._ndof[vb]) {//  pressure equation (KOMP dp/dt=rho*div) 
           double psii_g = currgp._phi_ndsQLVB_g[vb][BhomLagMultAdjOld._FEord][i];
 	  const uint irowl = i+space_dim*BhomAdjOld._ndof[vb];
-          currelem._FeM[vb](irowl)=0.;  // rhs
- //             currelem._KeM[vb](irowl,j+space_dim*el_ndof_q)  += dtxJxW_g*(psii_g*psij_g)*_Komp_fac/dt;
+          currelem._FeM(irowl)=0.;  // rhs
+ //             currelem._KeM(irowl,j+space_dim*el_ndof_q)  += dtxJxW_g*(psii_g*psij_g)*_Komp_fac/dt;
 
           for (uint j=0; j<BhomAdjOld._ndof[vb]; j++) { // B element matrix q*div(u)
             for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BhomAdjOld._FEord][j+idim*BhomAdjOld._ndof[vb]];
-            for (uint idim=0; idim<space_dim; idim++) currelem._KeM[vb](irowl,j+idim*BhomAdjOld._ndof[vb]) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
+            for (uint idim=0; idim<space_dim; idim++) currelem._KeM(irowl,j+idim*BhomAdjOld._ndof[vb]) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
                 }
         }
                          // end pressure eq (cont)
@@ -354,8 +354,8 @@ if (_Dir_pen_fl == 0)  {
     // end element gaussian integration loop
     
     ///  Add element matrix and rhs to the global ones.
-    _A[Level]->add_matrix(currelem._KeM[vb],currelem._el_dof_indices[vb]);
-    _b[Level]->add_vector(currelem._FeM[vb],currelem._el_dof_indices[vb]);
+    _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);
+    _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);
     
   } 
   // end of element loop
@@ -371,8 +371,8 @@ if (_Dir_pen_fl == 0)  {
 
  for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
 
-     currelem._KeM[vb].zero();
-     currelem._FeM[vb].zero();
+     currelem._KeM.zero();
+     currelem._FeM.zero();
 
      currelem.get_el_nod_conn_lev_subd(vb,Level,_iproc,iel);
      currelem.get_el_DofObj_lev_subd(vb,Level,_iproc,iel); 
@@ -386,7 +386,7 @@ if (_Dir_pen_fl == 0)  {
             BhomAdjOld.GetElDofsVect(vb,Level);
      BhomLagMultAdjOld.GetElDofsVect(vb,Level);
    
-     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BhomAdjOld._FEord,currelem._bc_eldofs[vb]); //only the Quadratic Part is modified! /*OK DIR_PEN*/
+     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BhomAdjOld._FEord,currelem._bc_eldofs); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
   
     //============ BC =======
@@ -432,8 +432,8 @@ if (_Dir_pen_fl == 1)  {
 
         for (uint idim=0; idim< space_dim; idim++)    {
              uint irowq=i+idim*BhomAdjOld._ndof[vb];
-            currelem._FeM[vb](irowq)  += 
-          currelem._bc_eldofs[vb][irowq]*           
+            currelem._FeM(irowq)  += 
+          currelem._bc_eldofs[irowq]*           
            dtxJxW_g*(   -1.*/*press_fl*/(1-el_flag[NN])*BhomLagMultAdjOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g  //  //OLD VALUES //AAA multiplying int times uint!!!
 
 // // //             TODO STRAIN AT THE BOUNDARY            + /*stress_fl*/el_flag[1]*IRe*strainUtrDn_g[idim]*phii_g 
@@ -455,7 +455,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 	   for (uint j=0; j< BhomAdjOld._ndof[vb]; j++) {
           const double phij_g = currgp._phi_ndsQLVB_g[vb][ BhomAdjOld._FEord][j];
 
-  currelem._KeM[vb](irowq,j+jdim*BhomAdjOld._ndof[vb]) +=                //projection over the physical (x,y,z) 
+  currelem._KeM(irowq,j+jdim*BhomAdjOld._ndof[vb]) +=                //projection over the physical (x,y,z) 
       + /*_Dir_pen_fl**/dtxJxW_g*phii_g*phij_g*(dbl_pen[NN]*currgp.get_normal_ptr()[jdim]*currgp.get_normal_ptr()[idim]   //the PENALTY is BY ELEMENT, but the (n,t) is BY GAUSS because we cannot compute now a nodal normal
                                               + dbl_pen[TT]*currgp.get_tangent_ptr()[0][jdim]*currgp.get_tangent_ptr()[0][idim]
                  #if DIMENSION==3
@@ -483,8 +483,8 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
       
     }  //gauss
     
-    _A[Level]->add_matrix(currelem._KeM[vb],currelem._el_dof_indices[vb]);
-    _b[Level]->add_vector(currelem._FeM[vb],currelem._el_dof_indices[vb]);
+    _A[Level]->add_matrix(currelem._KeM,currelem._el_dof_indices);
+    _b[Level]->add_vector(currelem._FeM,currelem._el_dof_indices);
 
  }//elem loop
 

@@ -877,7 +877,7 @@ void EqnBase::GenBc() {
 
  //**************************************************   
  //******** ELEM BASED ******************************  
-     CurrElem       currelem(*this,_eqnmap);
+     CurrElem       currelem(BB,*this,_eqnmap);
 
     _bc_fe_kk             =  new int*[_NoLevels];
     int* DofOff_Lev_kk    =  new int[_NoLevels];
@@ -1306,7 +1306,7 @@ void EqnBase::PrintBc(std::string namefile) {
 //for now, we will leave things like this
 void EqnBase::GenElBc()  {
 
-     CurrElem       currelem(*this,_eqnmap);  
+     CurrElem       currelem(BB,*this,_eqnmap);  
   
       uint space_dim = _mesh.get_dim();
 
@@ -1538,7 +1538,7 @@ void EqnBase::GenIc() {
 
     if (!in) {
 
-        CurrElem       currelem(*this,_eqnmap);  
+        CurrElem       currelem(VV,*this,_eqnmap);  
      
         const uint  coords_fine_offset = _mesh._NoNodesXLev[_NoLevels-1];
         const uint  el_nnodes = _mesh._GeomEl[VV][mesh_ord]._elnds;
@@ -3997,7 +3997,7 @@ const uint Level = _NoLevels - 1;
 const uint myproc= _iproc;
   double time=0.;
   
-    CurrElem       currelem(*this,_eqnmap);
+    CurrElem       currelem(vb,*this,_eqnmap);
 //     CurrGaussPoint   currgp(_eqnmap);    
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
 
