@@ -244,7 +244,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //         const double phii_gLL = currgp._phi_ndsQLVB_g[vb][Temp2._FEord][i];
 //         const double phii_gKK = currgp._phi_ndsQLVB_g[vb][Temp3._FEord][i];
 
-        for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][i+idim*Tempold._ndof[vb]];
+        for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][i+idim*Tempold._ndof[vb]];
 
 //=========== FIRST ROW ===============
         currelem.Rhs()(i) +=      
@@ -288,9 +288,9 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //           double phij_gKK = currgp._phi_ndsQLVB_g[Temp3._FEord][j];
 	  
         for (uint idim = 0; idim < space_dim; idim++)   {
-	  dphijdx_g  [idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][j+idim*Tempold._ndof[vb]]; 
-// // // 	  dphijdx_gLL[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Temp2._FEord]  [j+idim*Temp2._ndof[vb]]; 
-// // // 	  dphijdx_gKK[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Temp3._FEord]  [j+idim*Temp3._ndof[vb]]; 
+	  dphijdx_g  [idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][j+idim*Tempold._ndof[vb]]; 
+// // // 	  dphijdx_gLL[idim] = currgp._dphidxyz_ndsQLVB_g[Temp2._FEord]  [j+idim*Temp2._ndof[vb]]; 
+// // // 	  dphijdx_gKK[idim] = currgp._dphidxyz_ndsQLVB_g[Temp3._FEord]  [j+idim*Temp3._ndof[vb]]; 
           }
 	  
 	  

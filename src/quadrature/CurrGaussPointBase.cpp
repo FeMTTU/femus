@@ -29,17 +29,13 @@ CurrGaussPointBase::CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in 
   //TODO probabilmente anche qui si puo' fare del TEMPLATING!!!
   //BISOGNA STARE ATTENTI CHE SE FAI DEL TEMPLATING con le ALLOCAZIONI STATICHE allora ti diverti poco con i DOPPI o TRIPLI ARRAY
 
-  for (int vb = 0; vb < VB; vb++) {
      for (int fe = 0; fe < QL; fe++) {
-   _dphidxyz_ndsQLVB_g3D[vb][fe] =  new double[ 3           * _elem_type[fe]->GetNDofs() ]; //both VV and BB are 3 in general (vector product, or ONE?!?)
-     _dphidxyz_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _elem_type[fe]->GetNDofs() ];   
-  _dphidxezeta_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _elem_type[fe]->GetNDofs() ];     
+          _phi_ndsQLVB_g[fe] =  new double[                  _elem_type[fe]->GetNDofs() ];
+   _dphidxyz_ndsQLVB_g3D[fe] =  new double[ 3              * _elem_type[fe]->GetNDofs() ];
+     _dphidxyz_ndsQLVB_g[fe] =  new double[ _IntDim[vb_in] * _elem_type[fe]->GetNDofs() ];   
+  _dphidxezeta_ndsQLVB_g[fe] =  new double[ _IntDim[vb_in] * _elem_type[fe]->GetNDofs() ];     
    }
- }  
   
-       for (int fe = 0; fe < QL; fe++)  _phi_ndsQLVB_g[fe] =  new double[               _elem_type[fe]->GetNDofs() ];     
-
-
   //Jacobian matrices, normals, tangents
   
   _normal_g  = new double[_IntDim[VV]];
@@ -55,13 +51,12 @@ CurrGaussPointBase::CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in 
 
 CurrGaussPointBase::~CurrGaussPointBase() {
   
-    for (int i=0;i< VB;i++){
+
       for (int j=0;j< QL;j++) {
-	delete []  _dphidxyz_ndsQLVB_g[i][j];
-	delete []  _dphidxyz_ndsQLVB_g3D[i][j];
-	delete [] _dphidxezeta_ndsQLVB_g[i][j];
+	delete []  _dphidxyz_ndsQLVB_g[j];
+	delete []  _dphidxyz_ndsQLVB_g3D[j];
+	delete [] _dphidxezeta_ndsQLVB_g[j];
       }
-    }
 
           for (int j=0;j< QL;j++) delete [] _phi_ndsQLVB_g[j];
     

@@ -307,7 +307,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
         //since the Equation in this FE code is in WEAK FORM,
         //every Operator would have the test FUNCTIONS as ONE and ONLY ONE OF THEIR ARGUMENTS 
                                     const double phii_g       =      currgp._phi_ndsQLVB_g[qtyzero_ord][i];
-        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][qtyzero_ord][i+idim*qtyzero_ndof];
+        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[qtyzero_ord][i+idim*qtyzero_ndof];
 //======= END "COMMON tEST PART for QTYZERO" ==========
 	
 	  for (uint idim=0; idim<space_dim; idim++) {
@@ -339,7 +339,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 //======="COMMON SHAPE PART for QTYZERO": func and derivative, of the QTYZERO FE ORD ==========
 //   (j):       dof of the SHAPE function
            double                                  phij_g       =      currgp._phi_ndsQLVB_g[qtyzero_ord][j];
-           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][qtyzero_ord][j+idim*qtyzero_ndof];
+           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[qtyzero_ord][j+idim*qtyzero_ndof];
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
   
           double Lap_g=Math::dot(dphijdx_g,dphiidx_g,space_dim);
@@ -412,7 +412,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
           for (uint j=0; j<qtyzero_ndof; j++) { // B element matrix q*div(u)
 //======="COMMON SHAPE PART for QTYZERO" ==================
-            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][qtyzero_ord][j+idim*qtyzero_ndof];
+            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[qtyzero_ord][j+idim*qtyzero_ndof];
 //======="COMMON SHAPE PART for QTYZERO" - END ============
 	    
             for (uint idim=0; idim<space_dim; idim++) currelem.Mat()(irowl,j+idim*qtyzero_ndof) += -/*(1./dt)**/dtxJxW_g*psii_g*dphijdx_g[idim]; 

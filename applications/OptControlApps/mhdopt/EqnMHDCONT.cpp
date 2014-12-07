@@ -302,7 +302,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //first, you put whatever is related to the Test Functions of THESE rows:
 //test function value, test function first derivative
         const double                             phii_g       =      currgp._phi_ndsQLVB_g[BeOld._FEord][i];
-        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BeOld._FEord][i+idim*BeOld._ndof[vb]];
+        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BeOld._FEord][i+idim*BeOld._ndof[vb]];
 
 	 Math::extend(dphiidx_g,dphiidx_g3D,space_dim);
 	 Math::cross(BhomAdj._curl_g3D,dphiidx_g3D,curlxiXdphii_g3D);
@@ -345,7 +345,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //============preparation for (j) ============
 //here you put things that depend either on (j) or on (i,j)
           double                                  phij_g       =      currgp._phi_ndsQLVB_g[BeOld._FEord][j];
-          for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BeOld._FEord][j+idim*BeOld._ndof[vb]];
+          for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BeOld._FEord][j+idim*BeOld._ndof[vb]];
 
 	  double Lap_g = Math::dot(dphijdx_g,dphiidx_g,space_dim);
 	  double lambdaDdphii_g = Math::dot(VelAdj._val_g,dphiidx_g,space_dim);  //TODO why did i recompute it?
@@ -418,7 +418,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //============ QTYONE x QTYZERO (B matrix) q*div(u) ============
           for (uint j = 0; j < BeOld._ndof[vb]; j++) { // B element matrix 
 //============ preparation for (j) ============
-            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim]= currgp._dphidxyz_ndsQLVB_g[vb][BeOld._FEord][j+idim*BeOld._ndof[vb]];
+            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim]= currgp._dphidxyz_ndsQLVB_g[BeOld._FEord][j+idim*BeOld._ndof[vb]];
             for (uint idim=0; idim<space_dim; idim++) currelem.Mat()(irowl,j+idim*BeOld._ndof[vb]) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
                 }
 //============ END QTYONE x QTYZERO ============

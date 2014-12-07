@@ -55,8 +55,8 @@ namespace femus {
 	   uint idimp1 = (idim+1)%3;
 	   uint idimp2 = (idim+2)%3;
 	  _curl_g3D[idim] += 
-	  (_currGP._dphidxyz_ndsQLVB_g3D[vbflag][ord][eln+idimp1*el_nnodes] * _val_dofs3D[eln+idimp2*el_ndof_q] 
-	 - _currGP._dphidxyz_ndsQLVB_g3D[vbflag][ord][eln+idimp2*el_nnodes] * _val_dofs3D[eln+idimp1*el_ndof_q]); 
+	  (_currGP._dphidxyz_ndsQLVB_g3D[ord][eln+idimp1*el_nnodes] * _val_dofs3D[eln+idimp2*el_ndof_q] 
+	 - _currGP._dphidxyz_ndsQLVB_g3D[ord][eln+idimp2*el_nnodes] * _val_dofs3D[eln+idimp1*el_ndof_q]); 
            }
 	    //end curl
 
@@ -94,7 +94,7 @@ return;
 
 	  const uint indxdim=eln+idim*el_ndof;
 
-              _grad_g[ivar][idim] += _currGP._dphidxyz_ndsQLVB_g[vbflag][fe_order][indxdim]*_val_dofs[indxvar];
+              _grad_g[ivar][idim] += _currGP._dphidxyz_ndsQLVB_g[fe_order][indxdim]*_val_dofs[indxvar];
 	       
 	    }
 	    }

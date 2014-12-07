@@ -288,7 +288,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //============ preparation for (i) (Phii) ============
            Phii._val_g[0]       =      currgp._phi_ndsQLVB_g[Phii._FEord][i];          /*const double  phii_g*/ 
         for (uint idim=0; idim<space_dim; idim++)
-	  Phii._grad_g[0][idim] = currgp._dphidxyz_ndsQLVB_g[vb][Phii._FEord][i+idim*Phii._ndof[vb]];   /*dphiidx_g*/
+	  Phii._grad_g[0][idim] = currgp._dphidxyz_ndsQLVB_g[Phii._FEord][i+idim*Phii._ndof[vb]];   /*dphiidx_g*/
 //=== from this point on, the dependency on /*(i)*/, the ROW INDEX, of the quantities is given by Phii  
 //===  /*(i)*/ is ONLY used for the POSITIONS, later
 	  
@@ -333,7 +333,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //============ preparation for (j) (Phij) ============
             Phij._val_g[0]        =      currgp._phi_ndsQLVB_g[Phij._FEord][j];            /*double   phij_g*/ 
           for (uint idim=0; idim<space_dim; idim++)
-	    Phij._grad_g[0][idim] = currgp._dphidxyz_ndsQLVB_g[vb][Phij._FEord][j+idim*Phij._ndof[vb]];   //real shape  /*dphijdx_g[idim]*/
+	    Phij._grad_g[0][idim] = currgp._dphidxyz_ndsQLVB_g[Phij._FEord][j+idim*Phij._ndof[vb]];   //real shape  /*dphijdx_g[idim]*/
 //=== from this point on, the dependency on /*(j)*/, the COLUMN INDEX, of the quantities is given by Phij  
 //===  /*(j)*/ is ONLY used for the POSITIONS, later
 
@@ -392,7 +392,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
           currelem.Rhs()(irowl)=0.;
 
           for (uint j=0; j<bhomOld._ndof[vb]; j++) { // B element matrix q*div(u)
-            for (uint idim=0; idim<space_dim; idim++) Phij._grad_g[0][idim] =  currgp._dphidxyz_ndsQLVB_g[vb][Phij._FEord][j+idim*Phij._ndof[vb]];
+            for (uint idim=0; idim<space_dim; idim++) Phij._grad_g[0][idim] =  currgp._dphidxyz_ndsQLVB_g[Phij._FEord][j+idim*Phij._ndof[vb]];
             for (uint idim=0; idim<space_dim; idim++) currelem.Mat()(irowl,j+idim*bhomOld._ndof[vb]) += - dtxJxW_g*Psii._val_g[0]*Phij._grad_g[0][idim];  /*(i,j)*/  /*PDiv(MAT,Psii,Phij,idim)*/
                 }
 

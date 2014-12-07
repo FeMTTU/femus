@@ -40,15 +40,18 @@ virtual void SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const uint qlflag, con
 virtual void    SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp) = 0;
 virtual void ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag/*, const uint qp*/) = 0;
 
+// TODO encapsulation for phi
+inline double Phi(const uint ql,const uint dof) const { 
+  return _phi_ndsQLVB_g[ql][dof];
+}
 
   static CurrGaussPointBase& build(const uint vb_in, EquationsMap& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
 
     uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
+    double* _dphidxezeta_ndsQLVB_g[QL];  //canonical derivatives
+    double*    _dphidxyz_ndsQLVB_g[QL];  //physical derivatives
+    double*  _dphidxyz_ndsQLVB_g3D[QL];  //physical derivatives in 3D
     double*         _phi_ndsQLVB_g[QL];  //canonical functions  //TODO here it seems to contain GAUSS x ELDOFS
-    double* _dphidxezeta_ndsQLVB_g[VB][QL];  //canonical derivatives
-    double*    _dphidxyz_ndsQLVB_g[VB][QL];  //physical derivatives
-
-    double*  _dphidxyz_ndsQLVB_g3D[VB][QL];  //physical derivatives in 3D
   
   protected:
     

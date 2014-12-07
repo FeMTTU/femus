@@ -259,7 +259,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
        for (uint i=0; i < BhomAdjOld._ndof[vb]; i++)     {
 //======="COMMON tEST PART for QTYZERO": func and derivative, of the QTYZERO FE ORD ==========
         const double phii_g = currgp._phi_ndsQLVB_g[BhomAdjOld._FEord][i];
-        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BhomAdjOld._FEord][i+idim*BhomAdjOld._ndof[vb]];
+        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BhomAdjOld._FEord][i+idim*BhomAdjOld._ndof[vb]];
 //======= END "COMMON tEST PART for QTYZERO" ==========
 
    	  double BDdphii_g      = Math::dot(  Bmag._val_g,dphiidx_g,space_dim);
@@ -286,7 +286,7 @@ if (_Dir_pen_fl == 0)  {
         for (uint j=0; j<BhomAdjOld._ndof[vb]; j++) {// A element matrix
 //======="COMMON SHAPE PART for QTYZERO": ==========
            double                                  phij_g       =      currgp._phi_ndsQLVB_g[BhomAdjOld._FEord][j];
-           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BhomAdjOld._FEord][j+idim*BhomAdjOld._ndof[vb]];
+           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BhomAdjOld._FEord][j+idim*BhomAdjOld._ndof[vb]];
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
 
            double Lap_g    = Math::dot(dphijdx_g,dphiidx_g,space_dim);
@@ -340,7 +340,7 @@ if (_Dir_pen_fl == 0)  {
  //             currelem.Mat()(irowl,j+space_dim*el_ndof_q)  += dtxJxW_g*(psii_g*psij_g)*_Komp_fac/dt;
 
           for (uint j=0; j<BhomAdjOld._ndof[vb]; j++) { // B element matrix q*div(u)
-            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BhomAdjOld._FEord][j+idim*BhomAdjOld._ndof[vb]];
+            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BhomAdjOld._FEord][j+idim*BhomAdjOld._ndof[vb]];
             for (uint idim=0; idim<space_dim; idim++) currelem.Mat()(irowl,j+idim*BhomAdjOld._ndof[vb]) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
                 }
         }

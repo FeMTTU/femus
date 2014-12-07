@@ -292,7 +292,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 
         const double phii_g = currgp._phi_ndsQLVB_g[Tempold._FEord][i];
 
-        for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][i+idim*Tempold._ndof[vb]];
+        for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][i+idim*Tempold._ndof[vb]];
 
 //=========== FIRST ROW ===============
         currelem.Rhs()(i) +=      
@@ -335,7 +335,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
         for (uint j=0; j<Tempold._ndof[vb]; j++) {
           double phij_g = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
 	  
-        for (uint idim = 0; idim < space_dim; idim++)  dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][j+idim*Tempold._ndof[vb]]; 
+        for (uint idim = 0; idim < space_dim; idim++)  dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][j+idim*Tempold._ndof[vb]]; 
            
    
           double Lap_g   = Math::dot(dphijdx_g,dphiidx_g,space_dim);
