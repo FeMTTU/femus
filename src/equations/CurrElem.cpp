@@ -241,13 +241,13 @@ void CurrElem::PrintOrientation() const {
   }   
 
  // =====================================================================================
-void CurrElem::set_el_DofObj_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) {
+void CurrElem::set_el_DofObj_lev_subd(const uint Level,const uint isubd_in,const uint iel) {
 
      int sum_elems_prev_sd_at_lev = 0;
-      for (uint pr = 0; pr< isubd_in; pr++) { sum_elems_prev_sd_at_lev += _eqnmap._mesh._off_el[vb][_eqnmap._mesh._NoLevels*pr + Level + 1] - _eqnmap._mesh._off_el[vb][ _eqnmap._mesh._NoLevels*pr + Level]; }
+      for (uint pr = 0; pr< isubd_in; pr++) { sum_elems_prev_sd_at_lev += _eqnmap._mesh._off_el[_mesh_vb][_eqnmap._mesh._NoLevels*pr + Level + 1] - _eqnmap._mesh._off_el[_mesh_vb][ _eqnmap._mesh._NoLevels*pr + Level]; }
     uint iel_DofObj = iel + sum_elems_prev_sd_at_lev;
-    if       (vb == VV)  { _vol_iel_DofObj = iel_DofObj; }   
-    else if  (vb == BB)  { _vol_iel_DofObj = _eqnmap._mesh._el_bdry_to_vol[Level][iel_DofObj]; }
+    if       (_mesh_vb == VV)  { _vol_iel_DofObj = iel_DofObj; }   
+    else if  (_mesh_vb == BB)  { _vol_iel_DofObj = _eqnmap._mesh._el_bdry_to_vol[Level][iel_DofObj]; }
           
     return; 
 }

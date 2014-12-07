@@ -194,7 +194,7 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
     currelem.Rhs().zero(); 
 
     currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
-    currelem.set_el_DofObj_lev_subd(vb,Level,_iproc,iel);
+    currelem.set_el_DofObj_lev_subd(Level,_iproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(vb,xyz);    
@@ -375,7 +375,7 @@ if (_Dir_pen_fl == 0)  {
      currelem.Rhs().zero();
 
      currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
-     currelem.set_el_DofObj_lev_subd(vb,Level,_iproc,iel); 
+     currelem.set_el_DofObj_lev_subd(Level,_iproc,iel); 
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
