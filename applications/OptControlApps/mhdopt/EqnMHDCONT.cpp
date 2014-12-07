@@ -255,7 +255,7 @@ void EqnMHDCONT::init_equation_data() {
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
 //======= here starts the "COMMON SHAPE PART"==================
-for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (vb,fe,qp);  }
+for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }
 
  const double      det = dt*currgp.JacVectVV_g(vb,xyz);   //InvJac: is unique!
@@ -301,7 +301,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //(i) is used only for the RHS or for both MATRIX and RHS
 //first, you put whatever is related to the Test Functions of THESE rows:
 //test function value, test function first derivative
-        const double                             phii_g       =      currgp._phi_ndsQLVB_g[vb][BeOld._FEord][i];
+        const double                             phii_g       =      currgp._phi_ndsQLVB_g[BeOld._FEord][i];
         for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BeOld._FEord][i+idim*BeOld._ndof[vb]];
 
 	 Math::extend(dphiidx_g,dphiidx_g3D,space_dim);
@@ -344,7 +344,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
         for (uint j=0; j<BeOld._ndof[vb]; j++) {
 //============preparation for (j) ============
 //here you put things that depend either on (j) or on (i,j)
-          double                                  phij_g       =      currgp._phi_ndsQLVB_g[vb][BeOld._FEord][j];
+          double                                  phij_g       =      currgp._phi_ndsQLVB_g[BeOld._FEord][j];
           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BeOld._FEord][j+idim*BeOld._ndof[vb]];
 
 	  double Lap_g = Math::dot(dphijdx_g,dphiidx_g,space_dim);
@@ -386,7 +386,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 
 //============ QTYZERO x QTYONE dofs matrix (B^T matrix) // ( p*div(v) ) (NS eq) ============
        for (uint j=0; j < LagMultOld._ndof[vb]; j++) {
-          const double psij_g = currgp._phi_ndsQLVB_g[vb][LagMultOld._FEord][j];
+          const double psij_g = currgp._phi_ndsQLVB_g[LagMultOld._FEord][j];
           const int jclml = j+space_dim*BeOld._ndof[vb];
           for (uint idim=0; idim<space_dim; idim++) {
             uint irowq=i+idim*BeOld._ndof[vb];
@@ -404,7 +404,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //===============================================
           if ( i < LagMultOld._ndof[vb] ) {
 //============ preparation for (i) ============
-          double psii_g = currgp._phi_ndsQLVB_g[vb][LagMultOld._FEord][i];
+          double psii_g = currgp._phi_ndsQLVB_g[LagMultOld._FEord][i];
 	  const uint irowl = i+space_dim*BeOld._ndof[vb];
 
 //============ QTYONE rhs ============
@@ -506,7 +506,7 @@ if (_Dir_pen_fl == 1)  {
     for (uint qp=0; qp< el_ngauss; qp++) {
 
 //======= "COMMON SHAPE PART"============================
-for (uint fe = 0; fe < QL; fe++)     {        currgp.SetPhiElDofsFEVB_g (vb,fe,qp);  } //for velocity test functions AND for pressure shape functions
+for (uint fe = 0; fe < QL; fe++)     {        currgp.SetPhiElDofsFEVB_g (fe,qp);  } //for velocity test functions AND for pressure shape functions
 for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);   }
 
         const double det   = dt*currgp.JacVectBB_g(vb,xyz);
@@ -522,7 +522,7 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (v
 //============ QTYZERO dofs (rows) ============
       for (uint i=0; i<BeOld._ndof[vb]; i++) {
 //============ preparation for (i) ============
-const double phii_g = currgp._phi_ndsQLVB_g[vb][BeOld._FEord][i];
+const double phii_g = currgp._phi_ndsQLVB_g[BeOld._FEord][i];
 
 //============ QTYZERO rhs ============
                for (uint idim=0; idim< space_dim; idim++)    {
@@ -548,7 +548,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 	   for (uint jdim=0; jdim< space_dim; jdim++)    {
 
 	   for (uint j=0; j<BeOld._ndof[vb]; j++) {
-          const double phij_g = currgp._phi_ndsQLVB_g[vb][BeOld._FEord][j];
+          const double phij_g = currgp._phi_ndsQLVB_g[BeOld._FEord][j];
 
   currelem.Mat()(irowq,j+jdim*BeOld._ndof[vb]) +=                //projection over the physical (x,y,z) 
       + /*_Dir_pen_fl**/dtxJxW_g*phii_g*phij_g*(dbl_pen[NN]*currgp.get_normal_ptr()[jdim]*currgp.get_normal_ptr()[idim]   //the PENALTY is BY ELEMENT, but the (n,t) is BY GAUSS because we cannot compute now a nodal normal

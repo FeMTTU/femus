@@ -4011,7 +4011,7 @@ double  Jac_g=0.;
 
    const double  wgt_g = _eqnmap._qrule[vb].GetGaussWeight(qp);
 
-     for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (vb,fe,qp);  }
+     for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
  xyz.val_g(vb);
 double myval_g = pt2func(time,xyz._val_g); 

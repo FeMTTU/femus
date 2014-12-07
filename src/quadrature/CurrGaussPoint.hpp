@@ -31,7 +31,7 @@ double        JacVectVV_g(const uint vbflag, QuantityLocal& xyz )/*const*/;  //T
 double        JacVectBB_g(const uint vbflag, QuantityLocal& xyz )/* const*/;  //TODO should be only for BOUNDARY 
 
 
-void         SetPhiElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp);
+void         SetPhiElDofsFEVB_g(const uint qlflag, const uint qp);
 void SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp);
 void    SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp);
 void ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag/*, const uint qp*/);

@@ -44,7 +44,7 @@ CurrGaussPoint<FM_DIM>::~CurrGaussPoint() {
 
 
 template <unsigned int FM_DIM>
-void CurrGaussPoint<FM_DIM>::SetPhiElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp) {
+void CurrGaussPoint<FM_DIM>::SetPhiElDofsFEVB_g(const uint qlflag, const uint qp) {
   
     const uint el_nnodes =  _elem_type[qlflag]->GetNDofs();
     const uint el_ngauss =  _qrule.GetGaussPointsNumber();
@@ -52,7 +52,7 @@ void CurrGaussPoint<FM_DIM>::SetPhiElDofsFEVB_g(const uint vbflag,const uint qlf
    
     for (uint eln=0; eln<el_nnodes; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
-              _phi_ndsQLVB_g[vbflag][qlflag][eln] = _elem_type[qlflag]->GetPhi(qp,eln);
+              _phi_ndsQLVB_g[qlflag][eln] = _elem_type[qlflag]->GetPhi(qp,eln);
          }
 
 return;

@@ -231,7 +231,7 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
 
     for (uint qp = 0; qp < el_ngauss; qp++) {
 //=======here starts the "COMMON SHAPE PART"==================
-for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (vb,fe,qp);  }
+for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }  
 	  
 const double      det = dt*currgp.JacVectVV_g(vb,xyz);   //InvJac: is the same for both QQ and LL!
@@ -258,7 +258,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 
        for (uint i=0; i < BhomAdjOld._ndof[vb]; i++)     {
 //======="COMMON tEST PART for QTYZERO": func and derivative, of the QTYZERO FE ORD ==========
-        const double phii_g = currgp._phi_ndsQLVB_g[vb][BhomAdjOld._FEord][i];
+        const double phii_g = currgp._phi_ndsQLVB_g[BhomAdjOld._FEord][i];
         for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BhomAdjOld._FEord][i+idim*BhomAdjOld._ndof[vb]];
 //======= END "COMMON tEST PART for QTYZERO" ==========
 
@@ -285,7 +285,7 @@ if (_Dir_pen_fl == 0)  {
 	 
         for (uint j=0; j<BhomAdjOld._ndof[vb]; j++) {// A element matrix
 //======="COMMON SHAPE PART for QTYZERO": ==========
-           double                                  phij_g       =      currgp._phi_ndsQLVB_g[vb][BhomAdjOld._FEord][j];
+           double                                  phij_g       =      currgp._phi_ndsQLVB_g[BhomAdjOld._FEord][j];
            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][BhomAdjOld._FEord][j+idim*BhomAdjOld._ndof[vb]];
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
 
@@ -324,7 +324,7 @@ if (_Dir_pen_fl == 0)  {
                                       // end A element matrix
       
        for (uint j=0; j < BhomLagMultAdjOld._ndof[vb]; j++) {// B^T element matrix ( p*div(v) )
-          const double psij_g =  currgp._phi_ndsQLVB_g[vb][BhomLagMultAdjOld._FEord][j];
+          const double psij_g =  currgp._phi_ndsQLVB_g[BhomLagMultAdjOld._FEord][j];
           const int jclml= j + space_dim*BhomAdjOld._ndof[vb];
           for (uint idim=0; idim<space_dim; idim++) {
             uint irowq = i+idim*BhomAdjOld._ndof[vb];
@@ -334,7 +334,7 @@ if (_Dir_pen_fl == 0)  {
                                      // end B^T element matrix
 
           if (i<BhomLagMultAdjOld._ndof[vb]) {//  pressure equation (KOMP dp/dt=rho*div) 
-          double psii_g = currgp._phi_ndsQLVB_g[vb][BhomLagMultAdjOld._FEord][i];
+          double psii_g = currgp._phi_ndsQLVB_g[BhomLagMultAdjOld._FEord][i];
 	  const uint irowl = i+space_dim*BhomAdjOld._ndof[vb];
           currelem.Rhs()(irowl)=0.;  // rhs
  //             currelem.Mat()(irowl,j+space_dim*el_ndof_q)  += dtxJxW_g*(psii_g*psij_g)*_Komp_fac/dt;
@@ -413,7 +413,7 @@ if (_Dir_pen_fl == 1)  {
     for (uint qp=0; qp< el_ngauss; qp++) {
 //======= "COMMON SHAPE PART"============================
  for (uint fe = 0; fe < QL; fe++)     {
-   currgp.SetPhiElDofsFEVB_g (vb,fe,qp); 
+   currgp.SetPhiElDofsFEVB_g (fe,qp); 
    currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);   }
 
         const double det   = dt*currgp.JacVectBB_g(vb,xyz);
@@ -428,7 +428,7 @@ if (_Dir_pen_fl == 1)  {
 //==============================================================
            for (uint i=0; i < BhomAdjOld._ndof[vb]; i++) {
  
-	const double phii_g = currgp._phi_ndsQLVB_g[vb][BhomAdjOld._FEord][i];
+	const double phii_g = currgp._phi_ndsQLVB_g[BhomAdjOld._FEord][i];
 
         for (uint idim=0; idim< space_dim; idim++)    {
              uint irowq=i+idim*BhomAdjOld._ndof[vb];
@@ -453,7 +453,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 	   for (uint jdim=0; jdim< space_dim; jdim++)    {
 
 	   for (uint j=0; j< BhomAdjOld._ndof[vb]; j++) {
-          const double phij_g = currgp._phi_ndsQLVB_g[vb][ BhomAdjOld._FEord][j];
+          const double phij_g = currgp._phi_ndsQLVB_g[ BhomAdjOld._FEord][j];
 
   currelem.Mat()(irowq,j+jdim*BhomAdjOld._ndof[vb]) +=                //projection over the physical (x,y,z) 
       + /*_Dir_pen_fl**/dtxJxW_g*phii_g*phij_g*(dbl_pen[NN]*currgp.get_normal_ptr()[jdim]*currgp.get_normal_ptr()[idim]   //the PENALTY is BY ELEMENT, but the (n,t) is BY GAUSS because we cannot compute now a nodal normal

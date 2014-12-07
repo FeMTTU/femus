@@ -122,7 +122,7 @@ const uint FEord = _FEord;
 	  
 	       const uint indx=eln+ivar*el_ndof;
 	  
-              _val_g[ivar] += _currGP._phi_ndsQLVB_g[vbflag][FEord][eln]*_val_dofs[indx];
+              _val_g[ivar] += _currGP._phi_ndsQLVB_g[FEord][eln]*_val_dofs[indx];
 	       
 	    }
 

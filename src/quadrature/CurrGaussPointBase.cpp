@@ -34,10 +34,12 @@ CurrGaussPointBase::CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in 
    _dphidxyz_ndsQLVB_g3D[vb][fe] =  new double[ 3           * _elem_type[fe]->GetNDofs() ]; //both VV and BB are 3 in general (vector product, or ONE?!?)
      _dphidxyz_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _elem_type[fe]->GetNDofs() ];   
   _dphidxezeta_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _elem_type[fe]->GetNDofs() ];     
-          _phi_ndsQLVB_g[vb][fe] =  new double[               _elem_type[fe]->GetNDofs() ];     
    }
  }  
   
+       for (int fe = 0; fe < QL; fe++)  _phi_ndsQLVB_g[fe] =  new double[               _elem_type[fe]->GetNDofs() ];     
+
+
   //Jacobian matrices, normals, tangents
   
   _normal_g  = new double[_IntDim[VV]];
@@ -55,13 +57,14 @@ CurrGaussPointBase::~CurrGaussPointBase() {
   
     for (int i=0;i< VB;i++){
       for (int j=0;j< QL;j++) {
-	delete [] _phi_ndsQLVB_g[i][j];
 	delete []  _dphidxyz_ndsQLVB_g[i][j];
 	delete []  _dphidxyz_ndsQLVB_g3D[i][j];
 	delete [] _dphidxezeta_ndsQLVB_g[i][j];
       }
     }
-   
+
+          for (int j=0;j< QL;j++) delete [] _phi_ndsQLVB_g[j];
+    
        for (int i = 0; i < _IntDim[BB]; i++) { delete [] _tangent_g[i];}
        for (int i = 0; i < _IntDim[VV]; i++) { delete [] _InvJac_g[i];}
    delete [] _tangent_g;

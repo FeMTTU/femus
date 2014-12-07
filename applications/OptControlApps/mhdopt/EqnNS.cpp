@@ -424,7 +424,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 //of a certain Unknown are COMMON TO ALL,
 //Then we must only concentrate on preparing the OTHER involved quantities in that Operator
 for (uint fe = 0; fe < QL; fe++)     { 
-    currgp.SetPhiElDofsFEVB_g (vb,fe,qp);
+    currgp.SetPhiElDofsFEVB_g (fe,qp);
     currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }  
 	  
 const double      det = dt*currgp.JacVectVV_g(vb,xyz);   //InvJac: is the same for both QQ and LL!
@@ -498,7 +498,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
         //in this part we follow the Test Fncs of the FIRST QUANTITY of THIS Equation
         //since the Equation in this FE code is in WEAK FORM,
         //every Operator would have the test FUNCTIONS as ONE and ONLY ONE OF THEIR ARGUMENTS 
-                                    const double phii_g       =      currgp._phi_ndsQLVB_g[vb][qtyzero_ord][i];
+                                    const double phii_g       =      currgp._phi_ndsQLVB_g[qtyzero_ord][i];
         for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][qtyzero_ord][i+idim*qtyzero_ndof];
 //======= END "COMMON tEST PART for QTYZERO" ==========
 	
@@ -534,7 +534,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
         for (uint j=0; j< qtyzero_ndof; j++) {
 //======="COMMON SHAPE PART for QTYZERO": func and derivative, of the QTYZERO FE ORD ==========
 //   (j):       dof of the SHAPE function
-           double                                  phij_g       =     currgp._phi_ndsQLVB_g[vb][qtyzero_ord][j];
+           double                                  phij_g       =     currgp._phi_ndsQLVB_g[qtyzero_ord][j];
            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][qtyzero_ord][j+idim*qtyzero_ndof];
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
   
@@ -583,7 +583,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 //============ QTYZERO x QTYONE dofs matrix (B^T matrix) // ( p*div(v) ) (NS eq) ============
        for (uint j=0; j</*0*/qtyone_ndof; j++) {
 //======="COMMON SHAPE PART for QTYONE" ==================
-	 const double psij_g = currgp._phi_ndsQLVB_g[vb][qtyone_ord][j];
+	 const double psij_g = currgp._phi_ndsQLVB_g[qtyone_ord][j];
 //======="COMMON SHAPE PART for QTYONE" - END ============
 
           const int jclml = j + qtyZeroToOne_DofOffset;   /* space_dim*qtyzero_ndof */
@@ -600,7 +600,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
           if (i</*0*/qtyone_ndof) {
 //======="COMMON tEST PART for QTYONE" ============
-          double psii_g = currgp._phi_ndsQLVB_g[vb][qtyone_ord][i];
+          double psii_g = currgp._phi_ndsQLVB_g[qtyone_ord][i];
 //======= "COMMON tEST PART for QTYONE" - END ============
 	  const uint irowl = i + qtyZeroToOne_DofOffset;   /* space_dim*qtyzero_ndof */
           currelem.Rhs()(irowl)=0.;  // rhs
@@ -702,7 +702,7 @@ if (_Dir_pen_fl == 1)  {
     for (uint qp=0; qp< el_ngauss; qp++) {
             
 //======= "COMMON SHAPE PART"============================
-for (uint fe = 0; fe < QL; fe++)     {        currgp.SetPhiElDofsFEVB_g (vb,fe,qp);  } //for velocity test functions AND for pressure shape functions
+for (uint fe = 0; fe < QL; fe++)     {        currgp.SetPhiElDofsFEVB_g (fe,qp);  } //for velocity test functions AND for pressure shape functions
 for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp); }
 
         const double det   = dt*currgp.JacVectBB_g(vb,xyz);
@@ -742,7 +742,7 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (v
 //==============================================================
       for (uint i=0; i<qtyzero_ndof; i++) { // rhs (NS eq) //interpolation of the velocity test functions on the boundary
 
-	const double phii_g = currgp._phi_ndsQLVB_g[vb][qtyzero_ord][i];
+	const double phii_g = currgp._phi_ndsQLVB_g[qtyzero_ord][i];
 
          for (uint idim=0; idim< space_dim; idim++)    {
              uint irowq=i+idim*qtyzero_ndof;
@@ -767,7 +767,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 	   for (uint jdim=0; jdim< space_dim; jdim++)    {
 
 	   for (uint j=0; j<qtyzero_ndof; j++) {
-          const double phij_g = currgp._phi_ndsQLVB_g[vb][qtyzero_ord][j];
+          const double phij_g = currgp._phi_ndsQLVB_g[qtyzero_ord][j];
 
   currelem.Mat()(irowq,j+jdim*qtyzero_ndof) +=                //projection over the physical (x,y,z) 
       + /*_Dir_pen_fl**/dtxJxW_g*phii_g*phij_g*(dbl_pen[NN]*currgp.get_normal_ptr()[jdim]*currgp.get_normal_ptr()[idim]   //the PENALTY is BY ELEMENT, but the (n,t) is BY GAUSS because we cannot compute now a nodal normal
@@ -973,7 +973,7 @@ for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe
    const double  Jac_g = currgp.JacVectVV_g(vb,xyz);  //not xyz_refbox!      
    const double  wgt_g = _eqnmap._qrule[vb].GetGaussWeight(qp);
 
-     for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (vb,fe,qp);  }
+     for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
  Vel.val_g(vb);
  VelDes.val_g(vb);

@@ -217,7 +217,7 @@ int domain_flag = myphys->ElFlagControl(xyz_refbox._el_average[vb]);
 
 //======= "COMMON SHAPE PART"==================
 for (uint fe = 0; fe < QL; fe++)   { 
-  currgp.SetPhiElDofsFEVB_g (vb,fe,qp);
+  currgp.SetPhiElDofsFEVB_g (fe,qp);
   currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp); 
 }
 	  
@@ -240,7 +240,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 	  
       for (uint i=0; i < Tempold._ndof[vb]/*the maximum number is for biquadratic*/; i++)     {
 
-        const double phii_g   = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][i];
+        const double phii_g   = currgp._phi_ndsQLVB_g[Tempold._FEord][i];
 //         const double phii_gLL = currgp._phi_ndsQLVB_g[vb][Temp2._FEord][i];
 //         const double phii_gKK = currgp._phi_ndsQLVB_g[vb][Temp3._FEord][i];
 
@@ -283,9 +283,9 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 	
 	 // Matrix Assemblying ---------------------------
         for (uint j=0; j<Tempold._ndof[vb]; j++) {
-          double phij_g   = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][j];
-//           double phij_gLL = currgp._phi_ndsQLVB_g[vb][Temp2._FEord][j];
-//           double phij_gKK = currgp._phi_ndsQLVB_g[vb][Temp3._FEord][j];
+          double phij_g   = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
+//           double phij_gLL = currgp._phi_ndsQLVB_g[Temp2._FEord][j];
+//           double phij_gKK = currgp._phi_ndsQLVB_g[Temp3._FEord][j];
 	  
         for (uint idim = 0; idim < space_dim; idim++)   {
 	  dphijdx_g  [idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][j+idim*Tempold._ndof[vb]]; 
@@ -400,7 +400,7 @@ int el_Neum_flag=0;
 
 //======= "COMMON SHAPE PART"============================
   for (uint fe = 0; fe < QL; fe++)  {
-    currgp.SetPhiElDofsFEVB_g (vb,fe,qp);
+    currgp.SetPhiElDofsFEVB_g (fe,qp);
     currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp); 
   }
         const double  det   = currgp.JacVectBB_g(vb,xyz);
@@ -416,7 +416,7 @@ int el_Neum_flag=0;
 	   double QfluxDn_g=Math::dot( Qflux_g,currgp.get_normal_ptr(),space_dim );
 	 
         for (uint i=0; i<Tempold._ndof[vb]; i++) {
-   	const double phii_g =  currgp._phi_ndsQLVB_g[vb][Tempold._FEord][i]; 
+   	const double phii_g =  currgp._phi_ndsQLVB_g[Tempold._FEord][i]; 
 	
        currelem.Rhs()(i) +=
           0.*(currelem.GetBCDofFlag()[i]*
@@ -426,7 +426,7 @@ int el_Neum_flag=0;
 	 
          if (_Dir_pen_fl == 1) {
             for (uint j=0; j<Tempold._ndof[vb]; j++) {
-               double phij_g = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][j];
+               double phij_g = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
 	       currelem.Mat()(i,j) += 0.*el_penalty*dtxJxW_g*phij_g*phii_g;
 	    } 
           }
@@ -555,7 +555,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
    const double  Jac_g = currgp.JacVectVV_g(vb,xyz);  //not xyz_refbox!      
    const double  wgt_g = _eqnmap._qrule[vb].GetGaussWeight(qp);
 
-     for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (vb,fe,qp);  }
+     for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
        integral += el_flagdom*wgt_g*Jac_g*1.;
    
@@ -655,7 +655,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
   for (uint qp = 0; qp < el_ngauss; qp++) {
 
      for (uint fe = 0; fe < QL; fe++)     {
-       currgp.SetPhiElDofsFEVB_g (vb,fe,qp);
+       currgp.SetPhiElDofsFEVB_g (fe,qp);
        currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  
     }  
      
