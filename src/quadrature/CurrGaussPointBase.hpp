@@ -37,6 +37,7 @@ class EquationsMap;
     double*         _phi_ndsQLVB_g[VB][QL];  //canonical functions  //TODO here it seems to contain GAUSS x ELDOFS
     double* _dphidxezeta_ndsQLVB_g[VB][QL];  //canonical derivatives
     double*    _dphidxyz_ndsQLVB_g[VB][QL];  //physical derivatives
+
     double*  _dphidxyz_ndsQLVB_g3D[VB][QL];  //physical derivatives in 3D
 
  double**  get_tangent_ptr();   //TODO should be only for BOUNDARY 

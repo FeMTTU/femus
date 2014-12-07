@@ -27,6 +27,7 @@ algebra/SparseMatrix.cpp
 algebra/VankaPetscLinearEquationSolver.cpp
 algebra/FunctionBase.cpp
 algebra/ParsedFunction.cpp
+equations/CurrElem.cpp
 equations/EqnBase.cpp
 equations/EquationsMap.cpp
 equations/ExplicitSystem.cpp
@@ -65,7 +66,6 @@ fe/Tetrahedral.cpp
 fe/Triangle.cpp
 fe/Wedge.cpp
 meshGencase/Box.cpp
-meshGencase/CurrElem.cpp
 meshGencase/Domain.cpp
 meshGencase/ElemSto.cpp
 meshGencase/GeomEl.cpp
