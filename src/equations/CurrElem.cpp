@@ -21,7 +21,7 @@ namespace femus {
     
 //========== ELEMENT: Current Geometric Element (SERVICE)  ========================
    const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");
-  uint elnodes = _eqnmap._mesh._GeomEl[vb][mesh_ord]._elnds;     //TODO the mesh is quadratic
+  uint elnodes = _eqnmap._mesh.GetGeomEl(_eqnmap._mesh.get_dim()-1-vb,mesh_ord)._elnds;     //TODO the mesh is quadratic
   _el_conn = new uint[ elnodes ];   
    _xx_nds = new double[_eqnmap._mesh.get_dim()*elnodes ];
     _el_xm = new double[_eqnmap._mesh.get_dim()];  
@@ -128,9 +128,9 @@ for (uint ivar=0; ivar < _eqn._nvars[fe]; ivar++)    {
 ///It is for debugging purposes
 void CurrElem::PrintOrientation(const uint vb) const {
   
-      const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");
-      const uint el_nnodes   = _eqnmap._mesh._GeomEl[vb][mesh_ord]._elnds;
       const uint mydim = _eqnmap._mesh.get_dim();
+      const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");
+      const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(mydim -1 - vb,mesh_ord)._elnds;
 
        std::vector<double>   xi(mydim,0.);
        std::vector<double>  eta(mydim,0.);
@@ -198,9 +198,9 @@ void CurrElem::PrintOrientation(const uint vb) const {
 
   void CurrElem::SetMidpoint(const uint vb) const {
 
-    const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
-    const uint el_nnodes   = _eqnmap._mesh._GeomEl[vb][mesh_ord]._elnds;
     const uint mydim = _eqnmap._mesh.get_dim();
+    const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
+    const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(mydim-1-vb, mesh_ord)._elnds;
 
        for (uint idim=0; idim< mydim; idim++)  _el_xm[idim]=0.;
 
@@ -219,9 +219,9 @@ void CurrElem::PrintOrientation(const uint vb) const {
    // =====================================================================================
   void CurrElem::set_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) const {
 
-    const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
-    const uint el_nnodes   = _eqnmap._mesh._GeomEl[vb][mesh_ord]._elnds;
     const uint mydim = _eqnmap._mesh.get_dim();
+    const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
+    const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(mydim-1-vb,mesh_ord)._elnds;
           
    for (uint n=0; n<el_nnodes; n++)    {
 
@@ -264,7 +264,7 @@ void CurrElem::ConvertElemCoordsToMappingOrd(const uint vb,QuantityLocal& myvect
   const uint  elndof = myvect._ndof[vb];
   const uint vectdim = myvect._dim;
   const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
-  const uint offset = _eqnmap._mesh._GeomEl[vb][mesh_ord]._elnds;
+  const uint offset = _eqnmap._mesh.GetGeomEl(_eqnmap._mesh.get_dim()-1 - vb, mesh_ord)._elnds;
  
  //TODO ASSERT
  /* assert(*/ if (elndof > offset) {std::cout << "Quadratic transformation over linear mesh " << std::endl;abort();}  /*);*/

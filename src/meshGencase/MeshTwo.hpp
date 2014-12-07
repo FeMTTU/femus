@@ -71,7 +71,6 @@ public:
     const double _Lref;          ///Reference length for non-dimensionalization
 
 // ===== ABSTRACT GEOMEL(S) =====
-    std::vector< std::vector<GeomEl> >  _GeomEl;   //[VB][QL_NODES] 
     uint*      _type_FEM;         //just for check
     uint _elnodes[VB][QL];
     
@@ -116,14 +115,20 @@ public:
 //     std::string _nd_map_FineToLev;
   
     
-public:    
+   public:    
 // ====== DOMAIN SHAPE (TODO optional => pointer) ----- //if I put it as reference I'd have to initialize it
     Domain* _domain;      //TODO You must remember to ALLOCATE this POINTER BEFORE USING IT!
     Domain* GetDomain() const;
     void    SetDomain(Domain* );
     void TransformElemNodesToRef(const uint vb,const double* xx_qnds,double* refbox_xyz) const;
     
-  
+    inline GeomEl GetGeomEl(const uint dim, const uint order) const {
+     return _GeomEl[dim][order]; 
+    }
+
+   private:   
+     
+    std::vector< std::vector<GeomEl> >  _GeomEl;   //[DIM][QL_NODES] 
 
  };
 

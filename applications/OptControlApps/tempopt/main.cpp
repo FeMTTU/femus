@@ -77,7 +77,7 @@
   std::vector<Gauss>   qrule;
   qrule.reserve(VB);
   for (int vb=0;vb < VB; vb++) { 
-          Gauss qrule_temp(mesh._GeomEl[vb][mesh._mesh_order]._geomel_id.c_str(),"fifth");
+          Gauss qrule_temp(mesh.GetGeomEl(mesh.get_dim()-1-vb,mesh._mesh_order)._geomel_id.c_str(),"fifth");
          qrule.push_back(qrule_temp);
   }
   
@@ -88,13 +88,13 @@
 
   for (int vb=0;vb < VB; vb++) {
     for (int fe=0; fe<QL; fe++) {
-       FEElemType_vec[vb][fe] = elem_type::build(mesh._GeomEl[vb][mesh._mesh_order]._geomel_id.c_str(),fe, qrule[vb].GetGaussOrderString().c_str());
-       FEElemType_vec[vb][fe]->EvaluateShapeAtQP(mesh._GeomEl[vb][mesh._mesh_order]._geomel_id.c_str(),fe);
+       FEElemType_vec[vb][fe] = elem_type::build(mesh.GetGeomEl(mesh.get_dim()-1-vb,mesh._mesh_order)._geomel_id.c_str(),fe, qrule[vb].GetGaussOrderString().c_str());
+       FEElemType_vec[vb][fe]->EvaluateShapeAtQP(mesh.GetGeomEl(mesh.get_dim()-1-vb,mesh._mesh_order)._geomel_id.c_str(),fe);
      }
    }
   
   std::vector<FEElemBase*> FEElements(QL);
-  for (int fe=0; fe<QL; fe++)    FEElements[fe] = FEElemBase::build(mesh._GeomEl[VV][mesh._mesh_order]._geomel_id.c_str(),fe);
+  for (int fe=0; fe<QL; fe++)    FEElements[fe] = FEElemBase::build(mesh.GetGeomEl(mesh.get_dim()-1-VV,mesh._mesh_order)._geomel_id.c_str(),fe);
 
   // ======== TimeLoop ===================================
   TimeLoop time_loop(files); 

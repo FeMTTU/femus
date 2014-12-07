@@ -143,8 +143,8 @@
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof[VV] = _mesh._GeomEl[VV][xyz_refbox._FEord]._elnds;
-  xyz_refbox._ndof[BB] = _mesh._GeomEl[BB][xyz_refbox._FEord]._elnds;
+  xyz_refbox._ndof[VV] = _mesh.GetGeomEl(space_dim-1-VV,xyz_refbox._FEord)._elnds;
+  xyz_refbox._ndof[BB] = _mesh.GetGeomEl(space_dim-1-BB,xyz_refbox._FEord)._elnds;
   xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof[vb]]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   //==================

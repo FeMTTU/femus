@@ -297,7 +297,7 @@ void QuantityLocal::GetElDofsVect(const uint vbfl, const uint Level)  {
 //   const uint  elndof = myvect._ndof[vb];
 //   const uint vectdim = myvect._dim;
 //   const uint mesh_ord = (int) _eqnmap._utils._urtmap.get("mesh_ord");    
-//   const uint offset = _eqnmap._mesh._GeomEl._elnds[vb][mesh_ord];
+//   const uint offset = _eqnmap._mesh.GetGeomEl(_eqnmap._mesh.get_dim()-1-vb,mesh_ord)._elnds;
 //  
 //  //TODO ASSERT
 //  /* assert(*/ if (elndof > offset) {std::cout << "Quadratic transformation over linear mesh " << std::endl;abort();}  /*);*/

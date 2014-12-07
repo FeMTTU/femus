@@ -42,7 +42,7 @@ GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const 
   _mesh_file.assign(mesh_file_in);  //TODO it seems like moving from protected to public in Mesh changed the RUNTIME behaviour also!!!!!
                                      //now I moved it to gencase and it works   
    _feelems.resize(QL);
-  for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(_GeomEl[VV][_mesh_order]._geomel_id.c_str(),fe);
+  for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(GetGeomEl(get_dim()-1-VV,_mesh_order)._geomel_id.c_str(),fe);
  
 }
 
@@ -150,14 +150,14 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
             libMesh::ElemType libmname; //convert the _geomel name into the libmesh geom el name
 
             if ( get_dim() == 2 ) {
-            if (     _GeomEl[VV][_mesh_order].name == "Quadrilateral_9") libmname = libMesh::QUAD9;
-            else if (_GeomEl[VV][_mesh_order].name == "Triangle_6")  libmname = libMesh::TRI6;
+            if (     GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Quadrilateral_9") libmname = libMesh::QUAD9;
+            else if (GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Triangle_6")  libmname = libMesh::TRI6;
             libMesh::MeshTools::Generation::build_square
             (*msh_coarse, ninterv[0], ninterv[1], box._lb[0], box._le[0], box._lb[1], box._le[1],libmname);
 	    }
 	    else if ( get_dim() == 3 ) {
-            if (     _GeomEl[VV][_mesh_order].name == "Hexahedron_27")  libmname = libMesh::HEX27;
-            else if (_GeomEl[VV][_mesh_order].name == "Tetrahedron_10")  libmname = libMesh::TET10;
+            if (     GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Hexahedron_27")  libmname = libMesh::HEX27;
+            else if (GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Tetrahedron_10")  libmname = libMesh::TET10;
             libMesh::MeshTools::Generation::build_cube
             (*msh_coarse,  ninterv[0], ninterv[1],  ninterv[2], box._lb[0], box._le[0], box._lb[1], box._le[1], box._lb[2], box._le[2],libmname);
 	    }
@@ -2096,7 +2096,7 @@ void GenCase::PrintMeshHDF5() const  {
     int *ttype_FEM;
     ttype_FEM=new int[VB];
 
-    for (uint vb=0; vb< VB;vb++)   ttype_FEM[vb]=_GeomEl[vb][QQ]._elnds;
+    for (uint vb=0; vb< VB;vb++)   ttype_FEM[vb] = GetGeomEl(get_dim()-1-vb,QQ)._elnds;
 
     dimsf[0] = VB;
     dimsf[1] = 1;
