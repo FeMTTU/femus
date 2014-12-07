@@ -176,7 +176,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
+    currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
     currelem.set_el_DofObj_lev_subd(vb,Level,myproc,iel);
     currelem.SetMidpoint();
 
@@ -358,7 +358,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
       currelem.Mat().zero();
       currelem.Rhs().zero();
 
-      currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
+      currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
       currelem.set_el_DofObj_lev_subd(vb,Level,myproc,iel);
       currelem.SetMidpoint(); 
 
@@ -535,7 +535,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-      currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
+      currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
       currelem.set_el_DofObj_lev_subd(vb,Level,myproc,iel);
       currelem.SetMidpoint();
       
@@ -644,7 +644,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-      currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
+      currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
       currelem.set_el_DofObj_lev_subd(vb,Level,myproc,iel);
       currelem.SetMidpoint();
 

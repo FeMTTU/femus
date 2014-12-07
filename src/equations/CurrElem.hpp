@@ -110,7 +110,7 @@ class QuantityLocal;
       return _KeM;
     }
     
-    void  set_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) const;
+    void  set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel) const;
     
     //TODO this is not const because _vol_iel_DofObj is NOT A POINTER! 
     void  set_el_DofObj_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel);
@@ -118,7 +118,7 @@ class QuantityLocal;
     //TODO notice that this is not changing the POINTER , so it is const!
     void  SetMidpoint() const;
     
-    void  PrintOrientation(const uint vb) const;
+    void  PrintOrientation() const;
     
     void  ConvertElemCoordsToMappingOrd(const uint vb,QuantityLocal& myvect) const;
     
@@ -145,8 +145,9 @@ class QuantityLocal;
      uint    _vol_iel_DofObj;     /// i need to put the element also.
    double  *_xx_nds;              /// vector of the node coordinates for that element     [_spacedimension*NNDS];
    double  *_el_xm;               /// element center point                                [_spacedimension];
-   const uint _dim;
-   
+   const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
+   const uint _mesh_vb;     //index for the mesh
+
   };
   
 

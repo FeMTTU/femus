@@ -17,7 +17,8 @@ namespace femus {
     CurrElem::CurrElem(const uint vb, const EqnBase & eqn_in, const EquationsMap & e_map_in ):
     _eqn(eqn_in),
     _eqnmap(e_map_in),
-    _dim(_eqnmap._mesh.get_dim()-vb)
+    _dim(_eqnmap._mesh.get_dim()-vb),
+    _mesh_vb(vb)
     {
     
 //========== Current "Geometric Element"  ========================
@@ -129,32 +130,32 @@ for (uint ivar=0; ivar < _eqn._nvars[fe]; ivar++)    {
 ///This function prints the element orientation
 ///A QUADRATIC MESH VECTOR is passed HERE  
 ///It is for debugging purposes
-void CurrElem::PrintOrientation(const uint vb) const {
+void CurrElem::PrintOrientation() const {
   
-      const uint mydim = _eqnmap._mesh.get_dim();
+      const uint mesh_dim = _eqnmap._mesh.get_dim();
       const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");
-      const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(mydim -1 - vb,mesh_ord)._elnds;
+      const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(_dim -1,mesh_ord)._elnds;
 
-       std::vector<double>   xi(mydim,0.);
-       std::vector<double>  eta(mydim,0.);
-       std::vector<double> zeta(mydim,0.);  //TODO this should only be instantiated  in the 3D case, in any case we avoid USING IT 
+       std::vector<double>   xi(mesh_dim,0.);
+       std::vector<double>  eta(mesh_dim,0.);
+       std::vector<double> zeta(mesh_dim,0.);  //TODO this should only be instantiated  in the 3D case, in any case we avoid USING IT 
 
-      for (uint idim=0; idim< mydim; idim++) {
+      for (uint idim=0; idim< mesh_dim; idim++) {
                               xi[idim] = _xx_nds[1+idim*el_nnodes]-_xx_nds[0+idim*el_nnodes]; //1-0 xi axis
                              eta[idim] = _xx_nds[3+idim*el_nnodes]-_xx_nds[0+idim*el_nnodes]; //3-0 eta axis
-        if ( mydim == 3 )   zeta[idim] = _xx_nds[4+idim*el_nnodes]-_xx_nds[0+idim*el_nnodes]; //4-0 zeta axis
+        if ( mesh_dim == 3 )   zeta[idim] = _xx_nds[4+idim*el_nnodes]-_xx_nds[0+idim*el_nnodes]; //4-0 zeta axis
 
      }
 
      std::cout << "asse xi   ";
-       for (uint idim=0; idim< mydim; idim++)  std::cout << xi[idim] << " ";
+       for (uint idim=0; idim< mesh_dim; idim++)  std::cout << xi[idim] << " ";
       std::cout <<std::endl;
      std::cout << "asse eta  ";
-       for (uint idim=0; idim< mydim; idim++)  std::cout << eta[idim] << " ";
+       for (uint idim=0; idim< mesh_dim; idim++)  std::cout << eta[idim] << " ";
       std::cout <<std::endl;
-      if ( mydim == 3 )  {
+      if ( mesh_dim == 3 )  {
      std::cout << "asse zeta ";
-       for (uint idim=0; idim< mydim; idim++)  std::cout << zeta[idim] << " ";
+       for (uint idim=0; idim< mesh_dim; idim++)  std::cout << zeta[idim] << " ";
       std::cout <<std::endl;
       }
 
@@ -168,7 +169,7 @@ void CurrElem::PrintOrientation(const uint vb) const {
  
  
 // ========================================================
-//   void CurrElem::set_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel,
+//   void CurrElem::set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel,
 // 				uint el_conn[], double xx[]) const {///get the global node numbers for that element and their coordinates
 ///this routine does not yield the connectivity
 //is this function called when the class members are already filled?
@@ -220,15 +221,15 @@ void CurrElem::PrintOrientation(const uint vb) const {
   }
 
    // =====================================================================================
-  void CurrElem::set_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) const {
+  void CurrElem::set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel) const {
 
     const uint mydim = _eqnmap._mesh.get_dim();
     const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
-    const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(mydim-1-vb,mesh_ord)._elnds;
+    const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(_dim-1,mesh_ord)._elnds;
           
    for (uint n=0; n<el_nnodes; n++)    {
 
-     _el_conn[n] = _eqnmap._mesh._el_map[vb][( iel + _eqnmap._mesh._off_el[vb][_eqnmap._mesh._NoLevels*isubd_in + Level] )*el_nnodes+n];
+     _el_conn[n] = _eqnmap._mesh._el_map[_mesh_vb][( iel + _eqnmap._mesh._off_el[_mesh_vb][_eqnmap._mesh._NoLevels*isubd_in + Level] )*el_nnodes+n];
 
       for (uint idim=0; idim < mydim; idim++) {
         const uint indxn = n+idim*el_nnodes;

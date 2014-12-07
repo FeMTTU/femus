@@ -224,7 +224,7 @@ void EqnMHDCONT::init_equation_data() {
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
      
-    currelem.set_el_nod_conn_lev_subd(vb,Level,_iproc,iel);
+    currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
     currelem.set_el_DofObj_lev_subd(vb,Level,_iproc,iel);
     currelem.SetMidpoint();
     
@@ -458,7 +458,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
      currelem.Mat().zero();
      currelem.Rhs().zero();
 
-     currelem.set_el_nod_conn_lev_subd(vb,Level,_iproc,iel);
+     currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
      currelem.set_el_DofObj_lev_subd(vb,Level,_iproc,iel);
      currelem.SetMidpoint();
      
