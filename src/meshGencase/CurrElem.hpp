@@ -78,7 +78,6 @@ class QuantityLocal;
    const EqnBase & _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
    const EquationsMap & _eqnmap;
 
-    //==== REAL ELEMENT properties: connectivity, coordinates, ...  need the MESH BASICALLY
     inline const double*  GetMidpoint() const {
       return _el_xm;
     }
@@ -104,7 +103,17 @@ class QuantityLocal;
       return _bc_eldofs;
     }
     
-    void  get_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) const;
+    /** Returns a reference to the element rhs */
+    inline DenseVector & Rhs() {
+      return _FeM;
+    }
+    
+    /** Returns a reference to the element matrix */
+    inline DenseMatrix & Mat() {
+      return _KeM;
+    }
+    
+    void  set_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) const;
     
     //TODO this is not const because _vol_iel_DofObj is NOT A POINTER! 
     void  get_el_DofObj_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel);
@@ -116,23 +125,22 @@ class QuantityLocal;
     
     void  ConvertElemCoordsToMappingOrd(const uint vb,QuantityLocal& myvect) const;
     
-    void GetElDofsBc(const uint vbfl, const uint Level);  //needs the EQUATION basically
-   
-// ========================================================================================
-//========== ELEMENT: Current "EQUATION" Element (ql are TOGETHER ) ========================               
-  DenseMatrix                 _KeM; 
-  DenseVector                 _FeM;
-  
+    /** needs the EQUATION basically */
+    void GetElDofsBc(const uint vbfl, const uint Level);
  
   private:
     
+// ========================================================================================
+//========== Current "EQUATION" Element (ql are TOGETHER ): needs the EQUATION ========================               
+  DenseMatrix                 _KeM; 
+  DenseVector                 _FeM;
   uint                   _el_n_dofs;
   std::vector<uint> _el_dof_indices;
   uint*                  _bc_eldofs; //So the element must be aware of the BC of the equation
   
   
 // ========================================================================================
-//========== ELEMENT: Current Geometric Element (SERVICE)  ========================
+//==========  Current Geometric Element:  needs the MESH  ========================
      uint  *_el_conn;             /// vector of the global nodes for that element         [NNDS];
      uint    _vol_iel_DofObj;     /// i need to put the element also.
    double  *_xx_nds;              /// vector of the node coordinates for that element     [_spacedimension*NNDS];

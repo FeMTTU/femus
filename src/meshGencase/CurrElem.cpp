@@ -165,7 +165,7 @@ void CurrElem::get_el_orient(const uint vb) const {
  
  
 // ========================================================
-//   void CurrElem::get_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel,
+//   void CurrElem::set_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel,
 // 				uint el_conn[], double xx[]) const {///get the global node numbers for that element and their coordinates
 ///this routine does not yield the connectivity
 //is this function called when the class members are already filled?
@@ -217,7 +217,7 @@ void CurrElem::get_el_orient(const uint vb) const {
   }
 
    // =====================================================================================
-  void CurrElem::get_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) const {
+  void CurrElem::set_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) const {
 
     const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
     const uint el_nnodes   = _eqnmap._mesh._GeomEl[vb][mesh_ord]._elnds;

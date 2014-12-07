@@ -173,10 +173,10 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
-    currelem._KeM.zero();
-    currelem._FeM.zero(); 
+    currelem.Mat().zero();
+    currelem.Rhs().zero(); 
 
-    currelem.get_el_nod_conn_lev_subd(vb,Level,myproc,iel);
+    currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
     currelem.get_el_DofObj_lev_subd(vb,Level,myproc,iel);
     currelem.get_el_ctr(vb);
 
@@ -247,38 +247,38 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
         for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[vb][Tempold._FEord][i+idim*Tempold._ndof[vb]];
 
 //=========== FIRST ROW ===============
-        currelem._FeM(i) +=      
+        currelem.Rhs()(i) +=      
            currelem.GetBCDofFlag()[i]*dtxJxW_g*( 
                 7.*phii_g
 	  )
 	   + (1-currelem.GetBCDofFlag()[i])*detb*(Tempold._val_dofs[i]);
         
-        currelem._KeM(i,i) +=  (1-currelem.GetBCDofFlag()[i])*detb;
+        currelem.Mat()(i,i) +=  (1-currelem.GetBCDofFlag()[i])*detb;
 
 // // // //========= SECOND ROW =====================
 // // // 	 int ip1 = i + Tempold._ndof[vb]; 
 // // // 	 
 // // // 	if (i < _AbstractFE[ Temp2._FEord ]->_ndof[vb]) { 
-// // // 	 currelem._FeM(ip1) +=      
+// // // 	 currelem.Rhs()(ip1) +=      
 // // //            currelem.GetBCDofFlag()[ip1]*dtxJxW_g*( 
 // // //                 0.07*phii_gLL
 // // // 	  )
 // // // 	   + (1-currelem.GetBCDofFlag()[ip1])*detb*(Temp2._val_dofs[i]);
 // // //         
-// // //          currelem._KeM(ip1,ip1) +=  (1-currelem.GetBCDofFlag()[ip1])*detb;
+// // //          currelem.Mat()(ip1,ip1) +=  (1-currelem.GetBCDofFlag()[ip1])*detb;
 // // // 	}
 // // // 	
 // // // //======= THIRD ROW ===================================
 // // // 	 int ip2 = i + Tempold._ndof[vb] + Temp2._ndof[vb];
 // // // 	 
 // // // 	if (i < _AbstractFE[ Temp3._FEord ]->_ndof[vb]) { 
-// // //            currelem._FeM(ip2) +=      
+// // //            currelem.Rhs()(ip2) +=      
 // // //            currelem.GetBCDofFlag()[ip2]*dtxJxW_g*( 
 // // //                 0.07*phii_gKK
 // // // 	     )
 // // // 	   + (1-currelem.GetBCDofFlag()[ip2])*detb*(Temp3._val_dofs[i]);
 // // //         
-// // //         currelem._KeM(ip2,ip2) +=  (1-currelem.GetBCDofFlag()[ip2])*detb;
+// // //         currelem.Mat()(ip2,ip2) +=  (1-currelem.GetBCDofFlag()[ip2])*detb;
 // // // 	}
 	
 	 // Matrix Assemblying ---------------------------
@@ -306,7 +306,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
  
 //============ FIRST ROW state  delta T ===============
 //======= DIAGONAL =============================
-	   currelem._KeM(i,j) +=        
+	   currelem.Mat()(i,j) +=        
             currelem.GetBCDofFlag()[i]*dtxJxW_g*( 
              Lap_g  
             );
@@ -315,7 +315,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 // // // //===== DIAGONAL ===========================
 // // //  	if (i < _AbstractFE[ Temp2._FEord ]->_ndof[vb])  { 
 // // //   	if (j < _AbstractFE[ Temp2._FEord ]->_ndof[vb]) { 
-// // //        currelem._KeM(ip1,jp1) +=        
+// // //        currelem.Mat()(ip1,jp1) +=        
 // // //             currelem.GetBCDofFlag()[ip1]*
 // // //             dtxJxW_g*( 
 // // //               Lap_gLL
@@ -326,7 +326,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 // // // //======= DIAGONAL ==================
 // // // 	if (i < _AbstractFE[ Temp3._FEord ]->_ndof[vb])  { 
 // // //   	if (j < _AbstractFE[ Temp3._FEord ]->_ndof[vb]) { 
-// // //           currelem._KeM(ip2,jp2) +=        
+// // //           currelem.Mat()(ip2,jp2) +=        
 // // //             currelem.GetBCDofFlag()[ip2]*
 // // //               dtxJxW_g*( 
 // // //               phij_gKK*phii_gKK
@@ -342,10 +342,10 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
       }   //end i (row)
     } // end of the quadrature point qp-loop
 
-    currelem._KeM.print_scientific(std::cout);
+    currelem.Mat().print_scientific(std::cout);
     
-       _A[Level]->add_matrix(currelem._KeM,currelem.GetDofIndices());
-       _b[Level]->add_vector(currelem._FeM,currelem.GetDofIndices());
+       _A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+       _b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
   } // end of element loop
   // *****************************************************************
 
@@ -355,10 +355,10 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
     
      for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
 
-      currelem._KeM.zero();
-      currelem._FeM.zero();
+      currelem.Mat().zero();
+      currelem.Rhs().zero();
 
-      currelem.get_el_nod_conn_lev_subd(vb,Level,myproc,iel);
+      currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
       currelem.get_el_DofObj_lev_subd(vb,Level,myproc,iel);
       currelem.get_el_ctr(vb); 
 
@@ -418,7 +418,7 @@ int el_Neum_flag=0;
         for (uint i=0; i<Tempold._ndof[vb]; i++) {
    	const double phii_g =  currgp._phi_ndsQLVB_g[vb][Tempold._FEord][i]; 
 	
-       currelem._FeM(i) +=
+       currelem.Rhs()(i) +=
           0.*(currelem.GetBCDofFlag()[i]*
          el_Neum_flag*dtxJxW_g*(-QfluxDn_g)*phii_g    // beware of the sign  //this integral goes in the first equation
 	 + el_penalty*dtxJxW_g*Tempold._val_g[0]*phii_g)  //clearly, if you continue using bc=0 for setting nodal Dirichlet, this must go outside
@@ -427,7 +427,7 @@ int el_Neum_flag=0;
          if (_Dir_pen_fl == 1) {
             for (uint j=0; j<Tempold._ndof[vb]; j++) {
                double phij_g = currgp._phi_ndsQLVB_g[vb][Tempold._FEord][j];
-	       currelem._KeM(i,j) += 0.*el_penalty*dtxJxW_g*phij_g*phii_g;
+	       currelem.Mat()(i,j) += 0.*el_penalty*dtxJxW_g*phij_g*phii_g;
 	    } 
           }
 
@@ -437,8 +437,8 @@ int el_Neum_flag=0;
     }
         // end BDRYelement gaussian integration loop
         
-         _A[Level]->add_matrix(currelem._KeM,currelem.GetDofIndices());
-         _b[Level]->add_vector(currelem._FeM,currelem.GetDofIndices());
+         _A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+         _b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
    
   }
       // end of BDRYelement loop
@@ -535,7 +535,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-      currelem.get_el_nod_conn_lev_subd(vb,Level,myproc,iel);
+      currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
       currelem.get_el_DofObj_lev_subd(vb,Level,myproc,iel);
       currelem.get_el_ctr(vb);
       
@@ -645,7 +645,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-      currelem.get_el_nod_conn_lev_subd(vb,Level,myproc,iel);
+      currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
       currelem.get_el_DofObj_lev_subd(vb,Level,myproc,iel);
       currelem.get_el_ctr(vb);
 
