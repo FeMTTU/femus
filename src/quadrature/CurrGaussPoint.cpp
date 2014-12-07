@@ -19,8 +19,8 @@ namespace femus {
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
 //by the way, with the EquationsMap I reach the Utils, the Mesh, and so the GeomEl, and so on...
 template <unsigned int FM_DIM>
-CurrGaussPoint<FM_DIM>::CurrGaussPoint( EquationsMap& e_map_in ): 
-        CurrGaussPointBase(e_map_in) {
+CurrGaussPoint<FM_DIM>::CurrGaussPoint(const uint vb_in, EquationsMap& e_map_in ): 
+        CurrGaussPointBase(vb_in,e_map_in) {
   
  
 }
@@ -47,7 +47,7 @@ template <unsigned int FM_DIM>
 void CurrGaussPoint<FM_DIM>::SetPhiElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp) {
   
     const uint el_nnodes =  _elem_type[vbflag][qlflag]->GetNDofs();
-    const uint el_ngauss =  _qrule[vbflag].GetGaussPointsNumber();
+    const uint el_ngauss =  _qrule.GetGaussPointsNumber();
    
    
     for (uint eln=0; eln<el_nnodes; eln++)    { 
@@ -77,7 +77,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const ui
     
   const uint ndim      =    _IntDim[vbflag];
   const uint el_nnodes = _elem_type[vbflag][qlflag]->GetNDofs();
-  const uint el_ngauss =     _qrule[vbflag].GetGaussPointsNumber();
+  const uint el_ngauss =     _qrule.GetGaussPointsNumber();
   const uint goffset   = el_nnodes*el_ngauss;
 
   std::vector<double> dphidxi_g(ndim);  //the dimension of this should be _IntDim[vbflag], but we make it static like this, it doesnt hurt
@@ -146,7 +146,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const
     
            const uint ndim =    _IntDim[vbflag];
          const uint elndof = _elem_type[vbflag][qlflag]->GetNDofs();
-    const uint   el_ngauss =     _qrule[vbflag].GetGaussPointsNumber();
+    const uint   el_ngauss =     _qrule.GetGaussPointsNumber();
       const uint   goffset = elndof*el_ngauss;
 
 

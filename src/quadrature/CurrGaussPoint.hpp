@@ -24,7 +24,7 @@ template <unsigned int FM_DIM>
     
   public:
     
-     CurrGaussPoint( EquationsMap& e_map_in );
+     CurrGaussPoint(const uint vb_in, EquationsMap& e_map_in );
     ~CurrGaussPoint();
  
 double        JacVectVV_g(const uint vbflag, QuantityLocal& xyz )/*const*/;  //TODO should be only for VOLUME

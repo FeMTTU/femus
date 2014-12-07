@@ -81,7 +81,7 @@ namespace femus {
  void EqnNSAD::GenMatRhsVB(const uint vb,const double time,const uint Level)  {
 
     CurrElem       currelem(vb,*this,_eqnmap);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(vb,_eqnmap, _mesh.get_dim());
    
    
 //======= TIME - STATIONARY OR NOT =======

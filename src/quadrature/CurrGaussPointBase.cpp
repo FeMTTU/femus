@@ -18,10 +18,10 @@ namespace femus {
 // for the geometric element
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
 //by the way, with the EquationsMap I reach the Utils, the Mesh, and so the GeomEl, and so on...
-CurrGaussPointBase::CurrGaussPointBase( EquationsMap& e_map_in ):
+CurrGaussPointBase::CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in ):
     _eqnmap(e_map_in),
     _elem_type(e_map_in._elem_type),
-    _qrule(e_map_in._qrule) {
+    _qrule(e_map_in._qrule[vb_in]) {
   
   _IntDim[VV] = _eqnmap._mesh.get_dim();
   _IntDim[BB] = _eqnmap._mesh.get_dim() - 1; 
@@ -73,14 +73,14 @@ CurrGaussPointBase::~CurrGaussPointBase() {
 
 
 //this is what allows RUNTIME selection of the templates!!!
-   CurrGaussPointBase& CurrGaussPointBase::build(EquationsMap& eqmap_in, const uint dim_in) {
+   CurrGaussPointBase& CurrGaussPointBase::build(const uint vb_in, EquationsMap& eqmap_in, const uint dim_in) {
       
       
       switch(dim_in) {
 	
-	case(2):  return *(new  CurrGaussPoint<2>(eqmap_in));
+	case(2):  return *(new  CurrGaussPoint<2>(vb_in,eqmap_in));
 	
-	case(3):  return *(new CurrGaussPoint<3>(eqmap_in)); 
+	case(3):  return *(new  CurrGaussPoint<3>(vb_in,eqmap_in)); 
 	
 	default: {std::cout << "CurrGaussPointBase: Only 2D and 3D" << std::endl; abort();}
 	  

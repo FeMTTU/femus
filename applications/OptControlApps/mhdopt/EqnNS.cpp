@@ -91,7 +91,7 @@ return;
   void EqnNS::GenMatRhsVB(const uint vb,const double time,const uint Level)  {  ///< VB Assemblying.
 
     CurrElem       currelem(vb,*this,_eqnmap);    
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(vb,_eqnmap, _mesh.get_dim());
   
   
 //========== PROCESSOR INDEX
@@ -884,7 +884,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
 
     CurrElem       currelem(vb,*this,_eqnmap);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(vb,_eqnmap, _mesh.get_dim());
   
   
     //====== Physics cast

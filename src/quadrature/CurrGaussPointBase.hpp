@@ -27,12 +27,12 @@ class EquationsMap;
   
   public:
     
-    CurrGaussPointBase( EquationsMap& e_map_in );
+    CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in );
    ~CurrGaussPointBase();
  
     EquationsMap         & _eqnmap;
     std::vector< std::vector<elem_type*> >  &  _elem_type;  //[VB]
-    std::vector<Gauss>   _qrule;    //[VB]
+    Gauss   _qrule;    //[VB]
     uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
     double*         _phi_ndsQLVB_g[VB][QL];  //canonical functions  //TODO here it seems to contain GAUSS x ELDOFS
     double* _dphidxezeta_ndsQLVB_g[VB][QL];  //canonical derivatives
@@ -51,7 +51,7 @@ virtual void    SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag, con
 virtual void ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag/*, const uint qp*/) = 0;
 
 
-  static CurrGaussPointBase& build(EquationsMap& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
+  static CurrGaussPointBase& build(const uint vb_in, EquationsMap& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
 
   protected:
     

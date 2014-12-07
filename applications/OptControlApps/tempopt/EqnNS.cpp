@@ -77,7 +77,7 @@
     CurrElem       currelem(vb,*this,_eqnmap);
 //     CurrGaussPoint   currgp(_eqnmap);
 //here, I have to put the BASE, because that is my RUN-TIME DIMENSION-INDEPENDENT GaussPoint interface!!!!    
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(vb,_eqnmap, _mesh.get_dim());
 
 
 //========== PROCESSOR INDEX

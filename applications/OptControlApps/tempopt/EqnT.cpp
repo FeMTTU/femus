@@ -102,7 +102,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
 void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
 
   CurrElem       currelem(vb,*this,_eqnmap);    
-  CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
+  CurrGaussPointBase & currgp = CurrGaussPointBase::build(vb,_eqnmap, _mesh.get_dim());
   
   TempPhysics* myphys; myphys = static_cast<TempPhysics*>(&_phys);
 
@@ -650,7 +650,7 @@ else {   std::cout << " No line integrals yet... " << std::endl; abort();}
 double EqnT::ComputeIntegral (const uint vb, const uint Level) {
 
     CurrElem       currelem(vb,*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(vb,_eqnmap, _mesh.get_dim());
 
   //====== Physics cast
   TempPhysics *optphys; optphys = static_cast<TempPhysics*>(&_phys);
@@ -798,7 +798,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
   //reg_ord = 1: H1
 
     CurrElem       currelem(vb,*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(vb,_eqnmap, _mesh.get_dim());
   
   // processor index
   const uint myproc = _iproc;
