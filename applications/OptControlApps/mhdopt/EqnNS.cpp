@@ -317,7 +317,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
  
   /// b) Element  Loop over the volume (n_elem = number of elements of each FEM type)
 
-   const uint el_ngauss = _eqnmap._qrule[vb].GetGaussPointsNumber();
+   const uint el_ngauss = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussPointsNumber();
     
     const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
     const uint nel_b = _mesh._off_el[vb][_NoLevels*myproc+Level];
@@ -428,7 +428,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }  
 	  
 const double      det = dt*currgp.JacVectVV_g(vb,xyz);   //InvJac: is the same for both QQ and LL!
-const double dtxJxW_g = det*_eqnmap._qrule[vb].GetGaussWeight(qp);
+const double dtxJxW_g = det*_eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { currgp.SetDPhiDxyzElDofsFEVB_g   (vb,fe,qp); }
@@ -706,7 +706,7 @@ for (uint fe = 0; fe < QL; fe++)     {        currgp.SetPhiElDofsFEVB_g (fe,qp);
 for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp); }
 
         const double det   = dt*currgp.JacVectBB_g(vb,xyz);
-	const double dtxJxW_g = det * _eqnmap._qrule[vb].GetGaussWeight(qp);
+	const double dtxJxW_g = det * _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
 //-------- pressure==============
@@ -936,7 +936,7 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
    
    double integral=0.;
     
-      const uint el_ngauss = _eqnmap._qrule[vb].GetGaussPointsNumber();
+      const uint el_ngauss = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussPointsNumber();
 
 //parallel sum
     const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
@@ -971,7 +971,7 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
 for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }  
      
    const double  Jac_g = currgp.JacVectVV_g(vb,xyz);  //not xyz_refbox!      
-   const double  wgt_g = _eqnmap._qrule[vb].GetGaussWeight(qp);
+   const double  wgt_g = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
 
      for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 

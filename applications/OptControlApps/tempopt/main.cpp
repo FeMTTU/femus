@@ -75,9 +75,9 @@
   
 // ======  QRule ================================
   std::vector<Gauss>   qrule;
-  qrule.reserve(VB);
-  for (int vb=0;vb < VB; vb++) { 
-          Gauss qrule_temp(mesh.GetGeomEl(mesh.get_dim()-1-vb,mesh._mesh_order)._geomel_id.c_str(),"fifth");
+  qrule.reserve(mesh.get_dim());
+  for (int idim=0;idim < mesh.get_dim(); idim++) { 
+          Gauss qrule_temp(mesh.GetGeomEl(idim,mesh._mesh_order)._geomel_id.c_str(),"fifth");
          qrule.push_back(qrule_temp);
   }
   
@@ -88,7 +88,7 @@
 
   for (int vb=0;vb < VB; vb++) {
     for (int fe=0; fe<QL; fe++) {
-       FEElemType_vec[vb][fe] = elem_type::build(mesh.GetGeomEl(mesh.get_dim()-1-vb,mesh._mesh_order)._geomel_id.c_str(),fe, qrule[vb].GetGaussOrderString().c_str());
+       FEElemType_vec[vb][fe] = elem_type::build(mesh.GetGeomEl(mesh.get_dim()-1-vb,mesh._mesh_order)._geomel_id.c_str(),fe, qrule[mesh.get_dim()-1-vb].GetGaussOrderString().c_str());
        FEElemType_vec[vb][fe]->EvaluateShapeAtQP(mesh.GetGeomEl(mesh.get_dim()-1-vb,mesh._mesh_order)._geomel_id.c_str(),fe);
      }
    }

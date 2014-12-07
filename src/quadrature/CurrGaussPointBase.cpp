@@ -21,7 +21,7 @@ namespace femus {
 CurrGaussPointBase::CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in ):
     _eqnmap(e_map_in),
     _elem_type(e_map_in._elem_type[vb_in]),
-    _qrule(e_map_in._qrule[vb_in]) {
+    _qrule(e_map_in._qrule[_eqnmap._mesh.get_dim()-1-vb_in]) {
   
   _IntDim[VV] = _eqnmap._mesh.get_dim();
   _IntDim[BB] = _eqnmap._mesh.get_dim() - 1; 
