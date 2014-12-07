@@ -213,7 +213,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
 
     currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
     currelem.set_el_DofObj_lev_subd(vb,Level,myproc,iel);
-    currelem.SetMidpoint(vb);
+    currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
@@ -453,7 +453,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 
       currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
       currelem.set_el_DofObj_lev_subd(vb,Level,myproc,iel);
-      currelem.SetMidpoint(vb); 
+      currelem.SetMidpoint(); 
 
       currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
@@ -715,7 +715,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
 
       currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
       currelem.set_el_DofObj_lev_subd(vb,Level,myproc,iel);
-      currelem.SetMidpoint(vb);
+      currelem.SetMidpoint();
       
       currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
       _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
@@ -850,7 +850,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
 
       currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
       currelem.set_el_DofObj_lev_subd(vb,Level,myproc,iel);
-      currelem.SetMidpoint(vb);
+      currelem.SetMidpoint();
 
       currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
       _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);

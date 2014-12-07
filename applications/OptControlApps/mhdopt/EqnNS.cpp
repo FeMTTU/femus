@@ -331,7 +331,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 
     currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
     currelem.set_el_DofObj_lev_subd(vb,Level,myproc,iel);
-    currelem.SetMidpoint(vb);
+    currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
@@ -655,7 +655,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
      currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
      currelem.set_el_DofObj_lev_subd(vb,Level,myproc,iel);
-     currelem.SetMidpoint(vb);
+     currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
      _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
@@ -946,7 +946,7 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
 
     currelem.set_el_nod_conn_lev_subd(vb,Level,_iproc,iel);
     currelem.set_el_DofObj_lev_subd(vb,Level,_iproc,iel);
-    currelem.SetMidpoint(vb);
+    currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);

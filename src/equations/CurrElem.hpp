@@ -75,9 +75,6 @@ class QuantityLocal;
     CurrElem(const uint vb, const EqnBase&, const EquationsMap& e_map_in);
    ~CurrElem();
 
-   const EqnBase & _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
-   const EquationsMap & _eqnmap;
-
     inline const double*  GetMidpoint() const {
       return _el_xm;
     }
@@ -119,7 +116,7 @@ class QuantityLocal;
     void  set_el_DofObj_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel);
 
     //TODO notice that this is not changing the POINTER , so it is const!
-    void  SetMidpoint(const uint vb) const;
+    void  SetMidpoint() const;
     
     void  PrintOrientation(const uint vb) const;
     
@@ -128,6 +125,10 @@ class QuantityLocal;
     /** needs the EQUATION basically */
     void  SetElDofsBc(const uint vbfl, const uint Level);
  
+//========== Equation-related ========================               
+  const EqnBase & _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
+  const EquationsMap & _eqnmap;
+  
   private:
     
 // ========================================================================================
@@ -138,13 +139,13 @@ class QuantityLocal;
   std::vector<uint> _el_dof_indices;
   uint*                  _bc_eldofs; //So the element must be aware of the BC of the equation
   
-  
 // ========================================================================================
 //==========  Current Geometric Element:  needs the MESH  ========================
      uint  *_el_conn;             /// vector of the global nodes for that element         [NNDS];
      uint    _vol_iel_DofObj;     /// i need to put the element also.
    double  *_xx_nds;              /// vector of the node coordinates for that element     [_spacedimension*NNDS];
    double  *_el_xm;               /// element center point                                [_spacedimension];
+   const uint _dim;
    
   };
   

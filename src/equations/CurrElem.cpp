@@ -16,24 +16,27 @@ namespace femus {
 
     CurrElem::CurrElem(const uint vb, const EqnBase & eqn_in, const EquationsMap & e_map_in ):
     _eqn(eqn_in),
-    _eqnmap(e_map_in)
+    _eqnmap(e_map_in),
+    _dim(_eqnmap._mesh.get_dim()-vb)
     {
     
-//========== ELEMENT: Current Geometric Element (SERVICE)  ========================
+//========== Current "Geometric Element"  ========================
    const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");
-  uint elnodes = _eqnmap._mesh.GetGeomEl(_eqnmap._mesh.get_dim()-1-vb,mesh_ord)._elnds;     //TODO the mesh is quadratic
+  uint elnodes = _eqnmap._mesh.GetGeomEl(_dim-1,mesh_ord)._elnds;     //TODO the mesh is quadratic
   _el_conn = new uint[ elnodes ];   
    _xx_nds = new double[_eqnmap._mesh.get_dim()*elnodes ];
     _el_xm = new double[_eqnmap._mesh.get_dim()];  
-//========== ELEMENT: Current Geometric Element (SERVICE)  ========================
+//========== Current "Geometric Element"  ========================
 
+//========== Current "Equation Element"  ========================
   _el_n_dofs = 0;
-     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs += (_eqnmap._elem_type[vb][fe]->GetNDofs() )*_eqn._nvars[fe]; }    //EQUATION-RELATED
+     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs += (_eqnmap._elem_type[vb][fe]->GetNDofs() )*_eqn._nvars[fe]; }
 
-  _el_dof_indices.resize(_el_n_dofs);                  //EQUATION-RELATED
-  _bc_eldofs = new uint[_el_n_dofs];                   //EQUATION-RELATED
-  _KeM.resize(_el_n_dofs,_el_n_dofs);                  //EQUATION-RELATED
-  _FeM.resize(_el_n_dofs);                             //EQUATION-RELATED
+  _el_dof_indices.resize(_el_n_dofs);
+  _bc_eldofs = new uint[_el_n_dofs];
+  _KeM.resize(_el_n_dofs,_el_n_dofs);
+  _FeM.resize(_el_n_dofs);
+//========== Current "Equation Element"  ========================
       
       
   }
@@ -196,22 +199,22 @@ void CurrElem::PrintOrientation(const uint vb) const {
 ///Compute the element center
 ///TODO must do this in the QUADRATIC case
 
-  void CurrElem::SetMidpoint(const uint vb) const {
+  void CurrElem::SetMidpoint() const {
 
-    const uint mydim = _eqnmap._mesh.get_dim();
+    const uint mesh_dim = _eqnmap._mesh.get_dim();
     const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
-    const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(mydim-1-vb, mesh_ord)._elnds;
+    const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(_dim-1, mesh_ord)._elnds;
 
-       for (uint idim=0; idim< mydim; idim++)  _el_xm[idim]=0.;
+       for (uint idim=0; idim< mesh_dim; idim++)  _el_xm[idim]=0.;
 
-    for (uint idim=0; idim< mydim; idim++) {
+    for (uint idim=0; idim< mesh_dim; idim++) {
        for (uint eln=0; eln<el_nnodes; eln++)    { 
         const uint indxn = eln+idim*el_nnodes;
 	     _el_xm[idim]   +=   _xx_nds[indxn];
        }
      }
 
-  for (uint idim=0; idim< mydim; idim++)   _el_xm[idim]= _el_xm[idim]/el_nnodes;
+  for (uint idim=0; idim< mesh_dim; idim++)   _el_xm[idim]= _el_xm[idim]/el_nnodes;
   
    return; 
   }
