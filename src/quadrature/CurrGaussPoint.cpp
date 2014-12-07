@@ -46,13 +46,13 @@ CurrGaussPoint<FM_DIM>::~CurrGaussPoint() {
 template <unsigned int FM_DIM>
 void CurrGaussPoint<FM_DIM>::SetPhiElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp) {
   
-    const uint el_nnodes =  _elem_type[vbflag][qlflag]->GetNDofs();
+    const uint el_nnodes =  _elem_type[qlflag]->GetNDofs();
     const uint el_ngauss =  _qrule.GetGaussPointsNumber();
    
    
     for (uint eln=0; eln<el_nnodes; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
-              _phi_ndsQLVB_g[vbflag][qlflag][eln] = _elem_type[vbflag][qlflag]->GetPhi(qp,eln);
+              _phi_ndsQLVB_g[vbflag][qlflag][eln] = _elem_type[qlflag]->GetPhi(qp,eln);
          }
 
 return;
@@ -76,7 +76,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const ui
     
     
   const uint ndim      =    _IntDim[vbflag];
-  const uint el_nnodes = _elem_type[vbflag][qlflag]->GetNDofs();
+  const uint el_nnodes = _elem_type[qlflag]->GetNDofs();
   const uint el_ngauss =     _qrule.GetGaussPointsNumber();
   const uint goffset   = el_nnodes*el_ngauss;
 
@@ -85,7 +85,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const ui
          for (uint eln=0; eln<el_nnodes; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
   
-           for (uint idim=0; idim<ndim; idim++)  dphidxi_g[idim] = _elem_type[vbflag][qlflag]->GetDPhiDxez(qp, eln + idim*el_nnodes);    /*->_dphidxez_mapVB[vbflag][lqp+idim*goffset];*/
+           for (uint idim=0; idim<ndim; idim++)  dphidxi_g[idim] = _elem_type[qlflag]->GetDPhiDxez(qp, eln + idim*el_nnodes);    /*->_dphidxez_mapVB[vbflag][lqp+idim*goffset];*/
 	    
 	    for (uint idim=0; idim<ndim; idim++) {
 	    double sum = 0.;
@@ -119,7 +119,7 @@ void  CurrGaussPoint<FM_DIM>::ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const
 
   //AAA: valid from dimension to 3
 
-  const uint el_ndofs = _elem_type[vbflag][qlflag]->GetNDofs();
+  const uint el_ndofs = _elem_type[qlflag]->GetNDofs();
   const uint ndim     =    _IntDim[vbflag]/*dimension*/;
 //set to zero  
    for (uint eln=0; eln<el_ndofs; eln++)  {
@@ -145,7 +145,7 @@ template <unsigned int FM_DIM>
 void  CurrGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp) {
     
            const uint ndim =    _IntDim[vbflag];
-         const uint elndof = _elem_type[vbflag][qlflag]->GetNDofs();
+         const uint elndof = _elem_type[qlflag]->GetNDofs();
     const uint   el_ngauss =     _qrule.GetGaussPointsNumber();
       const uint   goffset = elndof*el_ngauss;
 
@@ -155,7 +155,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const
          for (uint eln=0; eln<elndof; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
   
-	         _dphidxezeta_ndsQLVB_g[vbflag][qlflag][eln+idim*elndof] = _elem_type[vbflag][qlflag]->GetDPhiDxez(qp,eln + idim*elndof);  /*->_dphidxez_mapVB[vbflag][lqp+idim*goffset];*/  
+	         _dphidxezeta_ndsQLVB_g[vbflag][qlflag][eln+idim*elndof] = _elem_type[qlflag]->GetDPhiDxez(qp,eln + idim*elndof);  /*->_dphidxez_mapVB[vbflag][lqp+idim*goffset];*/  
 	   }
 	 }
 
@@ -279,7 +279,7 @@ double CurrGaussPoint<FM_DIM>::JacVectBB_g(const uint vb, QuantityLocal& xyz )/*
 
     const uint    Order = xyz._FEord;  //order of the coordinate transformation 
     const uint     xoff = _eqnmap._mesh._GeomEl[vb][Order]._elnds;
-    const uint elnshape = _elem_type[vb][Order]->GetNDofs();
+    const uint elnshape = _elem_type[Order]->GetNDofs();
 //     double dxyzdxieta_g[FM_DIM - 1][FM_DIM]; 
     //TODO TODO TODO NOW I'LL PUT IT  CLASS MEMBER, (IT SHOULD STAY TOGETHER WITH _normal, _tangent and _jacobian...) 
     // I don't know if it wins to have the STATIC ALLOCATION outside or not...
@@ -439,7 +439,7 @@ double CurrGaussPoint<FM_DIM>::JacVectVV_g(const uint vb, QuantityLocal& xyz )/*
 
 const uint Order    = xyz._FEord;  //order of the coordinate transformation
 const uint xoff     = _eqnmap._mesh._GeomEl[vb][Order]._elnds;
-const uint elnshape =            _elem_type[vb][Order]->GetNDofs(); 
+const uint elnshape =            _elem_type[Order]->GetNDofs(); 
 // const uint space_dim = _eqnmap._mesh._dim;
 
   

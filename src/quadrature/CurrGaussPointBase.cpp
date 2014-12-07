@@ -20,7 +20,7 @@ namespace femus {
 //by the way, with the EquationsMap I reach the Utils, the Mesh, and so the GeomEl, and so on...
 CurrGaussPointBase::CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in ):
     _eqnmap(e_map_in),
-    _elem_type(e_map_in._elem_type),
+    _elem_type(e_map_in._elem_type[vb_in]),
     _qrule(e_map_in._qrule[vb_in]) {
   
   _IntDim[VV] = _eqnmap._mesh.get_dim();
@@ -31,10 +31,10 @@ CurrGaussPointBase::CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in 
 
   for (int vb = 0; vb < VB; vb++) {
      for (int fe = 0; fe < QL; fe++) {
-   _dphidxyz_ndsQLVB_g3D[vb][fe] =  new double[ 3           * _elem_type[vb][fe]->GetNDofs() ]; //both VV and BB are 3 in general (vector product, or ONE?!?)
-     _dphidxyz_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _elem_type[vb][fe]->GetNDofs() ];   
-  _dphidxezeta_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _elem_type[vb][fe]->GetNDofs() ];     
-          _phi_ndsQLVB_g[vb][fe] =  new double[               _elem_type[vb][fe]->GetNDofs() ];     
+   _dphidxyz_ndsQLVB_g3D[vb][fe] =  new double[ 3           * _elem_type[fe]->GetNDofs() ]; //both VV and BB are 3 in general (vector product, or ONE?!?)
+     _dphidxyz_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _elem_type[fe]->GetNDofs() ];   
+  _dphidxezeta_ndsQLVB_g[vb][fe] =  new double[ _IntDim[vb] * _elem_type[fe]->GetNDofs() ];     
+          _phi_ndsQLVB_g[vb][fe] =  new double[               _elem_type[fe]->GetNDofs() ];     
    }
  }  
   

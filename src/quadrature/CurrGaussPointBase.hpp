@@ -30,16 +30,6 @@ class EquationsMap;
     CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in );
    ~CurrGaussPointBase();
  
-    EquationsMap         & _eqnmap;
-    std::vector< std::vector<elem_type*> >  &  _elem_type;  //[VB]
-    Gauss   _qrule;    //[VB]
-    uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
-    double*         _phi_ndsQLVB_g[VB][QL];  //canonical functions  //TODO here it seems to contain GAUSS x ELDOFS
-    double* _dphidxezeta_ndsQLVB_g[VB][QL];  //canonical derivatives
-    double*    _dphidxyz_ndsQLVB_g[VB][QL];  //physical derivatives
-
-    double*  _dphidxyz_ndsQLVB_g3D[VB][QL];  //physical derivatives in 3D
-
  double**  get_tangent_ptr();   //TODO should be only for BOUNDARY 
  double*   get_normal_ptr();   //TODO should be only for BOUNDARY 
 virtual double        JacVectVV_g(const uint vbflag, QuantityLocal& xyz )/*const*/ = 0;  //TODO should be only for VOLUME
@@ -53,8 +43,18 @@ virtual void ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag/*, c
 
   static CurrGaussPointBase& build(const uint vb_in, EquationsMap& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
 
+    uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
+    double*         _phi_ndsQLVB_g[VB][QL];  //canonical functions  //TODO here it seems to contain GAUSS x ELDOFS
+    double* _dphidxezeta_ndsQLVB_g[VB][QL];  //canonical derivatives
+    double*    _dphidxyz_ndsQLVB_g[VB][QL];  //physical derivatives
+
+    double*  _dphidxyz_ndsQLVB_g3D[VB][QL];  //physical derivatives in 3D
+  
   protected:
     
+   EquationsMap         & _eqnmap;
+   std::vector<elem_type*>  &  _elem_type;
+   Gauss   _qrule;
    double**  _InvJac_g;/*[FM_DIM][FM_DIM]*/   //gauss Current Geometric Element //no new is needed here //TODO this is only for VOLUME elements
    double*  _normal_g;/*[FM_DIM]*/              //gauss Current Geometric Element //no new is needed here //TODO this should be only for a BOUNDARY GAUSS POINT
    double** _tangent_g;/*[FM_DIM - 1][FM_DIM]*/   //gauss  Current Geometric Element //no new is needed here //TODO this should be only for a BOUNDARY GAUSS POINT
