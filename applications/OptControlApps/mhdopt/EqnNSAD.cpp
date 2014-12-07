@@ -218,13 +218,13 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     currelem.Rhs().zero(); 
 
     currelem.set_el_nod_conn_lev_subd(vb,Level,_iproc,iel);
-    currelem.get_el_DofObj_lev_subd(vb,Level,_iproc,iel);
-    currelem.get_el_ctr(vb);
+    currelem.set_el_DofObj_lev_subd(vb,Level,_iproc,iel);
+    currelem.SetMidpoint(vb);
     
     currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
 
-    currelem.GetElDofsBc(vb,Level);
+    currelem.SetElDofsBc(vb,Level);
     
     VelAdjOld.GetElDofsVect(vb,Level);  
     PressAdjOld.GetElDofsVect(vb,Level);
@@ -408,13 +408,13 @@ if (_Dir_pen_fl == 0)  {
 	 currelem.Rhs().zero();
 
      currelem.set_el_nod_conn_lev_subd(vb,Level,_iproc,iel);
-     currelem.get_el_DofObj_lev_subd(vb,Level,_iproc,iel);
-     currelem.get_el_ctr(vb);
+     currelem.set_el_DofObj_lev_subd(vb,Level,_iproc,iel);
+     currelem.SetMidpoint(vb);
      
      currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
      _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
 
-     currelem.GetElDofsBc(vb,Level);
+     currelem.SetElDofsBc(vb,Level);
 
      VelAdjOld.GetElDofsVect(vb,Level);
      PressAdjOld.GetElDofsVect(vb,Level);

@@ -116,24 +116,24 @@ class QuantityLocal;
     void  set_el_nod_conn_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) const;
     
     //TODO this is not const because _vol_iel_DofObj is NOT A POINTER! 
-    void  get_el_DofObj_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel);
+    void  set_el_DofObj_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel);
 
     //TODO notice that this is not changing the POINTER , so it is const!
-    void  get_el_ctr(const uint vb) const;
+    void  SetMidpoint(const uint vb) const;
     
-    void  get_el_orient(const uint vb) const;
+    void  PrintOrientation(const uint vb) const;
     
     void  ConvertElemCoordsToMappingOrd(const uint vb,QuantityLocal& myvect) const;
     
     /** needs the EQUATION basically */
-    void GetElDofsBc(const uint vbfl, const uint Level);
+    void  SetElDofsBc(const uint vbfl, const uint Level);
  
   private:
     
 // ========================================================================================
 //========== Current "EQUATION" Element (ql are TOGETHER ): needs the EQUATION ========================               
-  DenseMatrix                 _KeM; 
-  DenseVector                 _FeM;
+  DenseMatrix                  _KeM; 
+  DenseVector                  _FeM;
   uint                   _el_n_dofs;
   std::vector<uint> _el_dof_indices;
   uint*                  _bc_eldofs; //So the element must be aware of the BC of the equation

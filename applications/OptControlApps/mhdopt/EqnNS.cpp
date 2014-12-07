@@ -330,14 +330,14 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
     currelem.Rhs().zero(); 
 
     currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
-    currelem.get_el_DofObj_lev_subd(vb,Level,myproc,iel);
-    currelem.get_el_ctr(vb);
+    currelem.set_el_DofObj_lev_subd(vb,Level,myproc,iel);
+    currelem.SetMidpoint(vb);
     
     currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
-    currelem.GetElDofsBc(vb,Level);
+    currelem.SetElDofsBc(vb,Level);
     
       VelOld.GetElDofsVect(vb,Level);
     pressOld.GetElDofsVect(vb,Level);
@@ -654,13 +654,13 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
          currelem.Mat().zero();  currelem.Rhs().zero();
 
      currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
-     currelem.get_el_DofObj_lev_subd(vb,Level,myproc,iel);
-     currelem.get_el_ctr(vb);
+     currelem.set_el_DofObj_lev_subd(vb,Level,myproc,iel);
+     currelem.SetMidpoint(vb);
      
      currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
      _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
 
-     currelem.GetElDofsBc(vb,Level);
+     currelem.SetElDofsBc(vb,Level);
      
      VelOld.GetElDofsVect(vb,Level);
      pressOld.GetElDofsVect(vb,Level);
@@ -945,8 +945,8 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
     currelem.set_el_nod_conn_lev_subd(vb,Level,_iproc,iel);
-    currelem.get_el_DofObj_lev_subd(vb,Level,_iproc,iel);
-    currelem.get_el_ctr(vb);
+    currelem.set_el_DofObj_lev_subd(vb,Level,_iproc,iel);
+    currelem.SetMidpoint(vb);
     
     currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);

@@ -56,7 +56,7 @@ namespace femus {
 
 
 
-void CurrElem::GetElDofsBc(const uint vbfl, const uint Level)  {
+void CurrElem::SetElDofsBc(const uint vbfl, const uint Level)  {
 
 /*CHECK*/   if (_vol_iel_DofObj >= _eqnmap._mesh._n_elements_vb_lev[VV][Level] ) { std::cout << "Out of the node_dof map FE KK range" << std::endl; abort();}
 
@@ -126,7 +126,7 @@ for (uint ivar=0; ivar < _eqn._nvars[fe]; ivar++)    {
 ///This function prints the element orientation
 ///A QUADRATIC MESH VECTOR is passed HERE  
 ///It is for debugging purposes
-void CurrElem::get_el_orient(const uint vb) const {
+void CurrElem::PrintOrientation(const uint vb) const {
   
       const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");
       const uint el_nnodes   = _eqnmap._mesh._GeomEl[vb][mesh_ord]._elnds;
@@ -196,7 +196,7 @@ void CurrElem::get_el_orient(const uint vb) const {
 ///Compute the element center
 ///TODO must do this in the QUADRATIC case
 
-  void CurrElem::get_el_ctr(const uint vb) const {
+  void CurrElem::SetMidpoint(const uint vb) const {
 
     const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
     const uint el_nnodes   = _eqnmap._mesh._GeomEl[vb][mesh_ord]._elnds;
@@ -237,7 +237,7 @@ void CurrElem::get_el_orient(const uint vb) const {
   }   
 
  // =====================================================================================
-void CurrElem::get_el_DofObj_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) {
+void CurrElem::set_el_DofObj_lev_subd(const uint vb,const uint Level,const uint isubd_in,const uint iel) {
 
      int sum_elems_prev_sd_at_lev = 0;
       for (uint pr = 0; pr< isubd_in; pr++) { sum_elems_prev_sd_at_lev += _eqnmap._mesh._off_el[vb][_eqnmap._mesh._NoLevels*pr + Level + 1] - _eqnmap._mesh._off_el[vb][ _eqnmap._mesh._NoLevels*pr + Level]; }

@@ -909,7 +909,7 @@ void EqnBase::GenBc() {
             for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 
 	        currelem.set_el_nod_conn_lev_subd(BB,Level,isubd,iel);
-                currelem.get_el_ctr(BB);
+                currelem.SetMidpoint(BB);
 		
  	    for (uint ivar=0; ivar< _n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!
 
@@ -1337,7 +1337,7 @@ void EqnBase::GenElBc()  {
                 std::vector<double> el_value(1 + _number_tang_comps[space_dim - 1],0.); //1 normal and 1 tangential or 1 normal and 3 tangential
 
                 currelem.set_el_nod_conn_lev_subd(BB,Level,isubd,iel);
-                currelem.get_el_ctr(BB);
+                currelem.SetMidpoint(BB);
 
                 //read the bc's //the read forgets all levels and subdomains, it is only based on the MIDDLE POINT
                 elem_bc_read(currelem.GetMidpoint(),surf_id,&el_value[0],el_flag);
@@ -1527,7 +1527,7 @@ void EqnBase::GenIc() {
 	    for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 	  
 	        currelem.set_el_nod_conn_lev_subd(VV,Level,_iproc,iel);
-                currelem.get_el_ctr(VV);
+                currelem.SetMidpoint(VV);
 	
             // we are looping over the mesh nodes, but it's a fake loop because we do not depend on "i" for the elements
             for (uint i=0; i < el_nnodes ; i++) {
@@ -3996,7 +3996,7 @@ const uint myproc= _iproc;
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
   
     currelem.set_el_nod_conn_lev_subd(vb,Level,myproc,iel);
-    currelem.get_el_ctr(vb); 
+    currelem.SetMidpoint(vb); 
     
     currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
 
