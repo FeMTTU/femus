@@ -274,16 +274,16 @@ void QuantityLocal::GetElDofsVect(const uint vbfl, const uint Level)  {
 
   void QuantityLocal::SetElemAverage(const uint vb) {
 
-       for (uint idim=0; idim< _dim; idim++)  _el_average[vb][idim]=0.;
+       for (uint idim=0; idim< _dim; idim++)  _el_average[idim]=0.;
 
     for (uint idim=0; idim< _dim; idim++) {
        for (uint eln=0; eln< _ndof; eln++)    { 
         const uint indxn = eln+idim*_ndof;
-	     _el_average[vb][idim]   +=  _val_dofs[indxn];
+	     _el_average[idim]   +=  _val_dofs[indxn];
        }
      }
 
-  for (uint idim=0; idim< _dim; idim++)   _el_average[vb][idim]= _el_average[vb][idim]/_ndof;
+  for (uint idim=0; idim< _dim; idim++)   _el_average[idim]= _el_average[idim]/_ndof;
   
    return; 
   }

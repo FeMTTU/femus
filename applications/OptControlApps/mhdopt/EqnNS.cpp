@@ -912,8 +912,7 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
-  xyz_refbox._el_average.resize(VB);
-    for (uint i=0; i<VB; i++)  xyz_refbox._el_average[i].resize(xyz_refbox._dim);
+  xyz_refbox._el_average.resize(xyz_refbox._dim);
   
      //========== 
     QuantityLocal Vel(currgp,currelem);
@@ -948,7 +947,7 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
 
 //======= 
     xyz_refbox.SetElemAverage(vb);
-    int el_flagdom = optphys->ElFlagControl(xyz_refbox._el_average[vb]);
+    int el_flagdom = optphys->ElFlagControl(xyz_refbox._el_average);
 //=======        
 
     if ( Vel._eqnptr != NULL )       Vel.GetElDofsVect(vb,Level);

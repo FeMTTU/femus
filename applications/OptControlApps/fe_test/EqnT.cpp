@@ -108,8 +108,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
-  xyz_refbox._el_average.resize(VB);
-  for (uint i=0; i<VB; i++)  xyz_refbox._el_average[i].resize(xyz_refbox._dim);
+  xyz_refbox._el_average.resize(xyz_refbox._dim);
   //==================
 
   //==== AUXILIARY ==============
@@ -168,7 +167,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
     //I could consider it as another element, but only with the geometrical part!
 
   xyz_refbox.SetElemAverage(vb);
-int domain_flag = myphys->ElFlagControl(xyz_refbox._el_average[vb]);
+int domain_flag = myphys->ElFlagControl(xyz_refbox._el_average);
 //====================    
     
 //===== FILL the DOFS of the EXTERNAL QUANTITIES: you must assure that for every Vect the quantity is set correctly
@@ -479,8 +478,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
-  xyz_refbox._el_average.resize(VB);
-  for (uint i=0; i<VB; i++)  xyz_refbox._el_average[i].resize(xyz_refbox._dim);
+  xyz_refbox._el_average.resize(xyz_refbox._dim);
   
     
    double integral = 0.;
@@ -502,7 +500,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
 
 // =============== 
       xyz_refbox.SetElemAverage(vb);
-      int el_flagdom = optphys->ElFlagControl(xyz_refbox._el_average[vb]);
+      int el_flagdom = optphys->ElFlagControl(xyz_refbox._el_average);
 //====================     
  
 

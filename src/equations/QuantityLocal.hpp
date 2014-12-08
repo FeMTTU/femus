@@ -67,7 +67,7 @@ namespace femus {
     double** _grad_g;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
     double** _grad_g3D;  //for cross products   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
     double* _curl_g3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    std::vector < std::vector<double> > _el_average;/*[VB][spacedim]*/ //NEED TO ALLOCATE THIS EXPLICITLY WHERE IT'S USED... TODO this class must be reconsidered!!! with std::vectorss, and so on!!!
+    std::vector<double> _el_average;  /*[spacedim]*/ //NEED TO ALLOCATE THIS EXPLICITLY WHERE IT'S USED... TODO this class must be reconsidered!!! with std::vectorss, and so on!!!
     uint _FEord; 
     uint _dim;
     uint _ndof;
