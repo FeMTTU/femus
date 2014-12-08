@@ -1505,38 +1505,6 @@ void BuildBox(      Mesh& mesh,
       }
      }
     
-//   mesh.ReorderMeshNodes(vt);
-// 
-//   mesh.BuildAdjVtx();
-//   
-//   mesh.Buildkel();
-//   
-//   if (mesh.n_processors()>=1) 
-//     mesh.GenerateMetisMeshPartition();
-//  
-//   vector <double> vt_temp2;
-//   for(int i=0;i<3;i++){
-//     vt_temp2=vt[i];
-//     for(unsigned j=0;j<mesh.GetNumberOfNodes();j++) {
-//       vt[i][mesh.GetMetisDof(j,2)]=vt_temp2[j];
-//     }
-//   }
-//   
-//   mesh._coordinate = new Solution(&mesh);
-//   mesh._coordinate->AddSolution("X",LAGRANGE,SECOND,1,0); 
-//   mesh._coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0); 
-//   mesh._coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0); 
-//   
-//   mesh._coordinate->ResizeSolutionVector("X");
-//   mesh._coordinate->ResizeSolutionVector("Y");
-//   mesh._coordinate->ResizeSolutionVector("Z");
-//     
-//   mesh._coordinate->SetCoarseCoordinates(vt);
-//  
-//   mesh._coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
-//   mesh._coordinate->ResizeSolutionVector("AMR");
-  
- 
 }
 
 

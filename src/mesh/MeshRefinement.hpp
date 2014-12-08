@@ -62,7 +62,12 @@ public:
     
 private:
 
-   Mesh& _mesh;                 //< reference to the mesh which is built by refinement
+    
+    /** To be added */
+    void Buildkmid();
+    
+  
+    Mesh& _mesh;                 //< reference to the mesh which is built by refinement
 
 };
 

@@ -18,6 +18,7 @@
 //----------------------------------------------------------------------------
 
 #include "Mesh.hpp"
+#include "MeshMetisPartitioning.hpp"
 #include "MeshRefinement.hpp"
 #include "NumericVector.hpp"
 
@@ -271,12 +272,17 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
       }
   }
   _mesh.el->SetMidpointNodeNumber(_mesh.GetNumberOfNodes() - _mesh.el->GetVertexNodeNumber());
-  // Now build kmid
-  _mesh.Buildkmid();
+  
+
+  Buildkmid();
+  
   _mesh.Buildkel();
   
-  //for parallel computations
-  if (_nprocs>=1) _mesh.GenerateMetisMeshPartition();
+  MeshMetisPartitioning meshmetispartitioning(_mesh);
+  meshmetispartitioning.DoPartition();
+  //_mesh.GenerateMetisMeshPartition();
+  
+  _mesh.FillISvector();
     
   // build Mesh coordinates by projecting the coarse coordinats
   _mesh._coordinate = new Solution(&_mesh);
@@ -359,5 +365,67 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   _mesh._coordinate->_Sol[2]->close();     
          
 }
+
+
+/**
+ * This function generates kmid for hex and wedge elements
+ **/
+void MeshRefinement::Buildkmid() {
+  
+  unsigned int nnodes = _mesh.GetNumberOfNodes();
+  
+  for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++)
+    for (unsigned inode=_mesh.el->GetElementDofNumber(iel,1); inode<_mesh.el->GetElementDofNumber(iel,2); inode++)
+      _mesh.el->SetElementVertexIndex(iel,inode,0);
+
+  for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++) {
+    for (unsigned iface=0; iface<_mesh.el->GetElementFaceNumber(iel,0); iface++) {
+      unsigned inode=_mesh.el->GetElementDofNumber(iel,1)+iface;
+      if ( 0==_mesh.el->GetElementVertexIndex(iel,inode) ) {
+        _mesh.el->SetElementVertexIndex(iel,inode,++nnodes);
+        unsigned i1=_mesh.el->GetFaceVertexIndex(iel,iface,0);
+        unsigned i2=_mesh.el->GetFaceVertexIndex(iel,iface,1);
+        unsigned i3=_mesh.el->GetFaceVertexIndex(iel,iface,2);
+        for (unsigned j=0; j< _mesh.el->GetVertexElementNumber(i1-1u); j++) {
+          unsigned jel= _mesh.el->GetVertexElementIndex(i1-1u,j)-1u;
+          if (jel>iel) {
+            for (unsigned jface=0; jface<_mesh.el->GetElementFaceNumber(jel,0); jface++) {
+              unsigned jnode=_mesh.el->GetElementDofNumber(jel,1)+jface;
+              if ( 0==_mesh.el->GetElementVertexIndex(jel,jnode) ) {
+                unsigned j1=_mesh.el->GetFaceVertexIndex(jel,jface,0);
+                unsigned j2=_mesh.el->GetFaceVertexIndex(jel,jface,1);
+                unsigned j3=_mesh.el->GetFaceVertexIndex(jel,jface,2);
+                unsigned j4=_mesh.el->GetFaceVertexIndex(jel,jface,3);
+                if ((i1==j1 || i1==j2 || i1==j3 ||  i1==j4 )&&
+                    (i2==j1 || i2==j2 || i2==j3 ||  i2==j4 )&&
+                    (i3==j1 || i3==j2 || i3==j3 ||  i3==j4 )) {
+                  _mesh.el->SetElementVertexIndex(jel,jnode,nnodes);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++) {
+    if (0==_mesh.el->GetElementType(iel)) {
+      _mesh.el->SetElementVertexIndex(iel,26,++nnodes);
+    }
+    if (3==_mesh.el->GetElementType(iel)) {
+      _mesh.el->SetElementVertexIndex(iel,8,++nnodes);
+    }
+  }
+  _mesh.el->SetNodeNumber(nnodes);
+
+  unsigned nv0= _mesh.el->GetVertexNodeNumber();
+  unsigned nv1= _mesh.el->GetMidpointNodeNumber();
+  _mesh.el->SetCentralNodeNumber(nnodes-nv0-nv1);
+  
+  _mesh.SetNumberOfNodes(nnodes);
+
+}
+
 
 }

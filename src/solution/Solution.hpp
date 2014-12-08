@@ -29,6 +29,7 @@
 #include "petscmat.h"
 #include "FElemTypeEnum.hpp"
 #include "ParallelObject.hpp"
+#include "vector"
 
 namespace femus {
 
