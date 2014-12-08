@@ -30,21 +30,9 @@
 #include "TempQuantities.hpp"
 #include "TempPhysics.hpp"
 
+#include "EquationsMap.hpp"
 
 
-// The question is: WHERE is the ORDER of the VARIABLES established?
-// I mean, on one hand there is an ORDER REGARDLESS of the FE family;
-//on the other hand there is an ORDER IN TERMS of FE.
-// The ORDER is important for defining the BLOCKS in the VECTORS and MATRICES.
-//In the initMeshToDof, i order QQ, LL and KK variables, BUT STILL YOU DO NOT KNOW
-// to WHICH QUANTITIES those VARIABLES are ASSOCIATED!
-// We should make a map that, for each SCALAR VARIABLE of EACH FE TYPE, 
-// tells you TO WHICH QUANTITY it is ASSOCIATED.
-// The point is then you have SCALAR variables associated to SCALAR QUANTITIES,
-// or SCALAR VARIABLES associated to VECTOR QUANTITIES.
-// So you should associate SCALAR VARIABLES to COMPONENTS of QUANTITIES.
-// The first time when you start associating scalar variables to quantities
-// is when you set the BC's
 // ======================================================
 EqnT::EqnT(  std::vector<Quantity*> int_map_in,
              EquationsMap& equations_map_in,
@@ -62,34 +50,8 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
       EqnT::~EqnT() {    }
 
 
-// ================================================================================
-// Now, the idea in the construction of the ELEMENT MATRIX and ELEMENT RHS is this.
-// You fill the element matrix, and each row (and column) of it will correspond
-// to a certain row of the global matrix.
-// HOW DO I KNOW THAT THIS CORRESPONDENCE is OK?
-// Well, this is given by the el_dof_indices.
-// every component of el_dof_indices tells me what is the GLOBAL ROW (and GLOBAL COLUMN)
-// So, if the length of your el_dof_indices is 10, then you'll have 10x10 elements to add to the global matrix,
-// given by all the possible couples "el_dof_indices[i] X el_dof_indices[j]"
-// TODO: Now, how do you know that the phi of one line is the correct phi, so it is the phi of THAT DOF?
-// I mean, how is the dependence on the REAL domain (NOT canonical) involved?
-// For the phi, the values are the same both on the canonical and on the stretched domain.
-// For the derivatives, I think the point is: you must pick the REAL dphidx in the SAME ORDER as you pick the CORRESPONDING DOFS.
-// Now, my point is: on a given row, are you sure that the code picks the correct dphidx?
 
-//TODO  what happens for STANDARD OUTPUTS? can we do in such a way that EVERYTHING is printed TO FILE?
-// we should REDIRECT TO THE *SAME* FILE ALL THE std output and std errors of ALL THE LIBRARIES!
-
-//NOW, PAY ATTENTION: The "iel" written as "iel=0; iel < (nel_e - nel_b);" is used for PICKING the CONNECTIVITY from the ELEMENT CONNECTIVITY MAP!
-// But, the iel as DofObject Index must be given in the correct form!
-// So, I will distinguish iel into iel_mesh and iel_DofObj:
-//In both cases we start from a "Geometrical Entity", the ELEMENT.
-//In the mesh case, we only use the ELEMENT to pick its CONNECTIVITY.
-//In the DofObj case,we use iel to pick the corresponding Element DOF from the node_dof map! 
-
-
-/// This function assembles the matrix and the rhs:
-void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
+ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
 
   CurrElem       currelem(vb,*this,_eqnmap);
   CurrGaussPointBase & currgp = CurrGaussPointBase::build(vb,_eqnmap, _mesh.get_dim());
@@ -135,8 +97,8 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     QuantityLocal xyz(currgp,currelem);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _eqnmap._elem_type[VV][xyz._FEord]->GetNDofs();
-    xyz._ndof[BB] = _eqnmap._elem_type[BB][xyz._FEord]->GetNDofs();
+    xyz._ndof[VV] = _eqnmap._elem_type[space_dim-1-VV][xyz._FEord]->GetNDofs();
+    xyz._ndof[BB] = _eqnmap._elem_type[space_dim-1-BB][xyz._FEord]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 
@@ -492,7 +454,7 @@ else {   std::cout << " No line integrals yet... " << std::endl; abort();}
 
 double EqnT::ComputeIntegral (const uint vb, const uint Level) {
 
-    CurrElem       currelem(vb,*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
+    CurrElem       currelem(vb,*this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(vb,_eqnmap, _mesh.get_dim());
 
   //====== Physics cast
@@ -508,8 +470,8 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _eqnmap._elem_type[VV][xyz._FEord]->GetNDofs();
-    xyz._ndof[BB] = _eqnmap._elem_type[BB][xyz._FEord]->GetNDofs();
+    xyz._ndof[VV] = _eqnmap._elem_type[space_dim-1-VV][xyz._FEord]->GetNDofs();
+    xyz._ndof[BB] = _eqnmap._elem_type[space_dim-1-BB][xyz._FEord]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 
@@ -619,8 +581,8 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _eqnmap._elem_type[VV][xyz._FEord]->GetNDofs();
-    xyz._ndof[BB] = _eqnmap._elem_type[BB][xyz._FEord]->GetNDofs();
+    xyz._ndof[VV] = _eqnmap._elem_type[space_dim-1-VV][xyz._FEord]->GetNDofs();
+    xyz._ndof[BB] = _eqnmap._elem_type[space_dim-1-BB][xyz._FEord]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
 

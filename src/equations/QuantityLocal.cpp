@@ -139,8 +139,8 @@ void QuantityLocal::VectWithQtyFillBasic() {
     _eqnptr   = _qtyptr->_eqn; 
     _dim      = _qtyptr->_dim;
     _FEord    = _qtyptr->_FEord;
-    _ndof[VV] = _currEl._eqnmap._elem_type[VV][_FEord]->GetNDofs();  //TODO here we use the eqnmap, of Course Vect must be used where the eqmap is there, but that can be in the main also
-    _ndof[BB] = _currEl._eqnmap._elem_type[BB][_FEord]->GetNDofs();
+    _ndof[VV] = _currEl._eqnmap._elem_type[_currEl._eqnmap._mesh.get_dim()-1-VV][_FEord]->GetNDofs();  //TODO here we use the eqnmap, of Course Vect must be used where the eqmap is there, but that can be in the main also
+    _ndof[BB] = _currEl._eqnmap._elem_type[_currEl._eqnmap._mesh.get_dim()-1-BB][_FEord]->GetNDofs();
 
     return;
 }

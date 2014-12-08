@@ -45,7 +45,7 @@ inline double Phi(const uint ql,const uint dof) const {
   return _phi_ndsQLVB_g[ql][dof];
 }
 
-  static CurrGaussPointBase& build(const uint vb_in, EquationsMap& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
+  static CurrGaussPointBase & build(const uint vb_in, EquationsMap& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
 
     uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
     double* _dphidxezeta_ndsQLVB_g[QL];  //canonical derivatives

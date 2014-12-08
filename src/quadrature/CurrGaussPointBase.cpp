@@ -20,7 +20,7 @@ namespace femus {
 //by the way, with the EquationsMap I reach the Utils, the Mesh, and so the GeomEl, and so on...
 CurrGaussPointBase::CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in ):
     _eqnmap(e_map_in),
-    _elem_type(e_map_in._elem_type[vb_in]),
+    _elem_type(e_map_in._elem_type[_eqnmap._mesh.get_dim()-1-vb_in]),
     _qrule(e_map_in._qrule[_eqnmap._mesh.get_dim()-1-vb_in]) {
   
   _IntDim[VV] = _eqnmap._mesh.get_dim();

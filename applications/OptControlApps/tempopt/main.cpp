@@ -83,13 +83,14 @@
   
   // =======Abstract FEElems =====  //remember to delete the FE at the end 
   const std::string  FEFamily[QL] = {"biquadratic","linear","constant"}; 
-  std::vector< std::vector<elem_type*> > FEElemType_vec(VB);
-  for (int vb=0;vb < VB; vb++)    FEElemType_vec[vb].resize(QL);
+  std::vector< std::vector<elem_type*> > FEElemType_vec(mesh.get_dim());
+  for (int idim=0; idim < mesh.get_dim(); idim++)   FEElemType_vec[idim].resize(QL);
 
-  for (int vb=0;vb < VB; vb++) {
+  for (int idim=0;idim < mesh.get_dim(); idim++) { 
     for (int fe=0; fe<QL; fe++) {
-       FEElemType_vec[vb][fe] = elem_type::build(mesh.GetGeomEl(mesh.get_dim()-1-vb,mesh._mesh_order)._geomel_id.c_str(),fe, qrule[mesh.get_dim()-1-vb].GetGaussOrderString().c_str());
-       FEElemType_vec[vb][fe]->EvaluateShapeAtQP(mesh.GetGeomEl(mesh.get_dim()-1-vb,mesh._mesh_order)._geomel_id.c_str(),fe);
+       FEElemType_vec[idim][fe] = elem_type::build(mesh.GetGeomEl(idim,mesh._mesh_order)._geomel_id.c_str(),fe,
+						            qrule[idim].GetGaussOrderString().c_str());
+       FEElemType_vec[idim][fe]->EvaluateShapeAtQP(mesh.GetGeomEl(idim,mesh._mesh_order)._geomel_id.c_str(),fe);
      }
    }
   

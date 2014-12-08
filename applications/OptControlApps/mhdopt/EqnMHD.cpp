@@ -117,8 +117,8 @@ namespace femus {
     QuantityLocal Phij(currgp,currelem); //TODO this is another Vect that doesnt have an associated quantity still
     Phij._dim      = 1;                                                         //scalar!
     Phij._FEord    = bhomOld._FEord;
-    Phij._ndof[VV] = _eqnmap._elem_type[VV][Phij._FEord]->GetNDofs(); 
-    Phij._ndof[BB] = _eqnmap._elem_type[BB][Phij._FEord]->GetNDofs();
+    Phij._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][Phij._FEord]->GetNDofs(); 
+    Phij._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][Phij._FEord]->GetNDofs();
     Phij._val_g    = new double [Phij._dim];
     Phij._grad_g   = new double*[Phij._dim];                                    //for VARIOUS Operators, like the grads and curls of the other Vects...
   for (uint i=0; i< Phij._dim;i++) {Phij._grad_g[i] = new double[DIMENSION];}
@@ -127,8 +127,8 @@ namespace femus {
     QuantityLocal Phii(currgp,currelem);
     Phii._dim      = 1;
     Phii._FEord    = bhomOld._FEord;
-    Phii._ndof[VV] = _eqnmap._elem_type[VV][Phii._FEord]->GetNDofs(); 
-    Phii._ndof[BB] = _eqnmap._elem_type[BB][Phii._FEord]->GetNDofs();
+    Phii._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][Phii._FEord]->GetNDofs(); 
+    Phii._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][Phii._FEord]->GetNDofs();
     Phii._val_g    = new double [Phii._dim];
     Phii._grad_g   = new double*[Phii._dim];
     for (uint i=0; i< Phii._dim;i++) {Phii._grad_g[i] = new double[DIMENSION];}    //for various Operators
@@ -139,16 +139,16 @@ namespace femus {
     QuantityLocal Psij(currgp,currelem);
     Psij._dim      = 1;
     Psij._FEord    = LagMultOld._FEord;
-    Psij._ndof[VV] = _eqnmap._elem_type[VV][Psij._FEord]->GetNDofs(); 
-    Psij._ndof[BB] = _eqnmap._elem_type[BB][Psij._FEord]->GetNDofs();
+    Psij._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][Psij._FEord]->GetNDofs(); 
+    Psij._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][Psij._FEord]->GetNDofs();
     Psij._val_g    = new double [Psij._dim];
     
 //QTYONE tEST: test of the second Unknown
     QuantityLocal Psii(currgp,currelem);
     Psii._dim      = 1;
     Psii._FEord    = LagMultOld._FEord;
-    Psii._ndof[VV] = _eqnmap._elem_type[VV][Psii._FEord]->GetNDofs();
-    Psii._ndof[BB] = _eqnmap._elem_type[BB][Psii._FEord]->GetNDofs();
+    Psii._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][Psii._FEord]->GetNDofs();
+    Psii._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][Psii._FEord]->GetNDofs();
     Psii._val_g    = new double [Psii._dim];
 
 //========= END tEST AND SHAPE FOR QTYZERO AND QTYONE =================
@@ -159,8 +159,8 @@ namespace femus {
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _eqnmap._elem_type[VV][xyz._FEord]->GetNDofs();
-    xyz._ndof[BB] = _eqnmap._elem_type[BB][xyz._FEord]->GetNDofs();
+    xyz._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][xyz._FEord]->GetNDofs();
+    xyz._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][xyz._FEord]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
     xyz._val_g    = new double[xyz._dim];
     

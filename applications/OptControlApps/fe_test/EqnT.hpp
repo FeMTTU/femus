@@ -1,5 +1,5 @@
-#ifndef __equationt_h__
-#define __equationt_h__
+#ifndef __equationfetest_h__
+#define __equationfetest_h__
 
 
 // Local Includes -----------------
