@@ -724,29 +724,27 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	  
 	  //BEGIN FLUID ASSEMBLY ============
 	  { 
-	    vector < adept::adouble > ResSupg(dim,0.);
+	    vector < adept::adouble > Res(dim,0.);
 	    for(unsigned ivar=0; ivar<dim; ivar++) {
+	      Res[ivar] += 0. - GradSolVAR[dim][ivar];
 	      for(unsigned jvar=0; jvar<dim; jvar++) {
-		ResSupg[ivar] -= SolVAR[jvar]*GradSolVAR[ivar][jvar] - IRe*NablaSolVAR[ivar][jvar];
+		Res[ivar] += - SolVAR[jvar]*GradSolVAR[ivar][jvar] + IRe*NablaSolVAR[ivar][jvar];
 	      }
-	      ResSupg[ivar] -= GradSolVAR[dim][ivar];
 	    }
 	    
 	    //BEGIN redidual momentum block  
 	    for (unsigned i=0; i<nve; i++){
-   
-	      
-	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		adept::adouble Adv_rhs=0.;
-		adept::adouble Lap_rhs=0.;
-		adept::adouble supgPhi=0.;
+   	      for(unsigned ivar=0; ivar<dim; ivar++) {
+		adept::adouble Advection = 0.;
+		adept::adouble Laplacian = 0.;
+		adept::adouble phiSupg=0.;
 		for(unsigned jvar=0; jvar<dim; jvar++) {
-		  Lap_rhs += IRe*gradphi[i*dim+jvar]*GradSolVAR[ivar][jvar];
-		  Adv_rhs +=   SolVAR[jvar]*GradSolVAR[ivar][jvar]*phi[i];
-		  supgPhi += ( SolVAR[jvar]*gradphi[i*dim+jvar] + IRe * nablaphi[i*nabla_dim+jvar] ) * tauSupg; 
+		  Advection += SolVAR[jvar]*GradSolVAR[ivar][jvar]*phi[i];
+		  Laplacian += IRe*gradphi[i*dim+jvar]*GradSolVAR[ivar][jvar];
+		  phiSupg   += ( SolVAR[jvar]*gradphi[i*dim+jvar] + IRe * nablaphi[i*nabla_dim+jvar] ) * tauSupg; 
 		}
-		aRhs[indexVAR[ivar]][i]+= ( - Lap_rhs - Adv_rhs + SolVAR[dim]*gradphi[i*dim+ivar]
-					    + ResSupg[ivar]*supgPhi )*Weight;	      
+		aRhs[indexVAR[ivar]][i]+= ( - Advection - Laplacian + SolVAR[dim] * gradphi[i*dim+ivar]
+					    + Res[ivar] * phiSupg ) * Weight;      
 	      }
 	    } 
 	    //END redidual momentum block     
@@ -758,11 +756,11 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 		div_vel +=GradSolVAR[ivar][ivar];
 	      }
 	      for (unsigned i=0; i<nve1; i++) {
-		adept::adouble ResDotMinusGradq=0.;
+		adept::adouble MinusGradPhi1DotRes = 0.;
 		for(int ivar=0;ivar<dim;ivar++){
-		  ResDotMinusGradq += ResSupg[ivar]*(-gradphi1[i*dim+ivar])*tauSupg; 
+		  MinusGradPhi1DotRes += -gradphi1[i*dim+ivar] * Res[ivar] * tauSupg; 
 		}
-		aRhs[indexVAR[dim]][i] += (-(-div_vel)*phi1[i] + ResDotMinusGradq )*Weight;
+		aRhs[indexVAR[dim]][i] += ( - (-div_vel) * phi1[i] + MinusGradPhi1DotRes ) * Weight;
 	      }
 	    }
 	    //END continuity block ===========================
