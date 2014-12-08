@@ -212,15 +212,15 @@
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
     currelem.SetElDofsBc(Level);
-      VelOld.GetElDofsVect(vb,Level);
-    pressOld.GetElDofsVect(vb,Level);
+      VelOld.GetElDofsVect(Level);
+    pressOld.GetElDofsVect(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,qtyzero_ord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
 
    
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
 #if (TEMP_QTY==1)
-   if ( Temp._eqnptr != NULL )  Temp.GetElDofsVect(vb,Level);
+   if ( Temp._eqnptr != NULL )  Temp.GetElDofsVect(Level);
      else                       Temp._qtyptr->FunctionDof(vb,Temp,time,xyz_refbox._val_dofs);
 #endif
 
@@ -275,7 +275,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //but, these quantities depend on idim and jdim, because they are  involved in multiplications with tEST and SHAPE functions
 
 //Internal Quantities
-      VelOld.val_g(vb);     //fills _val_g, needs _val_dofs
+      VelOld.val_g();     //fills _val_g, needs _val_dofs
       VelOld.grad_g(vb);     //fills _grad_g, needs _val_dofs //TODO can we see the analogies between JacVectVV_g and grad_g?
 //Advection all VelOld
       for (uint idim=0; idim<space_dim; idim++) { AdvRhs_g[idim]=0.;}
@@ -287,7 +287,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
           for (uint idim=0; idim<space_dim; idim++)    Div_g += VelOld._grad_g[idim][idim];     //TODO NONLIN
 
 #if (TEMP_QTY==1)
-     Temp.val_g(vb);
+     Temp.val_g();
  #endif
 
        
@@ -465,8 +465,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
      currelem.SetElDofsBc(Level);
      
-     VelOld.GetElDofsVect(vb,Level);
-     pressOld.GetElDofsVect(vb,Level);
+     VelOld.GetElDofsVect(Level);
+     pressOld.GetElDofsVect(Level);
 
      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,qtyzero_ord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
@@ -523,7 +523,7 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (v
 	  
 // // //    val_g(vb,pressOld);
    
-   xyz_refbox.val_g(vb);
+   xyz_refbox.val_g();
       pressOld._qtyptr->Function_txyz(time,xyz_refbox._val_g/*xyz._val_g*/,pressOld._val_g);  //i prefer using the function instead of the p_old vector
        
 //--- strain, derivative of velocity ============== 
@@ -538,7 +538,7 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (v
 //=================================================
 
       //-----old velocity=============
-	  VelOld.val_g(vb);  //substitute el_value...
+	  VelOld.val_g();  //substitute el_value...
 
 
 //==============================================================

@@ -222,21 +222,21 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
 
     currelem.SetElDofsBc(Level);
     
-    VelAdjOld.GetElDofsVect(vb,Level);  
-    PressAdjOld.GetElDofsVect(vb,Level);
+    VelAdjOld.GetElDofsVect(Level);  
+    PressAdjOld.GetElDofsVect(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,VelAdjOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
   
     
-    if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(vb,Level);
+    if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(Level);
     else                         Vel._qtyptr->FunctionDof(vb,Vel,time,xyz_refbox._val_dofs);    //give the Hartmann flow, if not solving NS
-    if ( Bhom._eqnptr != NULL )  Bhom.GetElDofsVect(vb,Level);
+    if ( Bhom._eqnptr != NULL )  Bhom.GetElDofsVect(Level);
     else                         Bhom._qtyptr->FunctionDof(vb,Bhom,time,xyz_refbox._val_dofs);
-    if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(vb,Level);
+    if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(Level);
     else                         Bext._qtyptr->FunctionDof(vb,Bext,time,xyz_refbox._val_dofs);
-    if ( BhomAdj._eqnptr != NULL )  BhomAdj.GetElDofsVect(vb,Level);
+    if ( BhomAdj._eqnptr != NULL )  BhomAdj.GetElDofsVect(Level);
     else                            BhomAdj._qtyptr->FunctionDof(vb,BhomAdj,time,xyz_refbox._val_dofs);    
-    if ( VelDes._eqnptr != NULL )  VelDes.GetElDofsVect(vb,Level);
+    if ( VelDes._eqnptr != NULL )  VelDes.GetElDofsVect(Level);
     else                           VelDes._qtyptr->FunctionDof(vb,VelDes,time,xyz_refbox._val_dofs);    
 
  
@@ -253,7 +253,7 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     
 //=======    
 ///optimal control
-    xyz_refbox.SetElemAverage(vb);
+    xyz_refbox.SetElemAverage();
   int el_flagdom= optphys->ElFlagControl(xyz_refbox._el_average);
 //=======    
 
@@ -273,11 +273,11 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.SetDPhiDxyzElDofsFEVB_g   (vb,fe,q
 for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe); }
 //=======end of the "COMMON SHAPE PART"==================
 
-   VelAdjOld.val_g(vb);
-     BhomAdj.curl_g(vb);
-        Bmag.val_g(vb);
-         Vel.val_g(vb);
-      VelDes.val_g(vb);
+   VelAdjOld.val_g();
+     BhomAdj.curl_g();
+        Bmag.val_g();
+         Vel.val_g();
+      VelDes.val_g();
          Vel.grad_g(vb);
 
 //vector product
@@ -412,8 +412,8 @@ if (_Dir_pen_fl == 0)  {
 
      currelem.SetElDofsBc(Level);
 
-     VelAdjOld.GetElDofsVect(vb,Level);
-     PressAdjOld.GetElDofsVect(vb,Level);
+     VelAdjOld.GetElDofsVect(Level);
+     PressAdjOld.GetElDofsVect(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,VelAdjOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
@@ -458,7 +458,7 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (v
 	const double dtxJxW_g = det * _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================   
       
-   xyz_refbox.val_g(vb); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
+   xyz_refbox.val_g(); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
       PressAdjOld._qtyptr->Function_txyz(time,xyz_refbox._val_g/*xyz._val_g*/,PressAdjOld._val_g);  //i prefer using the function instead of the p_old vector
       
 

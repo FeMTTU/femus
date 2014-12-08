@@ -226,19 +226,19 @@ namespace femus {
 
     currelem.SetElDofsBc(Level);
     
-       bhomOld.GetElDofsVect(vb,Level);
-    LagMultOld.GetElDofsVect(vb,Level);
+       bhomOld.GetElDofsVect(Level);
+    LagMultOld.GetElDofsVect(Level);
   
       if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,bhomOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
 
 
 //===== "PHYSICAL" INVOLVEMENT
 #if BMAG_QTY==1
-    if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(vb,Level);
+    if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(Level);
     else                         Bext._qtyptr->FunctionDof(vb,Bext,time,xyz_refbox._val_dofs);
 #endif
 #if VELOCITY_QTY==1
-    if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(vb,Level);      //----- for Advection MAT & RHS
+    if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(Level);      //----- for Advection MAT & RHS
     else                        Vel._qtyptr->FunctionDof(vb,Vel,time,xyz_refbox._val_dofs);
 #endif
     
@@ -258,15 +258,15 @@ for (uint fe = 0; fe < QL; fe++)     {    currgp.SetDPhiDxyzElDofsFEVB_g (vb,fe,
 for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe); }
 //======= end of the "COMMON SHAPE PART"==================
 
-      bhomOld.val_g(vb);         //---for Time
+      bhomOld.val_g();         //---for Time
 
 #if VELOCITY_QTY==1
-      Vel.val_g(vb);            //---- for Advection MAT & RHS
+      Vel.val_g();            //---- for Advection MAT & RHS
 #endif
 #if BMAG_QTY==1
-      Bext.val_g(vb);          //----- for Advection RHS
+      Bext.val_g();          //----- for Advection RHS
       Bext.grad_g(vb);          //----- for Laplacian RHS
-      Bext.curl_g(vb);          //----- for Curl Curl RHS         //THE EXTENSION of the DOFS to 3D is done INSIDE!!
+      Bext.curl_g();          //----- for Curl Curl RHS         //THE EXTENSION of the DOFS to 3D is done INSIDE!!
 #endif
 
 #if (VELOCITY_QTY==1) && (BMAG_QTY==1) //in this case we have two couplings with external quantities
@@ -433,8 +433,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
    
      currelem.SetElDofsBc(Level);
      
-        bhomOld.GetElDofsVect(vb,Level);
-     LagMultOld.GetElDofsVect(vb,Level);
+        bhomOld.GetElDofsVect(Level);
+     LagMultOld.GetElDofsVect(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,bhomOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
@@ -467,11 +467,11 @@ if (_Dir_pen_fl == 1)  {
     
 //========== EXTERNAL DOFS ===   
 #if BMAG_QTY==1
-    if ( Bext._eqnptr != NULL )   Bext.GetElDofsVect(vb,Level);
+    if ( Bext._eqnptr != NULL )   Bext.GetElDofsVect(Level);
     else                          Bext._qtyptr->FunctionDof(vb,Bext,time,xyz_refbox._val_dofs);
 #endif
 #if VELOCITY_QTY==1
-    if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(vb,Level);
+    if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(Level);
     else                        Vel._qtyptr->FunctionDof(vb,Vel,time,xyz_refbox._val_dofs);
 #endif
     
@@ -490,14 +490,14 @@ if (_Dir_pen_fl == 1)  {
 
 //---------lagmult
 	    //"post gauss method"
-   xyz_refbox.val_g(vb); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
+   xyz_refbox.val_g(); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
       LagMultOld._qtyptr->Function_txyz(time,xyz_refbox._val_g,LagMultOld._val_g);  //check that you have ZERO here
       
 #if VELOCITY_QTY==1
-     Vel.val_g(vb);
+     Vel.val_g();
 #endif
 #if BMAG_QTY==1
-     Bext.val_g(vb);
+     Bext.val_g();
 #endif
 #if (VELOCITY_QTY==1) && (BMAG_QTY==1)
           Math::extend( Vel._val_g,Vel._val_g3D,space_dim);

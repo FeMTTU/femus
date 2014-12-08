@@ -8,6 +8,59 @@
 
 namespace femus {
 
+ 
+ class EqnBase;
+ class Quantity;
+ class CurrGaussPointBase;
+ class CurrElem;
+
+  class QuantityLocal {
+    
+  public:
+    
+     QuantityLocal(CurrGaussPointBase &, CurrElem &);
+    ~QuantityLocal();
+
+    
+    //TODO all these function are of the SET type (this is how I should call them), that is why they are NOT CONST
+   void  VectWithQtyFillBasic();             //this needs the quantity and the fe map
+   void                 val_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
+   void                grad_g(const uint vbflag); //this only needs the CUrrent GAUSS  //No Quantity needed
+   void                curl_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
+   void            ExtendDofs(); //this only needs the CUrrent GAUSS  //No Quantity needed
+   void         GetElDofsVect(const uint Level); //this only needs the CUrrent ELEMENT
+   void        SetElemAverage();
+  
+  //if you have NO Quantity and NO Equation ==========
+//   void   SetElDofsFromArgs(const uint vb,const double * dofs);   //if you have NO Quantity and NO Equation, we should do the more flexible version of a Vect    
+                                                                 //but the point is that we have to pass also the offset...
+    
+
+    double*  _val_g;                                      //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT  //WHY ARE WE NOT ALLOCATING IN THE CONSTRUCTOR?!?
+    double*  _val_g3D;   //for cross products             //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
+    double*  _val_dofs;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
+    double*  _val_dofs3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
+    double** _grad_g;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
+    double** _grad_g3D;  //for cross products   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
+    double* _curl_g3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
+    std::vector<double> _el_average;  /*[spacedim]*/ //NEED TO ALLOCATE THIS EXPLICITLY WHERE IT'S USED... TODO this class must be reconsidered!!! with std::vectorss, and so on!!!
+    uint _FEord; 
+    uint _dim;
+    uint _ndof;
+    
+    EqnBase*  _eqnptr;
+    Quantity* _qtyptr;
+    
+    CurrGaussPointBase & _currGP;
+    CurrElem & _currEl;
+    
+
+  };
+  
+
+
+} //end namespace femus
+
 
 
 // The main difference to consider is  Vect WITH    Quantity
@@ -45,59 +98,5 @@ namespace femus {
  //for several operators
  
  //TODO TODO TODO this class must be better redefined 
- 
- 
- class EqnBase;
- class Quantity;
- class CurrGaussPointBase;
- class CurrElem;
-
-  class QuantityLocal {
-    
-  public:
-    
-     QuantityLocal(CurrGaussPointBase &, CurrElem &);
-    ~QuantityLocal();
-
-    
-    double*  _val_g;                                      //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT  //WHY ARE WE NOT ALLOCATING IN THE CONSTRUCTOR?!?
-    double*  _val_g3D;   //for cross products             //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    double*  _val_dofs;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    double*  _val_dofs3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    double** _grad_g;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    double** _grad_g3D;  //for cross products   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    double* _curl_g3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    std::vector<double> _el_average;  /*[spacedim]*/ //NEED TO ALLOCATE THIS EXPLICITLY WHERE IT'S USED... TODO this class must be reconsidered!!! with std::vectorss, and so on!!!
-    uint _FEord; 
-    uint _dim;
-    uint _ndof;
-    
-    EqnBase*  _eqnptr;
-    Quantity* _qtyptr;
-    
-    CurrGaussPointBase & _currGP;
-    CurrElem & _currEl;
-    
-
-    //TODO all these function are of the SET type (this is how I should call them), that is why they are NOT CONST
-   void  VectWithQtyFillBasic();             //this needs the quantity and the fe map
-   void                 val_g(const uint vbflag); //this only needs the CUrrent GAUSS  //No Quantity needed
-   void                grad_g(const uint vbflag); //this only needs the CUrrent GAUSS  //No Quantity needed
-   void                curl_g(const uint vbflag); //this only needs the CUrrent GAUSS  //No Quantity needed
-   void            ExtendDofs(const uint vbflag); //this only needs the CUrrent GAUSS  //No Quantity needed
-   void         GetElDofsVect(const uint vbflag, const uint Level); //this only needs the CUrrent ELEMENT
-   void        SetElemAverage(const uint vbflag);
-  
-  //if you have NO Quantity and NO Equation ==========
-//   void   SetElDofsFromArgs(const uint vb,const double * dofs);   //if you have NO Quantity and NO Equation, we should do the more flexible version of a Vect    
-                                                                 //but the point is that we have to pass also the offset...
-    
-  };
-  
-
-
-} //end namespace femus
-
-
 
 #endif

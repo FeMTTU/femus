@@ -4012,7 +4012,7 @@ double  Jac_g=0.;
 
      for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
- xyz.val_g(vb);
+ xyz.val_g();
 double myval_g = pt2func(time,xyz._val_g); 
 
  

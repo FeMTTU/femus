@@ -336,21 +336,21 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
     currelem.SetElDofsBc(Level);
     
-      VelOld.GetElDofsVect(vb,Level);
-    pressOld.GetElDofsVect(vb,Level);
+      VelOld.GetElDofsVect(Level);
+    pressOld.GetElDofsVect(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,qtyzero_ord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
 
    
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
  #if (BMAG_QTY==1)
-  if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(vb,Level); 
+  if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(Level); 
   else                         Bext._qtyptr->FunctionDof(vb,Bext,time,xyz_refbox._val_dofs);
-  if ( Bhom._eqnptr != NULL )  Bhom.GetElDofsVect(vb,Level);   
+  if ( Bhom._eqnptr != NULL )  Bhom.GetElDofsVect(Level);   
   else                         Bhom._qtyptr->FunctionDof(vb,Bhom,time,xyz_refbox._val_dofs);
 #endif
 #if (TEMP_QTY==1)
-   if ( Temp._eqnptr != NULL ) Temp.GetElDofsVect(vb,Level);
+   if ( Temp._eqnptr != NULL ) Temp.GetElDofsVect(Level);
      else                      Temp._qtyptr->FunctionDof(vb,Temp,time,xyz_refbox._val_dofs);
 #endif
 
@@ -374,7 +374,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 //for safety, i decide i'll put this INSIDE the CURLVECT, because it is the only routine 
 //for which the _3D is used
 //so you're sure you're doing it at a later time
-//      ExtendDofs(vb,Bmag); /*mgMHD->*//*mgMHDCONT->*/ // _utils.extend_nds(NDOF_FEM,B_qdofs,B_qdofs3D);//mgMHD2->_mixfe->_eldof[0][0]
+//      ExtendDofs(Bmag); /*mgMHD->*//*mgMHDCONT->*/ // _utils.extend_nds(NDOF_FEM,B_qdofs,B_qdofs3D);//mgMHD2->_mixfe->_eldof[0][0]
 //Do you need the DofExtension for other operators than CurlVect? Like for some vector products?
 //if you have some multiplication v x phii , where phii is the test function?
 //No, you already have the gauss values in that case
@@ -446,7 +446,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //but, these quantities depend on idim and jdim, because they are  involved in multiplications with tEST and SHAPE functions
 
 //Internal Quantities
-      VelOld.val_g(vb);   //fills _val_g, needs _val_dofs
+      VelOld.val_g();   //fills _val_g, needs _val_dofs
       VelOld.grad_g(vb);     //fills _grad_g, needs _val_dofs //TODO can we see the analogies between JacVectVV_g and grad_g?
 //Advection all VelOld
       for (uint idim=0; idim<space_dim; idim++) { AdvRhs_g[idim]=0.;}
@@ -461,10 +461,10 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //compute curlB
 //what is needed for curlB, ie the dofs3D and the dphi3D, is done BEFORE for the  dphi3D and here for the dofs3D  
 //      ExtendDphiDxyzElDofsFEVB_g(vb,Bmag._FEord/*FE_MAG*/);
-     Bmag.curl_g(vb); 
+     Bmag.curl_g(); 
 
 //compute B
-     Bmag.val_g(vb);
+     Bmag.val_g();
 
 //compute curlBxB
           Math::extend(Bmag._val_g,Bmag._val_g3D,space_dim);                    //fills _val_g3D
@@ -475,7 +475,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 #endif
 
 #if (TEMP_QTY==1)
-     Temp.val_g(vb);
+     Temp.val_g();
  #endif
 
 #if (TEMP_DEPS==1)
@@ -659,8 +659,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
      currelem.SetElDofsBc(Level);
      
-     VelOld.GetElDofsVect(vb,Level);
-     pressOld.GetElDofsVect(vb,Level);
+     VelOld.GetElDofsVect(Level);
+     pressOld.GetElDofsVect(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,qtyzero_ord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
@@ -716,7 +716,7 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (v
 	  
 // // //    val_g(vb,pressOld);
    
-   xyz_refbox.val_g(vb); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
+   xyz_refbox.val_g(); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
       pressOld._qtyptr->Function_txyz(time,xyz_refbox._val_g/*xyz._val_g*/,pressOld._val_g);  //i prefer using the function instead of the p_old vector
        
 //--- strain, derivative of velocity ============== 
@@ -731,7 +731,7 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (v
 //=================================================
 
       //-----old velocity=============
-	  VelOld.val_g(vb);  //substitute el_value...
+	  VelOld.val_g();  //substitute el_value...
 
 
 //==============================================================
@@ -946,13 +946,13 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
 
 //======= 
-    xyz_refbox.SetElemAverage(vb);
+    xyz_refbox.SetElemAverage();
     int el_flagdom = optphys->ElFlagControl(xyz_refbox._el_average);
 //=======        
 
-    if ( Vel._eqnptr != NULL )       Vel.GetElDofsVect(vb,Level);
+    if ( Vel._eqnptr != NULL )       Vel.GetElDofsVect(Level);
     else                             Vel._qtyptr->FunctionDof(vb,Vel,0./*time*/,xyz_refbox._val_dofs);    //give the Hartmann flow, if not solving NS
-    if ( VelDes._eqnptr != NULL ) VelDes.GetElDofsVect(vb,Level);
+    if ( VelDes._eqnptr != NULL ) VelDes.GetElDofsVect(Level);
     else                          VelDes._qtyptr->FunctionDof(vb,VelDes,0./*time*/,xyz_refbox._val_dofs);    
 
 //AAA time is picked as a function pointer of the time C library i think...
@@ -969,8 +969,8 @@ for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe
 
      for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
- Vel.val_g(vb);
- VelDes.val_g(vb);
+ Vel.val_g();
+ VelDes.val_g();
 
 
   double deltau_squarenorm_g = 0.;

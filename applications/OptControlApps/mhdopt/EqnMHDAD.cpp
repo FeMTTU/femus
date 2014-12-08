@@ -199,19 +199,19 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
 
     currelem.SetElDofsBc(Level);
     
-           BhomAdjOld.GetElDofsVect(vb,Level);
-    BhomLagMultAdjOld.GetElDofsVect(vb,Level);
+           BhomAdjOld.GetElDofsVect(Level);
+    BhomLagMultAdjOld.GetElDofsVect(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BhomAdjOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
     
     
-     if ( Vel._eqnptr != NULL )      Vel.GetElDofsVect(vb,Level);
+     if ( Vel._eqnptr != NULL )      Vel.GetElDofsVect(Level);
     else                             Vel._qtyptr->FunctionDof(vb,Vel,time,xyz_refbox._val_dofs);
-    if ( VelAdj._eqnptr != NULL ) VelAdj.GetElDofsVect(vb,Level);
+    if ( VelAdj._eqnptr != NULL ) VelAdj.GetElDofsVect(Level);
     else                          VelAdj._qtyptr->FunctionDof(vb,VelAdj,time,xyz_refbox._val_dofs);
-    if ( Bhom._eqnptr != NULL )     Bhom.GetElDofsVect(vb,Level);
+    if ( Bhom._eqnptr != NULL )     Bhom.GetElDofsVect(Level);
     else                            Bhom._qtyptr->FunctionDof(vb,Bhom,time,xyz_refbox._val_dofs);
-    if ( Bext._eqnptr != NULL )     Bext.GetElDofsVect(vb,Level);
+    if ( Bext._eqnptr != NULL )     Bext.GetElDofsVect(Level);
     else                            Bext._qtyptr->FunctionDof(vb,Bext,time,xyz_refbox._val_dofs);
 
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
@@ -239,11 +239,11 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.SetDPhiDxyzElDofsFEVB_g   (vb,fe,q
 for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe); }
 //=======end of the "COMMON SHAPE PART"==================
 
-      BhomAdjOld.val_g(vb);
-      Bmag.curl_g(vb);
-      Bmag.val_g(vb);
-      Vel.val_g(vb);
-      VelAdj.val_g(vb);
+      BhomAdjOld.val_g();
+      Bmag.curl_g();
+      Bmag.val_g();
+      Vel.val_g();
+      VelAdj.val_g();
 
  //vector product
           Math::extend(VelAdj._val_g,VelAdj._val_g3D,space_dim);
@@ -380,8 +380,8 @@ if (_Dir_pen_fl == 0)  {
 
      currelem.SetElDofsBc(Level);
      
-            BhomAdjOld.GetElDofsVect(vb,Level);
-     BhomLagMultAdjOld.GetElDofsVect(vb,Level);
+            BhomAdjOld.GetElDofsVect(Level);
+     BhomLagMultAdjOld.GetElDofsVect(Level);
    
      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BhomAdjOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
@@ -417,7 +417,7 @@ if (_Dir_pen_fl == 1)  {
 	const double dtxJxW_g = det * _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================   
       
-      xyz_refbox.val_g(vb);
+      xyz_refbox.val_g();
       BhomLagMultAdjOld._qtyptr->Function_txyz(time,xyz_refbox._val_g/*xyz._val_g*/,BhomLagMultAdjOld._val_g);  //i prefer using the function instead of the p_old vector
    
 //==============================================================

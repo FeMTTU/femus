@@ -35,14 +35,14 @@ namespace femus {
 //actually, that vector is only for service purposes 
 //so it could be also translated into some temporary vector whenever needed
  
- void QuantityLocal::curl_g(const uint vbflag) {
+ void QuantityLocal::curl_g() {
    
   const uint       ord = _FEord;
   const uint el_nnodes = _ndof;
   const uint el_ndof_q = el_nnodes ;
 
 //extend to 3D the dof values
-  ExtendDofs(vbflag);  
+  ExtendDofs();  
   
 //set to zero  the gauss values
   for (uint i=0; i<3; i++) _curl_g3D[i]=0.;
@@ -61,7 +61,6 @@ namespace femus {
 	    //end curl
 
 	   }
-	   
 
 
 return;
@@ -107,7 +106,7 @@ return;
   
  
 //=================================================================== 
- void QuantityLocal::val_g(const uint vbflag) {
+ void QuantityLocal::val_g() {
 
 const uint el_ndof = _ndof;
 const uint nvars = _dim;
@@ -147,7 +146,7 @@ void QuantityLocal::VectWithQtyFillBasic() {
 
 
 ///copy the space_dim-sized dof vector into its 3D version
-void QuantityLocal::ExtendDofs(const uint vb) {
+void QuantityLocal::ExtendDofs() {
   
   //AAA: valid from ndim to 3
 
@@ -218,7 +217,7 @@ void QuantityLocal::ExtendDofs(const uint vb) {
 // In the same way in the FINE RHS we have the true rhs,
 // while in all the other rhs we have the RESIDUALS.
 
-void QuantityLocal::GetElDofsVect(const uint vbfl, const uint Level)  {
+void QuantityLocal::GetElDofsVect(const uint Level)  {
   
   //we should put some try catch or something, to make sure that what we are calling here is already correctly filled as it should be
   //TODO FROM EQUATION HERE
@@ -272,7 +271,7 @@ void QuantityLocal::GetElDofsVect(const uint vbfl, const uint Level)  {
 
 // clearly _el_average must be allocated already!!!
 
-  void QuantityLocal::SetElemAverage(const uint vb) {
+  void QuantityLocal::SetElemAverage() {
 
        for (uint idim=0; idim< _dim; idim++)  _el_average[idim]=0.;
 

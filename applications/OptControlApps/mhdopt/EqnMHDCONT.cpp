@@ -231,19 +231,19 @@ void EqnMHDCONT::init_equation_data() {
 
     currelem.SetElDofsBc(Level);
     
-         BeOld.GetElDofsVect(vb,Level);  
-    LagMultOld.GetElDofsVect(vb,Level);
+         BeOld.GetElDofsVect(Level);  
+    LagMultOld.GetElDofsVect(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BeOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
  
     
-    if ( Vel._eqnptr != NULL )        Vel.GetElDofsVect(vb,Level);
+    if ( Vel._eqnptr != NULL )        Vel.GetElDofsVect(Level);
     else                              Vel._qtyptr->FunctionDof(vb,Vel,time,xyz_refbox._val_dofs);
-    if ( VelAdj._eqnptr != NULL )  VelAdj.GetElDofsVect(vb,Level);
+    if ( VelAdj._eqnptr != NULL )  VelAdj.GetElDofsVect(Level);
     else                           VelAdj._qtyptr->FunctionDof(vb,VelAdj,time,xyz_refbox._val_dofs);
-    if ( Bhom._eqnptr != NULL )      Bhom.GetElDofsVect(vb,Level);
+    if ( Bhom._eqnptr != NULL )      Bhom.GetElDofsVect(Level);
     else                             Bhom._qtyptr->FunctionDof(vb,Bhom,time,xyz_refbox._val_dofs);
-    if ( BhomAdj._eqnptr != NULL ) BhomAdj.GetElDofsVect(vb,Level);
+    if ( BhomAdj._eqnptr != NULL ) BhomAdj.GetElDofsVect(Level);
     else                           BhomAdj._qtyptr->FunctionDof(vb,BhomAdj,time,xyz_refbox._val_dofs);    
     
 
@@ -265,17 +265,17 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //======= end of the "COMMON SHAPE PART"==================
 
 //========preparation for things that are independent of (i,j), dofs of test and shape =====================
-       BhomAdj.curl_g(vb);
-          Bhom.curl_g(vb);
+       BhomAdj.curl_g();
+          Bhom.curl_g();
        
                                //Bhom.curl(); but how can i automatically activate the "new" for curlVect? I can do them all 
                                //if i do a class I can do them ALL together in the constructor,
                                //and delete them automatically in the destructor.
 
-       BeOld.val_g(vb); 
-         Vel.val_g(vb);
-      VelAdj.val_g(vb);
-        Bhom.val_g(vb);
+       BeOld.val_g(); 
+         Vel.val_g();
+      VelAdj.val_g();
+        Bhom.val_g();
      BhomAdj.grad_g(vb);
 
 // vector product
@@ -465,8 +465,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 
      currelem.SetElDofsBc(Level);
      
-          BeOld.GetElDofsVect(vb,Level);
-     LagMultOld.GetElDofsVect(vb,Level);
+          BeOld.GetElDofsVect(Level);
+     LagMultOld.GetElDofsVect(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BeOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
 
@@ -511,7 +511,7 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (v
 	const double dtxJxW_g = det*_eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
-   xyz_refbox.val_g(vb);
+   xyz_refbox.val_g();
       LagMultOld._qtyptr->Function_txyz(time,xyz_refbox._val_g/*xyz._val_g*/,LagMultOld._val_g);  //i prefer using the function instead of the p_old vector
 
 //==============================================================

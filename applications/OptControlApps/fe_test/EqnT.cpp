@@ -152,9 +152,9 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
       
     currelem.SetElDofsBc(Level);
 
-  Tempold.GetElDofsVect(vb,Level);
-//     Temp2.GetElDofsVect(vb,Level);
-//     Temp3.GetElDofsVect(vb,Level);
+  Tempold.GetElDofsVect(Level);
+//     Temp2.GetElDofsVect(Level);
+//     Temp3.GetElDofsVect(Level);
     
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
 
@@ -166,7 +166,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
     //either a Vect or a CurrElem !
     //I could consider it as another element, but only with the geometrical part!
 
-  xyz_refbox.SetElemAverage(vb);
+  xyz_refbox.SetElemAverage();
 int domain_flag = myphys->ElFlagControl(xyz_refbox._el_average);
 //====================    
     
@@ -188,9 +188,9 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.SetDPhiDxyzElDofsFEVB_g   (vb,fe,q
 for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe); }
 //======= end of the "COMMON SHAPE PART"==================
 
- 	Tempold.val_g(vb); 
-//  	  Temp2.val_g(vb); 
-//  	  Temp3.val_g(vb); 
+ 	Tempold.val_g(); 
+//  	  Temp2.val_g(); 
+//  	  Temp3.val_g(); 
 	   
 	   // always remember to get the dofs for the variables you use!
            // The point is that you fill the dofs with different functions...
@@ -326,9 +326,9 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
      
       currelem.SetElDofsBc(Level);
       
-       Tempold.GetElDofsVect(vb,Level);
-// // //          Temp2.GetElDofsVect(vb,Level);
-// // //          Temp3.GetElDofsVect(vb,Level);
+       Tempold.GetElDofsVect(Level);
+// // //          Temp2.GetElDofsVect(Level);
+// // //          Temp3.GetElDofsVect(Level);
 
      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified!
   
@@ -366,11 +366,11 @@ int el_Neum_flag=0;
         const double dtxJxW_g = det * _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
-       xyz.val_g(vb);
+       xyz.val_g();
        
        static_cast<Temperature*>(_eqnmap._qtymap.get_qty("Qty_Temperature"))->heatflux_txyz(time,xyz._val_g,Qflux_g);
    
-	Tempold.val_g(vb); //For the penalty Dirichlet //i need this for interpolating the old function at the gauss point
+	Tempold.val_g(); //For the penalty Dirichlet //i need this for interpolating the old function at the gauss point
 
 	   double QfluxDn_g=Math::dot( Qflux_g,currgp.get_normal_ptr(),space_dim );
 	 
@@ -499,7 +499,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
       _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
 
 // =============== 
-      xyz_refbox.SetElemAverage(vb);
+      xyz_refbox.SetElemAverage();
       int el_flagdom = optphys->ElFlagControl(xyz_refbox._el_average);
 //====================     
  
