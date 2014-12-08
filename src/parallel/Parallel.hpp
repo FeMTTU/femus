@@ -38,11 +38,11 @@ namespace femus {
 // Macro to identify and debug functions which should only be called in
 // parallel on every processor at once
 
-#undef parallel_onlyM
+#undef parallel_only
 #ifndef NDEBUG
-#define parallel_onlyM() do {assert(Parallel::verify(std::string(__FILE__))); assert(Parallel::verify(__LINE__)); } while (0)
+#define parallel_only() do {assert(Parallel::verify(std::string(__FILE__))); assert(Parallel::verify(__LINE__)); } while (0)
 #else
-#define parallel_onlyM()
+#define parallel_only()
 #endif
 
 /**
