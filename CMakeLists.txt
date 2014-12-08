@@ -93,6 +93,15 @@ IF(LIBMESH_FOUND)
   SET(HAVE_LIBMESH 1)
 ENDIF(LIBMESH_FOUND)
 
+# Find Libmesh (optional)
+FIND_PACKAGE(METIS)
+MESSAGE(STATUS "METIS_FOUND = ${METIS_FOUND}")
+
+SET (HAVE_METIS 0)
+IF(METIS_FOUND)
+  SET(HAVE_METIS 1)
+ENDIF(METIS_FOUND)
+
 
 
 #############################################################################################

@@ -22,6 +22,7 @@
 
 // Local Includes
 #include "AsmPetscLinearEquationSolver.hpp"
+#include "MeshASMPartitioning.hpp"
 #include "PetscPreconditioner.hpp"
 #include "PetscMatrix.hpp"
 #include <iomanip>
@@ -163,9 +164,10 @@ namespace femus {
     
     vector < vector < unsigned > > block_elements;
     
-    
-    _msh->GenerateVankaPartitions_FSI1(_element_block_number, block_elements, _block_type_range);
-    //_msh->GenerateVankaPartitions_FSI( _element_block_number, block_elements, _block_type_range);
+    MeshASMPartitioning meshasmpartitioning(*_msh);
+    meshasmpartitioning.DoPartition(_element_block_number, block_elements, _block_type_range);
+    //_msh->GenerateVankaPartitions_FSI1(_element_block_number, block_elements, _block_type_range);
+
     
     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(),true);
     for (unsigned iind=variable_to_be_solved.size()-_NSchurVar; iind<variable_to_be_solved.size(); iind++) {

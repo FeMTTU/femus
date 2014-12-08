@@ -33,10 +33,8 @@ FemTTUInit::FemTTUInit(
 ) {// ======================================================
 
 #ifdef HAVE_PETSC
-    int ierr = PetscInitialize (&argc, &argv, NULL, NULL);
-    CHKERRABORT(PETSC_COMM_WORLD,ierr);
-
-    std::cout << " FemTTUInit(): PETSC_COMM_WORLD initialized" << std::endl << std::endl;
+    
+  int ierr = PetscInitialize (&argc, &argv, NULL, NULL);    CHKERRABORT(PETSC_COMM_WORLD,ierr);
 
 #endif
 
@@ -52,6 +50,8 @@ FemTTUInit::FemTTUInit(
     }
 #endif
 
+   std::cout << " FemusInit(): PETSC_COMM_WORLD initialized" << std::endl << std::endl;
+
     return;
 }
 
@@ -60,7 +60,7 @@ FemTTUInit::~FemTTUInit() {
 
 #ifdef HAVE_PETSC
     PetscFinalize();
-    std::cout << std::endl << " ~FemTTUInit(): PETSC_COMM_WORLD ends" << std::endl;
+    std::cout << std::endl << " ~FemusInit(): PETSC_COMM_WORLD ends" << std::endl;
 #endif
 
     return;

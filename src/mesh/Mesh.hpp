@@ -20,14 +20,13 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "Elem.hpp"
-#include "vector"
-#include "map"
-#include "metis.h"
 #include "Solution.hpp"
 #include "ElemType.hpp"
 #include "ElemTypeEnum.hpp"
 #include "ParallelObject.hpp"
 
+#include "vector"
+#include "map"
 
 namespace femus {
 
@@ -142,29 +141,8 @@ public:
                                   const ElemType type, std::vector<bool> &type_elem_flag);
     
     
-    /** Partition Functions */
-    
-    /** Partition the mesh using the METIS partitioner */
-    void GenerateMetisMeshPartition();
-    
     /** To be added */
-    void GenerateVankaPartitions_FAST( const unsigned &block_size, vector < vector< unsigned > > &blk_elements,
-				       vector <unsigned> &block_element_type);
-    
-    /** To be added */
-    void GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
-				      vector <unsigned> &block_element_type);
-    
-    /** To be added */
-    void GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < vector< unsigned > > &block_elements,
-					vector <unsigned> &block_type_range);
-    
-    /** To be added */    
-    void GenerateVankaPartitions_METIS( const unsigned &block_size, vector < vector< unsigned > > &blk_elements);
- 
-    
-    /** To be added */
-    void Buildkmid();
+    void FillISvector();
 
     /** To be added */
     void Buildkel();
@@ -184,9 +162,9 @@ public:
     vector< vector<int> > ghost_nd_mts[5];
     vector <unsigned> ghost_size[5];
     elem *el;  //< elements
-    idx_t *epart;
-    idx_t *npart;
-    idx_t nsubdom;
+    int *epart;
+    int *npart;
+    int nsubdom;
     static bool (* _SetRefinementFlag)(const double &x, const double &y, const double &z,
                                        const int &ElemGroupNumber,const int &level);
     static bool _TestSetRefinementFlag;
