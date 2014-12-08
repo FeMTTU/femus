@@ -230,7 +230,7 @@ namespace femus {
      currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
      _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
 
-    currelem.SetElDofsBc(vb,Level);
+    currelem.SetElDofsBc(Level);
     
        bhomOld.GetElDofsVect(vb,Level);
     LagMultOld.GetElDofsVect(vb,Level);
@@ -437,7 +437,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
      currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
    
-     currelem.SetElDofsBc(vb,Level);
+     currelem.SetElDofsBc(Level);
      
         bhomOld.GetElDofsVect(vb,Level);
      LagMultOld.GetElDofsVect(vb,Level);

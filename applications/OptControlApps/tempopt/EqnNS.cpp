@@ -213,7 +213,7 @@
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
-    currelem.SetElDofsBc(vb,Level);
+    currelem.SetElDofsBc(Level);
       VelOld.GetElDofsVect(vb,Level);
     pressOld.GetElDofsVect(vb,Level);
 
@@ -465,7 +465,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
      currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
      _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
 
-     currelem.SetElDofsBc(vb,Level);
+     currelem.SetElDofsBc(Level);
      
      VelOld.GetElDofsVect(vb,Level);
      pressOld.GetElDofsVect(vb,Level);

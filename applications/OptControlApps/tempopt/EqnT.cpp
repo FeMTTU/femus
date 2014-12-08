@@ -226,7 +226,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
 // 3)BC VALUES 
 // 1) and 2) are taken in a single vector, 3) are considered separately
       
-    currelem.SetElDofsBc(vb,Level);
+    currelem.SetElDofsBc(Level);
 
   Tempold.GetElDofsVect(vb,Level);
     Tlift.GetElDofsVect(vb,Level);
@@ -458,7 +458,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
       currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
      
-      currelem.SetElDofsBc(vb,Level);
+      currelem.SetElDofsBc(Level);
       
        Tempold.GetElDofsVect(vb,Level);
          Tlift.GetElDofsVect(vb,Level);

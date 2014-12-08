@@ -16,6 +16,7 @@
 #include "RunTimeMap.hpp"
 #include "GeomEl.hpp"
 #include "ElemSto.hpp"
+#include "VBTypeEnum.hpp"
 
 
 namespace femus {

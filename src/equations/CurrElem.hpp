@@ -120,10 +120,11 @@ class QuantityLocal;
     
     void  PrintOrientation() const;
     
+    //TODO remove vb from these arguments
     void  ConvertElemCoordsToMappingOrd(const uint vb,QuantityLocal& myvect) const;
     
     /** needs the EQUATION basically */
-    void  SetElDofsBc(const uint vbfl, const uint Level);
+    void  SetElDofsBc(const uint Level);
  
 //========== Equation-related ========================               
   const EqnBase & _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO

@@ -5,7 +5,6 @@
 #include <string>
 
 #include "Typedefs.hpp"
-#include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"
 
 
