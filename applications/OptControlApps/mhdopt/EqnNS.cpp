@@ -170,27 +170,27 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     QuantityLocal VelOld(currgp,currelem);
     VelOld._qtyptr   = _QtyInternalVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();   //the internal quantities will eventually have *this as eqn pointer
-    VelOld._val_dofs = new double[VelOld._dim*VelOld._ndof[vb]];
+    VelOld._val_dofs = new double[VelOld._dim*VelOld._ndof];
     VelOld._val_g    = new double[VelOld._dim];
     VelOld._grad_g   = new double*[VelOld._dim];
   for (uint i=0; i< VelOld._dim;i++) {VelOld._grad_g[i] = new double[DIMENSION];}
 
    const uint   qtyzero_ord  = VelOld._FEord;
-   const uint   qtyzero_ndof = VelOld._ndof[vb]; 
+   const uint   qtyzero_ndof = VelOld._ndof; 
     Velocity*  vel_castqtyptr = static_cast<Velocity*>(VelOld._qtyptr); //casting for quantity-specific functions
 
 //=========
     QuantityLocal pressOld(currgp,currelem);
     pressOld._qtyptr   = _QtyInternalVector[QTYONE];
     pressOld.VectWithQtyFillBasic();
-    pressOld._val_dofs = new double[pressOld._dim*pressOld._ndof[vb]];
+    pressOld._val_dofs = new double[pressOld._dim*pressOld._ndof];
     pressOld._val_g    = new double[pressOld._dim];
 
    const uint qtyone_ord  = pressOld._FEord;
-   const uint qtyone_ndof = pressOld._ndof[vb]; 
+   const uint qtyone_ndof = pressOld._ndof; 
 
    //order
-   const uint  qtyZeroToOne_DofOffset = VelOld._ndof[vb]*VelOld._dim;
+   const uint  qtyZeroToOne_DofOffset = VelOld._ndof*VelOld._dim;
    
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
 
@@ -199,18 +199,16 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][xyz._FEord]->GetNDofs();
-    xyz._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
+    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
     xyz._val_g    = new double[xyz._dim];
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof[VV] = _mesh.GetGeomEl(DIMENSION-1-VV,xyz_refbox._FEord)._elnds;
-  xyz_refbox._ndof[BB] = _mesh.GetGeomEl(DIMENSION-1-BB,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof[vb]]; 
+  xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   //==================
     
@@ -219,22 +217,21 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     QuantityLocal Bhom(currgp,currelem); //only to retrieve the dofs
     Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
-    Bhom._val_dofs = new double[Bhom._dim*Bhom._ndof[vb]];
+    Bhom._val_dofs = new double[Bhom._dim*Bhom._ndof];
  
 //=========
     QuantityLocal Bext(currgp,currelem);   //only to retrieve the dofs
     Bext._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
-    Bext._val_dofs = new double[Bext._dim*Bext._ndof[vb]];
+    Bext._val_dofs = new double[Bext._dim*Bext._ndof];
 
 //========= auxiliary, must be AFTER Bhom!
     QuantityLocal Bmag(currgp,currelem); //total
     Bmag._dim        = Bhom._dim;
     Bmag._FEord      = Bhom._FEord;
-    Bmag._ndof[VV]   = _eqnmap._elem_type[_mesh.get_dim()-1-VV][Bmag._FEord]->GetNDofs();
-    Bmag._ndof[BB]   = _eqnmap._elem_type[_mesh.get_dim()-1-BB][Bmag._FEord]->GetNDofs();
-    Bmag._val_dofs   = new double[Bmag._dim*Bmag._ndof[vb]];
-    Bmag._val_dofs3D = new double[        3*Bmag._ndof[vb]]; //when the user adds this, he knows that he's gonna have a curl_g call
+    Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
+    Bmag._val_dofs   = new double[Bmag._dim*Bmag._ndof];
+    Bmag._val_dofs3D = new double[        3*Bmag._ndof]; //when the user adds this, he knows that he's gonna have a curl_g call
     Bmag._val_g      = new double[Bmag._dim];
     Bmag._val_g3D    = new double[3];
     Bmag._curl_g3D   = new double[3];  //when the user adds this, he knows that he's gonna have a curl_g call
@@ -248,7 +245,7 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     QuantityLocal Temp(currgp,currelem);
     Temp._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature");
     Temp.VectWithQtyFillBasic();
-    Temp._val_dofs = new double[Temp._dim*Temp._ndof[vb]];
+    Temp._val_dofs = new double[Temp._dim*Temp._ndof];
     Temp._val_g    = new double[Temp._dim];
 #endif
 //=================== TEMPERATURE WORLD============================
@@ -365,11 +362,11 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 
   #if (BMAG_QTY==1)   
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
-    Math::zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof[vb]);
+    Math::zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof);
 
     for (uint ivarq=0; ivarq < Bmag._dim; ivarq++)    { //ivarq is like idim
-          for (uint d=0; d <  Bmag._ndof[vb]; d++)    {
-          const uint     indxq  =         d + ivarq*Bmag._ndof[vb];
+          for (uint d=0; d <  Bmag._ndof; d++)    {
+          const uint     indxq  =         d + ivarq*Bmag._ndof;
           Bmag._val_dofs[indxq] = Bext._val_dofs[indxq] + Bhom._val_dofs[indxq];
 	  }
     }
@@ -904,18 +901,16 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][xyz._FEord]->GetNDofs();
-    xyz._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
+    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
     xyz._val_g    = new double[xyz._dim];
 
 //========== Quadratic domain, auxiliary  
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof[VV] = _mesh.GetGeomEl(DIMENSION-1-VV,xyz_refbox._FEord)._elnds;
-  xyz_refbox._ndof[BB] = _mesh.GetGeomEl(DIMENSION-1-BB,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof[vb]]; 
+  xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   xyz_refbox._el_average.resize(VB);
     for (uint i=0; i<VB; i++)  xyz_refbox._el_average[i].resize(xyz_refbox._dim);
@@ -924,14 +919,14 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
     QuantityLocal Vel(currgp,currelem);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
-    Vel._val_dofs    = new double[Vel._dim*Vel._ndof[vb]];
+    Vel._val_dofs    = new double[Vel._dim*Vel._ndof];
     Vel._val_g       = new double[Vel._dim];
     
     //========== 
     QuantityLocal VelDes(currgp,currelem);
     VelDes._qtyptr      = _eqnmap._qtymap.get_qty("Qty_DesVelocity");
     VelDes.VectWithQtyFillBasic();
-    VelDes._val_dofs    = new double[VelDes._dim*VelDes._ndof[vb]]; 
+    VelDes._val_dofs    = new double[VelDes._dim*VelDes._ndof]; 
     VelDes._val_g       = new double[VelDes._dim];         
    
    double integral=0.;

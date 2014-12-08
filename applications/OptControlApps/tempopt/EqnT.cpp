@@ -126,14 +126,14 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     QuantityLocal Tempold(currgp,currelem);
     Tempold._qtyptr   = _QtyInternalVector[0]; 
     Tempold.VectWithQtyFillBasic();
-    Tempold._val_dofs = new double[Tempold._dim*Tempold._ndof[vb]];
+    Tempold._val_dofs = new double[Tempold._dim*Tempold._ndof];
     Tempold._val_g    = new double[Tempold._dim];
 
 //====================================
     QuantityLocal Tlift(currgp,currelem);
     Tlift._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
     Tlift.VectWithQtyFillBasic();
-    Tlift._val_dofs = new double[Tlift._dim*Tlift._ndof[vb]];
+    Tlift._val_dofs = new double[Tlift._dim*Tlift._ndof];
     Tlift._val_g    = new double[Tlift._dim];
     Tlift._grad_g   = new double*[Tlift._dim];
     Tlift._grad_g[0]= new double[space_dim];
@@ -142,7 +142,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     QuantityLocal TAdj(currgp,currelem);
     TAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
     TAdj.VectWithQtyFillBasic();
-    TAdj._val_dofs = new double[TAdj._dim*TAdj._ndof[vb]];
+    TAdj._val_dofs = new double[TAdj._dim*TAdj._ndof];
     TAdj._val_g    = new double[TAdj._dim];
     TAdj._grad_g   = new double*[TAdj._dim];
     TAdj._grad_g[0]= new double[space_dim];    
@@ -152,18 +152,16 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     QuantityLocal xyz(currgp,currelem);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][xyz._FEord]->GetNDofs();
-    xyz._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
+    xyz._ndof     = _eqnmap._elem_type[_mesh.get_dim()-1-vb][xyz._FEord]->GetNDofs();
+    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
     xyz._val_g    = new double[xyz._dim];
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   QuantityLocal xyz_refbox(currgp,currelem);  //no quantity
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof[VV] = _mesh.GetGeomEl(space_dim-1-VV,xyz_refbox._FEord)._elnds;
-  xyz_refbox._ndof[BB] = _mesh.GetGeomEl(space_dim-1-BB,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof[vb]]; 
+  xyz_refbox._ndof     = _mesh.GetGeomEl(space_dim-1-vb,xyz_refbox._FEord)._elnds;
+  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   xyz_refbox._el_average.resize(VB);
   for (uint i=0; i<VB; i++)  xyz_refbox._el_average[i].resize(xyz_refbox._dim);
@@ -172,14 +170,14 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     QuantityLocal vel(currgp,currelem);
     vel._qtyptr   = _eqnmap._qtymap.get_qty("Qty_Velocity"); 
     vel.VectWithQtyFillBasic();
-    vel._val_dofs = new double[vel._dim*vel._ndof[vb]];
+    vel._val_dofs = new double[vel._dim*vel._ndof];
     vel._val_g    = new double[vel._dim];   
     
 //===============Tdes=====================
     QuantityLocal Tdes(currgp,currelem);
     Tdes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
-    Tdes._val_dofs = new double[Tdes._dim*Tdes._ndof[vb]];
+    Tdes._val_dofs = new double[Tdes._dim*Tdes._ndof];
     Tdes._val_g    = new double[Tdes._dim];
 
   //==== AUXILIARY ==============
@@ -288,11 +286,11 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
            // you should need a flag to check if the dofs have been correctly filled
 
       /// d) Local (element) assemblying energy equation
-      for (uint i=0; i < Tempold._ndof[vb]; i++)     {
+      for (uint i=0; i < Tempold._ndof; i++)     {
 
         const double phii_g = currgp._phi_ndsQLVB_g[Tempold._FEord][i];
 
-        for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][i+idim*Tempold._ndof[vb]];
+        for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][i+idim*Tempold._ndof];
 
 //=========== FIRST ROW ===============
         currelem.Rhs()(i) +=      
@@ -304,7 +302,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
         currelem.Mat()(i,i) +=  (1-currelem.GetBCDofFlag()[i])*detb;
 
 //========= SECOND ROW (CONTROL) =====================
-	 int ip1 = i + /* 1* */Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
+	 int ip1 = i + /* 1* */Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
 	 currelem.Rhs()(ip1) +=      
            currelem.GetBCDofFlag()[ip1]*dtxJxW_g*( 
                 Nonstat*Tempold._val_g[0]*phii_g/dt
@@ -315,7 +313,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
          currelem.Mat()(ip1,ip1) +=  (1-currelem.GetBCDofFlag()[ip1])*detb;
 
 //======= THIRD ROW (ADJOINT) ===================================
-	 int ip2 = i + 2 * Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
+	 int ip2 = i + 2 * Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
            currelem.Rhs()(ip2) +=      
            currelem.GetBCDofFlag()[ip2]*dtxJxW_g*( 
                 Nonstat*Tempold._val_g[0]*phii_g/dt
@@ -326,25 +324,25 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
         currelem.Mat()(ip2,ip2) +=  (1-currelem.GetBCDofFlag()[ip2])*detb;
 
 #if FOURTH_ROW==1
-	 int ip3 = i + 3 * Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
+	 int ip3 = i + 3 * Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
 	 
 	 if (i < _eqnmap._elem_type[_mesh.get_dim()-1-vb][T4_ord]->GetNDofs()) { currelem.Rhs()(ip3) +=  currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[T4_ord][i]) + (1-currelem.GetBCDofFlag()[ip3])*detb*1300.;
 	              currelem.Mat()(ip3,ip3)  += ( 1-currelem.GetBCDofFlag()[ip3] )*detb;  }
 #endif
 	 // Matrix Assemblying ---------------------------
-        for (uint j=0; j<Tempold._ndof[vb]; j++) {
+        for (uint j=0; j<Tempold._ndof; j++) {
           double phij_g = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
 	  
-        for (uint idim = 0; idim < space_dim; idim++)  dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][j+idim*Tempold._ndof[vb]]; 
+        for (uint idim = 0; idim < space_dim; idim++)  dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][j+idim*Tempold._ndof]; 
            
    
           double Lap_g   = Math::dot(dphijdx_g,dphiidx_g,space_dim);
           double Advection = Math::dot(vel._val_g,dphijdx_g,space_dim);
 
-	    int ip1 = i + Tempold._ndof[vb];
-	    int jp1 = j + Tempold._ndof[vb];
-	    int ip2 = i + 2*Tempold._ndof[vb];
-	    int jp2 = j + 2*Tempold._ndof[vb];
+	    int ip1 = i + Tempold._ndof;
+	    int jp1 = j + Tempold._ndof;
+	    int ip2 = i + 2*Tempold._ndof;
+	    int jp2 = j + 2*Tempold._ndof;
 
 // 	           T     T_0     T_adj
 	    
@@ -428,8 +426,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
             );
 
 #if FOURTH_ROW==1
-	 int ip3 = i + 3*Tempold._ndof[vb];   //suppose that T' T_0 T_adj have the same order
-// 	    int jp3 = j + 3*Tempold._ndof[vb];
+	 int ip3 = i + 3*Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
+// 	    int jp3 = j + 3*Tempold._ndof;
 	   if (i < _eqnmap._elem_type[_mesh.get_dim()-1-vb][T4_ord]->GetNDofs() ) currelem.Mat()(ip3,ip3) += currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[ T4_ord ][/*j*/i]*currgp._phi_ndsQLVB_g[ T4_ord ][i]);   
 #endif
 	    
@@ -469,7 +467,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
  //============ FLAGS ================
      double el_penalty = 0.;
      int pen_sum=0;
-     for (uint i=0; i< Tempold._ndof[vb]; i++)   pen_sum += currelem.GetBCDofFlag()[i];
+     for (uint i=0; i< Tempold._ndof; i++)   pen_sum += currelem.GetBCDofFlag()[i];
 //pen_sum == 0: all the nodes must be zero, so that ALL THE NODES of that face are set properly, even if with a penalty integral and not with the nodes!
 //this is a "FALSE" NATURAL boundary condition, it is ESSENTIAL actually
      if (pen_sum == 0/*< el_n_dofs porcata*/) { el_penalty = penalty_val;   }  //strictly minor for Dirichlet penalty, i.e. AT LEAST ONE NODE to get THE WHOLE ELEMENT
@@ -483,9 +481,9 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //it only suffices that SOME OF THE NODES ARE with bc=1, AT LEAST ONE
 int el_Neum_flag=0;
      uint Neum_sum=0;
-     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem.GetBCDofFlag()[i];
-     for (uint i=0; i < Tempold._ndof[vb]; i++)   Neum_sum += currelem.GetBCDofFlag()[i + Tempold._ndof[vb]];
-            if ( Neum_sum == 2*Tempold._ndof[vb] )  { el_Neum_flag=1;  }
+     for (uint i=0; i < Tempold._ndof; i++)   Neum_sum += currelem.GetBCDofFlag()[i];
+     for (uint i=0; i < Tempold._ndof; i++)   Neum_sum += currelem.GetBCDofFlag()[i + Tempold._ndof];
+            if ( Neum_sum == 2*Tempold._ndof )  { el_Neum_flag=1;  }
 
 //====================================
 
@@ -508,7 +506,7 @@ int el_Neum_flag=0;
 
 	   double QfluxDn_g=Math::dot( Qflux_g,currgp.get_normal_ptr(),space_dim );
 	 
-        for (uint i=0; i<Tempold._ndof[vb]; i++) {
+        for (uint i=0; i<Tempold._ndof; i++) {
    	const double phii_g =  currgp._phi_ndsQLVB_g[Tempold._FEord][i]; 
 	
        currelem.Rhs()(i) +=
@@ -518,7 +516,7 @@ int el_Neum_flag=0;
 	 ; 
 	 
          if (_Dir_pen_fl == 1) {
-            for (uint j=0; j<Tempold._ndof[vb]; j++) {
+            for (uint j=0; j<Tempold._ndof; j++) {
                double phij_g = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
 	       currelem.Mat()(i,j) += el_penalty*dtxJxW_g*phij_g*phii_g;
 	    } 
@@ -665,39 +663,37 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
     QuantityLocal Tempold(currgp,currelem);
     Tempold._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature"); 
     Tempold.VectWithQtyFillBasic();
-    Tempold._val_dofs = new double[Tempold._dim*Tempold._ndof[vb]];
+    Tempold._val_dofs = new double[Tempold._dim*Tempold._ndof];
     Tempold._val_g    = new double[Tempold._dim];
 
   //========== 
     QuantityLocal Tlift(currgp,currelem);
     Tlift._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_TempLift"); 
     Tlift.VectWithQtyFillBasic();
-    Tlift._val_dofs = new double[Tlift._dim*Tlift._ndof[vb]];
+    Tlift._val_dofs = new double[Tlift._dim*Tlift._ndof];
     Tlift._val_g    = new double[Tlift._dim];
     
  //===========
     QuantityLocal Tdes(currgp,currelem);
          Tdes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
-    Tdes._val_dofs = new double[Tdes._dim*Tdes._ndof[vb]];
+    Tdes._val_dofs = new double[Tdes._dim*Tdes._ndof];
     Tdes._val_g    = new double[Tdes._dim];
   
 //========= DOMAIN MAPPING
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][xyz._FEord]->GetNDofs();
-    xyz._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
+    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
     xyz._val_g    = new double[xyz._dim];
 
 //========== Quadratic domain, auxiliary  
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof[VV] = _mesh.GetGeomEl(space_dim-1-VV,xyz_refbox._FEord)._elnds;
-  xyz_refbox._ndof[BB] = _mesh.GetGeomEl(space_dim-1-BB,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof[vb]]; 
+  xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   xyz_refbox._el_average.resize(VB);
   for (uint i=0; i<VB; i++)  xyz_refbox._el_average[i].resize(xyz_refbox._dim);
@@ -813,7 +809,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
     QuantityLocal Tlift(currgp,currelem);
          Tlift._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_TempLift"); 
     Tlift.VectWithQtyFillBasic();
-    Tlift._val_dofs = new double[Tlift._dim*Tlift._ndof[vb]];
+    Tlift._val_dofs = new double[Tlift._dim*Tlift._ndof];
     Tlift._val_g    = new double[Tlift._dim];
     Tlift._grad_g       = new double*[1];
     Tlift._grad_g[0]    = new double[space_dim]; 
@@ -822,18 +818,16 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][xyz._FEord]->GetNDofs();
-    xyz._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
+    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
     xyz._val_g    = new double[xyz._dim];
 
 //========== Quadratic domain, auxiliary  
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof[VV] = _mesh.GetGeomEl(space_dim-1-VV,xyz_refbox._FEord)._elnds;
-  xyz_refbox._ndof[BB] = _mesh.GetGeomEl(space_dim-1-BB,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof[vb]]; 
+  xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   
     

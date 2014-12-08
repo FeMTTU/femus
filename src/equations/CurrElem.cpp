@@ -265,7 +265,7 @@ void CurrElem::set_el_DofObj_lev_subd(const uint Level,const uint isubd_in,const
 void CurrElem::ConvertElemCoordsToMappingOrd(const uint vb,QuantityLocal& myvect) const {
 
   
-  const uint  elndof = myvect._ndof[vb];
+  const uint  elndof = myvect._ndof;
   const uint vectdim = myvect._dim;
   const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
   const uint offset = _eqnmap._mesh.GetGeomEl(_eqnmap._mesh.get_dim()-1 - vb, mesh_ord)._elnds;

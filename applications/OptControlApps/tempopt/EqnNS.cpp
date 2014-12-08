@@ -105,27 +105,27 @@
     QuantityLocal VelOld(currgp,currelem);
     VelOld._qtyptr   = _QtyInternalVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();
-    VelOld._val_dofs = new double[VelOld._dim*VelOld._ndof[vb]];
+    VelOld._val_dofs = new double[VelOld._dim*VelOld._ndof];
     VelOld._val_g    = new double[VelOld._dim];
     VelOld._grad_g   = new double*[VelOld._dim];
   for (uint i=0; i< VelOld._dim;i++) {VelOld._grad_g[i] = new double[space_dim];}
 
    const uint   qtyzero_ord  = VelOld._FEord;
-   const uint   qtyzero_ndof = VelOld._ndof[vb]; 
+   const uint   qtyzero_ndof = VelOld._ndof; 
 //     Velocity*  vel_castqtyptr = static_cast<Velocity*>(VelOld._qtyptr); //casting for quantity-specific functions
 
 //=========
     QuantityLocal pressOld(currgp,currelem);
     pressOld._qtyptr   = _QtyInternalVector[QTYONE];
     pressOld.VectWithQtyFillBasic();
-    pressOld._val_dofs = new double[pressOld._dim*pressOld._ndof[vb]];
+    pressOld._val_dofs = new double[pressOld._dim*pressOld._ndof];
     pressOld._val_g    = new double[pressOld._dim];
 
    const uint qtyone_ord  = pressOld._FEord;
-   const uint qtyone_ndof = pressOld._ndof[vb]; 
+   const uint qtyone_ndof = pressOld._ndof; 
 
    //order
-   const uint  qtyZeroToOne_DofOffset = VelOld._ndof[vb]*VelOld._dim;
+   const uint  qtyZeroToOne_DofOffset = VelOld._ndof*VelOld._dim;
    
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
 
@@ -134,18 +134,16 @@
     QuantityLocal xyz(currgp,currelem); //domain
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][xyz._FEord]->GetNDofs();
-    xyz._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
+    xyz._ndof     = _eqnmap._elem_type[_mesh.get_dim()-1-vb][xyz._FEord]->GetNDofs();
+    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
     xyz._val_g    = new double[xyz._dim];
 //=========
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof[VV] = _mesh.GetGeomEl(space_dim-1-VV,xyz_refbox._FEord)._elnds;
-  xyz_refbox._ndof[BB] = _mesh.GetGeomEl(space_dim-1-BB,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof[vb]]; 
+  xyz_refbox._ndof     = _mesh.GetGeomEl(space_dim-1-vb,xyz_refbox._FEord)._elnds;
+  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   //==================
     
@@ -157,7 +155,7 @@
     QuantityLocal Temp(currgp,currelem);
     Temp._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature");
     Temp.VectWithQtyFillBasic();
-    Temp._val_dofs = new double[Temp._dim*Temp._ndof[vb]];
+    Temp._val_dofs = new double[Temp._dim*Temp._ndof];
     Temp._val_g    = new double[Temp._dim];
 #endif
 //=================== TEMPERATURE WORLD============================

@@ -38,7 +38,7 @@ namespace femus {
  void QuantityLocal::curl_g(const uint vbflag) {
    
   const uint       ord = _FEord;
-  const uint el_nnodes = _ndof[vbflag];
+  const uint el_nnodes = _ndof;
   const uint el_ndof_q = el_nnodes ;
 
 //extend to 3D the dof values
@@ -74,7 +74,7 @@ return;
  void QuantityLocal::grad_g(const uint vbflag) {
    
         const uint ndim = _currGP._IntDim[vbflag];
-   const uint   el_ndof = _ndof[vbflag];
+   const uint   el_ndof = _ndof;
    const uint     nvars = _dim;
    const uint  fe_order = _FEord;
 
@@ -109,7 +109,7 @@ return;
 //=================================================================== 
  void QuantityLocal::val_g(const uint vbflag) {
 
-const uint el_ndof = _ndof[vbflag];
+const uint el_ndof = _ndof;
 const uint nvars = _dim;
 const uint FEord = _FEord;
 //set to zero
@@ -139,8 +139,7 @@ void QuantityLocal::VectWithQtyFillBasic() {
     _eqnptr   = _qtyptr->_eqn; 
     _dim      = _qtyptr->_dim;
     _FEord    = _qtyptr->_FEord;
-    _ndof[VV] = _currEl._eqnmap._elem_type[_currEl._eqnmap._mesh.get_dim()-1-VV][_FEord]->GetNDofs();  //TODO here we use the eqnmap, of Course Vect must be used where the eqmap is there, but that can be in the main also
-    _ndof[BB] = _currEl._eqnmap._elem_type[_currEl._eqnmap._mesh.get_dim()-1-BB][_FEord]->GetNDofs();
+    _ndof     = _currEl._eqnmap._elem_type[_currEl.GetDim()-1][_FEord]->GetNDofs();  //TODO here we use the eqnmap, of Course Vect must be used where the eqmap is there, but that can be in the main also
 
     return;
 }
@@ -153,7 +152,7 @@ void QuantityLocal::ExtendDofs(const uint vb) {
   //AAA: valid from ndim to 3
 
   const uint ndim = _currEl._eqnmap._mesh.get_dim();
-  const uint el_ndofs = _ndof[vb];
+  const uint el_ndofs = _ndof;
   //set to zero
   for (uint eln=0; eln<el_ndofs; eln++)  {
     for (uint i=0; i<3; i++) {
@@ -254,8 +253,8 @@ void QuantityLocal::GetElDofsVect(const uint vbfl, const uint Level)  {
 
    for (uint ivar=0; ivar < _dim; ivar++)    {
 
-         for (uint d = 0; d <  _ndof[vbfl]; d++)    {
-               const uint     indx  = d + ivar * _ndof[vbfl];
+         for (uint d = 0; d <  _ndof; d++)    {
+               const uint     indx  = d + ivar * _ndof;
 
 	     if (vect_ord < KK )       DofObj = _currEl.GetConn()[d];
 	     else if (vect_ord == KK)  DofObj = _currEl.GetVolIel();
@@ -278,13 +277,13 @@ void QuantityLocal::GetElDofsVect(const uint vbfl, const uint Level)  {
        for (uint idim=0; idim< _dim; idim++)  _el_average[vb][idim]=0.;
 
     for (uint idim=0; idim< _dim; idim++) {
-       for (uint eln=0; eln< _ndof[vb]; eln++)    { 
-        const uint indxn = eln+idim*_ndof[vb];
+       for (uint eln=0; eln< _ndof; eln++)    { 
+        const uint indxn = eln+idim*_ndof;
 	     _el_average[vb][idim]   +=  _val_dofs[indxn];
        }
      }
 
-  for (uint idim=0; idim< _dim; idim++)   _el_average[vb][idim]= _el_average[vb][idim]/_ndof[vb];
+  for (uint idim=0; idim< _dim; idim++)   _el_average[vb][idim]= _el_average[vb][idim]/_ndof;
   
    return; 
   }

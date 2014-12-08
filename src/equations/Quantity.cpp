@@ -101,7 +101,7 @@ void Quantity::FunctionDof(const uint bdry, QuantityLocal& myvect, const double 
 
 //=====the Function
   double* func = new double[myvect._dim];
-  const uint dof_off = myvect._ndof[bdry];
+  const uint dof_off = myvect._ndof;
   
 if (dof_off > offset) {std::cout << "Use a quadratic mesh for FunctionDof computation" << std::endl; abort();}
 

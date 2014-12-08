@@ -103,14 +103,14 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     QuantityLocal VelAdjOld(currgp,currelem);
     VelAdjOld._qtyptr   = _QtyInternalVector[QTYZERO];
     VelAdjOld.VectWithQtyFillBasic();
-    VelAdjOld._val_dofs = new double[VelAdjOld._dim*VelAdjOld._ndof[vb]];
+    VelAdjOld._val_dofs = new double[VelAdjOld._dim*VelAdjOld._ndof];
     VelAdjOld._val_g    = new double[VelAdjOld._dim];
   
     //QTYONE
     QuantityLocal PressAdjOld(currgp,currelem);
     PressAdjOld._qtyptr   = _QtyInternalVector[QTYONE];
     PressAdjOld.VectWithQtyFillBasic();
-    PressAdjOld._val_dofs = new double[PressAdjOld._dim*PressAdjOld._ndof[vb]];
+    PressAdjOld._val_dofs = new double[PressAdjOld._dim*PressAdjOld._ndof];
     PressAdjOld._val_g    = new double[PressAdjOld._dim];  
 
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
@@ -121,18 +121,16 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][xyz._FEord]->GetNDofs();
-    xyz._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
+    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
     xyz._val_g    = new double[xyz._dim];
 
 //========== Quadratic domain, auxiliary  
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof[VV] = _mesh.GetGeomEl(space_dim-1-VV,xyz_refbox._FEord)._elnds;
-  xyz_refbox._ndof[BB] = _mesh.GetGeomEl(space_dim-1-BB,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof[vb]]; 
+  xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   xyz_refbox._el_average.resize(VB);
   for (uint i=0; i<VB; i++)  xyz_refbox._el_average[i].resize(xyz_refbox._dim);
@@ -140,7 +138,7 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     QuantityLocal Vel(currgp,currelem);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
-    Vel._val_dofs    = new double[Vel._dim*Vel._ndof[vb]]; 
+    Vel._val_dofs    = new double[Vel._dim*Vel._ndof]; 
     Vel._val_g       = new double[Vel._dim];
     Vel._grad_g      = new double*[Vel._dim];
   for (uint i=0; i< Vel._dim;i++) {Vel._grad_g[i] = new double[DIMENSION];}
@@ -148,27 +146,26 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     QuantityLocal VelDes(currgp,currelem);
     VelDes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_DesVelocity");
     VelDes.VectWithQtyFillBasic();
-    VelDes._val_dofs = new double[VelDes._dim*VelDes._ndof[vb]];
+    VelDes._val_dofs = new double[VelDes._dim*VelDes._ndof];
     VelDes._val_g    = new double[VelDes._dim];
 
     QuantityLocal Bhom(currgp,currelem);
     Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
-    Bhom._val_dofs = new double[Bhom._dim*Bhom._ndof[vb]];
+    Bhom._val_dofs = new double[Bhom._dim*Bhom._ndof];
  
     QuantityLocal Bext(currgp,currelem);
     Bext._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
-    Bext._val_dofs = new double[Bext._dim*Bext._ndof[vb]];
+    Bext._val_dofs = new double[Bext._dim*Bext._ndof];
 
 //========= auxiliary, must be AFTER Bhom!   //TODO this doesnt have any associated quantity!
     QuantityLocal Bmag(currgp,currelem); //total
     Bmag._dim        = Bhom._dim;               //same as Bhom
     Bmag._FEord      = Bhom._FEord;             //same as Bhom
-    Bmag._ndof[VV]   = _eqnmap._elem_type[_mesh.get_dim()-1-VV][Bmag._FEord]->GetNDofs();
-    Bmag._ndof[BB]   = _eqnmap._elem_type[_mesh.get_dim()-1-BB][Bmag._FEord]->GetNDofs();
-    Bmag._val_dofs   = new double[Bmag._dim*Bmag._ndof[vb]];
-    Bmag._val_dofs3D = new double[        3*Bmag._ndof[vb]];
+    Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
+    Bmag._val_dofs   = new double[Bmag._dim*Bmag._ndof];
+    Bmag._val_dofs3D = new double[        3*Bmag._ndof];
     Bmag._val_g      = new double[Bmag._dim];
     Bmag._val_g3D    = new double[3];
     
@@ -176,8 +173,8 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     QuantityLocal BhomAdj(currgp,currelem); 
     BhomAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHomAdj"); 
     BhomAdj.VectWithQtyFillBasic();
-    BhomAdj._val_dofs =   new double[BhomAdj._dim*BhomAdj._ndof[vb]];
-    BhomAdj._val_dofs3D =   new double[         3*BhomAdj._ndof[vb]]; 
+    BhomAdj._val_dofs =   new double[BhomAdj._dim*BhomAdj._ndof];
+    BhomAdj._val_dofs3D =   new double[         3*BhomAdj._ndof]; 
     BhomAdj._curl_g3D =    new double[3];
     
     //========= END EXTERNAL QUANTITIES =================
@@ -245,11 +242,11 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
 
  
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
-    Math::zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof[vb]);
+    Math::zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof);
 
     for (uint ivarq=0; ivarq < Bmag._dim; ivarq++)    { //ivarq is like idim
-          for (uint d=0; d < Bmag._ndof[vb]; d++)    {
-          const uint     indxq  =         d + ivarq*Bmag._ndof[vb];
+          for (uint d=0; d < Bmag._ndof; d++)    {
+          const uint     indxq  =         d + ivarq*Bmag._ndof;
           Bmag._val_dofs[indxq] = Bext._val_dofs[indxq] + Bhom._val_dofs[indxq];
 	  }
     }    
@@ -291,14 +288,14 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================
 //==============================================================
-       for (uint i = 0; i < VelAdjOld._ndof[vb]; i++)     {
+       for (uint i = 0; i < VelAdjOld._ndof; i++)     {
 //======="COMMON tEST PART for QTYZERO": func and derivative, of the QTYZERO FE ORD ==========
         const double phii_g = currgp._phi_ndsQLVB_g[VelAdjOld._FEord][i];
-        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim]= currgp._dphidxyz_ndsQLVB_g[VelAdjOld._FEord][i+idim*VelAdjOld._ndof[vb]];
+        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim]= currgp._dphidxyz_ndsQLVB_g[VelAdjOld._FEord][i+idim*VelAdjOld._ndof];
 //======= END "COMMON tEST PART for QTYZERO" ==========
 
          for (uint idim=0; idim<space_dim; idim++) {
-            const uint irowq=i+idim*VelAdjOld._ndof[vb];  //quadratic rows index
+            const uint irowq=i+idim*VelAdjOld._ndof;  //quadratic rows index
            currelem.Rhs()(irowq) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                             NonStatNSAD*VelAdjOld._val_g[idim]*phii_g/dt  //time
                            - curlxiXB_g3D[idim]*phii_g                    //this is due to the variation of velocity in the MAGNETIC ADVECTION, so it is due to a   NONLINEAR COUPLING "u times B", "MY_STATE times OTHER_STATE"
@@ -309,24 +306,24 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 
 if (_Dir_pen_fl == 0)  { 
   for (uint idim=0; idim<space_dim; idim++) { // filling diagonal for Dirichlet bc
-          const uint irowq = i+idim*VelAdjOld._ndof[vb];
+          const uint irowq = i+idim*VelAdjOld._ndof;
           currelem.Mat()(irowq,irowq) += (1-currelem.GetBCDofFlag()[irowq])*detb;
         }// end filling diagonal for Dirichlet bc
 }
 	 
-        for (uint j=0; j<VelAdjOld._ndof[vb]; j++) {// A element matrix
+        for (uint j=0; j<VelAdjOld._ndof; j++) {// A element matrix
 //======="COMMON SHAPE PART for QTYZERO": ==========
            double                                  phij_g       =      currgp._phi_ndsQLVB_g[VelAdjOld._FEord][j];
-           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[VelAdjOld._FEord][j+idim*VelAdjOld._ndof[vb]];
+           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[VelAdjOld._FEord][j+idim*VelAdjOld._ndof];
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
 
           double     Lap_g = Math::dot(dphijdx_g,dphiidx_g,space_dim);
 	  double Advphii_g = Math::dot(Vel._val_g,dphiidx_g,space_dim);   //TODO can put it outside
           
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
-            int irowq = i+idim*VelAdjOld._ndof[vb];
+            int irowq = i+idim*VelAdjOld._ndof;
             // diagonal blocks [1-5-9]
-            currelem.Mat()(irowq,j+idim*VelAdjOld._ndof[vb])
+            currelem.Mat()(irowq,j+idim*VelAdjOld._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                    NonStatNSAD* phij_g*phii_g/dt // time
                    + IRe*(dphijdx_g[idim]*dphiidx_g[idim] + Lap_g)      //Adjoint of D is D, Adjoint of Laplacian is Laplacian
@@ -335,7 +332,7 @@ if (_Dir_pen_fl == 0)  {
                );
             // block +1 [2-6-7]
             int idimp1=(idim+1)%space_dim;
-            currelem.Mat()(irowq,j+idimp1*VelAdjOld._ndof[vb])
+            currelem.Mat()(irowq,j+idimp1*VelAdjOld._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                    + IRe*(dphijdx_g[idim]*dphiidx_g[idimp1])
                    + phij_g*phii_g*/*dveldx_g*/Vel._grad_g[idimp1][idim]
@@ -343,7 +340,7 @@ if (_Dir_pen_fl == 0)  {
 #if (DIMENSION==3)
             // block +2 [3-4-8]
             int idimp2=(idim+2)%space_dim;
-            currelem.Mat()(irowq,j+idimp2*VelAdjOld._ndof[vb])
+            currelem.Mat()(irowq,j+idimp2*VelAdjOld._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                   + IRe*(dphijdx_g[idim]*dphiidx_g[idimp2])
                   + phij_g*phii_g*/*dveldx_g*/Vel._grad_g[idimp2][idim]
@@ -354,25 +351,25 @@ if (_Dir_pen_fl == 0)  {
         } 
                                       // end A element matrix
       
-       for (uint j=0; j<PressAdjOld._ndof[vb]; j++) {// B^T element matrix ( p*div(v) ) (NS eq)
+       for (uint j=0; j<PressAdjOld._ndof; j++) {// B^T element matrix ( p*div(v) ) (NS eq)
           const double psij_g =  currgp._phi_ndsQLVB_g[PressAdjOld._FEord][j];
-          const int jclml= j + space_dim*VelAdjOld._ndof[vb];
+          const int jclml= j + space_dim*VelAdjOld._ndof;
           for (uint idim=0; idim<space_dim; idim++) {
-            uint irowq = i+idim*VelAdjOld._ndof[vb];
+            uint irowq = i+idim*VelAdjOld._ndof;
             currelem.Mat()(irowq,jclml) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(-psij_g*dphiidx_g[idim]);
            }
         }
                                      // end B^T element matrix
 
-          if (i<PressAdjOld._ndof[vb]) {//  pressure equation (KOMP dp/dt=rho*div) 
+          if (i<PressAdjOld._ndof) {//  pressure equation (KOMP dp/dt=rho*div) 
           double psii_g = currgp._phi_ndsQLVB_g[PressAdjOld._FEord][i];
-	  const uint irowl = i+space_dim*VelAdjOld._ndof[vb];  //vertical offset
+	  const uint irowl = i+space_dim*VelAdjOld._ndof;  //vertical offset
           currelem.Rhs()(irowl)=0.;  // rhs
  //             KeM(irowl,j+space_dim*el_ndof_q)  += dtxJxW_g*(psii_g*psij_g)*_Komp_fac/dt;
 
-          for (uint j=0; j<VelAdjOld._ndof[vb]; j++) { // B element matrix q*div(u)
-            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[VelAdjOld._FEord][j+idim*VelAdjOld._ndof[vb]];
-            for (uint idim=0; idim<space_dim; idim++) currelem.Mat()(irowl,j+idim*VelAdjOld._ndof[vb]) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
+          for (uint j=0; j<VelAdjOld._ndof; j++) { // B element matrix q*div(u)
+            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[VelAdjOld._FEord][j+idim*VelAdjOld._ndof];
+            for (uint idim=0; idim<space_dim; idim++) currelem.Mat()(irowl,j+idim*VelAdjOld._ndof) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
                 }
 
         }
@@ -469,12 +466,12 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (v
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================
 //==============================================================
-      for (uint i=0; i < VelAdjOld._ndof[vb]; i++) {
+      for (uint i=0; i < VelAdjOld._ndof; i++) {
 
 	const double phii_g = currgp._phi_ndsQLVB_g[VelAdjOld._FEord][i];
 
          for (uint idim=0; idim< space_dim; idim++)    {
-             uint irowq=i+idim*VelAdjOld._ndof[vb];
+             uint irowq=i+idim*VelAdjOld._ndof;
           currelem.Rhs()(irowq)  += 
             currelem.GetBCDofFlag()[irowq]*           
            dtxJxW_g*(   -1.*/*press_fl*/(1-el_flag[NN])*PressAdjOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g  //  //OLD VALUES //AAA multiplying int times uint!!!
@@ -495,10 +492,10 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (v
 if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and much better than removing the code with the #ifdef   
 	   for (uint jdim=0; jdim< space_dim; jdim++)    {
 
-	   for (uint j=0; j< VelAdjOld._ndof[vb]; j++) {
+	   for (uint j=0; j< VelAdjOld._ndof; j++) {
           const double phij_g = currgp._phi_ndsQLVB_g[ VelAdjOld._FEord][j];
 
-  currelem.Mat()(irowq,j+jdim*VelAdjOld._ndof[vb]) +=                //projection over the physical (x,y,z) 
+  currelem.Mat()(irowq,j+jdim*VelAdjOld._ndof) +=                //projection over the physical (x,y,z) 
       + /*_Dir_pen_fl**/dtxJxW_g*phii_g*phij_g*(dbl_pen[NN]*currgp.get_normal_ptr()[jdim]*currgp.get_normal_ptr()[idim]   //the PENALTY is BY ELEMENT, but the (n,t) is BY GAUSS because we cannot compute now a nodal normal
                                               + dbl_pen[TT]*currgp.get_tangent_ptr()[0][jdim]*currgp.get_tangent_ptr()[0][idim]
                  #if DIMENSION==3

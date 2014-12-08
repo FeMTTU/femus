@@ -122,14 +122,14 @@ void EqnMHDCONT::init_equation_data() {
     QuantityLocal BeOld(currgp,currelem);
     BeOld._qtyptr   = _QtyInternalVector[QTYZERO];
     BeOld.VectWithQtyFillBasic();
-    BeOld._val_dofs = new double[BeOld._dim*BeOld._ndof[vb]];
+    BeOld._val_dofs = new double[BeOld._dim*BeOld._ndof];
     BeOld._val_g    = new double[BeOld._dim];
 
   //QTYONE
     QuantityLocal LagMultOld(currgp,currelem);
     LagMultOld._qtyptr   = _QtyInternalVector[QTYONE];
     LagMultOld.VectWithQtyFillBasic();
-    LagMultOld._val_dofs = new double[LagMultOld._dim*LagMultOld._ndof[vb]];
+    LagMultOld._val_dofs = new double[LagMultOld._dim*LagMultOld._ndof];
     LagMultOld._val_g    = new double[LagMultOld._dim];
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
 
@@ -138,26 +138,24 @@ void EqnMHDCONT::init_equation_data() {
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][xyz._FEord]->GetNDofs();
-    xyz._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
+    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
     xyz._val_g    = new double[xyz._dim];
 
     //==================Quadratic domain, auxiliary  //this is something that belongs to the user, so we must put it somewhere else,in the MeshUser or something
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof[VV] = _mesh.GetGeomEl(DIMENSION-1-VV,xyz_refbox._FEord)._elnds;
-  xyz_refbox._ndof[BB] = _mesh.GetGeomEl(DIMENSION-1-BB,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof[vb]]; 
+  xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   
 #if VELOCITY_QTY==1
     QuantityLocal Vel(currgp,currelem);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity"); //an alternative cannot exist, because it is an Unknown of This Equation
     Vel.VectWithQtyFillBasic();
-    Vel._val_dofs    = new double[Vel._dim*Vel._ndof[vb]]; 
-    Vel._val_dofs3D  = new double[       3*Vel._ndof[vb]]; //needed for a vector product
+    Vel._val_dofs    = new double[Vel._dim*Vel._ndof]; 
+    Vel._val_dofs3D  = new double[       3*Vel._ndof]; //needed for a vector product
     Vel._val_g       = new double[Vel._dim];
     Vel._val_g3D     = new double[3];   //needed for a vector product
 #endif  
@@ -166,8 +164,8 @@ void EqnMHDCONT::init_equation_data() {
     QuantityLocal VelAdj(currgp,currelem);
     VelAdj._qtyptr      = _eqnmap._qtymap.get_qty("Qty_VelocityAdj");
     VelAdj.VectWithQtyFillBasic();
-    VelAdj._val_dofs    = new double[VelAdj._dim*VelAdj._ndof[vb]];
-    VelAdj._val_dofs3D  = new double[       3*VelAdj._ndof[vb]]; //needed for a vector product
+    VelAdj._val_dofs    = new double[VelAdj._dim*VelAdj._ndof];
+    VelAdj._val_dofs3D  = new double[       3*VelAdj._ndof]; //needed for a vector product
     VelAdj._val_g       = new double[VelAdj._dim];
     VelAdj._val_g3D     = new double[3];   //needed for a vector product 
   
@@ -175,8 +173,8 @@ void EqnMHDCONT::init_equation_data() {
     QuantityLocal Bhom(currgp,currelem); 
     Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
-    Bhom._val_dofs =   new double[Bhom._dim*Bhom._ndof[vb]];
-    Bhom._val_dofs3D = new double[        3*Bhom._ndof[vb]];  //this is for the curl, not for val_dofs3D!!! 
+    Bhom._val_dofs =   new double[Bhom._dim*Bhom._ndof];
+    Bhom._val_dofs3D = new double[        3*Bhom._ndof];  //this is for the curl, not for val_dofs3D!!! 
     Bhom._val_g      = new double[Bhom._dim];
     Bhom._curl_g3D   = new double[3];
 
@@ -184,8 +182,8 @@ void EqnMHDCONT::init_equation_data() {
     QuantityLocal BhomAdj(currgp,currelem); 
     BhomAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHomAdj"); 
     BhomAdj.VectWithQtyFillBasic();
-    BhomAdj._val_dofs =   new double[BhomAdj._dim*BhomAdj._ndof[vb]];
-    BhomAdj._val_dofs3D = new double[           3*BhomAdj._ndof[vb]];
+    BhomAdj._val_dofs =   new double[BhomAdj._dim*BhomAdj._ndof];
+    BhomAdj._val_dofs3D = new double[           3*BhomAdj._ndof];
     BhomAdj._curl_g3D =  new double[3];
     BhomAdj._grad_g     = new double*[BhomAdj._dim];
     for (uint i=0; i< BhomAdj._dim;i++) {BhomAdj._grad_g[i] = new double[DIMENSION];}
@@ -295,14 +293,14 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //=================================
 //actually this is used for both QTYZERO and QTYONE,
 //because the dofs of pressure are FEWER...
-       for (uint i = 0; i < BeOld._ndof[vb]; i++)     {
+       for (uint i = 0; i < BeOld._ndof; i++)     {
 
 //============ preparation for (i) ============
 //(i) is used only for the RHS or for both MATRIX and RHS
 //first, you put whatever is related to the Test Functions of THESE rows:
 //test function value, test function first derivative
         const double                             phii_g       =      currgp._phi_ndsQLVB_g[BeOld._FEord][i];
-        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BeOld._FEord][i+idim*BeOld._ndof[vb]];
+        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BeOld._FEord][i+idim*BeOld._ndof];
 
 	 Math::extend(dphiidx_g,dphiidx_g3D,space_dim);
 	 Math::cross(BhomAdj._curl_g3D,dphiidx_g3D,curlxiXdphii_g3D);
@@ -320,7 +318,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 
 //============ QTYZERO rhs ============
          for (uint idim=0; idim<space_dim; idim++) {
-            const uint irowq = i+idim*BeOld._ndof[vb];
+            const uint irowq = i+idim*BeOld._ndof;
             
             currelem.Rhs()(irowq) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                           NonStatMHDCONT*BeOld._val_g[idim]*phii_g/dt
@@ -335,17 +333,17 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //============ END QTYZERO rhs ============
 
         for (uint idim=0; idim<space_dim; idim++) { // filling diagonal for Dirichlet bc
-          const uint irowq = i+idim*BeOld._ndof[vb];
+          const uint irowq = i+idim*BeOld._ndof;
           currelem.Mat()(irowq,irowq) += (1-currelem.GetBCDofFlag()[irowq])*detb;
         }
                                            // end filling diagonal for Dirichlet bc
 
 //============ QTYZERO x QTYZERO dofs matrix (A matrix) ============
-        for (uint j=0; j<BeOld._ndof[vb]; j++) {
+        for (uint j=0; j<BeOld._ndof; j++) {
 //============preparation for (j) ============
 //here you put things that depend either on (j) or on (i,j)
           double                                  phij_g       =      currgp._phi_ndsQLVB_g[BeOld._FEord][j];
-          for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BeOld._FEord][j+idim*BeOld._ndof[vb]];
+          for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BeOld._FEord][j+idim*BeOld._ndof];
 
 	  double Lap_g = Math::dot(dphijdx_g,dphiidx_g,space_dim);
 	  double lambdaDdphii_g = Math::dot(VelAdj._val_g,dphiidx_g,space_dim);  //TODO why did i recompute it?
@@ -353,9 +351,9 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //============ end preparation for (j) ============
 
           for (uint idim=0; idim<space_dim; idim++) {
-            int irowq = i+idim*BeOld._ndof[vb];
+            int irowq = i+idim*BeOld._ndof;
             // diagonal blocks [1-5-9]
-            currelem.Mat()(irowq,j+idim*BeOld._ndof[vb])
+            currelem.Mat()(irowq,j+idim*BeOld._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                  NonStatMHDCONT*phij_g*phii_g/dt// time
                  + betaL2*phij_g*phii_g
@@ -365,7 +363,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
                );
             // block +1 [2-6-7]
             int idimp1=(idim+1)%space_dim;
-            currelem.Mat()(irowq,j+idimp1*BeOld._ndof[vb])
+            currelem.Mat()(irowq,j+idimp1*BeOld._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                  + S*phij_g*( -VelAdj._val_g[idim]*dphiidx_g[idimp1])
                  + S*phii_g*( -VelAdj._val_g[idimp1]*dphijdx_g[idim])
@@ -373,7 +371,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 #if (DIMENSION==3)
             // block +2 [3-4-8]
             int idimp2=(idim+2)%space_dim;
-            currelem.Mat()(irowq,j+idimp2*BeOld._ndof[vb])
+            currelem.Mat()(irowq,j+idimp2*BeOld._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                   + S*phij_g*( -VelAdj._val_g[idim]*dphiidx_g[idimp2]) 
                   + S*phii_g*( -VelAdj._val_g[idimp2]*dphijdx_g[idim])
@@ -385,11 +383,11 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //============ END QTYZERO x QTYZERO dofs matrix (A matrix) ============
 
 //============ QTYZERO x QTYONE dofs matrix (B^T matrix) // ( p*div(v) ) (NS eq) ============
-       for (uint j=0; j < LagMultOld._ndof[vb]; j++) {
+       for (uint j=0; j < LagMultOld._ndof; j++) {
           const double psij_g = currgp._phi_ndsQLVB_g[LagMultOld._FEord][j];
-          const int jclml = j+space_dim*BeOld._ndof[vb];
+          const int jclml = j+space_dim*BeOld._ndof;
           for (uint idim=0; idim<space_dim; idim++) {
-            uint irowq=i+idim*BeOld._ndof[vb];
+            uint irowq=i+idim*BeOld._ndof;
             currelem.Mat()(irowq,jclml) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(-psij_g*dphiidx_g[idim]);
            }
         }
@@ -402,10 +400,10 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //============================================
 //============ QTYONE dofs (rows) ============
 //===============================================
-          if ( i < LagMultOld._ndof[vb] ) {
+          if ( i < LagMultOld._ndof ) {
 //============ preparation for (i) ============
           double psii_g = currgp._phi_ndsQLVB_g[LagMultOld._FEord][i];
-	  const uint irowl = i+space_dim*BeOld._ndof[vb];
+	  const uint irowl = i+space_dim*BeOld._ndof;
 
 //============ QTYONE rhs ============
           currelem.Rhs()(irowl)=0.;
@@ -416,10 +414,10 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 //============ END QTYONE x QTYONE ============
 
 //============ QTYONE x QTYZERO (B matrix) q*div(u) ============
-          for (uint j = 0; j < BeOld._ndof[vb]; j++) { // B element matrix 
+          for (uint j = 0; j < BeOld._ndof; j++) { // B element matrix 
 //============ preparation for (j) ============
-            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim]= currgp._dphidxyz_ndsQLVB_g[BeOld._FEord][j+idim*BeOld._ndof[vb]];
-            for (uint idim=0; idim<space_dim; idim++) currelem.Mat()(irowl,j+idim*BeOld._ndof[vb]) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
+            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim]= currgp._dphidxyz_ndsQLVB_g[BeOld._FEord][j+idim*BeOld._ndof];
+            for (uint idim=0; idim<space_dim; idim++) currelem.Mat()(irowl,j+idim*BeOld._ndof) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
                 }
 //============ END QTYONE x QTYZERO ============
 
@@ -520,13 +518,13 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (v
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================
 //==============================================================
 //============ QTYZERO dofs (rows) ============
-      for (uint i=0; i<BeOld._ndof[vb]; i++) {
+      for (uint i=0; i<BeOld._ndof; i++) {
 //============ preparation for (i) ============
 const double phii_g = currgp._phi_ndsQLVB_g[BeOld._FEord][i];
 
 //============ QTYZERO rhs ============
                for (uint idim=0; idim< space_dim; idim++)    {
-             uint irowq=i+idim*BeOld._ndof[vb];
+             uint irowq=i+idim*BeOld._ndof;
             currelem.Rhs()(irowq)  += 
           currelem.GetBCDofFlag()[irowq]*           
            dtxJxW_g*(   -1.*/*press_fl*/(1-el_flag[NN])*LagMultOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g  //  //OLD VALUES //AAA multiplying int times uint!!!
@@ -547,10 +545,10 @@ const double phii_g = currgp._phi_ndsQLVB_g[BeOld._FEord][i];
 if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and much better than removing the code with the #ifdef //  #if (NS_DIR_PENALTY==1)  
 	   for (uint jdim=0; jdim< space_dim; jdim++)    {
 
-	   for (uint j=0; j<BeOld._ndof[vb]; j++) {
+	   for (uint j=0; j<BeOld._ndof; j++) {
           const double phij_g = currgp._phi_ndsQLVB_g[BeOld._FEord][j];
 
-  currelem.Mat()(irowq,j+jdim*BeOld._ndof[vb]) +=                //projection over the physical (x,y,z) 
+  currelem.Mat()(irowq,j+jdim*BeOld._ndof) +=                //projection over the physical (x,y,z) 
       + /*_Dir_pen_fl**/dtxJxW_g*phii_g*phij_g*(dbl_pen[NN]*currgp.get_normal_ptr()[jdim]*currgp.get_normal_ptr()[idim]   //the PENALTY is BY ELEMENT, but the (n,t) is BY GAUSS because we cannot compute now a nodal normal
                                               + dbl_pen[TT]*currgp.get_tangent_ptr()[0][jdim]*currgp.get_tangent_ptr()[0][idim]
                  #if DIMENSION==3

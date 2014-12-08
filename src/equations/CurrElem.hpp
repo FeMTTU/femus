@@ -75,6 +75,10 @@ class QuantityLocal;
     CurrElem(const uint vb, const EqnBase&, const EquationsMap& e_map_in);
    ~CurrElem();
 
+    inline const uint  GetDim() const {
+      return _dim;
+    }
+    
     inline const double*  GetMidpoint() const {
       return _el_xm;
     }
@@ -126,6 +130,7 @@ class QuantityLocal;
     /** needs the EQUATION basically */
     void  SetElDofsBc(const uint Level);
  
+    //TODO make these private
 //========== Equation-related ========================               
   const EqnBase & _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
   const EquationsMap & _eqnmap;

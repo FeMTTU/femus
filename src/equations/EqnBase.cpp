@@ -3777,8 +3777,8 @@ void EqnBase::ReadVector(std::string namefile) {
  void EqnBase::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const uint vb,
 	    const uint *bc_eldofs,const QuantityLocal & Velold_in,const QuantityLocal& press_in,uint &press_fl) const {
 
-	const uint el_ndof_p =  press_in._ndof[vb];
-	const uint el_ndof_u =  Velold_in._ndof[vb];
+	const uint el_ndof_p =  press_in._ndof;
+	const uint el_ndof_u =  Velold_in._ndof;
 	const uint   nvars_u =  Velold_in._dim;
         int press_sum=0;
            for (uint i=0; i< el_ndof_p; i++)   press_sum += bc_eldofs[nvars_u*el_ndof_u + i]; //only one linear variable... pay attention when trying linear-linear
@@ -3979,9 +3979,8 @@ const uint myproc= _iproc;
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = _mesh.get_dim();
     xyz._FEord    = meshql;
-    xyz._ndof[VV] = _eqnmap._elem_type[_mesh.get_dim()-1-VV][xyz._FEord]->GetNDofs();
-    xyz._ndof[BB] = _eqnmap._elem_type[_mesh.get_dim()-1-BB][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
+    xyz._ndof     = _eqnmap._elem_type[_mesh.get_dim()-1-vb][xyz._FEord]->GetNDofs();
+    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
     xyz._val_g    = new double[xyz._dim];
 
   double integral = 0.;

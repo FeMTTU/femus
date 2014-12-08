@@ -70,7 +70,7 @@ namespace femus {
     std::vector < std::vector<double> > _el_average;/*[VB][spacedim]*/ //NEED TO ALLOCATE THIS EXPLICITLY WHERE IT'S USED... TODO this class must be reconsidered!!! with std::vectorss, and so on!!!
     uint _FEord; 
     uint _dim;
-    uint _ndof[VB];
+    uint _ndof;
     
     EqnBase*  _eqnptr;
     Quantity* _qtyptr;
