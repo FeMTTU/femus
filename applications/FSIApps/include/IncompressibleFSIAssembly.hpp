@@ -125,10 +125,7 @@ namespace femus {
     // -----------------------------------------------------------------
     // space discretization parameters
     unsigned SolType2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));  
-    unsigned end_ind2   = mymsh->GetEndIndex(SolType2);
-
     unsigned SolType1 = ml_sol->GetSolutionType(ml_sol->GetIndex("P"));  
-    unsigned end_ind1   = mymsh->GetEndIndex(SolType1);
 
     // mesh and procs
     unsigned nel    = mymsh->GetNumberOfElements();
@@ -177,8 +174,8 @@ namespace femus {
 
       unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
       short unsigned kelt = myel->GetElementType(kel);
-      unsigned nve        = myel->GetElementDofNumber(kel,end_ind2);
-      unsigned nve1       = myel->GetElementDofNumber(kel,end_ind1);
+      unsigned nve        = myel->GetElementDofNumber(kel,SolType2);
+      unsigned nve1       = myel->GetElementDofNumber(kel,SolType1);
       int flag_mat        = myel->GetElementMaterial(kel);
 
       // *******************************************************************************************************
@@ -314,36 +311,6 @@ namespace femus {
 	  
 	  if (flag_mat==2 || iel == mymsh->IS_Mts2Gmt_elem_offset[iproc]) {
 	    if(ig==0){
-	      // Navier-Stokes stabilization bar_nu evaluation	      
-	      adept::adouble bar_nu=0.;
-	      adept::adouble v_l2norm2=0.;
-	      unsigned ir = referenceElementPoint[kelt];
-	      for(int i=0;i<dim;i++){
-		v_l2norm2 += Soli[indexVAR[i]][ir]*Soli[indexVAR[i]][ir];
-		unsigned ip = referenceElementDirection[kelt][i][1];
-		unsigned im = referenceElementDirection[kelt][i][0];
-		adept::adouble Vxi_hxi=0.;
-		for(int j=0;j<dim;j++){
-		  Vxi_hxi += (vx[j][ip]-vx[j][im]) * Soli[indexVAR[j]][ir];
-		}
-		
-		adept::adouble Pe_xi=Vxi_hxi/(2.*IRe);
-		adept::adouble bar_xi; 
-		if( fabs( Pe_xi.value() ) < 1.0e-10) 
-		  bar_xi = 0.;
-		else 
-		  bar_xi = 1./tanh(Pe_xi)-1./Pe_xi;
-		bar_nu += bar_xi * Vxi_hxi;
-	      }
-	      
-	      bar_nu/=dim;
-	      if( v_l2norm2.value() > 1.0e-15 )
-		supg_tau = bar_nu/v_l2norm2;
-	      else 
-		supg_tau =0.;
-	      
-	      // End Navier-Stokes stabilization bar_nu evaluation
-	      	      
 	      double GaussWeight = mymsh->_finiteElement[kelt][SolType2]->GetGaussWeight(ig);
 	      area=Weight_hat/GaussWeight;
 	      if(iel==mymsh->IS_Mts2Gmt_elem_offset[iproc]){
@@ -405,36 +372,19 @@ namespace femus {
 
 		//BEGIN redidual Navier-Stokes in moving domain   
 		adept::adouble LapvelVAR[3]={0.,0.,0.};
-		adept::adouble AdvaleVAR[3]={0.,0.,0.};
-		adept::adouble SupgLaplace[3]={0.,0.,0.};
-		adept::adouble SupgAdvection[3]={0.,0.,0.};
-		adept::adouble SupgGradP[3]={0.,0.,0.};
-		adept::adouble VDotGradPhi=0;
-		
-		
+		adept::adouble AdvaleVAR[3]={0.,0.,0.};		
 		
 		for(int idim=0.; idim<dim; idim++) {
 		  for(int jdim=0.; jdim<dim; jdim++) {
 		    LapvelVAR[idim]     += GradSolVAR[dim+idim][jdim]*gradphi[i*dim+jdim];
-		    AdvaleVAR[idim]	+= SolVAR[dim+jdim]*GradSolVAR[dim+idim][jdim]*phi[i];
- 		    
-		    SupgLaplace[idim] 	+= NablaSolVAR[dim+idim][jdim];
- 		    SupgAdvection[idim]	+= SolVAR[dim+jdim]*GradSolVAR[dim+idim][jdim];
-		    VDotGradPhi 	+= SolVAR[dim+jdim]*gradphi[i*dim+jdim];
-		    
+		    AdvaleVAR[idim]	+= SolVAR[dim+jdim]*GradSolVAR[dim+idim][jdim]*phi[i];   
 		  }
 		}
-		//for(int idim=0; idim<dim; idim++) {
-		  //std::cout<< supg_tau.value() <<" "<<(SupgAdvection[idim].value() - IRe*SupgLaplace[idim].value() + SupgGradP[idim].value())<<std::endl;
-		  //std::cout<< SupgAdvection[idim].value()<<" "<< -IRe*SupgLaplace[idim].value()<<std::endl;
-		//}
 		
 		for(int idim=0; idim<dim; idim++) {
 		  adept::adouble value = (-AdvaleVAR[idim]      	     // advection term	
 					  -IRe*LapvelVAR[idim]	   	     // viscous dissipation
 					  +SolVAR[2*dim]*gradphi[i*dim+idim] // pressure gradient
-// 					  -VDotGradPhi*supg_tau*
-// 					   (SupgAdvection[idim] - IRe*SupgLaplace[idim] + SupgGradP[idim])
 					  )*Weight;
 		  if((!solidmark[i])){
 		    aRhs[indexVAR[dim+idim]][i]+=value; 
@@ -442,7 +392,7 @@ namespace femus {
 		  else{
 		    aRhs[indexVAR[idim]][i]+= value;
 		  }
-		    //END redidual Navier-Stokes in moving domain    
+		  //END redidual Navier-Stokes in moving domain    
 		}
 	      } 
 	    } 

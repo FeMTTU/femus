@@ -351,7 +351,7 @@ const unsigned referenceElementDirection[6][3][2]={ //Endpoint1, Endpoint2 =rEED
   }
 };
 
-const unsigned referenceElementPoint[6]={26,0,12,8,0,2};
+// const unsigned referenceElementPoint[6]={26,0,12,8,0,2};
 
 #endif
 

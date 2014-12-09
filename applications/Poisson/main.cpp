@@ -293,9 +293,6 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
   SolPdeIndex=mylin_impl_sys.GetSolPdeIndex("Sol");
   //solution order
   unsigned order_ind = ml_sol->GetSolutionType(SolIndex);
-  unsigned end_ind   = mymsh->GetEndIndex(order_ind);
-  
-  unsigned end_ind2   = mymsh->GetEndIndex(2);
   //coordinates
   vector< vector < double> > coordinates(dim);
 
@@ -337,8 +334,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
     short unsigned kelt=myel->GetElementType(kel);
-    unsigned nve=myel->GetElementDofNumber(kel,end_ind);
-    unsigned nve2=myel->GetElementDofNumber(kel,end_ind2);
+    unsigned nve=myel->GetElementDofNumber(kel,order_ind);
+    unsigned nve2=myel->GetElementDofNumber(kel,2);
     // resize
     metis_node.resize(nve);
     KK_dof.resize(nve);

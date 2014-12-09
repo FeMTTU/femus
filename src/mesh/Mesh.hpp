@@ -110,11 +110,6 @@ public:
     }
 
     /** To be added */
-    const unsigned GetEndIndex(const unsigned i) const {
-      return _END_IND[i];
-    }
-    
-    /** To be added */
     const unsigned GetFaceIndex() const {
       return Mesh::_face_index; 
     }

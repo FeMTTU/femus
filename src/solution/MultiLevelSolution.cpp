@@ -171,9 +171,8 @@ void MultiLevelSolution::Initialize(const char name[], initfunc func) {
       for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
         for (int iel=_ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom]; 
 	     iel < _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	  unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];    
-	  unsigned sol_ord = _ml_msh->GetLevel(ig)->GetEndIndex(_SolType[i]);
-	  unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,sol_ord);
+	  unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
+	  unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,sol_type);
 	  if(sol_type<3) {
             for(int j=0; j<nloc_dof; j++) {
 	      unsigned inode=(sol_type<3)?(_ml_msh->GetLevel(ig)->el->GetElementVertexIndex(kel_gmt,j)-1u):(kel_gmt+j*num_el);
@@ -396,7 +395,7 @@ void MultiLevelSolution::GenerateBdc_new(const unsigned k, const unsigned grid0,
 		short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
 		unsigned nv1=(!_TestIfPressure[k])?
 		  _ml_msh->GetLevel(igridn)->el->GetElementFaceDofNumber(kel_gmt,jface,_SolType[k]):
-		  _ml_msh->GetLevel(igridn)->el->GetElementDofNumber(iel,_ml_msh->GetLevel(igridn)->GetEndIndex(_SolType[k]));
+		  _ml_msh->GetLevel(igridn)->el->GetElementDofNumber(iel,_SolType[k]);
 		for (unsigned iv=0; iv<nv1; iv++) {
 		  unsigned inode=(!_TestIfPressure[k])? 
 		    _ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
@@ -456,7 +455,7 @@ void MultiLevelSolution::GenerateBdc_new(const unsigned k, const unsigned grid0,
 	    for (unsigned jface=0; jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt); jface++) {
 	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
 		short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
-		unsigned nv1=_ml_msh->GetLevel(igridn)->el->GetElementDofNumber(kel_gmt,_ml_msh->GetLevel(igridn)->GetEndIndex(_SolType[k]));
+		unsigned nv1=_ml_msh->GetLevel(igridn)->el->GetElementDofNumber(kel_gmt,_SolType[k]);
 		for (unsigned iv=0; iv<nv1; iv++) {
 		  unsigned inode=(kel_gmt+iv*nel);
 		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
@@ -567,7 +566,7 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 		short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
 		unsigned nv1=(!_TestIfPressure[k])?
 		  _ml_msh->GetLevel(igridn)->el->GetElementFaceDofNumber(kel_gmt,jface,_SolType[k]):
-		  _ml_msh->GetLevel(igridn)->el->GetElementDofNumber(iel,_ml_msh->GetLevel(igridn)->GetEndIndex(_SolType[k]));
+		  _ml_msh->GetLevel(igridn)->el->GetElementDofNumber(iel,_SolType[k]);
 		for (unsigned iv=0; iv<nv1; iv++) {
 		  unsigned inode=(!_TestIfPressure[k])? 
 		    _ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
@@ -615,7 +614,7 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 	    for (unsigned jface=0; jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt); jface++) {
 	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
 		short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
-		unsigned nv1=_ml_msh->GetLevel(igridn)->el->GetElementDofNumber(kel_gmt,_ml_msh->GetLevel(igridn)->GetEndIndex(_SolType[k]));
+		unsigned nv1=_ml_msh->GetLevel(igridn)->el->GetElementDofNumber(kel_gmt,_SolType[k]);
 		for (unsigned iv=0; iv<nv1; iv++) {
 		  unsigned inode=(kel_gmt+iv*nel);
 		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);

@@ -474,10 +474,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   // -----------------------------------------------------------------
   // space discretization parameters
   unsigned order_ind2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));  
-  unsigned end_ind2   = mymsh->GetEndIndex(order_ind2);
-
   unsigned order_ind1 = ml_sol->GetSolutionType(ml_sol->GetIndex("P"));  
-  unsigned end_ind1   = mymsh->GetEndIndex(order_ind1);
 
   // mesh and procs
   unsigned nel    = mymsh->GetNumberOfElements();
@@ -513,8 +510,8 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 
     unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
     short unsigned kelt = myel->GetElementType(kel);
-    unsigned nve        = myel->GetElementDofNumber(kel,end_ind2);
-    unsigned nve1       = myel->GetElementDofNumber(kel,end_ind1);
+    unsigned nve        = myel->GetElementDofNumber(kel,order_ind2);
+    unsigned nve1       = myel->GetElementDofNumber(kel,order_ind1);
     int flag_mat        = myel->GetElementMaterial(kel);
 
     //*******************************************************************************************************

@@ -41,8 +41,6 @@ using std::map;
 
 bool Mesh::_TestSetRefinementFlag=0;
 
-const unsigned Mesh::_END_IND[5]= {0,1,2,3,4};
-
 unsigned Mesh::_dimension=2;
 unsigned Mesh::_ref_index=4;  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
 unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
