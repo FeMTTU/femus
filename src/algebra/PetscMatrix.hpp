@@ -43,16 +43,16 @@ EXTERN_C_FOR_PETSC_END
 // parallel on parallel matrices but which may be called in serial on
 // serial matrices.  This macro will only be valid inside non-static
 // PetscMatrix methods
-#undef semiparallel_onlyM
+#undef semiparallel_only
 #ifndef NDEBUG
 #include <cstring>
 
-#define semiparallel_onlyM() do { if (this->initialized()) { const char *mytype; \
+#define semiparallel_only() do { if (this->initialized()) { const char *mytype; \
     MatGetType(_mat,&mytype); \
     if (!strcmp(mytype, MATSEQAIJ)) \
-      parallel_onlyM(); } } while (0)
+      parallel_only(); } } while (0)
 #else
-#define semiparallel_onlyM()
+#define semiparallel_only()
 #endif
 
 
@@ -214,7 +214,7 @@ inline PetscMatrix::~PetscMatrix() {
 // ==========================================
 /// This function checks if the matrix is closed
 inline void PetscMatrix::close() const {
-  parallel_onlyM();
+  parallel_only();
   int ierr=0;
   ierr = MatAssemblyBegin(_mat, MAT_FINAL_ASSEMBLY);
   CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -316,7 +316,7 @@ inline void PetscMatrix::add(const double a_in,      // double constant
   // X->close ();
   assert(X != NULL);
   assert(X->closed());
-  semiparallel_onlyM();
+  semiparallel_only();
   int ierr=0;
 
 #if PETSC_VERSION_LESS_THAN(2,3,0)  // 2.2.x & earlier style  
@@ -436,7 +436,7 @@ inline void PetscMatrix::matrix_add (const double a_in, SparseMatrix &X_in, cons
   // X->close ();
   assert(X->closed());
 
-  semiparallel_onlyM();
+  semiparallel_only();
 
   if(!strcmp(pattern_type,"different_nonzero_pattern")){
     ierr = MatAXPY(_mat, a, X->_mat, DIFFERENT_NONZERO_PATTERN);
