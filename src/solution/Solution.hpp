@@ -29,6 +29,7 @@
 #include "petscmat.h"
 #include "FElemTypeEnum.hpp"
 #include "ParallelObject.hpp"
+#include "vector"
 
 namespace femus {
 
@@ -38,7 +39,7 @@ namespace femus {
 class elem_type;
 class NumericVector;
 class SparseMatrix;
-class mesh;
+class Mesh;
 class MultiLevelSolution;
 
 using std::vector;
@@ -48,7 +49,7 @@ class Solution : public ParallelObject {
 public:
 
     /** Constructor */
-    Solution(mesh *other_msh);
+    Solution(Mesh *other_msh);
 
     /** Destructor */
     ~Solution();
@@ -120,7 +121,7 @@ private:
     vector <unsigned> _SolTmOrder;
     vector <FEFamily> _family;
     vector <FEOrder> _order;
-    mesh *_msh;
+    Mesh *_msh;
 
 };
 

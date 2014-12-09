@@ -40,7 +40,7 @@ class GmresPetscLinearEquationSolver : public LinearEquationSolver {
 public:
 
     /**  Constructor. Initializes Petsc data structures */
-    GmresPetscLinearEquationSolver (const unsigned &igrid, mesh *other_mesh);
+    GmresPetscLinearEquationSolver (const unsigned &igrid, Mesh *other_mesh);
 
     /// Destructor.
     ~GmresPetscLinearEquationSolver ();
@@ -93,7 +93,7 @@ private:
 
 };
 
-inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver (const unsigned &igrid, mesh* other_msh)
+inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver (const unsigned &igrid, Mesh* other_msh)
     : LinearEquationSolver(igrid, other_msh) {
 
     if(igrid==0) {

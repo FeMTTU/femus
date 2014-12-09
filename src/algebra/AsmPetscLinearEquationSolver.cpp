@@ -22,6 +22,7 @@
 
 // Local Includes
 #include "AsmPetscLinearEquationSolver.hpp"
+#include "MeshASMPartitioning.hpp"
 #include "PetscPreconditioner.hpp"
 #include "PetscMatrix.hpp"
 #include <iomanip>
@@ -48,8 +49,8 @@ namespace femus {
 
   // ==============================================
   void AsmPetscLinearEquationSolver::SetElementBlockNumber(const char all[], const unsigned & overlap) {
-    _element_block_number[0] = _msh->GetElementNumber();
-    _element_block_number[1] = _msh->GetElementNumber();
+    _element_block_number[0] = _msh->GetNumberOfElements();
+    _element_block_number[1] = _msh->GetNumberOfElements();
     _standard_ASM=1;
     _overlap=overlap;
   }
@@ -135,7 +136,7 @@ namespace femus {
     clock_t SearchTime=0;
     clock_t start_time=clock();
     
-    unsigned nel=_msh->GetElementNumber();
+    unsigned nel=_msh->GetNumberOfElements();
     
     bool FastVankaBlock=true;
     if(_NSchurVar==!0){
@@ -163,9 +164,10 @@ namespace femus {
     
     vector < vector < unsigned > > block_elements;
     
-    
-    _msh->GenerateVankaPartitions_FSI1(_element_block_number, block_elements, _block_type_range);
-    //_msh->GenerateVankaPartitions_FSI( _element_block_number, block_elements, _block_type_range);
+    MeshASMPartitioning meshasmpartitioning(*_msh);
+    meshasmpartitioning.DoPartition(_element_block_number, block_elements, _block_type_range);
+    //_msh->GenerateVankaPartitions_FSI1(_element_block_number, block_elements, _block_type_range);
+
     
     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(),true);
     for (unsigned iind=variable_to_be_solved.size()-_NSchurVar; iind<variable_to_be_solved.size(); iind++) {

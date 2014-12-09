@@ -34,7 +34,8 @@ namespace femus {
   
 
 namespace MeshTools {
-  namespace Generation {  
+  namespace Generation { 
+    namespace Private {
    
       /**
        * A useful inline function which replaces the #defines
@@ -43,8 +44,10 @@ namespace MeshTools {
        * the proper node number for 2D elements while the second
        * one returns the node number for 3D elements.
        */
-unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int i, const unsigned int j) {
-	switch(type)
+       inline
+       unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int i, const unsigned int j) {
+	
+          switch(type)
 	  {
 // 	  case INVALID_ELEM:
 // 	  case QUAD4:
@@ -74,6 +77,7 @@ unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int 
       
 
       // Same as the function above, but for 3D elements
+      inline
       unsigned int idx(const ElemType type,
 		       const unsigned int nx,
 		       const unsigned int ny,
@@ -111,11 +115,13 @@ unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int 
 	  }
 
 	return -1;
- }
+  }
+}
 
 // ------------------------------------------------------------
 // MeshTools::Generation function for mesh generation
-void BuildBrick(      mesh& mesh,
+void BuildBox(      Mesh& mesh,
+		      vector < vector < double> > &vt,
                       const unsigned int nx,
 	              const unsigned int ny,
 	              const unsigned int nz,
@@ -125,14 +131,16 @@ void BuildBrick(      mesh& mesh,
 		      const ElemType type,
 		      std::vector<bool> &type_elem_flag) {
   
-  vector <vector <double> > vt;  
-  vt.resize(3);
-    
-  mesh.SetGridNumber(0);
+  using namespace MeshTools::Generation::Private;
   
   // Clear the mesh and start from scratch
   //mesh.clear(); // to be added
-
+  
+//   vector <vector <double> > vt;  
+//   vt.resize(3);
+    
+//   mesh.SetGridNumber(0);
+ 
   if (nz != 0)
     mesh.SetDimension(3);
   else if (ny != 0)
@@ -165,7 +173,7 @@ void BuildBrick(      mesh& mesh,
            case EDGE3:
 //           case EDGE4:
              {
-	       mesh.SetElementNumber(nx);
+	       mesh.SetNumberOfElements(nx);
 	      
 	       ngroup = 1;
 	       nbcd   = 2;
@@ -282,7 +290,7 @@ void BuildBrick(      mesh& mesh,
  
          // Build the elements of the mesh
        unsigned iel = 0;
-	 mesh.el= new elem(mesh.GetElementNumber());
+	 mesh.el= new elem(mesh.GetNumberOfElements());
 	 mesh.el->SetElementGroupNumber(1);
          // Build the elements.  Each one is a bit different.
          switch(type)
@@ -385,7 +393,7 @@ void BuildBrick(      mesh& mesh,
 // 	  case QUAD8:
  	  case QUAD9:
  	    {
- 	      mesh.SetElementNumber(nx*ny);
+ 	      mesh.SetNumberOfElements(nx*ny);
 	      
 	      ngroup = 1;
 	      nbcd   = 4;
@@ -395,7 +403,7 @@ void BuildBrick(      mesh& mesh,
 // 	  case TRI3:
  	  case TRI6:
  	    {
-	      mesh.SetElementNumber(2*nx*ny);
+	      mesh.SetNumberOfElements(2*nx*ny);
 	      
 	      ngroup = 1;
 	      nbcd   = 4;
@@ -537,7 +545,7 @@ void BuildBrick(      mesh& mesh,
 
  	  	    
 	unsigned iel = 0;
-	mesh.el= new elem(mesh.GetElementNumber());
+	mesh.el= new elem(mesh.GetNumberOfElements());
 	mesh.el->SetElementGroupNumber(1);
  	// Build the elements.  Each one is a bit different.
  	switch (type)
@@ -799,7 +807,7 @@ void BuildBrick(      mesh& mesh,
 // 	  case TET10: // TET10's are created from an initial HEX27 discretization
 // 	  case PYRAMID5: // PYRAMID5's are created from an initial HEX27 discretization
 	    {
-	      mesh.SetElementNumber(nx*ny*nz);
+	      mesh.SetNumberOfElements(nx*ny*nz);
 	      ngroup = 1;
 	      nbcd   = 6;
               break;
@@ -975,7 +983,7 @@ void BuildBrick(      mesh& mesh,
  
  	// Build the elements.
         unsigned iel = 0;
-	mesh.el= new elem(mesh.GetElementNumber());
+	mesh.el= new elem(mesh.GetNumberOfElements());
 	mesh.el->SetElementGroupNumber(1);
  	switch (type)
  	  {
@@ -1497,116 +1505,6 @@ void BuildBrick(      mesh& mesh,
       }
      }
     
-    //*************** start reorder mesh dofs **************
-  //(1)linear (2)quadratic (3)biquaratic
-  
-  vector <unsigned> dof_index;
-  dof_index.resize(mesh.GetNumberOfNodes());
-  for(unsigned i=0;i<mesh.GetNumberOfNodes();i++){
-    dof_index[i]=i+1;
-  }
-  //reorder vertices and mid-points vs central points
-  for (unsigned iel=0; iel<mesh.GetElementNumber(); iel++) {
-    for (unsigned inode=0; inode<mesh.el->GetElementDofNumber(iel,1); inode++) {
-      for (unsigned jel=0; jel<mesh.GetElementNumber(); jel++) {
-	for (unsigned jnode=mesh.el->GetElementDofNumber(jel,1); jnode<mesh.el->GetElementDofNumber(jel,3); jnode++) { 
-	  unsigned ii=mesh.el->GetElementVertexIndex(iel,inode)-1;
-	  unsigned jj=mesh.el->GetElementVertexIndex(jel,jnode)-1;
-	  unsigned i0=dof_index[ii];
-          unsigned i1=dof_index[jj];
-	  if(i0>i1){
-	    dof_index[ii]=i1;
-	    dof_index[jj]=i0; 
-	  }
-	}
-      }
-    }
-  }
-  //reorder vertices vs mid-points
-  for (unsigned iel=0; iel<mesh.GetElementNumber(); iel++) {
-    for (unsigned inode=0; inode<mesh.el->GetElementDofNumber(iel,0); inode++) {
-      for (unsigned jel=0; jel<mesh.GetElementNumber(); jel++) {
-        for (unsigned jnode=mesh.el->GetElementDofNumber(jel,0); jnode<mesh.el->GetElementDofNumber(jel,1); jnode++) {
-          unsigned ii=mesh.el->GetElementVertexIndex(iel,inode)-1;
-	  unsigned jj=mesh.el->GetElementVertexIndex(jel,jnode)-1;
-	  unsigned i0=dof_index[ii];
-          unsigned i1=dof_index[jj];
-	  if(i0>i1){
-	    dof_index[ii]=i1;
-	    dof_index[jj]=i0; 
-	  }
-	}
-      }
-    }
-  }
-  
-  // update all
-  for (unsigned iel=0; iel<mesh.GetElementNumber(); iel++) {
-    for (unsigned inode=0; inode<mesh.el->GetElementDofNumber(iel,3); inode++) {
-      unsigned ii=mesh.el->GetElementVertexIndex(iel,inode)-1;
-      mesh.el->SetElementVertexIndex(iel,inode,dof_index[ii]);
-    }
-  }
-  vector <double> vt_temp;
-  for(int i=0;i<3;i++){
-    vt_temp=vt[i];
-    for(unsigned j=0;j<mesh.GetNumberOfNodes();j++){
-      vt[i][dof_index[j]-1]=vt_temp[j];
-    }
-  }
-  // **************  end reoreder mesh dofs **************
- 
-  mesh.el->SetNodeNumber(mesh.GetNumberOfNodes());
- 
-  unsigned nv0=0;
-  for (unsigned iel=0; iel<mesh.GetElementNumber(); iel++)
-    for (unsigned inode=0; inode<mesh.el->GetElementDofNumber(iel,0); inode++) {
-      unsigned i0=mesh.el->GetElementVertexIndex(iel,inode);
-      if (nv0<i0) nv0=i0;
-  }
-  mesh.el->SetVertexNodeNumber(nv0);
-
-  unsigned nv1=0;
-  for (unsigned iel=0; iel<mesh.GetElementNumber(); iel++)
-    for (unsigned inode=mesh.el->GetElementDofNumber(iel,0); inode<mesh.el->GetElementDofNumber(iel,1); inode++) {
-      unsigned i1=mesh.el->GetElementVertexIndex(iel,inode);
-      if (nv1<i1) nv1=i1;
-  }
-  mesh.el->SetMidpointNodeNumber(nv1-nv0);
-
-  mesh.el->SetCentralNodeNumber(mesh.GetNumberOfNodes()-nv1);
-
-  
-  //connectivity: find all the element near the vertices
-  mesh.BuildAdjVtx();
-  mesh.Buildkel();
-  
-  if (mesh.n_processors()>=1) 
-    mesh.GenerateMetisMeshPartition();
- 
-  vector <double> vt_temp2;
-  for(int i=0;i<3;i++){
-    vt_temp2=vt[i];
-    for(unsigned j=0;j<mesh.GetNumberOfNodes();j++) {
-      vt[i][mesh.GetMetisDof(j,2)]=vt_temp2[j];
-    }
-  }
-  
-  mesh._coordinate = new Solution(&mesh);
-  mesh._coordinate->AddSolution("X",LAGRANGE,SECOND,1,0); 
-  mesh._coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0); 
-  mesh._coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0); 
-  
-  mesh._coordinate->ResizeSolutionVector("X");
-  mesh._coordinate->ResizeSolutionVector("Y");
-  mesh._coordinate->ResizeSolutionVector("Z");
-    
-  mesh._coordinate->SetCoarseCoordinates(vt);
- 
-  mesh._coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
-  mesh._coordinate->ResizeSolutionVector("AMR");
-  
- 
 }
 
 

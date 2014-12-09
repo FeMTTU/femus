@@ -20,14 +20,13 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "Elem.hpp"
-#include "vector"
-#include "map"
-#include "metis.h"
 #include "Solution.hpp"
 #include "ElemType.hpp"
 #include "ElemTypeEnum.hpp"
 #include "ParallelObject.hpp"
 
+#include "vector"
+#include "map"
 
 namespace femus {
 
@@ -40,65 +39,41 @@ class Solution;
  * The mesh class
 */
 
-class mesh : public ParallelObject {
+class Mesh : public ParallelObject {
 
 public:
 
     /** Constructor */
     explicit
-    mesh() {};
+    Mesh() {};
 
     /** destructor */
-    ~mesh();
-
-    /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
-    void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag);
-
-    /** This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$ */
-    void RefineMesh(const unsigned &igrid, mesh *mshc, const elem_type* otheFiniteElement[6][5]);
-
-    /** To be Added */
-    void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
-    
-    /** Partition the mesh using the METIS partitioner */
-    void GenerateMetisMeshPartition();
+    ~Mesh();
 
     /** Print the mesh info for this level */
     void PrintInfo();
-
-    /** To be added */
-    void BuildAdjVtx();
-
-    /** To be added */
-    void Buildkmid();
-
-    /** To be added */
-    void Buildkel();
-
-    /** To be added */
-    void copy_elr(vector <unsigned> &other_vec) const;
 
     /** Get the dof number for the element -type- */
     unsigned GetDofNumber(const unsigned type) const;
     
     /** Set the number of nodes */
     void SetNumberOfNodes(const unsigned nnodes) {
-      nvt = nnodes; 
+      _nnodes = nnodes; 
     };
     
     /** Get the number of nodes */
     unsigned GetNumberOfNodes() const {
-      return nvt;
+      return _nnodes;
     }
     
     /** Set the number of element */
-    void SetElementNumber(const unsigned numelem) {
-      nel = numelem; 
+    void SetNumberOfElements(const unsigned nelem) {
+      _nelem = nelem; 
     };
 
     /** Get the number of element */
-    unsigned GetElementNumber() const {
-      return nel;
+    unsigned GetNumberOfElements() const {
+      return _nelem;
     }
 
     /** Set the grid number */
@@ -111,25 +86,22 @@ public:
       return _grid;
     }
 
-    /** Allocate memory for adding fluid or solid mark */
-    void AllocateAndMarkStructureNode();
-    
     /** Set the dimension of the problem (1D, 2D, 3D) */
     void SetDimension(const unsigned dim) {
-      mesh::_dimension = dim;
-      mesh::_ref_index = pow(2,mesh::_dimension);  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
-      mesh::_face_index = pow(2,mesh::_dimension-1u);
+      Mesh::_dimension = dim;
+      Mesh::_ref_index = pow(2,Mesh::_dimension);  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
+      Mesh::_face_index = pow(2,Mesh::_dimension-1u);
     }
     
 
     /** Get the dimension of the problem (1D, 2D, 3D) */
     const unsigned GetDimension() const {
-      return mesh::_dimension;
+      return Mesh::_dimension;
     }
 
     /** To be added*/
     const unsigned GetRefIndex() const {
-      return mesh::_ref_index;
+      return Mesh::_ref_index;
     }
 
     /** Get the metis dof from the gambit dof */
@@ -142,35 +114,42 @@ public:
       return _END_IND[i];
     }
     
-    /** Get the material of the kel element */
-    const unsigned GetElementMaterial(unsigned &kel) const;
+    /** To be added */
+    const unsigned GetFaceIndex() const {
+      return Mesh::_face_index; 
+    }
     
-    /** Flag all the elements to be refined */
-    void FlagAllElementsToBeRefined();
-
-    /** Flag all the even elements to be refined */
-    void FlagOnlyEvenElementsToBeRefined();
-
-    /** Flag the elements to be refined in according to a user-defined function */
-    void FlagElementsToBeRefinedByUserDefinedFunction();
-
-    /** Flag the elements to be refined in according to AMR criteria */
-    void FlagElementsToBeRefinedByAMR();
+    /** Allocate memory for adding fluid or solid mark */
+    void AllocateAndMarkStructureNode();
+    
+    
+    /** To be Added */
+    void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
+    
+    /** Generate mesh functions */
+    
+    /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
+    void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag);
+    
+    /** This function generates a coarse box mesh */
+    void GenerateCoarseBoxMesh(const unsigned int nx,
+                                  const unsigned int ny,
+                                  const unsigned int nz,
+                                  const double xmin, const double xmax,
+                                  const double ymin, const double ymax,
+                                  const double zmin, const double zmax,
+                                  const ElemType type, std::vector<bool> &type_elem_flag);
+    
     
     /** To be added */
-    void GenerateVankaPartitions_FAST( const unsigned &block_size, vector < vector< unsigned > > &blk_elements,
-				       vector <unsigned> &block_element_type);
+    void FillISvector();
+
+    /** To be added */
+    void Buildkel();
     
     /** To be added */
-    void GenerateVankaPartitions_FSI( const unsigned &block_size, vector < vector< unsigned > > &block_elements,
-				      vector <unsigned> &block_element_type);
+    void BuildAdjVtx();
     
-    /** To be added */
-    void GenerateVankaPartitions_FSI1( const unsigned *block_size, vector < vector< unsigned > > &block_elements,
-					vector <unsigned> &block_type_range);
-    
-    /** To be added */    
-    void GenerateVankaPartitions_METIS( const unsigned &block_size, vector < vector< unsigned > > &blk_elements);
     
     // member data
     Solution* _coordinate;
@@ -183,9 +162,9 @@ public:
     vector< vector<int> > ghost_nd_mts[5];
     vector <unsigned> ghost_size[5];
     elem *el;  //< elements
-    idx_t *epart;
-    idx_t *npart;
-    idx_t nsubdom;
+    int *epart;
+    int *npart;
+    int nsubdom;
     static bool (* _SetRefinementFlag)(const double &x, const double &y, const double &z,
                                        const int &ElemGroupNumber,const int &level);
     static bool _TestSetRefinementFlag;
@@ -193,10 +172,16 @@ public:
     
 
 private:
+  
+    /** To be added */
+    void copy_elr(vector <unsigned> &other_vec) const;
+  
+    /** Renumber nodes in the following order: vertices, face, center */
+    void RenumberNodes(vector < vector < double> > &coords);
     
     //member-data
-    int nel;                                   //< number of elements
-    unsigned nvt;                              //< number of nodes
+    int _nelem;                                   //< number of elements
+    unsigned _nnodes;                              //< number of nodes
     unsigned _grid;                            //< level of mesh in the multilevel hierarchy
     static unsigned _dimension;                //< dimension of the problem
     static unsigned _ref_index;

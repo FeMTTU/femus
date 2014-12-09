@@ -10,6 +10,10 @@
 
 #cmakedefine HAVE_PETSC
 
+//MPI library
+
+#cmakedefine HAVE_METIS
+
 //HDF5 library
 
 #cmakedefine HAVE_HDF5

@@ -53,7 +53,7 @@ class LinearEquationSolver : public LinearEquation {
 public:
 
     /**  Constructor. Initializes Solver data structure */
-    LinearEquationSolver (const unsigned &igrid, mesh* other_msh);
+    LinearEquationSolver (const unsigned &igrid, Mesh* other_msh);
 
     /** Destructor. */
     virtual ~LinearEquationSolver();
@@ -62,7 +62,7 @@ public:
     virtual void clear() {}
 
     /** Builds a \p LinearEquationSolver using the linear solver in \p solver_package */
-    static std::auto_ptr<LinearEquationSolver> build(const unsigned &igrid, mesh* other_msh,
+    static std::auto_ptr<LinearEquationSolver> build(const unsigned &igrid, Mesh* other_msh,
             const MgSmoother & smoother_type, const SolverPackage solver_package =LSOLVER);
 
     /** Set the tolerance for the solver */
@@ -146,7 +146,7 @@ protected:
  * -------------------- inline functions ---------------------
  */
 
-inline LinearEquationSolver::LinearEquationSolver(const unsigned &igrid, mesh* other_msh) :
+inline LinearEquationSolver::LinearEquationSolver(const unsigned &igrid, Mesh* other_msh) :
     LinearEquation(other_msh),
     _solver_type(GMRES),
     _preconditioner(NULL),

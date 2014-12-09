@@ -20,7 +20,7 @@ namespace femus {
     Solution*	 mysolution  	                      = ml_sol->GetSolutionLevel(level);
     MonolithicFSINonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<MonolithicFSINonLinearImplicitSystem>("Fluid-Structure-Interaction");
     LinearEquationSolver*  myLinEqSolver	              = my_nnlin_impl_sys._LinSolver[level];   
-    mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(level);
+    Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(level);
     elem		*myel		=  mymsh->el;
     SparseMatrix	*myKK		=  myLinEqSolver->_KK;
     NumericVector 	*myRES		=  myLinEqSolver->_RES;
@@ -131,7 +131,7 @@ namespace femus {
     unsigned end_ind1   = mymsh->GetEndIndex(SolType1);
 
     // mesh and procs
-    unsigned nel    = mymsh->GetElementNumber();
+    unsigned nel    = mymsh->GetNumberOfElements();
     unsigned igrid  = mymsh->GetGridNumber();
     unsigned iproc  = mymsh->processor_id();
 

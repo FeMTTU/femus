@@ -410,14 +410,14 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   MultiLevelSolution* ml_sol=ml_prob._ml_sol;
   
   
-  mesh*		 mymsh    	= ml_prob._ml_msh->GetLevel(level);
+  Mesh*		 mymsh    	= ml_prob._ml_msh->GetLevel(level);
   elem*		 myel		= mymsh->el;
   SparseMatrix*	 myKK		= mylsyspde->_KK;
   NumericVector* myRES 		= mylsyspde->_RES;
     
   //data
   const unsigned dim = mymsh->GetDimension();
-  unsigned nel= mymsh->GetElementNumber();
+  unsigned nel= mymsh->GetNumberOfElements();
   unsigned igrid= mymsh->GetGridNumber();
   unsigned iproc = mymsh->processor_id();
   double ILambda= 0; 
@@ -731,7 +731,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
   LinearImplicitSystem& mylin_impl_sys = ml_prob.get_system<LinearImplicitSystem>("Temperature");
   LinearEquationSolver*  mylsyspde     = mylin_impl_sys._LinSolver[level];   
-  mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
+  Mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
   elem*          myel		       = mymsh->el;
   SparseMatrix*  myKK		       = mylsyspde->_KK;
   NumericVector* myRES		       = mylsyspde->_RES;
@@ -740,7 +740,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   
   //data
   const unsigned	dim	= mymsh->GetDimension();
-  unsigned 		nel	= mymsh->GetElementNumber();
+  unsigned 		nel	= mymsh->GetNumberOfElements();
   unsigned 		igrid	= mymsh->GetGridNumber();
   unsigned 		iproc	= mymsh->processor_id();
   double		IPe	= 1./(ml_prob.parameters.get<Fluid>("Fluid").get_Peclet_number());  

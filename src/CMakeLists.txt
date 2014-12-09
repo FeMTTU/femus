@@ -75,6 +75,10 @@ mesh/Mesh.cpp
 mesh/MultiLevelMesh.cpp
 mesh/MeshGeneration.cpp
 mesh/GambitIO.cpp
+mesh/MeshRefinement.cpp
+mesh/MeshMetisPartitioning.cpp
+mesh/MeshPartitioning.cpp
+mesh/MeshASMPartitioning.cpp
 physics/Fluid.cpp
 physics/Material.cpp
 physics/Parameter.cpp

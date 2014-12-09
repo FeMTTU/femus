@@ -61,7 +61,7 @@ namespace femus {
     clock_t SearchTime=0;
     clock_t start_time=clock();
     _indexai_init=1;
-    unsigned nel=_msh->GetElementNumber();
+    unsigned nel=_msh->GetNumberOfElements();
     bool FastVankaBlock=true;
     if(_NSchurVar==!0){
       FastVankaBlock=(_SolType[_SolPdeIndex[VankaIndex[VankaIndex.size()-_NSchurVar]]]<3)?false:true;

@@ -164,7 +164,7 @@ void MultiLevelSolution::Initialize(const char name[], initfunc func) {
     //CheckVectorSize(i);
     unsigned sol_type = _SolType[i];
     for (unsigned ig=0; ig<_gridn; ig++) {
-      unsigned num_el = _ml_msh->GetLevel(ig)->GetElementNumber();
+      unsigned num_el = _ml_msh->GetLevel(ig)->GetNumberOfElements();
       _solution[ig]->ResizeSolutionVector(_SolName[i]);
       if (ig>0) BuildProlongatorMatrix(ig,i);     
       //for parallel
@@ -247,8 +247,8 @@ void MultiLevelSolution::BuildProlongatorMatrix(unsigned gridf, unsigned SolInde
   if(_solution[gridf]->_ProjMatFlag[ThisSolType]==0){
     _solution[gridf]->_ProjMatFlag[ThisSolType]=1;
     
-    mesh* mshf = _ml_msh->GetLevel(gridf);
-    mesh* mshc = _ml_msh->GetLevel(gridf-1);
+    Mesh* mshf = _ml_msh->GetLevel(gridf);
+    Mesh* mshc = _ml_msh->GetLevel(gridf-1);
     
     int nf     = mshf->MetisOffset[ThisSolType][_nprocs];
     int nc     = mshc->MetisOffset[ThisSolType][_nprocs];
@@ -449,7 +449,7 @@ void MultiLevelSolution::GenerateBdc_new(const unsigned k, const unsigned grid0,
       }
       else if(_TestIfPressure[k]){
 	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
-	  unsigned nel=_ml_msh->GetLevel(igridn)->GetElementNumber();
+	  unsigned nel=_ml_msh->GetLevel(igridn)->GetNumberOfElements();
 	  for (int iel=_ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom]; 
 	       iel < _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
 	    unsigned kel_gmt = _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel];
@@ -608,7 +608,7 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
       }
       else if(_TestIfPressure[k]){
 	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
-	  unsigned nel=_ml_msh->GetLevel(igridn)->GetElementNumber();
+	  unsigned nel=_ml_msh->GetLevel(igridn)->GetNumberOfElements();
 	  for (int iel=_ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom]; 
 	       iel < _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
 	    unsigned kel_gmt = _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel];
