@@ -57,7 +57,7 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=3;
+  nm=2;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
   nr=0;
@@ -85,8 +85,8 @@ int main(int argc,char **args) {
   
   // generate solution vector
   // ml_sol.AddSolution("T",LAGRANGE,SECOND);
-  ml_sol.AddSolution("U",LAGRANGE,SECOND);
-  ml_sol.AddSolution("V",LAGRANGE,SECOND);
+  ml_sol.AddSolution("U",LAGRANGE, FIRST);
+  ml_sol.AddSolution("V",LAGRANGE, FIRST);
   // the pressure variable should be the last for the Schur decomposition
   // ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
   
@@ -94,7 +94,7 @@ int main(int argc,char **args) {
   // ml_sol.AddSolution("U",LAGRANGE,FIRST);
   // ml_sol.AddSolution("V",LAGRANGE,FIRST);
   // the pressure variable should be the last for the Schur decomposition
-  ml_sol.AddSolution("P",LAGRANGE,FIRST);
+  ml_sol.AddSolution("P",LAGRANGE, FIRST);
   ml_sol.AssociatePropertyToSolution("P","Pressure");
  
   ml_sol.AddSolution("T",LAGRANGE,FIRST);
@@ -567,9 +567,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     
       for (unsigned i=0;i<nve;i++) {
 	unsigned inode=myel->GetMeshDof(kel,i,SolType2);
-	unsigned inode_Metis=mymsh->GetMetisDof(inode,SolType2);
-	// flag to know if the node "inode" lays on the fluid-solid interface
-	
+	unsigned inode_Metis=mymsh->GetMetisDof(inode,SolType2);	
 	for(int j=0; j<dim; j++) {
 	  // velocity dofs
 	  Soli[indexVAR[j]][i] =  (*mysolution->_Sol[indVAR[j]])(inode_Metis);
@@ -759,6 +757,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 		adept::adouble MinusGradPhi1DotRes = 0.;
 		for(int ivar=0;ivar<dim;ivar++){
 		  MinusGradPhi1DotRes += -gradphi1[i*dim+ivar] * Res[ivar] * tauSupg; 
+		  //MinusGradPhi1DotRes += gradphi1[i*dim+ivar] * GradSolVAR[dim][ivar] * tauSupg*1000;
 		}
 		aRhs[indexVAR[dim]][i] += ( - (-div_vel) * phi1[i] + MinusGradPhi1DotRes ) * Weight;
 	      }
