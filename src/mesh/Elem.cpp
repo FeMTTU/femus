@@ -48,7 +48,7 @@ elem::elem(const unsigned &other_nel) {
   kvert=new unsigned * [nel];
   kel=new int *[nel];
 
-  kvert_memory=new unsigned [nel*NVE[0][3]];
+  kvert_memory=new unsigned [nel*NVE[0][2]];
   kel_memory=new int [nel*NFC[0][1]];
   for (unsigned i=0; i<nel*NFC[0][1]; i++)
     kel_memory[i]=-1;
@@ -58,7 +58,7 @@ elem::elem(const unsigned &other_nel) {
 
   for (unsigned i=0; i<nel; i++) {
     kvert[i]=pt_u;
-    pt_u+=NVE[0][3];
+    pt_u+=NVE[0][2];
     kel[i]=pt_i;
     pt_i+=NFC[0][1];
   }
@@ -90,7 +90,7 @@ elem::elem(const elem *elc, const unsigned refindex) {
   unsigned kvert_size=0;
   unsigned kel_size=0;
   for (unsigned i=0; i<6; i++) {
-    kvert_size+=elc->GetRefinedElementNumber(i)*NVE[i][3];
+    kvert_size+=elc->GetRefinedElementNumber(i)*NVE[i][2];
     kel_size+=elc->GetRefinedElementNumber(i)*NFC[i][1];
   }
 //   kvert_size*=REF_INDEX;
@@ -111,7 +111,7 @@ elem::elem(const elem *elc, const unsigned refindex) {
       short unsigned elemt=elc->GetElementType(iel);
       for (unsigned j=0; j<NRE[elemt]; j++) {
         kvert[jel+j]=pt_u;
-        pt_u+=elc->GetElementDofNumber(iel);
+        pt_u+=elc->GetElementDofNumber(iel,2);
 
         kel[jel+j]=pt_i;
         pt_i+=elc->GetElementFaceNumber(iel);

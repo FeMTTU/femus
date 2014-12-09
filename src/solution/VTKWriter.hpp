@@ -48,7 +48,7 @@ public:
 private:
   
     /** femus to vtk cell type map */
-    static short unsigned int femusToVtkCellType[4][6];
+    static short unsigned int femusToVtkCellType[3][6];
 
 };
 
@@ -106,7 +106,7 @@ private:
  * VTK_HIGHER_ORDER_HEXAHEDRON            = 67, 
  */
   
- short unsigned int VTKWriter::femusToVtkCellType[4][6]= {{12,10,13,9,5,3},{25,24,26,23,22,21},{},{29,24,32,28,22,21}};
+ short unsigned int VTKWriter::femusToVtkCellType[3][6]= {{12,10,13,9,5,3},{25,24,26,23,22,21},{29,24,32,28,22,21}};
 
 
 } //end namespace femus

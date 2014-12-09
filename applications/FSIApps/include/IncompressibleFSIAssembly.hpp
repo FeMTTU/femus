@@ -424,10 +424,10 @@ namespace femus {
 		    
 		  }
 		}
-		for(int idim=0; idim<dim; idim++) {
-		  std::cout<< supg_tau.value() <<" "<<(SupgAdvection[idim].value() - IRe*SupgLaplace[idim].value() + SupgGradP[idim].value())<<std::endl;
-		  std::cout<< SupgAdvection[idim].value()<<" "<< -IRe*SupgLaplace[idim].value()<<std::endl;
-		}
+		//for(int idim=0; idim<dim; idim++) {
+		  //std::cout<< supg_tau.value() <<" "<<(SupgAdvection[idim].value() - IRe*SupgLaplace[idim].value() + SupgGradP[idim].value())<<std::endl;
+		  //std::cout<< SupgAdvection[idim].value()<<" "<< -IRe*SupgLaplace[idim].value()<<std::endl;
+		//}
 		
 		for(int idim=0; idim<dim; idim++) {
 		  adept::adouble value = (-AdvaleVAR[idim]      	     // advection term	

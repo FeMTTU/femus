@@ -49,9 +49,9 @@ void MeshMetisPartitioning::DoPartition() {
 
 #else  
    
-  unsigned eind_size = _mesh.el->GetElementNumber("Hex")*NVE[0][3]      + _mesh.el->GetElementNumber("Tet")*NVE[1][3] 
-                     + _mesh.el->GetElementNumber("Wedge")*NVE[2][3]    + _mesh.el->GetElementNumber("Quad")*NVE[3][3] 
-                     + _mesh.el->GetElementNumber("Triangle")*NVE[4][3] + _mesh.el->GetElementNumber("Line")*NVE[5][3];
+  unsigned eind_size = _mesh.el->GetElementNumber("Hex")*NVE[0][2]      + _mesh.el->GetElementNumber("Tet")*NVE[1][2] 
+                     + _mesh.el->GetElementNumber("Wedge")*NVE[2][2]    + _mesh.el->GetElementNumber("Quad")*NVE[3][2] 
+                     + _mesh.el->GetElementNumber("Triangle")*NVE[4][2] + _mesh.el->GetElementNumber("Line")*NVE[5][2];
 
 
   int nelem = _mesh.GetNumberOfElements();
@@ -78,9 +78,9 @@ void MeshMetisPartitioning::DoPartition() {
   unsigned counter=0;
   for (unsigned iel=0; iel<nelem; iel++) {
     unsigned ielt=_mesh.el->GetElementType(iel);
-    eptr[iel+1]=eptr[iel]+NVE[ielt][3];
+    eptr[iel+1]=eptr[iel]+NVE[ielt][2];
     
-    for (unsigned inode=0; inode<_mesh.el->GetElementDofNumber(iel,3); inode++){
+    for (unsigned inode=0; inode<_mesh.el->GetElementDofNumber(iel,2); inode++){
       eind[counter]=_mesh.el->GetElementVertexIndex(iel,inode)-1;
     
       counter++;

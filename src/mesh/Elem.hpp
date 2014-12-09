@@ -40,10 +40,10 @@ public:
     unsigned GetMeshDof(const unsigned iel,const unsigned &inode,const unsigned &type)const;
 
     /** To be Added */
-    unsigned GetElementDofNumber(const unsigned &iel,const unsigned &type=3) const;
+    unsigned GetElementDofNumber(const unsigned &iel,const unsigned &type) const;
 
     /** To be Added */
-    unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type=2) const;
+    unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const;
 
     /** Return the local->global node number */
     unsigned GetElementVertexIndex(const unsigned &iel,const unsigned &inode)const {
@@ -229,13 +229,13 @@ private:
 };
 
 //vertexes,edges,faces,interior,element,element+derivatives
-  const unsigned NVE[6][6]= {
-    {8,20,26,27,1,4},  //hex
-    {4,10,10,10,1,4},   //tet
-    {6,15,18,18,1,4},   //wedge
-    {4, 8, 8, 9,1,3},   //quad
-    {3, 6, 6, 6,1,3},   //tri
-    {2, 3, 3, 3,1,2}    //line
+  const unsigned NVE[6][5]= {
+    {8,20,27,1,4},  //hex
+    {4,10,10,1,4},   //tet
+    {6,15,18,1,4},   //wedge
+    {4, 8, 9,1,3},   //quad
+    {3, 6, 6,1,3},   //tri
+    {2, 3, 3,1,2}    //line
   };
 
 /**
