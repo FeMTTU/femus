@@ -23,7 +23,6 @@ public:
 
 // FE ==========
     static  FEElemBase* build(const std::string geomel_id_in, const uint fe_family);
-// GeomEl ======
     
 // Multigrid ===   //only VV
     virtual float get_embedding_matrix(const uint,const uint,const uint) = 0;  //should be geom_el
