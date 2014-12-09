@@ -59,7 +59,7 @@
 
   // ======= Mesh =====
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
-  Mesh mesh(files,mesh_map,Lref);
+  MeshTwo mesh(files,mesh_map,Lref);
   
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
   RunTimeMap<double> box_map("Box",files._output_path);

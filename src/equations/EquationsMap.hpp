@@ -18,7 +18,7 @@ namespace femus {
 
 class Utils;
 class Physics;
-class Mesh;
+class MeshTwo;
 class FEElemBase;
 class elem_type;
 class TimeLoop;
@@ -33,7 +33,7 @@ public:
     Files&       _files;
     Physics&     _phys;
     QuantityMap& _qtymap;
-    Mesh&        _mesh;
+    MeshTwo&     _mesh;
     std::vector<FEElemBase*> &  _AbstractFE;
     std::vector< std::vector<elem_type*> >  &  _elem_type;
     std::vector<Gauss>       _qrule;
@@ -43,7 +43,7 @@ public:
     EquationsMap( Files& files_in,
 		  Physics& mgphys_in,
 		  QuantityMap& qtymap_in,
-		  Mesh& mgmesh_in,
+		  MeshTwo& mgmesh_in,
 		  std::vector<FEElemBase*> & absfe_in,
                   std::vector< std::vector<elem_type*> > & elem_type_in,
 		  std::vector<Gauss> qrule_in,

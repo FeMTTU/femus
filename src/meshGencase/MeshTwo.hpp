@@ -27,13 +27,13 @@ class Domain;
 
 
   
-class Mesh  {
+class MeshTwo  {
 
 public:
 
 //===== Constructors/ Destructor ===========
-     Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref);
-//     ~Mesh ();
+     MeshTwo (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref);
+//     ~MeshTwo ();
     void clear ();
 
     //======= Print/read functions =======

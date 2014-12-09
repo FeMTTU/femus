@@ -22,7 +22,7 @@ namespace femus {
 
 
 // ========================================================
-Mesh::Mesh (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref) :
+MeshTwo::MeshTwo (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref) :
          _files(files_in),
          _mesh_rtmap(map_in),
          _dim(map_in.get("dimension")),
@@ -112,12 +112,12 @@ if ( _dim == 1  && (map_in.get("geomel_type") != LINE ) )
 }
 
 // ========================================================
-// Mesh::~Mesh ()  {
+// MeshTwo::~Mesh ()  {
 //   
 // }
 
 // ========================================================
-void Mesh::clear ()  {
+void MeshTwo::clear ()  {
  
    for (uint imesh =0; imesh<_NoLevels+1; imesh++) {
     delete []_Qnode_lev_Qnode_fine[imesh];
@@ -152,7 +152,7 @@ void Mesh::clear ()  {
 
 // ========================================================
 //This function transforms the node coordinates into the reference node coordinates
-  void Mesh::TransformElemNodesToRef(const uint vb,const double* xx_qnds, double* refbox_xyz) const {
+  void MeshTwo::TransformElemNodesToRef(const uint vb,const double* xx_qnds, double* refbox_xyz) const {
    
    double*   x_in = new double[_dim];
    double*   x_out = new double[_dim];
@@ -176,7 +176,7 @@ void Mesh::clear ()  {
 
 
 // ========================================================
-  void Mesh::SetDomain(Domain* domain_in)  {
+  void MeshTwo::SetDomain(Domain* domain_in)  {
     
     _domain = domain_in;
     
@@ -184,7 +184,7 @@ void Mesh::clear ()  {
   }
   
  // ========================================================
-  Domain* Mesh::GetDomain() const {
+  Domain* MeshTwo::GetDomain() const {
     
    return _domain; 
    
@@ -196,7 +196,7 @@ void Mesh::clear ()  {
 //is this function for ALL PROCESSORS 
 // or only for PROC==0? Seems to be for all processors
 // TODO do we need the leading "/" for opening a dataset?
-void Mesh::ReadMeshFile()   {
+void MeshTwo::ReadMeshFile()   {
 
   std::string    basemesh = DEFAULT_BASEMESH;
   std::string      ext_h5 = DEFAULT_EXT_H5;
@@ -209,7 +209,7 @@ void Mesh::ReadMeshFile()   {
 //==================================
   std::cout << " Reading mesh from= " <<  meshname.str() <<  std::endl;
   hid_t  file_id = H5Fopen(meshname.str().c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
-//   if (file_id < 0) {std::cout << "Mesh::read_c(): File Mesh input in data_in is missing"; abort();}
+//   if (file_id < 0) {std::cout << "MeshTwo::read_c(): File Mesh input in data_in is missing"; abort();}
 // he does not do this check, if things are wrong the H5Fopen function detects the error
 
 //==================================
@@ -221,11 +221,11 @@ void Mesh::ReadMeshFile()   {
 //==================================
 // CHECKS 
 // ===================== 
- if (_NoLevels !=  topdata[2])  {std::cout << "Mesh::read_c. Mismatch: the number of mesh levels is " <<
+ if (_NoLevels !=  topdata[2])  {std::cout << "MeshTwo::read_c. Mismatch: the number of mesh levels is " <<
    "different in the mesh file and in the configuration file" << std::endl;abort(); }
 
 
- if (_NoSubdom != topdata[3])  {std::cout << "Mesh::read_c. Mismatch: the number of mesh subdomains is " << _NoSubdom
+ if (_NoSubdom != topdata[3])  {std::cout << "MeshTwo::read_c. Mismatch: the number of mesh subdomains is " << _NoSubdom
                                    << " while the processor size of this run is " << paral::get_size()
                                    << ". Re-run gencase and your application with the same number of processors" << std::endl;abort(); }
   
@@ -234,14 +234,14 @@ void Mesh::ReadMeshFile()   {
 //in fact it is that file that sets the space in which we are simulating...
 //I'll put a check 
 
-if (_dim != topdata[0] ) {std::cout << "Mesh::read_c. Mismatch: the mesh dimension is " << _dim
+if (_dim != topdata[0] ) {std::cout << "MeshTwo::read_c. Mismatch: the mesh dimension is " << _dim
                                    << " while the dimension in the configuration file is " << _mesh_rtmap.get("dimension")
                                    << ". Recompile either gencase or your application appropriately" << std::endl;abort();}
 //it seems like it doesn't print to file if I don't put the endline "<< std::endl".
 //Also, "\n" seems to have no effect, "<< std::endl" must be used
 //This fact doesn't seem to be related to PARALLEL processes that abort sooner than the others
 
-if ( VB !=  topdata[1] )  {std::cout << "Mesh::read_c. Mismatch: the number of integration dimensions is " << topdata[1]
+if ( VB !=  topdata[1] )  {std::cout << "MeshTwo::read_c. Mismatch: the number of integration dimensions is " << topdata[1]
                                    << " while we have VB= " << VB 
                                    << ". Re-run gencase and your application appropriately " << std::endl;abort(); }
 
@@ -262,7 +262,7 @@ if ( VB !=  topdata[1] )  {std::cout << "Mesh::read_c. Mismatch: the number of i
   IO::read_UIhdf5(file_id, "/ELNODES_VB",_type_FEM);
 
   for (int vb=0; vb<VB;vb++) {
-if (_type_FEM[vb] !=  GetGeomEl(_dim-1-vb,QQ)._elnds )  {std::cout << "Mesh::read_c. Mismatch: the element type of the mesh is" <<
+if (_type_FEM[vb] !=  GetGeomEl(_dim-1-vb,QQ)._elnds )  {std::cout << "MeshTwo::read_c. Mismatch: the element type of the mesh is" <<
    "different from the element type as given by the GeomEl" << std::endl; abort(); }
   }
   
@@ -406,7 +406,7 @@ for (int vb=0; vb < VB; vb++)    {
 /// Write mesh to hdf5 file (namefile) 
 ///              as Mesh class (Mesh.h): 
 
-void Mesh::PrintMeshFile (const std::string & /*namefile*/) const
+void MeshTwo::PrintMeshFile (const std::string & /*namefile*/) const
 { 
 
   std::cout << "Implement it following the Gencase print mesh function" << std::endl; abort();
@@ -421,7 +421,7 @@ void Mesh::PrintMeshFile (const std::string & /*namefile*/) const
 //=============================================
 //this is different from the Mesh class function
 //because we are using quadratic elements
-void Mesh::PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std::string filename) const {
+void MeshTwo::PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std::string filename) const {
 
     if (_iproc==0)   {
 
@@ -461,7 +461,7 @@ void Mesh::PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std::strin
 
 // ========================================================
 /// It manages the printing in Xdmf format
-void Mesh::PrintForVisualizationAllLEVAllVB()  const {
+void MeshTwo::PrintForVisualizationAllLEVAllVB()  const {
   
     const uint iproc=_iproc;
    if (iproc==0) {
@@ -474,7 +474,7 @@ void Mesh::PrintForVisualizationAllLEVAllVB()  const {
 
 
 // ==================================================================
-void Mesh::PrintMultimeshXdmf() const {
+void MeshTwo::PrintMultimeshXdmf() const {
 
     std::string basepath  = _files._app_path;
     std::string input_dir = DEFAULT_CASEDIR;
@@ -491,7 +491,7 @@ void Mesh::PrintMultimeshXdmf() const {
     top_file << basemesh << ext_h5;
 
     if (out.fail()) {
-        std::cout << "Mesh::PrintMultimeshXdmf: The file is not open" << std::endl;
+        std::cout << "MeshTwo::PrintMultimeshXdmf: The file is not open" << std::endl;
         abort();
     }
 
@@ -550,7 +550,7 @@ void Mesh::PrintMultimeshXdmf() const {
  //but if you put ALL THE DATA in THE SAME FOLDER as the READER(s)
  //then they are always independent and the data will always be readable
 
- void Mesh::PrintXDMFAllLEVAllVB() const {
+ void MeshTwo::PrintXDMFAllLEVAllVB() const {
 
   std::string     basemesh = DEFAULT_BASEMESH;
   std::string     ext_xdmf = DEFAULT_EXT_XDMF;
@@ -585,7 +585,7 @@ void Mesh::PrintMultimeshXdmf() const {
 
 
 // ========================================================
-void Mesh::PrintXDMFGridVB(std::ofstream& out,
+void MeshTwo::PrintXDMFGridVB(std::ofstream& out,
 			      std::ostringstream& top_file,
 			      std::ostringstream& geom_file, const uint Level, const uint vb) const  {
 
@@ -619,7 +619,7 @@ void Mesh::PrintXDMFGridVB(std::ofstream& out,
 /// It prints the connectivity in hdf5 format
 /// The changes are only for visualization of quadratic FEM
 
-void Mesh::PrintConnLinAllLEVAllVB() const { 
+void MeshTwo::PrintConnLinAllLEVAllVB() const { 
 
     std::string    basemesh = DEFAULT_BASEMESH;
     std::string    ext_h5   = DEFAULT_EXT_H5;
@@ -644,7 +644,7 @@ void Mesh::PrintConnLinAllLEVAllVB() const {
 
 
 
-void Mesh::PrintConnLinVB(hid_t file, const uint Level, const uint vb) const {
+void MeshTwo::PrintConnLinVB(hid_t file, const uint Level, const uint vb) const {
   
    int conn[8][8];   uint *gl_conn;
   
@@ -798,7 +798,7 @@ void Mesh::PrintConnLinVB(hid_t file, const uint Level, const uint vb) const {
 // ===============================================================
 /// this function is done only by _iproc == 0!
 /// it prints the PID index on the cells of the linear mesh
-void Mesh::PrintSubdomFlagOnLinCells(std::string filename) const {
+void MeshTwo::PrintSubdomFlagOnLinCells(std::string filename) const {
   
  if (_iproc==0)   {
 
@@ -838,7 +838,7 @@ return;
 
 
 
-void Mesh::FillNodeSto() {
+void MeshTwo::FillNodeSto() {
 
 // ================================================
 //    NODES (in nd_sto and nod_val)
@@ -869,7 +869,7 @@ void Mesh::FillNodeSto() {
 
 
 //=====================================
-void Mesh::ComputeElemOffsetsBySubdLevel() {
+void MeshTwo::ComputeElemOffsetsBySubdLevel() {
     _off_el = new int*[VB];
     int sum_el_vb[VB];
     for (int vb=0;vb < VB; vb++) {
@@ -890,7 +890,7 @@ void Mesh::ComputeElemOffsetsBySubdLevel() {
 
 
 //====================================
-void Mesh::ComputeNodeOffsetsBySubdLevel()  {
+void MeshTwo::ComputeNodeOffsetsBySubdLevel()  {
     _off_nd = new int*[QL_NODES];
     int sum_nd_ql[QL_NODES];
     for (int fe=0;fe < QL_NODES; fe++) {
@@ -920,7 +920,7 @@ void Mesh::ComputeNodeOffsetsBySubdLevel()  {
 // this RECEIVES a NODE in FEMUS ordering
 // and YIELDS the DOF NUMBERING of ONE SCALAR variable (sometimes QQ, sometimes LL, in MG...)
 // ==================================================================
-void Mesh::ComputeNodeMapExtLevels() {
+void MeshTwo::ComputeNodeMapExtLevels() {
 
     int NegativeOneFlag = -1;  
   

@@ -22,7 +22,7 @@ namespace femus {
 class Files        ;
 class Physics      ;
 class EquationsMap ;
-class Mesh         ;
+class MeshTwo      ;
 class FEElemBase   ;
 class Quantity     ;
 class QuantityLocal;
@@ -165,7 +165,7 @@ protected:
 //=======================================================================
   Files                     & _files;        ///<  file class pointer
   Physics                   & _phys;         ///<  parameter class pointer
-  Mesh                      & _mesh;         ///<  mesh pointer
+  MeshTwo                   & _mesh;         ///<  mesh pointer
   std::vector<FEElemBase*>  &  _AbstractFE;  ///<  FE
   EquationsMap              & _eqnmap;       ///<  equation map  pointer
 

@@ -36,7 +36,7 @@ namespace femus {
 
 // ========================================================
 GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const double Lref, const std::string mesh_file_in)
-     : Mesh(files_in,map_in,Lref)
+     : MeshTwo(files_in,map_in,Lref)
 {
 
   _mesh_file.assign(mesh_file_in);  //TODO it seems like moving from protected to public in Mesh changed the RUNTIME behaviour also!!!!!

@@ -28,7 +28,7 @@ namespace femus {
 class FEElemBase;
 
 
-class GenCase : public Mesh {
+class GenCase : public MeshTwo {
 
 public:
 

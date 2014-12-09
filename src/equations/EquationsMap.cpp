@@ -29,7 +29,7 @@ namespace femus {
 EquationsMap::EquationsMap(Files& files_in,
                            Physics& mgphys_in,
                            QuantityMap& qtymap_in,
-                           Mesh& mgmesh_in,
+                           MeshTwo& mgmesh_in,
                            std::vector<FEElemBase*> & absfe_in,
                            std::vector< std::vector<elem_type*> >  & elem_type_in,
 			   std::vector<Gauss>   qrule_in,

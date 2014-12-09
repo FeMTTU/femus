@@ -13,7 +13,7 @@ class EquationsMap;
 
 
 class Utils;
-class Mesh;
+class MeshTwo;
 
 class TempPhysics : public Physics {
 

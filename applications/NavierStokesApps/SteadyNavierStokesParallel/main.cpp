@@ -57,7 +57,7 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=2;
+  nm=3;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
   nr=0;
@@ -85,8 +85,8 @@ int main(int argc,char **args) {
   
   // generate solution vector
   // ml_sol.AddSolution("T",LAGRANGE,SECOND);
-  ml_sol.AddSolution("U",LAGRANGE, FIRST);
-  ml_sol.AddSolution("V",LAGRANGE, FIRST);
+  ml_sol.AddSolution("U",LAGRANGE, SECOND);
+  ml_sol.AddSolution("V",LAGRANGE, SECOND);
   // the pressure variable should be the last for the Schur decomposition
   // ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
   

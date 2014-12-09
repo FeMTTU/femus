@@ -16,7 +16,7 @@ namespace femus {
 
 // Forward class
 class Utils;
-class Mesh;
+class MeshTwo;
 
 // ========================================
 //            Physics class
@@ -32,8 +32,8 @@ public:
   RunTimeMap<double>     _physrtmap;
 
   //mesh
-  Mesh*                 _mesh;   ///< Mesh  pointer
-  inline void   set_mesh(Mesh * mgmesh_in){    _mesh = mgmesh_in;   return;  }   /// Set mesh pointer
+  MeshTwo *               _mesh;   ///< Mesh  pointer
+  inline void   set_mesh(MeshTwo * mgmesh_in){    _mesh = mgmesh_in;   return;  }   /// Set mesh pointer
 
   // Costructor and destructor ----------------------------
    Physics(RunTimeMap<double> & physmap_in); ///< Constructor
