@@ -4,7 +4,7 @@
 #include "NumericVector.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
-#include "FemTTUInit.hpp"
+#include "FemusInit.hpp"
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
@@ -28,7 +28,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 int main(int argc,char **args) {
   
   /// Init Petsc-MPI communicator
-  FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
+  FemusInit mpinit(argc,args,MPI_COMM_WORLD);
   
   /// INIT MESH =================================  
   

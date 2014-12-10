@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: FemTTUInit
+ Module: FemusInit
  Authors: Simone Bnà, Giorgio Bornia
 
  Copyright (c) FEMTTU
@@ -35,7 +35,7 @@
 #endif
 
 // ========================================
-/// Class FemTTUInit
+/// Class FemusInit
 // ========================================
 
 
@@ -43,15 +43,15 @@ namespace femus {
 
 
 
-class FemTTUInit {
+class FemusInit {
   
 public:
   
     /// Constructor
-    FemTTUInit(int & argc,char** & argv, MPI_Comm comm_world_in = MPI_COMM_WORLD);
+    FemusInit(int & argc,char** & argv, MPI_Comm comm_world_in = MPI_COMM_WORLD);
 
     /// Destructor
-    ~FemTTUInit();
+    ~FemusInit();
     
 };
 

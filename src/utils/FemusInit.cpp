@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: FemTTUInit
+ Module: FemusInit
  Authors: Simone Bnà
 
  Copyright (c) FEMTTU
@@ -17,7 +17,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include <iostream>
-#include "FemTTUInit.hpp"
+#include "FemusInit.hpp"
 
 
 namespace femus {
@@ -26,7 +26,7 @@ namespace femus {
 
 // =======================================================
 /// This function initializes the libraries if it is parallel
-FemTTUInit::FemTTUInit(
+FemusInit::FemusInit(
     int & argc,            // integer program input
     char** & argv,         // char program input
     MPI_Comm comm_world_in // communicator for MPI direct
@@ -56,7 +56,7 @@ FemTTUInit::FemTTUInit(
 }
 
 
-FemTTUInit::~FemTTUInit() { 
+FemusInit::~FemusInit() { 
 
 #ifdef HAVE_PETSC
     PetscFinalize();

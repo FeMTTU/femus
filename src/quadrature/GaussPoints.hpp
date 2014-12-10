@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: FemTTUInit
+ Module: FemusInit
  Authors: Eugenio Aulisa, Giorgio Bornia
  
  Copyright (c) FEMTTU

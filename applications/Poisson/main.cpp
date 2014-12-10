@@ -5,7 +5,7 @@
 #include "NumericVector.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
-#include "FemTTUInit.hpp"
+#include "FemusInit.hpp"
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
@@ -78,7 +78,7 @@ int main(int argc,char **argv) {
     }
 
   /// Init Petsc-MPI communicator
-    FemTTUInit mpinit(argc,argv,MPI_COMM_WORLD);
+    FemusInit mpinit(argc,argv,MPI_COMM_WORLD);
     
     // input parser pointer
     std::auto_ptr<InputParser> inputparser = InputParser::build(path);
