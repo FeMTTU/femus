@@ -84,8 +84,8 @@ int main(int argc,char **args) {
   
   // generate solution vector
   // ml_sol.AddSolution("T",LAGRANGE,SECOND);
-  ml_sol.AddSolution("U",LAGRANGE, SECOND);
-  ml_sol.AddSolution("V",LAGRANGE, SECOND);
+  ml_sol.AddSolution("U",LAGRANGE, FIRST);
+  ml_sol.AddSolution("V",LAGRANGE, FIRST);
   // the pressure variable should be the last for the Schur decomposition
   // ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
   
@@ -674,9 +674,24 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	      }
 	      for(int j=0; j<nabla_dim; j++) {
 		NablaSolVAR[i][j]+=nablaphi[inode*nabla_dim+j]*soli;
+		//cout<<nablaphi[inode*nabla_dim+j]<<" ";
 	      }
+	      //cout<<endl;
 	    }
 	  } 
+	  
+// 	  for(int i=0;i<dim;i++){
+// 	    for(int j=0; j<nabla_dim; j++) {
+// 	      if(fabs(NablaSolVAR[i][j]) > 1.0e-10){
+// 		cout<<NablaSolVAR[i][j]<<endl;
+// 		double gg;
+// 		std::cin>>gg;
+// 	      }
+// 	    }
+// 	  }
+	  
+	  
+	  
 	  // pressure, solution and gradient 
 	  SolVAR[dim]=0.;
 	  for(int j=0; j<dim; j++) {
