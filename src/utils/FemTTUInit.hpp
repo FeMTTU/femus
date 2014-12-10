@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: FemTTUInit
- Authors: Simone Bnà
+ Authors: Simone Bnà, Giorgio Bornia
 
  Copyright (c) FEMTTU
  All rights reserved.
@@ -48,7 +48,7 @@ class FemTTUInit {
 public:
   
     /// Constructor
-    FemTTUInit(int & argc,char** & argv,MPI_Comm comm_world_in=MPI_COMM_WORLD);
+    FemTTUInit(int & argc,char** & argv, MPI_Comm comm_world_in = MPI_COMM_WORLD);
 
     /// Destructor
     ~FemTTUInit();

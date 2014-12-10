@@ -10,7 +10,7 @@
 
 // FEMuS
 #include "paral.hpp" 
-#include "FemusInit.hpp"
+#include "FemTTUInit.hpp"
 #include "Files.hpp"
 #include "Physics.hpp"
 #include "GeomEl.hpp"
@@ -41,7 +41,7 @@
  int main(int argc, char** argv) {
 
   // ====== FemusInit =====  //put this as the first call because mpi is initialized here
-  FemusInit init(argc,argv);
+  FemTTUInit init(argc,argv);
   
  // ======= Files ========================
   Files files("./"); 

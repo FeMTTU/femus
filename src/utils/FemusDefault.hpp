@@ -3,13 +3,8 @@
 
 
 // This file is meant to hold all the DEFAULT configuration of the library.
-// The idea is that EACH PARAMETER HER CAN EVENTUALLY BE OVERRIDDEN at RUNTIME,
+// The idea is that EACH PARAMETER HERE CAN EVENTUALLY BE OVERRIDDEN at RUNTIME,
 // either from a file to be read at runtime, or from the main, or from command line, or something
-
-// ALWAYS REMEMBER THAT THE IFDEFS ARE DANGEROUS BECAUSE YOU HAVE TO MAKE SURE 
-// THAT THIS HEADER IS INCLUDED IN THE CORRECT PLACES
-// FOR EVERY MACRO VARIABLE YOU SHOULD DO A GREP TO FIND ALL THE FILES IN WHICH IT IS NEEDED
-// AND THEN INCLUDE THIS HEADER EXPLICITLY, NOT THROUGH INDIRECT INCLUDES!
 
 
 //*********************************************
@@ -19,7 +14,6 @@
 #define DEFAULT_EXT_IN         ".in" 
 #define DEFAULT_EXT_LOG        ".log"
 #define DEFAULT_AUX_XDMF       "Xdmf.dtd" 
-// TODO ".gam" and ".med" for gambit and salome should be known to libmesh but we don't want to put OUR OWN includes in LIBMESH!!! 
 // // // // # ----  Mesh class ----
 #define DEFAULT_BASEMESH      "mesh" 
 #define DEFAULT_MULTIMESH     "multimesh" 
@@ -62,11 +56,6 @@
 
 #if DEFAULT_PRINT_TIME==1
 #include <ctime>
-
-
-namespace femus {
-
-
 #endif
 //*********************************************
 
@@ -99,44 +88,4 @@ namespace femus {
 
 
 
-} //end namespace femus
-
-
-
 #endif
-
-
-
-//********* CHOICE of RESTRICTOR TYPE *********
-//The MG matrices are generated for ONE SCALAR VARIABLE,
-//both the QUADRATIC and the LINEAR part,
-//and referred to the GLOBAL MATRIX.
-//They are available from the SolverBase class but
-//they are read in the SolDA class
-//I think they depend on the choice of the FE spaces
-//for solving the considered equation
-
-/*
- * This file is related to the configuration of the multigrid algorithm
- * Now the idea is the following. We cannot have so many files for configuration,
- * at least not in this manner.
- * If we want to have separate files, we may consider having one file per CLASS.
- * So we should do a class for multigrid management, which shouldnt be a bad idea 
- * actually. Now, the point is: we may want to configure classes at run-time or at compile time.
- * so we need a .in in one case, or a .h .
- * 
- * This MG_conf is basically a configuration of the EqnBASE class for now.
- * 
- * Notice that this conf file is used by both MAIN and GENCASE
- * 
- * Now, the point is: if you have to configure something,
- * you can decide some ways.
- *    At COMPILE TIME, you may either give the #define directives,
- * or you specify the parameters in the MAIN function,
- * so that they are passed to your class or function somehow.
- *    At RUN TIME, you decide a STANDARD way to READ either from file,
- * or from command line. In any case, the way you specify 
- * a parameter must be DOCUMENTED: you must know the exact word
- * for that parameter, for instance "dt" in a file or "--dt" at command line.
- * Well, this also holds for the #define variables.
- */
