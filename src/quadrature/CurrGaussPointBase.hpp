@@ -30,9 +30,14 @@ class EquationsMap;
     CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in );
    ~CurrGaussPointBase();
  
- double**  get_tangent_ptr();   //TODO should be only for BOUNDARY 
- double*   get_normal_ptr();   //TODO should be only for BOUNDARY 
-virtual double        JacVectVV_g(const uint vbflag, QuantityLocal& xyz )/*const*/ = 0;  //TODO should be only for VOLUME
+   inline const uint GetElemDim(const uint vb_in) const {
+     return _IntDim[vb_in];
+   }
+     
+   
+   double**  get_tangent_ptr();   //TODO should be only for BOUNDARY 
+   double*   get_normal_ptr();   //TODO should be only for BOUNDARY 
+virtual double        JacVectVV_g(QuantityLocal& xyz )/*const*/ = 0;  //TODO should be only for VOLUME
 virtual double        JacVectBB_g(const uint vbflag, QuantityLocal& xyz )/* const*/ = 0;  //TODO should be only for BOUNDARY 
 
 virtual void         SetPhiElDofsFEVB_g(const uint qlflag, const uint qp) = 0;
@@ -47,7 +52,6 @@ inline double Phi(const uint ql,const uint dof) const {
 
   static CurrGaussPointBase & build(const uint vb_in, EquationsMap& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
 
-    uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
     double* _dphidxezeta_ndsQLVB_g[QL];  //canonical derivatives
     double*    _dphidxyz_ndsQLVB_g[QL];  //physical derivatives
     double*  _dphidxyz_ndsQLVB_g3D[QL];  //physical derivatives in 3D
@@ -55,6 +59,7 @@ inline double Phi(const uint ql,const uint dof) const {
   
   protected:
     
+   uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
    EquationsMap         & _eqnmap;
    std::vector<elem_type*>  &  _elem_type;
    Gauss   _qrule;

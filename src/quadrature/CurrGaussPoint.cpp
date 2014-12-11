@@ -435,13 +435,10 @@ return det;
 //it fills _InvJac_g: NOTICE that THIS IS UNIQUE, there is no distinction between LINEAR and QUADRATIC.
 
 template <unsigned int FM_DIM>
-double CurrGaussPoint<FM_DIM>::JacVectVV_g(const uint vb, QuantityLocal& xyz )/* const*/ {
+double CurrGaussPoint<FM_DIM>::JacVectVV_g(QuantityLocal& xyz )/* const*/ {
 
 const uint Order    = xyz._FEord;  //order of the coordinate transformation
-const uint xoff     = _eqnmap._mesh.GetGeomEl( _eqnmap._mesh.get_dim()-1-vb, Order)._elnds;
-const uint elnshape =            _elem_type[Order]->GetNDofs(); 
-// const uint space_dim = _eqnmap._mesh._dim;
-
+const uint xoff     = xyz._ndof;
   
 //   double dxyzdxezeta_g[FM_DIM][FM_DIM]; //first index: x, second index: csi  
   
@@ -450,8 +447,8 @@ const uint elnshape =            _elem_type[Order]->GetNDofs();
 
       for (uint i=0; i< FM_DIM; i++){
 	for (uint j=0; j< FM_DIM; j++){
-          for (uint s=0;s<(uint)elnshape;s++) {
-	  _dxyzdxezeta_g[i][j] += xyz._val_dofs[s + i * xoff]*_dphidxezeta_ndsQLVB_g[Order][s+j*(elnshape)];
+          for (uint s=0;s<(uint)xoff;s++) {
+	  _dxyzdxezeta_g[i][j] += xyz._val_dofs[s + i * xoff]*_dphidxezeta_ndsQLVB_g[Order][s+j*xoff];
 	  }
 	}
       }

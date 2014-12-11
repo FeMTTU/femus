@@ -266,7 +266,7 @@ for (uint fe = 0; fe < QL; fe++)   {
   currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp); 
 }
 	  
-const double      det = dt*currgp.JacVectVV_g(vb,xyz);
+const double      det = dt*currgp.JacVectVV_g(xyz);
 const double dtxJxW_g = det*_eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
@@ -732,7 +732,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
 
      for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }  
      
-   const double  Jac_g = currgp.JacVectVV_g(vb,xyz);  //not xyz_refbox!      
+   const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
    const double  wgt_g = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
 
      for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
@@ -857,7 +857,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
        currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  
     }  
      
-      const double  Jac_g = currgp.JacVectVV_g(vb,xyz);  //not xyz_refbox!      
+      const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
       const double  wgt_g = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
 
   Tlift.val_g();

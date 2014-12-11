@@ -72,7 +72,7 @@ return;
 
  void QuantityLocal::grad_g(const uint vbflag) {
    
-        const uint ndim = _currGP._IntDim[vbflag];
+        const uint ndim = _currGP.GetElemDim(vbflag);
    const uint   el_ndof = _ndof;
    const uint     nvars = _dim;
    const uint  fe_order = _FEord;
