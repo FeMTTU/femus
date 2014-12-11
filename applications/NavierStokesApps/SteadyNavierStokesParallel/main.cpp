@@ -562,19 +562,26 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	vx[i].resize(nve);
       }
     
+         
       for (unsigned i=0;i<nve;i++) {
 	unsigned inode=myel->GetMeshDof(kel,i,SolType2);
-	unsigned inode_Metis=mymsh->GetMetisDof(inode,SolType2);	
+	unsigned inode_Metis=mymsh->GetMetisDof(inode,SolType2);
+	unsigned inode2_Metis=mymsh->GetMetisDof(inode,2);	
+	
 	for(int j=0; j<dim; j++) {
 	  // velocity dofs
 	  Soli[indexVAR[j]][i] =  (*mysolution->_Sol[indVAR[j]])(inode_Metis);
 	  dofsVAR[j][i] = myLinEqSolver->GetKKDof(indVAR[j],indexVAR[j],inode); 
 	  aRhs[indexVAR[j]][i] = 0.;
 	  //coordinates
-	  vx[j][i]=  (*mymsh->_coordinate->_Sol[j])(inode_Metis); 
+	  vx[j][i]=  (*mymsh->_coordinate->_Sol[j])(inode2_Metis); 
 	  
 	}
       }
+      
+      
+      
+      
       
       // pressure dofs
       for (unsigned i=0;i<nve1;i++) {
@@ -674,7 +681,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	      }
 	      for(int j=0; j<nabla_dim; j++) {
 		NablaSolVAR[i][j]+=nablaphi[inode*nabla_dim+j]*soli;
-		//cout<<nablaphi[inode*nabla_dim+j]<<" ";
+		//cout<<nablaphi[inode*nabla_dim+j].value()<<" ";
 	      }
 	      //cout<<endl;
 	    }
