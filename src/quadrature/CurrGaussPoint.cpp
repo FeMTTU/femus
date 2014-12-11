@@ -271,16 +271,16 @@ void CurrGaussPoint<3>::ComputeJacBB() {
 
 
 template <unsigned int FM_DIM>
-double CurrGaussPoint<FM_DIM>::JacVectBB_g(const uint vb, QuantityLocal& xyz )/* const*/ {
+double CurrGaussPoint<FM_DIM>::JacVectBB_g(QuantityLocal& xyz )/* const*/ {
   
   //here you check assert(_is_ready_for_Jac);
 
 //     const uint spacedim = _eqnmap._mesh._dim;
 
     const uint    Order = xyz._FEord;  //order of the coordinate transformation 
-    const uint     xoff = _eqnmap._mesh.GetGeomEl(FM_DIM-1-vb, Order)._elnds;
-    const uint elnshape = _elem_type[Order]->GetNDofs();
-//     double dxyzdxieta_g[FM_DIM - 1][FM_DIM]; 
+    const uint     xoff = xyz._ndof;
+
+    //     double dxyzdxieta_g[FM_DIM - 1][FM_DIM]; 
     //TODO TODO TODO NOW I'LL PUT IT  CLASS MEMBER, (IT SHOULD STAY TOGETHER WITH _normal, _tangent and _jacobian...) 
     // I don't know if it wins to have the STATIC ALLOCATION outside or not...
     // because now that this is a CLASS VARIABLE, you have to imagine that there is like a THIS pointer in front of every occurrence,
@@ -292,8 +292,8 @@ double CurrGaussPoint<FM_DIM>::JacVectBB_g(const uint vb, QuantityLocal& xyz )/*
 
       for (uint i=0; i< FM_DIM; i++){
 	for (uint j=0; j<FM_DIM - 1; j++){
-          for (uint s=0;s<elnshape;s++) {
-	  _dxyzdxieta_g[j][i] += xyz._val_dofs[s +i*xoff]*_dphidxezeta_ndsQLVB_g[Order][s+j*(elnshape)];
+          for (uint s=0;s<xoff;s++) {
+	  _dxyzdxieta_g[j][i] += xyz._val_dofs[s +i*xoff]*_dphidxezeta_ndsQLVB_g[Order][s+j*xoff];
 	  }
 	}
       }
@@ -301,7 +301,7 @@ double CurrGaussPoint<FM_DIM>::JacVectBB_g(const uint vb, QuantityLocal& xyz )/*
       
     double JacSur=0.;
 
-    ComputeJacBB(); //notice that here you don't have to put the angle brackets
+    ComputeJacBB();
 
     
         JacSur = sqrt(Math::dot(_normal_g,_normal_g,FM_DIM));
@@ -440,7 +440,6 @@ double CurrGaussPoint<FM_DIM>::JacVectVV_g(QuantityLocal& xyz )/* const*/ {
 const uint Order    = xyz._FEord;  //order of the coordinate transformation
 const uint xoff     = xyz._ndof;
   
-//   double dxyzdxezeta_g[FM_DIM][FM_DIM]; //first index: x, second index: csi  
   
       for (uint i=0; i< FM_DIM; i++){
          for (uint j=0; j< FM_DIM; j++){ _dxyzdxezeta_g[i][j]=0.; } }

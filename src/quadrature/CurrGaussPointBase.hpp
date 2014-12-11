@@ -38,7 +38,7 @@ class EquationsMap;
    double**  get_tangent_ptr();   //TODO should be only for BOUNDARY 
    double*   get_normal_ptr();   //TODO should be only for BOUNDARY 
 virtual double        JacVectVV_g(QuantityLocal& xyz )/*const*/ = 0;  //TODO should be only for VOLUME
-virtual double        JacVectBB_g(const uint vbflag, QuantityLocal& xyz )/* const*/ = 0;  //TODO should be only for BOUNDARY 
+virtual double        JacVectBB_g(QuantityLocal& xyz )/* const*/ = 0;  //TODO should be only for BOUNDARY 
 
 virtual void         SetPhiElDofsFEVB_g(const uint qlflag, const uint qp) = 0;
 virtual void SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp) = 0;

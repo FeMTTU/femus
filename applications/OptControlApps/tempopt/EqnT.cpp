@@ -493,7 +493,7 @@ int el_Neum_flag=0;
     currgp.SetPhiElDofsFEVB_g (fe,qp);
     currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp); 
   }
-        const double  det   = dt*currgp.JacVectBB_g(vb,xyz);
+        const double  det   = dt*currgp.JacVectBB_g(xyz);
         const double dtxJxW_g = det * _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 

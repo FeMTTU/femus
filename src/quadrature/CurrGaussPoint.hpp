@@ -28,7 +28,7 @@ template <unsigned int FM_DIM>
     ~CurrGaussPoint();
  
 double        JacVectVV_g(QuantityLocal& xyz )/*const*/;  //TODO should be only for VOLUME
-double        JacVectBB_g(const uint vbflag, QuantityLocal& xyz )/* const*/;  //TODO should be only for BOUNDARY 
+double        JacVectBB_g(QuantityLocal& xyz )/* const*/;  //TODO should be only for BOUNDARY 
 
 
 void         SetPhiElDofsFEVB_g(const uint qlflag, const uint qp);

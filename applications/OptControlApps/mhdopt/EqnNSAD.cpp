@@ -454,7 +454,7 @@ if (_Dir_pen_fl == 1)  {
  for (uint fe = 0; fe < QL; fe++)     {        currgp.SetPhiElDofsFEVB_g (fe,qp);  } 
 for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);   }
 
-        const double det   = dt * currgp.JacVectBB_g(vb,xyz);
+        const double det   = dt * currgp.JacVectBB_g(xyz);
 	const double dtxJxW_g = det * _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================   
       
