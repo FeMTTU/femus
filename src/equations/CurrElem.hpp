@@ -75,7 +75,7 @@ class QuantityLocal;
     void  PrintOrientation() const;
     
     //TODO remove vb from these arguments
-    void  ConvertElemCoordsToMappingOrd(const uint vb,QuantityLocal& myvect) const;
+    void  ConvertElemCoordsToMappingOrd(QuantityLocal& myvect) const;
     
     /** needs the EQUATION basically */
     void  SetElDofsBc(const uint Level);

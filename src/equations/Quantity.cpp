@@ -76,12 +76,7 @@ namespace femus {
 //this function is the wrapper for computing the dofs via a function
  //this works either with LINEAR or with QUADRATIC variables, 
 //   but always with a QUADRATIC mesh
-///set the external magnetic field on the node 'eln' for the component 'ivarq'
-///for every node you get the three dofs
-///We can distinguish this in three parts:
-/// picking the COORDINATES of the NODES corresponding to the dofs
-/// converting the COORDINATES to the reference frame
-/// looping over the dofs
+
 ///the only part that is not common is providing the THREE COMPONENTS
 //this function is appropriate only for the case of a BOX DOMAIN
   //How can I neglect it in the other cases? Just set to zero and that's it, for now...
@@ -126,6 +121,8 @@ if (dof_off > offset) {std::cout << "Use a quadratic mesh for FunctionDof comput
   
   
   ////////////////QTY MAP ////////////
+  
+  
   QuantityMap::QuantityMap(Physics& phys_in): _phys(phys_in) { }
   
 

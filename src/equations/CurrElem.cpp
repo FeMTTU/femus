@@ -262,13 +262,13 @@ void CurrElem::set_el_DofObj_lev_subd(const uint Level,const uint isubd_in,const
   //its data to the xyz Vect
   
   
-void CurrElem::ConvertElemCoordsToMappingOrd(const uint vb,QuantityLocal& myvect) const {
+void CurrElem::ConvertElemCoordsToMappingOrd(QuantityLocal& myvect) const {
 
   
   const uint  elndof = myvect._ndof;
   const uint vectdim = myvect._dim;
   const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
-  const uint offset = _eqnmap._mesh.GetGeomEl(_eqnmap._mesh.get_dim()-1 - vb, mesh_ord)._elnds;
+  const uint offset = _eqnmap._mesh.GetGeomEl(GetDim()-1, mesh_ord)._elnds;
  
  //TODO ASSERT
  /* assert(*/ if (elndof > offset) {std::cout << "Quadratic transformation over linear mesh " << std::endl;abort();}  /*);*/

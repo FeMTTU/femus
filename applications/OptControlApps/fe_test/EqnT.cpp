@@ -139,7 +139,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
     currelem.set_el_DofObj_lev_subd(Level,myproc,iel);
     currelem.SetMidpoint();
 
-    currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
+    currelem.ConvertElemCoordsToMappingOrd(xyz);
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
 
     
@@ -321,7 +321,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
       currelem.set_el_DofObj_lev_subd(Level,myproc,iel);
       currelem.SetMidpoint(); 
 
-      currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
+      currelem.ConvertElemCoordsToMappingOrd(xyz);
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
      
       currelem.SetElDofsBc(Level);
@@ -495,7 +495,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
       currelem.set_el_DofObj_lev_subd(Level,myproc,iel);
       currelem.SetMidpoint();
       
-      currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
+      currelem.ConvertElemCoordsToMappingOrd(xyz);
       _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
 
 // =============== 
@@ -602,7 +602,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
       currelem.set_el_DofObj_lev_subd(Level,myproc,iel);
       currelem.SetMidpoint();
 
-      currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
+      currelem.ConvertElemCoordsToMappingOrd(xyz);
       _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
      
   for (uint qp = 0; qp < el_ngauss; qp++) {

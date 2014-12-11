@@ -3997,7 +3997,7 @@ const uint myproc= _iproc;
     currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
     currelem.SetMidpoint(); 
     
-    currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
+    currelem.ConvertElemCoordsToMappingOrd(xyz);
 
      
     for (uint qp = 0; qp < el_ngauss; qp++) {

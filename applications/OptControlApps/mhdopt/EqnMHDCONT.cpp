@@ -226,7 +226,7 @@ void EqnMHDCONT::init_equation_data() {
     currelem.set_el_DofObj_lev_subd(Level,_iproc,iel);
     currelem.SetMidpoint();
     
-    currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
+    currelem.ConvertElemCoordsToMappingOrd(xyz);
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs); 
 
     currelem.SetElDofsBc(Level);
@@ -460,7 +460,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
      currelem.set_el_DofObj_lev_subd(Level,_iproc,iel);
      currelem.SetMidpoint();
      
-     currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
+     currelem.ConvertElemCoordsToMappingOrd(xyz);
     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
 
      currelem.SetElDofsBc(Level);
