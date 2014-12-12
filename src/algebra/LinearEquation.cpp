@@ -280,11 +280,10 @@ void LinearEquation::DeletePde() {
     const int max_size = static_cast< int > (ceil(pow(3,dim)));
    
     vector < vector < int > > dofsVAR(_SolPdeIndex.size());
-    vector < int > end_ind(_SolPdeIndex.size());
+    //vector < int > end_ind(_SolPdeIndex.size());
        
     for(int i=0;i<_SolPdeIndex.size();i++){
       dofsVAR[i].reserve(max_size);
-      end_ind[i] = _msh->GetEndIndex(_SolType[_SolPdeIndex[i]]);
     }
     
     // mesh and procs
@@ -310,7 +309,7 @@ void LinearEquation::DeletePde() {
       short int kelt = _msh->el->GetElementType(kel);
       vector < int > nve(_SolPdeIndex.size());
       for(int i=0;i<_SolPdeIndex.size();i++){
-	nve[i] = _msh->el->GetElementDofNumber(kel,end_ind[i]);
+	nve[i] = _msh->el->GetElementDofNumber(kel,_SolType[_SolPdeIndex[i]]);
       }
       for(int i=0; i<_SolPdeIndex.size(); i++) {
 	dofsVAR[i].resize(nve[i]);

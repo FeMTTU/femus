@@ -59,7 +59,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
     index=1;
     index_nd=1;
   } else if (!strcmp(order,"biquadratic")) { //biquadratic
-    index=3;
+    index=2;
     index_nd=2;
   }
   

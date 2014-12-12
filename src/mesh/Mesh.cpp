@@ -41,8 +41,6 @@ using std::map;
 
 bool Mesh::_TestSetRefinementFlag=0;
 
-const unsigned Mesh::_END_IND[5]= {0,1,3,4,5};
-
 unsigned Mesh::_dimension=2;
 unsigned Mesh::_ref_index=4;  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
 unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
@@ -192,7 +190,7 @@ void Mesh::RenumberNodes(vector < vector < double> > &coords) {
   for (unsigned iel=0; iel<_nelem; iel++) {
     for (unsigned inode=0; inode<el->GetElementDofNumber(iel,1); inode++) {
       for (unsigned jel=0; jel<_nelem; jel++) {
-	for (unsigned jnode=el->GetElementDofNumber(jel,1); jnode<el->GetElementDofNumber(jel,3); jnode++) { 
+	for (unsigned jnode=el->GetElementDofNumber(jel,1); jnode<el->GetElementDofNumber(jel,2); jnode++) { 
 	  unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
 	  unsigned jj=el->GetElementVertexIndex(jel,jnode)-1;
 	  unsigned i0=dof_index[ii];
@@ -225,7 +223,7 @@ void Mesh::RenumberNodes(vector < vector < double> > &coords) {
   
   // update all
   for (unsigned iel=0; iel<_nelem; iel++) {
-    for (unsigned inode=0; inode<el->GetElementDofNumber(iel,3); inode++) {
+    for (unsigned inode=0; inode<el->GetElementDofNumber(iel,2); inode++) {
       unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
       el->SetElementVertexIndex(iel,inode,dof_index[ii]);
     }
@@ -367,7 +365,7 @@ void Mesh::AllocateAndMarkStructureNode() {
     int flag_mat = el->GetElementMaterial(iel);
 
     if (flag_mat==4) {
-      unsigned nve=el->GetElementDofNumber(iel);
+      unsigned nve=el->GetElementDofNumber(iel,2);
       for ( unsigned i=0; i<nve; i++) {
         unsigned inode=el->GetElementVertexIndex(iel,i)-1u;
         el->SetNodeRegion(inode, 1);
@@ -456,7 +454,7 @@ void Mesh::FillISvector() {
 	  }
 	}
 	// biquadratic
-	for (unsigned inode=el->GetElementDofNumber(iel,1); inode<el->GetElementDofNumber(iel,3); inode++) {
+	for (unsigned inode=el->GetElementDofNumber(iel,1); inode<el->GetElementDofNumber(iel,2); inode++) {
 	  unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
 	  if(npart[ii]>isdom){
 	    npart[ii]=isdom;
@@ -524,7 +522,7 @@ void Mesh::FillISvector() {
       }
       
       
-      for (unsigned inode=el->GetElementDofNumber(iel,1); inode<el->GetElementDofNumber(iel,3); inode++) {
+      for (unsigned inode=el->GetElementDofNumber(iel,1); inode<el->GetElementDofNumber(iel,2); inode++) {
 	unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
 	if(node_count[ii]<isdom+1){
 	  node_count[ii]=isdom+1;
@@ -593,7 +591,7 @@ void Mesh::FillISvector() {
 	}
       }
       
-      for(unsigned inode=el->GetElementDofNumber(iel,1); inode<el->GetElementDofNumber(iel,3); inode++) {
+      for(unsigned inode=el->GetElementDofNumber(iel,1); inode<el->GetElementDofNumber(iel,2); inode++) {
 	unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
 	if(node_count[ii]<isdom+1){
 	  node_count[ii]=isdom+1;

@@ -285,9 +285,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   SolIndex[dim]=ml_sol->GetIndex(&Solname[3][0]);       
   //solution order
   unsigned order_ind2 = ml_sol->GetSolutionType(SolIndex[0]);
-  unsigned end_ind2   = mymsh->GetEndIndex(order_ind2);
   unsigned order_ind1 = ml_sol->GetSolutionType(SolIndex[dim]);
-  unsigned end_ind1   = mymsh->GetEndIndex(order_ind1);
   
   // declare 
   vector < int > metis_node2; 
@@ -349,8 +347,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
     short unsigned kelt=myel->GetElementType(kel);
-    unsigned nve2=myel->GetElementDofNumber(kel,end_ind2);
-    unsigned nve1=myel->GetElementDofNumber(kel,end_ind1);
+    unsigned nve2=myel->GetElementDofNumber(kel,order_ind2);
+    unsigned nve1=myel->GetElementDofNumber(kel,order_ind1);
     
     //set to zero all the entries of the FE matrices
     metis_node2.resize(nve2);

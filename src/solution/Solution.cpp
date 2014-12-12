@@ -319,7 +319,6 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
     cout << "Current maximum relative change = " <<EPSMAX/SOLMAX << endl << endl;
     SolMax[k] = AMRthreshold * SOLMAX;
     SolType[k] = _SolType[SolIndex[k]];
-    //SolEndInd[k]   = _msh->GetEndIndex(SolType[k]);
     SolEndInd[k]   = END_IND[SolType[k]];
   }
  
@@ -553,7 +552,6 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       _GradMat[SolType][i]->zero();
     }
         
-    unsigned SolEndInd   = _msh->GetEndIndex(SolType);
     unsigned nel= _msh->GetNumberOfElements();    
     
     for (int iel=_msh->IS_Mts2Gmt_elem_offset[_iproc]; iel < _msh->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
@@ -564,7 +562,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       unsigned kel = _msh->IS_Mts2Gmt_elem[iel];
       short unsigned kelt=_msh->el->GetElementType(kel);
     
-      unsigned nve=_msh->el->GetElementDofNumber(kel,SolEndInd);
+      unsigned nve=_msh->el->GetElementDofNumber(kel,SolType);
       
       // resize
       column_dofs.resize(nve);

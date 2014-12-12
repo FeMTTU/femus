@@ -341,9 +341,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
   SolIndex[dim]=ml_sol->GetIndex(&Solname[3][0]);       
   //solution order
   unsigned order_ind_vel = ml_sol->GetSolutionType(SolIndex[0]);
-  unsigned end_ind2   = mymsh->GetEndIndex(order_ind_vel);
   unsigned order_ind_p = ml_sol->GetSolutionType(SolIndex[dim]);
-  unsigned end_ind1   = mymsh->GetEndIndex(order_ind_p);
   
   double alpha = 0.;
   if(order_ind_p == order_ind_vel && order_ind_vel == 0) // if pressure and velocity are both linear, we need stabilization 
@@ -404,8 +402,8 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
 
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
     short unsigned kelt=myel->GetElementType(kel);
-    unsigned nve2=myel->GetElementDofNumber(kel,end_ind2);
-    unsigned nve1=myel->GetElementDofNumber(kel,end_ind1);
+    unsigned nve2=myel->GetElementDofNumber(kel,order_ind_vel);
+    unsigned nve1=myel->GetElementDofNumber(kel,order_ind_p);
     
     //set to zero all the entries of the FE matrices
     metis_node2.resize(nve2);

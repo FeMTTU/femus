@@ -559,7 +559,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     SolPdeIndex=mylin_impl_sys.GetSolPdeIndex("Sol");
     //solution order
     unsigned order_ind = ml_sol->GetSolutionType(SolIndex);
-    unsigned end_ind   = mymsh->GetEndIndex(order_ind);
+    
 
     //coordinates
     vector< vector < double> > coordinates(dim);
@@ -599,7 +599,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
         unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
         short unsigned kelt=myel->GetElementType(kel);
-        unsigned nve=myel->GetElementDofNumber(kel,end_ind);
+        unsigned nve=myel->GetElementDofNumber(kel,order_ind);
 
         // resize
         metis_node.resize(nve);
@@ -821,13 +821,13 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
     unsigned SolIndex;
     SolIndex=ml_sol.GetIndex("Sol");
     unsigned SolOrder = ml_sol.GetSolutionType(SolIndex);
-    unsigned SolEndIndex   = msh->GetEndIndex(SolOrder);
+    
         
     for (int iel_metis=msh->IS_Mts2Gmt_elem_offset[iproc]; iel_metis < msh->IS_Mts2Gmt_elem_offset[iproc+1]; iel_metis++) {
       unsigned kel = msh->IS_Mts2Gmt_elem[iel_metis];
       if(ilevel==gridn-1 || !msh->el->GetRefinedElementIndex(kel)) {
         short unsigned kelt= msh->el->GetElementType(kel);
-	unsigned nve= msh->el->GetElementDofNumber(kel,SolEndIndex);
+	unsigned nve= msh->el->GetElementDofNumber(kel,SolOrder);
       
 	// resize
 	metis_node.resize(nve);
