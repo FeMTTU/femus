@@ -532,12 +532,9 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       short unsigned kelt = myel->GetElementType(kel);
       unsigned nve        = myel->GetElementDofNumber(kel,SolType2);
       unsigned nve1       = myel->GetElementDofNumber(kel,SolType1);
-     
-
+    
       // *******************************************************************************************************
-    
-      //initialization of everything is in common fluid and solid
-    
+      
       //Rhs
       for(int i=0; i<dim; i++) {
 	dofsVAR[i].resize(nve);
@@ -561,8 +558,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       for(int i=0;i<dim;i++){
 	vx[i].resize(nve);
       }
-    
-         
+             
       for (unsigned i=0;i<nve;i++) {
 	unsigned inode=myel->GetMeshDof(kel,i,SolType2);
 	unsigned inode_Metis=mymsh->GetMetisDof(inode,SolType2);
@@ -578,11 +574,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	  
 	}
       }
-      
-      
-      
-      
-      
+            
       // pressure dofs
       for (unsigned i=0;i<nve1;i++) {
 	unsigned inode=myel->GetMeshDof(kel,i,SolType1);
@@ -592,7 +584,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	aRhs[indexVAR[dim]][i] = 0.;
       }
       
-      // build dof ccomposition             
+      // build dof composition             
       for(int idim=0;idim<dim;idim++){
 	dofsAll.insert( dofsAll.end(), dofsVAR[idim].begin(), dofsVAR[idim].end() );
       }
@@ -660,10 +652,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    double area=Weight.value()/GaussWeight;
 	    hk = 2*sqrt(area/acos(-1.));
 	  }
-	 
 	  
-	  
-	  //  velocity: solution, gradient and laplace
+	  // velocity: solution, gradient and laplace
 	  for(int i=0; i<dim; i++){
 	    SolVAR[i]=0.;
 	    for(int j=0; j<dim; j++) {
@@ -674,31 +664,16 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    }
 	    for (unsigned inode=0; inode<nve; inode++) {
 	      adept::adouble soli = Soli[indexVAR[i]][inode];
-	      //if(inode==ir) V[i]=soli.value();
 	      SolVAR[i]+=phi[inode]*soli;
 	      for(int j=0; j<dim; j++) {
 		GradSolVAR[i][j]+=gradphi[inode*dim+j]*soli;
 	      }
 	      for(int j=0; j<nabla_dim; j++) {
 		NablaSolVAR[i][j]+=nablaphi[inode*nabla_dim+j]*soli;
-		//cout<<nablaphi[inode*nabla_dim+j].value()<<" ";
 	      }
-	      //cout<<endl;
 	    }
 	  } 
-	  
-// 	  for(int i=0;i<dim;i++){
-// 	    for(int j=0; j<nabla_dim; j++) {
-// 	      if(fabs(NablaSolVAR[i][j]) > 1.0e-10){
-// 		cout<<NablaSolVAR[i][j]<<endl;
-// 		double gg;
-// 		std::cin>>gg;
-// 	      }
-// 	    }
-// 	  }
-	  
-	  
-	  
+	  	  
 	  // pressure, solution and gradient 
 	  SolVAR[dim]=0.;
 	  for(int j=0; j<dim; j++) {
