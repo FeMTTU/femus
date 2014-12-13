@@ -205,24 +205,6 @@ void Solution::FreeSolutionVectors() {
 }
 
 /**
- * Initialize the coarse variable coordinates X,Y,Z 
- **/
-// ------------------------------------------------------------------
-void Solution::SetCoarseCoordinates( vector < vector < double> > &vt){
-  unsigned indexSol;
-  
-  indexSol=GetIndex("X");
-  *_Sol[indexSol]=vt[0];
-  
-  indexSol=GetIndex("Y");
-  *_Sol[indexSol]=vt[1];
-  
-  indexSol=GetIndex("Z");
-  *_Sol[indexSol]=vt[2];
-  
-}
-
-/**
  * Update _Sol, _Res and _Eps based on EPS and RES 
  **/
 //--------------------------------------------------------------------------------
