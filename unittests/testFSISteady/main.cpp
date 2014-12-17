@@ -136,7 +136,7 @@ int main(int argc,char **args) {
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
   system.solve();
 
-  double l2normvarDX = ml_sol.GetSolutionLevel(3)->GetSolutionName("DX")->l2_norm(); 
+  double l2normvarDX = ml_sol.GetSolutionLevel(3)->GetSolutionName("DX").l2_norm(); 
   
   double l2normvarDXStored = 0.0042279620203351329;
   
@@ -147,7 +147,7 @@ int main(int argc,char **args) {
      exit(1);
   }
 
-  double l2normvarDY = ml_sol.GetSolutionLevel(3)->GetSolutionName("DY")->l2_norm(); 
+  double l2normvarDY = ml_sol.GetSolutionLevel(3)->GetSolutionName("DY").l2_norm(); 
   
   double l2normvarDYStored = 0.067282025856121724;
   
@@ -159,7 +159,7 @@ int main(int argc,char **args) {
   }
 
   
-  double l2normvarU = ml_sol.GetSolutionLevel(3)->GetSolutionName("U")->l2_norm(); 
+  double l2normvarU = ml_sol.GetSolutionLevel(3)->GetSolutionName("U").l2_norm(); 
   
   double l2normvarUStored = 43.302217899276172;
   
@@ -170,7 +170,7 @@ int main(int argc,char **args) {
     exit(1);
   }
   
-  double l2normvarV = ml_sol.GetSolutionLevel(3)->GetSolutionName("V")->l2_norm(); 
+  double l2normvarV = ml_sol.GetSolutionLevel(3)->GetSolutionName("V").l2_norm(); 
   
   double l2normvarVStored = 9.8339855962273379;
   
@@ -181,7 +181,7 @@ int main(int argc,char **args) {
     exit(1);
   }
   
-  double l2normvarP = ml_sol.GetSolutionLevel(3)->GetSolutionName("P")->l2_norm(); 
+  double l2normvarP = ml_sol.GetSolutionLevel(3)->GetSolutionName("P").l2_norm(); 
   
   double l2normvarPStored = 5.8717397150188155;
   

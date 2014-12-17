@@ -20,7 +20,7 @@
 #include "MeshGeneration.hpp"
 #include "MeshMetisPartitioning.hpp"
 #include "GambitIO.hpp"
-
+#include "NumericVector.hpp"
 
 // C++ includes
 #include <iostream>
@@ -115,7 +115,15 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _coordinate->ResizeSolutionVector("Y");
   _coordinate->ResizeSolutionVector("Z");
     
-  _coordinate->SetCoarseCoordinates(coords);
+  //_coordinate->SetCoarseCoordinates(coords);
+  _coordinate->GetSolutionName("X") = coords[0];
+  _coordinate->GetSolutionName("Y") = coords[1];
+  _coordinate->GetSolutionName("Z") = coords[2];
+//   *ppi = coords[0];
+  
+//   = coords[0];
+//   _coordinate->GetSolutionName("Y") = coords[1];
+//   _coordinate->GetSolutionName("Z") = coords[2];
   
   _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
   
@@ -169,7 +177,9 @@ void Mesh::GenerateCoarseBoxMesh(
   _coordinate->ResizeSolutionVector("Y");
   _coordinate->ResizeSolutionVector("Z");
     
-  _coordinate->SetCoarseCoordinates(coords);
+  _coordinate->GetSolutionName("X") = coords[0];
+  _coordinate->GetSolutionName("Y") = coords[1];
+  _coordinate->GetSolutionName("Z") = coords[2];
   
   _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
   
