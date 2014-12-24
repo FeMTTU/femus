@@ -20,6 +20,8 @@ using namespace femus;
 void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
 void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
 
+void SetLambda(MultiLevelSolution &mlSol, const unsigned &level, const unsigned &SolType, const char operatorName[]);
+
 
 double InitVariableU(const double &x, const double &y, const double &z);
 
@@ -55,7 +57,7 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=4;
+  nm=2;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
   nr=0;
@@ -85,6 +87,8 @@ int main(int argc,char **args) {
   
   ml_sol.AddSolution("U",LAGRANGE, FIRST);
   ml_sol.AddSolution("V",LAGRANGE, FIRST);
+  ml_sol.AddSolution("lmbd",DISCONTINOUS_POLYNOMIAL,ZERO,0,false);
+  
   // the pressure variable should be the last for the Schur decomposition
   // ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
   ml_sol.AddSolution("P",LAGRANGE, FIRST);
@@ -97,12 +101,16 @@ int main(int argc,char **args) {
   ml_sol.Initialize("V");
   ml_sol.Initialize("P");
   ml_sol.Initialize("T");
+  ml_sol.Initialize("lmbd");
   //Set Boundary (update Dirichlet(...) function)
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionCavityFlow);
   ml_sol.GenerateBdc("U");
   ml_sol.GenerateBdc("V");
   ml_sol.GenerateBdc("P");
   ml_sol.GenerateBdc("T");
+  
+  SetLambda(ml_sol, 0, 0,"elasticity");
+  //SetLambda(ml_sol, 0, 2,"diffusion");
   
   MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
   
@@ -221,7 +229,7 @@ int main(int argc,char **args) {
 //   xdmfio.write_system_solutions("biquadratic",print_vars);
   
   GMVWriter gmvio(ml_sol);
-  gmvio.write_system_solutions("linear",print_vars);
+  gmvio.write_system_solutions("biquadratic",print_vars);
   
   //Destroy all the new systems
   ml_prob.clear();
@@ -389,13 +397,15 @@ bool SetBoundaryConditionCavityFlow(const double& x, const double& y, const doub
 
 static unsigned counter=0;
 
+static adept::Stack adeptStack; 
+
 void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
  
        
     clock_t AssemblyTime=0;
     clock_t start_time, end_time;
   
-    static adept::Stack adeptStack; 
+    //static adept::Stack adeptStack; 
     
     //pointers and references
     MultiLevelSolution*	 ml_sol	                      = ml_prob._ml_sol;
@@ -516,8 +526,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     SolType[dim]=ml_sol->GetSolutionType(&varname[3][0]);
     indexVAR[dim]=my_nnlin_impl_sys.GetSolPdeIndex(&varname[3][0]);  
     
-    
-//    
+    unsigned indLmbd=ml_sol->GetIndex("lmbd");
     
     //----------------------------------------------------------------------------------
         
@@ -535,7 +544,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       unsigned nveVx      = myel->GetElementDofNumber(kel,SolTypeVx);
       
       // *******************************************************************************************************
-      
+      //cout<<SolType1<<" "<<SolType2<<" "<<SolTypeVx<<" "<<nve1<<" "<<nve2<<" "<<nveVx<<endl;
       //Rhs
       for(int i=0; i<dim; i++) {
 	dofsVAR[i].resize(nve2);
@@ -561,20 +570,20 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       }
       for (unsigned i=0;i<nveVx;i++) {
 	unsigned inode=myel->GetMeshDof(kel,i,SolTypeVx);
-	unsigned inodeVx_Metis=mymsh->GetMetisDof(inode,SolTypeVx);	
+	unsigned inode_Metis=mymsh->GetMetisDof(inode,SolTypeVx);	
 	for(int j=0; j<dim; j++) {
 	  //coordinates
-	  vx[j][i]=  (*mymsh->_coordinate->_Sol[j])(inodeVx_Metis); 
+	  vx[j][i]=  (*mymsh->_coordinate->_Sol[j])(inode_Metis); 
 	}
       }
       
       // Velocity
       for (unsigned i=0;i<nve2;i++) {
 	unsigned inode=myel->GetMeshDof(kel,i,SolType2);
-	unsigned inode2_Metis=mymsh->GetMetisDof(inode,SolType2);
+	unsigned inode_Metis=mymsh->GetMetisDof(inode,SolType2);
 	for(int j=0; j<dim; j++) {
 	  // velocity dofs
-	  Soli[indexVAR[j]][i] =  (*mysolution->_Sol[indVAR[j]])(inode2_Metis);
+	  Soli[indexVAR[j]][i] =  (*mysolution->_Sol[indVAR[j]])(inode_Metis);
 	  dofsVAR[j][i] = myLinEqSolver->GetKKDof(indVAR[j],indexVAR[j],inode); 
 	  aRhs[indexVAR[j]][i] = 0.;
 	}
@@ -598,51 +607,6 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {  
 	
 	adeptStack.new_recording();
-		
-// 	// Boundary integral
-// 	{
-// 	  double tau=0.;
-// 	  vector<adept::adouble> normal(dim,0);
-// 	       
-// 	  // loop on faces
-// 	  for(unsigned jface=0; jface<myel->GetElementFaceNumber(kel); jface++) {
-// 		
-// 	    // look for boundary faces
-// 	    if(myel->GetFaceElementIndex(kel,jface)<0) {
-// 	      unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
-// 	      if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,0.) && tau!=0.){
-// 		unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,SolType2);
-// 		const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);  		  		  
-// 		for(unsigned i=0; i<nve; i++) {
-// 		  unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-// 		  unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
-// 		  unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
-// 		  for(unsigned idim=0; idim<dim; idim++) {
-// 		    vx_face[idim][i]=(*mymsh->_coordinate->_Sol[idim])(inode_Metis) + Soli[indexVAR[idim]][ilocal];
-// 		  }
-// 		}
-// 		for(unsigned igs=0; igs < mymsh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {
-// 		  mymsh->_finiteElement[felt][SolType2]->JacobianSur_AD(vx_face,igs,Weight,phi,gradphi,normal);
-// 		  //phi1 =mymsh->_finiteElement[felt][SolType2]->GetPhi(igs);
-// 		  // *** phi_i loop ***
-// 		  for(unsigned i=0; i<nve; i++) {
-// 		    adept::adouble value = - phi[i]*tau/rhof*Weight;
-// 		    unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
-// 		    
-// 		    for(unsigned idim=0; idim<dim; idim++) {
-// 		      if(1){
-// 			aRhs[indexVAR[dim+idim]][ilocal]   += value*normal[idim];
-// 		      }
-// 		      else { //if interface node it goes to solid
-// 			aRhs[indexVAR[idim]][ilocal]   += value*normal[idim];
-// 		      }
-// 		    }	    
-// 		  }
-// 		}
-// 	      }
-// 	    }
-// 	  }    
-// 	}
 	  	  
 	// *** Gauss point loop ***
 	
@@ -652,13 +616,23 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	  mymsh->_finiteElement[kelt][SolType2]->Jacobian_AD(vx,ig,Weight,phi,gradphi,nablaphi);
 	  mymsh->_finiteElement[kelt][SolType1]->Jacobian_AD(vx,ig,Weight1,phi1,gradphi1,nablaphi1);  
 	  
-	  if(ig==0){
-	    double GaussWeight = mymsh->_finiteElement[kelt][SolType2]->GetGaussWeight(ig);
-	    adept::adouble area=Weight/GaussWeight;
-	    //hk = 2*sqrt(area/acos(-1.));
-	    hk = sqrt(area);
+	  for(int i=0;i<nve1;i++){
+	    for(int j=0;j<nabla_dim;j++){
+	      //cout<<nablaphi[i*nabla_dim+j]<<" ";
+	    }
+	    //cout<<endl;
 	  }
+	  //cout<<endl;
 	  
+	  
+	  if(ig==0){
+	    double referenceElementArea[6]={8, 1./6., 1., 4., 1., 2.};
+	    double GaussWeight = mymsh->_finiteElement[kelt][SolType2]->GetGaussWeight(ig);
+	    double area=referenceElementArea[kelt]*Weight.value()/GaussWeight;
+	    hk = pow(area,1./dim);
+	    //cout<<hk<<" ";
+	  }
+	 	  
 	  // velocity: solution, gradient and laplace
 	  for(int i=0; i<dim; i++){
 	    SolVAR[i]=0.;
@@ -693,7 +667,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    }
 	  } 
 	  
-	  bool Tezduyare=1;
+	  bool Tezduyare=0;
 	  bool FrancaAndFrey=!Tezduyare;
 	  
 	  if( Tezduyare ){
@@ -812,8 +786,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	    // Computer Methods in Applied Mechanics and Engineering 99 (1992) 209-233 North-Holland
 	    // *************************************************************************************	  
 	    // velocity
-	    double Ck[6][3]={{1.,1.,1.},{1.,1.,1.},{1.,1.,1.},{0.5, 11./270., 11./270.},{0.,1./42.,1./42.},{1.,1.,1.}};
-	  
+	    // double Ck[6][3]={{1.,1.,1.},{1.,1.,1.},{1.,1.,1.},{0.5, 11./270., 11./270.},{0.,1./42.,1./42.},{1.,1.,1.}};
+	  	    
 	    vector < adept::adouble > a(dim);
 	    for(int ivar=0; ivar<dim; ivar++){
 	      a[ivar]=SolVAR[ivar];
@@ -825,17 +799,28 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	      aL2Norm += a[ivar]*a[ivar];
 	    }
 	    aL2Norm=sqrt(aL2Norm);
-	  
-	    adept::adouble tauSupg=0.;
+	    
 	    adept::adouble deltaSupg=0.;
-	    adept::adouble mk=std::min(1./3., 2.*Ck[kelt][SolType2]);
+	    
+	    double sqrtlambdak = (*mysolution->_Sol[indLmbd])(iel);	    
+	    adept::adouble tauSupg=1. / ( sqrtlambdak*sqrtlambdak *4.*IRe);
+	    adept::adouble Rek   = aL2Norm / ( 4.*sqrtlambdak*IRe);
+	   
+	    /*adept::adouble mk=std::min(1./3., 2.*Ck[kelt][SolType2]);
 	    adept::adouble Rek   = mk * aL2Norm * hk / ( 4.*IRe);
+	    adept::adouble tauSupg = (mk*hk*hk/2.) / ( 4.*IRe);
+	    */	    
 	    if( Rek > 1.0e-15){
 	      adept::adouble xiRek = ( Rek >= 1. ) ? 1.:Rek;
-	      tauSupg = hk / (2.*aL2Norm)*xiRek;
-	      double lambda=1.;
-	      deltaSupg = lambda*aL2Norm*hk*xiRek;
+	     
+	      tauSupg   = xiRek/(aL2Norm*sqrtlambdak);
+	      deltaSupg = (xiRek*aL2Norm)/sqrtlambdak;
+	      
+// 	      tauSupg = hk / (2.*aL2Norm)*xiRek;
+// 	      double lambda=1.;
+// 	      deltaSupg = lambda*aL2Norm*hk*xiRek;
 	    }
+	    
 	    //END TAU_SUPG EVALUATION ============
 	  
 	  
@@ -851,7 +836,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 		  else if (2 == ivar + jvar ) kvar = dim+2; // xz
 		  else if (3 == ivar + jvar ) kvar = dim+1; // yz
 		  Res[ivar] += - SolVAR[jvar]*GradSolVAR[ivar][jvar] 
-			      + IRe * ( NablaSolVAR[ivar][jvar] + NablaSolVAR[jvar][kvar] );
+			       + IRe * ( NablaSolVAR[ivar][jvar] + NablaSolVAR[jvar][kvar] );
 		}
 	      }
 	    
@@ -876,9 +861,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 		
 		    Advection += SolVAR[jvar]*GradSolVAR[ivar][jvar]*phi[i];
 		    Laplacian += IRe*gradphi[i*dim+jvar]*(GradSolVAR[ivar][jvar]+GradSolVAR[jvar][ivar]);
-		    phiSupg   += ( SolVAR[jvar]*gradphi[i*dim+jvar] 
-				  - IRe * ( nablaphi[i*nabla_dim+jvar] + nablaphi[i*nabla_dim+kvar] )			    
-				  ) * tauSupg;     		  		
+		    phiSupg   += ( SolVAR[jvar]*gradphi[i*dim+jvar] ) * tauSupg;  
+		    
+		    aRhs[indexVAR[ivar]][i] += 	 Res[ivar] * (-IRe * nablaphi[i*nabla_dim+jvar])* tauSupg * Weight; 
+		    aRhs[indexVAR[jvar]][i] += 	 Res[ivar] * (-IRe * nablaphi[i*nabla_dim+kvar])* tauSupg * Weight; 		  
 		  }
 		  aRhs[indexVAR[ivar]][i]+= ( - Advection - Laplacian 
 					      + ( SolVAR[dim] - deltaSupg * div_vel) * gradphi[i*dim+ivar]
@@ -949,6 +935,345 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   }  
   
 
+//   void LU( double *a , const int n ){
+//   
+//     for (int k = 0 ; k < n-1 ; k++) {
+//       for ( int i = k+1 ; i < n ; i++) {
+// 	a[i*n+k] /= a[k*n+k];
+// 	for ( int j= k+1 ; j < n ; j++) {
+// 	  a[i*n+j] -=  a[i*n+k]*a[k*n+j] ;
+// 	}
+//       }
+//     } 
+//   }
+  
+    
+  
+  void SetLambda(MultiLevelSolution &mlSol, const unsigned &level, const unsigned &SolType, const char operatorName[]){
+        
+    clock_t GetLambdaTime=0;
+    clock_t start_time, end_time;
+    start_time=clock();
+         
+    //pointers and references
+    
+    Solution *mysolution = mlSol.GetSolutionLevel(level);
+    Mesh *mymsh	=  mlSol._ml_msh->GetLevel(level);
+    elem *myel	=  mymsh->el;
+    
+
+    unsigned indLmbd=mlSol.GetIndex("lmbd");
+    
+    const unsigned goeDim = mymsh->GetDimension();
+    const unsigned nablaGoeDim = 3*(goeDim-1);
+    const unsigned max_size = static_cast< unsigned > (ceil(pow(3,goeDim)));
+  
+    bool diffusion, elasticity;
+    if(!strcmp("diffusion", operatorName)){
+      diffusion  = true;
+      elasticity = false; 
+    }
+    else if(!strcmp("elasticity", operatorName)){
+      diffusion  = false;
+      elasticity = true; 
+    }
+    else{
+      cout<<"wrong operator name in SetLambda\n"
+	  <<"valid options are diffusion or elasicity\n";
+      abort();
+    }
+           
+    unsigned varDim=goeDim*elasticity+diffusion;
+    
+    // local objects
+    vector<vector<adept::adouble> > GradSolVAR(varDim);
+    vector<vector<adept::adouble> > NablaSolVAR(varDim);
+    
+    for(int ivar=0;ivar<varDim;ivar++){
+      GradSolVAR[ivar].resize(goeDim);
+      NablaSolVAR[ivar].resize(nablaGoeDim);
+    }
+        
+    vector <double > phi;
+    vector <adept::adouble> gradphi;
+    vector <adept::adouble> nablaphi;
+    adept::adouble Weight;
+    
+    phi.reserve(max_size);
+    gradphi.reserve(max_size*goeDim);
+    nablaphi.reserve(max_size*nablaGoeDim);
+        
+    vector <vector < adept::adouble> > vx(goeDim);
+    for(int ivar=0;ivar<goeDim;ivar++){
+      vx[ivar].reserve(max_size);
+    }
+    unsigned SolTypeVx=2.;
+   
+    vector< vector< adept::adouble > > Soli(varDim);
+    vector< vector< adept::adouble > > aRhs(varDim);
+    vector< vector< adept::adouble > > aLhs(varDim);
+    for(int ivar=0;ivar<varDim;ivar++){
+      Soli[ivar].reserve(max_size);
+      aRhs[ivar].reserve(max_size);
+      aLhs[ivar].reserve(max_size);
+    }     
+    vector < double > K;
+    K.reserve((max_size*varDim)*(max_size*varDim));
+    vector < double > M;
+    M.reserve((max_size*varDim)*(max_size*varDim));
+       
+    // mesh and procs
+    unsigned nel    = mymsh->GetNumberOfElements();
+    unsigned iproc  = mymsh->processor_id();
+   
+    // *** element loop ***
+    for(int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+
+      unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
+      short unsigned kelt = myel->GetElementType(kel);
+      unsigned nve        = myel->GetElementDofNumber(kel,SolType)-1;
+      unsigned nveVx      = myel->GetElementDofNumber(kel,SolTypeVx);
+            
+      // -------------- resize -------------- 
+      for(int ivar=0; ivar<varDim; ivar++) {
+	Soli[ivar].resize(nve);
+	aRhs[ivar].resize(nve);
+	aLhs[ivar].resize(nve);
+      }
+      
+      M.resize((varDim*nve)*(varDim*nve));
+      K.resize((varDim*nve)*(varDim*nve));
+      // ------------------------------------
+      
+      // ------------ get coordinates -------  
+      for(int i=0;i<goeDim;i++){
+	vx[i].resize(nveVx);
+      }
+      for (unsigned i=0;i<nveVx;i++) {
+	unsigned inode=myel->GetMeshDof(kel,i,SolTypeVx);
+	unsigned inodeVx_Metis=mymsh->GetMetisDof(inode,SolTypeVx);	
+	for(int j=0; j<goeDim; j++) {
+	  //coordinates
+	  vx[j][i]=  (*mymsh->_coordinate->_Sol[j])(inodeVx_Metis); 
+	}
+      }
+      // ------------------------------------
+      
+      // ------------ init ------------------
+      for (unsigned i=0;i<nve;i++) {
+	for(int ivar=0; ivar<varDim; ivar++) {
+	  Soli[ivar][i] = 1.;
+	  aRhs[ivar][i] = 0.;
+	  aLhs[ivar][i] = 0.;
+	}
+      }
+      // ------------------------------------           
+      
+      adeptStack.new_recording();
+      double hk=1.;
+      for (unsigned ig=0;ig < mymsh->_finiteElement[kelt][SolType]->GetGaussPointNumber(); ig++) {
+	// *** get Jacobian and test function and test function derivatives in the moving frame***
+	mymsh->_finiteElement[kelt][SolType]->Jacobian_AD(vx,ig,Weight,phi,gradphi,nablaphi);
+	if(ig==0){
+	  double referenceElementArea[6]={8, 1./6., 1., 4., 1., 2.};
+	  double GaussWeight = mymsh->_finiteElement[kelt][SolType]->GetGaussWeight(ig);
+	  double area=referenceElementArea[kelt]*Weight.value()/GaussWeight;
+	  hk = pow(area,1./goeDim);
+	  //cout<<hk<<endl;
+	  if(0 == SolType) break;
+	}
+		
+	for(int ivar=0; ivar<varDim; ivar++){
+	  for(int jvar=0; jvar<goeDim; jvar++) {
+	    GradSolVAR[ivar][jvar]=0.;
+	  }
+	  for(int jvar=0; jvar<nablaGoeDim; jvar++) {
+	    NablaSolVAR[ivar][jvar]=0.;
+	  }
+	  for (unsigned inode=0; inode<nve; inode++) {
+	    adept::adouble soli = Soli[ivar][inode];
+	    for(int jvar=0; jvar<goeDim; jvar++) {
+	      GradSolVAR[ivar][jvar] += gradphi[inode*goeDim+jvar]*soli;
+	    }
+	    for(int jvar=0; jvar<nablaGoeDim; jvar++) {
+	      NablaSolVAR[ivar][jvar]+=nablaphi[inode*nablaGoeDim+jvar]*soli;
+	    }
+	  }
+	} 
+		
+	
+	vector < adept::adouble > divGradSol(varDim,0.);
+	for(unsigned ivar=0; ivar<varDim; ivar++) {
+	  for(unsigned jvar=0; jvar<goeDim; jvar++) {
+	    if(diffusion){
+	      divGradSol[ivar] += NablaSolVAR[ivar][jvar];
+	    }
+	    else if(elasticity){
+	      unsigned kvar;
+	      if(ivar == jvar) kvar = jvar;
+	      else if (1 == ivar + jvar ) kvar = goeDim;   // xy
+	      else if (2 == ivar + jvar ) kvar = goeDim+2; // xz
+	      else if (3 == ivar + jvar ) kvar = goeDim+1; // yz
+	      divGradSol[ivar]   += 0.5*( NablaSolVAR[ivar][jvar] + NablaSolVAR[jvar][kvar]);
+	    }
+	  }
+	}
+	    	    	    
+	//BEGIN local assembly  
+	for (unsigned i=0; i<nve; i++){
+	  for(unsigned ivar=0; ivar<varDim; ivar++) {
+	    for(unsigned jvar=0; jvar<goeDim; jvar++) {
+	      aRhs[ivar][i] += gradphi[i*goeDim+jvar]*(GradSolVAR[ivar][jvar]) * Weight;
+	      if(diffusion){
+		aLhs[ivar][i] +=  divGradSol[ivar] * nablaphi[i*nablaGoeDim+jvar] * Weight; 
+		//aRhs[ivar][i] += gradphi[i*goeDim+jvar]*(GradSolVAR[ivar][jvar]) * Weight;
+	      }
+	      else if(elasticity){
+		unsigned kvar;
+		if(ivar == jvar) kvar = jvar;
+		else if (1 == ivar + jvar ) kvar = goeDim;   // xy
+		else if (2 == ivar + jvar ) kvar = goeDim+2; // xz
+		else if (3 == ivar + jvar ) kvar = goeDim+1; // yz
+		aLhs[ivar][i] +=  divGradSol[ivar] * 0.5 * nablaphi[i*nablaGoeDim+jvar] * Weight;   
+		aLhs[jvar][i] +=  divGradSol[ivar] * 0.5 * nablaphi[i*nablaGoeDim+kvar] * Weight;   
+		//aRhs[ivar][i] += 0.5*gradphi[i*goeDim+jvar]*0.5*(GradSolVAR[ivar][jvar]+GradSolVAR[jvar][ivar]) * Weight;
+		//aRhs[jvar][i] += 0.5*gradphi[i*goeDim+ivar]*0.5*(GradSolVAR[ivar][jvar]+GradSolVAR[jvar][ivar]) * Weight;
+	      }
+	    }
+	  }
+	} 
+	//END local assembly     	   	
+      }
+      cout<<hk<<endl;
+      double lambdak = 6./(hk*hk); //if SolType is linear
+            
+      if( SolType > 0 && SolType < 3){ // only if solType is not linear	         
+	for(int ivar=0; ivar<varDim; ivar++) {  
+	  adeptStack.independent(&Soli[ivar][0], nve); 
+	}
+      	         
+	//Store RHS in M
+	for(int ivar=0; ivar<varDim; ivar++) {  
+	  adeptStack.dependent(&aRhs[ivar][0], nve);
+	}
+	adeptStack.jacobian(&M[0]);
+	adeptStack.clear_dependents();
+       
+	//Store LHS in K
+	for(int ivar=0; ivar<varDim; ivar++) {  
+	  adeptStack.dependent(&aLhs[ivar][0], nve);
+	}
+	adeptStack.jacobian(&K[0]);
+	adeptStack.clear_dependents();
+      
+	adeptStack.clear_independents();
+         
+	unsigned matSize = nve*varDim;
+	
+	int remove[6][3]={{},{},{},{0,1,2},{0,2,2},{}};
+	
+	unsigned indSize = matSize;// - remove[kelt][SolType]*elasticity;
+      
+//       for(int i=0;i<indSize;i++){
+// 	for(int j=0;j<indSize;j++){
+// 	  cout<<K[matSize*i+j]<<" ";
+// 	}
+// 	cout<<endl;
+//       }
+//       cout<<endl;
+//       for(int i=0;i<indSize;i++){
+// 	for(int j=0;j<indSize;j++){
+// 	  cout<<M[matSize*i+j]<<" ";
+// 	}
+// 	cout<<endl;
+//      }
+          
+	// LU = M factorization
+	for (int k = 0 ; k < indSize-1 ; k++) {
+	  for ( int i = k+1 ; i < indSize ; i++) {
+	    M[i*matSize+k] /= M[k*matSize+k];
+	    for ( int j= k+1 ; j < indSize ; j++) {
+	      M[i*matSize+j] -=  M[i*matSize+k]*M[k*matSize+j] ;
+	    }
+	  }
+	} 
+            
+	// Power Method for the largest eigenvalue of K x = lambda LU x :
+	// iteration step: 
+	// y = U^(-1) L^(-1) K x
+	// lambda= phi(y)/phi(x)
+	// y = y / l2norm(y)
+	// x = y
+      
+      
+	vector < double > x(matSize,1.);
+	vector < double > y(matSize);
+            
+	double phik = x[0]+x[1]; 
+	lambdak=1.;
+	double error=1.;
+	while(error>1.0e-10 && counter <= 500){
+	  double phikm1 = phik;
+	  double lambdakm1 = lambdak;
+	
+	  // y = K x
+	  for(int i=0; i<indSize; i++){
+	    y[i]=0.;
+	    for(int j=0; j<indSize; j++){
+	      y[i] += K[ i*matSize + j ] * x[j];
+	    }
+	  }
+	
+	  // y = L^(-1) y
+	  for(int i=0; i<indSize; i++){
+	    for(int j=0; j<i; j++){
+	      y[i] -= M[i*matSize + j] * y[j];
+	    }
+	  }
+	
+	  // x <--  y = U^(-1) y
+	  double l2norm=0.;
+	  for(int i = indSize-1; i>=0; i--){
+	    x[i] = y[i];
+	    for(int j = i+1; j<indSize; j++){
+	      x[i] -= M[ i*matSize + j] * x[j];
+	    }
+	    x[i] /= M[i*matSize+i];
+	    l2norm += x[i]*x[i];
+	  }
+	  l2norm = sqrt(l2norm);
+	
+	  phik = (x[0]+x[1]);
+	  lambdak=  phik / phikm1;
+	
+	  for(int i=0;i<indSize;i++){
+	    x[i] /= l2norm;
+	  }
+	  phik /= l2norm;
+	  error = fabs( (lambdak-lambdakm1)/lambdak );
+	}
+      }  
+           
+      cout<<lambdak*hk*hk<<std::endl;
+      mysolution->_Sol[indLmbd]->set(iel,sqrt(lambdak));	  
+      //abort();
+    } //end list of elements loop
+    
+    
+    mysolution->_Sol[indLmbd]->close();
+    // *************************************
+    end_time=clock();
+    GetLambdaTime+=(end_time-start_time);
+    
+    std::cout<<"GetLambda Time = "<<GetLambdaTime/CLOCKS_PER_SEC <<std::endl;
+    //abort();
+  }  
+  
+   
+  
+  
+  
+  
 //------------------------------------------------------------------------------------------------------------
 void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
   
