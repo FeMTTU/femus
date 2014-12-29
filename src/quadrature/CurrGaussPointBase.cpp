@@ -6,6 +6,7 @@
 #include "GeomEl.hpp"
 
 #include "CurrGaussPoint.hpp"
+#include "CurrElem.hpp"
 
 
 namespace femus {
@@ -42,7 +43,7 @@ CurrGaussPointBase::CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in 
   _tangent_g = new double*[_IntDim[BB]];
   _InvJac_g  = new double*[_IntDim[VV]];
     for (int i = 0; i < _IntDim[VV]; i++) {  _InvJac_g[i] = new double[_IntDim[VV]]; }
-    for (int i = 0; i < _IntDim[BB]; i++) { _tangent_g[i] = new double[_IntDim[VV]];}
+    for (int i = 0; i < _IntDim[BB]; i++) { _tangent_g[i] = new double[_IntDim[VV]]; }
   
   
   
@@ -71,14 +72,14 @@ CurrGaussPointBase::~CurrGaussPointBase() {
 
 
 //this is what allows RUNTIME selection of the templates!!!
-   CurrGaussPointBase& CurrGaussPointBase::build(const uint vb_in, EquationsMap& eqmap_in, const uint dim_in) {
+   CurrGaussPointBase& CurrGaussPointBase::build(const CurrElem & elem_in, EquationsMap& eqmap_in, const uint dim_in) {
       
       
       switch(dim_in) {
 	
-	case(2):  return *(new  CurrGaussPoint<2>(vb_in,eqmap_in));
+	case(2):  return *(new  CurrGaussPoint<2>(elem_in.GetVb(),eqmap_in));
 	
-	case(3):  return *(new  CurrGaussPoint<3>(vb_in,eqmap_in)); 
+	case(3):  return *(new  CurrGaussPoint<3>(elem_in.GetVb(),eqmap_in)); 
 	
 	default: {std::cout << "CurrGaussPointBase: Only 2D and 3D" << std::endl; abort();}
 	  

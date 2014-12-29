@@ -18,7 +18,8 @@ namespace femus {
     _eqn(eqn_in),
     _eqnmap(e_map_in),
     _dim(_eqnmap._mesh.get_dim()-vb),
-    _mesh_vb(vb)
+    _mesh_vb(vb),
+    _is_vb(vb)
     {
     
 //========== Current "Geometric Element"  ========================
@@ -31,7 +32,7 @@ namespace femus {
 
 //========== Current "Equation Element"  ========================
   _el_n_dofs = 0;
-     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs += (_eqnmap._elem_type[_eqnmap._mesh.get_dim()-1-vb][fe]->GetNDofs() )*_eqn._nvars[fe]; }
+     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs += (_eqnmap._elem_type[_dim-1][fe]->GetNDofs() )*_eqn._nvars[fe]; }
 
   _el_dof_indices.resize(_el_n_dofs);
   _bc_eldofs = new uint[_el_n_dofs];

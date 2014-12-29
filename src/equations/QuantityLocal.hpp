@@ -48,13 +48,14 @@ namespace femus {
     uint _dim;
     uint _ndof;
     
-    EqnBase*  _eqnptr;
     Quantity* _qtyptr;
+    EqnBase*  _eqnptr;
     
+  protected:
+        
     CurrGaussPointBase & _currGP;
     CurrElem & _currEl;
     
-
   };
   
 
@@ -81,22 +82,8 @@ namespace femus {
  //Since the Vect may or may not have a Quantity, 
  //I don't pass the quantity to the constructor, but later
  
- //Ok, I need the list of Abstract FE Elements.
-//Now, Vect is first of all associated with a Quantity
-//but wait, what if it is not associated to any Quantity?
-//TODO then you need other ways to get to the FEMap.
-//The quantity must have the FEMap...
-//Then Vect must be used somewhere where the _FEMap can be reached
- 
-//TODO the Vect class should be called the VectGaussPoint, because it mostly holds GAUSS POINT VALUES ! 
- 
  //Ok, so Vect can have a quantity with equation,
  //or a quantity without equation,
  //or no quantity at all
  
- //Vect has a LOCAL nature, in the sense that it has the ELEMENT dofs, and also the CURRENT GAUSS values
- //for several operators
- 
- //TODO TODO TODO this class must be better redefined 
-
 #endif

@@ -25,6 +25,10 @@ class QuantityLocal;
     CurrElem(const uint vb, const EqnBase&, const EquationsMap& e_map_in);
    ~CurrElem();
 
+    inline const uint  GetVb() const {
+      return _is_vb;
+    }
+    
     inline const uint  GetDim() const {
       return _dim;
     }
@@ -74,7 +78,6 @@ class QuantityLocal;
     
     void  PrintOrientation() const;
     
-    //TODO remove vb from these arguments
     void  ConvertElemCoordsToMappingOrd(QuantityLocal& myvect) const;
     
     /** needs the EQUATION basically */
@@ -103,7 +106,8 @@ class QuantityLocal;
    double  *_el_xm;               /// element center point                                [_spacedimension];
    const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
    const uint _mesh_vb;     //index for the mesh
-
+   const uint _is_vb;
+    
   };
   
 

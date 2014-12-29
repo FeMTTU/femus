@@ -10,7 +10,7 @@
 namespace femus {
 
 
-
+class CurrElem;
 class elem_type;
 class QuantityLocal;
 class EquationsMap;
@@ -50,7 +50,7 @@ inline double Phi(const uint ql,const uint dof) const {
   return _phi_ndsQLVB_g[ql][dof];
 }
 
-  static CurrGaussPointBase & build(const uint vb_in, EquationsMap& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
+  static CurrGaussPointBase & build(const CurrElem & elem_in, EquationsMap& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
 
     double* _dphidxezeta_ndsQLVB_g[QL];  //canonical derivatives
     double*    _dphidxyz_ndsQLVB_g[QL];  //physical derivatives

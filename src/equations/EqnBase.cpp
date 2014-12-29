@@ -3970,7 +3970,7 @@ const uint myproc= _iproc;
   double time=0.;
   
     CurrElem       currelem(vb,*this,_eqnmap);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(vb,_eqnmap, _mesh.get_dim());
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
 
   //======== ELEMENT MAPPING =======
   const uint meshql = (int) _mesh._mesh_rtmap.get("meshql");  

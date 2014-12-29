@@ -75,9 +75,7 @@
  void EqnNS::GenMatRhsVB(const uint vb,const double time,const uint Level)  {  ///< VB Assemblying.
 
     CurrElem       currelem(vb,*this,_eqnmap);
-//     CurrGaussPoint   currgp(_eqnmap);
-//here, I have to put the BASE, because that is my RUN-TIME DIMENSION-INDEPENDENT GaussPoint interface!!!!    
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(vb,_eqnmap, _mesh.get_dim());
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
 
 
 //========== PROCESSOR INDEX
