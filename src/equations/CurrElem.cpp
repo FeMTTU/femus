@@ -18,8 +18,7 @@ namespace femus {
     _eqn(eqn_in),
     _eqnmap(e_map_in),
     _dim(_eqnmap._mesh.get_dim()-vb),
-    _mesh_vb(vb),
-    _is_vb(vb)
+    _mesh_vb(vb)
     {
     
 //========== Current "Geometric Element"  ========================

@@ -3,7 +3,8 @@
 
 
 #include "FETypeEnum.hpp"
-
+#include "EquationsMap.hpp"
+#include "MeshTwo.hpp"
 #include "DenseVector.hpp"
 #include "DenseMatrix.hpp"
 
@@ -26,7 +27,7 @@ class QuantityLocal;
    ~CurrElem();
 
     inline const uint  GetVb() const {
-      return _is_vb;
+      return _eqnmap._mesh.get_dim() - _dim;
     }
     
     inline const uint  GetDim() const {
@@ -106,7 +107,6 @@ class QuantityLocal;
    double  *_el_xm;               /// element center point                                [_spacedimension];
    const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
    const uint _mesh_vb;     //index for the mesh
-   const uint _is_vb;
     
   };
   
