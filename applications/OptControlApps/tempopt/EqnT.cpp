@@ -152,7 +152,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     QuantityLocal xyz(currgp,currelem);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[_mesh.get_dim()-1-vb][xyz._FEord]->GetNDofs();
+    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz._val_dofs = new double[xyz._dim*xyz._ndof];
     xyz._val_g    = new double[xyz._dim];
 
@@ -160,7 +160,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
   QuantityLocal xyz_refbox(currgp,currelem);  //no quantity
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = _mesh.GetGeomEl(space_dim-1-vb,xyz_refbox._FEord)._elnds;
+  xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   xyz_refbox._el_average.resize(xyz_refbox._dim);
@@ -197,7 +197,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     int T4_ord = T4_ORD;
   
   /// b) Element  Loop over the volume (n_elem)
-   const uint el_ngauss = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussPointsNumber();
+   const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
    const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
    const uint nel_b = _mesh._off_el[vb][_NoLevels*myproc+Level];
 
@@ -267,7 +267,7 @@ for (uint fe = 0; fe < QL; fe++)   {
 }
 	  
 const double      det = dt*currgp.JacVectVV_g(xyz);
-const double dtxJxW_g = det*_eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
+const double dtxJxW_g = det*_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { currgp.SetDPhiDxyzElDofsFEVB_g   (vb,fe,qp); }
@@ -325,7 +325,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 #if FOURTH_ROW==1
 	 int ip3 = i + 3 * Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
 	 
-	 if (i < _eqnmap._elem_type[_mesh.get_dim()-1-vb][T4_ord]->GetNDofs()) { currelem.Rhs()(ip3) +=  currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[T4_ord][i]) + (1-currelem.GetBCDofFlag()[ip3])*detb*1300.;
+	 if (i < _eqnmap._elem_type[currelem.GetDim()-1][T4_ord]->GetNDofs()) { currelem.Rhs()(ip3) +=  currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[T4_ord][i]) + (1-currelem.GetBCDofFlag()[ip3])*detb*1300.;
 	              currelem.Mat()(ip3,ip3)  += ( 1-currelem.GetBCDofFlag()[ip3] )*detb;  }
 #endif
 	 // Matrix Assemblying ---------------------------
@@ -427,7 +427,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
 #if FOURTH_ROW==1
 	 int ip3 = i + 3*Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
 // 	    int jp3 = j + 3*Tempold._ndof;
-	   if (i < _eqnmap._elem_type[_mesh.get_dim()-1-vb][T4_ord]->GetNDofs() ) currelem.Mat()(ip3,ip3) += currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[ T4_ord ][/*j*/i]*currgp._phi_ndsQLVB_g[ T4_ord ][i]);   
+	   if (i < _eqnmap._elem_type[currelem.GetDim()-1][T4_ord]->GetNDofs() ) currelem.Mat()(ip3,ip3) += currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[ T4_ord ][/*j*/i]*currgp._phi_ndsQLVB_g[ T4_ord ][i]);   
 #endif
 	    
         }  //end j (col)
@@ -494,7 +494,7 @@ int el_Neum_flag=0;
     currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp); 
   }
         const double  det   = dt*currgp.JacVectBB_g(xyz);
-        const double dtxJxW_g = det * _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
+        const double dtxJxW_g = det * _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
        xyz.val_g();
@@ -699,7 +699,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
     
    double integral = 0.;
 
-      const uint el_ngauss = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussPointsNumber();
+      const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
 
 //parallel sum
     const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
@@ -733,7 +733,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
      for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }  
      
    const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
-   const double  wgt_g = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
+   const double  wgt_g = _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
 
      for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
@@ -832,7 +832,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
    double integral = 0.;
 
 //loop over the geom el types
-      const uint el_ngauss = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussPointsNumber();
+      const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
 
 //parallel sum
     const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
@@ -858,7 +858,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
     }  
      
       const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
-      const double  wgt_g = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
+      const double  wgt_g = _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
 
   Tlift.val_g();
   Tlift.grad_g(vb);
