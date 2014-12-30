@@ -265,7 +265,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe)
 #endif
 #if BMAG_QTY==1
       Bext.val_g();          //----- for Advection RHS
-      Bext.grad_g(vb);          //----- for Laplacian RHS
+      Bext.grad_g();          //----- for Laplacian RHS
       Bext.curl_g();          //----- for Curl Curl RHS         //THE EXTENSION of the DOFS to 3D is done INSIDE!!
 #endif
 

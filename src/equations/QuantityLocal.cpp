@@ -70,9 +70,9 @@ return;
 //here I should check that the    _grad_g double array has been allocated
 //unfortunately there is no way to check this in C
 
- void QuantityLocal::grad_g(const uint vbflag) {
+ void QuantityLocal::grad_g() {
    
-        const uint ndim = _currGP.GetElemDim(vbflag);
+        const uint ndim = _currGP.GetElemDim(_currEl.GetVb());
    const uint   el_ndof = _ndof;
    const uint     nvars = _dim;
    const uint  fe_order = _FEord;

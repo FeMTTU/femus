@@ -20,6 +20,7 @@ namespace femus {
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
 //by the way, with the EquationsMap I reach the Utils, the Mesh, and so the GeomEl, and so on...
 CurrGaussPointBase::CurrGaussPointBase(const CurrElem & curr_el_in, EquationsMap& e_map_in ):
+ _current_elem(curr_el_in),
        _eqnmap(e_map_in),
     _elem_type(e_map_in._elem_type[curr_el_in.GetDim() - 1]),
         _qrule(e_map_in.    _qrule[curr_el_in.GetDim() - 1]) {

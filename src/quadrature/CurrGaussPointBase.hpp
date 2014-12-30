@@ -34,6 +34,9 @@ class EquationsMap;
      return _IntDim[vb_in];
    }
      
+   inline const CurrElem & GetCurrentElem() const {
+     return _current_elem;
+   }
    
    double**  get_tangent_ptr();   //TODO should be only for BOUNDARY 
    double*   get_normal_ptr();   //TODO should be only for BOUNDARY 
@@ -60,6 +63,7 @@ inline double Phi(const uint ql,const uint dof) const {
   protected:
     
    uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
+   const CurrElem & _current_elem;
    EquationsMap         & _eqnmap;
    std::vector<elem_type*>  &  _elem_type;
    Gauss   _qrule;

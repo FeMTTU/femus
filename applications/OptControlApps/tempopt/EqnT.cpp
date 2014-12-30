@@ -861,7 +861,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
       const double  wgt_g = _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
 
   Tlift.val_g();
-  Tlift.grad_g(vb);
+  Tlift.grad_g();
 
   double deltau_squarenorm_g = 0.;
    deltau_squarenorm_g += (1-reg_ord) * (Tlift._val_g[0])*(Tlift._val_g[0]); 

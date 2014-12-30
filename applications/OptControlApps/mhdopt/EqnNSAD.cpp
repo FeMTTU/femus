@@ -278,7 +278,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
         Bmag.val_g();
          Vel.val_g();
       VelDes.val_g();
-         Vel.grad_g(vb);
+         Vel.grad_g();
 
 //vector product
         Math::extend(Bmag._val_g,Bmag._val_g3D,space_dim);

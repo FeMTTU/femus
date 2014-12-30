@@ -25,7 +25,7 @@ namespace femus {
     //TODO all these function are of the SET type (this is how I should call them), that is why they are NOT CONST
    void  VectWithQtyFillBasic();             //this needs the quantity and the fe map
    void                 val_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
-   void                grad_g(const uint vbflag); //this only needs the CUrrent GAUSS  //No Quantity needed
+   void                grad_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void                curl_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void            ExtendDofs(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void         GetElDofsVect(const uint Level); //this only needs the CUrrent ELEMENT
