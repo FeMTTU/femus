@@ -29,10 +29,6 @@ class EquationsMap;
     
     CurrGaussPointBase(const CurrElem & curr_el_in, EquationsMap& e_map_in );
    ~CurrGaussPointBase();
- 
-   inline const uint GetElemDim(const uint vb_in) const {
-     return _IntDim[vb_in];
-   }
      
    inline const CurrElem & GetCurrentElem() const {
      return _current_elem;

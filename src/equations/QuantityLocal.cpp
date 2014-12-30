@@ -72,7 +72,7 @@ return;
 
  void QuantityLocal::grad_g() {
    
-        const uint ndim = _currGP.GetElemDim(_currEl.GetVb());
+        const uint ndim = _currEl.GetDim();
    const uint   el_ndof = _ndof;
    const uint     nvars = _dim;
    const uint  fe_order = _FEord;
