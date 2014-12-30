@@ -51,6 +51,10 @@ namespace femus {
     Quantity* _qtyptr;
     EqnBase*  _eqnptr;
     
+    inline const CurrElem &  GetCurrentElem() const { 
+      return _currEl;
+    }
+    
   protected:
         
     CurrGaussPointBase & _currGP;

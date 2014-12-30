@@ -5,7 +5,7 @@
 #include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "GaussPoints.hpp"
-
+#include "CurrElem.hpp"
 
 namespace femus {
 
@@ -55,7 +55,7 @@ inline double Phi(const uint ql,const uint dof) const {
     double* _dphidxezeta_ndsQLVB_g[QL];  //canonical derivatives
     double*    _dphidxyz_ndsQLVB_g[QL];  //physical derivatives
     double*  _dphidxyz_ndsQLVB_g3D[QL];  //physical derivatives in 3D
-    double*         _phi_ndsQLVB_g[QL];  //canonical functions  //TODO here it seems to contain GAUSS x ELDOFS
+    double*         _phi_ndsQLVB_g[QL];  //canonical functions
   
   protected:
     

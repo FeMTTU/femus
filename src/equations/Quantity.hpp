@@ -27,7 +27,7 @@ public:
    Quantity(std::string name_in,QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
   ~Quantity();  
 
-  /*virtual*/ void FunctionDof(const uint vb, QuantityLocal& myvect, const double t,const double* xx) const/* =0*/;
+  /*virtual*/ void FunctionDof(QuantityLocal& myvect, const double t,const double* xx) const/* =0*/;
       virtual void Function_txyz(const double t, const double* xp, double* temp) const   = 0;  
       
   void set_eqn(EqnBase*);

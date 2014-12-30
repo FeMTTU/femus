@@ -345,13 +345,13 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
  #if (BMAG_QTY==1)
   if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(Level); 
-  else                         Bext._qtyptr->FunctionDof(vb,Bext,time,xyz_refbox._val_dofs);
+  else                         Bext._qtyptr->FunctionDof(Bext,time,xyz_refbox._val_dofs);
   if ( Bhom._eqnptr != NULL )  Bhom.GetElDofsVect(Level);   
-  else                         Bhom._qtyptr->FunctionDof(vb,Bhom,time,xyz_refbox._val_dofs);
+  else                         Bhom._qtyptr->FunctionDof(Bhom,time,xyz_refbox._val_dofs);
 #endif
 #if (TEMP_QTY==1)
    if ( Temp._eqnptr != NULL ) Temp.GetElDofsVect(Level);
-     else                      Temp._qtyptr->FunctionDof(vb,Temp,time,xyz_refbox._val_dofs);
+     else                      Temp._qtyptr->FunctionDof(Temp,time,xyz_refbox._val_dofs);
 #endif
 
 //=== the connectivity is only related to the ELEMENT, so it is GEOMETRICAL
@@ -951,9 +951,9 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
 //=======        
 
     if ( Vel._eqnptr != NULL )       Vel.GetElDofsVect(Level);
-    else                             Vel._qtyptr->FunctionDof(vb,Vel,0./*time*/,xyz_refbox._val_dofs);    //give the Hartmann flow, if not solving NS
+    else                             Vel._qtyptr->FunctionDof(Vel,0./*time*/,xyz_refbox._val_dofs);    //give the Hartmann flow, if not solving NS
     if ( VelDes._eqnptr != NULL ) VelDes.GetElDofsVect(Level);
-    else                          VelDes._qtyptr->FunctionDof(vb,VelDes,0./*time*/,xyz_refbox._val_dofs);    
+    else                          VelDes._qtyptr->FunctionDof(VelDes,0./*time*/,xyz_refbox._val_dofs);    
 
 //AAA time is picked as a function pointer of the time C library i think...
     // it doesnt say it was not declared

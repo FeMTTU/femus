@@ -219,7 +219,7 @@
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
 #if (TEMP_QTY==1)
    if ( Temp._eqnptr != NULL )  Temp.GetElDofsVect(Level);
-     else                       Temp._qtyptr->FunctionDof(vb,Temp,time,xyz_refbox._val_dofs);
+     else                       Temp._qtyptr->FunctionDof(Temp,time,xyz_refbox._val_dofs);
 #endif
 
 //======== TWO PHASE WORLD

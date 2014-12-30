@@ -229,15 +229,15 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
   
     
     if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(Level);
-    else                         Vel._qtyptr->FunctionDof(vb,Vel,time,xyz_refbox._val_dofs);    //give the Hartmann flow, if not solving NS
+    else                         Vel._qtyptr->FunctionDof(Vel,time,xyz_refbox._val_dofs);    //give the Hartmann flow, if not solving NS
     if ( Bhom._eqnptr != NULL )  Bhom.GetElDofsVect(Level);
-    else                         Bhom._qtyptr->FunctionDof(vb,Bhom,time,xyz_refbox._val_dofs);
+    else                         Bhom._qtyptr->FunctionDof(Bhom,time,xyz_refbox._val_dofs);
     if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(Level);
-    else                         Bext._qtyptr->FunctionDof(vb,Bext,time,xyz_refbox._val_dofs);
+    else                         Bext._qtyptr->FunctionDof(Bext,time,xyz_refbox._val_dofs);
     if ( BhomAdj._eqnptr != NULL )  BhomAdj.GetElDofsVect(Level);
-    else                            BhomAdj._qtyptr->FunctionDof(vb,BhomAdj,time,xyz_refbox._val_dofs);    
+    else                            BhomAdj._qtyptr->FunctionDof(BhomAdj,time,xyz_refbox._val_dofs);    
     if ( VelDes._eqnptr != NULL )  VelDes.GetElDofsVect(Level);
-    else                           VelDes._qtyptr->FunctionDof(vb,VelDes,time,xyz_refbox._val_dofs);    
+    else                           VelDes._qtyptr->FunctionDof(VelDes,time,xyz_refbox._val_dofs);    
 
  
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!

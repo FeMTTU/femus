@@ -235,11 +235,11 @@ namespace femus {
 //===== "PHYSICAL" INVOLVEMENT
 #if BMAG_QTY==1
     if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(Level);
-    else                         Bext._qtyptr->FunctionDof(vb,Bext,time,xyz_refbox._val_dofs);
+    else                         Bext._qtyptr->FunctionDof(Bext,time,xyz_refbox._val_dofs);
 #endif
 #if VELOCITY_QTY==1
     if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(Level);      //----- for Advection MAT & RHS
-    else                        Vel._qtyptr->FunctionDof(vb,Vel,time,xyz_refbox._val_dofs);
+    else                        Vel._qtyptr->FunctionDof(Vel,time,xyz_refbox._val_dofs);
 #endif
     
 
@@ -468,11 +468,11 @@ if (_Dir_pen_fl == 1)  {
 //========== EXTERNAL DOFS ===   
 #if BMAG_QTY==1
     if ( Bext._eqnptr != NULL )   Bext.GetElDofsVect(Level);
-    else                          Bext._qtyptr->FunctionDof(vb,Bext,time,xyz_refbox._val_dofs);
+    else                          Bext._qtyptr->FunctionDof(Bext,time,xyz_refbox._val_dofs);
 #endif
 #if VELOCITY_QTY==1
     if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(Level);
-    else                        Vel._qtyptr->FunctionDof(vb,Vel,time,xyz_refbox._val_dofs);
+    else                        Vel._qtyptr->FunctionDof(Vel,time,xyz_refbox._val_dofs);
 #endif
     
 

@@ -252,10 +252,10 @@ int domain_flag = myphys->ElFlagControl(xyz_refbox._el_average);
   //Do not use GetElDofs if you want to pick an intermediate dof...
       
    if ( vel._eqnptr != NULL )  vel.GetElDofsVect(Level);
-   else                        vel._qtyptr->FunctionDof(vb,vel,time,xyz_refbox._val_dofs);
+   else                        vel._qtyptr->FunctionDof(vel,time,xyz_refbox._val_dofs);
 
    if ( Tdes._eqnptr != NULL )  Tdes.GetElDofsVect(Level);
-   else                         Tdes._qtyptr->FunctionDof(vb,Tdes,time,xyz_refbox._val_dofs);
+   else                         Tdes._qtyptr->FunctionDof(Tdes,time,xyz_refbox._val_dofs);
 
 
     for (uint qp=0; qp< el_ngauss; qp++) {
@@ -720,11 +720,11 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
 //====================     
  
     if ( Tempold._eqnptr != NULL )   Tempold.GetElDofsVect(Level);
-    else                             Tempold._qtyptr->FunctionDof(vb,Tempold,0.,xyz_refbox._val_dofs);
+    else                             Tempold._qtyptr->FunctionDof(Tempold,0.,xyz_refbox._val_dofs);
     if ( Tlift._eqnptr != NULL )       Tlift.GetElDofsVect(Level);
-    else                               Tlift._qtyptr->FunctionDof(vb,Tlift,0.,xyz_refbox._val_dofs);
+    else                               Tlift._qtyptr->FunctionDof(Tlift,0.,xyz_refbox._val_dofs);
     if ( Tdes._eqnptr != NULL )         Tdes.GetElDofsVect(Level);
-    else                                Tdes._qtyptr->FunctionDof(vb,Tdes,0.,xyz_refbox._val_dofs);    
+    else                                Tdes._qtyptr->FunctionDof(Tdes,0.,xyz_refbox._val_dofs);    
 
 
 

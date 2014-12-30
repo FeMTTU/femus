@@ -206,13 +206,13 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
     
     
      if ( Vel._eqnptr != NULL )      Vel.GetElDofsVect(Level);
-    else                             Vel._qtyptr->FunctionDof(vb,Vel,time,xyz_refbox._val_dofs);
+    else                             Vel._qtyptr->FunctionDof(Vel,time,xyz_refbox._val_dofs);
     if ( VelAdj._eqnptr != NULL ) VelAdj.GetElDofsVect(Level);
-    else                          VelAdj._qtyptr->FunctionDof(vb,VelAdj,time,xyz_refbox._val_dofs);
+    else                          VelAdj._qtyptr->FunctionDof(VelAdj,time,xyz_refbox._val_dofs);
     if ( Bhom._eqnptr != NULL )     Bhom.GetElDofsVect(Level);
-    else                            Bhom._qtyptr->FunctionDof(vb,Bhom,time,xyz_refbox._val_dofs);
+    else                            Bhom._qtyptr->FunctionDof(Bhom,time,xyz_refbox._val_dofs);
     if ( Bext._eqnptr != NULL )     Bext.GetElDofsVect(Level);
-    else                            Bext._qtyptr->FunctionDof(vb,Bext,time,xyz_refbox._val_dofs);
+    else                            Bext._qtyptr->FunctionDof(Bext,time,xyz_refbox._val_dofs);
 
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
     Math::zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof);
