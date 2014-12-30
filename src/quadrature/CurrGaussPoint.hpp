@@ -18,13 +18,20 @@ namespace femus {
 // a Current Element, 
 // an Abstract Mathematical Element (FEElem),
 // an Abstract Geometrical Element (GeomEl)
-   
+
+// This gauss point receives the Current Element, which can be a volume or boundary (or even less) element.
+// So far this class has the VV and BB parts altogether 
+// Questa classe ha potenzialmente sia la parte VV sia la parte BB, ma all'atto della costruzione  
+// ne sceglie solo uno, e alloca le strutture solo per quello. In questo modo solo le funzioni VV o BB dovranno essere usate.  
+
+
+  
 template <unsigned int FM_DIM>
   class CurrGaussPoint : public CurrGaussPointBase {
     
   public:
     
-     CurrGaussPoint(const uint vb_in, EquationsMap& e_map_in );
+     CurrGaussPoint(const CurrElem & curr_el_in, EquationsMap& e_map_in );
     ~CurrGaussPoint();
  
 double        JacVectVV_g(QuantityLocal& xyz )/*const*/;  //TODO should be only for VOLUME

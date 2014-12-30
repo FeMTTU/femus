@@ -19,10 +19,10 @@ namespace femus {
 // for the geometric element
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
 //by the way, with the EquationsMap I reach the Utils, the Mesh, and so the GeomEl, and so on...
-CurrGaussPointBase::CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in ):
-    _eqnmap(e_map_in),
-    _elem_type(e_map_in._elem_type[_eqnmap._mesh.get_dim()-1-vb_in]),
-    _qrule(e_map_in._qrule[_eqnmap._mesh.get_dim()-1-vb_in]) {
+CurrGaussPointBase::CurrGaussPointBase(const CurrElem & curr_el_in, EquationsMap& e_map_in ):
+       _eqnmap(e_map_in),
+    _elem_type(e_map_in._elem_type[curr_el_in.GetDim() - 1]),
+        _qrule(e_map_in.    _qrule[curr_el_in.GetDim() - 1]) {
   
   _IntDim[VV] = _eqnmap._mesh.get_dim();
   _IntDim[BB] = _eqnmap._mesh.get_dim() - 1; 
@@ -31,10 +31,10 @@ CurrGaussPointBase::CurrGaussPointBase(const uint vb_in, EquationsMap& e_map_in 
   //BISOGNA STARE ATTENTI CHE SE FAI DEL TEMPLATING con le ALLOCAZIONI STATICHE allora ti diverti poco con i DOPPI o TRIPLI ARRAY
 
      for (int fe = 0; fe < QL; fe++) {
-          _phi_ndsQLVB_g[fe] =  new double[                  _elem_type[fe]->GetNDofs() ];
-   _dphidxyz_ndsQLVB_g3D[fe] =  new double[ 3              * _elem_type[fe]->GetNDofs() ];
-     _dphidxyz_ndsQLVB_g[fe] =  new double[ _IntDim[vb_in] * _elem_type[fe]->GetNDofs() ];   
-  _dphidxezeta_ndsQLVB_g[fe] =  new double[ _IntDim[vb_in] * _elem_type[fe]->GetNDofs() ];     
+          _phi_ndsQLVB_g[fe] =  new double[                               _elem_type[fe]->GetNDofs() ];
+   _dphidxyz_ndsQLVB_g3D[fe] =  new double[ 3                           * _elem_type[fe]->GetNDofs() ];
+     _dphidxyz_ndsQLVB_g[fe] =  new double[ _IntDim[curr_el_in.GetVb()] * _elem_type[fe]->GetNDofs() ];   
+  _dphidxezeta_ndsQLVB_g[fe] =  new double[ _IntDim[curr_el_in.GetVb()] * _elem_type[fe]->GetNDofs() ];     
    }
   
   //Jacobian matrices, normals, tangents
@@ -77,9 +77,9 @@ CurrGaussPointBase::~CurrGaussPointBase() {
       
       switch(dim_in) {
 	
-	case(2):  return *(new  CurrGaussPoint<2>(elem_in.GetVb(),eqmap_in));
+	case(2):  return *(new  CurrGaussPoint<2>(elem_in,eqmap_in));
 	
-	case(3):  return *(new  CurrGaussPoint<3>(elem_in.GetVb(),eqmap_in)); 
+	case(3):  return *(new  CurrGaussPoint<3>(elem_in,eqmap_in)); 
 	
 	default: {std::cout << "CurrGaussPointBase: Only 2D and 3D" << std::endl; abort();}
 	  

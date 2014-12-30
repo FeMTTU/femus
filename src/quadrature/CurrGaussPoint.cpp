@@ -19,8 +19,8 @@ namespace femus {
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
 //by the way, with the EquationsMap I reach the Utils, the Mesh, and so the GeomEl, and so on...
 template <unsigned int FM_DIM>
-CurrGaussPoint<FM_DIM>::CurrGaussPoint(const uint vb_in, EquationsMap& e_map_in ): 
-        CurrGaussPointBase(vb_in,e_map_in) {
+CurrGaussPoint<FM_DIM>::CurrGaussPoint(const CurrElem & curr_el_in, EquationsMap& e_map_in ): 
+        CurrGaussPointBase(curr_el_in,e_map_in) {
   
  
 }
