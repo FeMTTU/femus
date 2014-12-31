@@ -101,6 +101,8 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
 /// This function assembles the matrix and the rhs:
 void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
 
+  const uint mesh_vb = vb;
+  
   CurrElem       currelem(vb,*this,_eqnmap);    
   CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
@@ -198,8 +200,8 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
   
   /// b) Element  Loop over the volume (n_elem)
    const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
-   const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
-   const uint nel_b = _mesh._off_el[vb][_NoLevels*myproc+Level];
+   const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
+   const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
 
   if (vb==VV)   {//BEGIN VOLUME
     
@@ -213,7 +215,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
 
     
 //MY EQUATION
@@ -453,7 +455,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(fe); }
       currelem.SetMidpoint(); 
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
      
       currelem.SetElDofsBc(Level);
       
@@ -712,7 +714,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
       currelem.SetMidpoint();
       
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-      _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
+      _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);
 
 // =============== 
       xyz_refbox.SetElemAverage();
@@ -845,7 +847,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
       currelem.SetMidpoint();
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-      _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
+      _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);
      
      Tlift.GetElDofsVect(Level);
 

@@ -152,12 +152,12 @@ void MeshTwo::clear ()  {
 
 // ========================================================
 //This function transforms the node coordinates into the reference node coordinates
-  void MeshTwo::TransformElemNodesToRef(const uint vb,const double* xx_qnds, double* refbox_xyz) const {
+  void MeshTwo::TransformElemNodesToRef(const uint elem_dim,const double* xx_qnds, double* refbox_xyz) const {
    
    double*   x_in = new double[_dim];
    double*   x_out = new double[_dim];
   const uint mesh_ord = (int) _mesh_rtmap.get("mesh_ord");
-  const uint el_nds = GetGeomEl(_dim-1-vb,mesh_ord)._elnds;
+  const uint el_nds = GetGeomEl(elem_dim-1,mesh_ord)._elnds;
 
       for (uint n=0;n < el_nds ;n++) {
 	

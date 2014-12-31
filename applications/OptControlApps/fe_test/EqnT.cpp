@@ -140,7 +140,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
 
     
 //MY EQUATION
@@ -322,7 +322,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(fe); }
       currelem.SetMidpoint(); 
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
      
       currelem.SetElDofsBc(Level);
       
@@ -496,7 +496,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
       currelem.SetMidpoint();
       
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-      _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
+      _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);
 
 // =============== 
       xyz_refbox.SetElemAverage();
@@ -603,7 +603,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
       currelem.SetMidpoint();
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-      _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
+      _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);
      
   for (uint qp = 0; qp < el_ngauss; qp++) {
 

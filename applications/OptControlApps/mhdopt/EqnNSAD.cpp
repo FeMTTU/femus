@@ -218,7 +218,7 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);
 
     currelem.SetElDofsBc(Level);
     
@@ -408,7 +408,7 @@ if (_Dir_pen_fl == 0)  {
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
+     _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);
 
      currelem.SetElDofsBc(Level);
 

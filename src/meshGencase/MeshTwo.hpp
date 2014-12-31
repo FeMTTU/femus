@@ -121,7 +121,7 @@ public:
     Domain* _domain;      //TODO You must remember to ALLOCATE this POINTER BEFORE USING IT!
     Domain* GetDomain() const;
     void    SetDomain(Domain* );
-    void TransformElemNodesToRef(const uint vb,const double* xx_qnds,double* refbox_xyz) const;
+    void TransformElemNodesToRef(const uint elem_dim,const double* xx_qnds,double* refbox_xyz) const;
     
     inline GeomEl GetGeomEl(const uint dim, const uint order) const {
      return _GeomEl[dim][order]; 
