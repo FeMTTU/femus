@@ -231,7 +231,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     Tlift.GetElDofsVect(Level);
      TAdj.GetElDofsVect(Level);
      
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
 
 // ===============      
 // Now the point is this: there are several functions of space
@@ -463,7 +463,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(fe); }
          Tlift.GetElDofsVect(Level);
           TAdj.GetElDofsVect(Level);
 
-     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,Tempold._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified!
+     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified!
   
  //============ FLAGS ================
      double el_penalty = 0.;
@@ -550,7 +550,7 @@ else {   std::cout << " No line integrals yet... " << std::endl; abort();}
   
 #ifdef DEFAULT_PRINT_INFO
   std::cout << " Matrix and RHS assembled for equation " << _eqname
-            << " Level "<< Level << " dofs " << _A[Level]->n() << " vb = " << vb << std::endl;
+            << " Level "<< Level << " dofs " << _A[Level]->n() << std::endl;
 #endif
 
   return;

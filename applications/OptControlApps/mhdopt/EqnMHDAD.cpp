@@ -202,7 +202,7 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
            BhomAdjOld.GetElDofsVect(Level);
     BhomLagMultAdjOld.GetElDofsVect(Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BhomAdjOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),BhomAdjOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
     
     
      if ( Vel._eqnptr != NULL )      Vel.GetElDofsVect(Level);
@@ -383,7 +383,7 @@ if (_Dir_pen_fl == 0)  {
             BhomAdjOld.GetElDofsVect(Level);
      BhomLagMultAdjOld.GetElDofsVect(Level);
    
-     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BhomAdjOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
+     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),BhomAdjOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
   
     //============ BC =======

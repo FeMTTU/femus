@@ -3756,9 +3756,9 @@ void EqnBase::ReadVector(std::string namefile) {
 //Simply, the class is made of POINTERS. Then, I've created a new pointer
 //which is EQUAL to the pointer of the class, and then I MODIFY what is inside that!
 //So, many functions here can be called CONST even if they are not!
-  void EqnBase::Bc_ConvertToDirichletPenalty(const uint vb, const uint ql, uint* bc) const {
+  void EqnBase::Bc_ConvertToDirichletPenalty(const uint elem_dim, const uint ql, uint* bc) const {
 
-    const uint ndof  = _eqnmap._elem_type[_mesh.get_dim()-1-vb][ql]->GetNDofs();
+    const uint ndof  = _eqnmap._elem_type[elem_dim-1][ql]->GetNDofs();
     const uint nvars = _nvars[ql];
 
     for (uint ivarq=0; ivarq < nvars; ivarq++) {

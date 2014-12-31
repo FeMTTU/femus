@@ -234,7 +234,7 @@ void EqnMHDCONT::init_equation_data() {
          BeOld.GetElDofsVect(Level);  
     LagMultOld.GetElDofsVect(Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BeOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),BeOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
  
     
     if ( Vel._eqnptr != NULL )        Vel.GetElDofsVect(Level);
@@ -468,7 +468,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (fe); }
           BeOld.GetElDofsVect(Level);
      LagMultOld.GetElDofsVect(Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BeOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),BeOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
 
 
 //============ BC =======

@@ -229,7 +229,7 @@ namespace femus {
        bhomOld.GetElDofsVect(Level);
     LagMultOld.GetElDofsVect(Level);
   
-      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,bhomOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
+      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),bhomOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
 
 
 //===== "PHYSICAL" INVOLVEMENT
@@ -436,7 +436,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (fe); }
         bhomOld.GetElDofsVect(Level);
      LagMultOld.GetElDofsVect(Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,bhomOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),bhomOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
 
 //============ BC =======

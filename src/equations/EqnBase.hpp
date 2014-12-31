@@ -140,7 +140,7 @@ public:
           void  clearElBc();
   virtual void elem_bc_read(const double * el_xm, int& surf_id, double * value,int * el_flag) const = 0;
           void Bc_GetElFlagValLevSubd(const uint Level,const uint isubd,const uint iel,int* el_flag,double* el_value ) const;
-          void Bc_ConvertToDirichletPenalty(const uint vb, const uint ql, uint* bc) const;
+          void Bc_ConvertToDirichletPenalty(const uint elem_dim, const uint ql, uint* bc) const;
           void Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const uint vb, const uint *bc_eldofs,const QuantityLocal &Velold_in,const QuantityLocal& press_in,uint &press_fl) const;
 //========= treating NumericVectors, related to Dirichlet Boundary Conditions! =======
           void Bc_ScaleDofVec(NumericVector * myvec,  double ScaleFac);
