@@ -40,9 +40,9 @@ virtual double        JacVectVV_g(QuantityLocal& xyz )/*const*/ = 0;  //TODO sho
 virtual double        JacVectBB_g(QuantityLocal& xyz )/* const*/ = 0;  //TODO should be only for BOUNDARY 
 
 virtual void         SetPhiElDofsFEVB_g(const uint qlflag, const uint qp) = 0;
-virtual void SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp) = 0;
-virtual void    SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp) = 0;
-virtual void ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag/*, const uint qp*/) = 0;
+virtual void SetDPhiDxezetaElDofsFEVB_g(const uint qlflag, const uint qp) = 0;
+virtual void    SetDPhiDxyzElDofsFEVB_g(const uint qlflag, const uint qp) = 0;
+virtual void ExtendDphiDxyzElDofsFEVB_g(const uint qlflag/*, const uint qp*/) = 0;
 
 // TODO encapsulation for phi
 inline double Phi(const uint ql,const uint dof) const { 

@@ -248,14 +248,14 @@ namespace femus {
 //======= here starts the "COMMON SHAPE PART"==================
 for (uint fe = 0; fe < QL; fe++)     { 
   currgp.SetPhiElDofsFEVB_g (fe,qp);
-  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }
+  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }
 
  const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is unique!
  const double dtxJxW_g = det*_eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
  const double     detb = det/el_ngauss;
 
-for (uint fe = 0; fe < QL; fe++)     {    currgp.SetDPhiDxyzElDofsFEVB_g (vb,fe,qp); }
-for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (vb,fe); }
+for (uint fe = 0; fe < QL; fe++)     {    currgp.SetDPhiDxyzElDofsFEVB_g (fe,qp); }
+for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (fe); }
 //======= end of the "COMMON SHAPE PART"==================
 
       bhomOld.val_g();         //---for Time
@@ -482,7 +482,7 @@ if (_Dir_pen_fl == 1)  {
 //=======here starts the "COMMON SHAPE PART"============================
       for (uint fe = 0; fe < QL; fe++)     {
 	currgp.SetPhiElDofsFEVB_g (fe,qp);  
-        currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);   }
+        currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);   }
       
         const double det      = dt * currgp.JacVectBB_g(xyz);
 	const double dtxJxW_g = det * _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);

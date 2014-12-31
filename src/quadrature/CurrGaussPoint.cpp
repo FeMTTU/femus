@@ -72,10 +72,10 @@ return;
 //so over 'dimension' variables or 'bdry_dimension' variables
 //then the rest should be alright
  template <unsigned int FM_DIM>
-void  CurrGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp) {
+void  CurrGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint qlflag, const uint qp) {
     
     
-  const uint ndim      =    _IntDim[vbflag];
+  const uint ndim      = _current_elem.GetDim();
   const uint el_nnodes = _elem_type[qlflag]->GetNDofs();
   const uint el_ngauss =     _qrule.GetGaussPointsNumber();
   const uint goffset   = el_nnodes*el_ngauss;
@@ -115,12 +115,13 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const ui
 //I dont need qp here
 //also, i only do this function AFTER FILLING _dphidxyz_ndsQLVB_g!
 template <unsigned int FM_DIM>
-void  CurrGaussPoint<FM_DIM>::ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag/*, const uint qp*/) {
+void  CurrGaussPoint<FM_DIM>::ExtendDphiDxyzElDofsFEVB_g(const uint qlflag/*, const uint qp*/) {
 
   //AAA: valid from dimension to 3
 
+  const uint ndim     = _current_elem.GetDim();
   const uint el_ndofs = _elem_type[qlflag]->GetNDofs();
-  const uint ndim     =    _IntDim[vbflag]/*dimension*/;
+  
 //set to zero  
    for (uint eln=0; eln<el_ndofs; eln++)  {
       for (uint i=0; i<3; i++) {
@@ -142,9 +143,9 @@ void  CurrGaussPoint<FM_DIM>::ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const
 
 //canonical derivatives
 template <unsigned int FM_DIM>
-void  CurrGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp) {
+void  CurrGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint qlflag, const uint qp) {
     
-           const uint ndim =    _IntDim[vbflag];
+           const uint ndim = _current_elem.GetDim();
          const uint elndof = _elem_type[qlflag]->GetNDofs();
     const uint   el_ngauss =     _qrule.GetGaussPointsNumber();
       const uint   goffset = elndof*el_ngauss;

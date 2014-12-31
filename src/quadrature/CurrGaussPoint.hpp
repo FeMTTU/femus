@@ -39,9 +39,9 @@ double        JacVectBB_g(QuantityLocal& xyz )/* const*/;  //TODO should be only
 
 
 void         SetPhiElDofsFEVB_g(const uint qlflag, const uint qp);
-void SetDPhiDxezetaElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp);
-void    SetDPhiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag, const uint qp);
-void ExtendDphiDxyzElDofsFEVB_g(const uint vbflag,const uint qlflag/*, const uint qp*/);
+void SetDPhiDxezetaElDofsFEVB_g(const uint qlflag, const uint qp);
+void    SetDPhiDxyzElDofsFEVB_g(const uint qlflag, const uint qp);
+void ExtendDphiDxyzElDofsFEVB_g(const uint qlflag/*, const uint qp*/);
    
   protected: 
     

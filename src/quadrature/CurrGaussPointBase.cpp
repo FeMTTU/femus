@@ -32,10 +32,10 @@ CurrGaussPointBase::CurrGaussPointBase(const CurrElem & curr_el_in, EquationsMap
   //BISOGNA STARE ATTENTI CHE SE FAI DEL TEMPLATING con le ALLOCAZIONI STATICHE allora ti diverti poco con i DOPPI o TRIPLI ARRAY
 
      for (int fe = 0; fe < QL; fe++) {
-          _phi_ndsQLVB_g[fe] =  new double[                               _elem_type[fe]->GetNDofs() ];
-   _dphidxyz_ndsQLVB_g3D[fe] =  new double[ 3                           * _elem_type[fe]->GetNDofs() ];
-     _dphidxyz_ndsQLVB_g[fe] =  new double[ _IntDim[curr_el_in.GetVb()] * _elem_type[fe]->GetNDofs() ];   
-  _dphidxezeta_ndsQLVB_g[fe] =  new double[ _IntDim[curr_el_in.GetVb()] * _elem_type[fe]->GetNDofs() ];     
+          _phi_ndsQLVB_g[fe] =  new double[                       _elem_type[fe]->GetNDofs() ];
+   _dphidxyz_ndsQLVB_g3D[fe] =  new double[ 3                   * _elem_type[fe]->GetNDofs() ];
+     _dphidxyz_ndsQLVB_g[fe] =  new double[ curr_el_in.GetDim() * _elem_type[fe]->GetNDofs() ];   
+  _dphidxezeta_ndsQLVB_g[fe] =  new double[ curr_el_in.GetDim() * _elem_type[fe]->GetNDofs() ];     
    }
   
   //Jacobian matrices, normals, tangents

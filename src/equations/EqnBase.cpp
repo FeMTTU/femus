@@ -4002,7 +4002,7 @@ const uint myproc= _iproc;
      
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
-for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }  
+for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
      
 double  Jac_g=0.;
           if (vb==0)   Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      

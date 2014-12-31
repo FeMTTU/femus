@@ -263,15 +263,15 @@ int domain_flag = myphys->ElFlagControl(xyz_refbox._el_average);
 //======= "COMMON SHAPE PART"==================
 for (uint fe = 0; fe < QL; fe++)   { 
   currgp.SetPhiElDofsFEVB_g (fe,qp);
-  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp); 
+  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp); 
 }
 	  
 const double      det = dt*currgp.JacVectVV_g(xyz);
 const double dtxJxW_g = det*_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
-for (uint fe = 0; fe < QL; fe++)     { currgp.SetDPhiDxyzElDofsFEVB_g   (vb,fe,qp); }
-for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe); }
+for (uint fe = 0; fe < QL; fe++)     { currgp.SetDPhiDxyzElDofsFEVB_g   (fe,qp); }
+for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(fe); }
 //======= end of the "COMMON SHAPE PART"==================
 
  	Tempold.val_g(); 
@@ -491,7 +491,7 @@ int el_Neum_flag=0;
 //======= "COMMON SHAPE PART"============================
   for (uint fe = 0; fe < QL; fe++)  {
     currgp.SetPhiElDofsFEVB_g (fe,qp);
-    currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp); 
+    currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp); 
   }
         const double  det   = dt*currgp.JacVectBB_g(xyz);
         const double dtxJxW_g = det * _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
@@ -730,7 +730,7 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
 
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
-     for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }  
+     for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
      
    const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
    const double  wgt_g = _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
@@ -854,7 +854,7 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
 
      for (uint fe = 0; fe < QL; fe++)     {
        currgp.SetPhiElDofsFEVB_g (fe,qp);
-       currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  
+       currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  
     }  
      
       const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
