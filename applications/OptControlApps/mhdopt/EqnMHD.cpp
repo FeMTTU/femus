@@ -95,20 +95,15 @@ namespace femus {
   const uint  meshql   = (int) _mesh._mesh_rtmap.get("meshql");   //======== ELEMENT MAPPING =======
      
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-  //QTYZERO
     QuantityLocal bhomOld(currgp,currelem);
     bhomOld._qtyptr   = _QtyInternalVector[QTYZERO];
     bhomOld.VectWithQtyFillBasic();
-    bhomOld._val_dofs = new double[bhomOld._dim*bhomOld._ndof];
-    bhomOld._val_g    = new double[bhomOld._dim];
+    bhomOld.Allocate();
 
-  //QTYONE
     QuantityLocal LagMultOld(currgp,currelem);
     LagMultOld._qtyptr   = _QtyInternalVector[QTYONE];
     LagMultOld.VectWithQtyFillBasic();
-    LagMultOld._val_dofs = new double[LagMultOld._dim*LagMultOld._ndof];
-    LagMultOld._val_g    = new double[LagMultOld._dim];
-
+    LagMultOld.Allocate();
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
 
     
@@ -118,34 +113,28 @@ namespace femus {
     Phij._dim      = 1;                                                         //scalar!
     Phij._FEord    = bhomOld._FEord;
     Phij._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][Phij._FEord]->GetNDofs(); 
-    Phij._val_g    = new double [Phij._dim];
-    Phij._grad_g   = new double*[Phij._dim];                                    //for VARIOUS Operators, like the grads and curls of the other Vects...
-  for (uint i=0; i< Phij._dim;i++) {Phij._grad_g[i] = new double[DIMENSION];}
+    Phij.Allocate();
         
 //QTYZERO tEST:  test of the first Unknown    
     QuantityLocal Phii(currgp,currelem);
     Phii._dim      = 1;
     Phii._FEord    = bhomOld._FEord;
     Phii._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][Phii._FEord]->GetNDofs();
-    Phii._val_g    = new double [Phii._dim];
-    Phii._grad_g   = new double*[Phii._dim];
-    for (uint i=0; i< Phii._dim;i++) {Phii._grad_g[i] = new double[DIMENSION];}    //for various Operators
-    Phii._grad_g3D = new double*[Phii._dim];                                       //for cross products
-    for (uint i=0; i< Phii._dim;i++) {Phii._grad_g3D[i] = new double[3];}          //for cross products
+    Phii.Allocate();
     
 //QTYONE SHAPE: Shape of the second Unknown
     QuantityLocal Psij(currgp,currelem);
     Psij._dim      = 1;
     Psij._FEord    = LagMultOld._FEord;
     Psij._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][Psij._FEord]->GetNDofs(); 
-    Psij._val_g    = new double [Psij._dim];
+    Psij.Allocate();
     
 //QTYONE tEST: test of the second Unknown
     QuantityLocal Psii(currgp,currelem);
     Psii._dim      = 1;
     Psii._FEord    = LagMultOld._FEord;
     Psii._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][Psii._FEord]->GetNDofs();
-    Psii._val_g    = new double [Psii._dim];
+    Psii.Allocate();
 
 //========= END tEST AND SHAPE FOR QTYZERO AND QTYONE =================
 
@@ -156,37 +145,25 @@ namespace femus {
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-    xyz._val_g    = new double[xyz._dim];
+    xyz.Allocate();
     
     //================== Quadratic domain, auxiliary
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-  xyz_refbox._val_g    = new double[xyz_refbox._dim];
+  xyz_refbox.Allocate();
 
     QuantityLocal Bext(currgp,currelem);
     Bext._qtyptr     = _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
-    Bext._val_dofs   = new double[Bext._dim*Bext._ndof];
-    Bext._val_dofs3D = new double[        3*Bext._ndof];    //needed for a vector product AND for the CURL
-    Bext._val_g      = new double[Bext._dim];
-    Bext._val_g3D    = new double[3];    //needed for a vector product
-    Bext._curl_g3D   = new double[3];
-    Bext._grad_g     = new double*[Bext._dim];
-  for (uint i=0; i< Bext._dim;i++) {Bext._grad_g[i] = new double[DIMENSION];}
- 
+    Bext.Allocate();
 
 #if VELOCITY_QTY==1
     QuantityLocal Vel(currgp,currelem);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity"); 
     Vel.VectWithQtyFillBasic();
-    Vel._val_dofs    = new double[Vel._dim*Vel._ndof];
-    Vel._val_dofs3D  = new double[       3*Vel._ndof]; //needed for a vector product
-    Vel._val_g       = new double[Vel._dim];
-    Vel._val_g3D     = new double[3];   //needed for a vector product
+    Vel.Allocate();
 #endif  
 
 //=========END EXTERNAL QUANTITIES (couplings) =====
@@ -592,43 +569,16 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 // END BOUNDARY  // *****************************************************************
      
  //******************************DESTROY ALL THE Vect****************************  
-// ===============domain ========
-    delete [] xyz_refbox._val_g;
-    delete [] xyz_refbox._val_dofs;
-    
-    delete [] xyz._val_g;
-    delete [] xyz._val_dofs;
-//================================= 
-    
-//=========Internal Quantities: no ifdef for them =========
-   delete [] bhomOld._val_g;
-   delete [] bhomOld._val_dofs;
-
-   delete [] LagMultOld._val_g;
-   delete [] LagMultOld._val_dofs;
-//==============================================
-
-    //=========External Quantities =========
+   xyz_refbox.Deallocate();
+   xyz.Deallocate();
+   bhomOld.Deallocate();
+   LagMultOld.Deallocate();
 #if BMAG_QTY==1
-   for (uint i=0; i< Bext._dim;i++) {delete [] Bext._grad_g[i];}
-      delete [] Bext._grad_g;
-      delete [] Bext._val_g;
-      delete [] Bext._val_g3D ;
-      delete [] Bext._curl_g3D ;
-      
-       delete [] Bext._val_dofs; 
-       delete [] Bext._val_dofs3D; 
+   Bext.Deallocate();
 #endif
 #if VELOCITY_QTY==1
-        delete [] Vel._val_g;
-        delete [] Vel._val_g3D;
-	delete [] Vel._val_dofs;
-	delete [] Vel._val_dofs3D;
-
+   Vel.Deallocate();
 #endif
-
-	
-	//==============================================
    
     
 #ifdef DEFAULT_PRINT_INFO
