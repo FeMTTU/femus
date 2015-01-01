@@ -73,11 +73,6 @@ namespace femus {
 
 
 
-
-/// This function assembles the matrix and the rhs:
- /// mode 0 = (matrix only) or mode 1 = (matrix +rhs)
- /// Level starts from zero
-
  void EqnNSAD::GenMatRhsVB(const uint vb,const double time,const uint Level)  {
 
     CurrElem       currelem(vb,*this,_eqnmap);
@@ -98,21 +93,17 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
   const double penalty_val = _mesh._mesh_rtmap.get("penalty_val");    
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-  
     //QTYZERO
     QuantityLocal VelAdjOld(currgp,currelem);
     VelAdjOld._qtyptr   = _QtyInternalVector[QTYZERO];
     VelAdjOld.VectWithQtyFillBasic();
-    VelAdjOld._val_dofs = new double[VelAdjOld._dim*VelAdjOld._ndof];
-    VelAdjOld._val_g    = new double[VelAdjOld._dim];
+    VelAdjOld.Allocate();
   
     //QTYONE
     QuantityLocal PressAdjOld(currgp,currelem);
     PressAdjOld._qtyptr   = _QtyInternalVector[QTYONE];
     PressAdjOld.VectWithQtyFillBasic();
-    PressAdjOld._val_dofs = new double[PressAdjOld._dim*PressAdjOld._ndof];
-    PressAdjOld._val_g    = new double[PressAdjOld._dim];  
-
+    PressAdjOld.Allocate();
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
   
 //=========EXTERNAL QUANTITIES (couplings) =====
@@ -122,74 +113,51 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-    xyz._val_g    = new double[xyz._dim];
+    xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-  xyz_refbox._val_g    = new double[xyz_refbox._dim];
-  xyz_refbox._el_average.resize(xyz_refbox._dim);
+  xyz_refbox.Allocate();
   
-    QuantityLocal Vel(currgp,currelem);
+  QuantityLocal Vel(currgp,currelem);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
-    Vel._val_dofs    = new double[Vel._dim*Vel._ndof]; 
-    Vel._val_g       = new double[Vel._dim];
-    Vel._grad_g      = new double*[Vel._dim];
-  for (uint i=0; i< Vel._dim;i++) {Vel._grad_g[i] = new double[DIMENSION];}
+    Vel.Allocate();
   
-    QuantityLocal VelDes(currgp,currelem);
+  QuantityLocal VelDes(currgp,currelem);
     VelDes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_DesVelocity");
     VelDes.VectWithQtyFillBasic();
-    VelDes._val_dofs = new double[VelDes._dim*VelDes._ndof];
-    VelDes._val_g    = new double[VelDes._dim];
+    VelDes.Allocate();
 
-    QuantityLocal Bhom(currgp,currelem);
+  QuantityLocal Bhom(currgp,currelem);
     Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
-    Bhom._val_dofs = new double[Bhom._dim*Bhom._ndof];
+    Bhom.Allocate();
  
-    QuantityLocal Bext(currgp,currelem);
+  QuantityLocal Bext(currgp,currelem);
     Bext._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
-    Bext._val_dofs = new double[Bext._dim*Bext._ndof];
+    Bext.Allocate();
 
 //========= auxiliary, must be AFTER Bhom!   //TODO this doesnt have any associated quantity!
-    QuantityLocal Bmag(currgp,currelem); //total
+  QuantityLocal Bmag(currgp,currelem); //total
     Bmag._dim        = Bhom._dim;               //same as Bhom
     Bmag._FEord      = Bhom._FEord;             //same as Bhom
     Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
-    Bmag._val_dofs   = new double[Bmag._dim*Bmag._ndof];
-    Bmag._val_dofs3D = new double[        3*Bmag._ndof];
-    Bmag._val_g      = new double[Bmag._dim];
-    Bmag._val_g3D    = new double[3];
+    Bmag.Allocate();
     
 //===============
-    QuantityLocal BhomAdj(currgp,currelem); 
+  QuantityLocal BhomAdj(currgp,currelem); 
     BhomAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHomAdj"); 
     BhomAdj.VectWithQtyFillBasic();
-    BhomAdj._val_dofs =   new double[BhomAdj._dim*BhomAdj._ndof];
-    BhomAdj._val_dofs3D =   new double[         3*BhomAdj._ndof]; 
-    BhomAdj._curl_g3D =    new double[3];
+    BhomAdj.Allocate();
     
     //========= END EXTERNAL QUANTITIES =================
 
 //====== Physics cast ============
-    //we've always done the cast of a pointer
-    //can we do the cast of a reference or object?
-    //the reference is like an alias; if we act on it
-    //its like we act on the original datum
-    //the point is that doing a static cast of an object,
-    //if it is permitted
-    //for now i'll define a pointer to the child,
-    //then pick the father, get its pointer with &,
-    //and do the casting of the pointers
-    //the control over this operation is done at RUN-TIME or COMPILE-TIME?
-    //run-time i think
   OptPhysics* optphys; optphys = static_cast<OptPhysics*>(&_phys);
     // ========= parameters
   const double alphaVel = _phys._physrtmap.get("alphaVel");
@@ -527,11 +495,17 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
   }//END BOUNDARY ************************
   
 
-  //******************************DESTROY ALL THE Vect****************************  TODO
-
-  
-  
-  
+  // cleaning
+  VelAdjOld.Deallocate();
+  PressAdjOld.Deallocate();
+  xyz.Deallocate();
+  xyz_refbox.Deallocate();  
+  Vel.Deallocate();
+  VelDes.Deallocate();
+  Bhom.Deallocate();
+  Bext.Deallocate();
+  Bmag.Deallocate();
+  BhomAdj.Deallocate();
   
 #ifdef DEFAULT_PRINT_INFO
  std::cout << " GenMatRhs " << _eqname << ": assembled  Level " << Level
@@ -544,12 +518,3 @@ return;
 
 } //end namespace femus
 
-
-
-// // //     // end BDRYelement gaussian integration loop
-// // // 
-// // // //   b[Level]->add_vector(Rhs(),el_dof_indices);////////////////////////////////
-// // // 
-// // //   //// AAA putting this or not makes a lot of difference!
-// // //   //the code goes MUCH MUCH faster! 
-// // //   //so it seems like this function is REALLY SLOW!
