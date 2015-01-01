@@ -24,6 +24,8 @@ namespace femus {
     
     //TODO all these function are of the SET type (this is how I should call them), that is why they are NOT CONST
    void  VectWithQtyFillBasic();             //this needs the quantity and the fe map
+   void Allocate();
+   void Deallocate();
    void                 val_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void                grad_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void                curl_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
@@ -43,11 +45,12 @@ namespace femus {
     double** _grad_g;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
     double** _grad_g3D;  //for cross products   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
     double* _curl_g3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
+    
     std::vector<double> _el_average;  /*[spacedim]*/ //NEED TO ALLOCATE THIS EXPLICITLY WHERE IT'S USED... TODO this class must be reconsidered!!! with std::vectorss, and so on!!!
+
     uint _FEord; 
     uint _dim;
     uint _ndof;
-    
     Quantity* _qtyptr;
     EqnBase*  _eqnptr;
     

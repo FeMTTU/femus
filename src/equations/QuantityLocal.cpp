@@ -143,7 +143,43 @@ void QuantityLocal::VectWithQtyFillBasic() {
     return;
 }
 
+void QuantityLocal::Allocate() {
+  
+    _val_g    = new double[_dim];   
+    _val_g3D  = new double[3]; 
+    _val_dofs   = new double[_dim*_ndof];
+    _val_dofs3D = new double[   3*_ndof];
+    _grad_g = new double*[_dim];
+  for (uint i=0; i< _dim;i++) { _grad_g[i] = new double[_currEl.GetDim()]; }
 
+    _grad_g3D = new double*[_dim];
+  for (uint i=0; i< _dim;i++) { _grad_g3D[i] = new double[3]; }
+
+  _curl_g3D = new double[3];
+
+  
+  return; 
+}
+
+
+void QuantityLocal::Deallocate() {
+  
+      delete []  _val_g      ;   
+      delete []  _val_g3D    ; 
+      delete []  _val_dofs   ;
+      delete []  _val_dofs3D ;
+
+      for (uint i=0; i< _dim;i++) { delete [] _grad_g[i]; }
+       delete []  _grad_g;
+       
+      for (uint i=0; i< _dim;i++) { delete [] _grad_g3D[i]; }
+       delete []  _grad_g3D  ;
+
+       delete []   _curl_g3D ;
+
+  
+  return; 
+}
 
 ///copy the space_dim-sized dof vector into its 3D version
 void QuantityLocal::ExtendDofs() {
