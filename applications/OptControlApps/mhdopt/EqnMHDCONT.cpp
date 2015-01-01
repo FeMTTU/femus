@@ -122,15 +122,17 @@ void EqnMHDCONT::init_equation_data() {
     QuantityLocal BeOld(currgp,currelem);
     BeOld._qtyptr   = _QtyInternalVector[QTYZERO];
     BeOld.VectWithQtyFillBasic();
-    BeOld._val_dofs = new double[BeOld._dim*BeOld._ndof];
-    BeOld._val_g    = new double[BeOld._dim];
+    BeOld.Allocate();
+//     BeOld._val_dofs = new double[BeOld._dim*BeOld._ndof];
+//     BeOld._val_g    = new double[BeOld._dim];
 
   //QTYONE
     QuantityLocal LagMultOld(currgp,currelem);
     LagMultOld._qtyptr   = _QtyInternalVector[QTYONE];
     LagMultOld.VectWithQtyFillBasic();
-    LagMultOld._val_dofs = new double[LagMultOld._dim*LagMultOld._ndof];
-    LagMultOld._val_g    = new double[LagMultOld._dim];
+    LagMultOld.Allocate();
+//     LagMultOld._val_dofs = new double[LagMultOld._dim*LagMultOld._ndof];
+//     LagMultOld._val_g    = new double[LagMultOld._dim];
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
 
 //=========EXTERNAL QUANTITIES (couplings) =====
@@ -139,54 +141,60 @@ void EqnMHDCONT::init_equation_data() {
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-    xyz._val_g    = new double[xyz._dim];
+    xyz.Allocate();
+//     xyz._val_dofs = new double[xyz._dim*xyz._ndof];
+//     xyz._val_g    = new double[xyz._dim];
 
     //==================Quadratic domain, auxiliary  //this is something that belongs to the user, so we must put it somewhere else,in the MeshUser or something
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-  xyz_refbox._val_g    = new double[xyz_refbox._dim];
+  xyz_refbox.Allocate();
+//   xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
+//   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   
 #if VELOCITY_QTY==1
     QuantityLocal Vel(currgp,currelem);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity"); //an alternative cannot exist, because it is an Unknown of This Equation
     Vel.VectWithQtyFillBasic();
-    Vel._val_dofs    = new double[Vel._dim*Vel._ndof]; 
-    Vel._val_dofs3D  = new double[       3*Vel._ndof]; //needed for a vector product
-    Vel._val_g       = new double[Vel._dim];
-    Vel._val_g3D     = new double[3];   //needed for a vector product
+    Vel.Allocate();
+//     Vel._val_dofs    = new double[Vel._dim*Vel._ndof]; 
+//     Vel._val_dofs3D  = new double[       3*Vel._ndof]; //needed for a vector product
+//     Vel._val_g       = new double[Vel._dim];
+//     Vel._val_g3D     = new double[3];   //needed for a vector product
 #endif  
 
     //==================
     QuantityLocal VelAdj(currgp,currelem);
     VelAdj._qtyptr      = _eqnmap._qtymap.get_qty("Qty_VelocityAdj");
     VelAdj.VectWithQtyFillBasic();
-    VelAdj._val_dofs    = new double[VelAdj._dim*VelAdj._ndof];
-    VelAdj._val_dofs3D  = new double[       3*VelAdj._ndof]; //needed for a vector product
-    VelAdj._val_g       = new double[VelAdj._dim];
-    VelAdj._val_g3D     = new double[3];   //needed for a vector product 
+    VelAdj.Allocate();
+//     VelAdj._val_dofs    = new double[VelAdj._dim*VelAdj._ndof];
+//     VelAdj._val_dofs3D  = new double[       3*VelAdj._ndof]; //needed for a vector product
+//     VelAdj._val_g       = new double[VelAdj._dim];
+//     VelAdj._val_g3D     = new double[3];   //needed for a vector product 
   
     //==================
     QuantityLocal Bhom(currgp,currelem); 
     Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
-    Bhom._val_dofs =   new double[Bhom._dim*Bhom._ndof];
-    Bhom._val_dofs3D = new double[        3*Bhom._ndof];  //this is for the curl, not for val_dofs3D!!! 
-    Bhom._val_g      = new double[Bhom._dim];
-    Bhom._curl_g3D   = new double[3];
+    Bhom.Allocate();
+//     Bhom._val_dofs =   new double[Bhom._dim*Bhom._ndof];
+//     Bhom._val_dofs3D = new double[        3*Bhom._ndof];  //this is for the curl, not for val_dofs3D!!! 
+//     Bhom._val_g      = new double[Bhom._dim];
+//     Bhom._curl_g3D   = new double[3];
 
 //===============
     QuantityLocal BhomAdj(currgp,currelem); 
     BhomAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHomAdj"); 
     BhomAdj.VectWithQtyFillBasic();
-    BhomAdj._val_dofs =   new double[BhomAdj._dim*BhomAdj._ndof];
-    BhomAdj._val_dofs3D = new double[           3*BhomAdj._ndof];
-    BhomAdj._curl_g3D =  new double[3];
-    BhomAdj._grad_g     = new double*[BhomAdj._dim];
-    for (uint i=0; i< BhomAdj._dim;i++) {BhomAdj._grad_g[i] = new double[DIMENSION];}
+    BhomAdj.Allocate();
+//     BhomAdj._val_dofs =   new double[BhomAdj._dim*BhomAdj._ndof];
+//     BhomAdj._val_dofs3D = new double[           3*BhomAdj._ndof];
+//     BhomAdj._curl_g3D =  new double[3];
+//     BhomAdj._grad_g     = new double*[BhomAdj._dim];
+//     for (uint i=0; i< BhomAdj._dim;i++) {BhomAdj._grad_g[i] = new double[DIMENSION];}
   //=========END EXTERNAL QUANTITIES (couplings) =====
 
     //========= reference values =========
@@ -586,41 +594,17 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
     
 // END BOUNDARY  // **************************
 
-
-  //TODO DO ALL THE DELETE***************
  //******************************DESTROY ALL THE Vect****************************  
-// ===============domain ========
-    delete [] xyz_refbox._val_g;
-    delete [] xyz_refbox._val_dofs;
-    
-    delete [] xyz._val_g;
-    delete [] xyz._val_dofs;
-//================================= 
-    
-//=========Internal Quantities: no ifdef for them =========
-   delete [] BeOld._val_g;
-   delete [] BeOld._val_dofs;
-
-   delete [] LagMultOld._val_g;
-   delete [] LagMultOld._val_dofs;
-//==============================================
-  #if VELOCITY_QTY==1
-        delete [] Vel._val_g;
-        delete [] Vel._val_g3D;
-	delete [] Vel._val_dofs;
-	delete [] Vel._val_dofs3D;
-
+   xyz_refbox.Deallocate(); 
+          xyz.Deallocate();
+        BeOld.Deallocate();
+   LagMultOld.Deallocate();
+#if VELOCITY_QTY==1
+   Vel.Deallocate();
 #endif
-  
-        delete [] VelAdj._val_g;
-        delete [] VelAdj._val_g3D;
-	delete [] VelAdj._val_dofs;
-	delete [] VelAdj._val_dofs3D;
-  
-// // //   for (uint k=0;k<(nvars_q);k++)    delete [] dxidx_g[k];
-// // //   delete []dxidx_g;
-// // //      
-   
+   VelAdj.Deallocate();
+   Bhom.Deallocate();
+   BhomAdj.Deallocate();
    
 #ifdef DEFAULT_PRINT_INFO
  std::cout << " GenMatRhs " << _eqname << ": assembled  Level " << Level
