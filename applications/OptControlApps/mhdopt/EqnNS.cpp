@@ -874,31 +874,35 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-    xyz._val_g    = new double[xyz._dim];
+    xyz.Allocate();
+//     xyz._val_dofs = new double[xyz._dim*xyz._ndof];
+//     xyz._val_g    = new double[xyz._dim];
 
 //========== Quadratic domain, auxiliary  
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-  xyz_refbox._val_g    = new double[xyz_refbox._dim];
-  xyz_refbox._el_average.resize(xyz_refbox._dim);
+  xyz_refbox.Allocate();
+//   xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
+//   xyz_refbox._val_g    = new double[xyz_refbox._dim];
+//   xyz_refbox._el_average.resize(xyz_refbox._dim);
   
      //========== 
     QuantityLocal Vel(currgp,currelem);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
-    Vel._val_dofs    = new double[Vel._dim*Vel._ndof];
-    Vel._val_g       = new double[Vel._dim];
+    Vel.Allocate();
+//     Vel._val_dofs    = new double[Vel._dim*Vel._ndof];
+//     Vel._val_g       = new double[Vel._dim];
     
     //========== 
     QuantityLocal VelDes(currgp,currelem);
     VelDes._qtyptr      = _eqnmap._qtymap.get_qty("Qty_DesVelocity");
     VelDes.VectWithQtyFillBasic();
-    VelDes._val_dofs    = new double[VelDes._dim*VelDes._ndof]; 
-    VelDes._val_g       = new double[VelDes._dim];         
+    VelDes.Allocate();
+//     VelDes._val_dofs    = new double[VelDes._dim*VelDes._ndof]; 
+//     VelDes._val_g       = new double[VelDes._dim];         
    
    double integral=0.;
     
@@ -958,6 +962,13 @@ for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel._val_g[j] - VelDe
     }//gauss loop
      
     }//element loop
+    
+   //cleaning 
+   xyz.Deallocate();
+   xyz_refbox.Deallocate();
+   Vel.Deallocate();
+   VelDes.Deallocate();
+
     
     
   return integral;  
