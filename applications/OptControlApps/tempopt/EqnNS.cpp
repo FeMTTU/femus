@@ -103,10 +103,7 @@
     QuantityLocal VelOld(currgp,currelem);
     VelOld._qtyptr   = _QtyInternalVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();
-    VelOld._val_dofs = new double[VelOld._dim*VelOld._ndof];
-    VelOld._val_g    = new double[VelOld._dim];
-    VelOld._grad_g   = new double*[VelOld._dim];
-  for (uint i=0; i< VelOld._dim;i++) {VelOld._grad_g[i] = new double[space_dim];}
+    VelOld.Allocate();
 
    const uint   qtyzero_ord  = VelOld._FEord;
    const uint   qtyzero_ndof = VelOld._ndof; 
@@ -116,8 +113,7 @@
     QuantityLocal pressOld(currgp,currelem);
     pressOld._qtyptr   = _QtyInternalVector[QTYONE];
     pressOld.VectWithQtyFillBasic();
-    pressOld._val_dofs = new double[pressOld._dim*pressOld._ndof];
-    pressOld._val_g    = new double[pressOld._dim];
+    pressOld.Allocate();
 
    const uint qtyone_ord  = pressOld._FEord;
    const uint qtyone_ndof = pressOld._ndof; 
@@ -133,17 +129,14 @@
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[_mesh.get_dim()-1-vb][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-    xyz._val_g    = new double[xyz._dim];
-//=========
+    xyz.Allocate();
+    
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(space_dim-1-vb,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-  xyz_refbox._val_g    = new double[xyz_refbox._dim];
-  //==================
+  xyz_refbox.Allocate();
     
 //======================== MAG WORLD ================================
 //======================== MAG WORLD ================================
@@ -153,8 +146,7 @@
     QuantityLocal Temp(currgp,currelem);
     Temp._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature");
     Temp.VectWithQtyFillBasic();
-    Temp._val_dofs = new double[Temp._dim*Temp._ndof];
-    Temp._val_g    = new double[Temp._dim];
+    Temp.Allocate();
 #endif
 //=================== TEMPERATURE WORLD============================
 
@@ -163,6 +155,7 @@
 //=======gravity==================================
   QuantityLocal gravity(currgp,currelem);
   gravity._dim = space_dim;
+//   gravity.Allocate(); CANNOT DO THIS NOW BECAUSE NOT ALL THE DATA FOR THE ALLOCATION ARE FILLED
   gravity._val_g    = new double[gravity._dim];
   gravity._val_g[0] = _phys._physrtmap.get("dirgx");
   gravity._val_g[1] = _phys._physrtmap.get("dirgy");
@@ -611,27 +604,22 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 
   //DESTROY ALL THE Vect  
 // ===============domain ========
-    delete [] xyz_refbox._val_g; delete [] xyz_refbox._val_dofs;
-    delete [] xyz._val_g; delete [] xyz._val_dofs;
-//=================================  
-
-//=========Internal Quantities: no ifdef for them =========
-   for (uint i=0; i< VelOld._dim;i++) {delete [] VelOld._grad_g[i];}
-      delete [] VelOld._grad_g;
-
-   delete []   VelOld._val_g; delete [] VelOld._val_dofs;     
-   delete [] pressOld._val_g; delete [] pressOld._val_dofs;
+   xyz_refbox.Deallocate();
+   xyz.Deallocate();
+   VelOld.Deallocate();
+   pressOld.Deallocate();
 //==============================================
    
 //======= inner Vect without Quantity ==========
 //not an Unknown
 //not from External Equation or Function
    delete [] gravity._val_g;
+//    gravity.Deallocate();
 //======= inner Vect without Quantity ==========
    
-#if TEMP_QTY==1  //================   
-  delete [] Temp._val_g; delete [] Temp._val_dofs;
-#endif         //================
+#if TEMP_QTY==1    
+   Temp.Deallocate();
+#endif
 
 
 #ifdef DEFAULT_PRINT_INFO
