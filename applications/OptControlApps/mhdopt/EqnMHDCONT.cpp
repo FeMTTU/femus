@@ -118,21 +118,15 @@ void EqnMHDCONT::init_equation_data() {
   const double penalty_val = _mesh._mesh_rtmap.get("penalty_val");    
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-  //QTYZERO
     QuantityLocal BeOld(currgp,currelem);
     BeOld._qtyptr   = _QtyInternalVector[QTYZERO];
     BeOld.VectWithQtyFillBasic();
     BeOld.Allocate();
-//     BeOld._val_dofs = new double[BeOld._dim*BeOld._ndof];
-//     BeOld._val_g    = new double[BeOld._dim];
 
-  //QTYONE
     QuantityLocal LagMultOld(currgp,currelem);
     LagMultOld._qtyptr   = _QtyInternalVector[QTYONE];
     LagMultOld.VectWithQtyFillBasic();
     LagMultOld.Allocate();
-//     LagMultOld._val_dofs = new double[LagMultOld._dim*LagMultOld._ndof];
-//     LagMultOld._val_g    = new double[LagMultOld._dim];
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
 
 //=========EXTERNAL QUANTITIES (couplings) =====
@@ -142,27 +136,19 @@ void EqnMHDCONT::init_equation_data() {
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
-//     xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-//     xyz._val_g    = new double[xyz._dim];
 
-    //==================Quadratic domain, auxiliary  //this is something that belongs to the user, so we must put it somewhere else,in the MeshUser or something
+    //==================Quadratic domain, auxiliary
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();
-//   xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-//   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   
 #if VELOCITY_QTY==1
     QuantityLocal Vel(currgp,currelem);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity"); //an alternative cannot exist, because it is an Unknown of This Equation
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
-//     Vel._val_dofs    = new double[Vel._dim*Vel._ndof]; 
-//     Vel._val_dofs3D  = new double[       3*Vel._ndof]; //needed for a vector product
-//     Vel._val_g       = new double[Vel._dim];
-//     Vel._val_g3D     = new double[3];   //needed for a vector product
 #endif  
 
     //==================
@@ -170,31 +156,18 @@ void EqnMHDCONT::init_equation_data() {
     VelAdj._qtyptr      = _eqnmap._qtymap.get_qty("Qty_VelocityAdj");
     VelAdj.VectWithQtyFillBasic();
     VelAdj.Allocate();
-//     VelAdj._val_dofs    = new double[VelAdj._dim*VelAdj._ndof];
-//     VelAdj._val_dofs3D  = new double[       3*VelAdj._ndof]; //needed for a vector product
-//     VelAdj._val_g       = new double[VelAdj._dim];
-//     VelAdj._val_g3D     = new double[3];   //needed for a vector product 
   
     //==================
     QuantityLocal Bhom(currgp,currelem); 
     Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();
-//     Bhom._val_dofs =   new double[Bhom._dim*Bhom._ndof];
-//     Bhom._val_dofs3D = new double[        3*Bhom._ndof];  //this is for the curl, not for val_dofs3D!!! 
-//     Bhom._val_g      = new double[Bhom._dim];
-//     Bhom._curl_g3D   = new double[3];
-
+    
 //===============
     QuantityLocal BhomAdj(currgp,currelem); 
     BhomAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHomAdj"); 
     BhomAdj.VectWithQtyFillBasic();
     BhomAdj.Allocate();
-//     BhomAdj._val_dofs =   new double[BhomAdj._dim*BhomAdj._ndof];
-//     BhomAdj._val_dofs3D = new double[           3*BhomAdj._ndof];
-//     BhomAdj._curl_g3D =  new double[3];
-//     BhomAdj._grad_g     = new double*[BhomAdj._dim];
-//     for (uint i=0; i< BhomAdj._dim;i++) {BhomAdj._grad_g[i] = new double[DIMENSION];}
   //=========END EXTERNAL QUANTITIES (couplings) =====
 
     //========= reference values =========
@@ -275,11 +248,6 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g (fe); }
 //========preparation for things that are independent of (i,j), dofs of test and shape =====================
        BhomAdj.curl_g();
           Bhom.curl_g();
-       
-                               //Bhom.curl(); but how can i automatically activate the "new" for curlVect? I can do them all 
-                               //if i do a class I can do them ALL together in the constructor,
-                               //and delete them automatically in the destructor.
-
        BeOld.val_g(); 
          Vel.val_g();
       VelAdj.val_g();
