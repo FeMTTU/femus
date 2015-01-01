@@ -171,10 +171,6 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     VelOld._qtyptr   = _QtyInternalVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();   //the internal quantities will eventually have *this as eqn pointer
     VelOld.Allocate();
-//     VelOld._val_dofs = new double[VelOld._dim*VelOld._ndof];
-//     VelOld._val_g    = new double[VelOld._dim];
-//     VelOld._grad_g   = new double*[VelOld._dim];
-//   for (uint i=0; i< VelOld._dim;i++) {VelOld._grad_g[i] = new double[DIMENSION];}
 
    const uint   qtyzero_ord  = VelOld._FEord;
    const uint   qtyzero_ndof = VelOld._ndof; 
@@ -185,8 +181,6 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     pressOld._qtyptr   = _QtyInternalVector[QTYONE];
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
-//     pressOld._val_dofs = new double[pressOld._dim*pressOld._ndof];
-//     pressOld._val_g    = new double[pressOld._dim];
 
    const uint qtyone_ord  = pressOld._FEord;
    const uint qtyone_ndof = pressOld._ndof; 
@@ -203,8 +197,6 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
-//     xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-//     xyz._val_g    = new double[xyz._dim];
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   QuantityLocal xyz_refbox(currgp,currelem);
@@ -212,9 +204,6 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();
-//   xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-//   xyz_refbox._val_g    = new double[xyz_refbox._dim];
-  //==================
     
 //============================ MAG WORLD =======================================
  #if BMAG_QTY==1  
@@ -222,14 +211,12 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();
-//     Bhom._val_dofs = new double[Bhom._dim*Bhom._ndof];
  
 //=========
     QuantityLocal Bext(currgp,currelem);   //only to retrieve the dofs
     Bext._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();
-//     Bext._val_dofs = new double[Bext._dim*Bext._ndof];
 
 //========= auxiliary, must be AFTER Bhom!
     QuantityLocal Bmag(currgp,currelem); //total
@@ -237,13 +224,6 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     Bmag._FEord      = Bhom._FEord;
     Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
     Bmag.Allocate();
-//     Bmag._val_dofs   = new double[Bmag._dim*Bmag._ndof];
-//     Bmag._val_dofs3D = new double[        3*Bmag._ndof]; //when the user adds this, he knows that he's gonna have a curl_g call
-//     Bmag._val_g      = new double[Bmag._dim];
-//     Bmag._val_g3D    = new double[3];
-//     Bmag._curl_g3D   = new double[3];  //when the user adds this, he knows that he's gonna have a curl_g call
-//     Bmag._grad_g     = new double*[Bmag._dim];
-//   for (uint i=0; i< Bmag._dim;i++) {Bmag._grad_g[i] = new double[DIMENSION];}
 #endif
 //======================== MAG WORLD ================================
 
@@ -253,8 +233,6 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     Temp._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature");
     Temp.VectWithQtyFillBasic();
     Temp.Allocate();
-//     Temp._val_dofs = new double[Temp._dim*Temp._ndof];
-//     Temp._val_g    = new double[Temp._dim];
 #endif
 //=================== TEMPERATURE WORLD============================
 
