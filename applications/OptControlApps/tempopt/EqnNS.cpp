@@ -483,7 +483,7 @@ if (_Dir_pen_fl == 1)  {
 //TODO here i should check that the nodal bc dirichlet i put correspond to the element NT flags
 
        uint press_fl=0;
-       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(vb,currelem.GetBCDofFlag(),VelOld,pressOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
+       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),VelOld,pressOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
  //only the LINEAR PART is USED!!
        
 // // TODO  if ( (1-el_flag[NN]) != press_fl)  {std::cout << "Sthg wrong with press elflags" << std::endl;abort();}

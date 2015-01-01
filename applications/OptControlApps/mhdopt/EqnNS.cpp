@@ -672,7 +672,7 @@ if (_Dir_pen_fl == 1)  {
 //TODO here i should check that the nodal bc dirichlet i put correspond to the element NT flags
 
        uint press_fl=0;
-       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(vb,currelem.GetBCDofFlag(),VelOld,pressOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
+       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),VelOld,pressOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
  //only the LINEAR PART is USED!!
        
 // // TODO  if ( (1-el_flag[NN]) != press_fl)  {std::cout << "Sthg wrong with press elflags" << std::endl;abort();}
@@ -875,8 +875,6 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
-//     xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-//     xyz._val_g    = new double[xyz._dim];
 
 //========== Quadratic domain, auxiliary  
   QuantityLocal xyz_refbox(currgp,currelem);
@@ -884,25 +882,18 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();
-//   xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-//   xyz_refbox._val_g    = new double[xyz_refbox._dim];
-//   xyz_refbox._el_average.resize(xyz_refbox._dim);
   
      //========== 
     QuantityLocal Vel(currgp,currelem);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
-//     Vel._val_dofs    = new double[Vel._dim*Vel._ndof];
-//     Vel._val_g       = new double[Vel._dim];
     
     //========== 
     QuantityLocal VelDes(currgp,currelem);
     VelDes._qtyptr      = _eqnmap._qtymap.get_qty("Qty_DesVelocity");
     VelDes.VectWithQtyFillBasic();
     VelDes.Allocate();
-//     VelDes._val_dofs    = new double[VelDes._dim*VelDes._ndof]; 
-//     VelDes._val_g       = new double[VelDes._dim];         
    
    double integral=0.;
     
@@ -968,8 +959,7 @@ for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel._val_g[j] - VelDe
    xyz_refbox.Deallocate();
    Vel.Deallocate();
    VelDes.Deallocate();
-
-    
+ 
     
   return integral;  
   

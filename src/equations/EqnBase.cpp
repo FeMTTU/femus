@@ -3774,7 +3774,7 @@ void EqnBase::ReadVector(std::string namefile) {
 //This function is for NS type equations:
 //it computes the flags for pressure and stress integrals 
 //based on the pressure nodes
- void EqnBase::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const uint vb,
+ void EqnBase::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(
 	    const uint *bc_eldofs,const QuantityLocal & Velold_in,const QuantityLocal& press_in,uint &press_fl) const {
 
 	const uint el_ndof_p =  press_in._ndof;
