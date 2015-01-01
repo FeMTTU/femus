@@ -128,26 +128,19 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     QuantityLocal Tempold(currgp,currelem);
     Tempold._qtyptr   = _QtyInternalVector[0]; 
     Tempold.VectWithQtyFillBasic();
-    Tempold._val_dofs = new double[Tempold._dim*Tempold._ndof];
-    Tempold._val_g    = new double[Tempold._dim];
+    Tempold.Allocate();
 
 //====================================
     QuantityLocal Tlift(currgp,currelem);
     Tlift._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
     Tlift.VectWithQtyFillBasic();
-    Tlift._val_dofs = new double[Tlift._dim*Tlift._ndof];
-    Tlift._val_g    = new double[Tlift._dim];
-    Tlift._grad_g   = new double*[Tlift._dim];
-    Tlift._grad_g[0]= new double[space_dim];
+    Tlift.Allocate();
 
 //=====================================
     QuantityLocal TAdj(currgp,currelem);
     TAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
     TAdj.VectWithQtyFillBasic();
-    TAdj._val_dofs = new double[TAdj._dim*TAdj._ndof];
-    TAdj._val_g    = new double[TAdj._dim];
-    TAdj._grad_g   = new double*[TAdj._dim];
-    TAdj._grad_g[0]= new double[space_dim];    
+    TAdj.Allocate();
     
 //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
@@ -155,31 +148,26 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-    xyz._val_g    = new double[xyz._dim];
+    xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   QuantityLocal xyz_refbox(currgp,currelem);  //no quantity
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-  xyz_refbox._val_g    = new double[xyz_refbox._dim];
-  xyz_refbox._el_average.resize(xyz_refbox._dim);
+  xyz_refbox.Allocate();
+  
   //==================
-
     QuantityLocal vel(currgp,currelem);
     vel._qtyptr   = _eqnmap._qtymap.get_qty("Qty_Velocity"); 
     vel.VectWithQtyFillBasic();
-    vel._val_dofs = new double[vel._dim*vel._ndof];
-    vel._val_g    = new double[vel._dim];   
+    vel.Allocate();
     
 //===============Tdes=====================
     QuantityLocal Tdes(currgp,currelem);
     Tdes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
-    Tdes._val_dofs = new double[Tdes._dim*Tdes._ndof];
-    Tdes._val_g    = new double[Tdes._dim];
+    Tdes.Allocate();
 
   //==== AUXILIARY ==============
     double* dphijdx_g = new double[space_dim];
@@ -541,12 +529,13 @@ else {   std::cout << " No line integrals yet... " << std::endl; abort();}
 
  
 //=========== cleaning stage ==============
-  delete []  Tdes._val_g;    delete []  Tdes._val_dofs;
-  delete []  TAdj._val_g;    delete []  TAdj._val_dofs;
-  delete []  Tlift._val_g;    delete []  Tlift._val_dofs;
-  delete []  Tempold._val_g;    delete []  Tempold._val_dofs;
-  delete []  xyz._val_g;        delete []  xyz._val_dofs;
-  delete []  vel._val_g;        delete []  vel._val_dofs;
+  Tdes.Deallocate();
+  TAdj.Deallocate();
+  Tlift.Deallocate();
+  Tempold.Deallocate();
+  xyz.Deallocate();
+  xyz_refbox.Deallocate();
+  vel.Deallocate();
   
 #ifdef DEFAULT_PRINT_INFO
   std::cout << " Matrix and RHS assembled for equation " << _eqname
@@ -664,41 +653,35 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
     QuantityLocal Tempold(currgp,currelem);
     Tempold._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature"); 
     Tempold.VectWithQtyFillBasic();
-    Tempold._val_dofs = new double[Tempold._dim*Tempold._ndof];
-    Tempold._val_g    = new double[Tempold._dim];
+    Tempold.Allocate();
 
   //========== 
     QuantityLocal Tlift(currgp,currelem);
     Tlift._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_TempLift"); 
     Tlift.VectWithQtyFillBasic();
-    Tlift._val_dofs = new double[Tlift._dim*Tlift._ndof];
-    Tlift._val_g    = new double[Tlift._dim];
+    Tlift.Allocate();
     
  //===========
     QuantityLocal Tdes(currgp,currelem);
-         Tdes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempDes"); 
+    Tdes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
-    Tdes._val_dofs = new double[Tdes._dim*Tdes._ndof];
-    Tdes._val_g    = new double[Tdes._dim];
+    Tdes.Allocate();
   
 //========= DOMAIN MAPPING
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-    xyz._val_g    = new double[xyz._dim];
+    xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-  xyz_refbox._val_g    = new double[xyz_refbox._dim];
-  xyz_refbox._el_average.resize(xyz_refbox._dim);
+  xyz_refbox.Allocate();
+
   
-    
    double integral = 0.;
 
       const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
@@ -774,12 +757,19 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
   
 	std::ofstream intgr_fstream;
     
-    if (paral::get_rank() ==0 ){ 
+    if (paral::get_rank() ==0 ) { 
       intgr_fstream.open(intgr_fname.c_str(),ios_base::app); 
       intgr_fstream << _eqnmap._files._output_time << " " << optphys->_physrtmap.get("alphaT") << " " << optphys->_physrtmap.get("injsuc")<< " "  << J << " " << std::endl ; 
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
-}
+    }
  
+  // cleaning ===
+  Tdes.Deallocate();
+  Tlift.Deallocate();
+  Tempold.Deallocate();
+  xyz.Deallocate();
+  xyz_refbox.Deallocate();
+    
     
   return J;  
     
@@ -807,28 +797,23 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
 
       //========== 
     QuantityLocal Tlift(currgp,currelem);
-         Tlift._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_TempLift"); 
+    Tlift._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_TempLift"); 
     Tlift.VectWithQtyFillBasic();
-    Tlift._val_dofs = new double[Tlift._dim*Tlift._ndof];
-    Tlift._val_g    = new double[Tlift._dim];
-    Tlift._grad_g       = new double*[1];
-    Tlift._grad_g[0]    = new double[space_dim]; 
+    Tlift.Allocate();
 
 //========= DOMAIN MAPPING
     QuantityLocal xyz(currgp,currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-    xyz._val_g    = new double[xyz._dim];
+    xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-  xyz_refbox._val_g    = new double[xyz_refbox._dim];
+  xyz_refbox.Allocate();
   
     
    double integral = 0.;
@@ -886,6 +871,12 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
 #endif
    
     std::cout << "@@@@@@@@@@@@@@@@ control norm: " << reg_ord << " " << J << std::endl;
+    
+   //cleaning ====
+  Tlift.Deallocate();
+  xyz.Deallocate();
+  xyz_refbox.Deallocate();
+    
     
   return J;  
   

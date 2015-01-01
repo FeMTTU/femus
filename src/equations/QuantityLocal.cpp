@@ -150,14 +150,15 @@ void QuantityLocal::Allocate() {
     _val_dofs   = new double[_dim*_ndof];
     _val_dofs3D = new double[   3*_ndof];
     _grad_g = new double*[_dim];
-  for (uint i=0; i< _dim;i++) { _grad_g[i] = new double[_currEl.GetDim()]; }
+  for (uint i=0; i< _dim;i++) { _grad_g[i] = new double[_currEl._eqnmap._mesh.get_dim()]; }
 
     _grad_g3D = new double*[_dim];
   for (uint i=0; i< _dim;i++) { _grad_g3D[i] = new double[3]; }
 
   _curl_g3D = new double[3];
 
-  
+   _el_average.resize(_dim);
+
   return; 
 }
 
