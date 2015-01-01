@@ -170,10 +170,11 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     QuantityLocal VelOld(currgp,currelem);
     VelOld._qtyptr   = _QtyInternalVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();   //the internal quantities will eventually have *this as eqn pointer
-    VelOld._val_dofs = new double[VelOld._dim*VelOld._ndof];
-    VelOld._val_g    = new double[VelOld._dim];
-    VelOld._grad_g   = new double*[VelOld._dim];
-  for (uint i=0; i< VelOld._dim;i++) {VelOld._grad_g[i] = new double[DIMENSION];}
+    VelOld.Allocate();
+//     VelOld._val_dofs = new double[VelOld._dim*VelOld._ndof];
+//     VelOld._val_g    = new double[VelOld._dim];
+//     VelOld._grad_g   = new double*[VelOld._dim];
+//   for (uint i=0; i< VelOld._dim;i++) {VelOld._grad_g[i] = new double[DIMENSION];}
 
    const uint   qtyzero_ord  = VelOld._FEord;
    const uint   qtyzero_ndof = VelOld._ndof; 
@@ -183,8 +184,9 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     QuantityLocal pressOld(currgp,currelem);
     pressOld._qtyptr   = _QtyInternalVector[QTYONE];
     pressOld.VectWithQtyFillBasic();
-    pressOld._val_dofs = new double[pressOld._dim*pressOld._ndof];
-    pressOld._val_g    = new double[pressOld._dim];
+    pressOld.Allocate();
+//     pressOld._val_dofs = new double[pressOld._dim*pressOld._ndof];
+//     pressOld._val_g    = new double[pressOld._dim];
 
    const uint qtyone_ord  = pressOld._FEord;
    const uint qtyone_ndof = pressOld._ndof; 
@@ -200,16 +202,18 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-    xyz._val_g    = new double[xyz._dim];
+    xyz.Allocate();
+//     xyz._val_dofs = new double[xyz._dim*xyz._ndof];
+//     xyz._val_g    = new double[xyz._dim];
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-  xyz_refbox._val_g    = new double[xyz_refbox._dim];
+  xyz_refbox.Allocate();
+//   xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
+//   xyz_refbox._val_g    = new double[xyz_refbox._dim];
   //==================
     
 //============================ MAG WORLD =======================================
@@ -217,26 +221,29 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     QuantityLocal Bhom(currgp,currelem); //only to retrieve the dofs
     Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
-    Bhom._val_dofs = new double[Bhom._dim*Bhom._ndof];
+    Bhom.Allocate();
+//     Bhom._val_dofs = new double[Bhom._dim*Bhom._ndof];
  
 //=========
     QuantityLocal Bext(currgp,currelem);   //only to retrieve the dofs
     Bext._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
-    Bext._val_dofs = new double[Bext._dim*Bext._ndof];
+    Bext.Allocate();
+//     Bext._val_dofs = new double[Bext._dim*Bext._ndof];
 
 //========= auxiliary, must be AFTER Bhom!
     QuantityLocal Bmag(currgp,currelem); //total
     Bmag._dim        = Bhom._dim;
     Bmag._FEord      = Bhom._FEord;
     Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
-    Bmag._val_dofs   = new double[Bmag._dim*Bmag._ndof];
-    Bmag._val_dofs3D = new double[        3*Bmag._ndof]; //when the user adds this, he knows that he's gonna have a curl_g call
-    Bmag._val_g      = new double[Bmag._dim];
-    Bmag._val_g3D    = new double[3];
-    Bmag._curl_g3D   = new double[3];  //when the user adds this, he knows that he's gonna have a curl_g call
-    Bmag._grad_g     = new double*[Bmag._dim];
-  for (uint i=0; i< Bmag._dim;i++) {Bmag._grad_g[i] = new double[DIMENSION];}
+    Bmag.Allocate();
+//     Bmag._val_dofs   = new double[Bmag._dim*Bmag._ndof];
+//     Bmag._val_dofs3D = new double[        3*Bmag._ndof]; //when the user adds this, he knows that he's gonna have a curl_g call
+//     Bmag._val_g      = new double[Bmag._dim];
+//     Bmag._val_g3D    = new double[3];
+//     Bmag._curl_g3D   = new double[3];  //when the user adds this, he knows that he's gonna have a curl_g call
+//     Bmag._grad_g     = new double*[Bmag._dim];
+//   for (uint i=0; i< Bmag._dim;i++) {Bmag._grad_g[i] = new double[DIMENSION];}
 #endif
 //======================== MAG WORLD ================================
 
@@ -245,8 +252,9 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     QuantityLocal Temp(currgp,currelem);
     Temp._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature");
     Temp.VectWithQtyFillBasic();
-    Temp._val_dofs = new double[Temp._dim*Temp._ndof];
-    Temp._val_g    = new double[Temp._dim];
+    Temp.Allocate();
+//     Temp._val_dofs = new double[Temp._dim*Temp._ndof];
+//     Temp._val_g    = new double[Temp._dim];
 #endif
 //=================== TEMPERATURE WORLD============================
 
@@ -803,41 +811,27 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
     }
   // END BOUNDARY ******************************
   
-//DESTROY ALL THE Vect  
-// ===============domain ========
-    delete [] xyz_refbox._val_g; delete [] xyz_refbox._val_dofs;
-    delete [] xyz._val_g; delete [] xyz._val_dofs;
-//=================================  
-
+//cleaning
+  xyz_refbox.Deallocate();
+  xyz.Deallocate();
 //=========Internal Quantities: no ifdef for them =========
-   for (uint i=0; i< VelOld._dim;i++) {delete [] VelOld._grad_g[i];}
-      delete [] VelOld._grad_g;
-
-   delete [] VelOld._val_g; delete [] VelOld._val_dofs;     
-   delete [] pressOld._val_g; delete [] pressOld._val_dofs;
-//==============================================
-   
+  VelOld.Deallocate();
+  pressOld.Deallocate();
 //======= inner Vect without Quantity ==========
 //not an Unknown
 //not from External Equation or Function
    delete [] gravity._val_g;
 //======= inner Vect without Quantity ==========
    
-#if BMAG_QTY==1   //============ 
-   for (uint i=0; i< Bmag._dim;i++) {delete [] Bmag._grad_g[i];}
-      delete [] Bmag._grad_g;
+#if BMAG_QTY==1
+  Bmag.Deallocate();
+  Bhom.Deallocate();
+  Bext.Deallocate();
+#endif
 
-   delete [] Bmag._val_g; delete [] Bmag._val_dofs;     
-   delete [] Bmag._val_g3D; delete [] Bmag._val_dofs3D;     
-   delete [] Bmag._curl_g3D;
-
-   delete [] Bhom._val_dofs; 
-   delete [] Bext._val_dofs; 
-#endif       //================
-
-#if TEMP_QTY==1  //================   
-  delete [] Temp._val_g; delete [] Temp._val_dofs;
-#endif         //================
+#if TEMP_QTY==1 
+  Temp.Deallocate();
+#endif
 
 
 #ifdef DEFAULT_PRINT_INFO
