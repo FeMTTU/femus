@@ -18,15 +18,9 @@ namespace femus {
 OptPhysics::OptPhysics( RunTimeMap<double> & map_in):
   Physics(map_in) { } 
 
- // ========================================================
- //the Box must already be initialized here
- //it must receive an el_xm already in the REFBox frame
-//  #define LCX1  0.25
-// #define LCX2  0.75
-// #define LCY1  0.90625
-///AAA questa funzione non lavora se tu fai solo DUE SUDDIVISIONI PER LATO e nolevels=1 !!!
 
- int OptPhysics::ElFlagControl(const std::vector<double> el_xm)  const {
+
+  int OptPhysics::ElFlagControl(const std::vector<double> el_xm)  const {
 
   Box* box= static_cast<Box*>(_mesh->GetDomain());
    

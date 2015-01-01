@@ -91,21 +91,17 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
   const double penalty_val =   _mesh._mesh_rtmap.get("penalty_val");    
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-  
      //QTYZERO
     QuantityLocal BhomAdjOld(currgp,currelem);
     BhomAdjOld._qtyptr   = _QtyInternalVector[QTYZERO];
     BhomAdjOld.VectWithQtyFillBasic();
-    BhomAdjOld._val_dofs = new double[BhomAdjOld._dim*BhomAdjOld._ndof];
-    BhomAdjOld._val_g    = new double[BhomAdjOld._dim];
+    BhomAdjOld.Allocate();    
   
     //QTYONE
     QuantityLocal BhomLagMultAdjOld(currgp,currelem);
     BhomLagMultAdjOld._qtyptr   = _QtyInternalVector[QTYONE];
     BhomLagMultAdjOld.VectWithQtyFillBasic();
-    BhomLagMultAdjOld._val_dofs = new double[BhomLagMultAdjOld._dim*BhomLagMultAdjOld._ndof];
-    BhomLagMultAdjOld._val_g    = new double[BhomLagMultAdjOld._dim];  
-
+    BhomLagMultAdjOld.Allocate();    
 //========= END INTERNAL QUANTITIES (unknowns of the equation) ================= 
 
 //=========EXTERNAL QUANTITIES (couplings) =====
@@ -115,55 +111,45 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-    xyz._val_g    = new double[xyz._dim];
+    xyz.Allocate();    
 
 //========== Quadratic domain, auxiliary  
   QuantityLocal xyz_refbox(currgp,currelem);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-  xyz_refbox._val_g    = new double[xyz_refbox._dim];   
+  xyz_refbox.Allocate();    
 
   //==========     
     QuantityLocal Vel(currgp,currelem);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
-    Vel._val_dofs    = new double[Vel._dim*Vel._ndof];
-    Vel._val_g       = new double[Vel._dim];
+    Vel.Allocate();    
  
     //==========    
     QuantityLocal VelAdj(currgp,currelem);
     VelAdj._qtyptr      = _eqnmap._qtymap.get_qty("Qty_VelocityAdj");
     VelAdj.VectWithQtyFillBasic();
-    VelAdj._val_dofs    = new double[VelAdj._dim*VelAdj._ndof];
-    VelAdj._val_dofs3D  = new double[       3*VelAdj._ndof]; //needed for a vector product
-    VelAdj._val_g       = new double[VelAdj._dim];
-    VelAdj._val_g3D     = new double[3];   //needed for a vector product
+    VelAdj.Allocate();    
    
     //==========    
     QuantityLocal Bhom(currgp,currelem);
     Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
-    Bhom._val_dofs = new double[Bhom._dim*Bhom._ndof];
+    Bhom.Allocate();    
 
 //=========
     QuantityLocal Bext(currgp,currelem);
     Bext._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
-    Bext._val_dofs = new double[Bext._dim*Bext._ndof];
+    Bext.Allocate();    
   
 //========= auxiliary, must be AFTER Bhom! //TODO this is an example of  Vect which is not associated to a Quantity
     QuantityLocal Bmag(currgp,currelem); //total
     Bmag._dim        = Bhom._dim;               //same as Bhom
     Bmag._FEord      = Bhom._FEord;             //same as Bhom
     Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
-    Bmag._val_dofs   = new double[Bmag._dim*Bmag._ndof]; //we might use their own vector!
-    Bmag._val_dofs3D = new double[        3*Bmag._ndof];
-    Bmag._val_g      = new double[Bmag._dim];
-    Bmag._curl_g3D   = new double[3];
-
+    Bmag.Allocate();    
     
 //========= END EXTERNAL QUANTITIES =================
   //====== Physics
@@ -487,8 +473,17 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 
   }//END BOUNDARY ************************
   
-  //******************************DESTROY ALL THE Vect****************************  TODO
-  
+  // cleaning
+  BhomAdjOld.Deallocate();
+  BhomLagMultAdjOld.Deallocate();
+  xyz.Deallocate();
+  xyz_refbox.Deallocate();
+  Vel.Deallocate();
+  VelAdj.Deallocate();
+  Bhom.Deallocate();
+  Bext.Deallocate();
+  Bmag.Deallocate();
+ 
   
 #ifdef DEFAULT_PRINT_INFO
  std::cout << " GenMatRhs " << _eqname << ": assembled  Level " << Level
