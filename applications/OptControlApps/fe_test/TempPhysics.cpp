@@ -18,12 +18,6 @@ TempPhysics::TempPhysics( RunTimeMap<double> & map_in):
   
 } 
 
- // ========================================================
- //the Box must already be initialized here
- //it must receive an el_xm already in the REFBox frame
-
-///AAA questa funzione NON lavora se tu fai solo DUE SUDDIVISIONI PER LATO e nolevels=1 !!!
-
  int TempPhysics::ElFlagControl(const std::vector<double> el_xm)  const {
 
   Box* box= static_cast<Box*>(_mesh->GetDomain());
@@ -76,70 +70,6 @@ TempPhysics::TempPhysics( RunTimeMap<double> & map_in):
 
 return el_flagdom; 
 }
-
-
-
- //=================
-    void TempPhysics::transient_loopPlusJ(EquationsMap & eqmap_in)  {
-
-    //  parameters
-    double         dt = eqmap_in._timeloop._timemap.get("dt");
-    int    print_step = eqmap_in._timeloop._timemap.get("printstep");
-
-    double curr_time = eqmap_in._timeloop._time_in;  //initialize current time
-    
- for (uint curr_step = eqmap_in._timeloop._t_idx_in + 1; curr_step <= eqmap_in._timeloop._t_idx_final; curr_step++) {
-
-   curr_time += dt;
-
-#if DEFAULT_PRINT_TIME==1
-      std::clock_t  start_time=std::clock();
-#endif
-
-      // set up the time step
-      std::cout << "\n  ** Solving time step " << curr_step
-                << ", time = "                 << curr_time  << " ***" << std::endl;
-
-       eqmap_in._timeloop._curr_t_idx = curr_step;
-       eqmap_in._timeloop._curr_time  = curr_time;
-       std::cout <<  "==========================" << eqmap_in._timeloop._curr_t_idx << " " <<  eqmap_in._timeloop._curr_time << std::endl;
-       
-	const uint delta_t_step = curr_step - eqmap_in._timeloop._t_idx_in;
-
-      //  time step for each system, without printing (good)
-      eqmap_in.OneTimestepEqnLoop(curr_time, delta_t_step);
-
-#if DEFAULT_PRINT_TIME==1
-      std::clock_t    end_time=std::clock();
-#endif 
-
-      // print solution
-      if (delta_t_step%print_step == 0) eqmap_in.PrintSol(curr_step,curr_time);   //print sol.N.h5 and sol.N.xmf
-    
-
-#if DEFAULT_PRINT_TIME==1
-      std::clock_t    end_time2=std::clock();
-      std::cout << " Time solver ----->= "   << double(end_time- start_time)/ CLOCKS_PER_SEC
-                << " Time printing ----->= " << double(end_time2- end_time) / CLOCKS_PER_SEC <<
-                std::endl;
-#endif 
-
-//=====functional evaluations=======
-
-	EqnT* eqnT = static_cast<EqnT*>(eqmap_in.get_eqs("Eqn_T"));
-
-		
-     double J = 0.;
-J = eqnT->ComputeIntegral(0,eqmap_in._mesh._NoLevels - 1);
-J = eqnT->ComputeNormControl (0, eqmap_in._mesh._NoLevels - 1,0 );
-J = eqnT->ComputeNormControl (0, eqmap_in._mesh._NoLevels - 1,1 );
-//=====functional evaluations =======
-
-
-   }   // end time loop
-
-    return;
-  }
   
 
 

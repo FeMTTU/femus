@@ -22,14 +22,8 @@ public:
 //constructor
 TempPhysics(  RunTimeMap<double> & map_in); 
   
- // =========== Nondimensional groups and ref values ========
-
    //========= CONTROL ====================================
       int ElFlagControl(const std::vector<double> el_xm) const;
-
-   //================= ALGORITHM ==========================
-  void transient_loopPlusJ(EquationsMap & eqmap_in);
-  
 
 };
 
