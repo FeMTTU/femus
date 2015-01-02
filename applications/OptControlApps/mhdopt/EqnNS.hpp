@@ -41,7 +41,7 @@ void  bc_read(const double * xp,const double * normal, int * bc) const;
  
  void ConvertMyselfToChild(EqnBase* mybase);
  
- double ComputeIntegral (const uint vb, const uint Level) ;  //cannot make it const because of set_phi_nds
+ double ComputeIntegral (const uint Level) const;
 
  
  

@@ -95,7 +95,6 @@
   //=======density and viscosity===================
   const double rhof = _phys._physrtmap.get("rho0");
   const double  muf = _phys._physrtmap.get("mu0");
-  const double rho1=0.; const double mu1=0.;
   //====== reference values ========================
 //====== related to Quantities on which Operators act, and to the choice of the "LEADING" EQUATION Operator
   TempPhysics *optphys; optphys = static_cast<TempPhysics*>(&_phys);
@@ -208,9 +207,8 @@
 #endif
 
 //======== TWO PHASE WORLD
-    double phase=1.;
-    double rho_nd =  phase+(1-phase)*rho1/rhof;
-    double  mu_nd =  phase+(1-phase)*mu1/muf;
+    double rho_nd =  1.;
+    double  mu_nd =  1.;
 //======== TWO PHASE WORLD
 
     
@@ -484,12 +482,6 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();
     
-#if TEMP_QTY==1
-    QuantityLocal Temp(currgp);
-    Temp._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature");
-    Temp.VectWithQtyFillBasic();
-    Temp.Allocate();
-#endif
 
     const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
     const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
@@ -574,7 +566,7 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (f
 // // //    val_g(vb,pressOld);
    
    xyz_refbox.val_g();
-      pressOld._qtyptr->Function_txyz(time,xyz_refbox._val_g/*xyz._val_g*/,pressOld._val_g);  //i prefer using the function instead of the p_old vector
+      pressOld._qtyptr->Function_txyz(time,xyz_refbox._val_g,pressOld._val_g);  //i prefer using the function instead of the p_old vector
        
 //--- strain, derivative of velocity ============== 
       
@@ -662,9 +654,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
    xyz.Deallocate();
    VelOld.Deallocate();
    pressOld.Deallocate();
-#if TEMP_QTY==1    
-   Temp.Deallocate();
-#endif
+
    
     }
   // END BOUNDARY ******************************

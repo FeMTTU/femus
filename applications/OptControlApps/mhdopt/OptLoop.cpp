@@ -267,7 +267,7 @@ do {
 
 double integral = 0.;
 #ifdef NS_EQUATIONS      
-   integral = mgNS->ComputeIntegral(0,e_map_in._mesh._NoLevels - 1);
+   integral = mgNS->ComputeIntegral(e_map_in._mesh._NoLevels - 1);
  #endif
   
    std::cout << "integral on processor 0: " << integral << std::endl;

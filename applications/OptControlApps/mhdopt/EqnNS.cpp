@@ -852,9 +852,11 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 //it means that a loop is done DIMENSION times instead of 1 time
 
 
-double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
+double EqnNS::ComputeIntegral (const uint Level) const {
 
-    CurrElem       currelem(vb,*this,_eqnmap);
+   const uint mesh_vb = VV;
+  
+    CurrElem       currelem(VV,*this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
   
@@ -899,11 +901,11 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
    
    double integral=0.;
     
-      const uint el_ngauss = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussPointsNumber();
+      const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
 
 //parallel sum
-    const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
-    const uint nel_b = _mesh._off_el[vb][_NoLevels*myproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
@@ -934,7 +936,7 @@ double EqnNS::ComputeIntegral (const uint vb, const uint Level) {
 for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
      
    const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
-   const double  wgt_g = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
+   const double  wgt_g = _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
 
      for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
