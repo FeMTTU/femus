@@ -23,7 +23,7 @@ class QuantityLocal;
 
   public:
     
-    CurrElem(const uint vb, const EqnBase&, const EquationsMap& e_map_in);
+    CurrElem(const uint vb, const EqnBase*, const EquationsMap& e_map_in);
    ~CurrElem();
 
     inline const uint  GetVb() const {
@@ -86,7 +86,7 @@ class QuantityLocal;
  
     //TODO make these private
 //========== Equation-related ========================               
-  const EqnBase & _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
+  const EqnBase * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
   const EquationsMap & _eqnmap;
   
   private:

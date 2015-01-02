@@ -92,7 +92,7 @@ return;
 
    const double time =  _eqnmap._timeloop._curr_time;
    
-    CurrElem       currelem(vb,*this,_eqnmap);    
+    CurrElem       currelem(vb,this,_eqnmap);    
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
   
@@ -780,8 +780,8 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 //================== END GAUSS LOOP (qp loop) ======================
 //==================================================================
     
-    _A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());   //      std::cout << "KeM "<< vb << " " << currelem.Mat().l1_norm() << std::endl;
-    _b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());   //      std::cout << "FeM "<< vb << " " << currelem.Rhs().l2_norm() << std::endl;
+    _A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+    _b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
 
     
   }
@@ -856,7 +856,7 @@ double EqnNS::ComputeIntegral (const uint Level) const {
 
    const uint mesh_vb = VV;
   
-    CurrElem       currelem(VV,*this,_eqnmap);
+    CurrElem       currelem(VV,this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
   

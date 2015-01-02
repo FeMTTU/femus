@@ -4,7 +4,6 @@
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 
-// #include "FEMap.h"
 #include "FEElemBase.hpp"
 
 #include "QuantityLocal.hpp"
@@ -14,7 +13,7 @@ namespace femus {
 
 
 
-    CurrElem::CurrElem(const uint vb, const EqnBase & eqn_in, const EquationsMap & e_map_in ):
+    CurrElem::CurrElem(const uint vb, const EqnBase * eqn_in, const EquationsMap & e_map_in ):
     _eqn(eqn_in),
     _eqnmap(e_map_in),
     _dim(_eqnmap._mesh.get_dim()-vb),
@@ -31,7 +30,7 @@ namespace femus {
 
 //========== Current "Equation Element"  ========================
   _el_n_dofs = 0;
-     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs += (_eqnmap._elem_type[_dim-1][fe]->GetNDofs() )*_eqn._nvars[fe]; }
+     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs += (_eqnmap._elem_type[_dim-1][fe]->GetNDofs() )*_eqn->_nvars[fe]; }
 
   _el_dof_indices.resize(_el_n_dofs);
   _bc_eldofs = new uint[_el_n_dofs];
@@ -68,24 +67,24 @@ void CurrElem::SetElDofsBc(const uint Level)  {
   
 int off_local_el[QL];
 off_local_el[QQ] = 0;
-off_local_el[LL] = _eqn._nvars[QQ]*(_eqnmap._elem_type[_dim-1][QQ]->GetNDofs() );
-off_local_el[KK] = _eqn._nvars[QQ]*(_eqnmap._elem_type[_dim-1][QQ]->GetNDofs() ) + _eqn._nvars[LL]*(_eqnmap._elem_type[_dim-1][LL]->GetNDofs() );
+off_local_el[LL] = _eqn->_nvars[QQ]*(_eqnmap._elem_type[_dim-1][QQ]->GetNDofs() );
+off_local_el[KK] = _eqn->_nvars[QQ]*(_eqnmap._elem_type[_dim-1][QQ]->GetNDofs() ) + _eqn->_nvars[LL]*(_eqnmap._elem_type[_dim-1][LL]->GetNDofs() );
   
 
  int DofObj = 0;
 for (int fe=0; fe < QL; fe++) {
-for (uint ivar=0; ivar < _eqn._nvars[fe]; ivar++)    {
+for (uint ivar=0; ivar < _eqn->_nvars[fe]; ivar++)    {
       for (uint d=0; d< _eqnmap._elem_type[_dim-1][fe]->GetNDofs(); d++)    {
 	
 	     if (fe < KK )       DofObj =        _el_conn[d];
 	     else if (fe == KK)  DofObj = _vol_iel_DofObj;
 	     
           const uint     indx  = d + ivar*_eqnmap._elem_type[_dim-1][fe]->GetNDofs() + off_local_el[fe];
-	  _el_dof_indices[indx] = _eqn._node_dof[Level][ DofObj + ivar*_eqn._DofNumLevFE[Level][fe] + _eqn._DofOffLevFE[Level][fe] ]; 
+	  _el_dof_indices[indx] = _eqn->_node_dof[Level][ DofObj + ivar*_eqn->_DofNumLevFE[Level][fe] + _eqn->_DofOffLevFE[Level][fe] ]; 
 
-         if (fe < KK ) { const uint dofkivar = _eqn._node_dof[Lev_pick_bc_dof][ DofObj + ivar*_eqn._DofNumLevFE[Lev_pick_bc_dof][fe] + _eqn._DofOffLevFE[Lev_pick_bc_dof][fe] ]; 
-             _bc_eldofs[indx] = _eqn._bc[dofkivar]; }
-         else if (fe == KK)    _bc_eldofs[indx] = _eqn._bc_fe_kk[Level][ DofObj + ivar*_eqn._DofNumLevFE[Level][KK] ];
+         if (fe < KK ) { const uint dofkivar = _eqn->_node_dof[Lev_pick_bc_dof][ DofObj + ivar*_eqn->_DofNumLevFE[Lev_pick_bc_dof][fe] + _eqn->_DofOffLevFE[Lev_pick_bc_dof][fe] ]; 
+             _bc_eldofs[indx] = _eqn->_bc[dofkivar]; }
+         else if (fe == KK)    _bc_eldofs[indx] = _eqn->_bc_fe_kk[Level][ DofObj + ivar*_eqn->_DofNumLevFE[Level][KK] ];
 	 }
     } 
 } // end fe

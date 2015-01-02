@@ -77,7 +77,7 @@ namespace femus {
 
    const double time =  _eqnmap._timeloop._curr_time;
    
-    CurrElem       currelem(vb,*this,_eqnmap);
+    CurrElem       currelem(vb,this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
    
    

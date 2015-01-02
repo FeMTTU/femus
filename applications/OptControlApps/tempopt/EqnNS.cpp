@@ -114,7 +114,7 @@
 //========================
   const uint mesh_vb = VV;
   
-    CurrElem       currelem(VV,*this,_eqnmap);
+    CurrElem       currelem(VV,this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
  
   
@@ -439,7 +439,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
      const uint mesh_vb = BB;
   
-    CurrElem       currelem(BB,*this,_eqnmap);
+    CurrElem       currelem(BB,this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
  
   

@@ -877,7 +877,7 @@ void EqnBase::GenBc() {
 
  //**************************************************   
  //******** ELEM BASED ******************************  
-     CurrElem       currelem(BB,*this,_eqnmap);
+     CurrElem       currelem(BB,this,_eqnmap);
 
     _bc_fe_kk             =  new int*[_NoLevels];
     int* DofOff_Lev_kk    =  new int[_NoLevels];
@@ -1306,7 +1306,7 @@ void EqnBase::PrintBc(std::string namefile) {
 //for now, we will leave things like this
 void EqnBase::GenElBc()  {
 
-     CurrElem       currelem(BB,*this,_eqnmap);  
+     CurrElem       currelem(BB,this,_eqnmap);  
   
       uint space_dim = _mesh.get_dim();
 
@@ -1510,7 +1510,7 @@ void EqnBase::GenIc() {
 
     if (!in) {
 
-        CurrElem       currelem(VV,*this,_eqnmap);  
+        CurrElem       currelem(VV,this,_eqnmap);  
      
         const uint  coords_fine_offset = _mesh._NoNodesXLev[_NoLevels-1];
         const uint  el_nnodes = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,mesh_ord)._elnds;
@@ -3944,107 +3944,6 @@ return;
 // // // // }
 
 
-//=================================================================
-//=================================================================
-//this function computes the integral of some function
-//i would wanna do it without the quantity interface
-//also do it with all the procs inside
-//remember that the mesh is nondimensional here
-// at the end you have to multiply again
-
-//i do not want to need no Equation nor Quantity
-//clearly in this way the FE order is not given,
-//but if you use the function at gauss coordinates you do not need that basically
-//clearly since i do not use any Quantity, i cannot consider the framework of the Domain
-//and the refbox coordinates, this is just a simple function, for testing
-//i think i cannot pass a function pointer to a member function,
-//maybe i can do that only if the function is STATIC
-//since here the order is not related to any equation, i can pick the  quadrature rule
-//as INDEPENDENT of the ORDER
-//in practice, here we are picking a 
-
-double EqnBase::FunctionIntegral (const uint vb, const EquationsMap & eqnmap_in, double (*pt2func)(double, const double* ) ) const {
-
-const uint Level = _NoLevels - 1;
-const uint myproc= _iproc;
-  double time=0.;
-  
-    CurrElem       currelem(vb,*this,_eqnmap);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
-
-  //======== ELEMENT MAPPING =======
-  const uint meshql = (int) _mesh._mesh_rtmap.get("meshql");  
- 
-//========= DOMAIN MAPPING
-    QuantityLocal xyz(currgp);
-    xyz._dim      = _mesh.get_dim();
-    xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[_mesh.get_dim()-1-vb][xyz._FEord]->GetNDofs();
-    xyz.Allocate();
-
-  double integral = 0.;
-  
-//loop over the geom el types
-      const uint el_ngauss = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussPointsNumber();
-
-//parallel sum
-    const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
-    const uint nel_b = _mesh._off_el[vb][_NoLevels*myproc+Level];
-  
-    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
-  
-    currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
-    currelem.SetMidpoint(); 
-    
-    currelem.ConvertElemCoordsToMappingOrd(xyz);
-
-     
-    for (uint qp = 0; qp < el_ngauss; qp++) {
-
-for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
-     
-double  Jac_g=0.;
-          if (vb==0)   Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
-     else if (vb==1)   Jac_g = currgp.JacVectBB_g(xyz);  //not xyz_refbox!      
-
-   const double  wgt_g = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
-
-     for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
-
- xyz.val_g();
-double myval_g = pt2func(time,xyz._val_g); 
-
- 
-  integral += wgt_g*Jac_g*myval_g;
-
-   
-    }//gauss loop
-     
-    }//element loop
-    
-         std::cout << std::endl << "vb = " << vb << " ^^^^^^^^^^^^^^^^^L'integrale sul processore "<< myproc << " vale: " << integral << std::endl;
-
-    double weights_sum = 0.;
-    for (uint qp = 0; qp < el_ngauss; qp++)  weights_sum += _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
-       std::cout << std::endl << "vb = " << vb << " ^^^^^^^^^^^^^^^^^ La somma dei pesi  vale: " << weights_sum << std::endl;
-
-       double J=0.;
-   #ifdef HAVE_MPI
-//       MPI_Reduce( &integral, &J, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );  //This one gives J only to processor 0 !
-      MPI_Allreduce( &integral, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );  //THIS IS THE RIGHT ONE!!
-   #else
-   J = integral;
-   #endif
-    
-     std::cout << std::endl << "vb = " << vb << " ^^^^^^^^^^^^^^^^^L'integrale totale vale: " << J << std::endl;
-
-    xyz.Deallocate();
-   
-  return J;  
-  
-}
 
 
 } //end namespace femus
-
-

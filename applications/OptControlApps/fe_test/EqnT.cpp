@@ -55,7 +55,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
 
   const double time =  _eqnmap._timeloop._curr_time;
    
-  CurrElem       currelem(vb,*this,_eqnmap);
+  CurrElem       currelem(vb,this,_eqnmap);
   CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
   TempPhysics* myphys; myphys = static_cast<TempPhysics*>(&_phys);

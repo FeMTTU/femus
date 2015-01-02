@@ -104,7 +104,7 @@ void EqnMHDCONT::init_equation_data() {
 
    const double time =  _eqnmap._timeloop._curr_time;
    
-    CurrElem       currelem(vb,*this,_eqnmap);
+    CurrElem       currelem(vb,this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
     
 //======= TIME - STATIONARY OR NOT =======
