@@ -146,15 +146,11 @@ void TempPhysics::set_nondimgroups() {
 
 		
      double J = 0.;
-J = eqnT->ComputeIntegral(0,eqmap_in._mesh._NoLevels - 1);
-J = eqnT->ComputeNormControl (0, eqmap_in._mesh._NoLevels - 1,0 );
-J = eqnT->ComputeNormControl (0, eqmap_in._mesh._NoLevels - 1,1 );
+J = eqnT->ComputeIntegral    ( eqmap_in._mesh._NoLevels - 1);
+J = eqnT->ComputeNormControl ( eqmap_in._mesh._NoLevels - 1,0 );
+J = eqnT->ComputeNormControl ( eqmap_in._mesh._NoLevels - 1,1 );
 //=====functional evaluations =======
 
-
-//====== Update bc ==============
-//eqnT->FillBcAfterAllocation();  //TODO TODO TODO what was this function?
-//====== Update bc ==============
 #endif
 
 

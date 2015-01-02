@@ -716,12 +716,7 @@ int el_Neum_flag=0;
 
 // This function computes the integral only for the current processor
 
-double EqnT::ComputeIntegral (const uint vb, const uint Level) {
-
-  const uint mesh_vb = vb;
-
-    CurrElem       currelem(vb,*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+double EqnT::ComputeIntegral (const uint Level) {
 
   //====== Physics cast
   TempPhysics *optphys; optphys = static_cast<TempPhysics*>(&_phys);
@@ -732,6 +727,11 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
   const uint mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");  
   const uint meshql   = (int) _mesh._mesh_rtmap.get("meshql");   //======== ELEMENT MAPPING =======
  
+  const uint mesh_vb = VV;
+
+    CurrElem       currelem(VV,*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+
   //========== 
     QuantityLocal Tempold(currgp);
     Tempold._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature"); 
@@ -861,22 +861,21 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
 
 /////////////////////////
 
-double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg_ord ) {
+double EqnT::ComputeNormControl (const uint Level, const uint reg_ord ) {
 
   //reg_ord = 0: L2
   //reg_ord = 1: H1
 
-  const uint mesh_vb = vb;
-  
-    CurrElem       currelem(vb,*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
-  
   // processor index
   const uint myproc = _iproc;
   const uint space_dim =       _mesh.get_dim();
   const uint mesh_ord  = (int) _mesh._mesh_rtmap.get("mesh_ord");  
   const uint meshql    = (int) _mesh._mesh_rtmap.get("meshql");    //======== ELEMENT MAPPING =======
 
+  const uint mesh_vb = VV;
+  
+    CurrElem       currelem(VV,*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 //======Functions in the integrand ============
 
