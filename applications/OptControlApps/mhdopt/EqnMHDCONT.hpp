@@ -35,7 +35,7 @@ EqnMHDCONT(  std::vector<Quantity*> int_map_in,
 
   void elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const;
   
-  void GenMatRhsVB(const uint vb,const double time,const uint Level);
+  void GenMatRhsVB(const uint vb, const uint Level);
 
   void init_equation_data();
 

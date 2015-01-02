@@ -112,13 +112,12 @@ void TempPhysics::set_nondimgroups() {
       std::clock_t  start_time=std::clock();
 #endif
 
-      // set up the time step
-      std::cout << "\n  ** Solving time step " << curr_step
-                << ", time = "                 << curr_time  << " ***" << std::endl;
-
        eqmap_in._timeloop._curr_t_idx = curr_step;
        eqmap_in._timeloop._curr_time  = curr_time;
-       std::cout <<  "==========================" << eqmap_in._timeloop._curr_t_idx << " " <<  eqmap_in._timeloop._curr_time << std::endl;
+
+      std::cout << "\n  ** Solving time step " << eqmap_in._timeloop._curr_t_idx
+                << ", time = "                 << eqmap_in._timeloop._curr_time   << " ***" << std::endl;
+
        
 	const uint delta_t_step = curr_step - eqmap_in._timeloop._t_idx_in;
 

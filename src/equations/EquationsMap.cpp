@@ -677,6 +677,7 @@ void EquationsMap::TransientLoop()  {
     for (uint curr_step = _timeloop._t_idx_in + 1; curr_step <= _timeloop._t_idx_final; curr_step++) {
 
         curr_time += dt;
+        _timeloop._curr_time  = curr_time;
 
 #if DEFAULT_PRINT_TIME==1 // only for cpu time check --------
         std::clock_t  start_time=std::clock();
@@ -690,7 +691,7 @@ void EquationsMap::TransientLoop()  {
 
 
         //  time step for each system, without printing (good)
-        OneTimestepEqnLoop(curr_time, delta_t_step);
+        OneTimestepEqnLoop(_timeloop._curr_time, delta_t_step);
 
 #if DEFAULT_PRINT_TIME==1 // only for cpu time check --------
         std::clock_t    end_time=std::clock();
@@ -723,7 +724,7 @@ void EquationsMap::OneTimestepEqnLoop(
     // loop for time steps
     for (iterator eqn=_equations.begin(); eqn != _equations.end(); eqn++)  {
         EqnBase* mgsol = eqn->second;
-        mgsol -> MGTimeStep(time,delta_t_step_in);
+        mgsol -> MGTimeStep(delta_t_step_in);
     }
     return;
 }

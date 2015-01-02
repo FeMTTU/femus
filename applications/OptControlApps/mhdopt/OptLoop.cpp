@@ -228,7 +228,7 @@ do {
     
     knonl_NS++;
 //      std::cout << "\n >>>>> Solving nonlinear step " << knonl_NS << " for" << mgNS->_eqname << std::endl;
-    nonlin_deltax_NS = mgNS-> MGTimeStep(0.,knonl_NS);
+    nonlin_deltax_NS = mgNS-> MGTimeStep(knonl_NS);
 
   } while ( nonlin_deltax_NS > eps_nl_NS && knonl_NS < MaxIterNS );
 }
@@ -244,7 +244,7 @@ do {
   k_MHD++;
 //ONE nonlinear step = ONE LINEAR SOLVER  
 //    std::cout << "\n >>>>>>>> Solving MHD system (linear in B), " << k_MHD << std::endl;
-    nonlin_deltax_MHD = mgMHD-> MGTimeStep(0.,k_MHD);
+    nonlin_deltax_MHD = mgMHD-> MGTimeStep(k_MHD);
 
 }while (nonlin_deltax_MHD > eps_MHD &&  k_MHD < MaxIterMHD );
   
@@ -343,7 +343,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
    uint k_NSAD=0;
   do {
    k_NSAD++;
-   lin_deltax_NSAD = mgNSAD-> MGTimeStep(0.,k_NSAD);
+   lin_deltax_NSAD = mgNSAD-> MGTimeStep(k_NSAD);
   }
   while (lin_deltax_NSAD > eps_NSAD && k_NSAD < MaxIterNSAD );
  }
@@ -353,7 +353,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
   uint k_MHDAD=0;
  do{
    k_MHDAD++;
-lin_deltax_MHDAD = mgMHDAD-> MGTimeStep(0.,k_MHDAD);
+lin_deltax_MHDAD = mgMHDAD-> MGTimeStep(k_MHDAD);
  }
 while(lin_deltax_MHDAD >  eps_MHDAD && k_MHDAD < MaxIterMHDAD );
 }
@@ -364,7 +364,7 @@ while(lin_deltax_MHDAD >  eps_MHDAD && k_MHDAD < MaxIterMHDAD );
 do{
   k_MHDCONT++;
   //not only when k_MHDCONT==1, but also when k_ADJCONT==1
-lin_deltax_MHDCONT =  mgMHDCONT-> MGTimeStep(0.,k_MHDCONT);
+lin_deltax_MHDCONT =  mgMHDCONT-> MGTimeStep(k_MHDCONT);
  }
 while(lin_deltax_MHDCONT >  eps_MHDCONT && k_MHDCONT < MaxIterMHDCONT );
 }

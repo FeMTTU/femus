@@ -24,7 +24,7 @@ public:
     ~EqnT();  
      
 
- void GenMatRhsVB(const uint vb,const double time,const uint Level);  ///< Volume Assemblying.
+ void GenMatRhsVB(const uint vb, const uint Level);  ///< Volume Assemblying.
  
  void ic_read(const double * xp, double * u_value, const double * el_xm) const;
  

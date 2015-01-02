@@ -88,8 +88,10 @@ return;
  /// Level starts from zero
 //in this routine, all the references to the FEorder must be related to the corresponding Quantity
 //or the corresponding Vect
-  void EqnNS::GenMatRhsVB(const uint vb,const double time,const uint Level)  {  ///< VB Assemblying.
+  void EqnNS::GenMatRhsVB(const uint vb, const uint Level)  {  ///< VB Assemblying.
 
+   const double time =  _eqnmap._timeloop._curr_time;
+   
     CurrElem       currelem(vb,*this,_eqnmap);    
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   

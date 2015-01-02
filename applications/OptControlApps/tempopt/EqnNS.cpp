@@ -72,8 +72,10 @@
     
 //===================================================
 /// This function assembles the matrix and the rhs:
- void EqnNS::GenMatRhsVB(const uint vb,const double time,const uint Level)  {  ///< VB Assemblying.
+ void EqnNS::GenMatRhsVB(const uint vb, const uint Level)  {  ///< VB Assemblying.
 
+   const double time =  _eqnmap._timeloop._curr_time;
+   
     CurrElem       currelem(vb,*this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
 

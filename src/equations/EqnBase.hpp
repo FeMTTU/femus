@@ -109,8 +109,8 @@ public:
     void PrintOneVarMatrixHDF5(std::string name, std::string groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel ) const;
     void PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, uint* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe) const;
 
- virtual  void GenMatRhsVB(const uint vb,const double time,const uint Level) = 0;  //every equation must have one, explicitly!
-        double MGTimeStep(const double time,const uint iter);                    ///< MG time step solver (backward Euler)
+ virtual  void GenMatRhsVB(const uint vb, const uint Level) = 0;  //every equation must have one, explicitly!
+        double MGTimeStep(const uint iter);                    ///< MG time step solver (backward Euler)
           void MGSolve(double Eps,int MaxIter, const uint Gamma=DEFAULT_MG_GAMMA, const uint Nc_pre=DEFAULT_NC_PRE,const uint Nc_coarse=DEFAULT_NC_COARSE,const uint Nc_post=DEFAULT_NC_POST);    ///< MultiGrid Solver
         double MGStep(int Level,double Eps1,int MaxIter, const uint Gamma, const uint Nc_pre,const uint Nc_coarse,const uint Nc_post);    ///< MultiGrid Step
           void MGCheck(int Level) const;                                           ///< Check Operators

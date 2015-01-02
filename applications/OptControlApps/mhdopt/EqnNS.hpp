@@ -37,7 +37,7 @@ void  bc_read(const double * xp,const double * normal, int * bc) const;
 
  void elem_bc_read(const double xp[],int& surf_id,double normal[],int bc_flag[]) const;
 
- void GenMatRhsVB(const uint vb,const double time,const uint Level);  ///< Volume Assemblying.
+ void GenMatRhsVB(const uint vb, const uint Level);  ///< Volume Assemblying.
  
  void ConvertMyselfToChild(EqnBase* mybase);
  

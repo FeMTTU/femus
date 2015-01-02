@@ -33,7 +33,7 @@ class EqnNS : public EqnBase {
 
  void elem_bc_read(const double * xp, int& surf_id, double normal[], int bc_flag[]) const;
 
- void GenMatRhsVB(const uint vb,const double time,const uint Level);  ///< Volume Assemblying.
+ void GenMatRhsVB(const uint vb, const uint Level);  ///< Volume Assemblying.
  
 
  double ComputeIntegral (const uint vb, const uint Level) ;  //cannot make it const because of set_phi_nds

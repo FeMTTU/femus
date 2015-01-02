@@ -76,8 +76,10 @@ namespace femus {
 
 /// This function assembles the matrix and the rhs:
 
-  void EqnMHD::GenMatRhsVB(const uint vb,const double time,const uint Level)  {
+  void EqnMHD::GenMatRhsVB(const uint vb, const uint Level)  {
 
+   const double time =  _eqnmap._timeloop._curr_time;
+   
     CurrElem       currelem(vb,*this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
     

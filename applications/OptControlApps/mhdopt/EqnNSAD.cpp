@@ -73,8 +73,10 @@ namespace femus {
 
 
 
- void EqnNSAD::GenMatRhsVB(const uint vb,const double time,const uint Level)  {
+ void EqnNSAD::GenMatRhsVB(const uint vb, const uint Level)  {
 
+   const double time =  _eqnmap._timeloop._curr_time;
+   
     CurrElem       currelem(vb,*this,_eqnmap);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
    

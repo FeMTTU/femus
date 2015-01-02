@@ -1642,7 +1642,7 @@ void EqnBase::GenIc() {
 
 /// Basically, the single time step consists in  ASSEMBLING + SOLVING
 
-double EqnBase::MGTimeStep(const double time, const uint iter) {
+double EqnBase::MGTimeStep(const uint iter) {
 
     std::cout  << std::endl << " Solving " << _eqname << " , step " << iter << std::endl;
 
@@ -1659,8 +1659,8 @@ double EqnBase::MGTimeStep(const double time, const uint iter) {
         _A[Level]->zero();
         _b[Level]->zero();
 
-        GenMatRhsVB(VV,time,Level);
-        GenMatRhsVB(BB,time,Level);
+        GenMatRhsVB(VV,Level);
+        GenMatRhsVB(BB,Level);
 
 #ifdef DEFAULT_PRINT_INFO
         _A[Level]->close();
