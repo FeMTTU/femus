@@ -35,8 +35,6 @@ class EqnNS : public EqnBase {
 
  void GenMatRhsVB(const uint vb, const uint Level);  ///< Volume Assemblying.
  
-
- double ComputeIntegral (const uint vb, const uint Level) ;  //cannot make it const because of set_phi_nds
  
 };
 
