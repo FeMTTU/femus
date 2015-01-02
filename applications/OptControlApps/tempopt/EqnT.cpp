@@ -101,13 +101,9 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
 /// This function assembles the matrix and the rhs:
 void  EqnT::GenMatRhsVB(const uint vb, const uint Level) {
 
-   const double time =  _eqnmap._timeloop._curr_time;
+  const double time =  _eqnmap._timeloop._curr_time;
 
-  const uint mesh_vb = vb;
-  
-  CurrElem       currelem(vb,*this,_eqnmap);    
-  CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
-  
+//========== PHYSICS =======
   TempPhysics* myphys; myphys = static_cast<TempPhysics*>(&_phys);
 
 //========== PROCESSOR INDEX
@@ -125,7 +121,32 @@ void  EqnT::GenMatRhsVB(const uint vb, const uint Level) {
   const uint  meshql   = (int) _mesh._mesh_rtmap.get("meshql");
   const uint  mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
 
+  //====== reference values ========================
+  const double IRe = 1./myphys->_Re;
+  const double IPr = 1./myphys->_Pr;
+  const double alphaT  = myphys->_physrtmap.get("alphaT");
+  const double alphaL2 = myphys->_physrtmap.get("alphaL2");
+  const double alphaH1 = myphys->_physrtmap.get("alphaH1");
   
+  //==== AUXILIARY ==============
+    double* dphijdx_g = new double[space_dim];
+    double* dphiidx_g = new double[space_dim];
+   //-----Nonhomogeneous Neumann------
+ // Qflux = - k grad(T) by definition
+//  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
+    double* Qflux_g = new double[space_dim];
+
+    int T4_ord = T4_ORD;
+    
+// ==========================================  
+// ==========================================  
+ {//BEGIN VOLUME
+ const uint mesh_vb = VV;
+  
+  CurrElem       currelem(VV,*this,_eqnmap);    
+  CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+  
+
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     QuantityLocal Tempold(currgp);
     Tempold._qtyptr   = _QtyInternalVector[0]; 
@@ -146,7 +167,7 @@ void  EqnT::GenMatRhsVB(const uint vb, const uint Level) {
     
 //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp);  //no quantity
+  QuantityLocal xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
@@ -154,10 +175,10 @@ void  EqnT::GenMatRhsVB(const uint vb, const uint Level) {
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   QuantityLocal xyz_refbox(currgp);  //no quantity
-  xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
-  xyz_refbox.Allocate();
+    xyz_refbox._dim      = space_dim;
+    xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+    xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+    xyz_refbox.Allocate();
   
   //==================
     QuantityLocal vel(currgp);
@@ -171,30 +192,15 @@ void  EqnT::GenMatRhsVB(const uint vb, const uint Level) {
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
 
-  //==== AUXILIARY ==============
-    double* dphijdx_g = new double[space_dim];
-    double* dphiidx_g = new double[space_dim];
-   //-----Nonhomogeneous Neumann------
- // Qflux = - k grad(T) by definition
-//  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
-    double* Qflux_g = new double[space_dim];
-
-  //====== reference values ========================
-  const double IRe = 1./myphys->_Re;
-  const double IPr = 1./myphys->_Pr;
-  const double alphaT  = myphys->_physrtmap.get("alphaT");
-  const double alphaL2 = myphys->_physrtmap.get("alphaL2");
-  const double alphaH1 = myphys->_physrtmap.get("alphaH1");
-
-    int T4_ord = T4_ORD;
   
-  /// b) Element  Loop over the volume (n_elem)
-   const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+
    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
 
-  if (vb==VV)   {//BEGIN VOLUME
-    
+// ==========================================  
+// ==========================================  
+   
+
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
     currelem.Mat().zero();
@@ -250,7 +256,9 @@ int domain_flag = myphys->ElFlagControl(xyz_refbox._el_average);
    else                         Tdes._qtyptr->FunctionDof(Tdes,time,xyz_refbox._val_dofs);
 
 
-    for (uint qp=0; qp< el_ngauss; qp++) {
+   const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+   
+   for (uint qp=0; qp< el_ngauss; qp++) {
 
 //======= "COMMON SHAPE PART"==================
 for (uint fe = 0; fe < QL; fe++)   { 
@@ -431,9 +439,79 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(fe); }
   } // end of element loop
   // *****************************************************************
 
-  }//END VOLUME
+ //=========== cleaning stage ==============
+  Tdes.Deallocate();
+  TAdj.Deallocate();
+  Tlift.Deallocate();
+  Tempold.Deallocate();
+  xyz.Deallocate();
+  xyz_refbox.Deallocate();
+  vel.Deallocate(); 
   
-  else if (vb==BB)  {//BEGIN BOUNDARY  // *****************************************************************
+  
+   }//END VOLUME
+  
+   { //BEGIN BOUNDARY  // *****************************************************************
+   
+ const uint mesh_vb = BB;
+  
+  CurrElem       currelem(BB,*this,_eqnmap);    
+  CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+  
+
+//=========INTERNAL QUANTITIES (unknowns of the equation) =========     
+    QuantityLocal Tempold(currgp);
+    Tempold._qtyptr   = _QtyInternalVector[0]; 
+    Tempold.VectWithQtyFillBasic();
+    Tempold.Allocate();
+
+//====================================
+    QuantityLocal Tlift(currgp);
+    Tlift._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
+    Tlift.VectWithQtyFillBasic();
+    Tlift.Allocate();
+
+//=====================================
+    QuantityLocal TAdj(currgp);
+    TAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
+    TAdj.VectWithQtyFillBasic();
+    TAdj.Allocate();
+    
+//=========EXTERNAL QUANTITIES (couplings) =====
+    //========= //DOMAIN MAPPING
+  QuantityLocal xyz(currgp);  //no quantity
+    xyz._dim      = space_dim;
+    xyz._FEord    = meshql;
+    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz.Allocate();
+
+    //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
+  QuantityLocal xyz_refbox(currgp);  //no quantity
+    xyz_refbox._dim      = space_dim;
+    xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+    xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+    xyz_refbox.Allocate();
+  
+  //==================
+    QuantityLocal vel(currgp);
+    vel._qtyptr   = _eqnmap._qtymap.get_qty("Qty_Velocity"); 
+    vel.VectWithQtyFillBasic();
+    vel.Allocate();
+    
+//===============Tdes=====================
+    QuantityLocal Tdes(currgp);
+    Tdes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempDes"); 
+    Tdes.VectWithQtyFillBasic();
+    Tdes.Allocate();
+
+  
+
+   const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
+   const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
+
+// ==========================================  
+// ==========================================     
+   
     
      for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
 
@@ -478,6 +556,8 @@ int el_Neum_flag=0;
 
 //====================================
 
+   const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+   
     for (uint qp=0; qp< el_ngauss; qp++) {
 
 //======= "COMMON SHAPE PART"============================
@@ -525,11 +605,6 @@ int el_Neum_flag=0;
   }
       // end of BDRYelement loop
     
-  }//END BOUNDARY
-
-else {   std::cout << " No line integrals yet... " << std::endl; abort();}
-
- 
 //=========== cleaning stage ==============
   Tdes.Deallocate();
   TAdj.Deallocate();
@@ -538,6 +613,10 @@ else {   std::cout << " No line integrals yet... " << std::endl; abort();}
   xyz.Deallocate();
   xyz_refbox.Deallocate();
   vel.Deallocate();
+
+     
+  }//END BOUNDARY
+
   
 #ifdef DEFAULT_PRINT_INFO
   std::cout << " Matrix and RHS assembled for equation " << _eqname
