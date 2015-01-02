@@ -3976,12 +3976,11 @@ const uint myproc= _iproc;
   const uint meshql = (int) _mesh._mesh_rtmap.get("meshql");  
  
 //========= DOMAIN MAPPING
-    QuantityLocal xyz(currgp,currelem);
+    QuantityLocal xyz(currgp);
     xyz._dim      = _mesh.get_dim();
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[_mesh.get_dim()-1-vb][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-    xyz._val_g    = new double[xyz._dim];
+    xyz.Allocate();
 
   double integral = 0.;
   
@@ -4039,6 +4038,7 @@ double myval_g = pt2func(time,xyz._val_g);
     
      std::cout << std::endl << "vb = " << vb << " ^^^^^^^^^^^^^^^^^L'integrale totale vale: " << J << std::endl;
 
+    xyz.Deallocate();
    
   return J;  
   

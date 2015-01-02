@@ -118,12 +118,12 @@ void EqnMHDCONT::init_equation_data() {
   const double penalty_val = _mesh._mesh_rtmap.get("penalty_val");    
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-    QuantityLocal BeOld(currgp,currelem);
+    QuantityLocal BeOld(currgp);
     BeOld._qtyptr   = _QtyInternalVector[QTYZERO];
     BeOld.VectWithQtyFillBasic();
     BeOld.Allocate();
 
-    QuantityLocal LagMultOld(currgp,currelem);
+    QuantityLocal LagMultOld(currgp);
     LagMultOld._qtyptr   = _QtyInternalVector[QTYONE];
     LagMultOld.VectWithQtyFillBasic();
     LagMultOld.Allocate();
@@ -131,40 +131,40 @@ void EqnMHDCONT::init_equation_data() {
 
 //=========EXTERNAL QUANTITIES (couplings) =====
   //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp,currelem);
+    QuantityLocal xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary
-  QuantityLocal xyz_refbox(currgp,currelem);
+  QuantityLocal xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();
   
 #if VELOCITY_QTY==1
-    QuantityLocal Vel(currgp,currelem);
+    QuantityLocal Vel(currgp);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity"); //an alternative cannot exist, because it is an Unknown of This Equation
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
 #endif  
 
     //==================
-    QuantityLocal VelAdj(currgp,currelem);
+    QuantityLocal VelAdj(currgp);
     VelAdj._qtyptr      = _eqnmap._qtymap.get_qty("Qty_VelocityAdj");
     VelAdj.VectWithQtyFillBasic();
     VelAdj.Allocate();
   
     //==================
-    QuantityLocal Bhom(currgp,currelem); 
+    QuantityLocal Bhom(currgp); 
     Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();
     
 //===============
-    QuantityLocal BhomAdj(currgp,currelem); 
+    QuantityLocal BhomAdj(currgp); 
     BhomAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHomAdj"); 
     BhomAdj.VectWithQtyFillBasic();
     BhomAdj.Allocate();

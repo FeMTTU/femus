@@ -125,46 +125,46 @@ void  EqnT::GenMatRhsVB(const uint vb, const double time,const uint Level) {
 
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    QuantityLocal Tempold(currgp,currelem);
+    QuantityLocal Tempold(currgp);
     Tempold._qtyptr   = _QtyInternalVector[0]; 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //====================================
-    QuantityLocal Tlift(currgp,currelem);
+    QuantityLocal Tlift(currgp);
     Tlift._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
-    QuantityLocal TAdj(currgp,currelem);
+    QuantityLocal TAdj(currgp);
     TAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
     
 //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp,currelem);  //no quantity
+    QuantityLocal xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  QuantityLocal xyz_refbox(currgp,currelem);  //no quantity
+  QuantityLocal xyz_refbox(currgp);  //no quantity
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();
   
   //==================
-    QuantityLocal vel(currgp,currelem);
+    QuantityLocal vel(currgp);
     vel._qtyptr   = _eqnmap._qtymap.get_qty("Qty_Velocity"); 
     vel.VectWithQtyFillBasic();
     vel.Allocate();
     
 //===============Tdes=====================
-    QuantityLocal Tdes(currgp,currelem);
+    QuantityLocal Tdes(currgp);
     Tdes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
@@ -637,6 +637,8 @@ else {   std::cout << " No line integrals yet... " << std::endl; abort();}
 
 double EqnT::ComputeIntegral (const uint vb, const uint Level) {
 
+  const uint mesh_vb = vb;
+
     CurrElem       currelem(vb,*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
 
@@ -650,32 +652,32 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
   const uint meshql   = (int) _mesh._mesh_rtmap.get("meshql");   //======== ELEMENT MAPPING =======
  
   //========== 
-    QuantityLocal Tempold(currgp,currelem);
+    QuantityLocal Tempold(currgp);
     Tempold._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature"); 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
   //========== 
-    QuantityLocal Tlift(currgp,currelem);
+    QuantityLocal Tlift(currgp);
     Tlift._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_TempLift"); 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
     
  //===========
-    QuantityLocal Tdes(currgp,currelem);
+    QuantityLocal Tdes(currgp);
     Tdes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
   
 //========= DOMAIN MAPPING
-    QuantityLocal xyz(currgp,currelem);
+    QuantityLocal xyz(currgp);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
-  QuantityLocal xyz_refbox(currgp,currelem);
+  QuantityLocal xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
@@ -687,8 +689,8 @@ double EqnT::ComputeIntegral (const uint vb, const uint Level) {
       const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
 
 //parallel sum
-    const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
-    const uint nel_b = _mesh._off_el[vb][_NoLevels*myproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
@@ -783,6 +785,8 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
   //reg_ord = 0: L2
   //reg_ord = 1: H1
 
+  const uint mesh_vb = vb;
+  
     CurrElem       currelem(vb,*this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
@@ -796,20 +800,20 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
 //======Functions in the integrand ============
 
       //========== 
-    QuantityLocal Tlift(currgp,currelem);
+    QuantityLocal Tlift(currgp);
     Tlift._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_TempLift"); 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //========= DOMAIN MAPPING
-    QuantityLocal xyz(currgp,currelem);
+    QuantityLocal xyz(currgp);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
-  QuantityLocal xyz_refbox(currgp,currelem);
+  QuantityLocal xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
@@ -822,8 +826,8 @@ double EqnT::ComputeNormControl (const uint vb, const uint Level, const uint reg
       const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
 
 //parallel sum
-    const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
-    const uint nel_b = _mesh._off_el[vb][_NoLevels*myproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
   
     for (int iel=0; iel < (nel_e - nel_b); iel++) {
 

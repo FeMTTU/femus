@@ -16,8 +16,8 @@ namespace femus {
 
 
 
-     QuantityLocal::QuantityLocal(CurrGaussPointBase & currgp_in, CurrElem & currel_in)
-     : _currGP(currgp_in),_currEl(currel_in) {  }
+     QuantityLocal::QuantityLocal(const CurrGaussPointBase & currgp_in)
+     : _currGP(currgp_in),_currEl(currgp_in.GetCurrentElem()) {  }
 
 
 

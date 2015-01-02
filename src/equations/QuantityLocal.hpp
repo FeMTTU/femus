@@ -18,7 +18,7 @@ namespace femus {
     
   public:
     
-     QuantityLocal(CurrGaussPointBase &, CurrElem &);
+     QuantityLocal(const CurrGaussPointBase &);
     ~QuantityLocal();
 
     
@@ -60,8 +60,8 @@ namespace femus {
     
   protected:
         
-    CurrGaussPointBase & _currGP;
-    CurrElem & _currEl;
+    const CurrGaussPointBase & _currGP;
+    const CurrElem & _currEl;
     
   };
   

@@ -100,7 +100,7 @@
 
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-    QuantityLocal VelOld(currgp,currelem);
+    QuantityLocal VelOld(currgp);
     VelOld._qtyptr   = _QtyInternalVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();
     VelOld.Allocate();
@@ -110,7 +110,7 @@
 //     Velocity*  vel_castqtyptr = static_cast<Velocity*>(VelOld._qtyptr); //casting for quantity-specific functions
 
 //=========
-    QuantityLocal pressOld(currgp,currelem);
+    QuantityLocal pressOld(currgp);
     pressOld._qtyptr   = _QtyInternalVector[QTYONE];
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
@@ -125,14 +125,14 @@
 
 //=========EXTERNAL QUANTITIES (couplings) =====
   //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp,currelem); //domain
+    QuantityLocal xyz(currgp); //domain
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[_mesh.get_dim()-1-vb][xyz._FEord]->GetNDofs();
     xyz.Allocate();
     
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  QuantityLocal xyz_refbox(currgp,currelem);
+  QuantityLocal xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(space_dim-1-vb,xyz_refbox._FEord)._elnds;
@@ -143,7 +143,7 @@
 
 //===================TEMPERATURE WORLD=============================
 #if TEMP_QTY==1
-    QuantityLocal Temp(currgp,currelem);
+    QuantityLocal Temp(currgp);
     Temp._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature");
     Temp.VectWithQtyFillBasic();
     Temp.Allocate();
@@ -153,7 +153,7 @@
 //other Physical constant Quantities
 
 //=======gravity==================================
-  QuantityLocal gravity(currgp,currelem);
+  QuantityLocal gravity(currgp);
   gravity._dim = space_dim;
 //   gravity.Allocate(); CANNOT DO THIS NOW BECAUSE NOT ALL THE DATA FOR THE ALLOCATION ARE FILLED
   gravity._val_g    = new double[gravity._dim];

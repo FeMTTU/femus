@@ -95,12 +95,12 @@ namespace femus {
   const uint  meshql   = (int) _mesh._mesh_rtmap.get("meshql");   //======== ELEMENT MAPPING =======
      
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-    QuantityLocal bhomOld(currgp,currelem);
+    QuantityLocal bhomOld(currgp);
     bhomOld._qtyptr   = _QtyInternalVector[QTYZERO];
     bhomOld.VectWithQtyFillBasic();
     bhomOld.Allocate();
 
-    QuantityLocal LagMultOld(currgp,currelem);
+    QuantityLocal LagMultOld(currgp);
     LagMultOld._qtyptr   = _QtyInternalVector[QTYONE];
     LagMultOld.VectWithQtyFillBasic();
     LagMultOld.Allocate();
@@ -109,28 +109,28 @@ namespace femus {
     
 //========= tEST AND SHAPE FOR QTYZERO AND QTYONE =================
 //QTYZERO SHAPE: shape of the first Unknown
-    QuantityLocal Phij(currgp,currelem); //TODO this is another Vect that doesnt have an associated quantity still
+    QuantityLocal Phij(currgp); //TODO this is another Vect that doesnt have an associated quantity still
     Phij._dim      = 1;                                                         //scalar!
     Phij._FEord    = bhomOld._FEord;
     Phij._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][Phij._FEord]->GetNDofs(); 
     Phij.Allocate();
         
 //QTYZERO tEST:  test of the first Unknown    
-    QuantityLocal Phii(currgp,currelem);
+    QuantityLocal Phii(currgp);
     Phii._dim      = 1;
     Phii._FEord    = bhomOld._FEord;
     Phii._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][Phii._FEord]->GetNDofs();
     Phii.Allocate();
     
 //QTYONE SHAPE: Shape of the second Unknown
-    QuantityLocal Psij(currgp,currelem);
+    QuantityLocal Psij(currgp);
     Psij._dim      = 1;
     Psij._FEord    = LagMultOld._FEord;
     Psij._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][Psij._FEord]->GetNDofs(); 
     Psij.Allocate();
     
 //QTYONE tEST: test of the second Unknown
-    QuantityLocal Psii(currgp,currelem);
+    QuantityLocal Psii(currgp);
     Psii._dim      = 1;
     Psii._FEord    = LagMultOld._FEord;
     Psii._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][Psii._FEord]->GetNDofs();
@@ -141,26 +141,26 @@ namespace femus {
     
 //=========EXTERNAL QUANTITIES (couplings) =====
   //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp,currelem);
+    QuantityLocal xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
     
     //================== Quadratic domain, auxiliary
-  QuantityLocal xyz_refbox(currgp,currelem);
+  QuantityLocal xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();
 
-    QuantityLocal Bext(currgp,currelem);
+    QuantityLocal Bext(currgp);
     Bext._qtyptr     = _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();
 
 #if VELOCITY_QTY==1
-    QuantityLocal Vel(currgp,currelem);
+    QuantityLocal Vel(currgp);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity"); 
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();

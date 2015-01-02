@@ -71,37 +71,37 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
 
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    QuantityLocal Tempold(currgp,currelem);
+    QuantityLocal Tempold(currgp);
     Tempold._qtyptr   = _QtyInternalVector[0]; 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    QuantityLocal Temp2(currgp,currelem);
+    QuantityLocal Temp2(currgp);
     Temp2._qtyptr   = _QtyInternalVector[1]; 
     Temp2.VectWithQtyFillBasic();
     Temp2.Allocate();
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    QuantityLocal Temp3(currgp,currelem);
+    QuantityLocal Temp3(currgp);
     Temp3._qtyptr   = _QtyInternalVector[2]; 
     Temp3.VectWithQtyFillBasic();
     Temp3.Allocate();
     
     //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp,currelem);  //no quantity
+    QuantityLocal xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  QuantityLocal xyz_refbox(currgp,currelem);  //no quantity
-  xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
-  xyz_refbox.Allocate();
+  QuantityLocal xyz_refbox(currgp);  //no quantity
+    xyz_refbox._dim      = space_dim;
+    xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+    xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+    xyz_refbox.Allocate();
 
   //==== AUXILIARY ==============
     double* dphijdx_g = new double[space_dim];
