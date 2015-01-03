@@ -75,11 +75,18 @@ namespace femus {
 
  void EqnNSAD::GenMatRhsVB(const uint vb, const uint Level)  {
 
+//====== Physics cast ============
+  OptPhysics* optphys; optphys = static_cast<OptPhysics*>(&_phys);
+    // ========= parameters
+  const double alphaVel = _phys._physrtmap.get("alphaVel");
+  const double IRe      = 1./optphys->_Re;
+
+  //=========== Operators 
+  double dphijdx_g[DIMENSION];
+  double dphiidx_g[DIMENSION];
+    double    curlxiXB_g3D[3];
+
    const double time =  _eqnmap._timeloop._curr_time;
-   
-    CurrElem       currelem(vb,this,_eqnmap);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
-   
    
 //======= TIME - STATIONARY OR NOT =======
 const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
@@ -94,6 +101,13 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
 //========= BCHandling =========
   const double penalty_val = _mesh._mesh_rtmap.get("penalty_val");    
   
+   {//BEGIN VOLUME    
+   
+   const uint mesh_vb = VV;
+    
+    CurrElem       currelem(VV,this,_eqnmap);
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     //QTYZERO
     QuantityLocal VelAdjOld(currgp);
@@ -159,24 +173,11 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     
     //========= END EXTERNAL QUANTITIES =================
 
-//====== Physics cast ============
-  OptPhysics* optphys; optphys = static_cast<OptPhysics*>(&_phys);
-    // ========= parameters
-  const double alphaVel = _phys._physrtmap.get("alphaVel");
-  const double IRe      = 1./optphys->_Re;
 
-  //=========== Operators 
-  double dphijdx_g[DIMENSION];
-  double dphiidx_g[DIMENSION];
-    double    curlxiXB_g3D[3];
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level];
 
-
-   const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
     
-    const uint nel_e = _mesh._off_el[vb][_NoLevels*_iproc+Level+1];
-    const uint nel_b = _mesh._off_el[vb][_NoLevels*_iproc+Level];
-
-  if (vb==VV)   {//BEGIN VOLUME    
     
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
@@ -228,8 +229,9 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
 //=======    
 
 
-    // element gaussian integration loop
-    for (uint qp = 0; qp < el_ngauss; qp++) {
+   const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+
+   for (uint qp = 0; qp < el_ngauss; qp++) {
 //=======here starts the "COMMON SHAPE PART"==================
 for (uint fe = 0; fe < QL; fe++)     { 
   currgp.SetPhiElDofsFEVB_g (fe,qp);  
@@ -239,8 +241,10 @@ const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is the same for 
 const double dtxJxW_g = det*_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
-for (uint fe = 0; fe < QL; fe++)     { currgp.SetDPhiDxyzElDofsFEVB_g   (fe,qp); }
-for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(fe); }
+for (uint fe = 0; fe < QL; fe++)     { 
+  currgp.SetDPhiDxyzElDofsFEVB_g   (fe,qp);
+  currgp.ExtendDphiDxyzElDofsFEVB_g(fe); 
+}
 //=======end of the "COMMON SHAPE PART"==================
 
    VelAdjOld.val_g();
@@ -357,6 +361,19 @@ if (_Dir_pen_fl == 0)  {
     
   } 
   // end of element loop
+
+  // cleaning
+  VelAdjOld.Deallocate();
+  PressAdjOld.Deallocate();
+  xyz.Deallocate();
+  xyz_refbox.Deallocate();  
+  Vel.Deallocate();
+  VelDes.Deallocate();
+  Bhom.Deallocate();
+  Bext.Deallocate();
+  Bmag.Deallocate();
+  BhomAdj.Deallocate();
+  
   
   }//END VOLUME
   
@@ -364,8 +381,81 @@ if (_Dir_pen_fl == 0)  {
     // *****************************************************************
     // *****************************************************************
 
-    else if (vb==BB)  {//BEGIN BOUNDARY  // *****************************************************************
+  {//BEGIN BOUNDARY  // *****************************************************************
   
+   const uint mesh_vb = BB;
+    
+    CurrElem       currelem(BB,this,_eqnmap);
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+   
+//=========INTERNAL QUANTITIES (unknowns of the equation) ==================
+    //QTYZERO
+    QuantityLocal VelAdjOld(currgp);
+    VelAdjOld._qtyptr   = _QtyInternalVector[QTYZERO];
+    VelAdjOld.VectWithQtyFillBasic();
+    VelAdjOld.Allocate();
+  
+    //QTYONE
+    QuantityLocal PressAdjOld(currgp);
+    PressAdjOld._qtyptr   = _QtyInternalVector[QTYONE];
+    PressAdjOld.VectWithQtyFillBasic();
+    PressAdjOld.Allocate();
+//========= END INTERNAL QUANTITIES (unknowns of the equation) =================
+  
+//=========EXTERNAL QUANTITIES (couplings) =====
+
+//========= DOMAIN MAPPING
+    QuantityLocal xyz(currgp);
+    xyz._dim      = space_dim;
+    xyz._FEord    = meshql;
+    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz.Allocate();
+
+//========== Quadratic domain, auxiliary  
+  QuantityLocal xyz_refbox(currgp);
+  xyz_refbox._dim      = space_dim;
+  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+  xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+  xyz_refbox.Allocate();
+  
+  QuantityLocal Vel(currgp);
+    Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
+    Vel.VectWithQtyFillBasic();
+    Vel.Allocate();
+  
+  QuantityLocal VelDes(currgp);
+    VelDes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_DesVelocity");
+    VelDes.VectWithQtyFillBasic();
+    VelDes.Allocate();
+
+  QuantityLocal Bhom(currgp);
+    Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
+    Bhom.VectWithQtyFillBasic();
+    Bhom.Allocate();
+ 
+  QuantityLocal Bext(currgp);
+    Bext._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
+    Bext.VectWithQtyFillBasic();
+    Bext.Allocate();
+
+//========= auxiliary, must be AFTER Bhom!   //TODO this doesnt have any associated quantity!
+  QuantityLocal Bmag(currgp); //total
+    Bmag._dim        = Bhom._dim;               //same as Bhom
+    Bmag._FEord      = Bhom._FEord;             //same as Bhom
+    Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
+    Bmag.Allocate();
+    
+//===============
+  QuantityLocal BhomAdj(currgp); 
+    BhomAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHomAdj"); 
+    BhomAdj.VectWithQtyFillBasic();
+    BhomAdj.Allocate();
+    
+    //========= END EXTERNAL QUANTITIES =================
+
+
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level];
   
 
  for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
@@ -419,6 +509,8 @@ if (_Dir_pen_fl == 1)  {
    //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
 //==============================================================
+   const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+   
     for (uint qp=0; qp< el_ngauss; qp++) {
 //======= "COMMON SHAPE PART"============================
  for (uint fe = 0; fe < QL; fe++)     {        currgp.SetPhiElDofsFEVB_g (fe,qp);  } 
@@ -488,15 +580,12 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
       
     }  //gauss
    
-    _A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());//      std::cout << "KeM "<< vb << " " << Mat().l1_norm() << std::endl;
-    _b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());//      std::cout << "FeM "<< vb << " " << Rhs().l2_norm() << std::endl;
+    _A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+    _b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
 
  }//elem loop
    
    
-  }//END BOUNDARY ************************
-  
-
   // cleaning
   VelAdjOld.Deallocate();
   PressAdjOld.Deallocate();
@@ -508,6 +597,8 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
   Bext.Deallocate();
   Bmag.Deallocate();
   BhomAdj.Deallocate();
+  
+  }//END BOUNDARY ************************
   
 #ifdef DEFAULT_PRINT_INFO
  std::cout << " GenMatRhs " << _eqname << ": assembled  Level " << Level
