@@ -100,7 +100,7 @@ void EqnMHDCONT::init_equation_data() {
   
 /// This function assembles the matrix and the rhs:
 
-  void EqnMHDCONT::GenMatRhsVB(const uint vb, const uint Level)  {
+  void EqnMHDCONT::GenMatRhs(const uint Level)  {
 
    const double time =  _eqnmap._timeloop._curr_time;
    

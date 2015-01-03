@@ -73,7 +73,7 @@ namespace femus {
 
 
 
- void EqnNSAD::GenMatRhsVB(const uint vb, const uint Level)  {
+ void EqnNSAD::GenMatRhs(const uint Level)  {
 
 //====== Physics cast ============
   OptPhysics* optphys; optphys = static_cast<OptPhysics*>(&_phys);

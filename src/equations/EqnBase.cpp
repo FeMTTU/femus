@@ -1265,10 +1265,10 @@ void EqnBase::PrintBc(std::string namefile) {
 //if the iel is in that range, compute the middle point and fill the _elem_bc
 
 //---------> WHAT IS THE PROBLEM ABOUT THIS FUNCTION?
-//---- Why does the get_el_nod_conn(BB,..) work in GenMatRhsVB
+//---- Why does the get_el_nod_conn(BB,..) work in GenMatRhs
 //but HERE it doesnt?
 //I think because here we are looping over ALL LEVELS and ALL SUBDOMAINS (procs)
-//while in the GenMatRhsVB every processor
+//while in the GenMatRhs every processor
 //does HIS OWN SUBDOMAIN (_iproc)
 // and ONE LEVEL AT A TIME (Level)!
 //instead, here every single processor does all of this!
@@ -1659,8 +1659,7 @@ double EqnBase::MGTimeStep(const uint iter) {
         _A[Level]->zero();
         _b[Level]->zero();
 
-        GenMatRhsVB(VV,Level);
-        GenMatRhsVB(BB,Level);
+        GenMatRhs(Level);
 
 #ifdef DEFAULT_PRINT_INFO
         _A[Level]->close();
@@ -3506,7 +3505,7 @@ void EqnBase::ReadVector(std::string namefile) {
 //so that linear temperature can get velocity values from QUADRATIC velocity
 //but, actually, we should do that only the things for the INVOLVED ORDERS
 // (Internally INVOLVED and Externally INVOLVED) are first allocated HERE
-// and THEN FILLED in the GenMatRhsVB
+// and THEN FILLED in the GenMatRhs
 //this would mean doing a LOOP of "new" and correspondingly a LOOP of "delete"
 //for the involved quantities
 //clearly, it is important that these "new" and delete things are not done INSIDE

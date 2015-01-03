@@ -72,7 +72,7 @@
     
 //===================================================
 /// This function assembles the matrix and the rhs:
- void EqnNS::GenMatRhsVB(const uint vb, const uint Level)  {
+ void EqnNS::GenMatRhs(const uint Level)  {
 
    const double time =  _eqnmap._timeloop._curr_time;
    

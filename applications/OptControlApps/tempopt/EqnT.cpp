@@ -99,7 +99,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
 
 
 /// This function assembles the matrix and the rhs:
-void  EqnT::GenMatRhsVB(const uint vb, const uint Level) {
+void  EqnT::GenMatRhs(const uint Level) {
 
   const double time =  _eqnmap._timeloop._curr_time;
 

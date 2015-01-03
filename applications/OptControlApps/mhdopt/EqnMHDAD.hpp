@@ -27,7 +27,7 @@ EqnMHDAD(  std::vector<Quantity*> int_map_in,
 
  void elem_bc_read(const double xp[],int& surf_id,double normal[],int bc_flag[]) const;
 
- void GenMatRhsVB(const uint vb, const uint Level);  ///< Volume Assemblying.
+ void GenMatRhs(const uint Level);  ///< Volume Assemblying.
   
 
 

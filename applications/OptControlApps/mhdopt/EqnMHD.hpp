@@ -28,7 +28,7 @@ class EqnMHD : public EqnBase {
   
   void elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const;
   
-  void GenMatRhsVB(const uint vb, const uint Level);
+  void GenMatRhs(const uint Level);
   
    
   

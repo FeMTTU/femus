@@ -72,7 +72,7 @@ EqnMHDAD::~EqnMHDAD() {}
 /// This function assembles the matrix and the rhs:
 
 
-  void EqnMHDAD::GenMatRhsVB(const uint vb, const uint Level)  {
+  void EqnMHDAD::GenMatRhs(const uint Level)  {
 
    const double time =  _eqnmap._timeloop._curr_time;
    

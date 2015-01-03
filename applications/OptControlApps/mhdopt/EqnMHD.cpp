@@ -76,7 +76,7 @@ namespace femus {
 
 /// This function assembles the matrix and the rhs:
 
-  void EqnMHD::GenMatRhsVB(const uint vb, const uint Level)  {
+  void EqnMHD::GenMatRhs(const uint Level)  {
 
   //====== Physics
   OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&_phys);

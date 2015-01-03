@@ -83,7 +83,7 @@ return;
       EqnNS::~EqnNS() {    }
     
     
-  void EqnNS::GenMatRhsVB(const uint vb, const uint Level)  {
+  void EqnNS::GenMatRhs(const uint Level)  {
 
 #if TEMP_DEPS==1
 //for this one i decide not to use any Vect's
