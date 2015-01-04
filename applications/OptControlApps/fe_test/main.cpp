@@ -15,6 +15,7 @@
 #include "Physics.hpp"
 #include "GeomEl.hpp"
 #include "MeshTwo.hpp"
+#include "GenCase.hpp"
 #include "FETypeEnum.hpp"
 #include "FEElemBase.hpp"
 #include "EquationsMap.hpp"
@@ -44,6 +45,17 @@
  // ======= Files ========================
   Files files("./"); 
         files.ConfigureRestart();
+	
+  files.CheckDir(files._app_path,DEFAULT_CASEDIR); //here, we must check if the input directory where gencase writes is there  //if not, we make it
+
+  RunTimeMap<std::string> files_map("Files",files._app_path);
+
+// ========= GenCase =====
+  RunTimeMap<double> mesh_map0("Mesh",files._app_path);
+  GenCase gencase(files,mesh_map0,1.,files_map.get("F_MESH_READ"));
+          gencase.GenerateCase();	
+	
+	
         files.CheckIODirectories();
         files.RedirectCout();
         files.CopyInputFiles();
