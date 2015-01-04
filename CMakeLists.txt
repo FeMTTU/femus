@@ -134,9 +134,6 @@ OPTION(BUILD_FSIAPPS "Build the FSI applications" ON)
 OPTION(BUILD_OPTCONTROLAPPS "Build the optimal control applications" ON)
 
 # --
-OPTION(BUILD_GENCASE "Build the case generator" ON)
-
-# --
 OPTION(BUILD_POISSON "Build the Poisson problem" ON)
 
 # --
