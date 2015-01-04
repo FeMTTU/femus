@@ -195,8 +195,6 @@ IF(BUILD_ADEPT)
   INCLUDE(ExternalLibraries/External_adept.cmake)
 ENDIF(BUILD_ADEPT)
 
-
-
 #############################################################################################
 ### Configuration project file
 #############################################################################################
@@ -239,6 +237,25 @@ ENDIF(FPARSER_FOUND)
 # add femus macro
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake-modules/femusMacroBuildApplication.cmake)
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake-modules/femusMacroBuildUnitTest.cmake)
+
+
+
+# Libmesh includes and flags
+IF(LIBMESH_FOUND)
+execute_process(COMMAND $ENV{FM_BASEPATH_TO_LM}/$ENV{FM_LM_FOLDER}/bin/libmesh-config --cppflags
+                COMMAND tr "\n" " " OUTPUT_VARIABLE LIBMESH_CPP)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LIBMESH_CPP}")
+execute_process(COMMAND $ENV{FM_BASEPATH_TO_LM}/$ENV{FM_LM_FOLDER}/bin/libmesh-config --include
+                COMMAND tr "\n" " " OUTPUT_VARIABLE LIBMESH_INC)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LIBMESH_INC}")
+execute_process(COMMAND $ENV{FM_BASEPATH_TO_LM}/$ENV{FM_LM_FOLDER}/bin/libmesh-config --libs
+                COMMAND tr "\n" " " OUTPUT_VARIABLE LIBMESH_LIBS)
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LIBMESH_LIBS}")
+ENDIF(LIBMESH_FOUND)
+# old Make syntax:
+# libmesh_INCLUDE  := $(shell ${FM_LM_DIR}/bin/libmesh-config --include)
+# libmesh_CPPFLAGS := $(shell ${FM_LM_DIR}/bin/libmesh-config --cppflags)
+# libmesh_LIBS     := $(shell ${FM_LM_DIR}/bin/libmesh-config --libs)
 
 
 #############################################################################################

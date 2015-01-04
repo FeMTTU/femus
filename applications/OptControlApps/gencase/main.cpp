@@ -8,18 +8,7 @@
 #include "GeomEl.hpp"
 #include "Box.hpp"
 
-#include "FEElemBase.hpp"
-#include "FEQuad4.hpp"
-#include "FEQuad9.hpp"
-#include "FEHex8.hpp"
-#include "FEHex27.hpp"
-#include "FETri3.hpp"
-#include "FETri6.hpp"
-#include "FETet4.hpp"
-#include "FETet10.hpp"
-#include "FETypeEnum.hpp"
 #include "RunTimeMap.hpp"
-#include "TimeLoop.hpp"
 #include "CmdLine.hpp"
 
 // Libmesh

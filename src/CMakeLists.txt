@@ -70,6 +70,7 @@ meshGencase/Domain.cpp
 meshGencase/ElemSto.cpp
 meshGencase/GeomEl.cpp
 meshGencase/MeshTwo.cpp
+meshGencase/GenCase.cpp
 mesh/Elem.cpp
 mesh/Mesh.cpp
 mesh/MultiLevelMesh.cpp
