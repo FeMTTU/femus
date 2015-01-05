@@ -57,25 +57,10 @@ int main(int argc, char** argv) {
 // ======= Files ========================
   Files files("./");
         files.ConfigureRestart();
-	
-  files.CheckDir(files._app_path,DEFAULT_CASEDIR); //here, we must check if the input directory where gencase writes is there  //if not, we make it
-
-  RunTimeMap<std::string> files_map("Files",files._app_path);
-
-// ========= GenCase =====
-  RunTimeMap<double> mesh_map0("Mesh",files._app_path);
-  GenCase gencase(files,mesh_map0,1.,files_map.get("F_MESH_READ"));
-          gencase.GenerateCase();	
-	
-	
         files.CheckIODirectories();
-        files.RedirectCout();
         files.CopyInputFiles();
-
-  // =========================================
-  // ======= END OF THE INITIALIZATION PART ========================
-  // =========================================
- 
+        files.RedirectCout();
+	
   // ======= Physics ========================
   RunTimeMap<double> physics_map("Physics",files._output_path);
   OptPhysics phys(physics_map);
@@ -83,7 +68,11 @@ int main(int argc, char** argv) {
   const double Lref  =  phys._physrtmap.get("Lref");
 
   // ======= Mesh =====
+  RunTimeMap<std::string> files_map("Files",files._output_path);
+
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
+  GenCase gencase(files,mesh_map,1.,files_map.get("F_MESH_READ"));
+          gencase.GenerateCase();	
   MeshTwo mesh(files,mesh_map,Lref); 
       
 //=========== Domain ================================

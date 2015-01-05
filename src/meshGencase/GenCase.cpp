@@ -109,6 +109,10 @@ void GenCase::GenerateCase()   {
 
     
 #endif //end have_libmesh    
+    
+#ifdef HAVE_MPI
+        MPI_Barrier(MPI_COMM_WORLD);
+#endif       
     return;
 }
 
@@ -880,13 +884,11 @@ void GenCase::ComputeProl()  {
   int NegativeOneFlag = -1;
   double   PseudoZero = 1.e-8;
   
-    std::string basepath  = _files._app_path;
-    std::string input_dir = DEFAULT_CASEDIR;
     std::string f_prol    = DEFAULT_F_PROL;
     std::string ext_h5    = DEFAULT_EXT_H5;
 
     std::ostringstream name;
-    name << basepath << "/" << input_dir << f_prol   << ext_h5;
+    name << _files._output_path << "/" << f_prol << ext_h5;
     hid_t file = H5Fcreate(name.str().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
 
   for (int Level1 = 1; Level1 < _NoLevels; Level1++) {  //Level1 is the OUTPUT level (fine level) (the level of the ROWS)
@@ -1483,13 +1485,11 @@ void GenCase::ComputeMatrix() {
     int *** memG;
 
 //========= CREATE THE FILE ============================
-    std::string basepath  = _files._app_path;
-    std::string input_dir = DEFAULT_CASEDIR;
     std::string f_matrix  = DEFAULT_F_MATRIX;
     std::string ext_h5    = DEFAULT_EXT_H5;
 
         std::ostringstream name;
-        name << basepath << "/" << input_dir << f_matrix << ext_h5;
+        name << _files._output_path << "/" << f_matrix << ext_h5;
         hid_t file = H5Fcreate(name.str().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
 
 //==============================================================
@@ -1804,13 +1804,11 @@ void GenCase::ComputeRest( ) {
   int NegativeOneFlag = -1;
   double   PseudoZero = 1.e-8;
   
-        std::string basepath  = _files._app_path;
-        std::string input_dir = DEFAULT_CASEDIR;
         std::string f_rest    = DEFAULT_F_REST;
         std::string ext_h5    = DEFAULT_EXT_H5;
 
         std::ostringstream filename;
-        filename << basepath << "/" << input_dir << f_rest << ext_h5;
+        filename << _files._output_path << "/" << f_rest << ext_h5;
         hid_t file = H5Fcreate(filename.str().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
 
   
@@ -2060,13 +2058,11 @@ void GenCase::PrintMeshHDF5() const  {
 
     std::ostringstream name;
 
-    std::string basepath  = _files._app_path;
-    std::string input_dir = DEFAULT_CASEDIR;
     std::string basemesh  = DEFAULT_BASEMESH;
     std::string ext_h5    = DEFAULT_EXT_H5;
 
     std::ostringstream inmesh;
-    inmesh << basepath << "/" << input_dir << basemesh << ext_h5;
+    inmesh << _files._output_path << "/" << basemesh << ext_h5;
 
 //==================================
 // OPEN FILE

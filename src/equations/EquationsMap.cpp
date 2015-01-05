@@ -384,7 +384,6 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) const {
         const uint NoLevels = _mesh._NoLevels;
         const uint ndigits  = _timeloop._timemap.get("ndigits");
 
-        std::string    input_dir = DEFAULT_CASEDIR;
         std::string     basecase = DEFAULT_BASECASE;
         std::string     basemesh = DEFAULT_BASEMESH;
         std::string       ext_h5 = DEFAULT_EXT_H5;

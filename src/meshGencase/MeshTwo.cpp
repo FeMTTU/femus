@@ -202,7 +202,7 @@ void MeshTwo::ReadMeshFile()   {
   std::string      ext_h5 = DEFAULT_EXT_H5;
   
   std::ostringstream meshname;
-  meshname << _files._output_path << "/" << DEFAULT_CASEDIR << "/" << basemesh  << ext_h5;
+  meshname << _files._output_path << "/" << basemesh  << ext_h5;
 
 //==================================
 // OPEN FILE 
@@ -476,15 +476,13 @@ void MeshTwo::PrintForVisualizationAllLEVAllVB()  const {
 // ==================================================================
 void MeshTwo::PrintMultimeshXdmf() const {
 
-    std::string basepath  = _files._app_path;
-    std::string input_dir = DEFAULT_CASEDIR;
     std::string multimesh = DEFAULT_MULTIMESH;
     std::string ext_xdmf  = DEFAULT_EXT_XDMF;
     std::string basemesh  = DEFAULT_BASEMESH;
     std::string ext_h5    = DEFAULT_EXT_H5;
 
     std::ostringstream inmesh_xmf;
-    inmesh_xmf << basepath << "/" << input_dir << multimesh << ext_xdmf;
+    inmesh_xmf << _files._output_path << "/" << multimesh << ext_xdmf;
     std::ofstream out(inmesh_xmf.str().c_str());
 
     std::ostringstream top_file;

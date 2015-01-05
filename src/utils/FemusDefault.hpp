@@ -38,7 +38,6 @@
 
 #define DEFAULT_BASEPATH     "./"
 #define DEFAULT_CONFIGDIR    "input/"
-#define DEFAULT_CASEDIR      "case/"
 #define DEFAULT_OUTPUTDIR    "output/"  //we have to hardcode it here otherwise we cannot perform restart without logical inconsistencies
 #define DEFAULT_RUNTIMECONF  "femus_conf.in"
 //*********************************************
