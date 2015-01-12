@@ -138,17 +138,14 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
             //here,the information about the shape must be given a priori here,
 //    while in the case of external mesh it should be given consistently
             //TODO think of Domain before or after Mesh
-
-            RunTimeMap<double> box_map("Box",_files._app_path);
-            Box box(get_dim(),box_map);
-                box.InitAndNondimensionalize(get_Lref());  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
-//i guess we could do this instantiation also INSIDE the gencase class
+	  
+       Box* box = static_cast<Box*>(GetDomain());
 
 //---Meshing -------
             uint* ninterv = new uint[get_dim()];
-	    ninterv[0] = box._domain_rtmap.get("nintervx");
-            ninterv[1] = box._domain_rtmap.get("nintervy");
-            if ( get_dim() == 3 ) ninterv[2] = box._domain_rtmap.get("nintervz");
+	    ninterv[0] = box->_domain_rtmap.get("nintervx");
+            ninterv[1] = box->_domain_rtmap.get("nintervy");
+            if ( get_dim() == 3 ) ninterv[2] = box->_domain_rtmap.get("nintervz");
 
             // fem element definition --------------------------------
             libMesh::ElemType libmname; //convert the _geomel name into the libmesh geom el name
@@ -157,13 +154,13 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
             if (     GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Quadrilateral_9") libmname = libMesh::QUAD9;
             else if (GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Triangle_6")  libmname = libMesh::TRI6;
             libMesh::MeshTools::Generation::build_square
-            (*msh_coarse, ninterv[0], ninterv[1], box._lb[0], box._le[0], box._lb[1], box._le[1],libmname);
+            (*msh_coarse, ninterv[0], ninterv[1], box->_lb[0], box->_le[0], box->_lb[1], box->_le[1],libmname);
 	    }
 	    else if ( get_dim() == 3 ) {
             if (     GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Hexahedron_27")  libmname = libMesh::HEX27;
             else if (GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Tetrahedron_10")  libmname = libMesh::TET10;
             libMesh::MeshTools::Generation::build_cube
-            (*msh_coarse,  ninterv[0], ninterv[1],  ninterv[2], box._lb[0], box._le[0], box._lb[1], box._le[1], box._lb[2], box._le[2],libmname);
+            (*msh_coarse,  ninterv[0], ninterv[1],  ninterv[2], box->_lb[0], box->_le[0], box->_lb[1], box->_le[1], box->_lb[2], box->_le[2],libmname);
 	    }
             else{         std::cout << " Dim 1 not implemented \n"; abort(); }
             

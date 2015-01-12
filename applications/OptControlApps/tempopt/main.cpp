@@ -61,12 +61,23 @@
   RunTimeMap<std::string> files_map("Files",files._output_path);
 
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
-  GenCase gencase(files,mesh_map,files_map.get("F_MESH_READ"));
-          gencase.SetLref(1.);  
-          gencase.GenerateCase();
+  GenCase mesh(files,mesh_map,files_map.get("F_MESH_READ"));
+          mesh.SetLref(1.);  
+	  
+  // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
+  RunTimeMap<double> box_map("Box",files._output_path);
+  Box mybox(mesh.get_dim(),box_map);
+      mybox.InitAndNondimensionalize(mesh.get_Lref());
 
-  MeshTwo mesh(files,mesh_map);
+          mesh.SetDomain(&mybox);    
+	  
+          mesh.GenerateCase();
+
           mesh.SetLref(Lref);
+      mybox.InitAndNondimensionalize(mesh.get_Lref());
+	  
+          mesh.ReadMeshFileAndNondimensionalize(); 
+          mesh.PrintForVisualizationAllLEVAllVB();
 	  
   //gencase is dimensionalized, meshtwo is nondimensionalized
   //since the meshtwo is nondimensionalized, all the BC and IC are gonna be implemented on a nondimensionalized mesh
@@ -74,17 +85,11 @@
   //moreover, a mesh may or may not be read from file
   //the generation is DIMENSIONAL, the nondimensionalization occurs later
   //Both the Mesh and the optional domain must be nondimensionalized
+  //first, we have to say if the mesh has a shape or not
+  //that depends on the application, it must be put at the main level
+  //then, after you know the shape, you may or may not generate the mesh with that shape 
+  //the two things are totally independent, and related to the application, not to the library
 
-  // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
-  RunTimeMap<double> box_map("Box",files._output_path);
-  Box mybox(mesh.get_dim(),box_map);
-      mybox.InitAndNondimensionalize(mesh.get_Lref());
-  
-  mesh.SetDomain(&mybox);    
-  
-  mesh.ReadMeshFileAndNondimensionalize(); 
-  mesh.PrintForVisualizationAllLEVAllVB();
-  
   phys.set_mesh(&mesh);
   
 // ======  QRule ================================

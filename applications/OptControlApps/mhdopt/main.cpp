@@ -71,23 +71,25 @@ int main(int argc, char** argv) {
   RunTimeMap<std::string> files_map("Files",files._output_path);
 
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
-  GenCase gencase(files,mesh_map,files_map.get("F_MESH_READ"));
-          gencase.SetLref(1.);
-          gencase.GenerateCase();
-
-  MeshTwo mesh(files,mesh_map); 
-          mesh.SetLref(Lref);
-      
-//=========== Domain ================================
+  
+    GenCase mesh(files,mesh_map,files_map.get("F_MESH_READ"));
+          mesh.SetLref(1.);  
+	  
+  // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
   RunTimeMap<double> box_map("Box",files._output_path);
   Box mybox(mesh.get_dim(),box_map);
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 
-  mesh.SetDomain(&mybox);
-  
-  mesh.ReadMeshFileAndNondimensionalize(); 
-  mesh.PrintForVisualizationAllLEVAllVB();
+          mesh.SetDomain(&mybox);    
+	  
+          mesh.GenerateCase();
 
+          mesh.SetLref(Lref);
+      mybox.InitAndNondimensionalize(mesh.get_Lref());
+	  
+          mesh.ReadMeshFileAndNondimensionalize(); 
+          mesh.PrintForVisualizationAllLEVAllVB();
+      
   phys.set_mesh(&mesh);
 
 // ======  QRule ================================ 
