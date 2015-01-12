@@ -77,21 +77,21 @@ void GenCase::GenerateCase()   {
 
     _msh_coarse = new libMesh::Mesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD,get_dim());
 
-    GenerateCoarseMesh(_msh_coarse);
+    GenerateCoarseMesh();
 
     _msh_all_levs = new libMesh::Mesh(*_msh_coarse);
 
-    RefineMesh(_msh_all_levs);
+    RefineMesh();
 
     _bd_msht = new  libMesh::BoundaryMesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD, _msh_all_levs->mesh_dimension()-1);
 
-    GenerateBoundaryMesh(_bd_msht,_msh_all_levs);
+    GenerateBoundaryMesh();
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t start_timeC=std::clock();
 #endif
 
-    GrabMeshinfoFromLibmesh(_msh_all_levs,_msh_coarse);  //only proc==0
+    GrabMeshinfoFromLibmesh();  //only proc==0
 
     delete _bd_msht;
     delete _msh_all_levs;
@@ -117,11 +117,11 @@ void GenCase::GenerateCase()   {
 }
 
 
-#ifdef HAVE_LIBMESH
 //===============================================================================
 //================= LIBMESH coarse Mesh OBJECT from FILE or FUNCTION ============
 //===============================================================================
-void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
+void GenCase::GenerateCoarseMesh() const {
+#ifdef HAVE_LIBMESH
 
     const uint libmesh_gen = GetRuntimeMap().get("libmesh_gen");
 
@@ -154,13 +154,13 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
             if (     GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Quadrilateral_9") libmname = libMesh::QUAD9;
             else if (GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Triangle_6")  libmname = libMesh::TRI6;
             libMesh::MeshTools::Generation::build_square
-            (*msh_coarse, ninterv[0], ninterv[1], box->_lb[0], box->_le[0], box->_lb[1], box->_le[1],libmname);
+            (*_msh_coarse, ninterv[0], ninterv[1], box->_lb[0], box->_le[0], box->_lb[1], box->_le[1],libmname);
 	    }
 	    else if ( get_dim() == 3 ) {
             if (     GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Hexahedron_27")  libmname = libMesh::HEX27;
             else if (GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Tetrahedron_10")  libmname = libMesh::TET10;
             libMesh::MeshTools::Generation::build_cube
-            (*msh_coarse,  ninterv[0], ninterv[1],  ninterv[2], box->_lb[0], box->_le[0], box->_lb[1], box->_le[1], box->_lb[2], box->_le[2],libmname);
+            (*_msh_coarse,  ninterv[0], ninterv[1],  ninterv[2], box->_lb[0], box->_le[0], box->_lb[1], box->_le[1], box->_lb[2], box->_le[2],libmname);
 	    }
             else {         std::cout << " Dim 1 not implemented \n"; abort(); }
             
@@ -181,7 +181,7 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
         mesh_infile << basepath << "/" << config_dir << f_mesh_read;
         std::ifstream inf(mesh_infile.str().c_str());
 
-        msh_coarse->read(mesh_infile.str().c_str());  //is this read in parallel or only by proc=0?
+        _msh_coarse->read(mesh_infile.str().c_str());  //is this read in parallel or only by proc=0?
 
         inf.close();
         break;
@@ -190,7 +190,7 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
         std::cout << "GenCase: Create a mesh somehow" << std::endl;
         abort();
     }
-    msh_coarse->print_info();
+    _msh_coarse->print_info();
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t end_timeA=std::clock();
@@ -198,11 +198,10 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
               << double(end_timeA- start_timeA) / CLOCKS_PER_SEC << std::endl;
 #endif
 
+#endif //end have_libmesh
     return;
 }
-#endif //end have_libmesh
 
-#ifdef HAVE_LIBMESH
 //==============================================================================
 //=============== GENERATE all the LEVELS for the LIBMESH Mesh OBJECT ==========
 //==============================================================================
@@ -216,14 +215,15 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
 // and making this distinction is not trivial, one must check everywhere what to use
 //   const uint mesh_refine = _utils.get_par("mesh_refine");
 //   if (mesh_refine) {
-void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) const {
+void GenCase::RefineMesh() const {
+#ifdef HAVE_LIBMESH
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t start_timeB=std::clock();
 #endif
 
     std::cout << "\n LibMesh Mesh Refinement ---------  \n";
-    libMesh::MeshRefinement mesh_refinement(*msh_all_levs);
+    libMesh::MeshRefinement mesh_refinement(*_msh_all_levs);
     mesh_refinement.uniformly_refine(_NoLevels-1);
 
 #ifdef DEFAULT_PRINT_TIME
@@ -232,12 +232,11 @@ void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) const {
               << double(end_timeB- start_timeB) / CLOCKS_PER_SEC << std::endl;
 #endif
 
+#endif //end have_libmesh
     return;
 }
-#endif //end have_libmesh
 
 
-#ifdef HAVE_LIBMESH
 //==============================================================================
 //=============== GENERATE BOUNDARY MESH =======================================
 //==============================================================================
@@ -251,17 +250,17 @@ void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) const {
 //TODO can we exploit the fact that BoundaryInfo is useful for containing boundary conditions
 //to READ from GAMBIT and ASSOCIATE FLAGS From Gambit to Libmesh, AND THEN from LIBMESH to FEMUS?
 
-void GenCase::GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs) const {
+void GenCase::GenerateBoundaryMesh() const {
+#ifdef HAVE_LIBMESH
 
     std::cout << " LibMesh BOUNDARY generation --------- \n";
-    msh_all_levs->boundary_info->sync(*bd_msht);
-    bd_msht->print_info();
+    _msh_all_levs->boundary_info->sync(*_bd_msht);
+    _bd_msht->print_info();
 
+#endif //end have_libmesh
     return;
 }
-#endif //end have_libmesh
 
-#ifdef HAVE_LIBMESH
 //==============================================================================
 //=============== GRAB MESH INFORMATION from LIBMESH (only proc0) ==============
 //==============================================================================
@@ -274,9 +273,8 @@ void GenCase::GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh
 /// together with the _nod_coords[] array
 ///once you have this interface with libmesh, you do the rest only in FEMuS.
 
-void  GenCase::GrabMeshinfoFromLibmesh(
-        libMesh::Mesh* msht,
-        libMesh::Mesh* msh0 ) {
+void  GenCase::GrabMeshinfoFromLibmesh() {
+#ifdef HAVE_LIBMESH
 
     if (_iproc == 0)  {  //serial function
 
@@ -298,14 +296,14 @@ void  GenCase::GrabMeshinfoFromLibmesh(
 //we can make a class that reads things the nodes from the constructor,
 // then you instantiate and initialize each object of that class
 
-        _n_nodes=msht->n_nodes();                   //these are the FINE nodes
-        _n_elements_sum_levs[VV]=msht->n_elem();                 //from mesh
+        _n_nodes = _msh_all_levs->n_nodes();                   //these are the FINE nodes
+        _n_elements_sum_levs[VV] = _msh_all_levs->n_elem();                 //from mesh
 
-        libMesh::Mesh::const_element_iterator         it_t00 = msh0->elements_begin();
-        const libMesh::Mesh::const_element_iterator  end_t00 = msh0->elements_end();
-        libMesh::Mesh::const_element_iterator          it_tr = msht->elements_begin();
-        const libMesh::Mesh::const_element_iterator   end_tr = msht->elements_end();
-        libMesh::Mesh::const_element_iterator it_el = msht->elements_begin();
+        libMesh::Mesh::const_element_iterator         it_t00 = _msh_coarse->elements_begin();
+        const libMesh::Mesh::const_element_iterator  end_t00 = _msh_coarse->elements_end();
+        libMesh::Mesh::const_element_iterator          it_tr = _msh_all_levs->elements_begin();
+        const libMesh::Mesh::const_element_iterator   end_tr = _msh_all_levs->elements_end();
+        libMesh::Mesh::const_element_iterator it_el = _msh_all_levs->elements_begin();
 // counting
         _n_elements_vb_lev     = new uint*[VB];
         _n_elements_vb_lev[VV] = new uint[_NoLevels];
@@ -380,7 +378,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(
                 _el_sto[count_e]->_elnds[inode]=knode;
             // coordinates storage
                 for (int idim=0; idim<get_dim(); idim++) {
-                    double xyz=  msht->point(knode)(idim);
+                    double xyz=  _msh_all_levs->point(knode)(idim);
                     _nd_coords_libm[knode+idim*_n_nodes]=xyz;
                 }
             }
@@ -454,7 +452,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(
         //The point is that I do not have the map that gives me the LIBMESH POSITION out of the count_eb position, so I'll do it again.
         //Now the processors of all levels and all 
         //these iterators are strange; for instance end_tr must be a "const const_element_iterator", otherwise the operator overloading of != does not work
-        libMesh::Mesh::const_element_iterator    my_iter = msht->elements_begin();
+        libMesh::Mesh::const_element_iterator    my_iter = _msh_all_levs->elements_begin();
         uint count_eb2=0;
             for (; my_iter != end_tr; ++my_iter) {
 	               Elem* elem = *my_iter; 
@@ -501,9 +499,10 @@ void  GenCase::GrabMeshinfoFromLibmesh(
  
 
     } //end proc==0
+    
+#endif //end have_libmesh
     return;
 }
-#endif //end have_libmesh
 
 
 // =======================================================

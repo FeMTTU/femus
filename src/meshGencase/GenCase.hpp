@@ -49,16 +49,14 @@ public:
     void ComputeRest();
     void PrintOneVarMatrixHDF5(const std::string & name, const std::string & groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel ) const;
     void PrintOneVarMGOperatorHDF5(const std::string & filename, const std::string & groupname, uint* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe) const;
-
-    void GenerateCase();
     void CreateStructuresLevSubd();
     
-#ifdef HAVE_LIBMESH
-    void GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const;
-    void RefineMesh(libMesh::Mesh* msh_all_levs) const;
-    void GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs) const;
-    void GrabMeshinfoFromLibmesh(libMesh::Mesh* msht, libMesh::Mesh* msh);
-#endif
+//functions using libmesh
+    void GenerateCase();
+    void GenerateCoarseMesh() const;
+    void RefineMesh() const;
+    void GenerateBoundaryMesh() const;
+    void GrabMeshinfoFromLibmesh();
     
 private:
 
