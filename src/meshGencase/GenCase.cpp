@@ -75,27 +75,27 @@ void GenCase::GenerateCase()   {
     std::clock_t start_timeA=std::clock();
 #endif
 
-    libMesh::Mesh* msh_coarse = new libMesh::Mesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD,get_dim());
+    _msh_coarse = new libMesh::Mesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD,get_dim());
 
-    GenerateCoarseMesh(msh_coarse);
+    GenerateCoarseMesh(_msh_coarse);
 
-    libMesh::Mesh* msh_all_levs = new libMesh::Mesh(*msh_coarse);
+    _msh_all_levs = new libMesh::Mesh(*_msh_coarse);
 
-    RefineMesh(msh_all_levs);
+    RefineMesh(_msh_all_levs);
 
-    libMesh::BoundaryMesh* bd_msht = new  libMesh::BoundaryMesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD, msh_all_levs->mesh_dimension()-1);
+    _bd_msht = new  libMesh::BoundaryMesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD, _msh_all_levs->mesh_dimension()-1);
 
-    GenerateBoundaryMesh(bd_msht,msh_all_levs);
+    GenerateBoundaryMesh(_bd_msht,_msh_all_levs);
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t start_timeC=std::clock();
 #endif
 
-    GrabMeshinfoFromLibmesh(msh_all_levs,msh_coarse);  //only proc==0
+    GrabMeshinfoFromLibmesh(_msh_all_levs,_msh_coarse);  //only proc==0
 
-    delete bd_msht;
-    delete msh_all_levs;
-    delete msh_coarse;
+    delete _bd_msht;
+    delete _msh_all_levs;
+    delete _msh_coarse;
 
     CreateStructuresLevSubd();    //only proc==0
 
@@ -162,9 +162,11 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
             libMesh::MeshTools::Generation::build_cube
             (*msh_coarse,  ninterv[0], ninterv[1],  ninterv[2], box->_lb[0], box->_le[0], box->_lb[1], box->_le[1], box->_lb[2], box->_le[2],libmname);
 	    }
-            else{         std::cout << " Dim 1 not implemented \n"; abort(); }
+            else {         std::cout << " Dim 1 not implemented \n"; abort(); }
             
         } //box
+        
+        else { std::cout << " Domain shape not implemented \n"; abort();  }
 
         break;
     }

@@ -62,6 +62,12 @@ public:
     
 private:
 
+#ifdef HAVE_LIBMESH
+  libMesh::Mesh* _msh_coarse;
+  libMesh::Mesh* _msh_all_levs;
+  libMesh::BoundaryMesh* _bd_msht;
+ #endif
+  
     // Element ===========
     std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
     std::string _mesh_file;    //mesh file name from the mesh generator
