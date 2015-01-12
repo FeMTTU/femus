@@ -19,10 +19,8 @@
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "EquationsMap.hpp"
-#include "QRule.hpp"
 #include "FEElemBase.hpp"
 #include "Files.hpp"
-#include "CurrElem.hpp"
 #include "CurrElem.hpp"
 #include "CurrGaussPoint.hpp"
 
@@ -846,7 +844,7 @@ void EqnBase::initVectors() {
 void EqnBase::GenBc() {
   
     std::string     basepath = _files._app_path;
-    std::string    input_dir = DEFAULT_CASEDIR;
+    std::string    input_dir = DEFAULT_CONFIGDIR;
     std::string          ibc = DEFAULT_IBC;
     std::string     ext_xdmf = DEFAULT_EXT_XDMF;
     std::string       ext_h5 = DEFAULT_EXT_H5;
@@ -863,7 +861,7 @@ void EqnBase::GenBc() {
  //******** NODE BASED ****************************   
     const uint mesh_ord    = (int) _mesh._mesh_rtmap.get("mesh_ord");
     const uint offset      = _mesh._NoNodesXLev[_NoLevels-1];
-    const uint el_nnodes_b = _mesh._GeomEl._elnds[BB][mesh_ord];
+    const uint el_nnodes_b = _mesh.GetGeomEl(_mesh.get_dim()-1-BB,mesh_ord)._elnds;
     double* normal = new double[_mesh.get_dim()];  //TODO remove this, it is useless
 
     int  *bc_flag = new int[_n_vars];
@@ -879,7 +877,7 @@ void EqnBase::GenBc() {
 
  //**************************************************   
  //******** ELEM BASED ******************************  
-     CurrElem       currelem(*this,_eqnmap);
+     CurrElem       currelem(BB,this,_eqnmap);
 
     _bc_fe_kk             =  new int*[_NoLevels];
     int* DofOff_Lev_kk    =  new int[_NoLevels];
@@ -910,12 +908,12 @@ void EqnBase::GenBc() {
             uint iel_e = _mesh._off_el[BB][ _NoLevels*isubd + Level+1];
             for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 
-	        currelem.get_el_nod_conn_lev_subd(BB,Level,isubd,iel);
-                currelem.get_el_ctr(BB);
+	        currelem.set_el_nod_conn_lev_subd(Level,isubd,iel);
+                currelem.SetMidpoint();
 		
  	    for (uint ivar=0; ivar< _n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!
 
-                 if (_n_vars >0) bc_read(currelem._el_xm[BB],normal,bc_flag);
+                 if (_n_vars >0) bc_read(currelem.GetMidpoint(),normal,bc_flag);
 
   //******************* ONLY FINE LEVEL, NODE VARS ***************** 
    if (Level == Lev_pick_bc_NODE_dof)  { 
@@ -923,13 +921,13 @@ void EqnBase::GenBc() {
                         const uint fine_node = _mesh._el_map[BB][(iel+iel_b)*el_nnodes_b+i];
 
                     //Set the quadratic fields
-                    if (i<_AbstractFE[QQ]->_ndof[BB])
+                    if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-BB][QQ]->GetNDofs() )
 		      for (uint ivar=0; ivar<_nvars[QQ]; ivar++) {
                             int kdof = _node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_DofNumLevFE[Lev_pick_bc_NODE_dof][QQ] + _DofOffLevFE[Lev_pick_bc_NODE_dof][QQ] ];
                            if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _VarOff[QQ]];
                         }
                     // Set the linear fields
-                    if (i<_AbstractFE[LL]->_ndof[BB]) {
+                    if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-BB][LL]->GetNDofs() ) {
                         for (uint ivar = 0; ivar < _nvars[LL]; ivar++) {
                             int kdof = _node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_DofNumLevFE[Lev_pick_bc_NODE_dof][LL] + _DofOffLevFE[Lev_pick_bc_NODE_dof][LL] ];
                            if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _VarOff[LL]];
@@ -1013,10 +1011,10 @@ void EqnBase::GenBc() {
 
 
 /// boundary conditions  from function
-void EqnBase::bc_read(double /*xp*/[],double /*normal*/[],int bc[]) {
-    for (uint ivar=0;ivar<_n_vars;ivar++) bc[ivar]=1;
-    return;
-}
+// void EqnBase::bc_read(const double /*xp*/[], const double /*normal*/[], int bc[]) const {
+//     for (uint ivar=0;ivar<_n_vars;ivar++) bc[ivar]=1;
+//     return;
+// }
 
 
 // =====================================================================
@@ -1110,7 +1108,7 @@ void EqnBase::PrintBc(std::string namefile) {
    int NGeomObjOnWhichToPrint[QL];
     NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[Level];
     NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[Level];
-    NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][Level]*_mesh._GeomEl.n_se[VV];
+    NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][Level]*_mesh.GetGeomEl(_mesh.get_dim()-1-VV,QQ).n_se;
   
     const uint n_nodes_lev = _mesh._NoNodesXLev[Level];
     int* sol_on_Qnodes = new int[n_nodes_lev];  //this vector will contain the values of ONE variable on ALL the QUADRATIC nodes
@@ -1143,9 +1141,9 @@ void EqnBase::PrintBc(std::string namefile) {
     // ========= LINEAR ==================
     // ===================================
     uint elnds[QL_NODES];
-    elnds[QQ] =_mesh._GeomEl._elnds[VV][QQ];
-    elnds[LL] =_mesh._GeomEl._elnds[VV][LL];
-    double *elsol_c=new double[elnds[LL]];
+    elnds[QQ] =_mesh.GetGeomEl(_mesh.get_dim()-1-VV,QQ)._elnds;
+    elnds[LL] =_mesh.GetGeomEl(_mesh.get_dim()-1-VV,LL)._elnds;
+    double *elsol_c = new double[elnds[LL]];
 
     for (uint ivar=0; ivar<_nvars[LL]; ivar++)   {
 
@@ -1216,8 +1214,8 @@ void EqnBase::PrintBc(std::string namefile) {
 	    for (int iel = 0;
               iel <    _mesh._off_el[VV][off_proc + Level+1]
                      - _mesh._off_el[VV][off_proc + Level]; iel++) {
-      for (uint is=0; is< _mesh._GeomEl.n_se[VV]; is++) {      
-	sol_on_cells[cel*_mesh._GeomEl.n_se[VV] + is] = _bc_fe_kk[Level][iel + sum_elems_prev_sd_at_lev + ivar*_mesh._n_elements_vb_lev[VV][Level]]; //this depends on level!
+      for (uint is=0; is< _mesh.GetGeomEl(_mesh.get_dim()-1-VV,_mesh._mesh_order).n_se; is++) {      
+	sol_on_cells[cel* _mesh.GetGeomEl(_mesh.get_dim()-1-VV,_mesh._mesh_order).n_se + is] = _bc_fe_kk[Level][iel + sum_elems_prev_sd_at_lev + ivar*_mesh._n_elements_vb_lev[VV][Level]]; //this depends on level!
       }
       cel++;
     }
@@ -1267,10 +1265,10 @@ void EqnBase::PrintBc(std::string namefile) {
 //if the iel is in that range, compute the middle point and fill the _elem_bc
 
 //---------> WHAT IS THE PROBLEM ABOUT THIS FUNCTION?
-//---- Why does the get_el_nod_conn(BB,..) work in GenMatRhsVB
+//---- Why does the get_el_nod_conn(BB,..) work in GenMatRhs
 //but HERE it doesnt?
 //I think because here we are looping over ALL LEVELS and ALL SUBDOMAINS (procs)
-//while in the GenMatRhsVB every processor
+//while in the GenMatRhs every processor
 //does HIS OWN SUBDOMAIN (_iproc)
 // and ONE LEVEL AT A TIME (Level)!
 //instead, here every single processor does all of this!
@@ -1308,7 +1306,7 @@ void EqnBase::PrintBc(std::string namefile) {
 //for now, we will leave things like this
 void EqnBase::GenElBc()  {
 
-     CurrElem       currelem(*this,_eqnmap);  
+     CurrElem       currelem(BB,this,_eqnmap);  
   
       uint space_dim = _mesh.get_dim();
 
@@ -1338,11 +1336,11 @@ void EqnBase::GenElBc()  {
                 int     el_flag[2] = {0,0};
                 std::vector<double> el_value(1 + _number_tang_comps[space_dim - 1],0.); //1 normal and 1 tangential or 1 normal and 3 tangential
 
-                currelem.get_el_nod_conn_lev_subd(BB,Level,isubd,iel);
-                currelem.get_el_ctr(BB);
+                currelem.set_el_nod_conn_lev_subd(Level,isubd,iel);
+                currelem.SetMidpoint();
 
                 //read the bc's //the read forgets all levels and subdomains, it is only based on the MIDDLE POINT
-                elem_bc_read(currelem._el_xm[BB],surf_id,&el_value[0],el_flag);
+                elem_bc_read(currelem.GetMidpoint(),surf_id,&el_value[0],el_flag);
 
                 std::cout << "Bdry " << surf_id << " normal: " <<  el_flag[0] << " tang: " <<  el_flag[1] << std::endl;
 
@@ -1373,34 +1371,6 @@ void EqnBase::GenElBc()  {
 
 
     return;
-}
-
-
-void EqnBase::elem_bc_read(double */*el_xm*/,int& surf_id, double *value,int* el_flag) {
-
-  std::cout << "AAAAAAAAAA you are using the default elem_bc_read which is basically MEANINGLESS" << std::endl;
-
-  uint space_dim = _mesh.get_dim();
-
-  surf_id=0;  
-
-  el_flag[NN]=1;    //yes normal component
-  el_flag[TT]=1;    //yes tang component
-     
-  value[NN]=0.;  //value of the normal 
-
-   for (uint i=0; i < _number_tang_comps[space_dim - 1]; i++) value[1+i] = 0.;
-
-// // //   WAS
-// // // #if dimension==2
-// // //   value[1]=0.;  //value of the tangential
-// // // #elif dimension==3
-// // //   value[1]=0.;  //value of the tangential
-// // //   value[2]=0.;  //value of the  tangential
-// // //   value[3]=0.;  //value of the tangential
-// // // #endif
-
-  return;
 }
 
 
@@ -1531,7 +1501,7 @@ void EqnBase::GenIc() {
     const uint mesh_ord    = (int) _mesh._mesh_rtmap.get("mesh_ord");
   
     std::string   basepath = _files._app_path;
-    std::string  input_dir = DEFAULT_CASEDIR;
+    std::string  input_dir = DEFAULT_CONFIGDIR;
     std::string        ibc = DEFAULT_IBC;
     std::string     ext_h5 = DEFAULT_EXT_H5;
     std::ostringstream ibc_filexmf;
@@ -1540,10 +1510,10 @@ void EqnBase::GenIc() {
 
     if (!in) {
 
-        CurrElem       currelem(*this,_eqnmap);  
+        CurrElem       currelem(VV,this,_eqnmap);  
      
         const uint  coords_fine_offset = _mesh._NoNodesXLev[_NoLevels-1];
-        const uint  el_nnodes = _mesh._GeomEl._elnds[mesh_ord][VV];
+        const uint  el_nnodes = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,mesh_ord)._elnds;
         double*      xp = new double[_mesh.get_dim()];
         double* u_value = new double[_n_vars];
 
@@ -1556,8 +1526,8 @@ void EqnBase::GenIc() {
 
 	    for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 	  
-	        currelem.get_el_nod_conn_lev_subd(VV,Level,_iproc,iel);
-                currelem.get_el_ctr(VV);
+	        currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
+                currelem.SetMidpoint();
 	
             // we are looping over the mesh nodes, but it's a fake loop because we do not depend on "i" for the elements
             for (uint i=0; i < el_nnodes ; i++) {
@@ -1567,26 +1537,26 @@ void EqnBase::GenIc() {
 
                 // ===================================================
                 // user definition reading function ----------------
-                ic_read(xp,u_value,currelem._el_xm[VV]);
+                ic_read(xp,u_value,currelem.GetMidpoint());
                 // -------------------------------------------------
                 // ===================================================
 
                 // Set the quadratic fields
-                if ( i < _AbstractFE[QQ]->_ndof[VV] ) {
+                if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-VV][QQ]->GetNDofs() ) {
                     for (uint ivar=0; ivar<_nvars[QQ]; ivar++) {
 		      int dof_pos_lev = _node_dof[Level][ fine_node + ivar*_DofNumLevFE[Level][QQ] + _DofOffLevFE[Level][QQ] ];
                         _x[Level]->set( dof_pos_lev, u_value[ivar + _VarOff[QQ]] );
 		    }
                 }
                 // Set the linear fields
-                if ( i < _AbstractFE[LL]->_ndof[VV] ) {
+                if ( i <  _eqnmap._elem_type[_mesh.get_dim()-1-VV][LL]->GetNDofs() ) {
                     for (uint ivar=0; ivar<_nvars[LL]; ivar++) {
 		      int dof_pos_lev = _node_dof[Level][ fine_node + ivar*_DofNumLevFE[Level][LL] + _DofOffLevFE[Level][LL] ];
                         _x[Level]->set( dof_pos_lev, u_value[ivar + _VarOff[LL]] );
                         }
 		    }
 		    
-                if ( i < _AbstractFE[KK]->_ndof[VV] ) {
+                if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-VV][KK]->GetNDofs() ) {
 		  
 		int sum_elems_prev_sd_at_lev = 0;
 	    for (uint pr = 0; pr < _iproc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*_NoLevels + Level + 1] - _mesh._off_el[VV][pr*_NoLevels + Level]; }
@@ -1630,10 +1600,10 @@ void EqnBase::GenIc() {
 
 
 /// initial conditions  from function
-void EqnBase::ic_read(double /*xp*/[],double ic[], double /*el_xm*/[]) {
-    for (uint ivar=0;ivar<_n_vars;ivar++) ic[ivar]=0.;
-    return;
-}
+// void EqnBase::ic_read(const double * /*xp*/, double * ic, const double * /*el_xm*/) const {
+//     for (uint ivar=0;ivar<_n_vars;ivar++) ic[ivar]=0.;
+//     return;
+// }
 
 
 
@@ -1672,7 +1642,7 @@ void EqnBase::ic_read(double /*xp*/[],double ic[], double /*el_xm*/[]) {
 
 /// Basically, the single time step consists in  ASSEMBLING + SOLVING
 
-double EqnBase::MGTimeStep(const double time, const uint iter) {
+double EqnBase::MGTimeStep(const uint iter) {
 
     std::cout  << std::endl << " Solving " << _eqname << " , step " << iter << std::endl;
 
@@ -1689,8 +1659,7 @@ double EqnBase::MGTimeStep(const double time, const uint iter) {
         _A[Level]->zero();
         _b[Level]->zero();
 
-        GenMatRhsVB(VV,time,Level);
-        GenMatRhsVB(BB,time,Level);
+        GenMatRhs(Level);
 
 #ifdef DEFAULT_PRINT_INFO
         _A[Level]->close();
@@ -2042,7 +2011,7 @@ void EqnBase::initMGOps() {
 
     std::ostringstream filename;
     std::string filename_base;
-    filename_base = _files._output_path + "/" + DEFAULT_CASEDIR + "/";
+    filename_base = _files._output_path + "/";
     
         filename.str("");     filename << filename_base << f_rest << ext_h5;
         ReadRest(filename.str());
@@ -3311,7 +3280,7 @@ void EqnBase::PrintVector(std::string namefile) {
     int NGeomObjOnWhichToPrint[QL];
     NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[Level];
     NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[Level];
-    NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][Level]*_mesh._GeomEl.n_se[VV];
+    NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][Level]*_mesh.GetGeomEl(_mesh.get_dim()-1-VV,_mesh._mesh_order).n_se;
     
     const uint n_nodes_lev = _mesh._NoNodesXLev[Level];
     double* sol_on_Qnodes  = new double[n_nodes_lev];  //TODO VALGRIND //this is QUADRATIC because it has to hold  either quadratic or linear variables and print them on a QUADRATIC mesh
@@ -3353,8 +3322,8 @@ void EqnBase::PrintVector(std::string namefile) {
     // ========= LINEAR ================
     // =================================
     uint elnds[QL_NODES];
-    elnds[QQ] = _mesh._GeomEl._elnds[VV][QQ];
-    elnds[LL] = _mesh._GeomEl._elnds[VV][LL];
+    elnds[QQ] = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,QQ)._elnds;
+    elnds[LL] = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,LL)._elnds;
     double* elsol_c = new double[elnds[LL]];
     
     for (uint ivar=0; ivar<_nvars[LL]; ivar++)        {
@@ -3443,8 +3412,8 @@ void EqnBase::PrintVector(std::string namefile) {
                       - _mesh._off_el[VV][off_proc + Level]; iel++) {
              int elem_lev = iel + sum_elems_prev_sd_at_lev;
 	  int dof_pos_lev = _node_dof[Level][ elem_lev + ivar*_DofNumLevFE[ Level ][KK] + _DofOffLevFE[ Level ][KK] ];   
-      for (uint is=0; is< _mesh._GeomEl.n_se[VV]; is++) {      
-	   sol_on_cells[cel*_mesh._GeomEl.n_se[VV] + is] = (*_x_old[Level])(dof_pos_lev) * _refvalue[ ivar + _VarOff[KK] ];
+      for (uint is=0; is< _mesh.GetGeomEl(_mesh.get_dim()-1-VV,_mesh._mesh_order).n_se; is++) {      
+	   sol_on_cells[cel*_mesh.GetGeomEl(_mesh.get_dim()-1-VV,_mesh._mesh_order).n_se + is] = (*_x_old[Level])(dof_pos_lev) * _refvalue[ ivar + _VarOff[KK] ];
       }
       cel++;
     }
@@ -3487,8 +3456,8 @@ void EqnBase::ReadVector(std::string namefile) {
 
     // reading loop over system varables
     for (uint ivar=0;ivar< _nvars[LL]+_nvars[QQ]; ivar++) {
-        uint el_nds=_mesh._GeomEl._elnds[VV][QQ];
-        if (ivar >= _nvars[QQ]) el_nds = _mesh._GeomEl._elnds[VV][LL]; // quad and linear
+        uint el_nds = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,QQ)._elnds;
+        if (ivar >= _nvars[QQ]) el_nds = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,LL)._elnds; // quad and linear
         // reading ivar param
        std::ostringstream grname; grname << _var_names[ivar] << "_" << "LEVEL" << Level;
         IO::read_Dhdf5(file_id,grname.str(),sol);
@@ -3497,7 +3466,7 @@ void EqnBase::ReadVector(std::string namefile) {
         // storing  ivar variables (in parallell)
         for (int iel=0;iel <  _mesh._off_el[0][_iproc*_NoLevels+_NoLevels]
                 -_mesh._off_el[0][_iproc*_NoLevels+_NoLevels-1]; iel++) {
-            uint elem_gidx=(iel+_mesh._off_el[0][_iproc*_NoLevels+_NoLevels-1])*_mesh._GeomEl._elnds[VV][mesh_ord];
+            uint elem_gidx=(iel+_mesh._off_el[0][_iproc*_NoLevels+_NoLevels-1])*_mesh.GetGeomEl(_mesh.get_dim()-1-VV,mesh_ord)._elnds;
             for (uint i=0; i<el_nds; i++) { // linear and quad
                 int k=_mesh._el_map[0][elem_gidx+i];   // the global node
                 _x[_NoLevels-1]->set(_node_dof[_NoLevels-1][k+ivar*offset],sol[k]*Irefval); // set the field
@@ -3536,7 +3505,7 @@ void EqnBase::ReadVector(std::string namefile) {
 //so that linear temperature can get velocity values from QUADRATIC velocity
 //but, actually, we should do that only the things for the INVOLVED ORDERS
 // (Internally INVOLVED and Externally INVOLVED) are first allocated HERE
-// and THEN FILLED in the GenMatRhsVB
+// and THEN FILLED in the GenMatRhs
 //this would mean doing a LOOP of "new" and correspondingly a LOOP of "delete"
 //for the involved quantities
 //clearly, it is important that these "new" and delete things are not done INSIDE
@@ -3786,9 +3755,9 @@ void EqnBase::ReadVector(std::string namefile) {
 //Simply, the class is made of POINTERS. Then, I've created a new pointer
 //which is EQUAL to the pointer of the class, and then I MODIFY what is inside that!
 //So, many functions here can be called CONST even if they are not!
-  void EqnBase::Bc_ConvertToDirichletPenalty(const uint vb, const uint ql, uint* bc) const {
+  void EqnBase::Bc_ConvertToDirichletPenalty(const uint elem_dim, const uint ql, uint* bc) const {
 
-    const uint ndof  = _AbstractFE[ql]->_ndof[vb];
+    const uint ndof  = _eqnmap._elem_type[elem_dim-1][ql]->GetNDofs();
     const uint nvars = _nvars[ql];
 
     for (uint ivarq=0; ivarq < nvars; ivarq++) {
@@ -3804,11 +3773,11 @@ void EqnBase::ReadVector(std::string namefile) {
 //This function is for NS type equations:
 //it computes the flags for pressure and stress integrals 
 //based on the pressure nodes
- void EqnBase::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const uint vb,
+ void EqnBase::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(
 	    const uint *bc_eldofs,const QuantityLocal & Velold_in,const QuantityLocal& press_in,uint &press_fl) const {
 
-	const uint el_ndof_p =  press_in._ndof[vb];
-	const uint el_ndof_u =  Velold_in._ndof[vb];
+	const uint el_ndof_p =  press_in._ndof;
+	const uint el_ndof_u =  Velold_in._ndof;
 	const uint   nvars_u =  Velold_in._dim;
         int press_sum=0;
            for (uint i=0; i< el_ndof_p; i++)   press_sum += bc_eldofs[nvars_u*el_ndof_u + i]; //only one linear variable... pay attention when trying linear-linear
@@ -3974,109 +3943,6 @@ return;
 // // // // }
 
 
-//=================================================================
-//=================================================================
-//this function computes the integral of some function
-//i would wanna do it without the quantity interface
-//also do it with all the procs inside
-//remember that the mesh is nondimensional here
-// at the end you have to multiply again
-
-//i do not want to need no Equation nor Quantity
-//clearly in this way the FE order is not given,
-//but if you use the function at gauss coordinates you do not need that basically
-//clearly since i do not use any Quantity, i cannot consider the framework of the Domain
-//and the refbox coordinates, this is just a simple function, for testing
-//i think i cannot pass a function pointer to a member function,
-//maybe i can do that only if the function is STATIC
-//since here the order is not related to any equation, i can pick the  quadrature rule
-//as INDEPENDENT of the ORDER
-//in practice, here we are picking a 
-
-double EqnBase::FunctionIntegral (const uint vb, double (*pt2func)(double, const double* ) ) {
-
-const uint Level = _NoLevels - 1;
-const uint myproc= _iproc;
-  double time=0.;
-  
-    CurrElem       currelem(*this,_eqnmap);
-//     CurrGaussPoint   currgp(_eqnmap);    
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(_eqnmap, _mesh.get_dim());
-
-  //======== ELEMENT MAPPING =======
-  const uint meshql = (int) _mesh._mesh_rtmap.get("meshql");  
- 
-//========= DOMAIN MAPPING
-    QuantityLocal xyz(currgp,currelem);
-    xyz._dim      = _mesh.get_dim();
-    xyz._FEord    = meshql;
-    xyz._ndof[VV] = _AbstractFE[xyz._FEord]->_ndof[VV];
-    xyz._ndof[BB] = _AbstractFE[xyz._FEord]->_ndof[BB];
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof[vb]];
-    xyz._val_g    = new double[xyz._dim];
-
-  double integral = 0.;
-  
-//loop over the geom el types
-      const uint el_ngauss = _eqnmap._qrule._NoGaussVB[vb];   //elem gauss points  
-
-//parallel sum
-    const uint nel_e = _mesh._off_el[vb][_NoLevels*myproc+Level+1];
-    const uint nel_b = _mesh._off_el[vb][_NoLevels*myproc+Level];
-  
-    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
-  
-    currelem.get_el_nod_conn_lev_subd(vb,Level,myproc,iel);
-    currelem.get_el_ctr(vb); 
-    
-    currelem.ConvertElemCoordsToMappingOrd(vb,xyz);
-
-     
-    for (uint qp = 0; qp < el_ngauss; qp++) {
-
-for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }  
-     
-double  Jac_g=0.;
-          if (vb==0)   Jac_g = currgp.JacVectVV_g(vb,xyz);  //not xyz_refbox!      
-     else if (vb==1)   Jac_g = currgp.JacVectBB_g(vb,xyz);  //not xyz_refbox!      
-
-   const double  wgt_g = _eqnmap._qrule._weightVB[vb][qp];
-
-     for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (vb,fe,qp);  }
-
- xyz.val_g(vb);
-double myval_g = pt2func(time,xyz._val_g); 
-
- 
-  integral += wgt_g*Jac_g*myval_g;
-
-   
-    }//gauss loop
-     
-    }//element loop
-    
-         std::cout << std::endl << "vb = " << vb << " ^^^^^^^^^^^^^^^^^L'integrale sul processore "<< myproc << " vale: " << integral << std::endl;
-
-    double weights_sum = 0.;
-    for (uint qp = 0; qp < el_ngauss; qp++)  weights_sum += _eqnmap._qrule._weightVB[vb][qp];
-       std::cout << std::endl << "vb = " << vb << " ^^^^^^^^^^^^^^^^^ La somma dei pesi  vale: " << weights_sum << std::endl;
-
-       double J=0.;
-   #ifdef HAVE_MPI
-//       MPI_Reduce( &integral, &J, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );  //This one gives J only to processor 0 !
-      MPI_Allreduce( &integral, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );  //THIS IS THE RIGHT ONE!!
-   #else
-   J = integral;
-   #endif
-    
-     std::cout << std::endl << "vb = " << vb << " ^^^^^^^^^^^^^^^^^L'integrale totale vale: " << J << std::endl;
-
-   
-  return J;  
-  
-}
 
 
 } //end namespace femus
-
-

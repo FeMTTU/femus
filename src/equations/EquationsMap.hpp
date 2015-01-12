@@ -9,6 +9,7 @@ using namespace std;
 
 
 #include "EqnBase.hpp"
+#include "GaussPoints.hpp"
 
 
 namespace femus {
@@ -17,9 +18,9 @@ namespace femus {
 
 class Utils;
 class Physics;
-class Mesh;
+class MeshTwo;
 class FEElemBase;
-class QRule;
+class elem_type;
 class TimeLoop;
 
 class QuantityMap;
@@ -32,18 +33,20 @@ public:
     Files&       _files;
     Physics&     _phys;
     QuantityMap& _qtymap;
-    Mesh&        _mesh;
-    std::vector<FEElemBase*>&  _AbstractFE;
-    QRule&       _qrule;
+    MeshTwo&     _mesh;
+    std::vector<FEElemBase*> &  _AbstractFE;
+    std::vector< std::vector<elem_type*> >  &  _elem_type;
+    std::vector<Gauss>       _qrule;
     TimeLoop&    _timeloop;
 
   /// Constructor
     EquationsMap( Files& files_in,
 		  Physics& mgphys_in,
 		  QuantityMap& qtymap_in,
-		  Mesh& mgmesh_in,
-		  std::vector<FEElemBase*>&  absfe_in,
-		  QRule& qrule_in,
+		  MeshTwo& mgmesh_in,
+		  std::vector<FEElemBase*> & absfe_in,
+                  std::vector< std::vector<elem_type*> > & elem_type_in,
+		  std::vector<Gauss> qrule_in,
 		  TimeLoop& timeloop_in
 		);
 

@@ -15,7 +15,7 @@ class FETet1 : public FEElemBase  {
 
 public:
   
-     FETet1(GeomEl* geomel_in);
+     FETet1();
      
     ~FETet1();
   

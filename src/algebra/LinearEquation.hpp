@@ -32,7 +32,7 @@ namespace femus {
 class elem_type;
 class NumericVector;
 class SparseMatrix;
-class mesh;
+class Mesh;
 
 /**
  This class is a container that holds linear operators and other structure for solving a linear equation system
@@ -40,13 +40,10 @@ class mesh;
 
 class LinearEquation : public ParallelObject {
 
-public:   
-
-  
 public:  
   
   /** costructor */
-  LinearEquation(mesh *other_msh);
+  LinearEquation(Mesh *other_msh);
   
   /** destructor */
   ~LinearEquation();
@@ -80,7 +77,7 @@ public:
   void AddLevel();
   
   // member data
-  mesh *_msh; 
+  Mesh *_msh; 
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
   SparseMatrix *_KK, *_PP,*_RR, *_CC; 
   vector < vector <unsigned> > KKoffset;

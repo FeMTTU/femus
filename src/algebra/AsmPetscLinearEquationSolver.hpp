@@ -41,7 +41,7 @@ class AsmPetscLinearEquationSolver : public LinearEquationSolver {
 public:
 
     /**  Constructor. Initializes Petsc data structures */
-    AsmPetscLinearEquationSolver (const unsigned &igrid, mesh *other_mesh);
+    AsmPetscLinearEquationSolver (const unsigned &igrid, Mesh *other_mesh);
 
     /** Destructor */
     ~AsmPetscLinearEquationSolver ();
@@ -122,7 +122,7 @@ private:
 
 // =================================================
 
-inline AsmPetscLinearEquationSolver::AsmPetscLinearEquationSolver (const unsigned &igrid, mesh* other_msh)
+inline AsmPetscLinearEquationSolver::AsmPetscLinearEquationSolver (const unsigned &igrid, Mesh* other_msh)
     : LinearEquationSolver(igrid, other_msh) {
 
     if(igrid==0) {

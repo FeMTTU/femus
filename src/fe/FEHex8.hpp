@@ -15,7 +15,7 @@ class  FEHex8 : public FEElemBase  {
 
 public:
   
-     FEHex8(GeomEl* geomel_in);
+     FEHex8();
      
     ~FEHex8();
   

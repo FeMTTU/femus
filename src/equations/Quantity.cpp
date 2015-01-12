@@ -76,12 +76,7 @@ namespace femus {
 //this function is the wrapper for computing the dofs via a function
  //this works either with LINEAR or with QUADRATIC variables, 
 //   but always with a QUADRATIC mesh
-///set the external magnetic field on the node 'eln' for the component 'ivarq'
-///for every node you get the three dofs
-///We can distinguish this in three parts:
-/// picking the COORDINATES of the NODES corresponding to the dofs
-/// converting the COORDINATES to the reference frame
-/// looping over the dofs
+
 ///the only part that is not common is providing the THREE COMPONENTS
 //this function is appropriate only for the case of a BOX DOMAIN
   //How can I neglect it in the other cases? Just set to zero and that's it, for now...
@@ -91,17 +86,17 @@ namespace femus {
 //the first one is GENERAL
 //the second one is SPECIFIC of the physics.
 
-void Quantity::FunctionDof(const uint bdry, QuantityLocal& myvect, const double t, const double* refbox_xyz) const {
+void Quantity::FunctionDof(QuantityLocal& myvect, const double t, const double* refbox_xyz) const {
 
 //====the Domain
   const uint space_dim = _qtymap._phys._mesh->get_dim();
   double* xp = new double[space_dim]; 
   const uint mesh_ord = (int) _qtymap._phys._mesh->_mesh_rtmap.get("mesh_ord");    
-  const uint offset   =       _qtymap._phys._mesh->_GeomEl._elnds[bdry][mesh_ord];
+  const uint offset   =       _qtymap._phys._mesh->GetGeomEl(myvect.GetCurrentElem().GetDim()-1,mesh_ord)._elnds;
 
 //=====the Function
   double* func = new double[myvect._dim];
-  const uint dof_off = myvect._ndof[bdry];
+  const uint dof_off = myvect._ndof;
   
 if (dof_off > offset) {std::cout << "Use a quadratic mesh for FunctionDof computation" << std::endl; abort();}
 
@@ -126,6 +121,8 @@ if (dof_off > offset) {std::cout << "Use a quadratic mesh for FunctionDof comput
   
   
   ////////////////QTY MAP ////////////
+  
+  
   QuantityMap::QuantityMap(Physics& phys_in): _phys(phys_in) { }
   
 

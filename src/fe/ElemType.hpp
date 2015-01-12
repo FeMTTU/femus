@@ -2,7 +2,7 @@
 
  Program: FEMuS
  Module: ElemType
- Authors: Eugenio Aulisa
+ Authors: Eugenio Aulisa, Giorgio Bornia
  
  Copyright (c) FEMuS
  All rights reserved. 
@@ -27,11 +27,10 @@
 #include "SparseMatrix.hpp"
 #include "Mesh.hpp"
 #include "LinearEquation.hpp"
+#include "GaussPoints.hpp"
 #include "adept.h"
 
 namespace femus {
-
-
 
 //------------------------------------------------------------------------------
 // Forward declarations
@@ -42,13 +41,16 @@ class LinearEquation;
 class elem_type {
   
 public:
-
-  /** constructor */
-  elem_type(const char *solid,const char *order, const char* gauss_order);
+  
+  /** constructor that receives Geometric Element and Gauss info */
+  elem_type(const char *geom_elem, const char *order_gauss);
   
   /** destructor */
-  ~elem_type();
+  virtual ~elem_type();
 
+  /** build function */
+  static  elem_type*  build(const std::string geomel_id_in, const uint fe_family_in, const char* gauss_order);
+  
   /** To be Added */
   void BuildProlongation(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
                          const unsigned &index_sol, const unsigned &kkindex_sol) const;
@@ -58,164 +60,297 @@ public:
                                  const unsigned &index_sol, const unsigned &kkindex_sol, const bool &TestDisp) const;		    
 
   /** To be Added */
-  void BuildProlongation(const mesh &meshf, const mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;
+  void BuildProlongation(const Mesh &meshf, const Mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;
   
   /** To be Added */
-  void BuildProlongation(const mesh& mymesh, const int& iel, SparseMatrix* Projmat, const unsigned &itype) const;
+  void BuildProlongation(const Mesh& mymesh, const int& iel, SparseMatrix* Projmat, const unsigned &itype) const;
+  
+	
+  virtual void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
+			   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const = 0;			 
+			 
+  virtual void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
+			vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const = 0;
+			
+  virtual void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
+			      vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const = 0;
+			      
+  virtual void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
+			   vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const = 0;
+  /** To be Added */
+  virtual double* GetPhi(const unsigned &ig) const = 0;
+  
+  /** To be Added */
+  virtual double* GetDPhiDXi(const unsigned &ig) const = 0;
+  
+  /** To be Added */
+  virtual double* GetDPhiDEta(const unsigned &ig) const{
+    std::cout<<"GetDPhiDEta does not apply for this element dimension\n"; 
+    abort();
+  }
+  
+  /** To be Added */
+  virtual double* GetDPhiDZeta(const unsigned &ig) const{
+    std::cout<<"GetDPhiDZeta does not apply for this element dimension\n"; 
+    abort();
+  };
+  
+//   /** To be Added */
+//   void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
+//                double &Weight, double *other_phi) const;
 
-  /** To be Added */ 
-  void JacobianSur2D(const vector < vector < double > > &vt, const unsigned &ig,
-                     double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal)const;
-  /** To be Added */ 
-  void JacobianSur2D_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
-			adept::adouble &Weight, vector < adept::adouble > &gradphi, 
-			vector < adept::adouble > &normal) const;
-  /** To be Added */
-  void JacobianSur1D(const vector < vector < double > > &vt, const unsigned &ig,
-                     double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
+  /** Function pointer for DPhiDXEZ */
+  typedef double* (elem_type::*_FunctionPointer)(const unsigned & ig) const;  //you need "elem_type::" for some reason
+  std::vector<_FunctionPointer> _DPhiXiEtaZetaPtr;
+  
+  /** Evaluate shape functions at all quadrature points */
+  virtual void EvaluateShapeAtQP(const std::string geomel_id_in, const uint fe_family_in);
 
-  /** To be Added */
-  void Jacobian3D(const vector < vector < double > > &vt,const unsigned &ig,
-                  double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi)const;
-  
-  /** To be Added */
-  void Jacobian2D(const vector < vector < double > > &vt,const unsigned &ig,
-                  double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
-		  
-  /** To be Added */
-  void Jacobian2D_AD(adept::Stack &s, const vector < vector < adept::adouble > > &vt,const unsigned &ig,
-		     adept::adouble &Weight, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;	  
-		     
-  /** To be Added */
-  void Jacobian3D_AD(adept::Stack &s, const vector < vector < adept::adouble > > &vt,const unsigned &ig,
-		     adept::adouble &Weight, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;	 
-  /** To be Added */
-  void Jacobian1D(const vector < vector < double > > &vt,const unsigned &ig,
-                  double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
-
-  /** To be Added */
-  void JacobianSur1D_AD( const vector < vector < adept::adouble > > &vt, const unsigned &ig,
-			 adept::adouble &Weight, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const; 		  
-		  
-  /** To be Added */
-  double* GetPhi(const unsigned &ig) const;
-  
-  /** To be Added */
-  double* GetDPhiDXi(const unsigned &ig) const;
-  
-  /** To be Added */
-  double* GetDPhiDEta(const unsigned &ig) const;
-  
-  /** To be Added */
-  double* GetDPhiDZeta(const unsigned &ig) const;
-  
-  /** To be Added */
-  void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
-               double &Weight, double *other_phi) const;
-
-  /** To be Added */
-  double  GetGaussWeight(const unsigned ig) const {
-    return GaussWeight[ig];
+  /** Get shape functions */
+  inline const double GetPhi(const uint qp, const uint dof ) const {
+     return _phi_mapGD[qp][dof];
+    }
+    
+  /** Get shape function first derivatives */
+  inline const double GetDPhiDxez(const uint qp, const uint dof ) const {
+     return _dphidxez_mapGD[qp][dof];
+    }
+    
+      /** To be Added */
+  inline const Gauss GetGaussRule() const {
+    return _gauss;
   };
   
   /** To be Added */
-  unsigned GetGaussPointNumber() const {
-    return GaussPoints;
+  inline double  GetGaussWeight(const unsigned ig) const {
+    return _gauss.GetGaussWeightsPointer()[ig];
   };
   
+  /** To be Added */
+  inline unsigned GetGaussPointNumber() const {
+    return _gauss.GetGaussPointsNumber();
+  };
+  
+  /** Retrieve the number of dofs for this element */
+  inline int  GetNDofs() const {
+    return _nc;
+  };
+    
+  /** Retrieve the dimension of the underlying geometric element */
+  inline unsigned  GetDim() const {
+    return _dim;
+  };
+
   // member data
   static unsigned _refindex;
  
-  void (elem_type::*Jacobian_ptr)(const vector < vector < double > > &vt, const unsigned &ig,
-                                  double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
-  
-  void (elem_type::*Jacobian_AD_ptr)(adept::Stack &s, const vector < vector < adept::adouble > > &vt, const unsigned &ig,
-				     adept::adouble &Weight,  vector < adept::adouble > &gradphi, vector < adept::adouble > &nabla_phi) const;				  
-				  
-  void (elem_type::*Jacobian_sur_ptr)(const vector < vector < double > > &vt, const unsigned &ig,
-                                      double &Weight, vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
-      
-  void (elem_type::*Jacobian_sur_AD_ptr)(const vector < vector < adept::adouble > > &vt, const unsigned &ig,
-					 adept::adouble &Weight, vector < adept::adouble > &gradphi, 
-					 vector < adept::adouble > &normal) const;
   void GetSparsityPatternSize(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc,  
 			      NumericVector* NNZ_d, NumericVector* NNZ_o,
 			      const unsigned &index_sol, const unsigned &kkindex_sol) const; 
-  void GetSparsityPatternSize(const mesh &meshf,const mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const;					 
+  void GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const;					 
   					 
-  void GetSparsityPatternSize(const mesh& mesh,const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned &itype) const;
+  void GetSparsityPatternSize(const Mesh& Mesh,const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned &itype) const;
 				      
-private:
+protected:
   
   // member data
-  void test_prol_and_rest();
-  int nc_,nf_,ncf_[3];
-  unsigned type_;
-  unsigned SolType_;
-  const double **X;
-  const int **IND;
-  const int **KVERT_IND;
-  double** rest_val;
-  int** rest_ind;
-  double* mem_rest_val;
-  int * mem_rest_ind;
-  double** prol_val;
-  int** prol_ind;
-  double* mem_prol_val;
-  int * mem_prol_ind;
-  basis *pt_basis;
-  hex0 hex_0;
-  hexpwl hex_pwl;
-  hex1 hex_1;
-  hexth hex_th;
-  hex2 hex_2;
-  wedge1 wedge_1;
-  wedgeth wedge_th;
-  wedge2 wedge_2;
-  tet0 tet_0;
-  tet1 tet_1;
-  tet2 tet_2;
-  quad0 quad_0;
-  quadpwl quad_pwl;
-  quad1 quad_1;
-  quadth quad_th;
-  quad2 quad_2;
-  tri0 tri_0;
-  tri1 tri_1;
-  tri2 tri_2;
-  line0 line_0;
-  line1 line_1;
-  line2 line_2;
-  const double *GaussWeight;
-  unsigned GaussPoints;
-  double **phi;
-  double *phi_memory;
-  double **dphidxi;
-  double *dphidxi_memory;
-  double **dphideta;
-  double *dphideta_memory;
-  double **dphidzeta;
-  double *dphidzeta_memory;
+  unsigned _dim; /*Spatial dimension of the geometric element*/
+  int _nc,_nf,_nlag[3];
+  unsigned _SolType;   /*Finite Element Family flag*/
+  const double **_X;
+  const int **_IND;
+  const int **_KVERT_IND;
   
-  double **d2phidxi2;
-  double *d2phidxi2_memory;
-  double **d2phideta2;
-  double *d2phideta2_memory;
-  double **d2phidzeta2;
-  double *d2phidzeta2_memory;
+  double **_prol_val;
+  int **_prol_ind;
+  double *_mem_prol_val;
+  int *_mem_prol_ind;
+  basis *_pt_basis;
   
-  double **d2phidxideta;
-  double *d2phidxideta_memory;
-  double **d2phidetadzeta;
-  double *d2phidetadzeta_memory;
-  double **d2phidzetadxi;
-  double *d2phidzetadxi_memory;
+//  Gauss
+  const Gauss _gauss;
+  double**      _phi_mapGD;
+  double** _dphidxez_mapGD;
   
-  
-  
-  
-  const double *weight;
 };
+
+
+class elem_type_1D : public elem_type {
+
+public:
+  /** constructor */
+  elem_type_1D(const char *solid,const char *order, const char* gauss_order);
+  
+  /** destructor */
+  ~elem_type_1D(){
+    
+    delete [] _phi;
+    delete [] _phi_memory;
+    delete [] _dphidxi;
+    delete [] _dphidxi_memory;
+      
+    delete [] _d2phidxi2;
+    delete [] _d2phidxi2_memory;
+           
+  };
+   
+  void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
+		   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;	
+		   
+  void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
+		vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
+		
+  void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
+	              vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const;
+		      
+  void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
+	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
+		    
+  inline double* GetPhi(const unsigned &ig) const { return _phi[ig]; }
+  inline double* GetDPhiDXi(const unsigned &ig) const { return _dphidxi[ig]; }
+		   
+  double **_phi;
+  double *_phi_memory;
+  double **_dphidxi;
+  double *_dphidxi_memory;
+  
+  double **_d2phidxi2;
+  double *_d2phidxi2_memory;
+};
+
+class elem_type_2D : public elem_type {
+public:
+  /** constructor */
+  elem_type_2D(const char *solid,const char *order, const char* gauss_order);
+  
+  /** destructor */
+  ~elem_type_2D(){
+    
+    delete [] _phi;
+    delete [] _phi_memory;
+    delete [] _dphidxi;
+    delete [] _dphidxi_memory;
+    delete [] _dphideta;
+    delete [] _dphideta_memory;
+  
+    delete [] _d2phidxi2;
+    delete [] _d2phidxi2_memory;
+    delete [] _d2phideta2;
+    delete [] _d2phideta2_memory;
+  
+    delete [] _d2phidxideta;
+    delete [] _d2phidxideta_memory;
+    
+  };
+	
+  void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
+		   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;	
+		   
+  void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
+		vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
+		
+  void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
+	              vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const;
+		      
+  void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
+	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const;
+
+  inline double* GetPhi(const unsigned &ig) const { return _phi[ig]; }
+  inline double* GetDPhiDXi(const unsigned &ig) const { return _dphidxi[ig]; }
+  inline double* GetDPhiDEta(const unsigned &ig) const { return _dphideta[ig]; }
+	   
+private:    
+  double **_phi;
+  double *_phi_memory;
+  double **_dphidxi;
+  double *_dphidxi_memory;
+  double **_dphideta;
+  double *_dphideta_memory;
+  
+  double **_d2phidxi2;
+  double *_d2phidxi2_memory;
+  double **_d2phideta2;
+  double *_d2phideta2_memory;
+  
+  double **_d2phidxideta;
+  double *_d2phidxideta_memory;
+};
+
+class elem_type_3D : public elem_type {
+public:
+  /** constructor */
+  elem_type_3D(const char *solid,const char *order, const char* gauss_order);
+   /** destructor */
+  ~elem_type_3D(){
+    delete [] _phi;
+    delete [] _phi_memory;
+    delete [] _dphidxi;
+    delete [] _dphidxi_memory;
+    delete [] _dphideta;
+    delete [] _dphideta_memory;
+    delete [] _dphidzeta;
+    delete [] _dphidzeta_memory;
+  
+    delete [] _d2phidxi2;
+    delete [] _d2phidxi2_memory;
+    delete [] _d2phideta2;
+    delete [] _d2phideta2_memory;
+    delete [] _d2phidzeta2;
+    delete [] _d2phidzeta2_memory;
+  
+    delete [] _d2phidxideta;
+    delete [] _d2phidxideta_memory;
+    delete [] _d2phidetadzeta;
+    delete [] _d2phidetadzeta_memory;
+    delete [] _d2phidzetadxi;
+    delete [] _d2phidzetadxi_memory;
+      
+  };
+	
+  void Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
+		   vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const;
+		   
+  void Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
+		vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const;
+		
+  void JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
+	              vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const{};
+		      
+  void JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
+	           vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const{};
+		   
+  
+  //---------------------------------------------------------------------------------------------------------
+  inline double* GetPhi(const unsigned &ig) const { return _phi[ig]; }
+  inline double* GetDPhiDXi(const unsigned &ig) const { return _dphidxi[ig]; }
+  inline double* GetDPhiDEta(const unsigned &ig) const { return _dphideta[ig]; }
+  inline double* GetDPhiDZeta(const unsigned &ig) const { return _dphidzeta[ig];}
+	
+private:	   		   
+  double **_phi;
+  double *_phi_memory;
+  double **_dphidxi;
+  double *_dphidxi_memory;
+  double **_dphideta;
+  double *_dphideta_memory;
+  double **_dphidzeta;
+  double *_dphidzeta_memory;
+  
+  double **_d2phidxi2;
+  double *_d2phidxi2_memory;
+  double **_d2phideta2;
+  double *_d2phideta2_memory;
+  double **_d2phidzeta2;
+  double *_d2phidzeta2_memory;
+  
+  double **_d2phidxideta;
+  double *_d2phidxideta_memory;
+  double **_d2phidetadzeta;
+  double *_d2phidetadzeta_memory;
+  double **_d2phidzetadxi;
+  double *_d2phidzetadxi_memory;
+};
+
 
 
 } //end namespace femus

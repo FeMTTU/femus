@@ -7,16 +7,7 @@ namespace femus {
 
 
 // =======================
-FETri6::FETri6(GeomEl* geomel_in) : FEElemBase(geomel_in) {
-	    
-	      _name[VV]="Tri_6";
-	      _name[BB]="Edge_3"; 
-             _pname[VV]="Triangle";
-	     _pname[BB]="Polyline"; 
-
-	     _ndof[VV]=6;    
-	     _ndof[BB]=3;
-	  }
+FETri6::FETri6() : FEElemBase() {  }
 	  
 // =======================
           FETri6::~FETri6() {    }

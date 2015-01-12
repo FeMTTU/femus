@@ -8,7 +8,7 @@ Authors:
 
   Eugenio Aulisa, PhD (email: )
   Simone Bnà, PhD (email: )
-  Giorgio Bornia (email: )
+  Giorgio Bornia, PhD (email: )
 
 
 Bug reports, fixes and suggestions (for which we are very grateful):

@@ -15,7 +15,7 @@ class FEQuad4 : public FEElemBase  {
 
 public:
   
-     FEQuad4(GeomEl* geomel);
+     FEQuad4();
      
     ~FEQuad4();
   

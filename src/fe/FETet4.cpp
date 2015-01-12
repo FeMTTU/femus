@@ -7,16 +7,7 @@ namespace femus {
 
 
 // =======================
-FETet4::FETet4(GeomEl* geomel_in) : FEElemBase(geomel_in) {
-	    
-	      _name[VV]="Tet_4";
-	      _name[BB]="Tri_3"; 
-             _pname[VV]="Tetrahedron";
-	     _pname[BB]="Triangle"; 
-
-	     _ndof[VV]=4;    
-	     _ndof[BB]=3;
-	  }
+FETet4::FETet4() : FEElemBase() {  }
 	  
 // =======================
           FETet4::~FETet4() {    }

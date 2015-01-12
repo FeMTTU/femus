@@ -28,7 +28,7 @@ namespace femus {
 using std::cout;
 using std::endl;
 
-bool (* mesh::_SetRefinementFlag)(const double &x, const double &y, const double &z, 
+bool (* Mesh::_SetRefinementFlag)(const double &x, const double &y, const double &z, 
 				  const int &ElemGroupNumber,const int &level) = NULL;
 
 //---------------------------------------------------------------------------------------------------

@@ -31,6 +31,7 @@ options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDe
 ENDIF()
 
 
+#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-parameter")
 
 #############################################################################################
 ### Output libraries folder
@@ -55,6 +56,7 @@ MARK_AS_ADVANCED (
 
 # Find Petsc Library 
 FIND_PACKAGE(PETSc REQUIRED)
+MESSAGE(STATUS "PETSC_FOUND = ${PETSC_FOUND}")
 
 SET(HAVE_PETSC 0)
 IF(PETSC_FOUND)
@@ -63,6 +65,7 @@ ENDIF(PETSC_FOUND)
 
 # Find MPI (optional) 
 FIND_PACKAGE(MPI)
+MESSAGE(STATUS "MPI_FOUND = ${MPI_FOUND}")
 
 SET(HAVE_MPI 0)
 IF(MPI_FOUND)
@@ -70,7 +73,7 @@ IF(MPI_FOUND)
 ENDIF(MPI_FOUND) 
 
 # Find FParser
-FIND_PACKAGE(FParser REQUIRED)
+FIND_PACKAGE(FParser)
 MESSAGE(STATUS "FPARSER_FOUND = ${FPARSER_FOUND}")
 SET (HAVE_FPARSER 0)
 IF(FPARSER_FOUND)
@@ -78,12 +81,13 @@ IF(FPARSER_FOUND)
 ENDIF(FPARSER_FOUND)
 
 # Find HDF5 (optional) 
-#FIND_PACKAGE (HDF5 NAMES hdf5)
+FIND_PACKAGE (HDF5)
+MESSAGE(STATUS "HDF5_FOUND = ${HDF5_FOUND}")
 
-#SET(HAVE_HDF5 0)
-#IF(HDF5_FOUND)
+SET(HAVE_HDF5 0)
+IF(HDF5_FOUND)
   SET(HAVE_HDF5 1)
-#ENDIF(HDF5_FOUND)
+ENDIF(HDF5_FOUND)
 
 # Find Libmesh (optional)
 FIND_PACKAGE(LIBMESH)
@@ -92,6 +96,15 @@ SET (HAVE_LIBMESH 0)
 IF(LIBMESH_FOUND)
   SET(HAVE_LIBMESH 1)
 ENDIF(LIBMESH_FOUND)
+
+# Find Libmesh (optional)
+FIND_PACKAGE(METIS)
+MESSAGE(STATUS "METIS_FOUND = ${METIS_FOUND}")
+
+SET (HAVE_METIS 0)
+IF(METIS_FOUND)
+  SET(HAVE_METIS 1)
+ENDIF(METIS_FOUND)
 
 
 
@@ -118,19 +131,10 @@ OPTION(BUILD_NAVIERSTOKESAPPS "Build the NavierStokes-line applications" ON)
 OPTION(BUILD_FSIAPPS "Build the FSI applications" ON)
 
 # --
-OPTION(BUILD_GENCASE "Build the case generator" ON)
-
-# --
-OPTION(BUILD_MHDOPT "Build the MHD optimal control problem" ON)
-
-# --
-OPTION(BUILD_TEMPER "Build the temperature optimal control problem" ON)
+OPTION(BUILD_OPTCONTROLAPPS "Build the optimal control applications" ON)
 
 # --
 OPTION(BUILD_POISSON "Build the Poisson problem" ON)
-
-# --
-OPTION(BUILD_TEMPERATURE "Build the Temperature problem" ON)
 
 # --
 OPTION(BUILD_POISSON_AMR "Build the Poisson_AMR problem" ON)
@@ -188,8 +192,6 @@ IF(BUILD_ADEPT)
   INCLUDE(ExternalLibraries/External_adept.cmake)
 ENDIF(BUILD_ADEPT)
 
-
-
 #############################################################################################
 ### Configuration project file
 #############################################################################################
@@ -213,6 +215,7 @@ ADD_DEFINITIONS(${PETSC_DEFINITIONS})
 #include femus include files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/algebra)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/meshGencase)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/utils)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/quadrature)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/parallel)
@@ -231,6 +234,25 @@ ENDIF(FPARSER_FOUND)
 # add femus macro
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake-modules/femusMacroBuildApplication.cmake)
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake-modules/femusMacroBuildUnitTest.cmake)
+
+
+
+# Libmesh includes and flags
+IF(LIBMESH_FOUND)
+execute_process(COMMAND $ENV{FM_BASEPATH_TO_LM}/$ENV{FM_LM_FOLDER}/bin/libmesh-config --cppflags
+                COMMAND tr "\n" " " OUTPUT_VARIABLE LIBMESH_CPP)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LIBMESH_CPP}")
+execute_process(COMMAND $ENV{FM_BASEPATH_TO_LM}/$ENV{FM_LM_FOLDER}/bin/libmesh-config --include
+                COMMAND tr "\n" " " OUTPUT_VARIABLE LIBMESH_INC)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LIBMESH_INC}")
+execute_process(COMMAND $ENV{FM_BASEPATH_TO_LM}/$ENV{FM_LM_FOLDER}/bin/libmesh-config --libs
+                COMMAND tr "\n" " " OUTPUT_VARIABLE LIBMESH_LIBS)
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LIBMESH_LIBS}")
+ENDIF(LIBMESH_FOUND)
+# old Make syntax:
+# libmesh_INCLUDE  := $(shell ${FM_LM_DIR}/bin/libmesh-config --include)
+# libmesh_CPPFLAGS := $(shell ${FM_LM_DIR}/bin/libmesh-config --cppflags)
+# libmesh_LIBS     := $(shell ${FM_LM_DIR}/bin/libmesh-config --libs)
 
 
 #############################################################################################
@@ -255,9 +277,9 @@ ADD_SUBDIRECTORY(applications)
 ### Unit tests
 #############################################################################################
 
+INCLUDE(CTest)
 # Add unit tests
 IF(BUILD_TESTING)
-  INCLUDE(CTest)
   ENABLE_TESTING()
   ADD_SUBDIRECTORY(unittests)
 ENDIF(BUILD_TESTING)

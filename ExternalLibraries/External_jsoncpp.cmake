@@ -7,7 +7,7 @@ SET(JSONCPP_SOURCE_DIR ${PROJECT_SOURCE_DIR}/ExternalLibraries/jsoncpp/jsoncpp-s
 
 #look if there is a package for jsoncpp
 IF (EXISTS "${JSONCPP_SOURCE_DIR}")   
-  MESSAGE (STATUS "JSONCPP: Found JSONCPP library")
+  MESSAGE (STATUS "JSONCPP_FOUND = TRUE")
 ENDIF (EXISTS "${JSONCPP_SOURCE_DIR}")
 
 SET (JSONCPP_INCLUDE_DIRS  ${JSONCPP_SOURCE_DIR}/include)

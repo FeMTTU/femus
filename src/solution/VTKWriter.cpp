@@ -22,6 +22,7 @@
 #include <b64/b64.h>
 #include "iostream"
 #include <fstream>
+#include <sstream>   
 #include "string.h"
 #include "stdio.h"
 #include <iomanip>
@@ -58,27 +59,26 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
     index=1;
     index_nd=1;
   } else if (!strcmp(order,"biquadratic")) { //biquadratic
-    index=3;
+    index=2;
     index_nd=2;
   }
-
-  const int eltp[4][6]= {{12,10,13,9,5,3},{25,24,26,23,22,21},{},{29,1,1,28,22,21}};
   
-  char *filename= new char[60];
-  sprintf(filename,"./output/mesh.level%d.%d.%s.vtu",_gridn,time_step,order);
+ 
+  std::ostringstream filename;
+  filename << "./output/mesh.level" << _gridn << "." << time_step << "." << order << ".vtu"; 
   std::ofstream fout;
   
   if(_iproc!=0) {
     fout.rdbuf();   //redirect to dev_null
   }
   else {
-    fout.open(filename);
-    if (!fout) {
-      std::cout << std::endl << " The output file "<<filename<<" cannot be opened.\n";
-      exit(0);
+    fout.open(filename.str().c_str());
+    if (fout.is_open()) {
+      std::cout << std::endl << " The output is printed to file " << filename.str() << " in VTK-XML (64-based) format" << std::endl; 
     }
     else {
-      std::cout << std::endl << " The output is printed to file " << filename << " in VTK-XML (64-based) format" << std::endl;   
+      std::cout << std::endl << " The output file "<< filename.str() <<" cannot be opened.\n";
+      exit(0);
     }
   }
   // haed ************************************************
@@ -98,7 +98,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   unsigned nel=0;
   unsigned counter=0;
   for (unsigned ig=_gridr-1u; ig<_gridn-1u; ig++) {
-    nel+=( _ml_sol._ml_msh->GetLevel(ig)->GetElementNumber() - _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
+    nel+=( _ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements() - _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
     counter+=(_ml_sol._ml_msh->GetLevel(ig)->el->GetElementNumber("Hex")-_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Hex"))*NVE[0][index];
     counter+=(_ml_sol._ml_msh->GetLevel(ig)->el->GetElementNumber("Tet")-_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Tet"))*NVE[1][index];
     counter+=(_ml_sol._ml_msh->GetLevel(ig)->el->GetElementNumber("Wedge")-_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Wedge"))*NVE[2][index];
@@ -106,7 +106,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
     counter+=(_ml_sol._ml_msh->GetLevel(ig)->el->GetElementNumber("Triangle")-_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Triangle"))*NVE[4][index];
     counter+=(_ml_sol._ml_msh->GetLevel(ig)->el->GetElementNumber("Line")-_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber("Line"))*NVE[5][index];
   }
-  nel+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->GetElementNumber();
+  nel+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->GetNumberOfElements();
   counter+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Hex")*NVE[0][index];
   counter+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Tet")*NVE[1][index];
   counter+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementNumber("Wedge")*NVE[2][index];
@@ -140,10 +140,6 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   fout << "   <Points>" << std::endl;
   fout << "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\">" << std::endl;
   
-//   unsigned indXYZ[3];
-//   indXYZ[0]=_ml_sol.GetIndex("X");
-//   indXYZ[1]=_ml_sol.GetIndex("Y");
-//   indXYZ[2]=_ml_sol.GetIndex("Z");
   
   vector <NumericVector*> mysol(_gridn);
   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
@@ -227,7 +223,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   icount = 0;
   unsigned offset_nvt=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
+    for (unsigned iel=0; iel<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); iel++) {
       if (ig==_gridn-1u || _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0) {
         for (unsigned j=0; j<_ml_sol._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
 	  unsigned loc_vtk_conn = map_pr[j];
@@ -268,7 +264,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   int offset_el=0;
   //print offset array
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); iel++) {
+    for (unsigned iel=0; iel<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); iel++) {
       if ( ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
   	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(iel,3);
         offset_el += _ml_sol._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel_Metis,index);
@@ -303,11 +299,11 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   unsigned short *var_type = static_cast <unsigned short*> (buffer_void);
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
       if (ig==_gridn-1u || _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)==0) {
 	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
         short unsigned ielt= _ml_sol._ml_msh->GetLevel(ig)->el->GetElementType(iel_Metis);
-	var_type[icount] = (short unsigned)(eltp[index][ielt]);
+	var_type[icount] = femusToVtkCellType[index][ielt];
 	icount++;
       }
     }
@@ -343,7 +339,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   unsigned short* var_reg=static_cast <unsigned short*> (buffer_void);
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
       if ( ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
 	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
 	var_reg[icount]= _ml_sol._ml_msh->GetLevel(ig)->el->GetElementGroup(ii);
@@ -375,7 +371,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   unsigned short* var_proc=static_cast <unsigned short*> (buffer_void);
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
       if ( ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
 	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
 	var_proc[icount]=(unsigned short)(_ml_sol._ml_msh->GetLevel(ig)->epart[ii]);
@@ -412,7 +408,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
       for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
 	vector<double> sol_local;
 	_ml_sol.GetSolutionLevel(ig)->_Sol[indx]->localize_to_one(sol_local,0);
-	for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+	for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
 	  if (ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
 	    unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,_ml_sol.GetSolutionType(indx));
 	    var_el[icount]=sol_local[iel_Metis];
@@ -447,7 +443,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   fout<< " <PointData Scalars=\"scalars\"> " << std::endl;
   //Loop on variables
    
-  // point pointer to common mamory area buffer of void type;
+  // point pointer to common memory area buffer of void type;
   float* var_nd = static_cast<float*>(buffer_void);
   for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_sol.GetSolutionSize(); i++) {
     unsigned indx=(test_all==0)?_ml_sol.GetIndex(vars[i].c_str()):i;
@@ -496,8 +492,8 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     delete mysol[ig];
   }
-  delete [] filename;
-  delete [] var_nd;  
+
+  delete [] var_nd; 
   
   //--------------------------------------------------------------------------------------------------------
   return;   

@@ -1,5 +1,5 @@
 // library includes
-#include "FemTTUInit.hpp"
+#include "FemusInit.hpp"
 #include "ElemType.hpp"
 #include "NumericVector.hpp"
 #include "PetscVector.hpp"
@@ -41,7 +41,7 @@ int main(int argc,char **args) {
 // // // // //   }
 // // // // //   
 // // // // //   /// Init Petsc-MPI communicator
-// // // // //   FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
+// // // // //   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
 // // // // //   
 // // // // //  //READ STRING of TIME FROM SHELL;
 // // // // //   std::string outfolder = "output"; //was getenv(OUTFOLDER);

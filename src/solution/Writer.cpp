@@ -75,7 +75,7 @@ void Writer::BuildProlongatorMatrices() {
   }  
   
   for (unsigned igridn=0; igridn<_gridn; igridn++){
-    mesh* msh = _ml_sol._ml_msh->GetLevel(igridn);
+    Mesh* msh = _ml_sol._ml_msh->GetLevel(igridn);
     for(int itype=0;itype<3;itype++){
       int ni = msh->MetisOffset[itype][_nprocs];
       int ni_loc = msh->own_size[itype][_iproc];
@@ -100,7 +100,7 @@ void Writer::BuildProlongatorMatrices() {
 	  for (int iel_mts=msh->IS_Mts2Gmt_elem_offset[isdom];iel_mts < msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
 	    unsigned iel = msh->IS_Mts2Gmt_elem[iel_mts];
 	    short unsigned ielt=msh->el->GetElementType(iel);
-            _ml_sol._ml_msh->_type_elem[ielt][jtype]->GetSparsityPatternSize(*msh, iel, NNZ_d, NNZ_o, itype);	  
+            _ml_sol._ml_msh->_finiteElement[ielt][jtype]->GetSparsityPatternSize(*msh, iel, NNZ_d, NNZ_o, itype);	  
 	  }
 	}
 	
@@ -125,7 +125,7 @@ void Writer::BuildProlongatorMatrices() {
 	  for (int iel_mts=msh->IS_Mts2Gmt_elem_offset[isdom];iel_mts < msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
 	    unsigned iel = msh->IS_Mts2Gmt_elem[iel_mts];
 	    short unsigned ielt=msh->el->GetElementType(iel);
-            _ml_sol._ml_msh->_type_elem[ielt][jtype]->BuildProlongation(*msh, iel, _ProlQitoQj[itype][jtype][igridn], itype);	  
+            _ml_sol._ml_msh->_finiteElement[ielt][jtype]->BuildProlongation(*msh, iel, _ProlQitoQj[itype][jtype][igridn], itype);	  
 	  }
 	}
 	_ProlQitoQj[itype][jtype][igridn]->close();

@@ -7,17 +7,17 @@
 
 
 #include "FEElemBase.hpp"
-
+#include "ElemType.hpp"
 
 namespace femus {
 
 
 
-class FEHex27 : public FEElemBase  {
+class FEHex27 : public FEElemBase {
 
 public:
   
-     FEHex27(GeomEl* geomel_in);
+     FEHex27();
      
     ~FEHex27();
   

@@ -85,7 +85,7 @@ void PetscMatrix::init(const  int m,
   }
 
   else {
-    parallel_onlyM();
+    parallel_only();
  
     ierr = MatCreate(MPI_COMM_WORLD, &_mat);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -131,7 +131,7 @@ void PetscMatrix::init(	const  int m, const  int n, const  int m_l, const  int n
     ierr = MatSetFromOptions (_mat); 	   				CHKERRABORT(MPI_COMM_WORLD,ierr);
   }
   else {
-    parallel_onlyM();
+    parallel_only();
     assert ( ( n_nz.size() == _m_l) && (n_oz.size() == _m_l) );
     ierr = MatCreate(MPI_COMM_WORLD, &_mat);				CHKERRABORT(MPI_COMM_WORLD,ierr);
     ierr = MatSetSizes(_mat, _m_l, _n_l, _m, _n);   			CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -176,7 +176,7 @@ void PetscMatrix::update_sparsity_pattern(
     ierr = MatSetFromOptions(_mat);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
   } else    { // multi processors ----------------------------
-    parallel_onlyM();             //TODO
+    parallel_only();             //TODO
     if (n_nz.empty()) {
 
 //old piece of code with Petsc lib version 3.1
@@ -312,7 +312,7 @@ void PetscMatrix::update_sparsity_pattern_old (const Graph & sparsity_pattern) {
              CHKERRABORT(MPI_COMM_WORLD,ierr);
     }
   else    {
-      parallel_onlyM();
+      parallel_only();
       if (n_nz.empty())
         ierr = MatCreateAIJ (MPI_COMM_WORLD,
 			        m_local, n_local,
@@ -343,7 +343,7 @@ void PetscMatrix::update_sparsity_pattern_old (const Graph & sparsity_pattern) {
 /// This function sets all the entries to 0
 void PetscMatrix::zero() {
   assert(this->initialized());
-  semiparallel_onlyM();
+  semiparallel_only();
   int ierr=0;
   ierr = MatZeroEntries(_mat);
   CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -353,7 +353,7 @@ void PetscMatrix::zero() {
 /// This function sets all row entries to 0 then puts diag_value in the diagonal entry
 void PetscMatrix::zero_rows(std::vector<int> & rows, double diag_value) {
   assert(this->initialized());
-  semiparallel_onlyM();
+  semiparallel_only();
   int ierr=0;
   if (!rows.empty()) ierr = MatZeroRows(_mat, rows.size(), &rows[0], diag_value,0,0);   // add,0,0,)    !!!!
   else   ierr = MatZeroRows(_mat, 0, PETSC_NULL, diag_value,0,0);                       // add,0,0,)    !!!!
@@ -364,7 +364,7 @@ void PetscMatrix::zero_rows(std::vector<int> & rows, double diag_value) {
 void PetscMatrix::clear() {
   int ierr=0;
   if ((this->initialized()) && (this->_destroy_mat_on_exit)) {
-    semiparallel_onlyM();
+    semiparallel_only();
     ierr = MatDestroy(&_mat);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
     this->_is_initialized = false;
@@ -374,7 +374,7 @@ void PetscMatrix::clear() {
 // ============================================
 double PetscMatrix::l1_norm() const {
   assert(this->initialized());
-  semiparallel_onlyM();
+  semiparallel_only();
   int ierr=0;
   PetscReal petsc_value;
   double value;
@@ -388,7 +388,7 @@ double PetscMatrix::l1_norm() const {
 // ==========================================
 double PetscMatrix::linfty_norm() const {
   assert(this->initialized());
-  semiparallel_onlyM();
+  semiparallel_only();
   int ierr=0;
   PetscReal petsc_value;
   double value;

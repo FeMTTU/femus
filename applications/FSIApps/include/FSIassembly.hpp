@@ -17,7 +17,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   Solution*	 mysolution  	                      = ml_sol->GetSolutionLevel(level);
   TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem>("Fluid-Structure-Interaction");
   LinearEquationSolver*  mylsyspde	              = my_nnlin_impl_sys._LinSolver[level];   
-  mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(level);
+  Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(level);
   elem		*myel		=  mymsh->el;
   SparseMatrix	*myKK		=  mylsyspde->_KK;
   NumericVector *myRES		=  mylsyspde->_RES;
@@ -148,14 +148,11 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   double _theta_ns=1.0;
   
   // space discretization parameters
-  unsigned order_ind2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));  
-  unsigned end_ind2   = mymsh->GetEndIndex(order_ind2);
-
+  unsigned order_ind2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U")); 
   unsigned order_ind1 = ml_sol->GetSolutionType(ml_sol->GetIndex("P"));  
-  unsigned end_ind1   = mymsh->GetEndIndex(order_ind1);
 
   // mesh and procs
-  unsigned nel    = mymsh->GetElementNumber();
+  unsigned nel    = mymsh->GetNumberOfElements();
   unsigned igrid  = mymsh->GetGridNumber();
   unsigned iproc  = mymsh->processor_id();
 
@@ -194,8 +191,8 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 
     unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
     short unsigned kelt = myel->GetElementType(kel);
-    unsigned nve        = myel->GetElementDofNumber(kel,end_ind2);
-    unsigned nve1       = myel->GetElementDofNumber(kel,end_ind1);
+    unsigned nve        = myel->GetElementDofNumber(kel,order_ind2);
+    unsigned nve1       = myel->GetElementDofNumber(kel,order_ind1);
     int flag_mat        = myel->GetElementMaterial(kel);
 
     //*******************************************************************************************************
@@ -317,14 +314,14 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
        
     if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
       /// *** Gauss point loop ***
-      for (unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
 
 	// *** get Jacobian and test function and test function derivatives in the moving frame***
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx,ig,Weight,phi,gradphi,nablaphi);
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_old,ig,Weight_old,phi_old,gradphi_old,nablaphi);
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat,nablaphi);
-	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
-	if (flag_mat==2) Weight_nojac = ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussWeight(ig);
+	ml_prob._ml_msh->_finiteElement[kelt][order_ind2]->Jacobian(vx,ig,Weight,phi,gradphi,nablaphi);
+	ml_prob._ml_msh->_finiteElement[kelt][order_ind2]->Jacobian(vx_old,ig,Weight_old,phi_old,gradphi_old,nablaphi);
+	ml_prob._ml_msh->_finiteElement[kelt][order_ind2]->Jacobian(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat,nablaphi);
+	phi1=ml_prob._ml_msh->_finiteElement[kelt][order_ind1]->GetPhi(ig);
+	if (flag_mat==2) Weight_nojac = ml_prob._ml_msh->_finiteElement[kelt][order_ind2]->GetGaussWeight(ig);
 
 	// ---------------------------------------------------------------------------
 	// displacement and velocity

@@ -14,7 +14,6 @@
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "FEElemBase.hpp"
-#include "QRule.hpp"
 #include "TimeLoop.hpp"
 
 #include "paral.hpp"
@@ -27,18 +26,20 @@ namespace femus {
 // ====================================================
 /// This function constructs the equation map
 
-EquationsMap::EquationsMap(Files& files_in,         // Utils pointer
-                           Physics& mgphys_in,        // Physics pointer
+EquationsMap::EquationsMap(Files& files_in,
+                           Physics& mgphys_in,
                            QuantityMap& qtymap_in,
-                           Mesh& mgmesh_in,           // Mesh pointer
-                           std::vector<FEElemBase*>& absfe_in,
-			   QRule&   qrule_in,
+                           MeshTwo& mgmesh_in,
+                           std::vector<FEElemBase*> & absfe_in,
+                           std::vector< std::vector<elem_type*> >  & elem_type_in,
+			   std::vector<Gauss>   qrule_in,
                            TimeLoop& timeloop_in ):
         _files(files_in),
         _phys(mgphys_in),
         _qtymap(qtymap_in),
         _mesh(mgmesh_in),
         _AbstractFE(absfe_in),
+        _elem_type(elem_type_in),
         _qrule(qrule_in),
         _timeloop(timeloop_in)  {}
 
@@ -206,7 +207,7 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) const 
         int NGeomObjOnWhichToPrint[QL];
         NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[l];
         NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*_mesh._GeomEl.n_se[VV];
+        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*_mesh.GetGeomEl(_mesh.get_dim()-1-VV,_mesh._mesh_order).n_se;
 	  
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
@@ -383,7 +384,6 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) const {
         const uint NoLevels = _mesh._NoLevels;
         const uint ndigits  = _timeloop._timemap.get("ndigits");
 
-        std::string    input_dir = DEFAULT_CASEDIR;
         std::string     basecase = DEFAULT_BASECASE;
         std::string     basemesh = DEFAULT_BASEMESH;
         std::string       ext_h5 = DEFAULT_EXT_H5;
@@ -431,7 +431,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) const {
         int NGeomObjOnWhichToPrint[QL];
         NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[l];
         NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*_mesh._GeomEl.n_se[VV];
+        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*_mesh.GetGeomEl( _mesh.get_dim()-1-VV, _mesh._mesh_order ).n_se;
 
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
@@ -495,7 +495,11 @@ void EquationsMap::PrintXDMFTopologyGeometry(std::ofstream& out, const uint Leve
     //coordinates
     std::ostringstream coord_file; coord_file <<  basemesh <<  ext_h5;
     
-    IO::PrintXDMFTopology(out,connfile.str(),hdf5_field.str(),_mesh._GeomEl.pname[vb],n_elements*_mesh._GeomEl.n_se[vb],n_elements*_mesh._GeomEl.n_se[vb],_mesh._GeomEl._elnds[vb][LL]);
+    IO::PrintXDMFTopology(out,connfile.str(),hdf5_field.str(),
+			             _mesh.GetGeomEl(_mesh.get_dim()-1-vb,LL).name,
+			  n_elements*_mesh.GetGeomEl(_mesh.get_dim()-1-vb, _mesh._mesh_order).n_se,
+			  n_elements*_mesh.GetGeomEl(_mesh.get_dim()-1-vb, _mesh._mesh_order).n_se,
+			             _mesh.GetGeomEl(_mesh.get_dim()-1-vb,LL)._elnds);
     std::ostringstream coord_lev; coord_lev << "_L" << Level; 
     IO::PrintXDMFGeometry(out,coord_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",_mesh._NoNodesXLev[Level],1);
 
@@ -672,6 +676,7 @@ void EquationsMap::TransientLoop()  {
     for (uint curr_step = _timeloop._t_idx_in + 1; curr_step <= _timeloop._t_idx_final; curr_step++) {
 
         curr_time += dt;
+        _timeloop._curr_time  = curr_time;
 
 #if DEFAULT_PRINT_TIME==1 // only for cpu time check --------
         std::clock_t  start_time=std::clock();
@@ -685,7 +690,7 @@ void EquationsMap::TransientLoop()  {
 
 
         //  time step for each system, without printing (good)
-        OneTimestepEqnLoop(curr_time, delta_t_step);
+        OneTimestepEqnLoop(_timeloop._curr_time, delta_t_step);
 
 #if DEFAULT_PRINT_TIME==1 // only for cpu time check --------
         std::clock_t    end_time=std::clock();
@@ -718,7 +723,7 @@ void EquationsMap::OneTimestepEqnLoop(
     // loop for time steps
     for (iterator eqn=_equations.begin(); eqn != _equations.end(); eqn++)  {
         EqnBase* mgsol = eqn->second;
-        mgsol -> MGTimeStep(time,delta_t_step_in);
+        mgsol -> MGTimeStep(delta_t_step_in);
     }
     return;
 }

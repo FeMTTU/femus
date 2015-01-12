@@ -16,8 +16,8 @@ namespace femus {
 
 
 
-     QuantityLocal::QuantityLocal(CurrGaussPointBase & currgp_in, CurrElem & currel_in)
-     : _currGP(currgp_in),_currEl(currel_in) {  }
+     QuantityLocal::QuantityLocal(const CurrGaussPointBase & currgp_in)
+     : _currGP(currgp_in),_currEl(currgp_in.GetCurrentElem()) {  }
 
 
 
@@ -35,14 +35,14 @@ namespace femus {
 //actually, that vector is only for service purposes 
 //so it could be also translated into some temporary vector whenever needed
  
- void QuantityLocal::curl_g(const uint vbflag) {
+ void QuantityLocal::curl_g() {
    
   const uint       ord = _FEord;
-  const uint el_nnodes = _ndof[vbflag];
+  const uint el_nnodes = _ndof;
   const uint el_ndof_q = el_nnodes ;
 
 //extend to 3D the dof values
-  ExtendDofs(vbflag);  
+  ExtendDofs();  
   
 //set to zero  the gauss values
   for (uint i=0; i<3; i++) _curl_g3D[i]=0.;
@@ -55,13 +55,12 @@ namespace femus {
 	   uint idimp1 = (idim+1)%3;
 	   uint idimp2 = (idim+2)%3;
 	  _curl_g3D[idim] += 
-	  (_currGP._dphidxyz_ndsQLVB_g3D[vbflag][ord][eln+idimp1*el_nnodes] * _val_dofs3D[eln+idimp2*el_ndof_q] 
-	 - _currGP._dphidxyz_ndsQLVB_g3D[vbflag][ord][eln+idimp2*el_nnodes] * _val_dofs3D[eln+idimp1*el_ndof_q]); 
+	  (_currGP._dphidxyz_ndsQLVB_g3D[ord][eln+idimp1*el_nnodes] * _val_dofs3D[eln+idimp2*el_ndof_q] 
+	 - _currGP._dphidxyz_ndsQLVB_g3D[ord][eln+idimp2*el_nnodes] * _val_dofs3D[eln+idimp1*el_ndof_q]); 
            }
 	    //end curl
 
 	   }
-	   
 
 
 return;
@@ -71,10 +70,10 @@ return;
 //here I should check that the    _grad_g double array has been allocated
 //unfortunately there is no way to check this in C
 
- void QuantityLocal::grad_g(const uint vbflag) {
+ void QuantityLocal::grad_g() {
    
-        const uint ndim = _currGP._IntDim[vbflag];
-   const uint   el_ndof = _ndof[vbflag];
+        const uint ndim = _currEl.GetDim();
+   const uint   el_ndof = _ndof;
    const uint     nvars = _dim;
    const uint  fe_order = _FEord;
 
@@ -94,7 +93,7 @@ return;
 
 	  const uint indxdim=eln+idim*el_ndof;
 
-              _grad_g[ivar][idim] += _currGP._dphidxyz_ndsQLVB_g[vbflag][fe_order][indxdim]*_val_dofs[indxvar];
+              _grad_g[ivar][idim] += _currGP._dphidxyz_ndsQLVB_g[fe_order][indxdim]*_val_dofs[indxvar];
 	       
 	    }
 	    }
@@ -107,9 +106,9 @@ return;
   
  
 //=================================================================== 
- void QuantityLocal::val_g(const uint vbflag) {
+ void QuantityLocal::val_g() {
 
-const uint el_ndof = _ndof[vbflag];
+const uint el_ndof = _ndof;
 const uint nvars = _dim;
 const uint FEord = _FEord;
 //set to zero
@@ -122,7 +121,7 @@ const uint FEord = _FEord;
 	  
 	       const uint indx=eln+ivar*el_ndof;
 	  
-              _val_g[ivar] += _currGP._phi_ndsQLVB_g[vbflag][FEord][eln]*_val_dofs[indx];
+              _val_g[ivar] += _currGP._phi_ndsQLVB_g[FEord][eln]*_val_dofs[indx];
 	       
 	    }
 
@@ -139,21 +138,57 @@ void QuantityLocal::VectWithQtyFillBasic() {
     _eqnptr   = _qtyptr->_eqn; 
     _dim      = _qtyptr->_dim;
     _FEord    = _qtyptr->_FEord;
-    _ndof[VV] = _currEl._eqnmap._AbstractFE[_FEord]->_ndof[VV];  //TODO here we use the eqnmap, of Course Vect must be used where the eqmap is there, but that can be in the main also
-    _ndof[BB] = _currEl._eqnmap._AbstractFE[_FEord]->_ndof[BB];
+    _ndof     = _currEl._eqnmap._elem_type[_currEl.GetDim()-1][_FEord]->GetNDofs();  //TODO here we use the eqnmap, of Course Vect must be used where the eqmap is there, but that can be in the main also
 
     return;
 }
 
+void QuantityLocal::Allocate() {
+  
+    _val_g    = new double[_dim];   
+    _val_g3D  = new double[3]; 
+    _val_dofs   = new double[_dim*_ndof];
+    _val_dofs3D = new double[   3*_ndof];
+    _grad_g = new double*[_dim];
+  for (uint i=0; i< _dim;i++) { _grad_g[i] = new double[_currEl._eqnmap._mesh.get_dim()]; }
 
+    _grad_g3D = new double*[_dim];
+  for (uint i=0; i< _dim;i++) { _grad_g3D[i] = new double[3]; }
+
+  _curl_g3D = new double[3];
+
+   _el_average.resize(_dim);
+
+  return; 
+}
+
+
+void QuantityLocal::Deallocate() {
+  
+      delete []  _val_g      ;   
+      delete []  _val_g3D    ; 
+      delete []  _val_dofs   ;
+      delete []  _val_dofs3D ;
+
+      for (uint i=0; i< _dim;i++) { delete [] _grad_g[i]; }
+       delete []  _grad_g;
+       
+      for (uint i=0; i< _dim;i++) { delete [] _grad_g3D[i]; }
+       delete []  _grad_g3D  ;
+
+       delete []   _curl_g3D ;
+
+  
+  return; 
+}
 
 ///copy the space_dim-sized dof vector into its 3D version
-void QuantityLocal::ExtendDofs(const uint vb) {
+void QuantityLocal::ExtendDofs() {
   
   //AAA: valid from ndim to 3
 
   const uint ndim = _currEl._eqnmap._mesh.get_dim();
-  const uint el_ndofs = _ndof[vb];
+  const uint el_ndofs = _ndof;
   //set to zero
   for (uint eln=0; eln<el_ndofs; eln++)  {
     for (uint i=0; i<3; i++) {
@@ -219,7 +254,7 @@ void QuantityLocal::ExtendDofs(const uint vb) {
 // In the same way in the FINE RHS we have the true rhs,
 // while in all the other rhs we have the RESIDUALS.
 
-void QuantityLocal::GetElDofsVect(const uint vbfl, const uint Level)  {
+void QuantityLocal::GetElDofsVect(const uint Level)  {
   
   //we should put some try catch or something, to make sure that what we are calling here is already correctly filled as it should be
   //TODO FROM EQUATION HERE
@@ -254,11 +289,11 @@ void QuantityLocal::GetElDofsVect(const uint vbfl, const uint Level)  {
 
    for (uint ivar=0; ivar < _dim; ivar++)    {
 
-         for (uint d = 0; d <  _ndof[vbfl]; d++)    {
-               const uint     indx  = d + ivar * _ndof[vbfl];
+         for (uint d = 0; d <  _ndof; d++)    {
+               const uint     indx  = d + ivar * _ndof;
 
-	     if (vect_ord < KK )       DofObj = _currEl._el_conn[vbfl][d];
-	     else if (vect_ord == KK)  DofObj = _currEl._vol_iel_DofObj[vbfl];
+	     if (vect_ord < KK )       DofObj = _currEl.GetConn()[d];
+	     else if (vect_ord == KK)  DofObj = _currEl.GetVolIel();
 	       
 	const uint dofkivar = _eqnptr->_node_dof[Lev_pick_dof][ DofObj + ivar*length_nodedof[vect_ord] + off_total]; //FROM MESH TO DOF, at the finest level because you are using x_old
 
@@ -273,18 +308,18 @@ void QuantityLocal::GetElDofsVect(const uint vbfl, const uint Level)  {
 
 // clearly _el_average must be allocated already!!!
 
-  void QuantityLocal::SetElemAverage(const uint vb) {
+  void QuantityLocal::SetElemAverage() {
 
-       for (uint idim=0; idim< _dim; idim++)  _el_average[vb][idim]=0.;
+       for (uint idim=0; idim< _dim; idim++)  _el_average[idim]=0.;
 
     for (uint idim=0; idim< _dim; idim++) {
-       for (uint eln=0; eln< _ndof[vb]; eln++)    { 
-        const uint indxn = eln+idim*_ndof[vb];
-	     _el_average[vb][idim]   +=  _val_dofs[indxn];
+       for (uint eln=0; eln< _ndof; eln++)    { 
+        const uint indxn = eln+idim*_ndof;
+	     _el_average[idim]   +=  _val_dofs[indxn];
        }
      }
 
-  for (uint idim=0; idim< _dim; idim++)   _el_average[vb][idim]= _el_average[vb][idim]/_ndof[vb];
+  for (uint idim=0; idim< _dim; idim++)   _el_average[idim]= _el_average[idim]/_ndof;
   
    return; 
   }
@@ -297,7 +332,7 @@ void QuantityLocal::GetElDofsVect(const uint vbfl, const uint Level)  {
 //   const uint  elndof = myvect._ndof[vb];
 //   const uint vectdim = myvect._dim;
 //   const uint mesh_ord = (int) _eqnmap._utils._urtmap.get("mesh_ord");    
-//   const uint offset = _eqnmap._mesh._GeomEl._elnds[vb][mesh_ord];
+//   const uint offset = _eqnmap._mesh.GetGeomEl(_eqnmap._mesh.get_dim()-1-vb,mesh_ord)._elnds;
 //  
 //  //TODO ASSERT
 //  /* assert(*/ if (elndof > offset) {std::cout << "Quadratic transformation over linear mesh " << std::endl;abort();}  /*);*/

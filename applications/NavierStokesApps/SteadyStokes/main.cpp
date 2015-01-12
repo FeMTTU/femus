@@ -4,7 +4,7 @@
 #include "NumericVector.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
-#include "FemTTUInit.hpp"
+#include "FemusInit.hpp"
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
@@ -47,7 +47,7 @@ int main(int argc,char **args) {
   }
   
   /// Init Petsc-MPI communicator
-  FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
+  FemusInit mpinit(argc,args,MPI_COMM_WORLD);
   
   /// INIT MESH =================================  
   
@@ -72,7 +72,7 @@ int main(int argc,char **args) {
   ml_msh.ReadCoarseMesh(infile,"seventh",Lref);
   ml_msh.RefineMesh(nm,nr,SetRefinementFlag);
   
-  ml_msh.print_info();
+  ml_msh.PrintInfo();
   
   MultiLevelSolution ml_sol(&ml_msh);
   
@@ -311,14 +311,14 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
   MultiLevelSolution* ml_sol=ml_prob._ml_sol;
   
   
-  mesh*		 mymsh    	= ml_prob._ml_msh->GetLevel(level);
+  Mesh*		 mymsh    	= ml_prob._ml_msh->GetLevel(level);
   elem*		 myel		= mymsh->el;
   SparseMatrix*	 myKK		= mylsyspde->_KK;
   NumericVector* myRES 		= mylsyspde->_RES;
     
   //data
   const unsigned dim = mymsh->GetDimension();
-  unsigned nel= mymsh->GetElementNumber();
+  unsigned nel= mymsh->GetNumberOfElements();
   unsigned igrid= mymsh->GetGridNumber();
   unsigned iproc = mymsh->processor_id();
   double ILambda= 0; 
@@ -341,9 +341,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
   SolIndex[dim]=ml_sol->GetIndex(&Solname[3][0]);       
   //solution order
   unsigned order_ind_vel = ml_sol->GetSolutionType(SolIndex[0]);
-  unsigned end_ind2   = mymsh->GetEndIndex(order_ind_vel);
   unsigned order_ind_p = ml_sol->GetSolutionType(SolIndex[dim]);
-  unsigned end_ind1   = mymsh->GetEndIndex(order_ind_p);
   
   double alpha = 0.;
   if(order_ind_p == order_ind_vel && order_ind_vel == 0) // if pressure and velocity are both linear, we need stabilization 
@@ -404,8 +402,8 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
 
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
     short unsigned kelt=myel->GetElementType(kel);
-    unsigned nve2=myel->GetElementDofNumber(kel,end_ind2);
-    unsigned nve1=myel->GetElementDofNumber(kel,end_ind1);
+    unsigned nve2=myel->GetElementDofNumber(kel,order_ind_vel);
+    unsigned nve1=myel->GetElementDofNumber(kel,order_ind_p);
     
     //set to zero all the entries of the FE matrices
     metis_node2.resize(nve2);
@@ -460,10 +458,10 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
    
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
       // *** Gauss poit loop ***
-      for(unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind_vel]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelt][order_ind_vel]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind_vel]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind_vel])->Jacobian_ptr)(coordinates,ig,Weight2,phi2,gradphi2,nablaphi2);
-	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind_p]->GetPhi(ig);
+	ml_prob._ml_msh->_finiteElement[kelt][order_ind_vel]->Jacobian(coordinates,ig,Weight2,phi2,gradphi2,nablaphi2);
+	phi1=ml_prob._ml_msh->_finiteElement[kelt][order_ind_p]->GetPhi(ig);
 
 	double GradSolP[3] = {0.,0.,0.};
 	//velocity variable

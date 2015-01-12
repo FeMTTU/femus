@@ -20,17 +20,7 @@ namespace femus {
 template <typename T>
 class RunTimeMap   {
 
-private:
-
-  const std::string               _tag_name;
-  
 public:
-
-  std::string               _basepath; // questo e' il basepath da cui parte la COPIA dei file di input e cosi' via
-                                       //TODO let me put it public just because I don't want to do the SET function right now...
-                                       //TODO siccome lo posso MODIFICARE in base al RESTART non posso piu' metterlo CONST
-  std::map<std::string, T > _rtmap;
-
 
    RunTimeMap(const std::string class_name, const std::string basepath_in );
   ~RunTimeMap();
@@ -42,6 +32,15 @@ public:
   const T      get(const std::string & name) const;  //TODO do const or not for the return... sembra che l'errore in debug mode fosse proprio qui!!!
 
   const std::string  get_rbasepath() const {return _basepath;}
+  
+  std::string               _basepath; // questo e' il basepath da cui parte la COPIA dei file di input e cosi' via
+                                       //TODO let me put it public just because I don't want to do the SET function right now...
+                                       //TODO siccome lo posso MODIFICARE in base al RESTART non posso piu' metterlo CONST
+  std::map<std::string, T > _rtmap;
+
+private:
+
+  const std::string               _tag_name;
   
 };
 

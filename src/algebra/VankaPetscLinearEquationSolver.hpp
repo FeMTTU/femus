@@ -45,7 +45,7 @@ class VankaPetscLinearEquationSolver : public LinearEquationSolver {
 public:
 
     /**  Constructor. Initializes Petsc data structures */
-    VankaPetscLinearEquationSolver (const unsigned &igrid, mesh *other_mesh);
+    VankaPetscLinearEquationSolver (const unsigned &igrid, Mesh *other_mesh);
 
     /** Destructor. */
     ~VankaPetscLinearEquationSolver ();
@@ -104,7 +104,7 @@ private:
 
 };
 
-inline VankaPetscLinearEquationSolver::VankaPetscLinearEquationSolver (const unsigned &igrid, mesh* other_msh)
+inline VankaPetscLinearEquationSolver::VankaPetscLinearEquationSolver (const unsigned &igrid, Mesh* other_msh)
     : LinearEquationSolver(igrid, other_msh) {
 
     if(igrid==0) {

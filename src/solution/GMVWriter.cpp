@@ -132,15 +132,15 @@ void GMVWriter::write_system_solutions(const char order[], std::vector<std::stri
 
   unsigned nel=0;
   for (unsigned ig=igridr-1u; ig<igridn-1u; ig++)
-    nel+=( _ml_sol._ml_msh->GetLevel(ig)->GetElementNumber() - _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
-  nel+=_ml_sol._ml_msh->GetLevel(igridn-1u)->GetElementNumber();
+    nel+=( _ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements() - _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
+  nel+=_ml_sol._ml_msh->GetLevel(igridn-1u)->GetNumberOfElements();
   fout.write((char *)&nel,sizeof(unsigned));
 
   unsigned topology[27];
   unsigned offset=1;
   
   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
       if ( ig==igridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
         short unsigned ielt=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementType(ii);
         if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
@@ -187,7 +187,7 @@ void GMVWriter::write_system_solutions(const char order[], std::vector<std::stri
 
   int icount=0;
   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
       if ( ig==igridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
 	var_el[icount]=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementGroup(ii);
         icount++;
@@ -203,7 +203,7 @@ void GMVWriter::write_system_solutions(const char order[], std::vector<std::stri
 
     int icount=0;
     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-      for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+      for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
 	if ( ig==igridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
 	  var_el[icount]=_ml_sol._ml_msh->GetLevel(ig)->epart[ii];
 	  icount++;
@@ -270,7 +270,7 @@ void GMVWriter::write_system_solutions(const char order[], std::vector<std::stri
 	    else{
 	      _ml_sol.GetSolutionLevel(ig)->_Eps[i]->localize_to_one(v_local,0);
 	    }
-	    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetElementNumber(); ii++) {
+	    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
 	      if ( ig==igridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
 		unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,_ml_sol.GetSolutionType(i));
 		var_el[icount]=v_local[iel_Metis];

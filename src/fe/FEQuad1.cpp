@@ -7,16 +7,7 @@ namespace femus {
 
 
 // =======================
-FEQuad1::FEQuad1(GeomEl* geomel_in) : FEElemBase(geomel_in) {
-  
-  _name[VV]="Quad_1";
-  _name[BB]="Edge_1"; 
-  _pname[VV]="Quadrilateral"; //TODO
-  _pname[BB]="Polyline";      //TODO
-    
-   _ndof[VV]=1;    
-   _ndof[BB]=1;
-	  }
+FEQuad1::FEQuad1() : FEElemBase() {   }
 	  
 // =======================
           FEQuad1::~FEQuad1() {    }

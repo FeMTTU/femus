@@ -15,7 +15,7 @@ class FETri3 : public FEElemBase  {
 
 public:
   
-     FETri3(GeomEl* geomel_in);
+     FETri3();
      
     ~FETri3();
   

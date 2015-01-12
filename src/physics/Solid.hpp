@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: FemTTUInit
+ Module: FemusInit
  Authors: Simone Bnà
 
  Copyright (c) FEMTTU

@@ -102,7 +102,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
   
   LinearEquationSolver* LinSolf=_LinSolver[gridf];
   LinearEquationSolver* LinSolc=_LinSolver[gridf-1];
-  mesh* mshc = _msh[gridf-1];
+  Mesh* mshc = _msh[gridf-1];
   int nf= LinSolf->KKIndex[LinSolf->KKIndex.size()-1u];
   int nc= LinSolc->KKIndex[LinSolc->KKIndex.size()-1u];
   int nf_loc = LinSolf->KKoffset[LinSolf->KKIndex.size()-1][iproc]-LinSolf->KKoffset[0][iproc];
@@ -125,7 +125,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
    	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _equation_systems._ml_msh->_type_elem[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
+	  _equation_systems._ml_msh->_finiteElement[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
 	}
       }
     }
@@ -170,12 +170,12 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
     
 	  short unsigned ielt=mshc->el->GetElementType(iel);
 	  if(TestDisp){
-	    _equation_systems._ml_msh->_type_elem[ielt][SolType]->BuildRestrictionTranspose(*LinSolf,*LinSolc,iel,RRt,SolIndex,k,TestDisp);
+	    _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildRestrictionTranspose(*LinSolf,*LinSolc,iel,RRt,SolIndex,k,TestDisp);
 	  }
 	  else{
-	    _equation_systems._ml_msh->_type_elem[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, RRt,SolIndex,k);
+	    _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, RRt,SolIndex,k);
 	  }	  
-	  _equation_systems._ml_msh->_type_elem[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, LinSolf->_PP,SolIndex,k);
+	  _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, LinSolf->_PP,SolIndex,k);
 	}
       }
     }
@@ -192,13 +192,13 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
 
   void MonolithicFSINonLinearImplicitSystem::SetElementBlockFluidAll() {
     for (unsigned i=1; i<_gridn; i++) {
-      _LinSolver[i]->SetElementBlockNumberFluid(_msh[i]->GetElementNumber(),0);
+      _LinSolver[i]->SetElementBlockNumberFluid(_msh[i]->GetNumberOfElements(),0);
     }
   }
 
   void MonolithicFSINonLinearImplicitSystem::SetElementBlockSolidAll() {
     for (unsigned i=1; i<_gridn; i++) {
-      _LinSolver[i]->SetElementBlockNumberSolid(_msh[i]->GetElementNumber(),0);
+      _LinSolver[i]->SetElementBlockNumberSolid(_msh[i]->GetNumberOfElements(),0);
     }
   }
 
@@ -210,7 +210,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
     _num_block = pow(base,dim_block);
 
     for (unsigned i=1; i<_gridn; i++) {
-      unsigned num_block2 = std::min(_num_block,_msh[i]->GetElementNumber());
+      unsigned num_block2 = std::min(_num_block,_msh[i]->GetNumberOfElements());
       _LinSolver[i]->SetElementBlockNumberFluid(num_block2, overlap);
     }
   }
@@ -222,7 +222,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
     _num_block = pow(base,dim_block);
 
     for (unsigned i=1; i<_gridn; i++) {
-      unsigned num_block2 = std::min(_num_block,_msh[i]->GetElementNumber());
+      unsigned num_block2 = std::min(_num_block,_msh[i]->GetNumberOfElements());
       _LinSolver[i]->SetElementBlockNumberSolid(num_block2,overlap);
     }
   }

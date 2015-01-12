@@ -4,7 +4,7 @@
 #include "NumericVector.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
-#include "FemTTUInit.hpp"
+#include "FemusInit.hpp"
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
@@ -296,7 +296,7 @@ int main(int argc,char **argv) {
 
     
     /// Init Petsc-MPI communicator
-    FemTTUInit mpinit(argc,argv,MPI_COMM_WORLD);
+    FemusInit mpinit(argc,argv,MPI_COMM_WORLD);
 
     /// INIT MESH =================================
 
@@ -322,12 +322,12 @@ int main(int argc,char **argv) {
     }
     else
     {
-        ml_msh.BuildBrickCoarseMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+        ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
     }
     //ml_msh.RefineMesh(nm,nr, SetRefinementFlag);
     ml_msh.RefineMesh(nm,nr, NULL);
     
-    ml_msh.print_info();
+    ml_msh.PrintInfo();
 
     MultiLevelSolution ml_sol(&ml_msh);
 
@@ -540,7 +540,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
     LinearImplicitSystem& mylin_impl_sys = ml_prob.get_system<LinearImplicitSystem>("Poisson");
     LinearEquationSolver*  mylsyspde     = mylin_impl_sys._LinSolver[level];
-    mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
+    Mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
     elem*          myel		       = mymsh->el;
     SparseMatrix*  myKK		       = mylsyspde->_KK;
     NumericVector* myRES		       = mylsyspde->_RES;
@@ -548,7 +548,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
     //data
     const unsigned	dim	= mymsh->GetDimension();
-    unsigned 		nel	= mymsh->GetElementNumber();
+    unsigned 		nel	= mymsh->GetNumberOfElements();
     unsigned 		igrid	= mymsh->GetGridNumber();
     unsigned 		iproc	= mymsh->processor_id();
 
@@ -559,7 +559,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     SolPdeIndex=mylin_impl_sys.GetSolPdeIndex("Sol");
     //solution order
     unsigned order_ind = ml_sol->GetSolutionType(SolIndex);
-    unsigned end_ind   = mymsh->GetEndIndex(order_ind);
+    
 
     //coordinates
     vector< vector < double> > coordinates(dim);
@@ -599,7 +599,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
         unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
         short unsigned kelt=myel->GetElementType(kel);
-        unsigned nve=myel->GetElementDofNumber(kel,end_ind);
+        unsigned nve=myel->GetElementDofNumber(kel,order_ind);
 
         // resize
         metis_node.resize(nve);
@@ -632,9 +632,9 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
         if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
             // *** Gauss poit loop ***
-            for(unsigned ig=0; ig < ml_prob._ml_msh->_type_elem[kelt][order_ind]->GetGaussPointNumber(); ig++) {
+            for(unsigned ig=0; ig < ml_prob._ml_msh->_finiteElement[kelt][order_ind]->GetGaussPointNumber(); ig++) {
                 // *** get Jacobian and test function and test function derivatives ***
-                (ml_prob._ml_msh->_type_elem[kelt][order_ind]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi,nablaphi);
+                ml_prob._ml_msh->_finiteElement[kelt][order_ind]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
                 //current solution
                 double SolT=0;
                 vector < double > gradSolT(dim,0.);
@@ -703,9 +703,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
 		        bdcfunc = (ParsedFunction* )(ml_sol->GetBdcFunction("Sol", face));
 			unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,order_ind);
-                        const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
-                        unsigned felt = FELT[kelt][jface<mymsh->el->GetElementFaceNumber(kel,0)];
-
+			const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);
                         for(unsigned i=0; i<nve; i++) {
                             unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
                             unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
@@ -717,8 +715,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 
                         if(felt != 6) 
 			{
-                          for(unsigned igs=0; igs < ml_prob._ml_msh->_type_elem[felt][order_ind]->GetGaussPointNumber(); igs++) {
-                            (ml_prob._ml_msh->_type_elem[felt][order_ind]->*ml_prob._ml_msh->_type_elem[felt][order_ind]->Jacobian_sur_ptr)(coordinates,igs,weight,phi,gradphi,normal);
+                          for(unsigned igs=0; igs < ml_prob._ml_msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
+                            ml_prob._ml_msh->_finiteElement[felt][order_ind]->JacobianSur(coordinates,igs,weight,phi,gradphi,normal);
 
 			    xyzt.assign(4,0.);
                             for(unsigned i=0; i<nve; i++) {
@@ -795,7 +793,7 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
   unsigned gridn=ml_sol._ml_msh->GetNumberOfLevels();
   for(int ilevel=0;ilevel<gridn;ilevel++){
     Solution*      solution  = ml_sol.GetSolutionLevel(ilevel);
-    mesh*          msh	     = ml_sol._ml_msh->GetLevel(ilevel);
+    Mesh*          msh	     = ml_sol._ml_msh->GetLevel(ilevel);
     unsigned 	   iproc     = msh->processor_id();
     
     
@@ -823,13 +821,13 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
     unsigned SolIndex;
     SolIndex=ml_sol.GetIndex("Sol");
     unsigned SolOrder = ml_sol.GetSolutionType(SolIndex);
-    unsigned SolEndIndex   = msh->GetEndIndex(SolOrder);
+    
         
     for (int iel_metis=msh->IS_Mts2Gmt_elem_offset[iproc]; iel_metis < msh->IS_Mts2Gmt_elem_offset[iproc+1]; iel_metis++) {
       unsigned kel = msh->IS_Mts2Gmt_elem[iel_metis];
       if(ilevel==gridn-1 || !msh->el->GetRefinedElementIndex(kel)) {
         short unsigned kelt= msh->el->GetElementType(kel);
-	unsigned nve= msh->el->GetElementDofNumber(kel,SolEndIndex);
+	unsigned nve= msh->el->GetElementDofNumber(kel,SolOrder);
       
 	// resize
 	metis_node.resize(nve);
@@ -850,9 +848,9 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
 	  }
 	}
 	
-	for(unsigned ig=0; ig < ml_sol._ml_msh->_type_elem[kelt][SolOrder]->GetGaussPointNumber(); ig++) {
+	for(unsigned ig=0; ig < ml_sol._ml_msh->_finiteElement[kelt][SolOrder]->GetGaussPointNumber(); ig++) {
           // *** get Jacobian and test function and test function derivatives ***
-          (ml_sol._ml_msh->_type_elem[kelt][SolOrder]->*(ml_sol._ml_msh->_type_elem[kelt][SolOrder])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi,nablaphi);
+          ml_sol._ml_msh->_finiteElement[kelt][SolOrder]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
           //current solution
           double SolT=0;
           vector < double > gradSolT(dim,0.);

@@ -61,7 +61,7 @@ namespace femus {
     clock_t SearchTime=0;
     clock_t start_time=clock();
     _indexai_init=1;
-    unsigned nel=_msh->GetElementNumber();
+    unsigned nel=_msh->GetNumberOfElements();
     bool FastVankaBlock=true;
     if(_NSchurVar==!0){
       FastVankaBlock=(_SolType[_SolPdeIndex[VankaIndex[VankaIndex.size()-_NSchurVar]]]<3)?false:true;
@@ -137,7 +137,7 @@ namespace femus {
 		  unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 		  unsigned SolType = _SolType[SolPdeIndex];
 		  const unsigned *pt_un=_msh->el->GetElementVertexAddress(jel,0);
-		  unsigned nvej=_msh->el->GetElementDofNumber(jel,_msh->_END_IND[SolType]);
+		  unsigned nvej=_msh->el->GetElementDofNumber(jel,SolType);
 		  for (unsigned jj=0; jj<nvej; jj++) {
 		    unsigned jnode=(SolType<3)?(*(pt_un++)-1u):(jel+jj*nel);
 
@@ -172,7 +172,7 @@ namespace femus {
 			const unsigned *pt_un=_msh->el->GetElementVertexAddress(kel,0);
 			unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 			unsigned SolType = _SolType[SolPdeIndex];
-			unsigned nvek=_msh->el->GetElementDofNumber(kel,_msh->_END_IND[SolType]);
+			unsigned nvek=_msh->el->GetElementDofNumber(kel,SolType);
 			for (unsigned kk=0; kk<nvek; kk++) {
 			  unsigned knode=(SolType<3)?(*(pt_un++)-1u):(kel+kk*nel);
 		
@@ -201,7 +201,7 @@ namespace femus {
 	      unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 	      unsigned SolType = _SolType[SolPdeIndex];
 	      const unsigned *pt_un=_msh->el->GetElementVertexAddress(iel,0);
-	      unsigned nvei=_msh->el->GetElementDofNumber(iel,_msh->_END_IND[SolType]);
+	      unsigned nvei=_msh->el->GetElementDofNumber(iel,SolType);
 	      for (unsigned ii=0; ii<nvei; ii++) {
 		unsigned inode=(SolType<3)?(*(pt_un++)-1u):(iel+ii*nel);
 		unsigned inode_Metis = _msh->GetMetisDof(inode,SolType);

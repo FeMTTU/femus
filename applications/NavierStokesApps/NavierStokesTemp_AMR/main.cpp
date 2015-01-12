@@ -4,7 +4,7 @@
 #include "NumericVector.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
-#include "FemTTUInit.hpp"
+#include "FemusInit.hpp"
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
@@ -47,7 +47,7 @@ int main(int argc,char **args) {
   }
   
   /// Init Petsc-MPI communicator
-  FemTTUInit mpinit(argc,args,MPI_COMM_WORLD);
+  FemusInit mpinit(argc,args,MPI_COMM_WORLD);
   
   /// INIT MESH =================================  
   
@@ -410,14 +410,14 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   MultiLevelSolution* ml_sol=ml_prob._ml_sol;
   
   
-  mesh*		 mymsh    	= ml_prob._ml_msh->GetLevel(level);
+  Mesh*		 mymsh    	= ml_prob._ml_msh->GetLevel(level);
   elem*		 myel		= mymsh->el;
   SparseMatrix*	 myKK		= mylsyspde->_KK;
   NumericVector* myRES 		= mylsyspde->_RES;
     
   //data
   const unsigned dim = mymsh->GetDimension();
-  unsigned nel= mymsh->GetElementNumber();
+  unsigned nel= mymsh->GetNumberOfElements();
   unsigned igrid= mymsh->GetGridNumber();
   unsigned iproc = mymsh->processor_id();
   double ILambda= 0; 
@@ -446,9 +446,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   SolIndex[dim]=ml_sol->GetIndex(&Solname[3][0]);       
   //solution order
   unsigned order_ind2 = ml_sol->GetSolutionType(SolIndex[0]);
-  unsigned end_ind2   = mymsh->GetEndIndex(order_ind2);
   unsigned order_ind1 = ml_sol->GetSolutionType(SolIndex[dim]);
-  unsigned end_ind1   = mymsh->GetEndIndex(order_ind1);
   
   // declare 
   vector < int > metis_node2; 
@@ -503,8 +501,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
     short unsigned kelt=myel->GetElementType(kel);
-    unsigned nve2=myel->GetElementDofNumber(kel,end_ind2);
-    unsigned nve1=myel->GetElementDofNumber(kel,end_ind1);
+    unsigned nve2=myel->GetElementDofNumber(kel,order_ind2);
+    unsigned nve1=myel->GetElementDofNumber(kel,order_ind1);
     
     //set to zero all the entries of the FE matrices
     metis_node2.resize(nve2);
@@ -565,10 +563,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
    
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
       // *** Gauss poit loop ***
-      for(unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind2]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind2])->Jacobian_ptr)(coordinates,ig,Weight2,phi2,gradphi2,nablaphi2);
-	phi1=ml_prob._ml_msh->_type_elem[kelt][order_ind1]->GetPhi(ig);
+	ml_prob._ml_msh->_finiteElement[kelt][order_ind2]->Jacobian(coordinates,ig,Weight2,phi2,gradphi2,nablaphi2);
+	phi1=ml_prob._ml_msh->_finiteElement[kelt][order_ind1]->GetPhi(ig);
 
 	//velocity variable
 	for(unsigned ivar=0; ivar<dim; ivar++) {
@@ -731,7 +729,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
   LinearImplicitSystem& mylin_impl_sys = ml_prob.get_system<LinearImplicitSystem>("Temperature");
   LinearEquationSolver*  mylsyspde     = mylin_impl_sys._LinSolver[level];   
-  mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
+  Mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
   elem*          myel		       = mymsh->el;
   SparseMatrix*  myKK		       = mylsyspde->_KK;
   NumericVector* myRES		       = mylsyspde->_RES;
@@ -740,7 +738,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   
   //data
   const unsigned	dim	= mymsh->GetDimension();
-  unsigned 		nel	= mymsh->GetElementNumber();
+  unsigned 		nel	= mymsh->GetNumberOfElements();
   unsigned 		igrid	= mymsh->GetGridNumber();
   unsigned 		iproc	= mymsh->processor_id();
   double		IPe	= 1./(ml_prob.parameters.get<Fluid>("Fluid").get_Peclet_number());  
@@ -752,7 +750,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   SolPdeIndex=mylin_impl_sys.GetSolPdeIndex("T");
   //solution order
   unsigned order_ind = ml_sol->GetSolutionType(SolIndex);
-  unsigned end_ind   = mymsh->GetEndIndex(order_ind);
+  //unsigned end_ind   = mymsh->GetEndIndex(order_ind);
   
   //coordinates
   vector< vector < double> > coordinates(dim); 
@@ -793,7 +791,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
 
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
     short unsigned kelt=myel->GetElementType(kel);
-    unsigned nve=myel->GetElementDofNumber(kel,end_ind);
+    unsigned nve=myel->GetElementDofNumber(kel,order_ind);
     
     // resize
     metis_node.resize(nve);
@@ -826,9 +824,9 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
         
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
       // *** Gauss poit loop ***
-      for(unsigned ig=0;ig < ml_prob._ml_msh->_type_elem[kelt][order_ind]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelt][order_ind]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
-	(ml_prob._ml_msh->_type_elem[kelt][order_ind]->*(ml_prob._ml_msh->_type_elem[kelt][order_ind])->Jacobian_ptr)(coordinates,ig,weight,phi,gradphi,nablaphi);
+	ml_prob._ml_msh->_finiteElement[kelt][order_ind]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
 	//Temperature and velocity current solution
 	double SolT=0;
 	vector < double > gradSolT(dim,0.);

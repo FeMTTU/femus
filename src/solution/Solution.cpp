@@ -35,7 +35,7 @@ using std::endl;
  *  Contructor 
  **/
 // ------------------------------------------------------------------
-Solution::Solution(mesh *other_msh){    
+Solution::Solution(Mesh *other_msh){    
  _msh = other_msh;
   for(int i=0;i<5;i++){
     _ProjMatFlag[i]=0;
@@ -205,24 +205,6 @@ void Solution::FreeSolutionVectors() {
 }
 
 /**
- * Initialize the coarse variable coordinates X,Y,Z 
- **/
-// ------------------------------------------------------------------
-void Solution::SetCoarseCoordinates( vector < vector < double> > &vt){
-  unsigned indexSol;
-  
-  indexSol=GetIndex("X");
-  *_Sol[indexSol]=vt[0];
-  
-  indexSol=GetIndex("Y");
-  *_Sol[indexSol]=vt[1];
-  
-  indexSol=GetIndex("Z");
-  *_Sol[indexSol]=vt[2];
-  
-}
-
-/**
  * Update _Sol, _Res and _Eps based on EPS and RES 
  **/
 //--------------------------------------------------------------------------------
@@ -234,8 +216,7 @@ void Solution::SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector
     unsigned indexSol=_SolPdeIndex[k];
     unsigned soltype =  _SolType[indexSol];
 
-    int loc_size   = _Eps[indexSol]->local_size();
-    int loc_offset_EPS = KKoffset[k][processor_id()];// - KKoffset[0][processor_id()]; //?????????
+    int loc_offset_EPS = KKoffset[k][processor_id()];
 
     int glob_offset_eps = _msh->MetisOffset[soltype][processor_id()];
 
@@ -281,24 +262,24 @@ void Solution::UpdateRes(const vector <unsigned> &_SolPdeIndex, NumericVector* _
     unsigned indexSol=_SolPdeIndex[k];
     unsigned soltype =  _SolType[indexSol];
 
-    int loc_offset_EPS = KKoffset[k][processor_id()];// - KKoffset[0][processor_id()]; //?????????
+    int loc_offset_RES = KKoffset[k][processor_id()];
 
-    int glob_offset_eps = _msh->MetisOffset[soltype][processor_id()];
+    int glob_offset_res = _msh->MetisOffset[soltype][processor_id()];
 
     vector <int> index(_msh->own_size[soltype][processor_id()]);
     for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
-      index[i]=loc_offset_EPS+i;
+      index[i]=loc_offset_RES+i;
     }
 
     vector <double> valueRES(_msh->own_size[soltype][processor_id()]);
     _RES->get(index,valueRES);
 
     for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
-      if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) {
-	_Res[indexSol]->set(i+glob_offset_eps,valueRES[i]);
+      if ((*_Bdc[indexSol])(i+glob_offset_res)>1.1) {
+	_Res[indexSol]->set(i+glob_offset_res,valueRES[i]);
       }
       else {
-	_Res[indexSol]->set(i+glob_offset_eps,zero);
+	_Res[indexSol]->set(i+glob_offset_res,zero);
       }
     }
     _Res[indexSol]->close();
@@ -320,7 +301,6 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
     cout << "Current maximum relative change = " <<EPSMAX/SOLMAX << endl << endl;
     SolMax[k] = AMRthreshold * SOLMAX;
     SolType[k] = _SolType[SolIndex[k]];
-    //SolEndInd[k]   = _msh->GetEndIndex(SolType[k]);
     SolEndInd[k]   = END_IND[SolType[k]];
   }
  
@@ -328,7 +308,7 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
   unsigned  AMRIndex= AMR->GetIndex("AMR");
   AMR->_Sol[AMRIndex]->zero();
   
-  unsigned nel= _msh->GetElementNumber();
+  unsigned nel= _msh->GetNumberOfElements();
     
   NumericVector *counter_vec;
   counter_vec = NumericVector::build().release();
@@ -385,7 +365,7 @@ bool Solution::FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,co
   vector <unsigned> SolEndInd(SolIndex.size());
   unsigned dim=_msh->GetDimension();
   
-  unsigned nel= _msh->GetElementNumber();
+  unsigned nel= _msh->GetNumberOfElements();
   
   for (unsigned k=0; k<SolIndex.size(); k++) {
             
@@ -464,11 +444,6 @@ bool Solution::FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,co
 }
 
 
-
-
-
-
-
 void Solution::BuildGradMatrixStructure(unsigned SolType) {
   
  if(SolType<3 && _GradMat[SolType][0]==0){
@@ -485,50 +460,50 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       _GradMat[SolType][i]->init(nr,nc,nr_loc,nc_loc,27,27);
     }
      
-    // Begin build elem type structure
-    const elem_type *type_elem[6];
-    if(dim==3){
-      if(SolType==0){
-	type_elem[0]=new const elem_type("hex","linear","zero");
-	type_elem[1]=new const elem_type("tet","linear","zero");
-	type_elem[2]=new const elem_type("wedge","linear","zero");
-      }	 
-      else if(SolType==1){
-	type_elem[0]=new const elem_type("hex","quadratic","zero");
-	type_elem[1]=new const elem_type("tet","quadratic","zero");
-	type_elem[2]=new const elem_type("wedge","quadratic","zero");
-      }	    
-      else{
-	type_elem[0]=new const elem_type("hex","biquadratic","zero");
-	type_elem[1]=new const elem_type("tet","biquadratic","zero");
-	type_elem[2]=new const elem_type("wedge","biquadratic","zero");
-      }
-    }	
-    else if(dim==2){
-      if(SolType==0){
-	type_elem[3]=new const elem_type("quad","linear","zero");
-	type_elem[4]=new const elem_type("tri","linear","zero");
-      }	 
-      else if(SolType==1){
-	type_elem[3]=new const elem_type("quad","quadratic","zero");
-	type_elem[4]=new const elem_type("tri","quadratic","zero");
-      }	    
-      else{
-	type_elem[3]=new const elem_type("quad","biquadratic","zero");
-	type_elem[4]=new const elem_type("tri","biquadratic","zero");
-      }
-    }
-    else if(dim==1){
-      if(SolType==0){
-	type_elem[5]=new const elem_type("line","linear","zero");
-      }	 
-      else if(SolType==1){
-	type_elem[5]=new const elem_type("line","quadratic","zero");
-      }	    
-      else{
-	type_elem[5]=new const elem_type("line","biquadratic","zero");
-      }
-    }
+//     // Begin build elem type structure
+//     const elem_type *type_elem[6];
+//     if(dim==3){
+//       if(SolType==0){
+// 	type_elem[0]=new const elem_type_3D("hex","linear","zero");
+// 	type_elem[1]=new const elem_type_3D("tet","linear","zero");
+// 	type_elem[2]=new const elem_type_3D("wedge","linear","zero");
+//       }	 
+//       else if(SolType==1){
+// 	type_elem[0]=new const elem_type_3D("hex","quadratic","zero");
+// 	type_elem[1]=new const elem_type_3D("tet","quadratic","zero");
+// 	type_elem[2]=new const elem_type_3D("wedge","quadratic","zero");
+//       }	    
+//       else{
+// 	type_elem[0]=new const elem_type_3D("hex","biquadratic","zero");
+// 	type_elem[1]=new const elem_type_3D("tet","biquadratic","zero");
+// 	type_elem[2]=new const elem_type_3D("wedge","biquadratic","zero");
+//       }
+//     }	
+//     else if(dim==2){
+//       if(SolType==0){
+// 	type_elem[3]=new const elem_type_2D("quad","linear","zero");
+// 	type_elem[4]=new const elem_type_2D("tri","linear","zero");
+//       }	 
+//       else if(SolType==1){
+// 	type_elem[3]=new const elem_type_2D("quad","quadratic","zero");
+// 	type_elem[4]=new const elem_type_2D("tri","quadratic","zero");
+//       }	    
+//       else{
+// 	type_elem[3]=new const elem_type_2D("quad","biquadratic","zero");
+// 	type_elem[4]=new const elem_type_2D("tri","biquadratic","zero");
+//       }
+//     }
+//     else if(dim==1){
+//       if(SolType==0){
+// 	type_elem[5]=new const elem_type_1D("line","linear","zero");
+//       }	 
+//       else if(SolType==1){
+// 	type_elem[5]=new const elem_type_1D("line","quadratic","zero");
+//       }	    
+//       else{
+// 	type_elem[5]=new const elem_type_1D("line","biquadratic","zero");
+//       }
+//     }
     
     vector< vector < double> > coordinates(dim);
     vector< int > column_dofs;
@@ -559,8 +534,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       _GradMat[SolType][i]->zero();
     }
         
-    unsigned SolEndInd   = _msh->GetEndIndex(SolType);
-    unsigned nel= _msh->GetElementNumber();    
+    unsigned nel= _msh->GetNumberOfElements();    
     
     for (int iel=_msh->IS_Mts2Gmt_elem_offset[_iproc]; iel < _msh->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
 
@@ -570,7 +544,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       unsigned kel = _msh->IS_Mts2Gmt_elem[iel];
       short unsigned kelt=_msh->el->GetElementType(kel);
     
-      unsigned nve=_msh->el->GetElementDofNumber(kel,SolEndInd);
+      unsigned nve=_msh->el->GetElementDofNumber(kel,SolType);
       
       // resize
       column_dofs.resize(nve);
@@ -595,7 +569,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
           coordinates[ivar][i]=(*_msh->_coordinate->_Sol[ivar])(inode_coord_metis);
         }
       }
-      (type_elem[kelt]->*(type_elem[kelt])->Jacobian_ptr)(coordinates,0,weight,phi,gradphi, nablaphi );
+      _msh->_finiteElement[kelt][SolType]->Jacobian(coordinates,0,weight,phi,gradphi, nablaphi );
 
       
       for(int i=0;i<nve;i++){
@@ -615,20 +589,20 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       _GradMat[SolType][i]->close();
     }
     
-    // Begin free elem type structures
-    if(dim==3){ 
-      delete type_elem[0];
-      delete type_elem[1];
-      delete type_elem[2];
-    }
-    else if(dim==2){
-      delete type_elem[3];
-      delete type_elem[4];
-    }
-    else if(dim==1){ 
-      delete type_elem[5];
-    }
-    // End free elem type structures
+//     // Begin free elem type structures
+//     if(dim==3){ 
+//       delete type_elem[0];
+//       delete type_elem[1];
+//       delete type_elem[2];
+//     }
+//     else if(dim==2){
+//       delete type_elem[3];
+//       delete type_elem[4];
+//     }
+//     else if(dim==1){ 
+//       delete type_elem[5];
+//     }
+//     // End free elem type structures
     
     
   }

@@ -659,7 +659,7 @@ void PetscVector::localize(std::vector<double>& v_local) const {
   this->_restore_array();
 
   // This function must be run on all processors at once
-  parallel_onlyM();
+  parallel_only();
 
   int ierr=0;
   PetscScalar *values;

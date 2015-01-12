@@ -129,7 +129,7 @@ void LinearImplicitSystem::AddSystemLevel() {
     _LinSolver[_gridn]->SetDirichletBCsHandling(_DirichletBCsHandlingMode);
     
     if(_numblock_test){
-      unsigned num_block2 = std::min(_num_block,_msh[_gridn]->GetElementNumber());
+      unsigned num_block2 = std::min(_num_block,_msh[_gridn]->GetNumberOfElements());
       _LinSolver[_gridn]->SetElementBlockNumber(num_block2);
     }
     else if(_numblock_all_test){
@@ -292,8 +292,10 @@ bool LinearImplicitSystem::IsLinearConverged(const unsigned igridn) {
   std::cout << std::endl;
   //for debugging purpose
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
+ 
     unsigned indexSol=_SolSystemPdeIndex[k];
-    
+ 
+       
 //     L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
 
     L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
@@ -339,8 +341,8 @@ void LinearImplicitSystem::SetAMRSetOptions(const std::string& AMR, const unsign
   if(SetRefinementFlag==NULL){    
   }
   else{
-    _msh[0]->mesh::_SetRefinementFlag = SetRefinementFlag;
-    _msh[0]->mesh::_TestSetRefinementFlag=1;
+    _msh[0]->Mesh::_SetRefinementFlag = SetRefinementFlag;
+    _msh[0]->Mesh::_TestSetRefinementFlag=1;
   }
 }
 
@@ -423,7 +425,7 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
   
   LinearEquationSolver* LinSolf=_LinSolver[gridf];
   LinearEquationSolver* LinSolc=_LinSolver[gridf-1];
-  mesh* mshc = _msh[gridf-1];
+  Mesh* mshc = _msh[gridf-1];
   int nf= LinSolf->KKIndex[LinSolf->KKIndex.size()-1u];
   int nc= LinSolc->KKIndex[LinSolc->KKIndex.size()-1u];
   int nf_loc = LinSolf->KKoffset[LinSolf->KKIndex.size()-1][iproc]-LinSolf->KKoffset[0][iproc];
@@ -446,7 +448,7 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
    	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _equation_systems._ml_msh->_type_elem[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
+	  _equation_systems._ml_msh->_finiteElement[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
 	}
       }
     }
@@ -478,7 +480,7 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
     	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _equation_systems._ml_msh->_type_elem[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel,LinSolf->_PP,SolIndex,k);
+	  _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel,LinSolf->_PP,SolIndex,k);
 	}
       }
     }
@@ -547,7 +549,7 @@ void LinearImplicitSystem::SetElementBlockNumber(unsigned const &dim_block) {
   _num_block = pow(base,dim_block);
 
   for (unsigned i=1; i<_gridn; i++) {
-    unsigned num_block2 = std::min(_num_block,_msh[i]->GetElementNumber());
+    unsigned num_block2 = std::min(_num_block,_msh[i]->GetNumberOfElements());
     _LinSolver[i]->SetElementBlockNumber(num_block2);
   }
 }

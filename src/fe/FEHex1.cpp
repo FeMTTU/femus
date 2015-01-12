@@ -7,16 +7,7 @@ namespace femus {
 
 
 // =======================
-FEHex1::FEHex1(GeomEl* geomel_in) : FEElemBase(geomel_in) {
-	    
-	      _name[VV]="Hex_1";
-	      _name[BB]="Quad_1"; 
-             _pname[VV]="Hexahedron";     //TODO for printing
-	     _pname[BB]="Quadrilateral";  //TODO for printing
-	     
-              _ndof[VV]=1;    
-	      _ndof[BB]=1;
-	  }
+FEHex1::FEHex1() : FEElemBase() {   }
 	  
 // =======================
           FEHex1::~FEHex1() {    }

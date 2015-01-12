@@ -29,6 +29,7 @@
 #include "petscmat.h"
 #include "FElemTypeEnum.hpp"
 #include "ParallelObject.hpp"
+#include "vector"
 
 namespace femus {
 
@@ -38,7 +39,8 @@ namespace femus {
 class elem_type;
 class NumericVector;
 class SparseMatrix;
-class mesh;
+class Mesh;
+class MultiLevelSolution;
 
 using std::vector;
 
@@ -47,7 +49,7 @@ class Solution : public ParallelObject {
 public:
 
     /** Constructor */
-    Solution(mesh *other_msh);
+    Solution(Mesh *other_msh);
 
     /** Destructor */
     ~Solution();
@@ -61,9 +63,6 @@ public:
     /** Free the solution vectors */
     void FreeSolutionVectors();
 
-    /** Set the coarse coordinates */
-    void SetCoarseCoordinates( vector < vector < double> > &vt);
-
     /** Sum to Solution vector the Epsilon vector. It is used inside the multigrid cycle */
     void SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
     
@@ -73,10 +72,16 @@ public:
     /** Update the solution */
     void UpdateSolution();
 
-    /** Get the solution (Numeric Vector) by name */
-    const NumericVector* GetSolutionName(const char* var) {
-        return _Sol[GetIndex(var)];
+    /** Get a const solution (Numeric Vector) by name */
+    const NumericVector& GetSolutionName(const char* var) const {
+        return *_Sol[GetIndex(var)];
     };
+    
+    /** Get a solution (Numeric Vector) by name */
+    NumericVector& GetSolutionName(const char* var) {
+        return *_Sol[GetIndex(var)];
+    };
+    
      /** Flag the elemets to be refined in the AMR alghorithm based on the epsilon*/
     bool FlagAMRRegionBasedOnl2(const vector <unsigned> &_SolPdeIndex, const double &AMRthreshold);
     
@@ -119,7 +124,7 @@ private:
     vector <unsigned> _SolTmOrder;
     vector <FEFamily> _family;
     vector <FEOrder> _order;
-    mesh *_msh;
+    Mesh *_msh;
 
 };
 
