@@ -32,7 +32,7 @@ class GenCase : public MeshTwo {
 
 public:
 
-     GenCase(const Files& files_in, const RunTimeMap<double> & map_in, const double lref,const std::string mesh_file);
+     GenCase(const Files& files_in, const RunTimeMap<double> & map_in, const std::string mesh_file);
     ~GenCase();                 
     
     

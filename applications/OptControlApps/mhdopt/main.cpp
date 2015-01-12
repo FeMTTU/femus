@@ -71,18 +71,21 @@ int main(int argc, char** argv) {
   RunTimeMap<std::string> files_map("Files",files._output_path);
 
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
-  GenCase gencase(files,mesh_map,1.,files_map.get("F_MESH_READ"));
-          gencase.GenerateCase();	
-  MeshTwo mesh(files,mesh_map,Lref); 
+  GenCase gencase(files,mesh_map,files_map.get("F_MESH_READ"));
+          gencase.SetLref(1.);
+          gencase.GenerateCase();
+
+  MeshTwo mesh(files,mesh_map); 
+          mesh.SetLref(Lref);
       
 //=========== Domain ================================
   RunTimeMap<double> box_map("Box",files._output_path);
   Box mybox(mesh.get_dim(),box_map);
-      mybox.init(mesh.get_Lref());
+      mybox.InitAndNondimensionalize(mesh.get_Lref());
 
   mesh.SetDomain(&mybox);
   
-  mesh.ReadMeshFile(); 
+  mesh.ReadMeshFileAndNondimensionalize(); 
   mesh.PrintForVisualizationAllLEVAllVB();
 
   phys.set_mesh(&mesh);

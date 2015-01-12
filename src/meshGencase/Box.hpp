@@ -25,7 +25,7 @@ namespace femus {
    Box(const uint spacedim_in, RunTimeMap<double> & map_in);
    ~Box();
    
-   void init(double Lref_in);
+   void InitAndNondimensionalize(double Lref_in);
 
    void TransformPointToRef(const double* x_in,double* x_out) const; 
    

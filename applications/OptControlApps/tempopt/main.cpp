@@ -61,21 +61,28 @@
   RunTimeMap<std::string> files_map("Files",files._output_path);
 
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
-  GenCase gencase(files,mesh_map,1.,files_map.get("F_MESH_READ"));
+  GenCase gencase(files,mesh_map,files_map.get("F_MESH_READ"));
+          gencase.SetLref(1.);  
           gencase.GenerateCase();
 
-  MeshTwo mesh(files,mesh_map,Lref);
-  
+  MeshTwo mesh(files,mesh_map);
+          mesh.SetLref(Lref);
+	  
   //gencase is dimensionalized, meshtwo is nondimensionalized
-  
+  //since the meshtwo is nondimensionalized, all the BC and IC are gonna be implemented on a nondimensionalized mesh
+  //now, a mesh may or may not have an associated domain
+  //moreover, a mesh may or may not be read from file
+  //the generation is DIMENSIONAL, the nondimensionalization occurs later
+  //Both the Mesh and the optional domain must be nondimensionalized
+
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
   RunTimeMap<double> box_map("Box",files._output_path);
   Box mybox(mesh.get_dim(),box_map);
-      mybox.init(mesh.get_Lref());
+      mybox.InitAndNondimensionalize(mesh.get_Lref());
   
   mesh.SetDomain(&mybox);    
   
-  mesh.ReadMeshFile(); 
+  mesh.ReadMeshFileAndNondimensionalize(); 
   mesh.PrintForVisualizationAllLEVAllVB();
   
   phys.set_mesh(&mesh);

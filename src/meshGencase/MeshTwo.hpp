@@ -32,12 +32,12 @@ class MeshTwo  {
 public:
 
 //===== Constructors/ Destructor ===========
-     MeshTwo (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref);
+     MeshTwo (const Files& files_in, const RunTimeMap<double>& map_in);
 //     ~MeshTwo ();
     void clear ();
 
     //======= Print/read functions =======
-    void ReadMeshFile();
+    void ReadMeshFileAndNondimensionalize();
     void PrintForVisualizationAllLEVAllVB() const;
     void PrintSubdomFlagOnLinCells(std::string filename) const;
     void PrintMultimeshXdmf() const;
@@ -120,7 +120,9 @@ public:
     inline const uint   get_dim()  const {return _dim;}
     inline const GeomEl GetGeomEl(const uint dim, const uint order) const {   return _GeomEl[dim][order]; }
     inline const RunTimeMap<double>  GetRuntimeMap()  const { return _mesh_rtmap; }
-    
+
+    //set functions
+    inline void SetLref(const double lref_in) { _Lref = lref_in; }
     
   protected:
     
@@ -131,7 +133,7 @@ public:
      
 //attributes    ************************************
     
-    const double _Lref;          ///Reference length for non-dimensionalization
+    double _Lref;          ///Reference length for non-dimensionalization
      
     std::vector< std::vector<GeomEl> >  _GeomEl;   //[DIM][QL_NODES] 
 

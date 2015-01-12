@@ -35,8 +35,8 @@ using namespace libMesh;
 namespace femus {
 
 // ========================================================
-GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const double Lref, const std::string mesh_file_in)
-     : MeshTwo(files_in,map_in,Lref)
+GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const std::string mesh_file_in)
+     : MeshTwo(files_in,map_in)
 {
 
   _mesh_file.assign(mesh_file_in);  //TODO it seems like moving from protected to public in Mesh changed the RUNTIME behaviour also!!!!!
@@ -141,7 +141,7 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
 
             RunTimeMap<double> box_map("Box",_files._app_path);
             Box box(get_dim(),box_map);
-                box.init(get_Lref());  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
+                box.InitAndNondimensionalize(get_Lref());  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
 //i guess we could do this instantiation also INSIDE the gencase class
 
 //---Meshing -------

@@ -22,12 +22,11 @@ namespace femus {
 
 
 // ========================================================
-MeshTwo::MeshTwo (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref) :
+MeshTwo::MeshTwo (const Files& files_in, const RunTimeMap<double>& map_in) :
          _files(files_in),
          _mesh_rtmap(map_in),
          _dim(map_in.get("dimension")),
-         _mesh_order(map_in.get("mesh_ord")),
-         _Lref(Lref)   {
+         _mesh_order(map_in.get("mesh_ord"))  {
 
     std::vector <std::string>  geomelem; 
     geomelem.resize(_dim);
@@ -197,7 +196,7 @@ void MeshTwo::clear ()  {
 // or only for PROC==0? Seems to be for all processors
 // TODO do we need the leading "/" for opening a dataset?
 // This routine reads the mesh file and also makes it NONDIMENSIONAL, so that everything is solved on a nondimensional mesh
-void MeshTwo::ReadMeshFile()   {
+void MeshTwo::ReadMeshFileAndNondimensionalize()   {
 
   std::string    basemesh = DEFAULT_BASEMESH;
   std::string      ext_h5 = DEFAULT_EXT_H5;

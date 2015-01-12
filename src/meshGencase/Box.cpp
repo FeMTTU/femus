@@ -25,7 +25,7 @@ Box::~Box()  {
   
 }
 
-void Box::init(double Lref_in)     {
+void Box::InitAndNondimensionalize(double Lref_in)     {
 
    _Lref = Lref_in;
    double ILref = 1./_Lref;
