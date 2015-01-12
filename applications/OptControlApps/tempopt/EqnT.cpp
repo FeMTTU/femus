@@ -114,12 +114,12 @@ void  EqnT::GenMatRhs(const uint Level) {
   const uint Nonstat = myphys->_physrtmap.get("NonStatTEMP");
   
 //========= BCHandling =========
-  const double penalty_val = _mesh._mesh_rtmap.get("penalty_val");    
+  const double penalty_val = _mesh.GetRuntimeMap().get("penalty_val");    
 
   //======== ELEMENT MAPPING =======
   const uint space_dim =       _mesh.get_dim();
-  const uint  meshql   = (int) _mesh._mesh_rtmap.get("meshql");
-  const uint  mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
+  const uint  meshql   = (int) _mesh.GetRuntimeMap().get("meshql");
+  const uint  mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
 
   //====== reference values ========================
   const double IRe = 1./myphys->_Re;
@@ -724,8 +724,8 @@ double EqnT::ComputeIntegral (const uint Level) {
   //====== processor index
   const uint myproc = _iproc;
   const uint space_dim =      _mesh.get_dim();
-  const uint mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");  
-  const uint meshql   = (int) _mesh._mesh_rtmap.get("meshql");   //======== ELEMENT MAPPING =======
+  const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");  
+  const uint meshql   = (int) _mesh.GetRuntimeMap().get("meshql");   //======== ELEMENT MAPPING =======
  
   const uint mesh_vb = VV;
 
@@ -869,8 +869,8 @@ double EqnT::ComputeNormControl (const uint Level, const uint reg_ord ) {
   // processor index
   const uint myproc = _iproc;
   const uint space_dim =       _mesh.get_dim();
-  const uint mesh_ord  = (int) _mesh._mesh_rtmap.get("mesh_ord");  
-  const uint meshql    = (int) _mesh._mesh_rtmap.get("meshql");    //======== ELEMENT MAPPING =======
+  const uint mesh_ord  = (int) _mesh.GetRuntimeMap().get("mesh_ord");  
+  const uint meshql    = (int) _mesh.GetRuntimeMap().get("meshql");    //======== ELEMENT MAPPING =======
 
   const uint mesh_vb = VV;
   

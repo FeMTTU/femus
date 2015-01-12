@@ -123,7 +123,7 @@ void GenCase::GenerateCase()   {
 //===============================================================================
 void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
 
-    const uint libmesh_gen = _mesh_rtmap.get("libmesh_gen");
+    const uint libmesh_gen = GetRuntimeMap().get("libmesh_gen");
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t start_timeA=std::clock();
@@ -133,7 +133,7 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
     case 1: {
         std::cout << " Internal mesh generator at level 0 \n";
 
-        if ( _mesh_rtmap.get("domain") == 0 ) {
+        if ( GetRuntimeMap().get("domain") == 0 ) {
 
             //here,the information about the shape must be given a priori here,
 //    while in the case of external mesh it should be given consistently

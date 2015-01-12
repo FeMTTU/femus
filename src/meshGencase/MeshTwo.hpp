@@ -63,13 +63,10 @@ public:
 
 //attributes    ************************************
     
-    const Files& _files; 
-    const RunTimeMap<double> & _mesh_rtmap;
     ElemStoVol**  _el_sto;                 //FILLED ACCORDING TO "how the Libmesh mesh iterator runs" which may not be id in general i think...
 
     const uint _dim;               ///< spatial dimension
     const uint _mesh_order;
-    const double _Lref;          ///Reference length for non-dimensionalization
 
 // ===== ABSTRACT GEOMEL(S) =====
     uint*      _type_FEM;         //just for check
@@ -126,8 +123,20 @@ public:
     inline GeomEl GetGeomEl(const uint dim, const uint order) const {
      return _GeomEl[dim][order]; 
     }
-
+    
+    inline const RunTimeMap<double>  GetRuntimeMap()  const { return _mesh_rtmap; }
+    
+    
+  protected:
+    
+    const Files& _files; 
+    const RunTimeMap<double> & _mesh_rtmap;
+    
    private:   
+     
+//attributes    ************************************
+    
+    const double _Lref;          ///Reference length for non-dimensionalization
      
     std::vector< std::vector<GeomEl> >  _GeomEl;   //[DIM][QL_NODES] 
 

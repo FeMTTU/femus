@@ -108,7 +108,7 @@ const uint myproc = eqnmap_in._mesh._iproc;
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,eqnmap_in, eqnmap_in._mesh.get_dim());
 
   //======== ELEMENT MAPPING =======
-  const uint meshql = (int) eqnmap_in._mesh._mesh_rtmap.get("meshql");  
+  const uint meshql = (int) eqnmap_in._mesh.GetRuntimeMap().get("meshql");  
  
 //========= DOMAIN MAPPING
     QuantityLocal xyz(currgp);

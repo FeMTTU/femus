@@ -91,7 +91,7 @@ void Quantity::FunctionDof(QuantityLocal& myvect, const double t, const double* 
 //====the Domain
   const uint space_dim = _qtymap._phys._mesh->get_dim();
   double* xp = new double[space_dim]; 
-  const uint mesh_ord = (int) _qtymap._phys._mesh->_mesh_rtmap.get("mesh_ord");    
+  const uint mesh_ord = (int) _qtymap._phys._mesh->GetRuntimeMap().get("mesh_ord");    
   const uint offset   =       _qtymap._phys._mesh->GetGeomEl(myvect.GetCurrentElem().GetDim()-1,mesh_ord)._elnds;
 
 //=====the Function

@@ -43,7 +43,7 @@ void EqnT::ic_read(const double xp[], double u_value[], const double el_xm[]) co
 
 void EqnT::bc_read(const double xp[],const double /*normal */[],int bc_flag[]) const {
 
-  const double bdry_toll = _mesh._mesh_rtmap.get("bdry_toll");
+  const double bdry_toll = _mesh.GetRuntimeMap().get("bdry_toll");
   
 
    Box* box = static_cast<Box*>(_mesh.GetDomain());

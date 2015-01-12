@@ -62,12 +62,12 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
   const uint myproc = _iproc;
 
 //========= BCHandling =========
-  const double penalty_val = _mesh._mesh_rtmap.get("penalty_val");    
+  const double penalty_val = _mesh.GetRuntimeMap().get("penalty_val");    
 
   //======== ELEMENT MAPPING =======
   const uint space_dim =       _mesh.get_dim();
-  const uint  meshql   = (int) _mesh._mesh_rtmap.get("meshql");
-  const uint  mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
+  const uint  meshql   = (int) _mesh.GetRuntimeMap().get("meshql");
+  const uint  mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
 
   {//BEGIN VOLUME
   

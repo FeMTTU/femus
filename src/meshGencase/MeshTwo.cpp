@@ -82,7 +82,7 @@ if ( _dim == 1  && (map_in.get("geomel_type") != LINE ) )
 
     _iproc    = paral::get_rank();
     _NoSubdom = paral::get_size();   
-    _NoLevels = _mesh_rtmap.get("nolevels");
+    _NoLevels = GetRuntimeMap().get("nolevels");
     
     const uint mesh_ord = (uint) map_in.get("mesh_ord");
     if (mesh_ord != 0) {
@@ -156,7 +156,7 @@ void MeshTwo::clear ()  {
    
    double*   x_in = new double[_dim];
    double*   x_out = new double[_dim];
-  const uint mesh_ord = (int) _mesh_rtmap.get("mesh_ord");
+  const uint mesh_ord = (int) GetRuntimeMap().get("mesh_ord");
   const uint el_nds = GetGeomEl(elem_dim-1,mesh_ord)._elnds;
 
       for (uint n=0;n < el_nds ;n++) {
@@ -235,7 +235,7 @@ void MeshTwo::ReadMeshFile()   {
 //I'll put a check 
 
 if (_dim != topdata[0] ) {std::cout << "MeshTwo::read_c. Mismatch: the mesh dimension is " << _dim
-                                   << " while the dimension in the configuration file is " << _mesh_rtmap.get("dimension")
+                                   << " while the dimension in the configuration file is " << GetRuntimeMap().get("dimension")
                                    << ". Recompile either gencase or your application appropriately" << std::endl;abort();}
 //it seems like it doesn't print to file if I don't put the endline "<< std::endl".
 //Also, "\n" seems to have no effect, "<< std::endl" must be used
@@ -252,7 +252,7 @@ if ( VB !=  topdata[1] )  {std::cout << "MeshTwo::read_c. Mismatch: the number o
 //the point is: what if you already have a mesh in external format?
 //then you have to either read the mesh order from the external file, if such
 //information can be retrieved, or provide it explicitly
-    const uint mesh_ord = (int) _mesh_rtmap.get("mesh_ord");    
+    const uint mesh_ord = (int) GetRuntimeMap().get("mesh_ord");    
 
 //==================================
 // FEM element DoF number

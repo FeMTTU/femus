@@ -181,7 +181,7 @@ void EqnBase::initNVars()  {
   
     
 //CHECK LINEAR MESH WITH QUADRATIC SHAPES
-    const uint mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
+    const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
     if (mesh_ord == 1 && _nvars[QQ]>0) {
         std::cout << "Can't handle linear mesh with quadratic variables, do a quadratic mesh" << std::endl;
         abort();
@@ -859,7 +859,7 @@ void EqnBase::GenBc() {
     
  //************************************************   
  //******** NODE BASED ****************************   
-    const uint mesh_ord    = (int) _mesh._mesh_rtmap.get("mesh_ord");
+    const uint mesh_ord    = (int) _mesh.GetRuntimeMap().get("mesh_ord");
     const uint offset      = _mesh._NoNodesXLev[_NoLevels-1];
     const uint el_nnodes_b = _mesh.GetGeomEl(_mesh.get_dim()-1-BB,mesh_ord)._elnds;
     double* normal = new double[_mesh.get_dim()];  //TODO remove this, it is useless
@@ -1498,7 +1498,7 @@ void EqnBase::clearElBc() {
 /// This function generates the initial conditions:
 void EqnBase::GenIc() {
 
-    const uint mesh_ord    = (int) _mesh._mesh_rtmap.get("mesh_ord");
+    const uint mesh_ord    = (int) _mesh.GetRuntimeMap().get("mesh_ord");
   
     std::string   basepath = _files._app_path;
     std::string  input_dir = DEFAULT_CONFIGDIR;
@@ -3447,7 +3447,7 @@ void EqnBase::ReadVector(std::string namefile) {
   
     const uint Level = _NoLevels-1;
     
-    const uint mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
+    const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
     const uint offset   =       _mesh._NoNodesXLev[_NoLevels-1];
 
     // file to read

@@ -94,11 +94,11 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
 
 //======== GEOMETRICAL ELEMENT =======
   const uint space_dim =       _mesh.get_dim();
-  const uint  mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
-  const uint    meshql = (int) _mesh._mesh_rtmap.get("meshql");  //======== ELEMENT MAPPING =======
+  const uint  mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
+  const uint    meshql = (int) _mesh.GetRuntimeMap().get("meshql");  //======== ELEMENT MAPPING =======
 
 //========= BCHandling =========
-  const double penalty_val =   _mesh._mesh_rtmap.get("penalty_val");    
+  const double penalty_val =   _mesh.GetRuntimeMap().get("penalty_val");    
 
    {//BEGIN VOLUME    
 

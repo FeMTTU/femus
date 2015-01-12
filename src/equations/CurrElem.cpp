@@ -21,7 +21,7 @@ namespace femus {
     {
     
 //========== Current "Geometric Element"  ========================
-   const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");
+   const uint mesh_ord = (int) _eqnmap._mesh.GetRuntimeMap().get("mesh_ord");
   uint elnodes = _eqnmap._mesh.GetGeomEl(_dim-1,mesh_ord)._elnds;     //TODO the mesh is quadratic
   _el_conn = new uint[ elnodes ];   
    _xx_nds = new double[_eqnmap._mesh.get_dim()*elnodes ];
@@ -132,7 +132,7 @@ for (uint ivar=0; ivar < _eqn->_nvars[fe]; ivar++)    {
 void CurrElem::PrintOrientation() const {
   
       const uint mesh_dim = _eqnmap._mesh.get_dim();
-      const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");
+      const uint mesh_ord = (int) _eqnmap._mesh.GetRuntimeMap().get("mesh_ord");
       const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(_dim -1,mesh_ord)._elnds;
 
        std::vector<double>   xi(mesh_dim,0.);
@@ -202,7 +202,7 @@ void CurrElem::PrintOrientation() const {
   void CurrElem::SetMidpoint() const {
 
     const uint mesh_dim = _eqnmap._mesh.get_dim();
-    const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
+    const uint mesh_ord = (int) _eqnmap._mesh.GetRuntimeMap().get("mesh_ord");    
     const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(_dim-1, mesh_ord)._elnds;
 
        for (uint idim=0; idim< mesh_dim; idim++)  _el_xm[idim]=0.;
@@ -223,7 +223,7 @@ void CurrElem::PrintOrientation() const {
   void CurrElem::set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel) const {
 
     const uint mydim = _eqnmap._mesh.get_dim();
-    const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
+    const uint mesh_ord = (int) _eqnmap._mesh.GetRuntimeMap().get("mesh_ord");    
     const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(_dim-1,mesh_ord)._elnds;
           
    for (uint n=0; n<el_nnodes; n++)    {
@@ -266,7 +266,7 @@ void CurrElem::ConvertElemCoordsToMappingOrd(QuantityLocal& myvect) const {
   
   const uint  elndof = myvect._ndof;
   const uint vectdim = myvect._dim;
-  const uint mesh_ord = (int) _eqnmap._mesh._mesh_rtmap.get("mesh_ord");    
+  const uint mesh_ord = (int) _eqnmap._mesh.GetRuntimeMap().get("mesh_ord");    
   const uint offset = _eqnmap._mesh.GetGeomEl(GetDim()-1, mesh_ord)._elnds;
  
  //TODO ASSERT
