@@ -45,7 +45,6 @@ public:
     void PrintConnLinAllLEVAllVB() const;
     void PrintXDMFGridVB(std::ofstream& out, std::ostringstream& top_file, std::ostringstream& geom_file,const uint Level, const uint vb) const;
     void PrintConnLinVB(hid_t file, const uint Level, const uint vb) const; 
-    void PrintMeshFile(const std::string & namefile) const;
     void PrintSubdomFlagOnQuadrCells(const int vb, const int Level,std::string filename) const;
 
     //======= mesh generation functions ====
@@ -56,10 +55,6 @@ public:
     void ComputeNodeOffsetsBySubdLevel();
     void ComputeMaxElXNode();
     void ComputeNodeMapExtLevels();
-
-    //get functions
-    inline const double get_Lref() const {return _Lref;}
-    inline const uint   get_dim()  const {return _dim;}
 
 //attributes    ************************************
     
@@ -120,10 +115,10 @@ public:
     void    SetDomain(Domain* );
     void TransformElemNodesToRef(const uint elem_dim,const double* xx_qnds,double* refbox_xyz) const;
     
-    inline GeomEl GetGeomEl(const uint dim, const uint order) const {
-     return _GeomEl[dim][order]; 
-    }
-    
+    //get functions
+    inline const double get_Lref() const {return _Lref;}
+    inline const uint   get_dim()  const {return _dim;}
+    inline const GeomEl GetGeomEl(const uint dim, const uint order) const {   return _GeomEl[dim][order]; }
     inline const RunTimeMap<double>  GetRuntimeMap()  const { return _mesh_rtmap; }
     
     

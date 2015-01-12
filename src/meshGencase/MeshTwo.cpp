@@ -196,6 +196,7 @@ void MeshTwo::clear ()  {
 //is this function for ALL PROCESSORS 
 // or only for PROC==0? Seems to be for all processors
 // TODO do we need the leading "/" for opening a dataset?
+// This routine reads the mesh file and also makes it NONDIMENSIONAL, so that everything is solved on a nondimensional mesh
 void MeshTwo::ReadMeshFile()   {
 
   std::string    basemesh = DEFAULT_BASEMESH;
@@ -397,24 +398,6 @@ for (int vb=0; vb < VB; vb++)    {
   return; 
    
 }
-
-
-
-
-
-// ========================================================
-/// Write mesh to hdf5 file (namefile) 
-///              as Mesh class (Mesh.h): 
-
-void MeshTwo::PrintMeshFile (const std::string & /*namefile*/) const
-{ 
-
-  std::cout << "Implement it following the Gencase print mesh function" << std::endl; abort();
-  
-  return; 
-}
-
-
 
 
 

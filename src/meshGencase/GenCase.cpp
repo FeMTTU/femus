@@ -622,7 +622,7 @@ void GenCase::CreateStructuresLevSubd() {
 
         ComputeNodeMapExtLevels();
 
-        PrintMeshHDF5();
+        PrintMeshFile();
 
 // delete the boundary part, no more needed
         for (int i=0;i<_n_elements_sum_levs[BB];i++)      delete  _el_sto_b[i];
@@ -2054,7 +2054,7 @@ void GenCase::ComputeRest( ) {
 
 
 // ===============================================================
-void GenCase::PrintMeshHDF5() const  {
+void GenCase::PrintMeshFile() const  {
 
     std::ostringstream name;
 

@@ -66,6 +66,8 @@
 
   MeshTwo mesh(files,mesh_map,Lref);
   
+  //gencase is dimensionalized, meshtwo is nondimensionalized
+  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
   RunTimeMap<double> box_map("Box",files._output_path);
   Box mybox(mesh.get_dim(),box_map);
