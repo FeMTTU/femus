@@ -58,10 +58,8 @@
   const double Lref  =  phys._physrtmap.get("Lref");     // reference L
 
   // ======= Mesh =====
-  RunTimeMap<std::string> files_map("Files",files._output_path);
-
   RunTimeMap<double> mesh_map("Mesh",files._output_path);
-  GenCase mesh(files,mesh_map,files_map.get("F_MESH_READ"));
+  GenCase mesh(files,mesh_map,"inclQ2D2x2.gam");
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
