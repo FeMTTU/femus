@@ -125,15 +125,21 @@ void GenCase::GenerateCase()   {
 void GenCase::GenerateCoarseMesh() const {
 #ifdef HAVE_LIBMESH
 
-    const uint libmesh_gen = GetRuntimeMap().get("libmesh_gen");
-
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t start_timeA=std::clock();
 #endif
+    
+    
+        std::string basepath    = _files._app_path;
+        std::string config_dir  = DEFAULT_CONFIGDIR;
+        std::string f_mesh_read = _mesh_file;
 
- 
-    switch (libmesh_gen) {
-    case 1: {
+        std::ostringstream mesh_infile;
+        mesh_infile << basepath << "/" << config_dir << f_mesh_read;
+        std::ifstream inf(mesh_infile.str().c_str());
+
+    if (!inf || f_mesh_read == ""  ) {
+
         std::cout << " Internal mesh generator at level 0 \n";
 
         if ( GetDomain()->GetDomainFlag() == 0 ) {
@@ -168,28 +174,16 @@ void GenCase::GenerateCoarseMesh() const {
         
         else { std::cout << " Domain shape not implemented for libmesh generation \n"; abort();  }
 
-        break;
     }
-    case 0: {
+    else {
         std::cout << " Reading Mesh File at level 0 \n";
-
-        std::string basepath    = _files._app_path;
-        std::string config_dir  = DEFAULT_CONFIGDIR;
-        std::string f_mesh_read = _mesh_file;
-
-        std::ostringstream mesh_infile;
-        mesh_infile << basepath << "/" << config_dir << f_mesh_read;
-        std::ifstream inf(mesh_infile.str().c_str());
 
         _msh_coarse->read(mesh_infile.str().c_str());  //is this read in parallel or only by proc=0?
 
-        inf.close();
-        break;
     }
-    default:
-        std::cout << "GenCase: Create a mesh somehow" << std::endl;
-        abort();
-    }
+    
+    inf.close();
+
     _msh_coarse->print_info();
 
 #ifdef DEFAULT_PRINT_TIME
