@@ -98,6 +98,8 @@ void GenCase::GenerateCase()   {
     delete _msh_coarse;
 
     CreateStructuresLevSubd();    //only proc==0
+    
+    Delete();
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t end_timeC = std::clock();
@@ -630,6 +632,18 @@ void GenCase::CreateStructuresLevSubd() {
         ComputeProl(); 
         ComputeRest();
 
+
+
+    } //end proc==0
+
+    return;
+}
+
+
+
+void GenCase::Delete() {
+
+    if (_iproc == 0)   {  //serial function
 //=====================================
 //delete
 //=====================================
@@ -667,20 +681,10 @@ void GenCase::CreateStructuresLevSubd() {
         delete [] _Qnode_lev_Qnode_fine;
 
 
-#ifdef DEFAULT_PRINT_INFO
-        std::cout<< " GenCase::printMesh: Operators  printed \n";
-#endif
-
     } //end proc==0
 
     return;
 }
-
-
-
-
-
-
 
 
 
