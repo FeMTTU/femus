@@ -9,7 +9,6 @@ meshql        1           # ------<ElementMapping>------- # for THE APP # =MESH 
 mesh_ord      0             # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# 0=QUADRATIC GeomElements (Quad8,Quad9,Hex27,...)# 1=LINEAR GeomElements (Quad4,Hex8,...)
 geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
 dimension     3                # =MESH CONSISTENCY===  # ==== in library routines 
-domain        0       # 0=Box# 1=Cylinder# Whatever the rest # this should be OUTSIDE  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # ==== DO IT ONLY FOR Gencase ====== 
 bdry_toll     0.0000001    # ==== not in library routines, but library-type
 
 # ----<BCHandling>-----------------

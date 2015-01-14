@@ -18,7 +18,9 @@ namespace femus {
  class Box : public Domain {
  
  public:
-      
+    
+   const uint GetDomainFlag() const { return 0;}
+   
     double* _lb;
     double* _le;
  

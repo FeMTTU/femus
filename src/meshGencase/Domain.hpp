@@ -39,6 +39,8 @@ namespace femus {
    ///transformation to reference Domain frame
    virtual void TransformPointToRef(const double* x_in, double* x_out) const = 0;
    
+   virtual const uint GetDomainFlag()  const = 0;
+   
   };
 
 

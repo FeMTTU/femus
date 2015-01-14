@@ -120,6 +120,8 @@ void GenCase::GenerateCase()   {
 //===============================================================================
 //================= LIBMESH coarse Mesh OBJECT from FILE or FUNCTION ============
 //===============================================================================
+//here,the information about the shape must be given a priori here,
+//    while in the case of external mesh it should be given consistently
 void GenCase::GenerateCoarseMesh() const {
 #ifdef HAVE_LIBMESH
 
@@ -129,15 +131,13 @@ void GenCase::GenerateCoarseMesh() const {
     std::clock_t start_timeA=std::clock();
 #endif
 
+ 
     switch (libmesh_gen) {
     case 1: {
         std::cout << " Internal mesh generator at level 0 \n";
 
-        if ( GetRuntimeMap().get("domain") == 0 ) {
+        if ( GetDomain()->GetDomainFlag() == 0 ) {
 
-            //here,the information about the shape must be given a priori here,
-//    while in the case of external mesh it should be given consistently
-            //TODO think of Domain before or after Mesh
 	  
        Box* box = static_cast<Box*>(GetDomain());
 
@@ -166,7 +166,7 @@ void GenCase::GenerateCoarseMesh() const {
             
         } //box
         
-        else { std::cout << " Domain shape not implemented \n"; abort();  }
+        else { std::cout << " Domain shape not implemented for libmesh generation \n"; abort();  }
 
         break;
     }
