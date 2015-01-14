@@ -34,16 +34,22 @@
 #include "EqnNS.hpp"
 #include "EqnT.hpp"
 
- 
+#ifdef HAVE_LIBMESH
+#include "libmesh/libmesh.h"
+#endif
+
 // =======================================
 // TEMPERATURE + NS optimal control problem
 // ======================================= 
 
  int main(int argc, char** argv) {
 
-  // ====== FemusInit =====  //put this as the first call because mpi is initialized here
-  FemusInit init(argc,argv);
-  
+#ifdef HAVE_LIBMESH
+   libMesh::LibMeshInit init(argc,argv);
+#else   
+   FemusInit init(argc,argv);
+#endif
+   
  // ======= Files ========================
   Files files("./"); 
         files.ConfigureRestart();

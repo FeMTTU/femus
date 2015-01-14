@@ -32,15 +32,21 @@
 #include "TempPhysics.hpp"
 #include "EqnT.hpp"
 
- 
+#ifdef HAVE_LIBMESH
+#include "libmesh/libmesh.h"
+#endif 
+
 // =======================================
 // Test for finite element families
 // ======================================= 
 
  int main(int argc, char** argv) {
 
-  // ====== FemusInit =====  //put this as the first call because mpi is initialized here
-  FemusInit init(argc,argv);
+#ifdef HAVE_LIBMESH
+   libMesh::LibMeshInit init(argc,argv);
+#else   
+   FemusInit init(argc,argv);
+#endif
   
  // ======= Files ========================
   Files files("./"); 
