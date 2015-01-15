@@ -97,8 +97,10 @@ void GenCase::GenerateCase()   {
     delete _msh_all_levs;
     delete _msh_coarse;
 
-    CreateStructuresLevSubd();    //only proc==0
+    CreateMeshStructuresLevSubd();    //only proc==0
     
+    ComputeMGOperators();    //only proc==0
+
     Delete();
 
 #ifdef DEFAULT_PRINT_TIME
@@ -577,7 +579,7 @@ void  GenCase::GrabMeshinfoFromLibmesh() {
 //==============================================================================
 //=============== CREATE FEMUS MESH, MAT, PROL, REST (only proc0) ==============
 //==============================================================================
-void GenCase::CreateStructuresLevSubd() {
+void GenCase::CreateMeshStructuresLevSubd() {
 
     if (_iproc == 0)   {  //serial function
 //================================================
@@ -626,19 +628,27 @@ void GenCase::CreateStructuresLevSubd() {
 
         PrintMultimeshXdmf();
 
+    } //end proc==0
+
+    return;
+}
+
+
+
+void GenCase::ComputeMGOperators() {
+
+    if (_iproc == 0)   {  //serial function
+      
             //this involves only VOLUME STUFF, no boundary stuff
             // instead, not only NODES but also ELEMENTS are used
         ComputeMatrix(); 
         ComputeProl(); 
         ComputeRest();
 
-
-
     } //end proc==0
 
     return;
 }
-
 
 
 void GenCase::Delete() {

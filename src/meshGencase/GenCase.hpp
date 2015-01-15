@@ -44,12 +44,13 @@ public:
     void ReorderNodesBySubdLev();
     void ComputeMaxElXNode();
 
+    void ComputeMGOperators();
     void ComputeMatrix();
     void ComputeProl();
     void ComputeRest();
     void PrintOneVarMatrixHDF5(const std::string & name, const std::string & groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel ) const;
     void PrintOneVarMGOperatorHDF5(const std::string & filename, const std::string & groupname, uint* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe) const;
-    void CreateStructuresLevSubd();
+    void CreateMeshStructuresLevSubd();
     void Delete();
 
 //functions using libmesh
