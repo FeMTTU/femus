@@ -429,7 +429,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //compute curlBxB
           Math::extend(&Bmag._val_g[0],&Bmag._val_g3D[0],space_dim);                    //fills _val_g3D
-          Math::cross(Bmag._curl_g3D,&Bmag._val_g3D[0],curlBXB_g3D);
+          Math::cross(&Bmag._curl_g3D[0],&Bmag._val_g3D[0],curlBXB_g3D);
 
 //compute JxB
           Math::cross(Jext_g3D,&Bmag._val_g3D[0],JextXB_g3D);

@@ -244,7 +244,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 
  //vector product
           Math::extend(&VelAdj._val_g[0],&VelAdj._val_g3D[0],space_dim);
-          Math::cross(Bmag._curl_g3D,&VelAdj._val_g3D[0],curlBXlambda_g3D);
+          Math::cross(&Bmag._curl_g3D[0],&VelAdj._val_g3D[0],curlBXlambda_g3D);
 
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================

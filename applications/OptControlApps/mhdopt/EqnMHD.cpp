@@ -285,7 +285,7 @@ for (uint fe = 0; fe < QL; fe++)     {
              Math::extend(&Phii._grad_g[0][0],&Phii._grad_g3D[0][0],space_dim);
 
     //--------- CURL CURL: Operator, RHS: curl Be . curl phi -------------------
-             Math::cross(Bext._curl_g3D,&Phii._grad_g3D[0][0],curlBeXdphii_g3D);
+             Math::cross(&Bext._curl_g3D[0],&Phii._grad_g3D[0][0],curlBeXdphii_g3D);
 
     //--------- ADVECTION: Operator, RHS: v x Be . curl phi -------------------
              Math::cross(      vXBe_g3D,&Phii._grad_g3D[0][0],  vXBeXdphii_g3D);       // _utils.cross(vXBe_g3D,dphiidx_g3D,vXBeXdphii_g3D);

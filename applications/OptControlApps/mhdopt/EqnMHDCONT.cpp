@@ -265,8 +265,8 @@ for (uint fe = 0; fe < QL; fe++)     {
       Math::extend(   &Vel._val_g[0],   &Vel._val_g3D[0],space_dim);
       Math::extend(&VelAdj._val_g[0],&VelAdj._val_g3D[0],space_dim);
 
-      Math::cross(BhomAdj._curl_g3D,   &Vel._val_g3D[0],curlxiXvel_g3D ); 
-      Math::cross(   Bhom._curl_g3D,&VelAdj._val_g3D[0],curlbXlambda_g3D );
+      Math::cross(&BhomAdj._curl_g3D[0],   &Vel._val_g3D[0],curlxiXvel_g3D ); 
+      Math::cross(   &Bhom._curl_g3D[0],&VelAdj._val_g3D[0],curlbXlambda_g3D );
 //========end preparation for things that are independent of (i,j) dofs of test and shape =====================
   
 //================================
@@ -286,7 +286,7 @@ for (uint fe = 0; fe < QL; fe++)     {
         for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BeOld._FEord][i+idim*BeOld._ndof];
 
 	 Math::extend(dphiidx_g,dphiidx_g3D,space_dim);
-	 Math::cross(BhomAdj._curl_g3D,dphiidx_g3D,curlxiXdphii_g3D);
+	 Math::cross(&BhomAdj._curl_g3D[0],dphiidx_g3D,curlxiXdphii_g3D);
 
 	  double bDdphii_g      = Math::dot(  &Bhom._val_g[0],dphiidx_g,space_dim);
 	  double lambdaDdphii_g = Math::dot(&VelAdj._val_g[0],dphiidx_g,space_dim);
