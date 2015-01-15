@@ -22,11 +22,13 @@ namespace femus {
 
 
 // ========================================================
-MeshTwo::MeshTwo (const Files& files_in, const RunTimeMap<double>& map_in) :
+MeshTwo::MeshTwo (const Files& files_in, const RunTimeMap<double>& map_in, const std::string mesh_file_in) :
          _files(files_in),
          _mesh_rtmap(map_in),
          _dim(map_in.get("dimension")),
          _mesh_order(map_in.get("mesh_ord"))  {
+
+    _mesh_file.assign(mesh_file_in); 
 
     std::vector <std::string>  geomelem; 
     geomelem.resize(_dim);

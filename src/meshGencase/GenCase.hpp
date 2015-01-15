@@ -70,9 +70,6 @@ private:
   
     // Element ===========
     std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
-    std::string _mesh_file;    //mesh file name from the mesh generator
-    
-
 
     std::vector< std::pair<int,int> > _nd_fm_libm; //from FINE FEMUS NODE ORDERING to FINE LIBMESH NODE ORDERING
     std::vector< std::pair<int,int> > _el_fm_libm; //because the EQUATION needs it for the SPARSITY PATTERN

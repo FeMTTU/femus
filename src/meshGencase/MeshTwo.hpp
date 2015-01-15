@@ -32,7 +32,7 @@ class MeshTwo  {
 public:
 
 //===== Constructors/ Destructor ===========
-     MeshTwo (const Files& files_in, const RunTimeMap<double>& map_in);
+     MeshTwo (const Files& files_in, const RunTimeMap<double>& map_in, const std::string mesh_file_in);
 //     ~MeshTwo ();
     void clear ();
 
@@ -128,7 +128,8 @@ public:
     
     const Files& _files; 
     const RunTimeMap<double> & _mesh_rtmap;
-    
+    std::string _mesh_file;    //mesh file name from the mesh generator
+ 
    private:   
      
 //attributes    ************************************
@@ -136,6 +137,7 @@ public:
     double _Lref;          ///Reference length for non-dimensionalization
      
     std::vector< std::vector<GeomEl> >  _GeomEl;   //[DIM][QL_NODES] 
+    
 
  };
 

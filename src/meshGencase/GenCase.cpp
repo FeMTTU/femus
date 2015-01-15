@@ -36,11 +36,9 @@ namespace femus {
 
 // ========================================================
 GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const std::string mesh_file_in)
-     : MeshTwo(files_in,map_in)
+     : MeshTwo(files_in,map_in,mesh_file_in)
 {
 
-  _mesh_file.assign(mesh_file_in);  //TODO it seems like moving from protected to public in Mesh changed the RUNTIME behaviour also!!!!!
-                                     //now I moved it to gencase and it works   
    _feelems.resize(QL);
   for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(GetGeomEl(get_dim()-1-VV,_mesh_order)._geomel_id.c_str(),fe);
  
