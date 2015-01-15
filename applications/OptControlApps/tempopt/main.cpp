@@ -81,6 +81,7 @@
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 	  
           mesh.ReadMeshFileAndNondimensionalize(); 
+	  mesh.PrintMultimeshXdmf();
           mesh.PrintForVisualizationAllLEVAllVB();
 	  
   //gencase is dimensionalized, meshtwo is nondimensionalized

@@ -1984,24 +1984,9 @@ void EqnBase::MGCheck(int Level) const {
 }
 
 
+
+
 // =========================================
-/// This function is the main initialisation function:
-//here, the vectors involved in the system are initialized per level
-//a lot of things are performed here
-//let us split this into two parts
-//the multigrid part, which depends on the files also
-//and the MatVec part
-//actually, also the matrix depends on the file due to the sparsity pattern
-//clearly, this function is called after InitMeshToDof
-
-//==================
-///this function DEPENDS in _iproc!!!
-/// Every process has a portion of the structures of every level,
-///but of course he knows also what is the GLOBAL dimension.
-//Here the matrix is initialized, so you give the dimensions,
-//but i would do altogether in the ReadMatrix files
-
-
 void EqnBase::ReadMGOps() {
 
     std::string     f_matrix = DEFAULT_F_MATRIX;

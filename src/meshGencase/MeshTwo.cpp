@@ -458,6 +458,8 @@ void MeshTwo::PrintForVisualizationAllLEVAllVB()  const {
 // ==================================================================
 void MeshTwo::PrintMultimeshXdmf() const {
 
+     if (_iproc==0) {
+  
     std::string multimesh = DEFAULT_MULTIMESH;
     std::string ext_xdmf  = DEFAULT_EXT_XDMF;
     std::string basemesh  = DEFAULT_BASEMESH;
@@ -518,6 +520,8 @@ void MeshTwo::PrintMultimeshXdmf() const {
     out << "</Xdmf> \n";
     out.close();
 
+    }    //end iproc
+    
     return;
 }
 

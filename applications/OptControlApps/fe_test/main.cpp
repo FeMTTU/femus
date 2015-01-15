@@ -79,6 +79,7 @@
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 	  
           mesh.ReadMeshFileAndNondimensionalize(); 
+	  mesh.PrintMultimeshXdmf();
           mesh.PrintForVisualizationAllLEVAllVB();
 
   phys.set_mesh(&mesh);

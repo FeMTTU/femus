@@ -585,10 +585,6 @@ void GenCase::CreateMeshStructuresLevSubd() {
 //================================================
 // AT THIS POINT ALL THE LIBMESH CALLS are over, we are only FEMuS
 //=====================================
-//TODO if you want to have a serious interface with libmesh, you must do like this: 
-// print to file all the info you need to grab from libmesh,
-//  and then read and process everything in the main program.
-// This is what happens with the FE Gauss files!
 
         // ================================================
         //      ELEMENTS
@@ -626,7 +622,6 @@ void GenCase::CreateMeshStructuresLevSubd() {
 
         delete [] _nd_coords_libm;
 
-        PrintMultimeshXdmf();
 
     } //end proc==0
 
