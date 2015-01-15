@@ -205,7 +205,7 @@ namespace femus {
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
+     _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
 
     currelem.SetElDofsBc(Level);
     
@@ -218,11 +218,11 @@ namespace femus {
 
 #if BMAG_QTY==1
     if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(Level);
-    else                         Bext._qtyptr->FunctionDof(Bext,time,xyz_refbox._val_dofs);
+    else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
 #endif
 #if VELOCITY_QTY==1
     if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(Level);      //----- for Advection MAT & RHS
-    else                        Vel._qtyptr->FunctionDof(Vel,time,xyz_refbox._val_dofs);
+    else                        Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
 #endif
     
    const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
@@ -519,7 +519,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.SetMidpoint();
 
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
    
      currelem.SetElDofsBc(Level);
      
@@ -558,11 +558,11 @@ if (_Dir_pen_fl == 1)  {
 //========== EXTERNAL DOFS ===   
 #if BMAG_QTY==1
     if ( Bext._eqnptr != NULL )   Bext.GetElDofsVect(Level);
-    else                          Bext._qtyptr->FunctionDof(Bext,time,xyz_refbox._val_dofs);
+    else                          Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
 #endif
 #if VELOCITY_QTY==1
     if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(Level);
-    else                        Vel._qtyptr->FunctionDof(Vel,time,xyz_refbox._val_dofs);
+    else                        Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
 #endif
     
 

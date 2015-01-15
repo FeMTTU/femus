@@ -40,8 +40,8 @@ namespace femus {
 
     std::vector<double>  _val_g;
     std::vector<double>  _val_g3D;   //for cross products             //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    double*  _val_dofs;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    double*  _val_dofs3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
+    std::vector<double>  _val_dofs;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
+    std::vector<double>  _val_dofs3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
     double** _grad_g;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
     double** _grad_g3D;  //for cross products   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
     double* _curl_g3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT

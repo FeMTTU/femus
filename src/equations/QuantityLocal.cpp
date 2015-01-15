@@ -147,8 +147,8 @@ void QuantityLocal::Allocate() {
   
     _val_g.resize(_dim);   
     _val_g3D.resize(3); 
-    _val_dofs   = new double[_dim*_ndof];
-    _val_dofs3D = new double[   3*_ndof];
+    _val_dofs.resize(_dim*_ndof);
+    _val_dofs3D.resize(3*_ndof);
     _grad_g = new double*[_dim];
   for (uint i=0; i< _dim;i++) { _grad_g[i] = new double[_currEl._eqnmap._mesh.get_dim()]; }
 
@@ -165,8 +165,8 @@ void QuantityLocal::Allocate() {
 
 void QuantityLocal::Deallocate() {
   
-      delete []  _val_dofs   ;
-      delete []  _val_dofs3D ;
+//       delete []  _val_dofs   ;
+//       delete []  _val_dofs3D ;
 
       for (uint i=0; i< _dim;i++) { delete [] _grad_g[i]; }
        delete []  _grad_g;

@@ -186,7 +186,7 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);    
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
 
     currelem.SetElDofsBc(Level);
     
@@ -197,16 +197,16 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
     
     
      if ( Vel._eqnptr != NULL )      Vel.GetElDofsVect(Level);
-    else                             Vel._qtyptr->FunctionDof(Vel,time,xyz_refbox._val_dofs);
+    else                             Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
     if ( VelAdj._eqnptr != NULL ) VelAdj.GetElDofsVect(Level);
-    else                          VelAdj._qtyptr->FunctionDof(VelAdj,time,xyz_refbox._val_dofs);
+    else                          VelAdj._qtyptr->FunctionDof(VelAdj,time,&xyz_refbox._val_dofs[0]);
     if ( Bhom._eqnptr != NULL )     Bhom.GetElDofsVect(Level);
-    else                            Bhom._qtyptr->FunctionDof(Bhom,time,xyz_refbox._val_dofs);
+    else                            Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
     if ( Bext._eqnptr != NULL )     Bext.GetElDofsVect(Level);
-    else                            Bext._qtyptr->FunctionDof(Bext,time,xyz_refbox._val_dofs);
+    else                            Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
 
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
-    Math::zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof);
+    Math::zeroN(&Bmag._val_dofs[0],Bmag._dim*Bmag._ndof);
 
     for (uint ivarq=0; ivarq < Bmag._dim; ivarq++)    { //ivarq is like idim
           for (uint d=0; d < Bmag._ndof; d++)    {
@@ -427,7 +427,7 @@ if (_Dir_pen_fl == 0)  {
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
 
      currelem.SetElDofsBc(Level);
      

@@ -209,7 +209,7 @@ void EqnMHDCONT::init_equation_data() {
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs); 
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]); 
 
     currelem.SetElDofsBc(Level);
     
@@ -220,13 +220,13 @@ void EqnMHDCONT::init_equation_data() {
  
     
     if ( Vel._eqnptr != NULL )        Vel.GetElDofsVect(Level);
-    else                              Vel._qtyptr->FunctionDof(Vel,time,xyz_refbox._val_dofs);
+    else                              Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
     if ( VelAdj._eqnptr != NULL )  VelAdj.GetElDofsVect(Level);
-    else                           VelAdj._qtyptr->FunctionDof(VelAdj,time,xyz_refbox._val_dofs);
+    else                           VelAdj._qtyptr->FunctionDof(VelAdj,time,&xyz_refbox._val_dofs[0]);
     if ( Bhom._eqnptr != NULL )      Bhom.GetElDofsVect(Level);
-    else                             Bhom._qtyptr->FunctionDof(Bhom,time,xyz_refbox._val_dofs);
+    else                             Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
     if ( BhomAdj._eqnptr != NULL ) BhomAdj.GetElDofsVect(Level);
-    else                           BhomAdj._qtyptr->FunctionDof(BhomAdj,time,xyz_refbox._val_dofs);    
+    else                           BhomAdj._qtyptr->FunctionDof(BhomAdj,time,&xyz_refbox._val_dofs[0]);    
     
 
 //==============================================================
@@ -493,7 +493,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
 
      currelem.SetElDofsBc(Level);
      

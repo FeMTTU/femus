@@ -131,7 +131,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
 
     
 //MY EQUATION
@@ -376,7 +376,7 @@ xyz_refbox.Deallocate();
       currelem.SetMidpoint(); 
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
      
       currelem.SetElDofsBc(Level);
       

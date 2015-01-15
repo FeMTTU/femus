@@ -304,7 +304,7 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
     currelem.SetElDofsBc(Level);
@@ -318,13 +318,13 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
  #if (BMAG_QTY==1)
   if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(Level); 
-  else                         Bext._qtyptr->FunctionDof(Bext,time,xyz_refbox._val_dofs);
+  else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
   if ( Bhom._eqnptr != NULL )  Bhom.GetElDofsVect(Level);   
-  else                         Bhom._qtyptr->FunctionDof(Bhom,time,xyz_refbox._val_dofs);
+  else                         Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
 #endif
 #if (TEMP_QTY==1)
    if ( Temp._eqnptr != NULL ) Temp.GetElDofsVect(Level);
-     else                      Temp._qtyptr->FunctionDof(Temp,time,xyz_refbox._val_dofs);
+     else                      Temp._qtyptr->FunctionDof(Temp,time,&xyz_refbox._val_dofs[0]);
 #endif
 
 //=== the connectivity is only related to the ELEMENT, so it is GEOMETRICAL
@@ -335,7 +335,7 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
 
   #if (BMAG_QTY==1)   
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
-    Math::zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof);
+    Math::zeroN(&Bmag._val_dofs[0],Bmag._dim*Bmag._ndof);
 
     for (uint ivarq=0; ivarq < Bmag._dim; ivarq++)    { //ivarq is like idim
           for (uint d=0; d <  Bmag._ndof; d++)    {
@@ -679,7 +679,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
+     _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
 
      currelem.SetElDofsBc(Level);
      
@@ -938,7 +938,7 @@ double EqnNS::ComputeIntegral (const uint Level) const {
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
 
 //======= 
     xyz_refbox.SetElemAverage();
@@ -946,9 +946,9 @@ double EqnNS::ComputeIntegral (const uint Level) const {
 //=======        
 
     if ( Vel._eqnptr != NULL )       Vel.GetElDofsVect(Level);
-    else                             Vel._qtyptr->FunctionDof(Vel,0./*time*/,xyz_refbox._val_dofs);    //give the Hartmann flow, if not solving NS
+    else                             Vel._qtyptr->FunctionDof(Vel,0./*time*/,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
     if ( VelDes._eqnptr != NULL ) VelDes.GetElDofsVect(Level);
-    else                          VelDes._qtyptr->FunctionDof(VelDes,0./*time*/,xyz_refbox._val_dofs);    
+    else                          VelDes._qtyptr->FunctionDof(VelDes,0./*time*/,&xyz_refbox._val_dofs[0]);    
 
 //AAA time is picked as a function pointer of the time C library i think...
     // it doesnt say it was not declared

@@ -211,7 +211,7 @@ void  EqnT::GenMatRhs(const uint Level) {
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
 
     
 //MY EQUATION
@@ -250,10 +250,10 @@ int domain_flag = myphys->ElFlagControl(xyz_refbox._el_average);
   //Do not use GetElDofs if you want to pick an intermediate dof...
       
    if ( vel._eqnptr != NULL )  vel.GetElDofsVect(Level);
-   else                        vel._qtyptr->FunctionDof(vel,time,xyz_refbox._val_dofs);
+   else                        vel._qtyptr->FunctionDof(vel,time,&xyz_refbox._val_dofs[0]);
 
    if ( Tdes._eqnptr != NULL )  Tdes.GetElDofsVect(Level);
-   else                         Tdes._qtyptr->FunctionDof(Tdes,time,xyz_refbox._val_dofs);
+   else                         Tdes._qtyptr->FunctionDof(Tdes,time,&xyz_refbox._val_dofs[0]);
 
 
    const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
@@ -517,7 +517,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(fe); }
       currelem.SetMidpoint(); 
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);    
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
      
       currelem.SetElDofsBc(Level);
       
@@ -773,7 +773,7 @@ double EqnT::ComputeIntegral (const uint Level) {
       currelem.SetMidpoint();
       
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-      _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);
+      _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
 
 // =============== 
       xyz_refbox.SetElemAverage();
@@ -781,11 +781,11 @@ double EqnT::ComputeIntegral (const uint Level) {
 //====================     
  
     if ( Tempold._eqnptr != NULL )   Tempold.GetElDofsVect(Level);
-    else                             Tempold._qtyptr->FunctionDof(Tempold,0.,xyz_refbox._val_dofs);
+    else                             Tempold._qtyptr->FunctionDof(Tempold,0.,&xyz_refbox._val_dofs[0]);
     if ( Tlift._eqnptr != NULL )       Tlift.GetElDofsVect(Level);
-    else                               Tlift._qtyptr->FunctionDof(Tlift,0.,xyz_refbox._val_dofs);
+    else                               Tlift._qtyptr->FunctionDof(Tlift,0.,&xyz_refbox._val_dofs[0]);
     if ( Tdes._eqnptr != NULL )         Tdes.GetElDofsVect(Level);
-    else                                Tdes._qtyptr->FunctionDof(Tdes,0.,xyz_refbox._val_dofs);    
+    else                                Tdes._qtyptr->FunctionDof(Tdes,0.,&xyz_refbox._val_dofs[0]);    
 
 
 
@@ -910,7 +910,7 @@ double EqnT::ComputeNormControl (const uint Level, const uint reg_ord ) {
       currelem.SetMidpoint();
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-      _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),xyz_refbox._val_dofs);
+      _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
      
      Tlift.GetElDofsVect(Level);
 
