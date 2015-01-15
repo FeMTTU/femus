@@ -29,15 +29,7 @@ namespace femus {
   
   
 
-  Files::Files(const std::string &  string_in)  
-
-  {  //TODO here is where we have to change because the path for the map is determined later, after configure restart and outtime generation... 
-	  
-	  _app_path = string_in;
-	  
-	    if (string_in == "")  { std::cout << " Set the basepath in the command line" << std::endl;    abort(); }
-
-	}  ///< Constructor
+  Files::Files()  { }
 
 	
   Files::~Files() { }
@@ -45,14 +37,13 @@ namespace femus {
   
   
   void Files::ConfigureRestart() {
-      
-      std::string mybasepath = _app_path;
 
 //         if (paral::get_rank() == 0) { //QUESTA LETTURA LA POSSONO FARE TUTTI I PROCESSORI!
             std::cout << " Reading the  run_to_restart_from file to determine restart status or not" << std::endl;
 
+    std::string app_path = "./";
     std::string lastrun_str;
-    lastrun_str = mybasepath + "/" + DEFAULT_OUTPUTDIR + "/" + DEFAULT_LAST_RUN;
+    lastrun_str = app_path + DEFAULT_OUTPUTDIR + "/" + DEFAULT_LAST_RUN;
 
     //check if last_run is there, if it's not there go ahead and set restart = FALSE
             std::string lastone;
@@ -76,7 +67,7 @@ namespace femus {
 	      std::cout << "*** RESTART is activated *****" << std::endl; 
 	      //we must set the basepath accordingly
 	    
-	    _input_path = mybasepath + "/" + DEFAULT_OUTPUTDIR + "/" + lastone + "/";
+	    _input_path = app_path + DEFAULT_OUTPUTDIR + "/" + lastone + "/";
 	    
 	      std::cout << "*** The new input path is *****" << _input_path << std::endl; 
 	    
@@ -84,7 +75,7 @@ namespace femus {
 	    else { std::cout << "Normal simulation without restart" << std::endl; 
 	    //Notice that the basepath in this case was set by the ARGUMENT of the CONSTRUCTOR
 	    
-	    _input_path = mybasepath + "/";
+	    _input_path = app_path;
 	    
 	    }
 
@@ -249,8 +240,9 @@ void Files::PrintRunForRestart(const std::string run_name_in) const {
 
    if (paral::get_rank() == 0 )   {
 
+   std::string app_path = "./";
    std::string run("");
-   run = _app_path + "/" + DEFAULT_OUTPUTDIR + "/" + run_name_in; //AAA BASE OUTPUT
+   run = app_path + DEFAULT_OUTPUTDIR + "/" + run_name_in; //AAA BASE OUTPUT
    std::cout << "Print the run " << run << "to file" << std::endl;
 
    std::ofstream run_file; run_file.open(run.c_str());
@@ -393,7 +385,8 @@ MPI_Bcast(out_char,outchar_size,MPI_CHAR,0,MPI_COMM_WORLD);
 
  //************************
  //set the input and output_path variables
- _output_path = _app_path + "/"  + DEFAULT_OUTPUTDIR + "/" + _output_time + "/";
+    std::string app_path = "./";
+   _output_path = app_path + DEFAULT_OUTPUTDIR + "/" + _output_time + "/";
  
  
  
@@ -503,7 +496,7 @@ MPI_Barrier(MPI_COMM_WORLD);
 void Files::CheckIODirectories() {
  
 //INPUT
-                    std::string abs_app = _app_path + "/";
+                    std::string abs_app = "./";
 /*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_CONFIGDIR); //it must be there only to be COPIED (and we don't even need the check in restart case)
 
 /*all procs*/   CheckDir(abs_app,DEFAULT_OUTPUTDIR);
@@ -542,7 +535,8 @@ void Files::CheckIODirectories() {
 //whenever I change the absolute path,
 //I'd prefer passing the file name explicitly
 
-    std::string abs_runlog = _app_path + "/" + DEFAULT_OUTPUTDIR 
+    std::string app_path = "./";
+    std::string abs_runlog = app_path + DEFAULT_OUTPUTDIR 
     + "/" + _output_time +  "/" + DEFAULT_RUN_LOG;
 
 //  std::ofstream file;  //if a filestream dies, then also its stream-buffer dies ?!? 

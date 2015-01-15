@@ -49,7 +49,7 @@
 #endif
   
  // ======= Files ========================
-  Files files("./"); 
+  Files files; 
         files.ConfigureRestart();
         files.CheckIODirectories();
         files.CopyInputFiles();   // at this point everything is in the folder of the current run!!!!

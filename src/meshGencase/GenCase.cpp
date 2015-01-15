@@ -133,13 +133,11 @@ void GenCase::GenerateCoarseMesh() const {
     std::clock_t start_timeA=std::clock();
 #endif
     
-    
-        std::string basepath    = _files._app_path;
         std::string config_dir  = DEFAULT_CONFIGDIR;
         std::string f_mesh_read = _mesh_file;
 
         std::ostringstream mesh_infile;
-        mesh_infile << basepath << "/" << config_dir << f_mesh_read;
+        mesh_infile << "./" << config_dir << f_mesh_read;
         std::ifstream inf(mesh_infile.str().c_str());
 
     if (!inf || f_mesh_read == ""  ) {

@@ -51,7 +51,7 @@
 #endif
    
  // ======= Files ========================
-  Files files("./"); 
+  Files files; 
         files.ConfigureRestart();
         files.CheckIODirectories();
         files.CopyInputFiles();

@@ -843,7 +843,6 @@ void EqnBase::initVectors() {
 
 void EqnBase::GenBc() {
   
-    std::string     basepath = _files._app_path;
     std::string    input_dir = DEFAULT_CONFIGDIR;
     std::string          ibc = DEFAULT_IBC;
     std::string     ext_xdmf = DEFAULT_EXT_XDMF;
@@ -851,7 +850,7 @@ void EqnBase::GenBc() {
     std::string  bdry_suffix = DEFAULT_BDRY_SUFFIX;
     
     std::ostringstream ibc_fileh5;
-    ibc_fileh5  << basepath << "/" << input_dir << "/" << ibc << ext_h5;
+    ibc_fileh5  << "./" << input_dir << "/" << ibc << ext_h5;
 // TODO actually, we should first COPY this file in the outtime dir, then READ it from there!
     std::ifstream in(ibc_fileh5.str().c_str());
 
@@ -1500,12 +1499,11 @@ void EqnBase::GenIc() {
 
     const uint mesh_ord    = (int) _mesh.GetRuntimeMap().get("mesh_ord");
   
-    std::string   basepath = _files._app_path;
     std::string  input_dir = DEFAULT_CONFIGDIR;
     std::string        ibc = DEFAULT_IBC;
     std::string     ext_h5 = DEFAULT_EXT_H5;
     std::ostringstream ibc_filexmf;
-    ibc_filexmf << basepath << "/"<< input_dir << ibc << ext_h5;
+    ibc_filexmf << "./"<< input_dir << ibc << ext_h5;
     std::ifstream in(ibc_filexmf.str().c_str());
 
     if (!in) {

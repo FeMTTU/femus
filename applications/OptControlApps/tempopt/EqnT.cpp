@@ -829,7 +829,8 @@ double EqnT::ComputeIntegral (const uint Level) {
     ///////// let us also print the functional value in a unique file,
     /////////so that we explore the variation wrt alpha
     
-    std::string intgr_fname = _eqnmap._files._app_path + "/" + DEFAULT_OUTPUTDIR + "/" + "alpha";
+    std::string app_path = "./";
+    std::string intgr_fname = app_path + DEFAULT_OUTPUTDIR + "/" + "alpha";
   
 	std::ofstream intgr_fstream;
     
