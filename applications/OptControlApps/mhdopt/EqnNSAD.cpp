@@ -418,40 +418,7 @@ if (_Dir_pen_fl == 0)  {
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();
   
-  QuantityLocal Vel(currgp);
-    Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
-    Vel.VectWithQtyFillBasic();
-    Vel.Allocate();
-  
-  QuantityLocal VelDes(currgp);
-    VelDes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_DesVelocity");
-    VelDes.VectWithQtyFillBasic();
-    VelDes.Allocate();
-
-  QuantityLocal Bhom(currgp);
-    Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
-    Bhom.VectWithQtyFillBasic();
-    Bhom.Allocate();
- 
-  QuantityLocal Bext(currgp);
-    Bext._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
-    Bext.VectWithQtyFillBasic();
-    Bext.Allocate();
-
-//========= auxiliary, must be AFTER Bhom!   //TODO this doesnt have any associated quantity!
-  QuantityLocal Bmag(currgp); //total
-    Bmag._dim        = Bhom._dim;               //same as Bhom
-    Bmag._FEord      = Bhom._FEord;             //same as Bhom
-    Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
-    Bmag.Allocate();
-    
-//===============
-  QuantityLocal BhomAdj(currgp); 
-    BhomAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHomAdj"); 
-    BhomAdj.VectWithQtyFillBasic();
-    BhomAdj.Allocate();
-    
-    //========= END EXTERNAL QUANTITIES =================
+//========= END EXTERNAL QUANTITIES =================
 
 
     const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
@@ -513,8 +480,10 @@ if (_Dir_pen_fl == 1)  {
    
     for (uint qp=0; qp< el_ngauss; qp++) {
 //======= "COMMON SHAPE PART"============================
- for (uint fe = 0; fe < QL; fe++)     {        currgp.SetPhiElDofsFEVB_g (fe,qp);  } 
-for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);   }
+ for (uint fe = 0; fe < QL; fe++)     { 
+    currgp.SetPhiElDofsFEVB_g (fe,qp); 
+    currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);
+}
 
         const double det   = dt * currgp.JacVectBB_g(xyz);
 	const double dtxJxW_g = det * _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
@@ -591,12 +560,6 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
   PressAdjOld.Deallocate();
   xyz.Deallocate();
   xyz_refbox.Deallocate();  
-  Vel.Deallocate();
-  VelDes.Deallocate();
-  Bhom.Deallocate();
-  Bext.Deallocate();
-  Bmag.Deallocate();
-  BhomAdj.Deallocate();
   
   }//END BOUNDARY ************************
   

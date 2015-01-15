@@ -408,38 +408,7 @@ if (_Dir_pen_fl == 0)  {
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();    
-
-  //==========     
-    QuantityLocal Vel(currgp);
-    Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
-    Vel.VectWithQtyFillBasic();
-    Vel.Allocate();    
- 
-    //==========    
-    QuantityLocal VelAdj(currgp);
-    VelAdj._qtyptr      = _eqnmap._qtymap.get_qty("Qty_VelocityAdj");
-    VelAdj.VectWithQtyFillBasic();
-    VelAdj.Allocate();    
    
-    //==========    
-    QuantityLocal Bhom(currgp);
-    Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
-    Bhom.VectWithQtyFillBasic();
-    Bhom.Allocate();    
-
-//=========
-    QuantityLocal Bext(currgp);
-    Bext._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
-    Bext.VectWithQtyFillBasic();
-    Bext.Allocate();    
-  
-//========= auxiliary, must be AFTER Bhom! //TODO this is an example of  Vect which is not associated to a Quantity
-    QuantityLocal Bmag(currgp); //total
-    Bmag._dim        = Bhom._dim;               //same as Bhom
-    Bmag._FEord      = Bhom._FEord;             //same as Bhom
-    Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
-    Bmag.Allocate();    
-    
 //========= END EXTERNAL QUANTITIES =================
 
     const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
@@ -573,11 +542,6 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
   BhomLagMultAdjOld.Deallocate();
   xyz.Deallocate();
   xyz_refbox.Deallocate();
-  Vel.Deallocate();
-  VelAdj.Deallocate();
-  Bhom.Deallocate();
-  Bext.Deallocate();
-  Bmag.Deallocate();
  
   }//END BOUNDARY ************************
   
