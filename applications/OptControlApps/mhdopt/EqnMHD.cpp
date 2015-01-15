@@ -282,13 +282,13 @@ for (uint fe = 0; fe < QL; fe++)     {
 	    }
  	  }
 
-             Math::extend(Phii._grad_g[0],Phii._grad_g3D[0],space_dim);                      //   _utils.extend(dphiidx_g,dphiidx_g3D);
+             Math::extend(&Phii._grad_g[0][0],&Phii._grad_g3D[0][0],space_dim);
 
     //--------- CURL CURL: Operator, RHS: curl Be . curl phi -------------------
-             Math::cross(Bext._curl_g3D,Phii._grad_g3D[0],curlBeXdphii_g3D);
+             Math::cross(Bext._curl_g3D,&Phii._grad_g3D[0][0],curlBeXdphii_g3D);
 
     //--------- ADVECTION: Operator, RHS: v x Be . curl phi -------------------
-             Math::cross(      vXBe_g3D,Phii._grad_g3D[0],  vXBeXdphii_g3D);       // _utils.cross(vXBe_g3D,dphiidx_g3D,vXBeXdphii_g3D);
+             Math::cross(      vXBe_g3D,&Phii._grad_g3D[0][0],  vXBeXdphii_g3D);       // _utils.cross(vXBe_g3D,dphiidx_g3D,vXBeXdphii_g3D);
 //============end preparation for (i) ============
 	     
          for (uint idim=0; idim<space_dim/*bhomOld._dim*/; idim++) {
@@ -319,9 +319,9 @@ for (uint fe = 0; fe < QL; fe++)     {
 //===  /*(j)*/ is ONLY used for the POSITIONS, later
 
     //--------- LAPLACIAN: Operator, MAT: grad b . grad phi ---------------------
-          double     Lap_g = Math::dot(Phij._grad_g[0],Phii._grad_g[0],space_dim);   /*(i,j)*/  //part independent of idim
+          double     Lap_g = Math::dot(&Phij._grad_g[0][0],&Phii._grad_g[0][0],space_dim);   /*(i,j)*/  //part independent of idim
     //--------- ADVECTION: Operator, MAT: v x b . curl phi -------------------
-          double Advphii_g = Math::dot( &Vel._val_g[0],Phii._grad_g[0],space_dim);  /*(i)*/ //part independent of idim //TODO what about putting it OUTSIDE?
+          double Advphii_g = Math::dot( &Vel._val_g[0],&Phii._grad_g[0][0],space_dim);  /*(i)*/ //part independent of idim //TODO what about putting it OUTSIDE?
      
           for (uint idim=0; idim<space_dim/*bhomOld._dim*/; idim++) { //filled in as 1-2-3 // 5-6-4 // 9-7-8
             int irowq=i+idim*bhomOld._ndof;   //idim gives the row index  //test of bhomOld
