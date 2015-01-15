@@ -661,37 +661,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();
-    
-//============================ MAG WORLD =======================================
- #if BMAG_QTY==1  
-    QuantityLocal Bhom(currgp); //only to retrieve the dofs
-    Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
-    Bhom.VectWithQtyFillBasic();
-    Bhom.Allocate();
- 
-//=========
-    QuantityLocal Bext(currgp);   //only to retrieve the dofs
-    Bext._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
-    Bext.VectWithQtyFillBasic();
-    Bext.Allocate();
 
-//========= auxiliary, must be AFTER Bhom!
-    QuantityLocal Bmag(currgp); //total
-    Bmag._dim        = Bhom._dim;
-    Bmag._FEord      = Bhom._FEord;
-    Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
-    Bmag.Allocate();
-#endif
-//======================== MAG WORLD ================================
-
-#if TEMP_QTY==1
-    QuantityLocal Temp(currgp);
-    Temp._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature");
-    Temp.VectWithQtyFillBasic();
-    Temp.Allocate();
-#endif
-
- 
+  
     const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
     const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
 
@@ -759,8 +730,10 @@ if (_Dir_pen_fl == 1)  {
     for (uint qp=0; qp< el_ngauss; qp++) {
             
 //======= "COMMON SHAPE PART"============================
-for (uint fe = 0; fe < QL; fe++)     {        currgp.SetPhiElDofsFEVB_g (fe,qp);  } //for velocity test functions AND for pressure shape functions
-for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp); }
+for (uint fe = 0; fe < QL; fe++)     {    
+  currgp.SetPhiElDofsFEVB_g (fe,qp);
+  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp); 
+}
 
         const double det   = dt*currgp.JacVectBB_g(xyz);
 	const double dtxJxW_g = det * _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
@@ -865,15 +838,6 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 //=========Internal Quantities: no ifdef for them =========
   VelOld.Deallocate();
   pressOld.Deallocate();
-#if BMAG_QTY==1
-  Bmag.Deallocate();
-  Bhom.Deallocate();
-  Bext.Deallocate();
-#endif
-#if TEMP_QTY==1 
-  Temp.Deallocate();
-#endif
-
   
     }
   // END BOUNDARY ******************************

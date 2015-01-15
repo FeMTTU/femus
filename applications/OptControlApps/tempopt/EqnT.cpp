@@ -491,12 +491,6 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(fe); }
     xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
     xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
     xyz_refbox.Allocate();
-  
-  //==================
-    QuantityLocal vel(currgp);
-    vel._qtyptr   = _eqnmap._qtymap.get_qty("Qty_Velocity"); 
-    vel.VectWithQtyFillBasic();
-    vel.Allocate();
     
 //===============Tdes=====================
     QuantityLocal Tdes(currgp);
@@ -612,7 +606,6 @@ int el_Neum_flag=0;
   Tempold.Deallocate();
   xyz.Deallocate();
   xyz_refbox.Deallocate();
-  vel.Deallocate();
 
      
   }//END BOUNDARY
