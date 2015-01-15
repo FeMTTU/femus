@@ -96,7 +96,7 @@ inline void extend_nds(const uint el_ndofs,const double* a_nds, double* a_nds3D,
 
 //=================================================================
 
-inline double FunctionIntegral (const uint vb, EquationsMap & eqnmap_in, double (*pt2func)(double, const double* ) )  {
+inline double FunctionIntegral (const uint vb, EquationsMap & eqnmap_in, double (*pt2func)(double, const std::vector<double> ) )  {
 
   const uint mesh_vb = vb;
   

@@ -169,7 +169,7 @@
   QuantityLocal gravity(currgp);
   gravity._dim = space_dim;
 //   gravity.Allocate(); CANNOT DO THIS NOW BECAUSE NOT ALL THE DATA FOR THE ALLOCATION ARE FILLED
-  gravity._val_g    = new double[gravity._dim];
+  gravity._val_g.resize(gravity._dim);
   gravity._val_g[0] = _phys._physrtmap.get("dirgx");
   gravity._val_g[1] = _phys._physrtmap.get("dirgy");
   if ( space_dim == 3 )   gravity._val_g[2] = _phys._physrtmap.get("dirgz"); 
@@ -324,7 +324,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
   
           double Lap_g=Math::dot(dphijdx_g,dphiidx_g,space_dim);
-	  double Adv_g=Math::dot(VelOld._val_g,dphijdx_g,space_dim);
+	  double Adv_g=Math::dot(&VelOld._val_g[0],dphijdx_g,space_dim);
           
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
             int irowq = i+idim*qtyzero_ndof;      //(i) is still the dof of the tEST functions
@@ -423,7 +423,6 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
    xyz.Deallocate();
    VelOld.Deallocate();
    pressOld.Deallocate();
-   delete [] gravity._val_g;  //    gravity.Deallocate();
 #if TEMP_QTY==1    
    Temp.Deallocate();
 #endif 
@@ -566,7 +565,7 @@ for (uint fe = 0; fe < QL; fe++)     {      currgp.SetDPhiDxezetaElDofsFEVB_g (f
 // // //    val_g(vb,pressOld);
    
    xyz_refbox.val_g();
-      pressOld._qtyptr->Function_txyz(time,xyz_refbox._val_g,pressOld._val_g);  //i prefer using the function instead of the p_old vector
+      pressOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0],&pressOld._val_g[0]);  //i prefer using the function instead of the p_old vector
        
 //--- strain, derivative of velocity ============== 
       

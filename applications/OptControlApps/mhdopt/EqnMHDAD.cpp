@@ -243,8 +243,8 @@ for (uint fe = 0; fe < QL; fe++)     {
       VelAdj.val_g();
 
  //vector product
-          Math::extend(VelAdj._val_g,VelAdj._val_g3D,space_dim);
-          Math::cross(Bmag._curl_g3D,VelAdj._val_g3D,curlBXlambda_g3D);
+          Math::extend(&VelAdj._val_g[0],&VelAdj._val_g3D[0],space_dim);
+          Math::cross(Bmag._curl_g3D,&VelAdj._val_g3D[0],curlBXlambda_g3D);
 
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================
@@ -256,8 +256,8 @@ for (uint fe = 0; fe < QL; fe++)     {
         for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BhomAdjOld._FEord][i+idim*BhomAdjOld._ndof];
 //======= END "COMMON tEST PART for QTYZERO" ==========
 
-   	  double BDdphii_g      = Math::dot(  Bmag._val_g,dphiidx_g,space_dim);
-	  double lambdaDdphii_g = Math::dot(VelAdj._val_g,dphiidx_g,space_dim);
+   	  double BDdphii_g      = Math::dot(  &Bmag._val_g[0],dphiidx_g,space_dim);
+	  double lambdaDdphii_g = Math::dot(&VelAdj._val_g[0],dphiidx_g,space_dim);
 	  
          for (uint idim=0; idim<space_dim; idim++) {
             const uint irowq = i+idim*BhomAdjOld._ndof;
@@ -284,7 +284,7 @@ if (_Dir_pen_fl == 0)  {
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
 
            double Lap_g    = Math::dot(dphijdx_g,dphiidx_g,space_dim);
-	  double Advphij_g = Math::dot(Vel._val_g,dphijdx_g,space_dim);
+	  double Advphij_g = Math::dot(&Vel._val_g[0],dphijdx_g,space_dim);
           
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
             int irowq = i+idim*BhomAdjOld._ndof;
@@ -470,7 +470,7 @@ if (_Dir_pen_fl == 1)  {
 //=======end "COMMON SHAPE PART"===================================   
       
       xyz_refbox.val_g();
-      BhomLagMultAdjOld._qtyptr->Function_txyz(time,xyz_refbox._val_g/*xyz._val_g*/,BhomLagMultAdjOld._val_g);  //i prefer using the function instead of the p_old vector
+      BhomLagMultAdjOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0]/*xyz._val_g*/,&BhomLagMultAdjOld._val_g[0]);  //i prefer using the function instead of the p_old vector
    
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ===================

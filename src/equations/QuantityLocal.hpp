@@ -38,8 +38,8 @@ namespace femus {
                                                                  //but the point is that we have to pass also the offset...
     
 
-    double*  _val_g;                                      //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT  //WHY ARE WE NOT ALLOCATING IN THE CONSTRUCTOR?!?
-    double*  _val_g3D;   //for cross products             //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
+    std::vector<double>  _val_g;
+    std::vector<double>  _val_g3D;   //for cross products             //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
     double*  _val_dofs;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
     double*  _val_dofs3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
     double** _grad_g;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT

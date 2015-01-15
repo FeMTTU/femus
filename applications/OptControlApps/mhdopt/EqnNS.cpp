@@ -281,7 +281,7 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
 //=======gravity==================================
   QuantityLocal gravity(currgp);
   gravity._dim=DIMENSION;
-  gravity._val_g    = new double[gravity._dim];
+  gravity._val_g.resize(gravity._dim);
   gravity._val_g[0] = _phys._physrtmap.get("dirgx");
   gravity._val_g[1] = _phys._physrtmap.get("dirgy");
 #if DIMENSION==3
@@ -428,11 +428,11 @@ for (uint fe = 0; fe < QL; fe++)     {
      Bmag.val_g();
 
 //compute curlBxB
-          Math::extend(Bmag._val_g,Bmag._val_g3D,space_dim);                    //fills _val_g3D
-          Math::cross(Bmag._curl_g3D,Bmag._val_g3D,curlBXB_g3D);
+          Math::extend(&Bmag._val_g[0],&Bmag._val_g3D[0],space_dim);                    //fills _val_g3D
+          Math::cross(Bmag._curl_g3D,&Bmag._val_g3D[0],curlBXB_g3D);
 
 //compute JxB
-          Math::cross(Jext_g3D,Bmag._val_g3D,JextXB_g3D);
+          Math::cross(Jext_g3D,&Bmag._val_g3D[0],JextXB_g3D);
 #endif
 
 #if (TEMP_QTY==1)
@@ -497,7 +497,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
   
           double Lap_g=Math::dot(dphijdx_g,dphiidx_g,space_dim);
-	  double Adv_g=Math::dot(VelOld._val_g,dphijdx_g,space_dim);
+	  double Adv_g=Math::dot(&VelOld._val_g[0],dphijdx_g,space_dim);
           
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
             int irowq = i+idim*qtyzero_ndof;      //(i) is still the dof of the tEST functions
@@ -596,11 +596,6 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 //=========Internal Quantities: no ifdef for them =========
   VelOld.Deallocate();
   pressOld.Deallocate();
-//======= inner Vect without Quantity ==========
-//not an Unknown
-//not from External Equation or Function
-   delete [] gravity._val_g;
-//======= inner Vect without Quantity ==========
 #if BMAG_QTY==1
   Bmag.Deallocate();
   Bhom.Deallocate();
@@ -750,7 +745,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 // // //    val_g(vb,pressOld);
    
    xyz_refbox.val_g(); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
-      pressOld._qtyptr->Function_txyz(time,xyz_refbox._val_g/*xyz._val_g*/,pressOld._val_g);  //i prefer using the function instead of the p_old vector
+      pressOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0]/*xyz._val_g*/,&pressOld._val_g[0]);  //i prefer using the function instead of the p_old vector
        
 //--- strain, derivative of velocity ============== 
       

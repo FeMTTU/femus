@@ -336,7 +336,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(fe); }
            
    
           double Lap_g   = Math::dot(dphijdx_g,dphiidx_g,space_dim);
-          double Advection = Math::dot(vel._val_g,dphijdx_g,space_dim);
+          double Advection = Math::dot(&vel._val_g[0],dphijdx_g,space_dim);
 
 	    int ip1 = i + Tempold._ndof;
 	    int jp1 = j + Tempold._ndof;
@@ -565,7 +565,7 @@ int el_Neum_flag=0;
 
        xyz.val_g();
        
-       static_cast<Temperature*>(_eqnmap._qtymap.get_qty("Qty_Temperature"))->heatflux_txyz(time,xyz._val_g,Qflux_g);
+       static_cast<Temperature*>(_eqnmap._qtymap.get_qty("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
    
 	Tempold.val_g(); //For the penalty Dirichlet //i need this for interpolating the old function at the gauss point
 

@@ -262,11 +262,11 @@ for (uint fe = 0; fe < QL; fe++)     {
      BhomAdj.grad_g();
 
 // vector product
-      Math::extend(   Vel._val_g,   Vel._val_g3D,space_dim);
-      Math::extend(VelAdj._val_g,VelAdj._val_g3D,space_dim);
+      Math::extend(   &Vel._val_g[0],   &Vel._val_g3D[0],space_dim);
+      Math::extend(&VelAdj._val_g[0],&VelAdj._val_g3D[0],space_dim);
 
-      Math::cross(BhomAdj._curl_g3D,   Vel._val_g3D,curlxiXvel_g3D ); 
-      Math::cross(   Bhom._curl_g3D,VelAdj._val_g3D,curlbXlambda_g3D );
+      Math::cross(BhomAdj._curl_g3D,   &Vel._val_g3D[0],curlxiXvel_g3D ); 
+      Math::cross(   Bhom._curl_g3D,&VelAdj._val_g3D[0],curlbXlambda_g3D );
 //========end preparation for things that are independent of (i,j) dofs of test and shape =====================
   
 //================================
@@ -288,8 +288,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 	 Math::extend(dphiidx_g,dphiidx_g3D,space_dim);
 	 Math::cross(BhomAdj._curl_g3D,dphiidx_g3D,curlxiXdphii_g3D);
 
-	  double bDdphii_g      = Math::dot(  Bhom._val_g,dphiidx_g,space_dim);
-	  double lambdaDdphii_g = Math::dot(VelAdj._val_g,dphiidx_g,space_dim);
+	  double bDdphii_g      = Math::dot(  &Bhom._val_g[0],dphiidx_g,space_dim);
+	  double lambdaDdphii_g = Math::dot(&VelAdj._val_g[0],dphiidx_g,space_dim);
 
 	  for (uint idim=0; idim<space_dim; idim++) Lapxi_g[idim]=0.;
 	  for (uint idim=0; idim<space_dim; idim++)  {
@@ -329,8 +329,8 @@ for (uint fe = 0; fe < QL; fe++)     {
           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BeOld._FEord][j+idim*BeOld._ndof];
 
 	  double Lap_g = Math::dot(dphijdx_g,dphiidx_g,space_dim);
-	  double lambdaDdphii_g = Math::dot(VelAdj._val_g,dphiidx_g,space_dim);  //TODO why did i recompute it?
-	  double lambdaDdphij_g = Math::dot(VelAdj._val_g,dphijdx_g,space_dim);
+	  double lambdaDdphii_g = Math::dot(&VelAdj._val_g[0],dphiidx_g,space_dim);  //TODO why did i recompute it?
+	  double lambdaDdphij_g = Math::dot(&VelAdj._val_g[0],dphijdx_g,space_dim);
 //============ end preparation for (j) ============
 
           for (uint idim=0; idim<space_dim; idim++) {
@@ -548,7 +548,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 //=======end "COMMON SHAPE PART"===================================
 
    xyz_refbox.val_g();
-      LagMultOld._qtyptr->Function_txyz(time,xyz_refbox._val_g/*xyz._val_g*/,LagMultOld._val_g);  //i prefer using the function instead of the p_old vector
+      LagMultOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0]/*xyz._val_g*/,&LagMultOld._val_g[0]);  //i prefer using the function instead of the p_old vector
 
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================

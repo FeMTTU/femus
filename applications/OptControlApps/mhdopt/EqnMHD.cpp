@@ -257,9 +257,9 @@ for (uint fe = 0; fe < QL; fe++)     {
 #endif
 
 #if (VELOCITY_QTY==1) && (BMAG_QTY==1) //in this case we have two couplings with external quantities
-       Math::extend( Vel._val_g, Vel._val_g3D,space_dim);                    //----- for Advection RHS
-       Math::extend(Bext._val_g,Bext._val_g3D,space_dim);                    //----- for Advection RHS
-       Math::cross( Vel._val_g3D,Bext._val_g3D,vXBe_g3D);          //----- for Advection RHS
+       Math::extend(&Vel._val_g[0],&Vel._val_g3D[0],space_dim);                    //----- for Advection RHS
+       Math::extend(&Bext._val_g[0],&Bext._val_g3D[0],space_dim);                    //----- for Advection RHS
+       Math::cross(&Vel._val_g3D[0],&Bext._val_g3D[0],vXBe_g3D);          //----- for Advection RHS
 #endif
 
 //================================
@@ -321,7 +321,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     //--------- LAPLACIAN: Operator, MAT: grad b . grad phi ---------------------
           double     Lap_g = Math::dot(Phij._grad_g[0],Phii._grad_g[0],space_dim);   /*(i,j)*/  //part independent of idim
     //--------- ADVECTION: Operator, MAT: v x b . curl phi -------------------
-          double Advphii_g = Math::dot( Vel._val_g    ,Phii._grad_g[0],space_dim);  /*(i)*/ //part independent of idim //TODO what about putting it OUTSIDE?
+          double Advphii_g = Math::dot( &Vel._val_g[0],Phii._grad_g[0],space_dim);  /*(i)*/ //part independent of idim //TODO what about putting it OUTSIDE?
      
           for (uint idim=0; idim<space_dim/*bhomOld._dim*/; idim++) { //filled in as 1-2-3 // 5-6-4 // 9-7-8
             int irowq=i+idim*bhomOld._ndof;   //idim gives the row index  //test of bhomOld
@@ -582,7 +582,7 @@ if (_Dir_pen_fl == 1)  {
 //---------lagmult
 	    //"post gauss method"
    xyz_refbox.val_g(); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
-      LagMultOld._qtyptr->Function_txyz(time,xyz_refbox._val_g,LagMultOld._val_g);  //check that you have ZERO here
+      LagMultOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0],&LagMultOld._val_g[0]);  //check that you have ZERO here
       
 #if VELOCITY_QTY==1
      Vel.val_g();
@@ -591,9 +591,9 @@ if (_Dir_pen_fl == 1)  {
      Bext.val_g();
 #endif
 #if (VELOCITY_QTY==1) && (BMAG_QTY==1)
-          Math::extend( Vel._val_g,Vel._val_g3D,space_dim);
-	  Math::extend(Bext._val_g,Bext._val_g3D,space_dim);
-	  Math::cross(Vel._val_g3D,Bext._val_g3D,velXBext_g3D);
+          Math::extend( &Vel._val_g[0],&Vel._val_g3D[0],space_dim);
+	  Math::extend(&Bext._val_g[0],&Bext._val_g3D[0],space_dim);
+	  Math::cross(&Vel._val_g3D[0],&Bext._val_g3D[0],velXBext_g3D);
   	  Math::extend(currgp.get_normal_ptr(),normal_g3D,space_dim);
 	  Math::cross(velXBext_g3D,normal_g3D,velXBextXn_g3D);
 #endif
