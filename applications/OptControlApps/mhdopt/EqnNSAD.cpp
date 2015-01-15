@@ -362,19 +362,7 @@ if (_Dir_pen_fl == 0)  {
   } 
   // end of element loop
 
-  // cleaning
-  VelAdjOld.Deallocate();
-  PressAdjOld.Deallocate();
-  xyz.Deallocate();
-  xyz_refbox.Deallocate();  
-  Vel.Deallocate();
-  VelDes.Deallocate();
-  Bhom.Deallocate();
-  Bext.Deallocate();
-  Bmag.Deallocate();
-  BhomAdj.Deallocate();
-  
-  
+ 
   }//END VOLUME
   
     // *****************************************************************
@@ -554,13 +542,6 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 
  }//elem loop
    
-   
-  // cleaning
-  VelAdjOld.Deallocate();
-  PressAdjOld.Deallocate();
-  xyz.Deallocate();
-  xyz_refbox.Deallocate();  
-  
   }//END BOUNDARY ************************
   
 #ifdef DEFAULT_PRINT_INFO

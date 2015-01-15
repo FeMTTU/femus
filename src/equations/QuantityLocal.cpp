@@ -165,12 +165,6 @@ void QuantityLocal::Allocate() {
 }
 
 
-void QuantityLocal::Deallocate() {
-  
-
-  return; 
-}
-
 ///copy the space_dim-sized dof vector into its 3D version
 void QuantityLocal::ExtendDofs() {
   

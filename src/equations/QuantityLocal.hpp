@@ -14,6 +14,9 @@ namespace femus {
  class CurrGaussPointBase;
  class CurrElem;
 
+
+ //Remember that you need to allocate the operators before if you use them
+ 
   class QuantityLocal {
     
   public:
@@ -25,7 +28,7 @@ namespace femus {
     //TODO all these function are of the SET type (this is how I should call them), that is why they are NOT CONST
    void  VectWithQtyFillBasic();             //this needs the quantity and the fe map
    void Allocate();
-   void Deallocate();
+
    void                 val_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void                grad_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void                curl_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
@@ -39,15 +42,16 @@ namespace femus {
     
 
     std::vector<double>  _val_g;
-    std::vector<double>  _val_g3D;   //for cross products             //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    std::vector<double>  _val_dofs;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    std::vector<double>  _val_dofs3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    std::vector< std::vector<double> >  _grad_g;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    std::vector< std::vector<double> >  _grad_g3D;  //for cross products   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    std::vector<double> _curl_g3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
+    std::vector<double>  _val_g3D;
+    std::vector< std::vector<double> >  _grad_g;
+    std::vector< std::vector<double> >  _grad_g3D;
+    std::vector<double> _curl_g3D;
     
-    std::vector<double> _el_average;  /*[spacedim]*/ //NEED TO ALLOCATE THIS EXPLICITLY WHERE IT'S USED... TODO this class must be reconsidered!!! with std::vectorss, and so on!!!
-
+    std::vector<double>  _val_dofs;  
+    std::vector<double>  _val_dofs3D;
+    
+    std::vector<double> _el_average;
+    
     uint _FEord; 
     uint _dim;
     uint _ndof;

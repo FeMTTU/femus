@@ -418,16 +418,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
   } 
   // end of element loop
 
-  //cleaning  
-   xyz_refbox.Deallocate();
-   xyz.Deallocate();
-   VelOld.Deallocate();
-   pressOld.Deallocate();
-#if TEMP_QTY==1    
-   Temp.Deallocate();
-#endif 
-   
-  
+ 
   }//END VOLUME
   
     // *****************************************************************
@@ -647,14 +638,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
   }
   // end of BDRYelement loop
 
-  
-  //cleaning  
-   xyz_refbox.Deallocate();
-   xyz.Deallocate();
-   VelOld.Deallocate();
-   pressOld.Deallocate();
-
-   
+    
     }
   // END BOUNDARY ******************************
   

@@ -354,18 +354,6 @@ if (_Dir_pen_fl == 0)  {
   } 
   // end of element loop
 
-  // cleaning
-  BhomAdjOld.Deallocate();
-  BhomLagMultAdjOld.Deallocate();
-  xyz.Deallocate();
-  xyz_refbox.Deallocate();
-  Vel.Deallocate();
-  VelAdj.Deallocate();
-  Bhom.Deallocate();
-  Bext.Deallocate();
-  Bmag.Deallocate();
- 
-
   }//END VOLUME
   
     // *****************************************************************
@@ -537,11 +525,6 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 
  }//elem loop
 
-  // cleaning
-  BhomAdjOld.Deallocate();
-  BhomLagMultAdjOld.Deallocate();
-  xyz.Deallocate();
-  xyz_refbox.Deallocate();
  
   }//END BOUNDARY ************************
   

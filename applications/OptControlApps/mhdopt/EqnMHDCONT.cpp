@@ -425,18 +425,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   } 
   // end of element loop
 
-// cleaning
-   xyz_refbox.Deallocate(); 
-          xyz.Deallocate();
-        BeOld.Deallocate();
-   LagMultOld.Deallocate();
-#if VELOCITY_QTY==1
-   Vel.Deallocate();
-#endif
-   VelAdj.Deallocate();
-   Bhom.Deallocate();
-   BhomAdj.Deallocate();
-   
+  
   }//END VOLUME
   
     // *****************************************************************
@@ -617,13 +606,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
   }
   //end bdry element loop
       
-      
-// cleaning
-   xyz_refbox.Deallocate(); 
-          xyz.Deallocate();
-        BeOld.Deallocate();
-   LagMultOld.Deallocate();
-   
+  
     }  
     
 // END BOUNDARY  // **************************

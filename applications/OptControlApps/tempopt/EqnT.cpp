@@ -439,16 +439,7 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(fe); }
   } // end of element loop
   // *****************************************************************
 
- //=========== cleaning stage ==============
-  Tdes.Deallocate();
-  TAdj.Deallocate();
-  Tlift.Deallocate();
-  Tempold.Deallocate();
-  xyz.Deallocate();
-  xyz_refbox.Deallocate();
-  vel.Deallocate(); 
-  
-  
+ 
    }//END VOLUME
   
    { //BEGIN BOUNDARY  // *****************************************************************
@@ -599,15 +590,7 @@ int el_Neum_flag=0;
   }
       // end of BDRYelement loop
     
-//=========== cleaning stage ==============
-  Tdes.Deallocate();
-  TAdj.Deallocate();
-  Tlift.Deallocate();
-  Tempold.Deallocate();
-  xyz.Deallocate();
-  xyz_refbox.Deallocate();
-
-     
+    
   }//END BOUNDARY
 
   
@@ -840,14 +823,7 @@ double EqnT::ComputeIntegral (const uint Level) {
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
     }
  
-  // cleaning ===
-  Tdes.Deallocate();
-  Tlift.Deallocate();
-  Tempold.Deallocate();
-  xyz.Deallocate();
-  xyz_refbox.Deallocate();
-    
-    
+   
   return J;  
     
 }
@@ -949,11 +925,6 @@ double EqnT::ComputeNormControl (const uint Level, const uint reg_ord ) {
 #endif
    
     std::cout << "@@@@@@@@@@@@@@@@ control norm: " << reg_ord << " " << J << std::endl;
-    
-   //cleaning ====
-  Tlift.Deallocate();
-  xyz.Deallocate();
-  xyz_refbox.Deallocate();
     
     
   return J;  

@@ -590,20 +590,6 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
   } 
   // end of element loop
   
-//cleaning
-  xyz_refbox.Deallocate();
-  xyz.Deallocate();
-//=========Internal Quantities: no ifdef for them =========
-  VelOld.Deallocate();
-  pressOld.Deallocate();
-#if BMAG_QTY==1
-  Bmag.Deallocate();
-  Bhom.Deallocate();
-  Bext.Deallocate();
-#endif
-#if TEMP_QTY==1 
-  Temp.Deallocate();
-#endif
 
   }//END VOLUME
   
@@ -827,12 +813,6 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
   }
   // end of BDRYelement loop
 
-//cleaning
-  xyz_refbox.Deallocate();
-  xyz.Deallocate();
-//=========Internal Quantities: no ifdef for them =========
-  VelOld.Deallocate();
-  pressOld.Deallocate();
   
     }
   // END BOUNDARY ******************************
@@ -981,13 +961,6 @@ for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel._val_g[j] - VelDe
     }//gauss loop
      
     }//element loop
-    
-   //cleaning 
-   xyz.Deallocate();
-   xyz_refbox.Deallocate();
-   Vel.Deallocate();
-   VelDes.Deallocate();
- 
     
   return integral;  
   

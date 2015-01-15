@@ -173,8 +173,6 @@ double myval_g = pt2func(time,xyz._val_g);
     
      std::cout << std::endl << " ^^^^^^^^^^^^^^^^^L'integrale totale vale: " << J << std::endl;
 
-    xyz.Deallocate();
-   
   return J;  
   
 }

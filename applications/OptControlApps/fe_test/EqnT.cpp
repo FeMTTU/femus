@@ -302,13 +302,6 @@ for (uint fe = 0; fe < QL; fe++)     {
   } // end of element loop
   // *****************************************************************
 
-//=========== cleaning stage ==============
-Temp3.Deallocate();
-Temp2.Deallocate();
-Tempold.Deallocate();
-xyz.Deallocate();
-xyz_refbox.Deallocate();
-
   delete [] dphijdx_g;
   delete [] dphiidx_g;
   delete [] dphijdx_gLL;
@@ -458,13 +451,6 @@ int el_Neum_flag=0;
   }
       // end of BDRYelement loop
     
-//=========== cleaning stage ==============
-Temp3.Deallocate();
-Temp2.Deallocate();
-Tempold.Deallocate();
-xyz.Deallocate();
-xyz_refbox.Deallocate();
-
 
   }//END BOUNDARY
 

@@ -391,23 +391,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   } 
   // end of element loop
   
- Phii.Deallocate();
- Phij.Deallocate();
- Psii.Deallocate();
- Psij.Deallocate();
  
- xyz_refbox.Deallocate();
- xyz.Deallocate();
- bhomOld.Deallocate();
- LagMultOld.Deallocate();
-#if BMAG_QTY==1
-   Bext.Deallocate();
-#endif
-#if VELOCITY_QTY==1
-   Vel.Deallocate();
-#endif
-   
-  
   }//END VOLUME
   
     // *****************************************************************
@@ -678,22 +662,6 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
   }
   // end of BDRYelement loop  
   
- Phii.Deallocate();
- Phij.Deallocate();
- Psii.Deallocate();
- Psij.Deallocate();
- 
- xyz_refbox.Deallocate();
- xyz.Deallocate();
- bhomOld.Deallocate();
- LagMultOld.Deallocate();
-#if BMAG_QTY==1
-   Bext.Deallocate();
-#endif
-#if VELOCITY_QTY==1
-   Vel.Deallocate();
-#endif
-   
     }  
     
 // END BOUNDARY  // *****************************************************************
