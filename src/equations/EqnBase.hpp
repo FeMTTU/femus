@@ -99,7 +99,7 @@ public:
 //=======================================================================
 //========= MULTIGRID FUNCTIONS (Vectors + A,R,P) ======== (procs,levels) 
 //=======================================================================
-    void initMGOps();                                           ///initialize A, R, P and read
+    void ReadMGOps();                                           ///initialize A, R, P and read
     void ReadMatrix(const std::string& name);  ///< Reading matrix A
     void ReadProl(const std::string& name);    ///< Reading Prolongation
     void ReadRest(const std::string& name);    ///< Reading Restriction

@@ -2002,7 +2002,7 @@ void EqnBase::MGCheck(int Level) const {
 //but i would do altogether in the ReadMatrix files
 
 
-void EqnBase::initMGOps() {
+void EqnBase::ReadMGOps() {
 
     std::string     f_matrix = DEFAULT_F_MATRIX;
     std::string       f_rest = DEFAULT_F_REST;

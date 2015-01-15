@@ -83,7 +83,7 @@ void  EquationsMap::setDofBcOpIc() {
     mgsol -> GenBc();
     mgsol -> GenElBc();
 //=====================
-    mgsol -> initMGOps();
+    mgsol -> ReadMGOps();
 //=====================
     mgsol -> initVectors();     //TODO can I do it earlier than this position?
 //=====================
