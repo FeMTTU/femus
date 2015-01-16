@@ -2504,6 +2504,10 @@ void GenCase::PrintElemVB(hid_t file,
 		       ElemStoBase** el_sto_in,
 		       const std::vector<std::pair<int,int> >  el_fm_libm_in ) const {
 
+// const unsigned from_libmesh_to_xdmf[27] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26};  //id
+// const unsigned from_libmesh_to_xdmf[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,21,22,23,24,20,25,26};  //from libmesh to femus
+// const unsigned from_libmesh_to_xdmf[27]    = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,24,22,21,23,20,25,26};  //from libmesh to xdmf
+
     std::ostringstream name;
 
     std::string auxvb[VB];
@@ -2530,11 +2534,24 @@ void GenCase::PrintElemVB(hid_t file,
     dimsf[1] = 1;
     IO::print_Ihdf5(file,(elems_fem_vb + "/OFF_EL"), dimsf,_off_el[vb]);
 
-    // Mesh 1 Volume at all levels  packaging data  (volume) ----------
     //here you pick all the elements at all levels,
     //and you print their connectivities according to the libmesh ordering
     int *tempconn;
     tempconn=new int[_n_elements_sum_levs[vb]*_elnodes[vb][QQ]]; //connectivity of all levels
+    
+// // //     if (_elnodes[vb][QQ] == 27)  { //HEX27
+// // // 
+// // //        for (int ielem=0;ielem<_n_elements_sum_levs[vb];ielem++) {
+// // //         for (uint inode=0;inode<_elnodes[vb][QQ];inode++) {
+// // //             int el_libm =   el_fm_libm_in[ielem].second;
+// // //             int nd_libm = el_sto_in[el_libm]->_elnds[inode];
+// // //             tempconn[ from_libmesh_to_xdmf[inode] + ielem*_elnodes[vb][QQ] ] = nd_libm_fm[nd_libm];
+// // //         }
+// // //     }      
+// // //     
+// // //     }//HEX27
+// // //     else {
+      
     for (int ielem=0;ielem<_n_elements_sum_levs[vb];ielem++) {
         for (uint inode=0;inode<_elnodes[vb][QQ];inode++) {
             int el_libm =   el_fm_libm_in[ielem].second;
@@ -2542,7 +2559,9 @@ void GenCase::PrintElemVB(hid_t file,
             tempconn[inode+ielem*_elnodes[vb][QQ]] = nd_libm_fm[nd_libm];
         }
     }
-    // global mesh hdf5 storage ------------------------------
+    
+// // //   }
+  
     dimsf[0] = _n_elements_sum_levs[vb]*_elnodes[vb][QQ];
     dimsf[1] = 1;
     IO::print_Ihdf5(file,(elems_fem_vb + "/CONN"), dimsf,tempconn);
@@ -2552,18 +2571,20 @@ void GenCase::PrintElemVB(hid_t file,
 
         int *conn_lev=new int[_n_elements_vb_lev[vb][ilev]*_elnodes[vb][QQ]];  //connectivity of ilev
 
+        
         int ltot=0;
         for (int iproc=0;iproc <_NoSubdom; iproc++) {
             for (int iel = _off_el[vb][iproc*_NoLevels+ilev];
                      iel < _off_el[vb][iproc*_NoLevels+ilev+1]; iel++) {
                 for (uint inode=0;inode<_elnodes[vb][QQ];inode++) {
-                    conn_lev[ltot*_elnodes[vb][QQ]+inode]=
-                        tempconn[  iel*_elnodes[vb][QQ]+inode];
+                    conn_lev[ltot*_elnodes[vb][QQ] + inode ] =
+                        tempconn[  iel*_elnodes[vb][QQ] + inode ];
                 }
                 ltot++;
             }
         }
-        // hdf5 storage     ----------------------------------
+        
+       
         dimsf[0] = _n_elements_vb_lev[vb][ilev]*_elnodes[vb][QQ];
         dimsf[1] = 1;
 

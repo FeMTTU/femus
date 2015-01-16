@@ -173,7 +173,10 @@ void elem_type::EvaluateShapeAtQP(const std::string geomel_id_in, const uint fe_
 // HEX 27 CASE ========================================== 
 // HEX 27 CASE ==========================================     
 // from eu connectivity to my (=libmesh) connectivity
-const unsigned map_hex27[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,24,20,21,22,23,25,26};
+const unsigned from_femus_to_libmesh[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,24,20,21,22,23,25,26};
+//                                          0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26 
+// from libmesh to eu connectivity
+const unsigned from_libmesh_to_femus[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,21,22,23,24,20,25,26};
 
 if ( fe_family_in == QQ && GetDim() == 3  && (!strcmp(geomel_id_in.c_str(),"hex")) ) {
             std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "REMEMBER THAT ONLY HEX27 HAS A DIFFERENT CONNECTIVITY MAP"  << std::endl;
@@ -182,13 +185,13 @@ if ( fe_family_in == QQ && GetDim() == 3  && (!strcmp(geomel_id_in.c_str(),"hex"
 
       for (int idof=0; idof < GetNDofs(); idof++) {
 //                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;
-        _phi_mapGD[ig][idof] = GetPhi(ig)[ map_hex27[idof] ];
+        _phi_mapGD[ig][idof] = GetPhi(ig)[ from_femus_to_libmesh[idof] ];
 // 	std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapGD[vb][ig][dof] << std::endl;
 
 // derivatives in canonical element
         for (uint idim = 0; idim < GetDim(); idim++) {
           double* dphi_g =   ( this->*(_DPhiXiEtaZetaPtr[idim]) )(ig);  //how to access a pointer to member function
-          _dphidxez_mapGD[ig][ idof + idim*GetNDofs()] =  dphi_g[ map_hex27[idof] ];
+          _dphidxez_mapGD[ig][ idof + idim*GetNDofs()] =  dphi_g[ from_femus_to_libmesh[idof] ];
           std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapGD[ig][ idof + idim*GetNDofs()]  << "                                      "  << std::endl;
 
         }
