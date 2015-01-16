@@ -190,19 +190,19 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
 
     currelem.SetElDofsBc(Level);
     
-           BhomAdjOld.GetElDofsVect(Level);
-    BhomLagMultAdjOld.GetElDofsVect(Level);
+           BhomAdjOld.GetElemDofs(Level);
+    BhomLagMultAdjOld.GetElemDofs(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),BhomAdjOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
     
     
-     if ( Vel._eqnptr != NULL )      Vel.GetElDofsVect(Level);
+     if ( Vel._eqnptr != NULL )      Vel.GetElemDofs(Level);
     else                             Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
-    if ( VelAdj._eqnptr != NULL ) VelAdj.GetElDofsVect(Level);
+    if ( VelAdj._eqnptr != NULL ) VelAdj.GetElemDofs(Level);
     else                          VelAdj._qtyptr->FunctionDof(VelAdj,time,&xyz_refbox._val_dofs[0]);
-    if ( Bhom._eqnptr != NULL )     Bhom.GetElDofsVect(Level);
+    if ( Bhom._eqnptr != NULL )     Bhom.GetElemDofs(Level);
     else                            Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
-    if ( Bext._eqnptr != NULL )     Bext.GetElDofsVect(Level);
+    if ( Bext._eqnptr != NULL )     Bext.GetElemDofs(Level);
     else                            Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
 
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
@@ -419,8 +419,8 @@ if (_Dir_pen_fl == 0)  {
 
      currelem.SetElDofsBc(Level);
      
-            BhomAdjOld.GetElDofsVect(Level);
-     BhomLagMultAdjOld.GetElDofsVect(Level);
+            BhomAdjOld.GetElemDofs(Level);
+     BhomLagMultAdjOld.GetElemDofs(Level);
    
      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),BhomAdjOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        

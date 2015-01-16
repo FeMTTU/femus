@@ -237,7 +237,7 @@ void QuantityLocal::ExtendDofs() {
 // In the same way in the FINE RHS we have the true rhs,
 // while in all the other rhs we have the RESIDUALS.
 
-void QuantityLocal::GetElDofsVect(const uint Level)  {
+void QuantityLocal::GetElemDofs(const uint Level)  {
   
   //we should put some try catch or something, to make sure that what we are calling here is already correctly filled as it should be
   //TODO FROM EQUATION HERE

@@ -213,19 +213,19 @@ void EqnMHDCONT::init_equation_data() {
 
     currelem.SetElDofsBc(Level);
     
-         BeOld.GetElDofsVect(Level);  
-    LagMultOld.GetElDofsVect(Level);
+         BeOld.GetElemDofs(Level);  
+    LagMultOld.GetElemDofs(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),BeOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
  
     
-    if ( Vel._eqnptr != NULL )        Vel.GetElDofsVect(Level);
+    if ( Vel._eqnptr != NULL )        Vel.GetElemDofs(Level);
     else                              Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
-    if ( VelAdj._eqnptr != NULL )  VelAdj.GetElDofsVect(Level);
+    if ( VelAdj._eqnptr != NULL )  VelAdj.GetElemDofs(Level);
     else                           VelAdj._qtyptr->FunctionDof(VelAdj,time,&xyz_refbox._val_dofs[0]);
-    if ( Bhom._eqnptr != NULL )      Bhom.GetElDofsVect(Level);
+    if ( Bhom._eqnptr != NULL )      Bhom.GetElemDofs(Level);
     else                             Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
-    if ( BhomAdj._eqnptr != NULL ) BhomAdj.GetElDofsVect(Level);
+    if ( BhomAdj._eqnptr != NULL ) BhomAdj.GetElemDofs(Level);
     else                           BhomAdj._qtyptr->FunctionDof(BhomAdj,time,&xyz_refbox._val_dofs[0]);    
     
 
@@ -486,8 +486,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 
      currelem.SetElDofsBc(Level);
      
-          BeOld.GetElDofsVect(Level);
-     LagMultOld.GetElDofsVect(Level);
+          BeOld.GetElemDofs(Level);
+     LagMultOld.GetElemDofs(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),BeOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
 

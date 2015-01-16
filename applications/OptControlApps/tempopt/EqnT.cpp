@@ -223,9 +223,9 @@ void  EqnT::GenMatRhs(const uint Level) {
       
     currelem.SetElDofsBc(Level);
 
-  Tempold.GetElDofsVect(Level);
-    Tlift.GetElDofsVect(Level);
-     TAdj.GetElDofsVect(Level);
+  Tempold.GetElemDofs(Level);
+    Tlift.GetElemDofs(Level);
+     TAdj.GetElemDofs(Level);
      
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
 
@@ -249,10 +249,10 @@ int domain_flag = myphys->ElFlagControl(xyz_refbox._el_average);
   // it is better to avoid using GetElDofs if the Vect is internal, only if external  
   //Do not use GetElDofs if you want to pick an intermediate dof...
       
-   if ( vel._eqnptr != NULL )  vel.GetElDofsVect(Level);
+   if ( vel._eqnptr != NULL )  vel.GetElemDofs(Level);
    else                        vel._qtyptr->FunctionDof(vel,time,&xyz_refbox._val_dofs[0]);
 
-   if ( Tdes._eqnptr != NULL )  Tdes.GetElDofsVect(Level);
+   if ( Tdes._eqnptr != NULL )  Tdes.GetElemDofs(Level);
    else                         Tdes._qtyptr->FunctionDof(Tdes,time,&xyz_refbox._val_dofs[0]);
 
 
@@ -270,8 +270,10 @@ const double      det = dt*currgp.JacVectVV_g(xyz);
 const double dtxJxW_g = det*_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
-for (uint fe = 0; fe < QL; fe++)     { currgp.SetDPhiDxyzElDofsFEVB_g   (fe,qp); }
-for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(fe); }
+for (uint fe = 0; fe < QL; fe++)     { 
+  currgp.SetDPhiDxyzElDofsFEVB_g   (fe,qp);
+  currgp.ExtendDphiDxyzElDofsFEVB_g(fe);
+}
 //======= end of the "COMMON SHAPE PART"==================
 
  	Tempold.val_g(); 
@@ -512,9 +514,9 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(fe); }
      
       currelem.SetElDofsBc(Level);
       
-       Tempold.GetElDofsVect(Level);
-         Tlift.GetElDofsVect(Level);
-          TAdj.GetElDofsVect(Level);
+       Tempold.GetElemDofs(Level);
+         Tlift.GetElemDofs(Level);
+          TAdj.GetElemDofs(Level);
 
      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified!
   
@@ -763,11 +765,11 @@ double EqnT::ComputeIntegral (const uint Level) {
       int el_flagdom = optphys->ElFlagControl(xyz_refbox._el_average);
 //====================     
  
-    if ( Tempold._eqnptr != NULL )   Tempold.GetElDofsVect(Level);
+    if ( Tempold._eqnptr != NULL )   Tempold.GetElemDofs(Level);
     else                             Tempold._qtyptr->FunctionDof(Tempold,0.,&xyz_refbox._val_dofs[0]);
-    if ( Tlift._eqnptr != NULL )       Tlift.GetElDofsVect(Level);
+    if ( Tlift._eqnptr != NULL )       Tlift.GetElemDofs(Level);
     else                               Tlift._qtyptr->FunctionDof(Tlift,0.,&xyz_refbox._val_dofs[0]);
-    if ( Tdes._eqnptr != NULL )         Tdes.GetElDofsVect(Level);
+    if ( Tdes._eqnptr != NULL )         Tdes.GetElemDofs(Level);
     else                                Tdes._qtyptr->FunctionDof(Tdes,0.,&xyz_refbox._val_dofs[0]);    
 
 
@@ -888,7 +890,7 @@ double EqnT::ComputeNormControl (const uint Level, const uint reg_ord ) {
       currelem.ConvertElemCoordsToMappingOrd(xyz);
       _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
      
-     Tlift.GetElDofsVect(Level);
+     Tlift.GetElemDofs(Level);
 
 
   for (uint qp = 0; qp < el_ngauss; qp++) {

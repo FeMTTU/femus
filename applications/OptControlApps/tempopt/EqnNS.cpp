@@ -194,15 +194,15 @@
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
     currelem.SetElDofsBc(Level);
-      VelOld.GetElDofsVect(Level);
-    pressOld.GetElDofsVect(Level);
+      VelOld.GetElemDofs(Level);
+    pressOld.GetElemDofs(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),qtyzero_ord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
 
    
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
 #if (TEMP_QTY==1)
-   if ( Temp._eqnptr != NULL )  Temp.GetElDofsVect(Level);
+   if ( Temp._eqnptr != NULL )  Temp.GetElemDofs(Level);
      else                       Temp._qtyptr->FunctionDof(Temp,time,&xyz_refbox._val_dofs[0]);
 #endif
 
@@ -495,8 +495,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
      currelem.SetElDofsBc(Level);
      
-     VelOld.GetElDofsVect(Level);
-     pressOld.GetElDofsVect(Level);
+     VelOld.GetElemDofs(Level);
+     pressOld.GetElemDofs(Level);
 
      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),qtyzero_ord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        

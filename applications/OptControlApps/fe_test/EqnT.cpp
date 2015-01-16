@@ -143,9 +143,9 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
       
     currelem.SetElDofsBc(Level);
 
-  Tempold.GetElDofsVect(Level);
-    Temp2.GetElDofsVect(Level);
-    Temp3.GetElDofsVect(Level);
+  Tempold.GetElemDofs(Level);
+    Temp2.GetElemDofs(Level);
+    Temp3.GetElemDofs(Level);
     
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
 
@@ -373,9 +373,9 @@ for (uint fe = 0; fe < QL; fe++)     {
      
       currelem.SetElDofsBc(Level);
       
-       Tempold.GetElDofsVect(Level);
-         Temp2.GetElDofsVect(Level);
-         Temp3.GetElDofsVect(Level);
+       Tempold.GetElemDofs(Level);
+         Temp2.GetElemDofs(Level);
+         Temp3.GetElemDofs(Level);
 
      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified!
   
