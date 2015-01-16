@@ -127,7 +127,6 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
     currelem.Rhs().zero(); 
 
     currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
-    currelem.set_el_DofObj_lev_subd(Level,myproc,iel);
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -365,7 +364,6 @@ for (uint fe = 0; fe < QL; fe++)     {
       currelem.Rhs().zero();
 
       currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
-      currelem.set_el_DofObj_lev_subd(Level,myproc,iel);
       currelem.SetMidpoint(); 
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);

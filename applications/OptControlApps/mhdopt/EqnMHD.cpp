@@ -201,7 +201,6 @@ namespace femus {
     currelem.Rhs().zero();
 
      currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
-     currelem.set_el_DofObj_lev_subd(Level,_iproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -499,7 +498,6 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.Rhs().zero(); 
      
      currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
-     currelem.set_el_DofObj_lev_subd(Level,_iproc,iel); 
      currelem.SetMidpoint();
 
      currelem.ConvertElemCoordsToMappingOrd(xyz);

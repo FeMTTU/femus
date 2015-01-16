@@ -207,7 +207,6 @@ void  EqnT::GenMatRhs(const uint Level) {
     currelem.Rhs().zero(); 
 
     currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
-    currelem.set_el_DofObj_lev_subd(Level,myproc,iel);
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -506,7 +505,6 @@ for (uint fe = 0; fe < QL; fe++)     {
       currelem.Rhs().zero();
 
       currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
-      currelem.set_el_DofObj_lev_subd(Level,myproc,iel);
       currelem.SetMidpoint(); 
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -754,7 +752,6 @@ double EqnT::ComputeIntegral (const uint Level) {
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
       currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
-      currelem.set_el_DofObj_lev_subd(Level,myproc,iel);
       currelem.SetMidpoint();
       
       currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -884,7 +881,6 @@ double EqnT::ComputeNormControl (const uint Level, const uint reg_ord ) {
     for (int iel=0; iel < (nel_e - nel_b); iel++) {
 
       currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
-      currelem.set_el_DofObj_lev_subd(Level,myproc,iel);
       currelem.SetMidpoint();
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
