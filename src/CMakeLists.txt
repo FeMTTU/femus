@@ -15,7 +15,6 @@ algebra/DenseVectorBase.cpp
 algebra/Graph.cpp
 algebra/LinearEquation.cpp
 algebra/LinearEquationSolver.cpp
-algebra/LinearSolverM.cpp
 algebra/NumericVector.cpp
 algebra/GmresPetscLinearEquationSolver.cpp
 algebra/PetscLinearSolverM.cpp

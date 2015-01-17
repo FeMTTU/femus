@@ -125,7 +125,15 @@ PetscErrorCode __libmesh_petsc_preconditioner_apply(PC pc, Vec x, Vec y) {
 
 
 
+  void PetscLinearSolverM::set_tolerances(const double &rtol, const double &atol,
+						    const double &divtol, const unsigned &maxits) {
 
+    _rtol   = static_cast<PetscReal>(rtol);
+    _abstol = static_cast<PetscReal>(atol);
+    _dtol   = static_cast<PetscReal>(divtol);
+    _maxits = static_cast<PetscInt>(maxits);
+						      
+  }
 
 
 

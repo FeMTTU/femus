@@ -11,6 +11,7 @@
 
 #include "FemusDefault.hpp"
 
+#include "MgSmootherEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "QTYnumEnum.hpp"
 #include "Quantity.hpp"
@@ -26,7 +27,7 @@
 
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
-#include "LinearSolverM.hpp"
+#include "LinearEquationSolver.hpp"
 #include "DenseMatrix.hpp"
 
 
@@ -80,8 +81,8 @@ EqnBase::EqnBase(std::vector<Quantity*> int_map_in,
  _number_tang_comps[2] = 3;
     
     //========= solver package ===========
-    _solver = new LinearSolverM*[_NoLevels];     //well, we clearly use the same package for all levels...
-    for (uint l=0;l<_NoLevels;l++) _solver[l] = LinearSolverM::build().release();
+    _solver = new LinearEquationSolver*[_NoLevels];     //well, we clearly use the same package for all levels...
+    for (uint l=0;l<_NoLevels;l++) _solver[l] = LinearEquationSolver::build(0,NULL,NO_SMOOTHER).release();
     
 
 }

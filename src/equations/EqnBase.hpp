@@ -29,7 +29,7 @@ class QuantityLocal;
 
 class SparseMatrix;
 class NumericVector;
-class LinearSolverM;
+class LinearEquationSolver;
 
 
 
@@ -150,7 +150,7 @@ public:
 //=======================================================================
 //======= MG: Linear Solvers for every Level ============
 //=======================================================================
-  LinearSolverM **_solver;     ///< linear system solver type (each level)
+  LinearEquationSolver **_solver;     ///< linear system solver type (each level)
 
 protected:
   

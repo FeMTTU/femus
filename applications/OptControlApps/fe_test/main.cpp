@@ -24,7 +24,7 @@
 #include "Quantity.hpp"
 #include "QTYnumEnum.hpp"
 #include "Box.hpp"  //for the DOMAIN
-#include "LinearSolverM.hpp"
+#include "LinearEquationSolver.hpp"
 
 
 // application 

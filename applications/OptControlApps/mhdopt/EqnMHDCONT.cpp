@@ -7,7 +7,7 @@
 #include "SparseMatrix.hpp"
 #include "DenseVector.hpp"
 #include "NumericVector.hpp"
-#include "LinearSolverM.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "Math.hpp"
 #include "Physics.hpp"

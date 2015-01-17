@@ -2,7 +2,7 @@
 
  Program: FEMuS
  Module: LinearEquationSolver
- Authors: Eugenio Aulisa, Simone Bnà
+ Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
 
  Copyright (c) FEMuS
  All rights reserved.
@@ -122,6 +122,13 @@ public:
 
     /** Call the smoother-solver using the PetscLibrary. */
     virtual void solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean) = 0;
+    
+  /** Old solver with algebra objects passed as arguments TODO think of removing */
+  virtual std::pair<unsigned int, double> solve (SparseMatrix&,  // System Matrix
+					       NumericVector&, // Solution vector
+					       NumericVector&, // RHS vector
+					       const double,      // Stopping tolerance
+					       const unsigned int) { }; // N. Iterations
 
 protected:
 
