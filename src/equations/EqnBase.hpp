@@ -57,10 +57,13 @@ public:
   std::vector<NumericVector *> _x_oold;    //this is used by MGTimeStep and also by the OptLoop
   std::vector<NumericVector *> _x_tmp;
   
-
           void  initVectors();                                      ///initialize vectors                                                               //System//
-          void PrintVector(std::string namefile);   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
+
+	  void PrintVector(std::string namefile);   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
           void  ReadVector(std::string namefile);                       ///read from a "Quadratic-Linearized" Mesh                                      //Writer/Reader// 
+
+//======= Linear Solvers for every Level ============
+  LinearEquationSolver **_solver;     ///(each level)
 
 //=======================================================================
 //======= Quantities =========
@@ -130,7 +133,7 @@ public:
   virtual void  ic_read(const double * xp, double * ic,const double * el_xm) const = 0; //TODO see what parameters can be made constant
           
 //=======================================================================
-//==== BOUNDARY CONDITIONS of the equation ========= (procs,levels) ==     //the Boundary conditions are in MultilevelSolution
+//==== BOUNDARY CONDITIONS of the equation ========= (procs,levels) ==     //MultilevelSolution
 //=======================================================================
     int   *_bc;         //==== NODAL DIRICHLET ======== ///< boundary conditions map (top level)  // POINTWISE(NODAL) FLAG for the BOUNDARY DOFS = FLAG for the tEST FUNCTIONS //TODO this should be PrintNumericVector of the equation, integer instead of double! do it when you make it parallel especially! //Later on I will do a bc for every level, considering the ELEMENT DOFS
     int  **_bc_fe_kk;   //==== FE KK DIRICHLET ========
@@ -153,9 +156,6 @@ public:
           void Bc_ScaleDofVec(NumericVector * myvec,  double ScaleFac);
           void Bc_AddDofVec(NumericVector* myvec, NumericVector* myvec2 );
           void Bc_AddScaleDofVec(NumericVector* vec_in,NumericVector* vec_out,const double ScaleFac );
-
-//======= Linear Solvers for every Level ============
-  LinearEquationSolver **_solver;     ///(each level)
 
 protected:
   

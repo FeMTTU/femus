@@ -38,6 +38,8 @@
 #include "libmesh/libmesh.h"
 #endif
 
+  void transient_loopPlusJ(EquationsMap & eqmap_in);   // ALGORITHM 
+
 // =======================================
 // TEMPERATURE + NS optimal control problem
 // ======================================= 
@@ -213,7 +215,7 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
   
   time_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
 
-  phys.transient_loopPlusJ(equations_map);
+  transient_loopPlusJ(equations_map);
 
 // at this point, the run has been completed 
   files.PrintRunForRestart(DEFAULT_LAST_RUN);/*(iproc==0)*/  //============= prepare default for next restart ==========  

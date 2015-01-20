@@ -34,10 +34,6 @@ TempPhysics(  RunTimeMap<double> & map_in);
    //========= CONTROL ====================================
       int ElFlagControl(const std::vector<double> el_xm) const;
 
-   //================= ALGORITHM ==========================
-  void transient_loopPlusJ(EquationsMap & eqmap_in);
-  
-
 };
 
 

@@ -93,10 +93,17 @@ void TempPhysics::set_nondimgroups() {
 
   return;
 }
+ 
 
+
+} //end namespace femus
+
+
+  
+using namespace femus;
 
  //=================
-    void TempPhysics::transient_loopPlusJ(EquationsMap & eqmap_in)  {
+    void transient_loopPlusJ(EquationsMap & eqmap_in)  {
 
     //  parameters
     double         dt = eqmap_in._timeloop._timemap.get("dt");
@@ -159,10 +166,5 @@ J = eqnT->ComputeNormControl ( eqmap_in._mesh._NoLevels - 1,1 );
     return;
   }
   
-
-
-} //end namespace femus
-
-
   
-
+  
