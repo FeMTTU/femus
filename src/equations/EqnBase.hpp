@@ -47,11 +47,11 @@ public:
 
   std::vector<NumericVector *> _x_old; //// LinearEquation (each level)
   
-  std::vector<NumericVector *> _x_oold;
+  std::vector<NumericVector *> _x_oold;    //this is used by MGTimeStep and also by the OptLoop
   std::vector<NumericVector *> _x_tmp;
         double MGTimeStep(const uint iter);                    ///< MG time step solver (backward Euler)
 
-          void  initVectors();                                      ///initialize vectors
+          void  initVectors();                                      ///initialize vectors                                                               //System//
           void PrintVector(std::string namefile);   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
           void  ReadVector(std::string namefile);                       ///read from a "Quadratic-Linearized" Mesh                                      //Writer/Reader// 
 
@@ -64,7 +64,7 @@ public:
   //====== Attributes of the equation ====
 //=======================================================================
   const std::string _eqname;   ///< equation name     //System//
-  uint               _iproc;   ///< processor rank
+  uint               _iproc;   ///< processor rank    //ParallelObject//
   const uint      _NoLevels;   ///< level number      //System//
 
 //=======================================================================
@@ -75,10 +75,10 @@ public:
           std::string eq_name_in="Base",
 	  std::string varname_in="u");   //System//
   
-  virtual ~EqnBase(); //System//
+  virtual ~EqnBase();                    //System//
   
 //=======================================================================
-//==== DOF MAP of the equation ============ (procs,levels) ==============
+//==== DOF MAP of the equation ============ (procs,levels) ==============   //// LinearEquation (each level)
 //=======================================================================
 //====== data =======
   int    **  _node_dof; ///< dof map
@@ -101,15 +101,13 @@ public:
 //=======================================================================
 //========= MULTIGRID FUNCTIONS (Vectors + A,R,P) ======== (procs,levels) 
 //=======================================================================
-    void ReadMGOps();
-    void ReadMatrix(const std::string& name);
-    void ReadProl(const std::string& name);
-    void ReadRest(const std::string& name);
-    void ComputeMatrix();
-    void ComputeProl();
-    void ComputeRest();
-    void PrintOneVarMatrixHDF5(std::string name, std::string groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel ) const;
-    void PrintOneVarMGOperatorHDF5(std::string filename, std::string groupname, uint* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe) const;
+    void ReadMGOps();                         // LinearEquation  (each level)
+    void ReadMatrix(const std::string& name); // LinearEquation  (each level)
+    void ReadProl(const std::string& name);   // LinearEquation  (each level)
+    void ReadRest(const std::string& name);   // LinearEquation  (each level)
+    void ComputeMatrix();                     // LinearEquation  (each level)
+    void ComputeProl();                       // LinearEquation  (each level)
+    void ComputeRest();                       // LinearEquation  (each level)
 
  virtual  void GenMatRhs(const uint Level) = 0;  //System//
           void MGSolve(double Eps,int MaxIter, const uint Gamma=DEFAULT_MG_GAMMA, const uint Nc_pre=DEFAULT_NC_PRE,const uint Nc_coarse=DEFAULT_NC_COARSE,const uint Nc_post=DEFAULT_NC_POST);  //PetscLinearSolverM//
@@ -120,11 +118,11 @@ public:
 //=======================================================================
 // ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==
 // ========================================================
-          void    GenIc();
+          void    GenIc();           //MultilevelSolution, Initialize function
   virtual void  ic_read(const double * xp, double * ic,const double * el_xm) const = 0; //TODO see what parameters can be made constant
           
 //=======================================================================
-//==== BOUNDARY CONDITIONS of the equation ========= (procs,levels) ==
+//==== BOUNDARY CONDITIONS of the equation ========= (procs,levels) ==     //the Boundary conditions are in MultilevelSolution
 //=======================================================================
     int   *_bc;         //==== NODAL DIRICHLET ======== ///< boundary conditions map (top level)  // POINTWISE(NODAL) FLAG for the BOUNDARY DOFS = FLAG for the tEST FUNCTIONS //TODO this should be PrintNumericVector of the equation, integer instead of double! do it when you make it parallel especially! //Later on I will do a bc for every level, considering the ELEMENT DOFS
     int  **_bc_fe_kk;   //==== FE KK DIRICHLET ========
@@ -157,7 +155,7 @@ protected:
 // ====== data pointer ==========
 //=======================================================================
   Files                     & _files;
-  Physics                   & _phys;           //In MultilevelProblem
+  Physics                   & _phys;           //passed from MultilevelProblem
   MeshTwo                   & _mesh;
   std::vector<FEElemBase*>  &  _AbstractFE;
   EquationsMap              & _eqnmap;
