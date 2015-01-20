@@ -220,7 +220,7 @@ void CurrElem::PrintOrientation() const {
   }
 
    // =====================================================================================
-  void CurrElem::set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel) const {
+  void CurrElem::set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel) {
 
     const uint mydim = _eqnmap._mesh.get_dim();
     const uint mesh_ord = (int) _eqnmap._mesh.GetRuntimeMap().get("mesh_ord");    
@@ -235,23 +235,20 @@ void CurrElem::PrintOrientation() const {
           _xx_nds[indxn] = _eqnmap._mesh._xyz[_el_conn[n]+idim*_eqnmap._mesh._NoNodesXLev[_eqnmap._mesh._NoLevels-1]];
       }
    }
-    
-    return;
-  }   
-
- // =====================================================================================
-void CurrElem::set_el_DofObj_lev_subd(const uint Level,const uint isubd_in,const uint iel) {
-
-     int sum_elems_prev_sd_at_lev = 0;
+   
+   
+    int sum_elems_prev_sd_at_lev = 0;
       for (uint pr = 0; pr< isubd_in; pr++) { sum_elems_prev_sd_at_lev += _eqnmap._mesh._off_el[_mesh_vb][_eqnmap._mesh._NoLevels*pr + Level + 1] - _eqnmap._mesh._off_el[_mesh_vb][ _eqnmap._mesh._NoLevels*pr + Level]; }
     uint iel_DofObj = iel + sum_elems_prev_sd_at_lev;
     if       (_mesh_vb == VV)  { _vol_iel_DofObj = iel_DofObj; }   
-    else if  (_mesh_vb == BB)  { _vol_iel_DofObj = _eqnmap._mesh._el_bdry_to_vol[Level][iel_DofObj]; }
-          
-    return; 
-}
+    else if  (_mesh_vb == BB)  { _vol_iel_DofObj = _eqnmap._mesh._el_bdry_to_vol[Level][iel_DofObj]; }  
+   
 
    
+    return;
+  }   
+
+  
   
 // ========================================================
   ///here, the original element order of the nodes is respected in xyz._val_dofs 

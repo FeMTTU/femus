@@ -300,7 +300,6 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     currelem.Rhs().zero(); 
 
     currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
-    currelem.set_el_DofObj_lev_subd(Level,myproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -309,21 +308,21 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
     currelem.SetElDofsBc(Level);
     
-      VelOld.GetElDofsVect(Level);
-    pressOld.GetElDofsVect(Level);
+      VelOld.GetElemDofs(Level);
+    pressOld.GetElemDofs(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),qtyzero_ord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
 
    
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
  #if (BMAG_QTY==1)
-  if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(Level); 
+  if ( Bext._eqnptr != NULL )  Bext.GetElemDofs(Level); 
   else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
-  if ( Bhom._eqnptr != NULL )  Bhom.GetElDofsVect(Level);   
+  if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs(Level);   
   else                         Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
 #endif
 #if (TEMP_QTY==1)
-   if ( Temp._eqnptr != NULL ) Temp.GetElDofsVect(Level);
+   if ( Temp._eqnptr != NULL ) Temp.GetElemDofs(Level);
      else                      Temp._qtyptr->FunctionDof(Temp,time,&xyz_refbox._val_dofs[0]);
 #endif
 
@@ -661,7 +660,6 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
      currelem.Rhs().zero();
 
      currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
-     currelem.set_el_DofObj_lev_subd(Level,myproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -669,8 +667,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
      currelem.SetElDofsBc(Level);
      
-     VelOld.GetElDofsVect(Level);
-     pressOld.GetElDofsVect(Level);
+     VelOld.GetElemDofs(Level);
+     pressOld.GetElemDofs(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),qtyzero_ord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
@@ -914,7 +912,6 @@ double EqnNS::ComputeIntegral (const uint Level) const {
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
     currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
-    currelem.set_el_DofObj_lev_subd(Level,_iproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -925,9 +922,9 @@ double EqnNS::ComputeIntegral (const uint Level) const {
     int el_flagdom = optphys->ElFlagControl(xyz_refbox._el_average);
 //=======        
 
-    if ( Vel._eqnptr != NULL )       Vel.GetElDofsVect(Level);
+    if ( Vel._eqnptr != NULL )       Vel.GetElemDofs(Level);
     else                             Vel._qtyptr->FunctionDof(Vel,0./*time*/,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
-    if ( VelDes._eqnptr != NULL ) VelDes.GetElDofsVect(Level);
+    if ( VelDes._eqnptr != NULL ) VelDes.GetElemDofs(Level);
     else                          VelDes._qtyptr->FunctionDof(VelDes,0./*time*/,&xyz_refbox._val_dofs[0]);    
 
 //AAA time is picked as a function pointer of the time C library i think...

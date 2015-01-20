@@ -69,11 +69,8 @@ class QuantityLocal;
       return _KeM;
     }
     
-    void  set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel) const;
+    void  set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel);
     
-    //TODO this is not const because _vol_iel_DofObj is NOT A POINTER! 
-    void  set_el_DofObj_lev_subd(const uint Level,const uint isubd_in,const uint iel);
-
     //TODO notice that this is not changing the POINTER , so it is const!
     void  SetMidpoint() const;
     

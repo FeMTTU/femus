@@ -185,7 +185,6 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
     currelem.Rhs().zero(); 
 
     currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
-    currelem.set_el_DofObj_lev_subd(Level,_iproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -193,21 +192,21 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
 
     currelem.SetElDofsBc(Level);
     
-    VelAdjOld.GetElDofsVect(Level);  
-    PressAdjOld.GetElDofsVect(Level);
+    VelAdjOld.GetElemDofs(Level);  
+    PressAdjOld.GetElemDofs(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),VelAdjOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
   
     
-    if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(Level);
+    if ( Vel._eqnptr != NULL )  Vel.GetElemDofs(Level);
     else                         Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
-    if ( Bhom._eqnptr != NULL )  Bhom.GetElDofsVect(Level);
+    if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs(Level);
     else                         Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
-    if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(Level);
+    if ( Bext._eqnptr != NULL )  Bext.GetElemDofs(Level);
     else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
-    if ( BhomAdj._eqnptr != NULL )  BhomAdj.GetElDofsVect(Level);
+    if ( BhomAdj._eqnptr != NULL )  BhomAdj.GetElemDofs(Level);
     else                            BhomAdj._qtyptr->FunctionDof(BhomAdj,time,&xyz_refbox._val_dofs[0]);    
-    if ( VelDes._eqnptr != NULL )  VelDes.GetElDofsVect(Level);
+    if ( VelDes._eqnptr != NULL )  VelDes.GetElemDofs(Level);
     else                           VelDes._qtyptr->FunctionDof(VelDes,time,&xyz_refbox._val_dofs[0]);    
 
  
@@ -419,7 +418,6 @@ if (_Dir_pen_fl == 0)  {
 	 currelem.Rhs().zero();
 
      currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
-     currelem.set_el_DofObj_lev_subd(Level,_iproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -427,8 +425,8 @@ if (_Dir_pen_fl == 0)  {
 
      currelem.SetElDofsBc(Level);
 
-     VelAdjOld.GetElDofsVect(Level);
-     PressAdjOld.GetElDofsVect(Level);
+     VelAdjOld.GetElemDofs(Level);
+     PressAdjOld.GetElemDofs(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),VelAdjOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        

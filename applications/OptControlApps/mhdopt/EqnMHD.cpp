@@ -201,7 +201,6 @@ namespace femus {
     currelem.Rhs().zero();
 
      currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
-     currelem.set_el_DofObj_lev_subd(Level,_iproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -209,19 +208,19 @@ namespace femus {
 
     currelem.SetElDofsBc(Level);
     
-       bhomOld.GetElDofsVect(Level);
-    LagMultOld.GetElDofsVect(Level);
+       bhomOld.GetElemDofs(Level);
+    LagMultOld.GetElemDofs(Level);
   
       if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),bhomOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
 
 
 
 #if BMAG_QTY==1
-    if ( Bext._eqnptr != NULL )  Bext.GetElDofsVect(Level);
+    if ( Bext._eqnptr != NULL )  Bext.GetElemDofs(Level);
     else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
 #endif
 #if VELOCITY_QTY==1
-    if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(Level);      //----- for Advection MAT & RHS
+    if ( Vel._eqnptr != NULL )  Vel.GetElemDofs(Level);      //----- for Advection MAT & RHS
     else                        Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
 #endif
     
@@ -499,7 +498,6 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.Rhs().zero(); 
      
      currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
-     currelem.set_el_DofObj_lev_subd(Level,_iproc,iel); 
      currelem.SetMidpoint();
 
      currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -507,8 +505,8 @@ for (uint fe = 0; fe < QL; fe++)     {
    
      currelem.SetElDofsBc(Level);
      
-        bhomOld.GetElDofsVect(Level);
-     LagMultOld.GetElDofsVect(Level);
+        bhomOld.GetElemDofs(Level);
+     LagMultOld.GetElemDofs(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),bhomOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
@@ -541,11 +539,11 @@ if (_Dir_pen_fl == 1)  {
     
 //========== EXTERNAL DOFS ===   
 #if BMAG_QTY==1
-    if ( Bext._eqnptr != NULL )   Bext.GetElDofsVect(Level);
+    if ( Bext._eqnptr != NULL )   Bext.GetElemDofs(Level);
     else                          Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
 #endif
 #if VELOCITY_QTY==1
-    if ( Vel._eqnptr != NULL )  Vel.GetElDofsVect(Level);
+    if ( Vel._eqnptr != NULL )  Vel.GetElemDofs(Level);
     else                        Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
 #endif
     
