@@ -34,10 +34,12 @@
 // EXTERN_C_FOR_PETSC_END
 #endif
 
+
 // ========================================
 /// Class FemusInit
 // ========================================
 
+#include "adept.h"
 
 namespace femus {
 
@@ -53,6 +55,8 @@ public:
     /// Destructor
     ~FemusInit();
     
+    static adept::Stack adeptStack; 
+     
 };
 
 

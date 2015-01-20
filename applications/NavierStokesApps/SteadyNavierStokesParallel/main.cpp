@@ -57,7 +57,7 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=2;
+  nm=4;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
   nr=0;
@@ -391,27 +391,20 @@ bool SetBoundaryConditionCavityFlow(const double& x, const double& y, const doub
 }
 
 
-// //------------------------------------------------------------------------------------------------------------
-
-#include "adept.h"
-
 static unsigned counter=0;
-
-static adept::Stack adeptStack; 
 
 void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
  
-       
+    adept::Stack & adeptStack = FemusInit::adeptStack;
+    
     clock_t AssemblyTime=0;
     clock_t start_time, end_time;
-  
-    //static adept::Stack adeptStack; 
-    
+      
     //pointers and references
-    MultiLevelSolution*	 ml_sol	                      = ml_prob._ml_sol;
-    Solution*	 mysolution  	                      = ml_sol->GetSolutionLevel(level);
+    MultiLevelSolution*	 ml_sol	               = ml_prob._ml_sol;
+    Solution*	 mysolution  	               = ml_sol->GetSolutionLevel(level);
     NonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<NonLinearImplicitSystem>("Navier-Stokes");
-    LinearEquationSolver*  myLinEqSolver	     = my_nnlin_impl_sys._LinSolver[level];   
+    LinearEquationSolver*  myLinEqSolver       = my_nnlin_impl_sys._LinSolver[level];   
     
     Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(level);
     elem		*myel		=  mymsh->el;
@@ -954,9 +947,9 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     clock_t GetLambdaTime=0;
     clock_t start_time, end_time;
     start_time=clock();
-         
-    //pointers and references
-    
+       
+    adept::Stack & adeptStack = FemusInit::adeptStack;
+            
     Solution *mysolution = mlSol.GetSolutionLevel(level);
     Mesh *mymsh	=  mlSol._ml_msh->GetLevel(level);
     elem *myel	=  mymsh->el;
@@ -964,9 +957,9 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 
     unsigned indLmbd=mlSol.GetIndex("lmbd");
     
-    const unsigned goeDim = mymsh->GetDimension();
-    const unsigned nablaGoeDim = 3*(goeDim-1);
-    const unsigned max_size = static_cast< unsigned > (ceil(pow(3,goeDim)));
+    const unsigned geoDim = mymsh->GetDimension();
+    const unsigned nablaGoeDim = (3*(geoDim-1)+!(geoDim-1));
+    const unsigned max_size = static_cast< unsigned > (ceil(pow(3,geoDim)));
   
     bool diffusion, elasticity;
     if(!strcmp("diffusion", operatorName)){
@@ -983,14 +976,14 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       abort();
     }
            
-    unsigned varDim=goeDim*elasticity+diffusion;
+    unsigned varDim=geoDim*elasticity+diffusion;
     
     // local objects
     vector<vector<adept::adouble> > GradSolVAR(varDim);
     vector<vector<adept::adouble> > NablaSolVAR(varDim);
     
     for(int ivar=0;ivar<varDim;ivar++){
-      GradSolVAR[ivar].resize(goeDim);
+      GradSolVAR[ivar].resize(geoDim);
       NablaSolVAR[ivar].resize(nablaGoeDim);
     }
         
@@ -1000,11 +993,11 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     adept::adouble Weight;
     
     phi.reserve(max_size);
-    gradphi.reserve(max_size*goeDim);
+    gradphi.reserve(max_size*geoDim);
     nablaphi.reserve(max_size*nablaGoeDim);
         
-    vector <vector < adept::adouble> > vx(goeDim);
-    for(int ivar=0;ivar<goeDim;ivar++){
+    vector <vector < adept::adouble> > vx(geoDim);
+    for(int ivar=0;ivar<geoDim;ivar++){
       vx[ivar].reserve(max_size);
     }
     unsigned SolTypeVx=2.;
@@ -1046,13 +1039,13 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       // ------------------------------------
       
       // ------------ get coordinates -------  
-      for(int i=0;i<goeDim;i++){
+      for(int i=0;i<geoDim;i++){
 	vx[i].resize(nveVx);
       }
       for (unsigned i=0;i<nveVx;i++) {
 	unsigned inode=myel->GetMeshDof(kel,i,SolTypeVx);
 	unsigned inodeVx_Metis=mymsh->GetMetisDof(inode,SolTypeVx);	
-	for(int j=0; j<goeDim; j++) {
+	for(int j=0; j<geoDim; j++) {
 	  //coordinates
 	  vx[j][i]=  (*mymsh->_coordinate->_Sol[j])(inodeVx_Metis); 
 	}
@@ -1075,16 +1068,16 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	// *** get Jacobian and test function and test function derivatives in the moving frame***
 	mymsh->_finiteElement[kelt][SolType]->Jacobian_AD(vx,ig,Weight,phi,gradphi,nablaphi);
 	if(ig==0){
-	  double referenceElementArea[6]={8, 1./6., 1., 4., 1., 2.};
+	  double referenceElementScale[6]={8., 1./6., 1., 4., 1., 2.};
 	  double GaussWeight = mymsh->_finiteElement[kelt][SolType]->GetGaussWeight(ig);
-	  double area=referenceElementArea[kelt]*Weight.value()/GaussWeight;
-	  hk = pow(area,1./goeDim);
+	  double area=referenceElementScale[kelt]*Weight.value()/GaussWeight;
+	  hk = pow(area,1./geoDim);
 	  //cout<<hk<<endl;
 	  if(0 == SolType) break;
 	}
 		
 	for(int ivar=0; ivar<varDim; ivar++){
-	  for(int jvar=0; jvar<goeDim; jvar++) {
+	  for(int jvar=0; jvar<geoDim; jvar++) {
 	    GradSolVAR[ivar][jvar]=0.;
 	  }
 	  for(int jvar=0; jvar<nablaGoeDim; jvar++) {
@@ -1092,8 +1085,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	  }
 	  for (unsigned inode=0; inode<nve; inode++) {
 	    adept::adouble soli = Soli[ivar][inode];
-	    for(int jvar=0; jvar<goeDim; jvar++) {
-	      GradSolVAR[ivar][jvar] += gradphi[inode*goeDim+jvar]*soli;
+	    for(int jvar=0; jvar<geoDim; jvar++) {
+	      GradSolVAR[ivar][jvar] += gradphi[inode*geoDim+jvar]*soli;
 	    }
 	    for(int jvar=0; jvar<nablaGoeDim; jvar++) {
 	      NablaSolVAR[ivar][jvar]+=nablaphi[inode*nablaGoeDim+jvar]*soli;
@@ -1104,16 +1097,16 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	
 	vector < adept::adouble > divGradSol(varDim,0.);
 	for(unsigned ivar=0; ivar<varDim; ivar++) {
-	  for(unsigned jvar=0; jvar<goeDim; jvar++) {
+	  for(unsigned jvar=0; jvar<geoDim; jvar++) {
 	    if(diffusion){
 	      divGradSol[ivar] += NablaSolVAR[ivar][jvar];
 	    }
 	    else if(elasticity){
 	      unsigned kvar;
 	      if(ivar == jvar) kvar = jvar;
-	      else if (1 == ivar + jvar ) kvar = goeDim;   // xy
-	      else if (2 == ivar + jvar ) kvar = goeDim+2; // xz
-	      else if (3 == ivar + jvar ) kvar = goeDim+1; // yz
+	      else if (1 == ivar + jvar ) kvar = geoDim;   // xy
+	      else if (2 == ivar + jvar ) kvar = geoDim+2; // xz
+	      else if (3 == ivar + jvar ) kvar = geoDim+1; // yz
 	      divGradSol[ivar]   += 0.5*( NablaSolVAR[ivar][jvar] + NablaSolVAR[jvar][kvar]);
 	    }
 	  }
@@ -1122,22 +1115,22 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	//BEGIN local assembly  
 	for (unsigned i=0; i<nve; i++){
 	  for(unsigned ivar=0; ivar<varDim; ivar++) {
-	    for(unsigned jvar=0; jvar<goeDim; jvar++) {
-	      aRhs[ivar][i] += gradphi[i*goeDim+jvar]*(GradSolVAR[ivar][jvar]) * Weight;
+	    for(unsigned jvar=0; jvar<geoDim; jvar++) {
+	      aRhs[ivar][i] += gradphi[i*geoDim+jvar]*(GradSolVAR[ivar][jvar]) * Weight;
 	      if(diffusion){
 		aLhs[ivar][i] +=  divGradSol[ivar] * nablaphi[i*nablaGoeDim+jvar] * Weight; 
-		//aRhs[ivar][i] += gradphi[i*goeDim+jvar]*(GradSolVAR[ivar][jvar]) * Weight;
+		//aRhs[ivar][i] += gradphi[i*geoDim+jvar]*(GradSolVAR[ivar][jvar]) * Weight;
 	      }
 	      else if(elasticity){
 		unsigned kvar;
 		if(ivar == jvar) kvar = jvar;
-		else if (1 == ivar + jvar ) kvar = goeDim;   // xy
-		else if (2 == ivar + jvar ) kvar = goeDim+2; // xz
-		else if (3 == ivar + jvar ) kvar = goeDim+1; // yz
+		else if (1 == ivar + jvar ) kvar = geoDim;   // xy
+		else if (2 == ivar + jvar ) kvar = geoDim+2; // xz
+		else if (3 == ivar + jvar ) kvar = geoDim+1; // yz
 		aLhs[ivar][i] +=  divGradSol[ivar] * 0.5 * nablaphi[i*nablaGoeDim+jvar] * Weight;   
 		aLhs[jvar][i] +=  divGradSol[ivar] * 0.5 * nablaphi[i*nablaGoeDim+kvar] * Weight;   
-		//aRhs[ivar][i] += 0.5*gradphi[i*goeDim+jvar]*0.5*(GradSolVAR[ivar][jvar]+GradSolVAR[jvar][ivar]) * Weight;
-		//aRhs[jvar][i] += 0.5*gradphi[i*goeDim+ivar]*0.5*(GradSolVAR[ivar][jvar]+GradSolVAR[jvar][ivar]) * Weight;
+		//aRhs[ivar][i] += 0.5*gradphi[i*geoDim+jvar]*0.5*(GradSolVAR[ivar][jvar]+GradSolVAR[jvar][ivar]) * Weight;
+		//aRhs[jvar][i] += 0.5*gradphi[i*geoDim+ivar]*0.5*(GradSolVAR[ivar][jvar]+GradSolVAR[jvar][ivar]) * Weight;
 	      }
 	    }
 	  }
@@ -1147,7 +1140,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       cout<<hk<<endl;
       double lambdak = 6./(hk*hk); //if SolType is linear
             
-      if( SolType > 0 && SolType < 3){ // only if solType is not linear	         
+      if( SolType == 1 || SolType == 2){ // only if solType is quadratic or biquadratic	         
 	for(int ivar=0; ivar<varDim; ivar++) {  
 	  adeptStack.independent(&Soli[ivar][0], nve); 
 	}

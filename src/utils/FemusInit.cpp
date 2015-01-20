@@ -19,10 +19,9 @@
 #include <iostream>
 #include "FemusInit.hpp"
 
-
 namespace femus {
 
-
+adept::Stack FemusInit::adeptStack; 
 
 // =======================================================
 /// This function initializes the libraries if it is parallel
