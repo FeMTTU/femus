@@ -49,7 +49,6 @@ public:
   
   std::vector<NumericVector *> _x_oold;    //this is used by MGTimeStep and also by the OptLoop
   std::vector<NumericVector *> _x_tmp;
-        double MGTimeStep(const uint iter);                    ///< MG time step solver (backward Euler)
 
           void  initVectors();                                      ///initialize vectors                                                               //System//
           void PrintVector(std::string namefile);   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
@@ -149,6 +148,13 @@ public:
 //======= Linear Solvers for every Level ============
   LinearEquationSolver **_solver;     ///(each level)
 
+//=======================================================================
+//======== MG Ops ============ (procs,levels) ====
+//=======================================================================
+  std::vector<SparseMatrix  *> _A;  // LinearEquation (each level)
+  std::vector<SparseMatrix *> _Rst; // LinearEquation (each level)
+  std::vector<SparseMatrix *> _Prl; // LinearEquation (each level)
+  
 protected:
   
 //=======================================================================
@@ -160,12 +166,6 @@ protected:
   std::vector<FEElemBase*>  &  _AbstractFE;
   EquationsMap              & _eqnmap;
 
-//=======================================================================
-//======== MG Ops ============ (procs,levels) ====
-//=======================================================================
-  std::vector<SparseMatrix  *> _A;  // LinearEquation (each level)
-  std::vector<SparseMatrix *> _Rst; // LinearEquation (each level)
-  std::vector<SparseMatrix *> _Prl; // LinearEquation (each level)
 
 };
 

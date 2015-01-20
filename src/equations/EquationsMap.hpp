@@ -71,15 +71,12 @@ public:
 
 
   void setDofBcOpIc() ;
-  void OneTimestepEqnLoop(const double time, const uint delta_t_step_in);
-
-  void TransientSetup();  //initialization of all the equations in the map
-  void TransientLoop();  //a standard transient loop in alphabetical order
 
 
   // read-print functions -------------------------------------------
   void PrintSol(const uint t_step,const double curr_time) const; ///< Print solution 
-  void ReadSol(const uint t_step,double& time_out);  ///< Read solution //TODO must be updated
+  void ReadSol(const uint t_step,double& time_out) const;  ///< Read solution //TODO must be updated
+  void PrintCase(const uint t_init) const; ///< Print ic and bc
   
 private:
   
@@ -88,7 +85,6 @@ private:
  void PrintSolXDMF(const uint t_step,const double curr_time) const;
  void PrintSolHDF5(const uint t_flag) const;
  
- void PrintCase(const uint t_init) const; ///< Print ic and bc
  void PrintCaseXDMF(const uint t_init) const;
  void PrintCaseHDF5(const uint t_init) const;
 

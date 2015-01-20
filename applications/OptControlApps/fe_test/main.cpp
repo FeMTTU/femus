@@ -164,9 +164,9 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
 //So somehow i'll have to put these objects at a higher level... but so far let us see if we can COMPUTE and PRINT from HERE and not from the gencase
 	 
   equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
-  equations_map.TransientSetup();  // reset the initial state (if restart) and print the Case
+  time_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
 
-  equations_map.TransientLoop();
+  time_loop.TransientLoop(equations_map);
 
 // at this point, the run has been completed 
   files.PrintRunForRestart(DEFAULT_LAST_RUN);/*(iproc==0)*/  //============= prepare default for next restart ==========  

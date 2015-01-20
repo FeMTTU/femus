@@ -3,7 +3,7 @@
 
 #include "Typedefs.hpp"
 #include "RunTimeMap.hpp"
-
+#include "EqnBase.hpp"
 
 namespace femus {
 
@@ -15,7 +15,7 @@ class Files;
 // ===============================================
 //                  TimeLoop class
 // ===============================================
-class TimeLoop  {
+class TimeLoop {
 
 /*  protected:*///TODO make protected use get/set
 public:
@@ -31,7 +31,6 @@ public:
     uint     _curr_t_idx; 
     double   _curr_time;
 
-  
 // public:
   // Constructor -------------------------------
 //  TimeLoop(Utils& mgutils_in, EquationsMap& mgeqmap_in);///< Constructor
@@ -47,7 +46,15 @@ public:
  // i did it "static" so that it can be used regardless of the specific instantiation;
  // since it is static it cannot act on the class runtime map which is not static datum;
  // so i have to pass the "unconstrained" runtime map explicitly  
-static void check_time_par(RunTimeMap<double>&  time_in);
+  static void check_time_par(RunTimeMap<double>&  time_in);
+
+  /////< MG time step solver (backward Euler)
+  double MGTimeStep(const uint iter, EqnBase * eqn) const;   
+  
+  void OneTimestepEqnLoop(const uint delta_t_step_in, const EquationsMap & eqnmap) const;
+
+  void TransientLoop(const EquationsMap & eqnmap);   //a standard transient loop in alphabetical order
+  void TransientSetup(const EquationsMap & eqnmap);  //initialization of all the equations in the map
 
 };
 

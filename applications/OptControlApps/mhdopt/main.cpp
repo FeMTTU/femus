@@ -247,7 +247,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 //================================
 
   equations_map.setDofBcOpIc();     //  /*TODO fileIO  for  Bc, init, and Ic*/
-  equations_map.TransientSetup();  // reset the initial state (if restart) and print the Case   /*TODO fileIO */ 
+  time_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case   /*TODO fileIO */ 
 
 //initialize specific data for specific equations
 //all that happened previously was related to the standard data of EqnBase, basically  

@@ -122,7 +122,7 @@ void TempPhysics::set_nondimgroups() {
 	const uint delta_t_step = curr_step - eqmap_in._timeloop._t_idx_in;
 
       //  time step for each system, without printing (good)
-      eqmap_in.OneTimestepEqnLoop(curr_time, delta_t_step);
+      eqmap_in._timeloop.OneTimestepEqnLoop(delta_t_step,eqmap_in);
 
 #if DEFAULT_PRINT_TIME==1
       std::clock_t    end_time=std::clock();

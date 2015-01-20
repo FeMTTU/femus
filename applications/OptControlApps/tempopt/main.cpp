@@ -210,7 +210,8 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
                            //In fact, part of them is only filled by gencase
 	 
   equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
-  equations_map.TransientSetup();  // reset the initial state (if restart) and print the Case
+  
+  time_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
 
   phys.transient_loopPlusJ(equations_map);
 
