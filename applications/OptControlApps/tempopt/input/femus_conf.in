@@ -47,12 +47,11 @@ thetaz    0.
 <TimeLoop>
 # double
 
-dt          0.1  
+dt          1.  
 itime       0.0  
 initial_step 0
 nsteps      5    
 printstep   1    
-ndigits     4    
 
 </TimeLoop>
 

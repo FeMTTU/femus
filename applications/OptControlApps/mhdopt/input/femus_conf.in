@@ -52,7 +52,6 @@ itime       0.0
 initial_step  0   
 nsteps      5   
 printstep   1   
-ndigits     4   
 
 </TimeLoop>
 

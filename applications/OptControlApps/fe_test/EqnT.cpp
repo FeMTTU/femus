@@ -53,7 +53,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
 
  void  EqnT::GenMatRhs(const uint Level) {
 
-  const double time =  _eqnmap._timeloop._curr_time;
+  const double time =  0.;
    
   TempPhysics* myphys; myphys = static_cast<TempPhysics*>(&_phys);
 

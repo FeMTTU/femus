@@ -4,7 +4,7 @@
 
 // Local Includes -----------------
 #include "EqnBase.hpp"
-
+#include "TimeLoop.hpp"
 
 namespace femus {
 
@@ -16,7 +16,10 @@ class EqnT : public EqnBase {
 
 public:
 
-    EqnT( std::vector<Quantity*> int_map_in,
+    const TimeLoop & _my_timeloop;
+  
+    EqnT(const TimeLoop & time_loop_in,
+	 std::vector<Quantity*> int_map_in,
 	  EquationsMap& mg_equations_map,
           std::string eqname_in="Eqn_T",
           std::string varname_in="T");

@@ -74,7 +74,7 @@ EqnMHDAD::~EqnMHDAD() {}
 
   void EqnMHDAD::GenMatRhs(const uint Level)  {
 
-   const double time =  _eqnmap._timeloop._curr_time;
+   const double time =  0.;  //_eqnmap._timeloop._curr_time;
    
   //====== Physics
   OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&_phys);
@@ -90,7 +90,7 @@ EqnMHDAD::~EqnMHDAD() {}
     
 //======= TIME - STATIONARY OR NOT =======
 const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
-  const double   dt = _eqnmap._timeloop._timemap.get("dt");
+  const double   dt = 1.; //_eqnmap._timeloop._timemap.get("dt");
 
 //======== GEOMETRICAL ELEMENT =======
   const uint space_dim =       _mesh.get_dim();

@@ -37,7 +37,6 @@ public:
     std::vector<FEElemBase*> &  _AbstractFE;
     std::vector< std::vector<elem_type*> >  &  _elem_type;
     std::vector<Gauss>       _qrule;
-    TimeLoop&    _timeloop;
 
   /// Constructor
     EquationsMap( Files& files_in,
@@ -46,8 +45,7 @@ public:
 		  MeshTwo& mgmesh_in,
 		  std::vector<FEElemBase*> & absfe_in,
                   std::vector< std::vector<elem_type*> > & elem_type_in,
-		  std::vector<Gauss> qrule_in,
-		  TimeLoop& timeloop_in
+		  std::vector<Gauss> qrule_in
 		);
 
     

@@ -126,7 +126,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 //================================================  
 
 
-   const double time =  _eqnmap._timeloop._curr_time;
+   const double time =  0.;   //_eqnmap._timeloop._curr_time;
    
   
 //========== PROCESSOR INDEX
@@ -164,7 +164,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 //finite elements for time as well...
 //well, we might do Time as a Vect
 const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
-  const double   dt = _eqnmap._timeloop._timemap.get("dt");  //======delta time==============================
+  const double   dt = 1.; //_eqnmap._timeloop._timemap.get("dt");
 
 //==========FLAG for NONLINEARITY, we might put here
 //this flag in fact may involve BOTH MATRIX and RHS, so here we are on top of both

@@ -38,7 +38,7 @@
 #include "libmesh/libmesh.h"
 #endif
 
-  void transient_loopPlusJ(EquationsMap & eqmap_in);   // ALGORITHM 
+  void transient_loopPlusJ(EquationsMap & eqmap_in, TimeLoop & time_loop_in);   // ALGORITHM 
 
 // =======================================
 // TEMPERATURE + NS optimal control problem
@@ -145,7 +145,7 @@
   // ===== end QuantityMap =========================================
 
   // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,FEElemType_vec,qrule,time_loop);  //here everything is passed as BASE STUFF, like it should!
+  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
   
 //===============================================
@@ -186,7 +186,7 @@ InternalVect_Temp[2] = &tempadj;               tempadj.SetPosInAssocEqn(2);
 InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 #endif
 
-  EqnT* eqnT = new EqnT(InternalVect_Temp,equations_map);
+  EqnT* eqnT = new EqnT(time_loop,InternalVect_Temp,equations_map);
   equations_map.set_eqs(eqnT);  
 
         temperature.set_eqn(eqnT);
@@ -215,7 +215,7 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
   
   time_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
 
-  transient_loopPlusJ(equations_map);
+  transient_loopPlusJ(equations_map,time_loop);
 
 // at this point, the run has been completed 
   files.PrintRunForRestart(DEFAULT_LAST_RUN);/*(iproc==0)*/  //============= prepare default for next restart ==========  

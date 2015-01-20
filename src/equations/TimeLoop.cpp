@@ -64,7 +64,7 @@ namespace femus {
 	uint NoLevels = nolevels_in;
 
         // time parameters
-        const uint ndigits     = _timemap.get("ndigits");
+        const uint ndigits     = DEFAULT_NDIGITS;
         const int print_step   = _timemap.get("printstep");
         // dir names
         std::string    basetime     = DEFAULT_BASETIME;
@@ -270,7 +270,7 @@ void TimeLoop::OneTimestepEqnLoop(
 void TimeLoop::TransientSetup(const EquationsMap & eqnmap)  {
 
     const uint initial_step = _timemap.get("initial_step");
-    const uint ndigits      = _timemap.get("ndigits");
+    const uint ndigits      = DEFAULT_NDIGITS;
 
     std::string   lastrun_f = DEFAULT_LAST_RUN;
     std::string     basesol = DEFAULT_BASESOL;

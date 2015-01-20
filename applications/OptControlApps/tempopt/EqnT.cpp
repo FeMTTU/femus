@@ -48,11 +48,13 @@
 // The first time when you start associating scalar variables to quantities
 // is when you set the BC's
 // ======================================================
-EqnT::EqnT(  std::vector<Quantity*> int_map_in,
+EqnT::EqnT(  const TimeLoop & time_loop_in,
+	     std::vector<Quantity*> int_map_in,
              EquationsMap& equations_map_in,
              std::string eqname_in,
              std::string varname_in):
-    EqnBase(int_map_in,equations_map_in,eqname_in,varname_in) {
+    EqnBase(int_map_in,equations_map_in,eqname_in,varname_in),
+    _my_timeloop(time_loop_in) {
 
 //=======  _var_names[]  ===========
   _var_names[0]="T";
@@ -101,7 +103,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
 /// This function assembles the matrix and the rhs:
 void  EqnT::GenMatRhs(const uint Level) {
 
-  const double time =  _eqnmap._timeloop._curr_time;
+  const double time = 0.; // _eqnmap._timeloop._curr_time;
 
 //========== PHYSICS =======
   TempPhysics* myphys; myphys = static_cast<TempPhysics*>(&_phys);
@@ -110,7 +112,7 @@ void  EqnT::GenMatRhs(const uint Level) {
   const uint myproc = _iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
-  const double    dt = _eqnmap._timeloop._timemap.get("dt");
+  const double    dt = 1.; //_eqnmap._timeloop._timemap.get("dt");
   const uint Nonstat = myphys->_physrtmap.get("NonStatTEMP");
   
 //========= BCHandling =========

@@ -92,11 +92,11 @@ namespace femus {
   double LapBe_g[DIMENSION];
 //============================
   
-   const double time =  _eqnmap._timeloop._curr_time;    
+   const double time =  0.; //_eqnmap._timeloop._curr_time;    
     
 //======= TIME - STATIONARY OR NOT =======
  const int NonStatMHD = (int) _phys._physrtmap.get("NonStatMHD");
-    const double dt   = _eqnmap._timeloop._timemap.get("dt");
+    const double dt   = 1.; //_eqnmap._timeloop._timemap.get("dt");
 
 //========= BCHandling =========
   const double penalty_val = _mesh.GetRuntimeMap().get("penalty_val");    

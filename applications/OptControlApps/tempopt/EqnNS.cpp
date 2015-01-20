@@ -74,14 +74,14 @@
 /// This function assembles the matrix and the rhs:
  void EqnNS::GenMatRhs(const uint Level)  {
 
-   const double time =  _eqnmap._timeloop._curr_time;
+   const double time =  0.;//_eqnmap._timeloop._curr_time;
    
 //========== PROCESSOR INDEX
   const uint myproc = _iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
   const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
-  const double     dt = _eqnmap._timeloop._timemap.get("dt");
+  const double     dt = 1.; //_eqnmap._timeloop._timemap.get("dt");
 
 //========= BCHandling =========
   const double penalty_val = _mesh.GetRuntimeMap().get("penalty_val");    

@@ -45,7 +45,7 @@
 using namespace femus;
 
 //***************** functions for this application
-void optimization_loop(EquationsMap& e_map_in);
+void optimization_loop(EquationsMap& e_map_in, TimeLoop  & time_loop_in);
 
 // double funzione(double t , const double* xyz) {return 1.;} 
 
@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
            time_loop._timemap.print();
   
   // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,FEElemType_vec,qrule,time_loop);
+  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,FEElemType_vec,qrule);
   
 //===============================================
 //================== Add EQUATIONS  AND ======================
@@ -257,7 +257,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   
 //   equations_map.TransientLoop();   // perform the time evolution for all the equations  /*TODO fileIO*/
 
-    optimization_loop(equations_map);  /////
+    optimization_loop(equations_map,time_loop);  /////
 
 // // //   eqnNS->FunctionIntegral (0,funzione);
 // // //   eqnNS->FunctionIntegral (1,funzione);

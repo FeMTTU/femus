@@ -91,7 +91,7 @@ Box* box= static_cast<Box*>(_mesh.GetDomain());
 
   bc_flag[0]=0;  //always fixed //T'
   
-    if  (_eqnmap._timeloop._curr_t_idx < 1)  
+    if  (_my_timeloop._curr_t_idx < 1)  
    {   bc_flag[1]=0; }
     else if ( (x_rotshift[1]) < 0.4*(le[1]-lb[1])  ||  (x_rotshift[1]) > 0.6*(le[1]-lb[1]) )  {  bc_flag[1]=0;  } 
     //T_0
@@ -122,7 +122,7 @@ Box* box= static_cast<Box*>(_mesh.GetDomain());
       bc_flag[0]=0; //always fixed
 
       //===== START FROM A SIMPLE STATE SOLUTION =========
-if  (_eqnmap._timeloop._curr_t_idx < 1)   bc_flag[1]=0;     //      bc_flag[1]=0; //=====CONTROL//////////////
+if  (_my_timeloop._curr_t_idx < 1)   bc_flag[1]=0;     //      bc_flag[1]=0; //=====CONTROL//////////////
       //===== START FROM A SIMPLE STATE SOLUTION =========
 else if  ( (x_rotshift[0]) < 0.25*(le[0] - lb[0]) || ( x_rotshift[0]) > 0.75*(le[0] - lb[0]) )  {  bc_flag[1]=0; }
       

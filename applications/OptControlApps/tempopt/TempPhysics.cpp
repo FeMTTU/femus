@@ -103,15 +103,15 @@ void TempPhysics::set_nondimgroups() {
 using namespace femus;
 
  //=================
-    void transient_loopPlusJ(EquationsMap & eqmap_in)  {
+    void transient_loopPlusJ(EquationsMap & eqmap_in, TimeLoop & time_loop_in)  {
 
     //  parameters
-    double         dt = eqmap_in._timeloop._timemap.get("dt");
-    int    print_step = eqmap_in._timeloop._timemap.get("printstep");
+    double         dt = time_loop_in._timemap.get("dt");
+    int    print_step = time_loop_in._timemap.get("printstep");
 
-    double curr_time = eqmap_in._timeloop._time_in;  //initialize current time
+    double curr_time = time_loop_in._time_in;  //initialize current time
     
- for (uint curr_step = eqmap_in._timeloop._t_idx_in + 1; curr_step <= eqmap_in._timeloop._t_idx_final; curr_step++) {
+ for (uint curr_step = time_loop_in._t_idx_in + 1; curr_step <= time_loop_in._t_idx_final; curr_step++) {
 
    curr_time += dt;
 
@@ -119,17 +119,17 @@ using namespace femus;
       std::clock_t  start_time=std::clock();
 #endif
 
-       eqmap_in._timeloop._curr_t_idx = curr_step;
-       eqmap_in._timeloop._curr_time  = curr_time;
+       time_loop_in._curr_t_idx = curr_step;
+       time_loop_in._curr_time  = curr_time;
 
-      std::cout << "\n  ** Solving time step " << eqmap_in._timeloop._curr_t_idx
-                << ", time = "                 << eqmap_in._timeloop._curr_time   << " ***" << std::endl;
+      std::cout << "\n  ** Solving time step " << time_loop_in._curr_t_idx
+                << ", time = "                 << time_loop_in._curr_time   << " ***" << std::endl;
 
        
-	const uint delta_t_step = curr_step - eqmap_in._timeloop._t_idx_in;
+	const uint delta_t_step = curr_step - time_loop_in._t_idx_in;
 
       //  time step for each system, without printing (good)
-      eqmap_in._timeloop.OneTimestepEqnLoop(delta_t_step,eqmap_in);
+      time_loop_in.OneTimestepEqnLoop(delta_t_step,eqmap_in);
 
 #if DEFAULT_PRINT_TIME==1
       std::clock_t    end_time=std::clock();

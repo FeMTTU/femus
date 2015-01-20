@@ -32,16 +32,14 @@ EquationsMap::EquationsMap(Files& files_in,
                            MeshTwo& mgmesh_in,
                            std::vector<FEElemBase*> & absfe_in,
                            std::vector< std::vector<elem_type*> >  & elem_type_in,
-			   std::vector<Gauss>   qrule_in,
-                           TimeLoop& timeloop_in ):
+			   std::vector<Gauss>   qrule_in ):
         _files(files_in),
         _phys(mgphys_in),
         _qtymap(qtymap_in),
         _mesh(mgmesh_in),
         _AbstractFE(absfe_in),
         _elem_type(elem_type_in),
-        _qrule(qrule_in),
-        _timeloop(timeloop_in)  {}
+        _qrule(qrule_in)  {}
 
 
 // ====================================================
@@ -116,7 +114,7 @@ void EquationsMap::PrintSolHDF5(const uint t_flag ) const {
     const uint    iproc =_mesh._iproc;
     if (iproc==0) {
 
-        const uint     ndigits  = _timeloop._timemap.get("ndigits");
+        const uint     ndigits  = DEFAULT_NDIGITS;
         std::string    basesol  = DEFAULT_BASESOL;
         std::string     ext_h5  = DEFAULT_EXT_H5;
         std::ostringstream filename;
@@ -162,8 +160,7 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) const 
     const uint    iproc =_mesh._iproc;
     if (iproc==0) {
 
-      const uint ndigits  = _timeloop._timemap.get("ndigits");
-
+      const uint ndigits  = DEFAULT_NDIGITS;
       const uint NoLevels = _mesh._NoLevels;
 
         //FE print
@@ -249,7 +246,7 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) const 
 /// This function read the solution form all the system (restart)
 void EquationsMap::ReadSol(const uint t_step, double& time_out) const {
 
-    const uint ndigits      = _timeloop._timemap.get("ndigits");
+    const uint ndigits      = DEFAULT_NDIGITS;
     std::string    basesol  = DEFAULT_BASESOL;
     std::string   ext_xdmf  = DEFAULT_EXT_XDMF;
     std::string     ext_h5  = DEFAULT_EXT_H5;
@@ -337,7 +334,7 @@ void EquationsMap::PrintCaseHDF5(const uint t_init) const {
     const uint    iproc =_mesh._iproc;
     if (iproc==0) {
 
-        const uint ndigits      = _timeloop._timemap.get("ndigits");
+        const uint ndigits      = DEFAULT_NDIGITS;
         std::string    basecase = DEFAULT_BASECASE;
         std::string   ext_xdmf  = DEFAULT_EXT_XDMF;
         std::string     ext_h5  = DEFAULT_EXT_H5;
@@ -382,7 +379,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) const {
     if (iproc==0) {
 
         const uint NoLevels = _mesh._NoLevels;
-        const uint ndigits  = _timeloop._timemap.get("ndigits");
+        const uint ndigits  = DEFAULT_NDIGITS;
 
         std::string     basecase = DEFAULT_BASECASE;
         std::string     basemesh = DEFAULT_BASEMESH;
