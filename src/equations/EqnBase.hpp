@@ -38,6 +38,13 @@ class EqnBase  {
 public:
 
 //=======================================================================
+//======== MG Ops ============ (procs,levels) ====
+//=======================================================================
+  std::vector<SparseMatrix  *> _A;  // LinearEquation (each level)
+  std::vector<SparseMatrix *> _Rst; // LinearEquation (each level)
+  std::vector<SparseMatrix *> _Prl; // LinearEquation (each level)
+  
+//=======================================================================
 //======== Vectors =============== (procs,levels) ==
 //=======================================================================
 
@@ -49,6 +56,7 @@ public:
   
   std::vector<NumericVector *> _x_oold;    //this is used by MGTimeStep and also by the OptLoop
   std::vector<NumericVector *> _x_tmp;
+  
 
           void  initVectors();                                      ///initialize vectors                                                               //System//
           void PrintVector(std::string namefile);   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
@@ -89,13 +97,14 @@ public:
   uint       _VarOff[QL];
   uint       _n_vars;           ///< number of SCALAR variables
   std::string *_var_names;     /// variable names of every SCALAR variable
-  double      *_refvalue;          ///reference values of every SCALAR variable
 //====== functions =======
           void initNVars();
-	  void initVarNamesRefValues(std::string varname_in);
+	  void initVarNames(std::string varname_in);
           void ComputeMeshToDof();
           void PrintMeshToDof() const;
 
+  double      *_refvalue;          ///reference values of every SCALAR variable
+          void initRefValues();
 
 //=======================================================================
 //========= MULTIGRID FUNCTIONS (Vectors + A,R,P) ======== (procs,levels) 
@@ -148,13 +157,6 @@ public:
 //======= Linear Solvers for every Level ============
   LinearEquationSolver **_solver;     ///(each level)
 
-//=======================================================================
-//======== MG Ops ============ (procs,levels) ====
-//=======================================================================
-  std::vector<SparseMatrix  *> _A;  // LinearEquation (each level)
-  std::vector<SparseMatrix *> _Rst; // LinearEquation (each level)
-  std::vector<SparseMatrix *> _Prl; // LinearEquation (each level)
-  
 protected:
   
 //=======================================================================

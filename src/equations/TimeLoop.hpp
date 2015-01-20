@@ -31,12 +31,9 @@ public:
     uint     _curr_t_idx; 
     double   _curr_time;
 
-// public:
-  // Constructor -------------------------------
-//  TimeLoop(Utils& mgutils_in, EquationsMap& mgeqmap_in);///< Constructor
-  TimeLoop(Files& files_in);///< Constructor
+  TimeLoop(Files& files_in);
 
-  ~TimeLoop(){}; ///< Destructor
+  ~TimeLoop(){};
    
 // print -------------------------------------------
    //this function is ok here because it doesn't involve the map 

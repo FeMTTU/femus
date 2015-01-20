@@ -65,9 +65,11 @@ EqnBase::EqnBase(std::vector<Quantity*> int_map_in,
 
 //============= init n_vars================
     initNVars();
-//========== varnames and refvalue ==============
-    initVarNamesRefValues(varname_in);
-
+//========== varnames ==============
+    initVarNames(varname_in);
+//========== RefValues ==============
+    initRefValues();
+   
     //========== processor number ==============
     _iproc=_mesh._iproc;
 
@@ -196,24 +198,32 @@ void EqnBase::initNVars()  {
 // by default, all the reference values are initialized to 1.
 //This is a function that doesnt make distinction BETWEEN various FE,
 // it treats the variables in the same manner
-void EqnBase::initVarNamesRefValues(std::string varname_in) {
+void EqnBase::initVarNames(std::string varname_in) {
 
     assert(_n_vars > 0);
 
     _var_names = new std::string[_n_vars];       // names
-    _refvalue  = new      double[_n_vars];           // refvalues
 
     std::ostringstream name;
     for (uint i=0;i< _n_vars; i++) { // variable name
         name.str("");
         name << varname_in << i+1;
         _var_names[i] = name.str();
-         _refvalue[i] = 1.;
     }
 
     return;
 }
 
+void EqnBase::initRefValues() {
+
+    assert(_n_vars > 0);
+
+    _refvalue  = new      double[_n_vars];           // refvalues
+
+    for (uint i=0;i< _n_vars; i++) _refvalue[i] = 1.;
+
+    return;
+}
 
 
 // ============================================================
