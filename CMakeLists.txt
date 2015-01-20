@@ -153,14 +153,14 @@ IF(BUILD_DOCUMENTATION)
   ENDIF(NOT DOXYGEN_FOUND)
   #-- Configure the Template Doxyfile for our specific project
   CONFIGURE_FILE(
-    "${PROJECT_SOURCE_DIR}/Doxygen/DoxyfileFemTTUlib.in"
-    "${PROJECT_BINARY_DIR}/DoxygenDocumentation/DoxyfileFemTTUlib" @ONLY IMMEDIATE
+    "${PROJECT_SOURCE_DIR}/Doxygen/DoxyfileFemuslib.in"
+    "${PROJECT_BINARY_DIR}/DoxygenDocumentation/DoxyfileFemuslib" @ONLY IMMEDIATE
   ) 
 
   #-- Add a custom target to run Doxygen when ever the project is built
   ADD_CUSTOM_TARGET (Docs ALL 
-    COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}//DoxygenDocumentation/DoxyfileFemTTUlib
-    SOURCES ${PROJECT_BINARY_DIR}//DoxygenDocumentation/DoxyfileFemTTUlib)
+    COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}//DoxygenDocumentation/DoxyfileFemuslib
+    SOURCES ${PROJECT_BINARY_DIR}//DoxygenDocumentation/DoxyfileFemuslib)
   # IF you do NOT want the documentation to be generated EVERY time you build the project
   # then leave out the 'ALL' keyword from the above command.
 ENDIF(BUILD_DOCUMENTATION)
