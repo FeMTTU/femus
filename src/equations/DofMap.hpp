@@ -24,14 +24,13 @@
 #include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "Typedefs.hpp"
-
+#include "MeshTwo.hpp"
 
 
 namespace femus {
 
 
   class EqnBase;
-  class MeshTwo;
   
 //=======================================================================
 //==== DOF MAP of the equation ============ (procs,levels) ==============   //// LinearEquation (each level)
@@ -48,7 +47,6 @@ public:
     const MeshTwo & _mesh;
     
 //====== data =======
-  int    **  _node_dof; ///< dof map
   uint  *    _Dim;            //number of dofs per level
   uint **    _DofNumLevFE;     
   uint **    _DofOffLevFE;     
@@ -62,16 +60,26 @@ public:
           void ComputeMeshToDof();
           void PrintMeshToDof() const;
 
+  inline  int GetDof(const uint Level,const uint fe,const uint ivar,const uint i) const;
+  inline  int GetStartDof(const uint Level, const uint offproc) const;  //TODO understand this, possibly remove it
 
-
-
-
-
+  
+  private:
+    
+    int    **  _node_dof; ///< dof map
+  
 
 };
 
 
-
+    int DofMap::GetDof(const uint Level,const uint fe,const uint ivar,const uint dofobj) const {
+         return _node_dof[Level][ dofobj + ivar*_DofNumLevFE[Level][fe] + _DofOffLevFE[Level][fe] ];
+    }
+    
+     inline  int DofMap::GetStartDof(const uint Level, const uint offproc) const {
+          return _node_dof[Level][  _mesh._off_nd[QQ][offproc] ];
+       }
+ 
 
 } //end namespace femus
 

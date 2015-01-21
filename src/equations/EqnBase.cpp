@@ -453,13 +453,13 @@ void EqnBase::GenBc() {
                     //Set the quadratic fields
                     if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-BB][QQ]->GetNDofs() )
 		      for (uint ivar=0; ivar<_dofmap._nvars[QQ]; ivar++) {
-                            int kdof = _dofmap._node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_dofmap._DofNumLevFE[Lev_pick_bc_NODE_dof][QQ] + _dofmap._DofOffLevFE[Lev_pick_bc_NODE_dof][QQ] ];
+                            int kdof = _dofmap.GetDof(Lev_pick_bc_NODE_dof,QQ,ivar,fine_node);
                            if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _dofmap._VarOff[QQ]];
                         }
                     // Set the linear fields
                     if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-BB][LL]->GetNDofs() ) {
                         for (uint ivar = 0; ivar < _dofmap._nvars[LL]; ivar++) {
-                            int kdof = _dofmap._node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_dofmap._DofNumLevFE[Lev_pick_bc_NODE_dof][LL] + _dofmap._DofOffLevFE[Lev_pick_bc_NODE_dof][LL] ];
+                            int kdof = _dofmap.GetDof(Lev_pick_bc_NODE_dof,LL,ivar,fine_node);
                            if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _dofmap._VarOff[LL]];
                         }
                     }
@@ -518,7 +518,7 @@ void EqnBase::GenBc() {
                     // Element node loop
                     for (int i=0; i< el_nodes; i++)     {// element loop
                         const uint k=_mesh._el_map[BB][(iel+iel0)*el_nnodes_b+i]; // global node
-                        int kdof= _dofmap._node_dof[_NoLevels-1][k+ivar* offset];
+                        int kdof= _dofmap.GetDof(_NoLevels-1,QQ,ivar,k);
                         _bc[kdof]=data[k];
                     }
                 }// iel
@@ -655,7 +655,7 @@ void EqnBase::PrintBc(std::string namefile) {
           for (int fine_node = _mesh._off_nd[QQ][off_proc];
 	           fine_node < _mesh._off_nd[QQ][off_proc+Level+1]; fine_node ++) {
 
-	int pos_in_sol_vec_lev = _dofmap._node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_dofmap._DofNumLevFE[ Lev_pick_bc_NODE_dof ][QQ] + _dofmap._DofOffLevFE[ Lev_pick_bc_NODE_dof ][QQ] ];
+	int pos_in_sol_vec_lev = _dofmap.GetDof(Lev_pick_bc_NODE_dof,QQ,ivar,fine_node);
 	int pos_on_Qnodes_lev  = _mesh._Qnode_fine_Qnode_lev[Level][ fine_node ]; 
 
 	sol_on_Qnodes[ pos_on_Qnodes_lev ] = _bc[pos_in_sol_vec_lev];
@@ -685,7 +685,7 @@ void EqnBase::PrintBc(std::string namefile) {
                     + _mesh._off_nd[LL][off_proc+Level+1]
                     - _mesh._off_nd[LL][off_proc]; fine_node++) {
 	      
-            int pos_in_sol_vec_lev = _dofmap._node_dof[Lev_pick_bc_NODE_dof][ fine_node  + ivar*_dofmap._DofNumLevFE[ Lev_pick_bc_NODE_dof ][LL] + _dofmap._DofOffLevFE[ Lev_pick_bc_NODE_dof ][LL] ]; 
+            int pos_in_sol_vec_lev = _dofmap.GetDof(Lev_pick_bc_NODE_dof,LL,ivar,fine_node); 
  	    int pos_on_Qnodes_lev  = _mesh._Qnode_fine_Qnode_lev[Level][ fine_node ];
 
 	    sol_on_Qnodes[ pos_on_Qnodes_lev ]=  _bc[pos_in_sol_vec_lev]; 
@@ -1073,14 +1073,14 @@ void EqnBase::GenIc() {
                 // Set the quadratic fields
                 if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-VV][QQ]->GetNDofs() ) {
                     for (uint ivar=0; ivar < _dofmap._nvars[QQ]; ivar++) {
-		      int dof_pos_lev = _dofmap._node_dof[Level][ fine_node + ivar*_dofmap._DofNumLevFE[Level][QQ] + _dofmap._DofOffLevFE[Level][QQ] ];
+		      int dof_pos_lev = _dofmap.GetDof(Level,QQ,ivar,fine_node);
                         _x[Level]->set( dof_pos_lev, u_value[ivar + _dofmap._VarOff[QQ]] );
 		    }
                 }
                 // Set the linear fields
                 if ( i <  _eqnmap._elem_type[_mesh.get_dim()-1-VV][LL]->GetNDofs() ) {
                     for (uint ivar=0; ivar<_dofmap._nvars[LL]; ivar++) {
-		      int dof_pos_lev = _dofmap._node_dof[Level][ fine_node + ivar*_dofmap._DofNumLevFE[Level][LL] + _dofmap._DofOffLevFE[Level][LL] ];
+		      int dof_pos_lev = _dofmap.GetDof(Level,LL,ivar,fine_node);
                         _x[Level]->set( dof_pos_lev, u_value[ivar + _dofmap._VarOff[LL]] );
                         }
 		    }
@@ -1093,7 +1093,7 @@ void EqnBase::GenIc() {
 		  //elem my level
                     for (uint ivar=0; ivar<_dofmap._nvars[KK]; ivar++) {
 		      int elem_lev = iel + sum_elems_prev_sd_at_lev;
-		      int dof_pos_lev = _dofmap._node_dof[Level][ elem_lev + ivar*_dofmap._DofNumLevFE[Level][KK] + _dofmap._DofOffLevFE[Level][KK] ];
+		      int dof_pos_lev = _dofmap.GetDof(Level,KK,ivar,elem_lev);
                         _x[Level]->set( dof_pos_lev, u_value[ivar + _dofmap._VarOff[KK]] );
                          }
 		    }
@@ -1635,6 +1635,7 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
 //============================================================================
     
     int NoLevels  = _mesh._NoLevels;
+    uint off_proc = NoLevels*_iproc;
 
     uint mrow_glob_t = 0;
     for (int fe=0; fe<QL; fe++) mrow_glob_t += _dofmap._nvars[fe]*rowcln[fe][fe][0];
@@ -1664,7 +1665,7 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
     graph._n  = ncol_glob_t;
     graph._ml = mrow_lev_proc_t;
     graph._nl = ncol_lev_proc_t;
-    graph._ml_start = _dofmap._node_dof[Level][ _mesh._off_nd[QQ][_iproc*NoLevels] ];
+    graph._ml_start = _dofmap.GetStartDof(Level,off_proc);
     // TODO is this used? I guess it is used by update_sparsity_pattern !
     // Every subdomain has a local set of dofs, and these dofs start at a specific point.
     // Now, remember that _mesh._off_nd[QQ] should only be used for computing offsets, so differences.
@@ -1698,7 +1699,7 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
             int dof_pos, irow;
 	         if  (r<KK) {  dof_pos = _mesh._Qnode_lev_Qnode_fine[FELevel[r]][ DofObj_lev ];  }
             else if (r==KK) {  dof_pos = DofObj_lev; }
-                    irow = _dofmap._node_dof[Level][ dof_pos + ivar*off_onevar[r] + off_EachFEFromStart[r] ]; 
+                    irow = _dofmap.GetDof(Level,r,ivar,dof_pos); 
 
 	    int len[QL];   for (int c=0;c<QL;c++) len[c] = 0;
 	    for (int c=0;c<QL;c++) len[c] = (length_row[r][c][ DofObj_lev+1 ]-length_row[r][c][ DofObj_lev ]);
@@ -1909,7 +1910,7 @@ void EqnBase::ReadProl(const std::string& name) {
         pattern._ml += _dofmap._nvars[fe]*ml[fe];  //  local _m
         pattern._nl += _dofmap._nvars[fe]*nl[fe];  //  local _n
      }
-    uint ml_start = _dofmap._node_dof[Level][_mesh._off_nd[QQ][off_proc]];
+    uint ml_start = _dofmap.GetStartDof(Level,off_proc);
     pattern._ml_start = ml_start;
 
     uint ml_init[QL]; //up to the current processor
@@ -1930,7 +1931,7 @@ void EqnBase::ReadProl(const std::string& name) {
           if (fe < KK)         dof_pos_f = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ i ];  //end fe < ql
           else if (fe == KK)   dof_pos_f = i;
           
-            int irow  = _dofmap._node_dof[ Lev_f ][ dof_pos_f + ivar*_dofmap._DofNumLevFE[ Lev_f ][fe] + _dofmap._DofOffLevFE[ Lev_f ][fe] ];
+            int irow  = _dofmap.GetDof(Lev_f,fe,ivar,dof_pos_f);
 
 	    uint ncol =    len[fe][i+1] -    len[fe][i];
             uint noff = lenoff[fe][i+1] - lenoff[fe][i];
@@ -1943,7 +1944,7 @@ void EqnBase::ReadProl(const std::string& name) {
 	      if      (fe  < KK) dof_pos_c = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ dof_pos_lev_c ];
               else if (fe == KK) dof_pos_c = dof_pos_lev_c; 
 	      
-	      pattern[irow][j] = _dofmap._node_dof[ Lev_c ][ dof_pos_c + ivar*_dofmap._DofNumLevFE[ Lev_c ][fe] + _dofmap._DofOffLevFE[ Lev_c ][fe] ];
+	      pattern[irow][j] = _dofmap.GetDof(Lev_c,fe,ivar,dof_pos_c);
             }
 // #endif
 
@@ -1966,7 +1967,7 @@ void EqnBase::ReadProl(const std::string& name) {
           if (fe < KK)        dof_pos_f = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ i ];  //end fe < ql
           else if (fe == KK)  dof_pos_f = i;
 
-          int irow  = _dofmap._node_dof[ Lev_f ][ dof_pos_f + ivar*_dofmap._DofNumLevFE[ Lev_f ][fe] + _dofmap._DofOffLevFE[ Lev_f ][fe] ];
+          int irow  = _dofmap.GetDof(Lev_f,fe,ivar,dof_pos_f);
 
             uint ncol = len[fe][i+1]-len[fe][i];
             tmp[0] = irow;
@@ -2136,7 +2137,7 @@ void EqnBase::ReadRest(const std::string& name) {
      } 
      
     // starting indices for local matrix
-   uint ml_start = _dofmap._node_dof[Lev_c][_mesh._off_nd[QQ][off_proc]];     //  offset proc nodes /*TODO is this correct?!? MAybe this is what is giving me trouble*/
+   uint ml_start = _dofmap.GetStartDof(Lev_c,off_proc);    //  offset proc nodes
    pattern._ml_start = ml_start;
    uint DofObjInit_lev_PrevProcs_c[QL];
         for (int fe=0;fe<QL;fe++) { DofObjInit_lev_PrevProcs_c[fe] = 0;  }
@@ -2155,7 +2156,7 @@ void EqnBase::ReadRest(const std::string& name) {
           if (fe < KK)         dof_pos_c = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ i ];
           else if (fe == KK)   dof_pos_c = i;
 	  
-            int irow  = _dofmap._node_dof[ Lev_c ][ dof_pos_c + ivar*_dofmap._DofNumLevFE[ Lev_c ][fe] + _dofmap._DofOffLevFE[ Lev_c ][fe] ];
+            int irow  = _dofmap.GetDof(Lev_c,fe,ivar,dof_pos_c);
 
 	    uint ncol = len[fe][i+1]-len[fe][i];
             uint noff = lenoff[fe][i+1] - lenoff[fe][i];
@@ -2168,7 +2169,7 @@ void EqnBase::ReadRest(const std::string& name) {
     
 	      if      (fe  < KK)  dof_pos_f = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ dof_pos_lev_f ];
               else if (fe == KK)  dof_pos_f = dof_pos_lev_f;
-              pattern[irow][j] = _dofmap._node_dof[ Lev_f ][ dof_pos_f + ivar*_dofmap._DofNumLevFE[ Lev_f ][fe] + _dofmap._DofOffLevFE[ Lev_f ][fe] ];
+              pattern[irow][j] = _dofmap.GetDof(Lev_f,fe,ivar,dof_pos_f);
                 }
 
               }
@@ -2197,8 +2198,8 @@ void EqnBase::ReadRest(const std::string& name) {
 	  int dof_pos_c;
           if (fe < KK)         dof_pos_c = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ i ];
           else if (fe == KK)   dof_pos_c = i;
-            int irow     = _dofmap._node_dof[      Lev_c][ dof_pos_c + ivar*_dofmap._DofNumLevFE[ Lev_c ][fe] + _dofmap._DofOffLevFE[ Lev_c ][fe] ];
-            int irow_top = _dofmap._node_dof[_NoLevels-1][ dof_pos_c + ivar*_dofmap._DofNumLevFE[ _NoLevels-1 ][fe] + _dofmap._DofOffLevFE[ _NoLevels-1 ][fe] ];
+            int irow     = _dofmap.GetDof(Lev_c,fe,ivar,dof_pos_c);
+            int irow_top = _dofmap.GetDof(_NoLevels-1,fe,ivar,dof_pos_c);
             uint ncol = len[fe][i+1]-len[fe][i];
             tmp[0]=irow;
             std::vector< uint> ind(pattern[irow].size()-1);
@@ -2509,8 +2510,8 @@ void EqnBase::PrintVector(std::string namefile) {
             for (int fine_node = _mesh._off_nd[QQ][off_proc];
                      fine_node < _mesh._off_nd[QQ][off_proc+Level+1]; fine_node++) {
       
-  	int pos_in_sol_vec_lev = _dofmap._node_dof[Level][fine_node + ivar*_dofmap._DofNumLevFE[ Level ][QQ] + _dofmap._DofOffLevFE[ Level ][QQ] ];
-	int pos_on_Qnodes_lev = _mesh._Qnode_fine_Qnode_lev[Level][ fine_node ]; 
+  	int pos_in_sol_vec_lev = _dofmap.GetDof(Level,QQ,ivar,fine_node);
+	int pos_on_Qnodes_lev  = _mesh._Qnode_fine_Qnode_lev[Level][ fine_node ]; 
 
 #ifndef NDEBUG
          if ( pos_on_Qnodes_lev >= (int) n_nodes_lev ) { std::cout << "^^^^^^^OUT OF THE ARRAY ^^^^^^" << std::endl; abort(); }
@@ -2549,7 +2550,7 @@ void EqnBase::PrintVector(std::string namefile) {
                          _mesh._off_nd[LL][off_proc + Level+1 ]
                        - _mesh._off_nd[LL][off_proc]; fine_node++) {
 	      
-	    int pos_in_sol_vec_lev = _dofmap._node_dof[Level][ fine_node + ivar*_dofmap._DofNumLevFE[ Level ][LL] + _dofmap._DofOffLevFE[ Level ][LL] ];
+	    int pos_in_sol_vec_lev = _dofmap.GetDof(Level,LL,ivar,fine_node);
  	    int pos_on_Qnodes_lev = _mesh._Qnode_fine_Qnode_lev[Level][ fine_node ];
 
 #ifndef NDEBUG
@@ -2623,7 +2624,7 @@ void EqnBase::PrintVector(std::string namefile) {
               iel <    _mesh._off_el[VV][off_proc + Level+1]
                       - _mesh._off_el[VV][off_proc + Level]; iel++) {
              int elem_lev = iel + sum_elems_prev_sd_at_lev;
-	  int dof_pos_lev = _dofmap._node_dof[Level][ elem_lev + ivar*_dofmap._DofNumLevFE[ Level ][KK] + _dofmap._DofOffLevFE[ Level ][KK] ];   
+	  int dof_pos_lev = _dofmap.GetDof(Level,KK,ivar,elem_lev);   
       for (uint is=0; is< _mesh.GetGeomEl(_mesh.get_dim()-1-VV,_mesh._mesh_order).n_se; is++) {      
 	   sol_on_cells[cel*_mesh.GetGeomEl(_mesh.get_dim()-1-VV,_mesh._mesh_order).n_se + is] = (*_x_old[Level])(dof_pos_lev) * _refvalue[ ivar + _dofmap._VarOff[KK] ];
       }
@@ -2681,7 +2682,7 @@ void EqnBase::ReadVector(std::string namefile) {
             uint elem_gidx=(iel+_mesh._off_el[0][_iproc*_NoLevels+_NoLevels-1])*_mesh.GetGeomEl(_mesh.get_dim()-1-VV,mesh_ord)._elnds;
             for (uint i=0; i<el_nds; i++) { // linear and quad
                 int k=_mesh._el_map[0][elem_gidx+i];   // the global node
-                _x[_NoLevels-1]->set(_dofmap._node_dof[_NoLevels-1][k+ivar*offset],sol[k]*Irefval); // set the field
+                _x[_NoLevels-1]->set(_dofmap.GetDof(_NoLevels-1,QQ,ivar,k), sol[k]*Irefval); // set the field
             }
         }
     }

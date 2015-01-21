@@ -110,7 +110,7 @@ public:
           void MGCheck(int Level) const;
 
 
-  DofMap  _dofmap;	  //// LinearEquation (each level)
+  DofMap  _dofmap;  //// LinearEquation (each level)
   
 //=======================================================================
 // ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==
