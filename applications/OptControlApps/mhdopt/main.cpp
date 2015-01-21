@@ -30,6 +30,7 @@
 
 // application includes
 #include "Opt_conf.hpp"
+#include "OptLoop.hpp"
 #include "OptQuantities.hpp"
 #include "OptPhysics.hpp"
 #include "EqnNS.hpp"
@@ -44,8 +45,6 @@
 
 using namespace femus;
 
-//***************** functions for this application
-void optimization_loop(EquationsMap& e_map_in, TimeLoop  & time_loop_in);
 
 // double funzione(double t , const double* xyz) {return 1.;} 
 
@@ -163,11 +162,6 @@ int main(int argc, char** argv) {
 //==== END Add QUANTITIES ========
 //================================
 
-  // ======== TimeLoop ===================================
-  TimeLoop time_loop(files); 
-           time_loop._timemap.read();
-           time_loop._timemap.print();
-  
   // ====== EquationsMap =================================
   EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,FEElemType_vec,qrule);
   
@@ -247,7 +241,13 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 //================================
 
   equations_map.setDofBcOpIc();     //  /*TODO fileIO  for  Bc, init, and Ic*/
-  time_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case   /*TODO fileIO */ 
+
+  // ======== OptLoop ===================================
+  OptLoop opt_loop(files); 
+           opt_loop._timemap.read();
+           opt_loop._timemap.print();
+
+  opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case   /*TODO fileIO */ 
 
 //initialize specific data for specific equations
 //all that happened previously was related to the standard data of EqnBase, basically  
@@ -255,10 +255,9 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   eqnMHDCONT->init_equation_data();
 #endif
   
-//   equations_map.TransientLoop();   // perform the time evolution for all the equations  /*TODO fileIO*/
-
-    optimization_loop(equations_map,time_loop);  /////
-
+    opt_loop.optimization_loop(equations_map);
+    
+    
 // // //   eqnNS->FunctionIntegral (0,funzione);
 // // //   eqnNS->FunctionIntegral (1,funzione);
 

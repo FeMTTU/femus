@@ -1,3 +1,6 @@
+#include "OptLoop.hpp"
+
+
 #include <cmath>
 
 //library headers
@@ -20,9 +23,10 @@
 #include "EqnNSAD.hpp"
 #include "EqnMHDAD.hpp"
 
+namespace femus {
 
-using namespace femus;
-
+  
+  
  //INITIALIZE FSTREAM FOR INTEGRAL
    //  create an ofstream integral.txt
    //the question is: who creates it? if one processor creates it,
@@ -73,9 +77,10 @@ using namespace femus;
 //either for OPTIMIZATION iterations or for NONLINEAR iterations,
 //depending on what you need
 
+ OptLoop::OptLoop(Files& files_in): TimeLoop(files_in) { }
 
 
-void optimization_loop(EquationsMap& e_map_in, TimeLoop  & time_loop_in)  {
+void OptLoop::optimization_loop(EquationsMap& e_map_in)  {
   
   
  #ifdef NS_EQUATIONS
@@ -102,9 +107,8 @@ std::string intgr_fname = e_map_in._files._output_path + "/" + "integral.txt";
 //INITIALIZE OPT LOOP
 //pseudo time parameters for optimization
     const uint      NoLevels = e_map_in._mesh._NoLevels;
-    double                dt = time_loop_in._timemap.get("dt");
-    double pseudo_opttimeval = time_loop_in._time_in;
-    int           print_step = time_loop_in._timemap.get("printstep");
+    double pseudo_opttimeval = _time_in;
+    int           print_step = _timemap.get("printstep");
 
      double omega = 1.;
      double Jold = 10.; //TODO AAA
@@ -147,9 +151,9 @@ double lin_deltax_MHDCONT = 0.;
   #endif
 
   //OPTIMIZATION LOOP
-for (uint opt_step = time_loop_in._t_idx_in + 1; opt_step <= time_loop_in._t_idx_final; opt_step++) {
+for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
   
-    pseudo_opttimeval += 1.;  //   pseudo_opttimeval += dt; //just to increase the time value
+    pseudo_opttimeval += 1.; //just to increase the time value
 
   std::cout << "\n  @@@@@@@@@@@@@@@@ Solving optimization step " << opt_step << std::endl;
 
@@ -228,7 +232,7 @@ do {
     
     knonl_NS++;
 //      std::cout << "\n >>>>> Solving nonlinear step " << knonl_NS << " for" << mgNS->_eqname << std::endl;
-    nonlin_deltax_NS = time_loop_in.MGTimeStep(knonl_NS,mgNS);
+    nonlin_deltax_NS = MGTimeStep(knonl_NS,mgNS);
 
   } while ( nonlin_deltax_NS > eps_nl_NS && knonl_NS < MaxIterNS );
 }
@@ -244,7 +248,7 @@ do {
   k_MHD++;
 //ONE nonlinear step = ONE LINEAR SOLVER  
 //    std::cout << "\n >>>>>>>> Solving MHD system (linear in B), " << k_MHD << std::endl;
-    nonlin_deltax_MHD = time_loop_in.MGTimeStep(k_MHD,mgMHD);
+    nonlin_deltax_MHD = MGTimeStep(k_MHD,mgMHD);
 
 }while (nonlin_deltax_MHD > eps_MHD &&  k_MHD < MaxIterMHD );
   
@@ -343,7 +347,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
    uint k_NSAD=0;
   do {
    k_NSAD++;
-   lin_deltax_NSAD = time_loop_in.MGTimeStep(k_NSAD,mgNSAD);
+   lin_deltax_NSAD = MGTimeStep(k_NSAD,mgNSAD);
   }
   while (lin_deltax_NSAD > eps_NSAD && k_NSAD < MaxIterNSAD );
  }
@@ -353,7 +357,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
   uint k_MHDAD=0;
  do{
    k_MHDAD++;
-lin_deltax_MHDAD = time_loop_in.MGTimeStep(k_MHDAD,mgMHDAD);
+lin_deltax_MHDAD = MGTimeStep(k_MHDAD,mgMHDAD);
  }
 while(lin_deltax_MHDAD >  eps_MHDAD && k_MHDAD < MaxIterMHDAD );
 }
@@ -364,7 +368,7 @@ while(lin_deltax_MHDAD >  eps_MHDAD && k_MHDAD < MaxIterMHDAD );
 do{
   k_MHDCONT++;
   //not only when k_MHDCONT==1, but also when k_ADJCONT==1
-lin_deltax_MHDCONT = time_loop_in.MGTimeStep(k_MHDCONT,mgMHDCONT);
+lin_deltax_MHDCONT = MGTimeStep(k_MHDCONT,mgMHDCONT);
  }
 while(lin_deltax_MHDCONT >  eps_MHDCONT && k_MHDCONT < MaxIterMHDCONT );
 }
@@ -434,7 +438,7 @@ while(lin_deltax_MHDCONT >  eps_MHDCONT && k_MHDCONT < MaxIterMHDCONT );
     
 //at the end of the optimization step, see the result for DIRECT and ADJOINT and CONTROL equations
 //now we are printing OUTSIDE the nonlinear loop, so we do not print the nonlinear steps
-const uint delta_opt_step = opt_step - time_loop_in._t_idx_in;
+const uint delta_opt_step = opt_step - _t_idx_in;
      if (delta_opt_step%print_step == 0) e_map_in.PrintSol(opt_step,pseudo_opttimeval);   //print sol.N.h5 and sol.N.xmf
   
       
@@ -443,3 +447,9 @@ const uint delta_opt_step = opt_step - time_loop_in._t_idx_in;
   
   return;
 }
+
+
+
+} //end namespace femus
+
+
