@@ -123,11 +123,11 @@ void EquationsMap::PrintSolHDF5(const uint t_flag ) const {
         hid_t   file= H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
         H5Fclose(file);
 
-        EquationsMap::const_iterator pos=_equations.begin();
-        EquationsMap::const_iterator pos_e=_equations.end();
+        EquationsMap::const_iterator pos = _equations.begin();
+        EquationsMap::const_iterator pos_e = _equations.end();
         for (;pos!=pos_e;pos++)    {
-            EqnBase *mgsol=pos->second;
-            mgsol->PrintVector(filename.str());
+            EqnBase* eqn = pos->second;
+            IO::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn,_AbstractFE);
         }
 
     } //end print iproc
@@ -302,7 +302,6 @@ void EquationsMap::ReadSol(const uint t_step, double& time_out) const {
     // loop reading over the variables ---------------------
     for (EquationsMap::const_iterator eqn=_equations.begin(); eqn != _equations.end(); eqn++) {
         EqnBase *mgsol=eqn->second;
-        mgsol->ReadVector(namefile.str());
     } //  loop --------------------------------------------------------
 
     return;
@@ -349,9 +348,9 @@ void EquationsMap::PrintCaseHDF5(const uint t_init) const {
         EquationsMap::const_iterator pos   = _equations.begin();
         EquationsMap::const_iterator pos_e = _equations.end();
         for (;pos!=pos_e;pos++) {
-            EqnBase *mgsol=pos->second;
-            mgsol->PrintVector(filename.str());          // initial solution
-            mgsol->PrintBc(filename.str());            // boundary condition
+            EqnBase* eqn = pos->second;
+            IO::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn,_AbstractFE);    // initial solution
+            eqn->PrintBc(filename.str());            // boundary condition
         }
 
     } //end iproc

@@ -58,10 +58,7 @@ public:
   std::vector<NumericVector *> _x_oold;    //this is used by MGTimeStep and also by the OptLoop
   std::vector<NumericVector *> _x_tmp;
   
-          void  initVectors();                                      ///initialize vectors                                                               //System//
-
-	  void PrintVector(std::string namefile);   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
-          void  ReadVector(std::string namefile);                       ///read from a "Quadratic-Linearized" Mesh                                      //Writer/Reader// 
+          void  initVectors();  ///initialize vectors       //System//
 
 //======= Linear Solvers for every Level ============
   LinearEquationSolver **_solver;     ///(each level)
@@ -71,11 +68,11 @@ public:
 //=======================================================================
       std::vector<Quantity*>          _QtyInternalVector;  //System//
       
-	    std::string *_var_names;     /// variable names of every SCALAR variable
-	  void initVarNames(std::string varname_in);
+	    std::string *_var_names;                   //MultilevelSolution//
+	  void initVarNames(std::string varname_in);   //MultilevelSolution//
 
-	  double      *_refvalue;          ///reference values of every SCALAR variable
-          void initRefValues();  
+	  double      *_refvalue;        //MultilevelSolution//
+          void initRefValues();          //MultilevelSolution//
 //=======================================================================
   //====== Attributes of the equation ====
 //=======================================================================
@@ -113,9 +110,9 @@ public:
   DofMap  _dofmap;  //// LinearEquation (each level)
   
 //=======================================================================
-// ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==
+// ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==    //MultilevelSolution, Initialize function
 // ========================================================
-          void    GenIc();           //MultilevelSolution, Initialize function
+          void    GenIc();           
   virtual void  ic_read(const double * xp, double * ic,const double * el_xm) const = 0; //TODO see what parameters can be made constant
           
 //=======================================================================

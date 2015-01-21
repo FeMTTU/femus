@@ -1,6 +1,7 @@
 #ifndef __io_hpp__
 #define __io_hpp__
 
+#include <vector>
 #include <map>
 #include <string>
 #include "hdf5.h"
@@ -10,8 +11,10 @@
 
 namespace femus {
 
-
-
+class DofMap;
+class MeshTwo;
+class EqnBase;
+class FEElemBase;
 
 namespace IO {
   
@@ -52,6 +55,11 @@ namespace IO {
 				     std::string data_type,
 				     int data_dim_one,
 				     int data_dim_two); 
+  
+  
+  void write_system_solutions(std::string namefile, MeshTwo* mesh, DofMap* dofmap, EqnBase* eqn, std::vector<FEElemBase*> & fe_in );   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
+  void  read_system_solutions(std::string namefile, MeshTwo* mesh, DofMap* dofmap, EqnBase* eqn);                       ///read from a "Quadratic-Linearized" Mesh                                      //Writer/Reader// 
+  
   
   
 }//end namespace IO

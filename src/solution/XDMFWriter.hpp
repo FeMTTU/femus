@@ -26,19 +26,13 @@ namespace femus {
 
 
 
-//------------------------------------------------------------------------------
-// Forward declarations
-//------------------------------------------------------------------------------
-class MultiLevelProblem;
-
-
 class XDMFWriter : public Writer {
 
 public:
 
     /** Constructor. */
     XDMFWriter(MultiLevelSolution& ml_sol);
-
+    
     /** Destructor */
     virtual ~XDMFWriter();
 
