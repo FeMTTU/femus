@@ -12,10 +12,11 @@
 #include "Typedefs.hpp"
 #include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"
+#include "DofMap.hpp"
+
 
 
 namespace femus {
-
 
 
 
@@ -69,7 +70,12 @@ public:
 //======= Quantities =========
 //=======================================================================
       std::vector<Quantity*>          _QtyInternalVector;  //System//
-  
+      
+	    std::string *_var_names;     /// variable names of every SCALAR variable
+	  void initVarNames(std::string varname_in);
+
+	  double      *_refvalue;          ///reference values of every SCALAR variable
+          void initRefValues();  
 //=======================================================================
   //====== Attributes of the equation ====
 //=======================================================================
@@ -88,28 +94,6 @@ public:
   virtual ~EqnBase();                    //System//
   
 //=======================================================================
-//==== DOF MAP of the equation ============ (procs,levels) ==============   //// LinearEquation (each level)
-//=======================================================================
-//====== data =======
-  int    **  _node_dof; ///< dof map
-  uint  *    _Dim;            //number of dofs per level
-  uint **    _DofNumLevFE;     
-  uint **    _DofOffLevFE;     
-  uint ***   _DofLocLevProcFE;     
-  uint       _nvars[QL];      ///  number of SCALAR variables          
-  uint       _VarOff[QL];
-  uint       _n_vars;           ///< number of SCALAR variables
-  std::string *_var_names;     /// variable names of every SCALAR variable
-//====== functions =======
-          void initNVars();
-	  void initVarNames(std::string varname_in);
-          void ComputeMeshToDof();
-          void PrintMeshToDof() const;
-
-  double      *_refvalue;          ///reference values of every SCALAR variable
-          void initRefValues();
-
-//=======================================================================
 //========= MULTIGRID FUNCTIONS (Vectors + A,R,P) ======== (procs,levels) 
 //=======================================================================
     void ReadMGOps();                         // LinearEquation  (each level)
@@ -121,11 +105,13 @@ public:
     void ComputeRest();                       // LinearEquation  (each level)
 
  virtual  void GenMatRhs(const uint Level) = 0;  //System//
-          void MGSolve(double Eps,int MaxIter, const uint Gamma=DEFAULT_MG_GAMMA, const uint Nc_pre=DEFAULT_NC_PRE,const uint Nc_coarse=DEFAULT_NC_COARSE,const uint Nc_post=DEFAULT_NC_POST);  //PetscLinearSolverM//
-        double MGStep(int Level,double Eps1,int MaxIter, const uint Gamma, const uint Nc_pre,const uint Nc_coarse,const uint Nc_post);                                                          //PetscLinearSolverM//
+          void MGSolve(double Eps,int MaxIter, const uint Gamma=DEFAULT_MG_GAMMA, const uint Nc_pre=DEFAULT_NC_PRE,const uint Nc_coarse=DEFAULT_NC_COARSE,const uint Nc_post=DEFAULT_NC_POST);  //LinearImplicitSystem//
+        double MGStep(int Level,double Eps1,int MaxIter, const uint Gamma, const uint Nc_pre,const uint Nc_coarse,const uint Nc_post);                                                          //LinearImplicitSystem//
           void MGCheck(int Level) const;
 
 
+  DofMap  _dofmap;	  //// LinearEquation (each level)
+  
 //=======================================================================
 // ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==
 // ========================================================

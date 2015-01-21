@@ -26,6 +26,7 @@ algebra/SparseMatrix.cpp
 algebra/VankaPetscLinearEquationSolver.cpp
 algebra/FunctionBase.cpp
 algebra/ParsedFunction.cpp
+equations/DofMap.cpp
 equations/CurrElem.cpp
 equations/EqnBase.cpp
 equations/EquationsMap.cpp

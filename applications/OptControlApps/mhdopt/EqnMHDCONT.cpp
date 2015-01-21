@@ -89,7 +89,7 @@ void EqnMHDCONT::init_equation_data() {
       _x_oldopt.resize(_NoLevels);
       
         for(uint  Level=0; Level<_NoLevels; Level++)  {
-   uint n_glob=_Dim[Level]; //is it already filled? Now yes!!!!!!!!!
+   uint n_glob = _dofmap._Dim[Level]; //is it already filled? Now yes!!!!!!!!!
   _x_oldopt[Level] = NumericVector::build().release(); _x_oldopt[Level]->init(n_glob,false, SERIAL);
        }
  

@@ -54,7 +54,8 @@ EqnBase::EqnBase(std::vector<Quantity*> int_map_in,
         _eqname(eqname_in),
         _NoLevels(e_map_in._mesh._NoLevels), //you can do that
         _var_names(NULL),
-        _refvalue(NULL) {
+        _refvalue(NULL),
+        _dofmap(*this,e_map_in._mesh) {
 
 //============= init Quantities ================
 //internal std::vector
@@ -64,7 +65,7 @@ EqnBase::EqnBase(std::vector<Quantity*> int_map_in,
     _QtyInternalVector = int_map_in;
 
 //============= init n_vars================
-    initNVars();
+    _dofmap.initNVars();
 //========== varnames ==============
     initVarNames(varname_in);
 //========== RefValues ==============
@@ -87,6 +88,40 @@ EqnBase::EqnBase(std::vector<Quantity*> int_map_in,
     for (uint l=0;l<_NoLevels;l++) _solver[l] = LinearEquationSolver::build(0,NULL,NO_SMOOTHER).release();
     
 
+}
+
+
+//====================
+// by default, all the reference values are initialized to 1.
+//This is a function that doesnt make distinction BETWEEN various FE,
+// it treats the variables in the same manner
+void EqnBase::initVarNames(std::string varname_in) {
+
+    assert(_n_vars > 0);
+
+    _var_names = new std::string[_dofmap._n_vars];       // names
+
+    std::ostringstream name;
+    for (uint i=0;i< _dofmap._n_vars; i++) { // variable name
+        name.str("");
+        name << varname_in << i+1;
+        _var_names[i] = name.str();
+    }
+
+    return;
+}
+
+
+
+void EqnBase::initRefValues() {
+
+    assert(_n_vars > 0);
+
+    _refvalue  = new      double[_dofmap._n_vars];           // refvalues
+
+    for (uint i=0;i< _dofmap._n_vars; i++) _refvalue[i] = 1.;
+
+    return;
 }
 
 
@@ -134,14 +169,7 @@ EqnBase::~EqnBase() {
     for (uint l=0;l<_NoLevels;l++)  delete _solver[l];
     delete []_solver;
 
- //========= DOF MAP ==============================
-    for (uint Level = 0; Level < _NoLevels; Level++)  delete [] _node_dof[ Level];
-    delete [] _node_dof;
-    for (uint Level = 0; Level < _NoLevels; Level++)  { delete [] _DofNumLevFE[Level]; delete [] _DofOffLevFE[Level]; } 
-    delete [] _DofNumLevFE;
-    delete [] _DofOffLevFE;
-    delete [] _Dim;           // dimension system Ax=b
-    
+   
  //========= refvalue and varnames =============
     delete [] _refvalue;
     delete [] _var_names;
@@ -156,514 +184,6 @@ EqnBase::~EqnBase() {
     clearElBc();   /*if (_Dir_pen_fl==1)*/ //DO IT ALWAYS!
 
     
-}
-
-
-//=========================
-//based on the Qty Internal Vector, i can define HOW MANY variables this equation has
-//then compute the total number of variables
-void EqnBase::initNVars()  {
-
-    for (uint fe = 0; fe < QL; fe++)  _nvars[fe]= 0;
-
-    for (uint i=0;i< _QtyInternalVector.size(); i++) {
-        for (uint fe = 0; fe < QL; fe++)  if ( _QtyInternalVector[i]->_FEord == fe) {
-                _nvars[fe] +=  _QtyInternalVector[i]->_dim;
-            }
-        }
-
-    
-    _n_vars = 0;
-    for (uint fe = 0; fe < QL; fe++) _n_vars += _nvars[fe];
-
-    
-  for (uint fe = 0; fe < QL; fe++) {
-    _VarOff[fe] = 0; 
-  for (uint fe2 = 0; fe2 < fe; fe2++) _VarOff[fe] += _nvars[fe2];
-  }
-  
-    
-//CHECK LINEAR MESH WITH QUADRATIC SHAPES
-    const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
-    if (mesh_ord == 1 && _nvars[QQ]>0) {
-        std::cout << "Can't handle linear mesh with quadratic variables, do a quadratic mesh" << std::endl;
-        abort();
-    }
-
-    return;
-}
-
-
-//====================
-// by default, all the reference values are initialized to 1.
-//This is a function that doesnt make distinction BETWEEN various FE,
-// it treats the variables in the same manner
-void EqnBase::initVarNames(std::string varname_in) {
-
-    assert(_n_vars > 0);
-
-    _var_names = new std::string[_n_vars];       // names
-
-    std::ostringstream name;
-    for (uint i=0;i< _n_vars; i++) { // variable name
-        name.str("");
-        name << varname_in << i+1;
-        _var_names[i] = name.str();
-    }
-
-    return;
-}
-
-void EqnBase::initRefValues() {
-
-    assert(_n_vars > 0);
-
-    _refvalue  = new      double[_n_vars];           // refvalues
-
-    for (uint i=0;i< _n_vars; i++) _refvalue[i] = 1.;
-
-    return;
-}
-
-
-// ============================================================
-/// This function initializes the system degrees of freedom (dof)
-/// for every Level you have a different dof map,
-/// but this is allocated as the fine level, therefore
-/// except the fine level the _nodedof is "full of holes"
-/// Why dont we allocate the dof map "without holes" ?
-/// because we want to refer to the FINE MESH node numbering
-/// which is unique.
-/// In fact, off_nd_q and off_nd_l give us the RANGES in the FINE NODES
-/// The dof map IS NOT THE IDENTITY !
-/// node numbering is what is given by the GENCASE;
-/// dof numbering instead starts from ZERO for every level!
-/// i think it is the identity only on the COARSE LEVEL
-/// For every level, you construct a _node_dof[Level]
-/// here you start giving an index to the dofs
-/// starting SUBDOMAIN BY SUBDOMAIN
-/// For each subdomain, you pick FIRST the QUADRATIC then the LINEAR dofs
-// void EqnBase::InitMeshToDof(const uint Level) {
-//let us do the level loop inside here,
-//so we can allocate and fill the nodedof
-//clearly, if we put a new inside here, we cannot call this function twice,
-//because we have only one delete.
-//so, we should either call this function in the base constructor or something
-//the point is that here the loop is over the SCALAR components already,
-//but first it should be over the ordered Quantities
-//Pick a quantity, pick its FE order, its number of scalar components
-// _off_nd[QQ] gives the node indices corresponding to the quadratic dofs for that lev and subd
-//_off_nd[LL] is different: it gives how many linear nodes you have after one quadratic node
-//so, to get the node index, you have to start from the quadratic node and add the offset of the linear
-// so, _off_nd[QQ] gives ABSOLUTE NODE values
-// instead, _off_nd[LL] gives "RELATIVE" node values wrt the quadratic nodes:
-// in order to obtain ABSOLUTE nodes you have to START FROM THE ABSOLUTE QUADRATIC and move
-// according to the relative offset
-// "quadratic nodes" = "nodes which correspond to quadratic dofs"
-// "linear nodes" = "nodes which correspond to linear dofs"
-// so those that are ABSOLUTE may be used also as RELATIVE when you do DIFFERENCES
-// but those that are RELATIVE may only be used as RELATIVE
-// notice that for each level, you have to SUBDIVIDE into SUBDOMAINS,
-//and within each subdomain you'll have to put ux,uy,uz and p
-// la versione "ASSOLUTA" e' in pratica la _node_map
-// l'unica differenza e' che la node_map e' su UN LIVELLO IN PIU'
-//noi praticamente dobbiamo prendere DUE LIVELLI CONTIGUI e metterli UNO IN FILA ALL'ALTRO
-//infatti io guarderei anche alla node_map per riempire questa node_dof,
-//perche' secondo me sono la stessa cosa!
-
-//here we have something to consider carefully
-//we must understand how to build the nodedof map
-//here, we first put all the QUADRATIC VARIABLES
-// and then all the LINEAR variables
-// - so we see that things here are based on nvars
-// all divided. Suppose that you have quadratic
-//linear and quadratic, it first puts the
-// two quadratic and then the linear one
-//this seems to be alright
-
-//Now we have to add the elements as dofs
-//InitMeshToDof basically fills the _node_dof map
-//now we are gonna do an _elem_dof thing
-
-//From here we see that QUADRATIC DOFS are put first,
-// then LINEAR DOFS,
-//and then we'll add CONSTANT DOFS.
-
-//Devo pensare se fare elem_dof oppure una unica node_dof,
-//che diventera' piuttosto "_geometrical_entity_to_dof"
-
-//count starts from zero for every level and then it grows.
-
-//node dof e' una mappa che tiene conto di TUTTI i PROCESSORI
-
-//Now the point is: Once you introduce ELEMENTS,
-//then you're gonna have NODES to which correspond
-// BOTH QUADRATIC DOFS
-// AND LINEAR DOFS
-// and then you have ELEMENTS to which correspond only CONSTANT DOFS.
-//So, do we need to INCREASE the OFFSET for the "GEOMETRICAL ENTITIES"?!
-//We'll see that.
-//Now, actually the biggest number you could have of GEOMETRICAL ENTITIES
-//is the NUMBER OF QUADRATIC NODES.
-//But let us not think of QUADRATIC NODES as "quadratic".
-//Let us think of NODES as MESH GEOMETRICAL ENTITIES.
-//We have NODES, we have ELEMENTS,
-//those are GEOMETRICAL ENTITIES.
-//On the other hand, we have FINITE ELEMENT FAMILIES,
-//each of which is characterized by a certain SET OF DEGREES OF FREEDOM,
-//so, HOW DO WE MATCH THE TWO?
-
-//===========
-// ogni processore inizia ad occupare la node_dof per un pezzo ben preciso,
-//un blocco contiguo che pero' e' diverso per ogni processore
-//     OFF_ND
-//     || ---|---|---  || ---|---|---  ||
-//       <--SUBD0----->  <---SUBD1----->
-//       <--->           <--->              Level0 - NODES
-//       <------->       <------>           Level1 - NODES
-//       <------------>  <------------>     Level2 - NODES
-
-//     This was for the NODES, for the ELEMENTS we have sthg like
-//     OFF_EL
-//     || ---|---|---  || ---|---|---  ||
-//       <--SUBD0----->  <---SUBD1---->
-//       <--->           <--->              Level0 - ELEMENTS
-//           <-->             <-->          Level1 - ELEMENTS
-//                <--->           <--->     Level2 - ELEMENTS
-
-//============
-// linear -----------------------------------
-//why do we put the linears in those positions?
-//maybe because we want some correspondence with the mesh
-//anyway, the point is that this node_dof is actually full of -1,
-//at all levels, both QQ and LL
-//the only level that is completely WITHOUT -1 is the QUADRATIC FINEST level.
-//now, i dont understand why we don't do something like
-//       for (int k1= 0;
-//                k1< _mesh._off_nd[LL][off_proc + Level+1]  - _mesh._off_nd[LL][off_proc]; k1++)
-//So, why don't we start from the ZERO position? Because we are supposed to put the dof number
-//at the CORRECT NODE POSITION; so, if it is a quadratic node, we put it at the quadratic position,
-//if it is a linear node, we put it at the linear position,
-//if it is an element dof, we put it at the element position, and so on and so on.
-//Now, for the elements things may be simpler, because one element belongs to ONLY ONE Level,
-//as a matter of fact, you dont really have an ABSOLUTE NUMBERING of ELEMENTS.
-//Well, the connectivity gives the numbering of the Elements at each level
-//Since we do not have to rely on some kind of Absolute Numbering for the Elements,
-//while we have to consider that for the NODES (because we have a well established list of nodes
-//on which we have to print all our fields),
-//then for the elements we will simply start from zero for every level
-// (of course we will go ahead after the previous quadratic and linear dofs)
-
-//So, remember that you have to put the DOF in the position of the corresponding NODE,
-//so that you can use this map!
-//So since the positions are always with respect to the QUADRATIC MESH,
-// you have to set the quadratic nodes, and as a matter of fact, linear nodes 
-// are a subset of quadratic nodes
-
-//
-// From the fact that we add this guy for the linear dofs _mesh._off_nd[QQ][off_proc]
-//I think that it means that the NODES are numbered FIRST QUADRATIC, THEN LINEAR... is that true?
-//Wait, some quadratic nodes are also linear already...
-
-//The count variable will change from Level to Level.
-//We have that "count" must be equal to _Dim[Level]. 
-//If that is not the case, we are missing something
-
-
-//Now, the point is: Every subdomain fills different pieces of the _node_dof map
-
-//TODO I want to write the three loops for QUADRATIC, LINEAR and CONSTANT ALTOGETHER
-
-//Now, what happens here... 
-//NODES are ordered in a unique set, separated by subdomain and by Level
-//Somewhat it makes sense to have nodes in a unique set because the same node belongs to DIFFERENT LEVELS.
-//It happens that elements are ordered as a unique set too,
-// but in this case each Element belongs to ONE and ONLY ONE LEVEL.
-// So there is a unique list of element, which we will call ABSOLUTE list,
-// and the elements in there have an ABSOLUTE number.
-// The ABSOLUTE element number is used to retrieve the connectivity
-// Now, for every Level, we want to have the list of elements 
-// starting from ZERO. In this way at each level we can fill the node_dof appropriately.
-// Of course, you want each subdomain to start at a DIFFERENT POINT,
-//So you dont want k1 to start from zero for all processors
-// Maybe the best way to do that is:
-// 1) to SUM the elements of the previous domains,
-// and put that as an OFFSET for starting;
-// 2) also, it could be good to read the elem connectivities at SEPARATE levels.
-// so, for every level we have to subtract the sum of the elements at the previous levels!
-
-// So, so far, we decide we'll explore the ELEM CONNECTIVITY with the ABSOLUTE Element number,
-// and the node_dof map with the "LEVEL-BASED" Element number.
-//so we must subtract the sum of the previous levels, 
-//which is a function of the current subdomain.
-
-//TODO we must make a CLEAR DISTINCTION between DOF_OBJECTS and DOF_INDICES!!!
-// The DOF_OBJECTS are the INPUTS in the node_dof map
-// The DOF_INDICES are the OUTPUTS
-// Every GEOMETRICAL ENTITY (NODE or ELEMENT) is characterized by MORE DOFS;
-// so, in order to make a FUNCTION, we must do the association
-//    GEOMETRICAL ENTITY --> DOF_OBJECTS --> DOF_INDICES
-// Now the idea is this: for the NODES, everything was built in such a way that
-// the DOF_OBJECTS are the SAME AT ALL LEVELS.
-//So, if you have a dof_object of some node at some level L, that is going to be the SAME dof_object 
-// also at the FINE LEVEL.
-// So, dof_object means "INPUT POSITION in the node_dof map"
-// Now, for ELEMENTS the situation is different.
-// We can choose two possibilities:
-// either build a _bc array FOR EVERY LEVEL for the element;
-// or building a _bc array ONLY AT THE FINE LEVEL,
-// and then know how to convert from the fine level to the CURRENT LEVEL.
-// In this second case you would say: for every level, what is the boundary condition
-// at my level given the boundary conditions on the fine level?
-
-// ok, i need to print some FIELD at ALL LEVELS
-// quindi mi ci vuole una routine che mi LINEARIZZA le CONNETTIVITA' a TUTTI I LIVELLI,
-// in modo che io posso sempre vedere, siccome paraview non mi stampa quadratico in 3D.
-// dopodiche' la stampa verra' fatta a ciascun livello su ciascun mesh LINEARIZZATO.
-// Allora, il punto e' questo: se usi un multigriglia e fai su e giu', allora i vettori intermedi
-//non hanno significato perche' contengono valori temporanei, residui, ecc...
-//ma se fai la stessa risoluzione a diversi livelli, allora ti puo' interessare stampare indipendentemente 
-// a diversi livelli! sia per le bc sia per x_old. Facciamolo.
-
-//=====================================
-// The DofObjects here, i.e. the "dof carriers", are NODES and ELEMENTS.
-// Assume a QUADRATIC MESH.
-// - For QQ FE, all Nodes are dof carriers
-// - For LL FE, SOME Nodes are dof carriers (and the others are -1)
-// - For KK FE, all Elements are dof carriers
-
-// - For the NODES, we always refer to the FINE numbering (Then, you may always want to use the maps 
-// to obtain the LEVEL numberings)
-// - For the ELEMENTS, it is different, because any Element belongs to ONLY ONE level.
-// So, what you do is you count the number of elements of the previous processors at THAT level,
-// and then you go ahead up to the following processor
-//======================================
-
-// When do you have a -1 in the node_dof? For the LINEAR nodes, and also for the QUADRATIC nodes at the non-fine level.
-
-//TODO this function is based on the assumption that we order
-// FIRST QUADRATIC, THEN LINEAR, THEN CONSTANT DOFS
-//I would like to see what happens if we remove this ordering
-// (of course all the matrices and MG operators would have consistent ordering)
-// also, it affects the way the ELEM MATRIX and RHS are FILLED
-
-// The node dof is used by MATRICES, RECTANGULAR or NOT, and VECTORS,
-//so it is basically the fundamental part of the equation
-
-void EqnBase::ComputeMeshToDof() {
-  
-  
-    assert(  _n_vars > 0);
-    assert(_NoLevels > 0);
-
-    _Dim      = new uint [_NoLevels];
-
-    for (uint Level=0; Level < _NoLevels; Level++)   {
-      
-      int ndof_onevar[QL];
-      ndof_onevar[QQ] = _mesh._NoNodesXLev[Level];
-      ndof_onevar[LL] = _mesh._NoNodesXLev[_NoLevels];
-      if (Level>0) ndof_onevar[LL] = _mesh._NoNodesXLev[Level-1];
-      ndof_onevar[KK] =  _mesh._n_elements_vb_lev[VV][Level];
-
-      _Dim[Level] = 0;
-      for (uint fe=0;fe<QL;fe++) _Dim[Level] += _nvars[fe]*ndof_onevar[fe];
-
-        std::cout << " Level "<< Level
-                  << ", Mesh Quadratic Level Nodes " << _mesh._NoNodesXLev[Level]
-                  << ", Quadratic DOFs " << _nvars[QQ]*ndof_onevar[QQ]
-                  << ", Linear DOFs "    << _nvars[LL]*ndof_onevar[LL]
-                  << ", Constant DOFs "  << _nvars[KK]*ndof_onevar[KK]  << std::endl;
-		  
-    }  
-  
-  
-  _DofLocLevProcFE = new uint**[_NoLevels];     
-   for (uint Level = 0; Level < _NoLevels; Level++) {
-       _DofLocLevProcFE[Level] = new uint*[_mesh._NoSubdom];
-        for (uint isubdom=0; isubdom<_mesh._NoSubdom; isubdom++) {
-            _DofLocLevProcFE[Level][isubdom] = new uint[QL];
-            _DofLocLevProcFE[Level][isubdom][QQ] = _mesh._off_nd[QQ][isubdom*_NoLevels+Level+1] - _mesh._off_nd[QQ][isubdom*_NoLevels];
-            _DofLocLevProcFE[Level][isubdom][LL] = _mesh._off_nd[LL][isubdom*_NoLevels+Level+1] - _mesh._off_nd[LL][isubdom*_NoLevels];
-            _DofLocLevProcFE[Level][isubdom][KK] = _mesh._off_el[VV][isubdom*_NoLevels+Level+1] - _mesh._off_el[VV][isubdom*_NoLevels+Level];
-       }
-    }
-  
-  //SETUP DOF OFFSETS for NODE DOF MAP ********************
-  //I need to set up the dof offsets for every level
-  //Since for nodes they do not depend on fe, but for elements they do, in general they depend on fe
-  _DofNumLevFE = new uint*[_NoLevels];
-  for (uint Level = 0; Level < _NoLevels; Level++) {
-  _DofNumLevFE[Level] = new uint[QL];
-  _DofNumLevFE[Level][QQ] = _mesh._NoNodesXLev[_NoLevels-1];
-  _DofNumLevFE[Level][LL] = _mesh._NoNodesXLev[_NoLevels-1];
-  _DofNumLevFE[Level][KK] = _mesh._n_elements_vb_lev[VV][Level];
-   }
-      
-  _DofOffLevFE = new uint*[_NoLevels];
-  for (uint Level = 0; Level < _NoLevels; Level++) {
-  _DofOffLevFE[Level] = new uint[QL];
-  
- for (int fe=0; fe<QL; fe++) { 
-  _DofOffLevFE[Level][fe] = 0;
-  for (int fe2=0; fe2 < fe; fe2++) _DofOffLevFE[Level][fe] += _nvars[fe2]*_DofNumLevFE[Level][fe2];
-    }
-  }
-
-  //fill node dof ******************************************
-    _node_dof = new int*[_NoLevels];
-
-    for (uint Level = 0; Level < _NoLevels; Level++) {
-      
-       int nodedof_size = 0;
-            for (uint fe=0;fe<QL;fe++)      nodedof_size += _nvars[fe]*_DofNumLevFE[Level][fe];
-   
-        _node_dof[Level] = new int[nodedof_size];
-            for (int k1=0;k1< nodedof_size;k1++) _node_dof[Level][k1] = -1;
-
-        uint dof_count_lev=0;
-        for (uint isubdom=0; isubdom<_mesh._NoSubdom; isubdom++) {
-            uint off_proc=isubdom*_NoLevels;
-
-            // quadratic -----------------------------------
-            for (uint ivar=0;ivar<_nvars[QQ];ivar++) {
-                for (int fine_node = _mesh._off_nd[QQ][off_proc];
-                         fine_node < _mesh._off_nd[QQ][off_proc+Level+1];fine_node++) {
- #ifndef NDEBUG
- 		  if ( fine_node >= (int) _DofNumLevFE[Level][QQ] ) {  std::cout << " Wrong QQ " << std::endl; abort(); }
- #endif	    
-                    _node_dof[Level][ fine_node + ivar*_DofNumLevFE[Level][QQ] + _DofOffLevFE[Level][QQ] ] = dof_count_lev;
-                    dof_count_lev++;
-                }
-            }
-
-            // linear -----------------------------------
-            for (uint ivar=0;ivar<_nvars[LL];ivar++) {
-                for (int fine_node = _mesh._off_nd[QQ][off_proc];
-                         fine_node < _mesh._off_nd[QQ][off_proc]
-                        + _mesh._off_nd[LL][off_proc + Level+1]
-                        - _mesh._off_nd[LL][off_proc]; fine_node++) {
-#ifndef NDEBUG
-  		  if ( fine_node >= (int) _DofNumLevFE[Level][LL] ) {  std::cout << " Wrong LL " << std::endl; abort(); }
-#endif
-                   _node_dof[Level][ fine_node + ivar*_DofNumLevFE[Level][LL] + _DofOffLevFE[Level][LL] ] = dof_count_lev;
-                    dof_count_lev++;
-                }
-            }
-           
-            // constant -----------------------------------
-            int sum_elems_prev_sd_at_lev = 0;
-	    for (uint pr = 0; pr < isubdom; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*_NoLevels + Level + 1] - _mesh._off_el[VV][pr*_NoLevels + Level]; }
-           
-            for (uint ivar = 0; ivar<_nvars[KK]; ivar++) {
-                for (uint elem =  sum_elems_prev_sd_at_lev;
-		                 elem <  sum_elems_prev_sd_at_lev
-		                     + _mesh._off_el[VV][off_proc + Level+1]
-                                     - _mesh._off_el[VV][off_proc + Level]; elem++) {
-#ifndef NDEBUG
-		  if ( elem >= _DofNumLevFE[Level][KK] ) {  std::cout << " Wrong KK " << std::endl; abort(); }
-#endif
-                    _node_dof[Level][elem + ivar*_DofNumLevFE[Level][KK] + _DofOffLevFE[Level][KK] ] = dof_count_lev;
-                    dof_count_lev++;
-                }
-            }
-
-        }  //end subdomain
-        
-#ifndef NDEBUG
-       if ( dof_count_lev  != _Dim[Level] ) { std::cout << "There is a mismatch between count and _Dim[Level] " << dof_count_lev << " " << _Dim[Level] << std::endl; abort(); }
-#endif
-
-        
-#ifdef DEFAULT_PRINT_INFO
-        std::cout << "EqnBase::InitMeshToDof(D)   Level= " << Level  << std::endl;
-#endif
-
-    } //end Level
-    
-    PrintMeshToDof();
-
-    return;
-}
-
-
-
-// For every Level, we loop over the DOF FE FAMILIES.
-// For every DOF FE FAMILY, we associate the GEOMETRICAL ENTITIES on top of which that FE FAMILY is built.
-// So, QUAD9 FE is associated to QUADRATIC QUAD9 NODES
-// You could also associate QUAD8 FE to QUADRATIC QUAD9 NODES,
-
-//On the other hand, we could think first of the GEOMETRICAL ENTITIES: "QUADRATIC NODES", "LINEAR NODES", "ELEMENTS",
-//And loop over the GEOMETRICAL ENTITIES, and ask: WHAT ARE THE DOFS ASSOCIATED TO THESE ENTITIES?
-//So, I would better just consider "QUADRATIC NODES" and "ELEMENTS", or "QUAD9 NODES" and "ELEMENTS";
-// or, if you have a "QUAD8 MESH", you would have "QUAD8 NODES" and "ELEMENTS".
-//Now, what do you do if you have a QUAD9 FE Family? No problem, in your computations you use another DOF,
-//which is not directly associated to any Geometrical Entity (in the "computer science" sense that the 9th node does not exists in the file..).
-//But, eventually, when you PRINT the QUAD9 ONTO the QUAD8 MESH, you somehow should take into account the presence of the 9TH DOF,
-// WHICH SHOULD CONTRIBUTE TO the DOF COEFFICIENTS in the PROJECTED SPACE.
-
-//So, putting the GEOMETRICAL ENTITIES FIRST, "NODES" and "ELEMENTS",
-// you may have:
-//NODES with QUADRATIC AND LINEAR FE DOFS
-//NODES with QUADRATIC FE DOFS
-//ELEMENTS with CONSTANT DOFS
-
-//What if you have "GEOMETRICAL ENTITIES" WITH "NO ASSOCIATED DOFS"? They just do not contribute.
-// Or "DOFS" with "NO GEOMETRICAL ENTITY", viceversa? You just PROJECT their contribution to the OTHER EXISTING GEOMETRICAL ENTITIES that HAVE DOFS of THAT SAME FE FAMILY.
-//So, another example, if you want to PRINT a QUAD4 FE SPACE onto a QUAD9 NODE GEOMETRY, 
-//you would be going from a SMALLER to a LARGER space,
-// so you would do some PROLONGATION.
-//If you went from a LARGER to a SMALLER space,
-// you would do some sort of PROJECTION ONTO SUBSPACE.
-// Somehow you may see the MG operators in the same way:
-
-// Restriction  = FROM LARGER TO SMALLER SPACE (PROJECTION ONTO SUBSPACE)
-// Prolongation = FROM SMALLER TO LARGER SPACE
-
-// Now, let us go back, and let us consider being in the case of looping over the DOF FE FAMILIES, 
-// and for each FE Family we pick the CORRESPONDING "DOF GENERATING" GEOMETRICAL ENTITIES.
-// The point is: the existence of the DOF should actually INTRINSIC, in the sense that it does not depend
-// on the UNDERLYING "DOF GENERATING" GEOMETRICAL ENTITIES.
-// You might wanna have QUAD9 FE on a linear mesh, for instance, and do all the computations as quadratic
-// and only at the end you project to the LINEAR MESH.
-
-// "GEOMETRICAL ENTITY" (NODES or ELEMENTS) may be also called "DOF GENERATING GEOMETRICAL OBJECT" or "DOF OBJECT"
-
-//The only thing that we are not printing here is the SUBDOMAIN SUBDIVISION
-
-//You should print this map while you are building it, and show precisely
-//where you SEPARATE things between one SUBDOMAIN and the other
-
-void EqnBase::PrintMeshToDof() const {
-
-  
-      for (uint Level = 0; Level< _NoLevels; Level++) { 
-	
-	std::cout << "========== Level " << Level << " =========="  << std::endl;
-
-	for (int fe=0; fe<QL; fe++) {
-	  
-	  	std::cout << "========== FE " << fe << " =========="  << std::endl;
-	  
-	for (uint ivar=0; ivar<_nvars[fe]; ivar++) {
-	  
-  	  	std::cout << "========== VAR " << ivar << " =========="  << std::endl;
-		
-	     for (uint i=0; i < _DofNumLevFE[Level][fe]; i++) {
-  
-	  std::cout <<  _node_dof[Level][ i + ivar*_DofNumLevFE[Level][fe] + _DofOffLevFE[Level][fe] ]   << std::endl;
-	  
-	  //inside here I can also find a way to print at the end of each subdomain, depending on "i"
-	  
-	     } //end i
-	     
-	  }
-	}
-	
-      }
-  
-  
- return; 
 }
 
 
@@ -683,22 +203,22 @@ void EqnBase::initVectors() {
 
     for (uint Level = 0; Level< _NoLevels; Level++) {
 
-    uint ml[QL];    for (int fe=0; fe<QL; fe++) ml[fe] = _DofLocLevProcFE[Level][_iproc][fe];
+    uint ml[QL];    for (int fe=0; fe<QL; fe++) ml[fe] = _dofmap._DofLocLevProcFE[Level][_iproc][fe];
     uint m_l = 0;
-    for (int fe=0; fe<QL; fe++)  m_l +=  ml[fe]*_nvars[fe];
+    for (int fe=0; fe<QL; fe++)  m_l +=  ml[fe]*_dofmap._nvars[fe];
     
         _b[Level] = NumericVector::build().release();
-        _b[Level]->init(_Dim[Level],m_l,false,AUTOMATIC);
+        _b[Level]->init(_dofmap._Dim[Level],m_l,false,AUTOMATIC);
         _res[Level] = NumericVector::build().release();
-        _res[Level]->init(_Dim[Level],m_l,false,AUTOMATIC);
+        _res[Level]->init(_dofmap._Dim[Level],m_l,false,AUTOMATIC);
         _x[Level] = NumericVector::build().release();
-        _x[Level]->init(_Dim[Level],m_l,false,AUTOMATIC);
+        _x[Level]->init(_dofmap._Dim[Level],m_l,false,AUTOMATIC);
         _x_old[Level] = NumericVector::build().release();
-        _x_old[Level]->init(_Dim[Level],false, SERIAL);
+        _x_old[Level]->init(_dofmap._Dim[Level],false, SERIAL);
         _x_oold[Level] = NumericVector::build().release();
-        _x_oold[Level]->init(_Dim[Level],false, SERIAL);
+        _x_oold[Level]->init(_dofmap._Dim[Level],false, SERIAL);
         _x_tmp[Level] = NumericVector::build().release();
-        _x_tmp[Level]->init(_Dim[Level],false, SERIAL);
+        _x_tmp[Level]->init(_dofmap._Dim[Level],false, SERIAL);
 
     } //end level loop
 
@@ -874,10 +394,10 @@ void EqnBase::GenBc() {
     const uint el_nnodes_b = _mesh.GetGeomEl(_mesh.get_dim()-1-BB,mesh_ord)._elnds;
     double* normal = new double[_mesh.get_dim()];  //TODO remove this, it is useless
 
-    int  *bc_flag = new int[_n_vars];
+    int  *bc_flag = new int[_dofmap._n_vars];
 
-    _bc = new int[_Dim[Lev_pick_bc_NODE_dof]];
-    for (uint i1=0;i1< _Dim[Lev_pick_bc_NODE_dof];i1++) _bc[i1] = DEFAULT_BC_FLAG;    // set 1 all the points for  bc (boundary condition)
+    _bc = new int[_dofmap._Dim[Lev_pick_bc_NODE_dof]];
+    for (uint i1=0;i1< _dofmap._Dim[Lev_pick_bc_NODE_dof];i1++) _bc[i1] = DEFAULT_BC_FLAG;    // set 1 all the points for  bc (boundary condition)
 
     //both here and in bc_read you have to put the value bc=0
     //so that you get the IDENTITY OPERATOR and you only have to provide the
@@ -894,7 +414,7 @@ void EqnBase::GenBc() {
     
     for (uint Level=0; Level <_NoLevels; Level++)   { //loop over the levels
 
-          DofOff_Lev_kk[Level] = _nvars[KK]*_DofNumLevFE[Level][KK];
+          DofOff_Lev_kk[Level] = _dofmap._nvars[KK]*_dofmap._DofNumLevFE[Level][KK];
               _bc_fe_kk[Level] = new int[DofOff_Lev_kk[Level]];
 
         for (int i=0; i < DofOff_Lev_kk[Level]; i++)    _bc_fe_kk[Level][i] = DEFAULT_BC_FLAG;
@@ -921,9 +441,9 @@ void EqnBase::GenBc() {
 	        currelem.set_el_nod_conn_lev_subd(Level,isubd,iel);
                 currelem.SetMidpoint();
 		
- 	    for (uint ivar=0; ivar< _n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!
+ 	    for (uint ivar=0; ivar< _dofmap._n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!
 
-                 if (_n_vars >0) bc_read(currelem.GetMidpoint(),normal,bc_flag);
+                 if (_dofmap._n_vars >0) bc_read(currelem.GetMidpoint(),normal,bc_flag);
 
   //******************* ONLY FINE LEVEL, NODE VARS ***************** 
    if (Level == Lev_pick_bc_NODE_dof)  { 
@@ -932,15 +452,15 @@ void EqnBase::GenBc() {
 
                     //Set the quadratic fields
                     if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-BB][QQ]->GetNDofs() )
-		      for (uint ivar=0; ivar<_nvars[QQ]; ivar++) {
-                            int kdof = _node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_DofNumLevFE[Lev_pick_bc_NODE_dof][QQ] + _DofOffLevFE[Lev_pick_bc_NODE_dof][QQ] ];
-                           if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _VarOff[QQ]];
+		      for (uint ivar=0; ivar<_dofmap._nvars[QQ]; ivar++) {
+                            int kdof = _dofmap._node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_dofmap._DofNumLevFE[Lev_pick_bc_NODE_dof][QQ] + _dofmap._DofOffLevFE[Lev_pick_bc_NODE_dof][QQ] ];
+                           if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _dofmap._VarOff[QQ]];
                         }
                     // Set the linear fields
                     if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-BB][LL]->GetNDofs() ) {
-                        for (uint ivar = 0; ivar < _nvars[LL]; ivar++) {
-                            int kdof = _node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_DofNumLevFE[Lev_pick_bc_NODE_dof][LL] + _DofOffLevFE[Lev_pick_bc_NODE_dof][LL] ];
-                           if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _VarOff[LL]];
+                        for (uint ivar = 0; ivar < _dofmap._nvars[LL]; ivar++) {
+                            int kdof = _dofmap._node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_dofmap._DofNumLevFE[Lev_pick_bc_NODE_dof][LL] + _dofmap._DofOffLevFE[Lev_pick_bc_NODE_dof][LL] ];
+                           if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _dofmap._VarOff[LL]];
                         }
                     }
                 } // i
@@ -955,9 +475,9 @@ void EqnBase::GenBc() {
 		 int bdry_iel_lev =  iel + sum_elems_prev_sd_at_lev;
 		 int vol_iel =  _mesh._el_bdry_to_vol[Level][bdry_iel_lev];
 		 
- 	        for (uint ivar= 0; ivar < _nvars[KK];  ivar++)  { 
-		  int dof_kk_pos_lev =  vol_iel + ivar*_DofNumLevFE[Level][KK];
-	            if (_bc_fe_kk[Level][ dof_kk_pos_lev ] != 0)  _bc_fe_kk[Level][ dof_kk_pos_lev ] = bc_flag[ ivar + _VarOff[KK] ];
+ 	        for (uint ivar= 0; ivar < _dofmap._nvars[KK];  ivar++)  { 
+		  int dof_kk_pos_lev =  vol_iel + ivar*_dofmap._DofNumLevFE[Level][KK];
+	            if (_bc_fe_kk[Level][ dof_kk_pos_lev ] != 0)  _bc_fe_kk[Level][ dof_kk_pos_lev ] = bc_flag[ ivar + _dofmap._VarOff[KK] ];
 		}
 //******************* END ALL LEVELS, ELEM VARS **************   
                  
@@ -983,7 +503,7 @@ void EqnBase::GenBc() {
         hid_t  file = H5Fopen(ibc_fileh5.str().c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
 
         // variable loop
-        for (uint ivar=0;ivar<_nvars[0];ivar++) { // ----------------------------
+        for (uint ivar=0;ivar< _dofmap._nvars[QQ];ivar++) { // ----------------------------
             // nodes for boundary elements
             int el_nodes=el_nnodes_b; /*  if (ivar >= _nvars[0]) el_nodes=NDOF_PB;*/ /*TODO check here*/
             // read
@@ -998,7 +518,7 @@ void EqnBase::GenBc() {
                     // Element node loop
                     for (int i=0; i< el_nodes; i++)     {// element loop
                         const uint k=_mesh._el_map[BB][(iel+iel0)*el_nnodes_b+i]; // global node
-                        int kdof= _node_dof[_NoLevels-1][k+ivar* offset];
+                        int kdof= _dofmap._node_dof[_NoLevels-1][k+ivar* offset];
                         _bc[kdof]=data[k];
                     }
                 }// iel
@@ -1127,7 +647,7 @@ void EqnBase::PrintBc(std::string namefile) {
     // ===================================
     // ========= QUADRATIC ================
     // ===================================
-    for (uint ivar=0;ivar<_nvars[QQ]; ivar++)        {
+    for (uint ivar=0;ivar<_dofmap._nvars[QQ]; ivar++)        {
       
       for (uint isubdom=0; isubdom<_mesh._NoSubdom; isubdom++) {
             uint off_proc=isubdom*_NoLevels;
@@ -1135,14 +655,14 @@ void EqnBase::PrintBc(std::string namefile) {
           for (int fine_node = _mesh._off_nd[QQ][off_proc];
 	           fine_node < _mesh._off_nd[QQ][off_proc+Level+1]; fine_node ++) {
 
-	int pos_in_sol_vec_lev = _node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_DofNumLevFE[ Lev_pick_bc_NODE_dof ][QQ] + _DofOffLevFE[ Lev_pick_bc_NODE_dof ][QQ] ];
+	int pos_in_sol_vec_lev = _dofmap._node_dof[Lev_pick_bc_NODE_dof][ fine_node + ivar*_dofmap._DofNumLevFE[ Lev_pick_bc_NODE_dof ][QQ] + _dofmap._DofOffLevFE[ Lev_pick_bc_NODE_dof ][QQ] ];
 	int pos_on_Qnodes_lev  = _mesh._Qnode_fine_Qnode_lev[Level][ fine_node ]; 
 
 	sol_on_Qnodes[ pos_on_Qnodes_lev ] = _bc[pos_in_sol_vec_lev];
           }
        }  //end subd
 
-       std::ostringstream var_name; var_name << _var_names[ ivar + _VarOff[QQ] ] << "_" << grname.str() << bdry_suffix;
+       std::ostringstream var_name; var_name << _var_names[ ivar + _dofmap._VarOff[QQ] ] << "_" << grname.str() << bdry_suffix;
        hsize_t dimsf[2];  dimsf[0] = NGeomObjOnWhichToPrint[QQ];  dimsf[1] = 1;
        IO::print_Ihdf5(file_id,var_name.str(),dimsf,sol_on_Qnodes);
     }
@@ -1155,7 +675,7 @@ void EqnBase::PrintBc(std::string namefile) {
     elnds[LL] =_mesh.GetGeomEl(_mesh.get_dim()-1-VV,LL)._elnds;
     double *elsol_c = new double[elnds[LL]];
 
-    for (uint ivar=0; ivar<_nvars[LL]; ivar++)   {
+    for (uint ivar=0; ivar<_dofmap._nvars[LL]; ivar++)   {
 
 	for (uint isubdom=0; isubdom<_mesh._NoSubdom; isubdom++) {
 	              uint off_proc=isubdom*_NoLevels;
@@ -1165,7 +685,7 @@ void EqnBase::PrintBc(std::string namefile) {
                     + _mesh._off_nd[LL][off_proc+Level+1]
                     - _mesh._off_nd[LL][off_proc]; fine_node++) {
 	      
-            int pos_in_sol_vec_lev = _node_dof[Lev_pick_bc_NODE_dof][ fine_node  + ivar*_DofNumLevFE[ Lev_pick_bc_NODE_dof ][LL] + _DofOffLevFE[ Lev_pick_bc_NODE_dof ][LL] ]; 
+            int pos_in_sol_vec_lev = _dofmap._node_dof[Lev_pick_bc_NODE_dof][ fine_node  + ivar*_dofmap._DofNumLevFE[ Lev_pick_bc_NODE_dof ][LL] + _dofmap._DofOffLevFE[ Lev_pick_bc_NODE_dof ][LL] ]; 
  	    int pos_on_Qnodes_lev  = _mesh._Qnode_fine_Qnode_lev[Level][ fine_node ];
 
 	    sol_on_Qnodes[ pos_on_Qnodes_lev ]=  _bc[pos_in_sol_vec_lev]; 
@@ -1199,7 +719,7 @@ void EqnBase::PrintBc(std::string namefile) {
             }
         } // 2bB end interpolation over the fine mesh
 
-       std::ostringstream var_name; var_name << _var_names[ ivar + _VarOff[LL] ] << "_" << grname.str() << bdry_suffix;
+       std::ostringstream var_name; var_name << _var_names[ ivar + _dofmap._VarOff[LL] ] << "_" << grname.str() << bdry_suffix;
        hsize_t  dimsf[2];  dimsf[0] = NGeomObjOnWhichToPrint[LL];  dimsf[1] = 1;
        IO::print_Ihdf5(file_id,var_name.str(),dimsf,sol_on_Qnodes);
     } // ivar
@@ -1210,7 +730,7 @@ void EqnBase::PrintBc(std::string namefile) {
      // ===================================
      // ========= CONSTANT ================
      // ===================================
-     for (uint ivar=0; ivar<_nvars[KK]; ivar++)        {
+     for (uint ivar=0; ivar < _dofmap._nvars[KK]; ivar++)        {
       
   int *sol_on_cells;   sol_on_cells = new int[ NGeomObjOnWhichToPrint[KK] ];
   
@@ -1231,7 +751,7 @@ void EqnBase::PrintBc(std::string namefile) {
     }
   }
   
-  std::ostringstream var_name; var_name << _var_names[ ivar + _VarOff[KK] ] << "_" << grname.str() << bdry_suffix;
+  std::ostringstream var_name; var_name << _var_names[ ivar + _dofmap._VarOff[KK] ] << "_" << grname.str() << bdry_suffix;
   hsize_t dimsf[2]; dimsf[0] = NGeomObjOnWhichToPrint[KK]; dimsf[1] = 1;
   IO::print_Ihdf5(file_id,var_name.str(),dimsf,sol_on_cells);   
       
@@ -1524,7 +1044,7 @@ void EqnBase::GenIc() {
         const uint  coords_fine_offset = _mesh._NoNodesXLev[_NoLevels-1];
         const uint  el_nnodes = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,mesh_ord)._elnds;
         double*      xp = new double[_mesh.get_dim()];
-        double* u_value = new double[_n_vars];
+        double* u_value = new double[_dofmap._n_vars];
 
        std::cout << "\n====================== GenIc:  Now we are setting them for all levels! ========================" << "\n \n";
 
@@ -1542,7 +1062,7 @@ void EqnBase::GenIc() {
             for (uint i=0; i < el_nnodes ; i++) {
                 int fine_node = _mesh._el_map[VV][ i + ( iel + iel_b )*el_nnodes ];
                 for (uint idim=0; idim<_mesh.get_dim(); idim++) xp[idim] = _mesh._xyz[ fine_node + idim*coords_fine_offset ];
-                for (uint ivar=0; ivar<_n_vars; ivar++) u_value[ivar] = 0.;
+                for (uint ivar=0; ivar < _dofmap._n_vars; ivar++) u_value[ivar] = 0.;
 
                 // ===================================================
                 // user definition reading function ----------------
@@ -1552,16 +1072,16 @@ void EqnBase::GenIc() {
 
                 // Set the quadratic fields
                 if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-VV][QQ]->GetNDofs() ) {
-                    for (uint ivar=0; ivar<_nvars[QQ]; ivar++) {
-		      int dof_pos_lev = _node_dof[Level][ fine_node + ivar*_DofNumLevFE[Level][QQ] + _DofOffLevFE[Level][QQ] ];
-                        _x[Level]->set( dof_pos_lev, u_value[ivar + _VarOff[QQ]] );
+                    for (uint ivar=0; ivar < _dofmap._nvars[QQ]; ivar++) {
+		      int dof_pos_lev = _dofmap._node_dof[Level][ fine_node + ivar*_dofmap._DofNumLevFE[Level][QQ] + _dofmap._DofOffLevFE[Level][QQ] ];
+                        _x[Level]->set( dof_pos_lev, u_value[ivar + _dofmap._VarOff[QQ]] );
 		    }
                 }
                 // Set the linear fields
                 if ( i <  _eqnmap._elem_type[_mesh.get_dim()-1-VV][LL]->GetNDofs() ) {
-                    for (uint ivar=0; ivar<_nvars[LL]; ivar++) {
-		      int dof_pos_lev = _node_dof[Level][ fine_node + ivar*_DofNumLevFE[Level][LL] + _DofOffLevFE[Level][LL] ];
-                        _x[Level]->set( dof_pos_lev, u_value[ivar + _VarOff[LL]] );
+                    for (uint ivar=0; ivar<_dofmap._nvars[LL]; ivar++) {
+		      int dof_pos_lev = _dofmap._node_dof[Level][ fine_node + ivar*_dofmap._DofNumLevFE[Level][LL] + _dofmap._DofOffLevFE[Level][LL] ];
+                        _x[Level]->set( dof_pos_lev, u_value[ivar + _dofmap._VarOff[LL]] );
                         }
 		    }
 		    
@@ -1571,10 +1091,10 @@ void EqnBase::GenIc() {
 	    for (uint pr = 0; pr < _iproc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*_NoLevels + Level + 1] - _mesh._off_el[VV][pr*_NoLevels + Level]; }
 	    
 		  //elem my level
-                    for (uint ivar=0; ivar<_nvars[KK]; ivar++) {
+                    for (uint ivar=0; ivar<_dofmap._nvars[KK]; ivar++) {
 		      int elem_lev = iel + sum_elems_prev_sd_at_lev;
-		      int dof_pos_lev = _node_dof[Level][ elem_lev + ivar*_DofNumLevFE[Level][KK] + _DofOffLevFE[Level][KK] ];
-                        _x[Level]->set( dof_pos_lev, u_value[ivar + _VarOff[KK]] );
+		      int dof_pos_lev = _dofmap._node_dof[Level][ elem_lev + ivar*_dofmap._DofNumLevFE[Level][KK] + _dofmap._DofOffLevFE[Level][KK] ];
+                        _x[Level]->set( dof_pos_lev, u_value[ivar + _dofmap._VarOff[KK]] );
                          }
 		    }
             }  //end i loop
@@ -2117,11 +1637,11 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
     int NoLevels  = _mesh._NoLevels;
 
     uint mrow_glob_t = 0;
-    for (int fe=0; fe<QL; fe++) mrow_glob_t += _nvars[fe]*rowcln[fe][fe][0];
+    for (int fe=0; fe<QL; fe++) mrow_glob_t += _dofmap._nvars[fe]*rowcln[fe][fe][0];
     uint ncol_glob_t = mrow_glob_t;
 
     uint mrow_lev_proc_t  = 0;
-    for (int fe=0; fe<QL; fe++)  mrow_lev_proc_t +=  _DofLocLevProcFE[Level][_iproc][fe]*_nvars[fe];
+    for (int fe=0; fe<QL; fe++)  mrow_lev_proc_t +=  _dofmap._DofLocLevProcFE[Level][_iproc][fe]*_dofmap._nvars[fe];
     uint ncol_lev_proc_t  = mrow_lev_proc_t;
 
     uint DofObjInit_lev_PrevProcs[QL];  //TODO what is this? it is the ROW INDEX at which to begin for every processor
@@ -2129,9 +1649,9 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
      for (int r=0; r<QL; r++)     DofObjInit_lev_PrevProcs[r] = 0;
          
     for (uint isubd=0; isubd<_iproc; isubd++) {
-        DofObjInit_lev_PrevProcs[QQ] += _DofLocLevProcFE[Level][isubd][QQ];
-        DofObjInit_lev_PrevProcs[LL] += _DofLocLevProcFE[Level][isubd][LL];
-        DofObjInit_lev_PrevProcs[KK] += _DofLocLevProcFE[Level][isubd][KK];
+        DofObjInit_lev_PrevProcs[QQ] += _dofmap._DofLocLevProcFE[Level][isubd][QQ];
+        DofObjInit_lev_PrevProcs[LL] += _dofmap._DofLocLevProcFE[Level][isubd][LL];
+        DofObjInit_lev_PrevProcs[KK] += _dofmap._DofLocLevProcFE[Level][isubd][KK];
     }    
     
     
@@ -2144,7 +1664,7 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
     graph._n  = ncol_glob_t;
     graph._ml = mrow_lev_proc_t;
     graph._nl = ncol_lev_proc_t;
-    graph._ml_start = _node_dof[Level][ _mesh._off_nd[QQ][_iproc*NoLevels] ];
+    graph._ml_start = _dofmap._node_dof[Level][ _mesh._off_nd[QQ][_iproc*NoLevels] ];
     // TODO is this used? I guess it is used by update_sparsity_pattern !
     // Every subdomain has a local set of dofs, and these dofs start at a specific point.
     // Now, remember that _mesh._off_nd[QQ] should only be used for computing offsets, so differences.
@@ -2166,24 +1686,24 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
     
     uint  off_EachFEFromStart[QL];
     off_EachFEFromStart[QQ] = 0;
-    off_EachFEFromStart[LL] = _nvars[QQ]*off_onevar[QQ];
-    off_EachFEFromStart[KK] = _nvars[QQ]*off_onevar[QQ]+_nvars[LL]*off_onevar[LL];
+    off_EachFEFromStart[LL] = _dofmap._nvars[QQ]*off_onevar[QQ];
+    off_EachFEFromStart[KK] = _dofmap._nvars[QQ]*off_onevar[QQ] + _dofmap._nvars[LL]*off_onevar[LL];
 
  //==============   
      for (int r=0;r<QL;r++) {
-      for (uint ivar=0; ivar<_nvars[r]; ivar++) {
+      for (uint ivar=0; ivar < _dofmap._nvars[r]; ivar++) {
 
-        for (uint DofObj_lev = DofObjInit_lev_PrevProcs[r]; DofObj_lev < DofObjInit_lev_PrevProcs[r] + _DofLocLevProcFE[Level][_iproc][r]; DofObj_lev++) {
+        for (uint DofObj_lev = DofObjInit_lev_PrevProcs[r]; DofObj_lev < DofObjInit_lev_PrevProcs[r] + _dofmap._DofLocLevProcFE[Level][_iproc][r]; DofObj_lev++) {
 
             int dof_pos, irow;
 	         if  (r<KK) {  dof_pos = _mesh._Qnode_lev_Qnode_fine[FELevel[r]][ DofObj_lev ];  }
             else if (r==KK) {  dof_pos = DofObj_lev; }
-                    irow = _node_dof[Level][ dof_pos + ivar*off_onevar[r] + off_EachFEFromStart[r] ]; 
+                    irow = _dofmap._node_dof[Level][ dof_pos + ivar*off_onevar[r] + off_EachFEFromStart[r] ]; 
 
 	    int len[QL];   for (int c=0;c<QL;c++) len[c] = 0;
 	    for (int c=0;c<QL;c++) len[c] = (length_row[r][c][ DofObj_lev+1 ]-length_row[r][c][ DofObj_lev ]);
             int rowsize = 0; 
-	    for (int c=0;c<QL;c++) rowsize +=_nvars[c]*len[c];
+	    for (int c=0;c<QL;c++) rowsize +=_dofmap._nvars[c]*len[c];
 	      graph[irow].resize(rowsize + 1);  //There is a +1 because in the last position you memorize the number of offset dofs in that row
 
 // // // #ifdef FEMUS_HAVE_LASPACK
@@ -2219,7 +1739,7 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
             int lenoff[QL];  for (int c=0;c<QL;c++) lenoff[c] = 0;
 	    for (int c=0;c<QL;c++)  lenoff[c] = length_offrow[r][c][DofObj_lev+1] - length_offrow[r][c][ DofObj_lev ];
 	    int lenoff_size = 0;
-	    for (int c=0;c<QL;c++) lenoff_size += _nvars[c]*lenoff[c];
+	    for (int c=0;c<QL;c++) lenoff_size += _dofmap._nvars[c]*lenoff[c];
             graph[irow][rowsize] = lenoff_size;      // last stored value is the number of in-matrix nonzero off-diagonal values
 
         }
@@ -2375,8 +1895,8 @@ void EqnBase::ReadProl(const std::string& name) {
     // pattern dimension
         int nrowt=0;int nclnt=0;
         for (int fe=0;fe<QL;fe++) {
-	  nrowt += _nvars[fe]*rowcln[fe][0];
-          nclnt += _nvars[fe]*rowcln[fe][1];
+	  nrowt += _dofmap._nvars[fe]*rowcln[fe][0];
+          nclnt += _dofmap._nvars[fe]*rowcln[fe][1];
 	}
     
     Graph pattern;
@@ -2386,10 +1906,10 @@ void EqnBase::ReadProl(const std::string& name) {
     pattern._ml = 0;
     pattern._nl = 0;
      for (int fe=0;fe<QL;fe++) { 
-        pattern._ml += _nvars[fe]*ml[fe];  //  local _m
-        pattern._nl += _nvars[fe]*nl[fe];  //  local _n
+        pattern._ml += _dofmap._nvars[fe]*ml[fe];  //  local _m
+        pattern._nl += _dofmap._nvars[fe]*nl[fe];  //  local _n
      }
-    uint ml_start = _node_dof[Level][_mesh._off_nd[QQ][off_proc]];
+    uint ml_start = _dofmap._node_dof[Level][_mesh._off_nd[QQ][off_proc]];
     pattern._ml_start = ml_start;
 
     uint ml_init[QL]; //up to the current processor
@@ -2404,13 +1924,13 @@ void EqnBase::ReadProl(const std::string& name) {
     //============= POSITION =========
    for (int fe=0;fe<QL;fe++) {
 
-     for (uint ivar=0;ivar<_nvars[fe];ivar++) {
+     for (uint ivar=0;ivar<_dofmap._nvars[fe];ivar++) {
         for (unsigned int i = ml_init[fe]; i < ml_init[fe]+ml[fe]; i++) {
           int dof_pos_f;
           if (fe < KK)         dof_pos_f = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ i ];  //end fe < ql
           else if (fe == KK)   dof_pos_f = i;
           
-            int irow  = _node_dof[ Lev_f ][ dof_pos_f + ivar*_DofNumLevFE[ Lev_f ][fe] + _DofOffLevFE[ Lev_f ][fe] ];
+            int irow  = _dofmap._node_dof[ Lev_f ][ dof_pos_f + ivar*_dofmap._DofNumLevFE[ Lev_f ][fe] + _dofmap._DofOffLevFE[ Lev_f ][fe] ];
 
 	    uint ncol =    len[fe][i+1] -    len[fe][i];
             uint noff = lenoff[fe][i+1] - lenoff[fe][i];
@@ -2423,7 +1943,7 @@ void EqnBase::ReadProl(const std::string& name) {
 	      if      (fe  < KK) dof_pos_c = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ dof_pos_lev_c ];
               else if (fe == KK) dof_pos_c = dof_pos_lev_c; 
 	      
-	      pattern[irow][j] = _node_dof[ Lev_c ][ dof_pos_c + ivar*_DofNumLevFE[ Lev_c ][fe] + _DofOffLevFE[ Lev_c ][fe] ];
+	      pattern[irow][j] = _dofmap._node_dof[ Lev_c ][ dof_pos_c + ivar*_dofmap._DofNumLevFE[ Lev_c ][fe] + _dofmap._DofOffLevFE[ Lev_c ][fe] ];
             }
 // #endif
 
@@ -2440,13 +1960,13 @@ void EqnBase::ReadProl(const std::string& name) {
     DenseMatrix *valmat;
     std::vector<uint> tmp(1);
    for (int fe=0; fe<QL; fe++) { 
-       for (uint ivar=0;ivar<_nvars[fe];ivar++) {
+       for (uint ivar=0;ivar < _dofmap._nvars[fe];ivar++) {
           for (unsigned int i=ml_init[fe]; i<ml_init[fe] + ml[fe]; i++) {
           int dof_pos_f;
           if (fe < KK)        dof_pos_f = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ i ];  //end fe < ql
           else if (fe == KK)  dof_pos_f = i;
 
-          int irow  = _node_dof[ Lev_f ][ dof_pos_f + ivar*_DofNumLevFE[ Lev_f ][fe] + _DofOffLevFE[ Lev_f ][fe] ];
+          int irow  = _dofmap._node_dof[ Lev_f ][ dof_pos_f + ivar*_dofmap._DofNumLevFE[ Lev_f ][fe] + _dofmap._DofOffLevFE[ Lev_f ][fe] ];
 
             uint ncol = len[fe][i+1]-len[fe][i];
             tmp[0] = irow;
@@ -2599,8 +2119,8 @@ void EqnBase::ReadRest(const std::string& name) {
 
     int nrowt=0;int nclnt=0;
         for (int fe=0;fe<QL;fe++) {
-	  nrowt += _nvars[fe]*rowcln[fe][0];
-          nclnt += _nvars[fe]*rowcln[fe][1];
+	  nrowt += _dofmap._nvars[fe]*rowcln[fe][0];
+          nclnt += _dofmap._nvars[fe]*rowcln[fe][1];
 	}
 
 
@@ -2611,12 +2131,12 @@ void EqnBase::ReadRest(const std::string& name) {
     pattern._ml = 0;            //  local _m
     pattern._nl = 0;            //  local _n
      for (int fe=0;fe<QL;fe++) { 
-        pattern._ml += _nvars[fe]*_DofLocLevProcFE[Lev_c][_iproc][fe]; 
-        pattern._nl += _nvars[fe]*_DofLocLevProcFE[Lev_f][_iproc][fe];
+        pattern._ml += _dofmap._nvars[fe]*_dofmap._DofLocLevProcFE[Lev_c][_iproc][fe]; 
+        pattern._nl += _dofmap._nvars[fe]*_dofmap._DofLocLevProcFE[Lev_f][_iproc][fe];
      } 
      
     // starting indices for local matrix
-   uint ml_start = _node_dof[Lev_c][_mesh._off_nd[QQ][off_proc]];     //  offset proc nodes /*TODO is this correct?!? MAybe this is what is giving me trouble*/
+   uint ml_start = _dofmap._node_dof[Lev_c][_mesh._off_nd[QQ][off_proc]];     //  offset proc nodes /*TODO is this correct?!? MAybe this is what is giving me trouble*/
    pattern._ml_start = ml_start;
    uint DofObjInit_lev_PrevProcs_c[QL];
         for (int fe=0;fe<QL;fe++) { DofObjInit_lev_PrevProcs_c[fe] = 0;  }
@@ -2629,13 +2149,13 @@ void EqnBase::ReadRest(const std::string& name) {
 
     //============= POSITION =========
         for (int fe=0; fe<QL; fe++) { 
-    for (uint ivar=0;ivar<_nvars[fe];ivar++) {
-        for (unsigned int i = DofObjInit_lev_PrevProcs_c[fe]; i< DofObjInit_lev_PrevProcs_c[fe] + _DofLocLevProcFE[Lev_c][_iproc][fe]; i++) {
+    for (uint ivar=0;ivar<_dofmap._nvars[fe];ivar++) {
+        for (unsigned int i = DofObjInit_lev_PrevProcs_c[fe]; i< DofObjInit_lev_PrevProcs_c[fe] + _dofmap._DofLocLevProcFE[Lev_c][_iproc][fe]; i++) {
 	  int dof_pos_c;
           if (fe < KK)         dof_pos_c = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ i ];
           else if (fe == KK)   dof_pos_c = i;
 	  
-            int irow  = _node_dof[ Lev_c ][ dof_pos_c + ivar*_DofNumLevFE[ Lev_c ][fe] + _DofOffLevFE[ Lev_c ][fe] ];
+            int irow  = _dofmap._node_dof[ Lev_c ][ dof_pos_c + ivar*_dofmap._DofNumLevFE[ Lev_c ][fe] + _dofmap._DofOffLevFE[ Lev_c ][fe] ];
 
 	    uint ncol = len[fe][i+1]-len[fe][i];
             uint noff = lenoff[fe][i+1] - lenoff[fe][i];
@@ -2648,7 +2168,7 @@ void EqnBase::ReadRest(const std::string& name) {
     
 	      if      (fe  < KK)  dof_pos_f = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ dof_pos_lev_f ];
               else if (fe == KK)  dof_pos_f = dof_pos_lev_f;
-              pattern[irow][j] = _node_dof[ Lev_f ][ dof_pos_f + ivar*_DofNumLevFE[ Lev_f ][fe] + _DofOffLevFE[ Lev_f ][fe] ];
+              pattern[irow][j] = _dofmap._node_dof[ Lev_f ][ dof_pos_f + ivar*_dofmap._DofNumLevFE[ Lev_f ][fe] + _dofmap._DofOffLevFE[ Lev_f ][fe] ];
                 }
 
               }
@@ -2672,13 +2192,13 @@ void EqnBase::ReadRest(const std::string& name) {
     std::vector<uint> tmp(1);
         for (int fe=0;fe<QL;fe++) {
 
-    for (uint ivar=0;ivar<_nvars[fe];ivar++) {
-        for (unsigned int i = DofObjInit_lev_PrevProcs_c[fe]; i< DofObjInit_lev_PrevProcs_c[fe] + _DofLocLevProcFE[Lev_c][_iproc][fe]; i++) {
+    for (uint ivar=0;ivar<_dofmap._nvars[fe];ivar++) {
+        for (unsigned int i = DofObjInit_lev_PrevProcs_c[fe]; i< DofObjInit_lev_PrevProcs_c[fe] + _dofmap._DofLocLevProcFE[Lev_c][_iproc][fe]; i++) {
 	  int dof_pos_c;
           if (fe < KK)         dof_pos_c = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ i ];
           else if (fe == KK)   dof_pos_c = i;
-            int irow     = _node_dof[      Lev_c][ dof_pos_c + ivar*_DofNumLevFE[ Lev_c ][fe] + _DofOffLevFE[ Lev_c ][fe] ];
-            int irow_top = _node_dof[_NoLevels-1][ dof_pos_c + ivar*_DofNumLevFE[ _NoLevels-1 ][fe] + _DofOffLevFE[ _NoLevels-1 ][fe] ];
+            int irow     = _dofmap._node_dof[      Lev_c][ dof_pos_c + ivar*_dofmap._DofNumLevFE[ Lev_c ][fe] + _dofmap._DofOffLevFE[ Lev_c ][fe] ];
+            int irow_top = _dofmap._node_dof[_NoLevels-1][ dof_pos_c + ivar*_dofmap._DofNumLevFE[ _NoLevels-1 ][fe] + _dofmap._DofOffLevFE[ _NoLevels-1 ][fe] ];
             uint ncol = len[fe][i+1]-len[fe][i];
             tmp[0]=irow;
             std::vector< uint> ind(pattern[irow].size()-1);
@@ -2980,7 +2500,7 @@ void EqnBase::PrintVector(std::string namefile) {
     // ===================================
     // ========= QUADRATIC ===============
     // ===================================
-    for (uint ivar=0; ivar<_nvars[QQ]; ivar++)        {
+    for (uint ivar=0; ivar<_dofmap._nvars[QQ]; ivar++)        {
       
       int pos_in_mesh_obj = 0;   
          for (uint isubdom=0; isubdom<_mesh._NoSubdom; isubdom++) {
@@ -2989,13 +2509,13 @@ void EqnBase::PrintVector(std::string namefile) {
             for (int fine_node = _mesh._off_nd[QQ][off_proc];
                      fine_node < _mesh._off_nd[QQ][off_proc+Level+1]; fine_node++) {
       
-  	int pos_in_sol_vec_lev = _node_dof[Level][fine_node + ivar*_DofNumLevFE[ Level ][QQ] + _DofOffLevFE[ Level ][QQ] ];
+  	int pos_in_sol_vec_lev = _dofmap._node_dof[Level][fine_node + ivar*_dofmap._DofNumLevFE[ Level ][QQ] + _dofmap._DofOffLevFE[ Level ][QQ] ];
 	int pos_on_Qnodes_lev = _mesh._Qnode_fine_Qnode_lev[Level][ fine_node ]; 
 
 #ifndef NDEBUG
          if ( pos_on_Qnodes_lev >= (int) n_nodes_lev ) { std::cout << "^^^^^^^OUT OF THE ARRAY ^^^^^^" << std::endl; abort(); }
 #endif
-        sol_on_Qnodes[ pos_on_Qnodes_lev/* pos_in_mesh_obj*/ ] = (*_x_old[Level])(pos_in_sol_vec_lev) * _refvalue[ ivar + _VarOff[QQ] ];
+        sol_on_Qnodes[ pos_on_Qnodes_lev/* pos_in_mesh_obj*/ ] = (*_x_old[Level])(pos_in_sol_vec_lev) * _refvalue[ ivar + _dofmap._VarOff[QQ] ];
 	pos_in_mesh_obj++;
 	  }
        }  //end subd
@@ -3004,7 +2524,7 @@ void EqnBase::PrintVector(std::string namefile) {
 	 if (pos_in_mesh_obj != NGeomObjOnWhichToPrint[QQ]) { std::cout << "Wrong counting of quadratic nodes" << std::endl; abort(); }
 #endif
 
-     std::ostringstream var_name;  var_name << _var_names[ ivar + _VarOff[QQ] ] << "_" << grname.str(); 	 //         std::string var_name = grname.str() + "/" + _var_names[ivar];
+     std::ostringstream var_name;  var_name << _var_names[ ivar + _dofmap._VarOff[QQ] ] << "_" << grname.str(); 	 //         std::string var_name = grname.str() + "/" + _var_names[ivar];
      hsize_t  dimsf[2];  dimsf[0] = NGeomObjOnWhichToPrint[QQ];  dimsf[1] = 1;
      IO::print_Dhdf5(file_id,var_name.str(),dimsf,sol_on_Qnodes);   //TODO VALGRIND
 
@@ -3018,7 +2538,7 @@ void EqnBase::PrintVector(std::string namefile) {
     elnds[LL] = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,LL)._elnds;
     double* elsol_c = new double[elnds[LL]];
     
-    for (uint ivar=0; ivar<_nvars[LL]; ivar++)        {
+    for (uint ivar=0; ivar < _dofmap._nvars[LL]; ivar++)        {
       
 //               for (uint i=0; i< n_nodes_lev; i++) { sol_on_Qnodes[i] = 0.; }
     
@@ -3029,7 +2549,7 @@ void EqnBase::PrintVector(std::string namefile) {
                          _mesh._off_nd[LL][off_proc + Level+1 ]
                        - _mesh._off_nd[LL][off_proc]; fine_node++) {
 	      
-	    int pos_in_sol_vec_lev = _node_dof[Level][ fine_node + ivar*_DofNumLevFE[ Level ][LL] + _DofOffLevFE[ Level ][LL] ];
+	    int pos_in_sol_vec_lev = _dofmap._node_dof[Level][ fine_node + ivar*_dofmap._DofNumLevFE[ Level ][LL] + _dofmap._DofOffLevFE[ Level ][LL] ];
  	    int pos_on_Qnodes_lev = _mesh._Qnode_fine_Qnode_lev[Level][ fine_node ];
 
 #ifndef NDEBUG
@@ -3037,7 +2557,7 @@ void EqnBase::PrintVector(std::string namefile) {
          if ( pos_on_Qnodes_lev >= (int) n_nodes_lev ) { std::cout << "^^^^^^^OUT OF THE ARRAY ^^^^^^" << std::endl; abort(); }
 #endif
 
-         sol_on_Qnodes[ pos_on_Qnodes_lev ] = (*_x_old[Level])(pos_in_sol_vec_lev) * _refvalue[ ivar + _VarOff[LL] ];
+         sol_on_Qnodes[ pos_on_Qnodes_lev ] = (*_x_old[Level])(pos_in_sol_vec_lev) * _refvalue[ ivar + _dofmap._VarOff[LL] ];
 	 
             }
         }
@@ -3076,7 +2596,7 @@ void EqnBase::PrintVector(std::string namefile) {
               }
           } // 2bB end interpolation over the fine mesh --------
         
-     std::ostringstream var_name; var_name << _var_names[ ivar + _VarOff[LL] ] << "_" << grname.str();
+     std::ostringstream var_name; var_name << _var_names[ ivar + _dofmap._VarOff[LL] ] << "_" << grname.str();
      hsize_t  dimsf[2]; dimsf[0] = NGeomObjOnWhichToPrint[LL];  dimsf[1] = 1;
      IO::print_Dhdf5(file_id,var_name.str(),dimsf,sol_on_Qnodes);
      
@@ -3090,7 +2610,7 @@ void EqnBase::PrintVector(std::string namefile) {
      // ===================================
   double *sol_on_cells;   sol_on_cells = new double[ NGeomObjOnWhichToPrint[KK] ];
 
-  for (uint ivar=0; ivar<_nvars[KK]; ivar++)        {
+  for (uint ivar=0; ivar < _dofmap._nvars[KK]; ivar++)        {
       
   int cel=0;
   for (uint iproc=0; iproc<_mesh._NoSubdom; iproc++) {
@@ -3103,15 +2623,15 @@ void EqnBase::PrintVector(std::string namefile) {
               iel <    _mesh._off_el[VV][off_proc + Level+1]
                       - _mesh._off_el[VV][off_proc + Level]; iel++) {
              int elem_lev = iel + sum_elems_prev_sd_at_lev;
-	  int dof_pos_lev = _node_dof[Level][ elem_lev + ivar*_DofNumLevFE[ Level ][KK] + _DofOffLevFE[ Level ][KK] ];   
+	  int dof_pos_lev = _dofmap._node_dof[Level][ elem_lev + ivar*_dofmap._DofNumLevFE[ Level ][KK] + _dofmap._DofOffLevFE[ Level ][KK] ];   
       for (uint is=0; is< _mesh.GetGeomEl(_mesh.get_dim()-1-VV,_mesh._mesh_order).n_se; is++) {      
-	   sol_on_cells[cel*_mesh.GetGeomEl(_mesh.get_dim()-1-VV,_mesh._mesh_order).n_se + is] = (*_x_old[Level])(dof_pos_lev) * _refvalue[ ivar + _VarOff[KK] ];
+	   sol_on_cells[cel*_mesh.GetGeomEl(_mesh.get_dim()-1-VV,_mesh._mesh_order).n_se + is] = (*_x_old[Level])(dof_pos_lev) * _refvalue[ ivar + _dofmap._VarOff[KK] ];
       }
       cel++;
     }
   }
   
-  std::ostringstream varname; varname << _var_names[ ivar + _VarOff[KK] ] << "_" << grname.str();         //   std::string varname = grname.str() + "/" + _var_names[_nvars[QQ]+_nvars[LL]+ivar];
+  std::ostringstream varname; varname << _var_names[ ivar + _dofmap._VarOff[KK] ] << "_" << grname.str();         //   std::string varname = grname.str() + "/" + _var_names[_nvars[QQ]+_nvars[LL]+ivar];
   hsize_t dimsf[2]; dimsf[0] = NGeomObjOnWhichToPrint[KK]; dimsf[1] = 1;
   IO::print_Dhdf5(file_id,varname.str(),dimsf,sol_on_cells);   
       
@@ -3147,9 +2667,9 @@ void EqnBase::ReadVector(std::string namefile) {
     hid_t  file_id = H5Fopen(namefile.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
 
     // reading loop over system varables
-    for (uint ivar=0;ivar< _nvars[LL]+_nvars[QQ]; ivar++) {
+    for (uint ivar=0;ivar< _dofmap._nvars[LL]+_dofmap._nvars[QQ]; ivar++) {
         uint el_nds = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,QQ)._elnds;
-        if (ivar >= _nvars[QQ]) el_nds = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,LL)._elnds; // quad and linear
+        if (ivar >= _dofmap._nvars[QQ]) el_nds = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,LL)._elnds; // quad and linear
         // reading ivar param
        std::ostringstream grname; grname << _var_names[ivar] << "_" << "LEVEL" << Level;
         IO::read_Dhdf5(file_id,grname.str(),sol);
@@ -3161,7 +2681,7 @@ void EqnBase::ReadVector(std::string namefile) {
             uint elem_gidx=(iel+_mesh._off_el[0][_iproc*_NoLevels+_NoLevels-1])*_mesh.GetGeomEl(_mesh.get_dim()-1-VV,mesh_ord)._elnds;
             for (uint i=0; i<el_nds; i++) { // linear and quad
                 int k=_mesh._el_map[0][elem_gidx+i];   // the global node
-                _x[_NoLevels-1]->set(_node_dof[_NoLevels-1][k+ivar*offset],sol[k]*Irefval); // set the field
+                _x[_NoLevels-1]->set(_dofmap._node_dof[_NoLevels-1][k+ivar*offset],sol[k]*Irefval); // set the field
             }
         }
     }
@@ -3450,7 +2970,7 @@ void EqnBase::ReadVector(std::string namefile) {
   void EqnBase::Bc_ConvertToDirichletPenalty(const uint elem_dim, const uint ql, uint* bc) const {
 
     const uint ndof  = _eqnmap._elem_type[elem_dim-1][ql]->GetNDofs();
-    const uint nvars = _nvars[ql];
+    const uint nvars = _dofmap._nvars[ql];
 
     for (uint ivarq=0; ivarq < nvars; ivarq++) {
            for (uint d=0; d< ndof; d++)    { 
@@ -3507,7 +3027,7 @@ void EqnBase::Bc_ScaleDofVec(NumericVector* myvec,  double ScaleFac /*, dimensio
 //will change due to the variation of a single component at the boundary
 
 
-for (uint i=0; i < _Dim[_NoLevels-1]; i++) { //loop over all the dofs, both quadratic and linear
+for (uint i=0; i < _dofmap._Dim[_NoLevels-1]; i++) { //loop over all the dofs, both quadratic and linear
   
   if (_bc[i] == 1 ) {  //if the dofs are not fixed, scale them
   
@@ -3525,7 +3045,7 @@ for (uint i=0; i < _Dim[_NoLevels-1]; i++) { //loop over all the dofs, both quad
 //add only where boundary conditions are not fixed
 void EqnBase::Bc_AddDofVec(NumericVector* vec_in,NumericVector* vec_out ) {
 
-for (uint i=0; i < _Dim[_NoLevels-1]; i++) { 
+for (uint i=0; i < _dofmap._Dim[_NoLevels-1]; i++) { 
 
     if (_bc[i] == 1 ) {
   
@@ -3542,7 +3062,7 @@ return;
 void EqnBase::Bc_AddScaleDofVec(NumericVector* vec_in,NumericVector* vec_out,const double ScaleFac ) {
 //add a vector multiplied by a constant (only where it is not fixed)
   
-for (uint i=0; i < _Dim[_NoLevels-1]; i++) { 
+for (uint i=0; i < _dofmap._Dim[_NoLevels-1]; i++) { 
 
     if (_bc[i] == 1 ) {
   

@@ -76,7 +76,7 @@ void  EquationsMap::setDofBcOpIc() {
 #endif
 
 //=====================
-    mgsol -> ComputeMeshToDof();
+    mgsol -> _dofmap.ComputeMeshToDof();
 //=====================
     mgsol -> GenBc();
     mgsol -> GenElBc();
@@ -218,10 +218,10 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) const 
             EqnBase *mgsol=pos1->second;
             int OffVarNames[QL];
             OffVarNames[QQ] = 0;
-            OffVarNames[LL] = mgsol->_nvars[QQ];
-            OffVarNames[KK] = mgsol->_nvars[QQ] + mgsol->_nvars[LL];
+            OffVarNames[LL] = mgsol->_dofmap._nvars[QQ];
+            OffVarNames[KK] = mgsol->_dofmap._nvars[QQ] + mgsol->_dofmap._nvars[LL];
             for (int fe=0; fe<QL; fe++)  {
-                for (uint ivar=0;ivar< mgsol->_nvars[fe]; ivar++)   {
+                for (uint ivar=0;ivar< mgsol->_dofmap._nvars[fe]; ivar++)   {
                    std::ostringstream var_name; var_name << mgsol->_var_names[ OffVarNames[fe] + ivar] << "_LEVEL" << l;
                    IO::PrintXDMFAttribute(out,hdf_file.str(),var_name.str(),var_name.str(),"Scalar",DofType[fe],"Float",NGeomObjOnWhichToPrint[fe],1);
                 }
@@ -446,10 +446,10 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) const {
             EqnBase *mgsol=pos1->second;
             int OffVarNames[QL];
             OffVarNames[QQ] = 0;
-            OffVarNames[LL] = mgsol->_nvars[QQ];
-            OffVarNames[KK] = mgsol->_nvars[QQ] + mgsol->_nvars[LL];
+            OffVarNames[LL] = mgsol->_dofmap._nvars[QQ];
+            OffVarNames[KK] = mgsol->_dofmap._nvars[QQ] + mgsol->_dofmap._nvars[LL];
             for (int fe=0; fe<QL; fe++)  {
-                for (uint ivar=0; ivar < mgsol->_nvars[fe]; ivar++)     {
+                for (uint ivar=0; ivar < mgsol->_dofmap._nvars[fe]; ivar++)     {
 		    std::ostringstream  varstream; varstream << mgsol->_var_names[OffVarNames[fe] + ivar] << "_LEVEL" << l;
                     var_name[VV] = varstream.str();
                     var_type[VV] = "Float";
