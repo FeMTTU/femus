@@ -33,12 +33,12 @@
 #include "TempPhysics.hpp"
 #include "EqnNS.hpp"
 #include "EqnT.hpp"
+#include "OptLoop.hpp"
+
 
 #ifdef HAVE_LIBMESH
 #include "libmesh/libmesh.h"
 #endif
-
-  void transient_loopPlusJ(EquationsMap & eqmap_in, TimeLoop & time_loop_in);   // ALGORITHM 
 
 // =======================================
 // TEMPERATURE + NS optimal control problem
@@ -123,11 +123,6 @@
   std::vector<FEElemBase*> FEElements(QL);
   for (int fe=0; fe<QL; fe++)    FEElements[fe] = FEElemBase::build(mesh.GetGeomEl(mesh.get_dim()-1-VV,mesh._mesh_order)._geomel_id.c_str(),fe);
 
-  // ======== TimeLoop ===================================
-  TimeLoop time_loop(files); 
-           time_loop._timemap.read();
-           time_loop._timemap.print();
-
   // ===== QuantityMap =========================================
   QuantityMap  qty_map(phys);
 
@@ -147,6 +142,12 @@
   // ====== EquationsMap =================================
   EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
+
+  // ======== TimeLoop ===================================
+  OptLoop opt_loop(files); 
+           opt_loop._timemap.read();
+           opt_loop._timemap.print();
+
   
 //===============================================
 //================== Add EQUATIONS AND ======================
@@ -186,7 +187,7 @@ InternalVect_Temp[2] = &tempadj;               tempadj.SetPosInAssocEqn(2);
 InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 #endif
 
-  EqnT* eqnT = new EqnT(time_loop,InternalVect_Temp,equations_map);
+  EqnT* eqnT = new EqnT(opt_loop,InternalVect_Temp,equations_map);
   equations_map.set_eqs(eqnT);  
 
         temperature.set_eqn(eqnT);
@@ -213,9 +214,9 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 	 
   equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
   
-  time_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
+  opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
 
-  transient_loopPlusJ(equations_map,time_loop);
+  opt_loop.optimization_loop(equations_map);
 
 // at this point, the run has been completed 
   files.PrintRunForRestart(DEFAULT_LAST_RUN);/*(iproc==0)*/  //============= prepare default for next restart ==========  
