@@ -20,7 +20,6 @@
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "EquationsMap.hpp"
-#include "FEElemBase.hpp"
 #include "Files.hpp"
 #include "CurrElem.hpp"
 #include "CurrGaussPoint.hpp"

@@ -1,12 +1,12 @@
 #include "CurrGaussPointBase.hpp"
 
 #include "EquationsMap.hpp"
-#include "FEElemBase.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 
 #include "CurrGaussPoint.hpp"
 #include "CurrElem.hpp"
+#include "ElemType.hpp"
 
 
 namespace femus {

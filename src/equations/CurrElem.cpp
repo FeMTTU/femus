@@ -3,9 +3,9 @@
 #include "EquationsMap.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
+#include "ElemType.hpp"
 #include "DofMap.hpp"
 
-#include "FEElemBase.hpp"
 
 #include "QuantityLocal.hpp"
 

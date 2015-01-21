@@ -13,7 +13,6 @@
 #include "Domain.hpp"
 #include "EquationsMap.hpp"
 #include "FETypeEnum.hpp"
-#include "FEElemBase.hpp"
 #include "NormTangEnum.hpp"
 #include "Quantity.hpp"
 #include "QTYnumEnum.hpp"

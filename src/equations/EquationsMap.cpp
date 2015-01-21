@@ -13,7 +13,6 @@
 #include "Quantity.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
-#include "FEElemBase.hpp"
 #include "TimeLoop.hpp"
 
 #include "paral.hpp"

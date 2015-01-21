@@ -2,7 +2,6 @@
 
 #include "EquationsMap.hpp"
 #include "Math.hpp"
-#include "FEElemBase.hpp"
 #include "QuantityLocal.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"

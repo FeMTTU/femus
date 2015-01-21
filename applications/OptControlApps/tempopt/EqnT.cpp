@@ -16,7 +16,6 @@
 #include "EquationsMap.hpp"
 #include "EqnBase.hpp"
 #include "FETypeEnum.hpp"
-#include "FEElemBase.hpp"
 #include "NormTangEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "QTYnumEnum.hpp"

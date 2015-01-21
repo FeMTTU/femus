@@ -14,7 +14,6 @@
 #include "GeomEl.hpp"
 #include "EquationsMap.hpp"
 #include "FETypeEnum.hpp"
-#include "FEElemBase.hpp"
 #include "NormTangEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "QTYnumEnum.hpp"

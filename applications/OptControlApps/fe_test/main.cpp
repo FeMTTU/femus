@@ -17,7 +17,6 @@
 #include "MeshTwo.hpp"
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
-#include "FEElemBase.hpp"
 #include "EquationsMap.hpp"
 #include "TimeLoop.hpp"
 #include "Typedefs.hpp"

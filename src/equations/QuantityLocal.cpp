@@ -1,9 +1,8 @@
 #include "QuantityLocal.hpp"
 
 #include "Quantity.hpp"
-#include "CurrElem.hpp" //TODO temporary, only to get to the Abstract FE, but i dont like taking it from here!
-// #include "FEMap.h"
-#include "FEElemBase.hpp"
+#include "CurrElem.hpp"
+#include "ElemType.hpp"
 #include "EquationsMap.hpp"
 #include "MeshTwo.hpp"
 
