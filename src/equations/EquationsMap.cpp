@@ -30,14 +30,12 @@ EquationsMap::EquationsMap(Files& files_in,
                            Physics& mgphys_in,
                            QuantityMap& qtymap_in,
                            MeshTwo& mgmesh_in,
-                           std::vector<FEElemBase*> & absfe_in,
                            std::vector< std::vector<elem_type*> >  & elem_type_in,
 			   std::vector<Gauss>   qrule_in ):
         _files(files_in),
         _phys(mgphys_in),
         _qtymap(qtymap_in),
         _mesh(mgmesh_in),
-        _AbstractFE(absfe_in),
         _elem_type(elem_type_in),
         _qrule(qrule_in)  {}
 
@@ -127,7 +125,7 @@ void EquationsMap::PrintSolHDF5(const uint t_flag ) const {
         EquationsMap::const_iterator pos_e = _equations.end();
         for (;pos!=pos_e;pos++)    {
             EqnBase* eqn = pos->second;
-            IO::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn,_AbstractFE);
+            IO::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn);
         }
 
     } //end print iproc
@@ -349,8 +347,8 @@ void EquationsMap::PrintCaseHDF5(const uint t_init) const {
         EquationsMap::const_iterator pos_e = _equations.end();
         for (;pos!=pos_e;pos++) {
             EqnBase* eqn = pos->second;
-            IO::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn,_AbstractFE);    // initial solution
-            IO::write_system_solutions_bc(filename.str(),&_mesh,&(eqn->_dofmap),eqn,_AbstractFE,eqn->_bc,eqn->_bc_fe_kk);            // boundary condition
+            IO::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn);    // initial solution
+            IO::write_system_solutions_bc(filename.str(),&_mesh,&(eqn->_dofmap),eqn,eqn->_bc,eqn->_bc_fe_kk);            // boundary condition
         }
 
     } //end iproc

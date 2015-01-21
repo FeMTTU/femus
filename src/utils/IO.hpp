@@ -56,8 +56,8 @@ namespace IO {
 				     int data_dim_one,
 				     int data_dim_two); 
   
-  void write_system_solutions_bc(std::string namefile, MeshTwo* mesh, DofMap* dofmap, EqnBase* eqn, std::vector<FEElemBase*> & fe_in, int* bc, int** bc_fe_kk);      
-  void write_system_solutions(std::string namefile, MeshTwo* mesh, DofMap* dofmap, EqnBase* eqn, std::vector<FEElemBase*> & fe_in );   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
+  void write_system_solutions_bc(std::string namefile, MeshTwo* mesh, DofMap* dofmap, EqnBase* eqn, int* bc, int** bc_fe_kk);      
+  void write_system_solutions(std::string namefile, MeshTwo* mesh, DofMap* dofmap, EqnBase* eqn);   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
   void  read_system_solutions(std::string namefile, MeshTwo* mesh, DofMap* dofmap, EqnBase* eqn);                       ///read from a "Quadratic-Linearized" Mesh                                      //Writer/Reader// 
   
   

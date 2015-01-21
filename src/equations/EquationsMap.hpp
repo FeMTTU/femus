@@ -34,7 +34,6 @@ public:
     Physics&     _phys;
     QuantityMap& _qtymap;
     MeshTwo&     _mesh;
-    std::vector<FEElemBase*> &  _AbstractFE;
     std::vector< std::vector<elem_type*> >  &  _elem_type;
     std::vector<Gauss>       _qrule;
 
@@ -43,7 +42,6 @@ public:
 		  Physics& mgphys_in,
 		  QuantityMap& qtymap_in,
 		  MeshTwo& mgmesh_in,
-		  std::vector<FEElemBase*> & absfe_in,
                   std::vector< std::vector<elem_type*> > & elem_type_in,
 		  std::vector<Gauss> qrule_in
 		);

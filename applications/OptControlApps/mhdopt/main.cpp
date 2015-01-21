@@ -117,9 +117,6 @@ int main(int argc, char** argv) {
      }
     }  
   
-  std::vector<FEElemBase*> FEElements(QL);
-  for (int fe=0; fe<QL; fe++)    FEElements[fe] = FEElemBase::build(mesh.GetGeomEl(mesh.get_dim()-1-VV,mesh._mesh_order)._geomel_id.c_str(),fe);  
-
   // ===== QuantityMap =========================================
   QuantityMap  qty_map(phys);
 
@@ -163,7 +160,7 @@ int main(int argc, char** argv) {
 //================================
 
   // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,FEElemType_vec,qrule);
+  EquationsMap equations_map(files,phys,qty_map,mesh,FEElemType_vec,qrule);
   
 //===============================================
 //================== Add EQUATIONS  AND ======================
@@ -271,9 +268,6 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 
 // ============  clean ================================
   equations_map.clean();  //deallocates the map of equations
-
-  for (int fe=0; fe<QL; fe++) delete FEElements[fe];
-  
   mesh.clear();
   
   return 0;

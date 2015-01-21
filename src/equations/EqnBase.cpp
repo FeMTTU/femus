@@ -48,7 +48,6 @@ EqnBase::EqnBase(std::vector<Quantity*> int_map_in,
         _files(e_map_in._files),
         _phys(e_map_in._phys),
         _mesh(e_map_in._mesh),
-        _AbstractFE(e_map_in._AbstractFE),
         _eqnmap(e_map_in),
         //=============
         _eqname(eqname_in),

@@ -105,9 +105,6 @@
       }
     }
                                                      
-  std::vector<FEElemBase*> FEElements(QL);
-  for (int fe=0; fe<QL; fe++)    FEElements[fe] = FEElemBase::build(mesh.GetGeomEl(mesh.get_dim()-1-VV,mesh._mesh_order)._geomel_id.c_str(),fe);
-
   // ======== TimeLoop ===================================
   TimeLoop time_loop(files); 
            time_loop._timemap.read();
@@ -126,7 +123,7 @@
   // ===== end QuantityMap =========================================
 
   // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
+  EquationsMap equations_map(files,phys,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
 //===============================================
 //================== Add EQUATIONS AND ======================
@@ -175,8 +172,6 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
 // ============  clean ================================
   // here we clean all that we allocated as new in the main
   equations_map.clean();  //deallocates the map of equations
-  for (int fe=0; fe<QL; fe++)  {  delete FEElements[fe]; }
-
   mesh.clear();
   
   
