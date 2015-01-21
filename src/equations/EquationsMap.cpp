@@ -350,7 +350,7 @@ void EquationsMap::PrintCaseHDF5(const uint t_init) const {
         for (;pos!=pos_e;pos++) {
             EqnBase* eqn = pos->second;
             IO::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn,_AbstractFE);    // initial solution
-            eqn->PrintBc(filename.str());            // boundary condition
+            IO::write_system_solutions_bc(filename.str(),&_mesh,&(eqn->_dofmap),eqn,_AbstractFE,eqn->_bc,eqn->_bc_fe_kk);            // boundary condition
         }
 
     } //end iproc

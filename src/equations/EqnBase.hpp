@@ -122,7 +122,6 @@ public:
     int  **_bc_fe_kk;   //==== FE KK DIRICHLET ========
           void    GenBc();
   virtual void  bc_read(const double * xp,const double * normal, int * bc) const = 0;
-          void  PrintBc(std::string namefile);      
  //====PENALTY DIRICHLET ======Elem BC=====================
    uint  _Dir_pen_fl;         ///flag for penalty with Dirichlet (0=no penalty, 1=yes penalty) //this penalty is for ALL the QUADRATIC variables //could we do a penalty only for ux and not for uy and uz?
     int  ***_elem_bc;        ///[LEVELS][IPROC][2xELEMENTSxLEV&PROC]
