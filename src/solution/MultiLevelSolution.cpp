@@ -164,9 +164,9 @@ void MultiLevelSolution::Initialize(const char name[], initfunc func) {
     unsigned sol_type = _SolType[i];
     for (unsigned ig=0; ig<_gridn; ig++) {
       unsigned num_el = _ml_msh->GetLevel(ig)->GetNumberOfElements();
-      if ( ig>0 ) BuildProlongatorMatrix(ig,i);   
       _solution[ig]->ResizeSolutionVector(_SolName[i]);
       _solution[ig]->_Sol[i]->zero();
+      if ( ig>0 ) BuildProlongatorMatrix(ig,i);
       if ( sol_type<3 ) {
 	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
 	  for (int iel=_ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom]; 
