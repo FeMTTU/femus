@@ -59,7 +59,7 @@
         files.CopyInputFiles();
         files.RedirectCout();
 
-  // ======= MyPhysics (implemented as child of Physics) ========================
+  // ======= MyPhysics (implemented as child of Physics): this is somewhat like the Parameters ========================
   RunTimeMap<double> physics_map("Physics",files._output_path);
   TempPhysics phys(physics_map);
               phys.set_nondimgroups(); //implement it
@@ -120,7 +120,7 @@
      }
    }
   
-  // ===== QuantityMap =========================================
+  // ===== QuantityMap : this is like the MultilevelSolution =========================================
   QuantityMap  qty_map(phys);
 
   Temperature temperature("Qty_Temperature",qty_map,1,FE_TEMPERATURE);     qty_map.set_qty(&temperature);

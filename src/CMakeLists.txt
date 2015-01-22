@@ -36,7 +36,6 @@ equations/LinearImplicitSystem.cpp
 equations/MonolithicFSINonLinearImplicitSystem.cpp
 equations/NonLinearImplicitSystem.cpp
 equations/MultiLevelProblem.cpp
-equations/Quantity.cpp
 equations/QuantityLocal.cpp
 equations/System.cpp
 equations/TimeLoop.cpp
@@ -89,6 +88,7 @@ quadrature/CurrGaussPoint.cpp
 quadrature/CurrGaussPointBase.cpp
 quadrature/GaussPoints.cpp
 solution/MultiLevelSolution.cpp
+solution/Quantity.cpp
 solution/Solution.cpp
 solution/Writer.cpp
 solution/VTKWriter.cpp
