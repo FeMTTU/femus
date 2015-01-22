@@ -64,7 +64,7 @@ namespace femus {
 
 
 
-  void Quantity::set_eqn(EqnBase* eqn_in)  { 
+  void Quantity::set_eqn(SystemTwo* eqn_in)  { 
 
     _eqn = eqn_in;
     

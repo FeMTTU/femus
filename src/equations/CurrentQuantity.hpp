@@ -9,7 +9,7 @@
 namespace femus {
 
  
- class EqnBase;
+ class SystemTwo;
  class Quantity;
  class CurrGaussPointBase;
  class CurrentElem;
@@ -56,7 +56,7 @@ namespace femus {
     uint _dim;
     uint _ndof;
     Quantity* _qtyptr;
-    EqnBase*  _eqnptr;
+    SystemTwo*  _eqnptr;
     
     inline const CurrentElem &  GetCurrentElem() const { 
       return _currEl;

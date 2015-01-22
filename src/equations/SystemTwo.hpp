@@ -34,7 +34,7 @@ class LinearEquationSolver;
 
 
 
-class EqnBase  {
+class SystemTwo  {
 
 public:
 
@@ -84,12 +84,12 @@ public:
 //=======================================================================
 // CONSTRUCTOR / DESTRUCTOR
 //=======================================================================
-  EqnBase(std::vector<Quantity*> int_map_in,
+  SystemTwo(std::vector<Quantity*> int_map_in,
 	  MultiLevelProblemTwo& equations_map,
           std::string eq_name_in="Base",
 	  std::string varname_in="u");   //System//
   
-  virtual ~EqnBase();                    //System//
+  virtual ~SystemTwo();                    //System//
   
 //=======================================================================
 //========= MULTIGRID FUNCTIONS (Vectors + A,R,P) ======== (procs,levels) 

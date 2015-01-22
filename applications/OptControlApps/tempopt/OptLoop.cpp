@@ -86,7 +86,7 @@ J = ComputeNormControl ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT,1 );
   
 // This function computes the integral only for the current processor
 
-double ComputeIntegral (const uint Level, const MeshTwo* mesh, const EqnBase* eqn) {
+double ComputeIntegral (const uint Level, const MeshTwo* mesh, const SystemTwo* eqn) {
 
   //====== processor index
   const uint myproc = mesh->_iproc;
@@ -221,7 +221,7 @@ double ComputeIntegral (const uint Level, const MeshTwo* mesh, const EqnBase* eq
 
 /////////////////////////
 
-double ComputeNormControl (const uint Level, const MeshTwo* mesh, const EqnBase* eqn, const uint reg_ord ) {
+double ComputeNormControl (const uint Level, const MeshTwo* mesh, const SystemTwo* eqn, const uint reg_ord ) {
 
   //reg_ord = 0: L2
   //reg_ord = 1: H1

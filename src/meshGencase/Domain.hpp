@@ -16,7 +16,7 @@ namespace femus {
 
 //if we make the constructor protected, then this class cannot be directly instantiated
 // in fact this is only a Base class
-//Base for Equations: EqnBase
+//Base for Equations: SystemTwo
 //Base for Quantities: Quantity
 //Base for Domains: Domain
 

@@ -1,4 +1,4 @@
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 
 // C++ 
 #include <sstream>
@@ -36,11 +36,11 @@ namespace femus {
 
 
 
-//the most important things for an EqnBase are:
+//the most important things for an SystemTwo are:
 //the number of variables
 //the names
 //other stuff but let us stop here now
-EqnBase::EqnBase(std::vector<Quantity*> int_map_in,
+SystemTwo::SystemTwo(std::vector<Quantity*> int_map_in,
                  MultiLevelProblemTwo& e_map_in,
                  std::string eqname_in,
                  std::string varname_in):
@@ -93,7 +93,7 @@ EqnBase::EqnBase(std::vector<Quantity*> int_map_in,
 // by default, all the reference values are initialized to 1.
 //This is a function that doesnt make distinction BETWEEN various FE,
 // it treats the variables in the same manner
-void EqnBase::initVarNames(std::string varname_in) {
+void SystemTwo::initVarNames(std::string varname_in) {
 
     assert(_n_vars > 0);
 
@@ -111,7 +111,7 @@ void EqnBase::initVarNames(std::string varname_in) {
 
 
 
-void EqnBase::initRefValues() {
+void SystemTwo::initRefValues() {
 
     assert(_n_vars > 0);
 
@@ -125,7 +125,7 @@ void EqnBase::initRefValues() {
 
 
 // ===================================================
-/// This function  is the EqnBase destructor.
+/// This function  is the SystemTwo destructor.
 //the important thing is that these destructions occur AFTER
 //the destructions of the levels inside
 //these things were allocated and filled in various init functions
@@ -133,7 +133,7 @@ void EqnBase::initRefValues() {
 //here, we destroy them in the place where they belong
 // pay attention to the fact that a lot of these delete are ok only if the respective function
 // where the new is is called!
-EqnBase::~EqnBase() {
+SystemTwo::~SystemTwo() {
 
  //========= MGOps  ===========================
     for (uint Level =0; Level<_NoLevels; Level++) {
@@ -189,7 +189,7 @@ EqnBase::~EqnBase() {
 
 //==================
 //this function DEPENDS in _iproc!!!
-void EqnBase::initVectors() {
+void SystemTwo::initVectors() {
 
     //allocation
          _x.resize(_NoLevels);
@@ -370,7 +370,7 @@ void EqnBase::initVectors() {
 
 //
 
-void EqnBase::GenBc() {
+void SystemTwo::GenBc() {
   
     std::string    input_dir = DEFAULT_CONFIGDIR;
     std::string          ibc = DEFAULT_IBC;
@@ -606,7 +606,7 @@ void EqnBase::GenBc() {
 //this routine is GENERAL. The only thing that is NOT GENERAL is the use of 4 element boundary flags
 // and of ONE normal value and ONE tangential VALUE
 //for now, we will leave things like this
-void EqnBase::GenElBc()  {
+void SystemTwo::GenElBc()  {
 
      CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);  
   
@@ -677,7 +677,7 @@ void EqnBase::GenElBc()  {
 
 
 ///////////////////////////////
-void EqnBase::Bc_GetElFlagValLevSubd(const uint Level,const uint isubd,const uint iel,int* el_flag,double* el_value ) const {
+void SystemTwo::Bc_GetElFlagValLevSubd(const uint Level,const uint isubd,const uint iel,int* el_flag,double* el_value ) const {
 
     el_flag[0] =        _elem_bc[Level][isubd][/*4*/2*iel]   ;
     el_flag[1] =        _elem_bc[Level][isubd][/*4*/2*iel+1] ;
@@ -704,7 +704,7 @@ void EqnBase::Bc_GetElFlagValLevSubd(const uint Level,const uint isubd,const uin
 
 
 ////////////////////////////////
-void EqnBase::clearElBc() {
+void SystemTwo::clearElBc() {
 
     for (uint Level=0; Level <_NoLevels;Level++)   {
 
@@ -798,7 +798,7 @@ void EqnBase::clearElBc() {
 
 
 /// This function generates the initial conditions:
-void EqnBase::GenIc() {
+void SystemTwo::GenIc() {
 
     const uint mesh_ord    = (int) _mesh.GetRuntimeMap().get("mesh_ord");
   
@@ -901,7 +901,7 @@ void EqnBase::GenIc() {
 
 
 /// initial conditions  from function
-// void EqnBase::ic_read(const double * /*xp*/, double * ic, const double * /*el_xm*/) const {
+// void SystemTwo::ic_read(const double * /*xp*/, double * ic, const double * /*el_xm*/) const {
 //     for (uint ivar=0;ivar<_n_vars;ivar++) ic[ivar]=0.;
 //     return;
 // }
@@ -922,7 +922,7 @@ void EqnBase::GenIc() {
 // instead of  "res_fine < Eps1*(1.+ bNorm_fine)" ???
 //because one is for the absolute error and another one is for the relative error
 /// This function solves the discrete problem with multigrid solver
-void EqnBase::MGSolve(double Eps1,          // tolerance for the linear solver
+void SystemTwo::MGSolve(double Eps1,          // tolerance for the linear solver
                       int MaxIter,           // n iterations
                       const uint Gamma,     // Control V W cycle
                       const uint Nc_pre,    // n pre-smoothing cycles
@@ -1011,7 +1011,7 @@ void EqnBase::MGSolve(double Eps1,          // tolerance for the linear solver
 //as for the pre-smoothing
 
 
-double EqnBase::MGStep(int Level,            // Level
+double SystemTwo::MGStep(int Level,            // Level
                        double Eps1,          // Tolerance
                        int MaxIter,          // n iterations - number of mg cycles
                        const uint Gamma,     // Control V W cycle
@@ -1148,7 +1148,7 @@ double EqnBase::MGStep(int Level,            // Level
 
 // =============================================
 /// Check for Prolong and Restr Operators
-void EqnBase::MGCheck(int Level) const {
+void SystemTwo::MGCheck(int Level) const {
 
     _x[Level-1]->matrix_mult(*_x[Level],*_Rst[Level-1]);
     _x[Level]  ->matrix_mult(*_x[Level-1],*_Prl[Level]);
@@ -1159,7 +1159,7 @@ void EqnBase::MGCheck(int Level) const {
 
 
 // =========================================
-void EqnBase::ReadMGOps() {
+void SystemTwo::ReadMGOps() {
 
     std::string     f_matrix = DEFAULT_F_MATRIX;
     std::string       f_rest = DEFAULT_F_REST;
@@ -1341,7 +1341,7 @@ void EqnBase::ReadMGOps() {
 // So, if the node_dof was not filled correctly, then when you 
 
 
-void EqnBase::ReadMatrix(const  std::string& namefile) {
+void SystemTwo::ReadMatrix(const  std::string& namefile) {
 
   _A.resize(_NoLevels);
 
@@ -1566,7 +1566,7 @@ void EqnBase::ReadMatrix(const  std::string& namefile) {
 
 //=============================
 //This function depends on _iproc
-void EqnBase::ReadProl(const std::string& name) {
+void SystemTwo::ReadProl(const std::string& name) {
 
     _Prl.resize(_NoLevels);  //TODO one place is left empty in practice, we can optimize this!!!
 
@@ -1804,7 +1804,7 @@ void EqnBase::ReadProl(const std::string& name) {
     
     //AAA fai molta attenzione: per esplorare la node_dof devi usare Lev_c e Lev_f,
     //perche' sono legati ai DOF (devi pensare che la questione del mesh e' gia' risolta)
-void EqnBase::ReadRest(const std::string& name) {
+void SystemTwo::ReadRest(const std::string& name) {
  
   _Rst.resize(_NoLevels);  //TODO why do it bigger?
   
@@ -2287,7 +2287,7 @@ void EqnBase::ReadRest(const std::string& name) {
 //Simply, the class is made of POINTERS. Then, I've created a new pointer
 //which is EQUAL to the pointer of the class, and then I MODIFY what is inside that!
 //So, many functions here can be called CONST even if they are not!
-  void EqnBase::Bc_ConvertToDirichletPenalty(const uint elem_dim, const uint ql, uint* bc) const {
+  void SystemTwo::Bc_ConvertToDirichletPenalty(const uint elem_dim, const uint ql, uint* bc) const {
 
     const uint ndof  = _eqnmap._elem_type[elem_dim-1][ql]->GetNDofs();
     const uint nvars = _dofmap._nvars[ql];
@@ -2305,7 +2305,7 @@ void EqnBase::ReadRest(const std::string& name) {
 //This function is for NS type equations:
 //it computes the flags for pressure and stress integrals 
 //based on the pressure nodes
- void EqnBase::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(
+ void SystemTwo::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(
 	    const uint *bc_eldofs,const CurrentQuantity & Velold_in,const CurrentQuantity& press_in,uint &press_fl) const {
 
 	const uint el_ndof_p =  press_in._ndof;
@@ -2334,7 +2334,7 @@ void EqnBase::ReadRest(const std::string& name) {
 ///this function scales the passed dof vector and takes into account the boundary conditions as well
 ///a function like that can be useful also for multiplying/dividing by reference values or the like
 
-void EqnBase::Bc_ScaleDofVec(NumericVector* myvec,  double ScaleFac /*, dimension */ ) {
+void SystemTwo::Bc_ScaleDofVec(NumericVector* myvec,  double ScaleFac /*, dimension */ ) {
 //only works with Level = NoLevels - 1 , because bc is only on the finest level
   
   //pass the pointer to the array,the dimension of the array, and the scale factor  
@@ -2363,7 +2363,7 @@ for (uint i=0; i < _dofmap._Dim[_NoLevels-1]; i++) { //loop over all the dofs, b
 }
 
 //add only where boundary conditions are not fixed
-void EqnBase::Bc_AddDofVec(NumericVector* vec_in,NumericVector* vec_out ) {
+void SystemTwo::Bc_AddDofVec(NumericVector* vec_in,NumericVector* vec_out ) {
 
 for (uint i=0; i < _dofmap._Dim[_NoLevels-1]; i++) { 
 
@@ -2379,7 +2379,7 @@ return;
 
 }
 
-void EqnBase::Bc_AddScaleDofVec(NumericVector* vec_in,NumericVector* vec_out,const double ScaleFac ) {
+void SystemTwo::Bc_AddScaleDofVec(NumericVector* vec_in,NumericVector* vec_out,const double ScaleFac ) {
 //add a vector multiplied by a constant (only where it is not fixed)
   
 for (uint i=0; i < _dofmap._Dim[_NoLevels-1]; i++) { 
@@ -2398,7 +2398,7 @@ return;
 
 
 
-// // // // void EqnBase::func_xyz() {
+// // // // void SystemTwo::func_xyz() {
 
 // // // // //   double xyz[dimension];
 // // // //   double xez[dimension];

@@ -8,7 +8,7 @@ using namespace std;
 #include "Typedefs.hpp"
 
 
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 #include "GaussPoints.hpp"
 
 
@@ -52,12 +52,12 @@ public:
   void clean(); ///< Clean all substructures
 
   // equation get/set
-  inline          void  set_eqs(EqnBase* value)            {_equations.insert(make_pair(value->_eqname,value));}
-  inline       EqnBase* get_eqs(const string & name)       {return _equations.find(name)->second;}
-  inline const EqnBase* get_eqs(const string & name) const {return _equations.find(name)->second;}
+  inline          void  set_eqs(SystemTwo* value)            {_equations.insert(make_pair(value->_eqname,value));}
+  inline       SystemTwo* get_eqs(const string & name)       {return _equations.find(name)->second;}
+  inline const SystemTwo* get_eqs(const string & name) const {return _equations.find(name)->second;}
 
-  typedef std::map<string, EqnBase*>::iterator iterator;
-  typedef std::map<string, EqnBase*>::const_iterator const_iterator;
+  typedef std::map<string, SystemTwo*>::iterator iterator;
+  typedef std::map<string, SystemTwo*>::const_iterator const_iterator;
 
   inline iterator       begin()       { return _equations.begin();}
   inline iterator         end()       { return _equations.end();}
@@ -75,7 +75,7 @@ public:
   
 private:
   
- map<string,EqnBase*> _equations;   // system map
+ map<string,SystemTwo*> _equations;   // system map
     
  void PrintSolXDMF(const uint t_step,const double curr_time) const;
  void PrintSolHDF5(const uint t_flag) const;

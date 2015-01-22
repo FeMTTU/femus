@@ -3,7 +3,7 @@
 
 #include "Typedefs.hpp"
 #include "RunTimeMap.hpp"
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 
 namespace femus {
 
@@ -46,7 +46,7 @@ public:
   static void check_time_par(RunTimeMap<double>&  time_in);
 
   /////< MG time step solver (backward Euler)
-  double MGTimeStep(const uint iter, EqnBase * eqn) const;   
+  double MGTimeStep(const uint iter, SystemTwo * eqn) const;   
   
   void OneTimestepEqnLoop(const uint delta_t_step_in, const MultiLevelProblemTwo & eqnmap) const;
 

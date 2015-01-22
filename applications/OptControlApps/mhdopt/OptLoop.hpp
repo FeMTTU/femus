@@ -3,7 +3,7 @@
 
 #include "Typedefs.hpp"
 #include "RunTimeMap.hpp"
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 #include "TimeLoop.hpp"
 
 
@@ -13,7 +13,7 @@ namespace femus {
 
 // Forward class
 class Files;
-class EqnBase;
+class SystemTwo;
 
 
 class OptLoop  : public TimeLoop {
@@ -26,7 +26,7 @@ public:
 
   void optimization_loop(MultiLevelProblemTwo& e_map_in);
 
-  void init_equation_data(const EqnBase* eqn);
+  void init_equation_data(const SystemTwo* eqn);
  
   //====data  
     std::vector<NumericVector *> _x_oldopt;  //old optimization step
@@ -34,7 +34,7 @@ public:
 };
 
 //prototypes that can stay outside of a class
-  double ComputeIntegral (const uint Level, const MeshTwo* mesh, const EqnBase* eqn);
+  double ComputeIntegral (const uint Level, const MeshTwo* mesh, const SystemTwo* eqn);
 
   int ElFlagControl(const std::vector<double> el_xm, const MeshTwo* mesh);
 

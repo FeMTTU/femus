@@ -3,14 +3,14 @@
 
 
 //inherited classes
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 
 namespace femus {
 
 // Forwarded classes
 class MultiLevelProblemTwo;
 
-class EqnMHDAD : public EqnBase {
+class EqnMHDAD : public SystemTwo {
 
   public:
     

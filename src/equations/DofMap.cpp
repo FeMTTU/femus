@@ -1,6 +1,6 @@
 #include "DofMap.hpp"
 
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 #include "Quantity.hpp"
 #include "MeshTwo.hpp"
 
@@ -8,7 +8,7 @@
 namespace femus {
   
   
- DofMap::DofMap(const EqnBase& eqn_in, const MeshTwo& mesh_in) : _eqn(eqn_in),_mesh(mesh_in) { }
+ DofMap::DofMap(const SystemTwo& eqn_in, const MeshTwo& mesh_in) : _eqn(eqn_in),_mesh(mesh_in) { }
 
   
 

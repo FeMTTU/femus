@@ -13,7 +13,7 @@ namespace femus {
 
 
 
-class EqnBase;
+class SystemTwo;
 class MultiLevelProblemTwo;
 class CurrentQuantity;
 
@@ -23,7 +23,7 @@ class CurrentQuantity;
 
   public:
     
-    CurrentElem(const uint vb, const EqnBase*, const MeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type);
+    CurrentElem(const uint vb, const SystemTwo*, const MeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type);
    ~CurrentElem();
 
     inline const uint  GetVb() const {
@@ -83,7 +83,7 @@ class CurrentQuantity;
  
     //TODO make these private
 //========== Equation-related ========================               
-  const EqnBase * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
+  const SystemTwo * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
   const MeshTwo & _mesh;
   const std::vector< std::vector<elem_type*> >  &  _elem_type;
   
@@ -117,7 +117,7 @@ class CurrentQuantity;
 // we have everything...
 //Through an equation we get to the equationsmap which gives us access to everything we need
 //Ok, I need to pass the Equation, and also I will pass the ref to EqMap, 
-// which is protected in the EqnBase class and I want to leave it protected
+// which is protected in the SystemTwo class and I want to leave it protected
 
 //The geometry does not depend on the specific equation
 //The rest yes

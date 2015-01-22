@@ -13,7 +13,7 @@
 namespace femus {
 
 
-class EqnBase;
+class SystemTwo;
 class Physics;
 class QuantityMap;
 
@@ -30,7 +30,7 @@ public:
   /*virtual*/ void FunctionDof(CurrentQuantity& myvect, const double t,const double* xx) const/* =0*/;
       virtual void Function_txyz(const double t, const double* xp, double* temp) const   = 0;  
       
-  void set_eqn(EqnBase*);
+  void set_eqn(SystemTwo*);
   
  inline       void SetPosInAssocEqn(uint pos_in) { _pos = pos_in; return;}
  
@@ -39,7 +39,7 @@ public:
   uint         _FEord;     //FEorder
   double *     _refvalue;  //ref values for the scalar components (_dim)
   QuantityMap& _qtymap;
-  EqnBase *      _eqn;
+  SystemTwo *      _eqn;
   uint           _pos;     //block position in the associated equation
 
   

@@ -3,7 +3,7 @@
 
 #include "Typedefs.hpp"
 #include "RunTimeMap.hpp"
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 #include "TimeLoop.hpp"
 
 
@@ -30,9 +30,9 @@ void optimization_loop(MultiLevelProblemTwo& e_map_in);
 
 };
 
- double ComputeIntegral (const uint Level,const MeshTwo* mesh, const EqnBase* eqn);
+ double ComputeIntegral (const uint Level,const MeshTwo* mesh, const SystemTwo* eqn);
 
- double ComputeNormControl (const uint Level, const MeshTwo* mesh, const EqnBase* eqn, const uint reg_ord );
+ double ComputeNormControl (const uint Level, const MeshTwo* mesh, const SystemTwo* eqn, const uint reg_ord );
 
  int ElFlagControl(const std::vector<double> el_xm, const MeshTwo* mesh);
 

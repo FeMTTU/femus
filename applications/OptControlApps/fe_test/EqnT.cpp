@@ -13,7 +13,7 @@
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "MultiLevelProblemTwo.hpp"
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "VBTypeEnum.hpp"
@@ -37,7 +37,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
              MultiLevelProblemTwo& equations_map_in,
              std::string eqname_in,
              std::string varname_in):
-    EqnBase(int_map_in,equations_map_in,eqname_in,varname_in) {
+    SystemTwo(int_map_in,equations_map_in,eqname_in,varname_in) {
 
 //=======  _var_names: they are the names of the quantities which are unkwnowns to this equation  ===========
    for (uint i=0; i<int_map_in.size(); i++)  _var_names[i]=int_map_in[i]->_name;

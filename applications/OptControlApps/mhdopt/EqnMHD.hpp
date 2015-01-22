@@ -2,7 +2,7 @@
 #define __mgsolvermhd0_h__
 
 
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 
 namespace femus {
 
@@ -10,7 +10,7 @@ namespace femus {
 class MultiLevelProblemTwo;
 
 
-class EqnMHD : public EqnBase {
+class EqnMHD : public SystemTwo {
 
   public:
   

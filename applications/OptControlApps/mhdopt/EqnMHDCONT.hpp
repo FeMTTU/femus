@@ -5,7 +5,7 @@
 #include <vector>
 
 // Local Includes
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 
 
 namespace femus {
@@ -13,7 +13,7 @@ namespace femus {
 // Forwarded classes
 class NumericVector;
 
-class EqnMHDCONT : public EqnBase {
+class EqnMHDCONT : public SystemTwo {
 
   public:
     

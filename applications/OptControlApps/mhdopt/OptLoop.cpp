@@ -7,7 +7,7 @@
 #include "NumericVector.hpp"
 #include "Physics.hpp"
 #include "MultiLevelProblemTwo.hpp"
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 #include "MeshTwo.hpp"
 #include "TimeLoop.hpp"
 #include "Files.hpp"
@@ -471,7 +471,7 @@ const uint delta_opt_step = opt_step - _t_idx_in;
 
 
 
-void OptLoop::init_equation_data(const EqnBase* eqn) {
+void OptLoop::init_equation_data(const SystemTwo* eqn) {
   
 //======equation-specific vectors     =====================
       _x_oldopt.resize(eqn->_NoLevels);
@@ -516,7 +516,7 @@ void OptLoop::init_equation_data(const EqnBase* eqn) {
 //it means that a loop is done DIMENSION times instead of 1 time
 
 
-double ComputeIntegral (const uint Level, const MeshTwo* mesh, const EqnBase* eqn) {
+double ComputeIntegral (const uint Level, const MeshTwo* mesh, const SystemTwo* eqn) {
 
    const uint mesh_vb = VV;
   

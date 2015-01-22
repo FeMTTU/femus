@@ -30,7 +30,7 @@
 namespace femus {
 
 
-  class EqnBase;
+  class SystemTwo;
   
 //=======================================================================
 //==== DOF MAP of the equation ============ (procs,levels) ==============   //// LinearEquation (each level)
@@ -40,10 +40,10 @@ class DofMap {
 
 public:
 
-     DofMap(const EqnBase& eqn_in, const MeshTwo& mesh);
+     DofMap(const SystemTwo& eqn_in, const MeshTwo& mesh);
     ~DofMap();
 
-    const EqnBase & _eqn;
+    const SystemTwo & _eqn;
     const MeshTwo & _mesh;
     
 //====== data =======

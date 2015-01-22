@@ -154,7 +154,7 @@ namespace femus {
 
 /// Basically, the single time step consists in  ASSEMBLING + SOLVING
 
-double TimeLoop::MGTimeStep(const uint iter, EqnBase * eqn_in) const {
+double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 
     std::cout  << std::endl << " Solving " << eqn_in->_eqname << " , step " << iter << std::endl;
 
@@ -257,7 +257,7 @@ void TimeLoop::OneTimestepEqnLoop(
     const MultiLevelProblemTwo & eqnmap) const {
     // loop for time steps
     for (MultiLevelProblemTwo::const_iterator eqn = eqnmap.begin(); eqn != eqnmap.end(); eqn++)  {
-        EqnBase* equation = eqn->second;
+        SystemTwo* equation = eqn->second;
         MGTimeStep(delta_t_step_in,equation);
     }
     return;

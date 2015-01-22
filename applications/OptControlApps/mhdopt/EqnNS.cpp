@@ -38,7 +38,7 @@ namespace femus {
 	           MultiLevelProblemTwo& equations_map_in,
                    std::string eqname_in,
                    std::string varname_in):
-           EqnBase(int_map_in,equations_map_in,eqname_in,varname_in),
+           SystemTwo(int_map_in,equations_map_in,eqname_in,varname_in),
      _AdvPic_fl(ADVPIC_NS),
      _AdvNew_fl(ADVNEW_NS),
      _Stab_fl(STAB_NS),
@@ -171,7 +171,7 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
 //the TimeStep loop or the NonLinear loop
 //So nonstationarity or nonlinearity may be characterized not only at the AssemblyMatRhs level,
 //but also externally at the loop level.
-//So they are a feature of an EqnBase. Nevertheless they should carry their own stuff,
+//So they are a feature of an SystemTwo. Nevertheless they should carry their own stuff,
 //for instance the vectors they need.
 //for instance: _res,_x,_A, _Prl, _Rst are needed by the MULTIGRID LINEAR SOLVER
 //So we should do a class that gathers those vectors which are only related to MG linear solver.

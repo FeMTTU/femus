@@ -3,7 +3,7 @@
 
 
 // Local Includes -----------------
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 
 
 namespace femus {
@@ -12,7 +12,7 @@ namespace femus {
 class MultiLevelProblemTwo;
 
 
-class EqnT : public EqnBase {
+class EqnT : public SystemTwo {
 
 public:
 

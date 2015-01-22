@@ -36,7 +36,7 @@
 	           MultiLevelProblemTwo& equations_map_in,
                    std::string eqname_in,
                    std::string varname_in):
-           EqnBase(int_map_in,equations_map_in,eqname_in,varname_in),
+           SystemTwo(int_map_in,equations_map_in,eqname_in,varname_in),
      _AdvPic_fl(ADVPIC_NS),
      _AdvNew_fl(ADVNEW_NS),
      _Stab_fl(STAB_NS),

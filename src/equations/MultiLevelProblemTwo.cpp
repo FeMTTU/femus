@@ -66,7 +66,7 @@ void MultiLevelProblemTwo::clean() {
 void  MultiLevelProblemTwo::setDofBcOpIc() {
 
     for (iterator eqn = _equations.begin(); eqn != _equations.end(); eqn++) {
-        EqnBase* mgsol = eqn->second;
+        SystemTwo* mgsol = eqn->second;
         
 #ifdef DEFAULT_PRINT_INFO
     std::cout << "\n Reading "  <<  mgsol -> _eqname << " Dof, Bc, Op, Ic \n";
@@ -123,7 +123,7 @@ void MultiLevelProblemTwo::PrintSolHDF5(const uint t_flag ) const {
         MultiLevelProblemTwo::const_iterator pos = _equations.begin();
         MultiLevelProblemTwo::const_iterator pos_e = _equations.end();
         for (;pos!=pos_e;pos++)    {
-            EqnBase* eqn = pos->second;
+            SystemTwo* eqn = pos->second;
             IO::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn);
         }
 
@@ -212,7 +212,7 @@ void MultiLevelProblemTwo::PrintSolXDMF(const uint t_step,const double curr_time
 	MultiLevelProblemTwo::const_iterator pos1   = _equations.begin();
         MultiLevelProblemTwo::const_iterator pos1_e = _equations.end();
         for (;pos1!=pos1_e;pos1++)   {
-            EqnBase *mgsol=pos1->second;
+            SystemTwo *mgsol=pos1->second;
             int OffVarNames[QL];
             OffVarNames[QQ] = 0;
             OffVarNames[LL] = mgsol->_dofmap._nvars[QQ];
@@ -298,7 +298,7 @@ void MultiLevelProblemTwo::ReadSol(const uint t_step, double& time_out) const {
 #endif // ---------------------------------------------
     // loop reading over the variables ---------------------
     for (MultiLevelProblemTwo::const_iterator eqn=_equations.begin(); eqn != _equations.end(); eqn++) {
-        EqnBase *mgsol=eqn->second;
+        SystemTwo *mgsol=eqn->second;
     } //  loop --------------------------------------------------------
 
     return;
@@ -345,7 +345,7 @@ void MultiLevelProblemTwo::PrintCaseHDF5(const uint t_init) const {
         MultiLevelProblemTwo::const_iterator pos   = _equations.begin();
         MultiLevelProblemTwo::const_iterator pos_e = _equations.end();
         for (;pos!=pos_e;pos++) {
-            EqnBase* eqn = pos->second;
+            SystemTwo* eqn = pos->second;
             IO::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn);    // initial solution
             IO::write_system_solutions_bc(filename.str(),&_mesh,&(eqn->_dofmap),eqn,eqn->_bc,eqn->_bc_fe_kk);            // boundary condition
         }
@@ -439,7 +439,7 @@ void MultiLevelProblemTwo::PrintCaseXDMF(const uint t_init) const {
         MultiLevelProblemTwo::const_iterator pos1=_equations.begin();
         MultiLevelProblemTwo::const_iterator pos1_e=_equations.end();
         for (;pos1!=pos1_e;pos1++)   {
-            EqnBase *mgsol=pos1->second;
+            SystemTwo *mgsol=pos1->second;
             int OffVarNames[QL];
             OffVarNames[QQ] = 0;
             OffVarNames[LL] = mgsol->_dofmap._nvars[QQ];

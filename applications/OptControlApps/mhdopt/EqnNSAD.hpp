@@ -3,7 +3,7 @@
 
 
 // Local Includes
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 
 namespace femus {
 
@@ -13,7 +13,7 @@ class MultiLevelProblemTwo;
 
 
 
-class EqnNSAD : public EqnBase {
+class EqnNSAD : public SystemTwo {
 
   public:
 

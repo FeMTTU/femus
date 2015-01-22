@@ -3,7 +3,7 @@
 
 
 //Inherited classes
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 
 namespace femus {
 
@@ -11,7 +11,7 @@ namespace femus {
 class MultiLevelProblemTwo;
 
 
-class EqnNS : public EqnBase {
+class EqnNS : public SystemTwo {
 
   public:
 

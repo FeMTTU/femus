@@ -29,7 +29,6 @@ algebra/ParsedFunction.cpp
 equations/DofMap.cpp
 equations/CurrentElem.cpp
 equations/CurrentQuantity.cpp
-equations/EqnBase.cpp
 equations/ExplicitSystem.cpp
 equations/ImplicitSystem.cpp
 equations/LinearImplicitSystem.cpp
@@ -38,6 +37,7 @@ equations/NonLinearImplicitSystem.cpp
 equations/MultiLevelProblem.cpp
 equations/MultiLevelProblemTwo.cpp
 equations/System.cpp
+equations/SystemTwo.cpp
 equations/TimeLoop.cpp
 equations/TransientSystem.cpp
 equations/NewmarkTransientSystem.cpp
