@@ -109,7 +109,7 @@ SystemTwo::SystemTwo(std::vector<Quantity*> int_map_in,
 // it treats the variables in the same manner
 void SystemTwo::initVarNames(std::string varname_in) {
 
-    assert(_n_vars > 0);
+    assert(_dofmap._n_vars > 0);
 
     _var_names = new std::string[_dofmap._n_vars];       // names
 
@@ -127,7 +127,7 @@ void SystemTwo::initVarNames(std::string varname_in) {
 
 void SystemTwo::initRefValues() {
 
-    assert(_n_vars > 0);
+    assert(_dofmap._n_vars > 0);
 
     _refvalue  = new      double[_dofmap._n_vars];           // refvalues
 

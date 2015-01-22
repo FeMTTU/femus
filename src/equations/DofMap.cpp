@@ -292,7 +292,7 @@ void DofMap::ComputeMeshToDof() {
   
   
     assert(  _n_vars > 0);
-    assert(_NoLevels > 0);
+    assert(_mesh._NoLevels > 0);
 
     _Dim      = new uint [ _mesh._NoLevels];
 
