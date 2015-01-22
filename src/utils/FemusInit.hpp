@@ -55,7 +55,7 @@ public:
     /// Destructor
     ~FemusInit();
     
-    static adept::Stack adeptStack; 
+    static adept::Stack _adeptStack; 
      
 };
 

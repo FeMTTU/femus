@@ -173,12 +173,12 @@ void Solution::InitAMREps(){
 // ------------------------------------------------------------------
 void Solution::FreeSolutionVectors() {
   for (unsigned i=0; i<_Sol.size(); i++) {
+    delete _Sol[i];
     if(_ResEpsBdcFlag[i]){
       delete _Res[i];
       delete _Eps[i];
       delete _Bdc[i];
     }
-    delete _Sol[i];
     if (_SolTmOrder[i]==2) {
       delete _SolOld[i];
     }

@@ -13,7 +13,7 @@ namespace femus {
     clock_t AssemblyTime=0;
     clock_t start_time, end_time;
   
-    adept::Stack & s = FemusInit::adeptStack;
+    adept::Stack & s = FemusInit::_adeptStack;
     //    static adept::Stack s; 
     
     //pointers and references

@@ -21,7 +21,7 @@
 
 namespace femus {
 
-adept::Stack FemusInit::adeptStack; 
+adept::Stack FemusInit::_adeptStack; 
 
 // =======================================================
 /// This function initializes the libraries if it is parallel

@@ -395,7 +395,7 @@ static unsigned counter=0;
 
 void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
  
-    adept::Stack & adeptStack = FemusInit::adeptStack;
+    adept::Stack & adeptStack = FemusInit::_adeptStack;
     
     clock_t AssemblyTime=0;
     clock_t start_time, end_time;
@@ -948,7 +948,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     clock_t start_time, end_time;
     start_time=clock();
        
-    adept::Stack & adeptStack = FemusInit::adeptStack;
+    adept::Stack & adeptStack = FemusInit::_adeptStack;
             
     Solution *mysolution = mlSol.GetSolutionLevel(level);
     Mesh *mymsh	=  mlSol._ml_msh->GetLevel(level);
