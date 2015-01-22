@@ -13,7 +13,7 @@ namespace femus {
 
 // Forward class
 class Files;
-
+class EqnBase;
 
 
 class OptLoop  : public TimeLoop {
@@ -22,11 +22,14 @@ public:
 
 
   OptLoop(Files& files_in);
+ ~OptLoop();
 
+  void optimization_loop(EquationsMap& e_map_in);
 
-void optimization_loop(EquationsMap& e_map_in);
+  void init_equation_data(const EqnBase* eqn);
 
-
+//====data  
+    std::vector<NumericVector *> _x_oldopt;  //old optimization step
 
 };
 

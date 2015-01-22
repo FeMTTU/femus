@@ -73,8 +73,9 @@ public:
 
 	  double      *_refvalue;        //MultilevelSolution//
           void initRefValues();          //MultilevelSolution//
+
 //=======================================================================
-  //====== Attributes of the equation ====
+//====== Attributes of the equation ====
 //=======================================================================
   const std::string _eqname;   ///< equation name     //System//
   uint               _iproc;   ///< processor rank    //ParallelObject//
@@ -141,9 +142,6 @@ public:
 
 protected:
   
-//=======================================================================
-// ====== data pointer ==========
-//=======================================================================
   Files                     & _files;
   Physics                   & _phys;           //passed from MultilevelProblem
   MeshTwo                   & _mesh;

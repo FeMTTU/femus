@@ -17,11 +17,7 @@ class EqnMHDCONT : public EqnBase {
 
   public:
     
-//====data  
-    std::vector<NumericVector *> _x_oldopt;  //old optimization step
-  
-    
-    
+   
 EqnMHDCONT(  std::vector<Quantity*> int_map_in,
 	     EquationsMap& mg_equations_map_in,
                    std::string eqname_in="Eqn_MHDCONT",
@@ -36,8 +32,6 @@ EqnMHDCONT(  std::vector<Quantity*> int_map_in,
   void elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const;
   
   void GenMatRhs(const uint Level);
-
-  void init_equation_data();
 
 };
 

@@ -79,7 +79,19 @@ namespace femus {
 
  OptLoop::OptLoop(Files& files_in): TimeLoop(files_in) { }
 
+ OptLoop::~OptLoop()  {
+  
+     for (uint Level = 0; Level < _x_oldopt.size(); Level++) {
+          delete _x_oldopt[Level];
+      }
+    
+      _x_oldopt.clear();
 
+  }
+ 
+ 
+ 
+ 
 void OptLoop::optimization_loop(EquationsMap& e_map_in)  {
   
   
@@ -144,11 +156,14 @@ double lin_deltax_NSAD = 0.;
 double lin_deltax_MHDAD = 0.;
 double lin_deltax_MHDCONT = 0.;
 
+//initialize specific data for specific equations
+#ifdef MHDCONT_EQUATIONS
+     init_equation_data(mgMHDCONT);
+#endif
+  
+//nitialize Becont
+  _x_oldopt[NoLevels - 1]->zero();    //initialize Boldopt=0;
 
-//initialize Becont
-  #ifdef MHDCONT_EQUATIONS 
-     mgMHDCONT->_x_oldopt[NoLevels - 1]->zero();    //initialize Boldopt=0;
-  #endif
 
   //OPTIMIZATION LOOP
 for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
@@ -164,7 +179,6 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
 //There is a problem... when you arrive here after it said: reduce the intensity, then in
 //xold there was a good value
 //xoold there was still the value multiplied
-//we'd better use x_tmp I think =======
 //   omega = 1.; //"omega=1" and "no if" is equal to the old loop
     mgMHDCONT->_x_oold[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont _x_oold " << mgMHDCONT->_x_oold [NoLevels - 1]->linfty_norm() << std::endl;
@@ -172,8 +186,8 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
     mgMHDCONT->_x_old[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont _x_old " << mgMHDCONT->_x_old [NoLevels - 1]->linfty_norm() << std::endl;
 
-    mgMHDCONT->_x_oldopt[NoLevels - 1]->close();
-    std::cout << "Linfty norm of Becont _x_oldopt " << mgMHDCONT->_x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
+    _x_oldopt[NoLevels - 1]->close();
+    std::cout << "Linfty norm of Becont _x_oldopt " << _x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
 
 //////////////////
 
@@ -189,11 +203,11 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
     std::cout << "Linfty norm of Becont _x_oold "
               << mgMHDCONT->_x_oold [NoLevels - 1]->linfty_norm() << std::endl;
 
-      mgMHDCONT->_x_oldopt[NoLevels - 1]->close();
+     _x_oldopt[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont _x_oldopt "
-              << mgMHDCONT->_x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
+              << _x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
 
-      mgMHDCONT->Bc_AddScaleDofVec(mgMHDCONT->_x_oldopt[NoLevels - 1],mgMHDCONT->_x_tmp [NoLevels - 1],1.- omega);
+      mgMHDCONT->Bc_AddScaleDofVec(_x_oldopt[NoLevels - 1],mgMHDCONT->_x_tmp [NoLevels - 1],1.- omega);
       mgMHDCONT->_x_tmp[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont x_old*omega + (1-omega)*xoold " 
               << mgMHDCONT->_x_tmp [NoLevels - 1]->linfty_norm() << std::endl;
@@ -306,7 +320,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
 //******* update Jold  //you must update it only here, because here it is the good point to restart from
     Jold = J;
 #ifdef MHDCONT_EQUATIONS      
-        *(mgMHDCONT->_x_oldopt[NoLevels-1]) = *(mgMHDCONT->_x_old[NoLevels-1]); 
+        *(_x_oldopt[NoLevels-1]) = *(mgMHDCONT->_x_old[NoLevels-1]); 
 #endif      
 
 	//this will be the new _x_oldopt?
@@ -446,6 +460,22 @@ const uint delta_opt_step = opt_step - _t_idx_in;
 
   
   return;
+}
+
+
+
+void OptLoop::init_equation_data(const EqnBase* eqn) {
+  
+//======equation-specific vectors     =====================
+      _x_oldopt.resize(eqn->_NoLevels);
+      
+        for(uint Level = 0; Level < _x_oldopt.size(); Level++)  {
+   uint n_glob = eqn->_dofmap._Dim[Level]; //is it already filled? Now yes!!!!!!!!!
+  _x_oldopt[Level] = NumericVector::build().release(); _x_oldopt[Level]->init(n_glob,false, SERIAL);
+       }
+ 
+  
+ return; 
 }
 
 

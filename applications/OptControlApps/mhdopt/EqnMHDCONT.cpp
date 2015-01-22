@@ -69,33 +69,9 @@ namespace femus {
     
   }
 
-//=======================
-//destructor
-  EqnMHDCONT::~EqnMHDCONT()  {
-    
-    for (uint Level =0; Level<_NoLevels; Level++) {
-          delete _x_oldopt[Level];
-      }
-    
-      _x_oldopt.clear();
+//======================
+  EqnMHDCONT::~EqnMHDCONT()  { }
 
-    
-  }
-
-void EqnMHDCONT::init_equation_data() {
-  
-//======equation-specific vectors     =====================
-      _x_oldopt.resize(_NoLevels);
-      
-        for(uint  Level=0; Level<_NoLevels; Level++)  {
-   uint n_glob = _dofmap._Dim[Level]; //is it already filled? Now yes!!!!!!!!!
-  _x_oldopt[Level] = NumericVector::build().release(); _x_oldopt[Level]->init(n_glob,false, SERIAL);
-       }
- 
-  
- return; 
-}
-  
   
 /// This function assembles the matrix and the rhs:
 

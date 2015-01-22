@@ -246,14 +246,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 
   opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case   /*TODO fileIO */ 
 
-//initialize specific data for specific equations
-//all that happened previously was related to the standard data of EqnBase, basically  
-#if MHDCONT_EQUATIONS==1
-  eqnMHDCONT->init_equation_data();
-#endif
-  
-    opt_loop.optimization_loop(equations_map);
-    
+  opt_loop.optimization_loop(equations_map);
     
 // // //   eqnNS->FunctionIntegral (0,funzione);
 // // //   eqnNS->FunctionIntegral (1,funzione);
@@ -267,8 +260,9 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   files.log_petsc();
 
 // ============  clean ================================
-  equations_map.clean();  //deallocates the map of equations
+  equations_map.clean();
   mesh.clear();
   
   return 0;
+  
 }
