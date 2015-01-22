@@ -13,7 +13,8 @@ namespace femus {
     clock_t AssemblyTime=0;
     clock_t start_time, end_time;
   
-    static adept::Stack s; 
+    adept::Stack & s = FemusInit::_adeptStack;
+    //    static adept::Stack s; 
     
     //pointers and references
     MultiLevelSolution*	 ml_sol	                      = ml_prob._ml_sol;

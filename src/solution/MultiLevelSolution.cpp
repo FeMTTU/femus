@@ -173,7 +173,7 @@ void MultiLevelSolution::Initialize(const char name[], initfunc func) {
 	     iel < _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
 	  unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
 	  unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,sol_type);
-	  if(sol_type<3) {
+	  if(sol_type<4) {
             for(int j=0; j<nloc_dof; j++) {
 	      unsigned inode=(sol_type<3)?(_ml_msh->GetLevel(ig)->el->GetElementVertexIndex(kel_gmt,j)-1u):(kel_gmt+j*num_el);
 	      int inode_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,sol_type);
@@ -183,7 +183,7 @@ void MultiLevelSolution::Initialize(const char name[], initfunc func) {
 	      double zz=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
 	      
 	      if(func) {
-		value = (sol_type<3)?func(xx,yy,zz):0;
+		value = (sol_type<4)?func(xx,yy,zz):0;
 	      }
 	      else {
 		value = 0.;
