@@ -16,7 +16,7 @@
 #include "CurrentElem.hpp"
 #include "SystemTwo.hpp"
 #include "MultiLevelProblemTwo.hpp"
-#include "MeshTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "ElemType.hpp"
 #include "DofMap.hpp"
@@ -29,7 +29,7 @@ namespace femus {
 
 
 
-    CurrentElem::CurrentElem(const uint vb, const SystemTwo * eqn_in, const MeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type ):
+    CurrentElem::CurrentElem(const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type ):
     _eqn(eqn_in),
     _mesh(mesh),
     _elem_type(elem_type),

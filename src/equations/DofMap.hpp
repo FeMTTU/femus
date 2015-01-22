@@ -24,7 +24,7 @@
 #include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "Typedefs.hpp"
-#include "MeshTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
 
 
 namespace femus {
@@ -40,11 +40,11 @@ class DofMap {
 
 public:
 
-     DofMap(const SystemTwo& eqn_in, const MeshTwo& mesh);
+     DofMap(const SystemTwo& eqn_in, const MultiLevelMeshTwo& mesh);
     ~DofMap();
 
     const SystemTwo & _eqn;
-    const MeshTwo & _mesh;
+    const MultiLevelMeshTwo & _mesh;
     
 //====== data =======
   uint  *    _Dim;            //number of dofs per level

@@ -7,7 +7,7 @@
 #include <sstream>
 #include <fstream>
 
-#include "MeshTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
 #include "DofMap.hpp"
 #include "SystemTwo.hpp"
 #include "FEElemBase.hpp"
@@ -392,7 +392,7 @@ void PrintXDMFGeometry(std::ofstream& outfstream,
 //except for the fine level where i print the true solution
 
 // This prints All Variables of One Equation    
-void write_system_solutions(const std::string namefile, const MeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn) {
+void write_system_solutions(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn) {
 
   std::vector<FEElemBase*> fe_in(QL);
   for (int fe=0; fe<QL; fe++)    fe_in[fe] = FEElemBase::build(mesh->GetGeomEl(mesh->get_dim()-1-VV,mesh->_mesh_order)._geomel_id.c_str(),fe);
@@ -575,7 +575,7 @@ void write_system_solutions(const std::string namefile, const MeshTwo* mesh, con
 // ===================================================
 /// This function reads the system solution from namefile.h5
 //TODO this must be modified in order to take into account KK element dofs
-void read_system_solutions(std::string namefile, MeshTwo* mesh, DofMap* dofmap, SystemTwo* eqn) {
+void read_system_solutions(std::string namefile, MultiLevelMeshTwo* mesh, DofMap* dofmap, SystemTwo* eqn) {
 //this is done in parallel
 
   std::cout << "read_system_solutions still has to be written for CONSTANT elements, BEWARE!!! ==============================  " << std::endl;
@@ -692,7 +692,7 @@ void read_system_solutions(std::string namefile, MeshTwo* mesh, DofMap* dofmap, 
 // e' quella FINE, ma noi ora dobbiamo prendere quella DI CIASCUN LIVELLO SEPARATAMENTE!
 
 
-void write_system_solutions_bc(const std::string namefile, const MeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk ) {
+void write_system_solutions_bc(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk ) {
   
   std::vector<FEElemBase*> fe_in(QL);
   for (int fe=0; fe<QL; fe++)    fe_in[fe] = FEElemBase::build(mesh->GetGeomEl(mesh->get_dim()-1-VV,mesh->_mesh_order)._geomel_id.c_str(),fe);

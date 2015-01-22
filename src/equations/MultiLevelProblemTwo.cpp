@@ -25,7 +25,7 @@
 #include "Files.hpp"
 #include "IO.hpp"
 #include "Quantity.hpp"
-#include "MeshTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "TimeLoop.hpp"
 
@@ -42,7 +42,7 @@ namespace femus {
 MultiLevelProblemTwo::MultiLevelProblemTwo(Files& files_in,
                            FemusInputParser<double> & phys_in,
                            QuantityMap& qtymap_in,
-                           MeshTwo& mesh_in,
+                           MultiLevelMeshTwo& mesh_in,
                            std::vector< std::vector<elem_type*> >  & elem_type_in,
 			   std::vector<Gauss>   qrule_in ):
         _files(files_in),

@@ -85,7 +85,7 @@ J = ComputeNormControl ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT,1 );
   
 // This function computes the integral only for the current processor
 
-double ComputeIntegral (const uint Level, const MeshTwo* mesh, const SystemTwo* eqn) {
+double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn) {
 
   //====== processor index
   const uint myproc = mesh->_iproc;
@@ -220,7 +220,7 @@ double ComputeIntegral (const uint Level, const MeshTwo* mesh, const SystemTwo* 
 
 /////////////////////////
 
-double ComputeNormControl (const uint Level, const MeshTwo* mesh, const SystemTwo* eqn, const uint reg_ord ) {
+double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn, const uint reg_ord ) {
 
   //reg_ord = 0: L2
   //reg_ord = 1: H1
@@ -325,7 +325,7 @@ double ComputeNormControl (const uint Level, const MeshTwo* mesh, const SystemTw
 
 ///AAA questa funzione NON lavora se tu fai solo DUE SUDDIVISIONI PER LATO e nolevels=1 !!!
 
- int ElFlagControl(const std::vector<double> el_xm, const MeshTwo* mesh)  {
+ int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMeshTwo* mesh)  {
 
   Box* box= static_cast<Box*>(mesh->GetDomain());
    

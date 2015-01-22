@@ -7,7 +7,7 @@
 #include "NumericVector.hpp"
 #include "MultiLevelProblemTwo.hpp"
 #include "SystemTwo.hpp"
-#include "MeshTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
 #include "TimeLoop.hpp"
 #include "Files.hpp"
 #include "CurrentElem.hpp"
@@ -514,7 +514,7 @@ void OptLoop::init_equation_data(const SystemTwo* eqn) {
 //it means that a loop is done DIMENSION times instead of 1 time
 
 
-double ComputeIntegral (const uint Level, const MeshTwo* mesh, const SystemTwo* eqn) {
+double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn) {
 
    const uint mesh_vb = VV;
   
@@ -620,7 +620,7 @@ for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel._val_g[j] - VelDe
 
 
 
-  int ElFlagControl(const std::vector<double> el_xm, const MeshTwo* mesh)  {
+  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMeshTwo* mesh)  {
 
   Box* box= static_cast<Box*>(mesh->GetDomain());
    

@@ -38,7 +38,7 @@ namespace femus {
 class Files        ;
 class Physics      ;
 class MultiLevelProblemTwo ;
-class MeshTwo      ;
+class MultiLevelMeshTwo      ;
 class FEElemBase   ;
 class Quantity     ;
 class CurrentQuantity;
@@ -161,7 +161,7 @@ protected:
   
   Files                     & _files;
   FemusInputParser<double>  & _phys;           
-  MeshTwo                   & _mesh;   //passed from MultilevelProblem
+  MultiLevelMeshTwo                   & _mesh;   //passed from MultilevelProblem
 
 
 };

@@ -36,7 +36,7 @@ namespace femus {
 
 // ========================================================
 GenCase::GenCase(const Files& files_in,const FemusInputParser<double> & map_in, const std::string mesh_file_in)
-     : MeshTwo(files_in,map_in,mesh_file_in)
+     : MultiLevelMeshTwo(files_in,map_in,mesh_file_in)
 {
 
    _feelems.resize(QL);

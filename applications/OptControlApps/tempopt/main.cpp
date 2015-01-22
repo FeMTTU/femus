@@ -13,7 +13,7 @@
 #include "FemusInit.hpp"
 #include "Files.hpp"
 #include "GeomEl.hpp"
-#include "MeshTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
 #include "GaussPoints.hpp"
@@ -223,9 +223,7 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
   files.log_petsc();
   
 // ============  clean ================================
-  // here we clean all that we allocated as new in the main
   equations_map.clean();
-  
   mesh.clear();
   
   

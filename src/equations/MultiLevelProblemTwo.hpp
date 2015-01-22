@@ -32,7 +32,7 @@ namespace femus {
 
 
 class Physics;
-class MeshTwo;
+class MultiLevelMeshTwo;
 class FEElemBase;
 class elem_type;
 class TimeLoop;
@@ -47,7 +47,7 @@ public:
     Files&       _files;
     FemusInputParser<double> &  _phys;
     QuantityMap& _qtymap;
-    MeshTwo&     _mesh;
+    MultiLevelMeshTwo&     _mesh;
     std::vector< std::vector<elem_type*> >  &  _elem_type;
     std::vector<Gauss>       _qrule;
 
@@ -55,7 +55,7 @@ public:
     MultiLevelProblemTwo( Files& files_in,
 		  FemusInputParser<double> & phys_in,
 		  QuantityMap& qtymap_in,
-		  MeshTwo& mesh_in,
+		  MultiLevelMeshTwo& mesh_in,
                   std::vector< std::vector<elem_type*> > & elem_type_in,
 		  std::vector<Gauss> qrule_in
 		);

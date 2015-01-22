@@ -27,13 +27,13 @@ class Domain;
 
 
   
-class MeshTwo  {
+class MultiLevelMeshTwo  {
 
 public:
 
 //===== Constructors/ Destructor ===========
-     MeshTwo (const Files& files_in, const FemusInputParser<double>& map_in, const std::string mesh_file_in);
-//     ~MeshTwo ();
+     MultiLevelMeshTwo (const Files& files_in, const FemusInputParser<double>& map_in, const std::string mesh_file_in);
+//     ~MultiLevelMeshTwo ();
     void clear ();
 
     //======= Print/read functions =======

@@ -14,7 +14,7 @@
 #include "FETypeEnum.hpp"
 #include "FemusInputParser.hpp"
 #include "ElemSto.hpp"
-#include "MeshTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
 
 // libmesh
 #ifdef HAVE_LIBMESH
@@ -28,7 +28,7 @@ namespace femus {
 class FEElemBase;
 
 
-class GenCase : public MeshTwo {
+class GenCase : public MultiLevelMeshTwo {
 
 public:
 

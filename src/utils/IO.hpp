@@ -12,7 +12,7 @@
 namespace femus {
 
 class DofMap;
-class MeshTwo;
+class MultiLevelMeshTwo;
 class SystemTwo;
 class FEElemBase;
 
@@ -56,9 +56,9 @@ namespace IO {
 				     int data_dim_one,
 				     int data_dim_two); 
   
-  void write_system_solutions_bc(const std::string namefile, const MeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk);      
-  void write_system_solutions(const std::string namefile, const MeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn);   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
-  void  read_system_solutions(const std::string namefile, const MeshTwo* mesh, const DofMap* dofmap, SystemTwo* eqn);                       ///read from a "Quadratic-Linearized" Mesh                                      //Writer/Reader// 
+  void write_system_solutions_bc(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk);      
+  void write_system_solutions(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn);   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
+  void  read_system_solutions(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, SystemTwo* eqn);                       ///read from a "Quadratic-Linearized" Mesh                                      //Writer/Reader// 
   
   
   

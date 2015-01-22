@@ -15,7 +15,7 @@
 
 #include "Quantity.hpp"
 
-#include "MeshTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
 #include "GeomEl.hpp"
 
 #include <vector>
@@ -137,7 +137,7 @@ if (dof_off > offset) {std::cout << "Use a quadratic mesh for FunctionDof comput
   ////////////////QTY MAP ////////////
   
   
-  QuantityMap::QuantityMap(const MeshTwo & mesh, const FemusInputParser<double> * map_in) : _mesh(mesh),_physmap(map_in) { }
+  QuantityMap::QuantityMap(const MultiLevelMeshTwo & mesh, const FemusInputParser<double> * map_in) : _mesh(mesh),_physmap(map_in) { }
   
 
 

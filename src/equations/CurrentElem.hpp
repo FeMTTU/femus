@@ -19,7 +19,7 @@
 
 #include "FETypeEnum.hpp"
 #include "MultiLevelProblemTwo.hpp"
-#include "MeshTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
 #include "DenseVector.hpp"
 #include "DenseMatrix.hpp"
 
@@ -38,7 +38,7 @@ class CurrentQuantity;
 
   public:
     
-    CurrentElem(const uint vb, const SystemTwo*, const MeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type);
+    CurrentElem(const uint vb, const SystemTwo*, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type);
    ~CurrentElem();
 
     inline const uint  GetVb() const {
@@ -99,7 +99,7 @@ class CurrentQuantity;
     //TODO make these private
 //========== Equation-related ========================               
   const SystemTwo * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
-  const MeshTwo & _mesh;
+  const MultiLevelMeshTwo & _mesh;
   const std::vector< std::vector<elem_type*> >  &  _elem_type;
   
   private:
