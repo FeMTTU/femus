@@ -12,7 +12,6 @@ namespace femus {
 class EquationsMap;
 
 
-class Utils;
 class MeshTwo;
 
 class TempPhysics : public Physics {

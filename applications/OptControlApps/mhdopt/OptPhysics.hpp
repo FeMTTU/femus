@@ -10,7 +10,6 @@
 namespace femus {
 
 
-class Utils;
 class MeshTwo;
 
 class OptPhysics : public Physics {

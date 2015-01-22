@@ -16,7 +16,6 @@ namespace femus {
 
 
 
-class Utils;
 class Physics;
 class MeshTwo;
 class FEElemBase;

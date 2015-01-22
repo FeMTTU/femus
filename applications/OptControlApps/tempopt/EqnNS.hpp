@@ -33,7 +33,7 @@ class EqnNS : public EqnBase {
 
  void elem_bc_read(const double * xp, int& surf_id, double normal[], int bc_flag[]) const;
 
- void GenMatRhs(const uint Level);  ///< Volume Assemblying.
+ void GenMatRhs(const uint Level);
  
  
 };

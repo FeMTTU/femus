@@ -15,7 +15,6 @@ namespace femus {
 
 
 // Forward class
-class Utils;
 class MeshTwo;
 
 // ========================================
