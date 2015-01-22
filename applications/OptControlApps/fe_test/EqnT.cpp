@@ -20,7 +20,7 @@
 #include "QTYnumEnum.hpp"
 #include "Domain.hpp"
 #include "TimeLoop.hpp"
-#include "CurrGaussPoint.hpp"
+#include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"
 #include "paral.hpp"
 
@@ -81,7 +81,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
   const uint mesh_vb = VV;
   
   CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
-  CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
@@ -318,7 +318,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   const uint mesh_vb = BB;
   
   CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
-  CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);

@@ -1,4 +1,4 @@
-#include "CurrGaussPoint.hpp"
+#include "CurrentGaussPoint.hpp"
 
 #include "MultiLevelProblemTwo.hpp"
 #include "Math.hpp"
@@ -18,15 +18,15 @@ namespace femus {
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
 //by the way, with the MultiLevelProblemTwo I reach the Utils, the Mesh, and so the GeomEl, and so on...
 template <unsigned int FM_DIM>
-CurrGaussPoint<FM_DIM>::CurrGaussPoint(const CurrentElem & curr_el_in, MultiLevelProblemTwo& e_map_in ): 
-        CurrGaussPointBase(curr_el_in,e_map_in) {
+CurrentGaussPoint<FM_DIM>::CurrentGaussPoint(const CurrentElem & curr_el_in, MultiLevelProblemTwo& e_map_in ): 
+        CurrentGaussPointBase(curr_el_in,e_map_in) {
   
  
 }
 
 
 template <unsigned int FM_DIM>
-CurrGaussPoint<FM_DIM>::~CurrGaussPoint() {
+CurrentGaussPoint<FM_DIM>::~CurrentGaussPoint() {
   
 //     for (int i=0;i< VB;i++){
 //       for (int j=0;j< QL;j++) {
@@ -43,7 +43,7 @@ CurrGaussPoint<FM_DIM>::~CurrGaussPoint() {
 
 
 template <unsigned int FM_DIM>
-void CurrGaussPoint<FM_DIM>::SetPhiElDofsFEVB_g(const uint qlflag, const uint qp) {
+void CurrentGaussPoint<FM_DIM>::SetPhiElDofsFEVB_g(const uint qlflag, const uint qp) {
   
     const uint el_nnodes =  _elem_type[qlflag]->GetNDofs();
     const uint el_ngauss =  _qrule.GetGaussPointsNumber();
@@ -71,7 +71,7 @@ return;
 //so over 'dimension' variables or 'bdry_dimension' variables
 //then the rest should be alright
  template <unsigned int FM_DIM>
-void  CurrGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint qlflag, const uint qp) {
+void  CurrentGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint qlflag, const uint qp) {
     
     
   const uint ndim      = _current_elem.GetDim();
@@ -114,7 +114,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint qlflag, const u
 //I dont need qp here
 //also, i only do this function AFTER FILLING _dphidxyz_ndsQLVB_g!
 template <unsigned int FM_DIM>
-void  CurrGaussPoint<FM_DIM>::ExtendDphiDxyzElDofsFEVB_g(const uint qlflag/*, const uint qp*/) {
+void  CurrentGaussPoint<FM_DIM>::ExtendDphiDxyzElDofsFEVB_g(const uint qlflag/*, const uint qp*/) {
 
   //AAA: valid from dimension to 3
 
@@ -142,7 +142,7 @@ void  CurrGaussPoint<FM_DIM>::ExtendDphiDxyzElDofsFEVB_g(const uint qlflag/*, co
 
 //canonical derivatives
 template <unsigned int FM_DIM>
-void  CurrGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint qlflag, const uint qp) {
+void  CurrentGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint qlflag, const uint qp) {
     
            const uint ndim = _current_elem.GetDim();
          const uint elndof = _elem_type[qlflag]->GetNDofs();
@@ -205,7 +205,7 @@ void  CurrGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint qlflag, cons
 // SPECIALIZATION of SUR JAC for DIM = 2
 // *****************************************
 template <>
-void CurrGaussPoint<2>::ComputeJacBB() {
+void CurrentGaussPoint<2>::ComputeJacBB() {
   
   const uint dim_in = 2;
   
@@ -227,7 +227,7 @@ Math::normalize(_tangent_g[0],fact,dim_in);
 // SPECIALIZATION of SUR JAC for DIM = 3
 // *****************************************
 template <>
-void CurrGaussPoint<3>::ComputeJacBB() {
+void CurrentGaussPoint<3>::ComputeJacBB() {
   
   const uint dim_in = 3;
   
@@ -271,7 +271,7 @@ void CurrGaussPoint<3>::ComputeJacBB() {
 
 
 template <unsigned int FM_DIM>
-double CurrGaussPoint<FM_DIM>::JacVectBB_g(CurrentQuantity& xyz )/* const*/ {
+double CurrentGaussPoint<FM_DIM>::JacVectBB_g(CurrentQuantity& xyz )/* const*/ {
   
   //here you check assert(_is_ready_for_Jac);
 
@@ -315,7 +315,7 @@ double CurrGaussPoint<FM_DIM>::JacVectBB_g(CurrentQuantity& xyz )/* const*/ {
 // SPECIALIZATION of JAC for DIM = 2
 // *****************************************
 template <>
-double CurrGaussPoint<2>::ComputeJacVV() {
+double CurrentGaussPoint<2>::ComputeJacVV() {
 
 double  det=0.;
 
@@ -346,7 +346,7 @@ return det;
 // SPECIALIZATION of JAC for DIM = 3
 // *****************************************
 template <>
-double CurrGaussPoint<3>::ComputeJacVV() {
+double CurrentGaussPoint<3>::ComputeJacVV() {
 
   const uint dim_in = 3;
   
@@ -435,7 +435,7 @@ return det;
 //it fills _InvJac_g: NOTICE that THIS IS UNIQUE, there is no distinction between LINEAR and QUADRATIC.
 
 template <unsigned int FM_DIM>
-double CurrGaussPoint<FM_DIM>::JacVectVV_g(CurrentQuantity& xyz )/* const*/ {
+double CurrentGaussPoint<FM_DIM>::JacVectVV_g(CurrentQuantity& xyz )/* const*/ {
 
 const uint Order    = xyz._FEord;  //order of the coordinate transformation
 const uint xoff     = xyz._ndof;
@@ -476,8 +476,8 @@ const uint xoff     = xyz._ndof;
 //explicit instantiations for 2D and 3D 
 // (this way i restrict the set of available template values to the ones i ask for an explicit instantiation)
 //****************************************
-template class CurrGaussPoint<2>;
-template class CurrGaussPoint<3>;
+template class CurrentGaussPoint<2>;
+template class CurrentGaussPoint<3>;
 
 
 

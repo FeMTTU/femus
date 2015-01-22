@@ -2,7 +2,7 @@
 
 #include "Temp_conf.hpp"
 #include "MultiLevelProblemTwo.hpp"
-#include "CurrGaussPoint.hpp"
+#include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"
 #include "CurrentQuantity.hpp"
 #include "Quantity.hpp"
@@ -97,7 +97,7 @@ double ComputeIntegral (const uint Level, const MeshTwo* mesh, const SystemTwo* 
   const uint mesh_vb = VV;
 
     CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);  //TODO do we really need eqn here, or only eqnmap?!
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
 
   //========== 
     CurrentQuantity Tempold(currgp);
@@ -235,7 +235,7 @@ double ComputeNormControl (const uint Level, const MeshTwo* mesh, const SystemTw
   const uint mesh_vb = VV;
   
     CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
   
 //======Functions in the integrand ============
 

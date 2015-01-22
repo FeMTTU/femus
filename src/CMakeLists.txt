@@ -28,6 +28,8 @@ algebra/FunctionBase.cpp
 algebra/ParsedFunction.cpp
 equations/DofMap.cpp
 equations/CurrentElem.cpp
+equations/CurrentGaussPoint.cpp
+equations/CurrentGaussPointBase.cpp
 equations/CurrentQuantity.cpp
 equations/ExplicitSystem.cpp
 equations/ImplicitSystem.cpp
@@ -84,8 +86,6 @@ physics/Material.cpp
 physics/Parameter.cpp
 physics/Physics.cpp
 physics/Solid.cpp
-quadrature/CurrGaussPoint.cpp
-quadrature/CurrGaussPointBase.cpp
 quadrature/GaussPoints.cpp
 solution/MultiLevelSolution.cpp
 solution/Quantity.cpp

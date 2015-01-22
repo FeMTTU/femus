@@ -12,7 +12,7 @@
 #include "TimeLoop.hpp"
 #include "Files.hpp"
 #include "CurrentElem.hpp"
-#include "CurrGaussPointBase.hpp"
+#include "CurrentGaussPointBase.hpp"
 #include "CurrentQuantity.hpp"
 #include "Quantity.hpp"
 #include "OptPhysics.hpp"
@@ -521,7 +521,7 @@ double ComputeIntegral (const uint Level, const MeshTwo* mesh, const SystemTwo* 
    const uint mesh_vb = VV;
   
     CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
   
   // processor index
   const uint myproc = mesh->_iproc;

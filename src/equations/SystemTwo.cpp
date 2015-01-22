@@ -37,7 +37,7 @@
 #include "MultiLevelProblemTwo.hpp"
 #include "Files.hpp"
 #include "CurrentElem.hpp"
-#include "CurrGaussPoint.hpp"
+#include "CurrentGaussPoint.hpp"
 
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"

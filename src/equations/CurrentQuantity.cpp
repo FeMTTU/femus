@@ -15,7 +15,7 @@ namespace femus {
 
 
 
-     CurrentQuantity::CurrentQuantity(const CurrGaussPointBase & currgp_in)
+     CurrentQuantity::CurrentQuantity(const CurrentGaussPointBase & currgp_in)
      : _currGP(currgp_in),_currEl(currgp_in.GetCurrentElem()) {  }
 
 

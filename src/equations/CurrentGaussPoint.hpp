@@ -4,7 +4,7 @@
 #include "Typedefs.hpp"
 #include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"
-#include "CurrGaussPointBase.hpp"
+#include "CurrentGaussPointBase.hpp"
 
 
 namespace femus {
@@ -27,12 +27,12 @@ namespace femus {
 
   
 template <unsigned int FM_DIM>
-  class CurrGaussPoint : public CurrGaussPointBase {
+  class CurrentGaussPoint : public CurrentGaussPointBase {
     
   public:
     
-     CurrGaussPoint(const CurrentElem & curr_el_in, MultiLevelProblemTwo& e_map_in );
-    ~CurrGaussPoint();
+     CurrentGaussPoint(const CurrentElem & curr_el_in, MultiLevelProblemTwo& e_map_in );
+    ~CurrentGaussPoint();
  
 double        JacVectVV_g(CurrentQuantity& xyz )/*const*/;  //TODO should be only for VOLUME
 double        JacVectBB_g(CurrentQuantity& xyz )/* const*/;  //TODO should be only for BOUNDARY 

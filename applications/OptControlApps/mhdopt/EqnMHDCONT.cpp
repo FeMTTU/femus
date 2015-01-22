@@ -19,7 +19,7 @@
 #include "Quantity.hpp"
 #include "QTYnumEnum.hpp"
 #include "TimeLoop.hpp"
-#include "CurrGaussPoint.hpp"
+#include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"
 
 
@@ -115,7 +115,7 @@ namespace femus {
   const uint mesh_vb = VV;
   
     CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity BeOld(currgp);
@@ -411,7 +411,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   const uint mesh_vb = BB;
   
     CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity BeOld(currgp);

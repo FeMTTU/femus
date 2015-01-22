@@ -23,12 +23,12 @@ class MultiLevelProblemTwo;
 // an Abstract Geometrical Element (GeomEl)
 
 
-  class CurrGaussPointBase {
+  class CurrentGaussPointBase {
   
   public:
     
-    CurrGaussPointBase(const CurrentElem & curr_el_in, MultiLevelProblemTwo& e_map_in );
-   ~CurrGaussPointBase();
+    CurrentGaussPointBase(const CurrentElem & curr_el_in, MultiLevelProblemTwo& e_map_in );
+   ~CurrentGaussPointBase();
      
    inline const CurrentElem & GetCurrentElem() const {
      return _current_elem;
@@ -49,7 +49,7 @@ inline double Phi(const uint ql,const uint dof) const {
   return _phi_ndsQLVB_g[ql][dof];
 }
 
-  static CurrGaussPointBase & build(const CurrentElem & elem_in, MultiLevelProblemTwo& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
+  static CurrentGaussPointBase & build(const CurrentElem & elem_in, MultiLevelProblemTwo& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
 
     double* _dphidxezeta_ndsQLVB_g[QL];  //canonical derivatives
     double*    _dphidxyz_ndsQLVB_g[QL];  //physical derivatives
@@ -71,9 +71,9 @@ inline double Phi(const uint ql,const uint dof) const {
   
 
 
-inline double** CurrGaussPointBase::get_tangent_ptr() { return _tangent_g;}
+inline double** CurrentGaussPointBase::get_tangent_ptr() { return _tangent_g;}
 
-inline double*  CurrGaussPointBase::get_normal_ptr() { return _normal_g;}
+inline double*  CurrentGaussPointBase::get_normal_ptr() { return _normal_g;}
 
 
 

@@ -1,10 +1,10 @@
-#include "CurrGaussPointBase.hpp"
+#include "CurrentGaussPointBase.hpp"
 
 #include "MultiLevelProblemTwo.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 
-#include "CurrGaussPoint.hpp"
+#include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"
 #include "ElemType.hpp"
 
@@ -19,7 +19,7 @@ namespace femus {
 // for the geometric element
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
 //by the way, with the MultiLevelProblemTwo I reach the Utils, the Mesh, and so the GeomEl, and so on...
-CurrGaussPointBase::CurrGaussPointBase(const CurrentElem & curr_el_in, MultiLevelProblemTwo& e_map_in ):
+CurrentGaussPointBase::CurrentGaussPointBase(const CurrentElem & curr_el_in, MultiLevelProblemTwo& e_map_in ):
  _current_elem(curr_el_in),
        _eqnmap(e_map_in),
     _elem_type(e_map_in._elem_type[curr_el_in.GetDim() - 1]),
@@ -51,7 +51,7 @@ CurrGaussPointBase::CurrGaussPointBase(const CurrentElem & curr_el_in, MultiLeve
 }
 
 
-CurrGaussPointBase::~CurrGaussPointBase() {
+CurrentGaussPointBase::~CurrentGaussPointBase() {
   
 
       for (int j=0;j< QL;j++) {
@@ -73,16 +73,16 @@ CurrGaussPointBase::~CurrGaussPointBase() {
 
 
 //this is what allows RUNTIME selection of the templates!!!
-   CurrGaussPointBase& CurrGaussPointBase::build(const CurrentElem & elem_in, MultiLevelProblemTwo& eqmap_in, const uint dim_in) {
+   CurrentGaussPointBase& CurrentGaussPointBase::build(const CurrentElem & elem_in, MultiLevelProblemTwo& eqmap_in, const uint dim_in) {
       
       
       switch(dim_in) {
 	
-	case(2):  return *(new  CurrGaussPoint<2>(elem_in,eqmap_in));
+	case(2):  return *(new  CurrentGaussPoint<2>(elem_in,eqmap_in));
 	
-	case(3):  return *(new  CurrGaussPoint<3>(elem_in,eqmap_in)); 
+	case(3):  return *(new  CurrentGaussPoint<3>(elem_in,eqmap_in)); 
 	
-	default: {std::cout << "CurrGaussPointBase: Only 2D and 3D" << std::endl; abort();}
+	default: {std::cout << "CurrentGaussPointBase: Only 2D and 3D" << std::endl; abort();}
 	  
       } //dim_in
       

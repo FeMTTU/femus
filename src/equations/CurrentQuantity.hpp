@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "VBTypeEnum.hpp"
-#include "CurrGaussPoint.hpp"
+#include "CurrentGaussPoint.hpp"
 
 
 namespace femus {
@@ -11,7 +11,7 @@ namespace femus {
  
  class SystemTwo;
  class Quantity;
- class CurrGaussPointBase;
+ class CurrentGaussPointBase;
  class CurrentElem;
 
 
@@ -21,7 +21,7 @@ namespace femus {
     
   public:
     
-     CurrentQuantity(const CurrGaussPointBase &);
+     CurrentQuantity(const CurrentGaussPointBase &);
     ~CurrentQuantity();
 
     
@@ -64,7 +64,7 @@ namespace femus {
     
   protected:
         
-    const CurrGaussPointBase & _currGP;
+    const CurrentGaussPointBase & _currGP;
     const CurrentElem & _currEl;
     
   };

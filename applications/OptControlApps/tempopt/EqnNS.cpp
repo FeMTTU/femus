@@ -19,7 +19,7 @@
 #include "QTYnumEnum.hpp"
 #include "Domain.hpp"
 #include "TimeLoop.hpp"
-#include "CurrGaussPoint.hpp"
+#include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"
   
 
@@ -114,7 +114,7 @@
   const uint mesh_vb = VV;
   
     CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
  
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -428,7 +428,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
      const uint mesh_vb = BB;
   
     CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
  
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
