@@ -392,7 +392,7 @@ void PrintXDMFGeometry(std::ofstream& outfstream,
 //except for the fine level where i print the true solution
 
 // This prints All Variables of One Equation    
-void write_system_solutions(std::string namefile, MeshTwo* mesh, DofMap* dofmap, EqnBase* eqn) {
+void write_system_solutions(const std::string namefile, const MeshTwo* mesh, const DofMap* dofmap, const EqnBase* eqn) {
 
   std::vector<FEElemBase*> fe_in(QL);
   for (int fe=0; fe<QL; fe++)    fe_in[fe] = FEElemBase::build(mesh->GetGeomEl(mesh->get_dim()-1-VV,mesh->_mesh_order)._geomel_id.c_str(),fe);
@@ -692,7 +692,7 @@ void read_system_solutions(std::string namefile, MeshTwo* mesh, DofMap* dofmap, 
 // e' quella FINE, ma noi ora dobbiamo prendere quella DI CIASCUN LIVELLO SEPARATAMENTE!
 
 
-void write_system_solutions_bc(std::string namefile, MeshTwo* mesh, DofMap* dofmap, EqnBase* eqn, int* bc, int** bc_fe_kk ) {
+void write_system_solutions_bc(const std::string namefile, const MeshTwo* mesh, const DofMap* dofmap, const EqnBase* eqn, const int* bc, int** bc_fe_kk ) {
   
   std::vector<FEElemBase*> fe_in(QL);
   for (int fe=0; fe<QL; fe++)    fe_in[fe] = FEElemBase::build(mesh->GetGeomEl(mesh->get_dim()-1-VV,mesh->_mesh_order)._geomel_id.c_str(),fe);
