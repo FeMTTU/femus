@@ -32,14 +32,6 @@
 
 namespace femus {
 
-//==========================
-void EqnNS::ConvertMyselfToChild(EqnBase* mybase)  {
-  //I overwrite the pointer so that i get the child members as well!
-  mybase = dynamic_cast<EqnNS* >(mybase);
-  if (mybase) {std::cout << "ConvertMyselfToChild: Bad downcasting from father to child" << std::endl;abort();}
-return;
-}
-
 
 ///=============== Constructor
   EqnNS::EqnNS(    std::vector<Quantity*> int_map_in,  //no reference!
