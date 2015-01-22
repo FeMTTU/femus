@@ -33,6 +33,9 @@ class Physics;
 class QuantityMap;
 
 
+//a quantity may or may not have an equation
+//if it has an equation, it must have some boundary condition flag
+
 
 
 class Quantity { 
@@ -44,7 +47,8 @@ public:
 
   /*virtual*/ void FunctionDof(CurrentQuantity& myvect, const double t,const double* xx) const/* =0*/;
       virtual void Function_txyz(const double t, const double* xp, double* temp) const   = 0;  
-      
+      virtual void bc_flag_txyz(const double t, const double* xp, double* flag) const  { std::cout <<  "A quantity that calls this function must have an implementation of it" << std::endl; abort(); } 
+     
   void set_eqn(SystemTwo*);
   
  inline       void SetPosInAssocEqn(uint pos_in) { _pos = pos_in; return;}
