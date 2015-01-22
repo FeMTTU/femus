@@ -30,6 +30,11 @@ void optimization_loop(EquationsMap& e_map_in);
 
 };
 
+ double ComputeIntegral (const uint Level,const MeshTwo* mesh, const EqnBase* eqn);
+
+ double ComputeNormControl (const uint Level, const MeshTwo* mesh, const EqnBase* eqn, const uint reg_ord );
+
+ int ElFlagControl(const std::vector<double> el_xm, const MeshTwo* mesh);
 
 
 } //end namespace femus

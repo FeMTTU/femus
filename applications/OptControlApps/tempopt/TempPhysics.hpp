@@ -30,8 +30,6 @@ TempPhysics(  RunTimeMap<double> & map_in);
    void set_nondimgroups();      /// set nondimensional groups and ref values
   //======================================================
 
-   //========= CONTROL ====================================
-      int ElFlagControl(const std::vector<double> el_xm) const;
 
 };
 

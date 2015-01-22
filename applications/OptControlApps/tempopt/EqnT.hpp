@@ -35,10 +35,6 @@ public:
 
  void elem_bc_read(const double */*el_xm*/, int& surf_id, double *value,int* el_flag) const {};
 
- double ComputeIntegral (const uint Level);
-
- double ComputeNormControl (const uint Level, const uint reg_ord );
-
 };
 
 
