@@ -2,7 +2,7 @@
 #define __mgtimeloop_h__
 
 #include "Typedefs.hpp"
-#include "RunTimeMap.hpp"
+#include "FemusInputParser.hpp"
 #include "SystemTwo.hpp"
 
 namespace femus {
@@ -21,7 +21,7 @@ class TimeLoop {
 public:
     // Data ---------------------------
     Files&              _files; ///< Utils pointer
-    RunTimeMap<double>  _timemap; 
+    FemusInputParser<double>  _timemap; 
 
   uint      _t_idx_in;  //initial time step index
   double    _time_in;  //initial time absolute value
@@ -43,7 +43,7 @@ public:
  // i did it "static" so that it can be used regardless of the specific instantiation;
  // since it is static it cannot act on the class runtime map which is not static datum;
  // so i have to pass the "unconstrained" runtime map explicitly  
-  static void check_time_par(RunTimeMap<double>&  time_in);
+  static void check_time_par(FemusInputParser<double>&  time_in);
 
   /////< MG time step solver (backward Euler)
   double MGTimeStep(const uint iter, SystemTwo * eqn) const;   

@@ -13,7 +13,7 @@
 
 #include "Typedefs.hpp"
 #include "FEMTTUConfig.h"
-#include "RunTimeMap.hpp"
+#include "FemusInputParser.hpp"
 #include "GeomEl.hpp"
 #include "ElemSto.hpp"
 #include "VBTypeEnum.hpp"
@@ -32,7 +32,7 @@ class MeshTwo  {
 public:
 
 //===== Constructors/ Destructor ===========
-     MeshTwo (const Files& files_in, const RunTimeMap<double>& map_in, const std::string mesh_file_in);
+     MeshTwo (const Files& files_in, const FemusInputParser<double>& map_in, const std::string mesh_file_in);
 //     ~MeshTwo ();
     void clear ();
 
@@ -119,7 +119,7 @@ public:
     inline const double get_Lref() const {return _Lref;}
     inline const uint   get_dim()  const {return _dim;}
     inline const GeomEl GetGeomEl(const uint dim, const uint order) const {   return _GeomEl[dim][order]; }
-    inline const RunTimeMap<double>  GetRuntimeMap()  const { return _mesh_rtmap; }
+    inline const FemusInputParser<double>  GetRuntimeMap()  const { return _mesh_rtmap; }
 
     //set functions
     inline void SetLref(const double lref_in) { _Lref = lref_in; }
@@ -127,7 +127,7 @@ public:
   protected:
     
     const Files& _files; 
-    const RunTimeMap<double> & _mesh_rtmap;
+    const FemusInputParser<double> & _mesh_rtmap;
     std::string _mesh_file;    //mesh file name from the mesh generator
  
    private:   

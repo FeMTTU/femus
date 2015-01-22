@@ -13,7 +13,7 @@
 
 namespace femus {
 
-TempPhysics::TempPhysics( RunTimeMap<double> & map_in):
+TempPhysics::TempPhysics( FemusInputParser<double> & map_in):
   Physics(map_in) { 
   
   

@@ -13,7 +13,7 @@
 #include "MultiLevelProblemTwo.hpp"
 #include "Files.hpp"
 #include "MeshTwo.hpp"
-#include "RunTimeMap.hpp"
+#include "FemusInputParser.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 
@@ -25,7 +25,7 @@ namespace femus {
 
 
 
- void TimeLoop::check_time_par(RunTimeMap<double>& time_in) {
+ void TimeLoop::check_time_par(FemusInputParser<double>& time_in) {
   
   if (time_in.get("initial_step") < 0.) {std::cout << " negative restart ;;;;;;;;;;;;;;;;;;;" << std::endl  ; abort();}
  

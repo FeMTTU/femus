@@ -8,7 +8,7 @@ namespace femus {
 
 
 
-Box::Box(const uint spacedim_in, RunTimeMap<double> & map_in) : Domain(spacedim_in,map_in) {
+Box::Box(const uint spacedim_in, FemusInputParser<double> & map_in) : Domain(spacedim_in,map_in) {
 
   _name = "Box";
   

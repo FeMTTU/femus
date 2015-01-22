@@ -9,7 +9,7 @@
 #include "Parameter.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelMesh.hpp"
-#include "RunTimeMap.hpp"
+#include "FemusInputParser.hpp"
 
 // application includes and prototypes
 #include "main.hpp"
@@ -25,7 +25,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 bool BoundaryND(/*MultiLevelProblem& mg_in,*/const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName,const double time);
 
 
-RunTimeMap<double> * runtime_double; //per ora devo usarla cosi' global... dovrebbe appartenere a tutte le classi...
+FemusInputParser<double> * runtime_double; //per ora devo usarla cosi' global... dovrebbe appartenere a tutte le classi...
                                      //e' chiaro che lasciarla qui e' un problema perche' gli argomenti del costruttore...
 
 int main(int argc,char **args) {
@@ -47,14 +47,14 @@ int main(int argc,char **args) {
 // // // // //   std::string outfolder = "output"; //was getenv(OUTFOLDER);
 // // // // //     
 // // // // //   // READ DOUBLES FROM FILE ======== WAS declared as GLOBAL SCOPE, now NO MORE
-// // // // // //   RunTimeMap<double> * runtime_double; //this line is not needed, it works nevertheless but it's not needed //so the brutal way to make it visible everywhere is to put the declaration OUTSIDE the function and to declare it with extern in all the files where it's needed
+// // // // // //   FemusInputParser<double> * runtime_double; //this line is not needed, it works nevertheless but it's not needed //so the brutal way to make it visible everywhere is to put the declaration OUTSIDE the function and to declare it with extern in all the files where it's needed
 // // // // //                                           //non serve il singleton pattern per questo! serve solo chiamare il costruttore QUI NEL MAIN e non OUTSIDE
-// // // // //   runtime_double = new RunTimeMap<double>("Doubles","./");
+// // // // //   runtime_double = new FemusInputParser<double>("Doubles","./");
 // // // // //   runtime_double->read();
 // // // // //   runtime_double->print();
 // // // // // 
 // // // // //   // READ STRINGS FROM FILE ========
-// // // // //   RunTimeMap<std::string> * runtime_string = new RunTimeMap<std::string>("Strings","./");  
+// // // // //   FemusInputParser<std::string> * runtime_string = new FemusInputParser<std::string>("Strings","./");  
 // // // // //   runtime_string->read();
 // // // // //   runtime_string->print();
 // // // // //   

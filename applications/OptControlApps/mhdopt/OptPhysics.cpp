@@ -15,7 +15,7 @@
 namespace femus {
 
 
-OptPhysics::OptPhysics( RunTimeMap<double> & map_in):
+OptPhysics::OptPhysics( FemusInputParser<double> & map_in):
   Physics(map_in) { } 
 
 

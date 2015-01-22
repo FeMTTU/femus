@@ -7,7 +7,7 @@
 #include <fstream>
 
 #include "FemusDefault.hpp"
-#include "RunTimeMap.hpp"
+#include "FemusInputParser.hpp"
 
 
 namespace femus {

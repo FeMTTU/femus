@@ -12,7 +12,7 @@
 #include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"
-#include "RunTimeMap.hpp"
+#include "FemusInputParser.hpp"
 #include "ElemSto.hpp"
 #include "MeshTwo.hpp"
 
@@ -32,7 +32,7 @@ class GenCase : public MeshTwo {
 
 public:
 
-     GenCase(const Files& files_in, const RunTimeMap<double> & map_in, const std::string mesh_file);
+     GenCase(const Files& files_in, const FemusInputParser<double> & map_in, const std::string mesh_file);
     ~GenCase();                 
     
     

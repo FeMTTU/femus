@@ -60,18 +60,18 @@
         files.RedirectCout();
 
   // ======= MyPhysics (implemented as child of Physics): this is somewhat like the Parameters ========================
-  RunTimeMap<double> physics_map("Physics",files._output_path);
+  FemusInputParser<double> physics_map("Physics",files._output_path);
   TempPhysics phys(physics_map);
               phys.set_nondimgroups(); //implement it
   const double Lref  =  phys._physrtmap.get("Lref");     // reference L
 
   // ======= Mesh =====
-  RunTimeMap<double> mesh_map("Mesh",files._output_path);
+  FemusInputParser<double> mesh_map("Mesh",files._output_path);
   GenCase mesh(files,mesh_map,"inclQ2D2x2.gam");
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
-  RunTimeMap<double> box_map("Box",files._output_path);
+  FemusInputParser<double> box_map("Box",files._output_path);
   Box mybox(mesh.get_dim(),box_map);
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 

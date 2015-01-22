@@ -18,12 +18,12 @@ namespace femus {
 
 
 template <typename T>
-class RunTimeMap   {
+class FemusInputParser   {
 
 public:
 
-   RunTimeMap(const std::string class_name, const std::string basepath_in );
-  ~RunTimeMap();
+   FemusInputParser(const std::string class_name, const std::string basepath_in );
+  ~FemusInputParser();
 
   void read();
   void print() const;
@@ -50,7 +50,7 @@ private:
 
 //=============
 template <typename T>
-RunTimeMap<T>::RunTimeMap(const std::string class_name_in, const std::string basepath_in) : 
+FemusInputParser<T>::FemusInputParser(const std::string class_name_in, const std::string basepath_in) : 
 _basepath(basepath_in),
 _tag_name(class_name_in)
 {
@@ -69,7 +69,7 @@ _tag_name(class_name_in)
 }
 
 template <typename T>
-RunTimeMap<T>::~RunTimeMap() {}
+FemusInputParser<T>::~FemusInputParser() {}
 
 //==================================================
 //this is the syntax for templated functions
@@ -79,13 +79,13 @@ RunTimeMap<T>::~RunTimeMap() {}
 //i'm afraid you have to do it always, even if you dont use that template
 //in that function (or you do not SEEM to use that template...)
 template <typename T>
- void   RunTimeMap<T>::set(const std::string & name, const T & value)  {
+ void   FemusInputParser<T>::set(const std::string & name, const T & value)  {
     _rtmap.insert(make_pair(name,value));
   }
 
 //=========================================  
 template <typename T>
-  const  T RunTimeMap<T>::get(const std::string & name) const {
+  const  T FemusInputParser<T>::get(const std::string & name) const {
     return _rtmap.find(name)->second;
   }
   
@@ -98,7 +98,7 @@ template <typename T>
 // Files should be sthg like global variables..
 
 template <typename T>
-  void RunTimeMap<T>::read() {
+  void FemusInputParser<T>::read() {
 
     std::ostringstream filename;
     filename << _basepath <<  "/" << DEFAULT_CONFIGDIR << "/" << DEFAULT_RUNTIMECONF;  
@@ -130,10 +130,10 @@ std::ifstream fin(filename.str().c_str());
 
       } 
       
-    else{ std::cout << _tag_name << " ::read_par (RunTimeMap): no " << cl_begin << " field found" << std::endl; abort();}
+    else{ std::cout << _tag_name << " ::read_par (FemusInputParser): no " << cl_begin << " field found" << std::endl; abort();}
 
   }
-  else {std::cout <<  _tag_name << " ::read_par (RunTimeMap): no parameter file found" << std::endl; abort();}
+  else {std::cout <<  _tag_name << " ::read_par (FemusInputParser): no parameter file found" << std::endl; abort();}
  
    fin.close();
  
@@ -150,12 +150,12 @@ return;
 
 //need typename because  of dependent scope... TODO
 template <typename T>
-void RunTimeMap<T>::print() const {
+void FemusInputParser<T>::print() const {
   
 #ifdef DEFAULT_PRINT_INFO
 
   std::cout << "\n ============================= \n";
-  std::cout << _tag_name << "   RunTimeMap: " << (int)_rtmap.size() << " parameters: \n";
+  std::cout << _tag_name << "   FemusInputParser: " << (int)_rtmap.size() << " parameters: \n";
   
   typename std::map<std::string,T>::const_iterator   pos=_rtmap.begin();
   typename std::map<std::string,T>::const_iterator pos_e=_rtmap.end();

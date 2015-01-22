@@ -68,18 +68,18 @@ int main(int argc, char** argv) {
         files.RedirectCout();
 	
   // ======= Physics ========================
-  RunTimeMap<double> physics_map("Physics",files._output_path);
+  FemusInputParser<double> physics_map("Physics",files._output_path);
   OptPhysics phys(physics_map);
              phys.set_nondimgroups();
   const double Lref  =  phys._physrtmap.get("Lref");
 
   // ======= Mesh =====
-  RunTimeMap<double> mesh_map("Mesh",files._output_path);
+  FemusInputParser<double> mesh_map("Mesh",files._output_path);
     GenCase mesh(files,mesh_map,"straightQ3D2x2x2ZERO.gam");
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
-  RunTimeMap<double> box_map("Box",files._output_path);
+  FemusInputParser<double> box_map("Box",files._output_path);
   Box mybox(mesh.get_dim(),box_map);
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 

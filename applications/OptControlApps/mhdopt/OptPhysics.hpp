@@ -17,7 +17,7 @@ class OptPhysics : public Physics {
 public:
   
 //constructor
-OptPhysics( RunTimeMap<double> & map_in); 
+OptPhysics( FemusInputParser<double> & map_in); 
   
   
  // =========== Nondimensional groups and ref values ========

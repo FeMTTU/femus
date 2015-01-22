@@ -22,7 +22,7 @@ namespace femus {
 
 
 // ========================================================
-MeshTwo::MeshTwo (const Files& files_in, const RunTimeMap<double>& map_in, const std::string mesh_file_in) :
+MeshTwo::MeshTwo (const Files& files_in, const FemusInputParser<double>& map_in, const std::string mesh_file_in) :
          _files(files_in),
          _mesh_rtmap(map_in),
          _dim(map_in.get("dimension")),

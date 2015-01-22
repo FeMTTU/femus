@@ -7,7 +7,7 @@
 
 // configure files
 #include "Typedefs.hpp"
-#include "RunTimeMap.hpp"
+#include "FemusInputParser.hpp"
 
 
 namespace femus {
@@ -28,14 +28,14 @@ class Physics {
 
 public:
 
-  RunTimeMap<double>     _physrtmap;
+  FemusInputParser<double>     _physrtmap;
 
   //mesh
   MeshTwo *               _mesh;   ///< Mesh  pointer
   inline void   set_mesh(MeshTwo * mgmesh_in){    _mesh = mgmesh_in;   return;  }   /// Set mesh pointer
 
   // Costructor and destructor ----------------------------
-   Physics(RunTimeMap<double> & physmap_in); ///< Constructor
+   Physics(FemusInputParser<double> & physmap_in); ///< Constructor
   ~Physics(){};                                     ///< Destructor
    
 };

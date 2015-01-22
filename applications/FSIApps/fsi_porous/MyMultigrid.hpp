@@ -1,6 +1,6 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelMesh.hpp"
-#include "RunTimeMap.hpp"
+#include "FemusInputParser.hpp"
 #include "main.hpp"
 
 using namespace femus;
@@ -10,8 +10,8 @@ class MyMultiGrid: public MultiLevelProblem {
 public:
   
    ///configuration / physics
-  RunTimeMap<double>* _runtime_double;
-  void AddParameters(RunTimeMap<double>* runtimein);
+  FemusInputParser<double>* _runtime_double;
+  void AddParameters(FemusInputParser<double>* runtimein);
   
   unsigned _qty_idx[N_QTIES];
   unsigned   _qty_ncomps[N_QTIES];

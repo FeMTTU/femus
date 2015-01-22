@@ -5,7 +5,7 @@
 // this function is fully user
 
 #include "Physics.hpp"
-#include "RunTimeMap.hpp"
+#include "FemusInputParser.hpp"
 
 namespace femus {
 
@@ -19,7 +19,7 @@ class TempPhysics : public Physics {
 public:
   
 //constructor
-TempPhysics(  RunTimeMap<double> & map_in); 
+TempPhysics(  FemusInputParser<double> & map_in); 
   
    //========= CONTROL ====================================
       int ElFlagControl(const std::vector<double> el_xm) const;

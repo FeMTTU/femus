@@ -34,7 +34,7 @@
 // // //   }
 // // //     
 // // //     
-// // //  void MyMultiGrid::AddParameters(RunTimeMap<double>* runtimein) {
+// // //  void MyMultiGrid::AddParameters(FemusInputParser<double>* runtimein) {
 // // //      
 // // //      _runtime_double = runtimein;
 // // //      return;
