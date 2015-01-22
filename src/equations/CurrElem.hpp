@@ -15,7 +15,7 @@ namespace femus {
 
 class EqnBase;
 class EquationsMap;
-class QuantityLocal;
+class CurrentQuantity;
 
 
 
@@ -76,7 +76,7 @@ class QuantityLocal;
     
     void  PrintOrientation() const;
     
-    void  ConvertElemCoordsToMappingOrd(QuantityLocal& myvect) const;
+    void  ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const;
     
     /** needs the EQUATION basically */
     void  SetElDofsBc(const uint Level);

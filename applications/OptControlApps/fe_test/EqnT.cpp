@@ -84,33 +84,33 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
   CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    QuantityLocal Tempold(currgp);
+    CurrentQuantity Tempold(currgp);
     Tempold._qtyptr   = _QtyInternalVector[0]; 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    QuantityLocal Temp2(currgp);
+    CurrentQuantity Temp2(currgp);
     Temp2._qtyptr   = _QtyInternalVector[1]; 
     Temp2.VectWithQtyFillBasic();
     Temp2.Allocate();
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    QuantityLocal Temp3(currgp);
+    CurrentQuantity Temp3(currgp);
     Temp3._qtyptr   = _QtyInternalVector[2]; 
     Temp3.VectWithQtyFillBasic();
     Temp3.Allocate();
     
     //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp);  //no quantity
+    CurrentQuantity xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  QuantityLocal xyz_refbox(currgp);  //no quantity
+  CurrentQuantity xyz_refbox(currgp);  //no quantity
     xyz_refbox._dim      = space_dim;
     xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
     xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
@@ -321,33 +321,33 @@ for (uint fe = 0; fe < QL; fe++)     {
   CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    QuantityLocal Tempold(currgp);
+    CurrentQuantity Tempold(currgp);
     Tempold._qtyptr   = _QtyInternalVector[0]; 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    QuantityLocal Temp2(currgp);
+    CurrentQuantity Temp2(currgp);
     Temp2._qtyptr   = _QtyInternalVector[1]; 
     Temp2.VectWithQtyFillBasic();
     Temp2.Allocate();
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    QuantityLocal Temp3(currgp);
+    CurrentQuantity Temp3(currgp);
     Temp3._qtyptr   = _QtyInternalVector[2]; 
     Temp3.VectWithQtyFillBasic();
     Temp3.Allocate();
     
     //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp);  //no quantity
+    CurrentQuantity xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  QuantityLocal xyz_refbox(currgp);  //no quantity
+  CurrentQuantity xyz_refbox(currgp);  //no quantity
     xyz_refbox._dim      = space_dim;
     xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
     xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;

@@ -1,4 +1,4 @@
-#include "QuantityLocal.hpp"
+#include "CurrentQuantity.hpp"
 
 #include "Quantity.hpp"
 #include "CurrElem.hpp"
@@ -15,12 +15,12 @@ namespace femus {
 
 
 
-     QuantityLocal::QuantityLocal(const CurrGaussPointBase & currgp_in)
+     CurrentQuantity::CurrentQuantity(const CurrGaussPointBase & currgp_in)
      : _currGP(currgp_in),_currEl(currgp_in.GetCurrentElem()) {  }
 
 
 
-    QuantityLocal::~QuantityLocal() { }
+    CurrentQuantity::~CurrentQuantity() { }
 
     
     
@@ -34,7 +34,7 @@ namespace femus {
 //actually, that vector is only for service purposes 
 //so it could be also translated into some temporary vector whenever needed
  
- void QuantityLocal::curl_g() {
+ void CurrentQuantity::curl_g() {
    
   const uint       ord = _FEord;
   const uint el_nnodes = _ndof;
@@ -69,7 +69,7 @@ return;
 //here I should check that the    _grad_g double array has been allocated
 //unfortunately there is no way to check this in C
 
- void QuantityLocal::grad_g() {
+ void CurrentQuantity::grad_g() {
    
         const uint ndim = _currEl.GetDim();
    const uint   el_ndof = _ndof;
@@ -105,7 +105,7 @@ return;
   
  
 //=================================================================== 
- void QuantityLocal::val_g() {
+ void CurrentQuantity::val_g() {
 
 const uint el_ndof = _ndof;
 const uint nvars = _dim;
@@ -131,7 +131,7 @@ const uint FEord = _FEord;
  }
 
 //nota che questa routine e' solo per i vect CON QUANTITY!!!
-void QuantityLocal::VectWithQtyFillBasic() {
+void CurrentQuantity::VectWithQtyFillBasic() {
   
   if ( _qtyptr == NULL ) {std::cout << " Vect must be endowed with a quantity for this to work " << std::endl; abort();}
     _eqnptr   = _qtyptr->_eqn; 
@@ -142,7 +142,7 @@ void QuantityLocal::VectWithQtyFillBasic() {
     return;
 }
 
-void QuantityLocal::Allocate() {
+void CurrentQuantity::Allocate() {
   
     _val_g.resize(_dim);   
     _val_g3D.resize(3); 
@@ -165,7 +165,7 @@ void QuantityLocal::Allocate() {
 
 
 ///copy the space_dim-sized dof vector into its 3D version
-void QuantityLocal::ExtendDofs() {
+void CurrentQuantity::ExtendDofs() {
   
   //AAA: valid from ndim to 3
 
@@ -236,7 +236,7 @@ void QuantityLocal::ExtendDofs() {
 // In the same way in the FINE RHS we have the true rhs,
 // while in all the other rhs we have the RESIDUALS.
 
-void QuantityLocal::GetElemDofs(const uint Level)  {
+void CurrentQuantity::GetElemDofs(const uint Level)  {
   
   //we should put some try catch or something, to make sure that what we are calling here is already correctly filled as it should be
   //TODO FROM EQUATION HERE
@@ -290,7 +290,7 @@ void QuantityLocal::GetElemDofs(const uint Level)  {
 
 // clearly _el_average must be allocated already!!!
 
-  void QuantityLocal::SetElemAverage() {
+  void CurrentQuantity::SetElemAverage() {
 
        for (uint idim=0; idim< _dim; idim++)  _el_average[idim]=0.;
 
@@ -308,7 +308,7 @@ void QuantityLocal::GetElemDofs(const uint Level)  {
   
   
   
-//   void QuantityLocal::SetElDofsFromArgs(const uint vb,const double * dofs_in) const {
+//   void CurrentQuantity::SetElDofsFromArgs(const uint vb,const double * dofs_in) const {
 // 
 //   
 //   const uint  elndof = myvect._ndof[vb];

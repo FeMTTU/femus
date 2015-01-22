@@ -110,13 +110,13 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     //QTYZERO
-    QuantityLocal VelAdjOld(currgp);
+    CurrentQuantity VelAdjOld(currgp);
     VelAdjOld._qtyptr   = _QtyInternalVector[QTYZERO];
     VelAdjOld.VectWithQtyFillBasic();
     VelAdjOld.Allocate();
   
     //QTYONE
-    QuantityLocal PressAdjOld(currgp);
+    CurrentQuantity PressAdjOld(currgp);
     PressAdjOld._qtyptr   = _QtyInternalVector[QTYONE];
     PressAdjOld.VectWithQtyFillBasic();
     PressAdjOld.Allocate();
@@ -125,48 +125,48 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
 //=========EXTERNAL QUANTITIES (couplings) =====
 
 //========= DOMAIN MAPPING
-    QuantityLocal xyz(currgp);
+    CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
-  QuantityLocal xyz_refbox(currgp);
+  CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();
   
-  QuantityLocal Vel(currgp);
+  CurrentQuantity Vel(currgp);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
   
-  QuantityLocal VelDes(currgp);
+  CurrentQuantity VelDes(currgp);
     VelDes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_DesVelocity");
     VelDes.VectWithQtyFillBasic();
     VelDes.Allocate();
 
-  QuantityLocal Bhom(currgp);
+  CurrentQuantity Bhom(currgp);
     Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();
  
-  QuantityLocal Bext(currgp);
+  CurrentQuantity Bext(currgp);
     Bext._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();
 
 //========= auxiliary, must be AFTER Bhom!   //TODO this doesnt have any associated quantity!
-  QuantityLocal Bmag(currgp); //total
+  CurrentQuantity Bmag(currgp); //total
     Bmag._dim        = Bhom._dim;               //same as Bhom
     Bmag._FEord      = Bhom._FEord;             //same as Bhom
     Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
     Bmag.Allocate();
     
 //===============
-  QuantityLocal BhomAdj(currgp); 
+  CurrentQuantity BhomAdj(currgp); 
     BhomAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHomAdj"); 
     BhomAdj.VectWithQtyFillBasic();
     BhomAdj.Allocate();
@@ -377,13 +377,13 @@ if (_Dir_pen_fl == 0)  {
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     //QTYZERO
-    QuantityLocal VelAdjOld(currgp);
+    CurrentQuantity VelAdjOld(currgp);
     VelAdjOld._qtyptr   = _QtyInternalVector[QTYZERO];
     VelAdjOld.VectWithQtyFillBasic();
     VelAdjOld.Allocate();
   
     //QTYONE
-    QuantityLocal PressAdjOld(currgp);
+    CurrentQuantity PressAdjOld(currgp);
     PressAdjOld._qtyptr   = _QtyInternalVector[QTYONE];
     PressAdjOld.VectWithQtyFillBasic();
     PressAdjOld.Allocate();
@@ -392,14 +392,14 @@ if (_Dir_pen_fl == 0)  {
 //=========EXTERNAL QUANTITIES (couplings) =====
 
 //========= DOMAIN MAPPING
-    QuantityLocal xyz(currgp);
+    CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
-  QuantityLocal xyz_refbox(currgp);
+  CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;

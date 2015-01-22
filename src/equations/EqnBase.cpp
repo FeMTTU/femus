@@ -2306,7 +2306,7 @@ void EqnBase::ReadRest(const std::string& name) {
 //it computes the flags for pressure and stress integrals 
 //based on the pressure nodes
  void EqnBase::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(
-	    const uint *bc_eldofs,const QuantityLocal & Velold_in,const QuantityLocal& press_in,uint &press_fl) const {
+	    const uint *bc_eldofs,const CurrentQuantity & Velold_in,const CurrentQuantity& press_in,uint &press_fl) const {
 
 	const uint el_ndof_p =  press_in._ndof;
 	const uint el_ndof_u =  Velold_in._ndof;

@@ -13,7 +13,7 @@
 #include "Files.hpp"
 #include "CurrElem.hpp"
 #include "CurrGaussPointBase.hpp"
-#include "QuantityLocal.hpp"
+#include "CurrentQuantity.hpp"
 #include "Quantity.hpp"
 #include "OptPhysics.hpp"
 #include "ElemType.hpp"
@@ -533,27 +533,27 @@ double ComputeIntegral (const uint Level, const MeshTwo* mesh, const EqnBase* eq
 //======Functions in the integrand ============
   
 //========= DOMAIN MAPPING
-    QuantityLocal xyz(currgp);
+    CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
     xyz._ndof     = eqn->_eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
-  QuantityLocal xyz_refbox(currgp);
+  CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = mesh->GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();
   
      //========== 
-    QuantityLocal Vel(currgp);
+    CurrentQuantity Vel(currgp);
     Vel._qtyptr      = eqn->_eqnmap._qtymap.get_qty("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
     
     //========== 
-    QuantityLocal VelDes(currgp);
+    CurrentQuantity VelDes(currgp);
     VelDes._qtyptr      = eqn->_eqnmap._qtymap.get_qty("Qty_DesVelocity");
     VelDes.VectWithQtyFillBasic();
     VelDes.Allocate();

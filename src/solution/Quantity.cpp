@@ -86,7 +86,7 @@ namespace femus {
 //the first one is GENERAL
 //the second one is SPECIFIC of the physics.
 
-void Quantity::FunctionDof(QuantityLocal& myvect, const double t, const double* refbox_xyz) const {
+void Quantity::FunctionDof(CurrentQuantity& myvect, const double t, const double* refbox_xyz) const {
 
 //====the Domain
   const uint space_dim = _qtymap._phys._mesh->get_dim();

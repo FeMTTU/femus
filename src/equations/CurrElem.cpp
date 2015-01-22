@@ -7,7 +7,7 @@
 #include "DofMap.hpp"
 
 
-#include "QuantityLocal.hpp"
+#include "CurrentQuantity.hpp"
 
 
 namespace femus {
@@ -260,7 +260,7 @@ void CurrElem::PrintOrientation() const {
   //its data to the xyz Vect
   
   
-void CurrElem::ConvertElemCoordsToMappingOrd(QuantityLocal& myvect) const {
+void CurrElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 
   
   const uint  elndof = myvect._ndof;

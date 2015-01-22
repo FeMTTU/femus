@@ -4,7 +4,7 @@
 #include "EquationsMap.hpp"
 #include "CurrGaussPoint.hpp"
 #include "CurrElem.hpp"
-#include "QuantityLocal.hpp"
+#include "CurrentQuantity.hpp"
 #include "Quantity.hpp"
 #include "ElemType.hpp"
 #include "Box.hpp"
@@ -100,32 +100,32 @@ double ComputeIntegral (const uint Level, const MeshTwo* mesh, const EqnBase* eq
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
 
   //========== 
-    QuantityLocal Tempold(currgp);
+    CurrentQuantity Tempold(currgp);
     Tempold._qtyptr   =  eqn->_eqnmap._qtymap.get_qty("Qty_Temperature"); 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
   //========== 
-    QuantityLocal Tlift(currgp);
+    CurrentQuantity Tlift(currgp);
     Tlift._qtyptr   =  eqn->_eqnmap._qtymap.get_qty("Qty_TempLift"); 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
     
  //===========
-    QuantityLocal Tdes(currgp);
+    CurrentQuantity Tdes(currgp);
     Tdes._qtyptr   = eqn->_eqnmap._qtymap.get_qty("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
   
 //========= DOMAIN MAPPING
-    QuantityLocal xyz(currgp);
+    CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = eqn->_eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
-  QuantityLocal xyz_refbox(currgp);
+  CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = mesh->GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
@@ -240,20 +240,20 @@ double ComputeNormControl (const uint Level, const MeshTwo* mesh, const EqnBase*
 //======Functions in the integrand ============
 
       //========== 
-    QuantityLocal Tlift(currgp);
+    CurrentQuantity Tlift(currgp);
     Tlift._qtyptr   =  eqn->_eqnmap._qtymap.get_qty("Qty_TempLift"); 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //========= DOMAIN MAPPING
-    QuantityLocal xyz(currgp);
+    CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = eqn->_eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
-  QuantityLocal xyz_refbox(currgp);
+  CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = mesh->GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;

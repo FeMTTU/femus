@@ -2,7 +2,7 @@
 
 #include "EquationsMap.hpp"
 #include "Math.hpp"
-#include "QuantityLocal.hpp"
+#include "CurrentQuantity.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 
@@ -271,7 +271,7 @@ void CurrGaussPoint<3>::ComputeJacBB() {
 
 
 template <unsigned int FM_DIM>
-double CurrGaussPoint<FM_DIM>::JacVectBB_g(QuantityLocal& xyz )/* const*/ {
+double CurrGaussPoint<FM_DIM>::JacVectBB_g(CurrentQuantity& xyz )/* const*/ {
   
   //here you check assert(_is_ready_for_Jac);
 
@@ -435,7 +435,7 @@ return det;
 //it fills _InvJac_g: NOTICE that THIS IS UNIQUE, there is no distinction between LINEAR and QUADRATIC.
 
 template <unsigned int FM_DIM>
-double CurrGaussPoint<FM_DIM>::JacVectVV_g(QuantityLocal& xyz )/* const*/ {
+double CurrGaussPoint<FM_DIM>::JacVectVV_g(CurrentQuantity& xyz )/* const*/ {
 
 const uint Order    = xyz._FEord;  //order of the coordinate transformation
 const uint xoff     = xyz._ndof;

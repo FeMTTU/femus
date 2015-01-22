@@ -118,12 +118,12 @@ namespace femus {
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-    QuantityLocal BeOld(currgp);
+    CurrentQuantity BeOld(currgp);
     BeOld._qtyptr   = _QtyInternalVector[QTYZERO];
     BeOld.VectWithQtyFillBasic();
     BeOld.Allocate();
 
-    QuantityLocal LagMultOld(currgp);
+    CurrentQuantity LagMultOld(currgp);
     LagMultOld._qtyptr   = _QtyInternalVector[QTYONE];
     LagMultOld.VectWithQtyFillBasic();
     LagMultOld.Allocate();
@@ -131,40 +131,40 @@ namespace femus {
 
 //=========EXTERNAL QUANTITIES (couplings) =====
   //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp);
+    CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary
-  QuantityLocal xyz_refbox(currgp);
+  CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();
   
 #if VELOCITY_QTY==1
-    QuantityLocal Vel(currgp);
+    CurrentQuantity Vel(currgp);
     Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity"); //an alternative cannot exist, because it is an Unknown of This Equation
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
 #endif  
 
     //==================
-    QuantityLocal VelAdj(currgp);
+    CurrentQuantity VelAdj(currgp);
     VelAdj._qtyptr      = _eqnmap._qtymap.get_qty("Qty_VelocityAdj");
     VelAdj.VectWithQtyFillBasic();
     VelAdj.Allocate();
   
     //==================
-    QuantityLocal Bhom(currgp); 
+    CurrentQuantity Bhom(currgp); 
     Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();
     
 //===============
-    QuantityLocal BhomAdj(currgp); 
+    CurrentQuantity BhomAdj(currgp); 
     BhomAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHomAdj"); 
     BhomAdj.VectWithQtyFillBasic();
     BhomAdj.Allocate();
@@ -414,12 +414,12 @@ for (uint fe = 0; fe < QL; fe++)     {
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-    QuantityLocal BeOld(currgp);
+    CurrentQuantity BeOld(currgp);
     BeOld._qtyptr   = _QtyInternalVector[QTYZERO];
     BeOld.VectWithQtyFillBasic();
     BeOld.Allocate();
 
-    QuantityLocal LagMultOld(currgp);
+    CurrentQuantity LagMultOld(currgp);
     LagMultOld._qtyptr   = _QtyInternalVector[QTYONE];
     LagMultOld.VectWithQtyFillBasic();
     LagMultOld.Allocate();
@@ -427,14 +427,14 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //=========EXTERNAL QUANTITIES (couplings) =====
   //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp);
+    CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary
-  QuantityLocal xyz_refbox(currgp);
+  CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;

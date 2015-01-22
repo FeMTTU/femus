@@ -200,7 +200,7 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-    QuantityLocal VelOld(currgp);
+    CurrentQuantity VelOld(currgp);
     VelOld._qtyptr   = _QtyInternalVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();   //the internal quantities will eventually have *this as eqn pointer
     VelOld.Allocate();
@@ -210,7 +210,7 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     Velocity*  vel_castqtyptr = static_cast<Velocity*>(VelOld._qtyptr); //casting for quantity-specific functions
 
 //=========
-    QuantityLocal pressOld(currgp);
+    CurrentQuantity pressOld(currgp);
     pressOld._qtyptr   = _QtyInternalVector[QTYONE];
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
@@ -225,14 +225,14 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
 
 //=========EXTERNAL QUANTITIES (couplings) =====
   //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp);
+    CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  QuantityLocal xyz_refbox(currgp);
+  CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
@@ -240,19 +240,19 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
     
 //============================ MAG WORLD =======================================
  #if BMAG_QTY==1  
-    QuantityLocal Bhom(currgp); //only to retrieve the dofs
+    CurrentQuantity Bhom(currgp); //only to retrieve the dofs
     Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();
  
 //=========
-    QuantityLocal Bext(currgp);   //only to retrieve the dofs
+    CurrentQuantity Bext(currgp);   //only to retrieve the dofs
     Bext._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();
 
 //========= auxiliary, must be AFTER Bhom!
-    QuantityLocal Bmag(currgp); //total
+    CurrentQuantity Bmag(currgp); //total
     Bmag._dim        = Bhom._dim;
     Bmag._FEord      = Bhom._FEord;
     Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
@@ -262,7 +262,7 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
 
 //===================TEMPERATURE WORLD=============================
 #if TEMP_QTY==1
-    QuantityLocal Temp(currgp);
+    CurrentQuantity Temp(currgp);
     Temp._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature");
     Temp.VectWithQtyFillBasic();
     Temp.Allocate();
@@ -270,7 +270,7 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
 //=================== TEMPERATURE WORLD============================
 
 //=======gravity==================================
-  QuantityLocal gravity(currgp);
+  CurrentQuantity gravity(currgp);
   gravity._dim=DIMENSION;
   gravity._val_g.resize(gravity._dim);
   gravity._val_g[0] = _phys._physrtmap.get("dirgx");
@@ -595,7 +595,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-    QuantityLocal VelOld(currgp);
+    CurrentQuantity VelOld(currgp);
     VelOld._qtyptr   = _QtyInternalVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();   //the internal quantities will eventually have *this as eqn pointer
     VelOld.Allocate();
@@ -605,7 +605,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
     Velocity*  vel_castqtyptr = static_cast<Velocity*>(VelOld._qtyptr); //casting for quantity-specific functions
 
 //=========
-    QuantityLocal pressOld(currgp);
+    CurrentQuantity pressOld(currgp);
     pressOld._qtyptr   = _QtyInternalVector[QTYONE];
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
@@ -620,14 +620,14 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
 //=========EXTERNAL QUANTITIES (couplings) =====
   //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp);
+    CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  QuantityLocal xyz_refbox(currgp);
+  CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;

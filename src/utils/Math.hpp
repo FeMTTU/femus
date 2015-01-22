@@ -4,7 +4,7 @@
 
 #include "Typedefs.hpp"
 
-#include "QuantityLocal.hpp"
+#include "CurrentQuantity.hpp"
 #include "ElemType.hpp"
 
 
@@ -111,7 +111,7 @@ const uint myproc = eqnmap_in._mesh._iproc;
   const uint meshql = (int) eqnmap_in._mesh.GetRuntimeMap().get("meshql");  
  
 //========= DOMAIN MAPPING
-    QuantityLocal xyz(currgp);
+    CurrentQuantity xyz(currgp);
     xyz._dim      = eqnmap_in._mesh.get_dim();
     xyz._FEord    = meshql;
     xyz._ndof     = eqnmap_in._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();

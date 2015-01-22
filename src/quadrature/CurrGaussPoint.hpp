@@ -34,8 +34,8 @@ template <unsigned int FM_DIM>
      CurrGaussPoint(const CurrElem & curr_el_in, EquationsMap& e_map_in );
     ~CurrGaussPoint();
  
-double        JacVectVV_g(QuantityLocal& xyz )/*const*/;  //TODO should be only for VOLUME
-double        JacVectBB_g(QuantityLocal& xyz )/* const*/;  //TODO should be only for BOUNDARY 
+double        JacVectVV_g(CurrentQuantity& xyz )/*const*/;  //TODO should be only for VOLUME
+double        JacVectBB_g(CurrentQuantity& xyz )/* const*/;  //TODO should be only for BOUNDARY 
 
 
 void         SetPhiElDofsFEVB_g(const uint qlflag, const uint qp);

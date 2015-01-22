@@ -36,7 +36,7 @@ equations/LinearImplicitSystem.cpp
 equations/MonolithicFSINonLinearImplicitSystem.cpp
 equations/NonLinearImplicitSystem.cpp
 equations/MultiLevelProblem.cpp
-equations/QuantityLocal.cpp
+equations/CurrentQuantity.cpp
 equations/System.cpp
 equations/TimeLoop.cpp
 equations/TransientSystem.cpp

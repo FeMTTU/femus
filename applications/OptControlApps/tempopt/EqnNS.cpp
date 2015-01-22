@@ -118,7 +118,7 @@
  
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-    QuantityLocal VelOld(currgp);
+    CurrentQuantity VelOld(currgp);
     VelOld._qtyptr   = _QtyInternalVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();
     VelOld.Allocate();
@@ -128,7 +128,7 @@
 //     Velocity*  vel_castqtyptr = static_cast<Velocity*>(VelOld._qtyptr); //casting for quantity-specific functions
 
 //=========
-    QuantityLocal pressOld(currgp);
+    CurrentQuantity pressOld(currgp);
     pressOld._qtyptr   = _QtyInternalVector[QTYONE];
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
@@ -143,21 +143,21 @@
 
 //=========EXTERNAL QUANTITIES (couplings) =====
   //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp); //domain
+    CurrentQuantity xyz(currgp); //domain
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
     
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  QuantityLocal xyz_refbox(currgp);
+  CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
   xyz_refbox.Allocate();
     
 #if TEMP_QTY==1
-    QuantityLocal Temp(currgp);
+    CurrentQuantity Temp(currgp);
     Temp._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature");
     Temp.VectWithQtyFillBasic();
     Temp.Allocate();
@@ -165,7 +165,7 @@
 
 //other Physical constant Quantities
 //=======gravity==================================
-  QuantityLocal gravity(currgp);
+  CurrentQuantity gravity(currgp);
   gravity._dim = space_dim;
 //   gravity.Allocate(); CANNOT DO THIS NOW BECAUSE NOT ALL THE DATA FOR THE ALLOCATION ARE FILLED
   gravity._val_g.resize(gravity._dim);
@@ -432,7 +432,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
  
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-    QuantityLocal VelOld(currgp);
+    CurrentQuantity VelOld(currgp);
     VelOld._qtyptr   = _QtyInternalVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();
     VelOld.Allocate();
@@ -442,7 +442,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 //     Velocity*  vel_castqtyptr = static_cast<Velocity*>(VelOld._qtyptr); //casting for quantity-specific functions
 
 //=========
-    QuantityLocal pressOld(currgp);
+    CurrentQuantity pressOld(currgp);
     pressOld._qtyptr   = _QtyInternalVector[QTYONE];
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
@@ -457,14 +457,14 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
 //=========EXTERNAL QUANTITIES (couplings) =====
   //========= //DOMAIN MAPPING
-    QuantityLocal xyz(currgp); //domain
+    CurrentQuantity xyz(currgp); //domain
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
     xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
     
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  QuantityLocal xyz_refbox(currgp);
+  CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;

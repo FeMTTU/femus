@@ -17,12 +17,12 @@ namespace femus {
 
  //Remember that you need to allocate the operators before if you use them
  
-  class QuantityLocal {
+  class CurrentQuantity {
     
   public:
     
-     QuantityLocal(const CurrGaussPointBase &);
-    ~QuantityLocal();
+     CurrentQuantity(const CurrGaussPointBase &);
+    ~CurrentQuantity();
 
     
     //TODO all these function are of the SET type (this is how I should call them), that is why they are NOT CONST
