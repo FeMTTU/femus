@@ -20,36 +20,6 @@ OptPhysics::OptPhysics( RunTimeMap<double> & map_in):
 
 
 
-  int OptPhysics::ElFlagControl(const std::vector<double> el_xm)  const {
-
-  Box* box= static_cast<Box*>(_mesh->GetDomain());
-   
-   
-     int el_flagdom=0;
-
-///optimal control
-  #if DIMENSION==2
-   //flag on the controlled region 2D
-       if (   el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])
-	   && el_xm[0] < 0.75*(box->_le[0] - box->_lb[0])
-	   && el_xm[1] > 0.75*(box->_le[1] - box->_lb[1]) ) {
-                 el_flagdom=1;
-             }
-  #else
-   //flag on the controlled region 3D
-      if ( el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])  
-	&& el_xm[0] < 0.75*(box->_le[0] - box->_lb[0]) 
-	&& el_xm[1] > 0.75*(box->_le[1] - box->_lb[1])
-	&& el_xm[2] > 0.25*(box->_le[2] - box->_lb[2]) 
-	&& el_xm[2] < 0.75*(box->_le[2] - box->_lb[2]) ) {
-	el_flagdom=1;
-        }
- #endif
-
-return el_flagdom; 
-}
-
-
 
 // ====================================================
 /// This function sets the nondimensional groups

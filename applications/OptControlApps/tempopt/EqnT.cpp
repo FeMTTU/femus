@@ -144,7 +144,7 @@ void  EqnT::GenMatRhs(const uint Level) {
  {//BEGIN VOLUME
  const uint mesh_vb = VV;
   
-  CurrElem       currelem(VV,this,_eqnmap);    
+  CurrElem       currelem(VV,this,_mesh,_eqnmap._elem_type);    
   CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 
@@ -448,7 +448,7 @@ for (uint fe = 0; fe < QL; fe++)     {
    
  const uint mesh_vb = BB;
   
-  CurrElem       currelem(BB,this,_eqnmap);    
+  CurrElem       currelem(BB,this,_mesh,_eqnmap._elem_type);    
   CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 
@@ -706,7 +706,7 @@ double EqnT::ComputeIntegral (const uint Level) {
  
   const uint mesh_vb = VV;
 
-    CurrElem       currelem(VV,this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
+    CurrElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
 
   //========== 
@@ -844,7 +844,7 @@ double EqnT::ComputeNormControl (const uint Level, const uint reg_ord ) {
 
   const uint mesh_vb = VV;
   
-    CurrElem       currelem(VV,this,_eqnmap);  //TODO in these functions you only need the GEOMETRIC PART, not the DOFS PART
+    CurrElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 //======Functions in the integrand ============

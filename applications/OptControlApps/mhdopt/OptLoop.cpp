@@ -11,6 +11,13 @@
 #include "MeshTwo.hpp"
 #include "TimeLoop.hpp"
 #include "Files.hpp"
+#include "CurrElem.hpp"
+#include "CurrGaussPointBase.hpp"
+#include "QuantityLocal.hpp"
+#include "Quantity.hpp"
+#include "OptPhysics.hpp"
+#include "ElemType.hpp"
+#include "Box.hpp"
 
 #include "paral.hpp"
 
@@ -285,7 +292,7 @@ do {
 
 double integral = 0.;
 #ifdef NS_EQUATIONS      
-   integral = mgNS->ComputeIntegral(e_map_in._mesh._NoLevels - 1);
+   integral = ComputeIntegral(e_map_in._mesh._NoLevels - 1,&e_map_in._mesh,mgNS);
  #endif
   
    std::cout << "integral on processor 0: " << integral << std::endl;
@@ -477,6 +484,173 @@ void OptLoop::init_equation_data(const EqnBase* eqn) {
   
  return; 
 }
+
+
+
+
+//===============================
+
+//this function should belong to the NS equation, or to EquationsMap
+//actually the best place is an OptimalControl framework
+
+//the problem is that this function uses all the structures 
+//for dofs and gauss which have been implemented in Eqn,
+// therefore i cannot move it so easily;
+// in this sense it cannot belong to the OptPhys class.
+//Now the point is: what would have happened if the EqnNS
+// was a LIBRARY class? We could not add the ComputeIntegral
+// function to its member functions, because it is 
+// an optimal-control related stuff.
+//So, here's another reason why the EqnNS must be application related;
+//but on the other hand here it is another reason
+//why we have to think of making a NS equation MORE ABSTRACT,
+//or at least some of its parts, in such a way that we can 
+// SHARE AT LEAST SOME PARTS OF IT TO OTHER "NS FLAVOURS".
+//We have to think of operators and boundary conditions,
+// in a more general framework
+
+//remember that the mesh is NON-DIMENSIONAL inside the code,
+// so you should multiply all coordinates by Lref
+ 
+//The value of this was 3 times in 3D and 2 times in 2D
+//it means that a loop is done DIMENSION times instead of 1 time
+
+
+double ComputeIntegral (const uint Level, const MeshTwo* mesh, const EqnBase* eqn) {
+
+   const uint mesh_vb = VV;
+  
+    CurrElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);
+    CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
+  
+  // processor index
+  const uint myproc = mesh->_iproc;
+  // geometry -----
+  const uint  space_dim =       mesh->get_dim();
+  const uint   mesh_ord = (int) mesh->GetRuntimeMap().get("mesh_ord");  
+  const uint     meshql = (int) mesh->GetRuntimeMap().get("meshql");    //======== ELEMENT MAPPING =======
+  
+//======Functions in the integrand ============
+  
+//========= DOMAIN MAPPING
+    QuantityLocal xyz(currgp);
+    xyz._dim      = DIMENSION;
+    xyz._FEord    = meshql;
+    xyz._ndof     = eqn->_eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz.Allocate();
+
+//========== Quadratic domain, auxiliary  
+  QuantityLocal xyz_refbox(currgp);
+  xyz_refbox._dim      = DIMENSION;
+  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+  xyz_refbox._ndof     = mesh->GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+  xyz_refbox.Allocate();
+  
+     //========== 
+    QuantityLocal Vel(currgp);
+    Vel._qtyptr      = eqn->_eqnmap._qtymap.get_qty("Qty_Velocity");
+    Vel.VectWithQtyFillBasic();
+    Vel.Allocate();
+    
+    //========== 
+    QuantityLocal VelDes(currgp);
+    VelDes._qtyptr      = eqn->_eqnmap._qtymap.get_qty("Qty_DesVelocity");
+    VelDes.VectWithQtyFillBasic();
+    VelDes.Allocate();
+   
+   double integral=0.;
+    
+      const uint el_ngauss = eqn->_eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+
+//parallel sum
+    const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
+    const uint nel_b = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level];
+  
+    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+
+    currelem.set_el_nod_conn_lev_subd(Level,mesh->_iproc,iel);
+    currelem.SetMidpoint();
+    
+    currelem.ConvertElemCoordsToMappingOrd(xyz);
+    mesh->TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
+
+//======= 
+    xyz_refbox.SetElemAverage();
+    int el_flagdom = ElFlagControl(xyz_refbox._el_average,mesh);
+//=======        
+
+    if ( Vel._eqnptr != NULL )       Vel.GetElemDofs(Level);
+    else                             Vel._qtyptr->FunctionDof(Vel,0./*time*/,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
+    if ( VelDes._eqnptr != NULL ) VelDes.GetElemDofs(Level);
+    else                          VelDes._qtyptr->FunctionDof(VelDes,0./*time*/,&xyz_refbox._val_dofs[0]);    
+
+//AAA time is picked as a function pointer of the time C library i think...
+    // it doesnt say it was not declared
+    //here's why you should remove all unused headers always!
+    
+
+    for (uint qp = 0; qp < el_ngauss; qp++) {
+
+for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
+     
+   const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
+   const double  wgt_g = eqn->_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+
+     for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (fe,qp);  }
+
+ Vel.val_g();
+ VelDes.val_g();
+
+
+  double deltau_squarenorm_g = 0.;
+for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel._val_g[j] - VelDes._val_g[j])*(Vel._val_g[j] - VelDes._val_g[j]); }
+
+  //NO for (uint j=0; j<space_dim; j++) { the integral is a scalar!
+ 
+  integral += el_flagdom*wgt_g*Jac_g*deltau_squarenorm_g;
+
+  //}
+   
+   
+    }//gauss loop
+     
+    }//element loop
+    
+  return integral;  
+  
+}
+
+
+
+  int ElFlagControl(const std::vector<double> el_xm, const MeshTwo* mesh)  {
+
+  Box* box= static_cast<Box*>(mesh->GetDomain());
+   
+   
+     int el_flagdom=0;
+
+///optimal control
+  #if DIMENSION==2
+   //flag on the controlled region 2D
+       if (   el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])
+	   && el_xm[0] < 0.75*(box->_le[0] - box->_lb[0])
+	   && el_xm[1] > 0.75*(box->_le[1] - box->_lb[1]) ) {
+                 el_flagdom=1;
+             }
+  #else
+   //flag on the controlled region 3D
+      if ( el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])  
+	&& el_xm[0] < 0.75*(box->_le[0] - box->_lb[0]) 
+	&& el_xm[1] > 0.75*(box->_le[1] - box->_lb[1])
+	&& el_xm[2] > 0.25*(box->_le[2] - box->_lb[2]) 
+	&& el_xm[2] < 0.75*(box->_le[2] - box->_lb[2]) ) {
+	el_flagdom=1;
+        }
+ #endif
+
+return el_flagdom; 
+}
+
 
 
 

@@ -14,24 +14,25 @@ namespace femus {
 
 
 
-    CurrElem::CurrElem(const uint vb, const EqnBase * eqn_in, const EquationsMap & e_map_in ):
+    CurrElem::CurrElem(const uint vb, const EqnBase * eqn_in, const MeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type ):
     _eqn(eqn_in),
-    _eqnmap(e_map_in),
-    _dim(_eqnmap._mesh.get_dim()-vb),
+    _mesh(mesh),
+    _elem_type(elem_type),
+    _dim(_mesh.get_dim()-vb),
     _mesh_vb(vb)
     {
     
 //========== Current "Geometric Element"  ========================
-   const uint mesh_ord = (int) _eqnmap._mesh.GetRuntimeMap().get("mesh_ord");
-  uint elnodes = _eqnmap._mesh.GetGeomEl(_dim-1,mesh_ord)._elnds;     //TODO the mesh is quadratic
+   const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
+  uint elnodes = _mesh.GetGeomEl(_dim-1,mesh_ord)._elnds;     //TODO the mesh is quadratic
   _el_conn = new uint[ elnodes ];   
-   _xx_nds = new double[_eqnmap._mesh.get_dim()*elnodes ];
-    _el_xm = new double[_eqnmap._mesh.get_dim()];  
+   _xx_nds = new double[_mesh.get_dim()*elnodes ];
+    _el_xm = new double[_mesh.get_dim()];  
 //========== Current "Geometric Element"  ========================
 
 //========== Current "Equation Element"  ========================
   _el_n_dofs = 0;
-     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs += (_eqnmap._elem_type[_dim-1][fe]->GetNDofs() )*_eqn->_dofmap._nvars[fe]; }
+     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs += (_elem_type[_dim-1][fe]->GetNDofs() )*_eqn->_dofmap._nvars[fe]; }
 
   _el_dof_indices.resize(_el_n_dofs);
   _bc_eldofs = new uint[_el_n_dofs];
@@ -62,25 +63,25 @@ namespace femus {
 
 void CurrElem::SetElDofsBc(const uint Level)  {
 
-/*CHECK*/   if (_vol_iel_DofObj >= _eqnmap._mesh._n_elements_vb_lev[VV][Level] ) { std::cout << "Out of the node_dof map FE KK range" << std::endl; abort();}
+/*CHECK*/   if (_vol_iel_DofObj >= _mesh._n_elements_vb_lev[VV][Level] ) { std::cout << "Out of the node_dof map FE KK range" << std::endl; abort();}
 
-  const uint Lev_pick_bc_dof = _eqnmap._mesh._NoLevels -1;  //we use the FINE Level as reference
+  const uint Lev_pick_bc_dof = _mesh._NoLevels -1;  //we use the FINE Level as reference
   
 int off_local_el[QL];
 off_local_el[QQ] = 0;
-off_local_el[LL] = _eqn->_dofmap._nvars[QQ]*(_eqnmap._elem_type[_dim-1][QQ]->GetNDofs() );
-off_local_el[KK] = _eqn->_dofmap._nvars[QQ]*(_eqnmap._elem_type[_dim-1][QQ]->GetNDofs() ) + _eqn->_dofmap._nvars[LL]*(_eqnmap._elem_type[_dim-1][LL]->GetNDofs() );
+off_local_el[LL] = _eqn->_dofmap._nvars[QQ]*(_elem_type[_dim-1][QQ]->GetNDofs() );
+off_local_el[KK] = _eqn->_dofmap._nvars[QQ]*(_elem_type[_dim-1][QQ]->GetNDofs() ) + _eqn->_dofmap._nvars[LL]*(_elem_type[_dim-1][LL]->GetNDofs() );
   
 
  int DofObj = 0;
 for (int fe=0; fe < QL; fe++) {
 for (uint ivar=0; ivar < _eqn->_dofmap._nvars[fe]; ivar++)    {
-      for (uint d=0; d< _eqnmap._elem_type[_dim-1][fe]->GetNDofs(); d++)    {
+      for (uint d=0; d< _elem_type[_dim-1][fe]->GetNDofs(); d++)    {
 	
 	     if (fe < KK )       DofObj =        _el_conn[d];
 	     else if (fe == KK)  DofObj = _vol_iel_DofObj;
 	     
-          const uint     indx  = d + ivar*_eqnmap._elem_type[_dim-1][fe]->GetNDofs() + off_local_el[fe];
+          const uint     indx  = d + ivar*_elem_type[_dim-1][fe]->GetNDofs() + off_local_el[fe];
 	  _el_dof_indices[indx] = _eqn->_dofmap.GetDof(Level,fe,ivar,DofObj);
 
          if (fe < KK ) { const uint dofkivar = _eqn->_dofmap.GetDof(Lev_pick_bc_dof,fe,ivar,DofObj); 
@@ -132,9 +133,9 @@ for (uint ivar=0; ivar < _eqn->_dofmap._nvars[fe]; ivar++)    {
 ///It is for debugging purposes
 void CurrElem::PrintOrientation() const {
   
-      const uint mesh_dim = _eqnmap._mesh.get_dim();
-      const uint mesh_ord = (int) _eqnmap._mesh.GetRuntimeMap().get("mesh_ord");
-      const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(_dim -1,mesh_ord)._elnds;
+      const uint mesh_dim = _mesh.get_dim();
+      const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
+      const uint el_nnodes   = _mesh.GetGeomEl(_dim -1,mesh_ord)._elnds;
 
        std::vector<double>   xi(mesh_dim,0.);
        std::vector<double>  eta(mesh_dim,0.);
@@ -202,9 +203,9 @@ void CurrElem::PrintOrientation() const {
 
   void CurrElem::SetMidpoint() const {
 
-    const uint mesh_dim = _eqnmap._mesh.get_dim();
-    const uint mesh_ord = (int) _eqnmap._mesh.GetRuntimeMap().get("mesh_ord");    
-    const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(_dim-1, mesh_ord)._elnds;
+    const uint mesh_dim = _mesh.get_dim();
+    const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");    
+    const uint el_nnodes   = _mesh.GetGeomEl(_dim-1, mesh_ord)._elnds;
 
        for (uint idim=0; idim< mesh_dim; idim++)  _el_xm[idim]=0.;
 
@@ -223,26 +224,26 @@ void CurrElem::PrintOrientation() const {
    // =====================================================================================
   void CurrElem::set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel) {
 
-    const uint mydim = _eqnmap._mesh.get_dim();
-    const uint mesh_ord = (int) _eqnmap._mesh.GetRuntimeMap().get("mesh_ord");    
-    const uint el_nnodes   = _eqnmap._mesh.GetGeomEl(_dim-1,mesh_ord)._elnds;
+    const uint mydim = _mesh.get_dim();
+    const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");    
+    const uint el_nnodes   = _mesh.GetGeomEl(_dim-1,mesh_ord)._elnds;
           
    for (uint n=0; n<el_nnodes; n++)    {
 
-     _el_conn[n] = _eqnmap._mesh._el_map[_mesh_vb][( iel + _eqnmap._mesh._off_el[_mesh_vb][_eqnmap._mesh._NoLevels*isubd_in + Level] )*el_nnodes+n];
+     _el_conn[n] = _mesh._el_map[_mesh_vb][( iel + _mesh._off_el[_mesh_vb][_mesh._NoLevels*isubd_in + Level] )*el_nnodes+n];
 
       for (uint idim=0; idim < mydim; idim++) {
         const uint indxn = n+idim*el_nnodes;
-          _xx_nds[indxn] = _eqnmap._mesh._xyz[_el_conn[n]+idim*_eqnmap._mesh._NoNodesXLev[_eqnmap._mesh._NoLevels-1]];
+          _xx_nds[indxn] = _mesh._xyz[_el_conn[n]+idim*_mesh._NoNodesXLev[_mesh._NoLevels-1]];
       }
    }
    
    
     int sum_elems_prev_sd_at_lev = 0;
-      for (uint pr = 0; pr< isubd_in; pr++) { sum_elems_prev_sd_at_lev += _eqnmap._mesh._off_el[_mesh_vb][_eqnmap._mesh._NoLevels*pr + Level + 1] - _eqnmap._mesh._off_el[_mesh_vb][ _eqnmap._mesh._NoLevels*pr + Level]; }
+      for (uint pr = 0; pr< isubd_in; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[_mesh_vb][_mesh._NoLevels*pr + Level + 1] - _mesh._off_el[_mesh_vb][ _mesh._NoLevels*pr + Level]; }
     uint iel_DofObj = iel + sum_elems_prev_sd_at_lev;
     if       (_mesh_vb == VV)  { _vol_iel_DofObj = iel_DofObj; }   
-    else if  (_mesh_vb == BB)  { _vol_iel_DofObj = _eqnmap._mesh._el_bdry_to_vol[Level][iel_DofObj]; }  
+    else if  (_mesh_vb == BB)  { _vol_iel_DofObj = _mesh._el_bdry_to_vol[Level][iel_DofObj]; }  
    
 
    
@@ -264,8 +265,8 @@ void CurrElem::ConvertElemCoordsToMappingOrd(QuantityLocal& myvect) const {
   
   const uint  elndof = myvect._ndof;
   const uint vectdim = myvect._dim;
-  const uint mesh_ord = (int) _eqnmap._mesh.GetRuntimeMap().get("mesh_ord");    
-  const uint offset = _eqnmap._mesh.GetGeomEl(GetDim()-1, mesh_ord)._elnds;
+  const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");    
+  const uint offset = _mesh.GetGeomEl(GetDim()-1, mesh_ord)._elnds;
  
  //TODO ASSERT
  /* assert(*/ if (elndof > offset) {std::cout << "Quadratic transformation over linear mesh " << std::endl;abort();}  /*);*/

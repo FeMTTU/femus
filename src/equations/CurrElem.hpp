@@ -23,11 +23,11 @@ class QuantityLocal;
 
   public:
     
-    CurrElem(const uint vb, const EqnBase*, const EquationsMap& e_map_in);
+    CurrElem(const uint vb, const EqnBase*, const MeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type);
    ~CurrElem();
 
     inline const uint  GetVb() const {
-      return _eqnmap._mesh.get_dim() - _dim;
+      return _mesh.get_dim() - _dim;
     }
     
     inline const uint  GetDim() const {
@@ -84,7 +84,8 @@ class QuantityLocal;
     //TODO make these private
 //========== Equation-related ========================               
   const EqnBase * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
-  const EquationsMap & _eqnmap;
+  const MeshTwo & _mesh;
+  const std::vector< std::vector<elem_type*> >  &  _elem_type;
   
   private:
     

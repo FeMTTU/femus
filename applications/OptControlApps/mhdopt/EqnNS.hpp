@@ -39,10 +39,6 @@ void  bc_read(const double * xp,const double * normal, int * bc) const;
 
  void GenMatRhs(const uint Level);
  
- double ComputeIntegral (const uint Level) const;
-
- 
- 
 };
 
 

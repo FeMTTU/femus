@@ -110,7 +110,7 @@ namespace femus {
 //======================
    const uint mesh_vb = VV;
    
-   CurrElem       currelem(VV,this,_eqnmap);
+   CurrElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -402,7 +402,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 //======================
    const uint mesh_vb = BB;
    
-   CurrElem       currelem(BB,this,_eqnmap);
+   CurrElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================

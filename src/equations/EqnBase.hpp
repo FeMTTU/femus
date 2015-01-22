@@ -140,12 +140,13 @@ public:
           void Bc_AddDofVec(NumericVector* myvec, NumericVector* myvec2 );
           void Bc_AddScaleDofVec(NumericVector* vec_in,NumericVector* vec_out,const double ScaleFac );
 
+  EquationsMap              & _eqnmap;
+  
 protected:
   
   Files                     & _files;
   Physics                   & _phys;           //passed from MultilevelProblem
   MeshTwo                   & _mesh;
-  EquationsMap              & _eqnmap;
 
 
 };

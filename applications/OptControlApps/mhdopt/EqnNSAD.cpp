@@ -28,6 +28,7 @@
 #include "EqnMHDAD.hpp"
 #include "EqnMHDCONT.hpp"
 #include "OptPhysics.hpp"
+#include "OptLoop.hpp"
 
 
 namespace femus {
@@ -104,7 +105,7 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
    
    const uint mesh_vb = VV;
     
-    CurrElem       currelem(VV,this,_eqnmap);
+    CurrElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -223,7 +224,7 @@ const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
 //=======    
 ///optimal control
     xyz_refbox.SetElemAverage();
-  int el_flagdom= optphys->ElFlagControl(xyz_refbox._el_average);
+  int el_flagdom = ElFlagControl(xyz_refbox._el_average,&_mesh);
 //=======    
 
 
@@ -371,7 +372,7 @@ if (_Dir_pen_fl == 0)  {
   
    const uint mesh_vb = BB;
     
-    CurrElem       currelem(BB,this,_eqnmap);
+    CurrElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================

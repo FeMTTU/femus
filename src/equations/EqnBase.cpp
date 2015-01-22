@@ -405,7 +405,7 @@ void EqnBase::GenBc() {
 
  //**************************************************   
  //******** ELEM BASED ******************************  
-     CurrElem       currelem(BB,this,_eqnmap);
+     CurrElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
 
     _bc_fe_kk             =  new int*[_NoLevels];
     int* DofOff_Lev_kk    =  new int[_NoLevels];
@@ -608,7 +608,7 @@ void EqnBase::GenBc() {
 //for now, we will leave things like this
 void EqnBase::GenElBc()  {
 
-     CurrElem       currelem(BB,this,_eqnmap);  
+     CurrElem       currelem(BB,this,_mesh,_eqnmap._elem_type);  
   
       uint space_dim = _mesh.get_dim();
 
@@ -811,7 +811,7 @@ void EqnBase::GenIc() {
 
     if (!in) {
 
-        CurrElem       currelem(VV,this,_eqnmap);  
+        CurrElem       currelem(VV,this,_mesh,_eqnmap._elem_type);  
      
         const uint  coords_fine_offset = _mesh._NoNodesXLev[_NoLevels-1];
         const uint  el_nnodes = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,mesh_ord)._elnds;

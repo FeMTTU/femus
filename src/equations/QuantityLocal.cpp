@@ -137,7 +137,7 @@ void QuantityLocal::VectWithQtyFillBasic() {
     _eqnptr   = _qtyptr->_eqn; 
     _dim      = _qtyptr->_dim;
     _FEord    = _qtyptr->_FEord;
-    _ndof     = _currEl._eqnmap._elem_type[_currEl.GetDim()-1][_FEord]->GetNDofs();  //TODO here we use the eqnmap, of Course Vect must be used where the eqmap is there, but that can be in the main also
+    _ndof     = _currEl._elem_type[_currEl.GetDim()-1][_FEord]->GetNDofs();
 
     return;
 }
@@ -151,7 +151,7 @@ void QuantityLocal::Allocate() {
     _val_dofs3D.resize(3*_ndof);
     
     _grad_g.resize(_dim);
-  for (uint i=0; i< _dim;i++) { _grad_g[i].resize(_currEl._eqnmap._mesh.get_dim()); }
+  for (uint i=0; i< _dim;i++) { _grad_g[i].resize(_currEl._mesh.get_dim()); }
 
     _grad_g3D.resize(_dim);
   for (uint i=0; i< _dim;i++) { _grad_g3D[i].resize(3); }
@@ -169,7 +169,7 @@ void QuantityLocal::ExtendDofs() {
   
   //AAA: valid from ndim to 3
 
-  const uint ndim = _currEl._eqnmap._mesh.get_dim();
+  const uint ndim = _currEl._mesh.get_dim();
   const uint el_ndofs = _ndof;
   //set to zero
   for (uint eln=0; eln<el_ndofs; eln++)  {
@@ -260,9 +260,9 @@ void QuantityLocal::GetElemDofs(const uint Level)  {
   
   const uint vect_ord = _FEord;
   int length_nodedof [QL];  
-  length_nodedof[QQ] = _currEl._eqnmap._mesh._NoNodesXLev[_eqnptr->_NoLevels-1];
-  length_nodedof[LL] = _currEl._eqnmap._mesh._NoNodesXLev[_eqnptr->_NoLevels-1];
-  length_nodedof[KK] = _currEl._eqnmap._mesh._n_elements_vb_lev[VV][Level];
+  length_nodedof[QQ] = _currEl._mesh._NoNodesXLev[_eqnptr->_NoLevels-1];
+  length_nodedof[LL] = _currEl._mesh._NoNodesXLev[_eqnptr->_NoLevels-1];
+  length_nodedof[KK] = _currEl._mesh._n_elements_vb_lev[VV][Level];
 
    int off_total = 0;
    for (uint i = 0; i < _qtyptr->_pos; i++) off_total += _eqnptr->_QtyInternalVector[i]->_dim * _eqnptr->_dofmap._DofNumLevFE[ Level ][ _eqnptr->_QtyInternalVector[i]->_FEord ];

@@ -103,7 +103,7 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
 
   const uint mesh_vb = VV;
   
-    CurrElem       currelem(VV,this,_eqnmap);
+    CurrElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -362,7 +362,7 @@ if (_Dir_pen_fl == 0)  {
 
   const uint mesh_vb = BB;
   
-    CurrElem       currelem(BB,this,_eqnmap);
+    CurrElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
