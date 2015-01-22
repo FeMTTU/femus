@@ -7,12 +7,10 @@
 #include "Typedefs.hpp"
 #include "GeomEl.hpp"
 #include "MeshTwo.hpp"
-#include "Physics.hpp"
 #include "Box.hpp"
 
 //application
 #include "TempQuantities.hpp"
-#include "TempPhysics.hpp"
 
 //=================== BEGIN CONSTRUCTORS ================================
 // ==================================================================

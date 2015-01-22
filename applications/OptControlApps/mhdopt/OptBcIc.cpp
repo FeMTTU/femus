@@ -3,7 +3,6 @@
 //library headers
 #include "Box.hpp"
 #include "MultiLevelProblemTwo.hpp"
-#include "Physics.hpp"
 #include "MeshTwo.hpp" 
 #include "NormTangEnum.hpp"
 
@@ -11,7 +10,6 @@
 //application headers
 #include "Opt_conf.hpp"
 #include "OptQuantities.hpp"
-#include "OptPhysics.hpp"
 #include "EqnNS.hpp"
 #include "EqnNSAD.hpp"
 #include "EqnMHD.hpp"

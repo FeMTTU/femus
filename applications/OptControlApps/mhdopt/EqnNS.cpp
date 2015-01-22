@@ -9,7 +9,6 @@
 #include "LinearEquationSolver.hpp"
 
 #include "Math.hpp"
-#include "Physics.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "MultiLevelProblemTwo.hpp"
@@ -27,7 +26,6 @@
 #include "EqnMHD.hpp"
 #include "EqnMHDCONT.hpp"
 #include "OptQuantities.hpp"
-#include "OptPhysics.hpp"
 
 
 namespace femus {

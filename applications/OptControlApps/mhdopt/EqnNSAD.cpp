@@ -7,7 +7,6 @@
 #include "LinearEquationSolver.hpp"
 
 #include "Math.hpp"
-#include "Physics.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "Domain.hpp"
@@ -27,7 +26,6 @@
 #include "EqnMHD.hpp"
 #include "EqnMHDAD.hpp"
 #include "EqnMHDCONT.hpp"
-#include "OptPhysics.hpp"
 #include "OptLoop.hpp"
 
 

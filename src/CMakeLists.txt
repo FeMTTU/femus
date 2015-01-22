@@ -84,7 +84,6 @@ mesh/MeshASMPartitioning.cpp
 physics/Fluid.cpp
 physics/Material.cpp
 physics/Parameter.cpp
-physics/Physics.cpp
 physics/Solid.cpp
 quadrature/GaussPoints.cpp
 solution/MultiLevelSolution.cpp

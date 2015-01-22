@@ -10,7 +10,6 @@
 #include "LinearEquationSolver.hpp"
 
 #include "Math.hpp"
-#include "Physics.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "MultiLevelProblemTwo.hpp"
@@ -25,7 +24,6 @@
 
 // application
 #include "Opt_conf.hpp"
-#include "OptPhysics.hpp"
 #include "EqnNS.hpp"
 #include "EqnMHD.hpp"
 #include "EqnNSAD.hpp"

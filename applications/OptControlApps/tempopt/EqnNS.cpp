@@ -9,7 +9,6 @@
 #include "LinearEquationSolver.hpp"
 
 #include "Math.hpp"
-#include "Physics.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "MultiLevelProblemTwo.hpp"
@@ -26,7 +25,6 @@
 //application
 #include "Temp_conf.hpp"
 #include "TempQuantities.hpp"
-#include "TempPhysics.hpp"
 #include "EqnT.hpp"
 
 

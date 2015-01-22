@@ -8,7 +8,6 @@
 #include "LinearEquationSolver.hpp"
 
 #include "Math.hpp"
-#include "Physics.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "Quantity.hpp"
@@ -22,7 +21,6 @@
 #include "Opt_conf.hpp"
 #include "EqnNS.hpp"
 #include "EqnMHDCONT.hpp"
-#include "OptPhysics.hpp"
 
 #include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"

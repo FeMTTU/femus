@@ -4,7 +4,6 @@
 //library headers
 #include "Box.hpp"
 #include "MultiLevelProblemTwo.hpp"
-#include "Physics.hpp"
 #include "MeshTwo.hpp" 
 #include "NormTangEnum.hpp"
 #include "TimeLoop.hpp"
@@ -12,7 +11,6 @@
 //application headers
 #include "Temp_conf.hpp"
 #include "TempQuantities.hpp"
-#include "TempPhysics.hpp"
 #include "EqnNS.hpp"
 #include "EqnT.hpp"
 

@@ -7,14 +7,12 @@
 #include "Typedefs.hpp"
 #include "GeomEl.hpp"
 #include "MeshTwo.hpp"
-#include "Physics.hpp"
 
 #include "Box.hpp"
 
 //application
 #include "Opt_conf.hpp"
 #include "OptQuantities.hpp"
-#include "OptPhysics.hpp"
 
 
 namespace femus {

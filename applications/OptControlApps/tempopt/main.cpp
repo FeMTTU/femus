@@ -12,7 +12,6 @@
 #include "paral.hpp" 
 #include "FemusInit.hpp"
 #include "Files.hpp"
-#include "Physics.hpp"
 #include "GeomEl.hpp"
 #include "MeshTwo.hpp"
 #include "GenCase.hpp"
@@ -30,7 +29,6 @@
 // application 
 #include "Temp_conf.hpp"
 #include "TempQuantities.hpp"
-#include "TempPhysics.hpp"
 #include "EqnNS.hpp"
 #include "EqnT.hpp"
 #include "OptLoop.hpp"

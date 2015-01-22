@@ -24,7 +24,6 @@
 
 #include "Files.hpp"
 #include "IO.hpp"
-#include "Physics.hpp"
 #include "Quantity.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"

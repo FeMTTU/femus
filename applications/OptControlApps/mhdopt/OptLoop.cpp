@@ -5,7 +5,6 @@
 
 //library headers
 #include "NumericVector.hpp"
-#include "Physics.hpp"
 #include "MultiLevelProblemTwo.hpp"
 #include "SystemTwo.hpp"
 #include "MeshTwo.hpp"
@@ -15,7 +14,6 @@
 #include "CurrentGaussPointBase.hpp"
 #include "CurrentQuantity.hpp"
 #include "Quantity.hpp"
-#include "OptPhysics.hpp"
 #include "ElemType.hpp"
 #include "Box.hpp"
 

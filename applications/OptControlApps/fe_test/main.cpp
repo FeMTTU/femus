@@ -12,7 +12,6 @@
 #include "paral.hpp" 
 #include "FemusInit.hpp"
 #include "Files.hpp"
-#include "Physics.hpp"
 #include "GeomEl.hpp"
 #include "MeshTwo.hpp"
 #include "GenCase.hpp"
@@ -28,7 +27,6 @@
 
 // application 
 #include "TempQuantities.hpp"
-#include "TempPhysics.hpp"
 #include "EqnT.hpp"
 
 #ifdef HAVE_LIBMESH
@@ -56,8 +54,7 @@
 
   // ======= MyPhysics (implemented as child of Physics) ========================
   FemusInputParser<double> physics_map("Physics",files._output_path);
-  TempPhysics phys(physics_map);
-  const double Lref  =  phys._physrtmap.get("Lref");     // reference L
+  const double Lref  =  physics_map.get("Lref");     // reference L
 
   // ======= Mesh =====
   FemusInputParser<double> mesh_map("Mesh",files._output_path);
@@ -81,8 +78,6 @@
 	  mesh.PrintMultimeshXdmf();
           mesh.PrintForVisualizationAllLEVAllVB();
 
-  phys.set_mesh(&mesh);
-  
   // ======  QRule ================================
   std::vector<Gauss>   qrule;
   qrule.reserve(mesh.get_dim());

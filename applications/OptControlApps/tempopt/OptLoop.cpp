@@ -10,7 +10,6 @@
 #include "Box.hpp"
 #include "paral.hpp"
 #include "Files.hpp"
-#include "Physics.hpp"
 
 #include "EqnT.hpp"
 

@@ -13,7 +13,6 @@ ${CMAKE_PROJECT_DIR}EqnNS.cpp
 ${CMAKE_PROJECT_DIR}EqnT.cpp
 ${CMAKE_PROJECT_DIR}OptLoop.cpp
 ${CMAKE_PROJECT_DIR}TempBcIc.cpp
-${CMAKE_PROJECT_DIR}TempPhysics.cpp
 ${CMAKE_PROJECT_DIR}TempQuantities.cpp
 )
 
