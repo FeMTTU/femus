@@ -99,4 +99,19 @@ class Velocity : public Quantity {
 
 };
 
+
+class Pressure2 : public Quantity {
+
+  public:
+  Pressure2(std::string name_in, QuantityMap& qtymap_in);
+  Pressure2(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+
+  ~Pressure2(){};
+
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+ 
+
+};
+
+
 #endif

@@ -60,6 +60,14 @@ Velocity::Velocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uin
 }
 
 
+//========================
+Pressure2::Pressure2(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
+
+  
+  for (uint i=0;i<dim_in;i++) _refvalue[i] = qtymap_in._physmap->get("pref");
+}
+
 //=================== END CONSTRUCTORS ================================
 // ==================================================================
 // ==================================================================
@@ -290,5 +298,12 @@ void Temperature::heatflux_txyz(const double /*t*/, const double* /*xyz*/, doubl
   return;
   }
 
- 
+// =================================================
+void Pressure2::Function_txyz(const double/* t*/, const double* xp,double* temp) const {
+
+  temp[0] = 1.;
+  
+  return;
+  
+  } 
   
