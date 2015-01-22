@@ -6,13 +6,11 @@
 //library includes
 #include "Typedefs.hpp"
 #include "GeomEl.hpp"
-#include "MeshTwo.hpp"
-#include "Physics.hpp"
+#include "MultiLevelMeshTwo.hpp"
 #include "Box.hpp"
 
 //application
 #include "TempQuantities.hpp"
-#include "TempPhysics.hpp"
 
 //=================== BEGIN CONSTRUCTORS ================================
 // ==================================================================
@@ -33,9 +31,9 @@ Temperature::Temperature(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 // =================================================
 void Temperature::Function_txyz(const double/* t*/, const double* xp,double* temp) const {
 
-  const double Tref = _qtymap._phys._physrtmap.get("Tref");
+  const double Tref = _qtymap._physmap->get("Tref");
 
-  Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());  
+  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());  
   
   temp[0] = 100.*(xp[0])*( ( box->_le[0] - box->_lb[0]) - xp[0])/Tref;
  

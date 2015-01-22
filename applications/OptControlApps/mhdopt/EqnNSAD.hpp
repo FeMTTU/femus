@@ -3,22 +3,22 @@
 
 
 // Local Includes
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 
 namespace femus {
 
 
 // Forwarded classes
-class EquationsMap;
+class MultiLevelProblemTwo;
 
 
 
-class EqnNSAD : public EqnBase {
+class EqnNSAD : public SystemTwo {
 
   public:
 
      EqnNSAD(  std::vector<Quantity*> int_map_in,
-	           EquationsMap& mg_equations_map_in,
+	           MultiLevelProblemTwo& mg_equations_map_in,
                    std::string eqname_in="Eqn_NSAD",
                    std::string varname_in="lambda");
 
@@ -31,7 +31,7 @@ class EqnNSAD : public EqnBase {
   void elem_bc_read(const double xp[],int& surf_id,double normal[],int bc_flag[]) const;
 
   
- void GenMatRhsVB(const uint vb,const double time,const uint Level);  ///< Volume Assemblying.
+ void GenMatRhs(const uint Level);
 
 
 

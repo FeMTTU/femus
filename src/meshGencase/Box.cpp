@@ -8,7 +8,7 @@ namespace femus {
 
 
 
-Box::Box(const uint spacedim_in, RunTimeMap<double> & map_in) : Domain(spacedim_in,map_in) {
+Box::Box(const uint spacedim_in, FemusInputParser<double> & map_in) : Domain(spacedim_in,map_in) {
 
   _name = "Box";
   
@@ -25,7 +25,7 @@ Box::~Box()  {
   
 }
 
-void Box::init(double Lref_in)     {
+void Box::InitAndNondimensionalize(double Lref_in)     {
 
    _Lref = Lref_in;
    double ILref = 1./_Lref;

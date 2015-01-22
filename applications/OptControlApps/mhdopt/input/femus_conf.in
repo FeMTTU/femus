@@ -2,14 +2,11 @@
 <Mesh>
 # double
 
-libmesh_gen   1     
-ibc_gen       0            # ==== in library routines
 nolevels      1       # ----<EqnBaseMeshMultiGrid>----------
 meshql        1           # ------<ElementMapping>------- # for THE APP # =MESH CONSISTENCY=== # ==== in library routines      # USER must provide this info explicitly # depends on the kind of Mesh that is used# depends basically on the Boundary Mesh# 0=QUADRATIC Mapping  1=LINEAR Mapping
 mesh_ord      0             # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# 0=QUADRATIC GeomElements (Quad8,Quad9,Hex27,...)# 1=LINEAR GeomElements (Quad4,Hex8,...)
 geomel_type   0            # =MESH CONSISTENCY===   # ==== in library routines     # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
 dimension     3                # =MESH CONSISTENCY===  # ==== in library routines 
-domain        0       # 0=Box# 1=Cylinder# Whatever the rest # this should be OUTSIDE  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # ==== DO IT ONLY FOR Gencase ====== 
 bdry_toll     0.0000001    # ==== not in library routines, but library-type
 
 # ----<BCHandling>-----------------
@@ -31,7 +28,7 @@ penalty_val 1.e10        # ==== not in library routines, but library-type
  lzb 0.    
  lze 1.    
 
-# only for libmesh_gen=1
+# only for libmesh generating function
 
 nintervx   4
 nintervy   4
@@ -47,16 +44,6 @@ thetaz    0.
 
 
 
-
-<Files>
-# std::string
-
-F_MESH_READ   straightQ3D2x2x2ZERO.gam
-
-</Files>
-
-
-
 <TimeLoop>
 # double
 
@@ -65,7 +52,6 @@ itime       0.0
 initial_step  0   
 nsteps      5   
 printstep   1   
-ndigits     4   
 
 </TimeLoop>
 

@@ -12,9 +12,9 @@
 #include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"
-#include "RunTimeMap.hpp"
+#include "FemusInputParser.hpp"
 #include "ElemSto.hpp"
-#include "MeshTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
 
 // libmesh
 #ifdef HAVE_LIBMESH
@@ -28,15 +28,15 @@ namespace femus {
 class FEElemBase;
 
 
-class GenCase : public MeshTwo {
+class GenCase : public MultiLevelMeshTwo {
 
 public:
 
-     GenCase(const Files& files_in, const RunTimeMap<double> & map_in, const double lref,const std::string mesh_file);
+     GenCase(const Files& files_in, const FemusInputParser<double> & map_in, const std::string mesh_file);
     ~GenCase();                 
     
     
-    void PrintMeshHDF5() const;
+    void PrintMeshFile() const;
     void PrintElemVB( hid_t file, uint vb,const std::vector<int> & v_inv_nd , ElemStoBase** elem_sto, const std::vector<std::pair<int,int> >  v_el ) const;
     void ElemChildToFather();
     void ReorderElementBySubdLev_VV();
@@ -44,29 +44,32 @@ public:
     void ReorderNodesBySubdLev();
     void ComputeMaxElXNode();
 
+    void ComputeMGOperators();
     void ComputeMatrix();
     void ComputeProl();
     void ComputeRest();
     void PrintOneVarMatrixHDF5(const std::string & name, const std::string & groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel ) const;
     void PrintOneVarMGOperatorHDF5(const std::string & filename, const std::string & groupname, uint* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe) const;
+    void CreateMeshStructuresLevSubd();
+    void Delete();
 
+//functions using libmesh
     void GenerateCase();
-    void CreateStructuresLevSubd();
-    
-#ifdef HAVE_LIBMESH
-    void GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const;
-    void RefineMesh(libMesh::Mesh* msh_all_levs) const;
-    void GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs) const;
-    void GrabMeshinfoFromLibmesh(libMesh::Mesh* msht, libMesh::Mesh* msh);
-#endif
+    void GenerateCoarseMesh() const;
+    void RefineMesh() const;
+    void GenerateBoundaryMesh() const;
+    void GrabMeshinfoFromLibmesh();
     
 private:
 
+#ifdef HAVE_LIBMESH
+  libMesh::Mesh* _msh_coarse;
+  libMesh::Mesh* _msh_all_levs;
+  libMesh::BoundaryMesh* _bd_msht;
+ #endif
+  
     // Element ===========
     std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
-    std::string _mesh_file;    //mesh file name from the mesh generator
-    
-
 
     std::vector< std::pair<int,int> > _nd_fm_libm; //from FINE FEMUS NODE ORDERING to FINE LIBMESH NODE ORDERING
     std::vector< std::pair<int,int> > _el_fm_libm; //because the EQUATION needs it for the SPARSITY PATTERN

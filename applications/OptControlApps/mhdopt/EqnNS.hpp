@@ -3,17 +3,17 @@
 
 
 //Inherited classes
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 
 
 namespace femus {
 
 
 // Forwarded classes
-class EquationsMap;
+class MultiLevelProblemTwo;
 
 
-class EqnNS : public EqnBase {
+class EqnNS : public SystemTwo {
 
   public:
 
@@ -23,7 +23,7 @@ class EqnNS : public EqnBase {
    const double _Komp_fac;
   
   EqnNS(   std::vector<Quantity*> int_map_in,
-	   EquationsMap& mg_equations_map,
+	   MultiLevelProblemTwo& mg_equations_map,
            std::string eqname_in="Eqn_NS",/*"Navier-Stokes"*/
            std::string varname_in="u");
    
@@ -37,13 +37,7 @@ void  bc_read(const double * xp,const double * normal, int * bc) const;
 
  void elem_bc_read(const double xp[],int& surf_id,double normal[],int bc_flag[]) const;
 
- void GenMatRhsVB(const uint vb,const double time,const uint Level);  ///< Volume Assemblying.
- 
- void ConvertMyselfToChild(EqnBase* mybase);
- 
- double ComputeIntegral (const uint vb, const uint Level) ;  //cannot make it const because of set_phi_nds
-
- 
+ void GenMatRhs(const uint Level);
  
 };
 

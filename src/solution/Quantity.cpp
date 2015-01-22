@@ -1,7 +1,21 @@
-#include "Quantity.hpp"
-#include "Physics.hpp"
+/*=========================================================================
 
-#include "MeshTwo.hpp"
+ Program: FEMUS
+ Module: Quantity
+ Authors: Giorgio Bornia
+
+ Copyright (c) FEMTTU
+ All rights reserved.
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
+#include "Quantity.hpp"
+
+#include "MultiLevelMeshTwo.hpp"
 #include "GeomEl.hpp"
 
 #include <vector>
@@ -11,7 +25,7 @@ namespace femus {
 
 
 
-//  EquationsMap equations_map(utils,phys, phys_usr,mesh,femap,time_loop);
+//  MultiLevelProblemTwo equations_map(utils,phys, phys_usr,mesh,femap,time_loop);
 //What does the Quantity need? 
 //The Physics? Yes, for the ref values, and so on
 //The Mesh? Yes,through the physics
@@ -64,7 +78,7 @@ namespace femus {
 
 
 
-  void Quantity::set_eqn(EqnBase* eqn_in)  { 
+  void Quantity::set_eqn(SystemTwo* eqn_in)  { 
 
     _eqn = eqn_in;
     
@@ -86,13 +100,13 @@ namespace femus {
 //the first one is GENERAL
 //the second one is SPECIFIC of the physics.
 
-void Quantity::FunctionDof(const uint bdry, QuantityLocal& myvect, const double t, const double* refbox_xyz) const {
+void Quantity::FunctionDof(CurrentQuantity& myvect, const double t, const double* refbox_xyz) const {
 
 //====the Domain
-  const uint space_dim = _qtymap._phys._mesh->get_dim();
+  const uint space_dim = myvect.GetCurrentElem()._mesh.get_dim();
   double* xp = new double[space_dim]; 
-  const uint mesh_ord = (int) _qtymap._phys._mesh->_mesh_rtmap.get("mesh_ord");    
-  const uint offset   =       _qtymap._phys._mesh->GetGeomEl(space_dim-1-bdry,mesh_ord)._elnds;
+  const uint mesh_ord = (int) myvect.GetCurrentElem()._mesh.GetRuntimeMap().get("mesh_ord");    
+  const uint offset   =       myvect.GetCurrentElem()._mesh.GetGeomEl(myvect.GetCurrentElem().GetDim()-1,mesh_ord)._elnds;
 
 //=====the Function
   double* func = new double[myvect._dim];
@@ -123,7 +137,7 @@ if (dof_off > offset) {std::cout << "Use a quadratic mesh for FunctionDof comput
   ////////////////QTY MAP ////////////
   
   
-  QuantityMap::QuantityMap(Physics& phys_in): _phys(phys_in) { }
+  QuantityMap::QuantityMap(const MultiLevelMeshTwo & mesh, const FemusInputParser<double> * map_in) : _mesh(mesh),_physmap(map_in) { }
   
 
 

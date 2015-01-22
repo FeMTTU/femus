@@ -5,9 +5,11 @@
 
 #ifdef HAVE_PETSC
 
+#include "Mesh.hpp"
+
 #include "Typedefs.hpp"
 
-#include "LinearSolverM.hpp"
+#include "LinearEquationSolver.hpp"
 #include "PetscVector.hpp"
 #include "PetscMatrix.hpp"
 #include "PetscMacro.hpp"
@@ -54,7 +56,7 @@ namespace femus {
 
 // ==========================================
 /// This class provides an interface to PETSc iterative solvers 
-class PetscLinearSolverM : public LinearSolverM
+class PetscLinearSolverM : public LinearEquationSolver
 {// ============================================
 
    private:
@@ -68,7 +70,7 @@ class PetscLinearSolverM : public LinearSolverM
 public:
   // Constructor --------------------------------------
   ///  Constructor. Initializes Petsc data structures 
-  PetscLinearSolverM ();
+  PetscLinearSolverM (const unsigned &igrid, Mesh *other_mesh);
   /// Destructor.  
   ~PetscLinearSolverM ();
   /// Release all memory and clear data structures.
@@ -78,6 +80,12 @@ public:
   /// Initialize data structures if not done so already plus much more
   void init (PetscMatrix* matrix);
   
+  void set_tolerances(const double &rtol, const double &atol,
+                                const double &divtol, const unsigned &maxits);
+
+  void solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean)
+  { std::cout << "To be implemented" << std::endl; abort(); }
+
   // Solvers ------------------------------------------------------
   /// Call the Petsc solver.  This function calls the method below, using the
   /// same matrix for the system and preconditioner matrices.    
@@ -151,12 +159,19 @@ private:
  // static PetscErrorCode _petsc_shell_matrix_mult(Mat mat, Vec arg, Vec dest);
  // /// Internal function if shell matrix mode is used.
  // static PetscErrorCode _petsc_shell_matrix_get_diagonal(Mat mat, Vec dest);
+  
+    PetscReal _rtol;
+    PetscReal _abstol;
+    PetscReal _dtol;
+    PetscInt  _maxits;  
+  
 };
 
 
 /*----------------------- functions ----------------------------------*/
 // =================================================
-inline PetscLinearSolverM::PetscLinearSolverM (){
+inline PetscLinearSolverM::PetscLinearSolverM (const unsigned &igrid, Mesh *other_mesh) :
+  LinearEquationSolver(igrid,other_mesh) {
   
   int i; MPI_Comm_size(MPI_COMM_WORLD,&i);  //TODO
   if (i == 1) this->_preconditioner_type = ILU_PRECOND;

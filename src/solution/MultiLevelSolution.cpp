@@ -161,33 +161,29 @@ void MultiLevelSolution::Initialize(const char name[], initfunc func) {
   
   double value;
   for (unsigned i=i_start; i<i_end; i++) {
-    //CheckVectorSize(i);
     unsigned sol_type = _SolType[i];
     for (unsigned ig=0; ig<_gridn; ig++) {
       unsigned num_el = _ml_msh->GetLevel(ig)->GetNumberOfElements();
+      if ( ig>0 ) BuildProlongatorMatrix(ig,i);   
       _solution[ig]->ResizeSolutionVector(_SolName[i]);
-      if (ig>0) BuildProlongatorMatrix(ig,i);     
-      //for parallel
-      for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-        for (int iel=_ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom]; 
-	     iel < _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	  unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
-	  unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,sol_type);
-	  if(sol_type<4) {
+      _solution[ig]->_Sol[i]->zero();
+      if ( sol_type<3 ) {
+	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+	  for (int iel=_ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom]; 
+	       iel < _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	    unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
+	    unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,sol_type);
+	  
             for(int j=0; j<nloc_dof; j++) {
-	      unsigned inode=(sol_type<3)?(_ml_msh->GetLevel(ig)->el->GetElementVertexIndex(kel_gmt,j)-1u):(kel_gmt+j*num_el);
-	      int inode_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,sol_type);
+	      unsigned inode=_ml_msh->GetLevel(ig)->el->GetMeshDof(kel_gmt,j,sol_type);
+	      unsigned inode_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,sol_type);
 	      unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,2);
 	      double xx=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);  
 	      double yy=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
 	      double zz=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
 	      
-	      if(func) {
-		value = (sol_type<4)?func(xx,yy,zz):0;
-	      }
-	      else {
-		value = 0.;
-	      }
+	      value = (func) ? func(xx,yy,zz) : 0;
+	      
 	      _solution[ig]->_Sol[i]->set(inode_Metis,value);
 	      if (_SolTmorder[i]==2) {
 		_solution[ig]->_SolOld[i]->set(inode_Metis,value);
@@ -195,10 +191,10 @@ void MultiLevelSolution::Initialize(const char name[], initfunc func) {
 	    }
 	  }
 	}
-      }
-      _solution[ig]->_Sol[i]->close();
-      if (_SolTmorder[i]==2) {
-	_solution[ig]->_SolOld[i]->close();
+        _solution[ig]->_Sol[i]->close();
+	if (_SolTmorder[i]==2) {
+	  _solution[ig]->_SolOld[i]->close();
+	}
       }
     }
   }

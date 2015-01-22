@@ -29,15 +29,7 @@ namespace femus {
   
   
 
-  Files::Files(const std::string &  string_in)  
-
-  {  //TODO here is where we have to change because the path for the map is determined later, after configure restart and outtime generation... 
-	  
-	  _app_path = string_in;
-	  
-	    if (string_in == "")  { std::cout << " Set the basepath in the command line" << std::endl;    abort(); }
-
-	}  ///< Constructor
+  Files::Files()  { }
 
 	
   Files::~Files() { }
@@ -45,14 +37,13 @@ namespace femus {
   
   
   void Files::ConfigureRestart() {
-      
-      std::string mybasepath = _app_path;
 
 //         if (paral::get_rank() == 0) { //QUESTA LETTURA LA POSSONO FARE TUTTI I PROCESSORI!
             std::cout << " Reading the  run_to_restart_from file to determine restart status or not" << std::endl;
 
+    std::string app_path = "./";
     std::string lastrun_str;
-    lastrun_str = mybasepath + "/" + DEFAULT_OUTPUTDIR + "/" + DEFAULT_LAST_RUN;
+    lastrun_str = app_path + DEFAULT_OUTPUTDIR + "/" + DEFAULT_LAST_RUN;
 
     //check if last_run is there, if it's not there go ahead and set restart = FALSE
             std::string lastone;
@@ -76,7 +67,7 @@ namespace femus {
 	      std::cout << "*** RESTART is activated *****" << std::endl; 
 	      //we must set the basepath accordingly
 	    
-	    _input_path = mybasepath + "/" + DEFAULT_OUTPUTDIR + "/" + lastone + "/";
+	    _input_path = app_path + DEFAULT_OUTPUTDIR + "/" + lastone + "/";
 	    
 	      std::cout << "*** The new input path is *****" << _input_path << std::endl; 
 	    
@@ -84,7 +75,7 @@ namespace femus {
 	    else { std::cout << "Normal simulation without restart" << std::endl; 
 	    //Notice that the basepath in this case was set by the ARGUMENT of the CONSTRUCTOR
 	    
-	    _input_path = mybasepath + "/";
+	    _input_path = app_path;
 	    
 	    }
 
@@ -249,8 +240,9 @@ void Files::PrintRunForRestart(const std::string run_name_in) const {
 
    if (paral::get_rank() == 0 )   {
 
+   std::string app_path = "./";
    std::string run("");
-   run = _app_path + "/" + DEFAULT_OUTPUTDIR + "/" + run_name_in; //AAA BASE OUTPUT
+   run = app_path + DEFAULT_OUTPUTDIR + "/" + run_name_in; //AAA BASE OUTPUT
    std::cout << "Print the run " << run << "to file" << std::endl;
 
    std::ofstream run_file; run_file.open(run.c_str());
@@ -393,7 +385,8 @@ MPI_Bcast(out_char,outchar_size,MPI_CHAR,0,MPI_COMM_WORLD);
 
  //************************
  //set the input and output_path variables
- _output_path = _app_path + "/"  + DEFAULT_OUTPUTDIR + "/" + _output_time + "/";
+    std::string app_path = "./";
+   _output_path = app_path + DEFAULT_OUTPUTDIR + "/" + _output_time + "/";
  
  
  
@@ -427,45 +420,11 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
 
  std::cout << "TODO: MUST FIND A WAY TO COPY A WHOLE DIRECTORY AND NOT THE SINGLE FILES" << std::endl;
     
-//these two files are copied here because they are useful for the visualization   
-
-   // >>>>>>> outtime dir: COPY FILES   //needs the BASEPATH of the APPLICATION
-  //copy mesh.h5
-   std::string  mesh_in  =   _input_path + "/" + DEFAULT_CASEDIR  + "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
-   std::string  mesh_out =  _output_path + "/" +                          DEFAULT_BASEMESH + DEFAULT_EXT_H5;
-/*(iproc==0)*/ CopyFile(mesh_in,mesh_out); 
-   
-//copy multimesh.xmf
-   std::string  mmesh_in  =   _input_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_MULTIMESH + DEFAULT_EXT_XDMF;
-   std::string  mmesh_out =  _output_path + "/" +                         DEFAULT_MULTIMESH + DEFAULT_EXT_XDMF;
-/*(iproc==0)*/ CopyFile(mmesh_in,mmesh_out); 
-
-CheckDirOrMake(_output_path, DEFAULT_CASEDIR);
-
-//I AM COPYING THIS TWICE BECAUSE I NEED IT BOTH FOR THE INPUT AND FOR THE OUTPUT FILES
- //copy mesh.h5
-   std::string  mesh_in_twice  =  _input_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
-   std::string  mesh_out_twice = _output_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_BASEMESH + DEFAULT_EXT_H5;
-/*(iproc==0)*/ CopyFile(mesh_in_twice,mesh_out_twice); 
-
-//copy MG files
-   std::string  op_in  =  _input_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
-   std::string  op_out = _output_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_MATRIX + DEFAULT_EXT_H5;
-/*(iproc==0)*/ CopyFile(op_in,op_out);
-
-   op_in  =   _input_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_REST + DEFAULT_EXT_H5;
-   op_out =  _output_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_REST + DEFAULT_EXT_H5;
-/*(iproc==0)*/ CopyFile(op_in,op_out);
-
-   op_in  =   _input_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_PROL + DEFAULT_EXT_H5;
-   op_out =  _output_path + "/" + DEFAULT_CASEDIR + "/" + DEFAULT_F_PROL + DEFAULT_EXT_H5;
-/*(iproc==0)*/ CopyFile(op_in,op_out);
-
 CheckDirOrMake(_output_path,DEFAULT_CONFIGDIR);
 
 //copy configuration file
-   op_in  =   _input_path + "/" + DEFAULT_CONFIGDIR + "/" + DEFAULT_RUNTIMECONF;
-   op_out =  _output_path + "/" + DEFAULT_CONFIGDIR + "/" + DEFAULT_RUNTIMECONF;
+   std::string op_in  =   _input_path + "/" + DEFAULT_CONFIGDIR + "/" + DEFAULT_RUNTIMECONF;
+   std::string op_out =  _output_path + "/" + DEFAULT_CONFIGDIR + "/" + DEFAULT_RUNTIMECONF;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
 //TODO here we should also copy the mesh file from the mesh generator... but we need to know the filename...
@@ -537,9 +496,8 @@ MPI_Barrier(MPI_COMM_WORLD);
 void Files::CheckIODirectories() {
  
 //INPUT
-                    std::string abs_app = _app_path + "/";
+                    std::string abs_app = "./";
 /*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_CONFIGDIR); //it must be there only to be COPIED (and we don't even need the check in restart case)
-/*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_CASEDIR);   //it must be there only to be COPIED
 
 /*all procs*/   CheckDir(abs_app,DEFAULT_OUTPUTDIR);
 
@@ -577,7 +535,8 @@ void Files::CheckIODirectories() {
 //whenever I change the absolute path,
 //I'd prefer passing the file name explicitly
 
-    std::string abs_runlog = _app_path + "/" + DEFAULT_OUTPUTDIR 
+    std::string app_path = "./";
+    std::string abs_runlog = app_path + DEFAULT_OUTPUTDIR 
     + "/" + _output_time +  "/" + DEFAULT_RUN_LOG;
 
 //  std::ofstream file;  //if a filestream dies, then also its stream-buffer dies ?!? 

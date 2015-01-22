@@ -56,6 +56,7 @@ MARK_AS_ADVANCED (
 
 # Find Petsc Library 
 FIND_PACKAGE(PETSc REQUIRED)
+MESSAGE(STATUS "PETSC_FOUND = ${PETSC_FOUND}")
 
 SET(HAVE_PETSC 0)
 IF(PETSC_FOUND)
@@ -64,6 +65,7 @@ ENDIF(PETSC_FOUND)
 
 # Find MPI (optional) 
 FIND_PACKAGE(MPI)
+MESSAGE(STATUS "MPI_FOUND = ${MPI_FOUND}")
 
 SET(HAVE_MPI 0)
 IF(MPI_FOUND)
@@ -71,7 +73,7 @@ IF(MPI_FOUND)
 ENDIF(MPI_FOUND) 
 
 # Find FParser
-FIND_PACKAGE(FParser REQUIRED)
+FIND_PACKAGE(FParser)
 MESSAGE(STATUS "FPARSER_FOUND = ${FPARSER_FOUND}")
 SET (HAVE_FPARSER 0)
 IF(FPARSER_FOUND)
@@ -79,12 +81,13 @@ IF(FPARSER_FOUND)
 ENDIF(FPARSER_FOUND)
 
 # Find HDF5 (optional) 
-#FIND_PACKAGE (HDF5 NAMES hdf5)
+FIND_PACKAGE (HDF5)
+MESSAGE(STATUS "HDF5_FOUND = ${HDF5_FOUND}")
 
-#SET(HAVE_HDF5 0)
-#IF(HDF5_FOUND)
+SET(HAVE_HDF5 0)
+IF(HDF5_FOUND)
   SET(HAVE_HDF5 1)
-#ENDIF(HDF5_FOUND)
+ENDIF(HDF5_FOUND)
 
 # Find Libmesh (optional)
 FIND_PACKAGE(LIBMESH)
@@ -131,9 +134,6 @@ OPTION(BUILD_FSIAPPS "Build the FSI applications" ON)
 OPTION(BUILD_OPTCONTROLAPPS "Build the optimal control applications" ON)
 
 # --
-OPTION(BUILD_GENCASE "Build the case generator" ON)
-
-# --
 OPTION(BUILD_POISSON "Build the Poisson problem" ON)
 
 # --
@@ -153,14 +153,14 @@ IF(BUILD_DOCUMENTATION)
   ENDIF(NOT DOXYGEN_FOUND)
   #-- Configure the Template Doxyfile for our specific project
   CONFIGURE_FILE(
-    "${PROJECT_SOURCE_DIR}/Doxygen/DoxyfileFemTTUlib.in"
-    "${PROJECT_BINARY_DIR}/DoxygenDocumentation/DoxyfileFemTTUlib" @ONLY IMMEDIATE
+    "${PROJECT_SOURCE_DIR}/Doxygen/DoxyfileFemuslib.in"
+    "${PROJECT_BINARY_DIR}/DoxygenDocumentation/DoxyfileFemuslib" @ONLY IMMEDIATE
   ) 
 
   #-- Add a custom target to run Doxygen when ever the project is built
   ADD_CUSTOM_TARGET (Docs ALL 
-    COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}//DoxygenDocumentation/DoxyfileFemTTUlib
-    SOURCES ${PROJECT_BINARY_DIR}//DoxygenDocumentation/DoxyfileFemTTUlib)
+    COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}//DoxygenDocumentation/DoxyfileFemuslib
+    SOURCES ${PROJECT_BINARY_DIR}//DoxygenDocumentation/DoxyfileFemuslib)
   # IF you do NOT want the documentation to be generated EVERY time you build the project
   # then leave out the 'ALL' keyword from the above command.
 ENDIF(BUILD_DOCUMENTATION)
@@ -191,8 +191,6 @@ IF(BUILD_ADEPT)
   SET(HAVE_ADEPT 1)
   INCLUDE(ExternalLibraries/External_adept.cmake)
 ENDIF(BUILD_ADEPT)
-
-
 
 #############################################################################################
 ### Configuration project file
@@ -236,6 +234,25 @@ ENDIF(FPARSER_FOUND)
 # add femus macro
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake-modules/femusMacroBuildApplication.cmake)
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake-modules/femusMacroBuildUnitTest.cmake)
+
+
+
+# Libmesh includes and flags
+IF(LIBMESH_FOUND)
+execute_process(COMMAND $ENV{FM_BASEPATH_TO_LM}/$ENV{FM_LM_FOLDER}/bin/libmesh-config --cppflags
+                COMMAND tr "\n" " " OUTPUT_VARIABLE LIBMESH_CPP)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LIBMESH_CPP}")
+execute_process(COMMAND $ENV{FM_BASEPATH_TO_LM}/$ENV{FM_LM_FOLDER}/bin/libmesh-config --include
+                COMMAND tr "\n" " " OUTPUT_VARIABLE LIBMESH_INC)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LIBMESH_INC}")
+execute_process(COMMAND $ENV{FM_BASEPATH_TO_LM}/$ENV{FM_LM_FOLDER}/bin/libmesh-config --libs
+                COMMAND tr "\n" " " OUTPUT_VARIABLE LIBMESH_LIBS)
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LIBMESH_LIBS}")
+ENDIF(LIBMESH_FOUND)
+# old Make syntax:
+# libmesh_INCLUDE  := $(shell ${FM_LM_DIR}/bin/libmesh-config --include)
+# libmesh_CPPFLAGS := $(shell ${FM_LM_DIR}/bin/libmesh-config --cppflags)
+# libmesh_LIBS     := $(shell ${FM_LM_DIR}/bin/libmesh-config --libs)
 
 
 #############################################################################################

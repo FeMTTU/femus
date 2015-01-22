@@ -35,12 +35,10 @@ using namespace libMesh;
 namespace femus {
 
 // ========================================================
-GenCase::GenCase(const Files& files_in,const RunTimeMap<double> & map_in, const double Lref, const std::string mesh_file_in)
-     : MeshTwo(files_in,map_in,Lref)
+GenCase::GenCase(const Files& files_in,const FemusInputParser<double> & map_in, const std::string mesh_file_in)
+     : MultiLevelMeshTwo(files_in,map_in,mesh_file_in)
 {
 
-  _mesh_file.assign(mesh_file_in);  //TODO it seems like moving from protected to public in Mesh changed the RUNTIME behaviour also!!!!!
-                                     //now I moved it to gencase and it works   
    _feelems.resize(QL);
   for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(GetGeomEl(get_dim()-1-VV,_mesh_order)._geomel_id.c_str(),fe);
  
@@ -75,29 +73,33 @@ void GenCase::GenerateCase()   {
     std::clock_t start_timeA=std::clock();
 #endif
 
-    libMesh::Mesh* msh_coarse = new libMesh::Mesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD,get_dim());
+    _msh_coarse = new libMesh::Mesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD,get_dim());
 
-    GenerateCoarseMesh(msh_coarse);
+    GenerateCoarseMesh();
 
-    libMesh::Mesh* msh_all_levs = new libMesh::Mesh(*msh_coarse);
+    _msh_all_levs = new libMesh::Mesh(*_msh_coarse);
 
-    RefineMesh(msh_all_levs);
+    RefineMesh();
 
-    libMesh::BoundaryMesh* bd_msht = new  libMesh::BoundaryMesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD, msh_all_levs->mesh_dimension()-1);
+    _bd_msht = new  libMesh::BoundaryMesh( (libMesh::Parallel::Communicator) MPI_COMM_WORLD, _msh_all_levs->mesh_dimension()-1);
 
-    GenerateBoundaryMesh(bd_msht,msh_all_levs);
+    GenerateBoundaryMesh();
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t start_timeC=std::clock();
 #endif
 
-    GrabMeshinfoFromLibmesh(msh_all_levs,msh_coarse);  //only proc==0
+    GrabMeshinfoFromLibmesh();  //only proc==0
 
-    delete bd_msht;
-    delete msh_all_levs;
-    delete msh_coarse;
+    delete _bd_msht;
+    delete _msh_all_levs;
+    delete _msh_coarse;
 
-    CreateStructuresLevSubd();    //only proc==0
+    CreateMeshStructuresLevSubd();    //only proc==0
+    
+    ComputeMGOperators();    //only proc==0
+
+    Delete();
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t end_timeC = std::clock();
@@ -109,85 +111,80 @@ void GenCase::GenerateCase()   {
 
     
 #endif //end have_libmesh    
+    
+#ifdef HAVE_MPI
+        MPI_Barrier(MPI_COMM_WORLD);
+#endif       
     return;
 }
 
 
-#ifdef HAVE_LIBMESH
 //===============================================================================
 //================= LIBMESH coarse Mesh OBJECT from FILE or FUNCTION ============
 //===============================================================================
-void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
-
-    const uint libmesh_gen = _mesh_rtmap.get("libmesh_gen");
+//here,the information about the shape must be given a priori here,
+//    while in the case of external mesh it should be given consistently
+void GenCase::GenerateCoarseMesh() const {
+#ifdef HAVE_LIBMESH
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t start_timeA=std::clock();
 #endif
+    
+        std::string config_dir  = DEFAULT_CONFIGDIR;
+        std::string f_mesh_read = _mesh_file;
 
-    switch (libmesh_gen) {
-    case 1: {
+        std::ostringstream mesh_infile;
+        mesh_infile << "./" << config_dir << f_mesh_read;
+        std::ifstream inf(mesh_infile.str().c_str());
+
+    if (!inf || f_mesh_read == ""  ) {
+
         std::cout << " Internal mesh generator at level 0 \n";
 
-        if ( _mesh_rtmap.get("domain") == 0 ) {
+        if ( GetDomain()->GetDomainFlag() == 0 ) {
 
-            //here,the information about the shape must be given a priori here,
-//    while in the case of external mesh it should be given consistently
-            //TODO think of Domain before or after Mesh
-
-            RunTimeMap<double> box_map("Box",_files._app_path);
-            Box box(get_dim(),box_map);
-                box.init(get_Lref());  //Lref=1., avoid the nondimensionalization, it must be dimensional here!!! //TODO we are generating a "physical" domain here!
-//i guess we could do this instantiation also INSIDE the gencase class
+	  
+       Box* box = static_cast<Box*>(GetDomain());
 
 //---Meshing -------
             uint* ninterv = new uint[get_dim()];
-	    ninterv[0] = box._domain_rtmap.get("nintervx");
-            ninterv[1] = box._domain_rtmap.get("nintervy");
-            if ( get_dim() == 3 ) ninterv[2] = box._domain_rtmap.get("nintervz");
+	    ninterv[0] = box->_domain_rtmap.get("nintervx");
+            ninterv[1] = box->_domain_rtmap.get("nintervy");
+            if ( get_dim() == 3 ) ninterv[2] = box->_domain_rtmap.get("nintervz");
 
             // fem element definition --------------------------------
             libMesh::ElemType libmname; //convert the _geomel name into the libmesh geom el name
 
             if ( get_dim() == 2 ) {
-            if (     GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Quadrilateral_9") libmname = libMesh::QUAD9;
-            else if (GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Triangle_6")  libmname = libMesh::TRI6;
+            if (     GetGeomEl(get_dim()-1,_mesh_order).name == "Quadrilateral_9") libmname = libMesh::QUAD9;
+            else if (GetGeomEl(get_dim()-1,_mesh_order).name == "Triangle_6")  libmname = libMesh::TRI6;
             libMesh::MeshTools::Generation::build_square
-            (*msh_coarse, ninterv[0], ninterv[1], box._lb[0], box._le[0], box._lb[1], box._le[1],libmname);
+            (*_msh_coarse, ninterv[0], ninterv[1], box->_lb[0], box->_le[0], box->_lb[1], box->_le[1],libmname);
 	    }
 	    else if ( get_dim() == 3 ) {
-            if (     GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Hexahedron_27")  libmname = libMesh::HEX27;
-            else if (GetGeomEl(get_dim()-1-VV,_mesh_order).name == "Tetrahedron_10")  libmname = libMesh::TET10;
+            if (     GetGeomEl(get_dim()-1,_mesh_order).name == "Hexahedron_27")  libmname = libMesh::HEX27;
+            else if (GetGeomEl(get_dim()-1,_mesh_order).name == "Tetrahedron_10")  libmname = libMesh::TET10;
             libMesh::MeshTools::Generation::build_cube
-            (*msh_coarse,  ninterv[0], ninterv[1],  ninterv[2], box._lb[0], box._le[0], box._lb[1], box._le[1], box._lb[2], box._le[2],libmname);
+            (*_msh_coarse,  ninterv[0], ninterv[1],  ninterv[2], box->_lb[0], box->_le[0], box->_lb[1], box->_le[1], box->_lb[2], box->_le[2],libmname);
 	    }
-            else{         std::cout << " Dim 1 not implemented \n"; abort(); }
+            else {         std::cout << " Dim 1 not implemented \n"; abort(); }
             
         } //box
+        
+        else { std::cout << " Domain shape not implemented for libmesh generation \n"; abort();  }
 
-        break;
     }
-    case 0: {
+    else {
         std::cout << " Reading Mesh File at level 0 \n";
 
-        std::string basepath    = _files._app_path;
-        std::string config_dir  = DEFAULT_CONFIGDIR;
-        std::string f_mesh_read = _mesh_file;
+        _msh_coarse->read(mesh_infile.str().c_str());  //is this read in parallel or only by proc=0?
 
-        std::ostringstream mesh_infile;
-        mesh_infile << basepath << "/" << config_dir << f_mesh_read;
-        std::ifstream inf(mesh_infile.str().c_str());
-
-        msh_coarse->read(mesh_infile.str().c_str());  //is this read in parallel or only by proc=0?
-
-        inf.close();
-        break;
     }
-    default:
-        std::cout << "GenCase: Create a mesh somehow" << std::endl;
-        abort();
-    }
-    msh_coarse->print_info();
+    
+    inf.close();
+
+    _msh_coarse->print_info();
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t end_timeA=std::clock();
@@ -195,11 +192,10 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
               << double(end_timeA- start_timeA) / CLOCKS_PER_SEC << std::endl;
 #endif
 
+#endif //end have_libmesh
     return;
 }
-#endif //end have_libmesh
 
-#ifdef HAVE_LIBMESH
 //==============================================================================
 //=============== GENERATE all the LEVELS for the LIBMESH Mesh OBJECT ==========
 //==============================================================================
@@ -213,14 +209,15 @@ void GenCase::GenerateCoarseMesh(libMesh::Mesh* msh_coarse) const {
 // and making this distinction is not trivial, one must check everywhere what to use
 //   const uint mesh_refine = _utils.get_par("mesh_refine");
 //   if (mesh_refine) {
-void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) const {
+void GenCase::RefineMesh() const {
+#ifdef HAVE_LIBMESH
 
 #ifdef DEFAULT_PRINT_TIME
     std::clock_t start_timeB=std::clock();
 #endif
 
     std::cout << "\n LibMesh Mesh Refinement ---------  \n";
-    libMesh::MeshRefinement mesh_refinement(*msh_all_levs);
+    libMesh::MeshRefinement mesh_refinement(*_msh_all_levs);
     mesh_refinement.uniformly_refine(_NoLevels-1);
 
 #ifdef DEFAULT_PRINT_TIME
@@ -229,12 +226,11 @@ void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) const {
               << double(end_timeB- start_timeB) / CLOCKS_PER_SEC << std::endl;
 #endif
 
+#endif //end have_libmesh
     return;
 }
-#endif //end have_libmesh
 
 
-#ifdef HAVE_LIBMESH
 //==============================================================================
 //=============== GENERATE BOUNDARY MESH =======================================
 //==============================================================================
@@ -248,17 +244,17 @@ void GenCase::RefineMesh(libMesh::Mesh* msh_all_levs) const {
 //TODO can we exploit the fact that BoundaryInfo is useful for containing boundary conditions
 //to READ from GAMBIT and ASSOCIATE FLAGS From Gambit to Libmesh, AND THEN from LIBMESH to FEMUS?
 
-void GenCase::GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh* msh_all_levs) const {
+void GenCase::GenerateBoundaryMesh() const {
+#ifdef HAVE_LIBMESH
 
     std::cout << " LibMesh BOUNDARY generation --------- \n";
-    msh_all_levs->boundary_info->sync(*bd_msht);
-    bd_msht->print_info();
+    _msh_all_levs->boundary_info->sync(*_bd_msht);
+    _bd_msht->print_info();
 
+#endif //end have_libmesh
     return;
 }
-#endif //end have_libmesh
 
-#ifdef HAVE_LIBMESH
 //==============================================================================
 //=============== GRAB MESH INFORMATION from LIBMESH (only proc0) ==============
 //==============================================================================
@@ -271,9 +267,8 @@ void GenCase::GenerateBoundaryMesh(libMesh::BoundaryMesh* bd_msht, libMesh::Mesh
 /// together with the _nod_coords[] array
 ///once you have this interface with libmesh, you do the rest only in FEMuS.
 
-void  GenCase::GrabMeshinfoFromLibmesh(
-        libMesh::Mesh* msht,
-        libMesh::Mesh* msh0 ) {
+void  GenCase::GrabMeshinfoFromLibmesh() {
+#ifdef HAVE_LIBMESH
 
     if (_iproc == 0)  {  //serial function
 
@@ -295,14 +290,14 @@ void  GenCase::GrabMeshinfoFromLibmesh(
 //we can make a class that reads things the nodes from the constructor,
 // then you instantiate and initialize each object of that class
 
-        _n_nodes=msht->n_nodes();                   //these are the FINE nodes
-        _n_elements_sum_levs[VV]=msht->n_elem();                 //from mesh
+        _n_nodes = _msh_all_levs->n_nodes();                   //these are the FINE nodes
+        _n_elements_sum_levs[VV] = _msh_all_levs->n_elem();                 //from mesh
 
-        libMesh::Mesh::const_element_iterator         it_t00 = msh0->elements_begin();
-        const libMesh::Mesh::const_element_iterator  end_t00 = msh0->elements_end();
-        libMesh::Mesh::const_element_iterator          it_tr = msht->elements_begin();
-        const libMesh::Mesh::const_element_iterator   end_tr = msht->elements_end();
-        libMesh::Mesh::const_element_iterator it_el = msht->elements_begin();
+        libMesh::Mesh::const_element_iterator         it_t00 = _msh_coarse->elements_begin();
+        const libMesh::Mesh::const_element_iterator  end_t00 = _msh_coarse->elements_end();
+        libMesh::Mesh::const_element_iterator          it_tr = _msh_all_levs->elements_begin();
+        const libMesh::Mesh::const_element_iterator   end_tr = _msh_all_levs->elements_end();
+        libMesh::Mesh::const_element_iterator it_el = _msh_all_levs->elements_begin();
 // counting
         _n_elements_vb_lev     = new uint*[VB];
         _n_elements_vb_lev[VV] = new uint[_NoLevels];
@@ -377,7 +372,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(
                 _el_sto[count_e]->_elnds[inode]=knode;
             // coordinates storage
                 for (int idim=0; idim<get_dim(); idim++) {
-                    double xyz=  msht->point(knode)(idim);
+                    double xyz=  _msh_all_levs->point(knode)(idim);
                     _nd_coords_libm[knode+idim*_n_nodes]=xyz;
                 }
             }
@@ -451,7 +446,7 @@ void  GenCase::GrabMeshinfoFromLibmesh(
         //The point is that I do not have the map that gives me the LIBMESH POSITION out of the count_eb position, so I'll do it again.
         //Now the processors of all levels and all 
         //these iterators are strange; for instance end_tr must be a "const const_element_iterator", otherwise the operator overloading of != does not work
-        libMesh::Mesh::const_element_iterator    my_iter = msht->elements_begin();
+        libMesh::Mesh::const_element_iterator    my_iter = _msh_all_levs->elements_begin();
         uint count_eb2=0;
             for (; my_iter != end_tr; ++my_iter) {
 	               Elem* elem = *my_iter; 
@@ -498,9 +493,10 @@ void  GenCase::GrabMeshinfoFromLibmesh(
  
 
     } //end proc==0
+    
+#endif //end have_libmesh
     return;
 }
-#endif //end have_libmesh
 
 
 // =======================================================
@@ -579,16 +575,12 @@ void  GenCase::GrabMeshinfoFromLibmesh(
 //==============================================================================
 //=============== CREATE FEMUS MESH, MAT, PROL, REST (only proc0) ==============
 //==============================================================================
-void GenCase::CreateStructuresLevSubd() {
+void GenCase::CreateMeshStructuresLevSubd() {
 
     if (_iproc == 0)   {  //serial function
 //================================================
 // AT THIS POINT ALL THE LIBMESH CALLS are over, we are only FEMuS
 //=====================================
-//TODO if you want to have a serious interface with libmesh, you must do like this: 
-// print to file all the info you need to grab from libmesh,
-//  and then read and process everything in the main program.
-// This is what happens with the FE Gauss files!
 
         // ================================================
         //      ELEMENTS
@@ -618,7 +610,7 @@ void GenCase::CreateStructuresLevSubd() {
 
         ComputeNodeMapExtLevels();
 
-        PrintMeshHDF5();
+        PrintMeshFile();
 
 // delete the boundary part, no more needed
         for (int i=0;i<_n_elements_sum_levs[BB];i++)      delete  _el_sto_b[i];
@@ -626,14 +618,33 @@ void GenCase::CreateStructuresLevSubd() {
 
         delete [] _nd_coords_libm;
 
-        PrintMultimeshXdmf();
 
+    } //end proc==0
+
+    return;
+}
+
+
+
+void GenCase::ComputeMGOperators() {
+
+    if (_iproc == 0)   {  //serial function
+      
             //this involves only VOLUME STUFF, no boundary stuff
             // instead, not only NODES but also ELEMENTS are used
         ComputeMatrix(); 
         ComputeProl(); 
         ComputeRest();
 
+    } //end proc==0
+
+    return;
+}
+
+
+void GenCase::Delete() {
+
+    if (_iproc == 0)   {  //serial function
 //=====================================
 //delete
 //=====================================
@@ -671,20 +682,10 @@ void GenCase::CreateStructuresLevSubd() {
         delete [] _Qnode_lev_Qnode_fine;
 
 
-#ifdef DEFAULT_PRINT_INFO
-        std::cout<< " GenCase::printMesh: Operators  printed \n";
-#endif
-
     } //end proc==0
 
     return;
 }
-
-
-
-
-
-
 
 
 
@@ -880,13 +881,11 @@ void GenCase::ComputeProl()  {
   int NegativeOneFlag = -1;
   double   PseudoZero = 1.e-8;
   
-    std::string basepath  = _files._app_path;
-    std::string input_dir = DEFAULT_CASEDIR;
     std::string f_prol    = DEFAULT_F_PROL;
     std::string ext_h5    = DEFAULT_EXT_H5;
 
     std::ostringstream name;
-    name << basepath << "/" << input_dir << f_prol   << ext_h5;
+    name << _files._output_path << "/" << f_prol << ext_h5;
     hid_t file = H5Fcreate(name.str().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
 
   for (int Level1 = 1; Level1 < _NoLevels; Level1++) {  //Level1 is the OUTPUT level (fine level) (the level of the ROWS)
@@ -1483,13 +1482,11 @@ void GenCase::ComputeMatrix() {
     int *** memG;
 
 //========= CREATE THE FILE ============================
-    std::string basepath  = _files._app_path;
-    std::string input_dir = DEFAULT_CASEDIR;
     std::string f_matrix  = DEFAULT_F_MATRIX;
     std::string ext_h5    = DEFAULT_EXT_H5;
 
         std::ostringstream name;
-        name << basepath << "/" << input_dir << f_matrix << ext_h5;
+        name << _files._output_path << "/" << f_matrix << ext_h5;
         hid_t file = H5Fcreate(name.str().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
 
 //==============================================================
@@ -1804,13 +1801,11 @@ void GenCase::ComputeRest( ) {
   int NegativeOneFlag = -1;
   double   PseudoZero = 1.e-8;
   
-        std::string basepath  = _files._app_path;
-        std::string input_dir = DEFAULT_CASEDIR;
         std::string f_rest    = DEFAULT_F_REST;
         std::string ext_h5    = DEFAULT_EXT_H5;
 
         std::ostringstream filename;
-        filename << basepath << "/" << input_dir << f_rest << ext_h5;
+        filename << _files._output_path << "/" << f_rest << ext_h5;
         hid_t file = H5Fcreate(filename.str().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
 
   
@@ -2056,17 +2051,15 @@ void GenCase::ComputeRest( ) {
 
 
 // ===============================================================
-void GenCase::PrintMeshHDF5() const  {
+void GenCase::PrintMeshFile() const  {
 
     std::ostringstream name;
 
-    std::string basepath  = _files._app_path;
-    std::string input_dir = DEFAULT_CASEDIR;
     std::string basemesh  = DEFAULT_BASEMESH;
     std::string ext_h5    = DEFAULT_EXT_H5;
 
     std::ostringstream inmesh;
-    inmesh << basepath << "/" << input_dir << basemesh << ext_h5;
+    inmesh << _files._output_path << "/" << basemesh << ext_h5;
 
 //==================================
 // OPEN FILE
@@ -2511,6 +2504,10 @@ void GenCase::PrintElemVB(hid_t file,
 		       ElemStoBase** el_sto_in,
 		       const std::vector<std::pair<int,int> >  el_fm_libm_in ) const {
 
+// const unsigned from_libmesh_to_xdmf[27] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26};  //id
+// const unsigned from_libmesh_to_xdmf[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,21,22,23,24,20,25,26};  //from libmesh to femus
+// const unsigned from_libmesh_to_xdmf[27]    = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,24,22,21,23,20,25,26};  //from libmesh to xdmf
+
     std::ostringstream name;
 
     std::string auxvb[VB];
@@ -2537,11 +2534,24 @@ void GenCase::PrintElemVB(hid_t file,
     dimsf[1] = 1;
     IO::print_Ihdf5(file,(elems_fem_vb + "/OFF_EL"), dimsf,_off_el[vb]);
 
-    // Mesh 1 Volume at all levels  packaging data  (volume) ----------
     //here you pick all the elements at all levels,
     //and you print their connectivities according to the libmesh ordering
     int *tempconn;
     tempconn=new int[_n_elements_sum_levs[vb]*_elnodes[vb][QQ]]; //connectivity of all levels
+    
+// // //     if (_elnodes[vb][QQ] == 27)  { //HEX27
+// // // 
+// // //        for (int ielem=0;ielem<_n_elements_sum_levs[vb];ielem++) {
+// // //         for (uint inode=0;inode<_elnodes[vb][QQ];inode++) {
+// // //             int el_libm =   el_fm_libm_in[ielem].second;
+// // //             int nd_libm = el_sto_in[el_libm]->_elnds[inode];
+// // //             tempconn[ from_libmesh_to_xdmf[inode] + ielem*_elnodes[vb][QQ] ] = nd_libm_fm[nd_libm];
+// // //         }
+// // //     }      
+// // //     
+// // //     }//HEX27
+// // //     else {
+      
     for (int ielem=0;ielem<_n_elements_sum_levs[vb];ielem++) {
         for (uint inode=0;inode<_elnodes[vb][QQ];inode++) {
             int el_libm =   el_fm_libm_in[ielem].second;
@@ -2549,7 +2559,9 @@ void GenCase::PrintElemVB(hid_t file,
             tempconn[inode+ielem*_elnodes[vb][QQ]] = nd_libm_fm[nd_libm];
         }
     }
-    // global mesh hdf5 storage ------------------------------
+    
+// // //   }
+  
     dimsf[0] = _n_elements_sum_levs[vb]*_elnodes[vb][QQ];
     dimsf[1] = 1;
     IO::print_Ihdf5(file,(elems_fem_vb + "/CONN"), dimsf,tempconn);
@@ -2559,18 +2571,20 @@ void GenCase::PrintElemVB(hid_t file,
 
         int *conn_lev=new int[_n_elements_vb_lev[vb][ilev]*_elnodes[vb][QQ]];  //connectivity of ilev
 
+        
         int ltot=0;
         for (int iproc=0;iproc <_NoSubdom; iproc++) {
             for (int iel = _off_el[vb][iproc*_NoLevels+ilev];
                      iel < _off_el[vb][iproc*_NoLevels+ilev+1]; iel++) {
                 for (uint inode=0;inode<_elnodes[vb][QQ];inode++) {
-                    conn_lev[ltot*_elnodes[vb][QQ]+inode]=
-                        tempconn[  iel*_elnodes[vb][QQ]+inode];
+                    conn_lev[ltot*_elnodes[vb][QQ] + inode ] =
+                        tempconn[  iel*_elnodes[vb][QQ] + inode ];
                 }
                 ltot++;
             }
         }
-        // hdf5 storage     ----------------------------------
+        
+       
         dimsf[0] = _n_elements_vb_lev[vb][ilev]*_elnodes[vb][QQ];
         dimsf[1] = 1;
 

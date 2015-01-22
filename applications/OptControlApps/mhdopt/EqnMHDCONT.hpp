@@ -5,7 +5,7 @@
 #include <vector>
 
 // Local Includes
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 
 
 namespace femus {
@@ -13,17 +13,13 @@ namespace femus {
 // Forwarded classes
 class NumericVector;
 
-class EqnMHDCONT : public EqnBase {
+class EqnMHDCONT : public SystemTwo {
 
   public:
     
-//====data  
-    std::vector<NumericVector *> _x_oldopt;  //old optimization step
-  
-    
-    
+   
 EqnMHDCONT(  std::vector<Quantity*> int_map_in,
-	     EquationsMap& mg_equations_map_in,
+	     MultiLevelProblemTwo& mg_equations_map_in,
                    std::string eqname_in="Eqn_MHDCONT",
                    std::string varname_in="Becont");
 
@@ -35,9 +31,7 @@ EqnMHDCONT(  std::vector<Quantity*> int_map_in,
 
   void elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const;
   
-  void GenMatRhsVB(const uint vb,const double time,const uint Level);
-
-  void init_equation_data();
+  void GenMatRhs(const uint Level);
 
 };
 

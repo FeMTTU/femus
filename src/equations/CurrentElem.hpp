@@ -1,9 +1,25 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: CurrentElem
+ Authors: Giorgio Bornia
+
+ Copyright (c) FEMTTU
+ All rights reserved.
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __currelem_h__
 #define __currelem_h__
 
 
 #include "FETypeEnum.hpp"
-
+#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
 #include "DenseVector.hpp"
 #include "DenseMatrix.hpp"
 
@@ -12,19 +28,23 @@ namespace femus {
 
 
 
-class EqnBase;
-class EquationsMap;
-class QuantityLocal;
+class SystemTwo;
+class MultiLevelProblemTwo;
+class CurrentQuantity;
 
 
 
-  class CurrElem {
+  class CurrentElem {
 
   public:
     
-    CurrElem(const uint vb, const EqnBase&, const EquationsMap& e_map_in);
-   ~CurrElem();
+    CurrentElem(const uint vb, const SystemTwo*, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type);
+   ~CurrentElem();
 
+    inline const uint  GetVb() const {
+      return _mesh.get_dim() - _dim;
+    }
+    
     inline const uint  GetDim() const {
       return _dim;
     }
@@ -64,26 +84,23 @@ class QuantityLocal;
       return _KeM;
     }
     
-    void  set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel) const;
+    void  set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel);
     
-    //TODO this is not const because _vol_iel_DofObj is NOT A POINTER! 
-    void  set_el_DofObj_lev_subd(const uint Level,const uint isubd_in,const uint iel);
-
     //TODO notice that this is not changing the POINTER , so it is const!
     void  SetMidpoint() const;
     
     void  PrintOrientation() const;
     
-    //TODO remove vb from these arguments
-    void  ConvertElemCoordsToMappingOrd(QuantityLocal& myvect) const;
+    void  ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const;
     
     /** needs the EQUATION basically */
     void  SetElDofsBc(const uint Level);
  
     //TODO make these private
 //========== Equation-related ========================               
-  const EqnBase & _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
-  const EquationsMap & _eqnmap;
+  const SystemTwo * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
+  const MultiLevelMeshTwo & _mesh;
+  const std::vector< std::vector<elem_type*> >  &  _elem_type;
   
   private:
     
@@ -103,7 +120,7 @@ class QuantityLocal;
    double  *_el_xm;               /// element center point                                [_spacedimension];
    const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
    const uint _mesh_vb;     //index for the mesh
-
+    
   };
   
 
@@ -115,7 +132,7 @@ class QuantityLocal;
 // we have everything...
 //Through an equation we get to the equationsmap which gives us access to everything we need
 //Ok, I need to pass the Equation, and also I will pass the ref to EqMap, 
-// which is protected in the EqnBase class and I want to leave it protected
+// which is protected in the SystemTwo class and I want to leave it protected
 
 //The geometry does not depend on the specific equation
 //The rest yes
@@ -137,7 +154,7 @@ class QuantityLocal;
 
  //alright, here I need a Current Element, to perform the loop
  //the current element only needs the eqn map, so we can use it everywhere
- //TODO here we only need the GEOMETRIC PART of the CurrElem, so maybe we will split 
+ //TODO here we only need the GEOMETRIC PART of the CurrentElem, so maybe we will split 
  //between the CurrGeomEl and the CurrFEEl
 //in fact this is used for many element loop, but just to retrieve the geometrical properties
 //like coords, middle point, etc.
@@ -153,7 +170,7 @@ class QuantityLocal;
 //but not in the reference frame
 //ok now i want to set the element center but NOT BASED ON THE MESH
 
-//So, so far we have the CurrElem class is 
+//So, so far we have the CurrentElem class is 
 //split into a CURR GEOMETRIC and a CURR EQUATION part.
 //The curr geometric is basically filled with the MESH class
 //The curr fe is basically filled with the EQUATION class

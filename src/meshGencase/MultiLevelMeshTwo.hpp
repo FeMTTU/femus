@@ -13,7 +13,7 @@
 
 #include "Typedefs.hpp"
 #include "FEMTTUConfig.h"
-#include "RunTimeMap.hpp"
+#include "FemusInputParser.hpp"
 #include "GeomEl.hpp"
 #include "ElemSto.hpp"
 #include "VBTypeEnum.hpp"
@@ -27,17 +27,17 @@ class Domain;
 
 
   
-class MeshTwo  {
+class MultiLevelMeshTwo  {
 
 public:
 
 //===== Constructors/ Destructor ===========
-     MeshTwo (const Files& files_in, const RunTimeMap<double>& map_in, const double Lref);
-//     ~MeshTwo ();
+     MultiLevelMeshTwo (const Files& files_in, const FemusInputParser<double>& map_in, const std::string mesh_file_in);
+//     ~MultiLevelMeshTwo ();
     void clear ();
 
     //======= Print/read functions =======
-    void ReadMeshFile();
+    void ReadMeshFileAndNondimensionalize();
     void PrintForVisualizationAllLEVAllVB() const;
     void PrintSubdomFlagOnLinCells(std::string filename) const;
     void PrintMultimeshXdmf() const;
@@ -45,7 +45,6 @@ public:
     void PrintConnLinAllLEVAllVB() const;
     void PrintXDMFGridVB(std::ofstream& out, std::ostringstream& top_file, std::ostringstream& geom_file,const uint Level, const uint vb) const;
     void PrintConnLinVB(hid_t file, const uint Level, const uint vb) const; 
-    void PrintMeshFile(const std::string & namefile) const;
     void PrintSubdomFlagOnQuadrCells(const int vb, const int Level,std::string filename) const;
 
     //======= mesh generation functions ====
@@ -57,19 +56,12 @@ public:
     void ComputeMaxElXNode();
     void ComputeNodeMapExtLevels();
 
-    //get functions
-    inline const double get_Lref() const {return _Lref;}
-    inline const uint   get_dim()  const {return _dim;}
-
 //attributes    ************************************
     
-    const Files& _files; 
-    const RunTimeMap<double> & _mesh_rtmap;
     ElemStoVol**  _el_sto;                 //FILLED ACCORDING TO "how the Libmesh mesh iterator runs" which may not be id in general i think...
 
     const uint _dim;               ///< spatial dimension
     const uint _mesh_order;
-    const double _Lref;          ///Reference length for non-dimensionalization
 
 // ===== ABSTRACT GEOMEL(S) =====
     uint*      _type_FEM;         //just for check
@@ -121,15 +113,31 @@ public:
     Domain* _domain;      //TODO You must remember to ALLOCATE this POINTER BEFORE USING IT!
     Domain* GetDomain() const;
     void    SetDomain(Domain* );
-    void TransformElemNodesToRef(const uint vb,const double* xx_qnds,double* refbox_xyz) const;
+    void TransformElemNodesToRef(const uint elem_dim,const double* xx_qnds,double* refbox_xyz) const;
     
-    inline GeomEl GetGeomEl(const uint dim, const uint order) const {
-     return _GeomEl[dim][order]; 
-    }
+    //get functions
+    inline const double get_Lref() const {return _Lref;}
+    inline const uint   get_dim()  const {return _dim;}
+    inline const GeomEl GetGeomEl(const uint dim, const uint order) const {   return _GeomEl[dim][order]; }
+    inline const FemusInputParser<double>  GetRuntimeMap()  const { return _mesh_rtmap; }
 
+    //set functions
+    inline void SetLref(const double lref_in) { _Lref = lref_in; }
+    
+  protected:
+    
+    const Files& _files; 
+    const FemusInputParser<double> & _mesh_rtmap;
+    std::string _mesh_file;    //mesh file name from the mesh generator
+ 
    private:   
      
+//attributes    ************************************
+    
+    double _Lref;          ///Reference length for non-dimensionalization
+     
     std::vector< std::vector<GeomEl> >  _GeomEl;   //[DIM][QL_NODES] 
+    
 
  };
 

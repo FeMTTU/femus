@@ -12,13 +12,13 @@
 #include "paral.hpp" 
 #include "FemusInit.hpp"
 #include "Files.hpp"
-#include "Physics.hpp"
 #include "GeomEl.hpp"
-#include "MeshTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
+#include "GenCase.hpp"
 #include "FETypeEnum.hpp"
-#include "FEElemBase.hpp"
 #include "GaussPoints.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
+#include "ElemType.hpp"
 #include "TimeLoop.hpp"
 #include "Typedefs.hpp"
 #include "Quantity.hpp"
@@ -29,50 +29,79 @@
 // application 
 #include "Temp_conf.hpp"
 #include "TempQuantities.hpp"
-#include "TempPhysics.hpp"
 #include "EqnNS.hpp"
 #include "EqnT.hpp"
+#include "OptLoop.hpp"
 
- 
+
+#ifdef HAVE_LIBMESH
+#include "libmesh/libmesh.h"
+#endif
+
 // =======================================
 // TEMPERATURE + NS optimal control problem
 // ======================================= 
 
  int main(int argc, char** argv) {
 
-  // ====== FemusInit =====  //put this as the first call because mpi is initialized here
-  FemusInit init(argc,argv);
-  
+#ifdef HAVE_LIBMESH
+   libMesh::LibMeshInit init(argc,argv);
+#else   
+   FemusInit init(argc,argv);
+#endif
+   
  // ======= Files ========================
-  Files files("./"); 
+  Files files; 
         files.ConfigureRestart();
         files.CheckIODirectories();
-        files.RedirectCout();
         files.CopyInputFiles();
-   // at this point everything is in the folder of the current run!!!!
+        files.RedirectCout();
 
-  // ======= MyPhysics (implemented as child of Physics) ========================
-  RunTimeMap<double> physics_map("Physics",files._output_path);
-  TempPhysics phys(physics_map);
-              phys.set_nondimgroups(); //implement it
-  const double Lref  =  phys._physrtmap.get("Lref");     // reference L
+  // ======= Physics Input Parser ========================
+  FemusInputParser<double> physics_map("Physics",files._output_path);
+
+  const double rhof   = physics_map.get("rho0");
+  const double Uref   = physics_map.get("Uref");
+  const double Lref   = physics_map.get("Lref");
+  const double  muf   = physics_map.get("mu0");
+
+  const double  _pref = rhof*Uref*Uref;           physics_map.set("pref",_pref);
+  const double   _Re  = (rhof*Uref*Lref)/muf;     physics_map.set("Re",_Re);
+  const double   _Fr  = (Uref*Uref)/(9.81*Lref);  physics_map.set("Fr",_Fr);
+  const double   _Pr  = muf/rhof;                 physics_map.set("Pr",_Pr);
 
   // ======= Mesh =====
-  RunTimeMap<double> mesh_map("Mesh",files._output_path);
-  MeshTwo mesh(files,mesh_map,Lref);
-  
+  FemusInputParser<double> mesh_map("Mesh",files._output_path);
+  GenCase mesh(files,mesh_map,"inclQ2D2x2.gam");
+          mesh.SetLref(1.);  
+	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
-  RunTimeMap<double> box_map("Box",files._output_path);
+  FemusInputParser<double> box_map("Box",files._output_path);
   Box mybox(mesh.get_dim(),box_map);
-      mybox.init(mesh.get_Lref());
-  
-  mesh.SetDomain(&mybox);    
-  
-  mesh.ReadMeshFile(); 
-  mesh.PrintForVisualizationAllLEVAllVB();
-  
-  phys.set_mesh(&mesh);
-  
+      mybox.InitAndNondimensionalize(mesh.get_Lref());
+
+          mesh.SetDomain(&mybox);    
+	  
+          mesh.GenerateCase();
+
+          mesh.SetLref(Lref);
+      mybox.InitAndNondimensionalize(mesh.get_Lref());
+	  
+          mesh.ReadMeshFileAndNondimensionalize(); 
+	  mesh.PrintMultimeshXdmf();
+          mesh.PrintForVisualizationAllLEVAllVB();
+	  
+  //gencase is dimensionalized, meshtwo is nondimensionalized
+  //since the meshtwo is nondimensionalized, all the BC and IC are gonna be implemented on a nondimensionalized mesh
+  //now, a mesh may or may not have an associated domain
+  //moreover, a mesh may or may not be read from file
+  //the generation is DIMENSIONAL, the nondimensionalization occurs later
+  //Both the Mesh and the optional domain must be nondimensionalized
+  //first, we have to say if the mesh has a shape or not
+  //that depends on the application, it must be put at the main level
+  //then, after you know the shape, you may or may not generate the mesh with that shape 
+  //the two things are totally independent, and related to the application, not to the library
+
 // ======  QRule ================================
   std::vector<Gauss>   qrule;
   qrule.reserve(mesh.get_dim());
@@ -94,16 +123,8 @@
      }
    }
   
-  std::vector<FEElemBase*> FEElements(QL);
-  for (int fe=0; fe<QL; fe++)    FEElements[fe] = FEElemBase::build(mesh.GetGeomEl(mesh.get_dim()-1-VV,mesh._mesh_order)._geomel_id.c_str(),fe);
-
-  // ======== TimeLoop ===================================
-  TimeLoop time_loop(files); 
-           time_loop._timemap.read();
-           time_loop._timemap.print();
-
-  // ===== QuantityMap =========================================
-  QuantityMap  qty_map(phys);
+  // ===== QuantityMap : this is like the MultilevelSolution =========================================
+  QuantityMap  qty_map(mesh,&physics_map);
 
   Temperature temperature("Qty_Temperature",qty_map,1,FE_TEMPERATURE);     qty_map.set_qty(&temperature);
   TempLift       templift("Qty_TempLift",qty_map,1,FE_TEMPERATURE);        qty_map.set_qty(&templift);  
@@ -118,9 +139,15 @@
   
   // ===== end QuantityMap =========================================
 
-  // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,FEElemType_vec,qrule,time_loop);  //here everything is passed as BASE STUFF, like it should!
+  // ====== MultiLevelProblemTwo =================================
+  MultiLevelProblemTwo equations_map(files,physics_map,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
+
+  // ======== TimeLoop ===================================
+  OptLoop opt_loop(files); 
+           opt_loop._timemap.read();
+           opt_loop._timemap.print();
+
   
 //===============================================
 //================== Add EQUATIONS AND ======================
@@ -160,7 +187,7 @@ InternalVect_Temp[2] = &tempadj;               tempadj.SetPosInAssocEqn(2);
 InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 #endif
 
-  EqnT* eqnT = new EqnT(InternalVect_Temp,equations_map);
+  EqnT* eqnT = new EqnT(opt_loop,InternalVect_Temp,equations_map);
   equations_map.set_eqs(eqnT);  
 
         temperature.set_eqn(eqnT);
@@ -186,19 +213,17 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
                            //In fact, part of them is only filled by gencase
 	 
   equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
-  equations_map.TransientSetup();  // reset the initial state (if restart) and print the Case
+  
+  opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
 
-  phys.transient_loopPlusJ(equations_map);
+  opt_loop.optimization_loop(equations_map);
 
 // at this point, the run has been completed 
   files.PrintRunForRestart(DEFAULT_LAST_RUN);/*(iproc==0)*/  //============= prepare default for next restart ==========  
   files.log_petsc();
   
 // ============  clean ================================
-  // here we clean all that we allocated as new in the main
-  equations_map.clean();  //deallocates the map of equations
-  for (int fe=0; fe<QL; fe++)  {  delete FEElements[fe]; }
-
+  equations_map.clean();
   mesh.clear();
   
   

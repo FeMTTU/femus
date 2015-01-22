@@ -13,12 +13,12 @@
 #include "FemusDefault.hpp"
 #include "FemusInit.hpp"
 #include "Files.hpp"
-#include "Physics.hpp"
 #include "GeomEl.hpp"
-#include "MeshTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
+#include "GenCase.hpp"
 #include "FETypeEnum.hpp"
-#include "FEElemBase.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
+#include "ElemType.hpp"
 #include "TimeLoop.hpp"
 #include "Typedefs.hpp"
 #include "CmdLine.hpp"
@@ -29,18 +29,20 @@
 
 // application includes
 #include "Opt_conf.hpp"
+#include "OptLoop.hpp"
 #include "OptQuantities.hpp"
-#include "OptPhysics.hpp"
 #include "EqnNS.hpp"
 #include "EqnNSAD.hpp"
 #include "EqnMHD.hpp"
 #include "EqnMHDAD.hpp"
 #include "EqnMHDCONT.hpp"
 
+#ifdef HAVE_LIBMESH
+#include "libmesh/libmesh.h"
+#endif
+
 using namespace femus;
 
-//***************** functions for this application
-void optimization_loop(EquationsMap& e_map_in);
 
 // double funzione(double t , const double* xyz) {return 1.;} 
 
@@ -50,42 +52,63 @@ void optimization_loop(EquationsMap& e_map_in);
 
 int main(int argc, char** argv) {
 
-  // ====== FemusInit =====  //put this as the first call because mpi is initialized here
-  FemusInit init(argc,argv);
+#ifdef HAVE_LIBMESH
+   libMesh::LibMeshInit init(argc,argv);
+#else   
+   FemusInit init(argc,argv);
+#endif 
 
 // ======= Files ========================
-  Files files("./");
+  Files files;
         files.ConfigureRestart();
         files.CheckIODirectories();
-        files.RedirectCout();
         files.CopyInputFiles();
-
-  // =========================================
-  // ======= END OF THE INITIALIZATION PART ========================
-  // =========================================
- 
+        files.RedirectCout();
+	
   // ======= Physics ========================
-  RunTimeMap<double> physics_map("Physics",files._output_path);
-  OptPhysics phys(physics_map);
-             phys.set_nondimgroups();
-  const double Lref  =  phys._physrtmap.get("Lref");
+  FemusInputParser<double> physics_map("Physics",files._output_path);
+  
+  const double rhof   = physics_map.get("rho0");
+  const double Uref   = physics_map.get("Uref");
+  const double Lref   = physics_map.get("Lref");
+  const double  muf   = physics_map.get("mu0");
+  const double MUMHD  = physics_map.get("MUMHD");
+  const double SIGMHD = physics_map.get("SIGMHD");
+  const double   Bref = physics_map.get("Bref");
+  const double sigma  = physics_map.get("sigma");
+
+  const double   _pref = rhof*Uref*Uref;             physics_map.set("pref",_pref);
+  const double   _Re  = (rhof*Uref*Lref)/muf;        physics_map.set("Re",_Re);
+  const double   _Fr  = (Uref*Uref)/(9.81*Lref);     physics_map.set("Fr",_Fr);
+  const double   _Pr=muf/rhof;                       physics_map.set("Pr",_Pr);
+
+  const double   _Rem = MUMHD*SIGMHD*Uref*Lref;      physics_map.set("Rem",_Rem);
+  const double   _Hm  = Bref*Lref*sqrt(SIGMHD/muf);  physics_map.set("Hm",_Hm);
+  const double   _S   = _Hm*_Hm/(_Re*_Rem);          physics_map.set("S",_S);
+  
+  const double   _We  = (Uref*Uref*Lref*rhof)/sigma; physics_map.set("We",_We);
 
   // ======= Mesh =====
-  RunTimeMap<double> mesh_map("Mesh",files._output_path);
-  MeshTwo mesh(files,mesh_map,Lref); 
-      
-//=========== Domain ================================
-  RunTimeMap<double> box_map("Box",files._output_path);
+  FemusInputParser<double> mesh_map("Mesh",files._output_path);
+    GenCase mesh(files,mesh_map,"straightQ3D2x2x2ZERO.gam");
+          mesh.SetLref(1.);  
+	  
+  // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
+  FemusInputParser<double> box_map("Box",files._output_path);
   Box mybox(mesh.get_dim(),box_map);
-      mybox.init(mesh.get_Lref());
+      mybox.InitAndNondimensionalize(mesh.get_Lref());
 
-  mesh.SetDomain(&mybox);
-  
-  mesh.ReadMeshFile(); 
-  mesh.PrintForVisualizationAllLEVAllVB();
+          mesh.SetDomain(&mybox);    
+	  
+          mesh.GenerateCase();
 
-  phys.set_mesh(&mesh);
-
+          mesh.SetLref(Lref);
+      mybox.InitAndNondimensionalize(mesh.get_Lref());
+	  
+          mesh.ReadMeshFileAndNondimensionalize(); 
+	  mesh.PrintMultimeshXdmf();
+          mesh.PrintForVisualizationAllLEVAllVB();
+      
 // ======  QRule ================================ 
   std::vector<Gauss>   qrule;
   qrule.reserve(mesh.get_dim());
@@ -107,11 +130,8 @@ int main(int argc, char** argv) {
      }
     }  
   
-  std::vector<FEElemBase*> FEElements(QL);
-  for (int fe=0; fe<QL; fe++)    FEElements[fe] = FEElemBase::build(mesh.GetGeomEl(mesh.get_dim()-1-VV,mesh._mesh_order)._geomel_id.c_str(),fe);  
-
   // ===== QuantityMap =========================================
-  QuantityMap  qty_map(phys);
+  QuantityMap  qty_map(mesh,&physics_map);
 
 //================================
 // ======= Add QUANTITIES ========  
@@ -152,13 +172,8 @@ int main(int argc, char** argv) {
 //==== END Add QUANTITIES ========
 //================================
 
-  // ======== TimeLoop ===================================
-  TimeLoop time_loop(files); 
-           time_loop._timemap.read();
-           time_loop._timemap.print();
-  
-  // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElements,FEElemType_vec,qrule,time_loop);
+  // ====== MultiLevelProblemTwo =================================
+  MultiLevelProblemTwo equations_map(files,physics_map,qty_map,mesh,FEElemType_vec,qrule);
   
 //===============================================
 //================== Add EQUATIONS  AND ======================
@@ -236,18 +251,16 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 //================================
 
   equations_map.setDofBcOpIc();     //  /*TODO fileIO  for  Bc, init, and Ic*/
-  equations_map.TransientSetup();  // reset the initial state (if restart) and print the Case   /*TODO fileIO */ 
 
-//initialize specific data for specific equations
-//all that happened previously was related to the standard data of EqnBase, basically  
-#if MHDCONT_EQUATIONS==1
-  eqnMHDCONT->init_equation_data();
-#endif
-  
-//   equations_map.TransientLoop();   // perform the time evolution for all the equations  /*TODO fileIO*/
+  // ======== OptLoop ===================================
+  OptLoop opt_loop(files); 
+           opt_loop._timemap.read();
+           opt_loop._timemap.print();
 
-    optimization_loop(equations_map);  /////
+  opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case   /*TODO fileIO */ 
 
+  opt_loop.optimization_loop(equations_map);
+    
 // // //   eqnNS->FunctionIntegral (0,funzione);
 // // //   eqnNS->FunctionIntegral (1,funzione);
 
@@ -260,11 +273,9 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   files.log_petsc();
 
 // ============  clean ================================
-  equations_map.clean();  //deallocates the map of equations
-
-  for (int fe=0; fe<QL; fe++) delete FEElements[fe];
-  
+  equations_map.clean();
   mesh.clear();
   
   return 0;
+  
 }

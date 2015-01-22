@@ -1,13 +1,21 @@
+#include "OptLoop.hpp"
+
+
 #include <cmath>
 
 //library headers
 #include "NumericVector.hpp"
-#include "Physics.hpp"
-#include "EquationsMap.hpp"
-#include "EqnBase.hpp"
-#include "MeshTwo.hpp"
+#include "MultiLevelProblemTwo.hpp"
+#include "SystemTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
 #include "TimeLoop.hpp"
 #include "Files.hpp"
+#include "CurrentElem.hpp"
+#include "CurrentGaussPointBase.hpp"
+#include "CurrentQuantity.hpp"
+#include "Quantity.hpp"
+#include "ElemType.hpp"
+#include "Box.hpp"
 
 #include "paral.hpp"
 
@@ -20,9 +28,10 @@
 #include "EqnNSAD.hpp"
 #include "EqnMHDAD.hpp"
 
+namespace femus {
 
-using namespace femus;
-
+  
+  
  //INITIALIZE FSTREAM FOR INTEGRAL
    //  create an ofstream integral.txt
    //the question is: who creates it? if one processor creates it,
@@ -73,9 +82,22 @@ using namespace femus;
 //either for OPTIMIZATION iterations or for NONLINEAR iterations,
 //depending on what you need
 
+ OptLoop::OptLoop(Files& files_in): TimeLoop(files_in) { }
 
+ OptLoop::~OptLoop()  {
+  
+     for (uint Level = 0; Level < _x_oldopt.size(); Level++) {
+          delete _x_oldopt[Level];
+      }
+    
+      _x_oldopt.clear();
 
-void optimization_loop(EquationsMap& e_map_in)  {
+  }
+ 
+ 
+ 
+ 
+void OptLoop::optimization_loop(MultiLevelProblemTwo& e_map_in)  {
   
   
  #ifdef NS_EQUATIONS
@@ -102,9 +124,8 @@ std::string intgr_fname = e_map_in._files._output_path + "/" + "integral.txt";
 //INITIALIZE OPT LOOP
 //pseudo time parameters for optimization
     const uint      NoLevels = e_map_in._mesh._NoLevels;
-    double                dt = e_map_in._timeloop._timemap.get("dt");
-    double pseudo_opttimeval = e_map_in._timeloop._time_in;
-    int           print_step = e_map_in._timeloop._timemap.get("printstep");
+    double pseudo_opttimeval = _time_in;
+    int           print_step = _timemap.get("printstep");
 
      double omega = 1.;
      double Jold = 10.; //TODO AAA
@@ -140,16 +161,19 @@ double lin_deltax_NSAD = 0.;
 double lin_deltax_MHDAD = 0.;
 double lin_deltax_MHDCONT = 0.;
 
+//initialize specific data for specific equations
+#ifdef MHDCONT_EQUATIONS
+     init_equation_data(mgMHDCONT);
+#endif
+  
+//nitialize Becont
+  _x_oldopt[NoLevels - 1]->zero();    //initialize Boldopt=0;
 
-//initialize Becont
-  #ifdef MHDCONT_EQUATIONS 
-     mgMHDCONT->_x_oldopt[NoLevels - 1]->zero();    //initialize Boldopt=0;
-  #endif
 
   //OPTIMIZATION LOOP
-for (uint opt_step = e_map_in._timeloop._t_idx_in + 1; opt_step <= e_map_in._timeloop._t_idx_final; opt_step++) {
+for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
   
-    pseudo_opttimeval += 1.;  //   pseudo_opttimeval += dt; //just to increase the time value
+    pseudo_opttimeval += 1.; //just to increase the time value
 
   std::cout << "\n  @@@@@@@@@@@@@@@@ Solving optimization step " << opt_step << std::endl;
 
@@ -160,7 +184,6 @@ for (uint opt_step = e_map_in._timeloop._t_idx_in + 1; opt_step <= e_map_in._tim
 //There is a problem... when you arrive here after it said: reduce the intensity, then in
 //xold there was a good value
 //xoold there was still the value multiplied
-//we'd better use x_tmp I think =======
 //   omega = 1.; //"omega=1" and "no if" is equal to the old loop
     mgMHDCONT->_x_oold[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont _x_oold " << mgMHDCONT->_x_oold [NoLevels - 1]->linfty_norm() << std::endl;
@@ -168,8 +191,8 @@ for (uint opt_step = e_map_in._timeloop._t_idx_in + 1; opt_step <= e_map_in._tim
     mgMHDCONT->_x_old[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont _x_old " << mgMHDCONT->_x_old [NoLevels - 1]->linfty_norm() << std::endl;
 
-    mgMHDCONT->_x_oldopt[NoLevels - 1]->close();
-    std::cout << "Linfty norm of Becont _x_oldopt " << mgMHDCONT->_x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
+    _x_oldopt[NoLevels - 1]->close();
+    std::cout << "Linfty norm of Becont _x_oldopt " << _x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
 
 //////////////////
 
@@ -185,11 +208,11 @@ for (uint opt_step = e_map_in._timeloop._t_idx_in + 1; opt_step <= e_map_in._tim
     std::cout << "Linfty norm of Becont _x_oold "
               << mgMHDCONT->_x_oold [NoLevels - 1]->linfty_norm() << std::endl;
 
-      mgMHDCONT->_x_oldopt[NoLevels - 1]->close();
+     _x_oldopt[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont _x_oldopt "
-              << mgMHDCONT->_x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
+              << _x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
 
-      mgMHDCONT->Bc_AddScaleDofVec(mgMHDCONT->_x_oldopt[NoLevels - 1],mgMHDCONT->_x_tmp [NoLevels - 1],1.- omega);
+      mgMHDCONT->Bc_AddScaleDofVec(_x_oldopt[NoLevels - 1],mgMHDCONT->_x_tmp [NoLevels - 1],1.- omega);
       mgMHDCONT->_x_tmp[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont x_old*omega + (1-omega)*xoold " 
               << mgMHDCONT->_x_tmp [NoLevels - 1]->linfty_norm() << std::endl;
@@ -228,7 +251,7 @@ do {
     
     knonl_NS++;
 //      std::cout << "\n >>>>> Solving nonlinear step " << knonl_NS << " for" << mgNS->_eqname << std::endl;
-    nonlin_deltax_NS = mgNS-> MGTimeStep(0.,knonl_NS);
+    nonlin_deltax_NS = MGTimeStep(knonl_NS,mgNS);
 
   } while ( nonlin_deltax_NS > eps_nl_NS && knonl_NS < MaxIterNS );
 }
@@ -244,7 +267,7 @@ do {
   k_MHD++;
 //ONE nonlinear step = ONE LINEAR SOLVER  
 //    std::cout << "\n >>>>>>>> Solving MHD system (linear in B), " << k_MHD << std::endl;
-    nonlin_deltax_MHD = mgMHD-> MGTimeStep(0.,k_MHD);
+    nonlin_deltax_MHD = MGTimeStep(k_MHD,mgMHD);
 
 }while (nonlin_deltax_MHD > eps_MHD &&  k_MHD < MaxIterMHD );
   
@@ -267,7 +290,7 @@ do {
 
 double integral = 0.;
 #ifdef NS_EQUATIONS      
-   integral = mgNS->ComputeIntegral(0,e_map_in._mesh._NoLevels - 1);
+   integral = ComputeIntegral(e_map_in._mesh._NoLevels - 1,&e_map_in._mesh,mgNS);
  #endif
   
    std::cout << "integral on processor 0: " << integral << std::endl;
@@ -302,7 +325,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
 //******* update Jold  //you must update it only here, because here it is the good point to restart from
     Jold = J;
 #ifdef MHDCONT_EQUATIONS      
-        *(mgMHDCONT->_x_oldopt[NoLevels-1]) = *(mgMHDCONT->_x_old[NoLevels-1]); 
+        *(_x_oldopt[NoLevels-1]) = *(mgMHDCONT->_x_old[NoLevels-1]); 
 #endif      
 
 	//this will be the new _x_oldopt?
@@ -343,7 +366,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
    uint k_NSAD=0;
   do {
    k_NSAD++;
-   lin_deltax_NSAD = mgNSAD-> MGTimeStep(0.,k_NSAD);
+   lin_deltax_NSAD = MGTimeStep(k_NSAD,mgNSAD);
   }
   while (lin_deltax_NSAD > eps_NSAD && k_NSAD < MaxIterNSAD );
  }
@@ -353,7 +376,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
   uint k_MHDAD=0;
  do{
    k_MHDAD++;
-lin_deltax_MHDAD = mgMHDAD-> MGTimeStep(0.,k_MHDAD);
+lin_deltax_MHDAD = MGTimeStep(k_MHDAD,mgMHDAD);
  }
 while(lin_deltax_MHDAD >  eps_MHDAD && k_MHDAD < MaxIterMHDAD );
 }
@@ -364,7 +387,7 @@ while(lin_deltax_MHDAD >  eps_MHDAD && k_MHDAD < MaxIterMHDAD );
 do{
   k_MHDCONT++;
   //not only when k_MHDCONT==1, but also when k_ADJCONT==1
-lin_deltax_MHDCONT =  mgMHDCONT-> MGTimeStep(0.,k_MHDCONT);
+lin_deltax_MHDCONT = MGTimeStep(k_MHDCONT,mgMHDCONT);
  }
 while(lin_deltax_MHDCONT >  eps_MHDCONT && k_MHDCONT < MaxIterMHDCONT );
 }
@@ -434,7 +457,7 @@ while(lin_deltax_MHDCONT >  eps_MHDCONT && k_MHDCONT < MaxIterMHDCONT );
     
 //at the end of the optimization step, see the result for DIRECT and ADJOINT and CONTROL equations
 //now we are printing OUTSIDE the nonlinear loop, so we do not print the nonlinear steps
-const uint delta_opt_step = opt_step - e_map_in._timeloop._t_idx_in;
+const uint delta_opt_step = opt_step - _t_idx_in;
      if (delta_opt_step%print_step == 0) e_map_in.PrintSol(opt_step,pseudo_opttimeval);   //print sol.N.h5 and sol.N.xmf
   
       
@@ -443,3 +466,192 @@ const uint delta_opt_step = opt_step - e_map_in._timeloop._t_idx_in;
   
   return;
 }
+
+
+
+void OptLoop::init_equation_data(const SystemTwo* eqn) {
+  
+//======equation-specific vectors     =====================
+      _x_oldopt.resize(eqn->_NoLevels);
+      
+        for(uint Level = 0; Level < _x_oldopt.size(); Level++)  {
+   uint n_glob = eqn->_dofmap._Dim[Level]; //is it already filled? Now yes!!!!!!!!!
+  _x_oldopt[Level] = NumericVector::build().release(); _x_oldopt[Level]->init(n_glob,false, SERIAL);
+       }
+ 
+  
+ return; 
+}
+
+
+
+
+//===============================
+
+//this function should belong to the NS equation, or to MultiLevelProblemTwo
+//actually the best place is an OptimalControl framework
+
+//the problem is that this function uses all the structures 
+//for dofs and gauss which have been implemented in Eqn,
+// therefore i cannot move it so easily;
+// in this sense it cannot belong to the OptPhys class.
+//Now the point is: what would have happened if the EqnNS
+// was a LIBRARY class? We could not add the ComputeIntegral
+// function to its member functions, because it is 
+// an optimal-control related stuff.
+//So, here's another reason why the EqnNS must be application related;
+//but on the other hand here it is another reason
+//why we have to think of making a NS equation MORE ABSTRACT,
+//or at least some of its parts, in such a way that we can 
+// SHARE AT LEAST SOME PARTS OF IT TO OTHER "NS FLAVOURS".
+//We have to think of operators and boundary conditions,
+// in a more general framework
+
+//remember that the mesh is NON-DIMENSIONAL inside the code,
+// so you should multiply all coordinates by Lref
+ 
+//The value of this was 3 times in 3D and 2 times in 2D
+//it means that a loop is done DIMENSION times instead of 1 time
+
+
+double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn) {
+
+   const uint mesh_vb = VV;
+  
+    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
+  
+  // processor index
+  const uint myproc = mesh->_iproc;
+  // geometry -----
+  const uint  space_dim =       mesh->get_dim();
+  const uint   mesh_ord = (int) mesh->GetRuntimeMap().get("mesh_ord");  
+  const uint     meshql = (int) mesh->GetRuntimeMap().get("meshql");    //======== ELEMENT MAPPING =======
+  
+//======Functions in the integrand ============
+  
+//========= DOMAIN MAPPING
+    CurrentQuantity xyz(currgp);
+    xyz._dim      = DIMENSION;
+    xyz._FEord    = meshql;
+    xyz._ndof     = eqn->_eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz.Allocate();
+
+//========== Quadratic domain, auxiliary  
+  CurrentQuantity xyz_refbox(currgp);
+  xyz_refbox._dim      = DIMENSION;
+  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+  xyz_refbox._ndof     = mesh->GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+  xyz_refbox.Allocate();
+  
+     //========== 
+    CurrentQuantity Vel(currgp);
+    Vel._qtyptr      = eqn->_eqnmap._qtymap.get_qty("Qty_Velocity");
+    Vel.VectWithQtyFillBasic();
+    Vel.Allocate();
+    
+    //========== 
+    CurrentQuantity VelDes(currgp);
+    VelDes._qtyptr      = eqn->_eqnmap._qtymap.get_qty("Qty_DesVelocity");
+    VelDes.VectWithQtyFillBasic();
+    VelDes.Allocate();
+   
+   double integral=0.;
+    
+      const uint el_ngauss = eqn->_eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+
+//parallel sum
+    const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
+    const uint nel_b = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level];
+  
+    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+
+    currelem.set_el_nod_conn_lev_subd(Level,mesh->_iproc,iel);
+    currelem.SetMidpoint();
+    
+    currelem.ConvertElemCoordsToMappingOrd(xyz);
+    mesh->TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
+
+//======= 
+    xyz_refbox.SetElemAverage();
+    int el_flagdom = ElFlagControl(xyz_refbox._el_average,mesh);
+//=======        
+
+    if ( Vel._eqnptr != NULL )       Vel.GetElemDofs(Level);
+    else                             Vel._qtyptr->FunctionDof(Vel,0./*time*/,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
+    if ( VelDes._eqnptr != NULL ) VelDes.GetElemDofs(Level);
+    else                          VelDes._qtyptr->FunctionDof(VelDes,0./*time*/,&xyz_refbox._val_dofs[0]);    
+
+//AAA time is picked as a function pointer of the time C library i think...
+    // it doesnt say it was not declared
+    //here's why you should remove all unused headers always!
+    
+
+    for (uint qp = 0; qp < el_ngauss; qp++) {
+
+for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
+     
+   const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
+   const double  wgt_g = eqn->_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+
+     for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (fe,qp);  }
+
+ Vel.val_g();
+ VelDes.val_g();
+
+
+  double deltau_squarenorm_g = 0.;
+for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel._val_g[j] - VelDes._val_g[j])*(Vel._val_g[j] - VelDes._val_g[j]); }
+
+  //NO for (uint j=0; j<space_dim; j++) { the integral is a scalar!
+ 
+  integral += el_flagdom*wgt_g*Jac_g*deltau_squarenorm_g;
+
+  //}
+   
+   
+    }//gauss loop
+     
+    }//element loop
+    
+  return integral;  
+  
+}
+
+
+
+  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMeshTwo* mesh)  {
+
+  Box* box= static_cast<Box*>(mesh->GetDomain());
+   
+   
+     int el_flagdom=0;
+
+///optimal control
+  #if DIMENSION==2
+   //flag on the controlled region 2D
+       if (   el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])
+	   && el_xm[0] < 0.75*(box->_le[0] - box->_lb[0])
+	   && el_xm[1] > 0.75*(box->_le[1] - box->_lb[1]) ) {
+                 el_flagdom=1;
+             }
+  #else
+   //flag on the controlled region 3D
+      if ( el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])  
+	&& el_xm[0] < 0.75*(box->_le[0] - box->_lb[0]) 
+	&& el_xm[1] > 0.75*(box->_le[1] - box->_lb[1])
+	&& el_xm[2] > 0.25*(box->_le[2] - box->_lb[2]) 
+	&& el_xm[2] < 0.75*(box->_le[2] - box->_lb[2]) ) {
+	el_flagdom=1;
+        }
+ #endif
+
+return el_flagdom; 
+}
+
+
+
+
+} //end namespace femus
+
+

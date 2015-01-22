@@ -2,21 +2,21 @@
 #define __mgsolvermhd0_h__
 
 
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 
 namespace femus {
 
 //Forward declarations
-class EquationsMap;
+class MultiLevelProblemTwo;
 
 
-class EqnMHD : public EqnBase {
+class EqnMHD : public SystemTwo {
 
   public:
   
   EqnMHD(
     std::vector<Quantity*> int_map_in,
-    EquationsMap& mg_equations_map_in,
+    MultiLevelProblemTwo& mg_equations_map_in,
     std::string eqname_in="Eqn_MHD",
     std::string varname_in="B");
 	   
@@ -28,7 +28,7 @@ class EqnMHD : public EqnBase {
   
   void elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const;
   
-  void GenMatRhsVB(const uint vb,const double time,const uint Level);
+  void GenMatRhs(const uint Level);
   
    
   

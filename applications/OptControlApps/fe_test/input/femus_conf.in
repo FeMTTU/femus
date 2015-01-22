@@ -2,14 +2,11 @@
 <Mesh>
 # double # mesh file consistency
 
-libmesh_gen   1   
-ibc_gen       0            # ==== in library routines # se c'e' un file per il mesh lo stesso file servira' anche per le BC se sono state impostate...
-nolevels      1                 
+nolevels      3                 
 meshql        1           # ------<ElementMapping>------- # for THE APP # =MESH CONSISTENCY=== # ==== in library routines # depends on the kind of Mesh that is used# depends basically on the Boundary Mesh# 0=QUADRATIC Mapping  1=LINEAR Mapping
 mesh_ord      0           # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# 0=QUADRATIC GeomElements (Quad8,Quad9,Hex27,...)# 1=LINEAR GeomElements (Quad4,Hex8,...)
 geomel_type   3           # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
 dimension     2              
-domain        0           # Box, or whatever SHAPE...  # =MESH CONSISTENCY(libmesh_gen=0)===  # ==== in library routines   # 0=Box# 1=Cylinder# Whatever the rest
 bdry_toll     0.0000001    # ==== not in library routines, but library-type
 
 
@@ -20,7 +17,7 @@ penalty_val 1.e10        # ==== not in library routines, but library-type
 
 
 <Box>
-# double # mesh file consistency (case libmesh_gen=0)  
+# double # mesh file consistency
 
  lxb 0.    
  lxe 1.  
@@ -31,7 +28,7 @@ penalty_val 1.e10        # ==== not in library routines, but library-type
  lzb 0.  
  lze 1.  
 
-# only for libmesh_gen=1
+# only for libmesh generating function
 
 nintervx   2
 nintervy   2 
@@ -47,16 +44,6 @@ thetaz    0.
 
 
 
-<Files>
-# std::string  # mesh file consistency
-
-F_MESH_READ    inclQ2D2x2.gam
-# ======== this last one is Only Gencase # we recognize the file format from the extension: .gam=gambit, .med=salome
-
-</Files>
-
-
-
 <TimeLoop>
 # double
 
@@ -65,7 +52,6 @@ itime       0.0
 initial_step 0
 nsteps      1    
 printstep   1    
-ndigits     4    
 
 </TimeLoop>
 

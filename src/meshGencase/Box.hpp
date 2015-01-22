@@ -3,7 +3,7 @@
 
 
 #include "Domain.hpp"
-#include "RunTimeMap.hpp"
+#include "FemusInputParser.hpp"
 
 
 namespace femus {
@@ -18,14 +18,16 @@ namespace femus {
  class Box : public Domain {
  
  public:
-      
+    
+   const uint GetDomainFlag() const { return 0;}
+   
     double* _lb;
     double* _le;
  
-   Box(const uint spacedim_in, RunTimeMap<double> & map_in);
+   Box(const uint spacedim_in, FemusInputParser<double> & map_in);
    ~Box();
    
-   void init(double Lref_in);
+   void InitAndNondimensionalize(double Lref_in);
 
    void TransformPointToRef(const double* x_in,double* x_out) const; 
    

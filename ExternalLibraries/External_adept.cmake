@@ -7,7 +7,7 @@ SET(ADEPT_SOURCE_DIR ${PROJECT_SOURCE_DIR}/ExternalLibraries/adept/adept-${ADEPT
 
 #look if there is a package for adept
 IF (EXISTS "${ADEPT_SOURCE_DIR}")   
-  MESSAGE(STATUS "ADEPT: Found ADEPT library")
+  MESSAGE(STATUS "ADEPT_FOUND = TRUE")
 ENDIF (EXISTS "${ADEPT_SOURCE_DIR}")
 
 SET (ADEPT_INCLUDE_DIRS  ${ADEPT_SOURCE_DIR}/include)

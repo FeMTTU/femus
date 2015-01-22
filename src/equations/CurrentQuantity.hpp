@@ -3,32 +3,37 @@
 
 #include <vector>
 #include "VBTypeEnum.hpp"
-#include "CurrGaussPoint.hpp"
+#include "CurrentGaussPoint.hpp"
 
 
 namespace femus {
 
  
- class EqnBase;
+ class SystemTwo;
  class Quantity;
- class CurrGaussPointBase;
- class CurrElem;
+ class CurrentGaussPointBase;
+ class CurrentElem;
 
-  class QuantityLocal {
+
+ //Remember that you need to allocate the operators before if you use them
+ 
+  class CurrentQuantity {
     
   public:
     
-     QuantityLocal(CurrGaussPointBase &, CurrElem &);
-    ~QuantityLocal();
+     CurrentQuantity(const CurrentGaussPointBase &);
+    ~CurrentQuantity();
 
     
     //TODO all these function are of the SET type (this is how I should call them), that is why they are NOT CONST
    void  VectWithQtyFillBasic();             //this needs the quantity and the fe map
+   void Allocate();
+
    void                 val_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
-   void                grad_g(const uint vbflag); //this only needs the CUrrent GAUSS  //No Quantity needed
+   void                grad_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void                curl_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void            ExtendDofs(); //this only needs the CUrrent GAUSS  //No Quantity needed
-   void         GetElDofsVect(const uint Level); //this only needs the CUrrent ELEMENT
+   void         GetElemDofs(const uint Level); //this only needs the CUrrent ELEMENT
    void        SetElemAverage();
   
   //if you have NO Quantity and NO Equation ==========
@@ -36,25 +41,32 @@ namespace femus {
                                                                  //but the point is that we have to pass also the offset...
     
 
-    double*  _val_g;                                      //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT  //WHY ARE WE NOT ALLOCATING IN THE CONSTRUCTOR?!?
-    double*  _val_g3D;   //for cross products             //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    double*  _val_dofs;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    double*  _val_dofs3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    double** _grad_g;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    double** _grad_g3D;  //for cross products   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    double* _curl_g3D;   //NEED TO ALLOCATE THIS ONE BEFORE IF YOU USE IT
-    std::vector<double> _el_average;  /*[spacedim]*/ //NEED TO ALLOCATE THIS EXPLICITLY WHERE IT'S USED... TODO this class must be reconsidered!!! with std::vectorss, and so on!!!
+    std::vector<double>  _val_g;
+    std::vector<double>  _val_g3D;
+    std::vector< std::vector<double> >  _grad_g;
+    std::vector< std::vector<double> >  _grad_g3D;
+    std::vector<double> _curl_g3D;
+    
+    std::vector<double>  _val_dofs;  
+    std::vector<double>  _val_dofs3D;
+    
+    std::vector<double> _el_average;
+    
     uint _FEord; 
     uint _dim;
     uint _ndof;
-    
-    EqnBase*  _eqnptr;
     Quantity* _qtyptr;
+    SystemTwo*  _eqnptr;
     
-    CurrGaussPointBase & _currGP;
-    CurrElem & _currEl;
+    inline const CurrentElem &  GetCurrentElem() const { 
+      return _currEl;
+    }
     
-
+  protected:
+        
+    const CurrentGaussPointBase & _currGP;
+    const CurrentElem & _currEl;
+    
   };
   
 
@@ -81,22 +93,8 @@ namespace femus {
  //Since the Vect may or may not have a Quantity, 
  //I don't pass the quantity to the constructor, but later
  
- //Ok, I need the list of Abstract FE Elements.
-//Now, Vect is first of all associated with a Quantity
-//but wait, what if it is not associated to any Quantity?
-//TODO then you need other ways to get to the FEMap.
-//The quantity must have the FEMap...
-//Then Vect must be used somewhere where the _FEMap can be reached
- 
-//TODO the Vect class should be called the VectGaussPoint, because it mostly holds GAUSS POINT VALUES ! 
- 
  //Ok, so Vect can have a quantity with equation,
  //or a quantity without equation,
  //or no quantity at all
  
- //Vect has a LOCAL nature, in the sense that it has the ELEMENT dofs, and also the CURRENT GAUSS values
- //for several operators
- 
- //TODO TODO TODO this class must be better redefined 
-
 #endif

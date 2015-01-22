@@ -3,19 +3,19 @@
 
 
 //inherited classes
-#include "EqnBase.hpp"
+#include "SystemTwo.hpp"
 
 namespace femus {
 
 // Forwarded classes
-class EquationsMap;
+class MultiLevelProblemTwo;
 
-class EqnMHDAD : public EqnBase {
+class EqnMHDAD : public SystemTwo {
 
   public:
     
 EqnMHDAD(  std::vector<Quantity*> int_map_in,
-	           EquationsMap& mg_equations_map_in,
+	           MultiLevelProblemTwo& mg_equations_map_in,
                    std::string eqname_in="Eqn_MHDAD",
                    std::string varname_in="xi");
 
@@ -27,7 +27,7 @@ EqnMHDAD(  std::vector<Quantity*> int_map_in,
 
  void elem_bc_read(const double xp[],int& surf_id,double normal[],int bc_flag[]) const;
 
- void GenMatRhsVB(const uint vb,const double time,const uint Level);  ///< Volume Assemblying.
+ void GenMatRhs(const uint Level);  ///< Volume Assemblying.
   
 
 

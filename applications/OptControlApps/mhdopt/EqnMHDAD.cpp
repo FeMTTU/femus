@@ -6,38 +6,35 @@
 #include "SparseMatrix.hpp"
 #include "DenseVector.hpp"
 #include "NumericVector.hpp"
-#include "LinearSolverM.hpp"
+#include "LinearEquationSolver.hpp"
 
 #include "Math.hpp"
-#include "Physics.hpp"
 #include "Quantity.hpp"
-#include "MeshTwo.hpp"
+#include "MultiLevelMeshTwo.hpp"
 #include "GeomEl.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "FETypeEnum.hpp"
-#include "FEElemBase.hpp"
 #include "NormTangEnum.hpp"
 #include "QTYnumEnum.hpp"
 #include "TimeLoop.hpp"
 
-#include "CurrGaussPoint.hpp"
-#include "CurrElem.hpp"
+#include "CurrentGaussPoint.hpp"
+#include "CurrentElem.hpp"
 
 #include "Opt_conf.hpp"
 #include "EqnNS.hpp"
 #include "EqnNSAD.hpp"
 #include "EqnMHD.hpp"
 #include "EqnMHDCONT.hpp"
-#include "OptPhysics.hpp"
 
 namespace femus {
 
 /// Constructor.
   EqnMHDAD::EqnMHDAD(std::vector<Quantity*> int_map_in,
-	           EquationsMap& mg_equations_map_in,
+	           MultiLevelProblemTwo& mg_equations_map_in,
                    std::string eqname_in,
                    std::string varname_in):
-      EqnBase(int_map_in,mg_equations_map_in,eqname_in,varname_in)      
+      SystemTwo(int_map_in,mg_equations_map_in,eqname_in,varname_in)      
       {
 
 //=======  _var_names[]  ===========
@@ -72,150 +69,138 @@ EqnMHDAD::~EqnMHDAD() {}
 /// This function assembles the matrix and the rhs:
 
 
-  void EqnMHDAD::GenMatRhsVB(const uint vb,const double time,const uint Level)  {
+  void EqnMHDAD::GenMatRhs(const uint Level)  {
 
-    CurrElem       currelem(vb,*this,_eqnmap);
-    CurrGaussPointBase & currgp = CurrGaussPointBase::build(vb,_eqnmap, _mesh.get_dim());
+   const double time =  0.;  //_eqnmap._timeloop._curr_time;
    
-    
-//======= TIME - STATIONARY OR NOT =======
-const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
-  const double   dt = _eqnmap._timeloop._timemap.get("dt");
-
-//======== GEOMETRICAL ELEMENT =======
-  const uint space_dim =       _mesh.get_dim();
-  const uint  mesh_ord = (int) _mesh._mesh_rtmap.get("mesh_ord");
-  const uint    meshql = (int) _mesh._mesh_rtmap.get("meshql");  //======== ELEMENT MAPPING =======
-
-//========= BCHandling =========
-  const double penalty_val =   _mesh._mesh_rtmap.get("penalty_val");    
-
-//=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-  
-     //QTYZERO
-    QuantityLocal BhomAdjOld(currgp,currelem);
-    BhomAdjOld._qtyptr   = _QtyInternalVector[QTYZERO];
-    BhomAdjOld.VectWithQtyFillBasic();
-    BhomAdjOld._val_dofs = new double[BhomAdjOld._dim*BhomAdjOld._ndof];
-    BhomAdjOld._val_g    = new double[BhomAdjOld._dim];
-  
-    //QTYONE
-    QuantityLocal BhomLagMultAdjOld(currgp,currelem);
-    BhomLagMultAdjOld._qtyptr   = _QtyInternalVector[QTYONE];
-    BhomLagMultAdjOld.VectWithQtyFillBasic();
-    BhomLagMultAdjOld._val_dofs = new double[BhomLagMultAdjOld._dim*BhomLagMultAdjOld._ndof];
-    BhomLagMultAdjOld._val_g    = new double[BhomLagMultAdjOld._dim];  
-
-//========= END INTERNAL QUANTITIES (unknowns of the equation) ================= 
-
-//=========EXTERNAL QUANTITIES (couplings) =====
-
- //========= DOMAIN MAPPING
-    QuantityLocal xyz(currgp,currelem);
-    xyz._dim      = DIMENSION;
-    xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
-    xyz._val_dofs = new double[xyz._dim*xyz._ndof];
-    xyz._val_g    = new double[xyz._dim];
-
-//========== Quadratic domain, auxiliary  
-  QuantityLocal xyz_refbox(currgp,currelem);
-  xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
-  xyz_refbox._val_dofs = new double[xyz_refbox._dim*xyz_refbox._ndof]; 
-  xyz_refbox._val_g    = new double[xyz_refbox._dim];   
-
-  //==========     
-    QuantityLocal Vel(currgp,currelem);
-    Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
-    Vel.VectWithQtyFillBasic();
-    Vel._val_dofs    = new double[Vel._dim*Vel._ndof];
-    Vel._val_g       = new double[Vel._dim];
- 
-    //==========    
-    QuantityLocal VelAdj(currgp,currelem);
-    VelAdj._qtyptr      = _eqnmap._qtymap.get_qty("Qty_VelocityAdj");
-    VelAdj.VectWithQtyFillBasic();
-    VelAdj._val_dofs    = new double[VelAdj._dim*VelAdj._ndof];
-    VelAdj._val_dofs3D  = new double[       3*VelAdj._ndof]; //needed for a vector product
-    VelAdj._val_g       = new double[VelAdj._dim];
-    VelAdj._val_g3D     = new double[3];   //needed for a vector product
-   
-    //==========    
-    QuantityLocal Bhom(currgp,currelem);
-    Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
-    Bhom.VectWithQtyFillBasic();
-    Bhom._val_dofs = new double[Bhom._dim*Bhom._ndof];
-
-//=========
-    QuantityLocal Bext(currgp,currelem);
-    Bext._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
-    Bext.VectWithQtyFillBasic();
-    Bext._val_dofs = new double[Bext._dim*Bext._ndof];
-  
-//========= auxiliary, must be AFTER Bhom! //TODO this is an example of  Vect which is not associated to a Quantity
-    QuantityLocal Bmag(currgp,currelem); //total
-    Bmag._dim        = Bhom._dim;               //same as Bhom
-    Bmag._FEord      = Bhom._FEord;             //same as Bhom
-    Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
-    Bmag._val_dofs   = new double[Bmag._dim*Bmag._ndof]; //we might use their own vector!
-    Bmag._val_dofs3D = new double[        3*Bmag._ndof];
-    Bmag._val_g      = new double[Bmag._dim];
-    Bmag._curl_g3D   = new double[3];
-
-    
-//========= END EXTERNAL QUANTITIES =================
-  //====== Physics
-  OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&_phys);
   //========= parameters
-   double IRem =  1./optphys->_Rem;
-   double S    = optphys->_S;
+   double IRem =  1./_phys.get("Rem");
+   double S    = _phys.get("S");
   
   //=========== Operators 
 
   double dphijdx_g[DIMENSION];
   double dphiidx_g[DIMENSION];
   double  curlBXlambda_g3D[3]; 
-
-    const uint el_ngauss = _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussPointsNumber();
     
-    const uint nel_e = _mesh._off_el[vb][_NoLevels*_iproc+Level+1];
-    const uint nel_b = _mesh._off_el[vb][_NoLevels*_iproc+Level];
+//======= TIME - STATIONARY OR NOT =======
+const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
+  const double   dt = 1.; //_eqnmap._timeloop._timemap.get("dt");
 
-  if (vb==VV)   {//BEGIN VOLUME    
+//======== GEOMETRICAL ELEMENT =======
+  const uint space_dim =       _mesh.get_dim();
+  const uint  mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
+  const uint    meshql = (int) _mesh.GetRuntimeMap().get("meshql");  //======== ELEMENT MAPPING =======
+
+//========= BCHandling =========
+  const double penalty_val =   _mesh.GetRuntimeMap().get("penalty_val");    
+
+   {//BEGIN VOLUME    
+
+  const uint mesh_vb = VV;
+  
+    CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+   
+//=========INTERNAL QUANTITIES (unknowns of the equation) ==================
+     //QTYZERO
+    CurrentQuantity BhomAdjOld(currgp);
+    BhomAdjOld._qtyptr   = _QtyInternalVector[QTYZERO];
+    BhomAdjOld.VectWithQtyFillBasic();
+    BhomAdjOld.Allocate();    
+  
+    //QTYONE
+    CurrentQuantity BhomLagMultAdjOld(currgp);
+    BhomLagMultAdjOld._qtyptr   = _QtyInternalVector[QTYONE];
+    BhomLagMultAdjOld.VectWithQtyFillBasic();
+    BhomLagMultAdjOld.Allocate();    
+//========= END INTERNAL QUANTITIES (unknowns of the equation) ================= 
+
+//=========EXTERNAL QUANTITIES (couplings) =====
+
+ //========= DOMAIN MAPPING
+    CurrentQuantity xyz(currgp);
+    xyz._dim      = DIMENSION;
+    xyz._FEord    = meshql;
+    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz.Allocate();    
+
+//========== Quadratic domain, auxiliary  
+  CurrentQuantity xyz_refbox(currgp);
+  xyz_refbox._dim      = DIMENSION;
+  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+  xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+  xyz_refbox.Allocate();    
+
+  //==========     
+    CurrentQuantity Vel(currgp);
+    Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
+    Vel.VectWithQtyFillBasic();
+    Vel.Allocate();    
  
+    //==========    
+    CurrentQuantity VelAdj(currgp);
+    VelAdj._qtyptr      = _eqnmap._qtymap.get_qty("Qty_VelocityAdj");
+    VelAdj.VectWithQtyFillBasic();
+    VelAdj.Allocate();    
+   
+    //==========    
+    CurrentQuantity Bhom(currgp);
+    Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
+    Bhom.VectWithQtyFillBasic();
+    Bhom.Allocate();    
+
+//=========
+    CurrentQuantity Bext(currgp);
+    Bext._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
+    Bext.VectWithQtyFillBasic();
+    Bext.Allocate();    
+  
+//========= auxiliary, must be AFTER Bhom! //TODO this is an example of  Vect which is not associated to a Quantity
+    CurrentQuantity Bmag(currgp); //total
+    Bmag._dim        = Bhom._dim;               //same as Bhom
+    Bmag._FEord      = Bhom._FEord;             //same as Bhom
+    Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
+    Bmag.Allocate();    
+    
+//========= END EXTERNAL QUANTITIES =================
+
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level];
+
+//=====================
+//=====================    
+    
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
     currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
-    currelem.set_el_DofObj_lev_subd(Level,_iproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);    
-    _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
 
     currelem.SetElDofsBc(Level);
     
-           BhomAdjOld.GetElDofsVect(Level);
-    BhomLagMultAdjOld.GetElDofsVect(Level);
+           BhomAdjOld.GetElemDofs(Level);
+    BhomLagMultAdjOld.GetElemDofs(Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BhomAdjOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
+    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),BhomAdjOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
     
     
-     if ( Vel._eqnptr != NULL )      Vel.GetElDofsVect(Level);
-    else                             Vel._qtyptr->FunctionDof(vb,Vel,time,xyz_refbox._val_dofs);
-    if ( VelAdj._eqnptr != NULL ) VelAdj.GetElDofsVect(Level);
-    else                          VelAdj._qtyptr->FunctionDof(vb,VelAdj,time,xyz_refbox._val_dofs);
-    if ( Bhom._eqnptr != NULL )     Bhom.GetElDofsVect(Level);
-    else                            Bhom._qtyptr->FunctionDof(vb,Bhom,time,xyz_refbox._val_dofs);
-    if ( Bext._eqnptr != NULL )     Bext.GetElDofsVect(Level);
-    else                            Bext._qtyptr->FunctionDof(vb,Bext,time,xyz_refbox._val_dofs);
+     if ( Vel._eqnptr != NULL )      Vel.GetElemDofs(Level);
+    else                             Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
+    if ( VelAdj._eqnptr != NULL ) VelAdj.GetElemDofs(Level);
+    else                          VelAdj._qtyptr->FunctionDof(VelAdj,time,&xyz_refbox._val_dofs[0]);
+    if ( Bhom._eqnptr != NULL )     Bhom.GetElemDofs(Level);
+    else                            Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
+    if ( Bext._eqnptr != NULL )     Bext.GetElemDofs(Level);
+    else                            Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
 
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
-    Math::zeroN(Bmag._val_dofs,Bmag._dim*Bmag._ndof);
+    Math::zeroN(&Bmag._val_dofs[0],Bmag._dim*Bmag._ndof);
 
     for (uint ivarq=0; ivarq < Bmag._dim; ivarq++)    { //ivarq is like idim
           for (uint d=0; d < Bmag._ndof; d++)    {
@@ -226,17 +211,23 @@ const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
 //=======
 
 
+    const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+    
     for (uint qp = 0; qp < el_ngauss; qp++) {
 //=======here starts the "COMMON SHAPE PART"==================
-for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
-for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);  }  
+for (uint fe = 0; fe < QL; fe++)     {          
+  currgp.SetPhiElDofsFEVB_g (fe,qp); 
+  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  
+}  
 	  
 const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is the same for both QQ and LL!
-const double dtxJxW_g = det * _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
+const double dtxJxW_g = det * _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
-for (uint fe = 0; fe < QL; fe++)     { currgp.SetDPhiDxyzElDofsFEVB_g   (vb,fe,qp); }
-for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe); }
+for (uint fe = 0; fe < QL; fe++)     { 
+  currgp.SetDPhiDxyzElDofsFEVB_g   (fe,qp);
+  currgp.ExtendDphiDxyzElDofsFEVB_g(fe);
+}
 //=======end of the "COMMON SHAPE PART"==================
 
       BhomAdjOld.val_g();
@@ -246,8 +237,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
       VelAdj.val_g();
 
  //vector product
-          Math::extend(VelAdj._val_g,VelAdj._val_g3D,space_dim);
-          Math::cross(Bmag._curl_g3D,VelAdj._val_g3D,curlBXlambda_g3D);
+          Math::extend(&VelAdj._val_g[0],&VelAdj._val_g3D[0],space_dim);
+          Math::cross(&Bmag._curl_g3D[0],&VelAdj._val_g3D[0],curlBXlambda_g3D);
 
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================
@@ -259,8 +250,8 @@ for (uint fe = 0; fe < QL; fe++)     { currgp.ExtendDphiDxyzElDofsFEVB_g(vb,fe);
         for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BhomAdjOld._FEord][i+idim*BhomAdjOld._ndof];
 //======= END "COMMON tEST PART for QTYZERO" ==========
 
-   	  double BDdphii_g      = Math::dot(  Bmag._val_g,dphiidx_g,space_dim);
-	  double lambdaDdphii_g = Math::dot(VelAdj._val_g,dphiidx_g,space_dim);
+   	  double BDdphii_g      = Math::dot(  &Bmag._val_g[0],dphiidx_g,space_dim);
+	  double lambdaDdphii_g = Math::dot(&VelAdj._val_g[0],dphiidx_g,space_dim);
 	  
          for (uint idim=0; idim<space_dim; idim++) {
             const uint irowq = i+idim*BhomAdjOld._ndof;
@@ -287,7 +278,7 @@ if (_Dir_pen_fl == 0)  {
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
 
            double Lap_g    = Math::dot(dphijdx_g,dphiidx_g,space_dim);
-	  double Advphij_g = Math::dot(Vel._val_g,dphijdx_g,space_dim);
+	  double Advphij_g = Math::dot(&Vel._val_g[0],dphijdx_g,space_dim);
           
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
             int irowq = i+idim*BhomAdjOld._ndof;
@@ -357,33 +348,74 @@ if (_Dir_pen_fl == 0)  {
   } 
   // end of element loop
 
-
   }//END VOLUME
   
     // *****************************************************************
     // *****************************************************************
     // *****************************************************************
 
-    else if (vb==BB)  {//BEGIN BOUNDARY  // *****************************************************************
+  {//BEGIN BOUNDARY  // *****************************************************************
 
+  const uint mesh_vb = BB;
+  
+    CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+   
+//=========INTERNAL QUANTITIES (unknowns of the equation) ==================
+     //QTYZERO
+    CurrentQuantity BhomAdjOld(currgp);
+    BhomAdjOld._qtyptr   = _QtyInternalVector[QTYZERO];
+    BhomAdjOld.VectWithQtyFillBasic();
+    BhomAdjOld.Allocate();    
+  
+    //QTYONE
+    CurrentQuantity BhomLagMultAdjOld(currgp);
+    BhomLagMultAdjOld._qtyptr   = _QtyInternalVector[QTYONE];
+    BhomLagMultAdjOld.VectWithQtyFillBasic();
+    BhomLagMultAdjOld.Allocate();    
+//========= END INTERNAL QUANTITIES (unknowns of the equation) ================= 
+
+//=========EXTERNAL QUANTITIES (couplings) =====
+
+ //========= DOMAIN MAPPING
+    CurrentQuantity xyz(currgp);
+    xyz._dim      = DIMENSION;
+    xyz._FEord    = meshql;
+    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz.Allocate();    
+
+//========== Quadratic domain, auxiliary  
+  CurrentQuantity xyz_refbox(currgp);
+  xyz_refbox._dim      = DIMENSION;
+  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+  xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+  xyz_refbox.Allocate();    
+   
+//========= END EXTERNAL QUANTITIES =================
+
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level];
+
+//=====================
+//=====================    
+    
  for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
 
      currelem.Mat().zero();
      currelem.Rhs().zero();
 
      currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
-     currelem.set_el_DofObj_lev_subd(Level,_iproc,iel); 
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(vb,currelem.GetNodeCoords(),xyz_refbox._val_dofs);
+    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
 
      currelem.SetElDofsBc(Level);
      
-            BhomAdjOld.GetElDofsVect(Level);
-     BhomLagMultAdjOld.GetElDofsVect(Level);
+            BhomAdjOld.GetElemDofs(Level);
+     BhomLagMultAdjOld.GetElemDofs(Level);
    
-     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(vb,BhomAdjOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
+     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),BhomAdjOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
   
     //============ BC =======
@@ -406,19 +438,20 @@ if (_Dir_pen_fl == 1)  {
     
 //========END BC============
      
+    const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
 
     for (uint qp=0; qp< el_ngauss; qp++) {
 //======= "COMMON SHAPE PART"============================
  for (uint fe = 0; fe < QL; fe++)     {
    currgp.SetPhiElDofsFEVB_g (fe,qp); 
-   currgp.SetDPhiDxezetaElDofsFEVB_g (vb,fe,qp);   }
+   currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);   }
 
         const double det   = dt*currgp.JacVectBB_g(xyz);
-	const double dtxJxW_g = det * _eqnmap._qrule[_mesh.get_dim()-1-vb].GetGaussWeight(qp);
+	const double dtxJxW_g = det * _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================   
       
       xyz_refbox.val_g();
-      BhomLagMultAdjOld._qtyptr->Function_txyz(time,xyz_refbox._val_g/*xyz._val_g*/,BhomLagMultAdjOld._val_g);  //i prefer using the function instead of the p_old vector
+      BhomLagMultAdjOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0]/*xyz._val_g*/,&BhomLagMultAdjOld._val_g[0]);  //i prefer using the function instead of the p_old vector
    
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ===================
@@ -485,9 +518,8 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
 
  }//elem loop
 
+ 
   }//END BOUNDARY ************************
-  
-  //******************************DESTROY ALL THE Vect****************************  TODO
   
   
 #ifdef DEFAULT_PRINT_INFO

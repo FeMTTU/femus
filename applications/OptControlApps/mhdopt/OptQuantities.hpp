@@ -6,7 +6,7 @@
 
 #include "Typedefs.hpp"
 #include "Quantity.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 
 #include "Opt_conf.hpp"
 

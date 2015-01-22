@@ -2,7 +2,7 @@
 
   Program: FEMUS
   Module: LinearEquationSolver
-  Authors: Eugenio Aulisa, Simone Bnà
+  Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
  
   Copyright (c) FEMTTU
   All rights reserved. 
@@ -28,6 +28,7 @@
 #include "AsmPetscLinearEquationSolver.hpp"
 #include "GmresPetscLinearEquationSolver.hpp"
 #include "VankaPetscLinearEquationSolver.hpp"
+#include "PetscLinearSolverM.hpp"
 #include "Preconditioner.hpp"
 
 namespace femus {
@@ -50,6 +51,10 @@ namespace femus {
       }
       case VANKA_SMOOTHER:{
 	std::auto_ptr<LinearEquationSolver> ap(new VankaPetscLinearEquationSolver(igrid, other_mesh));
+	return ap;
+      }
+      case NO_SMOOTHER:{
+	std::auto_ptr<LinearEquationSolver> ap(new PetscLinearSolverM(igrid, other_mesh));
 	return ap;
       }
       }

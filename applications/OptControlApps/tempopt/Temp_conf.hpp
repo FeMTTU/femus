@@ -8,7 +8,6 @@
 //   #define DIMENSION    3
 // **************************************
   
-//TODO it seems like this .h file is NOT in the .depend, how come?
  
 //let us give a definition of configuration.
 //What you pass to the constructor is configuration?
