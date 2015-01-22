@@ -9,7 +9,7 @@
 
 namespace femus {
 
-class EquationsMap;
+class MultiLevelProblemTwo;
 
 
 class MeshTwo;

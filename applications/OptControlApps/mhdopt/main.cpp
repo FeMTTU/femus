@@ -18,7 +18,7 @@
 #include "MeshTwo.hpp"
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "ElemType.hpp"
 #include "TimeLoop.hpp"
 #include "Typedefs.hpp"
@@ -159,8 +159,8 @@ int main(int argc, char** argv) {
 //==== END Add QUANTITIES ========
 //================================
 
-  // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElemType_vec,qrule);
+  // ====== MultiLevelProblemTwo =================================
+  MultiLevelProblemTwo equations_map(files,phys,qty_map,mesh,FEElemType_vec,qrule);
   
 //===============================================
 //================== Add EQUATIONS  AND ======================

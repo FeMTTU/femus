@@ -3,7 +3,7 @@
 
 
 #include "FETypeEnum.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "MeshTwo.hpp"
 #include "DenseVector.hpp"
 #include "DenseMatrix.hpp"
@@ -14,7 +14,7 @@ namespace femus {
 
 
 class EqnBase;
-class EquationsMap;
+class MultiLevelProblemTwo;
 class CurrentQuantity;
 
 

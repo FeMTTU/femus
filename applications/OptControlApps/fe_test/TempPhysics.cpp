@@ -1,7 +1,7 @@
 #include <cmath>
 
 //library
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "TimeLoop.hpp"
 #include "MeshTwo.hpp"
 #include "Box.hpp"

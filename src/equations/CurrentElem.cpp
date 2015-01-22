@@ -1,6 +1,6 @@
 #include "CurrentElem.hpp"
 #include "EqnBase.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "ElemType.hpp"

@@ -11,7 +11,7 @@
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "Domain.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "Quantity.hpp"
@@ -35,7 +35,7 @@ namespace femus {
 
 /// Constructor.
   EqnNSAD::EqnNSAD(std::vector<Quantity*> int_map_in,
-	           EquationsMap& equations_map_in,
+	           MultiLevelProblemTwo& equations_map_in,
                    std::string eqname_in,
                    std::string varname_in):
       EqnBase(int_map_in,equations_map_in,eqname_in,varname_in)      

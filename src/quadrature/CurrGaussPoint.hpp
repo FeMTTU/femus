@@ -31,7 +31,7 @@ template <unsigned int FM_DIM>
     
   public:
     
-     CurrGaussPoint(const CurrentElem & curr_el_in, EquationsMap& e_map_in );
+     CurrGaussPoint(const CurrentElem & curr_el_in, MultiLevelProblemTwo& e_map_in );
     ~CurrGaussPoint();
  
 double        JacVectVV_g(CurrentQuantity& xyz )/*const*/;  //TODO should be only for VOLUME

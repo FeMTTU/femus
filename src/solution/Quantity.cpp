@@ -11,7 +11,7 @@ namespace femus {
 
 
 
-//  EquationsMap equations_map(utils,phys, phys_usr,mesh,femap,time_loop);
+//  MultiLevelProblemTwo equations_map(utils,phys, phys_usr,mesh,femap,time_loop);
 //What does the Quantity need? 
 //The Physics? Yes, for the ref values, and so on
 //The Mesh? Yes,through the physics

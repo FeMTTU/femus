@@ -12,7 +12,7 @@
 #include "Physics.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "EqnBase.hpp"
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
@@ -28,13 +28,13 @@
 #include "TempQuantities.hpp"
 #include "TempPhysics.hpp"
 
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 
 namespace femus {
 
 // ======================================================
 EqnT::EqnT(  std::vector<Quantity*> int_map_in,
-             EquationsMap& equations_map_in,
+             MultiLevelProblemTwo& equations_map_in,
              std::string eqname_in,
              std::string varname_in):
     EqnBase(int_map_in,equations_map_in,eqname_in,varname_in) {

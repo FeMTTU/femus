@@ -13,7 +13,7 @@ namespace femus {
 class CurrentElem;
 class elem_type;
 class CurrentQuantity;
-class EquationsMap;
+class MultiLevelProblemTwo;
  
 
 //TODO maybe this gausspoint need the CurrentElement also
@@ -27,7 +27,7 @@ class EquationsMap;
   
   public:
     
-    CurrGaussPointBase(const CurrentElem & curr_el_in, EquationsMap& e_map_in );
+    CurrGaussPointBase(const CurrentElem & curr_el_in, MultiLevelProblemTwo& e_map_in );
    ~CurrGaussPointBase();
      
    inline const CurrentElem & GetCurrentElem() const {
@@ -49,7 +49,7 @@ inline double Phi(const uint ql,const uint dof) const {
   return _phi_ndsQLVB_g[ql][dof];
 }
 
-  static CurrGaussPointBase & build(const CurrentElem & elem_in, EquationsMap& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
+  static CurrGaussPointBase & build(const CurrentElem & elem_in, MultiLevelProblemTwo& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
 
     double* _dphidxezeta_ndsQLVB_g[QL];  //canonical derivatives
     double*    _dphidxyz_ndsQLVB_g[QL];  //physical derivatives
@@ -60,7 +60,7 @@ inline double Phi(const uint ql,const uint dof) const {
     
    uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
    const CurrentElem & _current_elem;
-   EquationsMap         & _eqnmap;
+   MultiLevelProblemTwo         & _eqnmap;
    std::vector<elem_type*>  &  _elem_type;
    Gauss   _qrule;
    double**  _InvJac_g;/*[FM_DIM][FM_DIM]*/   //gauss Current Geometric Element //no new is needed here //TODO this is only for VOLUME elements

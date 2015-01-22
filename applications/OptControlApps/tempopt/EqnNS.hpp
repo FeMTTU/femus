@@ -8,7 +8,7 @@
 namespace femus {
 
 // Forwarded classes
-class EquationsMap;
+class MultiLevelProblemTwo;
 
 
 class EqnNS : public EqnBase {
@@ -21,7 +21,7 @@ class EqnNS : public EqnBase {
    const double _Komp_fac;
   
   EqnNS(   std::vector<Quantity*> int_map_in,
-	   EquationsMap& mg_equations_map,
+	   MultiLevelProblemTwo& mg_equations_map,
            std::string eqname_in="Eqn_NS",/*"Navier-Stokes"*/
            std::string varname_in="u");
 

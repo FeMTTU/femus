@@ -1,4 +1,4 @@
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 
 // C++
 #include <iomanip>
@@ -25,7 +25,7 @@ namespace femus {
 // ====================================================
 /// This function constructs the equation map
 
-EquationsMap::EquationsMap(Files& files_in,
+MultiLevelProblemTwo::MultiLevelProblemTwo(Files& files_in,
                            Physics& mgphys_in,
                            QuantityMap& qtymap_in,
                            MeshTwo& mgmesh_in,
@@ -41,8 +41,8 @@ EquationsMap::EquationsMap(Files& files_in,
 
 // ====================================================
 /// This function destroys the equations
-void EquationsMap::clean() {
-    for (EquationsMap::iterator eqn = _equations.begin(); eqn != _equations.end(); eqn++) {
+void MultiLevelProblemTwo::clean() {
+    for (MultiLevelProblemTwo::iterator eqn = _equations.begin(); eqn != _equations.end(); eqn++) {
         delete eqn->second;
     }
 }
@@ -63,7 +63,7 @@ void EquationsMap::clean() {
 /// initialize vectors (could do this even before the BC)
 /// The INITIAL conditions can be done only after initVectors();
 
-void  EquationsMap::setDofBcOpIc() {
+void  MultiLevelProblemTwo::setDofBcOpIc() {
 
     for (iterator eqn = _equations.begin(); eqn != _equations.end(); eqn++) {
         EqnBase* mgsol = eqn->second;
@@ -96,7 +96,7 @@ void  EquationsMap::setDofBcOpIc() {
 
 // =================================================================
 /// This function prints xdmf and hdf5 file
-void EquationsMap::PrintSol(const uint t_step, const double curr_time) const {
+void MultiLevelProblemTwo::PrintSol(const uint t_step, const double curr_time) const {
 
     PrintSolHDF5(t_step);
     PrintSolXDMF(t_step,curr_time);
@@ -106,7 +106,7 @@ void EquationsMap::PrintSol(const uint t_step, const double curr_time) const {
 
 // =================================================================
 /// This function prints the attributes into the corresponding hdf5 file
-void EquationsMap::PrintSolHDF5(const uint t_flag ) const {
+void MultiLevelProblemTwo::PrintSolHDF5(const uint t_flag ) const {
 
     const uint    iproc =_mesh._iproc;
     if (iproc==0) {
@@ -120,8 +120,8 @@ void EquationsMap::PrintSolHDF5(const uint t_flag ) const {
         hid_t   file= H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
         H5Fclose(file);
 
-        EquationsMap::const_iterator pos = _equations.begin();
-        EquationsMap::const_iterator pos_e = _equations.end();
+        MultiLevelProblemTwo::const_iterator pos = _equations.begin();
+        MultiLevelProblemTwo::const_iterator pos_e = _equations.end();
         for (;pos!=pos_e;pos++)    {
             EqnBase* eqn = pos->second;
             IO::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn);
@@ -152,7 +152,7 @@ void EquationsMap::PrintSolHDF5(const uint t_flag ) const {
 //So you should do  in reverse order:  for (int l=NoLevels-1; l >= 0; l--) 
 // I DO NOT WANT TO SEPARATE the HDF5 file, because it works fine as a single file with no problems
 
-void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) const {
+void MultiLevelProblemTwo::PrintSolXDMF(const uint t_step,const double curr_time) const {
 
     const uint    iproc =_mesh._iproc;
     if (iproc==0) {
@@ -185,7 +185,7 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) const 
 
 	std::ofstream out(filename_xdmf.str().c_str());
         if (out.fail()) {
-            std::cout << "EquationsMap::print_soln_xmf: cannot print " << filename_xdmf.str().c_str() << std::endl;
+            std::cout << "MultiLevelProblemTwo::print_soln_xmf: cannot print " << filename_xdmf.str().c_str() << std::endl;
             abort();
         }
 
@@ -209,8 +209,8 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) const 
 
 	PrintXDMFTopologyGeometry(out,l,VV);
 
-	EquationsMap::const_iterator pos1   = _equations.begin();
-        EquationsMap::const_iterator pos1_e = _equations.end();
+	MultiLevelProblemTwo::const_iterator pos1   = _equations.begin();
+        MultiLevelProblemTwo::const_iterator pos1_e = _equations.end();
         for (;pos1!=pos1_e;pos1++)   {
             EqnBase *mgsol=pos1->second;
             int OffVarNames[QL];
@@ -241,7 +241,7 @@ void EquationsMap::PrintSolXDMF(const uint t_step,const double curr_time) const 
 
 // ========================================================================
 /// This function read the solution form all the system (restart)
-void EquationsMap::ReadSol(const uint t_step, double& time_out) const {
+void MultiLevelProblemTwo::ReadSol(const uint t_step, double& time_out) const {
 
     const uint ndigits      = DEFAULT_NDIGITS;
     std::string    basesol  = DEFAULT_BASESOL;
@@ -256,7 +256,7 @@ void EquationsMap::ReadSol(const uint t_step, double& time_out) const {
     << basesol << "." << setw(ndigits) << setfill('0') << t_step << "_l" << (_mesh._NoLevels - 1) << ext_xdmf;  //TODO here we should avoid doing this process TWICE because we already do it in the TransientSetup calling function
 
 #ifdef DEFAULT_PRINT_INFO // --------  info ------------------ 
-    std::cout << "\n EquationsMap::read_soln: Reading time  from "
+    std::cout << "\n MultiLevelProblemTwo::read_soln: Reading time  from "
               << namefile.str().c_str();
 #endif  // -------------------------------------------
     std::ifstream in ;
@@ -293,11 +293,11 @@ void EquationsMap::ReadSol(const uint t_step, double& time_out) const {
     // or where the executable is I think... no, the path is given by where the executable is LAUNCHED
 
 #ifdef DEFAULT_PRINT_INFO  // --------------- info ---------------
-    std::cout << "\n EquationsMap::read_soln: Reading from file "
+    std::cout << "\n MultiLevelProblemTwo::read_soln: Reading from file "
               << namefile.str().c_str() << std::endl;
 #endif // ---------------------------------------------
     // loop reading over the variables ---------------------
-    for (EquationsMap::const_iterator eqn=_equations.begin(); eqn != _equations.end(); eqn++) {
+    for (MultiLevelProblemTwo::const_iterator eqn=_equations.begin(); eqn != _equations.end(); eqn++) {
         EqnBase *mgsol=eqn->second;
     } //  loop --------------------------------------------------------
 
@@ -311,7 +311,7 @@ void EquationsMap::ReadSol(const uint t_step, double& time_out) const {
 // we should do a routine that for a given field prints both the hdf5 dataset
 // and the  xdmf tag... well it's not so automatic, because you need to know
 // what is the grid on which to print, bla bla bla
-void EquationsMap::PrintCase(const uint t_init) const {
+void MultiLevelProblemTwo::PrintCase(const uint t_init) const {
   
   
   
@@ -325,7 +325,7 @@ void EquationsMap::PrintCase(const uint t_init) const {
 // =============================================================================
 /// This function prints initial and boundary data in hdf5 fromat
 /// in the file case.h5
-void EquationsMap::PrintCaseHDF5(const uint t_init) const {
+void MultiLevelProblemTwo::PrintCaseHDF5(const uint t_init) const {
 
     const uint    iproc =_mesh._iproc;
     if (iproc==0) {
@@ -342,8 +342,8 @@ void EquationsMap::PrintCaseHDF5(const uint t_init) const {
         _mesh.PrintSubdomFlagOnLinCells(filename.str());
         H5Fclose(file);
 
-        EquationsMap::const_iterator pos   = _equations.begin();
-        EquationsMap::const_iterator pos_e = _equations.end();
+        MultiLevelProblemTwo::const_iterator pos   = _equations.begin();
+        MultiLevelProblemTwo::const_iterator pos_e = _equations.end();
         for (;pos!=pos_e;pos++) {
             EqnBase* eqn = pos->second;
             IO::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn);    // initial solution
@@ -369,7 +369,7 @@ void EquationsMap::PrintCaseHDF5(const uint t_init) const {
 //but, inside the lines of this file, you dont need to put the absolute paths,
 //because you already know you'll not separate .xmf and .h5
 
-void EquationsMap::PrintCaseXDMF(const uint t_init) const {
+void MultiLevelProblemTwo::PrintCaseXDMF(const uint t_init) const {
 
     const uint    iproc =_mesh._iproc;
     if (iproc==0) {
@@ -408,7 +408,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) const {
 
         std::ofstream out(filename_xdmf.str().c_str());
         if (out.fail()) {
-            std::cout << "EquationsMap::print_case_xmf: cannot print " << filename_xdmf.str().c_str() << std::endl;
+            std::cout << "MultiLevelProblemTwo::print_case_xmf: cannot print " << filename_xdmf.str().c_str() << std::endl;
             abort();
         }
 
@@ -436,8 +436,8 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) const {
 	IO::PrintXDMFAttribute(out,hdf_file.str(),pid_name.str(),pid_name.str(),"Scalar",DofType[KK],"Int",NGeomObjOnWhichToPrint[KK],1);
 
         // ATTRIBUTES FOR EACH SYSTEM ===========
-        EquationsMap::const_iterator pos1=_equations.begin();
-        EquationsMap::const_iterator pos1_e=_equations.end();
+        MultiLevelProblemTwo::const_iterator pos1=_equations.begin();
+        MultiLevelProblemTwo::const_iterator pos1_e=_equations.end();
         for (;pos1!=pos1_e;pos1++)   {
             EqnBase *mgsol=pos1->second;
             int OffVarNames[QL];
@@ -473,7 +473,7 @@ void EquationsMap::PrintCaseXDMF(const uint t_init) const {
 
 
 //print topology and geometry, useful for both case.xmf and sol.xmf
-void EquationsMap::PrintXDMFTopologyGeometry(std::ofstream& out, const uint Level, const uint vb) const {
+void MultiLevelProblemTwo::PrintXDMFTopologyGeometry(std::ofstream& out, const uint Level, const uint vb) const {
 
     //Mesh
     uint n_elements = _mesh._n_elements_vb_lev[vb][Level];

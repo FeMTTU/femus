@@ -19,7 +19,7 @@ class EqnMHDCONT : public EqnBase {
     
    
 EqnMHDCONT(  std::vector<Quantity*> int_map_in,
-	     EquationsMap& mg_equations_map_in,
+	     MultiLevelProblemTwo& mg_equations_map_in,
                    std::string eqname_in="Eqn_MHDCONT",
                    std::string varname_in="Becont");
 

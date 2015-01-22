@@ -17,7 +17,7 @@
 #include "MeshTwo.hpp"
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "TimeLoop.hpp"
 #include "Typedefs.hpp"
 #include "Quantity.hpp"
@@ -121,8 +121,8 @@
   Temperature temperature3("Qty_Temperature3",qty_map,1,2/*constant*/);      qty_map.set_qty(&temperature3);
   // ===== end QuantityMap =========================================
 
-  // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
+  // ====== MultiLevelProblemTwo =================================
+  MultiLevelProblemTwo equations_map(files,phys,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
 //===============================================
 //================== Add EQUATIONS AND ======================

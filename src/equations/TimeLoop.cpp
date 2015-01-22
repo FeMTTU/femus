@@ -10,7 +10,7 @@
 
 
 #include "TimeLoop.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "Files.hpp"
 #include "MeshTwo.hpp"
 #include "RunTimeMap.hpp"
@@ -254,9 +254,9 @@ double TimeLoop::MGTimeStep(const uint iter, EqnBase * eqn_in) const {
 /// This function performes all the Physics time step routines
 void TimeLoop::OneTimestepEqnLoop(
     const uint delta_t_step_in,     // integer time
-    const EquationsMap & eqnmap) const {
+    const MultiLevelProblemTwo & eqnmap) const {
     // loop for time steps
-    for (EquationsMap::const_iterator eqn = eqnmap.begin(); eqn != eqnmap.end(); eqn++)  {
+    for (MultiLevelProblemTwo::const_iterator eqn = eqnmap.begin(); eqn != eqnmap.end(); eqn++)  {
         EqnBase* equation = eqn->second;
         MGTimeStep(delta_t_step_in,equation);
     }
@@ -267,7 +267,7 @@ void TimeLoop::OneTimestepEqnLoop(
 ////////////////////////////////
 ////////////////////////////////
 
-void TimeLoop::TransientSetup(const EquationsMap & eqnmap)  {
+void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
 
     const uint initial_step = _timemap.get("initial_step");
     const uint ndigits      = DEFAULT_NDIGITS;
@@ -425,7 +425,7 @@ void TimeLoop::TransientSetup(const EquationsMap & eqnmap)  {
 ///////////////////////////////////////////////////////
 /*standard time loop over the map equations.
  The equations are solved in alphabetical order given by the map*/
-void TimeLoop::TransientLoop(const EquationsMap & eqnmap)  {
+void TimeLoop::TransientLoop(const MultiLevelProblemTwo & eqnmap)  {
 
     //  parameters
     double         dt = _timemap.get("dt");

@@ -9,7 +9,7 @@
 namespace femus {
 
 // Forward declarations ----------
-class EquationsMap;
+class MultiLevelProblemTwo;
 
 
 class EqnT : public EqnBase {
@@ -17,7 +17,7 @@ class EqnT : public EqnBase {
 public:
 
     EqnT( std::vector<Quantity*> int_map_in,
-	  EquationsMap& mg_equations_map,
+	  MultiLevelProblemTwo& mg_equations_map,
           std::string eqname_in="Eqn_T",
           std::string varname_in="T");
 

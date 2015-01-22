@@ -1,7 +1,7 @@
 #include "OptLoop.hpp"
 
 #include "Temp_conf.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "CurrGaussPoint.hpp"
 #include "CurrentElem.hpp"
 #include "CurrentQuantity.hpp"
@@ -20,7 +20,7 @@ namespace femus {
  OptLoop::OptLoop(Files& files_in): TimeLoop(files_in) { }
 
  //=================
-    void OptLoop::optimization_loop(EquationsMap & eqmap_in)  {
+    void OptLoop::optimization_loop(MultiLevelProblemTwo & eqmap_in)  {
 
     //  parameters
     int    print_step = _timemap.get("printstep");

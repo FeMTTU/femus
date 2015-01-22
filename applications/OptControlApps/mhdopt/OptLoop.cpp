@@ -6,7 +6,7 @@
 //library headers
 #include "NumericVector.hpp"
 #include "Physics.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "EqnBase.hpp"
 #include "MeshTwo.hpp"
 #include "TimeLoop.hpp"
@@ -99,7 +99,7 @@ namespace femus {
  
  
  
-void OptLoop::optimization_loop(EquationsMap& e_map_in)  {
+void OptLoop::optimization_loop(MultiLevelProblemTwo& e_map_in)  {
   
   
  #ifdef NS_EQUATIONS
@@ -490,7 +490,7 @@ void OptLoop::init_equation_data(const EqnBase* eqn) {
 
 //===============================
 
-//this function should belong to the NS equation, or to EquationsMap
+//this function should belong to the NS equation, or to MultiLevelProblemTwo
 //actually the best place is an OptimalControl framework
 
 //the problem is that this function uses all the structures 

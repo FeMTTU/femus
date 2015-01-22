@@ -22,7 +22,7 @@ namespace femus {
 
 class Files        ;
 class Physics      ;
-class EquationsMap ;
+class MultiLevelProblemTwo ;
 class MeshTwo      ;
 class FEElemBase   ;
 class Quantity     ;
@@ -85,7 +85,7 @@ public:
 // CONSTRUCTOR / DESTRUCTOR
 //=======================================================================
   EqnBase(std::vector<Quantity*> int_map_in,
-	  EquationsMap& equations_map,
+	  MultiLevelProblemTwo& equations_map,
           std::string eq_name_in="Base",
 	  std::string varname_in="u");   //System//
   
@@ -140,7 +140,7 @@ public:
           void Bc_AddDofVec(NumericVector* myvec, NumericVector* myvec2 );
           void Bc_AddScaleDofVec(NumericVector* vec_in,NumericVector* vec_out,const double ScaleFac );
 
-  EquationsMap              & _eqnmap;
+  MultiLevelProblemTwo              & _eqnmap;
   
 protected:
   

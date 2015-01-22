@@ -24,7 +24,7 @@ public:
   OptLoop(Files& files_in);
  ~OptLoop();
 
-  void optimization_loop(EquationsMap& e_map_in);
+  void optimization_loop(MultiLevelProblemTwo& e_map_in);
 
   void init_equation_data(const EqnBase* eqn);
  

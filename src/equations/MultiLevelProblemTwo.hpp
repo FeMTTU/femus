@@ -25,7 +25,7 @@ class TimeLoop;
 class QuantityMap;
 
 
-class EquationsMap  {
+class MultiLevelProblemTwo  {
 
 public:
   
@@ -37,7 +37,7 @@ public:
     std::vector<Gauss>       _qrule;
 
   /// Constructor
-    EquationsMap( Files& files_in,
+    MultiLevelProblemTwo( Files& files_in,
 		  Physics& mgphys_in,
 		  QuantityMap& qtymap_in,
 		  MeshTwo& mgmesh_in,
@@ -47,7 +47,7 @@ public:
 
     
     /// Destructor
-  ~EquationsMap(){};
+  ~MultiLevelProblemTwo(){};
   
   void clean(); ///< Clean all substructures
 

@@ -205,7 +205,7 @@ void Pressure::Function_txyz(const double t, const double* xp,double* func) cons
 // Everyone can reach the Domain through the mesh class as a FATHER domain;
 //how can we convert it to a specific domain EXPLICITLY
 // and STILL STAYING in the Mesh class WITHOUT PERTURBING it?
-//the basic classes Mesh, EquationsMap, QuantityMap handle FATHER THINGS.
+//the basic classes Mesh, MultiLevelProblemTwo, QuantityMap handle FATHER THINGS.
 //the application-specific classes (Equation, Quantity, Physics) handle CHILD things.
 //in this passage we must CONVERT at the highest possible level.
 //we should INSTANTIATE the CHILDREN in the applications 

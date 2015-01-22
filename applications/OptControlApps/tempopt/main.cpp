@@ -18,7 +18,7 @@
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
 #include "GaussPoints.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "ElemType.hpp"
 #include "TimeLoop.hpp"
 #include "Typedefs.hpp"
@@ -136,8 +136,8 @@
   
   // ===== end QuantityMap =========================================
 
-  // ====== EquationsMap =================================
-  EquationsMap equations_map(files,phys,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
+  // ====== MultiLevelProblemTwo =================================
+  MultiLevelProblemTwo equations_map(files,phys,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
 
   // ======== TimeLoop ===================================

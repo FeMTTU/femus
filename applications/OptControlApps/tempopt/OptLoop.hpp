@@ -24,7 +24,7 @@ public:
   OptLoop(Files& files_in);
 
 
-void optimization_loop(EquationsMap& e_map_in);
+void optimization_loop(MultiLevelProblemTwo& e_map_in);
 
 
 

@@ -19,7 +19,7 @@
 #include "Physics.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "Files.hpp"
 #include "CurrentElem.hpp"
 #include "CurrGaussPoint.hpp"
@@ -41,7 +41,7 @@ namespace femus {
 //the names
 //other stuff but let us stop here now
 EqnBase::EqnBase(std::vector<Quantity*> int_map_in,
-                 EquationsMap& e_map_in,
+                 MultiLevelProblemTwo& e_map_in,
                  std::string eqname_in,
                  std::string varname_in):
         _files(e_map_in._files),
@@ -2023,7 +2023,7 @@ void EqnBase::ReadRest(const std::string& name) {
 //not a map because we want things to be ordered.
 //this vector must be passed to the EqnNS constructor so that it can be passed
 //to the DA. 
-//so we must do things OUTSIDE the NS constructor, i.e. in the EquationsMap.
+//so we must do things OUTSIDE the NS constructor, i.e. in the MultiLevelProblemTwo.
 //We cannot do INSIDE the NS constructor because it is called AFTER the DA constructor.
 //where Velocity is in the first place and pressure is in the second
 //and later one can add OTHER Quantities with

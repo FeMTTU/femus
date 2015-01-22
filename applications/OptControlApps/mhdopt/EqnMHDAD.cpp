@@ -13,7 +13,7 @@
 #include "Quantity.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "QTYnumEnum.hpp"
@@ -33,7 +33,7 @@ namespace femus {
 
 /// Constructor.
   EqnMHDAD::EqnMHDAD(std::vector<Quantity*> int_map_in,
-	           EquationsMap& mg_equations_map_in,
+	           MultiLevelProblemTwo& mg_equations_map_in,
                    std::string eqname_in,
                    std::string varname_in):
       EqnBase(int_map_in,mg_equations_map_in,eqname_in,varname_in)      

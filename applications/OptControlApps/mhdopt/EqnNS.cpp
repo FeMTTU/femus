@@ -12,7 +12,7 @@
 #include "Physics.hpp"
 #include "MeshTwo.hpp"
 #include "GeomEl.hpp"
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "VBTypeEnum.hpp"
@@ -35,7 +35,7 @@ namespace femus {
 
 ///=============== Constructor
   EqnNS::EqnNS(    std::vector<Quantity*> int_map_in,  //no reference!
-	           EquationsMap& equations_map_in,
+	           MultiLevelProblemTwo& equations_map_in,
                    std::string eqname_in,
                    std::string varname_in):
            EqnBase(int_map_in,equations_map_in,eqname_in,varname_in),
@@ -130,7 +130,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 //FLAG for the TIME DISCRETIZATION
 //every Equation may have a TimeDiscretization
 //If different equations have the same TimeDiscretization, 
-//we can put them in the EquationsMap instead of the Equation
+//we can put them in the MultiLevelProblemTwo instead of the Equation
 //TimeDiscretization can be considered as an OPERATOR, like LAPLACIAN or whatever
 //What is an Operator characterized by?
 //-- by the Quantities it acts on

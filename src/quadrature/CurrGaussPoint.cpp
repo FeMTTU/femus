@@ -1,6 +1,6 @@
 #include "CurrGaussPoint.hpp"
 
-#include "EquationsMap.hpp"
+#include "MultiLevelProblemTwo.hpp"
 #include "Math.hpp"
 #include "CurrentQuantity.hpp"
 #include "MeshTwo.hpp"
@@ -16,9 +16,9 @@ namespace femus {
 //I need to hold the equations map pointer, because i also need a mesh pointer
 // for the geometric element
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
-//by the way, with the EquationsMap I reach the Utils, the Mesh, and so the GeomEl, and so on...
+//by the way, with the MultiLevelProblemTwo I reach the Utils, the Mesh, and so the GeomEl, and so on...
 template <unsigned int FM_DIM>
-CurrGaussPoint<FM_DIM>::CurrGaussPoint(const CurrentElem & curr_el_in, EquationsMap& e_map_in ): 
+CurrGaussPoint<FM_DIM>::CurrGaussPoint(const CurrentElem & curr_el_in, MultiLevelProblemTwo& e_map_in ): 
         CurrGaussPointBase(curr_el_in,e_map_in) {
   
  

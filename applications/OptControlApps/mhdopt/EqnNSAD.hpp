@@ -9,7 +9,7 @@ namespace femus {
 
 
 // Forwarded classes
-class EquationsMap;
+class MultiLevelProblemTwo;
 
 
 
@@ -18,7 +18,7 @@ class EqnNSAD : public EqnBase {
   public:
 
      EqnNSAD(  std::vector<Quantity*> int_map_in,
-	           EquationsMap& mg_equations_map_in,
+	           MultiLevelProblemTwo& mg_equations_map_in,
                    std::string eqname_in="Eqn_NSAD",
                    std::string varname_in="lambda");
 
