@@ -12,7 +12,7 @@ namespace femus {
  class EqnBase;
  class Quantity;
  class CurrGaussPointBase;
- class CurrElem;
+ class CurrentElem;
 
 
  //Remember that you need to allocate the operators before if you use them
@@ -58,14 +58,14 @@ namespace femus {
     Quantity* _qtyptr;
     EqnBase*  _eqnptr;
     
-    inline const CurrElem &  GetCurrentElem() const { 
+    inline const CurrentElem &  GetCurrentElem() const { 
       return _currEl;
     }
     
   protected:
         
     const CurrGaussPointBase & _currGP;
-    const CurrElem & _currEl;
+    const CurrentElem & _currEl;
     
   };
   

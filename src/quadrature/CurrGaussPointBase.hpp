@@ -5,18 +5,18 @@
 #include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "GaussPoints.hpp"
-#include "CurrElem.hpp"
+#include "CurrentElem.hpp"
 
 namespace femus {
 
 
-class CurrElem;
+class CurrentElem;
 class elem_type;
 class CurrentQuantity;
 class EquationsMap;
  
 
-//TODO maybe this gausspoint need the CurrElement also
+//TODO maybe this gausspoint need the CurrentElement also
 //Basically we will have 
 // a Current Element, 
 // an Abstract Mathematical Element (FEElem),
@@ -27,10 +27,10 @@ class EquationsMap;
   
   public:
     
-    CurrGaussPointBase(const CurrElem & curr_el_in, EquationsMap& e_map_in );
+    CurrGaussPointBase(const CurrentElem & curr_el_in, EquationsMap& e_map_in );
    ~CurrGaussPointBase();
      
-   inline const CurrElem & GetCurrentElem() const {
+   inline const CurrentElem & GetCurrentElem() const {
      return _current_elem;
    }
    
@@ -49,7 +49,7 @@ inline double Phi(const uint ql,const uint dof) const {
   return _phi_ndsQLVB_g[ql][dof];
 }
 
-  static CurrGaussPointBase & build(const CurrElem & elem_in, EquationsMap& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
+  static CurrGaussPointBase & build(const CurrentElem & elem_in, EquationsMap& e_map_in, const uint dim);  //Let us try with REFERENCE instead of POINTER
 
     double* _dphidxezeta_ndsQLVB_g[QL];  //canonical derivatives
     double*    _dphidxyz_ndsQLVB_g[QL];  //physical derivatives
@@ -59,7 +59,7 @@ inline double Phi(const uint ql,const uint dof) const {
   protected:
     
    uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
-   const CurrElem & _current_elem;
+   const CurrentElem & _current_elem;
    EquationsMap         & _eqnmap;
    std::vector<elem_type*>  &  _elem_type;
    Gauss   _qrule;

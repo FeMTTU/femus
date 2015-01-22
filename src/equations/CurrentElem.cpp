@@ -1,4 +1,4 @@
-#include "CurrElem.hpp"
+#include "CurrentElem.hpp"
 #include "EqnBase.hpp"
 #include "EquationsMap.hpp"
 #include "MeshTwo.hpp"
@@ -14,7 +14,7 @@ namespace femus {
 
 
 
-    CurrElem::CurrElem(const uint vb, const EqnBase * eqn_in, const MeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type ):
+    CurrentElem::CurrentElem(const uint vb, const EqnBase * eqn_in, const MeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type ):
     _eqn(eqn_in),
     _mesh(mesh),
     _elem_type(elem_type),
@@ -44,7 +44,7 @@ namespace femus {
   }
  
 
-    CurrElem::~CurrElem() {
+    CurrentElem::~CurrentElem() {
       
  delete [] _el_conn;
  delete [] _xx_nds;
@@ -61,7 +61,7 @@ namespace femus {
 
 
 
-void CurrElem::SetElDofsBc(const uint Level)  {
+void CurrentElem::SetElDofsBc(const uint Level)  {
 
 /*CHECK*/   if (_vol_iel_DofObj >= _mesh._n_elements_vb_lev[VV][Level] ) { std::cout << "Out of the node_dof map FE KK range" << std::endl; abort();}
 
@@ -131,7 +131,7 @@ for (uint ivar=0; ivar < _eqn->_dofmap._nvars[fe]; ivar++)    {
 ///This function prints the element orientation
 ///A QUADRATIC MESH VECTOR is passed HERE  
 ///It is for debugging purposes
-void CurrElem::PrintOrientation() const {
+void CurrentElem::PrintOrientation() const {
   
       const uint mesh_dim = _mesh.get_dim();
       const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
@@ -170,7 +170,7 @@ void CurrElem::PrintOrientation() const {
  
  
 // ========================================================
-//   void CurrElem::set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel,
+//   void CurrentElem::set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel,
 // 				uint el_conn[], double xx[]) const {///get the global node numbers for that element and their coordinates
 ///this routine does not yield the connectivity
 //is this function called when the class members are already filled?
@@ -201,7 +201,7 @@ void CurrElem::PrintOrientation() const {
 ///Compute the element center
 ///TODO must do this in the QUADRATIC case
 
-  void CurrElem::SetMidpoint() const {
+  void CurrentElem::SetMidpoint() const {
 
     const uint mesh_dim = _mesh.get_dim();
     const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");    
@@ -222,7 +222,7 @@ void CurrElem::PrintOrientation() const {
   }
 
    // =====================================================================================
-  void CurrElem::set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel) {
+  void CurrentElem::set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel) {
 
     const uint mydim = _mesh.get_dim();
     const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");    
@@ -260,7 +260,7 @@ void CurrElem::PrintOrientation() const {
   //its data to the xyz Vect
   
   
-void CurrElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
+void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 
   
   const uint  elndof = myvect._ndof;

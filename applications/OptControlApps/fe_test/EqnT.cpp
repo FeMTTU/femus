@@ -21,7 +21,7 @@
 #include "Domain.hpp"
 #include "TimeLoop.hpp"
 #include "CurrGaussPoint.hpp"
-#include "CurrElem.hpp"
+#include "CurrentElem.hpp"
 #include "paral.hpp"
 
 // application
@@ -80,7 +80,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
     
   const uint mesh_vb = VV;
   
-  CurrElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
+  CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
   CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
@@ -151,7 +151,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
 // which are expressed with respect to a reference frame
 //ok, now that the dofs are filled for xyz_refbox, I can use the el_average
 //Well, the alternative is to consider  the elem in the refbox as
-    //either a Vect or a CurrElem !
+    //either a Vect or a CurrentElem !
     //I could consider it as another element, but only with the geometrical part!
 
   xyz_refbox.SetElemAverage();
@@ -317,7 +317,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     
   const uint mesh_vb = BB;
   
-  CurrElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
+  CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
   CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     

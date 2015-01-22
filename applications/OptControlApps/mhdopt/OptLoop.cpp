@@ -11,7 +11,7 @@
 #include "MeshTwo.hpp"
 #include "TimeLoop.hpp"
 #include "Files.hpp"
-#include "CurrElem.hpp"
+#include "CurrentElem.hpp"
 #include "CurrGaussPointBase.hpp"
 #include "CurrentQuantity.hpp"
 #include "Quantity.hpp"
@@ -520,7 +520,7 @@ double ComputeIntegral (const uint Level, const MeshTwo* mesh, const EqnBase* eq
 
    const uint mesh_vb = VV;
   
-    CurrElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);
+    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
   
   // processor index

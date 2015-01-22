@@ -3,7 +3,7 @@
 #include "Temp_conf.hpp"
 #include "EquationsMap.hpp"
 #include "CurrGaussPoint.hpp"
-#include "CurrElem.hpp"
+#include "CurrentElem.hpp"
 #include "CurrentQuantity.hpp"
 #include "Quantity.hpp"
 #include "ElemType.hpp"
@@ -96,7 +96,7 @@ double ComputeIntegral (const uint Level, const MeshTwo* mesh, const EqnBase* eq
  
   const uint mesh_vb = VV;
 
-    CurrElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);  //TODO do we really need eqn here, or only eqnmap?!
+    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);  //TODO do we really need eqn here, or only eqnmap?!
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
 
   //========== 
@@ -234,7 +234,7 @@ double ComputeNormControl (const uint Level, const MeshTwo* mesh, const EqnBase*
 
   const uint mesh_vb = VV;
   
-    CurrElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);
+    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
   
 //======Functions in the integrand ============

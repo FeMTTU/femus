@@ -27,7 +27,8 @@ algebra/VankaPetscLinearEquationSolver.cpp
 algebra/FunctionBase.cpp
 algebra/ParsedFunction.cpp
 equations/DofMap.cpp
-equations/CurrElem.cpp
+equations/CurrentElem.cpp
+equations/CurrentQuantity.cpp
 equations/EqnBase.cpp
 equations/EquationsMap.cpp
 equations/ExplicitSystem.cpp
@@ -36,7 +37,6 @@ equations/LinearImplicitSystem.cpp
 equations/MonolithicFSINonLinearImplicitSystem.cpp
 equations/NonLinearImplicitSystem.cpp
 equations/MultiLevelProblem.cpp
-equations/CurrentQuantity.cpp
 equations/System.cpp
 equations/TimeLoop.cpp
 equations/TransientSystem.cpp

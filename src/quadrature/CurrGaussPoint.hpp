@@ -13,7 +13,7 @@ namespace femus {
 
 
 
-//TODO maybe this gausspoint needs the CurrElement also
+//TODO maybe this gausspoint needs the CurrentElement also
 //Basically we will have 
 // a Current Element, 
 // an Abstract Mathematical Element (FEElem),
@@ -31,7 +31,7 @@ template <unsigned int FM_DIM>
     
   public:
     
-     CurrGaussPoint(const CurrElem & curr_el_in, EquationsMap& e_map_in );
+     CurrGaussPoint(const CurrentElem & curr_el_in, EquationsMap& e_map_in );
     ~CurrGaussPoint();
  
 double        JacVectVV_g(CurrentQuantity& xyz )/*const*/;  //TODO should be only for VOLUME

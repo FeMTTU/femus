@@ -19,12 +19,12 @@ class CurrentQuantity;
 
 
 
-  class CurrElem {
+  class CurrentElem {
 
   public:
     
-    CurrElem(const uint vb, const EqnBase*, const MeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type);
-   ~CurrElem();
+    CurrentElem(const uint vb, const EqnBase*, const MeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type);
+   ~CurrentElem();
 
     inline const uint  GetVb() const {
       return _mesh.get_dim() - _dim;
@@ -139,7 +139,7 @@ class CurrentQuantity;
 
  //alright, here I need a Current Element, to perform the loop
  //the current element only needs the eqn map, so we can use it everywhere
- //TODO here we only need the GEOMETRIC PART of the CurrElem, so maybe we will split 
+ //TODO here we only need the GEOMETRIC PART of the CurrentElem, so maybe we will split 
  //between the CurrGeomEl and the CurrFEEl
 //in fact this is used for many element loop, but just to retrieve the geometrical properties
 //like coords, middle point, etc.
@@ -155,7 +155,7 @@ class CurrentQuantity;
 //but not in the reference frame
 //ok now i want to set the element center but NOT BASED ON THE MESH
 
-//So, so far we have the CurrElem class is 
+//So, so far we have the CurrentElem class is 
 //split into a CURR GEOMETRIC and a CURR EQUATION part.
 //The curr geometric is basically filled with the MESH class
 //The curr fe is basically filled with the EQUATION class

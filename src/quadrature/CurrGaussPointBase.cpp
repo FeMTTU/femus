@@ -5,7 +5,7 @@
 #include "GeomEl.hpp"
 
 #include "CurrGaussPoint.hpp"
-#include "CurrElem.hpp"
+#include "CurrentElem.hpp"
 #include "ElemType.hpp"
 
 
@@ -19,7 +19,7 @@ namespace femus {
 // for the geometric element
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
 //by the way, with the EquationsMap I reach the Utils, the Mesh, and so the GeomEl, and so on...
-CurrGaussPointBase::CurrGaussPointBase(const CurrElem & curr_el_in, EquationsMap& e_map_in ):
+CurrGaussPointBase::CurrGaussPointBase(const CurrentElem & curr_el_in, EquationsMap& e_map_in ):
  _current_elem(curr_el_in),
        _eqnmap(e_map_in),
     _elem_type(e_map_in._elem_type[curr_el_in.GetDim() - 1]),
@@ -73,7 +73,7 @@ CurrGaussPointBase::~CurrGaussPointBase() {
 
 
 //this is what allows RUNTIME selection of the templates!!!
-   CurrGaussPointBase& CurrGaussPointBase::build(const CurrElem & elem_in, EquationsMap& eqmap_in, const uint dim_in) {
+   CurrGaussPointBase& CurrGaussPointBase::build(const CurrentElem & elem_in, EquationsMap& eqmap_in, const uint dim_in) {
       
       
       switch(dim_in) {

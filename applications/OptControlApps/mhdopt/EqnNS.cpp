@@ -20,7 +20,7 @@
 #include "Domain.hpp"
 #include "TimeLoop.hpp"
 #include "CurrGaussPoint.hpp"
-#include "CurrElem.hpp"
+#include "CurrentElem.hpp"
 
 //application
 #include "Opt_conf.hpp"
@@ -196,7 +196,7 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
   
     const uint mesh_vb = VV;
   
-    CurrElem       currelem(VV,this,_mesh,_eqnmap._elem_type);    
+    CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);    
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -591,7 +591,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
     const uint mesh_vb = BB;
   
-    CurrElem       currelem(BB,this,_mesh,_eqnmap._elem_type);    
+    CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);    
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================

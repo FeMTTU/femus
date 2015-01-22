@@ -1,7 +1,7 @@
 #include "CurrentQuantity.hpp"
 
 #include "Quantity.hpp"
-#include "CurrElem.hpp"
+#include "CurrentElem.hpp"
 #include "ElemType.hpp"
 #include "EquationsMap.hpp"
 #include "MeshTwo.hpp"

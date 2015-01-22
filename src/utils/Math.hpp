@@ -104,7 +104,7 @@ const uint Level  = eqnmap_in._mesh._NoLevels - 1;
 const uint myproc = eqnmap_in._mesh._iproc;
   double time = 0.;
   
-    CurrElem       currelem(vb,NULL,eqnmap_in._mesh,eqnmap_in._elem_type); //element without equation
+    CurrentElem       currelem(vb,NULL,eqnmap_in._mesh,eqnmap_in._elem_type); //element without equation
     CurrGaussPointBase & currgp = CurrGaussPointBase::build(currelem,eqnmap_in, eqnmap_in._mesh.get_dim());
 
   //======== ELEMENT MAPPING =======
