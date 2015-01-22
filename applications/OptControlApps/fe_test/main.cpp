@@ -110,7 +110,7 @@
            time_loop._timemap.print();
 
   // ===== QuantityMap =========================================
-  QuantityMap  qty_map(phys);
+  QuantityMap  qty_map(mesh,&physics_map);
 
 //===============================================
 //================== Add QUANTITIES ======================
@@ -122,7 +122,7 @@
   // ===== end QuantityMap =========================================
 
   // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblemTwo equations_map(files,phys,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
+  MultiLevelProblemTwo equations_map(files,physics_map,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
 //===============================================
 //================== Add EQUATIONS AND ======================

@@ -80,7 +80,7 @@ namespace femus {
    const double time =  0.; //_eqnmap._timeloop._curr_time;
    
 //======= TIME - STATIONARY OR NOT =======
-  const int NonStatMHDCONT = (int) _phys._physrtmap.get("NonStatMHDCONT");
+  const int NonStatMHDCONT = (int) _phys.get("NonStatMHDCONT");
   const double        dt   = 1.; //_eqnmap._timeloop._timemap.get("dt");
 
 //======== GEOMETRICAL ELEMENT =======
@@ -93,11 +93,10 @@ namespace femus {
     //========= reference values =========
   
   //====== Physics
-  OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&_phys);
-  double       IRem = 1./optphys->_Rem;
-  double          S = optphys->_S;
-  const double betaL2   = _phys._physrtmap.get("betaL2");
-  const double gammaLap = _phys._physrtmap.get("gammaLap");
+  double       IRem = 1./_phys.get("Rem");
+  double          S = _phys.get("S");
+  const double betaL2   = _phys.get("betaL2");
+  const double gammaLap = _phys.get("gammaLap");
 //===========================
 
   //==== Operators @ gauss ========   //TODO USER

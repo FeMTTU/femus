@@ -69,9 +69,26 @@ int main(int argc, char** argv) {
 	
   // ======= Physics ========================
   FemusInputParser<double> physics_map("Physics",files._output_path);
-  OptPhysics phys(physics_map);
-             phys.set_nondimgroups();
-  const double Lref  =  phys._physrtmap.get("Lref");
+  
+  const double rhof   = physics_map.get("rho0");
+  const double Uref   = physics_map.get("Uref");
+  const double Lref   = physics_map.get("Lref");
+  const double  muf   = physics_map.get("mu0");
+  const double MUMHD  = physics_map.get("MUMHD");
+  const double SIGMHD = physics_map.get("SIGMHD");
+  const double   Bref = physics_map.get("Bref");
+  const double sigma  = physics_map.get("sigma");
+
+  const double   _pref = rhof*Uref*Uref;             physics_map.set("pref",_pref);
+  const double   _Re  = (rhof*Uref*Lref)/muf;        physics_map.set("Re",_Re);
+  const double   _Fr  = (Uref*Uref)/(9.81*Lref);     physics_map.set("Fr",_Fr);
+  const double   _Pr=muf/rhof;                       physics_map.set("Pr",_Pr);
+
+  const double   _Rem = MUMHD*SIGMHD*Uref*Lref;      physics_map.set("Rem",_Rem);
+  const double   _Hm  = Bref*Lref*sqrt(SIGMHD/muf);  physics_map.set("Hm",_Hm);
+  const double   _S   = _Hm*_Hm/(_Re*_Rem);          physics_map.set("S",_S);
+  
+  const double   _We  = (Uref*Uref*Lref*rhof)/sigma; physics_map.set("We",_We);
 
   // ======= Mesh =====
   FemusInputParser<double> mesh_map("Mesh",files._output_path);
@@ -94,8 +111,6 @@ int main(int argc, char** argv) {
 	  mesh.PrintMultimeshXdmf();
           mesh.PrintForVisualizationAllLEVAllVB();
       
-  phys.set_mesh(&mesh);
-
 // ======  QRule ================================ 
   std::vector<Gauss>   qrule;
   qrule.reserve(mesh.get_dim());
@@ -118,7 +133,7 @@ int main(int argc, char** argv) {
     }  
   
   // ===== QuantityMap =========================================
-  QuantityMap  qty_map(phys);
+  QuantityMap  qty_map(mesh,&physics_map);
 
 //================================
 // ======= Add QUANTITIES ========  
@@ -160,7 +175,7 @@ int main(int argc, char** argv) {
 //================================
 
   // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblemTwo equations_map(files,phys,qty_map,mesh,FEElemType_vec,qrule);
+  MultiLevelProblemTwo equations_map(files,physics_map,qty_map,mesh,FEElemType_vec,qrule);
   
 //===============================================
 //================== Add EQUATIONS  AND ======================

@@ -39,13 +39,11 @@ namespace femus {
  
 void EqnNS::ic_read(const double xp[],double u_value[], const double el_xm[]) const {
 
-  const double Uref = _phys._physrtmap.get("Uref");
-  //====== Physics
-  OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&_phys);
-  double pref = optphys->_pref;
+  const double Uref = _phys.get("Uref");
+  double pref = _phys.get("pref");
   const double bdry_toll = _mesh.GetRuntimeMap().get("bdry_toll");
 
-  double udes = _phys._physrtmap.get("udes");
+  double udes = _phys.get("udes");
   
   
   Box* box= static_cast<Box*>(_mesh.GetDomain());
@@ -378,15 +376,15 @@ Box* box = static_cast<Box*>(_mesh.GetDomain());
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
-       if (bc_flag[pos_ux] == 1)  bc_flag[pos_ux] = _phys._physrtmap.get("Fake3D");   //u x n  //check it for all equations
-       if (bc_flag[pos_uy] == 1)  bc_flag[pos_uy] = _phys._physrtmap.get("Fake3D");   //u x n          //leave this free for 2D
+       if (bc_flag[pos_ux] == 1)  bc_flag[pos_ux] = _phys.get("Fake3D");   //u x n  //check it for all equations
+       if (bc_flag[pos_uy] == 1)  bc_flag[pos_uy] = _phys.get("Fake3D");   //u x n          //leave this free for 2D
       bc_flag[pos_uz]=0;                                               //u dot n  
 //       bc_flag[pos_up]=0;
   }
   
   if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  {
-     if (bc_flag[pos_ux] == 1) bc_flag[pos_ux] = _phys._physrtmap.get("Fake3D");      //u x n
-     if (bc_flag[pos_uy] == 1) bc_flag[pos_uy] = _phys._physrtmap.get("Fake3D");      //u x n      //leave this free for 2D
+     if (bc_flag[pos_ux] == 1) bc_flag[pos_ux] = _phys.get("Fake3D");      //u x n
+     if (bc_flag[pos_uy] == 1) bc_flag[pos_uy] = _phys.get("Fake3D");      //u x n      //leave this free for 2D
      bc_flag[pos_uz] = 0;                                                  //u dot n
 //      bc_flag[pos_up]=0;
   }
@@ -447,8 +445,8 @@ Box* box = static_cast<Box*>(_mesh.GetDomain());
 //===============================================================
 void EqnMHD::ic_read(const double xp[],double u_value[], const double el_xm[]) const {
 
-  const double Uref = _phys._physrtmap.get("Uref");
-  const double Bref = _phys._physrtmap.get("Bref");
+  const double Uref = _phys.get("Uref");
+  const double Bref = _phys.get("Bref");
  
 #if (DIMENSION==2)
   u_value[0] = 0./Bref;
@@ -722,15 +720,15 @@ Box* box = static_cast<Box*>(_mesh.GetDomain());
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {   //  CONDUCTING, now insulating
-   if (bc_flag[0] == 1) bc_flag[0]=_phys._physrtmap.get("Fake3D");     //bxn
-   if (bc_flag[1] == 1) bc_flag[1]=_phys._physrtmap.get("Fake3D");     //bxn      //leave this free for 2D
+   if (bc_flag[0] == 1) bc_flag[0]=_phys.get("Fake3D");     //bxn
+   if (bc_flag[1] == 1) bc_flag[1]=_phys.get("Fake3D");     //bxn      //leave this free for 2D
 //      bc_flag[2]=0;                         //b.n 
 //     bc_flag[3]=0;
   }
   
   if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {   //  CONDUCTING, now insulating
-   if (bc_flag[0] == 1) bc_flag[0]=_phys._physrtmap.get("Fake3D");   //bxn
-   if (bc_flag[1] == 1) bc_flag[1]=_phys._physrtmap.get("Fake3D");   //bxn     //leave this free for 2D
+   if (bc_flag[0] == 1) bc_flag[0]=_phys.get("Fake3D");   //bxn
+   if (bc_flag[1] == 1) bc_flag[1]=_phys.get("Fake3D");   //bxn     //leave this free for 2D
 //  bc_flag[2]=0;                           //b.n 
 //     bc_flag[3]=0;
   }
@@ -853,14 +851,14 @@ if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
-    if (bc_flag[0] == 1) bc_flag[0]=_phys._physrtmap.get("Fake3D");   //u x n
-    if (bc_flag[1] == 1) bc_flag[1]=_phys._physrtmap.get("Fake3D");  //u x n             //leave this free for 2D
+    if (bc_flag[0] == 1) bc_flag[0]=_phys.get("Fake3D");   //u x n
+    if (bc_flag[1] == 1) bc_flag[1]=_phys.get("Fake3D");  //u x n             //leave this free for 2D
       bc_flag[2]=0;                                            //u dot n
 //      bc_flag[3]=0;
   }
   if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
-    if (bc_flag[0] == 1) bc_flag[0] = _phys._physrtmap.get("Fake3D");   //u x n
-    if (bc_flag[1] == 1) bc_flag[1] = _phys._physrtmap.get("Fake3D");  //u x n             //leave this free for 2D
+    if (bc_flag[0] == 1) bc_flag[0] = _phys.get("Fake3D");   //u x n
+    if (bc_flag[1] == 1) bc_flag[1] = _phys.get("Fake3D");  //u x n             //leave this free for 2D
     bc_flag[2]=0;                                                //u dot n
 //      bc_flag[3]=0;
   }
@@ -1120,15 +1118,15 @@ Box* box = static_cast<Box*>(_mesh.GetDomain());
   }
   
 if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //current  
-     if (bc_flag[0] == 1) bc_flag[0]=_phys._physrtmap.get("Fake3D");
-     if (bc_flag[1] == 1) bc_flag[1]=_phys._physrtmap.get("Fake3D");
+     if (bc_flag[0] == 1) bc_flag[0]=_phys.get("Fake3D");
+     if (bc_flag[1] == 1) bc_flag[1]=_phys.get("Fake3D");
 //      bc_flag[2]=0;
 //      bc_flag[3]=0;
   }
   
   if ((le[2]-lb[2]) - x_rotshift[2] > -bdry_toll &&  (le[2]-lb[2]) -x_rotshift[2] < bdry_toll)  {
-    if (bc_flag[0] == 1) bc_flag[0]=_phys._physrtmap.get("Fake3D");
-    if (bc_flag[1] == 1) bc_flag[1]=_phys._physrtmap.get("Fake3D");
+    if (bc_flag[0] == 1) bc_flag[0]=_phys.get("Fake3D");
+    if (bc_flag[1] == 1) bc_flag[1]=_phys.get("Fake3D");
 //    bc_flag[2]=0;
 //      bc_flag[3]=0;
   }
@@ -1288,8 +1286,8 @@ surf_id=77;
 
 void EqnMHDCONT::ic_read(const double xp[], double u_value[], const double el_xm[]) const {
 
-  const double Uref = _phys._physrtmap.get("Uref");
-  const double Bref = _phys._physrtmap.get("Bref");
+  const double Uref = _phys.get("Uref");
+  const double Bref = _phys.get("Bref");
  
 #if (DIMENSION==2)
   u_value[0] = Bref/Bref;
@@ -1544,8 +1542,8 @@ Box* box= static_cast<Box*>(_mesh.GetDomain());
   }
   
   if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
-    bc_flag[0]=_phys._physrtmap.get("UseControl");    // 
-    bc_flag[1]=_phys._physrtmap.get("UseControl");   //
+    bc_flag[0]=_phys.get("UseControl");    // 
+    bc_flag[1]=_phys.get("UseControl");   //
     
     bc_flag[2]=0;
     //bc_flag[3]=0;

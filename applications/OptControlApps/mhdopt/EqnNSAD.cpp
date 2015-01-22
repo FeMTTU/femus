@@ -75,11 +75,9 @@ namespace femus {
 
  void EqnNSAD::GenMatRhs(const uint Level)  {
 
-//====== Physics cast ============
-  OptPhysics* optphys; optphys = static_cast<OptPhysics*>(&_phys);
     // ========= parameters
-  const double alphaVel = _phys._physrtmap.get("alphaVel");
-  const double IRe      = 1./optphys->_Re;
+  const double alphaVel = _phys.get("alphaVel");
+  const double IRe      = 1./_phys.get("Re");
 
   //=========== Operators 
   double dphijdx_g[DIMENSION];
@@ -89,7 +87,7 @@ namespace femus {
    const double time =  0.;  //_eqnmap._timeloop._curr_time;
    
 //======= TIME - STATIONARY OR NOT =======
-const int NonStatNSAD = (int) _phys._physrtmap.get("NonStatNSAD");
+const int NonStatNSAD = (int) _phys.get("NonStatNSAD");
   const double   dt     = 1.;  //_eqnmap._timeloop._timemap.get("dt");
 
 // //======== GEOMETRICAL ELEMENT =======

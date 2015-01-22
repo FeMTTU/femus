@@ -71,7 +71,7 @@ class QuantityMap {
   
 public:
 
-   QuantityMap(Physics& phys_in);
+   QuantityMap(const MeshTwo & mesh, const FemusInputParser<double> * map_in);
   ~QuantityMap(){};
   
   inline           void  set_qty(Quantity* value)          {_QuantMap.insert(make_pair(value->_name,value));}
@@ -89,7 +89,9 @@ public:
 
   
  std::map<std::string,Quantity*> _QuantMap;
- Physics& _phys; 
+ const MeshTwo & _mesh;
+ const FemusInputParser<double> * _physmap;
+ 
   
 };
 

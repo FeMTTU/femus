@@ -234,9 +234,7 @@ else if  ( (x_rotshift[0]) < 0.25*(le[0] - lb[0]) || ( x_rotshift[0]) > 0.75*(le
 void EqnNS::ic_read(const double xp[],double u_value[],const double el_xm[]) const {
 
   //====== Physics
-   const double Uref = _phys._physrtmap.get("Uref");
-//   double pref = optphys->_pref;
-  TempPhysics *optphys; optphys = static_cast<TempPhysics*>(&_phys);
+   const double Uref = _phys.get("Uref");
   const double bdry_toll = _mesh.GetRuntimeMap().get("bdry_toll");
 
  
@@ -275,7 +273,7 @@ const double magnitude = 0. /*1.5*(x_rotshift[0] - box->_lb[0])*(box->_le[0]-x_r
  if  ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {
  
  if ( (x_rotshift[1]) > 0.4*(box->_le[1] - box->_lb[1]) && ( x_rotshift[1]) < 0.6*(box->_le[1]-box->_lb[1]) )  {  //left of the refbox
-       u_value[0] = optphys->_physrtmap.get("injsuc");    u_value[1] = 0; 
+       u_value[0] = _phys.get("injsuc");    u_value[1] = 0; 
       }
    }   
 //============================================

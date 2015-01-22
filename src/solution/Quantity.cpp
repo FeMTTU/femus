@@ -104,10 +104,10 @@ namespace femus {
 void Quantity::FunctionDof(CurrentQuantity& myvect, const double t, const double* refbox_xyz) const {
 
 //====the Domain
-  const uint space_dim = _qtymap._phys._mesh->get_dim();
+  const uint space_dim = myvect.GetCurrentElem()._mesh.get_dim();
   double* xp = new double[space_dim]; 
-  const uint mesh_ord = (int) _qtymap._phys._mesh->GetRuntimeMap().get("mesh_ord");    
-  const uint offset   =       _qtymap._phys._mesh->GetGeomEl(myvect.GetCurrentElem().GetDim()-1,mesh_ord)._elnds;
+  const uint mesh_ord = (int) myvect.GetCurrentElem()._mesh.GetRuntimeMap().get("mesh_ord");    
+  const uint offset   =       myvect.GetCurrentElem()._mesh.GetGeomEl(myvect.GetCurrentElem().GetDim()-1,mesh_ord)._elnds;
 
 //=====the Function
   double* func = new double[myvect._dim];
@@ -138,7 +138,7 @@ if (dof_off > offset) {std::cout << "Use a quadratic mesh for FunctionDof comput
   ////////////////QTY MAP ////////////
   
   
-  QuantityMap::QuantityMap(Physics& phys_in): _phys(phys_in) { }
+  QuantityMap::QuantityMap(const MeshTwo & mesh, const FemusInputParser<double> * map_in) : _mesh(mesh),_physmap(map_in) { }
   
 
 

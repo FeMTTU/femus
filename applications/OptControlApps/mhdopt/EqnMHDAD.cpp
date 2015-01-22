@@ -75,11 +75,9 @@ EqnMHDAD::~EqnMHDAD() {}
 
    const double time =  0.;  //_eqnmap._timeloop._curr_time;
    
-  //====== Physics
-  OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&_phys);
   //========= parameters
-   double IRem =  1./optphys->_Rem;
-   double S    = optphys->_S;
+   double IRem =  1./_phys.get("Rem");
+   double S    = _phys.get("S");
   
   //=========== Operators 
 
@@ -88,7 +86,7 @@ EqnMHDAD::~EqnMHDAD() {}
   double  curlBXlambda_g3D[3]; 
     
 //======= TIME - STATIONARY OR NOT =======
-const int NonStatMHDAD = (int) _phys._physrtmap.get("NonStatMHDAD");
+const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
   const double   dt = 1.; //_eqnmap._timeloop._timemap.get("dt");
 
 //======== GEOMETRICAL ELEMENT =======

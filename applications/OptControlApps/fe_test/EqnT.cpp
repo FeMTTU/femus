@@ -53,8 +53,6 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
  void  EqnT::GenMatRhs(const uint Level) {
 
   const double time =  0.;
-   
-  TempPhysics* myphys; myphys = static_cast<TempPhysics*>(&_phys);
 
 //========== PROCESSOR INDEX
   const uint myproc = _iproc;
@@ -155,7 +153,6 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
     //I could consider it as another element, but only with the geometrical part!
 
   xyz_refbox.SetElemAverage();
-int domain_flag = myphys->ElFlagControl(xyz_refbox._el_average);
 //====================    
     
 //===== FILL the DOFS of the EXTERNAL QUANTITIES: you must assure that for every Vect the quantity is set correctly

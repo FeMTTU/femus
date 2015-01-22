@@ -63,7 +63,7 @@ Temperature::Temperature(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 MagnFieldHom::MagnFieldHom(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
 
- for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in._phys._physrtmap.get("Bref");
+ for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in._physmap->get("Bref");
 }
 
 //===========================================================================
@@ -77,8 +77,8 @@ MagnFieldHomAdj::MagnFieldHomAdj(std::string name_in, QuantityMap& qtymap_in, ui
 MagnFieldHomLagMult::MagnFieldHomLagMult(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
   
-  const double Bref = qtymap_in._phys._physrtmap.get("Bref");
-  const double Uref = qtymap_in._phys._physrtmap.get("Uref");
+  const double Bref = qtymap_in._physmap->get("Bref");
+  const double Uref = qtymap_in._physmap->get("Uref");
   const double sigmaref = Uref*Bref;
   for (uint i=0;i<dim_in;i++) _refvalue[i]=sigmaref;
   
@@ -99,7 +99,7 @@ MagnFieldHomLagMultAdj::MagnFieldHomLagMultAdj(std::string name_in, QuantityMap&
 MagnFieldExt::MagnFieldExt(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {
 
-  for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in._phys._physrtmap.get("Bref");
+  for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in._physmap->get("Bref");
   
 }
 
@@ -107,8 +107,8 @@ MagnFieldExt::MagnFieldExt(std::string name_in, QuantityMap& qtymap_in, uint dim
 MagnFieldExtLagMult::MagnFieldExtLagMult(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {
 
-  const double Bref = qtymap_in._phys._physrtmap.get("Bref");
-  const double Uref = qtymap_in._phys._physrtmap.get("Uref");
+  const double Bref = qtymap_in._physmap->get("Bref");
+  const double Uref = qtymap_in._physmap->get("Uref");
   const double sigmaref = Uref*Bref;
   for (uint i=0;i<dim_in;i++) _refvalue[i]=sigmaref;
 
@@ -121,11 +121,8 @@ MagnFieldExtLagMult::MagnFieldExtLagMult(std::string name_in, QuantityMap& qtyma
 Pressure::Pressure(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
 
-  //====== Physics
-  OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&(qtymap_in._phys));
   
-  
-  for (uint i=0;i<dim_in;i++) _refvalue[i]= /*qtymap_in._phys.*/optphys->_pref;
+  for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in._physmap->get("pref");
 }
 
 //===========================================================================
@@ -140,7 +137,7 @@ PressureAdj::PressureAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 Velocity::Velocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {  
 
-    for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in._phys._physrtmap.get("Uref");
+    for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in._physmap->get("Uref");
   
 }
 
@@ -160,7 +157,7 @@ VelocityAdj::VelocityAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 DesVelocity::DesVelocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
   
-   for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in._phys._physrtmap.get("Uref");
+   for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in._physmap->get("Uref");
 
 }
 
@@ -176,7 +173,7 @@ DesVelocity::DesVelocity(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 
 void Velocity::Function_txyz(const double t,const double* xp, double* func) const {
 
-  Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
+  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   // we should do this static_cast in the QUANTITY or QUANTITY MAP constructor
   //if there is some domain shape, we see what type it is and we do the static cast
   //if there is no domain shape, we dont need the domain.
@@ -184,25 +181,22 @@ void Velocity::Function_txyz(const double t,const double* xp, double* func) cons
     //=====ROTATION of the Function
   const double thetaz = box->_domain_rtmap.get("thetaz");
   
-  //====== Physics
-  OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&(_qtymap._phys));
-  
-  const double rhof   = _qtymap._phys._physrtmap.get("rho0");
-  const double Uref   = _qtymap._phys._physrtmap.get("Uref");
-  const double muvel  = _qtymap._phys._physrtmap.get("mu0");
-  const double MUMHD  = _qtymap._phys._physrtmap.get("MUMHD");
-  const double SIGMHD = _qtymap._phys._physrtmap.get("SIGMHD");
-  const double Bref   = _qtymap._phys._physrtmap.get("Bref");
-  const double Lref   = _qtymap._phys._physrtmap.get("Lref");
+  const double rhof   = _qtymap._physmap->get("rho0");
+  const double Uref   = _qtymap._physmap->get("Uref");
+  const double muvel  = _qtymap._physmap->get("mu0");
+  const double MUMHD  = _qtymap._physmap->get("MUMHD");
+  const double SIGMHD = _qtymap._physmap->get("SIGMHD");
+  const double Bref   = _qtymap._physmap->get("Bref");
+  const double Lref   = _qtymap._physmap->get("Lref");
 
   const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution!!!
 
   double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
 
-  double Re  = optphys->_Re;
-  double Rem = optphys->_Rem;
-  double Hm  = optphys->_Hm;
-  double S   = optphys->_S;
+  double Re  = _qtymap._physmap->get("Re");
+  double Rem = _qtymap._physmap->get("Rem");
+  double Hm  = _qtymap._physmap->get("Hm");
+  double S   = _qtymap._physmap->get("S");
 
 
   double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
@@ -235,9 +229,9 @@ void Velocity::strain_txyz(const double t, const double* xyz,double strain[][DIM
 
 //here, tau is a tensor, so tau dot n is a vector which in general has a NORMAL and a TANGENTIAL component  
   
-    const double Lref = _qtymap._phys._physrtmap.get("Lref");
+    const double Lref = _qtymap._physmap->get("Lref");
       double ILref = 1./Lref;
-      const double lye = _qtymap._phys._mesh->GetDomain()->_domain_rtmap.get("lye");
+      const double lye = _qtymap._mesh.GetDomain()->_domain_rtmap.get("lye");
   const double x=xyz[0];
   const double y=xyz[1];
 #if DIMENSION==3
@@ -321,8 +315,7 @@ void Pressure::Function_txyz(const double t, const double* xp,double* func) cons
 // NO, we clearly cannot do that
 // i would want the gencase to be AS GENERAL as POSSIBLE
 
-Box* box= static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
-  OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&(_qtymap._phys));
+Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
 
   double         lb[DIMENSION];
   double         le[DIMENSION];
@@ -336,7 +329,7 @@ Box* box= static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
 #endif
   
  
-  func[0] =  1./ optphys->_pref*( (le[1]-lb[1]) - /*x_rotshift*/xp[1] )*(cos(6.*0.*t));
+  func[0] =  1./ _qtymap._physmap->get("pref")*( (le[1]-lb[1]) - /*x_rotshift*/xp[1] )*(cos(6.*0.*t));
 
 //this equation is in the reference frame CENTERED AT (0,0,0)  
   
@@ -365,10 +358,10 @@ void Temperature::Function_txyz(const double t, const double* xp,double* temp) c
   //it might happen something different. So,maybe, to make things not very complicated,
   // it suffices to pass the pointer, and then externally one will think of shifting the indices and so on.. anyway.
 
-  const double Tref = _qtymap._phys._physrtmap.get("Tref");
+  const double Tref = _qtymap._physmap->get("Tref");
 
 
-  Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());  
+  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());  
   
   temp[0] = 100.*(xp[0])*( ( box->_le[0] - box->_lb[0]) - xp[0])/Tref;
  
@@ -387,7 +380,7 @@ void Temperature::heatflux_txyz(const double t, const double* xyz, double* qflux
 //  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
 
 std::cout << "Temperature: Heatflux, check which coordinates are passed in here" << std::endl;
-  Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
+  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   const double thetaz = box->_domain_rtmap.get("thetaz");
 
      qflux[0]=+700.*cos(thetaz);
@@ -409,11 +402,11 @@ void MagnFieldExt::Function_txyz(const double t,const double* xp, double* func) 
 
   
   //=====ROTATION of the Function
-  Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
+  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   const double thetaz = box->_domain_rtmap.get("thetaz");
 
   //============== PICK THE REQUIRED REFERENCE VALUES for the FUNCTION
-  const double Bref   = _qtymap._phys._physrtmap.get("Bref");      //Uref*sqrt(rhof*MUMHD);   //in order to make S=1
+  const double Bref   = _qtymap._physmap->get("Bref");      //Uref*sqrt(rhof*MUMHD);   //in order to make S=1
 
 //function
   func[0] = (cos(thetaz)*Bref
@@ -456,10 +449,10 @@ return;
 void MagnFieldHom::Function_txyz(const double t, const double* xp, double* func) const {
 
 //============== PICK THE REQUIRED REFERENCE VALUES
-  const double Lref   = _qtymap._phys._physrtmap.get("Lref");
-  const double rhof   = _qtymap._phys._physrtmap.get("rho0");
-  const double Uref   = _qtymap._phys._physrtmap.get("Uref");
-  const double Bref   = _qtymap._phys._physrtmap.get("Bref");      //Uref*sqrt(rhof*MUMHD);   //in order to make S=1
+  const double Lref   = _qtymap._physmap->get("Lref");
+  const double rhof   = _qtymap._physmap->get("rho0");
+  const double Uref   = _qtymap._physmap->get("Uref");
+  const double Bref   = _qtymap._physmap->get("Bref");      //Uref*sqrt(rhof*MUMHD);   //in order to make S=1
 
   const double DpDz   = 1.;  //AAA: change it according to the pressure distribution
   // TODO THIS IS DELICATE!!! Suppose you change this multiplicative coefficient, then you get DIFFERENT THINGS!!!!
@@ -467,10 +460,8 @@ void MagnFieldHom::Function_txyz(const double t, const double* xp, double* func)
   
   double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
 
-  OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&(_qtymap._phys));
-
-  double Hm  = optphys->_Hm;
-  double S   = /*_qtymap._phys.*/optphys->_S;
+  double Hm  = _qtymap._physmap->get("Hm");
+  double S   = _qtymap._physmap->get("S");
 //=========================================
   
 //============= HERE, the analytical solution was given in a reference frame  [-LX,LX] 
@@ -484,7 +475,7 @@ void MagnFieldHom::Function_txyz(const double t, const double* xp, double* func)
 //where you see S, leave it like that (even if it contains Hm...). This is because S does not contain the reference length, actually! Good.
  
   
-    Box* box= static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
+    Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
   
   double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
   double Lmid  = 0.5*(box->_le[0] + box->_lb[0]);
@@ -537,29 +528,27 @@ return;
 void DesVelocity::Function_txyz(const double t, const double* xp,double* func) const {
   
   
-  const double Lref = _qtymap._phys._physrtmap.get("Lref");
-  const double Uref = _qtymap._phys._physrtmap.get("Uref");
+  const double Lref = _qtymap._physmap->get("Lref");
+  const double Uref = _qtymap._physmap->get("Uref");
   double ILref = 1./Lref;
     
-  const double rhof   = _qtymap._phys._physrtmap.get("rho0");
-  const double muvel  = _qtymap._phys._physrtmap.get("mu0");
-  const double MUMHD  = _qtymap._phys._physrtmap.get("MUMHD");
-  const double SIGMHD = _qtymap._phys._physrtmap.get("SIGMHD");
-  const double Bref   = _qtymap._phys._physrtmap.get("Bref");
+  const double rhof   = _qtymap._physmap->get("rho0");
+  const double muvel  = _qtymap._physmap->get("mu0");
+  const double MUMHD  = _qtymap._physmap->get("MUMHD");
+  const double SIGMHD = _qtymap._physmap->get("SIGMHD");
+  const double Bref   = _qtymap._physmap->get("Bref");
 
   const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution
 
   double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
 
-  OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&(_qtymap._phys));
-  
-  double Re  = /*_qtymap._phys.*/optphys->_Re;
-  double Rem = /*_qtymap._phys.*/optphys->_Rem;
-  double Hm  = /*_qtymap._phys.*/optphys->_Hm;
-  double S   = /*_qtymap._phys.*/optphys->_S;
+  double Re  = _qtymap._physmap->get("Re");
+  double Rem = _qtymap._physmap->get("Rem");
+  double Hm  = _qtymap._physmap->get("Hm");
+  double S   = _qtymap._physmap->get("S");
  
   
-  Box* box= static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
+  Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
   
   
   double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
@@ -572,7 +561,7 @@ void DesVelocity::Function_txyz(const double t, const double* xp,double* func) c
   //constant for the real reference length in the Hartmann number
   const double LHm =2.;   //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
 
-  const double magnitude = _qtymap._phys._physrtmap.get("udes")*DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
+  const double magnitude = _qtymap._physmap->get("udes")*DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
   
   func[0] = -sin(thetaz)*magnitude;
   func[1] = cos(thetaz)*magnitude;

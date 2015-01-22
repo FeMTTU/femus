@@ -79,8 +79,8 @@
   const uint myproc = _iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
-  const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
-  const double     dt = 1.; //_eqnmap._timeloop._timemap.get("dt");
+  const int NonStatNS = (int) _phys.get("NonStatNS");
+  const double     dt = 1.;
 
 //========= BCHandling =========
   const double penalty_val = _mesh.GetRuntimeMap().get("penalty_val");    
@@ -92,13 +92,12 @@
 
 
   //=======density and viscosity===================
-  const double rhof = _phys._physrtmap.get("rho0");
-  const double  muf = _phys._physrtmap.get("mu0");
+  const double rhof = _phys.get("rho0");
+  const double  muf = _phys.get("mu0");
   //====== reference values ========================
 //====== related to Quantities on which Operators act, and to the choice of the "LEADING" EQUATION Operator
-  TempPhysics *optphys; optphys = static_cast<TempPhysics*>(&_phys);
-  const double IRe = 1./optphys->_Re;
-  const double IFr = 1./optphys->_Fr;
+  const double IRe = 1./_phys.get("Re");
+  const double IFr = 1./_phys.get("Fr");
 //================================================  
 
 //================================================  
@@ -169,9 +168,9 @@
   gravity._dim = space_dim;
 //   gravity.Allocate(); CANNOT DO THIS NOW BECAUSE NOT ALL THE DATA FOR THE ALLOCATION ARE FILLED
   gravity._val_g.resize(gravity._dim);
-  gravity._val_g[0] = _phys._physrtmap.get("dirgx");
-  gravity._val_g[1] = _phys._physrtmap.get("dirgy");
-  if ( space_dim == 3 )   gravity._val_g[2] = _phys._physrtmap.get("dirgz"); 
+  gravity._val_g[0] = _phys.get("dirgx");
+  gravity._val_g[1] = _phys.get("dirgy");
+  if ( space_dim == 3 )   gravity._val_g[2] = _phys.get("dirgz"); 
     
     const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
     const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];

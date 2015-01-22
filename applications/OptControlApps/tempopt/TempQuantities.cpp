@@ -48,11 +48,8 @@ TempDes::TempDes(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint 
 Pressure::Pressure(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
 
-  //====== Physics
-  TempPhysics *optphys; optphys = static_cast<TempPhysics*>(&(qtymap_in._phys));
   
-  
-  for (uint i=0;i<dim_in;i++) _refvalue[i] = optphys->_pref;
+  for (uint i=0;i<dim_in;i++) _refvalue[i] = qtymap_in._physmap->get("pref");
 }
 
 
@@ -60,7 +57,7 @@ Pressure::Pressure(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uin
 Velocity::Velocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {  
 
-   for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in._phys._physrtmap.get("Uref");
+   for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in._physmap->get("Uref");
   
 }
 
@@ -79,7 +76,7 @@ void Velocity::Function_txyz(const double /*t*/,const double* xp, double* func) 
 
   
 
-  Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
+  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   // we should do this static_cast in the QUANTITY or QUANTITY MAP constructor
   //if there is some domain shape, we see what type it is and we do the static cast
   //if there is no domain shape, we dont need the domain.
@@ -93,11 +90,9 @@ void Velocity::Function_txyz(const double /*t*/,const double* xp, double* func) 
   //====== Physics
 //   TempPhysics *optphys; optphys = static_cast<TempPhysics*>(&(_qtymap._phys));
   
-  const double rhof   = _qtymap._phys._physrtmap.get("rho0");
-  const double Uref   = _qtymap._phys._physrtmap.get("Uref");
-//   const double muvel  = _qtymap._phys._physrtmap.get("mu0");
-//  const double Bref   = _qtymap._phys._physrtmap.get("Bref");
-  const double Lref   = _qtymap._phys._physrtmap.get("Lref");
+  const double rhof   = _qtymap._physmap->get("rho0");
+  const double Uref   = _qtymap._physmap->get("Uref");
+  const double Lref   = _qtymap._physmap->get("Lref");
 
   const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution!!!
 
@@ -137,9 +132,9 @@ void Velocity::strain_txyz(const double /*t*/, const double* xyz,double strain[]
 
 //here, tau is a tensor, so tau dot n is a vector which in general has a NORMAL and a TANGENTIAL component  
   
-    const double Lref = _qtymap._phys._physrtmap.get("Lref");
+    const double Lref = _qtymap._physmap->get("Lref");
       double ILref = 1./Lref;
-      const double lye = _qtymap._phys._mesh->GetDomain()->_domain_rtmap.get("lye");
+      const double lye = _qtymap._mesh.GetDomain()->_domain_rtmap.get("lye");
 //   const double x=xyz[0];
   const double y=xyz[1];
 #if DIMENSION==3
@@ -223,10 +218,9 @@ void Pressure::Function_txyz(const double t, const double* xp,double* func) cons
 // NO, we clearly cannot do that
 // i would want the gencase to be AS GENERAL as POSSIBLE
 
-Box* box= static_cast<Box*>(_qtymap._phys._mesh->GetDomain());  //already nondimensionalized
-  TempPhysics *optphys; optphys = static_cast<TempPhysics*>(&(_qtymap._phys));
+Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());  //already nondimensionalized
  
-  func[0] =  1./ optphys->_pref*( (box->_le[1] - box->_lb[1]) - xp[1] )*(cos(6.*0.*t));
+  func[0] =  1./ _qtymap._physmap->get("pref")*( (box->_le[1] - box->_lb[1]) - xp[1] )*(cos(6.*0.*t));
 
 //this equation is in the reference frame CENTERED AT (0,0,0)  
   
@@ -253,9 +247,9 @@ void TempAdj::Function_txyz(const double/* t*/, const double* /*xp*/,double* tem
 // =================================================
 void TempLift::Function_txyz(const double /*t*/, const double* xp,double* temp) const {
 
-  const double Tref = _qtymap._phys._physrtmap.get("Tref");
+  const double Tref = _qtymap._physmap->get("Tref");
 
-  Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());  
+  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());  
   
   temp[0] = 100.*(xp[0])*( ( box->_le[0] - box->_lb[0]) - xp[0])*(xp[1])*( ( box->_le[1] - box->_lb[1]) - xp[1])/Tref;
  
@@ -266,9 +260,9 @@ void TempLift::Function_txyz(const double /*t*/, const double* xp,double* temp) 
 // =================================================
 void Temperature::Function_txyz(const double/* t*/, const double* xp,double* temp) const {
 
-  const double Tref = _qtymap._phys._physrtmap.get("Tref");
+  const double Tref = _qtymap._physmap->get("Tref");
 
-  Box* box = static_cast<Box*>(_qtymap._phys._mesh->GetDomain());  
+  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());  
   
   temp[0] = 100.*(xp[0])*( ( box->_le[0] - box->_lb[0]) - xp[0])/Tref;
  

@@ -105,15 +105,12 @@ void  EqnT::GenMatRhs(const uint Level) {
 
   const double time = 0.; // _eqnmap._timeloop._curr_time;
 
-//========== PHYSICS =======
-  TempPhysics* myphys; myphys = static_cast<TempPhysics*>(&_phys);
-
 //========== PROCESSOR INDEX
   const uint myproc = _iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
   const double    dt = 1.; //_eqnmap._timeloop._timemap.get("dt");
-  const uint Nonstat = myphys->_physrtmap.get("NonStatTEMP");
+  const uint Nonstat = _phys.get("NonStatTEMP");
   
 //========= BCHandling =========
   const double penalty_val = _mesh.GetRuntimeMap().get("penalty_val");    
@@ -124,11 +121,11 @@ void  EqnT::GenMatRhs(const uint Level) {
   const uint  mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
 
   //====== reference values ========================
-  const double IRe = 1./myphys->_Re;
-  const double IPr = 1./myphys->_Pr;
-  const double alphaT  = myphys->_physrtmap.get("alphaT");
-  const double alphaL2 = myphys->_physrtmap.get("alphaL2");
-  const double alphaH1 = myphys->_physrtmap.get("alphaH1");
+  const double IRe = 1./_phys.get("Re");
+  const double IPr = 1./_phys.get("Pr");
+  const double alphaT  = _phys.get("alphaT");
+  const double alphaL2 = _phys.get("alphaL2");
+  const double alphaH1 = _phys.get("alphaH1");
   
   //==== AUXILIARY ==============
     double* dphijdx_g = new double[space_dim];

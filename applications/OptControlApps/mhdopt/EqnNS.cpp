@@ -93,10 +93,9 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
   //====== reference values ========================
 //====== related to Quantities on which Operators act, and to the choice of the "LEADING" EQUATION Operator
   //====== Physics
-  OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&_phys);
-  const double IRe = 1./optphys->_Re;
-  const double IFr = 1./optphys->_Fr;
-  const double   S = optphys->_S;
+  const double IRe = 1./_phys.get("Re");
+  const double IFr = 1./_phys.get("Fr");
+  const double   S = _phys.get("S");
 //================================================  
 
 //=============== electric current ===============
@@ -104,8 +103,8 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
   //because we only need it for a CROSS product
   double Jext_g3D[3]={0.,0.,0.}; //Quantity
   //=======density and viscosity===================
-  const double rhof = _phys._physrtmap.get("rho0");
-  const double  muf = _phys._physrtmap.get("mu0");
+  const double rhof = _phys.get("rho0");
+  const double  muf = _phys.get("mu0");
 
 //================================================  
 //=======Operators @ gauss =======================
@@ -154,7 +153,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 //because we use finite difference for it... unless we decide to do 
 //finite elements for time as well...
 //well, we might do Time as a Vect
-const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
+const int NonStatNS = (int) _phys.get("NonStatNS");
   const double   dt = 1.; //_eqnmap._timeloop._timemap.get("dt");
 
 //==========FLAG for NONLINEARITY, we might put here
@@ -273,10 +272,10 @@ const int NonStatNS = (int) _phys._physrtmap.get("NonStatNS");
   CurrentQuantity gravity(currgp);
   gravity._dim=DIMENSION;
   gravity._val_g.resize(gravity._dim);
-  gravity._val_g[0] = _phys._physrtmap.get("dirgx");
-  gravity._val_g[1] = _phys._physrtmap.get("dirgy");
+  gravity._val_g[0] = _phys.get("dirgx");
+  gravity._val_g[1] = _phys.get("dirgy");
 #if DIMENSION==3
-  gravity._val_g[2] = _phys._physrtmap.get("dirgz");
+  gravity._val_g[2] = _phys.get("dirgz");
 #endif  
  
     const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];

@@ -77,10 +77,8 @@ namespace femus {
 
   void EqnMHD::GenMatRhs(const uint Level)  {
 
-  //====== Physics
-  OptPhysics *optphys; optphys = static_cast<OptPhysics*>(&_phys);
   //========= reference values =========
-  const double IRem = 1./optphys->_Rem;
+  const double IRem = 1./_phys.get("Rem");
 //============================
 
 //==== Operators @ gauss ======== 
@@ -94,7 +92,7 @@ namespace femus {
    const double time =  0.; //_eqnmap._timeloop._curr_time;    
     
 //======= TIME - STATIONARY OR NOT =======
- const int NonStatMHD = (int) _phys._physrtmap.get("NonStatMHD");
+ const int NonStatMHD = (int) _phys.get("NonStatMHD");
     const double dt   = 1.; //_eqnmap._timeloop._timemap.get("dt");
 
 //========= BCHandling =========

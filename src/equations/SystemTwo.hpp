@@ -160,8 +160,8 @@ public:
 protected:
   
   Files                     & _files;
-  Physics                   & _phys;           //passed from MultilevelProblem
-  MeshTwo                   & _mesh;
+  FemusInputParser<double>  & _phys;           
+  MeshTwo                   & _mesh;   //passed from MultilevelProblem
 
 
 };

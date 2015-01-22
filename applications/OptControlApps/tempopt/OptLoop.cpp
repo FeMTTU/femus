@@ -209,7 +209,7 @@ double ComputeIntegral (const uint Level, const MeshTwo* mesh, const SystemTwo* 
     
     if (paral::get_rank() ==0 ) { 
       intgr_fstream.open(intgr_fname.c_str(),ios_base::app); 
-      intgr_fstream << eqn->_eqnmap._files._output_time << " " << eqn->_eqnmap._phys._physrtmap.get("alphaT") << " " << eqn->_eqnmap._phys._physrtmap.get("injsuc")<< " "  << J << " " << std::endl ; 
+      intgr_fstream << eqn->_eqnmap._files._output_time << " " << eqn->_eqnmap._phys.get("alphaT") << " " << eqn->_eqnmap._phys.get("injsuc")<< " "  << J << " " << std::endl ; 
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
     }
  

@@ -59,11 +59,18 @@
         files.CopyInputFiles();
         files.RedirectCout();
 
-  // ======= MyPhysics (implemented as child of Physics): this is somewhat like the Parameters ========================
+  // ======= Physics Input Parser ========================
   FemusInputParser<double> physics_map("Physics",files._output_path);
-  TempPhysics phys(physics_map);
-              phys.set_nondimgroups(); //implement it
-  const double Lref  =  phys._physrtmap.get("Lref");     // reference L
+
+  const double rhof   = physics_map.get("rho0");
+  const double Uref   = physics_map.get("Uref");
+  const double Lref   = physics_map.get("Lref");
+  const double  muf   = physics_map.get("mu0");
+
+  const double  _pref = rhof*Uref*Uref;           physics_map.set("pref",_pref);
+  const double   _Re  = (rhof*Uref*Lref)/muf;     physics_map.set("Re",_Re);
+  const double   _Fr  = (Uref*Uref)/(9.81*Lref);  physics_map.set("Fr",_Fr);
+  const double   _Pr  = muf/rhof;                 physics_map.set("Pr",_Pr);
 
   // ======= Mesh =====
   FemusInputParser<double> mesh_map("Mesh",files._output_path);
@@ -97,8 +104,6 @@
   //then, after you know the shape, you may or may not generate the mesh with that shape 
   //the two things are totally independent, and related to the application, not to the library
 
-  phys.set_mesh(&mesh);
-  
 // ======  QRule ================================
   std::vector<Gauss>   qrule;
   qrule.reserve(mesh.get_dim());
@@ -121,7 +126,7 @@
    }
   
   // ===== QuantityMap : this is like the MultilevelSolution =========================================
-  QuantityMap  qty_map(phys);
+  QuantityMap  qty_map(mesh,&physics_map);
 
   Temperature temperature("Qty_Temperature",qty_map,1,FE_TEMPERATURE);     qty_map.set_qty(&temperature);
   TempLift       templift("Qty_TempLift",qty_map,1,FE_TEMPERATURE);        qty_map.set_qty(&templift);  
@@ -137,7 +142,7 @@
   // ===== end QuantityMap =========================================
 
   // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblemTwo equations_map(files,phys,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
+  MultiLevelProblemTwo equations_map(files,physics_map,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
 
   // ======== TimeLoop ===================================

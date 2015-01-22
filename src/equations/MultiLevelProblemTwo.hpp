@@ -45,7 +45,7 @@ class MultiLevelProblemTwo  {
 public:
   
     Files&       _files;
-    Physics&     _phys;
+    FemusInputParser<double> &  _phys;
     QuantityMap& _qtymap;
     MeshTwo&     _mesh;
     std::vector< std::vector<elem_type*> >  &  _elem_type;
@@ -53,9 +53,9 @@ public:
 
   /// Constructor
     MultiLevelProblemTwo( Files& files_in,
-		  Physics& mgphys_in,
+		  FemusInputParser<double> & phys_in,
 		  QuantityMap& qtymap_in,
-		  MeshTwo& mgmesh_in,
+		  MeshTwo& mesh_in,
                   std::vector< std::vector<elem_type*> > & elem_type_in,
 		  std::vector<Gauss> qrule_in
 		);
