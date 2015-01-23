@@ -19,6 +19,7 @@ class Temperature : public Quantity {
   Temperature(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
   ~Temperature(){};
   void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<double> & flag) const;
  
 //specific function
   //this is the function of the IMPOSED DERIVATIVE of TEMPERATURE, aka heat flux
@@ -35,6 +36,7 @@ class TempLift : public Quantity {
   TempLift(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
   ~TempLift(){};
   void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<double> & flag) const;
   
 
 };
@@ -48,6 +50,7 @@ class TempAdj : public Quantity {
   TempAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
   ~TempAdj(){};
   void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<double> & flag) const;
   
 
 };
@@ -71,6 +74,7 @@ class Pressure : public Quantity {
   public:
   Pressure(std::string name_in, QuantityMap& qtymap_in);
   Pressure(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+  void bc_flag_txyz(const double t, const double* xp, std::vector<double> & flag) const;
 
   ~Pressure(){};
 
@@ -89,6 +93,7 @@ class Velocity : public Quantity {
   ~Velocity(){};
 
   void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<double> & flag) const;
 
   //specific function
   //this is the STRAIN DERIVATIVE of VELOCITY, so it must stay here
@@ -105,6 +110,7 @@ class Pressure2 : public Quantity {
   public:
   Pressure2(std::string name_in, QuantityMap& qtymap_in);
   Pressure2(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+  void bc_flag_txyz(const double t, const double* xp, std::vector<double> & flag) const;
 
   ~Pressure2(){};
 

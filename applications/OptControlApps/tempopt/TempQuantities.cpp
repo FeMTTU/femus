@@ -20,32 +20,23 @@
 
 //===========================================================================
 Temperature::Temperature(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) {
-
-}
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) { }
 
 //===========================================================================
 TempLift::TempLift(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) {
-
-}
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) { }
 
 //===========================================================================
 TempAdj::TempAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) {
-
-}
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) { }
 
 //===========================================================================
 TempDes::TempDes(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) {
-
-}
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) { }
 
 //========================
 Pressure::Pressure(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
-
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) {
   
   for (uint i=0;i<dim_in;i++) _refvalue[i] = qtymap_in._physmap->get("pref");
 }
@@ -56,7 +47,6 @@ Velocity::Velocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uin
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {  
 
    for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in._physmap->get("Uref");
-  
 }
 
 
@@ -64,7 +54,6 @@ Velocity::Velocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uin
 Pressure2::Pressure2(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
 
-  
   for (uint i=0;i<dim_in;i++) _refvalue[i] = qtymap_in._physmap->get("pref");
 }
 
@@ -79,8 +68,6 @@ Pressure2::Pressure2(std::string name_in, QuantityMap& qtymap_in, uint dim_in, u
 // in both cases you are "dynamic" somehow
 
 void Velocity::Function_txyz(const double /*t*/,const double* xp, double* func) const {
-
-  
 
   Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   // we should do this static_cast in the QUANTITY or QUANTITY MAP constructor
@@ -130,6 +117,103 @@ void Velocity::Function_txyz(const double /*t*/,const double* xp, double* func) 
 
   return;
 
+ 
+}
+
+
+void Velocity::bc_flag_txyz(const double t, const double* xp, std::vector<double> & bc_flag) const  {
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+#if (DIMENSION==2)
+  
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
+     bc_flag[0]=0;
+     bc_flag[1]=0;  
+  }
+
+ if ( (le[0]-lb[0]) - (x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll  ){ //right of the RefBox
+    bc_flag[0]=0;
+    bc_flag[1]=0;
+  }
+  
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
+     bc_flag[0]=0;
+     bc_flag[1]=0;
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
+
+//outflow only on part of the outlet
+  if ( (x_rotshift[0]) > 0.70*(le[0]-lb[0]) ) {
+      bc_flag[0]=0;      //ux
+//     bc_flag[1]=0;     //uy
+ }  //end part outflow
+    else {  
+      bc_flag[0]=0;  //ux
+      bc_flag[1]=0;   //uy
+    }
+  
+  } //top RefBox
+  
+
+#elif (DIMENSION==3)
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+    bc_flag[0]=0;    //u dot n
+    bc_flag[1]=0;    //u x n
+    bc_flag[2]=0;    //u x n 
+  }
+  
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
+    bc_flag[0]=0;    //u dot n
+    bc_flag[1]=0;   //u x n
+    bc_flag[2]=0;   //u x n
+  }
+  
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
+     bc_flag[0]=0;      //u x n
+//      bc_flag[1]=0;   //u dot n   //leave this free for inlet
+     bc_flag[2]=0;      //u x n
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
+     bc_flag[0]=0;     //u x n
+//      bc_flag[1]=0;  //u dot n   //leave this free for outlet
+     bc_flag[2]=0;     //u x n
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+//       if (bc_flag[0] == 1)  bc_flag[0]=_phys.get_par("Fake3D");   //u x n  //check it for all equations
+//       if (bc_flag[1] == 1)  bc_flag[1]=_phys.get_par("Fake3D");   //u x n          //leave this free for 2D
+      bc_flag[2]=0;                                               //u dot n  
+  }
+  
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
+//      if (bc_flag[0] == 1) bc_flag[0]=_phys.get_par("Fake3D");      //u x n
+//      if (bc_flag[1] == 1) bc_flag[1]=_phys.get_par("Fake3D");      //u x n      //leave this free for 2D
+      bc_flag[2]=0;                                                  //u dot n
+  }
+
+#endif
+
+  return;
  
 }
 
@@ -233,6 +317,86 @@ Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());  //already nondimensiona
   return;
   }
 
+void Pressure::bc_flag_txyz(const double t, const double* xp, std::vector<double> & bc_flag) const  {
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+#if (DIMENSION==2)
+  
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
+//      bc_flag[0]=0;
+  }
+
+ if ( (le[0]-lb[0]) - (x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll  ){ //right of the RefBox
+//     bc_flag[0]=0;
+  }
+  
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
+//      bc_flag[0]=0;
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
+
+//outflow only on part of the outlet
+  if ( (x_rotshift[0]) > 0.70*(le[0]-lb[0]) ) {
+      bc_flag[0]=0;
+ }  //end part outflow
+    else {  
+//       bc_flag[0]=0;
+    }
+  
+  } //top RefBox
+  
+
+#elif (DIMENSION==3)
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+//     bc_flag[0]=0;
+  }
+  
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
+//     bc_flag[0]=0;
+  }
+  
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
+     bc_flag[0]=0;
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
+     bc_flag[0]=0;     
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+//      bc_flag[0]=0;
+  }
+  
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
+//      bc_flag[0]=0;
+  }
+
+#endif
+
+  return;
+ 
+}
+  
+  
 //===============
 void TempDes::Function_txyz(const double /*t*/, const double* /*xp*/,double* temp) const {
   
