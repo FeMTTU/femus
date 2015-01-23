@@ -122,15 +122,20 @@
        FEElemType_vec[idim][fe]->EvaluateShapeAtQP(mesh.GetGeomEl(idim,mesh._mesh_order)._geomel_id.c_str(),fe);
      }
    }
-  
+
+  // ======== TimeLoop ===================================
+  OptLoop opt_loop(files); 
+           opt_loop._timemap.read();
+           opt_loop._timemap.print();
+   
   // ===== QuantityMap : this is like the MultilevelSolution =========================================
   QuantityMap  qty_map(mesh,&physics_map);
 
-  Temperature temperature("Qty_Temperature",qty_map,1,FE_TEMPERATURE);     qty_map.set_qty(&temperature);
-  TempLift       templift("Qty_TempLift",qty_map,1,FE_TEMPERATURE);        qty_map.set_qty(&templift);  
-  TempAdj         tempadj("Qty_TempAdj",qty_map,1,FE_TEMPERATURE);         qty_map.set_qty(&tempadj);  
-  TempDes         tempdes("Qty_TempDes",qty_map,1,FE_TEMPERATURE);         qty_map.set_qty(&tempdes);  
-  Pressure       pressure("Qty_Pressure",qty_map,1,FE_PRESSURE);           qty_map.set_qty(&pressure);
+  Temperature temperature("Qty_Temperature",qty_map,1,FE_TEMPERATURE);          qty_map.set_qty(&temperature);
+  TempLift       templift("Qty_TempLift",qty_map,1,FE_TEMPERATURE,opt_loop);    qty_map.set_qty(&templift);  
+  TempAdj         tempadj("Qty_TempAdj",qty_map,1,FE_TEMPERATURE);              qty_map.set_qty(&tempadj);  
+  TempDes         tempdes("Qty_TempDes",qty_map,1,FE_TEMPERATURE);              qty_map.set_qty(&tempdes);  
+  Pressure       pressure("Qty_Pressure",qty_map,1,FE_PRESSURE);                qty_map.set_qty(&pressure);
   Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),FE_VELOCITY);   qty_map.set_qty(&velocity);  
 
 #if FOURTH_ROW==1
@@ -142,11 +147,6 @@
   // ====== MultiLevelProblemTwo =================================
   MultiLevelProblemTwo equations_map(files,physics_map,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
-
-  // ======== TimeLoop ===================================
-  OptLoop opt_loop(files); 
-           opt_loop._timemap.read();
-           opt_loop._timemap.print();
 
   
 //===============================================
