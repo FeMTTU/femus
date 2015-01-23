@@ -61,6 +61,7 @@ public:
           void PrintMeshToDof() const;
 
   inline  int GetDof(const uint Level,const uint fe,const uint ivar,const uint i) const;
+  inline  int GetDofPosIn(const uint Level,const uint pos_in) const;
   inline  int GetStartDof(const uint Level, const uint offproc) const;  //TODO understand this, possibly remove it
 
   
@@ -71,6 +72,10 @@ public:
 
 };
 
+
+    int DofMap::GetDofPosIn(const uint Level,const uint pos_in) const {
+         return _node_dof[Level][pos_in];
+    }
 
     int DofMap::GetDof(const uint Level,const uint fe,const uint ivar,const uint dofobj) const {
          return _node_dof[Level][ dofobj + ivar*_DofNumLevFE[Level][fe] + _DofOffLevFE[Level][fe] ];
