@@ -299,9 +299,9 @@ void Temperature::heatflux_txyz(const double /*t*/, const double* /*xyz*/, doubl
   }
 
 // =================================================
-void Pressure2::Function_txyz(const double/* t*/, const double* xp,double* temp) const {
+void Pressure2::Function_txyz(const double/* t*/, const double* xp,double* value) const {
 
-  temp[0] = 1.;
+  value[0] = 1.;
   
   return;
   
