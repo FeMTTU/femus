@@ -457,7 +457,7 @@ void SystemTwo::GenBc() {
  	    
 //       uint count = 0;
 //         for (uint i = 0; i < _QtyInternalVector.size(); i++) {
-// 	  std::vector<int>  bc_temp(_QtyInternalVector[i]->_dim);
+// 	  std::vector<int>  bc_temp(_QtyInternalVector[i]->_dim,DEFAULT_BC_FLAG);
 // 	  _QtyInternalVector[i]->bc_flag_txyz(0.,currelem.GetMidpoint(),bc_temp);
 // 	  for (uint j = 0; j < _QtyInternalVector[i]->_dim; j++) {
 // 	    bc_flag[count] = bc_temp[j];
