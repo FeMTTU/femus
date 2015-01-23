@@ -630,6 +630,109 @@ void MagnFieldHomAdj::Function_txyz(const double t, const double* xp,double* fun
     return;
   }
   
+  
+  
+// ========================================================  
+// ========================================================  
+// ========================================================  
+
+
+void Velocity::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+#if (DIMENSION==2)
+  
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
+     bc_flag[0]=0;
+     bc_flag[1]=0;  
+  }
+
+ if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){ //right of the RefBox
+    bc_flag[0]=0;
+    bc_flag[1]=0;
+  }
+  
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
+     bc_flag[0]=0;   //u dot t
+//   bc_flag[1]=0;
+   }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
+    bc_flag[0]=0;
+//     bc_flag[1]=0;
+  }
+  
+
+#elif (DIMENSION==3)
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+    bc_flag[0]=0;    //u dot n
+    bc_flag[1]=0;    //u x n
+    bc_flag[2]=0;    //u x n 
+  }
+  
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll ) {  //right of the RefBox
+    bc_flag[0]=0;    //u dot n
+    bc_flag[1]=0;   //u x n
+    bc_flag[2]=0;   //u x n
+  }
+  
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )  {  //bottom  of the RefBox
+     bc_flag[0]=0;      //u x n
+//      bc_flag[1]=0;   //u dot n   //leave this free for VELOCITY INLET
+     bc_flag[2]=0;      //u x n
+   }
+  
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  {  //top of the  of the RefBox
+     bc_flag[0]=0;     //u x n
+//      bc_flag[1]=0;  //u dot n   //leave this free for outlet
+     bc_flag[2]=0;     //u x n
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+       if (bc_flag[0] == 1)  bc_flag[0] = _qtymap._physmap->get("Fake3D");   //u x n  //check it for all equations
+       if (bc_flag[1] == 1)  bc_flag[1] = _qtymap._physmap->get("Fake3D");   //u x n          //leave this free for 2D
+      bc_flag[2]=0;                                               //u dot n  
+  }
+  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  {
+     if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");      //u x n
+     if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");      //u x n      //leave this free for 2D
+     bc_flag[2] = 0;                                                  //u dot n
+  }
+  
+  #endif
+  
+  
+  
+  
+  return;
+ 
+}
+
+
+
+
+
+  
 
 
 } //end namespace femus
