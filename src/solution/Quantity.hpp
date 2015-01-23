@@ -47,7 +47,7 @@ public:
 
   /*virtual*/ void FunctionDof(CurrentQuantity& myvect, const double t,const double* xx) const/* =0*/;
       virtual void Function_txyz(const double t, const double* xp, double* temp) const   = 0;  
-      virtual void bc_flag_txyz(const double t, const double* xp, double* flag) const  { std::cout <<  "A quantity that calls this function must have an implementation of it" << std::endl; abort(); } 
+      virtual void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const  { std::cout <<  "A quantity that calls this function must have an implementation of it" << std::endl; abort(); } 
      
   void set_eqn(SystemTwo*);
   

@@ -406,7 +406,7 @@ void SystemTwo::GenBc() {
     const uint el_nnodes_b = _mesh.GetGeomEl(_mesh.get_dim()-1-BB,mesh_ord)._elnds;
     double* normal = new double[_mesh.get_dim()];  //TODO remove this, it is useless
 
-    int  *bc_flag = new int[_dofmap._n_vars];
+    std::vector<int> bc_flag(_dofmap._n_vars);
 
     _bc = new int[_dofmap._Dim[Lev_pick_bc_NODE_dof]];
     for (uint i1=0;i1< _dofmap._Dim[Lev_pick_bc_NODE_dof];i1++) _bc[i1] = DEFAULT_BC_FLAG;    // set 1 all the points for  bc (boundary condition)
@@ -454,8 +454,18 @@ void SystemTwo::GenBc() {
                 currelem.SetMidpoint();
 		
  	    for (uint ivar=0; ivar< _dofmap._n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!
+ 	    
+//       uint count = 0;
+//         for (uint i = 0; i < _QtyInternalVector.size(); i++) {
+// 	  std::vector<int>  bc_temp(_QtyInternalVector[i]->_dim);
+// 	  _QtyInternalVector[i]->bc_flag_txyz(0.,currelem.GetMidpoint(),bc_temp);
+// 	  for (uint j = 0; j < _QtyInternalVector[i]->_dim; j++) {
+// 	    bc_flag[count] = bc_temp[j];
+// 	    count++;
+// 	  }
+// 	} 
 
-                 if (_dofmap._n_vars >0) bc_read(currelem.GetMidpoint(),normal,bc_flag);
+                  bc_read(currelem.GetMidpoint(),normal,&bc_flag[0]);
 
   //******************* ONLY FINE LEVEL, NODE VARS ***************** 
    if (Level == Lev_pick_bc_NODE_dof)  { 
@@ -542,7 +552,6 @@ void SystemTwo::GenBc() {
         std::cout << "\n GenBc(DA): boundary conditions defined from file " << ibc_fileh5.str() << "\n \n";
     }
     
-    delete []bc_flag;
     delete []DofOff_Lev_kk;
     
     delete [] normal;

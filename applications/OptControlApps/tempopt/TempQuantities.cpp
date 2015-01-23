@@ -301,7 +301,7 @@ void Pressure2::Function_txyz(const double/* t*/, const double* xp,double* value
   
   
 
-void Velocity::bc_flag_txyz(const double t, const double* xp, std::vector<double> & bc_flag) const  {
+void Velocity::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
   const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
   
@@ -399,7 +399,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
   
   
-void Pressure::bc_flag_txyz(const double t, const double* xp, std::vector<double> & bc_flag) const  {
+void Pressure::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
   const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
   
@@ -479,7 +479,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 }  
   
   
- void Temperature::bc_flag_txyz(const double t, const double* xp, std::vector<double> & bc_flag) const  {
+ void Temperature::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
 // T' and its adjoint must be Dirichlet homogeneous everywhere on the boundary, by definition.
 
 
@@ -552,7 +552,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   return;
 }
 
- void TempLift::bc_flag_txyz(const double t, const double* xp, std::vector<double> & bc_flag) const  {
+ void TempLift::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
 // T' and its adjoint must be Dirichlet homogeneous everywhere on the boundary, by definition.
 
 
@@ -637,7 +637,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 }
 
 
- void TempAdj::bc_flag_txyz(const double t, const double* xp, std::vector<double> & bc_flag) const  {
+ void TempAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
 
   const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
   
@@ -709,7 +709,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 }
 
 
- void Pressure2::bc_flag_txyz(const double t, const double* xp, std::vector<double> & bc_flag) const  {
+ void Pressure2::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
 
   const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
   
