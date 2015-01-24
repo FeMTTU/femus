@@ -26,10 +26,7 @@ class EqnNSAD : public SystemTwo {
 
   void ic_read(const double * xp, double * u_value, const double * el_xm) const;
 
-  void  bc_read(const double * xp,const double * normal, int * bc) const;
-
   void elem_bc_read(const double xp[],int& surf_id,double normal[],int bc_flag[]) const;
-
   
  void GenMatRhs(const uint Level);
 
