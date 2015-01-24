@@ -923,11 +923,67 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
 
 
+ #if (DIMENSION==2)
+
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
+     bc_flag[0]=0;
+     bc_flag[1]=0;
+  }
   
+   if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){ //right of the RefBox
+    bc_flag[0]=0; 
+    bc_flag[1]=0;
+  }
   
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox  
+     bc_flag[0]=0;
+//      bc_flag[1]=0;      //u dot n leave this free
+  }
   
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox  
+    bc_flag[0]=0;
+//     bc_flag[1]=0;      //u dot n leave this free
+  }
   
+#else
+
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
+    bc_flag[0]=0;
+    bc_flag[1]=0;
+    bc_flag[2]=0;
+  }
   
+   if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){ //right of the RefBox
+    bc_flag[0]=0;
+    bc_flag[1]=0;
+    bc_flag[2]=0;
+  }
+  
+     if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox  
+     bc_flag[0]=0;
+//      bc_flag[1]=0;    //u dot n 
+     bc_flag[2]=0;
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox  
+     bc_flag[0]=0;
+//      bc_flag[1]=0;     //u dot n
+     bc_flag[2]=0;
+  }
+  
+if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //current  
+     if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");
+     if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");
+//      bc_flag[2]=0;
+  }
+  
+  if ((le[2]-lb[2]) - x_rotshift[2] > -bdry_toll &&  (le[2]-lb[2]) -x_rotshift[2] < bdry_toll)  {
+     if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");
+     if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");
+//    bc_flag[2]=0;
+  }
+#endif
+ 
   
   return;
  
@@ -1033,11 +1089,49 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
 
 
+  #if (DIMENSION==2)
+
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
+//   bc_flag[0]=0;
+  }
   
+   if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){ //right of the RefBox
+//   bc_flag[0]=0;
+  }
   
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox  
+//   bc_flag[0]=0;      //NO BOUNDARY ADJOINT MHD PRESSURE
+  }
   
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox  
+//   bc_flag[0]=0;      //NO BOUNDARY ADJOINT MHD PRESSURE 
+  }
+#else
+
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
+//  bc_flag[0]=0;
+  }
   
+   if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){ //right of the RefBox
+//  bc_flag[0]=0;
+  }
   
+     if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox  
+//  bc_flag[0]=0;   //NO BOUNDARY ADJOINT MHD PRESSURE
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox  
+//  bc_flag[0]=0;   //NO BOUNDARY ADJOINT MHD PRESSURE
+  }
+  
+if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //current  
+//      bc_flag[0]=0;
+  }
+  
+  if ((le[2]-lb[2]) - x_rotshift[2] > -bdry_toll &&  (le[2]-lb[2]) -x_rotshift[2] < bdry_toll)  {
+//      bc_flag[0]=0;
+  }
+#endif
   
   return;
  
@@ -1045,70 +1139,6 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
  
  
-void MagnFieldExt::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
-  
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
-  
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
-
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
-  lb[0] = box->_lb[0]; //already nondimensionalized
-  le[0] = box->_le[0];
-  lb[1] = box->_lb[1];
-  le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
-  lb[2] = box->_lb[2];
-  le[2] = box->_le[2];
-  }
-  
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
-
-
-
-  
-  
-  
-  
-  
-  
-  return;
- 
-} 
- 
-
-void MagnFieldExtLagMult::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
-  
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
-  
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
-
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
-  lb[0] = box->_lb[0]; //already nondimensionalized
-  le[0] = box->_le[0];
-  lb[1] = box->_lb[1];
-  le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
-  lb[2] = box->_lb[2];
-  le[2] = box->_le[2];
-  }
-  
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
-
-
-
-  
-  
-  
-  
-  
-  
-  return;
- 
-} 
  
 
 void VelocityAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
@@ -1277,6 +1307,72 @@ if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  
 }  
 
 
+
+void MagnFieldExt::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+
+  
+  
+  
+  
+  
+  
+  return;
+ 
+} 
+
+
+
+void MagnFieldExtLagMult::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+
+  
+  
+  
+  
+  
+  
+  return;
+ 
+} 
 
 
  
