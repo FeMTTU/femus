@@ -275,7 +275,7 @@ void SystemTwo::initVectors() {
  // is THE SAME!
  //That is why we have a lot of (-1) in the _node_dof map.
  
- //Ok, now i did a UNIQUE FUNCTION GenBc()
+ //Ok, now i did a UNIQUE FUNCTION GenerateBdc()
  // The point here is that for every equation I have to set TWO FUNCTIONS, bc_read and BCElemKKRead.
  //One is based on the NODE COORDINATE, one on the MIDDLE POINT of the BOUNDARY ELEMENT
  // So, for every equation i should implement two separate functions bc_read and BCElemKKRead,
@@ -384,7 +384,7 @@ void SystemTwo::initVectors() {
 
 //
 
-void SystemTwo::GenBc() {
+void SystemTwo::GenerateBdc() {
   
     std::string    input_dir = DEFAULT_CONFIGDIR;
     std::string          ibc = DEFAULT_IBC;
@@ -505,12 +505,12 @@ void SystemTwo::GenBc() {
         
      }//end nolevels
        
-        std::cout << "\n GenBc(DA): boundary conditions defined by  bc_read" << "\n \n";
+        std::cout << "\n GenerateBdc(DA): boundary conditions defined by  bc_read" << "\n \n";
     }
     
     // *********  reading from file ***************************
     else {     // boundary from the top grid
-        std::cout << "\n GenBc: READING FROM FILE STILL WITHOUT KK ELEMENTS, CHECK new and delete in here! ************** " << ibc_fileh5.str() << "\n \n";
+        std::cout << "\n GenerateBdc: READING FROM FILE STILL WITHOUT KK ELEMENTS, CHECK new and delete in here! ************** " << ibc_fileh5.str() << "\n \n";
         abort();
 	
         // temporary vector
@@ -546,7 +546,7 @@ void SystemTwo::GenBc() {
         // clean
         delete []data;
         H5Fclose(file);
-        std::cout << "\n GenBc(DA): boundary conditions defined from file " << ibc_fileh5.str() << "\n \n";
+        std::cout << "\n GenerateBdc(DA): boundary conditions defined from file " << ibc_fileh5.str() << "\n \n";
     }
     
     delete []DofOff_Lev_kk;
@@ -624,7 +624,7 @@ void SystemTwo::GenBc() {
 //this routine is GENERAL. The only thing that is NOT GENERAL is the use of 4 element boundary flags
 // and of ONE normal value and ONE tangential VALUE
 //for now, we will leave things like this
-void SystemTwo::GenElBc()  {
+void SystemTwo::GenerateBdcElem()  {
 
      CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);  
   
@@ -816,7 +816,7 @@ void SystemTwo::clearElBc() {
 
 
 /// This function generates the initial conditions:
-void SystemTwo::GenIc() {
+void SystemTwo::Initialize() {
 
     const uint mesh_ord    = (int) _mesh.GetRuntimeMap().get("mesh_ord");
   
@@ -836,7 +836,7 @@ void SystemTwo::GenIc() {
         double*      xp = new double[_mesh.get_dim()];
         double* u_value = new double[_dofmap._n_vars];
 
-       std::cout << "\n====================== GenIc:  Now we are setting them for all levels! ========================" << "\n \n";
+       std::cout << "\n====================== Initialize:  Now we are setting them for all levels! ========================" << "\n \n";
 
     for (uint Level = 0; Level< _NoLevels; Level++) {
 
@@ -900,14 +900,14 @@ void SystemTwo::GenIc() {
         delete [] xp;
 
 #ifdef DEFAULT_PRINT_INFO
-        std::cout << "\n GenIc(Base): Initial solution defined by ic_read" << "\n \n";
+        std::cout << "\n Initialize(Base): Initial solution defined by ic_read" << "\n \n";
 #endif
     }
     else {// -------------------- file reading --> data_in/case.h5
         std::cout << "^^^^^ WE HAVE TO CHECK BECAUSE WE ADDED CONSTANT ELEMENTS ^^^^^^" << std::endl; abort();
 
         IO::read_system_solutions(ibc_filexmf.str(),&_mesh,&_dofmap,this);
-        std::cout << "\n GenIc(Base): Initial solution defined by " <<  ibc_filexmf.str().c_str() << "\n \n";
+        std::cout << "\n Initialize(Base): Initial solution defined by " <<  ibc_filexmf.str().c_str() << "\n \n";
     }
 
     in.close();

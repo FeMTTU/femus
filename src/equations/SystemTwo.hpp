@@ -126,9 +126,9 @@ public:
   DofMap  _dofmap;  //// LinearEquation (each level)
   
 //=======================================================================
-// ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==    //MultilevelSolution, Initialize function
+// ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==    
 // ========================================================
-          void    GenIc();           
+          void    Initialize();           //MultilevelSolution
   virtual void  ic_read(const double * xp, double * ic,const double * el_xm) const = 0; //TODO see what parameters can be made constant
           
 //=======================================================================
@@ -136,14 +136,14 @@ public:
 //=======================================================================
     int   *_bc;         //==== NODAL DIRICHLET ======== ///< boundary conditions map (top level)  // POINTWISE(NODAL) FLAG for the BOUNDARY DOFS = FLAG for the tEST FUNCTIONS //TODO this should be PrintNumericVector of the equation, integer instead of double! do it when you make it parallel especially! //Later on I will do a bc for every level, considering the ELEMENT DOFS
     int  **_bc_fe_kk;   //==== FE KK DIRICHLET ========
-          void    GenBc();
+          void    GenerateBdc();          //MultilevelSolution
  //====PENALTY DIRICHLET ======Elem BC=====================
    uint  _Dir_pen_fl;         ///flag for penalty with Dirichlet (0=no penalty, 1=yes penalty) //this penalty is for ALL the QUADRATIC variables //could we do a penalty only for ux and not for uy and uz?
     int  ***_elem_bc;        ///[LEVELS][IPROC][2xELEMENTSxLEV&PROC]
  double  ***_elem_val_norm;  ///[LEVELS][IPROC][1xELEMENTSxLEV&PROC]
  double  ***_elem_val_tg;    ///[LEVELS][IPROC][(1or3)xELEMENTSxLEV&PROC]
  int _number_tang_comps[3];  //  {0,1,3} Number of tangential components in 1D,2D,3D (see BC in general domains) : use it only for 2D and 3D
-          void    GenElBc();
+          void    GenerateBdcElem();
           void  clearElBc();
   virtual void elem_bc_read(const double * el_xm, int& surf_id, double * value,int * el_flag) const = 0;
           void Bc_GetElFlagValLevSubd(const uint Level,const uint isubd,const uint iel,int* el_flag,double* el_value ) const;

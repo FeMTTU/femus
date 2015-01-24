@@ -380,7 +380,7 @@ void PrintXDMFGeometry(std::ofstream& outfstream,
 // Ok now the initial conditions are set only AT THE FINE LEVEL.
 // Depending on the kind of multigrid cycle, you may want to set the initial conditions
 // ONLY AT THE FINE LEVEL or AT ALL LEVELS...
-// For us, let us just do the GenIc function in such a way that all the levels can be treated separately.
+// For us, let us just do the Initialize function in such a way that all the levels can be treated separately.
 // then, if we need it, we call it for ALL LEVELS, or we call it for ONLY THE FINE, or ONLY THE COARSE, or whatever...
 
 //TODO ok, we have to remember one basic principle about our multigrid algorithm:

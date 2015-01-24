@@ -71,7 +71,7 @@ void EqnT::ic_read(const double xp[],double u_value[],const double el_xm[]) cons
 //question about the ORDER of VELOCITY and PRESSURE
 // Here, velocity must go BEFORE pressure
 //u_value[0]=ux, u_value[1]=uy, u_value[2]=uz, u_value[3]=up
-//therefore, the routine that calls this ic_read (GenIc) has an ORDER in IT
+//therefore, the routine that calls this ic_read (Initialize) has an ORDER in IT
 
  //this law is given in the NON-dimensional domain, with NON-dimensional values
  //NONdimensional pressure distribution, fundamental!!

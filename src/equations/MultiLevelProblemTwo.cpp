@@ -89,14 +89,14 @@ void  MultiLevelProblemTwo::setDofBcOpIc() {
 //=====================
     mgsol -> _dofmap.ComputeMeshToDof();
 //=====================
-    mgsol -> GenBc();
-    mgsol -> GenElBc();
+    mgsol -> GenerateBdc();
+    mgsol -> GenerateBdcElem();
 //=====================
     mgsol -> ReadMGOps();
 //=====================
     mgsol -> initVectors();     //TODO can I do it earlier than this position?
 //=====================
-    mgsol -> GenIc();              // initial solution
+    mgsol -> Initialize();              // initial solution
 
 #ifdef DEFAULT_PRINT_INFO
     std::cout << " Dof, Bc, Op, Ic settled for"  <<  mgsol -> _eqname <<  "\n";
