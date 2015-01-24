@@ -958,12 +958,51 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
+#if (DIMENSION==2)
 
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {
+//   bc_flag[0]=0;
+  }
   
+ if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){
+//   bc_flag[0]=0;
+  }
   
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  {
+//   bc_flag[0]=0;
+  }
   
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {
+//   bc_flag[0]=0;
+ }
   
+#else
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {
+//  bc_flag[0]=0;
+  }
   
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){
+//   bc_flag[0]=0;
+  }
+  
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {
+//   bc_flag[0]=0;
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {
+//   bc_flag[0]=0;
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+//     bc_flag[0]=0;
+  }
+  
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
+//     bc_flag[0]=0;
+  }
+  
+#endif
   
   return;
  
