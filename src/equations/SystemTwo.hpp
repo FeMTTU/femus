@@ -137,7 +137,6 @@ public:
     int   *_bc;         //==== NODAL DIRICHLET ======== ///< boundary conditions map (top level)  // POINTWISE(NODAL) FLAG for the BOUNDARY DOFS = FLAG for the tEST FUNCTIONS //TODO this should be PrintNumericVector of the equation, integer instead of double! do it when you make it parallel especially! //Later on I will do a bc for every level, considering the ELEMENT DOFS
     int  **_bc_fe_kk;   //==== FE KK DIRICHLET ========
           void    GenBc();
-  virtual void  bc_read(const double * xp,const double * normal, int * bc) const = 0;
  //====PENALTY DIRICHLET ======Elem BC=====================
    uint  _Dir_pen_fl;         ///flag for penalty with Dirichlet (0=no penalty, 1=yes penalty) //this penalty is for ALL the QUADRATIC variables //could we do a penalty only for ux and not for uy and uz?
     int  ***_elem_bc;        ///[LEVELS][IPROC][2xELEMENTSxLEV&PROC]

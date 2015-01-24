@@ -404,7 +404,6 @@ void SystemTwo::GenBc() {
     const uint mesh_ord    = (int) _mesh.GetRuntimeMap().get("mesh_ord");
     const uint offset      = _mesh._NoNodesXLev[_NoLevels-1];
     const uint el_nnodes_b = _mesh.GetGeomEl(_mesh.get_dim()-1-BB,mesh_ord)._elnds;
-    double* normal = new double[_mesh.get_dim()];  //TODO remove this, it is useless
 
     std::vector<int> bc_flag(_dofmap._n_vars);
 
@@ -455,17 +454,15 @@ void SystemTwo::GenBc() {
 		
  	    for (uint ivar=0; ivar< _dofmap._n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!
  	    
-//       uint count = 0;
-//         for (uint i = 0; i < _QtyInternalVector.size(); i++) {
-// 	  std::vector<int>  bc_temp(_QtyInternalVector[i]->_dim,DEFAULT_BC_FLAG);
-// 	  _QtyInternalVector[i]->bc_flag_txyz(0.,currelem.GetMidpoint(),bc_temp);
-// 	  for (uint j = 0; j < _QtyInternalVector[i]->_dim; j++) {
-// 	    bc_flag[count] = bc_temp[j];
-// 	    count++;
-// 	  }
-// 	} 
-
-                  bc_read(currelem.GetMidpoint(),normal,&bc_flag[0]);
+      uint count = 0;
+        for (uint i = 0; i < _QtyInternalVector.size(); i++) {
+	  std::vector<int>  bc_temp(_QtyInternalVector[i]->_dim,DEFAULT_BC_FLAG);
+	  _QtyInternalVector[i]->bc_flag_txyz(0.,currelem.GetMidpoint(),bc_temp);
+	  for (uint j = 0; j < _QtyInternalVector[i]->_dim; j++) {
+	    bc_flag[count] = bc_temp[j];
+	    count++;
+	  }
+	} 
 
   //******************* ONLY FINE LEVEL, NODE VARS ***************** 
    if (Level == Lev_pick_bc_NODE_dof)  { 
@@ -553,9 +550,7 @@ void SystemTwo::GenBc() {
     }
     
     delete []DofOff_Lev_kk;
-    
-    delete [] normal;
-    
+   
     return;
 }
 
