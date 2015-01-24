@@ -20,7 +20,6 @@ class Temperature : public Quantity {
   Temperature(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
   ~Temperature(){};
   void Function_txyz(const double t, const double* xp,double* temp) const;  
-//   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
  
 //specific function
   //this is the function of the IMPOSED DERIVATIVE of TEMPERATURE, aka heat flux
@@ -36,7 +35,7 @@ class MagnFieldHom : public Quantity {
 
   ~MagnFieldHom(){};
   void Function_txyz(const double t, const double* xp,double* temp) const;  
-//   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
  
 
 };
@@ -48,7 +47,7 @@ class MagnFieldHomAdj : public Quantity {
 
   ~MagnFieldHomAdj(){};
   void Function_txyz(const double t, const double* xp,double* temp) const;  
-//   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
  
 
 };
@@ -60,7 +59,7 @@ class MagnFieldExt : public Quantity {
 
   ~MagnFieldExt(){};
   void Function_txyz(const double t, const double* xp,double* temp) const;  
-//   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
  
 
 };
@@ -72,7 +71,7 @@ class MagnFieldHomLagMult : public Quantity {
 
   ~MagnFieldHomLagMult(){};
   void Function_txyz(const double t, const double* xp,double* temp) const;
-//   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
  
 
 };
@@ -85,7 +84,7 @@ class MagnFieldHomLagMultAdj : public Quantity {
 
   ~MagnFieldHomLagMultAdj(){};
   void Function_txyz(const double t, const double* xp,double* temp) const;
-//   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
  
 
 };
@@ -98,7 +97,7 @@ class MagnFieldExtLagMult : public Quantity {
 
   ~MagnFieldExtLagMult(){};
   void Function_txyz(const double t, const double* xp,double* temp) const;
-//   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
  
 
 };
@@ -126,7 +125,7 @@ class PressureAdj : public Quantity {
   ~PressureAdj(){};
 
   void Function_txyz(const double t, const double* xp,double* temp) const;  
-//   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
  
 
 };
@@ -161,7 +160,7 @@ class VelocityAdj : public Quantity {
   ~VelocityAdj(){};
 
   void Function_txyz(const double t, const double* xp,double* temp) const;  
-//   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
 
 
 };

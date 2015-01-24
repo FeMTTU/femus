@@ -801,7 +801,36 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   }
 
 #endif
+  
+  return;
+ 
+}
 
+
+
+void MagnFieldHom::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+
+  
   
   
   
@@ -812,9 +841,247 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 }
 
 
+void MagnFieldHomAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
+
+  
+  
+  
+  
+  
+  
+  return;
+ 
+}
+ 
+ 
+ 
+ 
+ 
+ void MagnFieldHomLagMult::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+
+  
+  
+  
+  
+  
+  
+  return;
+ 
+}
+
+
+
+
+void MagnFieldHomLagMultAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+
+  
+  
+  
+  
+  
+  
+  return;
+ 
+}
+
+ 
+ 
+void MagnFieldExt::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+
+  
+  
+  
+  
+  
+  
+  return;
+ 
+} 
+ 
+
+void MagnFieldExtLagMult::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+
+  
+  
+  
+  
+  
+  
+  return;
+ 
+} 
+ 
+
+void VelocityAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+
+  
+  
+  
+  
+  
+  
+  return;
+ 
+}  
+ 
+ 
+ 
+ 
+ void PressureAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+
+  
+  
+  
+  
+  
+  
+  return;
+ 
+}  
+ 
+ 
+ 
+ 
 } //end namespace femus
 
 
