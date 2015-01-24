@@ -1133,12 +1133,68 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
 
 
+#if (DIMENSION==2)
   
+ if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
+     bc_flag[0]=0;
+     bc_flag[1]=0;
+  }
   
+ if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){ //right of the RefBox
+    bc_flag[0]=0; 
+    bc_flag[1]=0;
+  }
+
+ if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
+     bc_flag[0]=0;
+//   bc_flag[1]=0;   //comment it, because you leave u_y free
+  }
   
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
+    bc_flag[0]=0;
+//  bc_flag[1]=0;  //comment it, because you leave u_y free
+  }
   
+#else
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+    bc_flag[0]=0;
+    bc_flag[1]=0;
+    bc_flag[2]=0;
+  }
   
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
+    bc_flag[0]=0;
+    bc_flag[1]=0;
+    bc_flag[2]=0;
+  }
   
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
+     bc_flag[0]=0;
+//      bc_flag[1]=0;    //INSTEAD THIS MUST CORRESPOND TO THE DIRECT
+                         //the SPACE of ADJOINT functions is the same as the SPACE for the DIRECT test functions
+                         //if you fix this then you dont control...
+     bc_flag[2]=0;
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
+     bc_flag[0]=0;
+//      bc_flag[1]=0;     //INSTEAD THIS MUST CORRESPOND TO THE DIRECT
+     bc_flag[2]=0;
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+    if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");   //u x n
+    if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");  //u x n             //leave this free for 2D
+      bc_flag[2]=0;                                            //u dot n
+  }
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
+    if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");   //u x n
+    if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");  //u x n             //leave this free for 2D
+    bc_flag[2]=0;                                                //u dot n
+  }
+#endif
+ 
   return;
  
 }  
@@ -1167,19 +1223,62 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
+#if (DIMENSION==2)
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
+//   bc_flag[0]=0;
+  }
+  
+ if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){ //right of the RefBox
+//  bc_flag[0]=0;
+  }
 
+if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
+//     bc_flag[0]=0;  //adjoint pressure: computing the integral is not correct, because the function p is prescribed
+                    //at the boundary, so deltap = 0 at the boundary.
+		    //You dont have to consider the symmetry with the direct equation!
+                    //so THERE IS NO BOUNDARY INTEGRAL to be computed
+		    //  COMMENT bc FOR THE ADJOINT PRESSURE
+                    //The problem is that p_old is modified after one nonlinear step,
+		    //so p was changing every time!
+  }
   
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
+//    bc_flag[0]=0;   //  COMMENT bc FOR THE ADJOINT PRESSURE
+  }
+#else
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+//  bc_flag[0]=0;
+  }
   
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
+//  bc_flag[0]=0;
+  }
   
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
+//   bc_flag[0]=0;
+  }
   
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
+//   bc_flag[0]=0;
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+//   bc_flag[0]=0;
+  }
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
+//   bc_flag[0]=0;
+  }
+#endif
   
   
   return;
  
 }  
- 
- 
- 
+
+
+
+
  
 } //end namespace femus
 
