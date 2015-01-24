@@ -829,16 +829,76 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
+ #if (DIMENSION==2)
 
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {
+//     bc_flag[0]=0;  //b.n useless with curl curl
+     bc_flag[1]=0;  //bxn
+  }
   
+ if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){
+//    bc_flag[0]=0;  //b.n useless with curl curl
+    bc_flag[1]=0;  //bxn
+  }
   
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  {
+     bc_flag[0]=0;  //bxn
+//      bc_flag[1]=0;      //leave this free
+  }
   
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {
+    bc_flag[0]=0;  //bxn
+//     bc_flag[1]=0;      //leave this free
+ }
   
+#else
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) { //  INSULATING
+    bc_flag[0]=0;   //b.n
+    bc_flag[1]=0;   //bxn
+    bc_flag[2]=0;   //bxn
+  }
+  
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){ //   INSULATING
+    bc_flag[0]=0;   //b.n
+    bc_flag[1]=0;   //bxn
+    bc_flag[2]=0;   //bxn
+  }
+  
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {
+    bc_flag[0]=0;       //bxn
+//     bc_flag[1]=0;    //b.n     //leave this free for inlet
+//     bc_flag[2]=0;    //bxn  //WHY ISNT THIS FIXED AS WELL?
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {
+    bc_flag[0]=0;         //bxn
+//     bc_flag[1]=0;      //b.n    //leave this free for outlet
+//     bc_flag[2]=0;     //bxn   //WHY ISNT THIS FIXED AS WELL?
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {   //  CONDUCTING, now insulating
+   if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");     //bxn
+   if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");     //bxn      //leave this free for 2D
+//      bc_flag[2]=0;                                       //b.n 
+  }
+  
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {   //  CONDUCTING, now insulating
+   if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");   //bxn
+   if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");   //bxn     //leave this free for 2D
+//  bc_flag[2]=0;                           //b.n 
+  }
+  
+#endif
   
   
   return;
  
 }
+
+
+
+
 
 
 void MagnFieldHomAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
