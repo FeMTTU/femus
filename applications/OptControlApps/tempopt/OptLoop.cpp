@@ -16,7 +16,7 @@
 namespace femus {
   
   
- OptLoop::OptLoop(Files& files_in): TimeLoop(files_in) { }
+ OptLoop::OptLoop(Files& files_in, const FemusInputParser<double> & map_in): TimeLoop(files_in, map_in) { }
 
  //=================
     void OptLoop::optimization_loop(MultiLevelProblemTwo & eqmap_in)  {

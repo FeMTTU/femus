@@ -100,9 +100,8 @@
     }
                                                      
   // ======== TimeLoop ===================================
-  TimeLoop time_loop(files); 
-           time_loop._timemap.read();
-           time_loop._timemap.print();
+  FemusInputParser<double> loop_map("TimeLoop",files._output_path);
+  TimeLoop time_loop(files,loop_map); 
 
   // ===== QuantityMap =========================================
   QuantityMap  qty_map(mesh,&physics_map);

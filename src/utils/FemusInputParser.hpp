@@ -54,18 +54,9 @@ FemusInputParser<T>::FemusInputParser(const std::string class_name_in, const std
 _basepath(basepath_in),
 _tag_name(class_name_in)
 {
-  
      read();
      print();
 
-  // I AM ALMOST SURE THAT THERE IS SOME PROBLEM WITH THE CONSTRUCTION of the _rtmap object...
-  // it sounds like it's not well initialized
-  //clearly the object is not const, so we need to find some other way to "sort of initialize" it
-//    _rtmap.clear();
-
-// IF I UNDERSTOOD CORRECTLY FROM THE DEBUGGER, the DEFAULT CONSTRUCTOR for STD::MAP is called here !!!  
-
-  
 }
 
 template <typename T>

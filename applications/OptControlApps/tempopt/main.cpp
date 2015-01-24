@@ -123,10 +123,9 @@
      }
    }
 
-  // ======== TimeLoop ===================================
-  OptLoop opt_loop(files); 
-           opt_loop._timemap.read();
-           opt_loop._timemap.print();
+  // ======== Loop ===================================
+  FemusInputParser<double> loop_map("TimeLoop",files._output_path);
+  OptLoop opt_loop(files, loop_map); 
    
   // ===== QuantityMap : this is like the MultilevelSolution =========================================
   QuantityMap  qty_map(mesh,&physics_map);

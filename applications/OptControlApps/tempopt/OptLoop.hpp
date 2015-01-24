@@ -21,7 +21,7 @@ class OptLoop  : public TimeLoop {
 public:
 
 
-  OptLoop(Files& files_in);
+  OptLoop(Files& files_in, const FemusInputParser<double> & map_in);
 
 
 void optimization_loop(MultiLevelProblemTwo& e_map_in);

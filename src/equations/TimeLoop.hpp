@@ -31,7 +31,7 @@ public:
     uint     _curr_t_idx; 
     double   _curr_time;
 
-  TimeLoop(Files& files_in);
+  TimeLoop(Files& files_in, const FemusInputParser<double> & map_in);
 
   ~TimeLoop(){};
    

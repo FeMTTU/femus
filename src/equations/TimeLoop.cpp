@@ -37,11 +37,11 @@ namespace femus {
 // ==================================================================
 /// Constructor
  
- TimeLoop::TimeLoop(Files& files_in):
+ TimeLoop::TimeLoop(Files& files_in, const FemusInputParser<double> & map_in):
  _files(files_in),
- _timemap("TimeLoop",_files._output_path)   {
+ _timemap(map_in)   {
 
- //inizialize to zero   
+ //inizialize   
    _t_idx_in  = 0;  
     _time_in  = 0.;  
  _t_idx_final = 0;

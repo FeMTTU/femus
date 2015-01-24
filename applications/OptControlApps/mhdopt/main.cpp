@@ -253,9 +253,8 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   equations_map.setDofBcOpIc();     //  /*TODO fileIO  for  Bc, init, and Ic*/
 
   // ======== OptLoop ===================================
-  OptLoop opt_loop(files); 
-           opt_loop._timemap.read();
-           opt_loop._timemap.print();
+  FemusInputParser<double> loop_map("TimeLoop",files._output_path);
+  OptLoop opt_loop(files,loop_map); 
 
   opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case   /*TODO fileIO */ 
 

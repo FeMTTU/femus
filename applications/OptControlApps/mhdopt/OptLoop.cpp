@@ -82,7 +82,7 @@ namespace femus {
 //either for OPTIMIZATION iterations or for NONLINEAR iterations,
 //depending on what you need
 
- OptLoop::OptLoop(Files& files_in): TimeLoop(files_in) { }
+ OptLoop::OptLoop(Files& files_in, const FemusInputParser<double> & map_in): TimeLoop(files_in,map_in) { }
 
  OptLoop::~OptLoop()  {
   

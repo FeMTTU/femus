@@ -20,8 +20,7 @@ class OptLoop  : public TimeLoop {
 
 public:
 
-
-  OptLoop(Files& files_in);
+  OptLoop(Files& files_in, const FemusInputParser<double> & map_in);
  ~OptLoop();
 
   void optimization_loop(MultiLevelProblemTwo& e_map_in);
@@ -33,7 +32,7 @@ public:
 
 };
 
-//prototypes that can stay outside of a class
+//prototypes that can even stay outside of a class
   double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn);
 
   int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMeshTwo* mesh);
