@@ -1329,11 +1329,77 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
+#if (DIMENSION==2)
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) { //left
+     bc_flag[0]=0;
+     bc_flag[1]=0;
+  }
+  
+  if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){  //right
+    bc_flag[0]=0; 
+    bc_flag[1]=0;
+  }
+  
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
+     bc_flag[0]=0;
+     bc_flag[1]=0;  //here when you control you must fix it,even if the corresponding b is let free, otherwise the control may use this as well
+                      //well,wait,it depends: if you are using the Laplacian for MHD state, then Becont bc's must be consistent with the Laplacian
+		      // given there.
+		      //if you are using curlxcurl, then Becont should be consistent with curl-curl
+		      //on the other hand, Be has a gamma*Laplacian FOR HERSELF... !
+		      //so the Becont BC's should be consistent BOTH WITH MHD EQUATION and with MHDCONT EQUATION!
+		      
+		      
+// wait, if you fix all dirichlet, then things go into Becontp pressure
+//instead if you fix one Dir and one Neu then nothing goes into pressure
 
+  }
   
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {//top of the  of the RefBox
+    
+     bc_flag[0] = _qtymap._physmap->get("UseControl");
+     bc_flag[1] = _qtymap._physmap->get("UseControl");
+ }
   
+#else
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+    bc_flag[0]=0;
+    bc_flag[1]=0;
+    bc_flag[2]=0;
+  }
   
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
+    bc_flag[0]=0;
+    bc_flag[1]=0;
+    bc_flag[2]=0;
+  }
   
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
+    bc_flag[0]=0;
+    bc_flag[1]=0;
+    bc_flag[2]=0;
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
+    bc_flag[0] = _qtymap._physmap->get("UseControl");
+    bc_flag[1] = _qtymap._physmap->get("UseControl");
+    
+    bc_flag[2]=0;
+  }
+   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+    bc_flag[0]=0;
+    bc_flag[1]=0;
+    bc_flag[2]=0;
+  }
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
+    bc_flag[0]=0;
+    bc_flag[1]=0;
+    bc_flag[2]=0;
+  }
+  
+#endif //DIMENSION
+
   
   
   return;
@@ -1362,12 +1428,52 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
   _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
 
+  
+  
+#if (DIMENSION==2)
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) { //left
+//   bc_flag[0]=0;
+  }
+  
+  if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){  //right
+//  bc_flag[0]=0;
+  }
+  
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
+//   bc_flag[0]=0;     //comment it, don't do the integral
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {//top of the  of the RefBox
+//   bc_flag[0]=0;       //comment it, don't do the integral
 
+ }
+  
+#else
 
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+//     bc_flag[0]=0;
+  }
   
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
+//     bc_flag[0]=0;
+  }
   
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
+//     bc_flag[0]=0;
+  }
   
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
+//     bc_flag[0]=0;
+    
+  }
+   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+//     bc_flag[0]=0;
+  }
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
+//     bc_flag[0]=0;
+  }
   
+#endif //DIMENSION
   
   
   return;
