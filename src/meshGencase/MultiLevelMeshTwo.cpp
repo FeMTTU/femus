@@ -518,7 +518,7 @@ void MultiLevelMeshTwo::PrintMultimeshXdmf() const {
 
             std::ostringstream hdf5_field;
             hdf5_field << _elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
-            IO::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),GetGeomEl(_dim-1-vb,QQ).name,
+            IO::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),GetGeomEl(_dim-1-vb,QQ)._xdmf_name,
 				  _n_elements_vb_lev[vb][ilev],
 				  _n_elements_vb_lev[vb][ilev],
 				  _elnodes[vb][QQ]);
@@ -601,7 +601,7 @@ void MultiLevelMeshTwo::PrintXDMFGridVB(std::ofstream& out,
     out << "<Grid Name=\"" << grid_mesh[vb].c_str() << "_L" << Level << "\"> \n";
     
    IO::PrintXDMFTopology(out,top_file.str(),hdf_field.str(),
-			     GetGeomEl(_dim-1-vb,LL).name,
+			     GetGeomEl(_dim-1-vb,LL)._xdmf_name,
 			 nel*GetGeomEl(_dim-1-vb,_mesh_order).n_se,
 			 nel*GetGeomEl(_dim-1-vb,_mesh_order).n_se,
 			     GetGeomEl(_dim-1-vb,LL)._elnds);    

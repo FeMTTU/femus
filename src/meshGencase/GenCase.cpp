@@ -157,14 +157,14 @@ void GenCase::GenerateCoarseMesh() const {
             libMesh::ElemType libmname; //convert the _geomel name into the libmesh geom el name
 
             if ( get_dim() == 2 ) {
-            if (     GetGeomEl(get_dim()-1,_mesh_order).name == "Quadrilateral_9") libmname = libMesh::QUAD9;
-            else if (GetGeomEl(get_dim()-1,_mesh_order).name == "Triangle_6")  libmname = libMesh::TRI6;
+            if (     GetGeomEl(get_dim()-1,_mesh_order)._xdmf_name == "Quadrilateral_9") libmname = libMesh::QUAD9;
+            else if (GetGeomEl(get_dim()-1,_mesh_order)._xdmf_name == "Triangle_6")  libmname = libMesh::TRI6;
             libMesh::MeshTools::Generation::build_square
             (*_msh_coarse, ninterv[0], ninterv[1], box->_lb[0], box->_le[0], box->_lb[1], box->_le[1],libmname);
 	    }
 	    else if ( get_dim() == 3 ) {
-            if (     GetGeomEl(get_dim()-1,_mesh_order).name == "Hexahedron_27")  libmname = libMesh::HEX27;
-            else if (GetGeomEl(get_dim()-1,_mesh_order).name == "Tetrahedron_10")  libmname = libMesh::TET10;
+            if (     GetGeomEl(get_dim()-1,_mesh_order)._xdmf_name == "Hexahedron_27")  libmname = libMesh::HEX27;
+            else if (GetGeomEl(get_dim()-1,_mesh_order)._xdmf_name == "Tetrahedron_10")  libmname = libMesh::TET10;
             libMesh::MeshTools::Generation::build_cube
             (*_msh_coarse,  ninterv[0], ninterv[1],  ninterv[2], box->_lb[0], box->_le[0], box->_lb[1], box->_le[1], box->_lb[2], box->_le[2],libmname);
 	    }

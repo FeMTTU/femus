@@ -503,7 +503,7 @@ void MultiLevelProblemTwo::PrintXDMFTopologyGeometry(std::ofstream& out, const u
     std::ostringstream coord_file; coord_file <<  basemesh <<  ext_h5;
     
     IO::PrintXDMFTopology(out,connfile.str(),hdf5_field.str(),
-			             _mesh.GetGeomEl(_mesh.get_dim()-1-vb,LL).name,
+			             _mesh.GetGeomEl(_mesh.get_dim()-1-vb,LL)._xdmf_name,
 			  n_elements*_mesh.GetGeomEl(_mesh.get_dim()-1-vb, _mesh._mesh_order).n_se,
 			  n_elements*_mesh.GetGeomEl(_mesh.get_dim()-1-vb, _mesh._mesh_order).n_se,
 			             _mesh.GetGeomEl(_mesh.get_dim()-1-vb,LL)._elnds);
