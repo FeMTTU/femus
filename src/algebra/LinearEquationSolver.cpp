@@ -28,7 +28,7 @@
 #include "AsmPetscLinearEquationSolver.hpp"
 #include "GmresPetscLinearEquationSolver.hpp"
 #include "VankaPetscLinearEquationSolver.hpp"
-#include "PetscLinearSolverM.hpp"
+#include "PetscLinearEquationSolverM.hpp"
 #include "Preconditioner.hpp"
 
 namespace femus {

@@ -17,7 +17,7 @@ algebra/LinearEquation.cpp
 algebra/LinearEquationSolver.cpp
 algebra/NumericVector.cpp
 algebra/GmresPetscLinearEquationSolver.cpp
-algebra/PetscLinearSolverM.cpp
+algebra/PetscLinearEquationSolverM.cpp
 algebra/PetscMatrix.cpp
 algebra/PetscPreconditioner.cpp
 algebra/PetscVector.cpp
