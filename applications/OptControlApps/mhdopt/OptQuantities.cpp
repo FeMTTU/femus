@@ -1478,11 +1478,66 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   
   return;
  
-} 
+}
+
+// =====================================================================
+// ===================== INITIAL CONDITIONS ============================
+// =====================================================================
+
+void Velocity::initialize_txyz(const double* xp, std::vector< double >& value) const {
+
+  return;
+}
 
 
- 
-} //end namespace femus
+void Pressure::initialize_txyz(const double* xp, std::vector< double >& value) const {
 
+  return;
+}
 
+void MagnFieldHom::initialize_txyz(const double* xp, std::vector< double >& value) const {
+
+  return;
+}
+
+void MagnFieldHomLagMult::initialize_txyz(const double* xp, std::vector< double >& value) const {
+
+  return;
+}
+
+void VelocityAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
+
+  return;
+}
+
+void PressureAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
+
+  return;
+}
+
+void MagnFieldHomAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
   
+  return;
+}
+
+void MagnFieldHomLagMultAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
+
+
+  return;
+}
+
+void MagnFieldExt::initialize_txyz(const double* xp, std::vector< double >& value) const {
+
+
+  return;
+}
+
+void MagnFieldExtLagMult::initialize_txyz(const double* xp, std::vector< double >& value) const {
+
+
+  return;
+}
+
+
+
+} //end namespace femus
