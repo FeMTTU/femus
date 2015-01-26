@@ -21,8 +21,6 @@ EqnMHDAD(  std::vector<Quantity*> int_map_in,
 
   ~EqnMHDAD();
 
- void ic_read(const double * xp, double * u_value, const double * el_xm) const;
-
  void elem_bc_read(const double xp[],int& surf_id,double normal[],int bc_flag[]) const;
 
  void GenMatRhs(const uint Level);

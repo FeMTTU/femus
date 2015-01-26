@@ -30,72 +30,42 @@ namespace femus {
  //this law is given in the NON-DIMENSIONAL domain, with NON-DIMENSIONAL values
  //NONDIMENSIONAL pressure distribution, fundamental!!
  
-void EqnNS::ic_read(const double xp[],double u_value[], const double el_xm[]) const {
 
-  const double Uref = _phys.get("Uref");
-  double pref = _phys.get("pref");
-  const double bdry_toll = _mesh.GetRuntimeMap().get("bdry_toll");
+//=======================
+///COMMENTS on the BC for MHD ====================
 
-  double udes = _phys.get("udes");
+/// This function defines the boundary conditions for the MHD system:
+    
+ //Bxn = (b+Be)xn = 0 would mean perfectly insulating   
+ //our present situation is such that:
+//on the walls:
+//bxn = Bexn = 0 => Bxn = 0
+//on the inlet and outlet we cannot speak of WALLS
+//how do we set BOUNDARY/INTERFACE conditions on the INLET/OUTLET?
+//right out of the boundary there will still be the same material
+//so we have to put INFINITY|SYMMETRY conditions
+//because we are studying an infinite channel:
+//   dB/dy=0
+//that would also come out from a formulation with the Laplacian
+//So you dont have to fix the test function, because the integrand 
+//is specified (equal to zero... but specified)
+// So for symmetry you LET FREE all the quantities
+// and that's ok. That means that the possible
+//BOUNDARY INTEGRALS containing FIRST DERIVATIVES 
+//of as a form of NORMAL DERIVATIVE, CURL DERIVATIVE or whatever
+//are set TO ZERO, 
+//not because the projection onto the normal is ZERO
+//but because you assume that ALL THE NORMAL DERIVATIVES ARE ZERO.
+
+//however we have
+ //bxn = 0
+ //Bexn = either FIXED or CONTROLLED value
+
+
   
   
-  Box* box= static_cast<Box*>(_mesh.GetDomain());
-  
-  double         lb[DIMENSION];
-  double         le[DIMENSION];
-  lb[0] = box->_lb[0];//already nondimensionalized
-  le[0] = box->_le[0];
-  lb[1] = box->_lb[1];
-  le[1] = box->_le[1];
-#if DIMENSION == 3
-  lb[2] = box->_lb[2];
-  le[2] = box->_le[2];
-#endif
   
   
-  double x_rotshift[DIMENSION];
-  _mesh._domain->TransformPointToRef(xp,x_rotshift); 
-//at this point, the coordinates are transformed into the REFERENCE BOX, so you can pass them to the Pressure function
-
-//TODO here you should also rotate the ELEMENT COORDINATES  
-  
-//rotation of the function  
-    double thetaz = box->_domain_rtmap.get("thetaz");
-
-  
-#if (DIMENSION==2)
-
-const double magnitude = /*udes**/1.*(x_rotshift[0] - box->_lb[0])*(box->_le[0]-x_rotshift[0] )/( Uref); 
-    u_value[0] = -sin(thetaz)*magnitude;
-    u_value[1] = cos(thetaz)*magnitude; 
-
-//what if you start... well, after the first state run, you already start with the analytical solution
-//well, you should put the DESIRED SOLUTION equal to the ANALYTICAL solution without control, so that u - u_d is IDENTICALLY ZERO!
-double press_tmp[1]; 
-       press_tmp[0]=0.;
- _eqnmap._qtymap.get_qty("Qty_Pressure")->Function_txyz(0.,x_rotshift,press_tmp);   
- u_value[2] = press_tmp[0];
-
-#elif (DIMENSION==3)
-
-  u_value[0] = 0.;
-  u_value[1] = 0.*/*udes**/(x_rotshift[0] - box->_lb[0])*(box->_le[0]-x_rotshift[0] )/( Uref);
-  u_value[2] = 0.;
-
-double press_tmp[1]; 
-       press_tmp[0]=0.;
-  _eqnmap._qtymap.get_qty("Qty_Pressure")->Function_txyz(0.,x_rotshift,press_tmp);
-u_value[3]= 0.*press_tmp[0];
- 
-   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  {  u_value[1] = (x_rotshift[0] - lb[0])*(le[0] - x_rotshift[0])*(x_rotshift[2] - lb[2])*(le[2]-x_rotshift[2])/Uref;  }
-  
-#endif
-
-
-  return;
-}
-
-
 //=======================
 //the implementation of these boundary conditions is related to the particular Domain
 //Here we are picking a Box
@@ -263,33 +233,6 @@ surf_id=77;
 
 
 
-///********************MHD*******************
-///********************MHD*******************
-///********************MHD*******************
-
-//===============================================================
-void EqnMHD::ic_read(const double xp[],double u_value[], const double el_xm[]) const {
-
-  const double Uref = _phys.get("Uref");
-  const double Bref = _phys.get("Bref");
- 
-#if (DIMENSION==2)
-  u_value[0] = 0./Bref;
-  u_value[1] = 0./Bref;
-  u_value[2] = 0./(Uref*Bref);
-
-#elif  (DIMENSION==3)
-  u_value[0] = 0./Bref;
-  u_value[1] = 0./Bref;
-  u_value[2] = 0./Bref;
-  u_value[3] = 0./(Uref*Bref);
-  
-#endif
-
-  return;
-}
-
-
 //===============================================================
 void EqnMHD::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const {
 //el_xm[] is the NON-DIMENSIONAL node coordinate
@@ -432,59 +375,6 @@ surf_id=77;
 
 #endif
 
-
-  return;
-}
-
-
-
-///COMMENTS on the BC for MHD ====================
-
-/// This function defines the boundary conditions for the MHD system:
-    
- //Bxn = (b+Be)xn = 0 would mean perfectly insulating   
- //our present situation is such that:
-//on the walls:
-//bxn = Bexn = 0 => Bxn = 0
-//on the inlet and outlet we cannot speak of WALLS
-//how do we set BOUNDARY/INTERFACE conditions on the INLET/OUTLET?
-//right out of the boundary there will still be the same material
-//so we have to put INFINITY|SYMMETRY conditions
-//because we are studying an infinite channel:
-//   dB/dy=0
-//that would also come out from a formulation with the Laplacian
-//So you dont have to fix the test function, because the integrand 
-//is specified (equal to zero... but specified)
-// So for symmetry you LET FREE all the quantities
-// and that's ok. That means that the possible
-//BOUNDARY INTEGRALS containing FIRST DERIVATIVES 
-//of as a form of NORMAL DERIVATIVE, CURL DERIVATIVE or whatever
-//are set TO ZERO, 
-//not because the projection onto the normal is ZERO
-//but because you assume that ALL THE NORMAL DERIVATIVES ARE ZERO.
-
-//however we have
- //bxn = 0
- //Bexn = either FIXED or CONTROLLED value
-
-
-
-
-// ===============================
-
-void EqnNSAD::ic_read(const double xp[],double u_value[], const double el_xm[]) const {
-//xp[] is the NON-DIMENSIONAL node coordinate  //TODO: reference values
-
-#if (DIMENSION==2)
-  u_value[0] = 0.;
-  u_value[1] = 0.;
-  u_value[2] = 0.;
-#else
-  u_value[0] = 0.;
-  u_value[1] = 0.;
-  u_value[2] = 0.;
-  u_value[3] = 0.;
-#endif
 
   return;
 }
@@ -634,33 +524,6 @@ surf_id=77;
 }
 
 
-
-// // ===============================
-// // ============ MHDAD ===================
-// // ===============================
-
-
-/// This function generates the initial conditions for the NS system:
-
-void EqnMHDAD::ic_read(const double xp[],double u_value[], const double el_xm[]) const {
-  
-#if (DIMENSION==2)
-  u_value[0] = 0.;
-  u_value[1] = 0.;
-  u_value[2] = 0.;
-#else
-  u_value[0] = 0.;
-  u_value[1] = 0.;
-  u_value[2] = 0.;
-  u_value[3] = 0.;
-#endif
-
-  return;
-  
-}
-
-
-
 // // ===============================
 // TODO must always be in tune with the DIRECT Equation
 void EqnMHDAD::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const{
@@ -807,27 +670,6 @@ surf_id=77;
 ///************ MHDCONT_EQUATIONS
 ///************ MHDCONT_EQUATIONS
 ///************ MHDCONT_EQUATIONS
-
-void EqnMHDCONT::ic_read(const double xp[], double u_value[], const double el_xm[]) const {
-
-  const double Uref = _phys.get("Uref");
-  const double Bref = _phys.get("Bref");
- 
-#if (DIMENSION==2)
-  u_value[0] = Bref/Bref;
-  u_value[1] = 0./Bref;
-  u_value[2] = 0./(Uref*Bref);
-
-#else
-  u_value[0] = Bref/Bref;
-  u_value[1] = 0./Bref;
-  u_value[2] = 0./Bref;
-  u_value[3] = 0./(Uref*Bref);
-  
-#endif
-
-  return;
-}
 
 
 void EqnMHDCONT::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const {
@@ -980,5 +822,3 @@ surf_id=77;
 
 
 } //end namespace femus
-
-

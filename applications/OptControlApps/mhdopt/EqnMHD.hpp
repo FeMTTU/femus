@@ -22,8 +22,6 @@ class EqnMHD : public SystemTwo {
 	   
   ~EqnMHD();
 
-  void ic_read(const double * xp, double * u_value, const double * el_xm) const;
-
   void elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const;
   
   void GenMatRhs(const uint Level);

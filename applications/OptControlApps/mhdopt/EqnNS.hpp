@@ -30,8 +30,6 @@ class EqnNS : public SystemTwo {
 
   ~EqnNS();
 
-
- void ic_read(const double * xp, double * u_value, const double * el_xm) const;
  
  void elem_bc_read(const double xp[],int& surf_id,double normal[],int bc_flag[]) const;
 
