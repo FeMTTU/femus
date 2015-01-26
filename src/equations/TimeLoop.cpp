@@ -1,7 +1,18 @@
-// ==================================================================
-//                  Class TimeLoop
-// ==================================================================
-// lib include
+/*=========================================================================
+
+ Program: FEMUS
+ Module: TimeLoop
+ Authors: Giorgio Bornia
+
+ Copyright (c) FEMTTU
+ All rights reserved.
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -194,15 +205,7 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 // and they do not depend on  time (because no adaptive refinement is performed)
 // They only depend on the nodes (dofs!)
 
-/// C) Reinitialization of  the ILU (if ILUINIT defined),
-// #ifdef ILUINIT
-//   if (iter%ILUINIT==0) {
-//     std::cout << " ILU Reinitialized: " << std::endl;
-//     for (int Level = NoLevels - 1; Level > 0; Level--) *L[Level].ILUExists = _LPFalse;
-//   }
-// #endif
-
-    /// D) Solution of the linear MGsystem
+/// D) Solution of the linear MGsystem
 #ifdef DEFAULT_PRINT_TIME
         std::clock_t start_time_sol = std::clock();
 #endif

@@ -1,3 +1,18 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: TimeLoop
+ Authors: Giorgio Bornia
+
+ Copyright (c) FEMTTU
+ All rights reserved.
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __mgtimeloop_h__
 #define __mgtimeloop_h__
 

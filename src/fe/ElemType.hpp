@@ -116,7 +116,7 @@ public:
      return _dphidxez_mapGD[qp][dof];
     }
     
-      /** To be Added */
+  /** To be Added */
   inline const Gauss GetGaussRule() const {
     return _gauss;
   };
@@ -135,7 +135,7 @@ public:
   inline int  GetNDofs() const {
     return _nc;
   };
-    
+  
   /** Retrieve the dimension of the underlying geometric element */
   inline unsigned  GetDim() const {
     return _dim;

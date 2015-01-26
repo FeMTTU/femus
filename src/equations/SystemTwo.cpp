@@ -67,7 +67,7 @@ SystemTwo::SystemTwo(std::vector<Quantity*> int_map_in,
         _NoLevels(e_map_in._mesh._NoLevels), //you can do that
         _var_names(NULL),
         _refvalue(NULL),
-        _dofmap(*this,e_map_in._mesh) {
+        _dofmap(this,e_map_in._mesh) {
 
 //============= init Quantities ================
 //internal std::vector
@@ -505,7 +505,7 @@ void SystemTwo::GenerateBdc() {
         
      }//end nolevels
        
-        std::cout << "\n GenerateBdc(DA): boundary conditions defined by  bc_read" << "\n \n";
+        std::cout << "\n GenerateBdc: boundary conditions defined by  bc_read" << "\n \n";
     }
     
     // *********  reading from file ***************************
@@ -814,6 +814,8 @@ void SystemTwo::clearElBc() {
 // GEOMETRIC COORDINATES of the DOF OBJECTS (Node, Elem)
 // associated to these dofs. In this way we can 
 
+// I want to change the loop for initializing a vector
+//
 
 /// This function generates the initial conditions:
 void SystemTwo::Initialize() {
@@ -832,9 +834,9 @@ void SystemTwo::Initialize() {
         CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);  
      
         const uint  coords_fine_offset = _mesh._NoNodesXLev[_NoLevels-1];
-        const uint  el_nnodes = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,mesh_ord)._elnds;
-        double*      xp = new double[_mesh.get_dim()];
-        double* u_value = new double[_dofmap._n_vars];
+        const uint  el_dof_objs = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,mesh_ord)._elnds;
+        std::vector<double>      xp(_mesh.get_dim());
+        std::vector<double> u_value(_dofmap._n_vars);
 
        std::cout << "\n====================== Initialize:  Now we are setting them for all levels! ========================" << "\n \n";
 
@@ -847,35 +849,84 @@ void SystemTwo::Initialize() {
 	  
 	        currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
                 currelem.SetMidpoint();
-	
+
+// // //             for (uint q=0; q < _QtyInternalVector.size() ; q++) {
+// // // 		      
+// // // 	  std::vector<double>  value(_QtyInternalVector[q]->_dim,0.);
+// // //             //the fact is that THERE ARE DIFFERENT DOF OBJECTS for DIFFERENT FE families
+// // // 	    //for each family we should only pick the dof objects that are needed
+// // // 	    //what changes between the FE families is the DOF OBJECT YOU PROVIDE: it could be a NODE or a CELL
+// // // 	    // Notice that for some elements you don't have the midpoint of the element!
+// // //      if (_QtyInternalVector[q]->_FEord < KK) {
+// // //        
+// // //         for (uint ivar=0; ivar < _QtyInternalVector[q]->_dim; ivar++) {
+// // //        
+// // //           for (uint k=0; k < _eqnmap._elem_type[_mesh.get_dim()-1][_QtyInternalVector[q]->_FEord]->GetNDofs() ; k++) {
+// // // 	    
+// // //                 const int fine_node = _mesh._el_map[VV][ k + ( iel + iel_b )*el_dof_objs ];
+// // //                 for (uint idim = 0; idim < _mesh.get_dim(); idim++) xp[idim] = _mesh._xyz[ fine_node + idim*coords_fine_offset ];
+// // // 
+// // // 	  _QtyInternalVector[q]->initialize_txyz(&xp[0],value);
+// // // 		    const int dof_pos_lev = _dofmap.GetDofQuantityComponent(Level,_QtyInternalVector[q],ivar,fine_node);
+// // // 		    _x[Level]->set( dof_pos_lev, value[ivar] );
+// // // 		      
+// // // 	    }  //dof objects 
+// // //          }
+// // // 
+// // //      }
+// // //      else if (_QtyInternalVector[q]->_FEord == KK) { 
+// // // 
+// // // 	    for (uint ivar=0; ivar < _QtyInternalVector[q]->_dim; ivar++) {
+// // // 	    
+// // //                 for (uint k=0; k < _eqnmap._elem_type[_mesh.get_dim()-1][_QtyInternalVector[q]->_FEord]->GetNDofs() ; k++) { //only 1
+// // // 		  
+// // //        int sum_elems_prev_sd_at_lev = 0;
+// // // 	  for (uint pr = 0; pr < _iproc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*_NoLevels + Level + 1] - _mesh._off_el[VV][pr*_NoLevels + Level]; }
+// // // 	  
+// // //           currelem.GetMidpoint();
+// // // 	  
+// // // 	  _QtyInternalVector[q]->initialize_txyz(&currelem.GetMidpoint()[0],value);
+// // // 
+// // // 	      const int elem_lev = iel + sum_elems_prev_sd_at_lev;
+// // // 	      const int dof_pos_lev = _dofmap.GetDofQuantityComponent(Level,_QtyInternalVector[q],ivar,elem_lev);
+// // //               _x[Level]->set( dof_pos_lev, value[ivar] );
+// // // 	    
+// // // 	       }  //k
+// // // 	} //ivar
+// // //        
+// // //      }     //end KK
+// // // 	    
+// // //    } //qty
+        
+		
             // we are looping over the mesh nodes, but it's a fake loop because we do not depend on "i" for the elements
-            for (uint i=0; i < el_nnodes ; i++) {
-                int fine_node = _mesh._el_map[VV][ i + ( iel + iel_b )*el_nnodes ];
-                for (uint idim=0; idim<_mesh.get_dim(); idim++) xp[idim] = _mesh._xyz[ fine_node + idim*coords_fine_offset ];
-                for (uint ivar=0; ivar < _dofmap._n_vars; ivar++) u_value[ivar] = 0.;
+            for (uint k=0; k < el_dof_objs ; k++) {
+                int fine_node = _mesh._el_map[VV][ k + ( iel + iel_b )*el_dof_objs ];
+                for (uint idim = 0; idim < _mesh.get_dim(); idim++) xp[idim] = _mesh._xyz[ fine_node + idim*coords_fine_offset ];
+                for (uint ivar = 0; ivar < _dofmap._n_vars; ivar++) u_value[ivar] = 0.;
 
                 // ===================================================
                 // user definition reading function ----------------
-                ic_read(xp,u_value,currelem.GetMidpoint());
+                ic_read(&xp[0],&u_value[0],currelem.GetMidpoint());
                 // -------------------------------------------------
                 // ===================================================
 
                 // Set the quadratic fields
-                if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-VV][QQ]->GetNDofs() ) {
+                if ( k < _eqnmap._elem_type[_mesh.get_dim()-1-VV][QQ]->GetNDofs() ) {
                     for (uint ivar=0; ivar < _dofmap._nvars[QQ]; ivar++) {
 		      int dof_pos_lev = _dofmap.GetDof(Level,QQ,ivar,fine_node);
                         _x[Level]->set( dof_pos_lev, u_value[ivar + _dofmap._VarOff[QQ]] );
 		    }
-                }
+                }  //end QQ
                 // Set the linear fields
-                if ( i <  _eqnmap._elem_type[_mesh.get_dim()-1-VV][LL]->GetNDofs() ) {
+                if ( k <  _eqnmap._elem_type[_mesh.get_dim()-1-VV][LL]->GetNDofs() ) {
                     for (uint ivar=0; ivar<_dofmap._nvars[LL]; ivar++) {
 		      int dof_pos_lev = _dofmap.GetDof(Level,LL,ivar,fine_node);
                         _x[Level]->set( dof_pos_lev, u_value[ivar + _dofmap._VarOff[LL]] );
                         }
-		    }
+		    } //end LL
 		    
-                if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-VV][KK]->GetNDofs() ) {
+                if ( k < _eqnmap._elem_type[_mesh.get_dim()-1-VV][KK]->GetNDofs() ) {
 		  
 		int sum_elems_prev_sd_at_lev = 0;
 	    for (uint pr = 0; pr < _iproc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*_NoLevels + Level + 1] - _mesh._off_el[VV][pr*_NoLevels + Level]; }
@@ -886,7 +937,7 @@ void SystemTwo::Initialize() {
 		      int dof_pos_lev = _dofmap.GetDof(Level,KK,ivar,elem_lev);
                         _x[Level]->set( dof_pos_lev, u_value[ivar + _dofmap._VarOff[KK]] );
                          }
-		    }
+		    } //end KK
             }  //end i loop
             
         } // end of element loop
@@ -896,14 +947,12 @@ void SystemTwo::Initialize() {
 	
     } //end Level
     
-        delete [] u_value;
-        delete [] xp;
 
 #ifdef DEFAULT_PRINT_INFO
         std::cout << "\n Initialize(Base): Initial solution defined by ic_read" << "\n \n";
 #endif
     }
-    else {// -------------------- file reading --> data_in/case.h5
+    else {// -------------------- file reading
         std::cout << "^^^^^ WE HAVE TO CHECK BECAUSE WE ADDED CONSTANT ELEMENTS ^^^^^^" << std::endl; abort();
 
         IO::read_system_solutions(ibc_filexmf.str(),&_mesh,&_dofmap,this);
@@ -914,19 +963,6 @@ void SystemTwo::Initialize() {
 
     return;
 }
-
-
-
-
-/// initial conditions  from function
-// void SystemTwo::ic_read(const double * /*xp*/, double * ic, const double * /*el_xm*/) const {
-//     for (uint ivar=0;ivar<_n_vars;ivar++) ic[ivar]=0.;
-//     return;
-// }
-
-
-
-
 
 
 // =================================================================

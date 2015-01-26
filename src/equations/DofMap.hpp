@@ -25,25 +25,27 @@
 #include "VBTypeEnum.hpp"
 #include "Typedefs.hpp"
 #include "MultiLevelMeshTwo.hpp"
-
+// #include "SystemTwo.hpp"  //TODO opening this creates a conflict, had to move one inline function to the .cpp
 
 namespace femus {
 
 
   class SystemTwo;
+  class Quantity;
   
 //=======================================================================
 //==== DOF MAP of the equation ============ (procs,levels) ==============   //// LinearEquation (each level)
 //=======================================================================
+  
 class DofMap {
 
 
 public:
 
-     DofMap(const SystemTwo& eqn_in, const MultiLevelMeshTwo& mesh);
+     DofMap(const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh);
     ~DofMap();
 
-    const SystemTwo & _eqn;
+    const SystemTwo * _eqn;
     const MultiLevelMeshTwo & _mesh;
     
 //====== data =======
@@ -61,6 +63,7 @@ public:
           void PrintMeshToDof() const;
 
   inline  int GetDof(const uint Level,const uint fe,const uint ivar,const uint i) const;
+  /*inline*/  int GetDofQuantityComponent(const uint Level, const Quantity* quantity_in, const uint quantity_var,const uint dofobj) const;  //TODO this should be in the .hpp instead
   inline  int GetDofPosIn(const uint Level,const uint pos_in) const;
   inline  int GetStartDof(const uint Level, const uint offproc) const;  //TODO understand this, possibly remove it
 
@@ -73,15 +76,18 @@ public:
 };
 
 
-    int DofMap::GetDofPosIn(const uint Level,const uint pos_in) const {
+
+
+  int DofMap::GetDofPosIn(const uint Level,const uint pos_in) const {
          return _node_dof[Level][pos_in];
     }
 
-    int DofMap::GetDof(const uint Level,const uint fe,const uint ivar,const uint dofobj) const {
-         return _node_dof[Level][ dofobj + ivar*_DofNumLevFE[Level][fe] + _DofOffLevFE[Level][fe] ];
+    /** at level Level, for a given FE, take the dof of the ivar_fe variable of that FE*/
+  int DofMap::GetDof(const uint Level,const uint fe,const uint ivar_fe,const uint dofobj) const {
+         return _node_dof[Level][ dofobj + ivar_fe*_DofNumLevFE[Level][fe] + _DofOffLevFE[Level][fe] ];
     }
     
-     inline  int DofMap::GetStartDof(const uint Level, const uint offproc) const {
+  int DofMap::GetStartDof(const uint Level, const uint offproc) const {
           return _node_dof[Level][  _mesh._off_nd[QQ][offproc] ];
        }
  

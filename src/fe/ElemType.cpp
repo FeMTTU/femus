@@ -437,7 +437,7 @@ elem_type_1D::elem_type_1D(const char *geom_elem, const char *order, const char 
   else if (!strcmp(order,"constant"))    _SolType=3;   
   else if (!strcmp(order,"disc_linear")) _SolType=4;   
   else {
-    cout<<order<<" is not a valid option for "<<geom_elem<<endl;
+    cout << order << " is not a valid option for " << geom_elem << endl;
     exit(0);
   }
    
@@ -448,12 +448,12 @@ elem_type_1D::elem_type_1D(const char *geom_elem, const char *order, const char 
     else if (_SolType == 3) _pt_basis = new line0;
     else if (_SolType == 4) _pt_basis = new linepwl;
     else {
-      cout<<order<<" is not a valid option for "<<geom_elem<<endl;
+      cout << order << " is not a valid option for " << geom_elem << endl;
       exit(0);
     }
   } 
   else {
-    cout<<geom_elem<<" is not a valid option"<<endl;
+    cout << geom_elem << " is not a valid option" << endl;
     exit(0);
   }
   
@@ -548,9 +548,10 @@ elem_type_1D::elem_type_1D(const char *geom_elem, const char *order, const char 
       _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j],x);
     }
   }
+  
 }
 
-
+  
 elem_type_2D::elem_type_2D(const char *geom_elem, const char *order, const char *order_gauss):
 	      elem_type(geom_elem,order_gauss)
 	       {
@@ -709,6 +710,7 @@ elem_type_2D::elem_type_2D(const char *geom_elem, const char *order, const char 
       _d2phidxideta[i][j] = _pt_basis->eval_d2phidxdy(_IND[j],x);
     }
   }
+  
 }
 
 elem_type_3D::elem_type_3D(const char *geom_elem, const char *order, const char *order_gauss) :
