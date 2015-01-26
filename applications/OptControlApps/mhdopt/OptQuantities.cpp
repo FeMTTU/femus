@@ -1412,7 +1412,7 @@ void MagnFieldExtLagMult::bc_flag_txyz(const double t, const double* xp, std::ve
   
   const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
   
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
   std::vector<double> lb(_qtymap._mesh.get_dim());
   std::vector<double> le(_qtymap._mesh.get_dim());
@@ -1486,12 +1486,80 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
 void Velocity::initialize_txyz(const double* xp, std::vector< double >& value) const {
 
+  const double Uref = _qtymap._physmap->get("Uref");
+  const double pref = _qtymap._physmap->get("pref");
+  const double udes = _qtymap._physmap->get("udes");
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  
+  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+//rotation of the function  
+    double thetaz = box->_domain_rtmap.get("thetaz");
+
+  
+#if (DIMENSION==2)
+
+const double magnitude = /*udes**/1.*(x_rotshift[0] - box->_lb[0])*(box->_le[0]-x_rotshift[0] )/( Uref); 
+    value[0] = -sin(thetaz)*magnitude;
+    value[1] = cos(thetaz)*magnitude; 
+
+#elif (DIMENSION==3)
+
+    value[0] = 0.;
+    value[1] = 0.*/*udes**/(x_rotshift[0] - box->_lb[0])*(box->_le[0]-x_rotshift[0] )/( Uref);
+    value[2] = 0.;
+
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  {  value[1] = (x_rotshift[0] - lb[0])*(le[0] - x_rotshift[0])*(x_rotshift[2] - lb[2])*(le[2]-x_rotshift[2])/Uref;  }
+  
+#endif
+  
   return;
 }
 
 
 void Pressure::initialize_txyz(const double* xp, std::vector< double >& value) const {
 
+  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+
+  std::vector<double> lb(_qtymap._mesh.get_dim());
+  std::vector<double> le(_qtymap._mesh.get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap._mesh.get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  
+#if (DIMENSION==2)
+  
+      Function_txyz(0.,&x_rotshift[0],&value[0]);
+      
+#elif (DIMENSION==3)
+      
+      value[0] = 0.;
+  
+#endif
+  
   return;
 }
 
@@ -1527,7 +1595,6 @@ void MagnFieldHomLagMultAdj::initialize_txyz(const double* xp, std::vector< doub
 }
 
 void MagnFieldExt::initialize_txyz(const double* xp, std::vector< double >& value) const {
-
 
   return;
 }
