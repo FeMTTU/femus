@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: XDMFWriter
- Authors: Eugenio Aulisa, Simone Bnà
+ Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
 
  Copyright (c) FEMTTU
  All rights reserved.
@@ -20,7 +20,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "Writer.hpp"
-
+#include "MultiLevelMeshTwo.hpp"
 
 namespace femus {
 
@@ -41,6 +41,9 @@ public:
 
     /** write a wrapper file for paraview to open all the files of an history toghether */
     void write_solution_wrapper(const char type[]) const;
+
+    /** */
+    static void PrintXDMFTopologyGeometry(std::ofstream& out,const unsigned Level, const unsigned vb, const MultiLevelMeshTwo& mesh);
 
 };
 

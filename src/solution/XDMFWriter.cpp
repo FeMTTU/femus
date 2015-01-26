@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: XDMFWriter
- Authors: Eugenio Aulisa, Simone Bnà
+ Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
  
  Copyright (c) FEMTTU
  All rights reserved. 
@@ -29,14 +29,16 @@
 
 #ifdef HAVE_HDF5
   #include "hdf5.h"
+#endif
 
+
+#include "MultiLevelMeshTwo.hpp"
+#include "IO.hpp"
 
 namespace femus {
 
 
-#endif
-
-
+  
 XDMFWriter::XDMFWriter(MultiLevelSolution& ml_probl): Writer(ml_probl)
 {
   
@@ -393,13 +395,43 @@ void XDMFWriter::write_solution_wrapper(const char type[]) const {
   //----------------------------------------------------------------------------------------------------------
   delete [] filename;
 
-
-} //end namespace femus
-
-
+#endif 
   
-#endif
- 
 }
+
+
+//print topology and geometry, useful for both case.xmf and sol.xmf
+ void XDMFWriter::PrintXDMFTopologyGeometry(std::ofstream& out,const unsigned Level, const unsigned vb, const MultiLevelMeshTwo& mesh)  {
+
+#ifdef HAVE_HDF5 
+    //Mesh
+    uint n_elements = mesh._n_elements_vb_lev[vb][Level];
+
+    std::string basemesh   = DEFAULT_BASEMESH;
+    std::string connlin    = DEFAULT_CONNLIN;
+    std::string     ext_h5 = DEFAULT_EXT_H5;
+    
+    //connectivity
+    std::ostringstream connfile; connfile <<  basemesh << connlin <<  ext_h5;
+    std::ostringstream hdf5_field; hdf5_field << "MSHCONN_VB_" << vb << "_LEV_" << Level;
+    //coordinates
+    std::ostringstream coord_file; coord_file <<  basemesh <<  ext_h5;
+    
+    IO::PrintXDMFTopology(out,connfile.str(),hdf5_field.str(),
+			             mesh.GetGeomEl(mesh.get_dim()-1-vb,LL)._xdmf_name,
+			  n_elements*mesh.GetGeomEl(mesh.get_dim()-1-vb, mesh._mesh_order).n_se,
+			  n_elements*mesh.GetGeomEl(mesh.get_dim()-1-vb, mesh._mesh_order).n_se,
+			             mesh.GetGeomEl(mesh.get_dim()-1-vb,LL)._elnds);
+    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
+    IO::PrintXDMFGeometry(out,coord_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[Level],1);
+
+#endif
+    
+    return;
+}
+
+
+ 
+} //end namespace femus
 
 
