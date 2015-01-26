@@ -236,6 +236,7 @@ void CurrentQuantity::ExtendDofs() {
 // In the same way in the FINE RHS we have the true rhs,
 // while in all the other rhs we have the RESIDUALS.
 
+//TODO this routine must be fixed a lot
 void CurrentQuantity::GetElemDofs(const uint Level)  {
   
   //we should put some try catch or something, to make sure that what we are calling here is already correctly filled as it should be

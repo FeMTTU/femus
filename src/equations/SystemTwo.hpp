@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __mgsolbase__
-#define __mgsolbase__
+#ifndef __mgsolbase_hpp_
+#define __mgsolbase_hpp_
 
 //C++ includes
 #include <vector>
@@ -71,7 +71,7 @@ public:
   std::vector<NumericVector *> _x_old; //// LinearEquation (each level)
   
   std::vector<NumericVector *> _x_oold;    //this is used by MGTimeStep and also by the OptLoop
-  std::vector<NumericVector *> _x_tmp;
+  std::vector<NumericVector *> _x_tmp;     //this is used by MGTimeStep and also by the OptLoop
   
           void  initVectors();  ///initialize vectors       //System//
 
@@ -122,14 +122,13 @@ public:
         double MGStep(int Level,double Eps1,int MaxIter, const uint Gamma, const uint Nc_pre,const uint Nc_coarse,const uint Nc_post);                                                          //LinearImplicitSystem//
           void MGCheck(int Level) const;
 
-
   DofMap  _dofmap;  //// LinearEquation (each level)
   
 //=======================================================================
 // ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==    
 // ========================================================
           void    Initialize();           //MultilevelSolution
-  virtual void  ic_read(const double * xp, double * ic,const double * el_xm) const = 0; //TODO see what parameters can be made constant
+  virtual void  ic_read(const double * xp, double * ic,const double * el_xm) const = 0;
           
 //=======================================================================
 //==== BOUNDARY CONDITIONS of the equation ========= (procs,levels) ==     //MultilevelSolution
@@ -154,13 +153,13 @@ public:
           void Bc_AddDofVec(NumericVector* myvec, NumericVector* myvec2 );
           void Bc_AddScaleDofVec(NumericVector* vec_in,NumericVector* vec_out,const double ScaleFac );
 
-  MultiLevelProblemTwo              & _eqnmap;
+  MultiLevelProblemTwo      & _eqnmap;
   
 protected:
   
   Files                     & _files;
   FemusInputParser<double>  & _phys;           
-  MultiLevelMeshTwo                   & _mesh;   //passed from MultilevelProblem
+  MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem
 
 
 };

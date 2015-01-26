@@ -18,18 +18,16 @@
 
 
 #include "FETypeEnum.hpp"
-#include "MultiLevelProblemTwo.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "DenseVector.hpp"
 #include "DenseMatrix.hpp"
-
+#include "ElemType.hpp"
 
 namespace femus {
 
 
 
 class SystemTwo;
-class MultiLevelProblemTwo;
 class CurrentQuantity;
 
 

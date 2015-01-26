@@ -731,8 +731,6 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
-#if (DIMENSION==2)
-  
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
 #if FOURTH_ROW==1
    bc_flag[0]=0;
@@ -740,15 +738,135 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   }
 
   
-#elif (DIMENSION==3)
+  return;
+}
 
-  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
-#if FOURTH_ROW==1
-   bc_flag[0]=0;
-#endif
+
+// ====================== INITIALIZE functions ===================================
+
+void Temperature::initialize_txyz(const double* xp, std::vector< double >& value) const {
+
+      value[0] = 0.; 
+  
+  return;
+}
+
+void TempAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
+
+      value[0] = 0.; 
+      
+  return;
+}
+
+void TempLift::initialize_txyz(const double* xp, std::vector< double >& value) const {
+  
+  
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+
+  Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]); 
+
+    value[0] = 1.;
+  if ((box->_le[1]-box->_lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (box->_le[1]-box->_lb[1]) -(x_rotshift[1]) < bdry_toll)  {
+    value[0] = 0.; 
   }
 
 
+  return;
+}
+
+void Velocity::initialize_txyz(const double* xp, std::vector< double >& value) const {
+  
+  //====== Physics
+   const double Uref = _qtymap._physmap->get("Uref");
+  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+
+ 
+  Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]); 
+//at this point, the coordinates are transformed into the REFERENCE BOX, so you can pass them to the Pressure function
+
+//rotation of the function  
+  const double thetaz = box->_domain_rtmap.get("thetaz");
+
+  const double magnitude = 0. /*1.5*(x_rotshift[0] - box->_lb[0])*(box->_le[0]-x_rotshift[0] )/( Uref)*/;
+    value[0] = -sin(thetaz)*magnitude;
+    value[1] = cos(thetaz)*magnitude; 
+
+//    if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
+//    u_value[0] =0;  u_value[1] = 0; }
+//  if ( (box->_le[0] - box->_lb[0])  - (x_rotshift[0]) > -bdry_toll && (box->_le[0] - box->_lb[0])  -(x_rotshift[0]) < bdry_toll)  { //right of the RefBox
+//       u_value[0] =0;  u_value[1] = 0; }
+   
+    //==================================
+    if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
+
+//below, inlet
+  if ( (x_rotshift[0]) < 0.25*(box->_le[0] - box->_lb[0]) || ( x_rotshift[0]) > 0.75*(box->_le[0] - box->_lb[0]) ) { 
+    value[0] = 0.;
+    value[1] = 0.;
+  }
+  else {
+    value[0] = 0.; 
+    value[1] = 1.; 
+    }
+  
+  }
+//============================================
+
+//========================================
+//left, inlet
+ if  ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {
+ 
+ if ( (x_rotshift[1]) > 0.4*(box->_le[1] - box->_lb[1]) && ( x_rotshift[1]) < 0.6*(box->_le[1]-box->_lb[1]) )  {  //left of the refbox
+       value[0] = _qtymap._physmap->get("injsuc");    
+       value[1] = 0.; 
+      }
+   }   
+//============================================
+
+//============================================
+//====== outlet
+  if ((box->_le[1]-box->_lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (box->_le[1]-box->_lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
+
+ if ( (x_rotshift[0]) < 0.71*(box->_le[0] - box->_lb[0]) ) {
+   value[0] = 0.;
+   value[1] = 0.; 
+}
+
+  }
+
+//============================================
+#if (DIMENSION==3)
+  value[2] = 0.;
+#endif
+
+
+  return;
+}
+
+
+
+void Pressure::initialize_txyz(const double* xp, std::vector< double >& value) const {
+  
+  Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+  
+  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
+  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]); 
+//at this point, the coordinates are transformed into the REFERENCE BOX, so you can pass them to the Pressure function
+
+    Function_txyz(0.,&x_rotshift[0],&value[0]);   
+  
+  return;
+}
+
+void Pressure2::initialize_txyz(const double* xp, std::vector< double >& value) const {
+#if FOURTH_ROW==1
+    value[0] =  72.*(xp[0]);
 #endif
   
   return;

@@ -26,8 +26,6 @@ void EqnT::ic_read(const double xp[],double u_value[],const double el_xm[]) cons
   double* x_rotshift = new double[_mesh.get_dim()];
   _mesh._domain->TransformPointToRef(xp,x_rotshift); 
 
-#if (DIMENSION==2)
-
 //   const double magnitude = (x_rotshift[0] - box->_lb[0])*(box->_le[0]-x_rotshift[0])*(x_rotshift[1] - box->_lb[1])/(Tref); 
 
 /*T'*/    u_value[0] = 0.; 
@@ -39,19 +37,6 @@ void EqnT::ic_read(const double xp[],double u_value[],const double el_xm[]) cons
 /*p2*/    u_value[3] =  72.*(xp[0]);
 #endif
 
-
-#elif (DIMENSION==3)  
-    
-    u_value[0] = 0.;
-    u_value[1] = 0.;
-    u_value[2] = 0.;
-#if FOURTH_ROW==1
-    u_value[3] =  72.*(xp[0]);
-#endif
-    
-    
-#endif    
-    
   delete[] x_rotshift;
   
   return;
