@@ -25,7 +25,7 @@ EqnMHDCONT(  std::vector<Quantity*> int_map_in,
 
   ~EqnMHDCONT();
 
-  void elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const;
+  void elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const {};
   
   void GenMatRhs(const uint Level);
 
