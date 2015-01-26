@@ -1,7 +1,21 @@
+/*=========================================================================
+
+ Program: FEMUS
+ Module: Box
+ Authors: Giorgio Bornia
+
+ Copyright (c) FEMTTU
+ All rights reserved.
+
+ This software is distributed WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #include "Box.hpp"
 
 #include <cmath>
-#include "Files.hpp"
 
 
 namespace femus {
@@ -12,18 +26,13 @@ Box::Box(const uint spacedim_in, FemusInputParser<double> & map_in) : Domain(spa
 
   _name = "Box";
   
-   _lb = new double[_spacedim];
-   _le = new double[_spacedim];
+   _lb.resize(_spacedim);
+   _le.resize(_spacedim);
   
 }
 
 
-Box::~Box()  {  
-  
-  delete [] _lb;
-  delete [] _le;
-  
-}
+Box::~Box()  { }
 
 void Box::InitAndNondimensionalize(double Lref_in)     {
 
@@ -73,8 +82,8 @@ void Box::TransformPointToRef(const double* x_in,double* x_out) const {
   double thetaz  = _domain_rtmap.get("thetaz");
   double transfl = _domain_rtmap.get("transflag");
 
-    double        xpr[3]={0.,0.,0.};
-    double         Dx[3]={0.,0.,0.};
+    double        xpr[3] = {0.,0.,0.};
+    double         Dx[3] = {0.,0.,0.};
 
   xpr[0]=x_in[0]*cos(thetaz) + x_in[1]*sin(thetaz);
   xpr[1]=x_in[1]*cos(thetaz) - x_in[0]*sin(thetaz);  
