@@ -22,7 +22,7 @@
 #include "Domain.hpp"
 #include "Typedefs.hpp"
 #include "Files.hpp"
-#include "IO.hpp"
+#include "XDMFWriter.hpp"
 #include "GeomEl.hpp"
 #include "GeomElTypeEnum.hpp"
 #include "VBTypeEnum.hpp"
@@ -233,7 +233,7 @@ void MultiLevelMeshTwo::ReadMeshFileAndNondimensionalize()   {
 // DFLS (Dimension, VB, Levels, Subdomains)
 // =====================
   uint topdata[4];
-  IO::read_UIhdf5(file_id,"/DFLS",topdata);
+  XDMFWriter::read_UIhdf5(file_id,"/DFLS",topdata);
 
 //==================================
 // CHECKS 
@@ -276,7 +276,7 @@ if ( VB !=  topdata[1] )  {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: th
 // =====================
 //Reading this is not very useful... well, it may be a check  
   _type_FEM=new uint[VB];
-  IO::read_UIhdf5(file_id, "/ELNODES_VB",_type_FEM);
+  XDMFWriter::read_UIhdf5(file_id, "/ELNODES_VB",_type_FEM);
 
   for (int vb=0; vb<VB;vb++) {
 if (_type_FEM[vb] !=  GetGeomEl(_dim-1-vb,QQ)._elnds )  {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the element type of the mesh is" <<
@@ -293,7 +293,7 @@ if (_type_FEM[vb] !=  GetGeomEl(_dim-1-vb,QQ)._elnds )  {std::cout << "MultiLeve
  // nodes X lev
  // ++++++++++++++++++++++++++++++++++++++++++++++++++
   _NoNodesXLev=new uint[_NoLevels+1];
-  IO::read_UIhdf5(file_id, "/NODES/MAP/NDxLEV",_NoNodesXLev);
+  XDMFWriter::read_UIhdf5(file_id, "/NODES/MAP/NDxLEV",_NoNodesXLev);
 
 // ===========================================
 //  COORDINATES  (COORD)
@@ -306,7 +306,7 @@ if (_type_FEM[vb] !=  GetGeomEl(_dim-1-vb,QQ)._elnds )  {std::cout << "MultiLeve
   double *coord;coord=new double[n_nodes];
   for (uint kc=0;kc<_dim;kc++) {
     std::ostringstream Name; Name << "NODES/COORD/X" << kc+1 << "_L" << lev_for_coords;
-    IO::read_Dhdf5(file_id,Name.str().c_str(),coord);
+    XDMFWriter::read_Dhdf5(file_id,Name.str().c_str(),coord);
     for (uint inode=0;inode<n_nodes;inode++) _xyz[inode+kc*n_nodes]=coord[inode]*ILref; //NONdimensionalization!!!
   }
   delete []coord;
@@ -319,7 +319,7 @@ _off_nd=new int*[QL_NODES];
 for (int fe=0;fe < QL_NODES; fe++)    {
   _off_nd[fe]=new int[_NoSubdom*_NoLevels+1];
   std::ostringstream namefe; namefe << "/NODES/MAP/OFF_ND" << "_F" << fe;
-   IO::read_Ihdf5(file_id,namefe.str().c_str(),_off_nd[fe]);
+   XDMFWriter::read_Ihdf5(file_id,namefe.str().c_str(),_off_nd[fe]);
   }
   
   
@@ -350,7 +350,7 @@ for (int fe=0;fe < QL_NODES; fe++)    {
     _Qnode_lev_Qnode_fine[ilev] = new uint [_NoNodesXLev[ilev]];
     _Qnode_fine_Qnode_lev[ilev] = new int [n_nodes_top];  //THIS HAS TO BE INT because it has -1!!!
     std::ostringstream Name; Name << "/NODES/MAP/MAP" << "_XL" << ilev;
-    IO::read_Ihdf5(file_id,Name.str().c_str(),_Qnode_fine_Qnode_lev[ilev]);
+    XDMFWriter::read_Ihdf5(file_id,Name.str().c_str(),_Qnode_fine_Qnode_lev[ilev]);
     for (uint inode=0;inode<n_nodes_top;inode++) {
          int val_lev = _Qnode_fine_Qnode_lev[ilev][inode];
       if ( val_lev != -1 ) _Qnode_lev_Qnode_fine[ilev][ val_lev ] = inode; //this doesnt have -1 numbers
@@ -372,7 +372,7 @@ for (int fe=0;fe < QL_NODES; fe++)    {
   for (uint vb=0;vb< VB;vb++) {
     _n_elements_vb_lev[vb]=new uint[_NoLevels];
     std::ostringstream Name; Name << "/ELEMS/VB" << vb  <<"/NExLEV";
-    IO::read_UIhdf5(file_id,Name.str().c_str(),_n_elements_vb_lev[vb]);
+    XDMFWriter::read_UIhdf5(file_id,Name.str().c_str(),_n_elements_vb_lev[vb]);
   }
 
 // ===========================================
@@ -383,7 +383,7 @@ for (int fe=0;fe < QL_NODES; fe++)    {
 for (int vb=0; vb < VB; vb++)    {
   _off_el[vb] = new int [_NoSubdom*_NoLevels+1];
   std::ostringstream offname; offname << "/ELEMS/VB" << vb << "/OFF_EL";
-    IO::read_Ihdf5(file_id,offname.str().c_str(),_off_el[vb]);
+    XDMFWriter::read_Ihdf5(file_id,offname.str().c_str(),_off_el[vb]);
 }
 
 // ===========================================
@@ -393,7 +393,7 @@ for (int vb=0; vb < VB; vb++)    {
 for (int vb=0; vb < VB; vb++)    {
   _el_map[vb]=new uint [_off_el[vb][_NoSubdom*_NoLevels]*GetGeomEl(_dim-1-vb,mesh_ord)._elnds];
   std::ostringstream elName; elName << "/ELEMS/VB" << vb  <<"/CONN";
-  IO::read_UIhdf5(file_id,elName.str().c_str(),_el_map[vb]);
+  XDMFWriter::read_UIhdf5(file_id,elName.str().c_str(),_el_map[vb]);
 }
 
 // ===========================================
@@ -403,7 +403,7 @@ for (int vb=0; vb < VB; vb++)    {
   for (uint lev=0; lev < _NoLevels; lev++)    {
   _el_bdry_to_vol[lev] = new int[_n_elements_vb_lev[BB][lev]];
     std::ostringstream btov; btov << "/ELEMS/BDRY_TO_VOL_L" << lev;
-  IO::read_Ihdf5(file_id, btov.str().c_str(),_el_bdry_to_vol[lev]);
+  XDMFWriter::read_Ihdf5(file_id, btov.str().c_str(),_el_bdry_to_vol[lev]);
   }
   
  // ===========================================
@@ -447,7 +447,7 @@ void MultiLevelMeshTwo::PrintSubdomFlagOnQuadrCells(const int vb, const int Leve
         std::ostringstream name;
         name << "/PID/PID_VB" << vb << "_L" << Level;
 
-        IO::print_Ihdf5(file_id,name.str(),dimsf,ucoord);
+        XDMFWriter::print_Ihdf5(file_id,name.str(),dimsf,ucoord);
 
         H5Fclose(file_id);
 
@@ -518,15 +518,15 @@ void MultiLevelMeshTwo::PrintMultimeshXdmf() const {
 
             std::ostringstream hdf5_field;
             hdf5_field << _elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
-            IO::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),GetGeomEl(_dim-1-vb,QQ)._xdmf_name,
+            XDMFWriter::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),GetGeomEl(_dim-1-vb,QQ)._xdmf_name,
 				  _n_elements_vb_lev[vb][ilev],
 				  _n_elements_vb_lev[vb][ilev],
 				  _elnodes[vb][QQ]);
             std::ostringstream coord_lev; coord_lev << "_L" << ilev; 
-	    IO::PrintXDMFGeometry(out,top_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[ilev],1);
+	    XDMFWriter::PrintXDMFGeometry(out,top_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[ilev],1);
             std::ostringstream pid_field;
             pid_field << "PID/PID_VB"<< vb <<"_L"<< ilev;
-            IO::PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",_n_elements_vb_lev[vb][ilev],1);
+            XDMFWriter::PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",_n_elements_vb_lev[vb][ilev],1);
 
             out << "</Grid> \n";
 	    
@@ -600,14 +600,14 @@ void MultiLevelMeshTwo::PrintXDMFGridVB(std::ofstream& out,
 
     out << "<Grid Name=\"" << grid_mesh[vb].c_str() << "_L" << Level << "\"> \n";
     
-   IO::PrintXDMFTopology(out,top_file.str(),hdf_field.str(),
+   XDMFWriter::PrintXDMFTopology(out,top_file.str(),hdf_field.str(),
 			     GetGeomEl(_dim-1-vb,LL)._xdmf_name,
 			 nel*GetGeomEl(_dim-1-vb,_mesh_order).n_se,
 			 nel*GetGeomEl(_dim-1-vb,_mesh_order).n_se,
 			     GetGeomEl(_dim-1-vb,LL)._elnds);    
 
    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
-   IO::PrintXDMFGeometry(out,geom_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[Level],1);
+   XDMFWriter::PrintXDMFGeometry(out,geom_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",_NoNodesXLev[Level],1);
     
     out << "</Grid> \n";  
 
@@ -823,7 +823,7 @@ void MultiLevelMeshTwo::PrintSubdomFlagOnLinCells(std::string filename) const {
   hsize_t dimsf[2]; dimsf[0] = n_elements*n_children; dimsf[1] = 1;
   std::ostringstream pidname; pidname << "PID" << "_LEVEL" << l;
   
-  IO::print_Ihdf5(file_id,pidname.str(),dimsf,ucoord);
+  XDMFWriter::print_Ihdf5(file_id,pidname.str(),dimsf,ucoord);
   
      } //end levels
   

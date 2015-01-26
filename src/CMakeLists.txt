@@ -95,7 +95,6 @@ solution/GMVWriter.cpp
 solution/XDMFWriter.cpp
 utils/FemusInit.cpp
 utils/Files.cpp
-utils/IO.cpp
 utils/InputParser.cpp
 utils/JsonInputParser.cpp
 )

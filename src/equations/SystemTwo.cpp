@@ -30,7 +30,7 @@
 #include "NormTangEnum.hpp"
 #include "QTYnumEnum.hpp"
 #include "Quantity.hpp"
-#include "IO.hpp"
+#include "XDMFWriter.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "GeomEl.hpp"
 #include "MultiLevelProblemTwo.hpp"
@@ -526,7 +526,7 @@ void SystemTwo::GenerateBdc() {
             // nodes for boundary elements
             int el_nodes=el_nnodes_b; /*  if (ivar >= _nvars[0]) el_nodes=NDOF_PB;*/ /*TODO check here*/
             // read
-            IO::read_Ihdf5(file,"/"+_var_names[ivar] + bdry_suffix,data);// from hdf5 file
+            XDMFWriter::read_Ihdf5(file,"/"+_var_names[ivar] + bdry_suffix,data);// from hdf5 file
 
             // storage boundary conditions <- data <- hdf5 file
             for (uint isubd=0;isubd<_mesh._NoSubdom;++isubd) {
@@ -915,7 +915,7 @@ void SystemTwo::Initialize() {
     else {// -------------------- file reading
         std::cout << "^^^^^ WE HAVE TO CHECK BECAUSE WE ADDED CONSTANT ELEMENTS ^^^^^^" << std::endl; abort();
 
-        IO::read_system_solutions(ibc_filexmf.str(),&_mesh,&_dofmap,this);
+        XDMFWriter::read_system_solutions(ibc_filexmf.str(),&_mesh,&_dofmap,this);
         std::cout << "\n Initialize(Base): Initial solution defined by " <<  ibc_filexmf.str().c_str() << "\n \n";
     }
 
@@ -1391,25 +1391,25 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
             std::ostringstream dim_name;
             dim_name << groupname_lev.str() << "/" << "DIM" << fe_couple.str();
             rowcln[r][c] = new uint[2];
-            IO::read_UIhdf5(file,dim_name.str().c_str(),rowcln[r][c]);
+            XDMFWriter::read_UIhdf5(file,dim_name.str().c_str(),rowcln[r][c]);
 
             //row length
             std::ostringstream len_name;
             len_name << groupname_lev.str() << "/" << "LEN" << fe_couple.str();
             length_row[r][c]=new uint[ rowcln[r][c][0]+1 ];
-            IO::read_UIhdf5(file,len_name.str().c_str(),length_row[r][c]);
+            XDMFWriter::read_UIhdf5(file,len_name.str().c_str(),length_row[r][c]);
 
             // matrix off diagonal
             std::ostringstream offlen_name;
             offlen_name << groupname_lev.str() << "/" << "OFFLEN" << fe_couple.str();
             length_offrow[r][c]=new uint[ rowcln[r][c][0]+1 ];
-            IO::read_UIhdf5(file,offlen_name.str().c_str(),length_offrow[r][c]);
+            XDMFWriter::read_UIhdf5(file,offlen_name.str().c_str(),length_offrow[r][c]);
 
             // matrix pos //must stay AFTER reading length_offrow
             std::ostringstream pos_name;
             pos_name << groupname_lev.str() << "/" << "POS" << fe_couple.str();
             pos_row[r][c]=new uint[ length_row[r][c][rowcln[r][c][0]] ];
-            IO::read_UIhdf5(file,pos_name.str().c_str(),pos_row[r][c]);
+            XDMFWriter::read_UIhdf5(file,pos_name.str().c_str(),pos_row[r][c]);
 
         } //end col
     } //end row

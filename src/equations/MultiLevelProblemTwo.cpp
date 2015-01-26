@@ -23,7 +23,7 @@
 #include "FemusDefault.hpp"
 
 #include "Files.hpp"
-#include "IO.hpp"
+#include "XDMFWriter.hpp"
 #include "XDMFWriter.hpp"
 #include "Quantity.hpp"
 #include "MultiLevelMeshTwo.hpp"
@@ -139,7 +139,7 @@ void MultiLevelProblemTwo::PrintSolHDF5(const uint t_flag ) const {
         MultiLevelProblemTwo::const_iterator pos_e = _equations.end();
         for (;pos!=pos_e;pos++)    {
             SystemTwo* eqn = pos->second;
-            IO::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn);
+            XDMFWriter::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn);
         }
 
     } //end print iproc
@@ -235,7 +235,7 @@ void MultiLevelProblemTwo::PrintSolXDMF(const uint t_step,const double curr_time
             for (int fe=0; fe<QL; fe++)  {
                 for (uint ivar=0;ivar< mgsol->_dofmap._nvars[fe]; ivar++)   {
                    std::ostringstream var_name; var_name << mgsol->_var_names[ OffVarNames[fe] + ivar] << "_LEVEL" << l;
-                   IO::PrintXDMFAttribute(out,hdf_file.str(),var_name.str(),var_name.str(),"Scalar",DofType[fe],"Float",NGeomObjOnWhichToPrint[fe],1);
+                   XDMFWriter::PrintXDMFAttribute(out,hdf_file.str(),var_name.str(),var_name.str(),"Scalar",DofType[fe],"Float",NGeomObjOnWhichToPrint[fe],1);
                 }
             } // end fe
         }
@@ -361,8 +361,8 @@ void MultiLevelProblemTwo::PrintCaseHDF5(const uint t_init) const {
         MultiLevelProblemTwo::const_iterator pos_e = _equations.end();
         for (;pos!=pos_e;pos++) {
             SystemTwo* eqn = pos->second;
-            IO::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn);    // initial solution
-            IO::write_system_solutions_bc(filename.str(),&_mesh,&(eqn->_dofmap),eqn,eqn->_bc,eqn->_bc_fe_kk);            // boundary condition
+            XDMFWriter::write_system_solutions(filename.str(),&_mesh,&(eqn->_dofmap),eqn);    // initial solution
+            XDMFWriter::write_system_solutions_bc(filename.str(),&_mesh,&(eqn->_dofmap),eqn,eqn->_bc,eqn->_bc_fe_kk);            // boundary condition
         }
 
     } //end iproc
@@ -448,7 +448,7 @@ void MultiLevelProblemTwo::PrintCaseXDMF(const uint t_init) const {
 
 	// ===== PID ======
         std::ostringstream  pid_name; pid_name << "PID" << "_LEVEL" << l;
-	IO::PrintXDMFAttribute(out,hdf_file.str(),pid_name.str(),pid_name.str(),"Scalar",DofType[KK],"Int",NGeomObjOnWhichToPrint[KK],1);
+	XDMFWriter::PrintXDMFAttribute(out,hdf_file.str(),pid_name.str(),pid_name.str(),"Scalar",DofType[KK],"Int",NGeomObjOnWhichToPrint[KK],1);
 
         // ATTRIBUTES FOR EACH SYSTEM ===========
         MultiLevelProblemTwo::const_iterator pos1=_equations.begin();
@@ -467,7 +467,7 @@ void MultiLevelProblemTwo::PrintCaseXDMF(const uint t_init) const {
                     var_name[BB] = var_name[VV] + bdry_suffix;
                     var_type[BB] = "Int";
                     for (int vb=0;vb<VB; vb++) {
-                        IO::PrintXDMFAttribute(out,hdf_file.str(),var_name[vb],var_name[vb],"Scalar",DofType[fe],var_type[vb],NGeomObjOnWhichToPrint[fe],1);
+                        XDMFWriter::PrintXDMFAttribute(out,hdf_file.str(),var_name[vb],var_name[vb],"Scalar",DofType[fe],var_type[vb],NGeomObjOnWhichToPrint[fe],1);
                     }
                 }
             } //end fe
