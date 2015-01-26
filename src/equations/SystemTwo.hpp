@@ -54,6 +54,16 @@ class SystemTwo  {
 public:
 
 //=======================================================================
+// CONSTRUCTOR / DESTRUCTOR
+//=======================================================================
+  SystemTwo(std::vector<Quantity*> int_map_in,
+	  MultiLevelProblemTwo& equations_map,
+          std::string eq_name_in="Base",
+	  std::string varname_in="u");   //System//
+  
+  virtual ~SystemTwo();                    //System//
+  
+//=======================================================================
 //======== MG Ops ============ (procs,levels) ====
 //=======================================================================
   std::vector<SparseMatrix  *> _A;  // LinearEquation (each level)
@@ -97,16 +107,6 @@ public:
   const uint      _NoLevels;   ///< level number      //System//
 
 //=======================================================================
-// CONSTRUCTOR / DESTRUCTOR
-//=======================================================================
-  SystemTwo(std::vector<Quantity*> int_map_in,
-	  MultiLevelProblemTwo& equations_map,
-          std::string eq_name_in="Base",
-	  std::string varname_in="u");   //System//
-  
-  virtual ~SystemTwo();                    //System//
-  
-//=======================================================================
 //========= MULTIGRID FUNCTIONS (Vectors + A,R,P) ======== (procs,levels) 
 //=======================================================================
     void ReadMGOps();                         // LinearEquation  (each level)
@@ -127,8 +127,7 @@ public:
 //=======================================================================
 // ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==    
 // ========================================================
-          void    Initialize();           //MultilevelSolution
-  virtual void  ic_read(const double * xp, double * ic,const double * el_xm) const = 0;
+          void    Initialize();           //MultilevelSolution  //this uses x and fills in x_old at all levels
           
 //=======================================================================
 //==== BOUNDARY CONDITIONS of the equation ========= (procs,levels) ==     //MultilevelSolution
