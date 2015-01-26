@@ -27,11 +27,6 @@ namespace femus {
 //on the other hand, the functions of the type _txyz
 //only accept a ROTATED xp, so let us not forget about rotating
 
-//question about the ORDER of VELOCITY and PRESSURE
-// Here, velocity must go BEFORE pressure
-//u_value[0]=ux, u_value[1]=uy, u_value[2]=uz, u_value[3]=up
-//therefore, the routine that calls this ic_read (Initialize) has an ORDER in IT
-
  //this law is given in the NON-DIMENSIONAL domain, with NON-DIMENSIONAL values
  //NONDIMENSIONAL pressure distribution, fundamental!!
  

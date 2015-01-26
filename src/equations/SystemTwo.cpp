@@ -952,6 +952,7 @@ void SystemTwo::Initialize() {
         std::cout << "\n Initialize(Base): Initial solution defined by ic_read" << "\n \n";
 #endif
     }
+
     else {// -------------------- file reading
         std::cout << "^^^^^ WE HAVE TO CHECK BECAUSE WE ADDED CONSTANT ELEMENTS ^^^^^^" << std::endl; abort();
 

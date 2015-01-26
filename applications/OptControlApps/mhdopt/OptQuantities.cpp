@@ -1564,43 +1564,84 @@ void Pressure::initialize_txyz(const double* xp, std::vector< double >& value) c
 }
 
 void MagnFieldHom::initialize_txyz(const double* xp, std::vector< double >& value) const {
+  
+  const double Bref = _qtymap._physmap->get("Bref");
+ 
+  value[0] = 0./Bref;
+  value[1] = 0./Bref;
+#if (DIMENSION==3)
+  value[2] = 0./Bref;
+#endif
 
   return;
 }
 
 void MagnFieldHomLagMult::initialize_txyz(const double* xp, std::vector< double >& value) const {
 
+  const double Uref = _qtymap._physmap->get("Uref");
+  const double Bref = _qtymap._physmap->get("Bref");
+ 
+  value[0] = 0./(Uref*Bref);
+  
   return;
 }
 
 void VelocityAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
 
+  value[0] = 0.;
+  value[1] = 0.;
+#if (DIMENSION==3)
+  value[2] = 0.;
+#endif
+  
   return;
 }
 
 void PressureAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
 
+  value[0] = 0.;
+  
   return;
 }
 
 void MagnFieldHomAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
+  
+  value[0] = 0.;
+  value[1] = 0.;
+#if (DIMENSION==3)
+  value[2] = 0.;
+#endif
   
   return;
 }
 
 void MagnFieldHomLagMultAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
 
+  value[0] = 0.;
 
   return;
 }
 
 void MagnFieldExt::initialize_txyz(const double* xp, std::vector< double >& value) const {
 
+  const double Bref = _qtymap._physmap->get("Bref");
+ 
+  value[0] = Bref/Bref;
+  value[1] = 0./Bref;
+#if (DIMENSION==3)
+  value[2] = 0./Bref;
+#endif
+  
+
   return;
 }
 
 void MagnFieldExtLagMult::initialize_txyz(const double* xp, std::vector< double >& value) const {
 
+  const double Uref = _qtymap._physmap->get("Uref");
+  const double Bref = _qtymap._physmap->get("Bref");
+ 
+  value[0] = 0./(Uref*Bref);
 
   return;
 }
