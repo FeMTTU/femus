@@ -156,6 +156,36 @@ void PrintXDMFGeometry(std::ofstream& outfstream,
 }
 
 
+//print topology and geometry, useful for both case.xmf and sol.xmf
+void PrintXDMFTopologyGeometry(std::ofstream& out, const uint Level, const uint vb, const MultiLevelMeshTwo& mesh) {
+
+    //Mesh
+    uint n_elements = mesh._n_elements_vb_lev[vb][Level];
+
+    std::string basemesh   = DEFAULT_BASEMESH;
+    std::string connlin    = DEFAULT_CONNLIN;
+    std::string     ext_h5 = DEFAULT_EXT_H5;
+    
+    //connectivity
+    std::ostringstream connfile; connfile <<  basemesh << connlin <<  ext_h5;
+    std::ostringstream hdf5_field; hdf5_field << "MSHCONN_VB_" << vb << "_LEV_" << Level;
+    //coordinates
+    std::ostringstream coord_file; coord_file <<  basemesh <<  ext_h5;
+    
+    IO::PrintXDMFTopology(out,connfile.str(),hdf5_field.str(),
+			             mesh.GetGeomEl(mesh.get_dim()-1-vb,LL)._xdmf_name,
+			  n_elements*mesh.GetGeomEl(mesh.get_dim()-1-vb, mesh._mesh_order).n_se,
+			  n_elements*mesh.GetGeomEl(mesh.get_dim()-1-vb, mesh._mesh_order).n_se,
+			             mesh.GetGeomEl(mesh.get_dim()-1-vb,LL)._elnds);
+    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
+    IO::PrintXDMFGeometry(out,coord_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[Level],1);
+
+    return;
+}
+
+
+
+
 // ============================================================
 /// This function prints the solution: for quad and linear fem
 /// the mesh is assumed to be quadratic, so we must print on quadratic nodes
@@ -843,6 +873,13 @@ void write_system_solutions_bc(const std::string namefile, const MultiLevelMeshT
       
     return;
 }
+
+
+
+
+
+
+
 
 
 

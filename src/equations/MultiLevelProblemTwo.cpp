@@ -221,7 +221,7 @@ void MultiLevelProblemTwo::PrintSolXDMF(const uint t_step,const double curr_time
 
 	out << "<Time Value =\"" << curr_time << "\" /> \n";
 
-	PrintXDMFTopologyGeometry(out,l,VV);
+	IO::PrintXDMFTopologyGeometry(out,l,VV,_mesh);
 
 	MultiLevelProblemTwo::const_iterator pos1   = _equations.begin();
         MultiLevelProblemTwo::const_iterator pos1_e = _equations.end();
@@ -443,7 +443,7 @@ void MultiLevelProblemTwo::PrintCaseXDMF(const uint t_init) const {
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
         // TOPOLOGY GEOMETRY ===========
-        PrintXDMFTopologyGeometry(out,l,VV);
+        IO::PrintXDMFTopologyGeometry(out,l,VV,_mesh);
 
 	// ===== PID ======
         std::ostringstream  pid_name; pid_name << "PID" << "_LEVEL" << l;
@@ -486,40 +486,4 @@ void MultiLevelProblemTwo::PrintCaseXDMF(const uint t_init) const {
 }
 
 
-//print topology and geometry, useful for both case.xmf and sol.xmf
-void MultiLevelProblemTwo::PrintXDMFTopologyGeometry(std::ofstream& out, const uint Level, const uint vb) const {
-
-    //Mesh
-    uint n_elements = _mesh._n_elements_vb_lev[vb][Level];
-
-    std::string basemesh   = DEFAULT_BASEMESH;
-    std::string connlin    = DEFAULT_CONNLIN;
-    std::string     ext_h5 = DEFAULT_EXT_H5;
-    
-    //connectivity
-    std::ostringstream connfile; connfile <<  basemesh << connlin <<  ext_h5;
-    std::ostringstream hdf5_field; hdf5_field << "MSHCONN_VB_" << vb << "_LEV_" << Level;
-    //coordinates
-    std::ostringstream coord_file; coord_file <<  basemesh <<  ext_h5;
-    
-    IO::PrintXDMFTopology(out,connfile.str(),hdf5_field.str(),
-			             _mesh.GetGeomEl(_mesh.get_dim()-1-vb,LL)._xdmf_name,
-			  n_elements*_mesh.GetGeomEl(_mesh.get_dim()-1-vb, _mesh._mesh_order).n_se,
-			  n_elements*_mesh.GetGeomEl(_mesh.get_dim()-1-vb, _mesh._mesh_order).n_se,
-			             _mesh.GetGeomEl(_mesh.get_dim()-1-vb,LL)._elnds);
-    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
-    IO::PrintXDMFGeometry(out,coord_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",_mesh._NoNodesXLev[Level],1);
-
-    return;
-}
-
-
-
-
-
-
-
 } //end namespace femus
-
-
-

@@ -98,9 +98,6 @@ private:
  void PrintCaseXDMF(const uint t_init) const;
  void PrintCaseHDF5(const uint t_init) const;
 
- void PrintXDMFTopologyGeometry(std::ofstream& out,const uint Level, const uint vb) const;
-
- 
 };
 
 
