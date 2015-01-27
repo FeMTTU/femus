@@ -307,34 +307,6 @@ void CurrentQuantity::GetElemDofs(const uint Level)  {
    return; 
   }
   
-  
-  
-//   void CurrentQuantity::SetElDofsFromArgs(const uint vb,const double * dofs_in) const {
-// 
-//   
-//   const uint  elndof = myvect._ndof[vb];
-//   const uint vectdim = myvect._dim;
-//   const uint mesh_ord = (int) _eqnmap._utils._urtmap.get("mesh_ord");    
-//   const uint offset = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
-//  
-//  //TODO ASSERT
-//  /* assert(*/ if (elndof > offset) {std::cout << "Quadratic transformation over linear mesh " << std::endl;abort();}  /*);*/
-//   
-//   //information for passing from mesh to dofs
-//   
-//     for (uint d=0; d < _ndof[vb]; d++) {
-// 	                                        
-//       for (uint idim=0; idim < _dim; idim++) {
-//           const uint     indxq  =    d + idim*_ndof[vb];
-// 
-// 	  _val_dofs[indxq] = dofs_in[d+idim*offset];
-//       }
-//     }
-// 
-//   return;
-// 
-//  }
-
 
 
 } //end namespace femus

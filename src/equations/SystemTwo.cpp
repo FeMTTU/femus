@@ -400,7 +400,6 @@ void SystemTwo::GenerateBdc() {
     
  //************************************************   
  //******** NODE BASED ****************************   
-    const uint mesh_ord    = (int) _mesh.GetRuntimeMap().get("mesh_ord");
     const uint offset      = _mesh._NoNodesXLev[_NoLevels-1];
 
     std::vector<int> bc_flag(_dofmap._n_vars);
@@ -819,8 +818,6 @@ void SystemTwo::clearElBc() {
 /// This function generates the initial conditions:
 void SystemTwo::Initialize() {
 
-    const uint mesh_ord    = (int) _mesh.GetRuntimeMap().get("mesh_ord");
-  
     std::string  input_dir = DEFAULT_CONFIGDIR;
     std::string        ibc = DEFAULT_IBC;
     std::string     ext_h5 = DEFAULT_EXT_H5;

@@ -994,7 +994,6 @@ void XDMFWriter::read_system_solutions(const std::string namefile, const MultiLe
   
     const uint Level = mesh->_NoLevels-1;
     
-    const uint mesh_ord = (int) mesh->GetRuntimeMap().get("mesh_ord");
     const uint offset   =       mesh->_NoNodesXLev[mesh->_NoLevels-1];
 
     // file to read
@@ -1011,11 +1010,11 @@ void XDMFWriter::read_system_solutions(const std::string namefile, const MultiLe
         double Irefval = 1./eqn->_refvalue[ivar]; // units
 
         // storing  ivar variables (in parallell)
-        for (int iel=0;iel <  mesh->_off_el[0][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels]
-                -mesh->_off_el[0][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1]; iel++) {
-            uint elem_gidx=(iel+mesh->_off_el[0][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1])*mesh->_elnodes[VV][mesh_ord];
+        for (int iel=0;iel <  mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels]
+                -mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1]; iel++) {
+            uint elem_gidx=(iel+mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1])*NVE[ mesh->_geomelem_flag[mesh->get_dim()-1] ][BIQUADR_FE];
             for (uint i=0; i<el_nds; i++) { // linear and quad
-                int k=mesh->_el_map[0][elem_gidx+i];   // the global node
+                int k=mesh->_el_map[VV][elem_gidx+i];   // the global node
                 eqn->_x[mesh->_NoLevels-1]->set(dofmap->GetDof(mesh->_NoLevels-1,QQ,ivar,k), sol[k]*Irefval); // set the field
             }
         }

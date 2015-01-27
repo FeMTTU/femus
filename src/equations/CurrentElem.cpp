@@ -37,7 +37,6 @@ namespace femus {
     {
     
 //========== Current "Geometric Element"  ========================
-   const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
   uint elnodes = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
   _el_conn = new uint[ elnodes ];   
    _xx_nds = new double[_mesh.get_dim()*elnodes ];
@@ -148,7 +147,6 @@ for (uint ivar=0; ivar < _eqn->_dofmap._nvars[fe]; ivar++)    {
 void CurrentElem::PrintOrientation() const {
   
       const uint mesh_dim = _mesh.get_dim();
-      const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
       const uint el_nnodes   = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
 
        std::vector<double>   xi(mesh_dim,0.);
@@ -218,7 +216,6 @@ void CurrentElem::PrintOrientation() const {
   void CurrentElem::SetMidpoint() const {
 
     const uint mesh_dim = _mesh.get_dim();
-    const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");    
     const uint el_nnodes   = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
 
        for (uint idim=0; idim< mesh_dim; idim++)  _el_xm[idim]=0.;
@@ -239,7 +236,6 @@ void CurrentElem::PrintOrientation() const {
   void CurrentElem::set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel) {
 
     const uint mydim = _mesh.get_dim();
-    const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");    
     const uint el_nnodes   = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
           
    for (uint n=0; n<el_nnodes; n++)    {
@@ -279,7 +275,6 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
   
   const uint  elndof = myvect._ndof;
   const uint vectdim = myvect._dim;
-  const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");    
   const uint offset = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
  
  //TODO ASSERT

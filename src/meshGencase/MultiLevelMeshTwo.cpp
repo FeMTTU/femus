@@ -177,7 +177,6 @@ void MultiLevelMeshTwo::clear ()  {
    
    double*   x_in = new double[_dim];
    double*   x_out = new double[_dim];
-  const uint mesh_ord = (int) GetRuntimeMap().get("mesh_ord");
   const uint el_nds = NVE[ _geomelem_flag[elem_dim-1] ][BIQUADR_FE];
 
       for (uint n=0;n < el_nds ;n++) {
