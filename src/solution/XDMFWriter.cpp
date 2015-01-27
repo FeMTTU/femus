@@ -1517,6 +1517,201 @@ void XDMFWriter::PrintSubdomFlagOnCellsLinear(std::string filename, const MultiL
 return;
 }
 
+
+
+// ========================================================
+/// It manages the printing in Xdmf format
+void XDMFWriter::PrintAllLEVAllVBLinear(const std::string output_path, const MultiLevelMeshTwo & mesh) {
+  
+    const uint iproc = mesh._iproc;
+   if (iproc==0) {
+       PrintConnAllLEVAllVBLinear(output_path,mesh);
+       PrintXDMFAllLEVAllVBLinear(output_path,mesh);
+    }
+   
+   return;
+}
+
+
+
+// ========================================================
+/// It prints the connectivity in hdf5 format
+/// The changes are only for visualization of quadratic FEM
+
+void XDMFWriter::PrintConnAllLEVAllVBLinear(const std::string output_path, const MultiLevelMeshTwo & mesh) { 
+
+    std::string    basemesh = DEFAULT_BASEMESH;
+    std::string    ext_h5   = DEFAULT_EXT_H5;
+    std::string    connlin  = DEFAULT_CONNLIN;
+
+  std::ostringstream namefile;
+  namefile << output_path << "/" << basemesh << connlin << ext_h5; 
+
+  std::cout << namefile.str() << std::endl;
+  hid_t file = H5Fcreate (namefile.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);  //TODO VALGRIND
+
+//================================
+// here we loop both over LEVELS and over VB, so everything is inside a UNIQUE FILE  
+  for(uint l=0; l< mesh._NoLevels; l++)
+           for(uint vb=0;vb< VB; vb++)
+	        PrintConnVBLinear(file,l,vb,mesh);
+//================================
+	   
+  H5Fclose(file); //TODO VALGRIND Invalid read of size 8: this is related to both H5Fcreate and H5Dcreate
+  return;
+}
+
+
+
+void XDMFWriter::PrintConnVBLinear(hid_t file, const uint Level, const uint vb, const MultiLevelMeshTwo & mesh) {
+  
+   int conn[8][8];  //TODO this is the largest dimension, bad programming
+   uint *gl_conn;
+  
+    uint icount=0;
+    uint mode = NVE[ mesh._geomelem_flag[mesh._dim-1-vb] ][BIQUADR_FE];
+    uint n_elements = mesh._n_elements_vb_lev[vb][Level];
+    uint nsubel, nnodes;
+
+    switch(mesh._dim)   {
+      case 2:  {
+    switch(mode){
+      // -----------------------------------
+      case 9:	// Quad 9  0-4-1-5-2-6-3-7-8
+      gl_conn=new uint[n_elements*4*4];
+      conn[0][0] = 0;  conn[0][1] = 4;   conn[0][2] = 8; conn[0][3] = 7;// quad4  0-4-8-7
+      conn[1][0] = 4;  conn[1][1] = 1;   conn[1][2] = 5; conn[1][3] = 8;// quad4  4-1-5-8
+      conn[2][0] = 8;  conn[2][1] = 5;   conn[2][2] = 2; conn[2][3] = 6;// quad4  8-5-2-6
+      conn[3][0] = 7;  conn[3][1] = 8;   conn[3][2] = 6; conn[3][3] = 3;// quad4  7-8-6-3
+      nsubel=4;nnodes=4;
+      break;
+//=====================
+      case 6:	// Quad 9  0-4-1-5-2-6-3-7-8
+      gl_conn=new uint[n_elements*4*3];
+      conn[0][0] = 0;  conn[0][1] = 3;   conn[0][2] = 5; // quad4  0-4-8-7
+      conn[1][0] = 3;  conn[1][1] = 4;   conn[1][2] = 5; // quad4  4-1-5-8
+      conn[2][0] = 3;  conn[2][1] = 1;   conn[2][2] = 4; // quad4  8-5-2-6
+      conn[3][0] = 4;  conn[3][1] = 2;   conn[3][2] = 5; // quad4  7-8-6-3
+      nsubel=4;nnodes=3;
+      break;
+//===================
+     case 3: // boundary edge 2 linear 0-2-1
+      gl_conn=new uint[n_elements*2*2];
+      conn[0][0] = 0; conn[0][1] = 2;		// element 0-2
+      conn[1][0] = 2; conn[1][1] = 1;		// element 1-2
+      nsubel=2;nnodes=2;
+     break;
+      // -----------------------------------------
+      default:   // interior 3D
+      gl_conn = new uint[n_elements*mode];
+      for (uint n=0;n<mode;n++) conn[0][n] = n;
+      nsubel=1;nnodes=mode;
+      break;
+      } //end switch mode 1
+ 
+ break; //end case 2
+      }
+      case 3:  {
+         switch(mode){
+  // ----------------------
+      case  27: //  Hex 27 (8 Hex8)
+      gl_conn=new uint[n_elements*8*8];
+      conn[0][0] = 0;  conn[0][1] = 8;  conn[0][2] = 20; conn[0][3] = 11;
+      conn[0][4] = 12; conn[0][5] = 21; conn[0][6] = 26; conn[0][7] = 24;
+      conn[1][0] = 8;  conn[1][1] = 1;  conn[1][2] = 9;  conn[1][3] = 20;
+      conn[1][4] = 21; conn[1][5] = 13; conn[1][6] = 22; conn[1][7] = 26;
+      conn[2][0] = 11; conn[2][1] = 20; conn[2][2] = 10; conn[2][3] = 3;
+      conn[2][4] = 24; conn[2][5] = 26; conn[2][6] = 23; conn[2][7] = 15;
+      conn[3][0] = 20; conn[3][1] = 9;  conn[3][2] = 2;  conn[3][3] = 10;
+      conn[3][4] = 26; conn[3][5] = 22; conn[3][6] = 14; conn[3][7] = 23;
+      conn[4][0] = 12; conn[4][1] = 21;  conn[4][2] = 26; conn[4][3] = 24;
+      conn[4][4] = 4;  conn[4][5] = 16;  conn[4][6] = 25; conn[4][7] = 19;
+      conn[5][0] = 21;  conn[5][1] = 13; conn[5][2] = 22; conn[5][3] = 26;
+      conn[5][4] = 16; conn[5][5] = 5;  conn[5][6] = 17; conn[5][7] = 25;
+      conn[6][0] = 24; conn[6][1] = 26; conn[6][2] = 23; conn[6][3] = 15;
+      conn[6][4] = 19; conn[6][5] = 25; conn[6][6] = 18; conn[6][7] = 7;
+      conn[7][0] = 26; conn[7][1] = 22; conn[7][2] = 14; conn[7][3] = 23;
+      conn[7][4] = 25; conn[7][5] = 17; conn[7][6] = 6;  conn[7][7] = 18;
+      nsubel=8;nnodes=8;     
+      break;
+    // ---------------------------------------  
+      case  10: // Tet10
+      gl_conn=new uint[n_elements*8*4];
+      conn[0][0] = 0; conn[0][1] = 4;  conn[0][2] = 6; conn[0][3] = 7;
+      conn[1][0] = 4; conn[1][1] = 1;  conn[1][2] = 5; conn[1][3] = 8;
+      conn[2][0] = 5; conn[2][1] = 2;  conn[2][2] = 6; conn[2][3] = 9;
+      conn[3][0] = 7; conn[3][1] = 8;  conn[3][2] = 9; conn[3][3] = 3;
+      conn[4][0] = 4; conn[4][1] = 8;  conn[4][2] = 6; conn[4][3] = 7;
+      conn[5][0] = 4; conn[5][1] = 5;  conn[5][2] = 6; conn[5][3] = 8;
+      conn[6][0] = 5; conn[6][1] = 9;  conn[6][2] = 6; conn[6][3] = 8;
+      conn[7][0] = 7; conn[7][1] = 6;  conn[7][2] = 9; conn[7][3] = 8;
+      nsubel=8;nnodes=4;
+      break;
+  // ---------------------------------------  
+      case 6:	// Tri6  0-3-1-4-2-5
+      gl_conn=new uint[n_elements*4*3];
+      conn[0][0] = 0;  conn[0][1] = 3;   conn[0][2] = 5; // quad4  0-4-8-7
+      conn[1][0] = 3;  conn[1][1] = 4;   conn[1][2] = 5; // quad4  4-1-5-8
+      conn[2][0] = 3;  conn[2][1] = 1;   conn[2][2] = 4; // quad4  8-5-2-6
+      conn[3][0] = 4;  conn[3][1] = 2;   conn[3][2] = 5; // quad4  7-8-6-3
+      nsubel=4;nnodes=3;
+      break;    
+    // ---------------------------------------  
+      case 9:  // Quad9 elements ( 4 Quad4)
+      gl_conn=new uint[n_elements*4*4];
+      conn[0][0] = 0; conn[0][1] =4; conn[0][2] = 8; conn[0][3] = 7;
+      conn[1][0] = 4; conn[1][1] =1; conn[1][2] = 5; conn[1][3] = 8;
+      conn[2][0]= 8;  conn[2][1] =5; conn[2][2] = 2; conn[2][3] = 6;
+      conn[3][0] = 7; conn[3][1] = 8;conn[3][2] = 6; conn[3][3] = 3;
+      nsubel=4;nnodes=4;
+      break;
+     // -----------------------------------------
+    default:   // interior 3D
+      gl_conn = new uint[n_elements*mode];
+      for (uint n=0;n<mode;n++) conn[0][n] = n;
+      nsubel=1;nnodes=mode;  
+       break;
+      } //end switch mode 2
+
+      break;
+      } //end case 3
+
+       default:
+      std::cout << "PrintConnLin not working" << std::endl; abort();
+   break;
+    }
+    
+      // mapping
+    for (uint iproc = 0; iproc < mesh._NoSubdom; iproc++) {
+      for (int el = mesh._off_el[vb][iproc*mesh._NoLevels+Level];
+           el < mesh._off_el[vb][iproc*mesh._NoLevels+Level+1]; el++) {
+        for (uint se = 0; se < nsubel; se++) {
+          for (uint i = 0; i < nnodes; i++) {
+	    const uint pos = el*mode+conn[se][i];
+	    uint Qnode_fine = mesh._el_map[vb][pos];
+	    uint Qnode_lev = mesh._Qnode_fine_Qnode_lev[Level][Qnode_fine];
+            gl_conn[icount] = Qnode_lev;
+	    icount++;
+          }
+        }
+      }
+    } 
+    
+     // Print mesh in hdf files
+    hsize_t dimsf[2];  dimsf[0] =icount;  dimsf[1] = 1;
+    hid_t dtsp = H5Screate_simple(2, dimsf, NULL);
+    std::ostringstream Name; Name << "MSHCONN_VB_" << vb << "_LEV_" << Level;
+    hid_t dtset = H5Dcreate(file,Name.str().c_str(),H5T_NATIVE_INT,dtsp,H5P_DEFAULT,H5P_DEFAULT,H5P_DEFAULT);  //TODO VALGRIND
+    H5Dwrite(dtset,H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT, gl_conn);
+    H5Sclose(dtsp);
+    H5Dclose(dtset);
+    
+    delete[] gl_conn;
+  
+    return;
+}
+ 
+
  
 } //end namespace femus
 

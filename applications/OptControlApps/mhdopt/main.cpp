@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 	  
           mesh.ReadMeshFileAndNondimensionalize(); 
 	  XDMFWriter::PrintMultimeshXdmfBiquadratic(files._output_path,mesh);
-          mesh.PrintAllLEVAllVBLinear();
+          XDMFWriter::PrintAllLEVAllVBLinear(files._output_path,mesh);
       
 // ======  QRule ================================ 
   std::vector<Gauss>   qrule;

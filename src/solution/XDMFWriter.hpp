@@ -106,6 +106,13 @@ public:
   
   static void PrintSubdomFlagOnCellsLinear(std::string filename, const MultiLevelMeshTwo & mesh);
   
+  static void PrintAllLEVAllVBLinear(const std::string output_path, const MultiLevelMeshTwo& mesh);
+  
+  static void PrintConnAllLEVAllVBLinear(const std::string output_path, const MultiLevelMeshTwo& mesh);
+  
+  static void PrintConnVBLinear(hid_t file, const uint Level, const uint vb, const MultiLevelMeshTwo& mesh); 
+
+  
 private:
   
    static const std::string type_el[4][6];

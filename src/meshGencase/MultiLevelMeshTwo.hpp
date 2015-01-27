@@ -52,9 +52,6 @@ public:
 
     //======= Print/read functions =======
     void ReadMeshFileAndNondimensionalize();
-    void PrintAllLEVAllVBLinear() const;
-    void PrintConnAllLEVAllVBLinear() const;
-    void PrintConnVBLinear(hid_t file, const uint Level, const uint vb) const; 
 
     //======= mesh generation functions ====
     void ElemChildToFather();
