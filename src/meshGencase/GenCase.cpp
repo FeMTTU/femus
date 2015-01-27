@@ -2248,7 +2248,7 @@ void GenCase::PrintMeshFile() const  {
 // ===========================================
     group_id = H5Gcreate(file, "/PID", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     for (int  vb= 0; vb< VB;vb++) {
-        for (int  ilev= 0;ilev< _NoLevels; ilev++)   XDMFWriter::PrintSubdomFlagOnQuadrCells(vb,ilev,inmesh.str().c_str(),*this);
+        for (int  ilev= 0;ilev< _NoLevels; ilev++)   XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(vb,ilev,inmesh.str().c_str(),*this);
     }
 
     H5Gclose(group_id);

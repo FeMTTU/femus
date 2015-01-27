@@ -1344,7 +1344,7 @@ void XDMFWriter::PrintMultimeshXdmfBiquadratic(const std::string output_path, co
  //but if you put ALL THE DATA in THE SAME FOLDER as the READER(s)
  //then they are always independent and the data will always be readable
 
- void XDMFWriter::PrintXDMFAllLEVAllVB(const std::string output_path, const MultiLevelMeshTwo & mesh) {
+ void XDMFWriter::PrintXDMFAllLEVAllVBLinear(const std::string output_path, const MultiLevelMeshTwo & mesh) {
 
   std::string     basemesh = DEFAULT_BASEMESH;
   std::string     ext_xdmf = DEFAULT_EXT_XDMF;
@@ -1446,7 +1446,7 @@ void XDMFWriter::PrintXDMFGridVBLinear(std::ofstream& out,
 }
 
 
-void XDMFWriter::PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh) {
+void XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh) {
 
     if (mesh._iproc==0)   {
 
@@ -1486,7 +1486,7 @@ void XDMFWriter::PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std:
 // ===============================================================
 /// this function is done only by _iproc == 0!
 /// it prints the PID index on the cells of the linear mesh
-void XDMFWriter::PrintSubdomFlagOnLinCells(std::string filename, const MultiLevelMeshTwo & mesh) {
+void XDMFWriter::PrintSubdomFlagOnCellsLinear(std::string filename, const MultiLevelMeshTwo & mesh) {
   
  if (mesh._iproc==0)   {
 

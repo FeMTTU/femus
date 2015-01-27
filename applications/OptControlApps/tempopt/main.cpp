@@ -89,7 +89,7 @@
 	  
           mesh.ReadMeshFileAndNondimensionalize(); 
 	  XDMFWriter::PrintMultimeshXdmfBiquadratic(files._output_path,mesh);
-          mesh.PrintForVisualizationAllLEVAllVB();
+          mesh.PrintAllLEVAllVBLinear();
 	  
   //gencase is dimensionalized, meshtwo is nondimensionalized
   //since the meshtwo is nondimensionalized, all the BC and IC are gonna be implemented on a nondimensionalized mesh

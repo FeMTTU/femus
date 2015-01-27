@@ -429,12 +429,12 @@ for (int vb=0; vb < VB; vb++)    {
 
 // ========================================================
 /// It manages the printing in Xdmf format
-void MultiLevelMeshTwo::PrintForVisualizationAllLEVAllVB()  const {
+void MultiLevelMeshTwo::PrintAllLEVAllVBLinear()  const {
   
     const uint iproc=_iproc;
    if (iproc==0) {
-       PrintConnLinAllLEVAllVB();
-       XDMFWriter::PrintXDMFAllLEVAllVB(_files._output_path,*this);
+       PrintConnAllLEVAllVBLinear();
+       XDMFWriter::PrintXDMFAllLEVAllVBLinear(_files._output_path,*this);
     }
    
    return;
@@ -446,7 +446,7 @@ void MultiLevelMeshTwo::PrintForVisualizationAllLEVAllVB()  const {
 /// It prints the connectivity in hdf5 format
 /// The changes are only for visualization of quadratic FEM
 
-void MultiLevelMeshTwo::PrintConnLinAllLEVAllVB() const { 
+void MultiLevelMeshTwo::PrintConnAllLEVAllVBLinear() const { 
 
     std::string    basemesh = DEFAULT_BASEMESH;
     std::string    ext_h5   = DEFAULT_EXT_H5;
@@ -462,7 +462,7 @@ void MultiLevelMeshTwo::PrintConnLinAllLEVAllVB() const {
 // here we loop both over LEVELS and over VB, so everything is inside a UNIQUE FILE  
   for(uint l=0; l< _NoLevels; l++)
            for(uint vb=0;vb< VB; vb++)
-	        PrintConnLinVB(file,l,vb);
+	        PrintConnVBLinear(file,l,vb);
 //================================
 	   
   H5Fclose(file); //TODO VALGRIND Invalid read of size 8: this is related to both H5Fcreate and H5Dcreate
@@ -471,7 +471,7 @@ void MultiLevelMeshTwo::PrintConnLinAllLEVAllVB() const {
 
 
 
-void MultiLevelMeshTwo::PrintConnLinVB(hid_t file, const uint Level, const uint vb) const {
+void MultiLevelMeshTwo::PrintConnVBLinear(hid_t file, const uint Level, const uint vb) const {
   
    int conn[8][8];  //TODO this is the largest dimension, bad programming
    uint *gl_conn;

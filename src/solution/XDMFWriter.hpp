@@ -91,7 +91,7 @@ public:
   
   static void PrintMultimeshXdmfBiquadratic(const std::string output_path, const MultiLevelMeshTwo & mesh);
   
-  static void PrintXDMFAllLEVAllVB(const std::string output_path, const MultiLevelMeshTwo & mesh);
+  static void PrintXDMFAllLEVAllVBLinear(const std::string output_path, const MultiLevelMeshTwo & mesh);
   
   static void PrintXDMFGridVBLinear(std::ofstream& out, std::ostringstream& top_file,
 			      std::ostringstream& geom_file,
@@ -102,9 +102,9 @@ public:
    /** */
   static void PrintXDMFTopologyGeometryLinear(std::ofstream& out,const unsigned Level, const unsigned vb, const MultiLevelMeshTwo& mesh);
 
-  static void PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh);
+  static void PrintSubdomFlagOnCellsBiquadratic(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh);
   
-  static void PrintSubdomFlagOnLinCells(std::string filename, const MultiLevelMeshTwo & mesh);
+  static void PrintSubdomFlagOnCellsLinear(std::string filename, const MultiLevelMeshTwo & mesh);
   
 private:
   

@@ -354,7 +354,7 @@ void MultiLevelProblemTwo::PrintCaseHDF5(const uint t_init) const {
         filename << _files._output_path << "/" << basecase << "." << setw(ndigits) << setfill('0') << t_init << ext_h5;
 
         hid_t file = H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
-        XDMFWriter::PrintSubdomFlagOnLinCells(filename.str(),_mesh);
+        XDMFWriter::PrintSubdomFlagOnCellsLinear(filename.str(),_mesh);
         H5Fclose(file);
 
         MultiLevelProblemTwo::const_iterator pos   = _equations.begin();
