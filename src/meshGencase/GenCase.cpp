@@ -2043,8 +2043,8 @@ void GenCase::PrintMeshFile() const  {
         elstob_out[i]= static_cast<ElemStoBase*>(_el_sto_b[i]);
     }
 
-    XDMFWriter::PrintElemVB(file,VV,_nd_libm_fm, elsto_out,_el_fm_libm,*this);
-    XDMFWriter::PrintElemVB(file,BB,_nd_libm_fm, elstob_out,_el_fm_libm_b,*this);
+    XDMFWriter::PrintElemVBBiquadratic(file,VV,_nd_libm_fm, elsto_out,_el_fm_libm,*this);
+    XDMFWriter::PrintElemVBBiquadratic(file,BB,_nd_libm_fm, elstob_out,_el_fm_libm_b,*this);
 
     // ===============
     // print child to father map for all levels for BOUNDARY ELEMENTS

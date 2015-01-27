@@ -50,9 +50,6 @@ public:
 //     ~MultiLevelMeshTwo ();
     void clear ();
 
-    //======= Print/read functions =======
-    void ReadMeshFileAndNondimensionalize();
-
     //======= mesh generation functions ====
     void ElemChildToFather();
     void ComputeElemOffsetsBySubdLevel();

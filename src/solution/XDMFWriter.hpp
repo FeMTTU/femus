@@ -112,8 +112,10 @@ public:
   
   static void PrintConnVBLinear(hid_t file, const uint Level, const uint vb, const MultiLevelMeshTwo& mesh); 
 
-  static void PrintElemVB(hid_t file, const uint vb, const std::vector<int> & nd_libm_fm, ElemStoBase** el_sto_in, const std::vector<std::pair<int,int> >  el_fm_libm_in, const MultiLevelMeshTwo & mesh);  
+  static void PrintElemVBBiquadratic(hid_t file, const uint vb, const std::vector<int> & nd_libm_fm, ElemStoBase** el_sto_in, const std::vector<std::pair<int,int> >  el_fm_libm_in, const MultiLevelMeshTwo & mesh);  
   
+  static void ReadMeshFileAndNondimensionalize(const std::string output_path, MultiLevelMeshTwo & mesh);
+
   /** MATRIX PRINTING */
   static void PrintOneVarMatrixHDF5(const std::string & name, const std::string & groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel );
   

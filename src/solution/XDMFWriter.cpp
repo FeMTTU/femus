@@ -37,7 +37,7 @@
 #include "NumericVector.hpp"
 #include "FEElemBase.hpp"
 #include "FETypeEnum.hpp"
-
+#include "paral.hpp"
 
 namespace femus {
 
@@ -1725,7 +1725,7 @@ void XDMFWriter::PrintConnVBLinear(hid_t file, const uint Level, const uint vb, 
 //then you pick the nodes of that element in LIBMESH numbering,
 //then you pick the nodes in femus NUMBERING,
 //and that's it
-void XDMFWriter::PrintElemVB(hid_t file,
+void XDMFWriter::PrintElemVBBiquadratic(hid_t file,
 		       const uint vb ,
 		       const std::vector<int> & nd_libm_fm, 
 		       ElemStoBase** el_sto_in,
@@ -1832,6 +1832,208 @@ void XDMFWriter::PrintElemVB(hid_t file,
 
 
 }
+
+
+
+// ========================================================
+/// Read mesh from hdf5 file (namefile) 
+//is this function for ALL PROCESSORS 
+// or only for PROC==0? Seems to be for all processors
+// TODO do we need the leading "/" for opening a dataset?
+// This routine reads the mesh file and also makes it NONDIMENSIONAL, so that everything is solved on a nondimensional mesh
+void XDMFWriter::ReadMeshFileAndNondimensionalize(const std::string output_path, MultiLevelMeshTwo & mesh)   {
+
+  std::string    basemesh = DEFAULT_BASEMESH;
+  std::string      ext_h5 = DEFAULT_EXT_H5;
+  
+  std::ostringstream meshname;
+  meshname << output_path << "/" << basemesh  << ext_h5;
+
+//==================================
+// OPEN FILE 
+//==================================
+  std::cout << " Reading mesh from= " <<  meshname.str() <<  std::endl;
+  hid_t  file_id = H5Fopen(meshname.str().c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
+//   if (file_id < 0) {std::cout << "MultiLevelMeshTwo::read_c(): File Mesh input in data_in is missing"; abort();}
+// he does not do this check, if things are wrong the H5Fopen function detects the error
+
+//==================================
+// DFLS (Dimension, VB, Levels, Subdomains)
+// =====================
+  uint topdata[4];
+  XDMFWriter::read_UIhdf5(file_id,"/DFLS",topdata);
+
+//==================================
+// CHECKS 
+// ===================== 
+ if (mesh._NoLevels !=  topdata[2])  {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the number of mesh levels is " <<
+   "different in the mesh file and in the configuration file" << std::endl;abort(); }
+
+
+ if (mesh._NoSubdom != topdata[3])  {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the number of mesh subdomains is " << mesh._NoSubdom
+                                   << " while the processor size of this run is " << paral::get_size()
+                                   << ". Re-run gencase and your application with the same number of processors" << std::endl;abort(); }
+  
+//alright, there is a check to make: if you run gencase in 3D, and then you run main in 2D then things go wrong...
+//this is because we read the dimension from 'dimension', we should read it from the mesh file in principle, 
+//in fact it is that file that sets the space in which we are simulating...
+//I'll put a check 
+
+if (mesh._dim != topdata[0] ) {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the mesh dimension is " << mesh._dim
+                                   << " while the dimension in the configuration file is " << mesh.GetRuntimeMap().get("dimension")
+                                   << ". Recompile either gencase or your application appropriately" << std::endl;abort();}
+//it seems like it doesn't print to file if I don't put the endline "<< std::endl".
+//Also, "\n" seems to have no effect, "<< std::endl" must be used
+//This fact doesn't seem to be related to PARALLEL processes that abort sooner than the others
+
+if ( VB !=  topdata[1] )  {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the number of integration dimensions is " << topdata[1]
+                                   << " while we have VB= " << VB 
+                                   << ". Re-run gencase and your application appropriately " << std::endl;abort(); }
+
+//==================================
+// FEM element DoF number
+// =====================
+//Reading this is not very useful... well, it may be a check  
+  XDMFWriter::read_UIhdf5(file_id, "/ELNODES_VB",&mesh._type_FEM[0]);
+
+  for (int vb=0; vb<VB;vb++) {
+if (mesh._type_FEM[vb] !=  NVE[ mesh._geomelem_flag[mesh._dim-1-vb] ][BIQUADR_FE] )  {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the element type of the mesh is" <<
+   "different from the element type as given by the GeomEl" << std::endl; abort(); }
+  }
+  
+// ===========================================
+// ===========================================
+//  NODES
+// ===========================================
+// ===========================================
+
+ // ++++++++++++++++++++++++++++++++++++++++++++++++++
+ // nodes X lev
+ // ++++++++++++++++++++++++++++++++++++++++++++++++++
+  mesh._NoNodesXLev=new uint[mesh._NoLevels+1];
+  XDMFWriter::read_UIhdf5(file_id, "/NODES/MAP/NDxLEV",mesh._NoNodesXLev);
+
+// ===========================================
+//  COORDINATES  (COORD)
+// ===========================================
+  //in the mesh file now I have the coordinates for all levels, but let me read only those of the FINEST level
+   double ILref = 1./mesh.get_Lref();
+   int lev_for_coords = mesh._NoLevels-1;
+  uint n_nodes =mesh._NoNodesXLev[lev_for_coords];
+  mesh._xyz=new double[mesh._dim*n_nodes];
+  double *coord;coord=new double[n_nodes];
+  for (uint kc=0;kc<mesh._dim;kc++) {
+    std::ostringstream Name; Name << "NODES/COORD/X" << kc+1 << "_L" << lev_for_coords;
+    XDMFWriter::read_Dhdf5(file_id,Name.str().c_str(),coord);
+    for (uint inode=0;inode<n_nodes;inode++) mesh._xyz[inode+kc*n_nodes]=coord[inode]*ILref; //NONdimensionalization!!!
+  }
+  delete []coord;
+
+// ===================================================
+//  OFF_ND
+// ===================================================
+ mesh._off_nd=new int*[QL_NODES];
+	    
+for (int fe=0;fe < QL_NODES; fe++)    {
+  mesh._off_nd[fe]=new int[mesh._NoSubdom*mesh._NoLevels+1];
+  std::ostringstream namefe; namefe << "/NODES/MAP/OFF_ND" << "_F" << fe;
+   XDMFWriter::read_Ihdf5(file_id,namefe.str().c_str(),mesh._off_nd[fe]);
+  }
+  
+  
+   // ====================================================
+ // NODE MAP
+ // ====================================================
+  // node mapping
+  //this map "mixes" linear and quadratic, in the sense that 
+  // if you have levels 0 1 2, you can define 
+  // 3 levels for the QUADRATIC DOFS, which are A=0 B=1 C=2,
+  //and similarly you can define 3 levels for the linear dofs.
+  //In order to be consistent with the levels you can define 
+  // another auxiliary level 3 which is 
+  // the coarse linear level
+  //in each _node_map there is no "subdomain" stuff, only LEVEL
+  // Each node_map contains the list of NODES of THAT LEVEL,
+  //of course in the FINE NODE NUMBERING
+  //in practice gives us, for every level, the FINE NODE INDICES corresponding to the DOFS
+  //so it is like an INVERSE DOF MAP: from DOF TO NODE.
+  //if you use levels 0 1 2, you do from QUADRATIC dof to FINE NODE
+  //if you use levels 3 0 1, you do from LINEAR dof to FINE NODE
+  
+  uint n_nodes_top=mesh._NoNodesXLev[mesh._NoLevels-1];
+  mesh._Qnode_lev_Qnode_fine = new uint *[mesh._NoLevels+1];
+  mesh._Qnode_fine_Qnode_lev = new int *[mesh._NoLevels+1];
+
+  for (uint ilev=0;ilev<=mesh._NoLevels;ilev++) { //loop on Extended levels 
+    mesh._Qnode_lev_Qnode_fine[ilev] = new uint [mesh._NoNodesXLev[ilev]];
+    mesh._Qnode_fine_Qnode_lev[ilev] = new int [n_nodes_top];  //THIS HAS TO BE INT because it has -1!!!
+    std::ostringstream Name; Name << "/NODES/MAP/MAP" << "_XL" << ilev;
+    XDMFWriter::read_Ihdf5(file_id,Name.str().c_str(),mesh._Qnode_fine_Qnode_lev[ilev]);
+    for (uint inode=0;inode<n_nodes_top;inode++) {
+         int val_lev = mesh._Qnode_fine_Qnode_lev[ilev][inode];
+      if ( val_lev != -1 ) mesh._Qnode_lev_Qnode_fine[ilev][ val_lev ] = inode; //this doesnt have -1 numbers
+      }
+      //This is how you read the _node_map: 
+      //- you remove the "-1" that come from the gencase
+      //- and you dont put the content (we dont need it!) but the position,
+      //   i.e. the node index in the fine numbering
+   }
+  
+// ===========================================
+//   /ELEMS
+// ===========================================
+   
+// ===========================================
+//   NUMBER EL
+// ===========================================
+  mesh._n_elements_vb_lev=new uint*[VB];
+  for (uint vb=0;vb< VB;vb++) {
+    mesh._n_elements_vb_lev[vb]=new uint[mesh._NoLevels];
+    std::ostringstream Name; Name << "/ELEMS/VB" << vb  <<"/NExLEV";
+    XDMFWriter::read_UIhdf5(file_id,Name.str().c_str(),mesh._n_elements_vb_lev[vb]);
+  }
+
+// ===========================================
+//   OFF_EL
+// ===========================================
+  mesh._off_el=new int*[VB];
+
+for (int vb=0; vb < VB; vb++)    {
+  mesh._off_el[vb] = new int [mesh._NoSubdom*mesh._NoLevels+1];
+  std::ostringstream offname; offname << "/ELEMS/VB" << vb << "/OFF_EL";
+    XDMFWriter::read_Ihdf5(file_id,offname.str().c_str(),mesh._off_el[vb]);
+}
+
+// ===========================================
+//   CONNECTIVITY
+// ===========================================
+  mesh._el_map=new uint*[VB];
+for (int vb=0; vb < VB; vb++)    {
+  mesh._el_map[vb]=new uint [mesh._off_el[vb][mesh._NoSubdom*mesh._NoLevels]*NVE[ mesh._geomelem_flag[mesh._dim-1-vb] ][BIQUADR_FE]];
+  std::ostringstream elName; elName << "/ELEMS/VB" << vb  <<"/CONN";
+  XDMFWriter::read_UIhdf5(file_id,elName.str().c_str(),mesh._el_map[vb]);
+}
+
+// ===========================================
+//   BDRY EL TO VOL EL
+// ===========================================
+   mesh._el_bdry_to_vol = new int*[mesh._NoLevels];
+  for (uint lev=0; lev < mesh._NoLevels; lev++)    {
+  mesh._el_bdry_to_vol[lev] = new int[mesh._n_elements_vb_lev[BB][lev]];
+    std::ostringstream btov; btov << "/ELEMS/BDRY_TO_VOL_L" << lev;
+  XDMFWriter::read_Ihdf5(file_id, btov.str().c_str(),mesh._el_bdry_to_vol[lev]);
+  }
+  
+ // ===========================================
+ //  CLOSE FILE 
+ // ===========================================
+  H5Fclose(file_id);
+
+  return; 
+   
+}
+
+
 
 
 
