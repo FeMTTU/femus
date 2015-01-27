@@ -9,7 +9,6 @@
 
 #include "Math.hpp"
 #include "MultiLevelMeshTwo.hpp"
-#include "GeomEl.hpp"
 #include "Quantity.hpp"
 #include "MultiLevelProblemTwo.hpp"
 #include "FETypeEnum.hpp"

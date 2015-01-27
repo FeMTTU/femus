@@ -29,10 +29,9 @@
 #include "Typedefs.hpp"
 #include "FEMTTUConfig.h"
 #include "FemusInputParser.hpp"
-#include "GeomEl.hpp"
 #include "ElemSto.hpp"
 #include "VBTypeEnum.hpp"
-
+#include "FETypeEnum.hpp"
 
 namespace femus {
 
@@ -130,7 +129,6 @@ public:
     //get functions
     inline const double get_Lref() const {return _Lref;}
     inline const uint   get_dim()  const {return _dim;}
-    inline const GeomEl GetGeomEl(const uint dim, const uint order) const {   return _GeomEl[dim][order]; }
     inline const FemusInputParser<double>  GetRuntimeMap()  const { return _mesh_rtmap; }
 
     //set functions
@@ -145,11 +143,8 @@ public:
    private:   
      
 //attributes    ************************************
-    
     double _Lref;          ///Reference length for non-dimensionalization
      
-    std::vector< std::vector<GeomEl> >  _GeomEl;   //[DIM][QL_NODES] 
-
  };
 
 

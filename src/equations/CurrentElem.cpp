@@ -17,7 +17,6 @@
 #include "SystemTwo.hpp"
 #include "MultiLevelProblemTwo.hpp"
 #include "MultiLevelMeshTwo.hpp"
-#include "GeomEl.hpp"
 #include "ElemType.hpp"
 #include "DofMap.hpp"
 

@@ -16,7 +16,6 @@
 #include "Quantity.hpp"
 
 #include "MultiLevelMeshTwo.hpp"
-#include "GeomEl.hpp"
 
 #include <vector>
 

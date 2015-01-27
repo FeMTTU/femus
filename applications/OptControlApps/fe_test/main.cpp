@@ -12,7 +12,6 @@
 #include "paral.hpp" 
 #include "FemusInit.hpp"
 #include "Files.hpp"
-#include "GeomEl.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"

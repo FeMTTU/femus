@@ -11,7 +11,6 @@
 #include "Math.hpp"
 #include "Quantity.hpp"
 #include "MultiLevelMeshTwo.hpp"
-#include "GeomEl.hpp"
 #include "MultiLevelProblemTwo.hpp"
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"

@@ -15,7 +15,6 @@
 #include "VBTypeEnum.hpp"
 #include "Files.hpp"
 #include "XDMFWriter.hpp"
-#include "GeomEl.hpp"
 #include "FEElemBase.hpp"
 
 // LibMesh

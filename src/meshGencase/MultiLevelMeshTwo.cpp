@@ -23,7 +23,6 @@
 #include "Typedefs.hpp"
 #include "Files.hpp"
 #include "XDMFWriter.hpp"
-#include "GeomEl.hpp"
 #include "Elem.hpp"
 #include "GeomElTypeEnum.hpp"
 #include "VBTypeEnum.hpp"
@@ -103,18 +102,6 @@ if ( _dim == 1  && (map_in.get("geomel_type") != LINE ) )
         {  std::cout << "Inconsistent input file" << std::endl; abort();   }
 
     
-    //     How to initialize a std::vector of classes ==================
-    _GeomEl.resize(_dim);
-    for (int d=0; d < _dim; d++) _GeomEl[d].reserve(QL_NODES);
-
-    for (int d=0; d < _dim; d++) { 
-    for (int ql=0;ql < QL_NODES; ql++)  { 
-          GeomEl geomel_temp( _geomelem_id[d], ql ); 
-         _GeomEl[d].push_back(geomel_temp); 
-       }
-    }
-//    End How to initialize a std::vector of classes ==================
-
     _iproc    = paral::get_rank();
     _NoSubdom = paral::get_size();   
     _NoLevels = GetRuntimeMap().get("nolevels");

@@ -7,8 +7,6 @@
 #include "Files.hpp"
 
 #include "GeomElTypeEnum.hpp"
-#include "GeomEl.hpp"
-
 #include "FETypeEnum.hpp"
 #include "FEQuad1.hpp"
 #include "FEQuad4.hpp"

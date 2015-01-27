@@ -27,7 +27,6 @@
 #include "XDMFWriter.hpp"
 #include "Quantity.hpp"
 #include "MultiLevelMeshTwo.hpp"
-#include "GeomEl.hpp"
 #include "TimeLoop.hpp"
 
 #include "paral.hpp"

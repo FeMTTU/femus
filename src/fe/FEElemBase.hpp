@@ -6,7 +6,6 @@
 
 #include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
-#include "GeomEl.hpp"
 #include "GaussPoints.hpp"
 #include "ElemType.hpp"
 
