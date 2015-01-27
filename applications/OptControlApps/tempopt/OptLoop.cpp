@@ -127,7 +127,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = mesh->GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+  xyz_refbox._ndof     = NVE[ mesh->_geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
   xyz_refbox.Allocate();
 
   
@@ -255,7 +255,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = mesh->GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+  xyz_refbox._ndof     = NVE[ mesh->_geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
   xyz_refbox.Allocate();
   
     

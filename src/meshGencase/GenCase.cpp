@@ -2089,7 +2089,7 @@ void GenCase::PrintMeshFile() const  {
     int *ttype_FEM;
     ttype_FEM=new int[VB];
 
-    for (uint vb=0; vb< VB;vb++)   ttype_FEM[vb] = GetGeomEl(get_dim()-1-vb,QQ)._elnds;
+    for (uint vb=0; vb< VB;vb++)   ttype_FEM[vb] = NVE[ _geomelem_flag[get_dim()-1-vb] ][BIQUADR_FE];
 
     dimsf[0] = VB;
     dimsf[1] = 1;

@@ -7,5 +7,8 @@ enum  FEType {QQ=0, LL, KK };
 #define QL_NODES 2
 #define QL 3
 
+#define BIQUADR_TYPEEL 3
+#define BIQUADR_FE   2
+#define LINEAR_FE    0
 
 #endif

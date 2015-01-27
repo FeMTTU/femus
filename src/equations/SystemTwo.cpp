@@ -403,7 +403,6 @@ void SystemTwo::GenerateBdc() {
  //******** NODE BASED ****************************   
     const uint mesh_ord    = (int) _mesh.GetRuntimeMap().get("mesh_ord");
     const uint offset      = _mesh._NoNodesXLev[_NoLevels-1];
-    const uint el_nnodes_b = _mesh.GetGeomEl(_mesh.get_dim()-1-BB,mesh_ord)._elnds;
 
     std::vector<int> bc_flag(_dofmap._n_vars);
 
@@ -419,6 +418,7 @@ void SystemTwo::GenerateBdc() {
  //**************************************************   
  //******** ELEM BASED ******************************  
      CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
+    const uint el_nnodes_b = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 
     _bc_fe_kk             =  new int*[_NoLevels];
     int* DofOff_Lev_kk    =  new int[_NoLevels];
@@ -834,7 +834,7 @@ void SystemTwo::Initialize() {
         CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);  
      
         const uint  coords_fine_offset = _mesh._NoNodesXLev[_NoLevels-1];
-        const uint  el_dof_objs = _mesh.GetGeomEl(_mesh.get_dim()-1-VV,mesh_ord)._elnds;
+        const uint  el_dof_objs = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
         std::vector<double>      xp(_mesh.get_dim());
         std::vector<double> u_value(_dofmap._n_vars);
 

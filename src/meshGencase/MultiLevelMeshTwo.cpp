@@ -24,6 +24,7 @@
 #include "Files.hpp"
 #include "XDMFWriter.hpp"
 #include "GeomEl.hpp"
+#include "Elem.hpp"
 #include "GeomElTypeEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"
@@ -48,18 +49,25 @@ MultiLevelMeshTwo::MultiLevelMeshTwo (const Files& files_in, const FemusInputPar
     _mesh_file.assign(mesh_file_in); 
 
     _geomelem_id.resize(_dim);
+    _geomelem_flag.resize(_dim);
     
     if (_eltype_flag[VV] == HEX)  {
       _eltype_flag[BB] = QUAD;
       _geomelem_id[0] = "line";
       _geomelem_id[1] = "quad";
       _geomelem_id[2] = "hex";
+      _geomelem_flag[0] = LINE;
+      _geomelem_flag[1] = QUAD;
+      _geomelem_flag[2] = HEX;
     }
     else if (_eltype_flag[VV] == TET)  {
       _eltype_flag[BB] = TRI;
       _geomelem_id[0] = "line";
       _geomelem_id[1] = "tri";
       _geomelem_id[2] = "tet";
+      _geomelem_flag[0] = LINE;
+      _geomelem_flag[1] = TRI;
+      _geomelem_flag[2] = TET;
     }
     else if (_eltype_flag[VV] == WEDGE)  {
        std::cout << "Wedge not supported" << std::endl; abort(); 
@@ -68,14 +76,19 @@ MultiLevelMeshTwo::MultiLevelMeshTwo (const Files& files_in, const FemusInputPar
       _eltype_flag[BB] = LINE;
       _geomelem_id[0] = "line";
       _geomelem_id[1] = "quad";
+      _geomelem_flag[0] = LINE;
+      _geomelem_flag[1] = QUAD;
     }
     else if (_eltype_flag[VV] == TRI)  {
       _eltype_flag[BB] = LINE;
       _geomelem_id[0] = "line";
       _geomelem_id[1] = "tri";
+      _geomelem_flag[0] = LINE;
+      _geomelem_flag[1] = TRI;
     }
     else if (_eltype_flag[VV] == LINE)  {
       _geomelem_id[0] = "line";
+      _geomelem_flag[0] = LINE;
       std::cout << "Geom Elem not supported" << std::endl; abort();
     }
     else  {  std::cout << "Geom Elem not supported" << std::endl; abort();   }
@@ -117,8 +130,8 @@ if ( _dim == 1  && (map_in.get("geomel_type") != LINE ) )
     }
 
     for (int vb=0;vb < VB; vb++) {
-        _elnodes[vb][QQ] = GetGeomEl(_dim-1-vb,mesh_ord)._elnds;  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
-        _elnodes[vb][LL] = GetGeomEl(_dim-1-vb,LL)._elnds;  //THE MESH ORD CAN ONLY BE QUADRATIC UP TO NOW!
+        _elnodes[vb][QQ] = NVE[ _geomelem_flag[_dim-1-vb] ][BIQUADR_FE];
+        _elnodes[vb][LL] = NVE[ _geomelem_flag[_dim-1-vb] ][LINEAR_FE];
         _elnodes[vb][KK] = 1;
     }
     //i do not want to use the linear part actually!!
@@ -178,7 +191,7 @@ void MultiLevelMeshTwo::clear ()  {
    double*   x_in = new double[_dim];
    double*   x_out = new double[_dim];
   const uint mesh_ord = (int) GetRuntimeMap().get("mesh_ord");
-  const uint el_nds = GetGeomEl(elem_dim-1,mesh_ord)._elnds;
+  const uint el_nds = NVE[ _geomelem_flag[elem_dim-1] ][BIQUADR_FE];
 
       for (uint n=0;n < el_nds ;n++) {
 	
@@ -283,7 +296,7 @@ if ( VB !=  topdata[1] )  {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: th
   XDMFWriter::read_UIhdf5(file_id, "/ELNODES_VB",&_type_FEM[0]);
 
   for (int vb=0; vb<VB;vb++) {
-if (_type_FEM[vb] !=  GetGeomEl(_dim-1-vb,QQ)._elnds )  {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the element type of the mesh is" <<
+if (_type_FEM[vb] !=  NVE[ _geomelem_flag[_dim-1-vb] ][BIQUADR_FE] )  {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the element type of the mesh is" <<
    "different from the element type as given by the GeomEl" << std::endl; abort(); }
   }
   
@@ -395,7 +408,7 @@ for (int vb=0; vb < VB; vb++)    {
 // ===========================================
   _el_map=new uint*[VB];
 for (int vb=0; vb < VB; vb++)    {
-  _el_map[vb]=new uint [_off_el[vb][_NoSubdom*_NoLevels]*GetGeomEl(_dim-1-vb,mesh_ord)._elnds];
+  _el_map[vb]=new uint [_off_el[vb][_NoSubdom*_NoLevels]*NVE[ _geomelem_flag[_dim-1-vb] ][BIQUADR_FE]];
   std::ostringstream elName; elName << "/ELEMS/VB" << vb  <<"/CONN";
   XDMFWriter::read_UIhdf5(file_id,elName.str().c_str(),_el_map[vb]);
 }
@@ -476,7 +489,7 @@ void MultiLevelMeshTwo::PrintConnVBLinear(hid_t file, const uint Level, const ui
    uint *gl_conn;
   
     uint icount=0;
-    uint mode = GetGeomEl(_dim-1-vb,QQ)._elnds;
+    uint mode = NVE[ _geomelem_flag[_dim-1-vb] ][BIQUADR_FE];
     uint n_elements = _n_elements_vb_lev[vb][Level];
     uint nsubel, nnodes;
 

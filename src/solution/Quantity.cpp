@@ -106,7 +106,7 @@ void Quantity::FunctionDof(CurrentQuantity& myvect, const double t, const double
   const uint space_dim = myvect.GetCurrentElem()._mesh.get_dim();
   double* xp = new double[space_dim]; 
   const uint mesh_ord = (int) myvect.GetCurrentElem()._mesh.GetRuntimeMap().get("mesh_ord");    
-  const uint offset   =       myvect.GetCurrentElem()._mesh.GetGeomEl(myvect.GetCurrentElem().GetDim()-1,mesh_ord)._elnds;
+  const uint offset   =       NVE[ _qtymap._mesh._geomelem_flag[myvect.GetCurrentElem().GetDim()-1] ][BIQUADR_FE];
 
 //=====the Function
   double* func = new double[myvect._dim];

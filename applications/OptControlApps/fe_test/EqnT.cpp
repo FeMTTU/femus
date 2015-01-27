@@ -109,7 +109,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
   CurrentQuantity xyz_refbox(currgp);  //no quantity
     xyz_refbox._dim      = space_dim;
     xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-    xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+    xyz_refbox._ndof     = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
     xyz_refbox.Allocate();
 
    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
@@ -345,7 +345,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   CurrentQuantity xyz_refbox(currgp);  //no quantity
     xyz_refbox._dim      = space_dim;
     xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-    xyz_refbox._ndof     = _mesh.GetGeomEl(currelem.GetDim()-1,xyz_refbox._FEord)._elnds;
+    xyz_refbox._ndof     = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
     xyz_refbox.Allocate();
 
    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];

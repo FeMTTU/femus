@@ -228,7 +228,7 @@ private:
 
 };
 
-//vertexes,edges,faces,interior,element,element+derivatives
+//vertices,edges,faces,interior,element,element+derivatives
   const unsigned NVE[6][5]= {
     {8,20,27,1,4},  //hex
     {4,10,10,1,4},   //tet

@@ -36,7 +36,7 @@
 #include "SystemTwo.hpp"
 #include "NumericVector.hpp"
 #include "FEElemBase.hpp"
-
+#include "FETypeEnum.hpp"
 
 
 namespace femus {
@@ -866,8 +866,8 @@ void XDMFWriter::write_system_solutions(const std::string namefile, const MultiL
     // ========= LINEAR ================
     // =================================
     uint elnds[QL_NODES];
-    elnds[QQ] = mesh->GetGeomEl(mesh->get_dim()-1-VV,QQ)._elnds;
-    elnds[LL] = mesh->GetGeomEl(mesh->get_dim()-1-VV,LL)._elnds;
+    elnds[QQ] = mesh->_elnodes[VV][QQ];
+    elnds[LL] = mesh->_elnodes[VV][LL];
     double* elsol_c = new double[elnds[LL]];
     
     for (uint ivar=0; ivar < dofmap->_nvars[LL]; ivar++)        {
@@ -1003,8 +1003,8 @@ void XDMFWriter::read_system_solutions(const std::string namefile, const MultiLe
 
     // reading loop over system varables
     for (uint ivar=0;ivar< dofmap->_nvars[LL]+dofmap->_nvars[QQ]; ivar++) {
-        uint el_nds = mesh->GetGeomEl(mesh->get_dim()-1-VV,QQ)._elnds;
-        if (ivar >= dofmap->_nvars[QQ]) el_nds = mesh->GetGeomEl(mesh->get_dim()-1-VV,LL)._elnds; // quad and linear
+        uint el_nds = mesh->_elnodes[VV][QQ];
+        if (ivar >= dofmap->_nvars[QQ]) el_nds = mesh->_elnodes[VV][LL];
         // reading ivar param
        std::ostringstream grname; grname << eqn->_var_names[ivar] << "_" << "LEVEL" << Level;
         XDMFWriter::read_Dhdf5(file_id,grname.str(),sol);
@@ -1013,7 +1013,7 @@ void XDMFWriter::read_system_solutions(const std::string namefile, const MultiLe
         // storing  ivar variables (in parallell)
         for (int iel=0;iel <  mesh->_off_el[0][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels]
                 -mesh->_off_el[0][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1]; iel++) {
-            uint elem_gidx=(iel+mesh->_off_el[0][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1])*mesh->GetGeomEl(mesh->get_dim()-1-VV,mesh_ord)._elnds;
+            uint elem_gidx=(iel+mesh->_off_el[0][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1])*mesh->_elnodes[VV][mesh_ord];
             for (uint i=0; i<el_nds; i++) { // linear and quad
                 int k=mesh->_el_map[0][elem_gidx+i];   // the global node
                 eqn->_x[mesh->_NoLevels-1]->set(dofmap->GetDof(mesh->_NoLevels-1,QQ,ivar,k), sol[k]*Irefval); // set the field
@@ -1158,8 +1158,8 @@ void XDMFWriter::write_system_solutions_bc(const std::string namefile, const Mul
     // ========= LINEAR ==================
     // ===================================
     uint elnds[QL_NODES];
-    elnds[QQ] =mesh->GetGeomEl(mesh->get_dim()-1-VV,QQ)._elnds;
-    elnds[LL] =mesh->GetGeomEl(mesh->get_dim()-1-VV,LL)._elnds;
+    elnds[QQ] =mesh->_elnodes[VV][QQ];
+    elnds[LL] =mesh->_elnodes[VV][LL];
     double *elsol_c = new double[elnds[LL]];
 
     for (uint ivar=0; ivar < eqn->_dofmap._nvars[LL]; ivar++)   {
@@ -1263,9 +1263,6 @@ void XDMFWriter::write_system_solutions_bc(const std::string namefile, const Mul
 // ==================================================================
 void XDMFWriter::PrintMultimeshXdmfBiquadratic(const std::string output_path, const MultiLevelMeshTwo &mesh) {
 
-  const uint BIQUADR_TYPEEL = 3;
-  const uint BIQUADR_FE     = 2;
-  
      if (mesh._iproc==0) {
   
     std::string multimesh = DEFAULT_MULTIMESH;

@@ -83,6 +83,7 @@ public:
     uint _elnodes[VB][QL];            ///  [VB]
     short unsigned _eltype_flag[VB];  ///  [VB]
     std::vector <std::string>  _geomelem_id;  ///   [DIM]
+    std::vector < short unsigned >  _geomelem_flag;  ///   [DIM]
     
 // ==== ELEMENTS ====
     uint** _n_elements_vb_lev; ///  [VB][L]      Number of Elements                                   
@@ -104,11 +105,11 @@ public:
     int**   _off_nd;               //ONLY VV  [QL][L+P*_NoLevels]  ///ONLY USED FOR THE EQUATION /// FROM DOF TO NODE: offsets for dofs      --->   // on the fine node numbering, the nodes corresponding to linear dofs are numbered FIRST... or not?                  
                                    
 // NODES ===============
-    int    _n_nodes;       //ONLY VV //of the WHOLE REFINEMENT! i.e. the FINE ones! //LMFILLS 
-    int ** _n_nodes_sl_ql; //ONLY VV //[QL]
-    int *  _elxnode;              //number of elements per node of the fine mesh
-    double *    _nd_coords_libm;  //node coordinates  //FILLED ACCORDING TO LIBMESH NODE ID ORDERING; then I'll print them according to my FEMUS ordering
-    NodeSto**   _nd_sto;                       //FILLED ACCORDING TO LIBMESH NODE ID ORDERING
+    int    _n_nodes;              //ONLY VV //of the WHOLE REFINEMENT! i.e. the FINE ones! //LMFILLS 
+    int ** _n_nodes_sl_ql;        //ONLY VV //[QL]
+    int *  _elxnode;              //ONLY VV //number of elements per node of the fine mesh
+    double *    _nd_coords_libm;  //ONLY VV //node coordinates  //FILLED ACCORDING TO LIBMESH NODE ID ORDERING; then I'll print them according to my FEMUS ordering
+    NodeSto**   _nd_sto;          //ONLY VV //FILLED ACCORDING TO LIBMESH NODE ID ORDERING
     int    _maxelxnode;
     
     // HDF5 FIELDS ===============
