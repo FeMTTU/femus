@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
   std::vector<Gauss>   qrule;
   qrule.reserve(mesh.get_dim());
   for (int idim=0;idim < mesh.get_dim(); idim++) { 
-          Gauss qrule_temp(mesh.GetGeomEl(idim,mesh._mesh_order)._geomel_id.c_str(),"fifth");
+          Gauss qrule_temp(mesh._geomelem_id[idim].c_str(),"fifth");
          qrule.push_back(qrule_temp);
   }
   
@@ -123,9 +123,9 @@ int main(int argc, char** argv) {
   
   for (int idim=0;idim < mesh.get_dim(); idim++) { 
     for (int fe=0; fe<QL; fe++) {
-       FEElemType_vec[idim][fe] = elem_type::build(mesh.GetGeomEl(idim,mesh._mesh_order)._geomel_id.c_str(),fe,
+       FEElemType_vec[idim][fe] = elem_type::build(mesh._geomelem_id[idim].c_str(),fe,
 						            qrule[idim].GetGaussOrderString().c_str());
-       FEElemType_vec[idim][fe]->EvaluateShapeAtQP(mesh.GetGeomEl(idim,mesh._mesh_order)._geomel_id.c_str(),fe);
+       FEElemType_vec[idim][fe]->EvaluateShapeAtQP(mesh._geomelem_id[idim].c_str(),fe);
      }
     }  
   

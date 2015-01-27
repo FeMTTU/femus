@@ -40,7 +40,7 @@ GenCase::GenCase(const Files& files_in,const FemusInputParser<double> & map_in, 
 {
 
    _feelems.resize(QL);
-  for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(GetGeomEl(get_dim()-1-VV,_mesh_order)._geomel_id.c_str(),fe);
+  for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(_geomelem_id[get_dim()-1].c_str(),fe);
  
 }
 
@@ -157,14 +157,14 @@ void GenCase::GenerateCoarseMesh() const {
             libMesh::ElemType libmname; //convert the _geomel name into the libmesh geom el name
 
             if ( get_dim() == 2 ) {
-            if (      GetGeomEl(get_dim()-1,_mesh_order)._geomel_id == "quad") libmname = libMesh::QUAD9;
-            else if ( GetGeomEl(get_dim()-1,_mesh_order)._geomel_id == "tri")  libmname = libMesh::TRI6;
+            if (      _geomelem_id[get_dim()-1] == "quad") libmname = libMesh::QUAD9;
+            else if ( _geomelem_id[get_dim()-1] == "tri")  libmname = libMesh::TRI6;
             libMesh::MeshTools::Generation::build_square
             (*_msh_coarse, ninterv[0], ninterv[1], box->_lb[0], box->_le[0], box->_lb[1], box->_le[1],libmname);
 	    }
 	    else if ( get_dim() == 3 ) {
-            if (      GetGeomEl(get_dim()-1,_mesh_order)._geomel_id == "hex")  libmname = libMesh::HEX27;
-            else if ( GetGeomEl(get_dim()-1,_mesh_order)._geomel_id == "tet")  libmname = libMesh::TET10;
+            if (      _geomelem_id[get_dim()-1] == "hex")  libmname = libMesh::HEX27;
+            else if ( _geomelem_id[get_dim()-1] == "tet")  libmname = libMesh::TET10;
             libMesh::MeshTools::Generation::build_cube
             (*_msh_coarse,  ninterv[0], ninterv[1],  ninterv[2], box->_lb[0], box->_le[0], box->_lb[1], box->_le[1], box->_lb[2], box->_le[2],libmname);
 	    }

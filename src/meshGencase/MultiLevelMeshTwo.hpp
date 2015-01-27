@@ -68,23 +68,22 @@ public:
 
 //attributes    ************************************
     
-    ElemStoVol**  _el_sto;                 //FILLED ACCORDING TO "how the Libmesh mesh iterator runs" which may not be id in general i think...
 
     const uint _dim;               ///< spatial dimension
     const uint _mesh_order;
-   
-// ===== ABSTRACT GEOMEL =====
-    uint      _type_FEM[VB];          ///  [VB] //just for check
-    short unsigned _eltype_flag[VB];  ///  [VB]
-    uint _elnodes[VB][QL];            ///  [VB]
-    
 // ==== PARALLEL ===
     uint _iproc;       /// current subdomain
     uint _NoSubdom;    /// Number of subdomains (subdomain P)
 
 // ==== MULTIGRID ====
     uint _NoLevels;          /// Number of Levels (L)
-
+   
+// ===== ABSTRACT GEOMEL =====
+    uint      _type_FEM[VB];          ///  [VB] //just for check
+    uint _elnodes[VB][QL];            ///  [VB]
+    short unsigned _eltype_flag[VB];  ///  [VB]
+    std::vector <std::string>  _geomelem_id;  ///   [DIM]
+    
 // ==== ELEMENTS ====
     uint** _n_elements_vb_lev; ///  [VB][L]      Number of Elements                                   
     int**  _off_el;            ///  [VB][L+P*_NoLevels]  offset of element numbers       
@@ -94,6 +93,7 @@ public:
     int ** _n_elements_sl_vb;        ///  [VB][]
     int    _n_elements_sum_levs[VB]; ///  [VB]   //of the WHOLE REFINEMENT! //LMFILLS 
     int ** _el_child_to_fath;        /// [LEV][IELEM]      //for every level, it gives you the father
+    ElemStoVol**  _el_sto;                 //FILLED ACCORDING TO "how the Libmesh mesh iterator runs" which may not be id in general i think...
     ElemStoBdry** _el_sto_b;               //FILLED with OUR ORDERING, "as we find them during the volume elem loop"
 
 // ===== NODES ======

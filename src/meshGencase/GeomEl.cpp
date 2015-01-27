@@ -9,14 +9,12 @@
 
 namespace femus {
 
-// NRE[6]= {8,8,8,4,4,2};
 
-  GeomEl::GeomEl(const std::string geomel_id_in, const uint mesh_order) :
-     _geomel_id(geomel_id_in)    {
+  GeomEl::GeomEl(const std::string geomel_id_in, const uint mesh_order) {
 
      if (mesh_order != QQ && mesh_order != LL ) { std::cout << "Wrong mesh order" << std::endl; abort(); }  
      
-     if (!strcmp(_geomel_id.c_str(),"hex")) {  
+     if (!strcmp(geomel_id_in.c_str(),"hex")) {  
       switch(mesh_order) {
       case(QQ):
           _elnds = 27; break;
@@ -25,11 +23,11 @@ namespace femus {
         } 
       } //end hex
 
-      else if (!strcmp(_geomel_id.c_str(),"wedge")) {
+      else if (!strcmp(geomel_id_in.c_str(),"wedge")) {
            std::cout << "Not supported yet" << std::endl; abort();
       } //end wedge
       
-      else if (!strcmp(_geomel_id.c_str(),"tet")) {
+      else if (!strcmp(geomel_id_in.c_str(),"tet")) {
       switch(mesh_order) {
       case(QQ):
           _elnds = 10; break;
@@ -38,7 +36,7 @@ namespace femus {
         } 
       } //end tet
       
-      else if (!strcmp(_geomel_id.c_str(),"quad")) {
+      else if (!strcmp(geomel_id_in.c_str(),"quad")) {
       switch(mesh_order) {
       case(QQ):
           _elnds = 9; break;
@@ -47,7 +45,7 @@ namespace femus {
         } 
       }  //end quad
       
-      else if (!strcmp(_geomel_id.c_str(),"tri")) {
+      else if (!strcmp(geomel_id_in.c_str(),"tri")) {
       switch(mesh_order) {
       case(QQ):
           _elnds = 6; break;
@@ -56,7 +54,7 @@ namespace femus {
         } 
       }  //end tri
       
-      else if (!strcmp(_geomel_id.c_str(),"line")) { 
+      else if (!strcmp(geomel_id_in.c_str(),"line")) { 
       switch(mesh_order) {
       case(QQ):
           _elnds = 3; break;

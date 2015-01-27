@@ -19,7 +19,6 @@ public:
      GeomEl(const std::string geomel_id, const uint mesh_order);
     ~GeomEl();
     
-    std::string _geomel_id;      
     uint      _elnds;     //NVE[6][5]
 
 };

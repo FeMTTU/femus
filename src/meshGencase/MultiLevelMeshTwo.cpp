@@ -47,36 +47,35 @@ MultiLevelMeshTwo::MultiLevelMeshTwo (const Files& files_in, const FemusInputPar
 	 
     _mesh_file.assign(mesh_file_in); 
 
-    std::vector <std::string>  geomelem; 
-    geomelem.resize(_dim);
+    _geomelem_id.resize(_dim);
     
     if (_eltype_flag[VV] == HEX)  {
       _eltype_flag[BB] = QUAD;
-      geomelem[0] = "line";
-      geomelem[1] = "quad";
-      geomelem[2] = "hex";
+      _geomelem_id[0] = "line";
+      _geomelem_id[1] = "quad";
+      _geomelem_id[2] = "hex";
     }
     else if (_eltype_flag[VV] == TET)  {
       _eltype_flag[BB] = TRI;
-      geomelem[0] = "line";
-      geomelem[1] = "tri";
-      geomelem[2] = "tet";
+      _geomelem_id[0] = "line";
+      _geomelem_id[1] = "tri";
+      _geomelem_id[2] = "tet";
     }
     else if (_eltype_flag[VV] == WEDGE)  {
        std::cout << "Wedge not supported" << std::endl; abort(); 
     }
     else if (_eltype_flag[VV] == QUAD)  {
       _eltype_flag[BB] = LINE;
-      geomelem[0] = "line";
-      geomelem[1] = "quad";
+      _geomelem_id[0] = "line";
+      _geomelem_id[1] = "quad";
     }
     else if (_eltype_flag[VV] == TRI)  {
       _eltype_flag[BB] = LINE;
-      geomelem[0] = "line";
-      geomelem[1] = "tri";
+      _geomelem_id[0] = "line";
+      _geomelem_id[1] = "tri";
     }
     else if (_eltype_flag[VV] == LINE)  {
-      geomelem[0] = "line";
+      _geomelem_id[0] = "line";
       std::cout << "Geom Elem not supported" << std::endl; abort();
     }
     else  {  std::cout << "Geom Elem not supported" << std::endl; abort();   }
@@ -97,7 +96,7 @@ if ( _dim == 1  && (map_in.get("geomel_type") != LINE ) )
 
     for (int d=0; d < _dim; d++) { 
     for (int ql=0;ql < QL_NODES; ql++)  { 
-          GeomEl geomel_temp( geomelem[d], ql ); 
+          GeomEl geomel_temp( _geomelem_id[d], ql ); 
          _GeomEl[d].push_back(geomel_temp); 
        }
     }

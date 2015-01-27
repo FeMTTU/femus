@@ -807,7 +807,7 @@ void XDMFWriter::PrintXDMFGeometry(std::ofstream& outfstream,
 void XDMFWriter::write_system_solutions(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn) {
 
   std::vector<FEElemBase*> fe_in(QL);
-  for (int fe=0; fe<QL; fe++)    fe_in[fe] = FEElemBase::build(mesh->GetGeomEl(mesh->get_dim()-1-VV,mesh->_mesh_order)._geomel_id.c_str(),fe);
+  for (int fe=0; fe<QL; fe++)    fe_in[fe] = FEElemBase::build(mesh->_geomelem_id[mesh->get_dim()-1-VV].c_str(),fe);
   
   
     hid_t file_id = H5Fopen(namefile.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
@@ -1107,7 +1107,7 @@ void XDMFWriter::read_system_solutions(const std::string namefile, const MultiLe
 void XDMFWriter::write_system_solutions_bc(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk ) {
   
   std::vector<FEElemBase*> fe_in(QL);
-  for (int fe=0; fe<QL; fe++)    fe_in[fe] = FEElemBase::build(mesh->GetGeomEl(mesh->get_dim()-1-VV,mesh->_mesh_order)._geomel_id.c_str(),fe);
+  for (int fe=0; fe<QL; fe++)    fe_in[fe] = FEElemBase::build(mesh->_geomelem_id[mesh->get_dim()-1-VV].c_str(),fe);
 
     hid_t file_id = H5Fopen(namefile.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
 
