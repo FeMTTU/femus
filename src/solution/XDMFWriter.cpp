@@ -1445,6 +1445,82 @@ void XDMFWriter::PrintXDMFGridVBLinear(std::ofstream& out,
     return;
 }
 
+
+void XDMFWriter::PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh) {
+
+    if (mesh._iproc==0)   {
+
+        //   const uint Level = /*_NoLevels*/_n_levels-1;
+        const uint n_children = /*4*(_dim-1)*/1;  /*here we have quadratic cells*/
+
+        uint      n_elements = mesh._n_elements_vb_lev[vb][Level];
+        int *ucoord;
+        ucoord=new int[n_elements*n_children];
+        int cel=0;
+        for (int iproc=0; iproc < mesh._NoSubdom; iproc++) {
+            for (int iel = mesh._off_el[vb][Level  + iproc*mesh._NoLevels];
+                     iel < mesh._off_el[vb][Level+1 + iproc*mesh._NoLevels]; iel++) {
+                for (uint is=0; is< n_children; is++)
+                    ucoord[cel*n_children + is]=iproc;
+                cel++;
+            }
+        }
+
+        hid_t file_id = H5Fopen(filename.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
+        hsize_t dimsf[2];
+        dimsf[0] = n_elements*n_children;
+        dimsf[1] = 1;
+        std::ostringstream name;
+        name << "/PID/PID_VB" << vb << "_L" << Level;
+
+        XDMFWriter::print_Ihdf5(file_id,name.str(),dimsf,ucoord);
+
+        H5Fclose(file_id);
+
+    }
+
+    return;
+}
+
+
+// ===============================================================
+/// this function is done only by _iproc == 0!
+/// it prints the PID index on the cells of the linear mesh
+void XDMFWriter::PrintSubdomFlagOnLinCells(std::string filename, const MultiLevelMeshTwo & mesh) {
+  
+ if (mesh._iproc==0)   {
+
+  hid_t file_id = H5Fopen(filename.c_str(),H5F_ACC_RDWR, H5P_DEFAULT); 
+
+  for (uint l=0; l< mesh._NoLevels; l++) {
+    
+  const uint n_children = 4*( mesh._dim-1);
+  uint n_elements =  mesh._n_elements_vb_lev[VV][l];
+  int *ucoord;   ucoord=new int[n_elements*n_children];
+  int cel=0;
+  for (uint iproc=0; iproc <  mesh._NoSubdom; iproc++) {
+    for (int iel =   mesh._off_el[VV][ l   + iproc* mesh._NoLevels];
+              iel <  mesh._off_el[VV][ l+1 + iproc* mesh._NoLevels]; iel++) {
+      for (uint is=0; is< n_children; is++)      
+	ucoord[cel*n_children + is]=iproc;
+      cel++;
+    }
+  }
+  
+  hsize_t dimsf[2]; dimsf[0] = n_elements*n_children; dimsf[1] = 1;
+  std::ostringstream pidname; pidname << "PID" << "_LEVEL" << l;
+  
+  XDMFWriter::print_Ihdf5(file_id,pidname.str(),dimsf,ucoord);
+  
+     } //end levels
+  
+    H5Fclose(file_id);
+    
+  }
+  
+return;
+}
+
  
 } //end namespace femus
 

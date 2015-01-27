@@ -167,7 +167,6 @@ void MultiLevelMeshTwo::clear ()  {
     delete[] _xyz;
     delete[] _NoNodesXLev;
     delete[] _off_nd;
-    delete[] _type_FEM;
     
   return;
 }
@@ -282,8 +281,7 @@ if ( VB !=  topdata[1] )  {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: th
 // FEM element DoF number
 // =====================
 //Reading this is not very useful... well, it may be a check  
-  _type_FEM=new uint[VB];
-  XDMFWriter::read_UIhdf5(file_id, "/ELNODES_VB",_type_FEM);
+  XDMFWriter::read_UIhdf5(file_id, "/ELNODES_VB",&_type_FEM[0]);
 
   for (int vb=0; vb<VB;vb++) {
 if (_type_FEM[vb] !=  GetGeomEl(_dim-1-vb,QQ)._elnds )  {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the element type of the mesh is" <<
@@ -424,44 +422,8 @@ for (int vb=0; vb < VB; vb++)    {
 
 
 
-//=============================================
-//this is different from the Mesh class function
-//because we are using quadratic elements
-void MultiLevelMeshTwo::PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std::string filename) const {
 
-    if (_iproc==0)   {
 
-        //   const uint Level = /*_NoLevels*/_n_levels-1;
-        const uint n_children = /*4*(_dim-1)*/1;  /*here we have quadratic cells*/
-
-        uint      n_elements = _n_elements_vb_lev[vb][Level];
-        int *ucoord;
-        ucoord=new int[n_elements*n_children];
-        int cel=0;
-        for (int iproc=0; iproc<_NoSubdom; iproc++) {
-            for (int iel = _off_el[vb][Level  + iproc*_NoLevels];
-                     iel < _off_el[vb][Level+1 + iproc*_NoLevels]; iel++) {
-                for (uint is=0; is< n_children; is++)
-                    ucoord[cel*n_children + is]=iproc;
-                cel++;
-            }
-        }
-
-        hid_t file_id = H5Fopen(filename.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
-        hsize_t dimsf[2];
-        dimsf[0] = n_elements*n_children;
-        dimsf[1] = 1;
-        std::ostringstream name;
-        name << "/PID/PID_VB" << vb << "_L" << Level;
-
-        XDMFWriter::print_Ihdf5(file_id,name.str(),dimsf,ucoord);
-
-        H5Fclose(file_id);
-
-    }
-
-    return;
-}
 
 
 
@@ -662,43 +624,7 @@ void MultiLevelMeshTwo::PrintConnLinVB(hid_t file, const uint Level, const uint 
 
 
 
-// ===============================================================
-/// this function is done only by _iproc == 0!
-/// it prints the PID index on the cells of the linear mesh
-void MultiLevelMeshTwo::PrintSubdomFlagOnLinCells(std::string filename) const {
-  
- if (_iproc==0)   {
 
-  hid_t file_id = H5Fopen(filename.c_str(),H5F_ACC_RDWR, H5P_DEFAULT); 
-
-  for (uint l=0; l<_NoLevels; l++) {
-    
-  const uint n_children = 4*(_dim-1);
-  uint n_elements = _n_elements_vb_lev[VV][l];
-  int *ucoord;   ucoord=new int[n_elements*n_children];
-  int cel=0;
-  for (uint iproc=0; iproc < _NoSubdom; iproc++) {
-    for (int iel =  _off_el[VV][ l   + iproc*_NoLevels];
-              iel < _off_el[VV][ l+1 + iproc*_NoLevels]; iel++) {
-      for (uint is=0; is< n_children; is++)      
-	ucoord[cel*n_children + is]=iproc;
-      cel++;
-    }
-  }
-  
-  hsize_t dimsf[2]; dimsf[0] = n_elements*n_children; dimsf[1] = 1;
-  std::ostringstream pidname; pidname << "PID" << "_LEVEL" << l;
-  
-  XDMFWriter::print_Ihdf5(file_id,pidname.str(),dimsf,ucoord);
-  
-     } //end levels
-  
-    H5Fclose(file_id);
-    
-  }
-  
-return;
-}
 
 
 

@@ -54,10 +54,8 @@ public:
     //======= Print/read functions =======
     void ReadMeshFileAndNondimensionalize();
     void PrintForVisualizationAllLEVAllVB() const;
-    void PrintSubdomFlagOnLinCells(std::string filename) const;
     void PrintConnLinAllLEVAllVB() const;
     void PrintConnLinVB(hid_t file, const uint Level, const uint vb) const; 
-    void PrintSubdomFlagOnQuadrCells(const int vb, const int Level,std::string filename) const;
 
     //======= mesh generation functions ====
     void ElemChildToFather();
@@ -76,9 +74,9 @@ public:
     const uint _mesh_order;
    
 // ===== ABSTRACT GEOMEL =====
-    uint*      _type_FEM;         //just for check
-    short unsigned _eltype_flag[VB];
-    uint _elnodes[VB][QL];
+    uint      _type_FEM[VB];          ///  [VB] //just for check
+    short unsigned _eltype_flag[VB];  ///  [VB]
+    uint _elnodes[VB][QL];            ///  [VB]
     
 // ==== PARALLEL ===
     uint _iproc;       /// current subdomain
@@ -88,26 +86,26 @@ public:
     uint _NoLevels;          /// Number of Levels (L)
 
 // ==== ELEMENTS ====
-    uint** _n_elements_vb_lev;        /// Number of Elements        [VB][L]                                     
-    int**  _off_el;            /// offset of element numbers [VB][L+P*_NoLevels]         
-    uint** _el_map;            /// Connectivity map         [VB][L+P*_NoLevels]
+    uint** _n_elements_vb_lev; ///  [VB][L]      Number of Elements                                   
+    int**  _off_el;            ///  [VB][L+P*_NoLevels]  offset of element numbers       
+    uint** _el_map;            ///  [VB][L+P*_NoLevels]  Connectivity map     
     int**  _el_bdry_to_vol;
 // ELEMENTS =============
-    int ** _n_elements_sl_vb;
-    int    _n_elements_sum_levs[VB];    //of the WHOLE REFINEMENT! //LMFILLS 
-    int ** _el_child_to_fath;              //for every level, it gives you the father
+    int ** _n_elements_sl_vb;        ///  [VB][]
+    int    _n_elements_sum_levs[VB]; ///  [VB]   //of the WHOLE REFINEMENT! //LMFILLS 
+    int ** _el_child_to_fath;        /// [LEV][IELEM]      //for every level, it gives you the father
     ElemStoBdry** _el_sto_b;               //FILLED with OUR ORDERING, "as we find them during the volume elem loop"
 
 // ===== NODES ======
-    uint*   _NoNodesXLev;            ///VOLUME, at the EXTENDED LEVELS
-    double* _xyz;                    ///< node coordinates
-    uint**  _Qnode_lev_Qnode_fine;   ///ONLY USED FOR THE EQUATION /// FROM DOF TO NODE: Q or L dofs by using an add aux level [_NoLevels+1][NoNodes[L]] //ONLY VOLUME  //NO PROC info, these are DOFS in the "SERIALIZED NUMBERING"
-    int**  _Qnode_fine_Qnode_lev;   ///Un nodo fine puo' o non appartenere ad un certo livello... quindi devo continuare a mantenere i -1, altrimenti dovrei fare un search che fa perdere tempo
-    int**   _off_nd;                 ///ONLY USED FOR THE EQUATION /// FROM DOF TO NODE: offsets for dofs  [QL][L+P*_NoLevels]                     //ONLY VOLUME
-                                   // on the fine node numbering, the nodes corresponding to linear dofs are numbered FIRST... or not?
+    double* _xyz;                  //ONLY VV  ///< node coordinates
+    uint*   _NoNodesXLev;          //ONLY VV  /// [LEV] ///VOLUME, at the EXTENDED LEVELS
+    uint**  _Qnode_lev_Qnode_fine; //ONLY VV   ///ONLY USED FOR THE EQUATION /// FROM DOF TO NODE: Q or L dofs by using an add aux level [_NoLevels+1][NoNodes[L]]  //NO PROC info, these are DOFS in the "SERIALIZED NUMBERING"
+    int**  _Qnode_fine_Qnode_lev;  //ONLY VV   ///Un nodo fine puo' o non appartenere ad un certo livello... quindi devo continuare a mantenere i -1, altrimenti dovrei fare un search che fa perdere tempo
+    int**   _off_nd;               //ONLY VV  [QL][L+P*_NoLevels]  ///ONLY USED FOR THE EQUATION /// FROM DOF TO NODE: offsets for dofs      --->   // on the fine node numbering, the nodes corresponding to linear dofs are numbered FIRST... or not?                  
+                                   
 // NODES ===============
-    int    _n_nodes;       //of the WHOLE REFINEMENT! i.e. the FINE ones! //LMFILLS 
-    int ** _n_nodes_sl_ql; 
+    int    _n_nodes;       //ONLY VV //of the WHOLE REFINEMENT! i.e. the FINE ones! //LMFILLS 
+    int ** _n_nodes_sl_ql; //ONLY VV //[QL]
     int *  _elxnode;              //number of elements per node of the fine mesh
     double *    _nd_coords_libm;  //node coordinates  //FILLED ACCORDING TO LIBMESH NODE ID ORDERING; then I'll print them according to my FEMUS ordering
     NodeSto**   _nd_sto;                       //FILLED ACCORDING TO LIBMESH NODE ID ORDERING

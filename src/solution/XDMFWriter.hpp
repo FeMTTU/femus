@@ -102,6 +102,9 @@ public:
    /** */
   static void PrintXDMFTopologyGeometryLinear(std::ofstream& out,const unsigned Level, const unsigned vb, const MultiLevelMeshTwo& mesh);
 
+  static void PrintSubdomFlagOnQuadrCells(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh);
+  
+  static void PrintSubdomFlagOnLinCells(std::string filename, const MultiLevelMeshTwo & mesh);
   
 private:
   
