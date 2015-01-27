@@ -74,10 +74,10 @@ public:
 
     const uint _dim;               ///< spatial dimension
     const uint _mesh_order;
-    short unsigned _eltype_flag[VB];
-
+   
 // ===== ABSTRACT GEOMEL =====
     uint*      _type_FEM;         //just for check
+    short unsigned _eltype_flag[VB];
     uint _elnodes[VB][QL];
     
 // ==== PARALLEL ===

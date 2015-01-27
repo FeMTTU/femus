@@ -17,7 +17,6 @@ namespace femus {
      if (mesh_order != QQ && mesh_order != LL ) { std::cout << "Wrong mesh order" << std::endl; abort(); }  
      
      if (!strcmp(_geomel_id.c_str(),"hex")) {  
-           _dim = 3;
            n_se = NRE[HEX];
       switch(mesh_order) {
       case(QQ):
@@ -32,7 +31,6 @@ namespace femus {
       } //end wedge
       
       else if (!strcmp(_geomel_id.c_str(),"tet")) {
-           _dim = 3;
            n_se = NRE[TET];
       switch(mesh_order) {
       case(QQ):
@@ -43,7 +41,6 @@ namespace femus {
       } //end tet
       
       else if (!strcmp(_geomel_id.c_str(),"quad")) {
-           _dim = 2;
            n_se = NRE[QUAD];
       switch(mesh_order) {
       case(QQ):
@@ -54,7 +51,6 @@ namespace femus {
       }  //end quad
       
       else if (!strcmp(_geomel_id.c_str(),"tri")) {
-           _dim = 2;
            n_se = NRE[TRI];
       switch(mesh_order) {
       case(QQ):
@@ -65,7 +61,6 @@ namespace femus {
       }  //end tri
       
       else if (!strcmp(_geomel_id.c_str(),"line")) { 
-           _dim = 1;
            n_se = NRE[LINE];
       switch(mesh_order) {
       case(QQ):

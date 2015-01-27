@@ -19,7 +19,6 @@ public:
      GeomEl(const std::string geomel_id, const uint mesh_order);
     ~GeomEl();
     
-    uint _dim;               /*THIS CANNOT BE CONST OTHERWISE I CANNOT DO A VECTOR WITH A PUSH_BACK (or I should create a copy constructor...)*/
     std::string _geomel_id;      
     uint      _elnds;     //NVE[6][5]
 
