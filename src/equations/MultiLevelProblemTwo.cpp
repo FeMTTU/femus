@@ -222,7 +222,7 @@ void MultiLevelProblemTwo::PrintSolXDMF(const uint t_step,const double curr_time
 
 	out << "<Time Value =\"" << curr_time << "\" /> \n";
 
-	XDMFWriter::PrintXDMFTopologyGeometry(out,l,VV,_mesh);
+	XDMFWriter::PrintXDMFTopologyGeometryLinear(out,l,VV,_mesh);
 
 	MultiLevelProblemTwo::const_iterator pos1   = _equations.begin();
         MultiLevelProblemTwo::const_iterator pos1_e = _equations.end();
@@ -444,7 +444,7 @@ void MultiLevelProblemTwo::PrintCaseXDMF(const uint t_init) const {
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
         // TOPOLOGY GEOMETRY ===========
-        XDMFWriter::PrintXDMFTopologyGeometry(out,l,VV,_mesh);
+        XDMFWriter::PrintXDMFTopologyGeometryLinear(out,l,VV,_mesh);
 
 	// ===== PID ======
         std::ostringstream  pid_name; pid_name << "PID" << "_LEVEL" << l;

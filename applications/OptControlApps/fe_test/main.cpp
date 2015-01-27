@@ -75,7 +75,7 @@
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 	  
           mesh.ReadMeshFileAndNondimensionalize(); 
-	  XDMFWriter::PrintMultimeshXdmf(files._output_path,mesh);
+	  XDMFWriter::PrintMultimeshXdmfBiquadratic(files._output_path,mesh);
           mesh.PrintForVisualizationAllLEVAllVB();
 
   // ======  QRule ================================
@@ -159,12 +159,11 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
   time_loop.TransientLoop(equations_map);
 
 // at this point, the run has been completed 
-  files.PrintRunForRestart(DEFAULT_LAST_RUN);/*(iproc==0)*/  //============= prepare default for next restart ==========  
+  files.PrintRunForRestart(DEFAULT_LAST_RUN);/*(iproc==0)*/
   files.log_petsc();
   
 // ============  clean ================================
-  // here we clean all that we allocated as new in the main
-  equations_map.clean();  //deallocates the map of equations
+  equations_map.clean();
   mesh.clear();
   
   

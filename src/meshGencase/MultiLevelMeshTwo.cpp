@@ -41,36 +41,43 @@ MultiLevelMeshTwo::MultiLevelMeshTwo (const Files& files_in, const FemusInputPar
          _files(files_in),
          _mesh_rtmap(map_in),
          _dim(map_in.get("dimension")),
-         _mesh_order(map_in.get("mesh_ord"))  {
+         _mesh_order(map_in.get("mesh_ord")) {
 
+    _eltype_flag[VV]= map_in.get("geomel_type");
+	 
     _mesh_file.assign(mesh_file_in); 
 
     std::vector <std::string>  geomelem; 
     geomelem.resize(_dim);
     
-    if (map_in.get("geomel_type") == HEX)  {
+    if (_eltype_flag[VV] == HEX)  {
+      _eltype_flag[BB] = QUAD;
       geomelem[0] = "line";
       geomelem[1] = "quad";
       geomelem[2] = "hex";
     }
-    else if (map_in.get("geomel_type") == TET)  {
+    else if (_eltype_flag[VV] == TET)  {
+      _eltype_flag[BB] = TRI;
       geomelem[0] = "line";
       geomelem[1] = "tri";
       geomelem[2] = "tet";
     }
-    else if (map_in.get("geomel_type") == WEDGE)  {
+    else if (_eltype_flag[VV] == WEDGE)  {
        std::cout << "Wedge not supported" << std::endl; abort(); 
     }
-    else if (map_in.get("geomel_type") == QUAD)  {
+    else if (_eltype_flag[VV] == QUAD)  {
+      _eltype_flag[BB] = LINE;
       geomelem[0] = "line";
       geomelem[1] = "quad";
     }
-    else if (map_in.get("geomel_type") == TRI)  {
+    else if (_eltype_flag[VV] == TRI)  {
+      _eltype_flag[BB] = LINE;
       geomelem[0] = "line";
       geomelem[1] = "tri";
     }
-    else if (map_in.get("geomel_type") == LINE)  {
+    else if (_eltype_flag[VV] == LINE)  {
       geomelem[0] = "line";
+      std::cout << "Geom Elem not supported" << std::endl; abort();
     }
     else  {  std::cout << "Geom Elem not supported" << std::endl; abort();   }
     
@@ -504,7 +511,8 @@ void MultiLevelMeshTwo::PrintConnLinAllLEVAllVB() const {
 
 void MultiLevelMeshTwo::PrintConnLinVB(hid_t file, const uint Level, const uint vb) const {
   
-   int conn[8][8];   uint *gl_conn;
+   int conn[8][8];  //TODO this is the largest dimension, bad programming
+   uint *gl_conn;
   
     uint icount=0;
     uint mode = GetGeomEl(_dim-1-vb,QQ)._elnds;
@@ -601,6 +609,7 @@ void MultiLevelMeshTwo::PrintConnLinVB(hid_t file, const uint Level, const uint 
       conn[1][0] = 4; conn[1][1] =1; conn[1][2] = 5; conn[1][3] = 8;
       conn[2][0]= 8;  conn[2][1] =5; conn[2][2] = 2; conn[2][3] = 6;
       conn[3][0] = 7; conn[3][1] = 8;conn[3][2] = 6; conn[3][3] = 3;
+      nsubel=4;nnodes=4;
       break;
      // -----------------------------------------
     default:   // interior 3D
@@ -624,7 +633,8 @@ void MultiLevelMeshTwo::PrintConnLinVB(hid_t file, const uint Level, const uint 
            el <_off_el[vb][iproc*_NoLevels+Level+1]; el++) {
         for (uint se = 0; se < nsubel; se++) {
           for (uint i = 0; i < nnodes; i++) {
-	    uint Qnode_fine = _el_map[vb][el*mode+conn[se][i]];
+	    const uint pos = el*mode+conn[se][i];
+	    uint Qnode_fine = _el_map[vb][pos];
 	    uint Qnode_lev = _Qnode_fine_Qnode_lev[Level][Qnode_fine];
             gl_conn[icount] = Qnode_lev;
 	    icount++;

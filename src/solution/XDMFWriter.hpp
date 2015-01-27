@@ -46,9 +46,6 @@ public:
     /** write a wrapper file for paraview to open all the files of an history toghether */
     void write_solution_wrapper(const char type[]) const;
 
-   /** */
-   static void PrintXDMFTopologyGeometry(std::ofstream& out,const unsigned Level, const unsigned vb, const MultiLevelMeshTwo& mesh);
-
   //==================    
    static void write_system_solutions_bc(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk);      
    static void write_system_solutions(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn);   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
@@ -92,15 +89,23 @@ public:
 				     int data_dim_one,
 				     int data_dim_two); 
   
-  static void PrintMultimeshXdmf(const std::string output_path, const MultiLevelMeshTwo & mesh);
+  static void PrintMultimeshXdmfBiquadratic(const std::string output_path, const MultiLevelMeshTwo & mesh);
   
   static void PrintXDMFAllLEVAllVB(const std::string output_path, const MultiLevelMeshTwo & mesh);
   
-  static void PrintXDMFGridVB(std::ofstream& out, std::ostringstream& top_file,
+  static void PrintXDMFGridVBLinear(std::ofstream& out, std::ostringstream& top_file,
 			      std::ostringstream& geom_file,
 			      const uint Level,
 			      const uint vb,
 			      const MultiLevelMeshTwo & mesh);
+  
+   /** */
+  static void PrintXDMFTopologyGeometryLinear(std::ofstream& out,const unsigned Level, const unsigned vb, const MultiLevelMeshTwo& mesh);
+
+  
+private:
+  
+   static const std::string type_el[4][6];
     
 
 };

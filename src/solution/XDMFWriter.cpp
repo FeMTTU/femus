@@ -41,6 +41,10 @@
 
 namespace femus {
 
+  const std::string XDMFWriter::type_el[4][6] = {{"Hexahedron","Tetrahedron","Wedge","Quadrilateral","Triangle","Edge"},
+                                {"Hexahedron_20","Tetrahedron_10","Not_implemented","Quadrilateral_8","Triangle_6","Edge_3"},
+			        {"Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented"},
+                                {"Hexahedron_27","Not_implemented","Not_implemented","Quadrilateral_9","Triangle_6","Edge_3"}};
 
   
 XDMFWriter::XDMFWriter(MultiLevelSolution& ml_probl): Writer(ml_probl)
@@ -74,16 +78,10 @@ void XDMFWriter::write_system_solutions(const char order[], std::vector<std::str
     index_nd=2;
   }
 
-  const std::string type_el[4][6] = {{"Hexahedron","Tetrahedron","Wedge","Quadrilateral","Triangle","Edge"},
-                                {"Hexahedron_20","Tetrahedron_10","Not_implemented","Quadrilateral_8","Triangle_6","Edge_3"},
-			        {"Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented"},
-                                {"Hexahedron_27","Not_implemented","Not_implemented","Quadrilateral_9","Triangle_6","Edge_3"}};
-			 
-  
   //I assume that the mesh is not mixed
   std::string type_elem;
   unsigned elemtype = _ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementType(0);
-  type_elem = type_el[index][elemtype];
+  type_elem = XDMFWriter::type_el[index][elemtype];
   
   if (type_elem.compare("Not_implemented") == 0) 
   {
@@ -404,38 +402,6 @@ void XDMFWriter::write_solution_wrapper(const char type[]) const {
 }
 
 
-//print topology and geometry, useful for both case.xmf and sol.xmf
- void XDMFWriter::PrintXDMFTopologyGeometry(std::ofstream& out,const unsigned Level, const unsigned vb, const MultiLevelMeshTwo& mesh)  {
-
-#ifdef HAVE_HDF5 
-    //Mesh
-    uint n_elements = mesh._n_elements_vb_lev[vb][Level];
-
-    std::string basemesh   = DEFAULT_BASEMESH;
-    std::string connlin    = DEFAULT_CONNLIN;
-    std::string     ext_h5 = DEFAULT_EXT_H5;
-    
-    //connectivity
-    std::ostringstream connfile; connfile <<  basemesh << connlin <<  ext_h5;
-    std::ostringstream hdf5_field; hdf5_field << "MSHCONN_VB_" << vb << "_LEV_" << Level;
-    //coordinates
-    std::ostringstream coord_file; coord_file <<  basemesh <<  ext_h5;
-    
-    XDMFWriter::PrintXDMFTopology(out,connfile.str(),hdf5_field.str(),
-			             mesh.GetGeomEl(mesh.get_dim()-1-vb,LL)._xdmf_name,
-			  n_elements*mesh.GetGeomEl(mesh.get_dim()-1-vb, mesh._mesh_order).n_se,
-			  n_elements*mesh.GetGeomEl(mesh.get_dim()-1-vb, mesh._mesh_order).n_se,
-			             mesh.GetGeomEl(mesh.get_dim()-1-vb,LL)._elnds);
-    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
-    XDMFWriter::PrintXDMFGeometry(out,coord_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[Level],1);
-
-#endif
-    
-    return;
-}
-
-
-
 // =============================================================
 hid_t XDMFWriter::read_Dhdf5(hid_t file,const std::string & name,double* data) {
 
@@ -448,23 +414,35 @@ hid_t XDMFWriter::read_Dhdf5(hid_t file,const std::string & name,double* data) {
 // ===========================================================================
 hid_t XDMFWriter::read_Ihdf5(hid_t file,const std::string & name,int* data) {
 
+#ifdef HAVE_HDF5 
+
   hid_t  dataset = H5Dopen(file,name.c_str(), H5P_DEFAULT);
   hid_t status=H5Dread(dataset,H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,data);
-  H5Dclose(dataset);
+  H5Dclose(dataset);  
   return status;
+  
+#endif
+  
 }
 
 // ===========================================================================
 hid_t XDMFWriter::read_UIhdf5(hid_t file,const std::string & name,uint* data) {
 
+#ifdef HAVE_HDF5 
+
   hid_t  dataset = H5Dopen(file,name.c_str(), H5P_DEFAULT);
   hid_t status=H5Dread(dataset,H5T_NATIVE_UINT,H5S_ALL,H5S_ALL,H5P_DEFAULT,data);
   H5Dclose(dataset);
   return status;
+  
+#endif
+  
 }
 
 //=========================================
 hid_t XDMFWriter::print_Dhdf5(hid_t file,const std::string & name, hsize_t dimsf[],double* data) {
+
+#ifdef HAVE_HDF5 
 
   hid_t dataspace = H5Screate_simple(2,dimsf, NULL);
   hid_t dataset = H5Dcreate(file,name.c_str(),H5T_NATIVE_DOUBLE,
@@ -473,12 +451,17 @@ hid_t XDMFWriter::print_Dhdf5(hid_t file,const std::string & name, hsize_t dimsf
   H5Dclose(dataset);
   H5Sclose(dataspace);
   return status;
+  
+#endif
+  
 }
 
 /// Print int data into dhdf5 file
 //TODO can we make a TEMPLATE function that takes either "double" or "int" and uses
 //either H5T_NATIVE_DOUBLE or H5T_NATIVE_INT? Everything else is the same
 hid_t XDMFWriter::print_Ihdf5(hid_t file,const std::string & name, hsize_t dimsf[],int* data) {
+
+#ifdef HAVE_HDF5 
 
   hid_t dataspace = H5Screate_simple(2,dimsf, NULL);
   hid_t dataset = H5Dcreate(file,name.c_str(),H5T_NATIVE_INT,
@@ -487,10 +470,15 @@ hid_t XDMFWriter::print_Ihdf5(hid_t file,const std::string & name, hsize_t dimsf
   H5Dclose(dataset);
   H5Sclose(dataspace);
   return status;
+  
+#endif
+  
 }
 
 //H5T_NATIVE_UINT
 hid_t XDMFWriter::print_UIhdf5(hid_t file,const std::string & name, hsize_t dimsf[],uint* data) {
+
+#ifdef HAVE_HDF5 
 
   hid_t dataspace = H5Screate_simple(2,dimsf, NULL);
   hid_t dataset = H5Dcreate(file,name.c_str(),H5T_NATIVE_UINT,
@@ -499,6 +487,9 @@ hid_t XDMFWriter::print_UIhdf5(hid_t file,const std::string & name, hsize_t dims
   H5Dclose(dataset);
   H5Sclose(dataspace);
   return status;
+  
+#endif
+  
 }
 
 
@@ -1270,8 +1261,11 @@ void XDMFWriter::write_system_solutions_bc(const std::string namefile, const Mul
 
 
 // ==================================================================
-void XDMFWriter::PrintMultimeshXdmf(const std::string output_path, const MultiLevelMeshTwo &mesh) {
+void XDMFWriter::PrintMultimeshXdmfBiquadratic(const std::string output_path, const MultiLevelMeshTwo &mesh) {
 
+  const uint BIQUADR_TYPEEL = 3;
+  const uint BIQUADR_FE     = 2;
+  
      if (mesh._iproc==0) {
   
     std::string multimesh = DEFAULT_MULTIMESH;
@@ -1315,10 +1309,12 @@ void XDMFWriter::PrintMultimeshXdmf(const std::string output_path, const MultiLe
 
             std::ostringstream hdf5_field;
             hdf5_field << mesh._elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
-            XDMFWriter::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),mesh.GetGeomEl(mesh._dim-1-vb,QQ)._xdmf_name,
-				  mesh._n_elements_vb_lev[vb][ilev],
-				  mesh._n_elements_vb_lev[vb][ilev],
-				  mesh._elnodes[vb][QQ]);
+            XDMFWriter::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),
+			             XDMFWriter::type_el[BIQUADR_TYPEEL][mesh._eltype_flag[vb]],
+			                            mesh._n_elements_vb_lev[vb][ilev],
+			                            mesh._n_elements_vb_lev[vb][ilev],
+			                            NVE[mesh._eltype_flag[vb]][BIQUADR_FE]);
+	    
             std::ostringstream coord_lev; coord_lev << "_L" << ilev; 
 	    XDMFWriter::PrintXDMFGeometry(out,top_file.str(),mesh._nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[ilev],1);
             std::ostringstream pid_field;
@@ -1372,7 +1368,7 @@ void XDMFWriter::PrintMultimeshXdmf(const std::string output_path, const MultiLe
   
           for(uint vb=0;vb< VB; vb++)  
 	    for(uint l=0; l< mesh._NoLevels; l++)
-	      PrintXDMFGridVB(out,top_file,geom_file,l,vb,mesh);
+	      PrintXDMFGridVBLinear(out,top_file,geom_file,l,vb,mesh);
    
    out << "</Domain> \n" << "</Xdmf> \n";
    out.close ();
@@ -1383,10 +1379,12 @@ void XDMFWriter::PrintMultimeshXdmf(const std::string output_path, const MultiLe
 
 
 // ========================================================
-void XDMFWriter::PrintXDMFGridVB(std::ofstream& out,
+void XDMFWriter::PrintXDMFGridVBLinear(std::ofstream& out,
 			      std::ostringstream& top_file,
 			      std::ostringstream& geom_file, const uint Level, const uint vb, const MultiLevelMeshTwo & mesh) {
 
+    const uint LIN_MESH = 0;
+    
   std::string grid_mesh[VB];
   grid_mesh[VV]="Volume";
   grid_mesh[BB]="Boundary";
@@ -1398,10 +1396,10 @@ void XDMFWriter::PrintXDMFGridVB(std::ofstream& out,
     out << "<Grid Name=\"" << grid_mesh[vb].c_str() << "_L" << Level << "\"> \n";
     
    XDMFWriter::PrintXDMFTopology(out,top_file.str(),hdf_field.str(),
-			     mesh.GetGeomEl(mesh._dim-1-vb,LL)._xdmf_name,
-			 nel*mesh.GetGeomEl(mesh._dim-1-vb,mesh._mesh_order).n_se,
-			 nel*mesh.GetGeomEl(mesh._dim-1-vb,mesh._mesh_order).n_se,
-			     mesh.GetGeomEl(mesh._dim-1-vb,LL)._elnds);    
+			             XDMFWriter::type_el[LIN_MESH][mesh._eltype_flag[vb]],
+			                            nel*NRE[mesh._eltype_flag[vb]],
+			                            nel*NRE[mesh._eltype_flag[vb]],
+			                                NVE[mesh._eltype_flag[vb]][LIN_MESH]);
 
    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
    XDMFWriter::PrintXDMFGeometry(out,geom_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[Level],1);
@@ -1411,6 +1409,41 @@ void XDMFWriter::PrintXDMFGridVB(std::ofstream& out,
    return;
 }
 
+
+
+//print topology and geometry, useful for both case.xmf and sol.xmf
+ void XDMFWriter::PrintXDMFTopologyGeometryLinear(std::ofstream& out,const unsigned Level, const unsigned vb, const MultiLevelMeshTwo& mesh)  {
+
+#ifdef HAVE_HDF5 
+
+    const uint LIN_MESH = 0;
+    
+    //Mesh
+    uint n_elements = mesh._n_elements_vb_lev[vb][Level];
+
+    std::string basemesh   = DEFAULT_BASEMESH;
+    std::string connlin    = DEFAULT_CONNLIN;
+    std::string ext_h5     = DEFAULT_EXT_H5;
+    
+    //connectivity
+    std::ostringstream connfile; connfile <<  basemesh << connlin <<  ext_h5;
+    std::ostringstream hdf5_field; hdf5_field << "MSHCONN_VB_" << vb << "_LEV_" << Level;
+    //coordinates
+    std::ostringstream coord_file; coord_file <<  basemesh <<  ext_h5;
+    
+    XDMFWriter::PrintXDMFTopology(out,connfile.str(),hdf5_field.str(),
+			             XDMFWriter::type_el[LIN_MESH][mesh._eltype_flag[vb]],
+			                     n_elements*NRE[mesh._eltype_flag[vb]],
+			                     n_elements*NRE[mesh._eltype_flag[vb]],
+			                                NVE[mesh._eltype_flag[vb]][LIN_MESH]);
+
+    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
+    XDMFWriter::PrintXDMFGeometry(out,coord_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[Level],1);
+
+#endif
+    
+    return;
+}
 
  
 } //end namespace femus

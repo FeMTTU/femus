@@ -88,7 +88,7 @@
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 	  
           mesh.ReadMeshFileAndNondimensionalize(); 
-	  XDMFWriter::PrintMultimeshXdmf(files._output_path,mesh);
+	  XDMFWriter::PrintMultimeshXdmfBiquadratic(files._output_path,mesh);
           mesh.PrintForVisualizationAllLEVAllVB();
 	  
   //gencase is dimensionalized, meshtwo is nondimensionalized

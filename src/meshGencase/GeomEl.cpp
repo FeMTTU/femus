@@ -21,9 +21,9 @@ namespace femus {
            n_se = NRE[HEX];
       switch(mesh_order) {
       case(QQ):
-          _elnds = 27; _xdmf_name = "Hexahedron_27";  break;
+          _elnds = 27; break;
       case(LL):
-          _elnds = 8;  _xdmf_name = "Hexahedron";     break;
+          _elnds = 8;  break;
         } 
       } //end hex
 
@@ -36,9 +36,9 @@ namespace femus {
            n_se = NRE[TET];
       switch(mesh_order) {
       case(QQ):
-          _elnds = 10; _xdmf_name = "Tetrahedron_10";  break;
+          _elnds = 10; break;
       case(LL):
-          _elnds = 4;  _xdmf_name = "Tetrahedron";     break;
+          _elnds = 4;  break;
         } 
       } //end tet
       
@@ -47,9 +47,9 @@ namespace femus {
            n_se = NRE[QUAD];
       switch(mesh_order) {
       case(QQ):
-          _elnds = 9; _xdmf_name = "Quadrilateral_9";  break;
+          _elnds = 9; break;
       case(LL):
-          _elnds = 4; _xdmf_name = "Quadrilateral";     break;
+          _elnds = 4; break;
         } 
       }  //end quad
       
@@ -58,9 +58,9 @@ namespace femus {
            n_se = NRE[TRI];
       switch(mesh_order) {
       case(QQ):
-          _elnds = 6; _xdmf_name = "Triangle_6";  break;
+          _elnds = 6; break;
       case(LL):
-          _elnds = 3; _xdmf_name = "Triangle";     break;
+          _elnds = 3; break;
         } 
       }  //end tri
       
@@ -69,9 +69,9 @@ namespace femus {
            n_se = NRE[LINE];
       switch(mesh_order) {
       case(QQ):
-          _elnds = 3; _xdmf_name = "Edge_3";  break;
+          _elnds = 3; break;
       case(LL):
-          _elnds = 2; _xdmf_name = "Edge";     break;
+          _elnds = 2; break;
         } 
       }  //end line
       

@@ -74,8 +74,9 @@ public:
 
     const uint _dim;               ///< spatial dimension
     const uint _mesh_order;
+    short unsigned _eltype_flag[VB];
 
-// ===== ABSTRACT GEOMEL(S) =====
+// ===== ABSTRACT GEOMEL =====
     uint*      _type_FEM;         //just for check
     uint _elnodes[VB][QL];
     
@@ -149,7 +150,6 @@ public:
     double _Lref;          ///Reference length for non-dimensionalization
      
     std::vector< std::vector<GeomEl> >  _GeomEl;   //[DIM][QL_NODES] 
-    
 
  };
 
