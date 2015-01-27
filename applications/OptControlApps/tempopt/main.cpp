@@ -24,7 +24,7 @@
 #include "Quantity.hpp"
 #include "QTYnumEnum.hpp"
 #include "Box.hpp"  //for the DOMAIN
-
+#include "XDMFWriter.hpp"
 
 // application 
 #include "Temp_conf.hpp"
@@ -88,7 +88,7 @@
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 	  
           mesh.ReadMeshFileAndNondimensionalize(); 
-	  mesh.PrintMultimeshXdmf();
+	  XDMFWriter::PrintMultimeshXdmf(files._output_path,mesh);
           mesh.PrintForVisualizationAllLEVAllVB();
 	  
   //gencase is dimensionalized, meshtwo is nondimensionalized

@@ -23,7 +23,7 @@
 #include "QTYnumEnum.hpp"
 #include "Box.hpp"  //for the DOMAIN
 #include "LinearEquationSolver.hpp"
-
+#include "XDMFWriter.hpp"
 
 // application 
 #include "TempQuantities.hpp"
@@ -75,7 +75,7 @@
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 	  
           mesh.ReadMeshFileAndNondimensionalize(); 
-	  mesh.PrintMultimeshXdmf();
+	  XDMFWriter::PrintMultimeshXdmf(files._output_path,mesh);
           mesh.PrintForVisualizationAllLEVAllVB();
 
   // ======  QRule ================================

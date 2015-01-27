@@ -1267,6 +1267,151 @@ void XDMFWriter::write_system_solutions_bc(const std::string namefile, const Mul
 
 
 
+
+
+// ==================================================================
+void XDMFWriter::PrintMultimeshXdmf(const std::string output_path, const MultiLevelMeshTwo &mesh) {
+
+     if (mesh._iproc==0) {
+  
+    std::string multimesh = DEFAULT_MULTIMESH;
+    std::string ext_xdmf  = DEFAULT_EXT_XDMF;
+    std::string basemesh  = DEFAULT_BASEMESH;
+    std::string ext_h5    = DEFAULT_EXT_H5;
+
+    std::ostringstream inmesh_xmf;
+    inmesh_xmf << output_path << "/" << multimesh << ext_xdmf;
+    std::ofstream out(inmesh_xmf.str().c_str());
+
+    std::ostringstream top_file;
+    top_file << basemesh << ext_h5;
+
+    if (out.fail()) {
+        std::cout << "MultiLevelMeshTwo::PrintMultimeshXdmf: The file is not open" << std::endl;
+        abort();
+    }
+
+//it seems that there is no control on this, if the directory isn't there
+//it doesnt give problems
+
+    //strings for VB
+    std::string  meshname[VB];
+    meshname[VV]="VolumeMesh";
+    meshname[BB]="BoundaryMesh";
+
+    out << "<?xml version=\"1.0\" ?> \n";
+    out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" \n";
+//   out << "[ <!ENTITY HeavyData \"mesh.h5\"> ] ";
+    out << "> \n";
+    out << " \n";
+    out << "<Xdmf> \n";
+    out << "<Domain> \n";
+
+    for (int vb=0;vb< VB;vb++) {
+
+        for (int ilev = 0; ilev < mesh._NoLevels; ilev++) {
+	  
+            out << "<Grid Name=\"" << meshname[vb] << ilev <<"\"> \n";
+
+            std::ostringstream hdf5_field;
+            hdf5_field << mesh._elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
+            XDMFWriter::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),mesh.GetGeomEl(mesh._dim-1-vb,QQ)._xdmf_name,
+				  mesh._n_elements_vb_lev[vb][ilev],
+				  mesh._n_elements_vb_lev[vb][ilev],
+				  mesh._elnodes[vb][QQ]);
+            std::ostringstream coord_lev; coord_lev << "_L" << ilev; 
+	    XDMFWriter::PrintXDMFGeometry(out,top_file.str(),mesh._nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[ilev],1);
+            std::ostringstream pid_field;
+            pid_field << "PID/PID_VB"<< vb <<"_L"<< ilev;
+            XDMFWriter::PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",mesh._n_elements_vb_lev[vb][ilev],1);
+
+            out << "</Grid> \n";
+	    
+        }
+    }
+
+    out << "</Domain> \n";
+    out << "</Xdmf> \n";
+    out.close();
+
+    }    //end iproc
+    
+    return;
+}
+
+// ========================================================
+/// It prints the volume/boundary Mesh (connectivity) in Xdmf format
+ //this is where the file mesh.xmf goes: it is a good rule that the
+ //file .xmf and the .h5 it needs should be in the same folder (so that READER and DATA are ALWAYS TOGETHER)
+ //well, there can be MANY READERS for ONE DATA file (e.g. sol.xmf, case.xmf)
+ // or MANY DATA files for  ONE READER,
+ //but if you put ALL THE DATA in THE SAME FOLDER as the READER(s)
+ //then they are always independent and the data will always be readable
+
+ void XDMFWriter::PrintXDMFAllLEVAllVB(const std::string output_path, const MultiLevelMeshTwo & mesh) {
+
+  std::string     basemesh = DEFAULT_BASEMESH;
+  std::string     ext_xdmf = DEFAULT_EXT_XDMF;
+  std::string       ext_h5 = DEFAULT_EXT_H5;
+  std::string      connlin = DEFAULT_CONNLIN;
+
+  std::ostringstream top_file; top_file << basemesh << connlin << ext_h5;
+  std::ostringstream geom_file; geom_file << basemesh << ext_h5;
+
+  std::ostringstream namefile;
+  namefile << output_path << "/" << basemesh << ext_xdmf;
+ 
+  std::ofstream out (namefile.str().c_str());
+
+  out << "<?xml version=\"1.0\" ?> \n";
+  out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" \n"; 
+  out << " [ <!ENTITY HeavyData \"mesh.h5 \"> ] ";
+  out << ">\n"; 
+  out << " \n";
+  out << "<Xdmf> \n" << "<Domain> \n";
+  
+          for(uint vb=0;vb< VB; vb++)  
+	    for(uint l=0; l< mesh._NoLevels; l++)
+	      PrintXDMFGridVB(out,top_file,geom_file,l,vb,mesh);
+   
+   out << "</Domain> \n" << "</Xdmf> \n";
+   out.close ();
+   
+   return;
+}
+
+
+
+// ========================================================
+void XDMFWriter::PrintXDMFGridVB(std::ofstream& out,
+			      std::ostringstream& top_file,
+			      std::ostringstream& geom_file, const uint Level, const uint vb, const MultiLevelMeshTwo & mesh) {
+
+  std::string grid_mesh[VB];
+  grid_mesh[VV]="Volume";
+  grid_mesh[BB]="Boundary";
+  
+  std::ostringstream hdf_field; hdf_field << "MSHCONN_VB_" << vb << "_LEV_" << Level;
+  
+    uint nel = mesh._n_elements_vb_lev[vb][Level];
+
+    out << "<Grid Name=\"" << grid_mesh[vb].c_str() << "_L" << Level << "\"> \n";
+    
+   XDMFWriter::PrintXDMFTopology(out,top_file.str(),hdf_field.str(),
+			     mesh.GetGeomEl(mesh._dim-1-vb,LL)._xdmf_name,
+			 nel*mesh.GetGeomEl(mesh._dim-1-vb,mesh._mesh_order).n_se,
+			 nel*mesh.GetGeomEl(mesh._dim-1-vb,mesh._mesh_order).n_se,
+			     mesh.GetGeomEl(mesh._dim-1-vb,LL)._elnds);    
+
+   std::ostringstream coord_lev; coord_lev << "_L" << Level; 
+   XDMFWriter::PrintXDMFGeometry(out,geom_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[Level],1);
+    
+    out << "</Grid> \n";  
+
+   return;
+}
+
+
  
 } //end namespace femus
 

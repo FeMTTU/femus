@@ -5,10 +5,8 @@
 #include <cstdlib>
 #include <sstream>
 
-// External library include 
-#include "FEMTTUConfig.h"
-
 // FEMuS
+#include "FEMTTUConfig.h"
 #include "paral.hpp"
 #include "FemusDefault.hpp"
 #include "FemusInit.hpp"
@@ -25,6 +23,7 @@
 #include "Quantity.hpp"
 #include "QTYnumEnum.hpp"
 #include "Box.hpp"  //for the DOMAIN
+#include "XDMFWriter.hpp"
 
 
 // application includes
@@ -106,7 +105,7 @@ int main(int argc, char** argv) {
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 	  
           mesh.ReadMeshFileAndNondimensionalize(); 
-	  mesh.PrintMultimeshXdmf();
+	  XDMFWriter::PrintMultimeshXdmf(files._output_path,mesh);
           mesh.PrintForVisualizationAllLEVAllVB();
       
 // ======  QRule ================================ 

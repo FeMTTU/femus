@@ -55,10 +55,7 @@ public:
     void ReadMeshFileAndNondimensionalize();
     void PrintForVisualizationAllLEVAllVB() const;
     void PrintSubdomFlagOnLinCells(std::string filename) const;
-    void PrintMultimeshXdmf() const;
-    void PrintXDMFAllLEVAllVB() const;
     void PrintConnLinAllLEVAllVB() const;
-    void PrintXDMFGridVB(std::ofstream& out, std::ostringstream& top_file, std::ostringstream& geom_file,const uint Level, const uint vb) const;
     void PrintConnLinVB(hid_t file, const uint Level, const uint vb) const; 
     void PrintSubdomFlagOnQuadrCells(const int vb, const int Level,std::string filename) const;
 
