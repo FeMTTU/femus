@@ -824,7 +824,7 @@ void XDMFWriter::write_system_solutions(const std::string namefile, const MultiL
     int NGeomObjOnWhichToPrint[QL];
     NGeomObjOnWhichToPrint[QQ] = mesh->_NoNodesXLev[Level];
     NGeomObjOnWhichToPrint[LL] = mesh->_NoNodesXLev[Level];
-    NGeomObjOnWhichToPrint[KK] = mesh->_n_elements_vb_lev[VV][Level]*mesh->GetGeomEl(mesh->get_dim()-1-VV,mesh->_mesh_order).n_se;
+    NGeomObjOnWhichToPrint[KK] = mesh->_n_elements_vb_lev[VV][Level]*NRE[mesh->_eltype_flag[VV]];
     
     const uint n_nodes_lev = mesh->_NoNodesXLev[Level];
     double* sol_on_Qnodes  = new double[n_nodes_lev];  //TODO VALGRIND //this is QUADRATIC because it has to hold  either quadratic or linear variables and print them on a QUADRATIC mesh
@@ -956,8 +956,8 @@ void XDMFWriter::write_system_solutions(const std::string namefile, const MultiL
                       - mesh->_off_el[VV][off_proc + Level]; iel++) {
              int elem_lev = iel + sum_elems_prev_sd_at_lev;
 	  int dof_pos_lev = dofmap->GetDof(Level,KK,ivar,elem_lev);   
-      for (uint is=0; is< mesh->GetGeomEl(mesh->get_dim()-1-VV,mesh->_mesh_order).n_se; is++) {      
-	   sol_on_cells[cel*mesh->GetGeomEl(mesh->get_dim()-1-VV,mesh->_mesh_order).n_se + is] = (* eqn->_x_old[Level])(dof_pos_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[KK] ];
+      for (uint is = 0; is < NRE[mesh->_eltype_flag[VV]]; is++) {      
+	   sol_on_cells[cel*NRE[mesh->_eltype_flag[VV]] + is] = (* eqn->_x_old[Level])(dof_pos_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[KK] ];
       }
       cel++;
     }
@@ -1125,7 +1125,7 @@ void XDMFWriter::write_system_solutions_bc(const std::string namefile, const Mul
    int NGeomObjOnWhichToPrint[QL];
     NGeomObjOnWhichToPrint[QQ] = mesh->_NoNodesXLev[Level];
     NGeomObjOnWhichToPrint[LL] = mesh->_NoNodesXLev[Level];
-    NGeomObjOnWhichToPrint[KK] = mesh->_n_elements_vb_lev[VV][Level]*mesh->GetGeomEl(mesh->get_dim()-1-VV,QQ).n_se;
+    NGeomObjOnWhichToPrint[KK] = mesh->_n_elements_vb_lev[VV][Level]*NRE[mesh->_eltype_flag[VV]];
   
     const uint n_nodes_lev = mesh->_NoNodesXLev[Level];
     int* sol_on_Qnodes = new int[n_nodes_lev];  //this vector will contain the values of ONE variable on ALL the QUADRATIC nodes
@@ -1231,8 +1231,8 @@ void XDMFWriter::write_system_solutions_bc(const std::string namefile, const Mul
 	    for (int iel = 0;
               iel <    mesh->_off_el[VV][off_proc + Level+1]
                      - mesh->_off_el[VV][off_proc + Level]; iel++) {
-      for (uint is=0; is< mesh->GetGeomEl(mesh->get_dim()-1-VV,mesh->_mesh_order).n_se; is++) {      
-	sol_on_cells[cel* mesh->GetGeomEl(mesh->get_dim()-1-VV,mesh->_mesh_order).n_se + is] = bc_fe_kk[Level][iel + sum_elems_prev_sd_at_lev + ivar*mesh->_n_elements_vb_lev[VV][Level]]; //this depends on level!
+      for (uint is = 0; is < NRE[mesh->_eltype_flag[VV]]; is++) {      
+	sol_on_cells[cel*NRE[mesh->_eltype_flag[VV]] + is] = bc_fe_kk[Level][iel + sum_elems_prev_sd_at_lev + ivar*mesh->_n_elements_vb_lev[VV][Level]]; //this depends on level!
       }
       cel++;
     }

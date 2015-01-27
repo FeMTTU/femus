@@ -216,7 +216,7 @@ void MultiLevelProblemTwo::PrintSolXDMF(const uint t_step,const double curr_time
         int NGeomObjOnWhichToPrint[QL];
         NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[l];
         NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*_mesh.GetGeomEl(_mesh.get_dim()-1-VV,_mesh._mesh_order).n_se;
+        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*NRE[_mesh._eltype_flag[VV]];
 	  
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
@@ -439,7 +439,7 @@ void MultiLevelProblemTwo::PrintCaseXDMF(const uint t_init) const {
         int NGeomObjOnWhichToPrint[QL];
         NGeomObjOnWhichToPrint[QQ] = _mesh._NoNodesXLev[l];
         NGeomObjOnWhichToPrint[LL] = _mesh._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*_mesh.GetGeomEl( _mesh.get_dim()-1-VV, _mesh._mesh_order ).n_se;
+        NGeomObjOnWhichToPrint[KK] = _mesh._n_elements_vb_lev[VV][l]*NRE[_mesh._eltype_flag[VV]];
 
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 

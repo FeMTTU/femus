@@ -22,9 +22,6 @@ public:
     std::string _geomel_id;      
     uint      _elnds;     //NVE[6][5]
 
-//===== Multigrid   
-    uint n_se;       //NRE[6]             ///< number of subelements 
-    
 };
 
 
