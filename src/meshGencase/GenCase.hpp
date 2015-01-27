@@ -37,7 +37,6 @@ public:
     
     
     void PrintMeshFile() const;
-    void PrintElemVB( hid_t file, uint vb,const std::vector<int> & v_inv_nd , ElemStoBase** elem_sto, const std::vector<std::pair<int,int> >  v_el ) const;
     
     void ElemChildToFather();
     void ReorderElementBySubdLev_VV();

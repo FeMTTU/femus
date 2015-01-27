@@ -63,7 +63,6 @@ public:
     void ComputeNodeMapExtLevels();
 
 //attributes    ************************************
-    
 
     const uint _dim;               ///< spatial dimension
     const uint _mesh_order;
@@ -78,7 +77,7 @@ public:
     uint      _type_FEM[VB];          ///  [VB] //just for check
     uint _elnodes[VB][QL];            ///  [VB]
     short unsigned _eltype_flag[VB];  ///  [VB]
-    std::vector <std::string>  _geomelem_id;  ///   [DIM]
+    std::vector < std::string >  _geomelem_id;       ///   [DIM]
     std::vector < short unsigned >  _geomelem_flag;  ///   [DIM]
     
 // ==== ELEMENTS ====
@@ -107,14 +106,6 @@ public:
     double *    _nd_coords_libm;  //ONLY VV //node coordinates  //FILLED ACCORDING TO LIBMESH NODE ID ORDERING; then I'll print them according to my FEMUS ordering
     NodeSto**   _nd_sto;          //ONLY VV //FILLED ACCORDING TO LIBMESH NODE ID ORDERING
     int    _maxelxnode;
-    
-    // HDF5 FIELDS ===============
-    std::string _nodes_name; //name for the HDF5 dataset
-    std::string _elems_name;   //name for the HDF5 dataset
-//     std::string _nd_coord_folder;  //TODO why seg fault if I use them?!?
-//     std::string _el_pid_name;
-//     std::string _nd_map_FineToLev;
-  
     
    public:    
 // ====== DOMAIN SHAPE (TODO optional => pointer) ----- //if I put it as reference I'd have to initialize it

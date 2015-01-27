@@ -112,11 +112,20 @@ public:
   
   static void PrintConnVBLinear(hid_t file, const uint Level, const uint vb, const MultiLevelMeshTwo& mesh); 
 
+  static void PrintElemVB(hid_t file, const uint vb, const std::vector<int> & nd_libm_fm, ElemStoBase** el_sto_in, const std::vector<std::pair<int,int> >  el_fm_libm_in, const MultiLevelMeshTwo & mesh);  
+  
   /** MATRIX PRINTING */
   static void PrintOneVarMatrixHDF5(const std::string & name, const std::string & groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel );
   
   static void PrintOneVarMGOperatorHDF5(const std::string & filename,const std::string & groupname, uint* n_dofs_lev, int count, int* Op_pos,double* Op_val,int* len,int* len_off, int FELevel_row, int FELevel_col, int fe);
   
+    // HDF5 FIELDS ===============
+   static const std::string _nodes_name; //name for the HDF5 dataset
+   static const std::string _elems_name;   //name for the HDF5 dataset
+//     std::string _nd_coord_folder;  //TODO why seg fault if I use them?!?
+//     std::string _el_pid_name;
+//     std::string _nd_map_FineToLev;
+
 private:
   
    static const std::string type_el[4][6];

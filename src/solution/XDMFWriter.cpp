@@ -46,6 +46,11 @@ namespace femus {
 			        {"Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented"},
                                 {"Hexahedron_27","Not_implemented","Not_implemented","Quadrilateral_9","Triangle_6","Edge_3"}};
 
+  const std::string XDMFWriter::_nodes_name = "/NODES";
+  const std::string XDMFWriter::_elems_name = "/ELEMS";
+//    _nd_coord_folder = "COORD";
+//      _el_pid_name = "PID";
+//     _nd_map_FineToLev = "MAP";
   
 XDMFWriter::XDMFWriter(MultiLevelSolution& ml_probl): Writer(ml_probl)
 {
@@ -1304,7 +1309,7 @@ void XDMFWriter::PrintMultimeshXdmfBiquadratic(const std::string output_path, co
             out << "<Grid Name=\"" << meshname[vb] << ilev <<"\"> \n";
 
             std::ostringstream hdf5_field;
-            hdf5_field << mesh._elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
+            hdf5_field << _elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
             XDMFWriter::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),
 			             XDMFWriter::type_el[BIQUADR_TYPEEL][mesh._eltype_flag[vb]],
 			                            mesh._n_elements_vb_lev[vb][ilev],
@@ -1312,7 +1317,7 @@ void XDMFWriter::PrintMultimeshXdmfBiquadratic(const std::string output_path, co
 			                            NVE[mesh._eltype_flag[vb]][BIQUADR_FE]);
 	    
             std::ostringstream coord_lev; coord_lev << "_L" << ilev; 
-	    XDMFWriter::PrintXDMFGeometry(out,top_file.str(),mesh._nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[ilev],1);
+	    XDMFWriter::PrintXDMFGeometry(out,top_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[ilev],1);
             std::ostringstream pid_field;
             pid_field << "PID/PID_VB"<< vb <<"_L"<< ilev;
             XDMFWriter::PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",mesh._n_elements_vb_lev[vb][ilev],1);
@@ -1710,6 +1715,124 @@ void XDMFWriter::PrintConnVBLinear(hid_t file, const uint Level, const uint vb, 
   
     return;
 }
+
+
+
+// ==========================================================
+//prints conn and stuff for either vol or bdry mesh
+//When you have to construct the connectivity,
+//you go back to the libmesh elem ordering,
+//then you pick the nodes of that element in LIBMESH numbering,
+//then you pick the nodes in femus NUMBERING,
+//and that's it
+void XDMFWriter::PrintElemVB(hid_t file,
+		       const uint vb ,
+		       const std::vector<int> & nd_libm_fm, 
+		       ElemStoBase** el_sto_in,
+		       const std::vector<std::pair<int,int> >  el_fm_libm_in, const MultiLevelMeshTwo & mesh ) {
+
+// const unsigned from_libmesh_to_xdmf[27] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26};  //id
+// const unsigned from_libmesh_to_xdmf[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,21,22,23,24,20,25,26};  //from libmesh to femus
+// const unsigned from_libmesh_to_xdmf[27]    = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,24,22,21,23,20,25,26};  //from libmesh to xdmf
+
+    std::ostringstream name;
+
+    std::string auxvb[VB];
+    auxvb[0]="0";
+    auxvb[1]="1";
+    std::string elems_fem = _elems_name;
+    std::string elems_fem_vb = elems_fem + "/VB" + auxvb[vb];  //VV later
+
+    hid_t subgroup_id = H5Gcreate(file, elems_fem_vb.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    hsize_t dimsf[2];
+    dimsf[0] = 2;
+    dimsf[1] = 1;
+    int ndofm[2];
+    ndofm[0] = mesh._elnodes[vb][QQ];
+    ndofm[1] = mesh._elnodes[vb][LL];
+    XDMFWriter::print_Ihdf5(file,(elems_fem_vb + "/NDOF_FO_F1"), dimsf,ndofm);
+    // NoElements ------------------------------------
+    dimsf[0] = mesh._NoLevels;
+    dimsf[1] = 1;
+    XDMFWriter::print_UIhdf5(file,(elems_fem_vb + "/NExLEV"), dimsf,mesh._n_elements_vb_lev[vb]);
+    // offset
+    dimsf[0] = mesh._NoSubdom*mesh._NoLevels+1;
+    dimsf[1] = 1;
+    XDMFWriter::print_Ihdf5(file,(elems_fem_vb + "/OFF_EL"), dimsf,mesh._off_el[vb]);
+
+    //here you pick all the elements at all levels,
+    //and you print their connectivities according to the libmesh ordering
+    int *tempconn;
+    tempconn=new int[mesh._n_elements_sum_levs[vb]*mesh._elnodes[vb][QQ]]; //connectivity of all levels
+    
+// // //     if (_elnodes[vb][QQ] == 27)  { //HEX27
+// // // 
+// // //        for (int ielem=0;ielem<_n_elements_sum_levs[vb];ielem++) {
+// // //         for (uint inode=0;inode<_elnodes[vb][QQ];inode++) {
+// // //             int el_libm =   el_fm_libm_in[ielem].second;
+// // //             int nd_libm = el_sto_in[el_libm]->_elnds[inode];
+// // //             tempconn[ from_libmesh_to_xdmf[inode] + ielem*_elnodes[vb][QQ] ] = nd_libm_fm[nd_libm];
+// // //         }
+// // //     }      
+// // //     
+// // //     }//HEX27
+// // //     else {
+      
+    for (int ielem=0;ielem<mesh._n_elements_sum_levs[vb];ielem++) {
+        for (uint inode=0;inode<mesh._elnodes[vb][QQ];inode++) {
+            int el_libm =   el_fm_libm_in[ielem].second;
+            int nd_libm = el_sto_in[el_libm]->_elnds[inode];
+            tempconn[inode+ielem*mesh._elnodes[vb][QQ]] = nd_libm_fm[nd_libm];
+        }
+    }
+    
+// // //   }
+  
+    dimsf[0] = mesh._n_elements_sum_levs[vb]*mesh._elnodes[vb][QQ];
+    dimsf[1] = 1;
+    XDMFWriter::print_Ihdf5(file,(elems_fem_vb + "/CONN"), dimsf,tempconn);
+
+    // level connectivity ---------------------------------
+    for (int ilev=0;ilev <mesh._NoLevels; ilev++) {
+
+        int *conn_lev=new int[mesh._n_elements_vb_lev[vb][ilev]*mesh._elnodes[vb][QQ]];  //connectivity of ilev
+
+        
+        int ltot=0;
+        for (int iproc=0;iproc <mesh._NoSubdom; iproc++) {
+            for (int iel = mesh._off_el[vb][iproc*mesh._NoLevels+ilev];
+                     iel < mesh._off_el[vb][iproc*mesh._NoLevels+ilev+1]; iel++) {
+                for (uint inode=0;inode<mesh._elnodes[vb][QQ];inode++) {
+                    conn_lev[ltot*mesh._elnodes[vb][QQ] + inode ] =
+                        tempconn[  iel*mesh._elnodes[vb][QQ] + inode ];
+                }
+                ltot++;
+            }
+        }
+        
+       
+        dimsf[0] = mesh._n_elements_vb_lev[vb][ilev]*mesh._elnodes[vb][QQ];
+        dimsf[1] = 1;
+
+        name.str("");
+        name << elems_fem_vb << "/CONN" << "_L" << ilev ;
+        XDMFWriter::print_Ihdf5(file,name.str(), dimsf,conn_lev);
+        //clean
+        delete []conn_lev;
+
+    }
+
+
+    delete []tempconn;
+
+    H5Gclose(subgroup_id);
+
+    return;
+
+
+}
+
 
 
 // =======================================================================

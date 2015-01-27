@@ -123,14 +123,6 @@ if ( _dim == 1  && (map_in.get("geomel_type") != LINE ) )
     }
     //i do not want to use the linear part actually!!
 
-  
-    _nodes_name = "/NODES";
-    _elems_name = "/ELEMS";
-//    _nd_coord_folder = "COORD";
-//      _el_pid_name = "PID";
-//     _nd_map_FineToLev = "MAP";
-
-
 }
 
 // ========================================================

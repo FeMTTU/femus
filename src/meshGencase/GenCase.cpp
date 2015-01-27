@@ -1936,10 +1936,10 @@ void GenCase::PrintMeshFile() const  {
 //  NODES
 // ===========================================
 // ===========================================
-    hid_t group_id = H5Gcreate(file, _nodes_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t group_id = H5Gcreate(file, XDMFWriter::_nodes_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
 // ++++ NODES/MAP ++++++++++++++++++++++++++++++++++++++++++++++
-    std::string ndmap = _nodes_name + "/MAP";
+    std::string ndmap = XDMFWriter::_nodes_name + "/MAP";
     hid_t subgroup_id = H5Gcreate(file, ndmap.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 // nodes X lev
     std::string ndxlev =  ndmap + "/NDxLEV";
@@ -1987,7 +1987,7 @@ void GenCase::PrintMeshFile() const  {
     
     
     
-    std::string ndcoords = _nodes_name + "/COORD";
+    std::string ndcoords = XDMFWriter::_nodes_name + "/COORD";
     subgroup_id = H5Gcreate(file, ndcoords.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
     // nodes are PRINTED ACCORDING to FEMUS ordering, which is inode, i.e. the INVERSE of v[inode].second
@@ -2029,7 +2029,7 @@ void GenCase::PrintMeshFile() const  {
 // ===========================================
 // ===========================================
 
-    group_id = H5Gcreate(file, _elems_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    group_id = H5Gcreate(file, XDMFWriter::_elems_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
     ElemStoBase** elsto_out;   //TODO delete it!
     elsto_out = new ElemStoBase*[_n_elements_sum_levs[VV]];
@@ -2043,8 +2043,8 @@ void GenCase::PrintMeshFile() const  {
         elstob_out[i]= static_cast<ElemStoBase*>(_el_sto_b[i]);
     }
 
-    PrintElemVB(file,VV,_nd_libm_fm, elsto_out,_el_fm_libm);
-    PrintElemVB(file,BB,_nd_libm_fm, elstob_out,_el_fm_libm_b);
+    XDMFWriter::PrintElemVB(file,VV,_nd_libm_fm, elsto_out,_el_fm_libm,*this);
+    XDMFWriter::PrintElemVB(file,BB,_nd_libm_fm, elstob_out,_el_fm_libm_b,*this);
 
     // ===============
     // print child to father map for all levels for BOUNDARY ELEMENTS
@@ -2052,7 +2052,7 @@ void GenCase::PrintMeshFile() const  {
 
     for (int lev=0;lev<_NoLevels; lev++)  {
         std::ostringstream   bname;
-        bname << _elems_name << "/BDRY_TO_VOL_L" << lev;
+        bname << XDMFWriter::_elems_name << "/BDRY_TO_VOL_L" << lev;
         dimsf[0] = _n_elements_vb_lev[BB][lev];
         dimsf[1] = 1;
         XDMFWriter::print_Ihdf5(file,bname.str(), dimsf,_el_child_to_fath[lev]);
@@ -2324,122 +2324,6 @@ void GenCase::ComputeMaxElXNode() {
     delete []_elxnode;
 
     return;
-}
-
-
-// ==========================================================
-//prints conn and stuff for either vol or bdry mesh
-//When you have to construct the connectivity,
-//you go back to the libmesh elem ordering,
-//then you pick the nodes of that element in LIBMESH numbering,
-//then you pick the nodes in femus NUMBERING,
-//and that's it
-void GenCase::PrintElemVB(hid_t file,
-		       const uint vb ,
-		       const std::vector<int> & nd_libm_fm, 
-		       ElemStoBase** el_sto_in,
-		       const std::vector<std::pair<int,int> >  el_fm_libm_in ) const {
-
-// const unsigned from_libmesh_to_xdmf[27] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26};  //id
-// const unsigned from_libmesh_to_xdmf[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,21,22,23,24,20,25,26};  //from libmesh to femus
-// const unsigned from_libmesh_to_xdmf[27]    = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,24,22,21,23,20,25,26};  //from libmesh to xdmf
-
-    std::ostringstream name;
-
-    std::string auxvb[VB];
-    auxvb[0]="0";
-    auxvb[1]="1";
-    std::string elems_fem = _elems_name;
-    std::string elems_fem_vb = elems_fem + "/VB" + auxvb[vb];  //VV later
-
-    hid_t subgroup_id = H5Gcreate(file, elems_fem_vb.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-
-    hsize_t dimsf[2];
-    dimsf[0] = 2;
-    dimsf[1] = 1;
-    int ndofm[2];
-    ndofm[0]=_elnodes[vb][QQ];
-    ndofm[1]=_elnodes[vb][LL];
-    XDMFWriter::print_Ihdf5(file,(elems_fem_vb + "/NDOF_FO_F1"), dimsf,ndofm);
-    // NoElements ------------------------------------
-    dimsf[0] = _NoLevels;
-    dimsf[1] = 1;
-    XDMFWriter::print_UIhdf5(file,(elems_fem_vb + "/NExLEV"), dimsf,_n_elements_vb_lev[vb]);
-    // offset
-    dimsf[0] = _NoSubdom*_NoLevels+1;
-    dimsf[1] = 1;
-    XDMFWriter::print_Ihdf5(file,(elems_fem_vb + "/OFF_EL"), dimsf,_off_el[vb]);
-
-    //here you pick all the elements at all levels,
-    //and you print their connectivities according to the libmesh ordering
-    int *tempconn;
-    tempconn=new int[_n_elements_sum_levs[vb]*_elnodes[vb][QQ]]; //connectivity of all levels
-    
-// // //     if (_elnodes[vb][QQ] == 27)  { //HEX27
-// // // 
-// // //        for (int ielem=0;ielem<_n_elements_sum_levs[vb];ielem++) {
-// // //         for (uint inode=0;inode<_elnodes[vb][QQ];inode++) {
-// // //             int el_libm =   el_fm_libm_in[ielem].second;
-// // //             int nd_libm = el_sto_in[el_libm]->_elnds[inode];
-// // //             tempconn[ from_libmesh_to_xdmf[inode] + ielem*_elnodes[vb][QQ] ] = nd_libm_fm[nd_libm];
-// // //         }
-// // //     }      
-// // //     
-// // //     }//HEX27
-// // //     else {
-      
-    for (int ielem=0;ielem<_n_elements_sum_levs[vb];ielem++) {
-        for (uint inode=0;inode<_elnodes[vb][QQ];inode++) {
-            int el_libm =   el_fm_libm_in[ielem].second;
-            int nd_libm = el_sto_in[el_libm]->_elnds[inode];
-            tempconn[inode+ielem*_elnodes[vb][QQ]] = nd_libm_fm[nd_libm];
-        }
-    }
-    
-// // //   }
-  
-    dimsf[0] = _n_elements_sum_levs[vb]*_elnodes[vb][QQ];
-    dimsf[1] = 1;
-    XDMFWriter::print_Ihdf5(file,(elems_fem_vb + "/CONN"), dimsf,tempconn);
-
-    // level connectivity ---------------------------------
-    for (int ilev=0;ilev <_NoLevels; ilev++) {
-
-        int *conn_lev=new int[_n_elements_vb_lev[vb][ilev]*_elnodes[vb][QQ]];  //connectivity of ilev
-
-        
-        int ltot=0;
-        for (int iproc=0;iproc <_NoSubdom; iproc++) {
-            for (int iel = _off_el[vb][iproc*_NoLevels+ilev];
-                     iel < _off_el[vb][iproc*_NoLevels+ilev+1]; iel++) {
-                for (uint inode=0;inode<_elnodes[vb][QQ];inode++) {
-                    conn_lev[ltot*_elnodes[vb][QQ] + inode ] =
-                        tempconn[  iel*_elnodes[vb][QQ] + inode ];
-                }
-                ltot++;
-            }
-        }
-        
-       
-        dimsf[0] = _n_elements_vb_lev[vb][ilev]*_elnodes[vb][QQ];
-        dimsf[1] = 1;
-
-        name.str("");
-        name << elems_fem_vb << "/CONN" << "_L" << ilev ;
-        XDMFWriter::print_Ihdf5(file,name.str(), dimsf,conn_lev);
-        //clean
-        delete []conn_lev;
-
-    }
-
-
-    delete []tempconn;
-
-    H5Gclose(subgroup_id);
-
-    return;
-
-
 }
 
 
