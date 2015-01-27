@@ -38,6 +38,7 @@ public:
     
     void PrintMeshFile() const;
     void PrintElemVB( hid_t file, uint vb,const std::vector<int> & v_inv_nd , ElemStoBase** elem_sto, const std::vector<std::pair<int,int> >  v_el ) const;
+    
     void ElemChildToFather();
     void ReorderElementBySubdLev_VV();
     void ReorderElementBySubdLev_BB();
@@ -48,8 +49,6 @@ public:
     void ComputeMatrix();
     void ComputeProl();
     void ComputeRest();
-    void PrintOneVarMatrixHDF5(const std::string & name, const std::string & groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel ) const;
-    void PrintOneVarMGOperatorHDF5(const std::string & filename, const std::string & groupname, uint* n_dofs_lev, int count,int* Rest,double* values,int* len,int* len_off, int FELevel, int FELevel2, int fe) const;
     void CreateMeshStructuresLevSubd();
     void Delete();
 

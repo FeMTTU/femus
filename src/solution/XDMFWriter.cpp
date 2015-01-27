@@ -1710,6 +1710,172 @@ void XDMFWriter::PrintConnVBLinear(hid_t file, const uint Level, const uint vb, 
   
     return;
 }
+
+
+// =======================================================================
+// For every matrix, compute "dimension", "position", "len", "offlen"
+// this function concerns a COUPLE of finite element families, that's it
+// fe_row = rows
+// fe_col = columns
+// the arrays that I print with HDF5 should already be filled at this point and have their dimension explicit
+// the dimension of POS (Mat)        is "count"
+// the dimension of LEN (len)        is "n_dofs_lev_fe[fe_row]+1"
+// the dimension of OFFLEN (len_off) is "n_dofs_lev_fe[fe_row]+1"
+
+void XDMFWriter::PrintOneVarMatrixHDF5(const std::string & name, const std::string & groupname, uint** n_dofs_lev_fe,int count,
+                               int* Mat,int* len,int* len_off,
+                               int fe_row, int fe_col, int* FELevel) {
+
+
+    hid_t file = H5Fopen(name.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
+
+    hsize_t dimsf[2];
+    dimsf[1] = 1;  //for all the cases
+
+    std::ostringstream fe_couple;
+    fe_couple <<  "_F" << fe_row << "_F" << fe_col;
+
+    //==== DIM ========
+    std::ostringstream name0;
+    name0  << groupname << "/" << "DIM" << fe_couple.str();
+    dimsf[0]=2;
+    int rowcln[2];
+    rowcln[0]=n_dofs_lev_fe[fe_row][FELevel[fe_row]]; //row dimension
+    rowcln[1]=n_dofs_lev_fe[fe_col][FELevel[fe_col]]; //column dimension
+    XDMFWriter::print_Ihdf5(file,name0.str().c_str(),dimsf,rowcln);
+
+    //===== POS =======
+    std::ostringstream name1;
+    name1 << groupname << "/"  << "POS" << fe_couple.str();
+    dimsf[0]=count;
+    XDMFWriter::print_Ihdf5(file,name1.str().c_str(),dimsf,Mat);
+
+    //===== LEN =======
+    std::ostringstream name2;
+    name2 << groupname << "/"  << "LEN" << fe_couple.str();
+    dimsf[0]=rowcln[0]+1;
+    XDMFWriter::print_Ihdf5(file,name2.str().c_str(),dimsf,len);
+
+    //==== OFFLEN ========
+    std::ostringstream name3;
+    name3 << groupname << "/"  << "OFFLEN" << fe_couple.str();
+    dimsf[0]= rowcln[0]+1;
+    XDMFWriter::print_Ihdf5(file,name3.str().c_str(),dimsf,len_off);
+
+    H5Fclose(file);  //TODO this file seems to be closed TWICE, here and in the calling function
+    //you open and close the file for every (FE_ROW,FE_COL) couple
+
+    return;
+}
+
+// ===============================================================
+// here pay attention, the EXTENDED LEVELS are not used for distinguishing
+//
+void XDMFWriter::PrintOneVarMGOperatorHDF5(const std::string & filename,const std::string & groupname, uint* n_dofs_lev, int count, int* Op_pos,double* Op_val,int* len,int* len_off, int FELevel_row, int FELevel_col, int fe) {
+
+    hid_t file = H5Fopen(filename.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);  //TODO questo apri interno e' per assicurarsi che il file sia aperto... quello fuori credo che non serva...
+                                                                       // e invece credo che quello serva per CREARE il file, altrimenti non esiste
+
+    hsize_t dimsf[2];
+    dimsf[1] = 1;  //for all the cases
+
+    std::ostringstream fe_family;
+    fe_family <<  "_F" << fe;
+    //==== DIM ========
+    std::ostringstream name0;
+    name0 << groupname << "/" << "DIM" << fe_family.str();
+    dimsf[0] = 2;
+    int rowcln[2]; //for restrictor row is coarse, column is fine
+        rowcln[0] = n_dofs_lev[FELevel_row];
+        rowcln[1] = n_dofs_lev[FELevel_col];
+	
+    XDMFWriter::print_Ihdf5(file,name0.str().c_str(),dimsf,rowcln);
+    //===== POS =======
+    std::ostringstream name1;
+    name1 << groupname << "/" << "POS" << fe_family.str();
+    dimsf[0] = count;
+    XDMFWriter::print_Ihdf5(file,name1.str().c_str(),dimsf,Op_pos);
+    //===== VAL =======
+    std::ostringstream name1b;
+    name1b << groupname << "/" << "VAL" << fe_family.str();
+    dimsf[0] = count;
+    XDMFWriter::print_Dhdf5(file,name1b.str().c_str(),dimsf,Op_val);
+    //===== LEN =======
+    std::ostringstream name2;
+    name2 << groupname << "/" << "LEN" << fe_family.str();
+    dimsf[0] = rowcln[0] + 1;
+    XDMFWriter::print_Ihdf5(file,name2.str().c_str(),dimsf,len);
+    //==== OFFLEN ========
+    std::ostringstream name3;
+    name3 << groupname << "/" << "OFFLEN" << fe_family.str();
+    dimsf[0] = rowcln[0] + 1;
+    XDMFWriter::print_Ihdf5(file,name3.str().c_str(),dimsf,len_off);
+
+
+    //TODO Attenzione!!! Per scrivere una matrice HDF5 la vuole TUTTA INSIEME!!!
+    //QUINDI DEVI FARE IN MODO DA ALLOCARLA SU UNO SPAZIO DI MEMORIA CONTIGUO!!!
+    // per questo devi fare l'allocazione non con i new separati per ogni riga,
+    //perche' in tal modo ogni riga puo' essere allocata in uno spazio di memoria
+    //differente, rompendo la contiguita'!
+    
+    //TODO I must do two template functions out of these
+    
+    //ok let me print also in matrix form, more easily readable
+    //i have a one dimensional array, i want to break it into two dimensional arrays
+    //ok if I just create it it puts only zeros
+    //now i want to extract vectors and in each row put the vector i want
+    //Ok, non lo so , lo faccio alla brutta, traduco il mio vettore lungo 
+    // in una matrice e stampo la matrice
+    int n_cols = 40; //facciamo una roba in grande ora
+    int ** mat_op = new int*[rowcln[0]];
+         mat_op[0] = new int[ rowcln[0]*n_cols ];
+ 
+   int  sum_prev_rows = 0;
+   for (uint i= 0; i< rowcln[0]; i++) { 
+             mat_op[i] = mat_op[0] + i*n_cols;    //sum of pointers, to keep contiguous in memory!!!
+	   for (uint j = 0; j< n_cols; j++) {  
+	       mat_op[i][j]  = 0;
+	     if ( j < (len[i+1] - len[i])) { mat_op[i][j] = Op_pos[ sum_prev_rows + j ]; }
+	  }
+  	     sum_prev_rows +=  (len[i+1] - len[i]);
+    }
+    
+    dimsf[0] = rowcln[0];    dimsf[1] = n_cols;
+    std::ostringstream name4;
+    name4 << groupname << "/" << "POS_MAT" << fe_family.str();
+    XDMFWriter::print_Ihdf5(file,name4.str().c_str(),dimsf,&mat_op[0][0]);
+
+     delete [] mat_op[0];
+     delete [] mat_op;
+
+//===========================    
+    n_cols = 40;
+    double ** mat = new double*[rowcln[0]];
+           mat[0] = new double[ rowcln[0]*n_cols ];
+    
+   sum_prev_rows = 0;
+   for (uint i= 0; i< rowcln[0]; i++) { 
+             mat[i] = mat[0] + i*n_cols;    //sum of pointers, to keep contiguous in memory!!!
+	   for (uint j = 0; j< n_cols; j++) {  
+	       mat[i][j]  = 0;
+	     if ( j < (len[i+1] - len[i])) { mat[i][j] = Op_val[ sum_prev_rows + j ]; }
+	  }
+  	     sum_prev_rows +=  (len[i+1] - len[i]);
+    }
+    
+    dimsf[0] = rowcln[0];    dimsf[1] = n_cols;
+    std::ostringstream name5;
+    name5 << groupname << "/" << "VAL_MAT" << fe_family.str();
+    XDMFWriter::print_Dhdf5(file,name5.str().c_str(),dimsf,&mat[0][0]);
+
+     delete [] mat[0];
+     delete [] mat;
+    
+    
+    H5Fclose(file);
+
+    return;
+}
  
 
  

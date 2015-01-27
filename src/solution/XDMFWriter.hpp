@@ -59,7 +59,7 @@ public:
    static hid_t read_Ihdf5(hid_t file,const std::string & name,int* data);
    static hid_t read_UIhdf5(hid_t file,const std::string & name,uint* data);
 
-  //XDMF  
+  /** MESH PRINTING */
    static void PrintXDMFAttribute(std::ofstream& outstream, 
 				      std::string hdf5_filename, 
 				      std::string hdf5_field,
@@ -112,6 +112,10 @@ public:
   
   static void PrintConnVBLinear(hid_t file, const uint Level, const uint vb, const MultiLevelMeshTwo& mesh); 
 
+  /** MATRIX PRINTING */
+  static void PrintOneVarMatrixHDF5(const std::string & name, const std::string & groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel );
+  
+  static void PrintOneVarMGOperatorHDF5(const std::string & filename,const std::string & groupname, uint* n_dofs_lev, int count, int* Op_pos,double* Op_val,int* len,int* len_off, int FELevel_row, int FELevel_col, int fe);
   
 private:
   
