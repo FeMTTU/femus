@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef _mg_files_h_
-#define _mg_files_h_
+#ifndef __files_hpp__
+#define __files_hpp__
 
 // C++
 #include <map>
@@ -41,20 +41,11 @@ class Files {
 
 public:
   
-  static std::ofstream file_sbuf;  //needed for I/O purposes
-  std::string  _input_path; //this is where the input files are located BEFORE YOU COPY THEM to the OUTTIME DIR!!!!! it has to alternatives in case of restart or not
-  std::string _output_path;
-  std::string _output_time; //this is the OUTTIME DIR!!!
-
-  bool _restart_flag; 
-  
    Files();
   ~Files();
 
 // Directory management =========
          void CheckIODirectories();
-  static void CheckDir(const std::string& dir_name_in, const std::string& my_name_in);
-  static void CheckDirOrAbort(const std::string& dir_name_in, const std::string& my_name_in);
   
 // Copy ========================= 
   void CopyInputFiles() const;
@@ -69,11 +60,38 @@ public:
   static void RedirectCoutFinalize(std::streambuf* sbuf);
          void log_petsc() const;
 
+// get=============
+  std::string  GetOutputPath() const {
+    return _output_path;
+  }
+  
+  std::string  GetInputPath() const {
+    return _input_path;
+  }
+  
+  std::string  GetOutputTime() const {
+    return _output_time;
+  }
+  
+  bool  GetRestartFlag() const {
+    return _restart_flag;
+  }
+ 
 private:
+  
+  static std::ofstream file_sbuf;  //needed for I/O purposes
+  std::string  _input_path; //this is where the input files are located BEFORE YOU COPY THEM to the OUTTIME DIR!!!!! it has to alternatives in case of restart or not
+  std::string _output_path;
+  std::string _output_time; //this is the OUTTIME DIR!!!
+
+  bool _restart_flag; 
+  
   
 // Directory management
          void ComposeOutdirName();
   static void CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in);
+  static void CheckDir(const std::string& dir_name_in, const std::string& my_name_in);
+  static void CheckDirOrAbort(const std::string& dir_name_in, const std::string& my_name_in);
 
 // Copy 
   void CopyFile(std::string  f_in,std::string  f_out) const;

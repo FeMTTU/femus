@@ -129,7 +129,7 @@ void MultiLevelProblemTwo::PrintSolHDF5(const uint t_flag ) const {
         std::string    basesol  = DEFAULT_BASESOL;
         std::string     ext_h5  = DEFAULT_EXT_H5;
         std::ostringstream filename;
-        filename << _files._output_path  << "/" << basesol << "." << setw(ndigits) << setfill('0') << t_flag << ext_h5;
+        filename << _files.GetOutputPath()  << "/" << basesol << "." << setw(ndigits) << setfill('0') << t_flag << ext_h5;
 
         hid_t   file= H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
         H5Fclose(file);
@@ -194,7 +194,7 @@ void MultiLevelProblemTwo::PrintSolXDMF(const uint t_step,const double curr_time
 	for (uint l=0; l < NoLevels; l++) {
 	
 	std::ostringstream filename_xdmf;
-        filename_xdmf << _files._output_path << "/" << basesol << "." << setw(ndigits) << setfill('0') << t_step << "_l" << l << ext_xdmf;
+        filename_xdmf << _files.GetOutputPath() << "/" << basesol << "." << setw(ndigits) << setfill('0') << t_step << "_l" << l << ext_xdmf;
         std::ostringstream hdf_file; hdf_file << basesol << "." << setw(ndigits) << setfill('0') << t_step << ext_h5;
 
 	std::ofstream out(filename_xdmf.str().c_str());
@@ -206,7 +206,7 @@ void MultiLevelProblemTwo::PrintSolXDMF(const uint t_step,const double curr_time
         //  ++++++++++++ Header ++++++++++++++
         out << "<?xml version=\"1.0\" ?> \n";
         out << "<!DOCTYPE Xdmf SYSTEM ";
-        out <<  "\"" << _files._output_path << "/" << aux_xdmf << "\" \n";
+        out <<  "\"" << _files.GetOutputPath() << "/" << aux_xdmf << "\" \n";
 //   out << " [ <!ENTITY HeavyData \"\"> ] ";
         out << ">\n";
         out << "<Xdmf> \n" << "<Domain> \n";
@@ -266,7 +266,7 @@ void MultiLevelProblemTwo::ReadSol(const uint t_step, double& time_out) const {
     // ---------------------------------------------------
     // open file -----------------------------
     std::ostringstream namefile;
-    namefile << _files._output_path << "/" 
+    namefile << _files.GetOutputPath() << "/" 
     << basesol << "." << setw(ndigits) << setfill('0') << t_step << "_l" << (_mesh._NoLevels - 1) << ext_xdmf;  //TODO here we should avoid doing this process TWICE because we already do it in the TransientSetup calling function
 
 #ifdef DEFAULT_PRINT_INFO // --------  info ------------------ 
@@ -301,7 +301,7 @@ void MultiLevelProblemTwo::ReadSol(const uint t_step, double& time_out) const {
     // ---------------------------------------------------
     // file name -----------------------------------------
     namefile.str("");  //empty string
-    namefile << _files._output_path << "/"
+    namefile << _files.GetOutputPath() << "/"
     << basesol << "." << setw(ndigits) << setfill('0') << t_step << ext_h5;
     //if i put the path of this file to be relative, will the read depend on where I launched the executable...
     // or where the executable is I think... no, the path is given by where the executable is LAUNCHED
@@ -350,7 +350,7 @@ void MultiLevelProblemTwo::PrintCaseHDF5(const uint t_init) const {
         std::string     ext_h5  = DEFAULT_EXT_H5;
 
         std::ostringstream filename;
-        filename << _files._output_path << "/" << basecase << "." << setw(ndigits) << setfill('0') << t_init << ext_h5;
+        filename << _files.GetOutputPath() << "/" << basecase << "." << setw(ndigits) << setfill('0') << t_init << ext_h5;
 
         hid_t file = H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
         XDMFWriter::PrintSubdomFlagOnCellsLinear(filename.str(),_mesh);
@@ -415,7 +415,7 @@ void MultiLevelProblemTwo::PrintCaseXDMF(const uint t_init) const {
 	for (uint l=0; l < NoLevels; l++) {
 	  
         std::ostringstream filename_xdmf;
-        filename_xdmf << _files._output_path << "/"
+        filename_xdmf << _files.GetOutputPath() << "/"
         << basecase  << "." << setw(ndigits) << setfill('0') << t_init << "_l" << l << ext_xdmf;
         std::ostringstream hdf_file;
         hdf_file <<  basecase << "." << setw(ndigits) << setfill('0') << t_init << ext_h5;
@@ -429,7 +429,7 @@ void MultiLevelProblemTwo::PrintCaseXDMF(const uint t_init) const {
         // BEGIN XDMF =======
         out << "<?xml version=\"1.0\" ?> \n";
         out << "<!DOCTYPE Xdmf SYSTEM ";
-        out <<  "\"" << _files._output_path << "/" << aux_xdmf << "\" \n";
+        out <<  "\"" << _files.GetOutputPath() << "/" << aux_xdmf << "\" \n";
 //    out << " [ <!ENTITY HeavyData \"\"> ] ";
         out << ">\n";
         out << "<Xdmf> \n" << "<Domain> \n";

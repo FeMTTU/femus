@@ -91,7 +91,7 @@ namespace femus {
 
 	// file 
         std::ostringstream Name;
-        Name << _files._output_path << "/" << basetime << "."
+        Name << _files.GetOutputPath() << "/" << basetime << "."
              << std::setw(ndigits) << std::setfill('0') << t_idx_in << "-"
              << std::setw(ndigits) << std::setfill('0') << t_idx_final  << "_l" << l
              << ext_xdmf;
@@ -104,7 +104,7 @@ namespace femus {
         //   Mesh -----------------------------------
         out << "<?xml version=\"1.0\" ?> \n";
         out << "<!DOCTYPE Xdmf SYSTEM "
-        <<  "\"" << _files._output_path << "/" << aux_xdmf << "\"" << "[]>\n";
+        <<  "\"" << _files.GetOutputPath() << "/" << aux_xdmf << "\"" << "[]>\n";
         out << "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.2\"> \n";
         out << "<Domain> \n";
         for (uint kp=0;kp< nprt; kp++)    {
@@ -310,7 +310,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
 //We will distinguish them later.
 
     //------initial data
-    if (_files._restart_flag) {
+    if (_files.GetRestartFlag()) {
         _t_idx_in  = initial_step;
         std::cout << "We wish to restart from time step " << _t_idx_in << std::endl;
         std::cout << "\n *+*+* TimeLoop::transient_setup: RESTART  " << std::endl;
@@ -320,9 +320,9 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
 
             stringstream tidxin;
             tidxin << setw(ndigits) << setfill('0') << _t_idx_in;
-            std::cout << " Restarting from run: " << _files._input_path << std::endl;
+            std::cout << " Restarting from run: " << _files.GetInputPath() << std::endl;
 	    std::ostringstream cp_src_xmf_stream;
-	    cp_src_xmf_stream << _files._input_path << "/" << basesol << "." << tidxin.str() << "_l" << (eqnmap._mesh._NoLevels - 1) << ext_xdmf;
+	    cp_src_xmf_stream << _files.GetInputPath() << "/" << basesol << "." << tidxin.str() << "_l" << (eqnmap._mesh._NoLevels - 1) << ext_xdmf;
             std::string cp_src_xmf = cp_src_xmf_stream.str();
             fstream file_cp_xmf(cp_src_xmf.c_str());
             if (!file_cp_xmf.is_open()) {
@@ -331,7 +331,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
             }
 
 	    std::ostringstream cp_src_h5_stream;
-	    cp_src_h5_stream << _files._input_path << "/" << basesol << "." << tidxin.str() /*<< "_l" << (_mesh._NoLevels - 1)*/ << ext_h5;
+	    cp_src_h5_stream << _files.GetInputPath() << "/" << basesol << "." << tidxin.str() /*<< "_l" << (_mesh._NoLevels - 1)*/ << ext_h5;
             std::string cp_src_h5 = cp_src_h5_stream.str();
             fstream file_cp_h5(cp_src_h5.c_str());
             if (!file_cp_h5.is_open()) {
@@ -339,7 +339,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
                 abort();
             }
 
-            std::string cp_dest_dir = _files._output_path;
+            std::string cp_dest_dir = _files.GetOutputPath();
 
             std::string cp_cmd_xmf = "cp " + cp_src_xmf  + " " +  cp_dest_dir;
             std::string cp_cmd_h5  = "cp " + cp_src_h5   + " " +  cp_dest_dir;

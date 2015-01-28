@@ -1178,7 +1178,7 @@ void SystemTwo::ReadMGOps() {
 
     std::ostringstream filename;
     std::string filename_base;
-    filename_base = _files._output_path + "/";
+    filename_base = _files.GetOutputPath() + "/";
     
         filename.str("");     filename << filename_base << f_rest << ext_h5;
         ReadRest(filename.str());

@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
         files.RedirectCout();
 	
   // ======= Physics ========================
-  FemusInputParser<double> physics_map("Physics",files._output_path);
+  FemusInputParser<double> physics_map("Physics",files.GetOutputPath());
   
   const double rhof   = physics_map.get("rho0");
   const double Uref   = physics_map.get("Uref");
@@ -87,25 +87,25 @@ int main(int argc, char** argv) {
   const double   _We  = (Uref*Uref*Lref*rhof)/sigma; physics_map.set("We",_We);
 
   // ======= Mesh =====
-  FemusInputParser<double> mesh_map("Mesh",files._output_path);
+  FemusInputParser<double> mesh_map("Mesh",files.GetOutputPath());
     GenCase mesh(mesh_map,"straightQ3D2x2x2ZERO.gam");
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
-  FemusInputParser<double> box_map("Box",files._output_path);
+  FemusInputParser<double> box_map("Box",files.GetOutputPath());
   Box mybox(mesh.get_dim(),box_map);
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 
           mesh.SetDomain(&mybox);    
 	  
-          mesh.GenerateCase(files._output_path);
+          mesh.GenerateCase(files.GetOutputPath());
 
           mesh.SetLref(Lref);
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 	  
-          XDMFWriter::ReadMeshFileAndNondimensionalizeBiquadratic(files._output_path,mesh); 
-	  XDMFWriter::PrintMultimeshXdmfBiquadratic(files._output_path,mesh);
-          XDMFWriter::PrintAllLEVAllVBLinear(files._output_path,mesh);
+          XDMFWriter::ReadMeshFileAndNondimensionalizeBiquadratic(files.GetOutputPath(),mesh); 
+	  XDMFWriter::PrintMultimeshXdmfBiquadratic(files.GetOutputPath(),mesh);
+          XDMFWriter::PrintAllLEVAllVBLinear(files.GetOutputPath(),mesh);
       
 // ======  QRule ================================ 
   std::vector<Gauss>   qrule;
@@ -251,7 +251,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   equations_map.setDofBcOpIc();     //  /*TODO fileIO  for  Bc, init, and Ic*/
 
   // ======== OptLoop ===================================
-  FemusInputParser<double> loop_map("TimeLoop",files._output_path);
+  FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());
   OptLoop opt_loop(files,loop_map); 
 
   opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case   /*TODO fileIO */ 

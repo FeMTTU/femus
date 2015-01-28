@@ -57,7 +57,7 @@
         files.RedirectCout();
 
   // ======= Physics Input Parser ========================
-  FemusInputParser<double> physics_map("Physics",files._output_path);
+  FemusInputParser<double> physics_map("Physics",files.GetOutputPath());
 
   const double rhof   = physics_map.get("rho0");
   const double Uref   = physics_map.get("Uref");
@@ -70,25 +70,25 @@
   const double   _Pr  = muf/rhof;                 physics_map.set("Pr",_Pr);
 
   // ======= Mesh =====
-  FemusInputParser<double> mesh_map("Mesh",files._output_path);
+  FemusInputParser<double> mesh_map("Mesh",files.GetOutputPath());
   GenCase mesh(mesh_map,"inclQ2D2x2.gam");
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
-  FemusInputParser<double> box_map("Box",files._output_path);
+  FemusInputParser<double> box_map("Box",files.GetOutputPath());
   Box mybox(mesh.get_dim(),box_map);
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 
           mesh.SetDomain(&mybox);    
 	  
-          mesh.GenerateCase(files._output_path);
+          mesh.GenerateCase(files.GetOutputPath());
 
           mesh.SetLref(Lref);
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 	  
-          XDMFWriter::ReadMeshFileAndNondimensionalizeBiquadratic(files._output_path,mesh); 
-	  XDMFWriter::PrintMultimeshXdmfBiquadratic(files._output_path,mesh);
-          XDMFWriter::PrintAllLEVAllVBLinear(files._output_path,mesh);
+          XDMFWriter::ReadMeshFileAndNondimensionalizeBiquadratic(files.GetOutputPath(),mesh); 
+	  XDMFWriter::PrintMultimeshXdmfBiquadratic(files.GetOutputPath(),mesh);
+          XDMFWriter::PrintAllLEVAllVBLinear(files.GetOutputPath(),mesh);
 	  
   //gencase is dimensionalized, meshtwo is nondimensionalized
   //since the meshtwo is nondimensionalized, all the BC and IC are gonna be implemented on a nondimensionalized mesh
@@ -123,7 +123,7 @@
    }
 
   // ======== Loop ===================================
-  FemusInputParser<double> loop_map("TimeLoop",files._output_path);
+  FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());
   OptLoop opt_loop(files, loop_map); 
    
   // ===== QuantityMap : this is like the MultilevelSolution =========================================
