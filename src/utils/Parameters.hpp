@@ -18,7 +18,7 @@
 
 namespace femus {
 
-
+#undef LIBMESH_HAVE_RTTI  //TODO we must fix this, because when I have libmesh includes it gives compiling errors with templating
 
   /**
    * Helper functions for printing scalar and vector types.  Called from Parameters::Parameter<T>::print(...).

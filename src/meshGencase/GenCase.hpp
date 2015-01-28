@@ -35,9 +35,6 @@ public:
      GenCase(const Files& files_in, const FemusInputParser<double> & map_in, const std::string mesh_file);
     ~GenCase();                 
     
-    
-    void PrintMeshFile() const;
-    
     void ElemChildToFather();
     void ReorderElementBySubdLev_VV();
     void ReorderElementBySubdLev_BB();
@@ -57,15 +54,7 @@ public:
     void RefineMesh() const;
     void GenerateBoundaryMesh() const;
     void GrabMeshinfoFromLibmesh();
-    
-private:
 
-#ifdef HAVE_LIBMESH
-  libMesh::Mesh* _msh_coarse;
-  libMesh::Mesh* _msh_all_levs;
-  libMesh::BoundaryMesh* _bd_msht;
- #endif
-  
     // Element ===========
     std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
 
@@ -75,6 +64,14 @@ private:
     std::vector<int>                  _nd_libm_fm; //from FINE LIBMESH NODE ORDERING to FINE FEMUS NODE ORDERING  //TODO this is the one that is not correctly filled in debug mode
     std::vector<int>                  _el_libm_fm;  //TODO in dbg mode they do not survive in GENCASE... extremely weird thing... let us try to convert from int* to std::vector<int>
 
+private:
+
+#ifdef HAVE_LIBMESH
+  libMesh::Mesh* _msh_coarse;
+  libMesh::Mesh* _msh_all_levs;
+  libMesh::BoundaryMesh* _bd_msht;
+ #endif
+  
 
 
 };

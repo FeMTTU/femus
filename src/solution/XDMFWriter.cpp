@@ -1841,7 +1841,7 @@ void XDMFWriter::PrintElemVBBiquadratic(hid_t file,
 // or only for PROC==0? Seems to be for all processors
 // TODO do we need the leading "/" for opening a dataset?
 // This routine reads the mesh file and also makes it NONDIMENSIONAL, so that everything is solved on a nondimensional mesh
-void XDMFWriter::ReadMeshFileAndNondimensionalize(const std::string output_path, MultiLevelMeshTwo & mesh)   {
+void XDMFWriter::ReadMeshFileAndNondimensionalizeBiquadratic(const std::string output_path, MultiLevelMeshTwo & mesh)   {
 
   std::string    basemesh = DEFAULT_BASEMESH;
   std::string      ext_h5 = DEFAULT_EXT_H5;
@@ -2034,6 +2034,219 @@ for (int vb=0; vb < VB; vb++)    {
 }
 
 
+// ===============================================================
+void XDMFWriter::PrintMeshFileBiquadratic(const std::string output_path, const GenCase & mesh)  {
+
+    std::ostringstream name;
+
+    std::string basemesh  = DEFAULT_BASEMESH;
+    std::string ext_h5    = DEFAULT_EXT_H5;
+
+    std::ostringstream inmesh;
+    inmesh << output_path << "/" << basemesh << ext_h5;
+
+//==================================
+// OPEN FILE
+//==================================
+    hid_t file = H5Fcreate(inmesh.str().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
+
+//==================================
+// DFLS (Dimension, VB, Levels, Subdomains)
+// =====================
+    int *tdata;
+
+    tdata    = new int[4];
+    tdata[0] = mesh._dim;
+    tdata[1] = VB;
+    tdata[2] = mesh._NoLevels;
+    tdata[3] = mesh._NoSubdom;
+
+    hsize_t dimsf[2];
+    dimsf[0] = 4;
+    dimsf[1] = 1;
+    XDMFWriter::print_Ihdf5(file,"DFLS", dimsf,tdata);
+    delete [] tdata;
+
+//==================================
+// FEM element DoF number
+// =====================
+    int *ttype_FEM;
+    ttype_FEM=new int[VB];
+
+    for (uint vb=0; vb< VB;vb++)   ttype_FEM[vb] = NVE[ mesh._geomelem_flag[mesh.get_dim()-1-vb] ][BIQUADR_FE];
+
+    dimsf[0] = VB;
+    dimsf[1] = 1;
+    XDMFWriter::print_Ihdf5(file,"ELNODES_VB", dimsf,ttype_FEM);
+
+// ===========================================
+// ===========================================
+//  NODES
+// ===========================================
+// ===========================================
+    hid_t group_id = H5Gcreate(file, XDMFWriter::_nodes_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+// ++++ NODES/MAP ++++++++++++++++++++++++++++++++++++++++++++++
+    std::string ndmap = XDMFWriter::_nodes_name + "/MAP";
+    hid_t subgroup_id = H5Gcreate(file, ndmap.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+// nodes X lev
+    std::string ndxlev =  ndmap + "/NDxLEV";
+    dimsf[0] = mesh._NoLevels+1;
+    dimsf[1] = 1;
+    XDMFWriter::print_UIhdf5(file, ndxlev.c_str(), dimsf,mesh._NoNodesXLev);
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++
+// node map (XL, extended levels)
+// ++++++++++++++++++++++++++++++++++++++++++++++++++
+    dimsf[0] = mesh._n_nodes;
+    dimsf[1] = 1;
+
+    for (int ilev= 0;ilev < mesh._NoLevels+1; ilev++) {
+        name.str("");
+        name << ndmap << "/MAP"<< "_XL" << ilev;
+        XDMFWriter::print_Ihdf5(file,name.str(),dimsf,mesh._Qnode_fine_Qnode_lev[ilev]);
+    }
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++
+//   OFF_ND: node offset quadratic and linear
+// ++++++++++++++++++++++++++++++++++++++++++++++++++
+    dimsf[0] = mesh._NoSubdom*mesh._NoLevels+1;
+    dimsf[1] = 1;
+    for (int fe=0;fe < QL_NODES; fe++) {
+        std::ostringstream namefe;
+        namefe <<  ndmap << "/OFF_ND" << "_F" << fe;
+        XDMFWriter::print_Ihdf5(file, namefe.str(),dimsf,mesh._off_nd[fe]);
+    }
+
+    H5Gclose(subgroup_id);
+
+// ===========================================
+//  COORDINATES  (COORD)
+// ===========================================
+    //ok, we need to print the coordinates of the nodes for each LEVEL
+    //The array _nod_coords holds the coordinates of the FINE Qnodes
+    //how do we take the Qnodes of each level?
+    //Well, I'd say we need to use  _off_nd for the quadratics
+    //Ok, the map _nd_fm_libm goes from FINE FEMUS NODE ORDERING to FINE LIBMESH NODE ORDERING
+    //I need to go from the QNODE NUMBER at LEVEL 
+    //to the QNODE NUMBER at FINE LEVEL according to FEMUS,
+    //and finally to the number at fine level according to LIBMESH.
+    //The fine level is the only one where the Qnode numbering is CONTIGUOUS
+    
+    
+    
+    std::string ndcoords = XDMFWriter::_nodes_name + "/COORD";
+    subgroup_id = H5Gcreate(file, ndcoords.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    // nodes are PRINTED ACCORDING to FEMUS ordering, which is inode, i.e. the INVERSE of v[inode].second
+    //you use this because you do DIRECTLY a NODE LOOP
+    //now let us loop coordinates over ALL LEVELS
+    for (int l=0; l<mesh._NoLevels; l++)  {
+    double * xcoord = new double[mesh._NoNodesXLev[l]];
+    for (int kc=0;kc<3;kc++) {
+      
+      int Qnode_lev=0; 
+      for (uint isubdom=0; isubdom<mesh._NoSubdom; isubdom++) {
+            uint off_proc=isubdom*mesh._NoLevels;
+               for (int k1 = mesh._off_nd[QQ][off_proc];
+                        k1 < mesh._off_nd[QQ][off_proc + l+1 ]; k1++) {
+		 int Qnode_fine_fm = mesh._Qnode_lev_Qnode_fine[l][Qnode_lev];
+		 xcoord[Qnode_lev] = mesh._nd_coords_libm[ mesh._nd_fm_libm[Qnode_fine_fm].second + kc*mesh._n_nodes ];
+		  Qnode_lev++; 
+		 }
+	      } //end subdomain
+	    
+// old        for (int inode=0; inode <_n_nodes_lev[l];inode++)  xcoord[inode] = _nod_coords[_nd_fm_libm[inode].second+kc*_n_nodes]; //the offset is fine
+        dimsf[0] = mesh._NoNodesXLev[l];
+        dimsf[1] = 1;
+        name.str("");
+        name << ndcoords << "/X" << kc+1<< "_L" << l;
+        XDMFWriter::print_Dhdf5(file,name.str(), dimsf,xcoord);
+    }
+
+    delete [] xcoord;
+     }  //levels
+    
+    H5Gclose(subgroup_id);
+
+    H5Gclose(group_id);
+
+// ===========================================
+// ===========================================
+//   /ELEMS
+// ===========================================
+// ===========================================
+
+    group_id = H5Gcreate(file, XDMFWriter::_elems_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    ElemStoBase** elsto_out;   //TODO delete it!
+    elsto_out = new ElemStoBase*[mesh._n_elements_sum_levs[VV]];
+    for (int i=0;i<mesh._n_elements_sum_levs[VV];i++) {
+        elsto_out[i]= static_cast<ElemStoBase*>(mesh._el_sto[i]);
+    }
+
+    ElemStoBase** elstob_out;
+    elstob_out = new ElemStoBase*[mesh._n_elements_sum_levs[BB]];
+    for (int i=0; i<mesh._n_elements_sum_levs[BB]; i++) {
+        elstob_out[i]= static_cast<ElemStoBase*>(mesh._el_sto_b[i]);
+    }
+
+    XDMFWriter::PrintElemVBBiquadratic(file,VV,mesh._nd_libm_fm, elsto_out,mesh._el_fm_libm,mesh);
+    XDMFWriter::PrintElemVBBiquadratic(file,BB,mesh._nd_libm_fm, elstob_out,mesh._el_fm_libm_b,mesh);
+
+    // ===============
+    // print child to father map for all levels for BOUNDARY ELEMENTS
+    // ===============
+
+    for (int lev=0;lev<mesh._NoLevels; lev++)  {
+        std::ostringstream   bname;
+        bname << XDMFWriter::_elems_name << "/BDRY_TO_VOL_L" << lev;
+        dimsf[0] = mesh._n_elements_vb_lev[BB][lev];
+        dimsf[1] = 1;
+        XDMFWriter::print_Ihdf5(file,bname.str(), dimsf,mesh._el_child_to_fath[lev]);
+    }
+
+
+
+
+//             std::cout <<  "==================" << std::endl;
+//          for (int i=0;i<_n_elements_vb_lev[BB][lev];i++)  {
+//              std::cout <<  _el_child_to_fath[lev][i] << std::endl;
+//        }
+// 	 }
+
+
+
+// ok, so, i had to do two cast vectors so i could pass them both to the print_elem_vb routine
+//now i have to be careful in destroying these, in relation with their fathers...
+
+    //delete temp  //I AM HERE TODO
+//     for (int i=0;i< _n_elements_sum_levs_vb[BB];i++) {   delete /*[]*/ elstob_out[i]; } // delete [] el_sto[i]; with [] it doesnt work
+//    delete [] elstob_out;
+//     for (int i=0;i< _n_elements_sum_levs_vb[VV];i++) {   delete /*[]*/ elsto_out[i]; } // delete [] el_sto[i]; with [] it doesnt work
+//    delete [] elsto_out;
+    H5Gclose(group_id);
+
+// ===========================================
+//   PID
+// ===========================================
+    group_id = H5Gcreate(file, "/PID", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    for (int  vb= 0; vb< VB;vb++) {
+        for (int  ilev= 0;ilev< mesh._NoLevels; ilev++)   XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(vb,ilev,inmesh.str().c_str(),mesh);
+    }
+
+    H5Gclose(group_id);
+
+// ===========================================
+//  CLOSE FILE
+// ===========================================
+    H5Fclose(file);
+
+    //============
+    delete [] ttype_FEM;
+
+    return;
+}
 
 
 
