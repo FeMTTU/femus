@@ -46,7 +46,7 @@ class MultiLevelMeshTwo  {
 public:
 
 //===== Constructors/ Destructor ===========
-     MultiLevelMeshTwo (const Files& files_in, const FemusInputParser<double>& map_in, const std::string mesh_file_in);
+     MultiLevelMeshTwo (const FemusInputParser<double>& map_in, const std::string mesh_file_in);
 //     ~MultiLevelMeshTwo ();
     void clear ();
 
@@ -118,10 +118,16 @@ public:
 
     //set functions
     inline void SetLref(const double lref_in) { _Lref = lref_in; }
+
+// FROM LIBMESH TO FEMUS ===============
+    std::vector< std::pair<int,int> > _nd_fm_libm; //from FINE FEMUS NODE ORDERING to FINE LIBMESH NODE ORDERING
+    std::vector< std::pair<int,int> > _el_fm_libm; //because the EQUATION needs it for the SPARSITY PATTERN
+    std::vector< std::pair<int,int> > _el_fm_libm_b;
+    std::vector<int>                  _nd_libm_fm; //from FINE LIBMESH NODE ORDERING to FINE FEMUS NODE ORDERING  //TODO this is the one that is not correctly filled in debug mode
+    std::vector<int>                  _el_libm_fm;  //TODO in dbg mode they do not survive in GENCASE... extremely weird thing... let us try to convert from int* to std::vector<int>
     
   protected:
     
-    const Files& _files; 
     const FemusInputParser<double> & _mesh_rtmap;
     std::string _mesh_file;    //mesh file name from the mesh generator
  

@@ -32,7 +32,7 @@ class GenCase : public MultiLevelMeshTwo {
 
 public:
 
-     GenCase(const Files& files_in, const FemusInputParser<double> & map_in, const std::string mesh_file);
+     GenCase(const FemusInputParser<double> & map_in, const std::string mesh_file);
     ~GenCase();                 
     
     void ElemChildToFather();
@@ -41,15 +41,15 @@ public:
     void ReorderNodesBySubdLev();
     void ComputeMaxElXNode();
 
-    void ComputeMGOperators();
-    void ComputeMatrix();
-    void ComputeProl();
-    void ComputeRest();
-    void CreateMeshStructuresLevSubd();
+    void ComputeMGOperators(const std::string output_path);
+    void ComputeMatrix(const std::string output_path);
+    void ComputeProl(const std::string output_path);
+    void ComputeRest(const std::string output_path);
+    void CreateMeshStructuresLevSubd(const std::string output_path);
     void Delete();
 
 //functions using libmesh
-    void GenerateCase();
+    void GenerateCase(const std::string output_path);
     void GenerateCoarseMesh() const;
     void RefineMesh() const;
     void GenerateBoundaryMesh() const;
@@ -57,12 +57,6 @@ public:
 
     // Element ===========
     std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
-
-    std::vector< std::pair<int,int> > _nd_fm_libm; //from FINE FEMUS NODE ORDERING to FINE LIBMESH NODE ORDERING
-    std::vector< std::pair<int,int> > _el_fm_libm; //because the EQUATION needs it for the SPARSITY PATTERN
-    std::vector< std::pair<int,int> > _el_fm_libm_b;
-    std::vector<int>                  _nd_libm_fm; //from FINE LIBMESH NODE ORDERING to FINE FEMUS NODE ORDERING  //TODO this is the one that is not correctly filled in debug mode
-    std::vector<int>                  _el_libm_fm;  //TODO in dbg mode they do not survive in GENCASE... extremely weird thing... let us try to convert from int* to std::vector<int>
 
 private:
 

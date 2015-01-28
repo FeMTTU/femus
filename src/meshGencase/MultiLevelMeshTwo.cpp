@@ -21,7 +21,6 @@
 
 #include "Domain.hpp"
 #include "Typedefs.hpp"
-#include "Files.hpp"
 #include "XDMFWriter.hpp"
 #include "Elem.hpp"
 #include "GeomElTypeEnum.hpp"
@@ -37,8 +36,7 @@ namespace femus {
 
 
 // ========================================================
-MultiLevelMeshTwo::MultiLevelMeshTwo (const Files& files_in, const FemusInputParser<double>& map_in, const std::string mesh_file_in) :
-         _files(files_in),
+MultiLevelMeshTwo::MultiLevelMeshTwo (const FemusInputParser<double>& map_in, const std::string mesh_file_in) :
          _mesh_rtmap(map_in),
          _dim(map_in.get("dimension")),
          _mesh_order(map_in.get("mesh_ord")) {

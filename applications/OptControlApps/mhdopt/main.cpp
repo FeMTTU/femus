@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
 
   // ======= Mesh =====
   FemusInputParser<double> mesh_map("Mesh",files._output_path);
-    GenCase mesh(files,mesh_map,"straightQ3D2x2x2ZERO.gam");
+    GenCase mesh(mesh_map,"straightQ3D2x2x2ZERO.gam");
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
 
           mesh.SetDomain(&mybox);    
 	  
-          mesh.GenerateCase();
+          mesh.GenerateCase(files._output_path);
 
           mesh.SetLref(Lref);
       mybox.InitAndNondimensionalize(mesh.get_Lref());

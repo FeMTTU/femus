@@ -2035,7 +2035,7 @@ for (int vb=0; vb < VB; vb++)    {
 
 
 // ===============================================================
-void XDMFWriter::PrintMeshFileBiquadratic(const std::string output_path, const GenCase & mesh)  {
+void XDMFWriter::PrintMeshFileBiquadratic(const std::string output_path, const MultiLevelMeshTwo & mesh)  {
 
     std::ostringstream name;
 

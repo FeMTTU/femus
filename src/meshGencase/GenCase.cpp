@@ -34,8 +34,8 @@ using namespace libMesh;
 namespace femus {
 
 // ========================================================
-GenCase::GenCase(const Files& files_in,const FemusInputParser<double> & map_in, const std::string mesh_file_in)
-     : MultiLevelMeshTwo(files_in,map_in,mesh_file_in)
+GenCase::GenCase(const FemusInputParser<double> & map_in, const std::string mesh_file_in)
+     : MultiLevelMeshTwo(map_in,mesh_file_in)
 {
 
    _feelems.resize(QL);
@@ -64,7 +64,7 @@ GenCase::~GenCase() {
 
 
 // =======================================================
-void GenCase::GenerateCase()   {
+void GenCase::GenerateCase(const std::string output_path)   {
 #ifdef HAVE_LIBMESH //i am putting this inside because there are no libmesh dependent arguments
   
   
@@ -94,9 +94,9 @@ void GenCase::GenerateCase()   {
     delete _msh_all_levs;
     delete _msh_coarse;
 
-    CreateMeshStructuresLevSubd();    //only proc==0
+    CreateMeshStructuresLevSubd(output_path);    //only proc==0
     
-    ComputeMGOperators();    //only proc==0
+    ComputeMGOperators(output_path);    //only proc==0
 
     Delete();
 
@@ -574,7 +574,7 @@ void  GenCase::GrabMeshinfoFromLibmesh() {
 //==============================================================================
 //=============== CREATE FEMUS MESH, MAT, PROL, REST (only proc0) ==============
 //==============================================================================
-void GenCase::CreateMeshStructuresLevSubd() {
+void GenCase::CreateMeshStructuresLevSubd(const std::string output_path) {
 
     if (_iproc == 0)   {  //serial function
 //================================================
@@ -609,7 +609,7 @@ void GenCase::CreateMeshStructuresLevSubd() {
 
         ComputeNodeMapExtLevels();
 
-        XDMFWriter::PrintMeshFileBiquadratic(_files._output_path,*this);
+        XDMFWriter::PrintMeshFileBiquadratic(output_path,*this);
 
 // delete the boundary part, no more needed
         for (int i=0;i<_n_elements_sum_levs[BB];i++)      delete  _el_sto_b[i];
@@ -625,15 +625,15 @@ void GenCase::CreateMeshStructuresLevSubd() {
 
 
 
-void GenCase::ComputeMGOperators() {
+void GenCase::ComputeMGOperators(const std::string output_path) {
 
     if (_iproc == 0)   {  //serial function
       
             //this involves only VOLUME STUFF, no boundary stuff
             // instead, not only NODES but also ELEMENTS are used
-        ComputeMatrix(); 
-        ComputeProl(); 
-        ComputeRest();
+        ComputeMatrix(output_path); 
+        ComputeProl(output_path); 
+        ComputeRest(output_path);
 
     } //end proc==0
 
@@ -712,7 +712,7 @@ void GenCase::Delete() {
 //stabiliti dalla suddivisione in proc e livelli
 
 
-void GenCase::ComputeProl()  {
+void GenCase::ComputeProl(const std::string output_path)  {
 
   int NegativeOneFlag = -1;
   double   PseudoZero = 1.e-8;
@@ -721,7 +721,7 @@ void GenCase::ComputeProl()  {
     std::string ext_h5    = DEFAULT_EXT_H5;
 
     std::ostringstream name;
-    name << _files._output_path << "/" << f_prol << ext_h5;
+    name << output_path << "/" << f_prol << ext_h5;
     hid_t file = H5Fcreate(name.str().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
 
   for (int Level1 = 1; Level1 < _NoLevels; Level1++) {  //Level1 is the OUTPUT level (fine level) (the level of the ROWS)
@@ -1295,7 +1295,7 @@ void GenCase::ComputeProl()  {
 //remember that for the KK elements I dont need eliminating multiple occurrences
 
 
-void GenCase::ComputeMatrix() {
+void GenCase::ComputeMatrix(const std::string output_path) {
 
 #ifdef DEFAULT_PRINT_INFO
     std::cout << " GenCase::compute_matrix:  start \n";
@@ -1322,7 +1322,7 @@ void GenCase::ComputeMatrix() {
     std::string ext_h5    = DEFAULT_EXT_H5;
 
         std::ostringstream name;
-        name << _files._output_path << "/" << f_matrix << ext_h5;
+        name << output_path << "/" << f_matrix << ext_h5;
         hid_t file = H5Fcreate(name.str().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
 
 //==============================================================
@@ -1632,7 +1632,7 @@ void GenCase::ComputeMatrix() {
 // otherwise, you would not just need to update the sparsity pattern
 
 
-void GenCase::ComputeRest( ) {
+void GenCase::ComputeRest(const std::string output_path) {
 
   int NegativeOneFlag = -1;
   double   PseudoZero = 1.e-8;
@@ -1641,7 +1641,7 @@ void GenCase::ComputeRest( ) {
         std::string ext_h5    = DEFAULT_EXT_H5;
 
         std::ostringstream filename;
-        filename << _files._output_path << "/" << f_rest << ext_h5;
+        filename << output_path << "/" << f_rest << ext_h5;
         hid_t file = H5Fcreate(filename.str().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
 
   

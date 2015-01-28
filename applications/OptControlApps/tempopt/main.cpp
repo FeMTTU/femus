@@ -71,7 +71,7 @@
 
   // ======= Mesh =====
   FemusInputParser<double> mesh_map("Mesh",files._output_path);
-  GenCase mesh(files,mesh_map,"inclQ2D2x2.gam");
+  GenCase mesh(mesh_map,"inclQ2D2x2.gam");
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
@@ -81,7 +81,7 @@
 
           mesh.SetDomain(&mybox);    
 	  
-          mesh.GenerateCase();
+          mesh.GenerateCase(files._output_path);
 
           mesh.SetLref(Lref);
       mybox.InitAndNondimensionalize(mesh.get_Lref());

@@ -21,7 +21,6 @@
 //----------------------------------------------------------------------------
 #include "Writer.hpp"
 #include "MultiLevelMeshTwo.hpp"
-#include "GenCase.hpp"
 
 namespace femus {
 
@@ -116,14 +115,14 @@ public:
   
   static void ReadMeshFileAndNondimensionalizeBiquadratic(const std::string output_path, MultiLevelMeshTwo & mesh);
 
-  static void PrintMeshFileBiquadratic(const std::string output_path, const GenCase & mesh);
+  static void PrintMeshFileBiquadratic(const std::string output_path, const MultiLevelMeshTwo & mesh);
   
   /** MATRIX PRINTING */
   static void PrintOneVarMatrixHDF5(const std::string & name, const std::string & groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel );
   
   static void PrintOneVarMGOperatorHDF5(const std::string & filename,const std::string & groupname, uint* n_dofs_lev, int count, int* Op_pos,double* Op_val,int* len,int* len_off, int FELevel_row, int FELevel_col, int fe);
   
-    // HDF5 FIELDS ===============
+// HDF5 FIELDS ===============
    static const std::string _nodes_name; //name for the HDF5 dataset
    static const std::string _elems_name;   //name for the HDF5 dataset
 //     std::string _nd_coord_folder;  //TODO why seg fault if I use them?!?
