@@ -80,8 +80,6 @@ public:
   inline const_iterator begin() const { return _equations.begin();}
   inline const_iterator   end() const { return _equations.end();}
 
-  void setDofBcOpIc() ;
-  
 private:
   
  map<string,SystemTwo*> _equations;   // system map

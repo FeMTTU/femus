@@ -209,9 +209,27 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 	 
 //   eqnNS->ComputeMatrix();  //CLEARLY THIS FUNCTION DOES NOT WORK AT THIS POINT, because not all the data in the mesh class are filled here! 
                            //In fact, part of them is only filled by gencase
+
 	 
-  equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
-  
+//once you have the list of the equations, you loop over them to initialize everything
+
+   for (MultiLevelProblemTwo::const_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
+        SystemTwo* mgsol = eqn->second;
+        
+//=====================
+    mgsol -> _dofmap.ComputeMeshToDof();
+//=====================
+    mgsol -> GenerateBdc();
+    mgsol -> GenerateBdcElem();
+//=====================
+    mgsol -> ReadMGOps();
+//=====================
+    mgsol -> initVectors();     //TODO can I do it earlier than this position?
+//=====================
+    mgsol -> Initialize();
+    } 
+	 
+	 
   opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
 
   opt_loop.optimization_loop(equations_map);

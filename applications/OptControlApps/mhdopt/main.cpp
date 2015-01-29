@@ -248,7 +248,22 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 //========= associate an EQUATION to QUANTITIES ========
 //================================
 
-  equations_map.setDofBcOpIc();     //  /*TODO fileIO  for  Bc, init, and Ic*/
+   for (MultiLevelProblemTwo::const_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
+        SystemTwo* mgsol = eqn->second;
+        
+//=====================
+    mgsol -> _dofmap.ComputeMeshToDof();
+//=====================
+    mgsol -> GenerateBdc();
+    mgsol -> GenerateBdcElem();
+//=====================
+    mgsol -> ReadMGOps();
+//=====================
+    mgsol -> initVectors();     //TODO can I do it earlier than this position?
+//=====================
+    mgsol -> Initialize();
+    
+    }
 
   // ======== OptLoop ===================================
   FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());

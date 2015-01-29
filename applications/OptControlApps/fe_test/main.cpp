@@ -152,7 +152,22 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
 // then I'll have A from the equation, PRL and REST from a MG object.
 //So somehow i'll have to put these objects at a higher level... but so far let us see if we can COMPUTE and PRINT from HERE and not from the gencase
 	 
-  equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
+   for (MultiLevelProblemTwo::const_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
+        SystemTwo* mgsol = eqn->second;
+        
+//=====================
+    mgsol -> _dofmap.ComputeMeshToDof();
+//=====================
+    mgsol -> GenerateBdc();
+    mgsol -> GenerateBdcElem();
+//=====================
+    mgsol -> ReadMGOps();
+//=====================
+    mgsol -> initVectors();     //TODO can I do it earlier than this position?
+//=====================
+    mgsol -> Initialize();
+    }
+    
   time_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
 
   time_loop.TransientLoop(equations_map);
