@@ -2397,6 +2397,157 @@ void XDMFWriter::PrintOneVarMGOperatorHDF5(const std::string & filename,const st
 
     return;
 }
+
+
+// MultiLevelProblem
+// =================================================================
+/// This function prints the attributes into the corresponding hdf5 file
+void XDMFWriter::PrintSolHDF5Linear(const std::string output_path, const uint t_flag, const MultiLevelProblemTwo & ml_prob ) {
+
+    const uint    iproc =ml_prob._mesh._iproc;
+    if (iproc==0) {
+
+        const uint     ndigits  = DEFAULT_NDIGITS;
+        std::string    basesol  = DEFAULT_BASESOL;
+        std::string     ext_h5  = DEFAULT_EXT_H5;
+        std::ostringstream filename;
+        filename << output_path << "/" << basesol << "." << setw(ndigits) << setfill('0') << t_flag << ext_h5;
+
+        hid_t   file= H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
+        H5Fclose(file);
+
+        MultiLevelProblemTwo::const_iterator pos = ml_prob.begin();
+        MultiLevelProblemTwo::const_iterator pos_e = ml_prob.end();
+        for (;pos!=pos_e;pos++)    {
+            SystemTwo* eqn = pos->second;
+            XDMFWriter::write_system_solutions(filename.str(),& ml_prob._mesh,&(eqn->_dofmap),eqn);
+        }
+
+    } //end print iproc
+
+    return;
+}
+
+// ===================================================================
+/// It prints the attributes in  Xdmf format for one time step
+// Qui dobbiamo separare le NODE variables dalle CELL variables!
+//le node variables sono le _nvars[QQ] e _nvars[LL], le Cell sono _nvars[KK]
+//The SCALAR variables are ordered FIRST QUADRATIC, then LINEAR, then CONSTANT
+
+//Ok, there is a problem when I want to print on coarser grids,
+// it seems that it needs the coarse coordinates
+//Ok i think i solved it
+
+//Now the thing is: i need to print from FINEST LEVEL, so that i can see in paraview the FINEST sequence!!!
+//Ok, now I want to print an XDMF for every level, because I've seen that paraview has quite a little bit
+// of problems in reading files with multiple grids, so I'll put everything in separate files per level.
+//The file name depends on the level so i will put it inside the level loop
+
+// If you want to put all the grids in the SAME XDMF file, then it is better to put the FINEST first, and then all the others...
+// This is due to the Paraview TIME Files that would read the FIRST GRID THEY MEET in the XDMF FILE!
+//So you should do  in reverse order:  for (int l=NoLevels-1; l >= 0; l--) 
+// I DO NOT WANT TO SEPARATE the HDF5 file, because it works fine as a single file with no problems
+
+void XDMFWriter::PrintSolXDMFLinear(const std::string output_path, const uint t_step,const double curr_time, const MultiLevelProblemTwo & ml_prob ) {
+
+    const uint    iproc =ml_prob._mesh._iproc;
+    if (iproc==0) {
+
+      const uint ndigits  = DEFAULT_NDIGITS;
+      const uint NoLevels = ml_prob._mesh._NoLevels;
+
+        //FE print
+        std::string DofType[QL];
+        DofType[QQ] = "Node";
+        DofType[LL] = "Node";
+        DofType[KK] = "Cell";
+
+        std::string basesol     = DEFAULT_BASESOL;
+        std::string basemesh    = DEFAULT_BASEMESH;
+        std::string aux_xdmf    = DEFAULT_AUX_XDMF;
+        std::string connlin     = DEFAULT_CONNLIN;
+        std::string     ext_h5  = DEFAULT_EXT_H5;
+        std::string    ext_xdmf = DEFAULT_EXT_XDMF;
+    
+        std::ostringstream top_file; top_file << connlin << ext_h5;
+        std::ostringstream geom_file; geom_file << basemesh << ext_h5;
+
+// =================================
+// ============= LEVELS ============
+// =================================
+	
+	for (uint l=0; l < NoLevels; l++) {
+	
+	std::ostringstream filename_xdmf;
+        filename_xdmf << output_path << "/" << basesol << "." << setw(ndigits) << setfill('0') << t_step << "_l" << l << ext_xdmf;
+        std::ostringstream hdf_file; hdf_file << basesol << "." << setw(ndigits) << setfill('0') << t_step << ext_h5;
+
+	std::ofstream out(filename_xdmf.str().c_str());
+        if (out.fail()) {
+            std::cout << "MultiLevelProblemTwo::print_soln_xmf: cannot print " << filename_xdmf.str().c_str() << std::endl;
+            abort();
+        }
+
+        //  ++++++++++++ Header ++++++++++++++
+        out << "<?xml version=\"1.0\" ?> \n";
+        out << "<!DOCTYPE Xdmf SYSTEM ";
+        out <<  "\"" << output_path << "/" << aux_xdmf << "\" \n";
+//   out << " [ <!ENTITY HeavyData \"\"> ] ";
+        out << ">\n";
+        out << "<Xdmf> \n" << "<Domain> \n";
+	
+
+        int NGeomObjOnWhichToPrint[QL];
+        NGeomObjOnWhichToPrint[QQ] = ml_prob._mesh._NoNodesXLev[l];
+        NGeomObjOnWhichToPrint[LL] = ml_prob._mesh._NoNodesXLev[l];
+        NGeomObjOnWhichToPrint[KK] = ml_prob._mesh._n_elements_vb_lev[VV][l]*NRE[ml_prob._mesh._eltype_flag[VV]];
+	  
+	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
+
+	out << "<Time Value =\"" << curr_time << "\" /> \n";
+	
+        XDMFWriter::PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,VV,ml_prob._mesh);
+
+	MultiLevelProblemTwo::const_iterator pos1   = ml_prob.begin();
+        MultiLevelProblemTwo::const_iterator pos1_e = ml_prob.end();
+        for (;pos1!=pos1_e;pos1++)   {
+            SystemTwo *mgsol=pos1->second;
+            int OffVarNames[QL];
+            OffVarNames[QQ] = 0;
+            OffVarNames[LL] = mgsol->_dofmap._nvars[QQ];
+            OffVarNames[KK] = mgsol->_dofmap._nvars[QQ] + mgsol->_dofmap._nvars[LL];
+            for (int fe=0; fe<QL; fe++)  {
+                for (uint ivar=0;ivar< mgsol->_dofmap._nvars[fe]; ivar++)   {
+                   std::ostringstream var_name; var_name << mgsol->_var_names[ OffVarNames[fe] + ivar] << "_LEVEL" << l;
+                   XDMFWriter::PrintXDMFAttribute(out,hdf_file.str(),var_name.str(),var_name.str(),"Scalar",DofType[fe],"Float",NGeomObjOnWhichToPrint[fe],1);
+                }
+            } // end fe
+        }
+
+        out << "</Grid>\n";
+	
+        // ============= END GRID ===========	
+
+	out << "</Domain> \n" << "</Xdmf> \n";
+        out.close();
+	
+	}//end levels
+	
+    } //end iproc==0
+
+    return;
+}
+
+// =================================================================
+/// This function prints xdmf and hdf5 file
+void XDMFWriter::PrintSolLinear(const std::string output_path, const uint t_step, const double curr_time, const MultiLevelProblemTwo & ml_prob ) {
+
+    XDMFWriter::PrintSolHDF5Linear(output_path,t_step,ml_prob);
+    XDMFWriter::PrintSolXDMFLinear(output_path,t_step,curr_time,ml_prob);
+
+    return;
+}
+
  
 
  

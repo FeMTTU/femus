@@ -27,6 +27,7 @@
 #include "FemusInputParser.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
+#include "XDMFWriter.hpp"
 
 #include "paral.hpp"
 
@@ -390,7 +391,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
         _t_idx_in = 0;                            //time step index
         _time_in = 0.;                           //time absolute value
 
-        eqnmap.PrintSol(_t_idx_in,_time_in);  //print sol.0.h5 and sol.0.xmf
+        XDMFWriter::PrintSolLinear(_files.GetOutputPath(),_t_idx_in,_time_in,eqnmap);  //print sol.0.h5 and sol.0.xmf
         //AAA: here _t_idx_in is intent-in, and also _time_in is intent-in
     }
 
@@ -459,7 +460,7 @@ void TimeLoop::TransientLoop(const MultiLevelProblemTwo & eqnmap)  {
 #endif  // ------------------------------------------
 
         // print solution
-        if (delta_t_step%print_step == 0) eqnmap.PrintSol(curr_step,curr_time);   //print sol.N.h5 and sol.N.xmf
+        if (delta_t_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),curr_step,curr_time,eqnmap);   //print sol.N.h5 and sol.N.xmf
 
 
 #if DEFAULT_PRINT_TIME==1 // only for cpu time check --------

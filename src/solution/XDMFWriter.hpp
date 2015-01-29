@@ -21,6 +21,7 @@
 //----------------------------------------------------------------------------
 #include "Writer.hpp"
 #include "MultiLevelMeshTwo.hpp"
+#include "MultiLevelProblemTwo.hpp"
 
 namespace femus {
 
@@ -126,6 +127,13 @@ public:
 //     std::string _nd_coord_folder;  //TODO why seg fault if I use them?!?
 //     std::string _el_pid_name;
 //     std::string _nd_map_FineToLev;
+
+ /** MultiLevelProblem */
+ static void PrintSolXDMFLinear(const std::string output_path, const uint t_step,const double curr_time, const MultiLevelProblemTwo & ml_prob );
+ 
+ static void PrintSolHDF5Linear(const std::string output_path, const uint t_flag, const MultiLevelProblemTwo & ml_prob );
+ 
+ static void PrintSolLinear(const std::string output_path, const uint t_step, const double curr_time, const MultiLevelProblemTwo & ml_prob );
 
 private:
   

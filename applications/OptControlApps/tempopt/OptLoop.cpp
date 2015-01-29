@@ -10,6 +10,7 @@
 #include "Box.hpp"
 #include "paral.hpp"
 #include "Files.hpp"
+#include "XDMFWriter.hpp"
 
 #include "EqnT.hpp"
 
@@ -51,7 +52,7 @@ namespace femus {
 #endif 
 
       // print solution
-      if (delta_t_step%print_step == 0) eqmap_in.PrintSol(curr_step,curr_time);   //print sol.N.h5 and sol.N.xmf
+      if (delta_t_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),curr_step,curr_time,eqmap_in);   //print sol.N.h5 and sol.N.xmf
     
 
 #if DEFAULT_PRINT_TIME==1
