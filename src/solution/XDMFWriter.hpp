@@ -140,6 +140,8 @@ public:
  static void PrintCaseHDF5Linear(const std::string output_path, const uint t_init, const MultiLevelProblemTwo & ml_prob );
  
  static void PrintCaseLinear(const std::string output_path, const uint t_init, const MultiLevelProblemTwo & ml_prob ); ///< Print ic and bc
+ 
+ static void ReadSol(const std::string output_path, const uint t_step,double& time_out, const MultiLevelProblemTwo & ml_prob);  ///< Read solution //TODO must be updated, not implemented
 
 private:
   

@@ -377,7 +377,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
 //some parts of them are good for a SPECIFIC NOLEVELS or a SPECIFIC NO_PROCESSORS
 //while others, IN PARTICULAR THOSE THAT ARE NECESSARY FOR RESTART, must be INDEPENDENT OF THAT.
 
-        eqnmap.ReadSol(_t_idx_in,_time_in); //read  sol.N.h5 and sol.N.xmf
+        XDMFWriter::ReadSol(_files.GetOutputPath(),_t_idx_in,_time_in,eqnmap); //read  sol.N.h5 and sol.N.xmf
         //AAA: here _t_idx_in is intent in, _time_in is intent out
         //reading files can be done in parallel with no problems
         //well, not really... reading can be done if you are sure that the file is there at the moment you call to read it

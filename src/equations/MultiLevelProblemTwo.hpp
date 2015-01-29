@@ -80,8 +80,6 @@ public:
   inline const_iterator   end() const { return _equations.end();}
 
   void setDofBcOpIc() ;
-
-  void ReadSol(const uint t_step,double& time_out) const;  ///< Read solution //TODO must be updated
   
 private:
   
