@@ -16,8 +16,7 @@ class EqnMHDAD : public SystemTwo {
     
 EqnMHDAD(  std::vector<Quantity*> int_map_in,
 	           MultiLevelProblemTwo& mg_equations_map_in,
-                   std::string eqname_in="Eqn_MHDAD",
-                   std::string varname_in="xi");
+                   std::string eqname_in="Eqn_MHDAD");
 
   ~EqnMHDAD();
 

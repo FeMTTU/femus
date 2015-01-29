@@ -31,9 +31,8 @@ namespace femus {
 /// Constructor.
   EqnMHDAD::EqnMHDAD(std::vector<Quantity*> int_map_in,
 	           MultiLevelProblemTwo& mg_equations_map_in,
-                   std::string eqname_in,
-                   std::string varname_in):
-      SystemTwo(int_map_in,mg_equations_map_in,eqname_in,varname_in)      
+                   std::string eqname_in):
+      SystemTwo(int_map_in,mg_equations_map_in,eqname_in)      
       {
 
 //=======  _var_names[]  ===========

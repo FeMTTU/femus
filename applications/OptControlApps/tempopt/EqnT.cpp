@@ -48,9 +48,8 @@
 EqnT::EqnT(  const TimeLoop & time_loop_in,
 	     std::vector<Quantity*> int_map_in,
              MultiLevelProblemTwo& equations_map_in,
-             std::string eqname_in,
-             std::string varname_in):
-    SystemTwo(int_map_in,equations_map_in,eqname_in,varname_in),
+             std::string eqname_in):
+    SystemTwo(int_map_in,equations_map_in,eqname_in),
     _my_timeloop(time_loop_in) {
 
 //=======  _var_names[]  ===========

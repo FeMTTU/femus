@@ -34,9 +34,8 @@ namespace femus {
 ///=============== Constructor
   EqnNS::EqnNS(    std::vector<Quantity*> int_map_in,  //no reference!
 	           MultiLevelProblemTwo& equations_map_in,
-                   std::string eqname_in,
-                   std::string varname_in):
-           SystemTwo(int_map_in,equations_map_in,eqname_in,varname_in),
+                   std::string eqname_in):
+           SystemTwo(int_map_in,equations_map_in,eqname_in),
      _AdvPic_fl(ADVPIC_NS),
      _AdvNew_fl(ADVNEW_NS),
      _Stab_fl(STAB_NS),

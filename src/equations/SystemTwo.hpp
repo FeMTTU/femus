@@ -58,8 +58,7 @@ public:
 //=======================================================================
   SystemTwo(std::vector<Quantity*> int_map_in,
 	  MultiLevelProblemTwo& equations_map,
-          std::string eq_name_in="Base",
-	  std::string varname_in="u");   //System//
+          std::string eq_name_in="Base");   //System//
   
   virtual ~SystemTwo();                    //System//
   

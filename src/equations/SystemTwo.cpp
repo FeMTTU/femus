@@ -54,8 +54,7 @@ namespace femus {
 //other stuff but let us stop here now
 SystemTwo::SystemTwo(std::vector<Quantity*> int_map_in,
                  MultiLevelProblemTwo& e_map_in,
-                 std::string eqname_in,
-                 std::string varname_in):
+                 std::string eqname_in):
         _phys(e_map_in._phys),
         _mesh(e_map_in._mesh),
         _eqnmap(e_map_in),
@@ -77,7 +76,7 @@ SystemTwo::SystemTwo(std::vector<Quantity*> int_map_in,
 //============= init n_vars================
     _dofmap.initNVars();
 //========== varnames ==============
-    initVarNames(varname_in);
+    initVarNames(eqname_in);
 //========== RefValues ==============
     initRefValues();
    

@@ -24,8 +24,7 @@ class EqnNS : public SystemTwo {
   
   EqnNS(   std::vector<Quantity*> int_map_in,
 	   MultiLevelProblemTwo& mg_equations_map,
-           std::string eqname_in="Eqn_NS",/*"Navier-Stokes"*/
-           std::string varname_in="u");
+           std::string eqname_in="Eqn_NS");
    
 
   ~EqnNS();

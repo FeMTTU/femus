@@ -145,7 +145,6 @@
   // ====== MultiLevelProblemTwo =================================
   MultiLevelProblemTwo equations_map(physics_map,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
-
   
 //===============================================
 //================== Add EQUATIONS AND ======================
@@ -165,7 +164,7 @@ InternalVect_NS[0] = &velocity;  velocity.SetPosInAssocEqn(0);
 InternalVect_NS[1] = &pressure;  pressure.SetPosInAssocEqn(1);
 
   EqnNS* eqnNS = new EqnNS(InternalVect_NS,equations_map);  equations_map.add_system(eqnNS);
-  
+
            velocity.set_eqn(eqnNS);
            pressure.set_eqn(eqnNS);
 #endif
