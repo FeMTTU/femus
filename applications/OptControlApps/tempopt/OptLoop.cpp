@@ -69,7 +69,7 @@ namespace femus {
 
 		
      double J = 0.;
-J = ComputeIntegral    ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT);
+J = ComputeIntegral    ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT,_files.GetOutputTime());
 J = ComputeNormControl ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT,0 );
 J = ComputeNormControl ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT,1 );
 //=====functional evaluations =======
@@ -86,7 +86,7 @@ J = ComputeNormControl ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT,1 );
   
 // This function computes the integral only for the current processor
 
-double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn) {
+double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn, const std::string output_time) {
 
   //====== processor index
   const uint myproc = mesh->_iproc;
@@ -209,7 +209,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     
     if (paral::get_rank() ==0 ) { 
       intgr_fstream.open(intgr_fname.c_str(),ios_base::app); 
-      intgr_fstream << eqn->_eqnmap._files.GetOutputTime() << " " << eqn->_eqnmap._phys.get("alphaT") << " " << eqn->_eqnmap._phys.get("injsuc")<< " "  << J << " " << std::endl ; 
+      intgr_fstream << output_time << " " << eqn->_eqnmap._phys.get("alphaT") << " " << eqn->_eqnmap._phys.get("injsuc")<< " "  << J << " " << std::endl ; 
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
     }
  

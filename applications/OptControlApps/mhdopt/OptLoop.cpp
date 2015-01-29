@@ -117,7 +117,7 @@ void OptLoop::optimization_loop(MultiLevelProblemTwo& e_map_in)  {
   #endif
 
 
-std::string intgr_fname = e_map_in._files.GetOutputPath() + "/" + "integral.txt";
+std::string intgr_fname = _files.GetOutputPath() + "/" + "integral.txt";
 
  std::ofstream intgr_fstream;
 

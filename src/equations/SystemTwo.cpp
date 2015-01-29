@@ -33,7 +33,6 @@
 #include "XDMFWriter.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "MultiLevelProblemTwo.hpp"
-#include "Files.hpp"
 #include "CurrentElem.hpp"
 #include "CurrentGaussPoint.hpp"
 
@@ -57,7 +56,6 @@ SystemTwo::SystemTwo(std::vector<Quantity*> int_map_in,
                  MultiLevelProblemTwo& e_map_in,
                  std::string eqname_in,
                  std::string varname_in):
-        _files(e_map_in._files),
         _phys(e_map_in._phys),
         _mesh(e_map_in._mesh),
         _eqnmap(e_map_in),
@@ -1170,7 +1168,7 @@ void SystemTwo::MGCheck(int Level) const {
 
 
 // =========================================
-void SystemTwo::ReadMGOps() {
+void SystemTwo::ReadMGOps(const std::string output_path) {
 
     std::string     f_matrix = DEFAULT_F_MATRIX;
     std::string       f_rest = DEFAULT_F_REST;
@@ -1179,7 +1177,7 @@ void SystemTwo::ReadMGOps() {
 
     std::ostringstream filename;
     std::string filename_base;
-    filename_base = _files.GetOutputPath() + "/";
+    filename_base = output_path + "/";
     
         filename.str("");     filename << filename_base << f_rest << ext_h5;
         ReadRest(filename.str());

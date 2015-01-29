@@ -115,7 +115,7 @@
   // ===== end QuantityMap =========================================
 
   // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblemTwo equations_map(files,physics_map,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
+  MultiLevelProblemTwo equations_map(physics_map,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
 //===============================================
 //================== Add EQUATIONS AND ======================
@@ -161,7 +161,7 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
     mgsol -> GenerateBdc();
     mgsol -> GenerateBdcElem();
 //=====================
-    mgsol -> ReadMGOps();
+    mgsol -> ReadMGOps(files.GetOutputPath());
 //=====================
     mgsol -> initVectors();     //TODO can I do it earlier than this position?
 //=====================

@@ -36,7 +36,6 @@ namespace femus {
 
 
 
-class Files        ;
 class Physics      ;
 class MultiLevelProblemTwo ;
 class MultiLevelMeshTwo      ;
@@ -110,7 +109,7 @@ public:
 //=======================================================================
 //========= MULTIGRID FUNCTIONS (Vectors + A,R,P) ======== (procs,levels) 
 //=======================================================================
-    void ReadMGOps();                         // LinearEquation  (each level)
+    void ReadMGOps(const std::string output_path); // LinearEquation  (each level)
     void ReadMatrix(const std::string& name); // LinearEquation  (each level)
     void ReadProl(const std::string& name);   // LinearEquation  (each level)
     void ReadRest(const std::string& name);   // LinearEquation  (each level)
@@ -157,7 +156,6 @@ public:
   
 protected:
   
-  Files                     & _files;
   FemusInputParser<double>  & _phys;           
   MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem
 

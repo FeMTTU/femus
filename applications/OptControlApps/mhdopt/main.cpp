@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
 //================================
 
   // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblemTwo equations_map(files,physics_map,qty_map,mesh,FEElemType_vec,qrule);
+  MultiLevelProblemTwo equations_map(physics_map,qty_map,mesh,FEElemType_vec,qrule);
   
 //===============================================
 //================== Add EQUATIONS  AND ======================
@@ -257,7 +257,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
     mgsol -> GenerateBdc();
     mgsol -> GenerateBdcElem();
 //=====================
-    mgsol -> ReadMGOps();
+    mgsol -> ReadMGOps(files.GetOutputPath());
 //=====================
     mgsol -> initVectors();     //TODO can I do it earlier than this position?
 //=====================

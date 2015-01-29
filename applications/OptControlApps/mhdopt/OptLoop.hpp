@@ -10,7 +10,12 @@
 
 namespace femus {
 
+//prototypes that can even stay outside of a class
+  double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn);
 
+  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMeshTwo* mesh);
+  
+  
 // Forward class
 class Files;
 class SystemTwo;
@@ -32,10 +37,7 @@ public:
 
 };
 
-//prototypes that can even stay outside of a class
-  double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn);
 
-  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMeshTwo* mesh);
 
 
 
