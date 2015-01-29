@@ -90,8 +90,14 @@ public:
 //=======================================================================
 //======= Quantities =========
 //=======================================================================
-      std::vector<Quantity*>          _QtyInternalVector;  //System//
+      inline const std::vector<Quantity*> & GetQtyIntVector() const { 
+	return _QtyInternalVector;
+      }
       
+      void SetQtyIntVector(const std::vector<Quantity*> & vect_in) { 
+	_QtyInternalVector = vect_in;
+      }
+
 	    std::string *_var_names;                   //MultilevelSolution//
 	  void initVarNames(std::string varname_in);   //MultilevelSolution//
 
@@ -158,6 +164,7 @@ protected:
   FemusInputParser<double>  & _phys;           
   MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem
 
+  std::vector<Quantity*>          _QtyInternalVector;  //System//
 
 };
 

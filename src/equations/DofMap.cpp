@@ -12,7 +12,7 @@ namespace femus {
    int DofMap::GetDofQuantityComponent(const uint Level, const Quantity* quantity_in, const uint quantity_ivar,const uint dofobj) const {
     
    int off_previous = 0;
-     for (uint i = 0; i < quantity_in->_pos; i++) off_previous += _eqn->_QtyInternalVector[i]->_dim *_DofNumLevFE[ Level ][ _eqn->_QtyInternalVector[i]->_FEord ];
+     for (uint i = 0; i < quantity_in->_pos; i++) off_previous += _eqn->GetQtyIntVector()[i]->_dim *_DofNumLevFE[ Level ][ _eqn->GetQtyIntVector()[i]->_FEord ];
 
          return GetDofPosIn(Level, dofobj + quantity_ivar*_DofNumLevFE[ Level ][quantity_in->_FEord] + off_previous);
     
@@ -26,9 +26,9 @@ void DofMap::initNVars()  {
 
     for (uint fe = 0; fe < QL; fe++)  _nvars[fe]= 0;
 
-    for (uint i=0;i< _eqn->_QtyInternalVector.size(); i++) {
-        for (uint fe = 0; fe < QL; fe++)  if ( _eqn->_QtyInternalVector[i]->_FEord == fe) {
-                _nvars[fe] +=  _eqn->_QtyInternalVector[i]->_dim;
+    for (uint i=0;i< _eqn->GetQtyIntVector().size(); i++) {
+        for (uint fe = 0; fe < QL; fe++)  if ( _eqn->GetQtyIntVector()[i]->_FEord == fe) {
+                _nvars[fe] +=  _eqn->GetQtyIntVector()[i]->_dim;
             }
         }
 
