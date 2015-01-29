@@ -11,6 +11,7 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "SolvertypeEnum.hpp"
 #include "FElemTypeEnum.hpp"
+#include "Files.hpp"
 
 using std::cout;
 using std::endl;
@@ -49,6 +50,10 @@ int main(int argc,char **args) {
   /// Init Petsc-MPI communicator
   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
   
+  Files files; 
+        files.CheckIODirectories();
+        files.RedirectCout();
+
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
@@ -255,7 +260,7 @@ int main(int argc,char **args) {
   print_vars.push_back("T");
   
   GMVWriter gmvio(ml_sol);
-  gmvio.write_system_solutions("biquadratic",print_vars);
+  gmvio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
   
   
   

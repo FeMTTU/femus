@@ -45,7 +45,7 @@ int main(int argc,char **args) {
   nm+=nr;
   nr=tmp;
 
-  std::string infile = "./input/fsifirst.neu";
+  const std::string infile = "./input/fsifirst.neu";
   
   double Lref = 1.;
   double Uref = 1.;

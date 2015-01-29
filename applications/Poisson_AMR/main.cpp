@@ -15,7 +15,8 @@
 #include <json/json.h>
 #include <json/value.h>
 #include "ParsedFunction.hpp"
-#include <stdlib.h>
+#include "Files.hpp"
+#include <cstdlib>
 
 
 using std::cout;
@@ -298,6 +299,10 @@ int main(int argc,char **argv) {
     /// Init Petsc-MPI communicator
     FemusInit mpinit(argc,argv,MPI_COMM_WORLD);
 
+    Files files; 
+          files.CheckIODirectories();
+          files.RedirectCout();
+
     /// INIT MESH =================================
 
     unsigned short nm,nr;
@@ -417,10 +422,10 @@ int main(int argc,char **argv) {
     print_vars.push_back("Sol");
 
     VTKWriter vtkio(ml_sol);
-    vtkio.write_system_solutions("biquadratic",print_vars);
+    vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
 
     GMVWriter gmvio(ml_sol);
-    gmvio.write_system_solutions("biquadratic",print_vars);
+    gmvio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
 
   // 
   //     XDMFWriter xdmfio(ml_sol);

@@ -8,6 +8,7 @@
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "FElemTypeEnum.hpp"
+#include "Files.hpp"
 #include "../include/FSIassembly.hpp"
 #include "../include/IncompressibleFSIAssembly.hpp"
 
@@ -49,6 +50,10 @@ int main(int argc,char **args) {
    
   /// Init Petsc-MPI communicator
   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
+
+  Files files; 
+        files.CheckIODirectories();
+        files.RedirectCout();
 
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
@@ -219,7 +224,7 @@ int main(int argc,char **args) {
   print_vars.push_back("V");
   print_vars.push_back("P");
       
-  vtkio.write_system_solutions("biquadratic",print_vars);
+  vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
 
   // Destroy all the new systems
   ml_prob.clear();

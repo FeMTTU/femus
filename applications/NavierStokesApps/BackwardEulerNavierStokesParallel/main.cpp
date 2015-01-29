@@ -8,6 +8,7 @@
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "FElemTypeEnum.hpp"
+#include "Files.hpp"
 
 using std::cout;
 using std::endl;
@@ -25,6 +26,10 @@ int main(int argc,char **args) {
   /// Init Petsc-MPI communicator
   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
   
+  Files files; 
+        files.CheckIODirectories();
+        files.RedirectCout();
+	
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
@@ -123,7 +128,7 @@ int main(int argc,char **args) {
       
 //       ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
       VTKWriter vtkio(ml_sol);
-      vtkio.write_system_solutions("biquadratic",print_vars,time_step);
+      vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars,time_step);
     }
   
   } //end loop timestep

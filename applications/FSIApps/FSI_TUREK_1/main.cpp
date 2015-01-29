@@ -7,6 +7,7 @@
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "FElemTypeEnum.hpp"
+#include "Files.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "../include/IncompressibleFSIAssembly.hpp"
 
@@ -175,6 +176,10 @@ int main(int argc,char **args) {
   /// Init Petsc-MPI communicator
   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
 
+  Files files; 
+        files.CheckIODirectories();
+        files.RedirectCout();
+	
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
@@ -192,25 +197,25 @@ int main(int argc,char **args) {
   nm+=nr;
   nr=tmp;
 
-  char *infile = new char [50];
+  std::string infile;
   
   if(1 == simulation){
-    sprintf(infile,"./input/turek.neu");
+    infile = "./input/turek.neu";
   }
   else if(2 == simulation){
-    sprintf(infile,"./input/beam.neu");
+    infile = "./input/beam.neu";
   }  
   else if(3 == simulation){
-    sprintf(infile,"./input/drum.neu");
+    infile = "./input/drum.neu";
   }  
   else if(4 == simulation) {
-    sprintf(infile,"./input/bathe_FSI.neu");
+    infile = "./input/bathe_FSI.neu";
   }
-  else if(5==simulation){
-    sprintf(infile,"./input/bathe_shell.neu");
+  else if(5 == simulation){
+    infile = "./input/bathe_shell.neu";
   }
-  else if(6==simulation){
-    sprintf(infile,"./input/bathe_cylinder.neu");
+  else if(6 == simulation){
+    infile = "./input/bathe_cylinder.neu";
   }
   
    double Lref, Uref, rhof, muf, rhos, ni, E; 
@@ -275,7 +280,7 @@ int main(int argc,char **args) {
   cout << "Fluid properties: " << endl;
   cout << fluid << endl;
 
-  MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
+  MultiLevelMesh ml_msh(nm,nr,infile.c_str(),"fifth",Lref,SetRefinementFlag);
   
   MultiLevelSolution ml_sol(&ml_msh);
   
@@ -440,12 +445,11 @@ int main(int argc,char **args) {
   if (!dimension2D) print_vars.push_back("W");
   print_vars.push_back("P");
       
-  vtkio.write_system_solutions("biquadratic",print_vars);
+  vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
 
   // Destroy all the new systems
   ml_prob.clear();
    
-  delete [] infile;
   return 0;
 }
 
