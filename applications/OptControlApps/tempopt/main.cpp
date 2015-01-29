@@ -164,7 +164,8 @@ InternalVect_NS[0] = &velocity;  velocity.SetPosInAssocEqn(0);
 InternalVect_NS[1] = &pressure;  pressure.SetPosInAssocEqn(1);
 
   EqnNS* eqnNS = new EqnNS(InternalVect_NS,equations_map,"Eqn_NS");  equations_map.add_system(eqnNS);
-
+  eqnNS->SetQtyIntVector(InternalVect_NS);
+  
            velocity.set_eqn(eqnNS);
            pressure.set_eqn(eqnNS);
 #endif
@@ -185,6 +186,8 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 #endif
 
   EqnT* eqnT = new EqnT(InternalVect_Temp,equations_map,"Eqn_T");
+  eqnT->SetQtyIntVector(InternalVect_Temp);
+
   equations_map.add_system(eqnT); 
   
         temperature.set_eqn(eqnT);

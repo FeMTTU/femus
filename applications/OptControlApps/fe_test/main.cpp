@@ -126,13 +126,13 @@
 //   so this operation of set_eqn could be done right away in the moment when you put the quantity in the equation
  
 std::vector<Quantity*> InternalVect_Temp(3); 
-// std::vector<Quantity*> InternalVect_Temp(1); 
 
 InternalVect_Temp[0] = &temperature;               temperature.SetPosInAssocEqn(0);
 InternalVect_Temp[1] = &temperature2;              temperature2.SetPosInAssocEqn(1);
 InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn(2);
 
   EqnT* eqnT = new EqnT(InternalVect_Temp,equations_map,"Eqn_T");
+  eqnT->SetQtyIntVector(InternalVect_Temp);
   equations_map.add_system(eqnT);  
   
     for (uint l=0; l< mesh._NoLevels; l++)  eqnT->_solver[l]->set_solver_type(GMRES);
