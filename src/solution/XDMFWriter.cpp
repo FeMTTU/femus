@@ -1264,7 +1264,7 @@ void XDMFWriter::write_system_solutions_bc(const std::string namefile, const Mul
 
 
 // ==================================================================
-void XDMFWriter::PrintMultimeshXdmfBiquadratic(const std::string output_path, const MultiLevelMeshTwo &mesh) {
+void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const MultiLevelMeshTwo &mesh) {
 
      if (mesh._iproc==0) {
   
@@ -1281,7 +1281,7 @@ void XDMFWriter::PrintMultimeshXdmfBiquadratic(const std::string output_path, co
     top_file << basemesh << ext_h5;
 
     if (out.fail()) {
-        std::cout << "MultiLevelMeshTwo::PrintMultimeshXdmf: The file is not open" << std::endl;
+        std::cout << "MultiLevelMeshTwo::PrintMeshBiquadratic: The file is not open" << std::endl;
         abort();
     }
 
@@ -1344,7 +1344,7 @@ void XDMFWriter::PrintMultimeshXdmfBiquadratic(const std::string output_path, co
  //but if you put ALL THE DATA in THE SAME FOLDER as the READER(s)
  //then they are always independent and the data will always be readable
 
- void XDMFWriter::PrintXDMFAllLEVAllVBLinear(const std::string output_path, const MultiLevelMeshTwo & mesh) {
+ void XDMFWriter::PrintMeshLinearXDMF(const std::string output_path, const MultiLevelMeshTwo & mesh) {
 
   std::string     basemesh = DEFAULT_BASEMESH;
   std::string     ext_xdmf = DEFAULT_EXT_XDMF;
@@ -1365,11 +1365,22 @@ void XDMFWriter::PrintMultimeshXdmfBiquadratic(const std::string output_path, co
   out << ">\n"; 
   out << " \n";
   out << "<Xdmf> \n" << "<Domain> \n";
+	      
+  std::string grid_mesh[VB];
+  grid_mesh[VV]="Volume";
+  grid_mesh[BB]="Boundary";  
   
-          for(uint vb=0;vb< VB; vb++)  
-	    for(uint l=0; l< mesh._NoLevels; l++)
-	      PrintXDMFGridVBLinear(out,top_file,geom_file,l,vb,mesh);
-   
+          for(uint vb=0;vb< VB; vb++)  {
+	    for(uint l=0; l< mesh._NoLevels; l++) {
+  
+    out << "<Grid Name=\"" << grid_mesh[vb].c_str() << "_L" << l << "\"> \n";
+    
+	      PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,vb,mesh);
+	      
+    out << "</Grid> \n";  
+	      
+	         }
+          }
    out << "</Domain> \n" << "</Xdmf> \n";
    out.close ();
    
@@ -1379,71 +1390,34 @@ void XDMFWriter::PrintMultimeshXdmfBiquadratic(const std::string output_path, co
 
 
 // ========================================================
-void XDMFWriter::PrintXDMFGridVBLinear(std::ofstream& out,
+//print topology and geometry, useful for both case.xmf and sol.xmf
+void XDMFWriter::PrintXDMFTopGeomVBLinear(std::ofstream& out,
 			      std::ostringstream& top_file,
 			      std::ostringstream& geom_file, const uint Level, const uint vb, const MultiLevelMeshTwo & mesh) {
 
-    const uint LIN_MESH = 0;
+#ifdef HAVE_HDF5 
+   
     
-  std::string grid_mesh[VB];
-  grid_mesh[VV]="Volume";
-  grid_mesh[BB]="Boundary";
-  
   std::ostringstream hdf_field; hdf_field << "MSHCONN_VB_" << vb << "_LEV_" << Level;
   
     uint nel = mesh._n_elements_vb_lev[vb][Level];
 
-    out << "<Grid Name=\"" << grid_mesh[vb].c_str() << "_L" << Level << "\"> \n";
     
    XDMFWriter::PrintXDMFTopology(out,top_file.str(),hdf_field.str(),
-			             XDMFWriter::type_el[LIN_MESH][mesh._eltype_flag[vb]],
+			     XDMFWriter::type_el[LINEAR_FE][mesh._eltype_flag[vb]],
 			                            nel*NRE[mesh._eltype_flag[vb]],
 			                            nel*NRE[mesh._eltype_flag[vb]],
-			                                NVE[mesh._eltype_flag[vb]][LIN_MESH]);
+			                                NVE[mesh._eltype_flag[vb]][LINEAR_FE]);
 
    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
    XDMFWriter::PrintXDMFGeometry(out,geom_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[Level],1);
     
-    out << "</Grid> \n";  
+    
+#endif
 
    return;
 }
 
-
-
-//print topology and geometry, useful for both case.xmf and sol.xmf
- void XDMFWriter::PrintXDMFTopologyGeometryLinear(std::ofstream& out,const unsigned Level, const unsigned vb, const MultiLevelMeshTwo& mesh)  {
-
-#ifdef HAVE_HDF5 
-
-    const uint LIN_MESH = 0;
-    
-    //Mesh
-    uint n_elements = mesh._n_elements_vb_lev[vb][Level];
-
-    std::string basemesh   = DEFAULT_BASEMESH;
-    std::string connlin    = DEFAULT_CONNLIN;
-    std::string ext_h5     = DEFAULT_EXT_H5;
-    
-    //connectivity
-    std::ostringstream connfile; connfile <<  basemesh << connlin <<  ext_h5;
-    std::ostringstream hdf5_field; hdf5_field << "MSHCONN_VB_" << vb << "_LEV_" << Level;
-    //coordinates
-    std::ostringstream coord_file; coord_file <<  basemesh <<  ext_h5;
-    
-    XDMFWriter::PrintXDMFTopology(out,connfile.str(),hdf5_field.str(),
-			             XDMFWriter::type_el[LIN_MESH][mesh._eltype_flag[vb]],
-			                     n_elements*NRE[mesh._eltype_flag[vb]],
-			                     n_elements*NRE[mesh._eltype_flag[vb]],
-			                                NVE[mesh._eltype_flag[vb]][LIN_MESH]);
-
-    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
-    XDMFWriter::PrintXDMFGeometry(out,coord_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[Level],1);
-
-#endif
-    
-    return;
-}
 
 
 void XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh) {
@@ -1525,12 +1499,12 @@ return;
 
 // ========================================================
 /// It manages the printing in Xdmf format
-void XDMFWriter::PrintAllLEVAllVBLinear(const std::string output_path, const MultiLevelMeshTwo & mesh) {
+void XDMFWriter::PrintMeshLinear(const std::string output_path, const MultiLevelMeshTwo & mesh) {
   
     const uint iproc = mesh._iproc;
    if (iproc==0) {
        PrintConnAllLEVAllVBLinear(output_path,mesh);
-       PrintXDMFAllLEVAllVBLinear(output_path,mesh);
+       PrintMeshLinearXDMF(output_path,mesh);
     }
    
    return;

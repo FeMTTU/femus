@@ -186,6 +186,9 @@ void MultiLevelProblemTwo::PrintSolXDMF(const uint t_step,const double curr_time
         std::string connlin     = DEFAULT_CONNLIN;
         std::string     ext_h5  = DEFAULT_EXT_H5;
         std::string    ext_xdmf = DEFAULT_EXT_XDMF;
+    
+        std::ostringstream top_file; top_file << basemesh << connlin << ext_h5;
+        std::ostringstream geom_file; geom_file << basemesh << ext_h5;
 
 // =================================
 // ============= LEVELS ============
@@ -220,8 +223,8 @@ void MultiLevelProblemTwo::PrintSolXDMF(const uint t_step,const double curr_time
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
 	out << "<Time Value =\"" << curr_time << "\" /> \n";
-
-	XDMFWriter::PrintXDMFTopologyGeometryLinear(out,l,VV,_mesh);
+	
+        XDMFWriter::PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,VV,_mesh);
 
 	MultiLevelProblemTwo::const_iterator pos1   = _equations.begin();
         MultiLevelProblemTwo::const_iterator pos1_e = _equations.end();
@@ -398,6 +401,9 @@ void MultiLevelProblemTwo::PrintCaseXDMF(const uint t_init) const {
         std::string     aux_xdmf = DEFAULT_AUX_XDMF;
         std::string      connlin = DEFAULT_CONNLIN;
         std::string  bdry_suffix = DEFAULT_BDRY_SUFFIX;
+	
+        std::ostringstream top_file; top_file << basemesh << connlin << ext_h5;
+        std::ostringstream geom_file; geom_file << basemesh << ext_h5;
 
         //FE print
         std::string DofType[QL];
@@ -443,7 +449,7 @@ void MultiLevelProblemTwo::PrintCaseXDMF(const uint t_init) const {
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
         // TOPOLOGY GEOMETRY ===========
-        XDMFWriter::PrintXDMFTopologyGeometryLinear(out,l,VV,_mesh);
+        XDMFWriter::PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,VV,_mesh);
 
 	// ===== PID ======
         std::ostringstream  pid_name; pid_name << "PID" << "_LEVEL" << l;

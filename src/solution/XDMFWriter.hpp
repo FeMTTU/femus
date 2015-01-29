@@ -89,23 +89,21 @@ public:
 				     int data_dim_one,
 				     int data_dim_two); 
   
-  static void PrintMultimeshXdmfBiquadratic(const std::string output_path, const MultiLevelMeshTwo & mesh);
+  static void PrintMeshBiquadraticXDMF(const std::string output_path, const MultiLevelMeshTwo & mesh);
   
-  static void PrintXDMFAllLEVAllVBLinear(const std::string output_path, const MultiLevelMeshTwo & mesh);
+  static void PrintMeshLinearXDMF(const std::string output_path, const MultiLevelMeshTwo & mesh);
   
-  static void PrintXDMFGridVBLinear(std::ofstream& out, std::ostringstream& top_file,
+  static void PrintXDMFTopGeomVBLinear(std::ofstream& out, std::ostringstream& top_file,
 			      std::ostringstream& geom_file,
 			      const uint Level,
 			      const uint vb,
 			      const MultiLevelMeshTwo & mesh);
   
-  static void PrintXDMFTopologyGeometryLinear(std::ofstream& out,const unsigned Level, const unsigned vb, const MultiLevelMeshTwo& mesh);
-
   static void PrintSubdomFlagOnCellsBiquadratic(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh);
   
   static void PrintSubdomFlagOnCellsLinear(std::string filename, const MultiLevelMeshTwo & mesh);
   
-  static void PrintAllLEVAllVBLinear(const std::string output_path, const MultiLevelMeshTwo& mesh);
+  static void PrintMeshLinear(const std::string output_path, const MultiLevelMeshTwo& mesh);
   
   static void PrintConnAllLEVAllVBLinear(const std::string output_path, const MultiLevelMeshTwo& mesh);
   
