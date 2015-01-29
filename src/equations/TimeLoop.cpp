@@ -417,7 +417,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
 //------- print
     //this happens when the output dir is already set
     //at this point this is already true
-    eqnmap.PrintCase(_t_idx_in);       //print caseN.xmf&h5 = IC + BC flags
+    XDMFWriter::PrintCaseLinear(_files.GetOutputPath(),_t_idx_in,eqnmap);       //print caseN.xmf&h5 = IC + BC flags
     transient_print_xmf(_t_idx_in,_t_idx_final,eqnmap._mesh._NoLevels); //print timeN.xmf
 
     return;

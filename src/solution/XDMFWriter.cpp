@@ -2549,6 +2549,181 @@ void XDMFWriter::PrintSolLinear(const std::string output_path, const uint t_step
 }
 
  
+// ====================================================
+/// This function prints initial and boundary data in xdmf+hdf5 format
+// of course whenever you change the fields printed in the case h5 file
+// then you need to change also the xdmf file
+// we should do a routine that for a given field prints both the hdf5 dataset
+// and the  xdmf tag... well it's not so automatic, because you need to know
+// what is the grid on which to print, bla bla bla
+void XDMFWriter::PrintCaseLinear(const std::string output_path, const uint t_init, const MultiLevelProblemTwo & ml_prob) {
+  
+  
+     XDMFWriter::PrintCaseHDF5Linear(output_path,t_init,ml_prob);
+     XDMFWriter::PrintCaseXDMFLinear(output_path,t_init,ml_prob);
+
+    return;
+} 
+
+
+// =============================================================================
+/// This function prints initial and boundary data in hdf5 fromat
+/// in the file case.h5
+void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t_init, const MultiLevelProblemTwo & ml_prob ) {
+
+    const uint    iproc =ml_prob._mesh._iproc;
+    if (iproc==0) {
+
+        const uint ndigits      = DEFAULT_NDIGITS;
+        std::string    basecase = DEFAULT_BASECASE;
+        std::string   ext_xdmf  = DEFAULT_EXT_XDMF;
+        std::string     ext_h5  = DEFAULT_EXT_H5;
+
+        std::ostringstream filename;
+        filename << output_path << "/" << basecase << "." << setw(ndigits) << setfill('0') << t_init << ext_h5;
+
+        hid_t file = H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
+
+	for (uint l=0; l< ml_prob._mesh._NoLevels; l++) {
+	
+        XDMFWriter::PrintSubdomFlagOnCellsLinear(l,filename.str(),ml_prob._mesh,LINEAR_FE);
+
+	}
+	
+        H5Fclose(file);
+
+        MultiLevelProblemTwo::const_iterator pos   = ml_prob.begin();
+        MultiLevelProblemTwo::const_iterator pos_e = ml_prob.end();
+        for (;pos!=pos_e;pos++) {
+            SystemTwo* eqn = pos->second;
+            XDMFWriter::write_system_solutions(filename.str(),& ml_prob._mesh,&(eqn->_dofmap),eqn);    // initial solution
+            XDMFWriter::write_system_solutions_bc(filename.str(),& ml_prob._mesh,&(eqn->_dofmap),eqn,eqn->_bc,eqn->_bc_fe_kk);            // boundary condition
+        }
+
+    } //end iproc
+
+    return;
+}
+
+
+
+// ====================================================================
+/// It prints the Xdmf file to read the initial and boundary conditions
+//now, this function does exactly the same as print sol;
+//more over, it prints the PID, and the BOUNDARY CONDITIONS
+//so it prints, INITIAL CONDITIONS, BOUNDARY CONDITIONS, PID
+//let us split so that we can have a unique function
+
+//clearly, you need to know WHERE to print this file.
+//so you need the absolute paths
+//but, inside the lines of this file, you dont need to put the absolute paths,
+//because you already know you'll not separate .xmf and .h5
+
+void XDMFWriter::PrintCaseXDMFLinear(const std::string output_path, const uint t_init, const MultiLevelProblemTwo & ml_prob ) {
+
+    const uint    iproc = ml_prob._mesh._iproc;
+    if (iproc==0) {
+
+        const uint NoLevels = ml_prob._mesh._NoLevels;
+        const uint ndigits  = DEFAULT_NDIGITS;
+
+        std::string     basecase = DEFAULT_BASECASE;
+        std::string     basemesh = DEFAULT_BASEMESH;
+        std::string       ext_h5 = DEFAULT_EXT_H5;
+        std::string     ext_xdmf = DEFAULT_EXT_XDMF;
+        std::string     aux_xdmf = DEFAULT_AUX_XDMF;
+        std::string      connlin = DEFAULT_CONNLIN;
+        std::string  bdry_suffix = DEFAULT_BDRY_SUFFIX;
+	
+        std::ostringstream top_file; top_file << connlin << ext_h5;
+        std::ostringstream geom_file; geom_file << basemesh << ext_h5;
+
+        //FE print
+        std::string DofType[QL];
+        DofType[QQ] = "Node";
+        DofType[LL] = "Node";
+        DofType[KK] = "Cell";
+
+        std::string var_name[VB];
+        std::string var_type[VB];
+	
+// =================================
+// ============= LEVELS ============
+// =================================
+	
+	for (uint l=0; l < NoLevels; l++) {
+	  
+        std::ostringstream filename_xdmf;
+        filename_xdmf << output_path << "/"
+        << basecase  << "." << setw(ndigits) << setfill('0') << t_init << "_l" << l << ext_xdmf;
+        std::ostringstream hdf_file;
+        hdf_file <<  basecase << "." << setw(ndigits) << setfill('0') << t_init << ext_h5;
+
+        std::ofstream out(filename_xdmf.str().c_str());
+        if (out.fail()) {
+            std::cout << "MultiLevelProblemTwo::print_case_xmf: cannot print " << filename_xdmf.str().c_str() << std::endl;
+            abort();
+        }
+
+        // BEGIN XDMF =======
+        out << "<?xml version=\"1.0\" ?> \n";
+        out << "<!DOCTYPE Xdmf SYSTEM ";
+        out <<  "\"" << output_path << "/" << aux_xdmf << "\" \n";
+//    out << " [ <!ENTITY HeavyData \"\"> ] ";
+        out << ">\n";
+        out << "<Xdmf> \n" << "<Domain> \n";
+	
+
+        int NGeomObjOnWhichToPrint[QL];
+        NGeomObjOnWhichToPrint[QQ] = ml_prob._mesh._NoNodesXLev[l];
+        NGeomObjOnWhichToPrint[LL] = ml_prob._mesh._NoNodesXLev[l];
+        NGeomObjOnWhichToPrint[KK] = ml_prob._mesh._n_elements_vb_lev[VV][l]*NRE[ml_prob._mesh._eltype_flag[VV]];
+
+	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
+
+        // TOPOLOGY GEOMETRY ===========
+        XDMFWriter::PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,VV,ml_prob._mesh);
+
+	// ===== PID ======
+        std::ostringstream  pid_name; pid_name << "PID" << "_LEVEL" << l;
+	XDMFWriter::PrintXDMFAttribute(out,hdf_file.str(),pid_name.str(),pid_name.str(),"Scalar",DofType[KK],"Int",NGeomObjOnWhichToPrint[KK],1);
+
+        // ATTRIBUTES FOR EACH SYSTEM ===========
+        MultiLevelProblemTwo::const_iterator pos1 = ml_prob.begin();
+        MultiLevelProblemTwo::const_iterator pos1_e = ml_prob.end();
+        for (;pos1!=pos1_e;pos1++)   {
+            SystemTwo *mgsol=pos1->second;
+            int OffVarNames[QL];
+            OffVarNames[QQ] = 0;
+            OffVarNames[LL] = mgsol->_dofmap._nvars[QQ];
+            OffVarNames[KK] = mgsol->_dofmap._nvars[QQ] + mgsol->_dofmap._nvars[LL];
+            for (int fe=0; fe<QL; fe++)  {
+                for (uint ivar=0; ivar < mgsol->_dofmap._nvars[fe]; ivar++)     {
+		    std::ostringstream  varstream; varstream << mgsol->_var_names[OffVarNames[fe] + ivar] << "_LEVEL" << l;
+                    var_name[VV] = varstream.str();
+                    var_type[VV] = "Float";
+                    var_name[BB] = var_name[VV] + bdry_suffix;
+                    var_type[BB] = "Int";
+                    for (int vb=0;vb<VB; vb++) {
+                        XDMFWriter::PrintXDMFAttribute(out,hdf_file.str(),var_name[vb],var_name[vb],"Scalar",DofType[fe],var_type[vb],NGeomObjOnWhichToPrint[fe],1);
+                    }
+                }
+            } //end fe
+
+        }  //end eqn
+
+        out << "</Grid>\n";
+
+	out << "</Domain> \n" << "</Xdmf> \n";
+        out.close();
+	
+	} //end levels
+
+    } //if iproc==0
+    
+    return;
+}
+
 
  
 } //end namespace femus

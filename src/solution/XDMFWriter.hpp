@@ -135,6 +135,12 @@ public:
  
  static void PrintSolLinear(const std::string output_path, const uint t_step, const double curr_time, const MultiLevelProblemTwo & ml_prob );
 
+ static void PrintCaseXDMFLinear(const std::string output_path, const uint t_init, const MultiLevelProblemTwo & ml_prob );
+ 
+ static void PrintCaseHDF5Linear(const std::string output_path, const uint t_init, const MultiLevelProblemTwo & ml_prob );
+ 
+ static void PrintCaseLinear(const std::string output_path, const uint t_init, const MultiLevelProblemTwo & ml_prob ); ///< Print ic and bc
+
 private:
   
    static const std::string type_el[4][6];

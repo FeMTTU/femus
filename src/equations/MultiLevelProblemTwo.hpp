@@ -79,21 +79,15 @@ public:
   inline const_iterator begin() const { return _equations.begin();}
   inline const_iterator   end() const { return _equations.end();}
 
-
   void setDofBcOpIc() ;
 
-
-  // read-print functions -------------------------------------------
   void ReadSol(const uint t_step,double& time_out) const;  ///< Read solution //TODO must be updated
-  void PrintCase(const uint t_init) const; ///< Print ic and bc
   
 private:
   
  map<string,SystemTwo*> _equations;   // system map
     
 
- void PrintCaseXDMF(const uint t_init) const;
- void PrintCaseHDF5(const uint t_init) const;
 
 };
 
