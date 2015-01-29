@@ -163,7 +163,7 @@ std::vector<Quantity*> InternalVect_NS(2);
 InternalVect_NS[0] = &velocity;  velocity.SetPosInAssocEqn(0);
 InternalVect_NS[1] = &pressure;  pressure.SetPosInAssocEqn(1);
 
-  EqnNS* eqnNS = new EqnNS(InternalVect_NS,equations_map);  equations_map.add_system(eqnNS);
+  EqnNS* eqnNS = new EqnNS(InternalVect_NS,equations_map,"Eqn_NS");  equations_map.add_system(eqnNS);
 
            velocity.set_eqn(eqnNS);
            pressure.set_eqn(eqnNS);
@@ -184,7 +184,7 @@ InternalVect_Temp[2] = &tempadj;               tempadj.SetPosInAssocEqn(2);
 InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 #endif
 
-  EqnT* eqnT = new EqnT(InternalVect_Temp,equations_map);
+  EqnT* eqnT = new EqnT(InternalVect_Temp,equations_map,"Eqn_T");
   equations_map.add_system(eqnT); 
   
         temperature.set_eqn(eqnT);

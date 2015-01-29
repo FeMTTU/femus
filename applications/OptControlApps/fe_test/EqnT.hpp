@@ -18,8 +18,7 @@ public:
 
     EqnT( std::vector<Quantity*> int_map_in,
 	  MultiLevelProblemTwo& mg_equations_map,
-          std::string eqname_in="Eqn_T",
-          std::string varname_in="T");
+          std::string eqname_in);
 
     ~EqnT();  
      
