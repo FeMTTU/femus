@@ -50,7 +50,8 @@ MultiLevelProblemTwo::MultiLevelProblemTwo(Files& files_in,
         _qtymap(qtymap_in),
         _mesh(mesh_in),
         _elem_type(elem_type_in),
-        _qrule(qrule_in)  {}
+        _qrule(qrule_in),
+        MultiLevelProblem()  { }
 
 
 // ====================================================

@@ -26,6 +26,7 @@ using namespace std;
 #include "SystemTwo.hpp"
 #include "GaussPoints.hpp"
 
+#include "MultiLevelProblem.hpp"
 
 namespace femus {
 
@@ -40,7 +41,7 @@ class TimeLoop;
 class QuantityMap;
 
 
-class MultiLevelProblemTwo  {
+class MultiLevelProblemTwo : public MultiLevelProblem {
 
 public:
   
@@ -67,9 +68,9 @@ public:
   void clean(); ///< Clean all substructures
 
   // equation get/set
-  inline          void  set_eqs(SystemTwo* value)            {_equations.insert(make_pair(value->_eqname,value));}
-  inline       SystemTwo* get_eqs(const string & name)       {return _equations.find(name)->second;}
-  inline const SystemTwo* get_eqs(const string & name) const {return _equations.find(name)->second;}
+  inline          void  add_system(SystemTwo* value)            {_equations.insert(make_pair(value->_eqname,value));}
+  inline       SystemTwo* get_system(const string & name)       {return _equations.find(name)->second;}
+  inline const SystemTwo* get_system(const string & name) const {return _equations.find(name)->second;}
 
   typedef std::map<string, SystemTwo*>::iterator iterator;
   typedef std::map<string, SystemTwo*>::const_iterator const_iterator;

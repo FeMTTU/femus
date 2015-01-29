@@ -184,7 +184,7 @@ InternalVect_NS[QTYZERO] = &velocity;      velocity.SetPosInAssocEqn(0);
 InternalVect_NS[QTYONE] = &pressure;       pressure.SetPosInAssocEqn(1);
 
   EqnNS* eqnNS=new EqnNS(InternalVect_NS,equations_map);
-  equations_map.set_eqs(eqnNS);
+  equations_map.add_system(eqnNS);
  
  velocity.set_eqn(eqnNS);
  pressure.set_eqn(eqnNS);
@@ -197,7 +197,7 @@ InternalVect_NSAD[QTYZERO] = &velocity_adj;     velocity_adj.SetPosInAssocEqn(0)
 InternalVect_NSAD[QTYONE]  = &pressure_adj;     pressure_adj.SetPosInAssocEqn(1);
 
   EqnNSAD* eqnNSAD=new EqnNSAD(InternalVect_NSAD,equations_map);
-  equations_map.set_eqs(eqnNSAD);
+  equations_map.add_system(eqnNSAD);
 
   velocity_adj.set_eqn(eqnNSAD);
   pressure_adj.set_eqn(eqnNSAD);
@@ -210,7 +210,7 @@ InternalVect_MHD[QTYZERO] = &bhom;             bhom.SetPosInAssocEqn(0);
 InternalVect_MHD[QTYONE]  = &bhom_lag_mult;    bhom_lag_mult.SetPosInAssocEqn(1);
 
   EqnMHD* eqnMHD=new EqnMHD(InternalVect_MHD,equations_map);
-  equations_map.set_eqs(eqnMHD);
+  equations_map.add_system(eqnMHD);
 
              bhom.set_eqn(eqnMHD);
     bhom_lag_mult.set_eqn(eqnMHD);
@@ -223,7 +223,7 @@ InternalVect_MHDAD[QTYZERO] = &bhom_adj;             bhom_adj.SetPosInAssocEqn(0
 InternalVect_MHDAD[QTYONE]  = &bhom_lag_mult_adj;    bhom_lag_mult_adj.SetPosInAssocEqn(1);
 	
   EqnMHDAD* eqnMHDAD=new EqnMHDAD(InternalVect_MHDAD,equations_map);
-  equations_map.set_eqs(eqnMHDAD);
+  equations_map.add_system(eqnMHDAD);
   
            bhom_adj.set_eqn(eqnMHDAD);
   bhom_lag_mult_adj.set_eqn(eqnMHDAD);
@@ -236,7 +236,7 @@ InternalVect_MHDCONT[QTYZERO] = &Bext;            Bext.SetPosInAssocEqn(0);
 InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn(1);
 
   EqnMHDCONT* eqnMHDCONT = new EqnMHDCONT(InternalVect_MHDCONT,equations_map);
-  equations_map.set_eqs(eqnMHDCONT);
+  equations_map.add_system(eqnMHDCONT);
 
                  Bext.set_eqn(eqnMHDCONT);
         Bext_lag_mult.set_eqn(eqnMHDCONT);

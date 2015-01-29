@@ -66,7 +66,8 @@ SystemTwo::SystemTwo(std::vector<Quantity*> int_map_in,
         _NoLevels(e_map_in._mesh._NoLevels), //you can do that
         _var_names(NULL),
         _refvalue(NULL),
-        _dofmap(this,e_map_in._mesh) {
+        _dofmap(this,e_map_in._mesh),
+        System(e_map_in,eqname_in,7) {
 
 //============= init Quantities ================
 //internal std::vector

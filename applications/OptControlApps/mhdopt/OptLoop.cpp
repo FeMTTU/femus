@@ -101,19 +101,19 @@ void OptLoop::optimization_loop(MultiLevelProblemTwo& e_map_in)  {
   
   
  #ifdef NS_EQUATIONS
-     EqnNS* mgNS = static_cast<EqnNS*>(e_map_in.get_eqs("Eqn_NS"));
+     EqnNS* mgNS = static_cast<EqnNS*>(e_map_in.get_system("Eqn_NS"));
   #endif
   #ifdef MHD_EQUATIONS
-     EqnMHD* mgMHD = static_cast<EqnMHD*>(e_map_in.get_eqs("Eqn_MHD"));
+     EqnMHD* mgMHD = static_cast<EqnMHD*>(e_map_in.get_system("Eqn_MHD"));
   #endif
  #ifdef NSAD_EQUATIONS
-     EqnNSAD* mgNSAD = static_cast<EqnNSAD*>(e_map_in.get_eqs("Eqn_NSAD"));
+     EqnNSAD* mgNSAD = static_cast<EqnNSAD*>(e_map_in.get_system("Eqn_NSAD"));
  #endif
   #ifdef MHDAD_EQUATIONS
-      EqnMHDAD* mgMHDAD = static_cast<EqnMHDAD*>(e_map_in.get_eqs("Eqn_MHDAD"));
+      EqnMHDAD* mgMHDAD = static_cast<EqnMHDAD*>(e_map_in.get_system("Eqn_MHDAD"));
   #endif
   #ifdef MHDCONT_EQUATIONS
-      EqnMHDCONT* mgMHDCONT = static_cast<EqnMHDCONT*>(e_map_in.get_eqs("Eqn_MHDCONT"));
+      EqnMHDCONT* mgMHDCONT = static_cast<EqnMHDCONT*>(e_map_in.get_system("Eqn_MHDCONT"));
   #endif
 
 

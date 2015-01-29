@@ -29,6 +29,7 @@
 #include "VBTypeEnum.hpp"
 #include "DofMap.hpp"
 
+#include "System.hpp"
 
 
 namespace femus {
@@ -49,7 +50,7 @@ class LinearEquationSolver;
 
 
 
-class SystemTwo  {
+class SystemTwo : public System {
 
 public:
 

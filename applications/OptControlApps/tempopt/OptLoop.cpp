@@ -65,7 +65,7 @@ namespace femus {
 //=====functional evaluations=======
 
 #if T_EQUATIONS==1
-		EqnT* eqnT = static_cast<EqnT*>(eqmap_in.get_eqs("Eqn_T"));
+		EqnT* eqnT = static_cast<EqnT*>(eqmap_in.get_system("Eqn_T"));
 
 		
      double J = 0.;
