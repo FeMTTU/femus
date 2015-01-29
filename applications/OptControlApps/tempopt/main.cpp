@@ -184,9 +184,9 @@ InternalVect_Temp[2] = &tempadj;               tempadj.SetPosInAssocEqn(2);
 InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 #endif
 
-  EqnT* eqnT = new EqnT(opt_loop,InternalVect_Temp,equations_map);
-  equations_map.add_system(eqnT);  
-
+  EqnT* eqnT = new EqnT(InternalVect_Temp,equations_map);
+  equations_map.add_system(eqnT); 
+  
         temperature.set_eqn(eqnT);
            templift.set_eqn(eqnT);
             tempadj.set_eqn(eqnT);

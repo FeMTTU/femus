@@ -45,12 +45,10 @@
 // The first time when you start associating scalar variables to quantities
 // is when you set the BC's
 // ======================================================
-EqnT::EqnT(  const TimeLoop & time_loop_in,
-	     std::vector<Quantity*> int_map_in,
+EqnT::EqnT(  std::vector<Quantity*> int_map_in,
              MultiLevelProblemTwo& equations_map_in,
              std::string eqname_in):
-    SystemTwo(int_map_in,equations_map_in,eqname_in),
-    _my_timeloop(time_loop_in) {
+    SystemTwo(int_map_in,equations_map_in,eqname_in) {
 
 //=======  _var_names[]  ===========
   _var_names[0]="T";
