@@ -99,7 +99,7 @@ public:
 			      const uint vb,
 			      const MultiLevelMeshTwo & mesh);
   
-  static void PrintSubdomFlagOnCellsBiquadratic(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh, const uint order);
+  static void PrintSubdomFlagOnCellsBiquadratic(hid_t & file, std::string filename, const MultiLevelMeshTwo & mesh, const uint order);
   
   static void PrintSubdomFlagOnCellsLinear(const int Level, std::string filename, const MultiLevelMeshTwo & mesh, const uint order);
   

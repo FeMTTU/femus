@@ -1420,13 +1420,20 @@ void XDMFWriter::PrintXDMFTopGeomVBLinear(std::ofstream& out,
 
 
 
-void XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh, const uint order) {
+void XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(hid_t & file, std::string filename, const MultiLevelMeshTwo & mesh, const uint order) {
 
-    if (mesh._iproc==0)   {
-
-        //   const uint Level = /*_NoLevels*/_n_levels-1;
-        const uint n_children = /*4*(_dim-1)*/1;  /*here we have quadratic cells*/
-
+  if (mesh._iproc==0)   {
+  
+    hid_t group_id = H5Gcreate(file, "/PID", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  
+    for (int  vb= 0; vb< VB;vb++) {
+        for (int  Level= 0;Level< mesh._NoLevels; Level++)  {
+	  
+   uint n_children;
+    if (order == BIQUADR_FE)      n_children = 1;
+    else if  (order == LINEAR_FE) n_children = 4*( mesh._dim-1);
+    else { std::cout << "Mesh Not supported" << std::endl; abort(); }   
+    
         uint      n_elements = mesh._n_elements_vb_lev[vb][Level];
         int *ucoord;
         ucoord=new int[n_elements*n_children];
@@ -1451,8 +1458,15 @@ void XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(const int vb, const int Level
 
         H5Fclose(file_id);
 
-    }
+    
+	} //end lev
+      
+    } //end vb
 
+    H5Gclose(group_id);
+    
+   }  //end iproc
+    
     return;
 }
 
@@ -1460,14 +1474,14 @@ void XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(const int vb, const int Level
 // ===============================================================
 /// this function is done only by _iproc == 0!
 /// it prints the PID index on the cells of the linear mesh
-void XDMFWriter::PrintSubdomFlagOnCellsLinear(const int Level, std::string filename, const MultiLevelMeshTwo & mesh, const uint order) {
+void XDMFWriter::PrintSubdomFlagOnCellsLinear(const int l, std::string filename, const MultiLevelMeshTwo & mesh, const uint order) {
   
  if (mesh._iproc==0)   {
 
-
-  const uint n_children = 4*( mesh._dim-1);
-  
-  for (uint l=0; l< mesh._NoLevels; l++) {
+   uint n_children;
+    if (order == BIQUADR_FE)      n_children = 1;
+    else if  (order == LINEAR_FE) n_children = 4*( mesh._dim-1);
+    else { std::cout << "Mesh Not supported" << std::endl; abort(); }   
     
   uint n_elements =  mesh._n_elements_vb_lev[VV][l];
   int *ucoord;   ucoord=new int[n_elements*n_children];
@@ -1490,8 +1504,6 @@ void XDMFWriter::PrintSubdomFlagOnCellsLinear(const int Level, std::string filen
   XDMFWriter::print_Ihdf5(file_id,pidname.str(),dimsf,ucoord);
      H5Fclose(file_id);
  
-     } //end levels
-  
     
   }
   
@@ -2206,12 +2218,7 @@ void XDMFWriter::PrintMeshFileBiquadratic(const std::string output_path, const M
 // ===========================================
 //   PID
 // ===========================================
-    group_id = H5Gcreate(file, "/PID", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    for (int  vb= 0; vb< VB;vb++) {
-        for (int  ilev= 0;ilev< mesh._NoLevels; ilev++)   XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(vb,ilev,inmesh.str().c_str(),mesh,878);
-    }
-
-    H5Gclose(group_id);
+ XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(file,inmesh.str().c_str(),mesh,BIQUADR_FE);
 
 // ===========================================
 //  CLOSE FILE

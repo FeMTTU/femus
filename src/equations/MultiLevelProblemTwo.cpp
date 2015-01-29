@@ -356,8 +356,12 @@ void MultiLevelProblemTwo::PrintCaseHDF5(const uint t_init) const {
         filename << _files.GetOutputPath() << "/" << basecase << "." << setw(ndigits) << setfill('0') << t_init << ext_h5;
 
         hid_t file = H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
+
+	for (uint l=0; l< _mesh._NoLevels; l++) {
 	
-        XDMFWriter::PrintSubdomFlagOnCellsLinear(878,filename.str(),_mesh,878);
+        XDMFWriter::PrintSubdomFlagOnCellsLinear(l,filename.str(),_mesh,LINEAR_FE);
+
+	}
 	
         H5Fclose(file);
 
