@@ -50,11 +50,6 @@ public:
 
   ~TimeLoop(){};
    
-// print -------------------------------------------
-   //this function is ok here because it doesn't involve the map 
-   //of the EQUATIONS, it is just a print of a time sequence to a .xmf file
-   void transient_print_xmf ( const uint t_idx_in,const uint t_idx_final, const uint nolevels) const;
-
  // i did it "static" so that it can be used regardless of the specific instantiation;
  // since it is static it cannot act on the class runtime map which is not static datum;
  // so i have to pass the "unconstrained" runtime map explicitly  
