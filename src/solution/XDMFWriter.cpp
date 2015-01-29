@@ -62,7 +62,7 @@ XDMFWriter::~XDMFWriter()
   
 }
 
-void XDMFWriter::write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step) 
+void XDMFWriter::write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
 #ifdef HAVE_HDF5
   
@@ -113,30 +113,30 @@ void XDMFWriter::write_system_solutions(const char order[], std::vector<std::str
   float *var_el_f         = new float [nel];
   float *var_nd_f         = new float [nvt];
 
-  char *filename= new char[60];
-  std::ofstream fout;
-  
+ 
   //--------------------------------------------------------------------------------------------------
   // Print The Xdmf wrapper
-  sprintf(filename,"./output/mesh.level%d.%d.%s.xmf",_gridn,time_step,order);
+  std::ostringstream filename;
+  filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".xmf"; 
+  std::ofstream fout;
   
   if(_iproc!=0) {
     fout.rdbuf();   //redirect to dev_null
   }
   else {
-    fout.open(filename);
-    if (!fout) {
-      std::cout << std::endl << " The output mesh file "<<filename<<" cannot be opened.\n";
-      exit(0);
+    fout.open(filename.str().c_str());
+    if (fout.is_open()) {
+      std::cout << std::endl << " The output is printed to file " << filename.str() << " in XDMF-HDF5 format" << std::endl; 
     }
     else {
-      std::cout << std::endl << " The output is printed to file " << filename << " in XDMF-HDF5 format" << std::endl;   
+      std::cout << std::endl << " The output file "<< filename.str() <<" cannot be opened.\n";
+      abort();
     }
   }
 
   // Print The HDF5 file
-  sprintf(filename,"./mesh.level%d.%d.%s.h5",_gridn,time_step,order);
-  // haed ************************************************
+  filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".h5"; 
+  // head ************************************************
   fout<<"<?xml version=\"1.0\" ?>" << std::endl;
   fout<<"<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd []\">"<< std::endl;
   fout<<"<Xdmf>"<<std::endl;
@@ -197,8 +197,8 @@ void XDMFWriter::write_system_solutions(const char order[], std::vector<std::str
   
   //----------------------------------------------------------------------------------------------------------
   hid_t file_id;
-  sprintf(filename,"./output/mesh.level%d.%d.%s.h5",_gridn,time_step,order);
-  file_id = H5Fcreate(filename,H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
+  filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".h5"; 
+  file_id = H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
   hsize_t dimsf[2];
   herr_t status;
   hid_t dataspace;
@@ -351,7 +351,6 @@ void XDMFWriter::write_system_solutions(const char order[], std::vector<std::str
   H5Fclose(file_id);
  
   //free memory
-  delete [] filename;
   delete [] var_int;
   delete [] var_el_f;
   delete [] var_nd_f;
@@ -361,7 +360,7 @@ void XDMFWriter::write_system_solutions(const char order[], std::vector<std::str
   return;   
 }
 
-void XDMFWriter::write_solution_wrapper(const char type[]) const {
+void XDMFWriter::write_solution_wrapper(const std::string output_path, const char type[]) const {
   
 #ifdef HAVE_HDF5 
   
@@ -370,13 +369,14 @@ void XDMFWriter::write_solution_wrapper(const char type[]) const {
   int ntime_steps = 1;
   int print_step = 1;
   
-  char *filename= new char[60];
   // Print The Xdmf transient wrapper
-  sprintf(filename,"./output/mesh.level%d.%s.xmf",_gridn,type);
+  std::ostringstream filename;
+  filename << output_path << "/sol.level" << _gridn << "." << type << ".xmf"; 
+
   std::ofstream ftr_out;
-  ftr_out.open(filename);
+  ftr_out.open(filename.str().c_str());
   if (!ftr_out) {
-    std::cout << "Transient Output mesh file "<<filename<<" cannot be opened.\n";
+    std::cout << "Transient Output mesh file " << filename << " cannot be opened.\n";
     exit(0);
   }
   
@@ -388,7 +388,7 @@ void XDMFWriter::write_solution_wrapper(const char type[]) const {
   // time loop for grid sequence
   for ( unsigned time_step = time_step0; time_step < time_step0 + ntime_steps; time_step++) {
     if ( !(time_step%print_step) ) {
-      sprintf(filename,"./mesh.level%d.%d.%s.xmf",_gridn,time_step,type);
+      filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << type << ".xmf"; 
       ftr_out << "<xi:include href=\"" << filename << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid["<< 1 <<"])\">\n";
       ftr_out << "<xi:fallback/>\n";
       ftr_out << "</xi:include>\n";
@@ -400,7 +400,6 @@ void XDMFWriter::write_solution_wrapper(const char type[]) const {
   ftr_out.close();
   ftr_out.close();  
   //----------------------------------------------------------------------------------------------------------
-  delete [] filename;
 
 #endif 
   

@@ -41,10 +41,10 @@ public:
     virtual ~XDMFWriter();
 
     /** write output function */
-    virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step = 0);
+    virtual void write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step = 0);
 
-    /** write a wrapper file for paraview to open all the files of an history toghether */
-    void write_solution_wrapper(const char type[]) const;
+    /** write a wrapper file for paraview to open all the files of an history together */
+    void write_solution_wrapper(const std::string output_path, const char type[]) const;
 
   //==================    
    static void write_system_solutions_bc(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk);      

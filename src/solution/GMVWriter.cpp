@@ -19,9 +19,10 @@
 #include "GMVWriter.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
-#include "stdio.h"
-#include "fstream"
-#include "iostream"
+#include <cstdio>
+#include <fstream>
+#include <iostream>
+#include <sstream>   
 #include <algorithm>  
 #include <cstring>
 
@@ -40,7 +41,7 @@ GMVWriter::~GMVWriter()
   
 }
 
-void GMVWriter::write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step) 
+void GMVWriter::write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
   unsigned igridn = _gridn; // aggiunta da me
   
@@ -53,26 +54,24 @@ void GMVWriter::write_system_solutions(const char order[], std::vector<std::stri
   // ********** linear -> index==0 *** quadratic -> index==1 **********
   unsigned index=(strcmp(order,"linear"))?1:0;
 
-  char *filename = new char[60];
-  sprintf(filename,"./output/mesh.level%d.%d.%s.gmv",igridn,time_step,order);
-
+  std::ostringstream filename;
+  filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".gmv"; 
   std::ofstream fout;
   
   if(_iproc!=0) {
     fout.rdbuf();   //redirect to dev_null
   }
   else {
-    fout.open(filename);
-    if (!fout) {
-      std::cout << std::endl << " The output file "<<filename<<" cannot be opened.\n";
-      exit(0);
+    fout.open(filename.str().c_str());
+    if (fout.is_open()) {
+      std::cout << std::endl << " The output is printed to file " << filename.str() << " in GMV format" << std::endl; 
     }
     else {
-      std::cout << std::endl << " The output is printed to file " << filename << " in GMV format" << std::endl;   
+      std::cout << std::endl << " The output file "<< filename.str() <<" cannot be opened.\n";
+      abort();
     }
-  }
-
-
+  }  
+  
   unsigned nvt=0;
   unsigned nvt_max=0;
   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
@@ -300,7 +299,6 @@ void GMVWriter::write_system_solutions(const char order[], std::vector<std::stri
     delete Mysol[ig];
   }
   delete [] det;
-  delete [] filename;
   
   return;   
 }

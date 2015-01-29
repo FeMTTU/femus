@@ -48,7 +48,7 @@ public:
     virtual ~Writer();
 
     /** write output function */
-    virtual void write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step = 0) = 0;
+    virtual void write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step = 0) = 0;
 
     /** set moving mesh */
     void SetMovingMesh(std::vector<std::string>& movvars_in);

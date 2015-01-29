@@ -20,7 +20,7 @@
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include <b64/b64.h>
-#include "iostream"
+#include <iostream>
 #include <fstream>
 #include <sstream>   
 #include "string.h"
@@ -45,7 +45,7 @@ VTKWriter::~VTKWriter()
 }
 
 
-void VTKWriter::write_system_solutions(const char order[], std::vector<std::string>& vars, const unsigned time_step) 
+void VTKWriter::write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
   bool test_all=!(vars[0].compare("All"));
   
@@ -65,7 +65,7 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
   
  
   std::ostringstream filename;
-  filename << "./output/mesh.level" << _gridn << "." << time_step << "." << order << ".vtu"; 
+  filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".vtu"; 
   std::ofstream fout;
   
   if(_iproc!=0) {
@@ -78,10 +78,11 @@ void VTKWriter::write_system_solutions(const char order[], std::vector<std::stri
     }
     else {
       std::cout << std::endl << " The output file "<< filename.str() <<" cannot be opened.\n";
-      exit(0);
+      abort();
     }
   }
-  // haed ************************************************
+  
+  // head ************************************************
   fout<<"<?xml version=\"1.0\"?>" << std::endl;
   fout<<"<VTKFile type = \"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
   fout << " <UnstructuredGrid>" << std::endl;

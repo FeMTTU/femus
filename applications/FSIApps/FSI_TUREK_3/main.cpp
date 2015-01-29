@@ -8,6 +8,7 @@
 #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "FElemTypeEnum.hpp"
+#include "Files.hpp"
 #include "../include/FSIassembly.hpp"
 
 using std::cout;
@@ -28,6 +29,10 @@ int main(int argc,char **args) {
   /// Init Petsc-MPI communicator
   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
 
+  Files files; 
+        files.CheckIODirectories();
+        files.RedirectCout();
+	
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
@@ -40,10 +45,8 @@ int main(int argc,char **args) {
   nm+=nr;
   nr=tmp;
 
-  char *infile = new char [50];
+  std::string infile = "./input/fsifirst.neu";
   
-  sprintf(infile,"./input/fsifirst.neu");
-
   double Lref = 1.;
   double Uref = 1.;
   double rhof = 1000.;
@@ -52,7 +55,7 @@ int main(int argc,char **args) {
   double ni = 0.4;
   double E = 5600000;
   
-  MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
+  MultiLevelMesh ml_msh(nm,nr,infile.c_str(),"fifth",Lref,SetRefinementFlag);
   
   MultiLevelSolution ml_sol(&ml_msh);
   
@@ -165,7 +168,7 @@ int main(int argc,char **args) {
       print_vars.push_back("P");
       
 //       ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
-      vtkio.write_system_solutions("biquadratic",print_vars,time_step);
+      vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars,time_step);
     }
   
   } //end loop timestep
@@ -174,7 +177,6 @@ int main(int argc,char **args) {
   // Destroy all the new systems
   ml_prob.clear();
    
-  delete [] infile;
   return 0;
 }
 
