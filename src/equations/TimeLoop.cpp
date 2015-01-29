@@ -284,7 +284,6 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
     std::string    basemesh = DEFAULT_BASEMESH;
 
     std::string  aux_xdmf   = DEFAULT_AUX_XDMF;
-    std::string  connlin    = DEFAULT_CONNLIN;
 
 
 //now, every run, restart or not, has a new output dir.

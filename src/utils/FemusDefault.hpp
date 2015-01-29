@@ -15,9 +15,10 @@
 #define DEFAULT_EXT_LOG        ".log"
 #define DEFAULT_AUX_XDMF       "Xdmf.dtd" 
 // // // // # ----  Mesh class ----
-#define DEFAULT_BASEMESH      "mesh_linear" 
-#define DEFAULT_MULTIMESH     "mesh_biquadratic" 
-#define DEFAULT_CONNLIN       "_conn_linear" 
+#define DEFAULT_BASEMESH_LIN  "mesh_linear"
+#define DEFAULT_BASEMESH_BIQ  "mesh_biquadratic"
+#define DEFAULT_BASEMESH      "mesh_biquadratic" 
+#define DEFAULT_CONNLIN       "mesh_conn_linear" 
 // // // // # ----  Multigrid  --------------
 #define DEFAULT_F_MATRIX     "Matrix" 
 #define DEFAULT_F_PROL       "Prol" 

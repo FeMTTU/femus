@@ -606,7 +606,7 @@ std::cout << "The number of processors is " << paral::get_size() << std::endl;
 //==========================================
   void Files::log_petsc() const {
     
-  std::string petsc_femus_log = "petsc_main.log";
+  std::string petsc_femus_log = "petsc.log";
   std::ostringstream petsc_log;
   petsc_log << _output_path << "/" << petsc_femus_log;
 

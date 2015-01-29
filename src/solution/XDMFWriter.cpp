@@ -1268,22 +1268,22 @@ void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const M
 
      if (mesh._iproc==0) {
   
-    std::string multimesh = DEFAULT_MULTIMESH;
     std::string ext_xdmf  = DEFAULT_EXT_XDMF;
     std::string basemesh  = DEFAULT_BASEMESH;
     std::string ext_h5    = DEFAULT_EXT_H5;
 
     std::ostringstream inmesh_xmf;
-    inmesh_xmf << output_path << "/" << multimesh << ext_xdmf;
+    inmesh_xmf << output_path << "/" << DEFAULT_BASEMESH_BIQ << ext_xdmf;
     std::ofstream out(inmesh_xmf.str().c_str());
-
-    std::ostringstream top_file;
-    top_file << basemesh << ext_h5;
 
     if (out.fail()) {
         std::cout << "MultiLevelMeshTwo::PrintMeshBiquadratic: The file is not open" << std::endl;
         abort();
     }
+    
+    std::ostringstream top_file;
+    top_file << basemesh << ext_h5;
+
 
 //it seems that there is no control on this, if the directory isn't there
 //it doesnt give problems
@@ -1351,11 +1351,11 @@ void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const M
   std::string       ext_h5 = DEFAULT_EXT_H5;
   std::string      connlin = DEFAULT_CONNLIN;
 
-  std::ostringstream top_file; top_file << basemesh << connlin << ext_h5;
+  std::ostringstream top_file; top_file <<  connlin << ext_h5;
   std::ostringstream geom_file; geom_file << basemesh << ext_h5;
 
   std::ostringstream namefile;
-  namefile << output_path << "/" << basemesh << ext_xdmf;
+  namefile << output_path << "/" << DEFAULT_BASEMESH_LIN << ext_xdmf;
  
   std::ofstream out (namefile.str().c_str());
 
@@ -1420,7 +1420,7 @@ void XDMFWriter::PrintXDMFTopGeomVBLinear(std::ofstream& out,
 
 
 
-void XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh) {
+void XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh, const uint order) {
 
     if (mesh._iproc==0)   {
 
@@ -1460,15 +1460,15 @@ void XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(const int vb, const int Level
 // ===============================================================
 /// this function is done only by _iproc == 0!
 /// it prints the PID index on the cells of the linear mesh
-void XDMFWriter::PrintSubdomFlagOnCellsLinear(std::string filename, const MultiLevelMeshTwo & mesh) {
+void XDMFWriter::PrintSubdomFlagOnCellsLinear(const int Level, std::string filename, const MultiLevelMeshTwo & mesh, const uint order) {
   
  if (mesh._iproc==0)   {
 
-  hid_t file_id = H5Fopen(filename.c_str(),H5F_ACC_RDWR, H5P_DEFAULT); 
 
+  const uint n_children = 4*( mesh._dim-1);
+  
   for (uint l=0; l< mesh._NoLevels; l++) {
     
-  const uint n_children = 4*( mesh._dim-1);
   uint n_elements =  mesh._n_elements_vb_lev[VV][l];
   int *ucoord;   ucoord=new int[n_elements*n_children];
   int cel=0;
@@ -1481,14 +1481,17 @@ void XDMFWriter::PrintSubdomFlagOnCellsLinear(std::string filename, const MultiL
     }
   }
   
-  hsize_t dimsf[2]; dimsf[0] = n_elements*n_children; dimsf[1] = 1;
+  hid_t file_id = H5Fopen(filename.c_str(),H5F_ACC_RDWR, H5P_DEFAULT); 
+  hsize_t dimsf[2];
+  dimsf[0] = n_elements*n_children;
+  dimsf[1] = 1;
   std::ostringstream pidname; pidname << "PID" << "_LEVEL" << l;
   
   XDMFWriter::print_Ihdf5(file_id,pidname.str(),dimsf,ucoord);
-  
+     H5Fclose(file_id);
+ 
      } //end levels
   
-    H5Fclose(file_id);
     
   }
   
@@ -1523,7 +1526,7 @@ void XDMFWriter::PrintConnAllLEVAllVBLinear(const std::string output_path, const
     std::string    connlin  = DEFAULT_CONNLIN;
 
   std::ostringstream namefile;
-  namefile << output_path << "/" << basemesh << connlin << ext_h5; 
+  namefile << output_path << "/" <<  connlin << ext_h5; 
 
   std::cout << namefile.str() << std::endl;
   hid_t file = H5Fcreate (namefile.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);  //TODO VALGRIND
@@ -2205,7 +2208,7 @@ void XDMFWriter::PrintMeshFileBiquadratic(const std::string output_path, const M
 // ===========================================
     group_id = H5Gcreate(file, "/PID", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     for (int  vb= 0; vb< VB;vb++) {
-        for (int  ilev= 0;ilev< mesh._NoLevels; ilev++)   XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(vb,ilev,inmesh.str().c_str(),mesh);
+        for (int  ilev= 0;ilev< mesh._NoLevels; ilev++)   XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(vb,ilev,inmesh.str().c_str(),mesh,878);
     }
 
     H5Gclose(group_id);

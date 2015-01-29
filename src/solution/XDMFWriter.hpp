@@ -99,9 +99,9 @@ public:
 			      const uint vb,
 			      const MultiLevelMeshTwo & mesh);
   
-  static void PrintSubdomFlagOnCellsBiquadratic(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh);
+  static void PrintSubdomFlagOnCellsBiquadratic(const int vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh, const uint order);
   
-  static void PrintSubdomFlagOnCellsLinear(std::string filename, const MultiLevelMeshTwo & mesh);
+  static void PrintSubdomFlagOnCellsLinear(const int Level, std::string filename, const MultiLevelMeshTwo & mesh, const uint order);
   
   static void PrintMeshLinear(const std::string output_path, const MultiLevelMeshTwo& mesh);
   

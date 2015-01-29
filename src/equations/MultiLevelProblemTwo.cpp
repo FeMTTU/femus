@@ -187,7 +187,7 @@ void MultiLevelProblemTwo::PrintSolXDMF(const uint t_step,const double curr_time
         std::string     ext_h5  = DEFAULT_EXT_H5;
         std::string    ext_xdmf = DEFAULT_EXT_XDMF;
     
-        std::ostringstream top_file; top_file << basemesh << connlin << ext_h5;
+        std::ostringstream top_file; top_file << connlin << ext_h5;
         std::ostringstream geom_file; geom_file << basemesh << ext_h5;
 
 // =================================
@@ -356,7 +356,9 @@ void MultiLevelProblemTwo::PrintCaseHDF5(const uint t_init) const {
         filename << _files.GetOutputPath() << "/" << basecase << "." << setw(ndigits) << setfill('0') << t_init << ext_h5;
 
         hid_t file = H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
-        XDMFWriter::PrintSubdomFlagOnCellsLinear(filename.str(),_mesh);
+	
+        XDMFWriter::PrintSubdomFlagOnCellsLinear(878,filename.str(),_mesh,878);
+	
         H5Fclose(file);
 
         MultiLevelProblemTwo::const_iterator pos   = _equations.begin();
@@ -402,7 +404,7 @@ void MultiLevelProblemTwo::PrintCaseXDMF(const uint t_init) const {
         std::string      connlin = DEFAULT_CONNLIN;
         std::string  bdry_suffix = DEFAULT_BDRY_SUFFIX;
 	
-        std::ostringstream top_file; top_file << basemesh << connlin << ext_h5;
+        std::ostringstream top_file; top_file << connlin << ext_h5;
         std::ostringstream geom_file; geom_file << basemesh << ext_h5;
 
         //FE print
