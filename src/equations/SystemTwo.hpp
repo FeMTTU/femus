@@ -56,8 +56,7 @@ public:
 //=======================================================================
 // CONSTRUCTOR / DESTRUCTOR
 //=======================================================================
-  SystemTwo(MultiLevelProblemTwo& equations_map,
-          std::string eq_name_in="Base");   //System//
+  SystemTwo(MultiLevelProblemTwo& equations_map, std::string eq_name_in, const unsigned int number, const MgSmoother & smoother_type);   //System//
   
   virtual ~SystemTwo();                    //System//
   

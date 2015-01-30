@@ -21,7 +21,7 @@ class EqnNS : public SystemTwo {
    const double _Komp_fac;
   
   EqnNS(MultiLevelProblemTwo& mg_equations_map,
-        std::string eqname_in);
+        std::string eqname_in,const unsigned int number, const MgSmoother & smoother_type);
 
   ~EqnNS();
 

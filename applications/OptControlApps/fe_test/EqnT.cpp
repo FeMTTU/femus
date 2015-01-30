@@ -31,8 +31,8 @@ namespace femus {
 
 // ======================================================
 EqnT::EqnT(MultiLevelProblemTwo& equations_map_in,
-           std::string eqname_in):
-    SystemTwo(equations_map_in,eqname_in) {}
+           std::string eqname_in, const unsigned int number, const MgSmoother & smoother_type):
+    SystemTwo(equations_map_in,eqname_in,number,smoother_type) {}
 
 
 //================ DESTRUCTOR    

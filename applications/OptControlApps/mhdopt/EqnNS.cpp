@@ -33,8 +33,8 @@ namespace femus {
 
 ///=============== Constructor
   EqnNS::EqnNS(    MultiLevelProblemTwo& equations_map_in,
-                   std::string eqname_in):
-           SystemTwo(equations_map_in,eqname_in),
+                   std::string eqname_in, const unsigned int number, const MgSmoother & smoother_type):
+           SystemTwo(equations_map_in,eqname_in,number,smoother_type),
      _AdvPic_fl(ADVPIC_NS),
      _AdvNew_fl(ADVNEW_NS),
      _Stab_fl(STAB_NS),
@@ -112,7 +112,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 //every routine we use here should depend directly on this one and not implicitly 
 //through the class _iproc. This should be a sort of "function argument",
 //like the Level
-  const uint myproc= _mesh._iproc;
+  const uint myproc = _mesh._iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
 //FLAG for the TIME DISCRETIZATION

@@ -31,8 +31,8 @@ namespace femus {
 
 ///Constructor
   EqnMHD::EqnMHD(  MultiLevelProblemTwo& mg_equations_map_in,
-                   std::string eqname_in):
-      SystemTwo(mg_equations_map_in,eqname_in)
+                   std::string eqname_in, const unsigned int number, const MgSmoother & smoother_type):
+      SystemTwo(mg_equations_map_in,eqname_in,number,smoother_type)
                   {
 
 // //====== VARNAMES of the equation

@@ -17,7 +17,7 @@ class EqnT : public SystemTwo {
 public:
 
     EqnT( MultiLevelProblemTwo& mg_equations_map,
-          std::string eqname_in);
+          std::string eqname_in, const unsigned int number, const MgSmoother & smoother_type);
 
     ~EqnT();  
      

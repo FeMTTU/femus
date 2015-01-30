@@ -18,7 +18,7 @@ class EqnNSAD : public SystemTwo {
   public:
 
      EqnNSAD(  MultiLevelProblemTwo& mg_equations_map_in,
-               std::string eqname_in);
+               std::string eqname_in, const unsigned int number, const MgSmoother & smoother_type);
 
   ~EqnNSAD();
 

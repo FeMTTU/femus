@@ -183,7 +183,7 @@ std::vector<Quantity*> InternalVect_NS(2);
 InternalVect_NS[QTYZERO] = &velocity;      velocity.SetPosInAssocEqn(0);
 InternalVect_NS[QTYONE] = &pressure;       pressure.SetPosInAssocEqn(1);
 
-  EqnNS* eqnNS = new EqnNS(equations_map,"Eqn_NS");
+  EqnNS* eqnNS = new EqnNS(equations_map,"Eqn_NS",0,NO_SMOOTHER);
   eqnNS->SetQtyIntVector(InternalVect_NS);
   equations_map.add_system(eqnNS);
  
@@ -197,7 +197,7 @@ std::vector<Quantity*> InternalVect_NSAD(2);
 InternalVect_NSAD[QTYZERO] = &velocity_adj;     velocity_adj.SetPosInAssocEqn(0);
 InternalVect_NSAD[QTYONE]  = &pressure_adj;     pressure_adj.SetPosInAssocEqn(1);
 
-  EqnNSAD* eqnNSAD=new EqnNSAD(equations_map,"Eqn_NSAD");
+  EqnNSAD* eqnNSAD=new EqnNSAD(equations_map,"Eqn_NSAD",1,NO_SMOOTHER);
   eqnNSAD->SetQtyIntVector(InternalVect_NSAD);
   equations_map.add_system(eqnNSAD);
 
@@ -211,7 +211,7 @@ std::vector<Quantity*> InternalVect_MHD(2);
 InternalVect_MHD[QTYZERO] = &bhom;             bhom.SetPosInAssocEqn(0);
 InternalVect_MHD[QTYONE]  = &bhom_lag_mult;    bhom_lag_mult.SetPosInAssocEqn(1);
 
-  EqnMHD* eqnMHD=new EqnMHD(equations_map,"Eqn_MHD");
+  EqnMHD* eqnMHD=new EqnMHD(equations_map,"Eqn_MHD",2,NO_SMOOTHER);
   eqnMHD->SetQtyIntVector(InternalVect_MHD);
   equations_map.add_system(eqnMHD);
 
@@ -225,7 +225,7 @@ std::vector<Quantity*> InternalVect_MHDAD(2);
 InternalVect_MHDAD[QTYZERO] = &bhom_adj;             bhom_adj.SetPosInAssocEqn(0);
 InternalVect_MHDAD[QTYONE]  = &bhom_lag_mult_adj;    bhom_lag_mult_adj.SetPosInAssocEqn(1);
 	
-  EqnMHDAD* eqnMHDAD=new EqnMHDAD(equations_map,"Eqn_MHDAD");
+  EqnMHDAD* eqnMHDAD=new EqnMHDAD(equations_map,"Eqn_MHDAD",3,NO_SMOOTHER);
   eqnMHDAD->SetQtyIntVector(InternalVect_MHDAD);
   equations_map.add_system(eqnMHDAD);
   
@@ -239,7 +239,7 @@ std::vector<Quantity*> InternalVect_MHDCONT(2);
 InternalVect_MHDCONT[QTYZERO] = &Bext;            Bext.SetPosInAssocEqn(0);
 InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn(1);
 
-  EqnMHDCONT* eqnMHDCONT = new EqnMHDCONT(equations_map,"Eqn_MHDCONT");
+  EqnMHDCONT* eqnMHDCONT = new EqnMHDCONT(equations_map,"Eqn_MHDCONT",4,NO_SMOOTHER);
   eqnMHDCONT->SetQtyIntVector(InternalVect_MHDCONT);
   equations_map.add_system(eqnMHDCONT);
 

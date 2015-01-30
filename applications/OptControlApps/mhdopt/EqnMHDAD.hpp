@@ -15,7 +15,7 @@ class EqnMHDAD : public SystemTwo {
   public:
     
 EqnMHDAD(   MultiLevelProblemTwo& mg_equations_map_in,
-            std::string eqname_in);
+            std::string eqname_in, const unsigned int number, const MgSmoother & smoother_type);
 
   ~EqnMHDAD();
 
