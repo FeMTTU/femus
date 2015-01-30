@@ -16,8 +16,7 @@ class EqnT : public SystemTwo {
 
 public:
 
-    EqnT( std::vector<Quantity*> int_map_in,
-	  MultiLevelProblemTwo& mg_equations_map,
+    EqnT( MultiLevelProblemTwo& mg_equations_map,
           std::string eqname_in);
 
     ~EqnT();  

@@ -33,28 +33,20 @@ namespace femus {
 //now, the idea is this:
 //if you have specific data for this equation, then you may 
 //define also specific member functions for it
-  EqnMHDCONT::EqnMHDCONT( std::vector<Quantity*> int_map_in,
-	           MultiLevelProblemTwo& equations_map_in,
+  EqnMHDCONT::EqnMHDCONT( MultiLevelProblemTwo& equations_map_in,
                    std::string eqname_in):
-      SystemTwo(int_map_in,equations_map_in,eqname_in)
+      SystemTwo(equations_map_in,eqname_in)
   {
 
-//====== VARNAMES of the equation=================
-   _var_names[0]="Becontx";
-   _var_names[1]="Beconty";
-#if (DIMENSION==3)
-    _var_names[2]="Becontz";
-#endif
-    _var_names[DIMENSION]="Becontp";
-
-    
-//=========  REFVALUES of the Unknown quantities of the equation===============
-   _refvalue[0] = _QtyInternalVector[0]->_refvalue[0];
-   _refvalue[1] = _QtyInternalVector[0]->_refvalue[1];
-#if (DIMENSION==3)
-    _refvalue[2]= _QtyInternalVector[0]->_refvalue[2];
-#endif
-   _refvalue[DIMENSION]= _QtyInternalVector[1]->_refvalue[0];
+// //====== VARNAMES of the equation=================
+//    _var_names[0]="Becontx";
+//    _var_names[1]="Beconty";
+// #if (DIMENSION==3)
+//     _var_names[2]="Becontz";
+// #endif
+//     _var_names[DIMENSION]="Becontp";
+// 
+//     
 
 //=========== Solver ================
      for(uint l=0;l<_NoLevels;l++)    _solver[l]->set_solver_type(SOLVERMHDCONT);
@@ -165,8 +157,8 @@ namespace femus {
     BhomAdj.Allocate();
   //=========END EXTERNAL QUANTITIES (couplings) =====
 
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level];
 
 
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
@@ -174,7 +166,7 @@ namespace femus {
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
      
-    currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
+    currelem.set_el_nod_conn_lev_subd(Level,_mesh._iproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -437,8 +429,8 @@ for (uint fe = 0; fe < QL; fe++)     {
   
   //=========END EXTERNAL QUANTITIES (couplings) =====
 
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level];
 
     
   for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
@@ -446,7 +438,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.Mat().zero();
      currelem.Rhs().zero();
 
-     currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
+     currelem.set_el_nod_conn_lev_subd(Level,_mesh._iproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -470,7 +462,7 @@ for (uint fe = 0; fe < QL; fe++)     {
        double  dbl_pen[NT] = {0.,0.};  //normal and tangential penalty value
    
     
-       Bc_GetElFlagValLevSubd(Level,_iproc,iel,el_flag,el_value);
+       Bc_GetElFlagValLevSubd(Level,_mesh._iproc,iel,el_flag,el_value);
 
 if (_Dir_pen_fl == 1)  { 
        if (el_flag[NN] == 1) {   dbl_pen[NN]=penalty_val; } //normal dirichlet

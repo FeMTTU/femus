@@ -65,15 +65,13 @@ namespace femus {
    _dim   = dim_in;
    _FEord = FEord_in;
    _eqn   = NULL; //initialize to NULL: by default the Quantity has no associated Equation
-   _refvalue = new double[_dim];
+   _refvalue.resize(_dim);
    for (uint i=0; i<_dim; i++)  _refvalue[i] = 1.; //default
    
    
   }
 
- Quantity::~Quantity() { 
-  delete [] _refvalue; 
- }
+ Quantity::~Quantity() {}
 
 
 

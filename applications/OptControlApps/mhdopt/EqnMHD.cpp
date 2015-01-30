@@ -30,27 +30,26 @@
 namespace femus {
 
 ///Constructor
-  EqnMHD::EqnMHD(  std::vector<Quantity*> int_map_in,
-	           MultiLevelProblemTwo& mg_equations_map_in,
+  EqnMHD::EqnMHD(  MultiLevelProblemTwo& mg_equations_map_in,
                    std::string eqname_in):
-      SystemTwo(int_map_in,mg_equations_map_in,eqname_in)
+      SystemTwo(mg_equations_map_in,eqname_in)
                   {
 
-//====== VARNAMES of the equation
-   _var_names[0]="Bx";
-   _var_names[1]="By";
-   _var_names[DIMENSION]="Bp";
-#if (DIMENSION==3)
-    _var_names[2]="Bz";
-#endif
-
-//=========  REFVALUES of the Unknown quantities of the equation
-   _refvalue[0] = _QtyInternalVector[0]->_refvalue[0];/* Bref;*/
-   _refvalue[1] = _QtyInternalVector[0]->_refvalue[1]; /*Bref*/
-#if (DIMENSION==3)
-    _refvalue[2]= _QtyInternalVector[0]->_refvalue[2];/*Bref*/
-#endif
-   _refvalue[DIMENSION]= _QtyInternalVector[1]->_refvalue[0];/*sigmaref = Uref*Bref*/
+// //====== VARNAMES of the equation
+//    _var_names[0]="Bx";
+//    _var_names[1]="By";
+//    _var_names[DIMENSION]="Bp";
+// #if (DIMENSION==3)
+//     _var_names[2]="Bz";
+// #endif
+// 
+// //=========  REFVALUES of the Unknown quantities of the equation
+//    _refvalue[0] = _QtyInternalVector[0]->_refvalue[0];/* Bref;*/
+//    _refvalue[1] = _QtyInternalVector[0]->_refvalue[1]; /*Bref*/
+// #if (DIMENSION==3)
+//     _refvalue[2]= _QtyInternalVector[0]->_refvalue[2];/*Bref*/
+// #endif
+//    _refvalue[DIMENSION]= _QtyInternalVector[1]->_refvalue[0];/*sigmaref = Uref*Bref*/
    
 
   //===== solver  
@@ -181,8 +180,8 @@ namespace femus {
 
 //=========END EXTERNAL QUANTITIES (couplings) =====
     
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level];
 
 //======================
 //======================
@@ -193,7 +192,7 @@ namespace femus {
     currelem.Mat().zero();
     currelem.Rhs().zero();
 
-     currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
+     currelem.set_el_nod_conn_lev_subd(Level,_mesh._iproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -473,8 +472,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //=========END EXTERNAL QUANTITIES (couplings) =====
     
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level];
 
 //======================
 //======================
@@ -490,7 +489,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.Mat().zero();
      currelem.Rhs().zero(); 
      
-     currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
+     currelem.set_el_nod_conn_lev_subd(Level,_mesh._iproc,iel);
      currelem.SetMidpoint();
 
      currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -513,7 +512,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 #endif
        double  dbl_pen[NT] = {0.,0.};  //normal and tangential penalty value
    
-       Bc_GetElFlagValLevSubd(Level,_iproc,iel,el_flag,el_value);
+       Bc_GetElFlagValLevSubd(Level,_mesh._iproc,iel,el_flag,el_value);
 
 if (_Dir_pen_fl == 1)  { 
        if (el_flag[NN] == 1) {   dbl_pen[NN]=penalty_val; } //normal dirichlet

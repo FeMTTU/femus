@@ -45,15 +45,14 @@
 // The first time when you start associating scalar variables to quantities
 // is when you set the BC's
 // ======================================================
-EqnT::EqnT(  std::vector<Quantity*> int_map_in,
-             MultiLevelProblemTwo& equations_map_in,
+EqnT::EqnT(  MultiLevelProblemTwo& equations_map_in,
              std::string eqname_in):
-    SystemTwo(int_map_in,equations_map_in,eqname_in) {
+    SystemTwo(equations_map_in,eqname_in) {
 
-//=======  _var_names[]  ===========
-  _var_names[0]="T";
-  _var_names[1]="Tlift";
-  _var_names[2]="Tadj";
+// //=======  _var_names[]  ===========
+//   _var_names[0]="T";
+//   _var_names[1]="Tlift";
+//   _var_names[2]="Tadj";
 
 //========= MG solver ===================
   for (uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(SOLVERT);
@@ -100,7 +99,7 @@ void  EqnT::GenMatRhs(const uint Level) {
   const double time = 0.; // _eqnmap._timeloop._curr_time;
 
 //========== PROCESSOR INDEX
-  const uint myproc = _iproc;
+  const uint myproc = _mesh._iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
   const double    dt = 1.; //_eqnmap._timeloop._timemap.get("dt");

@@ -14,10 +14,8 @@ class EqnMHD : public SystemTwo {
 
   public:
   
-  EqnMHD(
-    std::vector<Quantity*> int_map_in,
-    MultiLevelProblemTwo& mg_equations_map_in,
-    std::string eqname_in);
+  EqnMHD( MultiLevelProblemTwo& mg_equations_map_in,
+          std::string eqname_in);
 	   
   ~EqnMHD();
 

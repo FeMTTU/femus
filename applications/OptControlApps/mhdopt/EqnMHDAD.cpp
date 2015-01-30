@@ -29,28 +29,19 @@
 namespace femus {
 
 /// Constructor.
-  EqnMHDAD::EqnMHDAD(std::vector<Quantity*> int_map_in,
-	           MultiLevelProblemTwo& mg_equations_map_in,
+  EqnMHDAD::EqnMHDAD(MultiLevelProblemTwo& mg_equations_map_in,
                    std::string eqname_in):
-      SystemTwo(int_map_in,mg_equations_map_in,eqname_in)      
+      SystemTwo(mg_equations_map_in,eqname_in)      
       {
 
-//=======  _var_names[]  ===========
-    _var_names[0]="xix";
-    _var_names[1]="xiy";
-#if (DIMENSION==3)
-    _var_names[2]="xiz";
-#endif 
-    _var_names[DIMENSION]="xip";
+// //=======  _var_names[]  ===========
+//     _var_names[0]="xix";
+//     _var_names[1]="xiy";
+// #if (DIMENSION==3)
+//     _var_names[2]="xiz";
+// #endif 
+//     _var_names[DIMENSION]="xip";
   
-//=======  _refvalue[] ==============   
-    _refvalue[0] = _QtyInternalVector[0]->_refvalue[0];
-    _refvalue[1] = _QtyInternalVector[0]->_refvalue[1];
-#if (DIMENSION==3)
-    _refvalue[2] = _QtyInternalVector[0]->_refvalue[2];
-#endif
-    _refvalue[DIMENSION] = _QtyInternalVector[1]->_refvalue[0];
-
 //========= MG solver ===================
    for(uint l=0;l<_NoLevels;l++)   _solver[l]->set_solver_type(SOLVERMHDAD);
 
@@ -163,8 +154,8 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
     
 //========= END EXTERNAL QUANTITIES =================
 
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level];
 
 //=====================
 //=====================    
@@ -174,7 +165,7 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
+    currelem.set_el_nod_conn_lev_subd(Level,_mesh._iproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);    
@@ -391,8 +382,8 @@ if (_Dir_pen_fl == 0)  {
    
 //========= END EXTERNAL QUANTITIES =================
 
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level];
 
 //=====================
 //=====================    
@@ -402,7 +393,7 @@ if (_Dir_pen_fl == 0)  {
      currelem.Mat().zero();
      currelem.Rhs().zero();
 
-     currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
+     currelem.set_el_nod_conn_lev_subd(Level,_mesh._iproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -427,7 +418,7 @@ if (_Dir_pen_fl == 0)  {
        double  dbl_pen[NT] = {0.,0.};
    
     
-       Bc_GetElFlagValLevSubd(Level,_iproc,iel,el_flag,el_value);
+       Bc_GetElFlagValLevSubd(Level,_mesh._iproc,iel,el_flag,el_value);
 
 if (_Dir_pen_fl == 1)  { 
        if (el_flag[NN] == 1) {   dbl_pen[NN]=penalty_val; } //normal dirichlet

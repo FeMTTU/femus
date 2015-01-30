@@ -17,9 +17,8 @@ class EqnNSAD : public SystemTwo {
 
   public:
 
-     EqnNSAD(  std::vector<Quantity*> int_map_in,
-	           MultiLevelProblemTwo& mg_equations_map_in,
-                   std::string eqname_in);
+     EqnNSAD(  MultiLevelProblemTwo& mg_equations_map_in,
+               std::string eqname_in);
 
   ~EqnNSAD();
 

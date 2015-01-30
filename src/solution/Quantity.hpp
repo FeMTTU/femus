@@ -57,7 +57,7 @@ public:
   std::string  _name;      //quantity name, to retrieve it
   uint         _dim;       //number of scalar components
   uint         _FEord;     //FEorder
-  double *     _refvalue;  //ref values for the scalar components (_dim)
+  std::vector<double>     _refvalue;  //ref values for the scalar components (_dim)
   QuantityMap& _qtymap;
   SystemTwo *      _eqn;
   uint           _pos;     //block position in the associated equation

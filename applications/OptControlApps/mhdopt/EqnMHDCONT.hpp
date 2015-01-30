@@ -18,9 +18,8 @@ class EqnMHDCONT : public SystemTwo {
   public:
     
    
-EqnMHDCONT(  std::vector<Quantity*> int_map_in,
-	     MultiLevelProblemTwo& mg_equations_map_in,
-                   std::string eqname_in);
+EqnMHDCONT( MultiLevelProblemTwo& mg_equations_map_in,
+            std::string eqname_in);
 
   ~EqnMHDCONT();
 

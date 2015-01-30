@@ -29,27 +29,21 @@
 
 
 ///=============== Constructor
-  EqnNS::EqnNS(    std::vector<Quantity*> int_map_in,  //no reference!
-	           MultiLevelProblemTwo& equations_map_in,
+  EqnNS::EqnNS( MultiLevelProblemTwo& equations_map_in,
                    std::string eqname_in):
-           SystemTwo(int_map_in,equations_map_in,eqname_in),
+           SystemTwo(equations_map_in,eqname_in),
      _AdvPic_fl(ADVPIC_NS),
      _AdvNew_fl(ADVNEW_NS),
      _Stab_fl(STAB_NS),
      _Komp_fac(KOMP_NS)   {
 
 
-//=======  _var_names[]  ===========
-                          _var_names[0] = "ux"; //variable names
-                          _var_names[1] = "uy";
-   if ( _mesh.get_dim() == 3 ) _var_names[2] = "uz";
-                 _var_names[_mesh.get_dim()] = "up";
-     
-//=======  _refvalue[] ==============   
-                          _refvalue[0] =  _QtyInternalVector[0]->_refvalue[0]; 
-                          _refvalue[1] =  _QtyInternalVector[0]->_refvalue[1]; 
-   if ( _mesh.get_dim() == 3 ) _refvalue[2] =  _QtyInternalVector[0]->_refvalue[2]; 
-                 _refvalue[_mesh.get_dim()] =  _QtyInternalVector[1]->_refvalue[0];
+// //=======  _var_names[]  ===========
+//                           _var_names[0] = "ux"; //variable names
+//                           _var_names[1] = "uy";
+//    if ( _mesh.get_dim() == 3 ) _var_names[2] = "uz";
+//                  _var_names[_mesh.get_dim()] = "up";
+//      
 
 //========= MG solver ===================
   for(uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(SOLVERNS);
@@ -72,7 +66,7 @@
    const double time =  0.;//_eqnmap._timeloop._curr_time;
    
 //========== PROCESSOR INDEX
-  const uint myproc = _iproc;
+  const uint myproc = _mesh._iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
   const int NonStatNS = (int) _phys.get("NonStatNS");
