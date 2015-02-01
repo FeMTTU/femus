@@ -1,6 +1,5 @@
 #include "CurrentGaussPoint.hpp"
 
-#include "MultiLevelProblemTwo.hpp"
 #include "Math.hpp"
 #include "CurrentQuantity.hpp"
 #include "MultiLevelMeshTwo.hpp"
@@ -17,8 +16,8 @@ namespace femus {
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
 //by the way, with the MultiLevelProblemTwo I reach the Utils, the Mesh, and so the GeomEl, and so on...
 template <unsigned int FM_DIM>
-CurrentGaussPoint<FM_DIM>::CurrentGaussPoint(const CurrentElem & curr_el_in, MultiLevelProblemTwo& e_map_in ): 
-        CurrentGaussPointBase(curr_el_in,e_map_in) {
+CurrentGaussPoint<FM_DIM>::CurrentGaussPoint(const CurrentElem & curr_el_in, const Gauss & qrule_in): 
+        CurrentGaussPointBase(curr_el_in,qrule_in) {
   
  
 }

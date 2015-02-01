@@ -519,7 +519,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
    const uint mesh_vb = VV;
   
     CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap.GetQrule(currelem.GetDim()));
   
   // processor index
   const uint myproc = mesh->_iproc;
@@ -558,7 +558,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
    
    double integral=0.;
     
-      const uint el_ngauss = eqn->_eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+      const uint el_ngauss = eqn->_eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
 //parallel sum
     const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
@@ -592,7 +592,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
      
    const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
-   const double  wgt_g = eqn->_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+   const double  wgt_g = eqn->_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 
      for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 

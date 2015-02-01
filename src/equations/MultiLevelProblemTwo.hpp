@@ -49,7 +49,6 @@ public:
     QuantityMap& _qtymap;
     MultiLevelMeshTwo&     _mesh;
     std::vector< std::vector<elem_type*> >  &  _elem_type;
-    std::vector<Gauss>       _qrule;
 
   /// Constructor
     MultiLevelProblemTwo(FemusInputParser<double> & phys_in,
@@ -59,6 +58,7 @@ public:
 		  std::vector<Gauss> qrule_in
 		);
 
+  inline const Gauss & GetQrule(const unsigned dim) const {return _qrule[dim - 1];}
     
     /// Destructor
   ~MultiLevelProblemTwo(){};
@@ -82,6 +82,7 @@ private:
   
  map<string,SystemTwo*> _equations;   // system map
     
+    std::vector<Gauss>       _qrule;
 
 
 };
