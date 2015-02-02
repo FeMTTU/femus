@@ -31,16 +31,16 @@ namespace femus {
     CurrentElem::CurrentElem(const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type_in ):
     _eqn(eqn_in),
     _mesh(mesh),
-    _elem_type(elem_type_in[mesh.get_dim()-vb -1]),
     _dim(_mesh.get_dim()-vb),
+    _elem_type(elem_type_in[mesh.get_dim()-vb -1]),
     _mesh_vb(vb)
     {
     
 //========== Current "Geometric Element"  ========================
   uint elnodes = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
-  _el_conn = new uint[ elnodes ];   
-   _xx_nds = new double[_mesh.get_dim()*elnodes ];
-    _el_xm = new double[_mesh.get_dim()];  
+  _el_conn.resize(elnodes);   
+   _xx_nds.resize(_mesh.get_dim()*elnodes);
+    _el_xm.resize(_mesh.get_dim());  
 //========== Current "Geometric Element"  ========================
 
 //========== Current "Equation Element"  ========================
@@ -48,7 +48,7 @@ namespace femus {
      for (int fe = 0; fe < QL; fe++) {  _el_n_dofs += (_elem_type[fe]->GetNDofs() )*_eqn->_dofmap._nvars[fe]; }
 
   _el_dof_indices.resize(_el_n_dofs);
-  _bc_eldofs = new uint[_el_n_dofs];
+  _bc_eldofs.resize(_el_n_dofs);
   _KeM.resize(_el_n_dofs,_el_n_dofs);
   _FeM.resize(_el_n_dofs);
 //========== Current "Equation Element"  ========================
@@ -57,13 +57,7 @@ namespace femus {
   }
  
 
-    CurrentElem::~CurrentElem() {
-      
- delete [] _el_conn;
- delete [] _xx_nds;
- delete []  _el_xm;     
-      
-  }
+    CurrentElem::~CurrentElem() {}
     
     
     
@@ -211,9 +205,8 @@ void CurrentElem::PrintOrientation() const {
 
 // ========================================================
 ///Compute the element center
-///TODO must do this in the QUADRATIC case
 
-  void CurrentElem::SetMidpoint() const {
+  void CurrentElem::SetMidpoint() {
 
     const uint mesh_dim = _mesh.get_dim();
     const uint el_nnodes   = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
