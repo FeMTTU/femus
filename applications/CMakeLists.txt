@@ -129,6 +129,42 @@ IF(BUILD_NUM_PDE_CLASS)
     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Eugenio/input/)
     FILE(COPY           NumPdeSpring2015/Eugenio/input/ DESTINATION 
   ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Eugenio/input/)
+  
+  ADD_SUBDIRECTORY(NumPdeSpring2015/Giacomo/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Giacomo/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Giacomo/input/)
+    FILE(COPY           NumPdeSpring2015/Giacomo/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Giacomo/input/)
+  
+  ADD_SUBDIRECTORY(NumPdeSpring2015/Sara/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Sara/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Sara/input/)
+    FILE(COPY           NumPdeSpring2015/Sara/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Sara/input/)
+  
+  ADD_SUBDIRECTORY(NumPdeSpring2015/Thanuja/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Thanuja/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Thanuja/input/)
+    FILE(COPY           NumPdeSpring2015/Thanuja/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Thanuja/input/)
+  
+  ADD_SUBDIRECTORY(NumPdeSpring2015/Thanuka/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Thanuka/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Thanuka/input/)
+    FILE(COPY           NumPdeSpring2015/Thanuka/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Thanuka/input/)
+  
+  ADD_SUBDIRECTORY(NumPdeSpring2015/Bhagya/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Bhagya/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Bhagya/input/)
+    FILE(COPY           NumPdeSpring2015/Bhagya/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Bhagya/input/)
+  
+  ADD_SUBDIRECTORY(NumPdeSpring2015/Guoyi/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Guoyi/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Guoyi/input/)
+    FILE(COPY           NumPdeSpring2015/Guoyi/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Guoyi/input/)
 
 ENDIF(BUILD_NUM_PDE_CLASS)
 
