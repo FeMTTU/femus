@@ -30,16 +30,9 @@
 namespace femus {
 
 // ======================================================
-EqnT::EqnT(  std::vector<Quantity*> int_map_in,
-             MultiLevelProblemTwo& equations_map_in,
-             std::string eqname_in,
-             std::string varname_in):
-    SystemTwo(int_map_in,equations_map_in,eqname_in,varname_in) {
-
-//=======  _var_names: they are the names of the quantities which are unkwnowns to this equation  ===========
-   for (uint i=0; i<int_map_in.size(); i++)  _var_names[i]=int_map_in[i]->_name;
-  
-}
+EqnT::EqnT(MultiLevelProblemTwo& equations_map_in,
+           const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
+    SystemTwo(equations_map_in,eqname_in,number,smoother_type) {}
 
 
 //================ DESTRUCTOR    
@@ -52,7 +45,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
   const double time =  0.;
 
 //========== PROCESSOR INDEX
-  const uint myproc = _iproc;
+  const uint myproc = _mesh._iproc;
 
 //========= BCHandling =========
   const double penalty_val = _mesh.GetRuntimeMap().get("penalty_val");    
@@ -75,8 +68,8 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
     
   const uint mesh_vb = VV;
   
-  CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
-  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+  CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());
+  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
@@ -101,7 +94,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
     CurrentQuantity xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
@@ -153,7 +146,7 @@ EqnT::EqnT(  std::vector<Quantity*> int_map_in,
 //====================    
     
 //===== FILL the DOFS of the EXTERNAL QUANTITIES: you must assure that for every Vect the quantity is set correctly
-   const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp=0; qp< el_ngauss; qp++) {
 
@@ -164,7 +157,7 @@ for (uint fe = 0; fe < QL; fe++)   {
   }
 	  
 const double      det = currgp.JacVectVV_g(xyz);
-const double dtxJxW_g = det*_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+const double dtxJxW_g = det*_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     {
@@ -202,7 +195,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 //========= SECOND ROW =====================
 	 int ip1 = i + Tempold._ndof; 
 	 
-	if (i < _eqnmap._elem_type[currelem.GetDim()-1][ Temp2._FEord ]->GetNDofs() ) { 
+	if (i < currelem.GetElemType(Temp2._FEord)->GetNDofs() ) { 
 	 currelem.Rhs()(ip1) +=      
            currelem.GetBCDofFlag()[ip1]*dtxJxW_g*( 
                 0.07*phii_gLL
@@ -215,7 +208,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 //======= THIRD ROW ===================================
 	 int ip2 = i + Tempold._ndof + Temp2._ndof;
 	 
-	if (i < _eqnmap._elem_type[currelem.GetDim()-1][ Temp3._FEord ]->GetNDofs() ) { 
+	if (i < currelem.GetElemType(Temp3._FEord)->GetNDofs() ) { 
            currelem.Rhs()(ip2) +=      
            currelem.GetBCDofFlag()[ip2]*dtxJxW_g*( 
                 0.07*phii_gKK
@@ -257,8 +250,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //=========== SECOND ROW  =============
 //===== DIAGONAL ===========================
- 	if ( i < _eqnmap._elem_type[currelem.GetDim()-1][ Temp2._FEord ]->GetNDofs() )  { 
-  	if ( j < _eqnmap._elem_type[currelem.GetDim()-1][ Temp2._FEord ]->GetNDofs() ) { 
+ 	if ( i < currelem.GetElemType(Temp2._FEord)->GetNDofs() )  { 
+  	if ( j < currelem.GetElemType(Temp2._FEord)->GetNDofs() ) { 
        currelem.Mat()(ip1,jp1) +=        
             currelem.GetBCDofFlag()[ip1]*
             dtxJxW_g*(
@@ -269,8 +262,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 	}
 //============= THIRD ROW  =============
 //======= DIAGONAL ==================
-	if ( i < _eqnmap._elem_type[currelem.GetDim()-1][ Temp3._FEord ]->GetNDofs() )  { 
-  	if ( j < _eqnmap._elem_type[currelem.GetDim()-1][ Temp3._FEord ]->GetNDofs() ) { 
+	if ( i < currelem.GetElemType(Temp3._FEord)->GetNDofs() )  { 
+  	if ( j < currelem.GetElemType(Temp3._FEord)->GetNDofs() ) { 
           currelem.Mat()(ip2,jp2) +=        
             currelem.GetBCDofFlag()[ip2]*
               dtxJxW_g*( 
@@ -311,8 +304,8 @@ for (uint fe = 0; fe < QL; fe++)     {
     
   const uint mesh_vb = BB;
   
-  CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
-  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+  CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());
+  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
@@ -337,7 +330,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     CurrentQuantity xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
@@ -392,7 +385,7 @@ int el_Neum_flag=0;
 
 //====================================
 
-   const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp=0; qp< el_ngauss; qp++) {
 
@@ -402,12 +395,12 @@ int el_Neum_flag=0;
     currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp); 
   }
         const double  det   = currgp.JacVectBB_g(xyz);
-        const double dtxJxW_g = det * _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+        const double dtxJxW_g = det * _eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
        xyz.val_g();
        
-       static_cast<Temperature*>(_eqnmap._qtymap.get_qty("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
+       static_cast<Temperature*>(_eqnmap.GetQtyMap().get_qty("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
    
 	Tempold.val_g(); //For the penalty Dirichlet //i need this for interpolating the old function at the gauss point
 

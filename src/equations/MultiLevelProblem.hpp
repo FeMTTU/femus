@@ -50,6 +50,9 @@ public:
 
     /** Constructor */
     MultiLevelProblem(MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
+    
+    /** Empty constructor for inheritance TODO remove soon*/
+    MultiLevelProblem() {};
 
     /** Destructor */
     ~MultiLevelProblem() {};
@@ -158,6 +161,18 @@ public:
         _gridn++;
     };
     
+    /** returns the beginning of the systems map */
+  inline system_iterator       begin()       { return _systems.begin(); }
+
+    /**  */
+  inline system_iterator         end()       { return _systems.end(); }
+
+    /**  */
+  inline const_system_iterator begin() const { return _systems.begin(); }
+  
+    /**  */
+  inline const_system_iterator   end() const { return _systems.end(); }
+   
     
 private:
 

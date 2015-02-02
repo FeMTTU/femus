@@ -143,10 +143,9 @@
   // ===== end QuantityMap =========================================
 
   // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblemTwo equations_map(files,physics_map,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
+  MultiLevelProblemTwo equations_map(physics_map,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
-
-  
+  MultiLevelProblem equations_map_two;
 //===============================================
 //================== Add EQUATIONS AND ======================
 //========= associate an EQUATION to QUANTITIES ========
@@ -164,7 +163,9 @@ std::vector<Quantity*> InternalVect_NS(2);
 InternalVect_NS[0] = &velocity;  velocity.SetPosInAssocEqn(0);
 InternalVect_NS[1] = &pressure;  pressure.SetPosInAssocEqn(1);
 
-  EqnNS* eqnNS = new EqnNS(InternalVect_NS,equations_map);  equations_map.set_eqs(eqnNS);
+  EqnNS* eqnNS = new EqnNS(equations_map,"Eqn_NS",0,NO_SMOOTHER);  equations_map.add_system(eqnNS);
+  eqnNS->SetQtyIntVector(InternalVect_NS);
+//   equations_map_two.add_system("Basic","equazioneNS");
   
            velocity.set_eqn(eqnNS);
            pressure.set_eqn(eqnNS);
@@ -185,9 +186,11 @@ InternalVect_Temp[2] = &tempadj;               tempadj.SetPosInAssocEqn(2);
 InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 #endif
 
-  EqnT* eqnT = new EqnT(opt_loop,InternalVect_Temp,equations_map);
-  equations_map.set_eqs(eqnT);  
+  EqnT* eqnT = new EqnT(equations_map,"Eqn_T",1,NO_SMOOTHER);
+  eqnT->SetQtyIntVector(InternalVect_Temp);
 
+  equations_map.add_system(eqnT); 
+  
         temperature.set_eqn(eqnT);
            templift.set_eqn(eqnT);
             tempadj.set_eqn(eqnT);
@@ -207,11 +210,26 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 // then I'll have A from the equation, PRL and REST from a MG object.
 //So somehow i'll have to put these objects at a higher level... but so far let us see if we can COMPUTE and PRINT from HERE and not from the gencase
 	 
-//   eqnNS->ComputeMatrix();  //CLEARLY THIS FUNCTION DOES NOT WORK AT THIS POINT, because not all the data in the mesh class are filled here! 
-                           //In fact, part of them is only filled by gencase
+ 
+//once you have the list of the equations, you loop over them to initialize everything
+
+   for (MultiLevelProblemTwo::const_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
+        SystemTwo* mgsol = eqn->second;
+        
+//=====================
+    mgsol -> _dofmap.ComputeMeshToDof();
+//=====================
+    mgsol -> GenerateBdc();
+    mgsol -> GenerateBdcElem();
+//=====================
+    mgsol -> ReadMGOps(files.GetOutputPath());
+//=====================
+    mgsol -> initVectors();     //TODO can I do it earlier than this position?
+//=====================
+    mgsol -> Initialize();
+    } 
 	 
-  equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
-  
+	 
   opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
 
   opt_loop.optimization_loop(equations_map);

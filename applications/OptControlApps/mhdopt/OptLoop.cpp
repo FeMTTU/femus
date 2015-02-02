@@ -18,7 +18,7 @@
 #include "Box.hpp"
 
 #include "paral.hpp"
-
+#include "XDMFWriter.hpp"
 
 //application headers
 #include "Opt_conf.hpp"
@@ -101,23 +101,23 @@ void OptLoop::optimization_loop(MultiLevelProblemTwo& e_map_in)  {
   
   
  #ifdef NS_EQUATIONS
-     EqnNS* mgNS = static_cast<EqnNS*>(e_map_in.get_eqs("Eqn_NS"));
+     EqnNS* mgNS = static_cast<EqnNS*>(e_map_in.get_system("Eqn_NS"));
   #endif
   #ifdef MHD_EQUATIONS
-     EqnMHD* mgMHD = static_cast<EqnMHD*>(e_map_in.get_eqs("Eqn_MHD"));
+     EqnMHD* mgMHD = static_cast<EqnMHD*>(e_map_in.get_system("Eqn_MHD"));
   #endif
  #ifdef NSAD_EQUATIONS
-     EqnNSAD* mgNSAD = static_cast<EqnNSAD*>(e_map_in.get_eqs("Eqn_NSAD"));
+     EqnNSAD* mgNSAD = static_cast<EqnNSAD*>(e_map_in.get_system("Eqn_NSAD"));
  #endif
   #ifdef MHDAD_EQUATIONS
-      EqnMHDAD* mgMHDAD = static_cast<EqnMHDAD*>(e_map_in.get_eqs("Eqn_MHDAD"));
+      EqnMHDAD* mgMHDAD = static_cast<EqnMHDAD*>(e_map_in.get_system("Eqn_MHDAD"));
   #endif
   #ifdef MHDCONT_EQUATIONS
-      EqnMHDCONT* mgMHDCONT = static_cast<EqnMHDCONT*>(e_map_in.get_eqs("Eqn_MHDCONT"));
+      EqnMHDCONT* mgMHDCONT = static_cast<EqnMHDCONT*>(e_map_in.get_system("Eqn_MHDCONT"));
   #endif
 
 
-std::string intgr_fname = e_map_in._files.GetOutputPath() + "/" + "integral.txt";
+std::string intgr_fname = _files.GetOutputPath() + "/" + "integral.txt";
 
  std::ofstream intgr_fstream;
 
@@ -458,7 +458,7 @@ while(lin_deltax_MHDCONT >  eps_MHDCONT && k_MHDCONT < MaxIterMHDCONT );
 //at the end of the optimization step, see the result for DIRECT and ADJOINT and CONTROL equations
 //now we are printing OUTSIDE the nonlinear loop, so we do not print the nonlinear steps
 const uint delta_opt_step = opt_step - _t_idx_in;
-     if (delta_opt_step%print_step == 0) e_map_in.PrintSol(opt_step,pseudo_opttimeval);   //print sol.N.h5 and sol.N.xmf
+     if (delta_opt_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),opt_step,pseudo_opttimeval,e_map_in);   //print sol.N.h5 and sol.N.xmf
   
       
     }
@@ -518,8 +518,8 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
    const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
+    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap.GetElemType());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap.GetQrule(currelem.GetDim()));
   
   // processor index
   const uint myproc = mesh->_iproc;
@@ -534,7 +534,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = eqn->_eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
@@ -546,19 +546,19 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   
      //========== 
     CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = eqn->_eqnmap._qtymap.get_qty("Qty_Velocity");
+    Vel._qtyptr      = eqn->_eqnmap.GetQtyMap().get_qty("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
     
     //========== 
     CurrentQuantity VelDes(currgp);
-    VelDes._qtyptr      = eqn->_eqnmap._qtymap.get_qty("Qty_DesVelocity");
+    VelDes._qtyptr      = eqn->_eqnmap.GetQtyMap().get_qty("Qty_DesVelocity");
     VelDes.VectWithQtyFillBasic();
     VelDes.Allocate();
    
    double integral=0.;
     
-      const uint el_ngauss = eqn->_eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+      const uint el_ngauss = eqn->_eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
 //parallel sum
     const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
@@ -592,7 +592,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
      
    const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
-   const double  wgt_g = eqn->_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+   const double  wgt_g = eqn->_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 
      for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 

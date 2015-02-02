@@ -32,31 +32,22 @@ namespace femus {
 
 
 ///=============== Constructor
-  EqnNS::EqnNS(    std::vector<Quantity*> int_map_in,  //no reference!
-	           MultiLevelProblemTwo& equations_map_in,
-                   std::string eqname_in,
-                   std::string varname_in):
-           SystemTwo(int_map_in,equations_map_in,eqname_in,varname_in),
+  EqnNS::EqnNS(    MultiLevelProblemTwo& equations_map_in,
+                   const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
+           SystemTwo(equations_map_in,eqname_in,number,smoother_type),
      _AdvPic_fl(ADVPIC_NS),
      _AdvNew_fl(ADVNEW_NS),
      _Stab_fl(STAB_NS),
      _Komp_fac(KOMP_NS)   {
 
-//=======  _var_names[]  ===========
-    _var_names[0]="ux"; //variable names
-    _var_names[1]="uy";
-    _var_names[DIMENSION]="up";
-#if (DIMENSION==3)
-    _var_names[2]="uz";
-#endif
-    
-//=======  _refvalue[] ==============   
-     _refvalue[0] =  _QtyInternalVector[0]->_refvalue[0]; 
-     _refvalue[1] =  _QtyInternalVector[0]->_refvalue[1]; 
-#if (DIMENSION==3)
-     _refvalue[2] =  _QtyInternalVector[0]->_refvalue[2]; 
-#endif
-     _refvalue[DIMENSION] = _QtyInternalVector[1]->_refvalue[0];
+// //=======  _var_names[]  ===========
+//     _var_names[0]="ux"; //variable names
+//     _var_names[1]="uy";
+//     _var_names[DIMENSION]="up";
+// #if (DIMENSION==3)
+//     _var_names[2]="uz";
+// #endif
+//     
 
 //========= MG solver ===================
   for(uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(SOLVERNS);
@@ -85,8 +76,8 @@ namespace femus {
 //to use a specific function, in which case you first should do the static cast
 //for some Vect and nothing for others
 //so, it could be better to do a Vect_LOCAL_EXTERNAL MAP inside here
-Density* density_ptr     = static_cast<Density*>(_eqnmap._qtymap.get_qty("Qty_Density"));
-Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_Viscosity"));
+Density* density_ptr     = static_cast<Density*>(_eqnmap.GetQtyMap().get_qty("Qty_Density"));
+Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap.GetQtyMap().get_qty("Qty_Viscosity"));
 #endif  //temp deps
   //====== reference values ========================
 //====== related to Quantities on which Operators act, and to the choice of the "LEADING" EQUATION Operator
@@ -121,7 +112,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_
 //every routine we use here should depend directly on this one and not implicitly 
 //through the class _iproc. This should be a sort of "function argument",
 //like the Level
-  const uint myproc= _iproc;
+  const uint myproc = _mesh._iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
 //FLAG for the TIME DISCRETIZATION
@@ -193,8 +184,8 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
   
     const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);    
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+    CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());    
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity VelOld(currgp);
@@ -225,7 +216,7 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
@@ -238,13 +229,13 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
 //============================ MAG WORLD =======================================
  #if BMAG_QTY==1  
     CurrentQuantity Bhom(currgp); //only to retrieve the dofs
-    Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
+    Bhom._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();
  
 //=========
     CurrentQuantity Bext(currgp);   //only to retrieve the dofs
-    Bext._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
+    Bext._qtyptr   =  _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();
 
@@ -252,7 +243,7 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
     CurrentQuantity Bmag(currgp); //total
     Bmag._dim        = Bhom._dim;
     Bmag._FEord      = Bhom._FEord;
-    Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
+    Bmag._ndof       = _eqnmap.GetElemType()[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
     Bmag.Allocate();
 #endif
 //======================== MAG WORLD ================================
@@ -260,7 +251,7 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
 //===================TEMPERATURE WORLD=============================
 #if TEMP_QTY==1
     CurrentQuantity Temp(currgp);
-    Temp._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature");
+    Temp._qtyptr   =  _eqnmap.GetQtyMap().get_qty("Qty_Temperature");
     Temp.VectWithQtyFillBasic();
     Temp.Allocate();
 #endif
@@ -347,7 +338,7 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
 //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
 //==============================================================
-   const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp = 0; qp < el_ngauss; qp++) {  
 
@@ -371,7 +362,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 }  
 	  
 const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is the same for both QQ and LL!
-const double dtxJxW_g = det*_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+const double dtxJxW_g = det*_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { 
@@ -588,8 +579,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
     const uint mesh_vb = BB;
   
-    CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);    
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+    CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());    
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity VelOld(currgp);
@@ -620,7 +611,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
@@ -692,7 +683,7 @@ if (_Dir_pen_fl == 1)  {
 //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
 //==============================================================
-   const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp=0; qp< el_ngauss; qp++) {
             
@@ -703,7 +694,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 }
 
         const double det   = dt*currgp.JacVectBB_g(xyz);
-	const double dtxJxW_g = det * _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+	const double dtxJxW_g = det * _eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
 //-------- pressure==============

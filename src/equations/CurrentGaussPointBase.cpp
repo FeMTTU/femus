@@ -1,6 +1,5 @@
 #include "CurrentGaussPointBase.hpp"
 
-#include "MultiLevelProblemTwo.hpp"
 #include "MultiLevelMeshTwo.hpp"
 
 #include "CurrentGaussPoint.hpp"
@@ -18,14 +17,13 @@ namespace femus {
 // for the geometric element
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
 //by the way, with the MultiLevelProblemTwo I reach the Utils, the Mesh, and so the GeomEl, and so on...
-CurrentGaussPointBase::CurrentGaussPointBase(const CurrentElem & curr_el_in, MultiLevelProblemTwo& e_map_in ):
+CurrentGaussPointBase::CurrentGaussPointBase(const CurrentElem & curr_el_in, const Gauss & qrule_in ):
  _current_elem(curr_el_in),
-       _eqnmap(e_map_in),
-    _elem_type(e_map_in._elem_type[curr_el_in.GetDim() - 1]),
-        _qrule(e_map_in.    _qrule[curr_el_in.GetDim() - 1]) {
+    _elem_type(curr_el_in.GetElemTypeVectorFE()),
+        _qrule(qrule_in) {
   
-  _IntDim[VV] = _eqnmap._mesh.get_dim();
-  _IntDim[BB] = _eqnmap._mesh.get_dim() - 1; 
+  _IntDim[VV] = curr_el_in._mesh.get_dim();
+  _IntDim[BB] = curr_el_in._mesh.get_dim() - 1; 
   
   //TODO probabilmente anche qui si puo' fare del TEMPLATING!!!
   //BISOGNA STARE ATTENTI CHE SE FAI DEL TEMPLATING con le ALLOCAZIONI STATICHE allora ti diverti poco con i DOPPI o TRIPLI ARRAY
@@ -72,14 +70,14 @@ CurrentGaussPointBase::~CurrentGaussPointBase() {
 
 
 //this is what allows RUNTIME selection of the templates!!!
-   CurrentGaussPointBase& CurrentGaussPointBase::build(const CurrentElem & elem_in, MultiLevelProblemTwo& eqmap_in, const uint dim_in) {
+   CurrentGaussPointBase& CurrentGaussPointBase::build(const CurrentElem & elem_in, const Gauss & qrule_in) {
       
       
-      switch(dim_in) {
+      switch( elem_in._mesh.get_dim() ) {
 	
-	case(2):  return *(new  CurrentGaussPoint<2>(elem_in,eqmap_in));
+	case(2):  return *(new  CurrentGaussPoint<2>(elem_in,qrule_in));
 	
-	case(3):  return *(new  CurrentGaussPoint<3>(elem_in,eqmap_in)); 
+	case(3):  return *(new  CurrentGaussPoint<3>(elem_in,qrule_in)); 
 	
 	default: {std::cout << "CurrentGaussPointBase: Only 2D and 3D" << std::endl; abort();}
 	  

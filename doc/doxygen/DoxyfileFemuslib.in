@@ -32,7 +32,7 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = FEMUSLIB
+PROJECT_NAME           = FEMuS
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
@@ -58,7 +58,7 @@ PROJECT_LOGO           =
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = @PROJECT_BINARY_DIR@/DoxygenDocumentation
+OUTPUT_DIRECTORY       = @PROJECT_BINARY_DIR@/doc/doxygen/
 
 # If the CREATE_SUBDIRS tag is set to YES, then doxygen will create 4096 sub-
 # directories (in 2 levels) under the output directory of each output format and
@@ -821,7 +821,7 @@ RECURSIVE              = YES
 
 EXCLUDE                = @PROJECT_SOURCE_DIR@/Applications \
                          @PROJECT_SOURCE_DIR@/cmake-modules \
-                         @PROJECT_SOURCE_DIR@/Doxygen \
+                         @PROJECT_SOURCE_DIR@/doc \
                          @PROJECT_SOURCE_DIR@/ExternalLibraries
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or

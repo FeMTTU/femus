@@ -29,29 +29,19 @@
 namespace femus {
 
 /// Constructor.
-  EqnMHDAD::EqnMHDAD(std::vector<Quantity*> int_map_in,
-	           MultiLevelProblemTwo& mg_equations_map_in,
-                   std::string eqname_in,
-                   std::string varname_in):
-      SystemTwo(int_map_in,mg_equations_map_in,eqname_in,varname_in)      
+  EqnMHDAD::EqnMHDAD(MultiLevelProblemTwo& mg_equations_map_in,
+                   const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
+      SystemTwo(mg_equations_map_in,eqname_in,number,smoother_type)      
       {
 
-//=======  _var_names[]  ===========
-    _var_names[0]="xix";
-    _var_names[1]="xiy";
-#if (DIMENSION==3)
-    _var_names[2]="xiz";
-#endif 
-    _var_names[DIMENSION]="xip";
+// //=======  _var_names[]  ===========
+//     _var_names[0]="xix";
+//     _var_names[1]="xiy";
+// #if (DIMENSION==3)
+//     _var_names[2]="xiz";
+// #endif 
+//     _var_names[DIMENSION]="xip";
   
-//=======  _refvalue[] ==============   
-    _refvalue[0] = _QtyInternalVector[0]->_refvalue[0];
-    _refvalue[1] = _QtyInternalVector[0]->_refvalue[1];
-#if (DIMENSION==3)
-    _refvalue[2] = _QtyInternalVector[0]->_refvalue[2];
-#endif
-    _refvalue[DIMENSION] = _QtyInternalVector[1]->_refvalue[0];
-
 //========= MG solver ===================
    for(uint l=0;l<_NoLevels;l++)   _solver[l]->set_solver_type(SOLVERMHDAD);
 
@@ -98,8 +88,8 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
 
   const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+    CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
      //QTYZERO
@@ -121,7 +111,7 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();    
 
 //========== Quadratic domain, auxiliary  
@@ -133,25 +123,25 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
 
   //==========     
     CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
+    Vel._qtyptr      = _eqnmap.GetQtyMap().get_qty("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();    
  
     //==========    
     CurrentQuantity VelAdj(currgp);
-    VelAdj._qtyptr      = _eqnmap._qtymap.get_qty("Qty_VelocityAdj");
+    VelAdj._qtyptr      = _eqnmap.GetQtyMap().get_qty("Qty_VelocityAdj");
     VelAdj.VectWithQtyFillBasic();
     VelAdj.Allocate();    
    
     //==========    
     CurrentQuantity Bhom(currgp);
-    Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
+    Bhom._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();    
 
 //=========
     CurrentQuantity Bext(currgp);
-    Bext._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
+    Bext._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();    
   
@@ -159,13 +149,13 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
     CurrentQuantity Bmag(currgp); //total
     Bmag._dim        = Bhom._dim;               //same as Bhom
     Bmag._FEord      = Bhom._FEord;             //same as Bhom
-    Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
+    Bmag._ndof       = _eqnmap.GetElemType()[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
     Bmag.Allocate();    
     
 //========= END EXTERNAL QUANTITIES =================
 
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level];
 
 //=====================
 //=====================    
@@ -175,7 +165,7 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
+    currelem.set_el_nod_conn_lev_subd(Level,_mesh._iproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);    
@@ -210,7 +200,7 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
 //=======
 
 
-    const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+    const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
     
     for (uint qp = 0; qp < el_ngauss; qp++) {
 //=======here starts the "COMMON SHAPE PART"==================
@@ -220,7 +210,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 }  
 	  
 const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is the same for both QQ and LL!
-const double dtxJxW_g = det * _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+const double dtxJxW_g = det * _eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { 
@@ -357,8 +347,8 @@ if (_Dir_pen_fl == 0)  {
 
   const uint mesh_vb = BB;
   
-    CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+    CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
      //QTYZERO
@@ -380,7 +370,7 @@ if (_Dir_pen_fl == 0)  {
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();    
 
 //========== Quadratic domain, auxiliary  
@@ -392,8 +382,8 @@ if (_Dir_pen_fl == 0)  {
    
 //========= END EXTERNAL QUANTITIES =================
 
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_iproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level];
 
 //=====================
 //=====================    
@@ -403,7 +393,7 @@ if (_Dir_pen_fl == 0)  {
      currelem.Mat().zero();
      currelem.Rhs().zero();
 
-     currelem.set_el_nod_conn_lev_subd(Level,_iproc,iel);
+     currelem.set_el_nod_conn_lev_subd(Level,_mesh._iproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -428,7 +418,7 @@ if (_Dir_pen_fl == 0)  {
        double  dbl_pen[NT] = {0.,0.};
    
     
-       Bc_GetElFlagValLevSubd(Level,_iproc,iel,el_flag,el_value);
+       Bc_GetElFlagValLevSubd(Level,_mesh._iproc,iel,el_flag,el_value);
 
 if (_Dir_pen_fl == 1)  { 
        if (el_flag[NN] == 1) {   dbl_pen[NN]=penalty_val; } //normal dirichlet
@@ -437,7 +427,7 @@ if (_Dir_pen_fl == 1)  {
     
 //========END BC============
      
-    const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+    const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp=0; qp< el_ngauss; qp++) {
 //======= "COMMON SHAPE PART"============================
@@ -446,7 +436,7 @@ if (_Dir_pen_fl == 1)  {
    currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);   }
 
         const double det   = dt*currgp.JacVectBB_g(xyz);
-	const double dtxJxW_g = det * _eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+	const double dtxJxW_g = det * _eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================   
       
       xyz_refbox.val_g();

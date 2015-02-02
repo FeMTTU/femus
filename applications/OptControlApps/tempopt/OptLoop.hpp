@@ -30,7 +30,7 @@ void optimization_loop(MultiLevelProblemTwo& e_map_in);
 
 };
 
- double ComputeIntegral (const uint Level,const MultiLevelMeshTwo* mesh, const SystemTwo* eqn);
+ double ComputeIntegral (const uint Level,const MultiLevelMeshTwo* mesh, const SystemTwo* eqn, const std::string output_time);
 
  double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn, const uint reg_ord );
 

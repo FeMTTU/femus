@@ -37,7 +37,10 @@ namespace femus {
     _solution[i]=_ml_sol->GetSolutionLevel(i);
   }
 }
-  
+
+  /** TODO remove soon */
+  System::System(MultiLevelProblem& ml_prob, const std::string& name_in, const unsigned int number_in) : _equation_systems(ml_prob),_sys_number(number_in),_sys_name(name_in) {};
+
   
 System::~System() {
   this->clear();

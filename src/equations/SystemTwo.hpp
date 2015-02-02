@@ -29,13 +29,13 @@
 #include "VBTypeEnum.hpp"
 #include "DofMap.hpp"
 
+#include "System.hpp"
 
 
 namespace femus {
 
 
 
-class Files        ;
 class Physics      ;
 class MultiLevelProblemTwo ;
 class MultiLevelMeshTwo      ;
@@ -49,17 +49,14 @@ class LinearEquationSolver;
 
 
 
-class SystemTwo  {
+class SystemTwo : public System {
 
 public:
 
 //=======================================================================
 // CONSTRUCTOR / DESTRUCTOR
 //=======================================================================
-  SystemTwo(std::vector<Quantity*> int_map_in,
-	  MultiLevelProblemTwo& equations_map,
-          std::string eq_name_in="Base",
-	  std::string varname_in="u");   //System//
+  SystemTwo(MultiLevelProblemTwo & equations_map, const std::string & eq_name_in, const unsigned int number, const MgSmoother & smoother_type);   //System//
   
   virtual ~SystemTwo();                    //System//
   
@@ -91,25 +88,33 @@ public:
 //=======================================================================
 //======= Quantities =========
 //=======================================================================
-      std::vector<Quantity*>          _QtyInternalVector;  //System//
+      inline const std::vector<Quantity*> & GetQtyIntVector() const { 
+	return _QtyInternalVector;
+      }
       
-	    std::string *_var_names;                   //MultilevelSolution//
-	  void initVarNames(std::string varname_in);   //MultilevelSolution//
+      void SetQtyIntVector(const std::vector<Quantity*> & vect_in) { 
+	_QtyInternalVector = vect_in;
+	init_sys();
+      }
 
-	  double      *_refvalue;        //MultilevelSolution//
+	    std::vector<std::string> _var_names;                   //MultilevelSolution//
+	  void initVarNames();   //MultilevelSolution//
+
+	  std::vector<double>      _refvalue;        //MultilevelSolution//
           void initRefValues();          //MultilevelSolution//
+
+	  void init_sys();     //System//
 
 //=======================================================================
 //====== Attributes of the equation ====
 //=======================================================================
   const std::string _eqname;   ///< equation name     //System//
-  uint               _iproc;   ///< processor rank    //ParallelObject//
   const uint      _NoLevels;   ///< level number      //System//
 
 //=======================================================================
 //========= MULTIGRID FUNCTIONS (Vectors + A,R,P) ======== (procs,levels) 
 //=======================================================================
-    void ReadMGOps();                         // LinearEquation  (each level)
+    void ReadMGOps(const std::string output_path); // LinearEquation  (each level)
     void ReadMatrix(const std::string& name); // LinearEquation  (each level)
     void ReadProl(const std::string& name);   // LinearEquation  (each level)
     void ReadRest(const std::string& name);   // LinearEquation  (each level)
@@ -140,7 +145,7 @@ public:
     int  ***_elem_bc;        ///[LEVELS][IPROC][2xELEMENTSxLEV&PROC]
  double  ***_elem_val_norm;  ///[LEVELS][IPROC][1xELEMENTSxLEV&PROC]
  double  ***_elem_val_tg;    ///[LEVELS][IPROC][(1or3)xELEMENTSxLEV&PROC]
- int _number_tang_comps[3];  //  {0,1,3} Number of tangential components in 1D,2D,3D (see BC in general domains) : use it only for 2D and 3D
+ static const int _number_tang_comps[3];  //  {0,1,3} Number of tangential components in 1D,2D,3D (see BC in general domains) : use it only for 2D and 3D
           void    GenerateBdcElem();
           void  clearElBc();
   virtual void elem_bc_read(const double * el_xm, int& surf_id, double * value,int * el_flag) const = 0;
@@ -156,10 +161,10 @@ public:
   
 protected:
   
-  Files                     & _files;
-  FemusInputParser<double>  & _phys;           
-  MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem
+  const FemusInputParser<double>  & _phys;           
+  const MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem
 
+  std::vector<Quantity*>          _QtyInternalVector;  //System//
 
 };
 

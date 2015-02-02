@@ -22,10 +22,8 @@ class EqnNS : public SystemTwo {
    const uint   _Stab_fl;
    const double _Komp_fac;
   
-  EqnNS(   std::vector<Quantity*> int_map_in,
-	   MultiLevelProblemTwo& mg_equations_map,
-           std::string eqname_in="Eqn_NS",/*"Navier-Stokes"*/
-           std::string varname_in="u");
+  EqnNS(   MultiLevelProblemTwo& mg_equations_map,
+           const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type);
    
 
   ~EqnNS();

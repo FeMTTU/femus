@@ -115,7 +115,7 @@
   // ===== end QuantityMap =========================================
 
   // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblemTwo equations_map(files,physics_map,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
+  MultiLevelProblemTwo equations_map(physics_map,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
 //===============================================
 //================== Add EQUATIONS AND ======================
@@ -126,14 +126,14 @@
 //   so this operation of set_eqn could be done right away in the moment when you put the quantity in the equation
  
 std::vector<Quantity*> InternalVect_Temp(3); 
-// std::vector<Quantity*> InternalVect_Temp(1); 
 
 InternalVect_Temp[0] = &temperature;               temperature.SetPosInAssocEqn(0);
 InternalVect_Temp[1] = &temperature2;              temperature2.SetPosInAssocEqn(1);
 InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn(2);
 
-  EqnT* eqnT = new EqnT(InternalVect_Temp,equations_map);
-  equations_map.set_eqs(eqnT);  
+  EqnT* eqnT = new EqnT(equations_map,"Eqn_T",0,NO_SMOOTHER);
+  eqnT->SetQtyIntVector(InternalVect_Temp);
+  equations_map.add_system(eqnT);  
   
     for (uint l=0; l< mesh._NoLevels; l++)  eqnT->_solver[l]->set_solver_type(GMRES);
     eqnT->_Dir_pen_fl = 0;  //no penalty BC
@@ -152,7 +152,22 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
 // then I'll have A from the equation, PRL and REST from a MG object.
 //So somehow i'll have to put these objects at a higher level... but so far let us see if we can COMPUTE and PRINT from HERE and not from the gencase
 	 
-  equations_map.setDofBcOpIc();    //once you have the list of the equations, you loop over them to initialize everything
+   for (MultiLevelProblemTwo::const_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
+        SystemTwo* mgsol = eqn->second;
+        
+//=====================
+    mgsol -> _dofmap.ComputeMeshToDof();
+//=====================
+    mgsol -> GenerateBdc();
+    mgsol -> GenerateBdcElem();
+//=====================
+    mgsol -> ReadMGOps(files.GetOutputPath());
+//=====================
+    mgsol -> initVectors();     //TODO can I do it earlier than this position?
+//=====================
+    mgsol -> Initialize();
+    }
+    
   time_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
 
   time_loop.TransientLoop(equations_map);

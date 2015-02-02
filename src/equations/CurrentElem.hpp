@@ -48,11 +48,11 @@ class CurrentQuantity;
     }
     
     inline const double*  GetMidpoint() const {
-      return _el_xm;
+      return &_el_xm[0];
     }
     
     inline const uint*  GetConn() const {
-      return _el_conn;
+      return &_el_conn[0];
     }
     
     inline uint  GetVolIel() const {
@@ -60,7 +60,7 @@ class CurrentQuantity;
     }
     
     inline const double*  GetNodeCoords() const {
-      return _xx_nds;
+      return &_xx_nds[0];
     }
     
     inline std::vector<uint>  GetDofIndices() const {
@@ -68,8 +68,8 @@ class CurrentQuantity;
     }
     
     //TODO here i have to return non-const because of a function that i will change...
-    inline uint*  GetBCDofFlag() const {
-      return _bc_eldofs;
+    inline uint*  GetBCDofFlag() {
+      return &_bc_eldofs[0];
     }
     
     /** Returns a reference to the element rhs */
@@ -84,8 +84,7 @@ class CurrentQuantity;
     
     void  set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel);
     
-    //TODO notice that this is not changing the POINTER , so it is const!
-    void  SetMidpoint() const;
+    void  SetMidpoint();
     
     void  PrintOrientation() const;
     
@@ -94,13 +93,19 @@ class CurrentQuantity;
     /** needs the EQUATION basically */
     void  SetElDofsBc(const uint Level);
  
+    /** */
+    inline const elem_type* GetElemType(const uint fe) const { return  _elem_type[fe]; }
+    
+     inline const std::vector<elem_type*> &  GetElemTypeVectorFE() const { return _elem_type; }
+   
     //TODO make these private
 //========== Equation-related ========================               
   const SystemTwo * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
   const MultiLevelMeshTwo & _mesh;
-  const std::vector< std::vector<elem_type*> >  &  _elem_type;
   
   private:
+
+  const std::vector<elem_type*>  &  _elem_type;
     
 // ========================================================================================
 //========== Current "EQUATION" Element (ql are TOGETHER ): needs the EQUATION ========================               
@@ -108,14 +113,14 @@ class CurrentQuantity;
   DenseVector                  _FeM;
   uint                   _el_n_dofs;
   std::vector<uint> _el_dof_indices;
-  uint*                  _bc_eldofs; //So the element must be aware of the BC of the equation
+  std::vector<uint>      _bc_eldofs; //So the element must be aware of the BC of the equation
   
 // ========================================================================================
 //==========  Current Geometric Element:  needs the MESH  ========================
-     uint  *_el_conn;             /// vector of the global nodes for that element         [NNDS];
-     uint    _vol_iel_DofObj;     /// i need to put the element also.
-   double  *_xx_nds;              /// vector of the node coordinates for that element     [_spacedimension*NNDS];
-   double  *_el_xm;               /// element center point                                [_spacedimension];
+   std::vector<uint>   _el_conn;             /// vector of the global nodes for that element         [NNDS];
+   uint    _vol_iel_DofObj;     /// i need to put the element also.
+   std::vector<double> _xx_nds;              /// vector of the node coordinates for that element     [_spacedimension*NNDS];
+   std::vector<double> _el_xm;               /// element center point                                [_spacedimension];
    const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
    const uint _mesh_vb;     //index for the mesh
     
@@ -173,8 +178,6 @@ class CurrentQuantity;
 //The curr geometric is basically filled with the MESH class
 //The curr fe is basically filled with the EQUATION class
 
-//can we make a currelem that is not based on the mesh?
-//Let us now just make this one
 
 
 #endif

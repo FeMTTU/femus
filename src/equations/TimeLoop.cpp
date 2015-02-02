@@ -27,6 +27,7 @@
 #include "FemusInputParser.hpp"
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
+#include "XDMFWriter.hpp"
 
 #include "paral.hpp"
 
@@ -61,73 +62,6 @@ namespace femus {
   _curr_time  = 0.;
    
 }
-
-
-
-// =================================================================
-/// Xdmf transient  print
-//print from time t_idx_in to t_idx_final
-//I will print a separate time sequence for each LEVEL
-//TODO see if there is a way to read multiple sol collections, defined on different grids, in the SAME time file
-      void TimeLoop::transient_print_xmf(const uint t_idx_in,const uint t_idx_final, const uint nolevels_in) const {
-
-	//multigrid
-	uint NoLevels = nolevels_in;
-
-        // time parameters
-        const uint ndigits     = DEFAULT_NDIGITS;
-        const int print_step   = _timemap.get("printstep");
-        // dir names
-        std::string    basetime     = DEFAULT_BASETIME;
-        std::string    ext_xdmf     = DEFAULT_EXT_XDMF;
-        std::string    basesol      = DEFAULT_BASESOL;
-        std::string    aux_xdmf     = DEFAULT_AUX_XDMF;
-
-// =================================
-// ============= LEVELS ============
-// =================================
-	
-	for (uint l=0; l < NoLevels; l++) {
-
-	// file 
-        std::ostringstream Name;
-        Name << _files.GetOutputPath() << "/" << basetime << "."
-             << std::setw(ndigits) << std::setfill('0') << t_idx_in << "-"
-             << std::setw(ndigits) << std::setfill('0') << t_idx_final  << "_l" << l
-             << ext_xdmf;
-        std::ofstream out(Name.str().c_str());
-	if (out.fail()) {std::cout << "transient_print_xmf: cannot print timeN.xmf" << std::endl; abort();}
-	
-        uint nprt=1;
-        std::string gname[3];  gname[0]=basesol;
-
-        //   Mesh -----------------------------------
-        out << "<?xml version=\"1.0\" ?> \n";
-        out << "<!DOCTYPE Xdmf SYSTEM "
-        <<  "\"" << _files.GetOutputPath() << "/" << aux_xdmf << "\"" << "[]>\n";
-        out << "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.2\"> \n";
-        out << "<Domain> \n";
-        for (uint kp=0;kp< nprt; kp++)    {
-          out << "<Grid Name=\""<< gname[kp].c_str() <<"\"  GridType=\"Collection\" CollectionType=\"Temporal\"> \n";
-          // time loop for grid sequence
-          for (uint it = t_idx_in; it <= t_idx_final; it++) if (it%print_step ==0)   {
-              out << "<xi:include href=\""
-                  << basesol << "." << std::setw(ndigits) << std::setfill('0') << it << "_l" << l <<  ext_xdmf 
-                  << "\"" << " xpointer=\"xpointer(//Xdmf/Domain/Grid["<< kp+1 <<"])\" >\n";
-              out << "<xi:fallback />\n";
-              out << " </xi:include>\n";
-            }
-          out << "</Grid> \n";
-        }
-        // Grid Collection end
-        out << "</Domain> \n";
-        out << "</Xdmf> \n";
-        out.close();
-	
-	} //end levels
-	
-      return;
-    }
 
     
 // ======================================================
@@ -376,7 +310,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
 //some parts of them are good for a SPECIFIC NOLEVELS or a SPECIFIC NO_PROCESSORS
 //while others, IN PARTICULAR THOSE THAT ARE NECESSARY FOR RESTART, must be INDEPENDENT OF THAT.
 
-        eqnmap.ReadSol(_t_idx_in,_time_in); //read  sol.N.h5 and sol.N.xmf
+        XDMFWriter::ReadSol(_files.GetOutputPath(),_t_idx_in,_time_in,eqnmap); //read  sol.N.h5 and sol.N.xmf
         //AAA: here _t_idx_in is intent in, _time_in is intent out
         //reading files can be done in parallel with no problems
         //well, not really... reading can be done if you are sure that the file is there at the moment you call to read it
@@ -390,7 +324,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
         _t_idx_in = 0;                            //time step index
         _time_in = 0.;                           //time absolute value
 
-        eqnmap.PrintSol(_t_idx_in,_time_in);  //print sol.0.h5 and sol.0.xmf
+        XDMFWriter::PrintSolLinear(_files.GetOutputPath(),_t_idx_in,_time_in,eqnmap);  //print sol.0.h5 and sol.0.xmf
         //AAA: here _t_idx_in is intent-in, and also _time_in is intent-in
     }
 
@@ -416,8 +350,8 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
 //------- print
     //this happens when the output dir is already set
     //at this point this is already true
-    eqnmap.PrintCase(_t_idx_in);       //print caseN.xmf&h5 = IC + BC flags
-    transient_print_xmf(_t_idx_in,_t_idx_final,eqnmap._mesh._NoLevels); //print timeN.xmf
+    XDMFWriter::PrintCaseLinear(_files.GetOutputPath(),_t_idx_in,eqnmap);       //print caseN.xmf&h5 = IC + BC flags
+    XDMFWriter::transient_print_xmf(_files.GetOutputPath(),_t_idx_in,_t_idx_final,_timemap.get("printstep"),eqnmap._mesh._NoLevels); //print timeN.xmf
 
     return;
 }
@@ -459,7 +393,7 @@ void TimeLoop::TransientLoop(const MultiLevelProblemTwo & eqnmap)  {
 #endif  // ------------------------------------------
 
         // print solution
-        if (delta_t_step%print_step == 0) eqnmap.PrintSol(curr_step,curr_time);   //print sol.N.h5 and sol.N.xmf
+        if (delta_t_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),curr_step,curr_time,eqnmap);   //print sol.N.h5 and sol.N.xmf
 
 
 #if DEFAULT_PRINT_TIME==1 // only for cpu time check --------

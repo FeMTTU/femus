@@ -10,6 +10,7 @@
 #include "Box.hpp"
 #include "paral.hpp"
 #include "Files.hpp"
+#include "XDMFWriter.hpp"
 
 #include "EqnT.hpp"
 
@@ -51,7 +52,7 @@ namespace femus {
 #endif 
 
       // print solution
-      if (delta_t_step%print_step == 0) eqmap_in.PrintSol(curr_step,curr_time);   //print sol.N.h5 and sol.N.xmf
+      if (delta_t_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),curr_step,curr_time,eqmap_in);   //print sol.N.h5 and sol.N.xmf
     
 
 #if DEFAULT_PRINT_TIME==1
@@ -64,11 +65,11 @@ namespace femus {
 //=====functional evaluations=======
 
 #if T_EQUATIONS==1
-		EqnT* eqnT = static_cast<EqnT*>(eqmap_in.get_eqs("Eqn_T"));
+		EqnT* eqnT = static_cast<EqnT*>(eqmap_in.get_system("Eqn_T"));
 
 		
      double J = 0.;
-J = ComputeIntegral    ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT);
+J = ComputeIntegral    ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT,_files.GetOutputTime());
 J = ComputeNormControl ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT,0 );
 J = ComputeNormControl ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT,1 );
 //=====functional evaluations =======
@@ -85,7 +86,7 @@ J = ComputeNormControl ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT,1 );
   
 // This function computes the integral only for the current processor
 
-double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn) {
+double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn, const std::string output_time) {
 
   //====== processor index
   const uint myproc = mesh->_iproc;
@@ -95,24 +96,24 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
  
   const uint mesh_vb = VV;
 
-    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);  //TODO do we really need eqn here, or only eqnmap?!
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
+    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap.GetElemType());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap.GetQrule(currelem.GetDim()));
 
   //========== 
     CurrentQuantity Tempold(currgp);
-    Tempold._qtyptr   =  eqn->_eqnmap._qtymap.get_qty("Qty_Temperature"); 
+    Tempold._qtyptr   =  eqn->_eqnmap.GetQtyMap().get_qty("Qty_Temperature"); 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
   //========== 
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   =  eqn->_eqnmap._qtymap.get_qty("Qty_TempLift"); 
+    Tlift._qtyptr   =  eqn->_eqnmap.GetQtyMap().get_qty("Qty_TempLift"); 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
     
  //===========
     CurrentQuantity Tdes(currgp);
-    Tdes._qtyptr   = eqn->_eqnmap._qtymap.get_qty("Qty_TempDes"); 
+    Tdes._qtyptr   = eqn->_eqnmap.GetQtyMap().get_qty("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
   
@@ -120,7 +121,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = eqn->_eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
@@ -133,7 +134,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   
    double integral = 0.;
 
-      const uint el_ngauss = eqn->_eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+      const uint el_ngauss = eqn->_eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
 //parallel sum
     const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
@@ -166,7 +167,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
      for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
      
    const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
-   const double  wgt_g = eqn->_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+   const double  wgt_g = eqn->_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 
      for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
@@ -208,7 +209,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     
     if (paral::get_rank() ==0 ) { 
       intgr_fstream.open(intgr_fname.c_str(),ios_base::app); 
-      intgr_fstream << eqn->_eqnmap._files.GetOutputTime() << " " << eqn->_eqnmap._phys.get("alphaT") << " " << eqn->_eqnmap._phys.get("injsuc")<< " "  << J << " " << std::endl ; 
+      intgr_fstream << output_time << " " << eqn->_eqnmap.GetInputParser().get("alphaT") << " " << eqn->_eqnmap.GetInputParser().get("injsuc")<< " "  << J << " " << std::endl ; 
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
     }
  
@@ -233,14 +234,14 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
 
   const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap, mesh->get_dim());
+    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap.GetElemType());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap.GetQrule(currelem.GetDim()));
   
 //======Functions in the integrand ============
 
       //========== 
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   =  eqn->_eqnmap._qtymap.get_qty("Qty_TempLift"); 
+    Tlift._qtyptr   =  eqn->_eqnmap.GetQtyMap().get_qty("Qty_TempLift"); 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
@@ -248,7 +249,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
     CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = eqn->_eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
@@ -262,7 +263,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
    double integral = 0.;
 
 //loop over the geom el types
-      const uint el_ngauss = eqn->_eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+      const uint el_ngauss = eqn->_eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
 //parallel sum
     const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
@@ -287,7 +288,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
     }  
      
       const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
-      const double  wgt_g = eqn->_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+      const double  wgt_g = eqn->_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 
   Tlift.val_g();
   Tlift.grad_g();

@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
 //================================
 
   // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblemTwo equations_map(files,physics_map,qty_map,mesh,FEElemType_vec,qrule);
+  MultiLevelProblemTwo equations_map(physics_map,qty_map,mesh,FEElemType_vec,qrule);
   
 //===============================================
 //================== Add EQUATIONS  AND ======================
@@ -183,8 +183,9 @@ std::vector<Quantity*> InternalVect_NS(2);
 InternalVect_NS[QTYZERO] = &velocity;      velocity.SetPosInAssocEqn(0);
 InternalVect_NS[QTYONE] = &pressure;       pressure.SetPosInAssocEqn(1);
 
-  EqnNS* eqnNS=new EqnNS(InternalVect_NS,equations_map);
-  equations_map.set_eqs(eqnNS);
+  EqnNS* eqnNS = new EqnNS(equations_map,"Eqn_NS",0,NO_SMOOTHER);
+  eqnNS->SetQtyIntVector(InternalVect_NS);
+  equations_map.add_system(eqnNS);
  
  velocity.set_eqn(eqnNS);
  pressure.set_eqn(eqnNS);
@@ -196,8 +197,9 @@ std::vector<Quantity*> InternalVect_NSAD(2);
 InternalVect_NSAD[QTYZERO] = &velocity_adj;     velocity_adj.SetPosInAssocEqn(0);
 InternalVect_NSAD[QTYONE]  = &pressure_adj;     pressure_adj.SetPosInAssocEqn(1);
 
-  EqnNSAD* eqnNSAD=new EqnNSAD(InternalVect_NSAD,equations_map);
-  equations_map.set_eqs(eqnNSAD);
+  EqnNSAD* eqnNSAD=new EqnNSAD(equations_map,"Eqn_NSAD",1,NO_SMOOTHER);
+  eqnNSAD->SetQtyIntVector(InternalVect_NSAD);
+  equations_map.add_system(eqnNSAD);
 
   velocity_adj.set_eqn(eqnNSAD);
   pressure_adj.set_eqn(eqnNSAD);
@@ -209,8 +211,9 @@ std::vector<Quantity*> InternalVect_MHD(2);
 InternalVect_MHD[QTYZERO] = &bhom;             bhom.SetPosInAssocEqn(0);
 InternalVect_MHD[QTYONE]  = &bhom_lag_mult;    bhom_lag_mult.SetPosInAssocEqn(1);
 
-  EqnMHD* eqnMHD=new EqnMHD(InternalVect_MHD,equations_map);
-  equations_map.set_eqs(eqnMHD);
+  EqnMHD* eqnMHD=new EqnMHD(equations_map,"Eqn_MHD",2,NO_SMOOTHER);
+  eqnMHD->SetQtyIntVector(InternalVect_MHD);
+  equations_map.add_system(eqnMHD);
 
              bhom.set_eqn(eqnMHD);
     bhom_lag_mult.set_eqn(eqnMHD);
@@ -222,8 +225,9 @@ std::vector<Quantity*> InternalVect_MHDAD(2);
 InternalVect_MHDAD[QTYZERO] = &bhom_adj;             bhom_adj.SetPosInAssocEqn(0);
 InternalVect_MHDAD[QTYONE]  = &bhom_lag_mult_adj;    bhom_lag_mult_adj.SetPosInAssocEqn(1);
 	
-  EqnMHDAD* eqnMHDAD=new EqnMHDAD(InternalVect_MHDAD,equations_map);
-  equations_map.set_eqs(eqnMHDAD);
+  EqnMHDAD* eqnMHDAD=new EqnMHDAD(equations_map,"Eqn_MHDAD",3,NO_SMOOTHER);
+  eqnMHDAD->SetQtyIntVector(InternalVect_MHDAD);
+  equations_map.add_system(eqnMHDAD);
   
            bhom_adj.set_eqn(eqnMHDAD);
   bhom_lag_mult_adj.set_eqn(eqnMHDAD);
@@ -235,8 +239,9 @@ std::vector<Quantity*> InternalVect_MHDCONT(2);
 InternalVect_MHDCONT[QTYZERO] = &Bext;            Bext.SetPosInAssocEqn(0);
 InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn(1);
 
-  EqnMHDCONT* eqnMHDCONT = new EqnMHDCONT(InternalVect_MHDCONT,equations_map);
-  equations_map.set_eqs(eqnMHDCONT);
+  EqnMHDCONT* eqnMHDCONT = new EqnMHDCONT(equations_map,"Eqn_MHDCONT",4,NO_SMOOTHER);
+  eqnMHDCONT->SetQtyIntVector(InternalVect_MHDCONT);
+  equations_map.add_system(eqnMHDCONT);
 
                  Bext.set_eqn(eqnMHDCONT);
         Bext_lag_mult.set_eqn(eqnMHDCONT);
@@ -248,7 +253,22 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 //========= associate an EQUATION to QUANTITIES ========
 //================================
 
-  equations_map.setDofBcOpIc();     //  /*TODO fileIO  for  Bc, init, and Ic*/
+   for (MultiLevelProblemTwo::const_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
+        SystemTwo* mgsol = eqn->second;
+        
+//=====================
+    mgsol -> _dofmap.ComputeMeshToDof();
+//=====================
+    mgsol -> GenerateBdc();
+    mgsol -> GenerateBdcElem();
+//=====================
+    mgsol -> ReadMGOps(files.GetOutputPath());
+//=====================
+    mgsol -> initVectors();     //TODO can I do it earlier than this position?
+//=====================
+    mgsol -> Initialize();
+    
+    }
 
   // ======== OptLoop ===================================
   FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());

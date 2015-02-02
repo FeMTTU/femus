@@ -26,40 +26,40 @@ using namespace std;
 #include "SystemTwo.hpp"
 #include "GaussPoints.hpp"
 
+#include "MultiLevelProblem.hpp"
 
 namespace femus {
 
 
 
-class Physics;
 class MultiLevelMeshTwo;
-class FEElemBase;
 class elem_type;
-class TimeLoop;
-
 class QuantityMap;
 
 
-class MultiLevelProblemTwo  {
+class MultiLevelProblemTwo : public MultiLevelProblem {
 
 public:
   
-    Files&       _files;
-    FemusInputParser<double> &  _phys;
-    QuantityMap& _qtymap;
-    MultiLevelMeshTwo&     _mesh;
-    std::vector< std::vector<elem_type*> >  &  _elem_type;
-    std::vector<Gauss>       _qrule;
+    const MultiLevelMeshTwo&     _mesh;
 
   /// Constructor
-    MultiLevelProblemTwo( Files& files_in,
-		  FemusInputParser<double> & phys_in,
-		  QuantityMap& qtymap_in,
-		  MultiLevelMeshTwo& mesh_in,
-                  std::vector< std::vector<elem_type*> > & elem_type_in,
-		  std::vector<Gauss> qrule_in
+    MultiLevelProblemTwo(const FemusInputParser<double> & phys_in,
+		  const QuantityMap& qtymap_in,
+		  const MultiLevelMeshTwo& mesh_in,
+                  const std::vector< std::vector<elem_type*> > & elem_type_in,
+		  const std::vector<Gauss> qrule_in
 		);
 
+  inline const QuantityMap & GetQtyMap() const { return  _qtymap; }
+
+  inline const std::vector<elem_type*>  & GetElemType(const unsigned dim) const { return  _elem_type[dim - 1]; }
+    
+  inline const std::vector< std::vector<elem_type*> >  & GetElemType() const { return  _elem_type; }
+
+  inline const Gauss & GetQrule(const unsigned dim) const { return _qrule[dim - 1]; }
+  
+  inline const FemusInputParser<double> &  GetInputParser() const { return _phys; }
     
     /// Destructor
   ~MultiLevelProblemTwo(){};
@@ -67,9 +67,9 @@ public:
   void clean(); ///< Clean all substructures
 
   // equation get/set
-  inline          void  set_eqs(SystemTwo* value)            {_equations.insert(make_pair(value->_eqname,value));}
-  inline       SystemTwo* get_eqs(const string & name)       {return _equations.find(name)->second;}
-  inline const SystemTwo* get_eqs(const string & name) const {return _equations.find(name)->second;}
+  inline          void  add_system(SystemTwo* value)            {_equations.insert(make_pair(value->_eqname,value));}
+  inline       SystemTwo* get_system(const string & name)       {return _equations.find(name)->second;}
+  inline const SystemTwo* get_system(const string & name) const {return _equations.find(name)->second;}
 
   typedef std::map<string, SystemTwo*>::iterator iterator;
   typedef std::map<string, SystemTwo*>::const_iterator const_iterator;
@@ -79,24 +79,17 @@ public:
   inline const_iterator begin() const { return _equations.begin();}
   inline const_iterator   end() const { return _equations.end();}
 
-
-  void setDofBcOpIc() ;
-
-
-  // read-print functions -------------------------------------------
-  void PrintSol(const uint t_step,const double curr_time) const; ///< Print solution 
-  void ReadSol(const uint t_step,double& time_out) const;  ///< Read solution //TODO must be updated
-  void PrintCase(const uint t_init) const; ///< Print ic and bc
-  
 private:
   
- map<string,SystemTwo*> _equations;   // system map
+    map<string,SystemTwo*> _equations;   // system map
     
- void PrintSolXDMF(const uint t_step,const double curr_time) const;
- void PrintSolHDF5(const uint t_flag) const;
- 
- void PrintCaseXDMF(const uint t_init) const;
- void PrintCaseHDF5(const uint t_init) const;
+    const std::vector< std::vector<elem_type*> >  &  _elem_type;
+    
+    const std::vector<Gauss>       _qrule;
+    
+    const FemusInputParser<double> &  _phys;
+
+    const QuantityMap & _qtymap;
 
 };
 

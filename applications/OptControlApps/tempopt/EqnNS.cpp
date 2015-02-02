@@ -29,28 +29,21 @@
 
 
 ///=============== Constructor
-  EqnNS::EqnNS(    std::vector<Quantity*> int_map_in,  //no reference!
-	           MultiLevelProblemTwo& equations_map_in,
-                   std::string eqname_in,
-                   std::string varname_in):
-           SystemTwo(int_map_in,equations_map_in,eqname_in,varname_in),
+  EqnNS::EqnNS( MultiLevelProblemTwo & equations_map_in,
+                  const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
+           SystemTwo(equations_map_in,eqname_in,number,smoother_type),
      _AdvPic_fl(ADVPIC_NS),
      _AdvNew_fl(ADVNEW_NS),
      _Stab_fl(STAB_NS),
      _Komp_fac(KOMP_NS)   {
 
 
-//=======  _var_names[]  ===========
-                          _var_names[0] = "ux"; //variable names
-                          _var_names[1] = "uy";
-   if ( _mesh.get_dim() == 3 ) _var_names[2] = "uz";
-                 _var_names[_mesh.get_dim()] = "up";
-     
-//=======  _refvalue[] ==============   
-                          _refvalue[0] =  _QtyInternalVector[0]->_refvalue[0]; 
-                          _refvalue[1] =  _QtyInternalVector[0]->_refvalue[1]; 
-   if ( _mesh.get_dim() == 3 ) _refvalue[2] =  _QtyInternalVector[0]->_refvalue[2]; 
-                 _refvalue[_mesh.get_dim()] =  _QtyInternalVector[1]->_refvalue[0];
+// //=======  _var_names[]  ===========
+//                           _var_names[0] = "ux"; //variable names
+//                           _var_names[1] = "uy";
+//    if ( _mesh.get_dim() == 3 ) _var_names[2] = "uz";
+//                  _var_names[_mesh.get_dim()] = "up";
+//      
 
 //========= MG solver ===================
   for(uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(SOLVERNS);
@@ -73,7 +66,7 @@
    const double time =  0.;//_eqnmap._timeloop._curr_time;
    
 //========== PROCESSOR INDEX
-  const uint myproc = _iproc;
+  const uint myproc = _mesh._iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
   const int NonStatNS = (int) _phys.get("NonStatNS");
@@ -109,8 +102,8 @@
 //========================
   const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+    CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
  
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -142,7 +135,7 @@
     CurrentQuantity xyz(currgp); //domain
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
     
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
@@ -154,7 +147,7 @@
     
 #if TEMP_QTY==1
     CurrentQuantity Temp(currgp);
-    Temp._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature");
+    Temp._qtyptr   =  _eqnmap.GetQtyMap().get_qty("Qty_Temperature");
     Temp.VectWithQtyFillBasic();
     Temp.Allocate();
 #endif
@@ -209,7 +202,7 @@
 //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
 //==============================================================
-   const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp = 0; qp < el_ngauss; qp++) {  
 
@@ -233,7 +226,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   }
 	  
 const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is the same for both QQ and LL!
-const double dtxJxW_g = det*_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+const double dtxJxW_g = det*_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { 
@@ -427,8 +420,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
      const uint mesh_vb = BB;
   
-    CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap, _mesh.get_dim());
+    CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
  
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -460,7 +453,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
     CurrentQuantity xyz(currgp); //domain
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
     
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
@@ -529,7 +522,7 @@ if (_Dir_pen_fl == 1)  {
 //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
 //==============================================================
-   const uint el_ngauss = _eqnmap._qrule[currelem.GetDim()-1].GetGaussPointsNumber();
+   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp=0; qp< el_ngauss; qp++) {
             
@@ -540,7 +533,7 @@ if (_Dir_pen_fl == 1)  {
 }
 
         const double det   = dt*currgp.JacVectBB_g(xyz);
-	const double dtxJxW_g = det*_eqnmap._qrule[currelem.GetDim()-1].GetGaussWeight(qp);
+	const double dtxJxW_g = det*_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
 //-------- pressure==============

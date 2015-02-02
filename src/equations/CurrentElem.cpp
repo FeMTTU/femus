@@ -28,27 +28,27 @@ namespace femus {
 
 
 
-    CurrentElem::CurrentElem(const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type ):
+    CurrentElem::CurrentElem(const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type_in ):
     _eqn(eqn_in),
     _mesh(mesh),
-    _elem_type(elem_type),
     _dim(_mesh.get_dim()-vb),
+    _elem_type(elem_type_in[mesh.get_dim()-vb -1]),
     _mesh_vb(vb)
     {
     
 //========== Current "Geometric Element"  ========================
   uint elnodes = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
-  _el_conn = new uint[ elnodes ];   
-   _xx_nds = new double[_mesh.get_dim()*elnodes ];
-    _el_xm = new double[_mesh.get_dim()];  
+  _el_conn.resize(elnodes);   
+   _xx_nds.resize(_mesh.get_dim()*elnodes);
+    _el_xm.resize(_mesh.get_dim());  
 //========== Current "Geometric Element"  ========================
 
 //========== Current "Equation Element"  ========================
   _el_n_dofs = 0;
-     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs += (_elem_type[_dim-1][fe]->GetNDofs() )*_eqn->_dofmap._nvars[fe]; }
+     for (int fe = 0; fe < QL; fe++) {  _el_n_dofs += (_elem_type[fe]->GetNDofs() )*_eqn->_dofmap._nvars[fe]; }
 
   _el_dof_indices.resize(_el_n_dofs);
-  _bc_eldofs = new uint[_el_n_dofs];
+  _bc_eldofs.resize(_el_n_dofs);
   _KeM.resize(_el_n_dofs,_el_n_dofs);
   _FeM.resize(_el_n_dofs);
 //========== Current "Equation Element"  ========================
@@ -57,13 +57,7 @@ namespace femus {
   }
  
 
-    CurrentElem::~CurrentElem() {
-      
- delete [] _el_conn;
- delete [] _xx_nds;
- delete []  _el_xm;     
-      
-  }
+    CurrentElem::~CurrentElem() {}
     
     
     
@@ -82,19 +76,19 @@ void CurrentElem::SetElDofsBc(const uint Level)  {
   
 int off_local_el[QL];
 off_local_el[QQ] = 0;
-off_local_el[LL] = _eqn->_dofmap._nvars[QQ]*(_elem_type[_dim-1][QQ]->GetNDofs() );
-off_local_el[KK] = _eqn->_dofmap._nvars[QQ]*(_elem_type[_dim-1][QQ]->GetNDofs() ) + _eqn->_dofmap._nvars[LL]*(_elem_type[_dim-1][LL]->GetNDofs() );
+off_local_el[LL] = _eqn->_dofmap._nvars[QQ]*(_elem_type[QQ]->GetNDofs() );
+off_local_el[KK] = _eqn->_dofmap._nvars[QQ]*(_elem_type[QQ]->GetNDofs() ) + _eqn->_dofmap._nvars[LL]*(_elem_type[LL]->GetNDofs() );
   
 
  int DofObj = 0;
 for (int fe=0; fe < QL; fe++) {
 for (uint ivar=0; ivar < _eqn->_dofmap._nvars[fe]; ivar++)    {
-      for (uint d=0; d< _elem_type[_dim-1][fe]->GetNDofs(); d++)    {
+      for (uint d=0; d< _elem_type[fe]->GetNDofs(); d++)    {
 	
 	     if (fe < KK )       DofObj =        _el_conn[d];
 	     else if (fe == KK)  DofObj = _vol_iel_DofObj;
 	     
-          const uint     indx  = d + ivar*_elem_type[_dim-1][fe]->GetNDofs() + off_local_el[fe];
+          const uint     indx  = d + ivar*_elem_type[fe]->GetNDofs() + off_local_el[fe];
 	  _el_dof_indices[indx] = _eqn->_dofmap.GetDof(Level,fe,ivar,DofObj);
 
          if (fe < KK ) { const uint dofkivar = _eqn->_dofmap.GetDof(Lev_pick_bc_dof,fe,ivar,DofObj); 
@@ -211,9 +205,8 @@ void CurrentElem::PrintOrientation() const {
 
 // ========================================================
 ///Compute the element center
-///TODO must do this in the QUADRATIC case
 
-  void CurrentElem::SetMidpoint() const {
+  void CurrentElem::SetMidpoint() {
 
     const uint mesh_dim = _mesh.get_dim();
     const uint el_nnodes   = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];

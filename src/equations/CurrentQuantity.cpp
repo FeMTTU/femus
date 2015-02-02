@@ -137,7 +137,7 @@ void CurrentQuantity::VectWithQtyFillBasic() {
     _eqnptr   = _qtyptr->_eqn; 
     _dim      = _qtyptr->_dim;
     _FEord    = _qtyptr->_FEord;
-    _ndof     = _currEl._elem_type[_currEl.GetDim()-1][_FEord]->GetNDofs();
+    _ndof     = _currEl.GetElemType(_FEord)->GetNDofs();
 
     return;
 }
@@ -174,7 +174,7 @@ void CurrentQuantity::ExtendDofs() {
   //set to zero
   for (uint eln=0; eln<el_ndofs; eln++)  {
     for (uint i=0; i<3; i++) {
-       _val_dofs3D[eln+i*el_ndofs]=0.;
+       _val_dofs3D[eln+i*el_ndofs] = 0.;
     }
   }
 //extend
@@ -266,7 +266,7 @@ void CurrentQuantity::GetElemDofs(const uint Level)  {
   length_nodedof[KK] = _currEl._mesh._n_elements_vb_lev[VV][Level];
 
    int off_total = 0;
-   for (uint i = 0; i < _qtyptr->_pos; i++) off_total += _eqnptr->_QtyInternalVector[i]->_dim * _eqnptr->_dofmap._DofNumLevFE[ Level ][ _eqnptr->_QtyInternalVector[i]->_FEord ];
+   for (uint i = 0; i < _qtyptr->_pos; i++) off_total += _eqnptr->GetQtyIntVector()[i]->_dim * _eqnptr->_dofmap._DofNumLevFE[ Level ][ _eqnptr->GetQtyIntVector()[i]->_FEord ];
 
    int DofObj = 0;
 
