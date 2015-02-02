@@ -2474,7 +2474,7 @@ void XDMFWriter::PrintOneVarMGOperatorHDF5(const std::string & filename,const st
 /// This function prints the attributes into the corresponding hdf5 file
 void XDMFWriter::PrintSolHDF5Linear(const std::string output_path, const uint t_flag, const MultiLevelProblemTwo & ml_prob ) {
 
-    const uint    iproc =ml_prob._mesh._iproc;
+    const uint    iproc  = ml_prob.GetMeshTwo()._iproc;
     if (iproc==0) {
 
         const uint     ndigits  = DEFAULT_NDIGITS;
@@ -2490,7 +2490,7 @@ void XDMFWriter::PrintSolHDF5Linear(const std::string output_path, const uint t_
         MultiLevelProblemTwo::const_iterator pos_e = ml_prob.end();
         for (;pos!=pos_e;pos++)    {
             SystemTwo* eqn = pos->second;
-            XDMFWriter::write_system_solutions(filename.str(),& ml_prob._mesh,&(eqn->_dofmap),eqn);
+            XDMFWriter::write_system_solutions(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn);
         }
 
     } //end print iproc
@@ -2520,11 +2520,11 @@ void XDMFWriter::PrintSolHDF5Linear(const std::string output_path, const uint t_
 
 void XDMFWriter::PrintSolXDMFLinear(const std::string output_path, const uint t_step,const double curr_time, const MultiLevelProblemTwo & ml_prob ) {
 
-    const uint    iproc =ml_prob._mesh._iproc;
+    const uint    iproc =ml_prob.GetMeshTwo()._iproc;
     if (iproc==0) {
 
       const uint ndigits  = DEFAULT_NDIGITS;
-      const uint NoLevels = ml_prob._mesh._NoLevels;
+      const uint NoLevels = ml_prob.GetMeshTwo()._NoLevels;
 
         //FE print
         std::string DofType[QL];
@@ -2568,15 +2568,15 @@ void XDMFWriter::PrintSolXDMFLinear(const std::string output_path, const uint t_
 	
 
         int NGeomObjOnWhichToPrint[QL];
-        NGeomObjOnWhichToPrint[QQ] = ml_prob._mesh._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[LL] = ml_prob._mesh._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[KK] = ml_prob._mesh._n_elements_vb_lev[VV][l]*NRE[ml_prob._mesh._eltype_flag[VV]];
+        NGeomObjOnWhichToPrint[QQ] = ml_prob.GetMeshTwo()._NoNodesXLev[l];
+        NGeomObjOnWhichToPrint[LL] = ml_prob.GetMeshTwo()._NoNodesXLev[l];
+        NGeomObjOnWhichToPrint[KK] = ml_prob.GetMeshTwo()._n_elements_vb_lev[VV][l]*NRE[ml_prob.GetMeshTwo()._eltype_flag[VV]];
 	  
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
 	out << "<Time Value =\"" << curr_time << "\" /> \n";
 	
-        XDMFWriter::PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,VV,ml_prob._mesh);
+        XDMFWriter::PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,VV,ml_prob.GetMeshTwo());
 
 	MultiLevelProblemTwo::const_iterator pos1   = ml_prob.begin();
         MultiLevelProblemTwo::const_iterator pos1_e = ml_prob.end();
@@ -2641,7 +2641,7 @@ void XDMFWriter::PrintCaseLinear(const std::string output_path, const uint t_ini
 /// in the file case.h5
 void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t_init, const MultiLevelProblemTwo & ml_prob ) {
 
-    const uint    iproc =ml_prob._mesh._iproc;
+    const uint    iproc =ml_prob.GetMeshTwo()._iproc;
     if (iproc==0) {
 
         const uint ndigits      = DEFAULT_NDIGITS;
@@ -2654,9 +2654,9 @@ void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t
 
         hid_t file = H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
 
-	for (uint l=0; l< ml_prob._mesh._NoLevels; l++) {
+	for (uint l=0; l< ml_prob.GetMeshTwo()._NoLevels; l++) {
 	
-        XDMFWriter::PrintSubdomFlagOnCellsLinear(l,filename.str(),ml_prob._mesh,LINEAR_FE);
+        XDMFWriter::PrintSubdomFlagOnCellsLinear(l,filename.str(),ml_prob.GetMeshTwo(),LINEAR_FE);
 
 	}
 	
@@ -2666,8 +2666,8 @@ void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t
         MultiLevelProblemTwo::const_iterator pos_e = ml_prob.end();
         for (;pos!=pos_e;pos++) {
             SystemTwo* eqn = pos->second;
-            XDMFWriter::write_system_solutions(filename.str(),& ml_prob._mesh,&(eqn->_dofmap),eqn);    // initial solution
-            XDMFWriter::write_system_solutions_bc(filename.str(),& ml_prob._mesh,&(eqn->_dofmap),eqn,eqn->_bc,eqn->_bc_fe_kk);            // boundary condition
+            XDMFWriter::write_system_solutions(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn);    // initial solution
+            XDMFWriter::write_system_solutions_bc(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn,eqn->_bc,eqn->_bc_fe_kk);            // boundary condition
         }
 
     } //end iproc
@@ -2691,10 +2691,10 @@ void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t
 
 void XDMFWriter::PrintCaseXDMFLinear(const std::string output_path, const uint t_init, const MultiLevelProblemTwo & ml_prob ) {
 
-    const uint    iproc = ml_prob._mesh._iproc;
+    const uint    iproc = ml_prob.GetMeshTwo()._iproc;
     if (iproc==0) {
 
-        const uint NoLevels = ml_prob._mesh._NoLevels;
+        const uint NoLevels = ml_prob.GetMeshTwo()._NoLevels;
         const uint ndigits  = DEFAULT_NDIGITS;
 
         std::string     basecase = DEFAULT_BASECASE;
@@ -2745,14 +2745,14 @@ void XDMFWriter::PrintCaseXDMFLinear(const std::string output_path, const uint t
 	
 
         int NGeomObjOnWhichToPrint[QL];
-        NGeomObjOnWhichToPrint[QQ] = ml_prob._mesh._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[LL] = ml_prob._mesh._NoNodesXLev[l];
-        NGeomObjOnWhichToPrint[KK] = ml_prob._mesh._n_elements_vb_lev[VV][l]*NRE[ml_prob._mesh._eltype_flag[VV]];
+        NGeomObjOnWhichToPrint[QQ] = ml_prob.GetMeshTwo()._NoNodesXLev[l];
+        NGeomObjOnWhichToPrint[LL] = ml_prob.GetMeshTwo()._NoNodesXLev[l];
+        NGeomObjOnWhichToPrint[KK] = ml_prob.GetMeshTwo()._n_elements_vb_lev[VV][l]*NRE[ml_prob.GetMeshTwo()._eltype_flag[VV]];
 
 	out << "<Grid Name=\"Volume_L" << l << "\"> \n";
 
         // TOPOLOGY GEOMETRY ===========
-        XDMFWriter::PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,VV,ml_prob._mesh);
+        XDMFWriter::PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,VV,ml_prob.GetMeshTwo());
 
 	// ===== PID ======
         std::ostringstream  pid_name; pid_name << "PID" << "_LEVEL" << l;
@@ -2808,7 +2808,7 @@ void XDMFWriter::ReadSol(const std::string output_path, const uint t_step, doubl
     // open file -----------------------------
     std::ostringstream namefile;
     namefile << output_path << "/" 
-    << basesol << "." << setw(ndigits) << setfill('0') << t_step << "_l" << (ml_prob._mesh._NoLevels - 1) << ext_xdmf;  //TODO here we should avoid doing this process TWICE because we already do it in the TransientSetup calling function
+    << basesol << "." << setw(ndigits) << setfill('0') << t_step << "_l" << (ml_prob.GetMeshTwo()._NoLevels - 1) << ext_xdmf;  //TODO here we should avoid doing this process TWICE because we already do it in the TransientSetup calling function
 
 #ifdef DEFAULT_PRINT_INFO // --------  info ------------------ 
     std::cout << "\n MultiLevelProblemTwo::read_soln: Reading time  from "

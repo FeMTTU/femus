@@ -255,7 +255,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
             tidxin << setw(ndigits) << setfill('0') << _t_idx_in;
             std::cout << " Restarting from run: " << _files.GetInputPath() << std::endl;
 	    std::ostringstream cp_src_xmf_stream;
-	    cp_src_xmf_stream << _files.GetInputPath() << "/" << basesol << "." << tidxin.str() << "_l" << (eqnmap._mesh._NoLevels - 1) << ext_xdmf;
+	    cp_src_xmf_stream << _files.GetInputPath() << "/" << basesol << "." << tidxin.str() << "_l" << (eqnmap.GetMeshTwo()._NoLevels - 1) << ext_xdmf;
             std::string cp_src_xmf = cp_src_xmf_stream.str();
             fstream file_cp_xmf(cp_src_xmf.c_str());
             if (!file_cp_xmf.is_open()) {
@@ -351,7 +351,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
     //this happens when the output dir is already set
     //at this point this is already true
     XDMFWriter::PrintCaseLinear(_files.GetOutputPath(),_t_idx_in,eqnmap);       //print caseN.xmf&h5 = IC + BC flags
-    XDMFWriter::transient_print_xmf(_files.GetOutputPath(),_t_idx_in,_t_idx_final,_timemap.get("printstep"),eqnmap._mesh._NoLevels); //print timeN.xmf
+    XDMFWriter::transient_print_xmf(_files.GetOutputPath(),_t_idx_in,_t_idx_final,_timemap.get("printstep"),eqnmap.GetMeshTwo()._NoLevels); //print timeN.xmf
 
     return;
 }

@@ -100,19 +100,19 @@ inline double FunctionIntegral (const uint vb, MultiLevelProblemTwo & eqnmap_in,
 
   const uint mesh_vb = vb;
   
-const uint Level  = eqnmap_in._mesh._NoLevels - 1;
-const uint myproc = eqnmap_in._mesh._iproc;
+const uint Level  = eqnmap_in.GetMeshTwo()._NoLevels - 1;
+const uint myproc = eqnmap_in.GetMeshTwo()._iproc;
   double time = 0.;
   
-    CurrentElem       currelem(vb,NULL,eqnmap_in._mesh,eqnmap_in.GetElemType()); //element without equation
+    CurrentElem       currelem(vb,NULL,eqnmap_in.GetMeshTwo(),eqnmap_in.GetElemType()); //element without equation
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqnmap_in.GetQrule(currelem.GetDim()));
 
   //======== ELEMENT MAPPING =======
-  const uint meshql = (int) eqnmap_in._mesh.GetRuntimeMap().get("meshql");  
+  const uint meshql = (int) eqnmap_in.GetMeshTwo().GetRuntimeMap().get("meshql");  
  
 //========= DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
-    xyz._dim      = eqnmap_in._mesh.get_dim();
+    xyz._dim      = eqnmap_in.GetMeshTwo().get_dim();
     xyz._FEord    = meshql;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
@@ -123,8 +123,8 @@ const uint myproc = eqnmap_in._mesh._iproc;
       const uint el_ngauss = eqnmap_in.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
 //parallel sum
-    const uint nel_e = eqnmap_in._mesh._off_el[mesh_vb][eqnmap_in._mesh._NoLevels*myproc+Level+1];
-    const uint nel_b = eqnmap_in._mesh._off_el[mesh_vb][eqnmap_in._mesh._NoLevels*myproc+Level];
+    const uint nel_e = eqnmap_in.GetMeshTwo()._off_el[mesh_vb][eqnmap_in.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = eqnmap_in.GetMeshTwo()._off_el[mesh_vb][eqnmap_in.GetMeshTwo()._NoLevels*myproc+Level];
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
   

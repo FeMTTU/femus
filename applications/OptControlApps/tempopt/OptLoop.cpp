@@ -69,9 +69,9 @@ namespace femus {
 
 		
      double J = 0.;
-J = ComputeIntegral    ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT,_files.GetOutputTime());
-J = ComputeNormControl ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT,0 );
-J = ComputeNormControl ( eqmap_in._mesh._NoLevels - 1,&eqmap_in._mesh,eqnT,1 );
+J = ComputeIntegral    ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),eqnT,_files.GetOutputTime());
+J = ComputeNormControl ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),eqnT,0 );
+J = ComputeNormControl ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),eqnT,1 );
 //=====functional evaluations =======
 
 #endif

@@ -123,7 +123,7 @@ std::string intgr_fname = _files.GetOutputPath() + "/" + "integral.txt";
 
 //INITIALIZE OPT LOOP
 //pseudo time parameters for optimization
-    const uint      NoLevels = e_map_in._mesh._NoLevels;
+    const uint      NoLevels = e_map_in.GetMeshTwo()._NoLevels;
     double pseudo_opttimeval = _time_in;
     int           print_step = _timemap.get("printstep");
 
@@ -290,7 +290,7 @@ do {
 
 double integral = 0.;
 #ifdef NS_EQUATIONS      
-   integral = ComputeIntegral(e_map_in._mesh._NoLevels - 1,&e_map_in._mesh,mgNS);
+   integral = ComputeIntegral(e_map_in.GetMeshTwo()._NoLevels - 1,&e_map_in.GetMeshTwo(),mgNS);
  #endif
   
    std::cout << "integral on processor 0: " << integral << std::endl;
