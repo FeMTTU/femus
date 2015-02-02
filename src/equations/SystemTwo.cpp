@@ -56,7 +56,7 @@ const int SystemTwo::_number_tang_comps[3] = {0,1,3};
 //the names
 //other stuff but let us stop here now
 SystemTwo::SystemTwo(MultiLevelProblemTwo& e_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
-        _phys(e_map_in._phys),
+        _phys(e_map_in.GetInputParser()),
         _mesh(e_map_in._mesh),
         _eqnmap(e_map_in),
         //=============

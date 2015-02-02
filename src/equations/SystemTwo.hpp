@@ -161,8 +161,8 @@ public:
   
 protected:
   
-  FemusInputParser<double>  & _phys;           
-  MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem
+  const FemusInputParser<double>  & _phys;           
+  const MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem
 
   std::vector<Quantity*>          _QtyInternalVector;  //System//
 

@@ -81,9 +81,9 @@ public:
   
   inline           void  set_qty(Quantity* value)          {_QuantMap.insert(make_pair(value->_name,value));}
   
-  inline       Quantity* get_qty(const std::string & name)      {
+  inline       Quantity* get_qty(const std::string & name)  const    {
  
-    std::map<std::string,Quantity*>::iterator myit = _QuantMap.find(name);
+    std::map<std::string,Quantity*>::const_iterator myit = _QuantMap.find(name);
       if ( myit == _QuantMap.end() ) { 
        std::cout << "QuantityMap::get_qty: Sorry but there is no ---> "
                  << name  << " <--- element in the Global Quantity Map" << std::endl; abort();}

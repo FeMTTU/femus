@@ -32,12 +32,8 @@ namespace femus {
 
 
 
-class Physics;
 class MultiLevelMeshTwo;
-class FEElemBase;
 class elem_type;
-class TimeLoop;
-
 class QuantityMap;
 
 
@@ -45,20 +41,21 @@ class MultiLevelProblemTwo : public MultiLevelProblem {
 
 public:
   
-    FemusInputParser<double> &  _phys;
-    QuantityMap& _qtymap;
-    MultiLevelMeshTwo&     _mesh;
-    std::vector< std::vector<elem_type*> >  &  _elem_type;
+    const QuantityMap& _qtymap;
+    const MultiLevelMeshTwo&     _mesh;
+    const std::vector< std::vector<elem_type*> >  &  _elem_type;
 
   /// Constructor
-    MultiLevelProblemTwo(FemusInputParser<double> & phys_in,
-		  QuantityMap& qtymap_in,
-		  MultiLevelMeshTwo& mesh_in,
-                  std::vector< std::vector<elem_type*> > & elem_type_in,
-		  std::vector<Gauss> qrule_in
+    MultiLevelProblemTwo(const FemusInputParser<double> & phys_in,
+		  const QuantityMap& qtymap_in,
+		  const MultiLevelMeshTwo& mesh_in,
+                  const std::vector< std::vector<elem_type*> > & elem_type_in,
+		  const std::vector<Gauss> qrule_in
 		);
 
-  inline const Gauss & GetQrule(const unsigned dim) const {return _qrule[dim - 1];}
+  inline const Gauss & GetQrule(const unsigned dim) const { return _qrule[dim - 1]; }
+  
+  inline const FemusInputParser<double> &  GetInputParser() const { return _phys; }
     
     /// Destructor
   ~MultiLevelProblemTwo(){};
@@ -80,9 +77,11 @@ public:
 
 private:
   
- map<string,SystemTwo*> _equations;   // system map
+    map<string,SystemTwo*> _equations;   // system map
     
-    std::vector<Gauss>       _qrule;
+    const std::vector<Gauss>       _qrule;
+    
+    const FemusInputParser<double> &  _phys;
 
 
 };
