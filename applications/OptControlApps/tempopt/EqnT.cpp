@@ -147,13 +147,13 @@ void  EqnT::GenMatRhs(const uint Level) {
 
 //====================================
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
+    Tlift._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
     CurrentQuantity TAdj(currgp);
-    TAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
+    TAdj._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
     
@@ -174,13 +174,13 @@ void  EqnT::GenMatRhs(const uint Level) {
   
   //==================
     CurrentQuantity vel(currgp);
-    vel._qtyptr   = _eqnmap._qtymap.get_qty("Qty_Velocity"); 
+    vel._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_Velocity"); 
     vel.VectWithQtyFillBasic();
     vel.Allocate();
     
 //===============Tdes=====================
     CurrentQuantity Tdes(currgp);
-    Tdes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempDes"); 
+    Tdes._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
 
@@ -451,13 +451,13 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //====================================
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
+    Tlift._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
     CurrentQuantity TAdj(currgp);
-    TAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
+    TAdj._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
     
@@ -478,7 +478,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     
 //===============Tdes=====================
     CurrentQuantity Tdes(currgp);
-    Tdes._qtyptr   = _eqnmap._qtymap.get_qty("Qty_TempDes"); 
+    Tdes._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
 
@@ -548,7 +548,7 @@ int el_Neum_flag=0;
 
        xyz.val_g();
        
-       static_cast<Temperature*>(_eqnmap._qtymap.get_qty("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
+       static_cast<Temperature*>(_eqnmap.GetQtyMap().get_qty("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
    
 	Tempold.val_g(); //For the penalty Dirichlet //i need this for interpolating the old function at the gauss point
 

@@ -41,7 +41,6 @@ class MultiLevelProblemTwo : public MultiLevelProblem {
 
 public:
   
-    const QuantityMap& _qtymap;
     const MultiLevelMeshTwo&     _mesh;
 
   /// Constructor
@@ -51,6 +50,8 @@ public:
                   const std::vector< std::vector<elem_type*> > & elem_type_in,
 		  const std::vector<Gauss> qrule_in
 		);
+
+  inline const QuantityMap & GetQtyMap() const { return  _qtymap; }
 
   inline const std::vector<elem_type*>  & GetElemType(const unsigned dim) const { return  _elem_type[dim - 1]; }
     
@@ -88,6 +89,7 @@ private:
     
     const FemusInputParser<double> &  _phys;
 
+    const QuantityMap & _qtymap;
 
 };
 

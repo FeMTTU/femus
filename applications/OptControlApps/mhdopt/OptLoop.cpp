@@ -546,13 +546,13 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   
      //========== 
     CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = eqn->_eqnmap._qtymap.get_qty("Qty_Velocity");
+    Vel._qtyptr      = eqn->_eqnmap.GetQtyMap().get_qty("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
     
     //========== 
     CurrentQuantity VelDes(currgp);
-    VelDes._qtyptr      = eqn->_eqnmap._qtymap.get_qty("Qty_DesVelocity");
+    VelDes._qtyptr      = eqn->_eqnmap.GetQtyMap().get_qty("Qty_DesVelocity");
     VelDes.VectWithQtyFillBasic();
     VelDes.Allocate();
    

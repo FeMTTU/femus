@@ -123,25 +123,25 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
 
   //==========     
     CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity");
+    Vel._qtyptr      = _eqnmap.GetQtyMap().get_qty("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();    
  
     //==========    
     CurrentQuantity VelAdj(currgp);
-    VelAdj._qtyptr      = _eqnmap._qtymap.get_qty("Qty_VelocityAdj");
+    VelAdj._qtyptr      = _eqnmap.GetQtyMap().get_qty("Qty_VelocityAdj");
     VelAdj.VectWithQtyFillBasic();
     VelAdj.Allocate();    
    
     //==========    
     CurrentQuantity Bhom(currgp);
-    Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
+    Bhom._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();    
 
 //=========
     CurrentQuantity Bext(currgp);
-    Bext._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
+    Bext._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();    
   

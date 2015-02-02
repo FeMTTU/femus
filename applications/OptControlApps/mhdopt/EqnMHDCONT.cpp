@@ -133,26 +133,26 @@ namespace femus {
   
 #if VELOCITY_QTY==1
     CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = _eqnmap._qtymap.get_qty("Qty_Velocity"); //an alternative cannot exist, because it is an Unknown of This Equation
+    Vel._qtyptr      = _eqnmap.GetQtyMap().get_qty("Qty_Velocity"); //an alternative cannot exist, because it is an Unknown of This Equation
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
 #endif  
 
     //==================
     CurrentQuantity VelAdj(currgp);
-    VelAdj._qtyptr      = _eqnmap._qtymap.get_qty("Qty_VelocityAdj");
+    VelAdj._qtyptr      = _eqnmap.GetQtyMap().get_qty("Qty_VelocityAdj");
     VelAdj.VectWithQtyFillBasic();
     VelAdj.Allocate();
   
     //==================
     CurrentQuantity Bhom(currgp); 
-    Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
+    Bhom._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();
     
 //===============
     CurrentQuantity BhomAdj(currgp); 
-    BhomAdj._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHomAdj"); 
+    BhomAdj._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldHomAdj"); 
     BhomAdj.VectWithQtyFillBasic();
     BhomAdj.Allocate();
   //=========END EXTERNAL QUANTITIES (couplings) =====
@@ -413,7 +413,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
 
 //=========EXTERNAL QUANTITIES (couplings) =====
-  //========= //DOMAIN MAPPING
+  //========= //DOMAIN MAPPING7
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;

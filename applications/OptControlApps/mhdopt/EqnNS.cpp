@@ -76,8 +76,8 @@ namespace femus {
 //to use a specific function, in which case you first should do the static cast
 //for some Vect and nothing for others
 //so, it could be better to do a Vect_LOCAL_EXTERNAL MAP inside here
-Density* density_ptr     = static_cast<Density*>(_eqnmap._qtymap.get_qty("Qty_Density"));
-Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap._qtymap.get_qty("Qty_Viscosity"));
+Density* density_ptr     = static_cast<Density*>(_eqnmap.GetQtyMap().get_qty("Qty_Density"));
+Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap.GetQtyMap().get_qty("Qty_Viscosity"));
 #endif  //temp deps
   //====== reference values ========================
 //====== related to Quantities on which Operators act, and to the choice of the "LEADING" EQUATION Operator
@@ -229,13 +229,13 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
 //============================ MAG WORLD =======================================
  #if BMAG_QTY==1  
     CurrentQuantity Bhom(currgp); //only to retrieve the dofs
-    Bhom._qtyptr   = _eqnmap._qtymap.get_qty("Qty_MagnFieldHom");
+    Bhom._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();
  
 //=========
     CurrentQuantity Bext(currgp);   //only to retrieve the dofs
-    Bext._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_MagnFieldExt");
+    Bext._qtyptr   =  _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();
 
@@ -251,7 +251,7 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
 //===================TEMPERATURE WORLD=============================
 #if TEMP_QTY==1
     CurrentQuantity Temp(currgp);
-    Temp._qtyptr   =  _eqnmap._qtymap.get_qty("Qty_Temperature");
+    Temp._qtyptr   =  _eqnmap.GetQtyMap().get_qty("Qty_Temperature");
     Temp.VectWithQtyFillBasic();
     Temp.Allocate();
 #endif
