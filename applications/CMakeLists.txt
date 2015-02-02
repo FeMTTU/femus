@@ -121,3 +121,14 @@ IF(BUILD_POISSON_AMR)
     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/Poisson_AMR/input/)
     FILE(COPY           Poisson_AMR/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/Poisson_AMR/input/)
 ENDIF(BUILD_POISSON_AMR)
+
+
+IF(BUILD_NUM_PDE_CLASS)
+    ADD_SUBDIRECTORY(NumPdeSpring2015/Eugenio/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Eugenio/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Eugenio/input/)
+    FILE(COPY           NumPdeSpring2015/Eugenio/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Eugenio/input/)
+
+ENDIF(BUILD_NUM_PDE_CLASS)
+
