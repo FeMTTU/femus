@@ -88,7 +88,7 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
 
   const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
+    CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -111,7 +111,7 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();    
 
 //========== Quadratic domain, auxiliary  
@@ -149,7 +149,7 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
     CurrentQuantity Bmag(currgp); //total
     Bmag._dim        = Bhom._dim;               //same as Bhom
     Bmag._FEord      = Bhom._FEord;             //same as Bhom
-    Bmag._ndof       = _eqnmap._elem_type[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
+    Bmag._ndof       = _eqnmap.GetElemType()[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
     Bmag.Allocate();    
     
 //========= END EXTERNAL QUANTITIES =================
@@ -347,7 +347,7 @@ if (_Dir_pen_fl == 0)  {
 
   const uint mesh_vb = BB;
   
-    CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
+    CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -370,7 +370,7 @@ if (_Dir_pen_fl == 0)  {
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();    
 
 //========== Quadratic domain, auxiliary  

@@ -518,7 +518,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
    const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap._elem_type);
+    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap.GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap.GetQrule(currelem.GetDim()));
   
   // processor index
@@ -534,7 +534,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = eqn->_eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = eqn->_eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  

@@ -101,7 +101,7 @@ namespace femus {
 
   const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
+    CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -121,7 +121,7 @@ namespace femus {
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary
@@ -397,7 +397,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   
   const uint mesh_vb = BB;
   
-    CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
+    CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -417,7 +417,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary

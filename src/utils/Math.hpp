@@ -104,7 +104,7 @@ const uint Level  = eqnmap_in._mesh._NoLevels - 1;
 const uint myproc = eqnmap_in._mesh._iproc;
   double time = 0.;
   
-    CurrentElem       currelem(vb,NULL,eqnmap_in._mesh,eqnmap_in._elem_type); //element without equation
+    CurrentElem       currelem(vb,NULL,eqnmap_in._mesh,eqnmap_in.GetElemType()); //element without equation
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqnmap_in.GetQrule(currelem.GetDim()));
 
   //======== ELEMENT MAPPING =======
@@ -114,7 +114,7 @@ const uint myproc = eqnmap_in._mesh._iproc;
     CurrentQuantity xyz(currgp);
     xyz._dim      = eqnmap_in._mesh.get_dim();
     xyz._FEord    = meshql;
-    xyz._ndof     = eqnmap_in._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = eqnmap_in.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
   double integral = 0.;

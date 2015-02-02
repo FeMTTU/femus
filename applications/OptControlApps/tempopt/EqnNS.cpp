@@ -102,7 +102,7 @@
 //========================
   const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);
+    CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
  
   
@@ -135,7 +135,7 @@
     CurrentQuantity xyz(currgp); //domain
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
     
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
@@ -420,7 +420,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
      const uint mesh_vb = BB;
   
-    CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
+    CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
  
   
@@ -453,7 +453,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
     CurrentQuantity xyz(currgp); //domain
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
     
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========

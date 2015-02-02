@@ -414,7 +414,7 @@ void SystemTwo::GenerateBdc() {
 
  //**************************************************   
  //******** ELEM BASED ******************************  
-     CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);
+     CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());
     const uint el_nnodes_b = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 
     _bc_fe_kk             =  new int*[_NoLevels];
@@ -467,13 +467,13 @@ void SystemTwo::GenerateBdc() {
                         const uint fine_node = _mesh._el_map[BB][(iel+iel_b)*el_nnodes_b+i];
 
                     //Set the quadratic fields
-                    if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-BB][QQ]->GetNDofs() )
+                    if ( i < _eqnmap.GetElemType()[_mesh.get_dim()-1-BB][QQ]->GetNDofs() )
 		      for (uint ivar=0; ivar<_dofmap._nvars[QQ]; ivar++) {
                             int kdof = _dofmap.GetDof(Lev_pick_bc_NODE_dof,QQ,ivar,fine_node);
                            if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _dofmap._VarOff[QQ]];
                         }
                     // Set the linear fields
-                    if ( i < _eqnmap._elem_type[_mesh.get_dim()-1-BB][LL]->GetNDofs() ) {
+                    if ( i < _eqnmap.GetElemType()[_mesh.get_dim()-1-BB][LL]->GetNDofs() ) {
                         for (uint ivar = 0; ivar < _dofmap._nvars[LL]; ivar++) {
                             int kdof = _dofmap.GetDof(Lev_pick_bc_NODE_dof,LL,ivar,fine_node);
                            if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _dofmap._VarOff[LL]];
@@ -623,7 +623,7 @@ void SystemTwo::GenerateBdc() {
 //for now, we will leave things like this
 void SystemTwo::GenerateBdcElem()  {
 
-     CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);  
+     CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());  
   
       uint space_dim = _mesh.get_dim();
 
@@ -826,7 +826,7 @@ void SystemTwo::Initialize() {
 
     if (!in) {
 
-        CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);  
+        CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());  
      
         const uint  coords_fine_offset = _mesh._NoNodesXLev[_NoLevels-1];
         const uint  el_dof_objs = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
@@ -856,7 +856,7 @@ void SystemTwo::Initialize() {
        
         for (uint ivar=0; ivar < _QtyInternalVector[q]->_dim; ivar++) {
        
-          for (uint k=0; k < _eqnmap._elem_type[_mesh.get_dim()-1][_QtyInternalVector[q]->_FEord]->GetNDofs() ; k++) {
+          for (uint k=0; k < _eqnmap.GetElemType()[_mesh.get_dim()-1][_QtyInternalVector[q]->_FEord]->GetNDofs() ; k++) {
 	    
                 const int fine_node = _mesh._el_map[VV][ k + ( iel + iel_b )*el_dof_objs ];
                 for (uint idim = 0; idim < _mesh.get_dim(); idim++) xp[idim] = _mesh._xyz[ fine_node + idim*coords_fine_offset ];
@@ -873,7 +873,7 @@ void SystemTwo::Initialize() {
 
 	    for (uint ivar=0; ivar < _QtyInternalVector[q]->_dim; ivar++) {
 	    
-                for (uint k=0; k < _eqnmap._elem_type[_mesh.get_dim()-1][_QtyInternalVector[q]->_FEord]->GetNDofs() ; k++) { //only 1
+                for (uint k=0; k < _eqnmap.GetElemType()[_mesh.get_dim()-1][_QtyInternalVector[q]->_FEord]->GetNDofs() ; k++) { //only 1
 		  
        int sum_elems_prev_sd_at_lev = 0;
 	  for (uint pr = 0; pr < _mesh._iproc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*_NoLevels + Level + 1] - _mesh._off_el[VV][pr*_NoLevels + Level]; }
@@ -2298,7 +2298,7 @@ void SystemTwo::ReadRest(const std::string& name) {
 //So, many functions here can be called CONST even if they are not!
   void SystemTwo::Bc_ConvertToDirichletPenalty(const uint elem_dim, const uint ql, uint* bc) const {
 
-    const uint ndof  = _eqnmap._elem_type[elem_dim-1][ql]->GetNDofs();
+    const uint ndof  = _eqnmap.GetElemType()[elem_dim-1][ql]->GetNDofs();
     const uint nvars = _dofmap._nvars[ql];
 
     for (uint ivarq=0; ivarq < nvars; ivarq++) {

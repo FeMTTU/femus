@@ -135,7 +135,7 @@ void  EqnT::GenMatRhs(const uint Level) {
  {//BEGIN VOLUME
  const uint mesh_vb = VV;
   
-  CurrentElem       currelem(VV,this,_mesh,_eqnmap._elem_type);    
+  CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());    
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
   
 
@@ -162,7 +162,7 @@ void  EqnT::GenMatRhs(const uint Level) {
   CurrentQuantity xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
@@ -318,7 +318,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 #if FOURTH_ROW==1
 	 int ip3 = i + 3 * Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
 	 
-	 if (i < _eqnmap._elem_type[currelem.GetDim()-1][T4_ord]->GetNDofs()) { currelem.Rhs()(ip3) +=  currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[T4_ord][i]) + (1-currelem.GetBCDofFlag()[ip3])*detb*1300.;
+	 if (i < _eqnmap.GetElemType()[currelem.GetDim()-1][T4_ord]->GetNDofs()) { currelem.Rhs()(ip3) +=  currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[T4_ord][i]) + (1-currelem.GetBCDofFlag()[ip3])*detb*1300.;
 	              currelem.Mat()(ip3,ip3)  += ( 1-currelem.GetBCDofFlag()[ip3] )*detb;  }
 #endif
 	 // Matrix Assemblying ---------------------------
@@ -420,7 +420,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 #if FOURTH_ROW==1
 	 int ip3 = i + 3*Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
 // 	    int jp3 = j + 3*Tempold._ndof;
-	   if (i < _eqnmap._elem_type[currelem.GetDim()-1][T4_ord]->GetNDofs() ) currelem.Mat()(ip3,ip3) += currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[ T4_ord ][/*j*/i]*currgp._phi_ndsQLVB_g[ T4_ord ][i]);   
+	   if (i < _eqnmap.GetElemType()[currelem.GetDim()-1][T4_ord]->GetNDofs() ) currelem.Mat()(ip3,ip3) += currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[ T4_ord ][/*j*/i]*currgp._phi_ndsQLVB_g[ T4_ord ][i]);   
 #endif
 	    
         }  //end j (col)
@@ -439,7 +439,7 @@ for (uint fe = 0; fe < QL; fe++)     {
    
  const uint mesh_vb = BB;
   
-  CurrentElem       currelem(BB,this,_mesh,_eqnmap._elem_type);    
+  CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());    
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
   
 
@@ -466,7 +466,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   CurrentQuantity xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap._elem_type[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
