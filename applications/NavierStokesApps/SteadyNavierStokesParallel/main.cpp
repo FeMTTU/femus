@@ -36,6 +36,13 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 int main(int argc,char **args) {
 
+  /// Init Petsc-MPI communicator
+  FemusInit mpinit(argc,args,MPI_COMM_WORLD);
+  
+  Files files; 
+        files.CheckIODirectories();
+	files.RedirectCout();
+  
   bool Vanka=0, Gmres=0, Asm=0;
   if(argc >= 2) {
     if( !strcmp("vanka",args[1])) 	Vanka=1;
@@ -52,13 +59,6 @@ int main(int argc,char **args) {
     Gmres=1;
   }
   
-  /// Init Petsc-MPI communicator
-  FemusInit mpinit(argc,args,MPI_COMM_WORLD);
-  
-  Files files; 
-        files.CheckIODirectories();
-        files.RedirectCout();
-
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
@@ -225,17 +225,18 @@ int main(int argc,char **args) {
   print_vars.push_back("V");
   print_vars.push_back("P");
   print_vars.push_back("T");
-  
-     
+       
   VTKWriter vtkio(ml_sol);
   vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
-  
-//   XDMFWriter xdmfio(ml_sol);
-//   xdmfio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
+  //vtkio.write_system_solutions(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
   
   GMVWriter gmvio(ml_sol);
-  gmvio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
-  
+  gmvio.write_system_solutions(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+  // gmvio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
+    
+  //   XDMFWriter xdmfio(ml_sol);
+  //   xdmfio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
+   
   //Destroy all the new systems
   ml_prob.clear();
   

@@ -35,83 +35,12 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 int main(int argc,char **args) {
     
-  
-  const elem_type *_finiteElement[6][5];
-  
-  _finiteElement[0][0]=new const elem_type_3D("hex","linear","fifth");
-  _finiteElement[0][1]=new const elem_type_3D("hex","quadratic","fifth");
-  _finiteElement[0][2]=new const elem_type_3D("hex","biquadratic","fifth");
-  _finiteElement[0][3]=new const elem_type_3D("hex","constant","fifth");
-  _finiteElement[0][4]=new const elem_type_3D("hex","disc_linear","fifth");
-    
-  _finiteElement[1][0]=new const elem_type_3D("tet","linear","fifth");
-  _finiteElement[1][1]=new const elem_type_3D("tet","quadratic","fifth");
-  _finiteElement[1][2]=new const elem_type_3D("tet","biquadratic","fifth");
-  _finiteElement[1][3]=new const elem_type_3D("tet","constant","fifth");
-  _finiteElement[1][4]=new const elem_type_3D("tet","disc_linear","fifth");
-    
-  _finiteElement[2][0]=new const elem_type_3D("wedge","linear","fifth");
-  _finiteElement[2][1]=new const elem_type_3D("wedge","quadratic","fifth");
-  _finiteElement[2][2]=new const elem_type_3D("wedge","biquadratic","fifth");
-  _finiteElement[2][3]=new const elem_type_3D("wedge","constant","fifth");
-  _finiteElement[2][4]=new const elem_type_3D("wedge","disc_linear","fifth");
-     
-  _finiteElement[3][0]=new const elem_type_2D("quad","linear","fifth");
-  _finiteElement[3][1]=new const elem_type_2D("quad","quadratic","fifth");
-  _finiteElement[3][2]=new const elem_type_2D("quad","biquadratic","fifth");
-  _finiteElement[3][3]=new const elem_type_2D("quad","constant","fifth");
-  _finiteElement[3][4]=new const elem_type_2D("quad","disc_linear","fifth");
-    
-  _finiteElement[4][0]=new const elem_type_2D("tri","linear","fifth");
-  _finiteElement[4][1]=new const elem_type_2D("tri","quadratic","fifth");
-  _finiteElement[4][2]=new const elem_type_2D("tri","biquadratic","fifth");  
-  _finiteElement[4][3]=new const elem_type_2D("tri","constant","fifth");
-  _finiteElement[4][4]=new const elem_type_2D("tri","disc_linear","fifth"); 
-  
-  _finiteElement[5][0]=new const elem_type_1D("line","linear","fifth");
-  _finiteElement[5][1]=new const elem_type_1D("line","quadratic","fifth");
-  _finiteElement[5][2]=new const elem_type_1D("line","biquadratic","fifth"); 
-  _finiteElement[5][3]=new const elem_type_1D("line","constant","fifth");
-  _finiteElement[5][4]=new const elem_type_1D("line","disc_linear","fifth"); 
-   
-  delete _finiteElement[0][0];
-  delete _finiteElement[0][1];
-  delete _finiteElement[0][2];
-  delete _finiteElement[0][3];
-  delete _finiteElement[0][4];  
-    
-  delete _finiteElement[1][0];
-  delete _finiteElement[1][1];
-  delete _finiteElement[1][2];
-  delete _finiteElement[1][3];
-  delete _finiteElement[1][4];
-       
-  delete _finiteElement[2][0];
-  delete _finiteElement[2][1];
-  delete _finiteElement[2][2];
-  delete _finiteElement[2][3];
-  delete _finiteElement[2][4];  
-  
-  delete _finiteElement[3][0];
-  delete _finiteElement[3][1];
-  delete _finiteElement[3][2];
-  delete _finiteElement[3][3];
-  delete _finiteElement[3][4];
-  
-  delete _finiteElement[4][0];
-  delete _finiteElement[4][1];
-  delete _finiteElement[4][2];
-  delete _finiteElement[4][3];
-  delete _finiteElement[4][4];
-  
-  delete _finiteElement[5][0]; 
-  delete _finiteElement[5][1];
-  delete _finiteElement[5][2]; 
-  delete _finiteElement[5][3]; 
-  delete _finiteElement[5][4]; 
-  
-  //return 1;
-  
+  /// Init Petsc-MPI communicator
+  FemusInit mpinit(argc,args,MPI_COMM_WORLD);
+
+  Files files; 
+  files.CheckIODirectories();
+  files.RedirectCout();
   
   unsigned simulation;
   bool dimension2D;
@@ -173,12 +102,7 @@ int main(int argc,char **args) {
   }
   
    
-  /// Init Petsc-MPI communicator
-  FemusInit mpinit(argc,args,MPI_COMM_WORLD);
-
-  Files files; 
-        files.CheckIODirectories();
-        files.RedirectCout();
+  
 	
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
