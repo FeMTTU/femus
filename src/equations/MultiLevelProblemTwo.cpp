@@ -38,14 +38,34 @@ namespace femus {
 MultiLevelProblemTwo::MultiLevelProblemTwo(const FemusInputParser<double> & phys_in,
                            const QuantityMap& qtymap_in,
                            const MultiLevelMeshTwo& mesh_in,
-                           const std::vector< std::vector<elem_type*> >  & elem_type_in,
-			   const std::vector<Gauss>   qrule_in ):
+			   const std::string quadr_order_in):
         _phys(phys_in),
         _qtymap(qtymap_in),
         _mesh(mesh_in),
-        _elem_type(elem_type_in),
-        _qrule(qrule_in),
-        MultiLevelProblem()  { }
+        MultiLevelProblem()  {
+	  
+// ======  QRule ================================
+	  
+  _qrule.reserve(_mesh.get_dim());
+  for (int idim=0;idim < _mesh.get_dim(); idim++) { 
+          Gauss qrule_temp(_mesh._geomelem_id[idim].c_str(),quadr_order_in.c_str());
+         _qrule.push_back(qrule_temp);
+           }  
+
+  // =======FEElems =====  //remember to delete the FE at the end
+  const std::string  FEFamily[QL] = {"biquadratic","linear","constant"}; 
+  _elem_type.resize(_mesh.get_dim());
+  for (int idim=0;idim < _mesh.get_dim(); idim++)   _elem_type[idim].resize(QL);
+  
+  for (int idim=0;idim < _mesh.get_dim(); idim++) { 
+    for (int fe=0; fe<QL; fe++) {
+       _elem_type[idim][fe] = elem_type::build(_mesh._geomelem_id[idim].c_str(),fe,quadr_order_in.c_str());
+       _elem_type[idim][fe]->EvaluateShapeAtQP(_mesh._geomelem_id[idim].c_str(),fe);
+     }
+    }  
+           
+	  
+  }
 
 
 // ====================================================

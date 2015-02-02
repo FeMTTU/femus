@@ -101,27 +101,6 @@
   //then, after you know the shape, you may or may not generate the mesh with that shape 
   //the two things are totally independent, and related to the application, not to the library
 
-// ======  QRule ================================
-  std::vector<Gauss>   qrule;
-  qrule.reserve(mesh.get_dim());
-  for (int idim=0;idim < mesh.get_dim(); idim++) { 
-          Gauss qrule_temp(mesh._geomelem_id[idim].c_str(),"fifth");
-         qrule.push_back(qrule_temp);
-  }
-  
-  // =======Abstract FEElems =====  //remember to delete the FE at the end 
-  const std::string  FEFamily[QL] = {"biquadratic","linear","constant"}; 
-  std::vector< std::vector<elem_type*> > FEElemType_vec(mesh.get_dim());
-  for (int idim=0; idim < mesh.get_dim(); idim++)   FEElemType_vec[idim].resize(QL);
-
-  for (int idim=0;idim < mesh.get_dim(); idim++) { 
-    for (int fe=0; fe<QL; fe++) {
-       FEElemType_vec[idim][fe] = elem_type::build(mesh._geomelem_id[idim].c_str(),fe,
-						            qrule[idim].GetGaussOrderString().c_str());
-       FEElemType_vec[idim][fe]->EvaluateShapeAtQP(mesh._geomelem_id[idim].c_str(),fe);
-     }
-   }
-
   // ======== Loop ===================================
   FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());
   OptLoop opt_loop(files, loop_map); 
@@ -143,7 +122,7 @@
   // ===== end QuantityMap =========================================
 
   // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblemTwo equations_map(physics_map,qty_map,mesh,FEElemType_vec,qrule);  //here everything is passed as BASE STUFF, like it should!
+  MultiLevelProblemTwo equations_map(physics_map,qty_map,mesh,"fifth");  //here everything is passed as BASE STUFF, like it should!
                                                                                    //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
   MultiLevelProblem equations_map_two;
 //===============================================

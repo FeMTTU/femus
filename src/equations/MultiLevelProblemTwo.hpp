@@ -46,8 +46,7 @@ public:
     MultiLevelProblemTwo(const FemusInputParser<double> & phys_in,
 		  const QuantityMap& qtymap_in,
 		  const MultiLevelMeshTwo& mesh_in,
-                  const std::vector< std::vector<elem_type*> > & elem_type_in,
-		  const std::vector<Gauss> qrule_in
+		  const std::string quadr_order_in
 		);
 
   inline const  MultiLevelMeshTwo & GetMeshTwo() const { return  _mesh; }
@@ -60,9 +59,10 @@ public:
 
   inline const Gauss & GetQrule(const unsigned dim) const { return _qrule[dim - 1]; }
   
+  void SetQruleOrder(const std::string order_in) { _quadrature_order = order_in; return; }
+  
   inline const FemusInputParser<double> &  GetInputParser() const { return _phys; }
-    
-    /// Destructor
+  
   ~MultiLevelProblemTwo(){};
   
   void clean(); ///< Clean all substructures
@@ -84,9 +84,11 @@ private:
   
     map<string,SystemTwo*> _equations;   // system map
     
-    const std::vector< std::vector<elem_type*> >  &  _elem_type;
+    std::vector< std::vector<elem_type*> >  _elem_type;
     
-    const std::vector<Gauss>       _qrule;
+    std::vector<Gauss>       _qrule;
+    
+    std::string _quadrature_order;
     
     const FemusInputParser<double> &  _phys;
 
