@@ -19,7 +19,7 @@ namespace femus {
 //by the way, with the MultiLevelProblemTwo I reach the Utils, the Mesh, and so the GeomEl, and so on...
 CurrentGaussPointBase::CurrentGaussPointBase(const CurrentElem & curr_el_in, const Gauss & qrule_in ):
  _current_elem(curr_el_in),
-    _elem_type(curr_el_in.GetElemType()),
+    _elem_type(curr_el_in.GetElemTypeVectorFE()),
         _qrule(qrule_in) {
   
   _IntDim[VV] = curr_el_in._mesh.get_dim();

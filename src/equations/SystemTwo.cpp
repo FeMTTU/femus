@@ -467,13 +467,13 @@ void SystemTwo::GenerateBdc() {
                         const uint fine_node = _mesh._el_map[BB][(iel+iel_b)*el_nnodes_b+i];
 
                     //Set the quadratic fields
-                    if ( i < _eqnmap.GetElemType()[_mesh.get_dim()-1-BB][QQ]->GetNDofs() )
+                    if ( i < currelem.GetElemType(QQ)->GetNDofs() )
 		      for (uint ivar=0; ivar<_dofmap._nvars[QQ]; ivar++) {
                             int kdof = _dofmap.GetDof(Lev_pick_bc_NODE_dof,QQ,ivar,fine_node);
                            if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _dofmap._VarOff[QQ]];
                         }
                     // Set the linear fields
-                    if ( i < _eqnmap.GetElemType()[_mesh.get_dim()-1-BB][LL]->GetNDofs() ) {
+                    if ( i < currelem.GetElemType(LL)->GetNDofs() ) {
                         for (uint ivar = 0; ivar < _dofmap._nvars[LL]; ivar++) {
                             int kdof = _dofmap.GetDof(Lev_pick_bc_NODE_dof,LL,ivar,fine_node);
                            if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _dofmap._VarOff[LL]];
@@ -856,7 +856,7 @@ void SystemTwo::Initialize() {
        
         for (uint ivar=0; ivar < _QtyInternalVector[q]->_dim; ivar++) {
        
-          for (uint k=0; k < _eqnmap.GetElemType()[_mesh.get_dim()-1][_QtyInternalVector[q]->_FEord]->GetNDofs() ; k++) {
+          for (uint k=0; k < currelem.GetElemType(_QtyInternalVector[q]->_FEord)->GetNDofs() ; k++) {
 	    
                 const int fine_node = _mesh._el_map[VV][ k + ( iel + iel_b )*el_dof_objs ];
                 for (uint idim = 0; idim < _mesh.get_dim(); idim++) xp[idim] = _mesh._xyz[ fine_node + idim*coords_fine_offset ];
@@ -873,7 +873,7 @@ void SystemTwo::Initialize() {
 
 	    for (uint ivar=0; ivar < _QtyInternalVector[q]->_dim; ivar++) {
 	    
-                for (uint k=0; k < _eqnmap.GetElemType()[_mesh.get_dim()-1][_QtyInternalVector[q]->_FEord]->GetNDofs() ; k++) { //only 1
+                for (uint k=0; k < currelem.GetElemType(_QtyInternalVector[q]->_FEord)->GetNDofs() ; k++) { //only 1
 		  
        int sum_elems_prev_sd_at_lev = 0;
 	  for (uint pr = 0; pr < _mesh._iproc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*_NoLevels + Level + 1] - _mesh._off_el[VV][pr*_NoLevels + Level]; }

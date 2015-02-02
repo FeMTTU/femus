@@ -94,9 +94,10 @@ class CurrentQuantity;
     void  SetElDofsBc(const uint Level);
  
     /** */
-    inline const std::vector<elem_type*> & GetElemType() const { return  _elem_type; }
+    inline const elem_type* GetElemType(const uint fe) const { return  _elem_type[fe]; }
     
-    
+     inline const std::vector<elem_type*> &  GetElemTypeVectorFE() const { return _elem_type; }
+   
     //TODO make these private
 //========== Equation-related ========================               
   const SystemTwo * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO

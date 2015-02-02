@@ -124,28 +124,28 @@ namespace femus {
     CurrentQuantity Phij(currgp); //TODO this is another Vect that doesnt have an associated quantity still
     Phij._dim      = 1;                                                         //scalar!
     Phij._FEord    = bhomOld._FEord;
-    Phij._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][Phij._FEord]->GetNDofs(); 
+    Phij._ndof     = currelem.GetElemType(Phij._FEord)->GetNDofs(); 
     Phij.Allocate();
         
 //QTYZERO tEST:  test of the first Unknown    
     CurrentQuantity Phii(currgp);
     Phii._dim      = 1;
     Phii._FEord    = bhomOld._FEord;
-    Phii._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][Phii._FEord]->GetNDofs();
+    Phii._ndof     = currelem.GetElemType(Phii._FEord)->GetNDofs();
     Phii.Allocate();
     
 //QTYONE SHAPE: Shape of the second Unknown
     CurrentQuantity Psij(currgp);
     Psij._dim      = 1;
     Psij._FEord    = LagMultOld._FEord;
-    Psij._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][Psij._FEord]->GetNDofs(); 
+    Psij._ndof     = currelem.GetElemType(Psij._FEord)->GetNDofs(); 
     Psij.Allocate();
     
 //QTYONE tEST: test of the second Unknown
     CurrentQuantity Psii(currgp);
     Psii._dim      = 1;
     Psii._FEord    = LagMultOld._FEord;
-    Psii._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][Psii._FEord]->GetNDofs();
+    Psii._ndof     = currelem.GetElemType(Psii._FEord)->GetNDofs();
     Psii.Allocate();
 
 //========= END tEST AND SHAPE FOR QTYZERO AND QTYONE =================
@@ -156,7 +156,7 @@ namespace femus {
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
     
     //================== Quadratic domain, auxiliary
@@ -416,28 +416,28 @@ for (uint fe = 0; fe < QL; fe++)     {
     CurrentQuantity Phij(currgp); //TODO this is another Vect that doesnt have an associated quantity still
     Phij._dim      = 1;                                                         //scalar!
     Phij._FEord    = bhomOld._FEord;
-    Phij._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][Phij._FEord]->GetNDofs(); 
+    Phij._ndof     = currelem.GetElemType(Phij._FEord)->GetNDofs(); 
     Phij.Allocate();
         
 //QTYZERO tEST:  test of the first Unknown    
     CurrentQuantity Phii(currgp);
     Phii._dim      = 1;
     Phii._FEord    = bhomOld._FEord;
-    Phii._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][Phii._FEord]->GetNDofs();
+    Phii._ndof     = currelem.GetElemType(Phii._FEord)->GetNDofs();
     Phii.Allocate();
     
 //QTYONE SHAPE: Shape of the second Unknown
     CurrentQuantity Psij(currgp);
     Psij._dim      = 1;
     Psij._FEord    = LagMultOld._FEord;
-    Psij._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][Psij._FEord]->GetNDofs(); 
+    Psij._ndof     = currelem.GetElemType(Psij._FEord)->GetNDofs(); 
     Psij.Allocate();
     
 //QTYONE tEST: test of the second Unknown
     CurrentQuantity Psii(currgp);
     Psii._dim      = 1;
     Psii._FEord    = LagMultOld._FEord;
-    Psii._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][Psii._FEord]->GetNDofs();
+    Psii._ndof     = currelem.GetElemType(Psii._FEord)->GetNDofs();
     Psii.Allocate();
 
 //========= END tEST AND SHAPE FOR QTYZERO AND QTYONE =================
@@ -448,7 +448,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
     
     //================== Quadratic domain, auxiliary

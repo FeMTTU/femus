@@ -59,7 +59,7 @@ inline double Phi(const uint ql,const uint dof) const {
     
    uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
    const CurrentElem & _current_elem;
-   const std::vector<elem_type*>  &  _elem_type;
+   const std::vector<elem_type*>  &  _elem_type;  //[QL]
    const Gauss & _qrule;
    double**  _InvJac_g;/*[FM_DIM][FM_DIM]*/   //gauss Current Geometric Element //no new is needed here //TODO this is only for VOLUME elements
    double*  _normal_g;/*[FM_DIM]*/              //gauss Current Geometric Element //no new is needed here //TODO this should be only for a BOUNDARY GAUSS POINT

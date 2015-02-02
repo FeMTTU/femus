@@ -137,7 +137,7 @@ void CurrentQuantity::VectWithQtyFillBasic() {
     _eqnptr   = _qtyptr->_eqn; 
     _dim      = _qtyptr->_dim;
     _FEord    = _qtyptr->_FEord;
-    _ndof     = _currEl.GetElemType()[_FEord]->GetNDofs();
+    _ndof     = _currEl.GetElemType(_FEord)->GetNDofs();
 
     return;
 }

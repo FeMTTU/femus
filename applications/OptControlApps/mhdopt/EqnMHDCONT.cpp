@@ -121,7 +121,7 @@ namespace femus {
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary
@@ -417,7 +417,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary

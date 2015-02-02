@@ -216,7 +216,7 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
@@ -611,7 +611,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========

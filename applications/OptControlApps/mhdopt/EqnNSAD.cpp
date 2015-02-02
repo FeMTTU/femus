@@ -113,7 +113,7 @@ const int NonStatNSAD = (int) _phys.get("NonStatNSAD");
     CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
@@ -380,7 +380,7 @@ if (_Dir_pen_fl == 0)  {
     CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  

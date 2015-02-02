@@ -121,7 +121,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = eqn->_eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
@@ -249,7 +249,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
     CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = eqn->_eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  

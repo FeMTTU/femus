@@ -94,7 +94,7 @@ EqnT::EqnT(MultiLevelProblemTwo& equations_map_in,
     CurrentQuantity xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
@@ -195,7 +195,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 //========= SECOND ROW =====================
 	 int ip1 = i + Tempold._ndof; 
 	 
-	if (i < _eqnmap.GetElemType()[currelem.GetDim()-1][ Temp2._FEord ]->GetNDofs() ) { 
+	if (i < currelem.GetElemType(Temp2._FEord)->GetNDofs() ) { 
 	 currelem.Rhs()(ip1) +=      
            currelem.GetBCDofFlag()[ip1]*dtxJxW_g*( 
                 0.07*phii_gLL
@@ -208,7 +208,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 //======= THIRD ROW ===================================
 	 int ip2 = i + Tempold._ndof + Temp2._ndof;
 	 
-	if (i < _eqnmap.GetElemType()[currelem.GetDim()-1][ Temp3._FEord ]->GetNDofs() ) { 
+	if (i < currelem.GetElemType(Temp3._FEord)->GetNDofs() ) { 
            currelem.Rhs()(ip2) +=      
            currelem.GetBCDofFlag()[ip2]*dtxJxW_g*( 
                 0.07*phii_gKK
@@ -250,8 +250,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //=========== SECOND ROW  =============
 //===== DIAGONAL ===========================
- 	if ( i < _eqnmap.GetElemType()[currelem.GetDim()-1][ Temp2._FEord ]->GetNDofs() )  { 
-  	if ( j < _eqnmap.GetElemType()[currelem.GetDim()-1][ Temp2._FEord ]->GetNDofs() ) { 
+ 	if ( i < currelem.GetElemType(Temp2._FEord)->GetNDofs() )  { 
+  	if ( j < currelem.GetElemType(Temp2._FEord)->GetNDofs() ) { 
        currelem.Mat()(ip1,jp1) +=        
             currelem.GetBCDofFlag()[ip1]*
             dtxJxW_g*(
@@ -262,8 +262,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 	}
 //============= THIRD ROW  =============
 //======= DIAGONAL ==================
-	if ( i < _eqnmap.GetElemType()[currelem.GetDim()-1][ Temp3._FEord ]->GetNDofs() )  { 
-  	if ( j < _eqnmap.GetElemType()[currelem.GetDim()-1][ Temp3._FEord ]->GetNDofs() ) { 
+	if ( i < currelem.GetElemType(Temp3._FEord)->GetNDofs() )  { 
+  	if ( j < currelem.GetElemType(Temp3._FEord)->GetNDofs() ) { 
           currelem.Mat()(ip2,jp2) +=        
             currelem.GetBCDofFlag()[ip2]*
               dtxJxW_g*( 
@@ -330,7 +330,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     CurrentQuantity xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = meshql;
-    xyz._ndof     = _eqnmap.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========

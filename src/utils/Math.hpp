@@ -114,7 +114,7 @@ const uint myproc = eqnmap_in._mesh._iproc;
     CurrentQuantity xyz(currgp);
     xyz._dim      = eqnmap_in._mesh.get_dim();
     xyz._FEord    = meshql;
-    xyz._ndof     = eqnmap_in.GetElemType()[currelem.GetDim()-1][xyz._FEord]->GetNDofs();
+    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
   double integral = 0.;
