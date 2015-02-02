@@ -137,7 +137,7 @@ void CurrentQuantity::VectWithQtyFillBasic() {
     _eqnptr   = _qtyptr->_eqn; 
     _dim      = _qtyptr->_dim;
     _FEord    = _qtyptr->_FEord;
-    _ndof     = _currEl._elem_type[_currEl.GetDim()-1][_FEord]->GetNDofs();
+    _ndof     = _currEl._elem_type[_FEord]->GetNDofs();
 
     return;
 }
@@ -174,7 +174,7 @@ void CurrentQuantity::ExtendDofs() {
   //set to zero
   for (uint eln=0; eln<el_ndofs; eln++)  {
     for (uint i=0; i<3; i++) {
-       _val_dofs3D[eln+i*el_ndofs]=0.;
+       _val_dofs3D[eln+i*el_ndofs] = 0.;
     }
   }
 //extend

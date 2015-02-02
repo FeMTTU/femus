@@ -52,6 +52,8 @@ public:
 		  const std::vector<Gauss> qrule_in
 		);
 
+  inline const std::vector<elem_type*>  & GetElemType(const unsigned dim) const { return  _elem_type[dim - 1]; }
+    
   inline const std::vector< std::vector<elem_type*> >  & GetElemType() const { return  _elem_type; }
 
   inline const Gauss & GetQrule(const unsigned dim) const { return _qrule[dim - 1]; }

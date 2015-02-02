@@ -98,7 +98,7 @@ class CurrentQuantity;
 //========== Equation-related ========================               
   const SystemTwo * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
   const MultiLevelMeshTwo & _mesh;
-  const std::vector< std::vector<elem_type*> >  &  _elem_type;
+  const std::vector<elem_type*>  &  _elem_type;
   
   private:
     
@@ -173,8 +173,6 @@ class CurrentQuantity;
 //The curr geometric is basically filled with the MESH class
 //The curr fe is basically filled with the EQUATION class
 
-//can we make a currelem that is not based on the mesh?
-//Let us now just make this one
 
 
 #endif
