@@ -94,31 +94,31 @@ public:
   
   static void PrintMeshBiquadraticXDMF(const std::string output_path, const MultiLevelMeshTwo & mesh);
   
-  static void PrintMeshLinearXDMF(const std::string output_path, const MultiLevelMeshTwo & mesh);
+  static void PrintMeshLinearXDMF(const std::string output_path, const MultiLevelMeshTwo & mesh, const uint order_fe);
   
-  static void PrintXDMFTopGeomVBLinear(std::ofstream& out, std::ostringstream& top_file,
+  static void PrintXDMFTopGeom(std::ofstream& out, std::ostringstream& top_file,
 			      std::ostringstream& geom_file,
 			      const uint Level,
 			      const uint vb,
-			      const MultiLevelMeshTwo & mesh);
+			      const MultiLevelMeshTwo & mesh, const uint order_fe);
   
-  static void PrintSubdomFlagOnCellsAllVBAllLev(hid_t & file, std::string filename, const MultiLevelMeshTwo & mesh, const uint order);
+  static void PrintSubdomFlagOnCellsAllVBAllLevHDF5(hid_t & file, std::string filename, const MultiLevelMeshTwo & mesh, const uint order);
   
-  static void PrintSubdomFlagOnCells(const uint vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh, const uint order);
+  static void PrintSubdomFlagOnCellsHDF5(const uint vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh, const uint order);
   
   static void PrintMeshLinear(const std::string output_path, const MultiLevelMeshTwo& mesh);
   
-  static void PrintConnAllLEVAllVBLinear(const std::string output_path, const MultiLevelMeshTwo& mesh);
+  static void PrintConnAllLEVAllVBLinearHDF5(const std::string output_path, const MultiLevelMeshTwo& mesh);
   
-  static void PrintConnLinear(hid_t file, const uint Level, const uint vb, const MultiLevelMeshTwo& mesh); 
+  static void PrintConnLinearHDF5(hid_t file, const uint Level, const uint vb, const MultiLevelMeshTwo& mesh); 
 
-  static void PrintElemVBBiquadratic(hid_t file, const uint vb, const std::vector<int> & nd_libm_fm, ElemStoBase** el_sto_in, const std::vector<std::pair<int,int> >  el_fm_libm_in, const MultiLevelMeshTwo & mesh);  
+  static void PrintElemVBBiquadraticHDF5(hid_t file, const uint vb, const std::vector<int> & nd_libm_fm, ElemStoBase** el_sto_in, const std::vector<std::pair<int,int> >  el_fm_libm_in, const MultiLevelMeshTwo & mesh);  
   
-  static void ReadMeshFileAndNondimensionalizeBiquadratic(const std::string output_path, MultiLevelMeshTwo & mesh);
+  static void ReadMeshAndNondimensionalizeBiquadraticHDF5(const std::string output_path, MultiLevelMeshTwo & mesh);
 
-  static void PrintMeshFileBiquadratic(const std::string output_path, const MultiLevelMeshTwo & mesh);
+  static void PrintMeshBiquadraticHDF5(const std::string output_path, const MultiLevelMeshTwo & mesh);
   
-  /** MATRIX */
+  /** Matrices */
   static void PrintOneVarMatrixHDF5(const std::string & name, const std::string & groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel );
   
   static void PrintOneVarMGOperatorHDF5(const std::string & filename,const std::string & groupname, uint* n_dofs_lev, int count, int* Op_pos,double* Op_val,int* len,int* len_off, int FELevel_row, int FELevel_col, int fe);
@@ -144,7 +144,8 @@ private:
    
    static const std::string _nodes_name;
    static const std::string _elems_name;
-//     std::string _nd_coord_folder;  //TODO why seg fault if I use them?!?
+   static const std::string _conn; 
+   //     std::string _nd_coord_folder;
 //     std::string _el_pid_name;
 //     std::string _nd_map_FineToLev;
 

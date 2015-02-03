@@ -609,7 +609,7 @@ void GenCase::CreateMeshStructuresLevSubd(const std::string output_path) {
 
         ComputeNodeMapExtLevels();
 
-        XDMFWriter::PrintMeshFileBiquadratic(output_path,*this);
+        XDMFWriter::PrintMeshBiquadraticHDF5(output_path,*this);
 
 // delete the boundary part, no more needed
         for (int i=0;i<_n_elements_sum_levs[BB];i++)      delete  _el_sto_b[i];
