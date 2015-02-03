@@ -118,18 +118,11 @@ public:
 
   static void PrintMeshFileBiquadratic(const std::string output_path, const MultiLevelMeshTwo & mesh);
   
-  /** MATRIX PRINTING */
+  /** MATRIX */
   static void PrintOneVarMatrixHDF5(const std::string & name, const std::string & groupname, uint** n_nodes_all, int count,int* Mat,int* len,int* len_off,int type1, int type2, int* FELevel );
   
   static void PrintOneVarMGOperatorHDF5(const std::string & filename,const std::string & groupname, uint* n_dofs_lev, int count, int* Op_pos,double* Op_val,int* len,int* len_off, int FELevel_row, int FELevel_col, int fe);
   
-// HDF5 FIELDS ===============
-   static const std::string _nodes_name; //name for the HDF5 dataset
-   static const std::string _elems_name;   //name for the HDF5 dataset
-//     std::string _nd_coord_folder;  //TODO why seg fault if I use them?!?
-//     std::string _el_pid_name;
-//     std::string _nd_map_FineToLev;
-
  /** MultiLevelProblem */
  static void PrintSolXDMFLinear(const std::string output_path, const uint t_step,const double curr_time, const MultiLevelProblem & ml_prob );
  
@@ -148,6 +141,13 @@ public:
 private:
   
    static const std::string type_el[4][6];
+   
+   static const std::string _nodes_name;
+   static const std::string _elems_name;
+//     std::string _nd_coord_folder;  //TODO why seg fault if I use them?!?
+//     std::string _el_pid_name;
+//     std::string _nd_map_FineToLev;
+
     
 
 };

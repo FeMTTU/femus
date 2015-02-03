@@ -42,7 +42,7 @@
 
 namespace femus {
 
-  const std::string XDMFWriter::type_el[4][6] = {{"Hexahedron","Tetrahedron","Wedge","Quadrilateral","Triangle","Edge"},
+  const std::string XDMFWriter::type_el[4][6] = {{"Hexahedron","Tetrahedron","Wedge","Quadrilateral","Triangle","Polyline"},
                                 {"Hexahedron_20","Tetrahedron_10","Not_implemented","Quadrilateral_8","Triangle_6","Edge_3"},
 			        {"Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented"},
                                 {"Hexahedron_27","Not_implemented","Not_implemented","Quadrilateral_9","Triangle_6","Edge_3"}};
@@ -1443,10 +1443,14 @@ void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const M
   
           for(uint vb=0;vb< VB; vb++)  {
 	    for(uint l=0; l< mesh._NoLevels; l++) {
-  
+
     out << "<Grid Name=\"" << grid_mesh[vb].c_str() << "_L" << l << "\"> \n";
     
 	      PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,vb,mesh);
+	      
+  	// ===== PID ======
+        std::ostringstream  pid_name; pid_name << "PID" << "_LEVEL" << l;
+        if (vb==0)  PrintXDMFAttribute(out,top_file.str(),pid_name.str(),pid_name.str(),"Scalar","Cell","Int",mesh._n_elements_vb_lev[vb][l]*NRE[mesh._eltype_flag[vb]],1);
 	      
     out << "</Grid> \n";  
 	      
@@ -1616,11 +1620,14 @@ void XDMFWriter::PrintConnAllLEVAllVBLinear(const std::string output_path, const
 
 //================================
 // here we loop both over LEVELS and over VB, so everything is inside a UNIQUE FILE  
-  for(uint l=0; l< mesh._NoLevels; l++)
-           for(uint vb=0;vb< VB; vb++)
+     for(uint vb=0;vb< VB; vb++)  {
+       for(uint l=0; l< mesh._NoLevels; l++)    {
+       if (vb == 0) PrintSubdomFlagOnCellsLinear(l,namefile.str(),mesh,LINEAR_FE);
 	        PrintConnVBLinear(file,l,vb,mesh);
+	   }
+        }
 //================================
-	   
+   
   H5Fclose(file); //TODO VALGRIND Invalid read of size 8: this is related to both H5Fcreate and H5Dcreate
   return;
 }
@@ -2655,12 +2662,6 @@ void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t
 
         hid_t file = H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
 
-	for (uint l=0; l< ml_prob.GetMeshTwo()._NoLevels; l++) {
-	
-        XDMFWriter::PrintSubdomFlagOnCellsLinear(l,filename.str(),ml_prob.GetMeshTwo(),LINEAR_FE);
-
-	}
-	
         H5Fclose(file);
 
         MultiLevelProblem::const_system_iterator pos   = ml_prob.begin();
@@ -2754,10 +2755,6 @@ void XDMFWriter::PrintCaseXDMFLinear(const std::string output_path, const uint t
 
         // TOPOLOGY GEOMETRY ===========
         XDMFWriter::PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,VV,ml_prob.GetMeshTwo());
-
-	// ===== PID ======
-        std::ostringstream  pid_name; pid_name << "PID" << "_LEVEL" << l;
-	XDMFWriter::PrintXDMFAttribute(out,hdf_file.str(),pid_name.str(),pid_name.str(),"Scalar",DofType[KK],"Int",NGeomObjOnWhichToPrint[KK],1);
 
         // ATTRIBUTES FOR EACH SYSTEM ===========
         MultiLevelProblem::const_system_iterator pos1 = ml_prob.begin();
