@@ -58,10 +58,10 @@ public:
   /////< MG time step solver (backward Euler)
   double MGTimeStep(const uint iter, SystemTwo * eqn) const;   
   
-  void OneTimestepEqnLoop(const uint delta_t_step_in, const MultiLevelProblemTwo & eqnmap) const;
+  void OneTimestepEqnLoop(const uint delta_t_step_in, const MultiLevelProblem & eqnmap) const;
 
-  void TransientLoop(const MultiLevelProblemTwo & eqnmap);   //a standard transient loop in alphabetical order
-  void TransientSetup(const MultiLevelProblemTwo & eqnmap);  //initialization of all the equations in the map
+  void TransientLoop(const MultiLevelProblem & eqnmap);   //a standard transient loop in alphabetical order
+  void TransientSetup(const MultiLevelProblem & eqnmap);  //initialization of all the equations in the map
 
 };
 

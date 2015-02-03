@@ -6,7 +6,7 @@
 
 #include "CurrentQuantity.hpp"
 #include "ElemType.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 
 namespace femus {
 
@@ -96,7 +96,7 @@ inline void extend_nds(const uint el_ndofs,const double* a_nds, double* a_nds3D,
 
 //=================================================================
 
-inline double FunctionIntegral (const uint vb, MultiLevelProblemTwo & eqnmap_in, double (*pt2func)(double, const std::vector<double> ) )  {
+inline double FunctionIntegral (const uint vb, MultiLevelProblem & eqnmap_in, double (*pt2func)(double, const std::vector<double> ) )  {
 
   const uint mesh_vb = vb;
   

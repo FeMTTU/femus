@@ -28,7 +28,7 @@ public:
   OptLoop(Files& files_in, const FemusInputParser<double> & map_in);
  ~OptLoop();
 
-  void optimization_loop(MultiLevelProblemTwo& e_map_in);
+  void optimization_loop(MultiLevelProblem& e_map_in);
 
   void init_equation_data(const SystemTwo* eqn);
  

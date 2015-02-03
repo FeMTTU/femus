@@ -15,7 +15,7 @@
 #include "MultiLevelMeshTwo.hpp"
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "TimeLoop.hpp"
 #include "Typedefs.hpp"
 #include "Quantity.hpp"
@@ -95,7 +95,9 @@
   // ===== end QuantityMap =========================================
 
   // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblemTwo equations_map(mesh,"fifth");
+  MultiLevelProblem equations_map;
+  equations_map.SetMeshTwo(&mesh);
+  equations_map.SetQruleAndElemType("fifth");
   equations_map.SetInputParser(&physics_map); 
   equations_map.SetQtyMap(&qty_map);
 
@@ -113,16 +115,15 @@ InternalVect_Temp[0] = &temperature;               temperature.SetPosInAssocEqn(
 InternalVect_Temp[1] = &temperature2;              temperature2.SetPosInAssocEqn(1);
 InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn(2);
 
-  EqnT* eqnT = new EqnT(equations_map,"Eqn_T",0,NO_SMOOTHER);
-  eqnT->SetQtyIntVector(InternalVect_Temp);
-  equations_map.add_system(eqnT);  
+  EqnT & eqnT = equations_map.add_system<EqnT>("Eqn_T",NO_SMOOTHER);  //EqnT* eqnT = new EqnT(equations_map,"Eqn_T",0,NO_SMOOTHER);
+  eqnT.SetQtyIntVector(InternalVect_Temp);
   
-    for (uint l=0; l< mesh._NoLevels; l++)  eqnT->_solver[l]->set_solver_type(GMRES);
-    eqnT->_Dir_pen_fl = 0;  //no penalty BC
+    for (uint l=0; l< mesh._NoLevels; l++)  eqnT._solver[l]->set_solver_type(GMRES);
+    eqnT._Dir_pen_fl = 0;  //no penalty BC
 
-        temperature.set_eqn(eqnT);
-        temperature2.set_eqn(eqnT);
-        temperature3.set_eqn(eqnT);
+        temperature.set_eqn(&eqnT);
+        temperature2.set_eqn(&eqnT);
+        temperature3.set_eqn(&eqnT);
 
 //================================ 
 //========= End add EQUATIONS  and ========
@@ -134,8 +135,8 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
 // then I'll have A from the equation, PRL and REST from a MG object.
 //So somehow i'll have to put these objects at a higher level... but so far let us see if we can COMPUTE and PRINT from HERE and not from the gencase
 	 
-   for (MultiLevelProblemTwo::const_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
-        SystemTwo* mgsol = eqn->second;
+   for (MultiLevelProblem::const_system_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
+        SystemTwo* mgsol = static_cast<SystemTwo*>(eqn->second);
         
 //=====================
     mgsol -> _dofmap.ComputeMeshToDof();
@@ -159,7 +160,7 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
   files.log_petsc();
   
 // ============  clean ================================
-  equations_map.clean();
+  equations_map.clear();
   mesh.clear();
   
   

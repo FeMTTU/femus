@@ -1,7 +1,7 @@
 #include "OptLoop.hpp"
 
 #include "Temp_conf.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"
 #include "CurrentQuantity.hpp"
@@ -20,7 +20,7 @@ namespace femus {
  OptLoop::OptLoop(Files& files_in, const FemusInputParser<double> & map_in): TimeLoop(files_in, map_in) { }
 
  //=================
-    void OptLoop::optimization_loop(MultiLevelProblemTwo & eqmap_in)  {
+    void OptLoop::optimization_loop(MultiLevelProblem & eqmap_in)  {
 
     //  parameters
     int    print_step = _timemap.get("printstep");
@@ -65,7 +65,7 @@ namespace femus {
 //=====functional evaluations=======
 
 #if T_EQUATIONS==1
-		EqnT* eqnT = static_cast<EqnT*>(eqmap_in.get_system("Eqn_T"));
+		EqnT* eqnT = static_cast<EqnT*>(& eqmap_in.get_system("Eqn_T"));
 
 		
      double J = 0.;
@@ -208,7 +208,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 	std::ofstream intgr_fstream;
     
     if (paral::get_rank() ==0 ) { 
-      intgr_fstream.open(intgr_fname.c_str(),ios_base::app); 
+      intgr_fstream.open(intgr_fname.c_str(),std::ios_base::app); 
       intgr_fstream << output_time << " " << eqn->_eqnmap.GetInputParser().get("alphaT") << " " << eqn->_eqnmap.GetInputParser().get("injsuc")<< " "  << J << " " << std::endl ; 
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
     }

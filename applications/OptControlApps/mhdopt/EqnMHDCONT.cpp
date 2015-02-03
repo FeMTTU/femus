@@ -11,7 +11,7 @@
 
 #include "Math.hpp"
 #include "MultiLevelMeshTwo.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "Quantity.hpp"
@@ -33,7 +33,7 @@ namespace femus {
 //now, the idea is this:
 //if you have specific data for this equation, then you may 
 //define also specific member functions for it
-  EqnMHDCONT::EqnMHDCONT( MultiLevelProblemTwo& equations_map_in,
+  EqnMHDCONT::EqnMHDCONT( MultiLevelProblem& equations_map_in,
                   const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
       SystemTwo(equations_map_in,eqname_in,number,smoother_type)
   {

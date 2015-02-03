@@ -3,7 +3,8 @@
 #include "Quantity.hpp"
 #include "CurrentElem.hpp"
 #include "ElemType.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
+#include "SystemTwo.hpp"
 #include "MultiLevelMeshTwo.hpp"
 
 

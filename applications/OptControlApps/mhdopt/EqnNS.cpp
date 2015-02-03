@@ -10,7 +10,7 @@
 
 #include "Math.hpp"
 #include "MultiLevelMeshTwo.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "VBTypeEnum.hpp"
@@ -32,7 +32,7 @@ namespace femus {
 
 
 ///=============== Constructor
-  EqnNS::EqnNS(    MultiLevelProblemTwo& equations_map_in,
+  EqnNS::EqnNS(    MultiLevelProblem& equations_map_in,
                    const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
            SystemTwo(equations_map_in,eqname_in,number,smoother_type),
      _AdvPic_fl(ADVPIC_NS),

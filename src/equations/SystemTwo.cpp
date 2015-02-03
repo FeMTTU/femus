@@ -18,6 +18,7 @@
 // C++ 
 #include <sstream>
 #include <limits>
+#include <cassert>
 
 #include "FEMTTUConfig.h"
 #ifdef HAVE_MPI
@@ -32,7 +33,7 @@
 #include "Quantity.hpp"
 #include "XDMFWriter.hpp"
 #include "MultiLevelMeshTwo.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "CurrentElem.hpp"
 #include "CurrentGaussPoint.hpp"
 
@@ -51,17 +52,17 @@ const int SystemTwo::_number_tang_comps[3] = {0,1,3};
 
 
 
-//the most important things for an SystemTwo are:
+//the most important things for a SystemTwo are:
 //the number of variables
 //the names
 //other stuff but let us stop here now
-SystemTwo::SystemTwo(MultiLevelProblemTwo& e_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
+SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
         _phys(e_map_in.GetInputParser()),
         _mesh(e_map_in.GetMeshTwo()),
         _eqnmap(e_map_in),
         //=============
         _eqname(eqname_in),
-        _NoLevels(e_map_in.GetMeshTwo()._NoLevels), //you can do that
+        _NoLevels(e_map_in.GetMeshTwo()._NoLevels),
         _dofmap(this,e_map_in.GetMeshTwo()),
         System(e_map_in,eqname_in,number) {
 

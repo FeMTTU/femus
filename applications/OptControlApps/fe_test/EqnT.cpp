@@ -10,7 +10,6 @@
 #include "Files.hpp"
 #include "Math.hpp"
 #include "MultiLevelMeshTwo.hpp"
-#include "MultiLevelProblemTwo.hpp"
 #include "SystemTwo.hpp"
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
@@ -21,7 +20,7 @@
 #include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"
 #include "paral.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 
 // application
 #include "TempQuantities.hpp"
@@ -30,7 +29,7 @@
 namespace femus {
 
 // ======================================================
-EqnT::EqnT(MultiLevelProblemTwo& equations_map_in,
+EqnT::EqnT(MultiLevelProblem & equations_map_in,
            const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
     SystemTwo(equations_map_in,eqname_in,number,smoother_type) {}
 

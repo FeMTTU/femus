@@ -7,14 +7,14 @@
 namespace femus {
 
 //Forward declarations
-class MultiLevelProblemTwo;
+class MultiLevelProblem;
 
 
 class EqnMHD : public SystemTwo {
 
   public:
   
-  EqnMHD( MultiLevelProblemTwo& mg_equations_map_in,
+  EqnMHD( MultiLevelProblem& mg_equations_map_in,
           const std::string & eqname_in,const unsigned int number, const MgSmoother & smoother_type);
 	   
   ~EqnMHD();

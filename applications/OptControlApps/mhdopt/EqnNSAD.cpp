@@ -9,7 +9,7 @@
 #include "Math.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "Domain.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "Quantity.hpp"
@@ -31,7 +31,7 @@
 namespace femus {
 
 /// Constructor.
-  EqnNSAD::EqnNSAD(MultiLevelProblemTwo& equations_map_in,
+  EqnNSAD::EqnNSAD(MultiLevelProblem& equations_map_in,
                    const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
       SystemTwo(equations_map_in,eqname_in,number,smoother_type)      
       {

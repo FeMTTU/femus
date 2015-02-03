@@ -9,7 +9,7 @@ namespace femus {
 
 
 // Forwarded classes
-class MultiLevelProblemTwo;
+class MultiLevelProblem;
 
 
 
@@ -17,7 +17,7 @@ class EqnNSAD : public SystemTwo {
 
   public:
 
-     EqnNSAD(  MultiLevelProblemTwo& mg_equations_map_in,
+     EqnNSAD(  MultiLevelProblem& mg_equations_map_in,
                const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type);
 
   ~EqnNSAD();

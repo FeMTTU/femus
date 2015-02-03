@@ -21,7 +21,7 @@
 
 
 #include "TimeLoop.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "Files.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "FemusInputParser.hpp"
@@ -191,10 +191,10 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 /// This function performes all the Physics time step routines
 void TimeLoop::OneTimestepEqnLoop(
     const uint delta_t_step_in,     // integer time
-    const MultiLevelProblemTwo & eqnmap) const {
+    const MultiLevelProblem & eqnmap) const {
     // loop for time steps
-    for (MultiLevelProblemTwo::const_iterator eqn = eqnmap.begin(); eqn != eqnmap.end(); eqn++)  {
-        SystemTwo* equation = eqn->second;
+    for (MultiLevelProblem::const_system_iterator eqn = eqnmap.begin(); eqn != eqnmap.end(); eqn++)  {
+        SystemTwo* equation = static_cast<SystemTwo*>(eqn->second);
         MGTimeStep(delta_t_step_in,equation);
     }
     return;
@@ -204,7 +204,7 @@ void TimeLoop::OneTimestepEqnLoop(
 ////////////////////////////////
 ////////////////////////////////
 
-void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
+void TimeLoop::TransientSetup(const MultiLevelProblem & eqnmap)  {
 
     const uint initial_step = _timemap.get("initial_step");
     const uint ndigits      = DEFAULT_NDIGITS;
@@ -251,13 +251,13 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
 
         if (paral::get_rank() == 0) {
 
-            stringstream tidxin;
-            tidxin << setw(ndigits) << setfill('0') << _t_idx_in;
+            std::stringstream tidxin;
+            tidxin << std::setw(ndigits) << std::setfill('0') << _t_idx_in;
             std::cout << " Restarting from run: " << _files.GetInputPath() << std::endl;
 	    std::ostringstream cp_src_xmf_stream;
 	    cp_src_xmf_stream << _files.GetInputPath() << "/" << basesol << "." << tidxin.str() << "_l" << (eqnmap.GetMeshTwo()._NoLevels - 1) << ext_xdmf;
             std::string cp_src_xmf = cp_src_xmf_stream.str();
-            fstream file_cp_xmf(cp_src_xmf.c_str());
+            std::fstream file_cp_xmf(cp_src_xmf.c_str());
             if (!file_cp_xmf.is_open()) {
                 std::cout << "No xmf file" << std::endl;
                 abort();
@@ -266,7 +266,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
 	    std::ostringstream cp_src_h5_stream;
 	    cp_src_h5_stream << _files.GetInputPath() << "/" << basesol << "." << tidxin.str() /*<< "_l" << (_mesh._NoLevels - 1)*/ << ext_h5;
             std::string cp_src_h5 = cp_src_h5_stream.str();
-            fstream file_cp_h5(cp_src_h5.c_str());
+            std::fstream file_cp_h5(cp_src_h5.c_str());
             if (!file_cp_h5.is_open()) {
                 std::cout << "No h5 file" << std::endl;
                 abort();
@@ -361,7 +361,7 @@ void TimeLoop::TransientSetup(const MultiLevelProblemTwo & eqnmap)  {
 ///////////////////////////////////////////////////////
 /*standard time loop over the map equations.
  The equations are solved in alphabetical order given by the map*/
-void TimeLoop::TransientLoop(const MultiLevelProblemTwo & eqnmap)  {
+void TimeLoop::TransientLoop(const MultiLevelProblem & eqnmap)  {
 
     //  parameters
     double         dt = _timemap.get("dt");

@@ -11,7 +11,7 @@
 #include "Files.hpp"
 #include "Math.hpp"
 #include "MultiLevelMeshTwo.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "SystemTwo.hpp"
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
@@ -45,8 +45,7 @@
 // The first time when you start associating scalar variables to quantities
 // is when you set the BC's
 // ======================================================
-EqnT::EqnT(  MultiLevelProblemTwo& equations_map_in,
-             const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
+EqnT::EqnT(MultiLevelProblem& equations_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
     SystemTwo(equations_map_in,eqname_in,number,smoother_type) {
 
 // //=======  _var_names[]  ===========

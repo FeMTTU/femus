@@ -18,7 +18,7 @@ class EqnMHDCONT : public SystemTwo {
   public:
     
    
-EqnMHDCONT( MultiLevelProblemTwo& mg_equations_map_in,
+EqnMHDCONT( MultiLevelProblem& mg_equations_map_in,
             const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type);
 
   ~EqnMHDCONT();

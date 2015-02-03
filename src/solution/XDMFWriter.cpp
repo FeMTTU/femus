@@ -20,12 +20,13 @@
 #include "XDMFWriter.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
-#include "stdio.h"
-#include "fstream"
-#include "iostream"
+#include <cstdio>
+#include <fstream>
+#include <iostream>
 #include <algorithm>  
 #include <cstring>
 #include <sstream>
+#include <iomanip>
 
 #ifdef HAVE_HDF5
   #include "hdf5.h"
@@ -2472,7 +2473,7 @@ void XDMFWriter::PrintOneVarMGOperatorHDF5(const std::string & filename,const st
 // MultiLevelProblem
 // =================================================================
 /// This function prints the attributes into the corresponding hdf5 file
-void XDMFWriter::PrintSolHDF5Linear(const std::string output_path, const uint t_flag, const MultiLevelProblemTwo & ml_prob ) {
+void XDMFWriter::PrintSolHDF5Linear(const std::string output_path, const uint t_flag, const MultiLevelProblem & ml_prob ) {
 
     const uint    iproc  = ml_prob.GetMeshTwo()._iproc;
     if (iproc==0) {
@@ -2481,15 +2482,15 @@ void XDMFWriter::PrintSolHDF5Linear(const std::string output_path, const uint t_
         std::string    basesol  = DEFAULT_BASESOL;
         std::string     ext_h5  = DEFAULT_EXT_H5;
         std::ostringstream filename;
-        filename << output_path << "/" << basesol << "." << setw(ndigits) << setfill('0') << t_flag << ext_h5;
+        filename << output_path << "/" << basesol << "." << std::setw(ndigits) << std::setfill('0') << t_flag << ext_h5;
 
         hid_t   file= H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC, H5P_DEFAULT,H5P_DEFAULT);
         H5Fclose(file);
 
-        MultiLevelProblemTwo::const_iterator pos = ml_prob.begin();
-        MultiLevelProblemTwo::const_iterator pos_e = ml_prob.end();
+        MultiLevelProblem::const_system_iterator pos = ml_prob.begin();
+        MultiLevelProblem::const_system_iterator pos_e = ml_prob.end();
         for (;pos!=pos_e;pos++)    {
-            SystemTwo* eqn = pos->second;
+            SystemTwo* eqn = static_cast<SystemTwo*>(pos->second);
             XDMFWriter::write_system_solutions(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn);
         }
 
@@ -2518,7 +2519,7 @@ void XDMFWriter::PrintSolHDF5Linear(const std::string output_path, const uint t_
 //So you should do  in reverse order:  for (int l=NoLevels-1; l >= 0; l--) 
 // I DO NOT WANT TO SEPARATE the HDF5 file, because it works fine as a single file with no problems
 
-void XDMFWriter::PrintSolXDMFLinear(const std::string output_path, const uint t_step,const double curr_time, const MultiLevelProblemTwo & ml_prob ) {
+void XDMFWriter::PrintSolXDMFLinear(const std::string output_path, const uint t_step,const double curr_time, const MultiLevelProblem & ml_prob ) {
 
     const uint    iproc =ml_prob.GetMeshTwo()._iproc;
     if (iproc==0) {
@@ -2549,8 +2550,8 @@ void XDMFWriter::PrintSolXDMFLinear(const std::string output_path, const uint t_
 	for (uint l=0; l < NoLevels; l++) {
 	
 	std::ostringstream filename_xdmf;
-        filename_xdmf << output_path << "/" << basesol << "." << setw(ndigits) << setfill('0') << t_step << "_l" << l << ext_xdmf;
-        std::ostringstream hdf_file; hdf_file << basesol << "." << setw(ndigits) << setfill('0') << t_step << ext_h5;
+        filename_xdmf << output_path << "/" << basesol << "." << std::setw(ndigits) << std::setfill('0') << t_step << "_l" << l << ext_xdmf;
+        std::ostringstream hdf_file; hdf_file << basesol << "." << std::setw(ndigits) << std::setfill('0') << t_step << ext_h5;
 
 	std::ofstream out(filename_xdmf.str().c_str());
         if (out.fail()) {
@@ -2578,10 +2579,10 @@ void XDMFWriter::PrintSolXDMFLinear(const std::string output_path, const uint t_
 	
         XDMFWriter::PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,VV,ml_prob.GetMeshTwo());
 
-	MultiLevelProblemTwo::const_iterator pos1   = ml_prob.begin();
-        MultiLevelProblemTwo::const_iterator pos1_e = ml_prob.end();
+	MultiLevelProblem::const_system_iterator pos1   = ml_prob.begin();
+        MultiLevelProblem::const_system_iterator pos1_e = ml_prob.end();
         for (;pos1!=pos1_e;pos1++)   {
-            SystemTwo *mgsol=pos1->second;
+            SystemTwo* mgsol = static_cast<SystemTwo*>(pos1->second);
             int OffVarNames[QL];
             OffVarNames[QQ] = 0;
             OffVarNames[LL] = mgsol->_dofmap._nvars[QQ];
@@ -2610,7 +2611,7 @@ void XDMFWriter::PrintSolXDMFLinear(const std::string output_path, const uint t_
 
 // =================================================================
 /// This function prints xdmf and hdf5 file
-void XDMFWriter::PrintSolLinear(const std::string output_path, const uint t_step, const double curr_time, const MultiLevelProblemTwo & ml_prob ) {
+void XDMFWriter::PrintSolLinear(const std::string output_path, const uint t_step, const double curr_time, const MultiLevelProblem & ml_prob ) {
 
     XDMFWriter::PrintSolHDF5Linear(output_path,t_step,ml_prob);
     XDMFWriter::PrintSolXDMFLinear(output_path,t_step,curr_time,ml_prob);
@@ -2626,7 +2627,7 @@ void XDMFWriter::PrintSolLinear(const std::string output_path, const uint t_step
 // we should do a routine that for a given field prints both the hdf5 dataset
 // and the  xdmf tag... well it's not so automatic, because you need to know
 // what is the grid on which to print, bla bla bla
-void XDMFWriter::PrintCaseLinear(const std::string output_path, const uint t_init, const MultiLevelProblemTwo & ml_prob) {
+void XDMFWriter::PrintCaseLinear(const std::string output_path, const uint t_init, const MultiLevelProblem & ml_prob) {
   
   
      XDMFWriter::PrintCaseHDF5Linear(output_path,t_init,ml_prob);
@@ -2639,7 +2640,7 @@ void XDMFWriter::PrintCaseLinear(const std::string output_path, const uint t_ini
 // =============================================================================
 /// This function prints initial and boundary data in hdf5 fromat
 /// in the file case.h5
-void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t_init, const MultiLevelProblemTwo & ml_prob ) {
+void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t_init, const MultiLevelProblem & ml_prob ) {
 
     const uint    iproc =ml_prob.GetMeshTwo()._iproc;
     if (iproc==0) {
@@ -2650,7 +2651,7 @@ void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t
         std::string     ext_h5  = DEFAULT_EXT_H5;
 
         std::ostringstream filename;
-        filename << output_path << "/" << basecase << "." << setw(ndigits) << setfill('0') << t_init << ext_h5;
+        filename << output_path << "/" << basecase << "." << std::setw(ndigits) << std::setfill('0') << t_init << ext_h5;
 
         hid_t file = H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
 
@@ -2662,10 +2663,10 @@ void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t
 	
         H5Fclose(file);
 
-        MultiLevelProblemTwo::const_iterator pos   = ml_prob.begin();
-        MultiLevelProblemTwo::const_iterator pos_e = ml_prob.end();
+        MultiLevelProblem::const_system_iterator pos   = ml_prob.begin();
+        MultiLevelProblem::const_system_iterator pos_e = ml_prob.end();
         for (;pos!=pos_e;pos++) {
-            SystemTwo* eqn = pos->second;
+            SystemTwo* eqn = static_cast<SystemTwo*>(pos->second);
             XDMFWriter::write_system_solutions(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn);    // initial solution
             XDMFWriter::write_system_solutions_bc(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn,eqn->_bc,eqn->_bc_fe_kk);            // boundary condition
         }
@@ -2689,7 +2690,7 @@ void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t
 //but, inside the lines of this file, you dont need to put the absolute paths,
 //because you already know you'll not separate .xmf and .h5
 
-void XDMFWriter::PrintCaseXDMFLinear(const std::string output_path, const uint t_init, const MultiLevelProblemTwo & ml_prob ) {
+void XDMFWriter::PrintCaseXDMFLinear(const std::string output_path, const uint t_init, const MultiLevelProblem & ml_prob ) {
 
     const uint    iproc = ml_prob.GetMeshTwo()._iproc;
     if (iproc==0) {
@@ -2725,9 +2726,9 @@ void XDMFWriter::PrintCaseXDMFLinear(const std::string output_path, const uint t
 	  
         std::ostringstream filename_xdmf;
         filename_xdmf << output_path << "/"
-        << basecase  << "." << setw(ndigits) << setfill('0') << t_init << "_l" << l << ext_xdmf;
+        << basecase  << "." << std::setw(ndigits) << std::setfill('0') << t_init << "_l" << l << ext_xdmf;
         std::ostringstream hdf_file;
-        hdf_file <<  basecase << "." << setw(ndigits) << setfill('0') << t_init << ext_h5;
+        hdf_file <<  basecase << "." << std::setw(ndigits) << std::setfill('0') << t_init << ext_h5;
 
         std::ofstream out(filename_xdmf.str().c_str());
         if (out.fail()) {
@@ -2759,10 +2760,10 @@ void XDMFWriter::PrintCaseXDMFLinear(const std::string output_path, const uint t
 	XDMFWriter::PrintXDMFAttribute(out,hdf_file.str(),pid_name.str(),pid_name.str(),"Scalar",DofType[KK],"Int",NGeomObjOnWhichToPrint[KK],1);
 
         // ATTRIBUTES FOR EACH SYSTEM ===========
-        MultiLevelProblemTwo::const_iterator pos1 = ml_prob.begin();
-        MultiLevelProblemTwo::const_iterator pos1_e = ml_prob.end();
+        MultiLevelProblem::const_system_iterator pos1 = ml_prob.begin();
+        MultiLevelProblem::const_system_iterator pos1_e = ml_prob.end();
         for (;pos1!=pos1_e;pos1++)   {
-            SystemTwo *mgsol=pos1->second;
+            SystemTwo * mgsol = static_cast<SystemTwo*>(pos1->second);
             int OffVarNames[QL];
             OffVarNames[QQ] = 0;
             OffVarNames[LL] = mgsol->_dofmap._nvars[QQ];
@@ -2796,7 +2797,7 @@ void XDMFWriter::PrintCaseXDMFLinear(const std::string output_path, const uint t
 
 // ========================================================================
 /// This function read the solution form all the system (restart)
-void XDMFWriter::ReadSol(const std::string output_path, const uint t_step, double& time_out, const MultiLevelProblemTwo & ml_prob ) {
+void XDMFWriter::ReadSol(const std::string output_path, const uint t_step, double& time_out, const MultiLevelProblem & ml_prob ) {
 
     const uint ndigits      = DEFAULT_NDIGITS;
     std::string    basesol  = DEFAULT_BASESOL;
@@ -2808,7 +2809,7 @@ void XDMFWriter::ReadSol(const std::string output_path, const uint t_step, doubl
     // open file -----------------------------
     std::ostringstream namefile;
     namefile << output_path << "/" 
-    << basesol << "." << setw(ndigits) << setfill('0') << t_step << "_l" << (ml_prob.GetMeshTwo()._NoLevels - 1) << ext_xdmf;  //TODO here we should avoid doing this process TWICE because we already do it in the TransientSetup calling function
+    << basesol << "." << std::setw(ndigits) << std::setfill('0') << t_step << "_l" << (ml_prob.GetMeshTwo()._NoLevels - 1) << ext_xdmf;  //TODO here we should avoid doing this process TWICE because we already do it in the TransientSetup calling function
 
 #ifdef DEFAULT_PRINT_INFO // --------  info ------------------ 
     std::cout << "\n MultiLevelProblemTwo::read_soln: Reading time  from "
@@ -2843,7 +2844,7 @@ void XDMFWriter::ReadSol(const std::string output_path, const uint t_step, doubl
     // file name -----------------------------------------
     namefile.str("");  //empty string
     namefile << output_path << "/"
-    << basesol << "." << setw(ndigits) << setfill('0') << t_step << ext_h5;
+    << basesol << "." << std::setw(ndigits) << std::setfill('0') << t_step << ext_h5;
     //if i put the path of this file to be relative, will the read depend on where I launched the executable...
     // or where the executable is I think... no, the path is given by where the executable is LAUNCHED
 
@@ -2852,8 +2853,8 @@ void XDMFWriter::ReadSol(const std::string output_path, const uint t_step, doubl
               << namefile.str().c_str() << std::endl;
 #endif // ---------------------------------------------
     // loop reading over the variables ---------------------
-    for (MultiLevelProblemTwo::const_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
-        SystemTwo *mgsol=eqn->second;
+    for (MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
+        SystemTwo* mgsol = static_cast<SystemTwo*>(eqn->second);
     } //  loop --------------------------------------------------------
 
     return;

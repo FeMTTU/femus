@@ -22,7 +22,7 @@ class EqnNS : public SystemTwo {
    const uint   _Stab_fl;
    const double _Komp_fac;
   
-  EqnNS(   MultiLevelProblemTwo& mg_equations_map,
+  EqnNS(   MultiLevelProblem& mg_equations_map,
            const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type);
    
 

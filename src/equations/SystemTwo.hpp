@@ -37,7 +37,7 @@ namespace femus {
 
 
 class Physics      ;
-class MultiLevelProblemTwo ;
+class MultiLevelProblem;
 class MultiLevelMeshTwo      ;
 class FEElemBase   ;
 class Quantity     ;
@@ -56,7 +56,7 @@ public:
 //=======================================================================
 // CONSTRUCTOR / DESTRUCTOR
 //=======================================================================
-  SystemTwo(MultiLevelProblemTwo & equations_map, const std::string & eq_name_in, const unsigned int number, const MgSmoother & smoother_type);   //System//
+  SystemTwo(MultiLevelProblem & equations_map, const std::string & eq_name_in, const unsigned int number, const MgSmoother & smoother_type);   //System//
   
   virtual ~SystemTwo();                    //System//
   
@@ -157,7 +157,7 @@ public:
           void Bc_AddDofVec(NumericVector* myvec, NumericVector* myvec2 );
           void Bc_AddScaleDofVec(NumericVector* vec_in,NumericVector* vec_out,const double ScaleFac );
 
-  MultiLevelProblemTwo      & _eqnmap;
+  MultiLevelProblem      & _eqnmap;
   
 protected:
   

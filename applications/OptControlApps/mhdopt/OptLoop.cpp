@@ -5,7 +5,7 @@
 
 //library headers
 #include "NumericVector.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "SystemTwo.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "TimeLoop.hpp"
@@ -97,23 +97,23 @@ namespace femus {
  
  
  
-void OptLoop::optimization_loop(MultiLevelProblemTwo& e_map_in)  {
+void OptLoop::optimization_loop(MultiLevelProblem & e_map_in)  {
   
   
  #ifdef NS_EQUATIONS
-     EqnNS* mgNS = static_cast<EqnNS*>(e_map_in.get_system("Eqn_NS"));
+     EqnNS* mgNS = static_cast<EqnNS*>(& e_map_in.get_system("Eqn_NS") );
   #endif
   #ifdef MHD_EQUATIONS
-     EqnMHD* mgMHD = static_cast<EqnMHD*>(e_map_in.get_system("Eqn_MHD"));
+     EqnMHD* mgMHD = static_cast<EqnMHD*>(& e_map_in.get_system("Eqn_MHD"));
   #endif
  #ifdef NSAD_EQUATIONS
-     EqnNSAD* mgNSAD = static_cast<EqnNSAD*>(e_map_in.get_system("Eqn_NSAD"));
+     EqnNSAD* mgNSAD = static_cast<EqnNSAD*>(& e_map_in.get_system("Eqn_NSAD"));
  #endif
   #ifdef MHDAD_EQUATIONS
-      EqnMHDAD* mgMHDAD = static_cast<EqnMHDAD*>(e_map_in.get_system("Eqn_MHDAD"));
+      EqnMHDAD* mgMHDAD = static_cast<EqnMHDAD*>(& e_map_in.get_system("Eqn_MHDAD"));
   #endif
   #ifdef MHDCONT_EQUATIONS
-      EqnMHDCONT* mgMHDCONT = static_cast<EqnMHDCONT*>(e_map_in.get_system("Eqn_MHDCONT"));
+      EqnMHDCONT* mgMHDCONT = static_cast<EqnMHDCONT*>(& e_map_in.get_system("Eqn_MHDCONT"));
   #endif
 
 
@@ -305,7 +305,7 @@ double integral = 0.;
     std::cout << "@@@@@@@@@@@@@@@@ functional value: " << J << std::endl;
 
 if (paral::get_rank() ==0 ){ 
-      intgr_fstream.open(intgr_fname.c_str(),ios_base::app); 
+      intgr_fstream.open(intgr_fname.c_str(),std::ios_base::app); 
       intgr_fstream << opt_step << " " << pseudo_opttimeval << " " << J << " " << omega /*<< std::endl*/; 
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
 }
@@ -318,7 +318,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
   if (J < Jold  /*|| 1*/ ) {  
 
     if ( paral::get_rank() == 0 ){ 
-            intgr_fstream.open(intgr_fname.c_str(),ios_base::app); 
+            intgr_fstream.open(intgr_fname.c_str(),std::ios_base::app); 
             intgr_fstream << "@@@@@@@@@@@@@@@@ J < Jold" << std::endl;
             intgr_fstream.close();  //you have to close to disassociate the file from the stream
         }
@@ -416,7 +416,7 @@ while(lin_deltax_MHDCONT >  eps_MHDCONT && k_MHDCONT < MaxIterMHDCONT );
    else {
        std::cout << "@@@@@@@@@@@@@@@@ You went too far in following the gradient: reduce the intensity " << std::endl;
     if ( paral::get_rank() == 0 ){ 
-            intgr_fstream.open(intgr_fname.c_str(),ios_base::app); 
+            intgr_fstream.open(intgr_fname.c_str(),std::ios_base::app); 
             intgr_fstream << " J > Jold" << std::endl;
             intgr_fstream.close();  //you have to close to disassociate the file from the stream
 

@@ -39,7 +39,10 @@ namespace femus {
 }
 
   /** TODO remove soon */
-  System::System(MultiLevelProblem& ml_prob, const std::string& name_in, const unsigned int number_in) : _equation_systems(ml_prob),_sys_number(number_in),_sys_name(name_in) {};
+  System::System(MultiLevelProblem& ml_prob, const std::string& name_in, const unsigned int number_in) :
+  _equation_systems(ml_prob),
+  _sys_name(name_in),
+  _sys_number(number_in) {}
 
   
 System::~System() {

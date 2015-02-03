@@ -10,7 +10,7 @@
 #include "Math.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "Quantity.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "QTYnumEnum.hpp"
@@ -30,7 +30,7 @@
 namespace femus {
 
 ///Constructor
-  EqnMHD::EqnMHD(  MultiLevelProblemTwo& mg_equations_map_in,
+  EqnMHD::EqnMHD(  MultiLevelProblem& mg_equations_map_in,
                    const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
       SystemTwo(mg_equations_map_in,eqname_in,number,smoother_type)
                   {

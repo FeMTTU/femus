@@ -16,7 +16,7 @@
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
 #include "GaussPoints.hpp"
-#include "MultiLevelProblemTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "ElemType.hpp"
 #include "TimeLoop.hpp"
 #include "Typedefs.hpp"
@@ -122,11 +122,12 @@
   // ===== end QuantityMap =========================================
 
   // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblemTwo equations_map(mesh,"fifth");
+  MultiLevelProblem equations_map;
+  equations_map.SetMeshTwo(&mesh);
+  equations_map.SetQruleAndElemType("fifth");
   equations_map.SetInputParser(&physics_map);
   equations_map.SetQtyMap(&qty_map); 
 
-  MultiLevelProblem equations_map_two;
 //===============================================
 //================== Add EQUATIONS AND ======================
 //========= associate an EQUATION to QUANTITIES ========
@@ -144,12 +145,11 @@ std::vector<Quantity*> InternalVect_NS(2);
 InternalVect_NS[0] = &velocity;  velocity.SetPosInAssocEqn(0);
 InternalVect_NS[1] = &pressure;  pressure.SetPosInAssocEqn(1);
 
-  EqnNS* eqnNS = new EqnNS(equations_map,"Eqn_NS",0,NO_SMOOTHER);  equations_map.add_system(eqnNS);
-  eqnNS->SetQtyIntVector(InternalVect_NS);
-//   equations_map_two.add_system("Basic","equazioneNS");
+  EqnNS & eqnNS = equations_map.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);  // EqnNS* eqnNS = new EqnNS(equations_map,"Eqn_NS",0,NO_SMOOTHER);
+  eqnNS.SetQtyIntVector(InternalVect_NS);
   
-           velocity.set_eqn(eqnNS);
-           pressure.set_eqn(eqnNS);
+           velocity.set_eqn(&eqnNS);
+           pressure.set_eqn(&eqnNS);
 #endif
   
 #if T_EQUATIONS==1
@@ -167,16 +167,14 @@ InternalVect_Temp[2] = &tempadj;               tempadj.SetPosInAssocEqn(2);
 InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 #endif
 
-  EqnT* eqnT = new EqnT(equations_map,"Eqn_T",1,NO_SMOOTHER);
-  eqnT->SetQtyIntVector(InternalVect_Temp);
-
-  equations_map.add_system(eqnT); 
+  EqnT & eqnT = equations_map.add_system<EqnT>("Eqn_T",NO_SMOOTHER);  //EqnT* eqnT = new EqnT(equations_map,"Eqn_T",1,NO_SMOOTHER);
+  eqnT.SetQtyIntVector(InternalVect_Temp);
   
-        temperature.set_eqn(eqnT);
-           templift.set_eqn(eqnT);
-            tempadj.set_eqn(eqnT);
+        temperature.set_eqn(&eqnT);
+           templift.set_eqn(&eqnT);
+            tempadj.set_eqn(&eqnT);
    #if FOURTH_ROW==1
-         pressure_2.set_eqn(eqnT);
+         pressure_2.set_eqn(&eqnT);
    #endif
 
 #endif   
@@ -194,8 +192,8 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
  
 //once you have the list of the equations, you loop over them to initialize everything
 
-   for (MultiLevelProblemTwo::const_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
-        SystemTwo* mgsol = eqn->second;
+   for (MultiLevelProblem::const_system_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
+        SystemTwo* mgsol = static_cast<SystemTwo*>(eqn->second);
         
 //=====================
     mgsol -> _dofmap.ComputeMeshToDof();
@@ -220,7 +218,8 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
   files.log_petsc();
   
 // ============  clean ================================
-  equations_map.clean();
+//   equations_map.clean();
+  equations_map.clear();
   mesh.clear();
   
   
