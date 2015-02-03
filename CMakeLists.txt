@@ -139,7 +139,8 @@ OPTION(BUILD_POISSON "Build the Poisson problem" ON)
 # --
 OPTION(BUILD_POISSON_AMR "Build the Poisson_AMR problem" ON)
 
-
+# --
+OPTION(BUILD_NUM_PDE_CLASS "Build the Numerical PDE Class applications" ON)
 
 #############################################################################################
 ### Build documentation (Doxygen)
