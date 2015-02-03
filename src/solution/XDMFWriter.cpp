@@ -1361,8 +1361,8 @@ void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const M
 
     //strings for VB
     std::string  meshname[VB];
-    meshname[VV]="VolumeMesh";
-    meshname[BB]="BoundaryMesh";
+    meshname[VV]="Volume";
+    meshname[BB]="Boundary";
 
     out << "<?xml version=\"1.0\" ?> \n";
     out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" \n";
@@ -1450,7 +1450,7 @@ void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const M
 	      
   	// ===== PID ======
         std::ostringstream  pid_name; pid_name << "PID" << "_LEVEL" << l;
-        if (vb==0)  PrintXDMFAttribute(out,top_file.str(),pid_name.str(),pid_name.str(),"Scalar","Cell","Int",mesh._n_elements_vb_lev[vb][l]*NRE[mesh._eltype_flag[vb]],1);
+        if (vb==0)  PrintXDMFAttribute(out,top_file.str(),pid_name.str(),"PID","Scalar","Cell","Int",mesh._n_elements_vb_lev[vb][l]*NRE[mesh._eltype_flag[vb]],1);
 	      
     out << "</Grid> \n";  
 	      
