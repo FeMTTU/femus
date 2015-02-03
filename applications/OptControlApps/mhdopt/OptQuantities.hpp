@@ -22,7 +22,7 @@ class MagnFieldHom : public Quantity {
   
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
-  void initialize_txyz(const double* xp, std::vector<double> & value) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
  
 
 };
@@ -36,7 +36,7 @@ class MagnFieldHomAdj : public Quantity {
   
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
-  void initialize_txyz(const double* xp, std::vector<double> & value) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
  
 
 };
@@ -50,7 +50,7 @@ class MagnFieldExt : public Quantity {
   
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
-  void initialize_txyz(const double* xp, std::vector<double> & value) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
  
 
 };
@@ -64,7 +64,7 @@ class MagnFieldHomLagMult : public Quantity {
   
   void Function_txyz(const double t, const double* xp,double* temp) const;
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
-  void initialize_txyz(const double* xp, std::vector<double> & value) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
  
 
 };
@@ -79,7 +79,7 @@ class MagnFieldHomLagMultAdj : public Quantity {
   
   void Function_txyz(const double t, const double* xp,double* temp) const;
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
-  void initialize_txyz(const double* xp, std::vector<double> & value) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
  
 
 };
@@ -94,7 +94,7 @@ class MagnFieldExtLagMult : public Quantity {
    
   void Function_txyz(const double t, const double* xp,double* temp) const;
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
-  void initialize_txyz(const double* xp, std::vector<double> & value) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
  
 
 };
@@ -109,7 +109,7 @@ class Pressure : public Quantity {
 
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
-  void initialize_txyz(const double* xp, std::vector<double> & value) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
  
 
 };
@@ -124,7 +124,7 @@ class PressureAdj : public Quantity {
 
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
-  void initialize_txyz(const double* xp, std::vector<double> & value) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
  
 
 };
@@ -139,7 +139,7 @@ class Velocity : public Quantity {
 
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
-  void initialize_txyz(const double* xp, std::vector<double> & value) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
 
   //specific function
   //this is the STRAIN DERIVATIVE of VELOCITY, so it must stay here
@@ -161,7 +161,7 @@ class VelocityAdj : public Quantity {
 
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
-  void initialize_txyz(const double* xp, std::vector<double> & value) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
 
 
 };

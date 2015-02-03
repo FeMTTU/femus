@@ -862,7 +862,7 @@ void SystemTwo::Initialize() {
                 const int fine_node = _mesh._el_map[VV][ k + ( iel + iel_b )*el_dof_objs ];
                 for (uint idim = 0; idim < _mesh.get_dim(); idim++) xp[idim] = _mesh._xyz[ fine_node + idim*coords_fine_offset ];
 
-	  _QtyInternalVector[q]->initialize_txyz(&xp[0],value);
+	  _QtyInternalVector[q]->initialize_xyz(&xp[0],value);
 		    const int dof_pos_lev = _dofmap.GetDofQuantityComponent(Level,_QtyInternalVector[q],ivar,fine_node);
 		    _x[Level]->set( dof_pos_lev, value[ivar] );
 		      
@@ -881,7 +881,7 @@ void SystemTwo::Initialize() {
 	  
           currelem.GetMidpoint();
 	  
-	  _QtyInternalVector[q]->initialize_txyz(&currelem.GetMidpoint()[0],value);
+	  _QtyInternalVector[q]->initialize_xyz(&currelem.GetMidpoint()[0],value);
 
 	      const int elem_lev = iel + sum_elems_prev_sd_at_lev;
 	      const int dof_pos_lev = _dofmap.GetDofQuantityComponent(Level,_QtyInternalVector[q],ivar,elem_lev);

@@ -32,10 +32,10 @@
   EqnNS::EqnNS( MultiLevelProblem & equations_map_in,
                   const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
            SystemTwo(equations_map_in,eqname_in,number,smoother_type),
-     _AdvPic_fl(ADVPIC_NS),
-     _AdvNew_fl(ADVNEW_NS),
-     _Stab_fl(STAB_NS),
-     _Komp_fac(KOMP_NS)   {
+     _AdvPic_fl(1),
+     _AdvNew_fl(0),
+     _Stab_fl(0),
+     _Komp_fac(0)   {
 
 
 // //=======  _var_names[]  ===========
@@ -46,10 +46,10 @@
 //      
 
 //========= MG solver ===================
-  for(uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(SOLVERNS);
+  for(uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(GMRES);
 
 //============= DIR PENALTY===============
-   _Dir_pen_fl = NS_DIR_PENALTY;
+   _Dir_pen_fl = 0;
    
     }
 //====== END CONSTRUCTOR    
@@ -145,13 +145,6 @@
   xyz_refbox._ndof     = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
   xyz_refbox.Allocate();
     
-#if TEMP_QTY==1
-    CurrentQuantity Temp(currgp);
-    Temp._qtyptr   =  _eqnmap.GetQtyMap().get_qty("Qty_Temperature");
-    Temp.VectWithQtyFillBasic();
-    Temp.Allocate();
-#endif
-
 //other Physical constant Quantities
 //=======gravity==================================
   CurrentQuantity gravity(currgp);
@@ -185,13 +178,6 @@
     pressOld.GetElemDofs(Level);
 
     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),qtyzero_ord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
-
-   
-//=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
-#if (TEMP_QTY==1)
-   if ( Temp._eqnptr != NULL )  Temp.GetElemDofs(Level);
-     else                       Temp._qtyptr->FunctionDof(Temp,time,&xyz_refbox._val_dofs[0]);
-#endif
 
 //======== TWO PHASE WORLD
     double rho_nd =  1.;
@@ -259,10 +245,6 @@ for (uint fe = 0; fe < QL; fe++)     {
 //Divergence VelOld
 	  double Div_g=0.;
           for (uint idim=0; idim<space_dim; idim++)    Div_g += VelOld._grad_g[idim][idim];     //TODO NONLIN
-
-#if (TEMP_QTY==1)
-     Temp.val_g();
- #endif
 
        
 #ifdef AXISYMX

@@ -18,7 +18,7 @@ class Temperature : public Quantity {
   
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
-  void initialize_txyz(const double* xp, std::vector<double> & value) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
  
 //specific function
   //this is the function of the IMPOSED DERIVATIVE of TEMPERATURE, aka heat flux

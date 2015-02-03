@@ -48,16 +48,11 @@
 EqnT::EqnT(MultiLevelProblem& equations_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
     SystemTwo(equations_map_in,eqname_in,number,smoother_type) {
 
-// //=======  _var_names[]  ===========
-//   _var_names[0]="T";
-//   _var_names[1]="Tlift";
-//   _var_names[2]="Tadj";
-
 //========= MG solver ===================
-  for (uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(SOLVERT);
+  for (uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(GMRES);
   
 //============= DIR PENALTY===============
-   _Dir_pen_fl = TEMP_DIR_PENALTY;
+   _Dir_pen_fl = 0;
   
 }
 
@@ -127,8 +122,6 @@ void  EqnT::GenMatRhs(const uint Level) {
 //  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
     double* Qflux_g = new double[space_dim];
 
-    int T4_ord = T4_ORD;
-    
 // ==========================================  
 // ==========================================  
  {//BEGIN VOLUME
@@ -155,6 +148,13 @@ void  EqnT::GenMatRhs(const uint Level) {
     TAdj._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
+    
+#if FOURTH_ROW==1
+    CurrentQuantity Press2(currgp);
+    Press2._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_Pressure_2"); 
+    Press2.VectWithQtyFillBasic();
+    Press2.Allocate();
+#endif
     
 //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
@@ -317,7 +317,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 #if FOURTH_ROW==1
 	 int ip3 = i + 3 * Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
 	 
-	 if (i < currelem.GetElemType(T4_ord)->GetNDofs()) { currelem.Rhs()(ip3) +=  currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[T4_ord][i]) + (1-currelem.GetBCDofFlag()[ip3])*detb*1300.;
+	 if (i < currelem.GetElemType(Press2._FEord)->GetNDofs()) { currelem.Rhs()(ip3) +=  currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[Press2._FEord][i]) + (1-currelem.GetBCDofFlag()[ip3])*detb*1300.;
 	              currelem.Mat()(ip3,ip3)  += ( 1-currelem.GetBCDofFlag()[ip3] )*detb;  }
 #endif
 	 // Matrix Assemblying ---------------------------
@@ -419,7 +419,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 #if FOURTH_ROW==1
 	 int ip3 = i + 3*Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
 // 	    int jp3 = j + 3*Tempold._ndof;
-	   if (i < currelem.GetElemType(T4_ord)->GetNDofs() ) currelem.Mat()(ip3,ip3) += currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[ T4_ord ][/*j*/i]*currgp._phi_ndsQLVB_g[ T4_ord ][i]);   
+	   if (i < currelem.GetElemType(Press2._FEord)->GetNDofs() ) currelem.Mat()(ip3,ip3) += currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[ Press2._FEord ][/*j*/i]*currgp._phi_ndsQLVB_g[ Press2._FEord ][i]);   
 #endif
 	    
         }  //end j (col)

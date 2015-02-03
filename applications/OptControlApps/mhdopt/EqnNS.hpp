@@ -9,10 +9,6 @@
 namespace femus {
 
 
-// Forwarded classes
-class MultiLevelProblemTwo;
-
-
 class EqnNS : public SystemTwo {
 
   public:

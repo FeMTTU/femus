@@ -731,9 +731,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
 
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
-#if FOURTH_ROW==1
    bc_flag[0]=0;
-#endif
   }
 
   
@@ -743,21 +741,21 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
 // ====================== INITIALIZE functions ===================================
 
-void Temperature::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void Temperature::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
       value[0] = 0.; 
   
   return;
 }
 
-void TempAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void TempAdj::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
       value[0] = 0.; 
       
   return;
 }
 
-void TempLift::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void TempLift::initialize_xyz(const double* xp, std::vector< double >& value) const {
   
   
   const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
@@ -776,7 +774,7 @@ void TempLift::initialize_txyz(const double* xp, std::vector< double >& value) c
   return;
 }
 
-void Velocity::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void Velocity::initialize_xyz(const double* xp, std::vector< double >& value) const {
   
   //====== Physics
    const double Uref = _qtymap._physmap->get("Uref");
@@ -850,7 +848,7 @@ void Velocity::initialize_txyz(const double* xp, std::vector< double >& value) c
 
 
 
-void Pressure::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void Pressure::initialize_xyz(const double* xp, std::vector< double >& value) const {
   
   Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
   
@@ -863,10 +861,9 @@ void Pressure::initialize_txyz(const double* xp, std::vector< double >& value) c
   return;
 }
 
-void Pressure2::initialize_txyz(const double* xp, std::vector< double >& value) const {
-#if FOURTH_ROW==1
-    value[0] =  72.*(xp[0]);
-#endif
+void Pressure2::initialize_xyz(const double* xp, std::vector< double >& value) const {
+
+  value[0] =  72.*(xp[0]);
   
   return;
 }

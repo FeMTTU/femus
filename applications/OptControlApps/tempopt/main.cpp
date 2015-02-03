@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <sstream>
 
-// External library include ( LibMesh, PETSc...) ------------------------------
+// External library include ( LibMesh, PETSc...)
 #include "FEMTTUConfig.h"
 
 // FEMuS
@@ -108,15 +108,15 @@
   // ===== QuantityMap : this is like the MultilevelSolution =========================================
   QuantityMap  qty_map(mesh,&physics_map);
 
-  Temperature temperature("Qty_Temperature",qty_map,1,FE_TEMPERATURE);          qty_map.set_qty(&temperature);
-  TempLift       templift("Qty_TempLift",qty_map,1,FE_TEMPERATURE,opt_loop);    qty_map.set_qty(&templift);  
-  TempAdj         tempadj("Qty_TempAdj",qty_map,1,FE_TEMPERATURE);              qty_map.set_qty(&tempadj);  
-  TempDes         tempdes("Qty_TempDes",qty_map,1,FE_TEMPERATURE);              qty_map.set_qty(&tempdes);  
-  Pressure       pressure("Qty_Pressure",qty_map,1,FE_PRESSURE);                qty_map.set_qty(&pressure);
-  Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),FE_VELOCITY);   qty_map.set_qty(&velocity);  
+  Temperature temperature("Qty_Temperature",qty_map,1,QQ);          qty_map.set_qty(&temperature);
+  TempLift       templift("Qty_TempLift",qty_map,1,QQ,opt_loop);    qty_map.set_qty(&templift);  
+  TempAdj         tempadj("Qty_TempAdj",qty_map,1,QQ);              qty_map.set_qty(&tempadj);  
+  TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.set_qty(&tempdes);  
+  Pressure       pressure("Qty_Pressure",qty_map,1,LL);                qty_map.set_qty(&pressure);
+  Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.set_qty(&velocity);  
 
 #if FOURTH_ROW==1
-  Pressure2 pressure_2("Qty_Pressure_2",qty_map,1,T4_ORD);            qty_map.set_qty(&pressure_2);
+  Pressure2 pressure_2("Qty_Pressure_2",qty_map,1,KK);            qty_map.set_qty(&pressure_2);
 #endif 
   
   // ===== end QuantityMap =========================================
@@ -136,7 +136,6 @@
 //once you associate one quantity in the internal map of an equation, then it is immediately to be associated to that equation,
 //   so this operation of set_eqn could be done right away in the moment when you put the quantity in the equation
  
-#if NS_EQUATIONS==1
   //to retrieve a quantity i can take it from the qtymap of the problem  //but here, in the main, i can take that quantity directly...
 // std::vector<Quantity*> InternalVect_NS;
 // InternalVect_NS.push_back(&velocity);      
@@ -145,14 +144,12 @@ std::vector<Quantity*> InternalVect_NS(2);
 InternalVect_NS[0] = &velocity;  velocity.SetPosInAssocEqn(0);
 InternalVect_NS[1] = &pressure;  pressure.SetPosInAssocEqn(1);
 
-  EqnNS & eqnNS = equations_map.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);  // EqnNS* eqnNS = new EqnNS(equations_map,"Eqn_NS",0,NO_SMOOTHER);
+  EqnNS & eqnNS = equations_map.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);
   eqnNS.SetQtyIntVector(InternalVect_NS);
   
            velocity.set_eqn(&eqnNS);
            pressure.set_eqn(&eqnNS);
-#endif
   
-#if T_EQUATIONS==1
 std::vector<Quantity*> InternalVect_Temp( 3 + FOURTH_ROW );  //of course this must be exactly equal to the following number of get_qty
                                                              // can I do this dynamic? 
                                                              // well, the following order is essential, because it is the same order 
@@ -167,7 +164,7 @@ InternalVect_Temp[2] = &tempadj;               tempadj.SetPosInAssocEqn(2);
 InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
 #endif
 
-  EqnT & eqnT = equations_map.add_system<EqnT>("Eqn_T",NO_SMOOTHER);  //EqnT* eqnT = new EqnT(equations_map,"Eqn_T",1,NO_SMOOTHER);
+  EqnT & eqnT = equations_map.add_system<EqnT>("Eqn_T",NO_SMOOTHER);
   eqnT.SetQtyIntVector(InternalVect_Temp);
   
         temperature.set_eqn(&eqnT);
@@ -176,8 +173,7 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
    #if FOURTH_ROW==1
          pressure_2.set_eqn(&eqnT);
    #endif
-
-#endif   
+ 
 
 //================================ 
 //========= End add EQUATIONS  and ========

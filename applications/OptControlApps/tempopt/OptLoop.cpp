@@ -64,7 +64,6 @@ namespace femus {
 
 //=====functional evaluations=======
 
-#if T_EQUATIONS==1
 		EqnT* eqnT = static_cast<EqnT*>(& eqmap_in.get_system("Eqn_T"));
 
 		
@@ -73,8 +72,6 @@ J = ComputeIntegral    ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTw
 J = ComputeNormControl ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),eqnT,0 );
 J = ComputeNormControl ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),eqnT,1 );
 //=====functional evaluations =======
-
-#endif
 
 
     }   // end time loop
@@ -332,8 +329,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
    
      int el_flagdom=0;
 
-///optimal control
-  #if DIMENSION==2
+     if (mesh->get_dim() == 2) {
 //============== OUTFLOW     
 //        if (   el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])
 // 	   && el_xm[0] < 0.75*(box->_le[0] - box->_lb[0])
@@ -361,8 +357,10 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
 // 	   && el_xm[0] < 0.6*(box->_le[0] - box->_lb[0]) ) {
 //                  el_flagdom=1;
 //              }
-     
- #else
+     }
+ 
+ else if (mesh->get_dim() == 3) {
+ 
       if ( el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])  
 	&& el_xm[0] < 0.75*(box->_le[0] - box->_lb[0]) 
 	&& el_xm[1] > 0.75*(box->_le[1] - box->_lb[1])
@@ -370,9 +368,11 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
 	&& el_xm[2] < 0.75*(box->_le[2] - box->_lb[2]) ) {
 	el_flagdom=1;
         }
- #endif
+        
+ }
 
 return el_flagdom; 
+
 }
  
 

@@ -1483,7 +1483,7 @@ void MagnFieldExtLagMult::bc_flag_txyz(const double t, const double* xp, std::ve
 // ===================== INITIAL CONDITIONS ============================
 // =====================================================================
 
-void Velocity::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void Velocity::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
   const double Uref = _qtymap._physmap->get("Uref");
   const double pref = _qtymap._physmap->get("pref");
@@ -1531,7 +1531,7 @@ const double magnitude = /*udes**/1.*(x_rotshift[0] - box->_lb[0])*(box->_le[0]-
 }
 
 
-void Pressure::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void Pressure::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
   Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
@@ -1562,7 +1562,7 @@ void Pressure::initialize_txyz(const double* xp, std::vector< double >& value) c
   return;
 }
 
-void MagnFieldHom::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void MagnFieldHom::initialize_xyz(const double* xp, std::vector< double >& value) const {
   
   const double Bref = _qtymap._physmap->get("Bref");
  
@@ -1575,7 +1575,7 @@ void MagnFieldHom::initialize_txyz(const double* xp, std::vector< double >& valu
   return;
 }
 
-void MagnFieldHomLagMult::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void MagnFieldHomLagMult::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
   const double Uref = _qtymap._physmap->get("Uref");
   const double Bref = _qtymap._physmap->get("Bref");
@@ -1585,7 +1585,7 @@ void MagnFieldHomLagMult::initialize_txyz(const double* xp, std::vector< double 
   return;
 }
 
-void VelocityAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void VelocityAdj::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
   value[0] = 0.;
   value[1] = 0.;
@@ -1596,14 +1596,14 @@ void VelocityAdj::initialize_txyz(const double* xp, std::vector< double >& value
   return;
 }
 
-void PressureAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void PressureAdj::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
   value[0] = 0.;
   
   return;
 }
 
-void MagnFieldHomAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void MagnFieldHomAdj::initialize_xyz(const double* xp, std::vector< double >& value) const {
   
   value[0] = 0.;
   value[1] = 0.;
@@ -1614,14 +1614,14 @@ void MagnFieldHomAdj::initialize_txyz(const double* xp, std::vector< double >& v
   return;
 }
 
-void MagnFieldHomLagMultAdj::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void MagnFieldHomLagMultAdj::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
   value[0] = 0.;
 
   return;
 }
 
-void MagnFieldExt::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void MagnFieldExt::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
   const double Bref = _qtymap._physmap->get("Bref");
  
@@ -1635,7 +1635,7 @@ void MagnFieldExt::initialize_txyz(const double* xp, std::vector< double >& valu
   return;
 }
 
-void MagnFieldExtLagMult::initialize_txyz(const double* xp, std::vector< double >& value) const {
+void MagnFieldExtLagMult::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
   const double Uref = _qtymap._physmap->get("Uref");
   const double Bref = _qtymap._physmap->get("Bref");

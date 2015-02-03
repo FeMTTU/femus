@@ -167,9 +167,8 @@ InternalVect_NS[QTYZERO] = &velocity;      velocity.SetPosInAssocEqn(0);
 InternalVect_NS[QTYONE] = &pressure;       pressure.SetPosInAssocEqn(1);
 
 
-  EqnNS & eqnNS = equations_map.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);      //  EqnNS* eqnNS = new EqnNS(equations_map,"Eqn_NS",0,NO_SMOOTHER);
+  EqnNS & eqnNS = equations_map.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);
   eqnNS.SetQtyIntVector(InternalVect_NS);
-//   equations_map.add_system("Basic","Eqn_NS");  //equations_map.add_system(eqnNS);
 
  velocity.set_eqn(&eqnNS);
  pressure.set_eqn(&eqnNS);
@@ -181,9 +180,8 @@ std::vector<Quantity*> InternalVect_NSAD(2);
 InternalVect_NSAD[QTYZERO] = &velocity_adj;     velocity_adj.SetPosInAssocEqn(0);
 InternalVect_NSAD[QTYONE]  = &pressure_adj;     pressure_adj.SetPosInAssocEqn(1);
 
-  EqnNSAD & eqnNSAD = equations_map.add_system<EqnNSAD>("Eqn_NSAD",NO_SMOOTHER);  //   EqnNSAD* eqnNSAD = new EqnNSAD(equations_map,"Eqn_NSAD",1,NO_SMOOTHER);
+  EqnNSAD & eqnNSAD = equations_map.add_system<EqnNSAD>("Eqn_NSAD",NO_SMOOTHER); 
   eqnNSAD.SetQtyIntVector(InternalVect_NSAD);
-//   equations_map.add_system("Basic","Eqn_NSAD"); //  equations_map.add_system(eqnNSAD);
 
   velocity_adj.set_eqn(&eqnNSAD);
   pressure_adj.set_eqn(&eqnNSAD);
@@ -195,9 +193,8 @@ std::vector<Quantity*> InternalVect_MHD(2);
 InternalVect_MHD[QTYZERO] = &bhom;             bhom.SetPosInAssocEqn(0);
 InternalVect_MHD[QTYONE]  = &bhom_lag_mult;    bhom_lag_mult.SetPosInAssocEqn(1);
 
-  EqnMHD & eqnMHD = equations_map.add_system<EqnMHD>("Eqn_MHD",NO_SMOOTHER);    //EqnMHD* eqnMHD=new EqnMHD(equations_map,"Eqn_MHD",2,NO_SMOOTHER);
+  EqnMHD & eqnMHD = equations_map.add_system<EqnMHD>("Eqn_MHD",NO_SMOOTHER);
   eqnMHD.SetQtyIntVector(InternalVect_MHD);
-//   equations_map.add_system(eqnMHD);
 
              bhom.set_eqn(&eqnMHD);
     bhom_lag_mult.set_eqn(&eqnMHD);
@@ -209,9 +206,8 @@ std::vector<Quantity*> InternalVect_MHDAD(2);
 InternalVect_MHDAD[QTYZERO] = &bhom_adj;             bhom_adj.SetPosInAssocEqn(0);
 InternalVect_MHDAD[QTYONE]  = &bhom_lag_mult_adj;    bhom_lag_mult_adj.SetPosInAssocEqn(1);
 	
-  EqnMHDAD & eqnMHDAD = equations_map.add_system<EqnMHDAD>("Eqn_MHDAD",NO_SMOOTHER); // EqnMHDAD* eqnMHDAD=new EqnMHDAD(equations_map,"Eqn_MHDAD",3,NO_SMOOTHER);
+  EqnMHDAD & eqnMHDAD = equations_map.add_system<EqnMHDAD>("Eqn_MHDAD",NO_SMOOTHER);
   eqnMHDAD.SetQtyIntVector(InternalVect_MHDAD);
-//   equations_map.add_system(eqnMHDAD);
   
            bhom_adj.set_eqn(&eqnMHDAD);
   bhom_lag_mult_adj.set_eqn(&eqnMHDAD);
@@ -223,9 +219,8 @@ std::vector<Quantity*> InternalVect_MHDCONT(2);
 InternalVect_MHDCONT[QTYZERO] = &Bext;            Bext.SetPosInAssocEqn(0);
 InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn(1);
 
-  EqnMHDCONT & eqnMHDCONT = equations_map.add_system<EqnMHDCONT>("Eqn_MHDCONT",NO_SMOOTHER);  // EqnMHDCONT* eqnMHDCONT = new EqnMHDCONT(equations_map,"Eqn_MHDCONT",4,NO_SMOOTHER);
+  EqnMHDCONT & eqnMHDCONT = equations_map.add_system<EqnMHDCONT>("Eqn_MHDCONT",NO_SMOOTHER);
   eqnMHDCONT.SetQtyIntVector(InternalVect_MHDCONT);
-//   equations_map.add_system(eqnMHDCONT);
 
                  Bext.set_eqn(&eqnMHDCONT);
         Bext_lag_mult.set_eqn(&eqnMHDCONT);

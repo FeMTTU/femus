@@ -118,7 +118,7 @@ void Temperature::heatflux_txyz(const double /*t*/, const double* /*xyz*/, doubl
 }
  
  
-  void Temperature::initialize_txyz(const double* xp, std::vector<double> & value) const {
+  void Temperature::initialize_xyz(const double* xp, std::vector<double> & value) const {
    
     value[0] = 5.;
     

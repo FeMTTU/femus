@@ -115,7 +115,7 @@ InternalVect_Temp[0] = &temperature;               temperature.SetPosInAssocEqn(
 InternalVect_Temp[1] = &temperature2;              temperature2.SetPosInAssocEqn(1);
 InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn(2);
 
-  EqnT & eqnT = equations_map.add_system<EqnT>("Eqn_T",NO_SMOOTHER);  //EqnT* eqnT = new EqnT(equations_map,"Eqn_T",0,NO_SMOOTHER);
+  EqnT & eqnT = equations_map.add_system<EqnT>("Eqn_T",NO_SMOOTHER);
   eqnT.SetQtyIntVector(InternalVect_Temp);
   
     for (uint l=0; l< mesh._NoLevels; l++)  eqnT._solver[l]->set_solver_type(GMRES);
