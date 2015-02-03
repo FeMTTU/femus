@@ -1352,8 +1352,7 @@ void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const M
         abort();
     }
     
-    std::ostringstream top_file;
-    top_file << basemesh << ext_h5;
+    std::ostringstream top_file;  top_file << basemesh << ext_h5;
 
 
 //it seems that there is no control on this, if the directory isn't there
@@ -1376,21 +1375,19 @@ void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const M
 
         for (int ilev = 0; ilev < mesh._NoLevels; ilev++) {
 	  
-            out << "<Grid Name=\"" << meshname[vb] << ilev <<"\"> \n";
+            out << "<Grid Name=\"" << meshname[vb] << "_L" << ilev <<"\"> \n";
 
-            std::ostringstream hdf5_field;
-            hdf5_field << _elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
-            XDMFWriter::PrintXDMFTopology(out,top_file.str(),hdf5_field.str(),
-			             XDMFWriter::type_el[BIQUADR_TYPEEL][mesh._eltype_flag[vb]],
-			                            mesh._n_elements_vb_lev[vb][ilev],
-			                            mesh._n_elements_vb_lev[vb][ilev],
-			                            NVE[mesh._eltype_flag[vb]][BIQUADR_FE]);
+            std::ostringstream hdf5_field; hdf5_field << _elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
 	    
-            std::ostringstream coord_lev; coord_lev << "_L" << ilev; 
-	    XDMFWriter::PrintXDMFGeometry(out,top_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[ilev],1);
-            std::ostringstream pid_field;
-            pid_field << "PID/PID_VB"<< vb <<"_L"<< ilev;
-            XDMFWriter::PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",mesh._n_elements_vb_lev[vb][ilev],1);
+            std::ostringstream coord_lev;  coord_lev << "_L" << ilev; 
+
+	    std::ostringstream pid_field; pid_field << "PID/PID_VB"<< vb <<"_L"<< ilev;
+	    
+            PrintXDMFTopology(out,top_file.str(),hdf5_field.str(), type_el[BIQUADR_TYPEEL][mesh._eltype_flag[vb]], mesh._n_elements_vb_lev[vb][ilev], mesh._n_elements_vb_lev[vb][ilev], NVE[mesh._eltype_flag[vb]][BIQUADR_FE]);
+	    
+	    PrintXDMFGeometry(out,top_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[ilev],1);
+
+            PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",mesh._n_elements_vb_lev[vb][ilev],1);
 
             out << "</Grid> \n";
 	    
@@ -1420,7 +1417,7 @@ void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const M
   std::string     basemesh = DEFAULT_BASEMESH;
   std::string     ext_xdmf = DEFAULT_EXT_XDMF;
   std::string       ext_h5 = DEFAULT_EXT_H5;
-  std::string      connlin = DEFAULT_CONNLIN;
+  std::string      connlin = DEFAULT_BASEMESH_LIN;
 
   std::ostringstream top_file; top_file <<  connlin << ext_h5;
   std::ostringstream geom_file; geom_file << basemesh << ext_h5;
@@ -1429,7 +1426,11 @@ void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const M
   namefile << output_path << "/" << DEFAULT_BASEMESH_LIN << ext_xdmf;
  
   std::ofstream out (namefile.str().c_str());
-
+  
+  std::string meshname[VB];
+  meshname[VV]="Volume";
+  meshname[BB]="Boundary";  
+  
   out << "<?xml version=\"1.0\" ?> \n";
   out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" \n"; 
   out << " [ <!ENTITY HeavyData \"mesh.h5 \"> ] ";
@@ -1437,26 +1438,25 @@ void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const M
   out << " \n";
   out << "<Xdmf> \n" << "<Domain> \n";
 	      
-  std::string grid_mesh[VB];
-  grid_mesh[VV]="Volume";
-  grid_mesh[BB]="Boundary";  
-  
+
           for(uint vb=0;vb< VB; vb++)  {
 	    for(uint l=0; l< mesh._NoLevels; l++) {
 
-    out << "<Grid Name=\"" << grid_mesh[vb].c_str() << "_L" << l << "\"> \n";
+    out << "<Grid Name=\"" << meshname[vb].c_str() << "_L" << l << "\"> \n";
     
-	      PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,vb,mesh);
+        std::ostringstream  pid_field; pid_field << "PID/PID_VB"<< vb <<"_L"<< l;
+	
+	
+	   PrintXDMFTopGeomVBLinear(out,top_file,geom_file,l,vb,mesh);
 	      
-  	// ===== PID ======
-        std::ostringstream  pid_name; pid_name << "PID" << "_LEVEL" << l;
-        if (vb==0)  PrintXDMFAttribute(out,top_file.str(),pid_name.str(),"PID","Scalar","Cell","Int",mesh._n_elements_vb_lev[vb][l]*NRE[mesh._eltype_flag[vb]],1);
+           PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",mesh._n_elements_vb_lev[vb][l]*NRE[mesh._eltype_flag[vb]],1);
 	      
     out << "</Grid> \n";  
 	      
 	         }
           }
-   out << "</Domain> \n" << "</Xdmf> \n";
+   out << "</Domain> \n";
+   out << "</Xdmf> \n";
    out.close ();
    
    return;
@@ -1472,19 +1472,14 @@ void XDMFWriter::PrintXDMFTopGeomVBLinear(std::ofstream& out,
 
 #ifdef HAVE_HDF5 
    
-    
-  std::ostringstream hdf_field; hdf_field << "MSHCONN_VB_" << vb << "_LEV_" << Level;
-  
     uint nel = mesh._n_elements_vb_lev[vb][Level];
-
     
-   XDMFWriter::PrintXDMFTopology(out,top_file.str(),hdf_field.str(),
-			     XDMFWriter::type_el[LINEAR_FE][mesh._eltype_flag[vb]],
-			                            nel*NRE[mesh._eltype_flag[vb]],
-			                            nel*NRE[mesh._eltype_flag[vb]],
-			                                NVE[mesh._eltype_flag[vb]][LINEAR_FE]);
-
+   std::ostringstream hdf_field; hdf_field << "MSHCONN_VB_" << vb << "_LEV_" << Level;
+  
    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
+    
+   XDMFWriter::PrintXDMFTopology(out,top_file.str(),hdf_field.str(), type_el[LINEAR_FE][mesh._eltype_flag[vb]], nel*NRE[mesh._eltype_flag[vb]], nel*NRE[mesh._eltype_flag[vb]], NVE[mesh._eltype_flag[vb]][LINEAR_FE]);
+
    XDMFWriter::PrintXDMFGeometry(out,geom_file.str(),"NODES/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[Level],1);
     
     
@@ -1495,7 +1490,7 @@ void XDMFWriter::PrintXDMFTopGeomVBLinear(std::ofstream& out,
 
 
 
-void XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(hid_t & file, std::string filename, const MultiLevelMeshTwo & mesh, const uint order) {
+void XDMFWriter::PrintSubdomFlagOnCellsAllVBAllLev(hid_t & file, std::string filename, const MultiLevelMeshTwo & mesh, const uint order) {
 
   if (mesh._iproc==0)   {
   
@@ -1503,39 +1498,8 @@ void XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(hid_t & file, std::string fil
   
     for (int  vb= 0; vb< VB;vb++) {
         for (int  Level= 0;Level< mesh._NoLevels; Level++)  {
-	  
-   uint n_children;
-    if (order == BIQUADR_FE)      n_children = 1;
-    else if  (order == LINEAR_FE) n_children = 4*( mesh._dim-1);
-    else { std::cout << "Mesh Not supported" << std::endl; abort(); }   
-    
-        uint      n_elements = mesh._n_elements_vb_lev[vb][Level];
-        int *ucoord;
-        ucoord=new int[n_elements*n_children];
-        int cel=0;
-        for (int iproc=0; iproc < mesh._NoSubdom; iproc++) {
-            for (int iel = mesh._off_el[vb][Level  + iproc*mesh._NoLevels];
-                     iel < mesh._off_el[vb][Level+1 + iproc*mesh._NoLevels]; iel++) {
-                for (uint is=0; is< n_children; is++)
-                    ucoord[cel*n_children + is]=iproc;
-                cel++;
-            }
-        }
-
-        hid_t file_id = H5Fopen(filename.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
-        hsize_t dimsf[2];
-        dimsf[0] = n_elements*n_children;
-        dimsf[1] = 1;
-        std::ostringstream name;
-        name << "/PID/PID_VB" << vb << "_L" << Level;
-
-        XDMFWriter::print_Ihdf5(file_id,name.str(),dimsf,ucoord);
-
-        H5Fclose(file_id);
-
-    
-	} //end lev
-      
+             PrintSubdomFlagOnCells(vb,Level,filename, mesh, order);
+       } //end lev
     } //end vb
 
     H5Gclose(group_id);
@@ -1549,21 +1513,21 @@ void XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(hid_t & file, std::string fil
 // ===============================================================
 /// this function is done only by _iproc == 0!
 /// it prints the PID index on the cells of the linear mesh
-void XDMFWriter::PrintSubdomFlagOnCellsLinear(const int l, std::string filename, const MultiLevelMeshTwo & mesh, const uint order) {
+void XDMFWriter::PrintSubdomFlagOnCells(const uint vb, const int l, std::string filename, const MultiLevelMeshTwo & mesh, const uint order) {
   
  if (mesh._iproc==0)   {
 
    uint n_children;
     if (order == BIQUADR_FE)      n_children = 1;
-    else if  (order == LINEAR_FE) n_children = 4*( mesh._dim-1);
+    else if  (order == LINEAR_FE) n_children = NRE[mesh._eltype_flag[vb]];
     else { std::cout << "Mesh Not supported" << std::endl; abort(); }   
     
-  uint n_elements =  mesh._n_elements_vb_lev[VV][l];
+  uint n_elements =  mesh._n_elements_vb_lev[vb][l];
   int *ucoord;   ucoord=new int[n_elements*n_children];
   int cel=0;
   for (uint iproc=0; iproc <  mesh._NoSubdom; iproc++) {
-    for (int iel =   mesh._off_el[VV][ l   + iproc* mesh._NoLevels];
-              iel <  mesh._off_el[VV][ l+1 + iproc* mesh._NoLevels]; iel++) {
+    for (int iel =   mesh._off_el[vb][ l   + iproc* mesh._NoLevels];
+              iel <  mesh._off_el[vb][ l+1 + iproc* mesh._NoLevels]; iel++) {
       for (uint is=0; is< n_children; is++)      
 	ucoord[cel*n_children + is]=iproc;
       cel++;
@@ -1574,7 +1538,8 @@ void XDMFWriter::PrintSubdomFlagOnCellsLinear(const int l, std::string filename,
   hsize_t dimsf[2];
   dimsf[0] = n_elements*n_children;
   dimsf[1] = 1;
-  std::ostringstream pidname; pidname << "PID" << "_LEVEL" << l;
+  std::ostringstream pidname; pidname << "/PID/PID_VB" << vb << "_L" << l;
+//   std::ostringstream pidname; pidname << "PID" << "_LEVEL" << l;
   
   XDMFWriter::print_Ihdf5(file_id,pidname.str(),dimsf,ucoord);
      H5Fclose(file_id);
@@ -1610,31 +1575,33 @@ void XDMFWriter::PrintConnAllLEVAllVBLinear(const std::string output_path, const
 
     std::string    basemesh = DEFAULT_BASEMESH;
     std::string    ext_h5   = DEFAULT_EXT_H5;
-    std::string    connlin  = DEFAULT_CONNLIN;
+    std::string    connlin  = DEFAULT_BASEMESH_LIN;
 
   std::ostringstream namefile;
   namefile << output_path << "/" <<  connlin << ext_h5; 
 
   std::cout << namefile.str() << std::endl;
-  hid_t file = H5Fcreate (namefile.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);  //TODO VALGRIND
+  hid_t file = H5Fcreate (namefile.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT); 
 
 //================================
 // here we loop both over LEVELS and over VB, so everything is inside a UNIQUE FILE  
      for(uint vb=0;vb< VB; vb++)  {
        for(uint l=0; l< mesh._NoLevels; l++)    {
-       if (vb == 0) PrintSubdomFlagOnCellsLinear(l,namefile.str(),mesh,LINEAR_FE);
-	        PrintConnVBLinear(file,l,vb,mesh);
+	        PrintConnLinear(file,l,vb,mesh);
 	   }
         }
+        
+        PrintSubdomFlagOnCellsAllVBAllLev(file,namefile.str(),mesh,LINEAR_FE);
+        
 //================================
    
-  H5Fclose(file); //TODO VALGRIND Invalid read of size 8: this is related to both H5Fcreate and H5Dcreate
+  H5Fclose(file);
   return;
 }
 
 
 
-void XDMFWriter::PrintConnVBLinear(hid_t file, const uint Level, const uint vb, const MultiLevelMeshTwo & mesh) {
+void XDMFWriter::PrintConnLinear(hid_t file, const uint Level, const uint vb, const MultiLevelMeshTwo & mesh) {
   
    int conn[8][8];  //TODO this is the largest dimension, bad programming
    uint *gl_conn;
@@ -2296,7 +2263,7 @@ void XDMFWriter::PrintMeshFileBiquadratic(const std::string output_path, const M
 // ===========================================
 //   PID
 // ===========================================
- XDMFWriter::PrintSubdomFlagOnCellsBiquadratic(file,inmesh.str().c_str(),mesh,BIQUADR_FE);
+    PrintSubdomFlagOnCellsAllVBAllLev(file,inmesh.str().c_str(),mesh,BIQUADR_FE);
 
 // ===========================================
 //  CLOSE FILE
@@ -2543,7 +2510,7 @@ void XDMFWriter::PrintSolXDMFLinear(const std::string output_path, const uint t_
         std::string basesol     = DEFAULT_BASESOL;
         std::string basemesh    = DEFAULT_BASEMESH;
         std::string aux_xdmf    = DEFAULT_AUX_XDMF;
-        std::string connlin     = DEFAULT_CONNLIN;
+        std::string connlin     = DEFAULT_BASEMESH_LIN;
         std::string     ext_h5  = DEFAULT_EXT_H5;
         std::string    ext_xdmf = DEFAULT_EXT_XDMF;
     
@@ -2704,7 +2671,7 @@ void XDMFWriter::PrintCaseXDMFLinear(const std::string output_path, const uint t
         std::string       ext_h5 = DEFAULT_EXT_H5;
         std::string     ext_xdmf = DEFAULT_EXT_XDMF;
         std::string     aux_xdmf = DEFAULT_AUX_XDMF;
-        std::string      connlin = DEFAULT_CONNLIN;
+        std::string      connlin = DEFAULT_BASEMESH_LIN;
         std::string  bdry_suffix = DEFAULT_BDRY_SUFFIX;
 	
         std::ostringstream top_file; top_file << connlin << ext_h5;

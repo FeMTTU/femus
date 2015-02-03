@@ -102,15 +102,15 @@ public:
 			      const uint vb,
 			      const MultiLevelMeshTwo & mesh);
   
-  static void PrintSubdomFlagOnCellsBiquadratic(hid_t & file, std::string filename, const MultiLevelMeshTwo & mesh, const uint order);
+  static void PrintSubdomFlagOnCellsAllVBAllLev(hid_t & file, std::string filename, const MultiLevelMeshTwo & mesh, const uint order);
   
-  static void PrintSubdomFlagOnCellsLinear(const int Level, std::string filename, const MultiLevelMeshTwo & mesh, const uint order);
+  static void PrintSubdomFlagOnCells(const uint vb, const int Level, std::string filename, const MultiLevelMeshTwo & mesh, const uint order);
   
   static void PrintMeshLinear(const std::string output_path, const MultiLevelMeshTwo& mesh);
   
   static void PrintConnAllLEVAllVBLinear(const std::string output_path, const MultiLevelMeshTwo& mesh);
   
-  static void PrintConnVBLinear(hid_t file, const uint Level, const uint vb, const MultiLevelMeshTwo& mesh); 
+  static void PrintConnLinear(hid_t file, const uint Level, const uint vb, const MultiLevelMeshTwo& mesh); 
 
   static void PrintElemVBBiquadratic(hid_t file, const uint vb, const std::vector<int> & nd_libm_fm, ElemStoBase** el_sto_in, const std::vector<std::pair<int,int> >  el_fm_libm_in, const MultiLevelMeshTwo & mesh);  
   

@@ -18,7 +18,6 @@
 #define DEFAULT_BASEMESH_LIN  "mesh_linear"
 #define DEFAULT_BASEMESH_BIQ  "mesh_biquadratic"
 #define DEFAULT_BASEMESH      "mesh_biquadratic" 
-#define DEFAULT_CONNLIN       "mesh_conn_linear" 
 // // // // # ----  Multigrid  --------------
 #define DEFAULT_F_MATRIX     "Matrix" 
 #define DEFAULT_F_PROL       "Prol" 
