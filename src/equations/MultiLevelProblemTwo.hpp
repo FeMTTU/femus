@@ -43,15 +43,15 @@ public:
   
 
   /// Constructor
-    MultiLevelProblemTwo(const FemusInputParser<double> & phys_in,
-		  const QuantityMap& qtymap_in,
-		  const MultiLevelMeshTwo& mesh_in,
+    MultiLevelProblemTwo(const MultiLevelMeshTwo& mesh_in,
 		  const std::string quadr_order_in
 		);
 
   inline const  MultiLevelMeshTwo & GetMeshTwo() const { return  _mesh; }
-    
-  inline const QuantityMap & GetQtyMap() const { return  _qtymap; }
+  
+  inline void SetQtyMap(const QuantityMap * qtymap_in) { _qtymap = qtymap_in; return; }
+   
+  inline const QuantityMap & GetQtyMap() const { return  *_qtymap; }
 
   inline const std::vector<elem_type*>  & GetElemType(const unsigned dim) const { return  _elem_type[dim - 1]; }
     
@@ -61,11 +61,13 @@ public:
   
   void SetQruleOrder(const std::string order_in) { _quadrature_order = order_in; return; }
   
-  inline const FemusInputParser<double> &  GetInputParser() const { return _phys; }
+  inline const FemusInputParser<double> &  GetInputParser() const { return *_phys; }
+
+  void SetInputParser(const FemusInputParser<double> * parser_in) { _phys = parser_in; return; }
   
   ~MultiLevelProblemTwo(){};
   
-  void clean(); ///< Clean all substructures
+  void clean();
 
   // equation get/set
   inline          void  add_system(SystemTwo* value)            {_equations.insert(make_pair(value->_eqname,value));}
@@ -90,9 +92,9 @@ private:
     
     std::string _quadrature_order;
     
-    const FemusInputParser<double> &  _phys;
+    const FemusInputParser<double>  * _phys;
 
-    const QuantityMap & _qtymap;
+    const QuantityMap * _qtymap;
     
     const MultiLevelMeshTwo &     _mesh;
 

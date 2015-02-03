@@ -150,7 +150,10 @@ int main(int argc, char** argv) {
 //================================
 
   // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblemTwo equations_map(physics_map,qty_map,mesh,"fifth");
+  MultiLevelProblemTwo equations_map(mesh,"fifth");
+  equations_map.SetInputParser(&physics_map);
+  equations_map.SetQtyMap(&qty_map); 
+  
   
 //===============================================
 //================== Add EQUATIONS  AND ======================

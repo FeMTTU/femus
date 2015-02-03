@@ -40,7 +40,7 @@ public:
 
 private:
 
-  const std::string               _tag_name;
+  std::string               _tag_name;
   
 };
 

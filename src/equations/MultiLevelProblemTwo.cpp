@@ -35,12 +35,8 @@ namespace femus {
 // ====================================================
 /// This function constructs the equation map
 
-MultiLevelProblemTwo::MultiLevelProblemTwo(const FemusInputParser<double> & phys_in,
-                           const QuantityMap& qtymap_in,
-                           const MultiLevelMeshTwo& mesh_in,
+MultiLevelProblemTwo::MultiLevelProblemTwo(const MultiLevelMeshTwo& mesh_in,
 			   const std::string quadr_order_in):
-        _phys(phys_in),
-        _qtymap(qtymap_in),
         _mesh(mesh_in),
         MultiLevelProblem()  {
 	  

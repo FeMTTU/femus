@@ -122,8 +122,10 @@
   // ===== end QuantityMap =========================================
 
   // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblemTwo equations_map(physics_map,qty_map,mesh,"fifth");  //here everything is passed as BASE STUFF, like it should!
-                                                                                   //the equations need: physical parameters, physical quantities, Domain, FE, QRule, Time discretization  
+  MultiLevelProblemTwo equations_map(mesh,"fifth");
+  equations_map.SetInputParser(&physics_map);
+  equations_map.SetQtyMap(&qty_map); 
+
   MultiLevelProblem equations_map_two;
 //===============================================
 //================== Add EQUATIONS AND ======================
