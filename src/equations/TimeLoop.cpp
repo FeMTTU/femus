@@ -101,7 +101,7 @@ namespace femus {
 
 double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 
-    std::cout  << std::endl << " Solving " << eqn_in->_eqname << " , step " << iter << std::endl;
+    std::cout  << std::endl << " Solving " << eqn_in->name() << " , step " << iter << std::endl;
 
     ///A0) Put x_old into x_oold
     *(eqn_in->_x_oold[eqn_in->_NoLevels-1]) = *(eqn_in->_x_old[eqn_in->_NoLevels-1]);
@@ -177,8 +177,8 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 
     eqn_in->_x_tmp[eqn_in->_NoLevels-1]->close();
     double deltax_norm = eqn_in->_x_tmp[eqn_in->_NoLevels-1]->l2_norm();
-    std::cout << " $$$$$$ " << eqn_in->_eqname << " error l2 " << deltax_norm << std::endl;
-    std::cout << " $$$$$$ " << eqn_in->_eqname << " error linfty " << eqn_in->_x_tmp[eqn_in->_NoLevels-1]->linfty_norm() << std::endl;
+    std::cout << " $$$$$$ " << eqn_in->name() << " error l2 " << deltax_norm << std::endl;
+    std::cout << " $$$$$$ " << eqn_in->name() << " error linfty " << eqn_in->_x_tmp[eqn_in->_NoLevels-1]->linfty_norm() << std::endl;
 //AAA when the vectors have nan's, the norm becomes zero!
 //when the residual norm in pre and post smoothing is too big,
 //then it doesnt do any iterations, the solver doesnt solve anymore, so the solution remains frozen

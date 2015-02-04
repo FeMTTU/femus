@@ -98,17 +98,16 @@ public:
       }
 
 	    std::vector<std::string> _var_names;                   //MultilevelSolution//
-	  void initVarNames();   //MultilevelSolution//
+	  void initVarNames();                                     //MultilevelSolution//
 
 	  std::vector<double>      _refvalue;        //MultilevelSolution//
-          void initRefValues();          //MultilevelSolution//
+          void initRefValues();                      //MultilevelSolution//
 
 	  void init_sys();     //System//
 
 //=======================================================================
 //====== Attributes of the equation ====
 //=======================================================================
-  const std::string _eqname;   ///< equation name     //System//
   const uint      _NoLevels;   ///< level number      //System//
 
 //=======================================================================
@@ -161,7 +160,7 @@ public:
   
 protected:
   
-  const FemusInputParser<double>  & _phys;           
+  const FemusInputParser<double>  & _phys;   //passed from MultilevelProblem
   const MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem
 
   std::vector<Quantity*>          _QtyInternalVector;  //System//

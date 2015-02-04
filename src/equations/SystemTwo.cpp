@@ -60,8 +60,6 @@ SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in,
         _phys(e_map_in.GetInputParser()),
         _mesh(e_map_in.GetMeshTwo()),
         _eqnmap(e_map_in),
-        //=============
-        _eqname(eqname_in),
         _NoLevels(e_map_in.GetMeshTwo()._NoLevels),
         _dofmap(this,e_map_in.GetMeshTwo()),
         System(e_map_in,eqname_in,number) {

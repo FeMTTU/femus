@@ -528,7 +528,7 @@ if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and m
   }//END BOUNDARY ************************
   
 #ifdef DEFAULT_PRINT_INFO
- std::cout << " GenMatRhs " << _eqname << ": assembled  Level " << Level
+ std::cout << " GenMatRhs " << name() << ": assembled  Level " << Level
            << " with " << _A[Level]->m() << " dofs" << std::endl;
 #endif    
 

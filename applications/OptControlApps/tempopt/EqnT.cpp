@@ -586,7 +586,7 @@ int el_Neum_flag=0;
 
   
 #ifdef DEFAULT_PRINT_INFO
-  std::cout << " Matrix and RHS assembled for equation " << _eqname
+  std::cout << " Matrix and RHS assembled for equation " << name()
             << " Level "<< Level << " dofs " << _A[Level]->n() << std::endl;
 #endif
 
