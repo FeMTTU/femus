@@ -21,7 +21,7 @@
 #include "XDMFWriter.hpp"
 
 //application headers
-#include "Opt_conf.hpp"
+#include "OptLoop.hpp"
 #include "EqnNS.hpp"
 #include "EqnMHDCONT.hpp"
 #include "EqnMHD.hpp"

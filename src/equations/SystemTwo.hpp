@@ -67,6 +67,14 @@ public:
   std::vector<SparseMatrix *> _Rst; // LinearEquation (each level)
   std::vector<SparseMatrix *> _Prl; // LinearEquation (each level)
   
+    void ReadMGOps(const std::string output_path); // LinearEquation  (each level)
+    void ReadMatrix(const std::string& name); // LinearEquation  (each level)
+    void ReadProl(const std::string& name);   // LinearEquation  (each level)
+    void ReadRest(const std::string& name);   // LinearEquation  (each level)
+    void ComputeMatrix();                     // LinearEquation  (each level)
+    void ComputeProl();                       // LinearEquation  (each level)
+    void ComputeRest();                       // LinearEquation  (each level)
+  
 //=======================================================================
 //======== Vectors =============== (procs,levels) ==
 //=======================================================================
@@ -111,15 +119,6 @@ public:
   const uint      _NoLevels;   ///< level number      //System//
 
 //=======================================================================
-//========= MULTIGRID FUNCTIONS (Vectors + A,R,P) ======== (procs,levels) 
-//=======================================================================
-    void ReadMGOps(const std::string output_path); // LinearEquation  (each level)
-    void ReadMatrix(const std::string& name); // LinearEquation  (each level)
-    void ReadProl(const std::string& name);   // LinearEquation  (each level)
-    void ReadRest(const std::string& name);   // LinearEquation  (each level)
-    void ComputeMatrix();                     // LinearEquation  (each level)
-    void ComputeProl();                       // LinearEquation  (each level)
-    void ComputeRest();                       // LinearEquation  (each level)
 
  virtual  void GenMatRhs(const uint Level) = 0;  //System//
           void MGSolve(double Eps,int MaxIter, const uint Gamma=DEFAULT_MG_GAMMA, const uint Nc_pre=DEFAULT_NC_PRE,const uint Nc_coarse=DEFAULT_NC_COARSE,const uint Nc_post=DEFAULT_NC_POST);  //LinearImplicitSystem//

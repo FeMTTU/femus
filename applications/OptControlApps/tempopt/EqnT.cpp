@@ -47,9 +47,6 @@
 EqnT::EqnT(MultiLevelProblem& equations_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
     SystemTwo(equations_map_in,eqname_in,number,smoother_type) {
 
-//========= MG solver ===================
-  for (uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(GMRES);
-  
 //============= DIR PENALTY===============
    _Dir_pen_fl = 0;
   

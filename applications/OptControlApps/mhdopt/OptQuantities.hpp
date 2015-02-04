@@ -7,7 +7,7 @@
 #include "Typedefs.hpp"
 #include "Quantity.hpp"
 
-#include "Opt_conf.hpp"
+#include "OptLoop.hpp"
 
 
 namespace femus {

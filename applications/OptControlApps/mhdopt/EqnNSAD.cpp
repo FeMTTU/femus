@@ -20,7 +20,7 @@
 
 #include "FemusDefault.hpp"
 
-#include "Opt_conf.hpp"
+#include "OptLoop.hpp"
 #include "EqnNS.hpp"
 #include "EqnMHD.hpp"
 #include "EqnMHDAD.hpp"
@@ -44,14 +44,7 @@ namespace femus {
 // #endif
 //     _var_names[DIMENSION]="lambdap";
 
-
-//============ solver ===============
-   for(uint l=0;l<_NoLevels;l++)   _solver[l]->set_solver_type(SOLVERNSAD);
-   
-//============= DIR PENALTY ===============
-   _Dir_pen_fl = NSAD_DIR_PENALTY;
-    
-    }
+  }
 
 
 

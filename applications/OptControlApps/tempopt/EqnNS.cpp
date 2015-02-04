@@ -45,9 +45,6 @@
 //                  _var_names[_mesh.get_dim()] = "up";
 //      
 
-//========= MG solver ===================
-  for(uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(GMRES);
-
 //============= DIR PENALTY===============
    _Dir_pen_fl = 0;
    

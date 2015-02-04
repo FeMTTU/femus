@@ -22,7 +22,7 @@
 
 
 // application
-#include "Opt_conf.hpp"
+#include "OptLoop.hpp"
 #include "EqnNS.hpp"
 #include "EqnMHD.hpp"
 #include "EqnNSAD.hpp"
@@ -48,13 +48,6 @@ namespace femus {
 // 
 //     
 
-//=========== Solver ================
-     for(uint l=0;l<_NoLevels;l++)    _solver[l]->set_solver_type(SOLVERMHDCONT);
-
-//====== Dirichlet penalty     ==================
-    _Dir_pen_fl = MHDCONT_DIR_PENALTY;
-    
-    
   }
 
 //======================

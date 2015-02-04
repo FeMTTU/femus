@@ -21,7 +21,7 @@
 #include "CurrentElem.hpp"
 
 //application
-#include "Opt_conf.hpp"
+#include "OptLoop.hpp"
 #include "EqnMHD.hpp"
 #include "EqnMHDCONT.hpp"
 #include "OptQuantities.hpp"
@@ -35,10 +35,10 @@ namespace femus {
   EqnNS::EqnNS(    MultiLevelProblem& equations_map_in,
                    const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
            SystemTwo(equations_map_in,eqname_in,number,smoother_type),
-     _AdvPic_fl(ADVPIC_NS),
-     _AdvNew_fl(ADVNEW_NS),
-     _Stab_fl(STAB_NS),
-     _Komp_fac(KOMP_NS)   {
+     _AdvPic_fl(1),
+     _AdvNew_fl(0),
+     _Stab_fl(0),
+     _Komp_fac(0)   {
 
 // //=======  _var_names[]  ===========
 //     _var_names[0]="ux"; //variable names
@@ -49,12 +49,6 @@ namespace femus {
 // #endif
 //     
 
-//========= MG solver ===================
-  for(uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(SOLVERNS);
-
-//============= DIR PENALTY===============
-   _Dir_pen_fl = NS_DIR_PENALTY;
-   
     }
 //====== END CONSTRUCTOR    
     

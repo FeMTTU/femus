@@ -20,7 +20,7 @@
 #include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"
 
-#include "Opt_conf.hpp"
+#include "OptLoop.hpp"
 #include "EqnNS.hpp"
 #include "EqnNSAD.hpp"
 #include "EqnMHD.hpp"
@@ -41,13 +41,6 @@ namespace femus {
 //     _var_names[2]="xiz";
 // #endif 
 //     _var_names[DIMENSION]="xip";
-  
-//========= MG solver ===================
-   for(uint l=0;l<_NoLevels;l++)   _solver[l]->set_solver_type(SOLVERMHDAD);
-
-//============= DIR PENALTY===============
-   _Dir_pen_fl = MHDAD_DIR_PENALTY;   
-   
     }
 
 

@@ -17,7 +17,7 @@
 #include "TimeLoop.hpp"
 
 
-#include "Opt_conf.hpp"
+#include "OptLoop.hpp"
 #include "EqnNS.hpp"
 #include "EqnMHDCONT.hpp"
 
@@ -43,22 +43,6 @@ namespace femus {
 //     _var_names[2]="Bz";
 // #endif
 // 
-// //=========  REFVALUES of the Unknown quantities of the equation
-//    _refvalue[0] = _QtyInternalVector[0]->_refvalue[0];/* Bref;*/
-//    _refvalue[1] = _QtyInternalVector[0]->_refvalue[1]; /*Bref*/
-// #if (DIMENSION==3)
-//     _refvalue[2]= _QtyInternalVector[0]->_refvalue[2];/*Bref*/
-// #endif
-//    _refvalue[DIMENSION]= _QtyInternalVector[1]->_refvalue[0];/*sigmaref = Uref*Bref*/
-   
-
-  //===== solver  
-  for(uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(SOLVERMHD);
-
-    //////DIR PENALTY ///////////
-   _Dir_pen_fl = MHD_DIR_PENALTY;
-
-   
   }
 
   

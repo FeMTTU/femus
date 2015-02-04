@@ -118,7 +118,6 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
   EqnT & eqnT = equations_map.add_system<EqnT>("Eqn_T",NO_SMOOTHER);
   eqnT.SetQtyIntVector(InternalVect_Temp);
   
-    for (uint l=0; l< mesh._NoLevels; l++)  eqnT._solver[l]->set_solver_type(GMRES);
     eqnT._Dir_pen_fl = 0;  //no penalty BC
 
         temperature.set_eqn(&eqnT);
