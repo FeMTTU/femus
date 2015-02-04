@@ -76,8 +76,8 @@ namespace femus {
 //to use a specific function, in which case you first should do the static cast
 //for some Vect and nothing for others
 //so, it could be better to do a Vect_LOCAL_EXTERNAL MAP inside here
-Density* density_ptr     = static_cast<Density*>(_eqnmap.GetQtyMap().get_qty("Qty_Density"));
-Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap.GetQtyMap().get_qty("Qty_Viscosity"));
+Density* density_ptr     = static_cast<Density*>(GetMLProb().GetQtyMap().get_qty("Qty_Density"));
+Viscosity* viscosity_ptr = static_cast<Viscosity*>(GetMLProb().GetQtyMap().get_qty("Qty_Viscosity"));
 #endif  //temp deps
   //====== reference values ========================
 //====== related to Quantities on which Operators act, and to the choice of the "LEADING" EQUATION Operator
@@ -105,7 +105,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap.GetQtyMap().get_qty("
 //================================================  
 
 
-   const double time =  0.;   //_eqnmap._timeloop._curr_time;
+   const double time =  0.;   //GetMLProb()._timeloop._curr_time;
    
   
 //========== PROCESSOR INDEX
@@ -143,7 +143,7 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(_eqnmap.GetQtyMap().get_qty("
 //finite elements for time as well...
 //well, we might do Time as a Vect
 const int NonStatNS = (int) _phys.get("NonStatNS");
-  const double   dt = 1.; //_eqnmap._timeloop._timemap.get("dt");
+  const double   dt = 1.; //GetMLProb()._timeloop._timemap.get("dt");
 
 //==========FLAG for NONLINEARITY, we might put here
 //this flag in fact may involve BOTH MATRIX and RHS, so here we are on top of both
@@ -184,8 +184,8 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
   
     const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());    
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
+    CurrentElem       currelem(VV,this,_mesh,GetMLProb().GetElemType());    
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,GetMLProb().GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity VelOld(currgp);
@@ -229,13 +229,13 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
 //============================ MAG WORLD =======================================
  #if BMAG_QTY==1  
     CurrentQuantity Bhom(currgp); //only to retrieve the dofs
-    Bhom._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldHom");
+    Bhom._qtyptr   = GetMLProb().GetQtyMap().get_qty("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();
  
 //=========
     CurrentQuantity Bext(currgp);   //only to retrieve the dofs
-    Bext._qtyptr   =  _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldExt");
+    Bext._qtyptr   =  GetMLProb().GetQtyMap().get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();
 
@@ -243,7 +243,7 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
     CurrentQuantity Bmag(currgp); //total
     Bmag._dim        = Bhom._dim;
     Bmag._FEord      = Bhom._FEord;
-    Bmag._ndof       = _eqnmap.GetElemType()[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
+    Bmag._ndof       = GetMLProb().GetElemType()[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
     Bmag.Allocate();
 #endif
 //======================== MAG WORLD ================================
@@ -251,7 +251,7 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
 //===================TEMPERATURE WORLD=============================
 #if TEMP_QTY==1
     CurrentQuantity Temp(currgp);
-    Temp._qtyptr   =  _eqnmap.GetQtyMap().get_qty("Qty_Temperature");
+    Temp._qtyptr   =  GetMLProb().GetQtyMap().get_qty("Qty_Temperature");
     Temp.VectWithQtyFillBasic();
     Temp.Allocate();
 #endif
@@ -338,7 +338,7 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
 //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
 //==============================================================
-   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp = 0; qp < el_ngauss; qp++) {  
 
@@ -362,7 +362,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 }  
 	  
 const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is the same for both QQ and LL!
-const double dtxJxW_g = det*_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+const double dtxJxW_g = det*GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { 
@@ -579,8 +579,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
     const uint mesh_vb = BB;
   
-    CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());    
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
+    CurrentElem       currelem(BB,this,_mesh,GetMLProb().GetElemType());    
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,GetMLProb().GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity VelOld(currgp);
@@ -683,7 +683,7 @@ if (_Dir_pen_fl == 1)  {
 //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
 //==============================================================
-   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp=0; qp< el_ngauss; qp++) {
             
@@ -694,7 +694,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 }
 
         const double det   = dt*currgp.JacVectBB_g(xyz);
-	const double dtxJxW_g = det * _eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+	const double dtxJxW_g = det * GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
 //-------- pressure==============

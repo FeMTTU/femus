@@ -156,8 +156,6 @@ public:
           void Bc_AddDofVec(NumericVector* myvec, NumericVector* myvec2 );
           void Bc_AddScaleDofVec(NumericVector* vec_in,NumericVector* vec_out,const double ScaleFac );
 
-  MultiLevelProblem      & _eqnmap;
-  
 protected:
   
   const FemusInputParser<double>  & _phys;   //passed from MultilevelProblem

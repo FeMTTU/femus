@@ -59,7 +59,6 @@ const int SystemTwo::_number_tang_comps[3] = {0,1,3};
 SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
         _phys(e_map_in.GetInputParser()),
         _mesh(e_map_in.GetMeshTwo()),
-        _eqnmap(e_map_in),
         _NoLevels(e_map_in.GetMeshTwo()._NoLevels),
         _dofmap(this,e_map_in.GetMeshTwo()),
         System(e_map_in,eqname_in,number) {
@@ -413,7 +412,7 @@ void SystemTwo::GenerateBdc() {
 
  //**************************************************   
  //******** ELEM BASED ******************************  
-     CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());
+     CurrentElem       currelem(BB,this,_mesh,GetMLProb().GetElemType());
     const uint el_nnodes_b = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 
     _bc_fe_kk             =  new int*[_NoLevels];
@@ -622,7 +621,7 @@ void SystemTwo::GenerateBdc() {
 //for now, we will leave things like this
 void SystemTwo::GenerateBdcElem()  {
 
-     CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());  
+     CurrentElem       currelem(BB,this,_mesh,GetMLProb().GetElemType());  
   
       uint space_dim = _mesh.get_dim();
 
@@ -825,7 +824,7 @@ void SystemTwo::Initialize() {
 
     if (!in) {
 
-        CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());  
+        CurrentElem       currelem(VV,this,_mesh,GetMLProb().GetElemType());  
      
         const uint  coords_fine_offset = _mesh._NoNodesXLev[_NoLevels-1];
         const uint  el_dof_objs = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
@@ -2297,7 +2296,7 @@ void SystemTwo::ReadRest(const std::string& name) {
 //So, many functions here can be called CONST even if they are not!
   void SystemTwo::Bc_ConvertToDirichletPenalty(const uint elem_dim, const uint ql, uint* bc) const {
 
-    const uint ndof  = _eqnmap.GetElemType()[elem_dim-1][ql]->GetNDofs();
+    const uint ndof  = GetMLProb().GetElemType()[elem_dim-1][ql]->GetNDofs();
     const uint nvars = _dofmap._nvars[ql];
 
     for (uint ivarq=0; ivarq < nvars; ivarq++) {

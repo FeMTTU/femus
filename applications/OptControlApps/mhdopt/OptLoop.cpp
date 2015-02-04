@@ -518,8 +518,8 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
    const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap.GetElemType());
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap.GetQrule(currelem.GetDim()));
+    CurrentElem       currelem(VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
   
   // processor index
   const uint myproc = mesh->_iproc;
@@ -546,19 +546,19 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   
      //========== 
     CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = eqn->_eqnmap.GetQtyMap().get_qty("Qty_Velocity");
+    Vel._qtyptr      = eqn->GetMLProb().GetQtyMap().get_qty("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
     
     //========== 
     CurrentQuantity VelDes(currgp);
-    VelDes._qtyptr      = eqn->_eqnmap.GetQtyMap().get_qty("Qty_DesVelocity");
+    VelDes._qtyptr      = eqn->GetMLProb().GetQtyMap().get_qty("Qty_DesVelocity");
     VelDes.VectWithQtyFillBasic();
     VelDes.Allocate();
    
    double integral=0.;
     
-      const uint el_ngauss = eqn->_eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
 //parallel sum
     const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
@@ -592,7 +592,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
      
    const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
-   const double  wgt_g = eqn->_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+   const double  wgt_g = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 
      for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 

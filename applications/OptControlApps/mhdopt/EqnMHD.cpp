@@ -84,11 +84,11 @@ namespace femus {
   double LapBe_g[DIMENSION];
 //============================
   
-   const double time =  0.; //_eqnmap._timeloop._curr_time;    
+   const double time =  0.; //GetMLProb()._timeloop._curr_time;    
     
 //======= TIME - STATIONARY OR NOT =======
  const int NonStatMHD = (int) _phys.get("NonStatMHD");
-    const double dt   = 1.; //_eqnmap._timeloop._timemap.get("dt");
+    const double dt   = 1.; //GetMLProb()._timeloop._timemap.get("dt");
 
 //========= BCHandling =========
   const double penalty_val = _mesh.GetRuntimeMap().get("penalty_val");    
@@ -103,8 +103,8 @@ namespace femus {
 //======================
    const uint mesh_vb = VV;
    
-   CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
+   CurrentElem       currelem(VV,this,_mesh,GetMLProb().GetElemType());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,GetMLProb().GetQrule(currelem.GetDim()));
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity bhomOld(currgp);
@@ -167,13 +167,13 @@ namespace femus {
   xyz_refbox.Allocate();
 
     CurrentQuantity Bext(currgp);
-    Bext._qtyptr     = _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldExt");
+    Bext._qtyptr     = GetMLProb().GetQtyMap().get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();
 
 #if VELOCITY_QTY==1
     CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = _eqnmap.GetQtyMap().get_qty("Qty_Velocity"); 
+    Vel._qtyptr      = GetMLProb().GetQtyMap().get_qty("Qty_Velocity"); 
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
 #endif  
@@ -216,7 +216,7 @@ namespace femus {
     else                        Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
 #endif
     
-   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
@@ -227,7 +227,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 }
 
  const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is unique!
- const double dtxJxW_g = det*_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+ const double dtxJxW_g = det*GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
  const double     detb = det/el_ngauss;
 
 for (uint fe = 0; fe < QL; fe++)     {    
@@ -395,8 +395,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 //======================
    const uint mesh_vb = BB;
    
-   CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
+   CurrentElem       currelem(BB,this,_mesh,GetMLProb().GetElemType());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,GetMLProb().GetQrule(currelem.GetDim()));
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity bhomOld(currgp);
@@ -459,13 +459,13 @@ for (uint fe = 0; fe < QL; fe++)     {
   xyz_refbox.Allocate();
 
     CurrentQuantity Bext(currgp);
-    Bext._qtyptr     = _eqnmap.GetQtyMap().get_qty("Qty_MagnFieldExt");
+    Bext._qtyptr     = GetMLProb().GetQtyMap().get_qty("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();
 
 #if VELOCITY_QTY==1
     CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = _eqnmap.GetQtyMap().get_qty("Qty_Velocity"); 
+    Vel._qtyptr      = GetMLProb().GetQtyMap().get_qty("Qty_Velocity"); 
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
 #endif  
@@ -540,7 +540,7 @@ if (_Dir_pen_fl == 1)  {
 #endif
     
 
-   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp=0; qp< el_ngauss; qp++) {
       
@@ -550,7 +550,7 @@ if (_Dir_pen_fl == 1)  {
         currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);   }
       
         const double det      = dt * currgp.JacVectBB_g(xyz);
-	const double dtxJxW_g = det * _eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+	const double dtxJxW_g = det * GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end of the "COMMON SHAPE PART"===================================
 
 //---------lagmult

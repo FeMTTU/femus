@@ -67,8 +67,8 @@ EqnT::EqnT(MultiLevelProblem & equations_map_in,
     
   const uint mesh_vb = VV;
   
-  CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());
-  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
+  CurrentElem       currelem(VV,this,_mesh,GetMLProb().GetElemType());
+  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,GetMLProb().GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
@@ -145,7 +145,7 @@ EqnT::EqnT(MultiLevelProblem & equations_map_in,
 //====================    
     
 //===== FILL the DOFS of the EXTERNAL QUANTITIES: you must assure that for every Vect the quantity is set correctly
-   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp=0; qp< el_ngauss; qp++) {
 
@@ -156,7 +156,7 @@ for (uint fe = 0; fe < QL; fe++)   {
   }
 	  
 const double      det = currgp.JacVectVV_g(xyz);
-const double dtxJxW_g = det*_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+const double dtxJxW_g = det*GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     {
@@ -303,8 +303,8 @@ for (uint fe = 0; fe < QL; fe++)     {
     
   const uint mesh_vb = BB;
   
-  CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());
-  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
+  CurrentElem       currelem(BB,this,_mesh,GetMLProb().GetElemType());
+  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,GetMLProb().GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
@@ -384,7 +384,7 @@ int el_Neum_flag=0;
 
 //====================================
 
-   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp=0; qp< el_ngauss; qp++) {
 
@@ -394,12 +394,12 @@ int el_Neum_flag=0;
     currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp); 
   }
         const double  det   = currgp.JacVectBB_g(xyz);
-        const double dtxJxW_g = det * _eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+        const double dtxJxW_g = det * GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
        xyz.val_g();
        
-       static_cast<Temperature*>(_eqnmap.GetQtyMap().get_qty("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
+       static_cast<Temperature*>(GetMLProb().GetQtyMap().get_qty("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
    
 	Tempold.val_g(); //For the penalty Dirichlet //i need this for interpolating the old function at the gauss point
 

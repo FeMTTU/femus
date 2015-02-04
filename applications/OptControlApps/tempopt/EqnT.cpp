@@ -90,13 +90,13 @@ EqnT::EqnT(MultiLevelProblem& equations_map_in, const std::string & eqname_in, c
 /// This function assembles the matrix and the rhs:
 void  EqnT::GenMatRhs(const uint Level) {
 
-  const double time = 0.; // _eqnmap._timeloop._curr_time;
+  const double time = 0.; // GetMLProb()._timeloop._curr_time;
 
 //========== PROCESSOR INDEX
   const uint myproc = _mesh._iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
-  const double    dt = 1.; //_eqnmap._timeloop._timemap.get("dt");
+  const double    dt = 1.; //GetMLProb()._timeloop._timemap.get("dt");
   const uint Nonstat = _phys.get("NonStatTEMP");
   
 //========= BCHandling =========
@@ -127,8 +127,8 @@ void  EqnT::GenMatRhs(const uint Level) {
  {//BEGIN VOLUME
  const uint mesh_vb = VV;
   
-  CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());    
-  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
+  CurrentElem       currelem(VV,this,_mesh,GetMLProb().GetElemType());    
+  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,GetMLProb().GetQrule(currelem.GetDim()));
   
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
@@ -139,19 +139,19 @@ void  EqnT::GenMatRhs(const uint Level) {
 
 //====================================
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
+    Tlift._qtyptr   = GetMLProb().GetQtyMap().get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
     CurrentQuantity TAdj(currgp);
-    TAdj._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
+    TAdj._qtyptr   = GetMLProb().GetQtyMap().get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
     
 #if FOURTH_ROW==1
     CurrentQuantity Press2(currgp);
-    Press2._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_Pressure_2"); 
+    Press2._qtyptr   = GetMLProb().GetQtyMap().get_qty("Qty_Pressure_2"); 
     Press2.VectWithQtyFillBasic();
     Press2.Allocate();
 #endif
@@ -173,13 +173,13 @@ void  EqnT::GenMatRhs(const uint Level) {
   
   //==================
     CurrentQuantity vel(currgp);
-    vel._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_Velocity"); 
+    vel._qtyptr   = GetMLProb().GetQtyMap().get_qty("Qty_Velocity"); 
     vel.VectWithQtyFillBasic();
     vel.Allocate();
     
 //===============Tdes=====================
     CurrentQuantity Tdes(currgp);
-    Tdes._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempDes"); 
+    Tdes._qtyptr   = GetMLProb().GetQtyMap().get_qty("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
 
@@ -246,7 +246,7 @@ int domain_flag = ElFlagControl(xyz_refbox._el_average,&_mesh);
    else                         Tdes._qtyptr->FunctionDof(Tdes,time,&xyz_refbox._val_dofs[0]);
 
 
-   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
    for (uint qp=0; qp< el_ngauss; qp++) {
 
@@ -257,7 +257,7 @@ for (uint fe = 0; fe < QL; fe++)   {
 }
 	  
 const double      det = dt*currgp.JacVectVV_g(xyz);
-const double dtxJxW_g = det*_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+const double dtxJxW_g = det*GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { 
@@ -438,8 +438,8 @@ for (uint fe = 0; fe < QL; fe++)     {
    
  const uint mesh_vb = BB;
   
-  CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());    
-  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
+  CurrentElem       currelem(BB,this,_mesh,GetMLProb().GetElemType());    
+  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,GetMLProb().GetQrule(currelem.GetDim()));
   
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
@@ -450,13 +450,13 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //====================================
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
+    Tlift._qtyptr   = GetMLProb().GetQtyMap().get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
     CurrentQuantity TAdj(currgp);
-    TAdj._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
+    TAdj._qtyptr   = GetMLProb().GetQtyMap().get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
     
@@ -477,7 +477,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     
 //===============Tdes=====================
     CurrentQuantity Tdes(currgp);
-    Tdes._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempDes"); 
+    Tdes._qtyptr   = GetMLProb().GetQtyMap().get_qty("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
 
@@ -532,7 +532,7 @@ int el_Neum_flag=0;
 
 //====================================
 
-   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp=0; qp< el_ngauss; qp++) {
 
@@ -542,12 +542,12 @@ int el_Neum_flag=0;
     currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp); 
   }
         const double  det   = dt*currgp.JacVectBB_g(xyz);
-        const double dtxJxW_g = det * _eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+        const double dtxJxW_g = det * GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
        xyz.val_g();
        
-       static_cast<Temperature*>(_eqnmap.GetQtyMap().get_qty("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
+       static_cast<Temperature*>(GetMLProb().GetQtyMap().get_qty("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
    
 	Tempold.val_g(); //For the penalty Dirichlet //i need this for interpolating the old function at the gauss point
 
