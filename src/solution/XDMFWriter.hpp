@@ -92,9 +92,7 @@ public:
 				     int data_dim_one,
 				     int data_dim_two); 
   
-  static void PrintMeshBiquadraticXDMF(const std::string output_path, const MultiLevelMeshTwo & mesh);
-  
-  static void PrintMeshLinearXDMF(const std::string output_path, const MultiLevelMeshTwo & mesh, const uint order_fe);
+  static void PrintMeshXDMF(const std::string output_path, const MultiLevelMeshTwo & mesh, const uint order_fe);
   
   static void PrintXDMFTopGeom(std::ofstream& out, std::ostringstream& top_file,
 			      std::ostringstream& geom_file,

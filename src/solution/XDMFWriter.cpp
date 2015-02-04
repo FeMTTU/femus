@@ -1333,77 +1333,6 @@ void XDMFWriter::write_system_solutions_bc(const std::string namefile, const Mul
 
 
 
-
-
-// ==================================================================
-void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const MultiLevelMeshTwo &mesh) {
-
-     if (mesh._iproc==0) {
-  
-    std::string ext_xdmf  = DEFAULT_EXT_XDMF;
-    std::string basemesh  = DEFAULT_BASEMESH;
-    std::string ext_h5    = DEFAULT_EXT_H5;
-
-    std::ostringstream inmesh_xmf;
-    inmesh_xmf << output_path << "/" << DEFAULT_BASEMESH_BIQ << ext_xdmf;
-    std::ofstream out(inmesh_xmf.str().c_str());
-
-    if (out.fail()) {
-        std::cout << "MultiLevelMeshTwo::PrintMeshBiquadratic: The file is not open" << std::endl;
-        abort();
-    }
-    
-    std::ostringstream top_file;  top_file << basemesh << ext_h5;
-
-
-//it seems that there is no control on this, if the directory isn't there
-//it doesnt give problems
-
-    //strings for VB
-    std::string  meshname[VB];
-    meshname[VV]="Volume";
-    meshname[BB]="Boundary";
-
-    out << "<?xml version=\"1.0\" ?> \n";
-    out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" \n";
-//   out << "[ <!ENTITY HeavyData \"mesh.h5\"> ] ";
-    out << "> \n";
-    out << " \n";
-    out << "<Xdmf> \n";
-    out << "<Domain> \n";
-
-    for (int vb=0;vb< VB;vb++) {
-
-        for (int ilev = 0; ilev < mesh._NoLevels; ilev++) {
-	  
-            out << "<Grid Name=\"" << meshname[vb] << "_L" << ilev <<"\"> \n";
-
-            std::ostringstream hdf5_field; hdf5_field << _elems_name << "/VB" << vb << "/CONN" << "_L" << ilev;
-	    
-            std::ostringstream coord_lev;  coord_lev << "_L" << ilev; 
-
-	    std::ostringstream pid_field; pid_field << "PID/PID_VB"<< vb <<"_L"<< ilev;
-	    
-            PrintXDMFTopology(out,top_file.str(),hdf5_field.str(), type_el[BIQUADR_TYPEEL][mesh._eltype_flag[vb]], mesh._n_elements_vb_lev[vb][ilev], mesh._n_elements_vb_lev[vb][ilev], NVE[mesh._eltype_flag[vb]][BIQUADR_FE]);
-	    
-	    PrintXDMFGeometry(out,top_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[ilev],1);
-
-            PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",mesh._n_elements_vb_lev[vb][ilev],1);
-
-            out << "</Grid> \n";
-	    
-        }
-    }
-
-    out << "</Domain> \n";
-    out << "</Xdmf> \n";
-    out.close();
-
-    }    //end iproc
-    
-    return;
-}
-
 // ========================================================
 /// It prints the volume/boundary Mesh (connectivity) in Xdmf format
  //this is where the file mesh.xmf goes: it is a good rule that the
@@ -1413,24 +1342,35 @@ void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const M
  //but if you put ALL THE DATA in THE SAME FOLDER as the READER(s)
  //then they are always independent and the data will always be readable
 
- void XDMFWriter::PrintMeshLinearXDMF(const std::string output_path, const MultiLevelMeshTwo & mesh, const uint order_fe) {
+ void XDMFWriter::PrintMeshXDMF(const std::string output_path, const MultiLevelMeshTwo & mesh, const uint order_fe) {
 
-  std::string     basemesh = DEFAULT_BASEMESH;
-  std::string     ext_xdmf = DEFAULT_EXT_XDMF;
-  std::string       ext_h5 = DEFAULT_EXT_H5;
-  std::string      connlin = DEFAULT_BASEMESH_LIN;
-
-  std::ostringstream top_file; top_file <<  connlin << ext_h5;
-  std::ostringstream geom_file; geom_file << basemesh << ext_h5;
-
-  std::ostringstream namefile;
-  namefile << output_path << "/" << DEFAULT_BASEMESH_LIN << ext_xdmf;
- 
-  std::ofstream out (namefile.str().c_str());
-  
+    if (mesh._iproc==0) {
+      
   std::string meshname[VB];
   meshname[VV]="Volume";
   meshname[BB]="Boundary";  
+   
+   std::string ord_string;
+    if (order_fe == BIQUADR_FE)     {  ord_string = "_biquadratic";}
+    else if  (order_fe == LINEAR_FE) { ord_string = "_linear"; }
+
+  std::string     ext_xdmf = DEFAULT_EXT_XDMF;
+  std::string       ext_h5 = DEFAULT_EXT_H5;
+  std::string     basemesh = DEFAULT_BASEMESH;
+  std::string      connlin = DEFAULT_BASEMESH_LIN;
+
+  std::ostringstream top_file;  top_file  << "mesh" << ord_string << ext_h5;
+  std::ostringstream geom_file; geom_file << "mesh" << DEFAULT_BASEMESH_BIQ << ext_h5;
+
+  std::ostringstream namefile;
+  namefile << output_path << "/" << "mesh" << ord_string << ext_xdmf;
+ 
+  std::ofstream out (namefile.str().c_str());
+
+    if (out.fail()) {
+        std::cout << " The file is not open" << std::endl;
+        abort();
+    }
   
   out << "<?xml version=\"1.0\" ?> \n";
   out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" \n"; 
@@ -1441,16 +1381,20 @@ void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const M
 	      
 
           for(uint vb=0;vb< VB; vb++)  {
+	    
+   uint n_children;
+    if (order_fe == BIQUADR_FE)     { n_children = 1; }
+    else if  (order_fe == LINEAR_FE){ n_children = NRE[mesh._eltype_flag[vb]]; }
+
+	   
 	    for(uint l=0; l< mesh._NoLevels; l++) {
 
     out << "<Grid Name=\"" << meshname[vb].c_str() << "_L" << l << "\"> \n";
     
-        std::ostringstream  pid_field; pid_field << "PID/PID_VB"<< vb <<"_L"<< l;
-	
-	
 	   PrintXDMFTopGeom(out,top_file,geom_file,l,vb,mesh,order_fe);
 	      
-           PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",mesh._n_elements_vb_lev[vb][l]*NRE[mesh._eltype_flag[vb]],1);
+        std::ostringstream  pid_field; pid_field << "/PID/PID_VB"<< vb <<"_L"<< l;
+           PrintXDMFAttribute(out,top_file.str(),pid_field.str(),"PID","Scalar","Cell","Int",mesh._n_elements_vb_lev[vb][l]*n_children,1);
 	      
     out << "</Grid> \n";  
 	      
@@ -1461,6 +1405,10 @@ void XDMFWriter::PrintMeshBiquadraticXDMF(const std::string output_path, const M
    out << "</Xdmf> \n";
    out.close ();
    
+   
+    } //end iproc
+    
+    
    return;
 }
 
@@ -1481,7 +1429,7 @@ void XDMFWriter::PrintXDMFTopGeom(std::ofstream& out,
    
     uint nel = mesh._n_elements_vb_lev[vb][Level];
     
-   std::ostringstream hdf_field; hdf_field << "/VB" << vb << "/" << _conn  << "_L" << Level;
+   std::ostringstream hdf_field; hdf_field << _elems_name << "/VB" << vb << "/" << _conn  << "_L" << Level;
   
    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
     
@@ -1564,7 +1512,7 @@ void XDMFWriter::PrintMeshLinear(const std::string output_path, const MultiLevel
     const uint iproc = mesh._iproc;
    if (iproc==0) {
        PrintConnAllLEVAllVBLinearHDF5(output_path,mesh);
-       PrintMeshLinearXDMF(output_path,mesh,LINEAR_FE);
+       PrintMeshXDMF(output_path,mesh,LINEAR_FE);
     }
    
    return;
@@ -1591,22 +1539,24 @@ void XDMFWriter::PrintMeshLinear(const std::string output_path, const MultiLevel
   hid_t file = H5Fcreate (namefile.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT); 
 
 //================================
-// here we loop both over LEVELS and over VB, so everything is inside a UNIQUE FILE  
-     for(uint vb=0;vb< VB; vb++)  {
-           std::string elems_fem = _elems_name;
-    std::string elems_fem_vb = "/VB" + auxvb[vb];  
+        std::string elems_fem = _elems_name;
+    hid_t subgroup_id_0 = H5Gcreate(file, elems_fem.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    
+   for(uint vb=0;vb< VB; vb++)  {
+ 
+    std::string elems_fem_vb = _elems_name + "/VB" + auxvb[vb];  
 
     hid_t subgroup_id = H5Gcreate(file, elems_fem_vb.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-       for(uint l=0; l< mesh._NoLevels; l++)    {
-	        PrintConnLinearHDF5(subgroup_id,l,vb,mesh);
-	   }
+       for(uint l=0; l< mesh._NoLevels; l++)   PrintConnLinearHDF5(file,l,vb,mesh);
 	   
     H5Gclose(subgroup_id);
    
         }
         
-        PrintSubdomFlagOnCellsAllVBAllLevHDF5(file,namefile.str(),mesh,LINEAR_FE);
+    H5Gclose(subgroup_id_0);
+    
+     PrintSubdomFlagOnCellsAllVBAllLevHDF5(file,namefile.str(),mesh,LINEAR_FE);
         
 //================================
    
@@ -1753,7 +1703,7 @@ void XDMFWriter::PrintConnLinearHDF5(hid_t file, const uint Level, const uint vb
      // Print mesh in hdf files
     hsize_t dimsf[2];  dimsf[0] =icount;  dimsf[1] = 1;
     hid_t dtsp = H5Screate_simple(2, dimsf, NULL);
-    std::ostringstream Name; Name << "/VB" << vb << "/" << _conn << "_L" << Level;
+    std::ostringstream Name; Name << _elems_name << "/VB" << vb << "/" << _conn << "_L" << Level;
     
     hid_t dtset = H5Dcreate(file,Name.str().c_str(),H5T_NATIVE_INT,dtsp,H5P_DEFAULT,H5P_DEFAULT,H5P_DEFAULT);  //TODO VALGRIND
     H5Dwrite(dtset,H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT, gl_conn);
