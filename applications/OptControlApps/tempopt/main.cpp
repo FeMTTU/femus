@@ -26,7 +26,6 @@
 #include "XDMFWriter.hpp"
 
 // application 
-#include "Temp_conf.hpp"
 #include "TempQuantities.hpp"
 #include "EqnNS.hpp"
 #include "EqnT.hpp"
@@ -94,7 +93,7 @@
   //since the meshtwo is nondimensionalized, all the BC and IC are gonna be implemented on a nondimensionalized mesh
   //now, a mesh may or may not have an associated domain
   //moreover, a mesh may or may not be read from file
-  //the generation is DIMENSIONAL, the nondimensionalization occurs later
+  //the generation is dimensional, the nondimensionalization occurs later
   //Both the Mesh and the optional domain must be nondimensionalized
   //first, we have to say if the mesh has a shape or not
   //that depends on the application, it must be put at the main level

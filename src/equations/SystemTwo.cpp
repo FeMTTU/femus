@@ -519,7 +519,7 @@ void SystemTwo::GenerateBdc() {
         // variable loop
         for (uint ivar=0;ivar< _dofmap._nvars[QQ];ivar++) { // ----------------------------
             // nodes for boundary elements
-            int el_nodes=el_nnodes_b; /*  if (ivar >= _nvars[0]) el_nodes=NDOF_PB;*/ /*TODO check here*/
+            int el_nodes=el_nnodes_b; 
             // read
             XDMFWriter::read_Ihdf5(file,"/"+_var_names[ivar] + bdry_suffix,data);// from hdf5 file
 

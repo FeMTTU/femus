@@ -22,7 +22,7 @@
   
 
 //application
-#include "Temp_conf.hpp"
+#include "OptLoop.hpp"
 #include "TempQuantities.hpp"
 #include "EqnT.hpp"
 
@@ -677,9 +677,8 @@ Box* box= static_cast<Box*>(_mesh.GetDomain());
   _mesh._domain->TransformPointToRef(el_xm,x_rotshift);
 
  
- #if (DIMENSION==2)
-  
-
+  if (_mesh.get_dim() == 2) {
+    
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) { //left
 surf_id=44; 
      el_flag[NN]=1;
@@ -718,10 +717,9 @@ surf_id=22;
   }
   
  
-
-#elif (DIMENSION==3)
+} //end 2
  
-  
+    else if (_mesh.get_dim() == 3) {
   
  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) { //left
 surf_id=44;  
@@ -790,8 +788,7 @@ surf_id=77;
   
   }
 
-
-#endif
+    }
 
 
   delete[] lb;

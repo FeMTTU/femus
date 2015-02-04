@@ -9,7 +9,7 @@
 #include "Box.hpp"
 
 //application
-#include "Temp_conf.hpp"
+#include "OptLoop.hpp"
 #include "TempQuantities.hpp"
 
 //=================== BEGIN CONSTRUCTORS ================================
@@ -109,9 +109,9 @@ void Velocity::Function_txyz(const double /*t*/,const double* xp, double* func) 
                                        //add a 4. to the denominator
 				       //should check the difference between L and Lref
                                        //TODO check this nondimensionalization
-#if (DIMENSION==3)
+    if (_qtymap._mesh.get_dim() == 3) {
   func[2] = 0./*/Uref*/;
-#endif
+    }
 
 
   return;
@@ -131,19 +131,18 @@ void Velocity::strain_txyz(const double /*t*/, const double* xyz,double strain[]
       const double lye = _qtymap._mesh.GetDomain()->_domain_rtmap.get("lye");
 //   const double x=xyz[0];
   const double y=xyz[1];
-#if DIMENSION==3
+  if (_qtymap._mesh.get_dim() == 3) {
   const double z=xyz[2];
-#endif
-
+  }
   
   strain[0][0] = 0.;                     //ux,x
   strain[0][1] = strain[1][0] = 0. ;//0.5*(uy,x+ux,y) 
   strain[1][1] = 0.*(-(lye*ILref-y));                    //uy,y
-#if (DIMENSION==3)
+  if (_qtymap._mesh.get_dim() == 3) {
   strain[0][2] = strain[2][0] = 0. ;  //0.5*(uz,x+ux,z) 
   strain[1][2] = strain[2][1] = 0. ;  //0.5*(uy,z+uz,y)                                     
   strain[2][2] = 0. ;                    //uz,z
-#endif
+  }
 
 return;
 }
@@ -282,9 +281,9 @@ void Temperature::heatflux_txyz(const double /*t*/, const double* /*xyz*/, doubl
 
      qflux[0]=-2.1*0./**cos(thetaz)*/;
      qflux[1]=0./**sin(thetaz)*/;
- #if (DIMENSION==3)
+  if (_qtymap._mesh.get_dim() == 3) {
       qflux[2]=0.;
- #endif
+    }
 
   return;
   }
@@ -320,7 +319,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
   _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
 
-#if (DIMENSION==2)
+if (_qtymap._mesh.get_dim() == 2) {
   
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
      bc_flag[0]=0;
@@ -351,8 +350,9 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   
   } //top RefBox
   
+}  //end dim 2
 
-#elif (DIMENSION==3)
+  else if (_qtymap._mesh.get_dim() == 3) {
 
   if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
     bc_flag[0]=0;    //u dot n
@@ -389,8 +389,8 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 //      if (bc_flag[1] == 1) bc_flag[1]=_phys.get_par("Fake3D");      //u x n      //leave this free for 2D
       bc_flag[2]=0;                                                  //u dot n
   }
-
-#endif
+  
+}  //end dim 3
 
   return;
  
@@ -418,7 +418,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
   _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
 
-#if (DIMENSION==2)
+
   
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
 //      bc_flag[0]=0;
@@ -445,23 +445,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   } //top RefBox
   
 
-#elif (DIMENSION==3)
-
-  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
-//     bc_flag[0]=0;
-  }
-  
- if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
-//     bc_flag[0]=0;
-  }
-  
-   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
-     bc_flag[0]=0;
-  }
-  
-  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
-     bc_flag[0]=0;     
-  }
+  if (_qtymap._mesh.get_dim() == 3) {
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
 //      bc_flag[0]=0;
@@ -471,7 +455,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 //      bc_flag[0]=0;
   }
 
-#endif
+  } // end dim 3
 
   return;
  
@@ -502,8 +486,6 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
   
   
-#if (DIMENSION==2)
-  
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
       bc_flag[0]=0; //always fixed
   }
@@ -520,23 +502,8 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
       bc_flag[0]=0; //always fixed
   }
 
-#elif (DIMENSION==3)
 
-  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
-    bc_flag[0]=0;
-  }
-  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
-    bc_flag[0]=0;
-  }
-  
-   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
-     bc_flag[0]=0;    
-  }
-  
-  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
-     bc_flag[0]=0;
-  }
-  
+    if (_qtymap._mesh.get_dim() == 3) {
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
      bc_flag[0]=0;
   }
@@ -545,8 +512,9 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
       bc_flag[0]=0;
   }
   
+ } //end dim 3
   
-#endif
+
   
   return;
 }
@@ -575,7 +543,6 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
   
 
-#if (DIMENSION==2)
   
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
   
@@ -602,24 +569,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
     }
 
 
-  
-#elif (DIMENSION==3)
-
-  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
-    bc_flag[0]=0;
-  }
-  
- if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
-    bc_flag[0]=0;
-  }
-  
-   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
-     bc_flag[0]=0;    
-  }
-  
-  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
-     bc_flag[0]=0;
-  }
+  if (_qtymap._mesh.get_dim() == 3) {
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
      bc_flag[0]=0;
@@ -629,8 +579,8 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
       bc_flag[0]=0;
   }
   
-#endif
-
+  } //end dim 3
+  
   
   return;
 }
@@ -658,8 +608,6 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
-#if (DIMENSION==2)
-  
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
     bc_flag[0]=0;  //always fixed
   }
@@ -675,7 +623,6 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
       bc_flag[0]=0; //always fixed
   }
   
-#elif (DIMENSION==3)
 
   if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
     bc_flag[0]=0;
@@ -693,6 +640,10 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
      bc_flag[0]=0;
   }
   
+  
+  
+  
+  if (_qtymap._mesh.get_dim() == 3) {
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
      bc_flag[0]=0;
   }
@@ -701,8 +652,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
       bc_flag[0]=0;
   }
   
-  
-#endif
+  } //end dim 3
   
   return;
 }
@@ -836,11 +786,13 @@ void Velocity::initialize_xyz(const double* xp, std::vector< double >& value) co
 }
 
   }
-
-//============================================
-#if (DIMENSION==3)
+  
+  
+  
+  if (_qtymap._mesh.get_dim() == 3) {
   value[2] = 0.;
-#endif
+  }
+
 
 
   return;

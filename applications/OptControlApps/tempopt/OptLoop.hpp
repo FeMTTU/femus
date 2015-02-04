@@ -40,5 +40,14 @@ void optimization_loop( MultiLevelProblem & e_map_in );
 } //end namespace femus
 
 
+//********* SPACE DIMENSION ************
+
+#define DIMENSION    2
+//   #define DIMENSION    3
+// **************************************
+
+#define FOURTH_ROW 1
+
+
 
 #endif

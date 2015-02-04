@@ -1,6 +1,5 @@
 #include "OptLoop.hpp"
 
-#include "Temp_conf.hpp"
 #include "MultiLevelProblem.hpp"
 #include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"

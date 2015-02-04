@@ -25,7 +25,6 @@
 #include "paral.hpp"
 
 // application
-#include "Temp_conf.hpp"
 #include "TempQuantities.hpp"
 #include "EqnNS.hpp"
 
