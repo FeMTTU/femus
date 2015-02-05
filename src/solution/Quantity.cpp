@@ -101,7 +101,7 @@ void Quantity::FunctionDof(CurrentQuantity& myvect, const double t, const double
 //====the Domain
   const uint space_dim = myvect.GetCurrentElem()._mesh.get_dim();
   double* xp = new double[space_dim]; 
-  const uint offset   =       NVE[ _qtymap._mesh._geomelem_flag[myvect.GetCurrentElem().GetDim()-1] ][BIQUADR_FE];
+  const uint offset   =       NVE[ _qtymap.GetMeshTwo()->_geomelem_flag[myvect.GetCurrentElem().GetDim()-1] ][BIQUADR_FE];
 
 //=====the Function
   double* func = new double[myvect._dim];
@@ -132,7 +132,6 @@ if (dof_off > offset) {std::cout << "Use a quadratic mesh for FunctionDof comput
   ////////////////QTY MAP ////////////
   
   
-  QuantityMap::QuantityMap(const MultiLevelMeshTwo & mesh, const FemusInputParser<double> * map_in) : _mesh(mesh),_physmap(map_in) { }
   
 
 

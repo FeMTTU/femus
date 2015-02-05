@@ -37,7 +37,7 @@ TempDes::TempDes(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint 
 Pressure::Pressure(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {
   
-  for (uint i=0;i<dim_in;i++) _refvalue[i] = qtymap_in._physmap->get("pref");
+  for (uint i=0;i<dim_in;i++) _refvalue[i] = qtymap_in.GetInputParser()->get("pref");
 }
 
 
@@ -45,7 +45,7 @@ Pressure::Pressure(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uin
 Velocity::Velocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {  
 
-   for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in._physmap->get("Uref");
+   for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in.GetInputParser()->get("Uref");
 }
 
 
@@ -53,7 +53,7 @@ Velocity::Velocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uin
 Pressure2::Pressure2(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
 
-  for (uint i=0;i<dim_in;i++) _refvalue[i] = qtymap_in._physmap->get("pref");
+  for (uint i=0;i<dim_in;i++) _refvalue[i] = qtymap_in.GetInputParser()->get("pref");
 }
 
 //=================== END CONSTRUCTORS ================================
@@ -68,7 +68,7 @@ Pressure2::Pressure2(std::string name_in, QuantityMap& qtymap_in, uint dim_in, u
 
 void Velocity::Function_txyz(const double /*t*/,const double* xp, double* func) const {
 
-  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   // we should do this static_cast in the QUANTITY or QUANTITY MAP constructor
   //if there is some domain shape, we see what type it is and we do the static cast
   //if there is no domain shape, we dont need the domain.
@@ -82,9 +82,9 @@ void Velocity::Function_txyz(const double /*t*/,const double* xp, double* func) 
   //====== Physics
 //   TempPhysics *optphys; optphys = static_cast<TempPhysics*>(&(_qtymap._phys));
   
-  const double rhof   = _qtymap._physmap->get("rho0");
-  const double Uref   = _qtymap._physmap->get("Uref");
-  const double Lref   = _qtymap._physmap->get("Lref");
+  const double rhof   = _qtymap.GetInputParser()->get("rho0");
+  const double Uref   = _qtymap.GetInputParser()->get("Uref");
+  const double Lref   = _qtymap.GetInputParser()->get("Lref");
 
   const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution!!!
 
@@ -109,7 +109,7 @@ void Velocity::Function_txyz(const double /*t*/,const double* xp, double* func) 
                                        //add a 4. to the denominator
 				       //should check the difference between L and Lref
                                        //TODO check this nondimensionalization
-    if (_qtymap._mesh.get_dim() == 3) {
+    if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   func[2] = 0./*/Uref*/;
     }
 
@@ -126,19 +126,19 @@ void Velocity::strain_txyz(const double /*t*/, const double* xyz,double strain[]
 
 //here, tau is a tensor, so tau dot n is a vector which in general has a NORMAL and a TANGENTIAL component  
   
-    const double Lref = _qtymap._physmap->get("Lref");
+    const double Lref = _qtymap.GetInputParser()->get("Lref");
       double ILref = 1./Lref;
-      const double lye = _qtymap._mesh.GetDomain()->_domain_rtmap.get("lye");
+      const double lye = _qtymap.GetMeshTwo()->GetDomain()->_domain_rtmap.get("lye");
 //   const double x=xyz[0];
   const double y=xyz[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   const double z=xyz[2];
   }
   
   strain[0][0] = 0.;                     //ux,x
   strain[0][1] = strain[1][0] = 0. ;//0.5*(uy,x+ux,y) 
   strain[1][1] = 0.*(-(lye*ILref-y));                    //uy,y
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   strain[0][2] = strain[2][0] = 0. ;  //0.5*(uz,x+ux,z) 
   strain[1][2] = strain[2][1] = 0. ;  //0.5*(uy,z+uz,y)                                     
   strain[2][2] = 0. ;                    //uz,z
@@ -211,9 +211,9 @@ void Pressure::Function_txyz(const double t, const double* xp,double* func) cons
 // NO, we clearly cannot do that
 // i would want the gencase to be AS GENERAL as POSSIBLE
 
-Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());  //already nondimensionalized
+Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());  //already nondimensionalized
  
-  func[0] =  1./ _qtymap._physmap->get("pref")*( (box->_le[1] - box->_lb[1]) - xp[1] )*(cos(6.*0.*t));
+  func[0] =  1./ _qtymap.GetInputParser()->get("pref")*( (box->_le[1] - box->_lb[1]) - xp[1] )*(cos(6.*0.*t));
 
 //this equation is in the reference frame CENTERED AT (0,0,0)  
   
@@ -243,9 +243,9 @@ void TempAdj::Function_txyz(const double/* t*/, const double* /*xp*/,double* tem
 // =================================================
 void TempLift::Function_txyz(const double /*t*/, const double* xp,double* temp) const {
 
-  const double Tref = _qtymap._physmap->get("Tref");
+  const double Tref = _qtymap.GetInputParser()->get("Tref");
 
-  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());  
+  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());  
   
   temp[0] = 100.*(xp[0])*( ( box->_le[0] - box->_lb[0]) - xp[0])*(xp[1])*( ( box->_le[1] - box->_lb[1]) - xp[1])/Tref;
  
@@ -256,9 +256,9 @@ void TempLift::Function_txyz(const double /*t*/, const double* xp,double* temp) 
 // =================================================
 void Temperature::Function_txyz(const double/* t*/, const double* xp,double* temp) const {
 
-  const double Tref = _qtymap._physmap->get("Tref");
+  const double Tref = _qtymap.GetInputParser()->get("Tref");
 
-  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());  
+  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());  
   
   temp[0] = 100.*(xp[0])*( ( box->_le[0] - box->_lb[0]) - xp[0])/Tref;
  
@@ -281,7 +281,7 @@ void Temperature::heatflux_txyz(const double /*t*/, const double* /*xyz*/, doubl
 
      qflux[0]=-2.1*0./**cos(thetaz)*/;
      qflux[1]=0./**sin(thetaz)*/;
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
       qflux[2]=0.;
     }
 
@@ -301,25 +301,25 @@ void Pressure2::Function_txyz(const double/* t*/, const double* xp,double* value
 
 void Velocity::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
-if (_qtymap._mesh.get_dim() == 2) {
+if (_qtymap.GetMeshTwo()->get_dim() == 2) {
   
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
      bc_flag[0]=0;
@@ -352,7 +352,7 @@ if (_qtymap._mesh.get_dim() == 2) {
   
 }  //end dim 2
 
-  else if (_qtymap._mesh.get_dim() == 3) {
+  else if (_qtymap.GetMeshTwo()->get_dim() == 3) {
 
   if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
     bc_flag[0]=0;    //u dot n
@@ -400,23 +400,23 @@ if (_qtymap._mesh.get_dim() == 2) {
   
 void Pressure::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
   
@@ -445,7 +445,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   } //top RefBox
   
 
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
 //      bc_flag[0]=0;
@@ -466,24 +466,24 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 // T' and its adjoint must be Dirichlet homogeneous everywhere on the boundary, by definition.
 
 
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
 
-  Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
   
   
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
@@ -503,7 +503,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   }
 
 
-    if (_qtymap._mesh.get_dim() == 3) {
+    if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
      bc_flag[0]=0;
   }
@@ -523,24 +523,24 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 // T' and its adjoint must be Dirichlet homogeneous everywhere on the boundary, by definition.
 
 
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
 
-  Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
   
 
   
@@ -569,7 +569,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
     }
 
 
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
      bc_flag[0]=0;
@@ -588,24 +588,24 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
  void TempAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
 
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
 
-  Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
@@ -643,7 +643,7 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   
   
   
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
      bc_flag[0]=0;
   }
@@ -660,24 +660,24 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
  void Pressure2::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
 
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
 
-  Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
@@ -708,12 +708,12 @@ void TempAdj::initialize_xyz(const double* xp, std::vector< double >& value) con
 void TempLift::initialize_xyz(const double* xp, std::vector< double >& value) const {
   
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
 
-  Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]); 
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]); 
 
     value[0] = 1.;
   if ((box->_le[1]-box->_lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (box->_le[1]-box->_lb[1]) -(x_rotshift[1]) < bdry_toll)  {
@@ -727,14 +727,14 @@ void TempLift::initialize_xyz(const double* xp, std::vector< double >& value) co
 void Velocity::initialize_xyz(const double* xp, std::vector< double >& value) const {
   
   //====== Physics
-   const double Uref = _qtymap._physmap->get("Uref");
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+   const double Uref = _qtymap.GetInputParser()->get("Uref");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
 
  
-  Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]); 
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]); 
 //at this point, the coordinates are transformed into the REFERENCE BOX, so you can pass them to the Pressure function
 
 //rotation of the function  
@@ -770,7 +770,7 @@ void Velocity::initialize_xyz(const double* xp, std::vector< double >& value) co
  if  ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {
  
  if ( (x_rotshift[1]) > 0.4*(box->_le[1] - box->_lb[1]) && ( x_rotshift[1]) < 0.6*(box->_le[1]-box->_lb[1]) )  {  //left of the refbox
-       value[0] = _qtymap._physmap->get("injsuc");    
+       value[0] = _qtymap.GetInputParser()->get("injsuc");    
        value[1] = 0.; 
       }
    }   
@@ -789,7 +789,7 @@ void Velocity::initialize_xyz(const double* xp, std::vector< double >& value) co
   
   
   
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   value[2] = 0.;
   }
 
@@ -802,10 +802,10 @@ void Velocity::initialize_xyz(const double* xp, std::vector< double >& value) co
 
 void Pressure::initialize_xyz(const double* xp, std::vector< double >& value) const {
   
-  Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]); 
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]); 
 //at this point, the coordinates are transformed into the REFERENCE BOX, so you can pass them to the Pressure function
 
     Function_txyz(0.,&x_rotshift[0],&value[0]);   

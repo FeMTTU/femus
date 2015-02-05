@@ -177,7 +177,7 @@ private:
     /** To be Added */
     FunctionBase* GetBdcFunction(const unsigned int var, const unsigned int facename) const;
 
-    /** Array of solution, dimension of what is added */
+    /** Array of solution, dimension number of levels */
     vector <Solution*>  _solution;
     
     vector< vector <BDCType> > _boundaryconditions;

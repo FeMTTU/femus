@@ -106,8 +106,9 @@ int main(int argc, char** argv) {
           XDMFWriter::PrintMeshLinear(files.GetOutputPath(),mesh);
       
   // ===== QuantityMap =========================================
-  QuantityMap  qty_map(mesh,&physics_map);
-
+  QuantityMap  qty_map;
+  qty_map.SetMeshTwo(&mesh);
+  qty_map.SetInputParser(&physics_map);
 //================================
 // ======= Add QUANTITIES ========  
 //================================
@@ -204,12 +205,12 @@ int main(int argc, char** argv) {
 //=====================
     sys -> initVectors();
 //=====================
+    sys -> Initialize();
+//=====================
     sys -> _bcond.GenerateBdc();
     sys -> _bcond.GenerateBdcElem();
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
-//=====================
-    sys -> Initialize();
     
     }
 

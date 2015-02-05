@@ -105,12 +105,14 @@
   OptLoop opt_loop(files, loop_map); 
    
   // ===== QuantityMap : this is like the MultilevelSolution =========================================
-  QuantityMap  qty_map(mesh,&physics_map);
+  QuantityMap  qty_map;
+  qty_map.SetMeshTwo(&mesh);
+  qty_map.SetInputParser(&physics_map);
 
   Temperature temperature("Qty_Temperature",qty_map,1,QQ);          qty_map.AddQuantity(&temperature);
   TempLift       templift("Qty_TempLift",qty_map,1,QQ,opt_loop);    qty_map.AddQuantity(&templift);  
   TempAdj         tempadj("Qty_TempAdj",qty_map,1,QQ);              qty_map.AddQuantity(&tempadj);  
-  TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.AddQuantity(&tempdes);  
+  TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.AddQuantity(&tempdes);  //this is not going to be an Unknown!
   Pressure       pressure("Qty_Pressure",qty_map,1,LL);                qty_map.AddQuantity(&pressure);
   Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.AddQuantity(&velocity);  
 
@@ -158,7 +160,7 @@
  
 //once you have the list of the equations, you loop over them to initialize everything
 
-   for (MultiLevelProblem::const_system_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {\
+   for (MultiLevelProblem::const_system_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
      
    SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
 //=====================
@@ -167,13 +169,13 @@
     sys -> _dofmap.ComputeMeshToDof();
 //=====================
     sys -> initVectors();
+//=====================
+    sys -> Initialize();
 ///=====================
     sys -> _bcond.GenerateBdc();
     sys -> _bcond.GenerateBdcElem();
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
-//=====================
-    sys -> Initialize();
     
     } 
 	 

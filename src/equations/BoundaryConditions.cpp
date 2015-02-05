@@ -19,9 +19,9 @@ const int BoundaryConditions::_number_tang_comps[3] = {0,1,3};
 
          BoundaryConditions::~BoundaryConditions() {
 	   
- //===nodal
+ //=== node
     delete[] _bc;                                                                   // boundary condition flag
- //===constant
+ //=== element
      for (uint l=0; l < _dofmap->_mesh._NoLevels; l++)   delete [] _bc_fe_kk[l];
      delete [] _bc_fe_kk;
  //===penalty

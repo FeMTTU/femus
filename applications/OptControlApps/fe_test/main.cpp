@@ -78,12 +78,10 @@
           XDMFWriter::PrintMeshLinear(files.GetOutputPath(),mesh);
 
 	  
-  // ======== TimeLoop ===================================
-  FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());
-  TimeLoop time_loop(files,loop_map); 
-
   // ===== QuantityMap =========================================
-  QuantityMap  qty_map(mesh,&physics_map);
+  QuantityMap  qty_map;
+  qty_map.SetMeshTwo(&mesh);
+  qty_map.SetInputParser(&physics_map);
 
 //===============================================
 //================== Add QUANTITIES ======================
@@ -130,14 +128,18 @@
 //=====================
     sys -> initVectors();
 //=====================
+    sys -> Initialize();
+//=====================
     sys -> _bcond.GenerateBdc();
     sys -> _bcond.GenerateBdcElem();
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
-//=====================
-    sys -> Initialize();
     }
     
+  // ======== Loop ===================================
+  FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());
+  TimeLoop time_loop(files,loop_map); 
+
   time_loop.TransientSetup(ml_prob);  // reset the initial state (if restart) and print the Case
 
   time_loop.TransientLoop(ml_prob);

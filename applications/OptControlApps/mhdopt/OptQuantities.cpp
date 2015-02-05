@@ -60,7 +60,7 @@ Temperature::Temperature(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 MagnFieldHom::MagnFieldHom(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
 
- for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in._physmap->get("Bref");
+ for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in.GetInputParser()->get("Bref");
 }
 
 //===========================================================================
@@ -74,8 +74,8 @@ MagnFieldHomAdj::MagnFieldHomAdj(std::string name_in, QuantityMap& qtymap_in, ui
 MagnFieldHomLagMult::MagnFieldHomLagMult(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
   
-  const double Bref = qtymap_in._physmap->get("Bref");
-  const double Uref = qtymap_in._physmap->get("Uref");
+  const double Bref = qtymap_in.GetInputParser()->get("Bref");
+  const double Uref = qtymap_in.GetInputParser()->get("Uref");
   const double sigmaref = Uref*Bref;
   for (uint i=0;i<dim_in;i++) _refvalue[i]=sigmaref;
   
@@ -96,7 +96,7 @@ MagnFieldHomLagMultAdj::MagnFieldHomLagMultAdj(std::string name_in, QuantityMap&
 MagnFieldExt::MagnFieldExt(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {
 
-  for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in._physmap->get("Bref");
+  for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in.GetInputParser()->get("Bref");
   
 }
 
@@ -104,8 +104,8 @@ MagnFieldExt::MagnFieldExt(std::string name_in, QuantityMap& qtymap_in, uint dim
 MagnFieldExtLagMult::MagnFieldExtLagMult(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {
 
-  const double Bref = qtymap_in._physmap->get("Bref");
-  const double Uref = qtymap_in._physmap->get("Uref");
+  const double Bref = qtymap_in.GetInputParser()->get("Bref");
+  const double Uref = qtymap_in.GetInputParser()->get("Uref");
   const double sigmaref = Uref*Bref;
   for (uint i=0;i<dim_in;i++) _refvalue[i]=sigmaref;
 
@@ -119,7 +119,7 @@ Pressure::Pressure(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uin
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
 
   
-  for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in._physmap->get("pref");
+  for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in.GetInputParser()->get("pref");
 }
 
 //===========================================================================
@@ -134,7 +134,7 @@ PressureAdj::PressureAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 Velocity::Velocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {  
 
-    for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in._physmap->get("Uref");
+    for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in.GetInputParser()->get("Uref");
   
 }
 
@@ -154,7 +154,7 @@ VelocityAdj::VelocityAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 DesVelocity::DesVelocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
   
-   for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in._physmap->get("Uref");
+   for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in.GetInputParser()->get("Uref");
 
 }
 
@@ -170,7 +170,7 @@ DesVelocity::DesVelocity(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 
 void Velocity::Function_txyz(const double t,const double* xp, double* func) const {
 
-  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   // we should do this static_cast in the QUANTITY or QUANTITY MAP constructor
   //if there is some domain shape, we see what type it is and we do the static cast
   //if there is no domain shape, we dont need the domain.
@@ -178,22 +178,22 @@ void Velocity::Function_txyz(const double t,const double* xp, double* func) cons
     //=====ROTATION of the Function
   const double thetaz = box->_domain_rtmap.get("thetaz");
   
-  const double rhof   = _qtymap._physmap->get("rho0");
-  const double Uref   = _qtymap._physmap->get("Uref");
-  const double muvel  = _qtymap._physmap->get("mu0");
-  const double MUMHD  = _qtymap._physmap->get("MUMHD");
-  const double SIGMHD = _qtymap._physmap->get("SIGMHD");
-  const double Bref   = _qtymap._physmap->get("Bref");
-  const double Lref   = _qtymap._physmap->get("Lref");
+  const double rhof   = _qtymap.GetInputParser()->get("rho0");
+  const double Uref   = _qtymap.GetInputParser()->get("Uref");
+  const double muvel  = _qtymap.GetInputParser()->get("mu0");
+  const double MUMHD  = _qtymap.GetInputParser()->get("MUMHD");
+  const double SIGMHD = _qtymap.GetInputParser()->get("SIGMHD");
+  const double Bref   = _qtymap.GetInputParser()->get("Bref");
+  const double Lref   = _qtymap.GetInputParser()->get("Lref");
 
   const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution!!!
 
   double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
 
-  double Re  = _qtymap._physmap->get("Re");
-  double Rem = _qtymap._physmap->get("Rem");
-  double Hm  = _qtymap._physmap->get("Hm");
-  double S   = _qtymap._physmap->get("S");
+  double Re  = _qtymap.GetInputParser()->get("Re");
+  double Rem = _qtymap.GetInputParser()->get("Rem");
+  double Hm  = _qtymap.GetInputParser()->get("Hm");
+  double S   = _qtymap.GetInputParser()->get("S");
 
 
   double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
@@ -226,9 +226,9 @@ void Velocity::strain_txyz(const double t, const double* xyz,double strain[][DIM
 
 //here, tau is a tensor, so tau dot n is a vector which in general has a NORMAL and a TANGENTIAL component  
   
-    const double Lref = _qtymap._physmap->get("Lref");
+    const double Lref = _qtymap.GetInputParser()->get("Lref");
       double ILref = 1./Lref;
-      const double lye = _qtymap._mesh.GetDomain()->_domain_rtmap.get("lye");
+      const double lye = _qtymap.GetMeshTwo()->GetDomain()->_domain_rtmap.get("lye");
   const double x=xyz[0];
   const double y=xyz[1];
 #if DIMENSION==3
@@ -312,7 +312,7 @@ void Pressure::Function_txyz(const double t, const double* xp,double* func) cons
 // NO, we clearly cannot do that
 // i would want the gencase to be AS GENERAL as POSSIBLE
 
-Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
   double         lb[DIMENSION];
   double         le[DIMENSION];
@@ -326,7 +326,7 @@ Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
 #endif
   
  
-  func[0] =  1./ _qtymap._physmap->get("pref")*( (le[1]-lb[1]) - /*x_rotshift*/xp[1] )*(cos(6.*0.*t));
+  func[0] =  1./ _qtymap.GetInputParser()->get("pref")*( (le[1]-lb[1]) - /*x_rotshift*/xp[1] )*(cos(6.*0.*t));
 
 //this equation is in the reference frame CENTERED AT (0,0,0)  
   
@@ -355,10 +355,10 @@ void Temperature::Function_txyz(const double t, const double* xp,double* temp) c
   //it might happen something different. So,maybe, to make things not very complicated,
   // it suffices to pass the pointer, and then externally one will think of shifting the indices and so on.. anyway.
 
-  const double Tref = _qtymap._physmap->get("Tref");
+  const double Tref = _qtymap.GetInputParser()->get("Tref");
 
 
-  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());  
+  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());  
   
   temp[0] = 100.*(xp[0])*( ( box->_le[0] - box->_lb[0]) - xp[0])/Tref;
  
@@ -377,7 +377,7 @@ void Temperature::heatflux_txyz(const double t, const double* xyz, double* qflux
 //  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
 
 std::cout << "Temperature: Heatflux, check which coordinates are passed in here" << std::endl;
-  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   const double thetaz = box->_domain_rtmap.get("thetaz");
 
      qflux[0]=+700.*cos(thetaz);
@@ -399,11 +399,11 @@ void MagnFieldExt::Function_txyz(const double t,const double* xp, double* func) 
 
   
   //=====ROTATION of the Function
-  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   const double thetaz = box->_domain_rtmap.get("thetaz");
 
   //============== PICK THE REQUIRED REFERENCE VALUES for the FUNCTION
-  const double Bref   = _qtymap._physmap->get("Bref");      //Uref*sqrt(rhof*MUMHD);   //in order to make S=1
+  const double Bref   = _qtymap.GetInputParser()->get("Bref");      //Uref*sqrt(rhof*MUMHD);   //in order to make S=1
 
 //function
   func[0] = (cos(thetaz)*Bref
@@ -446,10 +446,10 @@ return;
 void MagnFieldHom::Function_txyz(const double t, const double* xp, double* func) const {
 
 //============== PICK THE REQUIRED REFERENCE VALUES
-  const double Lref   = _qtymap._physmap->get("Lref");
-  const double rhof   = _qtymap._physmap->get("rho0");
-  const double Uref   = _qtymap._physmap->get("Uref");
-  const double Bref   = _qtymap._physmap->get("Bref");      //Uref*sqrt(rhof*MUMHD);   //in order to make S=1
+  const double Lref   = _qtymap.GetInputParser()->get("Lref");
+  const double rhof   = _qtymap.GetInputParser()->get("rho0");
+  const double Uref   = _qtymap.GetInputParser()->get("Uref");
+  const double Bref   = _qtymap.GetInputParser()->get("Bref");      //Uref*sqrt(rhof*MUMHD);   //in order to make S=1
 
   const double DpDz   = 1.;  //AAA: change it according to the pressure distribution
   // TODO THIS IS DELICATE!!! Suppose you change this multiplicative coefficient, then you get DIFFERENT THINGS!!!!
@@ -457,8 +457,8 @@ void MagnFieldHom::Function_txyz(const double t, const double* xp, double* func)
   
   double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
 
-  double Hm  = _qtymap._physmap->get("Hm");
-  double S   = _qtymap._physmap->get("S");
+  double Hm  = _qtymap.GetInputParser()->get("Hm");
+  double S   = _qtymap.GetInputParser()->get("S");
 //=========================================
   
 //============= HERE, the analytical solution was given in a reference frame  [-LX,LX] 
@@ -472,7 +472,7 @@ void MagnFieldHom::Function_txyz(const double t, const double* xp, double* func)
 //where you see S, leave it like that (even if it contains Hm...). This is because S does not contain the reference length, actually! Good.
  
   
-    Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+    Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   
   double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
   double Lmid  = 0.5*(box->_le[0] + box->_lb[0]);
@@ -525,27 +525,27 @@ return;
 void DesVelocity::Function_txyz(const double t, const double* xp,double* func) const {
   
   
-  const double Lref = _qtymap._physmap->get("Lref");
-  const double Uref = _qtymap._physmap->get("Uref");
+  const double Lref = _qtymap.GetInputParser()->get("Lref");
+  const double Uref = _qtymap.GetInputParser()->get("Uref");
   double ILref = 1./Lref;
     
-  const double rhof   = _qtymap._physmap->get("rho0");
-  const double muvel  = _qtymap._physmap->get("mu0");
-  const double MUMHD  = _qtymap._physmap->get("MUMHD");
-  const double SIGMHD = _qtymap._physmap->get("SIGMHD");
-  const double Bref   = _qtymap._physmap->get("Bref");
+  const double rhof   = _qtymap.GetInputParser()->get("rho0");
+  const double muvel  = _qtymap.GetInputParser()->get("mu0");
+  const double MUMHD  = _qtymap.GetInputParser()->get("MUMHD");
+  const double SIGMHD = _qtymap.GetInputParser()->get("SIGMHD");
+  const double Bref   = _qtymap.GetInputParser()->get("Bref");
 
   const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution
 
   double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
 
-  double Re  = _qtymap._physmap->get("Re");
-  double Rem = _qtymap._physmap->get("Rem");
-  double Hm  = _qtymap._physmap->get("Hm");
-  double S   = _qtymap._physmap->get("S");
+  double Re  = _qtymap.GetInputParser()->get("Re");
+  double Rem = _qtymap.GetInputParser()->get("Rem");
+  double Hm  = _qtymap.GetInputParser()->get("Hm");
+  double S   = _qtymap.GetInputParser()->get("S");
  
   
-  Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   
   
   double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
@@ -558,7 +558,7 @@ void DesVelocity::Function_txyz(const double t, const double* xp,double* func) c
   //constant for the real reference length in the Hartmann number
   const double LHm =2.;   //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
 
-  const double magnitude = _qtymap._physmap->get("udes")*DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
+  const double magnitude = _qtymap.GetInputParser()->get("udes")*DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
   
   func[0] = -sin(thetaz)*magnitude;
   func[1] = cos(thetaz)*magnitude;
@@ -638,23 +638,23 @@ void MagnFieldHomAdj::Function_txyz(const double t, const double* xp,double* fun
 
 void Velocity::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
 #if (DIMENSION==2)
@@ -707,14 +707,14 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
-       if (bc_flag[0] == 1)  bc_flag[0] = _qtymap._physmap->get("Fake3D");   //u x n  //check it for all equations
-       if (bc_flag[1] == 1)  bc_flag[1] = _qtymap._physmap->get("Fake3D");   //u x n          //leave this free for 2D
+       if (bc_flag[0] == 1)  bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //u x n  //check it for all equations
+       if (bc_flag[1] == 1)  bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");   //u x n          //leave this free for 2D
       bc_flag[2]=0;                                               //u dot n  
   }
   
   if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  {
-     if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");      //u x n
-     if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");      //u x n      //leave this free for 2D
+     if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");      //u x n
+     if (bc_flag[1] == 1) bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");      //u x n      //leave this free for 2D
      bc_flag[2] = 0;                                                  //u dot n
   }
   
@@ -731,23 +731,23 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
 void Pressure::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
   #if (DIMENSION==2)
@@ -809,23 +809,23 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
 void MagnFieldHom::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
  #if (DIMENSION==2)
@@ -877,14 +877,14 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {   //  CONDUCTING, now insulating
-   if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");     //bxn
-   if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");     //bxn      //leave this free for 2D
+   if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");     //bxn
+   if (bc_flag[1] == 1) bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");     //bxn      //leave this free for 2D
 //      bc_flag[2]=0;                                       //b.n 
   }
   
   if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {   //  CONDUCTING, now insulating
-   if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");   //bxn
-   if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");   //bxn     //leave this free for 2D
+   if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //bxn
+   if (bc_flag[1] == 1) bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");   //bxn     //leave this free for 2D
 //  bc_flag[2]=0;                           //b.n 
   }
   
@@ -902,23 +902,23 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
 void MagnFieldHomAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
 
@@ -971,14 +971,14 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   }
   
 if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //current  
-     if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");
-     if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");
+     if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");
+     if (bc_flag[1] == 1) bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");
 //      bc_flag[2]=0;
   }
   
   if ((le[2]-lb[2]) - x_rotshift[2] > -bdry_toll &&  (le[2]-lb[2]) -x_rotshift[2] < bdry_toll)  {
-     if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");
-     if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");
+     if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");
+     if (bc_flag[1] == 1) bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");
 //    bc_flag[2]=0;
   }
 #endif
@@ -994,23 +994,23 @@ if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //current
  
  void MagnFieldHomLagMult::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
 #if (DIMENSION==2)
@@ -1068,23 +1068,23 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
 void MagnFieldHomLagMultAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
 
@@ -1142,23 +1142,23 @@ if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //current
 
 void VelocityAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
 
@@ -1213,13 +1213,13 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
-    if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");   //u x n
-    if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");  //u x n             //leave this free for 2D
+    if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //u x n
+    if (bc_flag[1] == 1) bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");  //u x n             //leave this free for 2D
       bc_flag[2]=0;                                            //u dot n
   }
   if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
-    if (bc_flag[0] == 1) bc_flag[0] = _qtymap._physmap->get("Fake3D");   //u x n
-    if (bc_flag[1] == 1) bc_flag[1] = _qtymap._physmap->get("Fake3D");  //u x n             //leave this free for 2D
+    if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //u x n
+    if (bc_flag[1] == 1) bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");  //u x n             //leave this free for 2D
     bc_flag[2]=0;                                                //u dot n
   }
 #endif
@@ -1233,23 +1233,23 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
  
  void PressureAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
 #if (DIMENSION==2)
@@ -1309,23 +1309,23 @@ if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  
 
 void MagnFieldExt::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
-Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
 #if (DIMENSION==2)
@@ -1356,8 +1356,8 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   
   if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {//top of the  of the RefBox
     
-     bc_flag[0] = _qtymap._physmap->get("UseControl");
-     bc_flag[1] = _qtymap._physmap->get("UseControl");
+     bc_flag[0] = _qtymap.GetInputParser()->get("UseControl");
+     bc_flag[1] = _qtymap.GetInputParser()->get("UseControl");
  }
   
 #else
@@ -1381,8 +1381,8 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
   }
   
   if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
-    bc_flag[0] = _qtymap._physmap->get("UseControl");
-    bc_flag[1] = _qtymap._physmap->get("UseControl");
+    bc_flag[0] = _qtymap.GetInputParser()->get("UseControl");
+    bc_flag[1] = _qtymap.GetInputParser()->get("UseControl");
     
     bc_flag[2]=0;
   }
@@ -1409,23 +1409,23 @@ Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
 
 void MagnFieldExtLagMult::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
-  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
   
   
@@ -1485,27 +1485,27 @@ void MagnFieldExtLagMult::bc_flag_txyz(const double t, const double* xp, std::ve
 
 void Velocity::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
-  const double Uref = _qtymap._physmap->get("Uref");
-  const double pref = _qtymap._physmap->get("pref");
-  const double udes = _qtymap._physmap->get("udes");
+  const double Uref = _qtymap.GetInputParser()->get("Uref");
+  const double pref = _qtymap.GetInputParser()->get("pref");
+  const double udes = _qtymap.GetInputParser()->get("udes");
   
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
-  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 //rotation of the function  
     double thetaz = box->_domain_rtmap.get("thetaz");
@@ -1533,21 +1533,21 @@ const double magnitude = /*udes**/1.*(x_rotshift[0] - box->_lb[0])*(box->_le[0]-
 
 void Pressure::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
-  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
   
 #if (DIMENSION==2)
   
@@ -1564,7 +1564,7 @@ void Pressure::initialize_xyz(const double* xp, std::vector< double >& value) co
 
 void MagnFieldHom::initialize_xyz(const double* xp, std::vector< double >& value) const {
   
-  const double Bref = _qtymap._physmap->get("Bref");
+  const double Bref = _qtymap.GetInputParser()->get("Bref");
  
   value[0] = 0./Bref;
   value[1] = 0./Bref;
@@ -1577,8 +1577,8 @@ void MagnFieldHom::initialize_xyz(const double* xp, std::vector< double >& value
 
 void MagnFieldHomLagMult::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
-  const double Uref = _qtymap._physmap->get("Uref");
-  const double Bref = _qtymap._physmap->get("Bref");
+  const double Uref = _qtymap.GetInputParser()->get("Uref");
+  const double Bref = _qtymap.GetInputParser()->get("Bref");
  
   value[0] = 0./(Uref*Bref);
   
@@ -1623,7 +1623,7 @@ void MagnFieldHomLagMultAdj::initialize_xyz(const double* xp, std::vector< doubl
 
 void MagnFieldExt::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
-  const double Bref = _qtymap._physmap->get("Bref");
+  const double Bref = _qtymap.GetInputParser()->get("Bref");
  
   value[0] = Bref/Bref;
   value[1] = 0./Bref;
@@ -1637,8 +1637,8 @@ void MagnFieldExt::initialize_xyz(const double* xp, std::vector< double >& value
 
 void MagnFieldExtLagMult::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
-  const double Uref = _qtymap._physmap->get("Uref");
-  const double Bref = _qtymap._physmap->get("Bref");
+  const double Uref = _qtymap.GetInputParser()->get("Uref");
+  const double Bref = _qtymap.GetInputParser()->get("Bref");
  
   value[0] = 0./(Uref*Bref);
 

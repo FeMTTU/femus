@@ -75,27 +75,39 @@ class QuantityMap {
   
 public:
 
-   QuantityMap(const MultiLevelMeshTwo & mesh, const FemusInputParser<double> * map_in);
-  ~QuantityMap(){};
+   QuantityMap() {};
+  ~QuantityMap() {};
   
   inline           void  AddQuantity(Quantity* value)          {_QuantMap.insert(make_pair(value->_name,value));}
   
   inline       Quantity* GetQuantity(const std::string & name)  const    {
  
     std::map<std::string,Quantity*>::const_iterator myit = _QuantMap.find(name);
+    
       if ( myit == _QuantMap.end() ) { 
        std::cout << "QuantityMap::GetQuantity: Sorry but there is no ---> "
-                 << name  << " <--- element in the Global Quantity Map" << std::endl; abort();}
+                 << name  << " <--- element in the Global Quantity Map" << std::endl; abort();
+      }
 
     return myit->second;
     
   }
 
+    /** get/set */
+  inline void SetMeshTwo(const MultiLevelMeshTwo * mesh_in)  {   _mesh = mesh_in; return; }
+  
+  inline const  MultiLevelMeshTwo * GetMeshTwo() const { return  _mesh; }
+  
+  inline const FemusInputParser<double> *  GetInputParser() const { return _physmap; }
+
+  void SetInputParser(const FemusInputParser<double> * parser_in) { _physmap = parser_in; return; }
+
+private:
   
  std::map<std::string,Quantity*> _QuantMap;
- const MultiLevelMeshTwo & _mesh;
- const FemusInputParser<double> * _physmap;
  
+ const MultiLevelMeshTwo * _mesh;
+ const FemusInputParser<double> * _physmap;
   
 };
 
