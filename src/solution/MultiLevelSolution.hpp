@@ -185,7 +185,7 @@ private:
     vector< vector <FunctionBase *> > _nonhomogeneousbcfunction; 
 
     
-    
+    /** This group of vectors has the size of the number of added solutions */
     bool _bdc_func_set;
     unsigned short  _gridn;
     vector <int>    _SolType;
