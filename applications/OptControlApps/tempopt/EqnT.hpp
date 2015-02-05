@@ -23,8 +23,6 @@ public:
      
  void GenMatRhs(const uint Level);
  
- void elem_bc_read(const double */*el_xm*/, int& surf_id, double *value,int* el_flag) const {};
-
 };
 
 

@@ -145,7 +145,7 @@ public:
  static const int _number_tang_comps[3];  //  {0,1,3} Number of tangential components in 1D,2D,3D (see BC in general domains) : use it only for 2D and 3D
           void    GenerateBdcElem();
           void  clearElBc();
-  virtual void elem_bc_read(const double * el_xm, int& surf_id, double * value,int * el_flag) const = 0;
+          void elem_bc_read(const double * el_xm, int& surf_id, double * value,int * el_flag) const;
           void Bc_GetElFlagValLevSubd(const uint Level,const uint isubd,const uint iel,int* el_flag,double* el_value ) const;
           void Bc_ConvertToDirichletPenalty(const uint elem_dim, const uint ql, uint* bc) const;
           void Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const uint *bc_eldofs,const CurrentQuantity &Velold_in,const CurrentQuantity& press_in,uint &press_fl) const;

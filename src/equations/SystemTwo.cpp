@@ -42,6 +42,8 @@
 #include "DenseMatrix.hpp"
 
 
+#include "Box.hpp"
+
 namespace femus {
 
 
@@ -380,17 +382,6 @@ void SystemTwo::initVectors() {
 
 void SystemTwo::GenerateBdc() {
   
-    std::string    input_dir = DEFAULT_CONFIGDIR;
-    std::string          ibc = DEFAULT_IBC;
-    std::string     ext_xdmf = DEFAULT_EXT_XDMF;
-    std::string       ext_h5 = DEFAULT_EXT_H5;
-    std::string  bdry_suffix = DEFAULT_BDRY_SUFFIX;
-    
-    std::ostringstream ibc_fileh5;
-    ibc_fileh5  << "./" << input_dir << "/" << ibc << ext_h5;
-// TODO actually, we should first COPY this file in the outtime dir, then READ it from there!
-    std::ifstream in(ibc_fileh5.str().c_str());
-
     const uint Lev_pick_bc_NODE_dof = GetGridn()-1;  //we use the FINE Level as reference
     
  //************************************************   
@@ -770,15 +761,6 @@ void SystemTwo::clearElBc() {
 /// This function generates the initial conditions:
 void SystemTwo::Initialize() {
 
-    std::string  input_dir = DEFAULT_CONFIGDIR;
-    std::string        ibc = DEFAULT_IBC;
-    std::string     ext_h5 = DEFAULT_EXT_H5;
-    std::ostringstream ibc_filexmf;
-    ibc_filexmf << "./"<< input_dir << ibc << ext_h5;
-    std::ifstream in(ibc_filexmf.str().c_str());
-
-    if (!in) {
-
         CurrentElem       currelem(VV,this,_mesh,GetMLProb().GetElemType());  
      
         const uint  coords_fine_offset = _mesh._NoNodesXLev[GetGridn()-1];
@@ -858,16 +840,6 @@ void SystemTwo::Initialize() {
 #ifdef DEFAULT_PRINT_INFO
         std::cout << "\n Initialize(Base): Initial solution defined by ic_read" << "\n \n";
 #endif
-    }
-
-    else {// -------------------- file reading
-        std::cout << "^^^^^ WE HAVE TO CHECK BECAUSE WE ADDED CONSTANT ELEMENTS ^^^^^^" << std::endl; abort();
-
-        XDMFWriter::read_system_solutions(ibc_filexmf.str(),&_mesh,&_dofmap,this);
-        std::cout << "\n Initialize(Base): Initial solution defined by " <<  ibc_filexmf.str().c_str() << "\n \n";
-    }
-
-    in.close();
 
     return;
 }
@@ -2344,6 +2316,174 @@ for (uint i=0; i < _dofmap._Dim[GetGridn()-1]; i++) {
 return;
 
 }
+
+
+
+
+//=======================
+//the implementation of these boundary conditions is related to the particular Domain
+//Here we are picking a Box
+//So, you get the domain name from the Domain. If it is not a box, you abort.
+//the imposition of the boundary conditions is related to the Equation.
+//Clearly, it depends on the domain
+//So for different domains we would have different parts here, with if's.
+//We cannot associate this function to the Box or the Cylinder because 
+//it depends on the OPERATORS involved in the EQUATION,
+//so it must stay stick to the Equation, which is a bunch of operators
+//every application has only one domain, but if you want to use different 
+//domains in the same equation you have to specify it here...
+//also, changing the domain would mean changing the functions in the Physics User Quantities,
+//so in general we do not automatically switch the domain so quickly
+
+//So, for every Domain we have a different implementation 
+// of this function
+//The idea is: i have to get the Box from where i put it.
+//The point is that i set it as a domain but it is also a Box
+//So i have to do a CAST from Domain to Box
+
+
+
+void SystemTwo::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const {
+//el_xm[] is the NON-DIMENSIONAL node coordinate // lb,le are NONDIMENSIONALIZED
+
+const double bdry_toll = _mesh.GetRuntimeMap().get("bdry_toll");
+
+  
+
+Box* box= static_cast<Box*>(_mesh.GetDomain());
+
+  std::vector<double>  lb(_mesh.get_dim());
+  std::vector<double>  le(_mesh.get_dim());
+  lb[0] = box->_lb[0];//already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  
+ if (_mesh.get_dim() == 3)  {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_mesh.get_dim());
+  _mesh._domain->TransformPointToRef(el_xm,&x_rotshift[0]);
+
+ 
+  if (_mesh.get_dim() == 2)  {
+
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) { //left
+surf_id=44; 
+     el_flag[NN]=1;
+     el_flag[TT]=1;   
+  value[NN]=0.;
+  value[TT]=0.;/*-4.*/
+    
+  }
+
+
+ if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0]) -(x_rotshift[0]) < bdry_toll){ //right
+surf_id=66; 
+     el_flag[NN]=1; 
+     el_flag[TT]=1;
+       value[NN]=0.;
+       value[TT]=0.;/*+4.*/ 
+}
+  
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom
+surf_id=22; 
+
+      el_flag[NN]=0;    //no normal component
+      el_flag[TT]=1;    //yes tangential component
+        value[NN]=0.;
+        value[TT]=0.;
+}
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  { //top
+ surf_id=88;
+
+     el_flag[NN]=0;     //no normal component
+     el_flag[TT]=1;     //yes tangential component
+       value[NN]=0.;
+       value[TT]=0.;
+    
+  }
+  
+  }  //end dim 2
+  
+  else if (_mesh.get_dim() == 3)  {
+
+  
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) { //left
+surf_id=44;  
+     el_flag[NN]=1;    //yes normal component
+     el_flag[TT]=1;    //yes tang component
+  value[NN]=0.;  //value of the normal 
+  value[1]=0.;  //value of the tangential
+  value[2]=0.;  //value of the  tangential
+  value[3]=0.;  //value of the tangential
+  }
+  
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) -x_rotshift[0] < bdry_toll){ //right
+surf_id=66;
+     el_flag[NN]=1;    //yes normal component 
+     el_flag[TT]=1;    //yes tang component
+  value[NN]=0.;  //value of the normal 
+  value[1]=0.;  //value of the tangential
+  value[2]=0.;  //value of the  tangential
+  value[3]=0.;  //value of the tangential
+   
+}
+  
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom
+
+   surf_id=22;
+
+     el_flag[NN]=0;    //no normal component
+     el_flag[TT]=1;    //yes tang component
+  value[NN]=0.;  //value of the normal 
+  value[1]=0.;  //value of the tangential
+  value[2]=0.;  //value of the  tangential
+  value[3]=0.;  //value of the tangential
+  }
+
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  { //top
+surf_id=88;
+
+     el_flag[NN]=0;    //no normal component
+     el_flag[TT]=1;    //yes tang component
+  value[NN]=0.;  //value of the normal 
+  value[1]=0.;  //value of the tangential
+  value[2]=0.;  //value of the  tangential
+  value[3]=0.;  //value of the tangential
+  }
+  
+ if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //symmetry
+
+surf_id=11;
+
+     el_flag[NN]=1;    //yes normal (equal to zero)
+     el_flag[TT]=0;    //no tangential (symmetry)
+  value[NN]=0.;  //value of the normal 
+  value[1]=0.;  //value of the tangential
+  value[2]=0.;  //value of the  tangential
+  value[3]=0.;  //value of the tangential
+  }
+  if ((le[2]-lb[2]) - x_rotshift[2] > -bdry_toll &&  (le[2]-lb[2]) -x_rotshift[2] < bdry_toll)  {
+surf_id=77; 
+     el_flag[NN]=1;    //yes normal component //it can be zero also i think
+     el_flag[TT]=0;    //no tang component
+  value[NN]=0.;  //value of the normal 
+  value[1]=0.;  //value of the tangential
+  value[2]=0.;  //value of the tangential
+  value[3]=0.;  //value of the tangential
+  
+  }
+
+  } //end dim 3
+
+
+  return;
+}
+
 
 
 

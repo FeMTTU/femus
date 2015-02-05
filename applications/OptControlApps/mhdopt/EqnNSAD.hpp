@@ -22,9 +22,7 @@ class EqnNSAD : public SystemTwo {
 
   ~EqnNSAD();
 
-  void elem_bc_read(const double xp[],int& surf_id,double normal[],int bc_flag[]) const {};
-  
- void GenMatRhs(const uint Level);
+  void GenMatRhs(const uint Level);
 
 
 
