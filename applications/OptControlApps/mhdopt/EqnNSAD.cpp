@@ -89,13 +89,13 @@ const int NonStatNSAD = (int) _phys.get("NonStatNSAD");
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     //QTYZERO
     CurrentQuantity VelAdjOld(currgp);
-    VelAdjOld._qtyptr   = _QtyInternalVector[QTYZERO];
+    VelAdjOld._qtyptr   = _UnknownQuantitiesVector[QTYZERO];
     VelAdjOld.VectWithQtyFillBasic();
     VelAdjOld.Allocate();
   
     //QTYONE
     CurrentQuantity PressAdjOld(currgp);
-    PressAdjOld._qtyptr   = _QtyInternalVector[QTYONE];
+    PressAdjOld._qtyptr   = _UnknownQuantitiesVector[QTYONE];
     PressAdjOld.VectWithQtyFillBasic();
     PressAdjOld.Allocate();
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
@@ -356,13 +356,13 @@ if (_Dir_pen_fl == 0)  {
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     //QTYZERO
     CurrentQuantity VelAdjOld(currgp);
-    VelAdjOld._qtyptr   = _QtyInternalVector[QTYZERO];
+    VelAdjOld._qtyptr   = _UnknownQuantitiesVector[QTYZERO];
     VelAdjOld.VectWithQtyFillBasic();
     VelAdjOld.Allocate();
   
     //QTYONE
     CurrentQuantity PressAdjOld(currgp);
-    PressAdjOld._qtyptr   = _QtyInternalVector[QTYONE];
+    PressAdjOld._qtyptr   = _UnknownQuantitiesVector[QTYONE];
     PressAdjOld.VectWithQtyFillBasic();
     PressAdjOld.Allocate();
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================

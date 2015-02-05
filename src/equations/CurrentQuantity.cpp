@@ -267,7 +267,7 @@ void CurrentQuantity::GetElemDofs(const uint Level)  {
   length_nodedof[KK] = _currEl._mesh._n_elements_vb_lev[VV][Level];
 
    int off_total = 0;
-   for (uint i = 0; i < _qtyptr->_pos; i++) off_total += _eqnptr->GetQtyIntVector()[i]->_dim * _eqnptr->_dofmap._DofNumLevFE[ Level ][ _eqnptr->GetQtyIntVector()[i]->_FEord ];
+   for (uint i = 0; i < _qtyptr->_pos; i++) off_total += _eqnptr->GetUnknownQuantitiesVector()[i]->_dim * _eqnptr->_dofmap._DofNumLevFE[ Level ][ _eqnptr->GetUnknownQuantitiesVector()[i]->_FEord ];
 
    int DofObj = 0;
 

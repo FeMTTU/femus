@@ -72,19 +72,19 @@ EqnT::EqnT(MultiLevelProblem & equations_map_in,
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
-    Tempold._qtyptr   = _QtyInternalVector[0]; 
+    Tempold._qtyptr   = _UnknownQuantitiesVector[0]; 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Temp2(currgp);
-    Temp2._qtyptr   = _QtyInternalVector[1]; 
+    Temp2._qtyptr   = _UnknownQuantitiesVector[1]; 
     Temp2.VectWithQtyFillBasic();
     Temp2.Allocate();
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Temp3(currgp);
-    Temp3._qtyptr   = _QtyInternalVector[2]; 
+    Temp3._qtyptr   = _UnknownQuantitiesVector[2]; 
     Temp3.VectWithQtyFillBasic();
     Temp3.Allocate();
     
@@ -308,19 +308,19 @@ for (uint fe = 0; fe < QL; fe++)     {
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
-    Tempold._qtyptr   = _QtyInternalVector[0]; 
+    Tempold._qtyptr   = _UnknownQuantitiesVector[0]; 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Temp2(currgp);
-    Temp2._qtyptr   = _QtyInternalVector[1]; 
+    Temp2._qtyptr   = _UnknownQuantitiesVector[1]; 
     Temp2.VectWithQtyFillBasic();
     Temp2.Allocate();
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Temp3(currgp);
-    Temp3._qtyptr   = _QtyInternalVector[2]; 
+    Temp3._qtyptr   = _UnknownQuantitiesVector[2]; 
     Temp3.VectWithQtyFillBasic();
     Temp3.Allocate();
     

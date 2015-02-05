@@ -66,7 +66,7 @@ SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in,
 //the equal puts the two equal to each other
 //as an alternative, since std::vector is a class, i could have used the initialization list above
 //like i do with REFERENCES. In that case the copy constructor would be called.
-//     _QtyInternalVector = int_map_in;
+//     _UnknownQuantitiesVector = int_map_in;
    
 // ========= PENALTY DIRICHLET FLAG ==============
 //put a default to zero, then every Eqn will OVERRIDE it
@@ -104,10 +104,10 @@ void SystemTwo::initVarNames() {
 //=======  _var_names: they are the names of the quantities which are unkwnowns to this equation  ===========
     std::ostringstream name;
     uint count = 0;
-   for (uint i=0; i< _QtyInternalVector.size(); i++) {
-        for (uint j=0; j < _QtyInternalVector[i]->_dim; j++) {
+   for (uint i=0; i< _UnknownQuantitiesVector.size(); i++) {
+        for (uint j=0; j < _UnknownQuantitiesVector[i]->_dim; j++) {
           name.str("");
-          name << _QtyInternalVector[i]->_name << j;
+          name << _UnknownQuantitiesVector[i]->_name << j;
 	  _var_names[count] = name.str();
 	  count++;
 	}
@@ -125,9 +125,9 @@ void SystemTwo::initRefValues() {
     _refvalue.resize(_dofmap._n_vars);
 
     uint count = 0;
-   for (uint i=0; i< _QtyInternalVector.size(); i++) {
-        for (uint j=0; j < _QtyInternalVector[i]->_dim; j++) {
-	  _refvalue[count] = _QtyInternalVector[i]->_refvalue[j];
+   for (uint i=0; i< _UnknownQuantitiesVector.size(); i++) {
+        for (uint j=0; j < _UnknownQuantitiesVector[i]->_dim; j++) {
+	  _refvalue[count] = _UnknownQuantitiesVector[i]->_refvalue[j];
 	  count++;
 	}
    }
@@ -448,10 +448,10 @@ void SystemTwo::GenerateBdc() {
  	    for (uint ivar=0; ivar< _dofmap._n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!
  	    
       uint count = 0;
-        for (uint i = 0; i < _QtyInternalVector.size(); i++) {
-	  std::vector<int>  bc_temp(_QtyInternalVector[i]->_dim,DEFAULT_BC_FLAG);
-	  _QtyInternalVector[i]->bc_flag_txyz(0.,currelem.GetMidpoint(),bc_temp);
-	  for (uint j = 0; j < _QtyInternalVector[i]->_dim; j++) {
+        for (uint i = 0; i < _UnknownQuantitiesVector.size(); i++) {
+	  std::vector<int>  bc_temp(_UnknownQuantitiesVector[i]->_dim,DEFAULT_BC_FLAG);
+	  _UnknownQuantitiesVector[i]->bc_flag_txyz(0.,currelem.GetMidpoint(),bc_temp);
+	  for (uint j = 0; j < _UnknownQuantitiesVector[i]->_dim; j++) {
 	    bc_flag[count] = bc_temp[j];
 	    count++;
 	  }
@@ -841,45 +841,45 @@ void SystemTwo::Initialize() {
 	        currelem.set_el_nod_conn_lev_subd(Level,_mesh._iproc,iel);
                 currelem.SetMidpoint();
 
-            for (uint q=0; q < _QtyInternalVector.size() ; q++) {
+            for (uint q=0; q < _UnknownQuantitiesVector.size() ; q++) {
 		      
-	  std::vector<double>  value(_QtyInternalVector[q]->_dim,0.);
+	  std::vector<double>  value(_UnknownQuantitiesVector[q]->_dim,0.);
             //the fact is that THERE ARE DIFFERENT DOF OBJECTS for DIFFERENT FE families
 	    //for each family we should only pick the dof objects that are needed
 	    //what changes between the FE families is the DOF OBJECT YOU PROVIDE: it could be a NODE or a CELL
 	    // Notice that for some elements you don't have the midpoint of the element!
-     if (_QtyInternalVector[q]->_FEord < KK) {
+     if (_UnknownQuantitiesVector[q]->_FEord < KK) {
        
-        for (uint ivar=0; ivar < _QtyInternalVector[q]->_dim; ivar++) {
+        for (uint ivar=0; ivar < _UnknownQuantitiesVector[q]->_dim; ivar++) {
        
-          for (uint k=0; k < currelem.GetElemType(_QtyInternalVector[q]->_FEord)->GetNDofs() ; k++) {
+          for (uint k=0; k < currelem.GetElemType(_UnknownQuantitiesVector[q]->_FEord)->GetNDofs() ; k++) {
 	    
                 const int fine_node = _mesh._el_map[VV][ k + ( iel + iel_b )*el_dof_objs ];
                 for (uint idim = 0; idim < _mesh.get_dim(); idim++) xp[idim] = _mesh._xyz[ fine_node + idim*coords_fine_offset ];
 
-	  _QtyInternalVector[q]->initialize_xyz(&xp[0],value);
-		    const int dof_pos_lev = _dofmap.GetDofQuantityComponent(Level,_QtyInternalVector[q],ivar,fine_node);
+	  _UnknownQuantitiesVector[q]->initialize_xyz(&xp[0],value);
+		    const int dof_pos_lev = _dofmap.GetDofQuantityComponent(Level,_UnknownQuantitiesVector[q],ivar,fine_node);
 		    _x[Level]->set( dof_pos_lev, value[ivar] );
 		      
 	    }  //dof objects 
          }
 
      }
-     else if (_QtyInternalVector[q]->_FEord == KK) { 
+     else if (_UnknownQuantitiesVector[q]->_FEord == KK) { 
 
-	    for (uint ivar=0; ivar < _QtyInternalVector[q]->_dim; ivar++) {
+	    for (uint ivar=0; ivar < _UnknownQuantitiesVector[q]->_dim; ivar++) {
 	    
-                for (uint k=0; k < currelem.GetElemType(_QtyInternalVector[q]->_FEord)->GetNDofs() ; k++) { //only 1
+                for (uint k=0; k < currelem.GetElemType(_UnknownQuantitiesVector[q]->_FEord)->GetNDofs() ; k++) { //only 1
 		  
        int sum_elems_prev_sd_at_lev = 0;
 	  for (uint pr = 0; pr < _mesh._iproc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*GetGridn() + Level + 1] - _mesh._off_el[VV][pr*GetGridn() + Level]; }
 	  
           currelem.GetMidpoint();
 	  
-	  _QtyInternalVector[q]->initialize_xyz(&currelem.GetMidpoint()[0],value);
+	  _UnknownQuantitiesVector[q]->initialize_xyz(&currelem.GetMidpoint()[0],value);
 
 	      const int elem_lev = iel + sum_elems_prev_sd_at_lev;
-	      const int dof_pos_lev = _dofmap.GetDofQuantityComponent(Level,_QtyInternalVector[q],ivar,elem_lev);
+	      const int dof_pos_lev = _dofmap.GetDofQuantityComponent(Level,_UnknownQuantitiesVector[q],ivar,elem_lev);
               _x[Level]->set( dof_pos_lev, value[ivar] );
 	    
  	                       }  //k

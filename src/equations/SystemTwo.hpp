@@ -99,20 +99,16 @@ public:
 //=======================================================================
 //======= Quantities =========
 //=======================================================================
-      inline const std::vector<Quantity*> & GetQtyIntVector() const { //MultilevelSolution//
-	return _QtyInternalVector;
+      inline const std::vector<Quantity*> & GetUnknownQuantitiesVector() const { //MultilevelSolution//
+	return _UnknownQuantitiesVector;
       }
       
-      void SetQtyIntVector(const std::vector<Quantity*> & vect_in) { //System//
-	_QtyInternalVector = vect_in;
-	init_sys();
-      }
-      
+     
       void AddUnknownToSystemPDE( Quantity* qty_in) { //System//
-	  unsigned n = _QtyInternalVector.size();
+	  unsigned n = _UnknownQuantitiesVector.size();
 
-	_QtyInternalVector.resize(n+1);
-	_QtyInternalVector[n] = qty_in;
+	_UnknownQuantitiesVector.resize(n+1);
+	_UnknownQuantitiesVector[n] = qty_in;
 	qty_in->set_eqn(this);
 	qty_in->SetPosInAssocEqn(n);
 	
@@ -163,7 +159,7 @@ protected:
   const FemusInputParser<double>  & _phys;   //passed from MultilevelProblem//
   const MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem//
 
-  std::vector<Quantity*>          _QtyInternalVector;  //MultilevelSolution//
+  std::vector<Quantity*>          _UnknownQuantitiesVector;  //MultilevelSolution//
 
 };
 

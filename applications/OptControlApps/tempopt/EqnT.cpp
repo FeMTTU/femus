@@ -129,19 +129,19 @@ void  EqnT::GenMatRhs(const uint Level) {
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
-    Tempold._qtyptr   = _QtyInternalVector[0]; 
+    Tempold._qtyptr   = _UnknownQuantitiesVector[0]; 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //====================================
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   = GetMLProb().GetQtyMap().GetQuantity("Qty_TempLift");//_QtyInternalVector[1]; 
+    Tlift._qtyptr   = GetMLProb().GetQtyMap().GetQuantity("Qty_TempLift");//_UnknownQuantitiesVector[1]; 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
     CurrentQuantity TAdj(currgp);
-    TAdj._qtyptr   = GetMLProb().GetQtyMap().GetQuantity("Qty_TempAdj");//_QtyInternalVector[2]; 
+    TAdj._qtyptr   = GetMLProb().GetQtyMap().GetQuantity("Qty_TempAdj");//_UnknownQuantitiesVector[2]; 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
     
@@ -440,19 +440,19 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
-    Tempold._qtyptr   = _QtyInternalVector[0]; 
+    Tempold._qtyptr   = _UnknownQuantitiesVector[0]; 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //====================================
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   = GetMLProb().GetQtyMap().GetQuantity("Qty_TempLift");//_QtyInternalVector[1]; 
+    Tlift._qtyptr   = GetMLProb().GetQtyMap().GetQuantity("Qty_TempLift");//_UnknownQuantitiesVector[1]; 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
     CurrentQuantity TAdj(currgp);
-    TAdj._qtyptr   = GetMLProb().GetQtyMap().GetQuantity("Qty_TempAdj");//_QtyInternalVector[2]; 
+    TAdj._qtyptr   = GetMLProb().GetQtyMap().GetQuantity("Qty_TempAdj");//_UnknownQuantitiesVector[2]; 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
     

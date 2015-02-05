@@ -136,7 +136,6 @@
   EqnNS & eqnNS = equations_map.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);
           eqnNS.AddUnknownToSystemPDE(&velocity); 
           eqnNS.AddUnknownToSystemPDE(&pressure); 
-          eqnNS.init_sys();  
   
   EqnT & eqnT = equations_map.add_system<EqnT>("Eqn_T",NO_SMOOTHER);
          eqnT.AddUnknownToSystemPDE(&temperature);
@@ -145,7 +144,6 @@
 #if FOURTH_ROW==1
          eqnT.AddUnknownToSystemPDE(&pressure_2);   //the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function
 #endif
-         eqnT.init_sys();
   
 //================================ 
 //========= End add EQUATIONS  and ========
@@ -162,18 +160,20 @@
 
    for (MultiLevelProblem::const_system_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {\
      
-   SystemTwo* mgsol = static_cast<SystemTwo*>(eqn->second);
+   SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
 //=====================
-    mgsol -> _dofmap.ComputeMeshToDof();
+    sys -> init_sys();
 //=====================
-    mgsol -> GenerateBdc();
-    mgsol -> GenerateBdcElem();
+    sys -> _dofmap.ComputeMeshToDof();
 //=====================
-    mgsol -> ReadMGOps(files.GetOutputPath());
+    sys -> GenerateBdc();
+    sys -> GenerateBdcElem();
 //=====================
-    mgsol -> initVectors();     //TODO can I do it earlier than this position?
+    sys -> ReadMGOps(files.GetOutputPath());
 //=====================
-    mgsol -> Initialize();
+    sys -> initVectors();     //TODO can I do it earlier than this position?
+//=====================
+    sys -> Initialize();
     
     } 
 	 
@@ -183,7 +183,7 @@
   opt_loop.optimization_loop(equations_map);
 
 // at this point, the run has been completed 
-  files.PrintRunForRestart(DEFAULT_LAST_RUN);/*(iproc==0)*/
+  files.PrintRunForRestart(DEFAULT_LAST_RUN);
   files.log_petsc();
   
 // ============  clean ================================

@@ -148,11 +148,11 @@ int main(int argc, char** argv) {
 //================================
 
   // ====== MultiLevelProblem =================================
-  MultiLevelProblem equations_map;
-  equations_map.SetMeshTwo(&mesh);
-  equations_map.SetQruleAndElemType("fifth");
-  equations_map.SetInputParser(&physics_map);
-  equations_map.SetQtyMap(&qty_map); 
+  MultiLevelProblem ml_prob;
+  ml_prob.SetMeshTwo(&mesh);
+  ml_prob.SetQruleAndElemType("fifth");
+  ml_prob.SetInputParser(&physics_map);
+  ml_prob.SetQtyMap(&qty_map); 
   
   
 //===============================================
@@ -161,69 +161,33 @@ int main(int argc, char** argv) {
 //========================================================
 
 #if NS_EQUATIONS==1
-std::vector<Quantity*> InternalVect_NS(2);
-InternalVect_NS[QTYZERO] = &velocity;      velocity.SetPosInAssocEqn(0);
-InternalVect_NS[QTYONE] = &pressure;       pressure.SetPosInAssocEqn(1);
-
-
-  EqnNS & eqnNS = equations_map.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);
-  eqnNS.SetQtyIntVector(InternalVect_NS);
-
- velocity.set_eqn(&eqnNS);
- pressure.set_eqn(&eqnNS);
-
+  EqnNS & eqnNS = ml_prob.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);
+          eqnNS.AddUnknownToSystemPDE(&velocity); 
+          eqnNS.AddUnknownToSystemPDE(&pressure); 
 #endif
   
 #if NSAD_EQUATIONS==1
-std::vector<Quantity*> InternalVect_NSAD(2);
-InternalVect_NSAD[QTYZERO] = &velocity_adj;     velocity_adj.SetPosInAssocEqn(0);
-InternalVect_NSAD[QTYONE]  = &pressure_adj;     pressure_adj.SetPosInAssocEqn(1);
-
-  EqnNSAD & eqnNSAD = equations_map.add_system<EqnNSAD>("Eqn_NSAD",NO_SMOOTHER); 
-  eqnNSAD.SetQtyIntVector(InternalVect_NSAD);
-
-  velocity_adj.set_eqn(&eqnNSAD);
-  pressure_adj.set_eqn(&eqnNSAD);
-
+  EqnNSAD & eqnNSAD = ml_prob.add_system<EqnNSAD>("Eqn_NSAD",NO_SMOOTHER); 
+            eqnNSAD.AddUnknownToSystemPDE(&velocity_adj); 
+            eqnNSAD.AddUnknownToSystemPDE(&pressure_adj); 
 #endif
   
 #if MHD_EQUATIONS==1
-std::vector<Quantity*> InternalVect_MHD(2);
-InternalVect_MHD[QTYZERO] = &bhom;             bhom.SetPosInAssocEqn(0);
-InternalVect_MHD[QTYONE]  = &bhom_lag_mult;    bhom_lag_mult.SetPosInAssocEqn(1);
-
-  EqnMHD & eqnMHD = equations_map.add_system<EqnMHD>("Eqn_MHD",NO_SMOOTHER);
-  eqnMHD.SetQtyIntVector(InternalVect_MHD);
-
-             bhom.set_eqn(&eqnMHD);
-    bhom_lag_mult.set_eqn(&eqnMHD);
- 
+  EqnMHD & eqnMHD = ml_prob.add_system<EqnMHD>("Eqn_MHD",NO_SMOOTHER);
+           eqnMHD.AddUnknownToSystemPDE(&bhom); 
+           eqnMHD.AddUnknownToSystemPDE(&bhom_lag_mult); 
 #endif
 
 #if MHDAD_EQUATIONS==1
-std::vector<Quantity*> InternalVect_MHDAD(2);
-InternalVect_MHDAD[QTYZERO] = &bhom_adj;             bhom_adj.SetPosInAssocEqn(0);
-InternalVect_MHDAD[QTYONE]  = &bhom_lag_mult_adj;    bhom_lag_mult_adj.SetPosInAssocEqn(1);
-	
-  EqnMHDAD & eqnMHDAD = equations_map.add_system<EqnMHDAD>("Eqn_MHDAD",NO_SMOOTHER);
-  eqnMHDAD.SetQtyIntVector(InternalVect_MHDAD);
-  
-           bhom_adj.set_eqn(&eqnMHDAD);
-  bhom_lag_mult_adj.set_eqn(&eqnMHDAD);
-  
+  EqnMHDAD & eqnMHDAD = ml_prob.add_system<EqnMHDAD>("Eqn_MHDAD",NO_SMOOTHER);
+             eqnMHDAD.AddUnknownToSystemPDE(&bhom_adj); 
+             eqnMHDAD.AddUnknownToSystemPDE(&bhom_lag_mult_adj); 
 #endif
 
 #if MHDCONT_EQUATIONS==1
-std::vector<Quantity*> InternalVect_MHDCONT(2);
-InternalVect_MHDCONT[QTYZERO] = &Bext;            Bext.SetPosInAssocEqn(0);
-InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn(1);
-
-  EqnMHDCONT & eqnMHDCONT = equations_map.add_system<EqnMHDCONT>("Eqn_MHDCONT",NO_SMOOTHER);
-  eqnMHDCONT.SetQtyIntVector(InternalVect_MHDCONT);
-
-                 Bext.set_eqn(&eqnMHDCONT);
-        Bext_lag_mult.set_eqn(&eqnMHDCONT);
-  
+  EqnMHDCONT & eqnMHDCONT = ml_prob.add_system<EqnMHDCONT>("Eqn_MHDCONT",NO_SMOOTHER);
+               eqnMHDCONT.AddUnknownToSystemPDE(&Bext); 
+               eqnMHDCONT.AddUnknownToSystemPDE(&Bext_lag_mult); 
 #endif  
    
 //================================
@@ -231,20 +195,21 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 //========= associate an EQUATION to QUANTITIES ========
 //================================
 
-   for (MultiLevelProblem::const_system_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
-        SystemTwo* mgsol = static_cast<SystemTwo*>(eqn->second);
-        
+   for (MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
+        SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
 //=====================
-    mgsol -> _dofmap.ComputeMeshToDof();
+    sys -> init_sys();
 //=====================
-    mgsol -> GenerateBdc();
-    mgsol -> GenerateBdcElem();
+    sys -> _dofmap.ComputeMeshToDof();
 //=====================
-    mgsol -> ReadMGOps(files.GetOutputPath());
+    sys -> GenerateBdc();
+    sys -> GenerateBdcElem();
 //=====================
-    mgsol -> initVectors();     //TODO can I do it earlier than this position?
+    sys -> ReadMGOps(files.GetOutputPath());
 //=====================
-    mgsol -> Initialize();
+    sys -> initVectors();     //TODO can I do it earlier than this position?
+//=====================
+    sys -> Initialize();
     
     }
 
@@ -252,13 +217,10 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());
   OptLoop opt_loop(files,loop_map); 
 
-  opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case   /*TODO fileIO */ 
+  opt_loop.TransientSetup(ml_prob);  // reset the initial state (if restart) and print the Case   /*TODO fileIO */ 
 
-  opt_loop.optimization_loop(equations_map);
+  opt_loop.optimization_loop(ml_prob);
     
-// // //   eqnNS->FunctionIntegral (0,funzione);
-// // //   eqnNS->FunctionIntegral (1,funzione);
-
 //============= prepare default for next restart ==========  
 // at this point, the run has been completed 
 // well, we do not know whether for the whole time range time.N-M.xmf
@@ -268,7 +230,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   files.log_petsc();
 
 // ============  clean ================================
-  equations_map.clear();
+  ml_prob.clear();
   mesh.clear();
   
   return 0;

@@ -94,35 +94,23 @@
   Temperature temperature3("Qty_Temperature3",qty_map,1,2/*constant*/);      qty_map.AddQuantity(&temperature3);
   // ===== end QuantityMap =========================================
 
-  // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblem equations_map;
-  equations_map.SetMeshTwo(&mesh);
-  equations_map.SetQruleAndElemType("fifth");
-  equations_map.SetInputParser(&physics_map); 
-  equations_map.SetQtyMap(&qty_map);
+  // ====== MultiLevelProblem =================================
+  MultiLevelProblem ml_prob;
+  ml_prob.SetMeshTwo(&mesh);
+  ml_prob.SetQruleAndElemType("fifth");
+  ml_prob.SetInputParser(&physics_map); 
+  ml_prob.SetQtyMap(&qty_map);
 
 //===============================================
 //================== Add EQUATIONS AND ======================
 //========= associate an EQUATION to QUANTITIES ========
 //========================================================
-// not all the Quantities need an association with equation
-//once you associate one quantity in the internal map of an equation, then it is immediately to be associated to that equation,
-//   so this operation of set_eqn could be done right away in the moment when you put the quantity in the equation
- 
-std::vector<Quantity*> InternalVect_Temp(3); 
 
-InternalVect_Temp[0] = &temperature;               temperature.SetPosInAssocEqn(0);
-InternalVect_Temp[1] = &temperature2;              temperature2.SetPosInAssocEqn(1);
-InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn(2);
-
-  EqnT & eqnT = equations_map.add_system<EqnT>("Eqn_T",NO_SMOOTHER);
-  eqnT.SetQtyIntVector(InternalVect_Temp);
-  
-    eqnT._Dir_pen_fl = 0;  //no penalty BC
-
-        temperature.set_eqn(&eqnT);
-        temperature2.set_eqn(&eqnT);
-        temperature3.set_eqn(&eqnT);
+  EqnT & eqnT = ml_prob.add_system<EqnT>("Eqn_T",NO_SMOOTHER);
+          eqnT.AddUnknownToSystemPDE(&temperature); 
+          eqnT.AddUnknownToSystemPDE(&temperature2); 
+          eqnT.AddUnknownToSystemPDE(&temperature3); 
+          eqnT._Dir_pen_fl = 0; 
 
 //================================ 
 //========= End add EQUATIONS  and ========
@@ -134,32 +122,33 @@ InternalVect_Temp[2] = &temperature3;              temperature3.SetPosInAssocEqn
 // then I'll have A from the equation, PRL and REST from a MG object.
 //So somehow i'll have to put these objects at a higher level... but so far let us see if we can COMPUTE and PRINT from HERE and not from the gencase
 	 
-   for (MultiLevelProblem::const_system_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
-        SystemTwo* mgsol = static_cast<SystemTwo*>(eqn->second);
-        
+   for (MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
+        SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
 //=====================
-    mgsol -> _dofmap.ComputeMeshToDof();
+    sys -> init_sys();
 //=====================
-    mgsol -> GenerateBdc();
-    mgsol -> GenerateBdcElem();
+    sys -> _dofmap.ComputeMeshToDof();
 //=====================
-    mgsol -> ReadMGOps(files.GetOutputPath());
+    sys -> GenerateBdc();
+    sys -> GenerateBdcElem();
 //=====================
-    mgsol -> initVectors();     //TODO can I do it earlier than this position?
+    sys -> ReadMGOps(files.GetOutputPath());
 //=====================
-    mgsol -> Initialize();
+    sys -> initVectors();     //TODO can I do it earlier than this position?
+//=====================
+    sys -> Initialize();
     }
     
-  time_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
+  time_loop.TransientSetup(ml_prob);  // reset the initial state (if restart) and print the Case
 
-  time_loop.TransientLoop(equations_map);
+  time_loop.TransientLoop(ml_prob);
 
 // at this point, the run has been completed 
-  files.PrintRunForRestart(DEFAULT_LAST_RUN);/*(iproc==0)*/
+  files.PrintRunForRestart(DEFAULT_LAST_RUN);
   files.log_petsc();
   
 // ============  clean ================================
-  equations_map.clear();
+  ml_prob.clear();
   mesh.clear();
   
   

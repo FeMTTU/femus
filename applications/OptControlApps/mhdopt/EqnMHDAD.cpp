@@ -87,13 +87,13 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
      //QTYZERO
     CurrentQuantity BhomAdjOld(currgp);
-    BhomAdjOld._qtyptr   = _QtyInternalVector[QTYZERO];
+    BhomAdjOld._qtyptr   = _UnknownQuantitiesVector[QTYZERO];
     BhomAdjOld.VectWithQtyFillBasic();
     BhomAdjOld.Allocate();    
   
     //QTYONE
     CurrentQuantity BhomLagMultAdjOld(currgp);
-    BhomLagMultAdjOld._qtyptr   = _QtyInternalVector[QTYONE];
+    BhomLagMultAdjOld._qtyptr   = _UnknownQuantitiesVector[QTYONE];
     BhomLagMultAdjOld.VectWithQtyFillBasic();
     BhomLagMultAdjOld.Allocate();    
 //========= END INTERNAL QUANTITIES (unknowns of the equation) ================= 
@@ -346,13 +346,13 @@ if (_Dir_pen_fl == 0)  {
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
      //QTYZERO
     CurrentQuantity BhomAdjOld(currgp);
-    BhomAdjOld._qtyptr   = _QtyInternalVector[QTYZERO];
+    BhomAdjOld._qtyptr   = _UnknownQuantitiesVector[QTYZERO];
     BhomAdjOld.VectWithQtyFillBasic();
     BhomAdjOld.Allocate();    
   
     //QTYONE
     CurrentQuantity BhomLagMultAdjOld(currgp);
-    BhomLagMultAdjOld._qtyptr   = _QtyInternalVector[QTYONE];
+    BhomLagMultAdjOld._qtyptr   = _UnknownQuantitiesVector[QTYONE];
     BhomLagMultAdjOld.VectWithQtyFillBasic();
     BhomLagMultAdjOld.Allocate();    
 //========= END INTERNAL QUANTITIES (unknowns of the equation) ================= 

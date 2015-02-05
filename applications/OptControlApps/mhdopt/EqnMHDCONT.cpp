@@ -99,12 +99,12 @@ namespace femus {
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity BeOld(currgp);
-    BeOld._qtyptr   = _QtyInternalVector[QTYZERO];
+    BeOld._qtyptr   = _UnknownQuantitiesVector[QTYZERO];
     BeOld.VectWithQtyFillBasic();
     BeOld.Allocate();
 
     CurrentQuantity LagMultOld(currgp);
-    LagMultOld._qtyptr   = _QtyInternalVector[QTYONE];
+    LagMultOld._qtyptr   = _UnknownQuantitiesVector[QTYONE];
     LagMultOld.VectWithQtyFillBasic();
     LagMultOld.Allocate();
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
@@ -395,12 +395,12 @@ for (uint fe = 0; fe < QL; fe++)     {
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity BeOld(currgp);
-    BeOld._qtyptr   = _QtyInternalVector[QTYZERO];
+    BeOld._qtyptr   = _UnknownQuantitiesVector[QTYZERO];
     BeOld.VectWithQtyFillBasic();
     BeOld.Allocate();
 
     CurrentQuantity LagMultOld(currgp);
-    LagMultOld._qtyptr   = _QtyInternalVector[QTYONE];
+    LagMultOld._qtyptr   = _UnknownQuantitiesVector[QTYONE];
     LagMultOld.VectWithQtyFillBasic();
     LagMultOld.Allocate();
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================

@@ -105,7 +105,7 @@
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity VelOld(currgp);
-    VelOld._qtyptr   = _QtyInternalVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
+    VelOld._qtyptr   = _UnknownQuantitiesVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();
     VelOld.Allocate();
 
@@ -115,7 +115,7 @@
 
 //=========
     CurrentQuantity pressOld(currgp);
-    pressOld._qtyptr   = _QtyInternalVector[QTYONE];
+    pressOld._qtyptr   = _UnknownQuantitiesVector[QTYONE];
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
 
@@ -405,7 +405,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity VelOld(currgp);
-    VelOld._qtyptr   = _QtyInternalVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
+    VelOld._qtyptr   = _UnknownQuantitiesVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();
     VelOld.Allocate();
 
@@ -415,7 +415,7 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
 //=========
     CurrentQuantity pressOld(currgp);
-    pressOld._qtyptr   = _QtyInternalVector[QTYONE];
+    pressOld._qtyptr   = _UnknownQuantitiesVector[QTYONE];
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
 
