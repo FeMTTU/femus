@@ -433,7 +433,6 @@ void SystemTwo::GenerateBdc() {
 // because every Boundary NODE belongs to the VOLUME
 // and every Boundary ELEMENT communicates its value ("as a TRACE") to the corresponding VOLUME ELEM DOF.
 
-    if (!in) {   // -------- reading bc from function
  
     for (uint Level=0; Level <GetGridn();Level++)   { //loop over the levels
 	
@@ -499,49 +498,7 @@ void SystemTwo::GenerateBdc() {
      }//end nolevels
        
         std::cout << "\n GenerateBdc: boundary conditions defined by  bc_read" << "\n \n";
-    }
-    
-    // *********  reading from file ***************************
-    else {     // boundary from the top grid
-        std::cout << "\n GenerateBdc: READING FROM FILE STILL WITHOUT KK ELEMENTS, CHECK new and delete in here! ************** " << ibc_fileh5.str() << "\n \n";
-        abort();
-	
-        // temporary vector
-        uint  n_nodes_q=_mesh._NoNodesXLev[GetGridn()-1];
-        int *data=new int[ n_nodes_q ];
-
-        // open file
-        std::ostringstream tabname;
-        hid_t  file = H5Fopen(ibc_fileh5.str().c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
-
-        // variable loop
-        for (uint ivar=0;ivar< _dofmap._nvars[QQ];ivar++) { // ----------------------------
-            // nodes for boundary elements
-            int el_nodes=el_nnodes_b; 
-            // read
-            XDMFWriter::read_Ihdf5(file,"/"+_var_names[ivar] + bdry_suffix,data);// from hdf5 file
-
-            // storage boundary conditions <- data <- hdf5 file
-            for (uint isubd=0;isubd<_mesh._NoSubdom;++isubd) {
-                int iel0=_mesh._off_el[BB][GetGridn()-1+GetGridn()*isubd];
-                int ielf=_mesh._off_el[BB][GetGridn()-1+GetGridn()*isubd+1];
-                for (int iel=0;iel <ielf-iel0; iel++) {
-
-                    // Element node loop
-                    for (int i=0; i< el_nodes; i++)     {// element loop
-                        const uint k=_mesh._el_map[BB][(iel+iel0)*el_nnodes_b+i]; // global node
-                        int kdof= _dofmap.GetDof(GetGridn()-1,QQ,ivar,k);
-                        _bc[kdof]=data[k];
-                    }
-                }// iel
-            }//proc
-        }// ivar ------------------------------------------------------------
-        // clean
-        delete []data;
-        H5Fclose(file);
-        std::cout << "\n GenerateBdc(DA): boundary conditions defined from file " << ibc_fileh5.str() << "\n \n";
-    }
-    
+ 
     delete []DofOff_Lev_kk;
    
     return;

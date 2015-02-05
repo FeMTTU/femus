@@ -129,12 +129,12 @@
 //=====================
     sys -> _dofmap.ComputeMeshToDof();
 //=====================
+    sys -> initVectors();
+//=====================
     sys -> GenerateBdc();
     sys -> GenerateBdcElem();
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
-//=====================
-    sys -> initVectors();     //TODO can I do it earlier than this position?
 //=====================
     sys -> Initialize();
     }

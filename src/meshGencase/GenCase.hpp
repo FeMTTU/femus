@@ -41,10 +41,10 @@ public:
     void ReorderNodesBySubdLev();
     void ComputeMaxElXNode();
 
-    void ComputeMGOperators(const std::string output_path);
-    void ComputeMatrix(const std::string output_path);
-    void ComputeProl(const std::string output_path);
-    void ComputeRest(const std::string output_path);
+    void ComputeAndPrintMGOperators(const std::string output_path);
+    void ComputeAndPrintMatrix(const std::string output_path);
+    void ComputeAndPrintProl(const std::string output_path);
+    void ComputeAndPrintRest(const std::string output_path);
     void CreateMeshStructuresLevSubd(const std::string output_path);
     void Delete();
 

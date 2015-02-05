@@ -30,29 +30,24 @@ You have to open another shell and set new values
 ##############################
 
 ###### How to set the parameters for an application ###########
-- See the files in the input/ directory
+- See 
 
 ###### How to change the mesh file of an application ###########
 - Put the mesh file in the input/ directory
-- Set the filename in the femus_conf.in file
-- Set libmesh_gen to 0
+- Set the filename in the main file
 
-###### IF YOU WANT TO REVERT TO LIBMESH-GENERATED MESH ###########
-- Set libmesh_gen back to 1
-- Don't have to move any mesh file
+###### IF YOU WANT TO REVERT TO GENERATED MESH ###########
+- don't put any string as a mesh file name in the main file
 
 ####### How to schedule a suite of runs ##########
 - Folders with time files
 
-####### How to switch from one application to another ##########
-- Just change folder. 
-
 ####### How to create a new application ##########
 - Copy the structure of an existing application, in particular the directories
    and the configuration files
-- Define your own Equations, Quantities, Physics and Domain based on the BASE CLASSES provided with the library.   
+- Define your own Systems and Quantities as CHILDREN the BASE CLASSES provided with the library.   
 - Instantiate in the main one object of each of the following types:
-  <Gencase>, <Box>, <TimeLoop>, <Utils>, <Files>, <Physics>
+  <Box>, <TimeLoop>, <Physics>
   (notice, these are the names of the TYPES, not of the instantiations...
    suppose you want to have more than one instantiation, then you should give DIFFERENT TAGS 
    for each separate instantiation...)
@@ -60,19 +55,18 @@ You have to open another shell and set new values
    Yeah, in the constructor of such an object we must put the check "if the file isn't there, abort"
    
 ####### How to RESTART a run of an application ##########
-- NOW I AM DOING EVERYTHING IN SUCH A WAY THAT THE WHOLE RUN WILL BE in the OUTTIME/ DIRECTORY... 
+- NOW I AM DOING EVERYTHING IN SUCH A WAY THAT THE WHOLE RUN WILL BE in the OUTTIME/ DIRECTORY...
   so to restart we will EXCLUSIVELY READ from THAT DIRECTORY
 
 - Set the folder from which to restart in the file run_to_restart_from
-- set the ITERATION NUMBER in the "restart" variable in the configuration file IN THE FOLDER OF THE CONSIDERED RUN!
+- set the ITERATION NUMBER in the "initial_step" variable in the configuration file IN THE FOLDER OF THE CONSIDERED RUN!
 - set the other parameters like "nsteps"
 
 - We must be very careful.
 - We must change ALMOST NOTHING
-- Do not rerun GENCASE
 - Do not change NUMBER OF PROCESSORS
 - Do not change NUMBER OF LEVELS
-- Do not change the OUTPUT FOLDERNAME
+- Do not change the OUTPUT FOLDERNAME (of course...)
 
 ######## How to ADD PARAMETERS to the runtime configuration file ############
 - One has to see if these will be LIBRARY parameters or APPLICATION parameters
@@ -90,8 +84,4 @@ You have to open another shell and set new values
 - now go to the binary directory and type make to generate the library
 - then enter your application folder and run make to generate your executable
 
-######## Critical part: understand for what parameters in the config file one has to RERUN GENCASE OR NOT #############
-
-
-######## When you change the input file in the repo folder (NOT IN THE BINARY FOLDER) then you have to RERUN CMAKE !!! #############
-
+###### When you change the input file in the repo folder (NOT IN THE BINARY FOLDER) then you have to RERUN CMAKE !!! #############
