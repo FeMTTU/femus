@@ -28,6 +28,7 @@
 #include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "DofMap.hpp"
+#include "Quantity.hpp"
 
 #include "System.hpp"
 
@@ -38,13 +39,12 @@ namespace femus {
 
 class MultiLevelProblem;
 class MultiLevelMeshTwo;
-class Quantity;
-class CurrentQuantity;
 
 class SparseMatrix;
 class NumericVector;
 class LinearEquationSolver;
 
+class CurrentQuantity;
 
 
 class SystemTwo : public System {
@@ -103,10 +103,22 @@ public:
 	return _QtyInternalVector;
       }
       
-      void SetQtyIntVector(const std::vector<Quantity*> & vect_in) { //MultilevelSolution//
+      void SetQtyIntVector(const std::vector<Quantity*> & vect_in) { //System//
 	_QtyInternalVector = vect_in;
 	init_sys();
       }
+      
+      void AddUnknownToSystemPDE( Quantity* qty_in) { //System//
+	  unsigned n = _QtyInternalVector.size();
+
+	_QtyInternalVector.resize(n+1);
+	_QtyInternalVector[n] = qty_in;
+	qty_in->set_eqn(this);
+	qty_in->SetPosInAssocEqn(n);
+	
+	return;
+      }
+      
 
 	    std::vector<std::string> _var_names;                   //MultilevelSolution//
 	  void initVarNames();                                     //MultilevelSolution//
