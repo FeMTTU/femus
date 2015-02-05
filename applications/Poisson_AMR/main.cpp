@@ -378,7 +378,7 @@ int main(int argc,char **argv) {
     std::cout << " PDE problem to solve: Poisson " << std::endl;
 
     LinearImplicitSystem & system2 = ml_prob.add_system<LinearImplicitSystem>("Poisson");
-    system2.AddSolutionToSytemPDE("Sol");
+    system2.AddSolutionToSystemPDE("Sol");
 
     // Set MG Options
     system2.AttachAssembleFunction(AssemblePoissonMatrixandRhs);

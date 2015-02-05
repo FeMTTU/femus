@@ -104,9 +104,9 @@ int main(int argc,char **args) {
   //create systems
   // add the system Navier-Stokes to the MultiLevel problem
   TransientNonlinearImplicitSystem & system = ml_prob.add_system<TransientNonlinearImplicitSystem> ("Navier-Stokes");
-  system.AddSolutionToSytemPDE("U");
-  system.AddSolutionToSytemPDE("V");
-  system.AddSolutionToSytemPDE("P");
+  system.AddSolutionToSystemPDE("U");
+  system.AddSolutionToSystemPDE("V");
+  system.AddSolutionToSystemPDE("P");
   
   // init all the systems
   system.init();

@@ -126,9 +126,9 @@ int main(int argc,char **args) {
   std::cout << " *********** Stokes ************  " << std::endl;
     
   LinearImplicitSystem & system1 = ml_prob.add_system<LinearImplicitSystem> ("Stokes");
-  system1.AddSolutionToSytemPDE("U");
-  system1.AddSolutionToSytemPDE("V");
-  system1.AddSolutionToSytemPDE("P");
+  system1.AddSolutionToSystemPDE("U");
+  system1.AddSolutionToSystemPDE("V");
+  system1.AddSolutionToSystemPDE("P");
   
   // Set MG Options
   system1.AttachAssembleFunction(AssembleMatrixResSteadyStokes);  

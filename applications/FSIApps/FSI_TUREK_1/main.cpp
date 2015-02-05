@@ -255,13 +255,13 @@ int main(int argc,char **args) {
   //create systems
   // add the system FSI to the MultiLevel problem
   MonolithicFSINonLinearImplicitSystem & system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");
-  system.AddSolutionToSytemPDE("DX");
-  system.AddSolutionToSytemPDE("DY");
-  if (!dimension2D) system.AddSolutionToSytemPDE("DZ");
-  system.AddSolutionToSytemPDE("U");
-  system.AddSolutionToSytemPDE("V");
-  if (!dimension2D) system.AddSolutionToSytemPDE("W");
-  system.AddSolutionToSytemPDE("P");
+  system.AddSolutionToSystemPDE("DX");
+  system.AddSolutionToSystemPDE("DY");
+  if (!dimension2D) system.AddSolutionToSystemPDE("DZ");
+  system.AddSolutionToSystemPDE("U");
+  system.AddSolutionToSystemPDE("V");
+  if (!dimension2D) system.AddSolutionToSystemPDE("W");
+  system.AddSolutionToSystemPDE("P");
   
 //   if(dimension2D){
 //     bool sparsity_pattern_matrix[5][5]={{1, 0, 1, 0, 0},

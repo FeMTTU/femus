@@ -112,11 +112,11 @@ int main(int argc,char **args) {
   //create systems
   // add the system FSI to the MultiLevel problem
   TransientMonolithicFSINonlinearImplicitSystem & system = ml_prob.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction");
-  system.AddSolutionToSytemPDE("DX");
-  system.AddSolutionToSytemPDE("DY");
-  system.AddSolutionToSytemPDE("U");
-  system.AddSolutionToSytemPDE("V");
-  system.AddSolutionToSytemPDE("P");
+  system.AddSolutionToSystemPDE("DX");
+  system.AddSolutionToSystemPDE("DY");
+  system.AddSolutionToSystemPDE("U");
+  system.AddSolutionToSystemPDE("V");
+  system.AddSolutionToSystemPDE("P");
   
   // init all the systems
   system.init();

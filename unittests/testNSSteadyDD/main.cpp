@@ -117,9 +117,9 @@ int main(int argc,char **args) {
   std::cout << " *********** Navier-Stokes ************  " << std::endl;
     
   NonLinearImplicitSystem & system1 = ml_prob.add_system<NonLinearImplicitSystem> ("Navier-Stokes");
-  system1.AddSolutionToSytemPDE("U");
-  system1.AddSolutionToSytemPDE("V");
-  system1.AddSolutionToSytemPDE("P");
+  system1.AddSolutionToSystemPDE("U");
+  system1.AddSolutionToSystemPDE("V");
+  system1.AddSolutionToSystemPDE("P");
   
   // Set MG Options
   system1.AttachAssembleFunction(AssembleMatrixResNS);  
@@ -163,7 +163,7 @@ int main(int argc,char **args) {
   std::cout << " *********** Temperature ************* " << std::endl;
     
   LinearImplicitSystem & system2 = ml_prob.add_system<LinearImplicitSystem> ("Temperature");
-  system2.AddSolutionToSytemPDE("T");
+  system2.AddSolutionToSystemPDE("T");
   
   
   // Set MG Options

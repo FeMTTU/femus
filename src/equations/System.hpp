@@ -64,7 +64,7 @@ public:
     }
 
     /** Associate the solution variables to the system PDE */
-    void AddSolutionToSytemPDE(const char solname[]);
+    void AddSolutionToSystemPDE(const char solname[]);
 
     /** Register a user function to use in assembling the system matrix and RHS. */
     void AttachAssembleFunction (void fptr(MultiLevelProblem &ml_prob, unsigned level,
