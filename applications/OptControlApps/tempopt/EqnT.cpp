@@ -181,8 +181,8 @@ void  EqnT::GenMatRhs(const uint Level) {
 
   
 
-   const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
-   const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
+   const uint nel_e = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level+1];
+   const uint nel_b = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level];
 
 // ==========================================  
 // ==========================================  
@@ -479,8 +479,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 
   
 
-   const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
-   const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
+   const uint nel_e = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level+1];
+   const uint nel_b = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level];
 
 // ==========================================  
 // ==========================================     

@@ -103,8 +103,8 @@ EqnT::EqnT(MultiLevelProblem & equations_map_in,
     xyz_refbox._ndof     = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
     xyz_refbox.Allocate();
 
-   const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
-   const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
+   const uint nel_e = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level+1];
+   const uint nel_b = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level];
 
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
@@ -339,8 +339,8 @@ for (uint fe = 0; fe < QL; fe++)     {
     xyz_refbox._ndof     = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
     xyz_refbox.Allocate();
 
-   const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
-   const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
+   const uint nel_e = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level+1];
+   const uint nel_b = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level];
    
      for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
 

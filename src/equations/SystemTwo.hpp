@@ -36,11 +36,9 @@ namespace femus {
 
 
 
-class Physics      ;
 class MultiLevelProblem;
-class MultiLevelMeshTwo      ;
-class FEElemBase   ;
-class Quantity     ;
+class MultiLevelMeshTwo;
+class Quantity;
 class CurrentQuantity;
 
 class SparseMatrix;
@@ -59,6 +57,9 @@ public:
   SystemTwo(MultiLevelProblem & equations_map, const std::string & eq_name_in, const unsigned int number, const MgSmoother & smoother_type);   //System//
   
   virtual ~SystemTwo();                    //System//
+
+  
+  DofMap  _dofmap;  //// LinearEquation (each level)
   
 //=======================================================================
 //======== MG Ops ============ (procs,levels) ====
@@ -91,16 +92,18 @@ public:
           void  initVectors();  ///initialize vectors       //System//
 
 //======= Linear Solvers for every Level ============
-  LinearEquationSolver **_solver;     ///(each level)
+  LinearEquationSolver **_solver;                                                                                                                                                       ///LinearImplicitSystem (all levels)//
+  void MGSolve(double Eps,int MaxIter, const uint Gamma=DEFAULT_MG_GAMMA, const uint Nc_pre=DEFAULT_NC_PRE,const uint Nc_coarse=DEFAULT_NC_COARSE,const uint Nc_post=DEFAULT_NC_POST);  //LinearImplicitSystem//
+  double MGStep(int Level,double Eps1,int MaxIter, const uint Gamma, const uint Nc_pre,const uint Nc_coarse,const uint Nc_post);                                                          //LinearImplicitSystem//
 
 //=======================================================================
 //======= Quantities =========
 //=======================================================================
-      inline const std::vector<Quantity*> & GetQtyIntVector() const { 
+      inline const std::vector<Quantity*> & GetQtyIntVector() const { //MultilevelSolution//
 	return _QtyInternalVector;
       }
       
-      void SetQtyIntVector(const std::vector<Quantity*> & vect_in) { 
+      void SetQtyIntVector(const std::vector<Quantity*> & vect_in) { //MultilevelSolution//
 	_QtyInternalVector = vect_in;
 	init_sys();
       }
@@ -111,25 +114,13 @@ public:
 	  std::vector<double>      _refvalue;        //MultilevelSolution//
           void initRefValues();                      //MultilevelSolution//
 
-	  void init_sys();     //System//
-
-//=======================================================================
-//====== Attributes of the equation ====
-//=======================================================================
-  const uint      _NoLevels;   ///< level number      //System//
+	  void init_sys();     //System//  //MultilevelSolution//
 
 //=======================================================================
 
  virtual  void GenMatRhs(const uint Level) = 0;  //System//
-          void MGSolve(double Eps,int MaxIter, const uint Gamma=DEFAULT_MG_GAMMA, const uint Nc_pre=DEFAULT_NC_PRE,const uint Nc_coarse=DEFAULT_NC_COARSE,const uint Nc_post=DEFAULT_NC_POST);  //LinearImplicitSystem//
-        double MGStep(int Level,double Eps1,int MaxIter, const uint Gamma, const uint Nc_pre,const uint Nc_coarse,const uint Nc_post);                                                          //LinearImplicitSystem//
-          void MGCheck(int Level) const;
 
-  DofMap  _dofmap;  //// LinearEquation (each level)
-  
-//=======================================================================
 // ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==    
-// ========================================================
           void    Initialize();           //MultilevelSolution  //this uses x and fills in x_old at all levels
           
 //=======================================================================
@@ -157,10 +148,10 @@ public:
 
 protected:
   
-  const FemusInputParser<double>  & _phys;   //passed from MultilevelProblem
-  const MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem
+  const FemusInputParser<double>  & _phys;   //passed from MultilevelProblem//
+  const MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem//
 
-  std::vector<Quantity*>          _QtyInternalVector;  //System//
+  std::vector<Quantity*>          _QtyInternalVector;  //MultilevelSolution//
 
 };
 

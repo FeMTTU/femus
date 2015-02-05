@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: System
- Authors: Simone Bnà
+ Authors: Simone Bnà, Giorgio Bornia
  
  Copyright (c) FEMTTU
  All rights reserved. 
@@ -14,7 +14,7 @@
 =========================================================================*/
 
 #include "System.hpp"
-
+#include "MultiLevelMeshTwo.hpp"
 
 namespace femus {
 
@@ -38,11 +38,12 @@ namespace femus {
   }
 }
 
-  /** TODO remove soon */
+  /** TODO remove at the end */
   System::System(MultiLevelProblem& ml_prob, const std::string& name_in, const unsigned int number_in) :
   _equation_systems(ml_prob),
   _sys_name(name_in),
-  _sys_number(number_in) {}
+  _sys_number(number_in),
+  _gridn(ml_prob.GetMeshTwo()._NoLevels) {}
 
   
 System::~System() {

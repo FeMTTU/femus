@@ -152,8 +152,8 @@
   gravity._val_g[1] = _phys.get("dirgy");
   if ( space_dim == 3 )   gravity._val_g[2] = _phys.get("dirgz"); 
     
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level];
 //========================
 //========================
 
@@ -443,8 +443,8 @@ if (_Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
   xyz_refbox.Allocate();
     
 
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level];
 
    
 //=== auxiliary Operators at the boundary

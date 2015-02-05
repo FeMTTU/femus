@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: System
- Authors: Simone Bnà
+ Authors: Simone Bnà, Giorgio Bornia
 
  Copyright (c) FEMTTU
  All rights reserved.
@@ -84,23 +84,33 @@ public:
 
     /** Get MultiLevelProblem */
     const MultiLevelProblem &  GetMLProb() const { return _equation_systems; }
-
+    
+    /** Get Number of Levels */
+    inline const unsigned GetGridn() const { return _gridn; }
+    
 protected:
 
     /** Constant reference to the \p EquationSystems object used for the simulation. */
     MultiLevelProblem& _equation_systems;
 
+    /** Mesh vector, dimension _gridn */
     vector<Mesh*> _msh;
 
+    /** Solution vector, dimension _gridn */
     vector<Solution*> _solution;
 
+    /** pointer */
     MultiLevelSolution* _ml_sol;
+
+    /** pointer */
     MultiLevelMesh* _ml_msh;
 
     vector <unsigned> _SolSystemPdeIndex;
 
+    /** Number of Levels */
     unsigned _gridn;
 
+    /** Number of Totally Refined Levels */
     unsigned _gridr;
 
     /** Function that assembles the system. */

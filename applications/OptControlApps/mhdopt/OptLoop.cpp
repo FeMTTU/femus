@@ -472,7 +472,7 @@ const uint delta_opt_step = opt_step - _t_idx_in;
 void OptLoop::init_equation_data(const SystemTwo* eqn) {
   
 //======equation-specific vectors     =====================
-      _x_oldopt.resize(eqn->_NoLevels);
+      _x_oldopt.resize(eqn->GetGridn());
       
         for(uint Level = 0; Level < _x_oldopt.size(); Level++)  {
    uint n_glob = eqn->_dofmap._Dim[Level]; //is it already filled? Now yes!!!!!!!!!

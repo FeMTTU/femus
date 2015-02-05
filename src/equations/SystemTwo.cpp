@@ -59,7 +59,6 @@ const int SystemTwo::_number_tang_comps[3] = {0,1,3};
 SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
         _phys(e_map_in.GetInputParser()),
         _mesh(e_map_in.GetMeshTwo()),
-        _NoLevels(e_map_in.GetMeshTwo()._NoLevels),
         _dofmap(this,e_map_in.GetMeshTwo()),
         System(e_map_in,eqname_in,number) {
 
@@ -75,8 +74,8 @@ SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in,
     _Dir_pen_fl = 0;
 
     //========= solver package ===========
-    _solver = new LinearEquationSolver*[_NoLevels];     //well, we clearly use the same package for all levels...
-    for (uint l=0;l<_NoLevels;l++) _solver[l] = LinearEquationSolver::build(0,NULL,NO_SMOOTHER).release();
+    _solver = new LinearEquationSolver*[GetGridn()];     //well, we clearly use the same package for all levels...
+    for (uint l=0; l < GetGridn(); l++) _solver[l] = LinearEquationSolver::build(0,NULL,NO_SMOOTHER).release();
     
 
 }
@@ -151,9 +150,9 @@ void SystemTwo::initRefValues() {
 SystemTwo::~SystemTwo() {
 
  //========= MGOps  ===========================
-    for (uint Level =0; Level<_NoLevels; Level++) {
+    for (uint Level =0; Level< GetGridn(); Level++) {
         delete _A[Level];
-        if (Level < _NoLevels - 1) delete _Rst[Level];
+        if (Level < GetGridn() - 1) delete _Rst[Level];
         if (Level > 0)             delete _Prl[Level];
     }
 
@@ -162,7 +161,7 @@ SystemTwo::~SystemTwo() {
     _Prl.clear();
 
  //======== Vectors ==========================
-    for (uint Level =0; Level<_NoLevels; Level++) {
+    for (uint Level =0; Level<GetGridn(); Level++) {
         delete _b[Level];
         delete _res[Level];
         delete _x[Level];
@@ -179,14 +178,14 @@ SystemTwo::~SystemTwo() {
      _x_tmp.clear();
 
  //========= solver
-    for (uint l=0;l<_NoLevels;l++)  delete _solver[l];
+    for (uint l = 0; l < GetGridn(); l++)  delete _solver[l];
     delete []_solver;
 
  //=========== BOUNDARY CONDITIONS =================
  //===nodal
     delete[] _bc;                                                                   // boundary condition flag
  //===constant
-     for (uint l=0; l < _NoLevels; l++)   delete [] _bc_fe_kk[l];
+     for (uint l=0; l < GetGridn(); l++)   delete [] _bc_fe_kk[l];
      delete [] _bc_fe_kk;
  //===penalty
     clearElBc();   /*if (_Dir_pen_fl==1)*/ //DO IT ALWAYS!
@@ -202,14 +201,14 @@ SystemTwo::~SystemTwo() {
 void SystemTwo::initVectors() {
 
     //allocation
-         _x.resize(_NoLevels);
-     _x_old.resize(_NoLevels);
-    _x_oold.resize(_NoLevels);
-     _x_tmp.resize(_NoLevels);
-         _b.resize(_NoLevels);
-       _res.resize(_NoLevels);
+         _x.resize(GetGridn());
+     _x_old.resize(GetGridn());
+    _x_oold.resize(GetGridn());
+     _x_tmp.resize(GetGridn());
+         _b.resize(GetGridn());
+       _res.resize(GetGridn());
 
-    for (uint Level = 0; Level< _NoLevels; Level++) {
+    for (uint Level = 0; Level< GetGridn(); Level++) {
 
     uint ml[QL];    for (int fe=0; fe<QL; fe++) ml[fe] = _dofmap._DofLocLevProcFE[Level][_mesh._iproc][fe];
     uint m_l = 0;
@@ -393,11 +392,11 @@ void SystemTwo::GenerateBdc() {
 // TODO actually, we should first COPY this file in the outtime dir, then READ it from there!
     std::ifstream in(ibc_fileh5.str().c_str());
 
-    const uint Lev_pick_bc_NODE_dof = _NoLevels-1;  //we use the FINE Level as reference
+    const uint Lev_pick_bc_NODE_dof = GetGridn()-1;  //we use the FINE Level as reference
     
  //************************************************   
  //******** NODE BASED ****************************   
-    const uint offset      = _mesh._NoNodesXLev[_NoLevels-1];
+    const uint offset      = _mesh._NoNodesXLev[GetGridn()-1];
 
     std::vector<int> bc_flag(_dofmap._n_vars);
 
@@ -415,10 +414,10 @@ void SystemTwo::GenerateBdc() {
      CurrentElem       currelem(BB,this,_mesh,GetMLProb().GetElemType());
     const uint el_nnodes_b = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 
-    _bc_fe_kk             =  new int*[_NoLevels];
-    int* DofOff_Lev_kk    =  new int[_NoLevels];
+    _bc_fe_kk             =  new int*[GetGridn()];
+    int* DofOff_Lev_kk    =  new int[GetGridn()];
     
-    for (uint Level=0; Level <_NoLevels; Level++)   { //loop over the levels
+    for (uint Level=0; Level <GetGridn(); Level++)   { //loop over the levels
 
           DofOff_Lev_kk[Level] = _dofmap._nvars[KK]*_dofmap._DofNumLevFE[Level][KK];
               _bc_fe_kk[Level] = new int[DofOff_Lev_kk[Level]];
@@ -437,11 +436,11 @@ void SystemTwo::GenerateBdc() {
 
     if (!in) {   // -------- reading bc from function
  
-    for (uint Level=0; Level <_NoLevels;Level++)   { //loop over the levels
+    for (uint Level=0; Level <GetGridn();Level++)   { //loop over the levels
 	
         for (uint isubd=0; isubd<_mesh._NoSubdom; ++isubd) {
-            uint iel_b = _mesh._off_el[BB][ _NoLevels*isubd + Level];
-            uint iel_e = _mesh._off_el[BB][ _NoLevels*isubd + Level+1];
+            uint iel_b = _mesh._off_el[BB][ GetGridn()*isubd + Level];
+            uint iel_e = _mesh._off_el[BB][ GetGridn()*isubd + Level+1];
             for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 
 	        currelem.set_el_nod_conn_lev_subd(Level,isubd,iel);
@@ -484,7 +483,7 @@ void SystemTwo::GenerateBdc() {
 
  //******************* ALL LEVELS, ELEM VARS ***************** 
 		 int sum_elems_prev_sd_at_lev = 0;
-                 for (uint pr = 0; pr < isubd; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[BB][_NoLevels*pr + Level + 1] - _mesh._off_el[BB][ _NoLevels*pr + Level]; }
+                 for (uint pr = 0; pr < isubd; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[BB][GetGridn()*pr + Level + 1] - _mesh._off_el[BB][ GetGridn()*pr + Level]; }
 		 
 		 int bdry_iel_lev =  iel + sum_elems_prev_sd_at_lev;
 		 int vol_iel =  _mesh._el_bdry_to_vol[Level][bdry_iel_lev];
@@ -509,7 +508,7 @@ void SystemTwo::GenerateBdc() {
         abort();
 	
         // temporary vector
-        uint  n_nodes_q=_mesh._NoNodesXLev[_NoLevels-1];
+        uint  n_nodes_q=_mesh._NoNodesXLev[GetGridn()-1];
         int *data=new int[ n_nodes_q ];
 
         // open file
@@ -525,14 +524,14 @@ void SystemTwo::GenerateBdc() {
 
             // storage boundary conditions <- data <- hdf5 file
             for (uint isubd=0;isubd<_mesh._NoSubdom;++isubd) {
-                int iel0=_mesh._off_el[BB][_NoLevels-1+_NoLevels*isubd];
-                int ielf=_mesh._off_el[BB][_NoLevels-1+_NoLevels*isubd+1];
+                int iel0=_mesh._off_el[BB][GetGridn()-1+GetGridn()*isubd];
+                int ielf=_mesh._off_el[BB][GetGridn()-1+GetGridn()*isubd+1];
                 for (int iel=0;iel <ielf-iel0; iel++) {
 
                     // Element node loop
                     for (int i=0; i< el_nodes; i++)     {// element loop
                         const uint k=_mesh._el_map[BB][(iel+iel0)*el_nnodes_b+i]; // global node
-                        int kdof= _dofmap.GetDof(_NoLevels-1,QQ,ivar,k);
+                        int kdof= _dofmap.GetDof(GetGridn()-1,QQ,ivar,k);
                         _bc[kdof]=data[k];
                     }
                 }// iel
@@ -625,11 +624,11 @@ void SystemTwo::GenerateBdcElem()  {
   
       uint space_dim = _mesh.get_dim();
 
-    _elem_bc       =  new int**[_NoLevels];
-    _elem_val_norm =  new double**[_NoLevels];
-    _elem_val_tg   =  new double**[_NoLevels];
+    _elem_bc       =  new int**[GetGridn()];
+    _elem_val_norm =  new double**[GetGridn()];
+    _elem_val_tg   =  new double**[GetGridn()];
 
-    for (uint Level=0; Level <_NoLevels;Level++)   { //loop over the levels
+    for (uint Level=0; Level <GetGridn();Level++)   { //loop over the levels
 
         _elem_bc[Level]       = new int*[_mesh._NoSubdom];//4*_mesh._n_elements_vb_lev[BB][Level] this was wrong, actually it is L + P*NoLevels, i wasnt considering the others but it was working! For instance in two D the numbers for the two procs are the same, here's why!
         _elem_val_norm[Level] = new double*[_mesh._NoSubdom];//_mesh._n_elements_vb_lev[BB][Level]
@@ -637,13 +636,13 @@ void SystemTwo::GenerateBdcElem()  {
 
         for (uint isubd=0;isubd<_mesh._NoSubdom;++isubd) {  //loop over the subdomains
 
-            uint iel_b=_mesh._off_el[BB][ _NoLevels*isubd +  Level];
-            uint iel_e=_mesh._off_el[BB][ _NoLevels*isubd +  Level+1];
+            uint iel_b=_mesh._off_el[BB][ GetGridn()*isubd +  Level];
+            uint iel_e=_mesh._off_el[BB][ GetGridn()*isubd +  Level+1];
 
-            _elem_bc[Level][isubd]  = new int[/*4*/2*(iel_e-iel_b)]; /*normal and tangential*/ //4*_mesh._n_elements_vb_lev[BB][Level+isubd*_NoLevels] that was not correct
-            _elem_val_norm[Level][isubd]  = new double[ 1*(iel_e-iel_b) ];  //_mesh._n_elements_vb_lev[BB][Level+isubd*_NoLevels]
+            _elem_bc[Level][isubd]  = new int[/*4*/2*(iel_e-iel_b)]; /*normal and tangential*/ //4*_mesh._n_elements_vb_lev[BB][Level+isubd*GetGridn()] that was not correct
+            _elem_val_norm[Level][isubd]  = new double[ 1*(iel_e-iel_b) ];  //_mesh._n_elements_vb_lev[BB][Level+isubd*GetGridn()]
 
-            _elem_val_tg[Level][isubd]  = new double[ _number_tang_comps[space_dim - 1]*(iel_e-iel_b) ];   //_mesh._n_elements_vb_lev[BB][Level+isubd*_NoLevels]
+            _elem_val_tg[Level][isubd]  = new double[ _number_tang_comps[space_dim - 1]*(iel_e-iel_b) ];   //_mesh._n_elements_vb_lev[BB][Level+isubd*GetGridn()]
 
             for (uint iel=0;iel < (iel_e - iel_b); iel++) {  //loop over the elems of that level&subdomain
 
@@ -719,7 +718,7 @@ void SystemTwo::Bc_GetElFlagValLevSubd(const uint Level,const uint isubd,const u
 ////////////////////////////////
 void SystemTwo::clearElBc() {
 
-    for (uint Level=0; Level <_NoLevels;Level++)   {
+    for (uint Level=0; Level <GetGridn();Level++)   {
 
         for (uint isubd=0;isubd<_mesh._NoSubdom;++isubd) {
             delete [] _elem_bc[Level][isubd];
@@ -826,17 +825,17 @@ void SystemTwo::Initialize() {
 
         CurrentElem       currelem(VV,this,_mesh,GetMLProb().GetElemType());  
      
-        const uint  coords_fine_offset = _mesh._NoNodesXLev[_NoLevels-1];
+        const uint  coords_fine_offset = _mesh._NoNodesXLev[GetGridn()-1];
         const uint  el_dof_objs = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
         std::vector<double>      xp(_mesh.get_dim());
         std::vector<double> u_value(_dofmap._n_vars);
 
        std::cout << "\n====================== Initialize:  Now we are setting them for all levels! ========================" << "\n \n";
 
-    for (uint Level = 0; Level< _NoLevels; Level++) {
+    for (uint Level = 0; Level< GetGridn(); Level++) {
 
-            uint iel_b = _mesh._off_el[VV][ _mesh._iproc*_NoLevels + Level ];
-            uint iel_e = _mesh._off_el[VV][ _mesh._iproc*_NoLevels + Level + 1];
+            uint iel_b = _mesh._off_el[VV][ _mesh._iproc*GetGridn() + Level ];
+            uint iel_e = _mesh._off_el[VV][ _mesh._iproc*GetGridn() + Level + 1];
 
 	    for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 	  
@@ -874,7 +873,7 @@ void SystemTwo::Initialize() {
                 for (uint k=0; k < currelem.GetElemType(_QtyInternalVector[q]->_FEord)->GetNDofs() ; k++) { //only 1
 		  
        int sum_elems_prev_sd_at_lev = 0;
-	  for (uint pr = 0; pr < _mesh._iproc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*_NoLevels + Level + 1] - _mesh._off_el[VV][pr*_NoLevels + Level]; }
+	  for (uint pr = 0; pr < _mesh._iproc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*GetGridn() + Level + 1] - _mesh._off_el[VV][pr*GetGridn() + Level]; }
 	  
           currelem.GetMidpoint();
 	  
@@ -942,14 +941,14 @@ void SystemTwo::MGSolve(double Eps1,          // tolerance for the linear solver
 #endif
     double res_fine;
 
-    _b[_NoLevels-1]->close();
-    double bNorm_fine =     _b[_NoLevels-1]->l2_norm();
-    _x_old[_NoLevels-1]->close();
-    double x_old_fine = _x_old[_NoLevels-1]->l2_norm();
+    _b[GetGridn()-1]->close();
+    double bNorm_fine =     _b[GetGridn()-1]->l2_norm();
+    _x_old[GetGridn()-1]->close();
+    double x_old_fine = _x_old[GetGridn()-1]->l2_norm();
 
 #ifdef DEFAULT_PRINT_INFO
     std::cout << " bNorm_fine l2 "     <<  bNorm_fine                     << std::endl;
-    std::cout << " bNorm_fine linfty " << _b[_NoLevels-1]->linfty_norm()  << std::endl;
+    std::cout << " bNorm_fine linfty " << _b[GetGridn()-1]->linfty_norm()  << std::endl;
     std::cout << " xold_fine l2 "      <<  x_old_fine                     << std::endl;
 #endif
 
@@ -962,7 +961,7 @@ void SystemTwo::MGSolve(double Eps1,          // tolerance for the linear solver
         //smooth on the coarse level WITH PHYSICAL b !
         //and compute the residual
 
-        for (uint Level = 1; Level < _NoLevels; Level++) {
+        for (uint Level = 1; Level < GetGridn(); Level++) {
 
             _x[Level]->matrix_mult(*_x[Level-1],*_Prl[Level]);  //**** project the solution
 
@@ -981,8 +980,7 @@ void SystemTwo::MGSolve(double Eps1,          // tolerance for the linear solver
 
 ///std::cout << "@@@@@@@@@@ start on the finest level @@@@@@@@"<< std::endl;
 
-        res_fine = MGStep(_NoLevels-1,Eps1,MaxIter,Gamma,Nc_pre,Nc_coarse,Nc_post);
-        // MGCheck(_NoLevels-1); // check projection-restriction
+        res_fine = MGStep(GetGridn()-1,Eps1,MaxIter,Gamma,Nc_pre,Nc_coarse,Nc_post);
 
 ///std::cout << "@@@@@@@@@@ back to the finest level @@@@@@@@"<< std::endl;
 
@@ -1152,18 +1150,6 @@ double SystemTwo::MGStep(int Level,            // Level
     //WHAT NORM is THIS?!? l2, but PRECONDITIONED!!!
 
 }
-
-// =============================================
-/// Check for Prolong and Restr Operators
-void SystemTwo::MGCheck(int Level) const {
-
-    _x[Level-1]->matrix_mult(*_x[Level],*_Rst[Level-1]);
-    _x[Level]  ->matrix_mult(*_x[Level-1],*_Prl[Level]);
-    return;
-}
-
-
-
 
 // =========================================
 void SystemTwo::ReadMGOps(const std::string output_path) {
@@ -1350,9 +1336,9 @@ void SystemTwo::ReadMGOps(const std::string output_path) {
 
 void SystemTwo::ReadMatrix(const  std::string& namefile) {
 
-  _A.resize(_NoLevels);
+  _A.resize(GetGridn());
 
-    for (uint Level = 0; Level< _NoLevels; Level++) {
+    for (uint Level = 0; Level< GetGridn(); Level++) {
 
       std::ostringstream groupname_lev; groupname_lev <<  "LEVEL" << Level;
   
@@ -1456,12 +1442,12 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
     
     int FELevel[QL];
     FELevel[QQ] = Level;
-    FELevel[LL] = (Level+_NoLevels)%(_NoLevels+1); //This is the map for the level of the LINEAR DOFS
+    FELevel[LL] = (Level+GetGridn())%(GetGridn()+1); //This is the map for the level of the LINEAR DOFS
     FELevel[KK] = Level;
 
     int off_onevar[QL];
-    off_onevar[QQ] = _mesh._NoNodesXLev[_NoLevels-1];
-    off_onevar[LL] = _mesh._NoNodesXLev[_NoLevels-1];
+    off_onevar[QQ] = _mesh._NoNodesXLev[GetGridn()-1];
+    off_onevar[LL] = _mesh._NoNodesXLev[GetGridn()-1];
     off_onevar[KK] = _mesh._n_elements_vb_lev[VV][Level];
     
     uint  off_EachFEFromStart[QL];
@@ -1491,13 +1477,13 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
 // // //             for (uint jvar=0; jvar<_nvars[QQ]; jvar++) {
 // // //             // quadratic-quadratic
 // // //                 for (int j=0; j<len[QQ]; j++) {
-// // //                     graph[irow][j+jvar*len[QQ]] = _node_dof[Level][ _mesh._node_map[FELevel[QQ]][pos_row[QQ][QQ][j+length_row[QQ][QQ][DofObj_lev]]]+jvar*_mesh._NoNodes[_NoLevels-1]];
+// // //                     graph[irow][j+jvar*len[QQ]] = _node_dof[Level][ _mesh._node_map[FELevel[QQ]][pos_row[QQ][QQ][j+length_row[QQ][QQ][DofObj_lev]]]+jvar*_mesh._NoNodes[GetGridn()-1]];
 // // //                 }
 // // // 	    }
 // // //                 // quadratic-linear 
 // // //                 for (uint jvar=0; jvar<_nvars[LL]; jvar++) {
 // // //                     for (int j=0; j<len[LL]; j++) {
-// // //                         graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][_mesh._node_map[FELevel[LL]][pos_row[QQ][LL][j+length_row[QQ][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*_mesh._NoNodes[_NoLevels-1]];
+// // //                         graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][_mesh._node_map[FELevel[LL]][pos_row[QQ][LL][j+length_row[QQ][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*_mesh._NoNodes[GetGridn()-1]];
 // // //                     }
 // // //                 }
 // // // 
@@ -1575,16 +1561,16 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
 //This function depends on _iproc
 void SystemTwo::ReadProl(const std::string& name) {
 
-    _Prl.resize(_NoLevels);  //TODO one place is left empty in practice, we can optimize this!!!
+    _Prl.resize(GetGridn());  //TODO one place is left empty in practice, we can optimize this!!!
 
-    for (uint Level = 1; Level< _NoLevels; Level++) {
+    for (uint Level = 1; Level< GetGridn(); Level++) {
   
     uint Lev_c = Level-1;
     uint Lev_f = Level;    
 
         int FEXLevel_c[QL];
         FEXLevel_c[QQ] = Level-1;                                 //COARSE Level for QUADRATIC
-        FEXLevel_c[LL] = (Level-1+_NoLevels)%(_NoLevels+1);
+        FEXLevel_c[LL] = (Level-1+GetGridn())%(GetGridn()+1);
         FEXLevel_c[KK] = Level-1;                                 //COARSE Level for CONSTANT //TODO is this used?
         int FEXLevel_f[QL];
         FEXLevel_f[QQ] = Level;                                  //FINE Level for QUADRATIC
@@ -1655,7 +1641,7 @@ void SystemTwo::ReadProl(const std::string& name) {
 // the number of variables of every FE type
 //Level goes from 1 to NoLevels-1
    
-    uint off_proc = _mesh._iproc*_NoLevels;
+    uint off_proc = _mesh._iproc*GetGridn();
 
     _Prl[ Lev_f ] = SparseMatrix::build().release();
 // // //     _Prl[ Lev_f ]->init(0,0,0,0); //TODO BACK TO A REASONABLE INIT
@@ -1696,8 +1682,8 @@ void SystemTwo::ReadProl(const std::string& name) {
       for (int fe=0;fe<QL;fe++) { 
            ml_init[fe]=0;
         for (uint isubd=0;isubd<_mesh._iproc; isubd++) {
-       if (fe < KK)       ml_init[fe] += _mesh._off_nd[fe][isubd*_NoLevels + Lev_f +1] - _mesh._off_nd[fe][isubd*_NoLevels];
-       else if (fe == KK) ml_init[fe] += _mesh._off_el[VV][isubd*_NoLevels + Lev_f +1] - _mesh._off_el[VV][isubd*_NoLevels + Lev_f];
+       if (fe < KK)       ml_init[fe] += _mesh._off_nd[fe][isubd*GetGridn() + Lev_f +1] - _mesh._off_nd[fe][isubd*GetGridn()];
+       else if (fe == KK) ml_init[fe] += _mesh._off_el[VV][isubd*GetGridn() + Lev_f +1] - _mesh._off_el[VV][isubd*GetGridn() + Lev_f];
 	}
       }
   
@@ -1797,11 +1783,11 @@ void SystemTwo::ReadProl(const std::string& name) {
 //are assembled by looping over NODES.
 // Then, the values are set with NODE LOOPS for Rest and Prol,
 // and with ELEMENT LOOP for the MATRIX (the Assemble Function)
-//Level goes from 0 to < _NoLevels - 1 ==> Level is COARSE here
+//Level goes from 0 to < GetGridn() - 1 ==> Level is COARSE here
   
 //    uint Lev_c = Level;
 //   uint Lev_f = Level+1;
-	//with these you explore arrays that go from 0  to _NoLevels - 1
+	//with these you explore arrays that go from 0  to GetGridn() - 1
                            //so where the distinction between QQ and LL is already made
                            // with the EXTENDED levels you explore things that have an additional level,
                            // and so can work both with QQ and with LL
@@ -1813,9 +1799,9 @@ void SystemTwo::ReadProl(const std::string& name) {
     //perche' sono legati ai DOF (devi pensare che la questione del mesh e' gia' risolta)
 void SystemTwo::ReadRest(const std::string& name) {
  
-  _Rst.resize(_NoLevels);  //TODO why do it bigger?
+  _Rst.resize(GetGridn());  //TODO why do it bigger?
   
-  for (uint Level = 0; Level< _NoLevels - 1; Level++) {
+  for (uint Level = 0; Level< GetGridn() - 1; Level++) {
     
     uint Lev_c = Level;
     uint Lev_f = Level+1;
@@ -1881,18 +1867,18 @@ void SystemTwo::ReadRest(const std::string& name) {
 //======= From here on the EQUATION comes into play, because we have to take into account
 // the number of variables of every FE type
 //TODO if you watch carefully, you see that the COARSE levels are EXTENDED,
-// while the FINE LEVELS never risk to be "extended", the maximum for them is (_NoLevels-1) !
+// while the FINE LEVELS never risk to be "extended", the maximum for them is (GetGridn()-1) !
     
         int FEXLevel_c[QL];
         FEXLevel_c[QQ] = Level;                                 //COARSE Level for QUADRATIC
-        FEXLevel_c[LL] = (_NoLevels + Level)%(_NoLevels + 1);   //COARSE Level for LINEAR: Level1=0 means coarse linear, a finer linear is the first coarse quadratic, and so on and so on
+        FEXLevel_c[LL] = (GetGridn() + Level)%(GetGridn() + 1);   //COARSE Level for LINEAR: Level1=0 means coarse linear, a finer linear is the first coarse quadratic, and so on and so on
         FEXLevel_c[KK] = Level;                                 //COARSE Level for CONSTANT
         int FEXLevel_f[QL];
         FEXLevel_f[QQ] = Level+1;                                  //FINE Level for QUADRATIC
         FEXLevel_f[LL] = Level;                                // AAA look at the symmetry, this is exactly (_n_levels + Level1 + 1)%(_n_levels + 1); ! //FINE Level for LINEAR:   Level1=0 means coarse linear, a finer linear is the first coarse quadratic, and so on and so on
         FEXLevel_f[KK] = Level+1;                                  //FINE Level for CONSTANT
 
-    uint off_proc=_NoLevels*_mesh._iproc;
+    uint off_proc=GetGridn()*_mesh._iproc;
 
     _Rst[Lev_c] = SparseMatrix::build().release();
 // // //     _Rst[Lev_c]->init(0,0,0,0);   //TODO BACK TO A REASONABLE INIT  //we have to do this before appropriately!!!
@@ -1922,8 +1908,8 @@ void SystemTwo::ReadRest(const std::string& name) {
         for (int fe=0;fe<QL;fe++) { DofObjInit_lev_PrevProcs_c[fe] = 0;  }
         for (int fe=0;fe<QL;fe++) { 
     for (uint isubd=0;isubd<_mesh._iproc; isubd++) { //up to the current processor
-       if (fe < KK)       /*mlinit*/ DofObjInit_lev_PrevProcs_c[fe] += _mesh._off_nd[fe][ isubd*_NoLevels + Lev_c +1 ]  - _mesh._off_nd[fe][isubd*_NoLevels];  
-       else if (fe == KK) /*mlinit*/ DofObjInit_lev_PrevProcs_c[fe] += _mesh._off_el[VV][ isubd*_NoLevels + Lev_c +1 ]  - _mesh._off_el[VV][isubd*_NoLevels + Lev_c];   
+       if (fe < KK)       /*mlinit*/ DofObjInit_lev_PrevProcs_c[fe] += _mesh._off_nd[fe][ isubd*GetGridn() + Lev_c +1 ]  - _mesh._off_nd[fe][isubd*GetGridn()];  
+       else if (fe == KK) /*mlinit*/ DofObjInit_lev_PrevProcs_c[fe] += _mesh._off_el[VV][ isubd*GetGridn() + Lev_c +1 ]  - _mesh._off_el[VV][isubd*GetGridn() + Lev_c];   
          }
      }
 
@@ -1978,7 +1964,7 @@ void SystemTwo::ReadRest(const std::string& name) {
           if (fe < KK)         dof_pos_c = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ i ];
           else if (fe == KK)   dof_pos_c = i;
             int irow     = _dofmap.GetDof(Lev_c,fe,ivar,dof_pos_c);
-            int irow_top = _dofmap.GetDof(_NoLevels-1,fe,ivar,dof_pos_c);
+            int irow_top = _dofmap.GetDof(GetGridn()-1,fe,ivar,dof_pos_c);
             uint ncol = len[fe][i+1]-len[fe][i];
             tmp[0]=irow;
             std::vector< uint> ind(pattern[irow].size()-1);
@@ -2354,7 +2340,7 @@ void SystemTwo::Bc_ScaleDofVec(NumericVector* myvec,  double ScaleFac /*, dimens
 //will change due to the variation of a single component at the boundary
 
 
-for (uint i=0; i < _dofmap._Dim[_NoLevels-1]; i++) { //loop over all the dofs, both quadratic and linear
+for (uint i=0; i < _dofmap._Dim[GetGridn()-1]; i++) { //loop over all the dofs, both quadratic and linear
   
   if (_bc[i] == 1 ) {  //if the dofs are not fixed, scale them
   
@@ -2372,7 +2358,7 @@ for (uint i=0; i < _dofmap._Dim[_NoLevels-1]; i++) { //loop over all the dofs, b
 //add only where boundary conditions are not fixed
 void SystemTwo::Bc_AddDofVec(NumericVector* vec_in,NumericVector* vec_out ) {
 
-for (uint i=0; i < _dofmap._Dim[_NoLevels-1]; i++) { 
+for (uint i=0; i < _dofmap._Dim[GetGridn()-1]; i++) { 
 
     if (_bc[i] == 1 ) {
   
@@ -2389,7 +2375,7 @@ return;
 void SystemTwo::Bc_AddScaleDofVec(NumericVector* vec_in,NumericVector* vec_out,const double ScaleFac ) {
 //add a vector multiplied by a constant (only where it is not fixed)
   
-for (uint i=0; i < _dofmap._Dim[_NoLevels-1]; i++) { 
+for (uint i=0; i < _dofmap._Dim[GetGridn()-1]; i++) { 
 
     if (_bc[i] == 1 ) {
   

@@ -147,8 +147,8 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
     
 //========= END EXTERNAL QUANTITIES =================
 
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_mesh._NoLevels*_mesh._iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_mesh._NoLevels*_mesh._iproc+Level];
 
 //=====================
 //=====================    
@@ -375,8 +375,8 @@ if (_Dir_pen_fl == 0)  {
    
 //========= END EXTERNAL QUANTITIES =================
 
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_mesh._NoLevels*_mesh._iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_mesh._NoLevels*_mesh._iproc+Level];
 
 //=====================
 //=====================    

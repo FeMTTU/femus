@@ -164,8 +164,8 @@ namespace femus {
 
 //=========END EXTERNAL QUANTITIES (couplings) =====
     
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_mesh._NoLevels*_mesh._iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_mesh._NoLevels*_mesh._iproc+Level];
 
 //======================
 //======================
@@ -456,8 +456,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //=========END EXTERNAL QUANTITIES (couplings) =====
     
-    const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*_mesh._iproc+Level];
+    const uint nel_e = _mesh._off_el[mesh_vb][_mesh._NoLevels*_mesh._iproc+Level+1];
+    const uint nel_b = _mesh._off_el[mesh_vb][_mesh._NoLevels*_mesh._iproc+Level];
 
 //======================
 //======================

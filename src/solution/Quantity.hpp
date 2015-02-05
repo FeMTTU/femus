@@ -29,7 +29,6 @@ namespace femus {
 
 
 class SystemTwo;
-class Physics;
 class QuantityMap;
 
 
