@@ -168,8 +168,8 @@
 //=====================
     sys -> initVectors();
 ///=====================
-    sys -> GenerateBdc();
-    sys -> GenerateBdcElem();
+    sys -> _bcond.GenerateBdc();
+    sys -> _bcond.GenerateBdcElem();
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
 //=====================

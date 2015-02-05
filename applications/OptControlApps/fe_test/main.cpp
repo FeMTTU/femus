@@ -110,7 +110,6 @@
           eqnT.AddUnknownToSystemPDE(&temperature); 
           eqnT.AddUnknownToSystemPDE(&temperature2); 
           eqnT.AddUnknownToSystemPDE(&temperature3); 
-          eqnT._Dir_pen_fl = 0; 
 
 //================================ 
 //========= End add EQUATIONS  and ========
@@ -131,8 +130,8 @@
 //=====================
     sys -> initVectors();
 //=====================
-    sys -> GenerateBdc();
-    sys -> GenerateBdcElem();
+    sys -> _bcond.GenerateBdc();
+    sys -> _bcond.GenerateBdcElem();
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
 //=====================

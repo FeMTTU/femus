@@ -187,7 +187,7 @@ namespace femus {
        bhomOld.GetElemDofs(Level);
     LagMultOld.GetElemDofs(Level);
   
-      if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),bhomOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
+      if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),bhomOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
 
 
 
@@ -484,7 +484,7 @@ for (uint fe = 0; fe < QL; fe++)     {
         bhomOld.GetElemDofs(Level);
      LagMultOld.GetElemDofs(Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),bhomOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
+    if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),bhomOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
 
 //============ BC =======
@@ -496,9 +496,9 @@ for (uint fe = 0; fe < QL; fe++)     {
 #endif
        double  dbl_pen[NT] = {0.,0.};  //normal and tangential penalty value
    
-       Bc_GetElFlagValLevSubd(Level,_mesh._iproc,iel,el_flag,el_value);
+       _bcond.Bc_GetElFlagValLevSubd(Level,_mesh._iproc,iel,el_flag,el_value);
 
-if (_Dir_pen_fl == 1)  { 
+if (_bcond._Dir_pen_fl == 1)  { 
        if (el_flag[NN] == 1) {   dbl_pen[NN]=penalty_val; } //normal dirichlet
        if (el_flag[TT] == 1) {   dbl_pen[TT]=penalty_val; } //tangential dirichlet
    }
@@ -507,7 +507,7 @@ if (_Dir_pen_fl == 1)  {
 //TODO here i should check that the nodal bc dirichlet i put correspond to the element NT flags
 
        uint press_fl=0;
-       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),bhomOld,LagMultOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
+       _bcond.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),bhomOld,LagMultOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
  //only the LINEAR PART is USED!!
        
 // // //   if ( (1-el_flag[NN]) != press_fl)  {std::cout << _eqname << ": sthg. wrong with press elflags" << std::endl;abort();}
@@ -573,7 +573,7 @@ if (_Dir_pen_fl == 1)  {
                              )
 
                                 //projection over the physical (x,y,z)
-      + _Dir_pen_fl *dtxJxW_g*Phii._val_g[0]*(dbl_pen[NN]*el_value[0]*currgp.get_normal_ptr()[idim] 
+      + _bcond._Dir_pen_fl *dtxJxW_g*Phii._val_g[0]*(dbl_pen[NN]*el_value[0]*currgp.get_normal_ptr()[idim] 
                                     + dbl_pen[TT]*el_value[1]*currgp.get_tangent_ptr()[0][idim]  // VelOld._val_g[idim] instead of el_value...
                #if DIMENSION==3
 		                    + dbl_pen[TT]*el_value[1]*currgp.get_tangent_ptr()[1][idim]    
@@ -584,7 +584,7 @@ if (_Dir_pen_fl == 1)  {
 	    ;   
 	    
 //====================
-if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and much better than removing the code with the #ifdef //  #if (NS_DIR_PENALTY==1)  
+if (_bcond._Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and much better than removing the code with the #ifdef //  #if (NS_DIR_PENALTY==1)  
 	   for (uint jdim=0; jdim< space_dim; jdim++)    {
 
 	   for (uint j=0; j<bhomOld._ndof; j++) {

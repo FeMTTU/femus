@@ -45,12 +45,7 @@
 // is when you set the BC's
 // ======================================================
 EqnT::EqnT(MultiLevelProblem& equations_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
-    SystemTwo(equations_map_in,eqname_in,number,smoother_type) {
-
-//============= DIR PENALTY===============
-   _Dir_pen_fl = 0;
-  
-}
+    SystemTwo(equations_map_in,eqname_in,number,smoother_type) { }
 
 
 //================ DESTRUCTOR    
@@ -213,7 +208,7 @@ void  EqnT::GenMatRhs(const uint Level) {
     Tlift.GetElemDofs(Level);
      TAdj.GetElemDofs(Level);
      
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
+    if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
 
 // ===============      
 // Now the point is this: there are several functions of space
@@ -503,7 +498,7 @@ for (uint fe = 0; fe < QL; fe++)     {
          Tlift.GetElemDofs(Level);
           TAdj.GetElemDofs(Level);
 
-     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified!
+     if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified!
   
  //============ FLAGS ================
      double el_penalty = 0.;
@@ -558,7 +553,7 @@ int el_Neum_flag=0;
 	 + el_penalty*dtxJxW_g*Tempold._val_g[0]*phii_g  //clearly, if you continue using bc=0 for setting nodal Dirichlet, this must go outside
 	 ; 
 	 
-         if (_Dir_pen_fl == 1) {
+         if (_bcond._Dir_pen_fl == 1) {
             for (uint j=0; j<Tempold._ndof; j++) {
                double phij_g = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
 	       currelem.Mat()(i,j) += el_penalty*dtxJxW_g*phij_g*phii_g;

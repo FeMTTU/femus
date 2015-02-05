@@ -173,7 +173,7 @@ const int NonStatNSAD = (int) _phys.get("NonStatNSAD");
     VelAdjOld.GetElemDofs(Level);  
     PressAdjOld.GetElemDofs(Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),VelAdjOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
+    if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),VelAdjOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
   
     
     if ( Vel._eqnptr != NULL )  Vel.GetElemDofs(Level);
@@ -254,7 +254,7 @@ for (uint fe = 0; fe < QL; fe++)     {
                            + (1-currelem.GetBCDofFlag()[irowq])*detb*VelAdjOld._val_dofs[irowq]; //Dirichlet bc
 	   }
 
-if (_Dir_pen_fl == 0)  { 
+if (_bcond._Dir_pen_fl == 0)  { 
   for (uint idim=0; idim<space_dim; idim++) { // filling diagonal for Dirichlet bc
           const uint irowq = i+idim*VelAdjOld._ndof;
           currelem.Mat()(irowq,irowq) += (1-currelem.GetBCDofFlag()[irowq])*detb;
@@ -406,7 +406,7 @@ if (_Dir_pen_fl == 0)  {
      VelAdjOld.GetElemDofs(Level);
      PressAdjOld.GetElemDofs(Level);
 
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),VelAdjOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
+    if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),VelAdjOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
        
 
 //============ BC =======
@@ -419,9 +419,9 @@ if (_Dir_pen_fl == 0)  {
        double  dbl_pen[NT] = {0.,0.};
    
     
-       Bc_GetElFlagValLevSubd(Level,_mesh._iproc,iel,el_flag,el_value);
+       _bcond.Bc_GetElFlagValLevSubd(Level,_mesh._iproc,iel,el_flag,el_value);
 
-if (_Dir_pen_fl == 1)  { 
+if (_bcond._Dir_pen_fl == 1)  { 
        if (el_flag[NN] == 1) {   dbl_pen[NN]=penalty_val; } //normal dirichlet
        if (el_flag[TT] == 1) {   dbl_pen[TT]=penalty_val; } //tangential dirichlet
    }
@@ -430,7 +430,7 @@ if (_Dir_pen_fl == 1)  {
 //TODO here i should check that the nodal bc dirichlet i put correspond to the element NT flags
 
        uint press_fl=0;
-       Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),VelAdjOld,PressAdjOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
+       _bcond.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),VelAdjOld,PressAdjOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
  //only the LINEAR PART is USED!!
        
 //   if ( (1-el_flag[NN]) != press_fl)  {std::cout << "Sthg wrong with press elflags" << std::endl;abort();}
@@ -474,7 +474,7 @@ if (_Dir_pen_fl == 1)  {
 
 	  )
                                 //projection over the physical (x,y,z)
-      + _Dir_pen_fl *dtxJxW_g*phii_g*(dbl_pen[NN]*el_value[0]*currgp.get_normal_ptr()[idim] 
+      + _bcond._Dir_pen_fl *dtxJxW_g*phii_g*(dbl_pen[NN]*el_value[0]*currgp.get_normal_ptr()[idim] 
                                     + dbl_pen[TT]*el_value[1]*currgp.get_tangent_ptr()[0][idim]  // VelOld._val_g[idim] instead of el_value...
                #if DIMENSION==3
 		                    + dbl_pen[TT]*el_value[1]*currgp.get_tangent_ptr()[1][idim]    
@@ -483,7 +483,7 @@ if (_Dir_pen_fl == 1)  {
 	   ;   
 	   
 //====================
-if (_Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and much better than removing the code with the #ifdef   
+if (_bcond._Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and much better than removing the code with the #ifdef   
 	   for (uint jdim=0; jdim< space_dim; jdim++)    {
 
 	   for (uint j=0; j< VelAdjOld._ndof; j++) {

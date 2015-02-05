@@ -198,7 +198,7 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
 
       mgMHDCONT->_x_tmp[NoLevels-1]->zero();
     *(mgMHDCONT->_x_tmp[NoLevels-1]) = *(mgMHDCONT->_x_old[NoLevels-1]);
-      mgMHDCONT->Bc_ScaleDofVec(mgMHDCONT->_x_tmp[NoLevels - 1], omega );
+      mgMHDCONT->_bcond.Bc_ScaleDofVec(mgMHDCONT->_x_tmp[NoLevels - 1], omega );
       mgMHDCONT->_x_tmp[NoLevels - 1]->close();
     std::cout << "Omega " << omega << std::endl;
     std::cout << "Linfty norm of Becont _x_old*omega "
@@ -212,7 +212,7 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
     std::cout << "Linfty norm of Becont _x_oldopt "
               << _x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
 
-      mgMHDCONT->Bc_AddScaleDofVec(_x_oldopt[NoLevels - 1],mgMHDCONT->_x_tmp [NoLevels - 1],1.- omega);
+      mgMHDCONT->_bcond.Bc_AddScaleDofVec(_x_oldopt[NoLevels - 1],mgMHDCONT->_x_tmp [NoLevels - 1],1.- omega);
       mgMHDCONT->_x_tmp[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont x_old*omega + (1-omega)*xoold " 
               << mgMHDCONT->_x_tmp [NoLevels - 1]->linfty_norm() << std::endl;
