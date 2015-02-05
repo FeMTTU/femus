@@ -105,6 +105,7 @@ protected:
     /** pointer */
     MultiLevelMesh* _ml_msh;
 
+    /** indices of the solutions, dynamical dimension */
     vector <unsigned> _SolSystemPdeIndex;
 
     /** Number of Levels */

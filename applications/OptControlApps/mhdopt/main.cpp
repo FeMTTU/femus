@@ -111,35 +111,35 @@ int main(int argc, char** argv) {
 //================================
 // ======= Add QUANTITIES ========  
 //================================
-  MagnFieldHom bhom("Qty_MagnFieldHom",qty_map,mesh.get_dim(),QQ);     qty_map.set_qty(&bhom);  
-  MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,mesh.get_dim(),QQ);     qty_map.set_qty(&Bext);  
+  MagnFieldHom bhom("Qty_MagnFieldHom",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&bhom);  
+  MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&Bext);  
 
 //consistency check
  if (bhom._dim !=  Bext._dim)     {std::cout << "main: inconsistency" << std::endl;abort();}
  if (bhom._FEord !=  Bext._FEord) {std::cout << "main: inconsistency" << std::endl;abort();}
 
- MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,LL);     qty_map.set_qty(&bhom_lag_mult);
- MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,LL);     qty_map.set_qty(&Bext_lag_mult);
- MagnFieldHomAdj                  bhom_adj("Qty_MagnFieldHomAdj",qty_map,mesh.get_dim(),QQ);        qty_map.set_qty(&bhom_adj);
- MagnFieldHomLagMultAdj  bhom_lag_mult_adj("Qty_MagnFieldHomLagMultAdj",qty_map,1,LL);  qty_map.set_qty(&bhom_lag_mult_adj);
+ MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,LL);     qty_map.AddQuantity(&bhom_lag_mult);
+ MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,LL);     qty_map.AddQuantity(&Bext_lag_mult);
+ MagnFieldHomAdj                  bhom_adj("Qty_MagnFieldHomAdj",qty_map,mesh.get_dim(),QQ);        qty_map.AddQuantity(&bhom_adj);
+ MagnFieldHomLagMultAdj  bhom_lag_mult_adj("Qty_MagnFieldHomLagMultAdj",qty_map,1,LL);  qty_map.AddQuantity(&bhom_lag_mult_adj);
 
-  Pressure  pressure("Qty_Pressure",qty_map,1,LL);            qty_map.set_qty(&pressure);
-  Velocity  velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.set_qty(&velocity);  
+  Pressure  pressure("Qty_Pressure",qty_map,1,LL);            qty_map.AddQuantity(&pressure);
+  Velocity  velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.AddQuantity(&velocity);  
 
-  VelocityAdj  velocity_adj("Qty_VelocityAdj",qty_map,mesh.get_dim(),QQ);         qty_map.set_qty(&velocity_adj);  
-  PressureAdj pressure_adj("Qty_PressureAdj",qty_map,1,LL);                  qty_map.set_qty(&pressure_adj);
-  DesVelocity des_velocity("Qty_DesVelocity",qty_map,mesh.get_dim(),QQ);       qty_map.set_qty(&des_velocity);
+  VelocityAdj  velocity_adj("Qty_VelocityAdj",qty_map,mesh.get_dim(),QQ);         qty_map.AddQuantity(&velocity_adj);  
+  PressureAdj pressure_adj("Qty_PressureAdj",qty_map,1,LL);                  qty_map.AddQuantity(&pressure_adj);
+  DesVelocity des_velocity("Qty_DesVelocity",qty_map,mesh.get_dim(),QQ);       qty_map.AddQuantity(&des_velocity);
  
 //consistency check
  if (velocity._dim !=  des_velocity._dim) {std::cout << "main: inconsistency" << std::endl; abort();}
  if (velocity._FEord !=  des_velocity._FEord) {std::cout << "main: inconsistency" << std::endl; abort();}
 
 // #if TEMP_DEPS==1
-  Temperature       temperature("Qty_Temperature",qty_map,1,QQ);      qty_map.set_qty(&temperature);  
-  Density               density("Qty_Density",qty_map,1,QQ);                       qty_map.set_qty(&density);   
-  Viscosity           viscosity("Qty_Viscosity",qty_map,1,QQ);                     qty_map.set_qty(&viscosity);
-  HeatConductivity    heat_cond("Qty_HeatConductivity",qty_map,1,QQ);              qty_map.set_qty(&heat_cond);
-  SpecificHeatP      spec_heatP("Qty_SpecificHeatP",qty_map,1,QQ);                 qty_map.set_qty(&spec_heatP);
+  Temperature       temperature("Qty_Temperature",qty_map,1,QQ);      qty_map.AddQuantity(&temperature);  
+  Density               density("Qty_Density",qty_map,1,QQ);                       qty_map.AddQuantity(&density);   
+  Viscosity           viscosity("Qty_Viscosity",qty_map,1,QQ);                     qty_map.AddQuantity(&viscosity);
+  HeatConductivity    heat_cond("Qty_HeatConductivity",qty_map,1,QQ);              qty_map.AddQuantity(&heat_cond);
+  SpecificHeatP      spec_heatP("Qty_SpecificHeatP",qty_map,1,QQ);                 qty_map.AddQuantity(&spec_heatP);
 // #endif  
 
   

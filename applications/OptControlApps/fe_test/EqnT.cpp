@@ -399,7 +399,7 @@ int el_Neum_flag=0;
 
        xyz.val_g();
        
-       static_cast<Temperature*>(GetMLProb().GetQtyMap().get_qty("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
+       static_cast<Temperature*>(GetMLProb().GetQtyMap().GetQuantity("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
    
 	Tempold.val_g(); //For the penalty Dirichlet //i need this for interpolating the old function at the gauss point
 

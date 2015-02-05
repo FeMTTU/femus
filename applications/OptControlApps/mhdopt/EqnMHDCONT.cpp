@@ -126,26 +126,26 @@ namespace femus {
   
 #if VELOCITY_QTY==1
     CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = GetMLProb().GetQtyMap().get_qty("Qty_Velocity"); //an alternative cannot exist, because it is an Unknown of This Equation
+    Vel._qtyptr      = GetMLProb().GetQtyMap().GetQuantity("Qty_Velocity"); //an alternative cannot exist, because it is an Unknown of This Equation
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
 #endif  
 
     //==================
     CurrentQuantity VelAdj(currgp);
-    VelAdj._qtyptr      = GetMLProb().GetQtyMap().get_qty("Qty_VelocityAdj");
+    VelAdj._qtyptr      = GetMLProb().GetQtyMap().GetQuantity("Qty_VelocityAdj");
     VelAdj.VectWithQtyFillBasic();
     VelAdj.Allocate();
   
     //==================
     CurrentQuantity Bhom(currgp); 
-    Bhom._qtyptr   = GetMLProb().GetQtyMap().get_qty("Qty_MagnFieldHom");
+    Bhom._qtyptr   = GetMLProb().GetQtyMap().GetQuantity("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();
     
 //===============
     CurrentQuantity BhomAdj(currgp); 
-    BhomAdj._qtyptr   = GetMLProb().GetQtyMap().get_qty("Qty_MagnFieldHomAdj"); 
+    BhomAdj._qtyptr   = GetMLProb().GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj"); 
     BhomAdj.VectWithQtyFillBasic();
     BhomAdj.Allocate();
   //=========END EXTERNAL QUANTITIES (couplings) =====

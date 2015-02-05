@@ -78,13 +78,13 @@ public:
    QuantityMap(const MultiLevelMeshTwo & mesh, const FemusInputParser<double> * map_in);
   ~QuantityMap(){};
   
-  inline           void  set_qty(Quantity* value)          {_QuantMap.insert(make_pair(value->_name,value));}
+  inline           void  AddQuantity(Quantity* value)          {_QuantMap.insert(make_pair(value->_name,value));}
   
-  inline       Quantity* get_qty(const std::string & name)  const    {
+  inline       Quantity* GetQuantity(const std::string & name)  const    {
  
     std::map<std::string,Quantity*>::const_iterator myit = _QuantMap.find(name);
       if ( myit == _QuantMap.end() ) { 
-       std::cout << "QuantityMap::get_qty: Sorry but there is no ---> "
+       std::cout << "QuantityMap::GetQuantity: Sorry but there is no ---> "
                  << name  << " <--- element in the Global Quantity Map" << std::endl; abort();}
 
     return myit->second;

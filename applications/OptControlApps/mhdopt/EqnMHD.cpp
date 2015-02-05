@@ -151,13 +151,13 @@ namespace femus {
   xyz_refbox.Allocate();
 
     CurrentQuantity Bext(currgp);
-    Bext._qtyptr     = GetMLProb().GetQtyMap().get_qty("Qty_MagnFieldExt");
+    Bext._qtyptr     = GetMLProb().GetQtyMap().GetQuantity("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();
 
 #if VELOCITY_QTY==1
     CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = GetMLProb().GetQtyMap().get_qty("Qty_Velocity"); 
+    Vel._qtyptr      = GetMLProb().GetQtyMap().GetQuantity("Qty_Velocity"); 
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
 #endif  
@@ -443,13 +443,13 @@ for (uint fe = 0; fe < QL; fe++)     {
   xyz_refbox.Allocate();
 
     CurrentQuantity Bext(currgp);
-    Bext._qtyptr     = GetMLProb().GetQtyMap().get_qty("Qty_MagnFieldExt");
+    Bext._qtyptr     = GetMLProb().GetQtyMap().GetQuantity("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();
 
 #if VELOCITY_QTY==1
     CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = GetMLProb().GetQtyMap().get_qty("Qty_Velocity"); 
+    Vel._qtyptr      = GetMLProb().GetQtyMap().GetQuantity("Qty_Velocity"); 
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
 #endif  

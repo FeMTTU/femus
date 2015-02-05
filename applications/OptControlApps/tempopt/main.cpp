@@ -107,15 +107,15 @@
   // ===== QuantityMap : this is like the MultilevelSolution =========================================
   QuantityMap  qty_map(mesh,&physics_map);
 
-  Temperature temperature("Qty_Temperature",qty_map,1,QQ);          qty_map.set_qty(&temperature);
-  TempLift       templift("Qty_TempLift",qty_map,1,QQ,opt_loop);    qty_map.set_qty(&templift);  
-  TempAdj         tempadj("Qty_TempAdj",qty_map,1,QQ);              qty_map.set_qty(&tempadj);  
-  TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.set_qty(&tempdes);  
-  Pressure       pressure("Qty_Pressure",qty_map,1,LL);                qty_map.set_qty(&pressure);
-  Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.set_qty(&velocity);  
+  Temperature temperature("Qty_Temperature",qty_map,1,QQ);          qty_map.AddQuantity(&temperature);
+  TempLift       templift("Qty_TempLift",qty_map,1,QQ,opt_loop);    qty_map.AddQuantity(&templift);  
+  TempAdj         tempadj("Qty_TempAdj",qty_map,1,QQ);              qty_map.AddQuantity(&tempadj);  
+  TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.AddQuantity(&tempdes);  
+  Pressure       pressure("Qty_Pressure",qty_map,1,LL);                qty_map.AddQuantity(&pressure);
+  Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.AddQuantity(&velocity);  
 
 #if FOURTH_ROW==1
-  Pressure2 pressure_2("Qty_Pressure_2",qty_map,1,KK);            qty_map.set_qty(&pressure_2);
+  Pressure2 pressure_2("Qty_Pressure_2",qty_map,1,KK);            qty_map.AddQuantity(&pressure_2);
 #endif 
   
   // ===== end QuantityMap =========================================
@@ -149,7 +149,7 @@ InternalVect_NS[1] = &pressure;  pressure.SetPosInAssocEqn(1);
            velocity.set_eqn(&eqnNS);
            pressure.set_eqn(&eqnNS);
   
-std::vector<Quantity*> InternalVect_Temp( 3 + FOURTH_ROW );  //of course this must be exactly equal to the following number of get_qty
+std::vector<Quantity*> InternalVect_Temp( 3 + FOURTH_ROW );  //of course this must be exactly equal to the following number of GetQuantity
                                                              // can I do this dynamic? 
                                                              // well, the following order is essential, because it is the same order 
                                                              // as the BLOCKS in the MATRIX, but at least with add you can avoid setting also the SIZE explicitly.
@@ -187,9 +187,9 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
  
 //once you have the list of the equations, you loop over them to initialize everything
 
-   for (MultiLevelProblem::const_system_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
-        SystemTwo* mgsol = static_cast<SystemTwo*>(eqn->second);
-        
+   for (MultiLevelProblem::const_system_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {\
+     
+   SystemTwo* mgsol = static_cast<SystemTwo*>(eqn->second);
 //=====================
     mgsol -> _dofmap.ComputeMeshToDof();
 //=====================
@@ -201,6 +201,7 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
     mgsol -> initVectors();     //TODO can I do it earlier than this position?
 //=====================
     mgsol -> Initialize();
+    
     } 
 	 
 	 
