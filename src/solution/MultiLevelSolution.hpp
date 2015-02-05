@@ -180,12 +180,11 @@ private:
     /** Array of solution, dimension number of levels */
     vector <Solution*>  _solution;
     
+    /** This group of vectors has the size of the number of added solutions */
     vector< vector <BDCType> > _boundaryconditions;
     vector< vector <bool> > _ishomogeneous;
     vector< vector <FunctionBase *> > _nonhomogeneousbcfunction; 
-
     
-    /** This group of vectors has the size of the number of added solutions */
     bool _bdc_func_set;
     unsigned short  _gridn;
     vector <int>    _SolType;

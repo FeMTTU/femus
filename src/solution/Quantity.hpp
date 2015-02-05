@@ -35,7 +35,7 @@ class QuantityMap;
 //a quantity may or may not have an equation
 //if it has an equation, it must have some boundary condition flag
 
-
+//The Solution is like a vector of Quantities
 
 class Quantity { 
   
@@ -78,7 +78,7 @@ public:
    QuantityMap() {};
   ~QuantityMap() {};
   
-  inline           void  AddQuantity(Quantity* value)          {_QuantMap.insert(make_pair(value->_name,value));}
+  inline           void  AddQuantity(Quantity* value)          { _QuantMap.insert(make_pair(value->_name,value)); }
   
   inline       Quantity* GetQuantity(const std::string & name)  const    {
  
@@ -110,10 +110,6 @@ private:
  const FemusInputParser<double> * _physmap;
   
 };
-
-
-
-
 
 
 

@@ -127,14 +127,6 @@ if (dof_off > offset) {std::cout << "Use a quadratic mesh for FunctionDof comput
 
 }  
   
-  
-  
-  ////////////////QTY MAP ////////////
-  
-  
-  
-
-
 
 
 } //end namespace femus
