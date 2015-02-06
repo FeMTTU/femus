@@ -169,9 +169,6 @@ const int NonStatMHDAD = (int) _phys.get("NonStatMHDAD");
            BhomAdjOld.GetElemDofs(Level);
     BhomLagMultAdjOld.GetElemDofs(Level);
 
-    if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),BhomAdjOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
-    
-    
      if ( Vel._eqnptr != NULL )      Vel.GetElemDofs(Level);
     else                             Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
     if ( VelAdj._eqnptr != NULL ) VelAdj.GetElemDofs(Level);
@@ -245,13 +242,10 @@ for (uint fe = 0; fe < QL; fe++)     {
                            + (1-currelem.GetBCDofFlag()[irowq])*detb*BhomAdjOld._val_dofs[irowq]; //Dirichlet bc
 	   }
 
-if (_bcond._Dir_pen_fl == 0)  {
         for (uint idim=0; idim<space_dim; idim++) { // filling diagonal for Dirichlet bc
           const uint irowq = i+idim*BhomAdjOld._ndof;
           currelem.Mat()(irowq,irowq) += (1-currelem.GetBCDofFlag()[irowq])*detb;
         }        // end filling diagonal for Dirichlet bc
-}
-                                           
 	 
         for (uint j=0; j<BhomAdjOld._ndof; j++) {// A element matrix
 //======="COMMON SHAPE PART for QTYZERO": ==========
@@ -397,27 +391,9 @@ if (_bcond._Dir_pen_fl == 0)  {
             BhomAdjOld.GetElemDofs(Level);
      BhomLagMultAdjOld.GetElemDofs(Level);
    
-     if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),BhomAdjOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
-       
-  
-    //============ BC =======
-    
-       int     el_flag[NT] = {0,0};
-#if DIMENSION==2
-       double el_value[N1T1] = {0.,0.};
-#elif DIMENSION==3
-       double el_value[N1T3] = {0.,0.,0.,0.}; 
-#endif
-       double  dbl_pen[NT] = {0.,0.};
-   
-    
-       _bcond.Bc_GetElFlagValLevSubd(Level,_mesh._iproc,iel,el_flag,el_value);
-
-if (_bcond._Dir_pen_fl == 1)  { 
-       if (el_flag[NN] == 1) {   dbl_pen[NN]=penalty_val; } //normal dirichlet
-       if (el_flag[TT] == 1) {   dbl_pen[TT]=penalty_val; } //tangential dirichlet
-   }
-    
+//============ BC =======
+       int press_fl=0;
+       _bcond.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),BhomAdjOld,BhomLagMultAdjOld,press_fl);
 //========END BC============
      
     const uint el_ngauss = GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
@@ -426,7 +402,8 @@ if (_bcond._Dir_pen_fl == 1)  {
 //======= "COMMON SHAPE PART"============================
  for (uint fe = 0; fe < QL; fe++)     {
    currgp.SetPhiElDofsFEVB_g (fe,qp); 
-   currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);   }
+   currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);
+}
 
         const double det   = dt*currgp.JacVectBB_g(xyz);
 	const double dtxJxW_g = det * GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
@@ -446,47 +423,12 @@ if (_bcond._Dir_pen_fl == 1)  {
              uint irowq=i+idim*BhomAdjOld._ndof;
             currelem.Rhs()(irowq)  += 
           currelem.GetBCDofFlag()[irowq]*           
-           dtxJxW_g*(   -1.*/*press_fl*/(1-el_flag[NN])*BhomLagMultAdjOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g  //  //OLD VALUES //AAA multiplying int times uint!!!
+           dtxJxW_g*(   -1.*press_fl*BhomLagMultAdjOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g
+        ); 
 
-// // //             TODO STRAIN AT THE BOUNDARY            + /*stress_fl*/el_flag[1]*IRe*strainUtrDn_g[idim]*phii_g 
-
-	  )
-                                //projection over the physical (x,y,z)
-      + _bcond._Dir_pen_fl *dtxJxW_g*phii_g*(dbl_pen[NN]*el_value[0]*currgp.get_normal_ptr()[idim] 
-                                    + dbl_pen[TT]*el_value[1]*currgp.get_tangent_ptr()[0][idim]  // VelOld._val_g[idim] instead of el_value...
-               #if DIMENSION==3
-		                    + dbl_pen[TT]*el_value[1]*currgp.get_tangent_ptr()[1][idim]    
-               #endif   
-          )
-	   ;   
 	   
-//====================
-if (_bcond._Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and much better than removing the code with the #ifdef //  #if (NS_DIR_PENALTY==1)  
-	   for (uint jdim=0; jdim< space_dim; jdim++)    {
-
-	   for (uint j=0; j< BhomAdjOld._ndof; j++) {
-          const double phij_g = currgp._phi_ndsQLVB_g[ BhomAdjOld._FEord][j];
-
-  currelem.Mat()(irowq,j+jdim*BhomAdjOld._ndof) +=                //projection over the physical (x,y,z) 
-      + /*_Dir_pen_fl**/dtxJxW_g*phii_g*phij_g*(dbl_pen[NN]*currgp.get_normal_ptr()[jdim]*currgp.get_normal_ptr()[idim]   //the PENALTY is BY ELEMENT, but the (n,t) is BY GAUSS because we cannot compute now a nodal normal
-                                              + dbl_pen[TT]*currgp.get_tangent_ptr()[0][jdim]*currgp.get_tangent_ptr()[0][idim]
-                 #if DIMENSION==3
-                                              + dbl_pen[TT]*currgp.get_tangent_ptr()[1][jdim]*currgp.get_tangent_ptr()[1][idim]
-                #endif   
-                   );
-	         } //end j
-      
-               } //end jdim
-  
-             }  //end penalty if
-//====================
-
-	 }
+ }
            //end of idim loop
-	
-	
-	
-	
 	
 	   } 
 //==============================================================

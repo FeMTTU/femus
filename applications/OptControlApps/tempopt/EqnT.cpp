@@ -208,7 +208,6 @@ void  EqnT::GenMatRhs(const uint Level) {
     Tlift.GetElemDofs(Level);
      TAdj.GetElemDofs(Level);
      
-    if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
 
 // ===============      
 // Now the point is this: there are several functions of space
@@ -498,21 +497,7 @@ for (uint fe = 0; fe < QL; fe++)     {
          Tlift.GetElemDofs(Level);
           TAdj.GetElemDofs(Level);
 
-     if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified!
-  
  //============ FLAGS ================
-     double el_penalty = 0.;
-     int pen_sum=0;
-     for (uint i=0; i< Tempold._ndof; i++)   pen_sum += currelem.GetBCDofFlag()[i];
-//pen_sum == 0: all the nodes must be zero, so that ALL THE NODES of that face are set properly, even if with a penalty integral and not with the nodes!
-//this is a "FALSE" NATURAL boundary condition, it is ESSENTIAL actually
-     if (pen_sum == 0/*< el_n_dofs porcata*/) { el_penalty = penalty_val;   }  //strictly minor for Dirichlet penalty, i.e. AT LEAST ONE NODE to get THE WHOLE ELEMENT
-                                                           //also for Neumann flag is the same
-                                                           
-//you should check that when you impose nodal bc flags you have to involve exactly one element for bc==0...
-//but on the other hand you will not impose bc==1 on all nodes for the element
-//So, it is recommended that for Dirichlet conditions you set ALL the NODES of that element to ZERO
-
 //in order to do the flag here, since it is a "TRUE" NATURAL BOUNDARY CONDITION,
 //it only suffices that SOME OF THE NODES ARE with bc=1, AT LEAST ONE
 int el_Neum_flag=0;
@@ -550,16 +535,8 @@ int el_Neum_flag=0;
        currelem.Rhs()(i) +=
           currelem.GetBCDofFlag()[i]*
          el_Neum_flag*dtxJxW_g*(-QfluxDn_g)*phii_g    // beware of the sign  //this integral goes in the first equation
-	 + el_penalty*dtxJxW_g*Tempold._val_g[0]*phii_g  //clearly, if you continue using bc=0 for setting nodal Dirichlet, this must go outside
 	 ; 
 	 
-         if (_bcond._Dir_pen_fl == 1) {
-            for (uint j=0; j<Tempold._ndof; j++) {
-               double phij_g = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
-	       currelem.Mat()(i,j) += el_penalty*dtxJxW_g*phij_g*phii_g;
-	    } 
-          }
-
 	  //end of j loop
 	}
           // end of i loop

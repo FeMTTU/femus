@@ -187,10 +187,6 @@ namespace femus {
        bhomOld.GetElemDofs(Level);
     LagMultOld.GetElemDofs(Level);
   
-      if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),bhomOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
-
-
-
 #if BMAG_QTY==1
     if ( Bext._eqnptr != NULL )  Bext.GetElemDofs(Level);
     else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
@@ -484,33 +480,9 @@ for (uint fe = 0; fe < QL; fe++)     {
         bhomOld.GetElemDofs(Level);
      LagMultOld.GetElemDofs(Level);
 
-    if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),bhomOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
-       
-
 //============ BC =======
-       int     el_flag[NT] = {0,0}; //normal and tangential flag
-#if DIMENSION==2
-       double el_value[N1T1] = {0.,0.};  //1 normal and 1 tangential
-#elif DIMENSION==3
-       double el_value[N1T3] = {0.,0.,0.,0.}; //1 normal and 3 tangential
-#endif
-       double  dbl_pen[NT] = {0.,0.};  //normal and tangential penalty value
-   
-       _bcond.Bc_GetElFlagValLevSubd(Level,_mesh._iproc,iel,el_flag,el_value);
-
-if (_bcond._Dir_pen_fl == 1)  { 
-       if (el_flag[NN] == 1) {   dbl_pen[NN]=penalty_val; } //normal dirichlet
-       if (el_flag[TT] == 1) {   dbl_pen[TT]=penalty_val; } //tangential dirichlet
-   }
-
-//checks
-//TODO here i should check that the nodal bc dirichlet i put correspond to the element NT flags
-
-       uint press_fl=0;
-       _bcond.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),bhomOld,LagMultOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
- //only the LINEAR PART is USED!!
-       
-// // //   if ( (1-el_flag[NN]) != press_fl)  {std::cout << _eqname << ": sthg. wrong with press elflags" << std::endl;abort();}
+       int press_fl=0;
+       _bcond.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),bhomOld,LagMultOld,press_fl); 
 //========END BC=========    
     
 //========== EXTERNAL DOFS ===   
@@ -531,7 +503,8 @@ if (_bcond._Dir_pen_fl == 1)  {
 //=======here starts the "COMMON SHAPE PART"============================
       for (uint fe = 0; fe < QL; fe++)     {
 	currgp.SetPhiElDofsFEVB_g (fe,qp);  
-        currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);   }
+        currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp); 
+      }
       
         const double det      = dt * currgp.JacVectBB_g(xyz);
 	const double dtxJxW_g = det * GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
@@ -567,63 +540,14 @@ if (_bcond._Dir_pen_fl == 1)  {
              uint irowq=i+idim*bhomOld._ndof;
             currelem.Rhs()(irowq)  +=
             currelem.GetBCDofFlag()[irowq]*
-            dtxJxW_g*(    -1.*(1-el_flag[NN])*LagMultOld._val_g[0]*currgp.get_normal_ptr()[idim]*Phii._val_g[0]   //AAA multiplying int times uint!!!   /*PDiv(RHS,(LagMultOld(Psiii),Phii,idim)*/
-// // //                            + Neum_fl*IRe*strainUtrDn_g[idim]*Phii._val_g[0]          // TODO: \tau \vect{n} on the boundary for the Laplacian
+            dtxJxW_g*(    -1.*press_fl*LagMultOld._val_g[0]*currgp.get_normal_ptr()[idim]*Phii._val_g[0]
                            + velXBextXn_g3D[idim]*Phii._val_g[0]  //advection  //this type of advection has also a boundary integral, if integration by parts is performed in similar manner
-                             )
-
-                                //projection over the physical (x,y,z)
-      + _bcond._Dir_pen_fl *dtxJxW_g*Phii._val_g[0]*(dbl_pen[NN]*el_value[0]*currgp.get_normal_ptr()[idim] 
-                                    + dbl_pen[TT]*el_value[1]*currgp.get_tangent_ptr()[0][idim]  // VelOld._val_g[idim] instead of el_value...
-               #if DIMENSION==3
-		                    + dbl_pen[TT]*el_value[1]*currgp.get_tangent_ptr()[1][idim]    
-               #endif   
-          )    
- 
-
-	    ;   
-	    
-//====================
-if (_bcond._Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and much better than removing the code with the #ifdef //  #if (NS_DIR_PENALTY==1)  
-	   for (uint jdim=0; jdim< space_dim; jdim++)    {
-
-	   for (uint j=0; j<bhomOld._ndof; j++) {
-         Phij._val_g[0] = currgp._phi_ndsQLVB_g[Phij._FEord][j];      /*const double phij_g*/
-
-     currelem.Mat()(irowq,j+jdim*bhomOld._ndof) +=                //projection over the physical (x,y,z) 
-         + /*_Dir_pen_fl**/dtxJxW_g*Phii._val_g[0]*Phij._val_g[0]*(dbl_pen[NN]*currgp.get_normal_ptr()[jdim]*currgp.get_normal_ptr()[idim]   //the PENALTY is BY ELEMENT, but the (n,t) is BY GAUSS because we cannot compute now a nodal normal
-                                                         + dbl_pen[TT]*currgp.get_tangent_ptr()[0][jdim]*currgp.get_tangent_ptr()[0][idim]
-                        #if DIMENSION==3
-                                                         + dbl_pen[TT]*currgp.get_tangent_ptr()[1][jdim]*currgp.get_tangent_ptr()[1][idim]
-                        #endif   
-                   );
-	         } //end j
-      
-               } //end jdim
-  
-             }  //end penalty if
-//====================	    
-	    
+                             );
 
           }
           //end of idim loop
 
-#if THIN_WALL==1
-    for (uint j=0; j<el_ndof_q; j++) {
-	const double phij_g=_phi_nds_gVB_QQ[vb][j];
-
-//b is in the y direction
-           uint irowq=i+1*el_ndof_q;
-           uint jrowq=j+1*el_ndof_q;
-
-         currelem.Mat()(irowq,jrowq) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
-                                  -CONDRATIO*phij_g*Phii._val_g[0]/*phii_g*/ //-
-                          );
-
-        }
-#endif
-
-      }
+     }
       // end of i loop
 
     } 

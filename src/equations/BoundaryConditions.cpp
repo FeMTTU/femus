@@ -13,19 +13,19 @@
 namespace femus {
 
 // ========= ELEM BC AUX ==============
-const int BoundaryConditions::_number_tang_comps[3] = {0,1,3};
+// const int BoundaryConditions::_number_tang_comps[3] = {0,1,3};
 
-     BoundaryConditions::BoundaryConditions(const DofMap* dofmap_in) : _dofmap(dofmap_in),_Dir_pen_fl(0)  {   }
+     BoundaryConditions::BoundaryConditions(const DofMap* dofmap_in) : _dofmap(dofmap_in)/*,_Dir_pen_fl(0)*/  {   }
 
          BoundaryConditions::~BoundaryConditions() {
 	   
  //=== node
-    delete[] _bc;                                                                   // boundary condition flag
+    delete[] _bc;
  //=== element
      for (uint l=0; l < _dofmap->_mesh._NoLevels; l++)   delete [] _bc_fe_kk[l];
      delete [] _bc_fe_kk;
  //===penalty
-    clearElBc();   /*if (_Dir_pen_fl==1)*/ //DO IT ALWAYS!
+//     clearElBc();   /*if (_Dir_pen_fl==1)*/ //DO IT ALWAYS!
 
 };
 
@@ -362,126 +362,127 @@ void BoundaryConditions::GenerateBdc() {
 //this routine is GENERAL. The only thing that is NOT GENERAL is the use of 4 element boundary flags
 // and of ONE normal value and ONE tangential VALUE
 //for now, we will leave things like this
-void BoundaryConditions::GenerateBdcElem()  {
 
-     CurrentElem       currelem(BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType());  
-  
-      uint space_dim = _dofmap->_mesh.get_dim();
-
-    _elem_bc       =  new int**[_dofmap->_mesh._NoLevels];
-    _elem_val_norm =  new double**[_dofmap->_mesh._NoLevels];
-    _elem_val_tg   =  new double**[_dofmap->_mesh._NoLevels];
-
-    for (uint Level=0; Level <_dofmap->_mesh._NoLevels;Level++)   { //loop over the levels
-
-        _elem_bc[Level]       = new int*[_dofmap->_mesh._NoSubdom];//4*_mesh._n_elements_vb_lev[BB][Level] this was wrong, actually it is L + P*NoLevels, i wasnt considering the others but it was working! For instance in two D the numbers for the two procs are the same, here's why!
-        _elem_val_norm[Level] = new double*[_dofmap->_mesh._NoSubdom];//_mesh._n_elements_vb_lev[BB][Level]
-        _elem_val_tg[Level]   = new double*[_dofmap->_mesh._NoSubdom];//_mesh._n_elements_vb_lev[BB][Level]
-
-        for (uint isubd = 0; isubd < _dofmap->_mesh._NoSubdom;++isubd) {  //loop over the subdomains
-
-            uint iel_b = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd +  Level];
-            uint iel_e = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd +  Level+1];
-
-            _elem_bc[Level][isubd]  = new int[/*4*/2*(iel_e-iel_b)]; /*normal and tangential*/ //4*_mesh._n_elements_vb_lev[BB][Level+isubd*_dofmap->_mesh._NoLevels] that was not correct
-            _elem_val_norm[Level][isubd]  = new double[ 1*(iel_e-iel_b) ];  //_mesh._n_elements_vb_lev[BB][Level+isubd*_dofmap->_mesh._NoLevels]
-
-            _elem_val_tg[Level][isubd]  = new double[ _number_tang_comps[space_dim - 1]*(iel_e-iel_b) ];   //_mesh._n_elements_vb_lev[BB][Level+isubd*_dofmap->_mesh._NoLevels]
-
-            for (uint iel=0;iel < (iel_e - iel_b); iel++) {  //loop over the elems of that level&subdomain
-
-                int surf_id=0;  //could do this outside also
-                int     el_flag[2] = {0,0};
-                std::vector<double> el_value(1 + _number_tang_comps[space_dim - 1],0.); //1 normal and 1 tangential or 1 normal and 3 tangential
-
-                currelem.set_el_nod_conn_lev_subd(Level,isubd,iel);
-                currelem.SetMidpoint();
-
-                //read the bc's //the read forgets all levels and subdomains, it is only based on the MIDDLE POINT
-                elem_bc_read(currelem.GetMidpoint(),surf_id,&el_value[0],el_flag);
-
-                std::cout << "Bdry " << surf_id << " normal: " <<  el_flag[0] << " tang: " <<  el_flag[1] << std::endl;
-
-                //store the bc's
-                _elem_bc[Level][isubd][/*4*/2*iel]   =  el_flag[0];
-                _elem_bc[Level][isubd][/*4*/2*iel+1] =  el_flag[1];
-                /*              _elem_bc[Level][isubd][4*iel+2] =  el_flag[2];
-                              _elem_bc[Level][isubd][4*iel+3] =  el_flag[3];*/
-                _elem_val_norm[Level][isubd][iel]   = el_value[0];
- 
-		for (uint i=0; i< _number_tang_comps[space_dim - 1]; i++) {
-		  _elem_val_tg[Level][isubd][ _number_tang_comps[space_dim-1]*iel + i ] = el_value[1+i];
-		}
-// // //   WAS
-// // // #if dimension==2
-// // //                 _elem_val_tg[Level][isubd][iel]   = el_value[1];
-// // // #elif dimension==3
-// // //                 _elem_val_tg[Level][isubd][3*iel]   = el_value[1];
-// // //                 _elem_val_tg[Level][isubd][3*iel+1]   = el_value[2];
-// // //                 _elem_val_tg[Level][isubd][3*iel+2]   = el_value[3];
-// // // 
-// // // #endif
-
-            }
-        }
-
-    }//end nolevels
-
-
-    return;
-}
-
-
-///////////////////////////////
-void BoundaryConditions::Bc_GetElFlagValLevSubd(const uint Level,const uint isubd,const uint iel,int* el_flag,double* el_value ) const {
-
-    el_flag[0] =        _elem_bc[Level][isubd][/*4*/2*iel]   ;
-    el_flag[1] =        _elem_bc[Level][isubd][/*4*/2*iel+1] ;
-    /*    el_flag[2] =        _elem_bc[Level][isubd][4*iel+2] ;
-        el_flag[3] =        _elem_bc[Level][isubd][4*iel+3] ;*/
-    el_value[0] =  _elem_val_norm[Level][isubd][iel]   ;
-
-  uint space_dim = _dofmap->_mesh.get_dim();
-
-  for (uint i=0; i < _number_tang_comps[space_dim - 1]; i++) el_value[1+i] = _elem_val_tg[Level][isubd][ _number_tang_comps[space_dim - 1]*iel + i ];
-    
-// // //   WAS
-// #if dimension==2
-//     el_value[1] =    _elem_val_tg[Level][isubd][iel]   ;
-// #elif dimension==3
-//     el_value[1] =    _elem_val_tg[Level][isubd][3*iel]   ;
-//     el_value[2] =    _elem_val_tg[Level][isubd][3*iel+1]   ;
-//     el_value[3] =    _elem_val_tg[Level][isubd][3*iel+2]   ;
-// #endif
-
-    return;
-}
+// // // // // void BoundaryConditions::GenerateBdcElem()  {
+// // // // // 
+// // // // //      CurrentElem       currelem(BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType());  
+// // // // //   
+// // // // //       uint space_dim = _dofmap->_mesh.get_dim();
+// // // // // 
+// // // // //     _elem_bc       =  new int**[_dofmap->_mesh._NoLevels];
+// // // // //     _elem_val_norm =  new double**[_dofmap->_mesh._NoLevels];
+// // // // //     _elem_val_tg   =  new double**[_dofmap->_mesh._NoLevels];
+// // // // // 
+// // // // //     for (uint Level=0; Level <_dofmap->_mesh._NoLevels;Level++)   { //loop over the levels
+// // // // // 
+// // // // //         _elem_bc[Level]       = new int*[_dofmap->_mesh._NoSubdom];//4*_mesh._n_elements_vb_lev[BB][Level] this was wrong, actually it is L + P*NoLevels, i wasnt considering the others but it was working! For instance in two D the numbers for the two procs are the same, here's why!
+// // // // //         _elem_val_norm[Level] = new double*[_dofmap->_mesh._NoSubdom];//_mesh._n_elements_vb_lev[BB][Level]
+// // // // //         _elem_val_tg[Level]   = new double*[_dofmap->_mesh._NoSubdom];//_mesh._n_elements_vb_lev[BB][Level]
+// // // // // 
+// // // // //         for (uint isubd = 0; isubd < _dofmap->_mesh._NoSubdom;++isubd) {  //loop over the subdomains
+// // // // // 
+// // // // //             uint iel_b = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd +  Level];
+// // // // //             uint iel_e = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd +  Level+1];
+// // // // // 
+// // // // //             _elem_bc[Level][isubd]  = new int[/*4*/2*(iel_e-iel_b)]; /*normal and tangential*/ //4*_mesh._n_elements_vb_lev[BB][Level+isubd*_dofmap->_mesh._NoLevels] that was not correct
+// // // // //             _elem_val_norm[Level][isubd]  = new double[ 1*(iel_e-iel_b) ];  //_mesh._n_elements_vb_lev[BB][Level+isubd*_dofmap->_mesh._NoLevels]
+// // // // // 
+// // // // //             _elem_val_tg[Level][isubd]  = new double[ _number_tang_comps[space_dim - 1]*(iel_e-iel_b) ];   //_mesh._n_elements_vb_lev[BB][Level+isubd*_dofmap->_mesh._NoLevels]
+// // // // // 
+// // // // //             for (uint iel=0;iel < (iel_e - iel_b); iel++) {  //loop over the elems of that level&subdomain
+// // // // // 
+// // // // //                 int surf_id=0;  //could do this outside also
+// // // // //                 int     el_flag[2] = {0,0};
+// // // // //                 std::vector<double> el_value(1 + _number_tang_comps[space_dim - 1],0.); //1 normal and 1 tangential or 1 normal and 3 tangential
+// // // // // 
+// // // // //                 currelem.set_el_nod_conn_lev_subd(Level,isubd,iel);
+// // // // //                 currelem.SetMidpoint();
+// // // // // 
+// // // // //                 //read the bc's //the read forgets all levels and subdomains, it is only based on the MIDDLE POINT
+// // // // //                 elem_bc_read(currelem.GetMidpoint(),surf_id,&el_value[0],el_flag);
+// // // // // 
+// // // // //                 std::cout << "Bdry " << surf_id << " normal: " <<  el_flag[0] << " tang: " <<  el_flag[1] << std::endl;
+// // // // // 
+// // // // //                 //store the bc's
+// // // // //                 _elem_bc[Level][isubd][/*4*/2*iel]   =  el_flag[0];
+// // // // //                 _elem_bc[Level][isubd][/*4*/2*iel+1] =  el_flag[1];
+// // // // //                 /*              _elem_bc[Level][isubd][4*iel+2] =  el_flag[2];
+// // // // //                               _elem_bc[Level][isubd][4*iel+3] =  el_flag[3];*/
+// // // // //                 _elem_val_norm[Level][isubd][iel]   = el_value[0];
+// // // // //  
+// // // // // 		for (uint i=0; i< _number_tang_comps[space_dim - 1]; i++) {
+// // // // // 		  _elem_val_tg[Level][isubd][ _number_tang_comps[space_dim-1]*iel + i ] = el_value[1+i];
+// // // // // 		}
+// // // // // // // //   WAS
+// // // // // // // // #if dimension==2
+// // // // // // // //                 _elem_val_tg[Level][isubd][iel]   = el_value[1];
+// // // // // // // // #elif dimension==3
+// // // // // // // //                 _elem_val_tg[Level][isubd][3*iel]   = el_value[1];
+// // // // // // // //                 _elem_val_tg[Level][isubd][3*iel+1]   = el_value[2];
+// // // // // // // //                 _elem_val_tg[Level][isubd][3*iel+2]   = el_value[3];
+// // // // // // // // 
+// // // // // // // // #endif
+// // // // // 
+// // // // //             }
+// // // // //         }
+// // // // // 
+// // // // //     }//end nolevels
+// // // // // 
+// // // // // 
+// // // // //     return;
+// // // // // }
 
 
+// ///////////////////////////////
+// void BoundaryConditions::Bc_GetElFlagValLevSubd(const uint Level,const uint isubd,const uint iel,int* el_flag,double* el_value ) const {
+// 
+//     el_flag[0] =        _elem_bc[Level][isubd][/*4*/2*iel]   ;
+//     el_flag[1] =        _elem_bc[Level][isubd][/*4*/2*iel+1] ;
+//     /*    el_flag[2] =        _elem_bc[Level][isubd][4*iel+2] ;
+//         el_flag[3] =        _elem_bc[Level][isubd][4*iel+3] ;*/
+//     el_value[0] =  _elem_val_norm[Level][isubd][iel]   ;
+// 
+//   uint space_dim = _dofmap->_mesh.get_dim();
+// 
+//   for (uint i=0; i < _number_tang_comps[space_dim - 1]; i++) el_value[1+i] = _elem_val_tg[Level][isubd][ _number_tang_comps[space_dim - 1]*iel + i ];
+//     
+// // // //   WAS
+// // #if dimension==2
+// //     el_value[1] =    _elem_val_tg[Level][isubd][iel]   ;
+// // #elif dimension==3
+// //     el_value[1] =    _elem_val_tg[Level][isubd][3*iel]   ;
+// //     el_value[2] =    _elem_val_tg[Level][isubd][3*iel+1]   ;
+// //     el_value[3] =    _elem_val_tg[Level][isubd][3*iel+2]   ;
+// // #endif
+// 
+//     return;
+// }
 
-////////////////////////////////
-void BoundaryConditions::clearElBc() {
 
-    for (uint Level=0; Level <_dofmap->_mesh._NoLevels;Level++)   {
 
-        for (uint isubd=0;isubd<_dofmap->_mesh._NoSubdom;++isubd) {
-            delete [] _elem_bc[Level][isubd];
-            delete [] _elem_val_norm[Level][isubd];
-            delete [] _elem_val_tg[Level][isubd];
-        }
-
-        delete [] _elem_bc[Level];
-        delete [] _elem_val_norm[Level];
-        delete [] _elem_val_tg[Level];
-
-    }
-
-    delete [] _elem_bc;
-    delete [] _elem_val_norm;
-    delete [] _elem_val_tg;
-
-    return;
-}
+// ////////////////////////////////
+// void BoundaryConditions::clearElBc() {
+// 
+//     for (uint Level=0; Level <_dofmap->_mesh._NoLevels;Level++)   {
+// 
+//         for (uint isubd=0;isubd<_dofmap->_mesh._NoSubdom;++isubd) {
+//             delete [] _elem_bc[Level][isubd];
+//             delete [] _elem_val_norm[Level][isubd];
+//             delete [] _elem_val_tg[Level][isubd];
+//         }
+// 
+//         delete [] _elem_bc[Level];
+//         delete [] _elem_val_norm[Level];
+//         delete [] _elem_val_tg[Level];
+// 
+//     }
+// 
+//     delete [] _elem_bc;
+//     delete [] _elem_val_norm;
+//     delete [] _elem_val_tg;
+// 
+//     return;
+// }
 
 /////////////////// ELEM BC ////////////////////
 
@@ -751,32 +752,13 @@ void BoundaryConditions::clearElBc() {
 
 
 
-
-//you see that this function is const, i.e. it doesnt modify any member of the class
-//but actually, IT DOES!
-//Simply, the class is made of POINTERS. Then, I've created a new pointer
-//which is EQUAL to the pointer of the class, and then I MODIFY what is inside that!
-//So, many functions here can be called CONST even if they are not!
-  void BoundaryConditions::Bc_ConvertToDirichletPenalty(const uint elem_dim, const uint ql, uint* bc) const {
-
-    const uint ndof  = _dofmap->_eqn->GetMLProb().GetElemType()[elem_dim-1][ql]->GetNDofs();
-    const uint nvars = _dofmap->_nvars[ql];
-
-    for (uint ivarq=0; ivarq < nvars; ivarq++) {
-           for (uint d=0; d< ndof; d++)    { 
-          const uint     indxq  =         d + ivarq*ndof;
-	       bc[indxq] = 1 ;     }
-    }
-          
-    return;
-  }
-
 //=================================
+//TODO deprecated
 //This function is for NS type equations:
 //it computes the flags for pressure and stress integrals 
 //based on the pressure nodes
  void BoundaryConditions::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(
-	    const uint *bc_eldofs,const CurrentQuantity & Velold_in,const CurrentQuantity& press_in,uint &press_fl) const {
+	    const uint *bc_eldofs,const CurrentQuantity & Velold_in,const CurrentQuantity& press_in,int &press_fl) const {
 
 	const uint el_ndof_p =  press_in._ndof;
 	const uint el_ndof_u =  Velold_in._ndof;
@@ -892,146 +874,146 @@ return;
 
 
 
-void BoundaryConditions::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const {
-//el_xm[] is the NON-DIMENSIONAL node coordinate // lb,le are NONDIMENSIONALIZED
-
-const double bdry_toll = _dofmap->_mesh.GetRuntimeMap().get("bdry_toll");
-
-  
-
-Box* box= static_cast<Box*>(_dofmap->_mesh.GetDomain());
-
-  std::vector<double>  lb(_dofmap->_mesh.get_dim());
-  std::vector<double>  le(_dofmap->_mesh.get_dim());
-  lb[0] = box->_lb[0];//already nondimensionalized
-  le[0] = box->_le[0];
-  lb[1] = box->_lb[1];
-  le[1] = box->_le[1];
-  
- if (_dofmap->_mesh.get_dim() == 3)  {
-  lb[2] = box->_lb[2];
-  le[2] = box->_le[2];
-  }
-  
-  std::vector<double> x_rotshift(_dofmap->_mesh.get_dim());
-  _dofmap->_mesh._domain->TransformPointToRef(el_xm,&x_rotshift[0]);
-
- 
-  if (_dofmap->_mesh.get_dim() == 2)  {
-
-  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) { //left
-surf_id=44; 
-     el_flag[NN]=1;
-     el_flag[TT]=1;   
-  value[NN]=0.;
-  value[TT]=0.;/*-4.*/
-    
-  }
-
-
- if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0]) -(x_rotshift[0]) < bdry_toll){ //right
-surf_id=66; 
-     el_flag[NN]=1; 
-     el_flag[TT]=1;
-       value[NN]=0.;
-       value[TT]=0.;/*+4.*/ 
-}
-  
-   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom
-surf_id=22; 
-
-      el_flag[NN]=0;    //no normal component
-      el_flag[TT]=1;    //yes tangential component
-        value[NN]=0.;
-        value[TT]=0.;
-}
-  
-  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  { //top
- surf_id=88;
-
-     el_flag[NN]=0;     //no normal component
-     el_flag[TT]=1;     //yes tangential component
-       value[NN]=0.;
-       value[TT]=0.;
-    
-  }
-  
-  }  //end dim 2
-  
-  else if (_dofmap->_mesh.get_dim() == 3)  {
-
-  
- if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) { //left
-surf_id=44;  
-     el_flag[NN]=1;    //yes normal component
-     el_flag[TT]=1;    //yes tang component
-  value[NN]=0.;  //value of the normal 
-  value[1]=0.;  //value of the tangential
-  value[2]=0.;  //value of the  tangential
-  value[3]=0.;  //value of the tangential
-  }
-  
- if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) -x_rotshift[0] < bdry_toll){ //right
-surf_id=66;
-     el_flag[NN]=1;    //yes normal component 
-     el_flag[TT]=1;    //yes tang component
-  value[NN]=0.;  //value of the normal 
-  value[1]=0.;  //value of the tangential
-  value[2]=0.;  //value of the  tangential
-  value[3]=0.;  //value of the tangential
-   
-}
-  
-   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom
-
-   surf_id=22;
-
-     el_flag[NN]=0;    //no normal component
-     el_flag[TT]=1;    //yes tang component
-  value[NN]=0.;  //value of the normal 
-  value[1]=0.;  //value of the tangential
-  value[2]=0.;  //value of the  tangential
-  value[3]=0.;  //value of the tangential
-  }
-
-  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  { //top
-surf_id=88;
-
-     el_flag[NN]=0;    //no normal component
-     el_flag[TT]=1;    //yes tang component
-  value[NN]=0.;  //value of the normal 
-  value[1]=0.;  //value of the tangential
-  value[2]=0.;  //value of the  tangential
-  value[3]=0.;  //value of the tangential
-  }
-  
- if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //symmetry
-
-surf_id=11;
-
-     el_flag[NN]=1;    //yes normal (equal to zero)
-     el_flag[TT]=0;    //no tangential (symmetry)
-  value[NN]=0.;  //value of the normal 
-  value[1]=0.;  //value of the tangential
-  value[2]=0.;  //value of the  tangential
-  value[3]=0.;  //value of the tangential
-  }
-  if ((le[2]-lb[2]) - x_rotshift[2] > -bdry_toll &&  (le[2]-lb[2]) -x_rotshift[2] < bdry_toll)  {
-surf_id=77; 
-     el_flag[NN]=1;    //yes normal component //it can be zero also i think
-     el_flag[TT]=0;    //no tang component
-  value[NN]=0.;  //value of the normal 
-  value[1]=0.;  //value of the tangential
-  value[2]=0.;  //value of the tangential
-  value[3]=0.;  //value of the tangential
-  
-  }
-
-  } //end dim 3
-
-
-  return;
-}
+// // // // // void BoundaryConditions::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const {
+// // // // // //el_xm[] is the NON-DIMENSIONAL node coordinate // lb,le are NONDIMENSIONALIZED
+// // // // // 
+// // // // // const double bdry_toll = _dofmap->_mesh.GetRuntimeMap().get("bdry_toll");
+// // // // // 
+// // // // //   
+// // // // // 
+// // // // // Box* box= static_cast<Box*>(_dofmap->_mesh.GetDomain());
+// // // // // 
+// // // // //   std::vector<double>  lb(_dofmap->_mesh.get_dim());
+// // // // //   std::vector<double>  le(_dofmap->_mesh.get_dim());
+// // // // //   lb[0] = box->_lb[0];//already nondimensionalized
+// // // // //   le[0] = box->_le[0];
+// // // // //   lb[1] = box->_lb[1];
+// // // // //   le[1] = box->_le[1];
+// // // // //   
+// // // // //  if (_dofmap->_mesh.get_dim() == 3)  {
+// // // // //   lb[2] = box->_lb[2];
+// // // // //   le[2] = box->_le[2];
+// // // // //   }
+// // // // //   
+// // // // //   std::vector<double> x_rotshift(_dofmap->_mesh.get_dim());
+// // // // //   _dofmap->_mesh._domain->TransformPointToRef(el_xm,&x_rotshift[0]);
+// // // // // 
+// // // // //  
+// // // // //   if (_dofmap->_mesh.get_dim() == 2)  {
+// // // // // 
+// // // // //   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) { //left
+// // // // // surf_id=44; 
+// // // // //      el_flag[NN]=1;
+// // // // //      el_flag[TT]=1;   
+// // // // //   value[NN]=0.;
+// // // // //   value[TT]=0.;/*-4.*/
+// // // // //     
+// // // // //   }
+// // // // // 
+// // // // // 
+// // // // //  if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0]) -(x_rotshift[0]) < bdry_toll){ //right
+// // // // // surf_id=66; 
+// // // // //      el_flag[NN]=1; 
+// // // // //      el_flag[TT]=1;
+// // // // //        value[NN]=0.;
+// // // // //        value[TT]=0.;/*+4.*/ 
+// // // // // }
+// // // // //   
+// // // // //    if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom
+// // // // // surf_id=22; 
+// // // // // 
+// // // // //       el_flag[NN]=0;    //no normal component
+// // // // //       el_flag[TT]=1;    //yes tangential component
+// // // // //         value[NN]=0.;
+// // // // //         value[TT]=0.;
+// // // // // }
+// // // // //   
+// // // // //   if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  { //top
+// // // // //  surf_id=88;
+// // // // // 
+// // // // //      el_flag[NN]=0;     //no normal component
+// // // // //      el_flag[TT]=1;     //yes tangential component
+// // // // //        value[NN]=0.;
+// // // // //        value[TT]=0.;
+// // // // //     
+// // // // //   }
+// // // // //   
+// // // // //   }  //end dim 2
+// // // // //   
+// // // // //   else if (_dofmap->_mesh.get_dim() == 3)  {
+// // // // // 
+// // // // //   
+// // // // //  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) { //left
+// // // // // surf_id=44;  
+// // // // //      el_flag[NN]=1;    //yes normal component
+// // // // //      el_flag[TT]=1;    //yes tang component
+// // // // //   value[NN]=0.;  //value of the normal 
+// // // // //   value[1]=0.;  //value of the tangential
+// // // // //   value[2]=0.;  //value of the  tangential
+// // // // //   value[3]=0.;  //value of the tangential
+// // // // //   }
+// // // // //   
+// // // // //  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) -x_rotshift[0] < bdry_toll){ //right
+// // // // // surf_id=66;
+// // // // //      el_flag[NN]=1;    //yes normal component 
+// // // // //      el_flag[TT]=1;    //yes tang component
+// // // // //   value[NN]=0.;  //value of the normal 
+// // // // //   value[1]=0.;  //value of the tangential
+// // // // //   value[2]=0.;  //value of the  tangential
+// // // // //   value[3]=0.;  //value of the tangential
+// // // // //    
+// // // // // }
+// // // // //   
+// // // // //    if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom
+// // // // // 
+// // // // //    surf_id=22;
+// // // // // 
+// // // // //      el_flag[NN]=0;    //no normal component
+// // // // //      el_flag[TT]=1;    //yes tang component
+// // // // //   value[NN]=0.;  //value of the normal 
+// // // // //   value[1]=0.;  //value of the tangential
+// // // // //   value[2]=0.;  //value of the  tangential
+// // // // //   value[3]=0.;  //value of the tangential
+// // // // //   }
+// // // // // 
+// // // // //   if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  { //top
+// // // // // surf_id=88;
+// // // // // 
+// // // // //      el_flag[NN]=0;    //no normal component
+// // // // //      el_flag[TT]=1;    //yes tang component
+// // // // //   value[NN]=0.;  //value of the normal 
+// // // // //   value[1]=0.;  //value of the tangential
+// // // // //   value[2]=0.;  //value of the  tangential
+// // // // //   value[3]=0.;  //value of the tangential
+// // // // //   }
+// // // // //   
+// // // // //  if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //symmetry
+// // // // // 
+// // // // // surf_id=11;
+// // // // // 
+// // // // //      el_flag[NN]=1;    //yes normal (equal to zero)
+// // // // //      el_flag[TT]=0;    //no tangential (symmetry)
+// // // // //   value[NN]=0.;  //value of the normal 
+// // // // //   value[1]=0.;  //value of the tangential
+// // // // //   value[2]=0.;  //value of the  tangential
+// // // // //   value[3]=0.;  //value of the tangential
+// // // // //   }
+// // // // //   if ((le[2]-lb[2]) - x_rotshift[2] > -bdry_toll &&  (le[2]-lb[2]) -x_rotshift[2] < bdry_toll)  {
+// // // // // surf_id=77; 
+// // // // //      el_flag[NN]=1;    //yes normal component //it can be zero also i think
+// // // // //      el_flag[TT]=0;    //no tang component
+// // // // //   value[NN]=0.;  //value of the normal 
+// // // // //   value[1]=0.;  //value of the tangential
+// // // // //   value[2]=0.;  //value of the tangential
+// // // // //   value[3]=0.;  //value of the tangential
+// // // // //   
+// // // // //   }
+// // // // // 
+// // // // //   } //end dim 3
+// // // // // 
+// // // // // 
+// // // // //   return;
+// // // // // }
 
 
 

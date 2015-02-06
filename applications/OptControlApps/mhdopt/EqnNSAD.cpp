@@ -173,9 +173,6 @@ const int NonStatNSAD = (int) _phys.get("NonStatNSAD");
     VelAdjOld.GetElemDofs(Level);  
     PressAdjOld.GetElemDofs(Level);
 
-    if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),VelAdjOld._FEord,currelem.GetBCDofFlag());  //only the Quadratic Part is modified!
-  
-    
     if ( Vel._eqnptr != NULL )  Vel.GetElemDofs(Level);
     else                         Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
     if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs(Level);
@@ -254,12 +251,10 @@ for (uint fe = 0; fe < QL; fe++)     {
                            + (1-currelem.GetBCDofFlag()[irowq])*detb*VelAdjOld._val_dofs[irowq]; //Dirichlet bc
 	   }
 
-if (_bcond._Dir_pen_fl == 0)  { 
   for (uint idim=0; idim<space_dim; idim++) { // filling diagonal for Dirichlet bc
           const uint irowq = i+idim*VelAdjOld._ndof;
           currelem.Mat()(irowq,irowq) += (1-currelem.GetBCDofFlag()[irowq])*detb;
         }// end filling diagonal for Dirichlet bc
-}
 	 
         for (uint j=0; j<VelAdjOld._ndof; j++) {// A element matrix
 //======="COMMON SHAPE PART for QTYZERO": ==========
@@ -315,7 +310,6 @@ if (_bcond._Dir_pen_fl == 0)  {
           double psii_g = currgp._phi_ndsQLVB_g[PressAdjOld._FEord][i];
 	  const uint irowl = i+space_dim*VelAdjOld._ndof;  //vertical offset
           currelem.Rhs()(irowl)=0.;  // rhs
- //             KeM(irowl,j+space_dim*el_ndof_q)  += dtxJxW_g*(psii_g*psij_g)*_Komp_fac/dt;
 
           for (uint j=0; j<VelAdjOld._ndof; j++) { // B element matrix q*div(u)
             for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[VelAdjOld._FEord][j+idim*VelAdjOld._ndof];
@@ -406,36 +400,11 @@ if (_bcond._Dir_pen_fl == 0)  {
      VelAdjOld.GetElemDofs(Level);
      PressAdjOld.GetElemDofs(Level);
 
-    if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),VelAdjOld._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
-       
-
 //============ BC =======
-       int     el_flag[NT] = {0,0};
-#if DIMENSION==2
-       double el_value[N1T1] = {0.,0.};
-#elif DIMENSION==3
-       double el_value[N1T3] = {0.,0.,0.,0.}; 
-#endif
-       double  dbl_pen[NT] = {0.,0.};
-   
-    
-       _bcond.Bc_GetElFlagValLevSubd(Level,_mesh._iproc,iel,el_flag,el_value);
-
-if (_bcond._Dir_pen_fl == 1)  { 
-       if (el_flag[NN] == 1) {   dbl_pen[NN]=penalty_val; } //normal dirichlet
-       if (el_flag[TT] == 1) {   dbl_pen[TT]=penalty_val; } //tangential dirichlet
-   }
-
-//checks
-//TODO here i should check that the nodal bc dirichlet i put correspond to the element NT flags
-
-       uint press_fl=0;
-       _bcond.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),VelAdjOld,PressAdjOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
+       int press_fl=0;
+       _bcond.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),VelAdjOld,PressAdjOld,press_fl);
  //only the LINEAR PART is USED!!
-       
-//   if ( (1-el_flag[NN]) != press_fl)  {std::cout << "Sthg wrong with press elflags" << std::endl;abort();}
-
-//========END BC============
+ //========END BC============
    
    //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
@@ -453,7 +422,7 @@ if (_bcond._Dir_pen_fl == 1)  {
 	const double dtxJxW_g = det * GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================   
       
-   xyz_refbox.val_g(); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
+   xyz_refbox.val_g();
       PressAdjOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0]/*xyz._val_g*/,&PressAdjOld._val_g[0]);  //i prefer using the function instead of the p_old vector
       
 
@@ -468,41 +437,10 @@ if (_bcond._Dir_pen_fl == 1)  {
              uint irowq=i+idim*VelAdjOld._ndof;
           currelem.Rhs()(irowq)  += 
             currelem.GetBCDofFlag()[irowq]*           
-           dtxJxW_g*(   -1.*/*press_fl*/(1-el_flag[NN])*PressAdjOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g  //  //OLD VALUES //AAA multiplying int times uint!!!
+           dtxJxW_g*(   -1.*press_fl*PressAdjOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g
 
-// // //             TODO STRAIN AT THE BOUNDARY            + /*stress_fl*/el_flag[1]*IRe*strainUtrDn_g[idim]*phii_g 
-
-	  )
-                                //projection over the physical (x,y,z)
-      + _bcond._Dir_pen_fl *dtxJxW_g*phii_g*(dbl_pen[NN]*el_value[0]*currgp.get_normal_ptr()[idim] 
-                                    + dbl_pen[TT]*el_value[1]*currgp.get_tangent_ptr()[0][idim]  // VelOld._val_g[idim] instead of el_value...
-               #if DIMENSION==3
-		                    + dbl_pen[TT]*el_value[1]*currgp.get_tangent_ptr()[1][idim]    
-               #endif   
-          )
-	   ;   
+	  );
 	   
-//====================
-if (_bcond._Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and much better than removing the code with the #ifdef   
-	   for (uint jdim=0; jdim< space_dim; jdim++)    {
-
-	   for (uint j=0; j< VelAdjOld._ndof; j++) {
-          const double phij_g = currgp._phi_ndsQLVB_g[ VelAdjOld._FEord][j];
-
-  currelem.Mat()(irowq,j+jdim*VelAdjOld._ndof) +=                //projection over the physical (x,y,z) 
-      + /*_Dir_pen_fl**/dtxJxW_g*phii_g*phij_g*(dbl_pen[NN]*currgp.get_normal_ptr()[jdim]*currgp.get_normal_ptr()[idim]   //the PENALTY is BY ELEMENT, but the (n,t) is BY GAUSS because we cannot compute now a nodal normal
-                                              + dbl_pen[TT]*currgp.get_tangent_ptr()[0][jdim]*currgp.get_tangent_ptr()[0][idim]
-                 #if DIMENSION==3
-                                              + dbl_pen[TT]*currgp.get_tangent_ptr()[1][jdim]*currgp.get_tangent_ptr()[1][idim]
-                #endif   
-                   );
-	         } //end j
-      
-               } //end jdim
-  
-             }  //end penalty if
-//====================
-
 	 }
            //end of idim loop
 

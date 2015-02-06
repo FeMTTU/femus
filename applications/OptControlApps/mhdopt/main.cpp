@@ -208,7 +208,6 @@ int main(int argc, char** argv) {
     sys -> Initialize();
 //=====================
     sys -> _bcond.GenerateBdc();
-    sys -> _bcond.GenerateBdcElem();
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
     

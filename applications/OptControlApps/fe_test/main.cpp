@@ -131,7 +131,6 @@
     sys -> Initialize();
 //=====================
     sys -> _bcond.GenerateBdc();
-    sys -> _bcond.GenerateBdcElem();
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
     }
