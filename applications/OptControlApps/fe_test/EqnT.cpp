@@ -39,7 +39,7 @@ EqnT::EqnT(MultiLevelProblem & equations_map_in,
 
 
 
- void  EqnT::GenMatRhs(const uint Level) {
+ void  EqnT::GenMatRhs(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix) {
 
   const double time =  0.;
 

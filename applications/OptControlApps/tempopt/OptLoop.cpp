@@ -11,7 +11,6 @@
 #include "Files.hpp"
 #include "XDMFWriter.hpp"
 
-#include "EqnT.hpp"
 
 namespace femus {
   
@@ -62,14 +61,13 @@ namespace femus {
 #endif 
 
 //=====functional evaluations=======
-
-		EqnT* eqnT = static_cast<EqnT*>(& eqmap_in.get_system("Eqn_T"));
+   SystemTwo & eqnT = eqmap_in.get_system<SystemTwo>("Eqn_T");
 
 		
      double J = 0.;
-J = ComputeIntegral    ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),eqnT,_files.GetOutputTime());
-J = ComputeNormControl ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),eqnT,0 );
-J = ComputeNormControl ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),eqnT,1 );
+J = ComputeIntegral    ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),&eqnT,_files.GetOutputTime());
+J = ComputeNormControl ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),&eqnT,0 );
+J = ComputeNormControl ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),&eqnT,1 );
 //=====functional evaluations =======
 
 

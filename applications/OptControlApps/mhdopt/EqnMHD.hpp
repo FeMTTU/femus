@@ -19,7 +19,7 @@ class EqnMHD : public SystemTwo {
 	   
   ~EqnMHD();
 
-  void GenMatRhs(const uint Level);
+  void GenMatRhs(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix);
   
 };
 

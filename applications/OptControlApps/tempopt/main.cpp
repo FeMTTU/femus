@@ -27,14 +27,17 @@
 
 // application 
 #include "TempQuantities.hpp"
-#include "EqnNS.hpp"
-#include "EqnT.hpp"
 #include "OptLoop.hpp"
 
 
 #ifdef HAVE_LIBMESH
 #include "libmesh/libmesh.h"
 #endif
+
+
+void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix);
+void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix);
+
 
 // =======================================
 // TEMPERATURE + NS optimal control problem
@@ -134,18 +137,20 @@
 //========= associate an EQUATION to QUANTITIES ========
 //========================================================
 // not all the Quantities need to be unknowns of an equation
- 
-  EqnNS & eqnNS = equations_map.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);
+
+  SystemTwo & eqnNS = equations_map.add_system<SystemTwo>("Eqn_NS",NO_SMOOTHER);
           eqnNS.AddUnknownToSystemPDE(&velocity); 
-          eqnNS.AddUnknownToSystemPDE(&pressure); 
+          eqnNS.AddUnknownToSystemPDE(&pressure);
+	  eqnNS.AttachAssembleFunction(GenMatRhsNS);
   
-  EqnT & eqnT = equations_map.add_system<EqnT>("Eqn_T",NO_SMOOTHER);
+  SystemTwo & eqnT = equations_map.add_system<SystemTwo>("Eqn_T",NO_SMOOTHER);
          eqnT.AddUnknownToSystemPDE(&temperature);
          eqnT.AddUnknownToSystemPDE(&templift);
          eqnT.AddUnknownToSystemPDE(&tempadj);
 #if FOURTH_ROW==1
          eqnT.AddUnknownToSystemPDE(&pressure_2);   //the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function
 #endif
+	 eqnT.AttachAssembleFunction(GenMatRhsT);
   
 //================================ 
 //========= End add EQUATIONS  and ========

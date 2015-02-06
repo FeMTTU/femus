@@ -58,6 +58,10 @@ void System::init() {
   
 }
 
+   System::AssembleFunctionType  System::GetAssembleFunction() {
+  return _assemble_system_function;
+}
+
 void System::AttachAssembleFunction(void fptr(MultiLevelProblem &ml_prob, unsigned level, 
 				      const unsigned &gridn, const bool &assembe_matrix))
 {

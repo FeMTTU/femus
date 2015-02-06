@@ -54,7 +54,7 @@ namespace femus {
 
 /// This function assembles the matrix and the rhs:
 
-  void EqnMHD::GenMatRhs(const uint Level)  {
+  void EqnMHD::GenMatRhs(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix) {
 
   //========= reference values =========
   const double IRem = 1./_phys.get("Rem");

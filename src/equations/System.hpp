@@ -66,9 +66,13 @@ public:
     /** Associate the solution variables to the system PDE */
     void AddSolutionToSystemPDE(const char solname[]);
 
+    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
+    
     /** Register a user function to use in assembling the system matrix and RHS. */
     void AttachAssembleFunction (void fptr(MultiLevelProblem &ml_prob, unsigned level,
                                            const unsigned &gridn, const bool &assembe_matrix));
+
+    AssembleFunctionType  GetAssembleFunction();
 
     /** Solves the system.  Should be overloaded in derived systems. */
     virtual void solve () {};
@@ -84,6 +88,9 @@ public:
 
     /** Get MultiLevelProblem */
     const MultiLevelProblem &  GetMLProb() const { return _equation_systems; }
+    
+    /** Get MultiLevelProblem */
+    MultiLevelProblem &  GetMLProb() { return _equation_systems; }
     
     /** Get Number of Levels */
     inline const unsigned GetGridn() const { return _gridn; }

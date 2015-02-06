@@ -51,7 +51,7 @@ EqnMHDAD::~EqnMHDAD() {}
 /// This function assembles the matrix and the rhs:
 
 
-  void EqnMHDAD::GenMatRhs(const uint Level)  {
+  void EqnMHDAD::GenMatRhs(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix)  {
 
    const double time =  0.;  //GetMLProb()._timeloop._curr_time;
    

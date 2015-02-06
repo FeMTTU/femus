@@ -53,7 +53,7 @@ namespace femus {
 
 
 
- void EqnNSAD::GenMatRhs(const uint Level)  {
+ void EqnNSAD::GenMatRhs(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix) {
 
     // ========= parameters
   const double alphaVel = _phys.get("alphaVel");

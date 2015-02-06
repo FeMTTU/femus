@@ -34,11 +34,7 @@ namespace femus {
 ///=============== Constructor
   EqnNS::EqnNS(    MultiLevelProblem& equations_map_in,
                    const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
-           SystemTwo(equations_map_in,eqname_in,number,smoother_type),
-     _AdvPic_fl(1),
-     _AdvNew_fl(0),
-     _Stab_fl(0),
-     _Komp_fac(0)   {
+           SystemTwo(equations_map_in,eqname_in,number,smoother_type)  {
 
 // //=======  _var_names[]  ===========
 //     _var_names[0]="ux"; //variable names
@@ -57,8 +53,10 @@ namespace femus {
       EqnNS::~EqnNS() {    }
     
     
-  void EqnNS::GenMatRhs(const uint Level)  {
+  void EqnNS::GenMatRhs(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix)  {
 
+    
+    
 #if TEMP_DEPS==1
 //for this one i decide not to use any Vect's
 //i do not need the vects so badly if i do not have to do space interpolation
@@ -140,6 +138,10 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
   const double   dt = 1.; //GetMLProb()._timeloop._timemap.get("dt");
 
 //==========FLAG for NONLINEARITY, we might put here
+   const uint   _AdvPic_fl = 1;
+   const uint   _AdvNew_fl = 0;
+   const uint   _Stab_fl = 0;
+   const double _Komp_fac = 0.;
 //this flag in fact may involve BOTH MATRIX and RHS, so here we are on top of both
 //this is another flag of an OPERATOR, a NONLINEAR Operator
 //in case of nonlinear operator, you also have to specify the LINEARIZATION SCHEME.

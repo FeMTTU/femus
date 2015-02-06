@@ -116,7 +116,7 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
         eqn_in->_A[Level]->zero();
         eqn_in->_b[Level]->zero();
 
-        eqn_in->GenMatRhs(Level);
+        eqn_in-> GetAssembleFunction()(eqn_in->GetMLProb(),Level,0,true);
 
 #ifdef DEFAULT_PRINT_INFO
         eqn_in->_A[Level]->close();

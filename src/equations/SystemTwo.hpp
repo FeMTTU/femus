@@ -125,10 +125,6 @@ public:
 
 	  void init_sys();     //System//  //MultilevelSolution//
 
-//=======================================================================
-
- virtual  void GenMatRhs(const uint Level) { std::cout << "You have to implement this" <<  std::endl; return;}  //System//
-
 // ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==    
           void    Initialize();           //MultilevelSolution  //this uses x and fills in x_old at all levels
           
