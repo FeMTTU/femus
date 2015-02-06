@@ -1,4 +1,3 @@
-#include "EqnT.hpp"
 
 #include "FemusDefault.hpp"
 
@@ -26,33 +25,23 @@
 #include "TempQuantities.hpp"
 
 
-namespace femus {
 
-// ======================================================
-EqnT::EqnT(MultiLevelProblem & equations_map_in,
-           const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
-    SystemTwo(equations_map_in,eqname_in,number,smoother_type) {}
-
-
-//================ DESTRUCTOR    
-      EqnT::~EqnT() {    }
-
-
-
- void  EqnT::GenMatRhs(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix) {
+ void GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix) {
+   
+  SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_T");
 
   const double time =  0.;
 
 //========== PROCESSOR INDEX
-  const uint myproc = _mesh._iproc;
+  const uint myproc = ml_prob.GetMeshTwo()._iproc;
 
 //========= BCHandling =========
-  const double penalty_val = _mesh.GetRuntimeMap().get("penalty_val");    
+  const double penalty_val = ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
 
   //======== ELEMENT MAPPING =======
-  const uint space_dim =       _mesh.get_dim();
-  const uint  meshql   = (int) _mesh.GetRuntimeMap().get("meshql");
-  const uint  mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
+  const uint space_dim =       ml_prob.GetMeshTwo().get_dim();
+  const uint  meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");
+  const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
 
   {//BEGIN VOLUME
   
@@ -67,24 +56,24 @@ EqnT::EqnT(MultiLevelProblem & equations_map_in,
     
   const uint mesh_vb = VV;
   
-  CurrentElem       currelem(VV,this,_mesh,GetMLProb().GetElemType());
-  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,GetMLProb().GetQrule(currelem.GetDim()));
+  CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
-    Tempold._qtyptr   = _UnknownQuantitiesVector[0]; 
+    Tempold._qtyptr   = my_system.GetUnknownQuantitiesVector()[0]; 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Temp2(currgp);
-    Temp2._qtyptr   = _UnknownQuantitiesVector[1]; 
+    Temp2._qtyptr   = my_system.GetUnknownQuantitiesVector()[1]; 
     Temp2.VectWithQtyFillBasic();
     Temp2.Allocate();
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Temp3(currgp);
-    Temp3._qtyptr   = _UnknownQuantitiesVector[2]; 
+    Temp3._qtyptr   = my_system.GetUnknownQuantitiesVector()[2]; 
     Temp3.VectWithQtyFillBasic();
     Temp3.Allocate();
     
@@ -100,11 +89,11 @@ EqnT::EqnT(MultiLevelProblem & equations_map_in,
   CurrentQuantity xyz_refbox(currgp);  //no quantity
     xyz_refbox._dim      = space_dim;
     xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-    xyz_refbox._ndof     = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+    xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
     xyz_refbox.Allocate();
 
-   const uint nel_e = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level+1];
-   const uint nel_b = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level];
+   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+   const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
 
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
@@ -115,7 +104,7 @@ EqnT::EqnT(MultiLevelProblem & equations_map_in,
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
 
     
 //MY EQUATION
@@ -143,7 +132,7 @@ EqnT::EqnT(MultiLevelProblem & equations_map_in,
 //====================    
     
 //===== FILL the DOFS of the EXTERNAL QUANTITIES: you must assure that for every Vect the quantity is set correctly
-   const uint el_ngauss = GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp=0; qp< el_ngauss; qp++) {
 
@@ -154,7 +143,7 @@ for (uint fe = 0; fe < QL; fe++)   {
   }
 	  
 const double      det = currgp.JacVectVV_g(xyz);
-const double dtxJxW_g = det*GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+const double dtxJxW_g = det*ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     {
@@ -278,8 +267,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 
     currelem.Mat().print_scientific(std::cout);
     
-       _A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-       _b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+       my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+       my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
   } // end of element loop
   // *****************************************************************
 
@@ -294,12 +283,11 @@ for (uint fe = 0; fe < QL; fe++)     {
   
   
 #ifdef DEFAULT_PRINT_INFO
-  std::cout << " Matrix and RHS assembled for equation " << name()
-            << " Level "<< Level << " dofs " << _A[Level]->n() << std::endl;
+  std::cout << " Matrix and RHS assembled for equation " << my_system.name()
+            << " Level "<< Level << " dofs " << my_system._A[Level]->n() << std::endl;
 #endif
 
   return;
 }
 
 
-} //end namespace femus

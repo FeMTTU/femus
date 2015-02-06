@@ -26,11 +26,13 @@
 
 // application 
 #include "TempQuantities.hpp"
-#include "EqnT.hpp"
 
 #ifdef HAVE_LIBMESH
 #include "libmesh/libmesh.h"
 #endif 
+
+ void GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+
 
 // =======================================
 // Test for finite element families
@@ -104,10 +106,11 @@
 //========= associate an EQUATION to QUANTITIES ========
 //========================================================
 
-  EqnT & eqnT = ml_prob.add_system<EqnT>("Eqn_T",NO_SMOOTHER);
+  SystemTwo &  eqnT = ml_prob.add_system<SystemTwo>("Eqn_T",NO_SMOOTHER);
           eqnT.AddUnknownToSystemPDE(&temperature); 
           eqnT.AddUnknownToSystemPDE(&temperature2); 
           eqnT.AddUnknownToSystemPDE(&temperature3); 
+          eqnT.AttachAssembleFunction(GenMatRhsT);
 
 //================================ 
 //========= End add EQUATIONS  and ========
