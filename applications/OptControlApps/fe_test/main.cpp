@@ -94,8 +94,14 @@
   Temperature temperature3("Qty_Temperature3",qty_map,1,2/*constant*/);      qty_map.AddQuantity(&temperature3);
   // ===== end QuantityMap =========================================
 
-  // ====== MultiLevelProblem =================================
-  MultiLevelProblem ml_prob;
+  // ====== Start new main =================================
+  MultiLevelMesh ml_msh;
+  ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,1,0,1,QUAD9,"seventh");
+//   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+
+  MultiLevelSolution ml_sol(&ml_msh);
+
+  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);  
   ml_prob.SetMeshTwo(&mesh);
   ml_prob.SetQruleAndElemType("fifth");
   ml_prob.SetInputParser(&physics_map); 

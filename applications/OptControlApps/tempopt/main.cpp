@@ -124,13 +124,19 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 #endif 
   
   // ===== end QuantityMap =========================================
+  
+  // ====== Start new main =================================
+  MultiLevelMesh ml_msh;
+  ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,1,0,0,QUAD9,"seventh");
+//   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
 
-  // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblem equations_map;
-  equations_map.SetMeshTwo(&mesh);
-  equations_map.SetQruleAndElemType("fifth");
-  equations_map.SetInputParser(&physics_map);
-  equations_map.SetQtyMap(&qty_map); 
+  MultiLevelSolution ml_sol(&ml_msh);
+
+  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
+  ml_prob.SetMeshTwo(&mesh);
+  ml_prob.SetQruleAndElemType("fifth");
+  ml_prob.SetInputParser(&physics_map);
+  ml_prob.SetQtyMap(&qty_map); 
 
 //===============================================
 //================== Add EQUATIONS AND ======================
@@ -138,12 +144,12 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 //========================================================
 // not all the Quantities need to be unknowns of an equation
 
-  SystemTwo & eqnNS = equations_map.add_system<SystemTwo>("Eqn_NS",NO_SMOOTHER);
+  SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS",NO_SMOOTHER);
           eqnNS.AddUnknownToSystemPDE(&velocity); 
           eqnNS.AddUnknownToSystemPDE(&pressure);
 	  eqnNS.SetAssembleFunction(GenMatRhsNS);
   
-  SystemTwo & eqnT = equations_map.add_system<SystemTwo>("Eqn_T",NO_SMOOTHER);
+  SystemTwo & eqnT = ml_prob.add_system<SystemTwo>("Eqn_T",NO_SMOOTHER);
          eqnT.AddUnknownToSystemPDE(&temperature);
          eqnT.AddUnknownToSystemPDE(&templift);
          eqnT.AddUnknownToSystemPDE(&tempadj);
@@ -165,7 +171,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
  
 //once you have the list of the equations, you loop over them to initialize everything
 
-   for (MultiLevelProblem::const_system_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
+   for (MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
      
    SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
 //=====================
@@ -184,16 +190,16 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
     } 
 	 
 	 
-  opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
+  opt_loop.TransientSetup(ml_prob);  // reset the initial state (if restart) and print the Case
 
-  opt_loop.optimization_loop(equations_map);
+  opt_loop.optimization_loop(ml_prob);
 
 // at this point, the run has been completed 
   files.PrintRunForRestart(DEFAULT_LAST_RUN);
   files.log_petsc();
   
 // ============  clean ================================
-  equations_map.clear();
+  ml_prob.clear();
   mesh.clear();
   
   

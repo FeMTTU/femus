@@ -145,10 +145,16 @@ int main(int argc, char** argv) {
   
 //================================
 //==== END Add QUANTITIES ========
-//================================
+//================================  
+  
+  // ====== Start new main =================================
+  MultiLevelMesh ml_msh;
+  ml_msh.GenerateCoarseBoxMesh(8,8,8,0,1,0,1,0,1,HEX27,"seventh");
+//   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
 
-  // ====== MultiLevelProblem =================================
-  MultiLevelProblem ml_prob;
+  MultiLevelSolution ml_sol(&ml_msh);
+
+  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
   ml_prob.SetQruleAndElemType("fifth");
   ml_prob.SetInputParser(&physics_map);

@@ -57,9 +57,6 @@ public:
 
     /** Constructor */
     MultiLevelProblem(MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
-    
-    /** Empty constructor for inheritance TODO remove soon*/
-    MultiLevelProblem() {};
 
     /** Destructor */
     ~MultiLevelProblem() {};
