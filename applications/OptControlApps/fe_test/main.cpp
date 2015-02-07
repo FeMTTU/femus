@@ -130,7 +130,11 @@
 //So somehow i'll have to put these objects at a higher level... but so far let us see if we can COMPUTE and PRINT from HERE and not from the gencase
 	 
    for (MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
+     
         SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
+// //=====================
+//     sys -> init();
+
 //=====================
     sys -> init_sys();
 //=====================
@@ -143,6 +147,7 @@
     sys -> _bcond.GenerateBdc();
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
+    
     }
     
   // ======== Loop ===================================

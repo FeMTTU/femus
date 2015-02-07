@@ -130,8 +130,6 @@ public:
           
 protected:
   
-  const MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem//
-
   std::vector<Quantity*>          _UnknownQuantitiesVector;  //MultilevelSolution//
 
 };
