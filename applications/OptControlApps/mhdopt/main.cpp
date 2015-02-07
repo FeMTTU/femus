@@ -155,6 +155,7 @@ int main(int argc, char** argv) {
   ml_msh.PrintInfo();
   
   MultiLevelSolution ml_sol(&ml_msh);
+  ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,2);
 
   MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
@@ -170,6 +171,7 @@ int main(int argc, char** argv) {
 
 #if NS_EQUATIONS==1
   SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS",NO_SMOOTHER);
+          eqnNS.AddSolutionToSystemPDE("FAKE");
           eqnNS.AddUnknownToSystemPDE(&velocity); 
           eqnNS.AddUnknownToSystemPDE(&pressure); 
           eqnNS.SetAssembleFunction(GenMatRhsNS); 
@@ -177,6 +179,7 @@ int main(int argc, char** argv) {
   
 #if NSAD_EQUATIONS==1
   SystemTwo & eqnNSAD = ml_prob.add_system<SystemTwo>("Eqn_NSAD",NO_SMOOTHER); 
+            eqnNSAD.AddSolutionToSystemPDE("FAKE");
             eqnNSAD.AddUnknownToSystemPDE(&velocity_adj); 
             eqnNSAD.AddUnknownToSystemPDE(&pressure_adj); 
             eqnNSAD.SetAssembleFunction(GenMatRhsNSAD);
@@ -184,6 +187,7 @@ int main(int argc, char** argv) {
   
 #if MHD_EQUATIONS==1
   SystemTwo & eqnMHD = ml_prob.add_system<SystemTwo>("Eqn_MHD",NO_SMOOTHER);
+           eqnMHD.AddSolutionToSystemPDE("FAKE");
            eqnMHD.AddUnknownToSystemPDE(&bhom); 
            eqnMHD.AddUnknownToSystemPDE(&bhom_lag_mult); 
            eqnMHD.SetAssembleFunction(GenMatRhsMHD);
@@ -191,6 +195,7 @@ int main(int argc, char** argv) {
 
 #if MHDAD_EQUATIONS==1
   SystemTwo & eqnMHDAD = ml_prob.add_system<SystemTwo>("Eqn_MHDAD",NO_SMOOTHER);
+             eqnMHDAD.AddSolutionToSystemPDE("FAKE");
              eqnMHDAD.AddUnknownToSystemPDE(&bhom_adj); 
              eqnMHDAD.AddUnknownToSystemPDE(&bhom_lag_mult_adj); 
              eqnMHDAD.SetAssembleFunction(GenMatRhsMHDAD);
@@ -198,6 +203,7 @@ int main(int argc, char** argv) {
 
 #if MHDCONT_EQUATIONS==1
   SystemTwo & eqnMHDCONT = ml_prob.add_system<SystemTwo>("Eqn_MHDCONT",NO_SMOOTHER);
+               eqnMHDCONT.AddSolutionToSystemPDE("FAKE");
                eqnMHDCONT.AddUnknownToSystemPDE(&Bext); 
                eqnMHDCONT.AddUnknownToSystemPDE(&Bext_lag_mult); 
                eqnMHDCONT.SetAssembleFunction(GenMatRhsMHDCONT);
@@ -212,7 +218,7 @@ int main(int argc, char** argv) {
      
         SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
 // //=====================
-//     sys -> init();
+    sys -> init();
 
 //=====================
     sys -> init_sys();

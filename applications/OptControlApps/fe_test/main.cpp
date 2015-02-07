@@ -101,6 +101,7 @@
   ml_msh.PrintInfo();
 
   MultiLevelSolution ml_sol(&ml_msh);
+  ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,2);
 
   MultiLevelProblem ml_prob(&ml_msh,&ml_sol);  
   ml_prob.SetMeshTwo(&mesh);
@@ -114,6 +115,7 @@
 //========================================================
 
   SystemTwo &  eqnT = ml_prob.add_system<SystemTwo>("Eqn_T",NO_SMOOTHER);
+          eqnT.AddSolutionToSystemPDE("FAKE");
           eqnT.AddUnknownToSystemPDE(&temperature); 
           eqnT.AddUnknownToSystemPDE(&temperature2); 
           eqnT.AddUnknownToSystemPDE(&temperature3); 
@@ -133,7 +135,7 @@
      
         SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
 // //=====================
-//     sys -> init();
+    sys -> init();
 
 //=====================
     sys -> init_sys();

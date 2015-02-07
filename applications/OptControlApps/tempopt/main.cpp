@@ -131,7 +131,8 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_msh.PrintInfo();
   
   MultiLevelSolution ml_sol(&ml_msh);
-
+  ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,2);
+  
   MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
   ml_prob.SetQruleAndElemType("fifth");
@@ -145,11 +146,13 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 // not all the Quantities need to be unknowns of an equation
 
   SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS",NO_SMOOTHER);
+          eqnNS.AddSolutionToSystemPDE("FAKE");
           eqnNS.AddUnknownToSystemPDE(&velocity); 
           eqnNS.AddUnknownToSystemPDE(&pressure);
 	  eqnNS.SetAssembleFunction(GenMatRhsNS);
   
   SystemTwo & eqnT = ml_prob.add_system<SystemTwo>("Eqn_T",NO_SMOOTHER);
+         eqnT.AddSolutionToSystemPDE("FAKE");
          eqnT.AddUnknownToSystemPDE(&temperature);
          eqnT.AddUnknownToSystemPDE(&templift);
          eqnT.AddUnknownToSystemPDE(&tempadj);
@@ -174,8 +177,8 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
    for (MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
      
    SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
-// //=====================
-//     sys -> init();
+//=====================
+    sys -> init();
 
 //=====================
     sys -> init_sys();
