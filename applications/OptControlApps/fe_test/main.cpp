@@ -110,7 +110,7 @@
           eqnT.AddUnknownToSystemPDE(&temperature); 
           eqnT.AddUnknownToSystemPDE(&temperature2); 
           eqnT.AddUnknownToSystemPDE(&temperature3); 
-          eqnT.AttachAssembleFunction(GenMatRhsT);
+          eqnT.SetAssembleFunction(GenMatRhsT);
 
 //================================ 
 //========= End add EQUATIONS  and ========

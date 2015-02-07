@@ -25,7 +25,7 @@ using std::endl;
 using namespace femus;
 
 
-void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
 
 
 // double InitVariableU(const double &x, const double &y, const double &z);
@@ -381,7 +381,7 @@ int main(int argc,char **argv) {
     system2.AddSolutionToSystemPDE("Sol");
 
     // Set MG Options
-    system2.AttachAssembleFunction(AssemblePoissonMatrixandRhs);
+    system2.SetAssembleFunction(AssemblePoissonMatrixandRhs);
     system2.SetMaxNumberOfLinearIterations(max_number_linear_iteration);
     system2.SetAbsoluteConvergenceTolerance(abs_conv_tol);
     system2.SetMgType(mgtype);
@@ -539,7 +539,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 
 //------------------------------------------------------------------------------------------------------------
-void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
 
     //pointers and references
     Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
@@ -596,7 +596,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     B.reserve(max_size*max_size);
 
     // Set to zeto all the entries of the Global Matrix
-    if(assembe_matrix) 
+    if(assemble_matrix) 
       myKK->zero();
 
     // *** element loop ***
@@ -619,7 +619,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
         // set to zero all the entries of the FE matrices
         F.resize(nve);
         memset(&F[0],0,nve*sizeof(double));
-        if(assembe_matrix) {
+        if(assemble_matrix) {
             B.resize(nve*nve);
             memset(&B[0],0,nve*nve*sizeof(double));
         }
@@ -677,7 +677,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
                     F[i]+= (-Lap_rhs + src_term*phi[i] )*weight;
 		    
                     //END RESIDUALS A block ===========================
-                    if(assembe_matrix) {
+                    if(assemble_matrix) {
                         // *** phi_j loop ***
                         for(unsigned j=0; j<nve; j++) {
                             double Lap=0;
@@ -689,7 +689,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
                             B[i*nve+j] += Lap;
                         } // end phij loop
                     } // end phii loop
-                } // endif assembe_matrix
+                } // endif assemble_matrix
             } // end gauss point loop
 
             //number of faces for each type of element
@@ -760,11 +760,11 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
         //Sum the local matrices/vectors into the global Matrix/vector
 
         myRES->add_vector_blocked(F,KK_dof);
-        if(assembe_matrix) myKK->add_matrix_blocked(B,KK_dof,KK_dof);
+        if(assemble_matrix) myKK->add_matrix_blocked(B,KK_dof,KK_dof);
     } //end list of elements loop for each subdomain
 
     myRES->close();
-    if(assembe_matrix) myKK->close();
+    if(assemble_matrix) myKK->close();
 
     // ***************** END ASSEMBLY *******************
 

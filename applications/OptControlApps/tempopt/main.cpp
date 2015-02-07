@@ -35,8 +35,8 @@
 #endif
 
 
-void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix);
-void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix);
+void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
 
 
 // =======================================
@@ -141,7 +141,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   SystemTwo & eqnNS = equations_map.add_system<SystemTwo>("Eqn_NS",NO_SMOOTHER);
           eqnNS.AddUnknownToSystemPDE(&velocity); 
           eqnNS.AddUnknownToSystemPDE(&pressure);
-	  eqnNS.AttachAssembleFunction(GenMatRhsNS);
+	  eqnNS.SetAssembleFunction(GenMatRhsNS);
   
   SystemTwo & eqnT = equations_map.add_system<SystemTwo>("Eqn_T",NO_SMOOTHER);
          eqnT.AddUnknownToSystemPDE(&temperature);
@@ -150,7 +150,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 #if FOURTH_ROW==1
          eqnT.AddUnknownToSystemPDE(&pressure_2);   //the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function
 #endif
-	 eqnT.AttachAssembleFunction(GenMatRhsT);
+	 eqnT.SetAssembleFunction(GenMatRhsT);
   
 //================================ 
 //========= End add EQUATIONS  and ========

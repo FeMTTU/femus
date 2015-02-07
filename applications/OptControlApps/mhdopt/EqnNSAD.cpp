@@ -24,7 +24,7 @@
 using namespace femus;
 
 
- void GenMatRhsNSAD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix) {
+ void GenMatRhsNSAD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix) {
 
   SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_NSAD");
   

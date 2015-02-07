@@ -17,7 +17,7 @@ using std::cout;
 using std::endl;
 using namespace femus;
 
-void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
+void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
 
 bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z,const char name[], 
 		double &value, const int FaceName, const double = 0.);
@@ -285,8 +285,8 @@ int main(int argc,char **args) {
 //   }
    
   // System Fluid-Structure-Interaction
-  system.AttachAssembleFunction(IncompressibleFSIAssemblyAD_DD);  
-  //system.AttachAssembleFunction(AssembleMatrixResFSI);  
+  system.SetAssembleFunction(IncompressibleFSIAssemblyAD_DD);  
+  //system.SetAssembleFunction(AssembleMatrixResFSI);  
   
   if(simulation < 3){
     system.SetMaxNumberOfLinearIterations(2);
@@ -874,7 +874,7 @@ bool SetBoundaryConditionBatheShell(const double &x, const double &y, const doub
 }
 
 /*
-void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
     
   clock_t AssemblyTime=0;
   clock_t start_time, end_time;

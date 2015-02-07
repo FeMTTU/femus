@@ -66,11 +66,11 @@ public:
     /** Associate the solution variables to the system PDE */
     void AddSolutionToSystemPDE(const char solname[]);
 
-    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
+    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
     
     /** Register a user function to use in assembling the system matrix and RHS. */
-    void AttachAssembleFunction (void fptr(MultiLevelProblem &ml_prob, unsigned level,
-                                           const unsigned &gridn, const bool &assembe_matrix));
+    void SetAssembleFunction (void fptr(MultiLevelProblem &ml_prob, unsigned level,
+                                           const unsigned &gridn, const bool &assemble_matrix));
 
     AssembleFunctionType  GetAssembleFunction();
 
@@ -123,7 +123,7 @@ protected:
 
     /** Function that assembles the system. */
     void (* _assemble_system_function) (MultiLevelProblem &ml_prob, unsigned level,
-                                        const unsigned &gridn, const bool &assembe_matrix);
+                                        const unsigned &gridn, const bool &assemble_matrix);
 
     /** The number associated with this system */
     const unsigned int _sys_number;

@@ -72,7 +72,7 @@
 
 
 /// This function assembles the matrix and the rhs:
-void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix) {
+void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix) {
 
   //if we are just a function not inside a class, we have to retrieve ourselves...
   SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_T");

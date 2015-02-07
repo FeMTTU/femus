@@ -62,8 +62,8 @@ void System::init() {
   return _assemble_system_function;
 }
 
-void System::AttachAssembleFunction(void fptr(MultiLevelProblem &ml_prob, unsigned level, 
-				      const unsigned &gridn, const bool &assembe_matrix))
+void System::SetAssembleFunction(void fptr(MultiLevelProblem &ml_prob, unsigned level, 
+				      const unsigned &gridn, const bool &assemble_matrix))
 {
   assert(fptr);
 
