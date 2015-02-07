@@ -55,7 +55,7 @@ SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in,
         _mesh(e_map_in.GetMeshTwo()),
         _dofmap(this,e_map_in.GetMeshTwo()),
         _bcond(&_dofmap),
-        System(e_map_in,eqname_in,number,smoother_type) {
+        LinearImplicitSystem(e_map_in,eqname_in,number,smoother_type) {
 
 
     //========= solver package ===========
@@ -63,6 +63,55 @@ SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in,
     for (uint l=0; l < GetGridn(); l++) _solver[l] = LinearEquationSolver::build(0,NULL,NO_SMOOTHER).release();
     
 }
+
+
+// ===================================================
+/// This function  is the SystemTwo destructor.
+//the important thing is that these destructions occur AFTER
+//the destructions of the levels inside
+//these things were allocated and filled in various init functions
+//either in the Base or in the DA
+//here, we destroy them in the place where they belong
+// pay attention to the fact that a lot of these delete are ok only if the respective function
+// where the new is is called!
+SystemTwo::~SystemTwo() {
+
+ //========= MGOps  ===========================
+    for (uint Level =0; Level< GetGridn(); Level++) {
+        delete _A[Level];
+        if (Level < GetGridn() - 1) delete _Rst[Level];
+        if (Level > 0)             delete _Prl[Level];
+    }
+
+    _A.clear();
+    _Rst.clear();
+    _Prl.clear();
+
+ //======== Vectors ==========================
+    for (uint Level =0; Level<GetGridn(); Level++) {
+        delete _b[Level];
+        delete _res[Level];
+        delete _x[Level];
+        delete _x_old[Level];
+        delete _x_oold[Level];
+        delete _x_tmp[Level];
+    }
+
+         _b.clear();
+       _res.clear();
+         _x.clear();
+     _x_old.clear();
+    _x_oold.clear();
+     _x_tmp.clear();
+
+ //========= solver
+    for (uint l = 0; l < GetGridn(); l++)  delete _solver[l];
+    delete []_solver;
+
+    
+}
+
+
 
 void SystemTwo::init_sys() {
 
@@ -122,51 +171,7 @@ void SystemTwo::initRefValues() {
 
 
 
-// ===================================================
-/// This function  is the SystemTwo destructor.
-//the important thing is that these destructions occur AFTER
-//the destructions of the levels inside
-//these things were allocated and filled in various init functions
-//either in the Base or in the DA
-//here, we destroy them in the place where they belong
-// pay attention to the fact that a lot of these delete are ok only if the respective function
-// where the new is is called!
-SystemTwo::~SystemTwo() {
 
- //========= MGOps  ===========================
-    for (uint Level =0; Level< GetGridn(); Level++) {
-        delete _A[Level];
-        if (Level < GetGridn() - 1) delete _Rst[Level];
-        if (Level > 0)             delete _Prl[Level];
-    }
-
-    _A.clear();
-    _Rst.clear();
-    _Prl.clear();
-
- //======== Vectors ==========================
-    for (uint Level =0; Level<GetGridn(); Level++) {
-        delete _b[Level];
-        delete _res[Level];
-        delete _x[Level];
-        delete _x_old[Level];
-        delete _x_oold[Level];
-        delete _x_tmp[Level];
-    }
-
-         _b.clear();
-       _res.clear();
-         _x.clear();
-     _x_old.clear();
-    _x_oold.clear();
-     _x_tmp.clear();
-
- //========= solver
-    for (uint l = 0; l < GetGridn(); l++)  delete _solver[l];
-    delete []_solver;
-
-    
-}
 
 
 

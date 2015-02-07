@@ -31,7 +31,7 @@
 #include "BoundaryConditions.hpp"
 #include "Quantity.hpp"
 
-#include "System.hpp"
+#include "LinearImplicitSystem.hpp"
 
 
 namespace femus {
@@ -46,7 +46,7 @@ class NumericVector;
 class LinearEquationSolver;
 
 
-class SystemTwo : public System {
+class SystemTwo : public LinearImplicitSystem {
 
 public:
 
