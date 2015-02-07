@@ -52,7 +52,7 @@ namespace femus {
 //the names
 //other stuff but let us stop here now
 SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
-        _phys(e_map_in.GetInputParser()),
+//         _phys(e_map_in.GetInputParser()),
         _mesh(e_map_in.GetMeshTwo()),
         _dofmap(this,e_map_in.GetMeshTwo()),
         _bcond(&_dofmap),

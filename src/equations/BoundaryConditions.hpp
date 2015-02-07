@@ -17,7 +17,6 @@
 #define __boundaryconditions_hpp__
 
 #include "Typedefs.hpp"
-#include "CurrentQuantity.hpp"
 
 
 
@@ -40,8 +39,6 @@ public:
     int   *_bc;         //==== NODAL DIRICHLET ======== ///< boundary conditions map (top level)  // POINTWISE(NODAL) FLAG for the BOUNDARY DOFS = FLAG for the tEST FUNCTIONS //TODO this should be PrintNumericVector of the equation, integer instead of double! do it when you make it parallel especially! //Later on I will do a bc for every level, considering the ELEMENT DOFS
     int  **_bc_fe_kk;   //==== CELL DIRICHLET ========
           void    GenerateBdc();          //MultilevelSolution
-//==== NODAL DIRICHLET ======== 	  
-          void Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const uint *bc_eldofs,const CurrentQuantity &Velold_in,const CurrentQuantity& press_in, int & press_fl) const;
 //========= treating NumericVectors, related to Dirichlet Boundary Conditions! =======
           void Bc_ScaleDofVec(NumericVector * myvec,  double ScaleFac);
           void Bc_AddDofVec(NumericVector* myvec, NumericVector* myvec2 );

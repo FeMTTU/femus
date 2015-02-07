@@ -287,7 +287,27 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 
  }   
    
+//=================================
+//TODO deprecated
+//This function is for NS type equations:
+//it computes the flags for pressure and stress integrals 
+//based on the pressure nodes
+ int CurrentElem::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const CurrentQuantity & Velold_in,const CurrentQuantity& press_in) const {
+   
+   int press_fl = 0;
+   
+	const uint el_ndof_p =  press_in._ndof;
+	const uint el_ndof_u =  Velold_in._ndof;
+	const uint   nvars_u =  Velold_in._dim;
+        int press_sum=0;
+           for (uint i=0; i< el_ndof_p; i++)   press_sum += _bc_eldofs[nvars_u*el_ndof_u + i]; //only one linear variable... pay attention when trying linear-linear
+            if ( press_sum ==0 )                 {  press_fl = 1; }   //ALL zeros: ONLY PRESSURE
 
+  
+    return press_fl;
+  }
+
+  
 
 } //end namespace femus
 

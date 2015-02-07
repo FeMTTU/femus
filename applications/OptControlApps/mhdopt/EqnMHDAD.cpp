@@ -366,8 +366,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      BhomLagMultAdjOld.GetElemDofs(Level);
    
 //============ BC =======
-       int press_fl=0;
-       my_system._bcond.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),BhomAdjOld,BhomLagMultAdjOld,press_fl);
+       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(BhomAdjOld,BhomLagMultAdjOld); 
 //========END BC============
      
     const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();

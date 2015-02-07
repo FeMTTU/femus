@@ -65,7 +65,7 @@ public:
 //=======================================================================
 //======== MG Ops ============ (procs,levels) ====
 //=======================================================================
-  std::vector<SparseMatrix  *> _A;  // LinearEquation (each level)
+  std::vector<SparseMatrix *> _A;  // LinearEquation (each level)
   std::vector<SparseMatrix *> _Rst; // LinearEquation (each level)
   std::vector<SparseMatrix *> _Prl; // LinearEquation (each level)
   
@@ -130,7 +130,6 @@ public:
           
 protected:
   
-  const FemusInputParser<double>  & _phys;   //passed from MultilevelProblem//
   const MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem//
 
   std::vector<Quantity*>          _UnknownQuantitiesVector;  //MultilevelSolution//

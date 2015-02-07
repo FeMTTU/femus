@@ -374,9 +374,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      PressAdjOld.GetElemDofs(Level);
 
 //============ BC =======
-       int press_fl=0;
-       my_system._bcond.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),VelAdjOld,PressAdjOld,press_fl);
- //only the LINEAR PART is USED!!
+       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(VelAdjOld,PressAdjOld); 
  //========END BC============
    
    //==============================================================
