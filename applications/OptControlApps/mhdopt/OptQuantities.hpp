@@ -9,8 +9,8 @@
 
 #include "OptLoop.hpp"
 
+using namespace femus;
 
-namespace femus {
 
 
 class MagnFieldHom : public Quantity {
@@ -252,12 +252,6 @@ class SpecificHeatP : public Quantity {
 void Temp_dep(const double temp_in, double& mu_out) const {mu_out = 1.;return;} 
 
 };
-
-
-
-} //end namespace femus
-
-
 
 
 

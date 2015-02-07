@@ -14,8 +14,6 @@
 #include "OptQuantities.hpp"
 
 
-namespace femus {
-  
 //=================== BEGIN CONSTRUCTORS ================================
 // ==================================================================
 // ==================================================================
@@ -67,7 +65,7 @@ MagnFieldHom::MagnFieldHom(std::string name_in, QuantityMap& qtymap_in, uint dim
 MagnFieldHomAdj::MagnFieldHomAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
 
-  for (uint i=0;i<dim_in;i++) _refvalue[i]=1.;// qtymap_in._phys.get_par("Bref");
+  for (uint i=0;i<dim_in;i++) _refvalue[i]=1.;// qtymap_in.ml_prob.GetInputParser().get_par("Bref");
 }
 
 //==========================================================================
@@ -85,8 +83,8 @@ MagnFieldHomLagMult::MagnFieldHomLagMult(std::string name_in, QuantityMap& qtyma
 MagnFieldHomLagMultAdj::MagnFieldHomLagMultAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
   
-//   const double Bref = qtymap_in._phys.get_par("Bref");
-//   const double Uref = qtymap_in._phys.get_par("Uref");
+//   const double Bref = qtymap_in.ml_prob.GetInputParser().get_par("Bref");
+//   const double Uref = qtymap_in.ml_prob.GetInputParser().get_par("Uref");
 //   const double sigmaref = Uref*Bref;
   for (uint i=0;i<dim_in;i++) _refvalue[i]=1.;   //sigmaref;
   
@@ -126,7 +124,7 @@ Pressure::Pressure(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uin
 PressureAdj::PressureAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
 
-   for (uint i=0;i<dim_in;i++) _refvalue[i]= 1./*qtymap_in._phys._pref*/;
+   for (uint i=0;i<dim_in;i++) _refvalue[i]= 1./*qtymap_in.ml_prob.GetInputParser()._pref*/;
 }
 
 
@@ -142,7 +140,7 @@ Velocity::Velocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uin
 VelocityAdj::VelocityAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {  
 
-    for (uint i=0;i<dim_in;i++) _refvalue[i] = 1.; /*qtymap_in._phys.get_par("Uref")*/ //TODO
+    for (uint i=0;i<dim_in;i++) _refvalue[i] = 1.; /*qtymap_in.ml_prob.GetInputParser().get_par("Uref")*/ //TODO
                                                     //do i have to put the same reference value as 
                                                     // the corresponding direct variable?
                                                     //or should this be equal to the reference value for
@@ -1644,7 +1642,3 @@ void MagnFieldExtLagMult::initialize_xyz(const double* xp, std::vector< double >
 
   return;
 }
-
-
-
-} //end namespace femus

@@ -12,6 +12,7 @@
 #include "FemusInit.hpp"
 #include "Files.hpp"
 #include "MultiLevelMeshTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
 #include "ElemType.hpp"
@@ -27,11 +28,6 @@
 // application includes
 #include "OptLoop.hpp"
 #include "OptQuantities.hpp"
-#include "EqnNS.hpp"
-#include "EqnNSAD.hpp"
-#include "EqnMHD.hpp"
-#include "EqnMHDAD.hpp"
-#include "EqnMHDCONT.hpp"
 
 #ifdef HAVE_LIBMESH
 #include "libmesh/libmesh.h"
@@ -39,8 +35,11 @@
 
 using namespace femus;
 
-
-// double funzione(double t , const double* xyz) {return 1.;} 
+  void GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix);
+  void GenMatRhsNSAD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix);
+  void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix);
+  void GenMatRhsMHDAD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix);
+  void GenMatRhsMHDCONT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assembe_matrix);
 
 // =======================================
 // MHD optimal control problem
@@ -162,33 +161,38 @@ int main(int argc, char** argv) {
 //========================================================
 
 #if NS_EQUATIONS==1
-  EqnNS & eqnNS = ml_prob.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);
+  SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS",NO_SMOOTHER);
           eqnNS.AddUnknownToSystemPDE(&velocity); 
           eqnNS.AddUnknownToSystemPDE(&pressure); 
+          eqnNS.AttachAssembleFunction(GenMatRhsNS); 
 #endif
   
 #if NSAD_EQUATIONS==1
-  EqnNSAD & eqnNSAD = ml_prob.add_system<EqnNSAD>("Eqn_NSAD",NO_SMOOTHER); 
+  SystemTwo & eqnNSAD = ml_prob.add_system<SystemTwo>("Eqn_NSAD",NO_SMOOTHER); 
             eqnNSAD.AddUnknownToSystemPDE(&velocity_adj); 
             eqnNSAD.AddUnknownToSystemPDE(&pressure_adj); 
+            eqnNSAD.AttachAssembleFunction(GenMatRhsNSAD);
 #endif
   
 #if MHD_EQUATIONS==1
-  EqnMHD & eqnMHD = ml_prob.add_system<EqnMHD>("Eqn_MHD",NO_SMOOTHER);
+  SystemTwo & eqnMHD = ml_prob.add_system<SystemTwo>("Eqn_MHD",NO_SMOOTHER);
            eqnMHD.AddUnknownToSystemPDE(&bhom); 
            eqnMHD.AddUnknownToSystemPDE(&bhom_lag_mult); 
+           eqnMHD.AttachAssembleFunction(GenMatRhsMHD);
 #endif
 
 #if MHDAD_EQUATIONS==1
-  EqnMHDAD & eqnMHDAD = ml_prob.add_system<EqnMHDAD>("Eqn_MHDAD",NO_SMOOTHER);
+  SystemTwo & eqnMHDAD = ml_prob.add_system<SystemTwo>("Eqn_MHDAD",NO_SMOOTHER);
              eqnMHDAD.AddUnknownToSystemPDE(&bhom_adj); 
              eqnMHDAD.AddUnknownToSystemPDE(&bhom_lag_mult_adj); 
+             eqnMHDAD.AttachAssembleFunction(GenMatRhsMHDAD);
 #endif
 
 #if MHDCONT_EQUATIONS==1
-  EqnMHDCONT & eqnMHDCONT = ml_prob.add_system<EqnMHDCONT>("Eqn_MHDCONT",NO_SMOOTHER);
+  SystemTwo & eqnMHDCONT = ml_prob.add_system<SystemTwo>("Eqn_MHDCONT",NO_SMOOTHER);
                eqnMHDCONT.AddUnknownToSystemPDE(&Bext); 
                eqnMHDCONT.AddUnknownToSystemPDE(&Bext_lag_mult); 
+               eqnMHDCONT.AttachAssembleFunction(GenMatRhsMHDCONT);
 #endif  
    
 //================================
