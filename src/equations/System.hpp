@@ -42,9 +42,6 @@ public:
     /** Constructor.  Optionally initializes required data structures. */
     System (MultiLevelProblem& ml_prob, const std::string& name, const unsigned int number, const MgSmoother & smoother_type);
 
-    /** Empty constructor. TODO remove soon */
-    System (MultiLevelProblem& ml_prob, const std::string& name_in, const unsigned int number_in);
-    
     /** destructor */
     virtual ~System();
 

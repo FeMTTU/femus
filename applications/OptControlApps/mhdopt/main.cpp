@@ -151,7 +151,9 @@ int main(int argc, char** argv) {
   MultiLevelMesh ml_msh;
   ml_msh.GenerateCoarseBoxMesh(8,8,8,0,1,0,1,0,1,HEX27,"seventh");
 //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
-
+  ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
+  ml_msh.PrintInfo();
+  
   MultiLevelSolution ml_sol(&ml_msh);
 
   MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
