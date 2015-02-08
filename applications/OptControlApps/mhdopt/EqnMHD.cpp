@@ -60,7 +60,12 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 //======================
    const uint mesh_vb = VV;
    
-   CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level];
+ 
+    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+   
+    CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -136,24 +141,18 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 #endif  
 
 //=========END EXTERNAL QUANTITIES (couplings) =====
-    
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level];
-
 //======================
 //======================
     
- 
-    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
-
+    
     currelem.Mat().zero();
     currelem.Rhs().zero();
 
-     currelem.set_el_nod_conn_lev_subd(Level,ml_prob.GetMeshTwo()._iproc,iel);
-     currelem.SetMidpoint();
+    currelem.set_el_nod_conn_lev_subd(Level,ml_prob.GetMeshTwo()._iproc,iel);
+    currelem.SetMidpoint();
      
-     currelem.ConvertElemCoordsToMappingOrd(xyz);
-     ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+    currelem.ConvertElemCoordsToMappingOrd(xyz);
+    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
     currelem.SetElDofsBc(Level);
     
@@ -346,9 +345,14 @@ for (uint fe = 0; fe < QL; fe++)     {
   
 //======================
 //======================
-   const uint mesh_vb = BB;
+    const uint mesh_vb = BB;
+    
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level];
+  
+  for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
    
-   CurrentElem       currelem(BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+    CurrentElem       currelem(BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -424,20 +428,15 @@ for (uint fe = 0; fe < QL; fe++)     {
 #endif  
 
 //=========END EXTERNAL QUANTITIES (couplings) =====
-    
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level];
-
-//======================
-//======================
   
   //=======Auxiliary Operators for the Boundary Integrals
     double velXBext_g3D[3];  //Operations at the boundary
       double normal_g3D[3];  //Operations at the boundary
   double velXBextXn_g3D[3];  //Operations at the boundary
+    
+//======================
+//======================
  
-  
-  for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
 
      currelem.Mat().zero();
      currelem.Rhs().zero(); 
@@ -446,7 +445,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.SetMidpoint();
 
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+     currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
    
      currelem.SetElDofsBc(Level);
      

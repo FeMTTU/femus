@@ -96,11 +96,13 @@ class CurrentQuantity;
     /** */
     inline const elem_type* GetElemType(const uint fe) const { return  _elem_type[fe]; }
     
-     inline const std::vector<elem_type*> &  GetElemTypeVectorFE() const { return _elem_type; }
+    inline const std::vector<elem_type*> &  GetElemTypeVectorFE() const { return _elem_type; }
      
     /** NODAL DIRICHLET */  
-     int Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const CurrentQuantity &Velold_in,const CurrentQuantity& press_in) const;
+    int Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const CurrentQuantity &Velold_in,const CurrentQuantity& press_in) const;
    
+    void TransformElemNodesToRef(Domain* mydom, double* refbox_xyz);
+    
     //TODO make these private
 //========== Equation-related ========================               
   const SystemTwo * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO

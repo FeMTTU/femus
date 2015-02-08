@@ -566,7 +566,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    mesh->TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
+    currelem.TransformElemNodesToRef(eqn->GetMLProb().GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 //======= 
     xyz_refbox.SetElemAverage();

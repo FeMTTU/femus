@@ -56,6 +56,11 @@
     
   const uint mesh_vb = VV;
   
+   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+   const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+
+  for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+    
   CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
@@ -92,10 +97,6 @@
     xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
     xyz_refbox.Allocate();
 
-   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
-   const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
-
-  for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
@@ -104,7 +105,7 @@
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
     
 //MY EQUATION

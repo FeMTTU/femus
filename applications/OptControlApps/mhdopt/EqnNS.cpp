@@ -153,7 +153,12 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 //===============================  
   
     const uint mesh_vb = VV;
-  
+ 
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+    
+    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+      
     CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
@@ -236,14 +241,10 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 #if DIMENSION==3
   gravity._val_g[2] = ml_prob.GetInputParser().get("dirgz");
 #endif  
- 
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
 
 //=======================
 //=======================    
 
-    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
  
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
@@ -252,7 +253,7 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
     currelem.SetElDofsBc(Level);
@@ -540,6 +541,11 @@ for (uint fe = 0; fe < QL; fe++)     {
 
     const uint mesh_vb = BB;
   
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+
+  for (uint iel=0; iel < (nel_e - nel_b) ; iel++) {
+  
     CurrentElem       currelem(BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
@@ -582,10 +588,6 @@ for (uint fe = 0; fe < QL; fe++)     {
   xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
   xyz_refbox.Allocate();
 
-  
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
-
 //=======================
 //=======================    
     
@@ -594,8 +596,6 @@ for (uint fe = 0; fe < QL; fe++)     {
   double strainUtrDn_g[DIMENSION];
 
 
-  for (uint iel=0; iel < (nel_e - nel_b) ; iel++) {
-
      currelem.Mat().zero();
      currelem.Rhs().zero();
 
@@ -603,7 +603,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+     currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
      currelem.SetElDofsBc(Level);
      

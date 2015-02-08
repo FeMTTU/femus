@@ -139,8 +139,8 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
       currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
       currelem.SetMidpoint();
       
-      currelem.ConvertElemCoordsToMappingOrd(xyz);
-      mesh->TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
+     currelem.ConvertElemCoordsToMappingOrd(xyz);
+     currelem.TransformElemNodesToRef(eqn->GetMLProb().GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 // =============== 
       xyz_refbox.SetElemAverage();
@@ -269,7 +269,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
       currelem.SetMidpoint();
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-      mesh->TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
+      currelem.TransformElemNodesToRef(eqn->GetMLProb().GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
      
      Tlift.GetElemDofs(Level);
 

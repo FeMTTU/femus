@@ -188,8 +188,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
-
+    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
     
 //MY EQUATION
 //the elements are, for every level:
@@ -483,7 +482,7 @@ for (uint fe = 0; fe < QL; fe++)     {
       currelem.SetMidpoint(); 
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+      currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
      
       currelem.SetElDofsBc(Level);
       
