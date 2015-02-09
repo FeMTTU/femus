@@ -8,7 +8,7 @@
 
 namespace femus {
     
-  void IncompressibleFSIAssemblyAD_DD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+  void IncompressibleFSIAssemblyAD_DD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
        
     clock_t AssemblyTime=0;
     clock_t start_time, end_time;
@@ -649,7 +649,7 @@ namespace femus {
   }
   /*
   
-  void IncompressibleFSIAssemblyAD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+  void IncompressibleFSIAssemblyAD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
        
     clock_t AssemblyTime=0;
     clock_t start_time, end_time;
@@ -1181,7 +1181,7 @@ namespace femus {
 		adept::adouble CauchyDIR[3]={0.,0.,0.};
 		for(int idim=0.; idim<dim; idim++) {
 		  for(int jdim=0.; jdim<dim; jdim++) {
-		    CauchyDIR[idim]+= gradvoid IncompressibleFSIAssemblyAD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+		    CauchyDIR[idim]+= gradvoid IncompressibleFSIAssemblyAD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
        
     clock_t AssemblyTime=0;
     clock_t start_time, end_time;
@@ -2089,7 +2089,7 @@ namespace femus {
   
   
    
-   void IncompressibleFSIAssembly(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+   void IncompressibleFSIAssembly(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
     
     clock_t AssemblyTime=0;
     clock_t start_time, end_time;

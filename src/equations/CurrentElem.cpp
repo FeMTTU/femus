@@ -91,8 +91,8 @@ for (uint ivar=0; ivar < _eqn->_dofmap._nvars[fe]; ivar++)    {
 	  _el_dof_indices[indx] = _eqn->_dofmap.GetDof(Level,fe,ivar,DofObj);
 
          if (fe < KK ) { const uint dofkivar = _eqn->_dofmap.GetDof(Lev_pick_bc_dof,fe,ivar,DofObj); 
-             _bc_eldofs[indx] = _eqn->_bc[dofkivar]; }
-         else if (fe == KK)    _bc_eldofs[indx] = _eqn->_bc_fe_kk[Level][ DofObj + ivar*_eqn->_dofmap._DofNumLevFE[Level][KK] ];
+             _bc_eldofs[indx] = _eqn->_bcond._bc[dofkivar]; }
+         else if (fe == KK)    _bc_eldofs[indx] = _eqn->_bcond._bc_fe_kk[Level][ DofObj + ivar*_eqn->_dofmap._DofNumLevFE[Level][KK] ];
 	 }
     } 
 } // end fe
@@ -287,7 +287,27 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 
  }   
    
+//=================================
+//TODO deprecated
+//This function is for NS type equations:
+//it computes the flags for pressure and stress integrals 
+//based on the pressure nodes
+ int CurrentElem::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const CurrentQuantity & Velold_in,const CurrentQuantity& press_in) const {
+   
+   int press_fl = 0;
+   
+	const uint el_ndof_p =  press_in._ndof;
+	const uint el_ndof_u =  Velold_in._ndof;
+	const uint   nvars_u =  Velold_in._dim;
+        int press_sum=0;
+           for (uint i=0; i< el_ndof_p; i++)   press_sum += _bc_eldofs[nvars_u*el_ndof_u + i]; //only one linear variable... pay attention when trying linear-linear
+            if ( press_sum ==0 )                 {  press_fl = 1; }   //ALL zeros: ONLY PRESSURE
 
+  
+    return press_fl;
+  }
+
+  
 
 } //end namespace femus
 

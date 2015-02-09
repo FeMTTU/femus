@@ -97,6 +97,9 @@ class CurrentQuantity;
     inline const elem_type* GetElemType(const uint fe) const { return  _elem_type[fe]; }
     
      inline const std::vector<elem_type*> &  GetElemTypeVectorFE() const { return _elem_type; }
+     
+    /** NODAL DIRICHLET */  
+     int Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const CurrentQuantity &Velold_in,const CurrentQuantity& press_in) const;
    
     //TODO make these private
 //========== Equation-related ========================               

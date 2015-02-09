@@ -18,7 +18,7 @@ using std::endl;
 
 using namespace femus;
 
-void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
+void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
 
 
 double InitVariableU(const double &x, const double &y, const double &z);
@@ -126,12 +126,12 @@ int main(int argc,char **args) {
   std::cout << " *********** Stokes ************  " << std::endl;
     
   LinearImplicitSystem & system1 = ml_prob.add_system<LinearImplicitSystem> ("Stokes");
-  system1.AddSolutionToSytemPDE("U");
-  system1.AddSolutionToSytemPDE("V");
-  system1.AddSolutionToSytemPDE("P");
+  system1.AddSolutionToSystemPDE("U");
+  system1.AddSolutionToSystemPDE("V");
+  system1.AddSolutionToSystemPDE("P");
   
   // Set MG Options
-  system1.AttachAssembleFunction(AssembleMatrixResSteadyStokes);  
+  system1.SetAssembleFunction(AssembleMatrixResSteadyStokes);  
   system1.SetMaxNumberOfLinearIterations(2);
   system1.SetAbsoluteConvergenceTolerance(1.e-10);
   system1.SetMgType(F_CYCLE);
@@ -305,7 +305,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 // //------------------------------------------------------------------------------------------------------------
 
 
-void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
+void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
      
   //pointers 
   Solution*	 mysolution  	             = ml_prob._ml_sol->GetSolutionLevel(level);
@@ -383,7 +383,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
    
   for(int i=0;i<dim+1;i++) F[i].reserve(max_size);
     
-  if(assembe_matrix){
+  if(assemble_matrix){
     for(int i=0;i<dim+1;i++){
       B[i].resize(dim+1);
       for(int j=0;j<dim+1;j++){
@@ -399,7 +399,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
   }
   
   // Set to zeto all the entries of the matrix
-  if(assembe_matrix) myKK->zero();
+  if(assemble_matrix) myKK->zero();
   
   // *** element loop ***
  
@@ -423,7 +423,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
       F[SolPdeIndex[ivar]].resize(nve2);
       memset(&F[SolPdeIndex[ivar]][0],0,nve2*sizeof(double));
       
-      if(assembe_matrix){
+      if(assemble_matrix){
 	B[SolPdeIndex[ivar]][SolPdeIndex[ivar]].resize(nve2*nve2);
 	B[SolPdeIndex[ivar]][SolPdeIndex[dim]].resize(nve2*nve1);
 	B[SolPdeIndex[dim]][SolPdeIndex[ivar]].resize(nve1*nve2);
@@ -437,7 +437,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
     memset(&F[SolPdeIndex[dim]][0],0,nve1*sizeof(double));
       
       
-    if(assembe_matrix*penalty){
+    if(assemble_matrix*penalty){
       B[SolPdeIndex[dim]][SolPdeIndex[dim]].resize(nve1*nve1,0.);
       memset(&B[SolPdeIndex[dim]][SolPdeIndex[dim]][0],0,nve1*nve1*sizeof(double));
     }
@@ -513,7 +513,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
 	  }
 	  //END RESIDUALS A block ===========================
 	  
-	  if(assembe_matrix){
+	  if(assemble_matrix){
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve2; j++) {
 	      double Lap=0;
@@ -533,7 +533,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
 		B[SolPdeIndex[ivar]][SolPdeIndex[dim]][i*nve1+j] -= gradphi2[i*dim+ivar]*phi1[j]*Weight2;
 	      }
 	    } //end phi1_j loop
-	  } // endif assembe_matrix
+	  } // endif assemble_matrix
 	} //end phii loop
   
 
@@ -550,17 +550,17 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
            
 	  //END RESIDUALS  B block ===========================
 	  
-	  if(assembe_matrix){
+	  if(assemble_matrix){
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve2; j++) {
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
 		B[SolPdeIndex[dim]][SolPdeIndex[ivar]][i*nve2+j]-= phi1[i]*gradphi2[j*dim+ivar]*Weight2;
 	      }
 	    }  //end phij loop
-	  } // endif assembe_matrix
+	  } // endif assemble_matrix
 	}  //end phi1_i loop
 	
-	if(assembe_matrix * penalty){  //block nve1 nve1
+	if(assemble_matrix * penalty){  //block nve1 nve1
 	  // *** phi_i loop ***
 	  for(unsigned i=0; i<nve1; i++){
 	    // *** phi_j loop ***
@@ -598,20 +598,20 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, c
     //Sum the local matrices/vectors into the Global Matrix/Vector
     for(unsigned ivar=0; ivar<dim; ivar++) {
       myRES->add_vector_blocked(F[SolPdeIndex[ivar]],KK_dof[ivar]);
-      if(assembe_matrix){
+      if(assemble_matrix){
 	myKK->add_matrix_blocked(B[SolPdeIndex[ivar]][SolPdeIndex[ivar]],KK_dof[ivar],KK_dof[ivar]);  
 	myKK->add_matrix_blocked(B[SolPdeIndex[ivar]][SolPdeIndex[dim]],KK_dof[ivar],KK_dof[dim]);
 	myKK->add_matrix_blocked(B[SolPdeIndex[dim]][SolPdeIndex[ivar]],KK_dof[dim],KK_dof[ivar]);
       }
     }
     //Penalty
-    if(assembe_matrix*penalty) myKK->add_matrix_blocked(B[SolPdeIndex[dim]][SolPdeIndex[dim]],KK_dof[dim],KK_dof[dim]);
+    if(assemble_matrix*penalty) myKK->add_matrix_blocked(B[SolPdeIndex[dim]][SolPdeIndex[dim]],KK_dof[dim],KK_dof[dim]);
     myRES->add_vector_blocked(F[SolPdeIndex[dim]],KK_dof[dim]);
     //--------------------------------------------------------------------------------------------------------  
   } //end list of elements loop for each subdomain
   
   
-  if(assembe_matrix) myKK->close();
+  if(assemble_matrix) myKK->close();
   myRES->close();
   // ***************** END ASSEMBLY *******************
 }

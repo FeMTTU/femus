@@ -36,8 +36,17 @@ void optimization_loop( MultiLevelProblem & e_map_in );
 
  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMeshTwo* mesh);
 
-
 } //end namespace femus
+
+
+
+//********* SPACE DIMENSION ************
+
+#define DIMENSION    2
+//   #define DIMENSION    3
+// **************************************
+
+#define FOURTH_ROW 1
 
 
 

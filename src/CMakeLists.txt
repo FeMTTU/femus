@@ -27,6 +27,7 @@ algebra/VankaPetscLinearEquationSolver.cpp
 algebra/FunctionBase.cpp
 algebra/ParsedFunction.cpp
 equations/DofMap.cpp
+equations/BoundaryConditions.cpp
 equations/CurrentElem.cpp
 equations/CurrentGaussPoint.cpp
 equations/CurrentGaussPointBase.cpp

@@ -26,16 +26,17 @@
 #include "XDMFWriter.hpp"
 
 // application 
-#include "Temp_conf.hpp"
 #include "TempQuantities.hpp"
-#include "EqnNS.hpp"
-#include "EqnT.hpp"
 #include "OptLoop.hpp"
 
 
 #ifdef HAVE_LIBMESH
 #include "libmesh/libmesh.h"
 #endif
+
+
+void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
 
 // =======================================
 // TEMPERATURE + NS optimal control problem
@@ -94,7 +95,7 @@
   //since the meshtwo is nondimensionalized, all the BC and IC are gonna be implemented on a nondimensionalized mesh
   //now, a mesh may or may not have an associated domain
   //moreover, a mesh may or may not be read from file
-  //the generation is DIMENSIONAL, the nondimensionalization occurs later
+  //the generation is dimensional, the nondimensionalization occurs later
   //Both the Mesh and the optional domain must be nondimensionalized
   //first, we have to say if the mesh has a shape or not
   //that depends on the application, it must be put at the main level
@@ -106,75 +107,57 @@
   OptLoop opt_loop(files, loop_map); 
    
   // ===== QuantityMap : this is like the MultilevelSolution =========================================
-  QuantityMap  qty_map(mesh,&physics_map);
+  QuantityMap  qty_map;
+  qty_map.SetMeshTwo(&mesh);
+  qty_map.SetInputParser(&physics_map);
 
-  Temperature temperature("Qty_Temperature",qty_map,1,QQ);          qty_map.set_qty(&temperature);
-  TempLift       templift("Qty_TempLift",qty_map,1,QQ,opt_loop);    qty_map.set_qty(&templift);  
-  TempAdj         tempadj("Qty_TempAdj",qty_map,1,QQ);              qty_map.set_qty(&tempadj);  
-  TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.set_qty(&tempdes);  
-  Pressure       pressure("Qty_Pressure",qty_map,1,LL);                qty_map.set_qty(&pressure);
-  Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.set_qty(&velocity);  
+  Temperature temperature("Qty_Temperature",qty_map,1,QQ);          qty_map.AddQuantity(&temperature);
+  TempLift       templift("Qty_TempLift",qty_map,1,QQ,opt_loop);    qty_map.AddQuantity(&templift);  
+  TempAdj         tempadj("Qty_TempAdj",qty_map,1,QQ);              qty_map.AddQuantity(&tempadj);  
+  TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.AddQuantity(&tempdes);  //this is not going to be an Unknown!
+  Pressure       pressure("Qty_Pressure",qty_map,1,LL);                qty_map.AddQuantity(&pressure);
+  Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.AddQuantity(&velocity);  
 
 #if FOURTH_ROW==1
-  Pressure2 pressure_2("Qty_Pressure_2",qty_map,1,KK);            qty_map.set_qty(&pressure_2);
+  Pressure2 pressure_2("Qty_Pressure_2",qty_map,1,KK);            qty_map.AddQuantity(&pressure_2);
 #endif 
   
   // ===== end QuantityMap =========================================
+  
+  // ====== Start new main =================================
+  MultiLevelMesh ml_msh;
+  ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,1,0,0,QUAD9,"seventh"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+  ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
+  ml_msh.PrintInfo();
+  
+  MultiLevelSolution ml_sol(&ml_msh);
 
-  // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblem equations_map;
-  equations_map.SetMeshTwo(&mesh);
-  equations_map.SetQruleAndElemType("fifth");
-  equations_map.SetInputParser(&physics_map);
-  equations_map.SetQtyMap(&qty_map); 
+  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
+  ml_prob.SetMeshTwo(&mesh);
+  ml_prob.SetQruleAndElemType("fifth");
+  ml_prob.SetInputParser(&physics_map);
+  ml_prob.SetQtyMap(&qty_map); 
 
 //===============================================
 //================== Add EQUATIONS AND ======================
 //========= associate an EQUATION to QUANTITIES ========
 //========================================================
-// not all the Quantities need an association with equation
-//once you associate one quantity in the internal map of an equation, then it is immediately to be associated to that equation,
-//   so this operation of set_eqn could be done right away in the moment when you put the quantity in the equation
- 
-  //to retrieve a quantity i can take it from the qtymap of the problem  //but here, in the main, i can take that quantity directly...
-// std::vector<Quantity*> InternalVect_NS;
-// InternalVect_NS.push_back(&velocity);      
-// InternalVect_NS.push_back(&pressure);        
-std::vector<Quantity*> InternalVect_NS(2); 
-InternalVect_NS[0] = &velocity;  velocity.SetPosInAssocEqn(0);
-InternalVect_NS[1] = &pressure;  pressure.SetPosInAssocEqn(1);
+// not all the Quantities need to be unknowns of an equation
 
-  EqnNS & eqnNS = equations_map.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);
-  eqnNS.SetQtyIntVector(InternalVect_NS);
+  SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS",NO_SMOOTHER);
+          eqnNS.AddUnknownToSystemPDE(&velocity); 
+          eqnNS.AddUnknownToSystemPDE(&pressure);
+	  eqnNS.SetAssembleFunction(GenMatRhsNS);
   
-           velocity.set_eqn(&eqnNS);
-           pressure.set_eqn(&eqnNS);
-  
-std::vector<Quantity*> InternalVect_Temp( 3 + FOURTH_ROW );  //of course this must be exactly equal to the following number of get_qty
-                                                             // can I do this dynamic? 
-                                                             // well, the following order is essential, because it is the same order 
-                                                             // as the BLOCKS in the MATRIX, but at least with add you can avoid setting also the SIZE explicitly.
-                                                             //The order in which you put the push_back instructions is essential and it gives you 
-                                                             //the order in the std::vector!!!
-InternalVect_Temp[0] = &temperature;       temperature.SetPosInAssocEqn(0);
-InternalVect_Temp[1] = &templift;             templift.SetPosInAssocEqn(1);
-InternalVect_Temp[2] = &tempadj;               tempadj.SetPosInAssocEqn(2);
-
+  SystemTwo & eqnT = ml_prob.add_system<SystemTwo>("Eqn_T",NO_SMOOTHER);
+         eqnT.AddUnknownToSystemPDE(&temperature);
+         eqnT.AddUnknownToSystemPDE(&templift);
+         eqnT.AddUnknownToSystemPDE(&tempadj);
 #if FOURTH_ROW==1
-InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
+         eqnT.AddUnknownToSystemPDE(&pressure_2);   //the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function
 #endif
-
-  EqnT & eqnT = equations_map.add_system<EqnT>("Eqn_T",NO_SMOOTHER);
-  eqnT.SetQtyIntVector(InternalVect_Temp);
+	 eqnT.SetAssembleFunction(GenMatRhsT);
   
-        temperature.set_eqn(&eqnT);
-           templift.set_eqn(&eqnT);
-            tempadj.set_eqn(&eqnT);
-   #if FOURTH_ROW==1
-         pressure_2.set_eqn(&eqnT);
-   #endif
- 
-
 //================================ 
 //========= End add EQUATIONS  and ========
 //========= associate an EQUATION to QUANTITIES ========
@@ -188,34 +171,38 @@ InternalVect_Temp[3] = &pressure_2;         pressure_2.SetPosInAssocEqn(3);
  
 //once you have the list of the equations, you loop over them to initialize everything
 
-   for (MultiLevelProblem::const_system_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
-        SystemTwo* mgsol = static_cast<SystemTwo*>(eqn->second);
-        
+   for (MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
+     
+   SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
+// //=====================
+//     sys -> init();
+
 //=====================
-    mgsol -> _dofmap.ComputeMeshToDof();
+    sys -> init_sys();
 //=====================
-    mgsol -> GenerateBdc();
-    mgsol -> GenerateBdcElem();
+    sys -> _dofmap.ComputeMeshToDof();
 //=====================
-    mgsol -> ReadMGOps(files.GetOutputPath());
+    sys -> initVectors();
 //=====================
-    mgsol -> initVectors();     //TODO can I do it earlier than this position?
+    sys -> Initialize();
+///=====================
+    sys -> _bcond.GenerateBdc();
 //=====================
-    mgsol -> Initialize();
+    sys -> ReadMGOps(files.GetOutputPath());
+    
     } 
 	 
 	 
-  opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
+  opt_loop.TransientSetup(ml_prob);  // reset the initial state (if restart) and print the Case
 
-  opt_loop.optimization_loop(equations_map);
+  opt_loop.optimization_loop(ml_prob);
 
 // at this point, the run has been completed 
-  files.PrintRunForRestart(DEFAULT_LAST_RUN);/*(iproc==0)*/  //============= prepare default for next restart ==========  
+  files.PrintRunForRestart(DEFAULT_LAST_RUN);
   files.log_petsc();
   
 // ============  clean ================================
-//   equations_map.clean();
-  equations_map.clear();
+  ml_prob.clear();
   mesh.clear();
   
   
