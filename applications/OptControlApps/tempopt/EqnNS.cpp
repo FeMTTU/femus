@@ -70,6 +70,10 @@
   std::vector<double>     AdvRhs_g(space_dim); //Operator: Adv(u,u,phi)
 //================================================  
 
+        my_system._A[Level]->zero();
+        my_system._b[Level]->zero();
+
+
   {//BEGIN VOLUME
 //========================
 //========================
@@ -508,7 +512,8 @@ for (uint fe = 0; fe < QL; fe++)     {
     }
   // END BOUNDARY ******************************
   
-
+        my_system._A[Level]->close();
+        my_system._b[Level]->close();
 
 
 #ifdef DEFAULT_PRINT_INFO

@@ -110,6 +110,9 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 //  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
     std::vector<double>  Qflux_g(space_dim);
 
+        my_system._A[Level]->zero();
+        my_system._b[Level]->zero();
+    
 // ==========================================  
 // ==========================================  
  {//BEGIN VOLUME
@@ -545,7 +548,10 @@ int el_Neum_flag=0;
     
   }//END BOUNDARY
 
-  
+        my_system._A[Level]->close();
+        my_system._b[Level]->close();
+
+ 
 #ifdef DEFAULT_PRINT_INFO
   std::cout << " Matrix and RHS assembled for equation " << my_system.name()
             << " Level "<< Level << " dofs " << my_system._A[Level]->n() << std::endl;

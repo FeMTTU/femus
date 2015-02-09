@@ -42,6 +42,9 @@
   const uint space_dim =       ml_prob.GetMeshTwo().get_dim();
   const uint  meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");
   const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
+  
+        my_system._A[Level]->zero();
+        my_system._b[Level]->zero();
 
   {//BEGIN VOLUME
   
@@ -283,7 +286,9 @@ for (uint fe = 0; fe < QL; fe++)     {
   
   }//END VOLUME
   
-  
+        my_system._A[Level]->close();
+        my_system._b[Level]->close();
+
 #ifdef DEFAULT_PRINT_INFO
   std::cout << " Matrix and RHS assembled for equation " << my_system.name()
             << " Level "<< Level << " dofs " << my_system._A[Level]->n() << std::endl;

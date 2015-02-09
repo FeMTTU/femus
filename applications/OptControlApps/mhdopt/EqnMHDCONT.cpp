@@ -62,6 +62,9 @@ using namespace femus;
   double        Lapxi_g[DIMENSION];
 //===========================
 
+  my_system._A[Level]->zero();
+  my_system._b[Level]->zero();
+
   {//BEGIN VOLUME
 
     const uint mesh_vb = VV;
@@ -477,6 +480,9 @@ const double phii_g = currgp._phi_ndsQLVB_g[BeOld._FEord][i];
     
 // END BOUNDARY  // **************************
 
+        my_system._A[Level]->close();
+        my_system._b[Level]->close();
+  
 #ifdef DEFAULT_PRINT_INFO
  std::cout << " GenMatRhs " << my_system.name() << ": assembled  Level " << Level
            << " with " << my_system._A[Level]->m() << " dofs " << std::endl;

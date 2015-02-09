@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
   ml_msh.PrintInfo();
   
   MultiLevelSolution ml_sol(&ml_msh);
-  ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,2);
+  ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
 
   MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
   ml_prob.SetMeshTwo(&mesh);

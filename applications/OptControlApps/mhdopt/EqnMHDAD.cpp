@@ -49,7 +49,10 @@ const int NonStatMHDAD = (int) ml_prob.GetInputParser().get("NonStatMHDAD");
   const uint    meshql = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");  //======== ELEMENT MAPPING =======
 
 //========= BCHandling =========
-  const double penalty_val =   ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
+  const double penalty_val =   ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");  
+  
+        my_system._A[Level]->zero();
+        my_system._b[Level]->zero();
 
    {//BEGIN VOLUME    
 
@@ -419,6 +422,8 @@ for (uint fe = 0; fe < QL; fe++)     {
  
   }//END BOUNDARY ************************
   
+        my_system._A[Level]->close();
+        my_system._b[Level]->close();
   
 #ifdef DEFAULT_PRINT_INFO
  std::cout << " GenMatRhs " << my_system.name() << ": assembled  Level " << Level

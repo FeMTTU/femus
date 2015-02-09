@@ -38,7 +38,8 @@ namespace femus {
     
 //========== Current "Geometric Element"  ========================
   uint elnodes = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
-  _el_conn.resize(elnodes);   
+  _el_conn.resize(elnodes);
+  _el_conn_new.resize(elnodes);   
    _xx_nds.resize(_mesh.get_dim()*elnodes);
     _el_xm.resize(_mesh.get_dim());  
 //========== Current "Geometric Element"  ========================
