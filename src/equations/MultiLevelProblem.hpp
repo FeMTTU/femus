@@ -57,9 +57,6 @@ public:
 
     /** Constructor */
     MultiLevelProblem(MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
-    
-    /** Empty constructor for inheritance TODO remove soon*/
-    MultiLevelProblem() {};
 
     /** Destructor */
     ~MultiLevelProblem() {};
@@ -185,10 +182,12 @@ public:
   
   inline const  MultiLevelMeshTwo & GetMeshTwo() const { return  *_mesh; }
   
+    /**  */
   inline void SetQtyMap(const QuantityMap * qtymap_in) { _qtymap = qtymap_in; return; }
    
   inline const QuantityMap & GetQtyMap() const { return  *_qtymap; }
 
+    /**  */
   inline const std::vector<elem_type*>  & GetElemType(const unsigned dim) const { return  _elem_type[dim - 1]; }
     
   inline const std::vector< std::vector<elem_type*> >  & GetElemType() const { return  _elem_type; }
@@ -197,6 +196,7 @@ public:
   
   void SetQruleAndElemType(const std::string quadr_order_in);
   
+    /**  */
   inline const FemusInputParser<double> &  GetInputParser() const { return *_phys; }
 
   void SetInputParser(const FemusInputParser<double> * parser_in) { _phys = parser_in; return; }
