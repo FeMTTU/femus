@@ -255,7 +255,7 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
-    currelem.SetElDofsBc(Level);
+    currelem.SetElDofsBc();
     
       VelOld.GetElemDofs(Level);
     pressOld.GetElemDofs(Level);
@@ -605,7 +605,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.ConvertElemCoordsToMappingOrd(xyz);
      ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
 
-     currelem.SetElDofsBc(Level);
+     currelem.SetElDofsBc();
      
      VelOld.GetElemDofs(Level);
      pressOld.GetElemDofs(Level);

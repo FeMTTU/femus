@@ -91,7 +91,7 @@ class CurrentQuantity;
     void  ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const;
     
     /** needs the EQUATION basically */
-    void  SetElDofsBc(const uint Level);
+    void  SetElDofsBc();
  
     /** */
     inline const elem_type* GetElemType(const uint fe) const { return  _elem_type[fe]; }

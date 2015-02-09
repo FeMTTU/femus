@@ -114,7 +114,7 @@
 // 3)BC VALUES 
 // 1) and 2) are taken in a single vector, 3) are considered separately
       
-    currelem.SetElDofsBc(Level);
+    currelem.SetElDofsBc();
 
   Tempold.GetElemDofs(Level);
     Temp2.GetElemDofs(Level);

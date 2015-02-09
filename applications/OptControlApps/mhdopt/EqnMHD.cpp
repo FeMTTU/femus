@@ -155,7 +155,7 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
      currelem.ConvertElemCoordsToMappingOrd(xyz);
      ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
 
-    currelem.SetElDofsBc(Level);
+    currelem.SetElDofsBc();
     
        bhomOld.GetElemDofs(Level);
     LagMultOld.GetElemDofs(Level);
@@ -448,7 +448,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.ConvertElemCoordsToMappingOrd(xyz);
     ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
    
-     currelem.SetElDofsBc(Level);
+     currelem.SetElDofsBc();
      
         bhomOld.GetElemDofs(Level);
      LagMultOld.GetElemDofs(Level);

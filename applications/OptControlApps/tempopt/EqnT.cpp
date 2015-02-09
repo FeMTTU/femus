@@ -199,7 +199,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 // 3)BC VALUES 
 // 1) and 2) are taken in a single vector, 3) are considered separately
       
-    currelem.SetElDofsBc(Level);
+    currelem.SetElDofsBc();
 
   Tempold.GetElemDofs(Level);
     Tlift.GetElemDofs(Level);
@@ -488,7 +488,7 @@ for (uint fe = 0; fe < QL; fe++)     {
       currelem.ConvertElemCoordsToMappingOrd(xyz);
     ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
      
-      currelem.SetElDofsBc(Level);
+      currelem.SetElDofsBc();
       
        Tempold.GetElemDofs(Level);
          Tlift.GetElemDofs(Level);

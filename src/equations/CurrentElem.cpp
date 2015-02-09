@@ -68,9 +68,9 @@ namespace femus {
 
 
 
-void CurrentElem::SetElDofsBc(const uint Level)  {
+void CurrentElem::SetElDofsBc()  {
 
-/*CHECK*/   if (_vol_iel_DofObj >= _mesh._n_elements_vb_lev[VV][Level] ) { std::cout << "Out of the node_dof map FE KK range" << std::endl; abort();}
+/*CHECK*/   if (_vol_iel_DofObj >= _mesh._n_elements_vb_lev[VV][_Level] ) { std::cout << "Out of the node_dof map FE KK range" << std::endl; abort();}
 
   const uint Lev_pick_bc_dof = _mesh._NoLevels -1;  //we use the FINE Level as reference
   
@@ -89,11 +89,11 @@ for (uint ivar=0; ivar < _eqn->_dofmap._nvars[fe]; ivar++)    {
 	     else if (fe == KK)  DofObj = _vol_iel_DofObj;
 	     
           const uint     indx  = d + ivar*_elem_type[fe]->GetNDofs() + off_local_el[fe];
-	  _el_dof_indices[indx] = _eqn->_dofmap.GetDof(Level,fe,ivar,DofObj);
+	  _el_dof_indices[indx] = _eqn->_dofmap.GetDof(_Level,fe,ivar,DofObj);
 
          if (fe < KK ) { const uint dofkivar = _eqn->_dofmap.GetDof(Lev_pick_bc_dof,fe,ivar,DofObj); 
              _bc_eldofs[indx] = _eqn->_bcond._bc[dofkivar]; }
-         else if (fe == KK)    _bc_eldofs[indx] = _eqn->_bcond._bc_fe_kk[Level][ DofObj + ivar*_eqn->_dofmap._DofNumLevFE[Level][KK] ];
+         else if (fe == KK)    _bc_eldofs[indx] = _eqn->_bcond._bc_fe_kk[_Level][ DofObj + ivar*_eqn->_dofmap._DofNumLevFE[_Level][KK] ];
 	 }
     } 
 } // end fe
