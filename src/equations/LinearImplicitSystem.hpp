@@ -66,9 +66,9 @@ public:
     }
 
     /**
-    * The \p NonlinearSolver defines the default interface used to
-    * solve the nonlinear_implicit system.  This class handles all the
-    * details of interfacing with various nonlinear algebra packages
+    * The \p LinearSolver defines the default interface used to
+    * solve the linear_implicit system.  This class handles all the
+    * details of interfacing with various linear algebra packages
     * like PETSc or LASPACK. Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
     */
     vector<LinearEquationSolver*> _LinSolver;

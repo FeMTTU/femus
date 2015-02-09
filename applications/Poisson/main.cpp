@@ -30,7 +30,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
   return test;
 }
 
-void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
 
 void show_usage()
 {
@@ -186,7 +186,7 @@ int main(int argc,char **argv) {
       std::cout << " PDE problem to solve: Poisson " << std::endl;
 
       LinearImplicitSystem & system2 = ml_prob.add_system<LinearImplicitSystem>("Poisson");
-      system2.AddSolutionToSytemPDE("Sol");
+      system2.AddSolutionToSystemPDE("Sol");
     
       // reading source function
       std::string function;
@@ -203,7 +203,7 @@ int main(int argc,char **argv) {
 #endif
 
       // Set MG Options
-      system2.AttachAssembleFunction(AssemblePoissonMatrixandRhs);
+      system2.SetAssembleFunction(AssemblePoissonMatrixandRhs);
     
       unsigned int max_number_linear_iteration = inputparser->getValue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.max_number_linear_iteration",6);
       system2.SetMaxNumberOfLinearIterations(max_number_linear_iteration);
@@ -273,7 +273,7 @@ int main(int argc,char **argv) {
 
 
 //------------------------------------------------------------------------------------------------------------
-void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
 
   //pointers and references
   Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
@@ -330,7 +330,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
  
     
   // Set to zeto all the entries of the Global Matrix
-  if(assembe_matrix) 
+  if(assemble_matrix) 
     myKK->zero();
 
   
@@ -352,7 +352,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     // set to zero all the entries of the FE matrices
     F.resize(nve);
     memset(&F[0],0,nve*sizeof(double));
-    if(assembe_matrix) {
+    if(assemble_matrix) {
       B.resize(nve*nve);
       memset(&B[0],0,nve*nve*sizeof(double));
     }
@@ -454,7 +454,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 		  +(src_term - resRhs) * supgPhi )*weight;
 		    
 	  //END RESIDUALS A block ===========================
-	  if(assembe_matrix) {
+	  if(assemble_matrix) {
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve; j++) {
 	      double lap=0;
@@ -468,7 +468,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 	      B[i*nve+j] += lap + adv ;
 	    } // end phij loop
 	  } // end phii loop
-	} // endif assembe_matrix
+	} // endif assemble_matrix
       } // end gauss point loop
 
       if( ml_prob._ml_sol->_Use_GenerateBdc_new ){ 
@@ -571,11 +571,11 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
     //Sum the local matrices/vectors into the global Matrix/vector
 
     myRES->add_vector_blocked(F,KK_dof);
-    if(assembe_matrix) myKK->add_matrix_blocked(B,KK_dof,KK_dof);
+    if(assemble_matrix) myKK->add_matrix_blocked(B,KK_dof,KK_dof);
   } //end list of elements loop for each subdomain
 
   myRES->close();
-  if(assembe_matrix) myKK->close();
+  if(assemble_matrix) myKK->close();
 
   // ***************** END ASSEMBLY *******************
 
