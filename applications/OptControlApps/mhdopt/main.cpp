@@ -12,6 +12,7 @@
 #include "FemusInit.hpp"
 #include "Files.hpp"
 #include "MultiLevelMeshTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
 #include "ElemType.hpp"
@@ -25,14 +26,8 @@
 
 
 // application includes
-#include "Opt_conf.hpp"
 #include "OptLoop.hpp"
 #include "OptQuantities.hpp"
-#include "EqnNS.hpp"
-#include "EqnNSAD.hpp"
-#include "EqnMHD.hpp"
-#include "EqnMHDAD.hpp"
-#include "EqnMHDCONT.hpp"
 
 #ifdef HAVE_LIBMESH
 #include "libmesh/libmesh.h"
@@ -40,8 +35,11 @@
 
 using namespace femus;
 
-
-// double funzione(double t , const double* xyz) {return 1.;} 
+  void GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+  void GenMatRhsNSAD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+  void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+  void GenMatRhsMHDAD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+  void GenMatRhsMHDCONT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
 
 // =======================================
 // MHD optimal control problem
@@ -107,53 +105,62 @@ int main(int argc, char** argv) {
           XDMFWriter::PrintMeshLinear(files.GetOutputPath(),mesh);
       
   // ===== QuantityMap =========================================
-  QuantityMap  qty_map(mesh,&physics_map);
-
+  QuantityMap  qty_map;
+  qty_map.SetMeshTwo(&mesh);
+  qty_map.SetInputParser(&physics_map);
 //================================
 // ======= Add QUANTITIES ========  
 //================================
-  MagnFieldHom bhom("Qty_MagnFieldHom",qty_map,mesh.get_dim(),FE_MAGNFIELDHOM);     qty_map.set_qty(&bhom);  
-  MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,mesh.get_dim(),FE_MAGNFIELDEXT);     qty_map.set_qty(&Bext);  
+  MagnFieldHom bhom("Qty_MagnFieldHom",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&bhom);  
+  MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&Bext);  
 
 //consistency check
  if (bhom._dim !=  Bext._dim)     {std::cout << "main: inconsistency" << std::endl;abort();}
  if (bhom._FEord !=  Bext._FEord) {std::cout << "main: inconsistency" << std::endl;abort();}
 
- MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,FE_MAGNFIELDHOMLAGMULT);     qty_map.set_qty(&bhom_lag_mult);
- MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,FE_MAGNFIELDEXTLAGMULT);     qty_map.set_qty(&Bext_lag_mult);
- MagnFieldHomAdj                  bhom_adj("Qty_MagnFieldHomAdj",qty_map,mesh.get_dim(),FE_MAGNFIELDHOM);        qty_map.set_qty(&bhom_adj);
- MagnFieldHomLagMultAdj  bhom_lag_mult_adj("Qty_MagnFieldHomLagMultAdj",qty_map,1,FE_MAGNFIELDHOMLAGMULT);  qty_map.set_qty(&bhom_lag_mult_adj);
+ MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,LL);     qty_map.AddQuantity(&bhom_lag_mult);
+ MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,LL);     qty_map.AddQuantity(&Bext_lag_mult);
+ MagnFieldHomAdj                  bhom_adj("Qty_MagnFieldHomAdj",qty_map,mesh.get_dim(),QQ);        qty_map.AddQuantity(&bhom_adj);
+ MagnFieldHomLagMultAdj  bhom_lag_mult_adj("Qty_MagnFieldHomLagMultAdj",qty_map,1,LL);  qty_map.AddQuantity(&bhom_lag_mult_adj);
 
-  Pressure  pressure("Qty_Pressure",qty_map,1,FE_PRESSURE);            qty_map.set_qty(&pressure);
-  Velocity  velocity("Qty_Velocity",qty_map,mesh.get_dim(),FE_VELOCITY);   qty_map.set_qty(&velocity);  
+  Pressure  pressure("Qty_Pressure",qty_map,1,LL);            qty_map.AddQuantity(&pressure);
+  Velocity  velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.AddQuantity(&velocity);  
 
-  VelocityAdj  velocity_adj("Qty_VelocityAdj",qty_map,mesh.get_dim(),FE_VELOCITY);         qty_map.set_qty(&velocity_adj);  
-  PressureAdj pressure_adj("Qty_PressureAdj",qty_map,1,FE_PRESSURE);                  qty_map.set_qty(&pressure_adj);
-  DesVelocity des_velocity("Qty_DesVelocity",qty_map,mesh.get_dim(),FE_DESVELOCITY);       qty_map.set_qty(&des_velocity);
+  VelocityAdj  velocity_adj("Qty_VelocityAdj",qty_map,mesh.get_dim(),QQ);         qty_map.AddQuantity(&velocity_adj);  
+  PressureAdj pressure_adj("Qty_PressureAdj",qty_map,1,LL);                  qty_map.AddQuantity(&pressure_adj);
+  DesVelocity des_velocity("Qty_DesVelocity",qty_map,mesh.get_dim(),QQ);       qty_map.AddQuantity(&des_velocity);
  
 //consistency check
- if (velocity._dim !=  des_velocity._dim) {std::cout << "main: inconsistency" << std::endl;abort();}
- if (velocity._FEord !=  des_velocity._FEord) {std::cout << "main: inconsistency" << std::endl;abort();}
+ if (velocity._dim !=  des_velocity._dim) {std::cout << "main: inconsistency" << std::endl; abort();}
+ if (velocity._FEord !=  des_velocity._FEord) {std::cout << "main: inconsistency" << std::endl; abort();}
 
 // #if TEMP_DEPS==1
-  Temperature       temperature("Qty_Temperature",qty_map,1,FE_TEMPERATURE);      qty_map.set_qty(&temperature);  
-  Density               density("Qty_Density",qty_map,1,0);                       qty_map.set_qty(&density);   
-  Viscosity           viscosity("Qty_Viscosity",qty_map,1,0);                     qty_map.set_qty(&viscosity);
-  HeatConductivity    heat_cond("Qty_HeatConductivity",qty_map,1,0);              qty_map.set_qty(&heat_cond);
-  SpecificHeatP      spec_heatP("Qty_SpecificHeatP",qty_map,1,0);                 qty_map.set_qty(&spec_heatP);
+  Temperature       temperature("Qty_Temperature",qty_map,1,QQ);      qty_map.AddQuantity(&temperature);  
+  Density               density("Qty_Density",qty_map,1,QQ);                       qty_map.AddQuantity(&density);   
+  Viscosity           viscosity("Qty_Viscosity",qty_map,1,QQ);                     qty_map.AddQuantity(&viscosity);
+  HeatConductivity    heat_cond("Qty_HeatConductivity",qty_map,1,QQ);              qty_map.AddQuantity(&heat_cond);
+  SpecificHeatP      spec_heatP("Qty_SpecificHeatP",qty_map,1,QQ);                 qty_map.AddQuantity(&spec_heatP);
 // #endif  
 
   
 //================================
 //==== END Add QUANTITIES ========
-//================================
+//================================  
+  
+  // ====== Start new main =================================
+  MultiLevelMesh ml_msh;
+  ml_msh.GenerateCoarseBoxMesh(8,8,8,0,1,0,1,0,1,HEX27,"seventh");
+//   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+  ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
+  ml_msh.PrintInfo();
+  
+  MultiLevelSolution ml_sol(&ml_msh);
 
-  // ====== MultiLevelProblem =================================
-  MultiLevelProblem equations_map;
-  equations_map.SetMeshTwo(&mesh);
-  equations_map.SetQruleAndElemType("fifth");
-  equations_map.SetInputParser(&physics_map);
-  equations_map.SetQtyMap(&qty_map); 
+  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
+  ml_prob.SetMeshTwo(&mesh);
+  ml_prob.SetQruleAndElemType("fifth");
+  ml_prob.SetInputParser(&physics_map);
+  ml_prob.SetQtyMap(&qty_map); 
   
   
 //===============================================
@@ -162,69 +169,38 @@ int main(int argc, char** argv) {
 //========================================================
 
 #if NS_EQUATIONS==1
-std::vector<Quantity*> InternalVect_NS(2);
-InternalVect_NS[QTYZERO] = &velocity;      velocity.SetPosInAssocEqn(0);
-InternalVect_NS[QTYONE] = &pressure;       pressure.SetPosInAssocEqn(1);
-
-
-  EqnNS & eqnNS = equations_map.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);
-  eqnNS.SetQtyIntVector(InternalVect_NS);
-
- velocity.set_eqn(&eqnNS);
- pressure.set_eqn(&eqnNS);
-
+  SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS",NO_SMOOTHER);
+          eqnNS.AddUnknownToSystemPDE(&velocity); 
+          eqnNS.AddUnknownToSystemPDE(&pressure); 
+          eqnNS.SetAssembleFunction(GenMatRhsNS); 
 #endif
   
 #if NSAD_EQUATIONS==1
-std::vector<Quantity*> InternalVect_NSAD(2);
-InternalVect_NSAD[QTYZERO] = &velocity_adj;     velocity_adj.SetPosInAssocEqn(0);
-InternalVect_NSAD[QTYONE]  = &pressure_adj;     pressure_adj.SetPosInAssocEqn(1);
-
-  EqnNSAD & eqnNSAD = equations_map.add_system<EqnNSAD>("Eqn_NSAD",NO_SMOOTHER); 
-  eqnNSAD.SetQtyIntVector(InternalVect_NSAD);
-
-  velocity_adj.set_eqn(&eqnNSAD);
-  pressure_adj.set_eqn(&eqnNSAD);
-
+  SystemTwo & eqnNSAD = ml_prob.add_system<SystemTwo>("Eqn_NSAD",NO_SMOOTHER); 
+            eqnNSAD.AddUnknownToSystemPDE(&velocity_adj); 
+            eqnNSAD.AddUnknownToSystemPDE(&pressure_adj); 
+            eqnNSAD.SetAssembleFunction(GenMatRhsNSAD);
 #endif
   
 #if MHD_EQUATIONS==1
-std::vector<Quantity*> InternalVect_MHD(2);
-InternalVect_MHD[QTYZERO] = &bhom;             bhom.SetPosInAssocEqn(0);
-InternalVect_MHD[QTYONE]  = &bhom_lag_mult;    bhom_lag_mult.SetPosInAssocEqn(1);
-
-  EqnMHD & eqnMHD = equations_map.add_system<EqnMHD>("Eqn_MHD",NO_SMOOTHER);
-  eqnMHD.SetQtyIntVector(InternalVect_MHD);
-
-             bhom.set_eqn(&eqnMHD);
-    bhom_lag_mult.set_eqn(&eqnMHD);
- 
+  SystemTwo & eqnMHD = ml_prob.add_system<SystemTwo>("Eqn_MHD",NO_SMOOTHER);
+           eqnMHD.AddUnknownToSystemPDE(&bhom); 
+           eqnMHD.AddUnknownToSystemPDE(&bhom_lag_mult); 
+           eqnMHD.SetAssembleFunction(GenMatRhsMHD);
 #endif
 
 #if MHDAD_EQUATIONS==1
-std::vector<Quantity*> InternalVect_MHDAD(2);
-InternalVect_MHDAD[QTYZERO] = &bhom_adj;             bhom_adj.SetPosInAssocEqn(0);
-InternalVect_MHDAD[QTYONE]  = &bhom_lag_mult_adj;    bhom_lag_mult_adj.SetPosInAssocEqn(1);
-	
-  EqnMHDAD & eqnMHDAD = equations_map.add_system<EqnMHDAD>("Eqn_MHDAD",NO_SMOOTHER);
-  eqnMHDAD.SetQtyIntVector(InternalVect_MHDAD);
-  
-           bhom_adj.set_eqn(&eqnMHDAD);
-  bhom_lag_mult_adj.set_eqn(&eqnMHDAD);
-  
+  SystemTwo & eqnMHDAD = ml_prob.add_system<SystemTwo>("Eqn_MHDAD",NO_SMOOTHER);
+             eqnMHDAD.AddUnknownToSystemPDE(&bhom_adj); 
+             eqnMHDAD.AddUnknownToSystemPDE(&bhom_lag_mult_adj); 
+             eqnMHDAD.SetAssembleFunction(GenMatRhsMHDAD);
 #endif
 
 #if MHDCONT_EQUATIONS==1
-std::vector<Quantity*> InternalVect_MHDCONT(2);
-InternalVect_MHDCONT[QTYZERO] = &Bext;            Bext.SetPosInAssocEqn(0);
-InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn(1);
-
-  EqnMHDCONT & eqnMHDCONT = equations_map.add_system<EqnMHDCONT>("Eqn_MHDCONT",NO_SMOOTHER);
-  eqnMHDCONT.SetQtyIntVector(InternalVect_MHDCONT);
-
-                 Bext.set_eqn(&eqnMHDCONT);
-        Bext_lag_mult.set_eqn(&eqnMHDCONT);
-  
+  SystemTwo & eqnMHDCONT = ml_prob.add_system<SystemTwo>("Eqn_MHDCONT",NO_SMOOTHER);
+               eqnMHDCONT.AddUnknownToSystemPDE(&Bext); 
+               eqnMHDCONT.AddUnknownToSystemPDE(&Bext_lag_mult); 
+               eqnMHDCONT.SetAssembleFunction(GenMatRhsMHDCONT);
 #endif  
    
 //================================
@@ -232,20 +208,24 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
 //========= associate an EQUATION to QUANTITIES ========
 //================================
 
-   for (MultiLevelProblem::const_system_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {
-        SystemTwo* mgsol = static_cast<SystemTwo*>(eqn->second);
-        
+   for (MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
+     
+        SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
+// //=====================
+//     sys -> init();
+
 //=====================
-    mgsol -> _dofmap.ComputeMeshToDof();
+    sys -> init_sys();
 //=====================
-    mgsol -> GenerateBdc();
-    mgsol -> GenerateBdcElem();
+    sys -> _dofmap.ComputeMeshToDof();
 //=====================
-    mgsol -> ReadMGOps(files.GetOutputPath());
+    sys -> initVectors();
 //=====================
-    mgsol -> initVectors();     //TODO can I do it earlier than this position?
+    sys -> Initialize();
 //=====================
-    mgsol -> Initialize();
+    sys -> _bcond.GenerateBdc();
+//=====================
+    sys -> ReadMGOps(files.GetOutputPath());
     
     }
 
@@ -253,13 +233,10 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());
   OptLoop opt_loop(files,loop_map); 
 
-  opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case   /*TODO fileIO */ 
+  opt_loop.TransientSetup(ml_prob);  // reset the initial state (if restart) and print the Case   /*TODO fileIO */ 
 
-  opt_loop.optimization_loop(equations_map);
+  opt_loop.optimization_loop(ml_prob);
     
-// // //   eqnNS->FunctionIntegral (0,funzione);
-// // //   eqnNS->FunctionIntegral (1,funzione);
-
 //============= prepare default for next restart ==========  
 // at this point, the run has been completed 
 // well, we do not know whether for the whole time range time.N-M.xmf
@@ -269,7 +246,7 @@ InternalVect_MHDCONT[QTYONE]  = &Bext_lag_mult;   Bext_lag_mult.SetPosInAssocEqn
   files.log_petsc();
 
 // ============  clean ================================
-  equations_map.clear();
+  ml_prob.clear();
   mesh.clear();
   
   return 0;

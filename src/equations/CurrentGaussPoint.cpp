@@ -273,7 +273,7 @@ double CurrentGaussPoint<FM_DIM>::JacVectBB_g(CurrentQuantity& xyz )/* const*/ {
   
   //here you check assert(_is_ready_for_Jac);
 
-//     const uint spacedim = _eqnmap._mesh._dim;
+//     const uint spacedim = GetMLProb()._mesh._dim;
 
     const uint    Order = xyz._FEord;  //order of the coordinate transformation 
     const uint     xoff = xyz._ndof;

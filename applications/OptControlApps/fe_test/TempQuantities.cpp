@@ -30,9 +30,9 @@ Temperature::Temperature(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 // =================================================
 void Temperature::Function_txyz(const double/* t*/, const double* xp,double* temp) const {
 
-  const double Tref = _qtymap._physmap->get("Tref");
+  const double Tref = _qtymap.GetInputParser()->get("Tref");
 
-  Box* box = static_cast<Box*>(_qtymap._mesh.GetDomain());  
+  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());  
   
   temp[0] = 100.*(xp[0])*( ( box->_le[0] - box->_lb[0]) - xp[0])/Tref;
  
@@ -66,24 +66,24 @@ void Temperature::heatflux_txyz(const double /*t*/, const double* /*xyz*/, doubl
 // T' and its adjoint must be Dirichlet homogeneous everywhere on the boundary, by definition.
 
 
-  const double bdry_toll = _qtymap._mesh.GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
   
 
-  Box* box= static_cast<Box*>(_qtymap._mesh.GetDomain());
+  Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
-  std::vector<double> lb(_qtymap._mesh.get_dim());
-  std::vector<double> le(_qtymap._mesh.get_dim());
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
   lb[0] = box->_lb[0]; //already nondimensionalized
   le[0] = box->_le[0];
   lb[1] = box->_lb[1];
   le[1] = box->_le[1];
-  if (_qtymap._mesh.get_dim() == 3) {
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
   lb[2] = box->_lb[2];
   le[2] = box->_le[2];
   }
   
-  std::vector<double> x_rotshift(_qtymap._mesh.get_dim());
-  _qtymap._mesh._domain->TransformPointToRef(xp,&x_rotshift[0]);
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
   
   
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
@@ -102,7 +102,7 @@ void Temperature::heatflux_txyz(const double /*t*/, const double* /*xyz*/, doubl
 //       bc_flag[0]=0;
   }
 
- if (_qtymap._mesh.get_dim() == 3) {
+ if (_qtymap.GetMeshTwo()->get_dim() == 3) {
    
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
 //      bc_flag[0]=0;

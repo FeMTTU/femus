@@ -10,11 +10,6 @@
 
 namespace femus {
 
-//prototypes that can even stay outside of a class
-  double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn);
-
-  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMeshTwo* mesh);
-  
   
 // Forward class
 class Files;
@@ -37,6 +32,109 @@ public:
 
 };
 
+
+
+//prototypes that can even stay outside of a class
+  double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn);
+
+  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMeshTwo* mesh);
+  
+
+  
+
+  
+  //********* SPACE DIMENSION, ONLY IN APPLICATION!!! ************
+// #define DIMENSION    2
+  #define DIMENSION    3
+
+//****************************************
+
+//TODO the Quantity #defines should be used to 
+//INCLUDE or EXCLUDE a certain PHYSICAL PHENOMENON from the system.
+// of course, this is not trivial, because not only you should 
+// avoid defining quantities,
+// but, if these quantities are unknowns of equations,
+// you should avoid defining the equations.autoOr, if these quantities are not unknowns 
+// of equations, but they participate to other equations as external quantities,
+// you should remove them from the element matrices...
+// So, that would mean removing the lines from the loop,
+// and you can do that only with a define...
+//So, it is not so easy to setup a so-called "PHYSICAL configuration..."
+
+
+//===================================
+//===========PHYSICAL FRAMEWORKS FLAGS 
+//====================================
+
+//*********************************
+#define VELOCITY_QTY 1
+//Provided quantities: Velocity
+//*********************************
+#define PRESSURE_QTY 1
+//Provided quantities: Pressure
+//*********************************
+#define BMAG_QTY 1
+//Provided quantities: MagnFieldHom
+//                     MagnFieldHomLagMult
+//                     MagnFieldExt
+//                     MagnFieldExtLagMult
+//*********************************
+#define OPT_CONTROL 1
+//Provided quantities: DesVelocity
+//*********************************
+#define TEMP_QTY 1
+//Provided quantities: Temperature
+
+
+
+//**********************************
+ #define NS_EQUATIONS    1
+//===== Provides: Velocity, Pressure
+//===== C++Name: EqnNS
+//===== MapName: "Eqn_NS"
+#if (NS_EQUATIONS==1)  //Dependency of this Equation on the Quantities it computes for
+    #define VELOCITY_QTY 1
+    #define PRESSURE_QTY 1
+#endif
+//**********************************
+ #define     MHD_EQUATIONS 1
+//=== Provides: MagnFieldHom
+//             (MagnFieldHomLagMult)
+//===== C++Name: EqnMHD
+//===== MapName: "Eqn_MHD"
+
+//**********************************
+   #define MHDCONT_EQUATIONS 1
+//=== Provides: MagnFieldExt
+//             (MagnFieldExtLagMult)
+//===== C++Name: EqnMHDCONT
+//===== MapName: "Eqn_MHDCONT"
+
+//**********************************
+   #define    NSAD_EQUATIONS 1
+//=== Provides: AdjVelocity
+//              AdjPressure
+//===== C++Name: EqnNSAD
+
+//**********************************
+   #define   MHDAD_EQUATIONS 1
+//=== Provides: AdjMagnFieldHom
+//             (AdjMagnFieldHomLagMult)
+//===== C++Name: EqnMHDAD
+
+//**************************************************************************************
+//***************************** EQNMHD *********************************************************
+//**************************************************************************************
+
+#define ADV_MHD  1.
+
+#define LAP_MHD 1
+
+//**************************************************************************************
+//**************************************************************************************
+
+
+#define LAPADJ 1.
 
 
 

@@ -18,6 +18,7 @@
 #include <stdlib.h> 
 #include <string.h> 
 
+namespace femus {
 
 Gauss::Gauss(const char *geom_elem, const char *order_gauss) : _order(order_gauss) {
       if (!strcmp(order_gauss,"zero")  || !strcmp(order_gauss,"first")) {
@@ -270,3 +271,4 @@ const double line_gauss::Gauss4[2][5]= {{0.23692688505619,0.47862867049937,0.568
 };
 
 
+} //end namespace femus     

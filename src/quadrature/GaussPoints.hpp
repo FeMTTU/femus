@@ -19,6 +19,8 @@
 #include <vector>
 #include <string>
 
+namespace femus {
+
   class hex_gauss {
   public:
     static const unsigned GaussPoints[5];
@@ -128,7 +130,7 @@
      
 
      
-     
+} //end namespace femus     
 
 
 #endif

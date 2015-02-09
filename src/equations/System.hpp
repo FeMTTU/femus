@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: System
- Authors: Simone Bnà
+ Authors: Simone Bnà, Giorgio Bornia
 
  Copyright (c) FEMTTU
  All rights reserved.
@@ -42,9 +42,6 @@ public:
     /** Constructor.  Optionally initializes required data structures. */
     System (MultiLevelProblem& ml_prob, const std::string& name, const unsigned int number, const MgSmoother & smoother_type);
 
-    /** Empty constructor. TODO remove soon */
-    System (MultiLevelProblem& ml_prob, const std::string& name_in, const unsigned int number_in);
-    
     /** destructor */
     virtual ~System();
 
@@ -64,11 +61,15 @@ public:
     }
 
     /** Associate the solution variables to the system PDE */
-    void AddSolutionToSytemPDE(const char solname[]);
+    void AddSolutionToSystemPDE(const char solname[]);
 
+    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+    
     /** Register a user function to use in assembling the system matrix and RHS. */
-    void AttachAssembleFunction (void fptr(MultiLevelProblem &ml_prob, unsigned level,
-                                           const unsigned &gridn, const bool &assembe_matrix));
+    void SetAssembleFunction (void fptr(MultiLevelProblem &ml_prob, unsigned level,
+                                           const unsigned &gridn, const bool &assemble_matrix));
+
+    AssembleFunctionType  GetAssembleFunction();
 
     /** Solves the system.  Should be overloaded in derived systems. */
     virtual void solve () {};
@@ -82,28 +83,44 @@ public:
     /** Get the index of the Solution "solname" for this system */
     unsigned GetSolPdeIndex(const char solname[]);
 
-
+    /** Get MultiLevelProblem */
+    const MultiLevelProblem &  GetMLProb() const { return _equation_systems; }
+    
+    /** Get MultiLevelProblem */
+    MultiLevelProblem &  GetMLProb() { return _equation_systems; }
+    
+    /** Get Number of Levels */
+    inline const unsigned GetGridn() const { return _gridn; }
+    
 protected:
 
     /** Constant reference to the \p EquationSystems object used for the simulation. */
     MultiLevelProblem& _equation_systems;
 
+    /** Mesh vector, dimension _gridn */
     vector<Mesh*> _msh;
 
+    /** Solution vector, dimension _gridn */
     vector<Solution*> _solution;
 
+    /** pointer */
     MultiLevelSolution* _ml_sol;
+
+    /** pointer */
     MultiLevelMesh* _ml_msh;
 
+    /** indices of the solutions, dynamical dimension */
     vector <unsigned> _SolSystemPdeIndex;
 
+    /** Number of Levels */
     unsigned _gridn;
 
+    /** Number of Totally Refined Levels */
     unsigned _gridr;
 
     /** Function that assembles the system. */
     void (* _assemble_system_function) (MultiLevelProblem &ml_prob, unsigned level,
-                                        const unsigned &gridn, const bool &assembe_matrix);
+                                        const unsigned &gridn, const bool &assemble_matrix);
 
     /** The number associated with this system */
     const unsigned int _sys_number;
