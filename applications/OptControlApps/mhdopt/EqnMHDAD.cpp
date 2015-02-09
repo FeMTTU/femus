@@ -140,16 +140,16 @@ const int NonStatMHDAD = (int) ml_prob.GetInputParser().get("NonStatMHDAD");
 
     currelem.SetElDofsBc();
     
-           BhomAdjOld.GetElemDofs(Level);
-    BhomLagMultAdjOld.GetElemDofs(Level);
+           BhomAdjOld.GetElemDofs();
+    BhomLagMultAdjOld.GetElemDofs();
 
-     if ( Vel._eqnptr != NULL )      Vel.GetElemDofs(Level);
+     if ( Vel._eqnptr != NULL )      Vel.GetElemDofs();
     else                             Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
-    if ( VelAdj._eqnptr != NULL ) VelAdj.GetElemDofs(Level);
+    if ( VelAdj._eqnptr != NULL ) VelAdj.GetElemDofs();
     else                          VelAdj._qtyptr->FunctionDof(VelAdj,time,&xyz_refbox._val_dofs[0]);
-    if ( Bhom._eqnptr != NULL )     Bhom.GetElemDofs(Level);
+    if ( Bhom._eqnptr != NULL )     Bhom.GetElemDofs();
     else                            Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
-    if ( Bext._eqnptr != NULL )     Bext.GetElemDofs(Level);
+    if ( Bext._eqnptr != NULL )     Bext.GetElemDofs();
     else                            Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
 
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
@@ -362,8 +362,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 
      currelem.SetElDofsBc();
      
-            BhomAdjOld.GetElemDofs(Level);
-     BhomLagMultAdjOld.GetElemDofs(Level);
+            BhomAdjOld.GetElemDofs();
+     BhomLagMultAdjOld.GetElemDofs();
    
 //============ BC =======
        int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(BhomAdjOld,BhomLagMultAdjOld); 

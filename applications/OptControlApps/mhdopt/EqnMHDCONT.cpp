@@ -139,18 +139,18 @@ using namespace femus;
 
     currelem.SetElDofsBc();
     
-         BeOld.GetElemDofs(Level);  
-    LagMultOld.GetElemDofs(Level);
+         BeOld.GetElemDofs();  
+    LagMultOld.GetElemDofs();
 
  
     
-    if ( Vel._eqnptr != NULL )        Vel.GetElemDofs(Level);
+    if ( Vel._eqnptr != NULL )        Vel.GetElemDofs();
     else                              Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
-    if ( VelAdj._eqnptr != NULL )  VelAdj.GetElemDofs(Level);
+    if ( VelAdj._eqnptr != NULL )  VelAdj.GetElemDofs();
     else                           VelAdj._qtyptr->FunctionDof(VelAdj,time,&xyz_refbox._val_dofs[0]);
-    if ( Bhom._eqnptr != NULL )      Bhom.GetElemDofs(Level);
+    if ( Bhom._eqnptr != NULL )      Bhom.GetElemDofs();
     else                             Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
-    if ( BhomAdj._eqnptr != NULL ) BhomAdj.GetElemDofs(Level);
+    if ( BhomAdj._eqnptr != NULL ) BhomAdj.GetElemDofs();
     else                           BhomAdj._qtyptr->FunctionDof(BhomAdj,time,&xyz_refbox._val_dofs[0]);    
     
 
@@ -410,8 +410,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 
      currelem.SetElDofsBc();
      
-          BeOld.GetElemDofs(Level);
-     LagMultOld.GetElemDofs(Level);
+          BeOld.GetElemDofs();
+     LagMultOld.GetElemDofs();
 
 //============ BC =======
        int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(BeOld,LagMultOld); 

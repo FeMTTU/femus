@@ -147,8 +147,8 @@
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
     currelem.SetElDofsBc();
-      VelOld.GetElemDofs(Level);
-    pressOld.GetElemDofs(Level);
+      VelOld.GetElemDofs();
+    pressOld.GetElemDofs();
 
 //======== TWO PHASE WORLD
     double rho_nd =  1.;
@@ -434,8 +434,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 
      currelem.SetElDofsBc();
      
-       VelOld.GetElemDofs(Level);
-     pressOld.GetElemDofs(Level);
+       VelOld.GetElemDofs();
+     pressOld.GetElemDofs();
 
 //============ BC =======
        int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(VelOld,pressOld); 

@@ -116,9 +116,9 @@
       
     currelem.SetElDofsBc();
 
-  Tempold.GetElemDofs(Level);
-    Temp2.GetElemDofs(Level);
-    Temp3.GetElemDofs(Level);
+  Tempold.GetElemDofs();
+    Temp2.GetElemDofs();
+    Temp3.GetElemDofs();
     
 // ===============      
 // Now the point is this: there are several functions of space

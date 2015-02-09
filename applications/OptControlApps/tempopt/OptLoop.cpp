@@ -147,11 +147,11 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
       int el_flagdom = ElFlagControl(xyz_refbox._el_average,mesh);
 //====================     
  
-    if ( Tempold._eqnptr != NULL )   Tempold.GetElemDofs(Level);
+    if ( Tempold._eqnptr != NULL )   Tempold.GetElemDofs();
     else                             Tempold._qtyptr->FunctionDof(Tempold,0.,&xyz_refbox._val_dofs[0]);
-    if ( Tlift._eqnptr != NULL )       Tlift.GetElemDofs(Level);
+    if ( Tlift._eqnptr != NULL )       Tlift.GetElemDofs();
     else                               Tlift._qtyptr->FunctionDof(Tlift,0.,&xyz_refbox._val_dofs[0]);
-    if ( Tdes._eqnptr != NULL )         Tdes.GetElemDofs(Level);
+    if ( Tdes._eqnptr != NULL )         Tdes.GetElemDofs();
     else                                Tdes._qtyptr->FunctionDof(Tdes,0.,&xyz_refbox._val_dofs[0]);    
 
 
@@ -271,7 +271,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
       currelem.ConvertElemCoordsToMappingOrd(xyz);
       mesh->TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
      
-     Tlift.GetElemDofs(Level);
+     Tlift.GetElemDofs();
 
 
   for (uint qp = 0; qp < el_ngauss; qp++) {

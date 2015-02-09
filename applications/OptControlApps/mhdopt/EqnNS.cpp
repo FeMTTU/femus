@@ -257,18 +257,18 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
     currelem.SetElDofsBc();
     
-      VelOld.GetElemDofs(Level);
-    pressOld.GetElemDofs(Level);
+      VelOld.GetElemDofs();
+    pressOld.GetElemDofs();
 
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
  #if (BMAG_QTY==1)
-  if ( Bext._eqnptr != NULL )  Bext.GetElemDofs(Level); 
+  if ( Bext._eqnptr != NULL )  Bext.GetElemDofs(); 
   else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
-  if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs(Level);   
+  if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs();   
   else                         Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
 #endif
 #if (TEMP_QTY==1)
-   if ( Temp._eqnptr != NULL ) Temp.GetElemDofs(Level);
+   if ( Temp._eqnptr != NULL ) Temp.GetElemDofs();
      else                      Temp._qtyptr->FunctionDof(Temp,time,&xyz_refbox._val_dofs[0]);
 #endif
 
@@ -607,8 +607,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 
      currelem.SetElDofsBc();
      
-     VelOld.GetElemDofs(Level);
-     pressOld.GetElemDofs(Level);
+     VelOld.GetElemDofs();
+     pressOld.GetElemDofs();
 
 //============ BC =======
        int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(VelOld,pressOld); 

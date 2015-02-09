@@ -573,9 +573,9 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     int el_flagdom = ElFlagControl(xyz_refbox._el_average,mesh);
 //=======        
 
-    if ( Vel._eqnptr != NULL )       Vel.GetElemDofs(Level);
+    if ( Vel._eqnptr != NULL )       Vel.GetElemDofs();
     else                             Vel._qtyptr->FunctionDof(Vel,0./*time*/,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
-    if ( VelDes._eqnptr != NULL ) VelDes.GetElemDofs(Level);
+    if ( VelDes._eqnptr != NULL ) VelDes.GetElemDofs();
     else                          VelDes._qtyptr->FunctionDof(VelDes,0./*time*/,&xyz_refbox._val_dofs[0]);    
 
 //AAA time is picked as a function pointer of the time C library i think...

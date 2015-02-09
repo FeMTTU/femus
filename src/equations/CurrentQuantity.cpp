@@ -238,7 +238,7 @@ void CurrentQuantity::ExtendDofs() {
 // while in all the other rhs we have the RESIDUALS.
 
 //TODO this routine must be fixed a lot
-void CurrentQuantity::GetElemDofs(const uint Level)  {
+void CurrentQuantity::GetElemDofs()  {
   
   //we should put some try catch or something, to make sure that what we are calling here is already correctly filled as it should be
   //TODO FROM EQUATION HERE
@@ -264,10 +264,10 @@ void CurrentQuantity::GetElemDofs(const uint Level)  {
   int length_nodedof [QL];  
   length_nodedof[QQ] = _currEl._mesh._NoNodesXLev[_eqnptr->GetGridn() - 1];
   length_nodedof[LL] = _currEl._mesh._NoNodesXLev[_eqnptr->GetGridn() - 1];
-  length_nodedof[KK] = _currEl._mesh._n_elements_vb_lev[VV][Level];
+  length_nodedof[KK] = _currEl._mesh._n_elements_vb_lev[VV][_currEl.GetLevel()];
 
    int off_total = 0;
-   for (uint i = 0; i < _qtyptr->_pos; i++) off_total += _eqnptr->GetUnknownQuantitiesVector()[i]->_dim * _eqnptr->_dofmap._DofNumLevFE[ Level ][ _eqnptr->GetUnknownQuantitiesVector()[i]->_FEord ];
+   for (uint i = 0; i < _qtyptr->_pos; i++) off_total += _eqnptr->GetUnknownQuantitiesVector()[i]->_dim * _eqnptr->_dofmap._DofNumLevFE[ _currEl.GetLevel() ][ _eqnptr->GetUnknownQuantitiesVector()[i]->_FEord ];
 
    int DofObj = 0;
 

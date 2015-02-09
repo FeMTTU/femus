@@ -201,9 +201,9 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
       
     currelem.SetElDofsBc();
 
-  Tempold.GetElemDofs(Level);
-    Tlift.GetElemDofs(Level);
-     TAdj.GetElemDofs(Level);
+  Tempold.GetElemDofs();
+    Tlift.GetElemDofs();
+     TAdj.GetElemDofs();
      
 
 // ===============      
@@ -226,10 +226,10 @@ int domain_flag = ElFlagControl(xyz_refbox._el_average,&ml_prob.GetMeshTwo());
   // it is better to avoid using GetElDofs if the Vect is internal, only if external  
   //Do not use GetElDofs if you want to pick an intermediate dof...
       
-   if ( vel._eqnptr != NULL )  vel.GetElemDofs(Level);
+   if ( vel._eqnptr != NULL )  vel.GetElemDofs();
    else                        vel._qtyptr->FunctionDof(vel,time,&xyz_refbox._val_dofs[0]);
 
-   if ( Tdes._eqnptr != NULL )  Tdes.GetElemDofs(Level);
+   if ( Tdes._eqnptr != NULL )  Tdes.GetElemDofs();
    else                         Tdes._qtyptr->FunctionDof(Tdes,time,&xyz_refbox._val_dofs[0]);
 
 
@@ -490,9 +490,9 @@ for (uint fe = 0; fe < QL; fe++)     {
      
       currelem.SetElDofsBc();
       
-       Tempold.GetElemDofs(Level);
-         Tlift.GetElemDofs(Level);
-          TAdj.GetElemDofs(Level);
+       Tempold.GetElemDofs();
+         Tlift.GetElemDofs();
+          TAdj.GetElemDofs();
 
  //============ FLAGS ================
 //in order to do the flag here, since it is a "TRUE" NATURAL BOUNDARY CONDITION,

@@ -157,15 +157,15 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 
     currelem.SetElDofsBc();
     
-       bhomOld.GetElemDofs(Level);
-    LagMultOld.GetElemDofs(Level);
+       bhomOld.GetElemDofs();
+    LagMultOld.GetElemDofs();
   
 #if BMAG_QTY==1
-    if ( Bext._eqnptr != NULL )  Bext.GetElemDofs(Level);
+    if ( Bext._eqnptr != NULL )  Bext.GetElemDofs();
     else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
 #endif
 #if VELOCITY_QTY==1
-    if ( Vel._eqnptr != NULL )  Vel.GetElemDofs(Level);      //----- for Advection MAT & RHS
+    if ( Vel._eqnptr != NULL )  Vel.GetElemDofs();      //----- for Advection MAT & RHS
     else                        Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
 #endif
     
@@ -450,8 +450,8 @@ for (uint fe = 0; fe < QL; fe++)     {
    
      currelem.SetElDofsBc();
      
-        bhomOld.GetElemDofs(Level);
-     LagMultOld.GetElemDofs(Level);
+        bhomOld.GetElemDofs();
+     LagMultOld.GetElemDofs();
 
 //============ BC =======
        int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(bhomOld,LagMultOld); 
@@ -459,11 +459,11 @@ for (uint fe = 0; fe < QL; fe++)     {
     
 //========== EXTERNAL DOFS ===   
 #if BMAG_QTY==1
-    if ( Bext._eqnptr != NULL )   Bext.GetElemDofs(Level);
+    if ( Bext._eqnptr != NULL )   Bext.GetElemDofs();
     else                          Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
 #endif
 #if VELOCITY_QTY==1
-    if ( Vel._eqnptr != NULL )  Vel.GetElemDofs(Level);
+    if ( Vel._eqnptr != NULL )  Vel.GetElemDofs();
     else                        Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
 #endif
     
