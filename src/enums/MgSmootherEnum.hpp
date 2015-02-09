@@ -4,8 +4,7 @@
 enum MgSmoother {
     VANKA_SMOOTHER=0,
     GMRES_SMOOTHER,
-    ASM_SMOOTHER,
-    NO_SMOOTHER
+    ASM_SMOOTHER
 };
 
 #endif

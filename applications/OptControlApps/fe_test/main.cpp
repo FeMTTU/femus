@@ -114,7 +114,7 @@
 //========= associate an EQUATION to QUANTITIES ========
 //========================================================
 
-  SystemTwo &  eqnT = ml_prob.add_system<SystemTwo>("Eqn_T",NO_SMOOTHER);
+  SystemTwo &  eqnT = ml_prob.add_system<SystemTwo>("Eqn_T");
           eqnT.AddSolutionToSystemPDE("FAKE");
           eqnT.AddUnknownToSystemPDE(&temperature); 
           eqnT.AddUnknownToSystemPDE(&temperature2); 

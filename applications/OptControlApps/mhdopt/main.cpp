@@ -170,7 +170,7 @@ int main(int argc, char** argv) {
 //========================================================
 
 #if NS_EQUATIONS==1
-  SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS",NO_SMOOTHER);
+  SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS");
           eqnNS.AddSolutionToSystemPDE("FAKE");
           eqnNS.AddUnknownToSystemPDE(&velocity); 
           eqnNS.AddUnknownToSystemPDE(&pressure); 
@@ -178,7 +178,7 @@ int main(int argc, char** argv) {
 #endif
   
 #if NSAD_EQUATIONS==1
-  SystemTwo & eqnNSAD = ml_prob.add_system<SystemTwo>("Eqn_NSAD",NO_SMOOTHER); 
+  SystemTwo & eqnNSAD = ml_prob.add_system<SystemTwo>("Eqn_NSAD"); 
             eqnNSAD.AddSolutionToSystemPDE("FAKE");
             eqnNSAD.AddUnknownToSystemPDE(&velocity_adj); 
             eqnNSAD.AddUnknownToSystemPDE(&pressure_adj); 
@@ -186,7 +186,7 @@ int main(int argc, char** argv) {
 #endif
   
 #if MHD_EQUATIONS==1
-  SystemTwo & eqnMHD = ml_prob.add_system<SystemTwo>("Eqn_MHD",NO_SMOOTHER);
+  SystemTwo & eqnMHD = ml_prob.add_system<SystemTwo>("Eqn_MHD");
            eqnMHD.AddSolutionToSystemPDE("FAKE");
            eqnMHD.AddUnknownToSystemPDE(&bhom); 
            eqnMHD.AddUnknownToSystemPDE(&bhom_lag_mult); 
@@ -194,7 +194,7 @@ int main(int argc, char** argv) {
 #endif
 
 #if MHDAD_EQUATIONS==1
-  SystemTwo & eqnMHDAD = ml_prob.add_system<SystemTwo>("Eqn_MHDAD",NO_SMOOTHER);
+  SystemTwo & eqnMHDAD = ml_prob.add_system<SystemTwo>("Eqn_MHDAD");
              eqnMHDAD.AddSolutionToSystemPDE("FAKE");
              eqnMHDAD.AddUnknownToSystemPDE(&bhom_adj); 
              eqnMHDAD.AddUnknownToSystemPDE(&bhom_lag_mult_adj); 
@@ -202,7 +202,7 @@ int main(int argc, char** argv) {
 #endif
 
 #if MHDCONT_EQUATIONS==1
-  SystemTwo & eqnMHDCONT = ml_prob.add_system<SystemTwo>("Eqn_MHDCONT",NO_SMOOTHER);
+  SystemTwo & eqnMHDCONT = ml_prob.add_system<SystemTwo>("Eqn_MHDCONT");
                eqnMHDCONT.AddSolutionToSystemPDE("FAKE");
                eqnMHDCONT.AddUnknownToSystemPDE(&Bext); 
                eqnMHDCONT.AddUnknownToSystemPDE(&Bext_lag_mult); 

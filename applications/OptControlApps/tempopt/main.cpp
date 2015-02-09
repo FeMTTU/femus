@@ -145,13 +145,13 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 //========================================================
 // not all the Quantities need to be unknowns of an equation
 
-  SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS",NO_SMOOTHER);
+  SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS");
           eqnNS.AddSolutionToSystemPDE("FAKE");
           eqnNS.AddUnknownToSystemPDE(&velocity); 
           eqnNS.AddUnknownToSystemPDE(&pressure);
 	  eqnNS.SetAssembleFunction(GenMatRhsNS);
   
-  SystemTwo & eqnT = ml_prob.add_system<SystemTwo>("Eqn_T",NO_SMOOTHER);
+  SystemTwo & eqnT = ml_prob.add_system<SystemTwo>("Eqn_T");
          eqnT.AddSolutionToSystemPDE("FAKE");
          eqnT.AddUnknownToSystemPDE(&temperature);
          eqnT.AddUnknownToSystemPDE(&templift);
