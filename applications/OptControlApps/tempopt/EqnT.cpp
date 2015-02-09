@@ -121,7 +121,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
   
-  CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+  CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 
@@ -184,7 +184,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+    currelem.SetDofobjConnCoords(myproc,iel);
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -197,11 +197,11 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 // 3)BC VALUES 
 // 1) and 2) are taken in a single vector, 3) are considered separately
       
-    currelem.SetElDofsBc(Level);
+    currelem.SetElDofsBc();
 
-  Tempold.GetElemDofs(Level);
-    Tlift.GetElemDofs(Level);
-     TAdj.GetElemDofs(Level);
+  Tempold.GetElemDofs();
+    Tlift.GetElemDofs();
+     TAdj.GetElemDofs();
      
 
 // ===============      
@@ -224,10 +224,10 @@ int domain_flag = ElFlagControl(xyz_refbox._el_average,&ml_prob.GetMeshTwo());
   // it is better to avoid using GetElDofs if the Vect is internal, only if external  
   //Do not use GetElDofs if you want to pick an intermediate dof...
       
-   if ( vel._eqnptr != NULL )  vel.GetElemDofs(Level);
+   if ( vel._eqnptr != NULL )  vel.GetElemDofs();
    else                        vel._qtyptr->FunctionDof(vel,time,&xyz_refbox._val_dofs[0]);
 
-   if ( Tdes._eqnptr != NULL )  Tdes.GetElemDofs(Level);
+   if ( Tdes._eqnptr != NULL )  Tdes.GetElemDofs();
    else                         Tdes._qtyptr->FunctionDof(Tdes,time,&xyz_refbox._val_dofs[0]);
 
 
@@ -429,7 +429,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
 
   
-  CurrentElem       currelem(BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+  CurrentElem       currelem(Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 
@@ -478,17 +478,17 @@ for (uint fe = 0; fe < QL; fe++)     {
       currelem.Mat().zero();
       currelem.Rhs().zero();
 
-      currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+      currelem.SetDofobjConnCoords(myproc,iel);
       currelem.SetMidpoint(); 
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
       currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
      
-      currelem.SetElDofsBc(Level);
+      currelem.SetElDofsBc();
       
-       Tempold.GetElemDofs(Level);
-         Tlift.GetElemDofs(Level);
-          TAdj.GetElemDofs(Level);
+       Tempold.GetElemDofs();
+         Tlift.GetElemDofs();
+          TAdj.GetElemDofs();
 
  //============ FLAGS ================
 //in order to do the flag here, since it is a "TRUE" NATURAL BOUNDARY CONDITION,

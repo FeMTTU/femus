@@ -61,7 +61,8 @@
 
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
-  CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+  CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+  
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
@@ -101,7 +102,7 @@
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+    currelem.SetDofobjConnCoords(myproc,iel);
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -115,11 +116,11 @@
 // 3)BC VALUES 
 // 1) and 2) are taken in a single vector, 3) are considered separately
       
-    currelem.SetElDofsBc(Level);
+    currelem.SetElDofsBc();
 
-  Tempold.GetElemDofs(Level);
-    Temp2.GetElemDofs(Level);
-    Temp3.GetElemDofs(Level);
+  Tempold.GetElemDofs();
+    Temp2.GetElemDofs();
+    Temp3.GetElemDofs();
     
 // ===============      
 // Now the point is this: there are several functions of space

@@ -33,7 +33,7 @@ namespace femus {
    void                grad_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void                curl_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void            ExtendDofs(); //this only needs the CUrrent GAUSS  //No Quantity needed
-   void         GetElemDofs(const uint Level); //this only needs the CUrrent ELEMENT
+   void         GetElemDofs(); //this only needs the CUrrent ELEMENT
    void        SetElemAverage();
   
   //if you have NO Quantity and NO Equation ==========

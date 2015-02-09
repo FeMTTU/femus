@@ -285,23 +285,24 @@ void SystemTwo::initVectors() {
 /// This function generates the initial conditions:
 void SystemTwo::Initialize() {
 
-        CurrentElem       currelem(VV,this,GetMLProb().GetMeshTwo(),GetMLProb().GetElemType());  
-     
+      
         const uint  coords_fine_offset = GetMLProb().GetMeshTwo()._NoNodesXLev[GetGridn()-1];
-        const uint  el_dof_objs = NVE[ GetMLProb().GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
         std::vector<double>      xp(GetMLProb().GetMeshTwo().get_dim());
         std::vector<double> u_value(_dofmap._n_vars);
 
        std::cout << "\n====================== Initialize:  Now we are setting them for all levels! ========================" << "\n \n";
 
     for (uint Level = 0; Level< GetGridn(); Level++) {
+      
+       CurrentElem       currelem(Level,VV,this,GetMLProb().GetMeshTwo(),GetMLProb().GetElemType());  
+        const uint  el_dof_objs = NVE[ GetMLProb().GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 
             uint iel_b = GetMLProb().GetMeshTwo()._off_el[VV][ GetMLProb().GetMeshTwo()._iproc*GetGridn() + Level ];
             uint iel_e = GetMLProb().GetMeshTwo()._off_el[VV][ GetMLProb().GetMeshTwo()._iproc*GetGridn() + Level + 1];
 
 	    for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 	  
-	        currelem.set_el_nod_conn_lev_subd(Level,GetMLProb().GetMeshTwo()._iproc,iel);
+	        currelem.SetDofobjConnCoords(GetMLProb().GetMeshTwo()._iproc,iel);
                 currelem.SetMidpoint();
 
             for (uint q=0; q < _UnknownQuantitiesVector.size() ; q++) {

@@ -80,7 +80,8 @@
 
   for (int iel=0; iel < (nel_e - nel_b); iel++) {
     
-    CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+    CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+    
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
  
   
@@ -139,16 +140,16 @@
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+    currelem.SetDofobjConnCoords(myproc,iel);
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
     currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
-    currelem.SetElDofsBc(Level);
-      VelOld.GetElemDofs(Level);
-    pressOld.GetElemDofs(Level);
+    currelem.SetElDofsBc();
+      VelOld.GetElemDofs();
+    pressOld.GetElemDofs();
 
 //======== TWO PHASE WORLD
     double rho_nd =  1.;
@@ -374,7 +375,7 @@ for (uint fe = 0; fe < QL; fe++)     {
    
   for (uint iel=0; iel < (nel_e - nel_b) ; iel++) {
   
-    CurrentElem       currelem(BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+    CurrentElem       currelem(Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
  
   
@@ -424,16 +425,16 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.Mat().zero();  
      currelem.Rhs().zero();
 
-     currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+     currelem.SetDofobjConnCoords(myproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
      currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
-     currelem.SetElDofsBc(Level);
+     currelem.SetElDofsBc();
      
-       VelOld.GetElemDofs(Level);
-     pressOld.GetElemDofs(Level);
+       VelOld.GetElemDofs();
+     pressOld.GetElemDofs();
 
 //============ BC =======
        int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(VelOld,pressOld); 
