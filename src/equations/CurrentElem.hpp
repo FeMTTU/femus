@@ -36,7 +36,7 @@ class CurrentQuantity;
 
   public:
     
-    CurrentElem(const uint vb, const SystemTwo*, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type);
+    CurrentElem(const uint level, const uint vb, const SystemTwo*, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type);
    ~CurrentElem();
 
     inline const uint  GetVb() const {
@@ -100,7 +100,10 @@ class CurrentQuantity;
      
     /** NODAL DIRICHLET */  
      int Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const CurrentQuantity &Velold_in,const CurrentQuantity& press_in) const;
-   
+ 
+      const uint GetLevel() const {return _Level;}
+     
+     
     //TODO make these private
 //========== Equation-related ========================               
   const SystemTwo * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
@@ -126,7 +129,8 @@ class CurrentQuantity;
    std::vector<double> _el_xm;               /// element center point                                [_spacedimension];
    const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
    const uint _mesh_vb;     //index for the mesh
-    
+
+      const uint _Level;  //the level to which the element belongs
   };
   
 

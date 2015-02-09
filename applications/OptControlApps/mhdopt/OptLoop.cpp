@@ -514,7 +514,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
    const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
+    CurrentElem       currelem(Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
   
   // processor index

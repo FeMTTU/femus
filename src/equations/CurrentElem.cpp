@@ -27,12 +27,13 @@ namespace femus {
 
 
 
-    CurrentElem::CurrentElem(const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type_in ):
+    CurrentElem::CurrentElem(const uint level, const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type_in ):
     _eqn(eqn_in),
     _mesh(mesh),
     _dim(_mesh.get_dim()-vb),
     _elem_type(elem_type_in[mesh.get_dim()-vb -1]),
-    _mesh_vb(vb)
+    _mesh_vb(vb),
+    _Level(level)
     {
     
 //========== Current "Geometric Element"  ========================

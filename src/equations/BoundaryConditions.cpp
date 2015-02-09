@@ -198,8 +198,6 @@ void BoundaryConditions::GenerateBdc() {
 
  //**************************************************   
  //******** ELEM BASED ******************************  
-     CurrentElem       currelem(BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType());
-    const uint el_nnodes_b = NVE[ _dofmap->_mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 
     _bc_fe_kk             =  new int*[_dofmap->_mesh._NoLevels];
     int* DofOff_Lev_kk    =  new int[_dofmap->_mesh._NoLevels];
@@ -223,6 +221,9 @@ void BoundaryConditions::GenerateBdc() {
 
  
     for (uint Level=0; Level <_dofmap->_mesh._NoLevels;Level++)   { //loop over the levels
+      
+    CurrentElem       currelem(Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType());
+    const uint el_nnodes_b = NVE[ _dofmap->_mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 	
         for (uint isubd=0; isubd<_dofmap->_mesh._NoSubdom; ++isubd) {
             uint iel_b = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd + Level];

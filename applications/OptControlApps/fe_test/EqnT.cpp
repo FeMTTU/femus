@@ -56,7 +56,7 @@
     
   const uint mesh_vb = VV;
   
-  CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+  CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
