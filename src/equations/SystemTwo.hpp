@@ -92,8 +92,7 @@ public:
   
           void  initVectors();  ///initialize vectors       //System//
 
-//======= Linear Solvers for every Level ============
-  LinearEquationSolver **_solver;                                                                                                                                                       ///LinearImplicitSystem (all levels)//
+//===================
   void MGSolve(double Eps,int MaxIter, const uint Gamma=DEFAULT_MG_GAMMA, const uint Nc_pre=DEFAULT_NC_PRE,const uint Nc_coarse=DEFAULT_NC_COARSE,const uint Nc_post=DEFAULT_NC_POST);  //LinearImplicitSystem//
   double MGStep(int Level,double Eps1,int MaxIter, const uint Gamma, const uint Nc_pre,const uint Nc_coarse,const uint Nc_post);                                                          //LinearImplicitSystem//
 

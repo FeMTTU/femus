@@ -54,15 +54,7 @@ namespace femus {
 SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
         _dofmap(this,e_map_in.GetMeshTwo()),
         _bcond(&_dofmap),
-        LinearImplicitSystem(e_map_in,eqname_in,number,smoother_type) {
-
-
-    //========= solver package ===========
-    _solver = new LinearEquationSolver*[GetGridn()];
-    for (uint l=0; l < GetGridn(); l++) _solver[l] = LinearEquationSolver::build(l,e_map_in._ml_msh->GetLevel(l),GMRES_SMOOTHER).release();
-    _solver[0]->set_solver_type(GMRES);
-    
-}
+        LinearImplicitSystem(e_map_in,eqname_in,number,smoother_type) { }
 
 
 // ===================================================
@@ -104,11 +96,7 @@ SystemTwo::~SystemTwo() {
     _x_oold.clear();
      _x_tmp.clear();
 
- //========= solver
-    for (uint l = 0; l < GetGridn(); l++)  delete _solver[l];
-    delete []_solver;
-
-    
+   
 }
 
 
@@ -495,7 +483,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << "Level " << Level << " ANorm l1 " << ANorm0 << " bNorm linfty " << bNorm0  << " xNormINITIAL linfty " << xNorm0 << std::endl;
 #endif
 
-        rest = _solver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_LSOLV_C,Nc_coarse);  //****** smooth on the coarsest level
+        rest = _LinSolver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_LSOLV_C,Nc_coarse);  //****** smooth on the coarsest level
 
 #ifdef DEFAULT_PRINT_CONV
         std::cout << " Coarse sol : res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -526,7 +514,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << "Level " << Level << " ANorm l1 " << ANormpre << " bNorm linfty " << bNormpre  << " xNormINITIAL linfty " << xNormpre << std::endl;
 #endif
 
-        rest = _solver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST, Nc_pre); //****** smooth on the finer level
+        rest = _LinSolver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST, Nc_pre); //****** smooth on the finer level
 
 #ifdef DEFAULT_PRINT_CONV
         std::cout << " Pre Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -581,7 +569,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << "Level " << Level << " ANorm l1 " << ANormpost << " bNorm linfty " << bNormpost << " xNormINITIAL linfty " << xNormpost << std::endl;
 #endif
 
-        rest = _solver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST,Nc_post);  //***** smooth on the coarser level
+        rest = _LinSolver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST,Nc_post);  //***** smooth on the coarser level
 
 #ifdef DEFAULT_PRINT_CONV 
         std::cout<<" Post Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;

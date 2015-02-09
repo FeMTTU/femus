@@ -136,6 +136,7 @@
         SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
 // //=====================
     sys -> init();
+    sys -> _LinSolver[0]->set_solver_type(GMRES);  //if I keep PREONLY it doesn't run
 
 //=====================
     sys -> init_sys();
