@@ -136,7 +136,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-      currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+      currelem.SetDofobjConnCoords(myproc,iel);
       currelem.SetMidpoint();
       
       currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -265,7 +265,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
   
     for (int iel=0; iel < (nel_e - nel_b); iel++) {
 
-      currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+      currelem.SetDofobjConnCoords(myproc,iel);
       currelem.SetMidpoint();
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);

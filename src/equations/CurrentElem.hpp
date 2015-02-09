@@ -82,7 +82,7 @@ class CurrentQuantity;
       return _KeM;
     }
     
-    void  set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel);
+    void  SetDofobjConnCoords(const uint isubd_in,const uint iel);
     
     void  SetMidpoint();
     

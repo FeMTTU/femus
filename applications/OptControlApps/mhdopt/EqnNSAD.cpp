@@ -135,7 +135,7 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.set_el_nod_conn_lev_subd(Level,ml_prob.GetMeshTwo()._iproc,iel);
+    currelem.SetDofobjConnCoords(ml_prob.GetMeshTwo()._iproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -362,7 +362,7 @@ for (uint fe = 0; fe < QL; fe++)     {
          currelem.Mat().zero();
 	 currelem.Rhs().zero();
 
-     currelem.set_el_nod_conn_lev_subd(Level,ml_prob.GetMeshTwo()._iproc,iel);
+     currelem.SetDofobjConnCoords(ml_prob.GetMeshTwo()._iproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);

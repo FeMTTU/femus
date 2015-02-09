@@ -128,7 +128,7 @@ const uint myproc = eqnmap_in.GetMeshTwo()._iproc;
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
   
-    currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+    currelem.SetDofobjConnCoords(myproc,iel);
     currelem.SetMidpoint(); 
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);

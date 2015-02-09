@@ -302,7 +302,7 @@ void SystemTwo::Initialize() {
 
 	    for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 	  
-	        currelem.set_el_nod_conn_lev_subd(Level,GetMLProb().GetMeshTwo()._iproc,iel);
+	        currelem.SetDofobjConnCoords(GetMLProb().GetMeshTwo()._iproc,iel);
                 currelem.SetMidpoint();
 
             for (uint q=0; q < _UnknownQuantitiesVector.size() ; q++) {

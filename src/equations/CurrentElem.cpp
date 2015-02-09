@@ -176,7 +176,7 @@ void CurrentElem::PrintOrientation() const {
  
  
 // ========================================================
-//   void CurrentElem::set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel,
+//   void CurrentElem::SetDofobjConnCoords(const uint Level,const uint isubd_in,const uint iel,
 // 				uint el_conn[], double xx[]) const {///get the global node numbers for that element and their coordinates
 ///this routine does not yield the connectivity
 //is this function called when the class members are already filled?
@@ -226,14 +226,14 @@ void CurrentElem::PrintOrientation() const {
   }
 
    // =====================================================================================
-  void CurrentElem::set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel) {
+  void CurrentElem::SetDofobjConnCoords(const uint isubd_in,const uint iel) {
 
     const uint mydim = _mesh.get_dim();
     const uint el_nnodes   = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
           
    for (uint n=0; n<el_nnodes; n++)    {
 
-     _el_conn[n] = _mesh._el_map[_mesh_vb][( iel + _mesh._off_el[_mesh_vb][_mesh._NoLevels*isubd_in + Level] )*el_nnodes+n];
+     _el_conn[n] = _mesh._el_map[_mesh_vb][( iel + _mesh._off_el[_mesh_vb][_mesh._NoLevels*isubd_in + _Level] )*el_nnodes+n];
 
       for (uint idim=0; idim < mydim; idim++) {
         const uint indxn = n+idim*el_nnodes;
@@ -243,10 +243,10 @@ void CurrentElem::PrintOrientation() const {
    
    
     int sum_elems_prev_sd_at_lev = 0;
-      for (uint pr = 0; pr< isubd_in; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[_mesh_vb][_mesh._NoLevels*pr + Level + 1] - _mesh._off_el[_mesh_vb][ _mesh._NoLevels*pr + Level]; }
+      for (uint pr = 0; pr< isubd_in; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[_mesh_vb][_mesh._NoLevels*pr + _Level + 1] - _mesh._off_el[_mesh_vb][ _mesh._NoLevels*pr + _Level]; }
     uint iel_DofObj = iel + sum_elems_prev_sd_at_lev;
     if       (_mesh_vb == VV)  { _vol_iel_DofObj = iel_DofObj; }   
-    else if  (_mesh_vb == BB)  { _vol_iel_DofObj = _mesh._el_bdry_to_vol[Level][iel_DofObj]; }  
+    else if  (_mesh_vb == BB)  { _vol_iel_DofObj = _mesh._el_bdry_to_vol[_Level][iel_DofObj]; }  
    
 
    
