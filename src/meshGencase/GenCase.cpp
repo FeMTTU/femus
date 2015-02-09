@@ -96,7 +96,7 @@ void GenCase::GenerateCase(const std::string output_path)   {
 
     CreateMeshStructuresLevSubd(output_path);    //only proc==0
     
-    ComputeMGOperators(output_path);    //only proc==0
+    ComputeAndPrintMGOperators(output_path);    //only proc==0
 
     Delete();
 
@@ -625,15 +625,15 @@ void GenCase::CreateMeshStructuresLevSubd(const std::string output_path) {
 
 
 
-void GenCase::ComputeMGOperators(const std::string output_path) {
+void GenCase::ComputeAndPrintMGOperators(const std::string output_path) {
 
     if (_iproc == 0)   {  //serial function
       
             //this involves only VOLUME STUFF, no boundary stuff
             // instead, not only NODES but also ELEMENTS are used
-        ComputeMatrix(output_path); 
-        ComputeProl(output_path); 
-        ComputeRest(output_path);
+        ComputeAndPrintMatrix(output_path); 
+        ComputeAndPrintProl(output_path); 
+        ComputeAndPrintRest(output_path);
 
     } //end proc==0
 
@@ -712,7 +712,7 @@ void GenCase::Delete() {
 //stabiliti dalla suddivisione in proc e livelli
 
 
-void GenCase::ComputeProl(const std::string output_path)  {
+void GenCase::ComputeAndPrintProl(const std::string output_path)  {
 
   int NegativeOneFlag = -1;
   double   PseudoZero = 1.e-8;
@@ -1295,7 +1295,7 @@ void GenCase::ComputeProl(const std::string output_path)  {
 //remember that for the KK elements I dont need eliminating multiple occurrences
 
 
-void GenCase::ComputeMatrix(const std::string output_path) {
+void GenCase::ComputeAndPrintMatrix(const std::string output_path) {
 
 #ifdef DEFAULT_PRINT_INFO
     std::cout << " GenCase::compute_matrix:  start \n";
@@ -1632,7 +1632,7 @@ void GenCase::ComputeMatrix(const std::string output_path) {
 // otherwise, you would not just need to update the sparsity pattern
 
 
-void GenCase::ComputeRest(const std::string output_path) {
+void GenCase::ComputeAndPrintRest(const std::string output_path) {
 
   int NegativeOneFlag = -1;
   double   PseudoZero = 1.e-8;

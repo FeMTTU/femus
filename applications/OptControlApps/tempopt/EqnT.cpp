@@ -1,4 +1,6 @@
-#include "EqnT.hpp"
+#ifndef __eqnt_hpp__
+#define __eqnt_hpp__
+
 
 #include "FemusDefault.hpp"
 
@@ -25,10 +27,7 @@
 #include "paral.hpp"
 
 // application
-#include "Temp_conf.hpp"
 #include "TempQuantities.hpp"
-#include "EqnNS.hpp"
-
 
 
 // The question is: WHERE is the ORDER of the VARIABLES established?
@@ -44,21 +43,6 @@
 // So you should associate SCALAR VARIABLES to COMPONENTS of QUANTITIES.
 // The first time when you start associating scalar variables to quantities
 // is when you set the BC's
-// ======================================================
-EqnT::EqnT(MultiLevelProblem& equations_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
-    SystemTwo(equations_map_in,eqname_in,number,smoother_type) {
-
-//========= MG solver ===================
-  for (uint l=0;l<_NoLevels;l++)  _solver[l]->set_solver_type(GMRES);
-  
-//============= DIR PENALTY===============
-   _Dir_pen_fl = 0;
-  
-}
-
-
-//================ DESTRUCTOR    
-      EqnT::~EqnT() {    }
 
 
 // ================================================================================
@@ -88,31 +72,35 @@ EqnT::EqnT(MultiLevelProblem& equations_map_in, const std::string & eqname_in, c
 
 
 /// This function assembles the matrix and the rhs:
-void  EqnT::GenMatRhs(const uint Level) {
+void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix) {
 
-  const double time = 0.; // _eqnmap._timeloop._curr_time;
+  //if we are just a function not inside a class, we have to retrieve ourselves...
+  SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_T");
+
+  
+  const double time = 0.; // ml_prob._timeloop._curr_time;
 
 //========== PROCESSOR INDEX
-  const uint myproc = _mesh._iproc;
+  const uint myproc = ml_prob.GetMeshTwo()._iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
-  const double    dt = 1.; //_eqnmap._timeloop._timemap.get("dt");
-  const uint Nonstat = _phys.get("NonStatTEMP");
+  const double    dt = 1.; //ml_prob._timeloop._timemap.get("dt");
+  const uint Nonstat = ml_prob.GetInputParser().get("NonStatTEMP");
   
 //========= BCHandling =========
-  const double penalty_val = _mesh.GetRuntimeMap().get("penalty_val");    
+  const double penalty_val = ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
 
   //======== ELEMENT MAPPING =======
-  const uint space_dim =       _mesh.get_dim();
-  const uint  meshql   = (int) _mesh.GetRuntimeMap().get("meshql");
-  const uint  mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
+  const uint space_dim =       ml_prob.GetMeshTwo().get_dim();
+  const uint  meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");
+  const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
 
   //====== reference values ========================
-  const double IRe = 1./_phys.get("Re");
-  const double IPr = 1./_phys.get("Pr");
-  const double alphaT  = _phys.get("alphaT");
-  const double alphaL2 = _phys.get("alphaL2");
-  const double alphaH1 = _phys.get("alphaH1");
+  const double IRe = 1./ml_prob.GetInputParser().get("Re");
+  const double IPr = 1./ml_prob.GetInputParser().get("Pr");
+  const double alphaT  = ml_prob.GetInputParser().get("alphaT");
+  const double alphaL2 = ml_prob.GetInputParser().get("alphaL2");
+  const double alphaH1 = ml_prob.GetInputParser().get("alphaH1");
   
   //==== AUXILIARY ==============
     double* dphijdx_g = new double[space_dim];
@@ -127,31 +115,31 @@ void  EqnT::GenMatRhs(const uint Level) {
  {//BEGIN VOLUME
  const uint mesh_vb = VV;
   
-  CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());    
-  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
+  CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
-    Tempold._qtyptr   = _QtyInternalVector[0]; 
+    Tempold._qtyptr   = my_system.GetUnknownQuantitiesVector()[0]; 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //====================================
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
+    Tlift._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempLift");//_UnknownQuantitiesVector[1]; 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
     CurrentQuantity TAdj(currgp);
-    TAdj._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
+    TAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempAdj");//_UnknownQuantitiesVector[2]; 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
     
 #if FOURTH_ROW==1
     CurrentQuantity Press2(currgp);
-    Press2._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_Pressure_2"); 
+    Press2._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Pressure_2"); 
     Press2.VectWithQtyFillBasic();
     Press2.Allocate();
 #endif
@@ -168,25 +156,25 @@ void  EqnT::GenMatRhs(const uint Level) {
   CurrentQuantity xyz_refbox(currgp);  //no quantity
     xyz_refbox._dim      = space_dim;
     xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-    xyz_refbox._ndof     = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+    xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
     xyz_refbox.Allocate();
   
   //==================
     CurrentQuantity vel(currgp);
-    vel._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_Velocity"); 
+    vel._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity"); 
     vel.VectWithQtyFillBasic();
     vel.Allocate();
     
 //===============Tdes=====================
     CurrentQuantity Tdes(currgp);
-    Tdes._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempDes"); 
+    Tdes._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
 
   
 
-   const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
-   const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
+   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+   const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
 
 // ==========================================  
 // ==========================================  
@@ -201,7 +189,7 @@ void  EqnT::GenMatRhs(const uint Level) {
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
 
     
 //MY EQUATION
@@ -217,7 +205,6 @@ void  EqnT::GenMatRhs(const uint Level) {
     Tlift.GetElemDofs(Level);
      TAdj.GetElemDofs(Level);
      
-    if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
 
 // ===============      
 // Now the point is this: there are several functions of space
@@ -229,7 +216,7 @@ void  EqnT::GenMatRhs(const uint Level) {
 
   xyz_refbox.SetElemAverage();
   
-int domain_flag = ElFlagControl(xyz_refbox._el_average,&_mesh);
+int domain_flag = ElFlagControl(xyz_refbox._el_average,&ml_prob.GetMeshTwo());
 //====================    
     
 //===== FILL the DOFS of the EXTERNAL QUANTITIES: you must assure that for every Vect the quantity is set correctly
@@ -246,7 +233,7 @@ int domain_flag = ElFlagControl(xyz_refbox._el_average,&_mesh);
    else                         Tdes._qtyptr->FunctionDof(Tdes,time,&xyz_refbox._val_dofs[0]);
 
 
-   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
    for (uint qp=0; qp< el_ngauss; qp++) {
 
@@ -257,7 +244,7 @@ for (uint fe = 0; fe < QL; fe++)   {
 }
 	  
 const double      det = dt*currgp.JacVectVV_g(xyz);
-const double dtxJxW_g = det*_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+const double dtxJxW_g = det*ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { 
@@ -426,8 +413,8 @@ for (uint fe = 0; fe < QL; fe++)     {
       }   //end i (row)
     } // end of the quadrature point qp-loop
 
-       _A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-       _b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+       my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+       my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
   } // end of element loop
   // *****************************************************************
 
@@ -438,25 +425,25 @@ for (uint fe = 0; fe < QL; fe++)     {
    
  const uint mesh_vb = BB;
   
-  CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());    
-  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,_eqnmap.GetQrule(currelem.GetDim()));
+  CurrentElem       currelem(BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
-    Tempold._qtyptr   = _QtyInternalVector[0]; 
+    Tempold._qtyptr   = my_system.GetUnknownQuantitiesVector()[0]; 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //====================================
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempLift");//_QtyInternalVector[1]; 
+    Tlift._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempLift");//_UnknownQuantitiesVector[1]; 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
     CurrentQuantity TAdj(currgp);
-    TAdj._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempAdj");//_QtyInternalVector[2]; 
+    TAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempAdj");//_UnknownQuantitiesVector[2]; 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
     
@@ -472,19 +459,19 @@ for (uint fe = 0; fe < QL; fe++)     {
   CurrentQuantity xyz_refbox(currgp);  //no quantity
     xyz_refbox._dim      = space_dim;
     xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-    xyz_refbox._ndof     = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+    xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
     xyz_refbox.Allocate();
     
 //===============Tdes=====================
     CurrentQuantity Tdes(currgp);
-    Tdes._qtyptr   = _eqnmap.GetQtyMap().get_qty("Qty_TempDes"); 
+    Tdes._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempDes"); 
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
 
   
 
-   const uint nel_e = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level+1];
-   const uint nel_b = _mesh._off_el[mesh_vb][_NoLevels*myproc+Level];
+   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+   const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
 
 // ==========================================  
 // ==========================================     
@@ -499,7 +486,7 @@ for (uint fe = 0; fe < QL; fe++)     {
       currelem.SetMidpoint(); 
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
      
       currelem.SetElDofsBc(Level);
       
@@ -507,21 +494,7 @@ for (uint fe = 0; fe < QL; fe++)     {
          Tlift.GetElemDofs(Level);
           TAdj.GetElemDofs(Level);
 
-     if (_Dir_pen_fl == 1) Bc_ConvertToDirichletPenalty(currelem.GetDim(),Tempold._FEord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified!
-  
  //============ FLAGS ================
-     double el_penalty = 0.;
-     int pen_sum=0;
-     for (uint i=0; i< Tempold._ndof; i++)   pen_sum += currelem.GetBCDofFlag()[i];
-//pen_sum == 0: all the nodes must be zero, so that ALL THE NODES of that face are set properly, even if with a penalty integral and not with the nodes!
-//this is a "FALSE" NATURAL boundary condition, it is ESSENTIAL actually
-     if (pen_sum == 0/*< el_n_dofs porcata*/) { el_penalty = penalty_val;   }  //strictly minor for Dirichlet penalty, i.e. AT LEAST ONE NODE to get THE WHOLE ELEMENT
-                                                           //also for Neumann flag is the same
-                                                           
-//you should check that when you impose nodal bc flags you have to involve exactly one element for bc==0...
-//but on the other hand you will not impose bc==1 on all nodes for the element
-//So, it is recommended that for Dirichlet conditions you set ALL the NODES of that element to ZERO
-
 //in order to do the flag here, since it is a "TRUE" NATURAL BOUNDARY CONDITION,
 //it only suffices that SOME OF THE NODES ARE with bc=1, AT LEAST ONE
 int el_Neum_flag=0;
@@ -532,7 +505,7 @@ int el_Neum_flag=0;
 
 //====================================
 
-   const uint el_ngauss = _eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp=0; qp< el_ngauss; qp++) {
 
@@ -542,12 +515,12 @@ int el_Neum_flag=0;
     currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp); 
   }
         const double  det   = dt*currgp.JacVectBB_g(xyz);
-        const double dtxJxW_g = det * _eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+        const double dtxJxW_g = det * ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
        xyz.val_g();
        
-       static_cast<Temperature*>(_eqnmap.GetQtyMap().get_qty("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
+       static_cast<Temperature*>(ml_prob.GetQtyMap().GetQuantity("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
    
 	Tempold.val_g(); //For the penalty Dirichlet //i need this for interpolating the old function at the gauss point
 
@@ -559,24 +532,16 @@ int el_Neum_flag=0;
        currelem.Rhs()(i) +=
           currelem.GetBCDofFlag()[i]*
          el_Neum_flag*dtxJxW_g*(-QfluxDn_g)*phii_g    // beware of the sign  //this integral goes in the first equation
-	 + el_penalty*dtxJxW_g*Tempold._val_g[0]*phii_g  //clearly, if you continue using bc=0 for setting nodal Dirichlet, this must go outside
 	 ; 
 	 
-         if (_Dir_pen_fl == 1) {
-            for (uint j=0; j<Tempold._ndof; j++) {
-               double phij_g = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
-	       currelem.Mat()(i,j) += el_penalty*dtxJxW_g*phij_g*phii_g;
-	    } 
-          }
-
 	  //end of j loop
 	}
           // end of i loop
     }
         // end BDRYelement gaussian integration loop
         
-        _A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-        _b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+        my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+        my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
    
   }
       // end of BDRYelement loop
@@ -586,8 +551,8 @@ int el_Neum_flag=0;
 
   
 #ifdef DEFAULT_PRINT_INFO
-  std::cout << " Matrix and RHS assembled for equation " << name()
-            << " Level "<< Level << " dofs " << _A[Level]->n() << std::endl;
+  std::cout << " Matrix and RHS assembled for equation " << my_system.name()
+            << " Level "<< Level << " dofs " << my_system._A[Level]->n() << std::endl;
 #endif
 
   return;
@@ -822,3 +787,4 @@ int el_Neum_flag=0;
 // converge fino ad alpha massimo molto piccolo.
 // Se la regione di controllo e' lontana dal boundary control, allora converge fino ad un alpha max molto piu' grande.
 
+#endif

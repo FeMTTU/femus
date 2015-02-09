@@ -1,4 +1,4 @@
-RULES FOR DEVELOPING FEMUS
+SOME RULES FOR DEVELOPING FEMUS - draft
 
 - Use std::cout, do not use printf for output.
 
@@ -17,7 +17,7 @@ FEMuS includes,
 - Try to put the includes EXPLICITLY WHERE THEY HAVE TO BE, 
   and not thinking that somewhere some include will lead me to the file i need...
 
-- In the SCRIPTS and in the MAKEFILES, almost all the variables have a FM_ or FEMUS_ prefix.
+- In the SCRIPTS, almost all the variables have a FM_ or FEMUS_ prefix.
  The variables without this prefix are like this because 
  they are defined for external packages
  For instance, PETSC_DIR and PETSC_ARCH are used to COMPILE PETSC.
@@ -28,13 +28,4 @@ FEMuS includes,
  - when you change the name of a file, header or source, recompile all the applications
    and make sure that everything compiles correctly.
    
- - when you start a file, put the source code among the NAMESPACE 
- 
- 
-   
-========== "DO-IT-YOURSELF" DEBUG SNIPPETS   
-//manual breakpoint
-// #ifdef HAVE_MPI
-// MPI_Barrier(MPI_COMM_WORLD);
-// #endif
-//   std::cout << "***** Up to this point ****** " << std::endl; abort();
+ - when you start a file, put the source code among the "namespace femus"

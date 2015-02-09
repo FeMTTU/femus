@@ -53,6 +53,7 @@ void MeshRefinement::FlagAllElementsToBeRefined() {
 
 //-------------------------------------------------------------------
 void MeshRefinement::FlagElementsToBeRefinedByUserDefinedFunction() {
+  
     _mesh.el->InitRefinedToZero();
    
     //refine based on the function SetRefinementFlag defined in the main;

@@ -6,7 +6,7 @@
 
 namespace femus {
 
-void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
     
   clock_t AssemblyTime=0;
   clock_t start_time, end_time;

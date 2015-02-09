@@ -2593,7 +2593,7 @@ void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t
         for (;pos!=pos_e;pos++) {
             SystemTwo* eqn = static_cast<SystemTwo*>(pos->second);
             XDMFWriter::write_system_solutions(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn);    // initial solution
-            XDMFWriter::write_system_solutions_bc(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn,eqn->_bc,eqn->_bc_fe_kk);            // boundary condition
+            XDMFWriter::write_system_solutions_bc(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn,eqn->_bcond._bc,eqn->_bcond._bc_fe_kk);            // boundary condition
         }
 
     } //end iproc
