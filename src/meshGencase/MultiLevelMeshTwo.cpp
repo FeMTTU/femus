@@ -161,28 +161,6 @@ void MultiLevelMeshTwo::clear ()  {
 }
 
 
-// ========================================================
-//This function transforms the node coordinates into the reference node coordinates
-  void MultiLevelMeshTwo::TransformElemNodesToRef(const uint elem_dim,const double* xx_qnds, double* refbox_xyz) const {
-   
-   double*   x_in = new double[_dim];
-   double*   x_out = new double[_dim];
-  const uint el_nds = NVE[ _geomelem_flag[elem_dim-1] ][BIQUADR_FE];
-
-      for (uint n=0;n < el_nds ;n++) {
-	
-   for (uint idim=0;idim < _dim; idim++)  x_in[idim] = xx_qnds[n + idim*el_nds];
-  
-  _domain->TransformPointToRef(x_in,x_out);
-
-   for (uint idim=0;idim < _dim; idim++)  refbox_xyz[n + idim*el_nds] = x_out[idim];
-   
-      }
-   
-  delete[] x_in;
-  delete[] x_out; 
-  return; 
- }
 
 
 // ========================================================

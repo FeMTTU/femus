@@ -29,10 +29,13 @@ using std::endl;
 
 namespace femus {
 
+ const unsigned elem_type::_fe_old_to_new[QL] = {2,0,3};
+ const unsigned elem_type::_fe_new_to_old[NFE_FAMS] = {1,-7,0,2,-7};
+  
 unsigned elem_type::_refindex=1;
 
 //   Constructor
-  elem_type::elem_type(const char *geom_elem, const char *order_gauss) : _gauss(geom_elem, order_gauss) {  }
+  elem_type::elem_type(const char *geom_elem, const char *order_gauss) : _gauss(geom_elem, order_gauss) {}
 
 
 elem_type::~elem_type() {
@@ -47,116 +50,16 @@ elem_type::~elem_type() {
   
   delete _pt_basis;
   
-};
-
-//----------------------------------------------------------------------------------------------------
-// build function TODO DEALLOCATE at destructor TODO FEFamilies
-//-----------------------------------------------------------------------------------------------------
-
- elem_type*  elem_type::build(const std::string geomel_id_in, const uint fe_family_in, const char* gauss_order) {
-
-  switch(fe_family_in) {
-
-// ================================================================================
-  case(QQ):  {  /*"biquadratic"*/
-    
-     if (!strcmp(geomel_id_in.c_str(),"hex")) {  
-        return new elem_type_3D("hex","biquadratic", gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"wedge")) {
-        return new elem_type_3D("wedge","biquadratic", gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"tet")) {
-        return new elem_type_3D("tet","biquadratic", gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"quad")) {
-        return new elem_type_2D("quad","biquadratic", gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"tri")) {
-        return new elem_type_2D("tri","biquadratic", gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"line")) { 
-        return new elem_type_1D("line","biquadratic", gauss_order);
-      }
-      else {std::cout << "Geometric element not recognized" << std::endl; abort();}
-    
-    break;
-  } //end feorder QQ
-
-// ================================================================================
-
-// ================================================================================
-  case(LL): {  /*"linear"*/
-    
-    
-     if (!strcmp(geomel_id_in.c_str(),"hex")) {  
-        return new elem_type_3D("hex","linear", gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"wedge")) {
-        return new elem_type_3D("wedge","linear", gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"tet")) {
-        return new elem_type_3D("tet","linear", gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"quad")) {
-        return new elem_type_2D("quad","linear", gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"tri")) {
-        return new elem_type_2D("tri","linear",  gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"line")) { 
-        return new elem_type_1D("line","linear", gauss_order);
-      }
-      else {std::cout << "Geometric element not recognized" << std::endl; abort();}
-    
-    break;
-  } //end feorder LL
-// ================================================================================
-
-
-// ================================================================================
-  case(KK): {  /*"constant"*/
-    
-
-     if (!strcmp(geomel_id_in.c_str(),"hex")) {  
-        return new elem_type_3D("hex","constant", gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"wedge")) {
-        return new elem_type_3D("wedge","constant", gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"tet")) {
-        return new elem_type_3D("tet","constant", gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"quad")) {
-        return new elem_type_2D("quad","constant", gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"tri")) {
-        return new elem_type_2D("tri","constant",  gauss_order);
-      }
-      else if (!strcmp(geomel_id_in.c_str(),"line")) { 
-        return new elem_type_1D("line","constant", gauss_order);
-      }
-      else {std::cout << "Geometric element not recognized" << std::endl; abort();}
-    
-    break;
-  }  //end feorder KK
-
-// ================================================================================
-  default: {
-    std::cout << "FE family not implemented yet" << std::endl;
-    abort();
-  }
-
-  }  //end switch fe order
-
 }
+
 
 //----------------------------------------------------------------------------------------------------
 // evaluate shape functions at all quadrature points  TODO DEALLOCATE at destructor TODO FEFamilies TODO change HEX27 connectivity
 //-----------------------------------------------------------------------------------------------------
 
-void elem_type::EvaluateShapeAtQP(const std::string geomel_id_in, const uint fe_family_in) {
+void elem_type::EvaluateShapeAtQP(const std::string geomel_id_in,const std::string fe_in) {
 
+if (  (!strcmp(fe_in.c_str(),"disc_linear"))  || (!strcmp(fe_in.c_str(),"quadratic")) ) {  std::cout << "BEWARE, family not supported yet" << std::endl; return; }
 
 // ============== allocate canonical shape ==================================================================
          _phi_mapGD = new double*[GetGaussRule().GetGaussPointsNumber()];// TODO valgrind, remember to DEALLOCATE THESE, e.g. with smart pointers
@@ -178,7 +81,7 @@ const unsigned from_femus_to_libmesh[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,1
 // from libmesh to eu connectivity
 const unsigned from_libmesh_to_femus[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,21,22,23,24,20,25,26};
 
-if ( fe_family_in == QQ && GetDim() == 3  && (!strcmp(geomel_id_in.c_str(),"hex")) ) {
+if ( (!strcmp(fe_in.c_str(),"biquadratic")) && GetDim() == 3  && (!strcmp(geomel_id_in.c_str(),"hex")) ) {
             std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "REMEMBER THAT ONLY HEX27 HAS A DIFFERENT CONNECTIVITY MAP"  << std::endl;
 
       for (int ig = 0; ig < GetGaussRule().GetGaussPointsNumber(); ig++) {
@@ -549,6 +452,10 @@ elem_type_1D::elem_type_1D(const char *geom_elem, const char *order, const char 
     }
   }
   
+ //===================== 
+  EvaluateShapeAtQP(geom_elem,order);
+
+  
 }
 
   
@@ -710,6 +617,10 @@ elem_type_2D::elem_type_2D(const char *geom_elem, const char *order, const char 
       _d2phidxideta[i][j] = _pt_basis->eval_d2phidxdy(_IND[j],x);
     }
   }
+  
+ //===================== 
+  EvaluateShapeAtQP(geom_elem,order);
+
   
 }
 
@@ -904,6 +815,11 @@ elem_type_3D::elem_type_3D(const char *geom_elem, const char *order, const char 
       _d2phidzetadxi[i][j] = _pt_basis->eval_d2phidzdx(_IND[j],x);
     }
   }
+  
+  
+ //===================== 
+  EvaluateShapeAtQP(geom_elem,order);
+
 }
 
 //---------------------------------------------------------------------------------------------------------

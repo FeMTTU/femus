@@ -12,4 +12,6 @@ enum  FEType {QQ=0, LL, KK };
 #define LINEAR_FE    0
 #define LINEAR_TYPEEL 0
 
+#define NFE_FAMS 5
+
 #endif

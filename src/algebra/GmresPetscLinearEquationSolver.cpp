@@ -368,6 +368,172 @@ namespace femus {
 		<< "Continuing with PETSC defaults" << std::endl;
     }
   }
+  
+  
+  
+// ========================================================
+std::pair<unsigned int, double> GmresPetscLinearEquationSolver::solve(SparseMatrix&  matrix_in,
+    SparseMatrix&  precond_in,  NumericVector& solution_in,  NumericVector& rhs_in,
+    const double tol,   const unsigned int m_its) {
+
+//   START_LOG("solve()", "PetscLinearSolverM");
+  // Make sure the data passed in are really of Petsc types
+  PetscMatrix* matrix   = libmeshM_cast_ptr<PetscMatrix*>(&matrix_in);
+  PetscMatrix* precond  = libmeshM_cast_ptr<PetscMatrix*>(&precond_in);
+  PetscVector* solution = libmeshM_cast_ptr<PetscVector*>(&solution_in);
+  PetscVector* rhs      = libmeshM_cast_ptr<PetscVector*>(&rhs_in);
+  this->init(matrix);
+
+  int ierr=0;  int its=0, max_its = static_cast<int>(m_its);
+  PetscReal final_resid=0.;
+  // Close the matrices and vectors in case this wasn't already done.
+  matrix->close();  precond->close();  solution->close(); rhs->close();
+//   // If matrix != precond, then this means we have specified a
+//   // special preconditioner, so reset preconditioner type to PCMAT.
+//   if (matrix != precond)
+//     {
+//       this->_preconditioner_type = USER_PRECOND;
+//       this->set_petsc_preconditioner_type ();
+//     }
+  if (this->_preconditioner) this->_preconditioner->set_matrix(matrix_in);
+  // 2.2.1 & newer style
+  // Set operators. The input matrix works as the preconditioning matrix
+  if (!this->same_preconditioner)  {
+    //ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat(),SAME_NONZERO_PATTERN);
+    ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat()); //PETSC3p5
+    CHKERRABORT(MPI_COMM_WORLD,ierr);
+  } else  {
+    //ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat(),SAME_PRECONDITIONER);
+    ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat()); //PETSC3p5
+    CHKERRABORT(MPI_COMM_WORLD,ierr);
+  }
+  // Set the tolerances for the iterative solver.  Use the user-supplied
+  // tolerance for the relative residual & leave the others at default values.
+  ierr = KSPSetTolerances(_ksp, tol, PETSC_DEFAULT,PETSC_DEFAULT, max_its);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // Solve the linear system
+  
+//        PetscLogEvent USER_EVENT;
+//      PetscLogDouble user_event_flops;
+//      PetscLogEventRegister("User event",0,&USER_EVENT);
+//      PetscLogEventBegin(USER_EVENT,0,0,0,0);
+       
+ 
+  ierr = KSPSolve(_ksp, rhs->vec(), solution->vec()); CHKERRABORT(MPI_COMM_WORLD,ierr);
+//         PetscLogFlops(user_event_flops);
+//      PetscLogEventEnd(USER_EVENT,0,0,0,0);
+
+     // Get the number of iterations required for convergence
+  ierr = KSPGetIterationNumber(_ksp, &its); CHKERRABORT(MPI_COMM_WORLD,ierr);
+  // Get the norm of the final residual to return to the user.
+  ierr = KSPGetResidualNorm(_ksp, &final_resid); CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+//   STOP_LOG("solve()", "PetscLinearSolverM");
+  return std::make_pair(its, final_resid);
+}
+  
+ 
+ // DEPRECATED ========================================================
+PetscErrorCode __libmesh_petsc_preconditioner_setup(PC pc) {
+  void *ctx;
+  PetscErrorCode ierr = PCShellGetContext(pc,&ctx);
+  CHKERRQ(ierr);
+  Preconditioner * preconditioner = static_cast<Preconditioner*>(ctx);
+  preconditioner->init();
+  return 0;
+}
+
+
+// DEPRECATED ========================================================
+PetscErrorCode __libmesh_petsc_preconditioner_apply(PC pc, Vec x, Vec y) {
+  void *ctx;
+  PetscErrorCode ierr = PCShellGetContext(pc,&ctx);
+  CHKERRQ(ierr);
+  Preconditioner * preconditioner = static_cast<Preconditioner*>(ctx);
+  PetscVector x_vec(x);
+  PetscVector y_vec(y);
+  preconditioner->apply(x_vec,y_vec);
+  return 0;
+} 
+ 
+ 
+ // DEPRECATED ========================================================
+void GmresPetscLinearEquationSolver::init(SparseMatrix* matrix) {
+  
+  PetscMatrix* matrix_two   = libmeshM_cast_ptr<PetscMatrix*>(matrix);
+  
+  // Initialize the data structures if not done so already.
+  if (!this->initialized())    {
+    this->_is_initialized = true;   int ierr=0;
+// #if PETSC_VERSION_LESS_THAN(2,2,0)  // 2.1.x & earlier style
+//     // Create the linear solver context
+//     ierr = SLESCreate(MPI_COMM_WORLD, &_sles);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     // Create the Krylov subspace & preconditioner contexts
+//     ierr = SLESGetKSP(_sles, &_ksp);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     ierr = SLESGetPC(_sles, &_pc);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     // Have the Krylov subspace method use our good initial guess rather than 0
+//     ierr = KSPSetInitialGuessNonzero(_ksp, PETSC_TRUE);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//     // Set user-specified  solver and preconditioner types
+//     this->set_petsc_solver_type();
+//     // Set the options from user-input
+//     // Set runtime options, e.g.,
+//     //      -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
+//     //  These options will override those specified above as long as
+//     //  SLESSetFromOptions() is called _after_ any other customization
+//     //  routines.
+//     ierr = SLESSetFromOptions(_sles);
+//     CHKERRABORT(MPI_COMM_WORLD,ierr);
+//
+// #else // 2.2.0 & newer style
+    // Create the linear solver context
+    ierr = KSPCreate(MPI_COMM_WORLD, &_ksp);  CHKERRABORT(MPI_COMM_WORLD,ierr);
+    //ierr = PCCreate (MPI_COMM_WORLD, &_pc); CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Create the preconditioner context
+    ierr = KSPGetPC(_ksp, &_pc);  CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Set operators. The input matrix works as the preconditioning matrix
+    //ierr = KSPSetOperators(_ksp, matrix->mat(), matrix->mat(),SAME_NONZERO_PATTERN);
+    ierr = KSPSetOperators(_ksp, matrix_two->mat(), matrix_two->mat()); //PETSC3p5
+    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Have the Krylov subspace method use our good initial guess rather than 0
+    ierr = KSPSetInitialGuessNonzero(_ksp, PETSC_TRUE);  CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Set user-specified  solver and preconditioner types
+    this->set_petsc_solver_type();
+    // Set the options from user-input
+    // Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
+    //  These options will override those specified above as long as
+    //  KSPSetFromOptions() is called _after_ any other customization  routines.
+    ierr = KSPSetFromOptions(_ksp);  CHKERRABORT(MPI_COMM_WORLD,ierr);
+    // Not sure if this is necessary, or if it is already handled by KSPSetFromOptions?
+    //ierr = PCSetFromOptions (_pc);CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+// #endif
+
+    // Notify PETSc of location to store residual history.
+    // This needs to be called before any solves, since
+    // it sets the residual history length to zero.  The default
+    // behavior is for PETSc to allocate (internally) an array
+    // of size 1000 to hold the residual norm history.
+    ierr = KSPSetResidualHistory(_ksp,
+                                 PETSC_NULL,   // pointer to the array which holds the history
+                                 PETSC_DECIDE, // size of the array holding the history
+                                 PETSC_TRUE);  // Whether or not to reset the history for each solve.
+    CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc);
+    if (this->_preconditioner) {
+      this->_preconditioner->set_matrix(*matrix);
+      PCShellSetContext(_pc,(void*)this->_preconditioner);
+      PCShellSetSetUp(_pc,__libmesh_petsc_preconditioner_setup);
+      PCShellSetApply(_pc,__libmesh_petsc_preconditioner_apply);
+    }
+  }
+}
+
+
 
 } //end namespace femus
 

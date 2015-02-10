@@ -198,8 +198,6 @@ void BoundaryConditions::GenerateBdc() {
 
  //**************************************************   
  //******** ELEM BASED ******************************  
-     CurrentElem       currelem(BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType());
-    const uint el_nnodes_b = NVE[ _dofmap->_mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 
     _bc_fe_kk             =  new int*[_dofmap->_mesh._NoLevels];
     int* DofOff_Lev_kk    =  new int[_dofmap->_mesh._NoLevels];
@@ -223,13 +221,16 @@ void BoundaryConditions::GenerateBdc() {
 
  
     for (uint Level=0; Level <_dofmap->_mesh._NoLevels;Level++)   { //loop over the levels
+      
+    CurrentElem       currelem(Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType());
+    const uint el_nnodes_b = NVE[ _dofmap->_mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 	
         for (uint isubd=0; isubd<_dofmap->_mesh._NoSubdom; ++isubd) {
             uint iel_b = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd + Level];
             uint iel_e = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd + Level+1];
             for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 
-	        currelem.set_el_nod_conn_lev_subd(Level,isubd,iel);
+	        currelem.SetDofobjConnCoords(isubd,iel);
                 currelem.SetMidpoint();
 		
  	    for (uint ivar=0; ivar< _dofmap->_n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!
@@ -395,7 +396,7 @@ void BoundaryConditions::GenerateBdc() {
 // // // // //                 int     el_flag[2] = {0,0};
 // // // // //                 std::vector<double> el_value(1 + _number_tang_comps[space_dim - 1],0.); //1 normal and 1 tangential or 1 normal and 3 tangential
 // // // // // 
-// // // // //                 currelem.set_el_nod_conn_lev_subd(Level,isubd,iel);
+// // // // //                 currelem.SetDofobjConnCoords(isubd,iel);
 // // // // //                 currelem.SetMidpoint();
 // // // // // 
 // // // // //                 //read the bc's //the read forgets all levels and subdomains, it is only based on the MIDDLE POINT
