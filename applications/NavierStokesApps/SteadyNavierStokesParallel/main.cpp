@@ -11,6 +11,7 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "SolvertypeEnum.hpp"
 #include "FElemTypeEnum.hpp"
+#include "OprtrTypeEnum.hpp"
 #include "Files.hpp"
 
 using std::cout;
@@ -21,7 +22,7 @@ using namespace femus;
 void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
 void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
 
-void SetLambda(MultiLevelSolution &mlSol, const unsigned &level, const unsigned &SolType, const char operatorName[]);
+void SetLambda(MultiLevelSolution &mlSol, const unsigned &level, const  FEOrder &order, Operator operatorType);
 
 
 double InitVariableU(const double &x, const double &y, const double &z);
@@ -41,7 +42,7 @@ int main(int argc,char **args) {
   
   Files files; 
         files.CheckIODirectories();
-	files.RedirectCout();
+	//files.RedirectCout();
   
   bool Vanka=0, Gmres=0, Asm=0;
   if(argc >= 2) {
@@ -90,16 +91,20 @@ int main(int argc,char **args) {
   
   // generate solution vector
   
-  ml_sol.AddSolution("U",LAGRANGE, FIRST);
-  ml_sol.AddSolution("V",LAGRANGE, FIRST);
-  ml_sol.AddSolution("lmbd",DISCONTINOUS_POLYNOMIAL,ZERO,0,false);
+  FEOrder orderPre = FIRST;
+  FEOrder orderVel = FIRST;
+  FEOrder orderTemp = FIRST;
+  
+  ml_sol.AddSolution("U", LAGRANGE, orderVel);
+  ml_sol.AddSolution("V", LAGRANGE, orderVel);
+  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
   
   // the pressure variable should be the last for the Schur decomposition
   // ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
-  ml_sol.AddSolution("P",LAGRANGE, FIRST);
+  ml_sol.AddSolution("P",LAGRANGE, orderPre);
   ml_sol.AssociatePropertyToSolution("P","Pressure");
  
-  ml_sol.AddSolution("T",LAGRANGE,FIRST);
+  ml_sol.AddSolution("T",LAGRANGE,orderTemp);
   
   //Initialize (update Init(...) function)
   ml_sol.Initialize("U");
@@ -114,7 +119,7 @@ int main(int argc,char **args) {
   ml_sol.GenerateBdc("P");
   ml_sol.GenerateBdc("T");
   
-  SetLambda(ml_sol, 0, 0,"elasticity");
+  SetLambda(ml_sol, 0, orderVel, ELASTICITY);
   //SetLambda(ml_sol, 0, 2,"diffusion");
   
   MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
@@ -946,10 +951,19 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 //     } 
 //   }
   
-    
+  void SetLambda(MultiLevelSolution &mlSol, const unsigned &level, const  FEOrder &order, Operator operatorType){
   
-  void SetLambda(MultiLevelSolution &mlSol, const unsigned &level, const unsigned &SolType, const char operatorName[]){
-        
+    unsigned SolType;
+    if (order<FIRST || order> SECOND){
+      std::cout<<"Wong Solution Order"<<std::endl;
+      exit(0);
+    }
+    else if ( order == FIRST ) SolType=0;
+    else if ( order == SERENDIPITY ) SolType=1;
+    else if ( order == SECOND) SolType=2;
+    
+    
+    
     clock_t GetLambdaTime=0;
     clock_t start_time, end_time;
     start_time=clock();
@@ -968,11 +982,11 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     const unsigned max_size = static_cast< unsigned > (ceil(pow(3,geoDim)));
   
     bool diffusion, elasticity;
-    if(!strcmp("diffusion", operatorName)){
+    if( operatorType == DIFFUSION ){
       diffusion  = true;
       elasticity = false; 
     }
-    else if(!strcmp("elasticity", operatorName)){
+    if( operatorType == ELASTICITY ){
       diffusion  = false;
       elasticity = true; 
     }
