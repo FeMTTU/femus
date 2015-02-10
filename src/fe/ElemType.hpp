@@ -29,6 +29,8 @@
 #include "LinearEquation.hpp"
 #include "GaussPoints.hpp"
 #include "adept.h"
+#include "FETypeEnum.hpp"
+
 
 namespace femus {
 
@@ -48,9 +50,6 @@ public:
   /** destructor */
   virtual ~elem_type();
 
-  /** build function */
-  static  elem_type*  build(const std::string geomel_id_in, const uint fe_family_in, const char* gauss_order);
-  
   /** To be Added */
   void BuildProlongation(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
                          const unsigned &index_sol, const unsigned &kkindex_sol) const;
@@ -99,19 +98,19 @@ public:
 //   void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
 //                double &Weight, double *other_phi) const;
 
-  /** Function pointer for DPhiDXEZ */
+  /** DEPRECATED  Function pointer for DPhiDXEZ */
   typedef double* (elem_type::*_FunctionPointer)(const unsigned & ig) const;  //you need "elem_type::" for some reason
   std::vector<_FunctionPointer> _DPhiXiEtaZetaPtr;
   
-  /** Evaluate shape functions at all quadrature points */
-  virtual void EvaluateShapeAtQP(const std::string geomel_id_in, const uint fe_family_in);
+  /** DEPRECATED Evaluate shape functions at all quadrature points */
+  virtual void EvaluateShapeAtQP(const std::string geomel_id_in,const std::string fe_in);
 
-  /** Get shape functions */
+  /**  DEPRECATED Get shape functions */
   inline const double GetPhi(const uint qp, const uint dof ) const {
      return _phi_mapGD[qp][dof];
     }
     
-  /** Get shape function first derivatives */
+  /**  DEPRECATED Get shape function first derivatives */
   inline const double GetDPhiDxez(const uint qp, const uint dof ) const {
      return _dphidxez_mapGD[qp][dof];
     }
@@ -151,6 +150,10 @@ public:
   					 
   void GetSparsityPatternSize(const Mesh& Mesh,const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned &itype) const;
 				      
+  static const unsigned _fe_old_to_new[QL];
+  
+  static const unsigned _fe_new_to_old[NFE_FAMS];
+  
 protected:
   
   // member data
@@ -169,6 +172,8 @@ protected:
   
 //  Gauss
   const Gauss _gauss;
+  
+  /**  DEPRECATED */
   double**      _phi_mapGD;
   double** _dphidxez_mapGD;
   

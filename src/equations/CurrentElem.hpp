@@ -36,7 +36,7 @@ class CurrentQuantity;
 
   public:
     
-    CurrentElem(const uint level, const uint vb, const SystemTwo*, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type);
+    CurrentElem(const uint level, const uint vb, const SystemTwo*, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type);
    ~CurrentElem();
 
     inline const uint  GetVb() const {
@@ -96,7 +96,7 @@ class CurrentQuantity;
     /** */
     inline const elem_type* GetElemType(const uint fe) const { return  _elem_type[fe]; }
     
-    inline const std::vector<elem_type*> &  GetElemTypeVectorFE() const { return _elem_type; }
+    inline const std::vector<const elem_type*> &  GetElemTypeVectorFE() const { return _elem_type; }
      
     /**  */  
     int Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const CurrentQuantity &Velold_in,const CurrentQuantity& press_in) const;
@@ -112,7 +112,7 @@ class CurrentQuantity;
   
   private:
 
-  const std::vector<elem_type*>  &  _elem_type;
+  const std::vector<const elem_type*>  &  _elem_type;
     
 // ========================================================================================
 //========== Current "EQUATION" Element (ql are TOGETHER ): needs the EQUATION ========================               

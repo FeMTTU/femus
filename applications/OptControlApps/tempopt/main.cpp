@@ -126,7 +126,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   
   // ====== Start new main =================================
   MultiLevelMesh ml_msh;
-  ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,1,0,0,QUAD9,"seventh"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+  ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,1,0,0,QUAD9,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
   ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
   ml_msh.PrintInfo();
   
@@ -178,7 +178,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
      
    SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
 //=====================
-    sys -> init();
+    sys -> init();     //the dof map is built here based on all the solutions associated with that system
     sys -> _LinSolver[0]->set_solver_type(GMRES);  //if I keep PREONLY it doesn't run
 
 //=====================
@@ -188,9 +188,9 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 //=====================
     sys -> initVectors();
 //=====================
-    sys -> Initialize();
+    sys -> Initialize();         //why do they do this BEFORE the dofmap?
 ///=====================
-    sys -> _bcond.GenerateBdc();
+    sys -> _bcond.GenerateBdc(); //why do they do this BEFORE the dofmap?
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
     
