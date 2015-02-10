@@ -18,7 +18,7 @@ using std::endl;
 using namespace femus;
 
 // User defined functions
-//int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+//int AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assemble_matrix);
 
 double SetVariableTimeStep(const double time);
 
@@ -162,7 +162,7 @@ int main(int argc,char **args) {
 //   system.SetSparsityPattern(sparsity_pattern);  
    
   // System Fluid-Structure-Interaction
-  system.AttachAssembleFunction(IncompressibleFSIAssemblyAD_DD);  
+  system.SetAssembleFunction(IncompressibleFSIAssemblyAD_DD);  
   
   system.SetMaxNumberOfLinearIterations(2);
   system.SetMgType(F_CYCLE);
@@ -348,7 +348,7 @@ int main(int argc,char **args) {
 //   system.init();
 //  
 //   // System Navier-Stokes
-//   system.AttachAssembleFunction(AssembleMatrixResFSI);  
+//   system.SetAssembleFunction(AssembleMatrixResFSI);  
 //   system.SetMaxNumberOfLinearIterations(1);
 //   system.SetAbsoluteConvergenceTolerance(1.e-8);  
 //   system.SetMaxNumberOfNonLinearIterations(5);  
@@ -602,7 +602,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 /*
 //--------------------------------------------------------------------------------------------------------------------
 
-void AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
+void AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned level, const unsigned &gridn, const unsigned &ipde, const bool &assemble_matrix) {
 
   clock_t AssemblyTime=0;
   clock_t start_time, end_time;

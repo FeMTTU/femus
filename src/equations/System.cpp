@@ -38,13 +38,6 @@ namespace femus {
   }
 }
 
-  /** TODO remove at the end */
-  System::System(MultiLevelProblem& ml_prob, const std::string& name_in, const unsigned int number_in) :
-  _equation_systems(ml_prob),
-  _sys_name(name_in),
-  _sys_number(number_in),
-  _gridn(ml_prob.GetMeshTwo()._NoLevels) {}
-
   
 System::~System() {
   this->clear();
@@ -58,8 +51,12 @@ void System::init() {
   
 }
 
-void System::AttachAssembleFunction(void fptr(MultiLevelProblem &ml_prob, unsigned level, 
-				      const unsigned &gridn, const bool &assembe_matrix))
+   System::AssembleFunctionType  System::GetAssembleFunction() {
+  return _assemble_system_function;
+}
+
+void System::SetAssembleFunction(void fptr(MultiLevelProblem &ml_prob, unsigned level, 
+				      const unsigned &gridn, const bool &assemble_matrix))
 {
   assert(fptr);
 

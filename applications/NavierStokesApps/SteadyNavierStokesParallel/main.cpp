@@ -19,8 +19,8 @@ using std::endl;
 
 using namespace femus;
 
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
-void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
 
 void SetLambda(MultiLevelSolution &mlSol, const unsigned &level, const  FEOrder &order, Operator operatorType);
 
@@ -145,7 +145,7 @@ int main(int argc,char **args) {
   system1.AddSolutionToSystemPDE("P");
   
   // Set MG Options
-  system1.AttachAssembleFunction(AssembleMatrixResNS);  
+  system1.SetAssembleFunction(AssembleMatrixResNS);  
   system1.SetMaxNumberOfNonLinearIterations(90);
   system1.SetMaxNumberOfLinearIterations(2);
   system1.SetAbsoluteConvergenceTolerance(1.e-10);
@@ -193,7 +193,7 @@ int main(int argc,char **args) {
   
   
   // Set MG Options
-  system2.AttachAssembleFunction(AssembleMatrixResT);
+  system2.SetAssembleFunction(AssembleMatrixResT);
   system2.SetMaxNumberOfLinearIterations(6);
   system2.SetAbsoluteConvergenceTolerance(1.e-9);  
   system2.SetMgType(V_CYCLE);
@@ -404,7 +404,7 @@ bool SetBoundaryConditionCavityFlow(const double& x, const double& y, const doub
 
 static unsigned counter=0;
 
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
  
     adept::Stack & adeptStack = FemusInit::_adeptStack;
     
@@ -1288,7 +1288,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   
   
 //------------------------------------------------------------------------------------------------------------
-void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
+void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
   
   //pointers and references
   Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
@@ -1349,7 +1349,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   B.reserve(max_size*max_size);
   
   // Set to zeto all the entries of the Global Matrix
-  if(assembe_matrix) myKK->zero();
+  if(assemble_matrix) myKK->zero();
   
   // *** element loop ***
  
@@ -1372,7 +1372,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
     // set to zero all the entries of the FE matrices
     F.resize(nve);
     memset(&F[0],0,nve*sizeof(double));
-    if(assembe_matrix){
+    if(assemble_matrix){
       B.resize(nve*nve);
       memset(&B[0],0,nve*nve*sizeof(double));
     }
@@ -1425,7 +1425,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
 	  }
 	  F[i]+= (-IPe*Lap_rhs-Adv_rhs*phi[i])*weight; 		    
 	  //END RESIDUALS A block ===========================
-	  if(assembe_matrix){
+	  if(assemble_matrix){
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve; j++) {
 	      double Lap=0;
@@ -1439,18 +1439,18 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
 	      B[i*nve+j] += IPe*Lap + Adv1;
 	    } // end phij loop
 	  } // end phii loop
-	} // endif assembe_matrix
+	} // endif assemble_matrix
       } // end gauss point loop
     } // endif single element not refined or fine grid loop
     //--------------------------------------------------------------------------------------------------------
     //Sum the local matrices/vectors into the global Matrix/vector
       
     myRES->add_vector_blocked(F,KK_dof);
-    if(assembe_matrix) myKK->add_matrix_blocked(B,KK_dof,KK_dof);  
+    if(assemble_matrix) myKK->add_matrix_blocked(B,KK_dof,KK_dof);  
   } //end list of elements loop for each subdomain
     
   myRES->close();
-  if(assembe_matrix) myKK->close();
+  if(assemble_matrix) myKK->close();
   
    // ***************** END ASSEMBLY *******************
   

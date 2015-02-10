@@ -27,14 +27,16 @@
 
 // application 
 #include "TempQuantities.hpp"
-#include "EqnNS.hpp"
-#include "EqnT.hpp"
 #include "OptLoop.hpp"
 
 
 #ifdef HAVE_LIBMESH
 #include "libmesh/libmesh.h"
 #endif
+
+
+void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
 
 // =======================================
 // TEMPERATURE + NS optimal control problem
@@ -105,12 +107,14 @@
   OptLoop opt_loop(files, loop_map); 
    
   // ===== QuantityMap : this is like the MultilevelSolution =========================================
-  QuantityMap  qty_map(mesh,&physics_map);
+  QuantityMap  qty_map;
+  qty_map.SetMeshTwo(&mesh);
+  qty_map.SetInputParser(&physics_map);
 
   Temperature temperature("Qty_Temperature",qty_map,1,QQ);          qty_map.AddQuantity(&temperature);
   TempLift       templift("Qty_TempLift",qty_map,1,QQ,opt_loop);    qty_map.AddQuantity(&templift);  
   TempAdj         tempadj("Qty_TempAdj",qty_map,1,QQ);              qty_map.AddQuantity(&tempadj);  
-  TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.AddQuantity(&tempdes);  
+  TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.AddQuantity(&tempdes);  //this is not going to be an Unknown!
   Pressure       pressure("Qty_Pressure",qty_map,1,LL);                qty_map.AddQuantity(&pressure);
   Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.AddQuantity(&velocity);  
 
@@ -119,31 +123,43 @@
 #endif 
   
   // ===== end QuantityMap =========================================
-
-  // ====== MultiLevelProblemTwo =================================
-  MultiLevelProblem equations_map;
-  equations_map.SetMeshTwo(&mesh);
-  equations_map.SetQruleAndElemType("fifth");
-  equations_map.SetInputParser(&physics_map);
-  equations_map.SetQtyMap(&qty_map); 
+  
+  // ====== Start new main =================================
+  MultiLevelMesh ml_msh;
+  ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,1,0,0,QUAD9,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+  ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
+  ml_msh.PrintInfo();
+  
+  MultiLevelSolution ml_sol(&ml_msh);
+  ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
+  
+  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
+  ml_prob.SetMeshTwo(&mesh);
+  ml_prob.SetQruleAndElemType("fifth");
+  ml_prob.SetInputParser(&physics_map);
+  ml_prob.SetQtyMap(&qty_map); 
 
 //===============================================
 //================== Add EQUATIONS AND ======================
 //========= associate an EQUATION to QUANTITIES ========
 //========================================================
 // not all the Quantities need to be unknowns of an equation
- 
-  EqnNS & eqnNS = equations_map.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);
+
+  SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS");
+          eqnNS.AddSolutionToSystemPDE("FAKE");
           eqnNS.AddUnknownToSystemPDE(&velocity); 
-          eqnNS.AddUnknownToSystemPDE(&pressure); 
+          eqnNS.AddUnknownToSystemPDE(&pressure);
+	  eqnNS.SetAssembleFunction(GenMatRhsNS);
   
-  EqnT & eqnT = equations_map.add_system<EqnT>("Eqn_T",NO_SMOOTHER);
+  SystemTwo & eqnT = ml_prob.add_system<SystemTwo>("Eqn_T");
+         eqnT.AddSolutionToSystemPDE("FAKE");
          eqnT.AddUnknownToSystemPDE(&temperature);
          eqnT.AddUnknownToSystemPDE(&templift);
          eqnT.AddUnknownToSystemPDE(&tempadj);
 #if FOURTH_ROW==1
          eqnT.AddUnknownToSystemPDE(&pressure_2);   //the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function
 #endif
+	 eqnT.SetAssembleFunction(GenMatRhsT);
   
 //================================ 
 //========= End add EQUATIONS  and ========
@@ -158,36 +174,39 @@
  
 //once you have the list of the equations, you loop over them to initialize everything
 
-   for (MultiLevelProblem::const_system_iterator eqn = equations_map.begin(); eqn != equations_map.end(); eqn++) {\
+   for (MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
      
    SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
+//=====================
+    sys -> init();     //the dof map is built here based on all the solutions associated with that system
+    sys -> _LinSolver[0]->set_solver_type(GMRES);  //if I keep PREONLY it doesn't run
+
 //=====================
     sys -> init_sys();
 //=====================
     sys -> _dofmap.ComputeMeshToDof();
 //=====================
     sys -> initVectors();
+//=====================
+    sys -> Initialize();         //why do they do this BEFORE the dofmap?
 ///=====================
-    sys -> _bcond.GenerateBdc();
-    sys -> _bcond.GenerateBdcElem();
+    sys -> _bcond.GenerateBdc(); //why do they do this BEFORE the dofmap?
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
-//=====================
-    sys -> Initialize();
     
     } 
 	 
 	 
-  opt_loop.TransientSetup(equations_map);  // reset the initial state (if restart) and print the Case
+  opt_loop.TransientSetup(ml_prob);  // reset the initial state (if restart) and print the Case
 
-  opt_loop.optimization_loop(equations_map);
+  opt_loop.optimization_loop(ml_prob);
 
 // at this point, the run has been completed 
   files.PrintRunForRestart(DEFAULT_LAST_RUN);
   files.log_petsc();
   
 // ============  clean ================================
-  equations_map.clear();
+  ml_prob.clear();
   mesh.clear();
   
   

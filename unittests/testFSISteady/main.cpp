@@ -13,7 +13,7 @@ using std::cout;
 using std::endl;
 using namespace femus;
 
-void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
+void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
 		double &value, const int FaceName, const double = 0.);
@@ -112,7 +112,7 @@ int main(int argc,char **args) {
   system.init();
    
   // System Fluid-Structure-Interaction
-  system.AttachAssembleFunction(AssembleMatrixResFSI);  
+  system.SetAssembleFunction(AssembleMatrixResFSI);  
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteConvergenceTolerance(1.e-8);  
   system.SetMgType(F_CYCLE);
@@ -351,7 +351,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
   return test;
 }
 
-void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix) {
+void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
     
   clock_t AssemblyTime=0;
   clock_t start_time, end_time;

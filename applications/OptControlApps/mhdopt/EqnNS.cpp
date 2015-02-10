@@ -1,4 +1,3 @@
-#include "EqnNS.hpp"
 
 #include "FemusDefault.hpp"
 
@@ -22,43 +21,16 @@
 
 //application
 #include "OptLoop.hpp"
-#include "EqnMHD.hpp"
-#include "EqnMHDCONT.hpp"
 #include "OptQuantities.hpp"
 #include "Box.hpp"
 
 
-namespace femus {
+    
+  void GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix)  {
 
-
-///=============== Constructor
-  EqnNS::EqnNS(    MultiLevelProblem& equations_map_in,
-                   const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
-           SystemTwo(equations_map_in,eqname_in,number,smoother_type),
-     _AdvPic_fl(1),
-     _AdvNew_fl(0),
-     _Stab_fl(0),
-     _Komp_fac(0)   {
-
-// //=======  _var_names[]  ===========
-//     _var_names[0]="ux"; //variable names
-//     _var_names[1]="uy";
-//     _var_names[DIMENSION]="up";
-// #if (DIMENSION==3)
-//     _var_names[2]="uz";
-// #endif
-//     
-
-    }
-//====== END CONSTRUCTOR    
+  SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_NS");
     
     
-//================ DESTRUCTOR    
-      EqnNS::~EqnNS() {    }
-    
-    
-  void EqnNS::GenMatRhs(const uint Level)  {
-
 #if TEMP_DEPS==1
 //for this one i decide not to use any Vect's
 //i do not need the vects so badly if i do not have to do space interpolation
@@ -70,15 +42,15 @@ namespace femus {
 //to use a specific function, in which case you first should do the static cast
 //for some Vect and nothing for others
 //so, it could be better to do a Vect_LOCAL_EXTERNAL MAP inside here
-Density* density_ptr     = static_cast<Density*>(GetMLProb().GetQtyMap().GetQuantity("Qty_Density"));
-Viscosity* viscosity_ptr = static_cast<Viscosity*>(GetMLProb().GetQtyMap().GetQuantity("Qty_Viscosity"));
+Density* density_ptr     = static_cast<Density*>(ml_prob.GetQtyMap().GetQuantity("Qty_Density"));
+Viscosity* viscosity_ptr = static_cast<Viscosity*>(ml_prob.GetQtyMap().GetQuantity("Qty_Viscosity"));
 #endif  //temp deps
   //====== reference values ========================
 //====== related to Quantities on which Operators act, and to the choice of the "LEADING" EQUATION Operator
   //====== Physics
-  const double IRe = 1./_phys.get("Re");
-  const double IFr = 1./_phys.get("Fr");
-  const double   S = _phys.get("S");
+  const double IRe = 1./ml_prob.GetInputParser().get("Re");
+  const double IFr = 1./ml_prob.GetInputParser().get("Fr");
+  const double   S = ml_prob.GetInputParser().get("S");
 //================================================  
 
 //=============== electric current ===============
@@ -86,8 +58,8 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(GetMLProb().GetQtyMap().GetQu
   //because we only need it for a CROSS product
   double Jext_g3D[3]={0.,0.,0.}; //Quantity
   //=======density and viscosity===================
-  const double rhof = _phys.get("rho0");
-  const double  muf = _phys.get("mu0");
+  const double rhof = ml_prob.GetInputParser().get("rho0");
+  const double  muf = ml_prob.GetInputParser().get("mu0");
 
 //================================================  
 //=======Operators @ gauss =======================
@@ -99,14 +71,14 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(GetMLProb().GetQtyMap().GetQu
 //================================================  
 
 
-   const double time =  0.;   //GetMLProb()._timeloop._curr_time;
+   const double time =  0.;   //ml_prob._timeloop._curr_time;
    
   
 //========== PROCESSOR INDEX
 //every routine we use here should depend directly on this one and not implicitly 
 //through the class _iproc. This should be a sort of "function argument",
 //like the Level
-  const uint myproc = _mesh._iproc;
+  const uint myproc = ml_prob.GetMeshTwo()._iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
 //FLAG for the TIME DISCRETIZATION
@@ -136,10 +108,14 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(GetMLProb().GetQtyMap().GetQu
 //because we use finite difference for it... unless we decide to do 
 //finite elements for time as well...
 //well, we might do Time as a Vect
-const int NonStatNS = (int) _phys.get("NonStatNS");
-  const double   dt = 1.; //GetMLProb()._timeloop._timemap.get("dt");
+const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
+  const double   dt = 1.; //ml_prob._timeloop._timemap.get("dt");
 
 //==========FLAG for NONLINEARITY, we might put here
+   const uint   _AdvPic_fl = 1;
+   const uint   _AdvNew_fl = 0;
+   const uint   _Stab_fl = 0;
+   const double _Komp_fac = 0.;
 //this flag in fact may involve BOTH MATRIX and RHS, so here we are on top of both
 //this is another flag of an OPERATOR, a NONLINEAR Operator
 //in case of nonlinear operator, you also have to specify the LINEARIZATION SCHEME.
@@ -164,26 +140,35 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
   
   
 //========== GEOMETRIC ELEMENT ========
-  const uint           space_dim = _mesh.get_dim();
-  const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
-  const uint meshql   = (int) _mesh.GetRuntimeMap().get("meshql"); //======== ELEMENT MAPPING =======
+  const uint           space_dim = ml_prob.GetMeshTwo().get_dim();
+  const uint mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
+  const uint meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql"); //======== ELEMENT MAPPING =======
   
 //========= BCHandling =========
-  const double penalty_val  = _mesh.GetRuntimeMap().get("penalty_val");    
+  const double penalty_val  = ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
 
-  
+        my_system._A[Level]->zero();
+        my_system._b[Level]->zero();
+
+
    {//BEGIN VOLUME
 //===============================  
 //===============================  
   
     const uint mesh_vb = VV;
-  
-    CurrentElem       currelem(VV,this,_mesh,GetMLProb().GetElemType());    
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,GetMLProb().GetQrule(currelem.GetDim()));
+ 
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+    
+    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+      
+    CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+    
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity VelOld(currgp);
-    VelOld._qtyptr   = _UnknownQuantitiesVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
+    VelOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();   //the internal quantities will eventually have *this as eqn pointer
     VelOld.Allocate();
 
@@ -193,7 +178,7 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
 
 //=========
     CurrentQuantity pressOld(currgp);
-    pressOld._qtyptr   = _UnknownQuantitiesVector[QTYONE];
+    pressOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYONE];
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
 
@@ -217,19 +202,19 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
   xyz_refbox.Allocate();
     
 //============================ MAG WORLD =======================================
  #if BMAG_QTY==1  
     CurrentQuantity Bhom(currgp); //only to retrieve the dofs
-    Bhom._qtyptr   = GetMLProb().GetQtyMap().GetQuantity("Qty_MagnFieldHom");
+    Bhom._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
     Bhom.Allocate();
  
 //=========
     CurrentQuantity Bext(currgp);   //only to retrieve the dofs
-    Bext._qtyptr   =  GetMLProb().GetQtyMap().GetQuantity("Qty_MagnFieldExt");
+    Bext._qtyptr   =  ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();
 
@@ -237,7 +222,7 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
     CurrentQuantity Bmag(currgp); //total
     Bmag._dim        = Bhom._dim;
     Bmag._FEord      = Bhom._FEord;
-    Bmag._ndof       = GetMLProb().GetElemType()[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
+    Bmag._ndof       = ml_prob.GetElemType()[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
     Bmag.Allocate();
 #endif
 //======================== MAG WORLD ================================
@@ -245,7 +230,7 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
 //===================TEMPERATURE WORLD=============================
 #if TEMP_QTY==1
     CurrentQuantity Temp(currgp);
-    Temp._qtyptr   =  GetMLProb().GetQtyMap().GetQuantity("Qty_Temperature");
+    Temp._qtyptr   =  ml_prob.GetQtyMap().GetQuantity("Qty_Temperature");
     Temp.VectWithQtyFillBasic();
     Temp.Allocate();
 #endif
@@ -255,47 +240,40 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
   CurrentQuantity gravity(currgp);
   gravity._dim=DIMENSION;
   gravity._val_g.resize(gravity._dim);
-  gravity._val_g[0] = _phys.get("dirgx");
-  gravity._val_g[1] = _phys.get("dirgy");
+  gravity._val_g[0] = ml_prob.GetInputParser().get("dirgx");
+  gravity._val_g[1] = ml_prob.GetInputParser().get("dirgy");
 #if DIMENSION==3
-  gravity._val_g[2] = _phys.get("dirgz");
+  gravity._val_g[2] = ml_prob.GetInputParser().get("dirgz");
 #endif  
- 
-    const uint nel_e = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level];
 
 //=======================
 //=======================    
 
-    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
  
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+    currelem.SetDofobjConnCoords(myproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
-    currelem.SetElDofsBc(Level);
+    currelem.SetElDofsBc();
     
-      VelOld.GetElemDofs(Level);
-    pressOld.GetElemDofs(Level);
+      VelOld.GetElemDofs();
+    pressOld.GetElemDofs();
 
-    if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),qtyzero_ord,currelem.GetBCDofFlag()); //only the Qtyzero Part is modified!
-
-   
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
  #if (BMAG_QTY==1)
-  if ( Bext._eqnptr != NULL )  Bext.GetElemDofs(Level); 
+  if ( Bext._eqnptr != NULL )  Bext.GetElemDofs(); 
   else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
-  if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs(Level);   
+  if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs();   
   else                         Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
 #endif
 #if (TEMP_QTY==1)
-   if ( Temp._eqnptr != NULL ) Temp.GetElemDofs(Level);
+   if ( Temp._eqnptr != NULL ) Temp.GetElemDofs();
      else                      Temp._qtyptr->FunctionDof(Temp,time,&xyz_refbox._val_dofs[0]);
 #endif
 
@@ -332,7 +310,7 @@ const int NonStatNS = (int) _phys.get("NonStatNS");
 //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
 //==============================================================
-   const uint el_ngauss = GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp = 0; qp < el_ngauss; qp++) {  
 
@@ -356,7 +334,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 }  
 	  
 const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is the same for both QQ and LL!
-const double dtxJxW_g = det*GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+const double dtxJxW_g = det*ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { 
@@ -448,17 +426,11 @@ for (uint fe = 0; fe < QL; fe++)     {
             + (1-currelem.GetBCDofFlag()[irowq])*detb*VelOld._val_dofs[irowq] //Dirichlet bc    
 	;
           }
-           // end filling element rhs u
 
-if (_bcond._Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
-//actually this is not needed because you add only zeros
-//it is only needed to avoid doing the operations on Ke
-// Bc_ConvertToDirichletPenalty puts all ONE on the quadratic dofs
   for (uint idim=0; idim<space_dim; idim++) { // filling diagonal for Dirichlet bc
           const uint irowq = i+idim*qtyzero_ndof;
           currelem.Mat()(irowq,irowq) += (1-currelem.GetBCDofFlag()[irowq])*detb;
         }
-}                                         // end filling diagonal for Dirichlet bc
 
 //============ QTYZERO x QTYZERO dofs matrix (A matrix) ============
         for (uint j=0; j< qtyzero_ndof; j++) {
@@ -556,8 +528,8 @@ if (_bcond._Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 //==============================================================
     
     ///  Add element matrix and rhs to the global ones.
-                   _A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-                   _b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+                   my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+                   my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
 
   } 
   // end of element loop
@@ -573,12 +545,18 @@ if (_bcond._Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
     const uint mesh_vb = BB;
   
-    CurrentElem       currelem(BB,this,_mesh,GetMLProb().GetElemType());    
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,GetMLProb().GetQrule(currelem.GetDim()));
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+
+  for (uint iel=0; iel < (nel_e - nel_b) ; iel++) {
+  
+    CurrentElem       currelem(Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity VelOld(currgp);
-    VelOld._qtyptr   = _UnknownQuantitiesVector[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
+    VelOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
     VelOld.VectWithQtyFillBasic();   //the internal quantities will eventually have *this as eqn pointer
     VelOld.Allocate();
 
@@ -588,7 +566,7 @@ if (_bcond._Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
 
 //=========
     CurrentQuantity pressOld(currgp);
-    pressOld._qtyptr   = _UnknownQuantitiesVector[QTYONE];
+    pressOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYONE];
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
 
@@ -612,12 +590,8 @@ if (_bcond._Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
   xyz_refbox.Allocate();
-
-  
-    const uint nel_e = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level+1];
-    const uint nel_b = _mesh._off_el[mesh_vb][_mesh._NoLevels*myproc+Level];
 
 //=======================
 //=======================    
@@ -627,57 +601,28 @@ if (_bcond._Dir_pen_fl == 0)  { //faster than multiplying by _Dir_pen_fl
   double strainUtrDn_g[DIMENSION];
 
 
-  for (uint iel=0; iel < (nel_e - nel_b) ; iel++) {
-
      currelem.Mat().zero();
      currelem.Rhs().zero();
 
-     currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+     currelem.SetDofobjConnCoords(myproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     _mesh.TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+     currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
-     currelem.SetElDofsBc(Level);
+     currelem.SetElDofsBc();
      
-     VelOld.GetElemDofs(Level);
-     pressOld.GetElemDofs(Level);
-
-    if (_bcond._Dir_pen_fl == 1) _bcond.Bc_ConvertToDirichletPenalty(currelem.GetDim(),qtyzero_ord,currelem.GetBCDofFlag()); //only the Quadratic Part is modified! /*OK DIR_PEN*/
-       
+     VelOld.GetElemDofs();
+     pressOld.GetElemDofs();
 
 //============ BC =======
-       int     el_flag[NT] = {0,0}; //normal and tangential flag
-#if DIMENSION==2
-       double el_value[N1T1] = {0.,0.};  //1 normal and 1 tangential
-#elif DIMENSION==3
-       double el_value[N1T3] = {0.,0.,0.,0.}; //1 normal and 3 tangential
-#endif
-       double  dbl_pen[NT] = {0.,0.};  //normal and tangential penalty value
-   
-    
-       _bcond.Bc_GetElFlagValLevSubd(Level,myproc,iel,el_flag,el_value);
-
-if (_bcond._Dir_pen_fl == 1)  { 
-       if (el_flag[NN] == 1) {   dbl_pen[NN]=penalty_val; } //normal dirichlet
-       if (el_flag[TT] == 1) {   dbl_pen[TT]=penalty_val; } //tangential dirichlet
-   }
-
-//checks
-//TODO here i should check that the nodal bc dirichlet i put correspond to the element NT flags
-
-       uint press_fl=0;
-       _bcond.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(currelem.GetBCDofFlag(),VelOld,pressOld,press_fl); //compute the PRESSURE FLAG with the PRESSURE nodal bc flags
- //only the LINEAR PART is USED!!
-       
-// // TODO  if ( (1-el_flag[NN]) != press_fl)  {std::cout << "Sthg wrong with press elflags" << std::endl;abort();}
-
+       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(VelOld,pressOld); 
 //========END BC============
 
 //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
 //==============================================================
-   const uint el_ngauss = GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp=0; qp< el_ngauss; qp++) {
             
@@ -688,35 +633,14 @@ for (uint fe = 0; fe < QL; fe++)     {
 }
 
         const double det   = dt*currgp.JacVectBB_g(xyz);
-	const double dtxJxW_g = det * GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+	const double dtxJxW_g = det * ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
-//-------- pressure==============
-    //"predof" VS "post gauss method"
-    //pay attention to this fact: even if we are in the equation to which pressure is associated
-    //(pressure is an unknown here!), we might prefer using the FUNCTION instead,
-    //in order to get some values that DO NOT CHANGE with the solution
-    //so i'm using the FUNCTION of an UNKNOWN, it is not an external quantity  
-	  //clearly, this is ALTERNATIVE to the command
-	  
-// // //    val_g(vb,pressOld);
-   
-   xyz_refbox.val_g(); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
-      pressOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0]/*xyz._val_g*/,&pressOld._val_g[0]);  //i prefer using the function instead of the p_old vector
-       
-//--- strain, derivative of velocity ============== 
+   xyz_refbox.val_g(); 
+      pressOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0],&pressOld._val_g[0]);  //i prefer using the function instead of the p_old vector
+//        pressOld.val_g();  //this is the alternative
       
-// // // TODO    /*VelOld._qtyptr*/vel_castqtyptr->strain_txyz_box(time,xyz_refbox._val_g/*xyz._val_g*/,strainU_g);
-// // //          for (uint idim=0; idim< /*space_dim*/; idim++)  strainUtrDn_g[idim]=0.;
-// // // 	    for (uint idim=0; idim< /*space_dim*/; idim++)  {   //beware that this space_dim is not IntDim
-// // // 	      for (uint jdim=0; jdim< /*space_dim*/; jdim++)    {
-// // //                 strainUtrDn_g[idim] += strainU_g[jdim][idim]*get_normal_ptr()[jdim];
-// // // 	        }
-// // // 	    }
-//=================================================
-
-      //-----old velocity=============
-	  VelOld.val_g();  //substitute el_value...
+	  VelOld.val_g();
 
 
 //==============================================================
@@ -730,44 +654,12 @@ for (uint fe = 0; fe < QL; fe++)     {
              uint irowq=i+idim*qtyzero_ndof;
             currelem.Rhs()(irowq)  += 
           currelem.GetBCDofFlag()[irowq]*           
-           dtxJxW_g*(   -1.*/*press_fl*/(1-el_flag[NN])*pressOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g  //  //OLD VALUES //AAA multiplying int times uint!!!
+           dtxJxW_g*(   -1.*pressOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g/**press_fl*/  //TODO if you uncomment this press_fl, which I think you should, it gives a different result...
 
-// // //             TODO STRAIN AT THE BOUNDARY            + /*stress_fl*/el_flag[1]*IRe*strainUtrDn_g[idim]*phii_g 
-
-	  )
-                                //projection over the physical (x,y,z)
-      + _bcond._Dir_pen_fl *dtxJxW_g*phii_g*(dbl_pen[NN]*el_value[0]*currgp.get_normal_ptr()[idim] 
-                                    + dbl_pen[TT]*el_value[1]*currgp.get_tangent_ptr()[0][idim]  // VelOld._val_g[idim] instead of el_value...
-               #if DIMENSION==3
-		                    + dbl_pen[TT]*el_value[1]*currgp.get_tangent_ptr()[1][idim]    
-               #endif   
-          )
-	   ;   
+	  ) ;   
 	   
-//====================
-if (_bcond._Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 , and much better than removing the code with the #ifdef //  #if (NS_DIR_PENALTY==1)  
-	   for (uint jdim=0; jdim< space_dim; jdim++)    {
-
-	   for (uint j=0; j<qtyzero_ndof; j++) {
-          const double phij_g = currgp._phi_ndsQLVB_g[qtyzero_ord][j];
-
-  currelem.Mat()(irowq,j+jdim*qtyzero_ndof) +=                //projection over the physical (x,y,z) 
-      + /*_Dir_pen_fl**/dtxJxW_g*phii_g*phij_g*(dbl_pen[NN]*currgp.get_normal_ptr()[jdim]*currgp.get_normal_ptr()[idim]   //the PENALTY is BY ELEMENT, but the (n,t) is BY GAUSS because we cannot compute now a nodal normal
-                                              + dbl_pen[TT]*currgp.get_tangent_ptr()[0][jdim]*currgp.get_tangent_ptr()[0][idim]
-                 #if DIMENSION==3
-                                              + dbl_pen[TT]*currgp.get_tangent_ptr()[1][jdim]*currgp.get_tangent_ptr()[1][idim]
-                #endif   
-                   );
-	         } //end j
-      
-               } //end jdim
-  
-             }  //end penalty if
-//====================
-
 	 }
            //end of idim loop
-
      }
 //==============================================================
 //========= END FILLING ELEMENT MAT/RHS (i loop) ====================
@@ -777,8 +669,8 @@ if (_bcond._Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 
 //================== END GAUSS LOOP (qp loop) ======================
 //==================================================================
     
-    _A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-    _b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+    my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+    my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
 
     
   }
@@ -788,10 +680,12 @@ if (_bcond._Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 
     }
   // END BOUNDARY ******************************
   
+        my_system._A[Level]->close();
+        my_system._b[Level]->close();
 
 #ifdef DEFAULT_PRINT_INFO
- std::cout << " GenMatRhs " << name() << ": assembled  Level " << Level
-           << " with " << _A[Level]->m() << " dofs" << std::endl;
+ std::cout << " GenMatRhs " << my_system.name() << ": assembled  Level " << Level
+           << " with " << my_system._A[Level]->m() << " dofs" << std::endl;
 #endif
 
     return;
@@ -846,16 +740,5 @@ if (_bcond._Dir_pen_fl == 1) {  //much faster than multiplying by _Dir_pen_fl=0 
 
 
   
-  
-  
-  
-
-
-
-
-
-
-
-} //end namespace femus
 
 

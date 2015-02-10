@@ -26,11 +26,13 @@
 
 // application 
 #include "TempQuantities.hpp"
-#include "EqnT.hpp"
 
 #ifdef HAVE_LIBMESH
 #include "libmesh/libmesh.h"
 #endif 
+
+ void GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+
 
 // =======================================
 // Test for finite element families
@@ -78,12 +80,10 @@
           XDMFWriter::PrintMeshLinear(files.GetOutputPath(),mesh);
 
 	  
-  // ======== TimeLoop ===================================
-  FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());
-  TimeLoop time_loop(files,loop_map); 
-
   // ===== QuantityMap =========================================
-  QuantityMap  qty_map(mesh,&physics_map);
+  QuantityMap  qty_map;
+  qty_map.SetMeshTwo(&mesh);
+  qty_map.SetInputParser(&physics_map);
 
 //===============================================
 //================== Add QUANTITIES ======================
@@ -94,8 +94,16 @@
   Temperature temperature3("Qty_Temperature3",qty_map,1,2/*constant*/);      qty_map.AddQuantity(&temperature3);
   // ===== end QuantityMap =========================================
 
-  // ====== MultiLevelProblem =================================
-  MultiLevelProblem ml_prob;
+  // ====== Start new main =================================
+  MultiLevelMesh ml_msh;
+  ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,1,0,1,QUAD9,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+  ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
+  ml_msh.PrintInfo();
+
+  MultiLevelSolution ml_sol(&ml_msh);
+  ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
+
+  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);  
   ml_prob.SetMeshTwo(&mesh);
   ml_prob.SetQruleAndElemType("fifth");
   ml_prob.SetInputParser(&physics_map); 
@@ -106,10 +114,12 @@
 //========= associate an EQUATION to QUANTITIES ========
 //========================================================
 
-  EqnT & eqnT = ml_prob.add_system<EqnT>("Eqn_T",NO_SMOOTHER);
+  SystemTwo &  eqnT = ml_prob.add_system<SystemTwo>("Eqn_T");
+          eqnT.AddSolutionToSystemPDE("FAKE");
           eqnT.AddUnknownToSystemPDE(&temperature); 
           eqnT.AddUnknownToSystemPDE(&temperature2); 
           eqnT.AddUnknownToSystemPDE(&temperature3); 
+          eqnT.SetAssembleFunction(GenMatRhsT);
 
 //================================ 
 //========= End add EQUATIONS  and ========
@@ -122,7 +132,12 @@
 //So somehow i'll have to put these objects at a higher level... but so far let us see if we can COMPUTE and PRINT from HERE and not from the gencase
 	 
    for (MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
+     
         SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
+// //=====================
+    sys -> init();
+    sys -> _LinSolver[0]->set_solver_type(GMRES);  //if I keep PREONLY it doesn't run
+
 //=====================
     sys -> init_sys();
 //=====================
@@ -130,14 +145,18 @@
 //=====================
     sys -> initVectors();
 //=====================
+    sys -> Initialize();
+//=====================
     sys -> _bcond.GenerateBdc();
-    sys -> _bcond.GenerateBdcElem();
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
-//=====================
-    sys -> Initialize();
+    
     }
     
+  // ======== Loop ===================================
+  FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());
+  TimeLoop time_loop(files,loop_map); 
+
   time_loop.TransientSetup(ml_prob);  // reset the initial state (if restart) and print the Case
 
   time_loop.TransientLoop(ml_prob);

@@ -31,7 +31,7 @@
 #include "BoundaryConditions.hpp"
 #include "Quantity.hpp"
 
-#include "System.hpp"
+#include "LinearImplicitSystem.hpp"
 
 
 namespace femus {
@@ -46,7 +46,7 @@ class NumericVector;
 class LinearEquationSolver;
 
 
-class SystemTwo : public System {
+class SystemTwo : public LinearImplicitSystem {
 
 public:
 
@@ -65,7 +65,7 @@ public:
 //=======================================================================
 //======== MG Ops ============ (procs,levels) ====
 //=======================================================================
-  std::vector<SparseMatrix  *> _A;  // LinearEquation (each level)
+  std::vector<SparseMatrix *> _A;  // LinearEquation (each level)
   std::vector<SparseMatrix *> _Rst; // LinearEquation (each level)
   std::vector<SparseMatrix *> _Prl; // LinearEquation (each level)
   
@@ -92,8 +92,7 @@ public:
   
           void  initVectors();  ///initialize vectors       //System//
 
-//======= Linear Solvers for every Level ============
-  LinearEquationSolver **_solver;                                                                                                                                                       ///LinearImplicitSystem (all levels)//
+//===================
   void MGSolve(double Eps,int MaxIter, const uint Gamma=DEFAULT_MG_GAMMA, const uint Nc_pre=DEFAULT_NC_PRE,const uint Nc_coarse=DEFAULT_NC_COARSE,const uint Nc_post=DEFAULT_NC_POST);  //LinearImplicitSystem//
   double MGStep(int Level,double Eps1,int MaxIter, const uint Gamma, const uint Nc_pre,const uint Nc_coarse,const uint Nc_post);                                                          //LinearImplicitSystem//
 
@@ -125,18 +124,11 @@ public:
 
 	  void init_sys();     //System//  //MultilevelSolution//
 
-//=======================================================================
-
- virtual  void GenMatRhs(const uint Level) = 0;  //System//
-
 // ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==    
           void    Initialize();           //MultilevelSolution  //this uses x and fills in x_old at all levels
           
 protected:
   
-  const FemusInputParser<double>  & _phys;   //passed from MultilevelProblem//
-  const MultiLevelMeshTwo         & _mesh;   //passed from MultilevelProblem//
-
   std::vector<Quantity*>          _UnknownQuantitiesVector;  //MultilevelSolution//
 
 };

@@ -52,18 +52,54 @@ namespace femus {
 //the names
 //other stuff but let us stop here now
 SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
-        _phys(e_map_in.GetInputParser()),
-        _mesh(e_map_in.GetMeshTwo()),
         _dofmap(this,e_map_in.GetMeshTwo()),
         _bcond(&_dofmap),
-        System(e_map_in,eqname_in,number) {
+        LinearImplicitSystem(e_map_in,eqname_in,number,smoother_type) { }
 
 
-    //========= solver package ===========
-    _solver = new LinearEquationSolver*[GetGridn()];
-    for (uint l=0; l < GetGridn(); l++) _solver[l] = LinearEquationSolver::build(0,NULL,NO_SMOOTHER).release();
-    
+// ===================================================
+/// This function  is the SystemTwo destructor.
+//the important thing is that these destructions occur AFTER
+//the destructions of the levels inside
+//these things were allocated and filled in various init functions
+//either in the Base or in the DA
+//here, we destroy them in the place where they belong
+// pay attention to the fact that a lot of these delete are ok only if the respective function
+// where the new is is called!
+SystemTwo::~SystemTwo() {
+
+ //========= MGOps  ===========================
+    for (uint Level =0; Level< GetGridn(); Level++) {
+        delete _A[Level];
+        if (Level < GetGridn() - 1) delete _Rst[Level];
+        if (Level > 0)             delete _Prl[Level];
+    }
+
+    _A.clear();
+    _Rst.clear();
+    _Prl.clear();
+
+ //======== Vectors ==========================
+    for (uint Level =0; Level<GetGridn(); Level++) {
+        delete _b[Level];
+        delete _res[Level];
+        delete _x[Level];
+        delete _x_old[Level];
+        delete _x_oold[Level];
+        delete _x_tmp[Level];
+    }
+
+         _b.clear();
+       _res.clear();
+         _x.clear();
+     _x_old.clear();
+    _x_oold.clear();
+     _x_tmp.clear();
+
+   
 }
+
+
 
 void SystemTwo::init_sys() {
 
@@ -123,51 +159,7 @@ void SystemTwo::initRefValues() {
 
 
 
-// ===================================================
-/// This function  is the SystemTwo destructor.
-//the important thing is that these destructions occur AFTER
-//the destructions of the levels inside
-//these things were allocated and filled in various init functions
-//either in the Base or in the DA
-//here, we destroy them in the place where they belong
-// pay attention to the fact that a lot of these delete are ok only if the respective function
-// where the new is is called!
-SystemTwo::~SystemTwo() {
 
- //========= MGOps  ===========================
-    for (uint Level =0; Level< GetGridn(); Level++) {
-        delete _A[Level];
-        if (Level < GetGridn() - 1) delete _Rst[Level];
-        if (Level > 0)             delete _Prl[Level];
-    }
-
-    _A.clear();
-    _Rst.clear();
-    _Prl.clear();
-
- //======== Vectors ==========================
-    for (uint Level =0; Level<GetGridn(); Level++) {
-        delete _b[Level];
-        delete _res[Level];
-        delete _x[Level];
-        delete _x_old[Level];
-        delete _x_oold[Level];
-        delete _x_tmp[Level];
-    }
-
-         _b.clear();
-       _res.clear();
-         _x.clear();
-     _x_old.clear();
-    _x_oold.clear();
-     _x_tmp.clear();
-
- //========= solver
-    for (uint l = 0; l < GetGridn(); l++)  delete _solver[l];
-    delete []_solver;
-
-    
-}
 
 
 
@@ -186,7 +178,7 @@ void SystemTwo::initVectors() {
 
     for (uint Level = 0; Level< GetGridn(); Level++) {
 
-    uint ml[QL];    for (int fe=0; fe<QL; fe++) ml[fe] = _dofmap._DofLocLevProcFE[Level][_mesh._iproc][fe];
+    uint ml[QL];    for (int fe=0; fe<QL; fe++) ml[fe] = _dofmap._DofLocLevProcFE[Level][GetMLProb().GetMeshTwo()._iproc][fe];
     uint m_l = 0;
     for (int fe=0; fe<QL; fe++)  m_l +=  ml[fe]*_dofmap._nvars[fe];
     
@@ -282,23 +274,24 @@ void SystemTwo::initVectors() {
 /// This function generates the initial conditions:
 void SystemTwo::Initialize() {
 
-        CurrentElem       currelem(VV,this,_mesh,GetMLProb().GetElemType());  
-     
-        const uint  coords_fine_offset = _mesh._NoNodesXLev[GetGridn()-1];
-        const uint  el_dof_objs = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
-        std::vector<double>      xp(_mesh.get_dim());
+      
+        const uint  coords_fine_offset = GetMLProb().GetMeshTwo()._NoNodesXLev[GetGridn()-1];
+        std::vector<double>      xp(GetMLProb().GetMeshTwo().get_dim());
         std::vector<double> u_value(_dofmap._n_vars);
 
        std::cout << "\n====================== Initialize:  Now we are setting them for all levels! ========================" << "\n \n";
 
     for (uint Level = 0; Level< GetGridn(); Level++) {
+      
+       CurrentElem       currelem(Level,VV,this,GetMLProb().GetMeshTwo(),GetMLProb().GetElemType());  
+        const uint  el_dof_objs = NVE[ GetMLProb().GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 
-            uint iel_b = _mesh._off_el[VV][ _mesh._iproc*GetGridn() + Level ];
-            uint iel_e = _mesh._off_el[VV][ _mesh._iproc*GetGridn() + Level + 1];
+            uint iel_b = GetMLProb().GetMeshTwo()._off_el[VV][ GetMLProb().GetMeshTwo()._iproc*GetGridn() + Level ];
+            uint iel_e = GetMLProb().GetMeshTwo()._off_el[VV][ GetMLProb().GetMeshTwo()._iproc*GetGridn() + Level + 1];
 
 	    for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 	  
-	        currelem.set_el_nod_conn_lev_subd(Level,_mesh._iproc,iel);
+	        currelem.SetDofobjConnCoords(GetMLProb().GetMeshTwo()._iproc,iel);
                 currelem.SetMidpoint();
 
             for (uint q=0; q < _UnknownQuantitiesVector.size() ; q++) {
@@ -314,8 +307,8 @@ void SystemTwo::Initialize() {
        
           for (uint k=0; k < currelem.GetElemType(_UnknownQuantitiesVector[q]->_FEord)->GetNDofs() ; k++) {
 	    
-                const int fine_node = _mesh._el_map[VV][ k + ( iel + iel_b )*el_dof_objs ];
-                for (uint idim = 0; idim < _mesh.get_dim(); idim++) xp[idim] = _mesh._xyz[ fine_node + idim*coords_fine_offset ];
+                const int fine_node = GetMLProb().GetMeshTwo()._el_map[VV][ k + ( iel + iel_b )*el_dof_objs ];
+                for (uint idim = 0; idim < GetMLProb().GetMeshTwo().get_dim(); idim++) xp[idim] = GetMLProb().GetMeshTwo()._xyz[ fine_node + idim*coords_fine_offset ];
 
 	  _UnknownQuantitiesVector[q]->initialize_xyz(&xp[0],value);
 		    const int dof_pos_lev = _dofmap.GetDofQuantityComponent(Level,_UnknownQuantitiesVector[q],ivar,fine_node);
@@ -332,7 +325,7 @@ void SystemTwo::Initialize() {
                 for (uint k=0; k < currelem.GetElemType(_UnknownQuantitiesVector[q]->_FEord)->GetNDofs() ; k++) { //only 1
 		  
        int sum_elems_prev_sd_at_lev = 0;
-	  for (uint pr = 0; pr < _mesh._iproc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*GetGridn() + Level + 1] - _mesh._off_el[VV][pr*GetGridn() + Level]; }
+	  for (uint pr = 0; pr < GetMLProb().GetMeshTwo()._iproc; pr++) { sum_elems_prev_sd_at_lev += GetMLProb().GetMeshTwo()._off_el[VV][pr*GetGridn() + Level + 1] - GetMLProb().GetMeshTwo()._off_el[VV][pr*GetGridn() + Level]; }
 	  
           currelem.GetMidpoint();
 	  
@@ -490,7 +483,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << "Level " << Level << " ANorm l1 " << ANorm0 << " bNorm linfty " << bNorm0  << " xNormINITIAL linfty " << xNorm0 << std::endl;
 #endif
 
-        rest = _solver[Level]->solve(*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_LSOLV_C,Nc_coarse);  //****** smooth on the coarsest level
+        rest = _LinSolver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_LSOLV_C,Nc_coarse);  //****** smooth on the coarsest level
 
 #ifdef DEFAULT_PRINT_CONV
         std::cout << " Coarse sol : res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -521,7 +514,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << "Level " << Level << " ANorm l1 " << ANormpre << " bNorm linfty " << bNormpre  << " xNormINITIAL linfty " << xNormpre << std::endl;
 #endif
 
-        rest=_solver[Level]->solve(*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST, Nc_pre); //****** smooth on the finer level
+        rest = _LinSolver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST, Nc_pre); //****** smooth on the finer level
 
 #ifdef DEFAULT_PRINT_CONV
         std::cout << " Pre Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -576,7 +569,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << "Level " << Level << " ANorm l1 " << ANormpost << " bNorm linfty " << bNormpost << " xNormINITIAL linfty " << xNormpost << std::endl;
 #endif
 
-        rest=_solver[Level]->solve(*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST,Nc_post);  //***** smooth on the coarser level
+        rest = _LinSolver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST,Nc_post);  //***** smooth on the coarser level
 
 #ifdef DEFAULT_PRINT_CONV 
         std::cout<<" Post Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -848,22 +841,22 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
 //============ compute things for the sparsity pattern =======================
 //============================================================================
     
-    int NoLevels  = _mesh._NoLevels;
-    uint off_proc = NoLevels*_mesh._iproc;
+    int NoLevels  = GetMLProb().GetMeshTwo()._NoLevels;
+    uint off_proc = NoLevels*GetMLProb().GetMeshTwo()._iproc;
 
     uint mrow_glob_t = 0;
     for (int fe=0; fe<QL; fe++) mrow_glob_t += _dofmap._nvars[fe]*rowcln[fe][fe][0];
     uint ncol_glob_t = mrow_glob_t;
 
     uint mrow_lev_proc_t  = 0;
-    for (int fe=0; fe<QL; fe++)  mrow_lev_proc_t +=  _dofmap._DofLocLevProcFE[Level][_mesh._iproc][fe]*_dofmap._nvars[fe];
+    for (int fe=0; fe<QL; fe++)  mrow_lev_proc_t +=  _dofmap._DofLocLevProcFE[Level][GetMLProb().GetMeshTwo()._iproc][fe]*_dofmap._nvars[fe];
     uint ncol_lev_proc_t  = mrow_lev_proc_t;
 
     uint DofObjInit_lev_PrevProcs[QL];  //TODO what is this? it is the ROW INDEX at which to begin for every processor
                       
      for (int r=0; r<QL; r++)     DofObjInit_lev_PrevProcs[r] = 0;
          
-    for (uint isubd=0; isubd<_mesh._iproc; isubd++) {
+    for (uint isubd=0; isubd<GetMLProb().GetMeshTwo()._iproc; isubd++) {
         DofObjInit_lev_PrevProcs[QQ] += _dofmap._DofLocLevProcFE[Level][isubd][QQ];
         DofObjInit_lev_PrevProcs[LL] += _dofmap._DofLocLevProcFE[Level][isubd][LL];
         DofObjInit_lev_PrevProcs[KK] += _dofmap._DofLocLevProcFE[Level][isubd][KK];
@@ -882,7 +875,7 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
     graph._ml_start = _dofmap.GetStartDof(Level,off_proc);
     // TODO is this used? I guess it is used by update_sparsity_pattern !
     // Every subdomain has a local set of dofs, and these dofs start at a specific point.
-    // Now, remember that _mesh._off_nd[QQ] should only be used for computing offsets, so differences.
+    // Now, remember that GetMLProb().GetMeshTwo()._off_nd[QQ] should only be used for computing offsets, so differences.
     // Here, it is used ALONE, because it gives you the NODE (in femus ordering) AT WHICH THE CURRENT SUBDOMAIN BEGINS,
     //and then from _node_dof[Level] (which was already constructed) you get THE LOCAL DOF AT THE CURRENT LEVEL TO START FROM.
     // Clearly, pay attention when you add elements, because in that case you would need to REDO the _node_dof map !!!
@@ -895,9 +888,9 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
     FELevel[KK] = Level;
 
     int off_onevar[QL];
-    off_onevar[QQ] = _mesh._NoNodesXLev[GetGridn()-1];
-    off_onevar[LL] = _mesh._NoNodesXLev[GetGridn()-1];
-    off_onevar[KK] = _mesh._n_elements_vb_lev[VV][Level];
+    off_onevar[QQ] = GetMLProb().GetMeshTwo()._NoNodesXLev[GetGridn()-1];
+    off_onevar[LL] = GetMLProb().GetMeshTwo()._NoNodesXLev[GetGridn()-1];
+    off_onevar[KK] = GetMLProb().GetMeshTwo()._n_elements_vb_lev[VV][Level];
     
     uint  off_EachFEFromStart[QL];
     off_EachFEFromStart[QQ] = 0;
@@ -908,10 +901,10 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
      for (int r=0;r<QL;r++) {
       for (uint ivar=0; ivar < _dofmap._nvars[r]; ivar++) {
 
-        for (uint DofObj_lev = DofObjInit_lev_PrevProcs[r]; DofObj_lev < DofObjInit_lev_PrevProcs[r] + _dofmap._DofLocLevProcFE[Level][_mesh._iproc][r]; DofObj_lev++) {
+        for (uint DofObj_lev = DofObjInit_lev_PrevProcs[r]; DofObj_lev < DofObjInit_lev_PrevProcs[r] + _dofmap._DofLocLevProcFE[Level][GetMLProb().GetMeshTwo()._iproc][r]; DofObj_lev++) {
 
             int dof_pos, irow;
-	         if  (r<KK) {  dof_pos = _mesh._Qnode_lev_Qnode_fine[FELevel[r]][ DofObj_lev ];  }
+	         if  (r<KK) {  dof_pos = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[FELevel[r]][ DofObj_lev ];  }
             else if (r==KK) {  dof_pos = DofObj_lev; }
                     irow = _dofmap.GetDof(Level,r,ivar,dof_pos); 
 
@@ -926,26 +919,26 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
 // // //             for (uint jvar=0; jvar<_nvars[QQ]; jvar++) {
 // // //             // quadratic-quadratic
 // // //                 for (int j=0; j<len[QQ]; j++) {
-// // //                     graph[irow][j+jvar*len[QQ]] = _node_dof[Level][ _mesh._node_map[FELevel[QQ]][pos_row[QQ][QQ][j+length_row[QQ][QQ][DofObj_lev]]]+jvar*_mesh._NoNodes[GetGridn()-1]];
+// // //                     graph[irow][j+jvar*len[QQ]] = _node_dof[Level][ GetMLProb().GetMeshTwo()._node_map[FELevel[QQ]][pos_row[QQ][QQ][j+length_row[QQ][QQ][DofObj_lev]]]+jvar*GetMLProb().GetMeshTwo()._NoNodes[GetGridn()-1]];
 // // //                 }
 // // // 	    }
 // // //                 // quadratic-linear 
 // // //                 for (uint jvar=0; jvar<_nvars[LL]; jvar++) {
 // // //                     for (int j=0; j<len[LL]; j++) {
-// // //                         graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][_mesh._node_map[FELevel[LL]][pos_row[QQ][LL][j+length_row[QQ][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*_mesh._NoNodes[GetGridn()-1]];
+// // //                         graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][GetMLProb().GetMeshTwo()._node_map[FELevel[LL]][pos_row[QQ][LL][j+length_row[QQ][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*GetMLProb().GetMeshTwo()._NoNodes[GetGridn()-1]];
 // // //                     }
 // // //                 }
 // // // 
 // // //             
 // // //             for (uint jvar=0; jvar<_nvars[QQ]; jvar++) {
 // // //                 for (int j=0; j<len[QQ]; j++) {
-// // //                     graph[irow][j+jvar*len[QQ]] = _node_dof[Level][_mesh._node_map[FELevel[QQ]][pos_row[LL][QQ][j+length_row[LL][QQ][DofObj_lev]]]+jvar*offset];
+// // //                     graph[irow][j+jvar*len[QQ]] = _node_dof[Level][GetMLProb().GetMeshTwo()._node_map[FELevel[QQ]][pos_row[LL][QQ][j+length_row[LL][QQ][DofObj_lev]]]+jvar*offset];
 // // //                 }
 // // //             }
 // // //             
 // // //             for (uint jvar=0; jvar<_nvars[LL]; jvar++) {
 // // //                 for (int j=0; j<len[LL]; j++) {
-// // //                     graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][ _mesh._node_map[FELevel[LL]][pos_row[LL][LL][j+length_row[LL][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*offset];
+// // //                     graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][ GetMLProb().GetMeshTwo()._node_map[FELevel[LL]][pos_row[LL][LL][j+length_row[LL][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*offset];
 // // //                 }
 // // //             }
 // // //            
@@ -1090,7 +1083,7 @@ void SystemTwo::ReadProl(const std::string& name) {
 // the number of variables of every FE type
 //Level goes from 1 to NoLevels-1
    
-    uint off_proc = _mesh._iproc*GetGridn();
+    uint off_proc = GetMLProb().GetMeshTwo()._iproc*GetGridn();
 
     _Prl[ Lev_f ] = SparseMatrix::build().release();
 // // //     _Prl[ Lev_f ]->init(0,0,0,0); //TODO BACK TO A REASONABLE INIT
@@ -1099,12 +1092,12 @@ void SystemTwo::ReadProl(const std::string& name) {
     uint ml[QL]; uint nl[QL];
      for (int fe=0; fe<QL; fe++) { 
        if (fe < KK) {
-       ml[fe] = _mesh._off_nd[fe][off_proc + Lev_f +1] - _mesh._off_nd[fe][off_proc];    //  local quadratic    //COARSE (rows)
-       nl[fe] = _mesh._off_nd[fe][off_proc + Lev_c +1] - _mesh._off_nd[fe][off_proc];    // global quadratic  //FINE QUADRATIC (cols)
+       ml[fe] = GetMLProb().GetMeshTwo()._off_nd[fe][off_proc + Lev_f +1] - GetMLProb().GetMeshTwo()._off_nd[fe][off_proc];    //  local quadratic    //COARSE (rows)
+       nl[fe] = GetMLProb().GetMeshTwo()._off_nd[fe][off_proc + Lev_c +1] - GetMLProb().GetMeshTwo()._off_nd[fe][off_proc];    // global quadratic  //FINE QUADRATIC (cols)
        }
        else if (fe == KK) { 
-       ml[fe] = _mesh._off_el[VV][off_proc + Lev_f +1] - _mesh._off_el[VV][off_proc + Lev_f];
-       nl[fe] = _mesh._off_el[VV][off_proc + Lev_c +1] - _mesh._off_el[VV][off_proc + Lev_c];
+       ml[fe] = GetMLProb().GetMeshTwo()._off_el[VV][off_proc + Lev_f +1] - GetMLProb().GetMeshTwo()._off_el[VV][off_proc + Lev_f];
+       nl[fe] = GetMLProb().GetMeshTwo()._off_el[VV][off_proc + Lev_c +1] - GetMLProb().GetMeshTwo()._off_el[VV][off_proc + Lev_c];
       }
      }
     // pattern dimension
@@ -1130,9 +1123,9 @@ void SystemTwo::ReadProl(const std::string& name) {
     uint ml_init[QL]; //up to the current processor
       for (int fe=0;fe<QL;fe++) { 
            ml_init[fe]=0;
-        for (uint isubd=0;isubd<_mesh._iproc; isubd++) {
-       if (fe < KK)       ml_init[fe] += _mesh._off_nd[fe][isubd*GetGridn() + Lev_f +1] - _mesh._off_nd[fe][isubd*GetGridn()];
-       else if (fe == KK) ml_init[fe] += _mesh._off_el[VV][isubd*GetGridn() + Lev_f +1] - _mesh._off_el[VV][isubd*GetGridn() + Lev_f];
+        for (uint isubd=0;isubd<GetMLProb().GetMeshTwo()._iproc; isubd++) {
+       if (fe < KK)       ml_init[fe] += GetMLProb().GetMeshTwo()._off_nd[fe][isubd*GetGridn() + Lev_f +1] - GetMLProb().GetMeshTwo()._off_nd[fe][isubd*GetGridn()];
+       else if (fe == KK) ml_init[fe] += GetMLProb().GetMeshTwo()._off_el[VV][isubd*GetGridn() + Lev_f +1] - GetMLProb().GetMeshTwo()._off_el[VV][isubd*GetGridn() + Lev_f];
 	}
       }
   
@@ -1142,7 +1135,7 @@ void SystemTwo::ReadProl(const std::string& name) {
      for (uint ivar=0;ivar<_dofmap._nvars[fe];ivar++) {
         for (unsigned int i = ml_init[fe]; i < ml_init[fe]+ml[fe]; i++) {
           int dof_pos_f;
-          if (fe < KK)         dof_pos_f = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ i ];  //end fe < ql
+          if (fe < KK)         dof_pos_f = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ i ];  //end fe < ql
           else if (fe == KK)   dof_pos_f = i;
           
             int irow  = _dofmap.GetDof(Lev_f,fe,ivar,dof_pos_f);
@@ -1155,7 +1148,7 @@ void SystemTwo::ReadProl(const std::string& name) {
             for (uint j=0; j<ncol; j++) {
 	      int dof_pos_lev_c = Prol_pos[fe][j+len[fe][i]];
 	      int dof_pos_c;
-	      if      (fe  < KK) dof_pos_c = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ dof_pos_lev_c ];
+	      if      (fe  < KK) dof_pos_c = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ dof_pos_lev_c ];
               else if (fe == KK) dof_pos_c = dof_pos_lev_c; 
 	      
 	      pattern[irow][j] = _dofmap.GetDof(Lev_c,fe,ivar,dof_pos_c);
@@ -1178,7 +1171,7 @@ void SystemTwo::ReadProl(const std::string& name) {
        for (uint ivar=0;ivar < _dofmap._nvars[fe];ivar++) {
           for (unsigned int i=ml_init[fe]; i<ml_init[fe] + ml[fe]; i++) {
           int dof_pos_f;
-          if (fe < KK)        dof_pos_f = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ i ];  //end fe < ql
+          if (fe < KK)        dof_pos_f = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ i ];  //end fe < ql
           else if (fe == KK)  dof_pos_f = i;
 
           int irow  = _dofmap.GetDof(Lev_f,fe,ivar,dof_pos_f);
@@ -1211,7 +1204,7 @@ void SystemTwo::ReadProl(const std::string& name) {
     pattern.clear();
 
     _Prl[  Lev_f ]->close();  //TODO do we need this?
-//     if (_mesh._iproc==0) _Prl[  Lev_f ]->print_personal();
+//     if (GetMLProb().GetMeshTwo()._iproc==0) _Prl[  Lev_f ]->print_personal();
 //     _Prl[  Lev_f ]->print_graphic(false); //TODO should pass this true or false as a parameter
    } //end levels
     
@@ -1327,7 +1320,7 @@ void SystemTwo::ReadRest(const std::string& name) {
         FEXLevel_f[LL] = Level;                                // AAA look at the symmetry, this is exactly (_n_levels + Level1 + 1)%(_n_levels + 1); ! //FINE Level for LINEAR:   Level1=0 means coarse linear, a finer linear is the first coarse quadratic, and so on and so on
         FEXLevel_f[KK] = Level+1;                                  //FINE Level for CONSTANT
 
-    uint off_proc=GetGridn()*_mesh._iproc;
+    uint off_proc=GetGridn()*GetMLProb().GetMeshTwo()._iproc;
 
     _Rst[Lev_c] = SparseMatrix::build().release();
 // // //     _Rst[Lev_c]->init(0,0,0,0);   //TODO BACK TO A REASONABLE INIT  //we have to do this before appropriately!!!
@@ -1346,8 +1339,8 @@ void SystemTwo::ReadRest(const std::string& name) {
     pattern._ml = 0;            //  local _m
     pattern._nl = 0;            //  local _n
      for (int fe=0;fe<QL;fe++) { 
-        pattern._ml += _dofmap._nvars[fe]*_dofmap._DofLocLevProcFE[Lev_c][_mesh._iproc][fe]; 
-        pattern._nl += _dofmap._nvars[fe]*_dofmap._DofLocLevProcFE[Lev_f][_mesh._iproc][fe];
+        pattern._ml += _dofmap._nvars[fe]*_dofmap._DofLocLevProcFE[Lev_c][GetMLProb().GetMeshTwo()._iproc][fe]; 
+        pattern._nl += _dofmap._nvars[fe]*_dofmap._DofLocLevProcFE[Lev_f][GetMLProb().GetMeshTwo()._iproc][fe];
      } 
      
     // starting indices for local matrix
@@ -1356,18 +1349,18 @@ void SystemTwo::ReadRest(const std::string& name) {
    uint DofObjInit_lev_PrevProcs_c[QL];
         for (int fe=0;fe<QL;fe++) { DofObjInit_lev_PrevProcs_c[fe] = 0;  }
         for (int fe=0;fe<QL;fe++) { 
-    for (uint isubd=0;isubd<_mesh._iproc; isubd++) { //up to the current processor
-       if (fe < KK)       /*mlinit*/ DofObjInit_lev_PrevProcs_c[fe] += _mesh._off_nd[fe][ isubd*GetGridn() + Lev_c +1 ]  - _mesh._off_nd[fe][isubd*GetGridn()];  
-       else if (fe == KK) /*mlinit*/ DofObjInit_lev_PrevProcs_c[fe] += _mesh._off_el[VV][ isubd*GetGridn() + Lev_c +1 ]  - _mesh._off_el[VV][isubd*GetGridn() + Lev_c];   
+    for (uint isubd=0;isubd<GetMLProb().GetMeshTwo()._iproc; isubd++) { //up to the current processor
+       if (fe < KK)       /*mlinit*/ DofObjInit_lev_PrevProcs_c[fe] += GetMLProb().GetMeshTwo()._off_nd[fe][ isubd*GetGridn() + Lev_c +1 ]  - GetMLProb().GetMeshTwo()._off_nd[fe][isubd*GetGridn()];  
+       else if (fe == KK) /*mlinit*/ DofObjInit_lev_PrevProcs_c[fe] += GetMLProb().GetMeshTwo()._off_el[VV][ isubd*GetGridn() + Lev_c +1 ]  - GetMLProb().GetMeshTwo()._off_el[VV][isubd*GetGridn() + Lev_c];   
          }
      }
 
     //============= POSITION =========
         for (int fe=0; fe<QL; fe++) { 
     for (uint ivar=0;ivar<_dofmap._nvars[fe];ivar++) {
-        for (unsigned int i = DofObjInit_lev_PrevProcs_c[fe]; i< DofObjInit_lev_PrevProcs_c[fe] + _dofmap._DofLocLevProcFE[Lev_c][_mesh._iproc][fe]; i++) {
+        for (unsigned int i = DofObjInit_lev_PrevProcs_c[fe]; i< DofObjInit_lev_PrevProcs_c[fe] + _dofmap._DofLocLevProcFE[Lev_c][GetMLProb().GetMeshTwo()._iproc][fe]; i++) {
 	  int dof_pos_c;
-          if (fe < KK)         dof_pos_c = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ i ];
+          if (fe < KK)         dof_pos_c = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ i ];
           else if (fe == KK)   dof_pos_c = i;
 	  
             int irow  = _dofmap.GetDof(Lev_c,fe,ivar,dof_pos_c);
@@ -1381,7 +1374,7 @@ void SystemTwo::ReadRest(const std::string& name) {
 	      int dof_pos_lev_f = Rest_pos[fe][ j+len[fe][i] ];
 	      int dof_pos_f;
     
-	      if      (fe  < KK)  dof_pos_f = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ dof_pos_lev_f ];
+	      if      (fe  < KK)  dof_pos_f = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ dof_pos_lev_f ];
               else if (fe == KK)  dof_pos_f = dof_pos_lev_f;
               pattern[irow][j] = _dofmap.GetDof(Lev_f,fe,ivar,dof_pos_f);
                 }
@@ -1395,7 +1388,7 @@ void SystemTwo::ReadRest(const std::string& name) {
     pattern.print();
     _Rst[Lev_c]->update_sparsity_pattern_old(pattern);  //TODO see 
 //         _Rst[Lev_c]->close();
-//     if (_mesh._iproc==0) _Rst[Lev_c]->print_personal(); //there is no print function for rectangular matrices, and print_personal doesnt seem to be working...
+//     if (GetMLProb().GetMeshTwo()._iproc==0) _Rst[Lev_c]->print_personal(); //there is no print function for rectangular matrices, and print_personal doesnt seem to be working...
 // la print stampa il contenuto, ma io voglio solo stampare lo sparsity pattern!
      //Allora cosa faccio: riempio di zeri e poi la stampo! No, di zeri no!!! devi riempirla con qualcos'altro!
 //TODO how can I print the sparsity pattern in Petsc BEFORE FILLING the MATRIX ?!?!
@@ -1408,9 +1401,9 @@ void SystemTwo::ReadRest(const std::string& name) {
         for (int fe=0;fe<QL;fe++) {
 
     for (uint ivar=0;ivar<_dofmap._nvars[fe];ivar++) {
-        for (unsigned int i = DofObjInit_lev_PrevProcs_c[fe]; i< DofObjInit_lev_PrevProcs_c[fe] + _dofmap._DofLocLevProcFE[Lev_c][_mesh._iproc][fe]; i++) {
+        for (unsigned int i = DofObjInit_lev_PrevProcs_c[fe]; i< DofObjInit_lev_PrevProcs_c[fe] + _dofmap._DofLocLevProcFE[Lev_c][GetMLProb().GetMeshTwo()._iproc][fe]; i++) {
 	  int dof_pos_c;
-          if (fe < KK)         dof_pos_c = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ i ];
+          if (fe < KK)         dof_pos_c = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ i ];
           else if (fe == KK)   dof_pos_c = i;
             int irow     = _dofmap.GetDof(Lev_c,fe,ivar,dof_pos_c);
             int irow_top = _dofmap.GetDof(GetGridn()-1,fe,ivar,dof_pos_c);
@@ -1442,7 +1435,7 @@ void SystemTwo::ReadRest(const std::string& name) {
     pattern.clear();
 
     _Rst[Lev_c]->close();   //TODO Do we really need this?
-//     if (_mesh._iproc==0)  _Rst[Lev_c]->print_personal(std::cout);
+//     if (GetMLProb().GetMeshTwo()._iproc==0)  _Rst[Lev_c]->print_personal(std::cout);
 //     _Rst[Lev_c]->print_graphic(false); // TODO should pass this true or false as a parameter
 
   } //end levels

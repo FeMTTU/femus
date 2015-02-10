@@ -37,14 +37,16 @@ class String;
 
 class System {
 
+protected:
+  
+    /** Function pointer type, easiest way to declare function pointer instantiations */
+    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+  
 public:
 
     /** Constructor.  Optionally initializes required data structures. */
     System (MultiLevelProblem& ml_prob, const std::string& name, const unsigned int number, const MgSmoother & smoother_type);
 
-    /** Empty constructor. TODO remove soon */
-    System (MultiLevelProblem& ml_prob, const std::string& name_in, const unsigned int number_in);
-    
     /** destructor */
     virtual ~System();
 
@@ -67,8 +69,9 @@ public:
     void AddSolutionToSystemPDE(const char solname[]);
 
     /** Register a user function to use in assembling the system matrix and RHS. */
-    void AttachAssembleFunction (void fptr(MultiLevelProblem &ml_prob, unsigned level,
-                                           const unsigned &gridn, const bool &assembe_matrix));
+    void SetAssembleFunction (AssembleFunctionType );
+
+    AssembleFunctionType  GetAssembleFunction();
 
     /** Solves the system.  Should be overloaded in derived systems. */
     virtual void solve () {};
@@ -85,11 +88,14 @@ public:
     /** Get MultiLevelProblem */
     const MultiLevelProblem &  GetMLProb() const { return _equation_systems; }
     
+    /** Get MultiLevelProblem */
+    MultiLevelProblem &  GetMLProb() { return _equation_systems; }
+    
     /** Get Number of Levels */
     inline const unsigned GetGridn() const { return _gridn; }
     
 protected:
-
+  
     /** Constant reference to the \p EquationSystems object used for the simulation. */
     MultiLevelProblem& _equation_systems;
 
@@ -115,8 +121,7 @@ protected:
     unsigned _gridr;
 
     /** Function that assembles the system. */
-    void (* _assemble_system_function) (MultiLevelProblem &ml_prob, unsigned level,
-                                        const unsigned &gridn, const bool &assembe_matrix);
+    AssembleFunctionType _assemble_system_function;
 
     /** The number associated with this system */
     const unsigned int _sys_number;

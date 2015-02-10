@@ -130,17 +130,6 @@ public:
 
 #define LAP_MHD 1
 
-
-//thin wall approximation
-#define THIN_WALL 0   //0=no thin wall 
-#define CONDRATIO 0.
-
-#define JEXT 0.
-
- //the contribution of this BDRYelement to the global matrix
-//Thin wall approximation in rectangular ducts: B = B_o + b
-// b only in the LONGITUDINAL direction, Neumann bc => bc_y=1
-
 //**************************************************************************************
 //**************************************************************************************
 

@@ -12,6 +12,7 @@
 #include "FemusInit.hpp"
 #include "Files.hpp"
 #include "MultiLevelMeshTwo.hpp"
+#include "MultiLevelProblem.hpp"
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
 #include "ElemType.hpp"
@@ -27,11 +28,6 @@
 // application includes
 #include "OptLoop.hpp"
 #include "OptQuantities.hpp"
-#include "EqnNS.hpp"
-#include "EqnNSAD.hpp"
-#include "EqnMHD.hpp"
-#include "EqnMHDAD.hpp"
-#include "EqnMHDCONT.hpp"
 
 #ifdef HAVE_LIBMESH
 #include "libmesh/libmesh.h"
@@ -39,8 +35,11 @@
 
 using namespace femus;
 
-
-// double funzione(double t , const double* xyz) {return 1.;} 
+  void GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+  void GenMatRhsNSAD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+  void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+  void GenMatRhsMHDAD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+  void GenMatRhsMHDCONT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
 
 // =======================================
 // MHD optimal control problem
@@ -106,8 +105,9 @@ int main(int argc, char** argv) {
           XDMFWriter::PrintMeshLinear(files.GetOutputPath(),mesh);
       
   // ===== QuantityMap =========================================
-  QuantityMap  qty_map(mesh,&physics_map);
-
+  QuantityMap  qty_map;
+  qty_map.SetMeshTwo(&mesh);
+  qty_map.SetInputParser(&physics_map);
 //================================
 // ======= Add QUANTITIES ========  
 //================================
@@ -145,10 +145,19 @@ int main(int argc, char** argv) {
   
 //================================
 //==== END Add QUANTITIES ========
-//================================
+//================================  
+  
+  // ====== Start new main =================================
+  MultiLevelMesh ml_msh;
+  ml_msh.GenerateCoarseBoxMesh(8,8,8,0,1,0,1,0,1,HEX27,"fifth");
+//   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+  ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
+  ml_msh.PrintInfo();
+  
+  MultiLevelSolution ml_sol(&ml_msh);
+  ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
 
-  // ====== MultiLevelProblem =================================
-  MultiLevelProblem ml_prob;
+  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
   ml_prob.SetQruleAndElemType("fifth");
   ml_prob.SetInputParser(&physics_map);
@@ -161,33 +170,43 @@ int main(int argc, char** argv) {
 //========================================================
 
 #if NS_EQUATIONS==1
-  EqnNS & eqnNS = ml_prob.add_system<EqnNS>("Eqn_NS",NO_SMOOTHER);
+  SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS");
+          eqnNS.AddSolutionToSystemPDE("FAKE");
           eqnNS.AddUnknownToSystemPDE(&velocity); 
           eqnNS.AddUnknownToSystemPDE(&pressure); 
+          eqnNS.SetAssembleFunction(GenMatRhsNS); 
 #endif
   
 #if NSAD_EQUATIONS==1
-  EqnNSAD & eqnNSAD = ml_prob.add_system<EqnNSAD>("Eqn_NSAD",NO_SMOOTHER); 
+  SystemTwo & eqnNSAD = ml_prob.add_system<SystemTwo>("Eqn_NSAD"); 
+            eqnNSAD.AddSolutionToSystemPDE("FAKE");
             eqnNSAD.AddUnknownToSystemPDE(&velocity_adj); 
             eqnNSAD.AddUnknownToSystemPDE(&pressure_adj); 
+            eqnNSAD.SetAssembleFunction(GenMatRhsNSAD);
 #endif
   
 #if MHD_EQUATIONS==1
-  EqnMHD & eqnMHD = ml_prob.add_system<EqnMHD>("Eqn_MHD",NO_SMOOTHER);
+  SystemTwo & eqnMHD = ml_prob.add_system<SystemTwo>("Eqn_MHD");
+           eqnMHD.AddSolutionToSystemPDE("FAKE");
            eqnMHD.AddUnknownToSystemPDE(&bhom); 
            eqnMHD.AddUnknownToSystemPDE(&bhom_lag_mult); 
+           eqnMHD.SetAssembleFunction(GenMatRhsMHD);
 #endif
 
 #if MHDAD_EQUATIONS==1
-  EqnMHDAD & eqnMHDAD = ml_prob.add_system<EqnMHDAD>("Eqn_MHDAD",NO_SMOOTHER);
+  SystemTwo & eqnMHDAD = ml_prob.add_system<SystemTwo>("Eqn_MHDAD");
+             eqnMHDAD.AddSolutionToSystemPDE("FAKE");
              eqnMHDAD.AddUnknownToSystemPDE(&bhom_adj); 
              eqnMHDAD.AddUnknownToSystemPDE(&bhom_lag_mult_adj); 
+             eqnMHDAD.SetAssembleFunction(GenMatRhsMHDAD);
 #endif
 
 #if MHDCONT_EQUATIONS==1
-  EqnMHDCONT & eqnMHDCONT = ml_prob.add_system<EqnMHDCONT>("Eqn_MHDCONT",NO_SMOOTHER);
+  SystemTwo & eqnMHDCONT = ml_prob.add_system<SystemTwo>("Eqn_MHDCONT");
+               eqnMHDCONT.AddSolutionToSystemPDE("FAKE");
                eqnMHDCONT.AddUnknownToSystemPDE(&Bext); 
                eqnMHDCONT.AddUnknownToSystemPDE(&Bext_lag_mult); 
+               eqnMHDCONT.SetAssembleFunction(GenMatRhsMHDCONT);
 #endif  
    
 //================================
@@ -196,7 +215,12 @@ int main(int argc, char** argv) {
 //================================
 
    for (MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
+     
         SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
+// //=====================
+    sys -> init();
+    sys -> _LinSolver[0]->set_solver_type(GMRES);  //if I keep PREONLY it doesn't run
+
 //=====================
     sys -> init_sys();
 //=====================
@@ -204,12 +228,11 @@ int main(int argc, char** argv) {
 //=====================
     sys -> initVectors();
 //=====================
+    sys -> Initialize();
+//=====================
     sys -> _bcond.GenerateBdc();
-    sys -> _bcond.GenerateBdcElem();
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
-//=====================
-    sys -> Initialize();
     
     }
 
