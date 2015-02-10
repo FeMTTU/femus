@@ -182,12 +182,44 @@ void MultiLevelSolution::Initialize(const char name[], initfunc func) {
 	      double yy=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
 	      double zz=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
 	      
-	      value = (func) ? func(xx,yy,zz) : 0;
+	      value = (func) ? func(xx,yy,zz) : 0.;
 	      
 	      _solution[ig]->_Sol[i]->set(inode_Metis,value);
 	      if (_SolTmorder[i]==2) {
 		_solution[ig]->_SolOld[i]->set(inode_Metis,value);
 	      }
+	    }
+	  }
+	}
+        _solution[ig]->_Sol[i]->close();
+	if (_SolTmorder[i]==2) {
+	  _solution[ig]->_SolOld[i]->close();
+	}
+      }
+      else if ( sol_type < 5 ) {
+	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+	  for (int iel=_ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom]; 
+	       iel < _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	    unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
+	  
+	    unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,0);
+	    double xx=0.,yy=0.,zz=0.;
+	    for(int j=0; j<nloc_dof; j++) {
+	      unsigned inode=_ml_msh->GetLevel(ig)->el->GetMeshDof(kel_gmt,j,2);
+	      unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,2);
+	      xx+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);  
+	      yy+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
+	      zz+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
+	    }
+	    xx /= nloc_dof;
+	    yy /= nloc_dof;
+	    zz /= nloc_dof;
+  
+	    value = (func) ? func(xx,yy,zz) : 0.;
+   
+	    _solution[ig]->_Sol[i]->set(iel,value);
+	    if (_SolTmorder[i]==2) {
+	      _solution[ig]->_SolOld[i]->set(iel,value);
 	    }
 	  }
 	}
