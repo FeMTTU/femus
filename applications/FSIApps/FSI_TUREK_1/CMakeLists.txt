@@ -1,6 +1,0 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-
-PROJECT(FSI_TUREK_1)
-
-femusMacroBuildApplication(FSIApps/FSI_TUREK_1 fsitrk1)
-
