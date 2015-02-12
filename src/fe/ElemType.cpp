@@ -82,7 +82,7 @@ const unsigned from_femus_to_libmesh[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,1
 const unsigned from_libmesh_to_femus[27] = {0,1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,21,22,23,24,20,25,26};
 
 if ( (!strcmp(fe_in.c_str(),"biquadratic")) && GetDim() == 3  && (!strcmp(geomel_id_in.c_str(),"hex")) ) {
-            std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "REMEMBER THAT ONLY HEX27 HAS A DIFFERENT CONNECTIVITY MAP"  << std::endl;
+//             std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "REMEMBER THAT ONLY HEX27 HAS A DIFFERENT CONNECTIVITY MAP"  << std::endl;
 
       for (int ig = 0; ig < GetGaussRule().GetGaussPointsNumber(); ig++) {
 
@@ -95,7 +95,7 @@ if ( (!strcmp(fe_in.c_str(),"biquadratic")) && GetDim() == 3  && (!strcmp(geomel
         for (uint idim = 0; idim < GetDim(); idim++) {
           double* dphi_g =   ( this->*(_DPhiXiEtaZetaPtr[idim]) )(ig);  //how to access a pointer to member function
           _dphidxez_mapGD[ig][ idof + idim*GetNDofs()] =  dphi_g[ from_femus_to_libmesh[idof] ];
-          std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapGD[ig][ idof + idim*GetNDofs()]  << "                                      "  << std::endl;
+//           std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapGD[ig][ idof + idim*GetNDofs()]  << "                                      "  << std::endl;
 
         }
 
