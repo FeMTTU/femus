@@ -18,22 +18,22 @@
 #include "FemusInit.hpp"
 using namespace femus;
 
-double InitVariableU(const double &x, const double &y, const double &z){
+double InitalValueU(const double &x, const double &y, const double &z){
   return x+y;
 }
 
-double InitVariableP(const double &x, const double &y, const double &z){
+double InitalValueP(const double &x, const double &y, const double &z){
   return x;
 }
 
-double InitVariableT(const double &x, const double &y, const double &z){
+double InitalValueT(const double &x, const double &y, const double &z){
   return y;
 }
 
-int main(int argc,char **args) {
+int main(int argc, char **args) {
   
   /// Init Petsc-MPI communicator
-  FemusInit mpinit(argc,args,MPI_COMM_WORLD);
+  FemusInit mpinit(argc, args, MPI_COMM_WORLD);
  
   // read coarse level mesh and generate finers level meshes
   MultiLevelMesh mlMsh;
@@ -56,21 +56,23 @@ int main(int argc,char **args) {
   mlSol.AddSolution("T",DISCONTINOUS_POLYNOMIAL, FIRST);
   
   mlSol.Initialize("All");  
-  mlSol.Initialize("U",InitVariableU);
-  mlSol.Initialize("P",InitVariableP);
-  mlSol.Initialize("T",InitVariableT); //note that this initialization is the same as piecewise constant element
+  mlSol.Initialize("U", InitalValueU);
+  mlSol.Initialize("P", InitalValueP);
+  mlSol.Initialize("T", InitalValueT); //note that this initialization is the same as piecewise constant element
   
-  // Print solutions
-  std::vector<std::string> variablesToBePrinted;
+  // print solutions
+  std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("U");
   variablesToBePrinted.push_back("P");
   variablesToBePrinted.push_back("T");
 
   VTKWriter vtkIO(mlSol);
-  vtkIO.write_system_solutions(DEFAULT_OUTPUTDIR,"biquadratic",variablesToBePrinted);
+  vtkIO.write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   GMVWriter gmvIO(mlSol);
-  gmvIO.write_system_solutions(DEFAULT_OUTPUTDIR,"biquadratic",variablesToBePrinted);
+  variablesToBePrinted.push_back("all");
+  gmvIO.SetDebugOutput(true);
+  gmvIO.write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
    
   return 1;
 }
