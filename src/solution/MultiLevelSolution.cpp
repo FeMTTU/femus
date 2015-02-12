@@ -89,7 +89,7 @@ void MultiLevelSolution::AddSolutionLevel(){
   
   for (int k=0; k<_SolName.size(); k++) {
     if(!_Use_GenerateBdc_new) GenerateBdc(k, grid0, 0.);
-    else GenerateBdc_new(k,grid0, 0.);  
+    else GenerateBdc_new(k, grid0, 0.);  
   }
   
   
