@@ -30,7 +30,6 @@
 #include "MgSmootherEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "QTYnumEnum.hpp"
-#include "Quantity.hpp"
 #include "XDMFWriter.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "MultiLevelProblem.hpp"
@@ -43,13 +42,9 @@
 #include "DenseMatrix.hpp"
 
 
+
+
 namespace femus {
-
-
-// ========= ELEM BC AUX ==============
-const int SystemTwo::_number_tang_comps[3] = {0,1,3};
-
-
 
 
 //the most important things for a SystemTwo are:
@@ -57,30 +52,54 @@ const int SystemTwo::_number_tang_comps[3] = {0,1,3};
 //the names
 //other stuff but let us stop here now
 SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
-        _phys(e_map_in.GetInputParser()),
-        _mesh(e_map_in.GetMeshTwo()),
-        _eqnmap(e_map_in),
-        _NoLevels(e_map_in.GetMeshTwo()._NoLevels),
         _dofmap(this,e_map_in.GetMeshTwo()),
-        System(e_map_in,eqname_in,number) {
+        _bcond(&_dofmap),
+        LinearImplicitSystem(e_map_in,eqname_in,number,smoother_type) { }
 
-//============= init Quantities ================
-//internal std::vector
-//the equal puts the two equal to each other
-//as an alternative, since std::vector is a class, i could have used the initialization list above
-//like i do with REFERENCES. In that case the copy constructor would be called.
-//     _QtyInternalVector = int_map_in;
+
+// ===================================================
+/// This function  is the SystemTwo destructor.
+//the important thing is that these destructions occur AFTER
+//the destructions of the levels inside
+//these things were allocated and filled in various init functions
+//either in the Base or in the DA
+//here, we destroy them in the place where they belong
+// pay attention to the fact that a lot of these delete are ok only if the respective function
+// where the new is is called!
+SystemTwo::~SystemTwo() {
+
+ //========= MGOps  ===========================
+    for (uint Level =0; Level< GetGridn(); Level++) {
+        delete _A[Level];
+        if (Level < GetGridn() - 1) delete _Rst[Level];
+        if (Level > 0)             delete _Prl[Level];
+    }
+
+    _A.clear();
+    _Rst.clear();
+    _Prl.clear();
+
+ //======== Vectors ==========================
+    for (uint Level =0; Level<GetGridn(); Level++) {
+        delete _b[Level];
+        delete _res[Level];
+        delete _x[Level];
+        delete _x_old[Level];
+        delete _x_oold[Level];
+        delete _x_tmp[Level];
+    }
+
+         _b.clear();
+       _res.clear();
+         _x.clear();
+     _x_old.clear();
+    _x_oold.clear();
+     _x_tmp.clear();
+
    
-// ========= PENALTY DIRICHLET FLAG ==============
-//put a default to zero, then every Eqn will OVERRIDE it
-    _Dir_pen_fl = 0;
-
-    //========= solver package ===========
-    _solver = new LinearEquationSolver*[_NoLevels];     //well, we clearly use the same package for all levels...
-    for (uint l=0;l<_NoLevels;l++) _solver[l] = LinearEquationSolver::build(0,NULL,NO_SMOOTHER).release();
-    
-
 }
+
+
 
 void SystemTwo::init_sys() {
 
@@ -107,10 +126,10 @@ void SystemTwo::initVarNames() {
 //=======  _var_names: they are the names of the quantities which are unkwnowns to this equation  ===========
     std::ostringstream name;
     uint count = 0;
-   for (uint i=0; i< _QtyInternalVector.size(); i++) {
-        for (uint j=0; j < _QtyInternalVector[i]->_dim; j++) {
+   for (uint i=0; i< _UnknownQuantitiesVector.size(); i++) {
+        for (uint j=0; j < _UnknownQuantitiesVector[i]->_dim; j++) {
           name.str("");
-          name << _QtyInternalVector[i]->_name << j;
+          name << _UnknownQuantitiesVector[i]->_name << j;
 	  _var_names[count] = name.str();
 	  count++;
 	}
@@ -128,9 +147,9 @@ void SystemTwo::initRefValues() {
     _refvalue.resize(_dofmap._n_vars);
 
     uint count = 0;
-   for (uint i=0; i< _QtyInternalVector.size(); i++) {
-        for (uint j=0; j < _QtyInternalVector[i]->_dim; j++) {
-	  _refvalue[count] = _QtyInternalVector[i]->_refvalue[j];
+   for (uint i=0; i< _UnknownQuantitiesVector.size(); i++) {
+        for (uint j=0; j < _UnknownQuantitiesVector[i]->_dim; j++) {
+	  _refvalue[count] = _UnknownQuantitiesVector[i]->_refvalue[j];
 	  count++;
 	}
    }
@@ -140,60 +159,7 @@ void SystemTwo::initRefValues() {
 
 
 
-// ===================================================
-/// This function  is the SystemTwo destructor.
-//the important thing is that these destructions occur AFTER
-//the destructions of the levels inside
-//these things were allocated and filled in various init functions
-//either in the Base or in the DA
-//here, we destroy them in the place where they belong
-// pay attention to the fact that a lot of these delete are ok only if the respective function
-// where the new is is called!
-SystemTwo::~SystemTwo() {
 
- //========= MGOps  ===========================
-    for (uint Level =0; Level<_NoLevels; Level++) {
-        delete _A[Level];
-        if (Level < _NoLevels - 1) delete _Rst[Level];
-        if (Level > 0)             delete _Prl[Level];
-    }
-
-    _A.clear();
-    _Rst.clear();
-    _Prl.clear();
-
- //======== Vectors ==========================
-    for (uint Level =0; Level<_NoLevels; Level++) {
-        delete _b[Level];
-        delete _res[Level];
-        delete _x[Level];
-        delete _x_old[Level];
-        delete _x_oold[Level];
-        delete _x_tmp[Level];
-    }
-
-         _b.clear();
-       _res.clear();
-         _x.clear();
-     _x_old.clear();
-    _x_oold.clear();
-     _x_tmp.clear();
-
- //========= solver
-    for (uint l=0;l<_NoLevels;l++)  delete _solver[l];
-    delete []_solver;
-
- //=========== BOUNDARY CONDITIONS =================
- //===nodal
-    delete[] _bc;                                                                   // boundary condition flag
- //===constant
-     for (uint l=0; l < _NoLevels; l++)   delete [] _bc_fe_kk[l];
-     delete [] _bc_fe_kk;
- //===penalty
-    clearElBc();   /*if (_Dir_pen_fl==1)*/ //DO IT ALWAYS!
-
-    
-}
 
 
 
@@ -203,16 +169,16 @@ SystemTwo::~SystemTwo() {
 void SystemTwo::initVectors() {
 
     //allocation
-         _x.resize(_NoLevels);
-     _x_old.resize(_NoLevels);
-    _x_oold.resize(_NoLevels);
-     _x_tmp.resize(_NoLevels);
-         _b.resize(_NoLevels);
-       _res.resize(_NoLevels);
+         _x.resize(GetGridn());
+     _x_old.resize(GetGridn());
+    _x_oold.resize(GetGridn());
+     _x_tmp.resize(GetGridn());
+         _b.resize(GetGridn());
+       _res.resize(GetGridn());
 
-    for (uint Level = 0; Level< _NoLevels; Level++) {
+    for (uint Level = 0; Level< GetGridn(); Level++) {
 
-    uint ml[QL];    for (int fe=0; fe<QL; fe++) ml[fe] = _dofmap._DofLocLevProcFE[Level][_mesh._iproc][fe];
+    uint ml[QL];    for (int fe=0; fe<QL; fe++) ml[fe] = _dofmap._DofLocLevProcFE[Level][GetMLProb().GetMeshTwo()._iproc][fe];
     uint m_l = 0;
     for (int fe=0; fe<QL; fe++)  m_l +=  ml[fe]*_dofmap._nvars[fe];
     
@@ -234,515 +200,7 @@ void SystemTwo::initVectors() {
     return;
 }
 
- //TODO every processor does ALL because bc is SERIAL
- //Now here we have to think how to impose the boundary conditions for KK
- //Now, the bc_read function orders the boundary condition flags of a QUADRATIC or LINEAR DOF OBJECT.
- //TODO The point is that you already have to know the ORDER in which the UNKNOWNS are settled in your system,
- // FIRST QUADRATIC, THEN LINEAR, THEN CONSTANT.
- // as a matter of fact, the bc_field should be ordered like a DOF vector,
- //so have first quadratic, then linear, then constant variables.
- //The fact is that by now we only have ONE bc FIELD, ordered like dofs yes, but ONLY FOR THE *FINE* LEVEL.
- // This is because every coarser NODE is always also FINE, and so that is ok.
- //But, for constant elements I want to make a LEVEL DEPENDENT bc_map,
- //  whose length changes with Level, just like the node_dof map.
- //Then you will have to loop over the BOUNDARY ELEMENT at EACH LEVEL,
- // and assign a FLAG to the VOLUME DOF ELEMENTS.
- // climbing back from Boundary to Volume (we know how to do that)
- // In order to pick the boundary element, we pick its MIDDLE POINT.
  
- //TODO why don't we better impose the boundary conditions
- // based on QUANTITIES and then SCALAR COMPONENTS of QUANTITIES?
- // Then depending on the type of dof you would have to 
- // loop over the DOF OBJECTS generating those dofs!
- // So you would loop either over NODES or over ELEMENTS and so on.
- 
- //Wait, we did two functions for QQ-LL and KK, but actually one function seems to be enough!!!
- //The only thing is that you need to distinguish between passing the NODE COORDINATE or the MIDDLE POINT of an ELEMENT,
- //but we can MODIFY the bc_read INTERFACE and MAKE A UNIQUE FUNCTION that ENCOMPASSES EVERYTHING.
- // Yes we can do that.
- 
- //Now, can we make a UNIQUE Function for filling the _bc fields, both for Nodes and for Elements?
- //One of the two is defined only on the FINE level, the other on ALL LEVELS
- 
- //BC is a property of the DOFS. Now, since to every DOF at any level has a corresponding FINE DOF,
- // and for consistency the bc_flag must be THE SAME at ALL LEVELS, then for the nodes
- // we have a UNIQUE FIELD for all levels.
- // Now, of course the DOF NUMBER CHANGES from one level to another. 
- // But, the POSITION of the DofObject (= "source" of the dof number) in the _node_dof[Level]
- // is THE SAME!
- //That is why we have a lot of (-1) in the _node_dof map.
- 
- //Ok, now i did a UNIQUE FUNCTION GenerateBdc()
- // The point here is that for every equation I have to set TWO FUNCTIONS, bc_read and BCElemKKRead.
- //One is based on the NODE COORDINATE, one on the MIDDLE POINT of the BOUNDARY ELEMENT
- // So, for every equation i should implement two separate functions bc_read and BCElemKKRead,
- // which i don't really like
- // The problem is that bc_read is called only on the fine level... no problem, I can call it also at the other levels.
- // but, in one case i will only use xp, in the other case i will use only el_xm, so i should pass fake variables in one case or the other
- //As far as i use two SEPARATE FIELDS for the boundary conditions, _bc AND _bc_fe_kk,
- // it is obvious that I have to use two separate functions
- //Then the problem is when you try to switch one Quantity from a NODE BASED FE Family to an ELEM BASED FE FAMILY
- //You have to change the way you  ENFORCE the BOUNDARY CONDITIONS.
- //TODO the problem is that here we should write things better.
- // We should write things in such a way that if we set an equation WITHOUT VARIABLES the code still runs. 
- // Here this does not happen.
- // if you allocate bc_flag with zero components, then you pass the pointer to the bc_read function which will set the components.
- // So you have to call the bc_read function only if the number of variables is not zero, and in the same way you have to call the function
- // BCElemKKRead only if the number of ElemBased variables is not zero!
- 
- 
- //SWITCHING one VARIABLE from KK to LL.
- // since the length of bc_value and bc_value_kk change, in the routine i cannot leave both selections fixed!
- 
- //Now the point is: I am sorry but we have to modify the structure of the boundary conditions...
- //I think we have to enforce the boundary conditions SEPARATELY for EACH QUANTITY
- //If the quantity is NODE-BASED, then we will use bc_read;
- //If the quantity is ELEMENT BASED, we will use bcelemKKread;
- //Now the point is only this: we want to do this in a UNIQUE routine,
- //so that we write the if's of the geometry only once. 
- //I guess first of all I should base everything on the BOUNDARY MIDDLE POINT.
- 
-//As a matter of fact I am taking the nodes but these are taken in an element loop,
-// so actually i am not looping straight away on the nodes, so i have superimpositions anyway.
-//so YES, i'll base anything on the ELEMENT MIDDLE POINT!
-//Ok, I did that. Now the list of the bc for each scalar variable is only in one place, under bc_read
- 
-//Now that routine is done in such a way that you have to order FIRST QQ, THEN LL, THEN KK;
-//In this way you will read correctly
-
-//TODO one thing that may be optimized here is that there are computations that could be avoided when you DO NOT HAVE QQ variables, or LL variables, or KK variables.
-
-// The good thing here would be to have a unique bc array at EACH LEVEL. 
-// The distinction between level is especially good for the elements, because the elements 
-//only belong to ONE level, it's not like the nodes...
-
-//TODO now i am looping over elements first, and nodes inside each element next.
-//therefore, if an element puts a zero and a following element puts a one, the one wins.
-//so we must find a way which is independent of the element order
-//if you loop over the nodes you involve them only once...
-//well, there are two reasons for which you superimpose elements:
-// 1 - because you loop over the boundary elements
-// 2 - because you loop over all faces which have "intersections"
-
-// I think we should do two routines for the flags: one that loops 
-// over the BOUNDARY ELEMENTS,
-// and one that loops over the VOLUME ELEMENTS.
-
-//So far, let us concentrate on the boundary loop. What is the way to check 
-//not to superimpose the ones on the zeros?
-//just put a check before checking
-
-//TODO ricorda che i bc sono praticamente dei dof fields,
-// quindi in principio possono essere fatti in PARALLELO!
-// anche x_old e' un vettore di dof. Alla fine non sono cose 
-//molto diverse in fondo!
-
-//Quindi bisogna pensare ad una cosa piu' generale.
-//Faro' il bc come un Numeric Vector di INTERI,
-//cosi' come x_old e' un NumericVector di DOUBLE.
-
-//in questo modo il loop per riempire le bc 
-// o il loop per riempire x_old
-// non saranno molto diversi, anzi molto simili!
-
-//per come e' fatto il mio sistema,
-//direi che la cosa giusta e' fare le BC a TUTTI I LIVELLI.
-// in questo modo e' tutto molto piu' chiaro.
-//la cosa che devo capire un attimo e' come avere 
-// il valore fisico A TUTTI I LIVELLI.
-//Per i nodi e' immediato, perche' un nodo coarser e' anche 
-// un nodo fine.
-// Per un elemento coarser, bisogna fare cosi': ottieni la soluzione 
-// FINE per gli elementi. Poi la ridistribuisci sugli elementi coarse,
-// a tutti i livelli.
-
-//Se volessimo fare le cose ottimizzate, 
-//dovremmo trattare cosi' lo STORAGE della SOLUZIONE:
-//Per i dof il cui dof object e' un NODO, 
-// mettiamo in un vettore SOLO FINE.
-
-//per i dof il cui dof object e' un ELEMENTO,
-//mettiamo in un vettore DI TUTTI I LIVELLI.
-
-//in questo modo minimizzeremmo lo spazio di memoria, che mi sembra 
-//una cosa giusta, anche se si devono splittare un attimo queste cose.
-
-//il punto e' che se magari facciamo prima QQ, poi KK, poi LL,
-// avremmo dei pezzi separati. 
-//Ma non c'e' problema, perche' noi proprio all'atto della stampa
-//facciamo la separazione!
-//ora, dobbiamo farla anche durante l'ALGORITMO DI SOLUZIONE.
-//Pertanto, definiro' nell'equazione 
-// un VETTORE di STORAGE NODALE per le VARIABILI NODALI
-// e un VETTORE di STORAGE di ELEMENTO per le VARIABILI DI ELEMENTO.
-
-//Questo vettore servira' per RETRIEVE THE DOFS FOR THE TRUE VALUES FOR ANY EQUATION,
-// and to PRINT ALL THE VARIABLES, node or cell.
-
-//
-
-void SystemTwo::GenerateBdc() {
-  
-    std::string    input_dir = DEFAULT_CONFIGDIR;
-    std::string          ibc = DEFAULT_IBC;
-    std::string     ext_xdmf = DEFAULT_EXT_XDMF;
-    std::string       ext_h5 = DEFAULT_EXT_H5;
-    std::string  bdry_suffix = DEFAULT_BDRY_SUFFIX;
-    
-    std::ostringstream ibc_fileh5;
-    ibc_fileh5  << "./" << input_dir << "/" << ibc << ext_h5;
-// TODO actually, we should first COPY this file in the outtime dir, then READ it from there!
-    std::ifstream in(ibc_fileh5.str().c_str());
-
-    const uint Lev_pick_bc_NODE_dof = _NoLevels-1;  //we use the FINE Level as reference
-    
- //************************************************   
- //******** NODE BASED ****************************   
-    const uint offset      = _mesh._NoNodesXLev[_NoLevels-1];
-
-    std::vector<int> bc_flag(_dofmap._n_vars);
-
-    _bc = new int[_dofmap._Dim[Lev_pick_bc_NODE_dof]];
-    for (uint i1=0;i1< _dofmap._Dim[Lev_pick_bc_NODE_dof];i1++) _bc[i1] = DEFAULT_BC_FLAG;    // set 1 all the points for  bc (boundary condition)
-
-    //both here and in bc_read you have to put the value bc=0
-    //so that you get the IDENTITY OPERATOR and you only have to provide the
-    //function for the RHS
- //******** NODE BASED ****************************   
- //***************************************************   
-
- //**************************************************   
- //******** ELEM BASED ******************************  
-     CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());
-    const uint el_nnodes_b = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
-
-    _bc_fe_kk             =  new int*[_NoLevels];
-    int* DofOff_Lev_kk    =  new int[_NoLevels];
-    
-    for (uint Level=0; Level <_NoLevels; Level++)   { //loop over the levels
-
-          DofOff_Lev_kk[Level] = _dofmap._nvars[KK]*_dofmap._DofNumLevFE[Level][KK];
-              _bc_fe_kk[Level] = new int[DofOff_Lev_kk[Level]];
-
-        for (int i=0; i < DofOff_Lev_kk[Level]; i++)    _bc_fe_kk[Level][i] = DEFAULT_BC_FLAG;
-    }
- //******** ELEM BASED ******************************   
- //************************************************   
-
- // Both the NODE BASED and the ELEM BASED are initialized to 1 over THE WHOLE VOLUME,
-// so over ALL THE DOFS.
-// Then you call the BOUNDARY FUNCTIONS, and these act only on boundary nodes or boundary elements,
-// but then of course their contribution goes into the volume,
-// because every Boundary NODE belongs to the VOLUME
-// and every Boundary ELEMENT communicates its value ("as a TRACE") to the corresponding VOLUME ELEM DOF.
-
-    if (!in) {   // -------- reading bc from function
- 
-    for (uint Level=0; Level <_NoLevels;Level++)   { //loop over the levels
-	
-        for (uint isubd=0; isubd<_mesh._NoSubdom; ++isubd) {
-            uint iel_b = _mesh._off_el[BB][ _NoLevels*isubd + Level];
-            uint iel_e = _mesh._off_el[BB][ _NoLevels*isubd + Level+1];
-            for (uint iel=0; iel < (iel_e - iel_b); iel++) {
-
-	        currelem.set_el_nod_conn_lev_subd(Level,isubd,iel);
-                currelem.SetMidpoint();
-		
- 	    for (uint ivar=0; ivar< _dofmap._n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!
- 	    
-      uint count = 0;
-        for (uint i = 0; i < _QtyInternalVector.size(); i++) {
-	  std::vector<int>  bc_temp(_QtyInternalVector[i]->_dim,DEFAULT_BC_FLAG);
-	  _QtyInternalVector[i]->bc_flag_txyz(0.,currelem.GetMidpoint(),bc_temp);
-	  for (uint j = 0; j < _QtyInternalVector[i]->_dim; j++) {
-	    bc_flag[count] = bc_temp[j];
-	    count++;
-	  }
-	} 
-
-  //******************* ONLY FINE LEVEL, NODE VARS ***************** 
-   if (Level == Lev_pick_bc_NODE_dof)  { 
-                for (uint i=0; i<  el_nnodes_b; i++)  {
-                        const uint fine_node = _mesh._el_map[BB][(iel+iel_b)*el_nnodes_b+i];
-
-                    //Set the quadratic fields
-                    if ( i < currelem.GetElemType(QQ)->GetNDofs() )
-		      for (uint ivar=0; ivar<_dofmap._nvars[QQ]; ivar++) {
-                            int kdof = _dofmap.GetDof(Lev_pick_bc_NODE_dof,QQ,ivar,fine_node);
-                           if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _dofmap._VarOff[QQ]];
-                        }
-                    // Set the linear fields
-                    if ( i < currelem.GetElemType(LL)->GetNDofs() ) {
-                        for (uint ivar = 0; ivar < _dofmap._nvars[LL]; ivar++) {
-                            int kdof = _dofmap.GetDof(Lev_pick_bc_NODE_dof,LL,ivar,fine_node);
-                           if (_bc[kdof] != 0) _bc[kdof] = bc_flag[ ivar + _dofmap._VarOff[LL]];
-                        }
-                    }
-                } // i
-                
-           }
-   //******************* END ONLY FINE LEVEL ***************** 
-
- //******************* ALL LEVELS, ELEM VARS ***************** 
-		 int sum_elems_prev_sd_at_lev = 0;
-                 for (uint pr = 0; pr < isubd; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[BB][_NoLevels*pr + Level + 1] - _mesh._off_el[BB][ _NoLevels*pr + Level]; }
-		 
-		 int bdry_iel_lev =  iel + sum_elems_prev_sd_at_lev;
-		 int vol_iel =  _mesh._el_bdry_to_vol[Level][bdry_iel_lev];
-		 
- 	        for (uint ivar= 0; ivar < _dofmap._nvars[KK];  ivar++)  { 
-		  int dof_kk_pos_lev =  vol_iel + ivar*_dofmap._DofNumLevFE[Level][KK];
-	            if (_bc_fe_kk[Level][ dof_kk_pos_lev ] != 0)  _bc_fe_kk[Level][ dof_kk_pos_lev ] = bc_flag[ ivar + _dofmap._VarOff[KK] ];
-		}
-//******************* END ALL LEVELS, ELEM VARS **************   
-                 
-            } // end of element loop
-        }  // end subdomain
-        
-     }//end nolevels
-       
-        std::cout << "\n GenerateBdc: boundary conditions defined by  bc_read" << "\n \n";
-    }
-    
-    // *********  reading from file ***************************
-    else {     // boundary from the top grid
-        std::cout << "\n GenerateBdc: READING FROM FILE STILL WITHOUT KK ELEMENTS, CHECK new and delete in here! ************** " << ibc_fileh5.str() << "\n \n";
-        abort();
-	
-        // temporary vector
-        uint  n_nodes_q=_mesh._NoNodesXLev[_NoLevels-1];
-        int *data=new int[ n_nodes_q ];
-
-        // open file
-        std::ostringstream tabname;
-        hid_t  file = H5Fopen(ibc_fileh5.str().c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
-
-        // variable loop
-        for (uint ivar=0;ivar< _dofmap._nvars[QQ];ivar++) { // ----------------------------
-            // nodes for boundary elements
-            int el_nodes=el_nnodes_b; /*  if (ivar >= _nvars[0]) el_nodes=NDOF_PB;*/ /*TODO check here*/
-            // read
-            XDMFWriter::read_Ihdf5(file,"/"+_var_names[ivar] + bdry_suffix,data);// from hdf5 file
-
-            // storage boundary conditions <- data <- hdf5 file
-            for (uint isubd=0;isubd<_mesh._NoSubdom;++isubd) {
-                int iel0=_mesh._off_el[BB][_NoLevels-1+_NoLevels*isubd];
-                int ielf=_mesh._off_el[BB][_NoLevels-1+_NoLevels*isubd+1];
-                for (int iel=0;iel <ielf-iel0; iel++) {
-
-                    // Element node loop
-                    for (int i=0; i< el_nodes; i++)     {// element loop
-                        const uint k=_mesh._el_map[BB][(iel+iel0)*el_nnodes_b+i]; // global node
-                        int kdof= _dofmap.GetDof(_NoLevels-1,QQ,ivar,k);
-                        _bc[kdof]=data[k];
-                    }
-                }// iel
-            }//proc
-        }// ivar ------------------------------------------------------------
-        // clean
-        delete []data;
-        H5Fclose(file);
-        std::cout << "\n GenerateBdc(DA): boundary conditions defined from file " << ibc_fileh5.str() << "\n \n";
-    }
-    
-    delete []DofOff_Lev_kk;
-   
-    return;
-}
-
-
-
-
-
-
-
-//===========================================
-/////////////////// ELEM BC ////////////////////
-///////////////////////////////
-///    el_flag[0] = pressure integral (yes=1 or no=0)
-///    el_flag[1] = stress integral
-///    el_flag[2] = normal component of velocity (fixed=yes=1)
-///   el_flag[3] = tangential component(-s)
-
-//elembc
-//this must only pick my _iproc and my Level
-//so what is the length of this per proc and per level?
-//clearly, here we do not know in which level we are, so we must
-//compute the lengths for every processor and every level
-//well, when we first allocate the vector, since it is serial,
-//we allocate it to the maximum length
-//then, it is when we FILL it that we have to take care of the correct range
-//we'll have to do a map for each LEVEL, how do we do that?
-
-//this map only takes into account the fine level, but how do i consider all the levels?
-//for the dofs, you just do it for the FINE LEVEL, because then a FINE node is also a coarser node
-//what could we do here?Once we pick the el_xm we must know at which level we are.
-//Well,actually we can pick the boundary element by its iel, like one does for the connectivity
-//if the iel is in that range, compute the middle point and fill the _elem_bc
-
-//---------> WHAT IS THE PROBLEM ABOUT THIS FUNCTION?
-//---- Why does the get_el_nod_conn(BB,..) work in GenMatRhs
-//but HERE it doesnt?
-//I think because here we are looping over ALL LEVELS and ALL SUBDOMAINS (procs)
-//while in the GenMatRhs every processor
-//does HIS OWN SUBDOMAIN (_iproc)
-// and ONE LEVEL AT A TIME (Level)!
-//instead, here every single processor does all of this!
-//it is a SERIAL routine
-//instead, in GenMatRhs every processor does HIS OWN PART, BOTH AT VOLUME and AT BOUNDARY
-//do we have to loop over
-
-//each processor does the loop over ALL the PROCESSORS, because this routine is serial
-
-//compute the elem middle point
-//we are on the boundary, so we are doing Quad9
-//why was it always working with MORE THAN ONE LEVEL?
-//it seems like the boundary connectivity map with ONE level and MORE THAN TWO PROCS doesnt work...
-
-//here, I distinguished the levels.
-//can i think of something like the dofs, where you can do all the things only at the FINE LEVEL?
-//if a dof is fine, it is also coarse,
-//if an element is fine, is it also coarse? no
-//if an element is coarse, is it also fine? no
-//if a flag is set on a fine element, then can i obtain the corresponding COARSE flag?
-//you have to know the SONS of your FATHER element
-//let us do a map with THREE indices:
-//first: processor
-//second: level
-//third: iel
-//well, the el_connectivity goes first by proc then by level,
-//so we decide to follow the el_connectivity
-//no, i think that i should put first the small range indices, then the larger ones
-//i wont use more than 4-5 level
-//i may want to use a lot of processors
-//every processor at every level may have a lot of elements
-
-//this routine is GENERAL. The only thing that is NOT GENERAL is the use of 4 element boundary flags
-// and of ONE normal value and ONE tangential VALUE
-//for now, we will leave things like this
-void SystemTwo::GenerateBdcElem()  {
-
-     CurrentElem       currelem(BB,this,_mesh,_eqnmap.GetElemType());  
-  
-      uint space_dim = _mesh.get_dim();
-
-    _elem_bc       =  new int**[_NoLevels];
-    _elem_val_norm =  new double**[_NoLevels];
-    _elem_val_tg   =  new double**[_NoLevels];
-
-    for (uint Level=0; Level <_NoLevels;Level++)   { //loop over the levels
-
-        _elem_bc[Level]       = new int*[_mesh._NoSubdom];//4*_mesh._n_elements_vb_lev[BB][Level] this was wrong, actually it is L + P*NoLevels, i wasnt considering the others but it was working! For instance in two D the numbers for the two procs are the same, here's why!
-        _elem_val_norm[Level] = new double*[_mesh._NoSubdom];//_mesh._n_elements_vb_lev[BB][Level]
-        _elem_val_tg[Level]   = new double*[_mesh._NoSubdom];//_mesh._n_elements_vb_lev[BB][Level]
-
-        for (uint isubd=0;isubd<_mesh._NoSubdom;++isubd) {  //loop over the subdomains
-
-            uint iel_b=_mesh._off_el[BB][ _NoLevels*isubd +  Level];
-            uint iel_e=_mesh._off_el[BB][ _NoLevels*isubd +  Level+1];
-
-            _elem_bc[Level][isubd]  = new int[/*4*/2*(iel_e-iel_b)]; /*normal and tangential*/ //4*_mesh._n_elements_vb_lev[BB][Level+isubd*_NoLevels] that was not correct
-            _elem_val_norm[Level][isubd]  = new double[ 1*(iel_e-iel_b) ];  //_mesh._n_elements_vb_lev[BB][Level+isubd*_NoLevels]
-
-            _elem_val_tg[Level][isubd]  = new double[ _number_tang_comps[space_dim - 1]*(iel_e-iel_b) ];   //_mesh._n_elements_vb_lev[BB][Level+isubd*_NoLevels]
-
-            for (uint iel=0;iel < (iel_e - iel_b); iel++) {  //loop over the elems of that level&subdomain
-
-                int surf_id=0;  //could do this outside also
-                int     el_flag[2] = {0,0};
-                std::vector<double> el_value(1 + _number_tang_comps[space_dim - 1],0.); //1 normal and 1 tangential or 1 normal and 3 tangential
-
-                currelem.set_el_nod_conn_lev_subd(Level,isubd,iel);
-                currelem.SetMidpoint();
-
-                //read the bc's //the read forgets all levels and subdomains, it is only based on the MIDDLE POINT
-                elem_bc_read(currelem.GetMidpoint(),surf_id,&el_value[0],el_flag);
-
-                std::cout << "Bdry " << surf_id << " normal: " <<  el_flag[0] << " tang: " <<  el_flag[1] << std::endl;
-
-                //store the bc's
-                _elem_bc[Level][isubd][/*4*/2*iel]   =  el_flag[0];
-                _elem_bc[Level][isubd][/*4*/2*iel+1] =  el_flag[1];
-                /*              _elem_bc[Level][isubd][4*iel+2] =  el_flag[2];
-                              _elem_bc[Level][isubd][4*iel+3] =  el_flag[3];*/
-                _elem_val_norm[Level][isubd][iel]   = el_value[0];
- 
-		for (uint i=0; i< _number_tang_comps[space_dim - 1]; i++) {
-		  _elem_val_tg[Level][isubd][ _number_tang_comps[space_dim-1]*iel + i ] = el_value[1+i];
-		}
-// // //   WAS
-// // // #if dimension==2
-// // //                 _elem_val_tg[Level][isubd][iel]   = el_value[1];
-// // // #elif dimension==3
-// // //                 _elem_val_tg[Level][isubd][3*iel]   = el_value[1];
-// // //                 _elem_val_tg[Level][isubd][3*iel+1]   = el_value[2];
-// // //                 _elem_val_tg[Level][isubd][3*iel+2]   = el_value[3];
-// // // 
-// // // #endif
-
-            }
-        }
-
-    }//end nolevels
-
-
-    return;
-}
-
-
-///////////////////////////////
-void SystemTwo::Bc_GetElFlagValLevSubd(const uint Level,const uint isubd,const uint iel,int* el_flag,double* el_value ) const {
-
-    el_flag[0] =        _elem_bc[Level][isubd][/*4*/2*iel]   ;
-    el_flag[1] =        _elem_bc[Level][isubd][/*4*/2*iel+1] ;
-    /*    el_flag[2] =        _elem_bc[Level][isubd][4*iel+2] ;
-        el_flag[3] =        _elem_bc[Level][isubd][4*iel+3] ;*/
-    el_value[0] =  _elem_val_norm[Level][isubd][iel]   ;
-
-  uint space_dim = _mesh.get_dim();
-
-  for (uint i=0; i < _number_tang_comps[space_dim - 1]; i++) el_value[1+i] = _elem_val_tg[Level][isubd][ _number_tang_comps[space_dim - 1]*iel + i ];
-    
-// // //   WAS
-// #if dimension==2
-//     el_value[1] =    _elem_val_tg[Level][isubd][iel]   ;
-// #elif dimension==3
-//     el_value[1] =    _elem_val_tg[Level][isubd][3*iel]   ;
-//     el_value[2] =    _elem_val_tg[Level][isubd][3*iel+1]   ;
-//     el_value[3] =    _elem_val_tg[Level][isubd][3*iel+2]   ;
-// #endif
-
-    return;
-}
-
-
-
-////////////////////////////////
-void SystemTwo::clearElBc() {
-
-    for (uint Level=0; Level <_NoLevels;Level++)   {
-
-        for (uint isubd=0;isubd<_mesh._NoSubdom;++isubd) {
-            delete [] _elem_bc[Level][isubd];
-            delete [] _elem_val_norm[Level][isubd];
-            delete [] _elem_val_tg[Level][isubd];
-        }
-
-        delete [] _elem_bc[Level];
-        delete [] _elem_val_norm[Level];
-        delete [] _elem_val_tg[Level];
-
-    }
-
-    delete [] _elem_bc;
-    delete [] _elem_val_norm;
-    delete [] _elem_val_tg;
-
-    return;
-}
-
-/////////////////// ELEM BC ////////////////////
-
 
 
 
@@ -816,73 +274,65 @@ void SystemTwo::clearElBc() {
 /// This function generates the initial conditions:
 void SystemTwo::Initialize() {
 
-    std::string  input_dir = DEFAULT_CONFIGDIR;
-    std::string        ibc = DEFAULT_IBC;
-    std::string     ext_h5 = DEFAULT_EXT_H5;
-    std::ostringstream ibc_filexmf;
-    ibc_filexmf << "./"<< input_dir << ibc << ext_h5;
-    std::ifstream in(ibc_filexmf.str().c_str());
-
-    if (!in) {
-
-        CurrentElem       currelem(VV,this,_mesh,_eqnmap.GetElemType());  
-     
-        const uint  coords_fine_offset = _mesh._NoNodesXLev[_NoLevels-1];
-        const uint  el_dof_objs = NVE[ _mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
-        std::vector<double>      xp(_mesh.get_dim());
+      
+        const uint  coords_fine_offset = GetMLProb().GetMeshTwo()._NoNodesXLev[GetGridn()-1];
+        std::vector<double>      xp(GetMLProb().GetMeshTwo().get_dim());
         std::vector<double> u_value(_dofmap._n_vars);
 
        std::cout << "\n====================== Initialize:  Now we are setting them for all levels! ========================" << "\n \n";
 
-    for (uint Level = 0; Level< _NoLevels; Level++) {
+    for (uint Level = 0; Level< GetGridn(); Level++) {
+      
+       CurrentElem       currelem(Level,VV,this,GetMLProb().GetMeshTwo(),GetMLProb().GetElemType());  
+        const uint  el_dof_objs = NVE[ GetMLProb().GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 
-            uint iel_b = _mesh._off_el[VV][ _mesh._iproc*_NoLevels + Level ];
-            uint iel_e = _mesh._off_el[VV][ _mesh._iproc*_NoLevels + Level + 1];
+            uint iel_b = GetMLProb().GetMeshTwo()._off_el[VV][ GetMLProb().GetMeshTwo()._iproc*GetGridn() + Level ];
+            uint iel_e = GetMLProb().GetMeshTwo()._off_el[VV][ GetMLProb().GetMeshTwo()._iproc*GetGridn() + Level + 1];
 
 	    for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 	  
-	        currelem.set_el_nod_conn_lev_subd(Level,_mesh._iproc,iel);
+	        currelem.SetDofobjConnCoords(GetMLProb().GetMeshTwo()._iproc,iel);
                 currelem.SetMidpoint();
 
-            for (uint q=0; q < _QtyInternalVector.size() ; q++) {
+            for (uint q=0; q < _UnknownQuantitiesVector.size() ; q++) {
 		      
-	  std::vector<double>  value(_QtyInternalVector[q]->_dim,0.);
+	  std::vector<double>  value(_UnknownQuantitiesVector[q]->_dim,0.);
             //the fact is that THERE ARE DIFFERENT DOF OBJECTS for DIFFERENT FE families
 	    //for each family we should only pick the dof objects that are needed
 	    //what changes between the FE families is the DOF OBJECT YOU PROVIDE: it could be a NODE or a CELL
 	    // Notice that for some elements you don't have the midpoint of the element!
-     if (_QtyInternalVector[q]->_FEord < KK) {
+     if (_UnknownQuantitiesVector[q]->_FEord < KK) {
        
-        for (uint ivar=0; ivar < _QtyInternalVector[q]->_dim; ivar++) {
+        for (uint ivar=0; ivar < _UnknownQuantitiesVector[q]->_dim; ivar++) {
        
-          for (uint k=0; k < currelem.GetElemType(_QtyInternalVector[q]->_FEord)->GetNDofs() ; k++) {
+          for (uint k=0; k < currelem.GetElemType(_UnknownQuantitiesVector[q]->_FEord)->GetNDofs() ; k++) {
 	    
-                const int fine_node = _mesh._el_map[VV][ k + ( iel + iel_b )*el_dof_objs ];
-                for (uint idim = 0; idim < _mesh.get_dim(); idim++) xp[idim] = _mesh._xyz[ fine_node + idim*coords_fine_offset ];
+                const int fine_node = GetMLProb().GetMeshTwo()._el_map[VV][ k + ( iel + iel_b )*el_dof_objs ];
+                for (uint idim = 0; idim < GetMLProb().GetMeshTwo().get_dim(); idim++) xp[idim] = GetMLProb().GetMeshTwo()._xyz[ fine_node + idim*coords_fine_offset ];
 
-	  _QtyInternalVector[q]->initialize_xyz(&xp[0],value);
-		    const int dof_pos_lev = _dofmap.GetDofQuantityComponent(Level,_QtyInternalVector[q],ivar,fine_node);
+	  _UnknownQuantitiesVector[q]->initialize_xyz(&xp[0],value);
+		    const int dof_pos_lev = _dofmap.GetDofQuantityComponent(Level,_UnknownQuantitiesVector[q],ivar,fine_node);
 		    _x[Level]->set( dof_pos_lev, value[ivar] );
 		      
 	    }  //dof objects 
          }
 
      }
-     else if (_QtyInternalVector[q]->_FEord == KK) { 
+     else if (_UnknownQuantitiesVector[q]->_FEord == KK) { 
 
-	    for (uint ivar=0; ivar < _QtyInternalVector[q]->_dim; ivar++) {
+	    for (uint ivar=0; ivar < _UnknownQuantitiesVector[q]->_dim; ivar++) {
 	    
-                for (uint k=0; k < currelem.GetElemType(_QtyInternalVector[q]->_FEord)->GetNDofs() ; k++) { //only 1
+                for (uint k=0; k < currelem.GetElemType(_UnknownQuantitiesVector[q]->_FEord)->GetNDofs() ; k++) { //only 1
 		  
        int sum_elems_prev_sd_at_lev = 0;
-	  for (uint pr = 0; pr < _mesh._iproc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[VV][pr*_NoLevels + Level + 1] - _mesh._off_el[VV][pr*_NoLevels + Level]; }
+	  for (uint pr = 0; pr < GetMLProb().GetMeshTwo()._iproc; pr++) { sum_elems_prev_sd_at_lev += GetMLProb().GetMeshTwo()._off_el[VV][pr*GetGridn() + Level + 1] - GetMLProb().GetMeshTwo()._off_el[VV][pr*GetGridn() + Level]; }
 	  
           currelem.GetMidpoint();
 	  
-	  _QtyInternalVector[q]->initialize_xyz(&currelem.GetMidpoint()[0],value);
+	  _UnknownQuantitiesVector[q]->initialize_xyz(&currelem.GetMidpoint()[0],value);
 
 	      const int elem_lev = iel + sum_elems_prev_sd_at_lev;
-	      const int dof_pos_lev = _dofmap.GetDofQuantityComponent(Level,_QtyInternalVector[q],ivar,elem_lev);
+	      const int dof_pos_lev = _dofmap.GetDofQuantityComponent(Level,_UnknownQuantitiesVector[q],ivar,elem_lev);
               _x[Level]->set( dof_pos_lev, value[ivar] );
 	    
  	                       }  //k
@@ -904,16 +354,6 @@ void SystemTwo::Initialize() {
 #ifdef DEFAULT_PRINT_INFO
         std::cout << "\n Initialize(Base): Initial solution defined by ic_read" << "\n \n";
 #endif
-    }
-
-    else {// -------------------- file reading
-        std::cout << "^^^^^ WE HAVE TO CHECK BECAUSE WE ADDED CONSTANT ELEMENTS ^^^^^^" << std::endl; abort();
-
-        XDMFWriter::read_system_solutions(ibc_filexmf.str(),&_mesh,&_dofmap,this);
-        std::cout << "\n Initialize(Base): Initial solution defined by " <<  ibc_filexmf.str().c_str() << "\n \n";
-    }
-
-    in.close();
 
     return;
 }
@@ -943,14 +383,14 @@ void SystemTwo::MGSolve(double Eps1,          // tolerance for the linear solver
 #endif
     double res_fine;
 
-    _b[_NoLevels-1]->close();
-    double bNorm_fine =     _b[_NoLevels-1]->l2_norm();
-    _x_old[_NoLevels-1]->close();
-    double x_old_fine = _x_old[_NoLevels-1]->l2_norm();
+    _b[GetGridn()-1]->close();
+    double bNorm_fine =     _b[GetGridn()-1]->l2_norm();
+    _x_old[GetGridn()-1]->close();
+    double x_old_fine = _x_old[GetGridn()-1]->l2_norm();
 
 #ifdef DEFAULT_PRINT_INFO
     std::cout << " bNorm_fine l2 "     <<  bNorm_fine                     << std::endl;
-    std::cout << " bNorm_fine linfty " << _b[_NoLevels-1]->linfty_norm()  << std::endl;
+    std::cout << " bNorm_fine linfty " << _b[GetGridn()-1]->linfty_norm()  << std::endl;
     std::cout << " xold_fine l2 "      <<  x_old_fine                     << std::endl;
 #endif
 
@@ -963,7 +403,7 @@ void SystemTwo::MGSolve(double Eps1,          // tolerance for the linear solver
         //smooth on the coarse level WITH PHYSICAL b !
         //and compute the residual
 
-        for (uint Level = 1; Level < _NoLevels; Level++) {
+        for (uint Level = 1; Level < GetGridn(); Level++) {
 
             _x[Level]->matrix_mult(*_x[Level-1],*_Prl[Level]);  //**** project the solution
 
@@ -982,8 +422,7 @@ void SystemTwo::MGSolve(double Eps1,          // tolerance for the linear solver
 
 ///std::cout << "@@@@@@@@@@ start on the finest level @@@@@@@@"<< std::endl;
 
-        res_fine = MGStep(_NoLevels-1,Eps1,MaxIter,Gamma,Nc_pre,Nc_coarse,Nc_post);
-        // MGCheck(_NoLevels-1); // check projection-restriction
+        res_fine = MGStep(GetGridn()-1,Eps1,MaxIter,Gamma,Nc_pre,Nc_coarse,Nc_post);
 
 ///std::cout << "@@@@@@@@@@ back to the finest level @@@@@@@@"<< std::endl;
 
@@ -1044,7 +483,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << "Level " << Level << " ANorm l1 " << ANorm0 << " bNorm linfty " << bNorm0  << " xNormINITIAL linfty " << xNorm0 << std::endl;
 #endif
 
-        rest = _solver[Level]->solve(*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_LSOLV_C,Nc_coarse);  //****** smooth on the coarsest level
+        rest = _LinSolver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_LSOLV_C,Nc_coarse);  //****** smooth on the coarsest level
 
 #ifdef DEFAULT_PRINT_CONV
         std::cout << " Coarse sol : res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -1075,7 +514,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << "Level " << Level << " ANorm l1 " << ANormpre << " bNorm linfty " << bNormpre  << " xNormINITIAL linfty " << xNormpre << std::endl;
 #endif
 
-        rest=_solver[Level]->solve(*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST, Nc_pre); //****** smooth on the finer level
+        rest = _LinSolver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST, Nc_pre); //****** smooth on the finer level
 
 #ifdef DEFAULT_PRINT_CONV
         std::cout << " Pre Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -1130,7 +569,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << "Level " << Level << " ANorm l1 " << ANormpost << " bNorm linfty " << bNormpost << " xNormINITIAL linfty " << xNormpost << std::endl;
 #endif
 
-        rest=_solver[Level]->solve(*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST,Nc_post);  //***** smooth on the coarser level
+        rest = _LinSolver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST,Nc_post);  //***** smooth on the coarser level
 
 #ifdef DEFAULT_PRINT_CONV 
         std::cout<<" Post Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -1153,18 +592,6 @@ double SystemTwo::MGStep(int Level,            // Level
     //WHAT NORM is THIS?!? l2, but PRECONDITIONED!!!
 
 }
-
-// =============================================
-/// Check for Prolong and Restr Operators
-void SystemTwo::MGCheck(int Level) const {
-
-    _x[Level-1]->matrix_mult(*_x[Level],*_Rst[Level-1]);
-    _x[Level]  ->matrix_mult(*_x[Level-1],*_Prl[Level]);
-    return;
-}
-
-
-
 
 // =========================================
 void SystemTwo::ReadMGOps(const std::string output_path) {
@@ -1351,9 +778,9 @@ void SystemTwo::ReadMGOps(const std::string output_path) {
 
 void SystemTwo::ReadMatrix(const  std::string& namefile) {
 
-  _A.resize(_NoLevels);
+  _A.resize(GetGridn());
 
-    for (uint Level = 0; Level< _NoLevels; Level++) {
+    for (uint Level = 0; Level< GetGridn(); Level++) {
 
       std::ostringstream groupname_lev; groupname_lev <<  "LEVEL" << Level;
   
@@ -1414,22 +841,22 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
 //============ compute things for the sparsity pattern =======================
 //============================================================================
     
-    int NoLevels  = _mesh._NoLevels;
-    uint off_proc = NoLevels*_mesh._iproc;
+    int NoLevels  = GetMLProb().GetMeshTwo()._NoLevels;
+    uint off_proc = NoLevels*GetMLProb().GetMeshTwo()._iproc;
 
     uint mrow_glob_t = 0;
     for (int fe=0; fe<QL; fe++) mrow_glob_t += _dofmap._nvars[fe]*rowcln[fe][fe][0];
     uint ncol_glob_t = mrow_glob_t;
 
     uint mrow_lev_proc_t  = 0;
-    for (int fe=0; fe<QL; fe++)  mrow_lev_proc_t +=  _dofmap._DofLocLevProcFE[Level][_mesh._iproc][fe]*_dofmap._nvars[fe];
+    for (int fe=0; fe<QL; fe++)  mrow_lev_proc_t +=  _dofmap._DofLocLevProcFE[Level][GetMLProb().GetMeshTwo()._iproc][fe]*_dofmap._nvars[fe];
     uint ncol_lev_proc_t  = mrow_lev_proc_t;
 
     uint DofObjInit_lev_PrevProcs[QL];  //TODO what is this? it is the ROW INDEX at which to begin for every processor
                       
      for (int r=0; r<QL; r++)     DofObjInit_lev_PrevProcs[r] = 0;
          
-    for (uint isubd=0; isubd<_mesh._iproc; isubd++) {
+    for (uint isubd=0; isubd<GetMLProb().GetMeshTwo()._iproc; isubd++) {
         DofObjInit_lev_PrevProcs[QQ] += _dofmap._DofLocLevProcFE[Level][isubd][QQ];
         DofObjInit_lev_PrevProcs[LL] += _dofmap._DofLocLevProcFE[Level][isubd][LL];
         DofObjInit_lev_PrevProcs[KK] += _dofmap._DofLocLevProcFE[Level][isubd][KK];
@@ -1448,7 +875,7 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
     graph._ml_start = _dofmap.GetStartDof(Level,off_proc);
     // TODO is this used? I guess it is used by update_sparsity_pattern !
     // Every subdomain has a local set of dofs, and these dofs start at a specific point.
-    // Now, remember that _mesh._off_nd[QQ] should only be used for computing offsets, so differences.
+    // Now, remember that GetMLProb().GetMeshTwo()._off_nd[QQ] should only be used for computing offsets, so differences.
     // Here, it is used ALONE, because it gives you the NODE (in femus ordering) AT WHICH THE CURRENT SUBDOMAIN BEGINS,
     //and then from _node_dof[Level] (which was already constructed) you get THE LOCAL DOF AT THE CURRENT LEVEL TO START FROM.
     // Clearly, pay attention when you add elements, because in that case you would need to REDO the _node_dof map !!!
@@ -1457,13 +884,13 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
     
     int FELevel[QL];
     FELevel[QQ] = Level;
-    FELevel[LL] = (Level+_NoLevels)%(_NoLevels+1); //This is the map for the level of the LINEAR DOFS
+    FELevel[LL] = (Level+GetGridn())%(GetGridn()+1); //This is the map for the level of the LINEAR DOFS
     FELevel[KK] = Level;
 
     int off_onevar[QL];
-    off_onevar[QQ] = _mesh._NoNodesXLev[_NoLevels-1];
-    off_onevar[LL] = _mesh._NoNodesXLev[_NoLevels-1];
-    off_onevar[KK] = _mesh._n_elements_vb_lev[VV][Level];
+    off_onevar[QQ] = GetMLProb().GetMeshTwo()._NoNodesXLev[GetGridn()-1];
+    off_onevar[LL] = GetMLProb().GetMeshTwo()._NoNodesXLev[GetGridn()-1];
+    off_onevar[KK] = GetMLProb().GetMeshTwo()._n_elements_vb_lev[VV][Level];
     
     uint  off_EachFEFromStart[QL];
     off_EachFEFromStart[QQ] = 0;
@@ -1474,10 +901,10 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
      for (int r=0;r<QL;r++) {
       for (uint ivar=0; ivar < _dofmap._nvars[r]; ivar++) {
 
-        for (uint DofObj_lev = DofObjInit_lev_PrevProcs[r]; DofObj_lev < DofObjInit_lev_PrevProcs[r] + _dofmap._DofLocLevProcFE[Level][_mesh._iproc][r]; DofObj_lev++) {
+        for (uint DofObj_lev = DofObjInit_lev_PrevProcs[r]; DofObj_lev < DofObjInit_lev_PrevProcs[r] + _dofmap._DofLocLevProcFE[Level][GetMLProb().GetMeshTwo()._iproc][r]; DofObj_lev++) {
 
             int dof_pos, irow;
-	         if  (r<KK) {  dof_pos = _mesh._Qnode_lev_Qnode_fine[FELevel[r]][ DofObj_lev ];  }
+	         if  (r<KK) {  dof_pos = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[FELevel[r]][ DofObj_lev ];  }
             else if (r==KK) {  dof_pos = DofObj_lev; }
                     irow = _dofmap.GetDof(Level,r,ivar,dof_pos); 
 
@@ -1492,26 +919,26 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
 // // //             for (uint jvar=0; jvar<_nvars[QQ]; jvar++) {
 // // //             // quadratic-quadratic
 // // //                 for (int j=0; j<len[QQ]; j++) {
-// // //                     graph[irow][j+jvar*len[QQ]] = _node_dof[Level][ _mesh._node_map[FELevel[QQ]][pos_row[QQ][QQ][j+length_row[QQ][QQ][DofObj_lev]]]+jvar*_mesh._NoNodes[_NoLevels-1]];
+// // //                     graph[irow][j+jvar*len[QQ]] = _node_dof[Level][ GetMLProb().GetMeshTwo()._node_map[FELevel[QQ]][pos_row[QQ][QQ][j+length_row[QQ][QQ][DofObj_lev]]]+jvar*GetMLProb().GetMeshTwo()._NoNodes[GetGridn()-1]];
 // // //                 }
 // // // 	    }
 // // //                 // quadratic-linear 
 // // //                 for (uint jvar=0; jvar<_nvars[LL]; jvar++) {
 // // //                     for (int j=0; j<len[LL]; j++) {
-// // //                         graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][_mesh._node_map[FELevel[LL]][pos_row[QQ][LL][j+length_row[QQ][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*_mesh._NoNodes[_NoLevels-1]];
+// // //                         graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][GetMLProb().GetMeshTwo()._node_map[FELevel[LL]][pos_row[QQ][LL][j+length_row[QQ][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*GetMLProb().GetMeshTwo()._NoNodes[GetGridn()-1]];
 // // //                     }
 // // //                 }
 // // // 
 // // //             
 // // //             for (uint jvar=0; jvar<_nvars[QQ]; jvar++) {
 // // //                 for (int j=0; j<len[QQ]; j++) {
-// // //                     graph[irow][j+jvar*len[QQ]] = _node_dof[Level][_mesh._node_map[FELevel[QQ]][pos_row[LL][QQ][j+length_row[LL][QQ][DofObj_lev]]]+jvar*offset];
+// // //                     graph[irow][j+jvar*len[QQ]] = _node_dof[Level][GetMLProb().GetMeshTwo()._node_map[FELevel[QQ]][pos_row[LL][QQ][j+length_row[LL][QQ][DofObj_lev]]]+jvar*offset];
 // // //                 }
 // // //             }
 // // //             
 // // //             for (uint jvar=0; jvar<_nvars[LL]; jvar++) {
 // // //                 for (int j=0; j<len[LL]; j++) {
-// // //                     graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][ _mesh._node_map[FELevel[LL]][pos_row[LL][LL][j+length_row[LL][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*offset];
+// // //                     graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][ GetMLProb().GetMeshTwo()._node_map[FELevel[LL]][pos_row[LL][LL][j+length_row[LL][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*offset];
 // // //                 }
 // // //             }
 // // //            
@@ -1576,16 +1003,16 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
 //This function depends on _iproc
 void SystemTwo::ReadProl(const std::string& name) {
 
-    _Prl.resize(_NoLevels);  //TODO one place is left empty in practice, we can optimize this!!!
+    _Prl.resize(GetGridn());  //TODO one place is left empty in practice, we can optimize this!!!
 
-    for (uint Level = 1; Level< _NoLevels; Level++) {
+    for (uint Level = 1; Level< GetGridn(); Level++) {
   
     uint Lev_c = Level-1;
     uint Lev_f = Level;    
 
         int FEXLevel_c[QL];
         FEXLevel_c[QQ] = Level-1;                                 //COARSE Level for QUADRATIC
-        FEXLevel_c[LL] = (Level-1+_NoLevels)%(_NoLevels+1);
+        FEXLevel_c[LL] = (Level-1+GetGridn())%(GetGridn()+1);
         FEXLevel_c[KK] = Level-1;                                 //COARSE Level for CONSTANT //TODO is this used?
         int FEXLevel_f[QL];
         FEXLevel_f[QQ] = Level;                                  //FINE Level for QUADRATIC
@@ -1656,7 +1083,7 @@ void SystemTwo::ReadProl(const std::string& name) {
 // the number of variables of every FE type
 //Level goes from 1 to NoLevels-1
    
-    uint off_proc = _mesh._iproc*_NoLevels;
+    uint off_proc = GetMLProb().GetMeshTwo()._iproc*GetGridn();
 
     _Prl[ Lev_f ] = SparseMatrix::build().release();
 // // //     _Prl[ Lev_f ]->init(0,0,0,0); //TODO BACK TO A REASONABLE INIT
@@ -1665,12 +1092,12 @@ void SystemTwo::ReadProl(const std::string& name) {
     uint ml[QL]; uint nl[QL];
      for (int fe=0; fe<QL; fe++) { 
        if (fe < KK) {
-       ml[fe] = _mesh._off_nd[fe][off_proc + Lev_f +1] - _mesh._off_nd[fe][off_proc];    //  local quadratic    //COARSE (rows)
-       nl[fe] = _mesh._off_nd[fe][off_proc + Lev_c +1] - _mesh._off_nd[fe][off_proc];    // global quadratic  //FINE QUADRATIC (cols)
+       ml[fe] = GetMLProb().GetMeshTwo()._off_nd[fe][off_proc + Lev_f +1] - GetMLProb().GetMeshTwo()._off_nd[fe][off_proc];    //  local quadratic    //COARSE (rows)
+       nl[fe] = GetMLProb().GetMeshTwo()._off_nd[fe][off_proc + Lev_c +1] - GetMLProb().GetMeshTwo()._off_nd[fe][off_proc];    // global quadratic  //FINE QUADRATIC (cols)
        }
        else if (fe == KK) { 
-       ml[fe] = _mesh._off_el[VV][off_proc + Lev_f +1] - _mesh._off_el[VV][off_proc + Lev_f];
-       nl[fe] = _mesh._off_el[VV][off_proc + Lev_c +1] - _mesh._off_el[VV][off_proc + Lev_c];
+       ml[fe] = GetMLProb().GetMeshTwo()._off_el[VV][off_proc + Lev_f +1] - GetMLProb().GetMeshTwo()._off_el[VV][off_proc + Lev_f];
+       nl[fe] = GetMLProb().GetMeshTwo()._off_el[VV][off_proc + Lev_c +1] - GetMLProb().GetMeshTwo()._off_el[VV][off_proc + Lev_c];
       }
      }
     // pattern dimension
@@ -1696,9 +1123,9 @@ void SystemTwo::ReadProl(const std::string& name) {
     uint ml_init[QL]; //up to the current processor
       for (int fe=0;fe<QL;fe++) { 
            ml_init[fe]=0;
-        for (uint isubd=0;isubd<_mesh._iproc; isubd++) {
-       if (fe < KK)       ml_init[fe] += _mesh._off_nd[fe][isubd*_NoLevels + Lev_f +1] - _mesh._off_nd[fe][isubd*_NoLevels];
-       else if (fe == KK) ml_init[fe] += _mesh._off_el[VV][isubd*_NoLevels + Lev_f +1] - _mesh._off_el[VV][isubd*_NoLevels + Lev_f];
+        for (uint isubd=0;isubd<GetMLProb().GetMeshTwo()._iproc; isubd++) {
+       if (fe < KK)       ml_init[fe] += GetMLProb().GetMeshTwo()._off_nd[fe][isubd*GetGridn() + Lev_f +1] - GetMLProb().GetMeshTwo()._off_nd[fe][isubd*GetGridn()];
+       else if (fe == KK) ml_init[fe] += GetMLProb().GetMeshTwo()._off_el[VV][isubd*GetGridn() + Lev_f +1] - GetMLProb().GetMeshTwo()._off_el[VV][isubd*GetGridn() + Lev_f];
 	}
       }
   
@@ -1708,7 +1135,7 @@ void SystemTwo::ReadProl(const std::string& name) {
      for (uint ivar=0;ivar<_dofmap._nvars[fe];ivar++) {
         for (unsigned int i = ml_init[fe]; i < ml_init[fe]+ml[fe]; i++) {
           int dof_pos_f;
-          if (fe < KK)         dof_pos_f = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ i ];  //end fe < ql
+          if (fe < KK)         dof_pos_f = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ i ];  //end fe < ql
           else if (fe == KK)   dof_pos_f = i;
           
             int irow  = _dofmap.GetDof(Lev_f,fe,ivar,dof_pos_f);
@@ -1721,7 +1148,7 @@ void SystemTwo::ReadProl(const std::string& name) {
             for (uint j=0; j<ncol; j++) {
 	      int dof_pos_lev_c = Prol_pos[fe][j+len[fe][i]];
 	      int dof_pos_c;
-	      if      (fe  < KK) dof_pos_c = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ dof_pos_lev_c ];
+	      if      (fe  < KK) dof_pos_c = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ dof_pos_lev_c ];
               else if (fe == KK) dof_pos_c = dof_pos_lev_c; 
 	      
 	      pattern[irow][j] = _dofmap.GetDof(Lev_c,fe,ivar,dof_pos_c);
@@ -1744,7 +1171,7 @@ void SystemTwo::ReadProl(const std::string& name) {
        for (uint ivar=0;ivar < _dofmap._nvars[fe];ivar++) {
           for (unsigned int i=ml_init[fe]; i<ml_init[fe] + ml[fe]; i++) {
           int dof_pos_f;
-          if (fe < KK)        dof_pos_f = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ i ];  //end fe < ql
+          if (fe < KK)        dof_pos_f = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ i ];  //end fe < ql
           else if (fe == KK)  dof_pos_f = i;
 
           int irow  = _dofmap.GetDof(Lev_f,fe,ivar,dof_pos_f);
@@ -1777,7 +1204,7 @@ void SystemTwo::ReadProl(const std::string& name) {
     pattern.clear();
 
     _Prl[  Lev_f ]->close();  //TODO do we need this?
-//     if (_mesh._iproc==0) _Prl[  Lev_f ]->print_personal();
+//     if (GetMLProb().GetMeshTwo()._iproc==0) _Prl[  Lev_f ]->print_personal();
 //     _Prl[  Lev_f ]->print_graphic(false); //TODO should pass this true or false as a parameter
    } //end levels
     
@@ -1798,11 +1225,11 @@ void SystemTwo::ReadProl(const std::string& name) {
 //are assembled by looping over NODES.
 // Then, the values are set with NODE LOOPS for Rest and Prol,
 // and with ELEMENT LOOP for the MATRIX (the Assemble Function)
-//Level goes from 0 to < _NoLevels - 1 ==> Level is COARSE here
+//Level goes from 0 to < GetGridn() - 1 ==> Level is COARSE here
   
 //    uint Lev_c = Level;
 //   uint Lev_f = Level+1;
-	//with these you explore arrays that go from 0  to _NoLevels - 1
+	//with these you explore arrays that go from 0  to GetGridn() - 1
                            //so where the distinction between QQ and LL is already made
                            // with the EXTENDED levels you explore things that have an additional level,
                            // and so can work both with QQ and with LL
@@ -1814,9 +1241,9 @@ void SystemTwo::ReadProl(const std::string& name) {
     //perche' sono legati ai DOF (devi pensare che la questione del mesh e' gia' risolta)
 void SystemTwo::ReadRest(const std::string& name) {
  
-  _Rst.resize(_NoLevels);  //TODO why do it bigger?
+  _Rst.resize(GetGridn());  //TODO why do it bigger?
   
-  for (uint Level = 0; Level< _NoLevels - 1; Level++) {
+  for (uint Level = 0; Level< GetGridn() - 1; Level++) {
     
     uint Lev_c = Level;
     uint Lev_f = Level+1;
@@ -1882,18 +1309,18 @@ void SystemTwo::ReadRest(const std::string& name) {
 //======= From here on the EQUATION comes into play, because we have to take into account
 // the number of variables of every FE type
 //TODO if you watch carefully, you see that the COARSE levels are EXTENDED,
-// while the FINE LEVELS never risk to be "extended", the maximum for them is (_NoLevels-1) !
+// while the FINE LEVELS never risk to be "extended", the maximum for them is (GetGridn()-1) !
     
         int FEXLevel_c[QL];
         FEXLevel_c[QQ] = Level;                                 //COARSE Level for QUADRATIC
-        FEXLevel_c[LL] = (_NoLevels + Level)%(_NoLevels + 1);   //COARSE Level for LINEAR: Level1=0 means coarse linear, a finer linear is the first coarse quadratic, and so on and so on
+        FEXLevel_c[LL] = (GetGridn() + Level)%(GetGridn() + 1);   //COARSE Level for LINEAR: Level1=0 means coarse linear, a finer linear is the first coarse quadratic, and so on and so on
         FEXLevel_c[KK] = Level;                                 //COARSE Level for CONSTANT
         int FEXLevel_f[QL];
         FEXLevel_f[QQ] = Level+1;                                  //FINE Level for QUADRATIC
         FEXLevel_f[LL] = Level;                                // AAA look at the symmetry, this is exactly (_n_levels + Level1 + 1)%(_n_levels + 1); ! //FINE Level for LINEAR:   Level1=0 means coarse linear, a finer linear is the first coarse quadratic, and so on and so on
         FEXLevel_f[KK] = Level+1;                                  //FINE Level for CONSTANT
 
-    uint off_proc=_NoLevels*_mesh._iproc;
+    uint off_proc=GetGridn()*GetMLProb().GetMeshTwo()._iproc;
 
     _Rst[Lev_c] = SparseMatrix::build().release();
 // // //     _Rst[Lev_c]->init(0,0,0,0);   //TODO BACK TO A REASONABLE INIT  //we have to do this before appropriately!!!
@@ -1912,8 +1339,8 @@ void SystemTwo::ReadRest(const std::string& name) {
     pattern._ml = 0;            //  local _m
     pattern._nl = 0;            //  local _n
      for (int fe=0;fe<QL;fe++) { 
-        pattern._ml += _dofmap._nvars[fe]*_dofmap._DofLocLevProcFE[Lev_c][_mesh._iproc][fe]; 
-        pattern._nl += _dofmap._nvars[fe]*_dofmap._DofLocLevProcFE[Lev_f][_mesh._iproc][fe];
+        pattern._ml += _dofmap._nvars[fe]*_dofmap._DofLocLevProcFE[Lev_c][GetMLProb().GetMeshTwo()._iproc][fe]; 
+        pattern._nl += _dofmap._nvars[fe]*_dofmap._DofLocLevProcFE[Lev_f][GetMLProb().GetMeshTwo()._iproc][fe];
      } 
      
     // starting indices for local matrix
@@ -1922,18 +1349,18 @@ void SystemTwo::ReadRest(const std::string& name) {
    uint DofObjInit_lev_PrevProcs_c[QL];
         for (int fe=0;fe<QL;fe++) { DofObjInit_lev_PrevProcs_c[fe] = 0;  }
         for (int fe=0;fe<QL;fe++) { 
-    for (uint isubd=0;isubd<_mesh._iproc; isubd++) { //up to the current processor
-       if (fe < KK)       /*mlinit*/ DofObjInit_lev_PrevProcs_c[fe] += _mesh._off_nd[fe][ isubd*_NoLevels + Lev_c +1 ]  - _mesh._off_nd[fe][isubd*_NoLevels];  
-       else if (fe == KK) /*mlinit*/ DofObjInit_lev_PrevProcs_c[fe] += _mesh._off_el[VV][ isubd*_NoLevels + Lev_c +1 ]  - _mesh._off_el[VV][isubd*_NoLevels + Lev_c];   
+    for (uint isubd=0;isubd<GetMLProb().GetMeshTwo()._iproc; isubd++) { //up to the current processor
+       if (fe < KK)       /*mlinit*/ DofObjInit_lev_PrevProcs_c[fe] += GetMLProb().GetMeshTwo()._off_nd[fe][ isubd*GetGridn() + Lev_c +1 ]  - GetMLProb().GetMeshTwo()._off_nd[fe][isubd*GetGridn()];  
+       else if (fe == KK) /*mlinit*/ DofObjInit_lev_PrevProcs_c[fe] += GetMLProb().GetMeshTwo()._off_el[VV][ isubd*GetGridn() + Lev_c +1 ]  - GetMLProb().GetMeshTwo()._off_el[VV][isubd*GetGridn() + Lev_c];   
          }
      }
 
     //============= POSITION =========
         for (int fe=0; fe<QL; fe++) { 
     for (uint ivar=0;ivar<_dofmap._nvars[fe];ivar++) {
-        for (unsigned int i = DofObjInit_lev_PrevProcs_c[fe]; i< DofObjInit_lev_PrevProcs_c[fe] + _dofmap._DofLocLevProcFE[Lev_c][_mesh._iproc][fe]; i++) {
+        for (unsigned int i = DofObjInit_lev_PrevProcs_c[fe]; i< DofObjInit_lev_PrevProcs_c[fe] + _dofmap._DofLocLevProcFE[Lev_c][GetMLProb().GetMeshTwo()._iproc][fe]; i++) {
 	  int dof_pos_c;
-          if (fe < KK)         dof_pos_c = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ i ];
+          if (fe < KK)         dof_pos_c = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ i ];
           else if (fe == KK)   dof_pos_c = i;
 	  
             int irow  = _dofmap.GetDof(Lev_c,fe,ivar,dof_pos_c);
@@ -1947,7 +1374,7 @@ void SystemTwo::ReadRest(const std::string& name) {
 	      int dof_pos_lev_f = Rest_pos[fe][ j+len[fe][i] ];
 	      int dof_pos_f;
     
-	      if      (fe  < KK)  dof_pos_f = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ dof_pos_lev_f ];
+	      if      (fe  < KK)  dof_pos_f = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[ FEXLevel_f[fe] ][ dof_pos_lev_f ];
               else if (fe == KK)  dof_pos_f = dof_pos_lev_f;
               pattern[irow][j] = _dofmap.GetDof(Lev_f,fe,ivar,dof_pos_f);
                 }
@@ -1961,7 +1388,7 @@ void SystemTwo::ReadRest(const std::string& name) {
     pattern.print();
     _Rst[Lev_c]->update_sparsity_pattern_old(pattern);  //TODO see 
 //         _Rst[Lev_c]->close();
-//     if (_mesh._iproc==0) _Rst[Lev_c]->print_personal(); //there is no print function for rectangular matrices, and print_personal doesnt seem to be working...
+//     if (GetMLProb().GetMeshTwo()._iproc==0) _Rst[Lev_c]->print_personal(); //there is no print function for rectangular matrices, and print_personal doesnt seem to be working...
 // la print stampa il contenuto, ma io voglio solo stampare lo sparsity pattern!
      //Allora cosa faccio: riempio di zeri e poi la stampo! No, di zeri no!!! devi riempirla con qualcos'altro!
 //TODO how can I print the sparsity pattern in Petsc BEFORE FILLING the MATRIX ?!?!
@@ -1974,19 +1401,19 @@ void SystemTwo::ReadRest(const std::string& name) {
         for (int fe=0;fe<QL;fe++) {
 
     for (uint ivar=0;ivar<_dofmap._nvars[fe];ivar++) {
-        for (unsigned int i = DofObjInit_lev_PrevProcs_c[fe]; i< DofObjInit_lev_PrevProcs_c[fe] + _dofmap._DofLocLevProcFE[Lev_c][_mesh._iproc][fe]; i++) {
+        for (unsigned int i = DofObjInit_lev_PrevProcs_c[fe]; i< DofObjInit_lev_PrevProcs_c[fe] + _dofmap._DofLocLevProcFE[Lev_c][GetMLProb().GetMeshTwo()._iproc][fe]; i++) {
 	  int dof_pos_c;
-          if (fe < KK)         dof_pos_c = _mesh._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ i ];
+          if (fe < KK)         dof_pos_c = GetMLProb().GetMeshTwo()._Qnode_lev_Qnode_fine[ FEXLevel_c[fe] ][ i ];
           else if (fe == KK)   dof_pos_c = i;
             int irow     = _dofmap.GetDof(Lev_c,fe,ivar,dof_pos_c);
-            int irow_top = _dofmap.GetDof(_NoLevels-1,fe,ivar,dof_pos_c);
+            int irow_top = _dofmap.GetDof(GetGridn()-1,fe,ivar,dof_pos_c);
             uint ncol = len[fe][i+1]-len[fe][i];
             tmp[0]=irow;
             std::vector< uint> ind(pattern[irow].size()-1);
 // 	    std::cout << "\n ==== " << irow << ": ";
             for (uint i1=0;i1<ind.size();i1++) { ind[i1] = pattern[irow][i1]; /*std::cout << " " << ind[i1] << " ";*/}
             valmat = new DenseMatrix(1,ncol);  //TODO add a matrix row by row...
-            for (uint j=0; j<ncol; j++) (*valmat)(0,j) = _bc[irow_top]*Rest_val[fe][ j+len[fe][i] ];
+            for (uint j=0; j<ncol; j++) (*valmat)(0,j) = _bcond._bc[irow_top]*Rest_val[fe][ j+len[fe][i] ];
             _Rst[Lev_c]->add_matrix(*valmat,tmp,ind);
             delete  valmat;
             }// end dof loop
@@ -2008,7 +1435,7 @@ void SystemTwo::ReadRest(const std::string& name) {
     pattern.clear();
 
     _Rst[Lev_c]->close();   //TODO Do we really need this?
-//     if (_mesh._iproc==0)  _Rst[Lev_c]->print_personal(std::cout);
+//     if (GetMLProb().GetMeshTwo()._iproc==0)  _Rst[Lev_c]->print_personal(std::cout);
 //     _Rst[Lev_c]->print_graphic(false); // TODO should pass this true or false as a parameter
 
   } //end levels
@@ -2027,382 +1454,7 @@ void SystemTwo::ReadRest(const std::string& name) {
 
 
 
-//here, we could pass a std::VECTOR of the UNKNOWN INTERNAL QUANTITIES,
-//not a map because we want things to be ordered.
-//this vector must be passed to the EqnNS constructor so that it can be passed
-//to the DA. 
-//so we must do things OUTSIDE the NS constructor, i.e. in the MultiLevelProblemTwo.
-//We cannot do INSIDE the NS constructor because it is called AFTER the DA constructor.
-//where Velocity is in the first place and pressure is in the second
-//and later one can add OTHER Quantities with
-//at this point things are done for only two types,
-//quadratic and linear
-//in general, suppose that you want linear velocity/linear pressure,
-//then you do not use the quadratics
-//BUT, we decided to have every shape funcs and stuff
-//both for QQ and for LL
-//So, we'll leave these like that, 
-//so that linear temperature can get velocity values from QUADRATIC velocity
-//but, actually, we should do that only the things for the INVOLVED ORDERS
-// (Internally INVOLVED and Externally INVOLVED) are first allocated HERE
-// and THEN FILLED in the GenMatRhs
-//this would mean doing a LOOP of "new" and correspondingly a LOOP of "delete"
-//for the involved quantities
-//clearly, it is important that these "new" and delete things are not done INSIDE
-//the Gauss loop but OUTSIDE, a priori
-//the problem is that in order to know these we must do a loop 
-//not only over the Internal Quantities but also the EXTERNAL ones  
-//because they need to be interpolated as well!
-//also, once we know which orders are involved, it is not absolutely immediate
-// what DERIVATIVE orders need to be actually filled: phi,dphidxezeta, dphidxyz,dphidxyz3D
-//While the FE order depends on the Involved QUANTITIES,
-//the DERIVATIVE order depends on the Involved OPERATORS.
-//Involved Quants or Ops means BOTH Internally AND Externally!
-//therefore, we cannot know.
-//One Day, we'll do an Equation as a list of Quantities and a list of Operators acting
-//on each of them.
-//So the rule will be: we FILL all that we ALLOCATE here.
-//ok, so we'll do a vector of internal, and a map of external for now...
-//in this way we may write in more general form all the things
 
-//===============related to the SINGLE EQUATION
-//=========number of variables
-//the number of variables of my own equation must be deduced from the INTERNAL QUANTITIES
-//now let us consider TWO internal quantities 
-//the InternalVector actually belongs to the BASE class,
-//but n_vars[] belongs to THIS class
-//so, we must consider that we have to turn things into QUADRATIC and LINEAR,
-//no matter how the Quantities are.
-//Suppose that you have FOUR Quantities, some of them are scalar, some vectors,
-//some are linear, some are quadratic, we must turn them into
-//nvars[QQ] and nvars[LL].
-//Then, when trying to pick the DOFS, we only need to know the offsets
-//for passing from the FIRST Quantity (some components and some order)
-//to the Second Quantity. Alright.
-//so now we''ll just do a TWO by TWO. From TWO Quantities to TWO different FE.
-//---> the important thing is not to use nvars_q_in and nvars_l_in any longer!
-
-//---> now, we must understand if the QQ and LL variables used later are
-//used in the sense "quadratic or linear - PUBLIC DOMAIN"
-//or Quadratic for the FIRST Quantity and LINEAR for the SECOND Quantity
-//----so, we have to understand where they are called.
-//_fe[0] must be called for being the _fe of quadratic,
-//not for being the fe of velocity...
-//well, actually i think that all the variables are treated here for being 
-//quadratic or linear variables
-
-
-
-
-
-
-
-
-
-
- 
- 
-
-
-
-//=======================================
-
-// one day this will be   GetElDofs(myvect,iel);
-  //the external quantities might go ahead on their own,
-//the only thing we need is the Gauss point value
-//The thing is simple: I need the value of the external quantity at a gauss point,
-//FOR THE ELEMENT I AM IN
-//So, both the SEARCH FOR DOFS and the INTERPOLATION AT THE GAUSS POINT
-//can be done INDEPENDENTLY BY EACH QUANTITY!
-  //for a given element,
-   //every EQUATION and EVERY VARIABLE IN THE EQUATION
-   //has ITS OWN _node_dof map!!!
-//considering how the dof map is filled now, it works only for QUADRATIC and LINEAR FINITE ELEMENTS
-//we should REWRITE the _node_dof map FOR EACH FINITE ELEMENT ASSOCIATED TO THE VARIABLES
-//for now, we use the connectivity of el_conn which works for BOTH QUADRATIC AND LINEAR.
-
-// TODO THAT THIS FUNCTION is NOT COMPLETE! If you want to pick the PRESSURE from NS,
-// you cant do like that!
-// you need to know how the dofmap behaves.
-// For now, and throughout the code, there is no dofmap class to handle this thing.
-//But, the dofmap is always like this: First the quadratic variables, then the linear variables
-//also, el_conn is always quadratic and trhis is not a problem, since 
-//you only have to loop over the vertices which are the FIRST in the connectivity order.
-//so, (idim+ var_off)*dof_off_gl 
-//myvect can be either quadratic or linear
-//if myvect == QQ, varoff=0
-//if myvect == LL, varoff=nvars_q. So this depends on the DA equation in which I find myself.
-// This is ok, because I have an equation pointer, so i know where the variables lies on.
-// TODO For now, we cannot pick only one component, but we can pick
-//either ALL the QUADRATIC, or ALL the LINEAR components
-//for now all our equations behave in this manner, but later we'll change this thing
-//this is something to consider.
-//What happens if I have both velocity and pressure that are linear,
-//and i want to pick only velocity or Only pressure?
-//i want to pick only a PART of the linear variables
-//we need this distinction because the _node_dof map is divided into the quadratic and the linear part
-//this is because we would have TWO DISTINCT PHYSICAL TYPES of LINEAR VARIABLES
-//so, if both variables are linear, you have that lin_off = 0, because nodedof starts with linear stuff;
-//but then, while Velocity is the First and it starts right at the beginning, Pressure
-//starts right after velocity.
-//So, for every DA equation, instead of distinguishing between 
-//the QUADRATIC variables and the LINEAR variables
-//We distinguish between a FIRST Quantity and a SECOND Quantity
-//(later we will do just a LIST of MORE Ordered Quantities)
-//based on them we have the number of variables nvars[FIRST] and nvars[SECOND] and 
-//so we can turn them into nvars[QQ] and nvars[LL],
-//on which all the loops are based
-//So, we'll have that for the FIRST Quantity the offset is ZERO,
-//for the second quantity the offset is the number of variables of the First Quantity:
-//lin_off = nvars[FIRST]
-//all the loops like multigrid operators or stuff are based only on _nvars[0] and _nvars[1],
-//so they're not aware if the first is velocity and the second is pressure,
-//they just dont care, they work BLINDLY for an ARBITRARY QUANTITY of QUADRATIC and LINEAR variables
-
-
-
-
-
-
-
-//**************************************************
-//here, we should explicitly pass the THREE QUANTITIES,
-// or better a vector of Quantities;
-//the structures of nodedof 
-// and bc_eldofs
-// are both ordered 
-// first by QUADRATIC and 
-// then by LINEAR variables.
-//But, the Vect we provide are ordered 
-// by the way we provide them...
-//so they may be first quadratic then linear then quadratic...
-//we should remember the passage from the initial order 
-//to the QL order...
-//Since later you fill the matrix based on the 
-//QL order, so you explicitly do what the initvectors
-//does at the beginning,
-//the point is that you must pay attention to
-//the order given at the BEGINNING
-//So we have a hybrid reasoning: 
-// by List of Quantities 
-// and 
-// by List of Quadratic and Linear Variables.
-//here we are picking things from structures 
-//that are all ordered by QL variables
-//but some of those are distinguished by Quantity...
-
-
-
-
-//now, we'll consider that qty zero and qty one are ordered
-//this must be done because in the el_dof_indices and bc_eldofs the nodes are ordered, first quadratic then linear,
-//or first linear then linear...
-//The KeM and FeM are filled as ORDERED, FIRST QTYZERO("velocity") then QTYONE("pressure")
-//so the bc_eldofs and el_dof_indices are correspondingly ORDERED
-//therefore also the corresponding global structures are ORDERED
-//if you want to write FIRST the PRESSURE then the VELOCITY equations you must "REPOSITION" the element matrix.
-//if you do linear linear how can you be sure that velocity comes first?
-//I must assure that also the GLOBAL bc and _node_dof start from the qty_zero (either quadratic or linear) and then qty_one
-
-
-//I'll do the version for a vector of Vect
-//when you explore the global structures, 
-//they all have the structure with quadratic and linear
-//distinguished, and ordered, first quadratic then linear.
-//So we have to explore these with nvars[QQ] and nvars[LL]
-//Now, the point is: when we want to explore the xold 
-//to retrieve the dof values, we have to do the inverse 
-//path that allowed us to 
-//the first quadratic goes to the first quantity
-//the second quadratic goes to the second quantity
-//the third quadratic goes to the third quantity... and so on...
-//in that case you have to consider that you may have 
-//more variables for a single quantity
-//we can say:we loop over the quantities,
-// in the order we gave
-// if they are quadratic we pick the dofs from the quadratic part, in the order we need;
-//if they are linear, we pick the dofs from the linear part.
-//then, we must keep in mind the current cursor for both the quadratic and the linear parts
-//E' possibile fare in modo che tutto sia costruito sulle quantities?
-//beh, in qualche modo, quando riempi i pezzi della matrice di elemento, 
-// ti servira' una distinzione per componenti... anche se sicuramente avere la quantita'
-//tutta insieme ti puo' permettere di scrivere in modo compatto
-//certi operatori specie su strutture vettoriali
-//direi che e' il caso di separare quello che e' suddiviso per QL
-// da quello che e' suddiviso per Quantity
-
-//finora l'idea e': inizializzo per quantita' fisiche,
-//poi converto tutto subito in QL,
-//poi costruisco tutto per QL
-
-// ad esempio, le condizioni al contorno sono messe tutte insieme,
-// e anche le condizioni iniziali sono tutte insieme.
-// Se io volessi un modo per riempire le condizioni al contorno
-// non per QL ma per Quantita',
-//dovrei fare il loop sulle quantita' nell'ordine che e' stato dato,
-//poi fare il loop sul numero di componenti di ciascuna quantita',
-//e in base a quello mettere una incognita oppure un'altra
-
-//TODO: Now, we are MULTILEVEL. Nevertheless, the boundary conditions are imposed
-//only on the FINE LEVEL. Now, the point is that the DofObj for 
-//Now, the boundary conditions are imposed by NODE COORDINATES,
-// lopping over ALL THE NODES, also the VOLUME NODES.
-// Then, you distinguish the BOUNDARY NODES from the VOlUME nodes 
-// by the COORDINATES
-// In the same way, we will distinguish the VOLUME ELEMENTS from the 
-// BOUNDARY elements by the COORDINATES of the CENTER.
-// the point is that we are talking about the VOLUME ELEMENTS,
-// so we do not know how big they are for putting ifs on the coordinates
-// Then, we will loop over volume elements;
-// if a volume element HAS a FACE ON THE BOUNDARY, 
-// and if that face satisfies the "LINE CONDITION" on the boundary,
-// then SET the corresponding BC.
-// The point is that we need the list of faces for each element, 
-// and then the coordinates of the nodes of each face.
-// so, so far, let me avoid all this stuff and put the boundary conditions
-// only on the QQ and LL
-// The important thing to remember is that the bc_flag 
-// is a flag that is associated to EACH DOF,
-// in particular to EACH ROW.
-
-//We need to understand what this routine receives and what it gives.
-//This routine receives DOF CARRIERS, in terms of NODE DOF CARRIERS and ELEM DOF CARRIERS.
-//What does it give? it gives DOF POSITIONS, and DOF BC FLAGS.
-//Of course for any DOF CARRIER there may be ONE OR MORE DOFS,
-//so one or more DOF POSITIONS, and one or more DOF BC FLAGS
-//So, given a "dof carrier" we do not know how many dofs are associated to it.
-//Therefore, an alternative would be: starting from the dofs, can we retrieve
-//what their dof carriers are?
-//Well, the point is that for purpose of domain decomposition
-// it is natural to loop over elements, and so it is natural 
-// to say: what are the DOF CARRIERS in this element?
-// Well, on the other hand, one might say: what are the DOFS in this element?
-//But, since you are in an element, to retrieve the dofs you necessarily start from 
-//the GEOMETRICAL ENTITIES that are available to you in there.
-//So, from "DOF CARRIER" to DOF is a "GEOMETRICAL approach"
-//Instead, from DOF to "DOF CARRIER" would be an "ALGEBRAIC approach"...,
-//but I dont think that anybody uses that
-
-//So the idea is that I always provide all the possible DOF CARRIERS,
-//and then they may be used or not depending on the existence of variables of each FE type
-
-
-
-
-
-//you see that this function is const, i.e. it doesnt modify any member of the class
-//but actually, IT DOES!
-//Simply, the class is made of POINTERS. Then, I've created a new pointer
-//which is EQUAL to the pointer of the class, and then I MODIFY what is inside that!
-//So, many functions here can be called CONST even if they are not!
-  void SystemTwo::Bc_ConvertToDirichletPenalty(const uint elem_dim, const uint ql, uint* bc) const {
-
-    const uint ndof  = _eqnmap.GetElemType()[elem_dim-1][ql]->GetNDofs();
-    const uint nvars = _dofmap._nvars[ql];
-
-    for (uint ivarq=0; ivarq < nvars; ivarq++) {
-           for (uint d=0; d< ndof; d++)    { 
-          const uint     indxq  =         d + ivarq*ndof;
-	       bc[indxq] = 1 ;     }
-    }
-          
-    return;
-  }
-
-//=================================
-//This function is for NS type equations:
-//it computes the flags for pressure and stress integrals 
-//based on the pressure nodes
- void SystemTwo::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(
-	    const uint *bc_eldofs,const CurrentQuantity & Velold_in,const CurrentQuantity& press_in,uint &press_fl) const {
-
-	const uint el_ndof_p =  press_in._ndof;
-	const uint el_ndof_u =  Velold_in._ndof;
-	const uint   nvars_u =  Velold_in._dim;
-        int press_sum=0;
-           for (uint i=0; i< el_ndof_p; i++)   press_sum += bc_eldofs[nvars_u*el_ndof_u + i]; //only one linear variable... pay attention when trying linear-linear
-            if ( press_sum ==0 )                 {  press_fl = 1; }   //ALL zeros: ONLY PRESSURE
-
-  
-    return;
-  }
-
-  
-  
-  
-
-//============================
-//glnode may be a multiple of the node number,
-//since node->dof is a non-function map
-//either because you have one node - one scalar dof, but vector variables
-//or because you have one node - many dofs
-
-
-
-///this function scales the passed dof vector and takes into account the boundary conditions as well
-///a function like that can be useful also for multiplying/dividing by reference values or the like
-
-void SystemTwo::Bc_ScaleDofVec(NumericVector* myvec,  double ScaleFac /*, dimension */ ) {
-//only works with Level = NoLevels - 1 , because bc is only on the finest level
-  
-  //pass the pointer to the array,the dimension of the array, and the scale factor  
-//remember that these vectors we pick are made by quadratic and linear parts,
-//so we actually know what kind of vector these are => the dimension can be taken from _Dim
-
-//if you have to scale, scale  BOTH vector components, otherwise you could have a non div free vector after the scaling,
-//because you scaled only one component.
-//Even if you're controlling only with one component at the boundary, both components of the lifting function
-//will change due to the variation of a single component at the boundary
-
-
-for (uint i=0; i < _dofmap._Dim[_NoLevels-1]; i++) { //loop over all the dofs, both quadratic and linear
-  
-  if (_bc[i] == 1 ) {  //if the dofs are not fixed, scale them
-  
-    myvec->set( i, (*myvec)(i)*ScaleFac );
-
-  }
-
-}
-  
-  
-  
- return; 
-}
-
-//add only where boundary conditions are not fixed
-void SystemTwo::Bc_AddDofVec(NumericVector* vec_in,NumericVector* vec_out ) {
-
-for (uint i=0; i < _dofmap._Dim[_NoLevels-1]; i++) { 
-
-    if (_bc[i] == 1 ) {
-  
-      vec_out->add (i,(*vec_in)(i));
-
-    }
-  
-}
-
-return;
-
-}
-
-void SystemTwo::Bc_AddScaleDofVec(NumericVector* vec_in,NumericVector* vec_out,const double ScaleFac ) {
-//add a vector multiplied by a constant (only where it is not fixed)
-  
-for (uint i=0; i < _dofmap._Dim[_NoLevels-1]; i++) { 
-
-    if (_bc[i] == 1 ) {
-  
-      vec_out->add (i,(*vec_in)(i)*ScaleFac);
-
-    }
-  
-}
-
-return;
-
-}
 
 
 

@@ -16,8 +16,8 @@ using std::cout;
 using std::endl;
 using namespace femus;
 
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
-void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
 
 
 double InitVariableU(const double &x, const double &y, const double &z);
@@ -117,12 +117,12 @@ int main(int argc,char **args) {
   std::cout << " *********** Navier-Stokes ************  " << std::endl;
     
   NonLinearImplicitSystem & system1 = ml_prob.add_system<NonLinearImplicitSystem> ("Navier-Stokes");
-  system1.AddSolutionToSytemPDE("U");
-  system1.AddSolutionToSytemPDE("V");
-  system1.AddSolutionToSytemPDE("P");
+  system1.AddSolutionToSystemPDE("U");
+  system1.AddSolutionToSystemPDE("V");
+  system1.AddSolutionToSystemPDE("P");
   
   // Set MG Options
-  system1.AttachAssembleFunction(AssembleMatrixResNS);  
+  system1.SetAssembleFunction(AssembleMatrixResNS);  
   system1.SetMaxNumberOfNonLinearIterations(3);
   system1.SetMaxNumberOfLinearIterations(2);
   system1.SetAbsoluteConvergenceTolerance(1.e-10);
@@ -163,11 +163,11 @@ int main(int argc,char **args) {
   std::cout << " *********** Temperature ************* " << std::endl;
     
   LinearImplicitSystem & system2 = ml_prob.add_system<LinearImplicitSystem> ("Temperature");
-  system2.AddSolutionToSytemPDE("T");
+  system2.AddSolutionToSystemPDE("T");
   
   
   // Set MG Options
-  system2.AttachAssembleFunction(AssembleMatrixResT);
+  system2.SetAssembleFunction(AssembleMatrixResT);
   system2.SetMaxNumberOfLinearIterations(6);
   system2.SetAbsoluteConvergenceTolerance(1.e-9);  
   system2.SetMgType(V_CYCLE);
@@ -391,7 +391,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 // //------------------------------------------------------------------------------------------------------------
 
 
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
      
   //pointers 
   Solution*	 mysolution  	             = ml_prob._ml_sol->GetSolutionLevel(level);
@@ -470,7 +470,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
    
   for(int i=0;i<dim+1;i++) F[i].reserve(max_size);
     
-  if(assembe_matrix){
+  if(assemble_matrix){
     for(int i=0;i<dim+1;i++){
       B[i].resize(dim+1);
       for(int j=0;j<dim+1;j++){
@@ -486,7 +486,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   }
   
   // Set to zeto all the entries of the matrix
-  if(assembe_matrix) myKK->zero();
+  if(assemble_matrix) myKK->zero();
   
   // *** element loop ***
  
@@ -510,7 +510,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       F[SolPdeIndex[ivar]].resize(nve2);
       memset(&F[SolPdeIndex[ivar]][0],0,nve2*sizeof(double));
       
-      if(assembe_matrix){
+      if(assemble_matrix){
 	B[SolPdeIndex[ivar]][SolPdeIndex[ivar]].resize(nve2*nve2);
 	B[SolPdeIndex[ivar]][SolPdeIndex[dim]].resize(nve2*nve1);
 	B[SolPdeIndex[dim]][SolPdeIndex[ivar]].resize(nve1*nve2);
@@ -524,7 +524,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     memset(&F[SolPdeIndex[dim]][0],0,nve1*sizeof(double));
       
       
-    if(assembe_matrix*nwtn_alg==2){
+    if(assemble_matrix*nwtn_alg==2){
       for(int ivar=0; ivar<dim; ivar++) {
 	for(int ivar2=1; ivar2<dim; ivar2++) {
 	  B[SolPdeIndex[ivar]][SolPdeIndex[(ivar+ivar2)%dim]].resize(nve2*nve2);
@@ -533,7 +533,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       }
     }
   
-    if(assembe_matrix*penalty){
+    if(assemble_matrix*penalty){
       B[SolPdeIndex[dim]][SolPdeIndex[dim]].resize(nve1*nve1,0.);
       memset(&B[SolPdeIndex[dim]][SolPdeIndex[dim]][0],0,nve1*nve1*sizeof(double));
     }
@@ -602,7 +602,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	  }
 	  //END RESIDUALS A block ===========================
 	  
-	  if(assembe_matrix){
+	  if(assemble_matrix){
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve2; j++) {
 	      double Lap=0;
@@ -633,7 +633,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 		B[SolPdeIndex[ivar]][SolPdeIndex[dim]][i*nve1+j] -= gradphi2[i*dim+ivar]*phi1[j]*Weight2;
 	      }
 	    } //end phi1_j loop
-	  } // endif assembe_matrix
+	  } // endif assemble_matrix
 	} //end phii loop
   
 
@@ -647,17 +647,17 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	  F[SolPdeIndex[dim]][i]+= (phi1[i]*div +penalty*ILambda*phi1[i]*SolVAR[dim])*Weight2;
 	  //END RESIDUALS  B block ===========================
 	  
-	  if(assembe_matrix){
+	  if(assemble_matrix){
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve2; j++) {
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
 		B[SolPdeIndex[dim]][SolPdeIndex[ivar]][i*nve2+j]-= phi1[i]*gradphi2[j*dim+ivar]*Weight2;
 	      }
 	    }  //end phij loop
-	  } // endif assembe_matrix
+	  } // endif assemble_matrix
 	}  //end phi1_i loop
 	
-	if(assembe_matrix * penalty){  //block nve1 nve1
+	if(assemble_matrix * penalty){  //block nve1 nve1
 	  // *** phi_i loop ***
 	  for(unsigned i=0; i<nve1; i++){
 	    // *** phi_j loop ***
@@ -692,7 +692,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     //Sum the local matrices/vectors into the Global Matrix/Vector
     for(unsigned ivar=0; ivar<dim; ivar++) {
       myRES->add_vector_blocked(F[SolPdeIndex[ivar]],KK_dof[ivar]);
-      if(assembe_matrix){
+      if(assemble_matrix){
 	myKK->add_matrix_blocked(B[SolPdeIndex[ivar]][SolPdeIndex[ivar]],KK_dof[ivar],KK_dof[ivar]);  
 	myKK->add_matrix_blocked(B[SolPdeIndex[ivar]][SolPdeIndex[dim]],KK_dof[ivar],KK_dof[dim]);
 	myKK->add_matrix_blocked(B[SolPdeIndex[dim]][SolPdeIndex[ivar]],KK_dof[dim],KK_dof[ivar]);
@@ -704,19 +704,19 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       }
     }
     //Penalty
-    if(assembe_matrix*penalty) myKK->add_matrix_blocked(B[SolPdeIndex[dim]][SolPdeIndex[dim]],KK_dof[dim],KK_dof[dim]);
+    if(assemble_matrix*penalty) myKK->add_matrix_blocked(B[SolPdeIndex[dim]][SolPdeIndex[dim]],KK_dof[dim],KK_dof[dim]);
     myRES->add_vector_blocked(F[SolPdeIndex[dim]],KK_dof[dim]);
     //--------------------------------------------------------------------------------------------------------  
   } //end list of elements loop for each subdomain
   
   
-  if(assembe_matrix) myKK->close();
+  if(assemble_matrix) myKK->close();
   myRES->close();
   // ***************** END ASSEMBLY *******************
 }
 
 //------------------------------------------------------------------------------------------------------------
-void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
+void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
   
   //pointers and references
   Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
@@ -774,7 +774,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   B.reserve(max_size*max_size);
   
   // Set to zeto all the entries of the Global Matrix
-  if(assembe_matrix) myKK->zero();
+  if(assemble_matrix) myKK->zero();
   
   // *** element loop ***
  
@@ -798,7 +798,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
     // set to zero all the entries of the FE matrices
     F.resize(nve);
     memset(&F[0],0,nve*sizeof(double));
-    if(assembe_matrix){
+    if(assemble_matrix){
       B.resize(nve*nve);
       memset(&B[0],0,nve*nve*sizeof(double));
     }
@@ -851,7 +851,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
 	  }
 	  F[i]+= (-IPe*Lap_rhs-Adv_rhs*phi[i])*weight; 		    
 	  //END RESIDUALS A block ===========================
-	  if(assembe_matrix){
+	  if(assemble_matrix){
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve; j++) {
 	      double Lap=0;
@@ -865,18 +865,18 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
 	      B[i*nve+j] += IPe*Lap + Adv1;
 	    } // end phij loop
 	  } // end phii loop
-	} // endif assembe_matrix
+	} // endif assemble_matrix
       } // end gauss point loop
     } // endif single element not refined or fine grid loop
     //--------------------------------------------------------------------------------------------------------
     //Sum the local matrices/vectors into the global Matrix/vector
       
     myRES->add_vector_blocked(F,KK_dof);
-    if(assembe_matrix) myKK->add_matrix_blocked(B,KK_dof,KK_dof);  
+    if(assemble_matrix) myKK->add_matrix_blocked(B,KK_dof,KK_dof);  
   } //end list of elements loop for each subdomain
     
   myRES->close();
-  if(assembe_matrix) myKK->close();
+  if(assemble_matrix) myKK->close();
   
    // ***************** END ASSEMBLY *******************
   

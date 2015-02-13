@@ -104,19 +104,16 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
     std::cout  << std::endl << " Solving " << eqn_in->name() << " , step " << iter << std::endl;
 
     ///A0) Put x_old into x_oold
-    *(eqn_in->_x_oold[eqn_in->_NoLevels-1]) = *(eqn_in->_x_old[eqn_in->_NoLevels-1]);
+    *(eqn_in->_x_oold[eqn_in->GetGridn()-1]) = *(eqn_in->_x_old[eqn_in->GetGridn()-1]);
 
     /// A) Assemblying 
 #if  DEFAULT_PRINT_TIME==1
     std::clock_t start_time=std::clock();
 #endif
 
-    for (uint Level = 0 ; Level < eqn_in->_NoLevels; Level++) {
+    for (uint Level = 0 ; Level < eqn_in->GetGridn(); Level++) {
 
-        eqn_in->_A[Level]->zero();
-        eqn_in->_b[Level]->zero();
-
-        eqn_in->GenMatRhs(Level);
+        eqn_in-> GetAssembleFunction()(eqn_in->GetMLProb(),Level,0,true);
 
 #ifdef DEFAULT_PRINT_INFO
         eqn_in->_A[Level]->close();
@@ -146,7 +143,7 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
       
         eqn_in->MGSolve(DEFAULT_EPS_LSOLV, DEFAULT_MAXITS_LSOLV);
 	
-// //     for (uint Level = 0 ; Level < _NoLevels; Level++)  { 
+// //     for (uint Level = 0 ; Level < GetGridn(); Level++)  { 
 // //       _solver[Level]->solve(*_A[Level],*_x[Level],*_b[Level],1.e-6,40);
 // //            _x[Level]->localize(*_x_old[Level]);   // x_old = x
 // //     }
@@ -161,24 +158,24 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 /// std::cout << "$$$$$$$$$ Computed the x with the MG method $$$$$$$" << std::endl;
 
     /// E) Update of the old solution at the top Level
-    eqn_in->_x[eqn_in->_NoLevels-1]->localize(*(eqn_in->_x_old[eqn_in->_NoLevels-1]));   // x_old = x
+    eqn_in->_x[eqn_in->GetGridn()-1]->localize(*(eqn_in->_x_old[eqn_in->GetGridn()-1]));   // x_old = x
 #ifdef DEFAULT_PRINT_INFO
     std::cout << "$$$$$$$$$ Updated the x_old solution $$$$$$$$$" << std::endl;
 #endif
 /// std::cout << "$$$$$$$$$ Check the convergence $$$$$$$" << std::endl;
 
-    eqn_in->_x_tmp[eqn_in->_NoLevels-1]->zero();
-    eqn_in->_x_tmp[eqn_in->_NoLevels-1]->add(+1.,*(eqn_in->_x_oold[eqn_in->_NoLevels-1]));
-    eqn_in->_x_tmp[eqn_in->_NoLevels-1]->add(-1.,*(eqn_in->_x_old[eqn_in->_NoLevels-1]));
+    eqn_in->_x_tmp[eqn_in->GetGridn()-1]->zero();
+    eqn_in->_x_tmp[eqn_in->GetGridn()-1]->add(+1.,*(eqn_in->_x_oold[eqn_in->GetGridn()-1]));
+    eqn_in->_x_tmp[eqn_in->GetGridn()-1]->add(-1.,*(eqn_in->_x_old[eqn_in->GetGridn()-1]));
     // x_oold -x_old =actually= (x_old - x)
     //(x must not be touched, as you print from it)
     //x_oold must not be touched ! Because it's used later for UPDATING Becont!
     //so you must create a temporary vector necessarily.
 
-    eqn_in->_x_tmp[eqn_in->_NoLevels-1]->close();
-    double deltax_norm = eqn_in->_x_tmp[eqn_in->_NoLevels-1]->l2_norm();
+    eqn_in->_x_tmp[eqn_in->GetGridn()-1]->close();
+    double deltax_norm = eqn_in->_x_tmp[eqn_in->GetGridn()-1]->l2_norm();
     std::cout << " $$$$$$ " << eqn_in->name() << " error l2 " << deltax_norm << std::endl;
-    std::cout << " $$$$$$ " << eqn_in->name() << " error linfty " << eqn_in->_x_tmp[eqn_in->_NoLevels-1]->linfty_norm() << std::endl;
+    std::cout << " $$$$$$ " << eqn_in->name() << " error linfty " << eqn_in->_x_tmp[eqn_in->GetGridn()-1]->linfty_norm() << std::endl;
 //AAA when the vectors have nan's, the norm becomes zero!
 //when the residual norm in pre and post smoothing is too big,
 //then it doesnt do any iterations, the solver doesnt solve anymore, so the solution remains frozen

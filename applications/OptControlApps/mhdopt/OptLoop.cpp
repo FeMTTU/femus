@@ -21,12 +21,8 @@
 #include "XDMFWriter.hpp"
 
 //application headers
-#include "Opt_conf.hpp"
-#include "EqnNS.hpp"
-#include "EqnMHDCONT.hpp"
-#include "EqnMHD.hpp"
-#include "EqnNSAD.hpp"
-#include "EqnMHDAD.hpp"
+#include "OptLoop.hpp"
+
 
 namespace femus {
 
@@ -101,19 +97,19 @@ void OptLoop::optimization_loop(MultiLevelProblem & e_map_in)  {
   
   
  #ifdef NS_EQUATIONS
-     EqnNS* mgNS = static_cast<EqnNS*>(& e_map_in.get_system("Eqn_NS") );
+   SystemTwo & eqnNS = e_map_in.get_system<SystemTwo>("Eqn_NS");
   #endif
   #ifdef MHD_EQUATIONS
-     EqnMHD* mgMHD = static_cast<EqnMHD*>(& e_map_in.get_system("Eqn_MHD"));
+   SystemTwo & eqnMHD = e_map_in.get_system<SystemTwo>("Eqn_MHD");
   #endif
  #ifdef NSAD_EQUATIONS
-     EqnNSAD* mgNSAD = static_cast<EqnNSAD*>(& e_map_in.get_system("Eqn_NSAD"));
+   SystemTwo & eqnNSAD = e_map_in.get_system<SystemTwo>("Eqn_NSAD");
  #endif
   #ifdef MHDAD_EQUATIONS
-      EqnMHDAD* mgMHDAD = static_cast<EqnMHDAD*>(& e_map_in.get_system("Eqn_MHDAD"));
+   SystemTwo & eqnMHDAD = e_map_in.get_system<SystemTwo>("Eqn_MHDAD");
   #endif
   #ifdef MHDCONT_EQUATIONS
-      EqnMHDCONT* mgMHDCONT = static_cast<EqnMHDCONT*>(& e_map_in.get_system("Eqn_MHDCONT"));
+   SystemTwo & eqnMHDCONT = e_map_in.get_system<SystemTwo>("Eqn_MHDCONT");
   #endif
 
 
@@ -163,7 +159,7 @@ double lin_deltax_MHDCONT = 0.;
 
 //initialize specific data for specific equations
 #ifdef MHDCONT_EQUATIONS
-     init_equation_data(mgMHDCONT);
+     init_equation_data(&eqnMHDCONT);
 #endif
   
 //nitialize Becont
@@ -185,47 +181,47 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
 //xold there was a good value
 //xoold there was still the value multiplied
 //   omega = 1.; //"omega=1" and "no if" is equal to the old loop
-    mgMHDCONT->_x_oold[NoLevels - 1]->close();
-    std::cout << "Linfty norm of Becont _x_oold " << mgMHDCONT->_x_oold [NoLevels - 1]->linfty_norm() << std::endl;
+    eqnMHDCONT._x_oold[NoLevels - 1]->close();
+    std::cout << "Linfty norm of Becont _x_oold " << eqnMHDCONT._x_oold [NoLevels - 1]->linfty_norm() << std::endl;
 
-    mgMHDCONT->_x_old[NoLevels - 1]->close();
-    std::cout << "Linfty norm of Becont _x_old " << mgMHDCONT->_x_old [NoLevels - 1]->linfty_norm() << std::endl;
+    eqnMHDCONT._x_old[NoLevels - 1]->close();
+    std::cout << "Linfty norm of Becont _x_old " << eqnMHDCONT._x_old [NoLevels - 1]->linfty_norm() << std::endl;
 
     _x_oldopt[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont _x_oldopt " << _x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
 
 //////////////////
 
-      mgMHDCONT->_x_tmp[NoLevels-1]->zero();
-    *(mgMHDCONT->_x_tmp[NoLevels-1]) = *(mgMHDCONT->_x_old[NoLevels-1]);
-      mgMHDCONT->Bc_ScaleDofVec(mgMHDCONT->_x_tmp[NoLevels - 1], omega );
-      mgMHDCONT->_x_tmp[NoLevels - 1]->close();
+      eqnMHDCONT._x_tmp[NoLevels-1]->zero();
+    *(eqnMHDCONT._x_tmp[NoLevels-1]) = *(eqnMHDCONT._x_old[NoLevels-1]);
+      eqnMHDCONT._bcond.Bc_ScaleDofVec(eqnMHDCONT._x_tmp[NoLevels - 1], omega );
+      eqnMHDCONT._x_tmp[NoLevels - 1]->close();
     std::cout << "Omega " << omega << std::endl;
     std::cout << "Linfty norm of Becont _x_old*omega "
-              << mgMHDCONT->_x_tmp [NoLevels - 1]->linfty_norm() << std::endl;
+              << eqnMHDCONT._x_tmp [NoLevels - 1]->linfty_norm() << std::endl;
 
-      mgMHDCONT->_x_oold[NoLevels - 1]->close();
+      eqnMHDCONT._x_oold[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont _x_oold "
-              << mgMHDCONT->_x_oold [NoLevels - 1]->linfty_norm() << std::endl;
+              << eqnMHDCONT._x_oold [NoLevels - 1]->linfty_norm() << std::endl;
 
      _x_oldopt[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont _x_oldopt "
               << _x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
 
-      mgMHDCONT->Bc_AddScaleDofVec(_x_oldopt[NoLevels - 1],mgMHDCONT->_x_tmp [NoLevels - 1],1.- omega);
-      mgMHDCONT->_x_tmp[NoLevels - 1]->close();
+      eqnMHDCONT._bcond.Bc_AddScaleDofVec(_x_oldopt[NoLevels - 1],eqnMHDCONT._x_tmp [NoLevels - 1],1.- omega);
+      eqnMHDCONT._x_tmp[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont x_old*omega + (1-omega)*xoold " 
-              << mgMHDCONT->_x_tmp [NoLevels - 1]->linfty_norm() << std::endl;
+              << eqnMHDCONT._x_tmp [NoLevels - 1]->linfty_norm() << std::endl;
 
-    *(mgMHDCONT->_x_old[NoLevels-1]) = *(mgMHDCONT->_x_tmp[NoLevels-1]);
+    *(eqnMHDCONT._x_old[NoLevels-1]) = *(eqnMHDCONT._x_tmp[NoLevels-1]);
 
-    mgMHDCONT->_x_old[NoLevels - 1]->close();
+    eqnMHDCONT._x_old[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont _x_old updated " 
-              << mgMHDCONT->_x_old [NoLevels - 1]->linfty_norm() << std::endl;
+              << eqnMHDCONT._x_old [NoLevels - 1]->linfty_norm() << std::endl;
 
  
-//   mgMHDCONT->x[NoLevels - 1]->close();
-//   std::cout << "Linfty norm of Becont x " << mgMHDCONT->x[NoLevels - 1]->linfty_norm() << std::endl;
+//   eqnMHDCONT.x[NoLevels - 1]->close();
+//   std::cout << "Linfty norm of Becont x " << eqnMHDCONT.x[NoLevels - 1]->linfty_norm() << std::endl;
 //NOTICE that at this point x_old for MHDCONT has been filled by ic_read the first time
 //for the other times it is updated by every solve
 
@@ -250,8 +246,8 @@ do {
   do {
     
     knonl_NS++;
-//      std::cout << "\n >>>>> Solving nonlinear step " << knonl_NS << " for" << mgNS->_eqname << std::endl;
-    nonlin_deltax_NS = MGTimeStep(knonl_NS,mgNS);
+//      std::cout << "\n >>>>> Solving nonlinear step " << knonl_NS << " for" << eqnNS->_eqname << std::endl;
+    nonlin_deltax_NS = MGTimeStep(knonl_NS,&eqnNS);
 
   } while ( nonlin_deltax_NS > eps_nl_NS && knonl_NS < MaxIterNS );
 }
@@ -267,7 +263,7 @@ do {
   k_MHD++;
 //ONE nonlinear step = ONE LINEAR SOLVER  
 //    std::cout << "\n >>>>>>>> Solving MHD system (linear in B), " << k_MHD << std::endl;
-    nonlin_deltax_MHD = MGTimeStep(k_MHD,mgMHD);
+    nonlin_deltax_MHD = MGTimeStep(k_MHD,&eqnMHD);
 
 }while (nonlin_deltax_MHD > eps_MHD &&  k_MHD < MaxIterMHD );
   
@@ -290,7 +286,7 @@ do {
 
 double integral = 0.;
 #ifdef NS_EQUATIONS      
-   integral = ComputeIntegral(e_map_in.GetMeshTwo()._NoLevels - 1,&e_map_in.GetMeshTwo(),mgNS);
+   integral = ComputeIntegral(e_map_in.GetMeshTwo()._NoLevels - 1,&e_map_in.GetMeshTwo(),&eqnNS);
  #endif
   
    std::cout << "integral on processor 0: " << integral << std::endl;
@@ -325,7 +321,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
 //******* update Jold  //you must update it only here, because here it is the good point to restart from
     Jold = J;
 #ifdef MHDCONT_EQUATIONS      
-        *(_x_oldopt[NoLevels-1]) = *(mgMHDCONT->_x_old[NoLevels-1]); 
+        *(_x_oldopt[NoLevels-1]) = *(eqnMHDCONT._x_old[NoLevels-1]); 
 #endif      
 
 	//this will be the new _x_oldopt?
@@ -366,7 +362,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
    uint k_NSAD=0;
   do {
    k_NSAD++;
-   lin_deltax_NSAD = MGTimeStep(k_NSAD,mgNSAD);
+   lin_deltax_NSAD = MGTimeStep(k_NSAD,&eqnNSAD);
   }
   while (lin_deltax_NSAD > eps_NSAD && k_NSAD < MaxIterNSAD );
  }
@@ -376,7 +372,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
   uint k_MHDAD=0;
  do{
    k_MHDAD++;
-lin_deltax_MHDAD = MGTimeStep(k_MHDAD,mgMHDAD);
+lin_deltax_MHDAD = MGTimeStep(k_MHDAD,&eqnMHDAD);
  }
 while(lin_deltax_MHDAD >  eps_MHDAD && k_MHDAD < MaxIterMHDAD );
 }
@@ -387,7 +383,7 @@ while(lin_deltax_MHDAD >  eps_MHDAD && k_MHDAD < MaxIterMHDAD );
 do{
   k_MHDCONT++;
   //not only when k_MHDCONT==1, but also when k_ADJCONT==1
-lin_deltax_MHDCONT = MGTimeStep(k_MHDCONT,mgMHDCONT);
+lin_deltax_MHDCONT = MGTimeStep(k_MHDCONT,&eqnMHDCONT);
  }
 while(lin_deltax_MHDCONT >  eps_MHDCONT && k_MHDCONT < MaxIterMHDCONT );
 }
@@ -472,7 +468,7 @@ const uint delta_opt_step = opt_step - _t_idx_in;
 void OptLoop::init_equation_data(const SystemTwo* eqn) {
   
 //======equation-specific vectors     =====================
-      _x_oldopt.resize(eqn->_NoLevels);
+      _x_oldopt.resize(eqn->GetGridn());
       
         for(uint Level = 0; Level < _x_oldopt.size(); Level++)  {
    uint n_glob = eqn->_dofmap._Dim[Level]; //is it already filled? Now yes!!!!!!!!!
@@ -518,8 +514,8 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
    const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,eqn,*mesh,eqn->_eqnmap.GetElemType());
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->_eqnmap.GetQrule(currelem.GetDim()));
+    CurrentElem       currelem(Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
   
   // processor index
   const uint myproc = mesh->_iproc;
@@ -546,19 +542,19 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   
      //========== 
     CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = eqn->_eqnmap.GetQtyMap().get_qty("Qty_Velocity");
+    Vel._qtyptr      = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
     
     //========== 
     CurrentQuantity VelDes(currgp);
-    VelDes._qtyptr      = eqn->_eqnmap.GetQtyMap().get_qty("Qty_DesVelocity");
+    VelDes._qtyptr      = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_DesVelocity");
     VelDes.VectWithQtyFillBasic();
     VelDes.Allocate();
    
    double integral=0.;
     
-      const uint el_ngauss = eqn->_eqnmap.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
 //parallel sum
     const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
@@ -566,20 +562,20 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-    currelem.set_el_nod_conn_lev_subd(Level,mesh->_iproc,iel);
+    currelem.SetDofobjConnCoords(mesh->_iproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    mesh->TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
+    currelem.TransformElemNodesToRef(eqn->GetMLProb().GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 //======= 
     xyz_refbox.SetElemAverage();
     int el_flagdom = ElFlagControl(xyz_refbox._el_average,mesh);
 //=======        
 
-    if ( Vel._eqnptr != NULL )       Vel.GetElemDofs(Level);
+    if ( Vel._eqnptr != NULL )       Vel.GetElemDofs();
     else                             Vel._qtyptr->FunctionDof(Vel,0./*time*/,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
-    if ( VelDes._eqnptr != NULL ) VelDes.GetElemDofs(Level);
+    if ( VelDes._eqnptr != NULL ) VelDes.GetElemDofs();
     else                          VelDes._qtyptr->FunctionDof(VelDes,0./*time*/,&xyz_refbox._val_dofs[0]);    
 
 //AAA time is picked as a function pointer of the time C library i think...
@@ -592,7 +588,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
      
    const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
-   const double  wgt_g = eqn->_eqnmap.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+   const double  wgt_g = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 
      for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 

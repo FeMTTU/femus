@@ -57,9 +57,6 @@ public:
 
     /** Constructor */
     MultiLevelProblem(MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
-    
-    /** Empty constructor for inheritance TODO remove soon*/
-    MultiLevelProblem() {};
 
     /** Destructor */
     ~MultiLevelProblem() {};
@@ -185,18 +182,21 @@ public:
   
   inline const  MultiLevelMeshTwo & GetMeshTwo() const { return  *_mesh; }
   
+    /** Quantity Map */
   inline void SetQtyMap(const QuantityMap * qtymap_in) { _qtymap = qtymap_in; return; }
    
   inline const QuantityMap & GetQtyMap() const { return  *_qtymap; }
 
-  inline const std::vector<elem_type*>  & GetElemType(const unsigned dim) const { return  _elem_type[dim - 1]; }
+    /** ElemType and Quadrature rule */
+  inline const std::vector<const elem_type*>  & GetElemType(const unsigned dim) const { return  _elem_type[dim - 1]; }
     
-  inline const std::vector< std::vector<elem_type*> >  & GetElemType() const { return  _elem_type; }
+  inline const std::vector< std::vector<const elem_type*> >  & GetElemType() const { return  _elem_type; }
 
   inline const Gauss & GetQrule(const unsigned dim) const { return _qrule[dim - 1]; }
   
   void SetQruleAndElemType(const std::string quadr_order_in);
   
+    /** Input Parser */
   inline const FemusInputParser<double> &  GetInputParser() const { return *_phys; }
 
   void SetInputParser(const FemusInputParser<double> * parser_in) { _phys = parser_in; return; }
@@ -209,7 +209,7 @@ private:
     unsigned short _gridn;
     unsigned short _gridr;
 
-    std::vector< std::vector<elem_type*> >  _elem_type;
+    std::vector< std::vector<const elem_type*> >  _elem_type;
     std::vector<Gauss>                      _qrule;
     const FemusInputParser<double>        * _phys;
     const QuantityMap                     * _qtymap;

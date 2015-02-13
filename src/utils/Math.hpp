@@ -104,7 +104,7 @@ const uint Level  = eqnmap_in.GetMeshTwo()._NoLevels - 1;
 const uint myproc = eqnmap_in.GetMeshTwo()._iproc;
   double time = 0.;
   
-    CurrentElem       currelem(vb,NULL,eqnmap_in.GetMeshTwo(),eqnmap_in.GetElemType()); //element without equation
+    CurrentElem       currelem(Level,vb,NULL,eqnmap_in.GetMeshTwo(),eqnmap_in.GetElemType()); //element without equation
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqnmap_in.GetQrule(currelem.GetDim()));
 
   //======== ELEMENT MAPPING =======
@@ -128,7 +128,7 @@ const uint myproc = eqnmap_in.GetMeshTwo()._iproc;
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
   
-    currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+    currelem.SetDofobjConnCoords(myproc,iel);
     currelem.SetMidpoint(); 
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);

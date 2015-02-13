@@ -238,7 +238,7 @@ void CurrentQuantity::ExtendDofs() {
 // while in all the other rhs we have the RESIDUALS.
 
 //TODO this routine must be fixed a lot
-void CurrentQuantity::GetElemDofs(const uint Level)  {
+void CurrentQuantity::GetElemDofs()  {
   
   //we should put some try catch or something, to make sure that what we are calling here is already correctly filled as it should be
   //TODO FROM EQUATION HERE
@@ -246,7 +246,7 @@ void CurrentQuantity::GetElemDofs(const uint Level)  {
     if ( _eqnptr == NULL ) {std::cout << " We need the Equation here" << std::endl; abort();}
 
   
-  const uint Lev_pick_dof = _eqnptr->_NoLevels-1;  //we use the FINE Level as reference //TODO wait, this is a mistake!!!
+  const uint Lev_pick_dof = _eqnptr->GetGridn()-1;  //we use the FINE Level as reference //TODO wait, this is a mistake!!!
   // of course you want to take from the FINE LEVEL, but ONLY FOR THE NODES!!! FOR the ELEMENTS you have to take from EACH LEVEL!!!
   // or, you still have to take from the FINE provided that you give a map from element to fine!!!
   
@@ -262,12 +262,12 @@ void CurrentQuantity::GetElemDofs(const uint Level)  {
   
   const uint vect_ord = _FEord;
   int length_nodedof [QL];  
-  length_nodedof[QQ] = _currEl._mesh._NoNodesXLev[_eqnptr->_NoLevels-1];
-  length_nodedof[LL] = _currEl._mesh._NoNodesXLev[_eqnptr->_NoLevels-1];
-  length_nodedof[KK] = _currEl._mesh._n_elements_vb_lev[VV][Level];
+  length_nodedof[QQ] = _currEl._mesh._NoNodesXLev[_eqnptr->GetGridn() - 1];
+  length_nodedof[LL] = _currEl._mesh._NoNodesXLev[_eqnptr->GetGridn() - 1];
+  length_nodedof[KK] = _currEl._mesh._n_elements_vb_lev[VV][_currEl.GetLevel()];
 
    int off_total = 0;
-   for (uint i = 0; i < _qtyptr->_pos; i++) off_total += _eqnptr->GetQtyIntVector()[i]->_dim * _eqnptr->_dofmap._DofNumLevFE[ Level ][ _eqnptr->GetQtyIntVector()[i]->_FEord ];
+   for (uint i = 0; i < _qtyptr->_pos; i++) off_total += _eqnptr->GetUnknownQuantitiesVector()[i]->_dim * _eqnptr->_dofmap._DofNumLevFE[ _currEl.GetLevel() ][ _eqnptr->GetUnknownQuantitiesVector()[i]->_FEord ];
 
    int DofObj = 0;
 

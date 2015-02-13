@@ -18,9 +18,9 @@
 using namespace femus;
 
 //===============================
-int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
-int AssembleMatrixResD(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
-int AssembleMatrixResVel(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix);
+int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assemble_matrix);
+int AssembleMatrixResD(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assemble_matrix);
+int AssembleMatrixResVel(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assemble_matrix);
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 bool BoundaryND(/*MultiLevelProblem& mg_in,*/const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName,const double time);
 
@@ -158,7 +158,7 @@ int main(int argc,char **args) {
 // // // // //  for (unsigned nonlin = 0; nonlin < runtime_double->get("nonlin_iter"); nonlin++) {
 // // // // //    
 // // // // // // // //   mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
-// // // // // // // //   mg.AttachAssembleFunction(AssembleMatrixResP);
+// // // // // // // //   mg.SetAssembleFunction(AssembleMatrixResP);
 // // // // // // // //   for (int i=0; i<NVAR_P; ++i)       mg.AddToVankaIndex(varnames_p[i].c_str());
 // // // // // // // //   mg.SetVankaSchurOptions(false);//(true,true,1);
 // // // // // // // //   mg.SetSolverFineGrids("GMRES");
@@ -169,7 +169,7 @@ int main(int argc,char **args) {
 // // // // // // // // 
 // // // // // // // //   
 // // // // // // // //   mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
-// // // // // // // //   mg.AttachAssembleFunction(AssembleMatrixResD);
+// // // // // // // //   mg.SetAssembleFunction(AssembleMatrixResD);
 // // // // // // // //   mg.AddToVankaIndex("DX");
 // // // // // // // //   mg.AddToVankaIndex("DY");
 // // // // // // // //   mg.AddToVankaIndex("DZ");  //remember it must be in MGIndex first //i dont solve 3d comp in 2D
@@ -182,7 +182,7 @@ int main(int argc,char **args) {
 // // // // // // // //   
 // // // // // // // // 
 // // // // // // // //   mg.ClearVankaIndex();  // create index of solutions to be to used in the Vanka Smoother
-// // // // // // // //   mg.AttachAssembleFunction(AssembleMatrixResVel);
+// // // // // // // //   mg.SetAssembleFunction(AssembleMatrixResVel);
 // // // // // // // //   mg.AddToVankaIndex("UX");
 // // // // // // // //   mg.AddToVankaIndex("UY");
 // // // // // // // //   mg.AddToVankaIndex("UZ");  //remember it must be in MGIndex first //i dont solve 3d comp in 2D
@@ -351,7 +351,7 @@ bool BoundaryND(/*MultiLevelProblem& mg_in,*/const double &x, const double &y, c
 }
 
 
-int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
+int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assemble_matrix) {
 
 // not time dependent
   MyMultiGrid& mg = static_cast<MyMultiGrid&>(mg2);
@@ -579,7 +579,7 @@ int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, /*const elem_type
 //Physically speaking, we must take into account the couplings,
 //and they must be somewhat IN ACCORDANCE: the permeabilities must be in agreement with the elastic constants...
 
-int AssembleMatrixResD(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
+int AssembleMatrixResD(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assemble_matrix) {
 
 // not time dependent
 // // //   MyMultiGrid& mg = static_cast<MyMultiGrid&>(mg2);
@@ -1014,7 +1014,7 @@ int AssembleMatrixResD(MultiLevelProblem &mg2, unsigned level, /*const elem_type
 }
 
 
-int AssembleMatrixResVel(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assembe_matrix) {
+int AssembleMatrixResVel(MultiLevelProblem &mg2, unsigned level, /*const elem_type *type_elem[6][5], vector <vector <double> > &vt,*/ const unsigned &gridn, const unsigned &ipde, const bool &assemble_matrix) {
 
 // not time dependent
 // // //   MyMultiGrid& mg = static_cast<MyMultiGrid&>(mg2);

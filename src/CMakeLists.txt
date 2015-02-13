@@ -17,7 +17,6 @@ algebra/LinearEquation.cpp
 algebra/LinearEquationSolver.cpp
 algebra/NumericVector.cpp
 algebra/GmresPetscLinearEquationSolver.cpp
-algebra/PetscLinearEquationSolverM.cpp
 algebra/PetscMatrix.cpp
 algebra/PetscPreconditioner.cpp
 algebra/PetscVector.cpp
@@ -27,6 +26,7 @@ algebra/VankaPetscLinearEquationSolver.cpp
 algebra/FunctionBase.cpp
 algebra/ParsedFunction.cpp
 equations/DofMap.cpp
+equations/BoundaryConditions.cpp
 equations/CurrentElem.cpp
 equations/CurrentGaussPoint.cpp
 equations/CurrentGaussPointBase.cpp

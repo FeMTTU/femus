@@ -22,6 +22,7 @@
 #include "FEMTTUConfig.h"
 #include "Parameter.hpp"
 #include "MultiLevelMeshTwo.hpp"
+#include "GeomElTypeEnum.hpp"
 #include <iostream>
 
 namespace femus {
@@ -182,23 +183,21 @@ void MultiLevelProblem::clear ()
 
  void MultiLevelProblem::SetQruleAndElemType(const std::string quadr_order_in) {
    
-// ======  QRule ================================
-	  
-  _qrule.reserve(_mesh->get_dim());
-  for (int idim=0;idim < _mesh->get_dim(); idim++) { 
+  
+  _qrule.reserve(_ml_msh->GetLevel(LEV_PICK)->GetDimension());
+  for (int idim=0;idim < _ml_msh->GetLevel(LEV_PICK)->GetDimension(); idim++) { 
           Gauss qrule_temp(_mesh->_geomelem_id[idim].c_str(),quadr_order_in.c_str());
          _qrule.push_back(qrule_temp);
            }  
 
   // =======FEElems =====  //remember to delete the FE at the end
   const std::string  FEFamily[QL] = {"biquadratic","linear","constant"}; 
-  _elem_type.resize(_mesh->get_dim());
-  for (int idim=0;idim < _mesh->get_dim(); idim++)   _elem_type[idim].resize(QL);
+  _elem_type.resize(_ml_msh->GetLevel(LEV_PICK)->GetDimension());
+  for (int idim=0;idim < _ml_msh->GetLevel(LEV_PICK)->GetDimension(); idim++)   _elem_type[idim].resize(QL);
   
-  for (int idim=0;idim < _mesh->get_dim(); idim++) { 
+  for (int idim=0;idim < _ml_msh->GetLevel(LEV_PICK)->GetDimension(); idim++) { 
     for (int fe=0; fe<QL; fe++) {
-       _elem_type[idim][fe] = elem_type::build(_mesh->_geomelem_id[idim].c_str(),fe,quadr_order_in.c_str());
-       _elem_type[idim][fe]->EvaluateShapeAtQP(_mesh->_geomelem_id[idim].c_str(),fe);
+       _elem_type[idim][fe] = _ml_msh->_finiteElement[ _mesh->_geomelem_flag[idim] ][ elem_type::_fe_old_to_new[fe] ];
      }
     }  
    

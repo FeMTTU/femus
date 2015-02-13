@@ -11,6 +11,7 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "SolvertypeEnum.hpp"
 #include "FElemTypeEnum.hpp"
+#include "OprtrTypeEnum.hpp"
 #include "Files.hpp"
 
 using std::cout;
@@ -18,10 +19,10 @@ using std::endl;
 
 using namespace femus;
 
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
-void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix);
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
 
-void SetLambda(MultiLevelSolution &mlSol, const unsigned &level, const unsigned &SolType, const char operatorName[]);
+void SetLambda(MultiLevelSolution &mlSol, const unsigned &level, const  FEOrder &order, Operator operatorType);
 
 
 double InitVariableU(const double &x, const double &y, const double &z);
@@ -41,7 +42,7 @@ int main(int argc,char **args) {
   
   Files files; 
         files.CheckIODirectories();
-	files.RedirectCout();
+	//files.RedirectCout();
   
   bool Vanka=0, Gmres=0, Asm=0;
   if(argc >= 2) {
@@ -90,16 +91,20 @@ int main(int argc,char **args) {
   
   // generate solution vector
   
-  ml_sol.AddSolution("U",LAGRANGE, FIRST);
-  ml_sol.AddSolution("V",LAGRANGE, FIRST);
-  ml_sol.AddSolution("lmbd",DISCONTINOUS_POLYNOMIAL,ZERO,0,false);
+  FEOrder orderPre = FIRST;
+  FEOrder orderVel = FIRST;
+  FEOrder orderTemp = FIRST;
+  
+  ml_sol.AddSolution("U", LAGRANGE, orderVel);
+  ml_sol.AddSolution("V", LAGRANGE, orderVel);
+  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
   
   // the pressure variable should be the last for the Schur decomposition
   // ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
-  ml_sol.AddSolution("P",LAGRANGE, FIRST);
+  ml_sol.AddSolution("P",LAGRANGE, orderPre);
   ml_sol.AssociatePropertyToSolution("P","Pressure");
  
-  ml_sol.AddSolution("T",LAGRANGE,FIRST);
+  ml_sol.AddSolution("T",LAGRANGE,orderTemp);
   
   //Initialize (update Init(...) function)
   ml_sol.Initialize("U");
@@ -114,7 +119,7 @@ int main(int argc,char **args) {
   ml_sol.GenerateBdc("P");
   ml_sol.GenerateBdc("T");
   
-  SetLambda(ml_sol, 0, 0,"elasticity");
+  SetLambda(ml_sol, 0, orderVel, ELASTICITY);
   //SetLambda(ml_sol, 0, 2,"diffusion");
   
   MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
@@ -135,12 +140,12 @@ int main(int argc,char **args) {
   std::cout << " *********** Navier-Stokes ************  " << std::endl;
     
   NonLinearImplicitSystem & system1 = ml_prob.add_system<NonLinearImplicitSystem> ("Navier-Stokes");
-  system1.AddSolutionToSytemPDE("U");
-  system1.AddSolutionToSytemPDE("V");
-  system1.AddSolutionToSytemPDE("P");
+  system1.AddSolutionToSystemPDE("U");
+  system1.AddSolutionToSystemPDE("V");
+  system1.AddSolutionToSystemPDE("P");
   
   // Set MG Options
-  system1.AttachAssembleFunction(AssembleMatrixResNS);  
+  system1.SetAssembleFunction(AssembleMatrixResNS);  
   system1.SetMaxNumberOfNonLinearIterations(90);
   system1.SetMaxNumberOfLinearIterations(2);
   system1.SetAbsoluteConvergenceTolerance(1.e-10);
@@ -184,11 +189,11 @@ int main(int argc,char **args) {
   std::cout << " *********** Temperature ************* " << std::endl;
     
   LinearImplicitSystem & system2 = ml_prob.add_system<LinearImplicitSystem> ("Temperature");
-  system2.AddSolutionToSytemPDE("T");
+  system2.AddSolutionToSystemPDE("T");
   
   
   // Set MG Options
-  system2.AttachAssembleFunction(AssembleMatrixResT);
+  system2.SetAssembleFunction(AssembleMatrixResT);
   system2.SetMaxNumberOfLinearIterations(6);
   system2.SetAbsoluteConvergenceTolerance(1.e-9);  
   system2.SetMgType(V_CYCLE);
@@ -399,7 +404,7 @@ bool SetBoundaryConditionCavityFlow(const double& x, const double& y, const doub
 
 static unsigned counter=0;
 
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
  
     adept::Stack & adeptStack = FemusInit::_adeptStack;
     
@@ -946,10 +951,19 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 //     } 
 //   }
   
-    
+  void SetLambda(MultiLevelSolution &mlSol, const unsigned &level, const  FEOrder &order, Operator operatorType){
   
-  void SetLambda(MultiLevelSolution &mlSol, const unsigned &level, const unsigned &SolType, const char operatorName[]){
-        
+    unsigned SolType;
+    if (order<FIRST || order> SECOND){
+      std::cout<<"Wong Solution Order"<<std::endl;
+      exit(0);
+    }
+    else if ( order == FIRST ) SolType=0;
+    else if ( order == SERENDIPITY ) SolType=1;
+    else if ( order == SECOND) SolType=2;
+    
+    
+    
     clock_t GetLambdaTime=0;
     clock_t start_time, end_time;
     start_time=clock();
@@ -968,11 +982,11 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     const unsigned max_size = static_cast< unsigned > (ceil(pow(3,geoDim)));
   
     bool diffusion, elasticity;
-    if(!strcmp("diffusion", operatorName)){
+    if( operatorType == DIFFUSION ){
       diffusion  = true;
       elasticity = false; 
     }
-    else if(!strcmp("elasticity", operatorName)){
+    if( operatorType == ELASTICITY ){
       diffusion  = false;
       elasticity = true; 
     }
@@ -1274,7 +1288,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   
   
 //------------------------------------------------------------------------------------------------------------
-void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assembe_matrix){
+void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
   
   //pointers and references
   Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
@@ -1335,7 +1349,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   B.reserve(max_size*max_size);
   
   // Set to zeto all the entries of the Global Matrix
-  if(assembe_matrix) myKK->zero();
+  if(assemble_matrix) myKK->zero();
   
   // *** element loop ***
  
@@ -1358,7 +1372,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
     // set to zero all the entries of the FE matrices
     F.resize(nve);
     memset(&F[0],0,nve*sizeof(double));
-    if(assembe_matrix){
+    if(assemble_matrix){
       B.resize(nve*nve);
       memset(&B[0],0,nve*nve*sizeof(double));
     }
@@ -1411,7 +1425,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
 	  }
 	  F[i]+= (-IPe*Lap_rhs-Adv_rhs*phi[i])*weight; 		    
 	  //END RESIDUALS A block ===========================
-	  if(assembe_matrix){
+	  if(assemble_matrix){
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve; j++) {
 	      double Lap=0;
@@ -1425,18 +1439,18 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
 	      B[i*nve+j] += IPe*Lap + Adv1;
 	    } // end phij loop
 	  } // end phii loop
-	} // endif assembe_matrix
+	} // endif assemble_matrix
       } // end gauss point loop
     } // endif single element not refined or fine grid loop
     //--------------------------------------------------------------------------------------------------------
     //Sum the local matrices/vectors into the global Matrix/vector
       
     myRES->add_vector_blocked(F,KK_dof);
-    if(assembe_matrix) myKK->add_matrix_blocked(B,KK_dof,KK_dof);  
+    if(assemble_matrix) myKK->add_matrix_blocked(B,KK_dof,KK_dof);  
   } //end list of elements loop for each subdomain
     
   myRES->close();
-  if(assembe_matrix) myKK->close();
+  if(assemble_matrix) myKK->close();
   
    // ***************** END ASSEMBLY *******************
   
