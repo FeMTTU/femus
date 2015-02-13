@@ -5,7 +5,6 @@
 #include "Parameter.hpp"
 #include "FemusInit.hpp"
 #include "SparseMatrix.hpp"
-#include "VTKWriter.hpp"
 #include "FElemTypeEnum.hpp"
 #include "Files.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
@@ -13,8 +12,7 @@
 
 double scale=1000.;
 
-using std::cout;
-using std::endl;
+using namespace std;
 using namespace femus;
 
 void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
@@ -372,12 +370,13 @@ int main(int argc,char **args) {
   //system.SetDirichletBCsHandling(PENALTY); 
   system.SetDirichletBCsHandling(ELIMINATION);   
    
+  ml_sol.SetWriter(GMV);
+
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
   mov_vars.push_back("DZ");
-  VTKWriter vtkio(ml_sol);
-  vtkio.SetMovingMesh(mov_vars);
+  ml_sol.GetWriter()->SetMovingMesh(mov_vars);
   
   // Solving Fluid-Structure-Interaction system
   std::cout << std::endl;
@@ -394,7 +393,7 @@ int main(int argc,char **args) {
   if (!dimension2D) print_vars.push_back("W");
   print_vars.push_back("P");
       
-  vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
+  ml_sol.GetWriter()->write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
 
   // Destroy all the new systems
   ml_prob.clear();

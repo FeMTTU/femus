@@ -171,6 +171,9 @@ public:
     bool _Use_GenerateBdc_new;
     
     /** To be Added */
+    Writer* GetWriter() {return _writer; }
+
+    /** To be Added */
     const Writer* GetWriter() const {return _writer; }
 
     /** To be Added */
