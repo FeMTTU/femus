@@ -26,24 +26,28 @@ namespace femus {
 
 
 
-//------------------------------------------------------------------------------
-// Forward declarations
-//------------------------------------------------------------------------------
-class MultiLevelProblem;
+  //------------------------------------------------------------------------------
+  // Forward declarations
+  //------------------------------------------------------------------------------
+  class MultiLevelProblem;
 
 
-class GMVWriter : public Writer {
+  class GMVWriter : public Writer {
+  private:
+    bool _debugOutput;
+  public:
 
-public:
+      /** Constructor. */
+      GMVWriter(MultiLevelSolution& ml_sol);
 
-    /** Constructor. */
-    GMVWriter(MultiLevelSolution& ml_sol);
+      /** Destructor */
+      virtual ~GMVWriter();
 
-    /** Destructor */
-    virtual ~GMVWriter();
-
-    /** write output function */
-    virtual void write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step=0);
+      /** write output function */
+      virtual void write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step=0);
+    
+      /** Set if to print or not to prind the debugging variables */
+      void SetDebugOutput( bool value ){ _debugOutput = value;}
 
 };
 

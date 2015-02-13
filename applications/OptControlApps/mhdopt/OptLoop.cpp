@@ -514,7 +514,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
    const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
+    CurrentElem       currelem(Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
   
   // processor index
@@ -562,20 +562,20 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-    currelem.set_el_nod_conn_lev_subd(Level,mesh->_iproc,iel);
+    currelem.SetDofobjConnCoords(mesh->_iproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    mesh->TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);
+    currelem.TransformElemNodesToRef(eqn->GetMLProb().GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 //======= 
     xyz_refbox.SetElemAverage();
     int el_flagdom = ElFlagControl(xyz_refbox._el_average,mesh);
 //=======        
 
-    if ( Vel._eqnptr != NULL )       Vel.GetElemDofs(Level);
+    if ( Vel._eqnptr != NULL )       Vel.GetElemDofs();
     else                             Vel._qtyptr->FunctionDof(Vel,0./*time*/,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
-    if ( VelDes._eqnptr != NULL ) VelDes.GetElemDofs(Level);
+    if ( VelDes._eqnptr != NULL ) VelDes.GetElemDofs();
     else                          VelDes._qtyptr->FunctionDof(VelDes,0./*time*/,&xyz_refbox._val_dofs[0]);    
 
 //AAA time is picked as a function pointer of the time C library i think...

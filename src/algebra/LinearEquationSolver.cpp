@@ -28,7 +28,6 @@
 #include "AsmPetscLinearEquationSolver.hpp"
 #include "GmresPetscLinearEquationSolver.hpp"
 #include "VankaPetscLinearEquationSolver.hpp"
-#include "PetscLinearEquationSolverM.hpp"
 #include "Preconditioner.hpp"
 
 namespace femus {
@@ -51,10 +50,6 @@ namespace femus {
       }
       case VANKA_SMOOTHER:{
 	std::auto_ptr<LinearEquationSolver> ap(new VankaPetscLinearEquationSolver(igrid, other_mesh));
-	return ap;
-      }
-      case NO_SMOOTHER:{
-	std::auto_ptr<LinearEquationSolver> ap(new PetscLinearSolverM(igrid, other_mesh));
 	return ap;
       }
       }

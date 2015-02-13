@@ -96,11 +96,12 @@
 
   // ====== Start new main =================================
   MultiLevelMesh ml_msh;
-  ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,1,0,1,QUAD9,"seventh"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+  ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,1,0,1,QUAD9,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
   ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
   ml_msh.PrintInfo();
 
   MultiLevelSolution ml_sol(&ml_msh);
+  ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
 
   MultiLevelProblem ml_prob(&ml_msh,&ml_sol);  
   ml_prob.SetMeshTwo(&mesh);
@@ -113,7 +114,8 @@
 //========= associate an EQUATION to QUANTITIES ========
 //========================================================
 
-  SystemTwo &  eqnT = ml_prob.add_system<SystemTwo>("Eqn_T",NO_SMOOTHER);
+  SystemTwo &  eqnT = ml_prob.add_system<SystemTwo>("Eqn_T");
+          eqnT.AddSolutionToSystemPDE("FAKE");
           eqnT.AddUnknownToSystemPDE(&temperature); 
           eqnT.AddUnknownToSystemPDE(&temperature2); 
           eqnT.AddUnknownToSystemPDE(&temperature3); 
@@ -133,7 +135,8 @@
      
         SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
 // //=====================
-//     sys -> init();
+    sys -> init();
+    sys -> _LinSolver[0]->set_solver_type(GMRES);  //if I keep PREONLY it doesn't run
 
 //=====================
     sys -> init_sys();

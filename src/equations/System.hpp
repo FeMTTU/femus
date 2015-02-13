@@ -37,6 +37,11 @@ class String;
 
 class System {
 
+protected:
+  
+    /** Function pointer type, easiest way to declare function pointer instantiations */
+    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+  
 public:
 
     /** Constructor.  Optionally initializes required data structures. */
@@ -63,11 +68,8 @@ public:
     /** Associate the solution variables to the system PDE */
     void AddSolutionToSystemPDE(const char solname[]);
 
-    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
-    
     /** Register a user function to use in assembling the system matrix and RHS. */
-    void SetAssembleFunction (void fptr(MultiLevelProblem &ml_prob, unsigned level,
-                                           const unsigned &gridn, const bool &assemble_matrix));
+    void SetAssembleFunction (AssembleFunctionType );
 
     AssembleFunctionType  GetAssembleFunction();
 
@@ -93,7 +95,7 @@ public:
     inline const unsigned GetGridn() const { return _gridn; }
     
 protected:
-
+  
     /** Constant reference to the \p EquationSystems object used for the simulation. */
     MultiLevelProblem& _equation_systems;
 
@@ -119,8 +121,7 @@ protected:
     unsigned _gridr;
 
     /** Function that assembles the system. */
-    void (* _assemble_system_function) (MultiLevelProblem &ml_prob, unsigned level,
-                                        const unsigned &gridn, const bool &assemble_matrix);
+    AssembleFunctionType _assemble_system_function;
 
     /** The number associated with this system */
     const unsigned int _sys_number;

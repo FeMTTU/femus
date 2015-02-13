@@ -103,19 +103,28 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
   const double alphaH1 = ml_prob.GetInputParser().get("alphaH1");
   
   //==== AUXILIARY ==============
-    double* dphijdx_g = new double[space_dim];
-    double* dphiidx_g = new double[space_dim];
+    std::vector<double> dphijdx_g(space_dim);
+    std::vector<double> dphiidx_g(space_dim);
    //-----Nonhomogeneous Neumann------
  // Qflux = - k grad(T) by definition
 //  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
-    double* Qflux_g = new double[space_dim];
+    std::vector<double>  Qflux_g(space_dim);
 
+        my_system._A[Level]->zero();
+        my_system._b[Level]->zero();
+    
 // ==========================================  
 // ==========================================  
  {//BEGIN VOLUME
- const uint mesh_vb = VV;
+ 
+   const uint mesh_vb = VV;
+   
+   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+   const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+
+  for (uint iel=0; iel < (nel_e - nel_b); iel++) {
   
-  CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+  CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 
@@ -172,25 +181,17 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     Tdes.Allocate();
 
   
-
-   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
-   const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
-
 // ==========================================  
 // ==========================================  
-   
 
-  for (uint iel=0; iel < (nel_e - nel_b); iel++) {
-    
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+    currelem.SetDofobjConnCoords(myproc,iel);
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
-
+    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
     
 //MY EQUATION
 //the elements are, for every level:
@@ -199,11 +200,11 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 // 3)BC VALUES 
 // 1) and 2) are taken in a single vector, 3) are considered separately
       
-    currelem.SetElDofsBc(Level);
+    currelem.SetElDofsBc();
 
-  Tempold.GetElemDofs(Level);
-    Tlift.GetElemDofs(Level);
-     TAdj.GetElemDofs(Level);
+  Tempold.GetElemDofs();
+    Tlift.GetElemDofs();
+     TAdj.GetElemDofs();
      
 
 // ===============      
@@ -226,10 +227,10 @@ int domain_flag = ElFlagControl(xyz_refbox._el_average,&ml_prob.GetMeshTwo());
   // it is better to avoid using GetElDofs if the Vect is internal, only if external  
   //Do not use GetElDofs if you want to pick an intermediate dof...
       
-   if ( vel._eqnptr != NULL )  vel.GetElemDofs(Level);
+   if ( vel._eqnptr != NULL )  vel.GetElemDofs();
    else                        vel._qtyptr->FunctionDof(vel,time,&xyz_refbox._val_dofs[0]);
 
-   if ( Tdes._eqnptr != NULL )  Tdes.GetElemDofs(Level);
+   if ( Tdes._eqnptr != NULL )  Tdes.GetElemDofs();
    else                         Tdes._qtyptr->FunctionDof(Tdes,time,&xyz_refbox._val_dofs[0]);
 
 
@@ -314,8 +315,8 @@ for (uint fe = 0; fe < QL; fe++)     {
         for (uint idim = 0; idim < space_dim; idim++)  dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][j+idim*Tempold._ndof]; 
            
    
-          double Lap_g   = Math::dot(dphijdx_g,dphiidx_g,space_dim);
-          double Advection = Math::dot(&vel._val_g[0],dphijdx_g,space_dim);
+          double Lap_g   = Math::dot(&dphijdx_g[0],&dphiidx_g[0],space_dim);
+          double Advection = Math::dot(&vel._val_g[0],&dphijdx_g[0],space_dim);
 
 	    int ip1 = i + Tempold._ndof;
 	    int jp1 = j + Tempold._ndof;
@@ -424,8 +425,14 @@ for (uint fe = 0; fe < QL; fe++)     {
    { //BEGIN BOUNDARY  // *****************************************************************
    
  const uint mesh_vb = BB;
+
+   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+   const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+    
+     for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
+
   
-  CurrentElem       currelem(BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+  CurrentElem       currelem(Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 
@@ -468,31 +475,23 @@ for (uint fe = 0; fe < QL; fe++)     {
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
 
-  
-
-   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
-   const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
-
 // ==========================================  
 // ==========================================     
-   
     
-     for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
-
       currelem.Mat().zero();
       currelem.Rhs().zero();
 
-      currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+      currelem.SetDofobjConnCoords(myproc,iel);
       currelem.SetMidpoint(); 
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+      currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
      
-      currelem.SetElDofsBc(Level);
+      currelem.SetElDofsBc();
       
-       Tempold.GetElemDofs(Level);
-         Tlift.GetElemDofs(Level);
-          TAdj.GetElemDofs(Level);
+       Tempold.GetElemDofs();
+         Tlift.GetElemDofs();
+          TAdj.GetElemDofs();
 
  //============ FLAGS ================
 //in order to do the flag here, since it is a "TRUE" NATURAL BOUNDARY CONDITION,
@@ -520,11 +519,11 @@ int el_Neum_flag=0;
 
        xyz.val_g();
        
-       static_cast<Temperature*>(ml_prob.GetQtyMap().GetQuantity("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],Qflux_g);
+       static_cast<Temperature*>(ml_prob.GetQtyMap().GetQuantity("Qty_Temperature"))->heatflux_txyz(time,&xyz._val_g[0],&Qflux_g[0]);
    
 	Tempold.val_g(); //For the penalty Dirichlet //i need this for interpolating the old function at the gauss point
 
-	   double QfluxDn_g=Math::dot( Qflux_g,currgp.get_normal_ptr(),space_dim );
+	   double QfluxDn_g=Math::dot( &Qflux_g[0],currgp.get_normal_ptr(),space_dim);
 	 
         for (uint i=0; i<Tempold._ndof; i++) {
    	const double phii_g =  currgp._phi_ndsQLVB_g[Tempold._FEord][i]; 
@@ -549,7 +548,10 @@ int el_Neum_flag=0;
     
   }//END BOUNDARY
 
-  
+        my_system._A[Level]->close();
+        my_system._b[Level]->close();
+
+ 
 #ifdef DEFAULT_PRINT_INFO
   std::cout << " Matrix and RHS assembled for equation " << my_system.name()
             << " Level "<< Level << " dofs " << my_system._A[Level]->n() << std::endl;

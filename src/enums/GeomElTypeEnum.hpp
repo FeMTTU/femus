@@ -11,6 +11,9 @@ enum  GeomElType { HEX=0,
   
                  };
 
+#define N_GEOM_ELS 6
+		 
+#define LEV_PICK  0
 
 
 #endif

@@ -123,12 +123,14 @@ public:
     /** Call the smoother-solver using the PetscLibrary. */
     virtual void solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean) = 0;
     
-  /** Old solver with algebra objects passed as arguments TODO think of removing */
+  /** DEPRECATED Old solver with algebra objects passed as arguments TODO think of removing */
   virtual std::pair<unsigned int, double> solve (SparseMatrix&,  // System Matrix
-					       NumericVector&, // Solution vector
+						SparseMatrix&,  // prec
+						NumericVector&, // Solution vector
 					       NumericVector&, // RHS vector
 					       const double,      // Stopping tolerance
-					       const unsigned int) { }; // N. Iterations
+					       const unsigned int) { std::cout << "If I call this it's wrong" << std::endl; abort(); }
+					       
 
 protected:
 

@@ -36,7 +36,7 @@ class CurrentQuantity;
 
   public:
     
-    CurrentElem(const uint vb, const SystemTwo*, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<elem_type*> >  & elem_type);
+    CurrentElem(const uint level, const uint vb, const SystemTwo*, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type);
    ~CurrentElem();
 
     inline const uint  GetVb() const {
@@ -82,7 +82,7 @@ class CurrentQuantity;
       return _KeM;
     }
     
-    void  set_el_nod_conn_lev_subd(const uint Level,const uint isubd_in,const uint iel);
+    void  SetDofobjConnCoords(const uint isubd_in,const uint iel);
     
     void  SetMidpoint();
     
@@ -91,16 +91,20 @@ class CurrentQuantity;
     void  ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const;
     
     /** needs the EQUATION basically */
-    void  SetElDofsBc(const uint Level);
+    void  SetElDofsBc();
  
     /** */
     inline const elem_type* GetElemType(const uint fe) const { return  _elem_type[fe]; }
     
-     inline const std::vector<elem_type*> &  GetElemTypeVectorFE() const { return _elem_type; }
+    inline const std::vector<const elem_type*> &  GetElemTypeVectorFE() const { return _elem_type; }
      
-    /** NODAL DIRICHLET */  
-     int Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const CurrentQuantity &Velold_in,const CurrentQuantity& press_in) const;
+    /**  */  
+    int Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const CurrentQuantity &Velold_in,const CurrentQuantity& press_in) const;
    
+    void TransformElemNodesToRef(Domain* mydom, double* refbox_xyz);
+    
+    const uint GetLevel() const {return _Level;}
+    
     //TODO make these private
 //========== Equation-related ========================               
   const SystemTwo * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
@@ -108,7 +112,7 @@ class CurrentQuantity;
   
   private:
 
-  const std::vector<elem_type*>  &  _elem_type;
+  const std::vector<const elem_type*>  &  _elem_type;
     
 // ========================================================================================
 //========== Current "EQUATION" Element (ql are TOGETHER ): needs the EQUATION ========================               
@@ -121,12 +125,14 @@ class CurrentQuantity;
 // ========================================================================================
 //==========  Current Geometric Element:  needs the MESH  ========================
    std::vector<uint>   _el_conn;             /// vector of the global nodes for that element         [NNDS];
+   std::vector<uint>   _el_conn_new;             /// vector of the global nodes for that element         [NNDS];
    uint    _vol_iel_DofObj;     /// i need to put the element also.
    std::vector<double> _xx_nds;              /// vector of the node coordinates for that element     [_spacedimension*NNDS];
    std::vector<double> _el_xm;               /// element center point                                [_spacedimension];
    const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
    const uint _mesh_vb;     //index for the mesh
-    
+
+      const uint _Level;  //the level to which the element belongs
   };
   
 
