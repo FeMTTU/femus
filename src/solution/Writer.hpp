@@ -67,7 +67,7 @@ protected:
     /** the displacement variables for mesh moving */
     std::vector<std::string> _moving_vars;
 
-    /** the multilevelproblem reference */
+    /** the multilevelsolution reference */
     MultiLevelSolution& _ml_sol;
 
     int _gridn;

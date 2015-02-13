@@ -20,13 +20,14 @@ PURPOSE.  See the above copyright notice for more information.
 // includes :
 //----------------------------------------------------------------------------
 #include <vector>
+#include <memory>
 #include "MultiLevelMesh.hpp"
 #include "Solution.hpp"
 #include "ParallelObject.hpp"
 #include "FElemTypeEnum.hpp"
 #include "BDCTypeEnum.hpp"
 #include "FunctionBase.hpp"
-
+#include "Writer.hpp"
 
 namespace femus {
 
@@ -169,6 +170,12 @@ public:
 
     bool _Use_GenerateBdc_new;
     
+    /** To be Added */
+    const Writer* GetWriter() const {return _writer; }
+
+    /** To be Added */
+    void SetWriter(const WriterEnum format) { _writer = Writer::build(format,this).release(); }
+
 private:
   
     /** To be Added */
@@ -200,7 +207,9 @@ private:
     vector <bool>   _PdeType;
     vector <bool>   _TestIfPressure;
     vector <bool>   _TestIfDisplacement;
-
+    
+    /** Multilevel solution writer */
+    Writer* _writer;
 
 };
 
