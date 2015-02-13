@@ -19,26 +19,29 @@ PURPOSE.  See the above copyright notice for more information.
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
+#include <vector>
 #include "MultiLevelMesh.hpp"
 #include "Solution.hpp"
 #include "ParallelObject.hpp"
 #include "FElemTypeEnum.hpp"
 #include "BDCTypeEnum.hpp"
 #include "FunctionBase.hpp"
-#include <vector>
 
 
 namespace femus {
 
 
 
-typedef double (*initfunc) (const double &x, const double &y, const double &z);
 
 /**
  * This class is a black box container to handle multilevel solutions.
  */
 
 class MultiLevelSolution : public ParallelObject {
+
+private:
+  
+    typedef double (*initfunc) (const double &x, const double &y, const double &z);
 
 public:
 
