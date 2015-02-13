@@ -33,12 +33,11 @@ namespace femus {
 
 
   class GMVWriter : public Writer {
-  private:
-    bool _debugOutput;
+    
   public:
 
       /** Constructor. */
-      GMVWriter(MultiLevelSolution& ml_sol);
+      GMVWriter(MultiLevelSolution & ml_sol);
 
       /** Destructor */
       virtual ~GMVWriter();
@@ -49,6 +48,9 @@ namespace femus {
       /** Set if to print or not to prind the debugging variables */
       void SetDebugOutput( bool value ){ _debugOutput = value;}
 
+  private:
+    bool _debugOutput;
+      
 };
 
 

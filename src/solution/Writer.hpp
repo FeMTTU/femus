@@ -21,8 +21,9 @@
 //----------------------------------------------------------------------------
 #include <vector>
 #include <string>
+#include <memory>
 #include "ParallelObject.hpp"
-
+#include "WriterEnum.hpp"
 
 namespace femus {
 
@@ -42,7 +43,7 @@ class Writer : public ParallelObject {
 public:
 
     /** Constructor. */
-    Writer(MultiLevelSolution& ml_probl);
+    Writer(MultiLevelSolution & ml_probl);
 
     /** Destructor */
     virtual ~Writer();
@@ -52,6 +53,8 @@ public:
 
     /** set moving mesh */
     void SetMovingMesh(std::vector<std::string>& movvars_in);
+    
+    static std::auto_ptr<Writer> build(const WriterEnum format, MultiLevelSolution * ml_sol);
 
 protected:
 
