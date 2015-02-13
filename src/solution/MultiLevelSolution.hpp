@@ -186,6 +186,7 @@ private:
     vector< vector <FunctionBase *> > _nonhomogeneousbcfunction; 
     
     bool _bdc_func_set;
+    
     unsigned short  _gridn;
     vector <int>    _SolType;
     vector <FEFamily> _family;

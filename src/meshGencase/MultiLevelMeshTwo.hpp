@@ -105,11 +105,10 @@ public:
     int    _maxelxnode;
     
    public:    
-// ====== DOMAIN SHAPE (TODO optional => pointer) ----- //if I put it as reference I'd have to initialize it
+// ====== DOMAIN SHAPE ( optional => pointer)
     Domain* _domain;      //TODO You must remember to ALLOCATE this POINTER BEFORE USING IT!
     Domain* GetDomain() const;
     void    SetDomain(Domain* );
-    void TransformElemNodesToRef(const uint elem_dim,const double* xx_qnds,double* refbox_xyz) const;
     
     //get functions
     inline const double get_Lref() const {return _Lref;}

@@ -147,14 +147,23 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 //========= BCHandling =========
   const double penalty_val  = ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
 
-  
+        my_system._A[Level]->zero();
+        my_system._b[Level]->zero();
+
+
    {//BEGIN VOLUME
 //===============================  
 //===============================  
   
     const uint mesh_vb = VV;
-  
-    CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+ 
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+    
+    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+      
+    CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+    
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -236,39 +245,35 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 #if DIMENSION==3
   gravity._val_g[2] = ml_prob.GetInputParser().get("dirgz");
 #endif  
- 
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
 
 //=======================
 //=======================    
 
-    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
  
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+    currelem.SetDofobjConnCoords(myproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
-    currelem.SetElDofsBc(Level);
+    currelem.SetElDofsBc();
     
-      VelOld.GetElemDofs(Level);
-    pressOld.GetElemDofs(Level);
+      VelOld.GetElemDofs();
+    pressOld.GetElemDofs();
 
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
  #if (BMAG_QTY==1)
-  if ( Bext._eqnptr != NULL )  Bext.GetElemDofs(Level); 
+  if ( Bext._eqnptr != NULL )  Bext.GetElemDofs(); 
   else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
-  if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs(Level);   
+  if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs();   
   else                         Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
 #endif
 #if (TEMP_QTY==1)
-   if ( Temp._eqnptr != NULL ) Temp.GetElemDofs(Level);
+   if ( Temp._eqnptr != NULL ) Temp.GetElemDofs();
      else                      Temp._qtyptr->FunctionDof(Temp,time,&xyz_refbox._val_dofs[0]);
 #endif
 
@@ -540,7 +545,13 @@ for (uint fe = 0; fe < QL; fe++)     {
 
     const uint mesh_vb = BB;
   
-    CurrentElem       currelem(BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+
+  for (uint iel=0; iel < (nel_e - nel_b) ; iel++) {
+  
+    CurrentElem       currelem(Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -582,10 +593,6 @@ for (uint fe = 0; fe < QL; fe++)     {
   xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
   xyz_refbox.Allocate();
 
-  
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
-
 //=======================
 //=======================    
     
@@ -594,21 +601,19 @@ for (uint fe = 0; fe < QL; fe++)     {
   double strainUtrDn_g[DIMENSION];
 
 
-  for (uint iel=0; iel < (nel_e - nel_b) ; iel++) {
-
      currelem.Mat().zero();
      currelem.Rhs().zero();
 
-     currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+     currelem.SetDofobjConnCoords(myproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+     currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
-     currelem.SetElDofsBc(Level);
+     currelem.SetElDofsBc();
      
-     VelOld.GetElemDofs(Level);
-     pressOld.GetElemDofs(Level);
+     VelOld.GetElemDofs();
+     pressOld.GetElemDofs();
 
 //============ BC =======
        int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(VelOld,pressOld); 
@@ -675,6 +680,8 @@ for (uint fe = 0; fe < QL; fe++)     {
     }
   // END BOUNDARY ******************************
   
+        my_system._A[Level]->close();
+        my_system._b[Level]->close();
 
 #ifdef DEFAULT_PRINT_INFO
  std::cout << " GenMatRhs " << my_system.name() << ": assembled  Level " << Level

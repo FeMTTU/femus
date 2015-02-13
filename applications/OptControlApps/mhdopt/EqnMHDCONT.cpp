@@ -62,11 +62,19 @@ using namespace femus;
   double        Lapxi_g[DIMENSION];
 //===========================
 
+  my_system._A[Level]->zero();
+  my_system._b[Level]->zero();
+
   {//BEGIN VOLUME
 
-  const uint mesh_vb = VV;
+    const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level];
+
+  for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+  
+    CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -122,35 +130,30 @@ using namespace femus;
     BhomAdj.Allocate();
   //=========END EXTERNAL QUANTITIES (couplings) =====
 
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level];
-
-
-  for (uint iel=0; iel < (nel_e - nel_b); iel++) {
  
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
      
-    currelem.set_el_nod_conn_lev_subd(Level,ml_prob.GetMeshTwo()._iproc,iel);
+    currelem.SetDofobjConnCoords(ml_prob.GetMeshTwo()._iproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]); 
+    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
-    currelem.SetElDofsBc(Level);
+    currelem.SetElDofsBc();
     
-         BeOld.GetElemDofs(Level);  
-    LagMultOld.GetElemDofs(Level);
+         BeOld.GetElemDofs();  
+    LagMultOld.GetElemDofs();
 
  
     
-    if ( Vel._eqnptr != NULL )        Vel.GetElemDofs(Level);
+    if ( Vel._eqnptr != NULL )        Vel.GetElemDofs();
     else                              Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
-    if ( VelAdj._eqnptr != NULL )  VelAdj.GetElemDofs(Level);
+    if ( VelAdj._eqnptr != NULL )  VelAdj.GetElemDofs();
     else                           VelAdj._qtyptr->FunctionDof(VelAdj,time,&xyz_refbox._val_dofs[0]);
-    if ( Bhom._eqnptr != NULL )      Bhom.GetElemDofs(Level);
+    if ( Bhom._eqnptr != NULL )      Bhom.GetElemDofs();
     else                             Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
-    if ( BhomAdj._eqnptr != NULL ) BhomAdj.GetElemDofs(Level);
+    if ( BhomAdj._eqnptr != NULL ) BhomAdj.GetElemDofs();
     else                           BhomAdj._qtyptr->FunctionDof(BhomAdj,time,&xyz_refbox._val_dofs[0]);    
     
 
@@ -361,7 +364,13 @@ for (uint fe = 0; fe < QL; fe++)     {
   
   const uint mesh_vb = BB;
   
-    CurrentElem       currelem(BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level];
+    
+  for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
+  
+    CurrentElem       currelem(Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+    
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
     
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -393,25 +402,20 @@ for (uint fe = 0; fe < QL; fe++)     {
   
   //=========END EXTERNAL QUANTITIES (couplings) =====
 
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level];
-
-    
-  for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
 
      currelem.Mat().zero();
      currelem.Rhs().zero();
 
-     currelem.set_el_nod_conn_lev_subd(Level,ml_prob.GetMeshTwo()._iproc,iel);
+     currelem.SetDofobjConnCoords(ml_prob.GetMeshTwo()._iproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+     currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
-     currelem.SetElDofsBc(Level);
+     currelem.SetElDofsBc();
      
-          BeOld.GetElemDofs(Level);
-     LagMultOld.GetElemDofs(Level);
+          BeOld.GetElemDofs();
+     LagMultOld.GetElemDofs();
 
 //============ BC =======
        int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(BeOld,LagMultOld); 
@@ -476,6 +480,9 @@ const double phii_g = currgp._phi_ndsQLVB_g[BeOld._FEord][i];
     
 // END BOUNDARY  // **************************
 
+        my_system._A[Level]->close();
+        my_system._b[Level]->close();
+  
 #ifdef DEFAULT_PRINT_INFO
  std::cout << " GenMatRhs " << my_system.name() << ": assembled  Level " << Level
            << " with " << my_system._A[Level]->m() << " dofs " << std::endl;

@@ -65,17 +65,27 @@
 
 //================================================  
 //=======Operators @ gauss =======================
-  double*    dphijdx_g = new double[space_dim]; // ShapeDer(): used for Laplacian,Divergence, ..., associated to an Unknown Quantity
-  double*    dphiidx_g = new double[space_dim]; // Test(): used for Laplacian,Advection,Divergence... associated to an Unknown Quantity
-  double*     AdvRhs_g = new double[space_dim]; //Operator: Adv(u,u,phi)
+  std::vector<double>    dphijdx_g(space_dim); // ShapeDer(): used for Laplacian,Divergence, ..., associated to an Unknown Quantity
+  std::vector<double>    dphiidx_g(space_dim); // Test(): used for Laplacian,Advection,Divergence... associated to an Unknown Quantity
+  std::vector<double>     AdvRhs_g(space_dim); //Operator: Adv(u,u,phi)
 //================================================  
+
+        my_system._A[Level]->zero();
+        my_system._b[Level]->zero();
+
 
   {//BEGIN VOLUME
 //========================
 //========================
-  const uint mesh_vb = VV;
+    const uint mesh_vb = VV;
   
-    CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+
+  for (int iel=0; iel < (nel_e - nel_b); iel++) {
+    
+    CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+    
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
  
   
@@ -127,28 +137,23 @@
   gravity._val_g[0] = ml_prob.GetInputParser().get("dirgx");
   gravity._val_g[1] = ml_prob.GetInputParser().get("dirgy");
   if ( space_dim == 3 )   gravity._val_g[2] = ml_prob.GetInputParser().get("dirgz"); 
-    
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+
 //========================
 //========================
-
-
-  for (int iel=0; iel < (nel_e - nel_b); iel++) {
  
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+    currelem.SetDofobjConnCoords(myproc,iel);
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
-    currelem.SetElDofsBc(Level);
-      VelOld.GetElemDofs(Level);
-    pressOld.GetElemDofs(Level);
+    currelem.SetElDofsBc();
+      VelOld.GetElemDofs();
+    pressOld.GetElemDofs();
 
 //======== TWO PHASE WORLD
     double rho_nd =  1.;
@@ -263,8 +268,8 @@ for (uint fe = 0; fe < QL; fe++)     {
            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[qtyzero_ord][j+idim*qtyzero_ndof];
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
   
-          double Lap_g=Math::dot(dphijdx_g,dphiidx_g,space_dim);
-	  double Adv_g=Math::dot(&VelOld._val_g[0],dphijdx_g,space_dim);
+          double Lap_g=Math::dot(&dphijdx_g[0],&dphiidx_g[0],space_dim);
+	  double Adv_g=Math::dot(&VelOld._val_g[0],&dphijdx_g[0],space_dim);
           
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
             int irowq = i+idim*qtyzero_ndof;      //(i) is still the dof of the tEST functions
@@ -367,9 +372,14 @@ for (uint fe = 0; fe < QL; fe++)     {
 
    {//BEGIN BOUNDARY  // *****************************************************************
 
-     const uint mesh_vb = BB;
+    const uint mesh_vb = BB;
+
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+   
+  for (uint iel=0; iel < (nel_e - nel_b) ; iel++) {
   
-    CurrentElem       currelem(BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+    CurrentElem       currelem(Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
  
   
@@ -411,31 +421,24 @@ for (uint fe = 0; fe < QL; fe++)     {
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
   xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
   xyz_refbox.Allocate();
-    
 
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
-
-   
 //=== auxiliary Operators at the boundary
 //   double strainU_g['dimension']['dimension'];
 //   double strainUtrDn_g['dimension'];
 
-  for (uint iel=0; iel < (nel_e - nel_b) ; iel++) {
-
      currelem.Mat().zero();  
      currelem.Rhs().zero();
 
-     currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+     currelem.SetDofobjConnCoords(myproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+     currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
-     currelem.SetElDofsBc(Level);
+     currelem.SetElDofsBc();
      
-       VelOld.GetElemDofs(Level);
-     pressOld.GetElemDofs(Level);
+       VelOld.GetElemDofs();
+     pressOld.GetElemDofs();
 
 //============ BC =======
        int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(VelOld,pressOld); 
@@ -509,7 +512,8 @@ for (uint fe = 0; fe < QL; fe++)     {
     }
   // END BOUNDARY ******************************
   
-
+        my_system._A[Level]->close();
+        my_system._b[Level]->close();
 
 
 #ifdef DEFAULT_PRINT_INFO

@@ -42,6 +42,9 @@
   const uint space_dim =       ml_prob.GetMeshTwo().get_dim();
   const uint  meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");
   const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
+  
+        my_system._A[Level]->zero();
+        my_system._b[Level]->zero();
 
   {//BEGIN VOLUME
   
@@ -56,7 +59,13 @@
     
   const uint mesh_vb = VV;
   
-  CurrentElem       currelem(VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+   const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+
+  for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+    
+  CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+  
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
@@ -92,19 +101,15 @@
     xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
     xyz_refbox.Allocate();
 
-   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
-   const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
-
-  for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.set_el_nod_conn_lev_subd(Level,myproc,iel);
+    currelem.SetDofobjConnCoords(myproc,iel);
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    ml_prob.GetMeshTwo().TransformElemNodesToRef(currelem.GetDim(),currelem.GetNodeCoords(),&xyz_refbox._val_dofs[0]);    
+    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
     
 //MY EQUATION
@@ -114,11 +119,11 @@
 // 3)BC VALUES 
 // 1) and 2) are taken in a single vector, 3) are considered separately
       
-    currelem.SetElDofsBc(Level);
+    currelem.SetElDofsBc();
 
-  Tempold.GetElemDofs(Level);
-    Temp2.GetElemDofs(Level);
-    Temp3.GetElemDofs(Level);
+  Tempold.GetElemDofs();
+    Temp2.GetElemDofs();
+    Temp3.GetElemDofs();
     
 // ===============      
 // Now the point is this: there are several functions of space
@@ -281,7 +286,9 @@ for (uint fe = 0; fe < QL; fe++)     {
   
   }//END VOLUME
   
-  
+        my_system._A[Level]->close();
+        my_system._b[Level]->close();
+
 #ifdef DEFAULT_PRINT_INFO
   std::cout << " Matrix and RHS assembled for equation " << my_system.name()
             << " Level "<< Level << " dofs " << my_system._A[Level]->n() << std::endl;
