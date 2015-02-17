@@ -31,7 +31,7 @@ namespace femus {
 
 
 
-GMVWriter::GMVWriter(MultiLevelSolution& ml_probl): Writer(ml_probl)
+GMVWriter::GMVWriter(MultiLevelSolution & ml_probl): Writer(ml_probl)
 {
   _debugOutput = false;
 }

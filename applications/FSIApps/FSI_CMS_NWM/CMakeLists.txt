@@ -1,6 +1,0 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-
-PROJECT(FSI_CMS_NWM)
-
-femusMacroBuildApplication(FSIApps/FSI_CMS_NWM fsicms)
-

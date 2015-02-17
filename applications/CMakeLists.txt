@@ -43,18 +43,18 @@ ENDIF(BUILD_NAVIERSTOKESAPPS)
 IF(BUILD_FSIAPPS)
 
 # FSI SteadyState Benchmark Comsol
-    ADD_SUBDIRECTORY(FSIApps/FSI_CMS_NWM/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_CMS_NWM/output/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_CMS_NWM/input/)
-    FILE(COPY           FSIApps/FSI_CMS_NWM/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_CMS_NWM/input/)
+    ADD_SUBDIRECTORY(FSIApps/FSITimeDependentBenchmarks/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSITimeDependentBenchmarks/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSITimeDependentBenchmarks/input/)
+    FILE(COPY           FSIApps/FSITimeDependentBenchmarks/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/FSIApps/FSITimeDependentBenchmarks/input/)
 
 # FSI SteadyState Benchmark Turek1
-    ADD_SUBDIRECTORY(FSIApps/FSI_TUREK_1/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_1/output/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_1/input/)
-    FILE(COPY           FSIApps/FSI_TUREK_1/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_1/input/)
+    ADD_SUBDIRECTORY(FSIApps/FSISteadyStateBenchmarks/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSISteadyStateBenchmarks/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSISteadyStateBenchmarks/input/)
+    FILE(COPY           FSIApps/FSISteadyStateBenchmarks/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/FSIApps/FSISteadyStateBenchmarks/input/)
 
 # FSI SteadyState Benchmark Turek3
     ADD_SUBDIRECTORY(FSIApps/FSI_TUREK_3/)

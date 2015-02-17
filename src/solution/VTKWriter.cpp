@@ -32,9 +32,10 @@
 namespace femus {
 
 
+ short unsigned int VTKWriter::femusToVtkCellType[3][6]= {{12,10,13,9,5,3},{25,24,26,23,22,21},{29,24,32,28,22,21}};
 
 
-VTKWriter::VTKWriter(MultiLevelSolution& ml_probl): Writer(ml_probl)
+VTKWriter::VTKWriter(MultiLevelSolution & ml_probl): Writer(ml_probl)
 {
   
 }
