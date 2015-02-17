@@ -16,7 +16,7 @@ Bug reports, fixes and suggestions (for which we are very grateful):
   all developers     
 
 
-Contributions are welcomed.
+Contributions are welcome.
 
 
 =============================== End of file ================================

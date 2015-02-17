@@ -29,3 +29,44 @@ FEMuS includes,
    and make sure that everything compiles correctly.
    
  - when you start a file, put the source code among the "namespace femus"
+
+ 
+ 
+##############################
+###### APPLICATION ###########
+##############################
+
+######## How to SETUP a NEW APPLICATION of the LIBRARY (will do a script probably) #############
+- Create a folder in the Applications directory with your main function and your src/header files
+- Write the Cmakelists.txt file for it
+- Add the reference to the application in the Cmakelists.txt of the package library
+- open cmake-gui and run configure and generate
+- NOW PAY ATTENTION TO WHAT HAPPENS WHEN YOU ADD SOURCE FILES to the LIBRARY (not to the application)! You have to update the LIST in the src/ cmake file!!! (use ls -1)
+- now go to the binary directory and type make to generate the library
+- then enter your application folder and run make to generate your executable
+
+######## How to IMPLEMENT A NEW APPLICATION #############
+- Follow the examples
+
+###### How to change the mesh file of an application ###########
+- Put the mesh file in the input/ directory
+- Set the filename in the main file
+
+####### How to schedule a suite of runs ##########
+- Script
+
+###### When you change the input file in the repo folder (NOT IN THE BINARY FOLDER) then you have to RERUN CMAKE !!! #############
+
+####### How to RESTART a run of an application ##########
+- THE WHOLE RUN is in a single "time" DIRECTORY...
+  so to restart we will EXCLUSIVELY READ from THAT DIRECTORY
+
+- Set the folder from which to restart in the file run_to_restart_from
+- set the ITERATION NUMBER in the "initial_step" variable in the configuration file IN THE FOLDER OF THE CONSIDERED RUN!
+- set the other parameters like "nsteps"
+
+- We must be very careful.
+- We must change ALMOST NOTHING
+- Do not change NUMBER OF PROCESSORS
+- Do not change NUMBER OF LEVELS
+- Do not change the OUTPUT FOLDERNAME (of course...)

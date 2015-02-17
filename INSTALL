@@ -1,0 +1,21 @@
+###### How to download the source package ###########
+
+git clone https://github.com/FeMTTU/femus.git
+
+###### How to configure (command line procedure) ###########
+cd femus
+
+source contrib/scripts/configure_femus.sh
+
+fm_set_femus --prefix my_femus_absolute_path --prefix-external my_external_absolute_path --method-petsc [opt,dbg] --method-libmesh [opt,dbg]
+
+
+if [ -d femus.build ]; then
+	echo "Directory exists"
+else 
+	mkdir femus.build
+fi
+
+cd femus.build
+
+cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE="Release" -DBUILD_DOCUMENTATION="OFF"  -DLIBMESH_DIR=my_libmesh_directory   ../femus
