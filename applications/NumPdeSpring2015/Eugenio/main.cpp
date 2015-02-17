@@ -41,7 +41,7 @@ int main(int argc, char **args) {
   mlMsh.ReadCoarseMesh("./input/square.neu","seventh",scalingFactor); 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfLevels=2;
+  unsigned numberOfLevels=4;
   unsigned numberOfSelectiveLevels=0;
   mlMsh.RefineMesh(numberOfLevels , numberOfLevels + numberOfSelectiveLevels, NULL);
   mlMsh.PrintInfo();
@@ -55,10 +55,12 @@ int main(int argc, char **args) {
   mlSol.AddSolution("P",DISCONTINOUS_POLYNOMIAL, ZERO);
   mlSol.AddSolution("T",DISCONTINOUS_POLYNOMIAL, FIRST);
   
-  mlSol.Initialize("All");  
+  mlSol.Initialize("All"); 
+  
   mlSol.Initialize("U", InitalValueU);
   mlSol.Initialize("P", InitalValueP);
-  mlSol.Initialize("T", InitalValueT); //note that this initialization is the same as piecewise constant element
+  mlSol.Initialize("T", InitalValueT); 
+  //note that this initialization is the same as piecewise constant element
   
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -71,7 +73,7 @@ int main(int argc, char **args) {
 
   GMVWriter gmvIO(mlSol);
   variablesToBePrinted.push_back("all");
-  gmvIO.SetDebugOutput(true);
+  gmvIO.SetDebugOutput(false);
   gmvIO.write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
    
   return 1;
