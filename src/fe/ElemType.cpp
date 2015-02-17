@@ -59,7 +59,7 @@ elem_type::~elem_type() {
 
 void elem_type::EvaluateShapeAtQP(const std::string geomel_id_in,const std::string fe_in) {
 
-if (  (!strcmp(fe_in.c_str(),"disc_linear"))  || (!strcmp(fe_in.c_str(),"quadratic")) ) {  std::cout << "BEWARE, family not supported yet" << std::endl; return; }
+// if (  (!strcmp(fe_in.c_str(),"disc_linear"))  || (!strcmp(fe_in.c_str(),"quadratic")) ) {  std::cout << "BEWARE, family not supported yet" << std::endl; return; }
 
 // ============== allocate canonical shape ==================================================================
          _phi_mapGD = new double*[GetGaussRule().GetGaussPointsNumber()];// TODO valgrind, remember to DEALLOCATE THESE, e.g. with smart pointers
