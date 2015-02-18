@@ -70,3 +70,17 @@ FEMuS includes,
 - Do not change NUMBER OF PROCESSORS
 - Do not change NUMBER OF LEVELS
 - Do not change the OUTPUT FOLDERNAME (of course...)
+
+
+
+##################################
+###### GIT CHEAT SHEET ###########
+##################################
+
+- Set name and email in your computer:
+
+git config --global user.name "Name Surname"
+git config --global user.email "name.surname@example.com"
+
+- Using the manual never hurts...
+
