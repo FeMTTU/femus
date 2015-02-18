@@ -29,11 +29,24 @@
 ############## "Software" DIRECTORY ############
 # Now we can install the software that we need #
 ################################################################################################
-echo This script must be run with ./install_femus.sh from any position
-EXTERNALDIR=external/
-mkdir -p $EXTERNALDIR
-cd $EXTERNALDIR
-SOFTWARE_DIR=$PWD/
+echo Install petsc
+
+if test "$1" != "--prefix-external"; then
+echo "The first argument must be --prefix-external"; exit;
+fi
+
+if test "$2" = ""; then
+echo "The second argument must be the directory (either relative or absolute) where you want to install petsc"; exit;
+fi
+
+
+SOFTWARE_DIR=`readlink -f $2`
+echo "=========" $SOFTWARE_DIR
+
+mkdir -p $SOFTWARE_DIR
+cd $SOFTWARE_DIR
+
+
 
 #######################################################################
 ################# LA PROCEDURA UNIVERSALE ###########################
@@ -260,7 +273,7 @@ done
 
 
 sleep 1
-echo Download, extract, compile PRE and  POST UTILITIES:  paraview, hdfview, gambit
+echo Download, extract, compile PRE and  POST UTILITIES:  paraview, hdfview
 # how do i put in a command line something that is chosen with some alternatives with menus in .php page?!?
 # wget http://www.hdfgroup.org/ftp/HDF5/hdf-java/hdfview/hdfview_install_linux64.bin
 # sh hdfview_install_linux64.bin   #this will need graphical interface
