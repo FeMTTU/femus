@@ -1,24 +1,23 @@
-###### How to download the source package ###########
 
-- Install petsc
-- Install libmesh (will not be linked soon)
-- Clone the FEMuS source code:
-git clone https://github.com/FeMTTU/femus.git
+- Clone the FEMuS source code from the github repo:
+
+   git clone https://github.com/FeMTTU/femus.git
+
+- Install petsc and libmesh in some common directory "my_external_directory" (please put it outside of the femus repo directory)
+
+  If they are not installed already, the script "install_external.sh" in contrib/scripts/ will do it automatically, with the following syntax:
+  
+  ./contrib/scripts/install_external.sh --prefix-external my_external_directory
 
 ###### How to configure (command line procedure) ###########
-cd femus
+   cd femus
 
-source contrib/scripts/configure_femus.sh
+   source contrib/scripts/configure_femus.sh
 
-fm_set_femus --prefix my_femus_absolute_path --prefix-external my_external_absolute_path --method-petsc [opt,dbg] --method-libmesh [opt,dbg]
+   fm_set_femus --prefix my_femus_absolute_path --prefix-external my_external_absolute_path --method-petsc [opt,dbg] --method-libmesh [opt,dbg]
 
+   mkdir femus.build
 
-if [ -d femus.build ]; then
-	echo "Directory exists"
-else 
-	mkdir femus.build
-fi
+   cd femus.build
 
-cd femus.build
-
-cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE="Release" -DBUILD_DOCUMENTATION="OFF"  -DLIBMESH_DIR=my_libmesh_directory   ../femus
+   cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE="[Debug Release RelWithDebInfo MinSizeRel None]" -DBUILD_DOCUMENTATION="[OFF ON]"  -DLIBMESH_DIR=my_libmesh_directory   ../femus
