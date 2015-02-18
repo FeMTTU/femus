@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-echo  "Source script for setting the FEMuS environment"
+echo  "Source script for setting some environment variables for FEMuS to work\n"
 
 
 while getopts ":a" opt; do
@@ -40,7 +40,7 @@ if test "$1" != "--prefix-basepath"; then
 echo "The first argument must be --prefix-basepath"; return 18;
 fi
 
- EXTERNAL_BASEPATH=$2
+ EXTERNAL_BASEPATH=`readlink -f $2`
 
 ############# MACHINE DEPENDENT ###################
  FM_BASEPATH_TO_MPI=$EXTERNAL_BASEPATH    #NOW ALL THESE VARIABLES will APPEAR IN THE ENVIRONMENT... even if you don't put EXPORT... TODO see if i can improve this
@@ -92,7 +92,7 @@ if test "$3" != "--method"; then
 echo "The third argument must be --method"; return 18;
 fi
 
-EXTERNAL_BASEPATH=$2
+EXTERNAL_BASEPATH=`readlink -f $2`
 PETSC_METHOD=$4
 
 
@@ -153,7 +153,7 @@ if test "$5" != "--method-petsc"; then
 echo "Use --method-petsc for Petsc method "; return;
 fi
 
-EXTERNAL_BASEPATH=$2
+EXTERNAL_BASEPATH=`readlink -f $2`
 LIBMESH_METHOD=$4
 PETSC_METHOD=$6
 
@@ -213,25 +213,21 @@ function fm_set_femus() {
 
 
 if test "$1" = "--help"; then
-echo " --prefix ABSOLUTE_PATH --prefix-external ABSOLUTE_PATH_2 --method-petsc {opt,dbg} --method-libmesh {opt,dbg,pro} ";
+echo " --prefix-external EXTERNAL_PATH --method-petsc {opt,dbg} --method-libmesh {opt,dbg,pro} ";
 return;
 fi
 
-FEMUS_PREFIX=$2
-EXTERNAL_PREFIX=$4
-PETSC_METHOD=$6
-LIBMESH_METHOD=$8
+EXTERNAL_PREFIX=`readlink -f $2`
+PETSC_METHOD=$4
+LIBMESH_METHOD=$6
 
-if test "$1" != "--prefix"; then
-echo "Use --prefix for femus source dir"; return;
-fi
-if test "$3" != "--prefix-external"; then
+if test "$1" != "--prefix-external"; then
 echo "Use --prefix-external for external packages"; return;
 fi
-if test "$5" != "--method-petsc"; then
+if test "$3" != "--method-petsc"; then
 echo "Use --method-petsc for Petsc"; return;
 fi
-if test "$7" != "--method-libmesh"; then
+if test "$5" != "--method-libmesh"; then
 echo "Use --method-libmesh for Libmesh"; return;
 fi
 
@@ -251,8 +247,8 @@ echo -e \
 ============================================================
 ================ Welcome to FEMuS =========================  
 ===== The method for FEMuS will be given by CMake \n
-===== The method for LibMesh is $LIBMESH_METHOD \n
 ===== The method for PETSc is  $PETSC_METHOD \n
+===== The method for LibMesh is $LIBMESH_METHOD \n
 "
 
 echo -e "======== BEWARE !!! ============
