@@ -23,7 +23,6 @@
 #include "petscksp.h"
 #include "petscvec.h" 
 
-// C++ includes
 // Local Includes
 #include "AsmPetscLinearEquationSolver.hpp"
 #include "GmresPetscLinearEquationSolver.hpp"

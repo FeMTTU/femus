@@ -32,9 +32,10 @@
 namespace femus {
 
 
+ short unsigned int VTKWriter::femusToVtkCellType[3][6]= {{12,10,13,9,5,3},{25,24,26,23,22,21},{29,24,32,28,22,21}};
 
 
-VTKWriter::VTKWriter(MultiLevelSolution& ml_probl): Writer(ml_probl)
+VTKWriter::VTKWriter(MultiLevelSolution & ml_probl): Writer(ml_probl)
 {
   
 }
@@ -47,7 +48,10 @@ VTKWriter::~VTKWriter()
 
 void VTKWriter::write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
-  bool test_all=!(vars[0].compare("All"));
+  bool print_all = 0;
+  for (unsigned ivar=0; ivar < vars.size(); ivar++){
+    print_all += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
+  }
   
   int icount;
   unsigned index=0;
@@ -399,8 +403,8 @@ void VTKWriter::write_system_solutions(const std::string output_path, const char
   
 
   //Print Solution (on element) ***************************************************************
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_sol.GetSolutionSize(); i++) {
-    unsigned indx=(test_all==0)?_ml_sol.GetIndex(vars[i].c_str()):i;
+  for (unsigned i=0; i<(!print_all)*vars.size() + print_all*_ml_sol.GetSolutionSize(); i++) {
+    unsigned indx=( print_all == 0 ) ? _ml_sol.GetIndex(vars[i].c_str()):i;
     if (3 <= _ml_sol.GetSolutionType(indx)) {
       fout << "    <DataArray type=\"Float32\" Name=\"" << _ml_sol.GetSolutionName(indx) <<"\" format=\"binary\">" << std::endl;
       // point pointer to common memory area buffer of void type;
@@ -446,8 +450,8 @@ void VTKWriter::write_system_solutions(const std::string output_path, const char
    
   // point pointer to common memory area buffer of void type;
   float* var_nd = static_cast<float*>(buffer_void);
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_sol.GetSolutionSize(); i++) {
-    unsigned indx=(test_all==0)?_ml_sol.GetIndex(vars[i].c_str()):i;
+  for (unsigned i=0; i<(!print_all)*vars.size()+ print_all*_ml_sol.GetSolutionSize(); i++) {
+    unsigned indx=( print_all == 0 )?_ml_sol.GetIndex(vars[i].c_str()):i;
     if (_ml_sol.GetSolutionType(indx)<3) {
       fout << " <DataArray type=\"Float32\" Name=\"" << _ml_sol.GetSolutionName(indx) <<"\" format=\"binary\">" << std::endl;
       //print solutions on nodes dimension

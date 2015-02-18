@@ -31,9 +31,9 @@ namespace femus {
 
 
 
-GMVWriter::GMVWriter(MultiLevelSolution& ml_probl): Writer(ml_probl)
+GMVWriter::GMVWriter(MultiLevelSolution & ml_probl): Writer(ml_probl)
 {
-  
+  _debugOutput = false;
 }
 
 GMVWriter::~GMVWriter()
@@ -44,9 +44,7 @@ GMVWriter::~GMVWriter()
 void GMVWriter::write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
   unsigned igridn = _gridn; // aggiunta da me
-  
-  bool debug = true;  // aggiunta da me
-  
+      
   if (igridn==0) igridn=_gridn;
   
   unsigned igridr=(_gridr <= igridn)?_gridr:igridn;
@@ -215,10 +213,17 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
   // ********** End printing Regions **********
   
   // ********** Start printing Solution **********
-  for (unsigned i=0; i<_ml_sol.GetSolutionSize(); i++) {
+  bool printAll = 0;
+  for (unsigned ivar=0; ivar < vars.size(); ivar++){
+    printAll += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
+  }
+   
+  for (unsigned ivar=0; ivar< !printAll*vars.size() + printAll*_ml_sol.GetSolutionSize(); ivar++) {
+    unsigned i = ( printAll == 0 ) ? _ml_sol.GetIndex( vars[ivar].c_str()) : ivar;
+  
     for(int name=0;name<4;name++){
       if (name==0){
-	sprintf(det,"%s %s","Sol",_ml_sol.GetSolutionName(i));
+	sprintf(det,"%s", _ml_sol.GetSolutionName(i));
       }
       else if (name==1){
 	sprintf(det,"%s %s","Bdc",_ml_sol.GetSolutionName(i));
@@ -229,7 +234,7 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
       else{
 	sprintf(det,"%s %s","Eps",_ml_sol.GetSolutionName(i));
       }
-      if(name==0 || (debug && _ml_sol.GetSolutionLevel(igridn-1u)->_ResEpsBdcFlag[i])){
+      if(name==0 || ( _debugOutput  && _ml_sol.GetSolutionLevel(igridn-1u)->_ResEpsBdcFlag[i])){
 	if (_ml_sol.GetSolutionType(i)<3) {  // **********  on the nodes **********
 	  fout.write((char *)det,sizeof(char)*8);
 	  fout.write((char *)&one,sizeof(unsigned));

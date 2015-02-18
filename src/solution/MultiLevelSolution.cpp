@@ -89,7 +89,7 @@ void MultiLevelSolution::AddSolutionLevel(){
   
   for (int k=0; k<_SolName.size(); k++) {
     if(!_Use_GenerateBdc_new) GenerateBdc(k, grid0, 0.);
-    else GenerateBdc_new(k,grid0, 0.);  
+    else GenerateBdc_new(k, grid0, 0.);  
   }
   
   
@@ -151,7 +151,7 @@ void MultiLevelSolution::Initialize(const char name[], initfunc func) {
   
   unsigned i_start;
   unsigned i_end;
-  if (!strcmp(name,"All")) {
+  if (!strcmp(name,"All") || !strcmp(name,"all") || !strcmp(name,"ALL")) {
     i_start=0;
     i_end=_SolType.size();
   } else {
@@ -159,70 +159,68 @@ void MultiLevelSolution::Initialize(const char name[], initfunc func) {
     i_end=i_start+1u;
   }
   
-  double value;
   for (unsigned i=i_start; i<i_end; i++) {
     unsigned sol_type = _SolType[i];
     for (unsigned ig=0; ig<_gridn; ig++) {
       unsigned num_el = _ml_msh->GetLevel(ig)->GetNumberOfElements();
       _solution[ig]->ResizeSolutionVector(_SolName[i]);
+      if ( ig > 0 ) BuildProlongatorMatrix(ig,i);
       _solution[ig]->_Sol[i]->zero();
-      if ( ig>0 ) BuildProlongatorMatrix(ig,i);
-      if ( sol_type<3 ) {
-	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-	  for (int iel=_ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom]; 
-	       iel < _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	    unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
-	    unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,sol_type);
+      if(func){
+	double value;
+	if ( sol_type < 3 ) {
+	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+	    for (int iel=_ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom]; 
+		iel < _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	      unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
+	      unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,sol_type);
 	  
-            for(int j=0; j<nloc_dof; j++) {
-	      unsigned inode=_ml_msh->GetLevel(ig)->el->GetMeshDof(kel_gmt,j,sol_type);
-	      unsigned inode_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,sol_type);
-	      unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,2);
-	      double xx=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);  
-	      double yy=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
-	      double zz=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
+	      for(int j=0; j<nloc_dof; j++) {
+		unsigned inode=_ml_msh->GetLevel(ig)->el->GetMeshDof(kel_gmt,j,sol_type);
+		unsigned inode_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,sol_type);
+		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,2);
+		double xx=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);  
+		double yy=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
+		double zz=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
 	      
-	      value = (func) ? func(xx,yy,zz) : 0.;
+		value = func(xx,yy,zz);
 	      
-	      _solution[ig]->_Sol[i]->set(inode_Metis,value);
-	      if (_SolTmorder[i]==2) {
-		_solution[ig]->_SolOld[i]->set(inode_Metis,value);
+		_solution[ig]->_Sol[i]->set(inode_Metis,value);
+		if (_SolTmorder[i]==2) {
+		  _solution[ig]->_SolOld[i]->set(inode_Metis,value);
+		}
 	      }
 	    }
 	  }
-	}
-        _solution[ig]->_Sol[i]->close();
-	if (_SolTmorder[i]==2) {
-	  _solution[ig]->_SolOld[i]->close();
-	}
-      }
-      else if ( sol_type < 5 ) {
-	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-	  for (int iel=_ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom]; 
-	       iel < _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-	    unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
+        }
+	else if ( sol_type < 5 ) {
+	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+	    for (int iel=_ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom]; 
+		iel < _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	      unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
 	  
-	    unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,0);
-	    double xx=0.,yy=0.,zz=0.;
-	    for(int j=0; j<nloc_dof; j++) {
-	      unsigned inode=_ml_msh->GetLevel(ig)->el->GetMeshDof(kel_gmt,j,2);
-	      unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,2);
-	      xx+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);  
-	      yy+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
-	      zz+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
-	    }
-	    xx /= nloc_dof;
-	    yy /= nloc_dof;
-	    zz /= nloc_dof;
+	      unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,0);
+	      double xx=0.,yy=0.,zz=0.;
+	      for(int j=0; j<nloc_dof; j++) {
+		unsigned inode=_ml_msh->GetLevel(ig)->el->GetMeshDof(kel_gmt,j,2);
+		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,2);
+		xx+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);  
+		yy+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
+		zz+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
+	      }
+	      xx /= nloc_dof;
+	      yy /= nloc_dof;
+	      zz /= nloc_dof;
   
-	    value = (func) ? func(xx,yy,zz) : 0.;
+	      value = func(xx,yy,zz);
    
-	    _solution[ig]->_Sol[i]->set(iel,value);
-	    if (_SolTmorder[i]==2) {
-	      _solution[ig]->_SolOld[i]->set(iel,value);
+	      _solution[ig]->_Sol[i]->set(iel,value);
+	      if (_SolTmorder[i]==2) {
+		_solution[ig]->_SolOld[i]->set(iel,value);
+	      }
 	    }
 	  }
-	}
+        }
         _solution[ig]->_Sol[i]->close();
 	if (_SolTmorder[i]==2) {
 	  _solution[ig]->_SolOld[i]->close();

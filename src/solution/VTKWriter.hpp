@@ -37,7 +37,7 @@ class VTKWriter : public Writer {
 public:
 
     /** Constructor. */
-    VTKWriter(MultiLevelSolution& ml_sol);
+    VTKWriter(MultiLevelSolution & ml_sol);
 
     /** Destructor */
     virtual ~VTKWriter();
@@ -106,8 +106,6 @@ private:
  * VTK_HIGHER_ORDER_HEXAHEDRON            = 67, 
  */
   
- short unsigned int VTKWriter::femusToVtkCellType[3][6]= {{12,10,13,9,5,3},{25,24,26,23,22,21},{29,24,32,28,22,21}};
-
 
 } //end namespace femus
 

@@ -35,7 +35,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
 void show_usage()
 {
   std::cout << "Use --inputfile variable to set the input file" << std::endl;
-  std::cout << "e.g.: ./Poisson --inputfile $FEMUS_DIR/applications/Poisson/input/input.json" << std::endl;
+  std::cout << "e.g.: ./Poisson --inputfile ./input/input.json" << std::endl;
 }
 
 ParsedFunction fpsource;
