@@ -245,12 +245,6 @@ fm_set_petsc   --prefix-basepath $EXTERNAL_PREFIX --method  $PETSC_METHOD       
 fm_set_libmesh --prefix-basepath $EXTERNAL_PREFIX --method  $LIBMESH_METHOD --method-petsc $PETSC_METHOD #needs FM_PETSC_METHOD and FM_LIBMESH_METHOD
 
 
-######## FEMUS #########
-export FEMUS_DIR=$FEMUS_PREFIX
-########################
-
-
-
 
 echo -e \
 "============================================================
