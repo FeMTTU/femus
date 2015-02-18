@@ -30,7 +30,7 @@ FEMuS includes,
    
  - when you start a file, put the source code among the "namespace femus"
 
- 
+ - data encapsulation, please
  
 ##############################
 ###### APPLICATION ###########

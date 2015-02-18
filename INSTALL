@@ -1,5 +1,8 @@
 ###### How to download the source package ###########
 
+- Install petsc
+- Install libmesh (will not be linked soon)
+- Clone the FEMuS source code:
 git clone https://github.com/FeMTTU/femus.git
 
 ###### How to configure (command line procedure) ###########
