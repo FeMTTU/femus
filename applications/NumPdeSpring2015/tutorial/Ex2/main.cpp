@@ -29,10 +29,10 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
 
 int main(int argc, char **args) {
   
-  /// Init Petsc-MPI communicator
+  // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
  
-  //define multilevel mesh
+  // define multilevel mesh
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor=1.; 
@@ -46,10 +46,10 @@ int main(int argc, char **args) {
   // erase all the coarse mesh levels 
   mlMsh.EraseCoarseLevels(numberOfUniformLevels-1);
   
-  // print some mesh info
+  // print mesh info
   mlMsh.PrintInfo();
   
-  // define the multilevel solution attaching the mlMsh 
+  // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution mlSol(&mlMsh);
   
   // add variables to mlSol
@@ -60,11 +60,11 @@ int main(int argc, char **args) {
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("u");
   
-  // define the multilevel problem attaching the mlSol
+  // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);  
   
-  // define system Poisson in mlProb as a Linear Implicit System
-  LinearImplicitSystem & system = mlProb.add_system<LinearImplicitSystem>("Poisson");
+  // add system Poisson in mlProb as a Linear Implicit System
+  LinearImplicitSystem & system = mlProb.add_system < LinearImplicitSystem > ("Poisson");
   
   // add solution "u" to system
   system.AddSolutionToSystemPDE("u");
@@ -138,6 +138,7 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
   vector <double> phi_x; // local test function first order partial derivatives
   vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
+  
   vector< double > Res; // local redidual vector
   vector< double > K; // local stiffness matrix
     
@@ -198,7 +199,7 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
     if( level == levelMax || !el->GetRefinedElementIndex(kel)) { // do not care now of this if now
       // *** Gauss point loop ***
       for(unsigned ig=0; ig < msh->_finiteElement[kelGeom][soluType]->GetGaussPointNumber(); ig++) {
-	// *** get gauss weight, test function and test function derivatives ***
+	// *** get gauss point weight, test function and test function partial derivatives ***
 	msh->_finiteElement[kelGeom][soluType]->Jacobian(x,ig,weight,phi,phi_x,phi_xx);
 	
 	// evaluate the solution, the solution derivatives and the coordinates in the gauss point

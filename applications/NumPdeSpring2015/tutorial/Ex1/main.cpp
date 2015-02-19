@@ -32,12 +32,13 @@ double InitalValueT(const double &x, const double &y, const double &z){
 
 int main(int argc, char **args) {
   
-  /// Init Petsc-MPI communicator
+  // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
  
-  // read coarse level mesh and generate finers level meshes
+  // define multilevel mesh
   MultiLevelMesh mlMsh;
   double scalingFactor=1.; 
+  // read coarse level mesh and generate finers level meshes
   mlMsh.ReadCoarseMesh("./input/square.neu","seventh",scalingFactor); 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
@@ -46,9 +47,10 @@ int main(int argc, char **args) {
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.PrintInfo();
   
-  // define and initialize variables
+  // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution mlSol(&mlMsh);
   
+  // add variables to mlSol
   mlSol.AddSolution("U",LAGRANGE, FIRST);
   mlSol.AddSolution("V",LAGRANGE, SERENDIPITY);
   mlSol.AddSolution("W",LAGRANGE, SECOND);
