@@ -157,7 +157,7 @@ int main(int argc, char** argv) {
   MultiLevelSolution ml_sol(&ml_msh);
   ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
 
-  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
+  MultiLevelProblem ml_prob(&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
   ml_prob.SetQruleAndElemType("fifth");
   ml_prob.SetInputParser(&physics_map);

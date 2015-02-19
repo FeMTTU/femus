@@ -70,7 +70,7 @@ int main(int argc,char **args) {
   ml_sol.GenerateBdc("P");
 
   
-  MultiLevelProblem ml_prob(&ml_msh, &ml_sol);
+  MultiLevelProblem ml_prob(&ml_sol);
   
   
   Parameter parameter(Lref,Uref);

@@ -78,7 +78,7 @@ int main(int argc, char **args) {
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("u");
   
-  MultiLevelProblem ml_prob(&mlMsh,&mlSol);  
+  MultiLevelProblem ml_prob(&mlSol);  
   LinearImplicitSystem & system = ml_prob.add_system<LinearImplicitSystem>("Poisson");
   system.AddSolutionToSystemPDE("u");
    

@@ -63,7 +63,7 @@ int main(int argc,char **args) {
   
   MultiLevelSolution ml_sol(&ml_msh);
   
-  MultiLevelProblem ml_prob(&ml_msh, &ml_sol);
+  MultiLevelProblem ml_prob(&ml_sol);
   
   // generate solution vector
   ml_sol.AddSolution("U",LAGRANGE,SECOND,2);

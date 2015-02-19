@@ -365,7 +365,7 @@ int main(int argc,char **argv) {
    // ml_sol.AddSolutionLevel();
     
 
-    MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
+    MultiLevelProblem ml_prob(&ml_sol);
     
     
 //     ml_prob.parameters.set<func>("func_source") = fpsource;

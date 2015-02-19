@@ -122,7 +122,7 @@ int main(int argc,char **args) {
   SetLambda(ml_sol, 0, orderVel, ELASTICITY);
   //SetLambda(ml_sol, 0, 2,"diffusion");
   
-  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
+  MultiLevelProblem ml_prob(&ml_sol);
   
   // add fluid material
   Parameter parameter(Lref,Uref);

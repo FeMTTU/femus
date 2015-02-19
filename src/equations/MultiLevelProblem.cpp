@@ -34,11 +34,20 @@ bool (* Mesh::_SetRefinementFlag)(const double &x, const double &y, const double
 				  const int &ElemGroupNumber,const int &level) = NULL;
 
 //---------------------------------------------------------------------------------------------------
-MultiLevelProblem::MultiLevelProblem( MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol):
-				      _gridn(ml_msh->GetNumberOfLevels()),
-				      _gridr(ml_msh->GetNumberOfGridTotallyRefined()),
-				      _ml_msh(ml_msh),
-				      _ml_sol(ml_sol)
+// MultiLevelProblem::MultiLevelProblem( MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol):
+// 				      _gridn(ml_msh->GetNumberOfLevels()),
+// 				      _gridr(ml_msh->GetNumberOfGridTotallyRefined()),
+// 				      _ml_msh(ml_msh),
+// 				      _ml_sol(ml_sol)
+// {
+//  
+// }
+
+MultiLevelProblem::MultiLevelProblem( MultiLevelSolution *ml_sol):
+				      _ml_sol(ml_sol),
+				      _ml_msh(ml_sol->_ml_msh),
+				      _gridn(_ml_msh->GetNumberOfLevels()),
+				      _gridr(_ml_msh->GetNumberOfGridTotallyRefined())
 {
  
 }

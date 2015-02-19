@@ -108,7 +108,7 @@ int main(int argc,char **args) {
   ml_sol.GenerateBdc("P");
   ml_sol.GenerateBdc("T");
   
-  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
+  MultiLevelProblem ml_prob(&ml_sol);
   
   // add fluid material
   Parameter parameter(Lref,Uref);

@@ -1,34 +1,22 @@
- #include "MultiLevelProblem.hpp"
+/** tutorial/Ex2
+ * This example shows how to set and solve the weak form of the Poisson problem 
+ *                    $$ \nu \Delta u = 1 \text{ on }\Omega, $$
+ * 		      $$ u=0 \text{ on } \Gamma, $$
+ * on a square domain;
+ * all the coarse-level meshes are removed;
+ * a multilevel problem and an equation system are initialized;
+ * a direct solver is used to solve the problem;
+ **/
 
+#include "FemusInit.hpp"
+#include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
-// #include "Fluid.hpp"
-// #include "Parameter.hpp"
-
-// #include "SparseMatrix.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
-// #include "FElemTypeEnum.hpp"
-// #include "Files.hpp"
-
-// using std::cout;
-// using std::endl;
 
 
-#include "FemusInit.hpp"
 using namespace femus;
-
-double InitalValueU(const double &x, const double &y, const double &z){
-  return x+y;
-}
-
-double InitalValueP(const double &x, const double &y, const double &z){
-  return x;
-}
-
-double InitalValueT(const double &x, const double &y, const double &z){
-  return y;
-}
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
   bool dirichlet=1; //dirichlet
@@ -36,7 +24,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
   return dirichlet;
 }
 
-void AssemplePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix);
+void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix);
 
 
 int main(int argc, char **args) {
@@ -44,72 +32,79 @@ int main(int argc, char **args) {
   /// Init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
  
-  // read coarse level mesh and generate finers level meshes
+  //define multilevel mesh
   MultiLevelMesh mlMsh;
+  // read coarse level mesh and generate finers level meshes
   double scalingFactor=1.; 
   mlMsh.ReadCoarseMesh("./input/square.neu","seventh",scalingFactor); 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfLevels=1;
+  unsigned numberOfUniformLevels=2;
   unsigned numberOfSelectiveLevels=0;
-  mlMsh.RefineMesh(numberOfLevels , numberOfLevels + numberOfSelectiveLevels, NULL);
+  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   
-  mlMsh.EraseCoarseLevels(numberOfLevels-1);
+  // erase all the coarse mesh levels 
+  mlMsh.EraseCoarseLevels(numberOfUniformLevels-1);
   
+  // print some mesh info
   mlMsh.PrintInfo();
   
-  // define and initialize variables
+  // define the multilevel solution attaching the mlMsh 
   MultiLevelSolution mlSol(&mlMsh);
   
+  // add variables to mlSol
   mlSol.AddSolution("u",LAGRANGE, FIRST);
+  mlSol.Initialize("All");
   
-  //   mlSol.AddSolution("V",LAGRANGE, SERENDIPITY);
-  //   mlSol.AddSolution("W",LAGRANGE, SECOND);
-  //   mlSol.AddSolution("P",DISCONTINOUS_POLYNOMIAL, ZERO);
-  //   mlSol.AddSolution("T",DISCONTINOUS_POLYNOMIAL, FIRST);
-  
-  //  mlSol.Initialize("All"); 
-  
-  mlSol.Initialize("u", InitalValueU);
-  //   mlSol.Initialize("P", InitalValueP);
-  //   mlSol.Initialize("T", InitalValueT); 
-  // //note that this initialization is the same as piecewise constant element
-  
+  // attach the boundary condition function and generate boundary data 
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("u");
   
-  MultiLevelProblem ml_prob(&mlMsh,&mlSol);  
-  LinearImplicitSystem & system = ml_prob.add_system<LinearImplicitSystem>("Poisson");
+  // define the multilevel problem attaching the mlSol
+  MultiLevelProblem mlProb(&mlSol);  
+  
+  // define system Poisson in mlProb as a Linear Implicit System
+  LinearImplicitSystem & system = mlProb.add_system<LinearImplicitSystem>("Poisson");
+  
+  // add solution "u" to system
   system.AddSolutionToSystemPDE("u");
    
-  // Set MG Options
-  system.SetAssembleFunction(AssemplePoissonProblem);  
+  // attach the assembling function to system
+  system.SetAssembleFunction(AssemblePoissonProblem);  
+  
+  // initilaize and solve the system 
   system.init();
   system.solve();
      
   // print solutions
   std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("u");
-//   variablesToBePrinted.push_back("P");
-//   variablesToBePrinted.push_back("T");
+  variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(mlSol);
   vtkIO.write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   GMVWriter gmvIO(mlSol);
-  variablesToBePrinted.push_back("all");
-  gmvIO.SetDebugOutput(false);
+  gmvIO.SetDebugOutput(true);
   gmvIO.write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
    
   return 0;
 }
 
-void AssemplePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix) {
+
+/**
+ * This function assemble the stiffnes matrix KK and the residual vector Res
+ * such that        
+ *                  KK w = RES = F - KK u0, 
+ * and consequently 
+ * 		    u = u0 + w satisfies KK u = F
+ **/
+
+void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix) {
   // ml_prob is the global object from/to where get/set all the data 
   // level is the level of the PDE system to be assembled  
   // levelMax is the Maximum level of the MultiLevelProblem
   // assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
-    
+      
   //pointers and references
   Mesh*         	msh	       	= ml_prob._ml_msh->GetLevel(level); // pointer to the mesh (level) object 
   elem*         	el	       	= msh->el;  // pointer to the elem object in msh (level) 				
@@ -117,8 +112,8 @@ void AssemplePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
   MultiLevelSolution* 	mlSol       	= ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution* 		sol       	= ml_prob._ml_sol->GetSolutionLevel(level); // pointer to the solution (level) object
   
-  LinearImplicitSystem& mlPdeSys 	= ml_prob.get_system<LinearImplicitSystem>("Poisson"); // reference to the linear implicit system named "Poisson" 
-  LinearEquationSolver* pdeSys      	= mlPdeSys._LinSolver[level]; // pointer to the equation (level) object 
+  LinearImplicitSystem* mlPdeSys 	= &ml_prob.get_system<LinearImplicitSystem>("Poisson"); // reference to the linear implicit system named "Poisson" 
+  LinearEquationSolver* pdeSys      	= mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object 
   SparseMatrix*  	KK	       	= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector* 	RES	       	= pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
   
@@ -126,14 +121,14 @@ void AssemplePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
   unsigned 		iproc	= msh->processor_id(); // get the process_id (for parallel computation)
 
   //solution variable
-  unsigned solIndex;
-  solIndex = mlSol->GetIndex("u"); // get the position of "u" in the ml_sol object
-  unsigned solType = mlSol->GetSolutionType(solIndex); // get the finite element type for "u"  
+  unsigned soluIndex;
+  soluIndex = mlSol->GetIndex("u"); // get the position of "u" in the ml_sol object
+  unsigned soluType = mlSol->GetSolutionType(soluIndex); // get the finite element type for "u"  
     
-  unsigned solPdeIndex;
-  solPdeIndex = mlPdeSys.GetSolPdeIndex("u"); // get the position of "u" in the pdeSys object
+  unsigned soluPdeIndex;
+  soluPdeIndex = mlPdeSys->GetSolPdeIndex("u"); // get the position of "u" in the pdeSys object
     
-  vector < double >  soli; // local solution
+  vector < double >  solu; // local solution
   
   vector < vector < double > > x(dim); // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
@@ -148,9 +143,7 @@ void AssemplePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
     
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned > (ceil(pow(3,dim))); // conservative: based on line3, quad9, hex27
- 
-  
-  soli.reserve(maxSize);
+  solu.reserve(maxSize);
   for(unsigned i = 0; i < dim; i++)
     x[i].reserve(maxSize);
   KKDof.reserve(maxSize);
@@ -160,9 +153,7 @@ void AssemplePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
   phi_xx.reserve(maxSize*dim2);
   Res.reserve(maxSize);
   K.reserve(maxSize*maxSize);
- 
-  double nu = 1.; //diffusive constant
-  
+   
   if( assembleMatrix ) 
     KK->zero(); // Set to zero all the entries of the Global Matrix
   
@@ -171,28 +162,28 @@ void AssemplePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
     
     unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof 
     short unsigned kelGeom = el->GetElementType( kel ); // element geometry type
-    unsigned nDofs  = el->GetElementDofNumber( kel, solType); // number of solution element dofs
+    unsigned nDofs  = el->GetElementDofNumber( kel, soluType); // number of solution element dofs
     unsigned nDofs2 = el->GetElementDofNumber( kel, xType); // number of coordinate element dofs
     
     // resize local arrays
     KKDof.resize(nDofs);
-    soli.resize(nDofs);
+    solu.resize(nDofs);
     for(int i=0; i<dim; i++) {
       x[i].resize(nDofs2);
     }
     Res.resize(nDofs); //resize
-    memset(&Res[0], 0 , nDofs*sizeof(double) ); //set Res to zero
+    std::fill(Res.begin(), Res.end(), 0); //set Res to zero
     if(assembleMatrix) {
       K.resize(nDofs*nDofs); //resize
-      memset(&K[0], 0, nDofs*nDofs*sizeof(double) ); //set K to zero
+      std::fill(K.begin(), K.end(), 0); //set K to zero
     }
          
     // local storage of global mapping and solution
     for( unsigned i=0; i<nDofs; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, solType);  // local to global solution node   
-      unsigned solDof = msh->GetMetisDof(iNode, solType); // global to global mapping between solution node and solution dof
-      soli[i] = (*sol->_Sol[solIndex])(solDof); // global extraction and local storage for the solution
-      KKDof[i] = pdeSys->GetKKDof(solIndex, solPdeIndex, iNode); // global to global mapping between solution node and pdeSys dof
+      unsigned iNode = el->GetMeshDof(kel, i, soluType);  // local to global solution node   
+      unsigned solDof = msh->GetMetisDof(iNode, soluType); // global to global mapping between solution node and solution dof
+      solu[i] = (*sol->_Sol[soluIndex])(solDof); // global extraction and local storage for the solution
+      KKDof[i] = pdeSys->GetKKDof(soluIndex, soluPdeIndex, iNode); // global to global mapping between solution node and pdeSys dof
     }
         
      // local storage of coordinates 
@@ -206,20 +197,20 @@ void AssemplePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
         
     if( level == levelMax || !el->GetRefinedElementIndex(kel)) { // do not care now of this if now
       // *** Gauss point loop ***
-      for(unsigned ig=0; ig < msh->_finiteElement[kelGeom][solType]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig=0; ig < msh->_finiteElement[kelGeom][soluType]->GetGaussPointNumber(); ig++) {
 	// *** get gauss weight, test function and test function derivatives ***
-	msh->_finiteElement[kelGeom][solType]->Jacobian(x,ig,weight,phi,phi_x,phi_xx);
+	msh->_finiteElement[kelGeom][soluType]->Jacobian(x,ig,weight,phi,phi_x,phi_xx);
 	
-	// evaluate the gauss point solution, solution derivatives and coordinates
-	double solG = 0;
-	vector < double > solG_x(dim,0.);
-	vector < double > xG(dim,0.);
+	// evaluate the solution, the solution derivatives and the coordinates in the gauss point
+	double soluGauss = 0;
+	vector < double > soluGauss_x(dim,0.);
+	vector < double > xGauss(dim,0.);
 	
 	for(unsigned i=0; i<nDofs; i++) {
-	  solG+=phi[i]*soli[i];
+	  soluGauss+=phi[i]*solu[i];
 	  for(unsigned jdim=0; jdim<dim; jdim++) {
-	    solG_x[jdim] += phi_x[i*dim+jdim]*soli[i];
-	    xG[jdim] += x[jdim][i]*phi[i]; 
+	    soluGauss_x[jdim] += phi_x[i*dim+jdim]*solu[i];
+	    xGauss[jdim] += x[jdim][i]*phi[i]; 
 	  }
 	}
         
@@ -228,10 +219,10 @@ void AssemplePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
 	 
 	  double laplace = 0.;
 	  for(unsigned jdim=0; jdim<dim; jdim++) {
-	    laplace   +=  phi_x[i*dim+jdim]*solG_x[jdim];
+	    laplace   +=  phi_x[i*dim+jdim]*soluGauss_x[jdim];
 	  }
 	  double srcTerm = 1.;  
-	  Res[i]+= (srcTerm*phi[i] - nu*laplace) * weight;
+	  Res[i]+= (srcTerm*phi[i] - laplace) * weight;
 	
 	  if( assembleMatrix ) {
 	    // *** phi_j loop ***
@@ -240,7 +231,7 @@ void AssemplePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
 	      for(unsigned kdim=0; kdim<dim; kdim++) {
 		laplace += ( phi_x[i*dim + kdim] * phi_x[j*dim + kdim] )*weight;
 	      }
-	      K[i*nDofs+j] += nu * laplace;
+	      K[i*nDofs+j] += laplace;
 	    } // end phi_j loop
 	  } // endif assemble_matrix
 	} // end phi_i loop

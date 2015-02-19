@@ -260,7 +260,7 @@ int main(int argc,char **args) {
   if (!dimension2D) ml_sol.GenerateBdc("W","Steady");
   ml_sol.GenerateBdc("P","Steady");
   
-  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
+  MultiLevelProblem ml_prob(&ml_sol);
   // Add fluid object
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   // Add Solid Object
