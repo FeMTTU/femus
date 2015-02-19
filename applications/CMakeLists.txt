@@ -158,6 +158,16 @@ IF(BUILD_NUM_PDE_CLASS)
     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Guoyi/output/)
     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Guoyi/input/)
     FILE(COPY           NumPdeSpring2015/Guoyi/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/Guoyi/input/)
+    
+  ADD_SUBDIRECTORY(NumPdeSpring2015/tutorial/Ex1)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/tutorial/Ex1/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/tutorial/Ex1/input/)
+    FILE(COPY           NumPdeSpring2015/tutorial/Ex1/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/tutorial/Ex1/input/)
+    
+  ADD_SUBDIRECTORY(NumPdeSpring2015/tutorial/Ex2)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/tutorial/Ex2/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/tutorial/Ex2/input/)
+    FILE(COPY           NumPdeSpring2015/tutorial/Ex2/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/NumPdeSpring2015/tutorial/Ex2/input/)  
 
 ENDIF(BUILD_NUM_PDE_CLASS)
 
