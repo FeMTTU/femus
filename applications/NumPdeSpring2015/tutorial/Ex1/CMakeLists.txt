@@ -2,5 +2,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(tutorialEx1)
 
-femusMacroBuildApplication(NumPdeSpring2015/tutorial/Ex1 ex1)
+SET(DIR_NAME "${TUTORIAL_FOLDER}/Ex1")
+SET(MAIN_FILE "Ex1")
+SET(EXEC_FILE "Ex1")
 
+femusMacroBuildApplication(${DIR_NAME} ${MAIN_FILE} ${EXEC_FILE})

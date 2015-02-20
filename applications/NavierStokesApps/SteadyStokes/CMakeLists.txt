@@ -2,5 +2,11 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(stokes)
 
-femusMacroBuildApplication(NavierStokesApps/SteadyStokes steadyst)
+
+SET(DIR_NAME "NavierStokesApps/SteadyStokes")
+SET(MAIN_FILE "main")
+SET(EXEC_FILE "steadyst")
+
+femusMacroBuildApplication( ${DIR_NAME} ${MAIN_FILE} ${EXEC_FILE})
+
 

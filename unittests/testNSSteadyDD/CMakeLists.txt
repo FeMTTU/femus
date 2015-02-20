@@ -2,9 +2,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(TestNSSteadyDD)
 
-femusMacroBuildUnitTest(testNSSteadyDD testNSSteadyDD)
+SET(DIR_NAME "testNSSteadyDD")
+SET(MAIN_FILE "main")
+SET(EXEC_FILE "testNSSteadyDD")
 
-#ADD_TEST(NAME testNSSteadyDD COMMAND valgrind --xml=yes --xml-file=${CMAKE_BINARY_DIR}/unittests/testNSSteadyDD.xml ./testNSSteadyDD)
-
-
- 
+femusMacroBuildUnitTest( ${DIR_NAME} ${MAIN_FILE} ${EXEC_FILE})

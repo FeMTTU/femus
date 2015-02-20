@@ -2,5 +2,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(NPdeClassThanuja)
 
-femusMacroBuildApplication(NumPdeSpring2015/Thanuja npde_thanuja)
+SET(DIR_NAME "NumPdeSpring2015/Thanuja")
+SET(MAIN_FILE "main")
+SET(EXEC_FILE "npde_thanuja")
 
+femusMacroBuildApplication(NumPdeSpring2015/Thanuja ${MAIN_FILE} ${EXEC_FILE})

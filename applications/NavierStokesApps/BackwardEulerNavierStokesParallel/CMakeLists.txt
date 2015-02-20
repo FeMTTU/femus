@@ -2,5 +2,10 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(TimedepNavierStokes)
 
-femusMacroBuildApplication(NavierStokesApps/BackwardEulerNavierStokesParallel backeuler)
+SET(DIR_NAME "NavierStokesApps/BackwardEulerNavierStokesParallel")
+SET(MAIN_FILE "main")
+SET(EXEC_FILE "backeuler")
+
+femusMacroBuildApplication( ${DIR_NAME} ${MAIN_FILE} ${EXEC_FILE})
+
 
