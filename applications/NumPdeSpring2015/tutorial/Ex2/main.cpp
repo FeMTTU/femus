@@ -1,11 +1,11 @@
 /** tutorial/Ex2
  * This example shows how to set and solve the weak form of the Poisson problem 
- *                    $$ \nu \Delta u = 1 \text{ on }\Omega, $$
+ *                    $$ \Delta u = 1 \text{ on }\Omega, $$
  * 		      $$ u=0 \text{ on } \Gamma, $$
- * on a square domain;
+ * on a square domain $\Omega$ with boundary $\Gamma$;
  * all the coarse-level meshes are removed;
  * a multilevel problem and an equation system are initialized;
- * a direct solver is used to solve the problem;
+ * a direct solver is used to solve the problem.
  **/
 
 #include "FemusInit.hpp"
@@ -14,7 +14,6 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
-
 
 using namespace femus;
 
@@ -100,19 +99,19 @@ int main(int argc, char **args) {
  **/
 
 void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix) {
-  // ml_prob is the global object from/to where get/set all the data 
-  // level is the level of the PDE system to be assembled  
-  // levelMax is the Maximum level of the MultiLevelProblem
-  // assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
+  //  ml_prob is the global object from/to where get/set all the data 
+  //  level is the level of the PDE system to be assembled  
+  //  levelMax is the Maximum level of the MultiLevelProblem
+  //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
       
-  //pointers and references
+  //  extract pointers to the several objects that we are going to use 
   Mesh*         	msh	       	= ml_prob._ml_msh->GetLevel(level); // pointer to the mesh (level) object 
   elem*         	el	       	= msh->el;  // pointer to the elem object in msh (level) 				
   
   MultiLevelSolution* 	mlSol       	= ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution* 		sol       	= ml_prob._ml_sol->GetSolutionLevel(level); // pointer to the solution (level) object
   
-  LinearImplicitSystem* mlPdeSys 	= &ml_prob.get_system<LinearImplicitSystem>("Poisson"); // reference to the linear implicit system named "Poisson" 
+  LinearImplicitSystem* mlPdeSys 	= &ml_prob.get_system<LinearImplicitSystem>("Poisson"); // pointer to the linear implicit system named "Poisson" 
   LinearEquationSolver* pdeSys      	= mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object 
   SparseMatrix*  	KK	       	= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector* 	RES	       	= pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
@@ -133,7 +132,7 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
   vector < vector < double > > x(dim); // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector< int > KKDof; // local to global solPde dofs
+  vector< int > KKDof; // local to global pdeSys dofs
   vector <double> phi;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
   vector <double> phi_xx; // local test function second order partial derivatives
@@ -150,7 +149,7 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
   KKDof.reserve(maxSize);
   phi.reserve(maxSize);
   phi_x.reserve(maxSize*dim);
-  unsigned dim2=(3*(dim-1)+!(dim-1));
+  unsigned dim2=(3*(dim-1)+!(dim-1)); // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   phi_xx.reserve(maxSize*dim2);
   Res.reserve(maxSize);
   K.reserve(maxSize*maxSize);
@@ -196,7 +195,7 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
       }
     }    
         
-    if( level == levelMax || !el->GetRefinedElementIndex(kel)) { // do not care now of this if now
+    if( level == levelMax || !el->GetRefinedElementIndex(kel)) { // do not care about this if now (it is used for the AMR)
       // *** Gauss point loop ***
       for(unsigned ig=0; ig < msh->_finiteElement[kelGeom][soluType]->GetGaussPointNumber(); ig++) {
 	// *** get gauss point weight, test function and test function partial derivatives ***
@@ -240,7 +239,7 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
     } // endif single element not refined or fine grid loop
 
     //--------------------------------------------------------------------------------------------------------
-    //Sum the local matrices/vectors into the global Matrix/vector
+    // Add the local Matrix/Vector into the global Matrix/Vector
 
     RES->add_vector_blocked(Res,KKDof);
     if(assembleMatrix) KK->add_matrix_blocked(K,KKDof,KKDof);
