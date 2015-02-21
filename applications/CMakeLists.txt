@@ -88,23 +88,41 @@ IF(BUILD_NUM_PDE_CLASS)
 
 #   ADD_SUBDIRECTORY(NumPdeSpring2015/Eugenio/)
   
-  ADD_SUBDIRECTORY(NumPdeSpring2015/Giacomo/)
-  
-  ADD_SUBDIRECTORY(NumPdeSpring2015/Sara/)
-  
-  ADD_SUBDIRECTORY(NumPdeSpring2015/Thanuja/)
-  
-  ADD_SUBDIRECTORY(NumPdeSpring2015/Thanuka/)
-  
-  ADD_SUBDIRECTORY(NumPdeSpring2015/Bhagya/)
-  
-  ADD_SUBDIRECTORY(NumPdeSpring2015/Guoyi/)
+#   ADD_SUBDIRECTORY(NumPdeSpring2015/Giacomo/)
+#   
+#   ADD_SUBDIRECTORY(NumPdeSpring2015/Sara/)
+#   
+#   ADD_SUBDIRECTORY(NumPdeSpring2015/Thanuja/)
+#   
+#   ADD_SUBDIRECTORY(NumPdeSpring2015/Thanuka/)
+#   
+#   #ADD_SUBDIRECTORY(NumPdeSpring2015/Bhagya/)
+#   
+#   ADD_SUBDIRECTORY(NumPdeSpring2015/Guoyi/)
         
   set(TUTORIAL_FOLDER NumPdeSpring2015/tutorial)  
   ADD_SUBDIRECTORY(${TUTORIAL_FOLDER})
   
-#   set(EUGENIO_FOLDER NumPdeSpring2015/Eugenio)  
-#   ADD_SUBDIRECTORY(${EUGENIO_FOLDER})  
+  set(EUGENIO_FOLDER NumPdeSpring2015/Eugenio)  
+  ADD_SUBDIRECTORY(${EUGENIO_FOLDER})  
 
+  set(BHAGYA_FOLDER NumPdeSpring2015/Bhagya)  
+  ADD_SUBDIRECTORY(${BHAGYA_FOLDER})
+  
+  set(SARA_FOLDER NumPdeSpring2015/Sara)  
+  ADD_SUBDIRECTORY(${SARA_FOLDER})
+  
+  set(GIACOMO_FOLDER NumPdeSpring2015/Giacomo)  
+  ADD_SUBDIRECTORY(${GIACOMO_FOLDER})
+  
+  set(THANUJA_FOLDER NumPdeSpring2015/Thanuja)  
+  ADD_SUBDIRECTORY(${THANUJA_FOLDER})
+  
+  set(THANUKA_FOLDER NumPdeSpring2015/Thanuka)  
+  ADD_SUBDIRECTORY(${THANUKA_FOLDER})
+  
+  set(GUOYI_FOLDER NumPdeSpring2015/Guoyi)  
+  ADD_SUBDIRECTORY(${GUOYI_FOLDER})
+  
 ENDIF(BUILD_NUM_PDE_CLASS)
 
