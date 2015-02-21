@@ -4,79 +4,84 @@
 
 IF(BUILD_NAVIERSTOKESAPPS)
   
+set(NS_FOLDER NavierStokes/)
+
   # Steady NavierStokes
-  ADD_SUBDIRECTORY(NavierStokesApps/SteadyNavierStokesParallel)
-  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/SteadyNavierStokesParallel/output/)
-  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/SteadyNavierStokesParallel/input/)
-  FILE(COPY           NavierStokesApps/SteadyNavierStokesParallel/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/SteadyNavierStokesParallel/input/)
+  ADD_SUBDIRECTORY(${NS_FOLDER}/SteadyNavierStokesParallel)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/SteadyNavierStokesParallel/output/)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/SteadyNavierStokesParallel/input/)
+  FILE(COPY           ${NS_FOLDER}/SteadyNavierStokesParallel/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/SteadyNavierStokesParallel/input/)
 
   # Time-dependent BE NavierStokes
-  ADD_SUBDIRECTORY(NavierStokesApps/BackwardEulerNavierStokesParallel/)
-  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/BackwardEulerNavierStokesParallel/output/)
-  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/BackwardEulerNavierStokesParallel/input/)
-  FILE(COPY           NavierStokesApps/BackwardEulerNavierStokesParallel/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/BackwardEulerNavierStokesParallel/input/)
+  ADD_SUBDIRECTORY(${NS_FOLDER}/BackwardEulerNavierStokesParallel/)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/BackwardEulerNavierStokesParallel/output/)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/BackwardEulerNavierStokesParallel/input/)
+  FILE(COPY           ${NS_FOLDER}/BackwardEulerNavierStokesParallel/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/BackwardEulerNavierStokesParallel/input/)
  
   # Time-dependent Generalized-alpha NavierStokes
-  ADD_SUBDIRECTORY(NavierStokesApps/TaylorGreenVortexFlowGeneralisedalpha/)
-  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/TaylorGreenVortexFlowGeneralisedalpha/output/)
-  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/TaylorGreenVortexFlowGeneralisedalpha/input/)
-  FILE(COPY           NavierStokesApps/TaylorGreenVortexFlowGeneralisedalpha/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/TaylorGreenVortexFlowGeneralisedalpha/input/)
+  ADD_SUBDIRECTORY(${NS_FOLDER}/TaylorGreenVortexFlowGeneralisedalpha/)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/TaylorGreenVortexFlowGeneralisedalpha/output/)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/TaylorGreenVortexFlowGeneralisedalpha/input/)
+  FILE(COPY           ${NS_FOLDER}/TaylorGreenVortexFlowGeneralisedalpha/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/TaylorGreenVortexFlowGeneralisedalpha/input/)
  
   # Steady Stokes
-  ADD_SUBDIRECTORY(NavierStokesApps/SteadyStokes/)
-  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/SteadyStokes/output/)
-  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/SteadyStokes/input/)
-  FILE(COPY           NavierStokesApps/SteadyStokes/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/SteadyStokes/input/)
+  ADD_SUBDIRECTORY(${NS_FOLDER}/SteadyStokes/)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/SteadyStokes/output/)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/SteadyStokes/input/)
+  FILE(COPY           ${NS_FOLDER}/SteadyStokes/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/SteadyStokes/input/)
 
   # Steady Navier Stokes steady
-  ADD_SUBDIRECTORY(NavierStokesApps/NavierStokesTemp_AMR/)
-  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/NavierStokesTemp_AMR/output/)
-  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/NavierStokesTemp_AMR/input/)
-  FILE(COPY           NavierStokesApps/NavierStokesTemp_AMR/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/NavierStokesApps/NavierStokesTemp_AMR/input/)
+  ADD_SUBDIRECTORY(${NS_FOLDER}/NavierStokesTemp_AMR/)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/NavierStokesTemp_AMR/output/)
+  FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/NavierStokesTemp_AMR/input/)
+  FILE(COPY           ${NS_FOLDER}/NavierStokesTemp_AMR/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/${NS_FOLDER}/NavierStokesTemp_AMR/input/)
  
 ENDIF(BUILD_NAVIERSTOKESAPPS)
 
 
 IF(BUILD_FSIAPPS)
 
-# FSI SteadyState Benchmark Comsol
-    ADD_SUBDIRECTORY(FSIApps/FSITimeDependentBenchmarks/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSITimeDependentBenchmarks/output/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSITimeDependentBenchmarks/input/)
-    FILE(COPY           FSIApps/FSITimeDependentBenchmarks/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/FSIApps/FSITimeDependentBenchmarks/input/)
+set(FSI_FOLDER FSI/)
 
-# FSI SteadyState Benchmark Turek1
-    ADD_SUBDIRECTORY(FSIApps/FSISteadyStateBenchmarks/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSISteadyStateBenchmarks/output/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSISteadyStateBenchmarks/input/)
-    FILE(COPY           FSIApps/FSISteadyStateBenchmarks/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/FSIApps/FSISteadyStateBenchmarks/input/)
+# FSI Time Dependent Benchmarks
+    ADD_SUBDIRECTORY(${FSI_FOLDER}/FSITimeDependentBenchmarks/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/FSITimeDependentBenchmarks/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/FSITimeDependentBenchmarks/input/)
+    FILE(COPY           ${FSI_FOLDER}/FSITimeDependentBenchmarks/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/FSITimeDependentBenchmarks/input/)
+
+# FSI SteadyState Benchmarks
+    ADD_SUBDIRECTORY(${FSI_FOLDER}/FSISteadyStateBenchmarks/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/FSISteadyStateBenchmarks/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/FSISteadyStateBenchmarks/input/)
+    FILE(COPY           ${FSI_FOLDER}/FSISteadyStateBenchmarks/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/FSISteadyStateBenchmarks/input/)
 
 # FSI SteadyState Benchmark Turek3
-    ADD_SUBDIRECTORY(FSIApps/FSI_TUREK_3/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_3/output/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_3/input/)
-    FILE(COPY           FSIApps/FSI_TUREK_3/input/ DESTINATION 
-  ${PROJECT_BINARY_DIR}/applications/FSIApps/FSI_TUREK_3/input/)
+    ADD_SUBDIRECTORY(${FSI_FOLDER}/FSI_TUREK_3/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/FSI_TUREK_3/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/FSI_TUREK_3/input/)
+    FILE(COPY           ${FSI_FOLDER}/FSI_TUREK_3/input/ DESTINATION 
+  ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/FSI_TUREK_3/input/)
 
 # FSI SteadyState in porous media
-    ADD_SUBDIRECTORY(FSIApps/fsi_porous/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/fsi_porous/output/)
-    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSIApps/fsi_porous/input/)
-    FILE(COPY           FSIApps/fsi_porous/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/FSIApps/fsi_porous/input/)
+    ADD_SUBDIRECTORY(${FSI_FOLDER}/fsi_porous/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/fsi_porous/output/)
+    FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/fsi_porous/input/)
+    FILE(COPY           ${FSI_FOLDER}/fsi_porous/input/ DESTINATION  ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/fsi_porous/input/)
 
 ENDIF(BUILD_FSIAPPS)
 
 
 
 
-set(OPTCONTROL_FOLDER OptControlApps/)
 
 IF(BUILD_OPTCONTROLAPPS)
+
+set(OPTCONTROL_FOLDER OptimalControl/)
 
 # MHD Optimal Control
     set(OPT_APPLICATION mhdopt)
@@ -92,7 +97,7 @@ IF(BUILD_OPTCONTROLAPPS)
     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/output/)
     FILE(COPY ${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/input/)
 
-# Temperature test
+# FE test
     set(OPT_APPLICATION fe_test)
     ADD_SUBDIRECTORY(${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/)
     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/input/)
