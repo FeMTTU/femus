@@ -3,40 +3,49 @@
 #############################################################################################
 
 IF(BUILD_NAVIERSTOKESAPPS)
+
+  
+set(NS_FOLDER NavierStokes/)
+
   # Steady NavierStokes
-  ADD_SUBDIRECTORY(NavierStokesApps/SteadyNavierStokesParallel)
+  ADD_SUBDIRECTORY(${NS_FOLDER}/SteadyNavierStokesParallel)
 
   # Time-dependent BE NavierStokes
-  ADD_SUBDIRECTORY(NavierStokesApps/BackwardEulerNavierStokesParallel/)
+  ADD_SUBDIRECTORY(${NS_FOLDER}/BackwardEulerNavierStokesParallel/)
  
   # Time-dependent Generalized-alpha NavierStokes
-  ADD_SUBDIRECTORY(NavierStokesApps/TaylorGreenVortexFlowGeneralisedalpha/)
+  ADD_SUBDIRECTORY(${NS_FOLDER}/TaylorGreenVortexFlowGeneralisedalpha/)
  
   # Steady Stokes
-  ADD_SUBDIRECTORY(NavierStokesApps/SteadyStokes/)
+  ADD_SUBDIRECTORY(${NS_FOLDER}/SteadyStokes/)
 
   # Steady Navier Stokes steady
-  ADD_SUBDIRECTORY(NavierStokesApps/NavierStokesTemp_AMR/)
+  ADD_SUBDIRECTORY(${NS_FOLDER}/NavierStokesTemp_AMR/)
 ENDIF(BUILD_NAVIERSTOKESAPPS)
 
 
 IF(BUILD_FSIAPPS)
-# FSI SteadyState Benchmark Comsol
-  ADD_SUBDIRECTORY(FSIApps/FSITimeDependentBenchmarks/)
 
-# FSI SteadyState Benchmark Turek1
-  ADD_SUBDIRECTORY(FSIApps/FSISteadyStateBenchmarks/)
+set(FSI_FOLDER FSI/)
+
+# FSI Time Dependent Benchmarks
+    ADD_SUBDIRECTORY(${FSI_FOLDER}/FSITimeDependentBenchmarks/)
+
+# FSI SteadyState Benchmarks
+    ADD_SUBDIRECTORY(${FSI_FOLDER}/FSISteadyStateBenchmarks/)
 
 # FSI SteadyState Benchmark Turek3
-  ADD_SUBDIRECTORY(FSIApps/FSI_TUREK_3/)
+    ADD_SUBDIRECTORY(${FSI_FOLDER}/FSI_TUREK_3/)
 
 # FSI SteadyState in porous media
-  ADD_SUBDIRECTORY(FSIApps/fsi_porous/)
+    ADD_SUBDIRECTORY(${FSI_FOLDER}/fsi_porous/)
+
 ENDIF(BUILD_FSIAPPS)
 
 
-set(OPTCONTROL_FOLDER OptControlApps/)
 IF(BUILD_OPTCONTROLAPPS)
+
+set(OPTCONTROL_FOLDER OptimalControl/)
 
 # MHD Optimal Control
     set(OPT_APPLICATION mhdopt)
@@ -52,7 +61,7 @@ IF(BUILD_OPTCONTROLAPPS)
     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/output/)
     FILE(COPY ${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/input/)
 
-# Temperature test
+# FE test
     set(OPT_APPLICATION fe_test)
     ADD_SUBDIRECTORY(${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/)
     FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/input/)
