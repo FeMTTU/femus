@@ -5,7 +5,6 @@
 #
 #
 
-
 MACRO(femusMacroBuildUnitTest foldername mainname appname)
 
 INCLUDE(CTest)
@@ -33,5 +32,10 @@ IF(HDF5_FOUND)
 ENDIF(HDF5_FOUND)
 
 ADD_TEST(NAME ${appname} COMMAND ${appname})
+
+FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/input/)
+FILE( COPY           ${CMAKE_SOURCE_DIR}/unittests/${foldername}/input/ 
+      DESTINATION ${PROJECT_BINARY_DIR}/input/)
+
 
 ENDMACRO(femusMacroBuildUnitTest)

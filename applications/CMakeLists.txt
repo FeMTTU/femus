@@ -3,7 +3,6 @@
 #############################################################################################
 
 IF(BUILD_NAVIERSTOKESAPPS)
-  
   # Steady NavierStokes
   ADD_SUBDIRECTORY(NavierStokesApps/SteadyNavierStokesParallel)
 
@@ -18,31 +17,25 @@ IF(BUILD_NAVIERSTOKESAPPS)
 
   # Steady Navier Stokes steady
   ADD_SUBDIRECTORY(NavierStokesApps/NavierStokesTemp_AMR/)
- 
 ENDIF(BUILD_NAVIERSTOKESAPPS)
 
 
 IF(BUILD_FSIAPPS)
-
 # FSI SteadyState Benchmark Comsol
-    ADD_SUBDIRECTORY(FSIApps/FSITimeDependentBenchmarks/)
+  ADD_SUBDIRECTORY(FSIApps/FSITimeDependentBenchmarks/)
 
 # FSI SteadyState Benchmark Turek1
-    ADD_SUBDIRECTORY(FSIApps/FSISteadyStateBenchmarks/)
+  ADD_SUBDIRECTORY(FSIApps/FSISteadyStateBenchmarks/)
 
 # FSI SteadyState Benchmark Turek3
-    ADD_SUBDIRECTORY(FSIApps/FSI_TUREK_3/)
+  ADD_SUBDIRECTORY(FSIApps/FSI_TUREK_3/)
 
 # FSI SteadyState in porous media
-    ADD_SUBDIRECTORY(FSIApps/fsi_porous/)
-
+  ADD_SUBDIRECTORY(FSIApps/fsi_porous/)
 ENDIF(BUILD_FSIAPPS)
 
 
-
-
 set(OPTCONTROL_FOLDER OptControlApps/)
-
 IF(BUILD_OPTCONTROLAPPS)
 
 # MHD Optimal Control
@@ -72,33 +65,17 @@ ENDIF(BUILD_OPTCONTROLAPPS)
 
 
 
-
-
 IF(BUILD_POISSON)
-       ADD_SUBDIRECTORY(Poisson/)
+  ADD_SUBDIRECTORY(Poisson/)
 ENDIF(BUILD_POISSON)
 
 
 IF(BUILD_POISSON_AMR)
-       ADD_SUBDIRECTORY(Poisson_AMR/)
+  ADD_SUBDIRECTORY(Poisson_AMR/)
 ENDIF(BUILD_POISSON_AMR)
 
 
 IF(BUILD_NUM_PDE_CLASS)
-
-#   ADD_SUBDIRECTORY(NumPdeSpring2015/Eugenio/)
-  
-#   ADD_SUBDIRECTORY(NumPdeSpring2015/Giacomo/)
-#   
-#   ADD_SUBDIRECTORY(NumPdeSpring2015/Sara/)
-#   
-#   ADD_SUBDIRECTORY(NumPdeSpring2015/Thanuja/)
-#   
-#   ADD_SUBDIRECTORY(NumPdeSpring2015/Thanuka/)
-#   
-#   #ADD_SUBDIRECTORY(NumPdeSpring2015/Bhagya/)
-#   
-#   ADD_SUBDIRECTORY(NumPdeSpring2015/Guoyi/)
         
   set(TUTORIAL_FOLDER NumPdeSpring2015/tutorial)  
   ADD_SUBDIRECTORY(${TUTORIAL_FOLDER})
