@@ -56,8 +56,10 @@ class MultiLevelProblem {
 public:
 
     /** Constructor */
-    MultiLevelProblem(MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
+    //MultiLevelProblem(MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
 
+    MultiLevelProblem(MultiLevelSolution *ml_sol);
+    
     /** Destructor */
     ~MultiLevelProblem() {};
 

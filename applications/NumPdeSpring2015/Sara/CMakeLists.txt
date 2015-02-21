@@ -1,6 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-PROJECT(NPdeClassSara)
+ADD_SUBDIRECTORY(Ex1)
 
-femusMacroBuildApplication(NumPdeSpring2015/Sara npde_sara)
-
+ADD_SUBDIRECTORY(Ex2) 

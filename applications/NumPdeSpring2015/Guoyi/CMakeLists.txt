@@ -1,6 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-PROJECT(NPdeClassGuoyi)
+ADD_SUBDIRECTORY(Ex1)
 
-femusMacroBuildApplication(NumPdeSpring2015/Guoyi npde_guoyi)
-
+ADD_SUBDIRECTORY(Ex2) 

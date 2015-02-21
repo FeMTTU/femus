@@ -1,6 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-PROJECT(NPdeClassEugenio)
+ADD_SUBDIRECTORY(Ex1)
 
-femusMacroBuildApplication(NumPdeSpring2015/Eugenio npde_eugenio)
-
+ADD_SUBDIRECTORY(Ex2) 

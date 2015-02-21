@@ -47,7 +47,9 @@ codeblocks/
 *.out
 *.toc
 
-
+# gambit junk stuff
+*.trn
+*.jou
 
 # packages
 # *.tar.*

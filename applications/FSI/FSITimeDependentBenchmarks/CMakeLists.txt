@@ -1,0 +1,10 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+PROJECT(FSI_TIME_DEPENDENT)
+
+SET(DIR_NAME "FSI/FSITimeDependentBenchmarks")
+SET(MAIN_FILE "main")
+SET(EXEC_FILE "fsitimedep")
+
+femusMacroBuildApplication( ${DIR_NAME} ${MAIN_FILE} ${EXEC_FILE})
+

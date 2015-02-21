@@ -1,6 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-PROJECT(NPdeClassThanuja)
+ADD_SUBDIRECTORY(Ex1)
 
-femusMacroBuildApplication(NumPdeSpring2015/Thanuja npde_thanuja)
-
+ADD_SUBDIRECTORY(Ex2) 
