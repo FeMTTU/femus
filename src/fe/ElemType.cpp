@@ -198,7 +198,9 @@ void elem_type::GetSparsityPatternSize(const LinearEquation &lspdef,const Linear
 }
 
 void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
-					  const unsigned &index_sol, const unsigned &kkindex_sol, const bool &TestDisp) const {
+					  const unsigned &index_sol, const unsigned &kkindex_sol, 
+					  const unsigned &index_pair_sol, const unsigned &kkindex_pair_sol) const{
+					 
   vector<int> cols(27);
   bool fluid_region = (2==lspdec._msh->el->GetElementMaterial(ielc))?1:0;
   
@@ -220,12 +222,20 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
     for (int k=0; k<ncols; k++) {
       int j=_prol_ind[i][k]; 
       int jadd=lspdec._msh->el->GetMeshDof(ielc,j,_SolType);
-      int jcolumn=lspdec.GetKKDof(index_sol,kkindex_sol,jadd); 
-      cols[k]=jcolumn;
-      
       bool jsolidmark=lspdef._msh->el->GetNodeRegion(jadd); 
+      if(isolidmark == jsolidmark){
+	int jcolumn=lspdec.GetKKDof(index_sol,kkindex_sol,jadd); 
+	cols[k]=jcolumn;
+	copy_prol_val[k]=_prol_val[i][k];
+      }
+      else {
+	int jcolumn=lspdec.GetKKDof(index_pair_sol,kkindex_pair_sol,jadd); 
+	cols[k]=jcolumn;
+	copy_prol_val[k]=(index_sol != index_pair_sol) ? _prol_val[i][k]:0.;
+      }
+     
       
-      copy_prol_val[k]=(!TestDisp || !fluid_region || isolidmark==jsolidmark)?_prol_val[i][k]:0.;
+      //copy_prol_val[k]=(!fluid_region || isolidmark==jsolidmark)?_prol_val[i][k]:0.;
     }    
     Projmat->insert_row(irow,ncols,cols,&copy_prol_val[0]);
   }

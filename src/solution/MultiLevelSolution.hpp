@@ -59,7 +59,7 @@ public:
     void AddSolutionLevel();
     
     /** To be Added */
-    void AssociatePropertyToSolution(const char solution_name[], const char solution_property[]);
+    void AssociatePropertyToSolution(const char solution_name[], const char solution_property[], const char solution_pair[] = NULL);
 
     /** To be Added */
     void ResizeSolutionVector( const char name[]);
@@ -160,6 +160,10 @@ public:
     bool  TestIfSolutionIsDisplacemenet(unsigned i) {
         return _TestIfDisplacement[i];
     };
+    
+    unsigned GetSolPairIndex(const unsigned& i) const{
+      return _SolPairIndex[i];
+    }
 
     // member data
     MultiLevelMesh* _ml_msh; //< Multilevel mesh
@@ -210,6 +214,7 @@ private:
     vector <bool>   _PdeType;
     vector <bool>   _TestIfPressure;
     vector <bool>   _TestIfDisplacement;
+    vector <unsigned> _SolPairIndex;
     
     /** Multilevel solution writer */
     Writer* _writer;

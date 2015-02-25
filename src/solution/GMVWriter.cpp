@@ -107,7 +107,7 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
 	for (unsigned ii=0; ii<nvt_ig; ii++) 
 	  var_nd[ii]= v_local[ii];
       }
-      if (_moving_mesh) {
+      if (_moving_mesh  && _ml_sol._ml_msh->GetLevel(0)->GetDimension() > i)  {
 	unsigned indDXDYDZ=_ml_sol.GetIndex(_moving_vars[i].c_str());
 	Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indDXDYDZ],*_ProlQitoQj[index][_ml_sol.GetSolutionType(indDXDYDZ)][ig]);
 	Mysol[ig]->localize_to_one(v_local,0);

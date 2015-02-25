@@ -154,11 +154,15 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
   
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned SolIndex=_SolSystemPdeIndex[k];
-    unsigned  SolType = _ml_sol->GetSolutionType(SolIndex);
+    unsigned solPairIndex=_ml_sol->GetSolPairIndex(k);
+    unsigned SolType = _ml_sol->GetSolutionType(SolIndex);
+    unsigned solPairPdeIndex = GetSolPdeIndex( _ml_sol->GetSolutionName(solPairIndex) );
+    
+    
     //bool TestDisp=0;
     //if(_ml_sol->TestIfSolutionIsDisplacemenet(SolIndex) )   TestDisp=1;
-    bool TestDisp=1;
-    if(_ml_sol->TestIfSolutionIsPressure(SolIndex) )   TestDisp=0;
+    bool testIfPressure=0;
+    if(_ml_sol->TestIfSolutionIsPressure(SolIndex) )   testIfPressure=1;
     
     
     // loop on the coarse grid 
@@ -169,8 +173,8 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
     
 	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  if(TestDisp){
-	    _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildRestrictionTranspose(*LinSolf,*LinSolc,iel,RRt,SolIndex,k,TestDisp);
+	  if(!testIfPressure){
+	    _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildRestrictionTranspose(*LinSolf,*LinSolc,iel,RRt,SolIndex,k,solPairIndex,solPairPdeIndex);
 	  }
 	  else{
 	    _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, RRt,SolIndex,k);

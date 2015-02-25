@@ -39,9 +39,9 @@ int main(int argc,char **args) {
   /// Init Petsc-MPI communicator
   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
 
-  Files files; 
-  files.CheckIODirectories();
-  files.RedirectCout();
+  //Files files; 
+  //files.CheckIODirectories();
+  //files.RedirectCout();
   
   unsigned simulation;
   bool dimension2D;
@@ -225,13 +225,16 @@ int main(int argc,char **args) {
   //Start System Variables
   ml_sol.AddSolution("DX",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("DY",LAGRANGE,SECOND,1);
-  if (!dimension2D) ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
-  ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
-  ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
-  if (!dimension2D) ml_sol.AssociatePropertyToSolution("DZ","Displacement"); // Add this line 
+  //ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
+  //if (!dimension2D) ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("U",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
   if (!dimension2D) ml_sol.AddSolution("W",LAGRANGE,SECOND,1);
+  // Pair each dispacement varible with the corresponding velocity variable
+  ml_sol.AssociatePropertyToSolution("U","Displacement","DX"); // Add this line
+  ml_sol.AssociatePropertyToSolution("V","Displacement","DY"); // Add this line 
+  if (!dimension2D) ml_sol.AssociatePropertyToSolution("W","Displacement","DZ"); // Add this line 
+  
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
   //ml_sol.AddSolution("P",LAGRANGE,FIRST,1);
@@ -393,7 +396,7 @@ int main(int argc,char **args) {
   if (!dimension2D) print_vars.push_back("W");
   print_vars.push_back("P");
       
-  ml_sol.GetWriter()->write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
+  ml_sol.GetWriter()->write_system_solutions(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
   // Destroy all the new systems
   ml_prob.clear();
