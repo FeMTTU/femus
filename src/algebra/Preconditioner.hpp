@@ -19,7 +19,7 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "SolverPackageEnum.hpp"
 #include "PrecondtypeEnum.hpp"
 

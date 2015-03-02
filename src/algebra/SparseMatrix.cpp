@@ -20,7 +20,7 @@
 #include <sstream>  
 #include "hdf5.h"   
 #include "SparseMatrix.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "NumericVector.hpp"
 #include "PetscMatrix.hpp"
 

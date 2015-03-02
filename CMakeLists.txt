@@ -199,8 +199,8 @@ ENDIF(BUILD_ADEPT)
 
 # configure a header file to pass some of the CMake settings to the source code
 CONFIGURE_FILE(
-  "${PROJECT_SOURCE_DIR}/config/FEMTTUConfig.h.in"
-  "${PROJECT_BINARY_DIR}/config/FEMTTUConfig.h" @ONLY IMMEDIATE
+  "${PROJECT_SOURCE_DIR}/config/FemusConfig.hpp.in"
+  "${PROJECT_BINARY_DIR}/config/FemusConfig.hpp" @ONLY IMMEDIATE
   )
 
   

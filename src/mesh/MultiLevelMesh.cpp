@@ -21,7 +21,7 @@
 #include "Elem.hpp"
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "MeshRefinement.hpp"
 
 

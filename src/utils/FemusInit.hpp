@@ -19,7 +19,7 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 //use this class only with petsc-mpi
 #ifdef HAVE_MPI

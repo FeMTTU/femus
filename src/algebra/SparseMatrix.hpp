@@ -24,7 +24,7 @@
 #include <vector>
 
 // configure files ----------------
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "SolverPackageEnum.hpp"
 #include "Graph.hpp"
 

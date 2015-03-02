@@ -6,7 +6,7 @@
 #include <cmath>
 #include <algorithm> 
 // FEMuS
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "FemusDefault.hpp"
 
 #include "Domain.hpp"

@@ -1,3 +1,7 @@
+#ifndef __femus_FemusConfig_hpp__
+#define __femus_FemusConfig_hpp__
+
+
 // the configured options and settings for Tutorial
 #define FEMTTU_VERSION_MAJOR @FEMTTU_VERSION_MAJOR@
 #define FEMTTU_VERSION_MINOR @FEMTTU_VERSION_MINOR@
@@ -60,5 +64,9 @@
   #endif
   
   
+
+#endif
+
+
 
 #endif

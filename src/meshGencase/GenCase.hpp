@@ -8,7 +8,7 @@
 #include "hdf5.h"
 
 // FEMuS
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"

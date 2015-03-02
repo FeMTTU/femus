@@ -23,7 +23,7 @@
 #include <memory>
 #include <cstdio>
 
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "SolverPackageEnum.hpp"
 #include "PrecondtypeEnum.hpp"
 #include "SolvertypeEnum.hpp"

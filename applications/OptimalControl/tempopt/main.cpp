@@ -6,7 +6,7 @@
 #include <sstream>
 
 // External library include ( LibMesh, PETSc...)
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 // FEMuS
 #include "paral.hpp" 

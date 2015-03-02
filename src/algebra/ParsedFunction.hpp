@@ -16,7 +16,7 @@ PURPOSE.  See the above copyright notice for more information.
 #ifndef __femus_algebra_ParsedFunction_hpp__
 #define __femus_algebra_ParsedFunction_hpp__
 
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 //----------------------------------------------------------------------------
 // includes :

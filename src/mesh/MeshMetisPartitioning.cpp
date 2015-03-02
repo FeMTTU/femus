@@ -18,7 +18,7 @@
 //----------------------------------------------------------------------------
 #include "MeshMetisPartitioning.hpp"
 #include "Mesh.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 #ifdef HAVE_METIS
   #include "metis.h"

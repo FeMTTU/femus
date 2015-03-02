@@ -21,7 +21,7 @@
 //----------------------------------------------------------------------------
 #include "SolverPackageEnum.hpp"
 #include "ParalleltypeEnum.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 // C++ includes
 #include <vector>

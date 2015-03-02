@@ -6,7 +6,7 @@
 #include <sstream>
 
 // FEMuS
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "paral.hpp"
 #include "FemusDefault.hpp"
 #include "FemusInit.hpp"

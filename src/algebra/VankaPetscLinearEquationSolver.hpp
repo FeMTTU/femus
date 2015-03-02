@@ -16,7 +16,7 @@
 #ifndef __femus_algebra_VankaPetscLinearEquationSolver_hpp__
 #define __femus_algebra_VankaPetscLinearEquationSolver_hpp__
 
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 #ifdef HAVE_PETSC
 

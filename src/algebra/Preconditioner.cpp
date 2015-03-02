@@ -19,7 +19,7 @@
 #include "Preconditioner.hpp"
 #include "PetscPreconditioner.hpp"
 #include <cstdlib>  
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 
 namespace femus {

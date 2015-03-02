@@ -20,7 +20,7 @@
 #include <limits>
 #include <cassert>
 
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #ifdef HAVE_MPI
 #include "mpi.h"
 #endif

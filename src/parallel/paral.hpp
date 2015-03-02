@@ -2,7 +2,7 @@
 #define __femus_parallel_paral_hpp__
 
 
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 #ifdef HAVE_MPI
 #include "mpi.h"

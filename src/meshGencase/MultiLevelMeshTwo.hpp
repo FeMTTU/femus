@@ -27,7 +27,7 @@
 #include "hdf5.h"
 
 #include "Typedefs.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "FemusInputParser.hpp"
 #include "ElemSto.hpp"
 #include "VBTypeEnum.hpp"
