@@ -1,5 +1,5 @@
-#ifndef __IncompFSIassembly_hpp__
-#define __IncompFSIassembly_hpp__
+#ifndef __femus_include_IncompressibleFSIAssembly_hpp__
+#define __femus_include_IncompressibleFSIAssembly_hpp__
 
 #include "MonolithicFSINonLinearImplicitSystem.hpp" 
 //#include "/home/eaulisa/devel/femusBin/ExternalLibraries/Adept/Sources/adept-1.0/include/adept.h"

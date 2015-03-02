@@ -1,5 +1,5 @@
-#ifndef __femus_mymulti_hpp__
-#define __femus_mymulti_hpp__
+#ifndef __femus_fsi_porous_MyMultigrid_hpp__
+#define __femus_fsi_porous_MyMultigrid_hpp__
 
 
 
