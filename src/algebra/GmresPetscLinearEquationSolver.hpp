@@ -13,10 +13,10 @@
 
   =========================================================================*/
 
-#ifndef __GmresPetscLinearEquationSolver_hpp__
-#define __GmresPetscLinearEquationSolver_hpp__
+#ifndef __femus_algebra_GmresPetscLinearEquationSolver_hpp__
+#define __femus_algebra_GmresPetscLinearEquationSolver_hpp__
 
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 #ifdef HAVE_PETSC
 

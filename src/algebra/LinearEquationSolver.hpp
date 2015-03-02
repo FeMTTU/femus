@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __linear_equation_solver_h__
-#define __linear_equation_solver_h__
+#ifndef __femus_algebra_LinearEquationSolver_hpp__
+#define __femus_algebra_LinearEquationSolver_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
@@ -23,7 +23,7 @@
 #include <memory>
 #include <cstdio>
 
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "SolverPackageEnum.hpp"
 #include "PrecondtypeEnum.hpp"
 #include "SolvertypeEnum.hpp"

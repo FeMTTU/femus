@@ -1,5 +1,5 @@
-#ifndef __fehex1_h__
-#define __fehex1_h__
+#ifndef __femus_meshGencase_FEHex1_hpp__
+#define __femus_meshGencase_FEHex1_hpp__
 
 
 #include <cstdlib>

@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __mgtimeloop_h__
-#define __mgtimeloop_h__
+#ifndef __femus_equations_TimeLoop_hpp__
+#define __femus_equations_TimeLoop_hpp__
 
 #include "Typedefs.hpp"
 #include "FemusInputParser.hpp"

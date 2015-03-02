@@ -13,13 +13,13 @@
 
 =========================================================================*/
 
-#ifndef __petsc_matrixMn_h__
-#define __petsc_matrixMn_h__
+#ifndef __femus_algebra_PetscMatrix_hpp__
+#define __femus_algebra_PetscMatrix_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 // ======================================
 #ifdef HAVE_PETSC

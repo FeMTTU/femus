@@ -8,7 +8,7 @@
 
   ( If they are not installed already, the script "install_external.sh" in contrib/scripts/ will do it automatically, with the following syntax:
   
-  ./contrib/scripts/install_external.sh --prefix-external my_external_directory )
+  ./femus/contrib/scripts/install_external.sh --prefix-external my_external_directory )
 
   
 - Source the "configure_femus.sh" script and execute the function "fm_set_femus" in order to set some environment variables:
@@ -24,4 +24,4 @@
 
    cd femus.build
 
-   cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE="[Debug Release RelWithDebInfo MinSizeRel None]" -DBUILD_DOCUMENTATION="[OFF ON]"  -DLIBMESH_DIR=my_libmesh_directory   ../femus
+   cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE="[Debug Release RelWithDebInfo MinSizeRel None]" -DLIBMESH_DIR=my_libmesh_directory   ../femus

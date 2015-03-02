@@ -1,0 +1,9 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+PROJECT(FSI_TUREK_3)
+
+SET(MAIN_FILE "main")
+SET(EXEC_FILE "fsitrk3")
+
+femusMacroBuildApplication(${MAIN_FILE} ${EXEC_FILE})
+

@@ -13,13 +13,13 @@
 
 =========================================================================*/
 
-#ifndef _femttu_init_
-#define _femttu_init_
+#ifndef __femus_utils_FemusInit_hpp__
+#define __femus_utils_FemusInit_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 //use this class only with petsc-mpi
 #ifdef HAVE_MPI

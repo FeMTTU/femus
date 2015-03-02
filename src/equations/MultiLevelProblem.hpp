@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __MultiLevelProblem_hpp__
-#define __MultiLevelProblem_hpp__
+#ifndef __femus_equations_MultiLevelProblem_hpp__
+#define __femus_equations_MultiLevelProblem_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
@@ -56,8 +56,10 @@ class MultiLevelProblem {
 public:
 
     /** Constructor */
-    MultiLevelProblem(MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
+    //MultiLevelProblem(MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
 
+    MultiLevelProblem(MultiLevelSolution *ml_sol);
+    
     /** Destructor */
     ~MultiLevelProblem() {};
 

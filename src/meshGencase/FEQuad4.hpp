@@ -1,5 +1,5 @@
-#ifndef __fequad4_h__
-#define __fequad4_h__
+#ifndef __femus_meshGencase_FEQuad4_hpp__
+#define __femus_meshGencase_FEQuad4_hpp__
 
 
 

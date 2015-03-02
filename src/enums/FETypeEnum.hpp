@@ -1,5 +1,5 @@
-#ifndef _fetype_enum
-#define _fetype_enum
+#ifndef __femus_enums_FETypeEnum_hpp__
+#define __femus_enums_FETypeEnum_hpp__
 
 
 enum  FEType {QQ=0, LL, KK };

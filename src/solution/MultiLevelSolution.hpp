@@ -13,8 +13,8 @@ PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
 
-#ifndef __MultiLevelSolution_hpp__
-#define __MultiLevelSolution_hpp__
+#ifndef __femus_solution_MultiLevelSolution_hpp__
+#define __femus_solution_MultiLevelSolution_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

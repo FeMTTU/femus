@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __basis_h___
-#define __basis_h___
+#ifndef __femus_fe_Basis_hpp__
+#define __femus_fe_Basis_hpp__
 
 #include <iostream>
 #include <stdlib.h>  

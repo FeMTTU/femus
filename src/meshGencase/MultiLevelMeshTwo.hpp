@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __mesh123D_h
-#define __mesh123D_h
+#ifndef __femus_meshGencase_MultiLevelMeshTwo_hpp__
+#define __femus_meshGencase_MultiLevelMeshTwo_hpp__
 
 //C++ 
 #include <fstream>
@@ -27,7 +27,7 @@
 #include "hdf5.h"
 
 #include "Typedefs.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "FemusInputParser.hpp"
 #include "ElemSto.hpp"
 #include "VBTypeEnum.hpp"

@@ -16,7 +16,7 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "XDMFWriter.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"

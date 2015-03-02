@@ -1,5 +1,5 @@
-#ifndef _vbtype_enum
-#define _vbtype_enum
+#ifndef __femus_enums_VBTypeEnum_hpp__
+#define __femus_enums_VBTypeEnum_hpp__
 
 enum  VBType {VV=0,
                BB };

@@ -5,7 +5,7 @@
 *.directory
 *CMakeCache.txt
 *src/.kdev_include_paths
-config/FEMTTUConfig.h
+config/FemusConfig.hpp
 
 
 
@@ -47,7 +47,9 @@ codeblocks/
 *.out
 *.toc
 
-
+# gambit junk stuff
+*.trn
+*.jou
 
 # packages
 # *.tar.*

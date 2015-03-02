@@ -77,7 +77,7 @@ int main(int argc,char **args) {
   ml_sol.GenerateBdc("V","Steady");
   ml_sol.GenerateBdc("P","Steady");
   
-  MultiLevelProblem ml_prob(&ml_msh,&ml_sol);
+  MultiLevelProblem ml_prob(&ml_sol);
 
   Parameter par(Lref,Uref);
   

@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __material_hpp__
-#define __material_hpp__
+#ifndef __femus_physics_Material_hpp__
+#define __femus_physics_Material_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
