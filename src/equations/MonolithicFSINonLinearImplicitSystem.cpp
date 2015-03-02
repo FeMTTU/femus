@@ -154,7 +154,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
   
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned SolIndex=_SolSystemPdeIndex[k];
-    unsigned solPairIndex=_ml_sol->GetSolPairIndex(k);
+    unsigned solPairIndex=_ml_sol->GetSolutionPairIndex(k);
     unsigned SolType = _ml_sol->GetSolutionType(SolIndex);
     unsigned solPairPdeIndex = GetSolPdeIndex( _ml_sol->GetSolutionName(solPairIndex) );
     

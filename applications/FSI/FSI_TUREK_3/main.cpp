@@ -62,10 +62,14 @@ int main(int argc,char **args) {
   //Start System Variables
   ml_sol.AddSolution("DX",LAGRANGE,SECOND,2);
   ml_sol.AddSolution("DY",LAGRANGE,SECOND,2);
-  ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
-  ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
+//   ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
+//   ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
   ml_sol.AddSolution("U",LAGRANGE,SECOND,2);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,2);
+  
+  //   ml_sol.PairSolution("U","DX"); // Add this line
+  //   ml_sol.PairSolution("V","DY"); // Add this line 
+  
   ml_sol.AddSolution("AX",LAGRANGE,SECOND,1,0);
   ml_sol.AddSolution("AY",LAGRANGE,SECOND,1,0);
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable

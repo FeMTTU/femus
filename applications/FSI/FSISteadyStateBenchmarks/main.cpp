@@ -230,10 +230,10 @@ int main(int argc,char **args) {
   ml_sol.AddSolution("U",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
   if (!dimension2D) ml_sol.AddSolution("W",LAGRANGE,SECOND,1);
-  // Pair each dispacement varible with the corresponding velocity variable
-  ml_sol.AssociatePropertyToSolution("U","Displacement","DX"); // Add this line
-  ml_sol.AssociatePropertyToSolution("V","Displacement","DY"); // Add this line 
-  if (!dimension2D) ml_sol.AssociatePropertyToSolution("W","Displacement","DZ"); // Add this line 
+  // Pair each velocity varible with the corresponding displacement variable
+  ml_sol.PairSolution("U","DX"); // Add this line
+  ml_sol.PairSolution("V","DY"); // Add this line 
+  if (!dimension2D) ml_sol.PairSolution("W","DZ"); // Add this line 
   
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);

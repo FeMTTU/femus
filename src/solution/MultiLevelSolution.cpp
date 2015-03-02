@@ -109,11 +109,9 @@ void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily,
   _SolTmorder.resize(n+1u);
   _PdeType.resize(n+1u);
   _TestIfPressure.resize(n+1u);
-  _TestIfDisplacement.resize(n+1u);
   _SolPairIndex.resize(n+1u);
   
   
-  _TestIfDisplacement[n]=0;
   _TestIfPressure[n]=0;
   _family[n] = fefamily;
   _order[n] = order;
@@ -135,24 +133,11 @@ void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily,
 }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelSolution::AssociatePropertyToSolution(const char solution_name[], const char solution_property[], const char solution_pair[]){
+void MultiLevelSolution::AssociatePropertyToSolution(const char solution_name[], const char solution_property[]){
   unsigned index=GetIndex(solution_name);
   if( !strcmp(solution_property,"pressure") || !strcmp(solution_property,"Pressure") ) _TestIfPressure[index]=1;
-  else if( !strcmp(solution_property,"displacement") || !strcmp(solution_property,"Displacement") ) {
-    _TestIfDisplacement[index]=1;
-    if( solution_pair != NULL){
-      unsigned indexPair=GetIndex(solution_pair);
-      _SolPairIndex[index]=indexPair;
-    }
-    else{
-      std::cout<<"In function AssociatePropertyToSolution(\"disp\",\"Displacement\",\"Vel\")\n"
-	       <<"pair each Displacement type variable,  disp, to a Velocity type variable, vel"<<std::endl;
-	       abort();
-    }
-  }
   else if( !strcmp(solution_property,"default") || !strcmp(solution_property,"Default") ) {
     _TestIfPressure[index]=0;
-    _TestIfDisplacement[index]=0;
   }
   else {
     cout<<"Error invalid property in function MultiLevelProblem::AssociatePropertyToSolution"<<endl;
@@ -161,6 +146,26 @@ void MultiLevelSolution::AssociatePropertyToSolution(const char solution_name[],
 }
 
 // *******************************************************
+
+
+void MultiLevelSolution::PairSolution(const char solution_name[], const char solution_pair[]){
+  unsigned index=GetIndex(solution_name);
+  unsigned indexPair=GetIndex(solution_pair);
+  _SolPairIndex[index]=indexPair;
+}
+
+// *******************************************************
+
+
+
+
+
+
+
+
+
+
+
 void MultiLevelSolution::Initialize(const char name[], initfunc func) {
   
   unsigned i_start;

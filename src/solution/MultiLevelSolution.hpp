@@ -59,8 +59,11 @@ public:
     void AddSolutionLevel();
     
     /** To be Added */
-    void AssociatePropertyToSolution(const char solution_name[], const char solution_property[], const char solution_pair[] = NULL);
+    void AssociatePropertyToSolution(const char solution_name[], const char solution_property[]);
 
+    /** To be Added */
+    void PairSolution(const char solution_name[], const char solution_pair[]);
+        
     /** To be Added */
     void ResizeSolutionVector( const char name[]);
 
@@ -157,11 +160,7 @@ public:
     };
 
     /** To be Added */
-    bool  TestIfSolutionIsDisplacemenet(unsigned i) {
-        return _TestIfDisplacement[i];
-    };
-    
-    unsigned GetSolPairIndex(const unsigned& i) const{
+    unsigned GetSolutionPairIndex(const unsigned& i) const{
       return _SolPairIndex[i];
     }
 
@@ -213,7 +212,6 @@ private:
     vector <int>    _SolTmorder;
     vector <bool>   _PdeType;
     vector <bool>   _TestIfPressure;
-    vector <bool>   _TestIfDisplacement;
     vector <unsigned> _SolPairIndex;
     
     /** Multilevel solution writer */
