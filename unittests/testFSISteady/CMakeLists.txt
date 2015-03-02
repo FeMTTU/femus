@@ -2,10 +2,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(testFSISteady)
 
-SET(DIR_NAME "testFSISteady")
 SET(MAIN_FILE "main")
 SET(EXEC_FILE "testFSISteady")
 
-femusMacroBuildUnitTest( ${DIR_NAME} ${MAIN_FILE} ${EXEC_FILE})
+femusMacroBuildUnitTest(${MAIN_FILE} ${EXEC_FILE})
 
 

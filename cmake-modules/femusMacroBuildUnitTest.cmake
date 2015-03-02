@@ -5,12 +5,12 @@
 #
 #
 
-MACRO(femusMacroBuildUnitTest foldername mainname appname)
+MACRO(femusMacroBuildUnitTest mainname appname)
 
 INCLUDE(CTest)
 
 # Build the executable
-ADD_EXECUTABLE(${appname} ${CMAKE_SOURCE_DIR}/unittests/${foldername}/${mainname}.cpp)
+ADD_EXECUTABLE(${appname} ${PROJECT_SOURCE_DIR}/${mainname}.cpp)
 
 # Link the executable to the petsc anf femttu libs
 TARGET_LINK_LIBRARIES(${appname} femus)
@@ -34,7 +34,7 @@ ENDIF(HDF5_FOUND)
 ADD_TEST(NAME ${appname} COMMAND ${appname})
 
 FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/input/)
-FILE( COPY           ${CMAKE_SOURCE_DIR}/unittests/${foldername}/input/ 
+FILE( COPY          ${PROJECT_SOURCE_DIR}/input/ 
       DESTINATION ${PROJECT_BINARY_DIR}/input/)
 
 
