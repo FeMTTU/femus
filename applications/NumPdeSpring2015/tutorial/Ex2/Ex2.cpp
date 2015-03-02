@@ -48,22 +48,26 @@ int main(int argc, char **args) {
   // print mesh info
   mlMsh.PrintInfo();
   
+  
+  for(unsigned i=0;i<2;i++){
   // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution mlSol(&mlMsh);
+  MultiLevelSolution *mlSol;
+  mlSol=new MultiLevelSolution(&mlMsh);
   
   // add variables to mlSol
-  mlSol.AddSolution("u",LAGRANGE, FIRST);
-  mlSol.Initialize("All");
+  mlSol->AddSolution("u",LAGRANGE, FIRST);
+  mlSol->Initialize("All");
   
   // attach the boundary condition function and generate boundary data 
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.GenerateBdc("u");
+  mlSol->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol->GenerateBdc("u");
   
   // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);  
+  MultiLevelProblem *mlProb;
+  mlProb = new MultiLevelProblem(mlSol);  
   
   // add system Poisson in mlProb as a Linear Implicit System
-  LinearImplicitSystem & system = mlProb.add_system < LinearImplicitSystem > ("Poisson");
+  LinearImplicitSystem & system = mlProb->add_system < LinearImplicitSystem > ("Poisson");
   
   // add solution "u" to system
   system.AddSolutionToSystemPDE("u");
@@ -79,13 +83,19 @@ int main(int argc, char **args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
-  VTKWriter vtkIO(mlSol);
-  vtkIO.write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  VTKWriter *vtkIO;
+  vtkIO = new VTKWriter(*mlSol);
+  vtkIO->write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
-  GMVWriter gmvIO(mlSol);
-  gmvIO.SetDebugOutput(true);
-  gmvIO.write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//   GMVWriter gmvIO(*mlSol);
+//   gmvIO.SetDebugOutput(true);
+//   gmvIO.write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
    
+  delete vtkIO;
+  delete mlProb;
+  delete mlSol;
+  }
+  
   return 0;
 }
 
