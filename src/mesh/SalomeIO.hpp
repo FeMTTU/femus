@@ -19,6 +19,9 @@
 
 // Local includes
 #include "MeshInput.hpp"
+#ifdef HAVE_HDF5
+  #include "hdf5.h"
+#endif
 
 namespace femus
 {
@@ -57,7 +60,18 @@ class SalomeIO : public MeshInput<Mesh>
  
    /** Map from Gambit face index to Femus face index */
    static const unsigned GambitToFemusFaceIndex[6][6];
-  
+
+   /** Read FE type */
+   int  ReadFE(hid_t file_id, std::string & el_fem_type_vol, std::string & el_fem_type_bd);   
+   
+   std::string mesh_menu;               //Mesh_1; strip from file name by removing .med
+   static const std::string group_name_begin; //FAS
+   static const std::string group_name_end;   //ELEME
+   static const std::string mesh_ensemble;        // ENS_MAA
+   static const std::string aux_zeroone;      // -0000000000000000001-0000000000000000001
+   static const std::string connectivity;     // MAI
+   static const std::string node_coord;       //NOE/COO
+
 };
 
 
