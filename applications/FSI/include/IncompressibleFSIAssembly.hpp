@@ -2,7 +2,6 @@
 #define __femus_include_IncompressibleFSIAssembly_hpp__
 
 #include "MonolithicFSINonLinearImplicitSystem.hpp" 
-//#include "/home/eaulisa/devel/femusBin/ExternalLibraries/Adept/Sources/adept-1.0/include/adept.h"
 #include "adept.h"
 
 

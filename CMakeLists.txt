@@ -176,21 +176,21 @@ ENDIF(BUILD_DOCUMENTATION)
 SET(HAVE_B64 0)
 IF(BUILD_B64)
   SET(HAVE_B64 1)
-  INCLUDE(ExternalLibraries/External_b64.cmake)
+  INCLUDE(external/External_b64.cmake)
 ENDIF(BUILD_B64)
 
 # Build the jsoncpp library
 SET(HAVE_JSONCPP 0)
 IF(BUILD_JSONCPP)
   SET(HAVE_JSONCPP 1)
-  INCLUDE(ExternalLibraries/External_jsoncpp.cmake)
+  INCLUDE(external/External_jsoncpp.cmake)
 ENDIF(BUILD_JSONCPP)  
 
 # Build the Adept external library
 SET(HAVE_ADEPT 0)
 IF(BUILD_ADEPT)
   SET(HAVE_ADEPT 1)
-  INCLUDE(ExternalLibraries/External_adept.cmake)
+  INCLUDE(external/External_adept.cmake)
 ENDIF(BUILD_ADEPT)
 
 #############################################################################################
