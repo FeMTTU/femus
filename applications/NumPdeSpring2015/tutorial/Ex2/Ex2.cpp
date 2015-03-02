@@ -87,9 +87,9 @@ int main(int argc, char **args) {
   vtkIO = new VTKWriter(*mlSol);
   vtkIO->write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
-//   GMVWriter gmvIO(*mlSol);
-//   gmvIO.SetDebugOutput(true);
-//   gmvIO.write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  GMVWriter gmvIO(*mlSol);
+  gmvIO.SetDebugOutput(true);
+  gmvIO.write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
    
   delete vtkIO;
   delete mlProb;

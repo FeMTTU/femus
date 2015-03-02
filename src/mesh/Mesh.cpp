@@ -76,10 +76,8 @@ void Mesh::PrintInfo() {
 /**
  *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file (Now only the Gambit Neutral File)
  **/
-void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag, const elem_type *otherFiniteElement[6][5]) {
-  
-  SetFiniteElementPtr(otherFiniteElement);
-  
+void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag) {
+    
   vector <vector <double> > coords(3);  
     
   _grid=0;
@@ -139,9 +137,7 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
   
   _coordinate->ResizeSolutionVector("AMR");
-  
-  BuildLagrangeProlongatorMatrices();
-  
+    
 };
 
 /**
@@ -152,10 +148,7 @@ void Mesh::GenerateCoarseBoxMesh(
         const double xmin, const double xmax,
         const double ymin, const double ymax,
         const double zmin, const double zmax,
-        const ElemType type, std::vector<bool> &type_elem_flag,
-	const elem_type *otherFiniteElement[6][5]) {
-  
-  SetFiniteElementPtr(otherFiniteElement);
+        const ElemType type, std::vector<bool> &type_elem_flag) {
   
   vector <vector <double> > coords(3);  
     
@@ -200,8 +193,6 @@ void Mesh::GenerateCoarseBoxMesh(
   _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
   
   _coordinate->ResizeSolutionVector("AMR");
-  
-  BuildLagrangeProlongatorMatrices();
   
 }  
   
@@ -658,8 +649,6 @@ void Mesh::FillISvector() {
   
 }
 
-
-
 void Mesh::BuildLagrangeProlongatorMatrices(){
   
   for(int itype=0;itype<3;itype++){
@@ -718,15 +707,6 @@ void Mesh::BuildLagrangeProlongatorMatrices(){
     }
   }
 }
-  
-  
-  
-  
-
-
-
-
-
 
 } //end namespace femus
 

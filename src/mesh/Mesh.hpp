@@ -124,8 +124,7 @@ public:
     /** Generate mesh functions */
     
     /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
-    void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag,
-      			const elem_type *otherFiniteElement[6][5]);
+    void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag);
     
     /** This function generates a coarse box mesh */
     void GenerateCoarseBoxMesh(const unsigned int nx,
@@ -134,8 +133,7 @@ public:
                                   const double xmin, const double xmax,
                                   const double ymin, const double ymax,
                                   const double zmin, const double zmax,
-                                  const ElemType type, std::vector<bool> &type_elem_flag,
-				  const elem_type *otherFiniteElement[6][5]);
+                                  const ElemType type, std::vector<bool> &type_elem_flag);
     
     
     /** To be added */
@@ -169,8 +167,7 @@ public:
     
     SparseMatrix* _ProlQitoQj[3][3];
     void BuildLagrangeProlongatorMatrices();
-    
-    
+        
 private:
   
     /** To be added */
