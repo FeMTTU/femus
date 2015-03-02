@@ -199,8 +199,8 @@ ENDIF(BUILD_ADEPT)
 
 # configure a header file to pass some of the CMake settings to the source code
 CONFIGURE_FILE(
-  "${PROJECT_SOURCE_DIR}/config/FemusConfig.hpp.in"
-  "${PROJECT_BINARY_DIR}/config/FemusConfig.hpp" @ONLY IMMEDIATE
+  "${PROJECT_SOURCE_DIR}/src/utils/FemusConfig.hpp.in"
+  "${PROJECT_BINARY_DIR}/include/FemusConfig.hpp" @ONLY IMMEDIATE
   )
 
   
@@ -225,7 +225,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/solution)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/enums)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/fe)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/physics)
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/config)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
 # Include Fparser files
 IF(FPARSER_FOUND)
