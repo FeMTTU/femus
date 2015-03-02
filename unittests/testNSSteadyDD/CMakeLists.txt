@@ -5,4 +5,8 @@ PROJECT(TestNSSteadyDD)
 SET(MAIN_FILE "main")
 SET(EXEC_FILE "testNSSteadyDD")
 
-femusMacroBuildUnitTest(${MAIN_FILE} ${EXEC_FILE})
+INCLUDE(CTest)
+
+ADD_TEST(NAME ${EXEC_FILE} COMMAND ${EXEC_FILE})
+
+femusMacroBuildApplication(${MAIN_FILE} ${EXEC_FILE})

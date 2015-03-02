@@ -234,8 +234,6 @@ ENDIF(FPARSER_FOUND)
 
 # add femus macro
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake-modules/femusMacroBuildApplication.cmake)
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake-modules/femusMacroBuildUnitTest.cmake)
-
 
 
 # Libmesh includes and flags
