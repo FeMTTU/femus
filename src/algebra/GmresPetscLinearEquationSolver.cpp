@@ -433,7 +433,7 @@ std::pair<unsigned int, double> GmresPetscLinearEquationSolver::solve(SparseMatr
 }
   
  
- // DEPRECATED ========================================================
+ // @deprecated ========================================================
 PetscErrorCode __libmesh_petsc_preconditioner_setup(PC pc) {
   void *ctx;
   PetscErrorCode ierr = PCShellGetContext(pc,&ctx);
@@ -444,7 +444,7 @@ PetscErrorCode __libmesh_petsc_preconditioner_setup(PC pc) {
 }
 
 
-// DEPRECATED ========================================================
+// @deprecated ========================================================
 PetscErrorCode __libmesh_petsc_preconditioner_apply(PC pc, Vec x, Vec y) {
   void *ctx;
   PetscErrorCode ierr = PCShellGetContext(pc,&ctx);
@@ -457,7 +457,7 @@ PetscErrorCode __libmesh_petsc_preconditioner_apply(PC pc, Vec x, Vec y) {
 } 
  
  
- // DEPRECATED ========================================================
+ // @deprecated ========================================================
 void GmresPetscLinearEquationSolver::init(SparseMatrix* matrix) {
   
   PetscMatrix* matrix_two   = libmeshM_cast_ptr<PetscMatrix*>(matrix);

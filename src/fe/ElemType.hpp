@@ -98,19 +98,19 @@ public:
 //   void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
 //                double &Weight, double *other_phi) const;
 
-  /** DEPRECATED  Function pointer for DPhiDXEZ */
+  /** @deprecated  Function pointer for DPhiDXEZ */
   typedef double* (elem_type::*_FunctionPointer)(const unsigned & ig) const;  //you need "elem_type::" for some reason
   std::vector<_FunctionPointer> _DPhiXiEtaZetaPtr;
   
-  /** DEPRECATED Evaluate shape functions at all quadrature points */
+  /** @deprecated Evaluate shape functions at all quadrature points */
   virtual void EvaluateShapeAtQP(const std::string geomel_id_in,const std::string fe_in);
 
-  /**  DEPRECATED Get shape functions */
+  /**  @deprecated Get shape functions */
   inline const double GetPhi(const uint qp, const uint dof ) const {
      return _phi_mapGD[qp][dof];
     }
     
-  /**  DEPRECATED Get shape function first derivatives */
+  /**  @deprecated Get shape function first derivatives */
   inline const double GetDPhiDxez(const uint qp, const uint dof ) const {
      return _dphidxez_mapGD[qp][dof];
     }
@@ -173,7 +173,7 @@ protected:
 //  Gauss
   const Gauss _gauss;
   
-  /**  DEPRECATED */
+  /**  @deprecated */
   double**      _phi_mapGD;
   double** _dphidxez_mapGD;
   
