@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __meshgeneration_hpp__
-#define __meshgeneration_hpp__
+#ifndef __femus_mesh_MeshGeneration_hpp__
+#define __femus_mesh_MeshGeneration_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

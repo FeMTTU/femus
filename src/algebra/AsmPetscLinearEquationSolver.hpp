@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __AsmPetscLinearEquationSolver_hpp__
-#define __AsmPetscLinearEquationSolver_hpp__
+#ifndef __femus_algebra_AsmPetscLinearEquationSolver_hpp__
+#define __femus_algebra_AsmPetscLinearEquationSolver_hpp__
 
 #include "FEMTTUConfig.h"
 

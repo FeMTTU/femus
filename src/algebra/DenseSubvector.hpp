@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __dense_subvectorM_h__
-#define __dense_subvectorM_h__
+#ifndef __femus_algebra_DenseSubvector_hpp__
+#define __femus_algebra_DenseSubvector_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

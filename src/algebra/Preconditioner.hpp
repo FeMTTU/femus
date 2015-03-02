@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __preconditioner_h__
-#define __preconditioner_h__
+#ifndef __femus_algebra_Preconditioner_hpp__
+#define __femus_algebra_Preconditioner_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

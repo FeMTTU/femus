@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __dense_submatrixM_h__
-#define __dense_submatrixM_h__
+#ifndef __femus_algebra_DenseSubmatrix_hpp__
+#define __femus_algebra_DenseSubmatrix_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

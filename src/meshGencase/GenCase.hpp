@@ -1,5 +1,5 @@
-#ifndef __meshGencase_GenCase_hpp__
-#define __meshGencase_GenCase_hpp__
+#ifndef __femus_meshGencase_GenCase_hpp__
+#define __femus_meshGencase_GenCase_hpp__
 
 //C++
 #include <string>

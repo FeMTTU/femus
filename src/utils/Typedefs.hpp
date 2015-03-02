@@ -1,5 +1,5 @@
-#ifndef _typedefs_cfg_h_
-#define _typedefs_cfg_h_
+#ifndef __femus_utils_Typedefs_hpp__
+#define __femus_utils_Typedefs_hpp__
 
 
 typedef unsigned int uint;

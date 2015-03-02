@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __parallel_object_hpp__
-#define __parallel_object_hpp__
+#ifndef __femus_parallel_ParallelObject_hpp__
+#define __femus_parallel_ParallelObject_hpp__
 
 #include "mpi.h"
 

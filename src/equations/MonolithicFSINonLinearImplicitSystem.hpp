@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __MonolithicFSI_nonlinear_implicit_system_h_
-#define __MonolithicFSI_nonlinear_implicit_system_h_
+#ifndef __femus_equations_MonolithicFSINonLinearImplicitSystem_hpp__
+#define __femus_equations_MonolithicFSINonLinearImplicitSystem_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

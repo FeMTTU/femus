@@ -1,5 +1,5 @@
-#ifndef __mgsmootherenum_h__
-#define __mgsmootherenum_h__
+#ifndef __femus_enums_MgSmootherEnum_hpp__
+#define __femus_enums_MgSmootherEnum_hpp__
 
 enum MgSmoother {
     VANKA_SMOOTHER=0,

@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __currelem_h__
-#define __currelem_h__
+#ifndef __femus_equations_CurrentElem_hpp__
+#define __femus_equations_CurrentElem_hpp__
 
 
 #include "FETypeEnum.hpp"

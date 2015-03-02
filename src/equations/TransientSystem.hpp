@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __transient_system_h__
-#define __transient_system_h__
+#ifndef __femus_equations_TransientSystem_hpp__
+#define __femus_equations_TransientSystem_hpp__
 
 #include <string>
 

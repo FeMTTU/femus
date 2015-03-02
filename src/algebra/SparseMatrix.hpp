@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __sparse_matrix_h__
-#define __sparse_matrix_h__
+#ifndef __femus_algebra_SparseMatrix_hpp__
+#define __femus_algebra_SparseMatrix_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

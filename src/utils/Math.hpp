@@ -1,5 +1,5 @@
-#ifndef __math_hpp__
-#define __math_hpp__
+#ifndef __femus_utils_Math_hpp__
+#define __femus_utils_Math_hpp__
 
 
 #include "Typedefs.hpp"

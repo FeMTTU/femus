@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __parameter_hpp__
-#define __parameter_hpp__
+#ifndef __femus_physics_Parameter_hpp__
+#define __femus_physics_Parameter_hpp__
 
 
 namespace femus {

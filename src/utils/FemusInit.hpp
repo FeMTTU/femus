@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef _femttu_init_
-#define _femttu_init_
+#ifndef __femus_utils_FemusInit_hpp__
+#define __femus_utils_FemusInit_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

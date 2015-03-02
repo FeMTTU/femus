@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __petsc_vector_h__
-#define __petsc_vector_h__
+#ifndef __femus_algebra_PetscVector_hpp__
+#define __femus_algebra_PetscVector_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

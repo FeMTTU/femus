@@ -1,5 +1,5 @@
-#ifndef __fetri3_h__
-#define __fetri3_h__
+#ifndef __femus_meshGencase_FETri3_hpp__
+#define __femus_meshGencase_FETri3_hpp__
 
 //Class for
 

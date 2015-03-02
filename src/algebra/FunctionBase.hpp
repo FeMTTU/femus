@@ -13,8 +13,8 @@ PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
 
-#ifndef __FunctionBase_hpp__
-#define __FunctionBase_hpp__
+#ifndef __femus_algebra_FunctionBase_hpp__
+#define __femus_algebra_FunctionBase_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

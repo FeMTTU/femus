@@ -1,5 +1,5 @@
-#ifndef __parameters_hpp__
-#define __parameters_hpp__
+#ifndef __femus_utils_Parameters_hpp__
+#define __femus_utils_Parameters_hpp__
 
 // C++ includes
 #include <typeinfo>

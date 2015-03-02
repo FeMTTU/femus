@@ -17,8 +17,8 @@
  * The ElemType class
 */
 
-#ifndef __elem_type_hpp__
-#define __elem_type_hpp__
+#ifndef __femus_fe_ElemType_hpp__
+#define __femus_fe_ElemType_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

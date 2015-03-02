@@ -1,5 +1,5 @@
-#ifndef __various_casts__
-#define __various_casts__
+#ifndef __femus_utils_Casts_hpp__
+#define __femus_utils_Casts_hpp__
 
 //The appropriate includes...
 #include <cassert>

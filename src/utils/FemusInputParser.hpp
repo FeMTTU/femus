@@ -1,5 +1,5 @@
-#ifndef _rtimemap_h_
-#define _rtimemap_h_
+#ifndef __femus_utils_FemusInputParser_hpp__
+#define __femus_utils_FemusInputParser_hpp__
 
 
 #include <cstdlib>

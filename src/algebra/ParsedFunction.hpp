@@ -13,8 +13,8 @@ PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
 
-#ifndef __ParsedFunction_gghpp__
-#define __ParsedFunction_gghpp__
+#ifndef __femus_algebra_ParsedFunction_hpp__
+#define __femus_algebra_ParsedFunction_hpp__
 
 #include "FEMTTUConfig.h"
 

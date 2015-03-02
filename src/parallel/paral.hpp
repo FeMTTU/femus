@@ -1,5 +1,5 @@
-#ifndef    _paral_h_
-#define    _paral_h_
+#ifndef __femus_parallel_paral_hpp__
+#define __femus_parallel_paral_hpp__
 
 
 #include "FEMTTUConfig.h"

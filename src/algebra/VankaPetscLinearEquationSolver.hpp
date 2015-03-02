@@ -13,8 +13,8 @@
 
   =========================================================================*/
 
-#ifndef __VankaPetscLinearEquationSolver_hpp__
-#define __VankaPetscLinearEquationSolver_hpp__
+#ifndef __femus_algebra_VankaPetscLinearEquationSolver_hpp__
+#define __femus_algebra_VankaPetscLinearEquationSolver_hpp__
 
 #include "FEMTTUConfig.h"
 

@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __fluid_hpp__
-#define __fluid_hpp__
+#ifndef __femus_physics_Fluid_hpp__
+#define __femus_physics_Fluid_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

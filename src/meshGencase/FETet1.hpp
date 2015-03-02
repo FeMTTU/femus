@@ -1,5 +1,5 @@
-#ifndef __fetet1_h__
-#define __fetet1_h__
+#ifndef __femus_meshGencase_FETet1_hpp__
+#define __femus_meshGencase_FETet1_hpp__
 
 #include <cstdlib>
 #include <iostream>

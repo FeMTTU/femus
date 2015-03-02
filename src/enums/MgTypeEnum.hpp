@@ -1,5 +1,5 @@
-#ifndef __mgtypeenum_h__
-#define __mgtypeenum_h__
+#ifndef __femus_enums_MgTypeEnum_hpp__
+#define __femus_enums_MgTypeEnum_hpp__
 
 enum MgType {
     F_CYCLE=0,

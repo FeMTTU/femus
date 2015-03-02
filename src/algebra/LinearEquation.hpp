@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __linear_equation_hpp__
-#define __linear_equation_hpp__
+#ifndef __femus_algebra_LinearEquation_hpp__
+#define __femus_algebra_LinearEquation_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
