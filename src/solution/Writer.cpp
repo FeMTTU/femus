@@ -52,15 +52,17 @@ Writer::Writer(MultiLevelSolution& ml_sol):
 
 Writer::~Writer()
 {
-  for (int igridn=0; igridn<_gridn; igridn++) {
+  
     for (int itype=0; itype<3; itype++) {
       for (int jtype=0; jtype<3; jtype++) {
-	if(_ProlQitoQj[itype][jtype][igridn])
-	{
-          delete _ProlQitoQj[itype][jtype][igridn];
-	  _ProlQitoQj[itype][jtype][igridn] = NULL;
+	for (int igridn=0; igridn<_gridn; igridn++) {
+	  if(_ProlQitoQj[itype][jtype][igridn])
+	  {
+	    delete _ProlQitoQj[itype][jtype][igridn];
+	    _ProlQitoQj[itype][jtype][igridn] = NULL;
+	  }
 	}
-      }
+	_ProlQitoQj[itype][jtype].resize(0);
     }
   }
   
