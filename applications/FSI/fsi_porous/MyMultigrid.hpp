@@ -1,3 +1,8 @@
+#ifndef __femus_mymulti_hpp__
+#define __femus_mymulti_hpp__
+
+
+
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelMesh.hpp"
 #include "FemusInputParser.hpp"
@@ -29,3 +34,8 @@ public:
   
   
 };
+
+
+
+
+#endif

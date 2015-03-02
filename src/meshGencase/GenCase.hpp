@@ -1,5 +1,5 @@
-#ifndef __gencase__
-#define __gencase__
+#ifndef __meshGencase_GenCase_hpp__
+#define __meshGencase_GenCase_hpp__
 
 //C++
 #include <string>
