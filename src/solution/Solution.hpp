@@ -19,8 +19,8 @@
 */
 
 
-#ifndef __solution_hpp__
-#define __solution_hpp__
+#ifndef __femus_solution_Solution_hpp__
+#define __femus_solution_Solution_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

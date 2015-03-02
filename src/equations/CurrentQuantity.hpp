@@ -1,5 +1,5 @@
-#ifndef __quantitylocal_h__
-#define __quantitylocal_h__
+#ifndef __femus_equations_CurrentQuantity_hpp__
+#define __femus_equations_CurrentQuantity_hpp__
 
 #include <vector>
 #include "VBTypeEnum.hpp"

@@ -1,5 +1,5 @@
-#ifndef __solverpackageenum_h__
-#define __solverpackageenum_h__
+#ifndef __femus_enums_SolverPackageEnum_hpp__
+#define __femus_enums_SolverPackageEnum_hpp__
 
 enum SolverPackage {
     PETSC_SOLVERS=0,

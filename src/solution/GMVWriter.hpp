@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __gmvwriter_h_
-#define __gmvwriter_h_
+#ifndef __femus_solution_GMVWriter_hpp__
+#define __femus_solution_GMVWriter_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

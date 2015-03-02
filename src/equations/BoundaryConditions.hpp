@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __boundaryconditions_hpp__
-#define __boundaryconditions_hpp__
+#ifndef __femus_equations_BoundaryConditions_hpp__
+#define __femus_equations_BoundaryConditions_hpp__
 
 #include "Typedefs.hpp"
 

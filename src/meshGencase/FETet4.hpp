@@ -1,5 +1,5 @@
-#ifndef __fetet4_h__
-#define __fetet4_h__
+#ifndef __femus_meshGencase_FETet4_hpp__
+#define __femus_meshGencase_FETet4_hpp__
 
 //Class for
 

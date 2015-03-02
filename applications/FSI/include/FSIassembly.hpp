@@ -1,5 +1,5 @@
-#ifndef __FSIassembly_hpp__
-#define __FSIassembly_hpp__
+#ifndef __femus_include_FSIassembly_hpp__
+#define __femus_include_FSIassembly_hpp__
 
 #include "TransientSystem.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"

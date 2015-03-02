@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __meshrefinement_hpp__
-#define __meshrefinement_hpp__
+#ifndef __femus_mesh_MeshRefinement_hpp__
+#define __femus_mesh_MeshRefinement_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __elem_hpp__
-#define __elem_hpp__
+#ifndef __femus_mesh_Elem_hpp__
+#define __femus_mesh_Elem_hpp__
 
 
 namespace femus {

@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __writer_h_
-#define __writer_h_
+#ifndef __femus_solution_Writer_hpp__
+#define __femus_solution_Writer_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

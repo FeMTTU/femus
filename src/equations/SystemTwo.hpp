@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __mgsolbase_hpp_
-#define __mgsolbase_hpp_
+#ifndef __femus_equations_SystemTwo_hpp__
+#define __femus_equations_SystemTwo_hpp__
 
 //C++ includes
 #include <vector>

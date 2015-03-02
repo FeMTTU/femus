@@ -1,5 +1,5 @@
-#ifndef __physicsuser__
-#define __physicsuser__
+#ifndef __femus_tempopt_TempQuantities_hpp__
+#define __femus_tempopt_TempQuantities_hpp__
 
 #include <iostream>
 #include <cstdlib>

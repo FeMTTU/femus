@@ -1,5 +1,5 @@
-#ifndef __elemtypeenum_h__
-#define __elemtypeenum_h__
+#ifndef __femus_enums_ElemTypeEnum_hpp__
+#define __femus_enums_ElemTypeEnum_hpp__
 
 /** Defines an \p enum for geometric element types. */
 

@@ -1,5 +1,5 @@
-#ifndef __paralleltype__
-#define __paralleltype__
+#ifndef __femus_enums_ParalleltypeEnum_hpp__
+#define __femus_enums_ParalleltypeEnum_hpp__
 
 enum ParallelType {
     AUTOMATIC=0,

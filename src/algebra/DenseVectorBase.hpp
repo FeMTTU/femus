@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __dense_vector_base_h__
-#define __dense_vector_base_h__
+#ifndef __femus_algebra_DenseVectorBase_hpp__
+#define __femus_algebra_DenseVectorBase_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

@@ -1,5 +1,5 @@
-#ifndef _femusdefault_h
-#define _femusdefault_h
+#ifndef __femus_utils_FemusDefault_hpp__
+#define __femus_utils_FemusDefault_hpp__
 
 
 // This file is meant to hold all the DEFAULT configuration of the library.

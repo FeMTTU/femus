@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __mesh123D_h
-#define __mesh123D_h
+#ifndef __femus_meshGencase_MultiLevelMeshTwo_hpp__
+#define __femus_meshGencase_MultiLevelMeshTwo_hpp__
 
 //C++ 
 #include <fstream>

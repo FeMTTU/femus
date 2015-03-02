@@ -1,5 +1,5 @@
-#ifndef __main_hpp__
-#define __main_hpp__
+#ifndef __femus_fsi_porous_main_hpp__
+#define __femus_fsi_porous_main_hpp__
 
 
 #include<iostream>

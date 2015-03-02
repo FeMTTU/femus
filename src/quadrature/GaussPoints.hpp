@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __gauss_points_hpp__
-#define __gauss_points_hpp__
+#ifndef __femus_quadrature_GaussPoints_hpp__
+#define __femus_quadrature_GaussPoints_hpp__
 
 #include <vector>
 #include <string>

@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __GambitIO_hpp__
-#define __GambitIO_hpp__
+#ifndef __femus_mesh_GambitIO_hpp__
+#define __femus_mesh_GambitIO_hpp__
 
 
 // Local includes

@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __petsc_preconditioner_h__
-#define __petsc_preconditioner_h__
+#ifndef __femus_algebra_PetscPreconditioner_hpp__
+#define __femus_algebra_PetscPreconditioner_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

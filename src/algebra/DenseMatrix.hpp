@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __dense_matrixM_h__
-#define __dense_matrixM_h__
+#ifndef __femus_algebra_DenseMatrix_hpp__
+#define __femus_algebra_DenseMatrix_hpp__
 
 // C++ includes
 #include <vector>
