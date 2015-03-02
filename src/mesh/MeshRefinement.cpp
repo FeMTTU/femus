@@ -297,6 +297,8 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   
   _mesh._coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
   _mesh._coordinate->ResizeSolutionVector("AMR");
+  
+  _mesh.BuildLagrangeProlongatorMatrices();
      
   //build projection Matrix
   unsigned thisSolType=2;

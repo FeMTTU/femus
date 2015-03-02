@@ -53,6 +53,15 @@ Mesh::~Mesh(){
     delete _coordinate;
     delete [] epart;
     delete [] npart;
+    
+    for (int itype=0; itype<3; itype++) {
+      for (int jtype=0; jtype<3; jtype++) {
+	delete _ProlQitoQj[itype][jtype];
+	_ProlQitoQj[itype][jtype] = NULL;
+      }
+    }
+    
+    
 }
 
 /// print Mesh info
@@ -67,8 +76,10 @@ void Mesh::PrintInfo() {
 /**
  *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file (Now only the Gambit Neutral File)
  **/
-void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag) {
-    
+void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag, const elem_type *otherFiniteElement[6][5]) {
+  
+  SetFiniteElementPtr(otherFiniteElement);
+  
   vector <vector <double> > coords(3);  
     
   _grid=0;
@@ -128,7 +139,9 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
   
   _coordinate->ResizeSolutionVector("AMR");
-    
+  
+  BuildLagrangeProlongatorMatrices();
+  
 };
 
 /**
@@ -139,7 +152,10 @@ void Mesh::GenerateCoarseBoxMesh(
         const double xmin, const double xmax,
         const double ymin, const double ymax,
         const double zmin, const double zmax,
-        const ElemType type, std::vector<bool> &type_elem_flag) {
+        const ElemType type, std::vector<bool> &type_elem_flag,
+	const elem_type *otherFiniteElement[6][5]) {
+  
+  SetFiniteElementPtr(otherFiniteElement);
   
   vector <vector <double> > coords(3);  
     
@@ -184,6 +200,8 @@ void Mesh::GenerateCoarseBoxMesh(
   _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
   
   _coordinate->ResizeSolutionVector("AMR");
+  
+  BuildLagrangeProlongatorMatrices();
   
 }  
   
@@ -639,6 +657,76 @@ void Mesh::FillISvector() {
   return; 
   
 }
+
+
+
+void Mesh::BuildLagrangeProlongatorMatrices(){
+  
+  for(int itype=0;itype<3;itype++){
+    int ni = MetisOffset[itype][_nprocs];
+    int ni_loc = own_size[itype][_iproc];
+    for (int jtype=0; jtype<3; jtype++) {
+      int nj = MetisOffset[jtype][_nprocs];
+      int nj_loc = own_size[itype][_iproc]; 	
+	
+      NumericVector *NNZ_d = NumericVector::build().release();
+      NumericVector *NNZ_o = NumericVector::build().release();
+      if(_nprocs==1) { // IF SERIAL
+	NNZ_d->init(ni,ni_loc,false,SERIAL);
+	NNZ_o->init(ni,ni_loc,false,SERIAL);
+      } 
+      else{
+	NNZ_d->init(ni,ni_loc,false,PARALLEL); 
+	NNZ_o->init(ni,ni_loc,false,PARALLEL); 
+      }
+      NNZ_d->zero();
+      NNZ_o->zero();
+	
+      for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+	for (int iel_mts=IS_Mts2Gmt_elem_offset[isdom];iel_mts < IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
+	  unsigned iel = IS_Mts2Gmt_elem[iel_mts];
+	  short unsigned ielt= el->GetElementType(iel);
+          _finiteElement[ielt][jtype]->GetSparsityPatternSize(*this, iel, NNZ_d, NNZ_o, itype);	  
+	}
+      }
+	
+      NNZ_d->close();
+      NNZ_o->close();
+    	
+      unsigned offset = MetisOffset[itype][_iproc];
+	
+      vector <int> nnz_d(ni_loc);
+      vector <int> nnz_o(ni_loc);
+      for(int i=0; i<ni_loc;i++){
+	nnz_d[i]=static_cast <int> ((*NNZ_d)(offset+i));
+	nnz_o[i]=static_cast <int> ((*NNZ_o)(offset+i));
+      }
+            
+      delete NNZ_d;
+      delete NNZ_o;
+	
+      _ProlQitoQj[itype][jtype] = SparseMatrix::build().release();
+      _ProlQitoQj[itype][jtype]->init(ni,nj, own_size[itype][_iproc], own_size[jtype][_iproc],nnz_d,nnz_o);
+      for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+	for (int iel_mts=IS_Mts2Gmt_elem_offset[isdom];iel_mts < IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
+	  unsigned iel = IS_Mts2Gmt_elem[iel_mts];
+	  short unsigned ielt=el->GetElementType(iel);
+          _finiteElement[ielt][jtype]->BuildProlongation(*this, iel, _ProlQitoQj[itype][jtype], itype);	  
+	}
+      }
+      _ProlQitoQj[itype][jtype]->close();
+    }
+  }
+}
+  
+  
+  
+  
+
+
+
+
+
 
 } //end namespace femus
 

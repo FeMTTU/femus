@@ -116,12 +116,14 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
     _level0.resize(_gridn0);
     _finiteElementGeometryFlag.resize(5,false);
     
+    BuildElemType(GaussOrder);
+    
     //coarse mesh
     _level0[0] = new Mesh();
     std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
-    _level0[0]->ReadCoarseMesh(mesh_file, Lref,_finiteElementGeometryFlag);
+    _level0[0]->ReadCoarseMesh(mesh_file, Lref,_finiteElementGeometryFlag,_finiteElement);
     
-    BuildElemType(GaussOrder);
+    
 
     //totally refined meshes
     for (unsigned i=1; i<_gridr0; i++) {
@@ -180,12 +182,13 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
     _level0.resize(_gridn0);
     _finiteElementGeometryFlag.resize(5,false);
     
+    BuildElemType(GaussOrder);
+    
     //coarse mesh
     _level0[0] = new Mesh();
     std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
-    _level0[0]->ReadCoarseMesh(mesh_file, Lref,_finiteElementGeometryFlag);
+    _level0[0]->ReadCoarseMesh(mesh_file, Lref,_finiteElementGeometryFlag,_finiteElement);
 
-    BuildElemType(GaussOrder);
    
     _gridn=_gridn0;
     _gridr=_gridr0;
@@ -207,14 +210,14 @@ void MultiLevelMesh::GenerateCoarseBoxMesh(
     _level0.resize(_gridn0);
     _finiteElementGeometryFlag.resize(5,false);
     
+    BuildElemType(GaussOrder);
+     
     //coarse mesh
     _level0[0] = new Mesh();
     std::cout << " Building brick mesh using the built-in mesh generator" << std::endl;
     
-    _level0[0]->GenerateCoarseBoxMesh(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_finiteElementGeometryFlag);
-
-    BuildElemType(GaussOrder);
-    
+    _level0[0]->GenerateCoarseBoxMesh(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_finiteElementGeometryFlag,_finiteElement);
+        
     _gridn=_gridn0;
     _gridr=_gridr0;
     _level.resize(_gridn);
