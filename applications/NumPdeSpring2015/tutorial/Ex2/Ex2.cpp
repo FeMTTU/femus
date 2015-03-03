@@ -41,8 +41,8 @@ int main(int argc, char **args) {
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
   
-  unsigned maxNumberOfMeshes=5;
-  vector < vector < double > >semiNorm;
+  unsigned maxNumberOfMeshes = 5;
+  vector < vector < double > > semiNorm;
   semiNorm.resize(maxNumberOfMeshes);
   
   for(unsigned i = 0; i < maxNumberOfMeshes; i++){ // loop on the mesh level
@@ -102,10 +102,10 @@ int main(int argc, char **args) {
     }
   }
   
-  
+  // print the seminorm of the error and the order of convergence between different levels
   std::cout<<std::endl;
   std::cout<<std::endl;
-  std::cout<<"SEMINORM ERROR:\n\n";
+  std::cout<<"SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout<<"LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
   for(unsigned i=0; i<maxNumberOfMeshes;i++){
     std::cout<<i+1<<"\t";

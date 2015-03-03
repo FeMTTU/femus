@@ -47,35 +47,40 @@ unsigned Mesh::_ref_index=4;  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
 unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
 
 //------------------------------------------------------------------------------------------------------
-Mesh::Mesh(){
-  for(int i=0;i<5;i++){
-    _ProjMat[i]=NULL;
+  Mesh::Mesh(){
+    for(int i=0;i<5;i++){
+      _ProjMat[i]=NULL;
+    }
+  
+    for (int itype=0; itype<3; itype++) {
+      for (int jtype=0; jtype<3; jtype++) {
+	_ProlQitoQj[itype][jtype] = NULL;
+      }
+    }
   }
-}
 
 
-Mesh::~Mesh(){
+  Mesh::~Mesh(){
     delete el;
     _coordinate->FreeSolutionVectors(); 
     delete _coordinate;
-    delete [] epart;
-    delete [] npart;
     
     for (int itype=0; itype<3; itype++) {
       for (int jtype=0; jtype<3; jtype++) {
-	delete _ProlQitoQj[itype][jtype];
-	_ProlQitoQj[itype][jtype] = NULL;
+	if(_ProlQitoQj[itype][jtype]){
+	  delete _ProlQitoQj[itype][jtype];
+	  _ProlQitoQj[itype][jtype] = NULL;
+	}
       }
     }
     
     for (unsigned i=0; i<5; i++) {
       if (_ProjMat[i]) {
 	delete _ProjMat[i];
+	_ProjMat[i]=NULL;
       }
-    }
-    
-    
-}
+    }    
+  }
 
 /// print Mesh info
 void Mesh::PrintInfo() {
@@ -118,7 +123,6 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   
   MeshMetisPartitioning meshmetispartitioning(*this);
   meshmetispartitioning.DoPartition();
-  //GenerateMetisMeshPartition();
   
   FillISvector();
   
@@ -140,15 +144,9 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _coordinate->ResizeSolutionVector("Y");
   _coordinate->ResizeSolutionVector("Z");
     
-  //_coordinate->SetCoarseCoordinates(coords);
   _coordinate->GetSolutionName("X") = coords[0];
   _coordinate->GetSolutionName("Y") = coords[1];
   _coordinate->GetSolutionName("Z") = coords[2];
-//   *ppi = coords[0];
-  
-//   = coords[0];
-//   _coordinate->GetSolutionName("Y") = coords[1];
-//   _coordinate->GetSolutionName("Z") = coords[2];
   
   _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
   
@@ -180,7 +178,6 @@ void Mesh::GenerateCoarseBoxMesh(
   
   MeshMetisPartitioning meshmetispartitioning(*this);
   meshmetispartitioning.DoPartition();
-  //GenerateMetisMeshPartition();
   
   FillISvector();
   
@@ -421,9 +418,6 @@ void Mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]){
     for(int j=0;j<5;j++)
       _finiteElement[i][j] = OtherFiniteElement[i][j];
 }
-
-
-
 
 
 

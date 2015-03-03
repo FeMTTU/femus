@@ -157,8 +157,8 @@ public:
     vector< vector<int> > ghost_nd_mts[5];
     vector <unsigned> ghost_size[5];
     elem *el;  //< elements
-    int *epart;
-    int *npart;
+    vector < int > epart;
+    vector < int > npart;
     int nsubdom;
     static bool (* _SetRefinementFlag)(const double &x, const double &y, const double &z,
                                        const int &ElemGroupNumber,const int &level);
