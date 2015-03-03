@@ -19,8 +19,7 @@ int main(int argc,char **args) {
   //Adimensional
   double Lref = 1.;
   
-  //MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,SetRefinementFlag); 
-//   MultiLevelMesh ml_msh;
+  MultiLevelMesh ml_msh;
 //   ml_msh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
   
   return 0;

@@ -38,7 +38,7 @@ class MultiLevelMesh {
 
 public:
 
-    /** @deprecated, if you instantiate with this without calling other functions later, the destructor at the end gives seg fault clearly */
+    /** Constructor */
     MultiLevelMesh();
 
     MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr,
