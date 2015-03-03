@@ -73,11 +73,36 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
   // later on we will have to relax this assumption, which implies probably adding one argument either in this function, or better in the constructor
   // (in any case, that would remove polymorphism for the children of MeshInput)
   
-//   unsigned found = name.find_last_of("/");
-//   unsigned found2 = name.find_last_of(".");
-//   mesh_menu = name.substr(0,found2);
-  
-  
+    hsize_t dims[2];
+    std::string el_fem_type_vol(""); 
+    std::string el_fem_type_bd("");
+    
+    hid_t  file_id = H5Fopen(name.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
+    
+    hid_t  gid = H5Gopen(file_id,mesh_ensemble.c_str(),H5P_DEFAULT);
+      
+    hsize_t     n_menus;
+    hid_t status= H5Gget_num_objs(gid, &n_menus);  // number of menus
+    if(status !=0) { std::cout << "Number of mesh menus not found"; abort(); }
+    
+    std::vector<int>  itype_vol;
+     itype_vol.resize(n_menus);
+    menu_names.resize(n_menus);
+    uint menu_max_length = 100;  ///@todo this length of the menu string is conservative enough...
+    for (unsigned j=0; j<menu_names.size(); j++) {
+      menu_names[j] = new char[menu_max_length];
+     H5Gget_objname_by_idx(gid,j,menu_names[j],menu_max_length); ///@deprecated see the HDF doc to replace this
+     std::string tempj(menu_names[j]);
+     itype_vol[j] =  ReadFE(file_id,el_fem_type_vol,el_fem_type_bd,tempj);
+    }
+
+    
+    for (unsigned j=0; j<menu_names.size(); j++) { delete [] menu_names[j]; }
+    
+    status = H5Fclose(file_id);
+ 
+    exit(0);   // just to make the test exit successfully
+
 //   Mesh& mesh = GetMesh();
 // 
 //   std::ifstream inf;
@@ -295,7 +320,8 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
 int  SalomeIO::ReadFE(
   hid_t file_id,
   std::string & el_fem_type_vol,
-  std::string & el_fem_type_bd
+  std::string & el_fem_type_bd,
+  const  std::string menu_name
 ) {
 
     Mesh& mesh = GetMesh();
@@ -324,7 +350,7 @@ int  SalomeIO::ReadFE(
     fem_type_bd["SE2"] = 0;  fem_type_bd["SE3"] = 0;
   }
 
-  std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + connectivity + "/";
+  std::string my_mesh_name_dir = mesh_ensemble +  "/" + menu_name + "/" +  aux_zeroone + "/" + connectivity + "/";  ///@todo here we have to loop
   
   hid_t       gid=H5Gopen(file_id,my_mesh_name_dir.c_str(),H5P_DEFAULT); // group identity
   hsize_t     n_fem_type;
