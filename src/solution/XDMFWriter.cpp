@@ -68,6 +68,8 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
 { 
 #ifdef HAVE_HDF5
   
+  MultiLevelMesh *mlMsh = _ml_sol._ml_msh;
+  
   bool test_all=!(vars[0].compare("All"));
     
   unsigned index=0;
@@ -87,7 +89,7 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
 
   //I assume that the mesh is not mixed
   std::string type_elem;
-  unsigned elemtype = _ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementType(0);
+  unsigned elemtype = mlMsh->GetLevel(_gridn-1u)->el->GetElementType(0);
   type_elem = XDMFWriter::type_el[index][elemtype];
   
   if (type_elem.compare("Not_implemented") == 0) 
@@ -98,19 +100,19 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
   
   unsigned nvt=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+    unsigned nvt_ig=mlMsh->GetLevel(ig)->GetDofNumber(index_nd);
     nvt+=nvt_ig;
   } 
   
   // Printing connectivity
   unsigned nel=0;
   for(unsigned ig=0;ig<_gridn-1u;ig++) {
-    nel+=( _ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements() - _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
+    nel+=( mlMsh->GetLevel(ig)->GetNumberOfElements() - mlMsh->GetLevel(ig)->el->GetRefinedElementNumber());
   }
-  nel+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->GetNumberOfElements();
+  nel+=mlMsh->GetLevel(_gridn-1u)->GetNumberOfElements();
   
   unsigned icount;
-  unsigned el_dof_number  = _ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index);
+  unsigned el_dof_number  = mlMsh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index);
   int *var_int            = new int [nel*el_dof_number];
   float *var_el_f         = new float [nel];
   float *var_nd_f         = new float [nvt];
@@ -216,14 +218,14 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
     for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
       NumericVector* mysol;
       mysol = NumericVector::build().release();
-      //mysol->init(_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
-      mysol->init(_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],_ml_sol._ml_msh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
-      mysol->matrix_mult(*_ml_sol._ml_msh->GetLevel(ig)->_coordinate->_Sol[i],_ml_sol._ml_msh->GetLevel(ig)->_ProlQitoQj[index_nd][2][ig]);
-      unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+      //mysol->init(mlMsh->GetLevel(ig)->GetDofNumber(index_nd),mlMsh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
+      mysol->init(mlMsh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],mlMsh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
+      mysol->matrix_mult(*mlMsh->GetLevel(ig)->_coordinate->_Sol[i],mlMsh->GetLevel(ig)->_ProlQitoQj[index_nd][2][ig]);
+      unsigned nvt_ig=mlMsh->GetLevel(ig)->GetDofNumber(index_nd);
       for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
       if (_moving_mesh) {
 	unsigned varind_DXDYDZ=_ml_sol.GetIndex(_moving_vars[i].c_str());
-	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[varind_DXDYDZ],_ml_sol._ml_msh->GetLevel(ig)->_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(varind_DXDYDZ)][ig]);
+	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[varind_DXDYDZ],mlMsh->GetLevel(ig)->_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(varind_DXDYDZ)][ig]);
 	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] += (*mysol)(ii);
       }
       offset_nvt+=nvt_ig;
@@ -248,18 +250,18 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
   icount = 0;
   unsigned offset_conn=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); iel++) {
-      if (_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-        for (unsigned j=0; j<_ml_sol._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
+    for (unsigned iel=0; iel<mlMsh->GetLevel(ig)->GetNumberOfElements(); iel++) {
+      if (mlMsh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
+        for (unsigned j=0; j<mlMsh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
 	  unsigned vtk_loc_conn = map_pr[j];
-	  unsigned jnode=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
-	  unsigned jnode_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
+	  unsigned jnode=mlMsh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
+	  unsigned jnode_Metis = mlMsh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
 	  var_int[icount] = offset_conn + jnode_Metis;
 	  icount++;
 	}
       }
     }
-    offset_conn += _ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+    offset_conn += mlMsh->GetLevel(ig)->GetDofNumber(index_nd);
   }
   
   dimsf[0] = nel*el_dof_number ;  dimsf[1] = 1;
@@ -276,10 +278,10 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
   // print regions
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-      if (ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
-	var_int[icount] = _ml_sol._ml_msh->GetLevel(ig)->el->GetElementGroup(iel_Metis);
+    for (unsigned ii=0; ii<mlMsh->GetLevel(ig)->GetNumberOfElements(); ii++) {
+      if (ig==_gridn-1u || 0==mlMsh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	unsigned iel_Metis = mlMsh->GetLevel(ig)->GetMetisDof(ii,3);
+	var_int[icount] = mlMsh->GetLevel(ig)->el->GetElementGroup(iel_Metis);
 	icount++;
       }
     }
@@ -300,9 +302,9 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
     if (_ml_sol.GetSolutionType(indx)>=3) {
       icount=0;
       for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-	  if (ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	    unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,_ml_sol.GetSolutionType(indx));
+	for (unsigned ii=0; ii<mlMsh->GetLevel(ig)->GetNumberOfElements(); ii++) {
+	  if (ig==_gridn-1u || 0==mlMsh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	    unsigned iel_Metis = mlMsh->GetLevel(ig)->GetMetisDof(ii,_ml_sol.GetSolutionType(indx));
 	    var_el_f[icount]=(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx])(iel_Metis);
 	    icount++;
 	  }
@@ -329,10 +331,10 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
         NumericVector* mysol;
 	mysol = NumericVector::build().release();
-        //mysol->init(_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
-	mysol->init(_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],_ml_sol._ml_msh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
-	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx],_ml_sol._ml_msh->GetLevel(ig)->_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(indx)][ig]);
-	unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+        //mysol->init(mlMsh->GetLevel(ig)->GetDofNumber(index_nd),mlMsh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
+	mysol->init(mlMsh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],mlMsh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
+	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx],mlMsh->GetLevel(ig)->_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(indx)][ig]);
+	unsigned nvt_ig=mlMsh->GetLevel(ig)->GetDofNumber(index_nd);
 	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
 	offset_nvt+=nvt_ig;
 	delete mysol;
