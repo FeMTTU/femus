@@ -302,8 +302,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
      
   //build projection Matrix
   unsigned thisSolType=2;
-  if(_mesh._coordinate->_ProjMatFlag[thisSolType]==0){ 
-    _mesh._coordinate->_ProjMatFlag[thisSolType]=1;
+  if (!_mesh._ProjMat[thisSolType]){
 
     int nf     = _mesh.MetisOffset[thisSolType][_nprocs];
     int nc     = mshc->MetisOffset[thisSolType][_nprocs];
@@ -344,8 +343,8 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
     delete NNZ_o;
     
     //build matrix
-    _mesh._coordinate->_ProjMat[thisSolType] = SparseMatrix::build().release();
-    _mesh._coordinate->_ProjMat[thisSolType]->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
+    _mesh._ProjMat[thisSolType] = SparseMatrix::build().release();
+    _mesh._ProjMat[thisSolType]->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
     // loop on the coarse grid 
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
       for (int iel_mts=mshc->IS_Mts2Gmt_elem_offset[isdom]; 
@@ -353,16 +352,16 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if( mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
 	  short unsigned ielt= mshc->el->GetElementType(iel);
-	  _mesh._finiteElement[ielt][thisSolType]->BuildProlongation(_mesh,*mshc,iel,_mesh._coordinate->_ProjMat[thisSolType]); 
+	  _mesh._finiteElement[ielt][thisSolType]->BuildProlongation(_mesh,*mshc,iel,_mesh._ProjMat[thisSolType]); 
 	}
       }
     }
-    _mesh._coordinate->_ProjMat[thisSolType]->close();
+    _mesh._ProjMat[thisSolType]->close();
   }
       
-  _mesh._coordinate->_Sol[0]->matrix_mult(*mshc->_coordinate->_Sol[0],*_mesh._coordinate->_ProjMat[thisSolType]);
-  _mesh._coordinate->_Sol[1]->matrix_mult(*mshc->_coordinate->_Sol[1],*_mesh._coordinate->_ProjMat[thisSolType]);
-  _mesh._coordinate->_Sol[2]->matrix_mult(*mshc->_coordinate->_Sol[2],*_mesh._coordinate->_ProjMat[thisSolType]);
+  _mesh._coordinate->_Sol[0]->matrix_mult(*mshc->_coordinate->_Sol[0],*_mesh._ProjMat[thisSolType]);
+  _mesh._coordinate->_Sol[1]->matrix_mult(*mshc->_coordinate->_Sol[1],*_mesh._ProjMat[thisSolType]);
+  _mesh._coordinate->_Sol[2]->matrix_mult(*mshc->_coordinate->_Sol[2],*_mesh._ProjMat[thisSolType]);
   _mesh._coordinate->_Sol[0]->close();
   _mesh._coordinate->_Sol[1]->close();
   _mesh._coordinate->_Sol[2]->close();     

@@ -45,7 +45,7 @@ public:
 
     /** Constructor */
     explicit
-    Mesh() {};
+    Mesh();
 
     /** destructor */
     ~Mesh();
@@ -167,7 +167,10 @@ public:
     
     SparseMatrix* _ProlQitoQj[3][3];
     void BuildLagrangeProlongatorMatrices();
-        
+       
+    /** one for every type of variable */
+    SparseMatrix* _ProjMat[5];
+    
 private:
   
     /** To be added */

@@ -104,10 +104,6 @@ public:
     vector <bool> _ResEpsBdcFlag;
     
     vector < vector <NumericVector*> > _GradVec;
-
-    /** one for every type of variable */
-    SparseMatrix* _ProjMat[5];
-    bool _ProjMatFlag[5];
     
     vector <SparseMatrix*> _GradMat[5];
    // bool _GradMatFlag[5];

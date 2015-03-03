@@ -157,15 +157,6 @@ void MultiLevelSolution::PairSolution(const char solution_name[], const char sol
 // *******************************************************
 
 
-
-
-
-
-
-
-
-
-
 void MultiLevelSolution::Initialize(const char name[], initfunc func) {
   
   unsigned i_start;
@@ -286,18 +277,18 @@ void MultiLevelSolution::BuildProlongatorMatrix(unsigned gridf, unsigned SolInde
     exit(0);
   }
   
-  unsigned ThisSolType=_SolType[SolIndex];
+  unsigned thisSolType=_SolType[SolIndex];
     
-  if(_solution[gridf]->_ProjMatFlag[ThisSolType]==0){
-    _solution[gridf]->_ProjMatFlag[ThisSolType]=1;
+  Mesh* mshf = _ml_msh->GetLevel(gridf);
     
-    Mesh* mshf = _ml_msh->GetLevel(gridf);
+  if( !mshf->_ProjMat[thisSolType] ){
+    
     Mesh* mshc = _ml_msh->GetLevel(gridf-1);
     
-    int nf     = mshf->MetisOffset[ThisSolType][_nprocs];
-    int nc     = mshc->MetisOffset[ThisSolType][_nprocs];
-    int nf_loc = mshf->own_size[ThisSolType][_iproc];
-    int nc_loc = mshc->own_size[ThisSolType][_iproc]; 
+    int nf     = mshf->MetisOffset[thisSolType][_nprocs];
+    int nc     = mshc->MetisOffset[thisSolType][_nprocs];
+    int nf_loc = mshf->own_size[thisSolType][_iproc];
+    int nc_loc = mshc->own_size[thisSolType][_iproc]; 
    
     //build matrix sparsity pattern size
     
@@ -314,14 +305,14 @@ void MultiLevelSolution::BuildProlongatorMatrix(unsigned gridf, unsigned SolInde
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
 	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _ml_msh->_finiteElement[ielt][ThisSolType]->GetSparsityPatternSize(*mshf, *mshc, iel, NNZ_d, NNZ_o); 
+	  _ml_msh->_finiteElement[ielt][thisSolType]->GetSparsityPatternSize(*mshf, *mshc, iel, NNZ_d, NNZ_o); 
 	}
       }
     }
     NNZ_d->close();
     NNZ_o->close();
     
-    unsigned offset = mshf->MetisOffset[ThisSolType][_iproc];
+    unsigned offset = mshf->MetisOffset[thisSolType][_iproc];
     vector <int> nnz_d(nf_loc);
     vector <int> nnz_o(nf_loc);
     for(int i=0; i<nf_loc;i++){
@@ -334,8 +325,8 @@ void MultiLevelSolution::BuildProlongatorMatrix(unsigned gridf, unsigned SolInde
     
     //build matrix     
     
-    _solution[gridf]->_ProjMat[ThisSolType] = SparseMatrix::build().release();
-    _solution[gridf]->_ProjMat[ThisSolType]->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
+    mshf->_ProjMat[thisSolType] = SparseMatrix::build().release();
+    mshf->_ProjMat[thisSolType]->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
     
     // loop on the coarse grid 
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
@@ -344,11 +335,11 @@ void MultiLevelSolution::BuildProlongatorMatrix(unsigned gridf, unsigned SolInde
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
 	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _ml_msh->_finiteElement[ielt][ThisSolType]->BuildProlongation(*mshf,*mshc,iel, _solution[gridf]->_ProjMat[ThisSolType]); 
+	  _ml_msh->_finiteElement[ielt][thisSolType]->BuildProlongation(*mshf,*mshc,iel, mshf->_ProjMat[thisSolType]); 
 	}
       }
     }
-    _solution[gridf]->_ProjMat[ThisSolType]->close();
+    mshf->_ProjMat[thisSolType]->close();
   }
 }
 

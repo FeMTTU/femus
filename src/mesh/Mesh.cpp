@@ -47,6 +47,12 @@ unsigned Mesh::_ref_index=4;  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
 unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
 
 //------------------------------------------------------------------------------------------------------
+Mesh::Mesh(){
+  for(int i=0;i<5;i++){
+    _ProjMat[i]=NULL;
+  }
+}
+
 
 Mesh::~Mesh(){
     delete el;
@@ -59,6 +65,12 @@ Mesh::~Mesh(){
       for (int jtype=0; jtype<3; jtype++) {
 	delete _ProlQitoQj[itype][jtype];
 	_ProlQitoQj[itype][jtype] = NULL;
+      }
+    }
+    
+    for (unsigned i=0; i<5; i++) {
+      if (_ProjMat[i]) {
+	delete _ProjMat[i];
       }
     }
     

@@ -403,7 +403,7 @@ void LinearImplicitSystem::ProlongatorSol(unsigned gridf) {
     unsigned SolIndex=_SolSystemPdeIndex[k];
     unsigned Typeindex=_ml_sol->GetSolutionType(SolIndex);
     
-    _solution[gridf]->_Sol[SolIndex]->matrix_mult(*_solution[gridf-1]->_Sol[SolIndex],*_solution[gridf]->_ProjMat[Typeindex]);
+    _solution[gridf]->_Sol[SolIndex]->matrix_mult(*_solution[gridf-1]->_Sol[SolIndex],*_msh[gridf]->_ProjMat[Typeindex]);
     _solution[gridf]->_Sol[SolIndex]->close();     
   }
 }
