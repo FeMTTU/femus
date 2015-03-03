@@ -62,9 +62,9 @@ class SalomeIO : public MeshInput<Mesh>
    static const unsigned GambitToFemusFaceIndex[6][6];
 
    /** Read FE type */
-   int  ReadFE(hid_t file_id, std::string & el_fem_type_vol, std::string & el_fem_type_bd);   
+   int  ReadFE(hid_t file_id, std::string & el_fem_type_vol, std::string & el_fem_type_bd, const  std::string menu_name);   
    
-   std::string mesh_menu;               //Mesh_1; strip from file name by removing .med
+   std::vector<char*> menu_names;
    static const std::string group_name_begin; //FAS
    static const std::string group_name_end;   //ELEME
    static const std::string mesh_ensemble;        // ENS_MAA
