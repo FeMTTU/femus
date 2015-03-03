@@ -1,5 +1,5 @@
-#ifndef _geomeltype_enum
-#define _geomeltype_enum
+#ifndef __femus_enums_GeomElTypeEnum_hpp__
+#define __femus_enums_GeomElTypeEnum_hpp__
 
 
 enum  GeomElType { HEX=0, 

@@ -1,5 +1,5 @@
-#ifndef _fetypeenum__
-#define _fetypeenum__
+#ifndef __femus_enums_FElemTypeEnum_hpp__
+#define __femus_enums_FElemTypeEnum_hpp__
 
 enum  FEFamily {
     LAGRANGE = 0,

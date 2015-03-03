@@ -1,5 +1,5 @@
-#ifndef __fehex8_h__
-#define __fehex8_h__
+#ifndef __femus_meshGencase_FEHex8_hpp__
+#define __femus_meshGencase_FEHex8_hpp__
 
 
 

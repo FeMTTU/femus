@@ -13,13 +13,13 @@
 
 =========================================================================*/
 
-#ifndef __parallel_h__
-#define __parallel_h__
+#ifndef __femus_parallel_Parallel_hpp__
+#define __femus_parallel_Parallel_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 #ifdef HAVE_MPI
 # include <mpi.h>

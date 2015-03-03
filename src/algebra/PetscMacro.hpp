@@ -1,8 +1,8 @@
-#ifndef __petsc_macro_h__
-#define __petsc_macro_h__
+#ifndef __femus_algebra_PetscMacro_hpp__
+#define __femus_algebra_PetscMacro_hpp__
 
 // #include "SolverlibConf.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 #ifdef HAVE_PETSC
 

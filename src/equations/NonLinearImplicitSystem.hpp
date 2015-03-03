@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __nonlinear_implicit_system_h_
-#define __nonlinear_implicit_system_h_
+#ifndef __femus_equations_NonLinearImplicitSystem_hpp__
+#define __femus_equations_NonLinearImplicitSystem_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

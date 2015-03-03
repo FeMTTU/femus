@@ -1,5 +1,5 @@
-#ifndef __dirichletBCtypeenum_h__
-#define __dirichletBCtypeenum_h__
+#ifndef __femus_enums_DirichletBCTypeEnum_hpp__
+#define __femus_enums_DirichletBCTypeEnum_hpp__
 
 enum DirichletBCType {
     PENALTY=0,

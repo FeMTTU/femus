@@ -13,8 +13,8 @@ PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
 
-#ifndef __jsoninputparser_hpp__
-#define __jsoninputparser_hpp__
+#ifndef __femus_utils_JsonInputParser_hpp__
+#define __femus_utils_JsonInputParser_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

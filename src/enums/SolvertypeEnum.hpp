@@ -1,5 +1,5 @@
-#ifndef __solvertype__
-#define __solvertype__
+#ifndef __femus_enums_SolvertypeEnum_hpp__
+#define __femus_enums_SolvertypeEnum_hpp__
 
 enum SolverType {
     CG=0,

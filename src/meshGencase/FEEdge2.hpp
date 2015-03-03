@@ -1,5 +1,5 @@
-#ifndef __feedge2_h__
-#define __feedge2_h__
+#ifndef __femus_meshGencase_FEEdge2_hpp__
+#define __femus_meshGencase_FEEdge2_hpp__
 
 //Class for
 #include <cstdlib>

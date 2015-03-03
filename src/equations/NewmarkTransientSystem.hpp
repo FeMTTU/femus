@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __newmark_transient_system_h__
-#define __newmark_transient_system_h__
+#ifndef __femus_equations_NewmarkTransientSystem_hpp__
+#define __femus_equations_NewmarkTransientSystem_hpp__
 
 //------------------------------------------------------------------------------
 // includes

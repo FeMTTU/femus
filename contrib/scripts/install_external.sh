@@ -4,7 +4,6 @@
 ######################################################
 # Now I'll do like this. this script must be copied in the main femus directory 
 # and completed with the machine dependent stuff. then it must be run.
-# first of all it creates the folder ExternalLibraries which will be NOT TRACKED using .gitignore!!!
 
 #problemi di questo script: se si interrompe non basta rigirarlo
 # non basta che il file sia corrotto

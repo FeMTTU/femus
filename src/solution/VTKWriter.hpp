@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __vtkwriter_h_
-#define __vtkwriter_h_
+#ifndef __femus_solution_VTKWriter_hpp__
+#define __femus_solution_VTKWriter_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

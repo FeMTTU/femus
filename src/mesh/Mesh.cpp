@@ -20,6 +20,7 @@
 #include "MeshGeneration.hpp"
 #include "MeshMetisPartitioning.hpp"
 #include "GambitIO.hpp"
+#include "SalomeIO.hpp"
 #include "NumericVector.hpp"
 
 // C++ includes
@@ -85,6 +86,9 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   if(name.rfind(".neu") < name.size())
   {
     GambitIO(*this).read(name,coords,Lref,type_elem_flag);
+  }
+  else if(name.rfind(".med") < name.size()) {
+    SalomeIO(*this).read(name,coords,Lref,type_elem_flag);
   }
   else
   {

@@ -13,8 +13,8 @@ PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
 
-#ifndef __MultiLevelMesh_hpp__
-#define __MultiLevelMesh_hpp__
+#ifndef __femus_mesh_MultiLevelMesh_hpp__
+#define __femus_mesh_MultiLevelMesh_hpp__
 
 
 #include "ElemTypeEnum.hpp"
@@ -38,7 +38,7 @@ class MultiLevelMesh {
 
 public:
 
-    /** Constructors */
+    /** @deprecated, if you instantiate with this without calling other functions later, the destructor at the end gives seg fault clearly */
     MultiLevelMesh();
 
     MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr,

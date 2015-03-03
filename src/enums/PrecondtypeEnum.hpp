@@ -1,5 +1,5 @@
-#ifndef __precondtype__
-#define __precondtype__
+#ifndef __femus_enums_PrecondtypeEnum_hpp__
+#define __femus_enums_PrecondtypeEnum_hpp__
 
 enum PreconditionerType {
     IDENTITY_PRECOND =0,

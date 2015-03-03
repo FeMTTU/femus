@@ -1,5 +1,5 @@
-#ifndef _cmdline_h_
-#define _cmdline_h_
+#ifndef __femus_utils_CmdLine_hpp__
+#define __femus_utils_CmdLine_hpp__
 
 #include <iostream>
 #include <utility>

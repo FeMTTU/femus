@@ -19,7 +19,7 @@
 #include "MultiLevelProblem.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "Parameter.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "GeomElTypeEnum.hpp"

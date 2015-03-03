@@ -1,5 +1,5 @@
-#ifndef __feelembase_h__
-#define __feelembase_h__
+#ifndef __femus_meshGencase_FEElemBase_hpp__
+#define __femus_meshGencase_FEElemBase_hpp__
 
 #include <string>
 #include <vector>

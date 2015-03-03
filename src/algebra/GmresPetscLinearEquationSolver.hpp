@@ -13,10 +13,10 @@
 
   =========================================================================*/
 
-#ifndef __GmresPetscLinearEquationSolver_hpp__
-#define __GmresPetscLinearEquationSolver_hpp__
+#ifndef __femus_algebra_GmresPetscLinearEquationSolver_hpp__
+#define __femus_algebra_GmresPetscLinearEquationSolver_hpp__
 
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 #ifdef HAVE_PETSC
 
@@ -71,12 +71,12 @@ public:
 
     clock_t BuildIndex(const vector <unsigned> &variable_to_be_solved);
 
-   /** DEPRECATED, remove soon */
+   /** @deprecated, remove soon */
     std::pair<unsigned int, double> solve(SparseMatrix&  matrix_in,
        SparseMatrix&  precond_in,  NumericVector& solution_in,  NumericVector& rhs_in,
        const double tol,   const unsigned int m_its);
     
-   /** DEPRECATED, remove soon */
+   /** @deprecated, remove soon */
     void init(SparseMatrix* matrix);
    
 private:

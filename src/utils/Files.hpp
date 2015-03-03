@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __files_hpp__
-#define __files_hpp__
+#ifndef __femus_utils_Files_hpp__
+#define __femus_utils_Files_hpp__
 
 // C++
 #include <map>

@@ -30,10 +30,10 @@ namespace femus {
 };
 
 
-//TODO every processor does ALL because bc is SERIAL
+//=== every processor does ALL because bc is SERIAL
  //Now here we have to think how to impose the boundary conditions for KK
  //Now, the bc_read function orders the boundary condition flags of a QUADRATIC or LINEAR DOF OBJECT.
- //TODO The point is that you already have to know the ORDER in which the UNKNOWNS are settled in your system,
+ //=== The point is that you already have to know the ORDER in which the UNKNOWNS are settled in your system,
  // FIRST QUADRATIC, THEN LINEAR, THEN CONSTANT.
  // as a matter of fact, the bc_field should be ordered like a DOF vector,
  //so have first quadratic, then linear, then constant variables.
@@ -46,7 +46,7 @@ namespace femus {
  // climbing back from Boundary to Volume (we know how to do that)
  // In order to pick the boundary element, we pick its MIDDLE POINT.
  
- //TODO why don't we better impose the boundary conditions
+ //=== why don't we better impose the boundary conditions
  // based on QUANTITIES and then SCALAR COMPONENTS of QUANTITIES?
  // Then depending on the type of dof you would have to 
  // loop over the DOF OBJECTS generating those dofs!
@@ -79,7 +79,7 @@ namespace femus {
  // it is obvious that I have to use two separate functions
  //Then the problem is when you try to switch one Quantity from a NODE BASED FE Family to an ELEM BASED FE FAMILY
  //You have to change the way you  ENFORCE the BOUNDARY CONDITIONS.
- //TODO the problem is that here we should write things better.
+ //=== the problem is that here we should write things better.
  // We should write things in such a way that if we set an equation WITHOUT VARIABLES the code still runs. 
  // Here this does not happen.
  // if you allocate bc_flag with zero components, then you pass the pointer to the bc_read function which will set the components.
@@ -106,13 +106,13 @@ namespace femus {
 //Now that routine is done in such a way that you have to order FIRST QQ, THEN LL, THEN KK;
 //In this way you will read correctly
 
-//TODO one thing that may be optimized here is that there are computations that could be avoided when you DO NOT HAVE QQ variables, or LL variables, or KK variables.
+//=== one thing that may be optimized here is that there are computations that could be avoided when you DO NOT HAVE QQ variables, or LL variables, or KK variables.
 
 // The good thing here would be to have a unique bc array at EACH LEVEL. 
 // The distinction between level is especially good for the elements, because the elements 
 //only belong to ONE level, it's not like the nodes...
 
-//TODO now i am looping over elements first, and nodes inside each element next.
+//=== now i am looping over elements first, and nodes inside each element next.
 //therefore, if an element puts a zero and a following element puts a one, the one wins.
 //so we must find a way which is independent of the element order
 //if you loop over the nodes you involve them only once...
@@ -128,7 +128,7 @@ namespace femus {
 //not to superimpose the ones on the zeros?
 //just put a check before checking
 
-//TODO ricorda che i bc sono praticamente dei dof fields,
+//=== ricorda che i bc sono praticamente dei dof fields,
 // quindi in principio possono essere fatti in PARALLELO!
 // anche x_old e' un vettore di dof. Alla fine non sono cose 
 //molto diverse in fondo!

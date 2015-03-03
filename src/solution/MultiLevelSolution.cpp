@@ -20,7 +20,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include "ElemType.hpp"
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "ParsedFunction.hpp"
 
 

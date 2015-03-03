@@ -1,5 +1,5 @@
-#ifndef __gencase__
-#define __gencase__
+#ifndef __femus_meshGencase_GenCase_hpp__
+#define __femus_meshGencase_GenCase_hpp__
 
 //C++
 #include <string>
@@ -8,7 +8,7 @@
 #include "hdf5.h"
 
 // FEMuS
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "Typedefs.hpp"
 #include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"

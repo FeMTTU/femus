@@ -1,5 +1,5 @@
-#ifndef __fequad9_h__
-#define __fequad9_h__
+#ifndef __femus_meshGencase_FEQuad9_hpp__
+#define __femus_meshGencase_FEQuad9_hpp__
 
 #include <cstdlib>
 #include <iostream>

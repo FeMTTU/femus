@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __solid_hpp__
-#define __solid_hpp__
+#ifndef __femus_physics_Solid_hpp__
+#define __femus_physics_Solid_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

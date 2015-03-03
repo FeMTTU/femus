@@ -2,9 +2,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(FSI_TUREK_1)
 
-SET(DIR_NAME "FSI/FSISteadyStateBenchmarks")
 SET(MAIN_FILE "main")
 SET(EXEC_FILE "fsisteady")
 
-femusMacroBuildApplication( ${DIR_NAME} ${MAIN_FILE} ${EXEC_FILE})
+femusMacroBuildApplication(${MAIN_FILE} ${EXEC_FILE})
 

@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __box_h__
-#define __box_h__
+#ifndef __femus_meshGencase_Box_hpp__
+#define __femus_meshGencase_Box_hpp__
 
 #include <vector>
 

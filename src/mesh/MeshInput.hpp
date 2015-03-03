@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __MeshInput_hpp__
-#define __MeshInput_hpp__
+#ifndef __femus_mesh_MeshInput_hpp__
+#define __femus_mesh_MeshInput_hpp__
 
 
 // Local includes

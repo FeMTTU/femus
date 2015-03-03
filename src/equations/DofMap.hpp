@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __dofmap_hpp__
-#define __dofmap_hpp__
+#ifndef __femus_equations_DofMap_hpp__
+#define __femus_equations_DofMap_hpp__
 
 
 #include <string>

@@ -1,5 +1,5 @@
-#ifndef __BDCtypeenum_h__
-#define __BDCtypeenum_h__
+#ifndef __femus_enums_BDCTypeEnum_hpp__
+#define __femus_enums_BDCTypeEnum_hpp__
 
 enum BDCType {
     DIRICHLET=0,
