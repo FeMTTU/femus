@@ -373,7 +373,7 @@ int main(int argc,char **args) {
   //system.SetDirichletBCsHandling(PENALTY); 
   system.SetDirichletBCsHandling(ELIMINATION);   
    
-  ml_sol.SetWriter(VTK);
+  ml_sol.SetWriter(GMV);
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");

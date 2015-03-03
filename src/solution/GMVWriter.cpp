@@ -102,7 +102,7 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
     
   for (int i=0; i<3; i++) {
     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-      Mysol[ig]->matrix_mult(*mlMsh->GetLevel(ig)->_coordinate->_Sol[i],mlMsh->GetLevel(ig)->_ProlQitoQj[index][2][ig]);
+      Mysol[ig]->matrix_mult(*mlMsh->GetLevel(ig)->_coordinate->_Sol[i],*mlMsh->GetLevel(ig)->_ProlQitoQj[index][2]);
       vector <double> v_local;
       Mysol[ig]->localize_to_one(v_local,0);
       unsigned nvt_ig=mlMsh->GetLevel(ig)->MetisOffset[index][_nprocs];      
@@ -112,7 +112,7 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
       }
       if (_moving_mesh  && mlMsh->GetLevel(0)->GetDimension() > i)  {
 	unsigned indDXDYDZ=_ml_sol.GetIndex(_moving_vars[i].c_str());
-	Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indDXDYDZ],mlMsh->GetLevel(ig)->_ProlQitoQj[index][_ml_sol.GetSolutionType(indDXDYDZ)][ig]);
+	Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indDXDYDZ],*mlMsh->GetLevel(ig)->_ProlQitoQj[index][_ml_sol.GetSolutionType(indDXDYDZ)]);
 	Mysol[ig]->localize_to_one(v_local,0);
 	unsigned nvt_ig=mlMsh->GetLevel(ig)->MetisOffset[index][_nprocs];      
 	if(_iproc==0){ 
@@ -243,16 +243,16 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
 	  fout.write((char *)&one,sizeof(unsigned));
 	  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
 	    if (name==0){
-	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[i],mlMsh->GetLevel(ig)->_ProlQitoQj[index][_ml_sol.GetSolutionType(i)][ig]);  
+	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[i],*mlMsh->GetLevel(ig)->_ProlQitoQj[index][_ml_sol.GetSolutionType(i)]);  
 	    }
 	    else if (name==1){
-	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Bdc[i],mlMsh->GetLevel(ig)->_ProlQitoQj[index][_ml_sol.GetSolutionType(i)][ig]);
+	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Bdc[i],*mlMsh->GetLevel(ig)->_ProlQitoQj[index][_ml_sol.GetSolutionType(i)]);
 	    }
 	    else if (name==2){
-	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Res[i],mlMsh->GetLevel(ig)->_ProlQitoQj[index][_ml_sol.GetSolutionType(i)][ig]);
+	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Res[i],*mlMsh->GetLevel(ig)->_ProlQitoQj[index][_ml_sol.GetSolutionType(i)]);
 	    }
 	    else{
-	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Eps[i],mlMsh->GetLevel(ig)->_ProlQitoQj[index][_ml_sol.GetSolutionType(i)][ig]);
+	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Eps[i],*mlMsh->GetLevel(ig)->_ProlQitoQj[index][_ml_sol.GetSolutionType(i)]);
 	    }
 	    std::vector<double> v_local;
 	    Mysol[ig]->localize_to_one(v_local,0);

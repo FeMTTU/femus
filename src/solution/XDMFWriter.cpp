@@ -220,12 +220,12 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
       mysol = NumericVector::build().release();
       //mysol->init(mlMsh->GetLevel(ig)->GetDofNumber(index_nd),mlMsh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
       mysol->init(mlMsh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],mlMsh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
-      mysol->matrix_mult(*mlMsh->GetLevel(ig)->_coordinate->_Sol[i],mlMsh->GetLevel(ig)->_ProlQitoQj[index_nd][2][ig]);
+      mysol->matrix_mult(*mlMsh->GetLevel(ig)->_coordinate->_Sol[i],*mlMsh->GetLevel(ig)->_ProlQitoQj[index_nd][2]);
       unsigned nvt_ig=mlMsh->GetLevel(ig)->GetDofNumber(index_nd);
       for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
       if (_moving_mesh) {
 	unsigned varind_DXDYDZ=_ml_sol.GetIndex(_moving_vars[i].c_str());
-	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[varind_DXDYDZ],mlMsh->GetLevel(ig)->_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(varind_DXDYDZ)][ig]);
+	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[varind_DXDYDZ],*mlMsh->GetLevel(ig)->_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(varind_DXDYDZ)]);
 	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] += (*mysol)(ii);
       }
       offset_nvt+=nvt_ig;
@@ -333,7 +333,7 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
 	mysol = NumericVector::build().release();
         //mysol->init(mlMsh->GetLevel(ig)->GetDofNumber(index_nd),mlMsh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
 	mysol->init(mlMsh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],mlMsh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
-	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx],mlMsh->GetLevel(ig)->_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(indx)][ig]);
+	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx],*mlMsh->GetLevel(ig)->_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(indx)]);
 	unsigned nvt_ig=mlMsh->GetLevel(ig)->GetDofNumber(index_nd);
 	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
 	offset_nvt+=nvt_ig;
