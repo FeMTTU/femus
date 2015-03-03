@@ -219,10 +219,10 @@ void SystemTwo::initVectors() {
 //scalar variables and to each of them give a NUMBER which represents the ORDER.
 // Of course it can only be up to the user to put the right function at the right place!
 
-//TODO AAA: oh this is very interesting... the initial conditions are set IN PARALLEL,
+//TTOODDOO AAA: oh this is very interesting... the initial conditions are set IN PARALLEL,
 // only by the current processor!
 
-//TODO ok the point is this: we are looping over elements, and then over nodes in the element,
+//TTOODDOO ok the point is this: we are looping over elements, and then over nodes in the element,
 //so when we pick the element values we pick them more than once actually...
 //but that's ok, we do like this so far, otherwise you would need two separate routines,
 // one for the NODE dofs and one for the ELEM dofs, and if you want to switch a quantity
@@ -256,12 +256,12 @@ void SystemTwo::initVectors() {
 //Probably if you wanted to do Printing with PARALLEL file system 
 // then you would need to give priority to processors first...
 
-//TODO: so far we have a node_dof that is explored based on the FINEST LEVEL for the NODES,
+//TTOODDOO: so far we have a node_dof that is explored based on the FINEST LEVEL for the NODES,
 // and based on EACH LEVEL for the elements. 
 //So, if we want to make it more general, we just put the offsets to be dependent on LEVEL,
 // and for the nodes they are simply NOT DEPENDENT!
 
-//TODO this function's goal is basically just to fill 
+//TTOODDOO this function's goal is basically just to fill 
 // the x vector in parallel, and then put it into x_old.
 //Of course it does this in a GEOMETRIC WAY.
 // xold is a vector of DOFS, so what we need are the 
@@ -366,7 +366,7 @@ void SystemTwo::Initialize() {
 //they are all like just a single linear solver loop, where convergence has already been reached,
 // and you do another check after the previous one in the linear solver loop
 //the big question is:
-//TODO why dont you do "res_fine < Eps1"
+///@todo why dont you do "res_fine < Eps1"
 // instead of  "res_fine < Eps1*(1.+ bNorm_fine)" ???
 //because one is for the absolute error and another one is for the relative error
 /// This function solves the discrete problem with multigrid solver
@@ -588,7 +588,7 @@ double SystemTwo::MGStep(int Level,            // Level
     _res[Level]->close();
 
     return  rest.second;  //it returns the residual norm of whatever level you are in
-    //TODO if this is the l2_norm then also the nonlinear solver is computed in the l2 norm
+    // if this is the l2_norm then also the nonlinear solver is computed in the l2 norm
     //WHAT NORM is THIS?!? l2, but PRECONDITIONED!!!
 
 }
@@ -650,7 +650,7 @@ void SystemTwo::ReadMGOps(const std::string output_path) {
 //correctly. It seems like one processor fills it and the other ones do not,
 //half of the lines seem to be unfilled.
 
-//TODO the std::cerr is not redirected to file, think of redirecting also it to file.
+///@todo the std::cerr is not redirected to file, think of redirecting it also to file.
 // The idea is that every output to terminal must be redirected to file.
 // so printf must not be used 
 
@@ -852,7 +852,7 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
     for (int fe=0; fe<QL; fe++)  mrow_lev_proc_t +=  _dofmap._DofLocLevProcFE[Level][GetMLProb().GetMeshTwo()._iproc][fe]*_dofmap._nvars[fe];
     uint ncol_lev_proc_t  = mrow_lev_proc_t;
 
-    uint DofObjInit_lev_PrevProcs[QL];  //TODO what is this? it is the ROW INDEX at which to begin for every processor
+    uint DofObjInit_lev_PrevProcs[QL];  // what is this? it is the ROW INDEX at which to begin for every processor
                       
      for (int r=0; r<QL; r++)     DofObjInit_lev_PrevProcs[r] = 0;
          
@@ -864,7 +864,7 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
     
     
     _A[Level] = SparseMatrix::build().release();
-// //     _A[Level]->init(_Dim[Level],_Dim[Level], mrow_lev_proc_t, mrow_lev_proc_t); //TODO BACK TO a REASONABLE INIT
+// //     _A[Level]->init(_Dim[Level],_Dim[Level], mrow_lev_proc_t, mrow_lev_proc_t); ///@todo BACK TO a REASONABLE INIT
 
     Graph graph;
     graph.resize(mrow_glob_t);
@@ -959,7 +959,7 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
 	graph.print();
 //===========================
 
-    _A[Level]->update_sparsity_pattern_old(graph);  //TODO see how it works
+    _A[Level]->update_sparsity_pattern_old(graph);
 
     //  clean ===============
     graph.clear();
@@ -1003,7 +1003,7 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
 //This function depends on _iproc
 void SystemTwo::ReadProl(const std::string& name) {
 
-    _Prl.resize(GetGridn());  //TODO one place is left empty in practice, we can optimize this!!!
+    _Prl.resize(GetGridn());  ///@todo one place is left empty in practice, we can optimize this!!!
 
     for (uint Level = 1; Level< GetGridn(); Level++) {
   
