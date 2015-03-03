@@ -71,6 +71,7 @@ class SalomeIO : public MeshInput<Mesh>
    static const std::string aux_zeroone;      // -0000000000000000001-0000000000000000001
    static const std::string connectivity;     // MAI
    static const std::string node_coord;       //NOE/COO
+   static const uint max_length;
 
 };
 

@@ -31,6 +31,7 @@ namespace femus {
    const std::string SalomeIO::aux_zeroone = "-0000000000000000001-0000000000000000001";
    const std::string SalomeIO::connectivity = "MAI";
    const std::string SalomeIO::node_coord = "NOE/COO";
+   const uint SalomeIO::max_length = 100;  ///@todo this length of the menu string is conservative enough...
 
   
   
@@ -68,11 +69,10 @@ const unsigned SalomeIO::GambitToFemusFaceIndex[6][6]=
 
   
 void SalomeIO::read(const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag) {
-  
-  //we assume that the mesh file name is the same as the menu. Therefore, we have to use BASENAME much like we do in the shell
-  // later on we will have to relax this assumption, which implies probably adding one argument either in this function, or better in the constructor
-  // (in any case, that would remove polymorphism for the children of MeshInput)
-  
+   
+    Mesh& mesh = GetMesh();
+    mesh.SetGridNumber(0);
+
     hsize_t dims[2];
     std::string el_fem_type_vol(""); 
     std::string el_fem_type_bd("");
@@ -88,22 +88,65 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
     std::vector<int>  itype_vol;
      itype_vol.resize(n_menus);
     menu_names.resize(n_menus);
-    uint menu_max_length = 100;  ///@todo this length of the menu string is conservative enough...
     for (unsigned j=0; j<menu_names.size(); j++) {
-      menu_names[j] = new char[menu_max_length];
-     H5Gget_objname_by_idx(gid,j,menu_names[j],menu_max_length); ///@deprecated see the HDF doc to replace this
+      menu_names[j] = new char[max_length];
+     H5Gget_objname_by_idx(gid,j,menu_names[j],max_length); ///@deprecated see the HDF doc to replace this
      std::string tempj(menu_names[j]);
      itype_vol[j] =  ReadFE(file_id,el_fem_type_vol,el_fem_type_bd,tempj);
     }
 
+    //   // read control data ******************** A
+//   mesh.SetDimension(dim);  // this is determined in the other routine already
+//   mesh.SetNumberOfElements(nel);
+//   mesh.SetNumberOfNodes(nvt);
+
     
+    
+    //   // end read control data **************** A
+
+    
+    
+    
+    
+    
+    
+    //   // read ELEMENT/cell ******************** B
+
+    
+    //   // end read  ELEMENT/CELL **************** B
+
+    
+    
+    
+    
+    //   // read NODAL COORDINATES **************** C
+
+    //   // end read NODAL COORDINATES ************* C
+
+    
+    
+    
+    
+//   // read GROUP **************** E
+    
+//   // end read GROUP **************** E
+
+
+
+
+
+
+//   // read boundary **************** D
+
+//   // end read boundary **************** D
+
+
     for (unsigned j=0; j<menu_names.size(); j++) { delete [] menu_names[j]; }
     
     status = H5Fclose(file_id);
  
     exit(0);   // just to make the test exit successfully
 
-//   Mesh& mesh = GetMesh();
 // 
 //   std::ifstream inf;
 //   std::string str2;
@@ -325,10 +368,39 @@ int  SalomeIO::ReadFE(
 ) {
 
     Mesh& mesh = GetMesh();
+    uint mydim = 1;  //this is the initial value, then it will be updated below
+    mesh.SetDimension(mydim);
 
+  // ************  determine mesh dimension  ************************************
+    /// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
+  std::string my_mesh_name_dir = mesh_ensemble +  "/" + menu_name + "/" +  aux_zeroone + "/" + connectivity + "/";  ///@todo here we have to loop
   
-// ************  reading  hdf5-med file  ************************************
+  hid_t       gid=H5Gopen(file_id,my_mesh_name_dir.c_str(),H5P_DEFAULT); // group identity
+  hsize_t     n_fem_type;
+  hid_t status= H5Gget_num_objs(gid, &n_fem_type);  // number of links
+  if(status !=0) {std::cout << "SalomeIO::read_fem_type:   H5Gget_num_objs not found"; abort();}
 
+  std::vector<char*> elem_list;  elem_list.resize(n_fem_type);
+    for (unsigned j=0; j < elem_list.size(); j++) {
+      elem_list[j] = new char[max_length];
+      H5Gget_objname_by_idx(gid,j,elem_list[j],max_length); ///@deprecated see the HDF doc to replace this
+      std::string tempj(elem_list[j]);
+      
+      if ( tempj.compare("HE8") == 0 || 
+	   tempj.compare("H20") == 0 ||  
+	   tempj.compare("H27") == 0 || 
+	   tempj.compare("TE4") == 0 || 
+	   tempj.compare("T10") == 0    )      { mydim = 3; } 
+      else if ( tempj.compare("QU4") == 0 || 
+	        tempj.compare("QU8") == 0 ||  
+	        tempj.compare("QU9") == 0 || 
+	        tempj.compare("TR3") == 0 || 
+	        tempj.compare("TR6") == 0    ) { mydim = 2; } 
+      
+      if ( mydim > mesh.GetDimension() ) mesh.SetDimension(mydim); 
+	
+    }  //end for
+    
   // ---------  Reading Element type (From salome to LIBMESH (itype_vol))------
   std::map< std::string, int > fem_type_vol;// Salome fem table name (vol)
   fem_type_vol["HE8"] = 5;  fem_type_vol["H20"] = 20; fem_type_vol["H27"] = 12;
@@ -350,12 +422,6 @@ int  SalomeIO::ReadFE(
     fem_type_bd["SE2"] = 0;  fem_type_bd["SE3"] = 0;
   }
 
-  std::string my_mesh_name_dir = mesh_ensemble +  "/" + menu_name + "/" +  aux_zeroone + "/" + connectivity + "/";  ///@todo here we have to loop
-  
-  hid_t       gid=H5Gopen(file_id,my_mesh_name_dir.c_str(),H5P_DEFAULT); // group identity
-  hsize_t     n_fem_type;
-  hid_t status= H5Gget_num_objs(gid, &n_fem_type);  // number of links
-  if(status !=0) {std::cout << "SalomeIO::read_fem_type:   H5Gget_num_objs not found"; abort();}
 
   // Get the element name from MESH_NAME_DIR in the file med (el_name)
   char **el_fem_type=new char*[n_fem_type];
