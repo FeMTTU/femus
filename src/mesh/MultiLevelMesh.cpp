@@ -35,21 +35,24 @@ using std::cout;
 using std::endl;
 
 MultiLevelMesh::~MultiLevelMesh() {
-    for (unsigned i=0; i<_gridn0; i++) {
+  
+    for (unsigned i=0; i<_level0.size(); i++) {
         delete _level0[i];
     }
+    
     for(unsigned i=0;i<6;i++){
-      if(i==5 || _finiteElementGeometryFlag[i])
+      if( _finiteElementGeometryFlag[i])
       for(unsigned j=0;j<5;j++){
 	delete _finiteElement[i][j];
       }
     }
-};
+    
+}
 
 //---------------------------------------------------------------------------------------------------
-MultiLevelMesh::MultiLevelMesh() {
+MultiLevelMesh::MultiLevelMesh(): _gridn0(0),_gridr0(0) {
   
-  _finiteElementGeometryFlag.resize(5,false);
+  _finiteElementGeometryFlag.resize(6,false);
   
   for(int i=0; i<6; i++) {
     for(int j=0; j<5; j++) {
@@ -96,7 +99,7 @@ MultiLevelMesh::MultiLevelMesh() {
       _finiteElement[4][3]=new const elem_type_2D("tri","constant",GaussOrder);
       _finiteElement[4][4]=new const elem_type_2D("tri","disc_linear",GaussOrder); 
     }
-    
+    _finiteElementGeometryFlag[5]=1; 
     _finiteElement[5][0]=new const elem_type_1D("line","linear",GaussOrder);
     _finiteElement[5][1]=new const elem_type_1D("line","quadratic",GaussOrder);
     _finiteElement[5][2]=new const elem_type_1D("line","biquadratic",GaussOrder); 
