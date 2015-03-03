@@ -225,7 +225,7 @@ int main(int argc,char **args) {
   //Start System Variables
   ml_sol.AddSolution("DX",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("DY",LAGRANGE,SECOND,1);
-  //ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
+  if (!dimension2D) ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
   //if (!dimension2D) ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("U",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
