@@ -48,8 +48,11 @@ unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
 
 //------------------------------------------------------------------------------------------------------
   Mesh::Mesh(){
+    
+    _coarseMsh = NULL;
+    
     for(int i=0;i<5;i++){
-      _ProjMat[i]=NULL;
+      _ProjCoarseToFine[i]=NULL;
     }
   
     for (int itype=0; itype<3; itype++) {
@@ -75,9 +78,9 @@ unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
     }
     
     for (unsigned i=0; i<5; i++) {
-      if (_ProjMat[i]) {
-	delete _ProjMat[i];
-	_ProjMat[i]=NULL;
+      if (_ProjCoarseToFine[i]) {
+	delete _ProjCoarseToFine[i];
+	_ProjCoarseToFine[i]=NULL;
       }
     }    
   }
@@ -85,7 +88,7 @@ unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
 /// print Mesh info
 void Mesh::PrintInfo() {
   
- std::cout << " Mesh Level        : " << _grid << std::endl; 
+ std::cout << " Mesh Level        : " << _level << std::endl; 
  std::cout << "   Number of elements: " << _nelem << std::endl; 
  std::cout << "   Number of nodes   : " << _nnodes << std::endl;
   
@@ -98,7 +101,7 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
     
   vector <vector <double> > coords(3);  
     
-  _grid=0;
+  _level=0;
 
   if(name.rfind(".neu") < name.size())
   {
@@ -166,7 +169,7 @@ void Mesh::GenerateCoarseBoxMesh(
   
   vector <vector <double> > coords(3);  
     
-  _grid=0;
+  _level=0;
     
   MeshTools::Generation::BuildBox(*this,coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,type_elem_flag);
   
@@ -728,6 +731,106 @@ void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype){
   }
   _ProjQitoQj[itype][jtype]->close();
 }
+
+
+
+SparseMatrix* Mesh::GetCoarseToFineProjection(const unsigned& solType){
+  
+  if( solType > 4 ){
+    std::cout<<"Wrong argument range in function \"GetCoarseToFineProjection\": "
+	     <<"solType is greater then 4"<<std::endl;
+    abort();
+  }
+    
+  if(!_ProjCoarseToFine[solType])
+    BuildCoarseToFineProjection(solType);
+  
+  return _ProjCoarseToFine[solType];
+}
+
+
+
+void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
+  
+  if (!_coarseMsh) {
+    std::cout<<"Error! In function \"BuildCoarseToFineProjection\": the coarse mesh has not been set"<<std::endl;
+    abort();
+  }
+     
+  if( !_ProjCoarseToFine[solType] ){
+      
+    int nf     = MetisOffset[solType][_nprocs];
+    int nc     = _coarseMsh->MetisOffset[solType][_nprocs];
+    int nf_loc = own_size[solType][_iproc];
+    int nc_loc = _coarseMsh->own_size[solType][_iproc]; 
+   
+    //build matrix sparsity pattern size
+    NumericVector *NNZ_d = NumericVector::build().release();
+    if(n_processors()==1) { // IF SERIAL
+      NNZ_d->init(nf, nf_loc, false, SERIAL);
+    } 
+    else { // IF PARALLEL
+      if(solType<3) {
+	if(ghost_size[solType][processor_id()]!=0) { 
+	  NNZ_d->init(nf, nf_loc, ghost_nd_mts[solType][processor_id()], false, GHOSTED);
+	} 
+	else { 
+	  std::vector < int > fake_ghost(1,nf_loc);
+	  NNZ_d->init(nf, nf_loc, fake_ghost, false, GHOSTED);
+	}
+      }
+      else { //discontinuous pressure has no ghost nodes
+	NNZ_d->init(nf, nf_loc, false, PARALLEL); 
+      }
+    }
+    NNZ_d->zero();
+     
+    NumericVector *NNZ_o = NumericVector::build().release();
+    NNZ_o->init(*NNZ_d);
+    NNZ_o->zero();
+        
+    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+      for (int iel_mts=_coarseMsh->IS_Mts2Gmt_elem_offset[isdom];iel_mts < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	unsigned iel = _coarseMsh->IS_Mts2Gmt_elem[iel_mts];
+	if(_coarseMsh->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+	  short unsigned ielt=_coarseMsh->el->GetElementType(iel);
+	  _finiteElement[ielt][solType]->GetSparsityPatternSize( *this, *_coarseMsh, iel, NNZ_d, NNZ_o); 
+	}
+      }
+    }
+    NNZ_d->close();
+    NNZ_o->close();
+    
+    unsigned offset = MetisOffset[solType][_iproc];
+    vector <int> nnz_d(nf_loc);
+    vector <int> nnz_o(nf_loc);
+    for(int i=0; i<nf_loc;i++){
+      nnz_d[i]=static_cast <int> ((*NNZ_d)(offset+i));
+      nnz_o[i]=static_cast <int> ((*NNZ_o)(offset+i));
+    }        
+    delete NNZ_d;
+    delete NNZ_o;
+    
+    //build matrix     
+    _ProjCoarseToFine[solType] = SparseMatrix::build().release();
+    _ProjCoarseToFine[solType]->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
+    
+    // loop on the coarse grid 
+    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+      for (int iel_mts=_coarseMsh->IS_Mts2Gmt_elem_offset[isdom]; 
+	   iel_mts < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	unsigned iel = _coarseMsh->IS_Mts2Gmt_elem[iel_mts];
+	if(_coarseMsh->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+	  short unsigned ielt=_coarseMsh->el->GetElementType(iel);
+	  _finiteElement[ielt][solType]->BuildProlongation(*this, *_coarseMsh,iel, _ProjCoarseToFine[solType]); 
+	}
+      }
+    }
+    _ProjCoarseToFine[solType]->close();
+  }
+}
+
+
 
 
 

@@ -92,9 +92,6 @@ public:
     };
 
     /** To be Added */
-    void BuildProlongatorMatrix(unsigned gridf, unsigned SolIndex);
-
-    /** To be Added */
     void AttachSetBoundaryConditionFunction ( bool (* SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[],
             double &value, const int FaceName, const double time) );
 
