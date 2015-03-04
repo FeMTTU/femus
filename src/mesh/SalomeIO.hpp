@@ -55,11 +55,14 @@ class SalomeIO : public MeshInput<Mesh>
 
  private:
    
-   /** Map from Gambit vertex index to Femus vertex index */
-   static const unsigned GambitToFemusVertexIndex[6][27]; 
+   /** Map from Salome vertex index to Femus vertex index */
+   static const unsigned SalomeToFemusVertexIndex[6][27]; 
  
-   /** Map from Gambit face index to Femus face index */
-   static const unsigned GambitToFemusFaceIndex[6][6];
+   /** Map from Salome face index to Femus face index */
+   static const unsigned SalomeToFemusFaceIndex[6][6];
+
+   /** Determine mesh dimension from mesh file */
+   void  FindDimension(hid_t gid, const  std::string menu_name,hsize_t n_fem_type);
 
    /** Read FE type */
    int  ReadFE(hid_t file_id, std::string & el_fem_type_vol, std::string & el_fem_type_bd, const  std::string menu_name);   
@@ -71,6 +74,7 @@ class SalomeIO : public MeshInput<Mesh>
    static const std::string aux_zeroone;      // -0000000000000000001-0000000000000000001
    static const std::string connectivity;     // MAI
    static const std::string node_coord;       //NOE/COO
+   static const uint max_length;
 
 };
 
