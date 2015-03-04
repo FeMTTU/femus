@@ -48,8 +48,10 @@ Authors
 ========
 
 Eugenio Aulisa
+
 Simone Bnà      
-Giorgio Bornia  
+
+Giorgio Bornia
 
 
 
