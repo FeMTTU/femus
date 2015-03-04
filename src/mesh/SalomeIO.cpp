@@ -93,19 +93,67 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
      H5Gget_objname_by_idx(gid,j,menu_names[j],max_length); ///@deprecated see the HDF doc to replace this
      std::string tempj(menu_names[j]);
      itype_vol[j] =  ReadFE(file_id,el_fem_type_vol,el_fem_type_bd,tempj);
-    }
-
+     
     //   // read control data ******************** A
-//   mesh.SetDimension(dim);  // this is determined in the other routine already
+//   mesh.SetDimension(dim);  // DONE  this is determined in the ReadFE routine
 //   mesh.SetNumberOfElements(nel);
-//   mesh.SetNumberOfNodes(nvt);
-
-    
+//   mesh.SetNumberOfNodes(nvt);  //DONE below
     
     //   // end read control data **************** A
 
+    //   // read NODAL COORDINATES **************** C
+   std::string coord_dataset = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + node_coord + "/";  ///@todo here we have to loop
+
+  // Getting dataset xyz
+  hid_t dtset = H5Dopen(file_id,coord_dataset.c_str(),H5P_DEFAULT);
+  hid_t filespace = H5Dget_space(dtset);    /* Get filespace handle first. */
+  hid_t status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
+  if(status ==0) std::cerr << "SalomeIO::read dims not found";
+  // reading xyz_med
+  unsigned int n_nodes = dims[0]/mesh.GetDimension();
+  double   *xyz_med = new double[dims[0]];
+  std::cout << " Number of points in med file =" <<  n_nodes << " " <<  std::endl;
+  
+  mesh.SetNumberOfNodes(n_nodes);
+  
+    coords[0].resize(n_nodes);
+    coords[1].resize(n_nodes);
+    coords[2].resize(n_nodes);
+
+  status=H5Dread(dtset,H5T_NATIVE_DOUBLE,H5S_ALL,H5S_ALL,H5P_DEFAULT,xyz_med);
+  H5Dclose(dtset);
+  
+   if (mesh.GetDimension()==3) {
+    for (unsigned j=0; j<n_nodes; j++) {
+      coords[0][j] = xyz_med[j]/Lref;
+      coords[1][j] = xyz_med[j+n_nodes]/Lref;
+      coords[2][j] = xyz_med[j+2*n_nodes]/Lref;
+    }
+  }
+
+  else if (mesh.GetDimension()==2) {
+    for (unsigned j=0; j<n_nodes; j++) {
+      coords[0][j] = xyz_med[j]/Lref;
+      coords[1][j] = xyz_med[j+n_nodes]/Lref;
+      coords[2][j] = 0.;
+    }
+  }
+
+  else if (mesh.GetDimension()==1) {
+    for (unsigned j=0; j<n_nodes; j++) {
+      coords[0][j] = xyz_med[j]/Lref;
+      coords[1][j] = 0.;
+      coords[2][j] = 0.;
+    }
+  }
+  
+  delete[] xyz_med;
     
+    //   // end read NODAL COORDINATES ************* C
     
+        }   //end menu names  **********************************************************
+
+
     
     
     
@@ -119,9 +167,6 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
     
     
     
-    //   // read NODAL COORDINATES **************** C
-
-    //   // end read NODAL COORDINATES ************* C
 
     
     
@@ -400,6 +445,8 @@ int  SalomeIO::ReadFE(
       if ( mydim > mesh.GetDimension() ) mesh.SetDimension(mydim); 
 	
     }  //end for
+    
+  // ************ end determine mesh dimension  ************************************
     
   // ---------  Reading Element type (From salome to LIBMESH (itype_vol))------
   std::map< std::string, int > fem_type_vol;// Salome fem table name (vol)
