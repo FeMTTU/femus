@@ -149,14 +149,15 @@ public:
     // member data
     Solution* _coordinate;
     const elem_type *_finiteElement[6][5];
-    vector <unsigned> IS_Mts2Gmt_elem_offset;
-    vector <unsigned> IS_Mts2Gmt_elem;
-    vector <unsigned> own_size[5];
-    vector <vector <unsigned> > MetisOffset;
-    vector< vector<unsigned> > ghost_nd[5];
-    vector< vector<int> > ghost_nd_mts[5];
-    vector <unsigned> ghost_size[5];
-    elem *el;  //< elements
+    
+    vector < unsigned > IS_Mts2Gmt_elem_offset;
+    vector < unsigned > IS_Mts2Gmt_elem;
+    vector < unsigned > own_size[5];
+    vector <vector < unsigned > > MetisOffset;
+    vector< vector < unsigned > > ghost_nd[5];
+    vector< vector < int > > ghost_nd_mts[5];
+    vector < unsigned > ghost_size[5];
+    elem *el;  // topology object
     vector < int > epart;
     vector < int > npart;
     int nsubdom;

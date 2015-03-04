@@ -636,8 +636,7 @@ void Mesh::FillISvector() {
       } 
     }
   }
-  
-  
+    
   MetisOffset.resize(5);
   for(int i=0;i<5;i++) 
     MetisOffset[i].resize(nsubdom+1);
@@ -738,7 +737,7 @@ SparseMatrix* Mesh::GetCoarseToFineProjection(const unsigned& solType){
   
   if( solType > 4 ){
     std::cout<<"Wrong argument range in function \"GetCoarseToFineProjection\": "
-	     <<"solType is greater then 4"<<std::endl;
+	     <<"solType is greater then SolTypeMax"<<std::endl;
     abort();
   }
     
