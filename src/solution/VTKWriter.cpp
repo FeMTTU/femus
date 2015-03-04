@@ -162,7 +162,8 @@ void VTKWriter::write_system_solutions(const std::string output_path, const char
     std::vector<double> v_local;
     unsigned nvt_ig=mlMsh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
     for(int kk=0;kk<3;kk++) {
-      mysol[ig]->matrix_mult(*mlMsh->GetLevel(ig)->_coordinate->_Sol[kk],*mlMsh->GetLevel(ig)->_ProlQitoQj[index_nd][2]);
+      mysol[ig]->matrix_mult(*mlMsh->GetLevel(ig)->_coordinate->_Sol[kk],
+			     *mlMsh->GetLevel(ig)->GetQitoQjProjection(index_nd,2));
       mysol[ig]->localize_to_one(v_local,0);
       if(_iproc==0) { 
 	for (unsigned i=0; i<nvt_ig; i++) {
@@ -187,7 +188,8 @@ void VTKWriter::write_system_solutions(const std::string output_path, const char
       std::vector<double> v_local;
       unsigned nvt_ig=mlMsh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
       for(int kk=0;kk<mlMsh->GetLevel(0)->GetDimension();kk++) {
-	mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indDXDYDZ[kk]],*mlMsh->GetLevel(ig)->_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(indDXDYDZ[kk])]);
+	mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indDXDYDZ[kk]],
+			       *mlMsh->GetLevel(ig)->GetQitoQjProjection(index_nd,_ml_sol.GetSolutionType(indDXDYDZ[kk])));
         mysol[ig]->localize_to_one(v_local,0);
 	if(_iproc==0) { 
 	  for (unsigned i=0; i<nvt_ig; i++) {
@@ -464,7 +466,8 @@ void VTKWriter::write_system_solutions(const std::string output_path, const char
       
       unsigned offset_nvt=0;
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx],*mlMsh->GetLevel(ig)->_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(indx)]);
+	mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx],
+			       *mlMsh->GetLevel(ig)->GetQitoQjProjection(index_nd,_ml_sol.GetSolutionType(indx)) );
 	vector<double> sol_local;
 	mysol[ig]->localize_to_one(sol_local,0);
 	unsigned nvt_ig=mlMsh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];

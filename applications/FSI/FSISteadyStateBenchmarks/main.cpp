@@ -15,8 +15,6 @@ double scale=1000.;
 using namespace std;
 using namespace femus;
 
-void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
-
 bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z,const char name[], 
 		double &value, const int FaceName, const double = 0.);
 bool SetBoundaryConditionDrum(const double &x, const double &y, const double &z,const char name[], 
@@ -281,31 +279,9 @@ int main(int argc,char **args) {
   system.AddSolutionToSystemPDE("V");
   if (!dimension2D) system.AddSolutionToSystemPDE("W");
   system.AddSolutionToSystemPDE("P");
-  
-//   if(dimension2D){
-//     bool sparsity_pattern_matrix[5][5]={{1, 0, 1, 0, 0},
-// 					{0, 1, 0, 1, 0},
-// 					{1, 1, 1, 1, 1},
-// 					{1, 1, 1, 1, 1},
-// 					{1, 1, 0, 0, 1}};
-//     vector < bool > sparsity_pattern (sparsity_pattern_matrix[0],sparsity_pattern_matrix[0]+25*sizeof(bool));
-//     system.SetSparsityPattern(sparsity_pattern);  
-//   }
-//   else{				   
-//     bool sparsity_pattern_matrix[7][7]={{1, 0, 0, 1, 0, 0, 0},
-// 					{0, 1, 0, 0, 1, 0, 0},
-// 					{0, 0, 1, 0, 0, 1, 0},
-// 					{1, 1, 1, 1, 1, 1, 1},
-// 					{1, 1, 1, 1, 1, 1, 1},
-// 					{1, 1, 1, 1, 1, 1, 1},
-// 					{1, 1, 1, 0, 0, 0, 1}};
-//     vector < bool > sparsity_pattern (sparsity_pattern_matrix[0],sparsity_pattern_matrix[0]+49*sizeof(bool));
-//     system.SetSparsityPattern(sparsity_pattern);  
-//   }
    
   // System Fluid-Structure-Interaction
-  system.SetAssembleFunction(IncompressibleFSIAssemblyAD_DD);  
-  //system.SetAssembleFunction(AssembleMatrixResFSI);  
+  system.SetAssembleFunction(IncompressibleFSIAssemblyAD_DD); 
   
   system.SetMgType(F_CYCLE);
   system.SetAbsoluteConvergenceTolerance(1.e-10);

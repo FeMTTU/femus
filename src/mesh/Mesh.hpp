@@ -165,14 +165,16 @@ public:
     static bool _TestSetRefinementFlag;
     std::map<unsigned int, std::string> _boundaryinfo;
     
-    SparseMatrix* _ProlQitoQj[3][3];
-    void BuildLagrangeProlongatorMatrices();
-       
+    SparseMatrix* GetQitoQjProjection(const unsigned& itype, const unsigned& jtype);
+    void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
+    
     /** one for every type of variable */
     SparseMatrix* _ProjMat[5];
     
 private:
   
+    SparseMatrix* _ProjQitoQj[3][3];
+    
     /** To be added */
     void copy_elr(vector <unsigned> &other_vec) const;
   

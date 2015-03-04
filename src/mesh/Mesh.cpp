@@ -54,7 +54,7 @@ unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
   
     for (int itype=0; itype<3; itype++) {
       for (int jtype=0; jtype<3; jtype++) {
-	_ProlQitoQj[itype][jtype] = NULL;
+	_ProjQitoQj[itype][jtype] = NULL;
       }
     }
   }
@@ -67,9 +67,9 @@ unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
     
     for (int itype=0; itype<3; itype++) {
       for (int jtype=0; jtype<3; jtype++) {
-	if(_ProlQitoQj[itype][jtype]){
-	  delete _ProlQitoQj[itype][jtype];
-	  _ProlQitoQj[itype][jtype] = NULL;
+	if(_ProjQitoQj[itype][jtype]){
+	  delete _ProjQitoQj[itype][jtype];
+	  _ProjQitoQj[itype][jtype] = NULL;
 	}
       }
     }
@@ -659,64 +659,80 @@ void Mesh::FillISvector() {
   
 }
 
-void Mesh::BuildLagrangeProlongatorMatrices(){
-  
-  for(int itype=0;itype<3;itype++){
-    int ni = MetisOffset[itype][_nprocs];
-    int ni_loc = own_size[itype][_iproc];
-    for (int jtype=0; jtype<3; jtype++) {
-      int nj = MetisOffset[jtype][_nprocs];
-      int nj_loc = own_size[itype][_iproc]; 	
-	
-      NumericVector *NNZ_d = NumericVector::build().release();
-      NumericVector *NNZ_o = NumericVector::build().release();
-      if(_nprocs==1) { // IF SERIAL
-	NNZ_d->init(ni,ni_loc,false,SERIAL);
-	NNZ_o->init(ni,ni_loc,false,SERIAL);
-      } 
-      else{
-	NNZ_d->init(ni,ni_loc,false,PARALLEL); 
-	NNZ_o->init(ni,ni_loc,false,PARALLEL); 
-      }
-      NNZ_d->zero();
-      NNZ_o->zero();
-	
-      for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-	for (int iel_mts=IS_Mts2Gmt_elem_offset[isdom];iel_mts < IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
-	  unsigned iel = IS_Mts2Gmt_elem[iel_mts];
-	  short unsigned ielt= el->GetElementType(iel);
-          _finiteElement[ielt][jtype]->GetSparsityPatternSize(*this, iel, NNZ_d, NNZ_o, itype);	  
-	}
-      }
-	
-      NNZ_d->close();
-      NNZ_o->close();
-    	
-      unsigned offset = MetisOffset[itype][_iproc];
-	
-      vector <int> nnz_d(ni_loc);
-      vector <int> nnz_o(ni_loc);
-      for(int i=0; i<ni_loc;i++){
-	nnz_d[i]=static_cast <int> ((*NNZ_d)(offset+i));
-	nnz_o[i]=static_cast <int> ((*NNZ_o)(offset+i));
-      }
-            
-      delete NNZ_d;
-      delete NNZ_o;
-	
-      _ProlQitoQj[itype][jtype] = SparseMatrix::build().release();
-      _ProlQitoQj[itype][jtype]->init(ni,nj, own_size[itype][_iproc], own_size[jtype][_iproc],nnz_d,nnz_o);
-      for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-	for (int iel_mts=IS_Mts2Gmt_elem_offset[isdom];iel_mts < IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
-	  unsigned iel = IS_Mts2Gmt_elem[iel_mts];
-	  short unsigned ielt=el->GetElementType(iel);
-          _finiteElement[ielt][jtype]->BuildProlongation(*this, iel, _ProlQitoQj[itype][jtype], itype);	  
-	}
-      }
-      _ProlQitoQj[itype][jtype]->close();
+SparseMatrix* Mesh::GetQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
+  if(itype < 3 && jtype < 3){
+    if(!_ProjQitoQj[itype][jtype]){
+      BuildQitoQjProjection(itype, jtype);
     }
   }
+  else{
+    std::cout<<"Wrong argument range in function" 
+	     <<"Mesh::GetLagrangeProjectionMatrix(const unsigned& itype, const unsigned& jtype)"<<std::cout;
+    abort();
+  }
+  return _ProjQitoQj[itype][jtype];
 }
+
+void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype){
+  
+  unsigned ni = MetisOffset[itype][_nprocs];
+  unsigned ni_loc = own_size[itype][_iproc];
+  
+  unsigned nj = MetisOffset[jtype][_nprocs];
+  unsigned nj_loc = own_size[itype][_iproc]; 	
+	
+  NumericVector *NNZ_d = NumericVector::build().release();
+  NumericVector *NNZ_o = NumericVector::build().release();
+  if(1 == _nprocs) { // IF SERIAL
+    NNZ_d->init(ni, ni_loc, false, SERIAL);
+    NNZ_o->init(ni, ni_loc, false, SERIAL);
+  } 
+  else{
+    NNZ_d->init(ni, ni_loc, false, PARALLEL); 
+    NNZ_o->init(ni, ni_loc, false, PARALLEL); 
+  }
+  NNZ_d->zero();
+  NNZ_o->zero();
+	
+  for(unsigned isdom = _iproc; isdom < _iproc+1; isdom++) {
+    for (unsigned iel_mts = IS_Mts2Gmt_elem_offset[isdom]; iel_mts < IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
+      unsigned iel = IS_Mts2Gmt_elem[iel_mts];
+      short unsigned ielt = el->GetElementType(iel);
+      _finiteElement[ielt][jtype]->GetSparsityPatternSize(*this, iel, NNZ_d, NNZ_o, itype);	  
+    }
+  }
+	
+  NNZ_d->close();
+  NNZ_o->close();
+    	
+  unsigned offset = MetisOffset[itype][_iproc];
+	
+  vector < int > nnz_d(ni_loc);
+  vector < int > nnz_o(ni_loc);
+  for(unsigned i = 0; i < ni_loc; i++){
+    nnz_d[i] = static_cast < int > ((*NNZ_d)(offset+i));
+    nnz_o[i] = static_cast < int > ((*NNZ_o)(offset+i));
+  }
+            
+  delete NNZ_d;
+  delete NNZ_o;
+	
+  _ProjQitoQj[itype][jtype] = SparseMatrix::build().release();
+  _ProjQitoQj[itype][jtype]->init(ni, nj, own_size[itype][_iproc], own_size[jtype][_iproc], nnz_d, nnz_o);
+  for(unsigned isdom = _iproc; isdom < _iproc+1; isdom++) {
+    for (unsigned iel_mts = IS_Mts2Gmt_elem_offset[isdom]; iel_mts < IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
+      unsigned iel = IS_Mts2Gmt_elem[iel_mts];
+      short unsigned ielt = el->GetElementType(iel);
+      _finiteElement[ielt][jtype]->BuildProlongation(*this, iel, _ProjQitoQj[itype][jtype], itype);	  
+    }
+  }
+  _ProjQitoQj[itype][jtype]->close();
+}
+
+
+
+
+
 
 } //end namespace femus
 

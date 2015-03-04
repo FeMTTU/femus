@@ -106,7 +106,6 @@ MultiLevelMesh::MultiLevelMesh(): _gridn0(0),_gridr0(0) {
     _finiteElement[5][3]=new const elem_type_1D("line","constant",GaussOrder);
     _finiteElement[5][4]=new const elem_type_1D("line","disc_linear",GaussOrder); 
     _level0[0]->SetFiniteElementPtr(_finiteElement); 
-    _level0[0]->BuildLagrangeProlongatorMatrices();
   }
 
 
