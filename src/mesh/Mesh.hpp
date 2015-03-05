@@ -176,6 +176,7 @@ public:
       _coarseMsh = otherCoarseMsh;
     };
     
+    
 private:
     /** Coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
     Mesh* _coarseMsh;
@@ -209,7 +210,6 @@ private:
     vector <unsigned> IS_Gmt2Mts_dof[5];        //< dof map
     vector <unsigned> IS_Gmt2Mts_dof_offset[5]; //< map offset
     static const unsigned _END_IND[5];
-
 };
 
 } //end namespace femus

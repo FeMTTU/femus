@@ -145,14 +145,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     TAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempAdj");//_UnknownQuantitiesVector[2]; 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
-    
-#if FOURTH_ROW==1
-    CurrentQuantity Press2(currgp);
-    Press2._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Pressure_2"); 
-    Press2.VectWithQtyFillBasic();
-    Press2.Allocate();
-#endif
-    
+   
 //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
   CurrentQuantity xyz(currgp);  //no quantity
@@ -302,12 +295,6 @@ for (uint fe = 0; fe < QL; fe++)     {
         
         currelem.Mat()(ip2,ip2) +=  (1-currelem.GetBCDofFlag()[ip2])*detb;
 
-#if FOURTH_ROW==1
-	 int ip3 = i + 3 * Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
-	 
-	 if (i < currelem.GetElemType(Press2._FEord)->GetNDofs()) { currelem.Rhs()(ip3) +=  currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[Press2._FEord][i]) + (1-currelem.GetBCDofFlag()[ip3])*detb*1300.;
-	              currelem.Mat()(ip3,ip3)  += ( 1-currelem.GetBCDofFlag()[ip3] )*detb;  }
-#endif
 	 // Matrix Assemblying ---------------------------
         for (uint j=0; j<Tempold._ndof; j++) {
           double phij_g = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
@@ -404,12 +391,6 @@ for (uint fe = 0; fe < QL; fe++)     {
                + alphaT*domain_flag*(phij_g)*phii_g  //T_0 delta T'     ///ADDED///////
             );
 
-#if FOURTH_ROW==1
-	 int ip3 = i + 3*Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
-// 	    int jp3 = j + 3*Tempold._ndof;
-	   if (i < currelem.GetElemType(Press2._FEord)->GetNDofs() ) currelem.Mat()(ip3,ip3) += currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[ Press2._FEord ][/*j*/i]*currgp._phi_ndsQLVB_g[ Press2._FEord ][i]);   
-#endif
-	    
         }  //end j (col)
       }   //end i (row)
     } // end of the quadrature point qp-loop

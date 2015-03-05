@@ -13,7 +13,7 @@ int main(int argc,char **args) {
   FemusInit init(argc,args,MPI_COMM_WORLD);
   
   std::string med_file = "Mesh_1.med";
-  std::ostringstream mystream; mystream << "./" << DEFAULT_CONFIGDIR << "/" << med_file;
+  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << med_file;
   const std::string infile = mystream.str();
  
   //Adimensional
