@@ -435,11 +435,11 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
 
  std::cout << "TODO: MUST FIND A WAY TO COPY A WHOLE DIRECTORY AND NOT THE SINGLE FILES" << std::endl;
     
-CheckDirOrMake(_output_path,DEFAULT_CONFIGDIR);
+CheckDirOrMake(_output_path,DEFAULT_INPUTDIR);
 
 //copy configuration file
-   std::string op_in  =   _input_path + "/" + DEFAULT_CONFIGDIR + "/" + DEFAULT_RUNTIMECONF;
-   std::string op_out =  _output_path + "/" + DEFAULT_CONFIGDIR + "/" + DEFAULT_RUNTIMECONF;
+   std::string op_in  =   _input_path + "/" + DEFAULT_INPUTDIR + "/" + DEFAULT_RUNTIMECONF;
+   std::string op_out =  _output_path + "/" + DEFAULT_INPUTDIR + "/" + DEFAULT_RUNTIMECONF;
 /*(iproc==0)*/ CopyFile(op_in,op_out);
 
 //TODO here we should also copy the mesh file from the mesh generator... but we need to know the filename...
@@ -512,7 +512,7 @@ void Files::CheckIODirectories() {
  
 //INPUT
                     std::string abs_app = "./";
-/*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_CONFIGDIR); //it must be there only to be COPIED (and we don't even need the check in restart case)
+/*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_INPUTDIR); //it must be there only to be COPIED (and we don't even need the check in restart case)
 
 /*all procs*/   CheckDir(abs_app,DEFAULT_OUTPUTDIR);
 
