@@ -195,7 +195,8 @@ void VTKWriter::write(const std::string output_path, const char order[], std::ve
       } //loop over dimension
       offset_nvt3+=3*nvt_ig;
     }
-  }
+    
+  } //end moving mesh and ml_sol
   
   if(_iproc==0) {
     //print coordinates dimension
@@ -441,10 +442,14 @@ void VTKWriter::write(const std::string output_path, const char order[], std::ve
       }
       //----------------------------------------------------------------------------------------------------
     }
+    
+  } //end mlsol
+  
   }
   fout << "   </CellData>" << std::endl;
   //   //------------------------------------------------------------------------------------------------
-  // 
+
+  if (_ml_sol != NULL) {
   //   //------------------------------------------------------------------------------------------------
   // / Print Solution (on nodes) ********************************************************************
   fout<< " <PointData Scalars=\"scalars\"> " << std::endl;
