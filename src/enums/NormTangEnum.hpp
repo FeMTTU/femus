@@ -1,5 +1,5 @@
-#ifndef _normtang_enum
-#define _normtang_enum
+#ifndef __femus_enums_NormTangEnum_hpp__
+#define __femus_enums_NormTangEnum_hpp__
 
 //=========norm tang
 enum  NORMTANGType {NN=0,

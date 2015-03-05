@@ -13,15 +13,15 @@
 
 =========================================================================*/
 
-#ifndef __numeric_vector_h__
-#define __numeric_vector_h__
+#ifndef __femus_algebra_NumericVector_hpp__
+#define __femus_algebra_NumericVector_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
 #include "SolverPackageEnum.hpp"
 #include "ParalleltypeEnum.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 // C++ includes
 #include <vector>

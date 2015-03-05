@@ -17,8 +17,8 @@
  * The ElemType class
 */
 
-#ifndef __elem_type_hpp__
-#define __elem_type_hpp__
+#ifndef __femus_fe_ElemType_hpp__
+#define __femus_fe_ElemType_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
@@ -56,7 +56,8 @@ public:
 
   /** To be Added */  
   void BuildRestrictionTranspose(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
-                                 const unsigned &index_sol, const unsigned &kkindex_sol, const bool &TestDisp) const;		    
+                                 const unsigned &index_sol, const unsigned &kkindex_sol, 
+				 const unsigned &index_pair_sol, const unsigned &kkindex_pair_sol) const;		    
 
   /** To be Added */
   void BuildProlongation(const Mesh &meshf, const Mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;
@@ -98,19 +99,19 @@ public:
 //   void GetArea(const double *vt,const double *vty, const double *vtz, const unsigned &ig,
 //                double &Weight, double *other_phi) const;
 
-  /** DEPRECATED  Function pointer for DPhiDXEZ */
+  /** @deprecated  Function pointer for DPhiDXEZ */
   typedef double* (elem_type::*_FunctionPointer)(const unsigned & ig) const;  //you need "elem_type::" for some reason
   std::vector<_FunctionPointer> _DPhiXiEtaZetaPtr;
   
-  /** DEPRECATED Evaluate shape functions at all quadrature points */
+  /** @deprecated Evaluate shape functions at all quadrature points */
   virtual void EvaluateShapeAtQP(const std::string geomel_id_in,const std::string fe_in);
 
-  /**  DEPRECATED Get shape functions */
+  /**  @deprecated Get shape functions */
   inline const double GetPhi(const uint qp, const uint dof ) const {
      return _phi_mapGD[qp][dof];
     }
     
-  /**  DEPRECATED Get shape function first derivatives */
+  /**  @deprecated Get shape function first derivatives */
   inline const double GetDPhiDxez(const uint qp, const uint dof ) const {
      return _dphidxez_mapGD[qp][dof];
     }
@@ -173,7 +174,7 @@ protected:
 //  Gauss
   const Gauss _gauss;
   
-  /**  DEPRECATED */
+  /**  @deprecated */
   double**      _phi_mapGD;
   double** _dphidxez_mapGD;
   

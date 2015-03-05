@@ -5,5 +5,5 @@ PROJECT(Poisson)
 SET(MAIN_FILE "main")
 SET(EXEC_FILE "Poisson")
 
-femusMacroBuildApplication(Poisson ${MAIN_FILE} ${EXEC_FILE})
+femusMacroBuildApplication(${MAIN_FILE} ${EXEC_FILE})
 

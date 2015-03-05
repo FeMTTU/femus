@@ -21,7 +21,7 @@
 #include "Elem.hpp"
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "MeshRefinement.hpp"
 
 
@@ -35,21 +35,24 @@ using std::cout;
 using std::endl;
 
 MultiLevelMesh::~MultiLevelMesh() {
-    for (unsigned i=0; i<_gridn0; i++) {
+  
+    for (unsigned i=0; i<_level0.size(); i++) {
         delete _level0[i];
     }
+    
     for(unsigned i=0;i<6;i++){
-      if(i==5 || _finiteElementGeometryFlag[i])
+      if( _finiteElementGeometryFlag[i])
       for(unsigned j=0;j<5;j++){
 	delete _finiteElement[i][j];
       }
     }
-};
+    
+}
 
 //---------------------------------------------------------------------------------------------------
-MultiLevelMesh::MultiLevelMesh() {
+MultiLevelMesh::MultiLevelMesh(): _gridn0(0),_gridr0(0) {
   
-  _finiteElementGeometryFlag.resize(5,false);
+  _finiteElementGeometryFlag.resize(6,false);
   
   for(int i=0; i<6; i++) {
     for(int j=0; j<5; j++) {
@@ -96,23 +99,25 @@ MultiLevelMesh::MultiLevelMesh() {
       _finiteElement[4][3]=new const elem_type_2D("tri","constant",GaussOrder);
       _finiteElement[4][4]=new const elem_type_2D("tri","disc_linear",GaussOrder); 
     }
-    
+    _finiteElementGeometryFlag[5]=1; 
     _finiteElement[5][0]=new const elem_type_1D("line","linear",GaussOrder);
     _finiteElement[5][1]=new const elem_type_1D("line","quadratic",GaussOrder);
     _finiteElement[5][2]=new const elem_type_1D("line","biquadratic",GaussOrder); 
     _finiteElement[5][3]=new const elem_type_1D("line","constant",GaussOrder);
     _finiteElement[5][4]=new const elem_type_1D("line","disc_linear",GaussOrder); 
-    _level0[0]->SetFiniteElementPtr(_finiteElement);
+    _level0[0]->SetFiniteElementPtr(_finiteElement); 
   }
 
 
 //---------------------------------------------------------------------------------------------------
-MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr, const char mesh_file[], const char GaussOrder[],
-                               const double Lref, bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
-                                       const int &ElemGroupNumber,const int &level)):
+MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr, 
+			       const char mesh_file[], const char GaussOrder[], const double Lref, 
+			       bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, 
+							  const int &ElemGroupNumber,const int &level) ):
     _gridn0(igridn),
     _gridr0(igridr) {
 
+        
     _level0.resize(_gridn0);
     _finiteElementGeometryFlag.resize(5,false);
     
@@ -121,7 +126,7 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
     std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
     _level0[0]->ReadCoarseMesh(mesh_file, Lref,_finiteElementGeometryFlag);
     
-    BuildElemType(GaussOrder);
+    BuildElemType(GaussOrder); 
 
     //totally refined meshes
     for (unsigned i=1; i<_gridr0; i++) {
@@ -212,9 +217,9 @@ void MultiLevelMesh::GenerateCoarseBoxMesh(
     std::cout << " Building brick mesh using the built-in mesh generator" << std::endl;
     
     _level0[0]->GenerateCoarseBoxMesh(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_finiteElementGeometryFlag);
-
+   
     BuildElemType(GaussOrder);
-    
+     
     _gridn=_gridn0;
     _gridr=_gridr0;
     _level.resize(_gridn);

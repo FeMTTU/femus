@@ -1,5 +1,7 @@
 SOME RULES FOR DEVELOPING FEMUS - draft
 
+- Use .hpp for header files and .cpp for source files
+
 - Use std::cout, do not use printf for output.
 
 - If a function must be performed by only one processor (processor 0),

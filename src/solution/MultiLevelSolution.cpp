@@ -20,7 +20,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include "ElemType.hpp"
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "ParsedFunction.hpp"
 
 
@@ -77,7 +77,6 @@ void MultiLevelSolution::AddSolutionLevel(){
   }
   for(unsigned i=0;i<_SolName.size();i++){
     _solution[_gridn]->ResizeSolutionVector(_SolName[i]);
-    BuildProlongatorMatrix(_gridn,i);   
         
     _solution[_gridn]->_Sol[i]->zero();
     if (_SolTmorder[i]==2) {
@@ -109,9 +108,9 @@ void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily,
   _SolTmorder.resize(n+1u);
   _PdeType.resize(n+1u);
   _TestIfPressure.resize(n+1u);
-  _TestIfDisplacement.resize(n+1u);
-
-  _TestIfDisplacement[n]=0;
+  _SolPairIndex.resize(n+1u);
+  
+  
   _TestIfPressure[n]=0;
   _family[n] = fefamily;
   _order[n] = order;
@@ -121,7 +120,8 @@ void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily,
   strcpy(_SolName[n],name);
   _SolTmorder[n]=tmorder;
   _PdeType[n]=PdeType;
- 
+  _SolPairIndex[n]=n;
+  
   cout << " Add variable " << std::setw(3) << _SolName[n] << " discretized with FE type "
        << std::setw(12) << order << " and time discretzation order " << tmorder << endl;
 
@@ -135,10 +135,8 @@ void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily,
 void MultiLevelSolution::AssociatePropertyToSolution(const char solution_name[], const char solution_property[]){
   unsigned index=GetIndex(solution_name);
   if( !strcmp(solution_property,"pressure") || !strcmp(solution_property,"Pressure") ) _TestIfPressure[index]=1;
-  else if( !strcmp(solution_property,"displacement") || !strcmp(solution_property,"Displacement") ) _TestIfDisplacement[index]=1;
   else if( !strcmp(solution_property,"default") || !strcmp(solution_property,"Default") ) {
     _TestIfPressure[index]=0;
-    _TestIfDisplacement[index]=0;
   }
   else {
     cout<<"Error invalid property in function MultiLevelProblem::AssociatePropertyToSolution"<<endl;
@@ -147,6 +145,17 @@ void MultiLevelSolution::AssociatePropertyToSolution(const char solution_name[],
 }
 
 // *******************************************************
+
+
+void MultiLevelSolution::PairSolution(const char solution_name[], const char solution_pair[]){
+  unsigned index=GetIndex(solution_name);
+  unsigned indexPair=GetIndex(solution_pair);
+  _SolPairIndex[index]=indexPair;
+}
+
+// *******************************************************
+
+
 void MultiLevelSolution::Initialize(const char name[], initfunc func) {
   
   unsigned i_start;
@@ -164,7 +173,6 @@ void MultiLevelSolution::Initialize(const char name[], initfunc func) {
     for (unsigned ig=0; ig<_gridn; ig++) {
       unsigned num_el = _ml_msh->GetLevel(ig)->GetNumberOfElements();
       _solution[ig]->ResizeSolutionVector(_SolName[i]);
-      if ( ig > 0 ) BuildProlongatorMatrix(ig,i);
       _solution[ig]->_Sol[i]->zero();
       if(func){
 	double value;
@@ -254,83 +262,6 @@ unsigned MultiLevelSolution::GetSolutionType(const char name[]) {
     }
   }
   return _SolType[index];
-}
-
-//---------------------------------------------------------------------------------------------------
-// This routine generates the matrix for the projection of the solution to finer grids  
-//---------------------------------------------------------------------------------------------------
-
-void MultiLevelSolution::BuildProlongatorMatrix(unsigned gridf, unsigned SolIndex) {
-  
-  if (gridf<1) {
-    cout<<"Error! In function \"BuildProlongatorMatrix\" argument less then 1"<<endl;
-    exit(0);
-  }
-  
-  unsigned ThisSolType=_SolType[SolIndex];
-    
-  if(_solution[gridf]->_ProjMatFlag[ThisSolType]==0){
-    _solution[gridf]->_ProjMatFlag[ThisSolType]=1;
-    
-    Mesh* mshf = _ml_msh->GetLevel(gridf);
-    Mesh* mshc = _ml_msh->GetLevel(gridf-1);
-    
-    int nf     = mshf->MetisOffset[ThisSolType][_nprocs];
-    int nc     = mshc->MetisOffset[ThisSolType][_nprocs];
-    int nf_loc = mshf->own_size[ThisSolType][_iproc];
-    int nc_loc = mshc->own_size[ThisSolType][_iproc]; 
-   
-    //build matrix sparsity pattern size
-    
-    NumericVector *NNZ_d = NumericVector::build().release();
-    NNZ_d->init(*_solution[gridf]->_Sol[SolIndex]);
-    NNZ_d->zero();
-    
-    NumericVector *NNZ_o = NumericVector::build().release();
-    NNZ_o->init(*_solution[gridf]->_Sol[SolIndex]);
-    NNZ_o->zero();
-        
-    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-      for (int iel_mts=mshc->IS_Mts2Gmt_elem_offset[isdom];iel_mts < mshc->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
-	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
-	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _ml_msh->_finiteElement[ielt][ThisSolType]->GetSparsityPatternSize(*mshf, *mshc, iel, NNZ_d, NNZ_o); 
-	}
-      }
-    }
-    NNZ_d->close();
-    NNZ_o->close();
-    
-    unsigned offset = mshf->MetisOffset[ThisSolType][_iproc];
-    vector <int> nnz_d(nf_loc);
-    vector <int> nnz_o(nf_loc);
-    for(int i=0; i<nf_loc;i++){
-      nnz_d[i]=static_cast <int> ((*NNZ_d)(offset+i));
-      nnz_o[i]=static_cast <int> ((*NNZ_o)(offset+i));
-    }
-            
-    delete NNZ_d;
-    delete NNZ_o;
-    
-    //build matrix     
-    
-    _solution[gridf]->_ProjMat[ThisSolType] = SparseMatrix::build().release();
-    _solution[gridf]->_ProjMat[ThisSolType]->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
-    
-    // loop on the coarse grid 
-    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-      for (int iel_mts=mshc->IS_Mts2Gmt_elem_offset[isdom]; 
-	   iel_mts < mshc->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
-	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
-	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _ml_msh->_finiteElement[ielt][ThisSolType]->BuildProlongation(*mshf,*mshc,iel, _solution[gridf]->_ProjMat[ThisSolType]); 
-	}
-      }
-    }
-    _solution[gridf]->_ProjMat[ThisSolType]->close();
-  }
 }
 
 //---------------------------------------------------------------------------------------------------

@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __quantity_h
-#define __quantity_h
+#ifndef __femus_solution_Quantity_hpp__
+#define __femus_solution_Quantity_hpp__
 
 #include <string>
 #include <map>

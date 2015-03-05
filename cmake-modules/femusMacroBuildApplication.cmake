@@ -6,10 +6,10 @@
 #
 
 
-MACRO(femusMacroBuildApplication foldername mainname appname)
+MACRO(femusMacroBuildApplication mainname appname)
 
 # Build the executable
-ADD_EXECUTABLE(${appname} ${CMAKE_SOURCE_DIR}/applications/${foldername}/${mainname}.cpp)
+ADD_EXECUTABLE(${appname} ${PROJECT_SOURCE_DIR}/${mainname}.cpp)
 
 # Link the executable to the petsc anf femttu libs
 TARGET_LINK_LIBRARIES(${appname} femus)
@@ -32,7 +32,7 @@ ENDIF(HDF5_FOUND)
 
 FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/output/)
 FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/input/)
-FILE(COPY           ${CMAKE_SOURCE_DIR}/applications/${foldername}/input/ DESTINATION ${PROJECT_BINARY_DIR}/input/)
+FILE(COPY           ${PROJECT_SOURCE_DIR}/input/ DESTINATION ${PROJECT_BINARY_DIR}/input/)
 
 
 ENDMACRO(femusMacroBuildApplication)

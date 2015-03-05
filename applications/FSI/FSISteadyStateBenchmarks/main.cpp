@@ -15,8 +15,6 @@ double scale=1000.;
 using namespace std;
 using namespace femus;
 
-void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
-
 bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z,const char name[], 
 		double &value, const int FaceName, const double = 0.);
 bool SetBoundaryConditionDrum(const double &x, const double &y, const double &z,const char name[], 
@@ -39,9 +37,9 @@ int main(int argc,char **args) {
   /// Init Petsc-MPI communicator
   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
 
-  Files files; 
-  files.CheckIODirectories();
-  files.RedirectCout();
+  //Files files; 
+  //files.CheckIODirectories();
+  //files.RedirectCout();
   
   unsigned simulation;
   bool dimension2D;
@@ -226,12 +224,15 @@ int main(int argc,char **args) {
   ml_sol.AddSolution("DX",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("DY",LAGRANGE,SECOND,1);
   if (!dimension2D) ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
-  ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
-  ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
-  if (!dimension2D) ml_sol.AssociatePropertyToSolution("DZ","Displacement"); // Add this line 
+  //if (!dimension2D) ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("U",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
   if (!dimension2D) ml_sol.AddSolution("W",LAGRANGE,SECOND,1);
+  // Pair each velocity varible with the corresponding displacement variable
+  ml_sol.PairSolution("U","DX"); // Add this line
+  ml_sol.PairSolution("V","DY"); // Add this line 
+  if (!dimension2D) ml_sol.PairSolution("W","DZ"); // Add this line 
+  
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
   //ml_sol.AddSolution("P",LAGRANGE,FIRST,1);
@@ -278,31 +279,9 @@ int main(int argc,char **args) {
   system.AddSolutionToSystemPDE("V");
   if (!dimension2D) system.AddSolutionToSystemPDE("W");
   system.AddSolutionToSystemPDE("P");
-  
-//   if(dimension2D){
-//     bool sparsity_pattern_matrix[5][5]={{1, 0, 1, 0, 0},
-// 					{0, 1, 0, 1, 0},
-// 					{1, 1, 1, 1, 1},
-// 					{1, 1, 1, 1, 1},
-// 					{1, 1, 0, 0, 1}};
-//     vector < bool > sparsity_pattern (sparsity_pattern_matrix[0],sparsity_pattern_matrix[0]+25*sizeof(bool));
-//     system.SetSparsityPattern(sparsity_pattern);  
-//   }
-//   else{				   
-//     bool sparsity_pattern_matrix[7][7]={{1, 0, 0, 1, 0, 0, 0},
-// 					{0, 1, 0, 0, 1, 0, 0},
-// 					{0, 0, 1, 0, 0, 1, 0},
-// 					{1, 1, 1, 1, 1, 1, 1},
-// 					{1, 1, 1, 1, 1, 1, 1},
-// 					{1, 1, 1, 1, 1, 1, 1},
-// 					{1, 1, 1, 0, 0, 0, 1}};
-//     vector < bool > sparsity_pattern (sparsity_pattern_matrix[0],sparsity_pattern_matrix[0]+49*sizeof(bool));
-//     system.SetSparsityPattern(sparsity_pattern);  
-//   }
    
   // System Fluid-Structure-Interaction
-  system.SetAssembleFunction(IncompressibleFSIAssemblyAD_DD);  
-  //system.SetAssembleFunction(AssembleMatrixResFSI);  
+  system.SetAssembleFunction(IncompressibleFSIAssemblyAD_DD); 
   
   system.SetMgType(F_CYCLE);
   system.SetAbsoluteConvergenceTolerance(1.e-10);
@@ -393,7 +372,7 @@ int main(int argc,char **args) {
   if (!dimension2D) print_vars.push_back("W");
   print_vars.push_back("P");
       
-  ml_sol.GetWriter()->write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
+  ml_sol.GetWriter()->write_system_solutions(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
   // Destroy all the new systems
   ml_prob.clear();

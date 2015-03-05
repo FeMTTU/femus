@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __domain_h__
-#define __domain_h__
+#ifndef __femus_meshGencase_Domain_hpp__
+#define __femus_meshGencase_Domain_hpp__
 
 #include <string>
 #include "Typedefs.hpp"

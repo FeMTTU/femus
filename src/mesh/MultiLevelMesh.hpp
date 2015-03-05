@@ -13,8 +13,8 @@ PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
 
-#ifndef __MultiLevelMesh_hpp__
-#define __MultiLevelMesh_hpp__
+#ifndef __femus_mesh_MultiLevelMesh_hpp__
+#define __femus_mesh_MultiLevelMesh_hpp__
 
 
 #include "ElemTypeEnum.hpp"
@@ -38,7 +38,7 @@ class MultiLevelMesh {
 
 public:
 
-    /** Constructors */
+    /** Constructor */
     MultiLevelMesh();
 
     MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr,

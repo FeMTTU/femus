@@ -176,21 +176,21 @@ ENDIF(BUILD_DOCUMENTATION)
 SET(HAVE_B64 0)
 IF(BUILD_B64)
   SET(HAVE_B64 1)
-  INCLUDE(ExternalLibraries/External_b64.cmake)
+  INCLUDE(external/External_b64.cmake)
 ENDIF(BUILD_B64)
 
 # Build the jsoncpp library
 SET(HAVE_JSONCPP 0)
 IF(BUILD_JSONCPP)
   SET(HAVE_JSONCPP 1)
-  INCLUDE(ExternalLibraries/External_jsoncpp.cmake)
+  INCLUDE(external/External_jsoncpp.cmake)
 ENDIF(BUILD_JSONCPP)  
 
 # Build the Adept external library
 SET(HAVE_ADEPT 0)
 IF(BUILD_ADEPT)
   SET(HAVE_ADEPT 1)
-  INCLUDE(ExternalLibraries/External_adept.cmake)
+  INCLUDE(external/External_adept.cmake)
 ENDIF(BUILD_ADEPT)
 
 #############################################################################################
@@ -199,8 +199,8 @@ ENDIF(BUILD_ADEPT)
 
 # configure a header file to pass some of the CMake settings to the source code
 CONFIGURE_FILE(
-  "${PROJECT_SOURCE_DIR}/config/FEMTTUConfig.h.in"
-  "${PROJECT_BINARY_DIR}/config/FEMTTUConfig.h" @ONLY IMMEDIATE
+  "${PROJECT_SOURCE_DIR}/src/utils/FemusConfig.hpp.in"
+  "${PROJECT_BINARY_DIR}/include/FemusConfig.hpp" @ONLY IMMEDIATE
   )
 
   
@@ -225,7 +225,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/solution)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/enums)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/fe)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/physics)
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/config)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
 # Include Fparser files
 IF(FPARSER_FOUND)
@@ -234,8 +234,6 @@ ENDIF(FPARSER_FOUND)
 
 # add femus macro
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake-modules/femusMacroBuildApplication.cmake)
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake-modules/femusMacroBuildUnitTest.cmake)
-
 
 
 # Libmesh includes and flags

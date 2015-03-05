@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __xdmfwriter_h_
-#define __xdmfwriter_h_
+#ifndef __femus_solution_XDMFWriter_hpp__
+#define __femus_solution_XDMFWriter_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

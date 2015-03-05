@@ -20,6 +20,7 @@
 #include "MeshGeneration.hpp"
 #include "MeshMetisPartitioning.hpp"
 #include "GambitIO.hpp"
+#include "SalomeIO.hpp"
 #include "NumericVector.hpp"
 
 // C++ includes
@@ -46,19 +47,48 @@ unsigned Mesh::_ref_index=4;  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
 unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
 
 //------------------------------------------------------------------------------------------------------
+  Mesh::Mesh(){
+    
+    _coarseMsh = NULL;
+    
+    for(int i=0;i<5;i++){
+      _ProjCoarseToFine[i]=NULL;
+    }
+  
+    for (int itype=0; itype<3; itype++) {
+      for (int jtype=0; jtype<3; jtype++) {
+	_ProjQitoQj[itype][jtype] = NULL;
+      }
+    }
+  }
 
-Mesh::~Mesh(){
+
+  Mesh::~Mesh(){
     delete el;
     _coordinate->FreeSolutionVectors(); 
     delete _coordinate;
-    delete [] epart;
-    delete [] npart;
-}
+    
+    for (int itype=0; itype<3; itype++) {
+      for (int jtype=0; jtype<3; jtype++) {
+	if(_ProjQitoQj[itype][jtype]){
+	  delete _ProjQitoQj[itype][jtype];
+	  _ProjQitoQj[itype][jtype] = NULL;
+	}
+      }
+    }
+    
+    for (unsigned i=0; i<5; i++) {
+      if (_ProjCoarseToFine[i]) {
+	delete _ProjCoarseToFine[i];
+	_ProjCoarseToFine[i]=NULL;
+      }
+    }    
+  }
 
 /// print Mesh info
 void Mesh::PrintInfo() {
   
- std::cout << " Mesh Level        : " << _grid << std::endl; 
+ std::cout << " Mesh Level        : " << _level << std::endl; 
  std::cout << "   Number of elements: " << _nelem << std::endl; 
  std::cout << "   Number of nodes   : " << _nnodes << std::endl;
   
@@ -71,11 +101,14 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
     
   vector <vector <double> > coords(3);  
     
-  _grid=0;
+  _level=0;
 
   if(name.rfind(".neu") < name.size())
   {
     GambitIO(*this).read(name,coords,Lref,type_elem_flag);
+  }
+  else if(name.rfind(".med") < name.size()) {
+    SalomeIO(*this).read(name,coords,Lref,type_elem_flag);
   }
   else
   {
@@ -93,7 +126,6 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   
   MeshMetisPartitioning meshmetispartitioning(*this);
   meshmetispartitioning.DoPartition();
-  //GenerateMetisMeshPartition();
   
   FillISvector();
   
@@ -115,15 +147,9 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _coordinate->ResizeSolutionVector("Y");
   _coordinate->ResizeSolutionVector("Z");
     
-  //_coordinate->SetCoarseCoordinates(coords);
   _coordinate->GetSolutionName("X") = coords[0];
   _coordinate->GetSolutionName("Y") = coords[1];
   _coordinate->GetSolutionName("Z") = coords[2];
-//   *ppi = coords[0];
-  
-//   = coords[0];
-//   _coordinate->GetSolutionName("Y") = coords[1];
-//   _coordinate->GetSolutionName("Z") = coords[2];
   
   _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
   
@@ -143,7 +169,7 @@ void Mesh::GenerateCoarseBoxMesh(
   
   vector <vector <double> > coords(3);  
     
-  _grid=0;
+  _level=0;
     
   MeshTools::Generation::BuildBox(*this,coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,type_elem_flag);
   
@@ -155,7 +181,6 @@ void Mesh::GenerateCoarseBoxMesh(
   
   MeshMetisPartitioning meshmetispartitioning(*this);
   meshmetispartitioning.DoPartition();
-  //GenerateMetisMeshPartition();
   
   FillISvector();
   
@@ -399,9 +424,6 @@ void Mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]){
 
 
 
-
-
-
 void Mesh::FillISvector() {
   
    //dof map: piecewise liner 0, quadratic 1, biquadratic 2, piecewise constant 3, picewise discontinous linear 4 
@@ -639,6 +661,181 @@ void Mesh::FillISvector() {
   return; 
   
 }
+
+SparseMatrix* Mesh::GetQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
+  if(itype < 3 && jtype < 3){
+    if(!_ProjQitoQj[itype][jtype]){
+      BuildQitoQjProjection(itype, jtype);
+    }
+  }
+  else{
+    std::cout<<"Wrong argument range in function" 
+	     <<"Mesh::GetLagrangeProjectionMatrix(const unsigned& itype, const unsigned& jtype)"<<std::cout;
+    abort();
+  }
+  return _ProjQitoQj[itype][jtype];
+}
+
+void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype){
+  
+  unsigned ni = MetisOffset[itype][_nprocs];
+  unsigned ni_loc = own_size[itype][_iproc];
+  
+  unsigned nj = MetisOffset[jtype][_nprocs];
+  unsigned nj_loc = own_size[itype][_iproc]; 	
+	
+  NumericVector *NNZ_d = NumericVector::build().release();
+  NumericVector *NNZ_o = NumericVector::build().release();
+  if(1 == _nprocs) { // IF SERIAL
+    NNZ_d->init(ni, ni_loc, false, SERIAL);
+    NNZ_o->init(ni, ni_loc, false, SERIAL);
+  } 
+  else{
+    NNZ_d->init(ni, ni_loc, false, PARALLEL); 
+    NNZ_o->init(ni, ni_loc, false, PARALLEL); 
+  }
+  NNZ_d->zero();
+  NNZ_o->zero();
+	
+  for(unsigned isdom = _iproc; isdom < _iproc+1; isdom++) {
+    for (unsigned iel_mts = IS_Mts2Gmt_elem_offset[isdom]; iel_mts < IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
+      unsigned iel = IS_Mts2Gmt_elem[iel_mts];
+      short unsigned ielt = el->GetElementType(iel);
+      _finiteElement[ielt][jtype]->GetSparsityPatternSize(*this, iel, NNZ_d, NNZ_o, itype);	  
+    }
+  }
+	
+  NNZ_d->close();
+  NNZ_o->close();
+    	
+  unsigned offset = MetisOffset[itype][_iproc];
+	
+  vector < int > nnz_d(ni_loc);
+  vector < int > nnz_o(ni_loc);
+  for(unsigned i = 0; i < ni_loc; i++){
+    nnz_d[i] = static_cast < int > ((*NNZ_d)(offset+i));
+    nnz_o[i] = static_cast < int > ((*NNZ_o)(offset+i));
+  }
+            
+  delete NNZ_d;
+  delete NNZ_o;
+	
+  _ProjQitoQj[itype][jtype] = SparseMatrix::build().release();
+  _ProjQitoQj[itype][jtype]->init(ni, nj, own_size[itype][_iproc], own_size[jtype][_iproc], nnz_d, nnz_o);
+  for(unsigned isdom = _iproc; isdom < _iproc+1; isdom++) {
+    for (unsigned iel_mts = IS_Mts2Gmt_elem_offset[isdom]; iel_mts < IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
+      unsigned iel = IS_Mts2Gmt_elem[iel_mts];
+      short unsigned ielt = el->GetElementType(iel);
+      _finiteElement[ielt][jtype]->BuildProlongation(*this, iel, _ProjQitoQj[itype][jtype], itype);	  
+    }
+  }
+  _ProjQitoQj[itype][jtype]->close();
+}
+
+
+
+SparseMatrix* Mesh::GetCoarseToFineProjection(const unsigned& solType){
+  
+  if( solType > 4 ){
+    std::cout<<"Wrong argument range in function \"GetCoarseToFineProjection\": "
+	     <<"solType is greater then 4"<<std::endl;
+    abort();
+  }
+    
+  if(!_ProjCoarseToFine[solType])
+    BuildCoarseToFineProjection(solType);
+  
+  return _ProjCoarseToFine[solType];
+}
+
+
+
+void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
+  
+  if (!_coarseMsh) {
+    std::cout<<"Error! In function \"BuildCoarseToFineProjection\": the coarse mesh has not been set"<<std::endl;
+    abort();
+  }
+     
+  if( !_ProjCoarseToFine[solType] ){
+      
+    int nf     = MetisOffset[solType][_nprocs];
+    int nc     = _coarseMsh->MetisOffset[solType][_nprocs];
+    int nf_loc = own_size[solType][_iproc];
+    int nc_loc = _coarseMsh->own_size[solType][_iproc]; 
+   
+    //build matrix sparsity pattern size
+    NumericVector *NNZ_d = NumericVector::build().release();
+    if(n_processors()==1) { // IF SERIAL
+      NNZ_d->init(nf, nf_loc, false, SERIAL);
+    } 
+    else { // IF PARALLEL
+      if(solType<3) {
+	if(ghost_size[solType][processor_id()]!=0) { 
+	  NNZ_d->init(nf, nf_loc, ghost_nd_mts[solType][processor_id()], false, GHOSTED);
+	} 
+	else { 
+	  std::vector < int > fake_ghost(1,nf_loc);
+	  NNZ_d->init(nf, nf_loc, fake_ghost, false, GHOSTED);
+	}
+      }
+      else { //discontinuous pressure has no ghost nodes
+	NNZ_d->init(nf, nf_loc, false, PARALLEL); 
+      }
+    }
+    NNZ_d->zero();
+     
+    NumericVector *NNZ_o = NumericVector::build().release();
+    NNZ_o->init(*NNZ_d);
+    NNZ_o->zero();
+        
+    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+      for (int iel_mts=_coarseMsh->IS_Mts2Gmt_elem_offset[isdom];iel_mts < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	unsigned iel = _coarseMsh->IS_Mts2Gmt_elem[iel_mts];
+	if(_coarseMsh->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+	  short unsigned ielt=_coarseMsh->el->GetElementType(iel);
+	  _finiteElement[ielt][solType]->GetSparsityPatternSize( *this, *_coarseMsh, iel, NNZ_d, NNZ_o); 
+	}
+      }
+    }
+    NNZ_d->close();
+    NNZ_o->close();
+    
+    unsigned offset = MetisOffset[solType][_iproc];
+    vector <int> nnz_d(nf_loc);
+    vector <int> nnz_o(nf_loc);
+    for(int i=0; i<nf_loc;i++){
+      nnz_d[i]=static_cast <int> ((*NNZ_d)(offset+i));
+      nnz_o[i]=static_cast <int> ((*NNZ_o)(offset+i));
+    }        
+    delete NNZ_d;
+    delete NNZ_o;
+    
+    //build matrix     
+    _ProjCoarseToFine[solType] = SparseMatrix::build().release();
+    _ProjCoarseToFine[solType]->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
+    
+    // loop on the coarse grid 
+    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+      for (int iel_mts=_coarseMsh->IS_Mts2Gmt_elem_offset[isdom]; 
+	   iel_mts < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
+	unsigned iel = _coarseMsh->IS_Mts2Gmt_elem[iel_mts];
+	if(_coarseMsh->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+	  short unsigned ielt=_coarseMsh->el->GetElementType(iel);
+	  _finiteElement[ielt][solType]->BuildProlongation(*this, *_coarseMsh,iel, _ProjCoarseToFine[solType]); 
+	}
+      }
+    }
+    _ProjCoarseToFine[solType]->close();
+  }
+}
+
+
+
+
+
+
+
 
 } //end namespace femus
 

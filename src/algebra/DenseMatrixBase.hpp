@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __dense_matrix_baseM_h__
-#define __dense_matrix_baseM_h__
+#ifndef __femus_algebra_DenseMatrixBase_hpp__
+#define __femus_algebra_DenseMatrixBase_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

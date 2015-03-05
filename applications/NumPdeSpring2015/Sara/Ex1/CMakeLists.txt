@@ -1,9 +1,9 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-PROJECT(saraEx1)
+SET (PROJECT_NAME "${MYNAME_FOLDER}${EXAMPLE_NUMBER}")
+PROJECT(PROJECT_NAME)
 
-SET(DIR_NAME "${SARA_FOLDER}/Ex1")
-SET(MAIN_FILE "Ex1")
-SET(EXEC_FILE "saraEx1")
+SET(MAIN_FILE "${EXAMPLE_NUMBER}") # the name of the source file with no extension
+SET(EXEC_FILE "${MYNAME_FOLDER}${EXAMPLE_NUMBER}") # the name of the executable file
 
-femusMacroBuildApplication(${DIR_NAME} ${MAIN_FILE} ${EXEC_FILE})
+femusMacroBuildApplication(${MAIN_FILE} ${EXEC_FILE})

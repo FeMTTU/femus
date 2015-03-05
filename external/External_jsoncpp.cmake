@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------------
 
 SET(JSONCPP_VERSION 0.5.0)
-SET(JSONCPP_SOURCE_DIR ${PROJECT_SOURCE_DIR}/ExternalLibraries/jsoncpp/jsoncpp-src-${JSONCPP_VERSION})
+SET(JSONCPP_SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/jsoncpp/jsoncpp-src-${JSONCPP_VERSION})
 
 #look if there is a package for jsoncpp
 IF (EXISTS "${JSONCPP_SOURCE_DIR}")   

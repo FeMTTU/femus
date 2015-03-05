@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __mgsolbase_hpp_
-#define __mgsolbase_hpp_
+#ifndef __femus_equations_SystemTwo_hpp__
+#define __femus_equations_SystemTwo_hpp__
 
 //C++ includes
 #include <vector>
@@ -23,7 +23,7 @@
 
 //FEMuS includes 
 #include "FemusDefault.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "Typedefs.hpp"
 #include "FETypeEnum.hpp"
 #include "VBTypeEnum.hpp"

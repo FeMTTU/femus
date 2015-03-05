@@ -13,8 +13,8 @@ PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
 
-#ifndef __MultiLevelSolution_hpp__
-#define __MultiLevelSolution_hpp__
+#ifndef __femus_solution_MultiLevelSolution_hpp__
+#define __femus_solution_MultiLevelSolution_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
@@ -62,6 +62,9 @@ public:
     void AssociatePropertyToSolution(const char solution_name[], const char solution_property[]);
 
     /** To be Added */
+    void PairSolution(const char solution_name[], const char solution_pair[]);
+        
+    /** To be Added */
     void ResizeSolutionVector( const char name[]);
 
     /** To be Added */
@@ -87,9 +90,6 @@ public:
     vector <int>  GetSolType() {
         return _SolType;
     };
-
-    /** To be Added */
-    void BuildProlongatorMatrix(unsigned gridf, unsigned SolIndex);
 
     /** To be Added */
     void AttachSetBoundaryConditionFunction ( bool (* SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[],
@@ -157,9 +157,9 @@ public:
     };
 
     /** To be Added */
-    bool  TestIfSolutionIsDisplacemenet(unsigned i) {
-        return _TestIfDisplacement[i];
-    };
+    unsigned GetSolutionPairIndex(const unsigned& i) const{
+      return _SolPairIndex[i];
+    }
 
     // member data
     MultiLevelMesh* _ml_msh; //< Multilevel mesh
@@ -209,7 +209,7 @@ private:
     vector <int>    _SolTmorder;
     vector <bool>   _PdeType;
     vector <bool>   _TestIfPressure;
-    vector <bool>   _TestIfDisplacement;
+    vector <unsigned> _SolPairIndex;
     
     /** Multilevel solution writer */
     Writer* _writer;

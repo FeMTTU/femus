@@ -18,7 +18,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "LinearEquationSolver.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 #include "PrecondtypeEnum.hpp"
 #include "petscksp.h"
 #include "petscvec.h" 

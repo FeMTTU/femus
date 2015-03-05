@@ -1,5 +1,5 @@
-#ifndef __elemsto_h__
-#define __elemsto_h__
+#ifndef __femus_meshGencase_ElemSto_hpp__
+#define __femus_meshGencase_ElemSto_hpp__
 
 // was like this ================================================
 //    ELEMENTS (in elem_sto and bd_elem_sto)

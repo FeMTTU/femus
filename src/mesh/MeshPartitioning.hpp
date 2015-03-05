@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __meshpartitioning_hpp__
-#define __meshpartitioning_hpp__
+#ifndef __femus_mesh_MeshPartitioning_hpp__
+#define __femus_mesh_MeshPartitioning_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

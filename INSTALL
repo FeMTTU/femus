@@ -24,4 +24,4 @@
 
    cd femus.build
 
-   cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE="[Debug Release RelWithDebInfo MinSizeRel None]" -DBUILD_DOCUMENTATION="[OFF ON]"  -DLIBMESH_DIR=my_libmesh_directory   ../femus
+   cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE="[Debug Release RelWithDebInfo MinSizeRel None]" -DLIBMESH_DIR=my_libmesh_directory   ../femus

@@ -43,6 +43,9 @@ GMVWriter::~GMVWriter()
 
 void GMVWriter::write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
+  
+  MultiLevelMesh *mlMsh = _ml_sol._ml_msh;
+  
   unsigned igridn = _gridn; // aggiunta da me
       
   if (igridn==0) igridn=_gridn;
@@ -73,7 +76,7 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
   unsigned nvt=0;
   unsigned nvt_max=0;
   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs];
+    unsigned nvt_ig=mlMsh->GetLevel(ig)->MetisOffset[index][_nprocs];
     nvt_max=(nvt_max>nvt_ig)?nvt_max:nvt_ig;
     nvt+=nvt_ig;
   }
@@ -82,7 +85,7 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
   vector <NumericVector*> Mysol(igridn);
   for(unsigned ig=igridr-1u; ig<_gridn; ig++) {
     Mysol[ig] = NumericVector::build().release();
-    Mysol[ig]->init(_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs],_ml_sol._ml_msh->GetLevel(ig)->own_size[index][_iproc],true,AUTOMATIC);
+    Mysol[ig]->init(mlMsh->GetLevel(ig)->MetisOffset[index][_nprocs],mlMsh->GetLevel(ig)->own_size[index][_iproc],true,AUTOMATIC);
   }
      
   // ********** Header **********
@@ -99,19 +102,21 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
     
   for (int i=0; i<3; i++) {
     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-      Mysol[ig]->matrix_mult(*_ml_sol._ml_msh->GetLevel(ig)->_coordinate->_Sol[i],*_ProlQitoQj[index][2][ig]);
+      Mysol[ig]->matrix_mult(*mlMsh->GetLevel(ig)->_coordinate->_Sol[i],
+			     *mlMsh->GetLevel(ig)->GetQitoQjProjection(index,2) );
       vector <double> v_local;
       Mysol[ig]->localize_to_one(v_local,0);
-      unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs];      
+      unsigned nvt_ig=mlMsh->GetLevel(ig)->MetisOffset[index][_nprocs];      
       if(_iproc==0){ 
 	for (unsigned ii=0; ii<nvt_ig; ii++) 
 	  var_nd[ii]= v_local[ii];
       }
-      if (_moving_mesh) {
+      if (_moving_mesh  && mlMsh->GetLevel(0)->GetDimension() > i)  {
 	unsigned indDXDYDZ=_ml_sol.GetIndex(_moving_vars[i].c_str());
-	Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indDXDYDZ],*_ProlQitoQj[index][_ml_sol.GetSolutionType(indDXDYDZ)][ig]);
+	Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indDXDYDZ],
+			       *mlMsh->GetLevel(ig)->GetQitoQjProjection(index, _ml_sol.GetSolutionType(indDXDYDZ)) );
 	Mysol[ig]->localize_to_one(v_local,0);
-	unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs];      
+	unsigned nvt_ig=mlMsh->GetLevel(ig)->MetisOffset[index][_nprocs];      
 	if(_iproc==0){ 
 	  for (unsigned ii=0; ii<nvt_ig; ii++) 
 	    var_nd[ii]+= v_local[ii];
@@ -129,17 +134,17 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
 
   unsigned nel=0;
   for (unsigned ig=igridr-1u; ig<igridn-1u; ig++)
-    nel+=( _ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements() - _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
-  nel+=_ml_sol._ml_msh->GetLevel(igridn-1u)->GetNumberOfElements();
+    nel+=( mlMsh->GetLevel(ig)->GetNumberOfElements() - mlMsh->GetLevel(ig)->el->GetRefinedElementNumber());
+  nel+=mlMsh->GetLevel(igridn-1u)->GetNumberOfElements();
   fout.write((char *)&nel,sizeof(unsigned));
 
   unsigned topology[27];
   unsigned offset=1;
   
   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-      if ( ig==igridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-        short unsigned ielt=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementType(ii);
+    for (unsigned ii=0; ii<mlMsh->GetLevel(ig)->GetNumberOfElements(); ii++) {
+      if ( ig==igridn-1u || 0==mlMsh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+        short unsigned ielt=mlMsh->GetLevel(ig)->el->GetElementType(ii);
         if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
         else if (ielt==1) sprintf(det,"ptet%d",eltp[index][1]);
         else if (ielt==2) sprintf(det,"pprism%d",eltp[index][2]);
@@ -157,15 +162,15 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
         fout.write((char *)&NVE[ielt][index],sizeof(unsigned));
 	for(unsigned j=0;j<NVE[ielt][index];j++){
 	  
-	  unsigned jnode=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementVertexIndex(ii,j)-1u;
-	  unsigned jnode_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(jnode,index);
+	  unsigned jnode=mlMsh->GetLevel(ig)->el->GetElementVertexIndex(ii,j)-1u;
+	  unsigned jnode_Metis = mlMsh->GetLevel(ig)->GetMetisDof(jnode,index);
 	  	  
 	  topology[j]=jnode_Metis+offset;
 	}
 	fout.write((char *)topology,sizeof(unsigned)*NVE[ielt][index]);
       }
     }
-    offset+=_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index][_nprocs];
+    offset+=mlMsh->GetLevel(ig)->MetisOffset[index][_nprocs];
   }
   // ********** End printing cell connectivity  **********
   
@@ -184,9 +189,9 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
 
   int icount=0;
   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-      if ( ig==igridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	var_el[icount]=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementGroup(ii);
+    for (unsigned ii=0; ii<mlMsh->GetLevel(ig)->GetNumberOfElements(); ii++) {
+      if ( ig==igridn-1u || 0==mlMsh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	var_el[icount]=mlMsh->GetLevel(ig)->el->GetElementGroup(ii);
         icount++;
       }
     }
@@ -200,9 +205,9 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
 
     int icount=0;
     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-      for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-	if ( ig==igridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	  var_el[icount]=_ml_sol._ml_msh->GetLevel(ig)->epart[ii];
+      for (unsigned ii=0; ii<mlMsh->GetLevel(ig)->GetNumberOfElements(); ii++) {
+	if ( ig==igridn-1u || 0==mlMsh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	  var_el[icount]=mlMsh->GetLevel(ig)->epart[ii];
 	  icount++;
 	}
       }
@@ -240,16 +245,20 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
 	  fout.write((char *)&one,sizeof(unsigned));
 	  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
 	    if (name==0){
-	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[i],*_ProlQitoQj[index][_ml_sol.GetSolutionType(i)][ig]);  
+	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[i],
+				     *mlMsh->GetLevel(ig)->GetQitoQjProjection(index, _ml_sol.GetSolutionType(i)) );
 	    }
 	    else if (name==1){
-	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Bdc[i],*_ProlQitoQj[index][_ml_sol.GetSolutionType(i)][ig]);
+	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Bdc[i],
+				     *mlMsh->GetLevel(ig)->GetQitoQjProjection(index, _ml_sol.GetSolutionType(i)) );
 	    }
 	    else if (name==2){
-	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Res[i],*_ProlQitoQj[index][_ml_sol.GetSolutionType(i)][ig]);
+	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Res[i],
+				     *mlMsh->GetLevel(ig)->GetQitoQjProjection(index, _ml_sol.GetSolutionType(i)) );
 	    }
 	    else{
-	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Eps[i],*_ProlQitoQj[index][_ml_sol.GetSolutionType(i)][ig]);
+	      Mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Eps[i],
+				     *mlMsh->GetLevel(ig)->GetQitoQjProjection(index, _ml_sol.GetSolutionType(i)) );
 	    }
 	    std::vector<double> v_local;
 	    Mysol[ig]->localize_to_one(v_local,0);
@@ -274,9 +283,9 @@ void GMVWriter::write_system_solutions(const std::string output_path, const char
 	    else{
 	      _ml_sol.GetSolutionLevel(ig)->_Eps[i]->localize_to_one(v_local,0);
 	    }
-	    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-	      if ( ig==igridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-		unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,_ml_sol.GetSolutionType(i));
+	    for (unsigned ii=0; ii<mlMsh->GetLevel(ig)->GetNumberOfElements(); ii++) {
+	      if ( ig==igridn-1u || 0==mlMsh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+		unsigned iel_Metis = mlMsh->GetLevel(ig)->GetMetisDof(ii,_ml_sol.GetSolutionType(i));
 		var_el[icount]=v_local[iel_Metis];
 		icount++;
 	      }

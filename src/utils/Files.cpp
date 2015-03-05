@@ -27,7 +27,7 @@
 // class
 #include "Files.hpp"
 
-#include "FEMTTUConfig.h" //for log_petsc
+#include "FemusConfig.hpp" //for log_petsc
 #ifdef HAVE_PETSC
 #include "petsc.h"
 #endif

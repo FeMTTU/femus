@@ -400,10 +400,11 @@ void LinearImplicitSystem::ProlongatorSol(unsigned gridf) {
 
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     
-    unsigned SolIndex=_SolSystemPdeIndex[k];
-    unsigned Typeindex=_ml_sol->GetSolutionType(SolIndex);
+    unsigned SolIndex = _SolSystemPdeIndex[k];
+    unsigned solType = _ml_sol->GetSolutionType(SolIndex);
     
-    _solution[gridf]->_Sol[SolIndex]->matrix_mult(*_solution[gridf-1]->_Sol[SolIndex],*_solution[gridf]->_ProjMat[Typeindex]);
+    _solution[gridf]->_Sol[SolIndex]->matrix_mult(*_solution[gridf-1]->_Sol[SolIndex],
+						  *_msh[gridf]->GetCoarseToFineProjection(solType));
     _solution[gridf]->_Sol[SolIndex]->close();     
   }
 }

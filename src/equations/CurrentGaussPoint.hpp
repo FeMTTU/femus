@@ -1,5 +1,5 @@
-#ifndef __currgausspoint_h__
-#define __currgausspoint_h__
+#ifndef __femus_equations_CurrentGaussPoint_hpp__
+#define __femus_equations_CurrentGaussPoint_hpp__
 
 #include "Typedefs.hpp"
 #include "FETypeEnum.hpp"

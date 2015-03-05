@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __mesh_hpp__
-#define __mesh_hpp__
+#ifndef __femus_mesh_Mesh_hpp__
+#define __femus_mesh_Mesh_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
@@ -45,7 +45,7 @@ public:
 
     /** Constructor */
     explicit
-    Mesh() {};
+    Mesh();
 
     /** destructor */
     ~Mesh();
@@ -78,12 +78,12 @@ public:
 
     /** Set the grid number */
     void SetGridNumber(const unsigned i) {
-        _grid=i;
+        _level=i;
     };
 
     /** Get the grid number */
     unsigned GetGridNumber() const {
-      return _grid;
+      return _level;
     }
 
     /** Set the dimension of the problem (1D, 2D, 3D) */
@@ -157,17 +157,42 @@ public:
     vector< vector<int> > ghost_nd_mts[5];
     vector <unsigned> ghost_size[5];
     elem *el;  //< elements
-    int *epart;
-    int *npart;
+    vector < int > epart;
+    vector < int > npart;
     int nsubdom;
     static bool (* _SetRefinementFlag)(const double &x, const double &y, const double &z,
                                        const int &ElemGroupNumber,const int &level);
     static bool _TestSetRefinementFlag;
     std::map<unsigned int, std::string> _boundaryinfo;
     
-
+    /** Get the projection matrix between Lagrange FEM at the same level mesh*/
+    SparseMatrix* GetQitoQjProjection(const unsigned& itype, const unsigned& jtype);
+        
+    /** Get the coarse to the fine projection matrix*/
+    SparseMatrix* GetCoarseToFineProjection(const unsigned& solType);    
+    
+    /** Set the coarser mesh from which this mesh is generated */
+    void SetCoarseMesh( Mesh* otherCoarseMsh ){
+      _coarseMsh = otherCoarseMsh;
+    };
+    
 private:
-  
+    /** Coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
+    Mesh* _coarseMsh;
+    
+    /** The projection matrix between Lagrange FEM at the same level mesh */
+    SparseMatrix* _ProjQitoQj[3][3];
+    
+    /** The coarse to the fine projection matrix */
+    SparseMatrix* _ProjCoarseToFine[5];
+    
+    /** Build the projection matrix between Lagrange FEM at the same level mesh*/
+    void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
+     
+    /** Build the coarse to the fine projection matrix */
+    void BuildCoarseToFineProjection(const unsigned& solType);
+        
+    
     /** To be added */
     void copy_elr(vector <unsigned> &other_vec) const;
   
@@ -177,7 +202,7 @@ private:
     //member-data
     int _nelem;                                   //< number of elements
     unsigned _nnodes;                              //< number of nodes
-    unsigned _grid;                            //< level of mesh in the multilevel hierarchy
+    unsigned _level;                            //< level of mesh in the multilevel hierarchy
     static unsigned _dimension;                //< dimension of the problem
     static unsigned _ref_index;
     static unsigned _face_index;

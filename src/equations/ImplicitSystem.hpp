@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __implicit_system_h_
-#define __implicit_system_h_
+#ifndef __femus_equations_ImplicitSystem_hpp__
+#define __femus_equations_ImplicitSystem_hpp__
 
 //----------------------------------------------------------------------------
 // includes :

@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __writer_h_
-#define __writer_h_
+#ifndef __femus_solution_Writer_hpp__
+#define __femus_solution_Writer_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
@@ -27,20 +27,20 @@
 
 namespace femus {
 
-// map from our connectivity to vtk-connectivity for paraview visualization  //TODO move this to the appropriate place
-const unsigned map_pr[27] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,23,21,20,22,24,25,26};
+  // map from our connectivity to vtk-connectivity for paraview visualization  //TODO move this to the appropriate place
+  const unsigned map_pr[27] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,23,21,20,22,24,25,26};
 
-//------------------------------------------------------------------------------
-// Forward declarations
-//------------------------------------------------------------------------------
-class MultiLevelSolution;
-class SparseMatrix;
-class Vector;
+  //------------------------------------------------------------------------------
+  // Forward declarations
+  //------------------------------------------------------------------------------
+  class MultiLevelSolution;
+  class SparseMatrix;
+  class Vector;
 
 
-class Writer : public ParallelObject {
+  class Writer : public ParallelObject {
 
-public:
+  public:
 
     /** Constructor. */
     Writer(MultiLevelSolution & ml_probl);
@@ -56,10 +56,7 @@ public:
     
     static std::auto_ptr<Writer> build(const WriterEnum format, MultiLevelSolution * ml_sol);
 
-protected:
-
-    /** a set of matrix for the projection of the solution */
-    static std::vector<SparseMatrix*> _ProlQitoQj[3][3];
+  protected:
 
     /** a flag to move the output mesh */
     int _moving_mesh;
@@ -75,15 +72,10 @@ protected:
     int _gridr;
 
 
-private:
+  private:
 
-    /** This routine generates the matrices for the projection of the solutions from different FE spaces */
-    void BuildProlongatorMatrices();
-
-};
-
-
-
+  };
+  
 } //end namespace femus
 
 

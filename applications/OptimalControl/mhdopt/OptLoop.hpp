@@ -1,5 +1,5 @@
-#ifndef __optloop_h__
-#define __optloop_h__
+#ifndef __femus_mhdopt_OptLoop_hpp__
+#define __femus_mhdopt_OptLoop_hpp__
 
 #include "Typedefs.hpp"
 #include "FemusInputParser.hpp"

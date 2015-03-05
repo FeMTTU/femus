@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------------
 
 SET(B64_VERSION 1.4.2)
-SET(B64_SOURCE_DIR ${PROJECT_SOURCE_DIR}/ExternalLibraries/b64/b64-${B64_VERSION})
+SET(B64_SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/b64/b64-${B64_VERSION})
 
 #look if there is a package for b64
 IF (EXISTS "${B64_SOURCE_DIR}")   

@@ -18,7 +18,7 @@
 //----------------------------------------------------------------------------
 #include "MeshMetisPartitioning.hpp"
 #include "Mesh.hpp"
-#include "FEMTTUConfig.h"
+#include "FemusConfig.hpp"
 
 #ifdef HAVE_METIS
   #include "metis.h"
@@ -92,13 +92,13 @@ void MeshMetisPartitioning::DoPartition() {
   int ncommon = _mesh.GetDimension()+1;
   _mesh.nsubdom = _nprocs;
     
-  _mesh.epart = new int [nelem];
-  _mesh.npart = new int [nnodes];
+  _mesh.epart.resize(nelem);
+  _mesh.npart.resize(nnodes);
   
   if(_mesh.nsubdom!=1) {
     
   //I call the Mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
-  int err = METIS_PartMeshDual(&nelem, &nnodes, eptr, eind, NULL, NULL, &ncommon, &_mesh.nsubdom, NULL, options, &objval, _mesh.epart, _mesh.npart);
+  int err = METIS_PartMeshDual(&nelem, &nnodes, eptr, eind, NULL, NULL, &ncommon, &_mesh.nsubdom, NULL, options, &objval, &_mesh.epart[0], &_mesh.npart[0]);
   
   if(err==METIS_OK) {
     //std::cout << " METIS PARTITIONING IS OK " << std::endl;

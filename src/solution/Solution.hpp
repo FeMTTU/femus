@@ -19,8 +19,8 @@
 */
 
 
-#ifndef __solution_hpp__
-#define __solution_hpp__
+#ifndef __femus_solution_Solution_hpp__
+#define __femus_solution_Solution_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
@@ -104,10 +104,6 @@ public:
     vector <bool> _ResEpsBdcFlag;
     
     vector < vector <NumericVector*> > _GradVec;
-
-    /** one for every type of variable */
-    SparseMatrix* _ProjMat[5];
-    bool _ProjMatFlag[5];
     
     vector <SparseMatrix*> _GradMat[5];
    // bool _GradMatFlag[5];

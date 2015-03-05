@@ -13,8 +13,8 @@ PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
 
-#ifndef __inputparser_hpp__
-#define __inputparser_hpp__
+#ifndef __femus_utils_InputParser_hpp__
+#define __femus_utils_InputParser_hpp__
 
 
 //----------------------------------------------------------------------------

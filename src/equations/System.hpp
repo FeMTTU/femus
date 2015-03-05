@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __System_hpp__
-#define __System_hpp__
+#ifndef __femus_equations_System_hpp__
+#define __femus_equations_System_hpp__
 
 //----------------------------------------------------------------------------
 // includes :
