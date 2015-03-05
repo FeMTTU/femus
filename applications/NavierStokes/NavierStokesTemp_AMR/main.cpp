@@ -259,7 +259,7 @@ int main(int argc,char **args) {
   print_vars.push_back("P");
   print_vars.push_back("T");
   
-  GMVWriter gmvio(ml_sol);
+  GMVWriter gmvio(&ml_sol);
   gmvio.write(files.GetOutputPath(),"biquadratic",print_vars);
   
   

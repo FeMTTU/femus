@@ -127,7 +127,7 @@ int main(int argc,char **args) {
       print_vars.push_back("P");
       
 //       ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
-      VTKWriter vtkio(ml_sol);
+      VTKWriter vtkio(&ml_sol);
       vtkio.write(files.GetOutputPath(),"biquadratic",print_vars,time_step);
     }
   

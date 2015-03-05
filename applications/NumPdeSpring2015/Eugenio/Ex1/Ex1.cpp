@@ -69,10 +69,10 @@ int main(int argc, char **args) {
   variablesToBePrinted.push_back("P");
   variablesToBePrinted.push_back("T");
 
-  VTKWriter vtkIO(mlSol);
+  VTKWriter vtkIO(&mlSol);
   vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
-  GMVWriter gmvIO(mlSol);
+  GMVWriter gmvIO(&mlSol);
   variablesToBePrinted.push_back("all");
   gmvIO.SetDebugOutput(false);
   gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);

@@ -421,10 +421,10 @@ int main(int argc,char **argv) {
     std::vector<std::string> print_vars;
     print_vars.push_back("Sol");
 
-    VTKWriter vtkio(ml_sol);
+    VTKWriter vtkio(&ml_sol);
     vtkio.write(files.GetOutputPath(),"biquadratic",print_vars);
 
-    GMVWriter gmvio(ml_sol);
+    GMVWriter gmvio(&ml_sol);
     gmvio.write(files.GetOutputPath(),"biquadratic",print_vars);
 
   // 
