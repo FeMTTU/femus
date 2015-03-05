@@ -126,11 +126,12 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
   ml_msh.PrintInfo();
   
+  ml_msh.SetWriter(GMV);
+  std::vector<std::string> print_vars;
+  ml_msh.GetWriter()->write(files.GetOutputPath(),"biquadratic",print_vars);
+  
   MultiLevelSolution ml_sol(&ml_msh);
   ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
-  
-  ml_sol.SetWriter(VTK);
-//   ml_sol.GetWriter()
   
   MultiLevelProblem ml_prob(&ml_sol);
   ml_prob.SetMeshTwo(&mesh);

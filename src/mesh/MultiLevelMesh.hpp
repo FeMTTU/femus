@@ -17,8 +17,10 @@ PURPOSE.  See the above copyright notice for more information.
 #define __femus_mesh_MultiLevelMesh_hpp__
 
 
-#include "ElemTypeEnum.hpp"
 #include <vector>
+#include "ElemTypeEnum.hpp"
+#include "WriterEnum.hpp"
+#include "Writer.hpp"
 
 namespace femus {
 
@@ -100,6 +102,13 @@ public:
 
     // data
     const elem_type *_finiteElement[6][5];
+    
+    /** To be Added */
+    const Writer* GetWriter() const {return _writer; }
+
+    /** To be Added */
+    void SetWriter(const WriterEnum format) { _writer = Writer::build(format,this).release(); }
+
 
 protected:
 
@@ -114,6 +123,9 @@ private:
     std::vector <Mesh*> _level0;
     std::vector <Mesh*> _level;
     std::vector <bool> _finiteElementGeometryFlag;
+    
+    /** MultilevelMesh  writer */
+    Writer* _writer;
 
 };
 

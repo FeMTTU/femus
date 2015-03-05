@@ -70,8 +70,28 @@ namespace femus {
 	abort(); 
       }
     } //end switch
+    
   }
 
+    std::auto_ptr<Writer> Writer::build(const WriterEnum format, MultiLevelMesh * ml_mesh)  {
+     
+    switch (format) {
+      case VTK: {
+	std::auto_ptr<Writer>   ap(new VTKWriter(ml_mesh)); return ap;
+      }
+      case GMV: {
+	std::auto_ptr<Writer>   ap(new GMVWriter(ml_mesh)); return ap;
+      }
+      case XDMF: {
+	std::auto_ptr<Writer>   ap(new XDMFWriter(ml_mesh)); return ap;
+      }
+      default: {
+	std::cout << "Format not supported" << std::endl; 
+	abort(); 
+      }
+    } //end switch
+    
+  }
 
   void Writer::SetMovingMesh(std::vector<std::string>& movvars_in){
     _moving_mesh = 1;

@@ -53,13 +53,17 @@ namespace femus {
     virtual ~Writer();
 
     /** write output function */
-    virtual void write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step = 0) = 0;
+    virtual void write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step = 0)  const = 0;
 
     /** set moving mesh */
     void SetMovingMesh(std::vector<std::string>& movvars_in);
     
+    /** runtime selection of writer for MLsol */
     static std::auto_ptr<Writer> build(const WriterEnum format, MultiLevelSolution * ml_sol);
 
+    /** runtime selection of writer for MLmesh */
+    static std::auto_ptr<Writer> build(const WriterEnum format, MultiLevelMesh * ml_mesh);
+    
   protected:
 
     /** a flag to move the output mesh */

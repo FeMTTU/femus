@@ -46,8 +46,7 @@ GMVWriter::~GMVWriter()
   
 }
 
-void GMVWriter::write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) 
-{ 
+void GMVWriter::write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) const { 
   
   unsigned igridn = _gridn; // aggiunta da me
       
@@ -114,7 +113,7 @@ void GMVWriter::write(const std::string output_path, const char order[], std::ve
 	for (unsigned ii=0; ii<nvt_ig; ii++) 
 	  var_nd[ii]= v_local[ii];
       }
-      if (_moving_mesh  && _ml_mesh->GetLevel(0)->GetDimension() > i)  {
+      if (_ml_sol != NULL && _moving_mesh  && _ml_mesh->GetLevel(0)->GetDimension() > i)  {
 	unsigned indDXDYDZ=_ml_sol->GetIndex(_moving_vars[i].c_str());
 	Mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indDXDYDZ],
 			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index, _ml_sol->GetSolutionType(indDXDYDZ)) );
@@ -221,6 +220,8 @@ void GMVWriter::write(const std::string output_path, const char order[], std::ve
   // ********** End printing Regions **********
   
   // ********** Start printing Solution **********
+  if (_ml_sol != NULL)  {
+  
   bool printAll = 0;
   for (unsigned ivar=0; ivar < vars.size(); ivar++){
     printAll += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
@@ -299,6 +300,8 @@ void GMVWriter::write(const std::string output_path, const char order[], std::ve
       }
     }
   }
+  
+  } //end _ml_sol
   // ********** End printing Solution **********
   sprintf(det,"%s","endvars");
   fout.write((char *)det,sizeof(char)*8);
