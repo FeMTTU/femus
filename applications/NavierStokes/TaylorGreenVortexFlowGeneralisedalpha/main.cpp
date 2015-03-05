@@ -123,7 +123,7 @@ int main(int argc,char **args) {
   const unsigned int n_timesteps = 5;
   const unsigned int write_interval = 1;
   
-  VTKWriter vtkio(ml_sol);
+  VTKWriter vtkio(&ml_sol);
   
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
    

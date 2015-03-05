@@ -174,7 +174,7 @@ int main(int argc,char **args) {
   print_vars.push_back("P");
   
      
-  VTKWriter vtkio(ml_sol);
+  VTKWriter vtkio(&ml_sol);
   vtkio.write(files.GetOutputPath(),"biquadratic",print_vars);
   
 //   XDMFWriter xdmfio(ml_prob);
