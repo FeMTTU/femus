@@ -64,7 +64,7 @@ XDMFWriter::~XDMFWriter()
   
 }
 
-void XDMFWriter::write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) 
+void XDMFWriter::write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
 #ifdef HAVE_HDF5
   
@@ -753,17 +753,17 @@ void XDMFWriter::PrintXDMFGeometry(std::ofstream& outfstream,
 // pos_in_mesh_obj gives me the position of the GEomElObject: in fact the quadratic dofs are built on the quadratic GeomEls exactly in this order
 //here we are picking the NODES per subd and level, so we are sure don't pass MORE TIMES on the SAME NODE
 
-// PRoblem with the linear variables in write_system_solutions and PrintBc. 
+// PRoblem with the linear variables in write and PrintBc. 
 //There is one line that brings to mistake, but TWO different mistakes.
 // in PrintBc it seems to be related to HDF5;
-// in write_system_solutions it seems to concern PETSC
+// in write it seems to concern PETSC
 //so that is the wrong line, if i comment it everything seems to work for any processor.
 //with two and three processors it seems to give even different errors...
 //when there is an error related to HDF5, the stack has the _start thing...
 // with two procs there is an error related to Petsc,
 // with three procs there is an error related to HDF5...
 
-//If I only use PrintBc and not write_system_solutions, 
+//If I only use PrintBc and not write, 
 //both with 2 and 3 processors the errors are related to HDF5... this is so absolutely weird...
 
 //Now it seems like I am restricted to that line. That line is responsible for the error.
@@ -885,7 +885,7 @@ void XDMFWriter::PrintXDMFGeometry(std::ofstream& outfstream,
 //except for the fine level where i print the true solution
 
 // This prints All Variables of One Equation    
-void XDMFWriter::write_system_solutions(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn) {
+void XDMFWriter::write(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn) {
 
   std::vector<FEElemBase*> fe_in(QL);
   for (int fe=0; fe<QL; fe++)    fe_in[fe] = FEElemBase::build(mesh->_geomelem_id[mesh->get_dim()-1-VV].c_str(),fe);
@@ -1184,7 +1184,7 @@ void XDMFWriter::read_system_solutions(const std::string namefile, const MultiLe
 // e' quella FINE, ma noi ora dobbiamo prendere quella DI CIASCUN LIVELLO SEPARATAMENTE!
 
 
-void XDMFWriter::write_system_solutions_bc(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk ) {
+void XDMFWriter::write_bc(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk ) {
   
   std::vector<FEElemBase*> fe_in(QL);
   for (int fe=0; fe<QL; fe++)    fe_in[fe] = FEElemBase::build(mesh->_geomelem_id[mesh->get_dim()-1-VV].c_str(),fe);
@@ -2427,7 +2427,7 @@ void XDMFWriter::PrintSolHDF5Linear(const std::string output_path, const uint t_
         MultiLevelProblem::const_system_iterator pos_e = ml_prob.end();
         for (;pos!=pos_e;pos++)    {
             SystemTwo* eqn = static_cast<SystemTwo*>(pos->second);
-            XDMFWriter::write_system_solutions(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn);
+            XDMFWriter::write(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn);
         }
 
     } //end print iproc
@@ -2597,8 +2597,8 @@ void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t
         MultiLevelProblem::const_system_iterator pos_e = ml_prob.end();
         for (;pos!=pos_e;pos++) {
             SystemTwo* eqn = static_cast<SystemTwo*>(pos->second);
-            XDMFWriter::write_system_solutions(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn);    // initial solution
-            XDMFWriter::write_system_solutions_bc(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn,eqn->_bcond._bc,eqn->_bcond._bc_fe_kk);            // boundary condition
+            XDMFWriter::write(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn);    // initial solution
+            XDMFWriter::write_bc(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn,eqn->_bcond._bc,eqn->_bcond._bc_fe_kk);            // boundary condition
         }
 
     } //end iproc

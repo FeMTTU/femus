@@ -41,7 +41,7 @@ GMVWriter::~GMVWriter()
   
 }
 
-void GMVWriter::write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) 
+void GMVWriter::write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) 
 { 
   
   MultiLevelMesh *mlMsh = _ml_sol._ml_msh;

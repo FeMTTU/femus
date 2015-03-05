@@ -175,13 +175,13 @@ int main(int argc,char **args) {
   
      
   VTKWriter vtkio(ml_sol);
-  vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
+  vtkio.write(files.GetOutputPath(),"biquadratic",print_vars);
   
 //   XDMFWriter xdmfio(ml_prob);
-//   xdmfio.write_system_solutions("biquadratic",print_vars);
+//   xdmfio.write("biquadratic",print_vars);
   
 //   GMVWriter gmvio(ml_sol);
-//   gmvio.write_system_solutions("biquadratic",print_vars);
+//   gmvio.write("biquadratic",print_vars);
   
   //Destroy all the new systems
   ml_prob.clear();

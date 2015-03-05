@@ -228,7 +228,7 @@ int main(int argc,char **args) {
   print_vars.push_back("V");
   print_vars.push_back("P");
       
-  vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
+  vtkio.write(files.GetOutputPath(),"biquadratic",print_vars);
 
   // Destroy all the new systems
   ml_prob.clear();
@@ -414,7 +414,7 @@ int main(int argc,char **args) {
 //       print_vars.push_back("P");
 //       
 // //       ml_probl.printsol_vtu_inline("biquadratic",print_vars,time_step);
-//       vtkio.write_system_solutions("biquadratic",print_vars,time_step);
+//       vtkio.write("biquadratic",print_vars,time_step);
 //     }
 //   
 //   } //end loop timestep

@@ -42,7 +42,7 @@ public:
     virtual ~XDMFWriter();
 
     /** write output function */
-    virtual void write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step = 0);
+    virtual void write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step = 0);
 
     /** write a wrapper file for paraview to open all the files of an history together */
     void write_solution_wrapper(const std::string output_path, const char type[]) const;
@@ -50,8 +50,8 @@ public:
   //==================    
    static void transient_print_xmf(const std::string output_path, const uint t_idx_in,const uint t_idx_final, const int print_step, const uint nolevels_in);
    
-   static void write_system_solutions_bc(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk);      
-   static void write_system_solutions(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn);   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
+   static void write_bc(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk);      
+   static void write(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn);   ///prints on a "Quadratic-Linearized" Mesh //TODO this should be PrintNumericVector of the equation //Writer//
    static void  read_system_solutions(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn);                       ///read from a "Quadratic-Linearized" Mesh                                      //Writer/Reader// 
     
   //hdf5 ------------------------------------
