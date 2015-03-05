@@ -46,8 +46,5 @@ void optimization_loop( MultiLevelProblem & e_map_in );
 //   #define DIMENSION    3
 // **************************************
 
-#define FOURTH_ROW 1
-
-
 
 #endif
