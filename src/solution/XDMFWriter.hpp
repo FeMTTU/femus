@@ -36,7 +36,10 @@ class XDMFWriter : public Writer {
 public:
 
     /** Constructor. */
-    XDMFWriter(MultiLevelSolution & ml_sol);
+    XDMFWriter(MultiLevelSolution * ml_sol);
+    
+    /** Constructor. */
+    XDMFWriter(MultiLevelMesh * ml_mesh);
     
     /** Destructor */
     virtual ~XDMFWriter();

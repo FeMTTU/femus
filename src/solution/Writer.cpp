@@ -34,14 +34,22 @@
 namespace femus {
 
 
-  Writer::Writer(MultiLevelSolution& ml_sol):
-    _ml_sol(ml_sol)
+  Writer::Writer( MultiLevelSolution* ml_sol ):
+    _ml_sol(ml_sol), _ml_mesh(ml_sol->_ml_msh)
   {
-    _gridn = ml_sol._ml_msh->GetNumberOfLevels();
-    _gridr = ml_sol._ml_msh->GetNumberOfGridTotallyRefined();
+    _gridn = _ml_mesh->GetNumberOfLevels();
+    _gridr = _ml_mesh->GetNumberOfGridTotallyRefined();
     _moving_mesh = 0;
   }
 
+  Writer::Writer( MultiLevelMesh* ml_mesh ):
+    _ml_sol(NULL), _ml_mesh(ml_mesh)
+  {
+    _gridn = _ml_mesh->GetNumberOfLevels();
+    _gridr = _ml_mesh->GetNumberOfGridTotallyRefined();
+    _moving_mesh = 0;
+  }  
+  
   Writer::~Writer() { }
 
 
@@ -49,13 +57,13 @@ namespace femus {
      
     switch (format) {
       case VTK: {
-	std::auto_ptr<Writer>   ap(new VTKWriter(*ml_sol)); return ap;
+	std::auto_ptr<Writer>   ap(new VTKWriter(ml_sol)); return ap;
       }
       case GMV: {
-	std::auto_ptr<Writer>   ap(new GMVWriter(*ml_sol)); return ap;
+	std::auto_ptr<Writer>   ap(new GMVWriter(ml_sol)); return ap;
       }
       case XDMF: {
-	std::auto_ptr<Writer>   ap(new XDMFWriter(*ml_sol)); return ap;
+	std::auto_ptr<Writer>   ap(new XDMFWriter(ml_sol)); return ap;
       }
       default: {
 	std::cout << "Format not supported" << std::endl; 

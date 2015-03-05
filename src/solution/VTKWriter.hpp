@@ -37,7 +37,10 @@ class VTKWriter : public Writer {
 public:
 
     /** Constructor. */
-    VTKWriter(MultiLevelSolution & ml_sol);
+    VTKWriter(MultiLevelSolution * ml_sol);
+
+    /** Constructor. */
+    VTKWriter(MultiLevelMesh * ml_mesh);
 
     /** Destructor */
     virtual ~VTKWriter();

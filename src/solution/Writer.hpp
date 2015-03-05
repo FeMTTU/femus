@@ -33,6 +33,7 @@ namespace femus {
   //------------------------------------------------------------------------------
   // Forward declarations
   //------------------------------------------------------------------------------
+  class MultiLevelMesh;
   class MultiLevelSolution;
   class SparseMatrix;
   class Vector;
@@ -43,7 +44,10 @@ namespace femus {
   public:
 
     /** Constructor. */
-    Writer(MultiLevelSolution & ml_probl);
+    Writer(MultiLevelSolution * ml_sol);
+
+    /** Constructor. */
+    Writer(MultiLevelMesh * ml_mesh);
 
     /** Destructor */
     virtual ~Writer();
@@ -64,8 +68,11 @@ namespace femus {
     /** the displacement variables for mesh moving */
     std::vector<std::string> _moving_vars;
 
-    /** the multilevelsolution reference */
-    MultiLevelSolution& _ml_sol;
+    /** the multilevelsolution pointer */
+    MultiLevelSolution* _ml_sol;
+
+    /** the multilevel mesh */
+    MultiLevelMesh* _ml_mesh;
 
     int _gridn;
 

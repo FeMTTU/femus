@@ -37,7 +37,10 @@ namespace femus {
   public:
 
       /** Constructor. */
-      GMVWriter(MultiLevelSolution & ml_sol);
+      GMVWriter(MultiLevelSolution * ml_sol);
+
+      /** Constructor. */
+      GMVWriter(MultiLevelMesh * ml_mesh);
 
       /** Destructor */
       virtual ~GMVWriter();

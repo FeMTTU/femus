@@ -35,15 +35,11 @@ namespace femus {
  short unsigned int VTKWriter::femusToVtkCellType[3][6]= {{12,10,13,9,5,3},{25,24,26,23,22,21},{29,24,32,28,22,21}};
 
 
-VTKWriter::VTKWriter(MultiLevelSolution & ml_probl): Writer(ml_probl)
-{
-  
-}
+VTKWriter::VTKWriter(MultiLevelSolution * ml_sol): Writer(ml_sol) {}
 
-VTKWriter::~VTKWriter()
-{
-  
-}
+VTKWriter::VTKWriter(MultiLevelMesh * ml_mesh): Writer(ml_mesh) {}
+
+VTKWriter::~VTKWriter() {}
 
 
 void VTKWriter::write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) 
@@ -53,7 +49,7 @@ void VTKWriter::write(const std::string output_path, const char order[], std::ve
     print_all += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
   }
   
-  MultiLevelMesh *mlMsh = _ml_sol._ml_msh;
+  MultiLevelMesh * mlMsh = _ml_mesh;
   
   int icount;
   unsigned index=0;
@@ -174,22 +170,23 @@ void VTKWriter::write(const std::string output_path, const char order[], std::ve
     offset_nvt3+=3*nvt_ig;
   }
   
-  if (_moving_mesh) {
+  
+  if (_ml_sol != NULL && _moving_mesh == true) {
     
     unsigned offset_nvt3=0;
     unsigned indDXDYDZ[3];
-    indDXDYDZ[0]=_ml_sol.GetIndex(_moving_vars[0].c_str());
-    indDXDYDZ[1]=_ml_sol.GetIndex(_moving_vars[1].c_str());
+    indDXDYDZ[0]=_ml_sol->GetIndex(_moving_vars[0].c_str());
+    indDXDYDZ[1]=_ml_sol->GetIndex(_moving_vars[1].c_str());
     if(mlMsh->GetLevel(0)->GetDimension() == 3) {
-      indDXDYDZ[2]=_ml_sol.GetIndex(_moving_vars[2].c_str());
+      indDXDYDZ[2]=_ml_sol->GetIndex(_moving_vars[2].c_str());
     }
       
     for(unsigned ig=_gridr-1u; ig<_gridn; ig++){
       std::vector<double> v_local;
       unsigned nvt_ig=mlMsh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
       for(int kk=0;kk<mlMsh->GetLevel(0)->GetDimension();kk++) {
-	mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indDXDYDZ[kk]],
-			       *mlMsh->GetLevel(ig)->GetQitoQjProjection(index_nd,_ml_sol.GetSolutionType(indDXDYDZ[kk])));
+	mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indDXDYDZ[kk]],
+			       *mlMsh->GetLevel(ig)->GetQitoQjProjection(index_nd,_ml_sol->GetSolutionType(indDXDYDZ[kk])));
         mysol[ig]->localize_to_one(v_local,0);
 	if(_iproc==0) { 
 	  for (unsigned i=0; i<nvt_ig; i++) {
@@ -372,6 +369,7 @@ void VTKWriter::write(const std::string output_path, const char order[], std::ve
     
   fout << std::endl;
   fout << "    </DataArray>" << std::endl;
+  
   //-----------------------------------------------------------------------------------------------------   
   // Print Metis Partitioning
   fout << "    <DataArray type=\"UInt16\" Name=\"Domain_partition\" format=\"binary\">" << std::endl;
@@ -405,21 +403,22 @@ void VTKWriter::write(const std::string output_path, const char order[], std::ve
   fout << std::endl;
   fout << "    </DataArray>" << std::endl;
   
+  if (_ml_sol != NULL) {
 
   //Print Solution (on element) ***************************************************************
-  for (unsigned i=0; i<(!print_all)*vars.size() + print_all*_ml_sol.GetSolutionSize(); i++) {
-    unsigned indx=( print_all == 0 ) ? _ml_sol.GetIndex(vars[i].c_str()):i;
-    if (3 <= _ml_sol.GetSolutionType(indx)) {
-      fout << "    <DataArray type=\"Float32\" Name=\"" << _ml_sol.GetSolutionName(indx) <<"\" format=\"binary\">" << std::endl;
+  for (unsigned i=0; i<(!print_all)*vars.size() + print_all*_ml_sol->GetSolutionSize(); i++) {
+    unsigned indx=( print_all == 0 ) ? _ml_sol->GetIndex(vars[i].c_str()):i;
+    if (3 <= _ml_sol->GetSolutionType(indx)) {
+      fout << "    <DataArray type=\"Float32\" Name=\"" << _ml_sol->GetSolutionName(indx) <<"\" format=\"binary\">" << std::endl;
       // point pointer to common memory area buffer of void type;
       float *var_el = static_cast< float*> (buffer_void);
       icount=0;
       for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
 	vector<double> sol_local;
-	_ml_sol.GetSolutionLevel(ig)->_Sol[indx]->localize_to_one(sol_local,0);
+	_ml_sol->GetSolutionLevel(ig)->_Sol[indx]->localize_to_one(sol_local,0);
 	for (unsigned ii=0; ii<mlMsh->GetLevel(ig)->GetNumberOfElements(); ii++) {
 	  if (ig==_gridn-1u || 0==mlMsh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	    unsigned iel_Metis = mlMsh->GetLevel(ig)->GetMetisDof(ii,_ml_sol.GetSolutionType(indx));
+	    unsigned iel_Metis = mlMsh->GetLevel(ig)->GetMetisDof(ii,_ml_sol->GetSolutionType(indx));
 	    var_el[icount]=sol_local[iel_Metis];
 	    icount++;
 	  }
@@ -454,10 +453,10 @@ void VTKWriter::write(const std::string output_path, const char order[], std::ve
    
   // point pointer to common memory area buffer of void type;
   float* var_nd = static_cast<float*>(buffer_void);
-  for (unsigned i=0; i<(!print_all)*vars.size()+ print_all*_ml_sol.GetSolutionSize(); i++) {
-    unsigned indx=( print_all == 0 )?_ml_sol.GetIndex(vars[i].c_str()):i;
-    if (_ml_sol.GetSolutionType(indx)<3) {
-      fout << " <DataArray type=\"Float32\" Name=\"" << _ml_sol.GetSolutionName(indx) <<"\" format=\"binary\">" << std::endl;
+  for (unsigned i=0; i<(!print_all)*vars.size()+ print_all*_ml_sol->GetSolutionSize(); i++) {
+    unsigned indx=( print_all == 0 )?_ml_sol->GetIndex(vars[i].c_str()):i;
+    if (_ml_sol->GetSolutionType(indx)<3) {
+      fout << " <DataArray type=\"Float32\" Name=\"" << _ml_sol->GetSolutionName(indx) <<"\" format=\"binary\">" << std::endl;
       //print solutions on nodes dimension
       cch = b64::b64_encode(&dim_array_ndvar[0], sizeof(dim_array_ndvar), NULL, 0);  
       b64::b64_encode(&dim_array_ndvar[0], sizeof(dim_array_ndvar), &enc[0], cch);
@@ -466,8 +465,8 @@ void VTKWriter::write(const std::string output_path, const char order[], std::ve
       
       unsigned offset_nvt=0;
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	mysol[ig]->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx],
-			       *mlMsh->GetLevel(ig)->GetQitoQjProjection(index_nd,_ml_sol.GetSolutionType(indx)) );
+	mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indx],
+			       *mlMsh->GetLevel(ig)->GetQitoQjProjection(index_nd,_ml_sol->GetSolutionType(indx)) );
 	vector<double> sol_local;
 	mysol[ig]->localize_to_one(sol_local,0);
 	unsigned nvt_ig=mlMsh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
@@ -490,6 +489,10 @@ void VTKWriter::write(const std::string output_path, const char order[], std::ve
   } // end for sol
   fout << "   </PointData>" << std::endl;
   
+    delete [] var_nd;
+    
+  }  //end _ml_sol != NULL
+  
   //------------------------------------------------------------------------------------------------
   
   fout << "  </Piece>" << std::endl;
@@ -503,7 +506,7 @@ void VTKWriter::write(const std::string output_path, const char order[], std::ve
     delete mysol[ig];
   }
 
-  delete [] var_nd; 
+ 
   
   //--------------------------------------------------------------------------------------------------------
   return;   
