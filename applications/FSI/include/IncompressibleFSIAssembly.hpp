@@ -129,7 +129,7 @@ namespace femus {
 
     // mesh and procs
     unsigned nel    = mymsh->GetNumberOfElements();
-    unsigned igrid  = mymsh->GetGridNumber();
+    unsigned igrid  = mymsh->GetLevel();
     unsigned iproc  = mymsh->processor_id();
 
     //----------------------------------------------------------------------------------
@@ -772,7 +772,7 @@ namespace femus {
 
     // mesh and procs
     unsigned nel    = mymsh->GetElementNumber();
-    unsigned igrid  = mymsh->GetGridNumber();
+    unsigned igrid  = mymsh->GetLevel();
     unsigned iproc  = mymsh->processor_id();
 
     //----------------------------------------------------------------------------------
@@ -1304,7 +1304,7 @@ namespace femus {
 
     // mesh and procs
     unsigned nel    = mymsh->GetElementNumber();
-    unsigned igrid  = mymsh->GetGridNumber();
+    unsigned igrid  = mymsh->GetLevel();
     unsigned iproc  = mymsh->processor_id();
 
     //----------------------------------------------------------------------------------
@@ -2220,7 +2220,7 @@ namespace femus {
 
     // mesh and procs
     unsigned nel    = mymsh->GetElementNumber();
-    unsigned igrid  = mymsh->GetGridNumber();
+    unsigned igrid  = mymsh->GetLevel();
     unsigned iproc  = mymsh->processor_id();
 
     //----------------------------------------------------------------------------------

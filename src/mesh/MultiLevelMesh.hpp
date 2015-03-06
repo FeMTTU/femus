@@ -99,12 +99,12 @@ public:
     void PrintInfo();
 
     // data
-    const elem_type *_finiteElement[6][5];
+    const elem_type *_finiteElement[6][5];  
 
 protected:
 
 private:
-
+    
     void BuildElemType(const char GaussOrder[]);
     
     // data

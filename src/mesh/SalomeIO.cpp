@@ -71,7 +71,7 @@ const unsigned SalomeIO::SalomeToFemusFaceIndex[6][6]=
 void SalomeIO::read(const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag) {
    
     Mesh& mesh = GetMesh();
-    mesh.SetGridNumber(0);
+    mesh.SetLevel(0);
 
     hsize_t dims[2];
     

@@ -176,7 +176,7 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
   _KK = SparseMatrix::build().release();
   //_KK->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
   _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,d_nnz,o_nnz);
-  unsigned igrid=_msh->GetGridNumber()+1;
+  unsigned igrid=_msh->GetLevel()+1;
   if(igrid>=_gridr && igrid<_gridn){
     _CC = SparseMatrix::build().release();
     _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,d_nnz,o_nnz);
@@ -194,7 +194,7 @@ void LinearEquation::AddLevel(){
     int KK_size=KKIndex[KKIndex.size()-1u];
     int KK_local_size =KKoffset[KKIndex.size()-1][processor_id()] - KKoffset[0][processor_id()];
    
-    unsigned igrid=_msh->GetGridNumber()+1;
+    unsigned igrid=_msh->GetLevel()+1;
     if(igrid>=_gridr && igrid<_gridn){
       _CC = SparseMatrix::build().release();
       _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,d_nnz,o_nnz);
@@ -231,14 +231,14 @@ void LinearEquation::DeletePde() {
   if(_KK)
     delete _KK;
   
-  unsigned igrid=_msh->GetGridNumber()+1;
+  unsigned igrid=_msh->GetLevel()+1;
   if(igrid>=_gridr && igrid<_gridn){
     if(_CC)
       delete _CC;
   }
   
   
-  if (_msh->GetGridNumber()>0) {
+  if (_msh->GetLevel()>0) {
      if(_PP) 
        delete _PP;
      if(_RR) 
@@ -288,7 +288,7 @@ void LinearEquation::DeletePde() {
     
     // mesh and procs
     int nel    = _msh->GetNumberOfElements();
-    int igrid  = _msh->GetGridNumber();
+    int igrid  = _msh->GetLevel();
     int this_proc  = _msh->processor_id();
     int nprocs=	      _msh->n_processors();
      

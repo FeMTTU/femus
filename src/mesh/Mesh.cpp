@@ -101,7 +101,7 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
     
   vector <vector <double> > coords(3);  
     
-  _level=0;
+  _level = 0;
 
   if(name.rfind(".neu") < name.size())
   {
@@ -118,7 +118,7 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
               << std::endl;
   }
   
-  RenumberNodes(coords);
+  ReorderMeshDofs(coords);
   
   BuildAdjVtx();
   
@@ -167,13 +167,13 @@ void Mesh::GenerateCoarseBoxMesh(
         const double zmin, const double zmax,
         const ElemType type, std::vector<bool> &type_elem_flag) {
   
-  vector <vector <double> > coords(3);  
+  vector <vector < double > > coords(3);  
     
-  _level=0;
+  _level = 0;
     
   MeshTools::Generation::BuildBox(*this,coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,type_elem_flag);
   
-  RenumberNodes(coords);
+  ReorderMeshDofs(coords);
   
   BuildAdjVtx();
   
@@ -214,7 +214,7 @@ void Mesh::GenerateCoarseBoxMesh(
   
 
 //------------------------------------------------------------------------------------------------------
-void Mesh::RenumberNodes(vector < vector < double> > &coords) {
+void Mesh::ReorderMeshDofs(vector < vector < double> > &coords) {
   
   vector <unsigned> dof_index;
   dof_index.resize(_nnodes);
@@ -309,9 +309,6 @@ void Mesh::BuildAdjVtx() {
   }
 }
 
-
-
-
 /**
  * This function stores the element adiacent to the element face (iel,iface)
  * and stores it in kel[iel][iface]
@@ -332,16 +329,13 @@ void Mesh::Buildkel() {
                 unsigned j2=el->GetFaceVertexIndex(jel,jface,1);
                 unsigned j3=el->GetFaceVertexIndex(jel,jface,2);
                 unsigned j4=el->GetFaceVertexIndex(jel,jface,3);
-// 		if((DIM[2]==1 &&
                 if ((Mesh::_dimension==3 &&
                      (i1==j1 || i1==j2 || i1==j3 ||  i1==j4 )&&
                      (i2==j1 || i2==j2 || i2==j3 ||  i2==j4 )&&
                      (i3==j1 || i3==j2 || i3==j3 ||  i3==j4 ))||
-// 		   (DIM[1]==1 &&
                     (Mesh::_dimension==2 &&
                      (i1==j1 || i1==j2 )&&
                      (i2==j1 || i2==j2 ))||
-// 		   (DIM[0]==1 &&
                     (Mesh::_dimension==1 &&
                      (i1==j1))
                    ) {
@@ -384,15 +378,6 @@ unsigned Mesh::GetDofNumber(const unsigned type) const {
 }
 
 
-/**
- * This function copies the refined element index vector in other_vector
- **/
-void Mesh::copy_elr(vector <unsigned> &other_vec) const {
-  for (unsigned i=0; i<_nelem; i++)
-    other_vec[i]=el->GetRefinedElementIndex(i);
-}
-
-
 void Mesh::AllocateAndMarkStructureNode() {
   el->AllocateNodeRegion();
   for (unsigned iel=0; iel<_nelem; iel++) {
@@ -407,16 +392,10 @@ void Mesh::AllocateAndMarkStructureNode() {
       }
     }
   }
-  return;
 }
 
 
-/**
- *  This function generates a finer Mesh level, $l_i$, from a coarser Mesh level $l_{i-1}$, $i>0$
- **/
-
 void Mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]){
-  
   for(int i=0;i<6;i++)
     for(int j=0;j<5;j++)
       _finiteElement[i][j] = OtherFiniteElement[i][j];
@@ -438,17 +417,16 @@ void Mesh::FillISvector() {
   
   // I 
   for(unsigned i=0;i<_nnodes;i++) {
-    npart[i]=nsubdom;
+    npart[i] = nsubdom;
   }
   
-  IS_Mts2Gmt_elem_offset[0]=0;
+  IS_Mts2Gmt_elem_offset[0] = 0;
   vector <unsigned> IS_Gmt2Mts_dof_counter(5,0);
   
    for(int k=0;k<5;k++) {
      IS_Gmt2Mts_dof[k].assign(GetDofNumber(k),GetDofNumber(k)-1); 
      //TODO for domain decomposition pourposes! the non existing dofs point to the last dof!!!!!!
    }
-  
   
   IS_Gmt2Mts_dof_counter[3]=0;
   IS_Gmt2Mts_dof_counter[4]=0;
@@ -457,8 +435,8 @@ void Mesh::FillISvector() {
     for(unsigned iel=0;iel<_nelem;iel++){
       if(epart[iel]==isdom){
 	//filling the piecewise IS_Mts2Gmt_elem metis->gambit
-	IS_Mts2Gmt_elem[ IS_Gmt2Mts_dof_counter[3] ]=iel;
-	IS_Gmt2Mts_dof[3][iel]=IS_Gmt2Mts_dof_counter[3];
+	IS_Mts2Gmt_elem[ IS_Gmt2Mts_dof_counter[3] ] = iel;
+	IS_Gmt2Mts_dof[3][iel] = IS_Gmt2Mts_dof_counter[3];
 	IS_Gmt2Mts_dof_counter[3]++;
 	IS_Mts2Gmt_elem_offset[isdom+1]=IS_Gmt2Mts_dof_counter[3];
 	// linear+quadratic+biquadratic
@@ -538,8 +516,7 @@ void Mesh::FillISvector() {
 	}
       }
       
-      
-       for (unsigned inode=el->GetElementDofNumber(iel,0); inode<el->GetElementDofNumber(iel,1); inode++) {
+      for (unsigned inode=el->GetElementDofNumber(iel,0); inode<el->GetElementDofNumber(iel,1); inode++) {
 	unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
 	if(node_count[ii]<isdom+1){
 	  node_count[ii]=isdom+1;
@@ -565,12 +542,9 @@ void Mesh::FillISvector() {
 	  }
 	}
       }
-      
-      
     }
   }
   
-
   for(int k=0; k<5; k++) {
     ghost_nd[k].resize(nsubdom);
     ghost_nd_mts[k].resize(nsubdom);
@@ -647,17 +621,13 @@ void Mesh::FillISvector() {
   MetisOffset[3][0]=0;
   MetisOffset[4][0]=0;
   
-  for(int i=1;i<=nsubdom;i++){
-    MetisOffset[0][i]= MetisOffset[0][i-1]+own_size[0][i-1];
-    MetisOffset[1][i]= MetisOffset[1][i-1]+own_size[1][i-1];
-    MetisOffset[2][i]= MetisOffset[2][i-1]+own_size[2][i-1];
+  for(int i = 1 ;i <= nsubdom; i++){
+    MetisOffset[0][i]= MetisOffset[0][i-1] + own_size[0][i-1];
+    MetisOffset[1][i]= MetisOffset[1][i-1] + own_size[1][i-1];
+    MetisOffset[2][i]= MetisOffset[2][i-1] + own_size[2][i-1];
     MetisOffset[3][i]= IS_Mts2Gmt_elem_offset[i];
     MetisOffset[4][i]= IS_Mts2Gmt_elem_offset[i]*(_dimension+1);
-    
-  }
-  
-   
-  return; 
+  } 
   
 }
 

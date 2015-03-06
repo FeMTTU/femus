@@ -302,12 +302,10 @@ void MultiLevelMesh::AddMeshLevel()
 
   MeshRefinement meshcoarser(*_level0[_gridn0-1u]);
   meshcoarser.FlagElementsToBeRefinedByUserDefinedFunction();
-  //_level0[_gridn0-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
   
   _level0[_gridn0] = new Mesh();
   MeshRefinement meshfiner(*_level0[_gridn0]);
   meshfiner.RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
-  //_level0[_gridn0]->RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
     
   _level.resize(_gridn+1u);
   _level[_gridn]=_level0[_gridn0];
@@ -324,12 +322,10 @@ void MultiLevelMesh::AddAMRMeshLevel()
   
   MeshRefinement meshcoarser(*_level0[_gridn0-1u]);
   meshcoarser.FlagElementsToBeRefinedByAMR();
-  //_level0[_gridn0-1u]->FlagElementsToBeRefinedByAMR();
   
   _level0[_gridn0] = new Mesh();
   MeshRefinement meshfiner(*_level0[_gridn0]);
   meshfiner.RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
-  //_level0[_gridn0]->RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
     
   _level.resize(_gridn+1u);
   _level[_gridn]=_level0[_gridn0];
@@ -349,8 +345,8 @@ void MultiLevelMesh::EraseCoarseLevels(unsigned levels_to_be_erased) {
     _gridr -= levels_to_be_erased;
     _gridn -= levels_to_be_erased;
     for(int i=0; i<_gridn; i++) {
-        _level[i]=_level0[i+levels_to_be_erased];
-        _level[i]->SetGridNumber(i);
+      _level[i]=_level0[i+levels_to_be_erased];
+      _level[i]->SetLevel(i);
     }
 }
 
@@ -366,7 +362,7 @@ void MultiLevelMesh::MarkStructureNode() {
 void MultiLevelMesh::PrintInfo() {
     std::cout << " Number of uniform mesh refinement: " << _gridn << std::endl;
     for(int i=0; i<_gridn; i++) {
-        _level[i]->PrintInfo();
+      _level[i]->PrintInfo();
     }
 }
 

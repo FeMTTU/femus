@@ -288,7 +288,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
   //data
   const unsigned	dim	= mymsh->GetDimension();
   unsigned 		nel	= mymsh->GetNumberOfElements();
-  unsigned 		igrid	= mymsh->GetGridNumber();
+  unsigned 		igrid	= mymsh->GetLevel();
   unsigned 		iproc	= mymsh->processor_id();
 
   //solution variable

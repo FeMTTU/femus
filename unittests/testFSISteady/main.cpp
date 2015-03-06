@@ -479,7 +479,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 
   // mesh and procs
   unsigned nel    = mymsh->GetNumberOfElements();
-  unsigned igrid  = mymsh->GetGridNumber();
+  unsigned igrid  = mymsh->GetLevel();
   unsigned iproc  = mymsh->processor_id();
 
   //----------------------------------------------------------------------------------
