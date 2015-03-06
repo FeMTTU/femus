@@ -37,13 +37,16 @@ class VTKWriter : public Writer {
 public:
 
     /** Constructor. */
-    VTKWriter(MultiLevelSolution & ml_sol);
+    VTKWriter(MultiLevelSolution * ml_sol);
+
+    /** Constructor. */
+    VTKWriter(MultiLevelMesh * ml_mesh);
 
     /** Destructor */
     virtual ~VTKWriter();
 
     /** write output function */
-    virtual void write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step=0);
+    virtual void write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step=0) const;
     
 private:
   

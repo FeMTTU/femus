@@ -247,7 +247,7 @@ int main(int argc,char **args) {
 //   print_vars.push_back("T");
   
 //   GMVWriter gmvio(ml_sol);
-//   gmvio.write_system_solutions("biquadratic",print_vars);
+//   gmvio.write("biquadratic",print_vars);
   
   
   

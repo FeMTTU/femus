@@ -33,6 +33,7 @@ namespace femus {
   //------------------------------------------------------------------------------
   // Forward declarations
   //------------------------------------------------------------------------------
+  class MultiLevelMesh;
   class MultiLevelSolution;
   class SparseMatrix;
   class Vector;
@@ -43,19 +44,26 @@ namespace femus {
   public:
 
     /** Constructor. */
-    Writer(MultiLevelSolution & ml_probl);
+    Writer(MultiLevelSolution * ml_sol);
+
+    /** Constructor. */
+    Writer(MultiLevelMesh * ml_mesh);
 
     /** Destructor */
     virtual ~Writer();
 
     /** write output function */
-    virtual void write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step = 0) = 0;
+    virtual void write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step = 0)  const = 0;
 
     /** set moving mesh */
     void SetMovingMesh(std::vector<std::string>& movvars_in);
     
+    /** runtime selection of writer for MLsol */
     static std::auto_ptr<Writer> build(const WriterEnum format, MultiLevelSolution * ml_sol);
 
+    /** runtime selection of writer for MLmesh */
+    static std::auto_ptr<Writer> build(const WriterEnum format, MultiLevelMesh * ml_mesh);
+    
   protected:
 
     /** a flag to move the output mesh */
@@ -64,8 +72,11 @@ namespace femus {
     /** the displacement variables for mesh moving */
     std::vector<std::string> _moving_vars;
 
-    /** the multilevelsolution reference */
-    MultiLevelSolution& _ml_sol;
+    /** the multilevelsolution pointer */
+    MultiLevelSolution* _ml_sol;
+
+    /** the multilevel mesh */
+    MultiLevelMesh* _ml_mesh;
 
     int _gridn;
 

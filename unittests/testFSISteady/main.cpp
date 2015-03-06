@@ -129,7 +129,7 @@ int main(int argc,char **args) {
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
-  VTKWriter vtkio(ml_sol);
+  VTKWriter vtkio(&ml_sol);
   vtkio.SetMovingMesh(mov_vars);
   
   // Solving Fluid-Structure-Interaction system

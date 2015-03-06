@@ -118,17 +118,17 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   Pressure       pressure("Qty_Pressure",qty_map,1,LL);                qty_map.AddQuantity(&pressure);
   Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.AddQuantity(&velocity);  
 
-#if FOURTH_ROW==1
-  Pressure2 pressure_2("Qty_Pressure_2",qty_map,1,KK);            qty_map.AddQuantity(&pressure_2);
-#endif 
-  
   // ===== end QuantityMap =========================================
   
   // ====== Start new main =================================
   MultiLevelMesh ml_msh;
-  ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,1,0,0,QUAD9,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+  ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,2,0,0,QUAD9,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"fifth");
   ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
   ml_msh.PrintInfo();
+  
+  ml_msh.SetWriter(VTK);
+  std::vector<std::string> print_vars;
+  ml_msh.GetWriter()->write(files.GetOutputPath(),"biquadratic",print_vars);
   
   MultiLevelSolution ml_sol(&ml_msh);
   ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
@@ -155,10 +155,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
          eqnT.AddSolutionToSystemPDE("FAKE");
          eqnT.AddUnknownToSystemPDE(&temperature);
          eqnT.AddUnknownToSystemPDE(&templift);
-         eqnT.AddUnknownToSystemPDE(&tempadj);
-#if FOURTH_ROW==1
-         eqnT.AddUnknownToSystemPDE(&pressure_2);   //the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function
-#endif
+         eqnT.AddUnknownToSystemPDE(&tempadj);//the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function
 	 eqnT.SetAssembleFunction(GenMatRhsT);
   
 //================================ 

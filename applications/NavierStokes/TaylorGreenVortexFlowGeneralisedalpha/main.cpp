@@ -123,7 +123,7 @@ int main(int argc,char **args) {
   const unsigned int n_timesteps = 5;
   const unsigned int write_interval = 1;
   
-  VTKWriter vtkio(ml_sol);
+  VTKWriter vtkio(&ml_sol);
   
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
    
@@ -150,7 +150,7 @@ int main(int argc,char **args) {
       print_vars.push_back("AY");
       
 //       ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
-      vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars,time_step);
+      vtkio.write(files.GetOutputPath(),"biquadratic",print_vars,time_step);
     }
   
   } //end loop timestep
