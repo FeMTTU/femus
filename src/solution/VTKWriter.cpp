@@ -43,6 +43,7 @@ VTKWriter::~VTKWriter() {}
 
 
 void VTKWriter::write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) const { 
+  
   bool print_all = 0;
   for (unsigned ivar=0; ivar < vars.size(); ivar++){
     print_all += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
