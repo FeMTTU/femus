@@ -117,10 +117,13 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 
  
   //--------------------------------------------------------------------------------------------------
+  std::string filename_prefix;
+  if( _ml_sol != NULL ) filename_prefix = "sol";
+  else filename_prefix = "mesh";
+  
   // Print The Xdmf wrapper
   std::ostringstream xdmf_filename;
-  if( _ml_sol != NULL )    xdmf_filename << output_path << "/" << "sol.level" << _gridn << "." << time_step << "." << order << ".xmf"; 
-  else                     xdmf_filename << output_path << "/" << "mesh.level" << _gridn << "." << time_step << "." << order << ".xmf"; 
+  xdmf_filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".xmf"; 
 
   std::ofstream fout;
     
@@ -141,7 +144,8 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   // Print The HDF5 file
   std::ostringstream hdf5_filename;
   std::ostringstream hdf5_filename2;
-  hdf5_filename2 << "sol.level" << _gridn << "." << time_step << "." << order << ".h5";
+  hdf5_filename2 << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".h5";
+  
   hdf5_filename << output_path << "/" <<  hdf5_filename2.str();
   // head ************************************************
   fout<<"<?xml version=\"1.0\" ?>" << std::endl;

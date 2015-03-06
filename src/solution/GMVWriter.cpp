@@ -57,11 +57,13 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
   // ********** linear -> index==0 *** quadratic -> index==1 **********
   unsigned index=(strcmp(order,"linear"))?1:0;
 
+  std::string filename_prefix;
+  if( _ml_sol != NULL ) filename_prefix = "sol";
+  else filename_prefix = "mesh";
+  
   std::ostringstream filename;
-  if( _ml_sol != NULL )
-    filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".gmv"; 
-  else
-    filename << output_path << "/mesh.level" << _gridn << "." << time_step << "." << order << ".gmv"; 
+    filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".gmv"; 
+    
   std::ofstream fout;
   
   if(_iproc!=0) {

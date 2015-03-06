@@ -64,11 +64,13 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
   }
   
  
+  std::string filename_prefix;
+  if( _ml_sol != NULL ) filename_prefix = "sol";
+  else filename_prefix = "mesh";
+  
   std::ostringstream filename;
-  if( _ml_sol != NULL )
-    filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".vtu"; 
-  else
-    filename << output_path << "/mesh.level" << _gridn << "." << time_step << "." << order << ".vtu"; 
+  filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".vtu"; 
+  
   std::ofstream fout;
   
   if(_iproc!=0) {
