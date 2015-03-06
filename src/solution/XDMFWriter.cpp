@@ -68,7 +68,6 @@ void XDMFWriter::write(const std::string output_path, const char order[], std::v
     print_all += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
   }  
   
-
   unsigned index=0;
   unsigned index_nd=0;
   if(!strcmp(order,"linear")) {    //linear
@@ -109,8 +108,8 @@ void XDMFWriter::write(const std::string output_path, const char order[], std::v
   nel+=_ml_mesh->GetLevel(_gridn-1u)->GetNumberOfElements();
   
   unsigned icount;
-  unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index);
-  int *var_int            = new int [nel*el_dof_number];
+  unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index_nd);
+  int * var_conn          = new int [nel*el_dof_number];
   float *var_el_f         = new float [nel];
   float *var_nd_f         = new float [nvt];
 
@@ -147,30 +146,30 @@ void XDMFWriter::write(const std::string output_path, const char order[], std::v
   fout<<"<Domain>"<<std::endl;
   fout<<"<Grid Name=\"Mesh\">"<<std::endl;
   fout<<"<Time Value =\""<< time_step<< "\" />"<<std::endl;
-  fout<<"<Topology TopologyType=\""<< type_elem <<"\" Dimensions=\""<< nel <<"\">"<<std::endl;
+  fout<<"<Topology Type=\""<< type_elem <<"\" Dimensions=\""<< nel <<"\">"<<std::endl;
   //Connectivity
-  fout<<"<DataStructure DataType=\"Int\" Dimensions=\""<< nel*el_dof_number <<"\"" << "  Format=\"HDF\">" << std::endl;
-  fout << hdf5_filename2.str() << ":CONNECTIVITY" << std::endl;
+  fout<<"<DataStructure DataType=\"Int\" Dimensions=\""<< nel << " " << el_dof_number <<"\"" << "  Format=\"HDF\">" << std::endl;
+  fout << hdf5_filename2.str() << ":/CONNECTIVITY" << std::endl;
   fout <<"</DataStructure>" << std::endl;
   fout << "</Topology>" << std::endl;
   fout << "<Geometry Type=\"X_Y_Z\">" << std::endl;
   //Node_X
-  fout<<"<DataStructure DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
-  fout << hdf5_filename2.str() << ":NODES_X1" << std::endl;
+  fout<<"<DataStructure DataType=\"Float\" Precision=\"8\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
+  fout << hdf5_filename2.str() << ":/NODES_X1" << std::endl;
   fout <<"</DataStructure>" << std::endl;
   //Node_Y
-  fout<<"<DataStructure DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
-  fout << hdf5_filename2.str() << ":NODES_X2" << std::endl;
+  fout<<"<DataStructure DataType=\"Float\" Precision=\"8\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
+  fout << hdf5_filename2.str() << ":/NODES_X2" << std::endl;
   fout <<"</DataStructure>" << std::endl;
   //Node_Z
-  fout<<"<DataStructure DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
-  fout << hdf5_filename2.str() << ":NODES_X3" << std::endl;
+  fout<<"<DataStructure DataType=\"Float\" Precision=\"8\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
+  fout << hdf5_filename2.str() << ":/NODES_X3" << std::endl;
   fout <<"</DataStructure>" << std::endl;
   fout <<"</Geometry>" << std::endl;
   //Regions
   fout << "<Attribute Name=\""<< "Regions"<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
   fout << "<DataItem DataType=\"Int\" Dimensions=\""<< nel << "  1\""  << "  Format=\"HDF\">" << std::endl;
-  fout << hdf5_filename2.str() << ":REGIONS" << std::endl;
+  fout << hdf5_filename2.str() << ":/REGIONS" << std::endl;
   fout << "</DataItem>" << std::endl;
   fout << "</Attribute>" << std::endl;
   
@@ -181,15 +180,15 @@ void XDMFWriter::write(const std::string output_path, const char order[], std::v
     //Printing biquadratic solution on the nodes
     if(_ml_sol->GetSolutionType(indx)<3) {  
       fout << "<Attribute Name=\""<< _ml_sol->GetSolutionName(indx)<<"\" AttributeType=\"Scalar\" Center=\"Node\">" << std::endl;
-      fout << "<DataItem DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
-      fout << hdf5_filename2.str() << ":" << _ml_sol->GetSolutionName(indx) << std::endl;
+      fout << "<DataItem DataType=\"Float\" Precision=\"8\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
+      fout << hdf5_filename2.str() << ":/" << _ml_sol->GetSolutionName(indx) << std::endl;
       fout << "</DataItem>" << std::endl;
       fout << "</Attribute>" << std::endl;
     }
     else if (_ml_sol->GetSolutionType(indx)>=3) {  //Printing picewise constant solution on the element
       fout << "<Attribute Name=\""<< _ml_sol->GetSolutionName(indx)<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
-      fout << "<DataItem DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nel << "  1\"" << "  Format=\"HDF\">" << std::endl;
-      fout << hdf5_filename2.str() << ":" << _ml_sol->GetSolutionName(indx) << std::endl;
+      fout << "<DataItem DataType=\"Float\" Precision=\"8\" Dimensions=\""<< nel << "  1\"" << "  Format=\"HDF\">" << std::endl;
+      fout << hdf5_filename2.str() << ":/" << _ml_sol->GetSolutionName(indx) << std::endl;
       fout << "</DataItem>" << std::endl;
       fout << "</Attribute>" << std::endl;
     }
@@ -255,23 +254,24 @@ void XDMFWriter::write(const std::string output_path, const char order[], std::v
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     for (unsigned iel=0; iel<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); iel++) {
       if (_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-        for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
+	int ndofs = _ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index_nd);
+        for (unsigned j=0; j<ndofs; j++) {
 	  unsigned vtk_loc_conn = map_pr[j];
 	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
 	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
-	  var_int[icount] = offset_conn + jnode_Metis;
+	  var_conn[icount] = offset_conn + jnode_Metis;
 	  icount++;
 	}
       }
     }
-    offset_conn += _ml_mesh->GetLevel(ig)->GetDofNumber(index_nd);
+    offset_conn += _ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];//GetLevel(ig)->GetDofNumber(index_nd);
   }
   
   dimsf[0] = nel*el_dof_number ;  dimsf[1] = 1;
   dataspace = H5Screate_simple(2,dimsf, NULL);
   dataset   = H5Dcreate(file_id,"/CONNECTIVITY",H5T_NATIVE_INT,
 			dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_int[0]);
+  status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_conn[0]);
   H5Sclose(dataspace);
   H5Dclose(dataset);
   //------------------------------------------------------------------------------------------------------
@@ -284,7 +284,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], std::v
     for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
       if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
 	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,3);
-	var_int[icount] = _ml_mesh->GetLevel(ig)->el->GetElementGroup(iel_Metis);
+	var_conn[icount] = _ml_mesh->GetLevel(ig)->el->GetElementGroup(iel_Metis);
 	icount++;
       }
     }
@@ -294,7 +294,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], std::v
   dataspace = H5Screate_simple(2,dimsf, NULL);
   dataset   = H5Dcreate(file_id,"/REGIONS",H5T_NATIVE_INT,
 			dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_int[0]);
+  status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_conn[0]);
   H5Sclose(dataspace);
   H5Dclose(dataset);
   
@@ -360,7 +360,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], std::v
   H5Fclose(file_id);
  
   //free memory
-  delete [] var_int;
+  delete [] var_conn;
   delete [] var_el_f;
   delete [] var_nd_f;
   
