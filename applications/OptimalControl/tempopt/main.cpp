@@ -128,8 +128,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_msh.PrintInfo();
   
   ml_msh.SetWriter(XDMF);
-  std::vector<std::string> print_vars;
-  ml_msh.GetWriter()->write(files.GetOutputPath(),"biquadratic",print_vars);
+  ml_msh.GetWriter()->write(files.GetOutputPath(),"biquadratic");
   
   MultiLevelSolution ml_sol(&ml_msh);
   ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
