@@ -45,7 +45,7 @@ public:
     virtual ~XDMFWriter();
 
     /** write output function */
-    virtual void write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step = 0) const;
+    virtual void write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) const;
 
     /** write a wrapper file for paraview to open all the files of an history together */
     void write_solution_wrapper(const std::string output_path, const char type[]) const;

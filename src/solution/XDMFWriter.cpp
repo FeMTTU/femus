@@ -60,10 +60,13 @@ XDMFWriter::XDMFWriter(MultiLevelMesh * ml_mesh): Writer(ml_mesh) {}
 
 XDMFWriter::~XDMFWriter() {}
 
-void XDMFWriter::write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) const { 
+void XDMFWriter::write(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) const { 
 #ifdef HAVE_HDF5
   
-  bool test_all=!(vars[0].compare("All"));
+  bool print_all = 0;
+  for (unsigned ivar=0; ivar < vars.size(); ivar++){
+    print_all += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
+  }
     
   unsigned index=0;
   unsigned index_nd=0;
@@ -114,9 +117,12 @@ void XDMFWriter::write(const std::string output_path, const char order[], std::v
   //--------------------------------------------------------------------------------------------------
   // Print The Xdmf wrapper
   std::ostringstream filename;
-  filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".xmf"; 
+  if( _ml_sol != NULL )
+    filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".xmf"; 
+  else
+    filename << output_path << "/mesh.level" << _gridn << "." << time_step << "." << order << ".xmf"; 
   std::ofstream fout;
-  
+    
   if(_iproc!=0) {
     fout.rdbuf();   //redirect to dev_null
   }
@@ -292,8 +298,8 @@ void XDMFWriter::write(const std::string output_path, const char order[], std::v
   
   //-------------------------------------------------------------------------------------------------------
   // printing element variables
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_sol->GetSolutionSize(); i++) {
-    unsigned indx=(test_all==0)?_ml_sol->GetIndex(vars[i].c_str()):i;
+  for (unsigned i=0; i<(1-print_all)*vars.size()+print_all*_ml_sol->GetSolutionSize(); i++) {
+    unsigned indx=(print_all==0)?_ml_sol->GetIndex(vars[i].c_str()):i;
     if (_ml_sol->GetSolutionType(indx)>=3) {
       icount=0;
       for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
@@ -319,8 +325,8 @@ void XDMFWriter::write(const std::string output_path, const char order[], std::v
   
   //-------------------------------------------------------------------------------------------------------
   // printing nodes variables
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_sol->GetSolutionSize(); i++) {
-    unsigned indx=(test_all==0)?_ml_sol->GetIndex(vars[i].c_str()):i;
+  for (unsigned i=0; i<(1-print_all)*vars.size()+print_all*_ml_sol->GetSolutionSize(); i++) {
+    unsigned indx=(print_all==0)?_ml_sol->GetIndex(vars[i].c_str()):i;
     if (_ml_sol->GetSolutionType(indx) < 3) {
       unsigned offset_nvt=0;
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {

@@ -42,7 +42,7 @@ VTKWriter::VTKWriter(MultiLevelMesh * ml_mesh): Writer(ml_mesh) {}
 VTKWriter::~VTKWriter() {}
 
 
-void VTKWriter::write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) const { 
+void VTKWriter::write(const std::string output_path, const char order[], const std::vector < std::string > & vars, const unsigned time_step) const { 
   bool print_all = 0;
   for (unsigned ivar=0; ivar < vars.size(); ivar++){
     print_all += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
@@ -66,7 +66,10 @@ void VTKWriter::write(const std::string output_path, const char order[], std::ve
   
  
   std::ostringstream filename;
-  filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".vtu"; 
+  if( _ml_sol != NULL )
+    filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".vtu"; 
+  else
+    filename << output_path << "/mesh.level" << _gridn << "." << time_step << "." << order << ".vtu"; 
   std::ofstream fout;
   
   if(_iproc!=0) {
