@@ -125,7 +125,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
    	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _equation_systems._ml_msh->_finiteElement[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
+	  mshc->_finiteElement[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
 	}
       }
     }
@@ -174,12 +174,12 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
     
 	  short unsigned ielt=mshc->el->GetElementType(iel);
 	  if(!testIfPressure){
-	    _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildRestrictionTranspose(*LinSolf,*LinSolc,iel,RRt,SolIndex,k,solPairIndex,solPairPdeIndex);
+	    mshc->_finiteElement[ielt][SolType]->BuildRestrictionTranspose(*LinSolf,*LinSolc,iel,RRt,SolIndex,k,solPairIndex,solPairPdeIndex);
 	  }
 	  else{
-	    _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, RRt,SolIndex,k);
+	    mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, RRt,SolIndex,k);
 	  }	  
-	  _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, LinSolf->_PP,SolIndex,k);
+	  mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, LinSolf->_PP,SolIndex,k);
 	}
       }
     }

@@ -79,7 +79,7 @@ void MeshRefinement::FlagElementsToBeRefinedByUserDefinedFunction() {
       vty/=nve;
       vtz/=nve;
       if(!_mesh.el->GetRefinedElementIndex(iel)){
-	if (_mesh._SetRefinementFlag(vtx,vty,vtz,_mesh.el->GetElementGroup(iel),_mesh.GetGridNumber())) {
+	if (_mesh._SetRefinementFlag(vtx,vty,vtz,_mesh.el->GetElementGroup(iel),_mesh.GetLevel())) {
 	  _mesh.el->SetRefinedElementIndex(iel,1);
 	  _mesh.el->AddToRefinedElementNumber(1);
 	  short unsigned elt=_mesh.el->GetElementType(iel);
@@ -113,7 +113,7 @@ void MeshRefinement::FlagElementsToBeRefinedByAMR() {
 	vty/=nve;
 	vtz/=nve;
 	if( (*_mesh._coordinate->_Sol[3])(iel_metis) < 0.5 &&
-	    _mesh._SetRefinementFlag(vtx,vty,vtz,_mesh.el->GetElementGroup(kel),_mesh.GetGridNumber()) ) {
+	    _mesh._SetRefinementFlag(vtx,vty,vtz,_mesh.el->GetElementGroup(kel),_mesh.GetLevel()) ) {
 	    _mesh._coordinate->_Sol[3]->set(iel_metis,1.);
 	}
       }
@@ -163,7 +163,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
     
   elem *elc=mshc->el;
     
-  _mesh.SetGridNumber(igrid);
+  _mesh.SetLevel(igrid);
   //_grid=igrid;
 
 

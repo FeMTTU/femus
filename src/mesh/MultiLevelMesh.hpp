@@ -109,11 +109,10 @@ public:
     /** To be Added */
     void SetWriter(const WriterEnum format) { _writer = Writer::build(format,this).release(); }
 
-
 protected:
 
 private:
-
+    
     void BuildElemType(const char GaussOrder[]);
     
     // data

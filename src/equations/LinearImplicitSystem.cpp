@@ -449,7 +449,7 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
    	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _equation_systems._ml_msh->_finiteElement[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
+	  mshc->_finiteElement[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
 	}
       }
     }
@@ -481,7 +481,7 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
     	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel,LinSolf->_PP,SolIndex,k);
+	  mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel,LinSolf->_PP,SolIndex,k);
 	}
       }
     }

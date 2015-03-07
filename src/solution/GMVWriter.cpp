@@ -46,7 +46,7 @@ GMVWriter::~GMVWriter()
   
 }
 
-void GMVWriter::write(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) const { 
+void GMVWriter::write(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) const { 
   
   unsigned igridn = _gridn; // aggiunta da me
       
@@ -57,8 +57,13 @@ void GMVWriter::write(const std::string output_path, const char order[], std::ve
   // ********** linear -> index==0 *** quadratic -> index==1 **********
   unsigned index=(strcmp(order,"linear"))?1:0;
 
+  std::string filename_prefix;
+  if( _ml_sol != NULL ) filename_prefix = "sol";
+  else filename_prefix = "mesh";
+  
   std::ostringstream filename;
-  filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".gmv"; 
+    filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".gmv"; 
+    
   std::ofstream fout;
   
   if(_iproc!=0) {

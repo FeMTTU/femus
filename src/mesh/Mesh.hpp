@@ -77,12 +77,12 @@ public:
     }
 
     /** Set the grid number */
-    void SetGridNumber(const unsigned i) {
+    void SetLevel(const unsigned i) {
         _level=i;
     };
 
     /** Get the grid number */
-    unsigned GetGridNumber() const {
+    unsigned GetLevel() const {
       return _level;
     }
 
@@ -149,14 +149,15 @@ public:
     // member data
     Solution* _coordinate;
     const elem_type *_finiteElement[6][5];
-    vector <unsigned> IS_Mts2Gmt_elem_offset;
-    vector <unsigned> IS_Mts2Gmt_elem;
-    vector <unsigned> own_size[5];
-    vector <vector <unsigned> > MetisOffset;
-    vector< vector<unsigned> > ghost_nd[5];
-    vector< vector<int> > ghost_nd_mts[5];
-    vector <unsigned> ghost_size[5];
-    elem *el;  //< elements
+    
+    vector < unsigned > IS_Mts2Gmt_elem_offset;
+    vector < unsigned > IS_Mts2Gmt_elem;
+    vector < unsigned > own_size[5];
+    vector <vector < unsigned > > MetisOffset;
+    vector< vector < unsigned > > ghost_nd[5];
+    vector< vector < int > > ghost_nd_mts[5];
+    vector < unsigned > ghost_size[5];
+    elem *el;  // topology object
     vector < int > epart;
     vector < int > npart;
     int nsubdom;
@@ -192,18 +193,14 @@ private:
      
     /** Build the coarse to the fine projection matrix */
     void BuildCoarseToFineProjection(const unsigned& solType);
-        
-    
-    /** To be added */
-    void copy_elr(vector <unsigned> &other_vec) const;
-  
-    /** Renumber nodes in the following order: vertices, face, center */
-    void RenumberNodes(vector < vector < double> > &coords);
+      
+    /** Reorder mesh dofs in the following order: vertices, face, center */
+    void ReorderMeshDofs(vector < vector < double> > &coords);
     
     //member-data
-    int _nelem;                                   //< number of elements
-    unsigned _nnodes;                              //< number of nodes
-    unsigned _level;                            //< level of mesh in the multilevel hierarchy
+    int _nelem;                                //< number of elements
+    unsigned _nnodes;                          //< number of nodes
+    unsigned _level;                           //< level of mesh in the multilevel hierarchy
     static unsigned _dimension;                //< dimension of the problem
     static unsigned _ref_index;
     static unsigned _face_index;

@@ -374,7 +374,7 @@ int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, /*const elem_type
 // // //   double geom_el_coords[SPACEDIM][MAX_EL_NODES];
 // // //   elem*    myel  = lsyspdemesh_lev->el;
 // // //   unsigned nel   = lsyspdemesh_lev->GetElementNumber();
-// // //   unsigned igrid = lsyspdemesh_lev->GetGridNumber();
+// // //   unsigned igrid = lsyspdemesh_lev->GetLevel();
 // // // 
 // // // // variables
 // // //   PetscInt nodeP[MAX_EL_NODES];
@@ -546,7 +546,7 @@ int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, /*const elem_type
 // // //   // ***************** END ASSEMBLY *******************
 // // // 
 // // //   // *** Computational info ***
-// // // //  cout<<"Grid="<< lsyspdemesh_lev->GetGridNumber()<<endl;
+// // // //  cout<<"Grid="<< lsyspdemesh_lev->GetLevel()<<endl;
 // // // //  cout<<"ASSEMBLY + RESIDUAL time="<<static_cast<double>(AssemblyTime)/CLOCKS_PER_SEC<<endl;
 // // // 
 // // //   //free memory
@@ -709,7 +709,7 @@ int AssembleMatrixResD(MultiLevelProblem &mg2, unsigned level, /*const elem_type
 // // //   clock_t start_time, end_time;
 // // // 
 // // //   unsigned nel   = lsyspdemesh_lev->GetElementNumber();
-// // //   unsigned igrid = lsyspdemesh_lev->GetGridNumber();
+// // //   unsigned igrid = lsyspdemesh_lev->GetLevel();
 // // // 
 // // //   start_time=clock();
 // // //   
@@ -1040,7 +1040,7 @@ int AssembleMatrixResVel(MultiLevelProblem &mg2, unsigned level, /*const elem_ty
 // // //   PetscInt node_geom[MAX_EL_NODES];
 // // //   elem*    myel  = lsyspdemesh_lev->el;
 // // //   unsigned nel   = lsyspdemesh_lev->GetElementNumber();
-// // //   unsigned igrid = lsyspdemesh_lev->GetGridNumber();
+// // //   unsigned igrid = lsyspdemesh_lev->GetLevel();
 // // // 
 // // // // variables  
 // // //   std::string varnames[NVAR_VEL];
@@ -1203,7 +1203,7 @@ int AssembleMatrixResVel(MultiLevelProblem &mg2, unsigned level, /*const elem_ty
 // // //   // ***************** END ASSEMBLY *******************
 // // // 
 // // //   // *** Computational info ***
-// // // //  cout<<"Grid="<< lsyspdemesh_lev->GetGridNumber()<<endl;
+// // // //  cout<<"Grid="<< lsyspdemesh_lev->GetLevel()<<endl;
 // // // //  cout<<"ASSEMBLY + RESIDUAL time="<<static_cast<double>(AssemblyTime)/CLOCKS_PER_SEC<<endl;
 // // // 
 // // //   //free memory
