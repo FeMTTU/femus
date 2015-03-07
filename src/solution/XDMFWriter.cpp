@@ -67,9 +67,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   for (unsigned ivar=0; ivar < vars.size(); ivar++){
     print_all += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
   }
-    
-
-  
+   
   unsigned index=0;
   unsigned index_nd=0;
   if(!strcmp(order,"linear")) {    //linear
@@ -232,7 +230,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 			 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,2) );
       unsigned nvt_ig=_ml_mesh->GetLevel(ig)->GetDofNumber(index_nd);
       for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
-      if (_ml_sol != NULL && _moving_mesh) {
+      if (_ml_sol != NULL && _moving_mesh && _ml_mesh->GetLevel(0)->GetDimension() > i) {
 	unsigned varind_DXDYDZ=_ml_sol->GetIndex(_moving_vars[i].c_str());
 	mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[varind_DXDYDZ],
 			   *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,_ml_sol->GetSolutionType(varind_DXDYDZ)));
