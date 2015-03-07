@@ -58,5 +58,5 @@ Giorgio Bornia
 License
 ========
 
-Femus is opensource software distributed under the LGPL license, version 2.1
+Femus is an open-source software distributed under the LGPL license, version 2.1
 

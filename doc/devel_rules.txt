@@ -86,3 +86,14 @@ git config --global user.email "name.surname@example.com"
 
 - Using the manual never hurts...
 
+- To contribute:
+  Create a personal github account 
+  Create a fork of the femus repository in your github account
+  Clone your fork in your computer
+  Work in your computer (do branches, commit changes, ...)
+  Push your branches back to your fork 
+  Send a pull request to the main femus repository
+  The maintainers will decide what to do with the pull request and possibly it will be merged to master
+  Periodically, sync the master in the fork with the master in the main femus repository
+
+
