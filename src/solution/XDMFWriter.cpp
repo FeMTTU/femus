@@ -222,12 +222,9 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   for (int i=0; i<3; i++) {
     for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
       unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];//->GetDofNumber(index_nd);
-      NumericVector* mysol;
-      NumericVector* mysol_ser;
-      mysol     = NumericVector::build().release();
-      mysol_ser = NumericVector::build().release();
+      NumericVector* mysol = NumericVector::build().release();
+      NumericVector* mysol_ser = NumericVector::build().release();
       mysol_ser->init(nvt_ig,nvt_ig,true,SERIAL);
-      //mysol->init(_ml_mesh->GetLevel(ig)->GetDofNumber(index_nd),_ml_mesh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
       mysol->init(nvt_ig,_ml_mesh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
       mysol->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
 			 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,2) );
@@ -323,13 +320,20 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
     if (_ml_sol->GetSolutionType(indx)>=3) {
       icount=0;
       for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
+	unsigned nel_ig = _ml_mesh->GetLevel(ig)->GetNumberOfElements();
+	unsigned sol_size = _ml_sol->GetSolutionLevel(ig)->_Sol[indx]->size();
+	NumericVector* mysol_ser = NumericVector::build().release();
+	mysol_ser->init(sol_size,sol_size,true,SERIAL);
+	for (unsigned ii=0; ii<nel_ig; ii++) {
 	  if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	    _ml_sol->GetSolutionLevel(ig)->_Sol[indx]->localize(*mysol_ser);
 	    unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,_ml_sol->GetSolutionType(indx));
-	    var_el_f[icount]=(*_ml_sol->GetSolutionLevel(ig)->_Sol[indx])(iel_Metis);
+	    
+	    var_el_f[icount]=(*mysol_ser)(iel_Metis);
 	    icount++;
 	  }
 	}
+	delete mysol_ser;
       } 
      
       dimsf[0] = nel;  dimsf[1] = 1;
@@ -350,11 +354,8 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
     if (_ml_sol->GetSolutionType(indx) < 3) {
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
         unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
-        NumericVector* mysol;
-        NumericVector* mysol_ser;
-	mysol = NumericVector::build().release();
-        mysol_ser = NumericVector::build().release();
-        //mysol->init(_ml_mesh->GetLevel(ig)->GetDofNumber(index_nd),_ml_mesh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
+        NumericVector* mysol = NumericVector::build().release();
+        NumericVector* mysol_ser = NumericVector::build().release();
 	mysol_ser->init(nvt_ig,nvt_ig,true,SERIAL);
 	mysol->init(nvt_ig,_ml_mesh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
 	mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indx],
