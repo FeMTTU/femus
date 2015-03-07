@@ -220,7 +220,6 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   // Printing nodes coordinates 
   
   for (int i=0; i<3; i++) {
-    unsigned offset_nvt = 0;
     for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
       unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];//->GetDofNumber(index_nd);
       NumericVector* mysol;
@@ -247,7 +246,6 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 	    }
       }
       
-      offset_nvt += nvt_ig;
       delete mysol;
       delete mysol_ser;
     }
@@ -258,9 +256,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
     dataspace = H5Screate_simple(2,dimsf, NULL);
     dataset   = H5Dcreate(file_id,Name.str().c_str(),H5T_NATIVE_FLOAT,
 			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-//        if(_iproc==0) {
    status = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_nd_f);
-//        }
    H5Sclose(dataspace);
     H5Dclose(dataset);
     
@@ -352,25 +348,31 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   for (unsigned i=0; i<(1-print_all)*vars.size()+print_all*_ml_sol->GetSolutionSize(); i++) {
     unsigned indx=(print_all==0)?_ml_sol->GetIndex(vars[i].c_str()):i;
     if (_ml_sol->GetSolutionType(indx) < 3) {
-      unsigned offset_nvt=0;
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+        unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
         NumericVector* mysol;
+        NumericVector* mysol_ser;
 	mysol = NumericVector::build().release();
+        mysol_ser = NumericVector::build().release();
         //mysol->init(_ml_mesh->GetLevel(ig)->GetDofNumber(index_nd),_ml_mesh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
-	mysol->init(_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],_ml_mesh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
+	mysol_ser->init(nvt_ig,nvt_ig,true,SERIAL);
+	mysol->init(nvt_ig,_ml_mesh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
 	mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indx],
 			   *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd, _ml_sol->GetSolutionType(indx)) );
-	unsigned nvt_ig=_ml_mesh->GetLevel(ig)->GetDofNumber(index_nd);
-	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
-	offset_nvt+=nvt_ig;
+        mysol->localize(*mysol_ser);
+	if(_iproc==0) { 
+	   for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii] = (*mysol_ser)(ii);
+	}
+	
 	delete mysol;
+	delete mysol_ser;
       }
      
       dimsf[0] = nvt;  dimsf[1] = 1;
       dataspace = H5Screate_simple(2,dimsf, NULL);
       dataset   = H5Dcreate(file_id,_ml_sol->GetSolutionName(indx),H5T_NATIVE_FLOAT,
 			    dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_nd_f[0]);
+      status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_nd_f);
       H5Sclose(dataspace);
       H5Dclose(dataset);
     }
