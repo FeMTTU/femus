@@ -110,6 +110,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   unsigned icount;
   unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index_nd);
   int * var_conn          = new int [nel*el_dof_number];
+  std::vector<int> var_proc(nel);
   float *var_el_f         = new float [nel];
   float *var_nd_f         = new float [nvt];
 
@@ -176,6 +177,12 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   fout << "<Attribute Name=\""<< "Regions"<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
   fout << "<DataItem DataType=\"Int\" Dimensions=\""<< nel << "  1\""  << "  Format=\"HDF\">" << std::endl;
   fout << hdf5_filename2.str() << ":/REGIONS" << std::endl;
+  fout << "</DataItem>" << std::endl;
+  fout << "</Attribute>" << std::endl;
+  //Metis partitions
+  fout << "<Attribute Name=\""<< "Domain_partitions"<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
+  fout << "<DataItem DataType=\"Int\" Dimensions=\""<< nel << "  1\""  << "  Format=\"HDF\">" << std::endl;
+  fout << hdf5_filename2.str() << ":/DOMAIN_PARTITIONS" << std::endl;
   fout << "</DataItem>" << std::endl;
   fout << "</Attribute>" << std::endl;
   
@@ -315,6 +322,30 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   H5Dclose(dataset);
   
   // end print regions
+  //-------------------------------------------------------------------------------------------------------
+  
+  //-------------------------------------------------------------------------------------------------------
+  // print partitioning
+  icount=0;
+  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+    
+    for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
+      if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,3);
+	    var_proc[icount] = _ml_mesh->GetLevel(ig)->epart[ii];
+	icount++;
+      }
+    }
+  } 
+   
+  dimsf[0] = nel;  dimsf[1] = 1;
+  dataspace = H5Screate_simple(2,dimsf, NULL);
+  dataset   = H5Dcreate(file_id,"/DOMAIN_PARTITIONS",H5T_NATIVE_INT,
+			dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_proc[0]);
+  H5Sclose(dataspace);
+  H5Dclose(dataset);  
+  // end print partitioning 
   //-------------------------------------------------------------------------------------------------------
   
   if (_ml_sol != NULL)  {
