@@ -23,8 +23,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>   
-#include "string.h"
-#include "stdio.h"
+#include <cstring>
+#include <cstdio>
 #include <iomanip>
 #include <algorithm>   
 
