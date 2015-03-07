@@ -91,7 +91,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   if (type_elem.compare("Not_implemented") == 0) 
   {
     std::cerr << "XDMF-Writer error: element type not supported!" << std::endl;
-    exit(1);
+    abort();
   }
   
   unsigned nvt=0;
@@ -220,36 +220,51 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   // Printing nodes coordinates 
   
   for (int i=0; i<3; i++) {
-    unsigned offset_nvt=0;
+    unsigned offset_nvt = 0;
     for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+      unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];//->GetDofNumber(index_nd);
       NumericVector* mysol;
-      mysol = NumericVector::build().release();
+      NumericVector* mysol_ser;
+      mysol     = NumericVector::build().release();
+      mysol_ser = NumericVector::build().release();
+      mysol_ser->init(nvt_ig,nvt_ig,true,SERIAL);
       //mysol->init(_ml_mesh->GetLevel(ig)->GetDofNumber(index_nd),_ml_mesh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
-      mysol->init(_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],_ml_mesh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
+      mysol->init(nvt_ig,_ml_mesh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
       mysol->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
 			 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,2) );
-      unsigned nvt_ig=_ml_mesh->GetLevel(ig)->GetDofNumber(index_nd);
-      for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
+      mysol->localize(*mysol_ser);
+            if(_iproc==0) { 
+      for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii] = (*mysol_ser)(ii);
+	    }
+	    
       if (_ml_sol != NULL && _moving_mesh && _ml_mesh->GetLevel(0)->GetDimension() > i) {
 	unsigned varind_DXDYDZ=_ml_sol->GetIndex(_moving_vars[i].c_str());
 	mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[varind_DXDYDZ],
 			   *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,_ml_sol->GetSolutionType(varind_DXDYDZ)));
-	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] += (*mysol)(ii);
+      mysol->localize(*mysol_ser);
+            if(_iproc==0) { 
+	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii] += (*mysol_ser)(ii);
+	    }
       }
-      offset_nvt+=nvt_ig;
+      
+      offset_nvt += nvt_ig;
       delete mysol;
+      delete mysol_ser;
     }
     
+	
     dimsf[0] = nvt ;  dimsf[1] = 1;
     std::ostringstream Name; Name << "/NODES_X" << i+1;
     dataspace = H5Screate_simple(2,dimsf, NULL);
     dataset   = H5Dcreate(file_id,Name.str().c_str(),H5T_NATIVE_FLOAT,
 			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    status = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_nd_f[0]);
-    H5Sclose(dataspace);
+//        if(_iproc==0) {
+   status = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_nd_f);
+//        }
+   H5Sclose(dataspace);
     H5Dclose(dataset);
     
-  }
+  } //end 3d loop
 
   //-------------------------------------------------------------------------------------------------------------
 
