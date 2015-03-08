@@ -55,7 +55,7 @@ public:
 //=======================================================================
   SystemTwo(MultiLevelProblem & equations_map, const std::string & eq_name_in, const unsigned int number, const MgSmoother & smoother_type);   //System//
   
-  virtual ~SystemTwo();                    //System//
+  ~SystemTwo();                    //System//
 
   
   DofMap  _dofmap;  //// LinearEquation (each level)

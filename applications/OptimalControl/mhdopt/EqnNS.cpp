@@ -13,6 +13,7 @@
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "VBTypeEnum.hpp"
+#include "GeomElTypeEnum.hpp"
 #include "QTYnumEnum.hpp"
 #include "Domain.hpp"
 #include "TimeLoop.hpp"
@@ -150,6 +151,12 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
         my_system._A[Level]->zero();
         my_system._b[Level]->zero();
 
+// ==========================================  
+  Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
+  elem		*myel		=  mymsh->el;
+	
+// ==========================================  
+// ==========================================  
 
    {//BEGIN VOLUME
 //===============================  
@@ -202,7 +209,7 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
     
 //============================ MAG WORLD =======================================
@@ -590,7 +597,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
   xyz_refbox.Allocate();
 
 //=======================

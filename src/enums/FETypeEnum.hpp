@@ -14,4 +14,6 @@ enum  FEType {QQ=0, LL, KK };
 
 #define NFE_FAMS 5
 
+#define ZERO_ELEM   0
+
 #endif

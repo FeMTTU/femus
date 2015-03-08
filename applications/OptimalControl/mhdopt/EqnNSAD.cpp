@@ -10,6 +10,7 @@
 #include "Domain.hpp"
 #include "MultiLevelProblem.hpp"
 #include "FETypeEnum.hpp"
+#include "GeomElTypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "Quantity.hpp"
 #include "QTYnumEnum.hpp"
@@ -55,6 +56,12 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
         my_system._A[Level]->zero();
         my_system._b[Level]->zero();
   
+// ==========================================  
+  Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
+  elem		*myel		=  mymsh->el;
+	
+// ==========================================  
+// ==========================================  
    {//BEGIN VOLUME    
    
    const uint mesh_vb = VV;
@@ -94,7 +101,7 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
   
   CurrentQuantity Vel(currgp);
@@ -354,7 +361,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
   xyz_refbox.Allocate();
   
 //========= END EXTERNAL QUANTITIES =================

@@ -85,7 +85,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 
   /// @todo I assume that the mesh is not mixed
   std::string type_elem;
-  unsigned elemtype = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementType(0);
+  unsigned elemtype = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementType(ZERO_ELEM);
   type_elem = XDMFWriter::type_el[index][elemtype];
   
   if (type_elem.compare("Not_implemented") == 0) 
