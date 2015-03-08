@@ -33,9 +33,6 @@
 
   const double time =  0.;
 
-//========== PROCESSOR INDEX
-  const uint myproc = ml_prob.GetMeshTwo()._iproc;
-
 //========= BCHandling =========
   const double penalty_val = ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
 
@@ -50,6 +47,7 @@
 // ==========================================  
   Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
   elem		*myel		=  mymsh->el;
+  const unsigned myproc  = mymsh->processor_id();
 	
 // ==========================================  
 // ==========================================

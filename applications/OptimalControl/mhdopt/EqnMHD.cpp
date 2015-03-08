@@ -62,6 +62,7 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 // ==========================================  
   Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
   elem		*myel		=  mymsh->el;
+  const unsigned myproc  = mymsh->processor_id();
 	
 // ==========================================  
 // ==========================================
@@ -70,8 +71,8 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 
    const uint mesh_vb = VV;
    
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level];
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
  
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
    

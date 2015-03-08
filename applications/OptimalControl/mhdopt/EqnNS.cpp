@@ -75,12 +75,6 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(ml_prob.GetQtyMap().GetQuanti
    const double time =  0.;   //ml_prob._timeloop._curr_time;
    
   
-//========== PROCESSOR INDEX
-//every routine we use here should depend directly on this one and not implicitly 
-//through the class _iproc. This should be a sort of "function argument",
-//like the Level
-  const uint myproc = ml_prob.GetMeshTwo()._iproc;
-
 //==========FLAG FOR STATIONARITY OR NOT
 //FLAG for the TIME DISCRETIZATION
 //every Equation may have a TimeDiscretization
@@ -154,6 +148,7 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 // ==========================================  
   Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
   elem		*myel		=  mymsh->el;
+  const unsigned myproc  = mymsh->processor_id();
 	
 // ==========================================  
 // ==========================================  

@@ -2,7 +2,7 @@
 
 Program: FEMUS
 Module: MultiLevelMesh
-Authors: Eugenio Aulisa, Simone Bnà
+Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
 
 Copyright (c) FEMUS
 All rights reserved.

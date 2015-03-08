@@ -39,9 +39,6 @@
 
    const double time =  0.;//ml_prob._timeloop._curr_time;
    
-//========== PROCESSOR INDEX
-  const uint myproc = ml_prob.GetMeshTwo()._iproc;
-
 //==========FLAG FOR STATIONARITY OR NOT
   const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
   const double     dt = 1.;
@@ -77,6 +74,7 @@
 // ==========================================  
   Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
   elem		*myel		=  mymsh->el;
+  const unsigned myproc  = mymsh->processor_id();
 	
 // ==========================================  
 // ==========================================  
