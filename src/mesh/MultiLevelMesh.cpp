@@ -23,6 +23,7 @@
 #include "NumericVector.hpp"
 #include "FemusConfig.hpp"
 #include "MeshRefinement.hpp"
+#include "Domain.hpp"
 
 
 //C++ include
@@ -371,7 +372,21 @@ void MultiLevelMesh::PrintInfo() {
       return _level0[LEV_PICK]->GetDimension();
     }
     
+// ========================================================
+  void MultiLevelMesh::SetDomain(Domain* domain_in)  {
     
+    _domain = domain_in;
+    
+   return; 
+  }
+  
+ // ========================================================
+  Domain* MultiLevelMesh::GetDomain() const {
+    
+   return _domain; 
+   
+  }
+  
 } //end namespace femus
 
 

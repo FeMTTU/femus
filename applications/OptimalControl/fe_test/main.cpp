@@ -100,6 +100,8 @@
   ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
   ml_msh.PrintInfo();
 
+  ml_msh.SetDomain(&mybox);    
+  
   MultiLevelSolution ml_sol(&ml_msh);
   ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
 

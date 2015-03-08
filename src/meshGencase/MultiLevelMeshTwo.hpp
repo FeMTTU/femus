@@ -106,7 +106,7 @@ public:
     
    public:    
 // ====== DOMAIN SHAPE ( optional => pointer)
-    Domain* _domain;      //TODO You must remember to ALLOCATE this POINTER BEFORE USING IT!
+    Domain* _domain;
     Domain* GetDomain() const;
     void    SetDomain(Domain* );
     

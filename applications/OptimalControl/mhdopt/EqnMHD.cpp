@@ -161,7 +161,7 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
      currelem.SetMidpoint();
      
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
+    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
     currelem.SetElDofsBc();
     
@@ -455,7 +455,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.SetMidpoint();
 
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
+     currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
    
      currelem.SetElDofsBc();
      

@@ -130,6 +130,8 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_msh.SetWriter(XDMF);
   ml_msh.GetWriter()->write(files.GetOutputPath(),"biquadratic");
   
+  ml_msh.SetDomain(&mybox);    
+	  
   MultiLevelSolution ml_sol(&ml_msh);
   ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
   
