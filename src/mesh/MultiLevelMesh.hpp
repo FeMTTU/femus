@@ -19,6 +19,7 @@ PURPOSE.  See the above copyright notice for more information.
 
 #include <vector>
 #include "ElemTypeEnum.hpp"
+#include "GeomElTypeEnum.hpp"
 #include "WriterEnum.hpp"
 #include "Writer.hpp"
 
@@ -108,7 +109,10 @@ public:
 
     /** To be Added */
     void SetWriter(const WriterEnum format) { _writer = Writer::build(format,this).release(); }
-
+    
+    /** Get the dimension of the problem (1D, 2D, 3D) */
+    const unsigned GetDimension() const;
+    
 protected:
 
 private:

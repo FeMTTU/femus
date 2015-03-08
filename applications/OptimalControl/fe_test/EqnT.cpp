@@ -33,11 +33,8 @@
 
   const double time =  0.;
 
-//========= BCHandling =========
-  const double penalty_val = ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
-
   //======== ELEMENT MAPPING =======
-  const uint space_dim =       ml_prob.GetMeshTwo().get_dim();
+  const uint space_dim =       ml_prob._ml_msh->GetDimension();
   const uint  meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");
   const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
   

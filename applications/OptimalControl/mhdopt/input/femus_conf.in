@@ -9,10 +9,6 @@ geomel_type   0            # =MESH CONSISTENCY===   # the mesh file should provi
 dimension     3            # =MESH CONSISTENCY===  
 bdry_toll     0.0000001    # ==== 
 
-# ----<BCHandling>-----------------
-penalty_val 1.e10        # ==== not in library routines, but library-type
-
-
 </Mesh>
 
 

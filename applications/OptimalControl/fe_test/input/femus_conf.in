@@ -9,10 +9,6 @@ geomel_type   3           # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh sh
 dimension     2              
 bdry_toll     0.0000001    # ==== not in library routines, but library-type
 
-
-# ----<BCHandling>-----------------
-penalty_val 1.e10        # ==== not in library routines, but library-type
-
 </Mesh>
 
 

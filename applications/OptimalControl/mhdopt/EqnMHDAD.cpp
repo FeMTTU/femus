@@ -45,13 +45,11 @@ const int NonStatMHDAD = (int) ml_prob.GetInputParser().get("NonStatMHDAD");
   const double   dt = 1.; //ml_prob._timeloop._timemap.get("dt");
 
 //======== GEOMETRICAL ELEMENT =======
-  const uint space_dim =       ml_prob.GetMeshTwo().get_dim();
+  const uint space_dim =       ml_prob._ml_msh->GetDimension();
   const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
   const uint    meshql = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");  //======== ELEMENT MAPPING =======
 
-//========= BCHandling =========
-  const double penalty_val =   ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");  
-  
+
         my_system._A[Level]->zero();
         my_system._b[Level]->zero();
 

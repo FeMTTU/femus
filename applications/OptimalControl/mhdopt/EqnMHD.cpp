@@ -48,11 +48,8 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
  const int NonStatMHD = (int) ml_prob.GetInputParser().get("NonStatMHD");
     const double dt   = 1.; //ml_prob._timeloop._timemap.get("dt");
 
-//========= BCHandling =========
-  const double penalty_val = ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
-  
 //======== GEOMETRICAL ELEMENT =======
-  const uint space_dim =       ml_prob.GetMeshTwo().get_dim();
+  const uint space_dim =       ml_prob._ml_msh->GetDimension();
   const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
   const uint  meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");   //======== ELEMENT MAPPING =======
   
@@ -160,7 +157,7 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
     currelem.Mat().zero();
     currelem.Rhs().zero();
 
-     currelem.SetDofobjConnCoords(ml_prob.GetMeshTwo()._iproc,iel);
+     currelem.SetDofobjConnCoords(myproc,iel);
      currelem.SetMidpoint();
      
     currelem.ConvertElemCoordsToMappingOrd(xyz);

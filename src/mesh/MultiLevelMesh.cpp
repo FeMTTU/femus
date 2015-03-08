@@ -366,7 +366,12 @@ void MultiLevelMesh::PrintInfo() {
     }
 }
 
-
+    /** Get the dimension of the problem (1D, 2D, 3D) from one Mesh (level 0 always exists, after initialization) */
+    const unsigned MultiLevelMesh::GetDimension() const {
+      return _level0[LEV_PICK]->GetDimension();
+    }
+    
+    
 } //end namespace femus
 
 

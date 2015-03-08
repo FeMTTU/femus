@@ -77,7 +77,11 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 
   //if we are just a function not inside a class, we have to retrieve ourselves...
   SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_T");
-
+// ==========================================  
+  Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
+  elem		*myel		=  mymsh->el;
+  const unsigned myproc  = mymsh->processor_id();
+	
   
   const double time = 0.; // ml_prob._timeloop._curr_time;
 
@@ -85,11 +89,8 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
   const double    dt = 1.; //ml_prob._timeloop._timemap.get("dt");
   const uint Nonstat = ml_prob.GetInputParser().get("NonStatTEMP");
   
-//========= BCHandling =========
-  const double penalty_val = ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
-
   //======== ELEMENT MAPPING =======
-  const uint space_dim =       ml_prob.GetMeshTwo().get_dim();
+  const uint space_dim =       ml_prob._ml_msh->GetDimension();
   const uint  meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");
   const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
 
@@ -111,11 +112,6 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
         my_system._A[Level]->zero();
         my_system._b[Level]->zero();
 
-// ==========================================  
-  Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
-  elem		*myel		=  mymsh->el;
-  const unsigned myproc  = mymsh->processor_id();
-	
 // ==========================================  
 // ==========================================  
  {//BEGIN VOLUME
