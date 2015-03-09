@@ -70,11 +70,11 @@ SystemTwo::~SystemTwo() {
 
  //========= MGOps  ===========================
     for (uint Level =0; Level< GetGridn(); Level++) {
-        if (Level < GetGridn() - 1) delete _Rst[Level];
+//         if (Level < GetGridn() - 1) delete _Rst[Level];
         if (Level > 0)             delete _Prl[Level];
     }
 
-    _Rst.clear();
+//     _Rst.clear();
     _Prl.clear();
 
  //======== Vectors ==========================
@@ -530,7 +530,7 @@ double SystemTwo::MGStep(int Level,            // Level
 
 ///    std::cout << ">>>>>>>> BEGIN ONE DESCENT >>>>>>>>>>"<< std::endl;
 
-        _b[Level-1]->matrix_mult(*_res[Level],*_Rst[Level-1]);//****** restrict the residual from the finer grid ( new rhs )
+        _b[Level-1]->matrix_mult(*_res[Level],*_LinSolver[Level-1]->_RR);//****** restrict the residual from the finer grid ( new rhs )
         _x[Level-1]->close();                                  //initial value of x for the presmoothing iterations
         _x[Level-1]->zero();                                  //initial value of x for the presmoothing iterations
 
@@ -1209,7 +1209,6 @@ void SystemTwo::ReadProl(const std::string& name) {
     //perche' sono legati ai DOF (devi pensare che la questione del mesh e' gia' risolta)
 void SystemTwo::ReadRest(const std::string& name) {
  
-  _Rst.resize(GetGridn());  //TODO why do it bigger?
   
   for (uint Level = 0; Level< GetGridn() - 1; Level++) {
     
@@ -1290,7 +1289,7 @@ void SystemTwo::ReadRest(const std::string& name) {
 
     uint off_proc=GetGridn()*GetMLProb().GetMeshTwo()._iproc;
 
-    _Rst[Lev_c] = SparseMatrix::build().release();
+    _LinSolver[Lev_c]->_RR = SparseMatrix::build().release();
 // // //     _Rst[Lev_c]->init(0,0,0,0);   //TODO BACK TO A REASONABLE INIT  //we have to do this before appropriately!!!
 
     int nrowt=0;int nclnt=0;
@@ -1354,7 +1353,7 @@ void SystemTwo::ReadRest(const std::string& name) {
 
     std::cout << "Printing Restrictor ===========" << std::endl;
     pattern.print();
-    _Rst[Lev_c]->update_sparsity_pattern_old(pattern);  //TODO see 
+    _LinSolver[Lev_c]->_RR->update_sparsity_pattern_old(pattern);  //TODO see 
 //         _Rst[Lev_c]->close();
 //     if (GetMLProb().GetMeshTwo()._iproc==0) _Rst[Lev_c]->print_personal(); //there is no print function for rectangular matrices, and print_personal doesnt seem to be working...
 // la print stampa il contenuto, ma io voglio solo stampare lo sparsity pattern!
@@ -1382,7 +1381,7 @@ void SystemTwo::ReadRest(const std::string& name) {
             for (uint i1=0;i1<ind.size();i1++) { ind[i1] = pattern[irow][i1]; /*std::cout << " " << ind[i1] << " ";*/}
             valmat = new DenseMatrix(1,ncol);  //TODO add a matrix row by row...
             for (uint j=0; j<ncol; j++) (*valmat)(0,j) = _bcond._bc[irow_top]*Rest_val[fe][ j+len[fe][i] ];
-            _Rst[Lev_c]->add_matrix(*valmat,tmp,ind);
+            _LinSolver[Lev_c]->_RR->add_matrix(*valmat,tmp,ind);
             delete  valmat;
             }// end dof loop
          } // end var loop
@@ -1402,7 +1401,7 @@ void SystemTwo::ReadRest(const std::string& name) {
 
     pattern.clear();
 
-    _Rst[Lev_c]->close();   //TODO Do we really need this?
+    _LinSolver[Lev_c]->_RR->close();
 //     if (GetMLProb().GetMeshTwo()._iproc==0)  _Rst[Lev_c]->print_personal(std::cout);
 //     _Rst[Lev_c]->print_graphic(false); // TODO should pass this true or false as a parameter
 
