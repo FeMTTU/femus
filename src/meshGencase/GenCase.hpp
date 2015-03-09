@@ -32,7 +32,7 @@ class GenCase : public MultiLevelMeshTwo {
 
 public:
 
-     GenCase(const FemusInputParser<double> & map_in, const std::string mesh_file);
+     GenCase(const unsigned nolevels, const unsigned dim, const GeomElType geomel_type, const std::string mesh_file);
     ~GenCase();                 
     
     void ElemChildToFather();

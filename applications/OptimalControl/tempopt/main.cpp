@@ -71,8 +71,10 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   const double   _Pr  = muf/rhof;                 physics_map.set("Pr",_Pr);
 
   // ======= Mesh =====
-  FemusInputParser<double> mesh_map("Mesh",files.GetOutputPath());
-  GenCase mesh(mesh_map,"inclQ2D2x2.gam");
+  const unsigned NoLevels = 3;
+  const unsigned dim = 2;
+  const GeomElType geomel_type = QUAD;
+  GenCase mesh(NoLevels,dim,geomel_type,"inclQ2D2x2.gam");
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
@@ -124,7 +126,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   
   MultiLevelMesh ml_msh;
   ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,2,0,0,QUAD9,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"fifth");
-  ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
+  ml_msh.RefineMesh(NoLevels,NoLevels,NULL);
   ml_msh.PrintInfo();
   
   ml_msh.SetWriter(XDMF);

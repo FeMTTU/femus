@@ -46,9 +46,6 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
 
 // //======== GEOMETRICAL ELEMENT =======
   const uint space_dim = ml_prob._ml_msh->GetDimension();
-  const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
-  const uint    meshql = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");  //======== ELEMENT MAPPING =======
-
 
         my_system._A[Level]->zero();
         my_system._b[Level]->zero();
@@ -91,14 +88,14 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
 //========= DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+  xyz_refbox._FEord    = MESH_ORDER;
   xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
   
@@ -178,7 +175,7 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
 //=======    
 ///optimal control
     xyz_refbox.SetElemAverage();
-  int el_flagdom = ElFlagControl(xyz_refbox._el_average,&ml_prob.GetMeshTwo());
+  int el_flagdom = ElFlagControl(xyz_refbox._el_average,ml_prob._ml_msh);
 //=======    
 
 
@@ -188,7 +185,8 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
 //=======here starts the "COMMON SHAPE PART"==================
 for (uint fe = 0; fe < QL; fe++)     { 
   currgp.SetPhiElDofsFEVB_g (fe,qp);  
-  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
+  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  
+}  
 	  
 const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is the same for both QQ and LL!
 const double dtxJxW_g = det*ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
@@ -351,14 +349,14 @@ for (uint fe = 0; fe < QL; fe++)     {
 //========= DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+  xyz_refbox._FEord    = MESH_ORDER;
   xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
   xyz_refbox.Allocate();
   

@@ -45,9 +45,6 @@
 
   //========== GEOMETRIC ELEMENT ========
   const uint           space_dim = ml_prob._ml_msh->GetDimension();
-  const uint mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
-  const uint meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql"); //======== ELEMENT MAPPING =======
-
 
   //=======density and viscosity===================
   const double rhof = ml_prob.GetInputParser().get("rho0");
@@ -119,14 +116,14 @@
   //========= //DOMAIN MAPPING
     CurrentQuantity xyz(currgp); //domain
     xyz._dim      = space_dim;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
     
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+  xyz_refbox._FEord    = MESH_ORDER;
   xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
     
@@ -413,14 +410,14 @@ for (uint fe = 0; fe < QL; fe++)     {
   //========= //DOMAIN MAPPING
     CurrentQuantity xyz(currgp); //domain
     xyz._dim      = space_dim;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
     
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+  xyz_refbox._FEord    = MESH_ORDER;
   xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
   xyz_refbox.Allocate();
 

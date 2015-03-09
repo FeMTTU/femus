@@ -32,6 +32,7 @@
 #include "ElemSto.hpp"
 #include "VBTypeEnum.hpp"
 #include "FETypeEnum.hpp"
+#include "GeomElTypeEnum.hpp"
 
 namespace femus {
 
@@ -46,8 +47,7 @@ class MultiLevelMeshTwo  {
 public:
 
 //===== Constructors/ Destructor ===========
-     MultiLevelMeshTwo (const FemusInputParser<double>& map_in, const std::string mesh_file_in);
-//     ~MultiLevelMeshTwo ();
+     MultiLevelMeshTwo (const unsigned nolevels, const unsigned dim, const GeomElType geomel_type, const std::string mesh_file_in);
     void clear ();
 
     //======= mesh generation functions ====
@@ -62,7 +62,6 @@ public:
 //attributes    ************************************
 
     const uint _dim;               ///< spatial dimension
-    const uint _mesh_order;
 // ==== PARALLEL ===
     uint _iproc;       /// current subdomain
     uint _NoSubdom;    /// Number of subdomains (subdomain P)
@@ -113,7 +112,6 @@ public:
     //get functions
     inline const double get_Lref() const {return _Lref;}
     inline const uint   get_dim()  const {return _dim;}
-    inline const FemusInputParser<double>  GetRuntimeMap()  const { return _mesh_rtmap; }
 
     //set functions
     inline void SetLref(const double lref_in) { _Lref = lref_in; }
@@ -127,7 +125,6 @@ public:
     
   protected:
     
-    const FemusInputParser<double> & _mesh_rtmap;
     std::string _mesh_file;    //mesh file name from the mesh generator
  
    private:   

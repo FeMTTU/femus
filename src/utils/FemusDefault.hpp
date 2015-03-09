@@ -59,6 +59,7 @@
 //*********************************************
 //********** BOUNDARY CONDITIONS **************
 #define DEFAULT_BC_FLAG 1 //=0 if you put a function on the RHS //you also have to comment the bc_read
+#define DEFAULT_BDRY_TOLL  0.0000001
 //*********************************************
 
 //****************************************
@@ -75,7 +76,6 @@
 #define DEFAULT_EPS_LSOLV_C  1.e-20//1.e-10
 #define DEFAULT_EPS_PREPOST 1.e-20
 #define DEFAULT_MAXITS_LSOLV  40
-// #define DEFAULT_MAXITS_LSOLV_C  40  //it's not there now!!! is it required a special one for the coarsest?
 #define DEFAULT_MG_GAMMA 1
 #define DEFAULT_NC_PRE    8 //16
 #define DEFAULT_NC_COARSE 40
@@ -84,6 +84,6 @@
 //**************************************************************************************
 
 //**************************************************************************************
-#define DEFAULT_NDIGITS   4
+#define DEFAULT_NDIGITS   4  //n of digits for the timestep printing
 
 #endif

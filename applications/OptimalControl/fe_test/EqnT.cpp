@@ -35,8 +35,6 @@
 
   //======== ELEMENT MAPPING =======
   const uint space_dim =       ml_prob._ml_msh->GetDimension();
-  const uint  meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");
-  const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
   
         my_system._A[Level]->zero();
         my_system._b[Level]->zero();
@@ -93,14 +91,14 @@
     //========= //DOMAIN MAPPING
     CurrentQuantity xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   CurrentQuantity xyz_refbox(currgp);  //no quantity
     xyz_refbox._dim      = space_dim;
-    xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+    xyz_refbox._FEord    = MESH_ORDER;;
     xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
     xyz_refbox.Allocate();
 

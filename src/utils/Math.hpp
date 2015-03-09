@@ -107,13 +107,10 @@ const uint myproc = eqnmap_in.GetMeshTwo()._iproc;
     CurrentElem       currelem(Level,vb,NULL,eqnmap_in.GetMeshTwo(),eqnmap_in.GetElemType()); //element without equation
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqnmap_in.GetQrule(currelem.GetDim()));
 
-  //======== ELEMENT MAPPING =======
-  const uint meshql = (int) eqnmap_in.GetMeshTwo().GetRuntimeMap().get("meshql");  
- 
 //========= DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
     xyz._dim      = eqnmap_in.GetMeshTwo().get_dim();
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
