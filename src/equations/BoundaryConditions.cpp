@@ -222,8 +222,10 @@ void BoundaryConditions::GenerateBdc() {
  
     for (uint Level=0; Level <_dofmap->_mesh._NoLevels;Level++)   { //loop over the levels
       
+  Mesh		*mymsh		=  _dofmap->_eqn->GetMLProb()._ml_msh->GetLevel(Level);
     CurrentElem       currelem(Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType());
-    const uint el_nnodes_b = NVE[ _dofmap->_mesh._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+    currelem.SetMesh(mymsh);
+    const uint el_nnodes_b = mymsh->el->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
 	
         for (uint isubd=0; isubd<_dofmap->_mesh._NoSubdom; ++isubd) {
             uint iel_b = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd + Level];
@@ -367,6 +369,7 @@ void BoundaryConditions::GenerateBdc() {
 // // // // // void BoundaryConditions::GenerateBdcElem()  {
 // // // // // 
 // // // // //      CurrentElem       currelem(BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType());  
+// // // // //     currelem.SetMesh(mymsh);
 // // // // //   
 // // // // //       uint space_dim = _dofmap->_mesh.get_dim();
 // // // // // 

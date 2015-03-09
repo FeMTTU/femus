@@ -514,7 +514,9 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
    const uint mesh_vb = VV;
   
+  Mesh		*mymsh		=  eqn->GetMLProb()._ml_msh->GetLevel(Level);
     CurrentElem       currelem(Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
+    currelem.SetMesh(mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
   
   // processor index
@@ -534,7 +536,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = NVE[ mesh->_geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._ndof     = mymsh->el->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
   
      //========== 
