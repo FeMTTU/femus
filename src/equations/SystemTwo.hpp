@@ -85,7 +85,7 @@ public:
   std::vector<NumericVector *> _x_old; //// LinearEquation (each level)
   
   NumericVector * _x_oold;    //this is used by MGTimeStep and also by the OptLoop
-  std::vector<NumericVector *> _x_tmp;     //this is used by MGTimeStep and also by the OptLoop
+  NumericVector * _x_tmp;     //this is used by MGTimeStep and also by the OptLoop
   
           void  initVectors();  ///initialize vectors       //System//
 

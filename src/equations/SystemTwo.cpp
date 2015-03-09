@@ -74,18 +74,16 @@ SystemTwo::~SystemTwo() {
         delete _res[Level];
         delete _x[Level];
         delete _x_old[Level];
-        delete _x_tmp[Level];
+
     }
 
-    
          _b.clear();
        _res.clear();
          _x.clear();
      _x_old.clear();
-     _x_tmp.clear();
 
         delete _x_oold;
-   
+        delete _x_tmp;
 }
 
 
@@ -160,7 +158,6 @@ void SystemTwo::initVectors() {
     //allocation
          _x.resize(GetGridn());
      _x_old.resize(GetGridn());
-     _x_tmp.resize(GetGridn());
          _b.resize(GetGridn());
        _res.resize(GetGridn());
 
@@ -178,13 +175,13 @@ void SystemTwo::initVectors() {
         _x[Level]->init(_dofmap._Dim[Level],m_l,false,AUTOMATIC);
         _x_old[Level] = NumericVector::build().release();
         _x_old[Level]->init(_dofmap._Dim[Level],false, SERIAL);
-        _x_tmp[Level] = NumericVector::build().release();
-        _x_tmp[Level]->init(_dofmap._Dim[Level],false, SERIAL);
 
     } //end level loop
     
         _x_oold = NumericVector::build().release();
         _x_oold->init(_dofmap._Dim[GetGridn()-1],false, SERIAL);
+        _x_tmp = NumericVector::build().release();
+        _x_tmp->init(_dofmap._Dim[GetGridn()-1],false, SERIAL);
 
 
     return;
