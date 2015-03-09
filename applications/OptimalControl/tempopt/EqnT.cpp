@@ -109,7 +109,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     std::vector<double>  Qflux_g(space_dim);
 
         my_system._LinSolver[Level]->_KK->zero();
-        my_system._b[Level]->zero();
+        my_system._LinSolver[Level]->_RESC->zero();
 
 // ==========================================  
 // ==========================================  
@@ -395,7 +395,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     } // end of the quadrature point qp-loop
 
        my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-       my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+       my_system._LinSolver[Level]->_RESC->add_vector(currelem.Rhs(),currelem.GetDofIndices());
   } // end of element loop
   // *****************************************************************
 
@@ -521,7 +521,7 @@ int el_Neum_flag=0;
         // end BDRYelement gaussian integration loop
         
         my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-        my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+        my_system._LinSolver[Level]->_RESC->add_vector(currelem.Rhs(),currelem.GetDofIndices());
    
   }
       // end of BDRYelement loop
@@ -530,7 +530,7 @@ int el_Neum_flag=0;
   }//END BOUNDARY
 
         my_system._LinSolver[Level]->_KK->close();
-        my_system._b[Level]->close();
+        my_system._LinSolver[Level]->_RESC->close();
 
  
 #ifdef DEFAULT_PRINT_INFO

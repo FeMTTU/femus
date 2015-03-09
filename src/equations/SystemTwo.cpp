@@ -70,14 +70,14 @@ SystemTwo::~SystemTwo() {
 
  //======== Vectors ==========================
     for (uint Level =0; Level<GetGridn(); Level++) {
-        delete _b[Level];
+//         delete _b[Level];
         delete _res[Level];
         delete _x[Level];
         delete _x_old[Level];
 
     }
 
-         _b.clear();
+//          _b.clear();
        _res.clear();
          _x.clear();
      _x_old.clear();
@@ -156,7 +156,7 @@ void SystemTwo::initVectors() {
     //allocation
          _x.resize(GetGridn());
      _x_old.resize(GetGridn());
-         _b.resize(GetGridn());
+//          _b.resize(GetGridn());
        _res.resize(GetGridn());
 
     for (uint Level = 0; Level< GetGridn(); Level++) {
@@ -165,8 +165,8 @@ void SystemTwo::initVectors() {
     uint m_l = 0;
     for (int fe=0; fe<QL; fe++)  m_l +=  ml[fe]*_dofmap._nvars[fe];
     
-        _b[Level] = NumericVector::build().release();
-        _b[Level]->init(_dofmap._Dim[Level],m_l,false,AUTOMATIC);
+        _LinSolver[Level]->_RESC = NumericVector::build().release();
+        _LinSolver[Level]->_RESC->init(_dofmap._Dim[Level],m_l,false,AUTOMATIC);
         _res[Level] = NumericVector::build().release();
         _res[Level]->init(_dofmap._Dim[Level],m_l,false,AUTOMATIC);
         _x[Level] = NumericVector::build().release();
@@ -365,14 +365,14 @@ void SystemTwo::MGSolve(double Eps1,          // tolerance for the linear solver
 #endif
     double res_fine;
 
-    _b[GetGridn()-1]->close();
-    double bNorm_fine =     _b[GetGridn()-1]->l2_norm();
+    _LinSolver[GetGridn()-1]->_RESC->close();
+    double bNorm_fine =     _LinSolver[GetGridn()-1]->_RESC->l2_norm();
     _x_old[GetGridn()-1]->close();
     double x_old_fine = _x_old[GetGridn()-1]->l2_norm();
 
 #ifdef DEFAULT_PRINT_INFO
     std::cout << " bNorm_fine l2 "     <<  bNorm_fine                     << std::endl;
-    std::cout << " bNorm_fine linfty " << _b[GetGridn()-1]->linfty_norm()  << std::endl;
+    std::cout << " bNorm_fine linfty " << _LinSolver[GetGridn()-1]->_RESC->linfty_norm()  << std::endl;
     std::cout << " xold_fine l2 "      <<  x_old_fine                     << std::endl;
 #endif
 
@@ -458,14 +458,14 @@ double SystemTwo::MGStep(int Level,            // Level
 #ifdef DEFAULT_PRINT_CONV
         _x[Level]->close();
         double xNorm0=_x[Level]->linfty_norm();
-        _b[Level]->close();
-        double bNorm0=_b[Level]->linfty_norm();
+        _LinSolver[Level]->_RESC->close();
+        double bNorm0=_LinSolver[Level]->_RESC->linfty_norm();
         _LinSolver[Level]->_KK->close();
         double ANorm0=_LinSolver[Level]->_KK->l1_norm();
         std::cout << "Level " << Level << " ANorm l1 " << ANorm0 << " bNorm linfty " << bNorm0  << " xNormINITIAL linfty " << xNorm0 << std::endl;
 #endif
 
-        rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,*_LinSolver[Level]->_KK,*_x[Level],*_b[Level],DEFAULT_EPS_LSOLV_C,Nc_coarse);  //****** smooth on the coarsest level
+        rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,*_LinSolver[Level]->_KK,*_x[Level],*_LinSolver[Level]->_RESC,DEFAULT_EPS_LSOLV_C,Nc_coarse);  //****** smooth on the coarsest level
 
 #ifdef DEFAULT_PRINT_CONV
         std::cout << " Coarse sol : res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -473,7 +473,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << " Norm of x after the coarse solution " << _x[Level]->linfty_norm() << std::endl;
 #endif
 
-        _res[Level]->resid(*_b[Level],*_x[Level],*_LinSolver[Level]->_KK);      //************ compute the coarse residual
+        _res[Level]->resid(*_LinSolver[Level]->_RESC,*_x[Level],*_LinSolver[Level]->_KK);      //************ compute the coarse residual
 
         _res[Level]->close();
         std::cout << "COARSE Level " << Level << " res linfty " << _res[Level]->linfty_norm() << " res l2 " << _res[Level]->l2_norm() << std::endl;
@@ -489,14 +489,14 @@ double SystemTwo::MGStep(int Level,            // Level
 #ifdef DEFAULT_PRINT_CONV
         _x[Level]->close();
         double xNormpre=_x[Level]->linfty_norm();
-        _b[Level]->close();
-        double bNormpre=_b[Level]->linfty_norm();
+        _LinSolver[Level]->_RESC->close();
+        double bNormpre=_LinSolver[Level]->_RESC->linfty_norm();
         _LinSolver[Level]->_KK->close();
         double ANormpre=_LinSolver[Level]->_KK->l1_norm();
         std::cout << "Level " << Level << " ANorm l1 " << ANormpre << " bNorm linfty " << bNormpre  << " xNormINITIAL linfty " << xNormpre << std::endl;
 #endif
 
-        rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,*_LinSolver[Level]->_KK,*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST, Nc_pre); //****** smooth on the finer level
+        rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,*_LinSolver[Level]->_KK,*_x[Level],*_LinSolver[Level]->_RESC,DEFAULT_EPS_PREPOST, Nc_pre); //****** smooth on the finer level
 
 #ifdef DEFAULT_PRINT_CONV
         std::cout << " Pre Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -506,13 +506,13 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << " time ="<< double(end_time- start_time) / CLOCKS_PER_SEC << std::endl;
 #endif
 
-        _res[Level]->resid(*_b[Level],*_x[Level],*_LinSolver[Level]->_KK);//********** compute the residual
+        _res[Level]->resid(*_LinSolver[Level]->_RESC,*_x[Level],*_LinSolver[Level]->_KK);//********** compute the residual
 
 ///    std::cout << "************ END ONE PRE-SMOOTHING *****************"<< std::endl;
 
 ///    std::cout << ">>>>>>>> BEGIN ONE DESCENT >>>>>>>>>>"<< std::endl;
 
-        _b[Level-1]->matrix_mult(*_res[Level],*_LinSolver[Level-1]->_RR);//****** restrict the residual from the finer grid ( new rhs )
+        _LinSolver[Level-1]->_RESC->matrix_mult(*_res[Level],*_LinSolver[Level-1]->_RR);//****** restrict the residual from the finer grid ( new rhs )
         _x[Level-1]->close();                                  //initial value of x for the presmoothing iterations
         _x[Level-1]->zero();                                  //initial value of x for the presmoothing iterations
 
@@ -544,14 +544,14 @@ double SystemTwo::MGStep(int Level,            // Level
 #ifdef DEFAULT_PRINT_CONV
         _x[Level]->close();
         double xNormpost=_x[Level]->linfty_norm();
-        _b[Level]->close();
-        double bNormpost=_b[Level]->linfty_norm();
+        _LinSolver[Level]->_RESC->close();
+        double bNormpost=_LinSolver[Level]->_RESC->linfty_norm();
         _LinSolver[Level]->_KK->close();
         double ANormpost=_LinSolver[Level]->_KK->l1_norm();
         std::cout << "Level " << Level << " ANorm l1 " << ANormpost << " bNorm linfty " << bNormpost << " xNormINITIAL linfty " << xNormpost << std::endl;
 #endif
 
-        rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,*_LinSolver[Level]->_KK,*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST,Nc_post);  //***** smooth on the coarser level
+        rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,*_LinSolver[Level]->_KK,*_x[Level],*_LinSolver[Level]->_RESC,DEFAULT_EPS_PREPOST,Nc_post);  //***** smooth on the coarser level
 
 #ifdef DEFAULT_PRINT_CONV 
         std::cout<<" Post Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -561,7 +561,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout<< " time ="<< double(end_time- start_time) / CLOCKS_PER_SEC << std::endl;
 #endif
 
-        _res[Level]->resid(*_b[Level],*_x[Level],*_LinSolver[Level]->_KK);   //*******  compute the residual
+        _res[Level]->resid(*_LinSolver[Level]->_RESC,*_x[Level],*_LinSolver[Level]->_KK);   //*******  compute the residual
 
 ///    std::cout << "************ END ONE POST-SMOOTHING *****************"<< std::endl;
 
