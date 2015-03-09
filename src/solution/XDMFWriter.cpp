@@ -1156,12 +1156,12 @@ void XDMFWriter::read_system_solutions(const std::string namefile, const MultiLe
             uint elem_gidx=(iel+mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1])*NVE[ mesh->_geomelem_flag[mesh->get_dim()-1] ][BIQUADR_FE];
             for (uint i=0; i<el_nds; i++) { // linear and quad
                 int k=mesh->_el_map[VV][elem_gidx+i];   // the global node
-                eqn->_x[mesh->_NoLevels-1]->set(dofmap->GetDof(mesh->_NoLevels-1,QQ,ivar,k), sol[k]*Irefval); // set the field
+                eqn->_LinSolver[mesh->_NoLevels-1]->_EPS->set(dofmap->GetDof(mesh->_NoLevels-1,QQ,ivar,k), sol[k]*Irefval); // set the field
             }
         }
     }
 
-    eqn->_x[mesh->_NoLevels-1]->localize(* eqn->_x_old[mesh->_NoLevels-1]);
+    eqn->_LinSolver[mesh->_NoLevels-1]->_EPS->localize(* eqn->_x_old[mesh->_NoLevels-1]);
     // clean
     H5Fclose(file_id);
     delete []sol;

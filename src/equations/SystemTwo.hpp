@@ -77,8 +77,8 @@ public:
 //=======================================================================
 
 //   std::vector<NumericVector *> _b;   //// LinearEquation (each level)   _RESC
-  std::vector<NumericVector *> _res; //// LinearEquation (each level)   _RES
-  std::vector<NumericVector *> _x;   //// LinearEquation (each level)   _EPS
+//   std::vector<NumericVector *> _res; //// LinearEquation (each level)   _RES
+//   std::vector<NumericVector *> _x;   //// LinearEquation (each level)   _EPS
 
   std::vector<NumericVector *> _x_old; //// LinearEquation (each level)  _EPSC
   

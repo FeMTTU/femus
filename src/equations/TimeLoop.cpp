@@ -164,7 +164,7 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 /// std::cout << "$$$$$$$$$ Computed the x with the MG method $$$$$$$" << std::endl;
 
     /// E) Update of the old solution at the top Level
-    eqn_in->_x[eqn_in->GetGridn()-1]->localize(*(eqn_in->_x_old[eqn_in->GetGridn()-1]));   // x_old = x
+    eqn_in->_LinSolver[eqn_in->GetGridn()-1]->_EPS->localize(*(eqn_in->_x_old[eqn_in->GetGridn()-1]));   // x_old = x
 #ifdef DEFAULT_PRINT_INFO
     std::cout << "$$$$$$$$$ Updated the x_old solution $$$$$$$$$" << std::endl;
 #endif
