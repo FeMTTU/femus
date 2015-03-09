@@ -65,7 +65,7 @@ public:
 //=======================================================================
 //======== MG Ops ============ (procs,levels) ====
 //=======================================================================
-  std::vector<SparseMatrix *> _Prl; // LinearEquation (each level) _PP
+//   std::vector<SparseMatrix *> _Prl; // LinearEquation (each level) _PP
   
     void ReadMGOps(const std::string output_path); // LinearEquation  (each level)
     void ReadMatrix(const std::string& name); // LinearEquation  (each level)

@@ -68,15 +68,6 @@ SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in,
 // where the new is is called!
 SystemTwo::~SystemTwo() {
 
- //========= MGOps  ===========================
-    for (uint Level =0; Level< GetGridn(); Level++) {
-//         if (Level < GetGridn() - 1) delete _Rst[Level];
-        if (Level > 0)             delete _Prl[Level];
-    }
-
-//     _Rst.clear();
-    _Prl.clear();
-
  //======== Vectors ==========================
     for (uint Level =0; Level<GetGridn(); Level++) {
         delete _b[Level];
@@ -405,7 +396,7 @@ void SystemTwo::MGSolve(double Eps1,          // tolerance for the linear solver
 
         for (uint Level = 1; Level < GetGridn(); Level++) {
 
-            _x[Level]->matrix_mult(*_x[Level-1],*_Prl[Level]);  //**** project the solution
+            _x[Level]->matrix_mult(*_x[Level-1],*_LinSolver[Level]->_PP);  //**** project the solution
 
             res_fine = MGStep(Level,Eps1,MaxIter,Gamma,Nc_pre,Nc_coarse,Nc_post);
 
@@ -545,7 +536,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << "BEFORE PROL Level " << Level << " res linfty " << _res[Level-1]->linfty_norm() << " res l2 " << _res[Level-1]->l2_norm() << std::endl;
 #endif
 
-        _res[Level]->matrix_mult(*_x[Level-1],*_Prl[Level]);//******** project the dx from the coarser grid
+        _res[Level]->matrix_mult(*_x[Level-1],*_LinSolver[Level]->_PP);//******** project the dx from the coarser grid
 #ifdef DEFAULT_PRINT_CONV
         _res[Level]->close();
         //here, the _res contains the prolongation of dx, so the new x is x_old + P dx
@@ -971,7 +962,6 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
 //This function depends on _iproc
 void SystemTwo::ReadProl(const std::string& name) {
 
-    _Prl.resize(GetGridn());  ///@todo one place is left empty in practice, we can optimize this!!!
 
     for (uint Level = 1; Level< GetGridn(); Level++) {
   
@@ -1053,7 +1043,7 @@ void SystemTwo::ReadProl(const std::string& name) {
    
     uint off_proc = GetMLProb().GetMeshTwo()._iproc*GetGridn();
 
-    _Prl[ Lev_f ] = SparseMatrix::build().release();
+    _LinSolver[Lev_f]->_PP = SparseMatrix::build().release();
 // // //     _Prl[ Lev_f ]->init(0,0,0,0); //TODO BACK TO A REASONABLE INIT
 
     // local matrix dimension
@@ -1130,7 +1120,7 @@ void SystemTwo::ReadProl(const std::string& name) {
 
     std::cout << "Printing Prolongator ===========" << std::endl;
     pattern.print();
-    _Prl[ Lev_f ]->update_sparsity_pattern_old(pattern);  //TODO shall we make the two operations of updating sparsity pattern and setting values together?
+    _LinSolver[Lev_f]->_PP->update_sparsity_pattern_old(pattern);  //TODO shall we make the two operations of updating sparsity pattern and setting values together?
 
 //=========== VALUES ===================
     DenseMatrix *valmat;
@@ -1150,7 +1140,7 @@ void SystemTwo::ReadProl(const std::string& name) {
             for (uint j=0; j<ind.size(); j++) ind[j] = pattern[irow][j];
             valmat = new DenseMatrix(1,ncol);
             for (uint j=0; j<ncol; j++)(*valmat)(0,j) = Prol_val[fe][j+len[fe][i]];
-            _Prl[ Lev_f ]->add_matrix(*valmat,tmp,ind);
+            _LinSolver[Lev_f]->_PP->add_matrix(*valmat,tmp,ind);
             delete  valmat;
         }
      }
@@ -1171,7 +1161,7 @@ void SystemTwo::ReadProl(const std::string& name) {
 
     pattern.clear();
 
-    _Prl[  Lev_f ]->close();  //TODO do we need this?
+    _LinSolver[Lev_f]->_PP->close();
 //     if (GetMLProb().GetMeshTwo()._iproc==0) _Prl[  Lev_f ]->print_personal();
 //     _Prl[  Lev_f ]->print_graphic(false); //TODO should pass this true or false as a parameter
    } //end levels
