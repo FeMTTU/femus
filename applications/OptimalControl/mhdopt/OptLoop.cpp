@@ -177,14 +177,15 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
 //xold there was a good value
 //xoold there was still the value multiplied
 //   omega = 1.; //"omega=1" and "no if" is equal to the old loop
-    eqnMHDCONT._x_oold->close();
-    std::cout << "Linfty norm of Becont _x_oold " << eqnMHDCONT._x_oold->linfty_norm() << std::endl;
-
-    eqnMHDCONT._x_old[NoLevels - 1]->close();
-    std::cout << "Linfty norm of Becont _x_old " << eqnMHDCONT._x_old [NoLevels - 1]->linfty_norm() << std::endl;
-
-    _x_oldopt->close();
-    std::cout << "Linfty norm of Becont _x_oldopt " << _x_oldopt->linfty_norm() << std::endl;
+   
+// // //     eqnMHDCONT._x_oold->close();
+// // //     std::cout << "Linfty norm of Becont _xoold " << eqnMHDCONT._x_oold->linfty_norm() << std::endl;
+// // // 
+// // //     eqnMHDCONT._x_old[NoLevels - 1]->close();
+// // //     std::cout << "Linfty norm of Becont _x_old " << eqnMHDCONT._x_old [NoLevels - 1]->linfty_norm() << std::endl;
+// // // 
+// // //     _x_oldopt->close();
+// // //     std::cout << "Linfty norm of Becont _x_oldopt " << _x_oldopt->linfty_norm() << std::endl;
 
 //////////////////
 
@@ -196,9 +197,9 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
     std::cout << "Linfty norm of Becont _x_old*omega "
               << eqnMHDCONT._x_tmp->linfty_norm() << std::endl;
 
-      eqnMHDCONT._x_oold->close();
-    std::cout << "Linfty norm of Becont _x_oold "
-              << eqnMHDCONT._x_oold->linfty_norm() << std::endl;
+// // //       eqnMHDCONT._x_oold->close();
+// // //     std::cout << "Linfty norm of Becont _xoold "
+// // //               << eqnMHDCONT._x_oold->linfty_norm() << std::endl;
 
      _x_oldopt->close();
     std::cout << "Linfty norm of Becont _x_oldopt "

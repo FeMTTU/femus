@@ -103,8 +103,12 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 
     std::cout  << std::endl << " Solving " << eqn_in->name() << " , step " << iter << std::endl;
 
+        NumericVector * _x_oold = NumericVector::build().release();
+        _x_oold->init(eqn_in->_dofmap._Dim[eqn_in->GetGridn()-1],false, SERIAL);
+
+    
     ///A0) Put x_old into x_oold
-    *(eqn_in->_x_oold) = *(eqn_in->_x_old[eqn_in->GetGridn()-1]);
+    *(_x_oold) = *(eqn_in->_x_old[eqn_in->GetGridn()-1]);
 
     /// A) Assemblying 
 #if  DEFAULT_PRINT_TIME==1
@@ -165,7 +169,7 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 /// std::cout << "$$$$$$$$$ Check the convergence $$$$$$$" << std::endl;
 
     eqn_in->_x_tmp->zero();
-    eqn_in->_x_tmp->add(+1.,*(eqn_in->_x_oold));
+    eqn_in->_x_tmp->add(+1.,*(_x_oold));
     eqn_in->_x_tmp->add(-1.,*(eqn_in->_x_old[eqn_in->GetGridn()-1]));
     // x_oold -x_old =actually= (x_old - x)
     //(x must not be touched, as you print from it)
@@ -179,6 +183,9 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 //AAA when the vectors have nan's, the norm becomes zero!
 //when the residual norm in pre and post smoothing is too big,
 //then it doesnt do any iterations, the solver doesnt solve anymore, so the solution remains frozen
+
+    // temp vector
+     delete _x_oold;
 
     return deltax_norm;  //TODO do we have to be based on l2norm or linfty norm???
 }

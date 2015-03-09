@@ -82,7 +82,6 @@ SystemTwo::~SystemTwo() {
          _x.clear();
      _x_old.clear();
 
-        delete _x_oold;
         delete _x_tmp;
 }
 
@@ -178,8 +177,6 @@ void SystemTwo::initVectors() {
 
     } //end level loop
     
-        _x_oold = NumericVector::build().release();
-        _x_oold->init(_dofmap._Dim[GetGridn()-1],false, SERIAL);
         _x_tmp = NumericVector::build().release();
         _x_tmp->init(_dofmap._Dim[GetGridn()-1],false, SERIAL);
 
