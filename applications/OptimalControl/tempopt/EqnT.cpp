@@ -18,6 +18,7 @@
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "VBTypeEnum.hpp"
+#include "GeomElTypeEnum.hpp"
 #include "QTYnumEnum.hpp"
 #include "Domain.hpp"
 #include "TimeLoop.hpp"
@@ -76,24 +77,20 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 
   //if we are just a function not inside a class, we have to retrieve ourselves...
   SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_T");
-
+// ==========================================  
+  Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
+  elem		*myel		=  mymsh->el;
+  const unsigned myproc  = mymsh->processor_id();
+	
   
   const double time = 0.; // ml_prob._timeloop._curr_time;
-
-//========== PROCESSOR INDEX
-  const uint myproc = ml_prob.GetMeshTwo()._iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
   const double    dt = 1.; //ml_prob._timeloop._timemap.get("dt");
   const uint Nonstat = ml_prob.GetInputParser().get("NonStatTEMP");
   
-//========= BCHandling =========
-  const double penalty_val = ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
-
   //======== ELEMENT MAPPING =======
-  const uint space_dim =       ml_prob.GetMeshTwo().get_dim();
-  const uint  meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");
-  const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
+  const uint space_dim =       ml_prob._ml_msh->GetDimension();
 
   //====== reference values ========================
   const double IRe = 1./ml_prob.GetInputParser().get("Re");
@@ -112,7 +109,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 
         my_system._A[Level]->zero();
         my_system._b[Level]->zero();
-    
+
 // ==========================================  
 // ==========================================  
  {//BEGIN VOLUME
@@ -150,15 +147,15 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     //========= //DOMAIN MAPPING
   CurrentQuantity xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   CurrentQuantity xyz_refbox(currgp);  //no quantity
     xyz_refbox._dim      = space_dim;
-    xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-    xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+    xyz_refbox._FEord    = MESH_ORDER;
+    xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
     xyz_refbox.Allocate();
   
   //==================
@@ -184,7 +181,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
+    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
     
 //MY EQUATION
 //the elements are, for every level:
@@ -210,7 +207,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 
   xyz_refbox.SetElemAverage();
   
-int domain_flag = ElFlagControl(xyz_refbox._el_average,&ml_prob.GetMeshTwo());
+int domain_flag = ElFlagControl(xyz_refbox._el_average,ml_prob._ml_msh);
 //====================    
     
 //===== FILL the DOFS of the EXTERNAL QUANTITIES: you must assure that for every Vect the quantity is set correctly
@@ -439,15 +436,15 @@ for (uint fe = 0; fe < QL; fe++)     {
     //========= //DOMAIN MAPPING
   CurrentQuantity xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   CurrentQuantity xyz_refbox(currgp);  //no quantity
     xyz_refbox._dim      = space_dim;
-    xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-    xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+    xyz_refbox._FEord    = MESH_ORDER;
+    xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
     xyz_refbox.Allocate();
     
 //===============Tdes=====================
@@ -466,7 +463,7 @@ for (uint fe = 0; fe < QL; fe++)     {
       currelem.SetMidpoint(); 
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-      currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
+      currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
      
       currelem.SetElDofsBc();
       

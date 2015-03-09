@@ -84,8 +84,10 @@ int main(int argc, char** argv) {
   const double   _We  = (Uref*Uref*Lref*rhof)/sigma; physics_map.set("We",_We);
 
   // ======= Mesh =====
-  FemusInputParser<double> mesh_map("Mesh",files.GetOutputPath());
-    GenCase mesh(mesh_map,"straightQ3D2x2x2ZERO.gam");
+  const unsigned NoLevels = 1;
+  const unsigned dim = 3;
+  const GeomElType geomel_type = HEX;
+    GenCase mesh(NoLevels,dim,geomel_type,"straightQ3D2x2x2ZERO.gam");
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
@@ -151,8 +153,10 @@ int main(int argc, char** argv) {
   MultiLevelMesh ml_msh;
   ml_msh.GenerateCoarseBoxMesh(8,8,8,0,1,0,1,0,1,HEX27,"fifth");
 //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
-  ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
+  ml_msh.RefineMesh(NoLevels,NoLevels,NULL);
   ml_msh.PrintInfo();
+  
+  ml_msh.SetDomain(&mybox);    
   
   MultiLevelSolution ml_sol(&ml_msh);
   ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);

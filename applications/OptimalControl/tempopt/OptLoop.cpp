@@ -18,7 +18,7 @@ namespace femus {
  OptLoop::OptLoop(Files& files_in, const FemusInputParser<double> & map_in): TimeLoop(files_in, map_in) { }
 
  //=================
-    void OptLoop::optimization_loop(MultiLevelProblem & eqmap_in)  {
+    void OptLoop::optimization_loop(MultiLevelProblem & ml_prob)  {
 
     //  parameters
     int    print_step = _timemap.get("printstep");
@@ -43,14 +43,14 @@ namespace femus {
 	const uint delta_t_step = curr_step - _t_idx_in;
 
       //  time step for each system, without printing (good)
-      OneTimestepEqnLoop(delta_t_step,eqmap_in);
+      OneTimestepEqnLoop(delta_t_step,ml_prob);
 
 #if DEFAULT_PRINT_TIME==1
       std::clock_t    end_time=std::clock();
 #endif 
 
       // print solution
-      if (delta_t_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),curr_step,curr_time,eqmap_in);   //print sol.N.h5 and sol.N.xmf
+      if (delta_t_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),curr_step,curr_time,ml_prob);   //print sol.N.h5 and sol.N.xmf
     
 
 #if DEFAULT_PRINT_TIME==1
@@ -61,13 +61,13 @@ namespace femus {
 #endif 
 
 //=====functional evaluations=======
-   SystemTwo & eqnT = eqmap_in.get_system<SystemTwo>("Eqn_T");
+   SystemTwo & eqnT = ml_prob.get_system<SystemTwo>("Eqn_T");
 
 		
      double J = 0.;
-J = ComputeIntegral    ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),&eqnT,_files.GetOutputTime());
-J = ComputeNormControl ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),&eqnT,0 );
-J = ComputeNormControl ( eqmap_in.GetMeshTwo()._NoLevels - 1,&eqmap_in.GetMeshTwo(),&eqnT,1 );
+J = ComputeIntegral    ( ml_prob.GetMeshTwo()._NoLevels - 1,&ml_prob.GetMeshTwo(),&eqnT,_files.GetOutputTime());
+J = ComputeNormControl ( ml_prob.GetMeshTwo()._NoLevels - 1,&ml_prob.GetMeshTwo(),&eqnT,0 );
+J = ComputeNormControl ( ml_prob.GetMeshTwo()._NoLevels - 1,&ml_prob.GetMeshTwo(),&eqnT,1 );
 //=====functional evaluations =======
 
 
@@ -85,8 +85,6 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   //====== processor index
   const uint myproc = mesh->_iproc;
   const uint space_dim =      mesh->get_dim();
-  const uint mesh_ord = (int) mesh->GetRuntimeMap().get("mesh_ord");  
-  const uint meshql   = (int) mesh->GetRuntimeMap().get("meshql");   //======== ELEMENT MAPPING =======
  
   const uint mesh_vb = VV;
 
@@ -114,14 +112,14 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 //========= DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+  xyz_refbox._FEord    = MESH_ORDER;
   xyz_refbox._ndof     = NVE[ mesh->_geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
   xyz_refbox.Allocate();
 
@@ -144,7 +142,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
 // =============== 
       xyz_refbox.SetElemAverage();
-      int el_flagdom = ElFlagControl(xyz_refbox._el_average,mesh);
+      int el_flagdom = ElFlagControl(xyz_refbox._el_average,eqn->GetMLProb()._ml_msh);
 //====================     
  
     if ( Tempold._eqnptr != NULL )   Tempold.GetElemDofs();
@@ -223,8 +221,6 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
   // processor index
   const uint myproc = mesh->_iproc;
   const uint space_dim =       mesh->get_dim();
-  const uint mesh_ord  = (int) mesh->GetRuntimeMap().get("mesh_ord");  
-  const uint meshql    = (int) mesh->GetRuntimeMap().get("meshql");    //======== ELEMENT MAPPING =======
 
   const uint mesh_vb = VV;
   
@@ -242,14 +238,14 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
 //========= DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+  xyz_refbox._FEord    = MESH_ORDER;
   xyz_refbox._ndof     = NVE[ mesh->_geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
   xyz_refbox.Allocate();
   
@@ -320,13 +316,13 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
 
 ///AAA questa funzione NON lavora se tu fai solo DUE SUDDIVISIONI PER LATO e nolevels=1 !!!
 
- int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMeshTwo* mesh)  {
+ int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMesh* mesh)  {
 
   Box* box= static_cast<Box*>(mesh->GetDomain());
    
      int el_flagdom=0;
 
-     if (mesh->get_dim() == 2) {
+     if (mesh->GetDimension() == 2) {
 //============== OUTFLOW     
 //        if (   el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])
 // 	   && el_xm[0] < 0.75*(box->_le[0] - box->_lb[0])
@@ -356,7 +352,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
 //              }
      }
  
- else if (mesh->get_dim() == 3) {
+ else if (mesh->GetDimension() == 3) {
  
       if ( el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])  
 	&& el_xm[0] < 0.75*(box->_le[0] - box->_lb[0]) 

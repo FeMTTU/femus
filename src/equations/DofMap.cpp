@@ -43,9 +43,7 @@ void DofMap::initNVars()  {
   }
   
     
-//CHECK LINEAR MESH WITH QUADRATIC SHAPES
-    const uint mesh_ord = (int) _mesh.GetRuntimeMap().get("mesh_ord");
-    if (mesh_ord == 1 && _nvars[QQ]>0) {
+    if (MESH_ORDER == 1 && _nvars[QQ]>0) {
         std::cout << "Can't handle linear mesh with quadratic variables, do a quadratic mesh" << std::endl;
         abort();
     }

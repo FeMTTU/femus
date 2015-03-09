@@ -636,7 +636,7 @@ void MagnFieldHomAdj::Function_txyz(const double t, const double* xp,double* fun
 
 void Velocity::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
@@ -729,7 +729,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
 void Pressure::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
@@ -807,7 +807,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
 void MagnFieldHom::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
@@ -900,7 +900,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
 void MagnFieldHomAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
@@ -992,7 +992,7 @@ if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //current
  
  void MagnFieldHomLagMult::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
@@ -1066,7 +1066,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
 void MagnFieldHomLagMultAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
@@ -1140,7 +1140,7 @@ if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //current
 
 void VelocityAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
@@ -1231,7 +1231,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
  
  void PressureAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
@@ -1307,7 +1307,7 @@ if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  
 
 void MagnFieldExt::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
@@ -1407,7 +1407,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
 void MagnFieldExtLagMult::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
   Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
@@ -1487,7 +1487,7 @@ void Velocity::initialize_xyz(const double* xp, std::vector< double >& value) co
   const double pref = _qtymap.GetInputParser()->get("pref");
   const double udes = _qtymap.GetInputParser()->get("udes");
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
   Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 

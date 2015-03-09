@@ -11,6 +11,7 @@
 #include "Quantity.hpp"
 #include "MultiLevelProblem.hpp"
 #include "FETypeEnum.hpp"
+#include "GeomElTypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "QTYnumEnum.hpp"
 #include "TimeLoop.hpp"
@@ -47,24 +48,26 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
  const int NonStatMHD = (int) ml_prob.GetInputParser().get("NonStatMHD");
     const double dt   = 1.; //ml_prob._timeloop._timemap.get("dt");
 
-//========= BCHandling =========
-  const double penalty_val = ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
-  
 //======== GEOMETRICAL ELEMENT =======
-  const uint space_dim =       ml_prob.GetMeshTwo().get_dim();
-  const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
-  const uint  meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");   //======== ELEMENT MAPPING =======
+  const uint space_dim =       ml_prob._ml_msh->GetDimension();
   
         my_system._A[Level]->zero();
         my_system._b[Level]->zero();
 
+// ==========================================  
+  Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
+  elem		*myel		=  mymsh->el;
+  const unsigned myproc  = mymsh->processor_id();
+	
+// ==========================================  
+// ==========================================
+  
   {//BEGIN VOLUME
-//======================
-//======================
+
    const uint mesh_vb = VV;
    
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level];
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
  
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
    
@@ -121,15 +124,15 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   //========= //DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
     
     //================== Quadratic domain, auxiliary
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._FEord    = MESH_ORDER;
+  xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
 
     CurrentQuantity Bext(currgp);
@@ -152,11 +155,11 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
     currelem.Mat().zero();
     currelem.Rhs().zero();
 
-     currelem.SetDofobjConnCoords(ml_prob.GetMeshTwo()._iproc,iel);
+     currelem.SetDofobjConnCoords(myproc,iel);
      currelem.SetMidpoint();
      
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
+    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
     currelem.SetElDofsBc();
     
@@ -409,15 +412,15 @@ for (uint fe = 0; fe < QL; fe++)     {
   //========= //DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
     
     //================== Quadratic domain, auxiliary
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._FEord    = MESH_ORDER;
+  xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
   xyz_refbox.Allocate();
 
     CurrentQuantity Bext(currgp);
@@ -450,7 +453,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.SetMidpoint();
 
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
+     currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
    
      currelem.SetElDofsBc();
      

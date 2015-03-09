@@ -2,7 +2,7 @@
 
 Program: FEMUS
 Module: MultiLevelMesh
-Authors: Eugenio Aulisa, Simone Bnà
+Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
 
 Copyright (c) FEMUS
 All rights reserved.
@@ -19,6 +19,7 @@ PURPOSE.  See the above copyright notice for more information.
 
 #include <vector>
 #include "ElemTypeEnum.hpp"
+#include "GeomElTypeEnum.hpp"
 #include "WriterEnum.hpp"
 #include "Writer.hpp"
 
@@ -30,7 +31,7 @@ namespace femus {
 //------------------------------------------------------------------------------
 class elem_type;
 class Mesh;
-
+class Domain;
 
 /**
 * This class is a black box container to handle multilevel mesh.
@@ -108,24 +109,37 @@ public:
 
     /** To be Added */
     void SetWriter(const WriterEnum format) { _writer = Writer::build(format,this).release(); }
+    
+    /** Get the dimension of the problem (1D, 2D, 3D) */
+    const unsigned GetDimension() const;
 
+    /** Domain (optional) */
+    Domain* GetDomain() const;
+    
+    /** Domain (optional) */
+    void    SetDomain(Domain* );    
+    
 protected:
 
 private:
     
     void BuildElemType(const char GaussOrder[]);
     
-    // data
+    /**  */
     unsigned short _gridn0, _gridr0;
     unsigned short _gridn, _gridr;
+
     /** Array of mesh */
     std::vector <Mesh*> _level0;
     std::vector <Mesh*> _level;
+
     std::vector <bool> _finiteElementGeometryFlag;
     
     /** MultilevelMesh  writer */
     Writer* _writer;
-
+    
+    /** Domain (optional) */
+    Domain* _domain;
 };
 
 

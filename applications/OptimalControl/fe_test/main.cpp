@@ -58,9 +58,11 @@
   const double Lref  =  physics_map.get("Lref");     // reference L
 
   // ======= Mesh =====
-  FemusInputParser<double> mesh_map("Mesh",files.GetOutputPath());
+  const unsigned NoLevels = 3;
+  const unsigned dim = 2;
+  const GeomElType geomel_type = QUAD;
 
-  GenCase mesh(mesh_map,"");
+  GenCase mesh(NoLevels,dim,geomel_type,"");
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
@@ -97,9 +99,11 @@
   // ====== Start new main =================================
   MultiLevelMesh ml_msh;
   ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,1,0,1,QUAD9,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
-  ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
+  ml_msh.RefineMesh(NoLevels,NoLevels,NULL);
   ml_msh.PrintInfo();
 
+  ml_msh.SetDomain(&mybox);    
+  
   MultiLevelSolution ml_sol(&ml_msh);
   ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
 

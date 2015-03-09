@@ -85,7 +85,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 
   /// @todo I assume that the mesh is not mixed
   std::string type_elem;
-  unsigned elemtype = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementType(0);
+  unsigned elemtype = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementType(ZERO_ELEM);
   type_elem = XDMFWriter::type_el[index][elemtype];
   
   if (type_elem.compare("Not_implemented") == 0) 
@@ -1940,7 +1940,7 @@ void XDMFWriter::ReadMeshAndNondimensionalizeBiquadraticHDF5(const std::string o
 //I'll put a check 
 
 if (mesh._dim != topdata[0] ) {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the mesh dimension is " << mesh._dim
-                                   << " while the dimension in the configuration file is " << mesh.GetRuntimeMap().get("dimension")
+                                   << " while the dimension in the configuration file is " << mesh.get_dim()
                                    << ". Recompile either gencase or your application appropriately" << std::endl;abort();}
 //it seems like it doesn't print to file if I don't put the endline "<< std::endl".
 //Also, "\n" seems to have no effect, "<< std::endl" must be used
@@ -2301,7 +2301,7 @@ void XDMFWriter::PrintMeshBiquadraticHDF5(const std::string output_path, const M
 
 
 // =======================================================================
-// For every matrix, compute "dimension", "position", "len", "offlen"
+// For every matrix, compute dimension, position, len, offlen
 // this function concerns a COUPLE of finite element families, that's it
 // fe_row = rows
 // fe_col = columns

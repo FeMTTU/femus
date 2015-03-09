@@ -13,6 +13,7 @@
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "VBTypeEnum.hpp"
+#include "GeomElTypeEnum.hpp"
 #include "QTYnumEnum.hpp"
 #include "Domain.hpp"
 #include "TimeLoop.hpp"
@@ -74,12 +75,6 @@ Viscosity* viscosity_ptr = static_cast<Viscosity*>(ml_prob.GetQtyMap().GetQuanti
    const double time =  0.;   //ml_prob._timeloop._curr_time;
    
   
-//========== PROCESSOR INDEX
-//every routine we use here should depend directly on this one and not implicitly 
-//through the class _iproc. This should be a sort of "function argument",
-//like the Level
-  const uint myproc = ml_prob.GetMeshTwo()._iproc;
-
 //==========FLAG FOR STATIONARITY OR NOT
 //FLAG for the TIME DISCRETIZATION
 //every Equation may have a TimeDiscretization
@@ -140,16 +135,18 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
   
   
 //========== GEOMETRIC ELEMENT ========
-  const uint           space_dim = ml_prob.GetMeshTwo().get_dim();
-  const uint mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
-  const uint meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql"); //======== ELEMENT MAPPING =======
+  const uint           space_dim = ml_prob._ml_msh->GetDimension();
   
-//========= BCHandling =========
-  const double penalty_val  = ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
-
         my_system._A[Level]->zero();
         my_system._b[Level]->zero();
 
+// ==========================================  
+  Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
+  elem		*myel		=  mymsh->el;
+  const unsigned myproc  = mymsh->processor_id();
+	
+// ==========================================  
+// ==========================================  
 
    {//BEGIN VOLUME
 //===============================  
@@ -194,15 +191,15 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
   //========= //DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._FEord    = MESH_ORDER;
+  xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
     
 //============================ MAG WORLD =======================================
@@ -257,7 +254,7 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
+    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
     currelem.SetElDofsBc();
@@ -582,15 +579,15 @@ for (uint fe = 0; fe < QL; fe++)     {
   //========= //DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._FEord    = MESH_ORDER;
+  xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
   xyz_refbox.Allocate();
 
 //=======================
@@ -608,7 +605,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
+     currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
      currelem.SetElDofsBc();
      

@@ -14,4 +14,7 @@ enum  FEType {QQ=0, LL, KK };
 
 #define NFE_FAMS 5
 
+#define  MESH_MAPPING_FE  1  //linear
+#define MESH_ORDER 0          //biq
+
 #endif
