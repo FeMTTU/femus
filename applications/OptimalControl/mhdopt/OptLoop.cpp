@@ -521,22 +521,19 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   const uint myproc = mesh->_iproc;
   // geometry -----
   const uint  space_dim =       mesh->get_dim();
-  const uint   mesh_ord = (int) mesh->GetRuntimeMap().get("mesh_ord");  
-  const uint     meshql = (int) mesh->GetRuntimeMap().get("meshql");    //======== ELEMENT MAPPING =======
   
-//======Functions in the integrand ============
-  
+ 
 //========= DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
     xyz._dim      = DIMENSION;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
+  xyz_refbox._FEord    = MESH_ORDER;
   xyz_refbox._ndof     = NVE[ mesh->_geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
   xyz_refbox.Allocate();
   
@@ -570,7 +567,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
 //======= 
     xyz_refbox.SetElemAverage();
-    int el_flagdom = ElFlagControl(xyz_refbox._el_average,mesh);
+    int el_flagdom = ElFlagControl(xyz_refbox._el_average,eqn->GetMLProb()._ml_msh);
 //=======        
 
     if ( Vel._eqnptr != NULL )       Vel.GetElemDofs();
@@ -616,22 +613,22 @@ for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel._val_g[j] - VelDe
 
 
 
-  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMeshTwo* mesh)  {
+  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMesh* mesh)  {
 
   Box* box= static_cast<Box*>(mesh->GetDomain());
    
    
      int el_flagdom=0;
 
-///optimal control
-  #if DIMENSION==2
+  if (mesh->GetDimension() == 2) {
    //flag on the controlled region 2D
        if (   el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])
 	   && el_xm[0] < 0.75*(box->_le[0] - box->_lb[0])
 	   && el_xm[1] > 0.75*(box->_le[1] - box->_lb[1]) ) {
                  el_flagdom=1;
              }
-  #else
+  }
+      else if (mesh->GetDimension() == 3) {
    //flag on the controlled region 3D
       if ( el_xm[0] > 0.25*(box->_le[0] - box->_lb[0])  
 	&& el_xm[0] < 0.75*(box->_le[0] - box->_lb[0]) 
@@ -640,7 +637,7 @@ for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel._val_g[j] - VelDe
 	&& el_xm[2] < 0.75*(box->_le[2] - box->_lb[2]) ) {
 	el_flagdom=1;
         }
- #endif
+      }
 
 return el_flagdom; 
 }

@@ -85,7 +85,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 
   /// @todo I assume that the mesh is not mixed
   std::string type_elem;
-  unsigned elemtype = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementType(0);
+  unsigned elemtype = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementType(ZERO_ELEM);
   type_elem = XDMFWriter::type_el[index][elemtype];
   
   if (type_elem.compare("Not_implemented") == 0) 
@@ -102,7 +102,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   
   // Printing connectivity
   unsigned nel=0;
-  for(unsigned ig=0;ig<_gridn-1u;ig++) {
+  for(unsigned ig=0; ig<_gridn-1u; ig++) {
     nel+=( _ml_mesh->GetLevel(ig)->GetNumberOfElements() - _ml_mesh->GetLevel(ig)->el->GetRefinedElementNumber());
   }
   nel+=_ml_mesh->GetLevel(_gridn-1u)->GetNumberOfElements();
@@ -110,7 +110,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   unsigned icount;
   unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index_nd);
   int * var_conn          = new int [nel*el_dof_number];
-  std::vector<int> var_proc(nel);
+  std::vector< int > var_proc(nel);
   float *var_el_f         = new float [nel];
   float *var_nd_f         = new float [nvt];
 
@@ -126,7 +126,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 
   std::ofstream fout;
     
-  if(_iproc!=0) {
+ if(_iproc != 0){
     fout.rdbuf();   //redirect to dev_null
   }
   else {
@@ -230,40 +230,40 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
     for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
       unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];//->GetDofNumber(index_nd);
       NumericVector* mysol = NumericVector::build().release();
-      NumericVector* mysol_ser = NumericVector::build().release();
-      mysol_ser->init(nvt_ig,nvt_ig,true,SERIAL);
+     
       mysol->init(nvt_ig,_ml_mesh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
       mysol->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
 			 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,2) );
-      mysol->localize(*mysol_ser);
-            if(_iproc==0) { 
-      for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii] = (*mysol_ser)(ii);
-	    }
+           
+      vector<double> mysol_ser;
+      mysol->localize_to_one(mysol_ser, 0);
+      
+      if(_iproc == 0){
+	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii] = mysol_ser[ii];
+      }
 	    
       if (_ml_sol != NULL && _moving_mesh && _ml_mesh->GetLevel(0)->GetDimension() > i) {
 	unsigned varind_DXDYDZ=_ml_sol->GetIndex(_moving_vars[i].c_str());
 	mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[varind_DXDYDZ],
 			   *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,_ml_sol->GetSolutionType(varind_DXDYDZ)));
-      mysol->localize(*mysol_ser);
-            if(_iproc==0) { 
-	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii] += (*mysol_ser)(ii);
-	    }
+	mysol->localize_to_one(mysol_ser, 0);
+	if(_iproc == 0){
+	  for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii] += mysol_ser[ii];
+	}
       }
-      
       delete mysol;
-      delete mysol_ser;
     }
     
-	
-    dimsf[0] = nvt ;  dimsf[1] = 1;
-    std::ostringstream Name; Name << "/NODES_X" << i+1;
-    dataspace = H5Screate_simple(2,dimsf, NULL);
-    dataset   = H5Dcreate(file_id,Name.str().c_str(),H5T_NATIVE_FLOAT,
-			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-   status = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_nd_f);
-   H5Sclose(dataspace);
-    H5Dclose(dataset);
-    
+    if(_iproc == 0){
+      dimsf[0] = nvt ;  dimsf[1] = 1;
+      std::ostringstream Name; Name << "/NODES_X" << i+1;
+      dataspace = H5Screate_simple(2,dimsf, NULL);
+      dataset   = H5Dcreate(file_id,Name.str().c_str(),H5T_NATIVE_FLOAT,
+			    dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      status = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_nd_f);
+      H5Sclose(dataspace);
+      H5Dclose(dataset);
+    }
   } //end 3d loop
 
   //-------------------------------------------------------------------------------------------------------------
@@ -272,13 +272,13 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   //connectivity
   icount = 0;
   unsigned offset_conn=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); iel++) {
-      if (_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
+  for ( unsigned ig=_gridr-1u; ig<_gridn; ig++ ) {
+    for ( unsigned iel = 0; iel < _ml_mesh->GetLevel(ig)->GetNumberOfElements(); iel++ ) {
+      if ( ig == _gridn-1u || _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel) == 0) {
 	int ndofs = _ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index_nd);
-        for (unsigned j=0; j<ndofs; j++) {
+        for (unsigned j = 0; j < ndofs; j++) {
 	  unsigned vtk_loc_conn = map_pr[j];
-	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
+	  unsigned jnode = _ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
 	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
 	  var_conn[icount] = offset_conn + jnode_Metis;
 	  icount++;
@@ -287,14 +287,15 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
     }
     offset_conn += _ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];//GetLevel(ig)->GetDofNumber(index_nd);
   }
-  
-  dimsf[0] = nel*el_dof_number ;  dimsf[1] = 1;
-  dataspace = H5Screate_simple(2,dimsf, NULL);
-  dataset   = H5Dcreate(file_id,"/CONNECTIVITY",H5T_NATIVE_INT,
-			dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_conn[0]);
-  H5Sclose(dataspace);
-  H5Dclose(dataset);
+   if(_iproc == 0){
+    dimsf[0] = nel*el_dof_number ;  dimsf[1] = 1;
+    dataspace = H5Screate_simple(2,dimsf, NULL);
+    dataset   = H5Dcreate(file_id,"/CONNECTIVITY",H5T_NATIVE_INT,
+			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_conn[0]);
+    H5Sclose(dataspace);
+    H5Dclose(dataset);
+   }
   //------------------------------------------------------------------------------------------------------
   
   
@@ -312,14 +313,15 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
       }
     }
   } 
-   
-  dimsf[0] = nel;  dimsf[1] = 1;
-  dataspace = H5Screate_simple(2,dimsf, NULL);
-  dataset   = H5Dcreate(file_id,"/REGIONS",H5T_NATIVE_INT,
-			dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_conn);
-  H5Sclose(dataspace);
-  H5Dclose(dataset);
+  if(_iproc == 0){ 
+    dimsf[0] = nel;  dimsf[1] = 1;
+    dataspace = H5Screate_simple(2,dimsf, NULL);
+    dataset   = H5Dcreate(file_id,"/REGIONS",H5T_NATIVE_INT,
+			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_conn);
+    H5Sclose(dataspace);
+    H5Dclose(dataset);
+  }
   
   // end print regions
   //-------------------------------------------------------------------------------------------------------
@@ -337,14 +339,15 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
       }
     }
   } 
-   
-  dimsf[0] = nel;  dimsf[1] = 1;
-  dataspace = H5Screate_simple(2,dimsf, NULL);
-  dataset   = H5Dcreate(file_id,"/DOMAIN_PARTITIONS",H5T_NATIVE_INT,
-			dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_proc[0]);
-  H5Sclose(dataspace);
-  H5Dclose(dataset);  
+  if(_iproc == 0){ 
+    dimsf[0] = nel;  dimsf[1] = 1;
+    dataspace = H5Screate_simple(2,dimsf, NULL);
+    dataset   = H5Dcreate(file_id,"/DOMAIN_PARTITIONS",H5T_NATIVE_INT,
+			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_proc[0]);
+    H5Sclose(dataspace);
+    H5Dclose(dataset);  
+  }
   // end print partitioning 
   //-------------------------------------------------------------------------------------------------------
   
@@ -358,28 +361,25 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
       for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
 	unsigned nel_ig = _ml_mesh->GetLevel(ig)->GetNumberOfElements();
 	unsigned sol_size = _ml_sol->GetSolutionLevel(ig)->_Sol[indx]->size();
-	NumericVector* mysol_ser = NumericVector::build().release();
-	mysol_ser->init(sol_size,sol_size,true,SERIAL);
+	vector < double > mysol_ser;
 	for (unsigned ii=0; ii<nel_ig; ii++) {
 	  if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	    _ml_sol->GetSolutionLevel(ig)->_Sol[indx]->localize(*mysol_ser);
+	    _ml_sol->GetSolutionLevel(ig)->_Sol[indx]->localize_to_one(mysol_ser, 0);
 	    unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,_ml_sol->GetSolutionType(indx));
-	    
-	    var_el_f[icount]=(*mysol_ser)(iel_Metis);
+	    var_el_f[icount]=mysol_ser[iel_Metis];
 	    icount++;
 	  }
 	}
-	delete mysol_ser;
       } 
-     
-      dimsf[0] = nel;  dimsf[1] = 1;
-      dataspace = H5Screate_simple(2,dimsf, NULL);
-      dataset   = H5Dcreate(file_id,_ml_sol->GetSolutionName(indx),H5T_NATIVE_FLOAT,
-			    dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_el_f[0]);
-      H5Sclose(dataspace);
-      H5Dclose(dataset);
-     
+      if(_iproc == 0){
+	dimsf[0] = nel;  dimsf[1] = 1;
+	dataspace = H5Screate_simple(2,dimsf, NULL);
+	dataset   = H5Dcreate(file_id,_ml_sol->GetSolutionName(indx),H5T_NATIVE_FLOAT,
+			      dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_el_f[0]);
+	H5Sclose(dataspace);
+	H5Dclose(dataset);
+      }
     }
   }
   
@@ -391,27 +391,25 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
         unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
         NumericVector* mysol = NumericVector::build().release();
-        NumericVector* mysol_ser = NumericVector::build().release();
-	mysol_ser->init(nvt_ig,nvt_ig,true,SERIAL);
 	mysol->init(nvt_ig,_ml_mesh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
 	mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indx],
 			   *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd, _ml_sol->GetSolutionType(indx)) );
-        mysol->localize(*mysol_ser);
-	if(_iproc==0) { 
-	   for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii] = (*mysol_ser)(ii);
+        vector < double > mysol_ser;
+	mysol->localize_to_one(mysol_ser, 0);
+	if(_iproc == 0){
+	   for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii] = mysol_ser[ii];
 	}
-	
 	delete mysol;
-	delete mysol_ser;
       }
-     
-      dimsf[0] = nvt;  dimsf[1] = 1;
-      dataspace = H5Screate_simple(2,dimsf, NULL);
-      dataset   = H5Dcreate(file_id,_ml_sol->GetSolutionName(indx),H5T_NATIVE_FLOAT,
+      if(_iproc == 0){
+	dimsf[0] = nvt;  dimsf[1] = 1;
+	dataspace = H5Screate_simple(2,dimsf, NULL);
+	dataset   = H5Dcreate(file_id,_ml_sol->GetSolutionName(indx),H5T_NATIVE_FLOAT,
 			    dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_nd_f);
-      H5Sclose(dataspace);
-      H5Dclose(dataset);
+	status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_nd_f);
+	H5Sclose(dataspace);
+	H5Dclose(dataset);
+      }
     }
   }
   //-------------------------------------------------------------------------------------------------------
@@ -1153,8 +1151,8 @@ void XDMFWriter::read_system_solutions(const std::string namefile, const MultiLe
         double Irefval = 1./eqn->_refvalue[ivar]; // units
 
         // storing  ivar variables (in parallell)
-        for (int iel=0;iel <  mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels]
-                -mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1]; iel++) {
+        for (int iel=0; iel <  mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels]
+			      -mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1]; iel++) {
             uint elem_gidx=(iel+mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1])*NVE[ mesh->_geomelem_flag[mesh->get_dim()-1] ][BIQUADR_FE];
             for (uint i=0; i<el_nds; i++) { // linear and quad
                 int k=mesh->_el_map[VV][elem_gidx+i];   // the global node
@@ -1942,7 +1940,7 @@ void XDMFWriter::ReadMeshAndNondimensionalizeBiquadraticHDF5(const std::string o
 //I'll put a check 
 
 if (mesh._dim != topdata[0] ) {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the mesh dimension is " << mesh._dim
-                                   << " while the dimension in the configuration file is " << mesh.GetRuntimeMap().get("dimension")
+                                   << " while the dimension in the configuration file is " << mesh.get_dim()
                                    << ". Recompile either gencase or your application appropriately" << std::endl;abort();}
 //it seems like it doesn't print to file if I don't put the endline "<< std::endl".
 //Also, "\n" seems to have no effect, "<< std::endl" must be used
@@ -2303,7 +2301,7 @@ void XDMFWriter::PrintMeshBiquadraticHDF5(const std::string output_path, const M
 
 
 // =======================================================================
-// For every matrix, compute "dimension", "position", "len", "offlen"
+// For every matrix, compute dimension, position, len, offlen
 // this function concerns a COUPLE of finite element families, that's it
 // fe_row = rows
 // fe_col = columns

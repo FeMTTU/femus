@@ -859,7 +859,7 @@ return;
 // // // // // void BoundaryConditions::elem_bc_read(const double el_xm[],int& surf_id, double value[],int el_flag[]) const {
 // // // // // //el_xm[] is the NON-DIMENSIONAL node coordinate // lb,le are NONDIMENSIONALIZED
 // // // // // 
-// // // // // const double bdry_toll = _dofmap->_mesh.GetRuntimeMap().get("bdry_toll");
+// // // // // const double bdry_toll = DEFAULT_BDRY_TOLL;
 // // // // // 
 // // // // //   
 // // // // // 

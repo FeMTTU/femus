@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: MultiLevelMesh
- Authors: Simone Bnà, Eugenio Aulisa
+ Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
  
  Copyright (c) FEMTTU
  All rights reserved. 
@@ -23,6 +23,7 @@
 #include "NumericVector.hpp"
 #include "FemusConfig.hpp"
 #include "MeshRefinement.hpp"
+#include "Domain.hpp"
 
 
 //C++ include
@@ -366,7 +367,26 @@ void MultiLevelMesh::PrintInfo() {
     }
 }
 
-
+    /** Get the dimension of the problem (1D, 2D, 3D) from one Mesh (level 0 always exists, after initialization) */
+    const unsigned MultiLevelMesh::GetDimension() const {
+      return _level0[LEV_PICK]->GetDimension();
+    }
+    
+// ========================================================
+  void MultiLevelMesh::SetDomain(Domain* domain_in)  {
+    
+    _domain = domain_in;
+    
+   return; 
+  }
+  
+ // ========================================================
+  Domain* MultiLevelMesh::GetDomain() const {
+    
+   return _domain; 
+   
+  }
+  
 } //end namespace femus
 
 

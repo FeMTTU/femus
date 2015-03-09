@@ -284,7 +284,7 @@ void Temperature::heatflux_txyz(const double /*t*/, const double* /*xyz*/, doubl
 
 void Velocity::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
@@ -383,7 +383,7 @@ if (_qtymap.GetMeshTwo()->get_dim() == 2) {
   
 void Pressure::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
@@ -449,7 +449,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 // T' and its adjoint must be Dirichlet homogeneous everywhere on the boundary, by definition.
 
 
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 
   Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
@@ -506,7 +506,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 // T' and its adjoint must be Dirichlet homogeneous everywhere on the boundary, by definition.
 
 
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 
   Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
@@ -571,7 +571,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
  void TempAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
 
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 
   Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
@@ -660,7 +660,7 @@ void TempAdj::initialize_xyz(const double* xp, std::vector< double >& value) con
 void TempLift::initialize_xyz(const double* xp, std::vector< double >& value) const {
   
   
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
 
   Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   
@@ -680,7 +680,7 @@ void Velocity::initialize_xyz(const double* xp, std::vector< double >& value) co
   
   //====== Physics
    const double Uref = _qtymap.GetInputParser()->get("Uref");
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
 
  
   Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());

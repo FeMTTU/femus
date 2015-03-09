@@ -34,8 +34,8 @@ using namespace libMesh;
 namespace femus {
 
 // ========================================================
-GenCase::GenCase(const FemusInputParser<double> & map_in, const std::string mesh_file_in)
-     : MultiLevelMeshTwo(map_in,mesh_file_in)
+GenCase::GenCase(const unsigned nolevels, const unsigned dim, const GeomElType geomel_type, const std::string mesh_file_in)
+     : MultiLevelMeshTwo(nolevels,dim,geomel_type,mesh_file_in)
 {
 
    _feelems.resize(QL);

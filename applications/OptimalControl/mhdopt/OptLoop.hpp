@@ -37,7 +37,7 @@ public:
 //prototypes that can even stay outside of a class
   double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn);
 
-  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMeshTwo* mesh);
+  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMesh* mesh);
   
 
   
