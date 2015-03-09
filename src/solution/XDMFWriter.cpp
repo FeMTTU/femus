@@ -988,7 +988,7 @@ void XDMFWriter::write(const std::string namefile, const MultiLevelMeshTwo* mesh
 #ifndef NDEBUG
          if ( pos_on_Qnodes_lev >= (int) n_nodes_lev ) { std::cout << "^^^^^^^OUT OF THE ARRAY ^^^^^^" << std::endl; abort(); }
 #endif
-        sol_on_Qnodes[ pos_on_Qnodes_lev/* pos_in_mesh_obj*/ ] = (* eqn->_x_old[Level])(pos_in_sol_vec_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[QQ] ];
+        sol_on_Qnodes[ pos_on_Qnodes_lev/* pos_in_mesh_obj*/ ] = (* eqn->_LinSolver[Level]->_EPSC )(pos_in_sol_vec_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[QQ] ];
 	pos_in_mesh_obj++;
 	  }
        }  //end subd
@@ -1030,7 +1030,7 @@ void XDMFWriter::write(const std::string namefile, const MultiLevelMeshTwo* mesh
          if ( pos_on_Qnodes_lev >= (int) n_nodes_lev ) { std::cout << "^^^^^^^OUT OF THE ARRAY ^^^^^^" << std::endl; abort(); }
 #endif
 
-         sol_on_Qnodes[ pos_on_Qnodes_lev ] = (*eqn->_x_old[Level])(pos_in_sol_vec_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[LL] ];
+         sol_on_Qnodes[ pos_on_Qnodes_lev ] = ( *eqn->_LinSolver[Level]->_EPSC )(pos_in_sol_vec_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[LL] ];
 	 
             }
         }
@@ -1098,7 +1098,7 @@ void XDMFWriter::write(const std::string namefile, const MultiLevelMeshTwo* mesh
              int elem_lev = iel + sum_elems_prev_sd_at_lev;
 	  int dof_pos_lev = dofmap->GetDof(Level,KK,ivar,elem_lev);   
       for (uint is = 0; is < NRE[mesh->_eltype_flag[VV]]; is++) {      
-	   sol_on_cells[cel*NRE[mesh->_eltype_flag[VV]] + is] = (* eqn->_x_old[Level])(dof_pos_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[KK] ];
+	   sol_on_cells[cel*NRE[mesh->_eltype_flag[VV]] + is] = (* eqn->_LinSolver[Level]->_EPSC)(dof_pos_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[KK] ];
       }
       cel++;
     }
@@ -1161,7 +1161,7 @@ void XDMFWriter::read_system_solutions(const std::string namefile, const MultiLe
         }
     }
 
-    eqn->_LinSolver[mesh->_NoLevels-1]->_EPS->localize(* eqn->_x_old[mesh->_NoLevels-1]);
+    eqn->_LinSolver[mesh->_NoLevels-1]->_EPS->localize(* eqn->_LinSolver[mesh->_NoLevels-1]->_EPSC);
     // clean
     H5Fclose(file_id);
     delete []sol;

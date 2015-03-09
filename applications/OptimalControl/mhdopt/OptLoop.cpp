@@ -192,7 +192,7 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
         _x_tmp2->init(eqnMHDCONT._dofmap._Dim[eqnMHDCONT.GetGridn()-1],false, SERIAL);
 
       _x_tmp2->zero();
-    *(_x_tmp2) = *(eqnMHDCONT._x_old[NoLevels-1]);
+    *(_x_tmp2) = *(eqnMHDCONT._LinSolver[NoLevels-1]->_EPSC);
       eqnMHDCONT._bcond.Bc_ScaleDofVec(_x_tmp2, omega );
       _x_tmp2->close();
     std::cout << "Omega " << omega << std::endl;
@@ -212,11 +212,11 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
     std::cout << "Linfty norm of Becont x_old*omega + (1-omega)*xoold " 
               << _x_tmp2->linfty_norm() << std::endl;
 
-    *(eqnMHDCONT._x_old[NoLevels-1]) = *(_x_tmp2);
+    *(eqnMHDCONT._LinSolver[NoLevels-1]->_EPSC) = *(_x_tmp2);
 
-    eqnMHDCONT._x_old[NoLevels - 1]->close();
+    eqnMHDCONT._LinSolver[NoLevels-1]->_EPSC->close();
     std::cout << "Linfty norm of Becont _x_old updated " 
-              << eqnMHDCONT._x_old [NoLevels - 1]->linfty_norm() << std::endl;
+              << eqnMHDCONT._LinSolver[NoLevels-1]->_EPSC->linfty_norm() << std::endl;
 
  
 //   eqnMHDCONT.x[NoLevels - 1]->close();
@@ -320,7 +320,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
 //******* update Jold  //you must update it only here, because here it is the good point to restart from
     Jold = J;
 #ifdef MHDCONT_EQUATIONS      
-        *(_x_oldopt) = *(eqnMHDCONT._x_old[NoLevels-1]); 
+        *(_x_oldopt) = *(eqnMHDCONT._LinSolver[NoLevels-1]->_EPSC); 
 #endif      
 
 	//this will be the new _x_oldopt?

@@ -110,7 +110,7 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 
     
     ///A0) Put x_old into x_oold
-    *(_x_oold) = *(eqn_in->_x_old[eqn_in->GetGridn()-1]);
+    *(_x_oold) = *( eqn_in->_LinSolver[eqn_in->GetGridn()-1]->_EPSC );
 
     /// A) Assemblying 
 #if  DEFAULT_PRINT_TIME==1
@@ -149,10 +149,6 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
       
         eqn_in->MGSolve(DEFAULT_EPS_LSOLV, DEFAULT_MAXITS_LSOLV);
 	
-// //     for (uint Level = 0 ; Level < GetGridn(); Level++)  { 
-// //       _solver[Level]->solve(*_LinSolver[Level]->_KK,*_x[Level],*_b[Level],1.e-6,40);
-// //            _x[Level]->localize(*_x_old[Level]);   // x_old = x
-// //     }
 
 #if    DEFAULT_PRINT_TIME==1
     std::clock_t end_time_sol = std::clock();
@@ -164,7 +160,7 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 /// std::cout << "$$$$$$$$$ Computed the x with the MG method $$$$$$$" << std::endl;
 
     /// E) Update of the old solution at the top Level
-    eqn_in->_LinSolver[eqn_in->GetGridn()-1]->_EPS->localize(*(eqn_in->_x_old[eqn_in->GetGridn()-1]));   // x_old = x
+    eqn_in->_LinSolver[eqn_in->GetGridn()-1]->_EPS->localize(*(eqn_in->_LinSolver[eqn_in->GetGridn()-1]->_EPSC));   // x_old = x
 #ifdef DEFAULT_PRINT_INFO
     std::cout << "$$$$$$$$$ Updated the x_old solution $$$$$$$$$" << std::endl;
 #endif
@@ -172,7 +168,7 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 
     _x_tmp->zero();
     _x_tmp->add(+1.,*(_x_oold));
-    _x_tmp->add(-1.,*(eqn_in->_x_old[eqn_in->GetGridn()-1]));
+    _x_tmp->add(-1.,*(eqn_in->_LinSolver[eqn_in->GetGridn()-1]->_EPSC));
     // x_oold -x_old =actually= (x_old - x)
     //(x must not be touched, as you print from it)
     //x_oold must not be touched ! Because it's used later for UPDATING Becont!

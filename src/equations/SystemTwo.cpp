@@ -57,20 +57,6 @@ SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in,
         LinearImplicitSystem(e_map_in,eqname_in,number,smoother_type) { }
 
 
-SystemTwo::~SystemTwo() {
-
- //======== Vectors ==========================
-    for (uint Level =0; Level<GetGridn(); Level++) {
-        delete _x_old[Level];
-
-    }
-
-     _x_old.clear();
-
-}
-
-
-
 void SystemTwo::init_sys() {
 
 //============= init n_vars================
@@ -138,8 +124,6 @@ void SystemTwo::initRefValues() {
 //this function DEPENDS in _iproc!!!
 void SystemTwo::initVectors() {
 
-    //allocation
-     _x_old.resize(GetGridn());
 
     for (uint Level = 0; Level< GetGridn(); Level++) {
 
@@ -153,8 +137,8 @@ void SystemTwo::initVectors() {
         _LinSolver[Level]->_RES->init(_dofmap._Dim[Level],m_l,false,AUTOMATIC);
         _LinSolver[Level]->_EPS = NumericVector::build().release();
         _LinSolver[Level]->_EPS->init(_dofmap._Dim[Level],m_l,false,AUTOMATIC);
-        _x_old[Level] = NumericVector::build().release();
-        _x_old[Level]->init(_dofmap._Dim[Level],false, SERIAL);
+        _LinSolver[Level]->_EPSC = NumericVector::build().release();
+        _LinSolver[Level]->_EPSC->init(_dofmap._Dim[Level],false, SERIAL);
 
     } //end level loop
     
@@ -309,8 +293,8 @@ void SystemTwo::Initialize() {
         
         } // end of element loop
 
-        _LinSolver[Level]->_EPS->localize(*_x_old[Level]);
-        _x_old[Level]->close();
+        _LinSolver[Level]->_EPS->localize(*_LinSolver[Level]->_EPSC);
+        _LinSolver[Level]->_EPSC->close();
 	
     } //end Level
     
@@ -349,8 +333,8 @@ void SystemTwo::MGSolve(double Eps1,          // tolerance for the linear solver
 
     _LinSolver[GetGridn()-1]->_RESC->close();
     double bNorm_fine =     _LinSolver[GetGridn()-1]->_RESC->l2_norm();
-    _x_old[GetGridn()-1]->close();
-    double x_old_fine = _x_old[GetGridn()-1]->l2_norm();
+    _LinSolver[GetGridn()-1]->_EPSC->close();
+    double x_old_fine = _LinSolver[GetGridn()-1]->_EPSC->l2_norm();
 
 #ifdef DEFAULT_PRINT_INFO
     std::cout << " bNorm_fine l2 "     <<  bNorm_fine                     << std::endl;

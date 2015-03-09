@@ -55,9 +55,6 @@ public:
 //=======================================================================
   SystemTwo(MultiLevelProblem & equations_map, const std::string & eq_name_in, const unsigned int number, const MgSmoother & smoother_type);   //System//
   
-  ~SystemTwo();                    //System//
-
-  
   DofMap  _dofmap;  //// LinearEquation (each level)
   
   BoundaryConditions _bcond;
@@ -71,18 +68,10 @@ public:
     void ReadProl(const std::string& name);   // LinearEquation  (each level)
     void ReadRest(const std::string& name);   // LinearEquation  (each level)
 
-  
-//=======================================================================
-//======== Vectors =============== (procs,levels) ==
-//=======================================================================
-
 //   std::vector<NumericVector *> _b;   //// LinearEquation (each level)   _RESC
 //   std::vector<NumericVector *> _res; //// LinearEquation (each level)   _RES
 //   std::vector<NumericVector *> _x;   //// LinearEquation (each level)   _EPS
-
-  std::vector<NumericVector *> _x_old; //// LinearEquation (each level)  _EPSC
-  
-  
+//   std::vector<NumericVector *> _x_old; //// LinearEquation (each level)  _EPSC
   
           void  initVectors();  ///initialize vectors       //System//
 
