@@ -28,7 +28,7 @@ public:
   void init_equation_data(const SystemTwo* eqn);
  
   //====data  
-    std::vector<NumericVector *> _x_oldopt;  //old optimization step
+  NumericVector * _x_oldopt;  //old optimization step
 
 };
 

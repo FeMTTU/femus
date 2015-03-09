@@ -82,11 +82,7 @@ namespace femus {
 
  OptLoop::~OptLoop()  {
   
-     for (uint Level = 0; Level < _x_oldopt.size(); Level++) {
-          delete _x_oldopt[Level];
-      }
-    
-      _x_oldopt.clear();
+          delete _x_oldopt;
 
   }
  
@@ -163,7 +159,7 @@ double lin_deltax_MHDCONT = 0.;
 #endif
   
 //nitialize Becont
-  _x_oldopt[NoLevels - 1]->zero();    //initialize Boldopt=0;
+  _x_oldopt->zero();    //initialize Boldopt=0;
 
 
   //OPTIMIZATION LOOP
@@ -187,8 +183,8 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
     eqnMHDCONT._x_old[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont _x_old " << eqnMHDCONT._x_old [NoLevels - 1]->linfty_norm() << std::endl;
 
-    _x_oldopt[NoLevels - 1]->close();
-    std::cout << "Linfty norm of Becont _x_oldopt " << _x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
+    _x_oldopt->close();
+    std::cout << "Linfty norm of Becont _x_oldopt " << _x_oldopt->linfty_norm() << std::endl;
 
 //////////////////
 
@@ -204,11 +200,11 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
     std::cout << "Linfty norm of Becont _x_oold "
               << eqnMHDCONT._x_oold->linfty_norm() << std::endl;
 
-     _x_oldopt[NoLevels - 1]->close();
+     _x_oldopt->close();
     std::cout << "Linfty norm of Becont _x_oldopt "
-              << _x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
+              << _x_oldopt->linfty_norm() << std::endl;
 
-      eqnMHDCONT._bcond.Bc_AddScaleDofVec(_x_oldopt[NoLevels - 1],eqnMHDCONT._x_tmp [NoLevels - 1],1.- omega);
+      eqnMHDCONT._bcond.Bc_AddScaleDofVec(_x_oldopt,eqnMHDCONT._x_tmp [NoLevels - 1],1.- omega);
       eqnMHDCONT._x_tmp[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont x_old*omega + (1-omega)*xoold " 
               << eqnMHDCONT._x_tmp [NoLevels - 1]->linfty_norm() << std::endl;
@@ -321,7 +317,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
 //******* update Jold  //you must update it only here, because here it is the good point to restart from
     Jold = J;
 #ifdef MHDCONT_EQUATIONS      
-        *(_x_oldopt[NoLevels-1]) = *(eqnMHDCONT._x_old[NoLevels-1]); 
+        *(_x_oldopt) = *(eqnMHDCONT._x_old[NoLevels-1]); 
 #endif      
 
 	//this will be the new _x_oldopt?
@@ -467,15 +463,10 @@ const uint delta_opt_step = opt_step - _t_idx_in;
 
 void OptLoop::init_equation_data(const SystemTwo* eqn) {
   
-//======equation-specific vectors     =====================
-      _x_oldopt.resize(eqn->GetGridn());
-      
-        for(uint Level = 0; Level < _x_oldopt.size(); Level++)  {
-   uint n_glob = eqn->_dofmap._Dim[Level]; //is it already filled? Now yes!!!!!!!!!
-  _x_oldopt[Level] = NumericVector::build().release(); _x_oldopt[Level]->init(n_glob,false, SERIAL);
-       }
- 
-  
+   uint n_glob = eqn->_dofmap._Dim[eqn->GetGridn()-1];
+  _x_oldopt = NumericVector::build().release();
+  _x_oldopt->init(n_glob,false, SERIAL);
+   
  return; 
 }
 
