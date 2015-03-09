@@ -67,6 +67,7 @@
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
   FemusInputParser<double> box_map("Box",files.GetOutputPath());
+
   Box mybox(mesh.get_dim(),box_map);
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 
@@ -92,8 +93,8 @@
 //========================================================
   
   Temperature temperature("Qty_Temperature",qty_map,1,0/*biquadratic*/);     qty_map.AddQuantity(&temperature);
-  Temperature temperature2("Qty_Temperature2",qty_map,1,1/*linear*/);        qty_map.AddQuantity(&temperature2);
-  Temperature temperature3("Qty_Temperature3",qty_map,1,2/*constant*/);      qty_map.AddQuantity(&temperature3);
+//   Temperature temperature2("Qty_Temperature2",qty_map,1,1/*linear*/);        qty_map.AddQuantity(&temperature2);
+//   Temperature temperature3("Qty_Temperature3",qty_map,1,2/*constant*/);      qty_map.AddQuantity(&temperature3);
   // ===== end QuantityMap =========================================
 
   // ====== Start new main =================================
@@ -121,8 +122,8 @@
   SystemTwo &  eqnT = ml_prob.add_system<SystemTwo>("Eqn_T");
           eqnT.AddSolutionToSystemPDE("FAKE");
           eqnT.AddUnknownToSystemPDE(&temperature); 
-          eqnT.AddUnknownToSystemPDE(&temperature2); 
-          eqnT.AddUnknownToSystemPDE(&temperature3); 
+//           eqnT.AddUnknownToSystemPDE(&temperature2); 
+//           eqnT.AddUnknownToSystemPDE(&temperature3); 
           eqnT.SetAssembleFunction(GenMatRhsT);
 
 //================================ 

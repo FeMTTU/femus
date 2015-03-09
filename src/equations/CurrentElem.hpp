@@ -120,15 +120,15 @@ class CurrentQuantity;
   DenseMatrix                  _KeM; 
   DenseVector                  _FeM;
   uint                   _el_n_dofs;
-  std::vector<uint> _el_dof_indices;
-  std::vector<uint>      _bc_eldofs; //So the element must be aware of the BC of the equation
+  std::vector<uint> _el_dof_indices;                  // this must become a vect of vect
+  std::vector<uint>      _bc_eldofs;                  // this must become a vect of vect
   
 // ========================================================================================
 //==========  Current Geometric Element:  needs the MESH  ========================
    std::vector<uint>   _el_conn;             /// vector of the global nodes for that element         [NNDS];
-   std::vector<uint>   _el_conn_new;             /// vector of the global nodes for that element         [NNDS];
+   std::vector<uint>   _el_conn_new;
    uint    _vol_iel_DofObj;     /// i need to put the element also.
-   std::vector<double> _xx_nds;              /// vector of the node coordinates for that element     [_spacedimension*NNDS];
+   std::vector<double> _xx_nds;              /// vector of the node coordinates for that element     [_spacedimension*NNDS];  // this must become a vect of vect
    std::vector<double> _el_xm;               /// element center point                                [_spacedimension];
    const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
    const uint _mesh_vb;     //index for the mesh
