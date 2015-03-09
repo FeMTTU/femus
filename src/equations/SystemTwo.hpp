@@ -70,9 +70,7 @@ public:
     void ReadMatrix(const std::string& name); // LinearEquation  (each level)
     void ReadProl(const std::string& name);   // LinearEquation  (each level)
     void ReadRest(const std::string& name);   // LinearEquation  (each level)
-    void ComputeMatrix();                     // LinearEquation  (each level)
-    void ComputeProl();                       // LinearEquation  (each level)
-    void ComputeRest();                       // LinearEquation  (each level)
+
   
 //=======================================================================
 //======== Vectors =============== (procs,levels) ==
