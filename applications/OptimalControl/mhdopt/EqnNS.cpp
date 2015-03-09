@@ -137,7 +137,7 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 //========== GEOMETRIC ELEMENT ========
   const uint           space_dim = ml_prob._ml_msh->GetDimension();
   
-        my_system._A[Level]->zero();
+        my_system._LinSolver[Level]->_KK->zero();
         my_system._b[Level]->zero();
 
 // ==========================================  
@@ -525,7 +525,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 //==============================================================
     
     ///  Add element matrix and rhs to the global ones.
-                   my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+                   my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
                    my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
 
   } 
@@ -666,7 +666,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 //================== END GAUSS LOOP (qp loop) ======================
 //==================================================================
     
-    my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+    my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
     my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
 
     
@@ -677,12 +677,12 @@ for (uint fe = 0; fe < QL; fe++)     {
     }
   // END BOUNDARY ******************************
   
-        my_system._A[Level]->close();
+        my_system._LinSolver[Level]->_KK->close();
         my_system._b[Level]->close();
 
 #ifdef DEFAULT_PRINT_INFO
  std::cout << " GenMatRhs " << my_system.name() << ": assembled  Level " << Level
-           << " with " << my_system._A[Level]->m() << " dofs" << std::endl;
+           << " with " << my_system._LinSolver[Level]->_KK->m() << " dofs" << std::endl;
 #endif
 
     return;

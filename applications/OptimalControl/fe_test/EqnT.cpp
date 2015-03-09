@@ -36,7 +36,7 @@
   //======== ELEMENT MAPPING =======
   const uint space_dim =       ml_prob._ml_msh->GetDimension();
   
-        my_system._A[Level]->zero();
+        my_system._LinSolver[Level]->_KK->zero();
         my_system._b[Level]->zero();
 
 // ==========================================  
@@ -273,7 +273,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 
     currelem.Mat().print_scientific(std::cout);
     
-       my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+       my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
        my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
   } // end of element loop
   // *****************************************************************
@@ -287,12 +287,12 @@ for (uint fe = 0; fe < QL; fe++)     {
   
   }//END VOLUME
   
-        my_system._A[Level]->close();
+        my_system._LinSolver[Level]->_KK->close();
         my_system._b[Level]->close();
 
 #ifdef DEFAULT_PRINT_INFO
   std::cout << " Matrix and RHS assembled for equation " << my_system.name()
-            << " Level "<< Level << " dofs " << my_system._A[Level]->n() << std::endl;
+            << " Level "<< Level << " dofs " << my_system._LinSolver[Level]->_KK->n() << std::endl;
 #endif
 
   return;

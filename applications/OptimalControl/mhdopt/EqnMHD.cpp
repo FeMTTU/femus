@@ -51,7 +51,7 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 //======== GEOMETRICAL ELEMENT =======
   const uint space_dim =       ml_prob._ml_msh->GetDimension();
   
-        my_system._A[Level]->zero();
+        my_system._LinSolver[Level]->_KK->zero();
         my_system._b[Level]->zero();
 
 // ==========================================  
@@ -335,7 +335,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     // end element gaussian integration loop
     
     ///  Add element matrix and rhs to the global ones.
-                      my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+                      my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
                       my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices()); 
 
   } 
@@ -532,7 +532,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     } 
     // end BDRYelement gaussian integration loop
 
-   my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+   my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
    my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
 
  
@@ -543,12 +543,12 @@ for (uint fe = 0; fe < QL; fe++)     {
     
 // END BOUNDARY  // *****************************************************************
 
-        my_system._A[Level]->close();
+        my_system._LinSolver[Level]->_KK->close();
         my_system._b[Level]->close();
     
 #ifdef DEFAULT_PRINT_INFO
  std::cout << " GenMatRhs " << my_system.name() << ": assembled  Level " << Level
-           << " with " << my_system._A[Level]->m() << " dofs " << std::endl;
+           << " with " << my_system._LinSolver[Level]->_KK->m() << " dofs " << std::endl;
 #endif     
 
 

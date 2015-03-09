@@ -70,12 +70,10 @@ SystemTwo::~SystemTwo() {
 
  //========= MGOps  ===========================
     for (uint Level =0; Level< GetGridn(); Level++) {
-        delete _A[Level];
         if (Level < GetGridn() - 1) delete _Rst[Level];
         if (Level > 0)             delete _Prl[Level];
     }
 
-    _A.clear();
     _Rst.clear();
     _Prl.clear();
 
@@ -480,12 +478,12 @@ double SystemTwo::MGStep(int Level,            // Level
         double xNorm0=_x[Level]->linfty_norm();
         _b[Level]->close();
         double bNorm0=_b[Level]->linfty_norm();
-        _A[Level]->close();
-        double ANorm0=_A[Level]->l1_norm();
+        _LinSolver[Level]->_KK->close();
+        double ANorm0=_LinSolver[Level]->_KK->l1_norm();
         std::cout << "Level " << Level << " ANorm l1 " << ANorm0 << " bNorm linfty " << bNorm0  << " xNormINITIAL linfty " << xNorm0 << std::endl;
 #endif
 
-        rest = _LinSolver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_LSOLV_C,Nc_coarse);  //****** smooth on the coarsest level
+        rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,*_LinSolver[Level]->_KK,*_x[Level],*_b[Level],DEFAULT_EPS_LSOLV_C,Nc_coarse);  //****** smooth on the coarsest level
 
 #ifdef DEFAULT_PRINT_CONV
         std::cout << " Coarse sol : res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -493,7 +491,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << " Norm of x after the coarse solution " << _x[Level]->linfty_norm() << std::endl;
 #endif
 
-        _res[Level]->resid(*_b[Level],*_x[Level],*_A[Level]);      //************ compute the coarse residual
+        _res[Level]->resid(*_b[Level],*_x[Level],*_LinSolver[Level]->_KK);      //************ compute the coarse residual
 
         _res[Level]->close();
         std::cout << "COARSE Level " << Level << " res linfty " << _res[Level]->linfty_norm() << " res l2 " << _res[Level]->l2_norm() << std::endl;
@@ -511,12 +509,12 @@ double SystemTwo::MGStep(int Level,            // Level
         double xNormpre=_x[Level]->linfty_norm();
         _b[Level]->close();
         double bNormpre=_b[Level]->linfty_norm();
-        _A[Level]->close();
-        double ANormpre=_A[Level]->l1_norm();
+        _LinSolver[Level]->_KK->close();
+        double ANormpre=_LinSolver[Level]->_KK->l1_norm();
         std::cout << "Level " << Level << " ANorm l1 " << ANormpre << " bNorm linfty " << bNormpre  << " xNormINITIAL linfty " << xNormpre << std::endl;
 #endif
 
-        rest = _LinSolver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST, Nc_pre); //****** smooth on the finer level
+        rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,*_LinSolver[Level]->_KK,*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST, Nc_pre); //****** smooth on the finer level
 
 #ifdef DEFAULT_PRINT_CONV
         std::cout << " Pre Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -526,7 +524,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout << " time ="<< double(end_time- start_time) / CLOCKS_PER_SEC << std::endl;
 #endif
 
-        _res[Level]->resid(*_b[Level],*_x[Level],*_A[Level]);//********** compute the residual
+        _res[Level]->resid(*_b[Level],*_x[Level],*_LinSolver[Level]->_KK);//********** compute the residual
 
 ///    std::cout << "************ END ONE PRE-SMOOTHING *****************"<< std::endl;
 
@@ -566,12 +564,12 @@ double SystemTwo::MGStep(int Level,            // Level
         double xNormpost=_x[Level]->linfty_norm();
         _b[Level]->close();
         double bNormpost=_b[Level]->linfty_norm();
-        _A[Level]->close();
-        double ANormpost=_A[Level]->l1_norm();
+        _LinSolver[Level]->_KK->close();
+        double ANormpost=_LinSolver[Level]->_KK->l1_norm();
         std::cout << "Level " << Level << " ANorm l1 " << ANormpost << " bNorm linfty " << bNormpost << " xNormINITIAL linfty " << xNormpost << std::endl;
 #endif
 
-        rest = _LinSolver[Level]->solve(*_A[Level],*_A[Level],*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST,Nc_post);  //***** smooth on the coarser level
+        rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,*_LinSolver[Level]->_KK,*_x[Level],*_b[Level],DEFAULT_EPS_PREPOST,Nc_post);  //***** smooth on the coarser level
 
 #ifdef DEFAULT_PRINT_CONV 
         std::cout<<" Post Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
@@ -581,7 +579,7 @@ double SystemTwo::MGStep(int Level,            // Level
         std::cout<< " time ="<< double(end_time- start_time) / CLOCKS_PER_SEC << std::endl;
 #endif
 
-        _res[Level]->resid(*_b[Level],*_x[Level],*_A[Level]);   //*******  compute the residual
+        _res[Level]->resid(*_b[Level],*_x[Level],*_LinSolver[Level]->_KK);   //*******  compute the residual
 
 ///    std::cout << "************ END ONE POST-SMOOTHING *****************"<< std::endl;
 
@@ -780,8 +778,6 @@ void SystemTwo::ReadMGOps(const std::string output_path) {
 
 void SystemTwo::ReadMatrix(const  std::string& namefile) {
 
-  _A.resize(GetGridn());
-
     for (uint Level = 0; Level< GetGridn(); Level++) {
 
       std::ostringstream groupname_lev; groupname_lev <<  "LEVEL" << Level;
@@ -865,8 +861,8 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
     }    
     
     
-    _A[Level] = SparseMatrix::build().release();
-// //     _A[Level]->init(_Dim[Level],_Dim[Level], mrow_lev_proc_t, mrow_lev_proc_t); ///@todo BACK TO a REASONABLE INIT
+    _LinSolver[Level]->_KK = SparseMatrix::build().release();
+// //     _LinSolver[Level]->_KK->init(_Dim[Level],_Dim[Level], mrow_lev_proc_t, mrow_lev_proc_t); ///@todo BACK TO a REASONABLE INIT
 
     Graph graph;
     graph.resize(mrow_glob_t);
@@ -916,36 +912,6 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
 	    for (int c=0;c<QL;c++) rowsize +=_dofmap._nvars[c]*len[c];
 	      graph[irow].resize(rowsize + 1);  //There is a +1 because in the last position you memorize the number of offset dofs in that row
 
-// // // #ifdef FEMUS_HAVE_LASPACK
-// // // 
-// // //             for (uint jvar=0; jvar<_nvars[QQ]; jvar++) {
-// // //             // quadratic-quadratic
-// // //                 for (int j=0; j<len[QQ]; j++) {
-// // //                     graph[irow][j+jvar*len[QQ]] = _node_dof[Level][ GetMLProb().GetMeshTwo()._node_map[FELevel[QQ]][pos_row[QQ][QQ][j+length_row[QQ][QQ][DofObj_lev]]]+jvar*GetMLProb().GetMeshTwo()._NoNodes[GetGridn()-1]];
-// // //                 }
-// // // 	    }
-// // //                 // quadratic-linear 
-// // //                 for (uint jvar=0; jvar<_nvars[LL]; jvar++) {
-// // //                     for (int j=0; j<len[LL]; j++) {
-// // //                         graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][GetMLProb().GetMeshTwo()._node_map[FELevel[LL]][pos_row[QQ][LL][j+length_row[QQ][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*GetMLProb().GetMeshTwo()._NoNodes[GetGridn()-1]];
-// // //                     }
-// // //                 }
-// // // 
-// // //             
-// // //             for (uint jvar=0; jvar<_nvars[QQ]; jvar++) {
-// // //                 for (int j=0; j<len[QQ]; j++) {
-// // //                     graph[irow][j+jvar*len[QQ]] = _node_dof[Level][GetMLProb().GetMeshTwo()._node_map[FELevel[QQ]][pos_row[LL][QQ][j+length_row[LL][QQ][DofObj_lev]]]+jvar*offset];
-// // //                 }
-// // //             }
-// // //             
-// // //             for (uint jvar=0; jvar<_nvars[LL]; jvar++) {
-// // //                 for (int j=0; j<len[LL]; j++) {
-// // //                     graph[irow][j+jvar*len[LL]+_nvars[QQ]*len[QQ]] = _node_dof[Level][ GetMLProb().GetMeshTwo()._node_map[FELevel[LL]][pos_row[LL][LL][j+length_row[LL][LL][DofObj_lev]]]+(jvar+_nvars[QQ])*offset];
-// // //                 }
-// // //             }
-// // //            
-// // #endif
- 
             int lenoff[QL];  for (int c=0;c<QL;c++) lenoff[c] = 0;
 	    for (int c=0;c<QL;c++)  lenoff[c] = length_offrow[r][c][DofObj_lev+1] - length_offrow[r][c][ DofObj_lev ];
 	    int lenoff_size = 0;
@@ -961,7 +927,7 @@ void SystemTwo::ReadMatrix(const  std::string& namefile) {
 	graph.print();
 //===========================
 
-    _A[Level]->update_sparsity_pattern_old(graph);
+    _LinSolver[Level]->_KK->update_sparsity_pattern_old(graph);
 
     //  clean ===============
     graph.clear();

@@ -116,10 +116,10 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
         eqn_in-> GetAssembleFunction()(eqn_in->GetMLProb(),Level,0,true);
 
 #ifdef DEFAULT_PRINT_INFO
-        eqn_in->_A[Level]->close();
-        double ANorm = eqn_in->_A[Level]->l1_norm();
+        eqn_in->_LinSolver[Level]->_KK->close();
+        double ANorm = eqn_in->_LinSolver[Level]->_KK->l1_norm();
 	
-//	_A[Level]->print_graphic(true); TODO should pass this true or false as a parameter
+//	_LinSolver[Level]->_KK->print_graphic(true); TODO should pass this true or false as a parameter
 	
         std::cout << " ANorm l1 " << Level << " "  << ANorm  << std::endl;
 #endif
@@ -144,7 +144,7 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
         eqn_in->MGSolve(DEFAULT_EPS_LSOLV, DEFAULT_MAXITS_LSOLV);
 	
 // //     for (uint Level = 0 ; Level < GetGridn(); Level++)  { 
-// //       _solver[Level]->solve(*_A[Level],*_x[Level],*_b[Level],1.e-6,40);
+// //       _solver[Level]->solve(*_LinSolver[Level]->_KK,*_x[Level],*_b[Level],1.e-6,40);
 // //            _x[Level]->localize(*_x_old[Level]);   // x_old = x
 // //     }
 
