@@ -188,14 +188,16 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
 // // //     std::cout << "Linfty norm of Becont _x_oldopt " << _x_oldopt->linfty_norm() << std::endl;
 
 //////////////////
+        NumericVector* _x_tmp2 = NumericVector::build().release();
+        _x_tmp2->init(eqnMHDCONT._dofmap._Dim[eqnMHDCONT.GetGridn()-1],false, SERIAL);
 
-      eqnMHDCONT._x_tmp->zero();
-    *(eqnMHDCONT._x_tmp) = *(eqnMHDCONT._x_old[NoLevels-1]);
-      eqnMHDCONT._bcond.Bc_ScaleDofVec(eqnMHDCONT._x_tmp, omega );
-      eqnMHDCONT._x_tmp->close();
+      _x_tmp2->zero();
+    *(_x_tmp2) = *(eqnMHDCONT._x_old[NoLevels-1]);
+      eqnMHDCONT._bcond.Bc_ScaleDofVec(_x_tmp2, omega );
+      _x_tmp2->close();
     std::cout << "Omega " << omega << std::endl;
     std::cout << "Linfty norm of Becont _x_old*omega "
-              << eqnMHDCONT._x_tmp->linfty_norm() << std::endl;
+              << _x_tmp2->linfty_norm() << std::endl;
 
 // // //       eqnMHDCONT._x_oold->close();
 // // //     std::cout << "Linfty norm of Becont _xoold "
@@ -205,12 +207,12 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
     std::cout << "Linfty norm of Becont _x_oldopt "
               << _x_oldopt->linfty_norm() << std::endl;
 
-      eqnMHDCONT._bcond.Bc_AddScaleDofVec(_x_oldopt,eqnMHDCONT._x_tmp,1.- omega);
-      eqnMHDCONT._x_tmp->close();
+      eqnMHDCONT._bcond.Bc_AddScaleDofVec(_x_oldopt,_x_tmp2,1.- omega);
+      _x_tmp2->close();
     std::cout << "Linfty norm of Becont x_old*omega + (1-omega)*xoold " 
-              << eqnMHDCONT._x_tmp->linfty_norm() << std::endl;
+              << _x_tmp2->linfty_norm() << std::endl;
 
-    *(eqnMHDCONT._x_old[NoLevels-1]) = *(eqnMHDCONT._x_tmp);
+    *(eqnMHDCONT._x_old[NoLevels-1]) = *(_x_tmp2);
 
     eqnMHDCONT._x_old[NoLevels - 1]->close();
     std::cout << "Linfty norm of Becont _x_old updated " 
@@ -453,7 +455,9 @@ while(lin_deltax_MHDCONT >  eps_MHDCONT && k_MHDCONT < MaxIterMHDCONT );
 const uint delta_opt_step = opt_step - _t_idx_in;
      if (delta_opt_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),opt_step,pseudo_opttimeval,e_map_in);   //print sol.N.h5 and sol.N.xmf
   
-      
+     
+     delete _x_tmp2;  //delete vector
+     
     }
 
   
