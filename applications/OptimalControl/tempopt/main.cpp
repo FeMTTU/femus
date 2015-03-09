@@ -179,7 +179,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
      
    SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
 //=====================
-    sys -> init();     //the dof map is built here based on all the solutions associated with that system
+    sys -> init_two();     //the dof map is built here based on all the solutions associated with that system
     sys -> _LinSolver[0]->set_solver_type(GMRES);  //if I keep PREONLY it doesn't run
 
 //=====================
@@ -189,9 +189,9 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 //=====================
     sys -> initVectors();
 //=====================
-    sys -> Initialize();         //why do they do this BEFORE the dofmap?
+    sys -> Initialize();
 ///=====================
-    sys -> _bcond.GenerateBdc(); //why do they do this BEFORE the dofmap?
+    sys -> _bcond.GenerateBdc();
 //=====================
     sys -> ReadMGOps(files.GetOutputPath());
     

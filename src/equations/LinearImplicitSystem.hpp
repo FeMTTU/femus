@@ -55,6 +55,9 @@ public:
     /** Init the system PDE structures */
     virtual void init();
     
+    /** @deprecated Init the system PDE structures */
+    virtual void init_two();     
+    
     /** Add a system level */
     void AddSystemLevel();
     /**

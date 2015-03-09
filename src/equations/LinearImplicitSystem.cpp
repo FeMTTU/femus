@@ -100,6 +100,35 @@ void LinearImplicitSystem::init() {
     AddVariableToBeSolved("All");
 }
 
+/// @deprecated 
+// this function is like init but it doesn't call InitPDE
+void LinearImplicitSystem::init_two() {
+  
+    _LinSolver.resize(_gridn);
+    
+    _LinSolver[0]=LinearEquationSolver::build(0,_msh[0],GMRES_SMOOTHER).release();
+    for(unsigned i=1;i<_gridn;i++){
+      _LinSolver[i]=LinearEquationSolver::build(i,_msh[i],_SmootherType).release();
+    }
+    
+//     for (unsigned i=0; i<_gridn; i++) {
+//       _LinSolver[i]->InitPde(_SolSystemPdeIndex,_ml_sol->GetSolType(),
+// 			     _ml_sol->GetSolName(),&_solution[i]->_Bdc,_gridr,_gridn,_SparsityPattern);
+//     }  
+//     
+//     for (unsigned ig=1; ig<_gridn; ig++) {
+//       BuildProlongatorMatrix(ig);
+//     }
+    
+    _NSchurVar_test=0;
+    _numblock_test=0;   
+    _numblock_all_test=0;
+    // By default we solved for all the PDE variables
+    ClearVariablesToBeSolved();
+    AddVariableToBeSolved("All");
+}
+
+
 
 void LinearImplicitSystem::AddSystemLevel() {
   
