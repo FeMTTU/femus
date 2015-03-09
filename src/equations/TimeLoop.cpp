@@ -104,7 +104,7 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
     std::cout  << std::endl << " Solving " << eqn_in->name() << " , step " << iter << std::endl;
 
     ///A0) Put x_old into x_oold
-    *(eqn_in->_x_oold[eqn_in->GetGridn()-1]) = *(eqn_in->_x_old[eqn_in->GetGridn()-1]);
+    *(eqn_in->_x_oold) = *(eqn_in->_x_old[eqn_in->GetGridn()-1]);
 
     /// A) Assemblying 
 #if  DEFAULT_PRINT_TIME==1
@@ -165,7 +165,7 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 /// std::cout << "$$$$$$$$$ Check the convergence $$$$$$$" << std::endl;
 
     eqn_in->_x_tmp[eqn_in->GetGridn()-1]->zero();
-    eqn_in->_x_tmp[eqn_in->GetGridn()-1]->add(+1.,*(eqn_in->_x_oold[eqn_in->GetGridn()-1]));
+    eqn_in->_x_tmp[eqn_in->GetGridn()-1]->add(+1.,*(eqn_in->_x_oold));
     eqn_in->_x_tmp[eqn_in->GetGridn()-1]->add(-1.,*(eqn_in->_x_old[eqn_in->GetGridn()-1]));
     // x_oold -x_old =actually= (x_old - x)
     //(x must not be touched, as you print from it)

@@ -65,7 +65,6 @@ public:
 //=======================================================================
 //======== MG Ops ============ (procs,levels) ====
 //=======================================================================
-//   std::vector<SparseMatrix *> _Prl; // LinearEquation (each level) _PP
   
     void ReadMGOps(const std::string output_path); // LinearEquation  (each level)
     void ReadMatrix(const std::string& name); // LinearEquation  (each level)
@@ -85,7 +84,7 @@ public:
 
   std::vector<NumericVector *> _x_old; //// LinearEquation (each level)
   
-  std::vector<NumericVector *> _x_oold;    //this is used by MGTimeStep and also by the OptLoop
+  NumericVector * _x_oold;    //this is used by MGTimeStep and also by the OptLoop
   std::vector<NumericVector *> _x_tmp;     //this is used by MGTimeStep and also by the OptLoop
   
           void  initVectors();  ///initialize vectors       //System//
