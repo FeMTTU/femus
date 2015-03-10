@@ -281,7 +281,7 @@ void CurrentQuantity::GetElemDofs()  {
 	       
                  const uint dofkivar = _eqnptr->_dofmap.GetDofPosIn(Lev_pick_dof,DofObj + ivar*length_nodedof[vect_ord] + off_total);
 
-	       if (vect_ord < KK ) { _val_dofs[indx] =  ( *(_eqnptr->_x_old[Lev_pick_dof]) )(dofkivar);  }
+	       if (vect_ord < KK ) { _val_dofs[indx] =  ( *( _eqnptr->_LinSolver[Lev_pick_dof]->_EPSC ) )(dofkivar);  }
 
 	         }
 	  }

@@ -24,7 +24,7 @@
 #include "MgTypeEnum.hpp"
 #include "DirichletBCTypeEnum.hpp"
 #include "MgSmootherEnum.hpp"
-
+#include "FemusDefault.hpp"
 
 namespace femus {
 
@@ -55,6 +55,16 @@ public:
     /** Init the system PDE structures */
     virtual void init();
     
+    /** @deprecated Init the system PDE structures */
+    virtual void init_two();     
+    
+    /** @deprecated Multigrid routine */
+    void MGSolve(double Eps,int MaxIter, const uint Gamma=DEFAULT_MG_GAMMA, const uint Nc_pre=DEFAULT_NC_PRE,const uint Nc_coarse=DEFAULT_NC_COARSE,const uint Nc_post=DEFAULT_NC_POST);
+
+    /** @deprecated Multigrid step routine */
+    double MGStep(int Level,double Eps1,int MaxIter, const uint Gamma, const uint Nc_pre,const uint Nc_coarse,const uint Nc_post);     
+  
+
     /** Add a system level */
     void AddSystemLevel();
     /**
