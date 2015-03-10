@@ -131,6 +131,18 @@ void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily,
   }
 }
 
+  void MultiLevelSolution::AddSolutionVector(const unsigned n_components, const std::string name, const FEFamily fefamily, const FEOrder order, unsigned tmorder, const bool &Pde_type) {
+
+     for (unsigned i=0; i<n_components; i++) {
+      std::ostringstream name_cmp; name_cmp << name << i;
+       AddSolution(name_cmp.str().c_str(),fefamily,order,tmorder,Pde_type);
+     }
+    
+    return;
+  }
+
+
+
 //---------------------------------------------------------------------------------------------------
 void MultiLevelSolution::AssociatePropertyToSolution(const char solution_name[], const char solution_property[]){
   unsigned index=GetIndex(solution_name);
@@ -245,7 +257,7 @@ unsigned MultiLevelSolution::GetIndex(const char name[]) const {
     index++;
     if (index==_SolType.size()) {
       cout<<"error! invalid solution name "<< name <<"entry GetIndex(...)"<<endl;
-      exit(0);
+      abort();
     }
   }
   return index;
