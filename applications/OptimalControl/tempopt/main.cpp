@@ -140,7 +140,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_sol.AddSolution("Qty_TempAdj",LAGRANGE,SECOND,0);
   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_Velocity",LAGRANGE,SECOND,0);
   ml_sol.AddSolution("Qty_Pressure",LAGRANGE,FIRST,0);
-  ml_sol.AddSolution("Qty_TempDes",LAGRANGE,SECOND,0);//this is not going to be an Unknown!
+  ml_sol.AddSolution("Qty_TempDes",LAGRANGE,SECOND,0,false); //this is not going to be an Unknown!
 
   ml_sol.Initialize("All");  /// @todo you have to call this before you can print @todo I can also call it after instantiation MLProblem
   ml_sol.SetWriter(VTK);

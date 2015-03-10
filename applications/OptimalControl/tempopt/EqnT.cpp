@@ -29,7 +29,6 @@
 
 // application
 #include "TempQuantities.hpp"
-#include "../../../src/equations/CurrentElem.hpp"
 
 
 // The question is: WHERE is the ORDER of the VARIABLES established?
@@ -122,7 +121,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
   
-  CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+  CurrentElem       currelem(iel,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
   currelem.SetMesh(mymsh);
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
@@ -412,7 +411,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
 
   
-  CurrentElem       currelem(Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+  CurrentElem       currelem(iel,Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
   currelem.SetMesh(mymsh);
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   

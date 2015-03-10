@@ -290,6 +290,25 @@ void CurrentQuantity::GetElemDofs()  {
 }
 
 
+// void CurrentQuantity::GetElemDofs_two()  {
+// 
+//       unsigned SolType2 = ml_sol->GetSolutionType(ml_sol->GetIndex(_qtyptr->_name));  
+//       unsigned nve2       = _currEl._mesh_new->el->GetElementDofNumber(kel,SolType2);
+// 
+//   
+//       for (unsigned i=0;i<nve2;i++) {
+// 	unsigned inode=_currEl._mesh_new->el->GetMeshDof(kel,i,SolType2);
+// 	unsigned inode_Metis=_currEl._mesh_new->GetMetisDof(inode,SolType2);
+// 	for(int j=0; j<_currEl._mesh_new->GetDimension(); j++) {
+// 	  // velocity dofs
+// 	  Soli[indexVAR[j]][i] =  (*mysolution->_Sol[indVAR[j]])(inode_Metis);
+// // 	  dofsVAR[j][i] = myLinEqSolver->GetKKDof(indVAR[j],indexVAR[j],inode); 
+// 	}
+//       }
+
+
+
+
 // clearly _el_average must be allocated already!!!
 
   void CurrentQuantity::SetElemAverage() {

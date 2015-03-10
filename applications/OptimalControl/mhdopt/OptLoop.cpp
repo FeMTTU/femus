@@ -511,15 +511,25 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
    const uint mesh_vb = VV;
   
   Mesh		*mymsh		=  eqn->GetMLProb()._ml_msh->GetLevel(Level);
-    CurrentElem       currelem(Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
-    currelem.SetMesh(mymsh);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
-  
   // processor index
   const uint myproc = mesh->_iproc;
   // geometry -----
   const uint  space_dim =       mesh->get_dim();
   
+
+   
+   double integral=0.;
+    
+
+//parallel sum
+    const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
+    const uint nel_b = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level];
+  
+    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+      
+    CurrentElem       currelem(iel,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
+    currelem.SetMesh(mymsh);
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
  
 //========= DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
@@ -546,17 +556,10 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     VelDes._qtyptr      = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_DesVelocity");
     VelDes.VectWithQtyFillBasic();
     VelDes.Allocate();
-   
-   double integral=0.;
     
       const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
-
-//parallel sum
-    const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
-    const uint nel_b = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level];
-  
-    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
-
+      
+      
     currelem.SetDofobjConnCoords(mesh->_iproc,iel);
     currelem.SetMidpoint();
     

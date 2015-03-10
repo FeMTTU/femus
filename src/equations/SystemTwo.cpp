@@ -230,15 +230,16 @@ void SystemTwo::Initialize() {
     for (uint Level = 0; Level< GetGridn(); Level++) {
       
   Mesh		*mymsh		=  GetMLProb()._ml_msh->GetLevel(Level);
-       CurrentElem       currelem(Level,VV,this,GetMLProb().GetMeshTwo(),GetMLProb().GetElemType());  
-       currelem.SetMesh(mymsh);
-        const uint  el_dof_objs = NVE[ GetMLProb().GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 
             uint iel_b = GetMLProb().GetMeshTwo()._off_el[VV][ GetMLProb().GetMeshTwo()._iproc*GetGridn() + Level ];
             uint iel_e = GetMLProb().GetMeshTwo()._off_el[VV][ GetMLProb().GetMeshTwo()._iproc*GetGridn() + Level + 1];
 
 	    for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 	  
+                CurrentElem       currelem(iel,Level,VV,this,GetMLProb().GetMeshTwo(),GetMLProb().GetElemType());  
+                currelem.SetMesh(mymsh);
+                const uint  el_dof_objs = NVE[ GetMLProb().GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+	
 	        currelem.SetDofobjConnCoords(GetMLProb().GetMeshTwo()._iproc,iel);
                 currelem.SetMidpoint();
 

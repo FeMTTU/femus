@@ -36,7 +36,7 @@ class CurrentQuantity;
 
   public:
     
-    CurrentElem(const uint level, const uint vb, const SystemTwo*, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type);
+    CurrentElem(const uint iel_in, const uint level, const uint vb, const SystemTwo*, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type);
 
     inline const uint  GetVb() const {
       return _mesh.get_dim() - _dim;
@@ -134,6 +134,8 @@ class CurrentQuantity;
    const uint _mesh_vb;     //index for the mesh
 
       const uint _Level;  //the level to which the element belongs
+      
+      const uint _iel;  //the index of the element (input for the parallel partition)
   };
   
 

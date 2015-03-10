@@ -112,34 +112,6 @@ void Velocity::Function_txyz(const double /*t*/,const double* xp, double* func) 
 }
 
 
-
-//============================================================= 
-void Velocity::strain_txyz(const double /*t*/, const double* xyz,double strain[][DIMENSION]) const {
-
-//here, tau is a tensor, so tau dot n is a vector which in general has a NORMAL and a TANGENTIAL component  
-  
-    const double Lref = _qtymap.GetInputParser()->get("Lref");
-      double ILref = 1./Lref;
-      const double lye = _qtymap.GetMeshTwo()->GetDomain()->_domain_rtmap.get("lye");
-//   const double x=xyz[0];
-  const double y=xyz[1];
-  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
-  const double z=xyz[2];
-  }
-  
-  strain[0][0] = 0.;                     //ux,x
-  strain[0][1] = strain[1][0] = 0. ;//0.5*(uy,x+ux,y) 
-  strain[1][1] = 0.*(-(lye*ILref-y));                    //uy,y
-  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
-  strain[0][2] = strain[2][0] = 0. ;  //0.5*(uz,x+ux,z) 
-  strain[1][2] = strain[2][1] = 0. ;  //0.5*(uy,z+uz,y)                                     
-  strain[2][2] = 0. ;                    //uz,z
-  }
-
-return;
-}
-
-
 //=============================================================
 /// prescribed pressure at the boundary
 //no initial condition for pressure is required, because it has no time derivative
