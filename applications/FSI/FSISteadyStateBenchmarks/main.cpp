@@ -349,7 +349,7 @@ int main(int argc,char **args) {
   //system.SetDirichletBCsHandling(PENALTY); 
   system.SetDirichletBCsHandling(ELIMINATION);   
    
-  ml_sol.SetWriter(XDMF);
+  ml_sol.SetWriter(GMV);
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -372,8 +372,8 @@ int main(int argc,char **args) {
   if (!dimension2D) print_vars.push_back("W");
   print_vars.push_back("P");
       
-  ml_sol.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
-
+  ml_sol.GetWriter()->ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+  //ml_sol.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
   // Destroy all the new systems
   ml_prob.clear();
    

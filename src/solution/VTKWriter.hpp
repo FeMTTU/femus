@@ -52,7 +52,6 @@ private:
   
     /** femus to vtk cell type map */
     static short unsigned int femusToVtkCellType[3][6];
-
 };
 
 /**    
