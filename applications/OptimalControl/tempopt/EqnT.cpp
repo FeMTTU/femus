@@ -61,9 +61,6 @@
 // For the derivatives, I think the point is: you must pick the REAL dphidx in the SAME ORDER as you pick the CORRESPONDING DOFS.
 // Now, my point is: on a given row, are you sure that the code picks the correct dphidx?
 
-//TODO  what happens for STANDARD OUTPUTS? can we do in such a way that EVERYTHING is printed TO FILE?
-// we should REDIRECT TO THE *SAME* FILE ALL THE std output and std errors of ALL THE LIBRARIES!
-
 //NOW, PAY ATTENTION: The "iel" written as "iel=0; iel < (nel_e - nel_b);" is used for PICKING the CONNECTIVITY from the ELEMENT CONNECTIVITY MAP!
 // But, the iel as DofObject Index must be given in the correct form!
 // So, I will distinguish iel into iel_mesh and iel_DofObj:

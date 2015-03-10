@@ -117,9 +117,9 @@ class CurrentQuantity;
     
 // ========================================================================================
 //========== Current "EQUATION" Element (ql are TOGETHER ): needs the EQUATION ========================               
+  uint                   _el_n_dofs;
   DenseMatrix                  _KeM; 
   DenseVector                  _FeM;
-  uint                   _el_n_dofs;
   std::vector<uint> _el_dof_indices;                  // this must become a vect of vect
   std::vector<uint>      _bc_eldofs;                  // this must become a vect of vect
   
@@ -191,6 +191,9 @@ class CurrentQuantity;
 //The curr geometric is basically filled with the MESH class
 //The curr fe is basically filled with the EQUATION class
 
-
+//====================================================
+// The differences with the other applications are that:
+// the element matrix is split into blocks, while here it is only one
+// Therefore, also the el_dof_indices and the bc_eldof flags are split as vector of vectors
 
 #endif

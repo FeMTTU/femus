@@ -333,6 +333,40 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
   return; 
  }
 
+ 
+    // =====================================================================================
+//   void CurrentElem::SetDofobjConn_twoCoordsDof() {
+//     
+//     
+//   unsigned order_ind2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U")); 
+// 
+//         unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
+//     short unsigned kelt = myel->GetElementType(kel);
+//     unsigned nve        = myel->GetElementDofNumber(kel,order_ind2);
+// 
+//     _el_conn_new.resize(nve);
+//     
+//     for (unsigned i=0;i<nve;i++) {
+//       // gambit nodes
+//            unsigned inode=(order_ind1<3)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
+//       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
+
+//       // dof metis
+//       unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+//       metis_node1[i]=mymsh->GetMetisDof(inode,SolType[2*dim]);
+//       /*metis_node2*/_el_conn_new[i]=inode_Metis;
+//     }
+//     
+//     
+//     
+//     return;
+//   }   
+
+ 
+ 
+ 
+ 
+ 
 } //end namespace femus
 
 
