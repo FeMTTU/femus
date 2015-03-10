@@ -560,7 +560,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
       const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
       
       
-    currelem.SetDofobjConnCoords(mesh->_iproc,iel);
+    currelem.SetDofobjConnCoords(mesh->_iproc);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);

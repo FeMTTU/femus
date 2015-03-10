@@ -155,7 +155,7 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
     currelem.Mat().zero();
     currelem.Rhs().zero();
 
-     currelem.SetDofobjConnCoords(myproc,iel);
+     currelem.SetDofobjConnCoords(myproc);
      currelem.SetMidpoint();
      
     currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -449,7 +449,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.Mat().zero();
      currelem.Rhs().zero(); 
      
-     currelem.SetDofobjConnCoords(ml_prob.GetMeshTwo()._iproc,iel);
+     currelem.SetDofobjConnCoords(ml_prob.GetMeshTwo()._iproc);
      currelem.SetMidpoint();
 
      currelem.ConvertElemCoordsToMappingOrd(xyz);

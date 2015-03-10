@@ -130,7 +130,7 @@ const uint myproc = ml_prob.GetMeshTwo()._iproc;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-    currelem.SetDofobjConnCoords(myproc,iel);
+    currelem.SetDofobjConnCoords(myproc);
     currelem.SetMidpoint(); 
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);

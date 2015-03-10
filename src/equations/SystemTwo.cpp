@@ -240,7 +240,7 @@ void SystemTwo::Initialize() {
                 currelem.SetMesh(mymsh);
                 const uint  el_dof_objs = NVE[ GetMLProb().GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 	
-	        currelem.SetDofobjConnCoords(GetMLProb().GetMeshTwo()._iproc,iel);
+	        currelem.SetDofobjConnCoords(GetMLProb().GetMeshTwo()._iproc);
                 currelem.SetMidpoint();
 
             for (uint q=0; q < _UnknownQuantitiesVector.size() ; q++) {
