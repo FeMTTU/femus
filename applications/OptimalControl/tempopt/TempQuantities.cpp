@@ -54,7 +54,6 @@ Velocity::Velocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uin
 
 
 //=============================================================
-///analytical velocity for Hartmann flow
 // difference between get_par and optsys:
 // in both cases you are "dynamic" somehow
 
@@ -231,27 +230,6 @@ void Temperature::Function_txyz(const double/* t*/, const double* xp,double* tem
   }
   
   
-// =================================================
-  //the coordinates (x,y,z,t) of the VOLUME domain are NON-dimensional
-  //and the function value must be nondimensional as well
- //-----Nonhomogeneous Neumann-------
- // Qflux = - k grad(T) by definition
-//  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
-void Temperature::heatflux_txyz(const double /*t*/, const double* /*xyz*/, double* qflux) const {
-
-// std::cout << "Temperature: Heatflux, check which coordinates are passed in here" << std::endl;
-//     Box* box= static_cast<Box*>(_qtymap._phys._mesh->GetDomain());
-//   const double thetaz = box->_domain_rtmap.get("thetaz");
-
-     qflux[0]=-2.1*0./**cos(thetaz)*/;
-     qflux[1]=0./**sin(thetaz)*/;
-  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
-      qflux[2]=0.;
-    }
-
-  return;
-  }
-
 
 
 void Velocity::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {

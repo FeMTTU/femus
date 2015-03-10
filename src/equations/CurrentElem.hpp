@@ -126,8 +126,8 @@ class CurrentQuantity;
 // ========================================================================================
 //==========  Current Geometric Element:  needs the MESH  ========================
    std::vector<uint>   _el_conn;             /// vector of the global nodes for that element         [NNDS];
-   std::vector<uint>   _el_conn_new;
    uint    _vol_iel_DofObj;     /// i need to put the element also.
+   std::vector<uint>   _el_conn_new;
    std::vector<double> _xx_nds;              /// vector of the node coordinates for that element     [_spacedimension*NNDS];  // this must become a vect of vect
    std::vector<double> _el_xm;               /// element center point                                [_spacedimension];
    const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)

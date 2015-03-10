@@ -340,26 +340,7 @@ void Temperature::Function_txyz(const double t, const double* xp,double* temp) c
   }
   
   
-// =================================================
-void Temperature::heatflux_txyz(const double t, const double* xyz, double* qflux) const {
-  //the coordinates (x,y,z,t) of the VOLUME domain are NON-DIMENSIONAL
-  //and the function value must be nondimensional as well
- //-----Nonhomogeneous Neumann-------
- // Qflux = - k grad(T) by definition
-//  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
 
-std::cout << "Temperature: Heatflux, check which coordinates are passed in here" << std::endl;
-  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
-  const double thetaz = box->_domain_rtmap.get("thetaz");
-
-     qflux[0]=+700.*cos(thetaz);
-     qflux[1]=+700.*sin(thetaz);
- #if (DIMENSION==3)
-      qflux[2]=0.;
- #endif
-
-  return;
-  }
 
 
 

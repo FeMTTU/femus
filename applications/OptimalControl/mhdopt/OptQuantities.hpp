@@ -183,11 +183,6 @@ class Temperature : public Quantity {
   
   void Function_txyz(const double t, const double* xp,double* temp) const;  
  
-//specific function
-  //this is the function of the IMPOSED DERIVATIVE of TEMPERATURE, aka heat flux
-  void heatflux_txyz(const double t,const double* xyz, double* qflux) const;
-  
-
 };
 
 

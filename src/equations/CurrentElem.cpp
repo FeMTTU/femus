@@ -292,7 +292,7 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
  }   
    
 //=================================
-//TODO deprecated
+/// @deprecated
 //This function is for NS type equations:
 //it computes the flags for pressure and stress integrals 
 //based on the pressure nodes
