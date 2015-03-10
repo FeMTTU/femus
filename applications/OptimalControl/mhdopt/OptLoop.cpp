@@ -511,8 +511,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
    const uint mesh_vb = VV;
   
   Mesh		*mymsh		=  eqn->GetMLProb()._ml_msh->GetLevel(Level);
-  // processor index
-  const uint myproc = mesh->_iproc;
+  const unsigned myproc  = mymsh->processor_id();
   // geometry -----
   const uint  space_dim =       mesh->get_dim();
   
@@ -560,7 +559,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
       const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
       
       
-    currelem.SetDofobjConnCoords(mesh->_iproc);
+    currelem.SetDofobjConnCoords(myproc);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
