@@ -57,7 +57,7 @@ SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in,
         LinearImplicitSystem(e_map_in,eqname_in,number,smoother_type) { }
 
 
-void SystemTwo::init_sys() {
+void SystemTwo::init_unknown_vars() {
 
 //============= init n_vars================
     _dofmap.initNVars();

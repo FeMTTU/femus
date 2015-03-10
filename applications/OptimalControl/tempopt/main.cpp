@@ -183,7 +183,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
     sys -> _LinSolver[0]->set_solver_type(GMRES);  //if I keep PREONLY it doesn't run
 
 //=====================
-    sys -> init_sys();
+    sys -> init_unknown_vars();
 //=====================
     sys -> _dofmap.ComputeMeshToDof();
 //=====================

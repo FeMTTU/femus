@@ -64,12 +64,10 @@ public:
 //=======================================================================
 //======= Quantities =========
 //=======================================================================
-      inline const std::vector<Quantity*> & GetUnknownQuantitiesVector() const { //MultilevelSolution//
-	return _UnknownQuantitiesVector;
-      }
+      inline const std::vector<Quantity*> & GetUnknownQuantitiesVector() const { 	return _UnknownQuantitiesVector;   }//MultilevelSolution//
       
      
-      void AddUnknownToSystemPDE( Quantity* qty_in) { //System//
+      void AddUnknownToSystemPDE( Quantity* qty_in) {                  //System//
 	  unsigned n = _UnknownQuantitiesVector.size();
 
 	_UnknownQuantitiesVector.resize(n+1);
@@ -87,7 +85,7 @@ public:
 	  std::vector<double>      _refvalue;        //MultilevelSolution//
           void initRefValues();                      //MultilevelSolution//
 
-	  void init_sys();     //System//  //MultilevelSolution//
+	  void init_unknown_vars();     //System//  //MultilevelSolution//
 
 // ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==    
           void    Initialize();           //MultilevelSolution  //this uses x and fills in x_old at all levels
