@@ -68,16 +68,7 @@ public:
     void ReadProl(const std::string& name);   // LinearEquation  (each level)
     void ReadRest(const std::string& name);   // LinearEquation  (each level)
 
-//   std::vector<NumericVector *> _b;   //// LinearEquation (each level)   _RESC
-//   std::vector<NumericVector *> _res; //// LinearEquation (each level)   _RES
-//   std::vector<NumericVector *> _x;   //// LinearEquation (each level)   _EPS
-//   std::vector<NumericVector *> _x_old; //// LinearEquation (each level)  _EPSC
-  
           void  initVectors();  ///initialize vectors       //System//
-
-//===================
-  void MGSolve(double Eps,int MaxIter, const uint Gamma=DEFAULT_MG_GAMMA, const uint Nc_pre=DEFAULT_NC_PRE,const uint Nc_coarse=DEFAULT_NC_COARSE,const uint Nc_post=DEFAULT_NC_POST);  //LinearImplicitSystem//
-  double MGStep(int Level,double Eps1,int MaxIter, const uint Gamma, const uint Nc_pre,const uint Nc_coarse,const uint Nc_post);                                                          //LinearImplicitSystem//
 
 //=======================================================================
 //======= Quantities =========
