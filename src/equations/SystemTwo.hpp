@@ -59,16 +59,7 @@ public:
   
   BoundaryConditions _bcond;
   
-//=======================================================================
-//======== MG Ops ============ (procs,levels) ====
-//=======================================================================
-  
-    void ReadMGOps(const std::string output_path); // LinearEquation  (each level)
-    void ReadMatrix(const std::string& name); // LinearEquation  (each level)
-    void ReadProl(const std::string& name);   // LinearEquation  (each level)
-    void ReadRest(const std::string& name);   // LinearEquation  (each level)
-
-          void  initVectors();  ///initialize vectors       //System//
+  void  initVectors();  ///initialize vectors       //System//
 
 //=======================================================================
 //======= Quantities =========

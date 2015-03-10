@@ -193,7 +193,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 ///=====================
     sys -> _bcond.GenerateBdc();
 //=====================
-    sys -> ReadMGOps(files.GetOutputPath());
+    GenCase::ReadMGOps(files.GetOutputPath(),sys);
     
     } 
 	 

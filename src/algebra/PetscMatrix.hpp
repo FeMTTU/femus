@@ -121,9 +121,11 @@ public:
   int MatGetRowM(const int i_val,int cols[]=PETSC_NULL , double vals[]=PETSC_NULL );
 
   // Setting -------------------------------------
-  // update pattern
-  void update_sparsity_pattern_old (const Graph & sparsity_pattern); //TODO remove it soon
+  /** @deprecated */
+  void update_sparsity_pattern_old (const Graph & sparsity_pattern);
+  
   void update_sparsity_pattern(const Graph &sparsity_pattern); ///<   sparsity patter update (Graph)
+  
   void update_sparsity_pattern(int m,int n,int m_l,int n_l,    ///<   sparsity patter update (petsc)
                                const std::vector<int>  n_oz,const std::vector<int>  n_nz);
   // set values

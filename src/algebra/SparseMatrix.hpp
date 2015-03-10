@@ -121,11 +121,10 @@ public:
     /** Close flag */
     virtual bool closed() const = 0;
 
-    // Updates the matrix sparsity pattern
-    /** Full sparsity update */
+    /** @deprecated */
     virtual void update_sparsity_pattern_old (const Graph &) =0;
 
-    /** To be Added */
+    /** Full sparsity update */
     virtual void update_sparsity_pattern (const Graph &) =0;
 
     /** Partial sparsity update */
@@ -216,7 +215,7 @@ public:
     /** Print  to the text file */
     virtual void print_personal(std::ostream& os=std::cout) const = 0;
 
-    /** print to hdf5 files */
+    /** @deprecated print to hdf5 files */
     virtual void print_hdf5(const std::string name="NULL") const=0;
 
     // Read
@@ -224,14 +223,14 @@ public:
     void read(const std::string& name);
 
     /** Read from hdf5 files */
-    /** Read lengths */
+    /** @deprecated Read lengths */
     virtual void read_len_hdf5(const std::string namefile,const int mode,
                                int len_row[],int leng_off_row[]);
 
-    /** Read pos */
+    /** @deprecated Read pos */
     virtual void read_pos_hdf5(const std::string namefile, const int mode, int pos[]);
 
-    /** Read dimensions */
+    /** @deprecated Read dimensions */
     virtual void read_dim_hdf5(const std::string namefile, int dim[]);
 
     // Submatrices ------------------------------------------------------

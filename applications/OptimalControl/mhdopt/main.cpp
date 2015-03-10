@@ -236,7 +236,7 @@ int main(int argc, char** argv) {
 //=====================
     sys -> _bcond.GenerateBdc();
 //=====================
-    sys -> ReadMGOps(files.GetOutputPath());
+    GenCase::ReadMGOps(files.GetOutputPath(),sys);
     
     }
 
