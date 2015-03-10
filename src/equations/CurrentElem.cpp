@@ -27,14 +27,15 @@ namespace femus {
 
 
 
-    CurrentElem::CurrentElem(const uint iel_in, const uint level, const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type_in ):
+    CurrentElem::CurrentElem(const uint iel_in, const uint iproc_in, const uint level, const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type_in ):
     _eqn(eqn_in),
     _mesh(mesh),
     _dim(_mesh.get_dim()-vb),
     _elem_type(elem_type_in[mesh.get_dim()-vb -1]),
     _mesh_vb(vb),
     _Level(level),
-    _iel(iel_in)
+    _iel(iel_in),
+    _proc(iproc_in)
     {
     
 //========== Current "Geometric Element"  ========================
@@ -228,14 +229,14 @@ void CurrentElem::PrintOrientation() const {
   }
 
    // =====================================================================================
-  void CurrentElem::SetDofobjConnCoords(const uint isubd_in) {
+  void CurrentElem::SetDofobjConnCoords() {
 
     const uint mydim = _mesh.get_dim();
     const uint el_nnodes   = _el_conn.size();
           
    for (uint n=0; n<el_nnodes; n++)    {
 
-     _el_conn[n] = _mesh._el_map[_mesh_vb][( _iel + _mesh._off_el[_mesh_vb][_mesh._NoLevels*isubd_in + _Level] )*el_nnodes+n];
+     _el_conn[n] = _mesh._el_map[_mesh_vb][( _iel + _mesh._off_el[_mesh_vb][_mesh._NoLevels*_proc + _Level] )*el_nnodes+n];
 
       for (uint idim=0; idim < mydim; idim++) {
         const uint indxn = n+idim*el_nnodes;
@@ -245,7 +246,7 @@ void CurrentElem::PrintOrientation() const {
    
    
     int sum_elems_prev_sd_at_lev = 0;
-      for (uint pr = 0; pr< isubd_in; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[_mesh_vb][_mesh._NoLevels*pr + _Level + 1] - _mesh._off_el[_mesh_vb][ _mesh._NoLevels*pr + _Level]; }
+      for (uint pr = 0; pr< _proc; pr++) { sum_elems_prev_sd_at_lev += _mesh._off_el[_mesh_vb][_mesh._NoLevels*pr + _Level + 1] - _mesh._off_el[_mesh_vb][ _mesh._NoLevels*pr + _Level]; }
     uint iel_DofObj = _iel + sum_elems_prev_sd_at_lev;
     if       (_mesh_vb == VV)  { _vol_iel_DofObj = iel_DofObj; }   
     else if  (_mesh_vb == BB)  { _vol_iel_DofObj = _mesh._el_bdry_to_vol[_Level][iel_DofObj]; }  

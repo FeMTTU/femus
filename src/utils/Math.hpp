@@ -117,7 +117,7 @@ const uint myproc = ml_prob.GetMeshTwo()._iproc;
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
       
-    CurrentElem       currelem(iel,Level,vb,NULL,ml_prob.GetMeshTwo(),ml_prob.GetElemType()); //element without equation
+    CurrentElem       currelem(iel,myproc,Level,vb,NULL,ml_prob.GetMeshTwo(),ml_prob.GetElemType()); //element without equation
     currelem.SetMesh(mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
 
@@ -130,7 +130,7 @@ const uint myproc = ml_prob.GetMeshTwo()._iproc;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-    currelem.SetDofobjConnCoords(myproc);
+    currelem.SetDofobjConnCoords();
     currelem.SetMidpoint(); 
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);

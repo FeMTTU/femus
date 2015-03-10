@@ -228,12 +228,13 @@ void BoundaryConditions::GenerateBdc() {
         for (uint isubd=0; isubd<_dofmap->_mesh._NoSubdom; ++isubd) {
             uint iel_b = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd + Level];
             uint iel_e = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd + Level+1];
+	    
             for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 	      
-                CurrentElem       currelem(iel,Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType());
+                CurrentElem       currelem(iel,isubd,Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType());
                 currelem.SetMesh(mymsh);
 
-	        currelem.SetDofobjConnCoords(isubd);
+	        currelem.SetDofobjConnCoords();
                 currelem.SetMidpoint();
 		
  	    for (uint ivar=0; ivar< _dofmap->_n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!

@@ -526,7 +526,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
       
-    CurrentElem       currelem(iel,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
+    CurrentElem       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
     currelem.SetMesh(mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
  
@@ -559,7 +559,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
       const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
       
       
-    currelem.SetDofobjConnCoords(myproc);
+    currelem.SetDofobjConnCoords();
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
