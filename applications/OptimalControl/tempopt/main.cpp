@@ -135,8 +135,13 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_msh.SetDomain(&mybox);    
 	  
   MultiLevelSolution ml_sol(&ml_msh);
-  ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
-  
+  ml_sol.AddSolution("Qty_Temperature",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_TempLift",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_TempAdj",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_Velocity",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_Pressure",LAGRANGE,FIRST,0);
+  ml_sol.AddSolution("Qty_TempDes",LAGRANGE,SECOND,0);//this is not going to be an Unknown!
+
   MultiLevelProblem ml_prob(&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
   ml_prob.SetQruleAndElemType("fifth");
