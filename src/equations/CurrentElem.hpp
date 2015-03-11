@@ -175,11 +175,6 @@ class CurrentQuantity;
 //in fact this is used for many element loop, but just to retrieve the geometrical properties
 //like coords, middle point, etc.
 
-//Ok, so far we have VB, so if we want only BB or VV we should actually make a vector 
-// of two functions like this
-//TODO i should TEMPLATIZE over VB!!! YES IT IS TRUE, IN FACT BASICALLY EVERYTHING 
-//DEPENDS ON VB, and when you use one you dont use the other!!!
-
 //=======================
 //ok here we would need a "REFERENCE REAL ELEMENT"
 //the current element contains the absolute coordinates, 

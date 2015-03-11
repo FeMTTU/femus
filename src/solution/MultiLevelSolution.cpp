@@ -270,7 +270,7 @@ unsigned MultiLevelSolution::GetSolutionType(const char name[]) {
     index++;
     if (index==_SolType.size()) {
       cout<<"error! invalid name entry GetSolType(...)"<<endl;
-      exit(0);
+      abort();
     }
   }
   return _SolType[index];

@@ -336,25 +336,46 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
  
     // =====================================================================================
 //   void CurrentElem::SetDofobjConn_twoCoordsDof() {
-//     
-//     
-//   unsigned order_ind2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U")); 
-// 
-//         unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
+
+// for each scalar variable involved, you need to define
+  // dofsVAR    # of solutions
+  // indexVAR   # of solutions
+  
+  //indVAR   # of rows
+  //SolType  # of columns
+  
+  //Now the thing is: we can have EQUATION BLOCKS that are NOT ASSOCIATED with any SOLUTION
+  //So, not only you can have a solution without equation, you can also have an equation without solution
+
+  //What is the difference between GetIndex and GetSolPdeIndex ??
+  //  AX AY AZ are solutions or not? Wait... they only appear in the switch for SetBoundaryConditionComsol...
+  
+//       unsigned nel    = mymsh->GetNumberOfElements();
+
+//          elem * myel = _mesh_new->el;
+//         unsigned kel    = _mesh_new->IS_Mts2Gmt_elem[_iel]; 
 //     short unsigned kelt = myel->GetElementType(kel);
-//     unsigned nve        = myel->GetElementDofNumber(kel,order_ind2);
+
+
+//   unsigned order_ind = ml_sol->GetSolutionType(ml_sol->GetIndex("U")); 
+//     unsigned nve        = myel->GetElementDofNumber(kel,order_ind);
+//     
+// 
 // 
 //     _el_conn_new.resize(nve);
 //     
 //     for (unsigned i=0;i<nve;i++) {
 //       // gambit nodes
-//            unsigned inode=(order_ind1<3)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
+//            unsigned inode=(order_ind<3)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
 //       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
 
 //       // dof metis
-//       unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
-//       metis_node1[i]=mymsh->GetMetisDof(inode,SolType[2*dim]);
-//       /*metis_node2*/_el_conn_new[i]=inode_Metis;
+//       /*metis_node2*/_el_conn_new[i] = mymsh->GetMetisDof(inode,BIQUADR_FE);
+//                       metis_node1[i] = mymsh->GetMetisDof(inode,SolType[2*dim]);
+
+
+//  	dofsVAR[j+dim][i]= mylsyspde->GetKKDof(indVAR[j+dim],indexVAR[j+dim],inode);   
+
 //     }
 //     
 //     
@@ -363,9 +384,40 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 //   }   
 
  
- 
- 
- 
+    // =====================================================================================
+//   void CurrentElem::SetCoords_two() {
+// 
+//      for (unsigned i=0;i<nve;i++) {
+//       gambit nodes
+//       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
+//       dof metis
+//       unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+//       metis_node2[i]=inode_Metis;
+//       
+//       unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+//       flag to know if the node "inode" lays on the fluid-solid interface
+//       solidmark[i]=myel->GetNodeRegion(inode); // to check
+//       for(int j=0; j<dim; j++) {
+// 	Updated coordinates (Moving frame)
+//         vx[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + (*mysolution->_Sol[indVAR[j]])(inode_Metis);
+// 	Old coordinates (Moving frame)
+//         vx_old[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + (*mysolution->_SolOld[indVAR[j]])(inode_Metis);
+// 	Fixed coordinates (Reference frame)
+// 	vx_hat[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis);  
+// 	displacement dofs
+// 	dofsVAR[j][i]= mylsyspde->GetKKDof(indVAR[j],indexVAR[j],inode); 
+// 	velocity dofs
+// 	dofsVAR[j+dim][i]= mylsyspde->GetKKDof(indVAR[j+dim],indexVAR[j+dim],inode);   
+//       }
+//     }
+//  
+//     
+//     
+//     
+//     return;
+//   }   
+
+
  
 } //end namespace femus
 

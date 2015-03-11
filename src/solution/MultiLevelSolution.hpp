@@ -196,21 +196,22 @@ private:
     /** Array of solution, dimension number of levels */
     vector <Solution*>  _solution;
     
+    /** Flag to tell whether the BC function has been set */
+    bool _bdc_func_set;
+
     /** This group of vectors has the size of the number of added solutions */
     vector< vector <BDCType> > _boundaryconditions;
     vector< vector <bool> > _ishomogeneous;
     vector< vector <FunctionBase *> > _nonhomogeneousbcfunction; 
     
-    bool _bdc_func_set;
-    
     unsigned short  _gridn;
-    vector <int>    _SolType;
+    vector <int>    _SolType;    /* Tells the FE index */
     vector <FEFamily> _family;
     vector <FEOrder> _order;
     vector <char*>  _SolName;
     vector <char*>  _BdcType;
     vector <int>    _SolTmorder;
-    vector <bool>   _PdeType;
+    vector <bool>   _PdeType;    /*Tells whether the Solution is an unknown of a PDE or not*/
     vector <bool>   _TestIfPressure;
     vector <unsigned> _SolPairIndex;
     
