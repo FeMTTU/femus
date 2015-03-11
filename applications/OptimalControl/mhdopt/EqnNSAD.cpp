@@ -47,8 +47,8 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
 // //======== GEOMETRICAL ELEMENT =======
   const uint space_dim = ml_prob._ml_msh->GetDimension();
 
-        my_system._A[Level]->zero();
-        my_system._b[Level]->zero();
+        my_system._LinSolver[Level]->_KK->zero();
+        my_system._LinSolver[Level]->_RESC->zero();
   
 // ==========================================  
   Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
@@ -67,6 +67,7 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
     CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+    currelem.SetMesh(mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -304,8 +305,8 @@ for (uint fe = 0; fe < QL; fe++)     {
     // end element gaussian integration loop
     
     ///  Add element matrix and rhs to the global ones.
-    my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-    my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+    my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+    my_system._LinSolver[Level]->_RESC->add_vector(currelem.Rhs(),currelem.GetDofIndices());
     
   } 
   // end of element loop
@@ -327,7 +328,7 @@ for (uint fe = 0; fe < QL; fe++)     {
    for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
      
     CurrentElem       currelem(Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
-
+    currelem.SetMesh(mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -426,19 +427,19 @@ for (uint fe = 0; fe < QL; fe++)     {
       
     }  //gauss
    
-    my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-    my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+    my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+    my_system._LinSolver[Level]->_RESC->add_vector(currelem.Rhs(),currelem.GetDofIndices());
 
  }//elem loop
    
   }//END BOUNDARY ************************
 
-        my_system._A[Level]->close();
-        my_system._b[Level]->close();
+        my_system._LinSolver[Level]->_KK->close();
+        my_system._LinSolver[Level]->_RESC->close();
   
 #ifdef DEFAULT_PRINT_INFO
  std::cout << " GenMatRhs " << my_system.name() << ": assembled  Level " << Level
-           << " with " << my_system._A[Level]->m() << " dofs" << std::endl;
+           << " with " << my_system._LinSolver[Level]->_KK->m() << " dofs" << std::endl;
 #endif    
 
 return;

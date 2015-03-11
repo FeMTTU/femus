@@ -37,7 +37,7 @@ namespace femus {
     {
     
 //========== Current "Geometric Element"  ========================
-  uint elnodes = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
+  uint elnodes = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];// mymsh->el->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   _el_conn.resize(elnodes);
   _el_conn_new.resize(elnodes);   
    _xx_nds.resize(_mesh.get_dim()*elnodes);
@@ -58,7 +58,7 @@ namespace femus {
   }
  
 
-    CurrentElem::~CurrentElem() {}
+  void  CurrentElem::SetMesh(const Mesh * mesh_in) { _mesh_new = mesh_in; return; }
     
     
     
@@ -142,7 +142,7 @@ for (uint ivar=0; ivar < _eqn->_dofmap._nvars[fe]; ivar++)    {
 void CurrentElem::PrintOrientation() const {
   
       const uint mesh_dim = _mesh.get_dim();
-      const uint el_nnodes   = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
+      const uint el_nnodes   = _el_conn.size();
 
        std::vector<double>   xi(mesh_dim,0.);
        std::vector<double>  eta(mesh_dim,0.);
@@ -210,7 +210,7 @@ void CurrentElem::PrintOrientation() const {
   void CurrentElem::SetMidpoint() {
 
     const uint mesh_dim = _mesh.get_dim();
-    const uint el_nnodes   = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
+    const uint el_nnodes   = _el_conn.size();
 
        for (uint idim=0; idim< mesh_dim; idim++)  _el_xm[idim]=0.;
 
@@ -230,7 +230,7 @@ void CurrentElem::PrintOrientation() const {
   void CurrentElem::SetDofobjConnCoords(const uint isubd_in,const uint iel) {
 
     const uint mydim = _mesh.get_dim();
-    const uint el_nnodes   = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
+    const uint el_nnodes   = _el_conn.size();
           
    for (uint n=0; n<el_nnodes; n++)    {
 
@@ -269,7 +269,7 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
   
   const uint  elndof = myvect._ndof;
   const uint vectdim = myvect._dim;
-  const uint offset = NVE[ _mesh._geomelem_flag[_dim-1] ][BIQUADR_FE];
+  const uint offset = _el_conn.size();
  
  //TODO ASSERT
  /* assert(*/ if (elndof > offset) {std::cout << "Quadratic transformation over linear mesh " << std::endl;abort();}  /*);*/

@@ -74,7 +74,7 @@ namespace femus {
 //now it is an optimization loop
 //question:how do I see the NONLINEAR LOOPS alone?
 //you call transient_loop() instead of optimization_loop()
-//x_old and _x_oold will be used 
+//x_old and _xoold will be used 
 //either for OPTIMIZATION iterations or for NONLINEAR iterations,
 //depending on what you need
 
@@ -82,11 +82,7 @@ namespace femus {
 
  OptLoop::~OptLoop()  {
   
-     for (uint Level = 0; Level < _x_oldopt.size(); Level++) {
-          delete _x_oldopt[Level];
-      }
-    
-      _x_oldopt.clear();
+          delete _x_oldopt;
 
   }
  
@@ -163,7 +159,7 @@ double lin_deltax_MHDCONT = 0.;
 #endif
   
 //nitialize Becont
-  _x_oldopt[NoLevels - 1]->zero();    //initialize Boldopt=0;
+  _x_oldopt->zero();    //initialize Boldopt=0;
 
 
   //OPTIMIZATION LOOP
@@ -181,43 +177,46 @@ for (uint opt_step = _t_idx_in + 1; opt_step <= _t_idx_final; opt_step++) {
 //xold there was a good value
 //xoold there was still the value multiplied
 //   omega = 1.; //"omega=1" and "no if" is equal to the old loop
-    eqnMHDCONT._x_oold[NoLevels - 1]->close();
-    std::cout << "Linfty norm of Becont _x_oold " << eqnMHDCONT._x_oold [NoLevels - 1]->linfty_norm() << std::endl;
-
-    eqnMHDCONT._x_old[NoLevels - 1]->close();
-    std::cout << "Linfty norm of Becont _x_old " << eqnMHDCONT._x_old [NoLevels - 1]->linfty_norm() << std::endl;
-
-    _x_oldopt[NoLevels - 1]->close();
-    std::cout << "Linfty norm of Becont _x_oldopt " << _x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
+   
+// // //     eqnMHDCONT._x_oold->close();
+// // //     std::cout << "Linfty norm of Becont _xoold " << eqnMHDCONT._x_oold->linfty_norm() << std::endl;
+// // // 
+// // //     eqnMHDCONT._x_old[NoLevels - 1]->close();
+// // //     std::cout << "Linfty norm of Becont _x_old " << eqnMHDCONT._x_old [NoLevels - 1]->linfty_norm() << std::endl;
+// // // 
+// // //     _x_oldopt->close();
+// // //     std::cout << "Linfty norm of Becont _x_oldopt " << _x_oldopt->linfty_norm() << std::endl;
 
 //////////////////
+        NumericVector* _x_tmp2 = NumericVector::build().release();
+        _x_tmp2->init(eqnMHDCONT._dofmap._Dim[eqnMHDCONT.GetGridn()-1],false, SERIAL);
 
-      eqnMHDCONT._x_tmp[NoLevels-1]->zero();
-    *(eqnMHDCONT._x_tmp[NoLevels-1]) = *(eqnMHDCONT._x_old[NoLevels-1]);
-      eqnMHDCONT._bcond.Bc_ScaleDofVec(eqnMHDCONT._x_tmp[NoLevels - 1], omega );
-      eqnMHDCONT._x_tmp[NoLevels - 1]->close();
+      _x_tmp2->zero();
+    *(_x_tmp2) = *(eqnMHDCONT._LinSolver[NoLevels-1]->_EPSC);
+      eqnMHDCONT._bcond.Bc_ScaleDofVec(_x_tmp2, omega );
+      _x_tmp2->close();
     std::cout << "Omega " << omega << std::endl;
     std::cout << "Linfty norm of Becont _x_old*omega "
-              << eqnMHDCONT._x_tmp [NoLevels - 1]->linfty_norm() << std::endl;
+              << _x_tmp2->linfty_norm() << std::endl;
 
-      eqnMHDCONT._x_oold[NoLevels - 1]->close();
-    std::cout << "Linfty norm of Becont _x_oold "
-              << eqnMHDCONT._x_oold [NoLevels - 1]->linfty_norm() << std::endl;
+// // //       eqnMHDCONT._x_oold->close();
+// // //     std::cout << "Linfty norm of Becont _xoold "
+// // //               << eqnMHDCONT._x_oold->linfty_norm() << std::endl;
 
-     _x_oldopt[NoLevels - 1]->close();
+     _x_oldopt->close();
     std::cout << "Linfty norm of Becont _x_oldopt "
-              << _x_oldopt [NoLevels - 1]->linfty_norm() << std::endl;
+              << _x_oldopt->linfty_norm() << std::endl;
 
-      eqnMHDCONT._bcond.Bc_AddScaleDofVec(_x_oldopt[NoLevels - 1],eqnMHDCONT._x_tmp [NoLevels - 1],1.- omega);
-      eqnMHDCONT._x_tmp[NoLevels - 1]->close();
+      eqnMHDCONT._bcond.Bc_AddScaleDofVec(_x_oldopt,_x_tmp2,1.- omega);
+      _x_tmp2->close();
     std::cout << "Linfty norm of Becont x_old*omega + (1-omega)*xoold " 
-              << eqnMHDCONT._x_tmp [NoLevels - 1]->linfty_norm() << std::endl;
+              << _x_tmp2->linfty_norm() << std::endl;
 
-    *(eqnMHDCONT._x_old[NoLevels-1]) = *(eqnMHDCONT._x_tmp[NoLevels-1]);
+    *(eqnMHDCONT._LinSolver[NoLevels-1]->_EPSC) = *(_x_tmp2);
 
-    eqnMHDCONT._x_old[NoLevels - 1]->close();
+    eqnMHDCONT._LinSolver[NoLevels-1]->_EPSC->close();
     std::cout << "Linfty norm of Becont _x_old updated " 
-              << eqnMHDCONT._x_old [NoLevels - 1]->linfty_norm() << std::endl;
+              << eqnMHDCONT._LinSolver[NoLevels-1]->_EPSC->linfty_norm() << std::endl;
 
  
 //   eqnMHDCONT.x[NoLevels - 1]->close();
@@ -321,7 +320,7 @@ if ( fabs(J - Jold) > epsJ /*|| 1*/  ) {
 //******* update Jold  //you must update it only here, because here it is the good point to restart from
     Jold = J;
 #ifdef MHDCONT_EQUATIONS      
-        *(_x_oldopt[NoLevels-1]) = *(eqnMHDCONT._x_old[NoLevels-1]); 
+        *(_x_oldopt) = *(eqnMHDCONT._LinSolver[NoLevels-1]->_EPSC); 
 #endif      
 
 	//this will be the new _x_oldopt?
@@ -456,7 +455,9 @@ while(lin_deltax_MHDCONT >  eps_MHDCONT && k_MHDCONT < MaxIterMHDCONT );
 const uint delta_opt_step = opt_step - _t_idx_in;
      if (delta_opt_step%print_step == 0) XDMFWriter::PrintSolLinear(_files.GetOutputPath(),opt_step,pseudo_opttimeval,e_map_in);   //print sol.N.h5 and sol.N.xmf
   
-      
+     
+     delete _x_tmp2;  //delete vector
+     
     }
 
   
@@ -467,15 +468,10 @@ const uint delta_opt_step = opt_step - _t_idx_in;
 
 void OptLoop::init_equation_data(const SystemTwo* eqn) {
   
-//======equation-specific vectors     =====================
-      _x_oldopt.resize(eqn->GetGridn());
-      
-        for(uint Level = 0; Level < _x_oldopt.size(); Level++)  {
-   uint n_glob = eqn->_dofmap._Dim[Level]; //is it already filled? Now yes!!!!!!!!!
-  _x_oldopt[Level] = NumericVector::build().release(); _x_oldopt[Level]->init(n_glob,false, SERIAL);
-       }
- 
-  
+   uint n_glob = eqn->_dofmap._Dim[eqn->GetGridn()-1];
+  _x_oldopt = NumericVector::build().release();
+  _x_oldopt->init(n_glob,false, SERIAL);
+   
  return; 
 }
 
@@ -514,7 +510,9 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
    const uint mesh_vb = VV;
   
+  Mesh		*mymsh		=  eqn->GetMLProb()._ml_msh->GetLevel(Level);
     CurrentElem       currelem(Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
+    currelem.SetMesh(mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
   
   // processor index
@@ -534,7 +532,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = DIMENSION;
   xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = NVE[ mesh->_geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._ndof     = mymsh->el->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
   
      //========== 

@@ -82,6 +82,7 @@ J = ComputeNormControl ( ml_prob.GetMeshTwo()._NoLevels - 1,&ml_prob.GetMeshTwo(
 
 double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn, const std::string output_time) {
 
+  Mesh		*mymsh		=  eqn->GetMLProb()._ml_msh->GetLevel(Level);
   //====== processor index
   const uint myproc = mesh->_iproc;
   const uint space_dim =      mesh->get_dim();
@@ -89,6 +90,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   const uint mesh_vb = VV;
 
     CurrentElem       currelem(Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
+    currelem.SetMesh(mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
 
   //========== 
@@ -120,7 +122,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = NVE[ mesh->_geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._ndof     = mymsh->el->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
 
   
@@ -224,7 +226,10 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
 
   const uint mesh_vb = VV;
   
+  Mesh		*mymsh		=  eqn->GetMLProb()._ml_msh->GetLevel(Level);
+  
     CurrentElem       currelem(Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
+    currelem.SetMesh(mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
   
 //======Functions in the integrand ============
@@ -246,7 +251,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
   xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = NVE[ mesh->_geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._ndof     = mymsh->el->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
   
     

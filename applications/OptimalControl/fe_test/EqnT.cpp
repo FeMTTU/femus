@@ -36,8 +36,8 @@
   //======== ELEMENT MAPPING =======
   const uint space_dim =       ml_prob._ml_msh->GetDimension();
   
-        my_system._A[Level]->zero();
-        my_system._b[Level]->zero();
+        my_system._LinSolver[Level]->_KK->zero();
+        my_system._LinSolver[Level]->_RESC->zero();
 
 // ==========================================  
   Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
@@ -66,7 +66,7 @@
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
   CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
-  
+  currelem.SetMesh(mymsh);
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
@@ -75,17 +75,17 @@
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
-//=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    CurrentQuantity Temp2(currgp);
-    Temp2._qtyptr   = my_system.GetUnknownQuantitiesVector()[1]; 
-    Temp2.VectWithQtyFillBasic();
-    Temp2.Allocate();
+// //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
+//     CurrentQuantity Temp2(currgp);
+//     Temp2._qtyptr   = my_system.GetUnknownQuantitiesVector()[1]; 
+//     Temp2.VectWithQtyFillBasic();
+//     Temp2.Allocate();
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    CurrentQuantity Temp3(currgp);
-    Temp3._qtyptr   = my_system.GetUnknownQuantitiesVector()[2]; 
-    Temp3.VectWithQtyFillBasic();
-    Temp3.Allocate();
+//     CurrentQuantity Temp3(currgp);
+//     Temp3._qtyptr   = my_system.GetUnknownQuantitiesVector()[2]; 
+//     Temp3.VectWithQtyFillBasic();
+//     Temp3.Allocate();
     
     //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
@@ -123,8 +123,8 @@
     currelem.SetElDofsBc();
 
   Tempold.GetElemDofs();
-    Temp2.GetElemDofs();
-    Temp3.GetElemDofs();
+//     Temp2.GetElemDofs();
+//     Temp3.GetElemDofs();
     
 // ===============      
 // Now the point is this: there are several functions of space
@@ -159,8 +159,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 //======= end of the "COMMON SHAPE PART"==================
 
  	Tempold.val_g(); 
- 	  Temp2.val_g(); 
- 	  Temp3.val_g(); 
+//  	  Temp2.val_g(); 
+//  	  Temp3.val_g(); 
 	   
 	   // always remember to get the dofs for the variables you use!
            // The point is that you fill the dofs with different functions...
@@ -170,8 +170,8 @@ for (uint fe = 0; fe < QL; fe++)     {
       for (uint i=0; i < Tempold._ndof/*the maximum number is for biquadratic*/; i++)     {
 
         const double phii_g   = currgp._phi_ndsQLVB_g[Tempold._FEord][i];
-        const double phii_gLL = currgp._phi_ndsQLVB_g[Temp2._FEord][i];
-        const double phii_gKK = currgp._phi_ndsQLVB_g[Temp3._FEord][i];
+//         const double phii_gLL = currgp._phi_ndsQLVB_g[Temp2._FEord][i];
+//         const double phii_gKK = currgp._phi_ndsQLVB_g[Temp3._FEord][i];
 
         for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][i+idim*Tempold._ndof];
 
@@ -185,41 +185,41 @@ for (uint fe = 0; fe < QL; fe++)     {
         currelem.Mat()(i,i) +=  (1-currelem.GetBCDofFlag()[i])*detb;
 
 //========= SECOND ROW =====================
-	 int ip1 = i + Tempold._ndof; 
-	 
-	if (i < currelem.GetElemType(Temp2._FEord)->GetNDofs() ) { 
-	 currelem.Rhs()(ip1) +=      
-           currelem.GetBCDofFlag()[ip1]*dtxJxW_g*( 
-                0.07*phii_gLL
-	  )
-	   + (1-currelem.GetBCDofFlag()[ip1])*detb*(Temp2._val_dofs[i]);
-        
-         currelem.Mat()(ip1,ip1) +=  (1-currelem.GetBCDofFlag()[ip1])*detb;
-	}
+// 	 int ip1 = i + Tempold._ndof; 
+// 	 
+// 	if (i < currelem.GetElemType(Temp2._FEord)->GetNDofs() ) { 
+// 	 currelem.Rhs()(ip1) +=      
+//            currelem.GetBCDofFlag()[ip1]*dtxJxW_g*( 
+//                 0.07*phii_gLL
+// 	  )
+// 	   + (1-currelem.GetBCDofFlag()[ip1])*detb*(Temp2._val_dofs[i]);
+//         
+//          currelem.Mat()(ip1,ip1) +=  (1-currelem.GetBCDofFlag()[ip1])*detb;
+// 	}
 	
-//======= THIRD ROW ===================================
-	 int ip2 = i + Tempold._ndof + Temp2._ndof;
-	 
-	if (i < currelem.GetElemType(Temp3._FEord)->GetNDofs() ) { 
-           currelem.Rhs()(ip2) +=      
-           currelem.GetBCDofFlag()[ip2]*dtxJxW_g*( 
-                0.07*phii_gKK
-	     )
-	   + (1-currelem.GetBCDofFlag()[ip2])*detb*(Temp3._val_dofs[i]);
-        
-        currelem.Mat()(ip2,ip2) +=  (1-currelem.GetBCDofFlag()[ip2])*detb;
-	}
+// //======= THIRD ROW ===================================
+// 	 int ip2 = i + Tempold._ndof + Temp2._ndof;
+// 	 
+// 	if (i < currelem.GetElemType(Temp3._FEord)->GetNDofs() ) { 
+//            currelem.Rhs()(ip2) +=      
+//            currelem.GetBCDofFlag()[ip2]*dtxJxW_g*( 
+//                 0.07*phii_gKK
+// 	     )
+// 	   + (1-currelem.GetBCDofFlag()[ip2])*detb*(Temp3._val_dofs[i]);
+//         
+//         currelem.Mat()(ip2,ip2) +=  (1-currelem.GetBCDofFlag()[ip2])*detb;
+// 	}
 	
 	 // Matrix Assemblying ---------------------------
         for (uint j=0; j<Tempold._ndof; j++) {
           double phij_g   = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
-          double phij_gLL = currgp._phi_ndsQLVB_g[Temp2._FEord][j];
-          double phij_gKK = currgp._phi_ndsQLVB_g[Temp3._FEord][j];
+//           double phij_gLL = currgp._phi_ndsQLVB_g[Temp2._FEord][j];
+//           double phij_gKK = currgp._phi_ndsQLVB_g[Temp3._FEord][j];
 	  
         for (uint idim = 0; idim < space_dim; idim++)   {
 	  dphijdx_g  [idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][j+idim*Tempold._ndof]; 
-	  dphijdx_gLL[idim] = currgp._dphidxyz_ndsQLVB_g[Temp2._FEord]  [j+idim*Temp2._ndof]; 
-	  dphijdx_gKK[idim] = currgp._dphidxyz_ndsQLVB_g[Temp3._FEord]  [j+idim*Temp3._ndof]; 
+// 	  dphijdx_gLL[idim] = currgp._dphidxyz_ndsQLVB_g[Temp2._FEord]  [j+idim*Temp2._ndof]; 
+// 	  dphijdx_gKK[idim] = currgp._dphidxyz_ndsQLVB_g[Temp3._FEord]  [j+idim*Temp3._ndof]; 
           }
 	  
 	  
@@ -229,8 +229,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 	    int ip1 = i + Tempold._ndof;
 	    int jp1 = j + Tempold._ndof;
-	    int ip2 = i + Tempold._ndof + Temp2._ndof;
-	    int jp2 = j + Tempold._ndof + Temp2._ndof;
+// 	    int ip2 = i + Tempold._ndof + Temp2._ndof;
+// 	    int jp2 = j + Tempold._ndof + Temp2._ndof;
 
  
 //============ FIRST ROW state  delta T ===============
@@ -242,28 +242,28 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //=========== SECOND ROW  =============
 //===== DIAGONAL ===========================
- 	if ( i < currelem.GetElemType(Temp2._FEord)->GetNDofs() )  { 
-  	if ( j < currelem.GetElemType(Temp2._FEord)->GetNDofs() ) { 
-       currelem.Mat()(ip1,jp1) +=        
-            currelem.GetBCDofFlag()[ip1]*
-            dtxJxW_g*(
-// 	      phij_gLL*phii_gLL
-           +  Lap_gLL
-            ); 
-	  }
-	}
+//  	if ( i < currelem.GetElemType(Temp2._FEord)->GetNDofs() )  { 
+//   	if ( j < currelem.GetElemType(Temp2._FEord)->GetNDofs() ) { 
+//        currelem.Mat()(ip1,jp1) +=        
+//             currelem.GetBCDofFlag()[ip1]*
+//             dtxJxW_g*(
+// // 	      phij_gLL*phii_gLL
+//            +  Lap_gLL
+//             ); 
+// 	  }
+// 	}
 //============= THIRD ROW  =============
 //======= DIAGONAL ==================
-	if ( i < currelem.GetElemType(Temp3._FEord)->GetNDofs() )  { 
-  	if ( j < currelem.GetElemType(Temp3._FEord)->GetNDofs() ) { 
-          currelem.Mat()(ip2,jp2) +=        
-            currelem.GetBCDofFlag()[ip2]*
-              dtxJxW_g*( 
-              phij_gKK*phii_gKK
-            + Lap_gKK
-            ); 
-	  }
-	}
+// 	if ( i < currelem.GetElemType(Temp3._FEord)->GetNDofs() )  { 
+//   	if ( j < currelem.GetElemType(Temp3._FEord)->GetNDofs() ) { 
+//           currelem.Mat()(ip2,jp2) +=        
+//             currelem.GetBCDofFlag()[ip2]*
+//               dtxJxW_g*( 
+//               phij_gKK*phii_gKK
+//             + Lap_gKK
+//             ); 
+// 	  }
+// 	}
 	
 	
 	    
@@ -273,8 +273,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 
     currelem.Mat().print_scientific(std::cout);
     
-       my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-       my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+       my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+       my_system._LinSolver[Level]->_RESC->add_vector(currelem.Rhs(),currelem.GetDofIndices());
   } // end of element loop
   // *****************************************************************
 
@@ -287,12 +287,12 @@ for (uint fe = 0; fe < QL; fe++)     {
   
   }//END VOLUME
   
-        my_system._A[Level]->close();
-        my_system._b[Level]->close();
+        my_system._LinSolver[Level]->_KK->close();
+        my_system._LinSolver[Level]->_RESC->close();
 
 #ifdef DEFAULT_PRINT_INFO
   std::cout << " Matrix and RHS assembled for equation " << my_system.name()
-            << " Level "<< Level << " dofs " << my_system._A[Level]->n() << std::endl;
+            << " Level "<< Level << " dofs " << my_system._LinSolver[Level]->_KK->n() << std::endl;
 #endif
 
   return;
