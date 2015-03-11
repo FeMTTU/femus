@@ -331,21 +331,21 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 
 void GMVWriter::ParallelWrite(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) const { 
   
-  unsigned igridn = _gridn; // aggiunta da me
+  unsigned gridn = _gridn; // aggiunta da me
       
-  if (igridn==0) igridn=_gridn;
+  if ( gridn == 0 ) gridn = _gridn;
   
-  unsigned igridr=(_gridr <= igridn)?_gridr:igridn;
+  unsigned igridr=( _gridr <= gridn ) ? _gridr : gridn;
 
   // ********** linear -> index==0 *** quadratic -> index==1 **********
-  unsigned index=(strcmp(order,"linear"))?1:0;
+  unsigned index=( strcmp(order, "linear") ) ? 1 : 0;
 
   std::string filename_prefix;
   if( _ml_sol != NULL ) filename_prefix = "sol";
   else filename_prefix = "mesh";
   
   std::ostringstream filename;
-    filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." <<_iproc<<"."<< time_step << "." << order << ".gmv"; 
+  filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." <<_iproc<<"."<< time_step << "." << order << ".gmv"; 
     
   std::ofstream fout;
   
@@ -358,23 +358,23 @@ void GMVWriter::ParallelWrite(const std::string output_path, const char order[],
     abort();
   }
   
-  //count the own dof nodes on all levels
-  unsigned nvt=0;
-  unsigned nvt_max=0;
-  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+  //count the own node dofs on all levels
+  unsigned nvt = 0;
+  unsigned nvt_max = 0;
+  for (unsigned ig=igridr-1u; ig<gridn; ig++) {
     unsigned nvt_ig = _ml_mesh->GetLevel(ig)->own_size[index][_iproc];
     nvt_max=( nvt_max > nvt_ig ) ? nvt_max : nvt_ig;
     nvt += nvt_ig;
   }
   
-  // count the ghost dof nodes and the own dof elements on all levels
+  // count the ghost node dofs and the own element dofs element on all levels
   unsigned ghost_counter = 0;
   unsigned nel=0;
-  for (unsigned ig = igridr-1u; ig<igridn; ig++) {
+  for (unsigned ig = igridr-1u; ig<gridn; ig++) {
     unsigned offset_iprc = _ml_mesh->GetLevel(ig)->MetisOffset[index][_iproc];	
     for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
       unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
-      if ( ig == igridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
+      if ( ig == gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
 	nel++;
 	short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(kel);
         for(unsigned j=0; j<NVE[ielt][index]; j++){
@@ -396,7 +396,7 @@ void GMVWriter::ParallelWrite(const std::string output_path, const char order[],
   var_nd.resize(nvt_max+1); //TO FIX Valgrind complaints! In reality it should be only nvt
   vector < double > var_el;
   var_el.resize(nel+1); //TO FIX Valgrind complaints! In reality it should be only nel
-  vector < NumericVector* > Mysol(igridn);
+  vector < NumericVector* > Mysol(gridn);
   for(unsigned ig=igridr-1u; ig<_gridn; ig++) {
     Mysol[ig] = NumericVector::build().release();
     
@@ -424,7 +424,7 @@ void GMVWriter::ParallelWrite(const std::string output_path, const char order[],
   fout.write((char *)&nvt,sizeof(unsigned));
     
   for (int i=0; i<3; i++) {
-    for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+    for (unsigned ig=igridr-1u; ig<gridn; ig++) {
       Mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
 			     *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );
       
@@ -443,12 +443,12 @@ void GMVWriter::ParallelWrite(const std::string output_path, const char order[],
     }
     //print ghost coordinates
     ghost_counter = 0;
-    for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+    for (unsigned ig=igridr-1u; ig<gridn; ig++) {
       unsigned ig_ghost_couter=0;
       unsigned offset_iprc = _ml_mesh->GetLevel(ig)->MetisOffset[index][_iproc];	
       for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
 	unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
-	if ( ig == igridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) { 
+	if ( ig == gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) { 
 	  short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(kel);
 	  for(unsigned j=0;j<NVE[ielt][index];j++){  
 	    unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, j, index);  
@@ -468,7 +468,7 @@ void GMVWriter::ParallelWrite(const std::string output_path, const char order[],
 	unsigned offset_iprc = _ml_mesh->GetLevel(ig)->MetisOffset[index][_iproc];	
 	for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
 	  unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
-	  if ( ig == igridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
+	  if ( ig == gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
 	    short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(kel);
 	    for(unsigned j=0;j<NVE[ielt][index];j++){  
 	      unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, j, index);  
@@ -497,12 +497,12 @@ void GMVWriter::ParallelWrite(const std::string output_path, const char order[],
   unsigned offset=1;
   
   ghost_counter = 0;
-  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+  for (unsigned ig=igridr-1u; ig<gridn; ig++) {
     unsigned offset_iprc = _ml_mesh->GetLevel(ig)->MetisOffset[index][_iproc];	
     unsigned nvt_ig= _ml_mesh->GetLevel(ig)->own_size[index][_iproc];
     for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
       unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
-      if ( ig == igridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
+      if ( ig == gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
         short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(kel);
         if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
         else if (ielt==1) sprintf(det,"ptet%d",eltp[index][1]);
@@ -546,10 +546,10 @@ void GMVWriter::ParallelWrite(const std::string output_path, const char order[],
   fout.write((char *)&zero,sizeof(unsigned));
 
   int icount=0;
-  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+  for (unsigned ig=igridr-1u; ig<gridn; ig++) {
     for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
       unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
-      if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
+      if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
 	var_el[icount]=_ml_mesh->GetLevel(ig)->el->GetElementGroup(kel);
         icount++;
       }
@@ -563,10 +563,10 @@ void GMVWriter::ParallelWrite(const std::string output_path, const char order[],
     fout.write((char *)&zero,sizeof(unsigned));
 
     int icount=0;
-    for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+    for (unsigned ig=igridr-1u; ig<gridn; ig++) {
       for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
       unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
-      if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
+      if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
 	  var_el[icount]=_ml_mesh->GetLevel(ig)->epart[kel];
 	  icount++;
 	}
@@ -601,11 +601,11 @@ void GMVWriter::ParallelWrite(const std::string output_path, const char order[],
       else{
 	sprintf(det,"%s %s","Eps",_ml_sol->GetSolutionName(i));
       }
-      if(name==0 || ( _debugOutput  && _ml_sol->GetSolutionLevel(igridn-1u)->_ResEpsBdcFlag[i])){
+      if(name==0 || ( _debugOutput  && _ml_sol->GetSolutionLevel(gridn-1u)->_ResEpsBdcFlag[i])){
 	if (_ml_sol->GetSolutionType(i)<3) {  // **********  on the nodes **********
 	  fout.write((char *)det,sizeof(char)*8);
 	  fout.write((char *)&one,sizeof(unsigned));
-	  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+	  for (unsigned ig=igridr-1u; ig<gridn; ig++) {
 	    if (name==0){
 	      Mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[i],
 				     *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index, _ml_sol->GetSolutionType(i)) );
@@ -630,11 +630,11 @@ void GMVWriter::ParallelWrite(const std::string output_path, const char order[],
 	  }
 	  //print ghost dofs
 	  ghost_counter = 0;
-	  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+	  for (unsigned ig=igridr-1u; ig<gridn; ig++) {
 	    unsigned offset_iprc = _ml_mesh->GetLevel(ig)->MetisOffset[index][_iproc];	
 	    for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
 	      unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
-	      if ( ig == igridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
+	      if ( ig == gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
 		short unsigned ielt = _ml_mesh->GetLevel(ig)->el->GetElementType(kel);
 		for(unsigned j=0; j < NVE[ielt][index]; j++){  
 		  unsigned jnode = _ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, j, index);  
@@ -654,11 +654,11 @@ void GMVWriter::ParallelWrite(const std::string output_path, const char order[],
 	  fout.write((char *)det,sizeof(char)*8);
 	  fout.write((char *)&zero,sizeof(unsigned));
 	  int icount=0;
-	  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+	  for (unsigned ig=igridr-1u; ig<gridn; ig++) {
 	    for (unsigned iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
 	    unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
 	    unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(kel,_ml_sol->GetSolutionType(i));
-	    if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
+	    if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
 		if (name==0){
 		  var_el[icount] = (*_ml_sol->GetSolutionLevel(ig)->_Sol[i])(iel_Metis);
 		}
@@ -693,7 +693,7 @@ void GMVWriter::ParallelWrite(const std::string output_path, const char order[],
   // ********** End printing file **********
   
   // Free memory
-  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+  for (unsigned ig=igridr-1u; ig<gridn; ig++) {
     delete Mysol[ig];
   }
   delete [] det;
