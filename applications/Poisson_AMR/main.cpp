@@ -425,7 +425,7 @@ int main(int argc,char **argv) {
     vtkio.write(files.GetOutputPath(),"biquadratic",print_vars);
 
     GMVWriter gmvio(&ml_sol);
-    gmvio.write(files.GetOutputPath(),"biquadratic",print_vars);
+    gmvio.ParallelWrite(files.GetOutputPath(),"biquadratic",print_vars);
 
   // 
   //     XDMFWriter xdmfio(ml_sol);
