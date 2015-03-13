@@ -349,7 +349,7 @@ int main(int argc,char **args) {
   //system.SetDirichletBCsHandling(PENALTY); 
   system.SetDirichletBCsHandling(ELIMINATION);   
    
-  ml_sol.SetWriter(GMV);
+  ml_sol.SetWriter(VTK);
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -373,7 +373,7 @@ int main(int argc,char **args) {
   print_vars.push_back("P");
       
   ml_sol.GetWriter()->ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
-  //ml_sol.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+  ml_sol.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
   // Destroy all the new systems
   ml_prob.clear();
    

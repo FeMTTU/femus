@@ -81,9 +81,9 @@ int main(int argc,char **argv) {
   /// Init Petsc-MPI communicator
     FemusInit mpinit(argc,argv,MPI_COMM_WORLD);
     
-    Files files; 
-          files.CheckIODirectories();
-          files.RedirectCout();
+    //Files files; 
+    //files.CheckIODirectories();
+    //files.RedirectCout();
 	
     // input parser pointer
     std::auto_ptr<InputParser> inputparser = InputParser::build(path);
@@ -255,10 +255,10 @@ int main(int argc,char **argv) {
 	print_vars.push_back("Sol");
 
 	VTKWriter vtkio(&ml_sol);
-	vtkio.write(files.GetOutputPath(),"biquadratic",print_vars);
+	vtkio.ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
 	GMVWriter gmvio(&ml_sol);
-	gmvio.write(files.GetOutputPath(),"biquadratic",print_vars);
+	gmvio.ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 	// 
 	//     XDMFWriter xdmfio(ml_sol);
 	//     xdmfio.write(files.GetOutputPath(),"biquadratic",print_vars);
