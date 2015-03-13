@@ -49,19 +49,11 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
     print_all += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
   }
   
-  int icount;
+   int icount;
   unsigned index=0;
-  unsigned index_nd=0;
-  if (!strcmp(order,"linear")) {   //linear
-    index=0;
-    index_nd=0;
-  } else if (!strcmp(order,"quadratic")) { //quadratic
-    index=1;
-    index_nd=1;
-  } else if (!strcmp(order,"biquadratic")) { //biquadratic
-    index=2;  /// @todo why is there a 2 while XDMF has a 3?
-    index_nd=2;
-  }
+  if 	  (!strcmp(order,"linear")) 	 index=0; //linear
+  else if (!strcmp(order,"quadratic")) 	 index=1; //quadratic
+  else if (!strcmp(order,"biquadratic")) index=2; //biquadratic
   
  
   std::string filename_prefix;
@@ -97,7 +89,7 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
   
   unsigned nvt=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+    unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs];
     nvt+=nvt_ig;
   }  
 
@@ -150,7 +142,7 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
   vector <NumericVector*> mysol(_gridn);
   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     mysol[ig] = NumericVector::build().release();
-    mysol[ig]->init(_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],_ml_mesh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
+    mysol[ig]->init(_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs],_ml_mesh->GetLevel(ig)->own_size[index][_iproc],true,AUTOMATIC);
   }
   
   // point pointer to common mamory area buffer of void type;
@@ -159,10 +151,10 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
   unsigned offset_nvt3=0;
   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     std::vector<double> v_local;
-    unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+    unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs];
     for(int kk=0;kk<3;kk++) {
       mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[kk],
-			     *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,2));
+			     *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2));
       mysol[ig]->localize_to_one(v_local,0);
       if(_iproc==0) { 
 	for (unsigned i=0; i<nvt_ig; i++) {
@@ -186,10 +178,10 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
       
     for(unsigned ig=_gridr-1u; ig<_gridn; ig++){
       std::vector<double> v_local;
-      unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+      unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs];
       for(int kk=0;kk<_ml_mesh->GetLevel(0)->GetDimension();kk++) {
 	mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indDXDYDZ[kk]],
-			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,_ml_sol->GetSolutionType(indDXDYDZ[kk])));
+			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indDXDYDZ[kk])));
         mysol[ig]->localize_to_one(v_local,0);
 	if(_iproc==0) { 
 	  for (unsigned i=0; i<nvt_ig; i++) {
@@ -238,13 +230,13 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
         for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
 	  unsigned loc_vtk_conn = map_pr[j];
 	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,loc_vtk_conn)-1u;
-	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
+	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode,index);
 	  var_conn[icount] = offset_nvt+jnode_Metis;
 	  icount++;
 	}
       }
     }
-    offset_nvt+=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+    offset_nvt+=_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs];
   }
   
   //print connectivity dimension
@@ -276,8 +268,7 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     for (unsigned iel=0; iel<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); iel++) {
       if ( ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
-  	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(iel,3);
-        offset_el += _ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel_Metis,index);
+        offset_el += _ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index);
         var_off[icount] = offset_el;
 	icount++;
       }
@@ -311,8 +302,8 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
       if (ig==_gridn-1u || _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)==0) {
-	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,3);
-        short unsigned ielt= _ml_mesh->GetLevel(ig)->el->GetElementType(iel_Metis);
+	//unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,3);
+        short unsigned ielt= _ml_mesh->GetLevel(ig)->el->GetElementType(ii);
 	var_type[icount] = femusToVtkCellType[index][ielt];
 	icount++;
       }
@@ -351,7 +342,6 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
       if ( ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,3);
 	var_reg[icount]= _ml_mesh->GetLevel(ig)->el->GetElementGroup(ii);
 	icount++;
       }
@@ -384,7 +374,6 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
       if ( ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,3);
 	var_proc[icount]=(unsigned short)(_ml_mesh->GetLevel(ig)->epart[ii]);
 	icount++;
       }
@@ -474,10 +463,10 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
       unsigned offset_nvt=0;
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
 	mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indx],
-			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,_ml_sol->GetSolutionType(indx)) );
+			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indx)) );
 	vector<double> sol_local;
 	mysol[ig]->localize_to_one(sol_local,0);
-	unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+	unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs];
 	for (unsigned ii=0; ii<nvt_ig; ii++) {
 	  var_nd[ii+offset_nvt] = sol_local[ii];
 	}
@@ -530,9 +519,9 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   
   int icount;
   unsigned index=0;
-  if 	  (!strcmp(order,"linear")) 	index=0; //linear
-  else if (!strcmp(order,"quadratic")) 	index=1; //quadratic
-  else if (!strcmp(order,"biquadratic"))index=2; //biquadratic
+  if 	  (!strcmp(order,"linear")) 	 index=0; //linear
+  else if (!strcmp(order,"quadratic")) 	 index=1; //quadratic
+  else if (!strcmp(order,"biquadratic")) index=2; //biquadratic
    
   std::string filename_prefix;
   if( _ml_sol != NULL ) filename_prefix = "sol";
