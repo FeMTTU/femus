@@ -1,21 +1,4 @@
 
-<Mesh>
-# double # mesh file consistency
-
-nolevels      3                 
-meshql        1           # ------<ElementMapping>------- # for THE APP # =MESH CONSISTENCY=== # ==== in library routines # depends on the kind of Mesh that is used# depends basically on the Boundary Mesh# 0=QUADRATIC Mapping  1=LINEAR Mapping
-mesh_ord      0           # ==== both for the App and for Gencase ======  # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info# 0=QUADRATIC GeomElements (Quad8,Quad9,Hex27,...)# 1=LINEAR GeomElements (Quad4,Hex8,...)
-geomel_type   3           # ==== DO IT ONLY FOR Gencase ======  # GAMBIT mesh should provide this info
-dimension     2              
-bdry_toll     0.0000001    # ==== not in library routines, but library-type
-
-
-# ----<BCHandling>-----------------
-penalty_val 1.e10        # ==== not in library routines, but library-type
-
-</Mesh>
-
-
 <Box>
 # double # mesh file consistency
 

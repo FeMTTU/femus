@@ -299,9 +299,9 @@ int main(int argc,char **argv) {
     /// Init Petsc-MPI communicator
     FemusInit mpinit(argc,argv,MPI_COMM_WORLD);
 
-    Files files; 
-          files.CheckIODirectories();
-          files.RedirectCout();
+    //Files files; 
+    //files.CheckIODirectories();
+    //files.RedirectCout();
 
     /// INIT MESH =================================
 
@@ -421,12 +421,18 @@ int main(int argc,char **argv) {
     std::vector<std::string> print_vars;
     print_vars.push_back("Sol");
 
+    //VTKWriter vtkio(&ml_sol);
+    //vtkio.ParallelWrite(files.GetOutputPath(),"biquadratic",print_vars);
+
+    //GMVWriter gmvio(&ml_sol);
+    //gmvio.ParallelWrite(files.GetOutputPath(),"biquadratic",print_vars);
+
     VTKWriter vtkio(&ml_sol);
-    vtkio.write(files.GetOutputPath(),"biquadratic",print_vars);
+    vtkio.ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
-    GMVWriter gmvio(&ml_sol);
-    gmvio.write(files.GetOutputPath(),"biquadratic",print_vars);
-
+    //GMVWriter gmvio(&ml_sol);
+    //gmvio.ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+    
   // 
   //     XDMFWriter xdmfio(ml_sol);
   //     xdmfio.write("biquadratic",print_vars);
