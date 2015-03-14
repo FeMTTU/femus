@@ -18,14 +18,15 @@
 using namespace femus;
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
-  bool dirichlet=1; //dirichlet
+  bool dirichlet = true; //dirichlet
   value=0.;
+  if(facename == 2) dirichlet = false;
   return dirichlet;
 }
 
 void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix);
 
-double GetErrorNorm(MultiLevelSolution *mlSol);
+std::pair < double, double > GetErrorNorm(MultiLevelSolution *mlSol);
 
 int main(int argc, char **args) {
   
@@ -37,11 +38,22 @@ int main(int argc, char **args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor=1.; 
-  mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor); 
+  mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor); 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
+  unsigned dim = mlMsh.GetDimension();
+  unsigned maxNumberOfMeshes;
   
-  unsigned maxNumberOfMeshes = 7;
+  if(dim==2){ 
+    maxNumberOfMeshes = 7;
+  }
+  else{
+    maxNumberOfMeshes = 5;
+  }
+  
+  vector < vector < double > > l2Norm;
+  l2Norm.resize(maxNumberOfMeshes);
+  
   vector < vector < double > > semiNorm;
   semiNorm.resize(maxNumberOfMeshes);
   
@@ -58,6 +70,7 @@ int main(int argc, char **args) {
     mlMsh.PrintInfo();
   
     FEOrder feOrder[3] = {FIRST, SERENDIPITY, SECOND};
+    l2Norm[i].resize(3);
     semiNorm[i].resize(3);
     
     for(unsigned j=0; j<3; j++){ // loop on the FE Order
@@ -88,7 +101,9 @@ int main(int argc, char **args) {
       system.init();
       system.solve();
      
-      semiNorm[i][j] = GetErrorNorm(&mlSol);
+      std::pair< double , double > norm = GetErrorNorm(&mlSol);
+      l2Norm[i][j]  =norm.first;
+      semiNorm[i][j]=norm.second;
       // print solutions
       std::vector < std::string > variablesToBePrinted;
       variablesToBePrinted.push_back("All");
@@ -103,6 +118,29 @@ int main(int argc, char **args) {
   }
   
   // print the seminorm of the error and the order of convergence between different levels
+  std::cout<<std::endl;
+  std::cout<<std::endl;
+  std::cout<<"l2 ERROR and ORDER OF CONVERGENCE:\n\n";
+  std::cout<<"LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
+  for(unsigned i=0; i<maxNumberOfMeshes;i++){
+    std::cout<<i+1<<"\t";
+    std::cout.precision(14);
+    for(unsigned j=0;j<3;j++){
+      std::cout << l2Norm[i][j]<<"\t";
+    }
+    std::cout<<std::endl;
+    
+    if(i<maxNumberOfMeshes-1){
+      std::cout.precision(3);
+      std::cout<<"\t\t";
+      for(unsigned j=0;j<3;j++){
+	std::cout << log(l2Norm[i][j]/l2Norm[i+1][j])/log(2.)<<"\t\t\t";
+      }
+      std::cout<<std::endl;
+    }
+    
+  }
+  
   std::cout<<std::endl;
   std::cout<<std::endl;
   std::cout<<"SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
@@ -125,6 +163,9 @@ int main(int argc, char **args) {
     }
     
   }
+  
+  
+  
   return 0;
 }
 
@@ -308,7 +349,7 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
   
 }
 
-double GetErrorNorm(MultiLevelSolution *mlSol){
+std::pair < double, double > GetErrorNorm(MultiLevelSolution *mlSol){
   unsigned level = mlSol->_ml_msh->GetNumberOfLevels()-1u;
   //  extract pointers to the several objects that we are going to use 
   Mesh*         	msh	       	= mlSol->_ml_msh->GetLevel(level); // pointer to the mesh (level) object 
@@ -404,24 +445,26 @@ double GetErrorNorm(MultiLevelSolution *mlSol){
       l2norm += (exactSol - soluGauss ) * (exactSol - soluGauss ) * weight;
     } // end gauss point loop
   } //end element loop for each process
-      
-  NumericVector *seminorm_vec;
-  seminorm_vec = NumericVector::build().release();
     
-  if(1 == msh->n_processors()) { 
-    seminorm_vec->init(msh->n_processors(), 1, false, SERIAL); 
-  } 
-  else { 
-    seminorm_vec->init(msh->n_processors(), 1 , false, PARALLEL); 	   
-  }
-      
-  seminorm_vec->set(iproc, seminorm);
-  seminorm_vec->close();
-  seminorm=seminorm_vec->l1_norm();
+  // add the norms of all processes  
+  NumericVector *norm_vec;
+  norm_vec = NumericVector::build().release();
+  norm_vec->init(msh->n_processors(), 1 , false, AUTOMATIC); 	   
+  
+  norm_vec->set(iproc, l2norm);
+  norm_vec->close();
+  l2norm=norm_vec->l1_norm();
+  
+  norm_vec->set(iproc, seminorm);
+  norm_vec->close();
+  seminorm=norm_vec->l1_norm();
     
-  delete seminorm_vec;
-    
-  //return sqrt(seminorm);
-  return(sqrt(l2norm));
+  delete norm_vec;
+ 
+  std::pair < double, double > norm;
+  norm.first  = sqrt(l2norm);
+  norm.second = sqrt(seminorm);
+  
+  return norm;
   
 }
