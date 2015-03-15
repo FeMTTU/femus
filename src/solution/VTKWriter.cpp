@@ -27,7 +27,7 @@
 #include <cstdio>
 #include <iomanip>
 #include <algorithm>   
-
+#include "Files.hpp"
 
 namespace femus {
 
@@ -510,13 +510,16 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
 }
 
 
+
 void VTKWriter::ParallelWrite(const std::string output_path, const char order[], const std::vector < std::string > & vars, const unsigned time_step) const { 
 
-  bool print_all = 0;
-  for (unsigned ivar=0; ivar < vars.size(); ivar++){
-    print_all += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
-  }
+  // *********** open vtu files *************
+  std::ofstream fout;
   
+  std::string dirnamePVTK = "VTKParallelFiles/";
+  Files files; 
+  files.CheckDir(output_path,dirnamePVTK);
+    
   int icount;
   unsigned index=0;
   if 	  (!strcmp(order,"linear")) 	 index=0; //linear
@@ -526,12 +529,9 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   std::string filename_prefix;
   if( _ml_sol != NULL ) filename_prefix = "sol";
   else filename_prefix = "mesh";
-  
+   
   std::ostringstream filename;
-  
-  filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." <<_iproc<<"."<< time_step << "." << order << ".vtu"; 
-  
-  std::ofstream fout;
+  filename << output_path << "/"<<dirnamePVTK<< filename_prefix << ".level" << _gridn << "." <<_iproc<<"."<< time_step << "." << order << ".vtu"; 
   
   fout.open(filename.str().c_str());
   if (fout.is_open()) {
@@ -542,21 +542,19 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
     abort();
   }
   
-  // head ************************************************
+  // *********** write vtu header ************
   fout<<"<?xml version=\"1.0\"?>" << std::endl;
   fout<<"<VTKFile type = \"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
   fout << "  <UnstructuredGrid>" << std::endl;
-  //-----------------------------------------------------------------------------------------------------------
-
-  std::ostringstream Pfilename;
-  Pfilename << output_path << "/" << filename_prefix << ".level" << _gridn <<"."<< time_step << "." << order << ".vtp";
  
+  // *********** open vtp file *************
   std::ofstream Pfout;
-  
   if(_iproc!=0) {
     Pfout.rdbuf();   //redirect to dev_null
   }
   else {
+    std::ostringstream Pfilename;
+    Pfilename << output_path << "/" << filename_prefix << ".level" << _gridn <<"."<< time_step << "." << order << ".vtp";
     Pfout.open(Pfilename.str().c_str());
     if (Pfout.is_open()) {
       std::cout << std::endl << " The output is printed to file " << Pfilename.str() << " in VTK-XML (64-based) format" << std::endl; 
@@ -567,21 +565,17 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
     }
   }
   
-  // head ************************************************
+  // *********** write vtp header ************
   Pfout<<"<?xml version=\"1.0\"?>" << std::endl;
   Pfout<<"<VTKFile type = \"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
   Pfout<< "  <PUnstructuredGrid GhostLevel=\"0\">" << std::endl;
-  
   for(int jproc=0;jproc<_nprocs;jproc++){
-    Pfout<<"    <Piece Source=\""
+    Pfout<<"    <Piece Source=\""<<dirnamePVTK
          << filename_prefix << ".level" << _gridn << "." <<jproc<<"."<< time_step << "." << order << ".vtu"
 	 <<"\"/>" << std::endl;
   }
+  // ****************************************
   
-  
-  
-  
-  //----------------------------------------------------------------------------------------------------------
   
   //count the own node dofs on all levels
   unsigned nvt = 0;
@@ -967,11 +961,14 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
     
   fout  << std::endl;
   fout  << "        </DataArray>" << std::endl;
-  
   if (_ml_sol == NULL) {
     delete [] var_proc;
   }
   
+  bool print_all = 0;
+    for (unsigned ivar=0; ivar < vars.size(); ivar++){
+      print_all += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
+  }
   if (_ml_sol != NULL) {
     //Print Solution (on element) ***************************************************************
     for (unsigned i=0; i<(!print_all)*vars.size() + print_all*_ml_sol->GetSolutionSize(); i++) {
