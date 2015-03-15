@@ -545,9 +545,42 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   // head ************************************************
   fout<<"<?xml version=\"1.0\"?>" << std::endl;
   fout<<"<VTKFile type = \"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
-  fout << " <UnstructuredGrid>" << std::endl;
+  fout << "  <UnstructuredGrid>" << std::endl;
   //-----------------------------------------------------------------------------------------------------------
 
+  std::ostringstream Pfilename;
+  Pfilename << output_path << "/" << filename_prefix << ".level" << _gridn <<"."<< time_step << "." << order << ".vtp";
+ 
+  std::ofstream Pfout;
+  
+  if(_iproc!=0) {
+    Pfout.rdbuf();   //redirect to dev_null
+  }
+  else {
+    Pfout.open(Pfilename.str().c_str());
+    if (Pfout.is_open()) {
+      std::cout << std::endl << " The output is printed to file " << Pfilename.str() << " in VTK-XML (64-based) format" << std::endl; 
+    }
+    else {
+      std::cout << std::endl << " The output file "<< Pfilename.str() <<" cannot be opened.\n";
+      abort();
+    }
+  }
+  
+  // head ************************************************
+  Pfout<<"<?xml version=\"1.0\"?>" << std::endl;
+  Pfout<<"<VTKFile type = \"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
+  Pfout<< "  <PUnstructuredGrid GhostLevel=\"0\">" << std::endl;
+  
+  for(int jproc=0;jproc<_nprocs;jproc++){
+    Pfout<<"    <Piece Source=\""
+         << filename_prefix << ".level" << _gridn << "." <<jproc<<"."<< time_step << "." << order << ".vtu"
+	 <<"\"/>" << std::endl;
+  }
+  
+  
+  
+  
   //----------------------------------------------------------------------------------------------------------
   
   //count the own node dofs on all levels
@@ -607,13 +640,15 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   enc.resize(cch);
   char *pt_char;
   
-  fout << "  <Piece NumberOfPoints= \"" << nvt << "\" NumberOfCells= \"" << nel << "\" >" << std::endl;
+  fout  << "    <Piece NumberOfPoints= \"" << nvt << "\" NumberOfCells= \"" << nel << "\" >" << std::endl;
   
   //-----------------------------------------------------------------------------------------------
   // print coordinates *********************************************Solu*******************************************
-  fout << "   <Points>" << std::endl;
-  fout << "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\">" << std::endl;
+  fout  << "      <Points>" << std::endl;
+  fout  << "        <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\">" << std::endl;
   
+  Pfout << "    <PPoints>" << std::endl;
+  Pfout << "      <PDataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\"/>" << std::endl;
   
   vector < NumericVector* > mysol(_gridn);
   for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
@@ -715,17 +750,19 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
   fout << std::endl;
   
-  fout << "    </DataArray>" << std::endl;
-  fout << "   </Points>" << std::endl;
+  fout  << "        </DataArray>" << std::endl;
+  fout  << "      </Points>" << std::endl;
+  Pfout << "    </PPoints>" << std::endl;
   //-----------------------------------------------------------------------------------------------
   
   //-----------------------------------------------------------------------------------------------
   // Printing of element connectivity - offset - format type  *
-  fout << "   <Cells>" << std::endl;
-  
+  fout  << "      <Cells>" << std::endl;
+  Pfout << "    <PCells>" << std::endl;
   //-----------------------------------------------------------------------------------------------
   //print connectivity
-  fout << "    <DataArray type=\"Int32\" Name=\"connectivity\" format=\"binary\">" << std::endl;
+  fout  << "        <DataArray type=\"Int32\" Name=\"connectivity\" format=\"binary\">" << std::endl;
+  Pfout << "      <PDataArray type=\"Int32\" Name=\"connectivity\" format=\"binary\"/>" << std::endl;
   
   // point pointer to common mamory area buffer of void type;
   int *var_conn = static_cast <int*> (buffer_void);
@@ -762,13 +799,16 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   pt_char=&enc[0];
   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
   fout << std::endl;
-  fout << "    </DataArray>" << std::endl;
+  fout << "        </DataArray>" << std::endl;
   //------------------------------------------------------------------------------------------------
   
   //-------------------------------------------------------------------------------------------------
   //printing offset
-  fout << "    <DataArray type=\"Int32\" Name=\"offsets\" format=\"binary\">" << std::endl;
+  fout  << "        <DataArray type=\"Int32\" Name=\"offsets\" format=\"binary\">" << std::endl;
+  Pfout << "      <PDataArray type=\"Int32\" Name=\"offsets\" format=\"binary\"/>" << std::endl;
  
+  
+  
   // point pointer to common mamory area buffer of void type;
   int *var_off=static_cast <int*>(buffer_void);
   icount = 0;
@@ -798,15 +838,16 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   pt_char=&enc[0];
   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
     
-  fout << std::endl;
+  fout  << std::endl;
   
-  fout << "    </DataArray>" << std::endl;
+  fout  << "        </DataArray>" << std::endl;
   //--------------------------------------------------------------------------------------------------
   
   //--------------------------------------------------------------------------------------------------
   //Element format type : 23:Serendipity(8-nodes)  28:Quad9-Biquadratic
-  fout << "    <DataArray type=\"UInt16\" Name=\"types\" format=\"binary\">" << std::endl;
-   
+  fout  << "        <DataArray type=\"UInt16\" Name=\"types\" format=\"binary\">" << std::endl;
+  Pfout << "      <PDataArray type=\"UInt16\" Name=\"types\" format=\"binary\"/>" << std::endl;
+  
   // point pointer to common mamory area buffer of void type;
   unsigned short *var_type = static_cast <unsigned short*> (buffer_void);
   icount=0;
@@ -845,19 +886,22 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   pt_char=&enc[0];
   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
     
-  fout << std::endl;
-  fout << "    </DataArray>" << std::endl;
+  fout  << std::endl;
+  fout  << "        </DataArray>" << std::endl;
   //----------------------------------------------------------------------------------------------------
 //   
-  fout << "   </Cells>" << std::endl;
+  fout  << "      </Cells>" << std::endl;
+  Pfout << "    </PCells>" << std::endl;
   //--------------------------------------------------------------------------------------------------
 
   // /Print Cell Data ****************************************************************************
-  fout << "   <CellData Scalars=\"scalars\">" << std::endl;
-
+  fout  << "      <CellData Scalars=\"scalars\">" << std::endl;
+  Pfout << "    <PCellData Scalars=\"scalars\">" << std::endl;
   //--------------------------------------------------------------------------------------------
   // Print Regions
-  fout << "    <DataArray type=\"UInt16\" Name=\"Regions\" format=\"binary\">" << std::endl;
+  fout  << "        <DataArray type=\"UInt16\" Name=\"Regions\" format=\"binary\">" << std::endl;
+  Pfout << "      <PDataArray type=\"UInt16\" Name=\"Regions\" format=\"binary\"/>" << std::endl;
+  
   
   // point pointer to common mamory area buffer of void type;
   unsigned short* var_reg=static_cast <unsigned short*> (buffer_void);
@@ -886,12 +930,13 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   pt_char=&enc[0];
   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
     
-  fout << std::endl;
-  fout << "    </DataArray>" << std::endl;
+  fout  << std::endl;
+  fout  << "        </DataArray>" << std::endl;
   
   //-----------------------------------------------------------------------------------------------------   
   // Print Metis Partitioning
-  fout << "    <DataArray type=\"UInt16\" Name=\"Domain_partition\" format=\"binary\">" << std::endl;
+  fout  << "        <DataArray type=\"UInt16\" Name=\"Domain_partition\" format=\"binary\">" << std::endl;
+  Pfout << "      <PDataArray type=\"UInt16\" Name=\"Domain_partition\" format=\"binary\"/>" << std::endl;
   
   // point pointer to common mamory area buffer of void type;
   unsigned short* var_proc=static_cast <unsigned short*> (buffer_void);
@@ -920,8 +965,8 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   pt_char=&enc[0];
   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
     
-  fout << std::endl;
-  fout << "    </DataArray>" << std::endl;
+  fout  << std::endl;
+  fout  << "        </DataArray>" << std::endl;
   
   if (_ml_sol == NULL) {
     delete [] var_proc;
@@ -932,7 +977,8 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
     for (unsigned i=0; i<(!print_all)*vars.size() + print_all*_ml_sol->GetSolutionSize(); i++) {
       unsigned indx=( print_all == 0 ) ? _ml_sol->GetIndex(vars[i].c_str()):i;
       if (3 <= _ml_sol->GetSolutionType(indx)) {
-	fout << "    <DataArray type=\"Float32\" Name=\"" << _ml_sol->GetSolutionName(indx) <<"\" format=\"binary\">" << std::endl;
+	fout  << "        <DataArray type=\"Float32\" Name=\"" << _ml_sol->GetSolutionName(indx) <<"\" format=\"binary\">" << std::endl;
+	Pfout << "      <PDataArray type=\"Float32\" Name=\"" << _ml_sol->GetSolutionName(indx) <<"\" format=\"binary\"/>" << std::endl;
 	// point pointer to common memory area buffer of void type;
 	float *var_el = static_cast< float*> (buffer_void);
 	icount=0;
@@ -959,18 +1005,20 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
 	pt_char=&enc[0];
 	for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
 	fout << std::endl;
-	fout << "    </DataArray>" << std::endl;
+	fout << "        </DataArray>" << std::endl;
 	//----------------------------------------------------------------------------------------------------
       }
     } //end _ml_sol != NULL
   }
-  fout << "   </CellData>" << std::endl;
+  fout  << "      </CellData>" << std::endl;
+  Pfout << "    </PCellData>" << std::endl;
   //   //------------------------------------------------------------------------------------------------
 
   if (_ml_sol != NULL) {
   //   //------------------------------------------------------------------------------------------------
   // / Print Solution (on nodes) ********************************************************************
-  fout<< " <PointData Scalars=\"scalars\"> " << std::endl;
+  fout  << "      <PointData Scalars=\"scalars\"> " << std::endl;
+  Pfout << "    <PPointData Scalars=\"scalars\"> " << std::endl;
   //Loop on variables
    
   // point pointer to common memory area buffer of void type;
@@ -978,7 +1026,9 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   for (unsigned i=0; i<(!print_all)*vars.size()+ print_all*_ml_sol->GetSolutionSize(); i++) {
     unsigned indx=( print_all == 0 )?_ml_sol->GetIndex(vars[i].c_str()):i;
     if (_ml_sol->GetSolutionType(indx)<3) {
-      fout << " <DataArray type=\"Float32\" Name=\"" << _ml_sol->GetSolutionName(indx) <<"\" format=\"binary\">" << std::endl;
+      fout  << "        <DataArray type=\"Float32\" Name=\"" << _ml_sol->GetSolutionName(indx) <<"\" format=\"binary\">" << std::endl;
+      Pfout << "      <PDataArray type=\"Float32\" Name=\"" << _ml_sol->GetSolutionName(indx) <<"\" format=\"binary\"/>" << std::endl;
+      
       //print solutions on nodes dimension
       cch = b64::b64_encode(&dim_array_ndvar[0], sizeof(dim_array_ndvar), NULL, 0);  
       b64::b64_encode(&dim_array_ndvar[0], sizeof(dim_array_ndvar), &enc[0], cch);
@@ -1025,19 +1075,25 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
       for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char; 
       fout << std::endl;
 
-      fout << "    </DataArray>" << std::endl;
+      fout  << "        </DataArray>" << std::endl;
       } //endif
     } // end for sol
-    fout << "   </PointData>" << std::endl;
+    fout  << "      </PointData>" << std::endl;
+    Pfout << "    </PPointData>" << std::endl;
     delete [] var_nd;
   }  //end _ml_sol != NULL
     
   //------------------------------------------------------------------------------------------------
   
-  fout << "  </Piece>" << std::endl;
-  fout << " </UnstructuredGrid>" << std::endl;
+  fout << "    </Piece>" << std::endl;
+  fout << "  </UnstructuredGrid>" << std::endl;
   fout << "</VTKFile>" << std::endl;
   fout.close();
+  
+  Pfout << "  </PUnstructuredGrid>" << std::endl;
+  Pfout << "</VTKFile>" << std::endl;
+  Pfout.close();
+  
   
   //-----------------------------------------------------------------------------------------------------
   //free memory
