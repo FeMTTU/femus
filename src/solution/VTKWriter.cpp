@@ -230,8 +230,8 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
         for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
 	  unsigned loc_vtk_conn = map_pr[j];
 	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,loc_vtk_conn)-1u;
-	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode,index);
-	  var_conn[icount] = offset_nvt+jnode_Metis;
+	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode,index);
+	  var_conn[icount] = offset_nvt + jnodeMetis;
 	  icount++;
 	}
       }
@@ -302,8 +302,7 @@ void VTKWriter::write(const std::string output_path, const char order[], const s
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
       if (ig==_gridn-1u || _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)==0) {
-	//unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,3);
-        short unsigned ielt= _ml_mesh->GetLevel(ig)->el->GetElementType(ii);
+	short unsigned ielt= _ml_mesh->GetLevel(ig)->el->GetElementType(ii);
 	var_type[icount] = femusToVtkCellType[index][ielt];
 	icount++;
       }
@@ -534,10 +533,7 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   filename << output_path << "/"<<dirnamePVTK<< filename_prefix << ".level" << _gridn << "." <<_iproc<<"."<< time_step << "." << order << ".vtu"; 
   
   fout.open(filename.str().c_str());
-  if (fout.is_open()) {
-    std::cout << std::endl << " The output is printed to file " << filename.str() << " in VTK-XML (64-based) format" << std::endl; 
-  }
-  else {
+  if (!fout.is_open()) {
     std::cout << std::endl << " The output file "<< filename.str() <<" cannot be opened.\n";
     abort();
   }
@@ -547,17 +543,17 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   fout<<"<VTKFile type = \"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
   fout << "  <UnstructuredGrid>" << std::endl;
  
-  // *********** open vtp file *************
+  // *********** open pvtu file *************
   std::ofstream Pfout;
   if(_iproc!=0) {
     Pfout.rdbuf();   //redirect to dev_null
   }
   else {
     std::ostringstream Pfilename;
-    Pfilename << output_path << "/" << filename_prefix << ".level" << _gridn <<"."<< time_step << "." << order << ".vtp";
+    Pfilename << output_path << "/" << filename_prefix << ".level" << _gridn <<"."<< time_step << "." << order << ".pvtu";
     Pfout.open(Pfilename.str().c_str());
     if (Pfout.is_open()) {
-      std::cout << std::endl << " The output is printed to file " << Pfilename.str() << " in VTK-XML (64-based) format" << std::endl; 
+      std::cout << std::endl << " The output is printed to file " << Pfilename.str() << " in parallel VTK-XML (64-based) format" << std::endl; 
     }
     else {
       std::cout << std::endl << " The output file "<< Pfilename.str() <<" cannot be opened.\n";
@@ -565,7 +561,7 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
     }
   }
   
-  // *********** write vtp header ************
+  // *********** write pvtu header ***********
   Pfout<<"<?xml version=\"1.0\"?>" << std::endl;
   Pfout<<"<VTKFile type = \"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
   Pfout<< "  <PUnstructuredGrid GhostLevel=\"0\">" << std::endl;
@@ -601,10 +597,10 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
         for(unsigned j=0; j<NVE[ielt][index]; j++){
 	  counter += NVE[ielt][index];
 	  unsigned loc_vtk_conn = map_pr[j];
-	  unsigned jnode = _ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(kel,loc_vtk_conn)-1u;
+	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
 	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
-	  if( jnodeMetis < offset_iprc ){ //Is this a ghost node?
-	    ghost_counter++;
+	  if( jnodeMetis < offset_iprc ){ // check if jnodeMetis is a ghost node
+	    ghost_counter++; 
 	  }
 	}
       }
@@ -697,7 +693,7 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
 	  short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(kel);
 	  for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(kel,index); j++) {
 	    unsigned loc_vtk_conn = map_pr[j];
-	    unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(kel,loc_vtk_conn)-1u;
+	    unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
 	    unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
 	    if( jnodeMetis < offset_iprc ){ 
 	      var_coord[ offset_ig + icounter + i] = (*mysol[ig])(jnodeMetis);
@@ -718,7 +714,7 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
 	    short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(kel);
 	    for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(kel,index); j++) {
 	      unsigned loc_vtk_conn = map_pr[j];
-	      unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(kel,loc_vtk_conn)-1u;
+	      unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
 	      unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
 	      if( jnodeMetis < offset_iprc ){ 
 		var_coord[ offset_ig + icounter + i] += (*mysol[ig])(jnodeMetis);
@@ -771,7 +767,7 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
       if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
         for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(kel,index); j++) {
 	  unsigned loc_vtk_conn = map_pr[j];
-	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(kel,loc_vtk_conn)-1u;
+	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
 	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
 	  var_conn[icount] = (jnodeMetis >= offset_iprc )? jnodeMetis - offset_iprc + offset_nvt : nvt0 + (ghost_counter++);
 	  icount++;
@@ -844,18 +840,6 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
   
   // point pointer to common mamory area buffer of void type;
   unsigned short *var_type = static_cast <unsigned short*> (buffer_void);
-  icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-      if (ig==_gridn-1u || _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)==0) {
-	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,3);
-        short unsigned ielt= _ml_mesh->GetLevel(ig)->el->GetElementType(iel_Metis);
-	var_type[icount] = femusToVtkCellType[index][ielt];
-	icount++;
-      }
-    }
-  }
-  
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
@@ -1055,7 +1039,7 @@ void VTKWriter::ParallelWrite(const std::string output_path, const char order[],
 	    short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(kel);
 	    for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(kel,index); j++) {
 	      unsigned loc_vtk_conn = map_pr[j];
-	      unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(kel,loc_vtk_conn)-1u;
+	      unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
 	      unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
 	      if( jnodeMetis < offset_iprc ){ 
 		var_nd[ offset_ig + icounter] = (*mysol[ig])(jnodeMetis);
