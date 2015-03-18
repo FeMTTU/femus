@@ -329,7 +329,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 }
 
 
-void GMVWriter::ParallelWrite(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) const { 
+void GMVWriter::Pwrite(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) const { 
   
   unsigned gridn = _gridn; // aggiunta da me
       
