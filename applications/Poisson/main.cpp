@@ -261,8 +261,8 @@ int main(int argc,char **argv) {
 	GMVWriter gmvio(&ml_sol);
 	gmvio.Pwrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 	
-	XDMFWriter xdmfio(&ml_sol);
-	xdmfio.Pwrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+	//XDMFWriter xdmfio(&ml_sol);
+	//xdmfio.Pwrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
     
 	//Destroy all the new systems
 	ml_prob.clear();

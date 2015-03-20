@@ -111,8 +111,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
     unsigned nvt_ig = _ml_mesh->GetLevel(ig)->own_size[index][_iproc];
     nvt += nvt_ig;
   }
-  
-  
+   
   // count the ghost node dofs and the own element dofs element on all levels
   unsigned ghost_counter = 0;
   unsigned counter=0;
@@ -123,9 +122,9 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
       unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
       if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
 	nel++;
-	short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(kel);
-        for(unsigned j=0; j<NVE[ielt][index]; j++){
-	  counter += NVE[ielt][index];
+	short unsigned ielt = _ml_mesh->GetLevel(ig)->el->GetElementType(kel);
+	for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(kel,index); j++) {
+          counter++;
 	  unsigned loc_vtk_conn = map_pr[j];
 	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
 	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
@@ -136,7 +135,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
       }
     }
   }
-  
+   
   unsigned nvt0 = nvt;
   nvt += ghost_counter; // total node dofs (own + ghost)
   
@@ -305,7 +304,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
     }
     offset_nvt+= nvt_ig;
   }
-  
+    
   //print connectivity dimension
   cch = b64::b64_encode(&dim_array_conn[0], sizeof(dim_array_conn), NULL, 0);  
   b64::b64_encode(&dim_array_conn[0], sizeof(dim_array_conn), &enc[0], cch);

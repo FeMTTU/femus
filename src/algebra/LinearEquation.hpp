@@ -79,6 +79,7 @@ public:
   // member data
   Mesh *_msh; 
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
+  //SparseMatrix *_KK, *_CC; 
   SparseMatrix *_KK, *_PP,*_RR, *_CC; 
   vector < vector <unsigned> > KKoffset;
   vector < unsigned > KKghostsize;
