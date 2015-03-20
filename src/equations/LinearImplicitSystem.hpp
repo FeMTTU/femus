@@ -82,7 +82,7 @@ public:
     * like PETSc or LASPACK. Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
     */
     vector < LinearEquationSolver*> _LinSolver;
-    vector < SparseMatrix* > _PP, _RR; 
+    
     /** Set the max number of linear iterationsfor solving Ax=b */
     void SetMaxNumberOfLinearIterations(unsigned int max_lin_it) {
         _n_max_linear_iterations = max_lin_it;
@@ -170,6 +170,7 @@ public:
     
 protected:
 
+    vector < SparseMatrix* > _PP, _RR; 
     /** Create the Prolongator matrix for the Multigrid solver */
     void Prolongator(const unsigned &gridf);
 

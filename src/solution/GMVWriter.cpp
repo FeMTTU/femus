@@ -402,7 +402,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
     
     if(n_processors()==1) { // IF SERIAL
       Mysol[ig]->init(_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs],
-		      _ml_mesh->GetLevel(ig)->own_size[index][_nprocs],false,SERIAL);
+		      _ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs],false,SERIAL);
     } 
     else{ // IF PARALLEL
       Mysol[ig]->init(_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs], 
