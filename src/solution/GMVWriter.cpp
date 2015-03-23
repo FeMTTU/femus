@@ -24,7 +24,8 @@
 #include <iostream>
 #include <sstream>   
 #include <algorithm>  
-#include <cstring>
+#include <cstring> 
+#include "Files.hpp"
 
 
 namespace femus {
@@ -331,6 +332,11 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 
 void GMVWriter::Pwrite(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) const { 
   
+  if(_nprocs == 1){
+    write( output_path, order,  vars, time_step);
+    return;
+  }
+  
   unsigned gridn = _gridn; // aggiunta da me
       
   if ( gridn == 0 ) gridn = _gridn;
@@ -340,20 +346,21 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
   // ********** linear -> index==0 *** quadratic -> index==1 **********
   unsigned index=( strcmp(order, "linear") ) ? 1 : 0;
 
+  std::string dirnamePGMV = "GMVParallelFiles/";
+  Files files; 
+  files.CheckDir(output_path,dirnamePGMV);
+  
   std::string filename_prefix;
   if( _ml_sol != NULL ) filename_prefix = "sol";
   else filename_prefix = "mesh";
   
   std::ostringstream filename;
-  filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." <<_iproc<<"."<< time_step << "." << order << ".gmv"; 
+  filename << output_path << "/" << dirnamePGMV << filename_prefix << ".level" << _gridn << "." <<_iproc<<"."<< time_step << "." << order << ".gmv"; 
     
   std::ofstream fout;
   
   fout.open(filename.str().c_str());
-  if (fout.is_open()) {
-    std::cout << std::endl << " The output is printed to file " << filename.str() << " in GMV format" << std::endl; 
-  }
-  else {
+  if (!fout.is_open()) {
     std::cout << std::endl << " The output file "<< filename.str() <<" cannot be opened.\n";
     abort();
   }
@@ -700,61 +707,66 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
   }
   delete [] det;
   
-//   // print xml wrapper
-//   
-//   // *********** open pvtu file *************
-//   std::ofstream Pfout;
-//   if(_iproc!=0) {
-//     Pfout.rdbuf();   //redirect to dev_null
-//   }
-//   else {
-//     std::ostringstream Pfilename;
-//     Pfilename << output_path << "/" << filename_prefix << "_level" << _gridn <<"_"<< time_step << "_" << order << "_gmv.xml";
-//     Pfout.open(Pfilename.str().c_str());
-//     if (Pfout.is_open()) {
-//       std::cout << std::endl << " The output is printed to file " << Pfilename.str() << " in parallel GMV-XML (64-based) format" << std::endl; 
-//     }
-//     else {
-//       std::cout << std::endl << " The output file "<< Pfilename.str() <<" cannot be opened.\n";
-//       abort();
-//     }
-//   }
-//   
-//   // *********** write pvtu header ***********
-//   Pfout<< "<?xml version=\"1.0\"?>" << std::endl;
-//   Pfout<< "<pqevents>\n";
-//   for(int jproc=0;jproc<_nprocs;jproc++){
-//     Pfout<< "  <pqevent object=\"pqClientMainWindow/MainControlsToolbar/1QToolButton0\" command=\"activate\" arguments=\"\" />\n";
-//     Pfout<< "  <pqevent object=\"pqClientMainWindow/FileOpenDialog\" command=\"filesSelected\" arguments=\"";
-//     Pfout<< filename_prefix << ".level" << _gridn << "." <<jproc<<"."<< time_step << "." << order << ".gmv\" />\n";
-//   }
-//   
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,0,50,0,/0:0\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,0,50,0,/0:0\" />\n";
-//   
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/propertiesDock/propertiesPanel/Accept\" command=\"activate\"   arguments=\"\" />\n";
-//     
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,33554432,50,0,/0:0/"<<_nprocs-1<<":0\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,33554432,50,0,/0:0/"<<_nprocs-1<<":0\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"keyEvent\" 	 arguments=\"7,16777248,0,,0,1\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/menubar\" command=\"activate\" arguments=\"menuFilters\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/menubar/menuFilters/Alphabetical\" command=\"activate\"        arguments=\"GroupDataSets\" />\n";
-//   
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,0,50,0,/0:0\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,0,50,0,/0:0\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,33554432,50,0,/0:0/"<<_nprocs<<":0\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,33554432,50,0,/0:0/"<<_nprocs<<":0\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"keyEvent\"     arguments=\"7,16777248,0,,0,1\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,67108864,0,0,/0:0/0:1\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,67108864,0,0,/0:0/0:1\" />\n";
-//     
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,0,50,0,/0:0/"<<_nprocs<<":0\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,0,50,0,/0:0/"<<_nprocs<<":0\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,0,0,0,/0:0/"<<_nprocs<<":1\" />\n";
-//   Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,0,0,0,/0:0/"<<_nprocs<<":1\" />\n";
-//     
-//   Pfout<< "</pqevents>\n";
-//   Pfout.close();
+  // print xml wrapper
+  
+  // *********** open pvtu file *************
+  std::ofstream Pfout;
+  if(_iproc!=0) {
+    Pfout.rdbuf();   //redirect to dev_null
+  }
+  else {
+    std::ostringstream Pfilename;
+    Pfilename << output_path << "/" << filename_prefix << "_level" << _gridn <<"_"<< time_step << "_" << order << "_gmv.xml";
+    Pfout.open(Pfilename.str().c_str());
+    if (Pfout.is_open()) {
+      std::cout << std::endl << " The output is printed to file " << Pfilename.str() << " in parallel GMV-XML (64-based) format" << std::endl; 
+      std::cout << " Laod it in ParaView -> Tools -> Play Test ... \n";
+    }
+    else {
+      std::cout << std::endl << " The output file "<< Pfilename.str() <<" cannot be opened.\n";
+      abort();
+    }
+  }
+  
+  // *********** write pvtu header ***********
+  Pfout<< "<?xml version=\"1.0\"?>" << std::endl;
+  Pfout<< "<pqevents>\n";
+  for(int jproc=0;jproc<_nprocs;jproc++){
+    Pfout<< "  <pqevent object=\"pqClientMainWindow/MainControlsToolbar/1QToolButton0\" command=\"activate\" arguments=\"\" />\n";
+    Pfout<< "  <pqevent object=\"pqClientMainWindow/FileOpenDialog\" command=\"filesSelected\" arguments=\"";
+    Pfout<< dirnamePGMV << filename_prefix << ".level" << _gridn << "." <<jproc<<"."<< time_step << "." << order << ".gmv\" />\n";
+  }
+  
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,0,50,5,/0:0\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,0,50,5,/0:0\" />\n";
+  
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/propertiesDock/propertiesPanel/Accept\" command=\"activate\"   arguments=\"\" />\n";
+    
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,33554432,50,5,/0:0/"<<_nprocs-1<<":0\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,33554432,50,5,/0:0/"<<_nprocs-1<<":0\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"keyEvent\" 	 arguments=\"7,16777248,0,,0,1\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/menubar\" command=\"activate\" arguments=\"menuFilters\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/menubar/menuFilters/Alphabetical\" command=\"activate\"        arguments=\"GroupDataSets\" />\n";
+  
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,0,10,5,/0:0/"<<_nprocs<<":1\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,0,10,5,/0:0/"<<_nprocs<<":1\" />\n";
+  
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,33554432,25,5,/0:0\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,33554432,25,5,/0:0\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,33554432,50,5,/0:0/"<<_nprocs<<":0\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,33554432,50,5,/0:0/"<<_nprocs<<":0\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"keyEvent\"     arguments=\"7,16777248,0,,0,1\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,0,10,5,/0:0/"<<_nprocs<<":1\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,0,10,5,/0:0/"<<_nprocs<<":1\" />\n";
+  
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,0,50,5,/0:0/"<<_nprocs<<":1\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,0,50,5,/0:0/"<<_nprocs<<":1\" />\n";
+  
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mousePress\"   arguments=\"1,1,0,10,5,/0:0/"<<_nprocs<<":1\" />\n";
+  Pfout<< "  <pqevent object=\"pqClientMainWindow/pipelineBrowserDock/pipelineBrowser\" command=\"mouseRelease\" arguments=\"1,0,0,10,5,/0:0/"<<_nprocs<<":1\" />\n";
+  
+  Pfout<< "</pqevents>\n";
+  Pfout.close();
     
   
   
