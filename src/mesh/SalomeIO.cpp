@@ -35,13 +35,42 @@ namespace femus {
    const uint SalomeIO::max_length = 100;  ///@todo this length of the menu string is conservative enough...
 
   
+  //for the hex27, salome goes as follows:
+  //face X=-1, clockwise from cube center;
+  //face X=+1, anticlockwise from cube center;
+  
   
  const unsigned SalomeIO::SalomeToFemusVertexIndex[N_GEOM_ELS][27]= 
    {
-    {
-      4,16,0,15,23,11,7,19,3,
-      12,20,8,25,26,24,14,22,10,
-      5,17,1,13,21,9,6,18,2
+     //from femus to salome
+     //1,2,4,3,
+     //5,6,8,7,
+     //9,12,11,10,                centers lower face
+     //13,16,15,14,                 centers upper face
+     //18,17,19,20,                            vertical edges
+     //23,25,24,26,                                     vertical faces 
+     // 21,                        lower face
+     // 22,                           upper face
+     // 27                          hex center
+     
+     //from femus to salome - subract one
+// 0,1,3,2,4,5,7,6,8,11,10,9,12,15,14,13,17,16,18,19,22,24,23,25, 20,21,26   
+ 
+     //0,1,2,3,4,5,6,7,8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26   //identity
+     //0,1,3,2,4,5,7,6,8,11,10,9, 12,15,14,13,17,16,18,19,22,24,23,25,20,21,26     //from femus to salome
+     //0,1,3,2,4,5,7,6,8,11,10,9,12,15,14,13,17,16,18,19,24,25,20,22,21,23,26      //from salome to femus  
+
+     
+     {
+       0,1,3,2,4,5,7,6,8,11,10,9,12,15,14,13,17,16,18,19,24,25,20,22,21,23,26 
+//       0,1,2,3,4,5,6,7,   //vertices
+//       8,9,10,11,  //midpoints lower face
+//       12,13,14,15,//midpoints upper face
+//       16,17,18,19,//midpoints vertical edges
+//       24,25,      //opposite faces x direction
+//       20,22,      //opposite faces z direction
+//       23,21,      //opposite faces y direction
+//       26          //hexahedron center
     },  //HEX27
     {
       0,4,1,6,5,
