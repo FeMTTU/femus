@@ -120,3 +120,10 @@ From command line:
 To be added
 
 ##################################
+
+How to install HDFVIEW
+
+Follow the instruction in the HDFVIEW website
+
+At the end of the build process, you should have an hdfview.sh script inside the bin directory of your build.
+You must open that script and change the INSTALLDIR variable with the path of this build (by default, /usr/local is in it)
