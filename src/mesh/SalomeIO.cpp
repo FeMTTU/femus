@@ -16,6 +16,7 @@
 //local include
 #include "SalomeIO.hpp"
 #include "Mesh.hpp"
+#include "GeomElTypeEnum.hpp"
 
 //C++ include
 #include <cassert>
@@ -35,29 +36,29 @@ namespace femus {
 
   
   
- const unsigned SalomeIO::SalomeToFemusVertexIndex[6][27]= 
+ const unsigned SalomeIO::SalomeToFemusVertexIndex[N_GEOM_ELS][27]= 
    {
     {
       4,16,0,15,23,11,7,19,3,
       12,20,8,25,26,24,14,22,10,
       5,17,1,13,21,9,6,18,2
-    },
+    },  //HEX27
     {
       0,4,1,6,5,
       2,7,8,9,3
-    },
+    },  //TET10
     {
       3, 11,5, 9, 10,4,
       12,17,14,15,16,13,
       0, 8, 2, 6, 7, 1
-    },
-    {0,4,1,5,2,6,3,7,8},
-    {0,3,1,4,2,5},
-    {0,2,1}
+    },  //WEDGE18
+    {0,4,1,5,2,6,3,7,8}, //QUAD9
+    {0,1,2,3,4,5},       //TRI6
+    {0,2,1}              //EDGE3
   };
 
   
-const unsigned SalomeIO::SalomeToFemusFaceIndex[6][6]= 
+const unsigned SalomeIO::SalomeToFemusFaceIndex[N_GEOM_ELS][6]= 
   {
     {0,4,2,5,3,1},
     {0,1,2,3},
@@ -193,9 +194,9 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
   // SET NUMBER OF ELEMENTS
    mesh.SetNumberOfElements(n_elements);
   
-  int   *conn_map5 = new  int[dim_conn];
+  int   *conn_map = new  int[dim_conn];
   std::cout << " Number of elements in med file " <<  n_elements <<  std::endl;
-  status=H5Dread(dtset,H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,conn_map5);
+  status=H5Dread(dtset,H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,conn_map);
   if(status !=0) {std::cout << "SalomeIO::read: connectivity not found"; abort();}
   H5Dclose(dtset);
 
@@ -209,28 +210,28 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
     if (nve==27) {
       type_elem_flag[0]=type_elem_flag[3]=true;
       mesh.el->AddToElementNumber(1,"Hex");
-      mesh.el->SetElementType(iel,0);
+      mesh.el->SetElementType(iel,HEX);
     } else if (nve==10) {
       type_elem_flag[1]=type_elem_flag[4]=true;
       mesh.el->AddToElementNumber(1,"Tet");
-      mesh.el->SetElementType(iel,1);
+      mesh.el->SetElementType(iel,TET);
     } else if (nve==18) {
       type_elem_flag[2]=type_elem_flag[3]=type_elem_flag[4]=true;
       mesh.el->AddToElementNumber(1,"Wedge");
-      mesh.el->SetElementType(iel,2);
+      mesh.el->SetElementType(iel,WEDGE);
     } else if (nve==9) {
       type_elem_flag[3]=true;
       mesh.el->AddToElementNumber(1,"Quad");
-      mesh.el->SetElementType(iel,3);
+      mesh.el->SetElementType(iel,QUAD);
     }
     else if (nve==6 && mesh.GetDimension()==2) {
       type_elem_flag[4]=true;
       mesh.el->AddToElementNumber(1,"Triangle");
-      mesh.el->SetElementType(iel,4);
+      mesh.el->SetElementType(iel,TRI);
     }
     else if (nve==3 && mesh.GetDimension()==1) {
       mesh.el->AddToElementNumber(1,"Line");
-      mesh.el->SetElementType(iel,5);
+      mesh.el->SetElementType(iel,LINE);
     } else {
       std::cout<<"Error! Invalid element type in reading  File!"<<std::endl;
       std::cout<<"Error! Use a second order discretization"<<std::endl;
@@ -238,7 +239,7 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
     }
     for (unsigned i=0; i<nve; i++) {
       unsigned inode = SalomeToFemusVertexIndex[mesh.el->GetElementType(iel)][i];
-      mesh.el->SetElementVertexIndex(iel,inode,conn_map5[iel+i*n_elements]);
+      mesh.el->SetElementVertexIndex(iel,inode,conn_map[iel+i*n_elements]);
     }
   }
   
@@ -251,7 +252,7 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
 // // // // //     // add node pointers to the elements
 // // // // //     for(int i=0; i<Node_el; i++) {
 // // // // // //       elem->set_node(eletype.nodes[i])= mesh.node_ptr(conn_map[Node_el*iel+i]);
-// // // // //       elem->set_node(eletype.nodes[i])= mesh.node_ptr(conn_map5[iel+i*n_elements]-1);
+// // // // //       elem->set_node(eletype.nodes[i])= mesh.node_ptr(conn_map[iel+i*n_elements]-1);
 // // // // //     }
 // // // // //   }    
 
@@ -271,7 +272,7 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
 
 
   // clean
-  delete [] conn_map5;
+  delete [] conn_map;
 
         }
         
@@ -345,7 +346,7 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
 //       unsigned iel,iface;
 //       inf>>iel>>str2>>iface;
 //       iel--;
-//       iface=SalomeIO::GambitToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
+//       iface=SalomeIO::SalomeToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
 //       mesh.el->SetFaceElementIndex(iel,iface,value);
 //     }
 //     inf >> str2;
