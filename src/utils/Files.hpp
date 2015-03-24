@@ -76,7 +76,9 @@ public:
   bool  GetRestartFlag() const {
     return _restart_flag;
   }
- 
+  
+  static void CheckDir(const std::string& dir_name_in, const std::string& my_name_in);
+  
 private:
   
   static std::ofstream file_sbuf;  //needed for I/O purposes
@@ -90,7 +92,7 @@ private:
 // Directory management
          void ComposeOutdirName();
   static void CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in);
-  static void CheckDir(const std::string& dir_name_in, const std::string& my_name_in);
+//   static void CheckDir(const std::string& dir_name_in, const std::string& my_name_in);
   static void CheckDirOrAbort(const std::string& dir_name_in, const std::string& my_name_in);
 
 // Copy 

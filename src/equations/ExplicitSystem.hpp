@@ -54,6 +54,9 @@ public:
 
     /** Init the system PDE structures */
     virtual void init();
+    
+    /** @deprecated Init the system PDE structures */
+    virtual void init_two(){};     
 
     /**
      * @returns \p "Explicit".  Helps in identifying

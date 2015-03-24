@@ -54,7 +54,7 @@ namespace femus {
 
     /** write output function */
     virtual void write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0)  const = 0;
-
+    virtual void Pwrite(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) const = 0;
     /** set moving mesh */
     void SetMovingMesh(std::vector<std::string>& movvars_in);
     

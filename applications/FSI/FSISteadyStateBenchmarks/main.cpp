@@ -15,17 +15,17 @@ double scale=1000.;
 using namespace std;
 using namespace femus;
 
-bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z,const char name[], 
-		double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionDrum(const double &x, const double &y, const double &z,const char name[], 
-		double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionBatheCylinder(const double &x, const double &y, const double &z,const char name[], 
-				       double &value, const int facename, const double time);
+bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y, const double &z,const char name[], 
+						double &value, const int FaceName, const double = 0.);
+bool SetBoundaryConditionBathe_2D_FSI(const double &x, const double &y, const double &z,const char name[], 
+				      double &value, const int FaceName, const double = 0.);
+bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const double &x, const double &y, const double &z,const char name[], 
+						double &value, const int facename, const double time);
 
-bool SetBoundaryConditionBatheShell(const double &x, const double &y, const double &z,const char name[], 
-				       double &value, const int facename, const double time);
-bool SetBoundaryConditionComsol(const double &x, const double &y, const double &z,const char name[], 
-		double &value, const int FaceName, const double = 0.);
+bool SetBoundaryConditionBathe_3D_solid(const double &x, const double &y, const double &z,const char name[], 
+					double &value, const int facename, const double time);
+bool SetBoundaryConditionComsol_2D_FSI(const double &x, const double &y, const double &z,const char name[], 
+				       double &value, const int FaceName, const double = 0.);
 
  
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
@@ -34,13 +34,14 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 int main(int argc,char **args) {
     
-  /// Init Petsc-MPI communicator
+  // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
 
   //Files files; 
   //files.CheckIODirectories();
   //files.RedirectCout();
   
+  // ******* Extract the problem dimension and simulation identifier based on the inline input *******
   unsigned simulation;
   bool dimension2D;
   
@@ -52,12 +53,12 @@ int main(int argc,char **args) {
     else if( !strcmp("turek_2D_solid",args[1])) {    /** Solid Turek beam benchmark test. Beware: activate gravity in assembly */
       simulation=2; 
       dimension2D=1;  
-   }
+    }
     else if( !strcmp("bathe_2D_FSI",args[1])){  /** Bathe 2D membrane benchmark */
       simulation=3; 
       dimension2D=1;  
-   }
-   else if( !strcmp("bathe_3D_FSI",args[1])){  /** Bathe 3D cylinder FSI benchmark */
+    }
+    else if( !strcmp("bathe_3D_FSI",args[1])){  /** Bathe 3D cylinder FSI benchmark */
       simulation=4; 
       dimension2D=0;  
     }
@@ -88,7 +89,7 @@ int main(int argc,char **args) {
     abort();
   }
    
-  
+  // ******* Extract the preconditioner type based on the inline input *******
   bool Vanka=0, Gmres=0, Asm=0;
   if(argc >= 3) {
     if( !strcmp("vanka",args[2])) 	Vanka=1;
@@ -97,7 +98,7 @@ int main(int argc,char **args) {
     
     if(Vanka+Gmres+Asm==0) {
       cout << "wrong input arguments!" << endl;
-      exit(0);
+      abort();
     }
   }
   else {
@@ -106,26 +107,7 @@ int main(int argc,char **args) {
   }
   
    
-  
-	
-  unsigned short nm,nr;
-  std::cout<<"#MULTIGRID levels? (>=1) \n";
-  //std::cin>>nm;
-  if(simulation < 3)
-    nm=3;
-  else if(simulation == 3 || simulation == 7)
-    nm=4;
-  else if(simulation < 7)
-    nm=2;
-
-
-  std::cout<<"#MAX_REFINEMENT levels? (>=0) \n";
-  //std::cin>>nr;
-  nr=0;
-  int tmp=nm;
-  nm+=nr;
-  nr=tmp;
-
+  // ******* Extract the mesh.neu file name based on the simulation identifier *******
   std::string infile;
   
   if(1 == simulation){
@@ -150,26 +132,28 @@ int main(int argc,char **args) {
     infile = "./input/comsolbenchmark.neu";
   }
   
-   double Lref, Uref, rhof, muf, rhos, ni, E; 
+   
+  // ******* Set physics parameters *******   
+  double Lref, Uref, rhof, muf, rhos, ni, E; 
   
-    Lref = 1.;	
-    Uref = 1.;
+  Lref = 1.;	
+  Uref = 1.;
  
-  if(simulation<3){ //turek FSI
+  if(simulation<3){ //turek 2D
     rhof = 1000.;
     muf = 1.;
     rhos = 1000;
     ni = 0.5;
     E = 1400000; 
   }
-  else if(simulation==3){ //bathe membrane
+  else if(simulation==3){ //bathe 2D
     rhof = 1000;
     muf = 0.04;
     rhos = 800;
     ni = 0.5;
     E = 140000000; 
   }
-  else if(simulation<7){ //bathe cylinder
+  else if(simulation<7){ //bathe 3D
     rhof = 100.;
     muf = 1.;
     rhos = 800;
@@ -188,26 +172,8 @@ int main(int argc,char **args) {
   
   // Generate Solid Object
   Solid solid;
-  if(simulation<3){
-    solid = Solid(par,E,ni,rhos,"Mooney-Rivlin-MassPenalty"); 
-    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-MassPenalty");
-    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
-  }
-  else if(simulation==3 || simulation == 7){
-    solid = Solid(par,E,ni,rhos,"Mooney-Rivlin"); 
-    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-MassPenalty");
-    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
-  }
-  else if(simulation < 7){	
-    solid = Solid(par,E,ni,rhos,"Mooney-Rivlin"); 
-    //solid = Solid(par,E,ni,rhos,"Neo-Hookean");
-    //Solid solid(par,E,ni,rhos,"Neo-Hookean-BW");
-    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-BW-Penalty");
-    //solid = Solid(par,E,ni,rhos,"Neo-Hookean-AB-Penalty"); //Allan Bower
+  solid = Solid(par,E,ni,rhos,"Mooney-Rivlin");
    
-  }
-  
-  
   cout << "Solid properties: " << endl;
   cout << solid << endl;
   
@@ -216,18 +182,36 @@ int main(int argc,char **args) {
   cout << "Fluid properties: " << endl;
   cout << fluid << endl;
 
-  MultiLevelMesh ml_msh(nm,nr,infile.c_str(),"fifth",Lref,SetRefinementFlag);
+  // ******* Init multilevel mesh from mesh.neu file *******
+  unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
   
+  if(simulation < 3)
+    numberOfUniformRefinedMeshes=3;
+  else if(simulation == 3 || simulation == 7)
+    numberOfUniformRefinedMeshes=4;
+  else if(simulation < 7)
+    numberOfUniformRefinedMeshes=2;
+
+  numberOfAMRLevels = 0;
+  
+  MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes, numberOfUniformRefinedMeshes + numberOfAMRLevels,
+			infile.c_str(),"fifth",Lref,SetRefinementFlag);
+  
+  // mark Solid nodes
+  ml_msh.MarkStructureNode();
+  
+  // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
   
-  //Start System Variables
+  // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("DY",LAGRANGE,SECOND,1);
   if (!dimension2D) ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
-  //if (!dimension2D) ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
+  
   ml_sol.AddSolution("U",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
   if (!dimension2D) ml_sol.AddSolution("W",LAGRANGE,SECOND,1);
+  
   // Pair each velocity varible with the corresponding displacement variable
   ml_sol.PairSolution("U","DX"); // Add this line
   ml_sol.PairSolution("V","DY"); // Add this line 
@@ -235,24 +219,24 @@ int main(int argc,char **args) {
   
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
-  //ml_sol.AddSolution("P",LAGRANGE,FIRST,1);
   ml_sol.AssociatePropertyToSolution("P","Pressure"); // Add this line
 
-  //Initialize (update Init(...) function)
+  // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
-  //Set Boundary (update Dirichlet(...) function)
+  // ******* Set boundary functions *******
   if(1==simulation || 2==simulation)
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek);
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek_2D_FSI_and_solid);
   else if( 3==simulation)
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionDrum);
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBathe_2D_FSI);
   else if (4==simulation || 6==simulation)
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBatheCylinder);
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBathe_3D_FSI_and_fluid);
   else if (5==simulation)
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBatheShell);
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBathe_3D_solid);
   else if (7 == simulation)
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionComsol);
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionComsol_2D_FSI);
 
+  // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX","Steady");
   ml_sol.GenerateBdc("DY","Steady");
   if (!dimension2D) ml_sol.GenerateBdc("DZ","Steady");
@@ -261,16 +245,15 @@ int main(int argc,char **args) {
   if (!dimension2D) ml_sol.GenerateBdc("W","Steady");
   ml_sol.GenerateBdc("P","Steady");
   
+  // ******* Define the FSI Multilevel Problem *******
   MultiLevelProblem ml_prob(&ml_sol);
   // Add fluid object
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
-  // mark Solid nodes
-  ml_msh.MarkStructureNode();
+  
  
-  //create systems
-  // add the system FSI to the MultiLevel problem
+  // ******* Add FSI system to the MultiLevel problem *******
   MonolithicFSINonLinearImplicitSystem & system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");
   system.AddSolutionToSystemPDE("DX");
   system.AddSolutionToSystemPDE("DY");
@@ -280,76 +263,70 @@ int main(int argc,char **args) {
   if (!dimension2D) system.AddSolutionToSystemPDE("W");
   system.AddSolutionToSystemPDE("P");
    
-  // System Fluid-Structure-Interaction
+  // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(IncompressibleFSIAssemblyAD_DD); 
   
+  // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
   system.SetAbsoluteConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-10);
+  if( simulation == 7 )  
+    system.SetNonLinearConvergenceTolerance(1.e-5);
   system.SetNumberPreSmoothingStep(1);
   system.SetNumberPostSmoothingStep(1);
-  if(simulation < 3 || simulation == 7){
+  if( simulation < 3 || simulation == 7 ) {
     system.SetMaxNumberOfLinearIterations(2);
     system.SetMaxNumberOfNonLinearIterations(10);
   }
-  else if(simulation < 7){	
+  else {	
     system.SetMaxNumberOfLinearIterations(8);
     system.SetMaxNumberOfNonLinearIterations(15); 
   }
-  
-  if(simulation == 7)  system.SetNonLinearConvergenceTolerance(1.e-5);
-
-   
-  //Set Smoother Options
+     
+  // ******* Set Preconditioner *******
   if(Gmres) 		system.SetMgSmoother(GMRES_SMOOTHER);
   else if(Asm) 		system.SetMgSmoother(ASM_SMOOTHER);
   else if(Vanka)	system.SetMgSmoother(VANKA_SMOOTHER);
   
-  // init all the systems
   system.init();
   
+  // ******* Set Smoother *******
   system.SetSolverFineGrids(GMRES);
-  if(3 >= simulation || 6 == simulation || 7 == simulation )
+  if( simulation < 3 || simulation > 5 )
     system.SetPreconditionerFineGrids(ILU_PRECOND); 
   else
     system.SetPreconditionerFineGrids(MLU_PRECOND); 
- 
   system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
  
+  // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   
-  system.AddVariableToBeSolved("DX");
-  system.AddVariableToBeSolved("DY");
-  if (!dimension2D)  system.AddVariableToBeSolved("DZ");
-  
-  system.AddVariableToBeSolved("U");
-  system.AddVariableToBeSolved("V");
-  if (!dimension2D)  system.AddVariableToBeSolved("W");
-  system.AddVariableToBeSolved("P");
-    
-  //for Vanka and ASM smoothers
+  // ******* Set the last (1) variables in system (i.e. P) to be a schur variable *******
   system.SetNumberOfSchurVariables(1);
+  
+  // ******* Set block size for the ASM smoothers *******
   if(simulation < 3){
     system.SetElementBlockNumber(2);
   }
-  else if(simulation ==3 || !dimension2D){
-    //system.SetElementBlockNumber("All");
-    //system.SetElementBlockNumber(2);
+  else if(simulation < 7 ){
     system.SetElementBlockNumberFluid(2);
-    //system.SetElementBlockNumberSolid(2);
-    //system.SetElementBlockFluidAll();
     system.SetElementBlockSolidAll();
   }
   else if(simulation == 7 ){
-     system.SetElementBlockNumber(3);   
+    system.SetElementBlockNumber(3);   
   }
   
-  //for Gmres smoother
-  //system.SetDirichletBCsHandling(PENALTY); 
+  // ******* For Gmres Preconditioner only *******
   system.SetDirichletBCsHandling(ELIMINATION);   
    
-  ml_sol.SetWriter(XDMF);
+  // ******* Solve *******
+  std::cout << std::endl;
+  std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
+  system.solve();
+   
+  // ******* Print solution *******
+  ml_sol.SetWriter(VTK);
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -357,26 +334,14 @@ int main(int argc,char **args) {
   mov_vars.push_back("DZ");
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
   
-  // Solving Fluid-Structure-Interaction system
-  std::cout << std::endl;
-  std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
-  system.solve();
-   
-  //print solution 
   std::vector<std::string> print_vars;
-  print_vars.push_back("DX");
-  print_vars.push_back("DY");
-  if (!dimension2D) print_vars.push_back("DZ");
-  print_vars.push_back("U");
-  print_vars.push_back("V");
-  if (!dimension2D) print_vars.push_back("W");
-  print_vars.push_back("P");
+  print_vars.push_back("All");
       
+  //ml_sol.GetWriter()->ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
   ml_sol.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
-
-  // Destroy all the new systems
+  
+  // ******* Clear all systems *******
   ml_prob.clear();
-   
   return 0;
 }
 
@@ -395,7 +360,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(!strcmp(name,"U")) {
@@ -405,9 +370,9 @@ bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z
       value=1.5*um*4.0/0.1681*y*(0.41-y);
     }  
     else if(2==facename ){  //outflow
-     test=0;
- //    test=1;
-     value=0.;
+      test=0;
+      //    test=1;
+      value=0.;
     }
     else if(3==facename ){  // no-slip fluid wall
       test=1;
@@ -428,9 +393,9 @@ bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z
       value=0.;
     }  
     else if(2==facename ){      //outflow
-     test=0;
- //    test=1;
-     value=0.;
+      test=0;
+      //    test=1;
+      value=0.;
     }
     else if(3==facename ){      // no-slip fluid wall
       test=1;
@@ -473,8 +438,8 @@ bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z
       value=0.;
     }  
     else if(2==facename ){   //outflow
-     test=1;
-     value=0.;
+      test=1;
+      value=0.;
     }
     else if(3==facename ){   // no-slip fluid wall
       test=0; //0
@@ -495,8 +460,8 @@ bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z
       value=0.;
     }  
     else if(2==facename ){   //outflow
-     test=0; // 0
-     value=0.;
+      test=0; // 0
+      value=0.;
     }
     else if(3==facename ){   // no-slip fluid wall
       test=1;
@@ -514,7 +479,7 @@ bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z
   return test;
 }
 
-bool SetBoundaryConditionDrum(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_2D_FSI(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(!strcmp(name,"U")) {
@@ -523,8 +488,8 @@ bool SetBoundaryConditionDrum(const double &x, const double &y, const double &z,
       value=0;
     }  
     else if(2==facename ){  //top side
-     test=0;
-     value=0.;
+      test=0;
+      value=0.;
     }
     else if(3==facename ){  //top bottom
       test=1;
@@ -544,13 +509,13 @@ bool SetBoundaryConditionDrum(const double &x, const double &y, const double &z,
     }
   }  
   else if(!strcmp(name,"V")){
-     if(1==facename){   //top
+    if(1==facename){   //top
       test=0;
       value=0;
     }  
     else if(2==facename ){  //top side
-     test=0;
-     value=0.;
+      test=0;
+      value=0.;
     }
     else if(3==facename ){  //top bottom
       test=1;
@@ -581,8 +546,8 @@ bool SetBoundaryConditionDrum(const double &x, const double &y, const double &z,
       value=0;
     }  
     else if(2==facename ){  //top side
-     test=1;
-     value=0.;
+      test=1;
+      value=0.;
     }
     else if(3==facename ){  //top bottom
       test=0;
@@ -602,13 +567,13 @@ bool SetBoundaryConditionDrum(const double &x, const double &y, const double &z,
     }
   }
   else if(!strcmp(name,"DY")){
-   if(1==facename){   //top
+    if(1==facename){   //top
       test=1;
       value=0;
     }  
     else if(2==facename ){  //top side
-     test=0;
-     value=0.;
+      test=0;
+      value=0.;
     }
     else if(3==facename ){  //top bottom
       test=1;
@@ -633,7 +598,7 @@ bool SetBoundaryConditionDrum(const double &x, const double &y, const double &z,
 
 
 
-bool SetBoundaryConditionBatheCylinder(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   
@@ -713,7 +678,7 @@ bool SetBoundaryConditionBatheCylinder(const double &x, const double &y, const d
     } 
   }
   else if(!strcmp(name,"DX")){
-   if(1==facename){   //outflow
+    if(1==facename){   //outflow
       test=1;
       value=0;
     }  
@@ -770,7 +735,7 @@ bool SetBoundaryConditionBatheCylinder(const double &x, const double &y, const d
   return test;
 }
 
-bool SetBoundaryConditionBatheShell(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_3D_solid(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   
@@ -831,7 +796,7 @@ bool SetBoundaryConditionBatheShell(const double &x, const double &y, const doub
     } 
   }
   else if(!strcmp(name,"DX")){
-   if(2==facename){  //stress
+    if(2==facename){  //stress
       test=0;
       value=0;
     }
@@ -880,7 +845,7 @@ bool SetBoundaryConditionBatheShell(const double &x, const double &y, const doub
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionComsol(const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName, const double time) {
+bool SetBoundaryConditionComsol_2D_FSI(const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName, const double time) {
   bool test=1; //Dirichlet
   value=0.;
   //   cout << "Time bdc : " <<  time << endl;
@@ -1013,18 +978,6 @@ bool SetBoundaryConditionComsol(const double &x, const double &y, const double &
       test=1;
       value=0.;
     }
-  }
-  else if (!strcmp(name,"AX")) {
-    test=0;
-    value=0;
-  }
-  else if (!strcmp(name,"AY")) {
-    test=0;
-    value=0;
-  }
-  else if (!strcmp(name,"AZ")) {
-    test=0;
-    value=0;
   }
   return test;
 }

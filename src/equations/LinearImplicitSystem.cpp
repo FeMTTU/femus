@@ -55,7 +55,10 @@ void LinearImplicitSystem::clear() {
     for (unsigned ig=0; ig<_gridn; ig++) {
       _LinSolver[ig]->DeletePde();
       delete _LinSolver[ig];
-    }  
+      if(_PP[ig]) delete _PP[ig];
+      if(_RR[ig]) delete _RR[ig];
+    }
+        
     _NSchurVar_test=0;
     _numblock_test=0;
     _numblock_all_test=0;
@@ -87,7 +90,13 @@ void LinearImplicitSystem::init() {
       _LinSolver[i]->InitPde(_SolSystemPdeIndex,_ml_sol->GetSolType(),
 			     _ml_sol->GetSolName(),&_solution[i]->_Bdc,_gridr,_gridn,_SparsityPattern);
     }  
-    
+       
+    _PP.resize(_gridn);
+    _RR.resize(_gridn);
+    for(unsigned i=0;i<_gridn;i++){
+      _PP[i]=NULL;
+      _RR[i]=NULL;
+    }
     for (unsigned ig=1; ig<_gridn; ig++) {
       BuildProlongatorMatrix(ig);
     }
@@ -99,6 +108,35 @@ void LinearImplicitSystem::init() {
     ClearVariablesToBeSolved();
     AddVariableToBeSolved("All");
 }
+
+/// @deprecated 
+// this function is like init but it doesn't call InitPDE
+void LinearImplicitSystem::init_two() {
+  
+    _LinSolver.resize(_gridn);
+    
+    _LinSolver[0]=LinearEquationSolver::build(0,_msh[0],GMRES_SMOOTHER).release();
+    for(unsigned i=1;i<_gridn;i++){
+      _LinSolver[i]=LinearEquationSolver::build(i,_msh[i],_SmootherType).release();
+    }
+    
+//     for (unsigned i=0; i<_gridn; i++) {
+//       _LinSolver[i]->InitPde(_SolSystemPdeIndex,_ml_sol->GetSolType(),
+// 			     _ml_sol->GetSolName(),&_solution[i]->_Bdc,_gridr,_gridn,_SparsityPattern);
+//     }  
+//     
+//     for (unsigned ig=1; ig<_gridn; ig++) {
+//       BuildProlongatorMatrix(ig);
+//     }
+    
+    _NSchurVar_test=0;
+    _numblock_test=0;   
+    _numblock_all_test=0;
+    // By default we solved for all the PDE variables
+    ClearVariablesToBeSolved();
+    AddVariableToBeSolved("All");
+}
+
 
 
 void LinearImplicitSystem::AddSystemLevel() {
@@ -365,24 +403,24 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
     if (gridf>=_gridr) {  //_gridr
       if (!_LinSolver[gridf-1]->_CC_flag) {
 	_LinSolver[gridf-1]->_CC_flag=1;
-	_LinSolver[gridf-1]->_CC->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,!matrix_reuse);
+	_LinSolver[gridf-1]->_CC->matrix_PtAP(*_PP[gridf],*_LinSolver[gridf]->_KK,!matrix_reuse);
       } 
       else{
-	_LinSolver[gridf-1]->_CC->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,matrix_reuse);
+	_LinSolver[gridf-1]->_CC->matrix_PtAP(*_PP[gridf],*_LinSolver[gridf]->_KK,matrix_reuse);
       }
       _LinSolver[gridf-1u]->_KK->matrix_add(1.,*_LinSolver[gridf-1u]->_CC,"different_nonzero_pattern");
     } 
     else { //Projection of the Matrix on the lower level
       if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
-	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,!matrix_reuse);
+	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_PP[gridf],*_LinSolver[gridf]->_KK,!matrix_reuse);
       }
       else{
-	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,matrix_reuse);
+	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_PP[gridf],*_LinSolver[gridf]->_KK,matrix_reuse);
       }    
     }
   }
       
-  _LinSolver[gridf-1u]->_RESC->matrix_mult_transpose(*_LinSolver[gridf]->_RES, *_LinSolver[gridf]->_PP);
+  _LinSolver[gridf-1u]->_RESC->matrix_mult_transpose(*_LinSolver[gridf]->_RES, *_PP[gridf]);
   *_LinSolver[gridf-1u]->_RES += *_LinSolver[gridf-1u]->_RESC;
   
 }
@@ -390,7 +428,7 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
 // *******************************************************
 void LinearImplicitSystem::Prolongator(const unsigned &gridf) {
   
-  _LinSolver[gridf]->_EPSC->matrix_mult(*_LinSolver[gridf-1]->_EPS,*_LinSolver[gridf]->_PP);
+  _LinSolver[gridf]->_EPSC->matrix_mult(*_LinSolver[gridf-1]->_EPS,*_PP[gridf]);
   _LinSolver[gridf]->UpdateResidual();
   _LinSolver[gridf]->SumEpsCToEps();
 }
@@ -469,8 +507,8 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
   delete NNZ_d;
   delete NNZ_o;
     
-  LinSolf->_PP = SparseMatrix::build().release();
-  LinSolf->_PP->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
+  _PP[gridf] = SparseMatrix::build().release();
+  _PP[gridf]->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
   
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned SolIndex = _SolSystemPdeIndex[k];
@@ -481,12 +519,12 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
     	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel,LinSolf->_PP,SolIndex,k);
+	  mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel,_PP[gridf],SolIndex,k);
 	}
       }
     }
   }
-  LinSolf->_PP->close();
+  _PP[gridf]->close();
 }
 
 
@@ -602,6 +640,246 @@ void LinearImplicitSystem::SetNumberOfSchurVariables(const unsigned short &NSchu
    
    
 }
+
+// =================================================================
+//   std::vector<NumericVector *> _b;   //// LinearEquation (each level)   _RESC
+//   std::vector<NumericVector *> _res; //// LinearEquation (each level)   _RES
+//   std::vector<NumericVector *> _x;   //// LinearEquation (each level)   _EPS
+//   std::vector<NumericVector *> _x_old; //// LinearEquation (each level)  _EPSC
+
+//if the residual norm is small enough,exit the cycle, and so also the MGSolve
+//this is also the check for the single level solver
+//what is the meaning of having multiple cycles for single-grid solver?
+//they are all like just a single linear solver loop, where convergence has already been reached,
+// and you do another check after the previous one in the linear solver loop
+//the big question is:
+///@todo why dont you do "res_fine < Eps1"
+// instead of  "res_fine < Eps1*(1.+ bNorm_fine)" ???
+//because one is for the absolute error and another one is for the relative error
+/// This function solves the discrete problem with multigrid solver
+void LinearImplicitSystem::MGSolve(double Eps1,          // tolerance for the linear solver
+                      int MaxIter,           // n iterations
+                      const uint Gamma,     // Control V W cycle
+                      const uint Nc_pre,    // n pre-smoothing cycles
+                      const uint Nc_coarse, // n coarse cycles
+                      const uint Nc_post    // n post-smoothing cycles
+                     ) {
+
+#ifdef DEFAULT_PRINT_INFO
+    std::cout << "######### BEGIN MG SOLVE ########" << std::endl;
+#endif
+    double res_fine;
+
+    _LinSolver[GetGridn()-1]->_RESC->close();
+    double bNorm_fine =     _LinSolver[GetGridn()-1]->_RESC->l2_norm();
+    _LinSolver[GetGridn()-1]->_EPSC->close();
+    double x_old_fine = _LinSolver[GetGridn()-1]->_EPSC->l2_norm();
+
+#ifdef DEFAULT_PRINT_INFO
+    std::cout << " bNorm_fine l2 "     <<  bNorm_fine                     << std::endl;
+    std::cout << " bNorm_fine linfty " << _LinSolver[GetGridn()-1]->_RESC->linfty_norm()  << std::endl;
+    std::cout << " xold_fine l2 "      <<  x_old_fine                     << std::endl;
+#endif
+
+    // FAS Multigrid (Nested) ---------
+    bool NestedMG=false;
+    if (NestedMG) {
+        _LinSolver[0]->_EPS->zero();
+        MGStep(0,1.e-20,MaxIter,Gamma,Nc_pre,Nc_coarse,Nc_post);
+
+        //smooth on the coarse level WITH PHYSICAL b !
+        //and compute the residual
+
+        for (uint Level = 1; Level < GetGridn(); Level++) {
+
+            _LinSolver[Level]->_EPS->matrix_mult(*_LinSolver[Level-1]->_EPS,*_PP[Level]);  //**** project the solution
+
+            res_fine = MGStep(Level,Eps1,MaxIter,Gamma,Nc_pre,Nc_coarse,Nc_post);
+
+        }
+    } // NestedMG
+
+    // V or W cycle
+    int cycle = 0;
+    bool exit_mg = false;
+
+    while (!exit_mg && cycle<MaxIter) {
+
+///std::cout << "@@@@@@@@@@ BEGIN MG CYCLE @@@@@@@@"<< std::endl;
+
+///std::cout << "@@@@@@@@@@ start on the finest level @@@@@@@@"<< std::endl;
+
+        res_fine = MGStep(GetGridn()-1,Eps1,MaxIter,Gamma,Nc_pre,Nc_coarse,Nc_post);
+
+///std::cout << "@@@@@@@@@@ back to the finest level @@@@@@@@"<< std::endl;
+
+///std::cout << "@@@@@@@@@@ END MG CYCLE @@@@@@@@"<< std::endl;
+
+        std::cout << "@@@@@@@@@@ CHECK THE RESIDUAL NORM OF THE FINEST LEVEL @@@@@@@@"<< std::endl;
+
+        std::cout << "res_fine: " << res_fine << std::endl;
+        std::cout << "bNorm_fine: " << bNorm_fine << std::endl;
+
+        if (res_fine < Eps1*(1. + bNorm_fine)) exit_mg = true;
+
+        cycle++;
+
+#ifdef DEFAULT_PRINT_INFO
+        std::cout << " cycle= " << cycle   << " residual= " << res_fine << " \n";
+#endif
+
+    }
+
+#ifdef DEFAULT_PRINT_INFO
+    std::cout << "######### END MG SOLVE #######"<< std::endl;
+#endif
+    return;
+}
+
+// ====================================================================
+/// This function does one multigrid step
+// solve Ax=b
+// compute the residual res=b- Ax
+// restrict the residual R*res
+//notice that the A and b for the POST-smoothing are the same
+//as for the pre-smoothing
+
+
+double LinearImplicitSystem::MGStep(int Level,            // Level
+                       double Eps1,          // Tolerance
+                       int MaxIter,          // n iterations - number of mg cycles
+                       const uint Gamma,     // Control V W cycle
+                       const uint Nc_pre,    // n pre-smoothing smoother iterations
+                       const uint Nc_coarse, // n coarse smoother iterations
+                       const uint Nc_post    // n post-smoothing smoother iterations
+                      ) {
+
+
+    std::pair<uint,double> rest;
+
+    if (Level == 0) {
+///  std::cout << "************ REACHED THE BOTTOM *****************"<< std::endl;
+
+#ifdef DEFAULT_PRINT_CONV
+        _LinSolver[Level]->_EPS->close();
+        double xNorm0=_LinSolver[Level]->_EPS->linfty_norm();
+        _LinSolver[Level]->_RESC->close();
+        double bNorm0=_LinSolver[Level]->_RESC->linfty_norm();
+        _LinSolver[Level]->_KK->close();
+        double ANorm0=_LinSolver[Level]->_KK->l1_norm();
+        std::cout << "Level " << Level << " ANorm l1 " << ANorm0 << " bNorm linfty " << bNorm0  << " xNormINITIAL linfty " << xNorm0 << std::endl;
+#endif
+
+        rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,*_LinSolver[Level]->_KK,*_LinSolver[Level]->_EPS,*_LinSolver[Level]->_RESC,DEFAULT_EPS_LSOLV_C,Nc_coarse);  //****** smooth on the coarsest level
+
+#ifdef DEFAULT_PRINT_CONV
+        std::cout << " Coarse sol : res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
+        _LinSolver[Level]->_EPS->close();
+        std::cout << " Norm of x after the coarse solution " << _LinSolver[Level]->_EPS->linfty_norm() << std::endl;
+#endif
+
+        _LinSolver[Level]->_RES->resid(*_LinSolver[Level]->_RESC,*_LinSolver[Level]->_EPS,*_LinSolver[Level]->_KK);      //************ compute the coarse residual
+
+        _LinSolver[Level]->_RES->close();
+        std::cout << "COARSE Level " << Level << " res linfty " << _LinSolver[Level]->_RES->linfty_norm() << " res l2 " << _LinSolver[Level]->_RES->l2_norm() << std::endl;
+
+    }
+
+    else {
+
+///  std::cout << "************ BEGIN ONE PRE-SMOOTHING *****************"<< std::endl;
+#ifdef DEFAULT_PRINT_TIME
+        std::clock_t start_time=std::clock();
+#endif
+#ifdef DEFAULT_PRINT_CONV
+        _LinSolver[Level]->_EPS->close();
+        double xNormpre=_LinSolver[Level]->_EPS->linfty_norm();
+        _LinSolver[Level]->_RESC->close();
+        double bNormpre=_LinSolver[Level]->_RESC->linfty_norm();
+        _LinSolver[Level]->_KK->close();
+        double ANormpre=_LinSolver[Level]->_KK->l1_norm();
+        std::cout << "Level " << Level << " ANorm l1 " << ANormpre << " bNorm linfty " << bNormpre  << " xNormINITIAL linfty " << xNormpre << std::endl;
+#endif
+
+        rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,*_LinSolver[Level]->_KK,*_LinSolver[Level]->_EPS,*_LinSolver[Level]->_RESC,DEFAULT_EPS_PREPOST, Nc_pre); //****** smooth on the finer level
+
+#ifdef DEFAULT_PRINT_CONV
+        std::cout << " Pre Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
+#endif
+#ifdef DEFAULT_PRINT_TIME
+        std::clock_t end_time=std::clock();
+        std::cout << " time ="<< double(end_time- start_time) / CLOCKS_PER_SEC << std::endl;
+#endif
+
+        _LinSolver[Level]->_RES->resid(*_LinSolver[Level]->_RESC,*_LinSolver[Level]->_EPS,*_LinSolver[Level]->_KK);//********** compute the residual
+
+///    std::cout << "************ END ONE PRE-SMOOTHING *****************"<< std::endl;
+
+///    std::cout << ">>>>>>>> BEGIN ONE DESCENT >>>>>>>>>>"<< std::endl;
+
+        _LinSolver[Level-1]->_RESC->matrix_mult(*_LinSolver[Level]->_RES,*_RR[Level-1]);//****** restrict the residual from the finer grid ( new rhs )
+        _LinSolver[Level-1]->_EPS->close();                                  //initial value of x for the presmoothing iterations
+        _LinSolver[Level-1]->_EPS->zero();                                  //initial value of x for the presmoothing iterations
+
+        for (uint g=1; g <= Gamma; g++)
+            MGStep(Level-1,Eps1,MaxIter,Gamma,Nc_pre,Nc_coarse,Nc_post); //***** call MGStep for another possible descent
+
+//at this point you have certainly reached the COARSE level
+
+///      std::cout << ">>>>>>>> BEGIN ONE ASCENT >>>>>>>>"<< std::endl;
+#ifdef DEFAULT_PRINT_CONV
+        _LinSolver[Level-1]->_RES->close();
+        std::cout << "BEFORE PROL Level " << Level << " res linfty " << _LinSolver[Level-1]->_RES->linfty_norm() << " res l2 " << _LinSolver[Level-1]->_RES->l2_norm() << std::endl;
+#endif
+
+        _LinSolver[Level]->_RES->matrix_mult(*_LinSolver[Level-1]->_EPS,*_PP[Level]);//******** project the dx from the coarser grid
+#ifdef DEFAULT_PRINT_CONV
+        _LinSolver[Level]->_RES->close();
+        //here, the _res contains the prolongation of dx, so the new x is x_old + P dx
+        std::cout << "AFTER PROL Level " << Level << " res linfty " << _LinSolver[Level]->_RES->linfty_norm() << " res l2 " << _LinSolver[Level]->_RES->l2_norm() << std::endl;
+#endif
+        _LinSolver[Level]->_EPS->add(*_LinSolver[Level]->_RES);// adding the coarser residual to x
+        //initial value of x for the post-smoothing iterations
+        //_b is the same as before
+///   std::cout << "************ BEGIN ONE POST-SMOOTHING *****************"<< std::endl;
+        // postsmooting (Nc_post)
+#ifdef DEFAULT_PRINT_TIME
+        start_time=std::clock();
+#endif
+#ifdef DEFAULT_PRINT_CONV
+        _LinSolver[Level]->_EPS->close();
+        double xNormpost=_LinSolver[Level]->_EPS->linfty_norm();
+        _LinSolver[Level]->_RESC->close();
+        double bNormpost=_LinSolver[Level]->_RESC->linfty_norm();
+        _LinSolver[Level]->_KK->close();
+        double ANormpost=_LinSolver[Level]->_KK->l1_norm();
+        std::cout << "Level " << Level << " ANorm l1 " << ANormpost << " bNorm linfty " << bNormpost << " xNormINITIAL linfty " << xNormpost << std::endl;
+#endif
+
+        rest = _LinSolver[Level]->solve(*_LinSolver[Level]->_KK,*_LinSolver[Level]->_KK,*_LinSolver[Level]->_EPS,*_LinSolver[Level]->_RESC,DEFAULT_EPS_PREPOST,Nc_post);  //***** smooth on the coarser level
+
+#ifdef DEFAULT_PRINT_CONV 
+        std::cout<<" Post Lev: " << Level << ", res-norm: " << rest.second << " n-its: " << rest.first << std::endl;
+#endif
+#ifdef DEFAULT_PRINT_TIME
+        end_time=std::clock();
+        std::cout<< " time ="<< double(end_time- start_time) / CLOCKS_PER_SEC << std::endl;
+#endif
+
+        _LinSolver[Level]->_RES->resid(*_LinSolver[Level]->_RESC,*_LinSolver[Level]->_EPS,*_LinSolver[Level]->_KK);   //*******  compute the residual
+
+///    std::cout << "************ END ONE POST-SMOOTHING *****************"<< std::endl;
+
+    }
+
+    _LinSolver[Level]->_RES->close();
+
+    return  rest.second;  //it returns the residual norm of whatever level you are in
+    // if this is the l2_norm then also the nonlinear solver is computed in the l2 norm
+    //WHAT NORM is THIS?!? l2, but PRECONDITIONED!!!
+
+}
+
 
 } //end namespace femus
 

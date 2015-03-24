@@ -29,6 +29,7 @@
 
 // application
 #include "TempQuantities.hpp"
+#include "../../../src/equations/CurrentElem.hpp"
 
 
 // The question is: WHERE is the ORDER of the VARIABLES established?
@@ -107,8 +108,8 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 //  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
     std::vector<double>  Qflux_g(space_dim);
 
-        my_system._A[Level]->zero();
-        my_system._b[Level]->zero();
+        my_system._LinSolver[Level]->_KK->zero();
+        my_system._LinSolver[Level]->_RESC->zero();
 
 // ==========================================  
 // ==========================================  
@@ -122,6 +123,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
   
   CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+  currelem.SetMesh(mymsh);
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 
@@ -392,8 +394,8 @@ for (uint fe = 0; fe < QL; fe++)     {
       }   //end i (row)
     } // end of the quadrature point qp-loop
 
-       my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-       my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+       my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+       my_system._LinSolver[Level]->_RESC->add_vector(currelem.Rhs(),currelem.GetDofIndices());
   } // end of element loop
   // *****************************************************************
 
@@ -411,6 +413,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 
   
   CurrentElem       currelem(Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+  currelem.SetMesh(mymsh);
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 
@@ -517,8 +520,8 @@ int el_Neum_flag=0;
     }
         // end BDRYelement gaussian integration loop
         
-        my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-        my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+        my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+        my_system._LinSolver[Level]->_RESC->add_vector(currelem.Rhs(),currelem.GetDofIndices());
    
   }
       // end of BDRYelement loop
@@ -526,13 +529,13 @@ int el_Neum_flag=0;
     
   }//END BOUNDARY
 
-        my_system._A[Level]->close();
-        my_system._b[Level]->close();
+        my_system._LinSolver[Level]->_KK->close();
+        my_system._LinSolver[Level]->_RESC->close();
 
  
 #ifdef DEFAULT_PRINT_INFO
   std::cout << " Matrix and RHS assembled for equation " << my_system.name()
-            << " Level "<< Level << " dofs " << my_system._A[Level]->n() << std::endl;
+            << " Level "<< Level << " dofs " << my_system._LinSolver[Level]->_KK->n() << std::endl;
 #endif
 
   return;

@@ -216,13 +216,13 @@ void Files::CheckDir(const std::string& dir_name_in, const std::string& my_name_
   std::ifstream in;  in.open(dirname.str().c_str()); 
 
   if (!in.is_open()) {
-    std::cout << " No " << dirname.str()  << " directory: I'll create it. "  << std::endl;
+    std::cout << std::endl << " No " << dirname.str()  << " directory: I'll create it. "  << std::endl;
 
    int status = mkdir(dirname.str().c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
       if (status != 0) {std::cout << "MKDIR error: " << status << std::endl; abort();}
 
   }
-  else {std::cout<< "That's alright, " << my_name_in << " is already there." << std::endl;}
+  else {std::cout << std::endl <<" That's alright, " << my_name_in << " is already there." << std::endl;}
 
 in.close();
 
