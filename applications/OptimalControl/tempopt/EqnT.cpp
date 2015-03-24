@@ -18,6 +18,7 @@
 #include "FETypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "VBTypeEnum.hpp"
+#include "GeomElTypeEnum.hpp"
 #include "QTYnumEnum.hpp"
 #include "Domain.hpp"
 #include "TimeLoop.hpp"
@@ -28,6 +29,7 @@
 
 // application
 #include "TempQuantities.hpp"
+#include "../../../src/equations/CurrentElem.hpp"
 
 
 // The question is: WHERE is the ORDER of the VARIABLES established?
@@ -76,24 +78,20 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 
   //if we are just a function not inside a class, we have to retrieve ourselves...
   SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_T");
-
+// ==========================================  
+  Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
+  elem		*myel		=  mymsh->el;
+  const unsigned myproc  = mymsh->processor_id();
+	
   
   const double time = 0.; // ml_prob._timeloop._curr_time;
-
-//========== PROCESSOR INDEX
-  const uint myproc = ml_prob.GetMeshTwo()._iproc;
 
 //==========FLAG FOR STATIONARITY OR NOT
   const double    dt = 1.; //ml_prob._timeloop._timemap.get("dt");
   const uint Nonstat = ml_prob.GetInputParser().get("NonStatTEMP");
   
-//========= BCHandling =========
-  const double penalty_val = ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
-
   //======== ELEMENT MAPPING =======
-  const uint space_dim =       ml_prob.GetMeshTwo().get_dim();
-  const uint  meshql   = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");
-  const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
+  const uint space_dim =       ml_prob._ml_msh->GetDimension();
 
   //====== reference values ========================
   const double IRe = 1./ml_prob.GetInputParser().get("Re");
@@ -110,9 +108,9 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 //  QfluxDOTn>0: energy flows outside (cooling)  QfluxDOTn<0: energy flows inside (heating)
     std::vector<double>  Qflux_g(space_dim);
 
-        my_system._A[Level]->zero();
-        my_system._b[Level]->zero();
-    
+        my_system._LinSolver[Level]->_KK->zero();
+        my_system._LinSolver[Level]->_RESC->zero();
+
 // ==========================================  
 // ==========================================  
  {//BEGIN VOLUME
@@ -125,6 +123,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
   
   CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+  currelem.SetMesh(mymsh);
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 
@@ -145,27 +144,20 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     TAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempAdj");//_UnknownQuantitiesVector[2]; 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
-    
-#if FOURTH_ROW==1
-    CurrentQuantity Press2(currgp);
-    Press2._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Pressure_2"); 
-    Press2.VectWithQtyFillBasic();
-    Press2.Allocate();
-#endif
-    
+   
 //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
   CurrentQuantity xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   CurrentQuantity xyz_refbox(currgp);  //no quantity
     xyz_refbox._dim      = space_dim;
-    xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-    xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+    xyz_refbox._FEord    = MESH_ORDER;
+    xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
     xyz_refbox.Allocate();
   
   //==================
@@ -191,7 +183,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
+    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
     
 //MY EQUATION
 //the elements are, for every level:
@@ -217,7 +209,7 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 
   xyz_refbox.SetElemAverage();
   
-int domain_flag = ElFlagControl(xyz_refbox._el_average,&ml_prob.GetMeshTwo());
+int domain_flag = ElFlagControl(xyz_refbox._el_average,ml_prob._ml_msh);
 //====================    
     
 //===== FILL the DOFS of the EXTERNAL QUANTITIES: you must assure that for every Vect the quantity is set correctly
@@ -302,12 +294,6 @@ for (uint fe = 0; fe < QL; fe++)     {
         
         currelem.Mat()(ip2,ip2) +=  (1-currelem.GetBCDofFlag()[ip2])*detb;
 
-#if FOURTH_ROW==1
-	 int ip3 = i + 3 * Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
-	 
-	 if (i < currelem.GetElemType(Press2._FEord)->GetNDofs()) { currelem.Rhs()(ip3) +=  currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[Press2._FEord][i]) + (1-currelem.GetBCDofFlag()[ip3])*detb*1300.;
-	              currelem.Mat()(ip3,ip3)  += ( 1-currelem.GetBCDofFlag()[ip3] )*detb;  }
-#endif
 	 // Matrix Assemblying ---------------------------
         for (uint j=0; j<Tempold._ndof; j++) {
           double phij_g = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
@@ -404,18 +390,12 @@ for (uint fe = 0; fe < QL; fe++)     {
                + alphaT*domain_flag*(phij_g)*phii_g  //T_0 delta T'     ///ADDED///////
             );
 
-#if FOURTH_ROW==1
-	 int ip3 = i + 3*Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
-// 	    int jp3 = j + 3*Tempold._ndof;
-	   if (i < currelem.GetElemType(Press2._FEord)->GetNDofs() ) currelem.Mat()(ip3,ip3) += currelem.GetBCDofFlag()[ip3]*dtxJxW_g*(currgp._phi_ndsQLVB_g[ Press2._FEord ][/*j*/i]*currgp._phi_ndsQLVB_g[ Press2._FEord ][i]);   
-#endif
-	    
         }  //end j (col)
       }   //end i (row)
     } // end of the quadrature point qp-loop
 
-       my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-       my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+       my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+       my_system._LinSolver[Level]->_RESC->add_vector(currelem.Rhs(),currelem.GetDofIndices());
   } // end of element loop
   // *****************************************************************
 
@@ -433,6 +413,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 
   
   CurrentElem       currelem(Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
+  currelem.SetMesh(mymsh);
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 
@@ -458,15 +439,15 @@ for (uint fe = 0; fe < QL; fe++)     {
     //========= //DOMAIN MAPPING
   CurrentQuantity xyz(currgp);  //no quantity
     xyz._dim      = space_dim;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   CurrentQuantity xyz_refbox(currgp);  //no quantity
     xyz_refbox._dim      = space_dim;
-    xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-    xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+    xyz_refbox._FEord    = MESH_ORDER;
+    xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
     xyz_refbox.Allocate();
     
 //===============Tdes=====================
@@ -485,7 +466,7 @@ for (uint fe = 0; fe < QL; fe++)     {
       currelem.SetMidpoint(); 
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-      currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
+      currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
      
       currelem.SetElDofsBc();
       
@@ -539,8 +520,8 @@ int el_Neum_flag=0;
     }
         // end BDRYelement gaussian integration loop
         
-        my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-        my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+        my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+        my_system._LinSolver[Level]->_RESC->add_vector(currelem.Rhs(),currelem.GetDofIndices());
    
   }
       // end of BDRYelement loop
@@ -548,13 +529,13 @@ int el_Neum_flag=0;
     
   }//END BOUNDARY
 
-        my_system._A[Level]->close();
-        my_system._b[Level]->close();
+        my_system._LinSolver[Level]->_KK->close();
+        my_system._LinSolver[Level]->_RESC->close();
 
  
 #ifdef DEFAULT_PRINT_INFO
   std::cout << " Matrix and RHS assembled for equation " << my_system.name()
-            << " Level "<< Level << " dofs " << my_system._A[Level]->n() << std::endl;
+            << " Level "<< Level << " dofs " << my_system._LinSolver[Level]->_KK->n() << std::endl;
 #endif
 
   return;

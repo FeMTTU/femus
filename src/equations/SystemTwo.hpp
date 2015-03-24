@@ -55,56 +55,19 @@ public:
 //=======================================================================
   SystemTwo(MultiLevelProblem & equations_map, const std::string & eq_name_in, const unsigned int number, const MgSmoother & smoother_type);   //System//
   
-  virtual ~SystemTwo();                    //System//
-
-  
   DofMap  _dofmap;  //// LinearEquation (each level)
   
   BoundaryConditions _bcond;
   
-//=======================================================================
-//======== MG Ops ============ (procs,levels) ====
-//=======================================================================
-  std::vector<SparseMatrix *> _A;  // LinearEquation (each level)
-  std::vector<SparseMatrix *> _Rst; // LinearEquation (each level)
-  std::vector<SparseMatrix *> _Prl; // LinearEquation (each level)
-  
-    void ReadMGOps(const std::string output_path); // LinearEquation  (each level)
-    void ReadMatrix(const std::string& name); // LinearEquation  (each level)
-    void ReadProl(const std::string& name);   // LinearEquation  (each level)
-    void ReadRest(const std::string& name);   // LinearEquation  (each level)
-    void ComputeMatrix();                     // LinearEquation  (each level)
-    void ComputeProl();                       // LinearEquation  (each level)
-    void ComputeRest();                       // LinearEquation  (each level)
-  
-//=======================================================================
-//======== Vectors =============== (procs,levels) ==
-//=======================================================================
-
-  std::vector<NumericVector *> _b;   //// LinearEquation (each level)
-  std::vector<NumericVector *> _x;   //// LinearEquation (each level)
-  std::vector<NumericVector *> _res; //// LinearEquation (each level)
-
-  std::vector<NumericVector *> _x_old; //// LinearEquation (each level)
-  
-  std::vector<NumericVector *> _x_oold;    //this is used by MGTimeStep and also by the OptLoop
-  std::vector<NumericVector *> _x_tmp;     //this is used by MGTimeStep and also by the OptLoop
-  
-          void  initVectors();  ///initialize vectors       //System//
-
-//===================
-  void MGSolve(double Eps,int MaxIter, const uint Gamma=DEFAULT_MG_GAMMA, const uint Nc_pre=DEFAULT_NC_PRE,const uint Nc_coarse=DEFAULT_NC_COARSE,const uint Nc_post=DEFAULT_NC_POST);  //LinearImplicitSystem//
-  double MGStep(int Level,double Eps1,int MaxIter, const uint Gamma, const uint Nc_pre,const uint Nc_coarse,const uint Nc_post);                                                          //LinearImplicitSystem//
+  void  initVectors();  ///initialize vectors       //System//
 
 //=======================================================================
 //======= Quantities =========
 //=======================================================================
-      inline const std::vector<Quantity*> & GetUnknownQuantitiesVector() const { //MultilevelSolution//
-	return _UnknownQuantitiesVector;
-      }
+      inline const std::vector<Quantity*> & GetUnknownQuantitiesVector() const { 	return _UnknownQuantitiesVector;   }//MultilevelSolution//
       
      
-      void AddUnknownToSystemPDE( Quantity* qty_in) { //System//
+      void AddUnknownToSystemPDE( Quantity* qty_in) {                  //System//
 	  unsigned n = _UnknownQuantitiesVector.size();
 
 	_UnknownQuantitiesVector.resize(n+1);
@@ -122,7 +85,7 @@ public:
 	  std::vector<double>      _refvalue;        //MultilevelSolution//
           void initRefValues();                      //MultilevelSolution//
 
-	  void init_sys();     //System//  //MultilevelSolution//
+	  void init_unknown_vars();     //System//  //MultilevelSolution//
 
 // ============ INITIAL CONDITIONS of the equation ====== (procs,levels) ==    
           void    Initialize();           //MultilevelSolution  //this uses x and fills in x_old at all levels

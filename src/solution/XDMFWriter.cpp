@@ -54,22 +54,20 @@ namespace femus {
 //      _el_pid_name = "PID";
 //     _nd_map_FineToLev = "MAP";
   
-XDMFWriter::XDMFWriter(MultiLevelSolution& ml_probl): Writer(ml_probl)
-{
-  
-}
+XDMFWriter::XDMFWriter(MultiLevelSolution * ml_sol): Writer(ml_sol) {}
 
-XDMFWriter::~XDMFWriter()
-{
-  
-}
+XDMFWriter::XDMFWriter(MultiLevelMesh * ml_mesh): Writer(ml_mesh) {}
 
-void XDMFWriter::write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step) 
-{ 
+XDMFWriter::~XDMFWriter() {}
+
+void XDMFWriter::write(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) const { 
 #ifdef HAVE_HDF5
   
-  bool test_all=!(vars[0].compare("All"));
-    
+  bool print_all = 0;
+  for (unsigned ivar=0; ivar < vars.size(); ivar++){
+    print_all += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
+  }
+   
   unsigned index=0;
   unsigned index_nd=0;
   if(!strcmp(order,"linear")) {    //linear
@@ -85,59 +83,69 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
     index_nd=2;
   }
 
-  //I assume that the mesh is not mixed
+  /// @todo I assume that the mesh is not mixed
   std::string type_elem;
-  unsigned elemtype = _ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementType(0);
+  unsigned elemtype = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementType(ZERO_ELEM);
   type_elem = XDMFWriter::type_el[index][elemtype];
   
   if (type_elem.compare("Not_implemented") == 0) 
   {
     std::cerr << "XDMF-Writer error: element type not supported!" << std::endl;
-    exit(1);
+    abort();
   }
   
   unsigned nvt=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+    unsigned nvt_ig=_ml_mesh->GetLevel(ig)->GetDofNumber(index_nd);
     nvt+=nvt_ig;
   } 
   
   // Printing connectivity
   unsigned nel=0;
-  for(unsigned ig=0;ig<_gridn-1u;ig++) {
-    nel+=( _ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements() - _ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementNumber());
+  for(unsigned ig=0; ig<_gridn-1u; ig++) {
+    nel+=( _ml_mesh->GetLevel(ig)->GetNumberOfElements() - _ml_mesh->GetLevel(ig)->el->GetRefinedElementNumber());
   }
-  nel+=_ml_sol._ml_msh->GetLevel(_gridn-1u)->GetNumberOfElements();
+  nel+=_ml_mesh->GetLevel(_gridn-1u)->GetNumberOfElements();
   
   unsigned icount;
-  unsigned el_dof_number  = _ml_sol._ml_msh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index);
-  int *var_int            = new int [nel*el_dof_number];
+  unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index_nd);
+  int * var_conn          = new int [nel*el_dof_number];
+  std::vector< int > var_proc(nel);
   float *var_el_f         = new float [nel];
   float *var_nd_f         = new float [nvt];
 
  
   //--------------------------------------------------------------------------------------------------
-  // Print The Xdmf wrapper
-  std::ostringstream filename;
-  filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".xmf"; 
-  std::ofstream fout;
+  std::string filename_prefix;
+  if( _ml_sol != NULL ) filename_prefix = "sol";
+  else filename_prefix = "mesh";
   
-  if(_iproc!=0) {
+  // Print The Xdmf wrapper
+  std::ostringstream xdmf_filename;
+  xdmf_filename << output_path << "/" << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".xmf"; 
+
+  std::ofstream fout;
+    
+ if(_iproc != 0){
     fout.rdbuf();   //redirect to dev_null
   }
   else {
-    fout.open(filename.str().c_str());
+    fout.open(xdmf_filename.str().c_str());
     if (fout.is_open()) {
-      std::cout << std::endl << " The output is printed to file " << filename.str() << " in XDMF-HDF5 format" << std::endl; 
+      std::cout << std::endl << " The output is printed to file " << xdmf_filename.str() << " in XDMF-HDF5 format" << std::endl; 
     }
     else {
-      std::cout << std::endl << " The output file "<< filename.str() <<" cannot be opened.\n";
+      std::cout << std::endl << " The output file "<< xdmf_filename.str() <<" cannot be opened.\n";
       abort();
     }
   }
 
   // Print The HDF5 file
-  filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".h5"; 
+  std::ostringstream hdf5_filename;
+  std::ostringstream hdf5_filename2;
+  hdf5_filename2 << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".h5";
+  
+  hdf5_filename << output_path << "/" <<  hdf5_filename2.str();
   // head ************************************************
   fout<<"<?xml version=\"1.0\" ?>" << std::endl;
   fout<<"<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd []\">"<< std::endl;
@@ -145,52 +153,62 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
   fout<<"<Domain>"<<std::endl;
   fout<<"<Grid Name=\"Mesh\">"<<std::endl;
   fout<<"<Time Value =\""<< time_step<< "\" />"<<std::endl;
-  fout<<"<Topology TopologyType=\""<< type_elem <<"\" NumberOfElements=\""<< nel <<"\">"<<std::endl;
+  fout<<"<Topology Type=\""<< type_elem <<"\" Dimensions=\""<< nel <<"\">"<<std::endl;
   //Connectivity
-  fout<<"<DataStructure DataType=\"Int\" Dimensions=\""<< nel*el_dof_number <<"\"" << "  Format=\"HDF\">" << std::endl;
-  fout << filename << ":CONNECTIVITY" << std::endl;
+  fout<<"<DataStructure DataType=\"Int\" Dimensions=\""<< nel << " " << el_dof_number <<"\"" << "  Format=\"HDF\">" << std::endl;
+  fout << hdf5_filename2.str() << ":/CONNECTIVITY" << std::endl;
   fout <<"</DataStructure>" << std::endl;
   fout << "</Topology>" << std::endl;
   fout << "<Geometry Type=\"X_Y_Z\">" << std::endl;
   //Node_X
-  fout<<"<DataStructure DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
-  fout << filename << ":NODES_X1" << std::endl;
+  fout<<"<DataStructure DataType=\"Float\" Precision=\"8\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
+  fout << hdf5_filename2.str() << ":/NODES_X1" << std::endl;
   fout <<"</DataStructure>" << std::endl;
   //Node_Y
-  fout<<"<DataStructure DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
-  fout << filename << ":NODES_X2" << std::endl;
+  fout<<"<DataStructure DataType=\"Float\" Precision=\"8\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
+  fout << hdf5_filename2.str() << ":/NODES_X2" << std::endl;
   fout <<"</DataStructure>" << std::endl;
   //Node_Z
-  fout<<"<DataStructure DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
-  fout << filename << ":NODES_X3" << std::endl;
+  fout<<"<DataStructure DataType=\"Float\" Precision=\"8\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
+  fout << hdf5_filename2.str() << ":/NODES_X3" << std::endl;
   fout <<"</DataStructure>" << std::endl;
   fout <<"</Geometry>" << std::endl;
   //Regions
   fout << "<Attribute Name=\""<< "Regions"<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
-  fout << "<DataItem DataType=\"Int\" Dimensions=\""<< nel << "\"" << "  Format=\"HDF\">" << std::endl;
-  fout << filename << ":REGIONS" << std::endl;
+  fout << "<DataItem DataType=\"Int\" Dimensions=\""<< nel << "  1\""  << "  Format=\"HDF\">" << std::endl;
+  fout << hdf5_filename2.str() << ":/REGIONS" << std::endl;
   fout << "</DataItem>" << std::endl;
   fout << "</Attribute>" << std::endl;
+  //Metis partitions
+  fout << "<Attribute Name=\""<< "Domain_partitions"<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
+  fout << "<DataItem DataType=\"Int\" Dimensions=\""<< nel << "  1\""  << "  Format=\"HDF\">" << std::endl;
+  fout << hdf5_filename2.str() << ":/DOMAIN_PARTITIONS" << std::endl;
+  fout << "</DataItem>" << std::endl;
+  fout << "</Attribute>" << std::endl;
+  
+  if (_ml_sol != NULL) {
   // Solution Variables
   for (unsigned i=0; i<vars.size(); i++) {
-    unsigned indx=_ml_sol.GetIndex(vars[i].c_str());  
+    unsigned indx=_ml_sol->GetIndex(vars[i].c_str());  
     //Printing biquadratic solution on the nodes
-    if(_ml_sol.GetSolutionType(indx)<3) {  
-      fout << "<Attribute Name=\""<< _ml_sol.GetSolutionName(indx)<<"\" AttributeType=\"Scalar\" Center=\"Node\">" << std::endl;
-      fout << "<DataItem DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
-      fout << filename << ":" << _ml_sol.GetSolutionName(indx) << std::endl;
+    if(_ml_sol->GetSolutionType(indx)<3) {  
+      fout << "<Attribute Name=\""<< _ml_sol->GetSolutionName(indx)<<"\" AttributeType=\"Scalar\" Center=\"Node\">" << std::endl;
+      fout << "<DataItem DataType=\"Float\" Precision=\"8\" Dimensions=\""<< nvt << "  1\"" << "  Format=\"HDF\">" << std::endl;
+      fout << hdf5_filename2.str() << ":/" << _ml_sol->GetSolutionName(indx) << std::endl;
       fout << "</DataItem>" << std::endl;
       fout << "</Attribute>" << std::endl;
     }
-    else if (_ml_sol.GetSolutionType(indx)>=3) {  //Printing picewise constant solution on the element
-      fout << "<Attribute Name=\""<< _ml_sol.GetSolutionName(indx)<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
-      fout << "<DataItem DataType=\"Float\" Precision=\"4\" Dimensions=\""<< nel << "\"  Format=\"HDF\">" << std::endl;
-      fout << filename << ":" << _ml_sol.GetSolutionName(indx) << std::endl;
+    else if (_ml_sol->GetSolutionType(indx)>=3) {  //Printing picewise constant solution on the element
+      fout << "<Attribute Name=\""<< _ml_sol->GetSolutionName(indx)<<"\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
+      fout << "<DataItem DataType=\"Float\" Precision=\"8\" Dimensions=\""<< nel << "  1\"" << "  Format=\"HDF\">" << std::endl;
+      fout << hdf5_filename2.str() << ":/" << _ml_sol->GetSolutionName(indx) << std::endl;
       fout << "</DataItem>" << std::endl;
       fout << "</Attribute>" << std::endl;
     }
   }
-
+  
+  } //end ml_sol
+  
   fout <<"</Grid>" << std::endl;
   fout <<"</Domain>" << std::endl;
   fout <<"</Xdmf>" << std::endl;
@@ -199,8 +217,7 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
   
   //----------------------------------------------------------------------------------------------------------
   hid_t file_id;
-  filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << order << ".h5"; 
-  file_id = H5Fcreate(filename.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
+  file_id = H5Fcreate(hdf5_filename.str().c_str(),H5F_ACC_TRUNC,H5P_DEFAULT,H5P_DEFAULT);
   hsize_t dimsf[2];
   herr_t status;
   hid_t dataspace;
@@ -209,37 +226,45 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
   //-----------------------------------------------------------------------------------------------------------
   // Printing nodes coordinates 
   
-  PetscScalar *MYSOL[1]; //TODO
-
   for (int i=0; i<3; i++) {
-    unsigned offset_nvt=0;
     for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-      NumericVector* mysol;
-      mysol = NumericVector::build().release();
-      //mysol->init(_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
-      mysol->init(_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],_ml_sol._ml_msh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
-      mysol->matrix_mult(*_ml_sol._ml_msh->GetLevel(ig)->_coordinate->_Sol[i],*Writer::_ProlQitoQj[index_nd][2][ig]);
-      unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
-      for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
-      if (_moving_mesh) {
-	unsigned varind_DXDYDZ=_ml_sol.GetIndex(_moving_vars[i].c_str());
-	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[varind_DXDYDZ],*Writer::_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(varind_DXDYDZ)][ig]);
-	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] += (*mysol)(ii);
+      unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];//->GetDofNumber(index_nd);
+      NumericVector* mysol = NumericVector::build().release();
+     
+      mysol->init(nvt_ig,_ml_mesh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
+      mysol->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
+			 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,2) );
+           
+      vector<double> mysol_ser;
+      mysol->localize_to_one(mysol_ser, 0);
+      
+      if(_iproc == 0){
+	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii] = mysol_ser[ii];
       }
-      offset_nvt+=nvt_ig;
+	    
+      if (_ml_sol != NULL && _moving_mesh && _ml_mesh->GetLevel(0)->GetDimension() > i) {
+	unsigned varind_DXDYDZ=_ml_sol->GetIndex(_moving_vars[i].c_str());
+	mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[varind_DXDYDZ],
+			   *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,_ml_sol->GetSolutionType(varind_DXDYDZ)));
+	mysol->localize_to_one(mysol_ser, 0);
+	if(_iproc == 0){
+	  for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii] += mysol_ser[ii];
+	}
+      }
       delete mysol;
     }
     
-    dimsf[0] = nvt ;  dimsf[1] = 1;
-    std::ostringstream Name; Name << "/NODES_X" << i+1;
-    dataspace = H5Screate_simple(2,dimsf, NULL);
-    dataset   = H5Dcreate(file_id,Name.str().c_str(),H5T_NATIVE_FLOAT,
-			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    status = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_nd_f[0]);
-    H5Sclose(dataspace);
-    H5Dclose(dataset);
-    
-  }
+    if(_iproc == 0){
+      dimsf[0] = nvt ;  dimsf[1] = 1;
+      std::ostringstream Name; Name << "/NODES_X" << i+1;
+      dataspace = H5Screate_simple(2,dimsf, NULL);
+      dataset   = H5Dcreate(file_id,Name.str().c_str(),H5T_NATIVE_FLOAT,
+			    dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      status = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_nd_f);
+      H5Sclose(dataspace);
+      H5Dclose(dataset);
+    }
+  } //end 3d loop
 
   //-------------------------------------------------------------------------------------------------------------
 
@@ -247,113 +272,153 @@ void XDMFWriter::write_system_solutions(const std::string output_path, const cha
   //connectivity
   icount = 0;
   unsigned offset_conn=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=0; iel<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); iel++) {
-      if (_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0 || ig==_gridn-1u) {
-        for (unsigned j=0; j<_ml_sol._ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
+  for ( unsigned ig=_gridr-1u; ig<_gridn; ig++ ) {
+    for ( unsigned iel = 0; iel < _ml_mesh->GetLevel(ig)->GetNumberOfElements(); iel++ ) {
+      if ( ig == _gridn-1u || _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel) == 0) {
+	int ndofs = _ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index_nd);
+        for (unsigned j = 0; j < ndofs; j++) {
 	  unsigned vtk_loc_conn = map_pr[j];
-	  unsigned jnode=_ml_sol._ml_msh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
-	  unsigned jnode_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
-	  var_int[icount] = offset_conn + jnode_Metis;
+	  unsigned jnode = _ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
+	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
+	  var_conn[icount] = offset_conn + jnode_Metis;
 	  icount++;
 	}
       }
     }
-    offset_conn += _ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
+    offset_conn += _ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];//GetLevel(ig)->GetDofNumber(index_nd);
   }
-  
-  dimsf[0] = nel*el_dof_number ;  dimsf[1] = 1;
-  dataspace = H5Screate_simple(2,dimsf, NULL);
-  dataset   = H5Dcreate(file_id,"/CONNECTIVITY",H5T_NATIVE_INT,
-			dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_int[0]);
-  H5Sclose(dataspace);
-  H5Dclose(dataset);
+   if(_iproc == 0){
+    dimsf[0] = nel*el_dof_number ;  dimsf[1] = 1;
+    dataspace = H5Screate_simple(2,dimsf, NULL);
+    dataset   = H5Dcreate(file_id,"/CONNECTIVITY",H5T_NATIVE_INT,
+			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_conn[0]);
+    H5Sclose(dataspace);
+    H5Dclose(dataset);
+   }
   //------------------------------------------------------------------------------------------------------
   
   
   //-------------------------------------------------------------------------------------------------------
   // print regions
+  
   icount=0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-      if (ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,3);
-	var_int[icount] = _ml_sol._ml_msh->GetLevel(ig)->el->GetElementGroup(iel_Metis);
+    
+    for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
+      if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,3);
+	var_conn[icount] = _ml_mesh->GetLevel(ig)->el->GetElementGroup(ii);
 	icount++;
       }
     }
   } 
-   
-  dimsf[0] = nel;  dimsf[1] = 1;
-  dataspace = H5Screate_simple(2,dimsf, NULL);
-  dataset   = H5Dcreate(file_id,"/REGIONS",H5T_NATIVE_INT,
-			dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_int[0]);
-  H5Sclose(dataspace);
-  H5Dclose(dataset);
+  if(_iproc == 0){ 
+    dimsf[0] = nel;  dimsf[1] = 1;
+    dataspace = H5Screate_simple(2,dimsf, NULL);
+    dataset   = H5Dcreate(file_id,"/REGIONS",H5T_NATIVE_INT,
+			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_conn);
+    H5Sclose(dataspace);
+    H5Dclose(dataset);
+  }
+  
+  // end print regions
+  //-------------------------------------------------------------------------------------------------------
   
   //-------------------------------------------------------------------------------------------------------
+  // print partitioning
+  icount=0;
+  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+    
+    for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
+      if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,3);
+	    var_proc[icount] = _ml_mesh->GetLevel(ig)->epart[ii];
+	icount++;
+      }
+    }
+  } 
+  if(_iproc == 0){ 
+    dimsf[0] = nel;  dimsf[1] = 1;
+    dataspace = H5Screate_simple(2,dimsf, NULL);
+    dataset   = H5Dcreate(file_id,"/DOMAIN_PARTITIONS",H5T_NATIVE_INT,
+			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_proc[0]);
+    H5Sclose(dataspace);
+    H5Dclose(dataset);  
+  }
+  // end print partitioning 
+  //-------------------------------------------------------------------------------------------------------
+  
+  if (_ml_sol != NULL)  {
+  //-------------------------------------------------------------------------------------------------------
   // printing element variables
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_sol.GetSolutionSize(); i++) {
-    unsigned indx=(test_all==0)?_ml_sol.GetIndex(vars[i].c_str()):i;
-    if (_ml_sol.GetSolutionType(indx)>=3) {
+  for (unsigned i=0; i<(1-print_all)*vars.size()+print_all*_ml_sol->GetSolutionSize(); i++) {
+    unsigned indx=(print_all==0)?_ml_sol->GetIndex(vars[i].c_str()):i;
+    if (_ml_sol->GetSolutionType(indx)>=3) {
       icount=0;
       for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	for (unsigned ii=0; ii<_ml_sol._ml_msh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-	  if (ig==_gridn-1u || 0==_ml_sol._ml_msh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	    unsigned iel_Metis = _ml_sol._ml_msh->GetLevel(ig)->GetMetisDof(ii,_ml_sol.GetSolutionType(indx));
-	    var_el_f[icount]=(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx])(iel_Metis);
+	unsigned nel_ig = _ml_mesh->GetLevel(ig)->GetNumberOfElements();
+	unsigned sol_size = _ml_sol->GetSolutionLevel(ig)->_Sol[indx]->size();
+	vector < double > mysol_ser;
+	for (unsigned ii=0; ii<nel_ig; ii++) {
+	  if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	    _ml_sol->GetSolutionLevel(ig)->_Sol[indx]->localize_to_one(mysol_ser, 0);
+	    unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,_ml_sol->GetSolutionType(indx));
+	    var_el_f[icount]=mysol_ser[iel_Metis];
 	    icount++;
 	  }
 	}
       } 
-     
-      dimsf[0] = nel;  dimsf[1] = 1;
-      dataspace = H5Screate_simple(2,dimsf, NULL);
-      dataset   = H5Dcreate(file_id,_ml_sol.GetSolutionName(indx),H5T_NATIVE_FLOAT,
-			    dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_el_f[0]);
-      H5Sclose(dataspace);
-      H5Dclose(dataset);
-     
+      if(_iproc == 0){
+	dimsf[0] = nel;  dimsf[1] = 1;
+	dataspace = H5Screate_simple(2,dimsf, NULL);
+	dataset   = H5Dcreate(file_id,_ml_sol->GetSolutionName(indx),H5T_NATIVE_FLOAT,
+			      dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_el_f[0]);
+	H5Sclose(dataspace);
+	H5Dclose(dataset);
+      }
     }
   }
   
   //-------------------------------------------------------------------------------------------------------
   // printing nodes variables
-  for (unsigned i=0; i<(1-test_all)*vars.size()+test_all*_ml_sol.GetSolutionSize(); i++) {
-    unsigned indx=(test_all==0)?_ml_sol.GetIndex(vars[i].c_str()):i;
-    if (_ml_sol.GetSolutionType(indx) < 3) {
-      unsigned offset_nvt=0;
+  for (unsigned i=0; i<(1-print_all)*vars.size()+print_all*_ml_sol->GetSolutionSize(); i++) {
+    unsigned indx=(print_all==0)?_ml_sol->GetIndex(vars[i].c_str()):i;
+    if (_ml_sol->GetSolutionType(indx) < 3) {
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-        NumericVector* mysol;
-	mysol = NumericVector::build().release();
-        //mysol->init(_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd),true,AUTOMATIC);
-	mysol->init(_ml_sol._ml_msh->GetLevel(ig)->MetisOffset[index_nd][_nprocs],_ml_sol._ml_msh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
-	mysol->matrix_mult(*_ml_sol.GetSolutionLevel(ig)->_Sol[indx],*_ProlQitoQj[index_nd][_ml_sol.GetSolutionType(indx)][ig]);
-	unsigned nvt_ig=_ml_sol._ml_msh->GetLevel(ig)->GetDofNumber(index_nd);
-	for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii+offset_nvt] = (*mysol)(ii);
-	offset_nvt+=nvt_ig;
+        unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+        NumericVector* mysol = NumericVector::build().release();
+	mysol->init(nvt_ig,_ml_mesh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
+	mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indx],
+			   *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd, _ml_sol->GetSolutionType(indx)) );
+        vector < double > mysol_ser;
+	mysol->localize_to_one(mysol_ser, 0);
+	if(_iproc == 0){
+	   for (unsigned ii=0; ii<nvt_ig; ii++) var_nd_f[ii] = mysol_ser[ii];
+	}
 	delete mysol;
       }
-     
-      dimsf[0] = nvt;  dimsf[1] = 1;
-      dataspace = H5Screate_simple(2,dimsf, NULL);
-      dataset   = H5Dcreate(file_id,_ml_sol.GetSolutionName(indx),H5T_NATIVE_FLOAT,
+      if(_iproc == 0){
+	dimsf[0] = nvt;  dimsf[1] = 1;
+	dataspace = H5Screate_simple(2,dimsf, NULL);
+	dataset   = H5Dcreate(file_id,_ml_sol->GetSolutionName(indx),H5T_NATIVE_FLOAT,
 			    dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,&var_nd_f[0]);
-      H5Sclose(dataspace);
-      H5Dclose(dataset);
+	status   = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_nd_f);
+	H5Sclose(dataspace);
+	H5Dclose(dataset);
+      }
     }
   }
   //-------------------------------------------------------------------------------------------------------
-    
+  } //
   // Close the file -------------
   H5Fclose(file_id);
  
   //free memory
-  delete [] var_int;
+  delete [] var_conn;
   delete [] var_el_f;
   delete [] var_nd_f;
   
@@ -748,17 +813,17 @@ void XDMFWriter::PrintXDMFGeometry(std::ofstream& outfstream,
 // pos_in_mesh_obj gives me the position of the GEomElObject: in fact the quadratic dofs are built on the quadratic GeomEls exactly in this order
 //here we are picking the NODES per subd and level, so we are sure don't pass MORE TIMES on the SAME NODE
 
-// PRoblem with the linear variables in write_system_solutions and PrintBc. 
+// PRoblem with the linear variables in write and PrintBc. 
 //There is one line that brings to mistake, but TWO different mistakes.
 // in PrintBc it seems to be related to HDF5;
-// in write_system_solutions it seems to concern PETSC
+// in write it seems to concern PETSC
 //so that is the wrong line, if i comment it everything seems to work for any processor.
 //with two and three processors it seems to give even different errors...
 //when there is an error related to HDF5, the stack has the _start thing...
 // with two procs there is an error related to Petsc,
 // with three procs there is an error related to HDF5...
 
-//If I only use PrintBc and not write_system_solutions, 
+//If I only use PrintBc and not write, 
 //both with 2 and 3 processors the errors are related to HDF5... this is so absolutely weird...
 
 //Now it seems like I am restricted to that line. That line is responsible for the error.
@@ -880,7 +945,7 @@ void XDMFWriter::PrintXDMFGeometry(std::ofstream& outfstream,
 //except for the fine level where i print the true solution
 
 // This prints All Variables of One Equation    
-void XDMFWriter::write_system_solutions(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn) {
+void XDMFWriter::write(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn) {
 
   std::vector<FEElemBase*> fe_in(QL);
   for (int fe=0; fe<QL; fe++)    fe_in[fe] = FEElemBase::build(mesh->_geomelem_id[mesh->get_dim()-1-VV].c_str(),fe);
@@ -923,7 +988,7 @@ void XDMFWriter::write_system_solutions(const std::string namefile, const MultiL
 #ifndef NDEBUG
          if ( pos_on_Qnodes_lev >= (int) n_nodes_lev ) { std::cout << "^^^^^^^OUT OF THE ARRAY ^^^^^^" << std::endl; abort(); }
 #endif
-        sol_on_Qnodes[ pos_on_Qnodes_lev/* pos_in_mesh_obj*/ ] = (* eqn->_x_old[Level])(pos_in_sol_vec_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[QQ] ];
+        sol_on_Qnodes[ pos_on_Qnodes_lev/* pos_in_mesh_obj*/ ] = (* eqn->_LinSolver[Level]->_EPSC )(pos_in_sol_vec_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[QQ] ];
 	pos_in_mesh_obj++;
 	  }
        }  //end subd
@@ -965,7 +1030,7 @@ void XDMFWriter::write_system_solutions(const std::string namefile, const MultiL
          if ( pos_on_Qnodes_lev >= (int) n_nodes_lev ) { std::cout << "^^^^^^^OUT OF THE ARRAY ^^^^^^" << std::endl; abort(); }
 #endif
 
-         sol_on_Qnodes[ pos_on_Qnodes_lev ] = (*eqn->_x_old[Level])(pos_in_sol_vec_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[LL] ];
+         sol_on_Qnodes[ pos_on_Qnodes_lev ] = ( *eqn->_LinSolver[Level]->_EPSC )(pos_in_sol_vec_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[LL] ];
 	 
             }
         }
@@ -1033,7 +1098,7 @@ void XDMFWriter::write_system_solutions(const std::string namefile, const MultiL
              int elem_lev = iel + sum_elems_prev_sd_at_lev;
 	  int dof_pos_lev = dofmap->GetDof(Level,KK,ivar,elem_lev);   
       for (uint is = 0; is < NRE[mesh->_eltype_flag[VV]]; is++) {      
-	   sol_on_cells[cel*NRE[mesh->_eltype_flag[VV]] + is] = (* eqn->_x_old[Level])(dof_pos_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[KK] ];
+	   sol_on_cells[cel*NRE[mesh->_eltype_flag[VV]] + is] = (* eqn->_LinSolver[Level]->_EPSC)(dof_pos_lev) * eqn->_refvalue[ ivar + dofmap->_VarOff[KK] ];
       }
       cel++;
     }
@@ -1086,17 +1151,17 @@ void XDMFWriter::read_system_solutions(const std::string namefile, const MultiLe
         double Irefval = 1./eqn->_refvalue[ivar]; // units
 
         // storing  ivar variables (in parallell)
-        for (int iel=0;iel <  mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels]
-                -mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1]; iel++) {
+        for (int iel=0; iel <  mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels]
+			      -mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1]; iel++) {
             uint elem_gidx=(iel+mesh->_off_el[VV][mesh->_iproc*mesh->_NoLevels+mesh->_NoLevels-1])*NVE[ mesh->_geomelem_flag[mesh->get_dim()-1] ][BIQUADR_FE];
             for (uint i=0; i<el_nds; i++) { // linear and quad
                 int k=mesh->_el_map[VV][elem_gidx+i];   // the global node
-                eqn->_x[mesh->_NoLevels-1]->set(dofmap->GetDof(mesh->_NoLevels-1,QQ,ivar,k), sol[k]*Irefval); // set the field
+                eqn->_LinSolver[mesh->_NoLevels-1]->_EPS->set(dofmap->GetDof(mesh->_NoLevels-1,QQ,ivar,k), sol[k]*Irefval); // set the field
             }
         }
     }
 
-    eqn->_x[mesh->_NoLevels-1]->localize(* eqn->_x_old[mesh->_NoLevels-1]);
+    eqn->_LinSolver[mesh->_NoLevels-1]->_EPS->localize(* eqn->_LinSolver[mesh->_NoLevels-1]->_EPSC);
     // clean
     H5Fclose(file_id);
     delete []sol;
@@ -1179,7 +1244,7 @@ void XDMFWriter::read_system_solutions(const std::string namefile, const MultiLe
 // e' quella FINE, ma noi ora dobbiamo prendere quella DI CIASCUN LIVELLO SEPARATAMENTE!
 
 
-void XDMFWriter::write_system_solutions_bc(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk ) {
+void XDMFWriter::write_bc(const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk ) {
   
   std::vector<FEElemBase*> fe_in(QL);
   for (int fe=0; fe<QL; fe++)    fe_in[fe] = FEElemBase::build(mesh->_geomelem_id[mesh->get_dim()-1-VV].c_str(),fe);
@@ -1875,7 +1940,7 @@ void XDMFWriter::ReadMeshAndNondimensionalizeBiquadraticHDF5(const std::string o
 //I'll put a check 
 
 if (mesh._dim != topdata[0] ) {std::cout << "MultiLevelMeshTwo::read_c. Mismatch: the mesh dimension is " << mesh._dim
-                                   << " while the dimension in the configuration file is " << mesh.GetRuntimeMap().get("dimension")
+                                   << " while the dimension in the configuration file is " << mesh.get_dim()
                                    << ". Recompile either gencase or your application appropriately" << std::endl;abort();}
 //it seems like it doesn't print to file if I don't put the endline "<< std::endl".
 //Also, "\n" seems to have no effect, "<< std::endl" must be used
@@ -2236,7 +2301,7 @@ void XDMFWriter::PrintMeshBiquadraticHDF5(const std::string output_path, const M
 
 
 // =======================================================================
-// For every matrix, compute "dimension", "position", "len", "offlen"
+// For every matrix, compute dimension, position, len, offlen
 // this function concerns a COUPLE of finite element families, that's it
 // fe_row = rows
 // fe_col = columns
@@ -2422,7 +2487,7 @@ void XDMFWriter::PrintSolHDF5Linear(const std::string output_path, const uint t_
         MultiLevelProblem::const_system_iterator pos_e = ml_prob.end();
         for (;pos!=pos_e;pos++)    {
             SystemTwo* eqn = static_cast<SystemTwo*>(pos->second);
-            XDMFWriter::write_system_solutions(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn);
+            XDMFWriter::write(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn);
         }
 
     } //end print iproc
@@ -2592,8 +2657,8 @@ void XDMFWriter::PrintCaseHDF5Linear(const std::string output_path, const uint t
         MultiLevelProblem::const_system_iterator pos_e = ml_prob.end();
         for (;pos!=pos_e;pos++) {
             SystemTwo* eqn = static_cast<SystemTwo*>(pos->second);
-            XDMFWriter::write_system_solutions(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn);    // initial solution
-            XDMFWriter::write_system_solutions_bc(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn,eqn->_bcond._bc,eqn->_bcond._bc_fe_kk);            // boundary condition
+            XDMFWriter::write(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn);    // initial solution
+            XDMFWriter::write_bc(filename.str(),& ml_prob.GetMeshTwo(),&(eqn->_dofmap),eqn,eqn->_bcond._bc,eqn->_bcond._bc_fe_kk);            // boundary condition
         }
 
     } //end iproc

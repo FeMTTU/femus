@@ -151,10 +151,7 @@ namespace femus {
     vector < unsigned > indexb(DofOffsetSize,DofOffsetSize);
     vector <bool> owned(DofOffsetSize,false);
     
-    map<int,bool> mymap;
-    //map<int,bool> mymap_u;
-    //map<int,bool> mymap_p;
-    
+    map<int,bool> mymap;    
     
     unsigned ElemOffset   = _msh->MetisOffset[3][iproc];
     unsigned ElemOffsetp1 = _msh->MetisOffset[3][iproc+1];
@@ -166,9 +163,7 @@ namespace femus {
     
     MeshASMPartitioning meshasmpartitioning(*_msh);
     meshasmpartitioning.DoPartition(_element_block_number, block_elements, _block_type_range);
-    //_msh->GenerateVankaPartitions_FSI1(_element_block_number, block_elements, _block_type_range);
-
-    
+        
     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(),true);
     for (unsigned iind=variable_to_be_solved.size()-_NSchurVar; iind<variable_to_be_solved.size(); iind++) {
       unsigned PdeIndexSol=variable_to_be_solved[iind];
@@ -176,42 +171,23 @@ namespace femus {
     }
     
     // *** Start Vanka Block ***
-//    bool test_end=0;
-//    int vb_index=0;
-//    while (test_end==0){
 
     _is_loc_idx.resize(block_elements.size());
     _is_ovl_idx.resize(block_elements.size());	
-    
-    //_is_ovl_u_idx.resize(block_elements.size());	
-    //_is_ovl_p_idx.resize(block_elements.size());	
-    
   
     for(int vb_index=0;vb_index<block_elements.size();vb_index++){  
       _is_loc_idx[vb_index].resize(DofOffsetSize);
       _is_ovl_idx[vb_index].resize(DofOffsetSize);
       
-      //_is_ovl_u_idx[vb_index].resize(DofOffsetSize);
-      //_is_ovl_p_idx[vb_index].resize(DofOffsetSize);
-      
       PetscInt PAsize=0;
       PetscInt PBsize=0;
-      
-      //PetscInt PBsize_u=0;
-      //PetscInt PBsize_p=0;
       
       PetscInt Csize=0;
       
       // ***************** NODE/ELEMENT SERCH *******************
-      //test_end=1;
-      //   int gel=_msh->IS_Mts2Gmt_elem_offset[iproc] + vb_index*_element_block_number;
-      //      for (int iel_mts=gel; iel_mts<gel+_element_block_number && iel_mts< _msh->IS_Mts2Gmt_elem_offset[iproc+1]; iel_mts++) {
-
       for(int kel=0;kel<block_elements[vb_index].size();kel++){
 	unsigned iel_mts = block_elements[vb_index][kel];
 	unsigned iel = _msh->IS_Mts2Gmt_elem[iel_mts];     
-	
-	//unsigned iel = _msh->IS_Mts2Gmt_elem[block_elements[vb_index][kel]];
 	
 	for (unsigned i=0; i<_msh->el->GetElementDofNumber(iel,0); i++) {
 	  unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
@@ -229,39 +205,35 @@ namespace femus {
 		indexc[jel_Metis-ElemOffset]=Csize++;
 		//----------------------------------------------------------------------------------
 		//add non-schur node to be solved
-		
-		//for (unsigned iind=0; iind<variable_to_be_solved.size()-_NSchurVar; iind++) {
-		// unsigned indexSol=variable_to_be_solved[iind];
 		for(int indexSol=0; indexSol < _SolPdeIndex.size(); indexSol++){ 
 		  if(ThisVaribaleIsNonSchur[indexSol]){
 		    unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 		    unsigned SolType = _SolType[SolPdeIndex];
-		    const unsigned *pt_un=_msh->el->GetElementVertexAddress(jel,0);
 		    unsigned nvej=_msh->el->GetElementDofNumber(jel,SolType);
 		    for (unsigned jj=0; jj<nvej; jj++) {
-		      unsigned jnode=(SolType<3)?(*(pt_un++)-1u):(jel+jj*nel);
-		      unsigned jnode_Metis = _msh->GetMetisDof(jnode,SolType);
-		      unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
-		      if(jnode_Metis >= _msh->MetisOffset[SolType][iproc] &&
-			jnode_Metis <  _msh->MetisOffset[SolType][iproc+1]){
-			//unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
-			if(indexa[kkdof- DofOffset]==DofOffsetSize && owned[kkdof- DofOffset]==false) {
-			  owned[kkdof- DofOffset]=true;
-			  _is_loc_idx[vb_index][PAsize]=kkdof;
-			  indexa[kkdof-DofOffset]=PAsize++;
+		      unsigned jnode=_msh->el->GetMeshDof(jel,jj,SolType);
+		      
+// 		      bool solidmark = _msh->el->GetNodeRegion(jnode);
+// 		      if( vb_index < _block_type_range[0] || !solidmark ){
+			unsigned jnode_Metis = _msh->GetMetisDof(jnode,SolType);
+			unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
+			if(jnode_Metis >= _msh->MetisOffset[SolType][iproc] &&
+			  jnode_Metis <  _msh->MetisOffset[SolType][iproc+1]){
+			  if(indexa[kkdof- DofOffset]==DofOffsetSize && owned[kkdof- DofOffset]==false) {
+			    owned[kkdof- DofOffset]=true;
+			    _is_loc_idx[vb_index][PAsize]=kkdof;
+			    indexa[kkdof-DofOffset]=PAsize++;
+			  }
+			  if(indexb[kkdof- DofOffset]==DofOffsetSize) {
+			    _is_ovl_idx[vb_index][PBsize]=kkdof;
+			    indexb[kkdof-DofOffset]=PBsize++;
+			  }
 			}
-			if(indexb[kkdof- DofOffset]==DofOffsetSize) {
-			  _is_ovl_idx[vb_index][PBsize]=kkdof;
-			  indexb[kkdof-DofOffset]=PBsize++;
-			  //_is_ovl_u_idx[vb_index][PBsize_u]=kkdof; 
-			  //PBsize_u++;
+			else {
+			  mymap[kkdof]=true;
 			}
 		      }
-		      else {
-			mymap[kkdof]=true;
-			//mymap_u[kkdof]=true;
-		      }
-		    }
+// 		    }
 		  }
 		}
 	      }
@@ -271,16 +243,13 @@ namespace femus {
 	//-----------------------------------------------------------------------------------------
 	//Add Schur nodes (generally pressure) to be solved
 	{
-	  //for (unsigned iind=variable_to_be_solved.size()-_NSchurVar; iind<variable_to_be_solved.size(); iind++) {
-	  //  unsigned indexSol=variable_to_be_solved[iind];
 	  for(int indexSol=0; indexSol < _SolPdeIndex.size(); indexSol++){ 
 	    if(!ThisVaribaleIsNonSchur[indexSol]){
 	      unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 	      unsigned SolType = _SolType[SolPdeIndex];
-	      const unsigned *pt_un=_msh->el->GetElementVertexAddress(iel,0);
 	      unsigned nvei=_msh->el->GetElementDofNumber(iel,SolType);
 	      for (unsigned ii=0; ii<nvei; ii++) {
-		unsigned inode=(SolType<3)?(*(pt_un++)-1u):(iel+ii*nel);
+		unsigned inode=_msh->el->GetMeshDof(iel,ii,SolType);
 		unsigned inode_Metis = _msh->GetMetisDof(inode,SolType);
 		unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, inode);
 		if(inode_Metis >= _msh->MetisOffset[SolType][iproc] &&
@@ -293,13 +262,10 @@ namespace femus {
 		  if(indexb[kkdof- DofOffset]==DofOffsetSize ) {
 		    _is_ovl_idx[vb_index][PBsize]=kkdof;
 		    indexb[kkdof-DofOffset]=PBsize++;
-		    //_is_ovl_p_idx[vb_index][PBsize_p]=kkdof; 
-		    //PBsize_p++;
 		  }		
 		}
 		else{ 
 		  mymap[kkdof]=true;
-		  //mymap_p[kkdof]=true;
 		}
 	      }
 	    }
@@ -307,7 +273,6 @@ namespace femus {
 	}
 	//-----------------------------------------------------------------------------------------
       }
-     // if(gel+_element_block_number <_msh->IS_Mts2Gmt_elem_offset[iproc+1] ) test_end=0;     
       
       // *** re-initialize indeces(a,c,d)
       for (PetscInt i=0; i<PAsize; i++) {
@@ -320,9 +285,7 @@ namespace femus {
 	indexc[indexci[i]]=ElemOffsetSize;
       }
       
-      _is_loc_idx[vb_index].resize(PAsize);/*
-      _is_ovl_u_idx[vb_index].resize(PBsize_u);
-      _is_ovl_p_idx[vb_index].resize(PBsize_p);*/
+      _is_loc_idx[vb_index].resize(PAsize);
       
       _is_ovl_idx[vb_index].resize(PBsize+mymap.size());
       int i=0;
@@ -330,43 +293,20 @@ namespace femus {
 	_is_ovl_idx[vb_index][PBsize+i]= it->first;
       }
       
-      /*_is_ovl_u_idx[vb_index].resize(PBsize_u+mymap_u.size());
-      i=0;
-      for (std::map<int,bool>::iterator it=mymap_u.begin(); it!=mymap_u.end(); ++it,++i){
-	_is_ovl_u_idx[vb_index][PBsize_u+i]= it->first;
-      }    
-      
-      _is_ovl_p_idx[vb_index].resize(PBsize_p+mymap_p.size());
-      i=0;
-      for (std::map<int,bool>::iterator it=mymap_p.begin(); it!=mymap_p.end(); ++it,++i){
-	_is_ovl_p_idx[vb_index][PBsize_p+i]= it->first;
-      }*/    
-      
-      
-      
-      
-      
       std::sort(_is_loc_idx[vb_index].begin(), _is_loc_idx[vb_index].end());
       std::sort(_is_ovl_idx[vb_index].begin(), _is_ovl_idx[vb_index].end());
-//       std::sort(_is_ovl_u_idx[vb_index].begin(), _is_ovl_u_idx[vb_index].end());
-//       std::sort(_is_ovl_p_idx[vb_index].begin(), _is_ovl_p_idx[vb_index].end());
     }
     
     //BEGIN Generate std::vector<IS> for vanka solve ***********
     _is_loc.resize(_is_loc_idx.size());
     _is_ovl.resize(_is_ovl_idx.size());
-    //_is_ovl_u.resize(_is_ovl_u_idx.size());
-    //_is_ovl_p.resize(_is_ovl_p_idx.size());
+
     for(unsigned vb_index=0;vb_index<_is_loc_idx.size();vb_index++){  
       PetscErrorCode ierr;  
       ierr=ISCreateGeneral(MPI_COMM_SELF,_is_loc_idx[vb_index].size(),&_is_loc_idx[vb_index][0],PETSC_USE_POINTER,&_is_loc[vb_index]);
       CHKERRABORT(MPI_COMM_SELF,ierr);
       ierr=ISCreateGeneral(MPI_COMM_SELF,_is_ovl_idx[vb_index].size(),&_is_ovl_idx[vb_index][0],PETSC_USE_POINTER,&_is_ovl[vb_index]);
       CHKERRABORT(MPI_COMM_SELF,ierr);
-      //ierr=ISCreateGeneral(MPI_COMM_SELF,_is_ovl_u_idx[vb_index].size(),&_is_ovl_u_idx[vb_index][0],PETSC_USE_POINTER,&_is_ovl_u[vb_index]);
-      //CHKERRABORT(MPI_COMM_SELF,ierr);
-      //ierr=ISCreateGeneral(MPI_COMM_SELF,_is_ovl_p_idx[vb_index].size(),&_is_ovl_p_idx[vb_index][0],PETSC_USE_POINTER,&_is_ovl_p[vb_index]);
-      //CHKERRABORT(MPI_COMM_SELF,ierr);
     }
     //END Generate std::vector<IS> for vanka solve ***********  
         
@@ -448,7 +388,7 @@ namespace femus {
     
     // *** Computational info ***
 #ifndef NDEBUG   
-    cout << "ASM Grid: " << _msh->GetGridNumber()<< "        SOLVER TIME:        "  << std::setw(11) << std::setprecision(6) << std::fixed <<
+    cout << "ASM Grid: " << _msh->GetLevel()<< "        SOLVER TIME:        "  << std::setw(11) << std::setprecision(6) << std::fixed <<
       static_cast<double>( SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
       "  ITS: " << _maxits  << "\t ksp_clean = "<< ksp_clean<<endl;
 #endif
@@ -492,10 +432,10 @@ namespace femus {
       // tolerance for the relative residual & leave the others at default values.
       ierr = KSPSetTolerances(_ksp,_rtol,_abstol,_dtol,_maxits);	CHKERRABORT(MPI_COMM_WORLD,ierr);
       
-      if(_msh->GetGridNumber()!=0)
+      if(_msh->GetLevel()!=0)
 	KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
       
-      if(_msh->GetGridNumber()!=0)
+      if(_msh->GetLevel()!=0)
 	KSPSetNormType(_ksp,KSP_NORM_NONE);
      
       ierr = KSPSetFromOptions(_ksp);						CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -587,7 +527,7 @@ namespace femus {
       ierr = KSPSetType(_ksp, (char*) KSPCGS);						CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case BICG:
-      ierr = KSPSetType(_ksp, (char*) KSPBICG);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(_ksp, (char*) KSPBICG);						CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case TCQMR:
       ierr = KSPSetType(_ksp, (char*) KSPTCQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -596,10 +536,10 @@ namespace femus {
       ierr = KSPSetType(_ksp, (char*) KSPTFQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case LSQR:
-      ierr = KSPSetType(_ksp, (char*) KSPLSQR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(_ksp, (char*) KSPLSQR);						CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case BICGSTAB:
-      ierr = KSPSetType(_ksp, (char*) KSPBCGS);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(_ksp, (char*) KSPBCGS);						CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case MINRES:
       ierr = KSPSetType(_ksp, (char*) KSPMINRES);					CHKERRABORT(MPI_COMM_WORLD,ierr);

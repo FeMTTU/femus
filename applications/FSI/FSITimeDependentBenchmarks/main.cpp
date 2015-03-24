@@ -97,10 +97,14 @@ int main(int argc,char **args) {
   //Start System Variables
   ml_sol.AddSolution("DX",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("DY",LAGRANGE,SECOND,1);
-  ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
-  ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
+//   ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
+//   ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
   ml_sol.AddSolution("U",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
+  
+//   ml_sol.PairSolution("U","DX"); // Add this line
+//   ml_sol.PairSolution("V","DY"); // Add this line 
+  
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
   ml_sol.AssociatePropertyToSolution("P","Pressure"); // Add this line
@@ -208,7 +212,7 @@ int main(int argc,char **args) {
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
-  VTKWriter vtkio(ml_sol);
+  VTKWriter vtkio(&ml_sol);
   vtkio.SetMovingMesh(mov_vars);
   
   // Solving Fluid-Structure-Interaction system
@@ -224,7 +228,7 @@ int main(int argc,char **args) {
   print_vars.push_back("V");
   print_vars.push_back("P");
       
-  vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
+  vtkio.write(files.GetOutputPath(),"biquadratic",print_vars);
 
   // Destroy all the new systems
   ml_prob.clear();
@@ -410,7 +414,7 @@ int main(int argc,char **args) {
 //       print_vars.push_back("P");
 //       
 // //       ml_probl.printsol_vtu_inline("biquadratic",print_vars,time_step);
-//       vtkio.write_system_solutions("biquadratic",print_vars,time_step);
+//       vtkio.write("biquadratic",print_vars,time_step);
 //     }
 //   
 //   } //end loop timestep
@@ -761,7 +765,7 @@ void AssembleMatrixResFSI(NonLinearMultiLevelProblem &nl_td_ml_prob2, unsigned l
 
   // mesh and procs
   unsigned nel    = mymsh->GetElementNumber();
-  unsigned igrid  = mymsh->GetGridNumber();
+  unsigned igrid  = mymsh->GetLevel();
   unsigned iproc  = mymsh->GetProcID();
   unsigned nprocs = mymsh->GetNumProcs();
 
@@ -1636,7 +1640,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 
   // mesh and procs
   unsigned nel    = mymsh->GetElementNumber();
-  unsigned igrid  = mymsh->GetGridNumber();
+  unsigned igrid  = mymsh->GetLevel();
   unsigned iproc  = mymsh->processor_id();
 
   //----------------------------------------------------------------------------------

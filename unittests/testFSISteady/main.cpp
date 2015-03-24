@@ -58,10 +58,11 @@ int main(int argc,char **args) {
   //Start System Variables
   ml_sol.AddSolution("DX",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("DY",LAGRANGE,SECOND,1);
-  ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
-  ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
+//   ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
+//   ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
   ml_sol.AddSolution("U",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
+  
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
   ml_sol.AssociatePropertyToSolution("P","Pressure"); // Add this line
@@ -128,7 +129,7 @@ int main(int argc,char **args) {
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
-  VTKWriter vtkio(ml_sol);
+  VTKWriter vtkio(&ml_sol);
   vtkio.SetMovingMesh(mov_vars);
   
   // Solving Fluid-Structure-Interaction system
@@ -478,7 +479,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
 
   // mesh and procs
   unsigned nel    = mymsh->GetNumberOfElements();
-  unsigned igrid  = mymsh->GetGridNumber();
+  unsigned igrid  = mymsh->GetLevel();
   unsigned iproc  = mymsh->processor_id();
 
   //----------------------------------------------------------------------------------

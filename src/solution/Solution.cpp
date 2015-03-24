@@ -38,7 +38,6 @@ using std::endl;
 Solution::Solution(Mesh *other_msh){    
  _msh = other_msh;
   for(int i=0;i<5;i++){
-    _ProjMatFlag[i]=0;
     _GradMat[i].resize(_msh->GetDimension());
     _AMR_flag=0;
   }
@@ -193,9 +192,6 @@ void Solution::FreeSolutionVectors() {
       delete _AMREps[i];
   }
   for (unsigned i=0; i<5; i++) {
-    if (_ProjMatFlag[i]) {
-      delete _ProjMat[i];
-    }
     for(int j=0;j<_msh->GetDimension();j++){
       if(_GradMat[i][j]){	
 	delete _GradMat[i][j];

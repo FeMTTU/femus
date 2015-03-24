@@ -185,6 +185,7 @@ void PetscVector::matrix_mult(const NumericVector &vec_in,const SparseMatrix &ma
   A->close();
   ierr = MatMult(const_cast<PetscMatrix*>(A)->mat(),v->_vec,_vec);
   CHKERRABORT(MPI_COMM_WORLD,ierr);
+  this->close();
   return;
 }
 
@@ -200,6 +201,7 @@ void PetscVector::matrix_mult_transpose(const NumericVector &vec_in,const Sparse
   A->close();
   ierr = MatMultTranspose(const_cast<PetscMatrix*>(A)->mat(),v->_vec,_vec);
   CHKERRABORT(MPI_COMM_WORLD,ierr);
+  this->close();
   return;
 }
 

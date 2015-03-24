@@ -58,13 +58,16 @@
   const double Lref  =  physics_map.get("Lref");     // reference L
 
   // ======= Mesh =====
-  FemusInputParser<double> mesh_map("Mesh",files.GetOutputPath());
+  const unsigned NoLevels = 3;
+  const unsigned dim = 2;
+  const GeomElType geomel_type = QUAD;
 
-  GenCase mesh(mesh_map,"");
+  GenCase mesh(NoLevels,dim,geomel_type,"");
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
   FemusInputParser<double> box_map("Box",files.GetOutputPath());
+
   Box mybox(mesh.get_dim(),box_map);
       mybox.InitAndNondimensionalize(mesh.get_Lref());
 
@@ -90,16 +93,18 @@
 //========================================================
   
   Temperature temperature("Qty_Temperature",qty_map,1,0/*biquadratic*/);     qty_map.AddQuantity(&temperature);
-  Temperature temperature2("Qty_Temperature2",qty_map,1,1/*linear*/);        qty_map.AddQuantity(&temperature2);
-  Temperature temperature3("Qty_Temperature3",qty_map,1,2/*constant*/);      qty_map.AddQuantity(&temperature3);
+//   Temperature temperature2("Qty_Temperature2",qty_map,1,1/*linear*/);        qty_map.AddQuantity(&temperature2);
+//   Temperature temperature3("Qty_Temperature3",qty_map,1,2/*constant*/);      qty_map.AddQuantity(&temperature3);
   // ===== end QuantityMap =========================================
 
   // ====== Start new main =================================
   MultiLevelMesh ml_msh;
   ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,1,0,1,QUAD9,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
-  ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
+  ml_msh.RefineMesh(NoLevels,NoLevels,NULL);
   ml_msh.PrintInfo();
 
+  ml_msh.SetDomain(&mybox);    
+  
   MultiLevelSolution ml_sol(&ml_msh);
   ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
 
@@ -117,8 +122,8 @@
   SystemTwo &  eqnT = ml_prob.add_system<SystemTwo>("Eqn_T");
           eqnT.AddSolutionToSystemPDE("FAKE");
           eqnT.AddUnknownToSystemPDE(&temperature); 
-          eqnT.AddUnknownToSystemPDE(&temperature2); 
-          eqnT.AddUnknownToSystemPDE(&temperature3); 
+//           eqnT.AddUnknownToSystemPDE(&temperature2); 
+//           eqnT.AddUnknownToSystemPDE(&temperature3); 
           eqnT.SetAssembleFunction(GenMatRhsT);
 
 //================================ 
@@ -135,11 +140,11 @@
      
         SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
 // //=====================
-    sys -> init();
+    sys -> init_two();
     sys -> _LinSolver[0]->set_solver_type(GMRES);  //if I keep PREONLY it doesn't run
 
 //=====================
-    sys -> init_sys();
+    sys -> init_unknown_vars();
 //=====================
     sys -> _dofmap.ComputeMeshToDof();
 //=====================
@@ -149,7 +154,7 @@
 //=====================
     sys -> _bcond.GenerateBdc();
 //=====================
-    sys -> ReadMGOps(files.GetOutputPath());
+    GenCase::ReadMGOps(files.GetOutputPath(),sys);
     
     }
     

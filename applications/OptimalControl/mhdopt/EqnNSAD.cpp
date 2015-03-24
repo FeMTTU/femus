@@ -10,6 +10,7 @@
 #include "Domain.hpp"
 #include "MultiLevelProblem.hpp"
 #include "FETypeEnum.hpp"
+#include "GeomElTypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "Quantity.hpp"
 #include "QTYnumEnum.hpp"
@@ -44,27 +45,29 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
   const double   dt     = 1.;  //ml_prob._timeloop._timemap.get("dt");
 
 // //======== GEOMETRICAL ELEMENT =======
-  const uint space_dim = ml_prob.GetMeshTwo().get_dim();
-  const uint  mesh_ord = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("mesh_ord");
-  const uint    meshql = (int) ml_prob.GetMeshTwo().GetRuntimeMap().get("meshql");  //======== ELEMENT MAPPING =======
+  const uint space_dim = ml_prob._ml_msh->GetDimension();
 
+        my_system._LinSolver[Level]->_KK->zero();
+        my_system._LinSolver[Level]->_RESC->zero();
   
-//========= BCHandling =========
-  const double penalty_val = ml_prob.GetMeshTwo().GetRuntimeMap().get("penalty_val");    
-
-        my_system._A[Level]->zero();
-        my_system._b[Level]->zero();
-  
+// ==========================================  
+  Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
+  elem		*myel		=  mymsh->el;
+  const unsigned myproc  = mymsh->processor_id();
+	
+// ==========================================  
+// ==========================================  
    {//BEGIN VOLUME    
    
    const uint mesh_vb = VV;
 
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level];
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
     
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
     CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
+    currelem.SetMesh(mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -86,15 +89,15 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
 //========= DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._FEord    = MESH_ORDER;
+  xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
   
   CurrentQuantity Vel(currgp);
@@ -136,11 +139,11 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.SetDofobjConnCoords(ml_prob.GetMeshTwo()._iproc,iel);
+    currelem.SetDofobjConnCoords(myproc,iel);
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
+    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
     currelem.SetElDofsBc();
     
@@ -173,7 +176,7 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
 //=======    
 ///optimal control
     xyz_refbox.SetElemAverage();
-  int el_flagdom = ElFlagControl(xyz_refbox._el_average,&ml_prob.GetMeshTwo());
+  int el_flagdom = ElFlagControl(xyz_refbox._el_average,ml_prob._ml_msh);
 //=======    
 
 
@@ -183,7 +186,8 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
 //=======here starts the "COMMON SHAPE PART"==================
 for (uint fe = 0; fe < QL; fe++)     { 
   currgp.SetPhiElDofsFEVB_g (fe,qp);  
-  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
+  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  
+}  
 	  
 const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is the same for both QQ and LL!
 const double dtxJxW_g = det*ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
@@ -301,8 +305,8 @@ for (uint fe = 0; fe < QL; fe++)     {
     // end element gaussian integration loop
     
     ///  Add element matrix and rhs to the global ones.
-    my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-    my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+    my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+    my_system._LinSolver[Level]->_RESC->add_vector(currelem.Rhs(),currelem.GetDofIndices());
     
   } 
   // end of element loop
@@ -318,13 +322,13 @@ for (uint fe = 0; fe < QL; fe++)     {
   
     const uint mesh_vb = BB;
 
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*ml_prob.GetMeshTwo()._iproc+Level];
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
  
    for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
      
     CurrentElem       currelem(Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
-
+    currelem.SetMesh(mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -346,15 +350,15 @@ for (uint fe = 0; fe < QL; fe++)     {
 //========= DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
-    xyz._FEord    = meshql;
+    xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
 //========== Quadratic domain, auxiliary  
   CurrentQuantity xyz_refbox(currgp);
   xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = mesh_ord; //this must be QUADRATIC!!!
-  xyz_refbox._ndof     = NVE[ ml_prob.GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+  xyz_refbox._FEord    = MESH_ORDER;
+  xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
   xyz_refbox.Allocate();
   
 //========= END EXTERNAL QUANTITIES =================
@@ -363,11 +367,11 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.Mat().zero();
      currelem.Rhs().zero();
 
-     currelem.SetDofobjConnCoords(ml_prob.GetMeshTwo()._iproc,iel);
+     currelem.SetDofobjConnCoords(myproc,iel);
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     currelem.TransformElemNodesToRef(ml_prob.GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
+     currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
      currelem.SetElDofsBc();
 
@@ -423,19 +427,19 @@ for (uint fe = 0; fe < QL; fe++)     {
       
     }  //gauss
    
-    my_system._A[Level]->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-    my_system._b[Level]->add_vector(currelem.Rhs(),currelem.GetDofIndices());
+    my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
+    my_system._LinSolver[Level]->_RESC->add_vector(currelem.Rhs(),currelem.GetDofIndices());
 
  }//elem loop
    
   }//END BOUNDARY ************************
 
-        my_system._A[Level]->close();
-        my_system._b[Level]->close();
+        my_system._LinSolver[Level]->_KK->close();
+        my_system._LinSolver[Level]->_RESC->close();
   
 #ifdef DEFAULT_PRINT_INFO
  std::cout << " GenMatRhs " << my_system.name() << ": assembled  Level " << Level
-           << " with " << my_system._A[Level]->m() << " dofs" << std::endl;
+           << " with " << my_system._LinSolver[Level]->_KK->m() << " dofs" << std::endl;
 #endif    
 
 return;

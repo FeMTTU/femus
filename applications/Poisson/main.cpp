@@ -81,9 +81,9 @@ int main(int argc,char **argv) {
   /// Init Petsc-MPI communicator
     FemusInit mpinit(argc,argv,MPI_COMM_WORLD);
     
-    Files files; 
-          files.CheckIODirectories();
-          files.RedirectCout();
+    //Files files; 
+    //files.CheckIODirectories();
+    //files.RedirectCout();
 	
     // input parser pointer
     std::auto_ptr<InputParser> inputparser = InputParser::build(path);
@@ -254,14 +254,15 @@ int main(int argc,char **argv) {
 	std::vector<std::string> print_vars;
 	print_vars.push_back("Sol");
 
-	VTKWriter vtkio(ml_sol);
-	vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
-
-	GMVWriter gmvio(ml_sol);
-	gmvio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
-	// 
-	//     XDMFWriter xdmfio(ml_sol);
-	//     xdmfio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
+	VTKWriter vtkio(&ml_sol);
+	vtkio.write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+	
+	
+	GMVWriter gmvio(&ml_sol);
+	gmvio.Pwrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+	
+	//XDMFWriter xdmfio(&ml_sol);
+	//xdmfio.Pwrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
     
 	//Destroy all the new systems
 	ml_prob.clear();
@@ -288,7 +289,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
   //data
   const unsigned	dim	= mymsh->GetDimension();
   unsigned 		nel	= mymsh->GetNumberOfElements();
-  unsigned 		igrid	= mymsh->GetGridNumber();
+  unsigned 		igrid	= mymsh->GetLevel();
   unsigned 		iproc	= mymsh->processor_id();
 
   //solution variable

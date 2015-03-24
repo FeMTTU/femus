@@ -66,7 +66,7 @@ void Temperature::heatflux_txyz(const double /*t*/, const double* /*xyz*/, doubl
 // T' and its adjoint must be Dirichlet homogeneous everywhere on the boundary, by definition.
 
 
-  const double bdry_toll = _qtymap.GetMeshTwo()->GetRuntimeMap().get("bdry_toll");
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
   
 
   Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());

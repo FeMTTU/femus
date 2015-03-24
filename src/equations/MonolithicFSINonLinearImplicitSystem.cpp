@@ -65,24 +65,24 @@ void MonolithicFSINonLinearImplicitSystem::Restrictor(const unsigned &gridf, con
     if (gridf>=_gridr) {  //_gridr
       if (!LinSolc->_CC_flag) {
 	LinSolc->_CC_flag=1;
-	LinSolc->_CC->matrix_ABC(*LinSolf->_RR,*LinSolf->_KK,*LinSolf->_PP,!matrix_reuse);
+	LinSolc->_CC->matrix_ABC(*_RR[gridf],*LinSolf->_KK,*_PP[gridf],!matrix_reuse);
       } 
       else{
-	LinSolc->_CC->matrix_ABC(*LinSolf->_RR,*LinSolf->_KK,*LinSolf->_PP,matrix_reuse);
+	LinSolc->_CC->matrix_ABC(*_RR[gridf],*LinSolf->_KK,*_PP[gridf],matrix_reuse);
       }
       LinSolc->_KK->matrix_add(1.,*LinSolc->_CC,"different_nonzero_pattern");
     } 
     else { //Projection of the Matrix on the lower level
       if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
-	LinSolc->_KK->matrix_ABC(*LinSolf->_RR,*LinSolf->_KK,*LinSolf->_PP,!matrix_reuse);
+	LinSolc->_KK->matrix_ABC(*_RR[gridf],*LinSolf->_KK,*_PP[gridf],!matrix_reuse);
       }
       else{ 
-	LinSolc->_KK->matrix_ABC(*LinSolf->_RR,*LinSolf->_KK,*LinSolf->_PP,matrix_reuse);
+	LinSolc->_KK->matrix_ABC(*_RR[gridf],*LinSolf->_KK,*_PP[gridf],matrix_reuse);
       }    
     }
   }
  
-  LinSolc->_RESC->matrix_mult(*LinSolf->_RES, *LinSolf->_RR);
+  LinSolc->_RESC->matrix_mult(*LinSolf->_RES, *_RR[gridf]);
   *LinSolc->_RES += *LinSolc->_RESC;
   
 }
@@ -125,7 +125,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
    	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _equation_systems._ml_msh->_finiteElement[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
+	  mshc->_finiteElement[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
 	}
       }
     }
@@ -145,8 +145,8 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
   delete NNZ_d;
   delete NNZ_o;
     
-  LinSolf->_PP = SparseMatrix::build().release();
-  LinSolf->_PP->init(nf,nc,nf_loc,nc_loc,nnz_d, nnz_o);
+  _PP[gridf] = SparseMatrix::build().release();
+  _PP[gridf]->init(nf,nc,nf_loc,nc_loc,nnz_d, nnz_o);
   
   SparseMatrix *RRt;
   RRt = SparseMatrix::build().release();
@@ -154,11 +154,15 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
   
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned SolIndex=_SolSystemPdeIndex[k];
-    unsigned  SolType = _ml_sol->GetSolutionType(SolIndex);
+    unsigned solPairIndex=_ml_sol->GetSolutionPairIndex(k);
+    unsigned SolType = _ml_sol->GetSolutionType(SolIndex);
+    unsigned solPairPdeIndex = GetSolPdeIndex( _ml_sol->GetSolutionName(solPairIndex) );
+    
+    
     //bool TestDisp=0;
     //if(_ml_sol->TestIfSolutionIsDisplacemenet(SolIndex) )   TestDisp=1;
-    bool TestDisp=1;
-    if(_ml_sol->TestIfSolutionIsPressure(SolIndex) )   TestDisp=0;
+    bool testIfPressure=0;
+    if(_ml_sol->TestIfSolutionIsPressure(SolIndex) )   testIfPressure=1;
     
     
     // loop on the coarse grid 
@@ -169,23 +173,23 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
     
 	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  if(TestDisp){
-	    _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildRestrictionTranspose(*LinSolf,*LinSolc,iel,RRt,SolIndex,k,TestDisp);
+	  if(!testIfPressure){
+	    mshc->_finiteElement[ielt][SolType]->BuildRestrictionTranspose(*LinSolf,*LinSolc,iel,RRt,SolIndex,k,solPairIndex,solPairPdeIndex);
 	  }
 	  else{
-	    _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, RRt,SolIndex,k);
+	    mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, RRt,SolIndex,k);
 	  }	  
-	  _equation_systems._ml_msh->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, LinSolf->_PP,SolIndex,k);
+	  mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, _PP[gridf],SolIndex,k);
 	}
       }
     }
   }
   
-  LinSolf->_PP->close();
+  _PP[gridf]->close();
   RRt->close();
   
-  LinSolf->_RR = SparseMatrix::build().release();
-  RRt->get_transpose( *LinSolf->_RR);
+  _RR[gridf] = SparseMatrix::build().release();
+  RRt->get_transpose( *_RR[gridf]);
   delete RRt;
   
 }

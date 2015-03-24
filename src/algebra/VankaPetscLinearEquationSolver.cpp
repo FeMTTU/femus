@@ -381,7 +381,7 @@ namespace femus {
     
 #ifndef NDEBUG  
     // *** Computational info ***
-    cout << "VANKA Grid: "<<_msh->GetGridNumber()<< "      SOLVER TIME:        " << std::setw(11) << std::setprecision(6) << std::fixed <<
+    cout << "VANKA Grid: "<<_msh->GetLevel()<< "      SOLVER TIME:        " << std::setw(11) << std::setprecision(6) << std::fixed <<
     static_cast<double>(SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
       "  ITS: " << _maxits << endl;
 #endif
@@ -431,10 +431,10 @@ namespace femus {
       // tolerance for the relative residual & leave the others at default values.
       ierr = KSPSetTolerances(ksp,_rtol,_abstol,_dtol,_maxits);	CHKERRABORT(MPI_COMM_WORLD,ierr);
     
-      if(_msh->GetGridNumber()!=0)
+      if(_msh->GetLevel()!=0)
 	KSPSetInitialGuessKnoll(ksp, PETSC_TRUE);
 
-      if(_msh->GetGridNumber()!=0)
+      if(_msh->GetLevel()!=0)
 	KSPSetNormType(ksp,KSP_NORM_NONE);
      
       // Set the options from user-input
@@ -529,7 +529,7 @@ namespace femus {
 //   //   if (!this->initialized()) {
 //   this->_is_initialized = true;
 //   int ierr=0;
-//   int grid=_msh->GetGridNumber();
+//   int grid=_msh->GetLevel();
 //   
 //   // Since the matrix is sequential for us, we use as communicator MPI_COMM_WORLD (serial) 
 //   // instead of PETSC_COMM_WORLD (parallel)

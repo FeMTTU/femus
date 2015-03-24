@@ -56,7 +56,8 @@ public:
 
   /** To be Added */  
   void BuildRestrictionTranspose(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat, 
-                                 const unsigned &index_sol, const unsigned &kkindex_sol, const bool &TestDisp) const;		    
+                                 const unsigned &index_sol, const unsigned &kkindex_sol, 
+				 const unsigned &index_pair_sol, const unsigned &kkindex_pair_sol) const;		    
 
   /** To be Added */
   void BuildProlongation(const Mesh &meshf, const Mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;

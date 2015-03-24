@@ -69,13 +69,13 @@ int main(int argc, char **args) {
   variablesToBePrinted.push_back("P");
   variablesToBePrinted.push_back("T");
 
-  VTKWriter vtkIO(mlSol);
-  vtkIO.write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  VTKWriter vtkIO(&mlSol);
+  vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
-  GMVWriter gmvIO(mlSol);
+  GMVWriter gmvIO(&mlSol);
   variablesToBePrinted.push_back("all");
   gmvIO.SetDebugOutput(false);
-  gmvIO.write_system_solutions(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
    
   return 0;
 }

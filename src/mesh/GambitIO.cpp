@@ -70,7 +70,7 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &coords
   unsigned nvt;
   unsigned nel;
 
-  mesh.SetGridNumber(0);
+  mesh.SetLevel(0);
   // read control data ******************** A
   inf.open(name.c_str());
   if (!inf) {

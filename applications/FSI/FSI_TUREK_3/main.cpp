@@ -62,10 +62,14 @@ int main(int argc,char **args) {
   //Start System Variables
   ml_sol.AddSolution("DX",LAGRANGE,SECOND,2);
   ml_sol.AddSolution("DY",LAGRANGE,SECOND,2);
-  ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
-  ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
+//   ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
+//   ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
   ml_sol.AddSolution("U",LAGRANGE,SECOND,2);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,2);
+  
+  //   ml_sol.PairSolution("U","DX"); // Add this line
+  //   ml_sol.PairSolution("V","DY"); // Add this line 
+  
   ml_sol.AddSolution("AX",LAGRANGE,SECOND,1,0);
   ml_sol.AddSolution("AY",LAGRANGE,SECOND,1,0);
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
@@ -140,7 +144,7 @@ int main(int argc,char **args) {
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
-  VTKWriter vtkio(ml_sol);
+  VTKWriter vtkio(&ml_sol);
   vtkio.SetMovingMesh(mov_vars);
   
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
@@ -168,7 +172,7 @@ int main(int argc,char **args) {
       print_vars.push_back("P");
       
 //       ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
-      vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars,time_step);
+      vtkio.write(files.GetOutputPath(),"biquadratic",print_vars,time_step);
     }
   
   } //end loop timestep
