@@ -229,7 +229,7 @@ namespace femus {
   
     // *** Computational info ***
 #ifndef NDEBUG  
-    cout << "GMRES Grid: " << _msh->GetGridNumber()<< "      SOLVER TIME:        "  << std::setw(11) << std::setprecision(6) << std::fixed <<
+    cout << "GMRES Grid: " << _msh->GetLevel()<< "      SOLVER TIME:        "  << std::setw(11) << std::setprecision(6) << std::fixed <<
       static_cast<double>( SearchTime + AssemblyTime + SolveTime + UpdateTime)/ CLOCKS_PER_SEC<<
       "  ITS: " << _maxits  << "\t ksp_clean = "<< ksp_clean<<endl;
 #endif
@@ -287,10 +287,10 @@ namespace femus {
       // tolerance for the relative residual & leave the others at default values.
       ierr = KSPSetTolerances(_ksp,_rtol,_abstol,_dtol,_maxits);	CHKERRABORT(MPI_COMM_WORLD,ierr);
     
-      if(_msh->GetGridNumber()!=0)
+      if(_msh->GetLevel()!=0)
 	KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
 
-      if(_msh->GetGridNumber()!=0)
+      if(_msh->GetLevel()!=0)
  	KSPSetNormType(_ksp,KSP_NORM_NONE);
      
       // Set the options from user-input
@@ -433,7 +433,7 @@ std::pair<unsigned int, double> GmresPetscLinearEquationSolver::solve(SparseMatr
 }
   
  
- // DEPRECATED ========================================================
+ // @deprecated ========================================================
 PetscErrorCode __libmesh_petsc_preconditioner_setup(PC pc) {
   void *ctx;
   PetscErrorCode ierr = PCShellGetContext(pc,&ctx);
@@ -444,7 +444,7 @@ PetscErrorCode __libmesh_petsc_preconditioner_setup(PC pc) {
 }
 
 
-// DEPRECATED ========================================================
+// @deprecated ========================================================
 PetscErrorCode __libmesh_petsc_preconditioner_apply(PC pc, Vec x, Vec y) {
   void *ctx;
   PetscErrorCode ierr = PCShellGetContext(pc,&ctx);
@@ -457,7 +457,7 @@ PetscErrorCode __libmesh_petsc_preconditioner_apply(PC pc, Vec x, Vec y) {
 } 
  
  
- // DEPRECATED ========================================================
+ // @deprecated ========================================================
 void GmresPetscLinearEquationSolver::init(SparseMatrix* matrix) {
   
   PetscMatrix* matrix_two   = libmeshM_cast_ptr<PetscMatrix*>(matrix);

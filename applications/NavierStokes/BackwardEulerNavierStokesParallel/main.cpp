@@ -127,8 +127,8 @@ int main(int argc,char **args) {
       print_vars.push_back("P");
       
 //       ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
-      VTKWriter vtkio(ml_sol);
-      vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars,time_step);
+      VTKWriter vtkio(&ml_sol);
+      vtkio.write(files.GetOutputPath(),"biquadratic",print_vars,time_step);
     }
   
   } //end loop timestep
@@ -265,7 +265,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
   double theta = 0.5;
   const unsigned dim = mymsh->GetDimension();
   unsigned nel= mymsh->GetNumberOfElements();
-  unsigned igrid= mymsh->GetGridNumber();
+  unsigned igrid= mymsh->GetLevel();
   unsigned iproc = mymsh->processor_id();
   double ILambda = 0.; 
   double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();

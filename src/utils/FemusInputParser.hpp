@@ -92,7 +92,7 @@ template <typename T>
   void FemusInputParser<T>::read() {
 
     std::ostringstream filename;
-    filename << _basepath <<  "/" << DEFAULT_CONFIGDIR << "/" << DEFAULT_RUNTIMECONF;  
+    filename << _basepath <<  "/" << DEFAULT_INPUTDIR << "/" << DEFAULT_RUNTIMECONF;  
 
 
 std::ifstream fin(filename.str().c_str());

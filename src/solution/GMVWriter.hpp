@@ -37,20 +37,25 @@ namespace femus {
   public:
 
       /** Constructor. */
-      GMVWriter(MultiLevelSolution & ml_sol);
+      GMVWriter(MultiLevelSolution * ml_sol);
+
+      /** Constructor. */
+      GMVWriter(MultiLevelMesh * ml_mesh);
 
       /** Destructor */
       virtual ~GMVWriter();
 
       /** write output function */
-      virtual void write_system_solutions(const std::string output_path, const char order[], std::vector<std::string>& vars, const unsigned time_step=0);
+      void write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step=0) const;
     
+      void Pwrite(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step=0) const;
+          
       /** Set if to print or not to prind the debugging variables */
       void SetDebugOutput( bool value ){ _debugOutput = value;}
 
   private:
+    
     bool _debugOutput;
-      
 };
 
 

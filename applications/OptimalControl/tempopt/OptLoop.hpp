@@ -30,11 +30,11 @@ void optimization_loop( MultiLevelProblem & e_map_in );
 
 };
 
- double ComputeIntegral (const uint Level,const MultiLevelMeshTwo* mesh, const SystemTwo* eqn, const std::string output_time);
+ double ComputeIntegral (const uint Level,  const MultiLevelMeshTwo* mesh, const SystemTwo* eqn, const std::string output_time);
 
  double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn, const uint reg_ord );
 
- int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMeshTwo* mesh);
+ int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMesh* mesh);
 
 } //end namespace femus
 
@@ -45,9 +45,6 @@ void optimization_loop( MultiLevelProblem & e_map_in );
 #define DIMENSION    2
 //   #define DIMENSION    3
 // **************************************
-
-#define FOURTH_ROW 1
-
 
 
 #endif

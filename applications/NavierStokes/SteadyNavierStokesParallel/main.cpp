@@ -231,16 +231,16 @@ int main(int argc,char **args) {
   print_vars.push_back("P");
   print_vars.push_back("T");
        
-  VTKWriter vtkio(ml_sol);
-  vtkio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
-  //vtkio.write_system_solutions(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+  VTKWriter vtkio(&ml_sol);
+  vtkio.write(files.GetOutputPath(),"biquadratic",print_vars);
+  //vtkio.write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
   
-  GMVWriter gmvio(ml_sol);
-  gmvio.write_system_solutions(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
-  // gmvio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
+  GMVWriter gmvio(&ml_sol);
+  gmvio.write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+  // gmvio.write(files.GetOutputPath(),"biquadratic",print_vars);
     
   //   XDMFWriter xdmfio(ml_sol);
-  //   xdmfio.write_system_solutions(files.GetOutputPath(),"biquadratic",print_vars);
+  //   xdmfio.write(files.GetOutputPath(),"biquadratic",print_vars);
    
   //Destroy all the new systems
   ml_prob.clear();
@@ -511,7 +511,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
     
     // mesh and procs
     unsigned nel    = mymsh->GetNumberOfElements();
-    unsigned igrid  = mymsh->GetGridNumber();
+    unsigned igrid  = mymsh->GetLevel();
     unsigned iproc  = mymsh->processor_id();
 
     //----------------------------------------------------------------------------------
@@ -1304,7 +1304,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsign
   //data
   const unsigned	dim	= mymsh->GetDimension();
   unsigned 		nel	= mymsh->GetNumberOfElements();
-  unsigned 		igrid	= mymsh->GetGridNumber();
+  unsigned 		igrid	= mymsh->GetLevel();
   unsigned 		iproc	= mymsh->processor_id();
   double		IPe	= 1./(ml_prob.parameters.get<Fluid>("Fluid").get_Peclet_number());  
   

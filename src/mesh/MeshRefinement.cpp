@@ -79,7 +79,7 @@ void MeshRefinement::FlagElementsToBeRefinedByUserDefinedFunction() {
       vty/=nve;
       vtz/=nve;
       if(!_mesh.el->GetRefinedElementIndex(iel)){
-	if (_mesh._SetRefinementFlag(vtx,vty,vtz,_mesh.el->GetElementGroup(iel),_mesh.GetGridNumber())) {
+	if (_mesh._SetRefinementFlag(vtx,vty,vtz,_mesh.el->GetElementGroup(iel),_mesh.GetLevel())) {
 	  _mesh.el->SetRefinedElementIndex(iel,1);
 	  _mesh.el->AddToRefinedElementNumber(1);
 	  short unsigned elt=_mesh.el->GetElementType(iel);
@@ -113,7 +113,7 @@ void MeshRefinement::FlagElementsToBeRefinedByAMR() {
 	vty/=nve;
 	vtz/=nve;
 	if( (*_mesh._coordinate->_Sol[3])(iel_metis) < 0.5 &&
-	    _mesh._SetRefinementFlag(vtx,vty,vtz,_mesh.el->GetElementGroup(kel),_mesh.GetGridNumber()) ) {
+	    _mesh._SetRefinementFlag(vtx,vty,vtz,_mesh.el->GetElementGroup(kel),_mesh.GetLevel()) ) {
 	    _mesh._coordinate->_Sol[3]->set(iel_metis,1.);
 	}
       }
@@ -157,11 +157,13 @@ void MeshRefinement::FlagOnlyEvenElementsToBeRefined() {
 //---------------------------------------------------------------------------------------------------------------
 void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_type *otherFiniteElement[6][5]) {
   
+  _mesh.SetCoarseMesh(mshc);
+  
   _mesh.SetFiniteElementPtr(otherFiniteElement);
     
   elem *elc=mshc->el;
     
-  _mesh.SetGridNumber(igrid);
+  _mesh.SetLevel(igrid);
   //_grid=igrid;
 
 
@@ -297,70 +299,12 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   
   _mesh._coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
   _mesh._coordinate->ResizeSolutionVector("AMR");
+ 
+  unsigned solType=2;
      
-  //build projection Matrix
-  unsigned thisSolType=2;
-  if(_mesh._coordinate->_ProjMatFlag[thisSolType]==0){ 
-    _mesh._coordinate->_ProjMatFlag[thisSolType]=1;
-
-    int nf     = _mesh.MetisOffset[thisSolType][_nprocs];
-    int nc     = mshc->MetisOffset[thisSolType][_nprocs];
-    int nf_loc = _mesh.own_size[thisSolType][_iproc];
-    int nc_loc = mshc->own_size[thisSolType][_iproc]; 
-
-    //build matrix sparsity pattern size for efficient storage
-    
-    NumericVector *NNZ_d = NumericVector::build().release();
-    NNZ_d->init(*_mesh._coordinate->_Sol[0]);
-    NNZ_d->zero();
-    
-    NumericVector *NNZ_o = NumericVector::build().release();
-    NNZ_o->init(*_mesh._coordinate->_Sol[0]);
-    NNZ_o->zero();
-        
-    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-      for (int iel_mts=mshc->IS_Mts2Gmt_elem_offset[isdom];iel_mts < mshc->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
-	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
-	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  _mesh._finiteElement[ielt][thisSolType]->GetSparsityPatternSize(_mesh, *mshc, iel, NNZ_d, NNZ_o); 
-	}
-      }
-    }
-    NNZ_d->close();
-    NNZ_o->close();
-    
-    unsigned offset = _mesh.MetisOffset[thisSolType][_iproc];
-    vector <int> nnz_d(nf_loc);
-    vector <int> nnz_o(nf_loc);
-    for(int i=0; i<nf_loc;i++){
-      nnz_d[i]=static_cast <int> ((*NNZ_d)(offset+i));
-      nnz_o[i]=static_cast <int> ((*NNZ_o)(offset+i));
-    }
-            
-    delete NNZ_d;
-    delete NNZ_o;
-    
-    //build matrix
-    _mesh._coordinate->_ProjMat[thisSolType] = SparseMatrix::build().release();
-    _mesh._coordinate->_ProjMat[thisSolType]->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
-    // loop on the coarse grid 
-    for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-      for (int iel_mts=mshc->IS_Mts2Gmt_elem_offset[isdom]; 
-	   iel_mts < mshc->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
-	if( mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
-	  short unsigned ielt= mshc->el->GetElementType(iel);
-	  _mesh._finiteElement[ielt][thisSolType]->BuildProlongation(_mesh,*mshc,iel,_mesh._coordinate->_ProjMat[thisSolType]); 
-	}
-      }
-    }
-    _mesh._coordinate->_ProjMat[thisSolType]->close();
-  }
-      
-  _mesh._coordinate->_Sol[0]->matrix_mult(*mshc->_coordinate->_Sol[0],*_mesh._coordinate->_ProjMat[thisSolType]);
-  _mesh._coordinate->_Sol[1]->matrix_mult(*mshc->_coordinate->_Sol[1],*_mesh._coordinate->_ProjMat[thisSolType]);
-  _mesh._coordinate->_Sol[2]->matrix_mult(*mshc->_coordinate->_Sol[2],*_mesh._coordinate->_ProjMat[thisSolType]);
+  _mesh._coordinate->_Sol[0]->matrix_mult(*mshc->_coordinate->_Sol[0],*_mesh.GetCoarseToFineProjection(solType));
+  _mesh._coordinate->_Sol[1]->matrix_mult(*mshc->_coordinate->_Sol[1],*_mesh.GetCoarseToFineProjection(solType));
+  _mesh._coordinate->_Sol[2]->matrix_mult(*mshc->_coordinate->_Sol[2],*_mesh.GetCoarseToFineProjection(solType));
   _mesh._coordinate->_Sol[0]->close();
   _mesh._coordinate->_Sol[1]->close();
   _mesh._coordinate->_Sol[2]->close();     

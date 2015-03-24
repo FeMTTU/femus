@@ -36,12 +36,10 @@ namespace femus {
 
 
 // ========================================================
-MultiLevelMeshTwo::MultiLevelMeshTwo (const FemusInputParser<double>& map_in, const std::string mesh_file_in) :
-         _mesh_rtmap(map_in),
-         _dim(map_in.get("dimension")),
-         _mesh_order(map_in.get("mesh_ord")) {
+MultiLevelMeshTwo::MultiLevelMeshTwo (const unsigned nolevels, const unsigned dim, const GeomElType geomel_type, const std::string mesh_file_in) :
+         _dim(dim) {
 
-    _eltype_flag[VV]= map_in.get("geomel_type");
+    _eltype_flag[VV]= geomel_type;
 	 
     _mesh_file.assign(mesh_file_in); 
 
@@ -90,22 +88,21 @@ MultiLevelMeshTwo::MultiLevelMeshTwo (const FemusInputParser<double>& map_in, co
     }
     else  {  std::cout << "Geom Elem not supported" << std::endl; abort();   }
     
-if ( _dim == 3  && (map_in.get("geomel_type") != HEX && map_in.get("geomel_type") != TET && map_in.get("geomel_type") != WEDGE) )
+if ( _dim == 3  && (geomel_type != HEX && geomel_type != TET && geomel_type != WEDGE) )
         {  std::cout << "Inconsistent input file" << std::endl; abort();   }
     
-if ( _dim == 2  && (map_in.get("geomel_type") != QUAD && map_in.get("geomel_type") != TRI ) )
+if ( _dim == 2  && (geomel_type != QUAD && geomel_type != TRI ) )
         {  std::cout << "Inconsistent input file" << std::endl; abort();   }
     
-if ( _dim == 1  && (map_in.get("geomel_type") != LINE ) )
+if ( _dim == 1  && (geomel_type != LINE ) )
         {  std::cout << "Inconsistent input file" << std::endl; abort();   }
 
     
     _iproc    = paral::get_rank();
     _NoSubdom = paral::get_size();   
-    _NoLevels = GetRuntimeMap().get("nolevels");
+    _NoLevels = nolevels;
     
-    const uint mesh_ord = (uint) map_in.get("mesh_ord");
-    if (mesh_ord != 0) {
+    if (MESH_ORDER != QQ) {
         std::cout << "Linear mesh not yet implemented" << std::endl;
         abort();
     }

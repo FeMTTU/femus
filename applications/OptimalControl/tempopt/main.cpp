@@ -71,8 +71,10 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   const double   _Pr  = muf/rhof;                 physics_map.set("Pr",_Pr);
 
   // ======= Mesh =====
-  FemusInputParser<double> mesh_map("Mesh",files.GetOutputPath());
-  GenCase mesh(mesh_map,"inclQ2D2x2.gam");
+  const unsigned NoLevels = 3;
+  const unsigned dim = 2;
+  const GeomElType geomel_type = QUAD;
+  GenCase mesh(NoLevels,dim,geomel_type,"inclQ2D2x2.gam");
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
@@ -118,18 +120,20 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   Pressure       pressure("Qty_Pressure",qty_map,1,LL);                qty_map.AddQuantity(&pressure);
   Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.AddQuantity(&velocity);  
 
-#if FOURTH_ROW==1
-  Pressure2 pressure_2("Qty_Pressure_2",qty_map,1,KK);            qty_map.AddQuantity(&pressure_2);
-#endif 
-  
   // ===== end QuantityMap =========================================
   
   // ====== Start new main =================================
+  
   MultiLevelMesh ml_msh;
-  ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,1,0,0,QUAD9,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
-  ml_msh.RefineMesh(mesh_map.get("nolevels"),mesh_map.get("nolevels"),NULL);
+  ml_msh.GenerateCoarseBoxMesh(8,8,0,0,1,0,2,0,0,QUAD9,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"fifth");
+  ml_msh.RefineMesh(NoLevels,NoLevels,NULL);
   ml_msh.PrintInfo();
   
+  ml_msh.SetWriter(XDMF);
+  ml_msh.GetWriter()->write(files.GetOutputPath(),"biquadratic");
+  
+  ml_msh.SetDomain(&mybox);    
+	  
   MultiLevelSolution ml_sol(&ml_msh);
   ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
   
@@ -155,10 +159,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
          eqnT.AddSolutionToSystemPDE("FAKE");
          eqnT.AddUnknownToSystemPDE(&temperature);
          eqnT.AddUnknownToSystemPDE(&templift);
-         eqnT.AddUnknownToSystemPDE(&tempadj);
-#if FOURTH_ROW==1
-         eqnT.AddUnknownToSystemPDE(&pressure_2);   //the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function
-#endif
+         eqnT.AddUnknownToSystemPDE(&tempadj);//the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function
 	 eqnT.SetAssembleFunction(GenMatRhsT);
   
 //================================ 
@@ -178,21 +179,21 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
      
    SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
 //=====================
-    sys -> init();     //the dof map is built here based on all the solutions associated with that system
+    sys -> init_two();     //the dof map is built here based on all the solutions associated with that system
     sys -> _LinSolver[0]->set_solver_type(GMRES);  //if I keep PREONLY it doesn't run
 
 //=====================
-    sys -> init_sys();
+    sys -> init_unknown_vars();
 //=====================
     sys -> _dofmap.ComputeMeshToDof();
 //=====================
     sys -> initVectors();
 //=====================
-    sys -> Initialize();         //why do they do this BEFORE the dofmap?
+    sys -> Initialize();
 ///=====================
-    sys -> _bcond.GenerateBdc(); //why do they do this BEFORE the dofmap?
+    sys -> _bcond.GenerateBdc();
 //=====================
-    sys -> ReadMGOps(files.GetOutputPath());
+    GenCase::ReadMGOps(files.GetOutputPath(),sys);
     
     } 
 	 
