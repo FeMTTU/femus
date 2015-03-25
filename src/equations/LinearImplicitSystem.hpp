@@ -168,9 +168,10 @@ public:
      /** enforce sparcity pattern for setting uncoupled variables and save on memory allocation **/
     void SetSparsityPattern(vector < bool > other_sparcity_pattern);
     
+    vector < SparseMatrix* > _PP, _RR; /// @todo put it back to protected
+
 protected:
 
-    vector < SparseMatrix* > _PP, _RR; 
     /** Create the Prolongator matrix for the Multigrid solver */
     void Prolongator(const unsigned &gridf);
 

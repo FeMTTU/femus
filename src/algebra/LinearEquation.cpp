@@ -42,8 +42,6 @@ LinearEquation::LinearEquation(Mesh *other_msh){
   _EPSC = NULL;
   _RES = NULL;
   _RESC = NULL;
-  _PP = NULL;
-  _RR = NULL;
   _KK = NULL;
   _CC = NULL;
 }
@@ -235,14 +233,6 @@ void LinearEquation::DeletePde() {
   if(igrid>=_gridr && igrid<_gridn){
     if(_CC)
       delete _CC;
-  }
-  
-  
-  if (_msh->GetLevel()>0) {
-     if(_PP) 
-       delete _PP;
-     if(_RR) 
-       delete _RR;
   }
   
   if(_EPS)
