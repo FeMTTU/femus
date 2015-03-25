@@ -19,8 +19,15 @@ using namespace femus;
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
   bool dirichlet=1; //dirichlet
+  if(1 == facename){
+    dirichlet=1;
+  }
+  else if(2 == facename){
+    dirichlet=0;
+  }
   value=0.;
   return dirichlet;
+  
 }
 
 void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix);
@@ -37,11 +44,16 @@ int main(int argc, char **args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor=1.; 
-  mlMsh.ReadCoarseMesh("./input/square.neu","seventh",scalingFactor); 
+  //mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor); 
+  //mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor); 
+  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor); 
+  mlMsh.ReadCoarseMesh("./input/cube_all_shapes.neu","seventh",scalingFactor); 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
   
-  unsigned maxNumberOfMeshes = 5;
+  const unsigned dim = mlMsh.GetLevel(0)->GetDimension();
+  
+  unsigned maxNumberOfMeshes = (dim == 2)? 7 : 4;
   vector < vector < double > > semiNorm;
   semiNorm.resize(maxNumberOfMeshes);
   

@@ -46,13 +46,14 @@ public:
     virtual ~VTKWriter();
 
     /** write output function */
-    virtual void write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step=0) const;
-    
+    void write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step=0) const{
+      Pwrite(output_path, order, vars, time_step);
+    };
+    void Pwrite(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step=0) const;
 private:
   
     /** femus to vtk cell type map */
     static short unsigned int femusToVtkCellType[3][6];
-
 };
 
 /**    

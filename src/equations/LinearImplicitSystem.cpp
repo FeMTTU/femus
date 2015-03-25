@@ -55,7 +55,10 @@ void LinearImplicitSystem::clear() {
     for (unsigned ig=0; ig<_gridn; ig++) {
       _LinSolver[ig]->DeletePde();
       delete _LinSolver[ig];
-    }  
+      if(_PP[ig]) delete _PP[ig];
+      if(_RR[ig]) delete _RR[ig];
+    }
+        
     _NSchurVar_test=0;
     _numblock_test=0;
     _numblock_all_test=0;
@@ -87,7 +90,13 @@ void LinearImplicitSystem::init() {
       _LinSolver[i]->InitPde(_SolSystemPdeIndex,_ml_sol->GetSolType(),
 			     _ml_sol->GetSolName(),&_solution[i]->_Bdc,_gridr,_gridn,_SparsityPattern);
     }  
-    
+       
+    _PP.resize(_gridn);
+    _RR.resize(_gridn);
+    for(unsigned i=0;i<_gridn;i++){
+      _PP[i]=NULL;
+      _RR[i]=NULL;
+    }
     for (unsigned ig=1; ig<_gridn; ig++) {
       BuildProlongatorMatrix(ig);
     }
@@ -394,24 +403,24 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
     if (gridf>=_gridr) {  //_gridr
       if (!_LinSolver[gridf-1]->_CC_flag) {
 	_LinSolver[gridf-1]->_CC_flag=1;
-	_LinSolver[gridf-1]->_CC->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,!matrix_reuse);
+	_LinSolver[gridf-1]->_CC->matrix_PtAP(*_PP[gridf],*_LinSolver[gridf]->_KK,!matrix_reuse);
       } 
       else{
-	_LinSolver[gridf-1]->_CC->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,matrix_reuse);
+	_LinSolver[gridf-1]->_CC->matrix_PtAP(*_PP[gridf],*_LinSolver[gridf]->_KK,matrix_reuse);
       }
       _LinSolver[gridf-1u]->_KK->matrix_add(1.,*_LinSolver[gridf-1u]->_CC,"different_nonzero_pattern");
     } 
     else { //Projection of the Matrix on the lower level
       if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
-	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,!matrix_reuse);
+	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_PP[gridf],*_LinSolver[gridf]->_KK,!matrix_reuse);
       }
       else{
-	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_LinSolver[gridf]->_PP,*_LinSolver[gridf]->_KK,matrix_reuse);
+	_LinSolver[gridf-1]->_KK->matrix_PtAP(*_PP[gridf],*_LinSolver[gridf]->_KK,matrix_reuse);
       }    
     }
   }
       
-  _LinSolver[gridf-1u]->_RESC->matrix_mult_transpose(*_LinSolver[gridf]->_RES, *_LinSolver[gridf]->_PP);
+  _LinSolver[gridf-1u]->_RESC->matrix_mult_transpose(*_LinSolver[gridf]->_RES, *_PP[gridf]);
   *_LinSolver[gridf-1u]->_RES += *_LinSolver[gridf-1u]->_RESC;
   
 }
@@ -419,7 +428,7 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
 // *******************************************************
 void LinearImplicitSystem::Prolongator(const unsigned &gridf) {
   
-  _LinSolver[gridf]->_EPSC->matrix_mult(*_LinSolver[gridf-1]->_EPS,*_LinSolver[gridf]->_PP);
+  _LinSolver[gridf]->_EPSC->matrix_mult(*_LinSolver[gridf-1]->_EPS,*_PP[gridf]);
   _LinSolver[gridf]->UpdateResidual();
   _LinSolver[gridf]->SumEpsCToEps();
 }
@@ -498,8 +507,8 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
   delete NNZ_d;
   delete NNZ_o;
     
-  LinSolf->_PP = SparseMatrix::build().release();
-  LinSolf->_PP->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
+  _PP[gridf] = SparseMatrix::build().release();
+  _PP[gridf]->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
   
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned SolIndex = _SolSystemPdeIndex[k];
@@ -510,12 +519,12 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
 	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
     	  short unsigned ielt=mshc->el->GetElementType(iel);
-	  mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel,LinSolf->_PP,SolIndex,k);
+	  mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel,_PP[gridf],SolIndex,k);
 	}
       }
     }
   }
-  LinSolf->_PP->close();
+  _PP[gridf]->close();
 }
 
 
@@ -683,7 +692,7 @@ void LinearImplicitSystem::MGSolve(double Eps1,          // tolerance for the li
 
         for (uint Level = 1; Level < GetGridn(); Level++) {
 
-            _LinSolver[Level]->_EPS->matrix_mult(*_LinSolver[Level-1]->_EPS,*_LinSolver[Level]->_PP);  //**** project the solution
+            _LinSolver[Level]->_EPS->matrix_mult(*_LinSolver[Level-1]->_EPS,*_PP[Level]);  //**** project the solution
 
             res_fine = MGStep(Level,Eps1,MaxIter,Gamma,Nc_pre,Nc_coarse,Nc_post);
 
@@ -808,7 +817,7 @@ double LinearImplicitSystem::MGStep(int Level,            // Level
 
 ///    std::cout << ">>>>>>>> BEGIN ONE DESCENT >>>>>>>>>>"<< std::endl;
 
-        _LinSolver[Level-1]->_RESC->matrix_mult(*_LinSolver[Level]->_RES,*_LinSolver[Level-1]->_RR);//****** restrict the residual from the finer grid ( new rhs )
+        _LinSolver[Level-1]->_RESC->matrix_mult(*_LinSolver[Level]->_RES,*_RR[Level-1]);//****** restrict the residual from the finer grid ( new rhs )
         _LinSolver[Level-1]->_EPS->close();                                  //initial value of x for the presmoothing iterations
         _LinSolver[Level-1]->_EPS->zero();                                  //initial value of x for the presmoothing iterations
 
@@ -823,7 +832,7 @@ double LinearImplicitSystem::MGStep(int Level,            // Level
         std::cout << "BEFORE PROL Level " << Level << " res linfty " << _LinSolver[Level-1]->_RES->linfty_norm() << " res l2 " << _LinSolver[Level-1]->_RES->l2_norm() << std::endl;
 #endif
 
-        _LinSolver[Level]->_RES->matrix_mult(*_LinSolver[Level-1]->_EPS,*_LinSolver[Level]->_PP);//******** project the dx from the coarser grid
+        _LinSolver[Level]->_RES->matrix_mult(*_LinSolver[Level-1]->_EPS,*_PP[Level]);//******** project the dx from the coarser grid
 #ifdef DEFAULT_PRINT_CONV
         _LinSolver[Level]->_RES->close();
         //here, the _res contains the prolongation of dx, so the new x is x_old + P dx
