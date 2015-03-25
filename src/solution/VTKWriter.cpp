@@ -125,7 +125,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 	short unsigned ielt = _ml_mesh->GetLevel(ig)->el->GetElementType(kel);
 	for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(kel,index); j++) {
           counter++;
-	  unsigned loc_vtk_conn = map_pr[j];
+	  unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
 	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
 	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
 	  if( jnodeMetis < offset_iprc ){ // check if jnodeMetis is a ghost node
@@ -220,7 +220,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 	if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) { 
 	  short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(kel);
 	  for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(kel,index); j++) {
-	    unsigned loc_vtk_conn = map_pr[j];
+	    unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
 	    unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
 	    unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
 	    if( jnodeMetis < offset_iprc ){ 
@@ -241,7 +241,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 	  if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) { 
 	    short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(kel);
 	    for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(kel,index); j++) {
-	      unsigned loc_vtk_conn = map_pr[j];
+	      unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
 	      unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
 	      unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
 	      if( jnodeMetis < offset_iprc ){ 
@@ -294,7 +294,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
       unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
       if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
         for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(kel,index); j++) {
-	  unsigned loc_vtk_conn = map_pr[j];
+	  unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
 	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
 	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
 	  var_conn[icount] = (jnodeMetis >= offset_iprc )? jnodeMetis - offset_iprc + offset_nvt : nvt0 + (ghost_counter++);
@@ -566,7 +566,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 	  if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) { 
 	    short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(kel);
 	    for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(kel,index); j++) {
-	      unsigned loc_vtk_conn = map_pr[j];
+	      unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
 	      unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
 	      unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
 	      if( jnodeMetis < offset_iprc ){ 
@@ -802,7 +802,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 //     for (unsigned iel=0; iel<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); iel++) {
 //       if (ig==_gridn-1u || _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)==0) {
 //         for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
-// 	  unsigned loc_vtk_conn = map_pr[j];
+// 	  unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
 // 	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,loc_vtk_conn)-1u;
 // 	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode,index);
 // 	  var_conn[icount] = offset_nvt + jnodeMetis;

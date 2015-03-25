@@ -274,7 +274,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
       if ( ig == _gridn-1u || _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel) == 0) {
 	int ndofs = _ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index_nd);
         for (unsigned j = 0; j < ndofs; j++) {
-	  unsigned vtk_loc_conn = map_pr[j];
+	  unsigned vtk_loc_conn = FemusToVTKorToXDMFConn[j];
 	  unsigned jnode = _ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
 	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
 	  var_conn[icount] = offset_conn + jnode_Metis;
@@ -1484,9 +1484,9 @@ void XDMFWriter::PrintXDMFTopGeom(std::ofstream& out,
 
 #ifdef HAVE_HDF5 
   
-   uint n_children, order_typeel;
-    if (order_fe == BIQUADR_FE)     { n_children = 1; order_typeel = BIQUADR_TYPEEL;}
-    else if  (order_fe == LINEAR_FE) {n_children = NRE[mesh._eltype_flag[vb]]; order_typeel = LINEAR_TYPEEL;}
+   uint n_children;
+    if (order_fe == BIQUADR_FE)     { n_children = 1; }
+    else if  (order_fe == LINEAR_FE) {n_children = NRE[mesh._eltype_flag[vb]]; }
     else { std::cout << "Mesh Not supported" << std::endl; abort(); }   
    
     uint nel = mesh._n_elements_vb_lev[vb][Level];
@@ -1495,7 +1495,7 @@ void XDMFWriter::PrintXDMFTopGeom(std::ofstream& out,
   
    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
     
-   PrintXDMFTopology(out,top_file.str(),hdf_field.str(), type_el[order_typeel][mesh._eltype_flag[vb]], nel*n_children, nel*n_children, NVE[mesh._eltype_flag[vb]][order_fe]);
+   PrintXDMFTopology(out,top_file.str(),hdf_field.str(), type_el[order_fe][mesh._eltype_flag[vb]], nel*n_children, nel*n_children, NVE[mesh._eltype_flag[vb]][order_fe]);
 
    PrintXDMFGeometry(out,geom_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[Level],1);
    

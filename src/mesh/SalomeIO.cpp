@@ -277,19 +277,6 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
       mesh.el->SetElementVertexIndex(iel,inode,conn_map[iel+i*n_elements]);
     }
   }
-  
-// // // // // //   // Adding Connectivity to mesh structure (Libmesh)
-// // // // //   mesh.reserve_elem(n_elements);
-// // // // //   // read the elements
-// // // // //   for(int iel=0; iel<(int)n_elements; ++iel) {
-// // // // //     // add the elements to the mesh
-// // // // //     Elem* elem = mesh.add_elem(Elem::build(eletype.type).release());
-// // // // //     // add node pointers to the elements
-// // // // //     for(int i=0; i<Node_el; i++) {
-// // // // // //       elem->set_node(eletype.nodes[i])= mesh.node_ptr(conn_map[Node_el*iel+i]);
-// // // // //       elem->set_node(eletype.nodes[i])= mesh.node_ptr(conn_map[iel+i*n_elements]-1);
-// // // // //     }
-// // // // //   }    
 
     //   // end read  ELEMENT/CELL **************** B
 
