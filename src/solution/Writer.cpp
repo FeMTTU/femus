@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: Writer
- Authors: Eugenio Aulisa, Simone Bnà
+ Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
  
  Copyright (c) FEMTTU
  All rights reserved. 

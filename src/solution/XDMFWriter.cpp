@@ -42,10 +42,11 @@
 
 namespace femus {
 
-  const std::string XDMFWriter::type_el[4][6] = {{"Hexahedron","Tetrahedron","Wedge","Quadrilateral","Triangle","Polyline"},
-                                {"Hexahedron_20","Tetrahedron_10","Not_implemented","Quadrilateral_8","Triangle_6","Edge_3"},
-			        {"Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented"},
-                                {"Hexahedron_27","Not_implemented","Not_implemented","Quadrilateral_9","Triangle_6","Edge_3"}};
+  const std::string XDMFWriter::type_el[3][N_GEOM_ELS] = {{"Hexahedron","Tetrahedron","Wedge","Quadrilateral","Triangle","Polyline"},     //linear
+                                {"Hexahedron_20","Tetrahedron_10","Not_implemented","Quadrilateral_8","Triangle_6","Edge_3"},             //serendipity
+                                {"Hexahedron_27","Tetrahedron_10","Not_implemented","Quadrilateral_9","Triangle_6","Edge_3"}};            //tensor-product quadratic (some real, some fake)
+				/// @todo Tri6 and Tet10 are actually SERENDIPITY, not TENSOR-PRODUCT QUADRATIC.
+				// The corresponding tensor-product ones should be Tri7 and Tet14 
 
   const std::string XDMFWriter::_nodes_name = "/NODES";
   const std::string XDMFWriter::_elems_name = "/ELEMS";
@@ -68,25 +69,21 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
     print_all += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
   }
    
-  unsigned index=0;
   unsigned index_nd=0;
   if(!strcmp(order,"linear")) {    //linear
-    index=0;
     index_nd=0;
   }
   else if(!strcmp(order,"quadratic")) {  //quadratic
-    index=1;
     index_nd=1;
   }
-  else if(!strcmp(order,"biquadratic")) { //biquadratic
-    index=3;
+  else if(!strcmp(order,"biquadratic")) { //tensor-product quadratic (real and fake)
     index_nd=2;
   }
 
   /// @todo I assume that the mesh is not mixed
   std::string type_elem;
   unsigned elemtype = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementType(ZERO_ELEM);
-  type_elem = XDMFWriter::type_el[index][elemtype];
+  type_elem = XDMFWriter::type_el[index_nd][elemtype];
   
   if (type_elem.compare("Not_implemented") == 0) 
   {
@@ -108,7 +105,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   nel+=_ml_mesh->GetLevel(_gridn-1u)->GetNumberOfElements();
   
   unsigned icount;
-  unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index_nd);
+  unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementDofNumber(ZERO_ELEM,index_nd);
   int * var_conn          = new int [nel*el_dof_number];
   std::vector< int > var_proc(nel);
   float *var_el_f         = new float [nel];
