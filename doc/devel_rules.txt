@@ -127,3 +127,5 @@ Follow the instruction in the HDFVIEW website
 
 At the end of the build process, you should have an hdfview.sh script inside the bin directory of your build.
 You must open that script and change the INSTALLDIR variable with the path of this build (by default, /usr/local is in it)
+
+Another alternative to view the content of an HDF5 file is to use the 'h5dump' utility shipped with HDF5 (installed through PETSc, for instance)

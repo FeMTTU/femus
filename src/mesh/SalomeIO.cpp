@@ -16,7 +16,6 @@
 //local include
 #include "SalomeIO.hpp"
 #include "Mesh.hpp"
-#include "GeomElTypeEnum.hpp"
 
 //C++ include
 #include <cassert>
@@ -35,43 +34,51 @@ namespace femus {
    const uint SalomeIO::max_length = 100;  ///@todo this length of the menu string is conservative enough...
 
   
-  //for the hex27, salome goes as follows:
-  //face X=-1, clockwise from cube center;
-  //face X=+1, anticlockwise from cube center;
+  //How to determine a general connectivity:
+  //you have to align the element with respect to the x-y-z (or xi-eta-zeta) reference frame,
+  //and then look at the order in the med file.
+  //For every node there is a location, and you have to put that index in that x-y-z location.
+  //Look NOT at the NUMBERING, but at the ORDER!
   
+// SALOME HEX27  
+//         1------17-------5
+//        /|              /|
+//       / |             / |
+//      8  |   21      12  |
+//     /   9      22   /   13
+//    /    |          /    |
+//   0------16-------4     |
+//   | 20  |   26    |  25 |
+//   |     2------18-|-----6    
+//   |    /          |    /     
+//  11   /  24       15  /      
+//   | 10      23    |  14      
+//   | /             | /        
+//   |/              |/         
+//   3-------19------7          
+
+// TEMPLATE HEX27  (for future uses)
+//         X------X--------X
+//        /|              /|
+//       / |             / |
+//      X  |   X        X  |
+//     /   X      X    /   X
+//    /    |          /    |
+//   X------X--------X     |
+//   | X   |   X     |  X  |
+//   |     X------X--|-----X      zeta  
+//   |    /          |    /         ^    
+//   X   /  X        X   /          |   eta
+//   |  X      X     |  X           |  /
+//   | /             | /            | /
+//   |/              |/             |/ 
+//   X-------X-------X              -------> xi   
+
   
  const unsigned SalomeIO::SalomeToFemusVertexIndex[N_GEOM_ELS][27]= 
    {
-     //from femus to salome
-     //1,2,4,3,
-     //5,6,8,7,
-     //9,12,11,10,                centers lower face
-     //13,16,15,14,                 centers upper face
-     //18,17,19,20,                            vertical edges
-     //23,25,24,26,                                     vertical faces 
-     // 21,                        lower face
-     // 22,                           upper face
-     // 27                          hex center
      
-     //from femus to salome - subract one
-// 0,1,3,2,4,5,7,6,8,11,10,9,12,15,14,13,17,16,18,19,22,24,23,25, 20,21,26   
- 
-     //0,1,2,3,4,5,6,7,8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26   //identity
-     //0,1,3,2,4,5,7,6,8,11,10,9, 12,15,14,13,17,16,18,19,22,24,23,25,20,21,26     //from femus to salome
-     //0,1,3,2,4,5,7,6,8,11,10,9,12,15,14,13,17,16,18,19,24,25,20,22,21,23,26      //from salome to femus  
-
-     
-     {
-       0,1,3,2,4,5,7,6,8,11,10,9,12,15,14,13,17,16,18,19,24,25,20,22,21,23,26 
-//       0,1,2,3,4,5,6,7,   //vertices
-//       8,9,10,11,  //midpoints lower face
-//       12,13,14,15,//midpoints upper face
-//       16,17,18,19,//midpoints vertical edges
-//       24,25,      //opposite faces x direction
-//       20,22,      //opposite faces z direction
-//       23,21,      //opposite faces y direction
-//       26          //hexahedron center
-    },  //HEX27
+     {4,7,3,0,5,6,2,1,15,19,11,16,13,18,9,17,12,14,10,8,23,25,22,24,20,21,26},  //HEX27
     {
       0,4,1,6,5,
       2,7,8,9,3

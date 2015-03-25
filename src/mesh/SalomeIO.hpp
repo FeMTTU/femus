@@ -19,6 +19,8 @@
 
 // Local includes
 #include "MeshInput.hpp"
+#include "GeomElTypeEnum.hpp"
+
 #ifdef HAVE_HDF5
   #include "hdf5.h"
 #endif
@@ -56,10 +58,10 @@ class SalomeIO : public MeshInput<Mesh>
  private:
    
    /** Map from Salome vertex index to Femus vertex index */
-   static const unsigned SalomeToFemusVertexIndex[6][27]; 
+   static const unsigned SalomeToFemusVertexIndex[N_GEOM_ELS][27]; 
  
    /** Map from Salome face index to Femus face index */
-   static const unsigned SalomeToFemusFaceIndex[6][6];
+   static const unsigned SalomeToFemusFaceIndex[N_GEOM_ELS][6];
 
    /** Determine mesh dimension from mesh file */
    void  FindDimension(hid_t gid, const  std::string menu_name,hsize_t n_fem_type);
