@@ -117,9 +117,9 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   TempLift       templift("Qty_TempLift",qty_map,1,QQ,opt_loop);    qty_map.AddQuantity(&templift);  
   TempAdj         tempadj("Qty_TempAdj",qty_map,1,QQ);              qty_map.AddQuantity(&tempadj);  
   TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.AddQuantity(&tempdes);  //this is not going to be an Unknown!
-  Pressure       pressure("Qty_Pressure",qty_map,1,LL);                qty_map.AddQuantity(&pressure);
-  Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.AddQuantity(&velocity);  
-
+  Pressure       pressure("Qty_Pressure",qty_map,1,LL);             qty_map.AddQuantity(&pressure);
+  VelocityX     velocityX("Qty_Velocity0",qty_map,1,QQ);            qty_map.AddQuantity(&velocityX);
+  VelocityY     velocityY("Qty_Velocity1",qty_map,1,QQ);            qty_map.AddQuantity(&velocityY);
   // ===== end QuantityMap =========================================
   
   // ====== Start new main =================================
@@ -164,7 +164,8 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
           eqnNS.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_Velocity");
           eqnNS.AddSolutionToSystemPDE("Qty_Pressure");
 	  
-          eqnNS.AddUnknownToSystemPDE(&velocity); 
+          eqnNS.AddUnknownToSystemPDE(&velocityX); 
+          eqnNS.AddUnknownToSystemPDE(&velocityY); 
           eqnNS.AddUnknownToSystemPDE(&pressure);
 	  
 	  eqnNS.SetAssembleFunction(GenMatRhsNS);
