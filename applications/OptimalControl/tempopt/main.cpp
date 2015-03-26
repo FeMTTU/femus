@@ -197,6 +197,38 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
    for (MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
      
    SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
+   
+  // ******* set MG-Solver *******
+  sys->SetMgType(F_CYCLE);
+  sys->SetAbsoluteConvergenceTolerance(1.e-10);
+  sys->SetNonLinearConvergenceTolerance(1.e-10);//1.e-5
+  sys->SetNumberPreSmoothingStep(1);
+  sys->SetNumberPostSmoothingStep(1);
+  sys->SetMaxNumberOfLinearIterations(8);     //2
+  sys->SetMaxNumberOfNonLinearIterations(15); //10
+  
+  // ******* Set Preconditioner *******
+  sys->SetMgSmoother(GMRES_SMOOTHER);//ASM_SMOOTHER,VANKA_SMOOTHER
+   
+  // ******* init *******
+  sys->init();
+  
+  // ******* Set Smoother *******
+  sys->SetSolverFineGrids(GMRES);
+  sys->SetPreconditionerFineGrids(ILU_PRECOND); 
+  sys->SetTolerances(1.e-12,1.e-20,1.e+50,20);   /// what the heck do these parameters mean?
+
+    // ******* Add variables to be solved *******  /// do we always need this?
+  sys->ClearVariablesToBeSolved();
+  sys->AddVariableToBeSolved("All");
+  
+    
+  // ******* For Gmres Preconditioner only *******
+  sys->SetDirichletBCsHandling(ELIMINATION);
+  
+  // ******* For Gmres Preconditioner only *******
+//   sys->solve();
+
 //=====================
     sys -> init_two();     //the dof map is built here based on all the solutions associated with that system
     sys -> _LinSolver[0]->set_solver_type(GMRES);  //if I keep PREONLY it doesn't run

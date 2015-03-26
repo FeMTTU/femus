@@ -54,7 +54,7 @@ namespace femus {
 SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
         _dofmap(this,e_map_in.GetMeshTwo()),
         _bcond(&_dofmap),
-        LinearImplicitSystem(e_map_in,eqname_in,number,smoother_type) { }
+        NonLinearImplicitSystem(e_map_in,eqname_in,number,smoother_type) { }
 
 
 void SystemTwo::init_unknown_vars() {
