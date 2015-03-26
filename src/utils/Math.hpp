@@ -107,9 +107,21 @@ const uint myproc = ml_prob.GetMeshTwo()._iproc;
   
   Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(Level);
   
-    CurrentElem       currelem(Level,vb,NULL,ml_prob.GetMeshTwo(),ml_prob.GetElemType()); //element without equation
+
+  double integral = 0.;
+  
+
+//parallel sum
+    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
+    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+  
+    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+      
+    CurrentElem       currelem(iel,myproc,Level,vb,NULL,ml_prob.GetMeshTwo(),ml_prob.GetElemType()); //element without equation
     currelem.SetMesh(mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
+
+    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
 //========= DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
@@ -118,18 +130,7 @@ const uint myproc = ml_prob.GetMeshTwo()._iproc;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-  double integral = 0.;
-  
-//loop over the geom el types
-      const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
-
-//parallel sum
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
-  
-    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
-  
-    currelem.SetDofobjConnCoords(myproc,iel);
+    currelem.SetDofobjConnCoords();
     currelem.SetMidpoint(); 
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -160,9 +161,9 @@ double myval_g = pt2func(time,xyz._val_g);
     
          std::cout << std::endl  << " ^^^^^^^^^^^^^^^^^L'integrale sul processore "<< myproc << " vale: " << integral << std::endl;
 
-    double weights_sum = 0.;
-    for (uint qp = 0; qp < el_ngauss; qp++)  weights_sum += ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
-       std::cout << std::endl << " ^^^^^^^^^^^^^^^^^ La somma dei pesi  vale: " << weights_sum << std::endl;
+//     double weights_sum = 0.;
+//     for (uint qp = 0; qp < el_ngauss; qp++)  weights_sum += ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+//        std::cout << std::endl << " ^^^^^^^^^^^^^^^^^ La somma dei pesi  vale: " << weights_sum << std::endl;
 
        double J=0.;
    #ifdef HAVE_MPI

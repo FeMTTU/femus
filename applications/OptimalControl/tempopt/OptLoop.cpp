@@ -89,7 +89,19 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
  
   const uint mesh_vb = VV;
 
-    CurrentElem       currelem(Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
+
+
+  
+   double integral = 0.;
+
+
+//parallel sum
+    const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
+    const uint nel_b = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level];
+  
+    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+      
+    CurrentElem       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
     currelem.SetMesh(mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
 
@@ -124,19 +136,8 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   xyz_refbox._FEord    = MESH_ORDER;
   xyz_refbox._ndof     = mymsh->el->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
-
   
-   double integral = 0.;
-
-      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
-
-//parallel sum
-    const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
-    const uint nel_b = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level];
-  
-    for (uint iel=0; iel < (nel_e - nel_b); iel++) {
-
-      currelem.SetDofobjConnCoords(myproc,iel);
+      currelem.SetDofobjConnCoords();
       currelem.SetMidpoint();
       
      currelem.ConvertElemCoordsToMappingOrd(xyz);
@@ -154,7 +155,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     if ( Tdes._eqnptr != NULL )         Tdes.GetElemDofs();
     else                                Tdes._qtyptr->FunctionDof(Tdes,0.,&xyz_refbox._val_dofs[0]);    
 
-
+      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
@@ -228,7 +229,18 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
   
   Mesh		*mymsh		=  eqn->GetMLProb()._ml_msh->GetLevel(Level);
   
-    CurrentElem       currelem(Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
+
+    
+   double integral = 0.;
+
+
+//parallel sum
+    const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
+    const uint nel_b = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level];
+  
+    for (int iel=0; iel < (nel_e - nel_b); iel++) {
+      
+    CurrentElem       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
     currelem.SetMesh(mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
   
@@ -254,19 +266,10 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
   xyz_refbox._ndof     = mymsh->el->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
   
-    
-   double integral = 0.;
-
 //loop over the geom el types
-      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
-
-//parallel sum
-    const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
-    const uint nel_b = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level];
-  
-    for (int iel=0; iel < (nel_e - nel_b); iel++) {
-
-      currelem.SetDofobjConnCoords(myproc,iel);
+      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();      
+      
+      currelem.SetDofobjConnCoords();
       currelem.SetMidpoint();
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);

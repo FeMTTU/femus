@@ -24,7 +24,7 @@
 
 namespace femus {
   
- const unsigned GambitIO::GambitToFemusVertexIndex[6][27]= 
+ const unsigned GambitIO::GambitToFemusVertexIndex[N_GEOM_ELS][27]= 
    {
     {
       4,16,0,15,23,11,7,19,3,
@@ -46,7 +46,7 @@ namespace femus {
   };
 
   
-const unsigned GambitIO::GambitToFemusFaceIndex[6][6]= 
+const unsigned GambitIO::GambitToFemusFaceIndex[N_GEOM_ELS][6]= 
   {
     {0,4,2,5,3,1},
     {0,1,2,3},

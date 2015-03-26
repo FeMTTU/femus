@@ -42,10 +42,11 @@
 
 namespace femus {
 
-  const std::string XDMFWriter::type_el[4][6] = {{"Hexahedron","Tetrahedron","Wedge","Quadrilateral","Triangle","Polyline"},
-                                {"Hexahedron_20","Tetrahedron_10","Not_implemented","Quadrilateral_8","Triangle_6","Edge_3"},
-			        {"Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented","Not_implemented"},
-                                {"Hexahedron_27","Not_implemented","Not_implemented","Quadrilateral_9","Triangle_6","Edge_3"}};
+  const std::string XDMFWriter::type_el[3][N_GEOM_ELS] = {{"Hexahedron","Tetrahedron","Wedge","Quadrilateral","Triangle","Polyline"},     //linear
+                                {"Hexahedron_20","Tetrahedron_10","Not_implemented","Quadrilateral_8","Triangle_6","Edge_3"},             //serendipity
+                                {"Hexahedron_27","Tetrahedron_10","Not_implemented","Quadrilateral_9","Triangle_6","Edge_3"}};            //tensor-product quadratic (some real, some fake)
+				/// @todo Tri6 and Tet10 are actually SERENDIPITY, not TENSOR-PRODUCT QUADRATIC.
+				// The corresponding tensor-product ones should be Tri7 and Tet14 
 
   const std::string XDMFWriter::_nodes_name = "/NODES";
   const std::string XDMFWriter::_elems_name = "/ELEMS";
@@ -68,25 +69,21 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
     print_all += !(vars[ivar].compare("All")) + !(vars[ivar].compare("all")) + !(vars[ivar].compare("ALL"));
   }
    
-  unsigned index=0;
   unsigned index_nd=0;
   if(!strcmp(order,"linear")) {    //linear
-    index=0;
     index_nd=0;
   }
   else if(!strcmp(order,"quadratic")) {  //quadratic
-    index=1;
     index_nd=1;
   }
-  else if(!strcmp(order,"biquadratic")) { //biquadratic
-    index=3;
+  else if(!strcmp(order,"biquadratic")) { //tensor-product quadratic (real and fake)
     index_nd=2;
   }
 
   /// @todo I assume that the mesh is not mixed
   std::string type_elem;
   unsigned elemtype = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementType(ZERO_ELEM);
-  type_elem = XDMFWriter::type_el[index][elemtype];
+  type_elem = XDMFWriter::type_el[index_nd][elemtype];
   
   if (type_elem.compare("Not_implemented") == 0) 
   {
@@ -108,7 +105,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   nel+=_ml_mesh->GetLevel(_gridn-1u)->GetNumberOfElements();
   
   unsigned icount;
-  unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementDofNumber(0,index_nd);
+  unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementDofNumber(ZERO_ELEM,index_nd);
   int * var_conn          = new int [nel*el_dof_number];
   std::vector< int > var_proc(nel);
   float *var_el_f         = new float [nel];
@@ -277,7 +274,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
       if ( ig == _gridn-1u || _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel) == 0) {
 	int ndofs = _ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index_nd);
         for (unsigned j = 0; j < ndofs; j++) {
-	  unsigned vtk_loc_conn = map_pr[j];
+	  unsigned vtk_loc_conn = FemusToVTKorToXDMFConn[j];
 	  unsigned jnode = _ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
 	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
 	  var_conn[icount] = offset_conn + jnode_Metis;
@@ -1487,9 +1484,9 @@ void XDMFWriter::PrintXDMFTopGeom(std::ofstream& out,
 
 #ifdef HAVE_HDF5 
   
-   uint n_children, order_typeel;
-    if (order_fe == BIQUADR_FE)     { n_children = 1; order_typeel = BIQUADR_TYPEEL;}
-    else if  (order_fe == LINEAR_FE) {n_children = NRE[mesh._eltype_flag[vb]]; order_typeel = LINEAR_TYPEEL;}
+   uint n_children;
+    if (order_fe == BIQUADR_FE)     { n_children = 1; }
+    else if  (order_fe == LINEAR_FE) {n_children = NRE[mesh._eltype_flag[vb]]; }
     else { std::cout << "Mesh Not supported" << std::endl; abort(); }   
    
     uint nel = mesh._n_elements_vb_lev[vb][Level];
@@ -1498,7 +1495,7 @@ void XDMFWriter::PrintXDMFTopGeom(std::ofstream& out,
   
    std::ostringstream coord_lev; coord_lev << "_L" << Level; 
     
-   PrintXDMFTopology(out,top_file.str(),hdf_field.str(), type_el[order_typeel][mesh._eltype_flag[vb]], nel*n_children, nel*n_children, NVE[mesh._eltype_flag[vb]][order_fe]);
+   PrintXDMFTopology(out,top_file.str(),hdf_field.str(), type_el[order_fe][mesh._eltype_flag[vb]], nel*n_children, nel*n_children, NVE[mesh._eltype_flag[vb]][order_fe]);
 
    PrintXDMFGeometry(out,geom_file.str(),_nodes_name+"/COORD/X",coord_lev.str(),"X_Y_Z","Float",mesh._NoNodesXLev[Level],1);
    

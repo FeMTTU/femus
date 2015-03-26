@@ -135,7 +135,17 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_msh.SetDomain(&mybox);    
 	  
   MultiLevelSolution ml_sol(&ml_msh);
-  ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_Temperature",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_TempLift",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_TempAdj",LAGRANGE,SECOND,0);
+  ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_Velocity",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_Pressure",LAGRANGE,FIRST,0);
+  ml_sol.AddSolution("Qty_TempDes",LAGRANGE,SECOND,0,false); //this is not going to be an Unknown!
+
+  ml_sol.Initialize("All");  /// @todo you have to call this before you can print @todo I can also call it after instantiation MLProblem
+  ml_sol.SetWriter(VTK);
+  std::vector<std::string> print_vars(1); print_vars[0] = "All"; // we should find a way to make this easier
+  ml_sol.GetWriter()->write(files.GetOutputPath(),"biquadratic",print_vars);
   
   MultiLevelProblem ml_prob(&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
@@ -150,13 +160,13 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 // not all the Quantities need to be unknowns of an equation
 
   SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS");
-          eqnNS.AddSolutionToSystemPDE("FAKE");
+//           eqnNS.AddSolutionToSystemPDE("FAKE");   //do the vector version of it
           eqnNS.AddUnknownToSystemPDE(&velocity); 
           eqnNS.AddUnknownToSystemPDE(&pressure);
 	  eqnNS.SetAssembleFunction(GenMatRhsNS);
   
   SystemTwo & eqnT = ml_prob.add_system<SystemTwo>("Eqn_T");
-         eqnT.AddSolutionToSystemPDE("FAKE");
+//          eqnT.AddSolutionToSystemPDE("FAKE");
          eqnT.AddUnknownToSystemPDE(&temperature);
          eqnT.AddUnknownToSystemPDE(&templift);
          eqnT.AddUnknownToSystemPDE(&tempadj);//the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function

@@ -19,6 +19,7 @@
 
 // Local includes
 #include "MeshInput.hpp"
+#include "GeomElTypeEnum.hpp"
 
 namespace femus
 {
@@ -53,10 +54,10 @@ class GambitIO : public MeshInput<Mesh>
  private:
    
    /** Map from Gambit vertex index to Femus vertex index */
-   static const unsigned GambitToFemusVertexIndex[6][27]; 
+   static const unsigned GambitToFemusVertexIndex[N_GEOM_ELS][27]; 
  
    /** Map from Gambit face index to Femus face index */
-   static const unsigned GambitToFemusFaceIndex[6][6];
+   static const unsigned GambitToFemusFaceIndex[N_GEOM_ELS][6];
   
 };
 

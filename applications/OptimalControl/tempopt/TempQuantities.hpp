@@ -22,11 +22,6 @@ class Temperature : public Quantity {
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
   void initialize_xyz(const double* xp, std::vector<double> & value) const;
  
-//specific function
-  //this is the function of the IMPOSED DERIVATIVE of TEMPERATURE, aka heat flux
-  void heatflux_txyz(const double t,const double* xyz, double* qflux) const;
-  
-
 };
 
 //===============
@@ -97,13 +92,6 @@ class Velocity : public Quantity {
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
   void initialize_xyz(const double* xp, std::vector<double> & value) const;
-
-  //specific function
-  //this is the STRAIN DERIVATIVE of VELOCITY, so it must stay here
-  //from the physical and also mathematical point of view
-  //the shape funcs of the same order as v will then be used and so on
-//multi-dimensional arrays must have bounds for all dimensions except the first
-    void strain_txyz(const double t, const double* xp,double strain[][DIMENSION]) const;  //TODO convert this double array
 
 };
 
