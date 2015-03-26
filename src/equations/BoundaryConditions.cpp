@@ -176,7 +176,7 @@ namespace femus {
 // and to PRINT ALL THE VARIABLES, node or cell.
 
 //
-
+// here the boundary conditions are STEADY-STATE right now
 void BoundaryConditions::GenerateBdc() {
   
     const uint Lev_pick_bc_NODE_dof = _dofmap->_mesh._NoLevels - 1;  //we use the FINE Level as reference

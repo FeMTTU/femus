@@ -104,17 +104,13 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   //then, after you know the shape, you may or may not generate the mesh with that shape 
   //the two things are totally independent, and related to the application, not to the library
 
-  // ======== Loop ===================================
-  FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());
-  OptLoop opt_loop(files, loop_map); 
-   
   // ===== QuantityMap : this is like the MultilevelSolution =========================================
   QuantityMap  qty_map;
   qty_map.SetMeshTwo(&mesh);
   qty_map.SetInputParser(&physics_map);
 
   Temperature temperature("Qty_Temperature",qty_map,1,QQ);          qty_map.AddQuantity(&temperature);
-  TempLift       templift("Qty_TempLift",qty_map,1,QQ,opt_loop);    qty_map.AddQuantity(&templift);  
+  TempLift       templift("Qty_TempLift",qty_map,1,QQ);             qty_map.AddQuantity(&templift);  
   TempAdj         tempadj("Qty_TempAdj",qty_map,1,QQ);              qty_map.AddQuantity(&tempadj);  
   TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.AddQuantity(&tempdes);  //this is not going to be an Unknown!
   Pressure       pressure("Qty_Pressure",qty_map,1,LL);             qty_map.AddQuantity(&pressure);
@@ -249,7 +245,10 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
     
     } 
 	 
-	 
+  // ======== Loop ===================================
+  FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());
+  OptLoop opt_loop(files, loop_map); 
+   
   opt_loop.TransientSetup(ml_prob);  // reset the initial state (if restart) and print the Case
 
   opt_loop.optimization_loop(ml_prob);

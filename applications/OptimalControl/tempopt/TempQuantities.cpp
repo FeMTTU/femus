@@ -22,8 +22,8 @@ Temperature::Temperature(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { }
 
 //===========================================================================
-TempLift::TempLift(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in, const TimeLoop & timeloop_in) : _my_timeloop(timeloop_in), 
- Quantity(name_in,qtymap_in,dim_in,FEord_in) { }
+TempLift::TempLift(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) { }
 
 //===========================================================================
 TempAdj::TempAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
@@ -415,8 +415,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
   
-    if  (_my_timeloop._curr_t_idx < 1)    { bc_flag[0] = 0; }
-    else if ( (x_rotshift[1]) < 0.4*(le[1]-lb[1])  ||  (x_rotshift[1]) > 0.6*(le[1]-lb[1]) )  {  bc_flag[0]=0;  } 
+     bc_flag[0] = 0;
  
   }
 
@@ -427,30 +426,14 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   
    if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
 
-     //===== START FROM A SIMPLE STATE SOLUTION =========
-     if  (_my_timeloop._curr_t_idx < 1)   { bc_flag[0] = 0; }  //=====CONTROL//////////////
-      //===== START FROM A SIMPLE STATE SOLUTION =========
-     else if  ( (x_rotshift[0]) < 0.25*(le[0] - lb[0]) || ( x_rotshift[0]) > 0.75*(le[0] - lb[0]) )  {  bc_flag[0]=0; }
+       if  ( (x_rotshift[0]) < 0.25*(le[0] - lb[0]) || ( x_rotshift[0]) > 0.75*(le[0] - lb[0]) )  {  bc_flag[0]=0; }
+       
      }
   
   if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
       bc_flag[0]=0;
     }
-
-
-  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
-  
-  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
-     bc_flag[0]=0;
-  }
-  
-  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
-      bc_flag[0]=0;
-  }
-  
-  } //end dim 3
-  
-  
+ 
   return;
 }
 

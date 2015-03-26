@@ -28,15 +28,12 @@ class Temperature : public Quantity {
 class TempLift : public Quantity {
 
   public:
-   TempLift(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in, const TimeLoop & time_loop_in);
+   TempLift(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
   ~TempLift(){};
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
   void initialize_xyz(const double* xp, std::vector<double> & value) const;
   
-    const TimeLoop & _my_timeloop;
-  
-
 };
 
 
