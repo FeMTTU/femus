@@ -66,8 +66,7 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
     
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
-    CurrentElem       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
-    currelem.SetMesh(mymsh);
+    CurrentElem       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
@@ -327,8 +326,7 @@ for (uint fe = 0; fe < QL; fe++)     {
  
    for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
      
-    CurrentElem       currelem(iel,myproc,Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
-    currelem.SetMesh(mymsh);
+    CurrentElem       currelem(iel,myproc,Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================

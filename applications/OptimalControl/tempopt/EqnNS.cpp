@@ -83,8 +83,7 @@
 
   for (int iel=0; iel < (nel_e - nel_b); iel++) {
     
-    CurrentElem       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
-    currelem.SetMesh(mymsh);
+    CurrentElem       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
  
   

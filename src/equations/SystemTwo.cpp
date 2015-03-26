@@ -237,12 +237,12 @@ void SystemTwo::Initialize() {
 
 	    for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 	  
-                CurrentElem       currelem(iel,myproc,Level,VV,this,GetMLProb().GetMeshTwo(),GetMLProb().GetElemType());  
-                currelem.SetMesh(mymsh);
-                const uint  el_dof_objs = NVE[ GetMLProb().GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+                CurrentElem       currelem(iel,myproc,Level,VV,this,GetMLProb().GetMeshTwo(),GetMLProb().GetElemType(),mymsh);  
 	
 	        currelem.SetDofobjConnCoords();
                 currelem.SetMidpoint();
+		
+                const uint  el_dof_objs = NVE[ GetMLProb().GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 
             for (uint q=0; q < _UnknownQuantitiesVector.size() ; q++) {
 		      

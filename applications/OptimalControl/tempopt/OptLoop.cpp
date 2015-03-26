@@ -101,8 +101,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
       
-    CurrentElem       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
-    currelem.SetMesh(mymsh);
+    CurrentElem       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
 
   //========== 
@@ -240,8 +239,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
   
     for (int iel=0; iel < (nel_e - nel_b); iel++) {
       
-    CurrentElem       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType());
-    currelem.SetMesh(mymsh);
+    CurrentElem       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
   
 //======Functions in the integrand ============
