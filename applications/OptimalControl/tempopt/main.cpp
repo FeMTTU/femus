@@ -160,16 +160,25 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 // not all the Quantities need to be unknowns of an equation
 
   SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS");
-//           eqnNS.AddSolutionToSystemPDE("FAKE");   //do the vector version of it
+  
+          eqnNS.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_Velocity");
+          eqnNS.AddSolutionToSystemPDE("Qty_Pressure");
+	  
           eqnNS.AddUnknownToSystemPDE(&velocity); 
           eqnNS.AddUnknownToSystemPDE(&pressure);
+	  
 	  eqnNS.SetAssembleFunction(GenMatRhsNS);
   
   SystemTwo & eqnT = ml_prob.add_system<SystemTwo>("Eqn_T");
-//          eqnT.AddSolutionToSystemPDE("FAKE");
+  
+         eqnT.AddSolutionToSystemPDE("Qty_Temperature");
+         eqnT.AddSolutionToSystemPDE("Qty_TempLift");
+         eqnT.AddSolutionToSystemPDE("Qty_TempAdj");
+	 
          eqnT.AddUnknownToSystemPDE(&temperature);
          eqnT.AddUnknownToSystemPDE(&templift);
          eqnT.AddUnknownToSystemPDE(&tempadj);//the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function
+	 
 	 eqnT.SetAssembleFunction(GenMatRhsT);
   
 //================================ 
