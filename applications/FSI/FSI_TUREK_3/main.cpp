@@ -222,7 +222,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
        }
       else {
         value=1.5*um*4.0/0.1681*y*(0.41-y);
-       }
+      }
     }  
     else if(2==facename ){  //outflow
      test=0;
