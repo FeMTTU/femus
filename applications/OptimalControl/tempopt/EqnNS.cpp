@@ -40,9 +40,6 @@
   //========== GEOMETRIC ELEMENT ========
   const uint           space_dim = ml_prob._ml_msh->GetDimension();
 
-  //=======density and viscosity===================
-  const double rhof = ml_prob.GetInputParser().get("rho0");
-  const double  muf = ml_prob.GetInputParser().get("mu0");
   //====== reference values ========================
 //====== related to Quantities on which Operators act, and to the choice of the "LEADING" EQUATION Operator
   const double IRe = 1./ml_prob.GetInputParser().get("Re");
@@ -83,12 +80,14 @@
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity VelOldX(currgp);
-    VelOldX._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0");
+    VelOldX._qtyptr  = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0");
+    VelOldX._SolName = "Qty_Velocity0";
     VelOldX.VectWithQtyFillBasic();
     VelOldX.Allocate();
 
     CurrentQuantity VelOldY(currgp);
-    VelOldY._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity1");
+    VelOldY._qtyptr  = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity1");
+    VelOldY._SolName = "Qty_Velocity1";
     VelOldY.VectWithQtyFillBasic();
     VelOldY.Allocate();
 
@@ -102,7 +101,8 @@
 
 //=========
     CurrentQuantity pressOld(currgp);
-    pressOld._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Pressure");
+    pressOld._qtyptr  = ml_prob.GetQtyMap().GetQuantity("Qty_Pressure");
+    pressOld._SolName = "Qty_Pressure";
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
 
@@ -157,12 +157,6 @@
      VelOldY.GetElemDofs();
     pressOld.GetElemDofs();
 
-//======== TWO PHASE WORLD
-    double rho_nd =  1.;
-    double  mu_nd =  1.;
-//======== TWO PHASE WORLD
-
-    
 //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
 //==============================================================
@@ -246,8 +240,8 @@ for (uint fe = 0; fe < QL; fe++)     {
                                                   //(idim): component of the tEST function
            currelem.Rhs()(irowq) += 
          currelem.GetBCDofFlag()[irowq]*
-           dtxJxW_g*(       + _AdvNew_fl*rho_nd*          AdvRhs_g[idim]*phii_g     // NONLIN
-                            +            rho_nd*IFr*gravity._val_g[idim]*phii_g     // gravity                           
+           dtxJxW_g*(       + _AdvNew_fl*          AdvRhs_g[idim]*phii_g     // NONLIN
+                            +            IFr*gravity._val_g[idim]*phii_g     // gravity                           
                                )
             + (1-currelem.GetBCDofFlag()[irowq])*detb*VelOld_vec[idim]->_val_dofs[i] //Dirichlet bc    
 	;
@@ -279,10 +273,10 @@ for (uint fe = 0; fe < QL; fe++)     {
                += 
             currelem.GetBCDofFlag()[irowq]*    
             dtxJxW_g*(
-                 + _AdvPic_fl*                           rho_nd* Adv_g*phii_g                //TODO NONLIN
-                 + _AdvNew_fl*rho_nd*phij_g*VelOld_vec[idim]->_grad_g[0][idim]*phii_g        //TODO NONLIN
-                 + _AdvPic_fl*_Stab_fl*rho_nd*        0.5*Div_g*phij_g*phii_g                //TODO NONLIN
-                 +                         mu_nd*IRe*(      dphijdx_g[idim]*dphiidx_g[idim] + Lap_g)
+                 + _AdvPic_fl*                           Adv_g*phii_g                //TODO NONLIN
+                 + _AdvNew_fl*phij_g*VelOld_vec[idim]->_grad_g[0][idim]*phii_g        //TODO NONLIN
+                 + _AdvPic_fl*_Stab_fl*        0.5*Div_g*phij_g*phii_g                //TODO NONLIN
+                 +                         IRe*(      dphijdx_g[idim]*dphiidx_g[idim] + Lap_g)
                );
 
             int idimp1=(idim+1)%space_dim;    // block +1 [2-6-7] [idim(rows),idim+1(columns)]  //(idimp1): component of the SHAPE functions
@@ -290,8 +284,8 @@ for (uint fe = 0; fe < QL; fe++)     {
                +=
             currelem.GetBCDofFlag()[irowq]*
             dtxJxW_g*(
-                   _AdvNew_fl*rho_nd*phij_g*VelOld_vec[idim]->_grad_g[0][idimp1]*phii_g           //TODO NONLIN
-                              +            mu_nd*IRe*(     dphijdx_g[idim]*dphiidx_g[idimp1])
+                   _AdvNew_fl*phij_g*VelOld_vec[idim]->_grad_g[0][idimp1]*phii_g           //TODO NONLIN
+                              +            IRe*(     dphijdx_g[idim]*dphiidx_g[idimp1])
                );
 
           }

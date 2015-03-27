@@ -116,19 +116,22 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
-    Tempold._qtyptr   = my_system.GetUnknownQuantitiesVector()[0]; 
+    Tempold._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Temperature"); 
+    Tempold._SolName = "Qty_Temperature";
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //====================================
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempLift");//_UnknownQuantitiesVector[1]; 
+    Tlift._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempLift");
+    Tlift._SolName = "Qty_TempLift";
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
     CurrentQuantity TAdj(currgp);
-    TAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempAdj");//_UnknownQuantitiesVector[2]; 
+    TAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempAdj"); 
+    TAdj._SolName = "Qty_TempAdj";
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
    
@@ -150,18 +153,21 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
   //==================
     CurrentQuantity velX(currgp);
     velX._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
+    velX._SolName = "Qty_Velocity0";
     velX.VectWithQtyFillBasic();
     velX.Allocate();
     
   //==================
     CurrentQuantity velY(currgp);
     velY._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity1"); 
+    velY._SolName = "Qty_Velocity1";
     velY.VectWithQtyFillBasic();
     velY.Allocate();    
     
 //===============Tdes=====================
     CurrentQuantity Tdes(currgp);
     Tdes._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempDes"); 
+    Tdes._SolName = "Qty_TempDes";
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
 
@@ -190,15 +196,12 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
   int domain_flag = ElFlagControl(xyz_refbox._el_average,ml_prob._ml_msh);
 //====================    
     
-//===== FILL the DOFS of the EXTERNAL QUANTITIES: you must assure that for every Vect the quantity is set correctly
-// for every Vect it must be clear if it belongs to an equation or not, and which equation it belongs to;
-// this is usually made clear by the related QUANTITY.
-      
+//===== FILL the DOFS of the EXTERNAL QUANTITIES:
    if ( velX._eqnptr != NULL )  velX.GetElemDofs();
-   else                        velX._qtyptr->FunctionDof(velX,time,&xyz_refbox._val_dofs[0]);
+   else                         velX._qtyptr->FunctionDof(velX,time,&xyz_refbox._val_dofs[0]);
    
    if ( velY._eqnptr != NULL )  velY.GetElemDofs();
-   else                        velY._qtyptr->FunctionDof(velY,time,&xyz_refbox._val_dofs[0]);
+   else                         velY._qtyptr->FunctionDof(velY,time,&xyz_refbox._val_dofs[0]);
 
    if ( Tdes._eqnptr != NULL )  Tdes.GetElemDofs();
    else                         Tdes._qtyptr->FunctionDof(Tdes,time,&xyz_refbox._val_dofs[0]);
