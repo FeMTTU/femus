@@ -5,10 +5,7 @@
 #include <cstdlib>
 #include <sstream>
 
-// External library include ( LibMesh, PETSc...)
 #include "FemusConfig.hpp"
-
-// FEMuS
 #include "paral.hpp" 
 #include "FemusInit.hpp"
 #include "Files.hpp"
@@ -33,7 +30,6 @@
 #ifdef HAVE_LIBMESH
 #include "libmesh/libmesh.h"
 #endif
-
 
 void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
 void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
@@ -109,13 +105,13 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   qty_map.SetMeshTwo(&mesh);
   qty_map.SetInputParser(&physics_map);
 
+  Pressure       pressure("Qty_Pressure",qty_map,1,LL);             qty_map.AddQuantity(&pressure);
+  VelocityX     velocityX("Qty_Velocity0",qty_map,1,QQ);            qty_map.AddQuantity(&velocityX);
+  VelocityY     velocityY("Qty_Velocity1",qty_map,1,QQ);            qty_map.AddQuantity(&velocityY);
   Temperature temperature("Qty_Temperature",qty_map,1,QQ);          qty_map.AddQuantity(&temperature);
   TempLift       templift("Qty_TempLift",qty_map,1,QQ);             qty_map.AddQuantity(&templift);  
   TempAdj         tempadj("Qty_TempAdj",qty_map,1,QQ);              qty_map.AddQuantity(&tempadj);  
   TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.AddQuantity(&tempdes);  //this is not going to be an Unknown!
-  Pressure       pressure("Qty_Pressure",qty_map,1,LL);             qty_map.AddQuantity(&pressure);
-  VelocityX     velocityX("Qty_Velocity0",qty_map,1,QQ);            qty_map.AddQuantity(&velocityX);
-  VelocityY     velocityY("Qty_Velocity1",qty_map,1,QQ);            qty_map.AddQuantity(&velocityY);
   // ===== end QuantityMap =========================================
   
   // ====== Start new main =================================
@@ -136,13 +132,19 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_sol.AddSolution("Qty_TempAdj",LAGRANGE,SECOND,0);
   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_Velocity",LAGRANGE,SECOND,0);
   ml_sol.AddSolution("Qty_Pressure",LAGRANGE,FIRST,0);
-  ml_sol.AddSolution("Qty_TempDes",LAGRANGE,SECOND,0,false); //this is not going to be an Unknown!
+  ml_sol.AddSolution("Qty_TempDes",LAGRANGE,SECOND,0,false); //this is not going to be an Unknown! //moreover, this is not going to need any BC (i think they are excluded with "false") // I would like to have a Solution that is NOT EVEN related to the mesh at all... just like a function "on-the-fly"
 
   ml_sol.Initialize("All");  /// @todo you have to call this before you can print @todo I can also call it after instantiation MLProblem
   ml_sol.SetWriter(VTK);
   std::vector<std::string> print_vars(1); print_vars[0] = "All"; // we should find a way to make this easier
   ml_sol.GetWriter()->write(files.GetOutputPath(),"biquadratic",print_vars);
-  
+
+  // ******* Set boundary functions *******
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+
+
+
+  // ******* Set problem *******
   MultiLevelProblem ml_prob(&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
   ml_prob.SetQruleAndElemType("fifth");

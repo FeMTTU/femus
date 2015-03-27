@@ -492,20 +492,6 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
      bc_flag[0]=0;
   }
   
-  
-  
-  
-  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
-  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
-     bc_flag[0]=0;
-  }
-  
-  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
-      bc_flag[0]=0;
-  }
-  
-  } //end dim 3
-  
   return;
 }
 

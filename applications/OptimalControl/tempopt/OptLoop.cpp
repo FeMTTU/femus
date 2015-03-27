@@ -373,7 +373,68 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
 return el_flagdom; 
 
 }
+
+
+//---------------------------------------------------------------------------------------------------------------------
+
+bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+
+//   // defaults ***********
+  bool test=1; //dirichlet  // 0 neumann
+//   value=0.;
+//   // defaults ***********
+//   
+//   const double bdry_toll = DEFAULT_BDRY_TOLL;
+//   
+//   Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
+// 
+//   std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+//   std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
+//   lb[0] = box->_lb[0]; //already nondimensionalized
+//   le[0] = box->_le[0];
+//   lb[1] = box->_lb[1];
+//   le[1] = box->_le[1];
+//   if (_qtymap.GetMeshTwo()->get_dim() == 3) {
+//   lb[2] = box->_lb[2];
+//   le[2] = box->_le[2];
+//   }
+//   
+//     std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+//   _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+  
+  if(!strcmp(name,"Qty_Temperature")) {
  
+  }
+  
+  
+  else if(!strcmp(name,"Qty_TempLift")){
+ 
+  }
+  
+  
+  
+  else if(!strcmp(name,"Qty_TempAdj")){
+ 
+  }
+  
+  
+  else if(!strcmp(name,"Qty_Velocity0")){
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_Velocity1")){
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_Pressure")){
+ 
+  }
+  
+  return test;
+}
+
+
 
 
 } //end namespace femus

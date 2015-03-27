@@ -2,7 +2,7 @@
 
 Program: FEMuS
 Module: MultiLevelProblem
-Authors: Eugenio Aulisa, Simone Bnà
+Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
 
 Copyright (c) FEMuS
 All rights reserved.
@@ -42,7 +42,11 @@ class MultiLevelSolution : public ParallelObject {
 
 private:
   
-    typedef double (*initfunc) (const double &x, const double &y, const double &z);
+    /** Initial condition function pointer typedef */
+    typedef double (*InitFunc) (const double &x, const double &y, const double &z);
+    
+    /** Boundary condition function pointer typedef */
+    typedef bool (*BoundaryFunc) (const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName, const double time);
 
 public:
 
@@ -71,7 +75,7 @@ public:
     void ResizeSolutionVector( const char name[]);
 
     /** To be Added */
-    void Initialize(const char name[], initfunc func = NULL);
+    void Initialize(const char name[], InitFunc func = NULL);
 
     /** To be Added */
     unsigned GetIndex(const char name[]) const;
@@ -95,8 +99,7 @@ public:
     };
 
     /** To be Added */
-    void AttachSetBoundaryConditionFunction ( bool (* SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[],
-            double &value, const int FaceName, const double time) );
+    void AttachSetBoundaryConditionFunction (BoundaryFunc SetBoundaryConditionFunction );
 
     /** To be Added */
     void GenerateBdc(const char name[], const char bdc_type[]="Steady");
@@ -167,8 +170,9 @@ public:
     // member data
     MultiLevelMesh* _ml_msh; //< Multilevel mesh
 
-    bool (*_SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[],
-                                           double &value, const int FaceName, const double time); //< boundary condition function pointer
+    /** boundary condition function pointer */
+    BoundaryFunc _SetBoundaryConditionFunction;
+    
     void build();
 
     bool _Use_GenerateBdc_new;

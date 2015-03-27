@@ -2,7 +2,7 @@
 
 Program: FEMUS
 Module: MultiLevelProblem
-Authors: Eugenio Aulisa, Simone Bnà
+Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
  
 Copyright (c) FEMTTU
 All rights reserved. 
@@ -168,7 +168,7 @@ void MultiLevelSolution::PairSolution(const char solution_name[], const char sol
 // *******************************************************
 
 
-void MultiLevelSolution::Initialize(const char name[], initfunc func) {
+void MultiLevelSolution::Initialize(const char name[], InitFunc func) {
   
   unsigned i_start;
   unsigned i_end;
@@ -277,8 +277,7 @@ unsigned MultiLevelSolution::GetSolutionType(const char name[]) {
 }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelSolution::AttachSetBoundaryConditionFunction ( bool (* SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
-												     double &value, const int FaceName, const double time) ) {
+void MultiLevelSolution::AttachSetBoundaryConditionFunction ( BoundaryFunc SetBoundaryConditionFunction ) {
   _bdc_func_set = true;
   _SetBoundaryConditionFunction = SetBoundaryConditionFunction;
   return;
