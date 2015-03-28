@@ -135,9 +135,6 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_sol.AddSolution("Qty_TempDes",LAGRANGE,SECOND,0,false); //this is not going to be an Unknown! //moreover, this is not going to need any BC (i think they are excluded with "false") // I would like to have a Solution that is NOT EVEN related to the mesh at all... just like a function "on-the-fly"
 
   ml_sol.Initialize("All");  /// @todo you have to call this before you can print @todo I can also call it after instantiation MLProblem
-  ml_sol.SetWriter(VTK);
-  std::vector<std::string> print_vars(1); print_vars[0] = "All"; // we should find a way to make this easier
-  ml_sol.GetWriter()->write(files.GetOutputPath(),"biquadratic",print_vars);
 
   // ******* Set boundary function function *******
   ml_sol.AttachSetBoundaryConditionFunctionMLProb(SetBoundaryCondition);
@@ -158,6 +155,11 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_sol.GenerateBdc("Qty_Velocity0","Steady",&ml_prob);
   ml_sol.GenerateBdc("Qty_Velocity1","Steady",&ml_prob);
   ml_sol.GenerateBdc("Qty_Pressure","Steady",&ml_prob);
+
+  // ******* Debug *******
+  ml_sol.SetWriter(VTK);
+  std::vector<std::string> print_vars(1); print_vars[0] = "All"; // we should find a way to make this easier
+  ml_sol.GetWriter()->write(files.GetOutputPath(),"biquadratic",print_vars);
 
   
 //===============================================

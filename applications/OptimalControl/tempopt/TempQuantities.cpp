@@ -109,7 +109,7 @@ void Pressure::Function_txyz(const double t, const double* xp,double* func) cons
 
 Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());  //already nondimensionalized
  
-  func[0] =  1./ _qtymap.GetInputParser()->get("pref")*( (box->_le[1] - box->_lb[1]) - xp[1] )*(cos(6.*0.*t));
+  func[0] =  1./ _qtymap.GetInputParser()->get("pref")*( (box->_le[1] - box->_lb[1]) - xp[1] );
 
 //this equation is in the reference frame CENTERED AT (0,0,0)  
   
@@ -312,19 +312,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
     }
   
   } //top RefBox
-  
 
-  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
-  
-  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
-//      bc_flag[0]=0;
-  }
-  
-  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
-//      bc_flag[0]=0;
-  }
-
-  } // end dim 3
 
   return;
  
@@ -475,23 +463,6 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
       bc_flag[0]=0; //always fixed
   }
   
-
-  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
-    bc_flag[0]=0;
-  }
-  
-  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
-    bc_flag[0]=0;
-  }
-  
-  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
-     bc_flag[0]=0;    
-  }
-  
-  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
-     bc_flag[0]=0;
-  }
-  
   return;
 }
 
@@ -603,26 +574,6 @@ void VelocityY::initialize_xyz(const double* xp, std::vector< double >& value) c
   
   }
 //============================================
-
-//========================================
-//left, inlet
- if  ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {
- 
- if ( (x_rotshift[1]) > 0.4*(box->_le[1] - box->_lb[1]) && ( x_rotshift[1]) < 0.6*(box->_le[1]-box->_lb[1]) )  {  //left of the refbox
-       value[0] = 0.; 
-      }
-   }   
-//============================================
-
-//============================================
-//====== outlet
-  if ((box->_le[1]-box->_lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (box->_le[1]-box->_lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
-
- if ( (x_rotshift[0]) < 0.71*(box->_le[0] - box->_lb[0]) ) {
-   value[0] = 0.;
-}
-
-  }
 
   return;
 }
