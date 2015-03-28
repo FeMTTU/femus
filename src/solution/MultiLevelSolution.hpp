@@ -32,7 +32,7 @@ PURPOSE.  See the above copyright notice for more information.
 namespace femus {
 
 
-
+class MultiLevelProblem;
 
 /**
  * This class is a black box container to handle multilevel solutions.
@@ -47,6 +47,9 @@ private:
     
     /** Boundary condition function pointer typedef */
     typedef bool (*BoundaryFunc) (const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName, const double time);
+
+    /** @duplicate */
+    typedef bool (*BoundaryFuncMLProb) (const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName, const double time);
 
 public:
 
@@ -102,13 +105,22 @@ public:
     void AttachSetBoundaryConditionFunction (BoundaryFunc SetBoundaryConditionFunction );
 
     /** To be Added */
-    void GenerateBdc(const char name[], const char bdc_type[]="Steady");
+    void GenerateBdc(const char name[], const char bdc_type[]="Steady", const MultiLevelProblem * ml_prob = NULL);
     
     /** To be Added */
     void InitializeBdc();
 
     /** To be Added */
     void UpdateBdc(const double time);
+    
+    /** @duplicate */
+    void AttachSetBoundaryConditionFunctionMLProb ( BoundaryFuncMLProb SetBoundaryConditionFunction_in );
+    
+    /** @duplicate */
+    void GenerateBdc_MLProb(const MultiLevelProblem * ml_prob, const unsigned int k, const unsigned int grid0, const double time);
+
+    /** @duplicate */
+    BoundaryFuncMLProb _SetBoundaryConditionFunctionMLProb;
 
     /** To be Added */
     void GenerateBdc(const unsigned int k, const unsigned grid0, const double time);

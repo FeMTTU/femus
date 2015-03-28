@@ -377,7 +377,7 @@ return el_flagdom;
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
 
 //   // defaults ***********
   bool test=1; //dirichlet  // 0 neumann

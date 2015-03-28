@@ -139,9 +139,8 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   std::vector<std::string> print_vars(1); print_vars[0] = "All"; // we should find a way to make this easier
   ml_sol.GetWriter()->write(files.GetOutputPath(),"biquadratic",print_vars);
 
-  // ******* Set boundary functions *******
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-
+  // ******* Set boundary function function *******
+  ml_sol.AttachSetBoundaryConditionFunctionMLProb(SetBoundaryCondition);
 
 
   // ******* Set problem *******
@@ -150,7 +149,17 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_prob.SetQruleAndElemType("fifth");
   ml_prob.SetInputParser(&physics_map);
   ml_prob.SetQtyMap(&qty_map); 
+  
+  
+  // ******* Generate boundary conditions *******
+  ml_sol.GenerateBdc("Qty_Temperature","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_TempLift","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_TempAdj","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_Velocity0","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_Velocity1","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_Pressure","Steady",&ml_prob);
 
+  
 //===============================================
 //================== Add EQUATIONS AND ======================
 //========= associate an EQUATION to QUANTITIES ========
