@@ -5,10 +5,7 @@
 #include <cstdlib>
 #include <sstream>
 
-// External library include ( LibMesh, PETSc...)
 #include "FemusConfig.hpp"
-
-// FEMuS
 #include "paral.hpp" 
 #include "FemusInit.hpp"
 #include "Files.hpp"
@@ -33,7 +30,6 @@
 #ifdef HAVE_LIBMESH
 #include "libmesh/libmesh.h"
 #endif
-
 
 void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
 void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
@@ -104,22 +100,18 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   //then, after you know the shape, you may or may not generate the mesh with that shape 
   //the two things are totally independent, and related to the application, not to the library
 
-  // ======== Loop ===================================
-  FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());
-  OptLoop opt_loop(files, loop_map); 
-   
   // ===== QuantityMap : this is like the MultilevelSolution =========================================
   QuantityMap  qty_map;
   qty_map.SetMeshTwo(&mesh);
   qty_map.SetInputParser(&physics_map);
 
+  Pressure       pressure("Qty_Pressure",qty_map,1,LL);             qty_map.AddQuantity(&pressure);
+  VelocityX     velocityX("Qty_Velocity0",qty_map,1,QQ);            qty_map.AddQuantity(&velocityX);
+  VelocityY     velocityY("Qty_Velocity1",qty_map,1,QQ);            qty_map.AddQuantity(&velocityY);
   Temperature temperature("Qty_Temperature",qty_map,1,QQ);          qty_map.AddQuantity(&temperature);
-  TempLift       templift("Qty_TempLift",qty_map,1,QQ,opt_loop);    qty_map.AddQuantity(&templift);  
+  TempLift       templift("Qty_TempLift",qty_map,1,QQ);             qty_map.AddQuantity(&templift);  
   TempAdj         tempadj("Qty_TempAdj",qty_map,1,QQ);              qty_map.AddQuantity(&tempadj);  
   TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.AddQuantity(&tempdes);  //this is not going to be an Unknown!
-  Pressure       pressure("Qty_Pressure",qty_map,1,LL);                qty_map.AddQuantity(&pressure);
-  Velocity       velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.AddQuantity(&velocity);  
-
   // ===== end QuantityMap =========================================
   
   // ====== Start new main =================================
@@ -135,14 +127,41 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_msh.SetDomain(&mybox);    
 	  
   MultiLevelSolution ml_sol(&ml_msh);
-  ml_sol.AddSolution("FAKE",LAGRANGE,SECOND,0);
-  
+  ml_sol.AddSolution("Qty_Temperature",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_TempLift",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_TempAdj",LAGRANGE,SECOND,0);
+  ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_Velocity",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_Pressure",LAGRANGE,FIRST,0);
+  ml_sol.AddSolution("Qty_TempDes",LAGRANGE,SECOND,0,false); //this is not going to be an Unknown! //moreover, this is not going to need any BC (i think they are excluded with "false") // I would like to have a Solution that is NOT EVEN related to the mesh at all... just like a function "on-the-fly"
+
+  ml_sol.Initialize("All");  /// @todo you have to call this before you can print @todo I can also call it after instantiation MLProblem
+
+  // ******* Set boundary function function *******
+  ml_sol.AttachSetBoundaryConditionFunctionMLProb(SetBoundaryCondition);
+
+
+  // ******* Set problem *******
   MultiLevelProblem ml_prob(&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
   ml_prob.SetQruleAndElemType("fifth");
   ml_prob.SetInputParser(&physics_map);
   ml_prob.SetQtyMap(&qty_map); 
+  
+  
+  // ******* Generate boundary conditions *******
+  ml_sol.GenerateBdc("Qty_Temperature","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_TempLift","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_TempAdj","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_Velocity0","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_Velocity1","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_Pressure","Steady",&ml_prob);
 
+  // ******* Debug *******
+  ml_sol.SetWriter(VTK);
+  std::vector<std::string> print_vars(1); print_vars[0] = "All"; // we should find a way to make this easier
+  ml_sol.GetWriter()->write(files.GetOutputPath(),"biquadratic",print_vars);
+
+  
 //===============================================
 //================== Add EQUATIONS AND ======================
 //========= associate an EQUATION to QUANTITIES ========
@@ -150,16 +169,27 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 // not all the Quantities need to be unknowns of an equation
 
   SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS");
-          eqnNS.AddSolutionToSystemPDE("FAKE");
-          eqnNS.AddUnknownToSystemPDE(&velocity); 
+  
+          eqnNS.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_Velocity");
+          eqnNS.AddSolutionToSystemPDE("Qty_Pressure");
+	  
+          eqnNS.AddUnknownToSystemPDE(&velocityX); 
+          eqnNS.AddUnknownToSystemPDE(&velocityY); 
           eqnNS.AddUnknownToSystemPDE(&pressure);
+	  
 	  eqnNS.SetAssembleFunction(GenMatRhsNS);
   
+
   SystemTwo & eqnT = ml_prob.add_system<SystemTwo>("Eqn_T");
-         eqnT.AddSolutionToSystemPDE("FAKE");
+  
+         eqnT.AddSolutionToSystemPDE("Qty_Temperature");
+         eqnT.AddSolutionToSystemPDE("Qty_TempLift");
+         eqnT.AddSolutionToSystemPDE("Qty_TempAdj");
+	 
          eqnT.AddUnknownToSystemPDE(&temperature);
          eqnT.AddUnknownToSystemPDE(&templift);
          eqnT.AddUnknownToSystemPDE(&tempadj);//the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function
+	 
 	 eqnT.SetAssembleFunction(GenMatRhsT);
   
 //================================ 
@@ -178,6 +208,38 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
    for (MultiLevelProblem::const_system_iterator eqn = ml_prob.begin(); eqn != ml_prob.end(); eqn++) {
      
    SystemTwo* sys = static_cast<SystemTwo*>(eqn->second);
+   
+  // ******* set MG-Solver *******
+  sys->SetMgType(F_CYCLE);
+  sys->SetAbsoluteConvergenceTolerance(1.e-10);
+  sys->SetNonLinearConvergenceTolerance(1.e-10);//1.e-5
+  sys->SetNumberPreSmoothingStep(1);
+  sys->SetNumberPostSmoothingStep(1);
+  sys->SetMaxNumberOfLinearIterations(8);     //2
+  sys->SetMaxNumberOfNonLinearIterations(15); //10
+  
+  // ******* Set Preconditioner *******
+  sys->SetMgSmoother(GMRES_SMOOTHER);//ASM_SMOOTHER,VANKA_SMOOTHER
+   
+  // ******* init *******
+  sys->init();
+  
+  // ******* Set Smoother *******
+  sys->SetSolverFineGrids(GMRES);
+  sys->SetPreconditionerFineGrids(ILU_PRECOND); 
+  sys->SetTolerances(1.e-12,1.e-20,1.e+50,20);   /// what the heck do these parameters mean?
+
+    // ******* Add variables to be solved *******  /// do we always need this?
+  sys->ClearVariablesToBeSolved();
+  sys->AddVariableToBeSolved("All");
+  
+    
+  // ******* For Gmres Preconditioner only *******
+  sys->SetDirichletBCsHandling(ELIMINATION);
+  
+  // ******* For Gmres Preconditioner only *******
+//   sys->solve();
+
 //=====================
     sys -> init_two();     //the dof map is built here based on all the solutions associated with that system
     sys -> _LinSolver[0]->set_solver_type(GMRES);  //if I keep PREONLY it doesn't run
@@ -197,7 +259,10 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
     
     } 
 	 
-	 
+  // ======== Loop ===================================
+  FemusInputParser<double> loop_map("TimeLoop",files.GetOutputPath());
+  OptLoop opt_loop(files, loop_map); 
+   
   opt_loop.TransientSetup(ml_prob);  // reset the initial state (if restart) and print the Case
 
   opt_loop.optimization_loop(ml_prob);

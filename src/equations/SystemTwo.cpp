@@ -54,7 +54,7 @@ namespace femus {
 SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
         _dofmap(this,e_map_in.GetMeshTwo()),
         _bcond(&_dofmap),
-        LinearImplicitSystem(e_map_in,eqname_in,number,smoother_type) { }
+        NonLinearImplicitSystem(e_map_in,eqname_in,number,smoother_type) { }
 
 
 void SystemTwo::init_unknown_vars() {
@@ -229,18 +229,20 @@ void SystemTwo::Initialize() {
 
     for (uint Level = 0; Level< GetGridn(); Level++) {
       
-  Mesh		*mymsh		=  GetMLProb()._ml_msh->GetLevel(Level);
-       CurrentElem       currelem(Level,VV,this,GetMLProb().GetMeshTwo(),GetMLProb().GetElemType());  
-       currelem.SetMesh(mymsh);
-        const uint  el_dof_objs = NVE[ GetMLProb().GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
+            Mesh	*mymsh	=  GetMLProb()._ml_msh->GetLevel(Level);
+            const unsigned myproc  = mymsh->processor_id();
 
             uint iel_b = GetMLProb().GetMeshTwo()._off_el[VV][ GetMLProb().GetMeshTwo()._iproc*GetGridn() + Level ];
             uint iel_e = GetMLProb().GetMeshTwo()._off_el[VV][ GetMLProb().GetMeshTwo()._iproc*GetGridn() + Level + 1];
 
 	    for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 	  
-	        currelem.SetDofobjConnCoords(GetMLProb().GetMeshTwo()._iproc,iel);
+                CurrentElem       currelem(iel,myproc,Level,VV,this,GetMLProb().GetMeshTwo(),GetMLProb().GetElemType(),mymsh);  
+	
+	        currelem.SetDofobjConnCoords();
                 currelem.SetMidpoint();
+		
+                const uint  el_dof_objs = NVE[ GetMLProb().GetMeshTwo()._geomelem_flag[currelem.GetDim()-1] ][BIQUADR_FE];
 
             for (uint q=0; q < _UnknownQuantitiesVector.size() ; q++) {
 		      

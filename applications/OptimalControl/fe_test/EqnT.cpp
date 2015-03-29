@@ -65,8 +65,7 @@
 
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
-  CurrentElem       currelem(Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());
-  currelem.SetMesh(mymsh);
+  CurrentElem       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
@@ -98,7 +97,7 @@
     //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
   CurrentQuantity xyz_refbox(currgp);  //no quantity
     xyz_refbox._dim      = space_dim;
-    xyz_refbox._FEord    = MESH_ORDER;;
+    xyz_refbox._FEord    = MESH_ORDER;
     xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
     xyz_refbox.Allocate();
 
@@ -106,7 +105,7 @@
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
-    currelem.SetDofobjConnCoords(myproc,iel);
+    currelem.SetDofobjConnCoords();
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);

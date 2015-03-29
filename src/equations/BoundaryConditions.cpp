@@ -176,7 +176,7 @@ namespace femus {
 // and to PRINT ALL THE VARIABLES, node or cell.
 
 //
-
+// here the boundary conditions are STEADY-STATE right now
 void BoundaryConditions::GenerateBdc() {
   
     const uint Lev_pick_bc_NODE_dof = _dofmap->_mesh._NoLevels - 1;  //we use the FINE Level as reference
@@ -223,16 +223,17 @@ void BoundaryConditions::GenerateBdc() {
     for (uint Level=0; Level <_dofmap->_mesh._NoLevels;Level++)   { //loop over the levels
       
   Mesh		*mymsh		=  _dofmap->_eqn->GetMLProb()._ml_msh->GetLevel(Level);
-    CurrentElem       currelem(Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType());
-    currelem.SetMesh(mymsh);
     const uint el_nnodes_b = mymsh->el->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
 	
         for (uint isubd=0; isubd<_dofmap->_mesh._NoSubdom; ++isubd) {
             uint iel_b = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd + Level];
             uint iel_e = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd + Level+1];
+	    
             for (uint iel=0; iel < (iel_e - iel_b); iel++) {
+	      
+                CurrentElem       currelem(iel,isubd,Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType(),mymsh);
 
-	        currelem.SetDofobjConnCoords(isubd,iel);
+	        currelem.SetDofobjConnCoords();
                 currelem.SetMidpoint();
 		
  	    for (uint ivar=0; ivar< _dofmap->_n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!

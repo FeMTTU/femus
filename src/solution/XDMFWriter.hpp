@@ -146,7 +146,7 @@ public:
 
 private:
   
-   static const std::string type_el[4][6];
+   static const std::string type_el[3][N_GEOM_ELS];
    
    static const std::string _nodes_name;
    static const std::string _elems_name;

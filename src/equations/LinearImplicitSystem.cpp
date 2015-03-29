@@ -109,6 +109,8 @@ void LinearImplicitSystem::init() {
     AddVariableToBeSolved("All");
 }
 
+
+
 /// @deprecated 
 // this function is like init but it doesn't call InitPDE
 void LinearImplicitSystem::init_two() {
@@ -124,6 +126,15 @@ void LinearImplicitSystem::init_two() {
 //       _LinSolver[i]->InitPde(_SolSystemPdeIndex,_ml_sol->GetSolType(),
 // 			     _ml_sol->GetSolName(),&_solution[i]->_Bdc,_gridr,_gridn,_SparsityPattern);
 //     }  
+
+
+    _PP.resize(_gridn);
+    _RR.resize(_gridn);
+    for(unsigned i=0;i<_gridn;i++){
+      _PP[i]=NULL;
+      _RR[i]=NULL;
+    }
+    
 //     
 //     for (unsigned ig=1; ig<_gridn; ig++) {
 //       BuildProlongatorMatrix(ig);

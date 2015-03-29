@@ -163,7 +163,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsi
   vector <unsigned> indexVAR(2*dim+1);
   //vector <unsigned> indCOORD(dim);
   vector <unsigned> indVAR(3*dim+1);  
-  vector <unsigned> SolType(3*dim+1);  
+  vector <unsigned> SolType(3*dim+1);  /// @todo is this really 3*d + 1 or 2*d+1 would be enough?
   
   for(unsigned ivar=0; ivar<dim; ivar++) {
     //indCOORD[ivar]=ml_prob.GetIndex(&coordname[ivar][0]);

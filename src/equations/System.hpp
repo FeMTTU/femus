@@ -65,6 +65,9 @@ public:
         return "Basic";
     }
 
+    /** Add a vector of solution variables to the system PDE */
+    void AddSolutionToSystemPDEVector(const unsigned n_components,  const std::string name);
+  
     /** Associate the solution variables to the system PDE */
     void AddSolutionToSystemPDE(const char solname[]);
 

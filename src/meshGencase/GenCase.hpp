@@ -47,10 +47,10 @@ public:
     void ComputeAndPrintProl(const std::string output_path);
     void ComputeAndPrintRest(const std::string output_path);
     
-    static void ReadMGOps(const std::string output_path, const SystemTwo * mysys);
-    static void ReadMatrix(const std::string& name, const SystemTwo * mysys); 
-    static void ReadProl(const std::string& name, const SystemTwo * mysys);   
-    static void ReadRest(const std::string& name, const SystemTwo * mysys);
+    static void ReadMGOps(const std::string output_path, SystemTwo * mysys);
+    static void ReadMatrix(const std::string& name,  SystemTwo * mysys); 
+    static void ReadProl(const std::string& name, SystemTwo * mysys);   
+    static void ReadRest(const std::string& name, SystemTwo * mysys);
     
     void CreateMeshStructuresLevSubd(const std::string output_path);
     void Delete();

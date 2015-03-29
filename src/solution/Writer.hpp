@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: Writer
- Authors: Eugenio Aulisa, Simone Bnà
+ Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
 
  Copyright (c) FEMTTU
  All rights reserved.
@@ -26,9 +26,6 @@
 #include "WriterEnum.hpp"
 
 namespace femus {
-
-  // map from our connectivity to vtk-connectivity for paraview visualization  //TODO move this to the appropriate place
-  const unsigned map_pr[27] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,23,21,20,22,24,25,26};
 
   //------------------------------------------------------------------------------
   // Forward declarations
@@ -82,6 +79,8 @@ namespace femus {
 
     int _gridr;
 
+    /** map from femus connectivity to vtk-connectivity for paraview visualization */
+    static const unsigned FemusToVTKorToXDMFConn[27];
 
   private:
 

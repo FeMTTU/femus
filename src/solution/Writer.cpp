@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: Writer
- Authors: Eugenio Aulisa, Simone Bnà
+ Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
  
  Copyright (c) FEMTTU
  All rights reserved. 
@@ -33,7 +33,9 @@
 
 namespace femus {
 
-
+  
+  const unsigned Writer::FemusToVTKorToXDMFConn[27] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,23,21,20,22,24,25,26};
+  
   Writer::Writer( MultiLevelSolution* ml_sol ):
     _ml_sol(ml_sol), _ml_mesh(ml_sol->_ml_msh)
   {

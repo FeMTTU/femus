@@ -36,7 +36,7 @@ class CurrentQuantity;
 
   public:
     
-    CurrentElem(const uint level, const uint vb, const SystemTwo*, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type);
+    CurrentElem(const uint iel_in, const uint iproc_in, const uint level, const uint vb, const SystemTwo*,  const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type, const Mesh * mesh_new);
 
     inline const uint  GetVb() const {
       return _mesh.get_dim() - _dim;
@@ -81,7 +81,7 @@ class CurrentQuantity;
       return _KeM;
     }
     
-    void  SetDofobjConnCoords(const uint isubd_in,const uint iel);
+    void  SetDofobjConnCoords();
     
     void  SetMidpoint();
     
@@ -109,7 +109,6 @@ class CurrentQuantity;
   const SystemTwo * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
   const MultiLevelMeshTwo & _mesh;
   const Mesh * _mesh_new;
-  void  SetMesh(const Mesh * mesh_in);
  
   private:
 
@@ -117,23 +116,26 @@ class CurrentQuantity;
     
 // ========================================================================================
 //========== Current "EQUATION" Element (ql are TOGETHER ): needs the EQUATION ========================               
+  uint                   _el_n_dofs;
   DenseMatrix                  _KeM; 
   DenseVector                  _FeM;
-  uint                   _el_n_dofs;
   std::vector<uint> _el_dof_indices;                  // this must become a vect of vect
   std::vector<uint>      _bc_eldofs;                  // this must become a vect of vect
   
 // ========================================================================================
 //==========  Current Geometric Element:  needs the MESH  ========================
    std::vector<uint>   _el_conn;             /// vector of the global nodes for that element         [NNDS];
-   std::vector<uint>   _el_conn_new;
    uint    _vol_iel_DofObj;     /// i need to put the element also.
+   std::vector<uint>   _el_conn_new;
    std::vector<double> _xx_nds;              /// vector of the node coordinates for that element     [_spacedimension*NNDS];  // this must become a vect of vect
    std::vector<double> _el_xm;               /// element center point                                [_spacedimension];
    const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
    const uint _mesh_vb;     //index for the mesh
 
       const uint _Level;  //the level to which the element belongs
+      
+      const uint _iel;  //the index of the element (input for the parallel partition)
+      const uint _proc;
   };
   
 
@@ -172,11 +174,6 @@ class CurrentQuantity;
 //in fact this is used for many element loop, but just to retrieve the geometrical properties
 //like coords, middle point, etc.
 
-//Ok, so far we have VB, so if we want only BB or VV we should actually make a vector 
-// of two functions like this
-//TODO i should TEMPLATIZE over VB!!! YES IT IS TRUE, IN FACT BASICALLY EVERYTHING 
-//DEPENDS ON VB, and when you use one you dont use the other!!!
-
 //=======================
 //ok here we would need a "REFERENCE REAL ELEMENT"
 //the current element contains the absolute coordinates, 
@@ -188,6 +185,9 @@ class CurrentQuantity;
 //The curr geometric is basically filled with the MESH class
 //The curr fe is basically filled with the EQUATION class
 
-
+//====================================================
+// The differences with the other applications are that:
+// the element matrix is split into blocks, while here it is only one
+// Therefore, also the el_dof_indices and the bc_eldof flags are split as vector of vectors
 
 #endif

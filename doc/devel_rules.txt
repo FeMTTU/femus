@@ -96,4 +96,36 @@ git config --global user.email "name.surname@example.com"
   The maintainers will decide what to do with the pull request and possibly it will be merged to master
   Periodically, sync the master in the fork with the master in the main femus repository
 
+##################################
 
+WORKFLOW for updating the master in the FORK from the master in the MAIN REPO
+
+In github:
+
+Go in the MAIN REPO
+
+Click on "Pull requests" (on the right)
+Click on "New pull request" (green button)
+Click on "compare across forks"
+The "base fork" is going to be the FORK master branch
+The "head fork" is going to be the MAIN master branch
+Click on "create pull request"
+Add some title for it
+Make sure that the branches can be AUTOMATICALLY MERGED (otherwise you have to solve the conflicts using command line...)
+Click on "Merge pull request" (you find it by scrolling towards the bottom of the page)
+Click on "Confirm merge"
+
+From command line:
+
+To be added
+
+##################################
+
+How to install HDFVIEW
+
+Follow the instruction in the HDFVIEW website
+
+At the end of the build process, you should have an hdfview.sh script inside the bin directory of your build.
+You must open that script and change the INSTALLDIR variable with the path of this build (by default, /usr/local is in it)
+
+Another alternative to view the content of an HDF5 file is to use the 'h5dump' utility shipped with HDF5 (installed through PETSc, for instance)
