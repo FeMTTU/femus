@@ -74,7 +74,7 @@ namespace femus {
     const double *phi1;
     
     adept::adouble Weight=0.;
-    double Weight_nojac=0.;
+    adept::adouble Weight_nojac=0.;
     double Weight_hat=0.;
     double Weight_old=0.;
   
@@ -354,7 +354,7 @@ namespace femus {
 		rapresentative_area=area_elem_first->l1_norm()/nprocs;
 	      }
 	    }
-	    Weight_nojac = Weight_hat/area*rapresentative_area;
+	    Weight_nojac = Weight/area*rapresentative_area;
 	  }
 	  // ---------------------------------------------------------------------------
 	  // displacement and velocity
@@ -410,11 +410,11 @@ namespace femus {
 		adept::adouble LapmapVAR[3] = {0., 0., 0.};
 		for(int idim = 0; idim < dim; idim++) {
 		  for(int jdim = 0; jdim < dim; jdim++) {
-		    LapmapVAR[idim] += (GradSolhatVAR[idim][jdim]*gradphi_hat[i*dim+jdim]) ;
+		    LapmapVAR[idim] += (GradSolVAR[idim][jdim]+GradSolVAR[jdim][idim])*gradphi[i*dim+jdim];
 		  }
 		}
 		for(int idim=0; idim<dim; idim++) {
-		  aRhs[indexVAR[idim]][i]+=(!solidmark[i])*(-LapmapVAR[idim]*Weight_nojac);
+		  aRhs[indexVAR[idim]][i]+=(!solidmark[i])*(- LapmapVAR[idim]*Weight_nojac );
 		}
 		//END redidual Laplacian ALE map in reference domain
 
@@ -426,8 +426,10 @@ namespace femus {
 		
 		for(int idim=0.; idim<dim; idim++) {
 		  for(int jdim=0.; jdim<dim; jdim++) {
-		    LapvelVAR[idim]     += GradSolVAR[dim+idim][jdim] * gradphi[i*dim+jdim];
-		    LapvelVAR_old[idim] += GradSolVAR_old[dim+idim][jdim] * gradphi_old[i*dim+jdim];
+		    
+		    LapvelVAR[idim]     += (GradSolVAR[dim+idim][jdim] + GradSolVAR[dim+jdim][idim])* gradphi[i*dim+jdim];
+		    LapvelVAR_old[idim] += (GradSolVAR_old[dim+idim][jdim] + GradSolVAR_old[dim+jdim][idim]) * gradphi_old[i*dim+jdim];
+		    
 		    AdvaleVAR[idim]	+= ( ( SolVAR[dim+jdim] - meshVel[jdim] ) * GradSolVAR[dim+idim][jdim] 
 					    +( GradSolVAR[dim+jdim][jdim] - GradMeshVel[jdim][jdim] ) * SolVAR[dim+idim] 
 					   ) * phi[i];

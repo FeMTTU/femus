@@ -146,9 +146,9 @@ int main(int argc,char **args) {
     
     rhof = 1000.;
     muf = 1.;
-    rhos = 1000.;
+    rhos = 10000.;
     ni = 0.5;
-    E = 5600000;
+    E = 1400000;
     
     
     /*
@@ -200,7 +200,7 @@ int main(int argc,char **args) {
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
   
   if(simulation < 3)
-    numberOfUniformRefinedMeshes=1;
+    numberOfUniformRefinedMeshes=3;
   else if(simulation == 3 || simulation == 7)
     numberOfUniformRefinedMeshes=4;
   else if(simulation < 7)
@@ -210,7 +210,7 @@ int main(int argc,char **args) {
   
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes, numberOfUniformRefinedMeshes + numberOfAMRLevels,
 			infile.c_str(),"fifth",Lref,SetRefinementFlag);
-  
+  ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes-1);
   // mark Solid nodes
   ml_msh.MarkStructureNode();
   
@@ -378,14 +378,14 @@ int main(int argc,char **args) {
 
 double SetVariableTimeStep(const double time) {
   std::cout<<time<<std::endl;
-  if(time < 4.) {
+  if(time < 5.) {
     return 0.1;
   } 
-  else if(time < 10.) {
+  else if(time < 9.) {
     return 0.05; 
   }  
   else {
-    return 0.005; 
+    return 0.025; 
   }
 }
 
@@ -412,7 +412,7 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y
   if(!strcmp(name,"U")) {
     if(1==facename){   //inflow
       test=1;
-      double um = 2.0;
+      double um = 1.0;
       if(time < 2.0) {
    	value=1.5*um*4.0/0.1681*y*(0.41-y)*0.5*(1. - cos(0.5*3.141592653589793*(time)));
       }
@@ -493,7 +493,7 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y
       value=0.;
     }
     else if(3==facename ){   // no-slip fluid wall
-      test=0; //0
+      test=0; 
       value=0.;	
     }
     else if(4==facename ){   // no-slip solid wall
