@@ -24,10 +24,11 @@ PURPOSE.  See the above copyright notice for more information.
 #include "ParsedFunction.hpp"
 
 
+
 //C++ include
 #include <iostream>
 #include <iomanip>
-
+#include <sstream>
 
 namespace femus {
 
