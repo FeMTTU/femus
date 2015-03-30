@@ -36,6 +36,10 @@ void optimization_loop( MultiLevelProblem & e_map_in );
 
  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMesh* mesh);
 
+ bool  SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time);
+ 
+double  SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char * name);
+
 } //end namespace femus
 
 

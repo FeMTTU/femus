@@ -16,6 +16,8 @@
 #include "System.hpp"
 #include "MultiLevelMeshTwo.hpp"
 
+#include <sstream>
+
 namespace femus {
 
 
@@ -63,7 +65,16 @@ void System::SetAssembleFunction(void fptr(MultiLevelProblem &ml_prob, unsigned 
   _assemble_system_function = fptr;
 }
   
+void System::AddSolutionToSystemPDEVector(const unsigned n_components, const std::string name) {
 
+    for (unsigned i=0; i<n_components; i++) {
+      std::ostringstream name_cmp; name_cmp << name << i;
+       AddSolutionToSystemPDE(name_cmp.str().c_str());
+     }
+     
+}
+  
+  
 void System::AddSolutionToSystemPDE(const char solname[]){
   unsigned jsol=0;
   for(unsigned j=0;j<_SolSystemPdeIndex.size();j++){

@@ -82,10 +82,6 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
   
   const double time = 0.; // ml_prob._timeloop._curr_time;
 
-//==========FLAG FOR STATIONARITY OR NOT
-  const double    dt = 1.; //ml_prob._timeloop._timemap.get("dt");
-  const uint Nonstat = ml_prob.GetInputParser().get("NonStatTEMP");
-  
   //======== ELEMENT MAPPING =======
   const uint space_dim =       ml_prob._ml_msh->GetDimension();
 
@@ -114,26 +110,28 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
   
-  CurrentElem       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType());    
-  currelem.SetMesh(mymsh);
+  CurrentElem       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);    
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
-    Tempold._qtyptr   = my_system.GetUnknownQuantitiesVector()[0]; 
+    Tempold._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Temperature"); 
+    Tempold._SolName = "Qty_Temperature";
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //====================================
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempLift");//_UnknownQuantitiesVector[1]; 
+    Tlift._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempLift");
+    Tlift._SolName = "Qty_TempLift";
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
     CurrentQuantity TAdj(currgp);
-    TAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempAdj");//_UnknownQuantitiesVector[2]; 
+    TAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempAdj"); 
+    TAdj._SolName = "Qty_TempAdj";
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
    
@@ -153,14 +151,23 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     xyz_refbox.Allocate();
   
   //==================
-    CurrentQuantity vel(currgp);
-    vel._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity"); 
-    vel.VectWithQtyFillBasic();
-    vel.Allocate();
+    CurrentQuantity velX(currgp);
+    velX._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
+    velX._SolName = "Qty_Velocity0";
+    velX.VectWithQtyFillBasic();
+    velX.Allocate();
+    
+  //==================
+    CurrentQuantity velY(currgp);
+    velY._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity1"); 
+    velY._SolName = "Qty_Velocity1";
+    velY.VectWithQtyFillBasic();
+    velY.Allocate();    
     
 //===============Tdes=====================
     CurrentQuantity Tdes(currgp);
     Tdes._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempDes"); 
+    Tdes._SolName = "Qty_TempDes";
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
 
@@ -189,12 +196,12 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
   int domain_flag = ElFlagControl(xyz_refbox._el_average,ml_prob._ml_msh);
 //====================    
     
-//===== FILL the DOFS of the EXTERNAL QUANTITIES: you must assure that for every Vect the quantity is set correctly
-// for every Vect it must be clear if it belongs to an equation or not, and which equation it belongs to;
-// this is usually made clear by the related QUANTITY.
-      
-   if ( vel._eqnptr != NULL )  vel.GetElemDofs();
-   else                        vel._qtyptr->FunctionDof(vel,time,&xyz_refbox._val_dofs[0]);
+//===== FILL the DOFS of the EXTERNAL QUANTITIES:
+   if ( velX._eqnptr != NULL )  velX.GetElemDofs();
+   else                         velX._qtyptr->FunctionDof(velX,time,&xyz_refbox._val_dofs[0]);
+   
+   if ( velY._eqnptr != NULL )  velY.GetElemDofs();
+   else                         velY._qtyptr->FunctionDof(velY,time,&xyz_refbox._val_dofs[0]);
 
    if ( Tdes._eqnptr != NULL )  Tdes.GetElemDofs();
    else                         Tdes._qtyptr->FunctionDof(Tdes,time,&xyz_refbox._val_dofs[0]);
@@ -210,7 +217,7 @@ for (uint fe = 0; fe < QL; fe++)   {
   currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp); 
 }
 	  
-const double      det = dt*currgp.JacVectVV_g(xyz);
+const double      det = currgp.JacVectVV_g(xyz);
 const double dtxJxW_g = det*ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
@@ -223,7 +230,8 @@ for (uint fe = 0; fe < QL; fe++)     {
  	Tempold.val_g(); 
           Tlift.val_g(); 
            TAdj.val_g(); 
-            vel.val_g(); 
+           velX.val_g(); 
+           velY.val_g(); 
            Tdes.val_g();
    
 	   // always remember to get the dofs for the variables you use!
@@ -239,9 +247,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //=========== FIRST ROW ===============
         currelem.Rhs()(i) +=      
-           currelem.GetBCDofFlag()[i]*dtxJxW_g*( 
-                Nonstat*Tempold._val_g[0]*phii_g/dt
-	  )
+           currelem.GetBCDofFlag()[i]*dtxJxW_g*( 0. )
 	   + (1-currelem.GetBCDofFlag()[i])*detb*(Tempold._val_dofs[i]);
         
         currelem.Mat()(i,i) +=  (1-currelem.GetBCDofFlag()[i])*detb;
@@ -250,8 +256,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 	 int ip1 = i + /* 1* */Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
 	 currelem.Rhs()(ip1) +=      
            currelem.GetBCDofFlag()[ip1]*dtxJxW_g*( 
-                Nonstat*Tempold._val_g[0]*phii_g/dt
-                     + alphaT*domain_flag*(Tdes._val_g[0])*phii_g // T_d delta T_0    /////// ADDED /////
+                     + alphaT*domain_flag*(Tdes._val_g[0])*phii_g // T_d delta T_0
 	  )
 	   + (1-currelem.GetBCDofFlag()[ip1])*detb*(Tlift._val_dofs[i]);
         
@@ -261,7 +266,6 @@ for (uint fe = 0; fe < QL; fe++)     {
 	 int ip2 = i + 2 * Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
            currelem.Rhs()(ip2) +=      
            currelem.GetBCDofFlag()[ip2]*dtxJxW_g*( 
-                Nonstat*Tempold._val_g[0]*phii_g/dt
                 + alphaT*domain_flag*(Tdes._val_g[0])*phii_g // T_d delta T'
 	     )
 	   + (1-currelem.GetBCDofFlag()[ip2])*detb*(Tempold._val_dofs[i]);
@@ -276,7 +280,7 @@ for (uint fe = 0; fe < QL; fe++)     {
            
    
           double Lap_g   = Math::dot(&dphijdx_g[0],&dphiidx_g[0],space_dim);
-          double Advection = Math::dot(&vel._val_g[0],&dphijdx_g[0],space_dim);
+          double Advection = velX._val_g[0]*dphijdx_g[0] + velY._val_g[0]*dphijdx_g[1]; //Math::dot(&vel._val_g[0],&dphijdx_g[0],space_dim);
 
 	    int ip1 = i + Tempold._ndof;
 	    int jp1 = j + Tempold._ndof;
@@ -296,7 +300,6 @@ for (uint fe = 0; fe < QL; fe++)     {
 //======= DIAGONAL =============================
 	   currelem.Mat()(i,j) +=        
             currelem.GetBCDofFlag()[i]*dtxJxW_g*( 
-              Nonstat*phij_g*phii_g/dt 
             + Advection*phii_g
             + IRe*IPr*Lap_g  
             );
@@ -305,7 +308,6 @@ for (uint fe = 0; fe < QL; fe++)     {
     //same operators for T and T_0
 	    currelem.Mat()(i,jp1) +=        
             currelem.GetBCDofFlag()[i]*dtxJxW_g*(    
-              Nonstat*phij_g*phii_g/dt 
             + Advection*phii_g
             + IRe*IPr*Lap_g
 	    );
@@ -322,7 +324,6 @@ for (uint fe = 0; fe < QL; fe++)     {
          currelem.Mat()(ip1,jp1) +=        
             currelem.GetBCDofFlag()[ip1]*
             dtxJxW_g*( 
-              Nonstat*phij_g*phii_g/dt
              + alphaL2*phij_g*phii_g  //L_2 control norm
              + alphaH1*Lap_g          //H_1 control norm
               + alphaT*domain_flag*(phij_g)*phii_g  //T_0 delta T_0  //ADDED///////////////
@@ -346,7 +347,6 @@ for (uint fe = 0; fe < QL; fe++)     {
           currelem.Mat()(ip2,jp2) +=        
             currelem.GetBCDofFlag()[ip2]*
               dtxJxW_g*( 
-              Nonstat*phij_g*phii_g/dt
             - Advection*phii_g  //minus sign
             + IRe*IPr*Lap_g
                

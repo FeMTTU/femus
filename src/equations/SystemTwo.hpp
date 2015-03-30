@@ -31,7 +31,7 @@
 #include "BoundaryConditions.hpp"
 #include "Quantity.hpp"
 
-#include "LinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystem.hpp"
 
 
 namespace femus {
@@ -46,7 +46,7 @@ class NumericVector;
 class LinearEquationSolver;
 
 
-class SystemTwo : public LinearImplicitSystem {
+class SystemTwo : public NonLinearImplicitSystem {
 
 public:
 

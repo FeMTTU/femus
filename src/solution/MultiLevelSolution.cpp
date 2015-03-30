@@ -2,7 +2,7 @@
 
 Program: FEMUS
 Module: MultiLevelProblem
-Authors: Eugenio Aulisa, Simone Bnà
+Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
  
 Copyright (c) FEMTTU
 All rights reserved. 
@@ -64,7 +64,6 @@ MultiLevelSolution::MultiLevelSolution( MultiLevelMesh *ml_msh):
   
   _Use_GenerateBdc_new=false;
 
-  
 }
 
 void MultiLevelSolution::AddSolutionLevel(){
@@ -168,7 +167,7 @@ void MultiLevelSolution::PairSolution(const char solution_name[], const char sol
 // *******************************************************
 
 
-void MultiLevelSolution::Initialize(const char name[], initfunc func) {
+void MultiLevelSolution::Initialize(const char name[], InitFunc func) {
   
   unsigned i_start;
   unsigned i_end;
@@ -248,7 +247,98 @@ void MultiLevelSolution::Initialize(const char name[], initfunc func) {
       }
     }
   }
+  
+  return;
 }
+
+
+void MultiLevelSolution::InitializeMLProb(const MultiLevelProblem * ml_prob, const char name[], InitFuncMLProb func) {
+  
+  if (ml_prob == NULL) abort();
+  
+  unsigned i_start;
+  unsigned i_end;
+  if (!strcmp(name,"All") || !strcmp(name,"all") || !strcmp(name,"ALL")) {
+    i_start=0;
+    i_end=_SolType.size();
+  } else {
+    i_start=GetIndex(name);
+    i_end=i_start+1u;
+  }
+  
+  for (unsigned i=i_start; i<i_end; i++) {
+    unsigned sol_type = _SolType[i];
+    for (unsigned ig=0; ig<_gridn; ig++) {
+      unsigned num_el = _ml_msh->GetLevel(ig)->GetNumberOfElements();
+      _solution[ig]->ResizeSolutionVector(_SolName[i]);
+      _solution[ig]->_Sol[i]->zero();
+      if(func){
+	double value;
+	if ( sol_type < 3 ) {
+	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+	    for (int iel=_ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom]; 
+		iel < _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	      unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
+	      unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,sol_type);
+	  
+	      for(int j=0; j<nloc_dof; j++) {
+		unsigned inode=_ml_msh->GetLevel(ig)->el->GetMeshDof(kel_gmt,j,sol_type);
+		unsigned inode_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,sol_type);
+		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,2);
+		double xx=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);  
+		double yy=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
+		double zz=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
+	      
+		value = func(ml_prob,xx,yy,zz,name);
+	      
+		_solution[ig]->_Sol[i]->set(inode_Metis,value);
+		if (_SolTmorder[i]==2) {
+		  _solution[ig]->_SolOld[i]->set(inode_Metis,value);
+		}
+	      }
+	    }
+	  }
+        }
+	else if ( sol_type < 5 ) {
+	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+	    for (int iel=_ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom]; 
+		iel < _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	      unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
+	  
+	      unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,0);
+	      double xx=0.,yy=0.,zz=0.;
+	      for(int j=0; j<nloc_dof; j++) {
+		unsigned inode=_ml_msh->GetLevel(ig)->el->GetMeshDof(kel_gmt,j,2);
+		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,2);
+		xx+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);  
+		yy+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
+		zz+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
+	      }
+	      xx /= nloc_dof;
+	      yy /= nloc_dof;
+	      zz /= nloc_dof;
+  
+	      value = func(ml_prob,xx,yy,zz,name);
+   
+	      _solution[ig]->_Sol[i]->set(iel,value);
+	      if (_SolTmorder[i]==2) {
+		_solution[ig]->_SolOld[i]->set(iel,value);
+	      }
+	    }
+	  }
+        }
+        _solution[ig]->_Sol[i]->close();
+	if (_SolTmorder[i]==2) {
+	  _solution[ig]->_SolOld[i]->close();
+	}
+      }
+    }
+  }
+  
+  return;
+}
+
+
  
 //---------------------------------------------------------------------------------------------------
 unsigned MultiLevelSolution::GetIndex(const char name[]) const {
@@ -277,8 +367,14 @@ unsigned MultiLevelSolution::GetSolutionType(const char name[]) {
 }
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelSolution::AttachSetBoundaryConditionFunction ( bool (* SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[], 
-												     double &value, const int FaceName, const double time) ) {
+void MultiLevelSolution::AttachSetBoundaryConditionFunctionMLProb ( BoundaryFuncMLProb SetBoundaryConditionFunction_in ) {
+  _bdc_func_set = true;
+  _SetBoundaryConditionFunctionMLProb = SetBoundaryConditionFunction_in;
+  return;
+}
+
+//---------------------------------------------------------------------------------------------------
+void MultiLevelSolution::AttachSetBoundaryConditionFunction ( BoundaryFunc SetBoundaryConditionFunction ) {
   _bdc_func_set = true;
   _SetBoundaryConditionFunction = SetBoundaryConditionFunction;
   return;
@@ -449,7 +545,7 @@ void MultiLevelSolution::GenerateBdc_new(const unsigned k, const unsigned grid0,
 
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelSolution::GenerateBdc(const char name[], const char bdc_type[]) {
+void MultiLevelSolution::GenerateBdc(const char * name, const char * bdc_type, const MultiLevelProblem * ml_prob) {
   
   if(_Use_GenerateBdc_new==0 && _bdc_func_set==false) {
      cout << "Error: The boundary condition user-function is not set! Please call the AttachSetBoundaryConditionFunction routine" 
@@ -496,7 +592,10 @@ void MultiLevelSolution::GenerateBdc(const char name[], const char bdc_type[]) {
     }
   }
   for (unsigned i=i_start; i<i_end; i++) {
-    if(!_Use_GenerateBdc_new)GenerateBdc(i,0,0.);
+    if(!_Use_GenerateBdc_new) {
+       if ( ml_prob == NULL ) GenerateBdc(i,0,0.); 
+       else  GenerateBdcMLProb(ml_prob,i,0,0.);
+    }
     else GenerateBdc_new(i,0,0.);   
   }
 }
@@ -601,6 +700,95 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
   
 }
 
+
+//---------------------------------------------------------------------------------------------------
+void MultiLevelSolution::GenerateBdcMLProb(const MultiLevelProblem * ml_prob, const unsigned int k, const unsigned int grid0, const double time) {
+  
+  if (ml_prob == NULL) abort();
+       
+  // 2 Default Neumann
+  // 1 DD Dirichlet
+  // 0 Dirichlet
+  for (unsigned igridn=grid0; igridn<_gridn; igridn++) {
+    if(_solution[igridn]->_ResEpsBdcFlag[k]){
+      for (unsigned j=_ml_msh->GetLevel(igridn)->MetisOffset[_SolType[k]][_iproc]; j<_ml_msh->GetLevel(igridn)->MetisOffset[_SolType[k]][_iproc+1]; j++) {
+	_solution[igridn]->_Bdc[k]->set(j,2.);
+      }
+      if (_SolType[k]<3) {  
+	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
+	  for (int iel=_ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom]; 
+	       iel < _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	    unsigned kel_gmt = _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel];
+	    for (unsigned jface=0; jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt); jface++) {
+	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+		short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
+		unsigned nv1=(!_TestIfPressure[k])?
+		  _ml_msh->GetLevel(igridn)->el->GetElementFaceDofNumber(kel_gmt,jface,_SolType[k]):
+		  _ml_msh->GetLevel(igridn)->el->GetElementDofNumber(iel,_SolType[k]);
+		for (unsigned iv=0; iv<nv1; iv++) {
+		  unsigned inode=(!_TestIfPressure[k])? 
+		    _ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
+		    _ml_msh->GetLevel(igridn)->el->GetElementVertexIndex(kel_gmt,iv)-1u;
+		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
+		  _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
+		}
+	      }
+	    }
+	  }
+	}
+	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {  // 0 Dirichlet
+	  for (int iel=_ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom]; 
+	       iel < _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	    unsigned kel_gmt = _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel];
+	    for (unsigned jface=0; jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt); jface++) {
+	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)<0) { //Dirichlet
+		short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
+		unsigned nv1 = _ml_msh->GetLevel(igridn)->el->GetElementFaceDofNumber(kel_gmt,jface,_SolType[k]); 
+		for (unsigned iv=0; iv<nv1; iv++) {
+		  unsigned inode=_ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u;
+		  unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,2);
+		  double value;
+		  double xx=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[0])(inode_coord_Metis);  
+		  double yy=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[1])(inode_coord_Metis);
+		  double zz=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[2])(inode_coord_Metis);
+		  bool test=_SetBoundaryConditionFunctionMLProb(ml_prob,xx,yy,zz,_SolName[k],value,-(_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)+1),time);
+		  if (test) {
+		    unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
+		    _solution[igridn]->_Bdc[k]->set(inode_Metis,0.);
+		    _solution[igridn]->_Sol[k]->set(inode_Metis,value);
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+      else if(_TestIfPressure[k]){
+	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
+	  unsigned nel=_ml_msh->GetLevel(igridn)->GetNumberOfElements();
+	  for (int iel=_ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom]; 
+	       iel < _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	    unsigned kel_gmt = _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel];
+	    for (unsigned jface=0; jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt); jface++) {
+	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+		short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
+		unsigned nv1=_ml_msh->GetLevel(igridn)->el->GetElementDofNumber(kel_gmt,_SolType[k]);
+		for (unsigned iv=0; iv<nv1; iv++) {
+		  unsigned inode=(kel_gmt+iv*nel);
+		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
+		  _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
+		}
+	      }
+	    }
+	  }
+	}
+      }	
+      _solution[igridn]->_Sol[k]->close();
+      _solution[igridn]->_Bdc[k]->close();
+    }
+  }
+  
+}
 
 
 } //end namespace femus

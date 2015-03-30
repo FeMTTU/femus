@@ -176,7 +176,7 @@ namespace femus {
 // and to PRINT ALL THE VARIABLES, node or cell.
 
 //
-
+// here the boundary conditions are STEADY-STATE right now
 void BoundaryConditions::GenerateBdc() {
   
     const uint Lev_pick_bc_NODE_dof = _dofmap->_mesh._NoLevels - 1;  //we use the FINE Level as reference
@@ -231,8 +231,7 @@ void BoundaryConditions::GenerateBdc() {
 	    
             for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 	      
-                CurrentElem       currelem(iel,isubd,Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType());
-                currelem.SetMesh(mymsh);
+                CurrentElem       currelem(iel,isubd,Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType(),mymsh);
 
 	        currelem.SetDofobjConnCoords();
                 currelem.SetMidpoint();

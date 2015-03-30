@@ -36,7 +36,7 @@ class CurrentQuantity;
 
   public:
     
-    CurrentElem(const uint iel_in, const uint iproc_in, const uint level, const uint vb, const SystemTwo*, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type);
+    CurrentElem(const uint iel_in, const uint iproc_in, const uint level, const uint vb, const SystemTwo*,  const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type, const Mesh * mesh_new);
 
     inline const uint  GetVb() const {
       return _mesh.get_dim() - _dim;
@@ -109,7 +109,6 @@ class CurrentQuantity;
   const SystemTwo * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
   const MultiLevelMeshTwo & _mesh;
   const Mesh * _mesh_new;
-  void  SetMesh(const Mesh * mesh_in);
  
   private:
 

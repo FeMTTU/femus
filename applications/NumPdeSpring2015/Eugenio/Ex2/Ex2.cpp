@@ -17,10 +17,11 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char SolName[], double &value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
-  value=0.;
-  if(facename == 2) dirichlet = false;
+  value=0;
+  if(facename == 2) 
+    dirichlet = false;
   return dirichlet;
 }
 
@@ -38,7 +39,7 @@ int main(int argc, char **args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor=1.; 
-  mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor); 
+  mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor); 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();

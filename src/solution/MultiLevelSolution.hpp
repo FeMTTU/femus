@@ -2,7 +2,7 @@
 
 Program: FEMuS
 Module: MultiLevelProblem
-Authors: Eugenio Aulisa, Simone Bnà
+Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
 
 Copyright (c) FEMuS
 All rights reserved.
@@ -32,7 +32,7 @@ PURPOSE.  See the above copyright notice for more information.
 namespace femus {
 
 
-
+class MultiLevelProblem;
 
 /**
  * This class is a black box container to handle multilevel solutions.
@@ -42,7 +42,17 @@ class MultiLevelSolution : public ParallelObject {
 
 private:
   
-    typedef double (*initfunc) (const double &x, const double &y, const double &z);
+    /** Initial condition function pointer typedef */
+    typedef double (*InitFunc) (const double &x, const double &y, const double &z);
+
+    /** @duplicate */
+    typedef double (*InitFuncMLProb) (const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z, const char * name);
+    
+    /** Boundary condition function pointer typedef */
+    typedef bool (*BoundaryFunc) (const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName, const double time);
+
+    /** @duplicate */
+    typedef bool (*BoundaryFuncMLProb) (const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName, const double time);
 
 public:
 
@@ -71,8 +81,11 @@ public:
     void ResizeSolutionVector( const char name[]);
 
     /** To be Added */
-    void Initialize(const char name[], initfunc func = NULL);
+    void Initialize(const char name[], InitFunc func = NULL);
 
+    /** @duplicate */
+    void InitializeMLProb(const MultiLevelProblem * ml_prob, const char * name, InitFuncMLProb func = NULL);
+    
     /** To be Added */
     unsigned GetIndex(const char name[]) const;
 
@@ -95,17 +108,25 @@ public:
     };
 
     /** To be Added */
-    void AttachSetBoundaryConditionFunction ( bool (* SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[],
-            double &value, const int FaceName, const double time) );
+    void AttachSetBoundaryConditionFunction (BoundaryFunc SetBoundaryConditionFunction );
 
     /** To be Added */
-    void GenerateBdc(const char name[], const char bdc_type[]="Steady");
+    void GenerateBdc(const char name[], const char bdc_type[]="Steady", const MultiLevelProblem * ml_prob = NULL);
     
     /** To be Added */
     void InitializeBdc();
 
     /** To be Added */
     void UpdateBdc(const double time);
+    
+    /** @duplicate */
+    void AttachSetBoundaryConditionFunctionMLProb ( BoundaryFuncMLProb SetBoundaryConditionFunction_in );
+    
+    /** @duplicate */
+    void GenerateBdcMLProb(const MultiLevelProblem * ml_prob, const unsigned int k, const unsigned int grid0, const double time);
+
+    /** @duplicate */
+    BoundaryFuncMLProb _SetBoundaryConditionFunctionMLProb;
 
     /** To be Added */
     void GenerateBdc(const unsigned int k, const unsigned grid0, const double time);
@@ -167,8 +188,9 @@ public:
     // member data
     MultiLevelMesh* _ml_msh; //< Multilevel mesh
 
-    bool (*_SetBoundaryConditionFunction) (const double &x, const double &y, const double &z,const char name[],
-                                           double &value, const int FaceName, const double time); //< boundary condition function pointer
+    /** boundary condition function pointer */
+    BoundaryFunc _SetBoundaryConditionFunction;
+    
     void build();
 
     bool _Use_GenerateBdc_new;

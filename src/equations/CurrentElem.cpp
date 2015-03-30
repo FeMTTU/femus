@@ -27,7 +27,7 @@ namespace femus {
 
 
 
-    CurrentElem::CurrentElem(const uint iel_in, const uint iproc_in, const uint level, const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type_in ):
+    CurrentElem::CurrentElem(const uint iel_in, const uint iproc_in, const uint level, const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type_in, const Mesh * mesh_new ):
     _eqn(eqn_in),
     _mesh(mesh),
     _dim(_mesh.get_dim()-vb),
@@ -35,7 +35,8 @@ namespace femus {
     _mesh_vb(vb),
     _Level(level),
     _iel(iel_in),
-    _proc(iproc_in)
+    _proc(iproc_in),
+    _mesh_new(mesh_new)
     {
     
 //========== Current "Geometric Element"  ========================
@@ -60,9 +61,6 @@ namespace femus {
   }
  
 
-  void  CurrentElem::SetMesh(const Mesh * mesh_in) { _mesh_new = mesh_in; return; }
-    
-    
     
 //Ok, in the new logic  the element and gauss points are going to be instantiations
 // of the assemble routine. therefore they will be filled using the this-> pointer,
