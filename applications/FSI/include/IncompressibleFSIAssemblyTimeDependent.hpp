@@ -267,7 +267,6 @@ namespace femus {
 	dofsVAR[2*dim][i]=myLinEqSolver->GetKKDof(indVAR[2*dim],indexVAR[2*dim],inode);
 	Soli[indexVAR[2*dim]][i]     = (*mysolution->_Sol[indVAR[2*dim]])(inode_Metis);
 	Soli_old[indexVAR[2*dim]][i] = (*mysolution->_SolOld[indVAR[2*dim]])(inode_Metis);
-	//std::cout<<Soli[indexVAR[2*dim]][i]<<" "<<Soli_old[indexVAR[2*dim]][i]<<std::endl;
 	aRhs[indexVAR[2*dim]][i] = 0.;
       }
       

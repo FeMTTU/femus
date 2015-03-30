@@ -114,7 +114,7 @@ int main(int argc,char **args) {
   std::string infile;
   
   if(1 == simulation){
-    infile = "./input/turek.neu";
+    infile = "./input/turek_FSI3.neu";
   }
   else if(2 == simulation){
     infile = "./input/beam.neu";
@@ -143,13 +143,26 @@ int main(int argc,char **args) {
   Uref = 1.;
  
   if(simulation<3){ //turek 2D
+//     //Turek-Hron FSI1
+//     rhof = 1000.;
+//     muf = 1.;
+//     rhos = 1000.;
+//     ni = 0.5;
+//     E = 1400000;
     
+//     //Turek-Hron FSI2
+//     rhof = 1000.;
+//     muf = 1.;
+//     rhos = 10000.;
+//     ni = 0.5;
+//     E = 1400000;
+     
+    //Turek-Hron FSI3
     rhof = 1000.;
     muf = 1.;
-    rhos = 10000.;
+    rhos = 1000.;
     ni = 0.5;
-    E = 1400000;
-    
+    E = 5600000;
     
     /*
     rhof = 1000.;
@@ -200,7 +213,7 @@ int main(int argc,char **args) {
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
   
   if(simulation < 3)
-    numberOfUniformRefinedMeshes=3;
+    numberOfUniformRefinedMeshes=4;
   else if(simulation == 3 || simulation == 7)
     numberOfUniformRefinedMeshes=4;
   else if(simulation < 7)
@@ -381,11 +394,11 @@ double SetVariableTimeStep(const double time) {
   if(time < 5.) {
     return 0.1;
   } 
-  else if(time < 9.) {
+  else if(time < 6.) {
     return 0.05; 
   }  
   else {
-    return 0.025; 
+    return 0.01; 
   }
 }
 
@@ -412,7 +425,9 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y
   if(!strcmp(name,"U")) {
     if(1==facename){   //inflow
       test=1;
-      double um = 1.0;
+      //double um = 0.2; // Turek-Hron FSI1 
+      //double um = 1.0; // Turek-Hron FSI2
+      double um = 2.0; // Turek-Hron FSI3
       if(time < 2.0) {
    	value=1.5*um*4.0/0.1681*y*(0.41-y)*0.5*(1. - cos(0.5*3.141592653589793*(time)));
       }
