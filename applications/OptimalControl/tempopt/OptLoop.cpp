@@ -470,8 +470,6 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
  
   }
   
-  
-  
   else if(!strcmp(name,"Qty_TempAdj")){
     
     
@@ -524,9 +522,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
   if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
        test=1; 
       value=0.; 
-  } //top RefBox    
-    
-    
+  } //top RefBox     
     
   }
   
@@ -613,6 +609,106 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
   return test;
 }
 
+
+//---------------------------------------------------------------------------------------------------------------------
+
+double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z, const char * name) {
+
+  std::vector<double> xp(ml_prob->_ml_msh->GetDimension());
+  xp[0] = x;
+  xp[1] = y;
+
+  if ( ml_prob->_ml_msh->GetDimension() == 3 )    xp[1] = z;
+
+  // defaults ***********
+  double value = 0.;
+  // defaults ***********
+  
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
+  
+  Box* box = static_cast<Box*>(ml_prob->_ml_msh->GetDomain());
+
+  std::vector<double> lb(ml_prob->_ml_msh->GetDimension());
+  std::vector<double> le(ml_prob->_ml_msh->GetDimension());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (ml_prob->_ml_msh->GetDimension() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+    std::vector<double> x_rotshift(ml_prob->_ml_msh->GetDimension());
+  ml_prob->_ml_msh->GetDomain()->TransformPointToRef(&xp[0],&x_rotshift[0]);
+
+  
+  if(!strcmp(name,"Qty_Temperature")) {
+ 
+    value = 0.; 
+  }
+  
+  
+  else if(!strcmp(name,"Qty_TempLift")){
+    
+    value = 1.;
+    
+      if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {
+    value = 0.; 
+  }
+ 
+  }
+  
+  
+  
+  else if(!strcmp(name,"Qty_TempAdj")){
+    
+      value = 0.; 
+
+  }
+  
+  
+  else if(!strcmp(name,"Qty_Velocity0")){
+ 
+      value = 0.; 
+
+     if  ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {
+ 
+ if ( (x_rotshift[1]) > 0.4*(le[1] - lb[1]) && ( x_rotshift[1]) < 0.6*(le[1]-lb[1]) )  {  //left of the refbox
+       value = ml_prob->GetInputParser().get("injsuc");    
+      }
+   }
+   
+  }
+  
+  else if(!strcmp(name,"Qty_Velocity1")){
+    
+     //==================================
+    if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
+
+//below, inlet
+  if ( (x_rotshift[0]) < 0.25*(le[0] - lb[0]) || ( x_rotshift[0]) > 0.75*(le[0] - lb[0]) ) { 
+    value = 0.;
+  }
+  else {
+    value = 1.; 
+    }
+  
+  }
+    
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_Pressure")) {
+    
+    
+  value =  1./ ml_prob->GetInputParser().get("pref")*( (le[1] - lb[1]) - xp[1] );
+
+     
+  }
+  
+  return value;
+}
 
 
 
