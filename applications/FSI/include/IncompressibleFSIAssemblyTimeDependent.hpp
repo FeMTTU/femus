@@ -144,7 +144,7 @@ namespace femus {
     double _gravity[3]={0.,0.,0.};
     
     double dt =  my_nnlin_impl_sys.GetIntervalTime(); 
-    
+    double time =  my_nnlin_impl_sys.GetTime();
     // -----------------------------------------------------------------
     // space discretization parameters
     unsigned SolType2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));  
@@ -298,7 +298,9 @@ namespace femus {
 	    // look for boundary faces
 	    if(myel->GetFaceElementIndex(kel,jface)<0) {
 	      unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
-	      if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,0.) && tau!=0.){
+	      if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,time) && tau!=0.){
+		double tau_old;
+		ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau_old,face,time-dt);
 		unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,SolType2);
 		const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);  		  		  
 		for(unsigned i=0; i<nve; i++) {
@@ -317,14 +319,15 @@ namespace femus {
 		  // *** phi_i loop ***
 		  for(unsigned i=0; i<nve; i++) {
 		    adept::adouble value = - phi[i]*tau/rhof*Weight;
+		    double value_old = - phi[i]*tau_old/rhof*Weight_old;
 		    unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
 		    
 		    for(unsigned idim=0; idim<dim; idim++) {
 		      if((!solidmark[ilocal])){
-			aRhs[indexVAR[dim+idim]][ilocal]   += value*normal[idim];
+			aRhs[indexVAR[dim+idim]][ilocal]   += 0.5*dt*(value + value_old)*normal[idim];
 		      }
 		      else { //if interface node it goes to solid
-			aRhs[indexVAR[idim]][ilocal]   += value*normal[idim];
+			aRhs[indexVAR[idim]][ilocal]   += 0.5*dt*(value + value_old)*normal[idim];
 		      }
 		    }	    
 		  }

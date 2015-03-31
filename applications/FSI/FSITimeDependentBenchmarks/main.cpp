@@ -34,6 +34,8 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 double SetVariableTimeStep(const double time);
 
 //------------------------------------------------------------------------------------------------------------------
+unsigned turek_FSI = 0;
+unsigned simulation;
 
 int main(int argc,char **args) {
     
@@ -45,50 +47,62 @@ int main(int argc,char **args) {
   //files.RedirectCout();
   
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
-  unsigned simulation;
+  
   bool dimension2D;
   
   if(argc >= 2) {
-    if( !strcmp("turek_2D_FSI",args[1])) {   /** FSI steady-state Turek benchmark */
-      simulation=1; 
-      dimension2D=1;  
+    if( !strcmp("turek_2D_FSI1",args[1])) {   /** FSI steady-state Turek benchmark */
+      turek_FSI = 1;
+      simulation = 1; 
+      dimension2D = 1;  
+    }
+    else if( !strcmp("turek_2D_FSI2",args[1])) {   /** FSI steady-state Turek benchmark */
+      turek_FSI = 2;
+      simulation = 1; 
+      dimension2D = 1;  
+    }
+    else if( !strcmp("turek_2D_FSI3",args[1])) {   /** FSI steady-state Turek benchmark */
+      turek_FSI = 3;
+      simulation = 1; 
+      dimension2D = 1;  
     }
     else if( !strcmp("turek_2D_solid",args[1])) {    /** Solid Turek beam benchmark test. Beware: activate gravity in assembly */
-      simulation=2; 
-      dimension2D=1;  
+      turek_FSI = 1;
+      simulation = 2; 
+      dimension2D = 1;  
     }
     else if( !strcmp("bathe_2D_FSI",args[1])){  /** Bathe 2D membrane benchmark */
-      simulation=3; 
-      dimension2D=1;  
+      simulation = 3; 
+      dimension2D = 1;  
     }
     else if( !strcmp("bathe_3D_FSI",args[1])){  /** Bathe 3D cylinder FSI benchmark */
-      simulation=4; 
-      dimension2D=0;  
+      simulation = 4; 
+      dimension2D = 0;  
     }
     else if( !strcmp("bathe_3D_solid",args[1])) { /** Bathe 3D solid, for debugging */
-      simulation=5; 
-      dimension2D=0;  
+      simulation = 5; 
+      dimension2D = 0;  
     }
     else if( !strcmp("bathe_3D_fluid",args[1])) { /** Bathe 3D fluid, for debugging */
-      simulation=6; 
-      dimension2D=0;  
+      simulation = 6; 
+      dimension2D = 0;  
     }
     else if( !strcmp("comsol_2D_FSI",args[1])) { /** Comsol 2D vertical beam benchmark */
-      simulation=7; 
-      dimension2D=1;  
+      simulation = 7; 
+      dimension2D = 1;  
     }
 
     else{    
       cout << "wrong input arguments!\n";
       cout << "please specify the simulation you want to run, options are\n";
-      cout << "turek_2D_FSI \n turek_2D_solid \n bathe_2D_FSI \n bathe_3D_FSI \n bathe_3D_solid \n bathe_3D_fluid \n comsol_2D_FSI \n";
+      cout << "turek_2D_FSI1 \n turek_2D_FSI2 \n turek_2D_FSI3 \n turek_2D_solid \n bathe_2D_FSI \n bathe_3D_FSI \n bathe_3D_solid \n bathe_3D_fluid \n comsol_2D_FSI \n";
       abort();
     }
   }
   else {   
     cout << "no input arguments!\n";
     cout << "please specify the simulation you want to run, options are\n";
-    cout << "turek_2D_FSI \n turek_2D_solid \n bathe_2D_FSI \n bathe_3D_FSI \n bathe_3D_solid \n bathe_3D_fluid \n comsol_2D_FSI \n";
+    cout << "turek_2D_FSI1 \n turek_2D_FSI2 \n turek_2D_FSI3 \n turek_2D_solid \n bathe_2D_FSI \n bathe_3D_FSI \n bathe_3D_solid \n bathe_3D_fluid \n comsol_2D_FSI \n";
     abort();
   }
    
@@ -143,40 +157,33 @@ int main(int argc,char **args) {
   Uref = 1.;
  
   if(simulation<3){ //turek 2D
-//     //Turek-Hron FSI1
-//     rhof = 1000.;
-//     muf = 1.;
-//     rhos = 1000.;
-//     ni = 0.5;
-//     E = 1400000;
-    
-//     //Turek-Hron FSI2
-//     rhof = 1000.;
-//     muf = 1.;
-//     rhos = 10000.;
-//     ni = 0.5;
-//     E = 1400000;
-     
-    //Turek-Hron FSI3
-    rhof = 1000.;
-    muf = 1.;
-    rhos = 1000.;
-    ni = 0.5;
-    E = 5600000;
-    
-    /*
-    rhof = 1000.;
-    muf = 1.;
-    rhos = 1000;
-    ni = 0.5;
-    E = 1400000; */
+    //Turek-Hron FSI1
+      rhof = 1000.;
+      muf = 1.;
+      rhos = 1000.;
+      ni = 0.5;
+      E = 1400000;    
+    if(turek_FSI == 2){ //Turek-Hron FSI2
+      rhof = 1000.;
+      muf = 1.;
+      rhos = 10000.;
+      ni = 0.5;
+      E = 1400000;
+    }
+    else if (turek_FSI == 3){ //Turek-Hron FSI3
+      rhof = 1000.;
+      muf = 1.;
+      rhos = 1000.;
+      ni = 0.5;
+      E = 5600000;
+    }  
   }
   else if(simulation==3){ //bathe 2D
     rhof = 1000;
     muf = 0.04;
     rhos = 800;
     ni = 0.5;
-    E = 140000000; 
+    E = 180000000; 
   }
   else if(simulation<7){ //bathe 3D
     rhof = 100.;
@@ -212,9 +219,14 @@ int main(int argc,char **args) {
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
   
-  if(simulation < 3)
-    numberOfUniformRefinedMeshes=4;
-  else if(simulation == 3 || simulation == 7)
+  if(simulation < 3){
+    numberOfUniformRefinedMeshes=3;
+    if( turek_FSI ==3 )
+      numberOfUniformRefinedMeshes=4;
+  }
+  else if(simulation == 3)
+     numberOfUniformRefinedMeshes=3;
+  else if(simulation == 7)
     numberOfUniformRefinedMeshes=4;
   else if(simulation < 7)
     numberOfUniformRefinedMeshes=2;
@@ -267,7 +279,12 @@ int main(int argc,char **args) {
   ml_sol.GenerateBdc("DX","Steady");
   ml_sol.GenerateBdc("DY","Steady");
   if (!dimension2D) ml_sol.GenerateBdc("DZ","Steady");
-  ml_sol.GenerateBdc("U","Time_dependent");
+    
+  if( turek_FSI == 2 || turek_FSI ==3 )
+    ml_sol.GenerateBdc("U","Time_dependent");
+  else
+    ml_sol.GenerateBdc("U","Steady");
+    
   ml_sol.GenerateBdc("V","Steady");
   if (!dimension2D) ml_sol.GenerateBdc("W","Steady");
   ml_sol.GenerateBdc("P","Steady");
@@ -367,7 +384,7 @@ int main(int argc,char **args) {
   
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 10000;
+  const unsigned int n_timesteps = 500;
   
   ml_sol.GetWriter()->Pwrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
   
@@ -390,16 +407,24 @@ int main(int argc,char **args) {
 //---------------------------------------------------------------------------------------------------------------------
 
 double SetVariableTimeStep(const double time) {
-  std::cout<<time<<std::endl;
-  if(time < 5.) {
-    return 0.1;
-  } 
-  else if(time < 6.) {
-    return 0.05; 
-  }  
-  else {
-    return 0.01; 
+  double dt = 1.;
+  if( turek_FSI == 2 ){
+    if	    ( time < 5. ) dt = 0.1;
+    else if ( time < 9. ) dt = 0.05;
+    else 		  dt = 0.025;    
   }
+  else if ( turek_FSI == 3 ){
+    if	    ( time < 5. ) dt = 0.1;
+    else if ( time < 6. ) dt = 0.05;
+    else 		  dt = 0.01; 
+  }
+  else if ( simulation == 3 ) dt=0.001;
+  else if ( simulation == 7 ) dt=0.001;
+  else{
+    std::cout << "Warning this simulation case has not been considered yet for the time dependent case"<<std::endl;
+    abort();
+  } 
+  return dt;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -422,17 +447,18 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
-  if(!strcmp(name,"U")) {
+  if( !strcmp(name,"U") ) {
     if(1==facename){   //inflow
-      test=1;
-      //double um = 0.2; // Turek-Hron FSI1 
-      //double um = 1.0; // Turek-Hron FSI2
-      double um = 2.0; // Turek-Hron FSI3
+      test = 1;
+      double um = 0.2;
+      if( turek_FSI == 2 ) um = 2.;
+      if( turek_FSI == 3 ) um = 1.;
+            
       if(time < 2.0) {
-   	value=1.5*um*4.0/0.1681*y*(0.41-y)*0.5*(1. - cos(0.5*3.141592653589793*(time)));
+   	value = 1.5 * um * 4.0 / 0.1681 * y * ( 0.41 - y) * 0.5 * ( 1. - cos( 0.5 * 3.141592653589793 * time) );
       }
       else {
-        value=1.5*um*4.0/0.1681*y*(0.41-y);
+        value = 1.5 * um * 4.0 / 0.1681 * y * ( 0.41 - y );
       }
     }  
     else if(2==facename ){  //outflow
@@ -571,7 +597,7 @@ bool SetBoundaryConditionBathe_2D_FSI(const double &x, const double &y, const do
     }
     else if(6==facename ){  //bottom 
       test=0;
-      value=200000;	
+      value=5000000*time;	
     }
   }  
   else if(!strcmp(name,"V")){

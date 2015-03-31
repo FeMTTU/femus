@@ -100,6 +100,11 @@ public:
     double GetIntervalTime() const {
         return _dt;
     };
+    
+    /** Get the time */
+    double GetTime() const {
+        return _time;
+    };
 
 protected:
 
