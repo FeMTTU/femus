@@ -21,9 +21,6 @@ namespace femus {
 	   
  //=== node
     delete[] _bc;
- //=== element
-     for (uint l=0; l < _dofmap->_mesh._NoLevels; l++)   delete [] _bc_fe_kk[l];
-     delete [] _bc_fe_kk;
  //===penalty
 //     clearElBc();   /*if (_Dir_pen_fl==1)*/ //DO IT ALWAYS!
 
@@ -199,15 +196,12 @@ void BoundaryConditions::GenerateBdc() {
  //**************************************************   
  //******** ELEM BASED ******************************  
 
-    _bc_fe_kk             =  new int*[_dofmap->_mesh._NoLevels];
     int* DofOff_Lev_kk    =  new int[_dofmap->_mesh._NoLevels];
     
     for (uint Level=0; Level <_dofmap->_mesh._NoLevels; Level++)   { //loop over the levels
 
           DofOff_Lev_kk[Level] = _dofmap->_nvars[KK]*_dofmap->_DofNumLevFE[Level][KK];
-              _bc_fe_kk[Level] = new int[DofOff_Lev_kk[Level]];
 
-        for (int i=0; i < DofOff_Lev_kk[Level]; i++)    _bc_fe_kk[Level][i] = DEFAULT_BC_FLAG;
     }
  //******** ELEM BASED ******************************   
  //************************************************   
@@ -278,10 +272,6 @@ void BoundaryConditions::GenerateBdc() {
 		 int bdry_iel_lev =  iel + sum_elems_prev_sd_at_lev;
 		 int vol_iel =  _dofmap->_mesh._el_bdry_to_vol[Level][bdry_iel_lev];
 		 
- 	        for (uint ivar= 0; ivar < _dofmap->_nvars[KK];  ivar++)  { 
-		  int dof_kk_pos_lev =  vol_iel + ivar*_dofmap->_DofNumLevFE[Level][KK];
-	            if (_bc_fe_kk[Level][ dof_kk_pos_lev ] != 0)  _bc_fe_kk[Level][ dof_kk_pos_lev ] = bc_flag[ ivar + _dofmap->_VarOff[KK] ];
-		}
 //******************* END ALL LEVELS, ELEM VARS **************   
                  
             } // end of element loop

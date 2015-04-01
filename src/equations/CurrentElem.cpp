@@ -92,9 +92,9 @@ for (uint ivar=0; ivar < _eqn->_dofmap._nvars[fe]; ivar++)    {
           const uint     indx  = d + ivar*_elem_type[fe]->GetNDofs() + off_local_el[fe];
 	  _el_dof_indices[indx] = _eqn->_dofmap.GetDof(_Level,fe,ivar,DofObj);
 
-         if (fe < KK ) { const uint dofkivar = _eqn->_dofmap.GetDof(Lev_pick_bc_dof,fe,ivar,DofObj); 
-             _bc_eldofs[indx] = _eqn->_bcond._bc[dofkivar]; }
-         else if (fe == KK)    _bc_eldofs[indx] = _eqn->_bcond._bc_fe_kk[_Level][ DofObj + ivar*_eqn->_dofmap._DofNumLevFE[_Level][KK] ];
+	   const uint dofkivar = _eqn->_dofmap.GetDof(Lev_pick_bc_dof,fe,ivar,DofObj); 
+             _bc_eldofs[indx] = _eqn->_bcond._bc[dofkivar]; 
+	   
 	 }
     } 
 } // end fe
