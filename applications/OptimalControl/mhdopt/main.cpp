@@ -143,8 +143,7 @@ int main(int argc, char** argv) {
   
   // ====== Start new main =================================
   MultiLevelMesh ml_msh;
-  ml_msh.GenerateCoarseBoxMesh(8,8,8,0,1,0,1,0,1,HEX27,"fifth");
-//   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+  ml_msh.GenerateCoarseBoxMesh(8,8,8,0,1,0,1,0,1,HEX27,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
   ml_msh.RefineMesh(NoLevels,NoLevels,NULL);
   ml_msh.PrintInfo();
   
@@ -153,21 +152,21 @@ int main(int argc, char** argv) {
   MultiLevelSolution ml_sol(&ml_msh);
   
   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_MagnFieldHom",LAGRANGE,SECOND,0);
-//   ml_sol.AddSolution("Qty_MagnFieldHomLagMult",LAGRANGE,FIRST,0);
-//   
-//   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_MagnFieldExt",LAGRANGE,SECOND,0);
-//   ml_sol.AddSolution("Qty_MagnFieldExtLagMult",LAGRANGE,FIRST,0);
-// 
-//   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_MagnFieldHomAdj",LAGRANGE,SECOND,0);
-//   ml_sol.AddSolution("Qty_MagnFieldHomLagMultAdj",LAGRANGE,FIRST,0);
-// 
-//   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_Velocity",LAGRANGE,SECOND,0);
-//   ml_sol.AddSolution("Qty_Pressure",LAGRANGE,FIRST,0);
-// 
-//   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_VelocityAdj",LAGRANGE,SECOND,0);
-//   ml_sol.AddSolution("Qty_PressureAdj",LAGRANGE,FIRST,0);
-// 
-//   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_DesVelocity",LAGRANGE,SECOND,0,false);
+  ml_sol.AddSolution("Qty_MagnFieldHomLagMult",LAGRANGE,FIRST,0);
+  
+  ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_MagnFieldExt",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_MagnFieldExtLagMult",LAGRANGE,FIRST,0);
+
+  ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_MagnFieldHomAdj",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_MagnFieldHomLagMultAdj",LAGRANGE,FIRST,0);
+
+  ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_Velocity",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_Pressure",LAGRANGE,FIRST,0);
+
+  ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_VelocityAdj",LAGRANGE,SECOND,0);
+  ml_sol.AddSolution("Qty_PressureAdj",LAGRANGE,FIRST,0);
+
+  ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_DesVelocity",LAGRANGE,SECOND,0,false);
   
   
   
