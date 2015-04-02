@@ -103,12 +103,30 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
     Vel._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity");
     Vel.VectWithQtyFillBasic();
     Vel.Allocate();
+    
   
-  CurrentQuantity VelDes(currgp);
-    VelDes._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_DesVelocity");
-    VelDes.VectWithQtyFillBasic();
-    VelDes.Allocate();
+  CurrentQuantity VelDesX(currgp);
+    VelDesX._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_DesVelocity0");
+    VelDesX.VectWithQtyFillBasic();
+    VelDesX.Allocate();
 
+  CurrentQuantity VelDesY(currgp);
+    VelDesY._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_DesVelocity1");
+    VelDesY.VectWithQtyFillBasic();
+    VelDesY.Allocate();
+
+  CurrentQuantity VelDesZ(currgp);
+    VelDesZ._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_DesVelocity2");
+    VelDesZ.VectWithQtyFillBasic();
+    VelDesZ.Allocate();
+
+  std::vector<CurrentQuantity*> VelDes_vec;   
+    VelDes_vec.push_back(&VelDesX);
+    VelDes_vec.push_back(&VelDesY);
+    VelDes_vec.push_back(&VelDesZ);
+    
+    
+    
   CurrentQuantity Bhom(currgp);
     Bhom._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHom");
     Bhom.VectWithQtyFillBasic();
@@ -157,9 +175,11 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
     else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
     if ( BhomAdj._eqnptr != NULL )  BhomAdj.GetElemDofs();
     else                            BhomAdj._qtyptr->FunctionDof(BhomAdj,time,&xyz_refbox._val_dofs[0]);    
-    if ( VelDes._eqnptr != NULL )  VelDes.GetElemDofs();
-    else                           VelDes._qtyptr->FunctionDof(VelDes,time,&xyz_refbox._val_dofs[0]);    
-
+    
+ for (uint idim=0; idim < space_dim; idim++)    {
+   if ( VelDes_vec[idim]->_eqnptr != NULL )  VelDes_vec[idim]->GetElemDofs();
+    else                                    VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],time,&xyz_refbox._val_dofs[0]);    
+    }
  
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
     Math::zeroN(&Bmag._val_dofs[0],Bmag._dim*Bmag._ndof);
@@ -202,8 +222,9 @@ for (uint fe = 0; fe < QL; fe++)     {
      BhomAdj.curl_g();
         Bmag.val_g();
          Vel.val_g();
-      VelDes.val_g();
          Vel.grad_g();
+	 
+  for (uint idim=0; idim < space_dim; idim++)    VelDes_vec[idim]->val_g();
 
 //vector product
         Math::extend(&Bmag._val_g[0],&Bmag._val_g3D[0],space_dim);
@@ -223,7 +244,7 @@ for (uint fe = 0; fe < QL; fe++)     {
            currelem.Rhs()(irowq) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                             NonStatNSAD*VelAdjOld._val_g[idim]*phii_g/dt  //time
                            - curlxiXB_g3D[idim]*phii_g                    //this is due to the variation of velocity in the MAGNETIC ADVECTION, so it is due to a   NONLINEAR COUPLING "u times B", "MY_STATE times OTHER_STATE"
-                           - alphaVel*el_flagdom*(Vel._val_g[idim] - VelDes._val_g[idim])*phii_g    //this is the dependence that counts
+                           - alphaVel*el_flagdom*(Vel._val_g[idim] - VelDes_vec[idim]->_val_g[0])*phii_g    //this is the dependence that counts
                            )
                            + (1-currelem.GetBCDofFlag()[irowq])*detb*VelAdjOld._val_dofs[irowq]; //Dirichlet bc
 	   }

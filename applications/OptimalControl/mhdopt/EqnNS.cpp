@@ -150,17 +150,16 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity VelOld(currgp);
-    VelOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
-    VelOld.VectWithQtyFillBasic();   //the internal quantities will eventually have *this as eqn pointer
+    VelOld._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity"); 
+    VelOld.VectWithQtyFillBasic();
     VelOld.Allocate();
 
    const uint   qtyzero_ord  = VelOld._FEord;
    const uint   qtyzero_ndof = VelOld._ndof; 
-    Velocity*  vel_castqtyptr = static_cast<Velocity*>(VelOld._qtyptr); //casting for quantity-specific functions
 
 //=========
     CurrentQuantity pressOld(currgp);
-    pressOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYONE];
+    pressOld._qtyptr = ml_prob.GetQtyMap().GetQuantity("Qty_Pressure");
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
 
@@ -517,7 +516,6 @@ for (uint fe = 0; fe < QL; fe++)     {
 
    const uint   qtyzero_ord  = VelOld._FEord;
    const uint   qtyzero_ndof = VelOld._ndof; 
-    Velocity*  vel_castqtyptr = static_cast<Velocity*>(VelOld._qtyptr); //casting for quantity-specific functions
 
 //=========
     CurrentQuantity pressOld(currgp);

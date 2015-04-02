@@ -158,18 +158,38 @@ class VelocityAdj : public Quantity {
 };
 
 
-class DesVelocity : public Quantity {
+class DesVelocityX : public Quantity {
 
   public:
     
-   DesVelocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
-  ~DesVelocity(){};
+   DesVelocityX(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
 
   void Function_txyz(const double t, const double* xp,double* temp) const;  
  
 
 };
 
+class DesVelocityY : public Quantity {
+
+  public:
+    
+   DesVelocityY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+ 
+
+};
+
+class DesVelocityZ : public Quantity {
+
+  public:
+    
+   DesVelocityZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+ 
+
+};
 
 #endif
 

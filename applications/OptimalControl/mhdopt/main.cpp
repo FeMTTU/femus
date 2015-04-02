@@ -117,25 +117,27 @@ int main(int argc, char** argv) {
   MagnFieldHom bhom("Qty_MagnFieldHom",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&bhom);  
   MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&Bext);  
 
+  MagnFieldHomAdj                  bhom_adj("Qty_MagnFieldHomAdj",qty_map,mesh.get_dim(),QQ);        qty_map.AddQuantity(&bhom_adj);
+ 
+  Velocity  velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.AddQuantity(&velocity);  
+ 
+  VelocityAdj  velocity_adj("Qty_VelocityAdj",qty_map,mesh.get_dim(),QQ);         qty_map.AddQuantity(&velocity_adj);
+ 
+ MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,LL);     qty_map.AddQuantity(&bhom_lag_mult);
+ MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,LL);     qty_map.AddQuantity(&Bext_lag_mult);
+ MagnFieldHomLagMultAdj  bhom_lag_mult_adj("Qty_MagnFieldHomLagMultAdj",qty_map,1,LL);  qty_map.AddQuantity(&bhom_lag_mult_adj);
+ Pressure  pressure("Qty_Pressure",qty_map,1,LL);            qty_map.AddQuantity(&pressure);
+ PressureAdj pressure_adj("Qty_PressureAdj",qty_map,1,LL);                  qty_map.AddQuantity(&pressure_adj);
+
+   DesVelocityX des_velocityX("Qty_DesVelocity0",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityX);
+   DesVelocityY des_velocityY("Qty_DesVelocity1",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityY);
+   DesVelocityZ des_velocityZ("Qty_DesVelocity2",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityZ);
+
 //consistency check
  if (bhom._dim !=  Bext._dim)     {std::cout << "main: inconsistency" << std::endl;abort();}
  if (bhom._FEord !=  Bext._FEord) {std::cout << "main: inconsistency" << std::endl;abort();}
-
- MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,LL);     qty_map.AddQuantity(&bhom_lag_mult);
- MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,LL);     qty_map.AddQuantity(&Bext_lag_mult);
- MagnFieldHomAdj                  bhom_adj("Qty_MagnFieldHomAdj",qty_map,mesh.get_dim(),QQ);        qty_map.AddQuantity(&bhom_adj);
- MagnFieldHomLagMultAdj  bhom_lag_mult_adj("Qty_MagnFieldHomLagMultAdj",qty_map,1,LL);  qty_map.AddQuantity(&bhom_lag_mult_adj);
-
-  Pressure  pressure("Qty_Pressure",qty_map,1,LL);            qty_map.AddQuantity(&pressure);
-  Velocity  velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.AddQuantity(&velocity);  
-
-  VelocityAdj  velocity_adj("Qty_VelocityAdj",qty_map,mesh.get_dim(),QQ);         qty_map.AddQuantity(&velocity_adj);  
-  PressureAdj pressure_adj("Qty_PressureAdj",qty_map,1,LL);                  qty_map.AddQuantity(&pressure_adj);
-  DesVelocity des_velocity("Qty_DesVelocity",qty_map,mesh.get_dim(),QQ);       qty_map.AddQuantity(&des_velocity);
- 
-//consistency check
- if (velocity._dim !=  des_velocity._dim) {std::cout << "main: inconsistency" << std::endl; abort();}
- if (velocity._FEord !=  des_velocity._FEord) {std::cout << "main: inconsistency" << std::endl; abort();}
+//  if (velocity._dim !=  des_velocity._dim) {std::cout << "main: inconsistency" << std::endl; abort();}
+//  if (velocity._FEord !=  des_velocity._FEord) {std::cout << "main: inconsistency" << std::endl; abort();}
  
 //================================
 //==== END Add QUANTITIES ========
@@ -186,20 +188,24 @@ int main(int argc, char** argv) {
 #if NS_EQUATIONS==1
   SystemTwo & eqnNS = ml_prob.add_system<SystemTwo>("Eqn_NS");
   
-          eqnNS.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_MagnFieldHom");
-	  
+          eqnNS.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_Velocity");
+	  eqnNS.AddSolutionToSystemPDE("Qty_Pressure");
+
           eqnNS.AddUnknownToSystemPDE(&velocity); 
           eqnNS.AddUnknownToSystemPDE(&pressure); 
+	  
           eqnNS.SetAssembleFunction(GenMatRhsNS); 
 #endif
   
 #if NSAD_EQUATIONS==1
   SystemTwo & eqnNSAD = ml_prob.add_system<SystemTwo>("Eqn_NSAD"); 
   
-            eqnNSAD.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_MagnFieldHom");
+            eqnNSAD.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_VelocityAdj");
+            eqnNSAD.AddSolutionToSystemPDE("Qty_PressureAdj");
 	    
             eqnNSAD.AddUnknownToSystemPDE(&velocity_adj); 
             eqnNSAD.AddUnknownToSystemPDE(&pressure_adj); 
+	    
             eqnNSAD.SetAssembleFunction(GenMatRhsNSAD);
 #endif
   
@@ -207,29 +213,35 @@ int main(int argc, char** argv) {
   SystemTwo & eqnMHD = ml_prob.add_system<SystemTwo>("Eqn_MHD");
   
            eqnMHD.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_MagnFieldHom");
+           eqnMHD.AddSolutionToSystemPDE("Qty_MagnFieldHomLagMult");
 	   
            eqnMHD.AddUnknownToSystemPDE(&bhom); 
            eqnMHD.AddUnknownToSystemPDE(&bhom_lag_mult); 
+	   
            eqnMHD.SetAssembleFunction(GenMatRhsMHD);
 #endif
 
 #if MHDAD_EQUATIONS==1
   SystemTwo & eqnMHDAD = ml_prob.add_system<SystemTwo>("Eqn_MHDAD");
   
-             eqnMHDAD.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_MagnFieldHom");
+             eqnMHDAD.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_MagnFieldHomAdj");
+             eqnMHDAD.AddSolutionToSystemPDE("Qty_MagnFieldHomLagMultAdj");
 	     
              eqnMHDAD.AddUnknownToSystemPDE(&bhom_adj); 
              eqnMHDAD.AddUnknownToSystemPDE(&bhom_lag_mult_adj); 
+	     
              eqnMHDAD.SetAssembleFunction(GenMatRhsMHDAD);
 #endif
 
 #if MHDCONT_EQUATIONS==1
   SystemTwo & eqnMHDCONT = ml_prob.add_system<SystemTwo>("Eqn_MHDCONT");
   
-               eqnMHDCONT.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_MagnFieldHom");
+               eqnMHDCONT.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_MagnFieldExt");
+               eqnMHDCONT.AddSolutionToSystemPDE("Qty_MagnFieldExtLagMult");
 	       
                eqnMHDCONT.AddUnknownToSystemPDE(&Bext); 
                eqnMHDCONT.AddUnknownToSystemPDE(&Bext_lag_mult); 
+	       
                eqnMHDCONT.SetAssembleFunction(GenMatRhsMHDCONT);
 #endif  
    
