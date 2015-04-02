@@ -32,20 +32,6 @@
   SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_NS");
     
     
-#if TEMP_DEPS==1
-//for this one i decide not to use any Vect's
-//i do not need the vects so badly if i do not have to do space interpolation
-//here I need the pointer but not as a Quantity, but as the child class 
-//also, since these quantities are not used for interpolation 
-//i do not add them to the EXTERNAL MAP. The purpose of that map would be to
-//loop automatically over it for getting the dofs.
-//but actually it is not so necessary to have it. For instance you may need 
-//to use a specific function, in which case you first should do the static cast
-//for some Vect and nothing for others
-//so, it could be better to do a Vect_LOCAL_EXTERNAL MAP inside here
-Density* density_ptr     = static_cast<Density*>(ml_prob.GetQtyMap().GetQuantity("Qty_Density"));
-Viscosity* viscosity_ptr = static_cast<Viscosity*>(ml_prob.GetQtyMap().GetQuantity("Qty_Viscosity"));
-#endif  //temp deps
   //====== reference values ========================
 //====== related to Quantities on which Operators act, and to the choice of the "LEADING" EQUATION Operator
   //====== Physics
@@ -223,15 +209,6 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 #endif
 //======================== MAG WORLD ================================
 
-//===================TEMPERATURE WORLD=============================
-#if TEMP_QTY==1
-    CurrentQuantity Temp(currgp);
-    Temp._qtyptr   =  ml_prob.GetQtyMap().GetQuantity("Qty_Temperature");
-    Temp.VectWithQtyFillBasic();
-    Temp.Allocate();
-#endif
-//=================== TEMPERATURE WORLD============================
-
 //=======gravity==================================
   CurrentQuantity gravity(currgp);
   gravity._dim=DIMENSION;
@@ -267,10 +244,6 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
   else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
   if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs();   
   else                         Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
-#endif
-#if (TEMP_QTY==1)
-   if ( Temp._eqnptr != NULL ) Temp.GetElemDofs();
-     else                      Temp._qtyptr->FunctionDof(Temp,time,&xyz_refbox._val_dofs[0]);
 #endif
 
 //=== the connectivity is only related to the ELEMENT, so it is GEOMETRICAL
@@ -379,19 +352,6 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //compute JxB
           Math::cross(Jext_g3D,&Bmag._val_g3D[0],JextXB_g3D);
-#endif
-
-#if (TEMP_QTY==1)
-     Temp.val_g();
- #endif
-
-#if (TEMP_DEPS==1)
-  double rho_t=1.; density_ptr->Temp_dep(Temp._val_g[0],rho_t); rho_nd *= rho_t;
-  double mu_t=1. ; density_ptr->Temp_dep(Temp._val_g[0],mu_t) ; mu_nd  *= mu_t;
-#endif
-       
-#ifdef AXISYMX
-      dtxJxW_g  *=yyg;  //what is the symmetry axis? I guess the x axis.
 #endif
 
 //==============================================================

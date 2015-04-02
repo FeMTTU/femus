@@ -18,42 +18,6 @@
 // ==================================================================
 // ==================================================================
 
-SpecificHeatP::SpecificHeatP(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) {
-  //let us override any possible mistake in the instantiation
-  //the rule is Qty_ + the class name.
-  //putting this here i avoid using the default arguments which i dislike because they 
-  //must be at the bottom of the list of arguments
-  //we shouldnt do like this and give the user the possibility of 
-  //defining MORE INSTANTIATIONS of the SpecificHeatP type 
-  //TODO but, beware that more instantiations would mean for instance DIFFERENT FUNCTIONS of x,y,z,t,
-  //so maybe you'll just want to define another specificHeatP class
-  
-}
-
-HeatConductivity::HeatConductivity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) {
-  
-}
-
-Viscosity::Viscosity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
-
-}
-
-Density::Density(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
-
-}
-//======end temp dependence
-
-
-//===========================================================================
-Temperature::Temperature(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) {
-
-}
-
 //===========================================================================
 MagnFieldHom::MagnFieldHom(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
@@ -315,30 +279,6 @@ void PressureAdj::Function_txyz(const double t, const double* xp,double* func) c
 }
 
 
-// =================================================
-void Temperature::Function_txyz(const double t, const double* xp,double* temp) const {
-  //the coordinates (x,y,z,t) of the VOLUME domain are NON-DIMENSIONAL
-  //and the function value must be nondimensional as well
-
-  //the compidx may be useful when you have to set a component other than zero... for instance,
-  //you have three neutron fluxes, or pressure is u_value[4] instead of the first scalar 
-  //We pass the pointer and the index, for scalar variables
-  //for vector variables we always assume that they go from 0 to DIMENSION-1. Actually,
-  //it might happen something different. So,maybe, to make things not very complicated,
-  // it suffices to pass the pointer, and then externally one will think of shifting the indices and so on.. anyway.
-
-  const double Tref = _qtymap.GetInputParser()->get("Tref");
-
-
-  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());  
-  
-  temp[0] = 100.*(xp[0])*( ( box->_le[0] - box->_lb[0]) - xp[0])/Tref;
- 
-
-  
-  return;
-  }
-  
   
 
 

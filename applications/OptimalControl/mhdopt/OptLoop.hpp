@@ -82,9 +82,6 @@ public:
 #define OPT_CONTROL 1
 //Provided quantities: DesVelocity
 //*********************************
-#define TEMP_QTY 1
-//Provided quantities: Temperature
-
 
 
 //**********************************
