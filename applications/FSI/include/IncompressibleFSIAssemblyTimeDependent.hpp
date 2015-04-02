@@ -575,8 +575,8 @@ namespace femus {
 	    	for (int I=0; I<3; ++I) {
 		  for (int J=0; J<3; ++J) {
 		    if ( 1 == solid_model ) { //Wood-Bonet J_hat  =1;
-		      Cauchy[I][J]     = mus * ( B[I][J]     - Id2th[I][J] ) - mus*I1_B     * SolVAR[2*dim] * Id2th[I][J]; 	
-		      Cauchy_old[I][J] = mus * ( B_old[I][J] - Id2th[I][J] ) - mus*I1_B_old * SolVAR[2*dim] * Id2th[I][J]; 	
+		      Cauchy[I][J]     = mus * ( B[I][J]     - Id2th[I][J] ) - mus/3.*I1_B     * SolVAR[2*dim] * Id2th[I][J]; 	
+		      Cauchy_old[I][J] = mus * ( B_old[I][J] - Id2th[I][J] ) - mus/3.*I1_B_old * SolVAR[2*dim] * Id2th[I][J]; 	
 		    }
 // 		    else if ( 2 == solid_model ) Cauchy[I][J] = mus/J_hat*B[I][J] 
 // 							       -mus/J_hat*SolVAR[2*dim]*Id2th[I][J];    //Wood-Bonet J_hat !=1;
@@ -602,7 +602,7 @@ namespace femus {
 		adept::adouble invB[3][3];
 		double invB_old[3][3];
 		
-		invB[0][0] =  (B[1][1]*B[2][2]-B[2][1]*B[1][2])*invdetB;
+		invB[0][0] =  (B[1][1]*B[2][2]-B[1][2]*B[2][1])*invdetB;
 		invB[1][0] = -(B[0][1]*B[2][2]-B[0][2]*B[2][1])*invdetB;
 		invB[2][0] =  (B[0][1]*B[1][2]-B[0][2]*B[1][1])*invdetB;
 		invB[0][1] = -(B[1][0]*B[2][2]-B[1][2]*B[2][0])*invdetB;
@@ -612,7 +612,7 @@ namespace femus {
 		invB[1][2] = -(B[0][0]*B[2][1]-B[2][0]*B[0][1])*invdetB;
 		invB[2][2] =  (B[0][0]*B[1][1]-B[1][0]*B[0][1])*invdetB;
 		
-		invB_old[0][0] =  (B_old[1][1]*B_old[2][2]-B_old[2][1]*B_old[1][2])*invdetB_old;
+		invB_old[0][0] =  (B_old[1][1]*B_old[2][2]-B_old[1][2]*B_old[2][1])*invdetB_old;
 		invB_old[1][0] = -(B_old[0][1]*B_old[2][2]-B_old[0][2]*B_old[2][1])*invdetB_old;
 		invB_old[2][0] =  (B_old[0][1]*B_old[1][2]-B_old[0][2]*B_old[1][1])*invdetB_old;
 		invB_old[0][1] = -(B_old[1][0]*B_old[2][2]-B_old[1][2]*B_old[2][0])*invdetB_old;
@@ -631,15 +631,17 @@ namespace femus {
 		I2_B_old = B_old[0][0] * B_old[1][1] + B_old[1][1] * B_old[2][2] + B_old[2][2]*B_old[0][0]
 			  -B_old[0][1] * B_old[1][0] - B_old[1][2] * B_old[2][1] - B_old[2][0]*B_old[0][2];     
 		
+		double C1 = mus/2.;
+		double C2 = 0.*C1;
+			  
 		for (int I=0; I<3; ++I) {
 		  for (int J=0; J<3; ++J) {
-		    Cauchy[I][J] = mus*(2.*B[I][J] - invB[I][J] - Id2th[I][J] )/3.
-				  -mus*(2.*I1_B - I2_B )/3.*SolVAR[2*dim]*Id2th[I][J];
+		    Cauchy[I][J] =  2.*C1*B[I][J] - 2.*C2*invB[I][J]
+				  -(2./3.)*(C1*I1_B - C2*I2_B )* SolVAR[2*dim]*Id2th[I][J];
 				  
-		    Cauchy_old[I][J] = mus*(2.*B_old[I][J] - invB_old[I][J] - Id2th[I][J] )/3.
-				      -mus*(2.*I1_B_old - I2_B_old )/3.*SolVAR[2*dim]*Id2th[I][J];		
-		    
-		    //std::cout << Cauchy_old[I][J] << " ";	
+		    Cauchy_old[I][J] =  2.*C1*B_old[I][J] - 2.*C2*invB_old[I][J]
+				      -(2./3.)*(C1*I1_B_old - C2*I2_B_old )* SolVAR[2*dim]*Id2th[I][J];
+		    //std::cout<<C1*rhof<<" "<<C2*rhof<<" "<<std::endl;
 		    
 		  }
 		}

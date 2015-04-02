@@ -134,7 +134,7 @@ int main(int argc,char **args) {
     infile = "./input/beam.neu";
   }  
   else if(3 == simulation){
-    infile = "./input/drum.neu";
+    infile = "./input/drum2.neu";
   }  
   else if(4 == simulation) {
     infile = "./input/bathe_FSI.neu";
@@ -168,14 +168,14 @@ int main(int argc,char **args) {
       muf = 1.;
       rhos = 10000.;
       ni = 0.5;
-      E = 1400000;
+      E = 1400000*(1.5/1.4);
     }
     else if (turek_FSI == 3){ //Turek-Hron FSI3
       rhof = 1000.;
       muf = 1.;
       rhos = 1000.;
       ni = 0.5;
-      E = 5600000;
+      E = 5600000*(1.5/1.4);
     }  
   }
   else if(simulation==3){ //bathe 2D
@@ -183,14 +183,14 @@ int main(int argc,char **args) {
     muf = 0.04;
     rhos = 800;
     ni = 0.5;
-    E = 180000000; 
+    E = 120000000; 
   }
   else if(simulation<7){ //bathe 3D
     rhof = 100.;
     muf = 1.;
     rhos = 800;
     ni = 0.5;
-    E = 1800000;
+    E = 1200000;
   }
   else if(simulation==7){ //comsol
     rhof = 1000.;
@@ -225,7 +225,7 @@ int main(int argc,char **args) {
       numberOfUniformRefinedMeshes=4;
   }
   else if(simulation == 3)
-     numberOfUniformRefinedMeshes=3;
+     numberOfUniformRefinedMeshes=4;
   else if(simulation == 7)
     numberOfUniformRefinedMeshes=4;
   else if(simulation < 7)
@@ -409,9 +409,9 @@ int main(int argc,char **args) {
 double SetVariableTimeStep(const double time) {
   double dt = 1.;
   if( turek_FSI == 2 ){
-    if	    ( time < 5. ) dt = 0.1;
-    else if ( time < 9. ) dt = 0.05;
-    else 		  dt = 0.025;    
+    if	    ( time < 5. )   dt = 0.1;
+    else if ( time < 6.5 )  dt = 0.05;
+    else 		    dt = 0.01;    
   }
   else if ( turek_FSI == 3 ){
     if	    ( time < 5. ) dt = 0.1;
@@ -419,6 +419,7 @@ double SetVariableTimeStep(const double time) {
     else 		  dt = 0.01; 
   }
   else if ( simulation == 3 ) dt=0.001;
+  else if ( simulation == 4 ) dt=0.01;
   else if ( simulation == 7 ) dt=0.001;
   else{
     std::cout << "Warning this simulation case has not been considered yet for the time dependent case"<<std::endl;
@@ -700,11 +701,11 @@ bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const double &x, const double &y
       //double r=sqrt(y*y+z*z);
       //value=1000*(0.05-r)*(0.05+r);
       test=0;
-      value=15*1.5*1000;
+      value=15*1000*time;
     }  
     else if(2==facename){  //outflow
       test=0;
-      value=13*1.5*1000;   
+      value=13*1000*time;   
     }
     else if(3==facename || 4==facename ){  // clamped solid 
       test=1;
