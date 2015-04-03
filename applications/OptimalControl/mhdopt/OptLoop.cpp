@@ -544,10 +544,25 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   xyz_refbox.Allocate();
   
      //========== 
-    CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Velocity");
-    Vel.VectWithQtyFillBasic();
-    Vel.Allocate();
+    CurrentQuantity VelX(currgp);
+    VelX._qtyptr      = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Velocity0"); 
+    VelX.VectWithQtyFillBasic();
+    VelX.Allocate();
+    
+    CurrentQuantity VelY(currgp);
+    VelY._qtyptr      = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Velocity1"); 
+    VelY.VectWithQtyFillBasic();
+    VelY.Allocate();
+    
+    CurrentQuantity VelZ(currgp);
+    VelZ._qtyptr      = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Velocity2"); 
+    VelZ.VectWithQtyFillBasic();
+    VelZ.Allocate();
+    
+    std::vector<CurrentQuantity*> Vel_vec;   
+    Vel_vec.push_back(&VelX);
+    Vel_vec.push_back(&VelY);
+    Vel_vec.push_back(&VelZ);
     
     //========== 
   CurrentQuantity VelDesX(currgp);
@@ -586,12 +601,12 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     int el_flagdom = ElFlagControl(xyz_refbox._el_average,eqn->GetMLProb()._ml_msh);
 //=======        
 
-    if ( Vel._eqnptr != NULL )       Vel.GetElemDofs();
-    else                             Vel._qtyptr->FunctionDof(Vel,0./*time*/,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
-    
  for (uint idim=0; idim < space_dim; idim++)    {
+    if ( Vel_vec[idim]->_eqnptr != NULL )  Vel_vec[idim]->GetElemDofs();
+    else                                   Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
    if ( VelDes_vec[idim]->_eqnptr != NULL )  VelDes_vec[idim]->GetElemDofs();
     else                                    VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0,&xyz_refbox._val_dofs[0]);    
+    
     }    
 
 //AAA time is picked as a function pointer of the time C library i think...
@@ -608,12 +623,14 @@ for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp
 
      for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
- Vel.val_g();
- for (uint idim=0; idim < space_dim; idim++)  VelDes_vec[idim]->val_g();
 
+ for (uint idim=0; idim < space_dim; idim++) {
+   Vel_vec[idim]->val_g();
+   VelDes_vec[idim]->val_g();
+ }
 
   double deltau_squarenorm_g = 0.;
-for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel._val_g[j] - VelDes_vec[j]->_val_g[0])*(Vel._val_g[j] - VelDes_vec[j]->_val_g[0]); }
+for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel_vec[j]->_val_g[0] - VelDes_vec[j]->_val_g[0])*(Vel_vec[j]->_val_g[0] - VelDes_vec[j]->_val_g[0]); }
 
   //NO for (uint j=0; j<space_dim; j++) { the integral is a scalar!
  

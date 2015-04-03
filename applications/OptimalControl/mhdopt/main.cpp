@@ -114,14 +114,14 @@ int main(int argc, char** argv) {
 //================================
 // ======= Add QUANTITIES ========  
 //================================
-  MagnFieldHom bhom("Qty_MagnFieldHom",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&bhom);  
-  MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&Bext);  
-
-  MagnFieldHomAdj                  bhom_adj("Qty_MagnFieldHomAdj",qty_map,mesh.get_dim(),QQ);        qty_map.AddQuantity(&bhom_adj);
- 
-  Velocity  velocity("Qty_Velocity",qty_map,mesh.get_dim(),QQ);   qty_map.AddQuantity(&velocity);  
+  VelocityX  velocityX("Qty_Velocity0",qty_map,1,QQ);   qty_map.AddQuantity(&velocityX);  
+  VelocityY  velocityY("Qty_Velocity1",qty_map,1,QQ);   qty_map.AddQuantity(&velocityY);  
+  VelocityZ  velocityZ("Qty_Velocity2",qty_map,1,QQ);   qty_map.AddQuantity(&velocityZ);  
  
   VelocityAdj  velocity_adj("Qty_VelocityAdj",qty_map,mesh.get_dim(),QQ);         qty_map.AddQuantity(&velocity_adj);
+  MagnFieldHom bhom("Qty_MagnFieldHom",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&bhom);  
+  MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&Bext);  
+  MagnFieldHomAdj    bhom_adj("Qty_MagnFieldHomAdj",qty_map,mesh.get_dim(),QQ);        qty_map.AddQuantity(&bhom_adj);
  
  MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,LL);     qty_map.AddQuantity(&bhom_lag_mult);
  MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,LL);     qty_map.AddQuantity(&Bext_lag_mult);
@@ -191,7 +191,9 @@ int main(int argc, char** argv) {
           eqnNS.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_Velocity");
 	  eqnNS.AddSolutionToSystemPDE("Qty_Pressure");
 
-          eqnNS.AddUnknownToSystemPDE(&velocity); 
+          eqnNS.AddUnknownToSystemPDE(&velocityX); 
+          eqnNS.AddUnknownToSystemPDE(&velocityY); 
+          eqnNS.AddUnknownToSystemPDE(&velocityZ); 
           eqnNS.AddUnknownToSystemPDE(&pressure); 
 	  
           eqnNS.SetAssembleFunction(GenMatRhsNS); 
