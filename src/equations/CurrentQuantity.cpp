@@ -139,6 +139,12 @@ void CurrentQuantity::VectWithQtyFillBasic() {
     _dim      = _qtyptr->_dim;
     _FEord    = _qtyptr->_FEord;
     _ndof     = _currEl.GetElemType(_FEord)->GetNDofs();
+    
+    
+//   if (_SolName == "") { std::cout << " I need to have a solution " << std::endl; abort(); }
+  
+  
+  
 
     return;
 }

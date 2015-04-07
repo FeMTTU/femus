@@ -98,7 +98,7 @@ class CurrentQuantity;
     inline const std::vector<const elem_type*> &  GetElemTypeVectorFE() const { return _elem_type; }
      
     /**  */  
-    int Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const CurrentQuantity &Velold_in,const CurrentQuantity& press_in) const;
+    int Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const uint ndof_in, const uint space_dim, const CurrentQuantity& press_in) const;
    
     void TransformElemNodesToRef(Domain* mydom, double* refbox_xyz);
     

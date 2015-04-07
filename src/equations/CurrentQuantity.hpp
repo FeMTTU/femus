@@ -39,7 +39,6 @@ namespace femus {
   //if you have NO Quantity and NO Equation ==========
 //   void   SetElDofsFromArgs(const uint vb,const double * dofs);   //if you have NO Quantity and NO Equation, we should do the more flexible version of a Vect    
                                                                  //but the point is that we have to pass also the offset...
-    std::string _SolName;
 
     std::vector<double>  _val_g;
     std::vector<double>  _val_g3D;
@@ -61,6 +60,15 @@ namespace femus {
     inline const CurrentElem &  GetCurrentElem() const { 
       return _currEl;
     }
+    
+    
+    std::string _SolName;
+    
+    vector< int > _dofSOL;
+    unsigned _indexSOL;
+    unsigned _indSOL;
+    unsigned _SolTypeSOL;
+    
     
   protected:
         

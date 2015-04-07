@@ -21,6 +21,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
 #include "FemusConfig.hpp"
+#include "FemusDefault.hpp"
 #include "ParsedFunction.hpp"
 
 
@@ -99,7 +100,7 @@ void MultiLevelSolution::AddSolutionLevel(){
 void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily, const FEOrder order,
 				     unsigned tmorder, const bool &PdeType) {
   
-  unsigned n=_SolType.size();
+  unsigned n =_SolType.size();
   _SolType.resize(n+1u);
   _family.resize(n+1u);
   _order.resize(n+1u);
@@ -115,7 +116,7 @@ void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily,
   _family[n] = fefamily;
   _order[n] = order;
   _SolType[n] = order - ((fefamily==LAGRANGE)?1:0) + fefamily*3;     
-  _SolName[n]  = new char [8];
+  _SolName[n]  = new char [DEFAULT_SOL_NCHARS];
   _BdcType[n]  = new char [20];
   strcpy(_SolName[n],name);
   _SolTmorder[n]=tmorder;
@@ -248,7 +249,98 @@ void MultiLevelSolution::Initialize(const char name[], InitFunc func) {
       }
     }
   }
+  
+  return;
 }
+
+
+void MultiLevelSolution::InitializeMLProb(const MultiLevelProblem * ml_prob, const char name[], InitFuncMLProb func) {
+  
+  if (ml_prob == NULL) abort();
+  
+  unsigned i_start;
+  unsigned i_end;
+  if (!strcmp(name,"All") || !strcmp(name,"all") || !strcmp(name,"ALL")) {
+    i_start=0;
+    i_end=_SolType.size();
+  } else {
+    i_start=GetIndex(name);
+    i_end=i_start+1u;
+  }
+  
+  for (unsigned i=i_start; i<i_end; i++) {
+    unsigned sol_type = _SolType[i];
+    for (unsigned ig=0; ig<_gridn; ig++) {
+      unsigned num_el = _ml_msh->GetLevel(ig)->GetNumberOfElements();
+      _solution[ig]->ResizeSolutionVector(_SolName[i]);
+      _solution[ig]->_Sol[i]->zero();
+      if(func){
+	double value;
+	if ( sol_type < 3 ) {
+	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+	    for (int iel=_ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom]; 
+		iel < _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	      unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
+	      unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,sol_type);
+	  
+	      for(int j=0; j<nloc_dof; j++) {
+		unsigned inode=_ml_msh->GetLevel(ig)->el->GetMeshDof(kel_gmt,j,sol_type);
+		unsigned inode_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,sol_type);
+		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,2);
+		double xx=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);  
+		double yy=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
+		double zz=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
+	      
+		value = func(ml_prob,xx,yy,zz,name);
+	      
+		_solution[ig]->_Sol[i]->set(inode_Metis,value);
+		if (_SolTmorder[i]==2) {
+		  _solution[ig]->_SolOld[i]->set(inode_Metis,value);
+		}
+	      }
+	    }
+	  }
+        }
+	else if ( sol_type < 5 ) {
+	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
+	    for (int iel=_ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom]; 
+		iel < _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	      unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
+	  
+	      unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,0);
+	      double xx=0.,yy=0.,zz=0.;
+	      for(int j=0; j<nloc_dof; j++) {
+		unsigned inode=_ml_msh->GetLevel(ig)->el->GetMeshDof(kel_gmt,j,2);
+		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,2);
+		xx+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);  
+		yy+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
+		zz+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
+	      }
+	      xx /= nloc_dof;
+	      yy /= nloc_dof;
+	      zz /= nloc_dof;
+  
+	      value = func(ml_prob,xx,yy,zz,name);
+   
+	      _solution[ig]->_Sol[i]->set(iel,value);
+	      if (_SolTmorder[i]==2) {
+		_solution[ig]->_SolOld[i]->set(iel,value);
+	      }
+	    }
+	  }
+        }
+        _solution[ig]->_Sol[i]->close();
+	if (_SolTmorder[i]==2) {
+	  _solution[ig]->_SolOld[i]->close();
+	}
+      }
+    }
+  }
+  
+  return;
+}
+
+
  
 //---------------------------------------------------------------------------------------------------
 unsigned MultiLevelSolution::GetIndex(const char name[]) const {
@@ -455,7 +547,7 @@ void MultiLevelSolution::GenerateBdc_new(const unsigned k, const unsigned grid0,
 
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelSolution::GenerateBdc(const char name[], const char bdc_type[], const MultiLevelProblem * ml_prob) {
+void MultiLevelSolution::GenerateBdc(const char * name, const char * bdc_type, const MultiLevelProblem * ml_prob) {
   
   if(_Use_GenerateBdc_new==0 && _bdc_func_set==false) {
      cout << "Error: The boundary condition user-function is not set! Please call the AttachSetBoundaryConditionFunction routine" 
@@ -504,7 +596,7 @@ void MultiLevelSolution::GenerateBdc(const char name[], const char bdc_type[], c
   for (unsigned i=i_start; i<i_end; i++) {
     if(!_Use_GenerateBdc_new) {
        if ( ml_prob == NULL ) GenerateBdc(i,0,0.); 
-       else  GenerateBdc_MLProb(ml_prob,i,0,0.);
+       else  GenerateBdcMLProb(ml_prob,i,0,0.);
     }
     else GenerateBdc_new(i,0,0.);   
   }
@@ -612,7 +704,7 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 
 
 //---------------------------------------------------------------------------------------------------
-void MultiLevelSolution::GenerateBdc_MLProb(const MultiLevelProblem * ml_prob, const unsigned int k, const unsigned int grid0, const double time) {
+void MultiLevelSolution::GenerateBdcMLProb(const MultiLevelProblem * ml_prob, const unsigned int k, const unsigned int grid0, const double time) {
   
   if (ml_prob == NULL) abort();
        

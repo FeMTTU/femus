@@ -6,6 +6,7 @@
 // The idea is that EACH PARAMETER HERE CAN EVENTUALLY BE OVERRIDDEN at RUNTIME,
 // either from a file to be read at runtime, or from the main, or from command line, or something
 
+#define DEFAULT_SOL_NCHARS   32    //GMV accepts at most 32 characters for a field
 
 //*********************************************
 //************** FILES ************************
@@ -62,12 +63,6 @@
 #define DEFAULT_BDRY_TOLL  0.0000001
 //*********************************************
 
-//****************************************
-//********** NUMERIC VECTOR **************
-// Default tolerance used when comparing two NumericVectors
-// Actually in libmesh it is much less! 
-#define DEFAULT_NUMVEC_TOLERANCE 1.e-20
-//****************************************
 
 //**************************************************************************************
 //************************EQNBASE - MULTIGRID ******************************************

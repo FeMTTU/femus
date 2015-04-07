@@ -134,12 +134,6 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_sol.AddSolution("Qty_Pressure",LAGRANGE,FIRST,0);
   ml_sol.AddSolution("Qty_TempDes",LAGRANGE,SECOND,0,false); //this is not going to be an Unknown! //moreover, this is not going to need any BC (i think they are excluded with "false") // I would like to have a Solution that is NOT EVEN related to the mesh at all... just like a function "on-the-fly"
 
-  ml_sol.Initialize("All");  /// @todo you have to call this before you can print @todo I can also call it after instantiation MLProblem
-
-  // ******* Set boundary function function *******
-  ml_sol.AttachSetBoundaryConditionFunctionMLProb(SetBoundaryCondition);
-
-
   // ******* Set problem *******
   MultiLevelProblem ml_prob(&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
@@ -147,6 +141,24 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_prob.SetInputParser(&physics_map);
   ml_prob.SetQtyMap(&qty_map); 
   
+  // ******* Initial condition *******
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_Temperature",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_TempLift",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_TempAdj",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_Velocity0",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_Velocity1",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_Pressure",SetInitialCondition); 
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_TempDes",SetInitialCondition); 
+
+  /// @todo you have to call this before you can print 
+  /// @todo I can also call it after instantiation MLProblem  
+  /// @todo I cannot call it with "All" and with a FUNCTION, because I need the string for "All" as a variable
+  /// @todo Have to say that you have to call this initialize BEFORE the generation of the boundary conditions;
+  /// if you called this after, it would superimpose the BOUNDARY VALUES 
+  /// @todo you have to initialize also those variables which are NOT unknowns!
+  
+  // ******* Set boundary function function *******
+  ml_sol.AttachSetBoundaryConditionFunctionMLProb(SetBoundaryCondition);
   
   // ******* Generate boundary conditions *******
   ml_sol.GenerateBdc("Qty_Temperature","Steady",&ml_prob);
@@ -156,6 +168,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   ml_sol.GenerateBdc("Qty_Velocity1","Steady",&ml_prob);
   ml_sol.GenerateBdc("Qty_Pressure","Steady",&ml_prob);
 
+  
   // ******* Debug *******
   ml_sol.SetWriter(VTK);
   std::vector<std::string> print_vars(1); print_vars[0] = "All"; // we should find a way to make this easier
@@ -188,7 +201,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 	 
          eqnT.AddUnknownToSystemPDE(&temperature);
          eqnT.AddUnknownToSystemPDE(&templift);
-         eqnT.AddUnknownToSystemPDE(&tempadj);//the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function
+         eqnT.AddUnknownToSystemPDE(&tempadj); //the order in which you add defines the order in the matrix as well, so it is in tune with the assemble function
 	 
 	 eqnT.SetAssembleFunction(GenMatRhsT);
   

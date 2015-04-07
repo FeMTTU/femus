@@ -18,42 +18,6 @@
 // ==================================================================
 // ==================================================================
 
-SpecificHeatP::SpecificHeatP(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) {
-  //let us override any possible mistake in the instantiation
-  //the rule is Qty_ + the class name.
-  //putting this here i avoid using the default arguments which i dislike because they 
-  //must be at the bottom of the list of arguments
-  //we shouldnt do like this and give the user the possibility of 
-  //defining MORE INSTANTIATIONS of the SpecificHeatP type 
-  //TODO but, beware that more instantiations would mean for instance DIFFERENT FUNCTIONS of x,y,z,t,
-  //so maybe you'll just want to define another specificHeatP class
-  
-}
-
-HeatConductivity::HeatConductivity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) {
-  
-}
-
-Viscosity::Viscosity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
-
-}
-
-Density::Density(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
-
-}
-//======end temp dependence
-
-
-//===========================================================================
-Temperature::Temperature(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) {
-
-}
-
 //===========================================================================
 MagnFieldHom::MagnFieldHom(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
@@ -129,7 +93,23 @@ PressureAdj::PressureAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 
 
 //=========================================================================
-Velocity::Velocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+VelocityX::VelocityX(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) {  
+
+    for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in.GetInputParser()->get("Uref");
+  
+}
+
+//=========================================================================
+VelocityY::VelocityY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) {  
+
+    for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in.GetInputParser()->get("Uref");
+  
+}
+
+//=========================================================================
+VelocityZ::VelocityZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {  
 
     for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in.GetInputParser()->get("Uref");
@@ -149,7 +129,23 @@ VelocityAdj::VelocityAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 }
 
 //==========================================================================
-DesVelocity::DesVelocity(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+DesVelocityX::DesVelocityX(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
+  
+   for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in.GetInputParser()->get("Uref");
+
+}
+
+//==========================================================================
+DesVelocityY::DesVelocityY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
+  
+   for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in.GetInputParser()->get("Uref");
+
+}
+
+//==========================================================================
+DesVelocityZ::DesVelocityZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
   
    for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in.GetInputParser()->get("Uref");
@@ -162,11 +158,7 @@ DesVelocity::DesVelocity(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 
 
 //=============================================================
-///analytical velocity for Hartmann flow
-// difference between get_par and optsys:
-// in both cases you are "dynamic" somehow
-
-void Velocity::Function_txyz(const double t,const double* xp, double* func) const {
+void VelocityX::Function_txyz(const double t,const double* xp, double* func) const {
 
   Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   // we should do this static_cast in the QUANTITY or QUANTITY MAP constructor
@@ -206,13 +198,104 @@ void Velocity::Function_txyz(const double t,const double* xp, double* func) cons
  
   
   func[0] = -sin(thetaz)*magnitude/*/Uref*/;
-  func[1] = cos(thetaz)*magnitude;
-                                       //add a 4. to the denominator
-				       //should check the difference between L and Lref
-                                       //TODO check this nondimensionalization
-#if (DIMENSION==3)
-  func[2] = 0./*/Uref*/;
-#endif
+
+  return;
+
+ 
+}
+
+
+
+//=============================================================
+void VelocityY::Function_txyz(const double t,const double* xp, double* func) const {
+
+  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
+  // we should do this static_cast in the QUANTITY or QUANTITY MAP constructor
+  //if there is some domain shape, we see what type it is and we do the static cast
+  //if there is no domain shape, we dont need the domain.
+  
+    //=====ROTATION of the Function
+  const double thetaz = box->_domain_rtmap.get("thetaz");
+  
+  const double rhof   = _qtymap.GetInputParser()->get("rho0");
+  const double Uref   = _qtymap.GetInputParser()->get("Uref");
+  const double muvel  = _qtymap.GetInputParser()->get("mu0");
+  const double MUMHD  = _qtymap.GetInputParser()->get("MUMHD");
+  const double SIGMHD = _qtymap.GetInputParser()->get("SIGMHD");
+  const double Bref   = _qtymap.GetInputParser()->get("Bref");
+  const double Lref   = _qtymap.GetInputParser()->get("Lref");
+
+  const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution!!!
+
+  double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
+
+  double Re  = _qtymap.GetInputParser()->get("Re");
+  double Rem = _qtymap.GetInputParser()->get("Rem");
+  double Hm  = _qtymap.GetInputParser()->get("Hm");
+  double S   = _qtymap.GetInputParser()->get("S");
+
+
+  double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
+  double Lmid  = 0.5*(box->_le[0] + box->_lb[0]);
+
+  double xtr = xp[0] - Lmid/*/Lref*/;
+
+  
+ //constant for the real reference length in the Hartmann number
+  const double LHm =2.;   //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
+  const double magnitude = DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
+ 
+  
+  func[0] = cos(thetaz)*magnitude;
+ 
+  return;
+
+ 
+}
+
+
+
+//=============================================================
+void VelocityZ::Function_txyz(const double t,const double* xp, double* func) const {
+
+  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
+  // we should do this static_cast in the QUANTITY or QUANTITY MAP constructor
+  //if there is some domain shape, we see what type it is and we do the static cast
+  //if there is no domain shape, we dont need the domain.
+  
+    //=====ROTATION of the Function
+  const double thetaz = box->_domain_rtmap.get("thetaz");
+  
+  const double rhof   = _qtymap.GetInputParser()->get("rho0");
+  const double Uref   = _qtymap.GetInputParser()->get("Uref");
+  const double muvel  = _qtymap.GetInputParser()->get("mu0");
+  const double MUMHD  = _qtymap.GetInputParser()->get("MUMHD");
+  const double SIGMHD = _qtymap.GetInputParser()->get("SIGMHD");
+  const double Bref   = _qtymap.GetInputParser()->get("Bref");
+  const double Lref   = _qtymap.GetInputParser()->get("Lref");
+
+  const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution!!!
+
+  double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
+
+  double Re  = _qtymap.GetInputParser()->get("Re");
+  double Rem = _qtymap.GetInputParser()->get("Rem");
+  double Hm  = _qtymap.GetInputParser()->get("Hm");
+  double S   = _qtymap.GetInputParser()->get("S");
+
+
+  double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
+  double Lmid  = 0.5*(box->_le[0] + box->_lb[0]);
+
+  double xtr = xp[0] - Lmid/*/Lref*/;
+
+  
+ //constant for the real reference length in the Hartmann number
+  const double LHm =2.;   //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
+  const double magnitude = DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
+ 
+  
+  func[0] = 0./*/Uref*/;
 
   return;
 
@@ -315,30 +398,6 @@ void PressureAdj::Function_txyz(const double t, const double* xp,double* func) c
 }
 
 
-// =================================================
-void Temperature::Function_txyz(const double t, const double* xp,double* temp) const {
-  //the coordinates (x,y,z,t) of the VOLUME domain are NON-DIMENSIONAL
-  //and the function value must be nondimensional as well
-
-  //the compidx may be useful when you have to set a component other than zero... for instance,
-  //you have three neutron fluxes, or pressure is u_value[4] instead of the first scalar 
-  //We pass the pointer and the index, for scalar variables
-  //for vector variables we always assume that they go from 0 to DIMENSION-1. Actually,
-  //it might happen something different. So,maybe, to make things not very complicated,
-  // it suffices to pass the pointer, and then externally one will think of shifting the indices and so on.. anyway.
-
-  const double Tref = _qtymap.GetInputParser()->get("Tref");
-
-
-  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());  
-  
-  temp[0] = 100.*(xp[0])*( ( box->_le[0] - box->_lb[0]) - xp[0])/Tref;
- 
-
-  
-  return;
-  }
-  
   
 
 
@@ -473,9 +532,8 @@ return;
 
 
 
-//I'll do that after checking NS + MHD
 ///Desired velocity for optimal control
-void DesVelocity::Function_txyz(const double t, const double* xp,double* func) const {
+void DesVelocityX::Function_txyz(const double t, const double* xp,double* func) const {
   
   
   const double Lref = _qtymap.GetInputParser()->get("Lref");
@@ -514,7 +572,6 @@ void DesVelocity::Function_txyz(const double t, const double* xp,double* func) c
   const double magnitude = _qtymap.GetInputParser()->get("udes")*DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
   
   func[0] = -sin(thetaz)*magnitude;
-  func[1] = cos(thetaz)*magnitude;
                                        //add a 4 to the denominator
 				       //should check the difference between L and Lref
                                        //TODO check this nondimensionalization
@@ -527,16 +584,73 @@ void DesVelocity::Function_txyz(const double t, const double* xp,double* func) c
 //  get_par("udes")/**(x - lxb*ILref)*(lxe*ILref-x)*//Uref;
 //  get_par("udes")/Uref;
 
-#if (DIMENSION==3)
-  func[2] = 0./*/Uref*/;
-#endif
-
-  
+ 
   return;
 
 }
  
 
+ 
+///Desired velocity for optimal control
+void DesVelocityY::Function_txyz(const double t, const double* xp,double* func) const {
+  
+  
+  const double Lref = _qtymap.GetInputParser()->get("Lref");
+  const double Uref = _qtymap.GetInputParser()->get("Uref");
+  double ILref = 1./Lref;
+    
+  const double rhof   = _qtymap.GetInputParser()->get("rho0");
+  const double muvel  = _qtymap.GetInputParser()->get("mu0");
+  const double MUMHD  = _qtymap.GetInputParser()->get("MUMHD");
+  const double SIGMHD = _qtymap.GetInputParser()->get("SIGMHD");
+  const double Bref   = _qtymap.GetInputParser()->get("Bref");
+
+  const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution
+
+  double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
+
+  double Re  = _qtymap.GetInputParser()->get("Re");
+  double Rem = _qtymap.GetInputParser()->get("Rem");
+  double Hm  = _qtymap.GetInputParser()->get("Hm");
+  double S   = _qtymap.GetInputParser()->get("S");
+ 
+  
+  Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
+  
+  
+  double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
+  double Lmid  = 0.5*(box->_le[0] + box->_lb[0]);
+
+  double xtr = xp[0] - Lmid;
+
+  const double thetaz = box->_domain_rtmap.get("thetaz");
+
+  //constant for the real reference length in the Hartmann number
+  const double LHm =2.;   //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
+
+  const double magnitude = _qtymap.GetInputParser()->get("udes")*DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
+  
+  func[0] = cos(thetaz)*magnitude;
+  
+  return;
+
+} 
+ 
+ 
+///Desired velocity for optimal control
+void DesVelocityZ::Function_txyz(const double t, const double* xp,double* func) const {
+  
+  func[0] = 0.;
+
+  return;
+
+} 
+ 
+ 
+ 
+ 
+ 
+ 
 void VelocityAdj::Function_txyz(const double t, const double* xp,double* func) const{
   
   func[0] = 0./*/Uref*/;
@@ -589,7 +703,7 @@ void MagnFieldHomAdj::Function_txyz(const double t, const double* xp,double* fun
 // ========================================================  
 
 
-void Velocity::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+void VelocityX::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
   const double bdry_toll = DEFAULT_BDRY_TOLL;
   
@@ -610,71 +724,136 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
-#if (DIMENSION==2)
-  
-  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
-     bc_flag[0]=0;
-     bc_flag[1]=0;  
-  }
-
- if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){ //right of the RefBox
-    bc_flag[0]=0;
-    bc_flag[1]=0;
-  }
-  
-   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
-     bc_flag[0]=0;   //u dot t
-//   bc_flag[1]=0;
-   }
-  
-  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
-    bc_flag[0]=0;
-//     bc_flag[1]=0;
-  }
-  
-
-#elif (DIMENSION==3)
-
   if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
     bc_flag[0]=0;    //u dot n
-    bc_flag[1]=0;    //u x n
-    bc_flag[2]=0;    //u x n 
   }
   
  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll ) {  //right of the RefBox
     bc_flag[0]=0;    //u dot n
-    bc_flag[1]=0;   //u x n
-    bc_flag[2]=0;   //u x n
   }
   
    if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )  {  //bottom  of the RefBox
      bc_flag[0]=0;      //u x n
-//      bc_flag[1]=0;   //u dot n   //leave this free for VELOCITY INLET
-     bc_flag[2]=0;      //u x n
    }
   
   if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  {  //top of the  of the RefBox
      bc_flag[0]=0;     //u x n
-//      bc_flag[1]=0;  //u dot n   //leave this free for outlet
-     bc_flag[2]=0;     //u x n
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
        if (bc_flag[0] == 1)  bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //u x n  //check it for all equations
-       if (bc_flag[1] == 1)  bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");   //u x n          //leave this free for 2D
-      bc_flag[2]=0;                                               //u dot n  
   }
   
   if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  {
      if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");      //u x n
-     if (bc_flag[1] == 1) bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");      //u x n      //leave this free for 2D
-     bc_flag[2] = 0;                                                  //u dot n
   }
   
-  #endif
   
   
   
+  return;
+ 
+}
+
+
+
+void VelocityY::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
+  
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
+
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+    bc_flag[0]=0;    //u x n
+  }
+  
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll ) {  //right of the RefBox
+    bc_flag[0]=0;   //u x n
+  }
+  
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )  {  //bottom  of the RefBox
+//      bc_flag[0]=0;   //u dot n   //leave this free for VELOCITY INLET
+   }
+  
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  {  //top of the  of the RefBox
+//      bc_flag[0]=0;  //u dot n   //leave this free for outlet
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+       if (bc_flag[0] == 1)  bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //u x n          //leave this free for 2D
+  }
+  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  {
+     if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");      //u x n      //leave this free for 2D
+  }
+  
+
+  
+  return;
+ 
+}
+
+
+
+void VelocityZ::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
+  
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
+
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+    bc_flag[0]=0;    //u x n 
+  }
+  
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll ) {  //right of the RefBox
+    bc_flag[0]=0;   //u x n
+  }
+  
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )  {  //bottom  of the RefBox
+     bc_flag[0]=0;      //u x n
+   }
+  
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  {  //top of the  of the RefBox
+     bc_flag[0]=0;     //u x n
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+      bc_flag[0]=0;                                               //u dot n  
+  }
+  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  {
+     bc_flag[0] = 0;                                                  //u dot n
+  }
   
   return;
  
@@ -1436,7 +1615,18 @@ void MagnFieldExtLagMult::bc_flag_txyz(const double t, const double* xp, std::ve
 // ===================== INITIAL CONDITIONS ============================
 // =====================================================================
 
-void Velocity::initialize_xyz(const double* xp, std::vector< double >& value) const {
+void VelocityX::initialize_xyz(const double* xp, std::vector< double >& value) const {
+
+    value[0] = 0.;
+  
+  return;
+}
+
+
+
+
+
+void VelocityY::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
   const double Uref = _qtymap.GetInputParser()->get("Uref");
   const double pref = _qtymap.GetInputParser()->get("pref");
@@ -1463,25 +1653,25 @@ void Velocity::initialize_xyz(const double* xp, std::vector< double >& value) co
 //rotation of the function  
     double thetaz = box->_domain_rtmap.get("thetaz");
 
-  
-#if (DIMENSION==2)
-
-const double magnitude = /*udes**/1.*(x_rotshift[0] - box->_lb[0])*(box->_le[0]-x_rotshift[0] )/( Uref); 
-    value[0] = -sin(thetaz)*magnitude;
-    value[1] = cos(thetaz)*magnitude; 
-
-#elif (DIMENSION==3)
-
     value[0] = 0.;
-    value[1] = 0.*/*udes**/(x_rotshift[0] - box->_lb[0])*(box->_le[0]-x_rotshift[0] )/( Uref);
-    value[2] = 0.;
 
-   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  {  value[1] = (x_rotshift[0] - lb[0])*(le[0] - x_rotshift[0])*(x_rotshift[2] - lb[2])*(le[2]-x_rotshift[2])/Uref;  }
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  {  value[0] = (x_rotshift[0] - lb[0])*(le[0] - x_rotshift[0])*(x_rotshift[2] - lb[2])*(le[2]-x_rotshift[2])/Uref;  }
   
-#endif
   
   return;
 }
+
+
+
+void VelocityZ::initialize_xyz(const double* xp, std::vector< double >& value) const {
+
+    value[0] = 0.;
+  
+  return;
+}
+
+
+
 
 
 void Pressure::initialize_xyz(const double* xp, std::vector< double >& value) const {

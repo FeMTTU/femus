@@ -21,6 +21,7 @@
 #include <fstream>
 #include <algorithm>
 #include "Solution.hpp"
+#include "FemusDefault.hpp"
 #include "ElemType.hpp"
 #include "ParalleltypeEnum.hpp"
 #include "NumericVector.hpp"
@@ -83,7 +84,7 @@ void Solution::AddSolution( const char name[], const FEFamily fefamily, const FE
   _SolType[n] = order - ((fefamily==LAGRANGE)?1:0) + fefamily*3;
   _SolTmOrder[n]=tmorder;
   _SolOld.resize(n+1u);
-  _SolName[n]=new char [8];
+  _SolName[n]=new char [DEFAULT_SOL_NCHARS];
   strcpy(_SolName[n],name);  
   
 }

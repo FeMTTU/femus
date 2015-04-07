@@ -32,20 +32,6 @@
   SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_NS");
     
     
-#if TEMP_DEPS==1
-//for this one i decide not to use any Vect's
-//i do not need the vects so badly if i do not have to do space interpolation
-//here I need the pointer but not as a Quantity, but as the child class 
-//also, since these quantities are not used for interpolation 
-//i do not add them to the EXTERNAL MAP. The purpose of that map would be to
-//loop automatically over it for getting the dofs.
-//but actually it is not so necessary to have it. For instance you may need 
-//to use a specific function, in which case you first should do the static cast
-//for some Vect and nothing for others
-//so, it could be better to do a Vect_LOCAL_EXTERNAL MAP inside here
-Density* density_ptr     = static_cast<Density*>(ml_prob.GetQtyMap().GetQuantity("Qty_Density"));
-Viscosity* viscosity_ptr = static_cast<Viscosity*>(ml_prob.GetQtyMap().GetQuantity("Qty_Viscosity"));
-#endif  //temp deps
   //====== reference values ========================
 //====== related to Quantities on which Operators act, and to the choice of the "LEADING" EQUATION Operator
   //====== Physics
@@ -163,18 +149,32 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-    CurrentQuantity VelOld(currgp);
-    VelOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
-    VelOld.VectWithQtyFillBasic();   //the internal quantities will eventually have *this as eqn pointer
-    VelOld.Allocate();
-
-   const uint   qtyzero_ord  = VelOld._FEord;
-   const uint   qtyzero_ndof = VelOld._ndof; 
-    Velocity*  vel_castqtyptr = static_cast<Velocity*>(VelOld._qtyptr); //casting for quantity-specific functions
+      CurrentQuantity VelOldX(currgp);
+    VelOldX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
+    VelOldX.VectWithQtyFillBasic();
+    VelOldX.Allocate();
+    
+    CurrentQuantity VelOldY(currgp);
+    VelOldY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity1"); 
+    VelOldY.VectWithQtyFillBasic();
+    VelOldY.Allocate();
+    
+    CurrentQuantity VelOldZ(currgp);
+    VelOldZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity2"); 
+    VelOldZ.VectWithQtyFillBasic();
+    VelOldZ.Allocate();
+    
+    std::vector<CurrentQuantity*> VelOld_vec;   
+    VelOld_vec.push_back(&VelOldX);
+    VelOld_vec.push_back(&VelOldY);
+    VelOld_vec.push_back(&VelOldZ);
+    
+   const uint   qtyzero_ord  = VelOldX._FEord;
+   const uint   qtyzero_ndof = VelOldX._ndof; 
 
 //=========
     CurrentQuantity pressOld(currgp);
-    pressOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYONE];
+    pressOld._qtyptr = ml_prob.GetQtyMap().GetQuantity("Qty_Pressure");
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
 
@@ -182,7 +182,7 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
    const uint qtyone_ndof = pressOld._ndof; 
 
    //order
-   const uint  qtyZeroToOne_DofOffset = VelOld._ndof*VelOld._dim;
+   const uint  qtyZeroToOne_DofOffset = VelOldX._ndof*space_dim;
    
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
 
@@ -223,15 +223,6 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 #endif
 //======================== MAG WORLD ================================
 
-//===================TEMPERATURE WORLD=============================
-#if TEMP_QTY==1
-    CurrentQuantity Temp(currgp);
-    Temp._qtyptr   =  ml_prob.GetQtyMap().GetQuantity("Qty_Temperature");
-    Temp.VectWithQtyFillBasic();
-    Temp.Allocate();
-#endif
-//=================== TEMPERATURE WORLD============================
-
 //=======gravity==================================
   CurrentQuantity gravity(currgp);
   gravity._dim=DIMENSION;
@@ -258,7 +249,8 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
     currelem.SetElDofsBc();
     
-      VelOld.GetElemDofs();
+    for (uint idim=0; idim < space_dim; idim++) VelOld_vec[idim]->GetElemDofs();
+     
     pressOld.GetElemDofs();
 
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
@@ -267,10 +259,6 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
   else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
   if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs();   
   else                         Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
-#endif
-#if (TEMP_QTY==1)
-   if ( Temp._eqnptr != NULL ) Temp.GetElemDofs();
-     else                      Temp._qtyptr->FunctionDof(Temp,time,&xyz_refbox._val_dofs[0]);
 #endif
 
 //=== the connectivity is only related to the ELEMENT, so it is GEOMETRICAL
@@ -353,16 +341,19 @@ for (uint fe = 0; fe < QL; fe++)     {
 //but, these quantities depend on idim and jdim, because they are  involved in multiplications with tEST and SHAPE functions
 
 //Internal Quantities
-      VelOld.val_g();   //fills _val_g, needs _val_dofs
-      VelOld.grad_g();     //fills _grad_g, needs _val_dofs //TODO can we see the analogies between JacVectVV_g and grad_g?
+      for (uint idim=0; idim < space_dim; idim++) { 
+	VelOld_vec[idim]->val_g(); 
+	VelOld_vec[idim]->grad_g();
+      }
+
 //Advection all VelOld
       for (uint idim=0; idim<space_dim; idim++) { AdvRhs_g[idim]=0.;}
           for (uint idim=0; idim<space_dim; idim++)  {
 	    for (uint b=0; b<space_dim; b++) {
-	    AdvRhs_g[idim] += VelOld._val_g[b]*VelOld._grad_g[idim][b]; }   }   //TODO NONLIN // grad is [ivar][idim], i.e. [u v w][x y z]
+	    AdvRhs_g[idim] += VelOld_vec[b]->_val_g[0]*VelOld_vec[idim]->_grad_g[0][b]; }   }   // grad is [ivar][idim], i.e. [u v w][x y z]
 //Divergence VelOld
 	  double Div_g=0.;
-          for (uint idim=0; idim<space_dim; idim++)    Div_g += VelOld._grad_g[idim][idim];     //TODO NONLIN
+          for (uint idim=0; idim<space_dim; idim++)    Div_g += VelOld_vec[idim]->_grad_g[0][idim];
 
 #if (BMAG_QTY==1)
 //compute curlB
@@ -379,19 +370,6 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //compute JxB
           Math::cross(Jext_g3D,&Bmag._val_g3D[0],JextXB_g3D);
-#endif
-
-#if (TEMP_QTY==1)
-     Temp.val_g();
- #endif
-
-#if (TEMP_DEPS==1)
-  double rho_t=1.; density_ptr->Temp_dep(Temp._val_g[0],rho_t); rho_nd *= rho_t;
-  double mu_t=1. ; density_ptr->Temp_dep(Temp._val_g[0],mu_t) ; mu_nd  *= mu_t;
-#endif
-       
-#ifdef AXISYMX
-      dtxJxW_g  *=yyg;  //what is the symmetry axis? I guess the x axis.
 #endif
 
 //==============================================================
@@ -411,7 +389,7 @@ for (uint fe = 0; fe < QL; fe++)     {
                                                   //(idim): component of the tEST function
            currelem.Rhs()(irowq) += 
          currelem.GetBCDofFlag()[irowq]*
-           dtxJxW_g*(          NonStatNS*rho_nd*     VelOld._val_g[idim]*phii_g/dt  //time
+           dtxJxW_g*(          NonStatNS*rho_nd*     VelOld_vec[idim]->_val_g[0]*phii_g/dt  //time
                             + _AdvNew_fl*rho_nd*          AdvRhs_g[idim]*phii_g     //TODO NONLIN
                             +            rho_nd*IFr*gravity._val_g[idim]*phii_g     // gravity
 #if (BMAG_QTY==1)
@@ -419,7 +397,7 @@ for (uint fe = 0; fe < QL; fe++)     {
                             +                           JextXB_g3D[idim]*phii_g  
 #endif                            
                                )
-            + (1-currelem.GetBCDofFlag()[irowq])*detb*VelOld._val_dofs[irowq] //Dirichlet bc    
+            + (1-currelem.GetBCDofFlag()[irowq])*detb*VelOld_vec[idim]->_val_dofs[i] //Dirichlet bc    
 	;
           }
 
@@ -437,7 +415,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
   
           double Lap_g=Math::dot(dphijdx_g,dphiidx_g,space_dim);
-	  double Adv_g=Math::dot(&VelOld._val_g[0],dphijdx_g,space_dim);
+	  double Adv_g=0.;
+	  for (uint idim=0; idim<space_dim; idim++) Adv_g += VelOld_vec[idim]->_val_g[0] * dphijdx_g[idim]; // =Math::dot(&VelOld._val_g[0],dphijdx_g,space_dim);
           
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
             int irowq = i+idim*qtyzero_ndof;      //(i) is still the dof of the tEST functions
@@ -449,7 +428,7 @@ for (uint fe = 0; fe < QL; fe++)     {
             dtxJxW_g*(
                    +NonStatNS*                           rho_nd*phij_g*phii_g/dt
                  + _AdvPic_fl*                           rho_nd* Adv_g*phii_g                //TODO NONLIN
-                 + _AdvNew_fl*rho_nd*phij_g*VelOld._grad_g[idim][idim]*phii_g                //TODO NONLIN
+                 + _AdvNew_fl*rho_nd*phij_g*VelOld_vec[idim]->_grad_g[0][idim]*phii_g                //TODO NONLIN
                  + _AdvPic_fl*_Stab_fl*rho_nd*        0.5*Div_g*phij_g*phii_g                //TODO NONLIN
                  +                         mu_nd*IRe*(      dphijdx_g[idim]*dphiidx_g[idim] + Lap_g)
                );
@@ -459,7 +438,7 @@ for (uint fe = 0; fe < QL; fe++)     {
                +=
             currelem.GetBCDofFlag()[irowq]*
             dtxJxW_g*(
-                   _AdvNew_fl*rho_nd*phij_g*VelOld._grad_g[idim][idimp1]*phii_g           //TODO NONLIN
+                   _AdvNew_fl*rho_nd*phij_g*VelOld_vec[idim]->_grad_g[0][idimp1]*phii_g           //TODO NONLIN
                               +            mu_nd*IRe*(     dphijdx_g[idim]*dphiidx_g[idimp1])
                );
 #if (DIMENSION==3)
@@ -469,7 +448,7 @@ for (uint fe = 0; fe < QL; fe++)     {
                +=
            currelem.GetBCDofFlag()[irowq]*           
             dtxJxW_g*(
-                   _AdvNew_fl*rho_nd*phij_g*VelOld._grad_g[idim][idimp2]*phii_g          //TODO NONLIN
+                   _AdvNew_fl*rho_nd*phij_g*VelOld_vec[idim]->_grad_g[0][idimp2]*phii_g          //TODO NONLIN
                               +            mu_nd*IRe*(     dphijdx_g[idim]*dphiidx_g[idimp2])
                );
 #endif
@@ -550,18 +529,17 @@ for (uint fe = 0; fe < QL; fe++)     {
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-    CurrentQuantity VelOld(currgp);
-    VelOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYZERO]; //an alternative cannot exist, because it is an Unknown of This Equation
-    VelOld.VectWithQtyFillBasic();   //the internal quantities will eventually have *this as eqn pointer
-    VelOld.Allocate();
+      CurrentQuantity VelOldX(currgp);
+    VelOldX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
+    VelOldX.VectWithQtyFillBasic();
+    VelOldX.Allocate();
 
-   const uint   qtyzero_ord  = VelOld._FEord;
-   const uint   qtyzero_ndof = VelOld._ndof; 
-    Velocity*  vel_castqtyptr = static_cast<Velocity*>(VelOld._qtyptr); //casting for quantity-specific functions
+   const uint   qtyzero_ord  = VelOldX._FEord;
+   const uint   qtyzero_ndof = VelOldX._ndof; 
 
 //=========
     CurrentQuantity pressOld(currgp);
-    pressOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYONE];
+    pressOld._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Pressure");
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
 
@@ -569,7 +547,7 @@ for (uint fe = 0; fe < QL; fe++)     {
    const uint qtyone_ndof = pressOld._ndof; 
 
    //order
-   const uint  qtyZeroToOne_DofOffset = VelOld._ndof*VelOld._dim;
+   const uint  qtyZeroToOne_DofOffset = VelOldX._ndof*space_dim;
    
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
 
@@ -607,11 +585,10 @@ for (uint fe = 0; fe < QL; fe++)     {
 
      currelem.SetElDofsBc();
      
-     VelOld.GetElemDofs();
      pressOld.GetElemDofs();
 
 //============ BC =======
-       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(VelOld,pressOld); 
+       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(VelOldX._ndof,space_dim,pressOld); 
 //========END BC============
 
 //==============================================================
@@ -635,9 +612,6 @@ for (uint fe = 0; fe < QL; fe++)     {
       pressOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0],&pressOld._val_g[0]);  //i prefer using the function instead of the p_old vector
 //        pressOld.val_g();  //this is the alternative
       
-	  VelOld.val_g();
-
-
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================
 //==============================================================

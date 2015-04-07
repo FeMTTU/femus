@@ -47,7 +47,9 @@ using namespace femus;
   const double gammaLap = ml_prob.GetInputParser().get("gammaLap");
 //===========================
 
-  //==== Operators @ gauss ========   //TODO USER
+  //==== Operators @ gauss ========
+  std::vector<double> Vel_vec_val_g(space_dim);
+  std::vector<double> Vel_vec_val_g3D(3);
   double dphijdx_g[DIMENSION];
   double dphiidx_g[DIMENSION];
   double      dphiidx_g3D[3];
@@ -108,10 +110,25 @@ using namespace femus;
   xyz_refbox.Allocate();
   
 #if VELOCITY_QTY==1
-    CurrentQuantity Vel(currgp);
-    Vel._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity"); //an alternative cannot exist, because it is an Unknown of This Equation
-    Vel.VectWithQtyFillBasic();
-    Vel.Allocate();
+        CurrentQuantity VelX(currgp);
+    VelX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
+    VelX.VectWithQtyFillBasic();
+    VelX.Allocate();
+    
+    CurrentQuantity VelY(currgp);
+    VelY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity1"); 
+    VelY.VectWithQtyFillBasic();
+    VelY.Allocate();
+    
+    CurrentQuantity VelZ(currgp);
+    VelZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity2"); 
+    VelZ.VectWithQtyFillBasic();
+    VelZ.Allocate();
+    
+    std::vector<CurrentQuantity*> Vel_vec;   
+    Vel_vec.push_back(&VelX);
+    Vel_vec.push_back(&VelY);
+    Vel_vec.push_back(&VelZ);
 #endif  
 
     //==================
@@ -149,9 +166,11 @@ using namespace femus;
     LagMultOld.GetElemDofs();
 
  
+    for (uint idim=0; idim < space_dim; idim++)    {
+      if ( Vel_vec[idim]->_eqnptr != NULL )    Vel_vec[idim]->GetElemDofs();
+    else                                       Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],time,&xyz_refbox._val_dofs[0]);
+    }
     
-    if ( Vel._eqnptr != NULL )        Vel.GetElemDofs();
-    else                              Vel._qtyptr->FunctionDof(Vel,time,&xyz_refbox._val_dofs[0]);
     if ( VelAdj._eqnptr != NULL )  VelAdj.GetElemDofs();
     else                           VelAdj._qtyptr->FunctionDof(VelAdj,time,&xyz_refbox._val_dofs[0]);
     if ( Bhom._eqnptr != NULL )      Bhom.GetElemDofs();
@@ -187,16 +206,20 @@ for (uint fe = 0; fe < QL; fe++)     {
        BhomAdj.curl_g();
           Bhom.curl_g();
        BeOld.val_g(); 
-         Vel.val_g();
       VelAdj.val_g();
         Bhom.val_g();
      BhomAdj.grad_g();
 
+     for (uint idim=0; idim<space_dim; idim++)   {
+       Vel_vec[idim]->val_g();
+       Vel_vec_val_g[idim] =  Vel_vec[idim]->_val_g[0];
+     }
+	
 // vector product
-      Math::extend(   &Vel._val_g[0],   &Vel._val_g3D[0],space_dim);
+      Math::extend(   &Vel_vec_val_g[0],   &Vel_vec_val_g3D[0],space_dim);
       Math::extend(&VelAdj._val_g[0],&VelAdj._val_g3D[0],space_dim);
 
-      Math::cross(&BhomAdj._curl_g3D[0],   &Vel._val_g3D[0],curlxiXvel_g3D ); 
+      Math::cross(&BhomAdj._curl_g3D[0],   &Vel_vec_val_g3D[0],curlxiXvel_g3D ); 
       Math::cross(   &Bhom._curl_g3D[0],&VelAdj._val_g3D[0],curlbXlambda_g3D );
 //========end preparation for things that are independent of (i,j) dofs of test and shape =====================
   
@@ -420,7 +443,7 @@ for (uint fe = 0; fe < QL; fe++)     {
      LagMultOld.GetElemDofs();
 
 //============ BC =======
-       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(BeOld,LagMultOld); 
+       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(BeOld._ndof,space_dim,LagMultOld); 
 //========END BC============
        
 //==============================================================
