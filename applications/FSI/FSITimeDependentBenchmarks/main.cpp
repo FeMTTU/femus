@@ -168,7 +168,7 @@ int main(int argc,char **args) {
       muf = 1.;
       rhos = 10000.;
       ni = 0.5;
-      E = 1400000/1.5;
+      E = 1400000;
     }
     else if (turek_FSI == 3){ //Turek-Hron FSI3
       rhof = 1000.;
@@ -183,14 +183,14 @@ int main(int argc,char **args) {
     muf = 0.04;
     rhos = 800;
     ni = 0.5;
-    E = 120000000; 
+    E = 180000000; 
   }
   else if(simulation<7){ //bathe 3D
     rhof = 100.;
     muf = 1.;
     rhos = 800;
     ni = 0.5;
-    E = 1200000;
+    E = 1800000;
   }
   else if(simulation==7){ //comsol
     rhof = 1000.;
@@ -419,7 +419,9 @@ double SetVariableTimeStep(const double time) {
     else 		  dt = 0.01; 
   }
   else if ( simulation == 3 ) dt=0.001;
-  else if ( simulation == 4 ) dt=0.01;
+  else if ( simulation == 4 ) dt=0.1;
+  else if ( simulation == 5 ) dt=0.1;
+  else if ( simulation == 6 ) dt=0.1;
   else if ( simulation == 7 ) dt=0.001;
   else{
     std::cout << "Warning this simulation case has not been considered yet for the time dependent case"<<std::endl;
@@ -835,7 +837,7 @@ bool SetBoundaryConditionBathe_3D_solid(const double &x, const double &y, const 
   if(!strcmp(name,"U")) {
     if(2==facename){  //stress
       test=0;
-      value=15*1.5*1000;   
+      value=15*1000*time;   
     }
     else if(3==facename || 4==facename ){  // clamped solid 
       test=1;
