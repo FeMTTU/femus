@@ -632,14 +632,14 @@ namespace femus {
 			  -B_old[0][1] * B_old[1][0] - B_old[1][2] * B_old[2][1] - B_old[2][0]*B_old[0][2];     
 		
 		double C1 = mus/2.;
-		double C2 = 0.*C1;
+		double C2 = 0.5*C1;
 			  
 		for (int I=0; I<3; ++I) {
 		  for (int J=0; J<3; ++J) {
-		    Cauchy[I][J] =  2.*C1*B[I][J] - 2.*C2*invB[I][J]
+		    Cauchy[I][J] =  2.*C1*(B[I][J]-0.*Id2th[I][J]) - 2.*(C2*invB[I][J]-0.*Id2th[I][J])
 				  -(2./3.)*(C1*I1_B - C2*I2_B )* SolVAR[2*dim]*Id2th[I][J];
 				  
-		    Cauchy_old[I][J] =  2.*C1*B_old[I][J] - 2.*C2*invB_old[I][J]
+		    Cauchy_old[I][J] =  2.*C1*(B_old[I][J]-0.*Id2th[I][J]) - 2.*C2*(invB_old[I][J]-0.*Id2th[I][J])
 				      -(2./3.)*(C1*I1_B_old - C2*I2_B_old )* SolVAR[2*dim]*Id2th[I][J];
 		    //std::cout<<C1*rhof<<" "<<C2*rhof<<" "<<std::endl;
 		    

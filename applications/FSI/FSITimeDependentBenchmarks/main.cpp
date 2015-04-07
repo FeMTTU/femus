@@ -168,14 +168,14 @@ int main(int argc,char **args) {
       muf = 1.;
       rhos = 10000.;
       ni = 0.5;
-      E = 1400000*(1.5/1.4);
+      E = 1400000/1.5;
     }
     else if (turek_FSI == 3){ //Turek-Hron FSI3
       rhof = 1000.;
       muf = 1.;
       rhos = 1000.;
       ni = 0.5;
-      E = 5600000*(1.5/1.4);
+      E = 5600000;
     }  
   }
   else if(simulation==3){ //bathe 2D
@@ -410,8 +410,8 @@ double SetVariableTimeStep(const double time) {
   double dt = 1.;
   if( turek_FSI == 2 ){
     if	    ( time < 5. )   dt = 0.1;
-    else if ( time < 6.5 )  dt = 0.05;
-    else 		    dt = 0.01;    
+    else if ( time < 9 )    dt = 0.05;
+    else 		    dt = 0.025;    
   }
   else if ( turek_FSI == 3 ){
     if	    ( time < 5. ) dt = 0.1;
@@ -452,8 +452,8 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y
     if(1==facename){   //inflow
       test = 1;
       double um = 0.2;
-      if( turek_FSI == 2 ) um = 2.;
-      if( turek_FSI == 3 ) um = 1.;
+      if( turek_FSI == 2 ) um = 1.;
+      if( turek_FSI == 3 ) um = 2.;
             
       if(time < 2.0) {
    	value = 1.5 * um * 4.0 / 0.1681 * y * ( 0.41 - y) * 0.5 * ( 1. - cos( 0.5 * 3.141592653589793 * time) );
