@@ -117,15 +117,27 @@ VelocityZ::VelocityZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, u
 }
 
 //=========================================================================
-VelocityAdj::VelocityAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+VelocityAdjX::VelocityAdjX(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {  
 
-    for (uint i=0;i<dim_in;i++) _refvalue[i] = 1.; /*qtymap_in.ml_prob.GetInputParser().get_par("Uref")*/ //TODO
-                                                    //do i have to put the same reference value as 
-                                                    // the corresponding direct variable?
-                                                    //or should this be equal to the reference value for
-                                                    //the test function of the corresponding state equation?
-  
+    for (uint i=0;i<dim_in;i++) _refvalue[i] = 1.;
+    
+}
+
+//=========================================================================
+VelocityAdjY::VelocityAdjY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) {  
+
+    for (uint i=0;i<dim_in;i++) _refvalue[i] = 1.;
+    
+}
+
+//=========================================================================
+VelocityAdjZ::VelocityAdjZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) {  
+
+    for (uint i=0;i<dim_in;i++) _refvalue[i] = 1.;
+    
 }
 
 //==========================================================================
@@ -651,14 +663,21 @@ void DesVelocityZ::Function_txyz(const double t, const double* xp,double* func) 
  
  
  
-void VelocityAdj::Function_txyz(const double t, const double* xp,double* func) const{
+void VelocityAdjX::Function_txyz(const double t, const double* xp,double* func) const{
   
-  func[0] = 0./*/Uref*/;
-  func[1] = 0./*/Uref*/;
-#if (DIMENSION==3)
-  func[2] = 0./*/Uref*/;
-#endif
+  func[0] = 0.;
+    return;
+  } 
+
+void VelocityAdjY::Function_txyz(const double t, const double* xp,double* func) const{
   
+  func[0] = 0.;
+    return;
+  } 
+
+void VelocityAdjZ::Function_txyz(const double t, const double* xp,double* func) const{
+  
+  func[0] = 0.;
     return;
   } 
 
@@ -1272,7 +1291,7 @@ if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //current
  
  
 
-void VelocityAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+void VelocityAdjX::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
   const double bdry_toll = DEFAULT_BDRY_TOLL;
   
@@ -1293,75 +1312,143 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
-
-#if (DIMENSION==2)
-  
- if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {//left of the RefBox
-     bc_flag[0]=0;
-     bc_flag[1]=0;
-  }
-  
- if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){ //right of the RefBox
-    bc_flag[0]=0; 
-    bc_flag[1]=0;
-  }
-
- if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
-     bc_flag[0]=0;
-//   bc_flag[1]=0;   //comment it, because you leave u_y free
-  }
-  
-  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
-    bc_flag[0]=0;
-//  bc_flag[1]=0;  //comment it, because you leave u_y free
-  }
-  
-#else
-
   if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
     bc_flag[0]=0;
-    bc_flag[1]=0;
-    bc_flag[2]=0;
   }
   
- if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll) {  //right of the RefBox
     bc_flag[0]=0;
-    bc_flag[1]=0;
-    bc_flag[2]=0;
   }
   
-   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll) {  //bottom  of the RefBox
      bc_flag[0]=0;
-//      bc_flag[1]=0;    //INSTEAD THIS MUST CORRESPOND TO THE DIRECT
-                         //the SPACE of ADJOINT functions is the same as the SPACE for the DIRECT test functions
-                         //if you fix this then you dont control...
-     bc_flag[2]=0;
   }
   
   if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
      bc_flag[0]=0;
-//      bc_flag[1]=0;     //INSTEAD THIS MUST CORRESPOND TO THE DIRECT
-     bc_flag[2]=0;
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
     if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //u x n
-    if (bc_flag[1] == 1) bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");  //u x n             //leave this free for 2D
-      bc_flag[2]=0;                                            //u dot n
   }
+  
   if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
     if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //u x n
-    if (bc_flag[1] == 1) bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");  //u x n             //leave this free for 2D
-    bc_flag[2]=0;                                                //u dot n
   }
-#endif
- 
+
   return;
  
 }  
  
  
  
+
+void VelocityAdjY::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
+  
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
+
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+    bc_flag[0]=0;
+  }
+  
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll) {  //right of the RefBox
+    bc_flag[0]=0;
+  }
+  
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
+//      bc_flag[0]=0;    //INSTEAD THIS MUST CORRESPOND TO THE DIRECT
+                         //the SPACE of ADJOINT functions is the same as the SPACE for the DIRECT test functions
+                         //if you fix this then you dont control...
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
+//      bc_flag[0]=0;     //INSTEAD THIS MUST CORRESPOND TO THE DIRECT
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+    if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");  //u x n             //leave this free for 2D
+  }
+  
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
+    if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");  //u x n             //leave this free for 2D
+  }
+
+
+  return;
+ 
+} 
+
+
+
+ 
+
+void VelocityAdjZ::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
+  
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
+
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+    bc_flag[0]=0;
+  }
+  
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
+    bc_flag[0]=0;
+  }
+  
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
+     bc_flag[0]=0;
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the  of the RefBox
+     bc_flag[0]=0;
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+      bc_flag[0]=0;                                            //u dot n
+  }
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
+    bc_flag[0]=0;                                                //u dot n
+  }
+
+
+  return;
+ 
+} 
+
+
  
  void PressureAdj::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
@@ -1728,13 +1815,24 @@ void MagnFieldHomLagMult::initialize_xyz(const double* xp, std::vector< double >
   return;
 }
 
-void VelocityAdj::initialize_xyz(const double* xp, std::vector< double >& value) const {
+void VelocityAdjX::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
   value[0] = 0.;
-  value[1] = 0.;
-#if (DIMENSION==3)
-  value[2] = 0.;
-#endif
+  
+  return;
+}
+
+
+void VelocityAdjY::initialize_xyz(const double* xp, std::vector< double >& value) const {
+
+  value[0] = 0.;
+  
+  return;
+}
+
+void VelocityAdjZ::initialize_xyz(const double* xp, std::vector< double >& value) const {
+
+  value[0] = 0.;
   
   return;
 }

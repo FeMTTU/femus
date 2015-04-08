@@ -38,12 +38,6 @@ using namespace femus;
   double dphiidx_g[DIMENSION];
     double    curlxiXB_g3D[3];
 
-   const double time =  0.;  //ml_prob._timeloop._curr_time;
-   
-//======= TIME - STATIONARY OR NOT =======
-const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
-  const double   dt     = 1.;  //ml_prob._timeloop._timemap.get("dt");
-
 // //======== GEOMETRICAL ELEMENT =======
   const uint space_dim = ml_prob._ml_msh->GetDimension();
 
@@ -70,15 +64,28 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-    //QTYZERO
-    CurrentQuantity VelAdjOld(currgp);
-    VelAdjOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYZERO];
-    VelAdjOld.VectWithQtyFillBasic();
-    VelAdjOld.Allocate();
-  
-    //QTYONE
+      CurrentQuantity VelAdjOldX(currgp);
+    VelAdjOldX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_VelocityAdj0"); 
+    VelAdjOldX.VectWithQtyFillBasic();
+    VelAdjOldX.Allocate();
+    
+    CurrentQuantity VelAdjOldY(currgp);
+    VelAdjOldY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_VelocityAdj1"); 
+    VelAdjOldY.VectWithQtyFillBasic();
+    VelAdjOldY.Allocate();
+    
+    CurrentQuantity VelAdjOldZ(currgp);
+    VelAdjOldZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_VelocityAdj2"); 
+    VelAdjOldZ.VectWithQtyFillBasic();
+    VelAdjOldZ.Allocate();
+    
+    std::vector<CurrentQuantity*> VelAdjOld_vec;
+    VelAdjOld_vec.push_back(&VelAdjOldX);
+    VelAdjOld_vec.push_back(&VelAdjOldY);
+    VelAdjOld_vec.push_back(&VelAdjOldZ);
+
     CurrentQuantity PressAdjOld(currgp);
-    PressAdjOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYONE];
+    PressAdjOld._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_PressureAdj");
     PressAdjOld.VectWithQtyFillBasic();
     PressAdjOld.Allocate();
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
@@ -183,21 +190,21 @@ const int NonStatNSAD = (int) ml_prob.GetInputParser().get("NonStatNSAD");
 
     currelem.SetElDofsBc();
     
-    VelAdjOld.GetElemDofs();  
     PressAdjOld.GetElemDofs();
 
     if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs();
-    else                         Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
+    else                         Bhom._qtyptr->FunctionDof(Bhom,0.,&xyz_refbox._val_dofs[0]);
     if ( Bext._eqnptr != NULL )  Bext.GetElemDofs();
-    else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
+    else                         Bext._qtyptr->FunctionDof(Bext,0.,&xyz_refbox._val_dofs[0]);
     if ( BhomAdj._eqnptr != NULL )  BhomAdj.GetElemDofs();
-    else                            BhomAdj._qtyptr->FunctionDof(BhomAdj,time,&xyz_refbox._val_dofs[0]);    
+    else                            BhomAdj._qtyptr->FunctionDof(BhomAdj,0.,&xyz_refbox._val_dofs[0]);    
     
  for (uint idim=0; idim < space_dim; idim++)    {
+    VelAdjOld_vec[idim]->GetElemDofs();  
     if ( Vel_vec[idim]->_eqnptr != NULL )  Vel_vec[idim]->GetElemDofs();
-    else                                   Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],time,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
+    else                                   Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
    if ( VelDes_vec[idim]->_eqnptr != NULL )  VelDes_vec[idim]->GetElemDofs();
-    else                                     VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],time,&xyz_refbox._val_dofs[0]);    
+    else                                     VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
     }
  
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
@@ -227,7 +234,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  
 }  
 	  
-const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is the same for both QQ and LL!
+const double      det = currgp.JacVectVV_g(xyz);   //InvJac: is the same for both QQ and LL!
 const double dtxJxW_g = det*ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
@@ -237,11 +244,11 @@ for (uint fe = 0; fe < QL; fe++)     {
 }
 //=======end of the "COMMON SHAPE PART"==================
 
-   VelAdjOld.val_g();
      BhomAdj.curl_g();
         Bmag.val_g();
  
   for (uint idim=0; idim < space_dim; idim++) {
+    VelAdjOld_vec[idim]->val_g();
     VelDes_vec[idim]->val_g();
     Vel_vec[idim]->val_g();
     Vel_vec[idim]->grad_g();
@@ -254,50 +261,46 @@ for (uint fe = 0; fe < QL; fe++)     {
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================
 //==============================================================
-       for (uint i = 0; i < VelAdjOld._ndof; i++)     {
-//======="COMMON tEST PART for QTYZERO": func and derivative, of the QTYZERO FE ORD ==========
-        const double phii_g = currgp._phi_ndsQLVB_g[VelAdjOld._FEord][i];
-        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim]= currgp._dphidxyz_ndsQLVB_g[VelAdjOld._FEord][i+idim*VelAdjOld._ndof];
-//======= END "COMMON tEST PART for QTYZERO" ==========
+       for (uint i = 0; i < VelAdjOldX._ndof; i++)     {
+
+	const double phii_g = currgp._phi_ndsQLVB_g[VelAdjOldX._FEord][i];
+        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim]= currgp._dphidxyz_ndsQLVB_g[VelAdjOldX._FEord][i+idim*VelAdjOldX._ndof];
 
          for (uint idim=0; idim<space_dim; idim++) {
-            const uint irowq=i+idim*VelAdjOld._ndof;  //quadratic rows index
+            const uint irowq=i+idim*VelAdjOldX._ndof;  //quadratic rows index
            currelem.Rhs()(irowq) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
-                            NonStatNSAD*VelAdjOld._val_g[idim]*phii_g/dt  //time
                            - curlxiXB_g3D[idim]*phii_g                    //this is due to the variation of velocity in the MAGNETIC ADVECTION, so it is due to a   NONLINEAR COUPLING "u times B", "MY_STATE times OTHER_STATE"
                            - alphaVel*el_flagdom*(Vel_vec[idim]->_val_g[0] - VelDes_vec[idim]->_val_g[0])*phii_g    //this is the dependence that counts
                            )
-                           + (1-currelem.GetBCDofFlag()[irowq])*detb*VelAdjOld._val_dofs[irowq]; //Dirichlet bc
+                           + (1-currelem.GetBCDofFlag()[irowq])*detb*VelAdjOld_vec[idim]->_val_dofs[i]; //Dirichlet bc
 	   }
 
   for (uint idim=0; idim<space_dim; idim++) { // filling diagonal for Dirichlet bc
-          const uint irowq = i+idim*VelAdjOld._ndof;
+          const uint irowq = i+idim*VelAdjOldX._ndof;
           currelem.Mat()(irowq,irowq) += (1-currelem.GetBCDofFlag()[irowq])*detb;
         }// end filling diagonal for Dirichlet bc
 	 
-        for (uint j=0; j<VelAdjOld._ndof; j++) {// A element matrix
-//======="COMMON SHAPE PART for QTYZERO": ==========
-           double                                  phij_g       =      currgp._phi_ndsQLVB_g[VelAdjOld._FEord][j];
-           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[VelAdjOld._FEord][j+idim*VelAdjOld._ndof];
-//======= END "COMMON SHAPE PART for QTYZERO" ==========
+        for (uint j=0; j<VelAdjOldX._ndof; j++) {// A element matrix
+	  
+           double                                  phij_g       =      currgp._phi_ndsQLVB_g[VelAdjOldX._FEord][j];
+           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[VelAdjOldX._FEord][j+idim*VelAdjOldX._ndof];
 
           double     Lap_g = Math::dot(dphijdx_g,dphiidx_g,space_dim);
 	  double Advphii_g = 0.;
 	  for (uint idim=0; idim<space_dim; idim++) Advphii_g += Vel_vec[idim]->_val_g[0]*dphiidx_g[idim];   //TODO can put it outside
           
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
-            int irowq = i+idim*VelAdjOld._ndof;
+            int irowq = i+idim*VelAdjOldX._ndof;
             // diagonal blocks [1-5-9]
-            currelem.Mat()(irowq,j+idim*VelAdjOld._ndof)
+            currelem.Mat()(irowq,j+idim*VelAdjOldX._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
-                   NonStatNSAD* phij_g*phii_g/dt // time
                    + IRe*(dphijdx_g[idim]*dphiidx_g[idim] + Lap_g)      //Adjoint of D is D, Adjoint of Laplacian is Laplacian
                    + phij_g*phii_g*/*dveldx_g*/Vel_vec[idim]->_grad_g[0][idim]  //Adjoint of Advection 1 delta(u) DOT grad(u): adj of nonlinear stuff has 2 TERMS (well, not always)
                    + phij_g*Advphii_g                                   //Adjoint of Advection 2 u DOT grad (delta(u)): adj of nonlinear stuff has 2 TERMS
                );
             // block +1 [2-6-7]
             int idimp1=(idim+1)%space_dim;
-            currelem.Mat()(irowq,j+idimp1*VelAdjOld._ndof)
+            currelem.Mat()(irowq,j+idimp1*VelAdjOldX._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                    + IRe*(dphijdx_g[idim]*dphiidx_g[idimp1])
                    + phij_g*phii_g*/*dveldx_g*/Vel_vec[idimp1]->_grad_g[0][idim]
@@ -305,7 +308,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 #if (DIMENSION==3)
             // block +2 [3-4-8]
             int idimp2=(idim+2)%space_dim;
-            currelem.Mat()(irowq,j+idimp2*VelAdjOld._ndof)
+            currelem.Mat()(irowq,j+idimp2*VelAdjOldX._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                   + IRe*(dphijdx_g[idim]*dphiidx_g[idimp2])
                   + phij_g*phii_g*/*dveldx_g*/Vel_vec[idimp2]->_grad_g[0][idim]
@@ -318,9 +321,9 @@ for (uint fe = 0; fe < QL; fe++)     {
       
        for (uint j=0; j<PressAdjOld._ndof; j++) {// B^T element matrix ( p*div(v) ) (NS eq)
           const double psij_g =  currgp._phi_ndsQLVB_g[PressAdjOld._FEord][j];
-          const int jclml= j + space_dim*VelAdjOld._ndof;
+          const int jclml= j + space_dim*VelAdjOldX._ndof;
           for (uint idim=0; idim<space_dim; idim++) {
-            uint irowq = i+idim*VelAdjOld._ndof;
+            uint irowq = i+idim*VelAdjOldX._ndof;
             currelem.Mat()(irowq,jclml) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(-psij_g*dphiidx_g[idim]);
            }
         }
@@ -328,12 +331,12 @@ for (uint fe = 0; fe < QL; fe++)     {
 
           if (i<PressAdjOld._ndof) {//  pressure equation (KOMP dp/dt=rho*div) 
           double psii_g = currgp._phi_ndsQLVB_g[PressAdjOld._FEord][i];
-	  const uint irowl = i+space_dim*VelAdjOld._ndof;  //vertical offset
+	  const uint irowl = i+space_dim*VelAdjOldX._ndof;  //vertical offset
           currelem.Rhs()(irowl)=0.;  // rhs
 
-          for (uint j=0; j<VelAdjOld._ndof; j++) { // B element matrix q*div(u)
-            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[VelAdjOld._FEord][j+idim*VelAdjOld._ndof];
-            for (uint idim=0; idim<space_dim; idim++) currelem.Mat()(irowl,j+idim*VelAdjOld._ndof) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
+          for (uint j=0; j<VelAdjOldX._ndof; j++) { // B element matrix q*div(u)
+            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[VelAdjOldX._FEord][j+idim*VelAdjOldX._ndof];
+            for (uint idim=0; idim<space_dim; idim++) currelem.Mat()(irowl,j+idim*VelAdjOldX._ndof) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
                 }
 
         }
@@ -373,15 +376,28 @@ for (uint fe = 0; fe < QL; fe++)     {
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-    //QTYZERO
-    CurrentQuantity VelAdjOld(currgp);
-    VelAdjOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYZERO];
-    VelAdjOld.VectWithQtyFillBasic();
-    VelAdjOld.Allocate();
-  
-    //QTYONE
+      CurrentQuantity VelAdjOldX(currgp);
+    VelAdjOldX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_VelocityAdj0"); 
+    VelAdjOldX.VectWithQtyFillBasic();
+    VelAdjOldX.Allocate();
+    
+    CurrentQuantity VelAdjOldY(currgp);
+    VelAdjOldY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_VelocityAdj1"); 
+    VelAdjOldY.VectWithQtyFillBasic();
+    VelAdjOldY.Allocate();
+    
+    CurrentQuantity VelAdjOldZ(currgp);
+    VelAdjOldZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_VelocityAdj2"); 
+    VelAdjOldZ.VectWithQtyFillBasic();
+    VelAdjOldZ.Allocate();
+    
+    std::vector<CurrentQuantity*> VelAdjOld_vec;
+    VelAdjOld_vec.push_back(&VelAdjOldX);
+    VelAdjOld_vec.push_back(&VelAdjOldY);
+    VelAdjOld_vec.push_back(&VelAdjOldZ);
+
     CurrentQuantity PressAdjOld(currgp);
-    PressAdjOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYONE];
+    PressAdjOld._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_PressureAdj");
     PressAdjOld.VectWithQtyFillBasic();
     PressAdjOld.Allocate();
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
@@ -416,11 +432,10 @@ for (uint fe = 0; fe < QL; fe++)     {
 
      currelem.SetElDofsBc();
 
-     VelAdjOld.GetElemDofs();
      PressAdjOld.GetElemDofs();
 
 //============ BC =======
-       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(VelAdjOld._ndof,space_dim,PressAdjOld); 
+       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(VelAdjOldX._ndof,space_dim,PressAdjOld); 
  //========END BC============
    
    //==============================================================
@@ -435,23 +450,23 @@ for (uint fe = 0; fe < QL; fe++)     {
     currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);
 }
 
-        const double det   = dt * currgp.JacVectBB_g(xyz);
+        const double det   = currgp.JacVectBB_g(xyz);
 	const double dtxJxW_g = det * ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================   
       
    xyz_refbox.val_g();
-      PressAdjOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0]/*xyz._val_g*/,&PressAdjOld._val_g[0]);  //i prefer using the function instead of the p_old vector
+      PressAdjOld._qtyptr->Function_txyz(0.,&xyz_refbox._val_g[0]/*xyz._val_g*/,&PressAdjOld._val_g[0]);  //i prefer using the function instead of the p_old vector
       
 
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================
 //==============================================================
-      for (uint i=0; i < VelAdjOld._ndof; i++) {
+      for (uint i=0; i < VelAdjOldX._ndof; i++) {
 
-	const double phii_g = currgp._phi_ndsQLVB_g[VelAdjOld._FEord][i];
+	const double phii_g = currgp._phi_ndsQLVB_g[VelAdjOldX._FEord][i];
 
          for (uint idim=0; idim< space_dim; idim++)    {
-             uint irowq=i+idim*VelAdjOld._ndof;
+             uint irowq=i+idim*VelAdjOldX._ndof;
           currelem.Rhs()(irowq)  += 
             currelem.GetBCDofFlag()[irowq]*           
            dtxJxW_g*(   -1.*press_fl*PressAdjOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g

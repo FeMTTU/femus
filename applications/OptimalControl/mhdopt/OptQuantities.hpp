@@ -171,12 +171,39 @@ class VelocityZ : public Quantity {
 
 
 
-class VelocityAdj : public Quantity {
+class VelocityAdjX : public Quantity {
 
   public:
     
-   VelocityAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
-  ~VelocityAdj(){};
+  VelocityAdjX(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
+
+
+};
+
+
+class VelocityAdjY : public Quantity {
+
+  public:
+    
+  VelocityAdjY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
+
+
+};
+
+
+class VelocityAdjZ : public Quantity {
+
+  public:
+    
+  VelocityAdjZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
 
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;

@@ -31,12 +31,6 @@ using namespace femus;
 
   SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_MHDCONT");
   
-   const double time =  0.; //ml_prob._timeloop._curr_time;
-   
-//======= TIME - STATIONARY OR NOT =======
-  const int NonStatMHDCONT = (int) ml_prob.GetInputParser().get("NonStatMHDCONT");
-  const double        dt   = 1.; //ml_prob._timeloop._timemap.get("dt");
-
 //======== GEOMETRICAL ELEMENT =======
   const uint space_dim =       ml_prob._ml_msh->GetDimension();
 
@@ -50,6 +44,8 @@ using namespace femus;
   //==== Operators @ gauss ========
   std::vector<double> Vel_vec_val_g(space_dim);
   std::vector<double> Vel_vec_val_g3D(3);
+  std::vector<double> VelAdj_vec_val_g(space_dim);
+  std::vector<double> VelAdj_vec_val_g3D(3);
   double dphijdx_g[DIMENSION];
   double dphiidx_g[DIMENSION];
   double      dphiidx_g3D[3];
@@ -131,12 +127,27 @@ using namespace femus;
     Vel_vec.push_back(&VelZ);
 #endif  
 
-    //==================
-    CurrentQuantity VelAdj(currgp);
-    VelAdj._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_VelocityAdj");
-    VelAdj.VectWithQtyFillBasic();
-    VelAdj.Allocate();
-  
+  //==========
+      CurrentQuantity VelAdjX(currgp);
+    VelAdjX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_VelocityAdj0"); 
+    VelAdjX.VectWithQtyFillBasic();
+    VelAdjX.Allocate();
+    
+    CurrentQuantity VelAdjY(currgp);
+    VelAdjY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_VelocityAdj1"); 
+    VelAdjY.VectWithQtyFillBasic();
+    VelAdjY.Allocate();
+    
+    CurrentQuantity VelAdjZ(currgp);
+    VelAdjZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_VelocityAdj2"); 
+    VelAdjZ.VectWithQtyFillBasic();
+    VelAdjZ.Allocate();
+    
+    std::vector<CurrentQuantity*> VelAdj_vec;
+    VelAdj_vec.push_back(&VelAdjX);
+    VelAdj_vec.push_back(&VelAdjY);
+    VelAdj_vec.push_back(&VelAdjZ);
+ 
     //==================
     CurrentQuantity Bhom(currgp); 
     Bhom._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHom");
@@ -168,15 +179,15 @@ using namespace femus;
  
     for (uint idim=0; idim < space_dim; idim++)    {
       if ( Vel_vec[idim]->_eqnptr != NULL )    Vel_vec[idim]->GetElemDofs();
-    else                                       Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],time,&xyz_refbox._val_dofs[0]);
+    else                                       Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+    if ( VelAdj_vec[idim]->_eqnptr != NULL) VelAdj_vec[idim]->GetElemDofs();
+    else                                    VelAdj_vec[idim]->_qtyptr->FunctionDof(*VelAdj_vec[idim],0.,&xyz_refbox._val_dofs[0]);
     }
     
-    if ( VelAdj._eqnptr != NULL )  VelAdj.GetElemDofs();
-    else                           VelAdj._qtyptr->FunctionDof(VelAdj,time,&xyz_refbox._val_dofs[0]);
     if ( Bhom._eqnptr != NULL )      Bhom.GetElemDofs();
-    else                             Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
+    else                             Bhom._qtyptr->FunctionDof(Bhom,0.,&xyz_refbox._val_dofs[0]);
     if ( BhomAdj._eqnptr != NULL ) BhomAdj.GetElemDofs();
-    else                           BhomAdj._qtyptr->FunctionDof(BhomAdj,time,&xyz_refbox._val_dofs[0]);    
+    else                           BhomAdj._qtyptr->FunctionDof(BhomAdj,0.,&xyz_refbox._val_dofs[0]);    
     
 
 //==============================================================
@@ -192,7 +203,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  
 }
 
- const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is unique!
+ const double      det = currgp.JacVectVV_g(xyz);   //InvJac: is unique!
  const double dtxJxW_g = det*ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
  const double     detb = det/el_ngauss;
 
@@ -206,21 +217,22 @@ for (uint fe = 0; fe < QL; fe++)     {
        BhomAdj.curl_g();
           Bhom.curl_g();
        BeOld.val_g(); 
-      VelAdj.val_g();
         Bhom.val_g();
      BhomAdj.grad_g();
 
      for (uint idim=0; idim<space_dim; idim++)   {
-       Vel_vec[idim]->val_g();
-       Vel_vec_val_g[idim] =  Vel_vec[idim]->_val_g[0];
+          Vel_vec[idim]->val_g();
+       VelAdj_vec[idim]->val_g();
+          Vel_vec_val_g[idim] =  Vel_vec[idim]->_val_g[0];
+       VelAdj_vec_val_g[idim] =  VelAdj_vec[idim]->_val_g[0];
      }
 	
 // vector product
       Math::extend(   &Vel_vec_val_g[0],   &Vel_vec_val_g3D[0],space_dim);
-      Math::extend(&VelAdj._val_g[0],&VelAdj._val_g3D[0],space_dim);
+      Math::extend(&VelAdj_vec_val_g[0],&VelAdj_vec_val_g3D[0],space_dim);
 
       Math::cross(&BhomAdj._curl_g3D[0],   &Vel_vec_val_g3D[0],curlxiXvel_g3D ); 
-      Math::cross(   &Bhom._curl_g3D[0],&VelAdj._val_g3D[0],curlbXlambda_g3D );
+      Math::cross(   &Bhom._curl_g3D[0],&VelAdj_vec_val_g3D[0],curlbXlambda_g3D );
 //========end preparation for things that are independent of (i,j) dofs of test and shape =====================
   
 //================================
@@ -243,7 +255,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 	 Math::cross(&BhomAdj._curl_g3D[0],dphiidx_g3D,curlxiXdphii_g3D);
 
 	  double bDdphii_g      = Math::dot(  &Bhom._val_g[0],dphiidx_g,space_dim);
-	  double lambdaDdphii_g = Math::dot(&VelAdj._val_g[0],dphiidx_g,space_dim);
+	  double lambdaDdphii_g = Math::dot(&VelAdj_vec_val_g[0],dphiidx_g,space_dim);
 
 	  for (uint idim=0; idim<space_dim; idim++) Lapxi_g[idim]=0.;
 	  for (uint idim=0; idim<space_dim; idim++)  {
@@ -258,12 +270,11 @@ for (uint fe = 0; fe < QL; fe++)     {
             const uint irowq = i+idim*BeOld._ndof;
             
             currelem.Rhs()(irowq) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
-                          NonStatMHDCONT*BeOld._val_g[idim]*phii_g/dt
                            -(1-LAP_MHD)*IRem*curlxiXdphii_g3D[idim]                 //from MHD  1
                                -LAP_MHD*IRem*Lapxi_g[idim]                              //from MHD  2
                            + curlxiXvel_g3D[idim]*phii_g                            //from MHD
                            - S*curlbXlambda_g3D[idim]*phii_g                             //from NS
-                           + S*(bDdphii_g*VelAdj._val_g[idim] - lambdaDdphii_g*Bhom._val_g[idim])     //from NS
+                           + S*(bDdphii_g*VelAdj_vec[idim]->_val_g[0] - lambdaDdphii_g*Bhom._val_g[idim])     //from NS
                          )
                          +(1-currelem.GetBCDofFlag()[irowq])*detb*BeOld._val_dofs[irowq]; //Dirichlet bc
 	   }
@@ -283,8 +294,8 @@ for (uint fe = 0; fe < QL; fe++)     {
           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BeOld._FEord][j+idim*BeOld._ndof];
 
 	  double Lap_g = Math::dot(dphijdx_g,dphiidx_g,space_dim);
-	  double lambdaDdphii_g = Math::dot(&VelAdj._val_g[0],dphiidx_g,space_dim);  //TODO why did i recompute it?
-	  double lambdaDdphij_g = Math::dot(&VelAdj._val_g[0],dphijdx_g,space_dim);
+	  double lambdaDdphii_g = Math::dot(&VelAdj_vec_val_g[0],dphiidx_g,space_dim);  //TODO why did i recompute it?
+	  double lambdaDdphij_g = Math::dot(&VelAdj_vec_val_g[0],dphijdx_g,space_dim);
 //============ end preparation for (j) ============
 
           for (uint idim=0; idim<space_dim; idim++) {
@@ -292,26 +303,25 @@ for (uint fe = 0; fe < QL; fe++)     {
             // diagonal blocks [1-5-9]
             currelem.Mat()(irowq,j+idim*BeOld._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
-                 NonStatMHDCONT*phij_g*phii_g/dt// time
                  + betaL2*phij_g*phii_g
                  + gammaLap*Lap_g
-                 + S*phij_g*(lambdaDdphii_g  - VelAdj._val_g[idim]*dphiidx_g[idim] )
-                 + S*phii_g*(lambdaDdphij_g  - VelAdj._val_g[idim]*dphijdx_g[idim] )
+                 + S*phij_g*(lambdaDdphii_g  - VelAdj_vec[idim]->_val_g[0]*dphiidx_g[idim] )
+                 + S*phii_g*(lambdaDdphij_g  - VelAdj_vec[idim]->_val_g[0]*dphijdx_g[idim] )
                );
             // block +1 [2-6-7]
             int idimp1=(idim+1)%space_dim;
             currelem.Mat()(irowq,j+idimp1*BeOld._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
-                 + S*phij_g*( -VelAdj._val_g[idim]*dphiidx_g[idimp1])
-                 + S*phii_g*( -VelAdj._val_g[idimp1]*dphijdx_g[idim])
+                 + S*phij_g*( -VelAdj_vec[idim]->_val_g[0]*dphiidx_g[idimp1])
+                 + S*phii_g*( -VelAdj_vec[idimp1]->_val_g[0]*dphijdx_g[idim])
                );
 #if (DIMENSION==3)
             // block +2 [3-4-8]
             int idimp2=(idim+2)%space_dim;
             currelem.Mat()(irowq,j+idimp2*BeOld._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
-                  + S*phij_g*( -VelAdj._val_g[idim]*dphiidx_g[idimp2]) 
-                  + S*phii_g*( -VelAdj._val_g[idimp2]*dphijdx_g[idim])
+                  + S*phij_g*( -VelAdj_vec[idim]->_val_g[0]*dphiidx_g[idimp2]) 
+                  + S*phii_g*( -VelAdj_vec[idimp2]->_val_g[0]*dphijdx_g[idim])
                );
 #endif
           }
@@ -459,12 +469,12 @@ for (uint fe = 0; fe < QL; fe++)     {
   currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);   
 }
 
-        const double det   = dt*currgp.JacVectBB_g(xyz);
+        const double det   = currgp.JacVectBB_g(xyz);
 	const double dtxJxW_g = det*ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
    xyz_refbox.val_g();
-      LagMultOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0]/*xyz._val_g*/,&LagMultOld._val_g[0]);  //i prefer using the function instead of the p_old vector
+      LagMultOld._qtyptr->Function_txyz(0.,&xyz_refbox._val_g[0]/*xyz._val_g*/,&LagMultOld._val_g[0]);  //i prefer using the function instead of the p_old vector
 
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================

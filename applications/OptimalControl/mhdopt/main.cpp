@@ -118,16 +118,20 @@ int main(int argc, char** argv) {
   VelocityY  velocityY("Qty_Velocity1",qty_map,1,QQ);   qty_map.AddQuantity(&velocityY);  
   VelocityZ  velocityZ("Qty_Velocity2",qty_map,1,QQ);   qty_map.AddQuantity(&velocityZ);  
  
-  VelocityAdj  velocity_adj("Qty_VelocityAdj",qty_map,mesh.get_dim(),QQ);         qty_map.AddQuantity(&velocity_adj);
+  VelocityAdjX  velocity_adjX("Qty_VelocityAdj0",qty_map,1,QQ);   qty_map.AddQuantity(&velocity_adjX);
+  VelocityAdjY  velocity_adjY("Qty_VelocityAdj1",qty_map,1,QQ);   qty_map.AddQuantity(&velocity_adjY);
+  VelocityAdjZ  velocity_adjZ("Qty_VelocityAdj2",qty_map,1,QQ);   qty_map.AddQuantity(&velocity_adjZ);
+  
+
   MagnFieldHom bhom("Qty_MagnFieldHom",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&bhom);  
   MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&Bext);  
   MagnFieldHomAdj    bhom_adj("Qty_MagnFieldHomAdj",qty_map,mesh.get_dim(),QQ);        qty_map.AddQuantity(&bhom_adj);
  
- MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,LL);     qty_map.AddQuantity(&bhom_lag_mult);
- MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,LL);     qty_map.AddQuantity(&Bext_lag_mult);
- MagnFieldHomLagMultAdj  bhom_lag_mult_adj("Qty_MagnFieldHomLagMultAdj",qty_map,1,LL);  qty_map.AddQuantity(&bhom_lag_mult_adj);
- Pressure  pressure("Qty_Pressure",qty_map,1,LL);            qty_map.AddQuantity(&pressure);
- PressureAdj pressure_adj("Qty_PressureAdj",qty_map,1,LL);                  qty_map.AddQuantity(&pressure_adj);
+  MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,LL);     qty_map.AddQuantity(&bhom_lag_mult);
+  MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,LL);     qty_map.AddQuantity(&Bext_lag_mult);
+  MagnFieldHomLagMultAdj  bhom_lag_mult_adj("Qty_MagnFieldHomLagMultAdj",qty_map,1,LL);  qty_map.AddQuantity(&bhom_lag_mult_adj);
+  Pressure                         pressure("Qty_Pressure",qty_map,1,LL);                qty_map.AddQuantity(&pressure);
+  PressureAdj                  pressure_adj("Qty_PressureAdj",qty_map,1,LL);             qty_map.AddQuantity(&pressure_adj);
 
    DesVelocityX des_velocityX("Qty_DesVelocity0",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityX);
    DesVelocityY des_velocityY("Qty_DesVelocity1",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityY);
@@ -205,7 +209,9 @@ int main(int argc, char** argv) {
             eqnNSAD.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_VelocityAdj");
             eqnNSAD.AddSolutionToSystemPDE("Qty_PressureAdj");
 	    
-            eqnNSAD.AddUnknownToSystemPDE(&velocity_adj); 
+            eqnNSAD.AddUnknownToSystemPDE(&velocity_adjX); 
+            eqnNSAD.AddUnknownToSystemPDE(&velocity_adjY); 
+            eqnNSAD.AddUnknownToSystemPDE(&velocity_adjZ); 
             eqnNSAD.AddUnknownToSystemPDE(&pressure_adj); 
 	    
             eqnNSAD.SetAssembleFunction(GenMatRhsNSAD);
