@@ -37,7 +37,7 @@ public:
 //==== BOUNDARY CONDITIONS of the equation ========= (procs,levels) ==     //MultilevelSolution
 //=======================================================================
     int   *_bc;         //==== NODAL DIRICHLET ======== ///< boundary conditions map (top level)  // POINTWISE(NODAL) FLAG for the BOUNDARY DOFS = FLAG for the tEST FUNCTIONS //TODO this should be PrintNumericVector of the equation, integer instead of double! do it when you make it parallel especially! //Later on I will do a bc for every level, considering the ELEMENT DOFS
-    int  **_bc_fe_kk;   //==== CELL DIRICHLET ========
+//     int  **_bc_fe_kk;   //==== CELL DIRICHLET ========
           void    GenerateBdc();          //MultilevelSolution
 //========= treating NumericVectors, related to Dirichlet Boundary Conditions! =======
           void Bc_ScaleDofVec(NumericVector * myvec,  double ScaleFac);

@@ -22,7 +22,6 @@ namespace femus {
   public:
     
      CurrentQuantity(const CurrentGaussPointBase &);
-    ~CurrentQuantity();
 
     
     //TODO all these function are of the SET type (this is how I should call them), that is why they are NOT CONST
@@ -34,12 +33,12 @@ namespace femus {
    void                curl_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void            ExtendDofs(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void         GetElemDofs(); //this only needs the CUrrent ELEMENT
+   void         GetElemDofs(const std::vector<CurrentQuantity*> vec_in);
    void        SetElemAverage();
   
   //if you have NO Quantity and NO Equation ==========
 //   void   SetElDofsFromArgs(const uint vb,const double * dofs);   //if you have NO Quantity and NO Equation, we should do the more flexible version of a Vect    
                                                                  //but the point is that we have to pass also the offset...
-    std::string _SolName;
 
     std::vector<double>  _val_g;
     std::vector<double>  _val_g3D;
@@ -52,15 +51,26 @@ namespace femus {
     
     std::vector<double> _el_average;
     
-    uint _FEord; 
-    uint _dim;
-    uint _ndof;
     Quantity* _qtyptr;
     SystemTwo*  _eqnptr;
     
     inline const CurrentElem &  GetCurrentElem() const { 
       return _currEl;
     }
+    
+    
+    std::string _SolName;
+    
+    vector< int > _dofSOL;
+    unsigned _indexSOL;
+    unsigned _indSOL;
+    unsigned _SolTypeSOL;
+
+// once you set these three, you can call "Allocate"    
+    uint _FEord; 
+    uint _dim;
+    uint _ndof;
+// once you set these three, you can call "Allocate"    
     
   protected:
         

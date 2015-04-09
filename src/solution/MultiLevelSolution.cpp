@@ -21,13 +21,15 @@ PURPOSE.  See the above copyright notice for more information.
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
 #include "FemusConfig.hpp"
+#include "FemusDefault.hpp"
 #include "ParsedFunction.hpp"
+
 
 
 //C++ include
 #include <iostream>
 #include <iomanip>
-
+#include <sstream>
 
 namespace femus {
 
@@ -98,7 +100,7 @@ void MultiLevelSolution::AddSolutionLevel(){
 void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily, const FEOrder order,
 				     unsigned tmorder, const bool &PdeType) {
   
-  unsigned n=_SolType.size();
+  unsigned n =_SolType.size();
   _SolType.resize(n+1u);
   _family.resize(n+1u);
   _order.resize(n+1u);
@@ -114,7 +116,7 @@ void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily,
   _family[n] = fefamily;
   _order[n] = order;
   _SolType[n] = order - ((fefamily==LAGRANGE)?1:0) + fefamily*3;     
-  _SolName[n]  = new char [8];
+  _SolName[n]  = new char [DEFAULT_SOL_NCHARS];
   _BdcType[n]  = new char [20];
   strcpy(_SolName[n],name);
   _SolTmorder[n]=tmorder;

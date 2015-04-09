@@ -14,7 +14,6 @@
 #include "NormTangEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "GeomElTypeEnum.hpp"
-#include "QTYnumEnum.hpp"
 #include "Domain.hpp"
 #include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"
@@ -263,8 +262,9 @@ for (uint fe = 0; fe < QL; fe++)     {
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
   
           double Lap_g = Math::dot(&dphijdx_g[0],&dphiidx_g[0],space_dim);
-	  double Adv_g = VelOld_vec[0]->_val_g[0] * dphijdx_g[0] + VelOld_vec[1]->_val_g[0] * dphijdx_g[1]; //Math::dot(&VelOld._val_g[0],&dphijdx_g[0],space_dim);
-          
+	  double Adv_g=0.;
+	  for (uint idim=0; idim<space_dim; idim++) Adv_g += VelOld_vec[idim]->_val_g[0] * dphijdx_g[idim]; // =Math::dot(&VelOld._val_g[0],dphijdx_g,space_dim);
+         
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
             int irowq = i+idim*qtyzero_ndof;      //(i) is still the dof of the tEST functions
                                                   //(idim): component of the tEST functions

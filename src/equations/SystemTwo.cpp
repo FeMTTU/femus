@@ -29,7 +29,6 @@
 
 #include "MgSmootherEnum.hpp"
 #include "NormTangEnum.hpp"
-#include "QTYnumEnum.hpp"
 #include "XDMFWriter.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "MultiLevelProblem.hpp"

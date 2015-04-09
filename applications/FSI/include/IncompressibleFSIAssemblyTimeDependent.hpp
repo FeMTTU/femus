@@ -144,7 +144,7 @@ namespace femus {
     double _gravity[3]={0.,0.,0.};
     
     double dt =  my_nnlin_impl_sys.GetIntervalTime(); 
-    
+    double time =  my_nnlin_impl_sys.GetTime();
     // -----------------------------------------------------------------
     // space discretization parameters
     unsigned SolType2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));  
@@ -267,7 +267,6 @@ namespace femus {
 	dofsVAR[2*dim][i]=myLinEqSolver->GetKKDof(indVAR[2*dim],indexVAR[2*dim],inode);
 	Soli[indexVAR[2*dim]][i]     = (*mysolution->_Sol[indVAR[2*dim]])(inode_Metis);
 	Soli_old[indexVAR[2*dim]][i] = (*mysolution->_SolOld[indVAR[2*dim]])(inode_Metis);
-	//std::cout<<Soli[indexVAR[2*dim]][i]<<" "<<Soli_old[indexVAR[2*dim]][i]<<std::endl;
 	aRhs[indexVAR[2*dim]][i] = 0.;
       }
       
@@ -299,7 +298,9 @@ namespace femus {
 	    // look for boundary faces
 	    if(myel->GetFaceElementIndex(kel,jface)<0) {
 	      unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
-	      if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,0.) && tau!=0.){
+	      if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,time) && tau!=0.){
+		double tau_old;
+		ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau_old,face,time-dt);
 		unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,SolType2);
 		const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);  		  		  
 		for(unsigned i=0; i<nve; i++) {
@@ -318,14 +319,15 @@ namespace femus {
 		  // *** phi_i loop ***
 		  for(unsigned i=0; i<nve; i++) {
 		    adept::adouble value = - phi[i]*tau/rhof*Weight;
+		    double value_old = - phi[i]*tau_old/rhof*Weight_old;
 		    unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
 		    
 		    for(unsigned idim=0; idim<dim; idim++) {
 		      if((!solidmark[ilocal])){
-			aRhs[indexVAR[dim+idim]][ilocal]   += value*normal[idim];
+			aRhs[indexVAR[dim+idim]][ilocal]   += 0.5*dt*(value + value_old)*normal[idim];
 		      }
 		      else { //if interface node it goes to solid
-			aRhs[indexVAR[idim]][ilocal]   += value*normal[idim];
+			aRhs[indexVAR[idim]][ilocal]   += 0.5*dt*(value + value_old)*normal[idim];
 		      }
 		    }	    
 		  }
@@ -573,8 +575,8 @@ namespace femus {
 	    	for (int I=0; I<3; ++I) {
 		  for (int J=0; J<3; ++J) {
 		    if ( 1 == solid_model ) { //Wood-Bonet J_hat  =1;
-		      Cauchy[I][J]     = mus * ( B[I][J]     - Id2th[I][J] ) - mus*I1_B     * SolVAR[2*dim] * Id2th[I][J]; 	
-		      Cauchy_old[I][J] = mus * ( B_old[I][J] - Id2th[I][J] ) - mus*I1_B_old * SolVAR[2*dim] * Id2th[I][J]; 	
+		      Cauchy[I][J]     = mus * ( B[I][J]     - Id2th[I][J] ) - mus/3.*I1_B     * SolVAR[2*dim] * Id2th[I][J]; 	
+		      Cauchy_old[I][J] = mus * ( B_old[I][J] - Id2th[I][J] ) - mus/3.*I1_B_old * SolVAR[2*dim] * Id2th[I][J]; 	
 		    }
 // 		    else if ( 2 == solid_model ) Cauchy[I][J] = mus/J_hat*B[I][J] 
 // 							       -mus/J_hat*SolVAR[2*dim]*Id2th[I][J];    //Wood-Bonet J_hat !=1;
@@ -600,7 +602,7 @@ namespace femus {
 		adept::adouble invB[3][3];
 		double invB_old[3][3];
 		
-		invB[0][0] =  (B[1][1]*B[2][2]-B[2][1]*B[1][2])*invdetB;
+		invB[0][0] =  (B[1][1]*B[2][2]-B[1][2]*B[2][1])*invdetB;
 		invB[1][0] = -(B[0][1]*B[2][2]-B[0][2]*B[2][1])*invdetB;
 		invB[2][0] =  (B[0][1]*B[1][2]-B[0][2]*B[1][1])*invdetB;
 		invB[0][1] = -(B[1][0]*B[2][2]-B[1][2]*B[2][0])*invdetB;
@@ -610,7 +612,7 @@ namespace femus {
 		invB[1][2] = -(B[0][0]*B[2][1]-B[2][0]*B[0][1])*invdetB;
 		invB[2][2] =  (B[0][0]*B[1][1]-B[1][0]*B[0][1])*invdetB;
 		
-		invB_old[0][0] =  (B_old[1][1]*B_old[2][2]-B_old[2][1]*B_old[1][2])*invdetB_old;
+		invB_old[0][0] =  (B_old[1][1]*B_old[2][2]-B_old[1][2]*B_old[2][1])*invdetB_old;
 		invB_old[1][0] = -(B_old[0][1]*B_old[2][2]-B_old[0][2]*B_old[2][1])*invdetB_old;
 		invB_old[2][0] =  (B_old[0][1]*B_old[1][2]-B_old[0][2]*B_old[1][1])*invdetB_old;
 		invB_old[0][1] = -(B_old[1][0]*B_old[2][2]-B_old[1][2]*B_old[2][0])*invdetB_old;
@@ -629,15 +631,17 @@ namespace femus {
 		I2_B_old = B_old[0][0] * B_old[1][1] + B_old[1][1] * B_old[2][2] + B_old[2][2]*B_old[0][0]
 			  -B_old[0][1] * B_old[1][0] - B_old[1][2] * B_old[2][1] - B_old[2][0]*B_old[0][2];     
 		
+		double C1 = mus/3.;
+		double C2 = C1/2.;
+			  
 		for (int I=0; I<3; ++I) {
 		  for (int J=0; J<3; ++J) {
-		    Cauchy[I][J] = mus*(2.*B[I][J] - invB[I][J] - Id2th[I][J] )/3.
-				  -mus*(2.*I1_B - I2_B )/3.*SolVAR[2*dim]*Id2th[I][J];
+		    Cauchy[I][J] =  2.*( C1 * B[I][J] - C2 * invB[I][J] )
+				  -(2./3.)*( C1 * I1_B - C2 * I2_B )* SolVAR[2*dim] * Id2th[I][J];
 				  
-		    Cauchy_old[I][J] = mus*(2.*B_old[I][J] - invB_old[I][J] - Id2th[I][J] )/3.
-				      -mus*(2.*I1_B_old - I2_B_old )/3.*SolVAR[2*dim]*Id2th[I][J];		
-		    
-		    //std::cout << Cauchy_old[I][J] << " ";	
+		    Cauchy_old[I][J] =  2.* ( C1* B_old[I][J] - C2 * invB_old[I][J] )
+				      -(2./3.)*( C1 * I1_B_old - C2 * I2_B_old )* SolVAR[2*dim] * Id2th[I][J];
+		    //std::cout<<C1*rhof<<" "<<C2*rhof<<" "<<std::endl;
 		    
 		  }
 		}

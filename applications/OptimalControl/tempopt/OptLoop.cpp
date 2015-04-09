@@ -107,18 +107,21 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   //========== 
     CurrentQuantity Tempold(currgp);
     Tempold._qtyptr   =  eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Temperature"); 
+    Tempold._SolName = "Qty_Temperature";
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
   //========== 
     CurrentQuantity Tlift(currgp);
     Tlift._qtyptr   =  eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_TempLift"); 
+    Tlift._SolName = "Qty_TempLift";
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
     
  //===========
     CurrentQuantity Tdes(currgp);
     Tdes._qtyptr   = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_TempDes"); 
+    Tdes._SolName = "Qty_TempDes";
     Tdes.VectWithQtyFillBasic();
     Tdes.Allocate();
   
@@ -247,6 +250,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
       //========== 
     CurrentQuantity Tlift(currgp);
     Tlift._qtyptr   =  eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_TempLift"); 
+    Tlift._SolName = "Qty_TempLift";
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
