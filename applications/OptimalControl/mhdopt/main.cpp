@@ -122,10 +122,12 @@ int main(int argc, char** argv) {
   VelocityAdjY  velocity_adjY("Qty_VelocityAdj1",qty_map,1,QQ);   qty_map.AddQuantity(&velocity_adjY);
   VelocityAdjZ  velocity_adjZ("Qty_VelocityAdj2",qty_map,1,QQ);   qty_map.AddQuantity(&velocity_adjZ);
   
+  MagnFieldHomAdjX    bhom_adjX("Qty_MagnFieldHomAdj0",qty_map,1,QQ);        qty_map.AddQuantity(&bhom_adjX);
+  MagnFieldHomAdjY    bhom_adjY("Qty_MagnFieldHomAdj1",qty_map,1,QQ);        qty_map.AddQuantity(&bhom_adjY);
+  MagnFieldHomAdjZ    bhom_adjZ("Qty_MagnFieldHomAdj2",qty_map,1,QQ);        qty_map.AddQuantity(&bhom_adjZ);
 
   MagnFieldHom bhom("Qty_MagnFieldHom",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&bhom);  
   MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&Bext);  
-  MagnFieldHomAdj    bhom_adj("Qty_MagnFieldHomAdj",qty_map,mesh.get_dim(),QQ);        qty_map.AddQuantity(&bhom_adj);
  
   MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,LL);     qty_map.AddQuantity(&bhom_lag_mult);
   MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,LL);     qty_map.AddQuantity(&Bext_lag_mult);
@@ -235,7 +237,9 @@ int main(int argc, char** argv) {
              eqnMHDAD.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_MagnFieldHomAdj");
              eqnMHDAD.AddSolutionToSystemPDE("Qty_MagnFieldHomLagMultAdj");
 	     
-             eqnMHDAD.AddUnknownToSystemPDE(&bhom_adj); 
+             eqnMHDAD.AddUnknownToSystemPDE(&bhom_adjX); 
+             eqnMHDAD.AddUnknownToSystemPDE(&bhom_adjY); 
+             eqnMHDAD.AddUnknownToSystemPDE(&bhom_adjZ); 
              eqnMHDAD.AddUnknownToSystemPDE(&bhom_lag_mult_adj); 
 	     
              eqnMHDAD.SetAssembleFunction(GenMatRhsMHDAD);

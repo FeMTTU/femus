@@ -171,12 +171,32 @@ using namespace femus;
     Bmag.Allocate();
     
 //===============
-  CurrentQuantity BhomAdj(currgp); 
-    BhomAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj"); 
-    BhomAdj.VectWithQtyFillBasic();
-    BhomAdj.Allocate();
+    CurrentQuantity BhomAdjX(currgp);
+    BhomAdjX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj0"); 
+    BhomAdjX.VectWithQtyFillBasic();
+    BhomAdjX.Allocate();
     
-    //========= END EXTERNAL QUANTITIES =================
+    CurrentQuantity BhomAdjY(currgp);
+    BhomAdjY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj1"); 
+    BhomAdjY.VectWithQtyFillBasic();
+    BhomAdjY.Allocate();
+    
+    CurrentQuantity BhomAdjZ(currgp);
+    BhomAdjZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj2"); 
+    BhomAdjZ.VectWithQtyFillBasic();
+    BhomAdjZ.Allocate();
+    
+    std::vector<CurrentQuantity*> BhomAdj_vec;
+    BhomAdj_vec.push_back(&BhomAdjX);
+    BhomAdj_vec.push_back(&BhomAdjY);
+    BhomAdj_vec.push_back(&BhomAdjZ);
+    
+    CurrentQuantity BhomAdj_vecQuant(currgp);   //without quantity, nor equation
+    BhomAdj_vecQuant._dim     = BhomAdj_vec.size();
+    BhomAdj_vecQuant._FEord   = BhomAdj_vec[0]->_FEord;
+    BhomAdj_vecQuant._ndof    = BhomAdj_vec[0]->_ndof;
+    BhomAdj_vecQuant.Allocate();
+//========= END EXTERNAL QUANTITIES =================
 
 
     currelem.Mat().zero();
@@ -190,22 +210,27 @@ using namespace femus;
 
     currelem.SetElDofsBc();
     
-    PressAdjOld.GetElemDofs();
 
     if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs();
     else                         Bhom._qtyptr->FunctionDof(Bhom,0.,&xyz_refbox._val_dofs[0]);
     if ( Bext._eqnptr != NULL )  Bext.GetElemDofs();
     else                         Bext._qtyptr->FunctionDof(Bext,0.,&xyz_refbox._val_dofs[0]);
-    if ( BhomAdj._eqnptr != NULL )  BhomAdj.GetElemDofs();
-    else                            BhomAdj._qtyptr->FunctionDof(BhomAdj,0.,&xyz_refbox._val_dofs[0]);    
     
  for (uint idim=0; idim < space_dim; idim++)    {
     VelAdjOld_vec[idim]->GetElemDofs();  
-    if ( Vel_vec[idim]->_eqnptr != NULL )  Vel_vec[idim]->GetElemDofs();
-    else                                   Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
-   if ( VelDes_vec[idim]->_eqnptr != NULL )  VelDes_vec[idim]->GetElemDofs();
-    else                                     VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
+    if ( Vel_vec[idim]->_eqnptr != NULL )      Vel_vec[idim]->GetElemDofs();
+    else                                       Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
+    if ( VelDes_vec[idim]->_eqnptr != NULL )   VelDes_vec[idim]->GetElemDofs();
+    else                                       VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
+    if ( BhomAdj_vec[idim]->_eqnptr != NULL )  BhomAdj_vec[idim]->GetElemDofs();
+    else                                       BhomAdj_vec[idim]->_qtyptr->FunctionDof(*BhomAdj_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
+    
     }
+    
+    
+    BhomAdj_vecQuant.GetElemDofs(BhomAdj_vec);
+    PressAdjOld.GetElemDofs();
+
  
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
     Math::zeroN(&Bmag._val_dofs[0],Bmag._dim*Bmag._ndof);
@@ -244,8 +269,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 }
 //=======end of the "COMMON SHAPE PART"==================
 
-     BhomAdj.curl_g();
-        Bmag.val_g();
+     BhomAdj_vecQuant.curl_g();
+     Bmag.val_g();
  
   for (uint idim=0; idim < space_dim; idim++) {
     VelAdjOld_vec[idim]->val_g();
@@ -256,7 +281,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   
 //vector product
         Math::extend(&Bmag._val_g[0],&Bmag._val_g3D[0],space_dim);
-        Math::cross(&BhomAdj._curl_g3D[0],&Bmag._val_g3D[0],curlxiXB_g3D);
+        Math::cross(&BhomAdj_vecQuant._curl_g3D[0],&Bmag._val_g3D[0],curlxiXB_g3D);
 
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================

@@ -155,10 +155,32 @@ using namespace femus;
     Bhom.Allocate();
     
 //===============
-    CurrentQuantity BhomAdj(currgp); 
-    BhomAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj"); 
-    BhomAdj.VectWithQtyFillBasic();
-    BhomAdj.Allocate();
+//===============
+    CurrentQuantity BhomAdjX(currgp);
+    BhomAdjX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj0"); 
+    BhomAdjX.VectWithQtyFillBasic();
+    BhomAdjX.Allocate();
+    
+    CurrentQuantity BhomAdjY(currgp);
+    BhomAdjY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj1"); 
+    BhomAdjY.VectWithQtyFillBasic();
+    BhomAdjY.Allocate();
+    
+    CurrentQuantity BhomAdjZ(currgp);
+    BhomAdjZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj2"); 
+    BhomAdjZ.VectWithQtyFillBasic();
+    BhomAdjZ.Allocate();
+    
+    std::vector<CurrentQuantity*> BhomAdj_vec;
+    BhomAdj_vec.push_back(&BhomAdjX);
+    BhomAdj_vec.push_back(&BhomAdjY);
+    BhomAdj_vec.push_back(&BhomAdjZ);
+    
+    CurrentQuantity BhomAdj_vecQuant(currgp);   //without quantity, nor equation
+    BhomAdj_vecQuant._dim     = BhomAdj_vec.size();
+    BhomAdj_vecQuant._FEord   = BhomAdj_vec[0]->_FEord;
+    BhomAdj_vecQuant._ndof    = BhomAdj_vec[0]->_ndof;
+    BhomAdj_vecQuant.Allocate();
   //=========END EXTERNAL QUANTITIES (couplings) =====
 
  
@@ -182,13 +204,14 @@ using namespace femus;
     else                                       Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);
     if ( VelAdj_vec[idim]->_eqnptr != NULL) VelAdj_vec[idim]->GetElemDofs();
     else                                    VelAdj_vec[idim]->_qtyptr->FunctionDof(*VelAdj_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+    if ( BhomAdj_vec[idim]->_eqnptr != NULL ) BhomAdj_vec[idim]->GetElemDofs();
+    else                                      BhomAdj_vec[idim]->_qtyptr->FunctionDof(*BhomAdj_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
     }
     
     if ( Bhom._eqnptr != NULL )      Bhom.GetElemDofs();
     else                             Bhom._qtyptr->FunctionDof(Bhom,0.,&xyz_refbox._val_dofs[0]);
-    if ( BhomAdj._eqnptr != NULL ) BhomAdj.GetElemDofs();
-    else                           BhomAdj._qtyptr->FunctionDof(BhomAdj,0.,&xyz_refbox._val_dofs[0]);    
     
+    BhomAdj_vecQuant.GetElemDofs(BhomAdj_vec);
 
 //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
@@ -214,24 +237,24 @@ for (uint fe = 0; fe < QL; fe++)     {
 //======= end of the "COMMON SHAPE PART"==================
 
 //========preparation for things that are independent of (i,j), dofs of test and shape =====================
-       BhomAdj.curl_g();
+       BhomAdj_vecQuant.curl_g();
           Bhom.curl_g();
        BeOld.val_g(); 
         Bhom.val_g();
-     BhomAdj.grad_g();
 
-     for (uint idim=0; idim<space_dim; idim++)   {
+   for (uint idim=0; idim<space_dim; idim++)   {
+      BhomAdj_vec[idim]->grad_g();
           Vel_vec[idim]->val_g();
        VelAdj_vec[idim]->val_g();
           Vel_vec_val_g[idim] =  Vel_vec[idim]->_val_g[0];
        VelAdj_vec_val_g[idim] =  VelAdj_vec[idim]->_val_g[0];
-     }
+   }
 	
 // vector product
       Math::extend(   &Vel_vec_val_g[0],   &Vel_vec_val_g3D[0],space_dim);
       Math::extend(&VelAdj_vec_val_g[0],&VelAdj_vec_val_g3D[0],space_dim);
 
-      Math::cross(&BhomAdj._curl_g3D[0],   &Vel_vec_val_g3D[0],curlxiXvel_g3D ); 
+      Math::cross(&BhomAdj_vecQuant._curl_g3D[0],   &Vel_vec_val_g3D[0],curlxiXvel_g3D ); 
       Math::cross(   &Bhom._curl_g3D[0],&VelAdj_vec_val_g3D[0],curlbXlambda_g3D );
 //========end preparation for things that are independent of (i,j) dofs of test and shape =====================
   
@@ -252,7 +275,7 @@ for (uint fe = 0; fe < QL; fe++)     {
         for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BeOld._FEord][i+idim*BeOld._ndof];
 
 	 Math::extend(dphiidx_g,dphiidx_g3D,space_dim);
-	 Math::cross(&BhomAdj._curl_g3D[0],dphiidx_g3D,curlxiXdphii_g3D);
+	 Math::cross(&BhomAdj_vecQuant._curl_g3D[0],dphiidx_g3D,curlxiXdphii_g3D);
 
 	  double bDdphii_g      = Math::dot(  &Bhom._val_g[0],dphiidx_g,space_dim);
 	  double lambdaDdphii_g = Math::dot(&VelAdj_vec_val_g[0],dphiidx_g,space_dim);
@@ -260,7 +283,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 	  for (uint idim=0; idim<space_dim; idim++) Lapxi_g[idim]=0.;
 	  for (uint idim=0; idim<space_dim; idim++)  {
 	      for (uint jdim=0; jdim<space_dim; jdim++) {
-                    Lapxi_g[idim] += BhomAdj._grad_g[idim][jdim]*dphiidx_g[jdim];  //TODO CHECK THIS
+                    Lapxi_g[idim] += BhomAdj_vec[idim]->_grad_g[0][jdim]*dphiidx_g[jdim];  //TODO CHECK THIS
                           }
 	  }
 //============end preparation for (i) ============

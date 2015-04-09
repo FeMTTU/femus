@@ -66,15 +66,28 @@ using namespace femus;
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-     //QTYZERO
-    CurrentQuantity BhomAdjOld(currgp);
-    BhomAdjOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYZERO];
-    BhomAdjOld.VectWithQtyFillBasic();
-    BhomAdjOld.Allocate();    
-  
-    //QTYONE
+    CurrentQuantity BhomAdjOldX(currgp);
+    BhomAdjOldX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj0"); 
+    BhomAdjOldX.VectWithQtyFillBasic();
+    BhomAdjOldX.Allocate();
+    
+    CurrentQuantity BhomAdjOldY(currgp);
+    BhomAdjOldY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj1"); 
+    BhomAdjOldY.VectWithQtyFillBasic();
+    BhomAdjOldY.Allocate();
+    
+    CurrentQuantity BhomAdjOldZ(currgp);
+    BhomAdjOldZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj2"); 
+    BhomAdjOldZ.VectWithQtyFillBasic();
+    BhomAdjOldZ.Allocate();
+    
+    std::vector<CurrentQuantity*> BhomAdjOld_vec;   
+    BhomAdjOld_vec.push_back(&BhomAdjOldX);
+    BhomAdjOld_vec.push_back(&BhomAdjOldY);
+    BhomAdjOld_vec.push_back(&BhomAdjOldZ);
+ 
     CurrentQuantity BhomLagMultAdjOld(currgp);
-    BhomLagMultAdjOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYONE];
+    BhomLagMultAdjOld._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomLagMultAdj");
     BhomLagMultAdjOld.VectWithQtyFillBasic();
     BhomLagMultAdjOld.Allocate();    
 //========= END INTERNAL QUANTITIES (unknowns of the equation) ================= 
@@ -172,10 +185,11 @@ using namespace femus;
 
     currelem.SetElDofsBc();
     
-           BhomAdjOld.GetElemDofs();
     BhomLagMultAdjOld.GetElemDofs();
 
     for (uint idim=0; idim < space_dim; idim++)    {
+           BhomAdjOld_vec[idim]->GetElemDofs();
+      
       if ( Vel_vec[idim]->_eqnptr != NULL )    Vel_vec[idim]->GetElemDofs();
     else                                       Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);
     if ( VelAdj_vec[idim]->_eqnptr != NULL) VelAdj_vec[idim]->GetElemDofs();
@@ -218,13 +232,14 @@ for (uint fe = 0; fe < QL; fe++)     {
 }
 //=======end of the "COMMON SHAPE PART"==================
 
-      BhomAdjOld.val_g();
+
       Bmag.curl_g();
       Bmag.val_g();
       
       for (uint idim=0; idim<space_dim; idim++)  {
-           Vel_vec[idim]->val_g(); 
-        VelAdj_vec[idim]->val_g(); 
+          BhomAdjOld_vec[idim]->val_g(); 
+                 Vel_vec[idim]->val_g(); 
+              VelAdj_vec[idim]->val_g(); 
 	VelAdj_vec_val_g[idim] = VelAdj_vec[idim]->_val_g[0];
       }
 
@@ -236,33 +251,33 @@ for (uint fe = 0; fe < QL; fe++)     {
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================
 //============================================================== 
 
-       for (uint i=0; i < BhomAdjOld._ndof; i++)     {
+       for (uint i=0; i < BhomAdjOldX._ndof; i++)     {
 //======="COMMON tEST PART for QTYZERO": func and derivative, of the QTYZERO FE ORD ==========
-        const double phii_g = currgp._phi_ndsQLVB_g[BhomAdjOld._FEord][i];
-        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BhomAdjOld._FEord][i+idim*BhomAdjOld._ndof];
+        const double phii_g = currgp._phi_ndsQLVB_g[BhomAdjOldX._FEord][i];
+        for (uint idim=0; idim<space_dim; idim++)  dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BhomAdjOldX._FEord][i+idim*BhomAdjOldX._ndof];
 //======= END "COMMON tEST PART for QTYZERO" ==========
 
    	  double BDdphii_g      = Math::dot(  &Bmag._val_g[0],dphiidx_g,space_dim);
 	  double lambdaDdphii_g = Math::dot(&VelAdj_vec_val_g[0],dphiidx_g,space_dim);
 	  
          for (uint idim=0; idim<space_dim; idim++) {
-            const uint irowq = i+idim*BhomAdjOld._ndof;
+            const uint irowq = i+idim*BhomAdjOldX._ndof;
            currelem.Rhs()(irowq) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                             - S*curlBXlambda_g3D[idim]*phii_g                             //from NS
                             + S*(BDdphii_g*VelAdj_vec_val_g[idim] - lambdaDdphii_g*Bmag._val_g[idim])     //from NS
                         )
-                           + (1-currelem.GetBCDofFlag()[irowq])*detb*BhomAdjOld._val_dofs[irowq]; //Dirichlet bc
+                           + (1-currelem.GetBCDofFlag()[irowq])*detb*BhomAdjOld_vec[idim]->_val_dofs[i]; //Dirichlet bc
 	   }
 
         for (uint idim=0; idim<space_dim; idim++) { // filling diagonal for Dirichlet bc
-          const uint irowq = i+idim*BhomAdjOld._ndof;
+          const uint irowq = i+idim*BhomAdjOldX._ndof;
           currelem.Mat()(irowq,irowq) += (1-currelem.GetBCDofFlag()[irowq])*detb;
         }        // end filling diagonal for Dirichlet bc
 	 
-        for (uint j=0; j<BhomAdjOld._ndof; j++) {// A element matrix
+        for (uint j=0; j<BhomAdjOldX._ndof; j++) {// A element matrix
 //======="COMMON SHAPE PART for QTYZERO": ==========
-           double                                  phij_g       =      currgp._phi_ndsQLVB_g[BhomAdjOld._FEord][j];
-           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BhomAdjOld._FEord][j+idim*BhomAdjOld._ndof];
+           double                                  phij_g       =      currgp._phi_ndsQLVB_g[BhomAdjOldX._FEord][j];
+           for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BhomAdjOldX._FEord][j+idim*BhomAdjOldX._ndof];
 //======= END "COMMON SHAPE PART for QTYZERO" ==========
 
            double Lap_g    = Math::dot(dphijdx_g,dphiidx_g,space_dim);
@@ -270,9 +285,9 @@ for (uint fe = 0; fe < QL; fe++)     {
 	  for (uint idim=0; idim<space_dim; idim++) Advphij_g += Vel_vec[idim]->_val_g[0]*dphijdx_g[idim];
           
           for (uint idim=0; idim<space_dim; idim++) { //filled in as 1-2-3 // 4-5-6 // 7-8-9
-            int irowq = i+idim*BhomAdjOld._ndof;
+            int irowq = i+idim*BhomAdjOldX._ndof;
             // diagonal blocks [1-5-9]
-            currelem.Mat()(irowq,j+idim*BhomAdjOld._ndof)
+            currelem.Mat()(irowq,j+idim*BhomAdjOldX._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                  + LAP_MHD*IRem*(Lap_g)
                  + (1-LAP_MHD)*IRem*(   Lap_g - dphijdx_g[idim]* dphiidx_g[idim] )
@@ -280,7 +295,7 @@ for (uint fe = 0; fe < QL; fe++)     {
                );
             // block +1 [2-6-7]
             int idimp1=(idim+1)%space_dim;
-            currelem.Mat()(irowq,j+idimp1*BhomAdjOld._ndof)
+            currelem.Mat()(irowq,j+idimp1*BhomAdjOldX._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                  + (1-LAP_MHD)*IRem*(  -dphijdx_g[idim]* dphiidx_g[idimp1] )
                  - phii_g*(            -dphijdx_g[idim]*Vel_vec[idimp1]->_val_g[0] )
@@ -288,7 +303,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 #if (DIMENSION==3)
             // block +2 [3-4-8]
             int idimp2=(idim+2)%space_dim;
-            currelem.Mat()(irowq,j+idimp2*BhomAdjOld._ndof)
+            currelem.Mat()(irowq,j+idimp2*BhomAdjOldX._ndof)
             += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(
                   + (1-LAP_MHD)*IRem*(-dphijdx_g[idim]* dphiidx_g[idimp2] )
                   - phii_g*(          -dphijdx_g[idim]*Vel_vec[idimp2]->_val_g[0] )
@@ -301,9 +316,9 @@ for (uint fe = 0; fe < QL; fe++)     {
       
        for (uint j=0; j < BhomLagMultAdjOld._ndof; j++) {// B^T element matrix ( p*div(v) )
           const double psij_g =  currgp._phi_ndsQLVB_g[BhomLagMultAdjOld._FEord][j];
-          const int jclml= j + space_dim*BhomAdjOld._ndof;
+          const int jclml= j + space_dim*BhomAdjOldX._ndof;
           for (uint idim=0; idim<space_dim; idim++) {
-            uint irowq = i+idim*BhomAdjOld._ndof;
+            uint irowq = i+idim*BhomAdjOldX._ndof;
             currelem.Mat()(irowq,jclml) += currelem.GetBCDofFlag()[irowq]*dtxJxW_g*(-psij_g*dphiidx_g[idim]);
            }
         }
@@ -311,13 +326,13 @@ for (uint fe = 0; fe < QL; fe++)     {
 
           if (i<BhomLagMultAdjOld._ndof) {//  pressure equation (KOMP dp/dt=rho*div) 
           double psii_g = currgp._phi_ndsQLVB_g[BhomLagMultAdjOld._FEord][i];
-	  const uint irowl = i+space_dim*BhomAdjOld._ndof;
+	  const uint irowl = i+space_dim*BhomAdjOldX._ndof;
           currelem.Rhs()(irowl)=0.;  // rhs
  //             currelem.Mat()(irowl,j+space_dim*el_ndof_q)  += dtxJxW_g*(psii_g*psij_g)*_Komp_fac/dt;
 
-          for (uint j=0; j<BhomAdjOld._ndof; j++) { // B element matrix q*div(u)
-            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BhomAdjOld._FEord][j+idim*BhomAdjOld._ndof];
-            for (uint idim=0; idim<space_dim; idim++) currelem.Mat()(irowl,j+idim*BhomAdjOld._ndof) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
+          for (uint j=0; j<BhomAdjOldX._ndof; j++) { // B element matrix q*div(u)
+            for (uint idim=0; idim<space_dim; idim++) dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[BhomAdjOldX._FEord][j+idim*BhomAdjOldX._ndof];
+            for (uint idim=0; idim<space_dim; idim++) currelem.Mat()(irowl,j+idim*BhomAdjOldX._ndof) += -dtxJxW_g*psii_g*dphijdx_g[idim]; 
                 }
         }
                          // end pressure eq (cont)
@@ -355,15 +370,28 @@ for (uint fe = 0; fe < QL; fe++)     {
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-     //QTYZERO
-    CurrentQuantity BhomAdjOld(currgp);
-    BhomAdjOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYZERO];
-    BhomAdjOld.VectWithQtyFillBasic();
-    BhomAdjOld.Allocate();    
-  
-    //QTYONE
+      CurrentQuantity BhomAdjOldX(currgp);
+    BhomAdjOldX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj0"); 
+    BhomAdjOldX.VectWithQtyFillBasic();
+    BhomAdjOldX.Allocate();
+    
+    CurrentQuantity BhomAdjOldY(currgp);
+    BhomAdjOldY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj1"); 
+    BhomAdjOldY.VectWithQtyFillBasic();
+    BhomAdjOldY.Allocate();
+    
+    CurrentQuantity BhomAdjOldZ(currgp);
+    BhomAdjOldZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomAdj2"); 
+    BhomAdjOldZ.VectWithQtyFillBasic();
+    BhomAdjOldZ.Allocate();
+    
+    std::vector<CurrentQuantity*> BhomAdjOld_vec;   
+    BhomAdjOld_vec.push_back(&BhomAdjOldX);
+    BhomAdjOld_vec.push_back(&BhomAdjOldY);
+    BhomAdjOld_vec.push_back(&BhomAdjOldZ);
+ 
     CurrentQuantity BhomLagMultAdjOld(currgp);
-    BhomLagMultAdjOld._qtyptr   = my_system.GetUnknownQuantitiesVector()[QTYONE];
+    BhomLagMultAdjOld._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomLagMultAdj");
     BhomLagMultAdjOld.VectWithQtyFillBasic();
     BhomLagMultAdjOld.Allocate();    
 //========= END INTERNAL QUANTITIES (unknowns of the equation) ================= 
@@ -401,11 +429,10 @@ for (uint fe = 0; fe < QL; fe++)     {
 
      currelem.SetElDofsBc();
      
-            BhomAdjOld.GetElemDofs();
      BhomLagMultAdjOld.GetElemDofs();
    
 //============ BC =======
-       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(BhomAdjOld._ndof,space_dim,BhomLagMultAdjOld); 
+       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(BhomAdjOldX._ndof,space_dim,BhomLagMultAdjOld); 
 //========END BC============
      
     const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
@@ -427,12 +454,12 @@ for (uint fe = 0; fe < QL; fe++)     {
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ===================
 //==============================================================
-           for (uint i=0; i < BhomAdjOld._ndof; i++) {
+           for (uint i=0; i < BhomAdjOldX._ndof; i++) {
  
-	const double phii_g = currgp._phi_ndsQLVB_g[BhomAdjOld._FEord][i];
+	const double phii_g = currgp._phi_ndsQLVB_g[BhomAdjOldX._FEord][i];
 
         for (uint idim=0; idim< space_dim; idim++)    {
-             uint irowq=i+idim*BhomAdjOld._ndof;
+             uint irowq=i+idim*BhomAdjOldX._ndof;
             currelem.Rhs()(irowq)  += 
           currelem.GetBCDofFlag()[irowq]*           
            dtxJxW_g*(   -1.*press_fl*BhomLagMultAdjOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g

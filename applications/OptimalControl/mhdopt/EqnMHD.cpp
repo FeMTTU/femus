@@ -47,8 +47,6 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   double LapBe_g[DIMENSION];
 //============================
   
-   const double time =  0.; //ml_prob._timeloop._curr_time;    
-    
         my_system._LinSolver[Level]->_KK->zero();
         my_system._LinSolver[Level]->_RESC->zero();
 
@@ -180,13 +178,13 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   
 #if BMAG_QTY==1
     if ( Bext._eqnptr != NULL )  Bext.GetElemDofs();
-    else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
+    else                         Bext._qtyptr->FunctionDof(Bext,0.,&xyz_refbox._val_dofs[0]);
 #endif
 #if VELOCITY_QTY==1 
     //----- for Advection MAT & RHS
     for (uint idim=0; idim < space_dim; idim++)    {    
     if ( Vel_vec[idim]->_eqnptr != NULL )  Vel_vec[idim]->GetElemDofs();
-    else                        Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],time,&xyz_refbox._val_dofs[0]);
+    else                        Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);
     }
 #endif
     
@@ -497,12 +495,12 @@ for (uint fe = 0; fe < QL; fe++)     {
 //========== EXTERNAL DOFS ===   
 #if BMAG_QTY==1
     if ( Bext._eqnptr != NULL )   Bext.GetElemDofs();
-    else                          Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
+    else                          Bext._qtyptr->FunctionDof(Bext,0.,&xyz_refbox._val_dofs[0]);
 #endif
 #if VELOCITY_QTY==1
     for (uint idim=0; idim < space_dim; idim++)    {    
     if ( Vel_vec[idim]->_eqnptr != NULL )  Vel_vec[idim]->GetElemDofs();
-    else                        Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],time,&xyz_refbox._val_dofs[0]);
+    else                        Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);
     }    
 #endif
     
@@ -524,7 +522,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 //---------lagmult
 	    //"post gauss method"
    xyz_refbox.val_g(); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
-      LagMultOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0],&LagMultOld._val_g[0]);  //check that you have ZERO here
+      LagMultOld._qtyptr->Function_txyz(0.,&xyz_refbox._val_g[0],&LagMultOld._val_g[0]);  //check that you have ZERO here
       
 #if VELOCITY_QTY==1
     for (uint idim=0; idim < space_dim; idim++) {
