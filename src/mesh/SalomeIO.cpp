@@ -124,13 +124,24 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
     menu_names.resize(n_menus);
     for (unsigned j=0; j<menu_names.size(); j++) {
       
+       menu_names[j] = new char[max_length];
+     H5Gget_objname_by_idx(gid,j,menu_names[j],max_length); ///@deprecated see the HDF doc to replace this
+     std::string tempj(menu_names[j]);
+     
+  
+      if  (tempj.substr(0,5).compare("Group") == 0) {
+	
+	
+	
+	
+      }  //end groups
+      
+      else {
+            
     std::string el_fem_type_vol_j(""); 
     std::string el_fem_type_bd_j("");
 
       
-      menu_names[j] = new char[max_length];
-     H5Gget_objname_by_idx(gid,j,menu_names[j],max_length); ///@deprecated see the HDF doc to replace this
-     std::string tempj(menu_names[j]);
      itype_vol[j] =  ReadFE(file_id,el_fem_type_vol_j,el_fem_type_bd_j,tempj);
      
     //   // read control data ******************** A
@@ -284,7 +295,12 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
     
     
 //   // read GROUP **************** E
-    
+
+
+
+
+
+
 //   // end read GROUP **************** E
 
 
@@ -296,7 +312,11 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
   // clean
   delete [] conn_map;
 
-        }
+      
+         }  //end meshes
+         
+        }   //end groups and meshes
+        
         
 //end menu names  **********************************************************
 //end menu names  **********************************************************
