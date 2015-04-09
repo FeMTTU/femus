@@ -19,7 +19,6 @@
 #include "NormTangEnum.hpp"
 #include "VBTypeEnum.hpp"
 #include "GeomElTypeEnum.hpp"
-#include "QTYnumEnum.hpp"
 #include "Domain.hpp"
 #include "TimeLoop.hpp"
 #include "CurrentGaussPoint.hpp"

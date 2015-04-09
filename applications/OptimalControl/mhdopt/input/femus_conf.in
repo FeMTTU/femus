@@ -117,9 +117,5 @@ Fake3D 0
 # -----------------------------------------------------------------------
 # PseudoTimeStepping
 NonStatNS 0 # 1
-NonStatMHD 0 # 1
-NonStatNSAD 0 
-NonStatMHDAD 0 
-NonStatMHDCONT 0
 
 </Physics>

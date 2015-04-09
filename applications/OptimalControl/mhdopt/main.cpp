@@ -20,7 +20,6 @@
 #include "Typedefs.hpp"
 #include "CmdLine.hpp"
 #include "Quantity.hpp"
-#include "QTYnumEnum.hpp"
 #include "Box.hpp"  //for the DOMAIN
 #include "XDMFWriter.hpp"
 
@@ -118,24 +117,35 @@ int main(int argc, char** argv) {
   VelocityY  velocityY("Qty_Velocity1",qty_map,1,QQ);   qty_map.AddQuantity(&velocityY);  
   VelocityZ  velocityZ("Qty_Velocity2",qty_map,1,QQ);   qty_map.AddQuantity(&velocityZ);  
  
-  VelocityAdj  velocity_adj("Qty_VelocityAdj",qty_map,mesh.get_dim(),QQ);         qty_map.AddQuantity(&velocity_adj);
-  MagnFieldHom bhom("Qty_MagnFieldHom",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&bhom);  
-  MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&Bext);  
-  MagnFieldHomAdj    bhom_adj("Qty_MagnFieldHomAdj",qty_map,mesh.get_dim(),QQ);        qty_map.AddQuantity(&bhom_adj);
- 
- MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,LL);     qty_map.AddQuantity(&bhom_lag_mult);
- MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,LL);     qty_map.AddQuantity(&Bext_lag_mult);
- MagnFieldHomLagMultAdj  bhom_lag_mult_adj("Qty_MagnFieldHomLagMultAdj",qty_map,1,LL);  qty_map.AddQuantity(&bhom_lag_mult_adj);
- Pressure  pressure("Qty_Pressure",qty_map,1,LL);            qty_map.AddQuantity(&pressure);
- PressureAdj pressure_adj("Qty_PressureAdj",qty_map,1,LL);                  qty_map.AddQuantity(&pressure_adj);
+  VelocityAdjX  velocity_adjX("Qty_VelocityAdj0",qty_map,1,QQ);   qty_map.AddQuantity(&velocity_adjX);
+  VelocityAdjY  velocity_adjY("Qty_VelocityAdj1",qty_map,1,QQ);   qty_map.AddQuantity(&velocity_adjY);
+  VelocityAdjZ  velocity_adjZ("Qty_VelocityAdj2",qty_map,1,QQ);   qty_map.AddQuantity(&velocity_adjZ);
+  
+  MagnFieldHomAdjX    bhom_adjX("Qty_MagnFieldHomAdj0",qty_map,1,QQ);        qty_map.AddQuantity(&bhom_adjX);
+  MagnFieldHomAdjY    bhom_adjY("Qty_MagnFieldHomAdj1",qty_map,1,QQ);        qty_map.AddQuantity(&bhom_adjY);
+  MagnFieldHomAdjZ    bhom_adjZ("Qty_MagnFieldHomAdj2",qty_map,1,QQ);        qty_map.AddQuantity(&bhom_adjZ);
 
-   DesVelocityX des_velocityX("Qty_DesVelocity0",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityX);
-   DesVelocityY des_velocityY("Qty_DesVelocity1",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityY);
-   DesVelocityZ des_velocityZ("Qty_DesVelocity2",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityZ);
+  MagnFieldHomX bhomX("Qty_MagnFieldHom0",qty_map,1,QQ);     qty_map.AddQuantity(&bhomX);  
+  MagnFieldHomY bhomY("Qty_MagnFieldHom1",qty_map,1,QQ);     qty_map.AddQuantity(&bhomY);  
+  MagnFieldHomZ bhomZ("Qty_MagnFieldHom2",qty_map,1,QQ);     qty_map.AddQuantity(&bhomZ);  
+  
+  MagnFieldExtX BextX("Qty_MagnFieldExt0",qty_map,1,QQ);     qty_map.AddQuantity(&BextX);  
+  MagnFieldExtY BextY("Qty_MagnFieldExt1",qty_map,1,QQ);     qty_map.AddQuantity(&BextY);  
+  MagnFieldExtZ BextZ("Qty_MagnFieldExt2",qty_map,1,QQ);     qty_map.AddQuantity(&BextZ);  
+
+  MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,LL);     qty_map.AddQuantity(&bhom_lag_mult);
+  MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,LL);     qty_map.AddQuantity(&Bext_lag_mult);
+  MagnFieldHomLagMultAdj  bhom_lag_mult_adj("Qty_MagnFieldHomLagMultAdj",qty_map,1,LL);  qty_map.AddQuantity(&bhom_lag_mult_adj);
+  Pressure                         pressure("Qty_Pressure",qty_map,1,LL);                qty_map.AddQuantity(&pressure);
+  PressureAdj                  pressure_adj("Qty_PressureAdj",qty_map,1,LL);             qty_map.AddQuantity(&pressure_adj);
+
+  DesVelocityX des_velocityX("Qty_DesVelocity0",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityX);
+  DesVelocityY des_velocityY("Qty_DesVelocity1",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityY);
+  DesVelocityZ des_velocityZ("Qty_DesVelocity2",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityZ);
 
 //consistency check
- if (bhom._dim !=  Bext._dim)     {std::cout << "main: inconsistency" << std::endl;abort();}
- if (bhom._FEord !=  Bext._FEord) {std::cout << "main: inconsistency" << std::endl;abort();}
+//  if (bhom._dim !=  Bext._dim)     {std::cout << "main: inconsistency" << std::endl;abort();}
+//  if (bhom._FEord !=  Bext._FEord) {std::cout << "main: inconsistency" << std::endl;abort();}
 //  if (velocity._dim !=  des_velocity._dim) {std::cout << "main: inconsistency" << std::endl; abort();}
 //  if (velocity._FEord !=  des_velocity._FEord) {std::cout << "main: inconsistency" << std::endl; abort();}
  
@@ -205,7 +215,9 @@ int main(int argc, char** argv) {
             eqnNSAD.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_VelocityAdj");
             eqnNSAD.AddSolutionToSystemPDE("Qty_PressureAdj");
 	    
-            eqnNSAD.AddUnknownToSystemPDE(&velocity_adj); 
+            eqnNSAD.AddUnknownToSystemPDE(&velocity_adjX); 
+            eqnNSAD.AddUnknownToSystemPDE(&velocity_adjY); 
+            eqnNSAD.AddUnknownToSystemPDE(&velocity_adjZ); 
             eqnNSAD.AddUnknownToSystemPDE(&pressure_adj); 
 	    
             eqnNSAD.SetAssembleFunction(GenMatRhsNSAD);
@@ -217,7 +229,9 @@ int main(int argc, char** argv) {
            eqnMHD.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_MagnFieldHom");
            eqnMHD.AddSolutionToSystemPDE("Qty_MagnFieldHomLagMult");
 	   
-           eqnMHD.AddUnknownToSystemPDE(&bhom); 
+           eqnMHD.AddUnknownToSystemPDE(&bhomX); 
+           eqnMHD.AddUnknownToSystemPDE(&bhomY); 
+           eqnMHD.AddUnknownToSystemPDE(&bhomZ); 
            eqnMHD.AddUnknownToSystemPDE(&bhom_lag_mult); 
 	   
            eqnMHD.SetAssembleFunction(GenMatRhsMHD);
@@ -229,7 +243,9 @@ int main(int argc, char** argv) {
              eqnMHDAD.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_MagnFieldHomAdj");
              eqnMHDAD.AddSolutionToSystemPDE("Qty_MagnFieldHomLagMultAdj");
 	     
-             eqnMHDAD.AddUnknownToSystemPDE(&bhom_adj); 
+             eqnMHDAD.AddUnknownToSystemPDE(&bhom_adjX); 
+             eqnMHDAD.AddUnknownToSystemPDE(&bhom_adjY); 
+             eqnMHDAD.AddUnknownToSystemPDE(&bhom_adjZ); 
              eqnMHDAD.AddUnknownToSystemPDE(&bhom_lag_mult_adj); 
 	     
              eqnMHDAD.SetAssembleFunction(GenMatRhsMHDAD);
@@ -241,8 +257,10 @@ int main(int argc, char** argv) {
                eqnMHDCONT.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_MagnFieldExt");
                eqnMHDCONT.AddSolutionToSystemPDE("Qty_MagnFieldExtLagMult");
 	       
-               eqnMHDCONT.AddUnknownToSystemPDE(&Bext); 
-               eqnMHDCONT.AddUnknownToSystemPDE(&Bext_lag_mult); 
+               eqnMHDCONT.AddUnknownToSystemPDE(&BextX);
+               eqnMHDCONT.AddUnknownToSystemPDE(&BextY);
+               eqnMHDCONT.AddUnknownToSystemPDE(&BextZ);
+	       eqnMHDCONT.AddUnknownToSystemPDE(&Bext_lag_mult); 
 	       
                eqnMHDCONT.SetAssembleFunction(GenMatRhsMHDCONT);
 #endif  

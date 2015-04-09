@@ -205,15 +205,15 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &coords
   mesh.el->SetElementGroupNumber(ngroup);
   for (unsigned k=0; k<ngroup; k++) {
     int ngel;
-    int name;
-    int mat;
+    int gr_name;
+    int gr_mat;
     while (str2.compare("GROUP:") != 0) inf >> str2;
-    inf >> str2 >> str2 >> ngel >> str2 >> mat >>str2 >> str2 >>name>> str2;
+    inf >> str2 >> str2 >> ngel >> str2 >> gr_mat >>str2 >> str2 >>gr_name>> str2;
     for (int i=0; i<ngel; i++) {
       int iel;
       inf >> iel;
-      mesh.el->SetElementGroup(iel-1,name);
-      mesh.el->SetElementMaterial(iel-1,mat);
+      mesh.el->SetElementGroup(iel-1,gr_name);
+      mesh.el->SetElementMaterial(iel-1,gr_mat);
     }
     inf >> str2;
     if (str2.compare("ENDOFSECTION") != 0) {
@@ -222,7 +222,7 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &coords
     }
   }
   inf.close();
-  // end read boundary **************** E
+  // end read GROUP **************** E
 
   // read boundary **************** D
   inf.open(name.c_str());

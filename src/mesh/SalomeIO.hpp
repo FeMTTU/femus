@@ -69,13 +69,16 @@ class SalomeIO : public MeshInput<Mesh>
    /** Read FE type */
    int  ReadFE(hid_t file_id, std::string & el_fem_type_vol, std::string & el_fem_type_bd, const  std::string menu_name);   
    
-   std::vector<char*> menu_names;
+//    std::vector<char*> menu_names;
    static const std::string group_name_begin; //FAS
    static const std::string group_name_end;   //ELEME
    static const std::string mesh_ensemble;        // ENS_MAA
    static const std::string aux_zeroone;      // -0000000000000000001-0000000000000000001
-   static const std::string connectivity;     // MAI
-   static const std::string node_coord;       //NOE/COO
+   static const std::string elem_list;     // MAI
+   static const std::string connectivity;  //NOD
+   static const std::string node_list;  //NOE;
+   static const std::string coord_list; // "COO";
+   static const std::string dofobj_indices;  //NUM
    static const uint max_length;
 
 };

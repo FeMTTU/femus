@@ -13,12 +13,11 @@ using namespace femus;
 
 
 
-class MagnFieldHom : public Quantity {
+class MagnFieldHomX : public Quantity {
 
   public:
     
-   MagnFieldHom(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
-  ~MagnFieldHom(){};
+   MagnFieldHomX(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
   
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
@@ -27,12 +26,11 @@ class MagnFieldHom : public Quantity {
 
 };
 
-class MagnFieldHomAdj : public Quantity {
+class MagnFieldHomY : public Quantity {
 
   public:
     
-   MagnFieldHomAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
-  ~MagnFieldHomAdj(){};
+   MagnFieldHomY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
   
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
@@ -41,12 +39,89 @@ class MagnFieldHomAdj : public Quantity {
 
 };
 
-class MagnFieldExt : public Quantity {
+class MagnFieldHomZ : public Quantity {
 
   public:
     
-   MagnFieldExt(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
-  ~MagnFieldExt(){};
+   MagnFieldHomZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+  
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
+ 
+
+};
+
+class MagnFieldHomAdjX : public Quantity {
+
+  public:
+    
+   MagnFieldHomAdjX(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+  
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
+ 
+
+};
+
+class MagnFieldHomAdjY : public Quantity {
+
+  public:
+    
+   MagnFieldHomAdjY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+  
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
+ 
+
+};
+
+class MagnFieldHomAdjZ : public Quantity {
+
+  public:
+    
+   MagnFieldHomAdjZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+  
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
+ 
+
+};
+
+class MagnFieldExtX : public Quantity {
+
+  public:
+    
+   MagnFieldExtX(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+  
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
+ 
+
+};
+
+class MagnFieldExtY : public Quantity {
+
+  public:
+    
+   MagnFieldExtY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+  
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
+ 
+
+};
+
+class MagnFieldExtZ : public Quantity {
+
+  public:
+    
+   MagnFieldExtZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
   
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
@@ -60,7 +135,6 @@ class MagnFieldHomLagMult : public Quantity {
   public:
     
    MagnFieldHomLagMult(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
-  ~MagnFieldHomLagMult(){};
   
   void Function_txyz(const double t, const double* xp,double* temp) const;
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
@@ -75,7 +149,6 @@ class MagnFieldHomLagMultAdj : public Quantity {
   public:
     
    MagnFieldHomLagMultAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
-  ~MagnFieldHomLagMultAdj(){};
   
   void Function_txyz(const double t, const double* xp,double* temp) const;
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
@@ -90,7 +163,6 @@ class MagnFieldExtLagMult : public Quantity {
   public:
     
    MagnFieldExtLagMult(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
-  ~MagnFieldExtLagMult(){};
    
   void Function_txyz(const double t, const double* xp,double* temp) const;
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
@@ -105,7 +177,6 @@ class Pressure : public Quantity {
   public:
     
    Pressure(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
-  ~Pressure(){};
 
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
@@ -120,7 +191,6 @@ class PressureAdj : public Quantity {
   public:
     
    PressureAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
-  ~PressureAdj(){};
 
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
@@ -171,12 +241,39 @@ class VelocityZ : public Quantity {
 
 
 
-class VelocityAdj : public Quantity {
+class VelocityAdjX : public Quantity {
 
   public:
     
-   VelocityAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
-  ~VelocityAdj(){};
+  VelocityAdjX(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
+
+
+};
+
+
+class VelocityAdjY : public Quantity {
+
+  public:
+    
+  VelocityAdjY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
+
+
+};
+
+
+class VelocityAdjZ : public Quantity {
+
+  public:
+    
+  VelocityAdjZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
 
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;

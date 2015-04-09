@@ -19,12 +19,7 @@ namespace femus {
      CurrentQuantity::CurrentQuantity(const CurrentGaussPointBase & currgp_in)
      : _currGP(currgp_in),_currEl(currgp_in.GetCurrentElem()) {  }
 
-
-
-    CurrentQuantity::~CurrentQuantity() { }
-
-    
-    
+   
     //============================
 //clearly, here we have the dphi at the dofs and the dof values
 //so, we have to extend both the dphi and the dofs
@@ -34,7 +29,7 @@ namespace femus {
 //instead,the myVect._val_dofs3D is filled here
 //actually, that vector is only for service purposes 
 //so it could be also translated into some temporary vector whenever needed
- 
+ /// @todo this function only works for a VECTOR quantity
  void CurrentQuantity::curl_g() {
    
   const uint       ord = _FEord;
@@ -282,18 +277,33 @@ void CurrentQuantity::GetElemDofs()  {
          for (uint d = 0; d <  _ndof; d++)    {
                const uint     indx  = d + ivar * _ndof;
 
-	     if (vect_ord < KK )       DofObj = _currEl.GetConn()[d];
-	     else if (vect_ord == KK)  DofObj = _currEl.GetVolIel();
+	          DofObj = _currEl.GetConn()[d];
 	       
                  const uint dofkivar = _eqnptr->_dofmap.GetDofPosIn(Lev_pick_dof,DofObj + ivar*length_nodedof[vect_ord] + off_total);
 
-	       if (vect_ord < KK ) { _val_dofs[indx] =  ( *( _eqnptr->_LinSolver[Lev_pick_dof]->_EPSC ) )(dofkivar);  }
+	         _val_dofs[indx] =  ( *( _eqnptr->_LinSolver[Lev_pick_dof]->_EPSC ) )(dofkivar); 
 
 	         }
 	  }
   
  return; 
 }
+
+
+//this function fills the element dofs from a vector of CurrentQuantity objects
+   void  CurrentQuantity::GetElemDofs(const std::vector<CurrentQuantity*> vec_in)  {
+     
+        for (uint ivar=0; ivar < _dim; ivar++)    {
+              for (uint d = 0; d <  _ndof; d++)    {
+               const uint     indx  = d + ivar * _ndof;
+		_val_dofs[indx] =  vec_in[ivar]->_val_dofs[d];
+		
+	      }
+	}
+     
+    return; 
+   }
+
 
 
 // void CurrentQuantity::GetElemDofs_two()  {
