@@ -221,12 +221,28 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     Bhom_vec.push_back(&BhomZ);
  
     //Bhom only to retrieve the dofs
+
+    CurrentQuantity BextX(currgp);
+    BextX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt0"); 
+    BextX.VectWithQtyFillBasic();
+    BextX.Allocate();
     
-//=========
-    CurrentQuantity Bext(currgp);   //only to retrieve the dofs
-    Bext._qtyptr   =  ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt");
-    Bext.VectWithQtyFillBasic();
-    Bext.Allocate();
+    CurrentQuantity BextY(currgp);
+    BextY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt1"); 
+    BextY.VectWithQtyFillBasic();
+    BextY.Allocate();
+    
+    CurrentQuantity BextZ(currgp);
+    BextZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt2"); 
+    BextZ.VectWithQtyFillBasic();
+    BextZ.Allocate();
+    
+    std::vector<CurrentQuantity*> Bext_vec;   
+    Bext_vec.push_back(&BextX);
+    Bext_vec.push_back(&BextY);
+    Bext_vec.push_back(&BextZ);
+ 
+    //Bext only to retrieve the dofs
 
 //========= auxiliary, must be AFTER Bhom!
     CurrentQuantity Bmag(currgp); //total
@@ -268,15 +284,15 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     pressOld.GetElemDofs();
 
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
- #if (BMAG_QTY==1)
-  if ( Bext._eqnptr != NULL )  Bext.GetElemDofs(); 
-  else                         Bext._qtyptr->FunctionDof(Bext,0.,&xyz_refbox._val_dofs[0]);
   
   for (uint idim=0; idim < space_dim; idim++) { 
+#if (BMAG_QTY==1)
        if ( Bhom_vec[idim]->_eqnptr != NULL )  Bhom_vec[idim]->GetElemDofs();   
        else                                    Bhom_vec[idim]->_qtyptr->FunctionDof(*Bhom_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-    }
+       if ( Bext_vec[idim]->_eqnptr != NULL )  Bext_vec[idim]->GetElemDofs(); 
+       else                                    Bext_vec[idim]->_qtyptr->FunctionDof(*Bext_vec[idim],0.,&xyz_refbox._val_dofs[0]);
 #endif
+   }
 
 //=== the connectivity is only related to the ELEMENT, so it is GEOMETRICAL
 //===then, the DofMap is RELATED to the EQUATION the Vect comes from!
@@ -291,7 +307,7 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     for (uint ivarq=0; ivarq < Bmag._dim; ivarq++)    { //ivarq is like idim
           for (uint d=0; d <  Bmag._ndof; d++)    {
           const uint     indxq  =         d + ivarq*Bmag._ndof;
-          Bmag._val_dofs[indxq] = Bext._val_dofs[indxq] + Bhom_vec[ivarq]->_val_dofs[d];
+          Bmag._val_dofs[indxq] = Bext_vec[ivarq]->_val_dofs[d] + Bhom_vec[ivarq]->_val_dofs[d];
 	  }
     }
 //=======after summing you EXTEND them to 3D
@@ -554,18 +570,10 @@ for (uint fe = 0; fe < QL; fe++)     {
    const uint   qtyzero_ord  = VelOldX._FEord;
    const uint   qtyzero_ndof = VelOldX._ndof; 
 
-//=========
     CurrentQuantity pressOld(currgp);
     pressOld._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Pressure");
     pressOld.VectWithQtyFillBasic();
     pressOld.Allocate();
-
-   const uint qtyone_ord  = pressOld._FEord;
-   const uint qtyone_ndof = pressOld._ndof; 
-
-   //order
-   const uint  qtyZeroToOne_DofOffset = VelOldX._ndof*space_dim;
-   
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
 
 //=========EXTERNAL QUANTITIES (couplings) =====

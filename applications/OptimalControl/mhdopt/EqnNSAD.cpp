@@ -174,12 +174,27 @@ using namespace femus;
     Bhom_vec.push_back(&BhomZ);
  
     //Bhom only to retrieve the dofs
-    
-   CurrentQuantity Bext(currgp);
-    Bext._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt");
-    Bext.VectWithQtyFillBasic();
-    Bext.Allocate();
 
+    CurrentQuantity BextX(currgp);
+    BextX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt0"); 
+    BextX.VectWithQtyFillBasic();
+    BextX.Allocate();
+    
+    CurrentQuantity BextY(currgp);
+    BextY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt1"); 
+    BextY.VectWithQtyFillBasic();
+    BextY.Allocate();
+    
+    CurrentQuantity BextZ(currgp);
+    BextZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt2"); 
+    BextZ.VectWithQtyFillBasic();
+    BextZ.Allocate();
+    
+    std::vector<CurrentQuantity*> Bext_vec;   
+    Bext_vec.push_back(&BextX);
+    Bext_vec.push_back(&BextY);
+    Bext_vec.push_back(&BextZ);
+ 
 //========= auxiliary, must be AFTER Bhom!   //TODO this doesnt have any associated quantity!
   CurrentQuantity Bmag(currgp); //total
     Bmag._dim        = Bhom_vec.size();
@@ -228,20 +243,20 @@ using namespace femus;
     currelem.SetElDofsBc();
     
 
-    if ( Bext._eqnptr != NULL )  Bext.GetElemDofs();
-    else                         Bext._qtyptr->FunctionDof(Bext,0.,&xyz_refbox._val_dofs[0]);
     
  for (uint idim=0; idim < space_dim; idim++)    {
     VelAdjOld_vec[idim]->GetElemDofs();  
-    if ( Vel_vec[idim]->_eqnptr != NULL )      Vel_vec[idim]->GetElemDofs();
-    else                                       Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
-    if ( VelDes_vec[idim]->_eqnptr != NULL )   VelDes_vec[idim]->GetElemDofs();
-    else                                       VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
+    if ( Vel_vec[idim]->_eqnptr != NULL )          Vel_vec[idim]->GetElemDofs();
+    else                                           Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
+    if ( VelDes_vec[idim]->_eqnptr != NULL )    VelDes_vec[idim]->GetElemDofs();
+    else                                        VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
     if ( BhomAdj_vec[idim]->_eqnptr != NULL )  BhomAdj_vec[idim]->GetElemDofs();
     else                                       BhomAdj_vec[idim]->_qtyptr->FunctionDof(*BhomAdj_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
     if ( Bhom_vec[idim]->_eqnptr != NULL )        Bhom_vec[idim]->GetElemDofs();
     else                                          Bhom_vec[idim]->_qtyptr->FunctionDof(*Bhom_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-  }
+     if ( Bext_vec[idim]->_eqnptr != NULL )       Bext_vec[idim]->GetElemDofs();
+    else                                          Bext_vec[idim]->_qtyptr->FunctionDof(*Bext_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+ }
     
     
     BhomAdj_vecQuant.GetElemDofs(BhomAdj_vec);  //this must be AFTER filling the scalar components
@@ -254,7 +269,7 @@ using namespace femus;
     for (uint ivarq=0; ivarq < Bmag._dim; ivarq++)    { //ivarq is like idim
           for (uint d=0; d < Bmag._ndof; d++)    {
           const uint     indxq  =         d + ivarq*Bmag._ndof;
-          Bmag._val_dofs[indxq] = Bext._val_dofs[indxq] + Bhom_vec[ivarq]->_val_dofs[d];
+          Bmag._val_dofs[indxq] = Bext_vec[ivarq]->_val_dofs[d] + Bhom_vec[ivarq]->_val_dofs[d];
 	  }
     }    
 //=======    

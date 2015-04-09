@@ -83,7 +83,23 @@ MagnFieldHomLagMultAdj::MagnFieldHomLagMultAdj(std::string name_in, QuantityMap&
 }
 
 //==========================================================================
-MagnFieldExt::MagnFieldExt(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+MagnFieldExtX::MagnFieldExtX(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) {
+
+  for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in.GetInputParser()->get("Bref");
+  
+}
+
+//==========================================================================
+MagnFieldExtY::MagnFieldExtY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) {
+
+  for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in.GetInputParser()->get("Bref");
+  
+}
+
+//==========================================================================
+MagnFieldExtZ::MagnFieldExtZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {
 
   for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in.GetInputParser()->get("Bref");
@@ -447,18 +463,12 @@ void PressureAdj::Function_txyz(const double t, const double* xp,double* func) c
 //=============================================================
 //this function receives the x values already in the Reference Box
 //so no transformation occurs here
-void MagnFieldExt::Function_txyz(const double t,const double* xp, double* func) const {
-
+void MagnFieldExtX::Function_txyz(const double t,const double* xp, double* func) const {
   
-  //=====ROTATION of the Function
-  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
-  const double thetaz = box->_domain_rtmap.get("thetaz");
-
-  //============== PICK THE REQUIRED REFERENCE VALUES for the FUNCTION
   const double Bref   = _qtymap.GetInputParser()->get("Bref");      //Uref*sqrt(rhof*MUMHD);   //in order to make S=1
 
 //function
-  func[0] = (cos(thetaz)*Bref
+  func[0] = (Bref
 /*             + 0.*x*x
              + 0.*y
              + 0.*(1.-x)
@@ -467,20 +477,36 @@ void MagnFieldExt::Function_txyz(const double t,const double* xp, double* func) 
              + 0.*x*x*(x-1.)*(x-1.)*2.*y*(y-1.)*(2.*y-1.)    //div=0
              + 0.*x*(1.-x)*y*(1.-y)*/
              )/Bref; 
-  func[1] = (sin(thetaz)*Bref
+
+return;  
+}
+
+
+//=============================================================
+//this function receives the x values already in the Reference Box
+//so no transformation occurs here
+void MagnFieldExtY::Function_txyz(const double t,const double* xp, double* func) const {
+  
+  const double Bref   = _qtymap.GetInputParser()->get("Bref");      //Uref*sqrt(rhof*MUMHD);   //in order to make S=1
+
+  func[0] = (0.
 /*             + 0.*y
              - 0.*sin(pi*x)*cos(pi*x)*sin(pi*y)*sin(pi*y)
              - 0.*y*y*(y-1.)*(y-1.)*2.*x*(x-1.)*(2.*x-1.)    //div=0
              - 0.*x*(1.-x)*y*(1.-y)*/
               )/Bref;
-#if (DIMENSION==3)
-  func[2] = (0.)/Bref;
-#endif
-  
-
-return;  
+  return;
 }
 
+//=============================================================
+//this function receives the x values already in the Reference Box
+//so no transformation occurs here
+void MagnFieldExtZ::Function_txyz(const double t,const double* xp, double* func) const {
+  
+  func[0] = 0.;
+ return;
+ 
+}
 
 
 
@@ -1732,7 +1758,7 @@ if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  
 
 
 
-void MagnFieldExt::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+void MagnFieldExtX::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
   const double bdry_toll = DEFAULT_BDRY_TOLL;
   
@@ -1753,20 +1779,34 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
-#if (DIMENSION==2)
-  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) { //left
-     bc_flag[0]=0;
-     bc_flag[1]=0;
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+    bc_flag[0]=0;
   }
   
-  if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){  //right
-    bc_flag[0]=0; 
-    bc_flag[1]=0;
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
+    bc_flag[0]=0;
   }
   
-   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
-     bc_flag[0]=0;
-     bc_flag[1]=0;  //here when you control you must fix it,even if the corresponding b is let free, otherwise the control may use this as well
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
+    bc_flag[0]=0;
+   }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
+    bc_flag[0] = _qtymap.GetInputParser()->get("UseControl");
+  }
+   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+    bc_flag[0]=0;
+  }
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
+    bc_flag[0]=0;
+  }
+  
+  return;
+ 
+} 
+
+
+//      bc_flag[1]=0;  //here when you control you must fix it,even if the corresponding b is let free, otherwise the control may use this as well
                       //well,wait,it depends: if you are using the Laplacian for MHD state, then Becont bc's must be consistent with the Laplacian
 		      // given there.
 		      //if you are using curlxcurl, then Becont should be consistent with curl-curl
@@ -1777,53 +1817,100 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 // wait, if you fix all dirichlet, then things go into Becontp pressure
 //instead if you fix one Dir and one Neu then nothing goes into pressure
 
+void MagnFieldExtY::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
+  
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
+
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
   }
   
-  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {//top of the  of the RefBox
-    
-     bc_flag[0] = _qtymap.GetInputParser()->get("UseControl");
-     bc_flag[1] = _qtymap.GetInputParser()->get("UseControl");
- }
-  
-#else
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
 
   if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
     bc_flag[0]=0;
-    bc_flag[1]=0;
-    bc_flag[2]=0;
   }
   
- if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll)  {  //right of the RefBox
     bc_flag[0]=0;
-    bc_flag[1]=0;
-    bc_flag[2]=0;
   }
   
    if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
     bc_flag[0]=0;
-    bc_flag[1]=0;
-    bc_flag[2]=0;
   }
   
   if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
     bc_flag[0] = _qtymap.GetInputParser()->get("UseControl");
-    bc_flag[1] = _qtymap.GetInputParser()->get("UseControl");
-    
-    bc_flag[2]=0;
   }
    if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
     bc_flag[0]=0;
-    bc_flag[1]=0;
-    bc_flag[2]=0;
   }
   if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
     bc_flag[0]=0;
-    bc_flag[1]=0;
-    bc_flag[2]=0;
   }
   
-#endif //DIMENSION
+  
+  return;
+ 
+} 
 
+
+
+void MagnFieldExtZ::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
+  
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
+
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+    bc_flag[0]=0;
+  }
+  
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){  //right of the RefBox
+    bc_flag[0]=0;
+  }
+  
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {  //bottom  of the RefBox
+    bc_flag[0]=0;
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
+  
+    bc_flag[0]=0;
+  }
+   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+    bc_flag[0]=0;
+  }
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
+    bc_flag[0]=0;
+  }
   
   
   return;
@@ -2085,19 +2172,34 @@ void MagnFieldHomLagMultAdj::initialize_xyz(const double* xp, std::vector< doubl
   return;
 }
 
-void MagnFieldExt::initialize_xyz(const double* xp, std::vector< double >& value) const {
+void MagnFieldExtX::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
   const double Bref = _qtymap.GetInputParser()->get("Bref");
  
   value[0] = Bref/Bref;
-  value[1] = 0./Bref;
-#if (DIMENSION==3)
-  value[2] = 0./Bref;
-#endif
-  
 
   return;
 }
+
+
+void MagnFieldExtY::initialize_xyz(const double* xp, std::vector< double >& value) const {
+
+  const double Bref = _qtymap.GetInputParser()->get("Bref");
+ 
+  value[0] = 0./Bref;
+
+  return;
+}
+
+void MagnFieldExtZ::initialize_xyz(const double* xp, std::vector< double >& value) const {
+
+  const double Bref = _qtymap.GetInputParser()->get("Bref");
+ 
+  value[0] = 0./Bref;
+
+  return;
+}
+
 
 void MagnFieldExtLagMult::initialize_xyz(const double* xp, std::vector< double >& value) const {
 

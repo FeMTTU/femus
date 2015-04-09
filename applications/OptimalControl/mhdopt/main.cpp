@@ -130,8 +130,10 @@ int main(int argc, char** argv) {
   MagnFieldHomY bhomY("Qty_MagnFieldHom1",qty_map,1,QQ);     qty_map.AddQuantity(&bhomY);  
   MagnFieldHomZ bhomZ("Qty_MagnFieldHom2",qty_map,1,QQ);     qty_map.AddQuantity(&bhomZ);  
   
-  MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&Bext);  
- 
+  MagnFieldExtX BextX("Qty_MagnFieldExt0",qty_map,1,QQ);     qty_map.AddQuantity(&BextX);  
+  MagnFieldExtY BextY("Qty_MagnFieldExt1",qty_map,1,QQ);     qty_map.AddQuantity(&BextY);  
+  MagnFieldExtZ BextZ("Qty_MagnFieldExt2",qty_map,1,QQ);     qty_map.AddQuantity(&BextZ);  
+
   MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,LL);     qty_map.AddQuantity(&bhom_lag_mult);
   MagnFieldExtLagMult         Bext_lag_mult("Qty_MagnFieldExtLagMult",qty_map,1,LL);     qty_map.AddQuantity(&Bext_lag_mult);
   MagnFieldHomLagMultAdj  bhom_lag_mult_adj("Qty_MagnFieldHomLagMultAdj",qty_map,1,LL);  qty_map.AddQuantity(&bhom_lag_mult_adj);
@@ -256,8 +258,10 @@ int main(int argc, char** argv) {
                eqnMHDCONT.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_MagnFieldExt");
                eqnMHDCONT.AddSolutionToSystemPDE("Qty_MagnFieldExtLagMult");
 	       
-               eqnMHDCONT.AddUnknownToSystemPDE(&Bext); 
-               eqnMHDCONT.AddUnknownToSystemPDE(&Bext_lag_mult); 
+               eqnMHDCONT.AddUnknownToSystemPDE(&BextX);
+               eqnMHDCONT.AddUnknownToSystemPDE(&BextY);
+               eqnMHDCONT.AddUnknownToSystemPDE(&BextZ);
+	       eqnMHDCONT.AddUnknownToSystemPDE(&Bext_lag_mult); 
 	       
                eqnMHDCONT.SetAssembleFunction(GenMatRhsMHDCONT);
 #endif  

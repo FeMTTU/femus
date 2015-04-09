@@ -91,11 +91,37 @@ class MagnFieldHomAdjZ : public Quantity {
 
 };
 
-class MagnFieldExt : public Quantity {
+class MagnFieldExtX : public Quantity {
 
   public:
     
-   MagnFieldExt(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+   MagnFieldExtX(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+  
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
+ 
+
+};
+
+class MagnFieldExtY : public Quantity {
+
+  public:
+    
+   MagnFieldExtY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
+  
+  void Function_txyz(const double t, const double* xp,double* temp) const;  
+  void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;
+  void initialize_xyz(const double* xp, std::vector<double> & value) const;
+ 
+
+};
+
+class MagnFieldExtZ : public Quantity {
+
+  public:
+    
+   MagnFieldExtZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
   
   void Function_txyz(const double t, const double* xp,double* temp) const;  
   void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const;

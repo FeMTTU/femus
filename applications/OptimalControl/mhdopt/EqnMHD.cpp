@@ -40,6 +40,8 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 //==== Operators @ gauss ======== 
   std::vector<double> Vel_vec_val_g(space_dim);
   std::vector<double> Vel_vec_val_g3D(3);
+  std::vector<double> Bext_vec_val_g(space_dim);
+  std::vector<double> Bext_vec_val_g3D(3);
   double         vXBe_g3D[3];
   double   vXBeXdphii_g3D[3];  
   double curlBeXdphii_g3D[3];
@@ -145,11 +147,32 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
 
-    CurrentQuantity Bext(currgp);
-    Bext._qtyptr     = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt");
-    Bext.VectWithQtyFillBasic();
-    Bext.Allocate();
-
+    CurrentQuantity BextX(currgp);
+    BextX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt0"); 
+    BextX.VectWithQtyFillBasic();
+    BextX.Allocate();
+    
+    CurrentQuantity BextY(currgp);
+    BextY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt1"); 
+    BextY.VectWithQtyFillBasic();
+    BextY.Allocate();
+    
+    CurrentQuantity BextZ(currgp);
+    BextZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt2"); 
+    BextZ.VectWithQtyFillBasic();
+    BextZ.Allocate();
+    
+    std::vector<CurrentQuantity*> Bext_vec;   
+    Bext_vec.push_back(&BextX);
+    Bext_vec.push_back(&BextY);
+    Bext_vec.push_back(&BextZ);
+  
+    CurrentQuantity Bext_vecQuant(currgp);   //without quantity, nor equation
+    Bext_vecQuant._dim     = Bext_vec.size();
+    Bext_vecQuant._FEord   = Bext_vec[0]->_FEord;
+    Bext_vecQuant._ndof    = Bext_vec[0]->_ndof;
+    Bext_vecQuant.Allocate();
+   
 #if VELOCITY_QTY==1
     CurrentQuantity VelX(currgp);
     VelX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
@@ -189,18 +212,19 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
     currelem.SetElDofsBc();
     
   
-#if BMAG_QTY==1
-    if ( Bext._eqnptr != NULL )  Bext.GetElemDofs();
-    else                         Bext._qtyptr->FunctionDof(Bext,0.,&xyz_refbox._val_dofs[0]);
-#endif
-    
     for (uint idim=0; idim < space_dim; idim++)    {    
         BhomOld_vec[idim]->GetElemDofs();
 #if VELOCITY_QTY==1 
    if ( Vel_vec[idim]->_eqnptr != NULL )  Vel_vec[idim]->GetElemDofs();
-    else                                  Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+   else                                   Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);
 #endif
+   if ( Bext_vec[idim]->_eqnptr != NULL )  Bext_vec[idim]->GetElemDofs();
+   else                                    Bext_vec[idim]->_qtyptr->FunctionDof(*Bext_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+    
     }
+    
+   Bext_vecQuant.GetElemDofs(Bext_vec); 
+   
     
    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
@@ -227,20 +251,21 @@ for (uint fe = 0; fe < QL; fe++)     {
         BhomOld_vec[idim]->val_g();
 #if VELOCITY_QTY==1
             Vel_vec[idim]->val_g();            //---- for Advection MAT & RHS
-      Vel_vec_val_g[idim] =  Vel_vec[idim]->_val_g[0];
+      Vel_vec_val_g[idim] = Vel_vec[idim]->_val_g[0];
 #endif
+           Bext_vec[idim]->val_g();          //----- for Advection RHS
+     Bext_vec_val_g[idim] = Bext_vec[idim]->_val_g[0];
+           Bext_vec[idim]->grad_g();          //----- for Laplacian RHS
     }
     
 #if BMAG_QTY==1
-      Bext.val_g();          //----- for Advection RHS
-      Bext.grad_g();          //----- for Laplacian RHS
-      Bext.curl_g();          //----- for Curl Curl RHS         //THE EXTENSION of the DOFS to 3D is done INSIDE!!
+      Bext_vecQuant.curl_g();          //----- for Curl Curl RHS         //THE EXTENSION of the DOFS to 3D is done INSIDE!!
 #endif
 
 #if (VELOCITY_QTY==1) && (BMAG_QTY==1) //in this case we have two couplings with external quantities
        Math::extend(&Vel_vec_val_g[0],&Vel_vec_val_g3D[0],space_dim);                    //----- for Advection RHS
-       Math::extend(&Bext._val_g[0],&Bext._val_g3D[0],space_dim);                    //----- for Advection RHS
-       Math::cross(&Vel_vec_val_g3D[0],&Bext._val_g3D[0],vXBe_g3D);          //----- for Advection RHS
+       Math::extend(&Bext_vec_val_g[0],&Bext_vec_val_g3D[0],space_dim);                    //----- for Advection RHS
+       Math::cross(&Vel_vec_val_g3D[0],&Bext_vec_val_g3D[0],vXBe_g3D);          //----- for Advection RHS
 #endif
 
 //================================
@@ -259,14 +284,14 @@ for (uint fe = 0; fe < QL; fe++)     {
 
           for (uint idim=0; idim<space_dim/*Bext._dim*/; idim++) {
  	    for (uint jdim=0; jdim<space_dim; jdim++) {
-              LapBe_g[idim] += Bext._grad_g[idim][jdim]*Phii._grad_g[0][jdim];
+              LapBe_g[idim] += Bext_vec[idim]->_grad_g[0][jdim]*Phii._grad_g[0][jdim];
 	    }
  	  }
 
              Math::extend(&Phii._grad_g[0][0],&Phii._grad_g3D[0][0],space_dim);
 
     //--------- CURL CURL: Operator, RHS: curl Be . curl phi -------------------
-             Math::cross(&Bext._curl_g3D[0],&Phii._grad_g3D[0][0],curlBeXdphii_g3D);
+             Math::cross(&Bext_vecQuant._curl_g3D[0],&Phii._grad_g3D[0][0],curlBeXdphii_g3D);
 
     //--------- ADVECTION: Operator, RHS: v x Be . curl phi -------------------
              Math::cross(      vXBe_g3D,&Phii._grad_g3D[0][0],  vXBeXdphii_g3D);       // _utils.cross(vXBe_g3D,dphiidx_g3D,vXBeXdphii_g3D);
@@ -451,10 +476,25 @@ for (uint fe = 0; fe < QL; fe++)     {
   xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
   xyz_refbox.Allocate();
 
-    CurrentQuantity Bext(currgp);
-    Bext._qtyptr     = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt");
-    Bext.VectWithQtyFillBasic();
-    Bext.Allocate();
+    CurrentQuantity BextX(currgp);
+    BextX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt0"); 
+    BextX.VectWithQtyFillBasic();
+    BextX.Allocate();
+    
+    CurrentQuantity BextY(currgp);
+    BextY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt1"); 
+    BextY.VectWithQtyFillBasic();
+    BextY.Allocate();
+    
+    CurrentQuantity BextZ(currgp);
+    BextZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt2"); 
+    BextZ.VectWithQtyFillBasic();
+    BextZ.Allocate();
+    
+    std::vector<CurrentQuantity*> Bext_vec;   
+    Bext_vec.push_back(&BextX);
+    Bext_vec.push_back(&BextY);
+    Bext_vec.push_back(&BextZ);
 
 #if VELOCITY_QTY==1
     CurrentQuantity VelX(currgp);
@@ -508,17 +548,12 @@ for (uint fe = 0; fe < QL; fe++)     {
 //========END BC=========    
     
 //========== EXTERNAL DOFS ===   
-#if BMAG_QTY==1
-    if ( Bext._eqnptr != NULL )   Bext.GetElemDofs();
-    else                          Bext._qtyptr->FunctionDof(Bext,0.,&xyz_refbox._val_dofs[0]);
-#endif
-#if VELOCITY_QTY==1
     for (uint idim=0; idim < space_dim; idim++)    {    
-    if ( Vel_vec[idim]->_eqnptr != NULL )  Vel_vec[idim]->GetElemDofs();
-    else                        Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-    }    
-#endif
-    
+    if ( Vel_vec[idim]->_eqnptr != NULL )     Vel_vec[idim]->GetElemDofs();
+    else                                      Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+    if ( Bext_vec[idim]->_eqnptr != NULL )   Bext_vec[idim]->GetElemDofs();
+    else                                     Bext_vec[idim]->_qtyptr->FunctionDof(*Bext_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+   }    
 
    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
@@ -539,19 +574,17 @@ for (uint fe = 0; fe < QL; fe++)     {
    xyz_refbox.val_g(); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
       LagMultOld._qtyptr->Function_txyz(0.,&xyz_refbox._val_g[0],&LagMultOld._val_g[0]);  //check that you have ZERO here
       
-#if VELOCITY_QTY==1
     for (uint idim=0; idim < space_dim; idim++) {
-      Vel_vec[idim]->val_g();
+            Vel_vec[idim]->val_g();
       Vel_vec_val_g[idim] =  Vel_vec[idim]->_val_g[0];
+           Bext_vec[idim]->val_g();
+     Bext_vec_val_g[idim] =  Bext_vec[idim]->_val_g[0];
     }
-#endif
-#if BMAG_QTY==1
-     Bext.val_g();
-#endif
+    
 #if (VELOCITY_QTY==1) && (BMAG_QTY==1)
           Math::extend(&Vel_vec_val_g[0],&Vel_vec_val_g3D[0],space_dim);
-	  Math::extend(&Bext._val_g[0],&Bext._val_g3D[0],space_dim);
-	  Math::cross(&Vel_vec_val_g3D[0],&Bext._val_g3D[0],velXBext_g3D);
+	  Math::extend(&Bext_vec_val_g[0],&Bext_vec_val_g3D[0],space_dim);
+	  Math::cross(&Vel_vec_val_g3D[0],&Bext_vec_val_g3D[0],velXBext_g3D);
   	  Math::extend(currgp.get_normal_ptr(),normal_g3D,space_dim);
 	  Math::cross(velXBext_g3D,normal_g3D,velXBextXn_g3D);
 #endif

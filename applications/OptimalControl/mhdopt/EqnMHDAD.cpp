@@ -89,7 +89,7 @@ using namespace femus;
     CurrentQuantity BhomLagMultAdjOld(currgp);
     BhomLagMultAdjOld._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHomLagMultAdj");
     BhomLagMultAdjOld.VectWithQtyFillBasic();
-    BhomLagMultAdjOld.Allocate();    
+    BhomLagMultAdjOld.Allocate();    /// @todo probably this Allocate not needed here
 //========= END INTERNAL QUANTITIES (unknowns of the equation) ================= 
 
 //=========EXTERNAL QUANTITIES (couplings) =====
@@ -172,12 +172,27 @@ using namespace femus;
     Bhom_vec.push_back(&BhomZ);
  
 //=========
-    CurrentQuantity Bext(currgp);
-    Bext._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt");
-    Bext.VectWithQtyFillBasic();
-    Bext.Allocate();    
-  
-//========= auxiliary, must be AFTER Bhom! //TODO this is an example of  Vect which is not associated to a Quantity
+    CurrentQuantity BextX(currgp);
+    BextX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt0"); 
+    BextX.VectWithQtyFillBasic();
+    BextX.Allocate();
+    
+    CurrentQuantity BextY(currgp);
+    BextY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt1"); 
+    BextY.VectWithQtyFillBasic();
+    BextY.Allocate();
+    
+    CurrentQuantity BextZ(currgp);
+    BextZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt2"); 
+    BextZ.VectWithQtyFillBasic();
+    BextZ.Allocate();
+    
+    std::vector<CurrentQuantity*> Bext_vec;   
+    Bext_vec.push_back(&BextX);
+    Bext_vec.push_back(&BextY);
+    Bext_vec.push_back(&BextZ);
+ 
+//========= auxiliary, must be AFTER Bhom!
     CurrentQuantity Bmag(currgp); //total
     Bmag._dim        = Bhom_vec.size();
     Bmag._FEord      = BhomX._FEord;
@@ -200,9 +215,8 @@ using namespace femus;
 
     currelem.SetElDofsBc();
     
-    BhomLagMultAdjOld.GetElemDofs();
-
     for (uint idim=0; idim < space_dim; idim++)    {
+      
            BhomAdjOld_vec[idim]->GetElemDofs();
       
       if ( Vel_vec[idim]->_eqnptr != NULL )    Vel_vec[idim]->GetElemDofs();
@@ -211,11 +225,11 @@ using namespace femus;
     else                                    VelAdj_vec[idim]->_qtyptr->FunctionDof(*VelAdj_vec[idim],0.,&xyz_refbox._val_dofs[0]);
     if ( Bhom_vec[idim]->_eqnptr != NULL )    Bhom_vec[idim]->GetElemDofs();
     else                                      Bhom_vec[idim]->_qtyptr->FunctionDof(*Bhom_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-    
+    if ( Bext_vec[idim]->_eqnptr != NULL )    Bext_vec[idim]->GetElemDofs();
+    else                                      Bext_vec[idim]->_qtyptr->FunctionDof(*Bext_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+   
     }
     
-    if ( Bext._eqnptr != NULL )     Bext.GetElemDofs();
-    else                            Bext._qtyptr->FunctionDof(Bext,0.,&xyz_refbox._val_dofs[0]);
 
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
     Math::zeroN(&Bmag._val_dofs[0],Bmag._dim*Bmag._ndof);
@@ -223,7 +237,7 @@ using namespace femus;
     for (uint ivarq=0; ivarq < Bmag._dim; ivarq++)    { //ivarq is like idim
           for (uint d=0; d < Bmag._ndof; d++)    {
           const uint     indxq  =         d + ivarq*Bmag._ndof;
-          Bmag._val_dofs[indxq] = Bext._val_dofs[indxq] + Bhom_vec[ivarq]->_val_dofs[d];
+          Bmag._val_dofs[indxq] = Bext_vec[ivarq]->_val_dofs[d] + Bhom_vec[ivarq]->_val_dofs[d];
 	  }
     }    
 //=======
