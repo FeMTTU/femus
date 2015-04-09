@@ -58,9 +58,6 @@
 //================================================  
 
 
-   const double time =  0.;   //ml_prob._timeloop._curr_time;
-   
-  
 //==========FLAG FOR STATIONARITY OR NOT
 //FLAG for the TIME DISCRETIZATION
 //every Equation may have a TimeDiscretization
@@ -203,11 +200,28 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     
 //============================ MAG WORLD =======================================
  #if BMAG_QTY==1  
-    CurrentQuantity Bhom(currgp); //only to retrieve the dofs
-    Bhom._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHom");
-    Bhom.VectWithQtyFillBasic();
-    Bhom.Allocate();
+    CurrentQuantity BhomX(currgp);
+    BhomX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHom0"); 
+    BhomX.VectWithQtyFillBasic();
+    BhomX.Allocate();
+    
+    CurrentQuantity BhomY(currgp);
+    BhomY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHom1"); 
+    BhomY.VectWithQtyFillBasic();
+    BhomY.Allocate();
+    
+    CurrentQuantity BhomZ(currgp);
+    BhomZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHom2"); 
+    BhomZ.VectWithQtyFillBasic();
+    BhomZ.Allocate();
+    
+    std::vector<CurrentQuantity*> Bhom_vec;   
+    Bhom_vec.push_back(&BhomX);
+    Bhom_vec.push_back(&BhomY);
+    Bhom_vec.push_back(&BhomZ);
  
+    //Bhom only to retrieve the dofs
+    
 //=========
     CurrentQuantity Bext(currgp);   //only to retrieve the dofs
     Bext._qtyptr   =  ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt");
@@ -216,9 +230,9 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 
 //========= auxiliary, must be AFTER Bhom!
     CurrentQuantity Bmag(currgp); //total
-    Bmag._dim        = Bhom._dim;
-    Bmag._FEord      = Bhom._FEord;
-    Bmag._ndof       = ml_prob.GetElemType()[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
+    Bmag._dim        = Bhom_vec.size();
+    Bmag._FEord      = BhomX._FEord;
+    Bmag._ndof       = BhomX._ndof;
     Bmag.Allocate();
 #endif
 //======================== MAG WORLD ================================
@@ -256,9 +270,12 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
  #if (BMAG_QTY==1)
   if ( Bext._eqnptr != NULL )  Bext.GetElemDofs(); 
-  else                         Bext._qtyptr->FunctionDof(Bext,time,&xyz_refbox._val_dofs[0]);
-  if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs();   
-  else                         Bhom._qtyptr->FunctionDof(Bhom,time,&xyz_refbox._val_dofs[0]);
+  else                         Bext._qtyptr->FunctionDof(Bext,0.,&xyz_refbox._val_dofs[0]);
+  
+  for (uint idim=0; idim < space_dim; idim++) { 
+       if ( Bhom_vec[idim]->_eqnptr != NULL )  Bhom_vec[idim]->GetElemDofs();   
+       else                                    Bhom_vec[idim]->_qtyptr->FunctionDof(*Bhom_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+    }
 #endif
 
 //=== the connectivity is only related to the ELEMENT, so it is GEOMETRICAL
@@ -274,7 +291,7 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     for (uint ivarq=0; ivarq < Bmag._dim; ivarq++)    { //ivarq is like idim
           for (uint d=0; d <  Bmag._ndof; d++)    {
           const uint     indxq  =         d + ivarq*Bmag._ndof;
-          Bmag._val_dofs[indxq] = Bext._val_dofs[indxq] + Bhom._val_dofs[indxq];
+          Bmag._val_dofs[indxq] = Bext._val_dofs[indxq] + Bhom_vec[ivarq]->_val_dofs[d];
 	  }
     }
 //=======after summing you EXTEND them to 3D
@@ -609,7 +626,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 //=======end "COMMON SHAPE PART"===================================
 
    xyz_refbox.val_g(); 
-      pressOld._qtyptr->Function_txyz(time,&xyz_refbox._val_g[0],&pressOld._val_g[0]);  //i prefer using the function instead of the p_old vector
+      pressOld._qtyptr->Function_txyz(0.,&xyz_refbox._val_g[0],&pressOld._val_g[0]);  //i prefer using the function instead of the p_old vector
 //        pressOld.val_g();  //this is the alternative
       
 //==============================================================

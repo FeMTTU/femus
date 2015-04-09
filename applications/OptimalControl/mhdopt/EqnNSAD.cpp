@@ -153,21 +153,38 @@ using namespace femus;
     
     
     
-  CurrentQuantity Bhom(currgp);
-    Bhom._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHom");
-    Bhom.VectWithQtyFillBasic();
-    Bhom.Allocate();
+    CurrentQuantity BhomX(currgp);
+    BhomX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHom0"); 
+    BhomX.VectWithQtyFillBasic();
+    BhomX.Allocate();
+    
+    CurrentQuantity BhomY(currgp);
+    BhomY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHom1"); 
+    BhomY.VectWithQtyFillBasic();
+    BhomY.Allocate();
+    
+    CurrentQuantity BhomZ(currgp);
+    BhomZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHom2"); 
+    BhomZ.VectWithQtyFillBasic();
+    BhomZ.Allocate();
+    
+    std::vector<CurrentQuantity*> Bhom_vec;   
+    Bhom_vec.push_back(&BhomX);
+    Bhom_vec.push_back(&BhomY);
+    Bhom_vec.push_back(&BhomZ);
  
-  CurrentQuantity Bext(currgp);
+    //Bhom only to retrieve the dofs
+    
+   CurrentQuantity Bext(currgp);
     Bext._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt");
     Bext.VectWithQtyFillBasic();
     Bext.Allocate();
 
 //========= auxiliary, must be AFTER Bhom!   //TODO this doesnt have any associated quantity!
   CurrentQuantity Bmag(currgp); //total
-    Bmag._dim        = Bhom._dim;               //same as Bhom
-    Bmag._FEord      = Bhom._FEord;             //same as Bhom
-    Bmag._ndof       = ml_prob.GetElemType()[currelem.GetDim()-1][Bmag._FEord]->GetNDofs();
+    Bmag._dim        = Bhom_vec.size();
+    Bmag._FEord      = BhomX._FEord;
+    Bmag._ndof       = BhomX._ndof;
     Bmag.Allocate();
     
 //===============
@@ -211,8 +228,6 @@ using namespace femus;
     currelem.SetElDofsBc();
     
 
-    if ( Bhom._eqnptr != NULL )  Bhom.GetElemDofs();
-    else                         Bhom._qtyptr->FunctionDof(Bhom,0.,&xyz_refbox._val_dofs[0]);
     if ( Bext._eqnptr != NULL )  Bext.GetElemDofs();
     else                         Bext._qtyptr->FunctionDof(Bext,0.,&xyz_refbox._val_dofs[0]);
     
@@ -224,11 +239,12 @@ using namespace femus;
     else                                       VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
     if ( BhomAdj_vec[idim]->_eqnptr != NULL )  BhomAdj_vec[idim]->GetElemDofs();
     else                                       BhomAdj_vec[idim]->_qtyptr->FunctionDof(*BhomAdj_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
+    if ( Bhom_vec[idim]->_eqnptr != NULL )        Bhom_vec[idim]->GetElemDofs();
+    else                                          Bhom_vec[idim]->_qtyptr->FunctionDof(*Bhom_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+  }
     
-    }
     
-    
-    BhomAdj_vecQuant.GetElemDofs(BhomAdj_vec);
+    BhomAdj_vecQuant.GetElemDofs(BhomAdj_vec);  //this must be AFTER filling the scalar components
     PressAdjOld.GetElemDofs();
 
  
@@ -238,7 +254,7 @@ using namespace femus;
     for (uint ivarq=0; ivarq < Bmag._dim; ivarq++)    { //ivarq is like idim
           for (uint d=0; d < Bmag._ndof; d++)    {
           const uint     indxq  =         d + ivarq*Bmag._ndof;
-          Bmag._val_dofs[indxq] = Bext._val_dofs[indxq] + Bhom._val_dofs[indxq];
+          Bmag._val_dofs[indxq] = Bext._val_dofs[indxq] + Bhom_vec[ivarq]->_val_dofs[d];
 	  }
     }    
 //=======    

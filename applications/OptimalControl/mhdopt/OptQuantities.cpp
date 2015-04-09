@@ -19,7 +19,21 @@
 // ==================================================================
 
 //===========================================================================
-MagnFieldHom::MagnFieldHom(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+MagnFieldHomX::MagnFieldHomX(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
+
+ for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in.GetInputParser()->get("Bref");
+}
+
+//===========================================================================
+MagnFieldHomY::MagnFieldHomY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
+: Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
+
+ for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in.GetInputParser()->get("Bref");
+}
+
+//===========================================================================
+MagnFieldHomZ::MagnFieldHomZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
 
  for (uint i=0;i<dim_in;i++) _refvalue[i]= qtymap_in.GetInputParser()->get("Bref");
@@ -481,7 +495,15 @@ return;
 //here, the box measures must be available, because e have to shift once more the reference frame
 //now we'll pass it here, but later we'll put that as a class variable or something
 
-void MagnFieldHom::Function_txyz(const double t, const double* xp, double* func) const {
+void MagnFieldHomX::Function_txyz(const double t, const double* xp, double* func) const {
+
+  func[0] = 0.;
+  return;  
+}
+
+
+
+void MagnFieldHomY::Function_txyz(const double t, const double* xp, double* func) const {
 
 //============== PICK THE REQUIRED REFERENCE VALUES
   const double Lref   = _qtymap.GetInputParser()->get("Lref");
@@ -523,13 +545,7 @@ void MagnFieldHom::Function_txyz(const double t, const double* xp, double* func)
  
    const double magnitude = 0.*DpDzad/S*Lhalf/Lref*(sinh(Hm/LHm*Lref/Lhalf*xtr) - xtr*Lref/Lhalf*sinh(Hm/LHm)) / sinh(Hm/LHm);
 
-  func[0] = -sin(thetaz)*magnitude; //0./Bref;
-  func[1] = cos(thetaz)*magnitude; //DpDzad/S*Lhalf/Lref*(sinh(Hm/LHm*Lref/Lhalf*xtr) - xtr*Lref/Lhalf*sinh(Hm/LHm)) / sinh(Hm/LHm) ;
-#if (DIMENSION==3)
-  func[2] = 0./*/Bref*/;
-#endif
-  
-  
+  func[0] = magnitude; //DpDzad/S*Lhalf/Lref*(sinh(Hm/LHm*Lref/Lhalf*xtr) - xtr*Lref/Lhalf*sinh(Hm/LHm)) / sinh(Hm/LHm) ;
   
 //  !!!!! REFERENCE TIME!!! if you change Lref, you have to change Uref so as to have TIMEref=1
 //AAA p changes!!!
@@ -550,11 +566,15 @@ void MagnFieldHom::Function_txyz(const double t, const double* xp, double* func)
   //where is the TWO FACTOR?
   //well, actually I think that  when the Hartmann number goes big the ratio 
   //between two maximum points is exactly TWO, so actually we have a different Bref... ?
-return;  
+  return;  
+
 }
 
+void MagnFieldHomZ::Function_txyz(const double t, const double* xp, double* func) const {
 
-
+  func[0] = 0.;
+  return;  
+}
 
 
 
@@ -979,7 +999,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
 
 
-void MagnFieldHom::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+void MagnFieldHomX::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
   
   const double bdry_toll = DEFAULT_BDRY_TOLL;
   
@@ -1004,60 +1024,44 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 
   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {
 //     bc_flag[0]=0;  //b.n useless with curl curl
-     bc_flag[1]=0;  //bxn
   }
   
  if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){
 //    bc_flag[0]=0;  //b.n useless with curl curl
-    bc_flag[1]=0;  //bxn
   }
   
    if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  {
      bc_flag[0]=0;  //bxn
-//      bc_flag[1]=0;      //leave this free
   }
   
   if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {
     bc_flag[0]=0;  //bxn
-//     bc_flag[1]=0;      //leave this free
  }
   
 #else
 
   if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) { //  INSULATING
     bc_flag[0]=0;   //b.n
-    bc_flag[1]=0;   //bxn
-    bc_flag[2]=0;   //bxn
   }
   
  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){ //   INSULATING
     bc_flag[0]=0;   //b.n
-    bc_flag[1]=0;   //bxn
-    bc_flag[2]=0;   //bxn
   }
   
    if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {
     bc_flag[0]=0;       //bxn
-//     bc_flag[1]=0;    //b.n     //leave this free for inlet
-//     bc_flag[2]=0;    //bxn  //WHY ISNT THIS FIXED AS WELL?
   }
   
   if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {
     bc_flag[0]=0;         //bxn
-//     bc_flag[1]=0;      //b.n    //leave this free for outlet
-//     bc_flag[2]=0;     //bxn   //WHY ISNT THIS FIXED AS WELL?
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {   //  CONDUCTING, now insulating
    if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");     //bxn
-   if (bc_flag[1] == 1) bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");     //bxn      //leave this free for 2D
-//      bc_flag[2]=0;                                       //b.n 
   }
   
   if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {   //  CONDUCTING, now insulating
    if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //bxn
-   if (bc_flag[1] == 1) bc_flag[1] = _qtymap.GetInputParser()->get("Fake3D");   //bxn     //leave this free for 2D
-//  bc_flag[2]=0;                           //b.n 
   }
   
 #endif
@@ -1068,8 +1072,127 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 }
 
 
+void MagnFieldHomY::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
+  
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
+
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
 
 
+ #if (DIMENSION==2)
+
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {
+     bc_flag[0]=0;  //bxn
+  }
+  
+ if ( (le[0]-lb[0])  -(x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll){
+    bc_flag[0]=0;  //bxn
+  }
+  
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  {
+//      bc_flag[0]=0;      //leave this free
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {
+//     bc_flag[0]=0;      //leave this free
+ }
+  
+#else
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) { //  INSULATING
+    bc_flag[0]=0;   //bxn
+  }
+  
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){ //   INSULATING
+    bc_flag[0]=0;   //bxn
+  }
+  
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {
+//     bc_flag[0]=0;    //b.n     //leave this free for inlet
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {
+//     bc_flag[0]=0;      //b.n    //leave this free for outlet
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {   //  CONDUCTING, now insulating
+   if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");     //bxn      //leave this free for 2D
+  }
+  
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {   //  CONDUCTING, now insulating
+   if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //bxn     //leave this free for 2D
+  }
+  
+#endif
+  
+  
+  return;
+ 
+}
+
+
+void MagnFieldHomZ::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
+  
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
+  
+Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
+
+  std::vector<double> lb(_qtymap.GetMeshTwo()->get_dim());
+  std::vector<double> le(_qtymap.GetMeshTwo()->get_dim());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (_qtymap.GetMeshTwo()->get_dim() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
+
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) { //  INSULATING
+    bc_flag[0]=0;   //bxn
+  }
+  
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll){ //   INSULATING
+    bc_flag[0]=0;   //bxn
+  }
+  
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)  {
+//     bc_flag[0]=0;    //bxn  //WHY ISNT THIS FIXED AS WELL?
+  }
+  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {
+//     bc_flag[0]=0;     //bxn   //WHY ISNT THIS FIXED AS WELL?
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {   //  CONDUCTING, now insulating
+//      bc_flag[0]=0;                                       //b.n 
+  }
+  
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {   //  CONDUCTING, now insulating
+//  bc_flag[0]=0;                           //b.n 
+  }
+  
+  return;
+ 
+}
 
 
 void MagnFieldHomAdjX::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
@@ -1875,18 +1998,27 @@ void Pressure::initialize_xyz(const double* xp, std::vector< double >& value) co
   return;
 }
 
-void MagnFieldHom::initialize_xyz(const double* xp, std::vector< double >& value) const {
+void MagnFieldHomX::initialize_xyz(const double* xp, std::vector< double >& value) const {
   
-  const double Bref = _qtymap.GetInputParser()->get("Bref");
- 
-  value[0] = 0./Bref;
-  value[1] = 0./Bref;
-#if (DIMENSION==3)
-  value[2] = 0./Bref;
-#endif
+  value[0] = 0.;
+  return;
+}
+
+
+void MagnFieldHomY::initialize_xyz(const double* xp, std::vector< double >& value) const {
+  
+  value[0] = 0.;
 
   return;
 }
+
+void MagnFieldHomZ::initialize_xyz(const double* xp, std::vector< double >& value) const {
+  
+  value[0] = 0.;
+
+  return;
+}
+
 
 void MagnFieldHomLagMult::initialize_xyz(const double* xp, std::vector< double >& value) const {
 

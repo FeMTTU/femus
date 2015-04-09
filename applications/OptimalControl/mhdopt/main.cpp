@@ -126,7 +126,10 @@ int main(int argc, char** argv) {
   MagnFieldHomAdjY    bhom_adjY("Qty_MagnFieldHomAdj1",qty_map,1,QQ);        qty_map.AddQuantity(&bhom_adjY);
   MagnFieldHomAdjZ    bhom_adjZ("Qty_MagnFieldHomAdj2",qty_map,1,QQ);        qty_map.AddQuantity(&bhom_adjZ);
 
-  MagnFieldHom bhom("Qty_MagnFieldHom",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&bhom);  
+  MagnFieldHomX bhomX("Qty_MagnFieldHom0",qty_map,1,QQ);     qty_map.AddQuantity(&bhomX);  
+  MagnFieldHomY bhomY("Qty_MagnFieldHom1",qty_map,1,QQ);     qty_map.AddQuantity(&bhomY);  
+  MagnFieldHomZ bhomZ("Qty_MagnFieldHom2",qty_map,1,QQ);     qty_map.AddQuantity(&bhomZ);  
+  
   MagnFieldExt Bext("Qty_MagnFieldExt",qty_map,mesh.get_dim(),QQ);     qty_map.AddQuantity(&Bext);  
  
   MagnFieldHomLagMult         bhom_lag_mult("Qty_MagnFieldHomLagMult",qty_map,1,LL);     qty_map.AddQuantity(&bhom_lag_mult);
@@ -135,13 +138,13 @@ int main(int argc, char** argv) {
   Pressure                         pressure("Qty_Pressure",qty_map,1,LL);                qty_map.AddQuantity(&pressure);
   PressureAdj                  pressure_adj("Qty_PressureAdj",qty_map,1,LL);             qty_map.AddQuantity(&pressure_adj);
 
-   DesVelocityX des_velocityX("Qty_DesVelocity0",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityX);
-   DesVelocityY des_velocityY("Qty_DesVelocity1",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityY);
-   DesVelocityZ des_velocityZ("Qty_DesVelocity2",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityZ);
+  DesVelocityX des_velocityX("Qty_DesVelocity0",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityX);
+  DesVelocityY des_velocityY("Qty_DesVelocity1",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityY);
+  DesVelocityZ des_velocityZ("Qty_DesVelocity2",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityZ);
 
 //consistency check
- if (bhom._dim !=  Bext._dim)     {std::cout << "main: inconsistency" << std::endl;abort();}
- if (bhom._FEord !=  Bext._FEord) {std::cout << "main: inconsistency" << std::endl;abort();}
+//  if (bhom._dim !=  Bext._dim)     {std::cout << "main: inconsistency" << std::endl;abort();}
+//  if (bhom._FEord !=  Bext._FEord) {std::cout << "main: inconsistency" << std::endl;abort();}
 //  if (velocity._dim !=  des_velocity._dim) {std::cout << "main: inconsistency" << std::endl; abort();}
 //  if (velocity._FEord !=  des_velocity._FEord) {std::cout << "main: inconsistency" << std::endl; abort();}
  
@@ -225,7 +228,9 @@ int main(int argc, char** argv) {
            eqnMHD.AddSolutionToSystemPDEVector(ml_msh.GetDimension(),"Qty_MagnFieldHom");
            eqnMHD.AddSolutionToSystemPDE("Qty_MagnFieldHomLagMult");
 	   
-           eqnMHD.AddUnknownToSystemPDE(&bhom); 
+           eqnMHD.AddUnknownToSystemPDE(&bhomX); 
+           eqnMHD.AddUnknownToSystemPDE(&bhomY); 
+           eqnMHD.AddUnknownToSystemPDE(&bhomZ); 
            eqnMHD.AddUnknownToSystemPDE(&bhom_lag_mult); 
 	   
            eqnMHD.SetAssembleFunction(GenMatRhsMHD);
