@@ -14,7 +14,6 @@
 #include "FETypeEnum.hpp"
 #include "GeomElTypeEnum.hpp"
 #include "NormTangEnum.hpp"
-#include "QTYnumEnum.hpp"
 #include "TimeLoop.hpp"
 
 #include "CurrentGaussPoint.hpp"

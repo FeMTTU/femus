@@ -13,7 +13,6 @@
 #include "GeomElTypeEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "Quantity.hpp"
-#include "QTYnumEnum.hpp"
 #include "TimeLoop.hpp"
 #include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"

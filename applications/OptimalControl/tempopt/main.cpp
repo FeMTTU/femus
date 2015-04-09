@@ -18,7 +18,6 @@
 #include "TimeLoop.hpp"
 #include "Typedefs.hpp"
 #include "Quantity.hpp"
-#include "QTYnumEnum.hpp"
 #include "Box.hpp"  //for the DOMAIN
 #include "XDMFWriter.hpp"
 
