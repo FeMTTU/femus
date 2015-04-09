@@ -22,15 +22,17 @@
 #include <cstdio>
 #include <fstream>
 
-
 namespace femus {
   
    const std::string SalomeIO::group_name_begin = "FAS";
    const std::string SalomeIO::group_name_end   = "ELEME";
    const std::string SalomeIO::mesh_ensemble = "ENS_MAA";
    const std::string SalomeIO::aux_zeroone = "-0000000000000000001-0000000000000000001";
-   const std::string SalomeIO::connectivity = "MAI";
-   const std::string SalomeIO::node_coord = "NOE/COO";
+   const std::string SalomeIO::elem_list = "MAI";
+   const std::string SalomeIO::connectivity = "NOD";
+   const std::string SalomeIO::node_list = "NOE";
+   const std::string SalomeIO::coord_list = "COO";
+   const std::string SalomeIO::dofobj_indices = "NUM";
    const uint SalomeIO::max_length = 100;  ///@todo this length of the menu string is conservative enough...
 
   
@@ -120,24 +122,39 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
     if(status !=0) { std::cout << "Number of mesh menus not found"; abort(); }
     
     std::vector<int>  itype_vol;
-     itype_vol.resize(n_menus);
-    menu_names.resize(n_menus);
-    for (unsigned j=0; j<menu_names.size(); j++) {
+     itype_vol.resize(n_menus);  /// @todo will modify this
+     
+    std::vector<std::string>  mesh_menus;
+    std::vector<std::string>  group_menus;
+    
+   // compute number of groups and number of meshes ===============
+    unsigned n_groups = 0;
+    unsigned n_meshes = 0;
+   
+    for (unsigned j=0; j<n_menus; j++) {
       
-       menu_names[j] = new char[max_length];
-     H5Gget_objname_by_idx(gid,j,menu_names[j],max_length); ///@deprecated see the HDF doc to replace this
-     std::string tempj(menu_names[j]);
+     char *  menu_names_j = new char[max_length];
+     H5Gget_objname_by_idx(gid,j,menu_names_j,max_length); ///@deprecated see the HDF doc to replace this
+     std::string tempj(menu_names_j);
      
   
-      if  (tempj.substr(0,5).compare("Group") == 0) {
-	
-	
-	
-	
-      }  //end groups
+     if  (tempj.substr(0,5).compare("Group") == 0) {
+       n_groups++;
+       group_menus.push_back(tempj);
+     }
+     else if  (tempj.substr(0,4).compare("Mesh") == 0) {
+       n_meshes++;
+       mesh_menus.push_back(tempj);
+     }
+     
+     
+    }
+   // compute number of groups and number of meshes ===============
+    
+    for (unsigned j=0; j< n_meshes; j++) {
       
-      else {
-            
+     std::string tempj = mesh_menus[j];
+
     std::string el_fem_type_vol_j(""); 
     std::string el_fem_type_bd_j("");
 
@@ -152,7 +169,7 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
     //   // end read control data **************** A
 
     //   // read NODAL COORDINATES **************** C
-   std::string coord_dataset = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + node_coord + "/";  ///@todo here we have to loop
+   std::string coord_dataset = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + node_list + "/" + coord_list + "/";  ///@todo here we have to loop
 
   hid_t dtset = H5Dopen(file_id,coord_dataset.c_str(),H5P_DEFAULT);
   
@@ -205,10 +222,10 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
 
     
     //   // read ELEMENT/cell ******************** B
-  std::string my_mesh_name_dir = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + connectivity + "/";  ///@todo here we have to loop
+  std::string my_mesh_name_dir = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
   
    // Getting  connectivity structure from file *.med
-  std::string node_name_dir = my_mesh_name_dir + el_fem_type_vol_j + "/NOD";
+  std::string node_name_dir = my_mesh_name_dir + el_fem_type_vol_j + "/" + connectivity;
   dtset = H5Dopen(file_id,node_name_dir.c_str(),H5P_DEFAULT);
   filespace = H5Dget_space(dtset);    /* Get filespace handle first. */
   status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
@@ -246,7 +263,6 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
   if(status !=0) {std::cout << "SalomeIO::read: connectivity not found"; abort();}
   H5Dclose(dtset);
 
- 
  mesh.el = new elem(n_elements);    ///@todo check where this is going to be deleted
  
   
@@ -290,87 +306,57 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
   }
 
     //   // end read  ELEMENT/CELL **************** B
-
     
-    
-    
-//   // read GROUP **************** E
-
-
-
-
-
-
-//   // end read GROUP **************** E
-
-
-//   // read boundary **************** D
-
-//   // end read boundary **************** D
-
-
   // clean
   delete [] conn_map;
 
-      
-         }  //end meshes
-         
-        }   //end groups and meshes
+        }   //end meshes
         
-        
-//end menu names  **********************************************************
-//end menu names  **********************************************************
-//end menu names  **********************************************************
-    
+   mesh.el->SetElementGroupNumber(n_groups);
+     //   // read GROUP **************** E
+     
+     for (unsigned j=0; j<n_groups; j++) {
+       
+     std::string tempj = group_menus[j];
+   
+       /// @todo check the underscores according to our naming standard
+       
+       // strip the first number to get the group number        //strip the second number to get the group material
+       int gr_name = atoi(tempj.substr(6,1).c_str());  
+       int gr_mat =  atoi(tempj.substr(8,1).c_str());
 
-    for (unsigned j=0; j<menu_names.size(); j++) { delete [] menu_names[j]; }
+      std::string el_fem_type_vol_j(""); 
+      std::string el_fem_type_bd_j("");
+
+      
+     ReadFE(file_id,el_fem_type_vol_j,el_fem_type_bd_j,tempj);
+       
+    std::string group_dataset = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + elem_list + "/" + el_fem_type_vol_j + "/" + dofobj_indices;  ///@todo here we have to loop
     
+  hid_t dtset = H5Dopen(file_id,group_dataset.c_str(),H5P_DEFAULT);
+  hid_t filespace = H5Dget_space(dtset);    /* Get filespace handle first. */
+  hid_t status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
+  int * elem_indices = new int[dims[0]];
+  status=H5Dread(dtset,H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,elem_indices);
+
+  for (unsigned i=0; i < dims[0]; i++) {
+           mesh.el->SetElementGroup(i, gr_name);
+           mesh.el->SetElementMaterial(i,gr_mat);
+    }
+	
+	
+   H5Dclose(dtset);
+   delete [] elem_indices;
+   
+    }
+     //   // end read GROUP **************** E
+ 
     status = H5Fclose(file_id);
  
-//     exit(0);   // just to make the test exit successfully
 
 // 
-//   std::string str2;
-//   unsigned ngroup;
 //   unsigned nbcd;
-//   unsigned dim;
-// 
-//   
-
-
-//   
-//   
-// 
-//   // read GROUP **************** E
-//   inf.open(name.c_str());
-//   if (!inf) {
-//     std::cout<<"Generic-mesh file "<< name << " cannot read group\n";
-//     exit(0);
-//   }
-//   mesh.el->SetElementGroupNumber(ngroup);
-//   for (unsigned k=0; k<ngroup; k++) {
-//     int ngel;
-//     int name;
-//     int mat;
-//     while (str2.compare("GROUP:") != 0) inf >> str2;
-//     inf >> str2 >> str2 >> ngel >> str2 >> mat >>str2 >> str2 >>name>> str2;
-//     for (int i=0; i<ngel; i++) {
-//       int iel;
-//       inf >> iel;
-//       mesh.el->SetElementGroup(iel-1,name);
-//       mesh.el->SetElementMaterial(iel-1,mat);
-//     }
-//     inf >> str2;
-//     if (str2.compare("ENDOFSECTION") != 0) {
-//       std::cout<<"error group data mesh"<<std::endl;
-//       exit(0);
-//     }
-//   }
-//   inf.close();
-//   // end read boundary **************** E
-//   
-//   
-// 
+ 
 //   // read boundary **************** D
 //   inf.open(name.c_str());
 //   if (!inf) {
@@ -414,7 +400,7 @@ int  SalomeIO::ReadFE(
   
   Mesh& mesh = GetMesh();
     /// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
-  std::string my_mesh_name_dir = mesh_ensemble +  "/" + menu_name + "/" +  aux_zeroone + "/" + connectivity + "/";  ///@todo here we have to loop
+  std::string my_mesh_name_dir = mesh_ensemble +  "/" + menu_name + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
   
   hid_t       gid = H5Gopen(file_id,my_mesh_name_dir.c_str(),H5P_DEFAULT); // group identity
   hsize_t     n_fem_type;
@@ -425,7 +411,7 @@ int  SalomeIO::ReadFE(
   FindDimension(gid,menu_name,n_fem_type);
   
   
-  // ---------  Reading Element type (From salome to LIBMESH (itype_vol))------
+  // ---------  Reading Element type
   std::map< std::string, int > fem_type_vol;// Salome fem table name (vol)
   fem_type_vol["HE8"] = 5;  fem_type_vol["H20"] = 20; fem_type_vol["H27"] = 12;
   fem_type_vol["TE4"] = 4;  fem_type_vol["T10"] = 11;
