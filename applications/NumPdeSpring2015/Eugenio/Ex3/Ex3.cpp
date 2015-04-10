@@ -27,9 +27,9 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
   return dirichlet;
 }
 
-void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix);
+void AssembleNonlinearProblem(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix);
 
-void AssemblePoissonProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix);
+void AssembleNonlinearProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix);
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution *mlSol);
 
@@ -43,7 +43,8 @@ int main(int argc, char **args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor=1.; 
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor); 
+//   mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor); 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -62,7 +63,7 @@ int main(int argc, char **args) {
   vector < vector < double > > semiNorm;
   semiNorm.resize(maxNumberOfMeshes);
   
-  for(unsigned i = maxNumberOfMeshes-1; i < maxNumberOfMeshes; i++){ // loop on the mesh level
+  for(unsigned i = 0; i < maxNumberOfMeshes; i++){ // loop on the mesh level
     
     unsigned numberOfUniformLevels = i+1;
     unsigned numberOfSelectiveLevels = 0;
@@ -78,7 +79,7 @@ int main(int argc, char **args) {
     l2Norm[i].resize(3);
     semiNorm[i].resize(3);
     
-    for(unsigned j=2; j<3; j++){ // loop on the FE Order
+    for(unsigned j=0; j<3; j++){ // loop on the FE Order
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
     
@@ -100,7 +101,7 @@ int main(int argc, char **args) {
       system.AddSolutionToSystemPDE("u");
    
       // attach the assembling function to system
-      system.SetAssembleFunction(AssemblePoissonProblem_AD);  
+      system.SetAssembleFunction(AssembleNonlinearProblem_AD);  
   
       // initilaize and solve the system 
       system.init();
@@ -127,10 +128,10 @@ int main(int argc, char **args) {
   std::cout<<std::endl;
   std::cout<<"l2 ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout<<"LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-  for(unsigned i=maxNumberOfMeshes-1; i<maxNumberOfMeshes;i++){
+  for(unsigned i=0; i<maxNumberOfMeshes;i++){
     std::cout<<i+1<<"\t";
     std::cout.precision(14);
-    for(unsigned j=2;j<3;j++){
+    for(unsigned j=0;j<3;j++){
       std::cout << l2Norm[i][j]<<"\t";
     }
     std::cout<<std::endl;
@@ -150,7 +151,7 @@ int main(int argc, char **args) {
   std::cout<<std::endl;
   std::cout<<"SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout<<"LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-  for(unsigned i=maxNumberOfMeshes-1; i<maxNumberOfMeshes;i++){
+  for(unsigned i=0; i<maxNumberOfMeshes;i++){
     std::cout<<i+1<<"\t";
     std::cout.precision(14);
     for(unsigned j=2;j<3;j++){
@@ -194,13 +195,23 @@ double GetExactSolutionLaplace(const vector < double > &x){
 };
 
 /**
- * This function assemble the stiffnes matrix KK and the residual vector Res
- * such that        
- *                  KK w = RES = F - KK u0, 
- * and consequently 
- * 		    u = u0 + w satisfies KK u = F
+ * Given the non linear problem
+ * 
+ * 			- \Delta u + < u, u, u > \cdot \nabla u = f(x)
+ * in the unit box centered in the origin with
+ *                      f(x) = - \Delta u_e + < u_e, u_e, u_e > \cdot \nabla u_e
+ *                  	u_e = \cos ( \pi * x ) * \cos( \pi * y ), 
+ * the following function assembles (explicitely) the Jacobian matrix J(u^i) and the residual vector Res(u^i)
+ * for the Newton iteration, i.e.
+ *        	    
+ *                  J(u^i) w = Res(u^i) = f(x) - ( - \Delta u^i + < u^i, u^i, u^i > \cdot \nabla u^i ), 
+ * 		    u^{i+1} = u^i + w 
+ * 		    where 
+ * 		    J(u^i) w = - \Delta w  + < w , w , w >  \cdot \nabla u^i + < u^i , u^i , u^i >  \cdot \nabla w
+ *                  
  **/
-void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix) {
+
+void AssembleNonlinearProblem(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix) {
   //  ml_prob is the global object from/to where get/set all the data 
   //  level is the level of the PDE system to be assembled  
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -241,7 +252,7 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
   double weight; // gauss point weight
   
   vector< double > Res; // local redidual vector
-  vector< double > K; // local stiffness matrix
+  vector< double > J; // local Jacobian matrix
     
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned > (ceil(pow(3,dim))); // conservative: based on line3, quad9, hex27
@@ -254,7 +265,7 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
   unsigned dim2=(3*(dim-1)+!(dim-1)); // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   phi_xx.reserve(maxSize*dim2);
   Res.reserve(maxSize);
-  K.reserve(maxSize*maxSize);
+  J.reserve(maxSize*maxSize);
    
   if( assembleMatrix ) 
     KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -276,8 +287,8 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
     Res.resize(nDofs); //resize
     std::fill(Res.begin(), Res.end(), 0); //set Res to zero
     if(assembleMatrix) {
-      K.resize(nDofs*nDofs); //resize
-      std::fill(K.begin(), K.end(), 0); //set K to zero
+      J.resize(nDofs*nDofs); //resize
+      std::fill(J.begin(), J.end(), 0); //set K to zero
     }
          
     // local storage of global mapping and solution
@@ -318,42 +329,33 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
         
         // *** phi_i loop ***
 	for(unsigned i=0; i<nDofs; i++) {
-	 
-	  double rho = 1.;
-	  
+	 	    
 	  double nonLinearTerm = 0.;
-	  double laplace = 0.;
-	  
+	  double mLaplace = 0.;
 	  for(unsigned jdim=0; jdim<dim; jdim++) {
-	    laplace   +=  phi_x[i*dim+jdim]*soluGauss_x[jdim];
-	    nonLinearTerm += rho * soluGauss * soluGauss_x[jdim] * phi[i];
+	    mLaplace   +=  phi_x[i*dim+jdim]*soluGauss_x[jdim];
+	    nonLinearTerm += soluGauss * soluGauss_x[jdim] * phi[i];
 	  }
 	    
 	  double exactSolValue = GetExactSolutionValue(xGauss);
-	  
 	  vector < double > exactSolGrad(dim);
 	  GetExactSolutionGradient(xGauss , exactSolGrad);
-         
           double exactSolLaplace = GetExactSolutionLaplace(xGauss);	  
 	  
 	  
-	  double srcTerm =  rho * exactSolValue * ( exactSolGrad[0] + exactSolGrad[1] ) 
-			  - exactSolLaplace;  
-	  Res[i]+= ( srcTerm*phi[i] - laplace - nonLinearTerm ) * weight;
+	  double f = (- exactSolLaplace + exactSolValue * ( exactSolGrad[0] + exactSolGrad[1] ) ) * phi[i] ;  
+	  Res[i]+= ( f - ( mLaplace + nonLinearTerm ) ) * weight;
 	
 	  if( assembleMatrix ) {
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nDofs; j++) {
-	      laplace = 0.;
+	      mLaplace = 0.;
 	      nonLinearTerm =0.;
 	      for(unsigned kdim=0; kdim<dim; kdim++) {
-		laplace += ( phi_x[i*dim + kdim] * phi_x[j*dim + kdim] )*weight;
-		nonLinearTerm += rho * phi[i] * 
-				 ( phi[j] * soluGauss_x[kdim] +
-				   soluGauss * phi_x[j*dim + kdim]
-				 ) * weight ;
+		mLaplace += ( phi_x[i*dim + kdim] * phi_x[j*dim + kdim] );
+		nonLinearTerm +=   phi[i] * ( phi[j] * soluGauss_x[kdim] + soluGauss * phi_x[j*dim + kdim] );
 	      }
-	      K[i*nDofs+j] += laplace + nonLinearTerm;
+	      J[i*nDofs+j] += ( mLaplace + nonLinearTerm ) * weight;
 	    } // end phi_j loop
 	  } // endif assemble_matrix
 	} // end phi_i loop
@@ -364,7 +366,7 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
     // Add the local Matrix/Vector into the global Matrix/Vector
 
     RES->add_vector_blocked(Res,KKDof);
-    if(assembleMatrix) KK->add_matrix_blocked(K,KKDof,KKDof);
+    if(assembleMatrix) KK->add_matrix_blocked(J,KKDof,KKDof);
   } //end element loop for each process
 
   RES->close();
@@ -373,28 +375,30 @@ void AssemblePoissonProblem(MultiLevelProblem &ml_prob, unsigned level, const un
 }
 
 
-
 /**
- * This function assemble the stiffnes matrix KK and the residual vector Res
- * Using automatic divverentiation for Newton iterative scheme         
- *                  J(u0) w =  - F(u0)  , 
- *                  with u = u0 + w  
- * 		    - F = f(x) - KK u = Res
- * 		    J = \grad_u F = KK
- * 			
- * thus
- * 		    KK w = f(x) - KK u0
+ * Given the non linear problem
+ * 
+ * 			- \Delta u + < u, u, u > \cdot \nabla u = f(x)
+ * in the unit box centered in the origin with
+ *                      f(x) = - \Delta u_e + < u_e, u_e, u_e > \cdot \nabla u_e
+ *                  	u_e = \cos ( \pi * x ) * \cos( \pi * y ), 
+ * the following function assembles the residual vector Res(u^i) and using automatic differentiation gets
+ *the exact Jacobian matrix J(u^i) for the Newton iteration, i.e.
+ *        	    
+ *                  J(u^i) w = Res(u^i) = f(x) - ( - \Delta u^i + < u^i, u^i, u^i > \cdot \nabla u^i ), 
+ * 		    u^{i+1} = u^i + w 
+ * 		    where 
+ * 		    J(u^i) w = - \Delta w  + < w , w , w >  \cdot \nabla u^i + < u^i , u^i , u^i >  \cdot \nabla w
+ *                  
  **/
 
-void AssemblePoissonProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix) {
+void AssembleNonlinearProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix) {
   //  ml_prob is the global object from/to where get/set all the data 
   //  level is the level of the PDE system to be assembled  
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
    
   // call the adept stack object
- 
-  
   adept::Stack & s = FemusInit::_adeptStack;
   
   //  extract pointers to the several objects that we are going to use 
@@ -433,7 +437,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const
   
   vector< double > Res; // local redidual vector
   vector< adept::adouble > aRes; // local redidual vector
-  vector< double > K; // local stiffness matrix
+  
       
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned > (ceil(pow(3,dim))); // conservative: based on line3, quad9, hex27
@@ -447,11 +451,13 @@ void AssemblePoissonProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const
   phi_xx.reserve(maxSize*dim2);
   Res.reserve(maxSize);
   aRes.reserve(maxSize);
-  K.reserve(maxSize*maxSize);
   
-  vector < double > Jac;
+  vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
   Jac.reserve(maxSize*maxSize);
+  vector< double > Jact; // local Jacobian matrix (ordered by raw, PETSC)
+  Jact.reserve(maxSize*maxSize);
     
+  
   if( assembleMatrix ) 
     KK->zero(); // Set to zero all the entries of the Global Matrix
   
@@ -475,9 +481,9 @@ void AssemblePoissonProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const
     aRes.resize(nDofs); //resize
     std::fill(aRes.begin(), aRes.end(), 0); //set aRes to zero
     
-    if(assembleMatrix) {
-      K.resize(nDofs*nDofs); //resize
-      std::fill(K.begin(), K.end(), 0); //set K to zero
+    if(assembleMatrix) { //resize
+      Jact.resize(nDofs*nDofs); 
+      Jac.resize(nDofs*nDofs);
     }
          
     // local storage of global mapping and solution
@@ -522,36 +528,21 @@ void AssemblePoissonProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const
         // *** phi_i loop ***
 	for(unsigned i=0; i<nDofs; i++) {
 	 
-	  double rho = 1.;
-	  
 	  adept::adouble nonLinearTerm = 0.;
-	  adept::adouble laplace = 0.;
-	  
+	  adept::adouble mLaplace = 0.;
 	  for(unsigned jdim=0; jdim<dim; jdim++) {
-	    laplace   +=  phi_x[i*dim+jdim]*soluGauss_x[jdim];
-	    nonLinearTerm += rho * soluGauss * soluGauss_x[jdim] * phi[i];
+	    mLaplace   +=  phi_x[i*dim+jdim]*soluGauss_x[jdim];
+	    nonLinearTerm += soluGauss * soluGauss_x[jdim] * phi[i];
 	  }
 	    
 	  double exactSolValue = GetExactSolutionValue(xGauss);
-	  
 	  vector < double > exactSolGrad(dim);
 	  GetExactSolutionGradient(xGauss , exactSolGrad);
-         
           double exactSolLaplace = GetExactSolutionLaplace(xGauss);	  
 	  
 	  
-	  double srcTerm =  rho * exactSolValue * ( exactSolGrad[0] + exactSolGrad[1] ) 
-			  - exactSolLaplace;  
-	  aRes[i]+= ( srcTerm*phi[i] - laplace - nonLinearTerm ) * weight;
-	  
-	  
-	  
-// 	  adept::adouble laplace = 0.;
-// 	  for(unsigned jdim=0; jdim<dim; jdim++) {
-// 	    laplace   +=  phi_x[i*dim+jdim]*soluGauss_x[jdim];
-// 	  }
-// 	  double srcTerm = - GetExactSolutionLaplace(xGauss);  
-// 	  aRes[i]+= (srcTerm*phi[i] - laplace) * weight;
+	  double f = (- exactSolLaplace + exactSolValue * ( exactSolGrad[0] + exactSolGrad[1] ) ) * phi[i] ;  
+	  aRes[i]+= ( f - ( mLaplace + nonLinearTerm ) ) * weight;
 	  
 	} // end phi_i loop
       } // end gauss point loop
@@ -577,14 +568,14 @@ void AssemblePoissonProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const
       // get the jacobian matrix (ordered by column)
       s.jacobian(&Jac[0]);	
      
-      // get the jacobian matrix (ordered by raw, i.e. K=Jac^t)
+      // get the jacobian matrix (ordered by raw, i.e. Jact=Jac^t)
       for (int inode=0;inode<nDofs;inode++){
 	for (int jnode=0;jnode<nDofs;jnode++){
-	   K[inode*nDofs+jnode]=-Jac[jnode*nDofs+inode];
+	   Jact[inode*nDofs+jnode]=-Jac[jnode*nDofs+inode];
 	}
       } 
-      //store K in the global matrix KK
-      KK->add_matrix_blocked(K,KKDof,KKDof);
+      //store Jact in the global matrix KK
+      KK->add_matrix_blocked(Jact,KKDof,KKDof);
       
       s.clear_independents();
       s.clear_dependents();
@@ -595,22 +586,6 @@ void AssemblePoissonProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const
   if( assembleMatrix ) KK->close();
   // ***************** END ASSEMBLY *******************
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

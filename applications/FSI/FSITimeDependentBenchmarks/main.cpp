@@ -371,7 +371,7 @@ int main(int argc,char **args) {
   
   
   // ******* Print solution *******
-  ml_sol.SetWriter(VTK);
+  ml_sol.SetWriter(GMV);
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -386,7 +386,7 @@ int main(int argc,char **args) {
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
   const unsigned int n_timesteps = 500;
   
-  ml_sol.GetWriter()->Pwrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
+  ml_sol.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
   
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
     
@@ -397,7 +397,7 @@ int main(int argc,char **args) {
    
     system.UpdateSolution();
   
-    ml_sol.GetWriter()->Pwrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
+    ml_sol.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }
   // ******* Clear all systems *******
   ml_prob.clear();
