@@ -79,6 +79,9 @@ int main(int argc, char **args) {
     semiNorm[i].resize(3);
     
     for(unsigned j=0; j<3; j++){ // loop on the FE Order
+      
+      std::cout<<"level = "<<i<<" FEM = "<<j<<std::endl; 
+      
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
     
@@ -105,8 +108,13 @@ int main(int argc, char **args) {
       // attach the assembling function to system
       system.SetAssembleFunction(AssembleBilaplaceProblem_AD);  
   
+      system.SetMgSmoother(ASM_SMOOTHER);
+      
       // initilaize and solve the system 
       system.init();
+      
+      //system.SetDirichletBCsHandling(PENALTY);   
+      
       system.solve();
      
       std::pair< double , double > norm = GetErrorNorm(&mlSol);
@@ -117,11 +125,11 @@ int main(int argc, char **args) {
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
-      vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+      vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted,i);
 
-      GMVWriter gmvIO(&mlSol);
-      gmvIO.SetDebugOutput(true);
-      gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//       GMVWriter gmvIO(&mlSol);
+//       gmvIO.SetDebugOutput(true);
+//       gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
     }
   }
   
@@ -390,10 +398,10 @@ void AssembleBilaplaceProblem_AD(MultiLevelProblem &ml_prob, unsigned level, con
 	    
 	  double exactSolValue = GetExactSolutionValue(xGauss);
 	  
-	  double pi = acos(-1);
+	  double pi = acos(-1.);
 	  
-	  aResu[i]+= ( solvGauss * phi[i] -  Laplace_u  ) * weight;
-	  aResv[i]+= ( 4*pi*pi*pi*pi*exactSolValue * phi[i] -  Laplace_v  ) * weight;
+	  aResv[i]+= ( solvGauss * phi[i] -  Laplace_u  ) * weight;
+	  aResu[i]+= ( 4.*pi*pi*pi*pi*exactSolValue * phi[i] -  Laplace_v  ) * weight;
 	  
 	} // end phi_i loop
       } // end gauss point loop

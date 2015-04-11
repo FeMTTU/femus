@@ -44,14 +44,14 @@ int main(int argc, char **args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor=1.; 
 //   mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor); 
+  mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor); 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes;
   
   if(dim==2){ 
-    maxNumberOfMeshes = 5;
+    maxNumberOfMeshes = 7;
   }
   else{
     maxNumberOfMeshes = 4;
@@ -63,7 +63,7 @@ int main(int argc, char **args) {
   vector < vector < double > > semiNorm;
   semiNorm.resize(maxNumberOfMeshes);
   
-  for(unsigned i = 0; i < maxNumberOfMeshes; i++){ // loop on the mesh level
+  for(unsigned i = 1; i < maxNumberOfMeshes; i++){ // loop on the mesh level
     
     unsigned numberOfUniformLevels = i+1;
     unsigned numberOfSelectiveLevels = 0;
@@ -115,11 +115,11 @@ int main(int argc, char **args) {
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
-      vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+      vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted,i);
 
-      GMVWriter gmvIO(&mlSol);
-      gmvIO.SetDebugOutput(true);
-      gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//       GMVWriter gmvIO(&mlSol);
+//       gmvIO.SetDebugOutput(true);
+//       gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted,i);
     }
   }
   
@@ -128,7 +128,7 @@ int main(int argc, char **args) {
   std::cout<<std::endl;
   std::cout<<"l2 ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout<<"LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-  for(unsigned i=0; i<maxNumberOfMeshes;i++){
+  for(unsigned i=1; i<maxNumberOfMeshes;i++){
     std::cout<<i+1<<"\t";
     std::cout.precision(14);
     for(unsigned j=0;j<3;j++){
@@ -151,7 +151,7 @@ int main(int argc, char **args) {
   std::cout<<std::endl;
   std::cout<<"SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout<<"LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-  for(unsigned i=0; i<maxNumberOfMeshes;i++){
+  for(unsigned i=1; i<maxNumberOfMeshes;i++){
     std::cout<<i+1<<"\t";
     std::cout.precision(14);
     for(unsigned j=2;j<3;j++){
