@@ -262,7 +262,7 @@ cd  ${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_BUILD}
 git checkout gambit_format
 export PETSC_ARCH=${myarchs[i]}
 echo =========== Compile
-./configure --disable-cxx11  --prefix=$SOFTWARE_DIR/${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_INSTALL}-petsc-${myarchs[i]}
+./configure --disable-cxx11 --with-methods="opt dbg" --prefix=$SOFTWARE_DIR/${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_INSTALL}-petsc-${myarchs[i]}
 # this script should be clever enough to find the external packages in petsc
 make -j $(( $(nproc)-1 ))
 make install
