@@ -108,13 +108,8 @@ int main(int argc, char **args) {
       // attach the assembling function to system
       system.SetAssembleFunction(AssembleBilaplaceProblem_AD);  
   
-      system.SetMgSmoother(ASM_SMOOTHER);
-      
       // initilaize and solve the system 
       system.init();
-      
-      //system.SetDirichletBCsHandling(PENALTY);   
-      
       system.solve();
      
       std::pair< double , double > norm = GetErrorNorm(&mlSol);
