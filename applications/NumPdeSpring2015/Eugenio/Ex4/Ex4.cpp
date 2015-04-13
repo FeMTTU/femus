@@ -159,7 +159,7 @@ int main(int argc, char **args) {
   for(unsigned i=0; i<maxNumberOfMeshes;i++){
     std::cout<<i+1<<"\t";
     std::cout.precision(14);
-    for(unsigned j=2;j<3;j++){
+    for(unsigned j=0;j<3;j++){
       std::cout << semiNorm[i][j]<<"\t";
     }
     std::cout<<std::endl;
