@@ -58,10 +58,10 @@ class SalomeIO : public MeshInput<Mesh>
  private:
    
    /** Map from Salome vertex index to Femus vertex index */
-   static const unsigned SalomeToFemusVertexIndex[N_GEOM_ELS][27]; 
+   static const unsigned SalomeToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]; 
  
    /** Map from Salome face index to Femus face index */
-   static const unsigned SalomeToFemusFaceIndex[N_GEOM_ELS][6];
+   static const unsigned SalomeToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES];
 
    /** Determine mesh dimension from mesh file */
    void  FindDimension(hid_t gid, const  std::string menu_name,hsize_t n_fem_type);

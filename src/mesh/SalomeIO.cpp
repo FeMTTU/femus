@@ -77,7 +77,7 @@ namespace femus {
 //   X-------X-------X              -------> xi   
 
   
- const unsigned SalomeIO::SalomeToFemusVertexIndex[N_GEOM_ELS][27]= 
+ const unsigned SalomeIO::SalomeToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]= 
    {
      
     {4,7,3,0,5,6,2,1,15,19,11,16,13,18,9,17,12,14,10,8,23,25,22,24,20,21,26},  //HEX27
@@ -95,7 +95,7 @@ namespace femus {
   };
 
   
-const unsigned SalomeIO::SalomeToFemusFaceIndex[N_GEOM_ELS][6]= 
+const unsigned SalomeIO::SalomeToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES]= 
   {
     {0,4,2,5,3,1},
     {0,1,2,3},
@@ -359,8 +359,12 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
  
  
     status = H5Fclose(file_id);
-
-// 
+    
+    //loop over volume elements
+    //extract faces
+    
+    
+    // 
 //   unsigned nbcd;
  
 //   // read boundary **************** D
