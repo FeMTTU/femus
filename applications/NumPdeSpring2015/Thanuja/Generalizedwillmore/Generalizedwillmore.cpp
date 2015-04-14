@@ -23,9 +23,12 @@ using namespace femus;
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char SolName[], double &value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
-  value=0;
-  if(facename == 2) 
-    dirichlet = false;
+  if( !strcmp("u",SolName) ){
+    value=0.0;
+  }
+  else if( !strcmp("v",SolName) ){
+    value=2.;
+  }
   return dirichlet;
 }
 
@@ -62,7 +65,7 @@ int main(int argc, char **args) {
   vector < vector < double > > semiNorm;
   semiNorm.resize(maxNumberOfMeshes);
   
-  for(unsigned i = 0; i < maxNumberOfMeshes; i++){ // loop on the mesh level
+  for(unsigned i = maxNumberOfMeshes-1; i < maxNumberOfMeshes; i++){ // loop on the mesh level
     
     unsigned numberOfUniformLevels = i+1;
     unsigned numberOfSelectiveLevels = 0;
@@ -78,7 +81,7 @@ int main(int argc, char **args) {
     l2Norm[i].resize(3);
     semiNorm[i].resize(3);
     
-    for(unsigned j=0; j<3; j++){ // loop on the FE Order
+    for(unsigned j=2; j<3; j++){ // loop on the FE Order
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
     
@@ -130,10 +133,10 @@ int main(int argc, char **args) {
   std::cout<<std::endl;
   std::cout<<"l2 ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout<<"LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-  for(unsigned i=0; i<maxNumberOfMeshes;i++){
+  for(unsigned i= maxNumberOfMeshes-1; i<maxNumberOfMeshes;i++){
     std::cout<<i+1<<"\t";
     std::cout.precision(14);
-    for(unsigned j=0;j<3;j++){
+    for(unsigned j=2;j<3;j++){
       std::cout << l2Norm[i][j]<<"\t";
     }
     std::cout<<std::endl;
@@ -141,7 +144,7 @@ int main(int argc, char **args) {
     if(i<maxNumberOfMeshes-1){
       std::cout.precision(3);
       std::cout<<"\t\t";
-      for(unsigned j=0;j<3;j++){
+      for(unsigned j=2;j<3;j++){
 	std::cout << log(l2Norm[i][j]/l2Norm[i+1][j])/log(2.)<<"\t\t\t";
       }
       std::cout<<std::endl;
@@ -153,7 +156,7 @@ int main(int argc, char **args) {
   std::cout<<std::endl;
   std::cout<<"SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout<<"LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-  for(unsigned i=0; i<maxNumberOfMeshes;i++){
+  for(unsigned i=maxNumberOfMeshes-1; i<maxNumberOfMeshes;i++){
     std::cout<<i+1<<"\t";
     std::cout.precision(14);
     for(unsigned j=2;j<3;j++){
@@ -164,7 +167,7 @@ int main(int argc, char **args) {
     if(i<maxNumberOfMeshes-1){
       std::cout.precision(3);
       std::cout<<"\t\t";
-      for(unsigned j=0;j<3;j++){
+      for(unsigned j=2;j<3;j++){
 	std::cout << log(semiNorm[i][j]/semiNorm[i+1][j])/log(2.)<<"\t\t\t";
       }
       std::cout<<std::endl;
@@ -377,41 +380,39 @@ void AssembleBilaplaceProblem_AD(MultiLevelProblem &ml_prob, unsigned level, con
 	  }
 	}
         
+        double c=0.;
+        double Id[2][2]={{1.,0.},{0.,1.}};
+	adept::adouble A2 = 1.;
+	vector < vector < adept::adouble> > B(dim);
+	for(unsigned jdim=0; jdim<dim; jdim++){
+	  B[jdim].resize(dim);
+	  A2 += soluGauss_x[jdim]*soluGauss_x[jdim]; 
+	}
+	adept::adouble A = sqrt(A2);
+		
+	for(unsigned jdim=0; jdim<dim; jdim++){
+	  for(unsigned kdim=0; kdim<dim; kdim++){
+	     B[jdim][kdim]= Id[jdim][kdim] - (soluGauss_x[jdim] * soluGauss_x[kdim]) / A2;
+	  }
+	}
+		
         // *** phi_i loop ***
 	for(unsigned i=0; i<nDofs; i++) {
-	  
-	  double c=1.;
-	  double B=1.;
-	  adept::adouble Laplace_u = 0.;
-	  adept::adouble Laplace_v = 0.;
-	  adept::adouble nonLinearTermU=1.;
-	  adept::adouble nonLinearTermV = 1.;
+	 			 
+	  adept::adouble nonLinearLaplaceU = 0.;
+	  adept::adouble nonLinearLaplaceV = 0.;
 	  
 	  for(unsigned jdim=0; jdim<dim; jdim++) {
-	    Laplace_u   +=  - phi_x[i*dim+jdim]*soluGauss_x[jdim]; 
-	    Laplace_v   +=  - phi_x[i*dim+jdim]*solvGauss_x[jdim];
-	    nonLinearTermU += soluGauss_x[jdim]*soluGauss_x[jdim];
-	    nonLinearTermV += (soluGauss_x[jdim]*soluGauss_x[jdim])*(B[i*dim]*solvGauss_x[jdim]+B[jdim]*solvGauss_x[jdim])  ;
+	    
+	    nonLinearLaplaceU +=  - 1. / A  * soluGauss_x[jdim] * phi_x[i*dim+jdim]; 
+	    
+	    nonLinearLaplaceV +=    1. / A * ( - ( B[jdim][0] * solvGauss_x[0] + B[jdim][1] * solvGauss_x[1] ) * phi_x[i*dim+jdim]
+					       + ( solvGauss*solvGauss/A2 + c ) * soluGauss_x[jdim] * phi_x[i*dim+jdim] );
 	    
 	  }
-	  nonLinearTermU *=solvGauss[jdim]*solvGauss[jdim]+c* Laplace_u;
-	    
-	  double exactSolValue = GetExactSolutionValue(xGauss);
-	  vector < double > exactSolGrad(dim);
-	  GetExactSolutionGradient(xGauss, exactSolGrad);
-	  
-	  //double exactNonLinearTerm =1.;
-	  //double exactLaplace_u=0.;
-	  //for(unsigned jdim=0; jdim<dim; jdim++) {
-	    //exactLaplace_u   +=  - phi_x[i*dim+jdim]*exactSolGrad[jdim];
-	    //exactNonLinearTerm += (exactSolGrad[jdim]*exactSolGrad[jdim]);
-	  //}
-	  //exactNonLinearTerm *=-c*exactLaplace_u;
-	  
-	  double pi = acos(-1);
-	  
-	  aResu[i]+= ( solvGauss * phi[i] -  Laplace_u ) * weight;
-	  aResv[i]+= ( soluGauss * phi[i]- nonLinearTermV * Laplace_v- nonLinearTermU ) * weight;
+	  	  
+	  aResu[i]+= ( 2.*solvGauss/A * phi[i] - nonLinearLaplaceU ) * weight;
+	  aResv[i]+= nonLinearLaplaceV * weight;
 	  
 	} // end phi_i loop
       } // end gauss point loop
