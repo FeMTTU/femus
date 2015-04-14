@@ -782,11 +782,11 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
-       if (bc_flag[0] == 1)  bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //u x n  //check it for all equations
+      bc_flag[0] = 0;   //u x n
   }
   
   if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  {
-     if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");      //u x n
+      bc_flag[0] = 0;      //u x n
   }
   
   
@@ -836,11 +836,11 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
-       if (bc_flag[0] == 1)  bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //u x n          //leave this free for 2D
+      bc_flag[0] = 0;   //u x n
   }
   
   if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  {
-     if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");      //u x n      //leave this free for 2D
+      bc_flag[0] = 0;      //u x n
   }
   
 
@@ -1038,11 +1038,11 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {   //  CONDUCTING, now insulating
-   if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");     //bxn
+   bc_flag[0] = 0;     //bxn
   }
   
   if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {   //  CONDUCTING, now insulating
-   if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //bxn
+   bc_flag[0] = 0;     //bxn
   }
   
 #endif
@@ -1110,12 +1110,12 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 //     bc_flag[0]=0;      //b.n    //leave this free for outlet
   }
   
-  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {   //  CONDUCTING, now insulating
-   if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");     //bxn      //leave this free for 2D
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+   bc_flag[0] = 0;    //bxn 
   }
   
-  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {   //  CONDUCTING, now insulating
-   if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //bxn     //leave this free for 2D
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
+   bc_flag[0] = 0;   //bxn
   }
   
 #endif
@@ -1215,11 +1215,11 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   }
   
 if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //current  
-     if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");
+     bc_flag[0] = 0;
   }
   
   if ((le[2]-lb[2]) - x_rotshift[2] > -bdry_toll &&  (le[2]-lb[2]) -x_rotshift[2] < bdry_toll)  {
-     if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");
+     bc_flag[0] = 0;
   }
   
   return;
@@ -1265,11 +1265,11 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   }
   
 if ( x_rotshift[2] > -bdry_toll &&  x_rotshift[2] < bdry_toll ) { //current  
-     if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");
+     bc_flag[0] = 0;
   }
   
   if ((le[2]-lb[2]) - x_rotshift[2] > -bdry_toll &&  (le[2]-lb[2]) -x_rotshift[2] < bdry_toll)  {
-     if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");
+     bc_flag[0] = 0;
   }
 
   
@@ -1516,11 +1516,11 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
-    if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //u x n
+     bc_flag[0] = 0;   //u x n
   }
   
   if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
-    if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");   //u x n
+    bc_flag[0] = 0;   //u x n
   }
 
   return;
@@ -1570,11 +1570,11 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   }
   
   if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
-    if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");  //u x n             //leave this free for 2D
+     bc_flag[0] = 0;  //u x n
   }
   
   if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  {
-    if (bc_flag[0] == 1) bc_flag[0] = _qtymap.GetInputParser()->get("Fake3D");  //u x n             //leave this free for 2D
+     bc_flag[0] = 0;  //u x n
   }
 
 

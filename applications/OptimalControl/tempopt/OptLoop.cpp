@@ -387,7 +387,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
   xp[0] = x;
   xp[1] = y;
 
-  if ( ml_prob->_ml_msh->GetDimension() == 3 )    xp[1] = z;
+  if ( ml_prob->_ml_msh->GetDimension() == 3 )    xp[2] = z;
 
   // defaults ***********
   bool test=1; //dirichlet  // 0 neumann

@@ -25,7 +25,6 @@
 
 
 namespace femus {
-
   
   
  //INITIALIZE FSTREAM FOR INTEGRAL
@@ -51,16 +50,11 @@ namespace femus {
 //sort of automatic mpi in the streams... but there is no such automation 
 // for std::cout, for instance
 
-
-
+  
 ///This optimization loop is just another way of picking the various equations in a certain order rather than another.
 ///The equations are stationary, but we have to mimic the algorithmic sequence as a time sequence,
 ///so that we can see the algorithmic steps in Paraview
 
-//BEFORE, the time loop was actually a COUPLED NONLINEAR LOOP where 
-// every equation was advanced by one nonlinear step altogether.
-//That brought to a lot of oscillations, that were transferred to 
-//all the equations,both the nonlinear ones and the linear ones.
 //NOW, the time step/value printed in file will just be an OPTIMIZATION STEP
 // so the outer loop will be OPTIMIZATION
 //then, inside, we will have NONLINEAR LOOP for the DIRECT equations
@@ -483,28 +477,11 @@ void OptLoop::init_equation_data(const SystemTwo* eqn) {
 //this function should belong to the NS equation, or to MultiLevelProblemTwo
 //actually the best place is an OptimalControl framework
 
-//the problem is that this function uses all the structures 
-//for dofs and gauss which have been implemented in Eqn,
-// therefore i cannot move it so easily;
-// in this sense it cannot belong to the OptPhys class.
-//Now the point is: what would have happened if the EqnNS
-// was a LIBRARY class? We could not add the ComputeIntegral
-// function to its member functions, because it is 
-// an optimal-control related stuff.
-//So, here's another reason why the EqnNS must be application related;
-//but on the other hand here it is another reason
-//why we have to think of making a NS equation MORE ABSTRACT,
-//or at least some of its parts, in such a way that we can 
-// SHARE AT LEAST SOME PARTS OF IT TO OTHER "NS FLAVOURS".
-//We have to think of operators and boundary conditions,
-// in a more general framework
-
 //remember that the mesh is NON-DIMENSIONAL inside the code,
 // so you should multiply all coordinates by Lref
  
 //The value of this was 3 times in 3D and 2 times in 2D
 //it means that a loop is done DIMENSION times instead of 1 time
-
 
 double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn) {
 
@@ -829,7 +806,6 @@ double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, c
   else if(!strcmp(name,"Qty_Pressure")) {
     
       value = 0.; 
-    
      
   }
   
@@ -838,21 +814,18 @@ double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, c
     
       value = 0.; 
     
-     
   }  
   
   else if(!strcmp(name,"Qty_MagnFieldHomLagMult")) {
     
        value = 0.; 
-   
-     
+       
   }
   
 
   else if(!strcmp(name,"Qty_MagnFieldExtLagMult")) {
     
       value = 0.; 
-    
      
   }  
   
@@ -909,7 +882,6 @@ double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, c
   const double magnitude = ml_prob->GetInputParser().get("udes")*DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
   
   value = magnitude;
-
   
   }
   
@@ -920,10 +892,233 @@ double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, c
   }
   
 
-
    
   return value;
 }
+
+// =====================================================================
+
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+  
+  std::vector<double> xp(ml_prob->_ml_msh->GetDimension());
+  xp[0] = x;
+  xp[1] = y;
+
+  if ( ml_prob->_ml_msh->GetDimension() == 3 )    xp[2] = z;
+
+  // defaults ***********
+  bool test=1; //dirichlet  // 0 neumann
+  value=0.;
+  // defaults ***********
+  
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
+  
+  Box* box = static_cast<Box*>(ml_prob->_ml_msh->GetDomain());
+
+  std::vector<double> lb(ml_prob->_ml_msh->GetDimension());
+  std::vector<double> le(ml_prob->_ml_msh->GetDimension());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (ml_prob->_ml_msh->GetDimension() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+    std::vector<double> x_rotshift(ml_prob->_ml_msh->GetDimension());
+  ml_prob->_ml_msh->GetDomain()->TransformPointToRef(&xp[0],&x_rotshift[0]);
+
+  
+  
+  
+  
+  //=================  
+   if(!strcmp(name,"Qty_Velocity0")) {
+     
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
+      test = 1;    //u dot n
+  }
+  
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll ) {  //right of the RefBox
+      test = 1;    //u dot n
+  }
+  
+   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )  {  //bottom  of the RefBox
+      test = 1;      //u x n
+   }
+  
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  {  //top of the  of the RefBox
+      test = 1;     //u x n
+  }
+  
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
+      test = 1;  //u x n
+  }
+  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  {
+      test = 1;  //u x n
+  }
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_Velocity1")) {
+    
+  const double Uref = ml_prob->GetInputParser().get("Uref");
+  
+     value = 0.;
+
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  {  value = (x_rotshift[0] - lb[0])*(le[0] - x_rotshift[0])*(x_rotshift[2] - lb[2])*(le[2]-x_rotshift[2])/Uref;  }
+  
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_Velocity2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+  
+//=================  
+  else if(!strcmp(name,"Qty_VelocityAdj0")) {
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_VelocityAdj1")) {
+    
+       value = 0.; 
+
+  }
+  
+  else if(!strcmp(name,"Qty_VelocityAdj2")) {
+    
+         value = 0.; 
+ 
+  }
+  
+ //=================  
+  else if(!strcmp(name,"Qty_MagnFieldHomAdj0")) {
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomAdj1")) {
+    
+      value = 0.; 
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomAdj2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+ //=================  
+  else if(!strcmp(name,"Qty_MagnFieldHom0")) {
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHom1")) {
+    
+      value = 0.; 
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHom2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+ 
+ //=================  
+  else if(!strcmp(name,"Qty_MagnFieldExt0")) {
+ 
+  const double Bref = ml_prob->GetInputParser().get("Bref");
+ 
+  value = Bref/Bref;
+   
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldExt1")) {
+    
+      value = 0.; 
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldExt2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+   //=================  
+   //=================  
+   //=================  
+
+  else if(!strcmp(name,"Qty_Pressure")) {
+    
+      value = 0.; 
+    
+     
+  }
+  
+
+  else if(!strcmp(name,"Qty_PressureAdj")) {
+    
+      value = 0.; 
+    
+     
+  }  
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomLagMult")) {
+    
+       value = 0.; 
+   
+     
+  }
+  
+
+  else if(!strcmp(name,"Qty_MagnFieldExtLagMult")) {
+    
+      value = 0.; 
+    
+     
+  }  
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomLagMultAdj")) {
+    
+       value = 0.; 
+     
+  }  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    return test;
+
+}
+
+
+
+
+
 
 
 
