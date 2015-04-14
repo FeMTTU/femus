@@ -264,9 +264,9 @@ void Mesh::ReorderMeshDofs(vector < vector < double> > &coords) {
     }
   }
   vector <double> coords_temp;
-  for(int i=0;i<3;i++){
+  for(int i=0;i<3;i++) {
     coords_temp=coords[i];
-    for(unsigned j=0;j<_nnodes;j++){
+    for(unsigned j=0;j<_nnodes;j++) {
       coords[i][dof_index[j]-1]=coords_temp[j];
     }
   }

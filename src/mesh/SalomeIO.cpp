@@ -113,6 +113,7 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
 
     hsize_t dims[2];
     
+   // compute number of menus ===============
     hid_t  file_id = H5Fopen(name.c_str(),H5F_ACC_RDWR, H5P_DEFAULT);
     
     hid_t  gid = H5Gopen(file_id,mesh_ensemble.c_str(),H5P_DEFAULT);
@@ -121,13 +122,11 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
     hid_t status= H5Gget_num_objs(gid, &n_menus);  // number of menus
     if(status !=0) { std::cout << "Number of mesh menus not found"; abort(); }
     
-    std::vector<int>  itype_vol;
-     itype_vol.resize(n_menus);  /// @todo will modify this
-     
+
+    // compute number of groups and number of meshes ===============
     std::vector<std::string>  mesh_menus;
     std::vector<std::string>  group_menus;
     
-   // compute number of groups and number of meshes ===============
     unsigned n_groups = 0;
     unsigned n_meshes = 0;
    
@@ -147,28 +146,35 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
        mesh_menus.push_back(tempj);
      }
      
-     
     }
    // compute number of groups and number of meshes ===============
     
+      unsigned int n_elements_b_bb = 0;
+      
+   // meshes ======================== 
     for (unsigned j=0; j< n_meshes; j++) {
       
      std::string tempj = mesh_menus[j];
 
-    std::string el_fem_type_vol_j(""); 
-    std::string el_fem_type_bd_j("");
+// dimension ===============
+     /// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
+  std::string my_mesh_name_dir = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+  
+  hsize_t     n_fem_type;
+  hid_t       gid = H5Gopen(file_id,my_mesh_name_dir.c_str(),H5P_DEFAULT);
+  hid_t status0 = H5Gget_num_objs(gid, &n_fem_type);
+  if(status0 !=0) {std::cout << "SalomeIO::read_fem_type:   H5Gget_num_objs not found"; abort();}
+  FindDimension(gid,tempj,n_fem_type);
+  H5Gclose(gid);
 
-      
-     itype_vol[j] =  ReadFE(file_id,el_fem_type_vol_j,el_fem_type_bd_j,tempj);
+  if (mesh.GetDimension() != n_fem_type) { std::cout << "Mismatch between dimension and number of element types" << std::endl; abort(); }
+  
+// fem type ===============
+  std::vector<std::string> el_fe_type(mesh.GetDimension());
+
+   ReadFE(file_id,el_fe_type, n_fem_type, my_mesh_name_dir);
      
-    //   // read control data ******************** A
-//   mesh.SetDimension(dim);  // DONE  this is determined in the ReadFE routine
-//   mesh.SetNumberOfElements(nel); //DONE below
-//   mesh.SetNumberOfNodes(nvt);  //DONE below
-    
-    //   // end read control data **************** A
-
-    //   // read NODAL COORDINATES **************** C
+   //   // read NODAL COORDINATES **************** C
    std::string coord_dataset = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + node_list + "/" + coord_list + "/";  ///@todo here we have to loop
 
   hid_t dtset = H5Dopen(file_id,coord_dataset.c_str(),H5P_DEFAULT);
@@ -222,49 +228,43 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
 
     
     //   // read ELEMENT/cell ******************** B
-  std::string my_mesh_name_dir = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
-  
-   // Getting  connectivity structure from file *.med
-  std::string node_name_dir = my_mesh_name_dir + el_fem_type_vol_j + "/" + connectivity;
-  dtset = H5Dopen(file_id,node_name_dir.c_str(),H5P_DEFAULT);
-  filespace = H5Dget_space(dtset);    /* Get filespace handle first. */
+  std::string node_name_dir = my_mesh_name_dir +  el_fe_type[mesh.GetDimension()-1] + "/" + connectivity;
+  hid_t dtset2 = H5Dopen(file_id,node_name_dir.c_str(),H5P_DEFAULT);
+  filespace = H5Dget_space(dtset2);
   status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
   if(status ==0) {std::cerr << "SalomeIO::read dims not found"; abort();}
-  const int dim_conn = dims[0];
 
   // DETERMINE NUMBER OF NODES PER ELEMENT
-  uint Node_el;
-        if      ( el_fem_type_vol_j.compare("HE8") == 0 ) Node_el = 8;
-	else if ( el_fem_type_vol_j.compare("H20") == 0 ) Node_el = 20;  
-	else if ( el_fem_type_vol_j.compare("H27") == 0 ) Node_el = 27; 
-	
-	else if ( el_fem_type_vol_j.compare("TE4") == 0 ) Node_el = 4;     
-	else if ( el_fem_type_vol_j.compare("T10") == 0 ) Node_el = 10;     
-	
-	else if ( el_fem_type_vol_j.compare("QU4") == 0 ) Node_el = 4;     
-	else if ( el_fem_type_vol_j.compare("QU8") == 0 ) Node_el = 8;     
-	else if ( el_fem_type_vol_j.compare("QU9") == 0 ) Node_el = 9;     
-	
-	else if ( el_fem_type_vol_j.compare("TR3") == 0 ) Node_el = 3;     
-	else if ( el_fem_type_vol_j.compare("TR6") == 0 ) Node_el = 6;   
-
-	else if ( el_fem_type_vol_j.compare("SE3") == 0 ) Node_el = 3;     
-	else if ( el_fem_type_vol_j.compare("SE2") == 0 ) Node_el = 2;    
-        else { std::cout << "SalomeIO::read: element not supported"; abort(); }
+  unsigned Node_el = FindElemNodes( el_fe_type[mesh.GetDimension()-1] );
   
+  const int dim_conn = dims[0];
   unsigned int n_elements = dim_conn/Node_el;
   
   // SET NUMBER OF ELEMENTS
    mesh.SetNumberOfElements(n_elements);
-  
-  int   *conn_map = new  int[dim_conn];
-  std::cout << " Number of elements in med file " <<  n_elements <<  std::endl;
-  status=H5Dread(dtset,H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,conn_map);
-  if(status !=0) {std::cout << "SalomeIO::read: connectivity not found"; abort();}
-  H5Dclose(dtset);
-
- mesh.el = new elem(n_elements);    ///@todo check where this is going to be deleted
  
+   
+  int * conn_map = new  int[dim_conn];
+  std::cout << " Number of elements in med file " <<  n_elements <<  std::endl;
+  status=H5Dread(dtset2,H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,conn_map);
+  if(status !=0) {std::cout << "SalomeIO::read: connectivity not found"; abort();}
+  H5Dclose(dtset2);
+
+  mesh.el = new elem(n_elements);    ///@todo check where this is going to be deleted
+ 
+   // BOUNDARY (and BOUNDARY of the BOUNDARY in 3D) =========================
+ for (unsigned i=0; i < mesh.GetDimension()-1; i++) {
+  hsize_t dims_i[2]; 
+  std::string node_name_dir_i = my_mesh_name_dir + el_fe_type[i] + "/" + dofobj_indices;
+  hid_t dtset_i = H5Dopen(file_id,node_name_dir_i.c_str(),H5P_DEFAULT);
+  filespace = H5Dget_space(dtset_i);
+  hid_t status  = H5Sget_simple_extent_dims(filespace, dims_i, NULL);
+  if(status ==0) { std::cerr << "SalomeIO::read dims not found"; abort(); }
+  n_elements_b_bb += dims_i[0];
+  H5Dclose(dtset_i);
+  }
+  // BOUNDARY =========================
+
   
   for (unsigned iel=0; iel<n_elements; iel++) {
     mesh.el->SetElementGroup(iel,1);
@@ -311,37 +311,43 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
   delete [] conn_map;
 
         }   //end meshes
+
         
    mesh.el->SetElementGroupNumber(n_groups);
-     //   // read GROUP **************** E
-     
+   
+       // read GROUP **************** E   
+   //we assume that these are VOLUME groups
+   //in general, I'd say that a group can only have ONE element type (should study the possibility of hybrid mesh)
+   
      for (unsigned j=0; j<n_groups; j++) {
        
+       const uint n_fe_types_for_groups = 1; // so far we have this assumption
+       
      std::string tempj = group_menus[j];
+     std::string my_mesh_name_dir = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
    
        /// @todo check the underscores according to our naming standard
        
-       // strip the first number to get the group number        //strip the second number to get the group material
+       // strip the first number to get the group number 
+       // strip the second number to get the group material
        int gr_name = atoi(tempj.substr(6,1).c_str());  
        int gr_mat =  atoi(tempj.substr(8,1).c_str());
 
-      std::string el_fem_type_vol_j(""); 
-      std::string el_fem_type_bd_j("");
-
+  std::vector<std::string> el_fe_type(mesh.GetDimension());
       
-     ReadFE(file_id,el_fem_type_vol_j,el_fem_type_bd_j,tempj);
+     ReadFE(file_id, el_fe_type, n_fe_types_for_groups, my_mesh_name_dir);
        
-    std::string group_dataset = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + elem_list + "/" + el_fem_type_vol_j + "/" + dofobj_indices;  ///@todo here we have to loop
+    std::string group_dataset = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + elem_list + "/" + el_fe_type[mesh.GetDimension()-1] + "/" + dofobj_indices;  ///@todo here we have to loop
     
   hid_t dtset = H5Dopen(file_id,group_dataset.c_str(),H5P_DEFAULT);
-  hid_t filespace = H5Dget_space(dtset);    /* Get filespace handle first. */
+  hid_t filespace = H5Dget_space(dtset);
   hid_t status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
   int * elem_indices = new int[dims[0]];
   status=H5Dread(dtset,H5T_NATIVE_INT,H5S_ALL,H5S_ALL,H5P_DEFAULT,elem_indices);
 
   for (unsigned i=0; i < dims[0]; i++) {
-           mesh.el->SetElementGroup(i, gr_name);
-           mesh.el->SetElementMaterial(i,gr_mat);
+           mesh.el->SetElementGroup(elem_indices[i] -1 - n_elements_b_bb, gr_name);
+           mesh.el->SetElementMaterial(elem_indices[i] -1 - n_elements_b_bb ,gr_mat);
     }
 	
 	
@@ -351,8 +357,8 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
     }
      //   // end read GROUP **************** E
  
-    status = H5Fclose(file_id);
  
+    status = H5Fclose(file_id);
 
 // 
 //   unsigned nbcd;
@@ -391,69 +397,70 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
 
 
 
-int  SalomeIO::ReadFE(
+void  SalomeIO::ReadFE(
   hid_t file_id,
-  std::string & el_fem_type_vol,
-  std::string & el_fem_type_bd,
-  const  std::string menu_name
-) {
+  std::vector<std::string> & fe_type_vec,
+  hsize_t n_fem_types,
+  const std::string  my_mesh_name_dir
+    ) 
+{
   
-  Mesh& mesh = GetMesh();
-    /// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
-  std::string my_mesh_name_dir = mesh_ensemble +  "/" + menu_name + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+    Mesh& mesh = GetMesh();
+   
+  // Get the element name
+  char **el_fem_type = new char*[n_fem_types];
   
-  hid_t       gid = H5Gopen(file_id,my_mesh_name_dir.c_str(),H5P_DEFAULT); // group identity
-  hsize_t     n_fem_type;
-  hid_t status= H5Gget_num_objs(gid, &n_fem_type);  // number of links
-  if(status !=0) {std::cout << "SalomeIO::read_fem_type:   H5Gget_num_objs not found"; abort();}
+  std::vector<int> index(n_fem_types);
 
+    const uint fe_name_nchars = 4;
   
-  FindDimension(gid,menu_name,n_fem_type);
-  
-  
-  // ---------  Reading Element type
-  std::map< std::string, int > fem_type_vol;// Salome fem table name (vol)
-  fem_type_vol["HE8"] = 5;  fem_type_vol["H20"] = 20; fem_type_vol["H27"] = 12;
-  fem_type_vol["TE4"] = 4;  fem_type_vol["T10"] = 11;
-  fem_type_vol["QU4"] = 3;  fem_type_vol["QU8"] = 19; fem_type_vol["QU9"] = 10;
-  fem_type_vol["TR3"] = 2;  fem_type_vol["TR6"] = 9;
-  fem_type_vol["SE2"] = 0;  fem_type_vol["SE3"] = 0;  // not valid in 3D
-  if(mesh.GetDimension()==3) {    // not valid in 3D as boundary
-    fem_type_vol["QU4"] = 0; fem_type_vol["QU8"] = 0; fem_type_vol["QU9"] = 0;
-    fem_type_vol["TR3"] = 0; fem_type_vol["TR6"] = 0;
+  for(int i=0; i<(int)n_fem_types; i++) {
+    
+    el_fem_type[i] = new char[fe_name_nchars];
+    H5Lget_name_by_idx(file_id,my_mesh_name_dir.c_str(), H5_INDEX_NAME, H5_ITER_INC,i, el_fem_type[i], fe_name_nchars, H5P_DEFAULT);
+    std::string temp_i(el_fem_type[i]);
+    
+    if (mesh.GetDimension() == 3) {
+      
+          if ( temp_i.compare("HE8") == 0 || 
+	       temp_i.compare("H20") == 0 ||  
+	       temp_i.compare("H27") == 0 || 
+	       temp_i.compare("TE4") == 0 || 
+	       temp_i.compare("T10") == 0   ) { index[mesh.GetDimension() -1] = i; fe_type_vec[mesh.GetDimension() -1] = el_fem_type[i];}
+          else if  ( temp_i.compare("QU4") == 0 || 
+	             temp_i.compare("QU8") == 0 ||  
+	             temp_i.compare("QU9") == 0 || 
+	             temp_i.compare("TR3") == 0 || 
+	             temp_i.compare("TR6") == 0 ) { index[mesh.GetDimension() -1 -1] = i; fe_type_vec[mesh.GetDimension() -1 -1] = el_fem_type[i]; }
+          else if  ( temp_i.compare("SE2") == 0 || 
+	             temp_i.compare("SE3") == 0 ) { index[mesh.GetDimension() -1 -1 -1] = i; fe_type_vec[mesh.GetDimension() -1 -1 -1] =  el_fem_type[i]; }
+	             
+    }
+    
+    else if (mesh.GetDimension() == 2) {
+      
+           if  (     temp_i.compare("QU4") == 0 || 
+	             temp_i.compare("QU8") == 0 ||  
+	             temp_i.compare("QU9") == 0 || 
+	             temp_i.compare("TR3") == 0 || 
+	             temp_i.compare("TR6") == 0    ) {  index[mesh.GetDimension() -1] = i; fe_type_vec[mesh.GetDimension() -1] = el_fem_type[i]; }
+          else if  ( temp_i.compare("SE2") == 0 || 
+	             temp_i.compare("SE3") == 0 ) {  index[mesh.GetDimension() -1 -1] = i; fe_type_vec[mesh.GetDimension() -1 -1] = el_fem_type[i]; }
+     
+    }
+    
+    else if (mesh.GetDimension() == 1) {
+               if  ( temp_i.compare("SE2") == 0 || 
+	             temp_i.compare("SE3") == 0 ) { index[mesh.GetDimension() -1] = i; fe_type_vec[mesh.GetDimension() -1] = el_fem_type[i];}
+    }    
+    
   }
-  std::map< std::string, int > fem_type_bd; // Salome fem table name (surface)
-  fem_type_bd["HE8"] = 0;  fem_type_bd["H20"] = 0;  fem_type_bd["H27"] = 0;
-  fem_type_bd["TE4"] = 0;  fem_type_bd["T10"] = 0;  // not valid in 2D
-  fem_type_bd["QU4"] = 3;  fem_type_bd["QU8"] = 19;  fem_type_bd["QU9"] = 10;
-  fem_type_bd["TR3"] = 2;  fem_type_bd["TR6"] = 9;
-  fem_type_bd["SE2"] = 1;  fem_type_bd["SE3"] = 8;
-  if(mesh.GetDimension()==3) {    // not valid in 3D as boundary
-    fem_type_bd["SE2"] = 0;  fem_type_bd["SE3"] = 0;
-  }
 
-
-  // Get the element name from MESH_NAME_DIR in the file med (el_name)
-  char **el_fem_type = new char*[n_fem_type];
-  int index_vol=0;  int index_bd=0;
-  for(int i=0; i<(int)n_fem_type; i++) {
-    el_fem_type[i]=new char[4];
-    H5Lget_name_by_idx(file_id,my_mesh_name_dir.c_str(), H5_INDEX_NAME, H5_ITER_INC,i,el_fem_type[i],4, H5P_DEFAULT);
-    if(fem_type_vol[el_fem_type[i]]!=0) index_vol=i;
-    if(fem_type_bd[el_fem_type[i]]!=0) index_bd=i;
-  }
-
-  // LIBMESH volume fem type (itype_vol) and MEDfem (el_fem_type_vol-el_fem_type_bd)
-  int itype_vol= fem_type_vol[el_fem_type[index_vol]]; assert(itype_vol!=0);
-  el_fem_type_vol=el_fem_type[index_vol];
-  el_fem_type_bd=el_fem_type[index_bd];
   // clean
-  for(int i=0; i<(int)n_fem_type; i++) delete[] el_fem_type[i];
-  delete[] el_fem_type; 
-  fem_type_vol.clear();
-  fem_type_bd.clear();
+  for(int i=0; i<(int)n_fem_types; i++) delete[] el_fem_type[i];
+  delete[] el_fem_type;
   
-  return itype_vol;
+  return;
 }
 
 
@@ -490,10 +497,30 @@ void  SalomeIO::FindDimension(hid_t gid, const  std::string menu_name, hsize_t n
   return;
 }
 
+unsigned  SalomeIO::FindElemNodes(const  std::string el_type) const {
 
+  unsigned Node_el;
+  
+        if      ( el_type.compare("HE8") == 0 ) Node_el = 8;
+	else if ( el_type.compare("H20") == 0 ) Node_el = 20;  
+	else if ( el_type.compare("H27") == 0 ) Node_el = 27; 
+	
+	else if ( el_type.compare("TE4") == 0 ) Node_el = 4;     
+	else if ( el_type.compare("T10") == 0 ) Node_el = 10;     
+	
+	else if ( el_type.compare("QU4") == 0 ) Node_el = 4;     
+	else if ( el_type.compare("QU8") == 0 ) Node_el = 8;     
+	else if ( el_type.compare("QU9") == 0 ) Node_el = 9;     
+	
+	else if ( el_type.compare("TR3") == 0 ) Node_el = 3;     
+	else if ( el_type.compare("TR6") == 0 ) Node_el = 6;   
 
+	else if ( el_type.compare("SE3") == 0 ) Node_el = 3;     
+	else if ( el_type.compare("SE2") == 0 ) Node_el = 2;    
+        else { std::cout << "SalomeIO::read: element not supported"; abort(); }
 
-
+return Node_el;
+}
 
 } //end namespace femus
 

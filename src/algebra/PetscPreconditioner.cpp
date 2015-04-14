@@ -129,11 +129,14 @@ void PetscPreconditioner::set_petsc_preconditioner_type
     CHKERRABORT(MPI_COMM_WORLD,ierr);
     break;    //here we set the SuperLU_dist solver package
 
-  case MLU_PRECOND:
-    ierr = PCSetType (pc, (char*) PCLU);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);
-    ierr = PCFactorSetMatSolverPackage(pc,MATSOLVERMUMPS);
-    CHKERRABORT(MPI_COMM_WORLD,ierr);                    //here we set the MUMPS parallel direct solver package
+  case MLU_PRECOND: //here we set the MUMPS parallel direct solver package
+    ierr = PCSetType (pc, (char*) PCLU); CHKERRABORT(MPI_COMM_WORLD,ierr);
+    
+    ierr = PCFactorSetMatSolverPackage(pc,MATSOLVERMUMPS); CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = PCFactorSetUpMatSolverPackage(pc); CHKERRABORT(MPI_COMM_WORLD,ierr);
+    Mat       F; 
+    ierr = PCFactorGetMatrix(pc,&F); CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = MatMumpsSetIcntl(F,14,30);CHKERRABORT(MPI_COMM_WORLD,ierr);
     break;
 
   case MCC_PRECOND:
