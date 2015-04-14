@@ -607,56 +607,8 @@ void MagnFieldHomZ::Function_txyz(const double t, const double* xp, double* func
 ///Desired velocity for optimal control
 void DesVelocityX::Function_txyz(const double t, const double* xp,double* func) const {
   
-  
-  const double Lref = _qtymap.GetInputParser()->get("Lref");
-  const double Uref = _qtymap.GetInputParser()->get("Uref");
-  double ILref = 1./Lref;
-    
-  const double rhof   = _qtymap.GetInputParser()->get("rho0");
-  const double muvel  = _qtymap.GetInputParser()->get("mu0");
-  const double MUMHD  = _qtymap.GetInputParser()->get("MUMHD");
-  const double SIGMHD = _qtymap.GetInputParser()->get("SIGMHD");
-  const double Bref   = _qtymap.GetInputParser()->get("Bref");
+  func[0] = 0.;
 
-  const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution
-
-  double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
-
-  double Re  = _qtymap.GetInputParser()->get("Re");
-  double Rem = _qtymap.GetInputParser()->get("Rem");
-  double Hm  = _qtymap.GetInputParser()->get("Hm");
-  double S   = _qtymap.GetInputParser()->get("S");
- 
-  
-  Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
-  
-  
-  double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
-  double Lmid  = 0.5*(box->_le[0] + box->_lb[0]);
-
-  double xtr = xp[0] - Lmid;
-
-  const double thetaz = box->_domain_rtmap.get("thetaz");
-
-  //constant for the real reference length in the Hartmann number
-  const double LHm =2.;   //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
-
-  const double magnitude = _qtymap.GetInputParser()->get("udes")*DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
-  
-  func[0] = -sin(thetaz)*magnitude;
-                                       //add a 4 to the denominator
-				       //should check the difference between L and Lref
-                                       //TODO check this nondimensionalization
-				       
-//here, I give as target velocity the velocity that would be obtained WITHOUT CONTROL
-//therefore, u starts very close to u_d, so I can put a very big alpha
-//now, I'll just put get_par("udes") so that I choose to modify the "amplitude"
-  
-  // get_par("udes")*DpDz*Hm*(cosh(Hm) - cosh(Hm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm)*Uref);
-//  get_par("udes")/**(x - lxb*ILref)*(lxe*ILref-x)*//Uref;
-//  get_par("udes")/Uref;
-
- 
   return;
 
 }
@@ -695,15 +647,18 @@ void DesVelocityY::Function_txyz(const double t, const double* xp,double* func) 
 
   double xtr = xp[0] - Lmid;
 
-  const double thetaz = box->_domain_rtmap.get("thetaz");
 
   //constant for the real reference length in the Hartmann number
   const double LHm =2.;   //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
 
   const double magnitude = _qtymap.GetInputParser()->get("udes")*DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
   
-  func[0] = cos(thetaz)*magnitude;
+  func[0] = magnitude;
   
+                                        //add a 4 to the denominator
+				       //should check the difference between L and Lref
+                                       //TODO check this nondimensionalization
+ 
   return;
 
 } 
@@ -2009,8 +1964,6 @@ void VelocityX::initialize_xyz(const double* xp, std::vector< double >& value) c
 void VelocityY::initialize_xyz(const double* xp, std::vector< double >& value) const {
 
   const double Uref = _qtymap.GetInputParser()->get("Uref");
-  const double pref = _qtymap.GetInputParser()->get("pref");
-  const double udes = _qtymap.GetInputParser()->get("udes");
   
   const double bdry_toll = DEFAULT_BDRY_TOLL;
   
@@ -2029,9 +1982,6 @@ void VelocityY::initialize_xyz(const double* xp, std::vector< double >& value) c
   
   std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
   _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]);
-
-//rotation of the function  
-    double thetaz = box->_domain_rtmap.get("thetaz");
 
     value[0] = 0.;
 
@@ -2108,12 +2058,8 @@ void MagnFieldHomZ::initialize_xyz(const double* xp, std::vector< double >& valu
 
 
 void MagnFieldHomLagMult::initialize_xyz(const double* xp, std::vector< double >& value) const {
-
-  const double Uref = _qtymap.GetInputParser()->get("Uref");
-  const double Bref = _qtymap.GetInputParser()->get("Bref");
  
-  value[0] = 0./(Uref*Bref);
-  
+  value[0] = 0.;
   return;
 }
 

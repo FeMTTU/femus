@@ -39,6 +39,7 @@ public:
 
   int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMesh* mesh);
   
+  double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z, const char * name);
 
   
 

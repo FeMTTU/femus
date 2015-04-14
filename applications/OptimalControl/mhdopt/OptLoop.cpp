@@ -680,6 +680,254 @@ return el_flagdom;
 
 
 
+//---------------------------------------------------------------------------------------------------------------------
+
+double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z, const char * name) {
+
+  std::vector<double> xp(ml_prob->_ml_msh->GetDimension());
+  xp[0] = x;
+  xp[1] = y;
+  xp[2] = z;
+
+  if ( ml_prob->_ml_msh->GetDimension() == 3 )    xp[2] = z;
+
+  // defaults ***********
+  double value = 0.;
+  // defaults ***********
+  
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
+  
+  Box* box = static_cast<Box*>(ml_prob->_ml_msh->GetDomain());
+
+  std::vector<double> lb(ml_prob->_ml_msh->GetDimension());
+  std::vector<double> le(ml_prob->_ml_msh->GetDimension());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (ml_prob->_ml_msh->GetDimension() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+    std::vector<double> x_rotshift(ml_prob->_ml_msh->GetDimension());
+  ml_prob->_ml_msh->GetDomain()->TransformPointToRef(&xp[0],&x_rotshift[0]);
+
+  
+  
+  
+  
+ 
+//=================  
+   if(!strcmp(name,"Qty_Velocity0")) {
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_Velocity1")) {
+    
+  const double Uref = ml_prob->GetInputParser().get("Uref");
+  
+     value = 0.;
+
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  {  value = (x_rotshift[0] - lb[0])*(le[0] - x_rotshift[0])*(x_rotshift[2] - lb[2])*(le[2]-x_rotshift[2])/Uref;  }
+  
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_Velocity2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+  
+//=================  
+  else if(!strcmp(name,"Qty_VelocityAdj0")) {
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_VelocityAdj1")) {
+    
+       value = 0.; 
+
+  }
+  
+  else if(!strcmp(name,"Qty_VelocityAdj2")) {
+    
+         value = 0.; 
+ 
+  }
+  
+ //=================  
+  else if(!strcmp(name,"Qty_MagnFieldHomAdj0")) {
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomAdj1")) {
+    
+      value = 0.; 
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomAdj2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+ //=================  
+  else if(!strcmp(name,"Qty_MagnFieldHom0")) {
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHom1")) {
+    
+      value = 0.; 
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHom2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+ 
+ //=================  
+  else if(!strcmp(name,"Qty_MagnFieldExt0")) {
+ 
+  const double Bref = ml_prob->GetInputParser().get("Bref");
+ 
+  value = Bref/Bref;
+   
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldExt1")) {
+    
+      value = 0.; 
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldExt2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+   //=================  
+   //=================  
+   //=================  
+
+  else if(!strcmp(name,"Qty_Pressure")) {
+    
+      value = 0.; 
+    
+     
+  }
+  
+
+  else if(!strcmp(name,"Qty_PressureAdj")) {
+    
+      value = 0.; 
+    
+     
+  }  
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomLagMult")) {
+    
+       value = 0.; 
+   
+     
+  }
+  
+
+  else if(!strcmp(name,"Qty_MagnFieldExtLagMult")) {
+    
+      value = 0.; 
+    
+     
+  }  
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomLagMultAdj")) {
+    
+       value = 0.; 
+     
+  }  
+   
+    //=================  
+   //=================  
+   //=================  
+ //=================  
+  else if(!strcmp(name,"Qty_DesVelocity0")) {
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_DesVelocity1")) {
+
+  const double Lref = ml_prob->GetInputParser().get("Lref");
+  const double Uref = ml_prob->GetInputParser().get("Uref");
+  double ILref = 1./Lref;
+    
+  const double rhof   = ml_prob->GetInputParser().get("rho0");
+  const double muvel  = ml_prob->GetInputParser().get("mu0");
+  const double MUMHD  = ml_prob->GetInputParser().get("MUMHD");
+  const double SIGMHD = ml_prob->GetInputParser().get("SIGMHD");
+  const double Bref   = ml_prob->GetInputParser().get("Bref");
+
+  const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution
+
+  double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
+
+  double Re  = ml_prob->GetInputParser().get("Re");
+  double Rem = ml_prob->GetInputParser().get("Rem");
+  double Hm  = ml_prob->GetInputParser().get("Hm");
+  double S   = ml_prob->GetInputParser().get("S");
+ 
+  
+  Box* box= static_cast<Box*>(ml_prob->_ml_msh->GetDomain());
+  
+  
+  double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
+  double Lmid  = 0.5*(box->_le[0] + box->_lb[0]);
+
+  double xtr = xp[0] - Lmid;
+
+
+  //constant for the real reference length in the Hartmann number
+  const double LHm =2.;   //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
+
+  const double magnitude = ml_prob->GetInputParser().get("udes")*DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
+  
+  value = magnitude;
+
+  
+  }
+  
+  else if(!strcmp(name,"Qty_DesVelocity2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+
+
+   
+  return value;
+}
+
+
+
+
 
 } //end namespace femus
 

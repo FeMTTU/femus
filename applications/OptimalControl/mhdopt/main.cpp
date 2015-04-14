@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
   const unsigned NoLevels = 1;
   const unsigned dim = 3;
   const GeomElType geomel_type = HEX;
-    GenCase mesh(NoLevels,dim,geomel_type,"straightQ3D2x2x2ZERO.gam");
+    GenCase mesh(NoLevels,dim,geomel_type,"");
           mesh.SetLref(1.);  
 	  
   // ======= MyDomainShape  (optional, implemented as child of Domain) ====================
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
   
   // ====== Start new main =================================
   MultiLevelMesh ml_msh;
-  ml_msh.GenerateCoarseBoxMesh(8,8,8,0,1,0,1,0,1,HEX27,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
+  ml_msh.GenerateCoarseBoxMesh(8,8,8,0,1,0,2,0,1,HEX27,"fifth"); //   ml_msh.GenerateCoarseBoxMesh(numelemx,numelemy,numelemz,xa,xb,ya,yb,za,zb,elemtype,"seventh");
   ml_msh.RefineMesh(NoLevels,NoLevels,NULL);
   ml_msh.PrintInfo();
   
@@ -164,24 +164,18 @@ int main(int argc, char** argv) {
   MultiLevelSolution ml_sol(&ml_msh);
   
   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_MagnFieldHom",LAGRANGE,SECOND,0);
-  ml_sol.AddSolution("Qty_MagnFieldHomLagMult",LAGRANGE,FIRST,0);
-  
   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_MagnFieldExt",LAGRANGE,SECOND,0);
-  ml_sol.AddSolution("Qty_MagnFieldExtLagMult",LAGRANGE,FIRST,0);
-
   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_MagnFieldHomAdj",LAGRANGE,SECOND,0);
-  ml_sol.AddSolution("Qty_MagnFieldHomLagMultAdj",LAGRANGE,FIRST,0);
-
   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_Velocity",LAGRANGE,SECOND,0);
-  ml_sol.AddSolution("Qty_Pressure",LAGRANGE,FIRST,0);
-
   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_VelocityAdj",LAGRANGE,SECOND,0);
-  ml_sol.AddSolution("Qty_PressureAdj",LAGRANGE,FIRST,0);
-
+  
   ml_sol.AddSolutionVector(ml_msh.GetDimension(),"Qty_DesVelocity",LAGRANGE,SECOND,0,false);
   
-  
-  
+  ml_sol.AddSolution("Qty_Pressure",LAGRANGE,FIRST,0);
+  ml_sol.AddSolution("Qty_PressureAdj",LAGRANGE,FIRST,0);
+  ml_sol.AddSolution("Qty_MagnFieldHomLagMult",LAGRANGE,FIRST,0);
+  ml_sol.AddSolution("Qty_MagnFieldExtLagMult",LAGRANGE,FIRST,0);
+  ml_sol.AddSolution("Qty_MagnFieldHomLagMultAdj",LAGRANGE,FIRST,0);
 
   MultiLevelProblem ml_prob(&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
@@ -189,6 +183,38 @@ int main(int argc, char** argv) {
   ml_prob.SetInputParser(&physics_map);
   ml_prob.SetQtyMap(&qty_map); 
   
+  
+   // ******* Initial condition *******
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_Velocity0",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_Velocity1",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_Velocity2",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_VelocityAdj0",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_VelocityAdj1",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_VelocityAdj2",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldHom0",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldHom1",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldHom2",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldExt0",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldExt1",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldExt2",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldHomAdj0",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldHomAdj1",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldHomAdj2",SetInitialCondition);  
+ 
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_DesVelocity0",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_DesVelocity1",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_DesVelocity2",SetInitialCondition);  
+  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_Pressure",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_PressureAdj",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldHomLagMult",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldExtLagMult",SetInitialCondition);  
+  ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldHomLagMultAdj",SetInitialCondition);  
+  
+  // ******* Debug *******
+  ml_sol.SetWriter(VTK);
+  std::vector<std::string> print_vars(1); print_vars[0] = "All"; // we should find a way to make this easier
+  ml_sol.GetWriter()->write(files.GetOutputPath(),"biquadratic",print_vars);
   
 //===============================================
 //================== Add EQUATIONS  AND ======================
