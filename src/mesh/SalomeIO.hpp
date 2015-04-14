@@ -69,18 +69,18 @@ class SalomeIO : public MeshInput<Mesh>
    unsigned  FindElemNodes(const  std::string el_type) const;
 
    /** Read FE type */
-   void  ReadFE(hid_t file_id, std::string & el_fem_type_vol, std::string & el_fem_type_bd,  std::vector<std::string> & fe_type_vec, hsize_t n_fem_types, const std::string my_mesh_name_dir);   
+   void  ReadFE(hid_t file_id, std::vector<std::string> & fe_type_vec, hsize_t n_fem_types, const std::string my_mesh_name_dir);   
    
 //    std::vector<char*> menu_names;
    static const std::string group_name_begin; //FAS
    static const std::string group_name_end;   //ELEME
-   static const std::string mesh_ensemble;        // ENS_MAA
+   static const std::string mesh_ensemble;    // ENS_MAA
    static const std::string aux_zeroone;      // -0000000000000000001-0000000000000000001
-   static const std::string elem_list;     // MAI
-   static const std::string connectivity;  //NOD
-   static const std::string node_list;  //NOE;
-   static const std::string coord_list; // "COO";
-   static const std::string dofobj_indices;  //NUM
+   static const std::string elem_list;        //MAI
+   static const std::string connectivity;     //NOD
+   static const std::string node_list;        //NOE
+   static const std::string coord_list;       //COO
+   static const std::string dofobj_indices;   //NUM
    static const uint max_length;
 
 };

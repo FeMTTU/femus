@@ -171,10 +171,8 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
   
 // fem type ===============
   std::vector<std::string> el_fe_type(mesh.GetDimension());
-    std::string el_fem_type_vol_j(""); 
-    std::string el_fem_type_bd_j("");
 
-   ReadFE(file_id,el_fem_type_vol_j,el_fem_type_bd_j,el_fe_type, n_fem_type, my_mesh_name_dir);
+   ReadFE(file_id,el_fe_type, n_fem_type, my_mesh_name_dir);
      
    //   // read NODAL COORDINATES **************** C
    std::string coord_dataset = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + node_list + "/" + coord_list + "/";  ///@todo here we have to loop
@@ -317,8 +315,10 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
         
    mesh.el->SetElementGroupNumber(n_groups);
    
-       // read GROUP **************** E   //we assume that these are VOLUME groups
-     
+       // read GROUP **************** E   
+   //we assume that these are VOLUME groups
+   //in general, I'd say that a group can only have ONE element type (should study the possibility of hybrid mesh)
+   
      for (unsigned j=0; j<n_groups; j++) {
        
        const uint n_fe_types_for_groups = 1; // so far we have this assumption
@@ -334,11 +334,8 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
        int gr_mat =  atoi(tempj.substr(8,1).c_str());
 
   std::vector<std::string> el_fe_type(mesh.GetDimension());
-      std::string el_fem_type_vol_j(""); 
-      std::string el_fem_type_bd_j("");
-
       
-     ReadFE(file_id, el_fem_type_vol_j, el_fem_type_bd_j, el_fe_type, n_fe_types_for_groups, my_mesh_name_dir);
+     ReadFE(file_id, el_fe_type, n_fe_types_for_groups, my_mesh_name_dir);
        
     std::string group_dataset = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + elem_list + "/" + el_fe_type[mesh.GetDimension()-1] + "/" + dofobj_indices;  ///@todo here we have to loop
     
@@ -402,8 +399,6 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
 
 void  SalomeIO::ReadFE(
   hid_t file_id,
-  std::string & el_fem_type_vol,
-  std::string & el_fem_type_bd,
   std::vector<std::string> & fe_type_vec,
   hsize_t n_fem_types,
   const std::string  my_mesh_name_dir
@@ -416,28 +411,29 @@ void  SalomeIO::ReadFE(
   char **el_fem_type = new char*[n_fem_types];
   
   std::vector<int> index(n_fem_types);
-  int index_vol=0;  
-  int index_bd=0;
+
+    const uint fe_name_nchars = 4;
   
   for(int i=0; i<(int)n_fem_types; i++) {
-    const uint fe_name_nchars = 4;
-    el_fem_type[i]=new char[fe_name_nchars];
+    
+    el_fem_type[i] = new char[fe_name_nchars];
     H5Lget_name_by_idx(file_id,my_mesh_name_dir.c_str(), H5_INDEX_NAME, H5_ITER_INC,i, el_fem_type[i], fe_name_nchars, H5P_DEFAULT);
     std::string temp_i(el_fem_type[i]);
+    
     if (mesh.GetDimension() == 3) {
       
           if ( temp_i.compare("HE8") == 0 || 
 	       temp_i.compare("H20") == 0 ||  
 	       temp_i.compare("H27") == 0 || 
 	       temp_i.compare("TE4") == 0 || 
-	       temp_i.compare("T10") == 0   ) { index_vol = i; index[mesh.GetDimension() -1] = i; fe_type_vec[mesh.GetDimension() -1] = el_fem_type[i];}
+	       temp_i.compare("T10") == 0   ) { index[mesh.GetDimension() -1] = i; fe_type_vec[mesh.GetDimension() -1] = el_fem_type[i];}
           else if  ( temp_i.compare("QU4") == 0 || 
 	             temp_i.compare("QU8") == 0 ||  
 	             temp_i.compare("QU9") == 0 || 
 	             temp_i.compare("TR3") == 0 || 
-	             temp_i.compare("TR6") == 0 ) { index_bd = i;  index[mesh.GetDimension() -1 -1] = i; fe_type_vec[mesh.GetDimension() -1 -1] = el_fem_type[i]; }
+	             temp_i.compare("TR6") == 0 ) { index[mesh.GetDimension() -1 -1] = i; fe_type_vec[mesh.GetDimension() -1 -1] = el_fem_type[i]; }
           else if  ( temp_i.compare("SE2") == 0 || 
-	             temp_i.compare("SE3") == 0 ) {   index[mesh.GetDimension() -1 -1 -1] = i; fe_type_vec[mesh.GetDimension() -1 -1 -1] =  el_fem_type[i]; }
+	             temp_i.compare("SE3") == 0 ) { index[mesh.GetDimension() -1 -1 -1] = i; fe_type_vec[mesh.GetDimension() -1 -1 -1] =  el_fem_type[i]; }
 	             
     }
     
@@ -447,23 +443,19 @@ void  SalomeIO::ReadFE(
 	             temp_i.compare("QU8") == 0 ||  
 	             temp_i.compare("QU9") == 0 || 
 	             temp_i.compare("TR3") == 0 || 
-	             temp_i.compare("TR6") == 0    ) { index_vol = i;  index[mesh.GetDimension() -1] = i; fe_type_vec[mesh.GetDimension() -1] = el_fem_type[i];}
+	             temp_i.compare("TR6") == 0    ) {  index[mesh.GetDimension() -1] = i; fe_type_vec[mesh.GetDimension() -1] = el_fem_type[i]; }
           else if  ( temp_i.compare("SE2") == 0 || 
-	             temp_i.compare("SE3") == 0 ) { index_bd = i;  index[mesh.GetDimension() -1 -1] = i; fe_type_vec[mesh.GetDimension() -1 -1] = el_fem_type[i]; }
+	             temp_i.compare("SE3") == 0 ) {  index[mesh.GetDimension() -1 -1] = i; fe_type_vec[mesh.GetDimension() -1 -1] = el_fem_type[i]; }
      
     }
     
     else if (mesh.GetDimension() == 1) {
                if  ( temp_i.compare("SE2") == 0 || 
-	             temp_i.compare("SE3") == 0 ) { index_vol = i; index[mesh.GetDimension() -1] = i; fe_type_vec[mesh.GetDimension() -1] = el_fem_type[i];}
+	             temp_i.compare("SE3") == 0 ) { index[mesh.GetDimension() -1] = i; fe_type_vec[mesh.GetDimension() -1] = el_fem_type[i];}
     }    
-
     
   }
 
-  el_fem_type_vol = el_fem_type[index_vol];
-  el_fem_type_bd  = el_fem_type[index_bd];
-  
   // clean
   for(int i=0; i<(int)n_fem_types; i++) delete[] el_fem_type[i];
   delete[] el_fem_type;
