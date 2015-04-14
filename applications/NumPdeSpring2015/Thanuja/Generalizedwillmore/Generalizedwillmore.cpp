@@ -380,7 +380,7 @@ void AssembleBilaplaceProblem_AD(MultiLevelProblem &ml_prob, unsigned level, con
 	  }
 	}
         
-        double c=0.;
+        double c=.1;
         double Id[2][2]={{1.,0.},{0.,1.}};
 	adept::adouble A2 = 1.;
 	vector < vector < adept::adouble> > B(dim);
