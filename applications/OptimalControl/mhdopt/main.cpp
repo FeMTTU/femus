@@ -210,6 +210,32 @@ int main(int argc, char** argv) {
   ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldHomLagMult",SetInitialCondition);  
   ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldExtLagMult",SetInitialCondition);  
   ml_sol.InitializeMLProb(&ml_prob,"Qty_MagnFieldHomLagMultAdj",SetInitialCondition);  
+
+  // ******* Set boundary function function *******
+  ml_sol.AttachSetBoundaryConditionFunctionMLProb(SetBoundaryCondition);
+  
+  // ******* Generate boundary conditions *******
+  ml_sol.GenerateBdc("Qty_Velocity0","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_Velocity1","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_Velocity2","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_VelocityAdj0","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_VelocityAdj1","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_VelocityAdj2","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_MagnFieldHom0","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_MagnFieldHom1","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_MagnFieldHom2","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_MagnFieldExt0","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_MagnFieldExt1","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_MagnFieldExt2","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_MagnFieldHomAdj0","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_MagnFieldHomAdj1","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_MagnFieldHomAdj2","Steady",&ml_prob);
+
+  ml_sol.GenerateBdc("Qty_Pressure","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_PressureAdj","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_MagnFieldHomLagMult","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_MagnFieldExtLagMult","Steady",&ml_prob);
+  ml_sol.GenerateBdc("Qty_MagnFieldHomLagMultAdj","Steady",&ml_prob);
   
   // ******* Debug *******
   ml_sol.SetWriter(VTK);

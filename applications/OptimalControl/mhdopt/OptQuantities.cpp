@@ -1747,7 +1747,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
    }
   
   if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
-    bc_flag[0] = _qtymap.GetInputParser()->get("UseControl");
+//     bc_flag[0] = 1;  //UseControl
   }
    if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
     bc_flag[0]=0;
@@ -1807,7 +1807,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   }
   
   if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
-    bc_flag[0] = _qtymap.GetInputParser()->get("UseControl");
+//     bc_flag[0] = 1; //UseControl;
   }
    if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
     bc_flag[0]=0;

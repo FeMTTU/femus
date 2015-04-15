@@ -41,6 +41,7 @@ public:
   
   double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z, const char * name);
 
+  bool  SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char * name, double &value, const int facename, const double time);
   
 
   

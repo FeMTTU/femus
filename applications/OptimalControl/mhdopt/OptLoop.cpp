@@ -930,36 +930,16 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
   ml_prob->_ml_msh->GetDomain()->TransformPointToRef(&xp[0],&x_rotshift[0]);
 
   
-  
-  
-  
   //=================  
    if(!strcmp(name,"Qty_Velocity0")) {
+
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;    //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;    //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;    //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1;    //u dot n
      
-  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll ) {  //left of the RefBox
-      test = 1;    //u dot n
-  }
-  
- if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll ) {  //right of the RefBox
-      test = 1;    //u dot n
-  }
-  
-   if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )  {  //bottom  of the RefBox
-      test = 1;      //u x n
-   }
-  
-  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  {  //top of the  of the RefBox
-      test = 1;     //u x n
-  }
-  
-  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll ) {
-      test = 1;  //u x n
-  }
-  
-  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  {
-      test = 1;  //u x n
-  }
- 
       value = 0.; 
    
   }
@@ -967,36 +947,72 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
   else if(!strcmp(name,"Qty_Velocity1")) {
     
   const double Uref = ml_prob->GetInputParser().get("Uref");
-  
-     value = 0.;
+       value = 0.;
 
-   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  {  value = (x_rotshift[0] - lb[0])*(le[0] - x_rotshift[0])*(x_rotshift[2] - lb[2])*(le[2]-x_rotshift[2])/Uref;  }
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                     test = 1;    //u x n
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )     test = 1;   //u x n
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )  {                                  test = 0;  //u dot n   //leave this free for VELOCITY INLET
+                                                                                                     value = (x_rotshift[0] - lb[0])*(le[0] - x_rotshift[0])*(x_rotshift[2] - lb[2])*(le[2]-x_rotshift[2])/Uref;  
+  }
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )   test = 0;  //u dot n   //leave this free for outlet
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                 test = 1;   //u x n
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )   test = 1;   //u x n
   
  
   }
   
   else if(!strcmp(name,"Qty_Velocity2")) {
+
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
     
-      value = 0.; 
+       value = 0.; 
  
   }
   
   
 //=================  
   else if(!strcmp(name,"Qty_VelocityAdj0")) {
- 
+    
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
       value = 0.; 
    
   }
   
   else if(!strcmp(name,"Qty_VelocityAdj1")) {
-    
-       value = 0.; 
 
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll)     test = 1;
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)                                     test = 0; //INSTEAD THIS MUST CORRESPOND TO THE DIRECT
+                                                                                                               //the SPACE of ADJOINT functions is the same as the SPACE for the DIRECT test functions
+                                                                                                               //if you fix this then you dont control...  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)    test = 0;   //INSTEAD THIS MUST CORRESPOND TO THE DIRECT
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;  //u x n
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)    test = 1;  //u x n
+    
+       value = 0.;
+  
   }
   
   else if(!strcmp(name,"Qty_VelocityAdj2")) {
     
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
          value = 0.; 
  
   }
@@ -1004,18 +1020,39 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
  //=================  
   else if(!strcmp(name,"Qty_MagnFieldHomAdj0")) {
  
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
       value = 0.; 
    
   }
   
   else if(!strcmp(name,"Qty_MagnFieldHomAdj1")) {
     
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 0;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 0;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
       value = 0.; 
  
   }
   
   else if(!strcmp(name,"Qty_MagnFieldHomAdj2")) {
     
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;    //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;    //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 0;    //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 0;    //u dot n
+
       value = 0.; 
  
   }
@@ -1023,18 +1060,38 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
  //=================  
   else if(!strcmp(name,"Qty_MagnFieldHom0")) {
  
-      value = 0.; 
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
+ value = 0.; 
    
   }
   
   else if(!strcmp(name,"Qty_MagnFieldHom1")) {
     
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 0;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 0;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
       value = 0.; 
  
   }
   
   else if(!strcmp(name,"Qty_MagnFieldHom2")) {
     
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 0;    //why isn't this fixed as well? 
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 0;    //why isn't this fixed as well? 
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 0;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 0; //u dot n
       value = 0.; 
  
   }
@@ -1046,18 +1103,39 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
   const double Bref = ml_prob->GetInputParser().get("Bref");
  
   value = Bref/Bref;
-   
+  
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                  test = 1;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll)   test = 1;
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)                                   test = 1;
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  test = 0; //UseControl
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                              test = 1;
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  test = 1;
+
   }
   
   else if(!strcmp(name,"Qty_MagnFieldExt1")) {
     
-      value = 0.; 
+  value = 0.; 
+      
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                  test = 1;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll)   test = 1;
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)                                   test = 1;
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  test = 0; //UseControl
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                              test = 1;
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  test = 1;
  
   }
   
   else if(!strcmp(name,"Qty_MagnFieldExt2")) {
     
-      value = 0.; 
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;    //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;    //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
+ value = 0.; 
  
   }
   
@@ -1066,7 +1144,15 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
    //=================  
 
   else if(!strcmp(name,"Qty_Pressure")) {
-    
+
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                     test = 0;  //don't do the integral
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )     test = 0; 
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                     test = 0;
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )   test = 1;  //do the integral
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                 test = 0;  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )   test = 0;
+  
       value = 0.; 
     
      
@@ -1075,12 +1161,25 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
 
   else if(!strcmp(name,"Qty_PressureAdj")) {
     
-      value = 0.; 
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                     test = 0;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )     test = 0; 
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                     test = 0;
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )   test = 0;
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                 test = 0;  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )   test = 0;
     
+      value = 0.; 
      
   }  
   
   else if(!strcmp(name,"Qty_MagnFieldHomLagMult")) {
+    
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                     test = 0;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )     test = 0; 
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                     test = 0;
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )   test = 0;
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                 test = 0;  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )   test = 0;
     
        value = 0.; 
    
@@ -1090,6 +1189,13 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
 
   else if(!strcmp(name,"Qty_MagnFieldExtLagMult")) {
     
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                     test = 0;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )     test = 0; 
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                     test = 0;
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )   test = 0;
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                 test = 0;  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )   test = 0;
+    
       value = 0.; 
     
      
@@ -1097,19 +1203,17 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
   
   else if(!strcmp(name,"Qty_MagnFieldHomLagMultAdj")) {
     
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                     test = 0;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )     test = 0; 
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                     test = 0;
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )   test = 0;
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                 test = 0;  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )   test = 0;
+    
        value = 0.; 
      
   }  
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
   
     return test;
 

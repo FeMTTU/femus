@@ -415,26 +415,13 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
   
   if(!strcmp(name,"Qty_Temperature")) {
  
-   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
-      test=1; 
-      value=0.;
-  }
-
-  if ( (le[0]-lb[0])  - (x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll)  { //right of the RefBox
-      test=1; 
-      value=0.;
-   }
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll )       test=1; 
+  if ( (le[0]-lb[0])  - (x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll)        test=1; 
+  if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)                               test=1; 
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)           test=1; 
    
-  if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
-      test=1; 
-      value=0.;
-  }
+  value = 0.;
   
-  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
-      test=1; 
-      value=0.;
-  }   
-    
   }
   
   
@@ -474,28 +461,15 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
  
   }
   
-  else if(!strcmp(name,"Qty_TempAdj")){
+  else if(!strcmp(name,"Qty_TempAdj")) {
     
     
-  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
-       test=1; 
-      value=0.; 
-  }
-
-  if ( (le[0]-lb[0])  - (x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll)  { //right of the RefBox
-       test=1; 
-      value=0.; 
-   }
-  if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
-       test=1; 
-      value=0.; 
-  }
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll )                                     test = 1; 
+  if ( (le[0]-lb[0])  - (x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll)      test = 1; 
+  if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)                                      test = 1; 
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)         test = 1; 
   
-  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
-       test=1; 
-      value=0.; 
-  }
-    
+    value=0.; 
   
   }
   
