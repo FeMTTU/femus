@@ -102,10 +102,15 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
  
    const uint mesh_vb = VV;
    
-   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
 
-  for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+//    const uint nel_beg = mymsh->IS_Mts2Gmt_elem_offset[myproc];
+//    const uint nel_end = mymsh->IS_Mts2Gmt_elem_offset[myproc+1];
+   
+  for (uint iel = 0; iel < (nel_e - nel_b); iel++) {
+
+//   for (uint iel_two = nel_beg; iel_two < nel_end; iel_two++) {
   
   CurrentElem       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);    
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
@@ -196,9 +201,8 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 //===== FILL the DOFS of the EXTERNAL QUANTITIES:
      velX.GetElemDofs();
      velY.GetElemDofs();
-   if ( Tdes._eqnptr != NULL )  Tdes.GetElemDofs();
-   else                         Tdes._qtyptr->FunctionDof(Tdes,0.,&xyz_refbox._val_dofs[0]);
-
+   
+     TempDesired(Tdes,currelem);
 
    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    

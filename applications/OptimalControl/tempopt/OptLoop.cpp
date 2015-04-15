@@ -152,16 +152,16 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
  
     Tempold.GetElemDofs();
     Tlift.GetElemDofs();
-    if ( Tdes._eqnptr != NULL )         Tdes.GetElemDofs();
-    else                                Tdes._qtyptr->FunctionDof(Tdes,0.,&xyz_refbox._val_dofs[0]);    
+    
+    TempDesired(Tdes,currelem);
 
-      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+    const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
      for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
      
-   const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
+   const double  Jac_g = currgp.JacVectVV_g(xyz);      
    const double  wgt_g = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 
      for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
@@ -375,6 +375,22 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
 return el_flagdom; 
 
 }
+
+
+ void TempDesired(CurrentQuantity& myvect, const CurrentElem & currelem)  {
+   
+   for (uint ivar=0; ivar < myvect._dim; ivar++) {
+       for (uint d=0; d < myvect._ndof; d++)    
+
+     myvect._val_dofs[d+ivar*myvect._ndof] =  0.9;
+     }
+     
+  return;
+  
+ }
+
+
+
 
 
 //---------------------------------------------------------------------------------------------------------------------

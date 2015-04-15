@@ -93,14 +93,7 @@
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-    //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  CurrentQuantity xyz_refbox(currgp);  //no quantity
-    xyz_refbox._dim      = space_dim;
-    xyz_refbox._FEord    = MESH_ORDER;
-    xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-    xyz_refbox.Allocate();
-
-    
+   
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
@@ -108,7 +101,6 @@
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
     
 //MY EQUATION
@@ -124,15 +116,6 @@
 //     Temp2.GetElemDofs();
 //     Temp3.GetElemDofs();
     
-// ===============      
-// Now the point is this: there are several functions of space
-// which are expressed with respect to a reference frame
-//ok, now that the dofs are filled for xyz_refbox, I can use the el_average
-//Well, the alternative is to consider  the elem in the refbox as
-    //either a Vect or a CurrentElem !
-    //I could consider it as another element, but only with the geometrical part!
-
-  xyz_refbox.SetElemAverage();
 //====================    
     
 //===== FILL the DOFS of the EXTERNAL QUANTITIES: you must assure that for every Vect the quantity is set correctly
