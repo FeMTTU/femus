@@ -172,7 +172,6 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
     Bext_vecQuant._ndof    = Bext_vec[0]->_ndof;
     Bext_vecQuant.Allocate();
    
-#if VELOCITY_QTY==1
     CurrentQuantity VelX(currgp);
     VelX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
     VelX.VectWithQtyFillBasic();
@@ -192,7 +191,6 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
     Vel_vec.push_back(&VelX);
     Vel_vec.push_back(&VelY);
     Vel_vec.push_back(&VelZ);
-#endif  
 
 //=========END EXTERNAL QUANTITIES (couplings) =====
 //======================
@@ -210,16 +208,10 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
 
     currelem.SetElDofsBc();
     
-  
     for (uint idim=0; idim < space_dim; idim++)    {    
         BhomOld_vec[idim]->GetElemDofs();
-#if VELOCITY_QTY==1 
-   if ( Vel_vec[idim]->_eqnptr != NULL )  Vel_vec[idim]->GetElemDofs();
-   else                                   Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-#endif
-   if ( Bext_vec[idim]->_eqnptr != NULL )  Bext_vec[idim]->GetElemDofs();
-   else                                    Bext_vec[idim]->_qtyptr->FunctionDof(*Bext_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-    
+            Vel_vec[idim]->GetElemDofs();
+           Bext_vec[idim]->GetElemDofs();
     }
     
    Bext_vecQuant.GetElemDofs(Bext_vec); 
@@ -248,24 +240,18 @@ for (uint fe = 0; fe < QL; fe++)     {
 
     for (uint idim=0; idim < space_dim; idim++)  {
         BhomOld_vec[idim]->val_g();
-#if VELOCITY_QTY==1
             Vel_vec[idim]->val_g();            //---- for Advection MAT & RHS
       Vel_vec_val_g[idim] = Vel_vec[idim]->_val_g[0];
-#endif
            Bext_vec[idim]->val_g();          //----- for Advection RHS
      Bext_vec_val_g[idim] = Bext_vec[idim]->_val_g[0];
            Bext_vec[idim]->grad_g();          //----- for Laplacian RHS
     }
     
-#if BMAG_QTY==1
       Bext_vecQuant.curl_g();          //----- for Curl Curl RHS         //THE EXTENSION of the DOFS to 3D is done INSIDE!!
-#endif
 
-#if (VELOCITY_QTY==1) && (BMAG_QTY==1) //in this case we have two couplings with external quantities
        Math::extend(&Vel_vec_val_g[0],&Vel_vec_val_g3D[0],space_dim);                    //----- for Advection RHS
        Math::extend(&Bext_vec_val_g[0],&Bext_vec_val_g3D[0],space_dim);                    //----- for Advection RHS
        Math::cross(&Vel_vec_val_g3D[0],&Bext_vec_val_g3D[0],vXBe_g3D);          //----- for Advection RHS
-#endif
 
 //================================
 //========= FILLING ELEMENT MAT/RHS
@@ -495,7 +481,6 @@ for (uint fe = 0; fe < QL; fe++)     {
     Bext_vec.push_back(&BextY);
     Bext_vec.push_back(&BextZ);
 
-#if VELOCITY_QTY==1
     CurrentQuantity VelX(currgp);
     VelX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
     VelX.VectWithQtyFillBasic();
@@ -515,7 +500,6 @@ for (uint fe = 0; fe < QL; fe++)     {
     Vel_vec.push_back(&VelX);
     Vel_vec.push_back(&VelY);
     Vel_vec.push_back(&VelZ);
-#endif  
 
 //=========END EXTERNAL QUANTITIES (couplings) =====
   
@@ -548,10 +532,8 @@ for (uint fe = 0; fe < QL; fe++)     {
     
 //========== EXTERNAL DOFS ===   
     for (uint idim=0; idim < space_dim; idim++)    {    
-    if ( Vel_vec[idim]->_eqnptr != NULL )     Vel_vec[idim]->GetElemDofs();
-    else                                      Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-    if ( Bext_vec[idim]->_eqnptr != NULL )   Bext_vec[idim]->GetElemDofs();
-    else                                     Bext_vec[idim]->_qtyptr->FunctionDof(*Bext_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+         Vel_vec[idim]->GetElemDofs();
+        Bext_vec[idim]->GetElemDofs();
    }    
 
    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
@@ -580,13 +562,11 @@ for (uint fe = 0; fe < QL; fe++)     {
      Bext_vec_val_g[idim] =  Bext_vec[idim]->_val_g[0];
     }
     
-#if (VELOCITY_QTY==1) && (BMAG_QTY==1)
           Math::extend(&Vel_vec_val_g[0],&Vel_vec_val_g3D[0],space_dim);
 	  Math::extend(&Bext_vec_val_g[0],&Bext_vec_val_g3D[0],space_dim);
 	  Math::cross(&Vel_vec_val_g3D[0],&Bext_vec_val_g3D[0],velXBext_g3D);
   	  Math::extend(currgp.get_normal_ptr(),normal_g3D,space_dim);
 	  Math::cross(velXBext_g3D,normal_g3D,velXBextXn_g3D);
-#endif
 
 
       // BDRYelement rhs filling

@@ -245,16 +245,12 @@ using namespace femus;
     
  for (uint idim=0; idim < space_dim; idim++)    {
     VelAdjOld_vec[idim]->GetElemDofs();  
-    if ( Vel_vec[idim]->_eqnptr != NULL )          Vel_vec[idim]->GetElemDofs();
-    else                                           Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
-    if ( VelDes_vec[idim]->_eqnptr != NULL )    VelDes_vec[idim]->GetElemDofs();
-    else                                        VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
-    if ( BhomAdj_vec[idim]->_eqnptr != NULL )  BhomAdj_vec[idim]->GetElemDofs();
-    else                                       BhomAdj_vec[idim]->_qtyptr->FunctionDof(*BhomAdj_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
-    if ( Bhom_vec[idim]->_eqnptr != NULL )        Bhom_vec[idim]->GetElemDofs();
-    else                                          Bhom_vec[idim]->_qtyptr->FunctionDof(*Bhom_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-     if ( Bext_vec[idim]->_eqnptr != NULL )       Bext_vec[idim]->GetElemDofs();
-    else                                          Bext_vec[idim]->_qtyptr->FunctionDof(*Bext_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+          Vel_vec[idim]->GetElemDofs();
+      BhomAdj_vec[idim]->GetElemDofs();
+         Bhom_vec[idim]->GetElemDofs();
+         Bext_vec[idim]->GetElemDofs();
+   if ( VelDes_vec[idim]->_eqnptr != NULL )  VelDes_vec[idim]->GetElemDofs();
+    else                                     VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0,&xyz_refbox._val_dofs[0]);    
  }
     
     

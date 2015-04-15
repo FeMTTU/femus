@@ -68,33 +68,9 @@ public:
 //===========PHYSICAL FRAMEWORKS FLAGS 
 //====================================
 
-//*********************************
-#define VELOCITY_QTY 1
-//Provided quantities: Velocity
-//*********************************
-#define PRESSURE_QTY 1
-//Provided quantities: Pressure
-//*********************************
-#define BMAG_QTY 1
-//Provided quantities: MagnFieldHom
-//                     MagnFieldHomLagMult
-//                     MagnFieldExt
-//                     MagnFieldExtLagMult
-//*********************************
-#define OPT_CONTROL 1
-//Provided quantities: DesVelocity
-//*********************************
-
-
 //**********************************
  #define NS_EQUATIONS    1
-//===== Provides: Velocity, Pressure
-//===== C++Name: EqnNS
-//===== MapName: "Eqn_NS"
-#if (NS_EQUATIONS==1)  //Dependency of this Equation on the Quantities it computes for
-    #define VELOCITY_QTY 1
-    #define PRESSURE_QTY 1
-#endif
+
 //**********************************
  #define     MHD_EQUATIONS 1
 //=== Provides: MagnFieldHom

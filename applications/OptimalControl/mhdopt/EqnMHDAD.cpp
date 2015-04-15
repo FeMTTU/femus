@@ -215,18 +215,11 @@ using namespace femus;
     currelem.SetElDofsBc();
     
     for (uint idim=0; idim < space_dim; idim++)    {
-      
            BhomAdjOld_vec[idim]->GetElemDofs();
-      
-      if ( Vel_vec[idim]->_eqnptr != NULL )    Vel_vec[idim]->GetElemDofs();
-    else                                       Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-    if ( VelAdj_vec[idim]->_eqnptr != NULL) VelAdj_vec[idim]->GetElemDofs();
-    else                                    VelAdj_vec[idim]->_qtyptr->FunctionDof(*VelAdj_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-    if ( Bhom_vec[idim]->_eqnptr != NULL )    Bhom_vec[idim]->GetElemDofs();
-    else                                      Bhom_vec[idim]->_qtyptr->FunctionDof(*Bhom_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-    if ( Bext_vec[idim]->_eqnptr != NULL )    Bext_vec[idim]->GetElemDofs();
-    else                                      Bext_vec[idim]->_qtyptr->FunctionDof(*Bext_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-   
+                  Vel_vec[idim]->GetElemDofs();
+               VelAdj_vec[idim]->GetElemDofs();
+                 Bhom_vec[idim]->GetElemDofs();
+                 Bext_vec[idim]->GetElemDofs();
     }
     
 

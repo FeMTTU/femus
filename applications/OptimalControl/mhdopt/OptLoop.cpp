@@ -579,10 +579,9 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 //=======        
 
  for (uint idim=0; idim < space_dim; idim++)    {
-    if ( Vel_vec[idim]->_eqnptr != NULL )  Vel_vec[idim]->GetElemDofs();
-    else                                   Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
+    Vel_vec[idim]->GetElemDofs();
    if ( VelDes_vec[idim]->_eqnptr != NULL )  VelDes_vec[idim]->GetElemDofs();
-    else                                    VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0,&xyz_refbox._val_dofs[0]);    
+    else                                     VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0,&xyz_refbox._val_dofs[0]);    
     
     }    
 

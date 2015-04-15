@@ -150,10 +150,8 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
       int el_flagdom = ElFlagControl(xyz_refbox._el_average,eqn->GetMLProb()._ml_msh);
 //====================     
  
-    if ( Tempold._eqnptr != NULL )   Tempold.GetElemDofs();
-    else                             Tempold._qtyptr->FunctionDof(Tempold,0.,&xyz_refbox._val_dofs[0]);
-    if ( Tlift._eqnptr != NULL )       Tlift.GetElemDofs();
-    else                               Tlift._qtyptr->FunctionDof(Tlift,0.,&xyz_refbox._val_dofs[0]);
+    Tempold.GetElemDofs();
+    Tlift.GetElemDofs();
     if ( Tdes._eqnptr != NULL )         Tdes.GetElemDofs();
     else                                Tdes._qtyptr->FunctionDof(Tdes,0.,&xyz_refbox._val_dofs[0]);    
 
@@ -684,6 +682,14 @@ double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, c
 
      
   }
+
+  else if(!strcmp(name,"Qty_TempDes")) {
+    
+    
+  value =  0.9;
+
+     
+  }  
   
   return value;
 }

@@ -79,8 +79,6 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
   const unsigned myproc  = mymsh->processor_id();
 	
   
-  const double time = 0.; // ml_prob._timeloop._curr_time;
-
   //======== ELEMENT MAPPING =======
   const uint space_dim =       ml_prob._ml_msh->GetDimension();
 
@@ -196,14 +194,10 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 //====================    
     
 //===== FILL the DOFS of the EXTERNAL QUANTITIES:
-   if ( velX._eqnptr != NULL )  velX.GetElemDofs();
-   else                         velX._qtyptr->FunctionDof(velX,time,&xyz_refbox._val_dofs[0]);
-   
-   if ( velY._eqnptr != NULL )  velY.GetElemDofs();
-   else                         velY._qtyptr->FunctionDof(velY,time,&xyz_refbox._val_dofs[0]);
-
+     velX.GetElemDofs();
+     velY.GetElemDofs();
    if ( Tdes._eqnptr != NULL )  Tdes.GetElemDofs();
-   else                         Tdes._qtyptr->FunctionDof(Tdes,time,&xyz_refbox._val_dofs[0]);
+   else                         Tdes._qtyptr->FunctionDof(Tdes,0.,&xyz_refbox._val_dofs[0]);
 
 
    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
@@ -232,12 +226,7 @@ for (uint fe = 0; fe < QL; fe++)     {
            velX.val_g(); 
            velY.val_g(); 
            Tdes.val_g();
-   
-	   // always remember to get the dofs for the variables you use!
-           // The point is that you fill the dofs with different functions...
-           // you should need a flag to check if the dofs have been correctly filled
-
-      /// d) Local (element) assemblying energy equation
+ 
       for (uint i=0; i < Tempold._ndof; i++)     {
 
         const double phii_g = currgp._phi_ndsQLVB_g[Tempold._FEord][i];

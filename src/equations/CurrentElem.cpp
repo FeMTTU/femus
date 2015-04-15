@@ -272,7 +272,7 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
   const uint offset = _el_conn.size();
  
  //TODO ASSERT
- /* assert(*/ if (elndof > offset) {std::cout << "Quadratic transformation over linear mesh " << std::endl;abort();}  /*);*/
+ /* assert(*/ if (elndof > offset) { std::cout << "Quadratic transformation over linear mesh " << std::endl; abort(); }  /*);*/
   
   //information for passing from mesh to dofs
   

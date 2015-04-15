@@ -198,7 +198,6 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
   xyz_refbox.Allocate();
     
 //============================ MAG WORLD =======================================
- #if BMAG_QTY==1  
     CurrentQuantity BhomX(currgp);
     BhomX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHom0"); 
     BhomX.VectWithQtyFillBasic();
@@ -249,7 +248,6 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     Bmag._FEord      = BhomX._FEord;
     Bmag._ndof       = BhomX._ndof;
     Bmag.Allocate();
-#endif
 //======================== MAG WORLD ================================
 
 //=======gravity==================================
@@ -285,13 +283,9 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 //=======RETRIEVE the DOFS of the COUPLED QUANTITIES    
   
   for (uint idim=0; idim < space_dim; idim++) { 
-#if (BMAG_QTY==1)
-       if ( Bhom_vec[idim]->_eqnptr != NULL )  Bhom_vec[idim]->GetElemDofs();   
-       else                                    Bhom_vec[idim]->_qtyptr->FunctionDof(*Bhom_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-       if ( Bext_vec[idim]->_eqnptr != NULL )  Bext_vec[idim]->GetElemDofs(); 
-       else                                    Bext_vec[idim]->_qtyptr->FunctionDof(*Bext_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-#endif
-   }
+         Bhom_vec[idim]->GetElemDofs();   
+         Bext_vec[idim]->GetElemDofs(); 
+     }
 
 //=== the connectivity is only related to the ELEMENT, so it is GEOMETRICAL
 //===then, the DofMap is RELATED to the EQUATION the Vect comes from!
@@ -299,7 +293,6 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 //===== After having all the dofs retrieved, we can start MANIPULATING them a bit!
      //Summing them    //Extending them,     //Whatever is performed on the Vect._val_dofs
 
-  #if (BMAG_QTY==1)   
 //======SUM Bhom and Bext  //from now on, you'll only use Bmag //Bmag,Bext and Bhom must have the same orders!
     Math::zeroN(&Bmag._val_dofs[0],Bmag._dim*Bmag._ndof);
 
@@ -318,7 +311,6 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 //if you have some multiplication v x phii , where phii is the test function?
 //No, you already have the gauss values in that case
 
-#endif
 
     double rho_nd =  1.;
     double  mu_nd =  1.;
@@ -387,7 +379,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 	  double Div_g=0.;
           for (uint idim=0; idim<space_dim; idim++)    Div_g += VelOld_vec[idim]->_grad_g[0][idim];
 
-#if (BMAG_QTY==1)
+
+	  
 //compute curlB
 //what is needed for curlB, ie the dofs3D and the dphi3D, is done BEFORE for the  dphi3D and here for the dofs3D  
 //      ExtendDphiDxyzElDofsFEVB_g(vb,Bmag._FEord/*FE_MAG*/);
@@ -402,8 +395,9 @@ for (uint fe = 0; fe < QL; fe++)     {
 
 //compute JxB
           Math::cross(Jext_g3D,&Bmag._val_g3D[0],JextXB_g3D);
-#endif
 
+	  
+	  
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================
 //==============================================================
@@ -424,10 +418,9 @@ for (uint fe = 0; fe < QL; fe++)     {
            dtxJxW_g*(          NonStatNS*rho_nd*     VelOld_vec[idim]->_val_g[0]*phii_g/dt  //time
                             + _AdvNew_fl*rho_nd*          AdvRhs_g[idim]*phii_g     //TODO NONLIN
                             +            rho_nd*IFr*gravity._val_g[idim]*phii_g     // gravity
-#if (BMAG_QTY==1)
+                            
                             +                        S*curlBXB_g3D[idim]*phii_g   //TODO NONLIN external
                             +                           JextXB_g3D[idim]*phii_g  
-#endif                            
                                )
             + (1-currelem.GetBCDofFlag()[irowq])*detb*VelOld_vec[idim]->_val_dofs[i] //Dirichlet bc    
 	;

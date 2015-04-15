@@ -119,8 +119,8 @@ using namespace femus;
   xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
   xyz_refbox.Allocate();
   
-#if VELOCITY_QTY==1
-        CurrentQuantity VelX(currgp);
+
+    CurrentQuantity VelX(currgp);
     VelX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
     VelX.VectWithQtyFillBasic();
     VelX.Allocate();
@@ -139,7 +139,6 @@ using namespace femus;
     Vel_vec.push_back(&VelX);
     Vel_vec.push_back(&VelY);
     Vel_vec.push_back(&VelZ);
-#endif  
 
   //==========
       CurrentQuantity VelAdjX(currgp);
@@ -234,14 +233,10 @@ using namespace femus;
  
     for (uint idim=0; idim < space_dim; idim++)    {
           BextOld_vec[idim]->GetElemDofs(); 
-     if ( Vel_vec[idim]->_eqnptr != NULL )        Vel_vec[idim]->GetElemDofs();
-    else                                          Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-    if ( VelAdj_vec[idim]->_eqnptr != NULL )   VelAdj_vec[idim]->GetElemDofs();
-    else                                       VelAdj_vec[idim]->_qtyptr->FunctionDof(*VelAdj_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-    if ( BhomAdj_vec[idim]->_eqnptr != NULL ) BhomAdj_vec[idim]->GetElemDofs();
-    else                                      BhomAdj_vec[idim]->_qtyptr->FunctionDof(*BhomAdj_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
-    if ( Bhom_vec[idim]->_eqnptr != NULL )       Bhom_vec[idim]->GetElemDofs();
-    else                                         Bhom_vec[idim]->_qtyptr->FunctionDof(*Bhom_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+              Vel_vec[idim]->GetElemDofs();
+           VelAdj_vec[idim]->GetElemDofs();
+          BhomAdj_vec[idim]->GetElemDofs();
+             Bhom_vec[idim]->GetElemDofs();
     }
     
     
