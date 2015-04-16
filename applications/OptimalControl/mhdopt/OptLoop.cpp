@@ -491,12 +491,10 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   const unsigned myproc  = mymsh->processor_id();
   // geometry -----
   const uint  space_dim =       mesh->get_dim();
-  
 
    
    double integral = 0.;
     
-
 //parallel sum
     const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
     const uint nel_b = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level];
@@ -556,38 +554,30 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     VelDes_vec.push_back(&VelDesZ);
 
 
-    
-      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
-      
-      
     currelem.SetDofobjConnCoords();
-    currelem.SetMidpoint();
     
-    currelem.ConvertElemCoordsToMappingOrd(xyz);
 
-//======= 
+    currelem.ConvertElemCoordsToMappingOrd(xyz);
     xyz.SetElemAverage();
     int el_flagdom = ElFlagControl(xyz._el_average,eqn->GetMLProb()._ml_msh);
-//=======        
 
+    
  for (uint idim=0; idim < space_dim; idim++)    {
        Vel_vec[idim]->GetElemDofs();
        VelDesired(&eqn->GetMLProb(),*VelDes_vec[idim],currelem,idim);
     }    
 
-//AAA time is picked as a function pointer of the time C library i think...
-    // it doesnt say it was not declared
-    //here's why you should remove all unused headers always!
-    
+      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
-for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
+for (uint fe = 0; fe < QL; fe++) {
+  currgp.SetPhiElDofsFEVB_g (fe,qp);
+  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);
+}  
      
    const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
    const double  wgt_g = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
-
-     for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
 
  for (uint idim=0; idim < space_dim; idim++) {
@@ -598,12 +588,9 @@ for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp
   double deltau_squarenorm_g = 0.;
 for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel_vec[j]->_val_g[0] - VelDes_vec[j]->_val_g[0])*(Vel_vec[j]->_val_g[0] - VelDes_vec[j]->_val_g[0]); }
 
-  //NO for (uint j=0; j<space_dim; j++) { the integral is a scalar!
  
   integral += el_flagdom*wgt_g*Jac_g*deltau_squarenorm_g;
 
-  //}
-   
    
     }//gauss loop
      

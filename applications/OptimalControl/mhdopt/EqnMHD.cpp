@@ -194,12 +194,11 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
     currelem.Mat().zero();
     currelem.Rhs().zero();
 
-     currelem.SetDofobjConnCoords();
-     currelem.SetMidpoint();
-     
+    currelem.SetDofobjConnCoords();
+     currelem.SetElDofsBc();
+    
     currelem.ConvertElemCoordsToMappingOrd(xyz);
 
-    currelem.SetElDofsBc();
     
     for (uint idim=0; idim < space_dim; idim++)    {    
         BhomOld_vec[idim]->GetElemDofs();
@@ -503,24 +502,20 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.Rhs().zero(); 
      
      currelem.SetDofobjConnCoords();
-     currelem.SetMidpoint();
+     currelem.SetElDofsBc();
 
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-   
-     currelem.SetElDofsBc();
-     
-     
      LagMultOld.GetElemDofs();
-
-//============ BC =======
-       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(BhomOldX._ndof,space_dim,LagMultOld); 
-//========END BC=========    
     
 //========== EXTERNAL DOFS ===   
     for (uint idim=0; idim < space_dim; idim++)    {    
          Vel_vec[idim]->GetElemDofs();
         Bext_vec[idim]->GetElemDofs();
    }    
+
+//============ BC =======
+       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(BhomOldX._ndof,space_dim,LagMultOld); 
+//========END BC=========    
 
    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    

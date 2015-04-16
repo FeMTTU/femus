@@ -89,8 +89,6 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
  
   const uint mesh_vb = VV;
 
-
-
   
    double integral = 0.;
 
@@ -133,10 +131,8 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     xyz.Allocate();
 
       currelem.SetDofobjConnCoords();
-      currelem.SetMidpoint();
       
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-
 // =============== 
      xyz.SetElemAverage();
      int el_flagdom = ElFlagControl(xyz._el_average,eqn->GetMLProb()._ml_msh);
@@ -254,7 +250,6 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
 
   
       currelem.SetDofobjConnCoords();
-      currelem.SetMidpoint();
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
      

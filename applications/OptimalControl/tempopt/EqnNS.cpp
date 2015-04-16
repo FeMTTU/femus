@@ -138,19 +138,15 @@
     currelem.Rhs().zero(); 
 
     currelem.SetDofobjConnCoords();
-    currelem.SetMidpoint();
+    currelem.SetElDofsBc();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
-    currelem.SetElDofsBc();
      VelOldX.GetElemDofs();
      VelOldY.GetElemDofs();
     pressOld.GetElemDofs();
 
-//==============================================================
-//================== GAUSS LOOP (qp loop) ======================
-//==============================================================
    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp = 0; qp < el_ngauss; qp++) {  

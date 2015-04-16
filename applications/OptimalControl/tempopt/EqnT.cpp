@@ -174,26 +174,22 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     currelem.Rhs().zero(); 
 
     currelem.SetDofobjConnCoords();
-    currelem.SetMidpoint();
-
-    currelem.ConvertElemCoordsToMappingOrd(xyz);
-    
     currelem.SetElDofsBc();
+    
 
   Tempold.GetElemDofs();
     Tlift.GetElemDofs();
      TAdj.GetElemDofs();
      
-
-  xyz.SetElemAverage();
-  int domain_flag = ElFlagControl(xyz._el_average,ml_prob._ml_msh);
-//====================    
-    
-//===== FILL the DOFS of the EXTERNAL QUANTITIES:
      velX.GetElemDofs();
      velY.GetElemDofs();
    
      TempDesired(Tdes,currelem);
+     
+    currelem.ConvertElemCoordsToMappingOrd(xyz);
+    xyz.SetElemAverage();
+    int domain_flag = ElFlagControl(xyz._el_average,ml_prob._ml_msh);
+//====================    
 
    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    

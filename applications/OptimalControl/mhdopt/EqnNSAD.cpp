@@ -225,7 +225,6 @@ using namespace femus;
     currelem.Rhs().zero(); 
 
     currelem.SetDofobjConnCoords();
-    currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
 
@@ -453,17 +452,12 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.Rhs().zero();
 
      currelem.SetDofobjConnCoords();
-     currelem.SetMidpoint();
-     
-     currelem.ConvertElemCoordsToMappingOrd(xyz);
-
      currelem.SetElDofsBc();
-
+    
+     currelem.ConvertElemCoordsToMappingOrd(xyz);
      PressAdjOld.GetElemDofs();
 
-//============ BC =======
        int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(VelAdjOldX._ndof,space_dim,PressAdjOld); 
- //========END BC============
    
    //==============================================================
 //================== GAUSS LOOP (qp loop) ======================

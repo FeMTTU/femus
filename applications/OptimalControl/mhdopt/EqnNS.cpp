@@ -261,7 +261,6 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     currelem.Rhs().zero(); 
 
     currelem.SetDofobjConnCoords();
-    currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
 
@@ -575,7 +574,6 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.Rhs().zero();
 
      currelem.SetDofobjConnCoords();
-     currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
 
