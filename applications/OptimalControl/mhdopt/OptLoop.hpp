@@ -39,6 +39,8 @@ public:
 
   int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMesh* mesh);
   
+  void VelDesired(const MultiLevelProblem * ml_prob, CurrentQuantity& myvect, const CurrentElem & currelem, const uint idim);
+  
   double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z, const char * name);
 
   bool  SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char * name, double &value, const int facename, const double time);

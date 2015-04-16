@@ -249,8 +249,7 @@ using namespace femus;
       BhomAdj_vec[idim]->GetElemDofs();
          Bhom_vec[idim]->GetElemDofs();
          Bext_vec[idim]->GetElemDofs();
-   if ( VelDes_vec[idim]->_eqnptr != NULL )  VelDes_vec[idim]->GetElemDofs();
-    else                                     VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0,&xyz_refbox._val_dofs[0]);    
+    VelDesired(&ml_prob,*VelDes_vec[idim],currelem,idim);
  }
     
     

@@ -494,7 +494,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   
 
    
-   double integral=0.;
+   double integral = 0.;
     
 
 //parallel sum
@@ -579,10 +579,8 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 //=======        
 
  for (uint idim=0; idim < space_dim; idim++)    {
-    Vel_vec[idim]->GetElemDofs();
-   if ( VelDes_vec[idim]->_eqnptr != NULL )  VelDes_vec[idim]->GetElemDofs();
-    else                                     VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0,&xyz_refbox._val_dofs[0]);    
-    
+       Vel_vec[idim]->GetElemDofs();
+       VelDesired(&eqn->GetMLProb(),*VelDes_vec[idim],currelem,idim);
     }    
 
 //AAA time is picked as a function pointer of the time C library i think...
@@ -653,6 +651,64 @@ for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel_vec[j]->_val_g[0]
 
 return el_flagdom; 
 }
+
+
+
+ void VelDesired(const MultiLevelProblem * ml_prob, CurrentQuantity& myvect, const CurrentElem & currelem, const uint idim)  {
+   
+  const double Lref = ml_prob->GetInputParser().get("Lref");
+  const double Uref = ml_prob->GetInputParser().get("Uref");
+  double ILref = 1./Lref;
+    
+  const double rhof   = ml_prob->GetInputParser().get("rho0");
+  const double muvel  = ml_prob->GetInputParser().get("mu0");
+  const double MUMHD  = ml_prob->GetInputParser().get("MUMHD");
+  const double SIGMHD = ml_prob->GetInputParser().get("SIGMHD");
+  const double Bref   = ml_prob->GetInputParser().get("Bref");
+
+  const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution
+
+  double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
+
+  double Re  = ml_prob->GetInputParser().get("Re");
+  double Rem = ml_prob->GetInputParser().get("Rem");
+  double Hm  = ml_prob->GetInputParser().get("Hm");
+  double S   = ml_prob->GetInputParser().get("S");
+ 
+  
+  Box* box= static_cast<Box*>(ml_prob->_ml_msh->GetDomain());
+  
+  
+  double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
+  double Lmid  = 0.5*(box->_le[0] + box->_lb[0]);
+
+
+
+  //constant for the real reference length in the Hartmann number
+  const double LHm =2.;   //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
+
+
+  
+       for (uint d=0; d < myvect._ndof; d++)   {
+	 
+
+          if (idim == 0) myvect._val_dofs[d] =  0.;  
+     else if (idim == 1){
+         double xtr = currelem.GetNodeCoords()[d] - Lmid;
+         const double magnitude = ml_prob->GetInputParser().get("udes")*DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
+                         myvect._val_dofs[d] =  magnitude; 
+     }
+     else if (idim == 2) myvect._val_dofs[d] =  0.; 
+
+ 
+      }
+     
+  return;
+  
+ }
+
+
+
 
 
 
