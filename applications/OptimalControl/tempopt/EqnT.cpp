@@ -145,13 +145,6 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-    //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  CurrentQuantity xyz_refbox(currgp);  //no quantity
-    xyz_refbox._dim      = space_dim;
-    xyz_refbox._FEord    = MESH_ORDER;
-    xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-    xyz_refbox.Allocate();
-  
   //==================
     CurrentQuantity velX(currgp);
     velX._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
@@ -184,8 +177,6 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     currelem.SetMidpoint();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
-    
     
     currelem.SetElDofsBc();
 
@@ -194,8 +185,8 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
      TAdj.GetElemDofs();
      
 
-  xyz_refbox.SetElemAverage();
-  int domain_flag = ElFlagControl(xyz_refbox._el_average,ml_prob._ml_msh);
+  xyz.SetElemAverage();
+  int domain_flag = ElFlagControl(xyz._el_average,ml_prob._ml_msh);
 //====================    
     
 //===== FILL the DOFS of the EXTERNAL QUANTITIES:

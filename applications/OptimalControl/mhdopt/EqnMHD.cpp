@@ -139,12 +139,6 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
     
-    //================== Quadratic domain, auxiliary
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-  xyz_refbox.Allocate();
 
     CurrentQuantity BextX(currgp);
     BextX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt0"); 
@@ -204,7 +198,6 @@ void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
      currelem.SetMidpoint();
      
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
     currelem.SetElDofsBc();
     
@@ -454,12 +447,6 @@ for (uint fe = 0; fe < QL; fe++)     {
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
     
-    //================== Quadratic domain, auxiliary
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
-  xyz_refbox.Allocate();
 
     CurrentQuantity BextX(currgp);
     BextX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldExt0"); 
@@ -519,7 +506,6 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.SetMidpoint();
 
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
    
      currelem.SetElDofsBc();
      
@@ -550,10 +536,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 	const double dtxJxW_g = det * ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end of the "COMMON SHAPE PART"===================================
 
-//---------lagmult
-	    //"post gauss method"
-   xyz_refbox.val_g(); // val_g(vb,xyz);   //CHECK the QUADRATICS!!!!!!!!!
-      LagMultOld._qtyptr->Function_txyz(0.,&xyz_refbox._val_g[0],&LagMultOld._val_g[0]);  //check that you have ZERO here
+   xyz.val_g();
+      LagMultOld._qtyptr->Function_txyz(0.,&xyz._val_g[0],&LagMultOld._val_g[0]);  //check that you have ZERO here
       
     for (uint idim=0; idim < space_dim; idim++) {
             Vel_vec[idim]->val_g();

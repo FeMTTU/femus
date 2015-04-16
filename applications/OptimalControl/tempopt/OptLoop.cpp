@@ -132,22 +132,14 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-//========== Quadratic domain, auxiliary  
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = mymsh->el->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-  xyz_refbox.Allocate();
-  
       currelem.SetDofobjConnCoords();
       currelem.SetMidpoint();
       
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     currelem.TransformElemNodesToRef(eqn->GetMLProb().GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 // =============== 
-      xyz_refbox.SetElemAverage();
-      int el_flagdom = ElFlagControl(xyz_refbox._el_average,eqn->GetMLProb()._ml_msh);
+     xyz.SetElemAverage();
+     int el_flagdom = ElFlagControl(xyz._el_average,eqn->GetMLProb()._ml_msh);
 //====================     
  
     Tempold.GetElemDofs();
@@ -159,12 +151,13 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
-     for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
+     for (uint fe = 0; fe < QL; fe++)     {  
+       currgp.SetPhiElDofsFEVB_g (fe,qp);
+       currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  
+    }  
      
    const double  Jac_g = currgp.JacVectVV_g(xyz);      
    const double  wgt_g = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
-
-     for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
  Tempold.val_g();
    Tlift.val_g();
@@ -259,24 +252,15 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-//========== Quadratic domain, auxiliary  
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = mymsh->el->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-  xyz_refbox.Allocate();
   
-//loop over the geom el types
-      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();      
-      
       currelem.SetDofobjConnCoords();
       currelem.SetMidpoint();
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-      currelem.TransformElemNodesToRef(eqn->GetMLProb().GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
      
      Tlift.GetElemDofs();
 
+     const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();      
 
   for (uint qp = 0; qp < el_ngauss; qp++) {
 
@@ -285,7 +269,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
        currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  
     }  
      
-      const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
+      const double  Jac_g = currgp.JacVectVV_g(xyz);      
       const double  wgt_g = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 
   Tlift.val_g();
@@ -379,11 +363,9 @@ return el_flagdom;
 
  void TempDesired(CurrentQuantity& myvect, const CurrentElem & currelem)  {
    
-   for (uint ivar=0; ivar < myvect._dim; ivar++) {
-       for (uint d=0; d < myvect._ndof; d++)    
-
-     myvect._val_dofs[d+ivar*myvect._ndof] =  0.9;
-     }
+   for (uint ivar=0; ivar < myvect._dim; ivar++) 
+       for (uint d=0; d < myvect._ndof; d++)      myvect._val_dofs[d+ivar*myvect._ndof] =  0.9;
+ 
      
   return;
   

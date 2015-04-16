@@ -112,12 +112,6 @@ using namespace femus;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-    //==================Quadratic domain, auxiliary
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-  xyz_refbox.Allocate();
   
 
     CurrentQuantity VelX(currgp);
@@ -226,7 +220,6 @@ using namespace femus;
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
     currelem.SetElDofsBc();
     
@@ -481,14 +474,6 @@ for (uint fe = 0; fe < QL; fe++)     {
     xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
-
-    //==================Quadratic domain, auxiliary
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
-  xyz_refbox.Allocate();
-  
   //=========END EXTERNAL QUANTITIES (couplings) =====
 
 
@@ -499,7 +484,6 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
      currelem.SetElDofsBc();
      
@@ -526,8 +510,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 	const double dtxJxW_g = det*ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
-   xyz_refbox.val_g();
-      LagMultOld._qtyptr->Function_txyz(0.,&xyz_refbox._val_g[0]/*xyz._val_g*/,&LagMultOld._val_g[0]);  //i prefer using the function instead of the p_old vector
+   xyz.val_g();
+      LagMultOld._qtyptr->Function_txyz(0.,&xyz._val_g[0]/*xyz._val_g*/,&LagMultOld._val_g[0]);  //i prefer using the function instead of the p_old vector
 
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================

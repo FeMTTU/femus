@@ -98,15 +98,6 @@ using namespace femus;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-//========== Quadratic domain, auxiliary  
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-  xyz_refbox.Allocate();
-  
-  
-  
     CurrentQuantity VelX(currgp);
     VelX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
     VelX.VectWithQtyFillBasic();
@@ -237,7 +228,6 @@ using namespace femus;
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
     currelem.SetElDofsBc();
     
@@ -268,11 +258,9 @@ using namespace femus;
     }    
 //=======    
     
-//=======    
 ///optimal control
-    xyz_refbox.SetElemAverage();
-  int el_flagdom = ElFlagControl(xyz_refbox._el_average,ml_prob._ml_msh);
-//=======    
+    xyz.SetElemAverage();
+  int el_flagdom = ElFlagControl(xyz._el_average,ml_prob._ml_msh);
 
 
    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
@@ -452,8 +440,6 @@ for (uint fe = 0; fe < QL; fe++)     {
     PressAdjOld.Allocate();
 //========= END INTERNAL QUANTITIES (unknowns of the equation) =================
   
-//=========EXTERNAL QUANTITIES (couplings) =====
-
 //========= DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
     xyz._dim      = space_dim;
@@ -461,14 +447,6 @@ for (uint fe = 0; fe < QL; fe++)     {
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-//========== Quadratic domain, auxiliary  
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
-  xyz_refbox.Allocate();
-  
-//========= END EXTERNAL QUANTITIES =================
 
 
      currelem.Mat().zero();
@@ -478,7 +456,6 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
      currelem.SetElDofsBc();
 
@@ -504,8 +481,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 	const double dtxJxW_g = det * ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================   
       
-   xyz_refbox.val_g();
-      PressAdjOld._qtyptr->Function_txyz(0.,&xyz_refbox._val_g[0]/*xyz._val_g*/,&PressAdjOld._val_g[0]);  //i prefer using the function instead of the p_old vector
+   xyz.val_g();
+      PressAdjOld._qtyptr->Function_txyz(0.,&xyz._val_g[0]/*xyz._val_g*/,&PressAdjOld._val_g[0]);  //i prefer using the function instead of the p_old vector
       
 
 //==============================================================

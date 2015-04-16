@@ -190,13 +190,6 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-    //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-  xyz_refbox.Allocate();
-    
 //============================ MAG WORLD =======================================
     CurrentQuantity BhomX(currgp);
     BhomX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_MagnFieldHom0"); 
@@ -271,7 +264,6 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
     currelem.SetElDofsBc();
@@ -576,20 +568,8 @@ for (uint fe = 0; fe < QL; fe++)     {
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-    //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
-  xyz_refbox.Allocate();
-
-//=======================
 //=======================    
     
-//=== auxiliary Operators at the boundary
-  double strainU_g[DIMENSION][DIMENSION];
-  double strainUtrDn_g[DIMENSION];
-
 
      currelem.Mat().zero();
      currelem.Rhs().zero();
@@ -598,7 +578,6 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.SetMidpoint();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
      currelem.SetElDofsBc();
      
@@ -625,8 +604,8 @@ for (uint fe = 0; fe < QL; fe++)     {
 	const double dtxJxW_g = det * ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
-   xyz_refbox.val_g(); 
-      pressOld._qtyptr->Function_txyz(0.,&xyz_refbox._val_g[0],&pressOld._val_g[0]);  //i prefer using the function instead of the p_old vector
+   xyz.val_g(); 
+      pressOld._qtyptr->Function_txyz(0.,&xyz._val_g[0],&pressOld._val_g[0]);  //i prefer using the function instead of the p_old vector
 //        pressOld.val_g();  //this is the alternative
       
 //==============================================================

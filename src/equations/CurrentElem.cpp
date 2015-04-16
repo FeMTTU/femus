@@ -310,26 +310,26 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
   }
 
   
-// ========================================================
-//This function transforms the node coordinates into the reference node coordinates
-  void CurrentElem::TransformElemNodesToRef(Domain* mydom, double* refbox_xyz) {
-   
-   std::vector<double>   x_in(_dim);
-   std::vector<double>   x_out(_dim);
-  const uint el_nds = _xx_nds.size()/_mesh.get_dim();
-
-      for ( uint n=0; n < el_nds; n++ ) {
-	
-   for ( uint idim=0; idim < _dim; idim++ )  x_in[idim] = _xx_nds[n + idim*el_nds];
-  
-  mydom->TransformPointToRef(&x_in[0],&x_out[0]);
-
-   for ( uint idim=0; idim < _dim; idim++ )  refbox_xyz[n + idim*el_nds] = x_out[idim];
-   
-      }
-   
-  return; 
- }
+// // // // ========================================================
+// // // //This function transforms the node coordinates into the reference node coordinates
+// // //   void CurrentElem::TransformElemNodesToRef(Domain* mydom, double* refbox_xyz) {
+// // //    
+// // //    std::vector<double>   x_in(_dim);
+// // //    std::vector<double>   x_out(_dim);
+// // //   const uint el_nds = _xx_nds.size()/_mesh.get_dim();
+// // // 
+// // //       for ( uint n=0; n < el_nds; n++ ) {
+// // // 	
+// // //    for ( uint idim=0; idim < _dim; idim++ )  x_in[idim] = _xx_nds[n + idim*el_nds];
+// // //   
+// // //   mydom->TransformPointToRef(&x_in[0],&x_out[0]);
+// // // 
+// // //    for ( uint idim=0; idim < _dim; idim++ )  refbox_xyz[n + idim*el_nds] = x_out[idim];
+// // //    
+// // //       }
+// // //    
+// // //   return; 
+// // //  }
 
  
     // =====================================================================================

@@ -513,13 +513,6 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-//========== Quadratic domain, auxiliary  
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = mymsh->el->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-  xyz_refbox.Allocate();
-  
      //========== 
     CurrentQuantity VelX(currgp);
     VelX._qtyptr      = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Velocity0"); 
@@ -571,11 +564,10 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(eqn->GetMLProb().GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 //======= 
-    xyz_refbox.SetElemAverage();
-    int el_flagdom = ElFlagControl(xyz_refbox._el_average,eqn->GetMLProb()._ml_msh);
+    xyz.SetElemAverage();
+    int el_flagdom = ElFlagControl(xyz._el_average,eqn->GetMLProb()._ml_msh);
 //=======        
 
  for (uint idim=0; idim < space_dim; idim++)    {
