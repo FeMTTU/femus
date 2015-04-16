@@ -177,6 +177,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   _mesh.el->SetElementGroupNumber(elc->GetElementGroupNumber());
   _mesh.el->SetNumberElementFather(elc->GetElementNumber());
 
+  bool AMR = false;
   for (unsigned iel=0; iel<elc->GetElementNumber(); iel++) {
     if ( elc->GetRefinedElementIndex(iel) ) {
       elc->SetRefinedElementIndex(iel,jel+1u);
@@ -215,6 +216,9 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
       jel+=_mesh.GetRefIndex();
 //       el->AddToElementNumber(REF_INDEX,elt);
       _mesh.el->AddToElementNumber(_mesh.GetRefIndex(),elt);
+    }
+    else {
+      AMR=true;
     }
   }
 
@@ -281,9 +285,24 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   
   _mesh.Buildkel();
   
-  MeshMetisPartitioning meshmetispartitioning(_mesh);
-  meshmetispartitioning.DoPartition();
-  //_mesh.GenerateMetisMeshPartition();
+  if( AMR == true ){
+    MeshMetisPartitioning meshmetispartitioning(_mesh);
+    meshmetispartitioning.DoPartition();
+  }
+  else{
+    _mesh.nsubdom = _nprocs;
+    _mesh.epart.resize( _mesh.GetNumberOfElements() );
+    _mesh.npart.resize( _mesh.GetNumberOfNodes() );
+    unsigned refIndex = _mesh.GetRefIndex();
+    for (unsigned iel=0; iel < elc->GetElementNumber(); iel++) {
+      for (unsigned j=0; j < refIndex; j++) {
+        _mesh.epart[ iel * refIndex + j ] = mshc->epart[iel];
+      }
+    }
+  }
+  
+  //MeshMetisPartitioning meshmetispartitioning(_mesh);
+  //meshmetispartitioning.DoPartition();
   
   _mesh.FillISvector();
     
