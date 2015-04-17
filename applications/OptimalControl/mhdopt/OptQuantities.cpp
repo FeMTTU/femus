@@ -268,7 +268,7 @@ Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
 #endif
   
  
-  func[0] =  1./ _qtymap.GetInputParser()->get("pref")*( (le[1]-lb[1]) - /*x_rotshift*/xp[1] )*(cos(6.*0.*t));
+  func[0] =  1./ _qtymap.GetInputParser()->get("pref")*( (le[1]-lb[1]) - /*x_rotshift*/xp[1] );
 
 //this equation is in the reference frame CENTERED AT (0,0,0)  
   
@@ -367,7 +367,7 @@ Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
   }
   
    if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )  {  //bottom  of the RefBox
-//      bc_flag[0]=0;   //u dot n   //leave this free for VELOCITY INLET
+      bc_flag[0]=0;   //u dot n   //leave this free for VELOCITY INLET
    }
   
   if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  {  //top of the  of the RefBox

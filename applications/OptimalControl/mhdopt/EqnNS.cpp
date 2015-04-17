@@ -545,7 +545,7 @@ for (uint fe = 0; fe < QL; fe++)     {
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-      CurrentQuantity VelOldX(currgp);
+    CurrentQuantity VelOldX(currgp);
     VelOldX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
     VelOldX.VectWithQtyFillBasic();
     VelOldX.Allocate();
@@ -603,9 +603,18 @@ for (uint fe = 0; fe < QL; fe++)     {
 //=======end "COMMON SHAPE PART"===================================
 
    xyz.val_g(); 
-      pressOld._qtyptr->Function_txyz(0.,&xyz._val_g[0],&pressOld._val_g[0]);  //i prefer using the function instead of the p_old vector
+   
+//      std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << std::endl;
+//      std::cout << xyz._val_g[1] << std::endl;
+
+   
+   pressOld._qtyptr->Function_txyz(0.,&xyz._val_g[0],&pressOld._val_g[0]);  //i prefer using the function instead of the p_old vector
 //        pressOld.val_g();  //this is the alternative
-      
+   if (press_fl == 1) {
+     std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << std::endl;
+     std::cout << pressOld._val_g[0] << std::endl;
+   }
+   
 //==============================================================
 //========= FILLING ELEMENT MAT/RHS (i loop) ====================
 //==============================================================
@@ -631,7 +640,10 @@ for (uint fe = 0; fe < QL; fe++)     {
 //==================================================================
 //================== END GAUSS LOOP (qp loop) ======================
 //==================================================================
-    
+//     std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << std::endl;
+//     currelem.Rhs().print_scientific(std::cout);
+//     std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << std::endl;
+
     my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
     my_system._LinSolver[Level]->_RESC->add_vector(currelem.Rhs(),currelem.GetDofIndices());
 

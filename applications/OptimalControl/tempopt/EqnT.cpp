@@ -60,13 +60,6 @@
 // For the derivatives, I think the point is: you must pick the REAL dphidx in the SAME ORDER as you pick the CORRESPONDING DOFS.
 // Now, my point is: on a given row, are you sure that the code picks the correct dphidx?
 
-//NOW, PAY ATTENTION: The "iel" written as "iel=0; iel < (nel_e - nel_b);" is used for PICKING the CONNECTIVITY from the ELEMENT CONNECTIVITY MAP!
-// But, the iel as DofObject Index must be given in the correct form!
-// So, I will distinguish iel into iel_mesh and iel_DofObj:
-//In both cases we start from a "Geometrical Entity", the ELEMENT.
-//In the mesh case, we only use the ELEMENT to pick its CONNECTIVITY.
-//In the DofObj case,we use iel to pick the corresponding Element DOF from the node_dof map! 
-
 
 /// This function assembles the matrix and the rhs:
 void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix) {

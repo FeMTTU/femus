@@ -69,18 +69,6 @@
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
-// //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-//     CurrentQuantity Temp2(currgp);
-//     Temp2._qtyptr   = my_system.GetUnknownQuantitiesVector()[1]; 
-//     Temp2.VectWithQtyFillBasic();
-//     Temp2.Allocate();
-
-//=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-//     CurrentQuantity Temp3(currgp);
-//     Temp3._qtyptr   = my_system.GetUnknownQuantitiesVector()[2]; 
-//     Temp3.VectWithQtyFillBasic();
-//     Temp3.Allocate();
-    
     //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
     CurrentQuantity xyz(currgp);  //no quantity
