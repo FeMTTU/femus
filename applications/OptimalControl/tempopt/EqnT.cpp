@@ -118,22 +118,22 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
-    Tempold._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Temperature"); 
     Tempold._SolName = "Qty_Temperature";
+    Tempold._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Temperature"); 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //====================================
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempLift");
     Tlift._SolName = "Qty_TempLift";
+    Tlift._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempLift");
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
     CurrentQuantity TAdj(currgp);
-    TAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempAdj"); 
     TAdj._SolName = "Qty_TempAdj";
+    TAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempAdj"); 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
    
@@ -147,23 +147,24 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 
   //==================
     CurrentQuantity velX(currgp);
-    velX._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
     velX._SolName = "Qty_Velocity0";
+    velX._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
     velX.VectWithQtyFillBasic();
     velX.Allocate();
     
   //==================
     CurrentQuantity velY(currgp);
-    velY._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity1"); 
     velY._SolName = "Qty_Velocity1";
+    velY._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity1"); 
     velY.VectWithQtyFillBasic();
     velY.Allocate();    
     
 //===============Tdes=====================
     CurrentQuantity Tdes(currgp);
-    Tdes._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempDes"); 
     Tdes._SolName = "Qty_TempDes";
-    Tdes.VectWithQtyFillBasic();
+    Tdes._dim      = Tempold._dim;
+    Tdes._FEord    = Tempold._FEord;
+    Tdes._ndof     = Tempold._ndof;
     Tdes.Allocate();
 
   

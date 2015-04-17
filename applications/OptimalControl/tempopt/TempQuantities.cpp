@@ -29,10 +29,6 @@ TempLift::TempLift(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uin
 TempAdj::TempAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { }
 
-//===========================================================================
-TempDes::TempDes(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) { }
-
 //========================
 Pressure::Pressure(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {

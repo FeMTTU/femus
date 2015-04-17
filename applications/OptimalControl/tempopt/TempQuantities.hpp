@@ -44,17 +44,6 @@ class TempAdj : public Quantity {
 
 };
 
-//===============
-class TempDes : public Quantity {
-
-  public:
-   TempDes(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
-  
-
-};
-
-
-
 class Pressure : public Quantity {
 
   public:
