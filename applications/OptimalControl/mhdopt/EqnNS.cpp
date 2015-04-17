@@ -574,10 +574,10 @@ for (uint fe = 0; fe < QL; fe++)     {
      currelem.Rhs().zero();
 
      currelem.SetDofobjConnCoords();
+     currelem.SetElDofsBc();
      
      currelem.ConvertElemCoordsToMappingOrd(xyz);
 
-     currelem.SetElDofsBc();
      
      pressOld.GetElemDofs();
 

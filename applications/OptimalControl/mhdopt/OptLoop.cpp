@@ -534,18 +534,21 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     
     //========== 
   CurrentQuantity VelDesX(currgp);
-    VelDesX._qtyptr   = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_DesVelocity0");
-    VelDesX.VectWithQtyFillBasic();
+    VelDesX._dim        = 1;
+    VelDesX._FEord      = VelX._FEord;
+    VelDesX._ndof       = VelX._ndof;
     VelDesX.Allocate();
 
   CurrentQuantity VelDesY(currgp);
-    VelDesY._qtyptr   = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_DesVelocity1");
-    VelDesY.VectWithQtyFillBasic();
+    VelDesY._dim        = 1;
+    VelDesY._FEord      = VelX._FEord;
+    VelDesY._ndof       = VelX._ndof;
     VelDesY.Allocate();
 
   CurrentQuantity VelDesZ(currgp);
-    VelDesZ._qtyptr   = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_DesVelocity2");
-    VelDesZ.VectWithQtyFillBasic();
+    VelDesZ._dim        = 1;
+    VelDesZ._FEord      = VelX._FEord;
+    VelDesZ._ndof       = VelX._ndof;
     VelDesZ.Allocate();
 
   std::vector<CurrentQuantity*> VelDes_vec;   

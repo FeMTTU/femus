@@ -139,10 +139,6 @@ int main(int argc, char** argv) {
   Pressure                         pressure("Qty_Pressure",qty_map,1,LL);                qty_map.AddQuantity(&pressure);
   PressureAdj                  pressure_adj("Qty_PressureAdj",qty_map,1,LL);             qty_map.AddQuantity(&pressure_adj);
 
-  DesVelocityX des_velocityX("Qty_DesVelocity0",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityX);
-  DesVelocityY des_velocityY("Qty_DesVelocity1",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityY);
-  DesVelocityZ des_velocityZ("Qty_DesVelocity2",qty_map,1,QQ);       qty_map.AddQuantity(&des_velocityZ);
-
 //consistency check
 //  if (bhom._dim !=  Bext._dim)     {std::cout << "main: inconsistency" << std::endl;abort();}
 //  if (bhom._FEord !=  Bext._FEord) {std::cout << "main: inconsistency" << std::endl;abort();}

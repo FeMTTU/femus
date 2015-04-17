@@ -184,71 +184,14 @@ VelocityAdjZ::VelocityAdjZ(std::string name_in, QuantityMap& qtymap_in, uint dim
     
 }
 
-//==========================================================================
-DesVelocityX::DesVelocityX(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
-  
-   for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in.GetInputParser()->get("Uref");
-
-}
-
-//==========================================================================
-DesVelocityY::DesVelocityY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
-  
-   for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in.GetInputParser()->get("Uref");
-
-}
-
-//==========================================================================
-DesVelocityZ::DesVelocityZ(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) { 
-  
-   for (uint i=0;i<dim_in;i++) _refvalue[i] =  qtymap_in.GetInputParser()->get("Uref");
-
-}
 
 //=================== END CONSTRUCTORS ================================
 // ==================================================================
 // ==================================================================
 
 
-  
-  
-  
 
-  void MagnFieldExtLagMult::Function_txyz(const double t, const double* xp,double* func) const{
-  
-  func[0] = 0./*/Uref*/;
-  
-    return;
-  }
-  
- void MagnFieldHomLagMult::Function_txyz(const double t, const double* xp,double* func) const{
-  
-  func[0] = 0./*/Uref*/;
-  
-    return;
-  }
-  
-   void MagnFieldHomLagMultAdj::Function_txyz(const double t, const double* xp,double* func) const{
-  
-  func[0] = 0./*/Uref*/;
-  
-    return;
-  }
- 
-// =================================================
-void PressureAdj::Function_txyz(const double t, const double* xp,double* func) const {
-
-  
-  func[0] = 0.;
-  
-  return;
-}
-
-   
-  //=============================================================
+//===============================================
 /// prescribed pressure at the boundary
 //no initial condition for pressure is required, because it has no time derivative
 //only the boundary condition in the Neumann part of the boundary has to be enforced
