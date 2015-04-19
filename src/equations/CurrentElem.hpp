@@ -100,7 +100,7 @@ class CurrentQuantity;
     /**  */  
     int Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const uint ndof_in, const uint space_dim, const CurrentQuantity& press_in) const;
    
-    void TransformElemNodesToRef(Domain* mydom, double* refbox_xyz);
+//     void TransformElemNodesToRef(Domain* mydom, double* refbox_xyz);
     
     const uint GetLevel() const {return _Level;}
     

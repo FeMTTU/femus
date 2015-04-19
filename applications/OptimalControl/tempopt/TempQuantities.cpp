@@ -29,10 +29,6 @@ TempLift::TempLift(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uin
 TempAdj::TempAdj(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) { }
 
-//===========================================================================
-TempDes::TempDes(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in) 
-: Quantity(name_in,qtymap_in,dim_in,FEord_in) { }
-
 //========================
 Pressure::Pressure(std::string name_in, QuantityMap& qtymap_in, uint dim_in, uint FEord_in)
 : Quantity(name_in,qtymap_in,dim_in,FEord_in) {
@@ -58,111 +54,6 @@ VelocityY::VelocityY(std::string name_in, QuantityMap& qtymap_in, uint dim_in, u
 //=================== END CONSTRUCTORS ================================
 // ==================================================================
 // ==================================================================
-
-
-//=============================================================
-void VelocityX::Function_txyz(const double /*t*/,const double* xp, double* func) const {
-
-  
-  func[0] = 0.;
-
-  return;
-
-}
-
-
-//=============================================================
-void VelocityY::Function_txyz(const double /*t*/,const double* xp, double* func) const {
-
-  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
-  
-  const double rhof   = _qtymap.GetInputParser()->get("rho0");
-  const double Uref   = _qtymap.GetInputParser()->get("Uref");
-  const double Lref   = _qtymap.GetInputParser()->get("Lref");
-
-  const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution!!!
-
-  double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
-
-  const double magnitude = 5.*DpDzad*xp[0]*(1. - xp[0]);
- 
-  
-  func[0] = magnitude;
-  
-  return;
- 
-}
-
-
-
-//=============================================================
-/// prescribed pressure at the boundary
-//no initial condition for pressure is required, because it has no time derivative
-//only the boundary condition in the Neumann part of the boundary has to be enforced
-//so there is also no problem about consistency between IC and BC values,
-// because there are NO IC values for pressure! 
-
-void Pressure::Function_txyz(const double t, const double* xp,double* func) const {
-  //the coordinates (x,y,z,t) of the VOLUME domain are NON-dimensional
-  //and the function value must be nondimensional as well
-  //this function receives an ALREADY ROTATED COORDINATE!
-
-Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());  //already nondimensionalized
- 
-  func[0] =  1./ _qtymap.GetInputParser()->get("pref")*( (box->_le[1] - box->_lb[1]) - xp[1] );
-
-//this equation is in the reference frame CENTERED AT (0,0,0)  
-  
-  return;
-  }
-
-
-  
-  
-//===============
-void TempDes::Function_txyz(const double /*t*/, const double* /*xp*/,double* temp) const {
-  
-  temp[0] = 0.9;
- 
-  return;
-}
-
-
-//===============
-void TempAdj::Function_txyz(const double/* t*/, const double* /*xp*/,double* temp) const {
-  
-  temp[0] = 0.;
- 
-  return;
-}
-  
-// =================================================
-void TempLift::Function_txyz(const double /*t*/, const double* xp,double* temp) const {
-
-  const double Tref = _qtymap.GetInputParser()->get("Tref");
-
-  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());  
-  
-  temp[0] = 100.*(xp[0])*( ( box->_le[0] - box->_lb[0]) - xp[0])*(xp[1])*( ( box->_le[1] - box->_lb[1]) - xp[1])/Tref;
- 
-  
-  return;
-  }
-
-// =================================================
-void Temperature::Function_txyz(const double/* t*/, const double* xp,double* temp) const {
-
-  const double Tref = _qtymap.GetInputParser()->get("Tref");
-
-  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());  
-  
-  temp[0] = 100.*(xp[0])*( ( box->_le[0] - box->_lb[0]) - xp[0])/Tref;
- 
-  
-  return;
-  }
-  
-  
 
 
 void VelocityX::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {
@@ -584,13 +475,15 @@ void VelocityY::initialize_xyz(const double* xp, std::vector< double >& value) c
 
 void Pressure::initialize_xyz(const double* xp, std::vector< double >& value) const {
   
-  Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());
+  Box* box= static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain()); //already nondimensionalized
   
-  std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
-  _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]); 
-//at this point, the coordinates are transformed into the REFERENCE BOX, so you can pass them to the Pressure function
+    value[0] =  1./ _qtymap.GetInputParser()->get("pref")*( (box->_le[1] - box->_lb[1]) - xp[1] );
+    
+// std::vector<double> x_rotshift(_qtymap.GetMeshTwo()->get_dim());
+//   _qtymap.GetMeshTwo()->_domain->TransformPointToRef(xp,&x_rotshift[0]); 
+// //at this point, the coordinates are transformed into the REFERENCE BOX, so you can pass them to the Pressure function
+ 
 
-    Function_txyz(0.,&x_rotshift[0],&value[0]);   
   
   return;
 }

@@ -44,7 +44,6 @@ public:
    Quantity(std::string name_in,QuantityMap& qtymap_in, uint dim_in, uint FEord_in);
   ~Quantity();  
 
-              void FunctionDof(CurrentQuantity& myvect, const double t,const double* xx) const;
       virtual void Function_txyz(const double t, const double* xp, double* temp) const  { std::cout <<  "A quantity that calls this function must have an implementation of it" << std::endl; abort();  }  
       virtual void bc_flag_txyz(const double t, const double* xp, std::vector<int> & flag) const  { std::cout <<  "A quantity that calls this function must have an implementation of it" << std::endl; abort(); } 
       virtual void initialize_xyz(const double* xp, std::vector<double> & value) const  { std::cout <<  "A quantity that calls this function must have an implementation of it" << std::endl; abort(); } 

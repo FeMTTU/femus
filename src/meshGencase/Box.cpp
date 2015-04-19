@@ -85,8 +85,8 @@ void Box::TransformPointToRef(const double* x_in,double* x_out) const {
     double        xpr[3] = {0.,0.,0.};
     double         Dx[3] = {0.,0.,0.};
 
-  xpr[0]=x_in[0]*cos(thetaz) + x_in[1]*sin(thetaz);
-  xpr[1]=x_in[1]*cos(thetaz) - x_in[0]*sin(thetaz);  
+  xpr[0] = x_in[0]*cos(thetaz) + x_in[1]*sin(thetaz);
+  xpr[1] = x_in[1]*cos(thetaz) - x_in[0]*sin(thetaz);  
 
   Dx[0]=0.5*(_le[0]-_lb[0])*transfl;
   Dx[1]=0.5*(_le[1]-_lb[1])*transfl;

@@ -121,13 +121,6 @@
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
     
-    //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-  xyz_refbox.Allocate();
-    
 //other Physical constant Quantities
 //=======gravity==================================
   CurrentQuantity gravity(currgp);
@@ -145,20 +138,15 @@
     currelem.Rhs().zero(); 
 
     currelem.SetDofobjConnCoords();
-    currelem.SetMidpoint();
+    currelem.SetElDofsBc();
 
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
 //=======RETRIEVE the DOFS of the UNKNOWN QUANTITIES,i.e. MY EQUATION
-    currelem.SetElDofsBc();
      VelOldX.GetElemDofs();
      VelOldY.GetElemDofs();
     pressOld.GetElemDofs();
 
-//==============================================================
-//================== GAUSS LOOP (qp loop) ======================
-//==============================================================
    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp = 0; qp < el_ngauss; qp++) {  

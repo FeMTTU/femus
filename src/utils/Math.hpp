@@ -130,14 +130,16 @@ const uint myproc = ml_prob.GetMeshTwo()._iproc;
     xyz.Allocate();
 
     currelem.SetDofobjConnCoords();
-    currelem.SetMidpoint(); 
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
 
      
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
-for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
+       for (uint fe = 0; fe < QL; fe++)     {  
+             currgp.SetPhiElDofsFEVB_g (fe,qp); 
+             currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);
+        }  
      
 double  Jac_g=0.;
           if (vb==0)   Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
@@ -145,7 +147,6 @@ double  Jac_g=0.;
 
    const double  wgt_g = ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 
-     for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
  xyz.val_g();
 double myval_g = pt2func(time,xyz._val_g); 
