@@ -285,24 +285,13 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   
   _mesh.Buildkel();
   
+  MeshMetisPartitioning meshmetispartitioning(_mesh);
   if( AMR == true ){
-    MeshMetisPartitioning meshmetispartitioning(_mesh);
     meshmetispartitioning.DoPartition();
   }
   else{
-    _mesh.nsubdom = _nprocs;
-    _mesh.epart.resize( _mesh.GetNumberOfElements() );
-    _mesh.npart.resize( _mesh.GetNumberOfNodes() );
-    unsigned refIndex = _mesh.GetRefIndex();
-    for (unsigned iel=0; iel < elc->GetElementNumber(); iel++) {
-      for (unsigned j=0; j < refIndex; j++) {
-        _mesh.epart[ iel * refIndex + j ] = mshc->epart[iel];
-      }
-    }
+    meshmetispartitioning.DoPartition(*mshc);
   }
-  
-  //MeshMetisPartitioning meshmetispartitioning(_mesh);
-  //meshmetispartitioning.DoPartition();
   
   _mesh.FillISvector();
     
