@@ -38,7 +38,7 @@ double InitalValueU(const double &x, const double &y, const double &z){
   return tan(theta);
 }
 
-void AssembleBilaplaceProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix);
+void AssembleWillmoreProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix);
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution *mlSol);
 
@@ -105,14 +105,14 @@ int main(int argc, char **args) {
       MultiLevelProblem mlProb(&mlSol);
        
       // add system Poisson in mlProb as a Linear Implicit System
-      NonLinearImplicitSystem & system = mlProb.add_system < NonLinearImplicitSystem > ("Poisson");
+      NonLinearImplicitSystem & system = mlProb.add_system < NonLinearImplicitSystem > ("Willmore");
   
       // add solution "u" to system
       system.AddSolutionToSystemPDE("u");
       system.AddSolutionToSystemPDE("v");
    
       // attach the assembling function to system
-      system.SetAssembleFunction(AssembleBilaplaceProblem_AD);  
+      system.SetAssembleFunction(AssembleWillmoreProblem_AD);  
   
       // initilaize and solve the system 
       system.init();
@@ -128,9 +128,6 @@ int main(int argc, char **args) {
       VTKWriter vtkIO(&mlSol);
       vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted,i);
 
-//       GMVWriter gmvIO(&mlSol);
-//       gmvIO.SetDebugOutput(true);
-//       gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
     }
   }
   
@@ -187,16 +184,6 @@ int main(int argc, char **args) {
 }
 
 
-double GetExactSolutionValue(const vector < double > &x){
-  return sqrt( 1./(cos(theta)*cos(theta)) - x[0]*x[0]- x[1]*x[1]);
-};
-
-
-void GetExactSolutionGradient(const vector < double > &x, vector < double > &solGrad){
-  double pi=acos(-1.);
-  solGrad[0]  = -x[0]/sqrt( 1./(cos(theta)*cos(theta)) - x[0]*x[0]- x[1]*x[1]);
-  solGrad[1]  = -x[1]/sqrt( 1./(cos(theta)*cos(theta)) - x[0]*x[0]- x[1]*x[1]);
-};
 
 
 /**
@@ -221,7 +208,7 @@ void GetExactSolutionGradient(const vector < double > &x, vector < double > &sol
  * using automatic differentiation       
  **/
 
-void AssembleBilaplaceProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix) {
+void AssembleWillmoreProblem_AD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix) {
   //  ml_prob is the global object from/to where get/set all the data 
   //  level is the level of the PDE system to be assembled  
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -237,7 +224,7 @@ void AssembleBilaplaceProblem_AD(MultiLevelProblem &ml_prob, unsigned level, con
   MultiLevelSolution* 	mlSol       	= ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution* 		sol       	= ml_prob._ml_sol->GetSolutionLevel(level); // pointer to the solution (level) object
   
-  NonLinearImplicitSystem* mlPdeSys 	= &ml_prob.get_system<NonLinearImplicitSystem>("Poisson"); // pointer to the linear implicit system named "Poisson" 
+  NonLinearImplicitSystem* mlPdeSys 	= &ml_prob.get_system<NonLinearImplicitSystem>("Willmore"); // pointer to the linear implicit system named "Poisson" 
   LinearEquationSolver* pdeSys      	= mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object 
   SparseMatrix*  	KK	       	= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector* 	RES	       	= pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
@@ -458,6 +445,21 @@ void AssembleBilaplaceProblem_AD(MultiLevelProblem &ml_prob, unsigned level, con
   // ***************** END ASSEMBLY *******************
 }
 
+
+
+
+// functions post processing
+
+double GetExactSolutionValue(const vector < double > &x){
+  return sqrt( 1./(cos(theta)*cos(theta)) - x[0]*x[0]- x[1]*x[1]);
+};
+
+
+void GetExactSolutionGradient(const vector < double > &x, vector < double > &solGrad){
+  double pi=acos(-1.);
+  solGrad[0]  = -x[0]/sqrt( 1./(cos(theta)*cos(theta)) - x[0]*x[0]- x[1]*x[1]);
+  solGrad[1]  = -x[1]/sqrt( 1./(cos(theta)*cos(theta)) - x[0]*x[0]- x[1]*x[1]);
+};
 
 
 
