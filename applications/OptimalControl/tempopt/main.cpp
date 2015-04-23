@@ -110,7 +110,6 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gr
   Temperature temperature("Qty_Temperature",qty_map,1,QQ);          qty_map.AddQuantity(&temperature);
   TempLift       templift("Qty_TempLift",qty_map,1,QQ);             qty_map.AddQuantity(&templift);  
   TempAdj         tempadj("Qty_TempAdj",qty_map,1,QQ);              qty_map.AddQuantity(&tempadj);  
-  TempDes         tempdes("Qty_TempDes",qty_map,1,QQ);              qty_map.AddQuantity(&tempdes);  //this is not going to be an Unknown!
   // ===== end QuantityMap =========================================
   
   // ====== Start new main =================================

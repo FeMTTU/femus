@@ -42,8 +42,13 @@ public:
     /** destructor */
     ~MeshMetisPartitioning() {}; 
     
-    /** Refinement functions */
+    /** New Metis parallel partitioning: 
+     *  for coarse and AMR mesh */
     void DoPartition();
+    
+    /** Parallel partitioning imported from coarser mesh partition: 
+     *  for uniformed refined meshes */
+    void DoPartition(const Mesh &meshc);
     
 private:
 

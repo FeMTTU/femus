@@ -53,11 +53,10 @@ void MeshMetisPartitioning::DoPartition() {
                      + _mesh.el->GetElementNumber("Wedge")*NVE[2][2]    + _mesh.el->GetElementNumber("Quad")*NVE[3][2] 
                      + _mesh.el->GetElementNumber("Triangle")*NVE[4][2] + _mesh.el->GetElementNumber("Line")*NVE[5][2];
 
-
   int nelem = _mesh.GetNumberOfElements();
-
-  idx_t *eptr = new idx_t [nelem+1];
-  idx_t *eind = new idx_t [eind_size];
+  
+  vector < idx_t > eptr(nelem+1);
+  vector < idx_t > eind(eind_size);
   
   idx_t objval;
   idx_t options[METIS_NOPTIONS]; 
@@ -82,14 +81,13 @@ void MeshMetisPartitioning::DoPartition() {
     
     for (unsigned inode=0; inode<_mesh.el->GetElementDofNumber(iel,2); inode++){
       eind[counter]=_mesh.el->GetElementVertexIndex(iel,inode)-1;
-    
       counter++;
     }
     
   }
   
   int nnodes = _mesh.GetNumberOfNodes();
-  int ncommon = _mesh.GetDimension()+1;
+  int ncommon = ( _mesh.GetDimension() == 1 ) ? 1 : _mesh.GetDimension()+1;
   _mesh.nsubdom = _nprocs;
     
   _mesh.epart.resize(nelem);
@@ -98,16 +96,16 @@ void MeshMetisPartitioning::DoPartition() {
   if(_mesh.nsubdom!=1) {
     
   //I call the Mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
-  int err = METIS_PartMeshDual(&nelem, &nnodes, eptr, eind, NULL, NULL, &ncommon, &_mesh.nsubdom, NULL, options, &objval, &_mesh.epart[0], &_mesh.npart[0]);
+  int err = METIS_PartMeshDual(&nelem, &nnodes, &eptr[0], &eind[0], NULL, NULL, &ncommon, &_mesh.nsubdom, NULL, options, &objval, &_mesh.epart[0], &_mesh.npart[0]);
   
-  if(err==METIS_OK) {
-    //std::cout << " METIS PARTITIONING IS OK " << std::endl;
+  if(err == METIS_OK) {
+    std::cout << " METIS PARTITIONING IS OK " << std::endl;
   }
-  else if(err==METIS_ERROR_INPUT) {
+  else if(err == METIS_ERROR_INPUT) {
     cout << " METIS_ERROR_INPUT " << endl;
     exit(1);
   }
-  else if (err==METIS_ERROR_MEMORY) {
+  else if (err == METIS_ERROR_MEMORY) {
     cout << " METIS_ERROR_MEMORY " << endl;
     exit(2);
   }
@@ -122,16 +120,23 @@ void MeshMetisPartitioning::DoPartition() {
       _mesh.epart[i]=0;
     } 
   }
-  
-  delete [] eptr;
-  delete [] eind;
-  
-  
+    
   return;
   
 #endif
   
 }
 
+void MeshMetisPartitioning::DoPartition(const Mesh& meshc){
+  _mesh.nsubdom = _nprocs;
+  _mesh.epart.resize( _mesh.GetNumberOfElements() );
+  _mesh.npart.resize( _mesh.GetNumberOfNodes() );
+  unsigned refIndex = _mesh.GetRefIndex();
+  for (unsigned iel=0; iel < meshc.GetNumberOfElements(); iel++) {
+    for (unsigned j=0; j < refIndex; j++) {
+      _mesh.epart[ iel * refIndex + j ] = meshc.epart[iel];
+    }
+  }
+}
 
 }

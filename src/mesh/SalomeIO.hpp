@@ -58,24 +58,29 @@ class SalomeIO : public MeshInput<Mesh>
  private:
    
    /** Map from Salome vertex index to Femus vertex index */
-   static const unsigned SalomeToFemusVertexIndex[N_GEOM_ELS][27]; 
+   static const unsigned SalomeToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]; 
  
    /** Map from Salome face index to Femus face index */
-   static const unsigned SalomeToFemusFaceIndex[N_GEOM_ELS][6];
+   static const unsigned SalomeToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES];
 
    /** Determine mesh dimension from mesh file */
    void  FindDimension(hid_t gid, const  std::string menu_name,hsize_t n_fem_type);
 
+   unsigned  FindElemNodes(const  std::string el_type) const;
+
    /** Read FE type */
-   int  ReadFE(hid_t file_id, std::string & el_fem_type_vol, std::string & el_fem_type_bd, const  std::string menu_name);   
+   void  ReadFE(hid_t file_id, std::vector<std::string> & fe_type_vec, hsize_t n_fem_types, const std::string my_mesh_name_dir);   
    
-   std::vector<char*> menu_names;
+//    std::vector<char*> menu_names;
    static const std::string group_name_begin; //FAS
    static const std::string group_name_end;   //ELEME
-   static const std::string mesh_ensemble;        // ENS_MAA
+   static const std::string mesh_ensemble;    // ENS_MAA
    static const std::string aux_zeroone;      // -0000000000000000001-0000000000000000001
-   static const std::string connectivity;     // MAI
-   static const std::string node_coord;       //NOE/COO
+   static const std::string elem_list;        //MAI
+   static const std::string connectivity;     //NOD
+   static const std::string node_list;        //NOE
+   static const std::string coord_list;       //COO
+   static const std::string dofobj_indices;   //NUM
    static const uint max_length;
 
 };

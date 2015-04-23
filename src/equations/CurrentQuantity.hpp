@@ -33,6 +33,7 @@ namespace femus {
    void                curl_g(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void            ExtendDofs(); //this only needs the CUrrent GAUSS  //No Quantity needed
    void         GetElemDofs(); //this only needs the CUrrent ELEMENT
+//    void         GetElemDofs_two(); //this only needs the CUrrent ELEMENT
    void         GetElemDofs(const std::vector<CurrentQuantity*> vec_in);
    void        SetElemAverage();
   

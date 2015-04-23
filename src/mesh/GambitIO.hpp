@@ -54,10 +54,10 @@ class GambitIO : public MeshInput<Mesh>
  private:
    
    /** Map from Gambit vertex index to Femus vertex index */
-   static const unsigned GambitToFemusVertexIndex[N_GEOM_ELS][27]; 
+   static const unsigned GambitToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]; 
  
    /** Map from Gambit face index to Femus face index */
-   static const unsigned GambitToFemusFaceIndex[N_GEOM_ELS][6];
+   static const unsigned GambitToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES];
   
 };
 
