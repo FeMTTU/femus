@@ -80,54 +80,6 @@ namespace femus {
     
     return; 
   }
-  
-  
-//=============================================================
-//this function is the wrapper for computing the dofs via a function
- //this works either with LINEAR or with QUADRATIC variables, 
-//   but always with a QUADRATIC mesh
-
-///the only part that is not common is providing the THREE COMPONENTS
-//this function is appropriate only for the case of a BOX DOMAIN
-  //How can I neglect it in the other cases? Just set to zero and that's it, for now...
-  //I would prefer avoiding excluding code with #ifdefs, but always compile it
-//this function could be a WRAPPER IDENTICAL to ALL THE OTHER WRAPPERS:
-//just get the node 'nondimensionalized' coordinates and pass them to the b_txyz function
-//the first one is GENERAL
-//the second one is SPECIFIC of the physics.
-
-void Quantity::FunctionDof(CurrentQuantity& myvect, const double t, const double* refbox_xyz) const {
-
-//====the Domain
-  const uint space_dim = myvect.GetCurrentElem()._mesh.get_dim();
-  double* xp = new double[space_dim]; 
-  const uint offset   =       NVE[ _qtymap.GetMeshTwo()->_geomelem_flag[myvect.GetCurrentElem().GetDim()-1] ][BIQUADR_FE];
-
-//=====the Function
-  double* func = new double[myvect._dim];
-  const uint dof_off = myvect._ndof;
-  
-if (dof_off > offset) {std::cout << "Use a quadratic mesh for FunctionDof computation" << std::endl; abort();}
-
-     for (uint d=0; d < dof_off; d++)    {
-
-    for (uint idim=0; idim < space_dim; idim++)  xp[idim] = refbox_xyz[ d + idim*offset];  //====the DOMAIN on the fly
-
-    Function_txyz(t,xp,func);
-  
-    for (uint ivar=0; ivar < myvect._dim; ivar++) myvect._val_dofs[d+ivar*dof_off] =  func[ivar];
-
-     }
-
-  
-  delete[] func;
-  delete[] xp;
-  
-  return;
-
-}  
-  
-
 
 } //end namespace femus
 

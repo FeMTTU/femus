@@ -60,13 +60,6 @@
 // For the derivatives, I think the point is: you must pick the REAL dphidx in the SAME ORDER as you pick the CORRESPONDING DOFS.
 // Now, my point is: on a given row, are you sure that the code picks the correct dphidx?
 
-//NOW, PAY ATTENTION: The "iel" written as "iel=0; iel < (nel_e - nel_b);" is used for PICKING the CONNECTIVITY from the ELEMENT CONNECTIVITY MAP!
-// But, the iel as DofObject Index must be given in the correct form!
-// So, I will distinguish iel into iel_mesh and iel_DofObj:
-//In both cases we start from a "Geometrical Entity", the ELEMENT.
-//In the mesh case, we only use the ELEMENT to pick its CONNECTIVITY.
-//In the DofObj case,we use iel to pick the corresponding Element DOF from the node_dof map! 
-
 
 /// This function assembles the matrix and the rhs:
 void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix) {
@@ -79,8 +72,6 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
   const unsigned myproc  = mymsh->processor_id();
 	
   
-  const double time = 0.; // ml_prob._timeloop._curr_time;
-
   //======== ELEMENT MAPPING =======
   const uint space_dim =       ml_prob._ml_msh->GetDimension();
 
@@ -104,10 +95,15 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
  
    const uint mesh_vb = VV;
    
-   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
+   const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
 
-  for (uint iel=0; iel < (nel_e - nel_b); iel++) {
+//    const uint nel_beg = mymsh->IS_Mts2Gmt_elem_offset[myproc];
+//    const uint nel_end = mymsh->IS_Mts2Gmt_elem_offset[myproc+1];
+   
+  for (uint iel = 0; iel < (nel_e - nel_b); iel++) {
+
+//   for (uint iel_two = nel_beg; iel_two < nel_end; iel_two++) {
   
   CurrentElem       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);    
   CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
@@ -115,22 +111,22 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
     CurrentQuantity Tempold(currgp);
-    Tempold._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Temperature"); 
     Tempold._SolName = "Qty_Temperature";
+    Tempold._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Temperature"); 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //====================================
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempLift");
     Tlift._SolName = "Qty_TempLift";
+    Tlift._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempLift");
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
     CurrentQuantity TAdj(currgp);
-    TAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempAdj"); 
     TAdj._SolName = "Qty_TempAdj";
+    TAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempAdj"); 
     TAdj.VectWithQtyFillBasic();
     TAdj.Allocate();
    
@@ -142,32 +138,26 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-    //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  CurrentQuantity xyz_refbox(currgp);  //no quantity
-    xyz_refbox._dim      = space_dim;
-    xyz_refbox._FEord    = MESH_ORDER;
-    xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-    xyz_refbox.Allocate();
-  
   //==================
     CurrentQuantity velX(currgp);
-    velX._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
     velX._SolName = "Qty_Velocity0";
+    velX._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
     velX.VectWithQtyFillBasic();
     velX.Allocate();
     
   //==================
     CurrentQuantity velY(currgp);
-    velY._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity1"); 
     velY._SolName = "Qty_Velocity1";
+    velY._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity1"); 
     velY.VectWithQtyFillBasic();
     velY.Allocate();    
     
 //===============Tdes=====================
     CurrentQuantity Tdes(currgp);
-    Tdes._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempDes"); 
     Tdes._SolName = "Qty_TempDes";
-    Tdes.VectWithQtyFillBasic();
+    Tdes._dim      = Tempold._dim;
+    Tdes._FEord    = Tempold._FEord;
+    Tdes._ndof     = Tempold._ndof;
     Tdes.Allocate();
 
   
@@ -178,33 +168,22 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gri
     currelem.Rhs().zero(); 
 
     currelem.SetDofobjConnCoords();
-    currelem.SetMidpoint();
-
-    currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
-    
-    
     currelem.SetElDofsBc();
+    
 
   Tempold.GetElemDofs();
     Tlift.GetElemDofs();
      TAdj.GetElemDofs();
      
-
-  xyz_refbox.SetElemAverage();
-  int domain_flag = ElFlagControl(xyz_refbox._el_average,ml_prob._ml_msh);
-//====================    
-    
-//===== FILL the DOFS of the EXTERNAL QUANTITIES:
-   if ( velX._eqnptr != NULL )  velX.GetElemDofs();
-   else                         velX._qtyptr->FunctionDof(velX,time,&xyz_refbox._val_dofs[0]);
+     velX.GetElemDofs();
+     velY.GetElemDofs();
    
-   if ( velY._eqnptr != NULL )  velY.GetElemDofs();
-   else                         velY._qtyptr->FunctionDof(velY,time,&xyz_refbox._val_dofs[0]);
-
-   if ( Tdes._eqnptr != NULL )  Tdes.GetElemDofs();
-   else                         Tdes._qtyptr->FunctionDof(Tdes,time,&xyz_refbox._val_dofs[0]);
-
+     TempDesired(Tdes,currelem);
+     
+    currelem.ConvertElemCoordsToMappingOrd(xyz);
+    xyz.SetElemAverage();
+    int domain_flag = ElFlagControl(xyz._el_average,ml_prob._ml_msh);
+//====================    
 
    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
    
@@ -232,12 +211,7 @@ for (uint fe = 0; fe < QL; fe++)     {
            velX.val_g(); 
            velY.val_g(); 
            Tdes.val_g();
-   
-	   // always remember to get the dofs for the variables you use!
-           // The point is that you fill the dofs with different functions...
-           // you should need a flag to check if the dofs have been correctly filled
-
-      /// d) Local (element) assemblying energy equation
+ 
       for (uint i=0; i < Tempold._ndof; i++)     {
 
         const double phii_g = currgp._phi_ndsQLVB_g[Tempold._FEord][i];

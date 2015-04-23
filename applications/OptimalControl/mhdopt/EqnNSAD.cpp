@@ -98,15 +98,6 @@ using namespace femus;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-//========== Quadratic domain, auxiliary  
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-  xyz_refbox.Allocate();
-  
-  
-  
     CurrentQuantity VelX(currgp);
     VelX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
     VelX.VectWithQtyFillBasic();
@@ -131,18 +122,21 @@ using namespace femus;
     
     
   CurrentQuantity VelDesX(currgp);
-    VelDesX._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_DesVelocity0");
-    VelDesX.VectWithQtyFillBasic();
+    VelDesX._dim        = 1;
+    VelDesX._FEord      = VelX._FEord;
+    VelDesX._ndof       = VelX._ndof;
     VelDesX.Allocate();
 
   CurrentQuantity VelDesY(currgp);
-    VelDesY._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_DesVelocity1");
-    VelDesY.VectWithQtyFillBasic();
+    VelDesY._dim        = 1;
+    VelDesY._FEord      = VelX._FEord;
+    VelDesY._ndof       = VelX._ndof;
     VelDesY.Allocate();
 
   CurrentQuantity VelDesZ(currgp);
-    VelDesZ._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_DesVelocity2");
-    VelDesZ.VectWithQtyFillBasic();
+    VelDesZ._dim        = 1;
+    VelDesZ._FEord      = VelX._FEord;
+    VelDesZ._ndof       = VelX._ndof;
     VelDesZ.Allocate();
 
   std::vector<CurrentQuantity*> VelDes_vec;   
@@ -234,10 +228,8 @@ using namespace femus;
     currelem.Rhs().zero(); 
 
     currelem.SetDofobjConnCoords();
-    currelem.SetMidpoint();
     
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
 
     currelem.SetElDofsBc();
     
@@ -245,16 +237,11 @@ using namespace femus;
     
  for (uint idim=0; idim < space_dim; idim++)    {
     VelAdjOld_vec[idim]->GetElemDofs();  
-    if ( Vel_vec[idim]->_eqnptr != NULL )          Vel_vec[idim]->GetElemDofs();
-    else                                           Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
-    if ( VelDes_vec[idim]->_eqnptr != NULL )    VelDes_vec[idim]->GetElemDofs();
-    else                                        VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
-    if ( BhomAdj_vec[idim]->_eqnptr != NULL )  BhomAdj_vec[idim]->GetElemDofs();
-    else                                       BhomAdj_vec[idim]->_qtyptr->FunctionDof(*BhomAdj_vec[idim],0.,&xyz_refbox._val_dofs[0]);    
-    if ( Bhom_vec[idim]->_eqnptr != NULL )        Bhom_vec[idim]->GetElemDofs();
-    else                                          Bhom_vec[idim]->_qtyptr->FunctionDof(*Bhom_vec[idim],0.,&xyz_refbox._val_dofs[0]);
-     if ( Bext_vec[idim]->_eqnptr != NULL )       Bext_vec[idim]->GetElemDofs();
-    else                                          Bext_vec[idim]->_qtyptr->FunctionDof(*Bext_vec[idim],0.,&xyz_refbox._val_dofs[0]);
+          Vel_vec[idim]->GetElemDofs();
+      BhomAdj_vec[idim]->GetElemDofs();
+         Bhom_vec[idim]->GetElemDofs();
+         Bext_vec[idim]->GetElemDofs();
+    VelDesired(&ml_prob,*VelDes_vec[idim],currelem,idim);
  }
     
     
@@ -273,11 +260,9 @@ using namespace femus;
     }    
 //=======    
     
-//=======    
 ///optimal control
-    xyz_refbox.SetElemAverage();
-  int el_flagdom = ElFlagControl(xyz_refbox._el_average,ml_prob._ml_msh);
-//=======    
+    xyz.SetElemAverage();
+  int el_flagdom = ElFlagControl(xyz._el_average,ml_prob._ml_msh);
 
 
    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
@@ -414,137 +399,6 @@ for (uint fe = 0; fe < QL; fe++)     {
  
   }//END VOLUME
   
-    // *****************************************************************
-    // *****************************************************************
-    // *****************************************************************
-
-  {//BEGIN BOUNDARY  // *****************************************************************
-  
-    const uint mesh_vb = BB;
-
-    const uint nel_e = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level+1];
-    const uint nel_b = ml_prob.GetMeshTwo()._off_el[mesh_vb][ml_prob.GetMeshTwo()._NoLevels*myproc+Level];
- 
-   for (uint iel=0;iel < (nel_e - nel_b) ; iel++) {
-     
-    CurrentElem       currelem(iel,myproc,Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
-   
-//=========INTERNAL QUANTITIES (unknowns of the equation) ==================
-      CurrentQuantity VelAdjOldX(currgp);
-    VelAdjOldX._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_VelocityAdj0"); 
-    VelAdjOldX.VectWithQtyFillBasic();
-    VelAdjOldX.Allocate();
-    
-    CurrentQuantity VelAdjOldY(currgp);
-    VelAdjOldY._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_VelocityAdj1"); 
-    VelAdjOldY.VectWithQtyFillBasic();
-    VelAdjOldY.Allocate();
-    
-    CurrentQuantity VelAdjOldZ(currgp);
-    VelAdjOldZ._qtyptr      = ml_prob.GetQtyMap().GetQuantity("Qty_VelocityAdj2"); 
-    VelAdjOldZ.VectWithQtyFillBasic();
-    VelAdjOldZ.Allocate();
-    
-    std::vector<CurrentQuantity*> VelAdjOld_vec;
-    VelAdjOld_vec.push_back(&VelAdjOldX);
-    VelAdjOld_vec.push_back(&VelAdjOldY);
-    VelAdjOld_vec.push_back(&VelAdjOldZ);
-
-    CurrentQuantity PressAdjOld(currgp);
-    PressAdjOld._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_PressureAdj");
-    PressAdjOld.VectWithQtyFillBasic();
-    PressAdjOld.Allocate();
-//========= END INTERNAL QUANTITIES (unknowns of the equation) =================
-  
-//=========EXTERNAL QUANTITIES (couplings) =====
-
-//========= DOMAIN MAPPING
-    CurrentQuantity xyz(currgp);
-    xyz._dim      = space_dim;
-    xyz._FEord    = MESH_MAPPING_FE;
-    xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
-    xyz.Allocate();
-
-//========== Quadratic domain, auxiliary  
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = myel->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
-  xyz_refbox.Allocate();
-  
-//========= END EXTERNAL QUANTITIES =================
-
-
-     currelem.Mat().zero();
-     currelem.Rhs().zero();
-
-     currelem.SetDofobjConnCoords();
-     currelem.SetMidpoint();
-     
-     currelem.ConvertElemCoordsToMappingOrd(xyz);
-     currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
-
-     currelem.SetElDofsBc();
-
-     PressAdjOld.GetElemDofs();
-
-//============ BC =======
-       int press_fl = currelem.Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(VelAdjOldX._ndof,space_dim,PressAdjOld); 
- //========END BC============
-   
-   //==============================================================
-//================== GAUSS LOOP (qp loop) ======================
-//==============================================================
-   const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
-   
-    for (uint qp=0; qp< el_ngauss; qp++) {
-//======= "COMMON SHAPE PART"============================
- for (uint fe = 0; fe < QL; fe++)     { 
-    currgp.SetPhiElDofsFEVB_g (fe,qp); 
-    currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);
-}
-
-        const double det   = currgp.JacVectBB_g(xyz);
-	const double dtxJxW_g = det * ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
-//=======end "COMMON SHAPE PART"===================================   
-      
-   xyz_refbox.val_g();
-      PressAdjOld._qtyptr->Function_txyz(0.,&xyz_refbox._val_g[0]/*xyz._val_g*/,&PressAdjOld._val_g[0]);  //i prefer using the function instead of the p_old vector
-      
-
-//==============================================================
-//========= FILLING ELEMENT MAT/RHS (i loop) ====================
-//==============================================================
-      for (uint i=0; i < VelAdjOldX._ndof; i++) {
-
-	const double phii_g = currgp._phi_ndsQLVB_g[VelAdjOldX._FEord][i];
-
-         for (uint idim=0; idim< space_dim; idim++)    {
-             uint irowq=i+idim*VelAdjOldX._ndof;
-          currelem.Rhs()(irowq)  += 
-            currelem.GetBCDofFlag()[irowq]*           
-           dtxJxW_g*(   -1.*press_fl*PressAdjOld._val_g[0]*currgp.get_normal_ptr()[idim]*phii_g
-
-	  );
-	   
-	 }
-           //end of idim loop
-
-     }
-//==============================================================
-//========= END FILLING ELEMENT MAT/RHS (i loop) ====================
-//==============================================================      
-      
-    }  //gauss
-   
-    my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());
-    my_system._LinSolver[Level]->_RESC->add_vector(currelem.Rhs(),currelem.GetDofIndices());
-
- }//elem loop
-   
-  }//END BOUNDARY ************************
-
         my_system._LinSolver[Level]->_KK->close();
         my_system._LinSolver[Level]->_RESC->close();
   

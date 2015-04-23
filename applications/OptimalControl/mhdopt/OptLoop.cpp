@@ -25,7 +25,6 @@
 
 
 namespace femus {
-
   
   
  //INITIALIZE FSTREAM FOR INTEGRAL
@@ -51,16 +50,11 @@ namespace femus {
 //sort of automatic mpi in the streams... but there is no such automation 
 // for std::cout, for instance
 
-
-
+  
 ///This optimization loop is just another way of picking the various equations in a certain order rather than another.
 ///The equations are stationary, but we have to mimic the algorithmic sequence as a time sequence,
 ///so that we can see the algorithmic steps in Paraview
 
-//BEFORE, the time loop was actually a COUPLED NONLINEAR LOOP where 
-// every equation was advanced by one nonlinear step altogether.
-//That brought to a lot of oscillations, that were transferred to 
-//all the equations,both the nonlinear ones and the linear ones.
 //NOW, the time step/value printed in file will just be an OPTIMIZATION STEP
 // so the outer loop will be OPTIMIZATION
 //then, inside, we will have NONLINEAR LOOP for the DIRECT equations
@@ -483,28 +477,11 @@ void OptLoop::init_equation_data(const SystemTwo* eqn) {
 //this function should belong to the NS equation, or to MultiLevelProblemTwo
 //actually the best place is an OptimalControl framework
 
-//the problem is that this function uses all the structures 
-//for dofs and gauss which have been implemented in Eqn,
-// therefore i cannot move it so easily;
-// in this sense it cannot belong to the OptPhys class.
-//Now the point is: what would have happened if the EqnNS
-// was a LIBRARY class? We could not add the ComputeIntegral
-// function to its member functions, because it is 
-// an optimal-control related stuff.
-//So, here's another reason why the EqnNS must be application related;
-//but on the other hand here it is another reason
-//why we have to think of making a NS equation MORE ABSTRACT,
-//or at least some of its parts, in such a way that we can 
-// SHARE AT LEAST SOME PARTS OF IT TO OTHER "NS FLAVOURS".
-//We have to think of operators and boundary conditions,
-// in a more general framework
-
 //remember that the mesh is NON-DIMENSIONAL inside the code,
 // so you should multiply all coordinates by Lref
  
 //The value of this was 3 times in 3D and 2 times in 2D
 //it means that a loop is done DIMENSION times instead of 1 time
-
 
 double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn) {
 
@@ -514,12 +491,10 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
   const unsigned myproc  = mymsh->processor_id();
   // geometry -----
   const uint  space_dim =       mesh->get_dim();
-  
 
    
-   double integral=0.;
+   double integral = 0.;
     
-
 //parallel sum
     const uint nel_e = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level+1];
     const uint nel_b = mesh->_off_el[mesh_vb][mesh->_NoLevels*myproc+Level];
@@ -536,13 +511,6 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-//========== Quadratic domain, auxiliary  
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = DIMENSION;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = mymsh->el->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-  xyz_refbox.Allocate();
-  
      //========== 
     CurrentQuantity VelX(currgp);
     VelX._qtyptr      = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Velocity0"); 
@@ -566,18 +534,21 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     
     //========== 
   CurrentQuantity VelDesX(currgp);
-    VelDesX._qtyptr   = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_DesVelocity0");
-    VelDesX.VectWithQtyFillBasic();
+    VelDesX._dim        = 1;
+    VelDesX._FEord      = VelX._FEord;
+    VelDesX._ndof       = VelX._ndof;
     VelDesX.Allocate();
 
   CurrentQuantity VelDesY(currgp);
-    VelDesY._qtyptr   = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_DesVelocity1");
-    VelDesY.VectWithQtyFillBasic();
+    VelDesY._dim        = 1;
+    VelDesY._FEord      = VelX._FEord;
+    VelDesY._ndof       = VelX._ndof;
     VelDesY.Allocate();
 
   CurrentQuantity VelDesZ(currgp);
-    VelDesZ._qtyptr   = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_DesVelocity2");
-    VelDesZ.VectWithQtyFillBasic();
+    VelDesZ._dim        = 1;
+    VelDesZ._FEord      = VelX._FEord;
+    VelDesZ._ndof       = VelX._ndof;
     VelDesZ.Allocate();
 
   std::vector<CurrentQuantity*> VelDes_vec;   
@@ -586,42 +557,30 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     VelDes_vec.push_back(&VelDesZ);
 
 
-    
-      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
-      
-      
     currelem.SetDofobjConnCoords();
-    currelem.SetMidpoint();
     
+
     currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(eqn->GetMLProb().GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
+    xyz.SetElemAverage();
+    int el_flagdom = ElFlagControl(xyz._el_average,eqn->GetMLProb()._ml_msh);
 
-//======= 
-    xyz_refbox.SetElemAverage();
-    int el_flagdom = ElFlagControl(xyz_refbox._el_average,eqn->GetMLProb()._ml_msh);
-//=======        
-
- for (uint idim=0; idim < space_dim; idim++)    {
-    if ( Vel_vec[idim]->_eqnptr != NULL )  Vel_vec[idim]->GetElemDofs();
-    else                                   Vel_vec[idim]->_qtyptr->FunctionDof(*Vel_vec[idim],0.,&xyz_refbox._val_dofs[0]);    //give the Hartmann flow, if not solving NS
-   if ( VelDes_vec[idim]->_eqnptr != NULL )  VelDes_vec[idim]->GetElemDofs();
-    else                                    VelDes_vec[idim]->_qtyptr->FunctionDof(*VelDes_vec[idim],0,&xyz_refbox._val_dofs[0]);    
     
+ for (uint idim=0; idim < space_dim; idim++)    {
+       Vel_vec[idim]->GetElemDofs();
+       VelDesired(&eqn->GetMLProb(),*VelDes_vec[idim],currelem,idim);
     }    
 
-//AAA time is picked as a function pointer of the time C library i think...
-    // it doesnt say it was not declared
-    //here's why you should remove all unused headers always!
-    
+      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
-for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
+for (uint fe = 0; fe < QL; fe++) {
+  currgp.SetPhiElDofsFEVB_g (fe,qp);
+  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);
+}  
      
    const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
    const double  wgt_g = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
-
-     for (uint fe = 0; fe < QL; fe++)     {     currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
 
  for (uint idim=0; idim < space_dim; idim++) {
@@ -632,12 +591,9 @@ for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp
   double deltau_squarenorm_g = 0.;
 for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel_vec[j]->_val_g[0] - VelDes_vec[j]->_val_g[0])*(Vel_vec[j]->_val_g[0] - VelDes_vec[j]->_val_g[0]); }
 
-  //NO for (uint j=0; j<space_dim; j++) { the integral is a scalar!
  
   integral += el_flagdom*wgt_g*Jac_g*deltau_squarenorm_g;
 
-  //}
-   
    
     }//gauss loop
      
@@ -677,6 +633,634 @@ for (uint j=0; j<space_dim; j++) { deltau_squarenorm_g += (Vel_vec[j]->_val_g[0]
 
 return el_flagdom; 
 }
+
+
+
+ void VelDesired(const MultiLevelProblem * ml_prob, CurrentQuantity& myvect, const CurrentElem & currelem, const uint idim)  {
+   
+  const double Lref = ml_prob->GetInputParser().get("Lref");
+  const double Uref = ml_prob->GetInputParser().get("Uref");
+  double ILref = 1./Lref;
+    
+  const double rhof   = ml_prob->GetInputParser().get("rho0");
+  const double muvel  = ml_prob->GetInputParser().get("mu0");
+  const double MUMHD  = ml_prob->GetInputParser().get("MUMHD");
+  const double SIGMHD = ml_prob->GetInputParser().get("SIGMHD");
+  const double Bref   = ml_prob->GetInputParser().get("Bref");
+
+  const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution
+
+  double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
+
+  double Re  = ml_prob->GetInputParser().get("Re");
+  double Rem = ml_prob->GetInputParser().get("Rem");
+  double Hm  = ml_prob->GetInputParser().get("Hm");
+  double S   = ml_prob->GetInputParser().get("S");
+ 
+  
+  Box* box= static_cast<Box*>(ml_prob->_ml_msh->GetDomain());
+  
+  
+  double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
+  double Lmid  = 0.5*(box->_le[0] + box->_lb[0]);
+
+
+
+  //constant for the real reference length in the Hartmann number
+  const double LHm =2.;   //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
+
+
+  
+       for (uint d=0; d < myvect._ndof; d++)   {
+	 
+
+          if (idim == 0) myvect._val_dofs[d] =  0.;  
+     else if (idim == 1){
+         double xtr = currelem.GetNodeCoords()[d] - Lmid;
+         const double magnitude = ml_prob->GetInputParser().get("udes")*DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
+                         myvect._val_dofs[d] =  magnitude; 
+     }
+     else if (idim == 2) myvect._val_dofs[d] =  0.; 
+
+ 
+      }
+     
+  return;
+  
+ }
+
+
+
+
+
+
+//---------------------------------------------------------------------------------------------------------------------
+
+double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z, const char * name) {
+
+  std::vector<double> xp(ml_prob->_ml_msh->GetDimension());
+  xp[0] = x;
+  xp[1] = y;
+  xp[2] = z;
+
+  if ( ml_prob->_ml_msh->GetDimension() == 3 )    xp[2] = z;
+
+  // defaults ***********
+  double value = 0.;
+  // defaults ***********
+  
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
+  
+  Box* box = static_cast<Box*>(ml_prob->_ml_msh->GetDomain());
+
+  std::vector<double> lb(ml_prob->_ml_msh->GetDimension());
+  std::vector<double> le(ml_prob->_ml_msh->GetDimension());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (ml_prob->_ml_msh->GetDimension() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+    std::vector<double> x_rotshift(ml_prob->_ml_msh->GetDimension());
+  ml_prob->_ml_msh->GetDomain()->TransformPointToRef(&xp[0],&x_rotshift[0]);
+
+  
+  
+  
+  
+ 
+//=================  
+   if(!strcmp(name,"Qty_Velocity0")) {
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_Velocity1")) {
+    
+  const double Uref = ml_prob->GetInputParser().get("Uref");
+  
+     value = 0.;
+
+   if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  {  value = (x_rotshift[0] - lb[0])*(le[0] - x_rotshift[0])*(x_rotshift[2] - lb[2])*(le[2]-x_rotshift[2])/Uref;  }
+  
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_Velocity2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+  
+//=================  
+  else if(!strcmp(name,"Qty_VelocityAdj0")) {
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_VelocityAdj1")) {
+    
+       value = 0.; 
+
+  }
+  
+  else if(!strcmp(name,"Qty_VelocityAdj2")) {
+    
+         value = 0.; 
+ 
+  }
+  
+ //=================  
+  else if(!strcmp(name,"Qty_MagnFieldHomAdj0")) {
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomAdj1")) {
+    
+      value = 0.; 
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomAdj2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+ //=================  
+  else if(!strcmp(name,"Qty_MagnFieldHom0")) {
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHom1")) {
+    
+      value = 0.; 
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHom2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+ 
+ //=================  
+  else if(!strcmp(name,"Qty_MagnFieldExt0")) {
+ 
+  const double Bref = ml_prob->GetInputParser().get("Bref");
+ 
+  value = Bref/Bref;
+   
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldExt1")) {
+    
+      value = 0.; 
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldExt2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+   //=================  
+   //=================  
+   //=================  
+
+  else if(!strcmp(name,"Qty_Pressure")) {
+    
+      value = 0.; 
+     
+  }
+  
+
+  else if(!strcmp(name,"Qty_PressureAdj")) {
+    
+      value = 0.; 
+    
+  }  
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomLagMult")) {
+    
+       value = 0.; 
+       
+  }
+  
+
+  else if(!strcmp(name,"Qty_MagnFieldExtLagMult")) {
+    
+      value = 0.; 
+     
+  }  
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomLagMultAdj")) {
+    
+       value = 0.; 
+     
+  }  
+   
+    //=================  
+   //=================  
+   //=================  
+ //=================  
+  else if(!strcmp(name,"Qty_DesVelocity0")) {
+ 
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_DesVelocity1")) {
+
+  const double Lref = ml_prob->GetInputParser().get("Lref");
+  const double Uref = ml_prob->GetInputParser().get("Uref");
+  double ILref = 1./Lref;
+    
+  const double rhof   = ml_prob->GetInputParser().get("rho0");
+  const double muvel  = ml_prob->GetInputParser().get("mu0");
+  const double MUMHD  = ml_prob->GetInputParser().get("MUMHD");
+  const double SIGMHD = ml_prob->GetInputParser().get("SIGMHD");
+  const double Bref   = ml_prob->GetInputParser().get("Bref");
+
+  const double DpDz   = 1./*0.5*/;  //AAA: change it according to the pressure distribution
+
+  double DpDzad = DpDz*Lref/(rhof*Uref*Uref);
+
+  double Re  = ml_prob->GetInputParser().get("Re");
+  double Rem = ml_prob->GetInputParser().get("Rem");
+  double Hm  = ml_prob->GetInputParser().get("Hm");
+  double S   = ml_prob->GetInputParser().get("S");
+ 
+  
+  Box* box= static_cast<Box*>(ml_prob->_ml_msh->GetDomain());
+  
+  
+  double Lhalf = 0.5*(box->_le[0] - box->_lb[0]);
+  double Lmid  = 0.5*(box->_le[0] + box->_lb[0]);
+
+  double xtr = xp[0] - Lmid;
+
+
+  //constant for the real reference length in the Hartmann number
+  const double LHm =2.;   //this is because the reference length for Hm is HALF THE WIDTH of the domain, which is Lref=1 now
+
+  const double magnitude = ml_prob->GetInputParser().get("udes")*DpDzad*Hm/LHm*(cosh(Hm/LHm) - cosh(Hm/LHm*xtr*Lref/Lhalf)) / (SIGMHD*Bref*Bref*sinh(Hm/LHm)*Uref);
+  
+  value = magnitude;
+  
+  }
+  
+  else if(!strcmp(name,"Qty_DesVelocity2")) {
+    
+      value = 0.; 
+ 
+  }
+  
+
+   
+  return value;
+}
+
+// =====================================================================
+
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+  
+  std::vector<double> xp(ml_prob->_ml_msh->GetDimension());
+  xp[0] = x;
+  xp[1] = y;
+
+  if ( ml_prob->_ml_msh->GetDimension() == 3 )    xp[2] = z;
+
+  // defaults ***********
+  bool test=1; //dirichlet  // 0 neumann
+  value=0.;
+  // defaults ***********
+  
+  const double bdry_toll = DEFAULT_BDRY_TOLL;
+  
+  Box* box = static_cast<Box*>(ml_prob->_ml_msh->GetDomain());
+
+  std::vector<double> lb(ml_prob->_ml_msh->GetDimension());
+  std::vector<double> le(ml_prob->_ml_msh->GetDimension());
+  lb[0] = box->_lb[0]; //already nondimensionalized
+  le[0] = box->_le[0];
+  lb[1] = box->_lb[1];
+  le[1] = box->_le[1];
+  if (ml_prob->_ml_msh->GetDimension() == 3) {
+  lb[2] = box->_lb[2];
+  le[2] = box->_le[2];
+  }
+  
+    std::vector<double> x_rotshift(ml_prob->_ml_msh->GetDimension());
+  ml_prob->_ml_msh->GetDomain()->TransformPointToRef(&xp[0],&x_rotshift[0]);
+
+  
+  //=================  
+   if(!strcmp(name,"Qty_Velocity0")) {
+
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;    //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;    //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;    //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1;    //u dot n
+     
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_Velocity1")) {
+    
+  const double Uref = ml_prob->GetInputParser().get("Uref");
+       value = 0.;
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                     test = 1;    //u x n
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )     test = 1;   //u x n
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )  {                                  test = 0;  //u dot n   //leave this free for VELOCITY INLET
+                                                                                                     value = (x_rotshift[0] - lb[0])*(le[0] - x_rotshift[0])*(x_rotshift[2] - lb[2])*(le[2]-x_rotshift[2])/Uref;  
+  }
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )   test = 0;  //u dot n   //leave this free for outlet
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                 test = 1;   //u x n
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )   test = 1;   //u x n
+  
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_Velocity2")) {
+
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+    
+       value = 0.; 
+ 
+  }
+  
+  
+//=================  
+  else if(!strcmp(name,"Qty_VelocityAdj0")) {
+    
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_VelocityAdj1")) {
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll)     test = 1;
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)                                     test = 0; //INSTEAD THIS MUST CORRESPOND TO THE DIRECT
+                                                                                                               //the SPACE of ADJOINT functions is the same as the SPACE for the DIRECT test functions
+                                                                                                               //if you fix this then you dont control...  
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)    test = 0;   //INSTEAD THIS MUST CORRESPOND TO THE DIRECT
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;  //u x n
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)    test = 1;  //u x n
+    
+       value = 0.;
+  
+  }
+  
+  else if(!strcmp(name,"Qty_VelocityAdj2")) {
+    
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
+         value = 0.; 
+ 
+  }
+  
+ //=================  
+  else if(!strcmp(name,"Qty_MagnFieldHomAdj0")) {
+ 
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
+      value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomAdj1")) {
+    
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 0;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 0;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
+      value = 0.; 
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomAdj2")) {
+    
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;    //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;    //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 0;    //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 0;    //u dot n
+
+      value = 0.; 
+ 
+  }
+  
+ //=================  
+  else if(!strcmp(name,"Qty_MagnFieldHom0")) {
+ 
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
+ value = 0.; 
+   
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHom1")) {
+    
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 0;      //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 0;     //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
+      value = 0.; 
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldHom2")) {
+    
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 0;    //why isn't this fixed as well? 
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 0;    //why isn't this fixed as well? 
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 0;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 0; //u dot n
+      value = 0.; 
+ 
+  }
+  
+ 
+ //=================  
+  else if(!strcmp(name,"Qty_MagnFieldExt0")) {
+ 
+  const double Bref = ml_prob->GetInputParser().get("Bref");
+ 
+  value = Bref/Bref;
+  
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                  test = 1;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll)   test = 1;
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)                                   test = 1;
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  test = 0; //UseControl
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                              test = 1;
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  test = 1;
+
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldExt1")) {
+    
+  value = 0.; 
+      
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                  test = 1;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll)   test = 1;
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll)                                   test = 1;
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  test = 0; //UseControl
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                              test = 1;
+  if ((le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll)  test = 1;
+ 
+  }
+  
+  else if(!strcmp(name,"Qty_MagnFieldExt2")) {
+    
+ if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                    test = 1;    //u x n 
+ if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )    test = 1;    //u x n
+ if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                    test = 1;    //u x n
+ if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )  test = 1;    //u x n
+ if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                test = 1;   //u dot n  
+ if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )  test = 1; //u dot n
+
+ value = 0.; 
+ 
+  }
+  
+   //=================  
+   //=================  
+   //=================  
+
+  else if(!strcmp(name,"Qty_Pressure")) {
+
+
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                     test = 0;  //don't do the integral
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )     test = 0; 
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                     test = 0;
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )   test = 1;  //do the integral
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                 test = 0;  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )   test = 0;
+  
+      value = 0.; 
+    
+     
+  }
+  
+
+  else if(!strcmp(name,"Qty_PressureAdj")) {
+    
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                     test = 0;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )     test = 0; 
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                     test = 0;
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )   test = 0;
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                 test = 0;  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )   test = 0;
+    
+      value = 0.; 
+     
+  }  
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomLagMult")) {
+    
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                     test = 0;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )     test = 0; 
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                     test = 0;
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )   test = 0;
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                 test = 0;  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )   test = 0;
+    
+       value = 0.; 
+   
+     
+  }
+  
+
+  else if(!strcmp(name,"Qty_MagnFieldExtLagMult")) {
+    
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                     test = 0;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )     test = 0; 
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                     test = 0;
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )   test = 0;
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                 test = 0;  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )   test = 0;
+    
+      value = 0.; 
+    
+     
+  }  
+  
+  else if(!strcmp(name,"Qty_MagnFieldHomLagMultAdj")) {
+    
+  if ( x_rotshift[0] > -bdry_toll &&  x_rotshift[0] < bdry_toll )                                     test = 0;
+  if ( (le[0]-lb[0])  - x_rotshift[0] > -bdry_toll && (le[0]-lb[0]) - x_rotshift[0] < bdry_toll )     test = 0; 
+  if ( x_rotshift[1] > -bdry_toll &&  x_rotshift[1] < bdry_toll )                                     test = 0;
+  if ( (le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll )   test = 0;
+  if ( (x_rotshift[2]) > -bdry_toll && ( x_rotshift[2]) < bdry_toll )                                 test = 0;  
+  if ( (le[2]-lb[2]) -(x_rotshift[2]) > -bdry_toll &&  (le[2]-lb[2]) -(x_rotshift[2]) < bdry_toll )   test = 0;
+    
+       value = 0.; 
+     
+  }  
+
+  
+    return test;
+
+}
+
+
+
+
+
+
 
 
 

@@ -89,8 +89,6 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
  
   const uint mesh_vb = VV;
 
-
-
   
    double integral = 0.;
 
@@ -106,23 +104,24 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
   //========== 
     CurrentQuantity Tempold(currgp);
-    Tempold._qtyptr   =  eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Temperature"); 
     Tempold._SolName = "Qty_Temperature";
+    Tempold._qtyptr   =  eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Temperature"); 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
   //========== 
     CurrentQuantity Tlift(currgp);
-    Tlift._qtyptr   =  eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_TempLift"); 
     Tlift._SolName = "Qty_TempLift";
+    Tlift._qtyptr   =  eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_TempLift"); 
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
     
  //===========
     CurrentQuantity Tdes(currgp);
-    Tdes._qtyptr   = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_TempDes"); 
     Tdes._SolName = "Qty_TempDes";
-    Tdes.VectWithQtyFillBasic();
+    Tdes._dim      = Tempold._dim;
+    Tdes._FEord    = Tempold._FEord;
+    Tdes._ndof     = Tempold._ndof;
     Tdes.Allocate();
   
 //========= DOMAIN MAPPING
@@ -132,41 +131,30 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-//========== Quadratic domain, auxiliary  
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = mymsh->el->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-  xyz_refbox.Allocate();
-  
       currelem.SetDofobjConnCoords();
-      currelem.SetMidpoint();
       
      currelem.ConvertElemCoordsToMappingOrd(xyz);
-     currelem.TransformElemNodesToRef(eqn->GetMLProb().GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
-
 // =============== 
-      xyz_refbox.SetElemAverage();
-      int el_flagdom = ElFlagControl(xyz_refbox._el_average,eqn->GetMLProb()._ml_msh);
+     xyz.SetElemAverage();
+     int el_flagdom = ElFlagControl(xyz._el_average,eqn->GetMLProb()._ml_msh);
 //====================     
  
-    if ( Tempold._eqnptr != NULL )   Tempold.GetElemDofs();
-    else                             Tempold._qtyptr->FunctionDof(Tempold,0.,&xyz_refbox._val_dofs[0]);
-    if ( Tlift._eqnptr != NULL )       Tlift.GetElemDofs();
-    else                               Tlift._qtyptr->FunctionDof(Tlift,0.,&xyz_refbox._val_dofs[0]);
-    if ( Tdes._eqnptr != NULL )         Tdes.GetElemDofs();
-    else                                Tdes._qtyptr->FunctionDof(Tdes,0.,&xyz_refbox._val_dofs[0]);    
+    Tempold.GetElemDofs();
+    Tlift.GetElemDofs();
+    
+    TempDesired(Tdes,currelem);
 
-      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+    const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
-     for (uint fe = 0; fe < QL; fe++)     {  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  }  
+     for (uint fe = 0; fe < QL; fe++)     {  
+       currgp.SetPhiElDofsFEVB_g (fe,qp);
+       currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  
+    }  
      
-   const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
+   const double  Jac_g = currgp.JacVectVV_g(xyz);      
    const double  wgt_g = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
-
-     for (uint fe = 0; fe < QL; fe++)     {          currgp.SetPhiElDofsFEVB_g (fe,qp);  }
 
  Tempold.val_g();
    Tlift.val_g();
@@ -261,24 +249,14 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-//========== Quadratic domain, auxiliary  
-  CurrentQuantity xyz_refbox(currgp);
-  xyz_refbox._dim      = space_dim;
-  xyz_refbox._FEord    = MESH_ORDER;
-  xyz_refbox._ndof     = mymsh->el->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-  xyz_refbox.Allocate();
   
-//loop over the geom el types
-      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();      
-      
       currelem.SetDofobjConnCoords();
-      currelem.SetMidpoint();
 
       currelem.ConvertElemCoordsToMappingOrd(xyz);
-      currelem.TransformElemNodesToRef(eqn->GetMLProb().GetMeshTwo().GetDomain(),&xyz_refbox._val_dofs[0]);    
      
      Tlift.GetElemDofs();
 
+     const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();      
 
   for (uint qp = 0; qp < el_ngauss; qp++) {
 
@@ -287,7 +265,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
        currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);  
     }  
      
-      const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!      
+      const double  Jac_g = currgp.JacVectVV_g(xyz);      
       const double  wgt_g = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
 
   Tlift.val_g();
@@ -379,6 +357,20 @@ return el_flagdom;
 }
 
 
+ void TempDesired(CurrentQuantity& myvect, const CurrentElem & currelem)  {
+   
+   for (uint ivar=0; ivar < myvect._dim; ivar++) 
+       for (uint d=0; d < myvect._ndof; d++)      myvect._val_dofs[d+ivar*myvect._ndof] =  0.9;
+ 
+     
+  return;
+  
+ }
+
+
+
+
+
 //---------------------------------------------------------------------------------------------------------------------
 
 bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
@@ -387,7 +379,7 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
   xp[0] = x;
   xp[1] = y;
 
-  if ( ml_prob->_ml_msh->GetDimension() == 3 )    xp[1] = z;
+  if ( ml_prob->_ml_msh->GetDimension() == 3 )    xp[2] = z;
 
   // defaults ***********
   bool test=1; //dirichlet  // 0 neumann
@@ -415,26 +407,13 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
   
   if(!strcmp(name,"Qty_Temperature")) {
  
-   if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
-      test=1; 
-      value=0.;
-  }
-
-  if ( (le[0]-lb[0])  - (x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll)  { //right of the RefBox
-      test=1; 
-      value=0.;
-   }
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll )       test=1; 
+  if ( (le[0]-lb[0])  - (x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll)        test=1; 
+  if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)                               test=1; 
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)           test=1; 
    
-  if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
-      test=1; 
-      value=0.;
-  }
+  value = 0.;
   
-  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
-      test=1; 
-      value=0.;
-  }   
-    
   }
   
   
@@ -474,28 +453,15 @@ bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, co
  
   }
   
-  else if(!strcmp(name,"Qty_TempAdj")){
+  else if(!strcmp(name,"Qty_TempAdj")) {
     
     
-  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll ) {  //left of the RefBox
-       test=1; 
-      value=0.; 
-  }
-
-  if ( (le[0]-lb[0])  - (x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll)  { //right of the RefBox
-       test=1; 
-      value=0.; 
-   }
-  if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)  { //bottom  of the RefBox
-       test=1; 
-      value=0.; 
-  }
+  if ( (x_rotshift[0]) > -bdry_toll && ( x_rotshift[0]) < bdry_toll )                                     test = 1; 
+  if ( (le[0]-lb[0])  - (x_rotshift[0]) > -bdry_toll && (le[0]-lb[0])  -(x_rotshift[0]) < bdry_toll)      test = 1; 
+  if (( x_rotshift[1]) > -bdry_toll && ( x_rotshift[1]) < bdry_toll)                                      test = 1; 
+  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)         test = 1; 
   
-  if ((le[1]-lb[1]) -(x_rotshift[1]) > -bdry_toll &&  (le[1]-lb[1]) -(x_rotshift[1]) < bdry_toll)  {  //top of the RefBox
-       test=1; 
-      value=0.; 
-  }
-    
+    value=0.; 
   
   }
   
@@ -622,7 +588,7 @@ double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, c
   xp[0] = x;
   xp[1] = y;
 
-  if ( ml_prob->_ml_msh->GetDimension() == 3 )    xp[1] = z;
+  if ( ml_prob->_ml_msh->GetDimension() == 3 )    xp[2] = z;
 
   // defaults ***********
   double value = 0.;
@@ -710,6 +676,14 @@ double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, c
 
      
   }
+
+  else if(!strcmp(name,"Qty_TempDes")) {
+    
+    
+  value =  0.9;
+
+     
+  }  
   
   return value;
 }

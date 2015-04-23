@@ -27,19 +27,7 @@ Temperature::Temperature(std::string name_in, QuantityMap& qtymap_in, uint dim_i
 // ==================================================================
 
 
-// =================================================
-void Temperature::Function_txyz(const double/* t*/, const double* xp,double* temp) const {
 
-  const double Tref = _qtymap.GetInputParser()->get("Tref");
-
-  Box* box = static_cast<Box*>(_qtymap.GetMeshTwo()->GetDomain());  
-  
-  temp[0] = 100.*(xp[0])*( ( box->_le[0] - box->_lb[0]) - xp[0])/Tref;
- 
-  
-  return;
-  }
-  
   
  
   void Temperature::bc_flag_txyz(const double t, const double* xp, std::vector<int> & bc_flag) const  {

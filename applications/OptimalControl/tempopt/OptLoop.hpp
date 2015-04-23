@@ -5,7 +5,8 @@
 #include "FemusInputParser.hpp"
 #include "SystemTwo.hpp"
 #include "TimeLoop.hpp"
-
+#include "CurrentElem.hpp"
+#include "CurrentQuantity.hpp"
 
 
 namespace femus {
@@ -36,6 +37,9 @@ void optimization_loop( MultiLevelProblem & e_map_in );
 
  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMesh* mesh);
 
+ void TempDesired(CurrentQuantity& myvect, const CurrentElem & currelem);
+
+ 
  bool  SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time);
  
 double  SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char * name);

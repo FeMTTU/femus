@@ -117,11 +117,11 @@ int main(int argc, char **args) {
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
-      vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+      vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted,i);
 
-      GMVWriter gmvIO(&mlSol);
-      gmvIO.SetDebugOutput(true);
-      gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//       GMVWriter gmvIO(&mlSol);
+//       gmvIO.SetDebugOutput(true);
+//       gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
     }
   }
   

@@ -51,10 +51,6 @@
   //==== AUXILIARY ==============
     double* dphijdx_g = new double[space_dim];
     double* dphiidx_g = new double[space_dim];
-    double* dphijdx_gLL = new double[space_dim];
-    double* dphiidx_gLL = new double[space_dim];
-    double* dphijdx_gKK = new double[space_dim];
-    double* dphiidx_gKK = new double[space_dim];
 
     
   const uint mesh_vb = VV;
@@ -73,18 +69,6 @@
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
-// //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-//     CurrentQuantity Temp2(currgp);
-//     Temp2._qtyptr   = my_system.GetUnknownQuantitiesVector()[1]; 
-//     Temp2.VectWithQtyFillBasic();
-//     Temp2.Allocate();
-
-//=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-//     CurrentQuantity Temp3(currgp);
-//     Temp3._qtyptr   = my_system.GetUnknownQuantitiesVector()[2]; 
-//     Temp3.VectWithQtyFillBasic();
-//     Temp3.Allocate();
-    
     //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
     CurrentQuantity xyz(currgp);  //no quantity
@@ -93,50 +77,19 @@
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
-    //==================Quadratic domain, auxiliary, must be QUADRATIC!!! ==========
-  CurrentQuantity xyz_refbox(currgp);  //no quantity
-    xyz_refbox._dim      = space_dim;
-    xyz_refbox._FEord    = MESH_ORDER;
-    xyz_refbox._ndof     = myel->GetElementDofNumber(ZERO_ELEM,BIQUADR_FE);
-    xyz_refbox.Allocate();
-
-    
+   
     currelem.Mat().zero();
     currelem.Rhs().zero(); 
 
     currelem.SetDofobjConnCoords();
-    currelem.SetMidpoint();
-
-    currelem.ConvertElemCoordsToMappingOrd(xyz);
-    currelem.TransformElemNodesToRef(ml_prob._ml_msh->GetDomain(),&xyz_refbox._val_dofs[0]);    
-
-    
-//MY EQUATION
-//the elements are, for every level:
-// 1)DOF INDICES
-// 2)BC FLAGS
-// 3)BC VALUES 
-// 1) and 2) are taken in a single vector, 3) are considered separately
-      
     currelem.SetElDofsBc();
 
-  Tempold.GetElemDofs();
-//     Temp2.GetElemDofs();
-//     Temp3.GetElemDofs();
-    
-// ===============      
-// Now the point is this: there are several functions of space
-// which are expressed with respect to a reference frame
-//ok, now that the dofs are filled for xyz_refbox, I can use the el_average
-//Well, the alternative is to consider  the elem in the refbox as
-    //either a Vect or a CurrentElem !
-    //I could consider it as another element, but only with the geometrical part!
+    currelem.ConvertElemCoordsToMappingOrd(xyz);
 
-  xyz_refbox.SetElemAverage();
+    Tempold.GetElemDofs();
+
 //====================    
-    
-//===== FILL the DOFS of the EXTERNAL QUANTITIES: you must assure that for every Vect the quantity is set correctly
-   const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+     const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp=0; qp< el_ngauss; qp++) {
 
@@ -157,19 +110,11 @@ for (uint fe = 0; fe < QL; fe++)     {
 //======= end of the "COMMON SHAPE PART"==================
 
  	Tempold.val_g(); 
-//  	  Temp2.val_g(); 
-//  	  Temp3.val_g(); 
 	   
-	   // always remember to get the dofs for the variables you use!
-           // The point is that you fill the dofs with different functions...
-           // you should need a flag to check if the dofs have been correctly filled
- 
 	  
       for (uint i=0; i < Tempold._ndof/*the maximum number is for biquadratic*/; i++)     {
 
         const double phii_g   = currgp._phi_ndsQLVB_g[Tempold._FEord][i];
-//         const double phii_gLL = currgp._phi_ndsQLVB_g[Temp2._FEord][i];
-//         const double phii_gKK = currgp._phi_ndsQLVB_g[Temp3._FEord][i];
 
         for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][i+idim*Tempold._ndof];
 
@@ -182,53 +127,19 @@ for (uint fe = 0; fe < QL; fe++)     {
         
         currelem.Mat()(i,i) +=  (1-currelem.GetBCDofFlag()[i])*detb;
 
-//========= SECOND ROW =====================
-// 	 int ip1 = i + Tempold._ndof; 
-// 	 
-// 	if (i < currelem.GetElemType(Temp2._FEord)->GetNDofs() ) { 
-// 	 currelem.Rhs()(ip1) +=      
-//            currelem.GetBCDofFlag()[ip1]*dtxJxW_g*( 
-//                 0.07*phii_gLL
-// 	  )
-// 	   + (1-currelem.GetBCDofFlag()[ip1])*detb*(Temp2._val_dofs[i]);
-//         
-//          currelem.Mat()(ip1,ip1) +=  (1-currelem.GetBCDofFlag()[ip1])*detb;
-// 	}
-	
-// //======= THIRD ROW ===================================
-// 	 int ip2 = i + Tempold._ndof + Temp2._ndof;
-// 	 
-// 	if (i < currelem.GetElemType(Temp3._FEord)->GetNDofs() ) { 
-//            currelem.Rhs()(ip2) +=      
-//            currelem.GetBCDofFlag()[ip2]*dtxJxW_g*( 
-//                 0.07*phii_gKK
-// 	     )
-// 	   + (1-currelem.GetBCDofFlag()[ip2])*detb*(Temp3._val_dofs[i]);
-//         
-//         currelem.Mat()(ip2,ip2) +=  (1-currelem.GetBCDofFlag()[ip2])*detb;
-// 	}
-	
 	 // Matrix Assemblying ---------------------------
         for (uint j=0; j<Tempold._ndof; j++) {
           double phij_g   = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
-//           double phij_gLL = currgp._phi_ndsQLVB_g[Temp2._FEord][j];
-//           double phij_gKK = currgp._phi_ndsQLVB_g[Temp3._FEord][j];
 	  
         for (uint idim = 0; idim < space_dim; idim++)   {
 	  dphijdx_g  [idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][j+idim*Tempold._ndof]; 
-// 	  dphijdx_gLL[idim] = currgp._dphidxyz_ndsQLVB_g[Temp2._FEord]  [j+idim*Temp2._ndof]; 
-// 	  dphijdx_gKK[idim] = currgp._dphidxyz_ndsQLVB_g[Temp3._FEord]  [j+idim*Temp3._ndof]; 
           }
 	  
 	  
           double Lap_g   = Math::dot(dphijdx_g,dphiidx_g,space_dim);
-          double Lap_gLL = Math::dot(dphijdx_gLL,dphiidx_gLL,space_dim);
-          double Lap_gKK = Math::dot(dphijdx_gKK,dphiidx_gKK,space_dim);
 
 	    int ip1 = i + Tempold._ndof;
 	    int jp1 = j + Tempold._ndof;
-// 	    int ip2 = i + Tempold._ndof + Temp2._ndof;
-// 	    int jp2 = j + Tempold._ndof + Temp2._ndof;
 
  
 //============ FIRST ROW state  delta T ===============
@@ -238,33 +149,6 @@ for (uint fe = 0; fe < QL; fe++)     {
              Lap_g  
             );
 
-//=========== SECOND ROW  =============
-//===== DIAGONAL ===========================
-//  	if ( i < currelem.GetElemType(Temp2._FEord)->GetNDofs() )  { 
-//   	if ( j < currelem.GetElemType(Temp2._FEord)->GetNDofs() ) { 
-//        currelem.Mat()(ip1,jp1) +=        
-//             currelem.GetBCDofFlag()[ip1]*
-//             dtxJxW_g*(
-// // 	      phij_gLL*phii_gLL
-//            +  Lap_gLL
-//             ); 
-// 	  }
-// 	}
-//============= THIRD ROW  =============
-//======= DIAGONAL ==================
-// 	if ( i < currelem.GetElemType(Temp3._FEord)->GetNDofs() )  { 
-//   	if ( j < currelem.GetElemType(Temp3._FEord)->GetNDofs() ) { 
-//           currelem.Mat()(ip2,jp2) +=        
-//             currelem.GetBCDofFlag()[ip2]*
-//               dtxJxW_g*( 
-//               phij_gKK*phii_gKK
-//             + Lap_gKK
-//             ); 
-// 	  }
-// 	}
-	
-	
-	    
         }  //end j (col)
       }   //end i (row)
     } // end of the quadrature point qp-loop
@@ -278,10 +162,6 @@ for (uint fe = 0; fe < QL; fe++)     {
 
   delete [] dphijdx_g;
   delete [] dphiidx_g;
-  delete [] dphijdx_gLL;
-  delete [] dphiidx_gLL;
-  delete [] dphijdx_gKK;
-  delete [] dphiidx_gKK;
   
   }//END VOLUME
   

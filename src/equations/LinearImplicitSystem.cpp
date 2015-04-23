@@ -169,7 +169,11 @@ void LinearImplicitSystem::AddSystemLevel() {
     
     _LinSolver[_gridn]->InitPde(_SolSystemPdeIndex,_ml_sol->GetSolType(),
 				_ml_sol->GetSolName(),&_solution[_gridn]->_Bdc,_gridr,_gridn+1,_SparsityPattern);    
-    BuildProlongatorMatrix(_gridn);
+    
+    
+    _PP.resize( _gridn + 1 );
+    _RR.resize( _gridn + 1 );
+    BuildProlongatorMatrix( _gridn );
    
     
     _LinSolver[_gridn]->set_solver_type(_finegridsolvertype);
@@ -517,7 +521,7 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
             
   delete NNZ_d;
   delete NNZ_o;
-    
+  
   _PP[gridf] = SparseMatrix::build().release();
   _PP[gridf]->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
   
