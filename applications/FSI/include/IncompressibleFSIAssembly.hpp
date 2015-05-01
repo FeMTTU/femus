@@ -276,7 +276,7 @@ namespace femus {
 		  }
 		}
 		for(unsigned igs=0; igs < mymsh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {
-		  mymsh->_finiteElement[felt][SolType2]->JacobianSur_AD(vx_face,igs,Weight,phi,gradphi,normal);
+		  mymsh->_finiteElement[felt][SolType2]->JacobianSur(vx_face,igs,Weight,phi,gradphi,normal);
 		  //phi1 =mymsh->_finiteElement[felt][SolType2]->GetPhi(igs);
 		  // *** phi_i loop ***
 		  for(unsigned i=0; i<nve; i++) {
@@ -303,7 +303,7 @@ namespace femus {
 	adept::adouble supg_tau;
 	for (unsigned ig=0;ig < mymsh->_finiteElement[kelt][SolType2]->GetGaussPointNumber(); ig++) {
 	  // *** get Jacobian and test function and test function derivatives in the moving frame***
-	  mymsh->_finiteElement[kelt][SolType2]->Jacobian_AD(vx,ig,Weight,phi,gradphi,nablaphi);
+	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx,ig,Weight,phi,gradphi,nablaphi);
 	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat,nablaphi_hat);
 	  phi1=mymsh->_finiteElement[kelt][SolType1]->GetPhi(ig);
 	  

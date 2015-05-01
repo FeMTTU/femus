@@ -617,8 +617,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 	adept::adouble hk;
 	for (unsigned ig=0;ig < mymsh->_finiteElement[kelt][SolType2]->GetGaussPointNumber(); ig++) {
 	  // *** get Jacobian and test function and test function derivatives in the moving frame***
-	  mymsh->_finiteElement[kelt][SolType2]->Jacobian_AD(vx,ig,Weight,phi,gradphi,nablaphi);
-	  mymsh->_finiteElement[kelt][SolType1]->Jacobian_AD(vx,ig,Weight1,phi1,gradphi1,nablaphi1);  
+	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx,ig,Weight,phi,gradphi,nablaphi);
+	  mymsh->_finiteElement[kelt][SolType1]->Jacobian(vx,ig,Weight1,phi1,gradphi1,nablaphi1);  
 	  
 	  for(int i=0;i<nve1;i++){
 	    for(int j=0;j<nabla_dim;j++){
@@ -1086,7 +1086,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
       double hk=1.;
       for (unsigned ig=0;ig < mymsh->_finiteElement[kelt][SolType]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives in the moving frame***
-	mymsh->_finiteElement[kelt][SolType]->Jacobian_AD(vx,ig,Weight,phi,gradphi,nablaphi);
+	mymsh->_finiteElement[kelt][SolType]->Jacobian(vx,ig,Weight,phi,gradphi,nablaphi);
 	if(ig==0){
 	  double referenceElementScale[6]={8., 1./6., 1., 4., 1., 2.};
 	  double GaussWeight = mymsh->_finiteElement[kelt][SolType]->GetGaussWeight(ig);
