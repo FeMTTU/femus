@@ -66,23 +66,6 @@ int main(void)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /** tutorial/Ex3
  * This example shows how to set and solve the weak form of the nonlinear problem 
  *                     -\Delta^2 u = f(x) \text{ on }\Omega, 
@@ -102,7 +85,7 @@ int main(void)
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
-#include <cppad/cppad.hpp> // the CppAD package http://www.coin-or.org/CppAD/
+
 
 using namespace femus;
 

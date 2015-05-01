@@ -21,9 +21,22 @@ using namespace femus;
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char SolName[], double &value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
-  value=0;
-//   if(facename == 2) 
-//     dirichlet = false;
+    
+  if(!strcmp(SolName,"U")) {
+    value=0.;
+  }
+  else if(!strcmp(SolName,"V")) {
+    value=0.;
+    if(facename == 1){
+      value=1.;
+    }
+  }
+  else if(!strcmp(SolName,"P")) {
+    value=0.;
+    dirichlet = false;
+    if( x<-0.49999999999 && y<-0.49999999999) dirichlet=true;
+  }
+  
   return dirichlet;
 }
 
@@ -58,8 +71,8 @@ int main(int argc, char **args) {
   MultiLevelSolution mlSol(&mlMsh);
     
   // add variables to mlSol
-  mlSol.AddSolution("U",LAGRANGE, FIRST);
-  mlSol.AddSolution("V",LAGRANGE, FIRST);
+  mlSol.AddSolution("U",LAGRANGE, SECOND);
+  mlSol.AddSolution("V",LAGRANGE, SECOND);
   mlSol.AddSolution("P",LAGRANGE, FIRST);
   mlSol.Initialize("All");
   
@@ -306,38 +319,29 @@ void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const u
 	}
         
 	adept::adouble solpGauss = 0;
-	vector < adept::adouble > solpGauss_x(dim,0.);
-        for(unsigned i=0; i<nDofsp; i++) {
+	for(unsigned i=0; i<nDofsp; i++) {
 	  solpGauss += phiP[i]*solp[i];
-	  for(unsigned jdim=0; jdim<dim; jdim++) {
-	    solpGauss_x[jdim] += phi_x[i*dim+jdim]*solp[i];
-	  }
 	}
         // *** phiuv_i loop ***
 	for(unsigned i=0; i<nDofs; i++) {
 	 
-	  adept::adouble laplaceu = 0.;
-	  adept::adouble laplacev = 0.;
+	  adept::adouble NSu = 0.;
+	  adept::adouble NSv = 0.;
 	  for(unsigned jdim=0; jdim<dim; jdim++) {
-	    laplaceu   +=  phi_x[i*dim+jdim]*soluGauss_x[jdim];
-	    laplacev   +=  phi_x[i*dim+jdim]*solvGauss_x[jdim];
+	    NSu   +=  phi_x[i*dim+jdim]*soluGauss_x[jdim];
+	    NSv   +=  phi_x[i*dim+jdim]*solvGauss_x[jdim];
 	  }
-	  double srcTerm = 1.;
-	  aResu[i]+= (srcTerm*phi[i] - laplaceu) * weight;
-	  aResv[i]+= (srcTerm*phi[i] - laplacev) * weight;
+	  NSu += -solpGauss*phi_x[i*dim+0];
+	  NSv += -solpGauss*phi_x[i*dim+1];
+	  
+	  aResu[i]+= - NSu * weight;
+	  aResv[i]+= - NSv * weight;
 	  
 	} // end phi_i loop
 	
 	// *** phip_i loop ***
 	for(unsigned i=0; i<nDofsp; i++) {
-	 
-	  adept::adouble laplacep = 0.;
-	  for(unsigned jdim=0; jdim<dim; jdim++) {
-	    laplacep   +=  phi_x[i*dim+jdim]*solpGauss_x[jdim];
-	  }
-	  double srcTerm = 1.;
-	  aResp[i]+= (srcTerm*phiP[i] - laplacep) * weight;
-	  
+	  aResp[i]+= -( soluGauss_x[0] + solvGauss_x[1]  ) * phiP[i]  * weight; 
 	} // end phi_i loop
 	
 	
