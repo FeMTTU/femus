@@ -58,7 +58,7 @@ int main(int argc, char **args) {
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
     
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 5;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   
@@ -322,15 +322,22 @@ void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const u
 	for(unsigned i=0; i<nDofsp; i++) {
 	  solpGauss += phiP[i]*solp[i];
 	}
+	
+	double ni=0.01;
+	
         // *** phiuv_i loop ***
 	for(unsigned i=0; i<nDofs; i++) {
 	 
 	  adept::adouble NSu = 0.;
 	  adept::adouble NSv = 0.;
 	  for(unsigned jdim=0; jdim<dim; jdim++) {
-	    NSu   +=  phi_x[i*dim+jdim]*soluGauss_x[jdim];
-	    NSv   +=  phi_x[i*dim+jdim]*solvGauss_x[jdim];
+	    NSu   +=  ni * phi_x[i*dim+jdim]*soluGauss_x[jdim];
+	    NSv   +=  ni * phi_x[i*dim+jdim]*solvGauss_x[jdim];
 	  }
+	  
+	  NSu += phi[i]*(soluGauss*soluGauss_x[0] + solvGauss*soluGauss_x[1]);
+	  NSv += phi[i]*(soluGauss*solvGauss_x[0] + solvGauss*solvGauss_x[1]);
+	  
 	  NSu += -solpGauss*phi_x[i*dim+0];
 	  NSv += -solpGauss*phi_x[i*dim+1];
 	  
