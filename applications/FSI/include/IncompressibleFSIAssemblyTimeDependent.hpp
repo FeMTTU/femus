@@ -313,7 +313,7 @@ namespace femus {
 		  }
 		}
 		for(unsigned igs=0; igs < mymsh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {
-		  mymsh->_finiteElement[felt][SolType2]->JacobianSur_AD(vx_face,igs,Weight,phi,gradphi,normal);
+		  mymsh->_finiteElement[felt][SolType2]->JacobianSur(vx_face,igs,Weight,phi,gradphi,normal);
 		  mymsh->_finiteElement[felt][SolType2]->JacobianSur(vx_face_old, igs, Weight_old, phi_old, gradphi_old, normal_old);
 		  //phi1 =mymsh->_finiteElement[felt][SolType2]->GetPhi(igs);
 		  // *** phi_i loop ***
@@ -341,7 +341,7 @@ namespace femus {
 	double area=1.;
 	for (unsigned ig=0;ig < mymsh->_finiteElement[kelt][SolType2]->GetGaussPointNumber(); ig++) {
 	  // *** get Jacobian and test function and test function derivatives in the moving frame***
-	  mymsh->_finiteElement[kelt][SolType2]->Jacobian_AD(vx,  ig, Weight,     phi,     gradphi,     nablaphi);
+	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx,  ig, Weight,     phi,     gradphi,     nablaphi);
 	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx_hat, ig, Weight_hat, phi_hat, gradphi_hat, nablaphi_hat);
 	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx_old, ig, Weight_old, phi_old, gradphi_old, nablaphi_old);
 	  phi1=mymsh->_finiteElement[kelt][SolType1]->GetPhi(ig);

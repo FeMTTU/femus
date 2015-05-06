@@ -21,9 +21,22 @@ using namespace femus;
 
 bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char SolName[], double &value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
-  value=0;
-//   if(facename == 2) 
-//     dirichlet = false;
+    
+  if(!strcmp(SolName,"U")) {
+    value=0.;
+  }
+  else if(!strcmp(SolName,"V")) {
+    value=0.;
+    if(facename == 1){
+      value=1.;
+    }
+  }
+  else if(!strcmp(SolName,"P")) {
+    value=0.;
+    dirichlet = false;
+    if( x<-0.49999999999 && y<-0.49999999999) dirichlet=true;
+  }
+  
   return dirichlet;
 }
 
@@ -45,7 +58,7 @@ int main(int argc, char **args) {
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
     
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 5;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   
@@ -149,8 +162,7 @@ void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const u
   unsigned solpIndex;
   solpIndex = mlSol->GetIndex("P"); // get the position of "P" in the ml_sol object
   unsigned solpType = mlSol->GetSolutionType(solpIndex); // get the finite element type for "u"  
-  
-    
+      
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex("U"); // get the position of "U" in the pdeSys object
   
@@ -182,7 +194,7 @@ void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const u
   vector< adept::adouble > aResv; // local redidual vectors
   vector< adept::adouble > aResp; // local redidual vector
   
-  vector< double > JacI; // local stiffness matrix
+  
       
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned > (ceil(pow(3,dim))); // conservative: based on line3, quad9, hex27
@@ -193,20 +205,22 @@ void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const u
   
   for(unsigned i = 0; i < dim; i++)
     x[i].reserve(maxSize);
-  
-  KKDof.reserve(3*maxSize);
-  
+   
   phi.reserve(maxSize);
   phi_x.reserve(maxSize*dim);
   unsigned dim2=(3*(dim-1)+!(dim-1)); // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   phi_xx.reserve(maxSize*dim2);
   
-  Res.reserve(3*maxSize);
-  
   aResu.reserve(maxSize);
   aResv.reserve(maxSize);
   aResp.reserve(maxSize);
   
+  
+  KKDof.reserve(3*maxSize);
+  
+  Res.reserve(3*maxSize);
+  
+  vector< double > JacI; // local stiffness matrix
   JacI.reserve(3*maxSize*3*maxSize);
   
   vector < double > Jac;
@@ -220,23 +234,34 @@ void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const u
     
     unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof 
     short unsigned kelGeom = el->GetElementType( kel ); // element geometry type
+    
     unsigned nDofs  = el->GetElementDofNumber( kel, soluvType); // number of solution element dofs
+    unsigned nDofsp = el->GetElementDofNumber( kel, solpType); // number of solution element dofs
     unsigned nDofs2 = el->GetElementDofNumber( kel, xType); // number of coordinate element dofs
     
     // resize local arrays
-    KKDof.resize(nDofs);
+    KKDof.resize(2*nDofs + nDofsp);
     solu.resize(nDofs);
+    solv.resize(nDofs);
+    solp.resize(nDofsp);
     for(int i=0; i<dim; i++) {
       x[i].resize(nDofs2);
     }
-    Res.resize(nDofs); //resize
+    
+    Res.resize(2*nDofs + nDofsp); //resize
     std::fill(Res.begin(), Res.end(), 0); //set Res to zero
     
     aResu.resize(nDofs); //resize
+    aResv.resize(nDofs); //resize
+    aResp.resize(nDofsp); //resize
     std::fill(aResu.begin(), aResu.end(), 0); //set aRes to zero
+    std::fill(aResv.begin(), aResv.end(), 0); //set aRes to zero
+    std::fill(aResp.begin(), aResp.end(), 0); //set aRes to zero
     
     if(assembleMatrix) {
-      JacI.resize(nDofs*nDofs); //resize
+      Jac.resize( (2*nDofs+nDofsp) * (2*nDofs+nDofsp));
+      JacI.resize( (2*nDofs+nDofsp) * (2*nDofs+nDofsp)); //resize
+      std::fill(Jac.begin(), Jac.end(), 0); //set K to zero
       std::fill(JacI.begin(), JacI.end(), 0); //set K to zero
     }
          
@@ -245,10 +270,19 @@ void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const u
       unsigned iNode = el->GetMeshDof(kel, i, soluvType);  // local to global solution node   
       unsigned solDof = msh->GetMetisDof(iNode, soluvType); // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof); // global extraction and local storage for the solution
-      KKDof[i] = pdeSys->GetKKDof(soluIndex, soluPdeIndex, iNode); // global to global mapping between solution node and pdeSys dof
+      solv[i] = (*sol->_Sol[solvIndex])(solDof); // global extraction and local storage for the solution
+      KKDof[i]       = pdeSys->GetKKDof(soluIndex, soluPdeIndex, iNode); // global to global mapping between solution node and pdeSys dof
+      KKDof[i+nDofs] = pdeSys->GetKKDof(solvIndex, solvPdeIndex, iNode); // global to global mapping between solution node and pdeSys dof
     }
-        
-     // local storage of coordinates 
+    
+    for( unsigned i=0; i<nDofsp; i++) {
+      unsigned iNode = el->GetMeshDof(kel, i, solpType);  // local to global solution node   
+      unsigned solDof = msh->GetMetisDof(iNode, solpType); // global to global mapping between solution node and solution dof
+      solp[i] = (*sol->_Sol[solpIndex])(solDof); // global extraction and local storage for the solution
+      KKDof[i+2*nDofs] = pdeSys->GetKKDof(solpIndex, solpPdeIndex, iNode); // global to global mapping between solution node and pdeSys dof
+    }
+         
+    // local storage of coordinates 
     for( unsigned i=0; i<nDofs2; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, xType);  // local to global coordinates node     
       unsigned xDof  = msh->GetMetisDof(iNode, xType); // global to global mapping between coordinates node and coordinate dof
@@ -265,31 +299,61 @@ void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const u
       for(unsigned ig=0; ig < msh->_finiteElement[kelGeom][soluvType]->GetGaussPointNumber(); ig++) {
 	// *** get gauss point weight, test function and test function partial derivatives ***
 	msh->_finiteElement[kelGeom][soluvType]->Jacobian(x,ig,weight,phi,phi_x,phi_xx);
+		
+	phiP = msh->_finiteElement[kelGeom][solpType]->GetPhi(ig);
 	
 	// evaluate the solution, the solution derivatives and the coordinates in the gauss point
 	adept::adouble soluGauss = 0;
+	adept::adouble solvGauss = 0;
+	
 	vector < adept::adouble > soluGauss_x(dim,0.);
-	vector < double > xGauss(dim,0.);
+	vector < adept::adouble > solvGauss_x(dim,0.);
 	
 	for(unsigned i=0; i<nDofs; i++) {
-	  soluGauss+=phi[i]*solu[i];
+	  soluGauss += phi[i]*solu[i];
+	  solvGauss += phi[i]*solv[i];
 	  for(unsigned jdim=0; jdim<dim; jdim++) {
 	    soluGauss_x[jdim] += phi_x[i*dim+jdim]*solu[i];
-	    xGauss[jdim] += x[jdim][i]*phi[i]; 
+	    solvGauss_x[jdim] += phi_x[i*dim+jdim]*solv[i];
 	  }
 	}
         
-        // *** phi_i loop ***
+	adept::adouble solpGauss = 0;
+	for(unsigned i=0; i<nDofsp; i++) {
+	  solpGauss += phiP[i]*solp[i];
+	}
+	
+	double ni=0.01;
+	
+        // *** phiuv_i loop ***
 	for(unsigned i=0; i<nDofs; i++) {
 	 
-	  adept::adouble laplace = 0.;
+	  adept::adouble NSu = 0.;
+	  adept::adouble NSv = 0.;
 	  for(unsigned jdim=0; jdim<dim; jdim++) {
-	    laplace   +=  phi_x[i*dim+jdim]*soluGauss_x[jdim];
+	    NSu   +=  ni * phi_x[i*dim+jdim]*soluGauss_x[jdim];
+	    NSv   +=  ni * phi_x[i*dim+jdim]*solvGauss_x[jdim];
 	  }
-	  double srcTerm = 1.;
-	  aResu[i]+= (srcTerm*phi[i] - laplace) * weight;
+	  
+	  NSu += phi[i]*(soluGauss*soluGauss_x[0] + solvGauss*soluGauss_x[1]);
+	  NSv += phi[i]*(soluGauss*solvGauss_x[0] + solvGauss*solvGauss_x[1]);
+	  
+	  NSu += -solpGauss*phi_x[i*dim+0];
+	  NSv += -solpGauss*phi_x[i*dim+1];
+	  
+	  aResu[i]+= - NSu * weight;
+	  aResv[i]+= - NSv * weight;
 	  
 	} // end phi_i loop
+	
+	// *** phip_i loop ***
+	for(unsigned i=0; i<nDofsp; i++) {
+	  aResp[i]+= -( soluGauss_x[0] + solvGauss_x[1]  ) * phiP[i]  * weight; 
+	} // end phi_i loop
+	
+	
+	
+	
       } // end gauss point loop
     } // endif single element not refined or fine grid loop
 
@@ -299,6 +363,10 @@ void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const u
     //copy the value of the adept::adoube aRes in double Res and store
     for(int i=0; i<nDofs; i++) {
       Res[i] = aResu[i].value();
+      Res[i+nDofs] = aResv[i].value();
+    }
+    for(int i=0; i<nDofsp; i++) {
+      Res[i+2*nDofs] = aResp[i].value();
     }
     RES->add_vector_blocked(Res,KKDof);
     
@@ -306,17 +374,21 @@ void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const u
       
       // define the dependent variables
       s.dependent(&aResu[0], nDofs);
+      s.dependent(&aResv[0], nDofs);
+      s.dependent(&aResp[0], nDofsp);
       
       // define the independent variables
       s.independent(&solu[0], nDofs);   
+      s.independent(&solv[0], nDofs);   
+      s.independent(&solp[0], nDofsp);   
       
       // get the jacobian matrix (ordered by column)
       s.jacobian(&Jac[0]);	
      
       // get the jacobian matrix (ordered by raw, i.e. K=Jac^t)
-      for (int inode=0;inode<nDofs;inode++){
-	for (int jnode=0;jnode<nDofs;jnode++){
-	   JacI[inode*nDofs+jnode]=-Jac[jnode*nDofs+inode];
+      for (int inode=0;inode < 2*nDofs+nDofsp; inode++){
+	for (int jnode=0;jnode < 2*nDofs+nDofsp; jnode++){
+	   JacI[inode*(2*nDofs+nDofsp)+jnode]=-Jac[jnode*(2*nDofs+nDofsp)+inode];
 	}
       } 
       //store K in the global matrix KK

@@ -834,14 +834,16 @@ elem_type_3D::elem_type_3D(const char *geom_elem, const char *order, const char 
 
 //---------------------------------------------------------------------------------------------------------
 
-void elem_type_1D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
-			      vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const{
-  other_phi.resize(_nc);
+template <class type>
+void elem_type_1D::Jacobian_type(const vector < vector < type > > &vt,const unsigned &ig, type &Weight, 
+		   vector < double > &phi, vector < type > &gradphi, vector < type > &nablaphi) const{
+
+  phi.resize(_nc);
   gradphi.resize(_nc*1);
   nablaphi.resize(_nc*1);				
   
-  adept::adouble Jac=0.;
-  adept::adouble JacI;
+  type Jac=0.;
+  type JacI;
   
   const double *dxi=_dphidxi[ig];
   
@@ -857,51 +859,24 @@ void elem_type_1D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,co
   const double *dxi2 = _d2phidxi2[ig];
   
   for (int inode=0; inode<_nc; inode++,dxi++, dxi2++) {
-    other_phi[inode]=_phi[ig][inode];
+    phi[inode]=_phi[ig][inode];
     gradphi[inode]=(*dxi)*JacI;
     nablaphi[inode] = (*dxi2)*JacI*JacI;
   }
   
 }
 
-void elem_type_1D::Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
-    			    vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const{
-  other_phi.resize(_nc);
-  gradphi.resize(_nc*1);
-  nablaphi.resize(_nc*1);				
-  
-  double Jac=0.;
-  double JacI;
-  
-  const double *dxi=_dphidxi[ig];
-  
-  for (int inode=0; inode<_nc; inode++,dxi++) {
-    Jac+=(*dxi)*vt[0][inode];
-  }
-    
-  Weight=Jac*_gauss.GetGaussWeightsPointer()[ig];
+//---------------------------------------------------------------------------------------------------------
 
-  JacI=1/Jac;
-  
-  dxi = _dphidxi[ig];
-  const double *dxi2 = _d2phidxi2[ig];
-  
-  for (int inode=0; inode<_nc; inode++,dxi++, dxi2++) {
-    other_phi[inode]=_phi[ig][inode];
-    gradphi[inode]=(*dxi)*JacI;
-    nablaphi[inode] = (*dxi2)*JacI*JacI;
-  }
-  
-}
+template <class type>	
+void elem_type_1D::JacobianSur_type(const vector < vector < type > > &vt, const unsigned &ig, type &Weight, 
+				  vector < double > &phi, vector < type > &gradphi, vector < type > &normal) const {
 
-void elem_type_1D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
-				  vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const {
-
-  other_phi.resize(_nc);
+  phi.resize(_nc);
   normal.resize(2);				
 			
-  adept::adouble Jac[2][2]={{0.,0.},{0.,0.}};
-  adept::adouble JacI[2][2];
+  type Jac[2][2]={{0.,0.},{0.,0.}};
+  type JacI[2][2];
 
   const double *dfeta=_dphidxi[ig];
 
@@ -911,7 +886,7 @@ void elem_type_1D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt
   }
 
 //   normal module
-  adept::adouble modn = sqrt(Jac[0][0]*Jac[0][0] + Jac[1][0]*Jac[1][0]);
+  type modn = sqrt(Jac[0][0]*Jac[0][0] + Jac[1][0]*Jac[1][0]);
 
   normal[0] =  Jac[1][0]/modn;
   normal[1] = -Jac[0][0]/modn;
@@ -925,7 +900,7 @@ void elem_type_1D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt
   Jac[1][1] = -normal[1];
 
   //The determinant of that matrix is the area
-  adept::adouble det= (Jac[0][0]*Jac[1][1]-Jac[0][1]*Jac[1][0]);
+  type det= (Jac[0][0]*Jac[1][1]-Jac[0][1]*Jac[1][0]);
 
   JacI[0][0] =  Jac[1][1]/det;
   JacI[0][1] = -Jac[0][1]/det;
@@ -935,67 +910,23 @@ void elem_type_1D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt
   Weight = det*_gauss.GetGaussWeightsPointer()[ig];
   
   for(int inode=0;inode<_nc;inode++){
-    other_phi[inode]=_phi[ig][inode];
-  }
-
-}
-
-void elem_type_1D::JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
-			       vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const {
-
-  other_phi.resize(_nc);
-  normal.resize(2);				
-			
-  double Jac[2][2]={{0.,0.},{0.,0.}};
-  double JacI[2][2];
-
-  const double *dfeta=_dphidxi[ig];
-
-  for (int inode=0; inode<_nc; inode++,dfeta++) {
-    Jac[0][0] += (*dfeta)*vt[0][inode];
-    Jac[1][0] += (*dfeta)*vt[1][inode];
-  }
-
-  //   normal module
-  double modn = sqrt(Jac[0][0]*Jac[0][0] + Jac[1][0]*Jac[1][0]);
-
-  normal[0] =  Jac[1][0]/modn;
-  normal[1] = -Jac[0][0]/modn;
-  
-  //The derivative of x with respect to eta (dx/deta) has the opposite sign with respect to the normal
-  //obtained as cross product between (dx/deta , dy/deta, 0) x (0,0,1)
-  //The Jacobian has the structure
-  // |dx/deta  -nx|
-  // |dy/deta  -ny|
-  Jac[0][1] = -normal[0];
-  Jac[1][1] = -normal[1];
-
-  //The determinant of that matrix is the area
-  double det= (Jac[0][0]*Jac[1][1]-Jac[0][1]*Jac[1][0]);
-
-  JacI[0][0] =  Jac[1][1]/det;
-  JacI[0][1] = -Jac[0][1]/det;
-  JacI[1][0] = -Jac[1][0]/det;
-  JacI[1][1] =  Jac[0][0]/det;
-
-  Weight = det*_gauss.GetGaussWeightsPointer()[ig];
-  
-  for(int inode=0;inode<_nc;inode++){
-    other_phi[inode]=_phi[ig][inode];
+    phi[inode]=_phi[ig][inode];
   }
 
 }
 
 //---------------------------------------------------------------------------------------------------------
-void elem_type_2D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
-			      vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const{
-	
-  other_phi.resize(_nc);
+
+template <class type>
+void elem_type_2D::Jacobian_type(const vector < vector < type > > &vt,const unsigned &ig, type &Weight, 
+				 vector < double > &phi, vector < type > &gradphi, vector < type > &nablaphi) const{	
+
+  phi.resize(_nc);
   gradphi.resize(_nc*2);
   nablaphi.resize(_nc*3);
 				
-  adept::adouble Jac[2][2]={{0,0},{0,0}};
-  adept::adouble JacI[2][2];
+  type Jac[2][2]={{0,0},{0,0}};
+  type JacI[2][2];
   const double *dxi=_dphidxi[ig];
   const double *deta=_dphideta[ig];
   for (int inode=0; inode<_nc; inode++,dxi++,deta++){
@@ -1004,7 +935,7 @@ void elem_type_2D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,co
     Jac[1][0] += (*deta)*vt[0][inode];
     Jac[1][1] += (*deta)*vt[1][inode];
   }
-  adept::adouble det=(Jac[0][0]*Jac[1][1]-Jac[0][1]*Jac[1][0]);
+  type det=(Jac[0][0]*Jac[1][1]-Jac[0][1]*Jac[1][0]);
 
   JacI[0][0]= Jac[1][1]/det;
   JacI[0][1]=-Jac[0][1]/det;
@@ -1022,7 +953,7 @@ void elem_type_2D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,co
     
   for (int inode=0; inode<_nc; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
     
-    other_phi[inode]=_phi[ig][inode];
+    phi[inode]=_phi[ig][inode];
      
     gradphi[2*inode+0]=(*dxi)*JacI[0][0] + (*deta)*JacI[0][1];
     gradphi[2*inode+1]=(*dxi)*JacI[1][0] + (*deta)*JacI[1][1];
@@ -1040,66 +971,15 @@ void elem_type_2D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,co
   }
 }
 
-void elem_type_2D::Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
-			    vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const{
-	
-  other_phi.resize(_nc);
-  gradphi.resize(_nc*2);
-  nablaphi.resize(_nc*3);
-				
-  double Jac[2][2]={{0,0},{0,0}};
-  double JacI[2][2];
-  const double *dxi=_dphidxi[ig];
-  const double *deta=_dphideta[ig];
-  for (int inode=0; inode<_nc; inode++,dxi++,deta++){
-    Jac[0][0] += (*dxi)*vt[0][inode];
-    Jac[0][1] += (*dxi)*vt[1][inode];
-    Jac[1][0] += (*deta)*vt[0][inode];
-    Jac[1][1] += (*deta)*vt[1][inode];
-  }
-  double det=(Jac[0][0]*Jac[1][1]-Jac[0][1]*Jac[1][0]);
+//---------------------------------------------------------------------------------------------------------
 
-  JacI[0][0]= Jac[1][1]/det;
-  JacI[0][1]=-Jac[0][1]/det;
-  JacI[1][0]=-Jac[1][0]/det;
-  JacI[1][1]= Jac[0][0]/det;
-
-  Weight=det*_gauss.GetGaussWeightsPointer()[ig];
-     
-  dxi=_dphidxi[ig];
-  deta=_dphideta[ig];
-  
-  const double *dxi2=_d2phidxi2[ig];
-  const double *deta2=_d2phideta2[ig];
-  const double *dxideta=_d2phidxideta[ig];
-    
-  for (int inode=0; inode<_nc; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
-    
-    other_phi[inode]=_phi[ig][inode];
-     
-    gradphi[2*inode+0]=(*dxi)*JacI[0][0] + (*deta)*JacI[0][1];
-    gradphi[2*inode+1]=(*dxi)*JacI[1][0] + (*deta)*JacI[1][1];
-    
-    nablaphi[3*inode+0]= 
-      ( (*dxi2)   *JacI[0][0] + (*dxideta)*JacI[0][1] ) * JacI[0][0] +
-      ( (*dxideta)*JacI[0][0] + (*deta2)  *JacI[0][1] ) * JacI[0][1]; 
-    nablaphi[3*inode+1]= 
-      ( (*dxi2)   *JacI[1][0] + (*dxideta)*JacI[1][1] ) * JacI[1][0] +
-      ( (*dxideta)*JacI[1][0] + (*deta2)  *JacI[1][1] ) * JacI[1][1]; 
-    nablaphi[3*inode+2]= 
-      ( (*dxi2)   *JacI[0][0] + (*dxideta)*JacI[0][1] ) * JacI[1][0] +
-      ( (*dxideta)*JacI[0][0] + (*deta2)  *JacI[0][1] ) * JacI[1][1]; 
-     
-  }
-}
-
-
-void elem_type_2D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight, 
-				  vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const {
-  other_phi.resize(_nc);
+template <class type>	
+void elem_type_2D::JacobianSur_type(const vector < vector < type > > &vt, const unsigned &ig, type &Weight, 
+				    vector < double > &phi, vector < type > &gradphi, vector < type > &normal) const {
+  phi.resize(_nc);
   normal.resize(3);
   
-  adept::adouble Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
+  type Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
  
   const double *dfx=_dphidxi[ig];
   const double *dfy=_dphideta[ig];
@@ -1115,10 +995,10 @@ void elem_type_2D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt
   }
     
     //   normal module
-  adept::adouble nx = Jac[1][0]*Jac[2][1] - Jac[1][1]*Jac[2][0];
-  adept::adouble ny = Jac[0][1]*Jac[2][0] - Jac[2][1]*Jac[0][0]; 
-  adept::adouble nz = Jac[0][0]*Jac[1][1] - Jac[0][1]*Jac[1][0];
-  adept::adouble invModn = 1./sqrt(nx*nx + ny*ny + nz*nz);
+  type nx = Jac[1][0]*Jac[2][1] - Jac[1][1]*Jac[2][0];
+  type ny = Jac[0][1]*Jac[2][0] - Jac[2][1]*Jac[0][0]; 
+  type nz = Jac[0][0]*Jac[1][1] - Jac[0][1]*Jac[1][0];
+  type invModn = 1./sqrt(nx*nx + ny*ny + nz*nz);
 
   normal[0] =  (nx)*invModn;
   normal[1] =  (ny)*invModn;
@@ -1129,78 +1009,32 @@ void elem_type_2D::JacobianSur_AD(const vector < vector < adept::adouble > > &vt
   Jac[2][2] = normal[2];
     
   //the determinant of the matrix is the area 
-  adept::adouble det=(Jac[0][0]*(Jac[1][1]*Jac[2][2]-Jac[1][2]*Jac[2][1])+
+  type det=(Jac[0][0]*(Jac[1][1]*Jac[2][2]-Jac[1][2]*Jac[2][1])+
 		      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
 		      Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
 
   Weight=det*_gauss.GetGaussWeightsPointer()[ig];
 
   for(int inode=0;inode<_nc;inode++){
-    other_phi[inode]=_phi[ig][inode];
+    phi[inode]=_phi[ig][inode];
   }
   
   //TODO warning the surface gradient is missing!!!!!!!!!!!!!!!
 }
 
-void elem_type_2D::JacobianSur(const vector < vector < double > > &vt, const unsigned &ig, double &Weight, 
-			       vector < double > &other_phi, vector < double > &gradphi, vector < double > &normal) const {
-  other_phi.resize(_nc);
-  normal.resize(3);
-  
-  double Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
- 
-  const double *dfx=_dphidxi[ig];
-  const double *dfy=_dphideta[ig];
-  
-  for(int inode=0; inode<_nc; inode++,dfx++,dfy++){       
-    Jac[0][0] += (*dfx)*vt[0][inode];
-    Jac[1][0] += (*dfx)*vt[1][inode];
-    Jac[2][0] += (*dfx)*vt[2][inode];
-    
-    Jac[0][1] += (*dfy)*vt[0][inode];
-    Jac[1][1] += (*dfy)*vt[1][inode];
-    Jac[2][1] += (*dfy)*vt[2][inode];
-  }
-    
-    //   normal module
-  double nx = Jac[1][0]*Jac[2][1] - Jac[1][1]*Jac[2][0];
-  double ny = Jac[0][1]*Jac[2][0] - Jac[2][1]*Jac[0][0]; 
-  double nz = Jac[0][0]*Jac[1][1] - Jac[0][1]*Jac[1][0];
-  double invModn = 1./sqrt(nx*nx + ny*ny + nz*nz);
-
-  normal[0] =  (nx)*invModn;
-  normal[1] =  (ny)*invModn;
-  normal[2] =  (nz)*invModn;
-    
-  Jac[0][2] = normal[0];
-  Jac[1][2] = normal[1];
-  Jac[2][2] = normal[2];
-    
-  //the determinant of the matrix is the area 
-  double det=(Jac[0][0]*(Jac[1][1]*Jac[2][2]-Jac[1][2]*Jac[2][1])+
-	      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
-	      Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
-
-  Weight=det*_gauss.GetGaussWeightsPointer()[ig];
-
-  for(int inode=0;inode<_nc;inode++){
-    other_phi[inode]=_phi[ig][inode];
-  }
-  
-  //TODO warning the surface gradient is missing!!!!!!!!!!!!!!!
-}
 
 //---------------------------------------------------------------------------------------------------------
-void elem_type_3D::Jacobian(const vector < vector < double > > &vt,const unsigned &ig, double &Weight, 
-			      vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const{
-  
-  other_phi.resize(_nc);
+template <class type>
+void elem_type_3D::Jacobian_type(const vector < vector < type > > &vt,const unsigned &ig, type &Weight, 
+		   vector < double > &phi, vector < type > &gradphi, vector < type > &nablaphi) const{	
+
+  phi.resize(_nc);
   gradphi.resize(_nc*3);
   nablaphi.resize(_nc*6);
 				
 				
-  double Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
-  double JacI[3][3];
+  type Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
+  type JacI[3][3];
   
   const double *dxi=_dphidxi[ig];
   const double *deta=_dphideta[ig];
@@ -1217,9 +1051,9 @@ void elem_type_3D::Jacobian(const vector < vector < double > > &vt,const unsigne
     Jac[2][1]+=(*dzeta)*vt[1][inode];
     Jac[2][2]+=(*dzeta)*vt[2][inode];
   } 
-  double det=(Jac[0][0]*(Jac[1][1]*Jac[2][2]-Jac[1][2]*Jac[2][1])+
- 	      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
-	      Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
+  type det=(Jac[0][0]*(Jac[1][1]*Jac[2][2]-Jac[1][2]*Jac[2][1])+
+		      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
+		      Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
 
   JacI[0][0]= (-Jac[1][2]*Jac[2][1] + Jac[1][1]*Jac[2][2])/det;
   JacI[0][1]= ( Jac[0][2]*Jac[2][1] - Jac[0][1]*Jac[2][2])/det;
@@ -1246,7 +1080,7 @@ void elem_type_3D::Jacobian(const vector < vector < double > > &vt,const unsigne
   
   for (int inode=0; inode<_nc; inode++, dxi++,deta++,dzeta++,dxi2++,deta2++,dzeta2++,dxideta++,detadzeta++,dzetadxi++) {
   
-    other_phi[inode]=_phi[ig][inode];
+    phi[inode]=_phi[ig][inode];
     
     gradphi[3*inode+0]=(*dxi)*JacI[0][0] + (*deta)*JacI[0][1] + (*dzeta)*JacI[0][2];
     gradphi[3*inode+1]=(*dxi)*JacI[1][0] + (*deta)*JacI[1][1] + (*dzeta)*JacI[1][2];
@@ -1280,104 +1114,7 @@ void elem_type_3D::Jacobian(const vector < vector < double > > &vt,const unsigne
   
 }
 
-
-void elem_type_3D::Jacobian_AD(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight, 
-			      vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const{
-  
-  other_phi.resize(_nc);
-  gradphi.resize(_nc*3);
-  nablaphi.resize(_nc*6);
-				
-				
-  adept::adouble Jac[3][3]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
-  adept::adouble JacI[3][3];
-  
-  const double *dxi=_dphidxi[ig];
-  const double *deta=_dphideta[ig];
-  const double *dzeta=_dphidzeta[ig];
-
-  for (int inode=0; inode<_nc; inode++,dxi++,deta++,dzeta++) {
-    Jac[0][0]+=(*dxi)*vt[0][inode];
-    Jac[0][1]+=(*dxi)*vt[1][inode];
-    Jac[0][2]+=(*dxi)*vt[2][inode];
-    Jac[1][0]+=(*deta)*vt[0][inode];
-    Jac[1][1]+=(*deta)*vt[1][inode];
-    Jac[1][2]+=(*deta)*vt[2][inode];
-    Jac[2][0]+=(*dzeta)*vt[0][inode];
-    Jac[2][1]+=(*dzeta)*vt[1][inode];
-    Jac[2][2]+=(*dzeta)*vt[2][inode];
-  } 
-  adept::adouble det=(Jac[0][0]*(Jac[1][1]*Jac[2][2]-Jac[1][2]*Jac[2][1])+
-		      Jac[0][1]*(Jac[1][2]*Jac[2][0]-Jac[1][0]*Jac[2][2])+
-		      Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]));
-
-  JacI[0][0]= (-Jac[1][2]*Jac[2][1] + Jac[1][1]*Jac[2][2])/det;
-  JacI[0][1]= ( Jac[0][2]*Jac[2][1] - Jac[0][1]*Jac[2][2])/det;
-  JacI[0][2]= (-Jac[0][2]*Jac[1][1] + Jac[0][1]*Jac[1][2])/det;
-  JacI[1][0]= ( Jac[1][2]*Jac[2][0] - Jac[1][0]*Jac[2][2])/det;
-  JacI[1][1]= (-Jac[0][2]*Jac[2][0] + Jac[0][0]*Jac[2][2])/det;
-  JacI[1][2]= ( Jac[0][2]*Jac[1][0] - Jac[0][0]*Jac[1][2])/det;
-  JacI[2][0]= (-Jac[1][1]*Jac[2][0] + Jac[1][0]*Jac[2][1])/det;
-  JacI[2][1]= ( Jac[0][1]*Jac[2][0] - Jac[0][0]*Jac[2][1])/det;
-  JacI[2][2]= (-Jac[0][1]*Jac[1][0] + Jac[0][0]*Jac[1][1])/det;
-
-  Weight=det*_gauss.GetGaussWeightsPointer()[ig];
- 
-  dxi=_dphidxi[ig];
-  deta=_dphideta[ig];
-  dzeta=_dphidzeta[ig];
-  
-  const double *dxi2=_d2phidxi2[ig];
-  const double *deta2=_d2phideta2[ig];
-  const double *dzeta2=_d2phidzeta2[ig];
-  const double *dxideta=_d2phidxideta[ig];
-  const double *detadzeta=_d2phidetadzeta[ig];
-  const double *dzetadxi=_d2phidzetadxi[ig];
-  
-  for (int inode=0; inode<_nc; inode++, dxi++,deta++,dzeta++,dxi2++,deta2++,dzeta2++,dxideta++,detadzeta++,dzetadxi++) {
-  
-    other_phi[inode]=_phi[ig][inode];
-    
-    gradphi[3*inode+0]=(*dxi)*JacI[0][0] + (*deta)*JacI[0][1] + (*dzeta)*JacI[0][2];
-    gradphi[3*inode+1]=(*dxi)*JacI[1][0] + (*deta)*JacI[1][1] + (*dzeta)*JacI[1][2];
-    gradphi[3*inode+2]=(*dxi)*JacI[2][0] + (*deta)*JacI[2][1] + (*dzeta)*JacI[2][2];
-    
-    nablaphi[6*inode+0]=
-      ( (*dxi2)    *JacI[0][0] + (*dxideta)  *JacI[0][1] + (*dzetadxi) *JacI[0][2] )*JacI[0][0]+
-      ( (*dxideta) *JacI[0][0] + (*deta2)    *JacI[0][1] + (*detadzeta)*JacI[0][2] )*JacI[0][1]+
-      ( (*dzetadxi)*JacI[0][0] + (*detadzeta)*JacI[0][1] + (*dzeta2)   *JacI[0][2] )*JacI[0][2];
-    nablaphi[6*inode+1]=
-      ( (*dxi2)    *JacI[1][0] + (*dxideta)  *JacI[1][1] + (*dzetadxi) *JacI[1][2] )*JacI[1][0]+
-      ( (*dxideta) *JacI[1][0] + (*deta2)    *JacI[1][1] + (*detadzeta)*JacI[1][2] )*JacI[1][1]+
-      ( (*dzetadxi)*JacI[1][0] + (*detadzeta)*JacI[1][1] + (*dzeta2)   *JacI[1][2] )*JacI[1][2];
-    nablaphi[6*inode+2]=
-      ( (*dxi2)    *JacI[2][0] + (*dxideta)  *JacI[2][1] + (*dzetadxi) *JacI[2][2] )*JacI[2][0]+
-      ( (*dxideta) *JacI[2][0] + (*deta2)    *JacI[2][1] + (*detadzeta)*JacI[2][2] )*JacI[2][1]+
-      ( (*dzetadxi)*JacI[2][0] + (*detadzeta)*JacI[2][1] + (*dzeta2)   *JacI[2][2] )*JacI[2][2];
-    nablaphi[6*inode+3]=
-      ( (*dxi2)    *JacI[0][0] + (*dxideta)  *JacI[0][1] + (*dzetadxi) *JacI[0][2] )*JacI[1][0]+
-      ( (*dxideta) *JacI[0][0] + (*deta2)    *JacI[0][1] + (*detadzeta)*JacI[0][2] )*JacI[1][1]+
-      ( (*dzetadxi)*JacI[0][0] + (*detadzeta)*JacI[0][1] + (*dzeta2)   *JacI[0][2] )*JacI[1][2];
-    nablaphi[6*inode+4]=
-      ( (*dxi2)    *JacI[1][0] + (*dxideta)  *JacI[1][1] + (*dzetadxi) *JacI[1][2] )*JacI[2][0]+
-      ( (*dxideta) *JacI[1][0] + (*deta2)    *JacI[1][1] + (*detadzeta)*JacI[1][2] )*JacI[2][1]+
-      ( (*dzetadxi)*JacI[1][0] + (*detadzeta)*JacI[1][1] + (*dzeta2)   *JacI[1][2] )*JacI[2][2];
-    nablaphi[6*inode+5]=
-      ( (*dxi2)    *JacI[2][0] + (*dxideta)  *JacI[2][1] + (*dzetadxi) *JacI[2][2] )*JacI[0][0]+
-      ( (*dxideta) *JacI[2][0] + (*deta2)    *JacI[2][1] + (*detadzeta)*JacI[2][2] )*JacI[0][1]+
-      ( (*dzetadxi)*JacI[2][0] + (*detadzeta)*JacI[2][1] + (*dzeta2)   *JacI[2][2] )*JacI[0][2];
-  }
-  
-}
-
-
-
-
-
-
-
-
-
+//---------------------------------------------------------------------------------------------------------
 
 } //end namespace femus
 
