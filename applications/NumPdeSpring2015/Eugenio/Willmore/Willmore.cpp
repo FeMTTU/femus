@@ -87,7 +87,7 @@ int main(int argc, char **args) {
     l2Norm[i].resize(3);
     semiNorm[i].resize(3);
     
-    for(unsigned j=2; j<3; j++){ // loop on the FE Order
+    for(unsigned j=0; j<3; j++){ // loop on the FE Order
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
     
@@ -139,7 +139,7 @@ int main(int argc, char **args) {
   for(unsigned i= 0; i<maxNumberOfMeshes;i++){
     std::cout<<i+1<<"\t";
     std::cout.precision(14);
-    for(unsigned j=2;j<3;j++){
+    for(unsigned j=0;j<3;j++){
       std::cout << l2Norm[i][j]<<"\t";
     }
     std::cout<<std::endl;
@@ -147,7 +147,7 @@ int main(int argc, char **args) {
     if(i<maxNumberOfMeshes-1){
       std::cout.precision(3);
       std::cout<<"\t\t";
-      for(unsigned j=2;j<3;j++){
+      for(unsigned j=0;j<3;j++){
 	std::cout << log(l2Norm[i][j]/l2Norm[i+1][j])/log(2.)<<"\t\t\t";
       }
       std::cout<<std::endl;
@@ -162,7 +162,7 @@ int main(int argc, char **args) {
   for(unsigned i=0; i<maxNumberOfMeshes;i++){
     std::cout<<i+1<<"\t";
     std::cout.precision(14);
-    for(unsigned j=2;j<3;j++){
+    for(unsigned j=0;j<3;j++){
       std::cout << semiNorm[i][j]<<"\t";
     }
     std::cout<<std::endl;
@@ -170,7 +170,7 @@ int main(int argc, char **args) {
     if(i<maxNumberOfMeshes-1){
       std::cout.precision(3);
       std::cout<<"\t\t";
-      for(unsigned j=2;j<3;j++){
+      for(unsigned j=0;j<3;j++){
 	std::cout << log(semiNorm[i][j]/semiNorm[i+1][j])/log(2.)<<"\t\t\t";
       }
       std::cout<<std::endl;
