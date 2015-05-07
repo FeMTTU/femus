@@ -562,12 +562,12 @@ namespace adept {
     // resulting matrix, the "m" dimension of the matrix varies
     // fastest. This is implemented by calling one of jacobian_forward
     // and jacobian_reverse, whichever would be faster.
-    void jacobian(Real* jacobian_out);
+    void jacobian(Real* jacobian_out, const bool row_major = false);
 
     // Compute the Jacobian matrix, but explicitly specify whether
     // this is done with repeated forward or reverse passes.
-    void jacobian_forward(Real* jacobian_out);
-    void jacobian_reverse(Real* jacobian_out);
+    void jacobian_forward(Real* jacobian_out, const bool row_major = false);
+    void jacobian_reverse(Real* jacobian_out, const bool row_major = false);
 
     // In order to compute the jacobian we need to first declare which
     // active variables are independent (x) and which are dependent

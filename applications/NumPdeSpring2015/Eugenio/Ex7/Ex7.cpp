@@ -383,15 +383,15 @@ void AssembleBoussinesqAppoximation_AD ( MultiLevelProblem &ml_prob, unsigned le
     //copy the value of the adept::adoube aRes in double Res and store them in RES
     Res.resize ( nDofsTVP ); //resize
     for ( int i = 0; i < nDofsT; i++ ) {
-      Res[i] = aResT[i].value();
+      Res[i] = -aResT[i].value();
     }
     for ( int i = 0; i < nDofsV; i++ ) {
       for ( unsigned  k = 0; k < dim; k++ ) {
-        Res[ i + nDofsT + k * nDofsV ] = aResV[k][i].value();
+        Res[ i + nDofsT + k * nDofsV ] = -aResV[k][i].value();
       }
     }
     for ( int i = 0; i < nDofsP; i++ ) {
-      Res[ i + nDofsT + dim * nDofsV ] = aResP[i].value();
+      Res[ i + nDofsT + dim * nDofsV ] = -aResP[i].value();
     }
     RES->add_vector_blocked ( Res, KKDof );
 
@@ -415,7 +415,7 @@ void AssembleBoussinesqAppoximation_AD ( MultiLevelProblem &ml_prob, unsigned le
       s.independent ( &solP[0], nDofsP );
 
       // get the jacobian matrix (ordered by column)
-      s.jacobian ( &Jac[0] );
+      s.jacobian ( &Jac[0] , true );
       // get the jacobian matrix (ordered by raw, i.e. K=Jac^t)
       for ( int inode = 0; inode < nDofsTVP; inode++ ) {
         for ( int jnode = 0; jnode < nDofsTVP; jnode++ ) {
@@ -424,7 +424,7 @@ void AssembleBoussinesqAppoximation_AD ( MultiLevelProblem &ml_prob, unsigned le
       }
 
       //store JacI in the global matrix KK
-      KK->add_matrix_blocked ( JacI, KKDof, KKDof );
+      KK->add_matrix_blocked ( Jac, KKDof, KKDof );
 
       s.clear_independents();
       s.clear_dependents();
