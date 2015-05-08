@@ -1,7 +1,8 @@
 
 [SourceFormatter][kdevastyle][User1]
 Caption=New GNU
-Content=BlockBreak=true,
+Content=
+BlockBreak=true,
 BlockBreakAll=false,
 BlockIfElse=false,
 Brackets=Attach,
@@ -31,4 +32,21 @@ PadParenthesesUn=true,
 PointerAlign=Type,
 
 
-for file in src/*/.cpp; do astyle --mode=c  --indent=spaces=2   --brackets=attach   $file; done
+for file in ./*/*.cpp ; do astyle \
+--break-blocks \
+--brackets=attach \
+--indent=spaces=2 \
+--indent-cases \
+--indent-classes \
+--indent-labels \
+--indent-namespaces \
+--indent-preprocessor \
+--indent-switches \
+--max-instatement-indent=40 \
+--min-conditional-indent=-1 \
+--pad-oper \
+--pad-header \
+--unpad-paren \
+--align-pointer=type \
+--suffix=none \
+$file; done
