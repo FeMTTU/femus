@@ -1,7 +1,7 @@
 /** tutorial/Ex2
  * This example shows how to set and solve the weak form of the Poisson problem
  *                    $$ \Delta u = 1 \text{ on }\Omega, $$
- * 		      $$ u=0 \text{ on } \Gamma, $$
+ *          $$ u=0 \text{ on } \Gamma, $$
  * on a square domain $\Omega$ with boundary $\Gamma$;
  * all the coarse-level meshes are removed;
  * a multilevel problem and an equation system are initialized;
@@ -212,7 +212,7 @@ double GetExactSolutionLaplace(const vector < double >& x) {
  * such that
  *                  KK w = RES = F - KK u0,
  * and consequently
- * 		    u = u0 + w satisfies KK u = F
+ *        u = u0 + w satisfies KK u = F
  **/
 void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
@@ -222,24 +222,24 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  LinearImplicitSystem* mlPdeSys 	= &ml_prob.get_system<LinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
+  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const unsigned levelMax = mlPdeSys->GetLevelMax();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
 
-  Mesh*        	 msh	       	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*        	 el	       	= msh->el;  // pointer to the elem object in msh (level)
+  Mesh*          msh          = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  elem*          el         = msh->el;  // pointer to the elem object in msh (level)
 
-  MultiLevelSolution*	 mlSol       	= ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*		 sol       	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  MultiLevelSolution*  mlSol        = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution*    sol        = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
-  LinearEquationSolver* pdeSys      	= mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-  SparseMatrix* 	 KK	       	= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
-  NumericVector*	 RES	       	= pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+  LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
+  SparseMatrix*    KK         = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  NumericVector*   RES          = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
-  const unsigned	dim	= msh->GetDimension(); // get the domain dimension of the problem
-  unsigned 		iproc	= msh->processor_id(); // get the process_id (for parallel computation)
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   //solution variable
   unsigned soluIndex;
@@ -394,23 +394,23 @@ void AssemblePoissonProblem_AD_mine(MultiLevelProblem& ml_prob) {
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
   //  extract pointers to the several objects that we are going to use
-  LinearImplicitSystem* mlPdeSys 	= &ml_prob.get_system<LinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
+  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const unsigned levelMax = mlPdeSys->GetLevelMax();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
-  Mesh*        	 msh	       	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*        	 el	       	= msh->el;  // pointer to the elem object in msh (level)
+  Mesh*          msh          = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  elem*          el         = msh->el;  // pointer to the elem object in msh (level)
 
-  MultiLevelSolution*	 mlSol       	= ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*		 sol       	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  MultiLevelSolution*  mlSol        = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution*    sol        = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
-  LinearEquationSolver* pdeSys      	= mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-  SparseMatrix* 	 KK	       	= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
-  NumericVector*	 RES	       	= pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+  LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
+  SparseMatrix*    KK         = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  NumericVector*   RES          = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
-  const unsigned	dim	= msh->GetDimension(); // get the domain dimension of the problem
-  unsigned 		iproc	= msh->processor_id(); // get the process_id (for parallel computation)
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   //solution variable
   unsigned soluIndex;
@@ -567,11 +567,11 @@ void AssemblePoissonProblem_AD_mine(MultiLevelProblem& ml_prob) {
  * Using automatic divverentiation for Newton iterative scheme
  *                  J(u0) w =  - F(u0)  ,
  *                  with u = u0 + w
- * 		    - F = f(x) - KK u = Res
- * 		    J = \grad_u F = KK
+ *        - F = f(x) - KK u = Res
+ *        J = \grad_u F = KK
  *
  * thus
- * 		    KK w = f(x) - KK u0
+ *        KK w = f(x) - KK u0
  **/
 
 void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
@@ -587,23 +587,23 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  LinearImplicitSystem* mlPdeSys 	= &ml_prob.get_system<LinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
+  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const unsigned levelMax = mlPdeSys->GetLevelMax();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
-  Mesh*        	 msh	       	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*        	 el	       	= msh->el;  // pointer to the elem object in msh (level)
+  Mesh*          msh          = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  elem*          el         = msh->el;  // pointer to the elem object in msh (level)
 
-  MultiLevelSolution*	 mlSol       	= ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*		 sol       	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  MultiLevelSolution*  mlSol        = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution*    sol        = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
-  LinearEquationSolver* pdeSys      	= mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-  SparseMatrix* 	 KK	       	= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
-  NumericVector*	 RES	       	= pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+  LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
+  SparseMatrix*    KK         = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  NumericVector*   RES          = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
-  const unsigned	dim	= msh->GetDimension(); // get the domain dimension of the problem
-  unsigned 		iproc	= msh->processor_id(); // get the process_id (for parallel computation)
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   //solution variable
   unsigned soluIndex;
@@ -800,12 +800,12 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
   unsigned level = mlSol->_ml_msh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
-  Mesh*        	 msh	       	= mlSol->_ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*        	 el	       	= msh->el;  // pointer to the elem object in msh (level)
-  Solution*		 sol       	= mlSol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  Mesh*          msh          = mlSol->_ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  elem*          el         = msh->el;  // pointer to the elem object in msh (level)
+  Solution*    sol        = mlSol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
-  const unsigned	dim	= msh->GetDimension(); // get the domain dimension of the problem
-  unsigned 		iproc	= msh->processor_id(); // get the process_id (for parallel computation)
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   //solution variable
   unsigned soluIndex;

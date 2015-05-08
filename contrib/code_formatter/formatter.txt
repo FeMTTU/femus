@@ -49,4 +49,5 @@ for file in ./*/*.cpp ; do astyle \
 --unpad-paren \
 --align-pointer=type \
 --suffix=none \
+--convert-tabs \
 $file; done
