@@ -34,11 +34,11 @@
 
 using namespace femus;
 
-  void GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
-  void GenMatRhsNSAD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
-  void GenMatRhsMHD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
-  void GenMatRhsMHDAD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
-  void GenMatRhsMHDCONT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+  void GenMatRhsNS(MultiLevelProblem &ml_prob);
+  void GenMatRhsNSAD(MultiLevelProblem &ml_prob);
+  void GenMatRhsMHD(MultiLevelProblem &ml_prob);
+  void GenMatRhsMHDAD(MultiLevelProblem &ml_prob);
+  void GenMatRhsMHDCONT(MultiLevelProblem &ml_prob);
 
 // =======================================
 // MHD optimal control problem

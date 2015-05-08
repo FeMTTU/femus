@@ -15,7 +15,7 @@ using std::cout;
 using std::endl;
 using namespace femus;   
 
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob);
 
 double InitVariableU(const double &x, const double &y, const double &z);
 double InitVariableV(const double &x, const double &y, const double &z);
@@ -219,12 +219,17 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 }
 
 //------------------------------------------------------------------------------------------------------------
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
      
   //pointers 
+  TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes");
+  const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+  const unsigned gridn = my_nnlin_impl_sys.GetLevelMax();
+  bool assemble_matrix = my_nnlin_impl_sys.GetAssembleMatrix(); 
+    
   MultiLevelSolution *ml_sol			      = ml_prob._ml_sol;
   Solution*	 mysolution  	                      = ml_sol->GetSolutionLevel(level);
-  TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes");
+   
   LinearEquationSolver*  mylsyspde	              = my_nnlin_impl_sys._LinSolver[level];   
   const char* pdename                                 = my_nnlin_impl_sys.name().c_str();
   

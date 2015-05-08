@@ -83,10 +83,10 @@ void NonLinearImplicitSystem::solve() {
       // ============== Fine level Assembly ==============
       _LinSolver[igridn-1u]->SetResZero();
       _LinSolver[igridn-1u]->SetEpsZero();
-      bool assemble_matrix = true; //Be carefull!!!! this is needed in the _assemble_function
-      
-      /// Be careful !!!! adesso stiamo usando _sys_number invece che ipde, da togliere al + presto
-      _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix); 
+      _assembleMatrix = true; //Be carefull!!!! this is needed in the _assemble_function
+      _levelToAssemble = igridn-1u;
+      _levelMax = igridn-1u;
+      _assemble_system_function( _equation_systems ); 
       
 #ifndef NDEBUG     
       std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;

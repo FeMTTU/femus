@@ -25,7 +25,7 @@ using std::endl;
 using namespace femus;
 
 
-void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob);
 
 
 // double InitVariableU(const double &x, const double &y, const double &z);
@@ -545,11 +545,15 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 
 //------------------------------------------------------------------------------------------------------------
-void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
 
     //pointers and references
-    Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
     LinearImplicitSystem& mylin_impl_sys = ml_prob.get_system<LinearImplicitSystem>("Poisson");
+    const unsigned level = mylin_impl_sys.GetLevelToAssemble();
+    const unsigned gridn = mylin_impl_sys.GetLevelMax();
+    bool assemble_matrix = mylin_impl_sys.GetAssembleMatrix(); 
+  
+    Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
     LinearEquationSolver*  mylsyspde     = mylin_impl_sys._LinSolver[level];
     Mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
     elem*          myel		       = mymsh->el;

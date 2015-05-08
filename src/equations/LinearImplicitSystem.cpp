@@ -235,10 +235,10 @@ void LinearImplicitSystem::solve() {
     clock_t start_time = clock();
     _LinSolver[igridn-1u]->SetResZero();
     _LinSolver[igridn-1u]->SetEpsZero();
-    bool assemble_matrix = true; //Be carefull!!!! this is needed in the _assemble_function
-      
-    /// Be careful !!!! adesso stiamo usando _sys_number invece che ipde, da togliere al + presto
-    _assemble_system_function(_equation_systems, igridn-1u, igridn-1u, assemble_matrix);  
+    _assembleMatrix = true; //Be carefull!!!! this is needed in the _assemble_function
+    _levelToAssemble = igridn-1u;
+    _levelMax = igridn-1u;
+    _assemble_system_function(_equation_systems );  
       
 #ifndef NDEBUG       
     std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
@@ -408,13 +408,15 @@ void LinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gri
   _LinSolver[gridf-1u]->SetEpsZero();
   _LinSolver[gridf-1u]->SetResZero();
   
-  bool assemble_matrix = (linear_iteration == 0) ? true : false;  //Be carefull!!!! this is needed in the _assemble_function      
+  _assembleMatrix = (linear_iteration == 0) ? true : false;  //Be carefull!!!! this is needed in the _assemble_function      
   if (gridf>=_gridr) {   //_gridr
-    _assemble_system_function(_equation_systems, gridf-1, gridn-1u, assemble_matrix);
+    _levelToAssemble = gridf-1;
+    _levelMax = gridn-1u;
+    _assemble_system_function( _equation_systems );
   }
      
   bool matrix_reuse=true;
-  if(assemble_matrix){
+  if( _assembleMatrix ){
     if (gridf>=_gridr) {  //_gridr
       if (!_LinSolver[gridf-1]->_CC_flag) {
 	_LinSolver[gridf-1]->_CC_flag=1;

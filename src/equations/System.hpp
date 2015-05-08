@@ -40,7 +40,7 @@ class System {
 protected:
   
     /** Function pointer type, easiest way to declare function pointer instantiations */
-    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob);//, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
   
 public:
 
@@ -100,6 +100,14 @@ public:
     /** Get Number of Levels */
     inline const unsigned GetGridn() const { return _gridn; }
     
+    inline unsigned GetLevelToAssemble(){ return _levelToAssemble; }
+    inline unsigned GetLevelMax(){ return _levelMax; }
+    inline bool GetAssembleMatrix(){ return _assembleMatrix; }
+    
+    inline unsigned SetLevelToAssemble(const unsigned &level){ _levelToAssemble = level; }
+    inline bool SetAssembleMatrix(const bool& assembleMatrix){ _assembleMatrix = assembleMatrix; }
+    inline unsigned SetLevelMax(const unsigned &levelMax){ _levelMax = levelMax; }
+    
 protected:
   
     /** Constant reference to the \p EquationSystems object used for the simulation. */
@@ -125,6 +133,14 @@ protected:
 
     /** Number of Totally Refined Levels */
     unsigned _gridr;
+    
+    bool _assembleMatrix;
+    unsigned _levelToAssemble;
+    unsigned _levelMax;
+    
+   
+    
+    
 
     /** Function that assembles the system. */
     AssembleFunctionType _assemble_system_function;

@@ -27,9 +27,10 @@
 
 //===================================================
 /// This function assembles the matrix and the rhs:
- void GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix)  {
+ void GenMatRhsNS(MultiLevelProblem &ml_prob)  {
 
    SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_NS");
+   const unsigned Level = my_system.GetLevelToAssemble();
     
    const uint   _AdvPic_fl = 1;
    const uint   _AdvNew_fl = 0;

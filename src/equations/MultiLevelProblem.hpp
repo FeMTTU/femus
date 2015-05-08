@@ -153,12 +153,12 @@ public:
 //   void init();
 
     /** Get the total number of grid, both totally refined and partial refined for DomainDecomposition */
-    const unsigned GetNumberOfGrid() const {
+    const unsigned GetNumberOfLevels() const {
         return _gridn;
     };
 
     /** Get the number of grid totally refined; it is a subset of _gridn */
-    const unsigned GetNumberOfGridTotallyRefined() const {
+    const unsigned GetNumberOfUniformlyRefinedLevels() const {
         return _gridr;
     };
 

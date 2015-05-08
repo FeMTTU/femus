@@ -17,8 +17,8 @@ using std::cout;
 using std::endl;
 using namespace femus;
 
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
-void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob);
+void AssembleMatrixResT(MultiLevelProblem &ml_prob);
 
 
 double InitVariableU(const double &x, const double &y, const double &z);
@@ -404,11 +404,15 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 // //------------------------------------------------------------------------------------------------------------
 
 
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
      
   //pointers 
-  Solution*	 mysolution  	             = ml_prob._ml_sol->GetSolutionLevel(level);
   NonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<NonLinearImplicitSystem>("Navier-Stokes");
+  const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+  const unsigned gridn = my_nnlin_impl_sys.GetLevelMax();
+  bool assemble_matrix = my_nnlin_impl_sys.GetAssembleMatrix(); 
+  
+  Solution*	 mysolution  	             = ml_prob._ml_sol->GetSolutionLevel(level);
   LinearEquationSolver*  mylsyspde	     = my_nnlin_impl_sys._LinSolver[level];   
   const char* pdename                        = my_nnlin_impl_sys.name().c_str();
   
@@ -728,11 +732,16 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 }
 
 //------------------------------------------------------------------------------------------------------------
-void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
+void AssembleMatrixResT(MultiLevelProblem &ml_prob){
   
   //pointers and references
-  Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
   LinearImplicitSystem& mylin_impl_sys = ml_prob.get_system<LinearImplicitSystem>("Temperature");
+  const unsigned level = mylin_impl_sys.GetLevelToAssemble();
+  const unsigned gridn = mylin_impl_sys.GetLevelMax();
+  bool assemble_matrix = mylin_impl_sys.GetAssembleMatrix(); 
+   
+  Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
+    
   LinearEquationSolver*  mylsyspde     = mylin_impl_sys._LinSolver[level];   
   Mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
   elem*          myel		       = mymsh->el;

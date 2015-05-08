@@ -18,7 +18,7 @@ using std::endl;
 
 using namespace femus;
 
-void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob);
 
 
 double InitVariableU(const double &x, const double &y, const double &z);
@@ -305,11 +305,15 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 // //------------------------------------------------------------------------------------------------------------
 
 
-void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
+void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob){
      
-  //pointers 
-  Solution*	 mysolution  	             = ml_prob._ml_sol->GetSolutionLevel(level);
+  //pointers
   LinearImplicitSystem& my_lin_impl_sys    = ml_prob.get_system<LinearImplicitSystem>("Stokes");
+  const unsigned level = my_lin_impl_sys.GetLevelToAssemble();
+  const unsigned gridn = my_lin_impl_sys.GetLevelMax();
+  bool assemble_matrix = my_lin_impl_sys.GetAssembleMatrix(); 
+   
+  Solution*	 mysolution  	             = ml_prob._ml_sol->GetSolutionLevel(level);
   LinearEquationSolver*  mylsyspde	     = my_lin_impl_sys._LinSolver[level];   
   const char* pdename                        = my_lin_impl_sys.name().c_str();
   

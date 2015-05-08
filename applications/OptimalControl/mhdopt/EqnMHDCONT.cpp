@@ -26,9 +26,10 @@
 using namespace femus;
 
   
-  void GenMatRhsMHDCONT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix) {
+  void GenMatRhsMHDCONT(MultiLevelProblem &ml_prob){
 
   SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_MHDCONT");
+  const unsigned Level = my_system.GetLevelToAssemble();
   
 //======== GEOMETRICAL ELEMENT =======
   const uint space_dim =       ml_prob._ml_msh->GetDimension();

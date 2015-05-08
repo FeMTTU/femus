@@ -41,7 +41,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 }
 
 
-void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix);
+void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob);
 
 
 int main(int argc, char **args) {
@@ -125,7 +125,7 @@ int main(int argc, char **args) {
  * 		    KK w = f(x) - KK u0
  **/
 
-void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &levelMax, const bool &assembleMatrix) {
+void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data 
   //  level is the level of the PDE system to be assembled  
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -136,6 +136,13 @@ void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const u
   
   adept::Stack & s = FemusInit::_adeptStack;
   
+  NonLinearImplicitSystem* mlPdeSys 	= &ml_prob.get_system<NonLinearImplicitSystem>("NS"); // pointer to the linear implicit system named "Poisson" 
+   
+  const unsigned level = mlPdeSys->GetLevelToAssemble();
+  const unsigned levelMax = mlPdeSys->GetLevelMax();
+  const bool assembleMatrix = mlPdeSys->GetAssembleMatrix(); 
+  
+  
   //  extract pointers to the several objects that we are going to use 
   Mesh*         	msh	       	= ml_prob._ml_msh->GetLevel(level); // pointer to the mesh (level) object 
   elem*         	el	       	= msh->el;  // pointer to the elem object in msh (level) 				
@@ -143,7 +150,6 @@ void AssembleNavierStokes_AD(MultiLevelProblem &ml_prob, unsigned level, const u
   MultiLevelSolution* 	mlSol       	= ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution* 		sol       	= ml_prob._ml_sol->GetSolutionLevel(level); // pointer to the solution (level) object
   
-  NonLinearImplicitSystem* mlPdeSys 	= &ml_prob.get_system<NonLinearImplicitSystem>("NS"); // pointer to the linear implicit system named "Poisson" 
   LinearEquationSolver* pdeSys      	= mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object 
   SparseMatrix*  	KK	       	= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector* 	RES	       	= pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)

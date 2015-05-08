@@ -7,7 +7,7 @@
 
 namespace femus {
     
-  void IncompressibleFSIAssemblyAD_DD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
+  void IncompressibleFSIAssemblyAD_DD(MultiLevelProblem &ml_prob) {
        
     clock_t AssemblyTime=0;
     clock_t start_time, end_time;
@@ -16,9 +16,14 @@ namespace femus {
     //    static adept::Stack s; 
     
     //pointers and references
+    
+    MonolithicFSINonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<MonolithicFSINonLinearImplicitSystem>("Fluid-Structure-Interaction");
+    const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+    const unsigned gridn = my_nnlin_impl_sys.GetLevelMax();
+    bool assemble_matrix = my_nnlin_impl_sys.GetAssembleMatrix(); 
+    
     MultiLevelSolution*	 ml_sol	                      = ml_prob._ml_sol;
     Solution*	 mysolution  	                      = ml_sol->GetSolutionLevel(level);
-    MonolithicFSINonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<MonolithicFSINonLinearImplicitSystem>("Fluid-Structure-Interaction");
     LinearEquationSolver*  myLinEqSolver	              = my_nnlin_impl_sys._LinSolver[level];   
     Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(level);
     elem		*myel		=  mymsh->el;

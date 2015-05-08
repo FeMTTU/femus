@@ -27,8 +27,8 @@ namespace femus {
   _equation_systems                 (ml_probl),
   _sys_name                         (name_in),
   _sys_number                       (number_in),
-  _gridn(ml_probl.GetNumberOfGrid()), 
-  _gridr(ml_probl.GetNumberOfGridTotallyRefined()),
+  _gridn(ml_probl.GetNumberOfLevels()), 
+  _gridr(ml_probl.GetNumberOfUniformlyRefinedLevels()),
   _ml_sol(ml_probl._ml_sol),
   _ml_msh(ml_probl._ml_msh)
 { 
@@ -57,8 +57,7 @@ void System::init() {
   return _assemble_system_function;
 }
 
-void System::SetAssembleFunction(void fptr(MultiLevelProblem &ml_prob, unsigned level, 
-				      const unsigned &gridn, const bool &assemble_matrix))
+void System::SetAssembleFunction(void fptr(MultiLevelProblem &ml_prob))
 {
   assert(fptr);
 
