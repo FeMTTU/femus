@@ -35,7 +35,7 @@ bool SetBoundaryCondition(const vector < double >& x, const char SolName[], doub
   return dirichlet;
 }
 
-double InitalValueU(const double& x, const double& y, const double& z) {
+double InitalValueU(const vector < double >& x) {
   return tan(theta);
 }
 

@@ -43,7 +43,7 @@ class MultiLevelSolution : public ParallelObject {
 private:
   
     /** Initial condition function pointer typedef */
-    typedef double (*InitFunc) (const double &x, const double &y, const double &z);
+    typedef double (*InitFunc) (const vector < double >& x);
 
     /** @duplicate */
     typedef double (*InitFuncMLProb) (const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z, const char * name);

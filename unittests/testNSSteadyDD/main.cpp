@@ -20,7 +20,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob);
 void AssembleMatrixResT(MultiLevelProblem &ml_prob);
 
 
-double InitVariableU(const double &x, const double &y, const double &z);
+double InitVariableU(const vector < double >& x);
 
 
 bool SetBoundaryCondition(const vector < double >& x, const char name[],
@@ -278,9 +278,9 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //--------------------------------------------------------------------------------------------------------------
 
-double InitVariableU(const double &x, const double &y, const double &z) { 
+double InitVariableU(const vector < double >& x) {
    double um = 0.2;
-   double  value=1.5*um*(4.0/(0.1681))*y*(0.41-y); 
+   double  value=1.5*um*(4.0/(0.1681))*x[1]*(0.41-x[1]);
    return value;
 }
 

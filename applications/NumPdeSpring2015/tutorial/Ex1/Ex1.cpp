@@ -18,16 +18,16 @@
 
 using namespace femus;
 
-double InitalValueU(const double& x, const double& y, const double& z) {
-  return x + y;
+double InitalValueU(const vector < double >& x) {
+  return x[0] + x[1];
 }
 
-double InitalValueP(const double& x, const double& y, const double& z) {
-  return x;
+double InitalValueP(const vector < double >& x) {
+  return x[0];
 }
 
-double InitalValueT(const double& x, const double& y, const double& z) {
-  return y;
+double InitalValueT(const vector < double >& x) {
+  return x[1];
 }
 
 int main(int argc, char** args) {

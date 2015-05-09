@@ -200,11 +200,12 @@ void MultiLevelSolution::Initialize(const char name[], InitFunc func) {
 		unsigned inode=_ml_msh->GetLevel(ig)->el->GetMeshDof(kel_gmt,j,sol_type);
 		unsigned inode_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,sol_type);
 		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,2);
-		double xx=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);  
-		double yy=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
-		double zz=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
-	      
-		value = func(xx,yy,zz);
+		std::vector < double > xx(3);
+		xx[0]=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);
+		xx[1]=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
+		xx[2]=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
+
+		value = func(xx);
 	      
 		_solution[ig]->_Sol[i]->set(inode_Metis,value);
 		if (_SolTmorder[i]==2) {
@@ -221,19 +222,20 @@ void MultiLevelSolution::Initialize(const char name[], InitFunc func) {
 	      unsigned kel_gmt = _ml_msh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];   
 	  
 	      unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,0);
-	      double xx=0.,yy=0.,zz=0.;
+	      std::vector < double > xx(3,0.);
+
 	      for(int j=0; j<nloc_dof; j++) {
 		unsigned inode=_ml_msh->GetLevel(ig)->el->GetMeshDof(kel_gmt,j,2);
 		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,2);
-		xx+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);  
-		yy+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
-		zz+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
+		xx[0]+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);
+		xx[1]+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
+		xx[2]+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
 	      }
-	      xx /= nloc_dof;
-	      yy /= nloc_dof;
-	      zz /= nloc_dof;
+	      xx[0] /= nloc_dof;
+	      xx[1] /= nloc_dof;
+	      xx[2] /= nloc_dof;
   
-	      value = func(xx,yy,zz);
+	      value = func(xx);
    
 	      _solution[ig]->_Sol[i]->set(iel,value);
 	      if (_SolTmorder[i]==2) {

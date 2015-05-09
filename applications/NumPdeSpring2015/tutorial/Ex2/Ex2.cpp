@@ -19,11 +19,11 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0;
 
-  if (facename == 2)
+  if (faceName == 2)
     dirichlet = false;
 
   return dirichlet;
@@ -46,7 +46,7 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-    probably in the furure it is not going to be an argument of this function   */
+    probably in furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes;
 

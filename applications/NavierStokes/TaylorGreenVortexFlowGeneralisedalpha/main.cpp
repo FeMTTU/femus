@@ -17,9 +17,9 @@ using namespace femus;
 
 void AssembleMatrixResNS(MultiLevelProblem &ml_prob);
 
-double InitVariableU(const double &x, const double &y, const double &z);
-double InitVariableV(const double &x, const double &y, const double &z);
-double InitVariableP(const double &x, const double &y, const double &z);
+double InitVariableU(const vector < double >& x);
+double InitVariableV(const vector < double >& x);
+double InitVariableP(const vector < double >& x);
 
 bool SetBoundaryCondition(const vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time);
@@ -176,18 +176,18 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //--------------------------------------------------------------------------------------------------------------
 
-double InitVariableU(const double &x, const double &y, const double &z){
-  double value = sin(x)*cos(y);
+double InitVariableU(const vector < double >& x){
+  double value = sin(x[0])*cos(x[1]);
   return value;
 }
 
-double InitVariableV(const double &x, const double &y, const double &z){
-  double value = -cos(x)*sin(y);
+double InitVariableV(const vector < double >& x){
+  double value = -cos(x[0])*sin(x[1]);
   return value;
 }
 
-double InitVariableP(const double &x, const double &y, const double &z){
-  double value = 1.*0.25*(cos(2.*x)+cos(2.*y));
+double InitVariableP(const vector < double >& x){
+  double value = 1.*0.25*(cos(2.*x[0])+cos(2.*x[1]));
   return value;
 }
 
