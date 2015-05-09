@@ -18,8 +18,6 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob);
 bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double = 0.);
 
-bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
-
 //------------------------------------------------------------------------------------------------------------------
 
 int main(int argc,char **args) {
@@ -51,7 +49,7 @@ int main(int argc,char **args) {
   double ni = 0.4;
   double E = 1400000;
   
-  MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
+  MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,NULL);
   
   MultiLevelSolution ml_sol(&ml_msh);
   
@@ -199,19 +197,6 @@ int main(int argc,char **args) {
    
   delete [] infile;
   return 0;
-}
-
-
-bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
-  bool refine=0;
-
-  //refinemenet based on elemen group number
-  if (elemgroupnumber==5) refine=1;
-  if (elemgroupnumber==6) refine=1;
-  if (elemgroupnumber==7 && level<5) refine=1;
-
-  return refine;
-
 }
 
 //---------------------------------------------------------------------------------------------------------------------

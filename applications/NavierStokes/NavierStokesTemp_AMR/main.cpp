@@ -27,8 +27,6 @@ double InitVariableU(const std::vector < double >& x);
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[],
 			  double &value, const int FaceName, const double time);
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
-
 int main(int argc,char **args) {
 
   bool Vanka=0, Gmres=0, Asm=0;
@@ -269,24 +267,6 @@ int main(int argc,char **args) {
     
   delete [] infile;
   return 0;
-}
-
-//-----------------------------------------------------------------------------------------------------------------
-
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
-  bool refine=0;
-  // refinemenet based on Elemen Group Number
-  if(ElemGroupNumber==5 ) {
-    refine=1;
-  }
-  if(ElemGroupNumber==6 && level<2) {
-    refine=1;
-  }
-  if(ElemGroupNumber==7 ) {
-    refine=0;
-  }
-
-  return refine;
 }
 
 //--------------------------------------------------------------------------------------------------------------

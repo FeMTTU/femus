@@ -19,8 +19,6 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob);
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[],
                           double &value, const int FaceName, const double time);
 
-bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
-
 int main(int argc,char **args) {
   
   /// Init Petsc-MPI communicator
@@ -49,7 +47,7 @@ int main(int argc,char **args) {
   double Lref = 1.;
   double Uref = 1.;
   
-  MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,SetRefinementFlag);
+  MultiLevelMesh ml_msh(nm,nr,infile,"seventh",Lref,NULL);
    
   MultiLevelSolution ml_sol(&ml_msh);
    
@@ -140,18 +138,6 @@ int main(int argc,char **args) {
 
   delete[] infile;
   return 0;
-}
-
-//-----------------------------------------------------------------------------------------------------------------
-
-bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber, const int &level) {
-   bool refine=0;
-   // refinemenet based on Elemen Group Number
-   if(ElemGroupNumber==5) refine=1;
-   if(ElemGroupNumber==6 ) refine=1;  // && level<2
-    if(ElemGroupNumber==7) refine=0;
-//    if(x>0 && x<5) refine=1;
-   return refine;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
