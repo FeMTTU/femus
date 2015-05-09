@@ -20,7 +20,7 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryCondition(const vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(3 == facename){  //stress
@@ -540,13 +540,14 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob){
       }
       else {
 	double tau=0.;
+	std::vector< double > xx(dim,0.);
 	vector < double > normal(dim,0);   
 	// loop on faces
 	for(unsigned jface=0; jface<myel->GetElementFaceNumber(kel); jface++) {
 	  // look for boundary faces
 	  if(myel->GetFaceElementIndex(kel,jface)<0) {
 	    unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
-	    if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"Sol",tau,face,0.) && tau!=0.){
+	    if( !ml_sol->_SetBoundaryConditionFunction(xx,"Sol",tau,face,0.) && tau!=0.){
 	      unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface, order_ind);
 	      const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);
 	      for(unsigned i=0; i<nve; i++) {

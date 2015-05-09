@@ -24,7 +24,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob);
 double InitVariableU(const double &x, const double &y, const double &z);
 
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryCondition(const vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time);
 
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
@@ -218,7 +218,7 @@ double InitVariableU(const double &x, const double &y, const double &z) {
 
 //-------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryCondition(const vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time){
   bool test=1; //Dirichlet
   value=0.;
@@ -227,7 +227,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
     if(1==FaceName){   //inflow
       test=1;
       double um = 0.2; // U/Uref
-      value=1.5*0.2*(4.0/(0.1681))*y*(0.41-y);
+      value=1.5*0.2*(4.0/(0.1681))*x[1]*(0.41-x[1]);
     }  
     else if(2==FaceName ){  //outflow
       test=0;

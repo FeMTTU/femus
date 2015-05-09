@@ -660,10 +660,11 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 		  unsigned inode=_ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u;
 		  unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,2);
 		  double value;
-		  double xx=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[0])(inode_coord_Metis);  
-		  double yy=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[1])(inode_coord_Metis);
-		  double zz=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[2])(inode_coord_Metis);
-		  bool test=_SetBoundaryConditionFunction(xx,yy,zz,_SolName[k],value,-(_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)+1),time);
+		  vector < double > xx(3);
+		  xx[0]=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[0])(inode_coord_Metis);
+		  xx[1]=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[1])(inode_coord_Metis);
+		  xx[2]=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[2])(inode_coord_Metis);
+		  bool test=_SetBoundaryConditionFunction(xx,_SolName[k],value,-(_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)+1),time);
 		  if (test) {
 		    unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
 		    _solution[igridn]->_Bdc[k]->set(inode_Metis,0.);

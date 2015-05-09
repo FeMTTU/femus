@@ -17,8 +17,8 @@ using namespace femus;
 
 double SetVariableTimeStep(const double time);
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
-		double &value, const int FaceName, const double = 0.);
+bool SetBoundaryCondition(const vector < double >& x, const char name[],
+			  double &value, const int FaceName, const double = 0.);
 
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
@@ -210,7 +210,7 @@ double SetVariableTimeStep(const double time) {
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryCondition(const vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(!strcmp(name,"U")) {
@@ -218,10 +218,10 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
       test=1;
       double um = 2.0;
       if(time < 2.0) {
-   	value=1.5*um*4.0/0.1681*y*(0.41-y)*0.5*(1. - cos(0.5*3.141592653589793*time));
+        value=1.5*um*4.0/0.1681*x[1]*(0.41-x[1])*0.5*(1. - cos(0.5*3.141592653589793*time));
        }
       else {
-        value=1.5*um*4.0/0.1681*y*(0.41-y);
+        value=1.5*um*4.0/0.1681*x[1]*(0.41-x[1]);
       }
     }  
     else if(2==facename ){  //outflow

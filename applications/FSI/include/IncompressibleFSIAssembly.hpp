@@ -265,11 +265,11 @@ namespace femus {
 	       
 	  // loop on faces
 	  for(unsigned jface=0; jface<myel->GetElementFaceNumber(kel); jface++) {
-		
+            std::vector < double > xx(3,0.);
 	    // look for boundary faces
 	    if(myel->GetFaceElementIndex(kel,jface)<0) {
 	      unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
-	      if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,0.) && tau!=0.){
+	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
 		unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,SolType2);
 		const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);  		  		  
 		for(unsigned i=0; i<nve; i++) {

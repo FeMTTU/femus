@@ -15,16 +15,16 @@ double scale=1000.;
 using namespace std;
 using namespace femus;
 
-bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionTurek_2D_FSI_and_solid(const vector < double >& x,const char name[],
 						double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionBathe_2D_FSI(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionBathe_2D_FSI(const vector < double >& x,const char name[],
 				      double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const vector < double >& x,const char name[],
 						double &value, const int facename, const double time);
 
-bool SetBoundaryConditionBathe_3D_solid(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionBathe_3D_solid(const vector < double >& x,const char name[],
 					double &value, const int facename, const double time);
-bool SetBoundaryConditionComsol_2D_FSI(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionComsol_2D_FSI(const vector < double >& x,const char name[],
 				       double &value, const int FaceName, const double = 0.);
 
  
@@ -360,14 +360,14 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionTurek_2D_FSI_and_solid(const vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(!strcmp(name,"U")) {
     if(1==facename){   //inflow
       test=1;
       double um = 0.2;
-      value=1.5*um*4.0/0.1681*y*(0.41-y);
+      value=1.5*um*4.0/0.1681*x[1]*(0.41-x[1]);
     }  
     else if(2==facename ){  //outflow
       test=0;
@@ -479,7 +479,7 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y
   return test;
 }
 
-bool SetBoundaryConditionBathe_2D_FSI(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_2D_FSI(const vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(!strcmp(name,"U")) {
@@ -598,7 +598,7 @@ bool SetBoundaryConditionBathe_2D_FSI(const double &x, const double &y, const do
 
 
 
-bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   
@@ -735,7 +735,7 @@ bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const double &x, const double &y
   return test;
 }
 
-bool SetBoundaryConditionBathe_3D_solid(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_3D_solid(const vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   
@@ -845,7 +845,7 @@ bool SetBoundaryConditionBathe_3D_solid(const double &x, const double &y, const 
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionComsol_2D_FSI(const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName, const double time) {
+bool SetBoundaryConditionComsol_2D_FSI(const vector < double >& x,const char name[], double &value, const int FaceName, const double time) {
   bool test=1; //Dirichlet
   value=0.;
   //   cout << "Time bdc : " <<  time << endl;
@@ -854,7 +854,7 @@ bool SetBoundaryConditionComsol_2D_FSI(const double &x, const double &y, const d
       test=1;
       //comsol Benchmark
       //value = (0.05*time*time)/(sqrt( (0.04 - time*time)*(0.04 - time*time) + (0.1*time)*(0.1*time) ))*y*(0.0001-y)*4.*100000000;
-      value = 0.05*y*(0.0001-y)*4.*100000000;
+      value = 0.05*x[1]*(0.0001-x[1])*4.*100000000;
     }
     else if (2==FaceName ) {  //outflow
       test=0;

@@ -16,8 +16,8 @@ using namespace femus;
 
 void AssembleMatrixResNS(MultiLevelProblem &ml_prob);
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
-			  double &value, const int FaceName, const double time);
+bool SetBoundaryCondition(const vector < double >& x, const char name[],
+                          double &value, const int FaceName, const double time);
 
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
@@ -156,7 +156,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //-------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryCondition(const vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time){
   bool test=1; //Dirichlet
   value=0.;
@@ -166,9 +166,9 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
       test=1;
       double um = 0.2; // U/Uref
       if(time < 2.0) {
-        value=1.5*um*(4.0/(0.1681))*y*(0.41-y)*0.5*(1. - cos(0.5*3.141592653589793*time) );
+        value=1.5*um*(4.0/(0.1681))*x[1]*(0.41-x[1])*0.5*(1. - cos(0.5*3.141592653589793*time) );
       } else {
-        value=1.5*um*(4.0/(0.1681))*y*(0.41-y);
+        value=1.5*um*(4.0/(0.1681))*x[1]*(0.41-x[1]);
       }
     }
     else if(2==FaceName ){  //outflow

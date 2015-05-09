@@ -21,7 +21,7 @@ double InitVariableU(const double &x, const double &y, const double &z);
 double InitVariableV(const double &x, const double &y, const double &z);
 double InitVariableP(const double &x, const double &y, const double &z);
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryCondition(const vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time);
 
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
@@ -193,25 +193,25 @@ double InitVariableP(const double &x, const double &y, const double &z){
 
 //-------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryCondition(const vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time){
   bool test=1; //Dirichlet
   value=0.;
 
   if(!strcmp(name,"U")) {
     test=1;
-    value=sin(x)*cos(y)*exp(-2.*0.01*time); 
+    value=sin(x[0])*cos(x[1])*exp(-2.*0.01*time);
   }  
   else if(!strcmp(name,"V")) {
     test=1;
-    value=-cos(x)*sin(y)*exp(-2.*0.01*time);
+    value=-cos(x[0])*sin(x[1])*exp(-2.*0.01*time);
   }
   else if(!strcmp(name,"P")) {
     test=0;
     value=0.;
-    if(x < 1.e-08 && y < 1.e-08) {
+    if(x[0] < 1.e-08 && x[1] < 1.e-08) {
       test=1;
-      value = 1.*0.25*(cos(2.*x)+cos(2.*y))*exp(-4.*0.01*time);
+      value = 1.*0.25*(cos(2.*x[0])+cos(2.*x[1]))*exp(-4.*0.01*time);
     }
   }
   

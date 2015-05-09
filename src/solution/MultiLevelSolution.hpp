@@ -49,7 +49,7 @@ private:
     typedef double (*InitFuncMLProb) (const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z, const char * name);
     
     /** Boundary condition function pointer typedef */
-    typedef bool (*BoundaryFunc) (const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName, const double time);
+    typedef bool (*BoundaryFunc) (const vector < double >& x, const char name[], double &value, const int FaceName, const double time);
 
     /** @duplicate */
     typedef bool (*BoundaryFuncMLProb) (const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName, const double time);

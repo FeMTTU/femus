@@ -23,7 +23,7 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const double& x, const double& y, const double& z, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
 
   if (!strcmp(SolName, "U")) {
@@ -32,7 +32,7 @@ bool SetBoundaryCondition(const double& x, const double& y, const double& z, con
     value = 0.;
 
     if (facename == 1) {
-      if (y < 0.5 && y > -0.5 && z < 0.5 && z > -0.5) value = 1.;
+      if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
     }
   }
 
@@ -42,7 +42,7 @@ bool SetBoundaryCondition(const double& x, const double& y, const double& z, con
     value = 0.;
     dirichlet = false;
 
-    if (x < -0.5 + 1.0e-10 && y < -0.5 + 1.0e-10 && z < 1.0e-10 && z > -1.0e-10) dirichlet = true;
+    if (x[0] < -0.5 + 1.0e-10 && x[1] < -0.5 + 1.0e-10 && x[2] < 1.0e-10 && x[2] > -1.0e-10) dirichlet = true;
   }
 
   return dirichlet;

@@ -15,8 +15,8 @@ using namespace femus;
 
 void AssembleMatrixResFSI(MultiLevelProblem &ml_prob);
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
-		double &value, const int FaceName, const double = 0.);
+bool SetBoundaryCondition(const vector < double >& x,const char name[],
+			  double &value, const int FaceName, const double = 0.);
 
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
@@ -216,14 +216,14 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryCondition(const vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(!strcmp(name,"U")) {
     if(1==facename){   //inflow
       test=1;
       double um = 0.2;
-      value=1.5*um*4.0/0.1681*y*(0.41-y);
+      value=1.5*um*4.0/0.1681*x[1]*(0.41-x[1]);
     }  
     else if(2==facename ){  //outflow
      test=0;

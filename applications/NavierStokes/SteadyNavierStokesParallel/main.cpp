@@ -27,10 +27,10 @@ void SetLambda(MultiLevelSolution &mlSol, const unsigned &level, const  FEOrder 
 
 double InitVariableU(const double &x, const double &y, const double &z);
 
-bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionTurek(const vector < double >& x,const char name[],
 			       double &value, const int FaceName, const double time);
 
-bool SetBoundaryConditionCavityFlow(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionCavityFlow(const vector < double >& x,const char name[],
 				    double &value, const int FaceName, const double time);
 
 bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
@@ -277,7 +277,7 @@ double InitVariableU(const double &x, const double &y, const double &z) {
 
 //-------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionTurek(const vector < double >& x,const char name[],
 			       double &value, const int FaceName, const double time){
   bool test=1; //Dirichlet
   value=0.;
@@ -286,7 +286,7 @@ bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z
     if(1==FaceName){   //inflow
       test=1;
       double um = 0.2; // U/Uref
-      value=1.5*0.2*(4.0/(0.1681))*y*(0.41-y);
+      value=1.5*0.2*(4.0/(0.1681))*x[1]*(0.41-x[1]);
     }  
     else if(2==FaceName ){  //outflow
       test=0;
@@ -380,20 +380,21 @@ bool SetBoundaryConditionTurek(const double &x, const double &y, const double &z
 }
 
 
-bool SetBoundaryConditionCavityFlow(const double& x, const double& y, const double& z, const char name[], double& value, const int FaceName, const double time){
+bool SetBoundaryConditionCavityFlow(const vector < double >& x, const char name[],
+				    double& value, const int FaceName, const double time){
   bool test=1; //Dirichlet
   value=0.;
   if(!strcmp(name,"V")){
     if(1==FaceName){            //inflow
       test=1;
-      if(y<0.5 && y>-0.5) value=1.;//4*(0.5-y)*(y+0.5);
+      if(x[1]<0.5 && x[1]>-0.5) value=1.;//4*(0.5-y)*(y+0.5);
     }
   }  
   
   if(!strcmp(name,"P")){
     test=0.;
     value=0.;
-    if(x < -.5+1.e-08 && y < -.5+1.e-08) {
+    if(x[0] < -.5+1.e-08 && x[1] < -.5+1.e-08) {
       test=1;
     }
   }
