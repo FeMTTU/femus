@@ -16,10 +16,10 @@ using namespace femus;
 
 void AssembleMatrixResNS(MultiLevelProblem &ml_prob);
 
-bool SetBoundaryCondition(const vector < double >& x, const char name[],
+bool SetBoundaryCondition(const std::vector < double >& x, const char name[],
                           double &value, const int FaceName, const double time);
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
+bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
 
 int main(int argc,char **args) {
   
@@ -144,7 +144,7 @@ int main(int argc,char **args) {
 
 //-----------------------------------------------------------------------------------------------------------------
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
+bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber, const int &level) {
    bool refine=0;
    // refinemenet based on Elemen Group Number
    if(ElemGroupNumber==5) refine=1;
@@ -156,7 +156,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //-------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const vector < double >& x,const char name[],
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time){
   bool test=1; //Dirichlet
   value=0.;

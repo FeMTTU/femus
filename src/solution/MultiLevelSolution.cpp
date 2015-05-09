@@ -223,7 +223,6 @@ void MultiLevelSolution::Initialize(const char name[], InitFunc func) {
 	  
 	      unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(kel_gmt,0);
 	      std::vector < double > xx(3,0.);
-
 	      for(int j=0; j<nloc_dof; j++) {
 		unsigned inode=_ml_msh->GetLevel(ig)->el->GetMeshDof(kel_gmt,j,2);
 		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(inode,2);

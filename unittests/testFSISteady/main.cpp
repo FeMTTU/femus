@@ -15,10 +15,10 @@ using namespace femus;
 
 void AssembleMatrixResFSI(MultiLevelProblem &ml_prob);
 
-bool SetBoundaryCondition(const vector < double >& x,const char name[],
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double = 0.);
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
+bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
 
 //------------------------------------------------------------------------------------------------------------------
 
@@ -202,7 +202,7 @@ int main(int argc,char **args) {
 }
 
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &elemgroupnumber,const int &level) {
+bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
   bool refine=0;
 
   //refinemenet based on elemen group number
@@ -216,7 +216,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const vector < double >& x,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(!strcmp(name,"U")) {

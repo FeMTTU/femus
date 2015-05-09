@@ -22,7 +22,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include "GeomElTypeEnum.hpp"
 #include "WriterEnum.hpp"
 #include "Writer.hpp"
-
+#include <vector>
 namespace femus {
 
 
@@ -46,7 +46,7 @@ public:
 
     MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr,
                    const char mesh_file[], const char GaussOrder[], const double Lref,
-                   bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
+                   bool (* SetRefinementFlag)(const std::vector < double > &x,
                            const int &ElemGroupNumber,const int &level));
     
     /** Destructor */
@@ -68,7 +68,7 @@ public:
 
     /** Refine the coarse mesh (totally or selectively (in according to the SetRefinementFlag user-function) ) */
     void RefineMesh(const unsigned short &igridn, const unsigned short &igridr,
-                    bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
+                    bool (* SetRefinementFlag)(const std::vector < double >& x,
                             const int &ElemGroupNumber,const int &level));
 
     /** Add a partially refined mesh level in the AMR alghorithm **/

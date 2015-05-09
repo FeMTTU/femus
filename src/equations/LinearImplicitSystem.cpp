@@ -373,7 +373,7 @@ bool LinearImplicitSystem::IsLinearConverged(const unsigned igridn) {
 
 void LinearImplicitSystem::SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels,
 					    const std::string& AMRnorm, const double &AMRthreshold,
-					    bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
+					    bool (* SetRefinementFlag)( const std::vector < double > &x,
                                        const int &ElemGroupNumber,const int &level)){
   if ( !strcmp("yes",AMR.c_str()) || !strcmp("YES",AMR.c_str()) || !strcmp("Yes",AMR.c_str()) ) {
     _AMRtest=1;

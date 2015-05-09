@@ -147,8 +147,8 @@ public:
      /** Set AMR options */
     void SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels,
 			  const std::string& AMRnorm, const double &AMRthreshold, 
-			  bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
-                                       const int &ElemGroupNumber,const int &level)=NULL);
+			  bool (* SetRefinementFlag)(const std::vector < double > &x,
+						     const int &ElemGroupNumber,const int &level)=NULL);
     
     /** Set the options of the Schur-Vanka smoother */
     //void SetVankaSchurOptions(bool Schur, short unsigned NSchurVar);

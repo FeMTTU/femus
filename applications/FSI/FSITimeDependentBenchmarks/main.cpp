@@ -16,20 +16,20 @@ double scale=1000.;
 using namespace std;
 using namespace femus;
 
-bool SetBoundaryConditionTurek_2D_FSI_and_solid(const vector < double >& x,const char name[],
+bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,const char name[],
 						double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionBathe_2D_FSI(const vector < double >& x,const char name[],
+bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double >& x,const char name[],
 				      double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const vector < double >& x,const char name[],
+bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const std::vector < double >& x,const char name[],
 						double &value, const int facename, const double time);
 
-bool SetBoundaryConditionBathe_3D_solid(const vector < double >& x,const char name[],
+bool SetBoundaryConditionBathe_3D_solid(const std::vector < double >& x,const char name[],
 					double &value, const int facename, const double time);
-bool SetBoundaryConditionComsol_2D_FSI(const vector < double >& x,const char name[],
+bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double >& x,const char name[],
 				       double &value, const int FaceName, const double = 0.);
 
  
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
+bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
 
 double SetVariableTimeStep(const double time);
 
@@ -433,7 +433,7 @@ double SetVariableTimeStep(const double time) {
 //---------------------------------------------------------------------------------------------------------------------
 
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &elemgroupnumber,const int &level) {
+bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
   bool refine=0;
 
   //refinemenet based on elemen group number
@@ -447,7 +447,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTurek_2D_FSI_and_solid(const vector < double >& x,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if( !strcmp(name,"U") ) {
@@ -574,7 +574,7 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const vector < double >& x,const
   return test;
 }
 
-bool SetBoundaryConditionBathe_2D_FSI(const vector < double >& x,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(!strcmp(name,"U")) {
@@ -693,7 +693,7 @@ bool SetBoundaryConditionBathe_2D_FSI(const vector < double >& x,const char name
 
 
 
-bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const vector < double >& x,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   
@@ -830,7 +830,7 @@ bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const vector < double >& x,const
   return test;
 }
 
-bool SetBoundaryConditionBathe_3D_solid(const vector < double >& x,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_3D_solid(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   
@@ -940,7 +940,7 @@ bool SetBoundaryConditionBathe_3D_solid(const vector < double >& x,const char na
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionComsol_2D_FSI(const vector < double >& x,const char name[], double &value, const int FaceName, const double time) {
+bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double >& x,const char name[], double &value, const int FaceName, const double time) {
   bool test=1; //Dirichlet
   value=0.;
   //   cout << "Time bdc : " <<  time << endl;

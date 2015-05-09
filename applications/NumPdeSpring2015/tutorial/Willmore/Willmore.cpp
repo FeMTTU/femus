@@ -23,7 +23,7 @@ using namespace femus;
 
 const double theta = acos(-1.) / 3;
 
-bool SetBoundaryCondition(const vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
 
   if (!strcmp("u", SolName)) {
@@ -35,7 +35,7 @@ bool SetBoundaryCondition(const vector < double >& x, const char SolName[], doub
   return dirichlet;
 }
 
-double InitalValueU(const vector < double >& x) {
+double InitalValueU(const std::vector < double >& x) {
   return tan(theta);
 }
 
@@ -478,12 +478,12 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
 
 // functions post processing
 
-double GetExactSolutionValue(const vector < double >& x) {
+double GetExactSolutionValue(const std::vector < double >& x) {
   return sqrt(1. / (cos(theta) * cos(theta)) - x[0] * x[0] - x[1] * x[1]);
 };
 
 
-void GetExactSolutionGradient(const vector < double >& x, vector < double >& solGrad) {
+void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
   double pi = acos(-1.);
   solGrad[0]  = -x[0] / sqrt(1. / (cos(theta) * cos(theta)) - x[0] * x[0] - x[1] * x[1]);
   solGrad[1]  = -x[1] / sqrt(1. / (cos(theta) * cos(theta)) - x[0] * x[0] - x[1] * x[1]);

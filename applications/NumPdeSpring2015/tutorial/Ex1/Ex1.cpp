@@ -18,15 +18,15 @@
 
 using namespace femus;
 
-double InitalValueU(const vector < double >& x) {
+double InitalValueU(const std::vector < double >& x) {
   return x[0] + x[1];
 }
 
-double InitalValueP(const vector < double >& x) {
+double InitalValueP(const std::vector < double >& x) {
   return x[0];
 }
 
-double InitalValueT(const vector < double >& x) {
+double InitalValueT(const std::vector < double >& x) {
   return x[1];
 }
 

@@ -21,7 +21,7 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const vector < double >& x, const char SolName[], double &value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double &value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   if( !strcmp("u",SolName) ){
     value=0.0;

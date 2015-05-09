@@ -17,14 +17,14 @@ using namespace femus;
 
 void AssembleMatrixResNS(MultiLevelProblem &ml_prob);
 
-double InitVariableU(const vector < double >& x);
-double InitVariableV(const vector < double >& x);
-double InitVariableP(const vector < double >& x);
+double InitVariableU(const std::vector < double >& x);
+double InitVariableV(const std::vector < double >& x);
+double InitVariableP(const std::vector < double >& x);
 
-bool SetBoundaryCondition(const vector < double >& x,const char name[],
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time);
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
+bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
 
 int main(int argc,char **args) {
   
@@ -164,7 +164,7 @@ int main(int argc,char **args) {
 
 //-----------------------------------------------------------------------------------------------------------------
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
+bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber, const int &level) {
    bool refine=0;
    // refinemenet based on Elemen Group Number
    if(ElemGroupNumber==5) refine=1;
@@ -176,24 +176,24 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //--------------------------------------------------------------------------------------------------------------
 
-double InitVariableU(const vector < double >& x){
+double InitVariableU(const std::vector < double >& x){
   double value = sin(x[0])*cos(x[1]);
   return value;
 }
 
-double InitVariableV(const vector < double >& x){
+double InitVariableV(const std::vector < double >& x){
   double value = -cos(x[0])*sin(x[1]);
   return value;
 }
 
-double InitVariableP(const vector < double >& x){
+double InitVariableP(const std::vector < double >& x){
   double value = 1.*0.25*(cos(2.*x[0])+cos(2.*x[1]));
   return value;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const vector < double >& x,const char name[],
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time){
   bool test=1; //Dirichlet
   value=0.;

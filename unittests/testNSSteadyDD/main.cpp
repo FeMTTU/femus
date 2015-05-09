@@ -20,13 +20,13 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob);
 void AssembleMatrixResT(MultiLevelProblem &ml_prob);
 
 
-double InitVariableU(const vector < double >& x);
+double InitVariableU(const std::vector < double >& x);
 
 
-bool SetBoundaryCondition(const vector < double >& x, const char name[],
+bool SetBoundaryCondition(const std::vector < double >& x, const char name[],
 			  double &value, const int FaceName, const double time);
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
+bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
 
 int main(int argc,char **args) {
 
@@ -260,7 +260,7 @@ int main(int argc,char **args) {
 
 //-----------------------------------------------------------------------------------------------------------------
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
+bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber, const int &level) {
   bool refine=0;
   // refinemenet based on Elemen Group Number
   if(ElemGroupNumber==5 ) {
@@ -278,7 +278,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //--------------------------------------------------------------------------------------------------------------
 
-double InitVariableU(const vector < double >& x) {
+double InitVariableU(const std::vector < double >& x) {
    double um = 0.2;
    double  value=1.5*um*(4.0/(0.1681))*x[1]*(0.41-x[1]);
    return value;
@@ -286,7 +286,7 @@ double InitVariableU(const vector < double >& x) {
 
 //-------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const vector < double >& x,const char name[],
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time){
   bool test=1; //Dirichlet
   value=0.;

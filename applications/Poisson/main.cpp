@@ -20,7 +20,7 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const vector < double >& x,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(3 == facename){  //stress
