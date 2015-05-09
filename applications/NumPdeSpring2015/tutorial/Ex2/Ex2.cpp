@@ -210,7 +210,7 @@ double GetExactSolutionLaplace(const vector < double >& x) {
  **/
 void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
-  
+
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
@@ -235,7 +235,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
-  
+
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   //solution variable
@@ -248,25 +248,26 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
   vector < double >  solu; // local solution
   solu.reserve(maxSize);
-  
+
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
   for (unsigned i = 0; i < dim; i++) {
     x[i].reserve(maxSize);
   }
-  
+
   vector <double> phi;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
   vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
-  
+
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
   phi_xx.reserve(maxSize * dim2);
- 
+
   vector< double > Res; // local redidual vector
   Res.reserve(maxSize);
-  
+
   vector< int > l2GMap; // local to global mapping
   l2GMap.reserve(maxSize);
   vector < double > Jac;
@@ -290,13 +291,13 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
     for (int i = 0; i < dim; i++) {
       x[i].resize(nDofs2);
     }
-    
+
     Res.resize(nDofs);    //resize
     std::fill(Res.begin(), Res.end(), 0);    //set aRes to zero
-    
+
     Jac.resize(nDofs * nDofs);    //resize
     std::fill(Jac.begin(), Jac.end(), 0);    //set aRes to zero
-   
+
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, soluType);    // local to global solution node
@@ -316,7 +317,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
     }
 
     if (level == levelMax || !el->GetRefinedElementIndex(kel)) {      // do not care about this if now (it is used for the AMR)
-      
+
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][soluType]->GetGaussPointNumber(); ig++) {
         // *** get gauss point weight, test function and test function partial derivatives ***
@@ -348,7 +349,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
           double srcTerm = - GetExactSolutionLaplace(x_gss);
           Res[i] += (srcTerm * phi[i] - laplace) * weight;
 
-	  if (assembleMatrix) {
+          if (assembleMatrix) {
             // *** phi_j loop ***
             for (unsigned j = 0; j < nDofs; j++) {
               laplace = 0.;
@@ -360,14 +361,14 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
               Jac[i * nDofs + j] += laplace;
             } // end phi_j loop
           } // endif assemble_matrix
-	  
+
         } // end phi_i loop
       } // end gauss point loop
     } // endif single element not refined or fine grid loop
 
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
-   
+
     //copy the value of the adept::adoube aRes in double Res and store
     RES->add_vector_blocked(Res, l2GMap);
 
@@ -391,7 +392,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
  *                  J(u0) w =  - F(u0)  ,
  *                  with u = u0 + w
  *                  - F = f(x) - J u = Res
- *                  J = \grad_u F 
+ *                  J = \grad_u F
  *
  * thus
  *                  J w = f(x) - J u0
@@ -428,7 +429,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
-  
+
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   //solution variable
@@ -441,25 +442,26 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   vector < adept::adouble >  solu; // local solution
   solu.reserve(maxSize);
-  
+
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
   for (unsigned i = 0; i < dim; i++) {
     x[i].reserve(maxSize);
   }
-  
+
   vector <double> phi;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
   vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
-  
+
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
   phi_xx.reserve(maxSize * dim2);
- 
+
   vector< adept::adouble > aRes; // local redidual vector
   aRes.reserve(maxSize);
-  
+
   vector< int > l2GMap; // local to global mapping
   l2GMap.reserve(maxSize);
   vector< double > Res; // local redidual vector
@@ -485,10 +487,10 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     for (int i = 0; i < dim; i++) {
       x[i].resize(nDofs2);
     }
-    
+
     aRes.resize(nDofs);    //resize
     std::fill(aRes.begin(), aRes.end(), 0);    //set aRes to zero
-   
+
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, soluType);    // local to global solution node
@@ -548,16 +550,18 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
-   
+
     //copy the value of the adept::adoube aRes in double Res and store
     Res.resize(nDofs);    //resize
+
     for (int i = 0; i < nDofs; i++) {
       Res[i] = - aRes[i].value();
     }
+
     RES->add_vector_blocked(Res, l2GMap);
 
     if (assembleMatrix) {
-      
+
       // define the dependent variables
       s.dependent(&aRes[0], nDofs);
 
@@ -701,6 +705,6 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
   seminorm = norm_vec->l1_norm();
 
   delete norm_vec;
-  return std::pair < double, double > (sqrt(l2norm),sqrt(seminorm));
+  return std::pair < double, double > (sqrt(l2norm), sqrt(seminorm));
 
 }
