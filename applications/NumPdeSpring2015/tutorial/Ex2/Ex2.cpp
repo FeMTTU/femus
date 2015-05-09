@@ -40,7 +40,6 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-
   // define multilevel mesh
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
@@ -101,7 +100,7 @@ int main(int argc, char** args) {
       system.AddSolutionToSystemPDE("u");
 
       // attach the assembling function to system
-      system.SetAssembleFunction(AssemblePoissonProblem);
+      system.SetAssembleFunction(AssemblePoissonProblem_AD);
 
       // initilaize and solve the system
       system.init();
@@ -176,25 +175,19 @@ int main(int argc, char** args) {
     }
 
   }
-
-
-
   return 0;
 }
-
 
 double GetExactSolutionValue(const vector < double >& x) {
   double pi = acos(-1.);
   return cos(pi * x[0]) * cos(pi * x[1]);
 };
 
-
 void GetExactSolutionGradient(const vector < double >& x, vector < double >& solGrad) {
   double pi = acos(-1.);
   solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
   solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
 };
-
 
 double GetExactSolutionLaplace(const vector < double >& x) {
   double pi = acos(-1.);
@@ -281,25 +274,25 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
     unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
     short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
-    unsigned nDofs  = el->GetElementDofNumber(kel, soluType);    // number of solution element dofs
-    unsigned nDofs2 = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
+    unsigned nDofu  = el->GetElementDofNumber(kel, soluType);    // number of solution element dofs
+    unsigned nDofx = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
 
     // resize local arrays
-    l2GMap.resize(nDofs);
-    solu.resize(nDofs);
+    l2GMap.resize(nDofu);
+    solu.resize(nDofu);
 
     for (int i = 0; i < dim; i++) {
-      x[i].resize(nDofs2);
+      x[i].resize(nDofx);
     }
 
-    Res.resize(nDofs);    //resize
-    std::fill(Res.begin(), Res.end(), 0);    //set aRes to zero
+    Res.resize(nDofu);    //resize
+    std::fill(Res.begin(), Res.end(), 0);    //set Res to zero
 
-    Jac.resize(nDofs * nDofs);    //resize
-    std::fill(Jac.begin(), Jac.end(), 0);    //set aRes to zero
+    Jac.resize(nDofu * nDofu);    //resize
+    std::fill(Jac.begin(), Jac.end(), 0);    //set Jac to zero
 
     // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofs; i++) {
+    for (unsigned i = 0; i < nDofu; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, soluType);    // local to global solution node
       unsigned solDof = msh->GetMetisDof(iNode, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
@@ -307,7 +300,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
     }
 
     // local storage of coordinates
-    for (unsigned i = 0; i < nDofs2; i++) {
+    for (unsigned i = 0; i < nDofx; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, xType);    // local to global coordinates node
       unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
 
@@ -328,7 +321,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
         vector < double > gradSolu_gss(dim, 0.);
         vector < double > x_gss(dim, 0.);
 
-        for (unsigned i = 0; i < nDofs; i++) {
+        for (unsigned i = 0; i < nDofu; i++) {
           solu_gss += phi[i] * solu[i];
 
           for (unsigned jdim = 0; jdim < dim; jdim++) {
@@ -338,7 +331,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
         }
 
         // *** phi_i loop ***
-        for (unsigned i = 0; i < nDofs; i++) {
+        for (unsigned i = 0; i < nDofu; i++) {
 
           double laplace = 0.;
 
@@ -351,14 +344,14 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
           if (assembleMatrix) {
             // *** phi_j loop ***
-            for (unsigned j = 0; j < nDofs; j++) {
+            for (unsigned j = 0; j < nDofu; j++) {
               laplace = 0.;
 
               for (unsigned kdim = 0; kdim < dim; kdim++) {
                 laplace += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]) * weight;
               }
 
-              Jac[i * nDofs + j] += laplace;
+              Jac[i * nDofu + j] += laplace;
             } // end phi_j loop
           } // endif assemble_matrix
 
@@ -385,7 +378,6 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
-
 /**
  * This function assemble the stiffnes matrix KK and the residual vector Res
  * Using automatic differentiation for Newton iterative scheme
@@ -397,7 +389,6 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
  * thus
  *                  J w = f(x) - J u0
  **/
-
 void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
@@ -477,22 +468,22 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
     unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
     short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
-    unsigned nDofs  = el->GetElementDofNumber(kel, soluType);    // number of solution element dofs
-    unsigned nDofs2 = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
+    unsigned nDofu  = el->GetElementDofNumber(kel, soluType);    // number of solution element dofs
+    unsigned nDofx = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
 
     // resize local arrays
-    l2GMap.resize(nDofs);
-    solu.resize(nDofs);
+    l2GMap.resize(nDofu);
+    solu.resize(nDofu);
 
     for (int i = 0; i < dim; i++) {
-      x[i].resize(nDofs2);
+      x[i].resize(nDofx);
     }
 
-    aRes.resize(nDofs);    //resize
+    aRes.resize(nDofu);    //resize
     std::fill(aRes.begin(), aRes.end(), 0);    //set aRes to zero
 
     // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofs; i++) {
+    for (unsigned i = 0; i < nDofu; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, soluType);    // local to global solution node
       unsigned solDof = msh->GetMetisDof(iNode, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
@@ -500,7 +491,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     }
 
     // local storage of coordinates
-    for (unsigned i = 0; i < nDofs2; i++) {
+    for (unsigned i = 0; i < nDofx; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, xType);    // local to global coordinates node
       unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
 
@@ -523,7 +514,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
         vector < adept::adouble > gradSolu_gss(dim, 0.);
         vector < double > x_gss(dim, 0.);
 
-        for (unsigned i = 0; i < nDofs; i++) {
+        for (unsigned i = 0; i < nDofu; i++) {
           solu_gss += phi[i] * solu[i];
 
           for (unsigned jdim = 0; jdim < dim; jdim++) {
@@ -533,7 +524,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
         }
 
         // *** phi_i loop ***
-        for (unsigned i = 0; i < nDofs; i++) {
+        for (unsigned i = 0; i < nDofu; i++) {
 
           adept::adouble laplace = 0.;
 
@@ -552,9 +543,9 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     // Add the local Matrix/Vector into the global Matrix/Vector
 
     //copy the value of the adept::adoube aRes in double Res and store
-    Res.resize(nDofs);    //resize
+    Res.resize(nDofu);    //resize
 
-    for (int i = 0; i < nDofs; i++) {
+    for (int i = 0; i < nDofu; i++) {
       Res[i] = - aRes[i].value();
     }
 
@@ -563,13 +554,13 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     if (assembleMatrix) {
 
       // define the dependent variables
-      s.dependent(&aRes[0], nDofs);
+      s.dependent(&aRes[0], nDofu);
 
       // define the independent variables
-      s.independent(&solu[0], nDofs);
+      s.independent(&solu[0], nDofu);
 
       // get the jacobian matrix (ordered by row major )
-      Jac.resize(nDofs * nDofs);    //resize
+      Jac.resize(nDofu * nDofu);    //resize
       s.jacobian(&Jac[0], true);
 
       //store K in the global matrix KK
@@ -586,7 +577,6 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   // ***************** END ASSEMBLY *******************
 }
-
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
   unsigned level = mlSol->_ml_msh->GetNumberOfLevels() - 1u;
@@ -633,25 +623,25 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
 
     unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
     short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
-    unsigned nDofs  = el->GetElementDofNumber(kel, soluType);    // number of solution element dofs
-    unsigned nDofs2 = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
+    unsigned nDofu  = el->GetElementDofNumber(kel, soluType);    // number of solution element dofs
+    unsigned nDofx = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
 
     // resize local arrays
-    solu.resize(nDofs);
+    solu.resize(nDofu);
 
     for (int i = 0; i < dim; i++) {
-      x[i].resize(nDofs2);
+      x[i].resize(nDofx);
     }
 
     // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofs; i++) {
+    for (unsigned i = 0; i < nDofu; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, soluType);    // local to global solution node
       unsigned solDof = msh->GetMetisDof(iNode, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
     }
 
     // local storage of coordinates
-    for (unsigned i = 0; i < nDofs2; i++) {
+    for (unsigned i = 0; i < nDofx; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, xType);    // local to global coordinates node
       unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
 
@@ -670,7 +660,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
       vector < double > gradSolu_gss(dim, 0.);
       vector < double > x_gss(dim, 0.);
 
-      for (unsigned i = 0; i < nDofs; i++) {
+      for (unsigned i = 0; i < nDofu; i++) {
         solu_gss += phi[i] * solu[i];
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
@@ -705,6 +695,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
   seminorm = norm_vec->l1_norm();
 
   delete norm_vec;
+
   return std::pair < double, double > (sqrt(l2norm), sqrt(seminorm));
 
 }
