@@ -109,11 +109,12 @@ void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily,
   _SolTmorder.resize(n+1u);
   _PdeType.resize(n+1u);
   _TestIfPressure.resize(n+1u);
+  _FixSolutionAtOnePoint.resize(n+1u);
   _SolPairIndex.resize(n+1u);
 
 
   _TestIfPressure[n] = 0;
-  _FixPressureAtOnePoint = false;
+  _FixSolutionAtOnePoint[n] = false;
   _family[n] = fefamily;
   _order[n] = order;
   _SolType[n] = order - ((fefamily==LAGRANGE)?1:0) + fefamily*3;
@@ -698,7 +699,7 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 	  }
 	}
       }
-      if( _TestIfPressure[k] && _FixPressureAtOnePoint == true  && _iproc == 0){
+      if( _FixSolutionAtOnePoint[k] == true  && _iproc == 0){
 	_solution[igridn]->_Bdc[k]->set(0,0.);
 	_solution[igridn]->_Sol[k]->set(0,0.);
       }

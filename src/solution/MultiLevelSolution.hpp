@@ -109,7 +109,7 @@ public:
 
     /** To be Added */
     void AttachSetBoundaryConditionFunction (BoundaryFunc SetBoundaryConditionFunction );
-    void FixPressureAtOnePoint(){ _FixPressureAtOnePoint = true ;};
+    void FixSolutionAtOnePoint( const char sol[] ){ _FixSolutionAtOnePoint[GetIndex(sol)] = true ;};
 
 
     /** To be Added */
@@ -229,15 +229,15 @@ private:
     vector< vector <FunctionBase *> > _nonhomogeneousbcfunction;
 
     unsigned short  _gridn;
-    vector <int>    _SolType;    /* Tells the FE index */
-    vector <FEFamily> _family;
-    vector <FEOrder> _order;
-    vector <char*>  _SolName;
-    vector <char*>  _BdcType;
-    vector <int>    _SolTmorder;
-    vector <bool>   _PdeType;    /*Tells whether the Solution is an unknown of a PDE or not*/
-    vector <bool>   _TestIfPressure;
-    bool _FixPressureAtOnePoint;
+    vector < int >    _SolType;    /* Tells the FE index */
+    vector < FEFamily > _family;
+    vector < FEOrder > _order;
+    vector < char* >  _SolName;
+    vector < char* >  _BdcType;
+    vector < int >    _SolTmorder;
+    vector < bool >   _PdeType;    /*Tells whether the Solution is an unknown of a PDE or not*/
+    vector < bool >   _TestIfPressure;
+    vector < bool > _FixSolutionAtOnePoint;
     vector <unsigned> _SolPairIndex;
 
     /** Multilevel solution writer */

@@ -86,7 +86,7 @@ int main(int argc, char** args) {
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.FixPressureAtOnePoint();
+  mlSol.FixSolutionAtOnePoint("P");
   mlSol.GenerateBdc("All");
 
   // define the multilevel problem attach the mlSol object to it
