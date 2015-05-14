@@ -36,8 +36,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
     }
   } else if (!strcmp(SolName, "P")) {
     dirichlet = false;
-
-    if (x[0] < -0.5 + 1.0e-10 && x[1] < -0.5 + 1.0e-10 && x[2] < 1.0e-10 && x[2] > -1.0e-10) dirichlet = true;
   }
 
   return dirichlet;
@@ -62,12 +60,12 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 7;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -81,11 +79,14 @@ int main(int argc, char** args) {
 
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
-  mlSol.AddSolution("P", LAGRANGE, FIRST);
+  //mlSol.AddSolution("P", LAGRANGE, FIRST);
+  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol.FixPressureAtOnePoint();
   mlSol.GenerateBdc("All");
 
   // define the multilevel problem attach the mlSol object to it
@@ -103,11 +104,33 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
+  system.SetMgSmoother(GMRES_SMOOTHER);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
+  system.SetMaxNumberOfNonLinearIterations(20);
+  system.SetMaxNumberOfLinearIterations(10);
+  system.SetAbsoluteConvergenceTolerance(1.e-10);
+  system.SetNonLinearConvergenceTolerance(1.e-8);
+  system.SetMgType(F_CYCLE);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
+
+
   // initilaize and solve the system
   system.init();
+
+  system.SetSolverFineGrids(GMRES);
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 20);
+
+  system.ClearVariablesToBeSolved();
+  system.AddVariableToBeSolved("All");
+  system.SetNumberOfSchurVariables(1);
+  system.SetElementBlockNumber(4);
+
+
+
   system.solve();
 
   // print solutions

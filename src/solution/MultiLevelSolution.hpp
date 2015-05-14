@@ -41,13 +41,13 @@ class MultiLevelProblem;
 class MultiLevelSolution : public ParallelObject {
 
 private:
-  
+
     /** Initial condition function pointer typedef */
     typedef double (*InitFunc) (const std::vector < double >& x);
 
     /** @duplicate */
     typedef double (*InitFuncMLProb) (const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z, const char * name);
-    
+
     /** Boundary condition function pointer typedef */
     typedef bool (*BoundaryFunc) (const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
 
@@ -67,16 +67,16 @@ public:
 
     /** If you want to add a vector whose components are treated the same way */
     void AddSolutionVector(const unsigned n_components, const std::string name, const FEFamily fefamily, const FEOrder order, unsigned tmorder=0, const bool &Pde_type=1);
-    
+
     /** To be Added */
     void AddSolutionLevel();
-    
+
     /** To be Added */
     void AssociatePropertyToSolution(const char solution_name[], const char solution_property[]);
 
     /** To be Added */
     void PairSolution(const char solution_name[], const char solution_pair[]);
-        
+
     /** To be Added */
     void ResizeSolutionVector( const char name[]);
 
@@ -85,7 +85,7 @@ public:
 
     /** @duplicate */
     void InitializeMLProb(const MultiLevelProblem * ml_prob, const char * name, InitFuncMLProb func = NULL);
-    
+
     /** To be Added */
     unsigned GetIndex(const char name[]) const;
 
@@ -109,19 +109,21 @@ public:
 
     /** To be Added */
     void AttachSetBoundaryConditionFunction (BoundaryFunc SetBoundaryConditionFunction );
+    void FixPressureAtOnePoint(){ _FixPressureAtOnePoint = true ;};
+
 
     /** To be Added */
     void GenerateBdc(const char name[], const char bdc_type[]="Steady", const MultiLevelProblem * ml_prob = NULL);
-    
+
     /** To be Added */
     void InitializeBdc();
 
     /** To be Added */
     void UpdateBdc(const double time);
-    
+
     /** @duplicate */
     void AttachSetBoundaryConditionFunctionMLProb ( BoundaryFuncMLProb SetBoundaryConditionFunction_in );
-    
+
     /** @duplicate */
     void GenerateBdcMLProb(const MultiLevelProblem * ml_prob, const unsigned int k, const unsigned int grid0, const double time);
 
@@ -130,20 +132,20 @@ public:
 
     /** To be Added */
     void GenerateBdc(const unsigned int k, const unsigned grid0, const double time);
-    
+
     /** To be Added */
     void GenerateBdc_new(const unsigned int k, const unsigned grid0, const double time);
-    
+
     /** To be Added */
     BDCType GetBoundaryCondition(const std::string varname, const unsigned int facename) const;
-    
+
     /** To be Added */
     bool Ishomogeneous(const std::string varname, const unsigned int facename) const;
-    
+
     /** To be Added */
-    void SetBoundaryCondition_new(const std::string name, const std::string facename, const BDCType bdctype = DIRICHLET, 
+    void SetBoundaryCondition_new(const std::string name, const std::string facename, const BDCType bdctype = DIRICHLET,
                               const bool istimedependent = false, FunctionBase* func = NULL);
-    
+
     /** To be Added */
     FunctionBase* GetBdcFunction(const std::string varname, const unsigned int facename) const;
 
@@ -190,11 +192,11 @@ public:
 
     /** boundary condition function pointer */
     BoundaryFunc _SetBoundaryConditionFunction;
-    
+
     void build();
 
     bool _Use_GenerateBdc_new;
-    
+
     /** To be Added */
     Writer* GetWriter() {return _writer; }
 
@@ -205,27 +207,27 @@ public:
     void SetWriter(const WriterEnum format) { _writer = Writer::build(format,this).release(); }
 
 private:
-  
+
     /** To be Added */
     BDCType GetBoundaryCondition(const unsigned int var, const unsigned int facename) const;
 
     /** To be Added */
     bool Ishomogeneous(const unsigned int var, const unsigned int facename) const;
-    
+
     /** To be Added */
     FunctionBase* GetBdcFunction(const unsigned int var, const unsigned int facename) const;
 
     /** Array of solution, dimension number of levels */
     vector <Solution*>  _solution;
-    
+
     /** Flag to tell whether the BC function has been set */
     bool _bdc_func_set;
 
     /** This group of vectors has the size of the number of added solutions */
     vector< vector <BDCType> > _boundaryconditions;
     vector< vector <bool> > _ishomogeneous;
-    vector< vector <FunctionBase *> > _nonhomogeneousbcfunction; 
-    
+    vector< vector <FunctionBase *> > _nonhomogeneousbcfunction;
+
     unsigned short  _gridn;
     vector <int>    _SolType;    /* Tells the FE index */
     vector <FEFamily> _family;
@@ -235,8 +237,9 @@ private:
     vector <int>    _SolTmorder;
     vector <bool>   _PdeType;    /*Tells whether the Solution is an unknown of a PDE or not*/
     vector <bool>   _TestIfPressure;
+    bool _FixPressureAtOnePoint;
     vector <unsigned> _SolPairIndex;
-    
+
     /** Multilevel solution writer */
     Writer* _writer;
 
