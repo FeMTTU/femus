@@ -4,7 +4,10 @@
 enum MgType {
     F_CYCLE=0,
     V_CYCLE,
-    M_CYCLE
+    M_CYCLE,
+    MULTIPLICATIVE,
+    ADDITIVE,
+    KASKADE 
 };
 
 #endif

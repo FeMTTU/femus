@@ -26,6 +26,8 @@
 #include "MgSmootherEnum.hpp"
 #include "FemusDefault.hpp"
 
+#include <petscksp.h>
+
 namespace femus {
 
 
@@ -49,21 +51,23 @@ public:
     /** Solves the system. */
     virtual void solve ();
 
+    virtual void PETSCsolve ();
+
     /** Clear all the data structures associated with the system. */
     virtual void clear();
 
     /** Init the system PDE structures */
     virtual void init();
-    
+
     /** @deprecated Init the system PDE structures */
-    virtual void init_two();     
-    
+    virtual void init_two();
+
     /** @deprecated Multigrid routine */
     void MGSolve(double Eps,int MaxIter, const uint Gamma=DEFAULT_MG_GAMMA, const uint Nc_pre=DEFAULT_NC_PRE,const uint Nc_coarse=DEFAULT_NC_COARSE,const uint Nc_post=DEFAULT_NC_POST);
 
     /** @deprecated Multigrid step routine */
-    double MGStep(int Level,double Eps1,int MaxIter, const uint Gamma, const uint Nc_pre,const uint Nc_coarse,const uint Nc_post);     
-  
+    double MGStep(int Level,double Eps1,int MaxIter, const uint Gamma, const uint Nc_pre,const uint Nc_coarse,const uint Nc_post);
+
 
     /** Add a system level */
     void AddSystemLevel();
@@ -82,7 +86,7 @@ public:
     * like PETSc or LASPACK. Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
     */
     vector < LinearEquationSolver*> _LinSolver;
-    
+
     /** Set the max number of linear iterationsfor solving Ax=b */
     void SetMaxNumberOfLinearIterations(unsigned int max_lin_it) {
         _n_max_linear_iterations = max_lin_it;
@@ -107,7 +111,7 @@ public:
     void SetAbsoluteConvergenceTolerance(double absolute_convergence_tolerance) {
         _absolute_convergence_tolerance = absolute_convergence_tolerance;
     };
-    
+
     /** */
     bool IsLinearConverged(const unsigned igridn);
 
@@ -130,7 +134,7 @@ public:
 
     /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
     void SetElementBlockNumber(unsigned const &dim_vanka_block);
-    
+
     /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
     void SetElementBlockNumber(const char all[],const unsigned & overlap = 1);
 
@@ -143,13 +147,13 @@ public:
     /** Set the tolerances for the ksp solver on fine grids: rtol, atol, divtol, maxits */
     void SetTolerances(const double rtol, const double atol,
                        const double divtol, const unsigned maxits);
-    
+
      /** Set AMR options */
     void SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels,
-			  const std::string& AMRnorm, const double &AMRthreshold, 
+			  const std::string& AMRnorm, const double &AMRthreshold,
 			  bool (* SetRefinementFlag)(const std::vector < double > &x,
 						     const int &ElemGroupNumber,const int &level)=NULL);
-    
+
     /** Set the options of the Schur-Vanka smoother */
     //void SetVankaSchurOptions(bool Schur, short unsigned NSchurVar);
     void SetNumberOfSchurVariables(const unsigned short &NSchurVar);
@@ -167,7 +171,7 @@ public:
 
      /** enforce sparcity pattern for setting uncoupled variables and save on memory allocation **/
     void SetSparsityPattern(vector < bool > other_sparcity_pattern);
-    
+
     vector < SparseMatrix* > _PP, _RR; /// @todo put it back to protected
 
 protected:
@@ -212,30 +216,32 @@ protected:
 
     /** To be Added */
     vector <unsigned> _VariablesToBeSolvedIndex;
-    
-   
-    
-    
+
+
+
+
     SolverType _finegridsolvertype;
     unsigned int _DirichletBCsHandlingMode;
     double _rtol,_atol,_divtol,_maxits;
     PreconditionerType _finegridpreconditioner;
-    
-    bool _numblock_test;   
+
+    bool _numblock_test;
     unsigned _num_block;
-    
+
     bool _numblock_all_test;
     bool _overlap;
-    
+
     bool _NSchurVar_test;
     unsigned short _NSchurVar;
     bool _AMRtest;
     unsigned _maxAMRlevels;
     short _AMRnorm;
     double _AMRthreshold;
-    
+
     vector <bool> _SparsityPattern;
-    
+
+    PC _pcMG;      ///< Preconditioner context
+    KSP _kspMG;    ///< Krylov subspace context
 };
 
 } //end namespace femus

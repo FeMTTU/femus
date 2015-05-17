@@ -1,6 +1,6 @@
 /** \file Ex7.cpp
  *  \brief This example shows how to set and solve the weak form
- *   of the Boussinesq appoximation of the Navier-Stokes Equation
+ *   of the Boussinesq approximation of the Navier-Stokes Equation
  *
  *  \f{eqnarray*}
  *  && \mathbf{V} \cdot \nabla T - \nabla \cdot\alpha \nabla T = 0 \\
@@ -20,12 +20,13 @@
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
-
+#include <map>
+#include <string>
 
 using namespace femus;
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-  bool dirichlet = true; //dirichlet
+  bool dirichlet = true; //Dirichlet
   value = 0.;
 
   if (!strcmp(SolName, "T")) {
@@ -36,6 +37,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
     }
   } else if (!strcmp(SolName, "P")) {
     dirichlet = false;
+
+    if (x[0] < -0.5 + 1.0e-10 && x[1] < -0.5 + 1.0e-10 && x[2] < 1.0e-10 && x[2] > -1.0e-10) dirichlet = true;
   }
 
   return dirichlet;
@@ -43,6 +46,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
+
 
 
 int main(int argc, char** args) {
@@ -56,16 +60,16 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-     probably in the furure it is not going to be an argument of this function   */
+  /* "seventh" is the order of accuracy that is used in the Gauss integration scheme
+     probably in the future it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 7;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -79,14 +83,11 @@ int main(int argc, char** args) {
 
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
-  //mlSol.AddSolution("P", LAGRANGE, FIRST);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
-  mlSol.AssociatePropertyToSolution("P", "Pressure");
+  mlSol.AddSolution("P", LAGRANGE, FIRST);
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.FixSolutionAtOnePoint("P");
   mlSol.GenerateBdc("All");
 
   // define the multilevel problem attach the mlSol object to it
@@ -104,33 +105,12 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  system.SetMgSmoother(GMRES_SMOOTHER);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
-  system.SetMaxNumberOfNonLinearIterations(20);
-  system.SetMaxNumberOfLinearIterations(10);
-  system.SetAbsoluteConvergenceTolerance(1.e-10);
-  system.SetNonLinearConvergenceTolerance(1.e-8);
-  system.SetMgType(F_CYCLE);
-  system.SetNumberPreSmoothingStep(2);
-  system.SetNumberPostSmoothingStep(2);
-
-
   // initilaize and solve the system
   system.init();
-
-  system.SetSolverFineGrids(GMRES);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
-  system.SetTolerances(1.e-12, 1.e-12, 1.e+50, 10);
-
-  system.ClearVariablesToBeSolved();
-  system.AddVariableToBeSolved("All");
-  system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(4);
-
-  //system.solve();
-  system.PETSCsolve();
+  system.solve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -166,7 +146,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
 
   LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
-  SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stiffness matrix object in pdeSys (level)
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
@@ -175,6 +155,15 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+
+  map< char*, std::pair < unsigned, unsigned > > solID;
+
+  for (unsigned i = 0; i < mlSol->GetSolutionSize(); i++) {
+    char* solname = mlSol->GetSolutionName(i);
+    solID[solname] = std::make_pair(mlSol->GetIndex(solname), mlSol->GetSolutionType(solname));
+    std::cout << solname << " " << solID[solname].first << " " << solID[solname].second << std::endl;
+  }
+
 
   //solution variable
   unsigned solTIndex;
@@ -209,9 +198,9 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   vector < vector < adept::adouble > >  solV(dim);    // local solution
   vector < adept::adouble >  solP; // local solution
 
-  vector< adept::adouble > aResT; // local redidual vector
-  vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
-  vector< adept::adouble > aResP; // local redidual vector
+  vector< adept::adouble > aResT; // local residual vector
+  vector< vector < adept::adouble > > aResV(dim);    // local residual vector
+  vector< adept::adouble > aResP; // local residual vector
 
   vector < vector < double > > coordX(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
@@ -251,7 +240,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   vector< int > KKDof; // local to global pdeSys dofs
   KKDof.reserve((dim + 2) *maxSize);
 
-  vector< double > Res; // local redidual vector
+  vector< double > Res; // local residual vector
   Res.reserve((dim + 2) *maxSize);
 
   vector < double > Jac;
@@ -263,7 +252,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->IS_Mts2Gmt_elem_offset[iproc]; iel < msh->IS_Mts2Gmt_elem_offset[iproc + 1]; iel++) {
 
-    unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
+    unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between parallel dof and mesh dof
     short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
 
     unsigned nDofsT = el->GetElementDofNumber(kel, solTType);    // number of solution element dofs
@@ -337,7 +326,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solVType]->GetGaussPointNumber(); ig++) {
-        // *** get gauss point weight, test function and test function partial derivatives ***
+        // *** get Gauss point weight, test function and test function partial derivatives ***
         msh->_finiteElement[kelGeom][solTType]->Jacobian(coordX, ig, weight, phiT, phiT_x, phiT_xx);
         msh->_finiteElement[kelGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
         phiP = msh->_finiteElement[kelGeom][solPType]->GetPhi(ig);
@@ -390,7 +379,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
           for (unsigned j = 0; j < dim; j++) {
             Temp +=  alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
-            //Temp +=  phiT[i] * (solV_gss[j] * gradSolT_gss[j]);
+            Temp +=  phiT[i] * (solV_gss[j] * gradSolT_gss[j]);
           }
 
           aResT[i] += - Temp * weight;
@@ -412,7 +401,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
             NSV[k] += -solP_gss * phiV_x[i * dim + k];
           }
 
-          //NSV[1] += -beta * solT_gss * phiV[i];
+          NSV[1] += -beta * solT_gss * phiV[i];
 
           for (unsigned  k = 0; k < dim; k++) {
             aResV[k][i] += - NSV[k] * weight;
@@ -451,7 +440,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     RES->add_vector_blocked(Res, KKDof);
 
-    //Extarct and store the Jacobian
+    //Extract and store the Jacobian
     if (assembleMatrix) {
       Jac.resize(nDofsTVP * nDofsTVP);
       // define the dependent variables
