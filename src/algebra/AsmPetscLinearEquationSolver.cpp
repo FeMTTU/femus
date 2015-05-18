@@ -418,6 +418,8 @@ void AsmPetscLinearEquationSolver::SetMGOptions (
   }
 
   this->clear();
+  this->set_petsc_solver_type();
+
   PetscMatrix* KKp = static_cast<PetscMatrix*> ( _KK );
   Mat KK = KKp->mat();
 
@@ -459,7 +461,10 @@ void AsmPetscLinearEquationSolver::SetMGOptions (
       KSPGetPC(_ksp_asm[i],&_pc_asm[1]);
       KSPSetTolerances(_ksp_asm[i],_rtol,_abstol,_dtol,1);
       KSPSetFromOptions(_ksp_asm[i]);
-      PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc_asm[1]);
+      if( this->_preconditioner_type == ILU_PRECOND )
+	PCSetType ( _pc_asm[1], (char*) PCILU );
+      else
+	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc_asm[1]);
       PCFactorSetZeroPivot(_pc_asm[1],epsilon);
       PCFactorSetShiftType(_pc_asm[1],MAT_SHIFT_NONZERO);
     }
@@ -470,7 +475,10 @@ void AsmPetscLinearEquationSolver::SetMGOptions (
       KSPGetPC(_ksp_asm[i],&_pc_asm[0]);
       KSPSetTolerances(_ksp_asm[i],_rtol,_abstol,_dtol,1);
       KSPSetFromOptions(_ksp_asm[i]);
-      PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc_asm[0]);
+      if( this->_preconditioner_type == ILU_PRECOND )
+	PCSetType ( _pc_asm[0], (char*) PCILU );
+      else
+	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc_asm[0]);
       PCFactorSetZeroPivot(_pc_asm[0], epsilon);
       PCFactorSetShiftType(_pc_asm[0],MAT_SHIFT_NONZERO);
     }
@@ -483,6 +491,8 @@ void AsmPetscLinearEquationSolver::MGsolve ( KSP& kspMG, const bool ksp_clean ) 
     PetscMatrix* KKp = static_cast< PetscMatrix* > ( _KK );
     Mat KK = KKp->mat();
     KSPSetOperators ( kspMG, KK, _Pmat );
+
+
 
     KSPSetTolerances ( kspMG, _rtol, _abstol, _dtol, _maxits );
 

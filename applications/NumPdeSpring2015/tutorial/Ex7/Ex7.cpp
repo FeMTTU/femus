@@ -123,9 +123,9 @@ int main(int argc, char** args) {
   system.init();
 
   system.SetSolverFineGrids(GMRES);
-  system.SetPreconditionerFineGrids(MLU_PRECOND);
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
   //system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40);
-  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20);
+  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 100);
 
 
   system.ClearVariablesToBeSolved();

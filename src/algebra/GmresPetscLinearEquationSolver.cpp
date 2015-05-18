@@ -267,6 +267,7 @@ void GmresPetscLinearEquationSolver::SetMGOptions (
     }
 
     this->clear();
+    this->set_petsc_solver_type();
     PetscMatrix* KKp = static_cast<PetscMatrix*> ( _KK );
     Mat KK = KKp->mat();
 

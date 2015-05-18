@@ -911,6 +911,7 @@ void LinearImplicitSystem::PETSCsolve (){
   clock_t start_mg_time = clock();
 
   KSPCreate(PETSC_COMM_WORLD,&_kspMG);
+  
   KSPGetPC(_kspMG,&_pcMG);
   PCSetType(_pcMG,PCMG);
   PCMGSetLevels(_pcMG,_gridn,NULL);
