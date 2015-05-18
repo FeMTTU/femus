@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: PetscPreconditioner
  Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -26,7 +26,7 @@
 #include "PetscMatrix.hpp"
 #include "PetscVector.hpp"
 
-#include <mpi.h>  
+#include <mpi.h>
 
 
 namespace femus {
@@ -86,7 +86,7 @@ void PetscPreconditioner::set_petsc_preconditioner_type
     CHKERRABORT(MPI_COMM_WORLD,ierr);
     break;
 
-    
+
   case ILU_PRECOND:
     {
       int nprocs; MPI_Comm_size(MPI_COMM_WORLD,&nprocs);  //TODO
@@ -108,9 +108,9 @@ void PetscPreconditioner::set_petsc_preconditioner_type
           set_petsc_subpreconditioner_type(PCILU, pc);
          }
       break;
-    }  
-    
-    
+    }
+
+
 //   case ILU_PRECOND: {
 //       ierr = PCSetType (pc, (char*) PCILU);
 //     break;
@@ -131,10 +131,10 @@ void PetscPreconditioner::set_petsc_preconditioner_type
 
   case MLU_PRECOND: //here we set the MUMPS parallel direct solver package
     ierr = PCSetType (pc, (char*) PCLU); CHKERRABORT(MPI_COMM_WORLD,ierr);
-    
+
     ierr = PCFactorSetMatSolverPackage(pc,MATSOLVERMUMPS); CHKERRABORT(MPI_COMM_WORLD,ierr);
     ierr = PCFactorSetUpMatSolverPackage(pc); CHKERRABORT(MPI_COMM_WORLD,ierr);
-    Mat       F; 
+    Mat       F;
     ierr = PCFactorGetMatrix(pc,&F); CHKERRABORT(MPI_COMM_WORLD,ierr);
     ierr = MatMumpsSetIcntl(F,14,30);CHKERRABORT(MPI_COMM_WORLD,ierr);
     break;

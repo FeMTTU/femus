@@ -81,6 +81,7 @@ int main(int argc, char** args) {
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
   mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
 
@@ -104,7 +105,7 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  system.SetMgSmoother(GMRES_SMOOTHER);
+  system.SetMgSmoother(ASM_SMOOTHER);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
@@ -113,6 +114,7 @@ int main(int argc, char** args) {
   system.SetAbsoluteConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-8);
   system.SetMgType(F_CYCLE);
+  //system.SetMgType(ADDITIVE);
   system.SetNumberPreSmoothingStep(2);
   system.SetNumberPostSmoothingStep(2);
 
@@ -121,8 +123,10 @@ int main(int argc, char** args) {
   system.init();
 
   system.SetSolverFineGrids(GMRES);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
-  system.SetTolerances(1.e-12, 1.e-12, 1.e+50, 10);
+  system.SetPreconditionerFineGrids(MLU_PRECOND);
+  //system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40);
+  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20);
+
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
@@ -404,7 +408,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           for (unsigned j = 0; j < dim; j++) {
             for (unsigned  k = 0; k < dim; k++) {
               NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
-              NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
+              //NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
             }
           }
 
@@ -412,7 +416,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
             NSV[k] += -solP_gss * phiV_x[i * dim + k];
           }
 
-          //NSV[1] += -beta * solT_gss * phiV[i];
+          NSV[1] += -beta * solT_gss * phiV[i];
 
           for (unsigned  k = 0; k < dim; k++) {
             aResV[k][i] += - NSV[k] * weight;

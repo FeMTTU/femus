@@ -46,6 +46,12 @@ public:
     /** Destructor */
     ~AsmPetscLinearEquationSolver ();
     KSP* GetKSP(){ return &_ksp; };
+
+    void SetMGOptions ( PC &_pc, const unsigned &level, const unsigned &maxlevel,
+                      const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean );
+
+    void MGsolve ( KSP& _ksp, const bool ksp_clean );
+
 private:
 
     /** Release all memory and clear data structures. */

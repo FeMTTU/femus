@@ -316,23 +316,43 @@ void GmresPetscLinearEquationSolver::MGsolve ( KSP& kspMG, const bool ksp_clean 
     PetscMatrix* KKp = static_cast< PetscMatrix* > ( _KK );
     Mat KK = KKp->mat();
     KSPSetOperators ( kspMG, KK, _Pmat );
-    KSPSetFromOptions ( kspMG );
+
     KSPSetTolerances ( kspMG, _rtol, _abstol, _dtol, _maxits );
+
+    if ( _msh->GetLevel() != 0 ){
+      KSPSetInitialGuessKnoll ( _ksp, PETSC_TRUE );
+      //KSPSetNormType ( _ksp, KSP_NORM_NONE );
+    }
+    KSPSetFromOptions ( kspMG );
   }
 
-  PetscVector* EPSp = static_cast< PetscVector* > ( _EPS );
-  Vec EPS = EPSp->vec();
+  PetscVector* EPSCp = static_cast< PetscVector* > ( _EPSC );
+  Vec EPSC = EPSCp->vec();
   PetscVector* RESp = static_cast< PetscVector* > ( _RES );
   Vec RES = RESp->vec();
 
-  KSPSolve ( kspMG, RES, EPS );
+  KSPSolve ( kspMG, RES, EPSC );
 
-  _RESC->matrix_mult ( *_EPS, *_KK );
+  _RESC->matrix_mult ( *_EPSC, *_KK );
   *_RES -= *_RESC;
+
+  *_EPS += *_EPSC;
 
   int its;
   KSPGetIterationNumber ( kspMG, &its );
   std::cout << "Number of iterations = " << its << std::endl;
+
+  KSPConvergedReason reason;
+  KSPGetConvergedReason(kspMG,&reason);
+  std::cout << "convergence reason = " << reason << std::endl;
+
+
+  PetscReal rtol;
+  PetscReal abstol;
+  PetscReal dtol;
+  PetscInt maxits;
+  KSPGetTolerances(kspMG, &rtol, &abstol, &dtol,&maxits);
+  std::cout<<rtol<<" "<<abstol<<" "<<dtol<<" "<<maxits<<std::endl;
 
 }
 

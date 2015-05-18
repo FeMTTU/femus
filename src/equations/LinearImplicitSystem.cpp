@@ -932,6 +932,7 @@ void LinearImplicitSystem::PETSCsolve (){
     abort();
   }
 
+  _LinSolver[_gridn-1u]->SetEpsZero();
   _LinSolver[_gridn-1u]->SetResZero();
 
   _assembleMatrix = true;
@@ -960,16 +961,15 @@ void LinearImplicitSystem::PETSCsolve (){
   for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
     std::cout << " ************* MG-Cycle : "<< _n_linear_iterations << " *************" << std::endl;
     bool ksp_clean=!_n_linear_iterations;
-    _LinSolver[_gridn-1u]->SetEpsZero();
     _LinSolver[_gridn-1u]->MGsolve(_kspMG, ksp_clean);
     _solution[_gridn-1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[_gridn-1]->_RES, _LinSolver[_gridn-1]->KKoffset );
     bool islinearconverged = IsLinearConverged(_gridn-1u);
     if(islinearconverged)
       break;
   }
-
   _solution[_gridn-1u]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[_gridn-1u]->_EPS,
                                     _LinSolver[_gridn-1u]->_RES, _LinSolver[_gridn-1u]->KKoffset );
+
 
   KSPDestroy(&_kspMG);
 
