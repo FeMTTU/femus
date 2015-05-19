@@ -67,7 +67,7 @@ public:
 
   // Setting --------------------------------------------
   ///  Set the user-specified solver stored in \p _solver_type
-  void set_petsc_solver_type ();
+  void set_petsc_solver_type ( KSP &ksp);
 
   clock_t BuildIndex ( const vector <unsigned> &variable_to_be_solved );
 
@@ -83,10 +83,41 @@ public:
     return &_ksp;
   };
 
-  void SetMGOptions ( PC &_pc, const unsigned &level, const unsigned &maxlevel,
-                      const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean );
+  void SetMGOptions ( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &maxlevel,
+                      const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean,
+                      SparseMatrix* PP, SparseMatrix* RR );
 
-  void MGsolve ( KSP& _ksp, const bool ksp_clean );
+  void MGsolve ( const bool ksp_clean , const unsigned &npre, const unsigned &npost );
+
+  void InitMG( const MgType &_mg_type, const unsigned &levelMax ){
+
+    KSPCreate(PETSC_COMM_WORLD,&_ksp);
+
+    KSPGetPC(_ksp,&_pc);
+    PCSetType(_pc,PCMG);
+    PCMGSetLevels(_pc,levelMax,NULL);
+
+    if( _mg_type == F_CYCLE ){
+      PCMGSetType(_pc, PC_MG_FULL);
+    }
+    else if( _mg_type == MULTIPLICATIVE ){
+      PCMGSetType(_pc, PC_MG_MULTIPLICATIVE);
+    }
+    else if( _mg_type == ADDITIVE ){
+      PCMGSetType(_pc, PC_MG_ADDITIVE);
+    }
+    else if( _mg_type == KASKADE ){
+      PCMGSetType(_pc, PC_MG_KASKADE);
+    }
+    else{
+      std::cout <<"Wrong mg_type for PETSCsolve()"<<std::endl;
+      abort();
+    }
+  };
+
+  void ClearMG(){
+    KSPDestroy(&_ksp);
+  }
 
 private:
 
@@ -120,7 +151,8 @@ inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver ( const un
     if ( _msh->n_processors() == 1 ) {
       this->_preconditioner_type = ILU_PRECOND;
     } else {
-      this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
+      //this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
+      this->_preconditioner_type = ASM_PRECOND;
     }
     unsigned dim = _msh->GetDimension();
     unsigned base = pow ( 2, dim );

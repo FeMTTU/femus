@@ -109,16 +109,21 @@ void PetscPreconditioner::set_petsc_preconditioner_type
          }
       break;
     }
-
-
-//   case ILU_PRECOND: {
-//       ierr = PCSetType (pc, (char*) PCILU);
-//     break;
-//   }
-
   case LU_PRECOND: {
-      ierr = PCSetType (pc, (char*) PCLU);
-      CHKERRABORT(MPI_COMM_WORLD,ierr);
+      int nprocs; MPI_Comm_size(MPI_COMM_WORLD,&nprocs);
+      if (nprocs == 1){
+          ierr = PCSetType (pc, (char*) PCLU);
+          CHKERRABORT(MPI_COMM_WORLD,ierr);
+       }
+       else{
+         ierr = PCSetType (pc, (char*) PCLU); CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+         ierr = PCFactorSetMatSolverPackage(pc,MATSOLVERMUMPS); CHKERRABORT(MPI_COMM_WORLD,ierr);
+         ierr = PCFactorSetUpMatSolverPackage(pc); CHKERRABORT(MPI_COMM_WORLD,ierr);
+         Mat       F;
+         ierr = PCFactorGetMatrix(pc,&F); CHKERRABORT(MPI_COMM_WORLD,ierr);
+         ierr = MatMumpsSetIcntl(F,14,30);CHKERRABORT(MPI_COMM_WORLD,ierr);
+       }
     break;
   }
 

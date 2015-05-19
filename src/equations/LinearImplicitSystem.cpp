@@ -53,7 +53,7 @@ LinearImplicitSystem::~LinearImplicitSystem() {
 }
 
 void LinearImplicitSystem::clear() {
-    for (unsigned ig=0; ig<_gridn; ig++) {
+    for (unsigned ig=0; ig<_LinSolver.size(); ig++) {
       _LinSolver[ig]->DeletePde();
       delete _LinSolver[ig];
       if(_PP[ig]) delete _PP[ig];
@@ -910,28 +910,7 @@ void LinearImplicitSystem::PETSCsolve (){
 
   clock_t start_mg_time = clock();
 
-  KSPCreate(PETSC_COMM_WORLD,&_kspMG);
-  
-  KSPGetPC(_kspMG,&_pcMG);
-  PCSetType(_pcMG,PCMG);
-  PCMGSetLevels(_pcMG,_gridn,NULL);
-
-  if( _mg_type == F_CYCLE ){
-    PCMGSetType(_pcMG, PC_MG_FULL);
-  }
-  else if( _mg_type == MULTIPLICATIVE ){
-    PCMGSetType(_pcMG, PC_MG_MULTIPLICATIVE);
-  }
-  else if( _mg_type == ADDITIVE ){
-    PCMGSetType(_pcMG, PC_MG_ADDITIVE);
-  }
-  else if( _mg_type == KASKADE ){
-    PCMGSetType(_pcMG, PC_MG_KASKADE);
-  }
-  else{
-    std::cout <<"Wrong mg_type for PETSCsolve()"<<std::endl;
-    abort();
-  }
+  _LinSolver[_gridn-1u]->InitMG( _mg_type, _gridn );
 
   _LinSolver[_gridn-1u]->SetEpsZero();
   _LinSolver[_gridn-1u]->SetResZero();
@@ -946,23 +925,16 @@ void LinearImplicitSystem::PETSCsolve (){
   }
 
   for( unsigned i = 0; i < _gridn; i++ ){
-    _LinSolver[i]->SetMGOptions(_pcMG, i, _gridn-1, _VariablesToBeSolvedIndex, true);
-
-    if( i > 0 ){
-      PetscMatrix* PPp=static_cast< PetscMatrix* >(_PP[i]);
-      Mat PP=PPp->mat();
-      PCMGSetInterpolation(_pcMG, i, PP);
-      PCMGSetRestriction(_pcMG, i, PP);
-    }
+    if(_RR[i] == NULL )
+      _LinSolver[i]->SetMGOptions( _LinSolver[_gridn-1u], i, _gridn-1, _VariablesToBeSolvedIndex, true, _PP[i], _PP[i]);
+    else
+      _LinSolver[i]->SetMGOptions( _LinSolver[_gridn-1u], i, _gridn-1, _VariablesToBeSolvedIndex, true, _PP[i], _RR[i]);
   }
 
-  PCMGSetNumberSmoothDown(_pcMG, _npre);
-  PCMGSetNumberSmoothUp(_pcMG, _npost);
-
   for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
-    std::cout << " ************* MG-Cycle : "<< _n_linear_iterations << " *************" << std::endl;
+    std::cout << " ************* Linear-Cycle : "<< _n_linear_iterations << " *************" << std::endl;
     bool ksp_clean=!_n_linear_iterations;
-    _LinSolver[_gridn-1u]->MGsolve(_kspMG, ksp_clean);
+    _LinSolver[_gridn-1u]->MGsolve( ksp_clean, _npre, _npost);
     _solution[_gridn-1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[_gridn-1]->_RES, _LinSolver[_gridn-1]->KKoffset );
     bool islinearconverged = IsLinearConverged(_gridn-1u);
     if(islinearconverged)
@@ -971,11 +943,9 @@ void LinearImplicitSystem::PETSCsolve (){
   _solution[_gridn-1u]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[_gridn-1u]->_EPS,
                                     _LinSolver[_gridn-1u]->_RES, _LinSolver[_gridn-1u]->KKoffset );
 
+  _LinSolver[_gridn-1u]->ClearMG();
 
-  KSPDestroy(&_kspMG);
-
-
-  std::cout << "\t     SOLVER TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
+  std::cout << "\t Linear-Cycle TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
   <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
 }
 

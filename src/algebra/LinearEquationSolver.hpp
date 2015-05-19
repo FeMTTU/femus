@@ -29,6 +29,7 @@
 #include "SolvertypeEnum.hpp"
 #include "LinearEquation.hpp"
 #include "MgSmootherEnum.hpp"
+#include "MgTypeEnum.hpp"
 
 #include <petscksp.h>
 
@@ -76,13 +77,24 @@ public:
       abort();
     }
 
-    virtual void SetMGOptions( PC &_pc, const unsigned &level, const unsigned &levelMax,
-                               const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean){
+    virtual void InitMG( const MgType &_mg_type, const unsigned &levelMax ){
+      std::cout<<"Warning InitMG(...) is not available for this smoother\n";
+      abort();
+    }
+
+    virtual void ClearMG(){
+      std::cout<<"Warning ClearMG() is not available for this smoother\n";
+      abort();
+    };
+
+    virtual void SetMGOptions( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &levelMax,
+                               const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean,
+                               SparseMatrix* PP, SparseMatrix* RR ){
       std::cout<<"Warning SetMGOptions(...) is not available for this smoother\n";
       abort();
     }
 
-    virtual void MGsolve(KSP& _ksp, const bool ksp_clean){
+    virtual void MGsolve( const bool ksp_clean, const unsigned &npre, const unsigned &npost ) {
       std::cout<<"Warning MGsolve(...) is not available for this smoother\n";
       abort();
     };

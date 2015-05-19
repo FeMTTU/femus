@@ -214,81 +214,23 @@ bool NonLinearImplicitSystem::IsNonLinearConverged(const unsigned igridn){
   return conv;
 }
 
-//   void NonLinearImplicitSystem::PETSCsolve (){
-//
-//   clock_t start_mg_time = clock();
-//   for ( _n_nonlinear_iterations = 0; _n_nonlinear_iterations < _n_max_nonlinear_iterations; _n_nonlinear_iterations++ ) {
-//   KSPCreate(PETSC_COMM_WORLD,&_kspMG);
-//   KSPGetPC(_kspMG,&_pcMG);
-//   PCSetType(_pcMG,PCMG);
-//   PCMGSetLevels(_pcMG,_gridn,NULL);
-//
-//   if( _mg_type == F_CYCLE ){
-//     PCMGSetType(_pcMG, PC_MG_FULL);
-//   }
-//   else if( _mg_type == MULTIPLICATIVE ){
-//     PCMGSetType(_pcMG, PC_MG_MULTIPLICATIVE);
-//   }
-//   else if( _mg_type == ADDITIVE ){
-//     PCMGSetType(_pcMG, PC_MG_ADDITIVE);
-//   }
-//   else if( _mg_type == KASKADE ){
-//     PCMGSetType(_pcMG, PC_MG_KASKADE);
-//   }
-//   else{
-//     std::cout <<"Wrong mg_type for PETSCsolve()"<<std::endl;
-//     abort();
-//   }
-//
-//   _LinSolver[_gridn-1u]->SetResZero();
-//
-//   _assembleMatrix = true;
-//   _levelToAssemble = _gridn-1u;
-//   _levelMax = _gridn-1u;
-//   _assemble_system_function(_equation_systems );
-//
-//   for( unsigned i =_gridn-1u; i > 0; i-- ){
-//     _LinSolver[i-1u]->_KK->matrix_PtAP(*_PP[i],*_LinSolver[i]->_KK, false);
-//   }
-//
-//   for( unsigned i = 0; i < _gridn; i++ ){
-//     _LinSolver[i]->SetMGOptions(_pcMG, i, _gridn-1, _VariablesToBeSolvedIndex, true);
-//
-//     if( i > 0 ){
-//       PetscMatrix* PPp=static_cast< PetscMatrix* >(_PP[i]);
-//       Mat PP=PPp->mat();
-//       PCMGSetInterpolation(_pcMG, i, PP);
-//       PCMGSetRestriction(_pcMG, i, PP);
-//     }
-//   }
-//
-//   PCMGSetNumberSmoothDown(_pcMG, _npre);
-//   PCMGSetNumberSmoothUp(_pcMG, _npost);
-//
-//   for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
-//     std::cout << " ************* MG-Cycle : "<< _n_linear_iterations << " *************" << std::endl;
-//     bool ksp_clean=!_n_linear_iterations;
-//     _LinSolver[_gridn-1u]->SetEpsZero();
-//     _LinSolver[_gridn-1u]->MGsolve(_kspMG, ksp_clean);
-//     _solution[_gridn-1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[_gridn-1]->_RES, _LinSolver[_gridn-1]->KKoffset );
-//     bool islinearconverged = IsLinearConverged(_gridn-1u);
-//     if(islinearconverged)
-//       break;
-//   }
-//
-//   _solution[_gridn-1u]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[_gridn-1u]->_EPS,
-//                                     _LinSolver[_gridn-1u]->_RES, _LinSolver[_gridn-1u]->KKoffset );
-//
-//    bool isnonlinearconverged = IsNonLinearConverged(_gridn-1);
-//    if (isnonlinearconverged)
-//      _n_nonlinear_iterations = _n_max_nonlinear_iterations+1;
-//
-//   KSPDestroy(&_kspMG);
-//
-//   }
-//   std::cout << "\t     SOLVER TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
-//   <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
-// }
+void NonLinearImplicitSystem::PETSCsolve (){
+
+  clock_t start_mg_time = clock();
+  for ( _n_nonlinear_iterations = 0; _n_nonlinear_iterations < _n_max_nonlinear_iterations; _n_nonlinear_iterations++ ) {
+    std::cout << std::endl << " ************* Nonlinear-Cycle: " << _n_nonlinear_iterations + 1 << " ****************\n" << std::endl;
+
+    LinearImplicitSystem::PETSCsolve ();
+
+    bool isnonlinearconverged = IsNonLinearConverged(_gridn-1);
+    if (isnonlinearconverged)
+      _n_nonlinear_iterations = _n_max_nonlinear_iterations+1;
+  }
+  std::cout << "\t Nonlinear-Cycle: TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
+  <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
+
+
+}
 
 
 

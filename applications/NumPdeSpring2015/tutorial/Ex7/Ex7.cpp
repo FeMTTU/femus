@@ -60,9 +60,10 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 7;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+
 
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -81,6 +82,7 @@ int main(int argc, char** args) {
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
   mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
@@ -105,33 +107,36 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
+  //system.SetMgSmoother(GMRES_SMOOTHER);
   system.SetMgSmoother(ASM_SMOOTHER);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
   system.SetMaxNumberOfNonLinearIterations(20);
-  system.SetMaxNumberOfLinearIterations(10);
-  system.SetAbsoluteConvergenceTolerance(1.e-10);
+  system.SetMaxNumberOfLinearIterations(3);
+  system.SetAbsoluteConvergenceTolerance(1.e-12);
   system.SetNonLinearConvergenceTolerance(1.e-8);
-  system.SetMgType(F_CYCLE);
+  //system.SetMgType(F_CYCLE);
   //system.SetMgType(ADDITIVE);
-  system.SetNumberPreSmoothingStep(2);
+  system.SetMgType(MULTIPLICATIVE);
+  //system.SetMgType(KASKADE);
+  system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
-
-
   // initilaize and solve the system
   system.init();
 
   system.SetSolverFineGrids(GMRES);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   //system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40);
-  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 100);
+  system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
 
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
+
+  system.SetDirichletBCsHandling(ELIMINATION);
 
   //system.solve();
   system.PETSCsolve();
@@ -394,7 +399,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
           for (unsigned j = 0; j < dim; j++) {
             Temp +=  alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
-            //Temp +=  phiT[i] * (solV_gss[j] * gradSolT_gss[j]);
+            Temp +=  phiT[i] * (solV_gss[j] * gradSolT_gss[j]);
           }
 
           aResT[i] += - Temp * weight;
@@ -408,7 +413,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           for (unsigned j = 0; j < dim; j++) {
             for (unsigned  k = 0; k < dim; k++) {
               NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
-              //NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
+              NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
             }
           }
 

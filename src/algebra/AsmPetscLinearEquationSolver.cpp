@@ -398,8 +398,9 @@ namespace femus {
 
 
 void AsmPetscLinearEquationSolver::SetMGOptions (
-    PC &pcMG, const unsigned &level, const unsigned &levelMax,
-    const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean ) {
+    LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &levelMax,
+    const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean,
+    SparseMatrix* PP, SparseMatrix* RR ){
 
   // ***************** NODE/ELEMENT SEARCH *******************
   if(_indexai_init==0) {
@@ -410,15 +411,21 @@ void AsmPetscLinearEquationSolver::SetMGOptions (
   }
 
   // ***************** END NODE/ELEMENT SEARCH *******************
+  KSP *kspMG = LinSolver->GetKSP();
+  PC pcMG;
+  KSPGetPC ( *kspMG, &pcMG );
+
+
+  KSP subksp;
 
   if ( level == 0 )
-    PCMGGetCoarseSolve ( pcMG, &_ksp );
+    PCMGGetCoarseSolve ( pcMG, &subksp );
   else {
-    PCMGGetSmoother ( pcMG, level , &_ksp );
+    PCMGGetSmoother ( pcMG, level , &subksp );
   }
 
   this->clear();
-  this->set_petsc_solver_type();
+  this->set_petsc_solver_type( subksp );
 
   PetscMatrix* KKp = static_cast<PetscMatrix*> ( _KK );
   Mat KK = KKp->mat();
@@ -431,76 +438,99 @@ void AsmPetscLinearEquationSolver::SetMGOptions (
   std::ostringstream levelName;
   levelName << "level" << level;
 
-  KSPSetOptionsPrefix ( _ksp, levelName.str().c_str() );
-  KSPSetFromOptions ( _ksp );
-  KSPSetOperators ( _ksp, KK, _Pmat );
+  KSPSetOptionsPrefix ( subksp, levelName.str().c_str() );
+  KSPSetFromOptions ( subksp );
+  KSPSetOperators ( subksp, KK, _Pmat );
 
-  KSPGetPC ( _ksp, &_pc );
+  PC subpc;
+  KSPGetPC ( subksp, &subpc );
 
-  PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND,_pc);
+  PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND,subpc);
   if(!_standard_ASM){
-    PCASMSetLocalSubdomains(_pc,_is_loc_idx.size(),&_is_ovl[0],&_is_loc[0]);
+    PCASMSetLocalSubdomains(subpc,_is_loc_idx.size(),&_is_ovl[0],&_is_loc[0]);
   }
-  PCASMSetOverlap(_pc,_overlap);
-  KSPSetUp(_ksp);
-  PCASMGetSubKSP(_pc,&_nlocal,&_first,&_ksp_asm);
+  PCASMSetOverlap(subpc,_overlap);
+  KSPSetUp(subksp);
+
+  KSP *subksps;
+  PCASMGetSubKSP(subpc,&_nlocal,PETSC_NULL,&subksps);
 
   PetscReal epsilon = 1.e-16;
-
   if(!_standard_ASM){
-    _pc_asm.resize(2);
     for (int i=0; i<_block_type_range[0]; i++) {
-      KSPGetPC(_ksp_asm[i],&_pc_asm[0]);
-      KSPSetTolerances(_ksp_asm[i],_rtol,_abstol,_dtol,1);
-      KSPSetFromOptions(_ksp_asm[i]);
-      PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND,_pc_asm[0]);
-      PCFactorSetZeroPivot(_pc_asm[0],epsilon);
-      PCFactorSetShiftType(_pc_asm[0],MAT_SHIFT_NONZERO);
+      PC subpcs;
+      KSPGetPC(subksps[i],&subpcs);
+      KSPSetTolerances(subksps[i],_rtol,_abstol,_dtol,1);
+      KSPSetFromOptions(subksps[i]);
+      PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND,subpcs);
+      PCFactorSetZeroPivot(subpcs,epsilon);
+      PCFactorSetShiftType(subpcs,MAT_SHIFT_NONZERO);
     }
     for (int i=_block_type_range[0]; i<_block_type_range[1]; i++) {
-      KSPGetPC(_ksp_asm[i],&_pc_asm[1]);
-      KSPSetTolerances(_ksp_asm[i],_rtol,_abstol,_dtol,1);
-      KSPSetFromOptions(_ksp_asm[i]);
+      PC subpcs;
+      KSPGetPC(subksps[i],&subpcs);
+      KSPSetTolerances(subksps[i],_rtol,_abstol,_dtol,1);
+      KSPSetFromOptions(subksps[i]);
       if( this->_preconditioner_type == ILU_PRECOND )
-	PCSetType ( _pc_asm[1], (char*) PCILU );
+	PCSetType ( subpcs, (char*) PCILU );
       else
-	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc_asm[1]);
-      PCFactorSetZeroPivot(_pc_asm[1],epsilon);
-      PCFactorSetShiftType(_pc_asm[1],MAT_SHIFT_NONZERO);
+	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,subpcs);
+      PCFactorSetZeroPivot(subpcs,epsilon);
+      PCFactorSetShiftType(subpcs,MAT_SHIFT_NONZERO);
     }
   }
   else{
-    _pc_asm.resize(1);
     for (int i=0; i<_nlocal; i++) {
-      KSPGetPC(_ksp_asm[i],&_pc_asm[0]);
-      KSPSetTolerances(_ksp_asm[i],_rtol,_abstol,_dtol,1);
-      KSPSetFromOptions(_ksp_asm[i]);
+      PC subpcs;
+      KSPGetPC(subksps[i],&subpcs);
+      KSPSetTolerances(subksps[i],_rtol,_abstol,_dtol,1);
+      KSPSetFromOptions(subksps[i]);
       if( this->_preconditioner_type == ILU_PRECOND )
-	PCSetType ( _pc_asm[0], (char*) PCILU );
+	PCSetType ( subpcs, (char*) PCILU );
       else
-	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,_pc_asm[0]);
-      PCFactorSetZeroPivot(_pc_asm[0], epsilon);
-      PCFactorSetShiftType(_pc_asm[0],MAT_SHIFT_NONZERO);
+	PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type,subpcs);
+      PCFactorSetZeroPivot(subpcs, epsilon);
+      PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
     }
   }
+
+  if ( level < levelMax ) {
+      PetscVector* EPSp = static_cast< PetscVector* > ( _EPS );
+      Vec EPS = EPSp->vec();
+      PetscVector* RESp = static_cast< PetscVector* > ( _RES );
+      Vec RES = RESp->vec();
+      PCMGSetX ( pcMG, level, EPS );
+      PCMGSetRhs ( pcMG, level, RES );
+    }
+    if ( level > 0 ) {
+      PetscVector* RESCp = static_cast<PetscVector*> ( _RESC );
+      Vec RESC = RESCp->vec();
+      PCMGSetR ( pcMG, level, RESC );
+
+      PetscMatrix* PPp=static_cast< PetscMatrix* >(PP);
+      Mat P=PPp->mat();
+      PCMGSetInterpolation(pcMG, level, P);
+
+      PetscMatrix* RRp=static_cast< PetscMatrix* >(RR);
+      Mat R=RRp->mat();
+      PCMGSetRestriction(pcMG, level, R);
+    }
+
+
 }
 
-void AsmPetscLinearEquationSolver::MGsolve ( KSP& kspMG, const bool ksp_clean ) {
+void AsmPetscLinearEquationSolver::MGsolve ( const bool ksp_clean , const unsigned &npre, const unsigned &npost ) {
 
   if ( ksp_clean ) {
     PetscMatrix* KKp = static_cast< PetscMatrix* > ( _KK );
     Mat KK = KKp->mat();
-    KSPSetOperators ( kspMG, KK, _Pmat );
-
-
-
-    KSPSetTolerances ( kspMG, _rtol, _abstol, _dtol, _maxits );
-
-    if ( _msh->GetLevel() != 0 ){
-      KSPSetInitialGuessKnoll ( _ksp, PETSC_TRUE );
-      KSPSetNormType ( _ksp, KSP_NORM_NONE );
-    }
-    KSPSetFromOptions ( kspMG );
+    KSPSetOperators ( _ksp, KK, _Pmat );
+    KSPSetTolerances ( _ksp, _rtol, _abstol, _dtol, _maxits );
+    KSPSetFromOptions ( _ksp );
+    PC pcMG;
+    KSPGetPC(_ksp, &pcMG);
+    PCMGSetNumberSmoothDown(pcMG, npre);
+    PCMGSetNumberSmoothUp(pcMG, npost);
   }
 
   PetscVector* EPSCp = static_cast< PetscVector* > ( _EPSC );
@@ -508,7 +538,7 @@ void AsmPetscLinearEquationSolver::MGsolve ( KSP& kspMG, const bool ksp_clean ) 
   PetscVector* RESp = static_cast< PetscVector* > ( _RES );
   Vec RES = RESp->vec();
 
-  KSPSolve ( kspMG, RES, EPSC );
+  KSPSolve ( _ksp, RES, EPSC );
 
   _RESC->matrix_mult ( *_EPSC, *_KK );
   *_RES -= *_RESC;
@@ -516,32 +546,25 @@ void AsmPetscLinearEquationSolver::MGsolve ( KSP& kspMG, const bool ksp_clean ) 
   *_EPS += *_EPSC;
 
   int its;
-  KSPGetIterationNumber ( kspMG, &its );
+  KSPGetIterationNumber ( _ksp, &its );
   std::cout << "Number of iterations = " << its << std::endl;
 
   KSPConvergedReason reason;
-  KSPGetConvergedReason(kspMG,&reason);
+  KSPGetConvergedReason(_ksp,&reason);
   std::cout << "convergence reason = " << reason << std::endl;
 
   PetscReal rtol;
   PetscReal abstol;
   PetscReal dtol;
   PetscInt maxits;
-  KSPGetTolerances(kspMG, &rtol, &abstol, &dtol,&maxits);
+  KSPGetTolerances(_ksp, &rtol, &abstol, &dtol,&maxits);
   std::cout<<rtol<<" "<<abstol<<" "<<dtol<<" "<<maxits<<std::endl;
-
 
 }
 
 
 
 // ================================================
-
-
-
-
-
-
 
 
   void AsmPetscLinearEquationSolver::clear() {
@@ -571,7 +594,7 @@ void AsmPetscLinearEquationSolver::MGsolve ( KSP& kspMG, const bool ksp_clean ) 
       // Create the preconditioner context
       ierr = KSPGetPC(_ksp, &_pc);						CHKERRABORT(MPI_COMM_WORLD,ierr);
       // Set operators. The input matrix works as the preconditioning matrix
-      this->set_petsc_solver_type();
+      this->set_petsc_solver_type( _ksp );
 
       //ierr = KSPSetOperators(_ksp, Amat, Pmat, SAME_PRECONDITIONER);		CHKERRABORT(MPI_COMM_WORLD,ierr);
       ierr = KSPSetOperators(_ksp, Amat, Pmat);		CHKERRABORT(MPI_COMM_WORLD,ierr); //PETSC3p5
@@ -600,10 +623,6 @@ void AsmPetscLinearEquationSolver::MGsolve ( KSP& kspMG, const bool ksp_clean ) 
 
       if(!_standard_ASM){
 	_pc_asm.resize(2);
-	//_ksp_split.resize(_nlocal);
-	//_pc_split.resize(2);
-	//_pc_split[0].resize(_nlocal);
-	//_pc_split[1].resize(_nlocal);
 	for (int i=0; i<_block_type_range[0]; i++) {
 	  ierr = KSPGetPC(_ksp_asm[i],&_pc_asm[0]);					CHKERRABORT(MPI_COMM_WORLD,ierr);
 	  ierr = KSPSetTolerances(_ksp_asm[i],_rtol,_abstol,_dtol,1); 		   	CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -611,32 +630,6 @@ void AsmPetscLinearEquationSolver::MGsolve ( KSP& kspMG, const bool ksp_clean ) 
 	  PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND,_pc_asm[0]);
 	  ierr = PCFactorSetZeroPivot(_pc_asm[0],epsilon);				CHKERRABORT(MPI_COMM_WORLD,ierr);
 	  ierr = PCFactorSetShiftType(_pc_asm[0],MAT_SHIFT_NONZERO); 			CHKERRABORT(MPI_COMM_WORLD,ierr);
-
-// 	  ierr = PCSetType(_pc_asm[i],PCFIELDSPLIT);				    CHKERRABORT(MPI_COMM_WORLD,ierr);
-//
-// 	  IS isu;
-// 	  ISCreateStride(MPI_COMM_SELF,_is_ovl_u_idx[i].size(),0,1,&isu);
-//
-// 	  IS isp;
-// 	  ISCreateStride(MPI_COMM_SELF,_is_ovl_p_idx[i].size(),_is_ovl_u_idx[i].size(),1,&isp);
-//
-//   	  ierr = PCFieldSplitSetIS(_pc_asm[i],"u",isu);        	  		    CHKERRABORT(MPI_COMM_WORLD,ierr);
-//   	  ierr = PCFieldSplitSetIS(_pc_asm[i],"p",isp);	            		    CHKERRABORT(MPI_COMM_WORLD,ierr);
-//
-// 	  ierr = PCFieldSplitSetType(_pc_asm[i], PC_COMPOSITE_SCHUR  );
-// 	  ierr = PCFieldSplitSetSchurPre(_pc_asm[i],PC_FIELDSPLIT_SCHUR_PRE_A11,NULL);
-// 	  ierr = KSPSetUp(_ksp_asm[i]);
-// 	  int n=2;
-// 	  ierr = PCFieldSplitGetSubKSP(_pc_asm[i],&n,&_ksp_split[i]);		    CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	  PetscReal zero = 1.e-16;
-// 	  ierr = KSPSetType(_ksp_split[i][0],KSPPREONLY);
-// 	  ierr = KSPGetPC(_ksp_split[i][0],&_pc_split[0][i]);                       CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	  ierr = KSPSetTolerances(_ksp_split[i][0],_rtol,_abstol,_dtol,10); 	    CHKERRABORT(MPI_COMM_WORLD,ierr);
-// 	  ierr = KSPSetFromOptions(_ksp_split[i][0]);
-// 	  PetscPreconditioner::set_petsc_preconditioner_type(ILU_PRECOND,_pc_split[0][i]);
-// 	  PCFactorSetZeroPivot(_pc_split[0][i],zero);
-// 	  PCFactorSetShiftType(_pc_split[0][i],MAT_SHIFT_NONZERO);
-
 	}
 	for (int i=_block_type_range[0]; i<_block_type_range[1]; i++) {
 	  ierr = KSPGetPC(_ksp_asm[i],&_pc_asm[1]);				CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -662,47 +655,47 @@ void AsmPetscLinearEquationSolver::MGsolve ( KSP& kspMG, const bool ksp_clean ) 
   }
 
   // =================================================
-  void AsmPetscLinearEquationSolver::set_petsc_solver_type() {
+  void AsmPetscLinearEquationSolver::set_petsc_solver_type( KSP &ksp ) {
     int ierr = 0;
     switch (this->_solver_type) {
     case CG:
-      ierr = KSPSetType(_ksp, (char*) KSPCG);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPCG);						CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case CR:
-      ierr = KSPSetType(_ksp, (char*) KSPCR);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPCR);						CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case CGS:
-      ierr = KSPSetType(_ksp, (char*) KSPCGS);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPCGS);						CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case BICG:
-      ierr = KSPSetType(_ksp, (char*) KSPBICG);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPBICG);						CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case TCQMR:
-      ierr = KSPSetType(_ksp, (char*) KSPTCQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPTCQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case TFQMR:
-      ierr = KSPSetType(_ksp, (char*) KSPTFQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPTFQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case LSQR:
-      ierr = KSPSetType(_ksp, (char*) KSPLSQR);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPLSQR);						CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case BICGSTAB:
-      ierr = KSPSetType(_ksp, (char*) KSPBCGS);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPBCGS);						CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case MINRES:
-      ierr = KSPSetType(_ksp, (char*) KSPMINRES);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPMINRES);					CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case GMRES:
-      ierr = KSPSetType(_ksp, (char*) KSPGMRES);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPGMRES);					CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case RICHARDSON:
-      ierr = KSPSetType(_ksp, (char*) KSPRICHARDSON);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPRICHARDSON);					CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case CHEBYSHEV:
-      ierr = KSPSetType(_ksp, (char*) KSPCHEBYSHEV);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPCHEBYSHEV);					CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case PREONLY:
-      ierr = KSPSetType(_ksp, (char*) KSPPREONLY);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPPREONLY);					CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     default:
       std::cerr << "ERROR:  Unsupported PETSC Solver: "

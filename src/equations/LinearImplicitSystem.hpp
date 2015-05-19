@@ -217,9 +217,6 @@ protected:
     /** To be Added */
     vector <unsigned> _VariablesToBeSolvedIndex;
 
-
-
-
     SolverType _finegridsolvertype;
     unsigned int _DirichletBCsHandlingMode;
     double _rtol,_atol,_divtol,_maxits;
@@ -240,9 +237,7 @@ protected:
 
     vector <bool> _SparsityPattern;
 
-    PC _pcMG;      ///< Preconditioner context
-    KSP _kspMG;    ///< Krylov subspace context
-};
+ };
 
 } //end namespace femus
 

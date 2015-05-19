@@ -59,7 +59,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 7;
+  unsigned numberOfUniformLevels = 5;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -104,16 +104,16 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  system.SetMgSmoother(ASM_SMOOTHER); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
-  //system.SetMgSmoother(GMRES_SMOOTHER); // GMRES
+  //system.SetMgSmoother(ASM_SMOOTHER); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
+  system.SetMgSmoother(GMRES_SMOOTHER); // GMRES
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
   system.SetMaxNumberOfNonLinearIterations(20);
-  system.SetMaxNumberOfLinearIterations(10);
-  system.SetAbsoluteConvergenceTolerance(1.e-10);
+  system.SetMaxNumberOfLinearIterations(3);
+  system.SetAbsoluteConvergenceTolerance(1.e-12);
   system.SetNonLinearConvergenceTolerance(1.e-8);
-  system.SetMgType(F_CYCLE);
+  system.SetMgType(V_CYCLE);
   system.SetNumberPreSmoothingStep(1);
   system.SetNumberPostSmoothingStep(1);
 
@@ -122,6 +122,7 @@ int main(int argc, char** args) {
   system.init();
 
   system.SetSolverFineGrids(GMRES);// do not touch
+  //system.SetSolverFineGrids(MINRES);
   system.SetPreconditionerFineGrids(ILU_PRECOND);// for ASM_SMOOTHER you can use MLU_PRECOND
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40); //PETSC GMRES tolerances
   //system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20);
