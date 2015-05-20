@@ -60,7 +60,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 7;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -107,8 +107,8 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetMgSmoother(ASM_SMOOTHER);
+  system.SetMgSmoother(GMRES_SMOOTHER);
+  //system.SetMgSmoother(ASM_SMOOTHER);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
@@ -136,10 +136,8 @@ int main(int argc, char** args) {
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
 
-  system.SetDirichletBCsHandling(ELIMINATION);
-
   //system.solve();
-  system.PETSCsolve();
+  system.MGsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

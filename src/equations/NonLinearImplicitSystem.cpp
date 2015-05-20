@@ -18,8 +18,6 @@
 #include "NumericVector.hpp"
 #include "iomanip"
 
-#include "PetscMatrix.hpp"
-
 namespace femus {
 
 
@@ -30,7 +28,6 @@ NonLinearImplicitSystem::NonLinearImplicitSystem (MultiLevelProblem& ml_probl,
 				const std::string& name_in,
 				const unsigned int number_in, const MgSmoother & smoother_type) :
   LinearImplicitSystem (ml_probl, name_in, number_in, smoother_type),
-  _n_nonlinear_iterations   (0),
   _n_max_nonlinear_iterations (15),
   _final_nonlinear_residual (1.e20),
   _max_nonlinear_convergence_tolerance(1.e-6)
@@ -72,80 +69,22 @@ void NonLinearImplicitSystem::solve() {
 
   for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {   //_igridn
 
-    std::cout << std::endl << "    ************* Level Max: " << igridn << " *************\n" << std::endl;
+    std::cout << std::endl << " ************* Level Max: " << igridn << " *************\n" << std::endl;
 
     bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_maxAMRlevels && igridn==_gridn)?1:0;
     if(ThisIsAMR) _solution[igridn-1]->InitAMREps();
 
 
-    for ( _n_nonlinear_iterations = 0; _n_nonlinear_iterations < _n_max_nonlinear_iterations; _n_nonlinear_iterations++ ) { //non linear cycle
+    for ( unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++ ) { //non linear cycle
       clock_t start_time = clock();
-      std::cout << std::endl << "    ************** NonLinear Cycle: " << _n_nonlinear_iterations + 1 << " ****************\n" << std::endl;
-      // ============== Fine level Assembly ==============
-      _LinSolver[igridn-1u]->SetResZero();
-      _LinSolver[igridn-1u]->SetEpsZero();
-      _assembleMatrix = true; //Be carefull!!!! this is needed in the _assemble_function
-      _levelToAssemble = igridn-1u;
-      _levelMax = igridn-1u;
-      _assemble_system_function( _equation_systems );
+      std::cout << std::endl << " ************* Nonlinear-Cycle: " << nonLinearIterator + 1 << " ****************\n" << std::endl;
 
-#ifndef NDEBUG
-      std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
-#endif
-      for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
+      Vcycle(igridn, full_cycle, nonLinearIterator );
 
-	bool ksp_clean=!_n_linear_iterations;
-
-	for (unsigned ig = igridn-1u; ig > 0; ig--) {
-
-
-	  // ============== Presmoothing ==============
-	  for (unsigned k = 0; k < _npre; k++) {
-	    _LinSolver[ig]->solve(_VariablesToBeSolvedIndex , ksp_clean*(!k));
-	  }
-	  // ============== Non-Standard Multigrid Restriction ==============
-	  start_time = clock();
-	  Restrictor(ig, igridn, _n_nonlinear_iterations, _n_linear_iterations, full_cycle);
-#ifndef NDEBUG
-	  std::cout << "Grid: " << ig << "-->" << ig-1 << "   RESTRICTION TIME:\t          "<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
-#endif
-	}
-        // ============== Coarse Direct Solver ==============
-        _LinSolver[0]->solve(_VariablesToBeSolvedIndex, ksp_clean);
-
- 	for (unsigned ig = 1; ig < igridn; ig++) {
-
- 	  // ============== Standard Prolongation ==============
- 	  start_time=clock();
- 	  Prolongator(ig);
-#ifndef NDEBUG
- 	  std::cout << "Grid: " << ig-1 << "-->" << ig << "  PROLUNGATION TIME:\t          " << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
-#endif
- 	  // ============== PostSmoothing ==============
-          for (unsigned k = 0; k < _npost; k++) {
-	    _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean*(!_npre)*(!k));
-	  }
- 	}
- 	// ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
- 	for (unsigned ig = _gridr-1; ig < igridn-1; ig++) {  // _gridr
- 	  _solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );
- 	}
-
-	_solution[igridn-1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
-	bool islinearconverged = IsLinearConverged(igridn-1);
-// 	if(_final_linear_residual < _absolute_convergence_tolerance)
-	if(islinearconverged)
-	  break;
-
-      }
-
-      // ============== Update Solution ( ig = igridn )==============
-      _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS,
-				       _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
       // ============== Test for non-linear Convergence ==============
       bool isnonlinearconverged = IsNonLinearConverged(igridn-1);
       if (isnonlinearconverged)
-	_n_nonlinear_iterations = _n_max_nonlinear_iterations+1;
+	nonLinearIterator = _n_max_nonlinear_iterations+1;
 
 #ifndef NDEBUG
       std::cout << std::endl;
@@ -173,36 +112,27 @@ void NonLinearImplicitSystem::solve() {
       }
     }
 
-    // ==============  Solution Prolongation ==============
     if (igridn < _gridn) {
       ProlongatorSol(igridn);
     }
   }
 
-  std::cout << "SOLVER TIME:   \t\t\t"<< std::setw(11) << std::setprecision(6) << std::fixed <<
-  static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
+  std::cout << "\t Nonlinear-Cycle: TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
+  <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
 
 }
 
 
 
 bool NonLinearImplicitSystem::IsNonLinearConverged(const unsigned igridn){
-
   bool conv=true;
   double ResMax;
   double L2normEps;
-
   std::cout << std::endl;
-  //for debugging purpose
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned indexSol=_SolSystemPdeIndex[k];
-
     L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
-    ResMax       = _solution[igridn]->_Res[indexSol]->linfty_norm();
-
-    std::cout << "level=" << igridn<< "\tLinftynormRes" << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << ResMax    <<std::endl;
-    std::cout << "level=" << igridn<< "\tL2normEps"     << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normEps <<std::endl;
-
+    std::cout << "level=" << igridn<< "\t Nonlinear Eps L2norm"     << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normEps <<std::endl;
     if (L2normEps <_max_nonlinear_convergence_tolerance && conv==true) {
       conv=true;
     }
@@ -214,21 +144,20 @@ bool NonLinearImplicitSystem::IsNonLinearConverged(const unsigned igridn){
   return conv;
 }
 
-void NonLinearImplicitSystem::PETSCsolve (){
+void NonLinearImplicitSystem::MGsolve (){
 
   clock_t start_mg_time = clock();
-  for ( _n_nonlinear_iterations = 0; _n_nonlinear_iterations < _n_max_nonlinear_iterations; _n_nonlinear_iterations++ ) {
-    std::cout << std::endl << " ************* Nonlinear-Cycle: " << _n_nonlinear_iterations + 1 << " ****************\n" << std::endl;
+  for ( unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++ ) {
+    std::cout << std::endl << " ************* Nonlinear-Cycle: " << nonLinearIterator + 1 << " ****************\n" << std::endl;
 
-    LinearImplicitSystem::PETSCsolve ();
+    LinearImplicitSystem::MGsolve ();
 
     bool isnonlinearconverged = IsNonLinearConverged(_gridn-1);
     if (isnonlinearconverged)
-      _n_nonlinear_iterations = _n_max_nonlinear_iterations+1;
+      nonLinearIterator = _n_max_nonlinear_iterations+1;
   }
   std::cout << "\t Nonlinear-Cycle: TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
   <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
-
 
 }
 

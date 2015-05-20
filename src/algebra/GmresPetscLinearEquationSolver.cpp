@@ -354,28 +354,20 @@ void GmresPetscLinearEquationSolver::MGsolve ( const bool ksp_clean , const unsi
 
   *_EPS += *_EPSC;
 
+#ifndef NDEBUG
   int its;
   KSPGetIterationNumber ( _ksp, &its );
-  std::cout << "Number of iterations = " << its << std::endl;
 
   KSPConvergedReason reason;
   KSPGetConvergedReason(_ksp,&reason);
-  std::cout << "convergence reason = " << reason << std::endl;
 
-  PetscReal rtol;
-  PetscReal abstol;
-  PetscReal dtol;
-  PetscInt maxits;
-  KSPGetTolerances(_ksp, &rtol, &abstol, &dtol,&maxits);
-  std::cout<<rtol<<" "<<abstol<<" "<<dtol<<" "<<maxits<<std::endl;
+  std::cout << "Number of iterations = " << its << "\t convergence reason = " << reason << std::endl;
+  std::cout << _rtol<<" " << _abstol<<" " << _dtol<<" " << _maxits << std::endl;
+#endif
 
 }
 
-
-
 // ================================================
-
-
 
 void GmresPetscLinearEquationSolver::clear() {
 
@@ -395,7 +387,6 @@ void GmresPetscLinearEquationSolver::clear() {
     ierr = VecDestroy ( &_Pw );
     CHKERRABORT ( MPI_COMM_WORLD, ierr );
   }
-
 
   if ( this->initialized() ) {
     this->_is_initialized = false;

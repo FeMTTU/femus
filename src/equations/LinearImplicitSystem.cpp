@@ -20,8 +20,6 @@
 #include "ElemType.hpp"
 #include <iomanip>
 
-#include "PetscMatrix.hpp"
-
 namespace femus {
 
 
@@ -32,7 +30,7 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
 				const std::string& name_in,
 				const unsigned int number_in, const MgSmoother & smoother_type) :
   ImplicitSystem (ml_probl, name_in, number_in, smoother_type),
-  _n_linear_iterations   (0),
+  //_n_linear_iterations   (0),
   _n_max_linear_iterations (3),
   _final_linear_residual (1.e20),
   _absolute_convergence_tolerance (1.e-08),
@@ -201,24 +199,92 @@ void LinearImplicitSystem::AddSystemLevel() {
 
 //---------------------------------------------------------------------------------------------------
 
+void LinearImplicitSystem::Vcycle(const unsigned &gridn,  const bool &full_cycle, const unsigned &nonlinear_cycle){
+
+  clock_t start_time = clock();
+    // ============== Fine level Assembly ==============
+    _LinSolver[gridn-1u]->SetResZero();
+    _LinSolver[gridn-1u]->SetEpsZero();
+    _assembleMatrix = true; //Be carefull!!!! this is needed in the _assemble_function
+    _levelToAssemble = gridn-1u;
+    _levelMax = gridn-1u;
+    _assemble_system_function(_equation_systems );
+
+#ifndef NDEBUG
+    std::cout << "Grid: " << gridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+#endif
+    for(unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++) { //linear cycle
+
+      std::cout << " ************* Linear-Cycle : "<< linearIterator + 1<< " *************" << std::endl;
+
+      bool ksp_clean=!linearIterator;
+
+      for (unsigned ig = gridn-1u; ig > 0; ig--) {
+
+        // ============== Presmoothing ==============
+        for (unsigned k = 0; k < _npre; k++) {
+          _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean*(!k));
+        }
+        // ============== AMR Restriction ==============
+        start_time = clock();
+        Restrictor(ig, gridn, nonlinear_cycle, linearIterator, full_cycle);
+#ifndef NDEBUG
+        std::cout << "Grid: " << ig << "-->" << ig-1 << "   RESTRICTION TIME:\t       "<< std::setw(11) << std::setprecision(6) << std::fixed
+        << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+#endif
+      }
+      // ============== Direct Solver ==============
+      _LinSolver[0]->solve(_VariablesToBeSolvedIndex, ksp_clean);
+
+      for (unsigned ig = 1; ig < gridn; ig++) {
+
+        // ============== Standard Prolongation ==============
+        start_time=clock();
+        Prolongator(ig);
+#ifndef NDEBUG
+        std::cout << "Grid: " << ig-1 << "-->" << ig << "  PROLUNGATION TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
+        << static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
+#endif
+        // ============== PostSmoothing ==============
+        for (unsigned k = 0; k < _npost; k++) {
+          _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean * (!_npre) * (!k));
+        }
+      }
+      // ============== Update AMR Solution and Residual ( _gridr-1 <= ig <= gridn-2 ) ==============
+      for (unsigned ig = _gridr-1; ig < gridn-1; ig++) {  // _gridr
+        _solution[ig]->UpdateSolAndRes(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );
+      }
+      // ============== Update Fine Residual ==============
+      _solution[gridn-1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[gridn-1]->_RES, _LinSolver[gridn-1]->KKoffset );
+      bool islinearconverged = IsLinearConverged(gridn-1);
+      if(islinearconverged)
+        break;
+
+    }
+    // ============== Update Fine Solution ==============
+    _solution[gridn-1]->UpdateSol(_SolSystemPdeIndex, _LinSolver[gridn-1]->_EPS, _LinSolver[gridn-1]->KKoffset );
+
+
+}
+
 void LinearImplicitSystem::solve() {
 
   clock_t start_mg_time = clock();
 
-  bool full_cycle;
-  unsigned igrid0;
+  bool isThisFullCycle;
+  unsigned grid0;
 
   if(_mg_type == F_CYCLE) {
-    full_cycle=1;
-    igrid0=1;
+    isThisFullCycle = 1;
+    grid0 = 1;
   }
   else if(_mg_type == V_CYCLE){
-    full_cycle=0;
-    igrid0=_gridn;
+    isThisFullCycle = 0;
+    grid0 = _gridn;
   }
   else if(_mg_type == M_CYCLE){
-    full_cycle=0;
-    igrid0=_gridr;
+    isThisFullCycle = 0;
+    grid0 = _gridr;
   }
   else{
     std::cout << "wrong mg_type for this solver "<<std::endl;
@@ -227,90 +293,16 @@ void LinearImplicitSystem::solve() {
 
   unsigned AMR_counter=0;
 
-  for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {   //_igridn
+  for ( unsigned igridn = grid0; igridn <= _gridn; igridn++) {   //_igridn
 
     std::cout << std::endl << " ************* Level : " << igridn -1 << " *************\n" << std::endl;
 
     bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_maxAMRlevels && igridn==_gridn)?1:0;
     if(ThisIsAMR) _solution[igridn-1]->InitAMREps();
 
-    int nonlinear_cycle = 0; // da eliminare anche questo parametro!!!!
+    Vcycle(igridn, isThisFullCycle );
 
-    // ============== Fine level Assembly ==============
-    clock_t start_time = clock();
-    _LinSolver[igridn-1u]->SetResZero();
-    _LinSolver[igridn-1u]->SetEpsZero();
-    _assembleMatrix = true; //Be carefull!!!! this is needed in the _assemble_function
-    _levelToAssemble = igridn-1u;
-    _levelMax = igridn-1u;
-    _assemble_system_function(_equation_systems );
-
-#ifndef NDEBUG
-    std::cout << "Grid: " << igridn-1 << "\t        ASSEMBLY TIME:\t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
-#endif
-
-    for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
-
-      //std::cout << std::endl;
-      std::cout << " ************* V-Cycle : "<< _n_linear_iterations << " *************" << std::endl;
-
-      bool ksp_clean=!_n_linear_iterations;
-
-      for (unsigned ig = igridn-1u; ig > 0; ig--) {
-
-	// ============== Presmoothing ==============
-	for (unsigned k = 0; k < _npre; k++) {
-	  _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean*(!k));
-	}
-	// ============== Non-Standard Multigrid Restriction ==============
-	start_time = clock();
-	Restrictor(ig, igridn, nonlinear_cycle, _n_linear_iterations, full_cycle);
-
-#ifndef NDEBUG
-	std::cout << "Grid: " << ig << "-->" << ig-1 << "   RESTRICTION TIME:\t       "<< std::setw(11) << std::setprecision(6) << std::fixed
-	<< static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
-#endif
-      }
-
-      // ============== Coarse Direct Solver ==============
-      _LinSolver[0]->solve(_VariablesToBeSolvedIndex, ksp_clean);
-
-      for (unsigned ig = 1; ig < igridn; ig++) {
-
- 	// ============== Standard Prolongation ==============
- 	start_time=clock();
- 	Prolongator(ig);
-
-#ifndef NDEBUG
- 	std::cout << "Grid: " << ig-1 << "-->" << ig << "  PROLUNGATION TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
- 	<< static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
-#endif
-
- 	// ============== PostSmoothing ==============
- 	for (unsigned k = 0; k < _npost; k++) {
- 	  _LinSolver[ig]->solve(_VariablesToBeSolvedIndex, ksp_clean * (!_npre) * (!k));
- 	}
-      }
-      // ============== Update Solution ( _gridr-1 <= ig <= igridn-2 ) ==============
-      for (unsigned ig = _gridr-1; ig < igridn-1; ig++) {  // _gridr
- 	_solution[ig]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset );
-      }
-
-      _solution[igridn-1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
-      bool islinearconverged = IsLinearConverged(igridn-1);
-      if(islinearconverged)
-        break;
-    }
-
-    // ============== Update Solution ( ig = igridn )==============
-    _solution[igridn-1]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[igridn-1]->_EPS,
-				      _LinSolver[igridn-1]->_RES, _LinSolver[igridn-1]->KKoffset );
-
-//       std::cout << std::endl;
-//       std::cout <<"GRID: "<<igridn-1<< "\t    EAR RESIDUAL:\t"<< _final_linear_residual << std::endl;
-
-    // ==============  Solution Prolongation ==============
-
+    // ==============  AMR ==============
     if(ThisIsAMR){
       bool conv_test=0;
       if(_AMRnorm==0){
@@ -331,12 +323,13 @@ void LinearImplicitSystem::solve() {
       }
     }
 
+    // ==============  Solution Prolongation ==============
     if (igridn < _gridn) {
       ProlongatorSol(igridn);
     }
+
   }
 
-  //std::cout << std::endl;
   std::cout << "\t     SOLVER TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
   <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
 
@@ -346,21 +339,11 @@ bool LinearImplicitSystem::IsLinearConverged(const unsigned igridn) {
 
   bool conv=true;
   double L2normRes;
-//   double L2normEps;
   std::cout << std::endl;
-  //for debugging purpose
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
-
     unsigned indexSol=_SolSystemPdeIndex[k];
-
-
-//     L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
-
     L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
-
-    std::cout << "level=" << igridn<< "\tL2normRes" << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normRes    <<std::endl;
-//     std::cout << "level=" << igridn<< "\tL2normEps"     << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normEps <<std::endl;
-
+    std::cout << "level=" << igridn<< "\t Linear Res L2norm " << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normRes    <<std::endl;
     if (L2normRes < _absolute_convergence_tolerance && conv==true) {
       conv=true;
     }
@@ -370,6 +353,7 @@ bool LinearImplicitSystem::IsLinearConverged(const unsigned igridn) {
   }
   std::cout << std::endl;
   return conv;
+
 }
 
 
@@ -906,7 +890,7 @@ double LinearImplicitSystem::MGStep(int Level,            // Level
 }
 
 
-void LinearImplicitSystem::PETSCsolve (){
+void LinearImplicitSystem::MGsolve (){
 
   clock_t start_mg_time = clock();
 
@@ -931,17 +915,16 @@ void LinearImplicitSystem::PETSCsolve (){
       _LinSolver[i]->SetMGOptions( _LinSolver[_gridn-1u], i, _gridn-1, _VariablesToBeSolvedIndex, true, _PP[i], _RR[i]);
   }
 
-  for(_n_linear_iterations = 0; _n_linear_iterations < _n_max_linear_iterations; _n_linear_iterations++) { //linear cycle
-    std::cout << " ************* Linear-Cycle : "<< _n_linear_iterations << " *************" << std::endl;
-    bool ksp_clean=!_n_linear_iterations;
+  for(unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++) { //linear cycle
+    std::cout << " ************* Linear-Cycle : "<< linearIterator + 1 << " *************" << std::endl;
+    bool ksp_clean=!linearIterator;
     _LinSolver[_gridn-1u]->MGsolve( ksp_clean, _npre, _npost);
     _solution[_gridn-1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[_gridn-1]->_RES, _LinSolver[_gridn-1]->KKoffset );
     bool islinearconverged = IsLinearConverged(_gridn-1u);
     if(islinearconverged)
       break;
   }
-  _solution[_gridn-1u]->SumEpsToSol(_SolSystemPdeIndex, _LinSolver[_gridn-1u]->_EPS,
-                                    _LinSolver[_gridn-1u]->_RES, _LinSolver[_gridn-1u]->KKoffset );
+  _solution[_gridn-1u]->UpdateSol(_SolSystemPdeIndex, _LinSolver[_gridn-1u]->_EPS, _LinSolver[_gridn-1u]->KKoffset );
 
   _LinSolver[_gridn-1u]->ClearMG();
 

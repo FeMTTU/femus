@@ -64,8 +64,9 @@ public:
     void FreeSolutionVectors();
 
     /** Sum to Solution vector the Epsilon vector. It is used inside the multigrid cycle */
-    void SumEpsToSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
-    
+    void UpdateSolAndRes(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
+
+    void UpdateSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, const vector <vector <unsigned> > &KKoffset);
     /** */
     void UpdateRes(const vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const vector <vector <unsigned> > &KKoffset);
 
@@ -76,21 +77,21 @@ public:
     const NumericVector& GetSolutionName(const char* var) const {
         return *_Sol[GetIndex(var)];
     };
-    
+
     /** Get a solution (Numeric Vector) by name */
     NumericVector& GetSolutionName(const char* var) {
         return *_Sol[GetIndex(var)];
     };
-    
+
      /** Flag the elemets to be refined in the AMR alghorithm based on the epsilon*/
     bool FlagAMRRegionBasedOnl2(const vector <unsigned> &_SolPdeIndex, const double &AMRthreshold);
-    
+
      /** Flag the elemets to be refined in the AMR alghorithm based on the solution gradient*/
     bool FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,const double &AMRthreshold);
-    
+
     /** Build Grad Matrix structure for SolType 0,1,2 */
     void BuildGradMatrixStructure(unsigned SolType);
-    
+
     /** Init and set to zero The AMR Eps vector */
     void InitAMREps();
     /** member data - one for each variable - */
@@ -102,9 +103,9 @@ public:
     bool _AMR_flag;
     vector <NumericVector*> _Bdc;
     vector <bool> _ResEpsBdcFlag;
-    
+
     vector < vector <NumericVector*> > _GradVec;
-    
+
     vector <SparseMatrix*> _GradMat[5];
    // bool _GradMatFlag[5];
 

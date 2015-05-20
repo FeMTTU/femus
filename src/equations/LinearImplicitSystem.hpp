@@ -51,7 +51,7 @@ public:
     /** Solves the system. */
     virtual void solve ();
 
-    virtual void PETSCsolve ();
+    virtual void MGsolve ();
 
     /** Clear all the data structures associated with the system. */
     virtual void clear();
@@ -90,11 +90,6 @@ public:
     /** Set the max number of linear iterationsfor solving Ax=b */
     void SetMaxNumberOfLinearIterations(unsigned int max_lin_it) {
         _n_max_linear_iterations = max_lin_it;
-    };
-
-    /** Get the number of linear iterations for solving Ax=b*/
-    unsigned int GetNumberOfLinearIterations() const {
-        return _n_linear_iterations;
     };
 
     /** Get the final Linear Residual of the linear problem Ax=b*/
@@ -176,6 +171,8 @@ public:
 
 protected:
 
+    void Vcycle(const unsigned &gridn,  const bool & full_cycle,  const unsigned &nonlinear_cycle = 0);
+
     /** Create the Prolongator matrix for the Multigrid solver */
     void Prolongator(const unsigned &gridf);
 
@@ -191,7 +188,7 @@ protected:
 
     // member data
     /** The number of linear iterations required to solve the linear system Ax=b. */
-    unsigned int _n_linear_iterations;
+    //unsigned int _n_linear_iterations;
 
     /** The final residual for the linear system Ax=b. */
     double _final_linear_residual;
