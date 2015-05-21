@@ -248,10 +248,9 @@ void GmresPetscLinearEquationSolver::solve ( const vector <unsigned> &variable_t
 
 
 
-void GmresPetscLinearEquationSolver::SetMGOptions (
+void GmresPetscLinearEquationSolver::MGsetLevels (
   LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &levelMax,
-  const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean,
-  SparseMatrix* PP, SparseMatrix* RR ) {
+  const vector <unsigned> &variable_to_be_solved, SparseMatrix* PP, SparseMatrix* RR ) {
 
   PetscErrorCode ierr;
 
@@ -259,7 +258,10 @@ void GmresPetscLinearEquationSolver::SetMGOptions (
   if ( _indexai_init == 0 ) BuildIndex ( variable_to_be_solved );
   // ***************** END NODE/ELEMENT SEARCH *******************
 
-  if ( _DirichletBCsHandlingMode == 0 ) {
+  if ( _DirichletBCsHandlingMode != 0 ) {
+    std::cout<<"Warning MGsolve does not allow BC by ELIMINATION, switched to PENALTY"<<std::endl;
+    _DirichletBCsHandlingMode = 0;
+  }
     KSP *kspMG = LinSolver->GetKSP();
     PC pcMG;
     KSPGetPC ( *kspMG, &pcMG );
@@ -271,8 +273,10 @@ void GmresPetscLinearEquationSolver::SetMGOptions (
       PCMGGetSmoother ( pcMG, level , &subksp );
     }
 
-    this->clear();
     this->set_petsc_solver_type(subksp);
+
+    if ( _Pmat_is_initialized ) MatDestroy ( &_Pmat );
+
     PetscMatrix* KKp = static_cast<PetscMatrix*> ( _KK );
     Mat KK = KKp->mat();
 
@@ -319,10 +323,7 @@ void GmresPetscLinearEquationSolver::SetMGOptions (
       PCMGSetRestriction(pcMG, level, R);
 
     }
-  } else {
-    std::cout << "warning use penalty method for Dirichlet BC" << std::endl;
-    abort();
-  }
+
 
 }
 

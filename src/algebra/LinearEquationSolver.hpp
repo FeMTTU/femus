@@ -77,18 +77,18 @@ public:
       abort();
     }
 
-    virtual void InitMG( const MgType &_mg_type, const unsigned &levelMax ){
+    virtual void MGinit( const MgType &_mg_type, const unsigned &levelMax ){
       std::cout<<"Warning InitMG(...) is not available for this smoother\n";
       abort();
     }
 
-    virtual void ClearMG(){
+    virtual void MGclear(){
       std::cout<<"Warning ClearMG() is not available for this smoother\n";
       abort();
     };
 
-    virtual void SetMGOptions( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &levelMax,
-                               const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean,
+    virtual void MGsetLevels( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &levelMax,
+                               const vector <unsigned> &variable_to_be_solved,
                                SparseMatrix* PP, SparseMatrix* RR ){
       std::cout<<"Warning SetMGOptions(...) is not available for this smoother\n";
       abort();

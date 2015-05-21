@@ -64,9 +64,8 @@ int main(int argc, char** args) {
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-
   // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 4);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -82,7 +81,6 @@ int main(int argc, char** args) {
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
   mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
-
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
@@ -135,7 +133,7 @@ int main(int argc, char** args) {
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
-
+  //system.SetDirichletBCsHandling(ELIMINATION);
   //system.solve();
   system.MGsolve();
 

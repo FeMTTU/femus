@@ -150,6 +150,8 @@ void NonLinearImplicitSystem::MGsolve (){
   for ( unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++ ) {
     std::cout << std::endl << " ************* Nonlinear-Cycle: " << nonLinearIterator + 1 << " ****************\n" << std::endl;
 
+    _MGmatrixReuse = (0 == nonLinearIterator ) ? false : true;
+
     LinearImplicitSystem::MGsolve ();
 
     bool isnonlinearconverged = IsNonLinearConverged(_gridn-1);

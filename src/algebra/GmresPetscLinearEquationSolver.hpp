@@ -83,13 +83,13 @@ public:
     return &_ksp;
   };
 
-  void SetMGOptions ( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &maxlevel,
-                      const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean,
+  void MGsetLevels ( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &maxlevel,
+                      const vector <unsigned> &variable_to_be_solved,
                       SparseMatrix* PP, SparseMatrix* RR );
 
   void MGsolve ( const bool ksp_clean , const unsigned &npre, const unsigned &npost );
 
-  void InitMG( const MgType &_mg_type, const unsigned &levelMax ){
+  void MGinit( const MgType &_mg_type, const unsigned &levelMax ){
 
     KSPCreate(PETSC_COMM_WORLD,&_ksp);
 
@@ -115,7 +115,7 @@ public:
     }
   };
 
-  void ClearMG(){
+  void MGclear(){
     KSPDestroy(&_ksp);
   }
 

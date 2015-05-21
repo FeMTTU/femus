@@ -30,7 +30,6 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
 				const std::string& name_in,
 				const unsigned int number_in, const MgSmoother & smoother_type) :
   ImplicitSystem (ml_probl, name_in, number_in, smoother_type),
-  //_n_linear_iterations   (0),
   _n_max_linear_iterations (3),
   _final_linear_residual (1.e20),
   _absolute_convergence_tolerance (1.e-08),
@@ -44,6 +43,7 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   _SmootherType(smoother_type)
  {
   _SparsityPattern.resize(0);
+  _MGmatrixReuse = false;
  }
 
 LinearImplicitSystem::~LinearImplicitSystem() {
@@ -583,12 +583,9 @@ void LinearImplicitSystem::ClearVariablesToBeSolved() {
   _VariablesToBeSolvedIndex.clear();
 }
 
-
 void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
   _SmootherType = mgsmoother;
 }
-
-
 
 void LinearImplicitSystem::SetElementBlockNumber(unsigned const &dim_block) {
   _numblock_test=1;
@@ -610,8 +607,6 @@ void LinearImplicitSystem::SetElementBlockNumber(const char all[], const unsigne
   }
 }
 
-
-
 void LinearImplicitSystem::SetSolverFineGrids(const SolverType finegridsolvertype) {
   _finegridsolvertype=finegridsolvertype;
   for (unsigned i=1; i<_gridn; i++) {
@@ -619,14 +614,12 @@ void LinearImplicitSystem::SetSolverFineGrids(const SolverType finegridsolvertyp
   }
 }
 
-
 void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType finegridpreconditioner) {
   _finegridpreconditioner=finegridpreconditioner;
   for (unsigned i=1; i<_gridn; i++) {
     _LinSolver[i]->set_preconditioner_type(_finegridpreconditioner);
   }
 }
-
 
 void LinearImplicitSystem::SetTolerances(const double rtol, const double atol,
 					       const double divtol, const unsigned maxits) {
@@ -639,15 +632,12 @@ void LinearImplicitSystem::SetTolerances(const double rtol, const double atol,
   }
 }
 
-
 void LinearImplicitSystem::SetNumberOfSchurVariables(const unsigned short &NSchurVar){
    _NSchurVar_test=1;
    _NSchurVar=NSchurVar;
     for (unsigned i=1; i<_gridn; i++) {
      _LinSolver[i]->SetNumberOfSchurVariables(_NSchurVar);
    }
-
-
 }
 
 // =================================================================
@@ -889,12 +879,11 @@ double LinearImplicitSystem::MGStep(int Level,            // Level
 
 }
 
-
 void LinearImplicitSystem::MGsolve (){
 
   clock_t start_mg_time = clock();
 
-  _LinSolver[_gridn-1u]->InitMG( _mg_type, _gridn );
+  _LinSolver[_gridn-1u]->MGinit( _mg_type, _gridn );
 
   _LinSolver[_gridn-1u]->SetEpsZero();
   _LinSolver[_gridn-1u]->SetResZero();
@@ -902,17 +891,17 @@ void LinearImplicitSystem::MGsolve (){
   _assembleMatrix = true;
   _levelToAssemble = _gridn-1u;
   _levelMax = _gridn-1u;
-  _assemble_system_function(_equation_systems );
+  _assemble_system_function( _equation_systems );
 
   for( unsigned i =_gridn-1u; i > 0; i-- ){
-    _LinSolver[i-1u]->_KK->matrix_PtAP(*_PP[i],*_LinSolver[i]->_KK, false);
+    _LinSolver[i-1u]->_KK->matrix_PtAP(*_PP[i], *_LinSolver[i]->_KK, _MGmatrixReuse );
   }
 
   for( unsigned i = 0; i < _gridn; i++ ){
-    if(_RR[i] == NULL )
-      _LinSolver[i]->SetMGOptions( _LinSolver[_gridn-1u], i, _gridn-1, _VariablesToBeSolvedIndex, true, _PP[i], _PP[i]);
+    if(_RR[i] )
+      _LinSolver[i]->MGsetLevels( _LinSolver[_gridn-1u], i, _gridn-1, _VariablesToBeSolvedIndex, _PP[i], _RR[i]);
     else
-      _LinSolver[i]->SetMGOptions( _LinSolver[_gridn-1u], i, _gridn-1, _VariablesToBeSolvedIndex, true, _PP[i], _RR[i]);
+      _LinSolver[i]->MGsetLevels( _LinSolver[_gridn-1u], i, _gridn-1, _VariablesToBeSolvedIndex, _PP[i], _PP[i]);
   }
 
   for(unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++) { //linear cycle
@@ -926,7 +915,7 @@ void LinearImplicitSystem::MGsolve (){
   }
   _solution[_gridn-1u]->UpdateSol(_SolSystemPdeIndex, _LinSolver[_gridn-1u]->_EPS, _LinSolver[_gridn-1u]->KKoffset );
 
-  _LinSolver[_gridn-1u]->ClearMG();
+  _LinSolver[_gridn-1u]->MGclear();
 
   std::cout << "\t Linear-Cycle TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
   <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;

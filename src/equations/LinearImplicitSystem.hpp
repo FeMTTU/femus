@@ -210,6 +210,7 @@ protected:
 
     /** To be Added */
     MgSmoother _SmootherType;
+    bool _MGmatrixReuse;
 
     /** To be Added */
     vector <unsigned> _VariablesToBeSolvedIndex;

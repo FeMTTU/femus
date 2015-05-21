@@ -397,10 +397,9 @@ namespace femus {
   }
 
 
-void AsmPetscLinearEquationSolver::SetMGOptions (
+void AsmPetscLinearEquationSolver::MGsetLevels (
     LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &levelMax,
-    const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean,
-    SparseMatrix* PP, SparseMatrix* RR ){
+    const vector <unsigned> &variable_to_be_solved, SparseMatrix* PP, SparseMatrix* RR ){
 
   // ***************** NODE/ELEMENT SEARCH *******************
   if(_indexai_init==0) {
@@ -415,7 +414,6 @@ void AsmPetscLinearEquationSolver::SetMGOptions (
   PC pcMG;
   KSPGetPC ( *kspMG, &pcMG );
 
-
   KSP subksp;
 
   if ( level == 0 )
@@ -424,14 +422,16 @@ void AsmPetscLinearEquationSolver::SetMGOptions (
     PCMGGetSmoother ( pcMG, level , &subksp );
   }
 
-  this->clear();
+
   this->set_petsc_solver_type( subksp );
 
-  PetscMatrix* KKp = static_cast<PetscMatrix*> ( _KK );
+  if ( _Pmat_is_initialized ) MatDestroy ( &_Pmat );
+
+  PetscMatrix* KKp = static_cast< PetscMatrix* > ( _KK );
   Mat KK = KKp->mat();
 
   MatDuplicate(KK,MAT_COPY_VALUES,&_Pmat);
-  MatSetOption(_Pmat,MAT_NO_OFF_PROC_ZERO_ROWS,PETSC_TRUE);
+  MatSetOption(_Pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
   MatZeroRows(_Pmat,_indexai[0].size(),&_indexai[0][0],1.e40,0,0);
   _Pmat_is_initialized = true;
 
@@ -515,9 +515,8 @@ void AsmPetscLinearEquationSolver::SetMGOptions (
       Mat R=RRp->mat();
       PCMGSetRestriction(pcMG, level, R);
     }
-
-
 }
+
 
 void AsmPetscLinearEquationSolver::MGsolve ( const bool ksp_clean , const unsigned &npre, const unsigned &npost ) {
 
@@ -556,30 +555,26 @@ void AsmPetscLinearEquationSolver::MGsolve ( const bool ksp_clean , const unsign
   std::cout << _rtol<<" " << _abstol<<" " << _dtol<<" " << _maxits << std::endl;
 #endif
 
-
-
 }
 
-
-
 // ================================================
-
 
   void AsmPetscLinearEquationSolver::clear() {
     int ierr=0;
     if(_Pmat_is_initialized){
       _Pmat_is_initialized = false;
-      ierr = MatDestroy(&_Pmat);          CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = MatDestroy(&_Pmat);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
     }
 
     if (this->initialized()) {
       this->_is_initialized = false;
-      ierr = KSPDestroy(&_ksp);		CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPDestroy(&_ksp);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
     }
   }
 
-
-  // ========================================================
+// ========================================================
 
   void AsmPetscLinearEquationSolver::init(Mat& Amat, Mat& Pmat) {
 
@@ -652,48 +647,62 @@ void AsmPetscLinearEquationSolver::MGsolve ( const bool ksp_clean , const unsign
     }
   }
 
-  // =================================================
+// =================================================
+
   void AsmPetscLinearEquationSolver::set_petsc_solver_type( KSP &ksp ) {
     int ierr = 0;
     switch (this->_solver_type) {
     case CG:
-      ierr = KSPSetType(ksp, (char*) KSPCG);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPCG);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case CR:
-      ierr = KSPSetType(ksp, (char*) KSPCR);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPCR);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case CGS:
-      ierr = KSPSetType(ksp, (char*) KSPCGS);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPCGS);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case BICG:
-      ierr = KSPSetType(ksp, (char*) KSPBICG);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPBICG);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case TCQMR:
-      ierr = KSPSetType(ksp, (char*) KSPTCQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPTCQMR);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case TFQMR:
-      ierr = KSPSetType(ksp, (char*) KSPTFQMR);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPTFQMR);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case LSQR:
-      ierr = KSPSetType(ksp, (char*) KSPLSQR);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPLSQR);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case BICGSTAB:
-      ierr = KSPSetType(ksp, (char*) KSPBCGS);						CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPBCGS);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case MINRES:
-      ierr = KSPSetType(ksp, (char*) KSPMINRES);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPMINRES);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case GMRES:
-      ierr = KSPSetType(ksp, (char*) KSPGMRES);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPGMRES);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case RICHARDSON:
-      ierr = KSPSetType(ksp, (char*) KSPRICHARDSON);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPRICHARDSON);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case CHEBYSHEV:
-      ierr = KSPSetType(ksp, (char*) KSPCHEBYSHEV);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPCHEBYSHEV);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     case PREONLY:
-      ierr = KSPSetType(ksp, (char*) KSPPREONLY);					CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = KSPSetType(ksp, (char*) KSPPREONLY);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
       return;
     default:
       std::cerr << "ERROR:  Unsupported PETSC Solver: "
