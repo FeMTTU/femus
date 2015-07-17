@@ -103,7 +103,7 @@ void LinearImplicitSystem::init() {
     _NSchurVar_test=0;
     _numblock_test=0;
     _numblock_all_test=0;
-    // By default we solved for all the PDE variables
+    // By default we solve for all the PDE variables
     ClearVariablesToBeSolved();
     AddVariableToBeSolved("All");
 }
