@@ -1,38 +1,97 @@
 /* adept.cpp -- Fast automatic differentiation with expression templates
 
-    Copyright (C) 2012-2013 Robin Hogan and the University of Reading
+    Copyright (C) 2012-2015 The University of Reading
 
-    Contact email address: r.j.hogan@reading.ac.uk
+    Author: Robin Hogan <r.j.hogan@reading.ac.uk>
 
     This file is part of the Adept library.
 
-    This library is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
 */
 
 
 #include <iostream>
 #include <cstring> // For memcpy
 
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "adept.h"
+
+#ifdef HAVE_CONFIG_H
+// Obtain compiler (CXX) and compile flags (CXXFLAGS) from config.h
+#include "config.h"
+#endif
+
 
 namespace adept {
 
   // Global pointers to the current thread, the second of which is
   // thread safe. The first is only used if ADEPT_STACK_THREAD_UNSAFE
   // is defined.
-  __thread Stack* _stack_current_thread = 0;
+  ADEPT_THREAD_LOCAL Stack* _stack_current_thread = 0;
   Stack* _stack_current_thread_unsafe = 0;
+
+  // Return the compiler used to compile the Adept library (e.g. "g++
+  // [4.3.2]" or "Microsoft Visual C++ [1800]")
+  std::string
+  compiler_version()
+  {
+#ifdef CXX
+    std::string cv = CXX; // Defined in config.h
+#elif defined(_MSC_VER)
+    std::string cv = "Microsoft Visual C++";
+#else
+    std::string cv = "unknown";
+#endif
+
+#ifdef __GNUC__
+
+#define STRINGIFY3(A,B,C) STRINGIFY(A) "." STRINGIFY(B) "." STRINGIFY(C)
+#define STRINGIFY(A) #A
+    cv += " [" STRINGIFY3(__GNUC__,__GNUC_MINOR__,__GNUC_PATCHLEVEL__) "]";
+#undef STRINGIFY
+#undef STRINGIFY3
+
+#elif defined(_MSC_VER)
+
+#define STRINGIFY1(A) STRINGIFY(A)
+#define STRINGIFY(A) #A
+    cv += " [" STRINGIFY1(_MSC_VER) "]";
+#undef STRINGIFY
+#undef STRINGIFY1
+
+#endif
+    return cv;
+  }
+
+  // Return the compiler flags used when compiling the Adept library
+  // (e.g. "-Wall -g -O3")
+  std::string
+  compiler_flags()
+  {
+#ifdef CXXFLAGS
+    return CXXFLAGS; // Defined in config.h
+#else
+    return "unknown";
+#endif
+  }
+
+  // MEMBER FUNCTIONS OF THE STACK CLASS
 
   // Destructor: frees dynamically allocated memory (if any)
   Stack::~Stack() {
@@ -40,11 +99,11 @@ namespace adept {
     // "this" is shortly to become invalid
     if (is_thread_unsafe_) {
       if (_stack_current_thread_unsafe == this) {
-	_stack_current_thread_unsafe = 0; 
+	_stack_current_thread_unsafe = 0;
       }
     }
     else if (_stack_current_thread == this) {
-      _stack_current_thread = 0; 
+      _stack_current_thread = 0;
     }
 #ifndef ADEPT_STACK_STORAGE_STL
     if (statement_) {
@@ -61,7 +120,7 @@ namespace adept {
     }
 #endif
   }
-  
+
   // Make this stack "active" by copying its "this" pointer to a
   // global variable; this makes it the stack that aReal objects
   // subsequently interact with when being created and participating
@@ -70,7 +129,7 @@ namespace adept {
   Stack::activate()
   {
     // Check that we don't already have an active stack in this thread
-    if ((is_thread_unsafe_ && _stack_current_thread_unsafe 
+    if ((is_thread_unsafe_ && _stack_current_thread_unsafe
 	 && _stack_current_thread_unsafe != this)
 	|| ((!is_thread_unsafe_) && _stack_current_thread
 	    && _stack_current_thread != this)) {
@@ -83,7 +142,7 @@ namespace adept {
       else {
 	_stack_current_thread_unsafe = this;
       }
-    }    
+    }
   }
 
   // This function is called by the constructor to initialize memory,
@@ -106,7 +165,7 @@ namespace adept {
     //    statement_[0].offset = -1;
     //    statement_[0].end_plus_one = 0;
   }
- 
+
 #ifndef ADEPT_STACK_STORAGE_STL
   // Double the size of the operation stack, or grow it even more if
   // the requested minimum number of extra entries (min) is greater
@@ -120,16 +179,16 @@ namespace adept {
     }
     Real* new_multiplier = new Real[new_size];
     Offset* new_offset = new Offset[new_size];
-    
+
     std::memcpy(new_multiplier, multiplier_, n_operations_*sizeof(Real));
     std::memcpy(new_offset, offset_, n_operations_*sizeof(Offset));
-    
+
     delete[] multiplier_;
     delete[] offset_;
-    
+
     multiplier_ = new_multiplier;
     offset_ = new_offset;
-    
+
     n_allocated_operations_ = new_size;
   }
 
@@ -151,6 +210,63 @@ namespace adept {
     n_allocated_statements_ = new_size;
   }
 #endif
+
+
+  // Set the maximum number of threads to be used in Jacobian
+  // calculations, if possible. A value of 1 indicates that OpenMP
+  // will not be used, while a value of 0 indicates that the number
+  // will match the number of available processors. Returns the
+  // maximum that will be used, which will be 1 if the Adept library
+  // was compiled without OpenMP support. Note that a value of 1 will
+  // disable the use of OpenMP with Adept, so Adept will then use no
+  // OpenMP directives or function calls. Note that if in your program
+  // you use OpenMP with each thread performing automatic
+  // differentiaion with its own independent Adept stack, then
+  // typically only one OpenMP thread is available for each Jacobian
+  // calculation, regardless of whether you call this function.
+  int
+  Stack::set_max_jacobian_threads(int n)
+  {
+#ifdef _OPENMP
+    if (have_openmp_) {
+      if (n == 1) {
+	openmp_manually_disabled_ = true;
+	return 1;
+      }
+      else if (n < 1) {
+	openmp_manually_disabled_ = false;
+	omp_set_num_threads(omp_get_num_procs());
+	return omp_get_max_threads();
+      }
+      else {
+	openmp_manually_disabled_ = false;
+	omp_set_num_threads(n);
+	return omp_get_max_threads();
+      }
+    }
+#endif
+    return 1;
+  }
+
+
+  // Return maximum number of OpenMP threads to be used in Jacobian
+  // calculation
+  int
+  Stack::max_jacobian_threads() const
+  {
+#ifdef _OPENMP
+    if (have_openmp_) {
+      if (openmp_manually_disabled_) {
+	return 1;
+      }
+      else {
+	return omp_get_max_threads();
+      }
+    }
+#endif
+    return 1;
+  }
+
 
   // Perform to adjoint computation (reverse mode). It is assumed that
   // some gradients have been assigned already, otherwise the function
@@ -176,11 +292,12 @@ namespace adept {
 	  }
 	}
       }
-    }  
+    }
     else {
       throw(gradients_not_initialized());
-    }  
+    }
   }
+
 
   // Perform tangent linear computation (forward mode). It is assumed
   // that some gradients have been assigned already, otherwise the
@@ -207,6 +324,7 @@ namespace adept {
     }
   }
 
+
   // Compute the Jacobian matrix; note that jacobian_out must be
   // allocated to be of size m*n, where m is the number of dependent
   // variables and n is the number of independents. The independents
@@ -215,13 +333,24 @@ namespace adept {
   // will fail with FAILURE_XXDEPENDENT_NOT_IDENTIFIED. In the
   // resulting matrix, the "m" dimension of the matrix varies
   // fastest. This is implemented using a forward pass, appropriate
-  // for m>n.
+  // for m>=n.
   void
   Stack::jacobian_forward(Real* jacobian_out, const bool row_major)
   {
     if (independent_offset_.empty() || dependent_offset_.empty()) {
       throw(dependents_or_independents_not_identified());
     }
+#ifdef _OPENMP
+    if (have_openmp_
+	&& !openmp_manually_disabled_
+	&& n_independent() > ADEPT_MULTIPASS_SIZE
+	&& omp_get_max_threads() > 1) {
+      // Call the parallel version
+      jacobian_forward_openmp(jacobian_out, row_major);
+      return;
+    }
+#endif
+
     gradient_multipass_.resize(max_gradient_);
     // For optimization reasons, we process a block of
     // ADEPT_MULTIPASS_SIZE columns of the Jacobian at once; calculate
@@ -248,10 +377,17 @@ namespace adept {
 	// Loop through operations
 	for (Offset iop = statement_[ist-1].end_plus_one;
 	     iop < statement.end_plus_one; iop++) {
-	  // Loop through columns within this block; we hope the
-	  // compiler can optimize this loop
-	  for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
-	    a[i] += multiplier_[iop]*gradient_multipass_[offset_[iop]][i];
+	  if (multiplier_[iop] == 1.0) {
+	    // Loop through columns within this block; we hope the
+	    // compiler can optimize this loop
+	    for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
+	      a[i] += gradient_multipass_[offset_[iop]][i];
+	    }
+	  }
+	  else {
+	    for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
+	      a[i] += multiplier_[iop]*gradient_multipass_[offset_[iop]][i];
+	    }
 	  }
 	}
 	// Copy the results
@@ -263,22 +399,23 @@ namespace adept {
       // into the Jacobian matrix
       if (row_major) {
         for (Offset idep = 0; idep < n_dependent(); idep++) {
-	  for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
-	    jacobian_out[idep*n_independent()+(i_independent+i)]
-	      = gradient_multipass_[dependent_offset_[idep]][i];
-	  }
+          for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
+            jacobian_out[idep*n_independent()+(i_independent+i)]
+              = gradient_multipass_[dependent_offset_[idep]][i];
+          }
         }
-      } else { // column-major
+      }
+      else { // column-major
         for (Offset idep = 0; idep < n_dependent(); idep++) {
-	  for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
-	    jacobian_out[(i_independent+i)*n_dependent()+idep]
-	      = gradient_multipass_[dependent_offset_[idep]][i];
-	  }
-	}
+          for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
+            jacobian_out[(i_independent+i)*n_dependent()+idep]
+              = gradient_multipass_[dependent_offset_[idep]][i];
+          }
+        }
       }
       i_independent += ADEPT_MULTIPASS_SIZE;
     } // End of loop over blocks
-    
+
     // Now do the same but for the remaining few columns in the matrix
     if (n_extra > 0) {
       zero_gradient_multipass();
@@ -290,8 +427,15 @@ namespace adept {
 	Block<ADEPT_MULTIPASS_SIZE,Real> a;
 	for (Offset iop = statement_[ist-1].end_plus_one;
 	     iop < statement.end_plus_one; iop++) {
-	  for (Offset i = 0; i < n_extra; i++) {
-	    a[i] += multiplier_[iop]*gradient_multipass_[offset_[iop]][i];
+	  if (multiplier_[iop] == 1.0) {
+	    for (Offset i = 0; i < n_extra; i++) {
+	      a[i] += gradient_multipass_[offset_[iop]][i];
+	    }
+	  }
+	  else {
+	    for (Offset i = 0; i < n_extra; i++) {
+	      a[i] += multiplier_[iop]*gradient_multipass_[offset_[iop]][i];
+	    }
 	  }
 	}
 	for (Offset i = 0; i < n_extra; i++) {
@@ -300,18 +444,19 @@ namespace adept {
       }
       if (row_major) {
         for (Offset idep = 0; idep < n_dependent(); idep++) {
-	  for (Offset i = 0; i < n_extra; i++) {
-	    jacobian_out[idep*n_independent()+(i_independent+i)]
-	      = gradient_multipass_[dependent_offset_[idep]][i];
-	  }
+          for (Offset i = 0; i < n_extra; i++) {
+            jacobian_out[idep*n_independent()+(i_independent+i)]
+              = gradient_multipass_[dependent_offset_[idep]][i];
+          }
         }
-      } else { // column-major
+      }
+      else { // column-major
         for (Offset idep = 0; idep < n_dependent(); idep++) {
-	  for (Offset i = 0; i < n_extra; i++) {
-	    jacobian_out[(i_independent+i)*n_dependent()+idep]
-	      = gradient_multipass_[dependent_offset_[idep]][i];
-	  }
-	}
+          for (Offset i = 0; i < n_extra; i++) {
+            jacobian_out[(i_independent+i)*n_dependent()+idep]
+              = gradient_multipass_[dependent_offset_[idep]][i];
+          }
+        }
       }
     }
   }
@@ -332,6 +477,17 @@ namespace adept {
     if (independent_offset_.empty() || dependent_offset_.empty()) {
       throw(dependents_or_independents_not_identified());
     }
+#ifdef _OPENMP
+    if (have_openmp_
+	&& !openmp_manually_disabled_
+	&& n_dependent() > ADEPT_MULTIPASS_SIZE
+	&& omp_get_max_threads() > 1) {
+      // Call the parallel version
+      jacobian_reverse_openmp(jacobian_out, row_major);
+      return;
+    }
+#endif
+
     gradient_multipass_.resize(max_gradient_);
     // For optimization reasons, we process a block of
     // ADEPT_MULTIPASS_SIZE rows of the Jacobian at once; calculate
@@ -380,7 +536,7 @@ namespace adept {
 	    // Try to minimize pointer dereferencing by making local
 	    // copies
 	    register Real multiplier = multiplier_[iop];
-	    register Real* __restrict__ gradient_multipass 
+	    register Real* __restrict gradient_multipass
 	      = &(gradient_multipass_[offset_[iop]][0]);
 #if ADEPT_MULTIPASS_SIZE > ADEPT_MULTIPASS_SIZE_ZERO_CHECK
 	    // For large blocks, loop over only the indices
@@ -401,22 +557,23 @@ namespace adept {
       // into the Jacobian matrix
       if (row_major) {
         for (Offset iindep = 0; iindep < n_independent(); iindep++) {
-	  for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
-	    jacobian_out[(i_dependent+i)*n_independent()+iindep]
-	      = gradient_multipass_[independent_offset_[iindep]][i];
-	  }
+          for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
+            jacobian_out[(i_dependent+i)*n_independent()+iindep]
+              = gradient_multipass_[independent_offset_[iindep]][i];
+          }
         }
-      } else { // column-major
-	for (Offset iindep = 0; iindep < n_independent(); iindep++) {
-	  for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
-	    jacobian_out[iindep*n_dependent()+i_dependent+i]
-	      = gradient_multipass_[independent_offset_[iindep]][i];
-	  }
-	}
+      }
+      else { // column-major
+        for (Offset iindep = 0; iindep < n_independent(); iindep++) {
+          for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
+            jacobian_out[iindep*n_dependent()+i_dependent+i]
+              = gradient_multipass_[independent_offset_[iindep]][i];
+          }
+        }
       }
       i_dependent += ADEPT_MULTIPASS_SIZE;
     } // End of loop over blocks
-    
+
     // Now do the same but for the remaining few rows in the matrix
     if (n_extra > 0) {
       zero_gradient_multipass();
@@ -445,7 +602,7 @@ namespace adept {
 	  for (Offset iop = statement_[ist-1].end_plus_one;
 	       iop < statement.end_plus_one; iop++) {
 	    register Real multiplier = multiplier_[iop];
-	    register Real* __restrict__ gradient_multipass 
+	    register Real* __restrict gradient_multipass
 	      = &(gradient_multipass_[offset_[iop]][0]);
 #if ADEPT_MULTIPASS_SIZE > ADEPT_MULTIPASS_SIZE_ZERO_CHECK
 	    for (Offset i = 0; i < n_non_zero; i++) {
@@ -461,22 +618,23 @@ namespace adept {
       }
       if (row_major) {
         for (Offset iindep = 0; iindep < n_independent(); iindep++) {
-	  for (Offset i = 0; i < n_extra; i++) {
-	    jacobian_out[(i_dependent+i)*n_independent()+iindep]
-	      = gradient_multipass_[independent_offset_[iindep]][i];
-	  }
+          for (Offset i = 0; i < n_extra; i++) {
+            jacobian_out[(i_dependent+i)*n_independent()+iindep]
+              = gradient_multipass_[independent_offset_[iindep]][i];
+          }
         }
-      } else { // column-major
-	for (Offset iindep = 0; iindep < n_independent(); iindep++) {
-	  for (Offset i = 0; i < n_extra; i++) {
-	    jacobian_out[iindep*n_dependent()+i_dependent+i]
-	      = gradient_multipass_[independent_offset_[iindep]][i];
-	  }
-	}
+      }
+      else { // column-major
+        for (Offset iindep = 0; iindep < n_independent(); iindep++) {
+          for (Offset i = 0; i < n_extra; i++) {
+            jacobian_out[iindep*n_dependent()+i_dependent+i]
+              = gradient_multipass_[independent_offset_[iindep]][i];
+          }
+        }
       }
     }
   }
-  
+
 
   // If an aReal object is deleted, its gradient_offset is
   // unregistered from the stack.  If this is at the top of the stack
@@ -544,12 +702,13 @@ namespace adept {
 	most_recent_gap_--;
       }
     }
+    // Finally check if gaps have merged
     if (status == ADDED_AT_BASE
 	&& most_recent_gap_ != gap_list_.begin()) {
       // Check whether the gap has merged with the next one
       GapListIterator it = most_recent_gap_;
       it--;
-      if (it->end == most_recent_gap_->start + 1) {
+      if (it->end == most_recent_gap_->start - 1) {
 	// Merge two gaps
 	most_recent_gap_->start = it->start;
 	gap_list_.erase(it);
@@ -557,17 +716,17 @@ namespace adept {
     }
     else if (status == ADDED_AT_TOP) {
       GapListIterator it = most_recent_gap_;
-      it--;
+      it++;
       if (it != gap_list_.end()
-	  && it->start == most_recent_gap_->end - 1) {
+	  && it->start == most_recent_gap_->end + 1) {
 	// Merge two gaps
 	most_recent_gap_->end = it->end;
 	gap_list_.erase(it);
       }
     }
-  }	
-  
-  
+  }
+
+
   // Compute the Jacobian matrix; note that jacobian_out must be
   // allocated to be of size m*n, where m is the number of dependent
   // variables and n is the number of independents. In the resulting
@@ -577,14 +736,14 @@ namespace adept {
   void
   Stack::jacobian(Real* jacobian_out, const bool row_major)
   {
-    if (n_independent() < n_dependent()) {
+    if (n_independent() <= n_dependent()) {
       jacobian_forward(jacobian_out, row_major);
     }
     else {
       jacobian_reverse(jacobian_out, row_major);
     }
   }
-  
+
   // Print each derivative statement to the specified stream (standard
   // output if omitted)
   void
@@ -595,11 +754,11 @@ namespace adept {
       os << ist
 		<< ": d[" << statement.offset
 		<< "] = ";
-      
+
       if (statement_[ist-1].end_plus_one == statement_[ist].end_plus_one) {
 	os << "0\n";
       }
-      else {    
+      else {
 	for (Offset i = statement_[ist-1].end_plus_one;
 	     i < statement.end_plus_one; i++) {
 	  os << " + " << multiplier_[i] << "*d[" << offset_[i] << "]";
@@ -608,7 +767,7 @@ namespace adept {
       }
     }
   }
-  
+
   // Print the current gradient list to the specified stream (standard
   // output if omitted)
   bool
@@ -692,9 +851,9 @@ namespace adept {
     }
     os << "   Recording status:\n";
     // Account for the null statement at the start by subtracting one
-    os << "      " << n_statements()-1 << " statements (" 
+    os << "      " << n_statements()-1 << " statements ("
        << n_allocated_statements() << " allocated)";
-    os << " and " << n_operations() << " operations (" 
+    os << " and " << n_operations() << " operations ("
        << n_allocated_operations() << " allocated)\n";
     os << "      " << n_gradients_registered() << " gradients currently registered ";
     os << "and a total of " << max_gradients() << " needed (current index "
@@ -709,7 +868,7 @@ namespace adept {
     }
     os << "   Computation status:\n";
     if (gradients_are_initialized()) {
-      os << "      " << max_gradients() << " gradients assigned (" 
+      os << "      " << max_gradients() << " gradients assigned ("
 	 << n_allocated_gradients() << " allocated)\n";
     }
     else {
@@ -717,7 +876,24 @@ namespace adept {
 	 << " allocated)\n";
     }
     os << "      Jacobian size: " << n_dependents() << "x" << n_independents() << "\n";
+#ifdef _OPENMP
+    if (have_openmp_) {
+      if (openmp_manually_disabled_) {
+	os << "      Parallel Jacobian calculation manually disabled\n";
+      }
+      else {
+	os << "      Parallel Jacobian calculation can use up to "
+	   << omp_get_max_threads() << " threads\n";
+	os << "      Each thread treats " << ADEPT_MULTIPASS_SIZE
+	   << " (in)dependent variables\n";
+      }
+    }
+    else {
+#endif
+      os << "      Parallel Jacobian calculation not available\n";
+#ifdef _OPENMP
+    }
+#endif
   }
-
 } // End namespace adept
 

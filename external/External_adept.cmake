@@ -2,7 +2,7 @@
 # Adept
 #-----------------------------------------------------------------------------
 
-SET(ADEPT_VERSION 1.0)
+SET(ADEPT_VERSION 1.1)
 SET(ADEPT_SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/adept/adept-${ADEPT_VERSION})
 
 #look if there is a package for adept
