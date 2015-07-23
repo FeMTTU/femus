@@ -27,6 +27,7 @@ bool SetBoundaryConditionBathe_3D_solid(const std::vector < double >& x,const ch
 bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double >& x,const char name[],
 				       double &value, const int FaceName, const double = 0.);
 
+double InitalValueU(const std::vector < double >& x);
 
 bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
 
@@ -186,11 +187,11 @@ int main(int argc,char **args) {
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
   if(simulation < 3)
-    numberOfUniformRefinedMeshes=3;
+    numberOfUniformRefinedMeshes = 3;
   else if(simulation == 3 || simulation == 7)
-    numberOfUniformRefinedMeshes=4;
+    numberOfUniformRefinedMeshes = 4;
   else if(simulation < 7)
-    numberOfUniformRefinedMeshes=2;
+    numberOfUniformRefinedMeshes = 2;
 
   numberOfAMRLevels = 0;
 
@@ -223,6 +224,9 @@ int main(int argc,char **args) {
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
+  if (1 == simulation )
+    ml_sol.Initialize("U",InitalValueU);
+
 
   // ******* Set boundary functions *******
   if(1==simulation || 2==simulation)
@@ -268,7 +272,7 @@ int main(int argc,char **args) {
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
-  system.SetAbsoluteConvergenceTolerance(1.e-10);
+  system.SetLinearConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-10);
   if( simulation == 7 )
     system.SetNonLinearConvergenceTolerance(1.e-5);
@@ -337,8 +341,9 @@ int main(int argc,char **args) {
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
 
+  ml_sol.GetWriter()->SetDebugOutput( true );
   //ml_sol.GetWriter()->ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
-  ml_sol.GetWriter()->Pwrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+  ml_sol.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
   // ******* Clear all systems *******
   ml_prob.clear();
@@ -356,6 +361,21 @@ bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumb
 
   return refine;
 
+}
+
+double InitalValueU(const std::vector < double >& x) {
+  double xc = 0.2;
+  double yc = 0.2;
+  double r = 0.05;
+  double r2 = r*r;
+  double xMxc2 = (x[0]-xc)*(x[0]-xc);
+  double OMxc2 = (0.-xc)*(0.-xc);
+  double yMyc2 = (x[1]-yc)*(x[1]-yc);
+
+  double H = 0.41;
+  double L = 2.5;
+  double um = 0.2;
+  return (xMxc2+yMyc2-r2)/(OMxc2+yMyc2-r2)*(1.5*um*4.0/0.1681*x[1]*(H-x[1]))*exp(-L*x[0]);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

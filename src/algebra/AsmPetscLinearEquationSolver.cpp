@@ -494,7 +494,7 @@ void AsmPetscLinearEquationSolver::MGsetLevels (
     }
   }
 
-  if ( level < levelMax ) {
+  if ( level < levelMax ) { //all but finest
       PetscVector* EPSp = static_cast< PetscVector* > ( _EPS );
       Vec EPS = EPSp->vec();
       PetscVector* RESp = static_cast< PetscVector* > ( _RES );
@@ -502,7 +502,7 @@ void AsmPetscLinearEquationSolver::MGsetLevels (
       PCMGSetX ( pcMG, level, EPS );
       PCMGSetRhs ( pcMG, level, RES );
     }
-    if ( level > 0 ) {
+    if ( level > 0 ) { //all but coarsest
       PetscVector* RESCp = static_cast<PetscVector*> ( _RESC );
       Vec RESC = RESCp->vec();
       PCMGSetR ( pcMG, level, RESC );

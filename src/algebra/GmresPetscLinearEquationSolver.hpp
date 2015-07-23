@@ -89,7 +89,7 @@ public:
 
   void MGsolve ( const bool ksp_clean , const unsigned &npre, const unsigned &npost );
 
-  void MGinit( const MgType &_mg_type, const unsigned &levelMax ){
+  void MGinit( const MgSmootherType & mg_smoother_type, const unsigned &levelMax ){
 
     KSPCreate(PETSC_COMM_WORLD,&_ksp);
 
@@ -97,16 +97,16 @@ public:
     PCSetType(_pc,PCMG);
     PCMGSetLevels(_pc,levelMax,NULL);
 
-    if( _mg_type == F_CYCLE ){
+    if( mg_smoother_type == FULL ){
       PCMGSetType(_pc, PC_MG_FULL);
     }
-    else if( _mg_type == MULTIPLICATIVE ){
+    else if( mg_smoother_type == MULTIPLICATIVE ){
       PCMGSetType(_pc, PC_MG_MULTIPLICATIVE);
     }
-    else if( _mg_type == ADDITIVE ){
+    else if( mg_smoother_type == ADDITIVE ){
       PCMGSetType(_pc, PC_MG_ADDITIVE);
     }
-    else if( _mg_type == KASKADE ){
+    else if( mg_smoother_type == KASKADE ){
       PCMGSetType(_pc, PC_MG_KASKADE);
     }
     else{

@@ -54,13 +54,17 @@ namespace femus {
     virtual void Pwrite(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) const = 0;
     /** set moving mesh */
     void SetMovingMesh(std::vector<std::string>& movvars_in);
-    
+
     /** runtime selection of writer for MLsol */
     static std::auto_ptr<Writer> build(const WriterEnum format, MultiLevelSolution * ml_sol);
 
     /** runtime selection of writer for MLmesh */
     static std::auto_ptr<Writer> build(const WriterEnum format, MultiLevelMesh * ml_mesh);
-    
+
+    virtual void SetDebugOutput( bool value ){
+      std::cout<<"Warning this writer type does not have debug printing"<<std::endl;
+    };
+
   protected:
 
     /** a flag to move the output mesh */
@@ -82,10 +86,12 @@ namespace femus {
     /** map from femus connectivity to vtk-connectivity for paraview visualization */
     static const unsigned FemusToVTKorToXDMFConn[27];
 
+
+
   private:
 
   };
-  
+
 } //end namespace femus
 
 

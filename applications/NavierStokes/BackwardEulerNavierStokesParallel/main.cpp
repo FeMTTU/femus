@@ -96,7 +96,7 @@ int main(int argc,char **args) {
   // System Navier-Stokes
   system.SetAssembleFunction(AssembleMatrixResNS);  
   system.SetMaxNumberOfLinearIterations(1);
-  system.SetAbsoluteConvergenceTolerance(1.e-8);  
+  system.SetLinearConvergenceTolerance(1.e-8);  
   system.SetMgType(V_CYCLE);
   system.SetMaxNumberOfNonLinearIterations(15);
 

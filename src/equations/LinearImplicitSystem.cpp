@@ -43,7 +43,8 @@ LinearImplicitSystem::LinearImplicitSystem (MultiLevelProblem& ml_probl,
   _SmootherType(smoother_type)
  {
   _SparsityPattern.resize(0);
-  _MGmatrixReuse = false;
+  _MGmatrixFineReuse = false;
+  _MGmatrixCoarseReuse = false;
  }
 
 LinearImplicitSystem::~LinearImplicitSystem() {
@@ -215,7 +216,7 @@ void LinearImplicitSystem::Vcycle(const unsigned &gridn,  const bool &full_cycle
 #endif
     for(unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++) { //linear cycle
 
-      std::cout << " ************* Linear-Cycle : "<< linearIterator + 1<< " *************" << std::endl;
+      std::cout << std::endl<< " ************ Linear iteration "<< linearIterator + 1 << " ***********" << std::endl;
 
       bool ksp_clean=!linearIterator;
 
@@ -343,7 +344,7 @@ bool LinearImplicitSystem::IsLinearConverged(const unsigned igridn) {
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned indexSol=_SolSystemPdeIndex[k];
     L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
-    std::cout << "level=" << igridn<< "\t Linear Res L2norm " << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normRes    <<std::endl;
+    std::cout << " ************ Level Max " << igridn+1<< "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName(indexSol) << " = " << L2normRes    <<std::endl;
     if (L2normRes < _absolute_convergence_tolerance && conv==true) {
       conv=true;
     }
@@ -351,7 +352,6 @@ bool LinearImplicitSystem::IsLinearConverged(const unsigned igridn) {
       conv=false;
     }
   }
-  std::cout << std::endl;
   return conv;
 
 }
@@ -879,45 +879,59 @@ double LinearImplicitSystem::MGStep(int Level,            // Level
 
 }
 
-void LinearImplicitSystem::MGsolve (){
+void LinearImplicitSystem::MGsolve (const MgSmootherType& mgSmootherType){
+  MGVcycle(_gridn, mgSmootherType);
+}
 
+void LinearImplicitSystem::MGVcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType){
   clock_t start_mg_time = clock();
 
-  _LinSolver[_gridn-1u]->MGinit( _mg_type, _gridn );
+  _LinSolver[gridn-1u]->MGinit( mgSmootherType, gridn );
 
-  _LinSolver[_gridn-1u]->SetEpsZero();
-  _LinSolver[_gridn-1u]->SetResZero();
+  _LinSolver[gridn-1u]->SetEpsZero();
+  _LinSolver[gridn-1u]->SetResZero();
 
   _assembleMatrix = true;
-  _levelToAssemble = _gridn-1u;
-  _levelMax = _gridn-1u;
+  _levelToAssemble = gridn-1u;
+  _levelMax = gridn-1u;
   _assemble_system_function( _equation_systems );
 
-  for( unsigned i =_gridn-1u; i > 0; i-- ){
-    _LinSolver[i-1u]->_KK->matrix_PtAP(*_PP[i], *_LinSolver[i]->_KK, _MGmatrixReuse );
+  for( unsigned i = gridn-1u; i > 0; i-- ){
+    if(_RR[i]){
+      if(i == gridn-1u)
+        _LinSolver[i-1u]->_KK->matrix_ABC(*_RR[i],*_LinSolver[i]->_KK,*_PP[i], _MGmatrixFineReuse);
+      else
+        _LinSolver[i-1u]->_KK->matrix_ABC(*_RR[i],*_LinSolver[i]->_KK,*_PP[i], _MGmatrixCoarseReuse);
+    }
+    else{
+      if(i == gridn-1u)
+        _LinSolver[i-1u]->_KK->matrix_PtAP(*_PP[i], *_LinSolver[i]->_KK, _MGmatrixFineReuse );
+      else
+        _LinSolver[i-1u]->_KK->matrix_PtAP(*_PP[i], *_LinSolver[i]->_KK, _MGmatrixCoarseReuse );
+    }
   }
 
-  for( unsigned i = 0; i < _gridn; i++ ){
+  for( unsigned i = 0; i < gridn; i++ ){
     if(_RR[i] )
-      _LinSolver[i]->MGsetLevels( _LinSolver[_gridn-1u], i, _gridn-1, _VariablesToBeSolvedIndex, _PP[i], _RR[i]);
+      _LinSolver[i]->MGsetLevels( _LinSolver[gridn-1u], i, gridn-1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i]);
     else
-      _LinSolver[i]->MGsetLevels( _LinSolver[_gridn-1u], i, _gridn-1, _VariablesToBeSolvedIndex, _PP[i], _PP[i]);
+      _LinSolver[i]->MGsetLevels( _LinSolver[gridn-1u], i, gridn-1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i]);
   }
 
   for(unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++) { //linear cycle
-    std::cout << " ************* Linear-Cycle : "<< linearIterator + 1 << " *************" << std::endl;
+    std::cout << std::endl<< " ************ Linear iteration "<< linearIterator + 1 << " ***********" << std::endl;
     bool ksp_clean=!linearIterator;
-    _LinSolver[_gridn-1u]->MGsolve( ksp_clean, _npre, _npost);
-    _solution[_gridn-1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[_gridn-1]->_RES, _LinSolver[_gridn-1]->KKoffset );
-    bool islinearconverged = IsLinearConverged(_gridn-1u);
+    _LinSolver[gridn-1u]->MGsolve( ksp_clean, _npre, _npost);
+    _solution[gridn-1u]->UpdateRes(_SolSystemPdeIndex, _LinSolver[gridn-1u]->_RES, _LinSolver[gridn-1u]->KKoffset );
+    bool islinearconverged = IsLinearConverged(gridn-1u);
     if(islinearconverged)
       break;
   }
-  _solution[_gridn-1u]->UpdateSol(_SolSystemPdeIndex, _LinSolver[_gridn-1u]->_EPS, _LinSolver[_gridn-1u]->KKoffset );
+  _solution[gridn-1u]->UpdateSol(_SolSystemPdeIndex, _LinSolver[gridn-1u]->_EPS, _LinSolver[gridn-1u]->KKoffset );
 
-  _LinSolver[_gridn-1u]->MGclear();
+  _LinSolver[gridn-1u]->MGclear();
 
-  std::cout << "\t Linear-Cycle TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
+  std::cout << std::endl<< " ********* Linear-Cycle TIME:   " << std::setw(11) << std::setprecision(6) << std::fixed
   <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
 }
 

@@ -51,7 +51,7 @@ public:
     /** Solves the system. */
     virtual void solve ();
 
-    virtual void MGsolve ();
+    virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
 
     /** Clear all the data structures associated with the system. */
     virtual void clear();
@@ -103,7 +103,7 @@ public:
     };
 
     /** Set the absolute convergence tolerance for the linear problem Ax=b*/
-    void SetAbsoluteConvergenceTolerance(double absolute_convergence_tolerance) {
+    void SetLinearConvergenceTolerance(double absolute_convergence_tolerance) {
         _absolute_convergence_tolerance = absolute_convergence_tolerance;
     };
 
@@ -172,6 +172,8 @@ public:
 protected:
 
     void Vcycle(const unsigned &gridn,  const bool & full_cycle,  const unsigned &nonlinear_cycle = 0);
+    void MGVcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType);
+
 
     /** Create the Prolongator matrix for the Multigrid solver */
     void Prolongator(const unsigned &gridf);
@@ -210,7 +212,8 @@ protected:
 
     /** To be Added */
     MgSmoother _SmootherType;
-    bool _MGmatrixReuse;
+    bool _MGmatrixFineReuse;
+    bool _MGmatrixCoarseReuse;
 
     /** To be Added */
     vector <unsigned> _VariablesToBeSolvedIndex;

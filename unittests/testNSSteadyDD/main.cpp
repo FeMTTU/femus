@@ -125,7 +125,7 @@ int main(int argc,char **args) {
   system1.SetAssembleFunction(AssembleMatrixResNS);  
   system1.SetMaxNumberOfNonLinearIterations(3);
   system1.SetMaxNumberOfLinearIterations(2);
-  system1.SetAbsoluteConvergenceTolerance(1.e-10);
+  system1.SetLinearConvergenceTolerance(1.e-10);
   system1.SetNonLinearConvergenceTolerance(1.e-04);
   system1.SetMgType(F_CYCLE);
   system1.SetNumberPreSmoothingStep(1);
@@ -169,7 +169,7 @@ int main(int argc,char **args) {
   // Set MG Options
   system2.SetAssembleFunction(AssembleMatrixResT);
   system2.SetMaxNumberOfLinearIterations(6);
-  system2.SetAbsoluteConvergenceTolerance(1.e-9);  
+  system2.SetLinearConvergenceTolerance(1.e-9);  
   system2.SetMgType(V_CYCLE);
   system2.SetNumberPreSmoothingStep(1);
   system2.SetNumberPostSmoothingStep(1);

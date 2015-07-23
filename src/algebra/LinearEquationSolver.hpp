@@ -77,7 +77,7 @@ public:
       abort();
     }
 
-    virtual void MGinit( const MgType &_mg_type, const unsigned &levelMax ){
+    virtual void MGinit( const MgSmootherType &mg_smoother_type, const unsigned &levelMax ){
       std::cout<<"Warning InitMG(...) is not available for this smoother\n";
       abort();
     }

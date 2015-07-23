@@ -4,10 +4,14 @@
 enum MgType {
     F_CYCLE=0,
     V_CYCLE,
-    M_CYCLE,
+    M_CYCLE
+};
+
+enum MgSmootherType{
+    FULL=0,
     MULTIPLICATIVE,
     ADDITIVE,
-    KASKADE 
+    KASKADE
 };
 
 #endif

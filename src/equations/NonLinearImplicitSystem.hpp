@@ -47,7 +47,7 @@ public:
 
     /** Solves the system. */
     virtual void solve ();
-    virtual void MGsolve ();
+    virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
     /** Clear all the data structures associated with the system. */
     virtual void clear();
 

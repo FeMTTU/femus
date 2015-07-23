@@ -65,7 +65,7 @@ int main(int argc, char** args) {
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 4);
+  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 4);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -112,12 +112,10 @@ int main(int argc, char** args) {
 
   system.SetMaxNumberOfNonLinearIterations(20);
   system.SetMaxNumberOfLinearIterations(3);
-  system.SetAbsoluteConvergenceTolerance(1.e-12);
+  system.SetLinearConvergenceTolerance(1.e-12);
   system.SetNonLinearConvergenceTolerance(1.e-8);
-  //system.SetMgType(F_CYCLE);
-  //system.SetMgType(ADDITIVE);
-  system.SetMgType(MULTIPLICATIVE);
-  //system.SetMgType(KASKADE);
+  system.SetMgType(F_CYCLE);
+
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
   // initilaize and solve the system

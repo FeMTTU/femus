@@ -53,14 +53,17 @@ void NonLinearImplicitSystem::solve() {
   unsigned igrid0;
 
   if(_mg_type == F_CYCLE) {
+    std::cout<< std::endl<<" *** Start MultiLevel Full-Cycle ***" << std::endl;
     full_cycle=1;
     igrid0=1;
   }
   else if(_mg_type == V_CYCLE){
+    std::cout<< std::endl<<" *** Start MultiLevel V-Cycle ***" << std::endl;
     full_cycle=0;
     igrid0=_gridn;
   }
   else {
+    std::cout<< std::endl<<" *** Start MultiLevel AMR-Cycle ***" << std::endl;
     full_cycle=0;
     igrid0=_gridr;
   }
@@ -69,15 +72,15 @@ void NonLinearImplicitSystem::solve() {
 
   for ( unsigned igridn=igrid0; igridn <= _gridn; igridn++) {   //_igridn
 
-    std::cout << std::endl << " ************* Level Max: " << igridn << " *************\n" << std::endl;
+    std::cout << std::endl << " ****** Start Level Max " << igridn << " ******" << std::endl;
+    clock_t start_nl_time = clock();
 
     bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_maxAMRlevels && igridn==_gridn)?1:0;
     if(ThisIsAMR) _solution[igridn-1]->InitAMREps();
 
 
     for ( unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++ ) { //non linear cycle
-      clock_t start_time = clock();
-      std::cout << std::endl << " ************* Nonlinear-Cycle: " << nonLinearIterator + 1 << " ****************\n" << std::endl;
+      std::cout << std::endl << " ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
       Vcycle(igridn, full_cycle, nonLinearIterator );
 
@@ -85,11 +88,6 @@ void NonLinearImplicitSystem::solve() {
       bool isnonlinearconverged = IsNonLinearConverged(igridn-1);
       if (isnonlinearconverged)
 	nonLinearIterator = _n_max_nonlinear_iterations+1;
-
-#ifndef NDEBUG
-      std::cout << std::endl;
-      std::cout << "COMPUTATION RESIDUAL: \t"<<static_cast<double>((clock()-start_time))/CLOCKS_PER_SEC << std::endl;
-#endif
     }
 
     if(ThisIsAMR){
@@ -115,10 +113,18 @@ void NonLinearImplicitSystem::solve() {
     if (igridn < _gridn) {
       ProlongatorSol(igridn);
     }
+
+    std::cout << std::endl << " ****** Nonlinear-Cycle TIME: " << std::setw(11) << std::setprecision(6) << std::fixed
+    <<static_cast<double>((clock()-start_nl_time))/CLOCKS_PER_SEC << std::endl;
+
+    std::cout << std::endl << " ****** End Level Max "<< igridn << " ******" << std::endl;
+
+
   }
 
-  std::cout << "\t Nonlinear-Cycle: TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
+  std::cout << std::endl << " *** MultiGrid TIME: " << std::setw(11) << std::setprecision(6) << std::fixed
   <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
+
 
 }
 
@@ -132,7 +138,7 @@ bool NonLinearImplicitSystem::IsNonLinearConverged(const unsigned igridn){
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned indexSol=_SolSystemPdeIndex[k];
     L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
-    std::cout << "level=" << igridn<< "\t Nonlinear Eps L2norm"     << std::scientific << _ml_sol->GetSolutionName(indexSol) << "=" << L2normEps <<std::endl;
+    std::cout << " ********* Level Max " << igridn+1<< " Nonlinear Eps L2norm" << std::scientific << _ml_sol->GetSolutionName(indexSol) << " = " << L2normEps <<std::endl;
     if (L2normEps <_max_nonlinear_convergence_tolerance && conv==true) {
       conv=true;
     }
@@ -140,25 +146,53 @@ bool NonLinearImplicitSystem::IsNonLinearConverged(const unsigned igridn){
       conv=false;
     }
   }
-  std::cout << std::endl;
   return conv;
 }
 
-void NonLinearImplicitSystem::MGsolve (){
+void NonLinearImplicitSystem::MGsolve (const MgSmootherType& mgSmootherType){
 
   clock_t start_mg_time = clock();
-  for ( unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++ ) {
-    std::cout << std::endl << " ************* Nonlinear-Cycle: " << nonLinearIterator + 1 << " ****************\n" << std::endl;
 
-    _MGmatrixReuse = (0 == nonLinearIterator ) ? false : true;
+  unsigned igrid0;
 
-    LinearImplicitSystem::MGsolve ();
-
-    bool isnonlinearconverged = IsNonLinearConverged(_gridn-1);
-    if (isnonlinearconverged)
-      nonLinearIterator = _n_max_nonlinear_iterations+1;
+  if(_mg_type == F_CYCLE) {
+    std::cout<< std::endl<<" *** Start Multigrid Full-Cycle ***" << std::endl;
+    igrid0=1;
   }
-  std::cout << "\t Nonlinear-Cycle: TIME:\t       " << std::setw(11) << std::setprecision(6) << std::fixed
+  else if(_mg_type == V_CYCLE){
+    std::cout<< std::endl<<" *** Start Multigrid V-Cycle ***" << std::endl;
+    igrid0=_gridn;
+  }
+  else {
+    std::cout<<"AMR-cycle not yet implemented in MGsolve"<<std::endl;
+    abort();
+  }
+
+  for ( unsigned igridn = igrid0; igridn <= _gridn; igridn++) {   //_igridn
+    std::cout << std::endl << " ****** Start Level Max " << igridn << " ******" << std::endl;
+    clock_t start_nl_time = clock();
+    for ( unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++ ) {
+      std::cout << std::endl << " ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
+
+      _MGmatrixFineReuse = (0 == nonLinearIterator ) ? false : true;
+      _MGmatrixCoarseReuse = ( igridn - igrid0 > 0 )? _MGmatrixFineReuse + true : _MGmatrixFineReuse + false;
+
+      MGVcycle (igridn, mgSmootherType);
+
+      bool isnonlinearconverged = IsNonLinearConverged(igridn-1);
+      if (isnonlinearconverged)
+        nonLinearIterator = _n_max_nonlinear_iterations+1;
+    }
+
+    if (igridn < _gridn) {
+      ProlongatorSol(igridn);
+    }
+    std::cout << std::endl << " ****** Nonlinear-Cycle TIME: " << std::setw(11) << std::setprecision(6) << std::fixed
+    <<static_cast<double>((clock()-start_nl_time))/CLOCKS_PER_SEC << std::endl;
+
+    std::cout << std::endl << " ****** End Level Max "<< igridn << " ******" << std::endl;
+  }
+  std::cout << std::endl << " *** MultiGrid TIME: " << std::setw(11) << std::setprecision(6) << std::fixed
   <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
 
 }

@@ -113,7 +113,7 @@ int main(int argc,char **args) {
   // System Fluid-Structure-Interaction
   system.SetAssembleFunction(AssembleMatrixResFSI);  
   system.SetMaxNumberOfLinearIterations(1);
-  system.SetAbsoluteConvergenceTolerance(1.e-8);  
+  system.SetLinearConvergenceTolerance(1.e-8);  
   system.SetMgType(F_CYCLE);
   system.SetMaxNumberOfNonLinearIterations(4);
   system.SetNonLinearConvergenceTolerance(1.e-5);

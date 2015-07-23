@@ -373,7 +373,7 @@ int main(int argc,char **argv) {
     // Set MG Options
     system2.SetAssembleFunction(AssemblePoissonMatrixandRhs);
     system2.SetMaxNumberOfLinearIterations(max_number_linear_iteration);
-    system2.SetAbsoluteConvergenceTolerance(abs_conv_tol);
+    system2.SetLinearConvergenceTolerance(abs_conv_tol);
     system2.SetMgType(mgtype);
     system2.SetNumberPreSmoothingStep(npresmoothing);
     system2.SetNumberPostSmoothingStep(npostmoothing);
