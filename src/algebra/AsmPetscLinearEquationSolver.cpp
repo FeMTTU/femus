@@ -450,6 +450,9 @@ void AsmPetscLinearEquationSolver::MGsetLevels (
     PCASMSetLocalSubdomains(subpc,_is_loc_idx.size(),&_is_ovl[0],&_is_loc[0]);
   }
   PCASMSetOverlap(subpc,_overlap);
+
+  //PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
+
   KSPSetUp(subksp);
 
   KSP *subksps;
@@ -608,11 +611,14 @@ void AsmPetscLinearEquationSolver::MGsolve ( const bool ksp_clean , const unsign
       if(!_standard_ASM){
       	ierr = PCASMSetLocalSubdomains(_pc,_is_loc_idx.size(),&_is_ovl[0],&_is_loc[0]); CHKERRABORT(MPI_COMM_WORLD,ierr);
       }
-      ierr = PCASMSetOverlap(_pc,_overlap); CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = PCASMSetOverlap(_pc,_overlap);                                         CHKERRABORT(MPI_COMM_WORLD,ierr);
+      //ierr = PCASMSetLocalType(_pc, PC_COMPOSITE_MULTIPLICATIVE);                   CHKERRABORT(MPI_COMM_WORLD,ierr);
       ierr = KSPSetUp(_ksp);							    CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+
       ierr = PCASMGetSubKSP(_pc,&_nlocal,&_first,&_ksp_asm);			    CHKERRABORT(MPI_COMM_WORLD,ierr);
 
-       PetscReal epsilon = 1.e-16;
+      PetscReal epsilon = 1.e-16;
 
       if(!_standard_ASM){
 	_pc_asm.resize(2);

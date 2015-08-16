@@ -314,8 +314,9 @@ int main(int argc,char **args) {
     system.SetElementBlockNumber(2);
   }
   else if(simulation < 7 ){
-    system.SetElementBlockNumberFluid(2);
-    system.SetElementBlockSolidAll();
+    system.SetElementBlockNumber(2);
+    //system.SetElementBlockNumberFluid(2);
+    //system.SetElementBlockSolidAll();
   }
   else if(simulation == 7 ){
     system.SetElementBlockNumber(3);
