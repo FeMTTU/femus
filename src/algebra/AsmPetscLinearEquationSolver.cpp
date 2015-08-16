@@ -450,9 +450,7 @@ void AsmPetscLinearEquationSolver::MGsetLevels (
     PCASMSetLocalSubdomains(subpc,_is_loc_idx.size(),&_is_ovl[0],&_is_loc[0]);
   }
   PCASMSetOverlap(subpc,_overlap);
-
   //PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
-
   KSPSetUp(subksp);
 
   KSP *subksps;
