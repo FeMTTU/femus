@@ -279,8 +279,8 @@ int main(int argc,char **args) {
   system.SetNumberPreSmoothingStep(1);
   system.SetNumberPostSmoothingStep(1);
   if( simulation < 3 || simulation == 7 ) {
-    system.SetMaxNumberOfLinearIterations(2);
-    system.SetMaxNumberOfNonLinearIterations(10);
+    system.SetMaxNumberOfLinearIterations(3);
+    system.SetMaxNumberOfNonLinearIterations(15);
   }
   else {
     system.SetMaxNumberOfLinearIterations(8);
@@ -300,7 +300,7 @@ int main(int argc,char **args) {
     system.SetPreconditionerFineGrids(ILU_PRECOND);
   else
     system.SetPreconditionerFineGrids(MLU_PRECOND);
-  system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
+  system.SetTolerances(1.e-12,1.e-20,1.e+50,5);
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
@@ -328,7 +328,7 @@ int main(int argc,char **args) {
   // ******* Solve *******
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
-  system.solve();
+  system.MGsolve();
 
   // ******* Print solution *******
   ml_sol.SetWriter(GMV);

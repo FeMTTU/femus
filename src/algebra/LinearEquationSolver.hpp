@@ -89,12 +89,14 @@ public:
 
     virtual void MGsetLevels( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &levelMax,
                                const vector <unsigned> &variable_to_be_solved,
-                               SparseMatrix* PP, SparseMatrix* RR ){
+                               SparseMatrix* PP, SparseMatrix* RR,
+                               const unsigned &npre, const unsigned &npost
+                             ){
       std::cout<<"Warning SetMGOptions(...) is not available for this smoother\n";
       abort();
     }
 
-    virtual void MGsolve( const bool ksp_clean, const unsigned &npre, const unsigned &npost ) {
+    virtual void MGsolve( const bool ksp_clean ) {
       std::cout<<"Warning MGsolve(...) is not available for this smoother\n";
       abort();
     };

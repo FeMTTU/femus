@@ -627,7 +627,7 @@ void LinearImplicitSystem::SetTolerances(const double rtol, const double atol,
   _atol=atol;
   _divtol=divtol;
   _maxits=maxits;
-  for (unsigned i=1; i<_gridn; i++) {
+  for (unsigned i=0; i<_gridn; i++) {
     _LinSolver[i]->set_tolerances(_rtol,_atol,_divtol,_maxits);
   }
 }
@@ -913,15 +913,15 @@ void LinearImplicitSystem::MGVcycle (const unsigned & gridn, const MgSmootherTyp
 
   for( unsigned i = 0; i < gridn; i++ ){
     if(_RR[i] )
-      _LinSolver[i]->MGsetLevels( _LinSolver[gridn-1u], i, gridn-1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i]);
+      _LinSolver[i]->MGsetLevels( _LinSolver[gridn-1u], i, gridn-1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost);
     else
-      _LinSolver[i]->MGsetLevels( _LinSolver[gridn-1u], i, gridn-1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i]);
+      _LinSolver[i]->MGsetLevels( _LinSolver[gridn-1u], i, gridn-1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost);
   }
 
   for(unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++) { //linear cycle
     std::cout << std::endl<< " ************ Linear iteration "<< linearIterator + 1 << " ***********" << std::endl;
     bool ksp_clean=!linearIterator;
-    _LinSolver[gridn-1u]->MGsolve( ksp_clean, _npre, _npost);
+    _LinSolver[gridn-1u]->MGsolve( ksp_clean );
     _solution[gridn-1u]->UpdateRes(_SolSystemPdeIndex, _LinSolver[gridn-1u]->_RES, _LinSolver[gridn-1u]->KKoffset );
     bool islinearconverged = IsLinearConverged(gridn-1u);
     if(islinearconverged)

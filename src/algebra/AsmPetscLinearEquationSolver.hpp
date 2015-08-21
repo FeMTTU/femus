@@ -49,9 +49,10 @@ public:
 
     void MGsetLevels ( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &maxlevel,
                       const vector <unsigned> &variable_to_be_solved,
-                      SparseMatrix* PP, SparseMatrix* RR );
+                      SparseMatrix* PP, SparseMatrix* RR ,
+                      const unsigned &npre, const unsigned &npost);
 
-    void MGsolve ( const bool ksp_clean, const unsigned &npre, const unsigned &npost );
+    void MGsolve ( const bool ksp_clean );
 
     void MGinit( const MgSmootherType &mg_smoother_type, const unsigned &levelMax ){
 
