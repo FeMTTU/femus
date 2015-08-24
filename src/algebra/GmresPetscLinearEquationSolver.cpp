@@ -135,7 +135,7 @@ namespace femus {
         // initialize Pmat wiwth penaly diagonal on the Dirichlet Nodes
         MatDuplicate(KK, MAT_COPY_VALUES, &_Pmat);
         MatSetOption(_Pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
-        MatZeroRows(_Pmat, _indexai[0].size(), &_indexai[0][0], 1.e40, 0, 0);
+        MatZeroRows(_Pmat, _indexai[0].size(), &_indexai[0][0], 1.e100, 0, 0);
         _Pmat_is_initialized = true;
         this->init(KK, _Pmat);
       }
@@ -270,8 +270,9 @@ namespace femus {
 
     KSP subksp;
     KSP subkspUp;
-    if (level == 0)
+    if (level == 0){
       PCMGGetCoarseSolve(pcMG, &subksp);
+    }
     else {
       PCMGGetSmoother(pcMG, level , &subksp);
       KSPSetTolerances(subksp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npre);
@@ -290,7 +291,7 @@ namespace femus {
 
     MatDuplicate(KK, MAT_COPY_VALUES, &_Pmat);
     MatSetOption(_Pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
-    MatZeroRows(_Pmat, _indexai[0].size(), &_indexai[0][0], 1.e40, 0, 0);
+    MatZeroRows(_Pmat, _indexai[0].size(), &_indexai[0][0], 1.e100, 0, 0);
     _Pmat_is_initialized = true;
 
     std::ostringstream levelName;

@@ -300,7 +300,7 @@ int main(int argc,char **args) {
     system.SetPreconditionerFineGrids(ILU_PRECOND);
   else
     system.SetPreconditionerFineGrids(MLU_PRECOND);
-  system.SetTolerances(1.e-12,1.e-20,1.e+50,5);
+  system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
@@ -317,6 +317,7 @@ int main(int argc,char **args) {
     system.SetElementBlockNumber(2);
     //system.SetElementBlockNumberFluid(2);
     //system.SetElementBlockSolidAll();
+    //system.SetElementBlockFluidAll();
   }
   else if(simulation == 7 ){
     system.SetElementBlockNumber(3);

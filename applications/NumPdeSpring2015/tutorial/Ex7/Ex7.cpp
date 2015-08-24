@@ -110,7 +110,7 @@ int main(int argc, char** args) {
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
-  system.SetMaxNumberOfNonLinearIterations(20);
+  system.SetMaxNumberOfNonLinearIterations(10);
   system.SetMaxNumberOfLinearIterations(3);
   system.SetLinearConvergenceTolerance(1.e-12);
   system.SetNonLinearConvergenceTolerance(1.e-8);

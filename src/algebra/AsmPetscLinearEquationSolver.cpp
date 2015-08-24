@@ -344,7 +344,7 @@ namespace femus {
       // initialize Pmat wiwth penaly diagonal on the Dirichlet Nodes
       MatDuplicate(KK, MAT_COPY_VALUES, &_Pmat);
       MatSetOption(_Pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
-      MatZeroRows(_Pmat, _indexai[0].size(), &_indexai[0][0], 1.e40, 0, 0);
+      MatZeroRows(_Pmat, _indexai[0].size(), &_indexai[0][0], 1.e100, 0, 0);
       _Pmat_is_initialized = true;
 
 
@@ -386,11 +386,27 @@ namespace femus {
     // **************** END RES/EPS UPDATE RES ***************
 
     // *** Computational info ***
-#ifndef NDEBUG
-    cout << "ASM Grid: " << _msh->GetLevel() << "        SOLVER TIME:        "  << std::setw(11) << std::setprecision(6) << std::fixed <<
-         static_cast<double>(SearchTime + AssemblyTime + SolveTime + UpdateTime) / CLOCKS_PER_SEC <<
-         "  ITS: " << _maxits  << "\t ksp_clean = " << ksp_clean << endl;
-#endif
+//#ifndef NDEBUG
+    int its;
+    KSPGetIterationNumber(_ksp, &its);
+
+    KSPConvergedReason reason;
+    KSPGetConvergedReason(_ksp, &reason);
+
+    PetscReal rnorm;
+    KSPGetResidualNorm(_ksp, &rnorm);
+
+    std::cout << "Number of iterations = " << its << "\t convergence reason = " << reason << std::endl;
+    std::cout << "Residual Norm ="<< rnorm <<std::endl;
+    std::cout << _rtol << " " << _abstol << " " << _dtol << " " << _maxits << std::endl;
+
+
+
+
+//     cout << "ASM Grid: " << _msh->GetLevel() << "        SOLVER TIME:        "  << std::setw(11) << std::setprecision(6) << std::fixed <<
+//          static_cast<double>(SearchTime + AssemblyTime + SolveTime + UpdateTime) / CLOCKS_PER_SEC <<
+//          "  ITS: " << _maxits  << "\t ksp_clean = " << ksp_clean << endl;
+//#endif
 
   }
 
@@ -413,12 +429,23 @@ namespace femus {
     PC pcMG;
     KSPGetPC(*kspMG, &pcMG);
 
+    PetscMatrix* KKp = static_cast< PetscMatrix* >(_KK);
+    Mat KK = KKp->mat();
+
+    if (_Pmat_is_initialized) MatDestroy(&_Pmat);
+    MatDuplicate(KK, MAT_COPY_VALUES, &_Pmat);
+    MatSetOption(_Pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
+    MatZeroRows(_Pmat, _indexai[0].size(), &_indexai[0][0], 1.e100, 0, 0);
+    _Pmat_is_initialized = true;
+
+
     KSP subksp;
     KSP subkspUp;
     if (level == 0)
       PCMGGetCoarseSolve(pcMG, &subksp);
     else {
       PCMGGetSmoother(pcMG, level , &subksp);
+      //KSPSetInitialGuessKnoll(subksp, PETSC_TRUE);
       KSPSetTolerances(subksp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npre);
       if (npre != npost) {
         PCMGGetSmootherUp(pcMG, level , &subkspUp);
@@ -427,16 +454,6 @@ namespace femus {
       }
     }
     this->set_petsc_solver_type(subksp);
-
-    if (_Pmat_is_initialized) MatDestroy(&_Pmat);
-
-    PetscMatrix* KKp = static_cast< PetscMatrix* >(_KK);
-    Mat KK = KKp->mat();
-
-    MatDuplicate(KK, MAT_COPY_VALUES, &_Pmat);
-    MatSetOption(_Pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
-    MatZeroRows(_Pmat, _indexai[0].size(), &_indexai[0][0], 1.e40, 0, 0);
-    _Pmat_is_initialized = true;
 
     std::ostringstream levelName;
     levelName << "level-" << level;
@@ -528,13 +545,12 @@ namespace femus {
 
   void AsmPetscLinearEquationSolver::MGsolve(const bool ksp_clean) {
 
-    cout << "ksp clean=" << ksp_clean << std::endl;
     if (ksp_clean) {
       PetscMatrix* KKp = static_cast< PetscMatrix* >(_KK);
       Mat KK = KKp->mat();
       KSPSetOperators(_ksp, KK, _Pmat);
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
-      KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
+      //KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
       KSPSetFromOptions(_ksp);
     }
 
@@ -546,8 +562,8 @@ namespace femus {
     KSPSolve(_ksp, RES, EPSC);
 
     _RESC->matrix_mult(*_EPSC, *_KK);
-    *_RES -= *_RESC;
 
+    *_RES -= *_RESC;
     *_EPS += *_EPSC;
 
 #ifndef NDEBUG
@@ -557,7 +573,11 @@ namespace femus {
     KSPConvergedReason reason;
     KSPGetConvergedReason(_ksp, &reason);
 
+    PetscReal rnorm;
+    KSPGetResidualNorm(_ksp, &rnorm);
+
     std::cout << "Number of iterations = " << its << "\t convergence reason = " << reason << std::endl;
+    std::cout << "Residual Norm ="<< rnorm <<std::endl;
     std::cout << _rtol << " " << _abstol << " " << _dtol << " " << _maxits << std::endl;
 #endif
 
@@ -606,7 +626,7 @@ namespace femus {
       ierr = KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
       CHKERRABORT(MPI_COMM_WORLD, ierr);
 
-      if (_msh->GetLevel() != 0)
+      if ( _msh->GetLevel() != 0)
         KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
 
       if (_msh->GetLevel() != 0)
