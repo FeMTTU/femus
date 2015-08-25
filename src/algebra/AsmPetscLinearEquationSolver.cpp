@@ -550,7 +550,7 @@ namespace femus {
       Mat KK = KKp->mat();
       KSPSetOperators(_ksp, KK, _Pmat);
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
-      //KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
+      KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
       KSPSetFromOptions(_ksp);
     }
 
