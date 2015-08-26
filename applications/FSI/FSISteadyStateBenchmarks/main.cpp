@@ -276,8 +276,10 @@ int main(int argc,char **args) {
   system.SetNonLinearConvergenceTolerance(1.e-10);
   if( simulation == 7 )
     system.SetNonLinearConvergenceTolerance(1.e-5);
-  system.SetNumberPreSmoothingStep(20);
-  system.SetNumberPostSmoothingStep(20);
+
+  system.SetNumberPreSmoothingStep(15);
+  system.SetNumberPostSmoothingStep(15);
+  
   if( simulation < 3 || simulation == 7 ) {
     system.SetMaxNumberOfLinearIterations(3);
     system.SetMaxNumberOfNonLinearIterations(15);
@@ -300,7 +302,8 @@ int main(int argc,char **args) {
     system.SetPreconditionerFineGrids(ILU_PRECOND);
   else
     system.SetPreconditionerFineGrids(MLU_PRECOND);
-  system.SetTolerances(1.e-12,1.e-20,1.e+50,2);
+
+  system.SetTolerances(1.e-12,1.e-20,1.e+50,1);
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
