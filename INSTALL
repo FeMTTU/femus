@@ -8,7 +8,8 @@
 
   ( If they are not installed already, the script "install_external.sh" in contrib/scripts/ will do it automatically, with the following syntax:
   
-  ./femus/contrib/scripts/install_external.sh --prefix-external my_external_directory )
+  ./femus/contrib/scripts/install_petsc_and_libmesh.sh --prefix-external my_external_directory 
+   )
 
   
 - Source the "configure_femus.sh" script and execute the function "fm_set_femus" in order to set some environment variables:
