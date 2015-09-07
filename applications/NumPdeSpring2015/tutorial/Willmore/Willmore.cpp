@@ -17,33 +17,114 @@
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
+#include <cstdlib>
 
 
 using namespace femus;
 
-const double theta = acos(-1.) / 3;
+int simulation = 1; // =1 sphere (default) = 2 torus
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+//Sphere
+
+double thetaSphere = acos(-1.)/3;
+
+bool SetBoundaryConditionSphere(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
 
   if (!strcmp("u", SolName)) {
-    value = tan(theta);
-  } else if (!strcmp("v", SolName)) {
-    value = -1. / tan(theta);
+    value = tan(thetaSphere);
+  } else if (!strcmp("W", SolName)) {
+    value = -1. / tan(thetaSphere);
   }
 
   return dirichlet;
 }
 
-double InitalValueU(const std::vector < double >& x) {
-  return tan(theta);
+double InitalValueUSphere(const std::vector < double >& x) {
+  return tan(thetaSphere);
 }
+
+double InitalValueWSphere(const std::vector < double >& x) {
+  return -1. / tan(thetaSphere);
+}
+
+// Torus
+
+bool SetBoundaryConditionTorus(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+  bool dirichlet = true; //dirichlet
+
+  double theta=acos(-1.)/6;
+  double z = sin(theta);
+
+  if (!strcmp("u", SolName)) {
+    value = z;
+  }
+  else if (!strcmp("W", SolName)) {
+    double theta1 = theta;
+    double theta2 = acos(-1.)-theta1;
+    double A=1./z;
+    double H1 =  0.5 * ( 1. + cos(theta1) / ( sqrt(2.) + cos(theta1) ) );
+    double H2 =  0.5 * ( 1. + cos(theta2) / ( sqrt(2.) + cos(theta2) ) );
+    if(facename == 1){
+      value = - A * H1;
+    }
+    else if(facename == 2){
+      value = - A * H2;
+    }
+  }
+
+  return dirichlet;
+}
+
+double InitalValueUTorus(const std::vector < double >& x) {
+  double r = sqrt( x[0] * x[0] + x[1] * x[1] );
+  double cosu = r - sqrt(2) ;
+  return sqrt( 1 - cosu * cosu );
+  //return 0.5;
+}
+
+double InitalValueWTorus(const std::vector < double >& x) {
+
+  double r = sqrt( x[0] * x[0] + x[1] * x[1] );
+  double cosu = r - sqrt(2) ;
+  double sinu = sqrt( 1 - cosu*cosu );
+
+  return - 0.5 / sinu * ( 1 + cosu / ( sqrt(2.) + cosu ) );
+  //return 0.25;
+}
+
 
 void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob);
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol);
 
 int main(int argc, char** args) {
+
+
+  if(argc >= 2) {
+    if( !strcmp("sphere",args[1]) || !strcmp("Sphere",args[1]) || !strcmp("SPHERE",args[1])) {
+      simulation = 1;
+      if( argc >= 3 ){
+        std::string str;
+        std::stringstream ss;
+        ss << args[2];
+        ss >> str;
+        int angle = atoi(str.c_str());
+        thetaSphere = acos(-1.)/180*angle;
+        //std::cout<<angle<<std::endl;
+        //abort();
+      }
+    }
+    else if( !strcmp("torus",args[1]) || !strcmp("Torus",args[1]) || !strcmp("TORUS",args[1])) simulation = 2;
+    else {
+      std::cout << "Wrong input, using default argument: simulation = 1 (Sphere)" << std::endl;
+    }
+  }
+  else {
+    std::cout << "No input argument, using default argument: simulation = 1 (Sphere)" << std::endl;
+  }
+
+
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
@@ -64,7 +145,12 @@ int main(int argc, char** args) {
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
     std::ostringstream filename;
-    filename << "./input/circle_quad" << i << ".neu";
+    if ( simulation == 1){
+      filename << "./input/circle_quad" << i << ".neu";
+    }
+    else if ( simulation == 2){
+      filename << "./input/torus30_" << i << ".neu";
+    }
     MultiLevelMesh mlMsh;
     // read coarse level mesh and generate finers level meshes
     double scalingFactor = 1.;
@@ -94,14 +180,24 @@ int main(int argc, char** args) {
 
       // add variables to mlSol
       mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
-      mlSol.AddSolution("v", LAGRANGE, feOrder[j]);
-      mlSol.Initialize("All");
-      mlSol.Initialize("u", InitalValueU);
-      // attach the boundary condition function and generate boundary data
-      mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-      mlSol.GenerateBdc("u");
-      mlSol.GenerateBdc("v");
+      mlSol.AddSolution("W", LAGRANGE, feOrder[j]);
 
+      if( simulation == 1){
+        mlSol.Initialize("u", InitalValueUSphere);
+        mlSol.Initialize("W", InitalValueWSphere);
+        // attach the boundary condition function and generate boundary data
+        mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionSphere);
+        mlSol.GenerateBdc("u");
+        mlSol.GenerateBdc("W");
+      }
+      else if( simulation == 2){
+        mlSol.Initialize("u", InitalValueUTorus);
+        mlSol.Initialize("W", InitalValueWTorus);
+        // attach the boundary condition function and generate boundary data
+        mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTorus);
+        mlSol.GenerateBdc("u");
+        mlSol.GenerateBdc("W");
+      }
       // define the multilevel problem attach the mlSol object to it
       MultiLevelProblem mlProb(&mlSol);
 
@@ -110,14 +206,14 @@ int main(int argc, char** args) {
 
       // add solution "u" to system
       system.AddSolutionToSystemPDE("u");
-      system.AddSolutionToSystemPDE("v");
+      system.AddSolutionToSystemPDE("W");
 
       // attach the assembling function to system
       system.SetAssembleFunction(AssembleWillmoreProblem_AD);
 
       // initilaize and solve the system
       system.init();
-      system.solve();
+      system.MGsolve();
 
       std::pair< double , double > norm = GetErrorNorm(&mlSol);
       l2Norm[i][j]  = norm.first;
@@ -127,6 +223,7 @@ int main(int argc, char** args) {
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
+      vtkIO.SetSurfaceVariable("u");
       vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
 
     }
@@ -258,14 +355,14 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
 
   vector < adept::adouble >  solu; // local solution
 
-  unsigned solvIndex;
-  solvIndex = mlSol->GetIndex("v");    // get the position of "v" in the ml_sol object
-  unsigned solvType = mlSol->GetSolutionType(solvIndex);    // get the finite element type for "v"
+  unsigned solWIndex;
+  solWIndex = mlSol->GetIndex("W");    // get the position of "v" in the ml_sol object
+  unsigned solWType = mlSol->GetSolutionType(solWIndex);    // get the finite element type for "v"
 
-  unsigned solvPdeIndex;
-  solvPdeIndex = mlPdeSys->GetSolPdeIndex("v");    // get the position of "v" in the pdeSys object
+  unsigned solWPdeIndex;
+  solWPdeIndex = mlPdeSys->GetSolPdeIndex("W");    // get the position of "v" in the pdeSys object
 
-  vector < adept::adouble >  solv; // local solution
+  vector < adept::adouble >  solW; // local solution
 
 
 
@@ -280,13 +377,13 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
 
   vector< double > Res; // local redidual vector
   vector< adept::adouble > aResu; // local redidual vector
-  vector< adept::adouble > aResv; // local redidual vector
+  vector< adept::adouble > aResW; // local redidual vector
 
 
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
   solu.reserve(maxSize);
-  solv.reserve(maxSize);
+  solW.reserve(maxSize);
 
   for (unsigned i = 0; i < dim; i++)
     x[i].reserve(maxSize);
@@ -299,7 +396,7 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
 
   Res.reserve(2 * maxSize);
   aResu.reserve(maxSize);
-  aResv.reserve(maxSize);
+  aResW.reserve(maxSize);
 
   vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
   Jac.reserve(4 * maxSize * maxSize);
@@ -321,7 +418,7 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
     // resize local arrays
     KKDof.resize(2 * nDofs);
     solu.resize(nDofs);
-    solv.resize(nDofs);
+    solW.resize(nDofs);
 
     for (int i = 0; i < dim; i++) {
       x[i].resize(nDofs2);
@@ -329,10 +426,10 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
 
     Res.resize(2 * nDofs);    //resize
     aResu.resize(nDofs);    //resize
-    aResv.resize(nDofs);    //resize
+    aResW.resize(nDofs);    //resize
 
     std::fill(aResu.begin(), aResu.end(), 0);    //set aRes to zero
-    std::fill(aResv.begin(), aResv.end(), 0);    //set aRes to zero
+    std::fill(aResW.begin(), aResW.end(), 0);    //set aRes to zero
 
     if (assembleMatrix) {   //resize
       Jact.resize(4 * nDofs * nDofs);
@@ -344,9 +441,9 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
       unsigned iNode = el->GetMeshDof(kel, i, soluType);    // local to global solution node
       unsigned solDof = msh->GetMetisDof(iNode, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
-      solv[i] = (*sol->_Sol[solvIndex])(solDof);      // global extraction and local storage for the solution
+      solW[i] = (*sol->_Sol[solWIndex])(solDof);      // global extraction and local storage for the solution
       KKDof[i]       = pdeSys->GetKKDof(soluIndex, soluPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dof
-      KKDof[nDofs + i] = pdeSys->GetKKDof(solvIndex, solvPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dof
+      KKDof[nDofs + i] = pdeSys->GetKKDof(solWIndex, solWPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dof
     }
 
     // local storage of coordinates
@@ -354,8 +451,8 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
       unsigned iNode = el->GetMeshDof(kel, i, xType);    // local to global coordinates node
       unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
 
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_coordinate->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+      for (unsigned idim = 0; idim < dim; idim++) {
+        x[idim][i] = (*msh->_coordinate->_Sol[idim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -372,37 +469,37 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
         adept::adouble soluGauss = 0;
         vector < adept::adouble > soluGauss_x(dim, 0.);
 
-        adept::adouble solvGauss = 0;
-        vector < adept::adouble > solvGauss_x(dim, 0.);
+        adept::adouble solWGauss = 0;
+        vector < adept::adouble > solWGauss_x(dim, 0.);
 
         vector < double > xGauss(dim, 0.);
 
         for (unsigned i = 0; i < nDofs; i++) {
           soluGauss += phi[i] * solu[i];
-          solvGauss += phi[i] * solv[i];
+          solWGauss += phi[i] * solW[i];
 
-          for (unsigned jdim = 0; jdim < dim; jdim++) {
-            soluGauss_x[jdim] += phi_x[i * dim + jdim] * solu[i];
-            solvGauss_x[jdim] += phi_x[i * dim + jdim] * solv[i];
-            xGauss[jdim] += x[jdim][i] * phi[i];
+          for (unsigned idim = 0; idim < dim; idim++) {
+            soluGauss_x[idim] += phi_x[i * dim + idim] * solu[i];
+            solWGauss_x[idim] += phi_x[i * dim + idim] * solW[i];
+            xGauss[idim] += x[idim][i] * phi[i];
           }
         }
 
-        double c = .0;
+        double c = 0.;
         double Id[2][2] = {{1., 0.}, {0., 1.}};
         adept::adouble A2 = 1.;
         vector < vector < adept::adouble> > B(dim);
 
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
-          B[jdim].resize(dim);
-          A2 += soluGauss_x[jdim] * soluGauss_x[jdim];
+        for (unsigned idim = 0; idim < dim; idim++) {
+          B[idim].resize(dim);
+          A2 += soluGauss_x[idim] * soluGauss_x[idim];
         }
 
         adept::adouble A = sqrt(A2);
 
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
-          for (unsigned kdim = 0; kdim < dim; kdim++) {
-            B[jdim][kdim] = Id[jdim][kdim] - (soluGauss_x[jdim] * soluGauss_x[kdim]) / A2;
+        for (unsigned idim = 0; idim < dim; idim++) {
+          for (unsigned jdim = 0; jdim < dim; jdim++) {
+            B[idim][jdim] = Id[idim][jdim] - (soluGauss_x[idim] * soluGauss_x[jdim]) / A2;
           }
         }
 
@@ -410,19 +507,21 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
         for (unsigned i = 0; i < nDofs; i++) {
 
           adept::adouble nonLinearLaplaceU = 0.;
-          adept::adouble nonLinearLaplaceV = 0.;
+          adept::adouble nonLinearLaplaceW = 0.;
 
-          for (unsigned jdim = 0; jdim < dim; jdim++) {
+          for (unsigned idim = 0; idim < dim; idim++) {
 
-            nonLinearLaplaceU +=  - 1. / A  * soluGauss_x[jdim] * phi_x[i * dim + jdim];
+            nonLinearLaplaceU +=  - 1. / A  * soluGauss_x[idim] * phi_x[i * dim + idim];
 
-            nonLinearLaplaceV +=    1. / A * (- (B[jdim][0] * solvGauss_x[0] + B[jdim][1] * solvGauss_x[1]) * phi_x[i * dim + jdim]
-                                              + (solvGauss * solvGauss / A2 + c) * soluGauss_x[jdim] * phi_x[i * dim + jdim]);
+            nonLinearLaplaceW +=   -1. / A * ( (B[idim][0] * solWGauss_x[0] +
+                                                B[idim][1] * solWGauss_x[1])
+                                              - (solWGauss * solWGauss / A2 + c) *
+                                                soluGauss_x[idim] ) * phi_x[i * dim + idim];
 
           }
 
-          aResu[i] += (2.*solvGauss / A * phi[i] - nonLinearLaplaceU) * weight;
-          aResv[i] += nonLinearLaplaceV * weight;
+          aResu[i] += (2.*solWGauss / A * phi[i] - nonLinearLaplaceU) * weight;
+          aResW[i] += nonLinearLaplaceW * weight;
 
         } // end phi_i loop
       } // end gauss point loop
@@ -434,7 +533,7 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
     //copy the value of the adept::adoube aRes in double Res and store
     for (int i = 0; i < nDofs; i++) {
       Res[i]       = aResu[i].value();
-      Res[nDofs + i] = aResv[i].value();
+      Res[nDofs + i] = aResW[i].value();
     }
 
     RES->add_vector_blocked(Res, KKDof);
@@ -443,11 +542,11 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
 
       // define the dependent variables
       s.dependent(&aResu[0], nDofs);
-      s.dependent(&aResv[0], nDofs);
+      s.dependent(&aResW[0], nDofs);
 
       // define the independent variables
       s.independent(&solu[0], nDofs);
-      s.independent(&solv[0], nDofs);
+      s.independent(&solW[0], nDofs);
       // get the jacobian matrix (ordered by column)
       s.jacobian(&Jac[0]);
 
@@ -473,20 +572,36 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
-
-
-
 // functions post processing
 
-double GetExactSolutionValue(const std::vector < double >& x) {
-  return sqrt(1. / (cos(theta) * cos(theta)) - x[0] * x[0] - x[1] * x[1]);
+double GetExactSolutionValueSphere(const std::vector < double >& x) {
+  return sqrt(1. / (cos(thetaSphere) * cos(thetaSphere)) - x[0] * x[0] - x[1] * x[1]);
+};
+
+void GetExactSolutionGradientSphere(const std::vector < double >& x, vector < double >& solGrad) {
+  double pi = acos(-1.);
+  solGrad[0]  = -x[0] / sqrt(1. / (cos(thetaSphere) * cos(thetaSphere)) - x[0] * x[0] - x[1] * x[1]);
+  solGrad[1]  = -x[1] / sqrt(1. / (cos(thetaSphere) * cos(thetaSphere)) - x[0] * x[0] - x[1] * x[1]);
 };
 
 
-void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
-  double pi = acos(-1.);
-  solGrad[0]  = -x[0] / sqrt(1. / (cos(theta) * cos(theta)) - x[0] * x[0] - x[1] * x[1]);
-  solGrad[1]  = -x[1] / sqrt(1. / (cos(theta) * cos(theta)) - x[0] * x[0] - x[1] * x[1]);
+double GetExactSolutionValueTorus(const std::vector < double >& x) {
+
+  double r = sqrt( x[0] * x[0] + x[1] * x[1] );
+  double cosu =  r - sqrt(2) ;
+  return sqrt( 1 - cosu * cosu );
+
+};
+
+void GetExactSolutionGradientTorus(const std::vector < double >& x, vector < double >& solGrad) {
+
+  double r = sqrt( x[0] * x[0] + x[1] * x[1] );
+  double cosu =  r - sqrt(2) ;
+  double z = sqrt( 1 - cosu * cosu );
+
+  solGrad[0] =  - cosu / ( r * z ) * x[0];
+  solGrad[1] =  - cosu / ( r * z ) * x[1];
+
 };
 
 
@@ -559,8 +674,8 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
       unsigned iNode = el->GetMeshDof(kel, i, xType);    // local to global coordinates node
       unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
 
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_coordinate->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+      for (unsigned idim = 0; idim < dim; idim++) {
+        x[idim][i] = (*msh->_coordinate->_Sol[idim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -577,21 +692,30 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
       for (unsigned i = 0; i < nDofs; i++) {
         soluGauss += phi[i] * solu[i];
 
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
-          soluGauss_x[jdim] += phi_x[i * dim + jdim] * solu[i];
-          xGauss[jdim] += x[jdim][i] * phi[i];
+        for (unsigned idim = 0; idim < dim; idim++) {
+          soluGauss_x[idim] += phi_x[i * dim + idim] * solu[i];
+          xGauss[idim] += x[idim][i] * phi[i];
         }
       }
 
+      double exactSol;
       vector <double> solGrad(dim);
-      GetExactSolutionGradient(xGauss, solGrad);
+      if( simulation == 1){
+        exactSol = GetExactSolutionValueSphere(xGauss);
+        GetExactSolutionGradientSphere(xGauss, solGrad);
+      }
+      else if( simulation == 2){
+        exactSol = GetExactSolutionValueTorus(xGauss);
+        GetExactSolutionGradientTorus(xGauss, solGrad);
+      }
+
+      l2norm += (exactSol - soluGauss) * (exactSol - soluGauss) * weight;
 
       for (unsigned j = 0; j < dim ; j++) {
         seminorm   += ((soluGauss_x[j] - solGrad[j]) * (soluGauss_x[j] - solGrad[j])) * weight;
       }
 
-      double exactSol = GetExactSolutionValue(xGauss);
-      l2norm += (exactSol - soluGauss) * (exactSol - soluGauss) * weight;
+
     } // end gauss point loop
   } //end element loop for each process
 
