@@ -26,7 +26,7 @@ int simulation = 1; // =1 sphere (default) = 2 torus
 
 //Sphere
 
-double thetaSphere = acos(-1.)/3;
+double thetaSphere = acos(-1.) / 3;
 
 bool SetBoundaryConditionSphere(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
@@ -53,22 +53,21 @@ double InitalValueWSphere(const std::vector < double >& x) {
 bool SetBoundaryConditionTorus(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
 
-  double theta=acos(-1.)/6;
+  double theta = acos(-1.) / 6;
   double z = sin(theta);
 
   if (!strcmp("u", SolName)) {
     value = z;
-  }
-  else if (!strcmp("W", SolName)) {
+  } else if (!strcmp("W", SolName)) {
     double theta1 = theta;
-    double theta2 = acos(-1.)-theta1;
-    double A=1./z;
-    double H1 =  0.5 * ( 1. + cos(theta1) / ( sqrt(2.) + cos(theta1) ) );
-    double H2 =  0.5 * ( 1. + cos(theta2) / ( sqrt(2.) + cos(theta2) ) );
-    if(facename == 1){
+    double theta2 = acos(-1.) - theta1;
+    double A = 1. / z;
+    double H1 =  0.5 * (1. + cos(theta1) / (sqrt(2.) + cos(theta1)));
+    double H2 =  0.5 * (1. + cos(theta2) / (sqrt(2.) + cos(theta2)));
+
+    if (facename == 1) {
       value = - A * H1;
-    }
-    else if(facename == 2){
+    } else if (facename == 2) {
       value = - A * H2;
     }
   }
@@ -77,19 +76,19 @@ bool SetBoundaryConditionTorus(const std::vector < double >& x, const char SolNa
 }
 
 double InitalValueUTorus(const std::vector < double >& x) {
-  double r = sqrt( x[0] * x[0] + x[1] * x[1] );
+  double r = sqrt(x[0] * x[0] + x[1] * x[1]);
   double cosu = r - sqrt(2) ;
-  return sqrt( 1 - cosu * cosu );
+  return sqrt(1 - cosu * cosu);
   //return 0.5;
 }
 
 double InitalValueWTorus(const std::vector < double >& x) {
 
-  double r = sqrt( x[0] * x[0] + x[1] * x[1] );
+  double r = sqrt(x[0] * x[0] + x[1] * x[1]);
   double cosu = r - sqrt(2) ;
-  double sinu = sqrt( 1 - cosu*cosu );
+  double sinu = sqrt(1 - cosu * cosu);
 
-  return - 0.5 / sinu * ( 1 + cosu / ( sqrt(2.) + cosu ) );
+  return - 0.5 / sinu * (1 + cosu / (sqrt(2.) + cosu));
   //return 0.25;
 }
 
@@ -101,26 +100,25 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol);
 int main(int argc, char** args) {
 
 
-  if(argc >= 2) {
-    if( !strcmp("sphere",args[1]) || !strcmp("Sphere",args[1]) || !strcmp("SPHERE",args[1])) {
+  if (argc >= 2) {
+    if (!strcmp("sphere", args[1]) || !strcmp("Sphere", args[1]) || !strcmp("SPHERE", args[1])) {
       simulation = 1;
-      if( argc >= 3 ){
+
+      if (argc >= 3) {
         std::string str;
         std::stringstream ss;
         ss << args[2];
         ss >> str;
         int angle = atoi(str.c_str());
-        thetaSphere = acos(-1.)/180*angle;
+        thetaSphere = acos(-1.) / 180 * angle;
         //std::cout<<angle<<std::endl;
         //abort();
       }
-    }
-    else if( !strcmp("torus",args[1]) || !strcmp("Torus",args[1]) || !strcmp("TORUS",args[1])) simulation = 2;
+    } else if (!strcmp("torus", args[1]) || !strcmp("Torus", args[1]) || !strcmp("TORUS", args[1])) simulation = 2;
     else {
       std::cout << "Wrong input, using default argument: simulation = 1 (Sphere)" << std::endl;
     }
-  }
-  else {
+  } else {
     std::cout << "No input argument, using default argument: simulation = 1 (Sphere)" << std::endl;
   }
 
@@ -145,12 +143,13 @@ int main(int argc, char** args) {
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
     std::ostringstream filename;
-    if ( simulation == 1){
+
+    if (simulation == 1) {
       filename << "./input/circle_quad" << i << ".neu";
-    }
-    else if ( simulation == 2){
+    } else if (simulation == 2) {
       filename << "./input/torus30_" << i << ".neu";
     }
+
     MultiLevelMesh mlMsh;
     // read coarse level mesh and generate finers level meshes
     double scalingFactor = 1.;
@@ -182,15 +181,14 @@ int main(int argc, char** args) {
       mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
       mlSol.AddSolution("W", LAGRANGE, feOrder[j]);
 
-      if( simulation == 1){
+      if (simulation == 1) {
         mlSol.Initialize("u", InitalValueUSphere);
         mlSol.Initialize("W", InitalValueWSphere);
         // attach the boundary condition function and generate boundary data
         mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionSphere);
         mlSol.GenerateBdc("u");
         mlSol.GenerateBdc("W");
-      }
-      else if( simulation == 2){
+      } else if (simulation == 2) {
         mlSol.Initialize("u", InitalValueUTorus);
         mlSol.Initialize("W", InitalValueWTorus);
         // attach the boundary condition function and generate boundary data
@@ -198,6 +196,7 @@ int main(int argc, char** args) {
         mlSol.GenerateBdc("u");
         mlSol.GenerateBdc("W");
       }
+
       // define the multilevel problem attach the mlSol object to it
       MultiLevelProblem mlProb(&mlSol);
 
@@ -513,10 +512,10 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
 
             nonLinearLaplaceU +=  - 1. / A  * soluGauss_x[idim] * phi_x[i * dim + idim];
 
-            nonLinearLaplaceW +=   -1. / A * ( (B[idim][0] * solWGauss_x[0] +
-                                                B[idim][1] * solWGauss_x[1])
+            nonLinearLaplaceW +=   -1. / A * ((B[idim][0] * solWGauss_x[0] +
+                                               B[idim][1] * solWGauss_x[1])
                                               - (solWGauss * solWGauss / A2 + c) *
-                                                soluGauss_x[idim] ) * phi_x[i * dim + idim];
+                                              soluGauss_x[idim]) * phi_x[i * dim + idim];
 
           }
 
@@ -587,20 +586,20 @@ void GetExactSolutionGradientSphere(const std::vector < double >& x, vector < do
 
 double GetExactSolutionValueTorus(const std::vector < double >& x) {
 
-  double r = sqrt( x[0] * x[0] + x[1] * x[1] );
+  double r = sqrt(x[0] * x[0] + x[1] * x[1]);
   double cosu =  r - sqrt(2) ;
-  return sqrt( 1 - cosu * cosu );
+  return sqrt(1 - cosu * cosu);
 
 };
 
 void GetExactSolutionGradientTorus(const std::vector < double >& x, vector < double >& solGrad) {
 
-  double r = sqrt( x[0] * x[0] + x[1] * x[1] );
+  double r = sqrt(x[0] * x[0] + x[1] * x[1]);
   double cosu =  r - sqrt(2) ;
-  double z = sqrt( 1 - cosu * cosu );
+  double z = sqrt(1 - cosu * cosu);
 
-  solGrad[0] =  - cosu / ( r * z ) * x[0];
-  solGrad[1] =  - cosu / ( r * z ) * x[1];
+  solGrad[0] =  - cosu / (r * z) * x[0];
+  solGrad[1] =  - cosu / (r * z) * x[1];
 
 };
 
@@ -700,11 +699,11 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
 
       double exactSol;
       vector <double> solGrad(dim);
-      if( simulation == 1){
+
+      if (simulation == 1) {
         exactSol = GetExactSolutionValueSphere(xGauss);
         GetExactSolutionGradientSphere(xGauss, solGrad);
-      }
-      else if( simulation == 2){
+      } else if (simulation == 2) {
         exactSol = GetExactSolutionValueTorus(xGauss);
         GetExactSolutionGradientTorus(xGauss, solGrad);
       }
