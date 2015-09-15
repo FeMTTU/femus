@@ -44,7 +44,7 @@ git clone -b maint https://bitbucket.org/petsc/petsc $FM_PETSC_DIR_REL
 
 cd $FM_PETSC_DIR_REL
 
-for i in  1
+for i in 0 #1 let us only install the optimized version, to speed up the installation
 do
 export PETSC_ARCH=${myarchs[i]}
 echo =========== Configure
