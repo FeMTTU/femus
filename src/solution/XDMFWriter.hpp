@@ -45,9 +45,9 @@ public:
     virtual ~XDMFWriter();
 
     /** write output function */
-    void write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) const;
+    void write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) ;
     
-    void Pwrite(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) const {
+    void Pwrite(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) {
       std::cout<<"the paralell writing function has not been yet implemente for XDMF format \n switched to serial write\n";
       write(output_path, order, vars, time_step);
     };

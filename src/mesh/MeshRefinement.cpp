@@ -218,7 +218,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
       _mesh.el->AddToElementNumber(_mesh.GetRefIndex(),elt);
     }
     else {
-      AMR=true;
+      AMR=true;//TODO
     }
   }
 
@@ -258,7 +258,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
                 break;
               }
             }
-            if (jm!=0) {
+            if (jm!=0) { //TODO this can be changed and put inside (by Sara)
               for (unsigned jnode=0; jnode<_mesh.el->GetElementDofNumber(jel,0); jnode++) {
                 if (_mesh.el->GetElementVertexIndex(jel,jnode)==ip) {
                   jp=jnode+1u;
@@ -332,7 +332,7 @@ void MeshRefinement::Buildkmid() {
       _mesh.el->SetElementVertexIndex(iel,inode,0);
 
   for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++) {
-    for (unsigned iface=0; iface<_mesh.el->GetElementFaceNumber(iel,0); iface++) {
+    for (unsigned iface=0; iface<_mesh.el->GetElementFaceNumber(iel,0); iface++) { // Ithink is on all the faces that are quads
       unsigned inode=_mesh.el->GetElementDofNumber(iel,1)+iface;
       if ( 0==_mesh.el->GetElementVertexIndex(iel,inode) ) {
         _mesh.el->SetElementVertexIndex(iel,inode,++nnodes);
@@ -363,10 +363,10 @@ void MeshRefinement::Buildkmid() {
   }
 
   for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++) {
-    if (0==_mesh.el->GetElementType(iel)) {
+    if (0==_mesh.el->GetElementType(iel)) { //cube
       _mesh.el->SetElementVertexIndex(iel,26,++nnodes);
     }
-    if (3==_mesh.el->GetElementType(iel)) {
+    if (3==_mesh.el->GetElementType(iel)) {//quad
       _mesh.el->SetElementVertexIndex(iel,8,++nnodes);
     }
   }

@@ -47,7 +47,7 @@ GMVWriter::~GMVWriter()
   
 }
 
-void GMVWriter::write(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) const { 
+void GMVWriter::write(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) { 
   
   unsigned igridn = _gridn; // aggiunta da me
       
@@ -330,7 +330,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 }
 
 
-void GMVWriter::Pwrite(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) const { 
+void GMVWriter::Pwrite(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) { 
   
   if(_nprocs == 1){
     write( output_path, order,  vars, time_step);

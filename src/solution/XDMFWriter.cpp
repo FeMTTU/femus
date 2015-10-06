@@ -61,7 +61,7 @@ XDMFWriter::XDMFWriter(MultiLevelMesh * ml_mesh): Writer(ml_mesh) {}
 
 XDMFWriter::~XDMFWriter() {}
 
-void XDMFWriter::write(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) const { 
+void XDMFWriter::write(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) { 
 #ifdef HAVE_HDF5
   
   bool print_all = 0;
