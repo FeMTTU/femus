@@ -17,13 +17,14 @@
 // includes :
 //----------------------------------------------------------------------------
 
-#include "Elem.hpp"
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <assert.h>
 
+#include "Elem.hpp"
+#include "GeomElTypeEnum.hpp"
 
 namespace femus {
 
@@ -71,56 +72,64 @@ elem::elem(const unsigned &other_nel) {
  * starting from the paramenters of the \textit{coarser elem}
  **/
 elem::elem(const elem *elc, const unsigned refindex) {
-  nelt[0]=nelt[1]=nelt[2]=nelt[3]=nelt[4]=nelt[5]=0;
-//   nel=elc->GetRefinedElementNumber()*REF_INDEX;
-  nel=elc->GetRefinedElementNumber()*refindex;
+  nelt[0] = nelt[1] = nelt[2] = nelt[3] = nelt[4] = nelt[5] = 0;
+  nel = elc->GetRefinedElementNumber()*refindex; //refined
+  nel += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // + non-refined;
+  
+  elt = new unsigned short [nel];
+  elg = new unsigned short [nel];
+  elmat = new unsigned short [nel];
+  elr = new unsigned [nel];
+  elf = new unsigned [nel];
+  elfRef = new bool [nel];
+  memset( elf, 0, nel*sizeof(unsigned) );
+  memset( elfRef, 0, nel*sizeof(bool) );
+  nelf = 0;
 
-  elt=new unsigned short [nel];
-  elg=new unsigned short [nel];
-  elmat=new unsigned short [nel];
-  elr=new unsigned [nel];
-  elf=new unsigned [nel];
-  memset(elf,0,nel*sizeof(unsigned));
-  nelf=0;
 
+  kvert = new unsigned * [nel];
+  kel = new int * [nel];
 
-  kvert=new unsigned*[nel];
-  kel=new int *[nel];
-
-  unsigned kvert_size=0;
-  unsigned kel_size=0;
-  for (unsigned i=0; i<6; i++) {
-    kvert_size+=elc->GetRefinedElementNumber(i)*NVE[i][2];
-    kel_size+=elc->GetRefinedElementNumber(i)*NFC[i][1];
+  unsigned kvert_size = 0;
+  unsigned kel_size = 0;
+  for (unsigned i = 0; i < N_GEOM_ELS; i++) {
+    kvert_size += elc->GetRefinedElementNumber(i) * refindex * NVE[i][2];
+    kel_size += elc->GetRefinedElementNumber(i) * refindex * NFC[i][1];
   }
-//   kvert_size*=REF_INDEX;
-//   kel_size*=REF_INDEX;
-  kvert_size*=refindex;
-  kel_size*=refindex;
-
-  kvert_memory=new unsigned [kvert_size];
-  kel_memory=new int [kel_size];
-  for (unsigned i=0; i<kel_size; i++)
-    kel_memory[i]=0;
-
-  int *pt_i=kel_memory;
-  unsigned *pt_u=kvert_memory;
-  unsigned jel=0;
-  for (unsigned iel=0; iel<elc->GetElementNumber(); iel++) {
-    if ( elc->GetRefinedElementIndex(iel) ) {
-      short unsigned elemt=elc->GetElementType(iel);
-      for (unsigned j=0; j<NRE[elemt]; j++) {
-        kvert[jel+j]=pt_u;
-        pt_u+=elc->GetElementDofNumber(iel,2);
-
-        kel[jel+j]=pt_i;
-        pt_i+=elc->GetElementFaceNumber(iel);
-      }
-      jel+=NRE[elemt];
+  
+  for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++ ){
+     if(!elc->GetRefinedElementIndex(iel) ){
+       unsigned type = elc->GetElementType(iel);
+       kvert_size += NVE[type][2];
+       kel_size += NFC[type][1];
     }
   }
-  _node_region_flag=false;
-  _child_elem_flag=false;
+  
+  kvert_memory = new unsigned [ kvert_size ];
+  kel_memory = new int [ kel_size ];
+  for (unsigned i=0; i < kel_size; i++)
+    kel_memory[i]=0;
+
+  int *pt_i = kel_memory;
+  unsigned *pt_u = kvert_memory;
+  unsigned jel = 0;
+  for (unsigned iel = 0; iel<elc->GetElementNumber(); iel++) {
+    short unsigned elemt = elc->GetElementType(iel);
+    int increment = 1;
+    if ( elc->GetRefinedElementIndex(iel) ) {
+      increment = NRE[elemt];
+    }
+    for (unsigned j = 0; j < increment; j++) {
+      kvert[jel+j] = pt_u;
+      pt_u += elc->GetElementDofNumber(iel,2);
+
+      kel[jel+j] = pt_i;
+      pt_i += elc->GetElementFaceNumber(iel);
+    }
+    jel += increment;
+  }
+  _node_region_flag = false;
+  _child_elem_flag = false;
 }
 
 
@@ -131,6 +140,7 @@ elem::~elem() {
     delete [] kel;
     delete [] elt;
     delete [] elf;
+    delete [] elfRef;
     delete [] elg;
     delete [] elmat;
     delete [] elr;
@@ -370,11 +380,20 @@ unsigned elem::GetElementFather(const unsigned &iel) const {
   return elf[iel];
 }
 
+
+/**
+ * Return if the coarse element father has been refined
+ **/
+bool elem::IsFatherRefined(const unsigned &iel) const {
+  return elfRef[iel];
+}
+
 /**
  * Set the coarse element father
  **/
-void elem::SetElementFather(const unsigned &iel, const unsigned &value) {
+void elem::SetElementFather(const unsigned &iel, const unsigned &value, const bool &refined) {
   elf[iel]=value;
+  elfRef[iel] = refined;
 }
 
 

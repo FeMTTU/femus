@@ -108,20 +108,6 @@ const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse Mesh dof = f2CVM[e
       {3,2} }
   };
 
-//   const unsigned coarse2CoarseVertexMapping[6][8]= { // coarse Mesh dof = C2CVM[element type][fine element]
-//     { {1,2,3,4,5,6,7,8},           cube
-  
-//       {1,2,3,4},                   tetrahedron           
-//             
-//       {1,2,3,4,5,6},               wedge
-//                
-//       {1,2,3,4},                   quad
-//       
-//       {1,2,3},                     triangle
-//  
-//       {1,2}                        line
-//    };
-  
   const unsigned coarse2FineFaceMapping[6][6][4][2]= { // fine element,fine face=c2FFM[element type][coarse face][face split index][0,1]
     {
       { {0,0},{1,0},{4,0},{5,0} },
@@ -160,45 +146,6 @@ const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse Mesh dof = f2CVM[e
       { {1,1} }
     }
   };
-  
-//     const unsigned coarse2CoarseFaceMapping[6][6][2]= { // coarse element,coarse face=c2CFM[element type][coarse face][0,1]
-//     {
-//       { {0,0} },
-//       { {1,1} },
-//       { {2,2} },
-//       { {3,3} },
-//       { {4,4} },
-//       { {5,5} }
-//     },
-//     { 
-//       { {0,0} },
-//       { {1,1} },
-//       { {2,2} },
-//       { {3,3} }
-//     },
-//     { 
-//       { {0,0} },
-//       { {1,1} },
-//       { {2,2} },
-//       { {3,3} },
-//       { {4,4} }
-//     },
-//     { 
-//       { {0,0} },
-//       { {1,1} },
-//       { {2,2} },
-//       { {3,3} }
-//     },
-//     { 
-//       { {0,0} },
-//       { {1,1} },
-//       { {2,2} }
-//     },
-//     { 
-//       { {0,0} },
-//       { {1,1} }
-//     }
-//   };
   
   const unsigned edge2VerticesMapping[6][12][2]= { // vertex1,vertex2=e2VM[element type][edge][0,1]
     {

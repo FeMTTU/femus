@@ -177,8 +177,11 @@ public:
     unsigned GetElementFather(const unsigned &iel) const;
 
     /** To be Added */
-    void SetElementFather(const unsigned &iel, const unsigned &value);
-
+    void SetElementFather(const unsigned &iel, const unsigned &value,  const bool &refined);
+    
+    /** To be Added */
+    bool IsFatherRefined(const unsigned &iel) const;
+ 
     /** To be Added */
     void SetNumberElementFather(const unsigned &value);
 
@@ -223,6 +226,7 @@ private:
     bool *_node_region;
     bool  _node_region_flag;
     unsigned *elf;
+    bool *elfRef;
     unsigned nelf;
     unsigned **kvert;
 
