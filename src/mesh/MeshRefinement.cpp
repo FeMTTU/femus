@@ -167,15 +167,18 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   //_grid=igrid;
 
 
-  int nelem=elc->GetRefinedElementNumber()*_mesh.GetRefIndex();
-  _mesh.SetNumberOfElements(nelem);
-  _mesh.el=new elem(elc,_mesh.GetRefIndex());
+  int nelem=elc->GetRefinedElementNumber()*_mesh.GetRefIndex(); // diventera' nrefelem = num di elem da raffinare
+  
+  // aggiungi nelem = nrefelem + (elc->GetElementNumber() - elc->GetRefinedElementNumber()) nuovo num totale di elementi 
+  
+  _mesh.SetNumberOfElements(nelem);  
+  _mesh.el=new elem(elc,_mesh.GetRefIndex()); // allocare piu' memoria?
 
   unsigned jel=0;
-  //divide each coarse element in 8(3D), 4(2D) or 2(1D) fine elemets and find all the vertices
+  //divide each coarse element in 8(3D), 4(2D) or 2(1D) fine elements and find all the vertices
 
   _mesh.el->SetElementGroupNumber(elc->GetElementGroupNumber());
-  _mesh.el->SetNumberElementFather(elc->GetElementNumber());
+  _mesh.el->SetNumberElementFather(elc->GetElementNumber()); // setta il num di elementi padre per il mesh fine
 
   bool AMR = false;
   for (unsigned iel=0; iel<elc->GetElementNumber(); iel++) {
@@ -218,7 +221,38 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
       _mesh.el->AddToElementNumber(_mesh.GetRefIndex(),elt);
     }
     else {
-      AMR=true;//TODO
+      AMR=true;
+      // elc->SetRefinedElementIndex(iel,jel+1u);
+      // unsigned elt=elc->GetElementType(iel);
+      
+      // // project element type
+      // _mesh.el->SetElementType(jel,elt);
+      // _mesh.el->SetElementFather(jel,iel);
+      // elc->SetChildElement(iel,jel,jel);
+      // unsigned elg=elc->GetElementGroup(iel);
+      // unsigned elmat=elc->GetElementMaterial(iel);
+      
+      // // project element group
+      // _mesh.el->SetElementGroup(jel,elg);
+      // _mesh.el->SetElementMaterial(jel,elmat);
+      
+      // // project vertex indeces
+      // for (unsigned inode=0; inode<elc->GetElementDofNumber(iel,0); inode++)
+      // _mesh.el->SetElementVertexIndex(jel,inode,elc->GetElementVertexIndex(iel,coarse2CoarseVertexMapping[elt][j][inode]-1u)); 
+      
+      // // project face indeces
+      // for (unsigned iface=0; iface<elc->GetElementFaceNumber(iel); iface++) {
+        // int value=elc->GetFaceElementIndex(iel,iface);
+        // if (0>value)
+          // for (unsigned jface=0; jface<_mesh.GetFaceIndex(); jface++)
+            // _mesh.el->SetFaceElementIndex(jel,coarse2CoarseFaceMapping[elt][iface][jface][1], value);
+      
+      // // update element numbers
+      // jel++
+      // _mesh.el->AddToElementNumber(1,elt);
+      }
+      }
+      
     }
   }
 
