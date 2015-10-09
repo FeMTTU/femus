@@ -173,7 +173,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   
   
   _mesh.SetNumberOfElements(nelem);  
-  _mesh.el = new elem( elc, _mesh.GetRefIndex() ); // allocare piu' memoria?
+  _mesh.el = new elem( elc, _mesh.GetRefIndex() );
 
   unsigned jel=0;
   //divide each coarse element in 8(3D), 4(2D) or 2(1D) fine elements and find all the vertices
@@ -233,7 +233,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
       _mesh.el->SetElementGroup(jel,elg);
       _mesh.el->SetElementMaterial(jel,elmat);
       
-      // project vertex indeces
+      // project nodes indeces
       for (unsigned inode=0; inode<elc->GetElementDofNumber(iel,2); inode++)
         _mesh.el->SetElementVertexIndex(jel,inode,elc->GetElementVertexIndex(iel,inode)); 
       
@@ -252,18 +252,28 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 
 
   int ncoarsenodes=elc->GetNodeNumber();
-  _mesh.SetNumberOfNodes(ncoarsenodes);
+  _mesh.SetNumberOfNodes(ncoarsenodes); 
   _mesh.el->SetVertexNodeNumber(ncoarsenodes);
   int nnodes = _mesh.GetNumberOfNodes();
   
+  //int ncoarsenodes=elc->GetNodeNumber();
+  //numOfNotRefElem = elc->GetElementNumber() - elc->GetRefinedElementNumber();
+  //int nnodes = ncoarsenodes - ((numOfNotRefElem * _mesh.GetRefIndex()) - 1);
+  //_mesh.SetNumberOfNodes(nnodes);
+  //_mesh.el->SetVertexNodeNumber(nnodes);
+  
   //find all the elements near each vertex
-  _mesh.BuildAdjVtx();
+  _mesh.BuildAdjVtx(); //TODO
   //initialize to zero all the middle edge points
-  for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel++)
+  for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel++) //{
+    // if (IsFatherRefined(iel) == true) {
     for (unsigned inode=_mesh.el->GetElementDofNumber(iel,0); inode<_mesh.el->GetElementDofNumber(iel,1); inode++)
       _mesh.el->SetElementVertexIndex(iel,inode,0);
+    //}
+ //}   
   //find all the middle edge points
   for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel++) {
+    // if (IsFatherRefined(iel) == true) {
     unsigned ielt=_mesh.el->GetElementType(iel);
     unsigned istart=_mesh.el->GetElementDofNumber(iel,0);
     unsigned iend=_mesh.el->GetElementDofNumber(iel,1);
@@ -277,7 +287,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
         //find all the near elements which share the same middle edge point
         for (unsigned j=0; j<_mesh.el->GetVertexElementNumber(im-1u); j++) {
           unsigned jel=_mesh.el->GetVertexElementIndex(im-1u,j)-1u;
-          if (jel>iel) {
+          if (/* IsFatherRefined(jel) == tr if (/* IsFatherRefined(jel) == trueue && */ jel>iel) {  // to skip coarse elements
             unsigned jm=0,jp=0;
             unsigned jelt=_mesh.el->GetElementType(jel);
             for (unsigned jnode=0; jnode<_mesh.el->GetElementDofNumber(jel,0); jnode++) {
@@ -305,10 +315,10 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
           }
         }
       }
+    //} 
   }
   _mesh.el->SetMidpointNodeNumber(_mesh.GetNumberOfNodes() - _mesh.el->GetVertexNodeNumber());
   
-
   Buildkmid();
   
   _mesh.Buildkel();
@@ -356,10 +366,13 @@ void MeshRefinement::Buildkmid() {
   unsigned int nnodes = _mesh.GetNumberOfNodes();
   
   for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++)
+    // if (IsFatherRefined(iel) == true) {
     for (unsigned inode=_mesh.el->GetElementDofNumber(iel,1); inode<_mesh.el->GetElementDofNumber(iel,2); inode++)
       _mesh.el->SetElementVertexIndex(iel,inode,0);
-
+  //}
+    
   for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++) {
+    // if (IsFatherRefined(iel) == true) {
     for (unsigned iface=0; iface<_mesh.el->GetElementFaceNumber(iel,0); iface++) { // Ithink is on all the faces that are quads
       unsigned inode=_mesh.el->GetElementDofNumber(iel,1)+iface;
       if ( 0==_mesh.el->GetElementVertexIndex(iel,inode) ) {
@@ -388,15 +401,18 @@ void MeshRefinement::Buildkmid() {
         }
       }
     }
+  //}  
   }
 
   for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++) {
+    // if (IsFatherRefined(iel) == true) {
     if (0==_mesh.el->GetElementType(iel)) { //cube
       _mesh.el->SetElementVertexIndex(iel,26,++nnodes);
     }
     if (3==_mesh.el->GetElementType(iel)) {//quad
       _mesh.el->SetElementVertexIndex(iel,8,++nnodes);
     }
+  //}
   }
   _mesh.el->SetNodeNumber(nnodes);
 
