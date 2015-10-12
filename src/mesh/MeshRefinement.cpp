@@ -253,7 +253,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 
   int ncoarsenodes=elc->GetNodeNumber();
   _mesh.SetNumberOfNodes(ncoarsenodes); 
-  _mesh.el->SetVertexNodeNumber(ncoarsenodes);
+  _mesh.el->SetVertexNodeNumber(ncoarsenodes); //TODO 
   int nnodes = _mesh.GetNumberOfNodes();
   
   //int ncoarsenodes=elc->GetNodeNumber();
@@ -265,59 +265,62 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   //find all the elements near each vertex
   _mesh.BuildAdjVtx(); //TODO
   //initialize to zero all the middle edge points
-  for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel++) //{
-    // if (IsFatherRefined(iel) == true) {
-    for (unsigned inode=_mesh.el->GetElementDofNumber(iel,0); inode<_mesh.el->GetElementDofNumber(iel,1); inode++)
-      _mesh.el->SetElementVertexIndex(iel,inode,0);
-    //}
- //}   
+  for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel++){
+    if ( _mesh.el->IsFatherRefined( iel ) ) {
+      for (unsigned inode=_mesh.el->GetElementDofNumber(iel,0); inode<_mesh.el->GetElementDofNumber(iel,1); inode++){
+	_mesh.el->SetElementVertexIndex(iel,inode,0);
+      }
+    }
+  }   
   //find all the middle edge points
   for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel++) {
-    // if (IsFatherRefined(iel) == true) {
-    unsigned ielt=_mesh.el->GetElementType(iel);
-    unsigned istart=_mesh.el->GetElementDofNumber(iel,0);
-    unsigned iend=_mesh.el->GetElementDofNumber(iel,1);
-    for (unsigned inode=istart; inode<iend; inode++)
-      if (0==_mesh.el->GetElementVertexIndex(iel,inode)) {
-	nnodes++;
-	_mesh.SetNumberOfNodes(nnodes);
-        _mesh.el->SetElementVertexIndex(iel,inode,nnodes);
-        unsigned im=_mesh.el->GetElementVertexIndex(iel,edge2VerticesMapping[ielt][inode-istart][0]);
-        unsigned ip=_mesh.el->GetElementVertexIndex(iel,edge2VerticesMapping[ielt][inode-istart][1]);
-        //find all the near elements which share the same middle edge point
-        for (unsigned j=0; j<_mesh.el->GetVertexElementNumber(im-1u); j++) {
-          unsigned jel=_mesh.el->GetVertexElementIndex(im-1u,j)-1u;
-          if (/* IsFatherRefined(jel) == tr if (/* IsFatherRefined(jel) == trueue && */ jel>iel) {  // to skip coarse elements
-            unsigned jm=0,jp=0;
-            unsigned jelt=_mesh.el->GetElementType(jel);
-            for (unsigned jnode=0; jnode<_mesh.el->GetElementDofNumber(jel,0); jnode++) {
-              if (_mesh.el->GetElementVertexIndex(jel,jnode)==im) {
-                jm=jnode+1u;
-                break;
-              }
-            }
-            if (jm!=0) { //TODO this can be changed and put inside (by Sara)
-              for (unsigned jnode=0; jnode<_mesh.el->GetElementDofNumber(jel,0); jnode++) {
-                if (_mesh.el->GetElementVertexIndex(jel,jnode)==ip) {
-                  jp=jnode+1u;
-                  break;
-                }
-              }
-              if (jp!=0) {
-                if (jp<jm) {
-                  unsigned tp=jp;
-                  jp=jm;
-                  jm=tp;
-                }
-                _mesh.el->SetElementVertexIndex(jel,vertices2EdgeMapping[jelt][--jm][--jp],nnodes);
-              }
-            }
-          }
-        }
-      }
-    //} 
+    if ( _mesh.el->IsFatherRefined(iel) ) {
+      unsigned ielt=_mesh.el->GetElementType(iel);
+      unsigned istart=_mesh.el->GetElementDofNumber(iel,0);
+      unsigned iend=_mesh.el->GetElementDofNumber(iel,1);
+      for (unsigned inode=istart; inode<iend; inode++) {
+	if (0 == _mesh.el->GetElementVertexIndex(iel,inode)) {
+	  nnodes++;
+	  //_mesh.SetNumberOfNodes(nnodes);
+	  _mesh.el->SetElementVertexIndex(iel,inode,nnodes);
+	  unsigned im=_mesh.el->GetElementVertexIndex(iel,edge2VerticesMapping[ielt][inode-istart][0]);
+	  unsigned ip=_mesh.el->GetElementVertexIndex(iel,edge2VerticesMapping[ielt][inode-istart][1]);
+	  //find all the near elements which share the same middle edge point
+	  for (unsigned j=0; j<_mesh.el->GetVertexElementNumber(im-1u); j++) {
+	    unsigned jel=_mesh.el->GetVertexElementIndex(im-1u,j)-1u;
+	    if ( _mesh.el->IsFatherRefined(jel) && jel > iel ) {  // to skip coarse elements
+	      unsigned jm=0,jp=0;
+	      unsigned jelt=_mesh.el->GetElementType(jel);
+	      for (unsigned jnode=0; jnode<_mesh.el->GetElementDofNumber(jel,0); jnode++) {
+		if (_mesh.el->GetElementVertexIndex(jel,jnode)==im) {
+		  jm=jnode+1u;
+		  break;
+		}
+	      }
+	      if (jm!=0) { //TODO this can be changed and put inside (by Sara)
+		for (unsigned jnode=0; jnode<_mesh.el->GetElementDofNumber(jel,0); jnode++) {
+		  if (_mesh.el->GetElementVertexIndex(jel,jnode)==ip) {
+		    jp=jnode+1u;
+		    break;
+		  }
+		}
+		if (jp!=0) {
+		  if (jp<jm) {
+		    unsigned tp=jp;
+		    jp=jm;
+		    jm=tp;
+		  }
+		  _mesh.el->SetElementVertexIndex(jel,vertices2EdgeMapping[jelt][--jm][--jp],nnodes);
+		}
+	      }
+	    }
+	  }
+	}
+      } 
+    }
   }
-  _mesh.el->SetMidpointNodeNumber(_mesh.GetNumberOfNodes() - _mesh.el->GetVertexNodeNumber());
+  _mesh.SetNumberOfNodes(nnodes);
+  _mesh.el->SetMidpointNodeNumber(nnodes - _mesh.el->GetVertexNodeNumber());
   
   Buildkmid();
   
@@ -359,60 +362,65 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 
 
 /**
- * This function generates kmid for hex and wedge elements
+ * This function generates face (for hex and wedge elements) and element (for hex and quad) dofs
  **/
 void MeshRefinement::Buildkmid() {
   
   unsigned int nnodes = _mesh.GetNumberOfNodes();
   
-  for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++)
-    // if (IsFatherRefined(iel) == true) {
-    for (unsigned inode=_mesh.el->GetElementDofNumber(iel,1); inode<_mesh.el->GetElementDofNumber(iel,2); inode++)
-      _mesh.el->SetElementVertexIndex(iel,inode,0);
-  //}
-    
-  for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++) {
-    // if (IsFatherRefined(iel) == true) {
-    for (unsigned iface=0; iface<_mesh.el->GetElementFaceNumber(iel,0); iface++) { // Ithink is on all the faces that are quads
-      unsigned inode=_mesh.el->GetElementDofNumber(iel,1)+iface;
-      if ( 0==_mesh.el->GetElementVertexIndex(iel,inode) ) {
-        _mesh.el->SetElementVertexIndex(iel,inode,++nnodes);
-        unsigned i1=_mesh.el->GetFaceVertexIndex(iel,iface,0);
-        unsigned i2=_mesh.el->GetFaceVertexIndex(iel,iface,1);
-        unsigned i3=_mesh.el->GetFaceVertexIndex(iel,iface,2);
-        for (unsigned j=0; j< _mesh.el->GetVertexElementNumber(i1-1u); j++) {
-          unsigned jel= _mesh.el->GetVertexElementIndex(i1-1u,j)-1u;
-          if (jel>iel) {
-            for (unsigned jface=0; jface<_mesh.el->GetElementFaceNumber(jel,0); jface++) {
-              unsigned jnode=_mesh.el->GetElementDofNumber(jel,1)+jface;
-              if ( 0==_mesh.el->GetElementVertexIndex(jel,jnode) ) {
-                unsigned j1=_mesh.el->GetFaceVertexIndex(jel,jface,0);
-                unsigned j2=_mesh.el->GetFaceVertexIndex(jel,jface,1);
-                unsigned j3=_mesh.el->GetFaceVertexIndex(jel,jface,2);
-                unsigned j4=_mesh.el->GetFaceVertexIndex(jel,jface,3);
-                if ((i1==j1 || i1==j2 || i1==j3 ||  i1==j4 )&&
-                    (i2==j1 || i2==j2 || i2==j3 ||  i2==j4 )&&
-                    (i3==j1 || i3==j2 || i3==j3 ||  i3==j4 )) {
-                  _mesh.el->SetElementVertexIndex(jel,jnode,nnodes);
-                }
-              }
-            }
-          }
-        }
+  //intialize to zero  
+  for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++){
+    if ( _mesh.el->IsFatherRefined(iel) ) {
+      for (unsigned inode=_mesh.el->GetElementDofNumber(iel,1); inode<_mesh.el->GetElementDofNumber(iel,2); inode++){
+	_mesh.el->SetElementVertexIndex(iel,inode,0);
       }
     }
-  //}  
+  }
+    
+  // generate face dofs for hex and wedge elements  
+  for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++) {
+    if ( _mesh.el->IsFatherRefined(iel) ) {
+      for (unsigned iface=0; iface<_mesh.el->GetElementFaceNumber(iel,0); iface++) { // I think is on all the faces that are quads
+	unsigned inode=_mesh.el->GetElementDofNumber(iel,1)+iface;
+	if ( 0 == _mesh.el->GetElementVertexIndex(iel,inode) ) {
+	  _mesh.el->SetElementVertexIndex(iel,inode,++nnodes);
+	  unsigned i1=_mesh.el->GetFaceVertexIndex(iel,iface,0);
+	  unsigned i2=_mesh.el->GetFaceVertexIndex(iel,iface,1);
+	  unsigned i3=_mesh.el->GetFaceVertexIndex(iel,iface,2);
+	  for (unsigned j=0; j< _mesh.el->GetVertexElementNumber(i1-1u); j++) {
+	    unsigned jel= _mesh.el->GetVertexElementIndex(i1-1u,j)-1u;
+	    if ( _mesh.el->IsFatherRefined(jel) && jel > iel ) {
+	      for (unsigned jface=0; jface<_mesh.el->GetElementFaceNumber(jel,0); jface++) {
+		unsigned jnode=_mesh.el->GetElementDofNumber(jel,1)+jface;
+		if ( 0==_mesh.el->GetElementVertexIndex(jel,jnode) ) {
+		  unsigned j1=_mesh.el->GetFaceVertexIndex(jel,jface,0);
+		  unsigned j2=_mesh.el->GetFaceVertexIndex(jel,jface,1);
+		  unsigned j3=_mesh.el->GetFaceVertexIndex(jel,jface,2);
+		  unsigned j4=_mesh.el->GetFaceVertexIndex(jel,jface,3);
+		  if ((i1==j1 || i1==j2 || i1==j3 ||  i1==j4 )&&
+		      (i2==j1 || i2==j2 || i2==j3 ||  i2==j4 )&&
+		      (i3==j1 || i3==j2 || i3==j3 ||  i3==j4 )) {
+		    _mesh.el->SetElementVertexIndex(jel,jnode,nnodes);
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }  
   }
 
+  // generates element dofs for hex and quad elements  
   for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++) {
-    // if (IsFatherRefined(iel) == true) {
-    if (0==_mesh.el->GetElementType(iel)) { //cube
-      _mesh.el->SetElementVertexIndex(iel,26,++nnodes);
+    if ( _mesh.el->IsFatherRefined(iel) ) {
+      if (0==_mesh.el->GetElementType(iel)) { //hex
+	_mesh.el->SetElementVertexIndex(iel,26,++nnodes);
+      }
+      if (3==_mesh.el->GetElementType(iel)) {//quad
+	_mesh.el->SetElementVertexIndex(iel,8,++nnodes);
+      }
     }
-    if (3==_mesh.el->GetElementType(iel)) {//quad
-      _mesh.el->SetElementVertexIndex(iel,8,++nnodes);
-    }
-  //}
   }
   _mesh.el->SetNodeNumber(nnodes);
 

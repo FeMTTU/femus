@@ -301,10 +301,10 @@ void Mesh::BuildAdjVtx() {
   el->AllocateVertexElementMemory();
   for (unsigned iel=0; iel<_nelem; iel++) {
     for (unsigned inode=0; inode < el->GetElementDofNumber(iel,0); inode++) {
-      unsigned ii=el->GetElementVertexIndex(iel,inode)-1u;
-      unsigned jj=0;
-      while ( 0 != el->GetVertexElementIndex(ii,jj) ) jj++;
-      el->SetVertexElementIndex(ii,jj,iel+1u);
+      unsigned irow=el->GetElementVertexIndex(iel,inode)-1u;
+      unsigned jcol=0;
+      while ( 0 != el->GetVertexElementIndex(irow,jcol) ) jcol++;
+      el->SetVertexElementIndex(irow,jcol,iel+1u);
     }
   }
 }
@@ -316,13 +316,13 @@ void Mesh::BuildAdjVtx() {
 void Mesh::Buildkel() {
   for (unsigned iel=0; iel<el->GetElementNumber(); iel++) {
     for (unsigned iface=0; iface<el->GetElementFaceNumber(iel); iface++) {
-      if ( el->GetFaceElementIndex(iel,iface) <= 0) {
+      if ( el->GetFaceElementIndex(iel,iface) <= 0) {//TODO probably just == -1
         unsigned i1=el->GetFaceVertexIndex(iel,iface,0);
         unsigned i2=el->GetFaceVertexIndex(iel,iface,1);
         unsigned i3=el->GetFaceVertexIndex(iel,iface,2);
         for (unsigned j=0; j< el->GetVertexElementNumber(i1-1u); j++) {
           unsigned jel= el->GetVertexElementIndex(i1-1u,j)-1u;
-          if (jel>iel) {
+          if (jel > iel) {
             for (unsigned jface=0; jface<el->GetElementFaceNumber(jel); jface++) {
               if ( el->GetFaceElementIndex(jel,jface) <= 0) {
                 unsigned j1=el->GetFaceVertexIndex(jel,jface,0);
