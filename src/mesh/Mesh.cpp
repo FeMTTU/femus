@@ -371,7 +371,7 @@ unsigned Mesh::GetDofNumber(const unsigned type) const {
     return _nelem;
     break;
   case 4:
-    return _nelem*(2+Mesh::_dimension-1);
+    return _nelem*(1+Mesh::_dimension);
     break;
   }
   return 0;
@@ -407,6 +407,8 @@ void Mesh::FillISvector() {
   
    //dof map: piecewise liner 0, quadratic 1, biquadratic 2, piecewise constant 3, picewise discontinous linear 4 
   
+  //nsubdom is the numer of processes
+  
   //resize the vector IS_Gmt2Mts_dof and dof
   for(int k=0;k<5;k++) {
     IS_Gmt2Mts_dof[k].resize(GetDofNumber(k)); 
@@ -415,8 +417,8 @@ void Mesh::FillISvector() {
   IS_Mts2Gmt_elem.resize(_nelem);
   IS_Mts2Gmt_elem_offset.resize(nsubdom+1);
   
-  // I 
-  for(unsigned i=0;i<_nnodes;i++) {
+  // Initialization 
+  for(unsigned i=0;i<_nnodes;i++) { // biquadratic dof number
     npart[i] = nsubdom;
   }
   
@@ -428,8 +430,8 @@ void Mesh::FillISvector() {
      //TODO for domain decomposition pourposes! the non existing dofs point to the last dof!!!!!!
    }
   
-  IS_Gmt2Mts_dof_counter[3]=0;
-  IS_Gmt2Mts_dof_counter[4]=0;
+  IS_Gmt2Mts_dof_counter[3]=0; //maybe to remove
+  IS_Gmt2Mts_dof_counter[4]=0; //maybe to remove
   
   for(int isdom=0;isdom<nsubdom;isdom++) {
     for(unsigned iel=0;iel<_nelem;iel++){
