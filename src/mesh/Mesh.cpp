@@ -430,7 +430,70 @@ void Mesh::FillISvector() {
   
   IS_Gmt2Mts_dof_counter[3]=0;
   IS_Gmt2Mts_dof_counter[4]=0;
+
   
+//-------------------------POSSIBILE MODIFICA A QUELLO CHE SEGUE SOTTO--------------------  
+ 
+//  for(int isdom=0; isdom<nsubdom; isdom++) {
+//    for(unsigned iel=0;iel<_nelem;iel++) {
+//      if(epart[iel]==isdom) {
+//        //filling the piecewise IS_Mts2Gmt_elem metis->gambit
+//        IS_Mts2Gmt_elem[ IS_Gmt2Mts_dof_counter[3] ] = iel;
+//        IS_Gmt2Mts_dof[3][iel] = IS_Gmt2Mts_dof_counter[3];
+//        IS_Gmt2Mts_dof_counter[3]++;
+//        IS_Mts2Gmt_elem_offset[isdom+1]=IS_Gmt2Mts_dof_counter[3];
+//      }
+//      for(unsigned k_dim=0; k_dim<_dimension+1; k_dim++) {
+//        if(epart[iel] == isdom) {
+//          IS_Gmt2Mts_dof[4][iel+k_dim*_nelem] = IS_Gmt2Mts_dof_counter[4];
+//          IS_Gmt2Mts_dof_counter[4]++;
+//        }
+//      }  
+//    }  
+//  }
+  
+   
+//-----------------------------------------------------------------------------------------
+
+//  for(int isdom=0; isdom<nsubdom; isdom++) {
+//    for(unsigned iel=0;iel<_nelem;iel++) {
+//      if(epart[iel]==isdom) {
+//        //filling the piecewise IS_Mts2Gmt_elem metis->gambit
+//        IS_Mts2Gmt_elem[ IS_Gmt2Mts_dof_counter[3] ] = iel;
+//        IS_Gmt2Mts_dof[3][iel] = IS_Gmt2Mts_dof_counter[3];
+//        IS_Gmt2Mts_dof_counter[3]++;
+//        IS_Mts2Gmt_elem_offset[isdom+1]=IS_Gmt2Mts_dof_counter[3];
+//      }
+//    }  
+//    for(unsigned k_dim=0; k_dim<_dimension+1; k_dim++) {
+//      for(unsigned iel=0; iel<_nelem; iel++) {
+//        if(epart[iel] == isdom) {
+//          IS_Gmt2Mts_dof[4][iel+k_dim*_nelem] = IS_Gmt2Mts_dof_counter[4];
+//          IS_Gmt2Mts_dof_counter[4]++;
+//        }
+//      }
+//    }
+//  }
+//  vector <vector <double> > nPartTemp; //TODO nPartTemp[k][ii] , initialized at nsubdom, k = 0,1,2 
+//  for(int isdom=0;isdom<nsubdom;isdom++) {
+//    for(unsigned iel=0;iel<_nelem;iel++) {
+//      if(epart[iel]==isdom) {  
+//        for(unsigned k=0; k<3; k++) {
+//          for(unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
+//            unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
+//            if(nPartTemp[k][ii]>isdom) {
+//              nPartTemp[k][ii]=isdom; 
+//              for(unsigned ik=0; ik<=k; ik++) {
+//                IS_Gmt2Mts_dof[ik][ii]=IS_Gmt2Mts_dof_counter[ik];
+//                IS_Gmt2Mts_dof_counter[ik]++;
+//              }  
+//            }  
+//          }
+//        }
+//      }
+//    }
+//  }  
+
   for(int isdom=0;isdom<nsubdom;isdom++) {
     for(unsigned iel=0;iel<_nelem;iel++){
       if(epart[iel]==isdom){
