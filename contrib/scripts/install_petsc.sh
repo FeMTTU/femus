@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# Here the philosophy is that mpi is downloaded with petsc,
-# so we are not going to use the SYSTEM MPI, or the SYSTEM PETSc
-# also, hdf5 will be taken from PETSc 
+# Here the philosophy is that mpi and hdf5 are downloaded with petsc,
+# so we are not going to use the SYSTEM MPI, or the SYSTEM HDF5
 
 # we might install the code in other environments where petsc and mpi are already there,
 # so in that case the PETSC_DIR and PETSC_ARCH will be set by the system administrator
@@ -48,13 +47,11 @@ for i in 0 #1 let us only install the optimized version, to speed up the install
 do
 export PETSC_ARCH=${myarchs[i]}
 echo =========== Configure
-./configure  --with-debugging=${debugflag[i]}  --with-x=1  --with-cc=gcc --with-cxx=g++ --with-fc=gfortran --with-clanguage=cxx  COPTFLAGS='-O3 -march=native -mtune=native' CXXOPTFLAGS='-O3 -march=native -mtune=native' FOPTFLAGS='-O3 -march=native -mtune=native' --with-shared-libraries=1 --download-openmpi=1 --download-fblaslapack=1 --download-blacs=1 --download-scalapack=1 --download-metis=1 --download-parmetis=1 --download-mumps=1 --download-hdf5=1
+./configure  --with-debugging=${debugflag[i]} --with-cc=gcc --with-cxx=g++ --with-fc=gfortran --with-clanguage=cxx  COPTFLAGS='-O3 -march=native -mtune=native' CXXOPTFLAGS='-O3 -march=native -mtune=native' FOPTFLAGS='-O3 -march=native -mtune=native' --with-shared-libraries=1 --download-openmpi=1 --download-fblaslapack=1 --download-blacs=1 --download-scalapack=1 --download-metis=1 --download-parmetis=1 --download-mumps=1 --download-hdf5=1
+#   --with-x=1
 #   --with-mpi-dir=$FM_MPI_DIR_ABS 
 #   --with-hdf5-dir=$FM_HDF5_DIR_ABS
 echo =========== Make
 make all #don't put -j here because it gives error! it's automatically -j!
 make test
 done
-# I don't want to redownload everything once i have them... is it possible? i should tell it to download from the other linux-dbg folder... 
-# or, when i download the external packages, i should put them OUTSIDE of the petsc folder...
-# i think that the script is already prepared for that because the next time it was much faster
