@@ -271,12 +271,15 @@ void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, cons
     int iproc=0;
     while (irow < meshf.MetisOffset[_SolType][iproc] || irow >= meshf.MetisOffset[_SolType][iproc+1] ) iproc++;
 
+    if(irow==97) std::cout<<"I am out"<<std::endl;
+    
     int ncols=_prol_ind[i+1]-_prol_ind[i];
     unsigned counter_o=0;
     for (int k=0; k<ncols; k++) {
       int j=_prol_ind[i][k];
       int jadd=meshc.el->GetMeshDof(ielc,j,_SolType);
       int jcolumn=meshc.GetMetisDof(jadd,_SolType);
+            
       if(jcolumn < meshc.MetisOffset[_SolType][iproc] || jcolumn >= meshc.MetisOffset[_SolType][iproc+1] ) counter_o++;
     }
 
@@ -286,27 +289,86 @@ void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, cons
   }
 }
 
+
+
+
+
 void elem_type::BuildProlongation(const Mesh &meshf,const Mesh &meshc, const int& ielc,
 				  SparseMatrix* Projmat) const {
-  vector<int> cols(27);
+  vector<int> jcols(27);
   for (int i=0; i<_nf; i++) {
     int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
     int ielf=meshc.el->GetChildElement(ielc,i0);
     int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
     int iadd=meshf.el->GetMeshDof(ielf,i1,_SolType);
     int irow=meshf.GetMetisDof(iadd,_SolType);  //  local-id to dof
+    
+     if(irow==97) std::cout<<"I am inout"<<std::endl;
+    
     int ncols=_prol_ind[i+1]-_prol_ind[i];
-    cols.assign(ncols,0);
+    jcols.assign(ncols,0);
     for (int k=0; k<ncols; k++) {
       int j=_prol_ind[i][k];
       int jadd=meshc.el->GetMeshDof(ielc,j,_SolType);
       int jcolumn=meshc.GetMetisDof(jadd,_SolType);
-      cols[k]=jcolumn;
+      jcols[k]=jcolumn;
     }
 
-    Projmat->insert_row(irow,ncols,cols,_prol_val[i]);
+    Projmat->insert_row(irow,ncols,jcols,_prol_val[i]);
   }
 }
+
+
+void elem_type::GetSparsityPatternSizeIdentity(const Mesh &meshf,const Mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const {
+
+  int ielf=meshc.el->GetChildElement(ielc,0);
+  
+  for (int i=0; i<_nc; i++) {
+    
+    int iadd=meshf.el->GetMeshDof(ielf,i,_SolType);
+    int irow=meshf.GetMetisDof(iadd,_SolType);  //  local-id to dof
+    int iproc=0;
+    while (irow < meshf.MetisOffset[_SolType][iproc] || irow >= meshf.MetisOffset[_SolType][iproc+1] ) iproc++;
+   
+    int jadd=meshc.el->GetMeshDof(ielc,i,_SolType);
+    int jcolumn=meshc.GetMetisDof(jadd,_SolType);
+    if(jcolumn < meshc.MetisOffset[_SolType][iproc] || jcolumn >= meshc.MetisOffset[_SolType][iproc+1] ) {
+      NNZ_o->set(irow,_nc);
+      NNZ_d->set(irow,_nc);
+      if(irow==97) std::cout<<"I am in"<<std::endl;
+    }
+    else {
+      NNZ_o->set(irow,_nc);
+      NNZ_d->set(irow,_nc);
+      if(irow==97) std::cout<<"I am in"<<std::endl;
+    }
+  }
+}
+
+
+
+void elem_type::BuildProlongationIdentity(const Mesh &meshf,const Mesh &meshc, const int& ielc,
+					  SparseMatrix* Projmat) const {
+					    
+  int ielf=meshc.el->GetChildElement(ielc,0);
+  vector <int> jcol(1);
+  double one = 1.;
+  
+  for (int i=0; i<_nc; i++) {
+    
+    int iadd=meshf.el->GetMeshDof(ielf,i,_SolType);
+    int irow=meshf.GetMetisDof(iadd,_SolType);  //  local-id to dof
+       
+    int jadd=meshc.el->GetMeshDof(ielc,i,_SolType);
+    jcol[0]=meshc.GetMetisDof(jadd,_SolType);
+    
+    if(irow==97) std::cout<<"I am in"<<std::endl;
+    
+    Projmat->insert_row(irow,1,jcol,&one);
+  }
+}
+
+
 
 //----------------------------------------------------------------------------------------------------
 // prolungator for solution printing

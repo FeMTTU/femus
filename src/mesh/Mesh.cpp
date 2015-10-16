@@ -859,7 +859,7 @@ void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype){
 
 SparseMatrix* Mesh::GetCoarseToFineProjection(const unsigned& solType){
   
-  if( solType > 4 ){
+  if( solType >= 5 ){
     std::cout<<"Wrong argument range in function \"GetCoarseToFineProjection\": "
 	     <<"solType is greater then SolTypeMax"<<std::endl;
     abort();
@@ -915,9 +915,12 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
       for (int iel_mts=_coarseMsh->IS_Mts2Gmt_elem_offset[isdom];iel_mts < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
 	unsigned iel = _coarseMsh->IS_Mts2Gmt_elem[iel_mts];
-	if(_coarseMsh->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
-	  short unsigned ielt=_coarseMsh->el->GetElementType(iel);
+	short unsigned ielt=_coarseMsh->el->GetElementType(iel);
+	if(_coarseMsh->el->GetRefinedElementIndex(iel)){ //if the coarse element has been refined
 	  _finiteElement[ielt][solType]->GetSparsityPatternSize( *this, *_coarseMsh, iel, NNZ_d, NNZ_o); 
+	}
+	else { //if the coarse element has not been refined
+	  _finiteElement[ielt][solType]->GetSparsityPatternSizeIdentity( *this, *_coarseMsh, iel, NNZ_d, NNZ_o); 
 	}
       }
     }
@@ -943,9 +946,12 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
       for (int iel_mts=_coarseMsh->IS_Mts2Gmt_elem_offset[isdom]; 
 	   iel_mts < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
 	unsigned iel = _coarseMsh->IS_Mts2Gmt_elem[iel_mts];
-	if(_coarseMsh->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
-	  short unsigned ielt=_coarseMsh->el->GetElementType(iel);
+	short unsigned ielt=_coarseMsh->el->GetElementType(iel);
+	if(_coarseMsh->el->GetRefinedElementIndex(iel)){ //if the coarse element has been refined
 	  _finiteElement[ielt][solType]->BuildProlongation(*this, *_coarseMsh,iel, _ProjCoarseToFine[solType]); 
+	}
+	else{ //if the coarse element has not been refined
+	  _finiteElement[ielt][solType]->BuildProlongationIdentity(*this, *_coarseMsh,iel, _ProjCoarseToFine[solType]); 
 	}
       }
     }

@@ -67,10 +67,19 @@ unsigned LinearEquation::GetIndex(const char name[]) {
 unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol, 
 				  const unsigned &idof_gmt) const {
   
-   unsigned soltype =  _SolType[index_sol]; 
-   unsigned isubdom = (soltype<3)?_msh->npart[idof_gmt]:(_msh->epart[idof_gmt % _msh->GetNumberOfElements()]);
-   unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);   
-   return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
+  unsigned soltype =  _SolType[index_sol]; 
+  //unsigned isubdom = (soltype<3)?_msh->npart[idof_gmt]:(_msh->epart[idof_gmt % _msh->GetNumberOfElements()]);
+  unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);  
+   
+  unsigned isubdom0 = 0;
+  unsigned isubdom1 = _nprocs;
+  unsigned isubdom  = _iproc;
+  while( idof_metis < _msh->MetisOffset[soltype][isubdom] || idof_metis >= _msh->MetisOffset[soltype][isubdom+1] ){
+    if( idof_metis < _msh->MetisOffset[soltype][isubdom] ) isubdom1 = isubdom;
+    else isubdom0 = isubdom+1;
+    isubdom = ( isubdom0 + isubdom1 ) / 2;
+  }
+  return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
 }
 
 //--------------------------------------------------------------------------------
