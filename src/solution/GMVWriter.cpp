@@ -53,7 +53,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
       
   if (igridn==0) igridn=_gridn;
   
-  unsigned igridr=(_gridr <= igridn)?_gridr:igridn;
+  unsigned igridr=igridn;//(_gridr <= igridn)?_gridr:igridn;
 
   // ********** linear -> index==0 *** quadratic -> index==1 **********
   unsigned index=(strcmp(order,"linear"))?1:0;

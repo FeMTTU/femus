@@ -128,12 +128,13 @@ void MeshMetisPartitioning::DoPartition() {
       cout << " METIS_GENERIC_ERROR " << endl;
       exit(3);
     }
+#endif
   }
 
 
   return;
 
-#endif
+
 
 }
 

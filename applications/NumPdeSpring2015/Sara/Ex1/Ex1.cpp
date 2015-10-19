@@ -30,6 +30,15 @@ double InitalValueT(const std::vector < double >& x) {
   return x[1];
 }
 
+
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+  bool dirichlet = false; //dirichlet
+  if( facename==1 ) dirichlet=true;
+  value = 0.;
+  return dirichlet;
+}
+
+
 bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
 
   bool refine=0;
@@ -51,7 +60,9 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //read coarse level mesh and generate finers level meshes
   //mlMsh.ReadCoarseMesh("./input/box.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/square_tri.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/cube_mixed.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
   unsigned numberOfUniformLevels = 1;
@@ -77,6 +88,10 @@ int main(int argc, char** args) {
 //   mlSol.Initialize("T", InitalValueT);    // note that this initialization is the same as piecewise constant element
 //
 //   // print solutions
+  
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol.GenerateBdc("All");
+  
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("U");
 //   variablesToBePrinted.push_back("P");

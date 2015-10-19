@@ -254,8 +254,6 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
   }
 }
 
-
-
 //----------------------------------------------------------------------------------------------------
 // build matrix sparsity pattern size and build prolungator matrix for single solution
 //-----------------------------------------------------------------------------------------------------
@@ -285,10 +283,6 @@ void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, cons
 
   }
 }
-
-
-
-
 
 void elem_type::BuildProlongation(const Mesh &meshf,const Mesh &meshc, const int& ielc,
 				  SparseMatrix* Projmat) const {
