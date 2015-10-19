@@ -69,6 +69,8 @@ void Solution::AddSolution( const char name[], const FEFamily fefamily, const FE
   _order.resize(n+1u);
 
   _Sol.resize(n+1u);
+  _Sol[n]=NULL;
+
   _Res.resize(n+1u);
   _Eps.resize(n+1u);
 
@@ -112,6 +114,18 @@ unsigned Solution::GetIndex(const char name[]) const {
 void Solution::ResizeSolutionVector(const char name[]) {
 
   unsigned i=GetIndex(name);
+
+  if(_Sol[i] != NULL){
+    delete _Sol[i];
+    if(_ResEpsBdcFlag[i]){
+      delete _Res[i];
+      delete _Eps[i];
+      delete _Bdc[i];
+    }
+    if (_SolTmOrder[i]==2) {
+      delete _SolOld[i];
+    }
+  }
 
   _Sol[i] = NumericVector::build().release();
   if(n_processors()==1) { // IF SERIAL
@@ -174,6 +188,7 @@ void Solution::InitAMREps(){
 void Solution::FreeSolutionVectors() {
   for (unsigned i=0; i<_Sol.size(); i++) {
     delete _Sol[i];
+    _Sol[i] = NULL;
     if(_ResEpsBdcFlag[i]){
       delete _Res[i];
       delete _Eps[i];

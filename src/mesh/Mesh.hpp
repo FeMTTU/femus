@@ -55,20 +55,20 @@ public:
 
     /** Get the dof number for the element -type- */
     unsigned GetDofNumber(const unsigned type) const;
-    
+
     /** Set the number of nodes */
     void SetNumberOfNodes(const unsigned nnodes) {
-      _nnodes = nnodes; 
+      _nnodes = nnodes;
     };
-    
+
     /** Get the number of nodes */
     unsigned GetNumberOfNodes() const {
       return _nnodes;
     }
-    
+
     /** Set the number of element */
     void SetNumberOfElements(const unsigned nelem) {
-      _nelem = nelem; 
+      _nelem = nelem;
     };
 
     /** Get the number of element */
@@ -92,7 +92,7 @@ public:
       Mesh::_ref_index = pow(2,Mesh::_dimension);  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
       Mesh::_face_index = pow(2,Mesh::_dimension-1u);
     }
-    
+
 
     /** Get the dimension of the problem (1D, 2D, 3D) */
     const unsigned GetDimension() const {
@@ -111,21 +111,21 @@ public:
 
     /** To be added */
     const unsigned GetFaceIndex() const {
-      return Mesh::_face_index; 
+      return Mesh::_face_index;
     }
-    
+
     /** Allocate memory for adding fluid or solid mark */
     void AllocateAndMarkStructureNode();
-    
-    
+
+
     /** To be Added */
     void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
-    
+
     /** Generate mesh functions */
-    
+
     /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
     void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag);
-    
+
     /** This function generates a coarse box mesh */
     void GenerateCoarseBoxMesh(const unsigned int nx,
                                   const unsigned int ny,
@@ -134,22 +134,22 @@ public:
                                   const double ymin, const double ymax,
                                   const double zmin, const double zmax,
                                   const ElemType type, std::vector<bool> &type_elem_flag);
-    
-    
+
+
     /** To be added */
     void FillISvector();
 
     /** To be added */
     void Buildkel();
-    
+
     /** To be added */
     void BuildAdjVtx();
-    
-    
+
+
     // member data
     Solution* _coordinate;
     const elem_type *_finiteElement[6][5];
-    
+
     vector < unsigned > IS_Mts2Gmt_elem_offset;
     vector < unsigned > IS_Mts2Gmt_elem;
     vector < unsigned > own_size[5];
@@ -159,44 +159,44 @@ public:
     vector < unsigned > ghost_size[5];
     elem *el;  // topology object
     vector < int > epart;
-    vector < int > npart;
-    int nsubdom;
+    //vector < int > npart;
+    //int nsubdom;
     static bool (* _SetRefinementFlag)(const std::vector < double >& x,
                                        const int &ElemGroupNumber,const int &level);
     static bool _TestSetRefinementFlag;
     std::map<unsigned int, std::string> _boundaryinfo;
-    
+
     /** Get the projection matrix between Lagrange FEM at the same level mesh*/
     SparseMatrix* GetQitoQjProjection(const unsigned& itype, const unsigned& jtype);
-        
+
     /** Get the coarse to the fine projection matrix*/
-    SparseMatrix* GetCoarseToFineProjection(const unsigned& solType);    
-    
+    SparseMatrix* GetCoarseToFineProjection(const unsigned& solType);
+
     /** Set the coarser mesh from which this mesh is generated */
     void SetCoarseMesh( Mesh* otherCoarseMsh ){
       _coarseMsh = otherCoarseMsh;
     };
-    
-    
+
+
 private:
     /** Coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
     Mesh* _coarseMsh;
-    
+
     /** The projection matrix between Lagrange FEM at the same level mesh */
     SparseMatrix* _ProjQitoQj[3][3];
-    
+
     /** The coarse to the fine projection matrix */
     SparseMatrix* _ProjCoarseToFine[5];
-    
+
     /** Build the projection matrix between Lagrange FEM at the same level mesh*/
     void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
-     
+
     /** Build the coarse to the fine projection matrix */
     void BuildCoarseToFineProjection(const unsigned& solType);
-      
+
     /** Reorder mesh dofs in the following order: vertices, face, center */
     void ReorderMeshDofs(vector < vector < double> > &coords);
-    
+
     //member-data
     int _nelem;                                //< number of elements
     unsigned _nnodes;                          //< number of nodes

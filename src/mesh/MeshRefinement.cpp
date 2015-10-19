@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: MeshRefinement
  Authors: Simone Bnà, Eugenio Aulisa
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -24,22 +24,22 @@
 
 
 namespace femus {
-  
+
 //-------------------------------------------------------------------
 MeshRefinement::MeshRefinement(Mesh& mesh): _mesh(mesh) {
-  
+
 }
 
 //-------------------------------------------------------------------
 MeshRefinement::~MeshRefinement() {
-  
+
 }
-  
+
 //-------------------------------------------------------------------
 void MeshRefinement::FlagAllElementsToBeRefined() {
-  
+
    _mesh.el->InitRefinedToZero();
-   
+
    //refine all next grid elements
    for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel++) {
      _mesh.el->SetRefinedElementIndex(iel,1);
@@ -53,18 +53,21 @@ void MeshRefinement::FlagAllElementsToBeRefined() {
 
 //-------------------------------------------------------------------
 void MeshRefinement::FlagElementsToBeRefinedByUserDefinedFunction() {
-  
+
     _mesh.el->InitRefinedToZero();
-   
+
+
+
     //refine based on the function SetRefinementFlag defined in the main;
     // the Mesh is serial, we cannot in parallel use the coordinates to selectively refine
-    std::vector<double> X_local;
-    std::vector<double> Y_local;
-    std::vector<double> Z_local;
-    _mesh._coordinate->_Sol[0]->localize_to_all(X_local);
-    _mesh._coordinate->_Sol[1]->localize_to_all(Y_local);
-    _mesh._coordinate->_Sol[2]->localize_to_all(Z_local);
-  
+//     std::vector<double> X_local;
+//     std::vector<double> Y_local;
+//     std::vector<double> Z_local;
+//     _mesh._coordinate->_Sol[0]->localize_to_all(X_local);
+//     _mesh._coordinate->_Sol[1]->localize_to_all(Y_local);
+//     _mesh._coordinate->_Sol[2]->localize_to_all(Z_local);
+
+
     for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel+=1) {
       unsigned nve=_mesh.el->GetElementDofNumber(iel,0);
       std::vector < double > vtx(3,0.);
@@ -87,6 +90,7 @@ void MeshRefinement::FlagElementsToBeRefinedByUserDefinedFunction() {
 	}
       }
     }
+
     _mesh.el->AllocateChildrenElement(_mesh.GetRefIndex());
 }
 
@@ -94,8 +98,8 @@ void MeshRefinement::FlagElementsToBeRefinedByUserDefinedFunction() {
 
 //-------------------------------------------------------------------
 void MeshRefinement::FlagElementsToBeRefinedByAMR() {
-    
-       
+
+
     if(_mesh._TestSetRefinementFlag){
       for (int iel_metis=_mesh.IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _mesh.IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
 	unsigned kel = _mesh.IS_Mts2Gmt_elem[iel_metis];
@@ -119,12 +123,12 @@ void MeshRefinement::FlagElementsToBeRefinedByAMR() {
       }
       _mesh._coordinate->_Sol[3]->close();
     }
-       
+
     std::vector<double> AMR_local;
     _mesh._coordinate->_Sol[3]->localize_to_all(AMR_local);
-  
+
     _mesh.el->InitRefinedToZero();
-    
+
     for (unsigned iel_metis=0; iel_metis<_mesh.GetNumberOfElements(); iel_metis++) {
       if(AMR_local[iel_metis]>0.5){
 	unsigned iel=_mesh.IS_Mts2Gmt_elem[iel_metis];
@@ -132,7 +136,7 @@ void MeshRefinement::FlagElementsToBeRefinedByAMR() {
 	_mesh.el->AddToRefinedElementNumber(1);
 	short unsigned elt=_mesh.el->GetElementType(iel);
 	_mesh.el->AddToRefinedElementNumber(1,elt);
-      }   
+      }
     }
     _mesh.el->AllocateChildrenElement(_mesh.GetRefIndex());
 }
@@ -140,7 +144,7 @@ void MeshRefinement::FlagElementsToBeRefinedByAMR() {
 
 //-------------------------------------------------------------------
 void MeshRefinement::FlagOnlyEvenElementsToBeRefined() {
-  
+
    _mesh.el->InitRefinedToZero();
 
    //refine all next grid even elements
@@ -156,13 +160,14 @@ void MeshRefinement::FlagOnlyEvenElementsToBeRefined() {
 
 //---------------------------------------------------------------------------------------------------------------
 void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_type *otherFiniteElement[6][5]) {
-  
+
+
   _mesh.SetCoarseMesh(mshc);
-  
+
   _mesh.SetFiniteElementPtr(otherFiniteElement);
-    
+
   elem *elc = mshc->el;
-    
+
   _mesh.SetLevel(igrid);
   //_grid=igrid;
 
@@ -170,9 +175,9 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   // total number of elements on the fine level
   int nelem = elc->GetRefinedElementNumber() * _mesh.GetRefIndex(); // refined
   nelem += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // not-refined
-  
-  
-  _mesh.SetNumberOfElements(nelem);  
+
+
+  _mesh.SetNumberOfElements(nelem);
   _mesh.el = new elem( elc, _mesh.GetRefIndex() );
 
   unsigned jel=0;
@@ -218,25 +223,25 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
     }
     else {
       AMR = true;
-      elc->SetRefinedElementIndex(iel,jel+1u); // to understand
+      //elc->SetRefinedElementIndex(iel,jel+1u); // to understand
       unsigned elt=elc->GetElementType(iel);
-      
+
       // project element type
       _mesh.el->SetElementType(jel,elt);
       _mesh.el->SetElementFather(jel, iel, false);
       elc->SetChildElement(iel,0,jel);
-      
+
       unsigned elg = elc->GetElementGroup(iel);
       unsigned elmat = elc->GetElementMaterial(iel);
-      
+
       // project element group
       _mesh.el->SetElementGroup(jel,elg);
       _mesh.el->SetElementMaterial(jel,elmat);
-      
+
       // project nodes indeces
       for (unsigned inode=0; inode<elc->GetElementDofNumber(iel,2); inode++)
-        _mesh.el->SetElementVertexIndex(jel,inode,elc->GetElementVertexIndex(iel,inode)); 
-      
+        _mesh.el->SetElementVertexIndex(jel,inode,elc->GetElementVertexIndex(iel,inode));
+
       // project face indeces
       for (unsigned iface=0; iface<elc->GetElementFaceNumber(iel); iface++) {
         int value = elc->GetFaceElementIndex(iel,iface);
@@ -250,18 +255,17 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
     }
   }
 
-
   int ncoarsenodes=elc->GetNodeNumber();
-  _mesh.SetNumberOfNodes(ncoarsenodes); 
-  _mesh.el->SetVertexNodeNumber(ncoarsenodes); //TODO 
+  _mesh.SetNumberOfNodes(ncoarsenodes);
+  _mesh.el->SetVertexNodeNumber(ncoarsenodes); //TODO
   int nnodes = _mesh.GetNumberOfNodes();
-  
+
   //int ncoarsenodes=elc->GetNodeNumber();
   //numOfNotRefElem = elc->GetElementNumber() - elc->GetRefinedElementNumber();
   //int nnodes = ncoarsenodes - ((numOfNotRefElem * _mesh.GetRefIndex()) - 1);
   //_mesh.SetNumberOfNodes(nnodes);
   //_mesh.el->SetVertexNodeNumber(nnodes);
-  
+
   //find all the elements near each vertex
   _mesh.BuildAdjVtx(); //TODO
   //initialize to zero all the middle edge points
@@ -271,7 +275,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 	_mesh.el->SetElementVertexIndex(iel,inode,0);
       }
     }
-  }   
+  }
   //find all the middle edge points
   for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel++) {
     if ( _mesh.el->IsFatherRefined(iel) ) {
@@ -316,16 +320,16 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 	    }
 	  }
 	}
-      } 
+      }
     }
   }
   _mesh.SetNumberOfNodes(nnodes);
   _mesh.el->SetMidpointNodeNumber(nnodes - _mesh.el->GetVertexNodeNumber());
-  
+
   Buildkmid();
-  
+
   _mesh.Buildkel();
-  
+
   MeshMetisPartitioning meshmetispartitioning(_mesh);
   if( AMR == true ){
     meshmetispartitioning.DoPartition();
@@ -333,31 +337,32 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   else{
     meshmetispartitioning.DoPartition(*mshc);
   }
-  
+
+
   _mesh.FillISvector();
-    
+
   // build Mesh coordinates by projecting the coarse coordinats
   _mesh._coordinate = new Solution(&_mesh);
-  _mesh._coordinate->AddSolution("X",LAGRANGE,SECOND,1,0); 
-  _mesh._coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0); 
-  _mesh._coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0); 
-  
+  _mesh._coordinate->AddSolution("X",LAGRANGE,SECOND,1,0);
+  _mesh._coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0);
+  _mesh._coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0);
+
   _mesh._coordinate->ResizeSolutionVector("X");
   _mesh._coordinate->ResizeSolutionVector("Y");
-  _mesh._coordinate->ResizeSolutionVector("Z");    
-  
-  _mesh._coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0); 
+  _mesh._coordinate->ResizeSolutionVector("Z");
+
+  _mesh._coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
   _mesh._coordinate->ResizeSolutionVector("AMR");
- 
+
   unsigned solType=2;
-     
+
   _mesh._coordinate->_Sol[0]->matrix_mult(*mshc->_coordinate->_Sol[0],*_mesh.GetCoarseToFineProjection(solType));
   _mesh._coordinate->_Sol[1]->matrix_mult(*mshc->_coordinate->_Sol[1],*_mesh.GetCoarseToFineProjection(solType));
   _mesh._coordinate->_Sol[2]->matrix_mult(*mshc->_coordinate->_Sol[2],*_mesh.GetCoarseToFineProjection(solType));
   _mesh._coordinate->_Sol[0]->close();
   _mesh._coordinate->_Sol[1]->close();
-  _mesh._coordinate->_Sol[2]->close();     
-         
+  _mesh._coordinate->_Sol[2]->close();
+
 }
 
 
@@ -365,10 +370,10 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
  * This function generates face (for hex and wedge elements) and element (for hex and quad) dofs
  **/
 void MeshRefinement::Buildkmid() {
-  
+
   unsigned int nnodes = _mesh.GetNumberOfNodes();
-  
-  //intialize to zero  
+
+  //intialize to zero
   for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++){
     if ( _mesh.el->IsFatherRefined(iel) ) {
       for (unsigned inode=_mesh.el->GetElementDofNumber(iel,1); inode<_mesh.el->GetElementDofNumber(iel,2); inode++){
@@ -376,8 +381,8 @@ void MeshRefinement::Buildkmid() {
       }
     }
   }
-    
-  // generate face dofs for hex and wedge elements  
+
+  // generate face dofs for hex and wedge elements
   for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++) {
     if ( _mesh.el->IsFatherRefined(iel) ) {
       for (unsigned iface=0; iface<_mesh.el->GetElementFaceNumber(iel,0); iface++) { // I think is on all the faces that are quads
@@ -408,10 +413,10 @@ void MeshRefinement::Buildkmid() {
 	  }
 	}
       }
-    }  
+    }
   }
 
-  // generates element dofs for hex and quad elements  
+  // generates element dofs for hex and quad elements
   for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++) {
     if ( _mesh.el->IsFatherRefined(iel) ) {
       if (0==_mesh.el->GetElementType(iel)) { //hex
@@ -427,7 +432,7 @@ void MeshRefinement::Buildkmid() {
   unsigned nv0= _mesh.el->GetVertexNodeNumber();
   unsigned nv1= _mesh.el->GetMidpointNodeNumber();
   _mesh.el->SetCentralNodeNumber(nnodes-nv0-nv1);
-  
+
   _mesh.SetNumberOfNodes(nnodes);
 
 }

@@ -21,7 +21,7 @@
 
 namespace femus {
 
-adept::Stack FemusInit::_adeptStack; 
+adept::Stack FemusInit::_adeptStack;
 
 // =======================================================
 /// This function initializes the libraries if it is parallel
@@ -32,7 +32,7 @@ FemusInit::FemusInit(
 ) {// ======================================================
 
 #ifdef HAVE_PETSC
-    
+
   int ierr = PetscInitialize (&argc, &argv, NULL, NULL);    CHKERRABORT(PETSC_COMM_WORLD,ierr);
 
 #endif
@@ -55,7 +55,7 @@ FemusInit::FemusInit(
 }
 
 
-FemusInit::~FemusInit() { 
+FemusInit::~FemusInit() {
 
 #ifdef HAVE_PETSC
     PetscFinalize();

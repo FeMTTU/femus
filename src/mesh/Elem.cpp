@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: Elem
  Authors: Eugenio Aulisa
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -65,6 +65,9 @@ elem::elem(const unsigned &other_nel) {
   }
   _node_region_flag=false;
   _child_elem_flag=false;
+
+  elfRef = new bool [nel];
+  memset( elfRef, 0, nel*sizeof(bool) );
 }
 
 /**
@@ -75,7 +78,7 @@ elem::elem(const elem *elc, const unsigned refindex) {
   nelt[0] = nelt[1] = nelt[2] = nelt[3] = nelt[4] = nelt[5] = 0;
   nel = elc->GetRefinedElementNumber()*refindex; //refined
   nel += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // + non-refined;
-  
+
   elt = new unsigned short [nel];
   elg = new unsigned short [nel];
   elmat = new unsigned short [nel];
@@ -96,7 +99,7 @@ elem::elem(const elem *elc, const unsigned refindex) {
     kvert_size += elc->GetRefinedElementNumber(i) * refindex * NVE[i][2];
     kel_size += elc->GetRefinedElementNumber(i) * refindex * NFC[i][1];
   }
-  
+
   for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++ ){
      if(!elc->GetRefinedElementIndex(iel) ){
        unsigned type = elc->GetElementType(iel);
@@ -104,7 +107,7 @@ elem::elem(const elem *elc, const unsigned refindex) {
        kel_size += NFC[type][1];
     }
   }
-  
+
   kvert_memory = new unsigned [ kvert_size ];
   kel_memory = new int [ kel_size ];
   for (unsigned i=0; i < kel_size; i++)
@@ -153,7 +156,7 @@ elem::~elem() {
       delete [] _child_elem;
     }
   }
-  
+
 /**
  * Return the number of vertices(type=0) + midpoints(type=1) + facepoints(type=2) + interiorpoits(type=2)
  **/
@@ -532,7 +535,7 @@ unsigned elem::GetIndex(const char name[]) const {
 void elem::AllocateNodeRegion() {
   _node_region_flag=1;
   _node_region=new bool [nvt];
-  for (int i=0; i<nvt; i++) _node_region[i]=0;  
+  for (int i=0; i<nvt; i++) _node_region[i]=0;
   // 0 means Fluid - 1 means Solid  ==> Solid wins on Fluid on Interface nodes
 }
 
@@ -549,14 +552,15 @@ void elem::AllocateChildrenElement(const unsigned &refindex){
     delete [] _child_elem_memory;
     delete [] _child_elem;
   }
-  
-  _child_elem_memory=new unsigned [nelr*refindex];
+
+  _child_elem_memory=new unsigned [nelr*refindex+(nel-nelr)];
   _child_elem = new unsigned* [nel];
-  
+
   unsigned *ptr=_child_elem_memory;
   for(int i=0;i<nel;i++){
     _child_elem[i]=ptr;
     if(elr[i]==1) ptr+=refindex;
+    else ptr+=1;
   }
   _child_elem_flag=true;
   return;

@@ -31,12 +31,12 @@ double InitalValueT(const std::vector < double >& x) {
 }
 
 bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
-  
+
   bool refine=0;
   if (elemgroupnumber==6 && level<1) refine=1;
   if (elemgroupnumber==7 && level<2) refine=1;
   if (elemgroupnumber==8 && level<3) refine=1;
-  
+
   return refine;
 
 }
@@ -49,7 +49,8 @@ int main(int argc, char** args) {
   // define multilevel mesh
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  // read coarse level mesh and generate finers level meshes
+  //read coarse level mesh and generate finers level meshes
+  //mlMsh.ReadCoarseMesh("./input/box.neu", "seventh", scalingFactor);
   mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
@@ -62,18 +63,19 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("U", LAGRANGE, FIRST);
+  //mlSol.AddSolution("U", LAGRANGE, FIRST);
+  mlSol.AddSolution("U", LAGRANGE, SECOND);
 //   mlSol.AddSolution("V", LAGRANGE, SERENDIPITY);
 //   mlSol.AddSolution("W", LAGRANGE, SECOND);
 //   mlSol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, ZERO);
 //   mlSol.AddSolution("T", DISCONTINOUS_POLYNOMIAL, FIRST);
-// 
+//
   mlSol.Initialize("All");    // initialize all varaibles to zero
-// 
+//
   mlSol.Initialize("U", InitalValueU);
 //   mlSol.Initialize("P", InitalValueP);
 //   mlSol.Initialize("T", InitalValueT);    // note that this initialization is the same as piecewise constant element
-// 
+//
 //   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("U");
