@@ -494,10 +494,10 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
     for(int isdom=iproc; isdom<iproc+1; isdom++) {
       for (int iel_mts=mshc->IS_Mts2Gmt_elem_offset[isdom]; iel_mts < mshc->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
-	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+	//if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
    	  short unsigned ielt=mshc->el->GetElementType(iel);
 	  mshc->_finiteElement[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
-	}
+	//}
       }
     }
   }
@@ -526,10 +526,10 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
     for(int isdom=iproc; isdom<iproc+1; isdom++) {
       for (int iel_mts=mshc->IS_Mts2Gmt_elem_offset[isdom]; iel_mts < mshc->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
 	unsigned iel = mshc->IS_Mts2Gmt_elem[iel_mts];
-	if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
+	//if(mshc->el->GetRefinedElementIndex(iel)){ //only if the coarse element has been refined
     	  short unsigned ielt=mshc->el->GetElementType(iel);
 	  mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel,_PP[gridf],SolIndex,k);
-	}
+	//}
       }
     }
   }

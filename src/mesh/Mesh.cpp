@@ -924,12 +924,7 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
       for (int iel_mts=_coarseMsh->IS_Mts2Gmt_elem_offset[isdom];iel_mts < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
 	unsigned iel = _coarseMsh->IS_Mts2Gmt_elem[iel_mts];
 	short unsigned ielt=_coarseMsh->el->GetElementType(iel);
-	if(_coarseMsh->el->GetRefinedElementIndex(iel)){ //if the coarse element has been refined
-	  _finiteElement[ielt][solType]->GetSparsityPatternSize( *this, *_coarseMsh, iel, NNZ_d, NNZ_o);
-	}
-	else {//if the coarse element has not been refined
-	  _finiteElement[ielt][solType]->GetSparsityPatternSizeIdentity( *this, *_coarseMsh, iel, NNZ_d, NNZ_o);
-	}
+	_finiteElement[ielt][solType]->GetSparsityPatternSize( *this, *_coarseMsh, iel, NNZ_d, NNZ_o);
       }
     }
     NNZ_d->close();
@@ -939,8 +934,8 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
     vector <int> nnz_d(nf_loc);
     vector <int> nnz_o(nf_loc);
     for(int i=0; i<nf_loc;i++){
-      nnz_d[i]=static_cast <int> ((*NNZ_d)(offset+i));
-      nnz_o[i]=static_cast <int> ((*NNZ_o)(offset+i));
+      nnz_d[i]=static_cast <int> (floor((*NNZ_d)(offset+i)+0.5));
+      nnz_o[i]=static_cast <int> (floor((*NNZ_o)(offset+i)+0.5));
     }
     delete NNZ_d;
     delete NNZ_o;
@@ -955,12 +950,7 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
 	   iel_mts < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
 	unsigned iel = _coarseMsh->IS_Mts2Gmt_elem[iel_mts];
 	short unsigned ielt=_coarseMsh->el->GetElementType(iel);
-	if(_coarseMsh->el->GetRefinedElementIndex(iel)){ //if the coarse element has been refined
-	  _finiteElement[ielt][solType]->BuildProlongation(*this, *_coarseMsh,iel, _ProjCoarseToFine[solType]);
-	}
-	else{ //if the coarse element has not been refined
-	  _finiteElement[ielt][solType]->BuildProlongationIdentity(*this, *_coarseMsh,iel, _ProjCoarseToFine[solType]);
-	}
+	_finiteElement[ielt][solType]->BuildProlongation(*this, *_coarseMsh,iel, _ProjCoarseToFine[solType]);
       }
     }
     _ProjCoarseToFine[solType]->close();
