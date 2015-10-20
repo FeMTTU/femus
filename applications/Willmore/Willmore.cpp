@@ -111,8 +111,6 @@ int main(int argc, char** args) {
         ss >> str;
         int angle = atoi(str.c_str());
         thetaSphere = acos(-1.) / 180 * angle;
-        //std::cout<<angle<<std::endl;
-        //abort();
       }
     } else if (!strcmp("torus", args[1]) || !strcmp("Torus", args[1]) || !strcmp("TORUS", args[1])) simulation = 2;
     else {
@@ -121,7 +119,6 @@ int main(int argc, char** args) {
   } else {
     std::cout << "No input argument, using default argument: simulation = 1 (Sphere)" << std::endl;
   }
-
 
 
   // init Petsc-MPI communicator
@@ -399,8 +396,6 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
 
   vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
   Jac.reserve(4 * maxSize * maxSize);
-  vector< double > Jact; // local Jacobian matrix (ordered by raw, PETSC)
-  Jact.reserve(4 * maxSize * maxSize);
 
 
   if (assembleMatrix)
@@ -429,11 +424,6 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
 
     std::fill(aResu.begin(), aResu.end(), 0);    //set aRes to zero
     std::fill(aResW.begin(), aResW.end(), 0);    //set aRes to zero
-
-    if (assembleMatrix) {   //resize
-      Jact.resize(4 * nDofs * nDofs);
-      Jac.resize(4 * nDofs * nDofs);
-    }
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
@@ -531,14 +521,14 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
 
     //copy the value of the adept::adoube aRes in double Res and store
     for (int i = 0; i < nDofs; i++) {
-      Res[i]       = aResu[i].value();
-      Res[nDofs + i] = aResW[i].value();
+      Res[i]       = -aResu[i].value();
+      Res[nDofs + i] = -aResW[i].value();
     }
 
     RES->add_vector_blocked(Res, KKDof);
 
     if (assembleMatrix) {
-
+      Jac.resize((2. * nDofs) *(2. * nDofs));
       // define the dependent variables
       s.dependent(&aResu[0], nDofs);
       s.dependent(&aResW[0], nDofs);
@@ -546,18 +536,10 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
       // define the independent variables
       s.independent(&solu[0], nDofs);
       s.independent(&solW[0], nDofs);
-      // get the jacobian matrix (ordered by column)
-      s.jacobian(&Jac[0]);
+      // get the jacobian matrix (ordered by row)
+      s.jacobian(&Jac[0], true);
 
-      // get the jacobian matrix (ordered by raw, i.e. Jact=Jac^t)
-      for (int inode = 0; inode < 2 * nDofs; inode++) {
-        for (int jnode = 0; jnode < 2 * nDofs; jnode++) {
-          Jact[inode * 2 * nDofs + jnode] = -Jac[jnode * 2 * nDofs + inode];
-        }
-      }
-
-      //store Jact in the global matrix KK
-      KK->add_matrix_blocked(Jact, KKDof, KKDof);
+      KK->add_matrix_blocked(Jac, KKDof, KKDof);
 
       s.clear_independents();
       s.clear_dependents();
