@@ -51,74 +51,31 @@ void MeshRefinement::FlagAllElementsToBeRefined() {
    _mesh.el->AllocateChildrenElement(_mesh.GetRefIndex());
 }
 
-//-------------------------------------------------------------------
-void MeshRefinement::FlagElementsToBeRefinedByUserDefinedFunction() {
-
-    _mesh.el->InitRefinedToZero();
-
-
-
-    //refine based on the function SetRefinementFlag defined in the main;
-    // the Mesh is serial, we cannot in parallel use the coordinates to selectively refine
-//     std::vector<double> X_local;
-//     std::vector<double> Y_local;
-//     std::vector<double> Z_local;
-//     _mesh._coordinate->_Sol[0]->localize_to_all(X_local);
-//     _mesh._coordinate->_Sol[1]->localize_to_all(Y_local);
-//     _mesh._coordinate->_Sol[2]->localize_to_all(Z_local);
-
-
-    for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel+=1) {
-      unsigned nve=_mesh.el->GetElementDofNumber(iel,0);
-      std::vector < double > vtx(3,0.);
-      for ( unsigned i=0; i<nve; i++) {
-	unsigned inode=_mesh.el->GetElementVertexIndex(iel,i)-1u;
-	unsigned inode_Metis=_mesh.GetMetisDof(inode,2);
-	vtx[0]+= (*_mesh._coordinate->_Sol[0])(inode_Metis);
-	vtx[1]+= (*_mesh._coordinate->_Sol[1])(inode_Metis);
-	vtx[2]+= (*_mesh._coordinate->_Sol[2])(inode_Metis);
-      }
-      vtx[0]/=nve;
-      vtx[1]/=nve;
-      vtx[2]/=nve;
-      if(!_mesh.el->GetRefinedElementIndex(iel)){
-	if (_mesh._SetRefinementFlag(vtx,_mesh.el->GetElementGroup(iel),_mesh.GetLevel())) {
-	  _mesh.el->SetRefinedElementIndex(iel,1);
-	  _mesh.el->AddToRefinedElementNumber(1);
-	  short unsigned elt=_mesh.el->GetElementType(iel);
-	  _mesh.el->AddToRefinedElementNumber(1,elt);
-	}
-      }
-    }
-
-    _mesh.el->AllocateChildrenElement(_mesh.GetRefIndex());
-}
-
-
 
 //-------------------------------------------------------------------
-void MeshRefinement::FlagElementsToBeRefinedByAMR() {
+void MeshRefinement::FlagElementsToBeRefined() {
 
-
-    if(_mesh._TestSetRefinementFlag){
+    if(_mesh._IsUserRefinementFunctionDefined){
       for (int iel_metis=_mesh.IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _mesh.IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
 	unsigned kel = _mesh.IS_Mts2Gmt_elem[iel_metis];
-	short unsigned kelt=_mesh.el->GetElementType(kel);
-        unsigned nve=_mesh.el->GetElementDofNumber(kel,0);
-	std::vector < double > vtx(3,0.);
-	for(unsigned i=0; i<nve; i++) {
-	  unsigned inode=_mesh.el->GetElementVertexIndex(kel,i)-1u;
-	  unsigned inode_metis=_mesh.GetMetisDof(inode,2);
-	  vtx[0]+= (*_mesh._coordinate->_Sol[0])(inode_metis);
-	  vtx[1]+= (*_mesh._coordinate->_Sol[1])(inode_metis);
-	  vtx[2]+= (*_mesh._coordinate->_Sol[2])(inode_metis);
-	}
-	vtx[0]/=nve;
-	vtx[1]/=nve;
-	vtx[2]/=nve;
-	if( (*_mesh._coordinate->_Sol[3])(iel_metis) < 0.5 &&
-	    _mesh._SetRefinementFlag(vtx,_mesh.el->GetElementGroup(kel),_mesh.GetLevel()) ) {
-	    _mesh._coordinate->_Sol[3]->set(iel_metis,1.);
+	if(_mesh.el->IsFatherRefined(kel)){
+	  short unsigned kelt=_mesh.el->GetElementType(kel);
+	  unsigned nve=_mesh.el->GetElementDofNumber(kel,0);
+	  std::vector < double > vtx(3,0.);
+	  for(unsigned i=0; i<nve; i++) {
+	    unsigned inode=_mesh.el->GetElementVertexIndex(kel,i)-1u;
+	    unsigned inode_metis=_mesh.GetMetisDof(inode,2);
+	    vtx[0]+= (*_mesh._coordinate->_Sol[0])(inode_metis);
+	    vtx[1]+= (*_mesh._coordinate->_Sol[1])(inode_metis);
+	    vtx[2]+= (*_mesh._coordinate->_Sol[2])(inode_metis);
+	  }
+	  vtx[0]/=nve;
+	  vtx[1]/=nve;
+	  vtx[2]/=nve;
+	  if( (*_mesh._coordinate->_Sol[3])(iel_metis) < 0.5 &&
+	      _mesh._SetRefinementFlag(vtx,_mesh.el->GetElementGroup(kel),_mesh.GetLevel()) ) {
+	      _mesh._coordinate->_Sol[3]->set(iel_metis,1.);
+	  }
 	}
       }
       _mesh._coordinate->_Sol[3]->close();
@@ -145,16 +102,30 @@ void MeshRefinement::FlagElementsToBeRefinedByAMR() {
 //-------------------------------------------------------------------
 void MeshRefinement::FlagOnlyEvenElementsToBeRefined() {
 
-   _mesh.el->InitRefinedToZero();
+  for (int iel_metis=_mesh.IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _mesh.IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
+    unsigned kel = _mesh.IS_Mts2Gmt_elem[iel_metis];
+    if(_mesh.el->IsFatherRefined(kel)){
+      if( (*_mesh._coordinate->_Sol[3])(iel_metis) < 0.5 && kel%2 == 0) {
+	_mesh._coordinate->_Sol[3]->set(iel_metis,1.);
+      }
+    }
+  }
+  
+  std::vector<double> AMR_local;
+  _mesh._coordinate->_Sol[3]->localize_to_all(AMR_local);
 
-   //refine all next grid even elements
-   for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel+=2) {
-     _mesh.el->SetRefinedElementIndex(iel,1);
-     _mesh.el->AddToRefinedElementNumber(1);
-     short unsigned elt=_mesh.el->GetElementType(iel);
-     _mesh.el->AddToRefinedElementNumber(1,elt);
-   }
-   _mesh.el->AllocateChildrenElement(_mesh.GetRefIndex());
+  _mesh.el->InitRefinedToZero();
+
+  for (unsigned iel_metis=0; iel_metis<_mesh.GetNumberOfElements(); iel_metis++) {
+    if(AMR_local[iel_metis]>0.5){
+      unsigned iel=_mesh.IS_Mts2Gmt_elem[iel_metis];
+      _mesh.el->SetRefinedElementIndex(iel,1);
+      _mesh.el->AddToRefinedElementNumber(1);
+      short unsigned elt=_mesh.el->GetElementType(iel);
+      _mesh.el->AddToRefinedElementNumber(1,elt);
+    }
+  }
+  _mesh.el->AllocateChildrenElement(_mesh.GetRefIndex());
 }
 
 

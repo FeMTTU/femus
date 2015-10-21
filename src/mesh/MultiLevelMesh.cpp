@@ -133,32 +133,28 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
     for (unsigned i=1; i<_gridr0; i++) {
         MeshRefinement meshcoarser(*_level0[i-1u]);
         meshcoarser.FlagAllElementsToBeRefined();
-        //_level0[i-1u]->FlagAllElementsToBeRefined();
-
 	_level0[i] = new Mesh();
 	MeshRefinement meshfiner(*_level0[i]);
         meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
-        //_level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
     }
 
     if(SetRefinementFlag==NULL){
     }
     else{
       Mesh::_SetRefinementFlag = SetRefinementFlag;
-      Mesh::_TestSetRefinementFlag=1;
+      Mesh::_IsUserRefinementFunctionDefined = true;
     }
 
 
     //partially refined meshes
     for (unsigned i=_gridr0; i<_gridn0; i++) {
-      if(!Mesh::_TestSetRefinementFlag) {
+      if(!Mesh::_IsUserRefinementFunctionDefined) {
         cout << "Set Refinement Region flag is not defined! " << endl;
         exit(1);
       }
       else {
 	MeshRefinement meshcoarser(*_level0[i-1u]);
-        meshcoarser.FlagElementsToBeRefinedByUserDefinedFunction();
-	//_level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
+        meshcoarser.FlagElementsToBeRefined();
       }
       _level0[i] = new Mesh();
       MeshRefinement meshfiner(*_level0[i]);
@@ -258,18 +254,18 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
     }
     else{
       Mesh::_SetRefinementFlag = SetRefinementFlag;
-      Mesh::_TestSetRefinementFlag=1;
+      Mesh::_IsUserRefinementFunctionDefined = true;
     }
 
     for (unsigned i=_gridr0; i<_gridn0; i++) {
-      if(Mesh::_TestSetRefinementFlag==0) {
+      if(Mesh::_IsUserRefinementFunctionDefined == false) {
         cout << "Set Refinement Region flag is not defined! " << endl;
         exit(1);
       }
       else {
 	MeshRefinement meshcoarser(*_level0[i-1u]);
-        meshcoarser.FlagElementsToBeRefinedByAMR();
-        //meshcoarser.FlagElementsToBeRefinedByUserDefinedFunction();
+        meshcoarser.FlagElementsToBeRefined();
+	//meshcoarser.FlagOnlyEvenElementsToBeRefined();
       }
       _level0[i] = new Mesh();
       MeshRefinement meshfiner(*_level0[i]);
@@ -288,32 +284,6 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
 
 }
 
-
-void MultiLevelMesh::AddMeshLevel()
-{
-
-  //AMR refine mesh
-   _level0.resize(_gridn0+1u);
-
-  if(Mesh::_TestSetRefinementFlag==0) {
-     cout << "Set Refinement Region flag is not defined! " << endl;
-     exit(1);
-  }
-
-  MeshRefinement meshcoarser(*_level0[_gridn0-1u]);
-  meshcoarser.FlagElementsToBeRefinedByUserDefinedFunction();
-
-  _level0[_gridn0] = new Mesh();
-  MeshRefinement meshfiner(*_level0[_gridn0]);
-  meshfiner.RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
-
-  _level.resize(_gridn+1u);
-  _level[_gridn]=_level0[_gridn0];
-
-  _gridn0++;
-  _gridn++;
-}
-
 void MultiLevelMesh::AddAMRMeshLevel()
 {
 
@@ -321,7 +291,7 @@ void MultiLevelMesh::AddAMRMeshLevel()
    _level0.resize(_gridn0+1u);
 
   MeshRefinement meshcoarser(*_level0[_gridn0-1u]);
-  meshcoarser.FlagElementsToBeRefinedByAMR();
+  meshcoarser.FlagElementsToBeRefined();
 
   _level0[_gridn0] = new Mesh();
   MeshRefinement meshfiner(*_level0[_gridn0]);

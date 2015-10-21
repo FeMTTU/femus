@@ -383,11 +383,11 @@ void LinearImplicitSystem::SetAMRSetOptions(const std::string& AMR, const unsign
     _AMRnorm=0;
   }
 
-  if(SetRefinementFlag==NULL){
+  if( SetRefinementFlag == NULL ){
   }
   else{
     _msh[0]->Mesh::_SetRefinementFlag = SetRefinementFlag;
-    _msh[0]->Mesh::_TestSetRefinementFlag=1;
+    _msh[0]->Mesh::_IsUserRefinementFunctionDefined = true;
   }
 }
 

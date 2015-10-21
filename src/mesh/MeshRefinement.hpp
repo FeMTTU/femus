@@ -53,11 +53,8 @@ public:
     /** Flag all the even elements to be refined */
     void FlagOnlyEvenElementsToBeRefined();
 
-    /** Flag the elements to be refined in according to a user-defined function */
-    void FlagElementsToBeRefinedByUserDefinedFunction();
-
     /** Flag the elements to be refined in according to AMR criteria */
-    void FlagElementsToBeRefinedByAMR();
+    void FlagElementsToBeRefined();
     
     
 private:

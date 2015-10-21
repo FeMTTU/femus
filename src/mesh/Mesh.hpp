@@ -163,7 +163,7 @@ public:
     //int nsubdom;
     static bool (* _SetRefinementFlag)(const std::vector < double >& x,
                                        const int &ElemGroupNumber,const int &level);
-    static bool _TestSetRefinementFlag;
+    static bool _IsUserRefinementFunctionDefined;
     std::map<unsigned int, std::string> _boundaryinfo;
 
     /** Get the projection matrix between Lagrange FEM at the same level mesh*/

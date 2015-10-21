@@ -40,7 +40,7 @@ using std::min;
 using std::sort;
 using std::map;
 
-bool Mesh::_TestSetRefinementFlag=0;
+bool Mesh::_IsUserRefinementFunctionDefined = false;
 
 unsigned Mesh::_dimension=2;
 unsigned Mesh::_ref_index=4;  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
