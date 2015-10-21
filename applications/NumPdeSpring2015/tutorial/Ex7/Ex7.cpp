@@ -45,9 +45,9 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
 
   bool refine=0;
-  if (elemgroupnumber==6 && level<3) refine=1;
-  if (elemgroupnumber==7 && level<4) refine=1;
-  if (elemgroupnumber==8 && level<5) refine=1;
+  if (elemgroupnumber==6 && level<4) refine=1;
+  if (elemgroupnumber==7 && level<5) refine=1;
+  if (elemgroupnumber==8 && level<6) refine=1;
 
   return refine;
 
@@ -78,11 +78,11 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
-  
-  
+
+
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
 
@@ -160,12 +160,12 @@ int main(int argc, char** args) {
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
-  
+
   GMVWriter gmvIO(&mlSol);
   variablesToBePrinted.push_back("all");
   gmvIO.SetDebugOutput(true);
   gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
-  
+
 
   return 0;
 }

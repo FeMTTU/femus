@@ -699,10 +699,9 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 // 	  }
 // 	}
 //       }
-      
-      //std::cout<<igridn<<" "<<k<<"   "<<_ml_msh->GetNumberOfGridTotallyRefined()<<std::endl;
-      if( _FixSolutionAtOnePoint[k] == true  && _iproc == 0 
-	  && igridn < _ml_msh->GetNumberOfGridTotallyRefined() ){
+
+
+      if( _FixSolutionAtOnePoint[k] == true  && _iproc == 0 ){
 	_solution[igridn]->_Bdc[k]->set(0,0.);
 	_solution[igridn]->_Sol[k]->set(0,0.);
       }

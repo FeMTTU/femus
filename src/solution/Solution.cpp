@@ -68,13 +68,13 @@ void Solution::AddSolution( const char name[], const FEFamily fefamily, const FE
   _family.resize(n+1u);
   _order.resize(n+1u);
 
-  _Sol.resize(n+1u); 
+  _Sol.resize(n+1u);
   _Sol[n] = NULL;
-  
-  _Res.resize(n+1u); 
+
+  _Res.resize(n+1u);
   _Res[n] = NULL;
-  
-  _Eps.resize(n+1u); 
+
+  _Eps.resize(n+1u);
   _Eps[n] = NULL;
 
   _GradVec.resize(n+1u);
@@ -202,7 +202,7 @@ void Solution::FreeSolutionVectors() {
       _Eps[i] = NULL;
       if( _Bdc[i] ) delete _Bdc[i];
       _Bdc[i]=NULL;
-      
+
     }
     if (_SolTmOrder[i]==2) {
       if(_SolOld[i]) delete _SolOld[i];
@@ -616,38 +616,8 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
     for(int i=0;i<dim;i++){
       _GradMat[SolType][i]->close();
     }
-
-//     // Begin free elem type structures
-//     if(dim==3){
-//       delete type_elem[0];
-//       delete type_elem[1];
-//       delete type_elem[2];
-//     }
-//     else if(dim==2){
-//       delete type_elem[3];
-//       delete type_elem[4];
-//     }
-//     else if(dim==1){
-//       delete type_elem[5];
-//     }
-//     // End free elem type structures
-
-
   }
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
 
 
 // ------------------------------------------------------------------
