@@ -679,29 +679,29 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 	  }
 	}
       }
-//       else if(_TestIfPressure[k]){
-// 	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
-// 	  unsigned nel=_ml_msh->GetLevel(igridn)->GetNumberOfElements();
-// 	  for (int iel=_ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom];
-// 	       iel < _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
-// 	    unsigned kel_gmt = _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel];
-// 	    for (unsigned jface=0; jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt); jface++) {
-// 	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
-// 		short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
-// 		unsigned nv1=_ml_msh->GetLevel(igridn)->el->GetElementDofNumber(kel_gmt,_SolType[k]);
-// 		for (unsigned iv=0; iv<nv1; iv++) {
-// 		  unsigned inode=(kel_gmt+iv*nel);
-// 		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
-// 		  _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
-// 		}
-// 	      }
-// 	    }
-// 	  }
-// 	}
-//       }
+      else if(_TestIfPressure[k]){
+	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
+	  unsigned nel=_ml_msh->GetLevel(igridn)->GetNumberOfElements();
+	  for (int iel=_ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom];
+	       iel < _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	    unsigned kel_gmt = _ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem[iel];
+	    for (unsigned jface=0; jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt); jface++) {
+	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+		short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
+		unsigned nv1=_ml_msh->GetLevel(igridn)->el->GetElementDofNumber(kel_gmt,_SolType[k]);
+		for (unsigned iv=0; iv<1; iv++) {
+		  unsigned inode=(kel_gmt+iv*nel);
+		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
+		  _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
+		}
+	      }
+	    }
+	  }
+	}
+      }
 
 
-      if( _FixSolutionAtOnePoint[k] == true  && _iproc == 0 ){
+      if( _FixSolutionAtOnePoint[k] == true  && _iproc == 0 && igridn<_ml_msh->GetNumberOfGridTotallyRefined()){
 	_solution[igridn]->_Bdc[k]->set(0,0.);
 	_solution[igridn]->_Sol[k]->set(0,0.);
       }

@@ -213,7 +213,7 @@ private:
     unsigned *_child_elem_memory;
     unsigned **_child_elem;
     bool _child_elem_flag;
-    unsigned **kvtel;
+    unsigned **kvtel; //node->element
     unsigned *kvtel_memory;
     unsigned *nve;
     unsigned *kvert_memory;
@@ -222,13 +222,13 @@ private:
     unsigned nel,nelt[6];
     unsigned nelr,nelrt[6];
     unsigned ngroup;
-    short unsigned *elt,*elg,*elmat;
+    short unsigned *elt,*elg,*elmat; //element
     bool *_node_region;
     bool  _node_region_flag;
     unsigned *elf;
-    bool *elfRef;
+    bool *elfRef; //element
     unsigned nelf;
-    unsigned **kvert;
+    unsigned **kvert; //element -> nodes
 
 };
 

@@ -107,8 +107,8 @@ void MeshMetisPartitioning::DoPartition() {
     }
 
 
-    int ncommon = ( _mesh.GetDimension() == 1 ) ? 1 : _mesh.GetDimension()+1;
-
+    //int ncommon = ( _mesh.GetDimension() == 1 ) ? 1 : _mesh.GetDimension()+1;
+    int ncommon = 1;	
 
     //I call the Mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
     int err = METIS_PartMeshDual(&nelem, &nnodes, &eptr[0], &eind[0], NULL, NULL, &ncommon, &_nprocs, NULL, options, &objval, &_mesh.epart[0], &npart[0]);
