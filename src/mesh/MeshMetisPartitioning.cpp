@@ -40,7 +40,7 @@ MeshMetisPartitioning::MeshMetisPartitioning(Mesh& mesh) : MeshPartitioning(mesh
 
 
 //------------------------------------------------------------------------------------------------------
-void MeshMetisPartitioning::DoPartition() {
+void MeshMetisPartitioning::DoPartition(const bool &AMR) {
 
 
   int nnodes = _mesh.GetNumberOfNodes();
@@ -68,7 +68,7 @@ void MeshMetisPartitioning::DoPartition() {
 #ifndef HAVE_METIS
     std::cerr << "Fatal error: Metis library was not found. Metis partioning algorithm cannot be called!" << std::endl;
     exit(1);
-#else
+#endif
 
     unsigned eind_size = _mesh.el->GetElementNumber("Hex")*NVE[0][2]      + _mesh.el->GetElementNumber("Tet")*NVE[1][2]
                       + _mesh.el->GetElementNumber("Wedge")*NVE[2][2]    + _mesh.el->GetElementNumber("Quad")*NVE[3][2]
@@ -96,19 +96,19 @@ void MeshMetisPartitioning::DoPartition() {
 
     eptr[0]=0;
     unsigned counter=0;
-    for (unsigned iel=0; iel<nelem; iel++) {
-      unsigned ielt=_mesh.el->GetElementType(iel);
-      eptr[iel+1]=eptr[iel]+NVE[ielt][2];
+    for (unsigned iel = 0; iel<nelem; iel++) {
+      unsigned ielt = _mesh.el->GetElementType(iel);
+      unsigned ndofs = _mesh.el->GetElementDofNumber(iel,2);
+      eptr[iel+1] = eptr[iel] + ndofs;
 
-      for (unsigned inode=0; inode<_mesh.el->GetElementDofNumber(iel,2); inode++){
-        eind[counter]=_mesh.el->GetElementVertexIndex(iel,inode)-1;
+      for (unsigned inode = 0; inode < ndofs; inode++){
+        eind[counter] = _mesh.el->GetElementVertexIndex(iel,inode)-1;
         counter++;
       }
     }
 
 
-    //int ncommon = ( _mesh.GetDimension() == 1 ) ? 1 : _mesh.GetDimension()+1;
-    int ncommon = 1;	
+    int ncommon = ( AMR || _mesh.GetDimension() == 1 ) ? 1 : _mesh.GetDimension()+1;
 
     //I call the Mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
     int err = METIS_PartMeshDual(&nelem, &nnodes, &eptr[0], &eind[0], NULL, NULL, &ncommon, &_nprocs, NULL, options, &objval, &_mesh.epart[0], &npart[0]);
@@ -128,7 +128,6 @@ void MeshMetisPartitioning::DoPartition() {
       cout << " METIS_GENERIC_ERROR " << endl;
       exit(3);
     }
-#endif
   }
 
 

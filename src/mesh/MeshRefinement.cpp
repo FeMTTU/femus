@@ -303,7 +303,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 
   MeshMetisPartitioning meshmetispartitioning(_mesh);
   if( AMR == true ){
-    meshmetispartitioning.DoPartition();
+    meshmetispartitioning.DoPartition(AMR);
   }
   else{
     meshmetispartitioning.DoPartition(*mshc);
