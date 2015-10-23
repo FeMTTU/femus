@@ -118,20 +118,23 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
               << std::endl;
   }
 
+  
   ReorderMeshDofs(coords);
-
-  BuildAdjVtx();
-
-  Buildkel();
-
+    
   MeshMetisPartitioning meshmetispartitioning(*this);
   meshmetispartitioning.DoPartition();
+  
+  FillISvector();
+  
+  BuildAdjVtx();
+  Buildkel();
 
+ 
 
 //   epart[0]=0;
 //   epart[1]=1;
 
-  FillISvector();
+ 
 
   vector <double> coords_temp;
   for(int i=0;i<3;i++){
@@ -179,14 +182,16 @@ void Mesh::GenerateCoarseBoxMesh(
 
   ReorderMeshDofs(coords);
 
-  BuildAdjVtx();
-
-  Buildkel();
-
   MeshMetisPartitioning meshmetispartitioning(*this);
   meshmetispartitioning.DoPartition();
 
   FillISvector();
+    
+  BuildAdjVtx();
+
+  Buildkel();
+
+ 
 
   vector <double> coords_temp;
   for(int i=0;i<3;i++){
@@ -469,6 +474,16 @@ void Mesh::FillISvector() {
   }
   //END building the  metis2Gambit_elem and  k = 3,4
 
+  
+  // TODO build new gambit mesh such that element_gambit = element_dof_metis ([3])
+  
+  // TODO run k = 2 : biquadratic
+  
+  // TODO  build new gambit mesh such that node_gambit = biquadratic_dof_metis ([2])
+   
+  // TODO run k 1,2 where now the mapping is build form metis[0] or [1] -> metis[2] ( which is node_gambit)
+  
+  
   //BEGIN building for k = 0,1,2
 
   vector < unsigned > npart;

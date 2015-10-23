@@ -68,6 +68,10 @@ elem::elem(const unsigned &other_nel) {
 
   elfRef = new bool [nel];
   memset( elfRef, 0, nel*sizeof(bool) );
+    
+  kvtel = NULL;
+  kvtel_memory = NULL;
+  nve = NULL;
 }
 
 /**
@@ -133,7 +137,26 @@ elem::elem(const elem *elc, const unsigned refindex) {
   }
   _node_region_flag = false;
   _child_elem_flag = false;
+  
+  kvtel = NULL;
+  kvtel_memory = NULL;
+  nve = NULL;
 }
+
+
+// {
+//   short unsigned *temp_elt;
+//   temp_elt = elt;
+//   
+//   elt = new short unsigned [nel];
+//   
+//   //loop iel;
+//   elt[mapping[iel]] = temp_elt[iel]
+//   
+//   
+//   delete [] temp_elt;
+//   
+// }
 
 
 elem::~elem() {
@@ -147,9 +170,14 @@ elem::~elem() {
     delete [] elg;
     delete [] elmat;
     delete [] elr;
+    
     delete [] kvtel_memory;
     delete [] kvtel;
     delete [] nve;
+    kvtel = NULL;
+    kvtel_memory = NULL;
+    nve = NULL;
+        
     if(_node_region_flag) delete [] _node_region;
     if(_child_elem_flag){
       delete [] _child_elem_memory;
@@ -458,6 +486,11 @@ void elem::AllocateVertexElementMemory() {
   unsigned counter=(nelt[0]*NVE[0][0]+nelt[1]*NVE[1][0]+nelt[2]*NVE[2][0]+
                     nelt[3]*NVE[3][0]+nelt[4]*NVE[4][0]+nelt[5]*NVE[5][0]);
 
+  
+  if( kvtel != NULL) delete [] kvtel;
+  if( kvtel_memory != NULL) delete [] kvtel_memory;
+  if( nve != NULL ) delete [] nve;
+  
   kvtel=new unsigned * [nv0];
   nve= new unsigned[nv0];
 

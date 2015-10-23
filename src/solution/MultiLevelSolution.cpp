@@ -688,19 +688,23 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 	  
 	    short unsigned ielt=_ml_msh->GetLevel(igridn)->el->GetElementType(kel_gmt);
 	  
-	    bool test=true;
+// 	    bool test=true;
 // 	    for (unsigned kface=0; kface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt); kface++) {
 // 	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,kface) > 0){
 // 		int kel = _ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,kface)-1;
 // 		unsigned kel_Metis = _ml_msh->GetLevel(igridn)->GetMetisDof(kel,_SolType[k]);
-// 		if( (*_solution[igridn]->_Bdc[k])(kel_Metis) == 1. ){
+// 		if( // kel_Metis >=  _ml_msh->GetLevel(igridn)->MetisOffset[3][isdom]&& 
+// 		  //kel_Metis < _ml_msh->GetLevel(igridn)->MetisOffset[3][isdom+1]
+// 		1){
+// 		  if( (*_solution[igridn]->_Bdc[k])(kel_Metis) == 1. ){
 // 		    test = false;
+// 		  }
 // 		}    
 // 	      }
 // 	    }
 	  
 	    for (unsigned jface=0; jface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(kel_gmt); jface++) {
-	      if (test && _ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
+	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(kel_gmt,jface)==0) { //Domain Decomposition Dirichlet
 		
 		unsigned nv1=_ml_msh->GetLevel(igridn)->el->GetElementDofNumber(kel_gmt,_SolType[k]);
 		for (unsigned iv=0; iv<1; iv++) {

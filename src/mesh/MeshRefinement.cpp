@@ -299,8 +299,6 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 
   Buildkmid();
 
-  _mesh.Buildkel();
-
   MeshMetisPartitioning meshmetispartitioning(_mesh);
   if( AMR == true ){
     meshmetispartitioning.DoPartition(AMR);
@@ -309,8 +307,13 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
     meshmetispartitioning.DoPartition(*mshc);
   }
 
-
   _mesh.FillISvector();
+  
+  _mesh.BuildAdjVtx(); //TODO
+  
+  _mesh.Buildkel();
+
+  
 
   // build Mesh coordinates by projecting the coarse coordinats
   _mesh._coordinate = new Solution(&_mesh);
