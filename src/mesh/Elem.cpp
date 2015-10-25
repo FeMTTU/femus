@@ -151,7 +151,7 @@ elem::elem(const elem *elc, const unsigned refindex) {
 //   elt = new short unsigned [nel];
 //   
 //   //loop iel;
-//   elt[mapping[iel]] = temp_elt[iel]
+//   elt[mapping[iel]] = temp_elt[iel];
 //   
 //   
 //   delete [] temp_elt;

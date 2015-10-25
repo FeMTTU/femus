@@ -477,11 +477,143 @@ void Mesh::FillISvector() {
   
   // TODO build new gambit mesh such that element_gambit = element_dof_metis ([3])
   
+//  REORDERING OF  ELT, ELG, ELMAT 
+//  short unsigned *temp_elt;
+//  short unsigned *temp_elg;
+//  short unsigned *temp_elmat;
+//
+//  temp_elt = elt;
+//  temp_elg = elg;
+//  temp_elmat = elmat;
+//   
+//  elt = new short unsigned [_nelem];
+//  elg = new short unsigned [_nelem];
+//  elmat = new short unsigned [_nelem];
+//   
+//  for(unsigned iel=0; iel<_nelem; iel++){ 
+//    elt[IS_Gmt2Mts_dof[3][iel]] = temp_elt[iel];
+//    elg[IS_Gmt2Mts_dof[3][iel]] = temp_elg[iel];
+//    elmat[IS_Gmt2Mts_dof[3][iel]] = temp_elmat[iel];
+//  }
+//   
+//  delete [] temp_elt;
+//  delete [] temp_elg;
+//  delete [] temp_elmat;
+
+//  REORDERING OF KEL
+//  int **temp_kel;
+//
+//  temp_kel = kel;
+//
+//  kel = new int * [_nelem];
+//
+//  for(unsigned iel=0; iel<_nelem; iel++){ 
+//    kel[IS_Gmt2Mts_dof[3][iel]] = new int [el->GetElementFaceNumber(iel,1)];
+//    for(unsigned iface=0; iface<el->GetElementFaceNumber(iel,1); iface++){
+//      kel[IS_Gmt2Mts_dof[3][iel]][iface] = temp_kel[iel][iface]; 
+//    }
+//  }
+//  delete [] temp_kel;
+
   // TODO run k = 2 : biquadratic
   
+//   vector < unsigned > npart;
+//   npart.reserve(GetDofNumber(2));
+// 
+//   vector <unsigned short> node_count;
+//   node_count.reserve(GetDofNumber(2));
+// 
+//   for(unsigned k=2; k<3; k++) {
+// 
+//     // Initialization for k = 2
+//     npart.assign(GetDofNumber(k),_nprocs);
+// 
+//     for(int isdom=0;isdom < _nprocs; isdom++){
+//       for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
+// 	unsigned iel=IS_Mts2Gmt_elem[i];
+// 	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
+// 	  unsigned ii=el->GetElementVertexIndex(iel,inode) - 1;
+// 	  if(npart[ii] > isdom) {
+// 	    npart[ii] = isdom;
+// 	    IS_Gmt2Mts_dof[k][ii]=IS_Gmt2Mts_dof_counter[k];
+// 	    IS_Gmt2Mts_dof_counter[k]++;
+// 	  }
+// 	}
+//       }
+//     }
+// 
+//     // ghost vs own nodes
+//     node_count.assign(GetDofNumber(k), 0);
+// 
+//     ghost_size[k].assign(_nprocs,0);
+//     own_size[k].assign(_nprocs,0);
+// 
+//     for(int isdom=0;isdom<_nprocs;isdom++){
+//       for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
+// 	unsigned iel=IS_Mts2Gmt_elem[i];
+// 	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
+// 	  unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
+// 	  if(node_count[ii] < isdom+1){
+// 	    node_count[ii]=isdom+1;
+// 	    if( npart[ii] != isdom){
+// 	      ghost_size[k][isdom]++;
+// 	    }
+// 	    else {
+// 	      own_size[k][isdom]++;
+// 	    }
+// 	  }
+// 	}
+//       }
+//     }
+// 
+//     ghost_nd[k].resize(_nprocs);
+//     ghost_nd_mts[k].resize(_nprocs);
+//     for(int isdom=0; isdom<_nprocs; isdom++) {
+//       ghost_nd[k][isdom].resize(ghost_size[k][isdom]);
+//       ghost_nd_mts[k][isdom].resize(ghost_size[k][isdom]);
+//     }
+// 
+//     node_count.assign (GetDofNumber(k), 0);
+//     ghost_size[k].assign(_nprocs,0);
+// 
+//     for(int isdom=0;isdom<_nprocs;isdom++) {
+//       for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
+// 	unsigned iel=IS_Mts2Gmt_elem[i];
+// 	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
+// 	  unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
+// 	  if(node_count[ii]<isdom+1){
+// 	    node_count[ii]=isdom+1;
+// 	    if(npart[ii] != isdom){
+// 	      ghost_nd_mts[k][isdom][ghost_size[k][isdom]]=IS_Gmt2Mts_dof[k][ii];
+// 	      ghost_nd[k][isdom][ghost_size[k][isdom]]=ii;
+// 	      ghost_size[k][isdom]++;
+// 	    }
+// 	  }
+// 	}
+//       }
+//     }
+//   }
+  
   // TODO  build new gambit mesh such that node_gambit = biquadratic_dof_metis ([2])
+  
+//  REORDERING OF KVERT
+//  unsigned **temp_kvert;
+//
+//  temp_kvert = kvert;
+//
+//  kvert = new unsigned * [_nelem];
+//
+//  for(unsigned iel=0; iel<_nelem; iel++){ 
+//    kvert[IS_Gmt2Mts_dof[3][iel]] = new int [el->GetElementDofNumber(iel,2)];
+//    for(unsigned inode=0; inode<el->GetElementDofNumber(iel,2); inode++){
+//      kvert[IS_Gmt2Mts_dof[3][iel]][IS_Gmt2Mts_dof[2][inode]] = temp_kvert[iel][inode]; //2 means biquadratic
+//    }
+//  }
+//  delete [] temp_kvert;
+
+//  REORDERING OF _COORDINATES ???
    
-  // TODO run k 1,2 where now the mapping is build form metis[0] or [1] -> metis[2] ( which is node_gambit)
+  // TODO run k 0,1 where now the mapping is build form metis[0] or [1] -> metis[2] ( which is node_gambit)
   
   
   //BEGIN building for k = 0,1,2
