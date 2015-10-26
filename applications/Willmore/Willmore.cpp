@@ -219,7 +219,7 @@ int main(int argc, char** args) {
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
-      vtkIO.SetSurfaceVariable("u");
+      vtkIO.SetGraphVariable("u");
       vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
 
     }

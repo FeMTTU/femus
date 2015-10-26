@@ -42,7 +42,7 @@ namespace femus {
     _gridn = _ml_mesh->GetNumberOfLevels();
     _gridr = _ml_mesh->GetNumberOfGridTotallyRefined();
     _moving_mesh = 0;
-    _surface = false;
+    _graph = false;
   }
 
   Writer::Writer( MultiLevelMesh* ml_mesh ):
@@ -101,10 +101,19 @@ namespace femus {
     _moving_vars = movvars_in;
   }
 
-  void Writer::SetSurfaceVariable(const std::string &surfaceVaraible){
-    _surface = true;
-    _surfaceVariable = surfaceVaraible;
+  void Writer::SetGraphVariable(const std::string &graphVaraible){
+    _graph = true;
+    _graphVariable = graphVaraible;
   }
+  
+  void Writer::SetSurfaceVariables( const std::vector < std::string > surfaceVariable ){
+    _surface = true;
+    _surfaceVariable.resize(3);
+    _surfaceVariable[0] = surfaceVariable[0];
+    _surfaceVariable[1] = surfaceVariable[1];
+    _surfaceVariable[2] = surfaceVariable[2];
+  }
+  
 
 } //end namespace femus
 

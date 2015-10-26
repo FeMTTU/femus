@@ -65,8 +65,12 @@ namespace femus {
       std::cout<<"Warning this writer type does not have debug printing"<<std::endl;
     };
 
-    void SetSurfaceVariable(const std::string &surfaceVaraible);
-    void UnsetSurfaceVariable(){ _surface = false;};
+    void SetGraphVariable(const std::string &GraphVaraible);
+    void UnsetGraphVariable(){ _graph = false;};
+    
+    void SetSurfaceVariables( const std::vector < std::string > surfaceVariable);
+    void UnsetSurfaceVariables(){ _surface = false;};
+    
   protected:
 
     /** a flag to move the output mesh */
@@ -75,9 +79,13 @@ namespace femus {
     /** the displacement variables for mesh moving */
     std::vector<std::string> _moving_vars;
 
-    bool _surface;
-    std::string _surfaceVariable;
+    bool _graph;
+    std::string _graphVariable;
 
+    bool _surface;
+    std::vector < std::string > _surfaceVariable;
+    
+    
     /** the multilevelsolution pointer */
     MultiLevelSolution* _ml_sol;
 

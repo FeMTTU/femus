@@ -201,8 +201,14 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
     for (int i = 0; i < 3; i++) {
       mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
 			     *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );
-      if( _surface && i == 2 ){
-        unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariable.c_str());
+      if( _surface ){
+        unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariable[0].c_str());
+        mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
+                               *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
+        mysol[ig]->close();
+      }
+      else if( _graph && i == 2 ){
+        unsigned indSurfVar=_ml_sol->GetIndex(_graphVariable.c_str());
         mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
                                *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
         mysol[ig]->close();
@@ -225,8 +231,14 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
     for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
       mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)-> _coordinate->_Sol[i],
 			     *_ml_mesh->GetLevel(ig)-> GetQitoQjProjection(index,2) );
-      if(i==2 && _surface){
-        unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariable.c_str());
+      if( _surface ){
+        unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariable[0].c_str());
+        mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
+                               *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
+        mysol[ig]->close();
+      }
+      else if(i==2 && _graph){
+        unsigned indSurfVar=_ml_sol->GetIndex(_graphVariable.c_str());
         mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
                                *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
         mysol[ig]->close();
