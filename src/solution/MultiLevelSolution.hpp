@@ -45,13 +45,13 @@ private:
     /** Initial condition function pointer typedef */
     typedef double (*InitFunc) (const std::vector < double >& x);
 
-    /** @duplicate */
+    /** duplicate */
     typedef double (*InitFuncMLProb) (const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z, const char * name);
 
     /** Boundary condition function pointer typedef */
     typedef bool (*BoundaryFunc) (const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
 
-    /** @duplicate */
+    /** duplicate */
     typedef bool (*BoundaryFuncMLProb) (const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName, const double time);
 
 public:
@@ -83,7 +83,7 @@ public:
     /** To be Added */
     void Initialize(const char name[], InitFunc func = NULL);
 
-    /** @duplicate */
+    /** duplicate */
     void InitializeMLProb(const MultiLevelProblem * ml_prob, const char * name, InitFuncMLProb func = NULL);
 
     /** To be Added */
@@ -121,13 +121,13 @@ public:
     /** To be Added */
     void UpdateBdc(const double time);
 
-    /** @duplicate */
+    /** duplicate */
     void AttachSetBoundaryConditionFunctionMLProb ( BoundaryFuncMLProb SetBoundaryConditionFunction_in );
 
-    /** @duplicate */
+    /** duplicate */
     void GenerateBdcMLProb(const MultiLevelProblem * ml_prob, const unsigned int k, const unsigned int grid0, const double time);
 
-    /** @duplicate */
+    /** duplicate */
     BoundaryFuncMLProb _SetBoundaryConditionFunctionMLProb;
 
     /** To be Added */
