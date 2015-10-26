@@ -67,10 +67,10 @@ namespace femus {
 
     void SetGraphVariable(const std::string &GraphVaraible);
     void UnsetGraphVariable(){ _graph = false;};
-    
-    void SetSurfaceVariables( const std::vector < std::string > surfaceVariable);
+
+    void SetSurfaceVariables( std::vector < std::string > &surfaceVariable );
     void UnsetSurfaceVariables(){ _surface = false;};
-    
+
   protected:
 
     /** a flag to move the output mesh */
@@ -84,8 +84,8 @@ namespace femus {
 
     bool _surface;
     std::vector < std::string > _surfaceVariable;
-    
-    
+
+
     /** the multilevelsolution pointer */
     MultiLevelSolution* _ml_sol;
 

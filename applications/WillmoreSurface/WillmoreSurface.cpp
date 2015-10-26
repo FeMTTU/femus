@@ -31,9 +31,9 @@ bool SetBoundaryConditionTorus(const std::vector < double >& x, const char SolNa
 
   double u = x[0];
   double v = x[1];
-    
+
   if (!strcmp("X", SolName)) {
-    value = (a+cos(u))*cos(v);  
+    value = (a+cos(u))*cos(v);
   }
   else if (!strcmp("Y", SolName)) {
     value = (a+cos(u))*sin(v);
@@ -44,40 +44,40 @@ bool SetBoundaryConditionTorus(const std::vector < double >& x, const char SolNa
   else if (!strcmp("H", SolName)) {
     value = 0.5*(-1. - cos(u)/(a+cos(u)));
   }
-  
+
   return dirichlet;
 }
 
 double InitalValueXTorus(const std::vector < double >& x) {
   double u = x[0];
   double v = x[1];
-  
+
   return (a+cos(u))*cos(v);
- 
+
 }
 
 double InitalValueYTorus(const std::vector < double >& x) {
   double u = x[0];
   double v = x[1];
-  
+
   return (a+cos(u))*sin(v);
- 
+
 }
 
 double InitalValueZTorus(const std::vector < double >& x) {
   double u = x[0];
   double v = x[1];
-  
+
   return sin(u);
- 
+
 }
 
 double InitalValueHTorus(const std::vector < double >& x) {
   double u = x[0];
   double v = x[1];
-  
+
   return 0.5*(-1. - cos(u)/(a+cos(u)));
- 
+
 }
 
 
@@ -106,7 +106,7 @@ int main(int argc, char** args) {
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
     std::ostringstream filename;
-    
+
     filename << "./input/square.neu";
 
     MultiLevelMesh mlMsh;
@@ -118,7 +118,7 @@ int main(int argc, char** args) {
     probably in the furure it is not going to be an argument of this function   */
     unsigned dim = mlMsh.GetDimension();
 
-    unsigned numberOfUniformLevels = 1;
+    unsigned numberOfUniformLevels = 4;
     unsigned numberOfSelectiveLevels = 0;
     mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -154,17 +154,17 @@ int main(int argc, char** args) {
 
 //       // define the multilevel problem attach the mlSol object to it
 //       MultiLevelProblem mlProb(&mlSol);
-// 
+//
 //       // add system Poisson in mlProb as a Linear Implicit System
 //       NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("Willmore");
-// 
+//
 //       // add solution "u" to system
 //       system.AddSolutionToSystemPDE("u");
 //       system.AddSolutionToSystemPDE("W");
-// 
+//
 //       // attach the assembling function to system
 //       system.SetAssembleFunction(AssembleWillmoreProblem_AD);
-// 
+//
 //       // initilaize and solve the system
 //       system.init();
 //       system.MGsolve();
@@ -176,17 +176,16 @@ int main(int argc, char** args) {
     std::vector < std::string > variablesToBePrinted;
     variablesToBePrinted.push_back("All");
 
-    std::vector < std::string > surfaceVariable(3);
-    surfaceVariable[0]="X";
-    surfaceVariable[1]="Y";
-    surfaceVariable[2]="Z";
-    
-    
+    std::vector < std::string > surfaceVariable;
+    surfaceVariable.push_back("X");
+    surfaceVariable.push_back("Y");
+    surfaceVariable.push_back("Z");
+
     VTKWriter vtkIO(&mlSol);
     vtkIO.SetSurfaceVariables(surfaceVariable);
     vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
 
-    
+
   }
 
 //   // print the seminorm of the error and the order of convergence between different levels
@@ -194,56 +193,56 @@ int main(int argc, char** args) {
 //   std::cout << std::endl;
 //   std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
 //   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-// 
+//
 //   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
 //     std::cout << i + 1 << "\t";
 //     std::cout.precision(14);
-// 
+//
 //     for (unsigned j = 0; j < 3; j++) {
 //       std::cout << l2Norm[i][j] << "\t";
 //     }
-// 
+//
 //     std::cout << std::endl;
-// 
+//
 //     if (i < maxNumberOfMeshes - 1) {
 //       std::cout.precision(3);
 //       std::cout << "\t\t";
-// 
+//
 //       for (unsigned j = 0; j < 3; j++) {
 //         std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "\t\t\t";
 //       }
-// 
+//
 //       std::cout << std::endl;
 //     }
-// 
+//
 //   }
-// 
+//
 //   std::cout << std::endl;
 //   std::cout << std::endl;
 //   std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
 //   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-// 
+//
 //   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
 //     std::cout << i + 1 << "\t";
 //     std::cout.precision(14);
-// 
+//
 //     for (unsigned j = 0; j < 3; j++) {
 //       std::cout << semiNorm[i][j] << "\t";
 //     }
-// 
+//
 //     std::cout << std::endl;
-// 
+//
 //     if (i < maxNumberOfMeshes - 1) {
 //       std::cout.precision(3);
 //       std::cout << "\t\t";
-// 
+//
 //       for (unsigned j = 0; j < 3; j++) {
 //         std::cout << log(semiNorm[i][j] / semiNorm[i + 1][j]) / log(2.) << "\t\t\t";
 //       }
-// 
+//
 //       std::cout << std::endl;
 //     }
-// 
+//
 //   }
 
 
@@ -524,7 +523,7 @@ double GetExactSolutionValueSphere(const std::vector < double >& x) {
 };
 
 void GetExactSolutionGradientSphere(const std::vector < double >& x, vector < double >& solGrad) {
-  
+
 };
 
 
@@ -535,7 +534,7 @@ double GetExactSolutionValueTorus(const std::vector < double >& x) {
 };
 
 void GetExactSolutionGradientTorus(const std::vector < double >& x, vector < double >& solGrad) {
-  
+
 };
 
 

@@ -105,15 +105,12 @@ namespace femus {
     _graph = true;
     _graphVariable = graphVaraible;
   }
-  
-  void Writer::SetSurfaceVariables( const std::vector < std::string > surfaceVariable ){
+
+  void Writer::SetSurfaceVariables( std::vector < std::string > &surfaceVariable ){
     _surface = true;
-    _surfaceVariable.resize(3);
-    _surfaceVariable[0] = surfaceVariable[0];
-    _surfaceVariable[1] = surfaceVariable[1];
-    _surfaceVariable[2] = surfaceVariable[2];
+    _surfaceVariable = surfaceVariable;
   }
-  
+
 
 } //end namespace femus
 

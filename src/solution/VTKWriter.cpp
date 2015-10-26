@@ -202,7 +202,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
       mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
 			     *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );
       if( _surface ){
-        unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariable[0].c_str());
+        unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariable[i].c_str());
         mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
                                *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
         mysol[ig]->close();
@@ -232,7 +232,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
       mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)-> _coordinate->_Sol[i],
 			     *_ml_mesh->GetLevel(ig)-> GetQitoQjProjection(index,2) );
       if( _surface ){
-        unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariable[0].c_str());
+        unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariable[i].c_str());
         mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
                                *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
         mysol[ig]->close();
