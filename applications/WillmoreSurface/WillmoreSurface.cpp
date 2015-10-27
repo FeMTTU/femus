@@ -176,15 +176,20 @@ int main(int argc, char** args) {
     std::vector < std::string > variablesToBePrinted;
     variablesToBePrinted.push_back("All");
 
-    std::vector < std::string > surfaceVariable;
-    surfaceVariable.push_back("X");
-    surfaceVariable.push_back("Y");
-    surfaceVariable.push_back("Z");
+    std::vector < std::string > surfaceVariables;
+    surfaceVariables.push_back("X");
+    surfaceVariables.push_back("Y");
+    surfaceVariables.push_back("Z");
 
     VTKWriter vtkIO(&mlSol);
-    vtkIO.SetSurfaceVariables(surfaceVariable);
+    vtkIO.SetSurfaceVariables(surfaceVariables);
     vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
 
+    GMVWriter gmvIO(&mlSol);
+    gmvIO.SetSurfaceVariables(surfaceVariables);
+    gmvIO.SetDebugOutput(true);
+    gmvIO.Pwrite(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+    
 
   }
 

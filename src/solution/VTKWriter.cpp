@@ -199,19 +199,19 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
     unsigned offset_iprc = _ml_mesh->GetLevel(ig)->MetisOffset[index][_iproc];
     unsigned nvt_ig = _ml_mesh->GetLevel(ig)->own_size[index][_iproc];
     for (int i = 0; i < 3; i++) {
-      mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
-			     *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );
-      if( _surface ){
-        unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariable[i].c_str());
-        mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
-                               *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
-        mysol[ig]->close();
+      if( !_surface ){
+	mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
+			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );    
+	if( _graph && i == 2 ){
+	  unsigned indGraph=_ml_sol->GetIndex(_graphVariable.c_str());
+	  mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indGraph],
+                               *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indGraph)) );
+	}	
       }
-      else if( _graph && i == 2 ){
-        unsigned indSurfVar=_ml_sol->GetIndex(_graphVariable.c_str());
+      else {
+        unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariables[i].c_str());
         mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
                                *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
-        mysol[ig]->close();
       }
       for (unsigned ii = 0; ii < nvt_ig; ii++) {
 	var_coord[ offset_ig + ii*3 + i] = (*mysol[ig])(ii + offset_iprc);
@@ -228,21 +228,22 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   }
   //print ghost nodes
   for (int i=0; i<3; i++) {
-    for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-      mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)-> _coordinate->_Sol[i],
-			     *_ml_mesh->GetLevel(ig)-> GetQitoQjProjection(index,2) );
-      if( _surface ){
-        unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariable[i].c_str());
-        mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
-                               *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
-        mysol[ig]->close();
+    for (unsigned ig = _gridr-1u; ig<_gridn; ig++) {
+      if( !_surface ){
+	mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)-> _coordinate->_Sol[i],
+			       *_ml_mesh->GetLevel(ig)-> GetQitoQjProjection(index,2) );
+	if( _graph && i == 2){
+	  unsigned indGraphVar = _ml_sol->GetIndex(_graphVariable.c_str());
+	  mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indGraphVar],
+				 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indGraphVar)) );
+	}
       }
-      else if(i==2 && _graph){
-        unsigned indSurfVar=_ml_sol->GetIndex(_graphVariable.c_str());
+      else {
+        unsigned indSurfVar = _ml_sol->GetIndex(_surfaceVariables[i].c_str());
         mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
-                               *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
-        mysol[ig]->close();
+			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
       }
+      
     }
     gridOffset = 0;
     unsigned ig = _gridr-1u;

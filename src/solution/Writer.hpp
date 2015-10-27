@@ -83,7 +83,7 @@ namespace femus {
     std::string _graphVariable;
 
     bool _surface;
-    std::vector < std::string > _surfaceVariable;
+    std::vector < std::string > _surfaceVariables;
 
 
     /** the multilevelsolution pointer */
