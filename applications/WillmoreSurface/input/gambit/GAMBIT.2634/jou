@@ -1,0 +1,20 @@
+/ Journal File for GAMBIT 2.3.16, Database 2.3.14, lnamd64 SP2006033020
+/ Identifier "default_id"
+/ File opened for write Mon Oct 26 16:21:24 2015.
+face create width 6.28318530718 height 6.28318530718 xyplane rectangle
+undo
+/Undone to: face create width 6.28318530718 height 6.28318530718 xyplane rectangl
+face create width 6.28318530718 height 6.28318530718 offset 3.14159265359 \
+  3.14159265359 0 xyplane rectangle
+default set "MESH.NODES.QUAD" numeric 9
+face mesh "face.1" map intervals 8
+solver select "Generic"
+physics create "1" btype "ELEMENT_SIDE" edge "edge.1"
+physics create "2" btype "ELEMENT_SIDE" edge "edge.3"
+physics create "3" btype "ELEMENT_SIDE" edge "edge.4"
+physics create "4" btype "ELEMENT_SIDE" edge "edge.2"
+physics create "5" ctype "FLUID" face "face.1"
+save name \
+  "/home/eaulisa/FEMuS/NumPDE/femus/applications/WillmoreSurface/input/gambit/square.dbs"
+export gambit \
+  "/home/eaulisa/FEMuS/NumPDE/femus/applications/WillmoreSurface/input/square.neu"
