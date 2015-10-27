@@ -16,6 +16,7 @@
 #ifndef __femus_mesh_Elem_hpp__
 #define __femus_mesh_Elem_hpp__
 
+#include <vector>
 
 namespace femus {
 
@@ -36,6 +37,10 @@ public:
     /** destructor */
     ~elem();
 
+    // reorder the element according to the new element mapping
+    void ReorderMeshElements( const std::vector < unsigned > &elementMapping );
+    
+    
     /** To be Added */
     unsigned GetMeshDof(const unsigned iel,const unsigned &inode,const unsigned &type)const;
 
@@ -217,6 +222,9 @@ private:
     unsigned *kvtel_memory;
     unsigned *nve;
     unsigned *kvert_memory;
+    unsigned _kelSize;
+    unsigned _kvertSize;
+    
     int *kel_memory;
     unsigned nvt,nv0,nv1,nv2;
     unsigned nel,nelt[6];
