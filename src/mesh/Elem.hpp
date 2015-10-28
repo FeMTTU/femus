@@ -38,7 +38,7 @@ public:
     ~elem();
 
     // reorder the element according to the new element mapping
-    void ReorderMeshElements( const std::vector < unsigned > &elementMapping );
+    void ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc);
     
     
     /** To be Added */
@@ -179,10 +179,7 @@ public:
     void SetVertexElementIndex(const unsigned &inode,const unsigned &jnode, const unsigned &value);
 
     /** To be Added */
-    unsigned GetElementFather(const unsigned &iel) const;
-
-    /** To be Added */
-    void SetElementFather(const unsigned &iel, const unsigned &value,  const bool &refined);
+    void SetIfFatherIsRefined(const unsigned &iel, const bool &refined);
     
     /** To be Added */
     bool IsFatherRefined(const unsigned &iel) const;
@@ -215,6 +212,7 @@ private:
     // member data
     int **kel;
     unsigned *elr;
+    unsigned _child_elem_size;
     unsigned *_child_elem_memory;
     unsigned **_child_elem;
     bool _child_elem_flag;
@@ -233,8 +231,7 @@ private:
     short unsigned *elt,*elg,*elmat; //element
     bool *_node_region;
     bool  _node_region_flag;
-    unsigned *elf;
-    bool *elfRef; //element
+    bool *elRef; //element
     unsigned nelf;
     unsigned **kvert; //element -> nodes
 

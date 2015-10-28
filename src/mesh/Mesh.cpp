@@ -124,7 +124,7 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   MeshMetisPartitioning meshmetispartitioning(*this);
   meshmetispartitioning.DoPartition();
   
-  FillISvector();
+  FillISvector(NULL);
   
   BuildAdjVtx();
   Buildkel();
@@ -185,7 +185,7 @@ void Mesh::GenerateCoarseBoxMesh(
   MeshMetisPartitioning meshmetispartitioning(*this);
   meshmetispartitioning.DoPartition();
 
-  FillISvector();
+  FillISvector(NULL);
     
   BuildAdjVtx();
 
@@ -412,7 +412,7 @@ void Mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]){
 
 //dof map: piecewise liner 0, quadratic 1, biquadratic 2, piecewise constant 3, picewise discontinous linear 4
 
-void Mesh::FillISvector() {
+void Mesh::FillISvector(elem *elc) {
 
   //BEGIN Initialization for k = 0,1,2,3,4
   //resize the vector IS_Gmt2Mts_dof and dof
@@ -432,15 +432,41 @@ void Mesh::FillISvector() {
   }
   //END Initialization for k = 0,1,2,3,4
 
-  //BEGIN building the  metis2Gambit_elem and  k = 3,4
+  
   for(int isdom=0;isdom<_nprocs;isdom++) { // isdom = iprocess
     for(unsigned iel=0;iel<_nelem;iel++){
       if( epart[iel] == isdom ){
 	//filling the piecewise IS_Mts2Gmt_elem metis->gambit
 	IS_Mts2Gmt_elem[ IS_Gmt2Mts_dof_counter[3] ] = iel;
+        IS_Gmt2Mts_dof_counter[3]++;
+	IS_Mts2Gmt_elem_offset[isdom+1]=IS_Gmt2Mts_dof_counter[3];
+      }
+    }
+  }
+  el->ReorderMeshElements( IS_Mts2Gmt_elem, elc);
+ 
+  vector < int > epart_temp(_nelem);
+  for(unsigned iel=0;iel<_nelem;iel++){
+    epart_temp[iel]=epart[iel];
+  }
+  for(unsigned iel=0;iel<_nelem;iel++){
+    epart[iel] = epart_temp[IS_Mts2Gmt_elem[iel]];
+  }
+  for(unsigned iel=0;iel<_nelem;iel++){
+    IS_Mts2Gmt_elem[iel]=iel;
+  }
+  
+  
+  IS_Gmt2Mts_dof_counter[3]=0;
+  //BEGIN building the  metis2Gambit_elem and  k = 3,4
+  for(int isdom=0;isdom<_nprocs;isdom++) { // isdom = iprocess
+    for(unsigned iel=0;iel<_nelem;iel++){
+      if( epart[iel] == isdom ){
+	//filling the piecewise IS_Mts2Gmt_elem metis->gambit
+	//IS_Mts2Gmt_elem[ IS_Gmt2Mts_dof_counter[3] ] = iel;
 	IS_Gmt2Mts_dof[3][iel] = IS_Gmt2Mts_dof_counter[3];
 	IS_Gmt2Mts_dof_counter[3]++;
-	IS_Mts2Gmt_elem_offset[isdom+1]=IS_Gmt2Mts_dof_counter[3];
+	//IS_Mts2Gmt_elem_offset[isdom+1]=IS_Gmt2Mts_dof_counter[3];
       }
     }
     for(unsigned k_dim=0;k_dim<_dimension+1;k_dim++){ //TODO maybe reverse the indexes
@@ -475,11 +501,8 @@ void Mesh::FillISvector() {
   //END building the  metis2Gambit_elem and  k = 3,4
   
   
-//   el->ReorderMeshElements( IS_Mts2Gmt_elem );
-//   
 //   for(unsigned iel=0;iel<_nelem;iel++){
-//     IS_Mts2Gmt_elem[iel]=iel;
-//     IS_Gmt2Mts_dof[3][iel]=iel;
+//     std::cout <<iel<<" "<<IS_Gmt2Mts_dof[3][iel] <<std::endl;
 //   }
   
   

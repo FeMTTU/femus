@@ -42,8 +42,6 @@ elem::elem(const unsigned &other_nel) {
   elg=new unsigned short [nel];
   elmat=new unsigned short [nel];
   elr=new unsigned [nel];
-  elf=new unsigned [nel];
-  memset(elf,0,nel*sizeof(unsigned));
   nelf=0;
 
   kvert=new unsigned * [nel];
@@ -69,8 +67,8 @@ elem::elem(const unsigned &other_nel) {
   _node_region_flag=false;
   _child_elem_flag=false;
 
-  elfRef = new bool [nel];
-  memset( elfRef, 0, nel*sizeof(bool) );
+  elRef = new bool [nel];
+  memset( elRef, 0, nel*sizeof(bool) );
     
   kvtel = NULL;
   kvtel_memory = NULL;
@@ -90,10 +88,10 @@ elem::elem(const elem *elc, const unsigned refindex) {
   elg = new unsigned short [nel];
   elmat = new unsigned short [nel];
   elr = new unsigned [nel];
-  elf = new unsigned [nel];
-  elfRef = new bool [nel];
-  memset( elf, 0, nel*sizeof(unsigned) );
-  memset( elfRef, 0, nel*sizeof(bool) );
+ 
+  elRef = new bool [nel];
+ 
+  memset( elRef, 0, nel*sizeof(bool) );
   nelf = 0;
 
 
@@ -146,29 +144,36 @@ elem::elem(const elem *elc, const unsigned refindex) {
   nve = NULL;
 }
 
-void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping  ){
+void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc){
   //  REORDERING OF  ELT, ELG, ELMAT 
   short unsigned *tempElt;
   short unsigned *tempElg;
   short unsigned *tempElmat;
-
+  bool *tempElRef;
+  
+  
   tempElt = elt;
   tempElg = elg;
   tempElmat = elmat;
+  tempElRef = elRef;
   
   elt = new short unsigned [nel];
   elg = new short unsigned [nel];
   elmat = new short unsigned [nel];
+  elRef = new bool [nel];
+  
   
   for(unsigned iel = 0; iel < nel; iel++){ 
     elt[iel]   = tempElt[ elementMapping[iel] ];
     elg[iel]   = tempElg[ elementMapping[iel] ];
     elmat[iel] = tempElmat[ elementMapping[iel] ];
+    elRef[iel] = tempElRef[ elementMapping[iel] ];
   }
   
   delete [] tempElt;
   delete [] tempElg;
   delete [] tempElmat;
+  delete [] elRef;
 
   //  REORDERING OF KEL
   int **tempKel;
@@ -224,8 +229,19 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping  
   delete [] tempKvert;
   delete [] tempKvertMemory;
   
- 
   
+  if(elc){
+    std::vector < unsigned > InverseElementMapping(nel);
+    for(unsigned iel=0; iel<nel; iel++){ 
+      InverseElementMapping[ elementMapping[ iel ] ] = iel;
+    }
+    unsigned *pt = elc->_child_elem_memory;
+    for(int i=0; i < elc->_child_elem_size; i++){
+      unsigned iel = InverseElementMapping[*pt];
+      *pt = iel;
+      pt++;
+    }
+  }
   
 }
 
@@ -251,8 +267,7 @@ elem::~elem() {
     delete [] kel_memory;
     delete [] kel;
     delete [] elt;
-    delete [] elf;
-    delete [] elfRef;
+    delete [] elRef;
     delete [] elg;
     delete [] elmat;
     delete [] elr;
@@ -490,27 +505,20 @@ void elem::SetElementType(const unsigned &iel, const short unsigned &value) {
 }
 
 
-/**
- * Return the coarse element father
- **/
-unsigned elem::GetElementFather(const unsigned &iel) const {
-  return elf[iel];
-}
 
 
 /**
  * Return if the coarse element father has been refined
  **/
 bool elem::IsFatherRefined(const unsigned &iel) const {
-  return elfRef[iel];
+  return elRef[iel];
 }
 
 /**
  * Set the coarse element father
  **/
-void elem::SetElementFather(const unsigned &iel, const unsigned &value, const bool &refined) {
-  elf[iel]=value;
-  elfRef[iel] = refined;
+void elem::SetIfFatherIsRefined(const unsigned &iel, const bool &refined) {
+  elRef[iel] = refined;
 }
 
 
@@ -672,7 +680,8 @@ void elem::AllocateChildrenElement(const unsigned &refindex){
     delete [] _child_elem;
   }
 
-  _child_elem_memory=new unsigned [nelr*refindex+(nel-nelr)];
+  _child_elem_size = nelr*refindex+(nel-nelr);
+  _child_elem_memory=new unsigned [_child_elem_size];
   _child_elem = new unsigned* [nel];
 
   unsigned *ptr=_child_elem_memory;
