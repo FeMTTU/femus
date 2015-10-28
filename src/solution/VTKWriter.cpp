@@ -205,7 +205,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 	if( _graph && i == 2 ){
 	  unsigned indGraph=_ml_sol->GetIndex(_graphVariable.c_str());
 	  mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indGraph],
-                               *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indGraph)) );
+                                 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indGraph)) );
 	}	
       }
       else {

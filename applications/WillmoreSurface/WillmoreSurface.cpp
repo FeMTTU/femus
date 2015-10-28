@@ -43,7 +43,6 @@ bool SetBoundaryConditionTorus(const std::vector < double >& x, const char SolNa
   }
   else if (!strcmp("H", SolName)) {
     value = -0.5*(1. + cos(u)/(a+cos(u)));
-    value = 1;//-0.5*(1. + cos(u)/(a+cos(u)));
   }
 
   return dirichlet;
@@ -77,7 +76,7 @@ double InitalValueHTorus(const std::vector < double >& x) {
   double u = x[0];
   double v = x[1];
 
-  return 1;//-0.5*(1. + cos(u)/(a+cos(u)));
+  return 0.5*(1. + cos(u)/(a+cos(u)));
 
 }
 
@@ -119,7 +118,7 @@ int main(int argc, char** args) {
     probably in the furure it is not going to be an argument of this function   */
     unsigned dim = mlMsh.GetDimension();
 
-    unsigned numberOfUniformLevels = 1;
+    unsigned numberOfUniformLevels = 4;
     unsigned numberOfSelectiveLevels = 0;
     mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -166,7 +165,7 @@ int main(int argc, char** args) {
     system.AddSolutionToSystemPDE("H");
 
     
-    system.SetMaxNumberOfNonLinearIterations(2);
+    system.SetMaxNumberOfNonLinearIterations(1);
     
 
     // attach the assembling function to system
@@ -419,12 +418,12 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, solHType);    // local to global solution node
       unsigned solDof = msh->GetMetisDof(iNode, solHType);    // global to global mapping between solution node and solution dof
-      for(int j = 0; j < 3; j++){      
-	solR[j][i] = (*sol->_Sol[solRIndex[j]])(solDof);      // global extraction and local storage for the solution
+      for(int k = 0; k < 3; k++){      
+	solR[k][i] = (*sol->_Sol[solRIndex[k]])(solDof);      // global extraction and local storage for the solution
       }
       solH[i] = (*sol->_Sol[solHIndex])(solDof);      // global extraction and local storage for the solution
-      for(int j = 0; j < 3; j++){      
-	KKDof[j*nDofs + i] = pdeSys->GetKKDof(solRIndex[j], solRPdeIndex[j], iNode);    // global to global mapping between solution node and pdeSys dof
+      for(int k = 0; k < 3; k++){      
+	KKDof[k*nDofs + i] = pdeSys->GetKKDof(solRIndex[k], solRPdeIndex[k], iNode);    // global to global mapping between solution node and pdeSys dof
       }
       KKDof[3*nDofs + i] = pdeSys->GetKKDof(solHIndex, solHPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dof
     }
@@ -464,28 +463,28 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	}
 			
         adept::adouble solHGauss = 0;
-        vector < adept::adouble > solHGauss_x(dim, 0.);
+        adept::adouble solHGauss_x[2]={0.,0.};
 
         for (unsigned i = 0; i < nDofs; i++) {
-	  for(int k=0; k<3; k++){
+	  for(int k = 0; k < 3; k++){
 	    solRGauss[k] += phi[i] * solR[k][i];
 	  }
           solHGauss += phi[i] * solH[i];
 
-          for (unsigned u = 0; u< dim; u++) { // gradient
-	    for(int k=0; k<3; k++){
+          for (unsigned u = 0; u < dim; u++) { // gradient
+	    for(int k=0; k < 3; k++){
 	      solRGauss_x[k][u] += phi_x[i * dim + u] * solR[k][i];
 	    }
             solHGauss_x[u] += phi_x[i * dim + u] * solH[i];
           }
           
           
-	  for (unsigned u = 0; u < dim; u++) { // hessian
-	    for (unsigned v = 0; v < dim; v++) {
-	      unsigned uvindex =0; //_uu
-	      if( u != v ) uvindex=2; //_uv or _vu
-	      else if( u = 1 ) uvindex=1; //_vv
-	      for(int k=0; k<3; k++){
+	  for( unsigned u = 0; u < dim; u++ ) { // hessian
+	    for( unsigned v = 0; v < dim; v++ ) {
+	      unsigned uvindex = 0; //_uu
+	      if( u != v ) uvindex = 2; //_uv or _vu
+	      else if( u = 1 ) uvindex = 1; //_vv
+	      for(int k = 0; k < 3; k++){
 		solRGauss_xx[k][u][v] += phi_xx[i * dim + uvindex] * solR[k][i];
 	      }
 	    }
@@ -493,11 +492,11 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	}
         adept::adouble g[2][2];
 	
-        g[0][0]=g[0][1]=g[1][0]=g[1][1]=0.;
+        g[0][0] = g[0][1] = g[1][0] = g[1][1] = 0.;
 	
-	for(int k=0; k<3; k++){
-	  for(int u=0; u<dim; u++){
-	    for(int v=0; v<dim; v++){
+	for(int k = 0; k < 3; k++){
+	  for(int u = 0; u < dim; u++){
+	    for(int v = 0; v < dim; v++){
 	      g[u][v] += solRGauss_x[k][u] * solRGauss_x[k][v];
 	    }
 	  }
@@ -508,7 +507,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	
 	adept::adouble detg = g[0][0]*g[1][1]-g[0][1]*g[1][0];
 	
-	adept::adouble  A=sqrt(detg);
+	adept::adouble  A = sqrt(detg);
 	
 	adept::adouble gI[2][2];
         
@@ -519,9 +518,9 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	
 	adept::adouble N[3];
 	
-	N[0] = ( solRGauss_x[1][0]*solRGauss_x[2][1] - solRGauss_x[1][1]*solRGauss_x[2][0] ) / A;
-	N[1] = ( solRGauss_x[2][0]*solRGauss_x[0][1] - solRGauss_x[2][1]*solRGauss_x[0][0] ) / A;
-	N[2] = ( solRGauss_x[0][0]*solRGauss_x[1][1] - solRGauss_x[0][1]*solRGauss_x[1][0] ) / A;
+	N[0] = ( solRGauss_x[1][0] * solRGauss_x[2][1] - solRGauss_x[1][1] * solRGauss_x[2][0] ) / A;
+	N[1] = ( solRGauss_x[2][0] * solRGauss_x[0][1] - solRGauss_x[2][1] * solRGauss_x[0][0] ) / A;
+	N[2] = ( solRGauss_x[0][0] * solRGauss_x[1][1] - solRGauss_x[0][1] * solRGauss_x[1][0] ) / A;
 	
 	adept::adouble h[2][2];
 	
@@ -548,7 +547,9 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	      }
 	      aResR[k][i] += gIgradRgradPhi * phi_x[i * dim + u] * weight;
 	    }
-	    aResR[k][i] += 2. * solHGauss * N[k] * phi[i] * weight;
+	    aResR[k][i] += solHGauss * N[k] * phi[i] * weight;
+	    
+	    //aResR[k][i] += solHGauss * phi[i] * weight;
 	  }
 	  
 	  
@@ -556,7 +557,6 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	    adept::adouble AgIgradHgradPhi=0;
 	    for(int v=0; v<dim; v++){
 	      AgIgradHgradPhi += A * gI[u][v] * solHGauss_x[v];
-	      //AgIgradHgradPhi += solHGauss_x[v];
 	    }
 	    aResH[i] -= AgIgradHgradPhi * phi_x[i * dim + u] * weight;
 	  }
