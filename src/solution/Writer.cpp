@@ -43,6 +43,7 @@ namespace femus {
     _gridr = _ml_mesh->GetNumberOfGridTotallyRefined();
     _moving_mesh = 0;
     _graph = false;
+    _surface = false;
   }
 
   Writer::Writer( MultiLevelMesh* ml_mesh ):
