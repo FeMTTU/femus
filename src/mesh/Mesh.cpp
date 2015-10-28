@@ -473,15 +473,14 @@ void Mesh::FillISvector() {
     }
   }
   //END building the  metis2Gambit_elem and  k = 3,4
-
   
-  // TODO build new gambit mesh such that element_gambit = element_dof_metis ([3])
   
-  // TODO run k = 2 : biquadratic
-  
-  // TODO  build new gambit mesh such that node_gambit = biquadratic_dof_metis ([2])
-   
-  // TODO run k 1,2 where now the mapping is build form metis[0] or [1] -> metis[2] ( which is node_gambit)
+//   el->ReorderMeshElements( IS_Mts2Gmt_elem );
+//   
+//   for(unsigned iel=0;iel<_nelem;iel++){
+//     IS_Mts2Gmt_elem[iel]=iel;
+//     IS_Gmt2Mts_dof[3][iel]=iel;
+//   }
   
   
   //BEGIN building for k = 0,1,2

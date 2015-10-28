@@ -49,9 +49,12 @@ elem::elem(const unsigned &other_nel) {
   kvert=new unsigned * [nel];
   kel=new int *[nel];
 
-  kvert_memory=new unsigned [nel*NVE[0][2]];
-  kel_memory=new int [nel*NFC[0][1]];
-  for (unsigned i=0; i<nel*NFC[0][1]; i++)
+  _kvertSize = nel*NVE[0][2];
+  _kelSize = nel*NFC[0][1];
+  
+  kvert_memory=new unsigned [_kvertSize];
+  kel_memory=new int [_kelSize];
+  for (unsigned i=0; i<_kelSize; i++)
     kel_memory[i]=-1;
 
   unsigned *pt_u=kvert_memory;
@@ -97,24 +100,24 @@ elem::elem(const elem *elc, const unsigned refindex) {
   kvert = new unsigned * [nel];
   kel = new int * [nel];
 
-  unsigned kvert_size = 0;
-  unsigned kel_size = 0;
+  _kvertSize = 0;
+  _kelSize = 0;
   for (unsigned i = 0; i < N_GEOM_ELS; i++) {
-    kvert_size += elc->GetRefinedElementNumber(i) * refindex * NVE[i][2];
-    kel_size += elc->GetRefinedElementNumber(i) * refindex * NFC[i][1];
+    _kvertSize += elc->GetRefinedElementNumber(i) * refindex * NVE[i][2];
+    _kelSize += elc->GetRefinedElementNumber(i) * refindex * NFC[i][1];
   }
 
   for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++ ){
      if(!elc->GetRefinedElementIndex(iel) ){
        unsigned type = elc->GetElementType(iel);
-       kvert_size += NVE[type][2];
-       kel_size += NFC[type][1];
+       _kvertSize += NVE[type][2];
+       _kelSize += NFC[type][1];
     }
   }
 
-  kvert_memory = new unsigned [ kvert_size ];
-  kel_memory = new int [ kel_size ];
-  for (unsigned i=0; i < kel_size; i++)
+  kvert_memory = new unsigned [ _kvertSize ];
+  kel_memory = new int [ _kelSize ];
+  for (unsigned i=0; i < _kelSize; i++)
     kel_memory[i]=0;
 
   int *pt_i = kel_memory;
@@ -143,6 +146,89 @@ elem::elem(const elem *elc, const unsigned refindex) {
   nve = NULL;
 }
 
+void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping  ){
+  //  REORDERING OF  ELT, ELG, ELMAT 
+  short unsigned *tempElt;
+  short unsigned *tempElg;
+  short unsigned *tempElmat;
+
+  tempElt = elt;
+  tempElg = elg;
+  tempElmat = elmat;
+  
+  elt = new short unsigned [nel];
+  elg = new short unsigned [nel];
+  elmat = new short unsigned [nel];
+  
+  for(unsigned iel = 0; iel < nel; iel++){ 
+    elt[iel]   = tempElt[ elementMapping[iel] ];
+    elg[iel]   = tempElg[ elementMapping[iel] ];
+    elmat[iel] = tempElmat[ elementMapping[iel] ];
+  }
+  
+  delete [] tempElt;
+  delete [] tempElg;
+  delete [] tempElmat;
+
+  //  REORDERING OF KEL
+  int **tempKel;
+  int *tempKelMemory;
+ 
+  tempKel = kel;
+  tempKelMemory = kel_memory;
+  
+  kel = new int * [nel];
+  kel_memory = new int [ _kelSize ];
+ 
+  int *ptKel= kel_memory;
+ 
+  for(unsigned iel=0; iel<nel; iel++){ 
+    kel[iel] = ptKel;
+    ptKel +=  NFC[elt[iel]][1];
+  }
+ 
+  for(unsigned iel=0; iel<nel; iel++){ 
+    for(unsigned iface=0; iface<NFC[elt[iel]][1]; iface++){
+      kel[iel][iface] = tempKel[elementMapping[iel]][iface]; 
+    }
+  }
+  delete [] tempKelMemory;
+  delete [] tempKel;
+   
+  //  REORDERING OF KVERT (ROWS)
+
+  
+  unsigned **tempKvert;
+  unsigned *tempKvertMemory;
+  
+  tempKvert = kvert;
+  tempKvertMemory = kvert_memory;
+  
+  kvert = new unsigned * [nel];
+  kvert_memory = new unsigned [ _kvertSize ];
+  
+  unsigned *ptKvert= kvert_memory;
+ 
+  for(unsigned iel=0; iel<nel; iel++){ 
+    kvert[iel] = ptKvert;
+    ptKvert +=  NVE[elt[iel]][2];
+  }
+  
+  for(unsigned iel=0; iel<nel; iel++){ 
+    for(unsigned inode=0; inode<NVE[elt[iel]][2]; inode++){
+      kvert[iel][inode] = tempKvert[elementMapping[iel]][inode]; 
+    }
+  }
+  
+   
+  delete [] tempKvert;
+  delete [] tempKvertMemory;
+  
+ 
+  
+  
+}
+
 
 // {
 //   short unsigned *temp_elt;
@@ -151,7 +237,7 @@ elem::elem(const elem *elc, const unsigned refindex) {
 //   elt = new short unsigned [nel];
 //   
 //   //loop iel;
-//   elt[mapping[iel]] = temp_elt[iel]
+//   elt[mapping[iel]] = temp_elt[iel];
 //   
 //   
 //   delete [] temp_elt;
