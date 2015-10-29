@@ -49,7 +49,7 @@ elem::elem(const unsigned &other_nel) {
 
   _kvertSize = nel*NVE[0][2];
   _kelSize = nel*NFC[0][1];
-  
+
   kvert_memory=new unsigned [_kvertSize];
   kel_memory=new int [_kelSize];
   for (unsigned i=0; i<_kelSize; i++)
@@ -69,7 +69,7 @@ elem::elem(const unsigned &other_nel) {
 
   elRef = new bool [nel];
   memset( elRef, 0, nel*sizeof(bool) );
-    
+
   kvtel = NULL;
   kvtel_memory = NULL;
   nve = NULL;
@@ -88,9 +88,9 @@ elem::elem(const elem *elc, const unsigned refindex) {
   elg = new unsigned short [nel];
   elmat = new unsigned short [nel];
   elr = new unsigned [nel];
- 
+
   elRef = new bool [nel];
- 
+
   memset( elRef, 0, nel*sizeof(bool) );
   nelf = 0;
 
@@ -138,101 +138,101 @@ elem::elem(const elem *elc, const unsigned refindex) {
   }
   _node_region_flag = false;
   _child_elem_flag = false;
-  
+
   kvtel = NULL;
   kvtel_memory = NULL;
   nve = NULL;
 }
 
 void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc){
-  //  REORDERING OF  ELT, ELG, ELMAT 
+  //  REORDERING OF  ELT, ELG, ELMAT
   short unsigned *tempElt;
   short unsigned *tempElg;
   short unsigned *tempElmat;
   bool *tempElRef;
-  
-  
+
+
   tempElt = elt;
   tempElg = elg;
   tempElmat = elmat;
   tempElRef = elRef;
-  
+
   elt = new short unsigned [nel];
   elg = new short unsigned [nel];
   elmat = new short unsigned [nel];
   elRef = new bool [nel];
-  
-  
-  for(unsigned iel = 0; iel < nel; iel++){ 
+
+
+  for(unsigned iel = 0; iel < nel; iel++){
     elt[iel]   = tempElt[ elementMapping[iel] ];
     elg[iel]   = tempElg[ elementMapping[iel] ];
     elmat[iel] = tempElmat[ elementMapping[iel] ];
     elRef[iel] = tempElRef[ elementMapping[iel] ];
   }
-  
+
   delete [] tempElt;
   delete [] tempElg;
   delete [] tempElmat;
-  delete [] elRef;
+  delete [] tempElRef;
 
   //  REORDERING OF KEL
   int **tempKel;
   int *tempKelMemory;
- 
+
   tempKel = kel;
   tempKelMemory = kel_memory;
-  
+
   kel = new int * [nel];
   kel_memory = new int [ _kelSize ];
- 
+
   int *ptKel= kel_memory;
- 
-  for(unsigned iel=0; iel<nel; iel++){ 
+
+  for(unsigned iel=0; iel<nel; iel++){
     kel[iel] = ptKel;
     ptKel +=  NFC[elt[iel]][1];
   }
- 
-  for(unsigned iel=0; iel<nel; iel++){ 
+
+  for(unsigned iel=0; iel<nel; iel++){
     for(unsigned iface=0; iface<NFC[elt[iel]][1]; iface++){
-      kel[iel][iface] = tempKel[elementMapping[iel]][iface]; 
+      kel[iel][iface] = tempKel[elementMapping[iel]][iface];
     }
   }
   delete [] tempKelMemory;
   delete [] tempKel;
-   
+
   //  REORDERING OF KVERT (ROWS)
 
-  
+
   unsigned **tempKvert;
   unsigned *tempKvertMemory;
-  
+
   tempKvert = kvert;
   tempKvertMemory = kvert_memory;
-  
+
   kvert = new unsigned * [nel];
   kvert_memory = new unsigned [ _kvertSize ];
-  
+
   unsigned *ptKvert= kvert_memory;
- 
-  for(unsigned iel=0; iel<nel; iel++){ 
+
+  for(unsigned iel=0; iel<nel; iel++){
     kvert[iel] = ptKvert;
     ptKvert +=  NVE[elt[iel]][2];
   }
-  
-  for(unsigned iel=0; iel<nel; iel++){ 
+
+  for(unsigned iel=0; iel<nel; iel++){
     for(unsigned inode=0; inode<NVE[elt[iel]][2]; inode++){
-      kvert[iel][inode] = tempKvert[elementMapping[iel]][inode]; 
+      kvert[iel][inode] = tempKvert[elementMapping[iel]][inode];
     }
   }
-  
-   
+
+
   delete [] tempKvert;
   delete [] tempKvertMemory;
-  
-  
+
+
   if(elc){
     std::vector < unsigned > InverseElementMapping(nel);
-    for(unsigned iel=0; iel<nel; iel++){ 
+    for(unsigned iel=0; iel<nel; iel++){
       InverseElementMapping[ elementMapping[ iel ] ] = iel;
     }
     unsigned *pt = elc->_child_elem_memory;
@@ -242,22 +242,22 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
       pt++;
     }
   }
-  
+
 }
 
 
 // {
 //   short unsigned *temp_elt;
 //   temp_elt = elt;
-//   
+//
 //   elt = new short unsigned [nel];
-//   
+//
 //   //loop iel;
 //   elt[mapping[iel]] = temp_elt[iel];
-//   
-//   
+//
+//
 //   delete [] temp_elt;
-//   
+//
 // }
 
 
@@ -271,14 +271,14 @@ elem::~elem() {
     delete [] elg;
     delete [] elmat;
     delete [] elr;
-    
+
     delete [] kvtel_memory;
     delete [] kvtel;
     delete [] nve;
     kvtel = NULL;
     kvtel_memory = NULL;
     nve = NULL;
-        
+
     if(_node_region_flag) delete [] _node_region;
     if(_child_elem_flag){
       delete [] _child_elem_memory;
@@ -580,11 +580,11 @@ void elem::AllocateVertexElementMemory() {
   unsigned counter=(nelt[0]*NVE[0][0]+nelt[1]*NVE[1][0]+nelt[2]*NVE[2][0]+
                     nelt[3]*NVE[3][0]+nelt[4]*NVE[4][0]+nelt[5]*NVE[5][0]);
 
-  
+
   if( kvtel != NULL) delete [] kvtel;
   if( kvtel_memory != NULL) delete [] kvtel_memory;
   if( nve != NULL ) delete [] nve;
-  
+
   kvtel=new unsigned * [nv0];
   nve= new unsigned[nv0];
 
