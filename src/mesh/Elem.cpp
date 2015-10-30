@@ -389,6 +389,7 @@ void elem::SetNodeNumber(const unsigned &value) {
  **/
 void elem::SetVertexNodeNumber(const unsigned &value) {
   _nv0=value;
+  _nvt=_nv0;
 }
 
 /**
@@ -396,6 +397,7 @@ void elem::SetVertexNodeNumber(const unsigned &value) {
  **/
 void elem::SetMidpointNodeNumber(const unsigned &value) {
   _nv1=value;
+  _nvt=_nv0+_nv1;
 }
 
 /**
@@ -403,6 +405,7 @@ void elem::SetMidpointNodeNumber(const unsigned &value) {
  **/
 void elem::SetCentralNodeNumber(const unsigned &value) {
   _nv2=value;
+  _nvt=_nv0+_nv1+_nv2;
 }
 
 /**
@@ -591,10 +594,10 @@ void elem::AllocateVertexElementMemory() {
   if( _kvtelMemory != NULL) delete [] _kvtelMemory;
   if( _nve != NULL ) delete [] _nve;
 
-  _kvtel=new unsigned * [_nv0];
-  _nve= new unsigned[_nv0];
+  _kvtel=new unsigned * [_nvt];
+  _nve= new unsigned[_nvt];
 
-  for (unsigned inode=0; inode<_nv0; inode++) {
+  for (unsigned inode=0; inode<_nvt; inode++) {
     _nve[inode]=0;
   }
   for (unsigned iel=0; iel<_nel; iel++) {
@@ -605,7 +608,7 @@ void elem::AllocateVertexElementMemory() {
 
   _kvtelMemory=new unsigned[counter];
   unsigned *pt= _kvtelMemory;
-  for (unsigned inode=0; inode<_nv0; inode++) {
+  for (unsigned inode=0; inode<_nvt; inode++) {
     _kvtel[inode]=pt;
     pt+=_nve[inode];
   }

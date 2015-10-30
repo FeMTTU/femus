@@ -99,7 +99,7 @@ void Mesh::PrintInfo() {
  **/
 void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag) {
 
-  vector <vector <double> > coords(3);
+  coords.resize(3);
 
   _level = 0;
 
@@ -129,20 +129,13 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   BuildAdjVtx();
   Buildkel();
 
- 
-
-//   epart[0]=0;
-//   epart[1]=1;
-
- 
-
-  vector <double> coords_temp;
-  for(int i=0;i<3;i++){
-    coords_temp=coords[i];
-    for(unsigned j=0;j<_nnodes;j++) {
-      coords[i][GetMetisDof(j,2)]=coords_temp[j];
-    }
-  }
+//   vector <double> coords_temp;
+//   for(int i=0;i<3;i++){
+//     coords_temp=coords[i];
+//     for(unsigned j=0;j<_nnodes;j++) {
+//       coords[i][GetMetisDof(j,2)]=coords_temp[j];
+//     }
+//   }
 
   _coordinate = new Solution(this);
 
@@ -174,7 +167,7 @@ void Mesh::GenerateCoarseBoxMesh(
         const double zmin, const double zmax,
         const ElemType type, std::vector<bool> &type_elem_flag) {
 
-  vector <vector < double > > coords(3);
+  coords.resize(3);
 
   _level = 0;
 
@@ -193,13 +186,13 @@ void Mesh::GenerateCoarseBoxMesh(
 
  
 
-  vector <double> coords_temp;
-  for(int i=0;i<3;i++){
-    coords_temp=coords[i];
-    for(unsigned j=0;j<_nnodes;j++) {
-      coords[i][GetMetisDof(j,2)]=coords_temp[j];
-    }
-  }
+//   vector <double> coords_temp;
+//   for(int i=0;i<3;i++){
+//     coords_temp=coords[i];
+//     for(unsigned j=0;j<_nnodes;j++) {
+//       coords[i][GetMetisDof(j,2)]=coords_temp[j];
+//     }
+//   }
 
   _coordinate = new Solution(this);
 
@@ -417,7 +410,7 @@ void Mesh::FillISvector(elem *elc) {
   //BEGIN Initialization for k = 0,1,2,3,4
   //resize the vector IS_Gmt2Mts_dof and dof
   for(int k=0;k<5;k++) {
-    IS_Gmt2Mts_dof[k].resize(GetDofNumber(k));
+    IS_Gmt2Mts_dof[k].resize(GetDofNumber(2));
     IS_Gmt2Mts_dof_offset[k].resize(_nprocs+1);
   }
   IS_Mts2Gmt_elem.resize(_nelem);
@@ -427,7 +420,7 @@ void Mesh::FillISvector(elem *elc) {
   vector <unsigned> IS_Gmt2Mts_dof_counter(5,0);
 
   for(int k=0;k<5;k++) {
-    IS_Gmt2Mts_dof[k].assign(GetDofNumber(k),GetDofNumber(k)-1);
+    IS_Gmt2Mts_dof[k].assign(GetDofNumber(2),GetDofNumber(k)-1);
     // the non existing dofs will point to the last dof!
   }
   //END Initialization for k = 0,1,2,3,4
@@ -512,8 +505,10 @@ void Mesh::FillISvector(elem *elc) {
   for(unsigned k=2; k<3; k++) {
 
     // Initialization for each k = 0,1,2
-    npart.assign(GetDofNumber(k),_nprocs);
-
+    npart.assign(GetDofNumber(2),_nprocs);
+    IS_Gmt2Mts_dof_counter[k]=0;
+    IS_Gmt2Mts_dof[k].assign(GetDofNumber(2),GetDofNumber(k)-1);
+    
     for(int isdom=0;isdom < _nprocs; isdom++){
       for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
 	unsigned iel=IS_Mts2Gmt_elem[i];
@@ -527,22 +522,45 @@ void Mesh::FillISvector(elem *elc) {
 	}
       }
     }
-
+   
+    el->ReorderMeshNodes( IS_Gmt2Mts_dof[k]);
+     
+    if(GetLevel() == 0){
+      vector <double> coords_temp;
+      for(int i=0;i<3;i++){
+	coords_temp=coords[i];
+	  for(unsigned j=0;j<GetDofNumber(2);j++) {
+	    coords[i][IS_Gmt2Mts_dof[k][j]]=coords_temp[j];
+	}
+      }
+    }
+     
+    for(unsigned j=0;j<GetDofNumber(2);j++) {
+      IS_Gmt2Mts_dof[k][j]=j;
+    } 
+     
     
-//     for(int i=0;i<IS_Gmt2Mts_dof_counter[k];i++){
-//       std::cout<< i << " " << IS_Gmt2Mts_dof[k][i] << std::endl;
-//     }
-//     
-//     el->ReorderMeshNodes( IS_Gmt2Mts_dof[k]);
-//     
-//     for(unsigned inode=0;inode<GetDofNumber(k);inode++){
-//      IS_Gmt2Mts_dof[k][inode]=inode;
-//    }
+    npart.assign(GetDofNumber(2),_nprocs);
+    //IS_Gmt2Mts_dof_counter[k]=0;
+    //IS_Gmt2Mts_dof[k].assign(GetDofNumber(2),GetDofNumber(k)-1);
     
-    
+    for(int isdom=0;isdom < _nprocs; isdom++){
+      for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
+	unsigned iel=IS_Mts2Gmt_elem[i];
+	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
+	  unsigned ii=el->GetElementVertexIndex(iel,inode) - 1;
+	  if(npart[ii] > isdom) {
+	    npart[ii] = isdom;
+	    //IS_Gmt2Mts_dof[k][ii]=IS_Gmt2Mts_dof_counter[k];
+	    //IS_Gmt2Mts_dof_counter[k]++;
+	  }
+	}
+      }
+    }
+     
     
     // ghost vs own nodes
-    node_count.assign(GetDofNumber(k), 0);
+    node_count.assign(GetDofNumber(2), 0);
 
     ghost_size[k].assign(_nprocs,0);
     own_size[k].assign(_nprocs,0);
@@ -572,7 +590,7 @@ void Mesh::FillISvector(elem *elc) {
       ghost_nd_mts[k][isdom].resize(ghost_size[k][isdom]);
     }
 
-    node_count.assign (GetDofNumber(k), 0);
+    node_count.assign (GetDofNumber(2), 0);
     ghost_size[k].assign(_nprocs,0);
 
     for(int isdom=0;isdom<_nprocs;isdom++) {
@@ -599,7 +617,7 @@ void Mesh::FillISvector(elem *elc) {
   for(unsigned k=0; k<2; k++) {
 
     // Initialization for each k = 0,1,2
-    npart.assign(GetDofNumber(k),_nprocs);
+    npart.assign(GetDofNumber(2),_nprocs);
 
     for(int isdom=0;isdom < _nprocs; isdom++){
       for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
@@ -616,7 +634,7 @@ void Mesh::FillISvector(elem *elc) {
     }
 
     // ghost vs own nodes
-    node_count.assign(GetDofNumber(k), 0);
+    node_count.assign(GetDofNumber(2), 0);
 
     ghost_size[k].assign(_nprocs,0);
     own_size[k].assign(_nprocs,0);
@@ -646,7 +664,7 @@ void Mesh::FillISvector(elem *elc) {
       ghost_nd_mts[k][isdom].resize(ghost_size[k][isdom]);
     }
 
-    node_count.assign (GetDofNumber(k), 0);
+    node_count.assign (GetDofNumber(2), 0);
     ghost_size[k].assign(_nprocs,0);
 
     for(int isdom=0;isdom<_nprocs;isdom++) {
