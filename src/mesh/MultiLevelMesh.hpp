@@ -72,8 +72,6 @@ public:
                             const int &ElemGroupNumber,const int &level));
 
     /** Add a partially refined mesh level in the AMR alghorithm **/
-    void AddMeshLevel();
-    
     void AddAMRMeshLevel();
     
     

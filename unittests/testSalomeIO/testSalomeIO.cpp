@@ -22,7 +22,7 @@ int main(int argc,char **args) {
   
   MultiLevelMesh ml_msh;
   ml_msh.ReadCoarseMesh(infile.c_str(),"fifth",Lref);
-  
+
   ml_msh.SetWriter(XDMF);
   ml_msh.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic");
   ml_msh.SetWriter(GMV);

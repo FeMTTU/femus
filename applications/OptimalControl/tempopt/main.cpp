@@ -120,7 +120,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
   ml_msh.PrintInfo();
   
   ml_msh.SetWriter(XDMF);
-  ml_msh.GetWriter()->write(files.GetOutputPath(),"biquadratic");
+  //ml_msh.GetWriter()->write(files.GetOutputPath(),"biquadratic");
   
   ml_msh.SetDomain(&mybox);    
 	  

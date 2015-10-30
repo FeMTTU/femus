@@ -44,11 +44,11 @@ public:
     
     /** New Metis parallel partitioning: 
      *  for coarse and AMR mesh */
-    void DoPartition();
+    void DoPartition( const bool &AMR = false );
     
     /** Parallel partitioning imported from coarser mesh partition: 
      *  for uniformed refined meshes */
-    void DoPartition(const Mesh &meshc);
+    void DoPartition( const Mesh &meshc );
     
 private:
 

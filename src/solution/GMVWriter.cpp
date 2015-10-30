@@ -47,13 +47,13 @@ GMVWriter::~GMVWriter()
   
 }
 
-void GMVWriter::write(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) const { 
+void GMVWriter::write(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) { 
   
   unsigned igridn = _gridn; // aggiunta da me
       
   if (igridn==0) igridn=_gridn;
   
-  unsigned igridr=(_gridr <= igridn)?_gridr:igridn;
+  unsigned igridr=igridn;//(_gridr <= igridn)?_gridr:igridn;
 
   // ********** linear -> index==0 *** quadratic -> index==1 **********
   unsigned index=(strcmp(order,"linear"))?1:0;
@@ -343,7 +343,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 }
 
 
-void GMVWriter::Pwrite(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) const { 
+void GMVWriter::Pwrite(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) { 
   
   if(_nprocs == 1){
     write( output_path, order,  vars, time_step);

@@ -42,6 +42,19 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 
+bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
+
+  bool refine=0;
+  if (elemgroupnumber==6 && level<4) refine=1;
+  if (elemgroupnumber==7 && level<5) refine=1;
+  if (elemgroupnumber==8 && level<6) refine=1;
+
+  return refine;
+
+}
+
+
+
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
 
@@ -55,14 +68,20 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 7;
-  unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+//   unsigned numberOfUniformLevels = 3;
+//   unsigned numberOfSelectiveLevels = 0;
+//   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+
+  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfSelectiveLevels = 3;
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
+
 
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
@@ -141,6 +160,12 @@ int main(int argc, char** args) {
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+
+  GMVWriter gmvIO(&mlSol);
+  variablesToBePrinted.push_back("all");
+  gmvIO.SetDebugOutput(true);
+  gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+
 
   return 0;
 }
@@ -334,7 +359,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       }
     }
 
-    if (level == levelMax || !el->GetRefinedElementIndex(kel)) {      // do not care about this if now (it is used for the AMR)
+   // if (level == levelMax || !el->GetRefinedElementIndex(kel)) {      // do not care about this if now (it is used for the AMR)
       // start a new recording of all the operations involving adept::adouble variables
       s.new_recording();
 
@@ -430,7 +455,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         } // end phiP_i loop
 
       } // end gauss point loop
-    } // endif single element not refined or fine grid loop
+   // } // endif single element not refined or fine grid loop
 
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector

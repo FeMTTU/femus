@@ -42,7 +42,7 @@ VTKWriter::VTKWriter(MultiLevelMesh * ml_mesh): Writer(ml_mesh) {}
 VTKWriter::~VTKWriter() {}
 
 
-void VTKWriter::Pwrite(const std::string output_path, const char order[], const std::vector < std::string > & vars, const unsigned time_step) const {
+void VTKWriter::Pwrite(const std::string output_path, const char order[], const std::vector < std::string > & vars, const unsigned time_step) {
 
   // *********** open vtu files *************
   std::ofstream fout;
@@ -104,7 +104,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   }
   // ****************************************
 
-
+  _gridr=_gridn;
   //count the own node dofs on all levels
   unsigned nvt = 0;
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {

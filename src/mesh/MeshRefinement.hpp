@@ -53,11 +53,8 @@ public:
     /** Flag all the even elements to be refined */
     void FlagOnlyEvenElementsToBeRefined();
 
-    /** Flag the elements to be refined in according to a user-defined function */
-    void FlagElementsToBeRefinedByUserDefinedFunction();
-
     /** Flag the elements to be refined in according to AMR criteria */
-    void FlagElementsToBeRefinedByAMR();
+    void FlagElementsToBeRefined();
     
     
 private:
@@ -96,7 +93,7 @@ const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse Mesh dof = f2CVM[e
       {14,17,16,5,11,10},
       {15,18,17,6,12,11},
       {16,17,18,10,11,12} },
-    { {1,5,9,8},
+    { {1,5,9,8},		
       {5,2,6,9},
       {9,6,3,7},
       {8,9,7,4} },
@@ -146,7 +143,7 @@ const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse Mesh dof = f2CVM[e
       { {1,1} }
     }
   };
-
+  
   const unsigned edge2VerticesMapping[6][12][2]= { // vertex1,vertex2=e2VM[element type][edge][0,1]
     {
       {0,1},{1,2},{2,3},{3,0},

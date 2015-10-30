@@ -177,8 +177,11 @@ public:
     unsigned GetElementFather(const unsigned &iel) const;
 
     /** To be Added */
-    void SetElementFather(const unsigned &iel, const unsigned &value);
-
+    void SetElementFather(const unsigned &iel, const unsigned &value,  const bool &refined);
+    
+    /** To be Added */
+    bool IsFatherRefined(const unsigned &iel) const;
+ 
     /** To be Added */
     void SetNumberElementFather(const unsigned &value);
 
@@ -210,7 +213,7 @@ private:
     unsigned *_child_elem_memory;
     unsigned **_child_elem;
     bool _child_elem_flag;
-    unsigned **kvtel;
+    unsigned **kvtel; //node->element
     unsigned *kvtel_memory;
     unsigned *nve;
     unsigned *kvert_memory;
@@ -219,12 +222,13 @@ private:
     unsigned nel,nelt[6];
     unsigned nelr,nelrt[6];
     unsigned ngroup;
-    short unsigned *elt,*elg,*elmat;
+    short unsigned *elt,*elg,*elmat; //element
     bool *_node_region;
     bool  _node_region_flag;
     unsigned *elf;
+    bool *elfRef; //element
     unsigned nelf;
-    unsigned **kvert;
+    unsigned **kvert; //element -> nodes
 
 };
 

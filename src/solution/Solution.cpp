@@ -69,21 +69,31 @@ void Solution::AddSolution( const char name[], const FEFamily fefamily, const FE
   _order.resize(n+1u);
 
   _Sol.resize(n+1u);
+  _Sol[n] = NULL;
+
   _Res.resize(n+1u);
+  _Res[n] = NULL;
+
   _Eps.resize(n+1u);
+  _Eps[n] = NULL;
 
   _GradVec.resize(n+1u);
   _GradVec[n].resize(_msh->GetDimension());
+  for(int i=0;i<_msh->GetDimension();i++){
+    _GradVec[n][i] = NULL;
+  }
 
   _Bdc.resize(n+1u);
+  _Bdc[n] = NULL;
   _ResEpsBdcFlag.resize(n+1u);
-
   _ResEpsBdcFlag[n]=Pde_type;
+
   _family[n] = fefamily;
   _order[n] = order;
   _SolType[n] = order - ((fefamily==LAGRANGE)?1:0) + fefamily*3;
   _SolTmOrder[n]=tmorder;
   _SolOld.resize(n+1u);
+  _SolOld[n] = NULL;
   _SolName[n]=new char [DEFAULT_SOL_NCHARS];
   strcpy(_SolName[n],name);
 
@@ -112,6 +122,16 @@ unsigned Solution::GetIndex(const char name[]) const {
 void Solution::ResizeSolutionVector(const char name[]) {
 
   unsigned i=GetIndex(name);
+
+  if( _Sol[i] )  delete _Sol[i];
+  if(_ResEpsBdcFlag[i]){
+    if( _Res[i] ) delete _Res[i];
+    if( _Eps[i] ) delete _Eps[i];
+    if( _Bdc[i] ) delete _Bdc[i];
+  }
+  if (_SolTmOrder[i]==2) {
+    if( _SolOld[i] ) delete _SolOld[i];
+  }
 
   _Sol[i] = NumericVector::build().release();
   if(n_processors()==1) { // IF SERIAL
@@ -173,24 +193,33 @@ void Solution::InitAMREps(){
 // ------------------------------------------------------------------
 void Solution::FreeSolutionVectors() {
   for (unsigned i=0; i<_Sol.size(); i++) {
-    delete _Sol[i];
+    if( _Sol[i] ) delete _Sol[i];
+    _Sol[i]=NULL;
     if(_ResEpsBdcFlag[i]){
-      delete _Res[i];
-      delete _Eps[i];
-      delete _Bdc[i];
+      if(_Res[i]) delete _Res[i];
+      _Res[i] = NULL;
+      if(_Eps[i]) delete _Eps[i];
+      _Eps[i] = NULL;
+      if( _Bdc[i] ) delete _Bdc[i];
+      _Bdc[i]=NULL;
+
     }
     if (_SolTmOrder[i]==2) {
-      delete _SolOld[i];
+      if(_SolOld[i]) delete _SolOld[i];
+      _SolOld[i] = NULL;
     }
 
     for(int j=0;j<_msh->GetDimension();j++){
       if(_GradVec[i][j]){
-	delete _GradVec[i][j];
+	if(_GradVec[i][j]) delete _GradVec[i][j];
+	_GradVec[i][j]=NULL;
       }
     }
 
-    if(_AMR_flag)
-      delete _AMREps[i];
+    if(_AMR_flag){
+      if( _AMREps[i] ) delete _AMREps[i];
+      _AMREps[i] = NULL;
+    }
   }
   for (unsigned i=0; i<5; i++) {
     for(int j=0;j<_msh->GetDimension();j++){
@@ -504,51 +533,6 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       _GradMat[SolType][i]->init(nr,nc,nr_loc,nc_loc,27,27);
     }
 
-//     // Begin build elem type structure
-//     const elem_type *type_elem[6];
-//     if(dim==3){
-//       if(SolType==0){
-// 	type_elem[0]=new const elem_type_3D("hex","linear","zero");
-// 	type_elem[1]=new const elem_type_3D("tet","linear","zero");
-// 	type_elem[2]=new const elem_type_3D("wedge","linear","zero");
-//       }
-//       else if(SolType==1){
-// 	type_elem[0]=new const elem_type_3D("hex","quadratic","zero");
-// 	type_elem[1]=new const elem_type_3D("tet","quadratic","zero");
-// 	type_elem[2]=new const elem_type_3D("wedge","quadratic","zero");
-//       }
-//       else{
-// 	type_elem[0]=new const elem_type_3D("hex","biquadratic","zero");
-// 	type_elem[1]=new const elem_type_3D("tet","biquadratic","zero");
-// 	type_elem[2]=new const elem_type_3D("wedge","biquadratic","zero");
-//       }
-//     }
-//     else if(dim==2){
-//       if(SolType==0){
-// 	type_elem[3]=new const elem_type_2D("quad","linear","zero");
-// 	type_elem[4]=new const elem_type_2D("tri","linear","zero");
-//       }
-//       else if(SolType==1){
-// 	type_elem[3]=new const elem_type_2D("quad","quadratic","zero");
-// 	type_elem[4]=new const elem_type_2D("tri","quadratic","zero");
-//       }
-//       else{
-// 	type_elem[3]=new const elem_type_2D("quad","biquadratic","zero");
-// 	type_elem[4]=new const elem_type_2D("tri","biquadratic","zero");
-//       }
-//     }
-//     else if(dim==1){
-//       if(SolType==0){
-// 	type_elem[5]=new const elem_type_1D("line","linear","zero");
-//       }
-//       else if(SolType==1){
-// 	type_elem[5]=new const elem_type_1D("line","quadratic","zero");
-//       }
-//       else{
-// 	type_elem[5]=new const elem_type_1D("line","biquadratic","zero");
-//       }
-//     }
-
     vector< vector < double> > coordinates(dim);
     vector< int > column_dofs;
     vector< int > row_dof;
@@ -632,38 +616,8 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
     for(int i=0;i<dim;i++){
       _GradMat[SolType][i]->close();
     }
-
-//     // Begin free elem type structures
-//     if(dim==3){
-//       delete type_elem[0];
-//       delete type_elem[1];
-//       delete type_elem[2];
-//     }
-//     else if(dim==2){
-//       delete type_elem[3];
-//       delete type_elem[4];
-//     }
-//     else if(dim==1){
-//       delete type_elem[5];
-//     }
-//     // End free elem type structures
-
-
   }
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
 
 
 // ------------------------------------------------------------------
