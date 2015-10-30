@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#put this script at the include/ or src/ level (modify .hpp or .cpp accordingly)
+# put this script at the include/ or src/ level (modify .hpp or .cpp accordingly)
 
 # This script is an attempt "to the best you can" of inserting 
 # the begin and end of a namespace in the library source files

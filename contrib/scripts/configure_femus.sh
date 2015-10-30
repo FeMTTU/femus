@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-echo  "Source script for setting some environment variables for FEMuS to work\n"
+echo -e "Source script for setting some environment variables for FEMuS to work\n"
 
 
 while getopts ":a" opt; do
@@ -46,7 +46,7 @@ fi
  FM_BASEPATH_TO_MPI=$EXTERNAL_BASEPATH    #NOW ALL THESE VARIABLES will APPEAR IN THE ENVIRONMENT... even if you don't put EXPORT... TODO see if i can improve this
  FM_MPI_FOLDER=petsc/$PETSC_ARCH
  FM_MPI_BIN=bin
- FM_MPI_LIB=lib64
+ FM_MPI_LIB=lib
 ############# END MACHINE DEPENDENT ###################
 
 
@@ -61,7 +61,7 @@ export PATH=$FM_MPI_DIR/$FM_MPI_BIN:$PATH
 #    echo "Avoid rewriting"
 # fi
 export LD_LIBRARY_PATH=$FM_MPI_DIR/$FM_MPI_LIB:$LD_LIBRARY_PATH
-   # is this one really needed?!?
+   # is this one really needed?!? yes, to override system mpi installation
 ########################
 
 }
@@ -227,9 +227,10 @@ fi
 if test "$3" != "--method-petsc"; then
 echo "Use --method-petsc for Petsc"; return;
 fi
-if test "$5" != "--method-libmesh"; then
-echo "Use --method-libmesh for Libmesh"; return;
-fi
+
+# if test "$5" != "--method-libmesh"; then
+# echo "Use --method-libmesh for Libmesh"; return;
+# fi
 
 
 #fm_set_mpi      # should be first because hdf5 may need it
@@ -238,7 +239,7 @@ fi
 
 fm_set_petsc   --prefix-basepath $EXTERNAL_PREFIX --method  $PETSC_METHOD                 #needs FM_PETSC_METHOD; fm_set_mpi is set within here
 
-fm_set_libmesh --prefix-basepath $EXTERNAL_PREFIX --method  $LIBMESH_METHOD --method-petsc $PETSC_METHOD #needs FM_PETSC_METHOD and FM_LIBMESH_METHOD
+# fm_set_libmesh --prefix-basepath $EXTERNAL_PREFIX --method  $LIBMESH_METHOD --method-petsc $PETSC_METHOD #needs FM_PETSC_METHOD and FM_LIBMESH_METHOD
 
 
 
@@ -248,14 +249,16 @@ echo -e \
 ================ Welcome to FEMuS =========================  
 ===== The method for FEMuS will be given by CMake \n
 ===== The method for PETSc is  $PETSC_METHOD \n
-===== The method for LibMesh is $LIBMESH_METHOD \n
 "
 
-echo -e "======== BEWARE !!! ============
-If the methods for FEMuS and for LibMesh differ,
-you are very likely to encounter problems
- during compilation, due to different compile modes!
-========================================="
+# ===== The method for LibMesh is $LIBMESH_METHOD \n
+
+# 
+# echo -e "======== BEWARE !!! ============
+# If the methods for FEMuS and for LibMesh differ,
+# you are very likely to encounter problems
+#  during compilation, due to different compile modes!
+# ========================================="
 
 
 
