@@ -35,43 +35,45 @@ using std::endl;
  * This constructor allocates the memory for the \textit{coarsest elem}
  **/
 elem::elem(const unsigned &other_nel) {
-  nelt[0]=nelt[1]=nelt[2]=nelt[3]=nelt[4]=nelt[5]=0;
-  nel=other_nel;
+  _nelt[0] = _nelt[1] = _nelt[2] = _nelt[3] = _nelt[4] = _nelt[5] = 0;
+  _nel = other_nel;
 
-  elt=new unsigned short [nel];
-  elg=new unsigned short [nel];
-  elmat=new unsigned short [nel];
-  elr=new unsigned [nel];
-  elf=new unsigned [nel];
-  memset(elf,0,nel*sizeof(unsigned));
-  nelf=0;
+  _elementType = new unsigned short [ _nel ];
+  _elementGroup = new unsigned short [ _nel ];
+  _elementMaterial = new unsigned short [ _nel ];
+  _elr = new unsigned [ _nel ];
+  _nelf = 0;
 
-  kvert=new unsigned * [nel];
-  kel=new int *[nel];
+  _kvert = new unsigned * [ _nel ];
+  _kel = new int *[ _nel ];
 
-  kvert_memory=new unsigned [nel*NVE[0][2]];
-  kel_memory=new int [nel*NFC[0][1]];
-  for (unsigned i=0; i<nel*NFC[0][1]; i++)
-    kel_memory[i]=-1;
+  _kvertSize = _nel*NVE[0][2];
+  _kelSize = _nel*NFC[0][1];
 
-  unsigned *pt_u=kvert_memory;
-  int *pt_i=kel_memory;
+  _kvertMemory=new unsigned [_kvertSize];
 
-  for (unsigned i=0; i<nel; i++) {
-    kvert[i]=pt_u;
-    pt_u+=NVE[0][2];
-    kel[i]=pt_i;
-    pt_i+=NFC[0][1];
+  _kelMemory=new int [_kelSize];
+  for (unsigned i=0; i<_kelSize; i++)
+    _kelMemory[i]=-1;
+
+  unsigned *pt_u = _kvertMemory;
+  int *pt_i = _kelMemory;
+
+  for (unsigned i=0; i<_nel; i++) {
+    _kvert[i] = pt_u;
+    pt_u += NVE[0][2];
+    _kel[i] = pt_i;
+    pt_i += NFC[0][1];
   }
-  _node_region_flag=false;
-  _child_elem_flag=false;
+  _nodeRegionFlag = false;
+  _childElemFlag = false;
 
-  elfRef = new bool [nel];
-  memset( elfRef, 0, nel*sizeof(bool) );
-    
-  kvtel = NULL;
-  kvtel_memory = NULL;
-  nve = NULL;
+  _elRef = new bool [_nel];
+  memset( _elRef, 0, _nel*sizeof(bool) );
+
+  _kvtel = NULL;
+  _kvtelMemory = NULL;
+  _nve = NULL;
 }
 
 /**
@@ -79,46 +81,46 @@ elem::elem(const unsigned &other_nel) {
  * starting from the paramenters of the \textit{coarser elem}
  **/
 elem::elem(const elem *elc, const unsigned refindex) {
-  nelt[0] = nelt[1] = nelt[2] = nelt[3] = nelt[4] = nelt[5] = 0;
-  nel = elc->GetRefinedElementNumber()*refindex; //refined
-  nel += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // + non-refined;
+  _nelt[0] = _nelt[1] = _nelt[2] = _nelt[3] = _nelt[4] = _nelt[5] = 0;
+  _nel = elc->GetRefinedElementNumber()*refindex; //refined
+  _nel += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // + non-refined;
 
-  elt = new unsigned short [nel];
-  elg = new unsigned short [nel];
-  elmat = new unsigned short [nel];
-  elr = new unsigned [nel];
-  elf = new unsigned [nel];
-  elfRef = new bool [nel];
-  memset( elf, 0, nel*sizeof(unsigned) );
-  memset( elfRef, 0, nel*sizeof(bool) );
-  nelf = 0;
+  _elementType = new unsigned short [_nel];
+  _elementGroup = new unsigned short [_nel];
+  _elementMaterial = new unsigned short [_nel];
+  _elr = new unsigned [_nel];
+
+  _elRef = new bool [_nel];
+
+  memset( _elRef, 0, _nel*sizeof(bool) );
+  _nelf = 0;
 
 
-  kvert = new unsigned * [nel];
-  kel = new int * [nel];
+  _kvert = new unsigned * [_nel];
+  _kel = new int * [_nel];
 
-  unsigned kvert_size = 0;
-  unsigned kel_size = 0;
+  _kvertSize = 0;
+  _kelSize = 0;
   for (unsigned i = 0; i < N_GEOM_ELS; i++) {
-    kvert_size += elc->GetRefinedElementNumber(i) * refindex * NVE[i][2];
-    kel_size += elc->GetRefinedElementNumber(i) * refindex * NFC[i][1];
+    _kvertSize += elc->GetRefinedElementNumber(i) * refindex * NVE[i][2];
+    _kelSize += elc->GetRefinedElementNumber(i) * refindex * NFC[i][1];
   }
 
   for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++ ){
      if(!elc->GetRefinedElementIndex(iel) ){
        unsigned type = elc->GetElementType(iel);
-       kvert_size += NVE[type][2];
-       kel_size += NFC[type][1];
+       _kvertSize += NVE[type][2];
+       _kelSize += NFC[type][1];
     }
   }
 
-  kvert_memory = new unsigned [ kvert_size ];
-  kel_memory = new int [ kel_size ];
-  for (unsigned i=0; i < kel_size; i++)
-    kel_memory[i]=0;
+  _kvertMemory = new unsigned [ _kvertSize ];
+  _kelMemory = new int [ _kelSize ];
+  for (unsigned i=0; i < _kelSize; i++)
+    _kelMemory[i]=0;
 
-  int *pt_i = kel_memory;
-  unsigned *pt_u = kvert_memory;
+  int *pt_i = _kelMemory;
+  unsigned *pt_u = _kvertMemory;
   unsigned jel = 0;
   for (unsigned iel = 0; iel<elc->GetElementNumber(); iel++) {
     short unsigned elemt = elc->GetElementType(iel);
@@ -127,61 +129,166 @@ elem::elem(const elem *elc, const unsigned refindex) {
       increment = NRE[elemt];
     }
     for (unsigned j = 0; j < increment; j++) {
-      kvert[jel+j] = pt_u;
+      _kvert[jel+j] = pt_u;
       pt_u += elc->GetElementDofNumber(iel,2);
 
-      kel[jel+j] = pt_i;
+      _kel[jel+j] = pt_i;
       pt_i += elc->GetElementFaceNumber(iel);
     }
     jel += increment;
   }
-  _node_region_flag = false;
-  _child_elem_flag = false;
+  _nodeRegionFlag = false;
+  _childElemFlag = false;
+
+  _kvtel = NULL;
+  _kvtelMemory = NULL;
+  _nve = NULL;
+}
+
+void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc){
+  //  REORDERING OF  ELT, ELG, ELMAT
+  short unsigned *tempElt;
+  short unsigned *tempElg;
+  short unsigned *tempElmat;
+  bool *tempElRef;
+
+
+  tempElt = _elementType;
+  tempElg = _elementGroup;
+  tempElmat = _elementMaterial;
+  tempElRef = _elRef;
+
+  _elementType = new short unsigned [_nel];
+  _elementGroup = new short unsigned [_nel];
+  _elementMaterial = new short unsigned [_nel];
+  _elRef = new bool [_nel];
+
+
+  for(unsigned iel = 0; iel < _nel; iel++){
+    _elementType[iel]   = tempElt[ elementMapping[iel] ];
+    _elementGroup[iel]   = tempElg[ elementMapping[iel] ];
+    _elementMaterial[iel] = tempElmat[ elementMapping[iel] ];
+    _elRef[iel] = tempElRef[ elementMapping[iel] ];
+  }
+
+  delete [] tempElt;
+  delete [] tempElg;
+  delete [] tempElmat;
+  delete [] tempElRef;
+
+  //  REORDERING OF KEL
+  int **tempKel;
+  int *tempKelMemory;
+
+  tempKel = _kel;
+  tempKelMemory = _kelMemory;
+
+  _kel = new int * [_nel];
+  _kelMemory = new int [ _kelSize ];
+
+  int *ptKel= _kelMemory;
+
+  for(unsigned iel=0; iel<_nel; iel++){
+    _kel[iel] = ptKel;
+    ptKel +=  NFC[_elementType[iel]][1];
+  }
+
+  for(unsigned iel=0; iel<_nel; iel++){
+    for(unsigned iface=0; iface<NFC[_elementType[iel]][1]; iface++){
+      _kel[iel][iface] = tempKel[elementMapping[iel]][iface];
+    }
+  }
+  delete [] tempKelMemory;
+  delete [] tempKel;
+
+  //  REORDERING OF KVERT (ROWS)
+
+
+  unsigned **tempKvert;
+  unsigned *tempKvertMemory;
+
+  tempKvert = _kvert;
+  tempKvertMemory = _kvertMemory;
+
+  _kvert = new unsigned * [_nel];
+  _kvertMemory = new unsigned [ _kvertSize ];
+
+  unsigned *ptKvert= _kvertMemory;
+
+  for(unsigned iel=0; iel<_nel; iel++){
+    _kvert[iel] = ptKvert;
+    ptKvert +=  NVE[_elementType[iel]][2];
+  }
+
+  for(unsigned iel=0; iel<_nel; iel++){
+    for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
+      _kvert[iel][inode] = tempKvert[elementMapping[iel]][inode];
+    }
+  }
+
+
+  delete [] tempKvert;
+  delete [] tempKvertMemory;
+
+
+  if(elc){
+    std::vector < unsigned > InverseElementMapping(_nel);
+    for(unsigned iel=0; iel<_nel; iel++){
+      InverseElementMapping[ elementMapping[ iel ] ] = iel;
+    }
+    unsigned *pt = elc->_childElemMemory;
+    for(int i=0; i < elc->_childElemSize; i++){
+      unsigned iel = InverseElementMapping[*pt];
+      *pt = iel;
+      pt++;
+    }
+  }
+
+}
+
+void elem::ReorderMeshNodes( const std::vector < unsigned > &nodeMapping){
   
-  kvtel = NULL;
-  kvtel_memory = NULL;
-  nve = NULL;
+  for(unsigned iel=0; iel<_nel; iel++){
+    
+    for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
+      std::cout<<_kvert[iel][inode]-1u<<" "; 
+    }
+    std::cout<<endl;
+    for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
+      _kvert[iel][inode] =  nodeMapping[ _kvert[iel][inode] -1u] + 1u;
+    }
+    for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
+      std::cout<<_kvert[iel][inode]-1u<<" "; 
+    }
+    std::cout<<std::endl;
+    
+  }
+  
 }
 
 
-// {
-//   short unsigned *temp_elt;
-//   temp_elt = elt;
-//   
-//   elt = new short unsigned [nel];
-//   
-//   //loop iel;
-//   elt[mapping[iel]] = temp_elt[iel]
-//   
-//   
-//   delete [] temp_elt;
-//   
-// }
-
-
 elem::~elem() {
-    delete [] kvert_memory;
-    delete [] kvert;
-    delete [] kel_memory;
-    delete [] kel;
-    delete [] elt;
-    delete [] elf;
-    delete [] elfRef;
-    delete [] elg;
-    delete [] elmat;
-    delete [] elr;
-    
-    delete [] kvtel_memory;
-    delete [] kvtel;
-    delete [] nve;
-    kvtel = NULL;
-    kvtel_memory = NULL;
-    nve = NULL;
-        
-    if(_node_region_flag) delete [] _node_region;
-    if(_child_elem_flag){
-      delete [] _child_elem_memory;
-      delete [] _child_elem;
+    delete [] _kvertMemory;
+    delete [] _kvert;
+    delete [] _kelMemory;
+    delete [] _kel;
+    delete [] _elementType;
+    delete [] _elRef;
+    delete [] _elementGroup;
+    delete [] _elementMaterial;
+    delete [] _elr;
+
+    delete [] _kvtelMemory;
+    delete [] _kvtel;
+    delete [] _nve;
+    _kvtel = NULL;
+    _kvtelMemory = NULL;
+    _nve = NULL;
+
+    if(_nodeRegionFlag) delete [] _nodeRegion;
+    if(_childElemFlag){
+      delete [] _childElemMemory;
+      delete [] _childElem;
     }
   }
 
@@ -189,12 +296,12 @@ elem::~elem() {
  * Return the number of vertices(type=0) + midpoints(type=1) + facepoints(type=2) + interiorpoits(type=2)
  **/
 unsigned elem::GetElementDofNumber(const unsigned &iel,const unsigned &type) const {
-  return NVE[elt[iel]][type];
+  return NVE[_elementType[iel]][type];
 }
 
 unsigned elem::GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const {
   assert(type<3);
-  return NFACENODES[elt[iel]][jface][type];
+  return NFACENODES[_elementType[iel]][jface][type];
 }
 
 const unsigned elem::GetElementFaceType(const unsigned &kel, const unsigned &jface) const{
@@ -209,7 +316,7 @@ const unsigned elem::GetElementFaceType(const unsigned &kel, const unsigned &jfa
  * Return the local to global dof
  **/
 unsigned elem::GetMeshDof(const unsigned iel,const unsigned &inode,const unsigned &SolType)const {
-  unsigned Dof=(SolType<3)?GetElementVertexIndex(iel,inode)-1u:(nel*inode)+iel;
+  unsigned Dof=(SolType<3)?GetElementVertexIndex(iel,inode)-1u:(_nel*inode)+iel;
   return Dof;
 }
 
@@ -218,84 +325,87 @@ unsigned elem::GetMeshDof(const unsigned iel,const unsigned &inode,const unsigne
  * Return the local->global node address
  **/
 const unsigned*  elem::GetElementVertexAddress(const unsigned &iel,const unsigned &inode)const {
-  return &kvert[iel][inode];
+  return &_kvert[iel][inode];
 }
 
 /**
  * Set the local->global node number
  **/
 void elem::SetElementVertexIndex(const unsigned &iel,const unsigned &inode, const unsigned &value) {
-  kvert[iel][inode]=value;
+  _kvert[iel][inode]=value;
 }
 
 /**
  * Return the local->global face node number
  **/
 unsigned elem::GetFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &inode)const {
-  return kvert[iel][ig[elt[iel]][iface][inode]];
+  return _kvert[iel][ig[_elementType[iel]][iface][inode]];
 }
 
 /**
  * Return the local(edge/face)->local(surface/volume) node number
  **/
 unsigned elem::GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &iedgenode) const {
-  return ig[elt[iel]][iface][iedgenode];
+  return ig[_elementType[iel]][iface][iedgenode];
 }
 
 /**
  * Return the total node number
  **/
 unsigned elem::GetNodeNumber()const {
-  return nvt;
+  return _nvt;
 }
 
 /**
  * Return the total vertex number
  **/
 unsigned elem::GetVertexNodeNumber()const {
-  return nv0;
+  return _nv0;
 }
 
 /**
  * Return the total vertex+midpoint number
  **/
 unsigned elem::GetMidpointNodeNumber()const {
-  return nv1;
+  return _nv1;
 }
 
 /**
  * Return the total vertex+midpoint+facepoint number
  **/
 unsigned elem::GetCentralNodeNumber()const {
-  return nv2;
+  return _nv2;
 }
 
 /**
  * Set the total node number
  **/
 void elem::SetNodeNumber(const unsigned &value) {
-  nvt=value;
+  _nvt=value;
 }
 
 /**
  * Set the total vertex number
  **/
 void elem::SetVertexNodeNumber(const unsigned &value) {
-  nv0=value;
+  _nv0=value;
+  _nvt=_nv0;
 }
 
 /**
  * Set the total vertex+midpoint number
  **/
 void elem::SetMidpointNodeNumber(const unsigned &value) {
-  nv1=value;
+  _nv1=value;
+  _nvt=_nv0+_nv1;
 }
 
 /**
  * Set the total vertex+midpoint+facepoint number
  **/
 void elem::SetCentralNodeNumber(const unsigned &value) {
-  nv2=value;
+  _nv2=value;
+  _nvt=_nv0+_nv1+_nv2;
 }
 
 /**
@@ -303,14 +413,14 @@ void elem::SetCentralNodeNumber(const unsigned &value) {
  **/
 unsigned elem::GetRefinedElementNumber(const char* name) const {
   if (!strcmp(name,"All")) {
-    return nelr;
+    return _nelr;
   }
   unsigned i;
   i=GetIndex(name);
-  return nelrt[i];
+  return _nelrt[i];
 }
 unsigned  elem::GetRefinedElementNumber(short unsigned ielt)const {
-  return nelrt[ielt];
+  return _nelrt[ielt];
 }
 
 /**
@@ -318,27 +428,27 @@ unsigned  elem::GetRefinedElementNumber(short unsigned ielt)const {
  **/
 void elem::AddToRefinedElementNumber(const unsigned &value, const char name[]) {
   if (!strcmp(name,"All")) {
-    nelr+=value;
+    _nelr+=value;
     return;
   }
   unsigned i;
   i=this->GetIndex(name);
-  nelrt[i]+=value;
+  _nelrt[i]+=value;
 }
 void elem::AddToRefinedElementNumber(const unsigned &value, short unsigned ielt) {
-  nelrt[ielt]+=value;
+  _nelrt[ielt]+=value;
 }
 
 
 unsigned elem::GetRefinedElementIndex(const unsigned &iel) const {
-  return elr[iel];
+  return _elr[iel];
 }
 void elem::SetRefinedElementIndex(const unsigned &iel, const unsigned &value) {
-  elr[iel]=value;
+  _elr[iel]=value;
 }
 void elem::InitRefinedToZero() {
-  nelr=nelrt[0]=nelrt[1]=nelrt[2]=nelrt[3]=nelrt[4]=nelrt[5]=0;
-  for (unsigned i=0; i<nel; i++) elr[i]=0;
+  _nelr=_nelrt[0]=_nelrt[1]=_nelrt[2]=_nelrt[3]=_nelrt[4]=_nelrt[5]=0;
+  for (unsigned i=0; i<_nel; i++) _elr[i]=0;
 }
 
 /**
@@ -346,11 +456,11 @@ void elem::InitRefinedToZero() {
  **/
 unsigned elem::GetElementNumber(const char* name) const {
   if (!strcmp(name,"All")) {
-    return nel;
+    return _nel;
   }
   unsigned i;
   i=this->GetIndex(name);
-  return nelt[i];
+  return _nelt[i];
 }
 
 /**
@@ -359,33 +469,33 @@ unsigned elem::GetElementNumber(const char* name) const {
 void elem::AddToElementNumber(const unsigned &value, const char name[]) {
   unsigned i;
   i=GetIndex(name);
-  nelt[i]+=value;
+  _nelt[i]+=value;
 }
 void elem::AddToElementNumber(const unsigned &value, short unsigned ielt) {
-  nelt[ielt]+=value;
+  _nelt[ielt]+=value;
 }
 unsigned elem::GetElementFaceNumber(const unsigned &iel, const unsigned &type)const {
-  return NFC[ elt[iel] ][type];
+  return NFC[ _elementType[iel] ][type];
 }
 unsigned elem::GetElementSquareFaceNumber(const unsigned &iel)const {
-  return NFC[ elt[iel] ][0];
+  return NFC[ _elementType[iel] ][0];
 }
 unsigned elem::GetElementTriangleFaceNumber(const unsigned &iel)const {
-  return NFC[ elt[iel] ][1]-NFC[ elt[iel] ][0];
+  return NFC[ _elementType[iel] ][1]-NFC[ _elementType[iel] ][0];
 }
 
 /**
  * Return the global adiacent-to-face element number
  **/
 int elem::GetFaceElementIndex(const unsigned &iel,const unsigned &iface) const {
-  return kel[iel][iface];
+  return _kel[iel][iface];
 }
 
 /**
  * Set the global adiacent-to-face element number
  **/
 void elem::SetFaceElementIndex(const unsigned &iel,const unsigned &iface, const int &value) {
-  kel[iel][iface]=value;
+  _kel[iel][iface]=value;
 }
 
 
@@ -393,38 +503,31 @@ void elem::SetFaceElementIndex(const unsigned &iel,const unsigned &iface, const 
  * Return element type: 0=hex, 1=Tet, 2=Wedge, 3=Quad, 4=Triangle and 5=Line
  **/
 short unsigned elem::GetElementType(const unsigned &iel) const {
-  return elt[iel];
+  return _elementType[iel];
 }
 
 /**
  * Set element type: 0=hex, 1=Tet, 2=Wedge, 3=Quad, 4=Triangle and 5=Line
  **/
 void elem::SetElementType(const unsigned &iel, const short unsigned &value) {
-  elt[iel]=value;
+  _elementType[iel]=value;
 }
 
 
-/**
- * Return the coarse element father
- **/
-unsigned elem::GetElementFather(const unsigned &iel) const {
-  return elf[iel];
-}
 
 
 /**
  * Return if the coarse element father has been refined
  **/
 bool elem::IsFatherRefined(const unsigned &iel) const {
-  return elfRef[iel];
+  return _elRef[iel];
 }
 
 /**
  * Set the coarse element father
  **/
-void elem::SetElementFather(const unsigned &iel, const unsigned &value, const bool &refined) {
-  elf[iel]=value;
-  elfRef[iel] = refined;
+void elem::SetIfFatherIsRefined(const unsigned &iel, const bool &refined) {
+  _elRef[iel] = refined;
 }
 
 
@@ -433,49 +536,49 @@ void elem::SetElementFather(const unsigned &iel, const unsigned &value, const bo
  **/
 
 void elem::SetNumberElementFather(const unsigned &value) {
-  nelf=value;
+  _nelf=value;
 }
 
 /**
  * Return element group
  **/
 short unsigned elem::GetElementGroup(const unsigned &iel) const {
-  return elg[iel];
+  return _elementGroup[iel];
 }
 
 /**
  * Set element group
  **/
 void elem::SetElementGroup(const unsigned &iel, const short unsigned &value) {
-  elg[iel]=value;
+  _elementGroup[iel]=value;
 }
 
 /**
  * Set element Material
 **/
 void elem::SetElementMaterial(const unsigned &iel, const short unsigned &value) {
-  elmat[iel]=value;
+  _elementMaterial[iel]=value;
 }
 
 /**
  * Return element material
  **/
 short unsigned elem::GetElementMaterial(const unsigned &iel) const {
-  return elmat[iel];
+  return _elementMaterial[iel];
 }
 
 /**
  * Return element group number
  **/
 unsigned elem::GetElementGroupNumber() const {
-  return ngroup;
+  return _ngroup;
 }
 
 /**
  * Set element group
  **/
 void elem::SetElementGroupNumber(const unsigned &value) {
-  ngroup=value;
+  _ngroup=value;
 }
 
 
@@ -483,61 +586,61 @@ void elem::SetElementGroupNumber(const unsigned &value) {
  * Set the memory storage and initialize nve and kvtel (node->element vectors)
  **/
 void elem::AllocateVertexElementMemory() {
-  unsigned counter=(nelt[0]*NVE[0][0]+nelt[1]*NVE[1][0]+nelt[2]*NVE[2][0]+
-                    nelt[3]*NVE[3][0]+nelt[4]*NVE[4][0]+nelt[5]*NVE[5][0]);
+  unsigned counter=(_nelt[0]*NVE[0][0]+_nelt[1]*NVE[1][0]+_nelt[2]*NVE[2][0]+
+                    _nelt[3]*NVE[3][0]+_nelt[4]*NVE[4][0]+_nelt[5]*NVE[5][0]);
 
-  
-  if( kvtel != NULL) delete [] kvtel;
-  if( kvtel_memory != NULL) delete [] kvtel_memory;
-  if( nve != NULL ) delete [] nve;
-  
-  kvtel=new unsigned * [nv0];
-  nve= new unsigned[nv0];
 
-  for (unsigned inode=0; inode<nv0; inode++) {
-    nve[inode]=0;
+  if( _kvtel != NULL) delete [] _kvtel;
+  if( _kvtelMemory != NULL) delete [] _kvtelMemory;
+  if( _nve != NULL ) delete [] _nve;
+
+  _kvtel=new unsigned * [_nvt];
+  _nve= new unsigned[_nvt];
+
+  for (unsigned inode=0; inode<_nvt; inode++) {
+    _nve[inode]=0;
   }
-  for (unsigned iel=0; iel<nel; iel++) {
+  for (unsigned iel=0; iel<_nel; iel++) {
     for (unsigned inode=0; inode < GetElementDofNumber(iel,0); inode++) {
-      nve[ GetElementVertexIndex(iel,inode)-1u ]++;
+      _nve[ GetElementVertexIndex(iel,inode)-1u ]++;
     }
   }
 
-  kvtel_memory=new unsigned[counter];
-  unsigned *pt= kvtel_memory;
-  for (unsigned inode=0; inode<nv0; inode++) {
-    kvtel[inode]=pt;
-    pt+=nve[inode];
+  _kvtelMemory=new unsigned[counter];
+  unsigned *pt= _kvtelMemory;
+  for (unsigned inode=0; inode<_nvt; inode++) {
+    _kvtel[inode]=pt;
+    pt+=_nve[inode];
   }
-  memset(kvtel_memory, 0, counter*sizeof(unsigned));
+  memset(_kvtelMemory, 0, counter*sizeof(unsigned));
 }
 
 /**
  * Return the number of elements which have given node
  **/
 unsigned elem::GetVertexElementNumber(const unsigned &inode)const {
-  return nve[inode];
+  return _nve[inode];
 }
 
 /**
  * Return the element index for the given i-node in the j-position with 0<=j<nve(i)
  **/
 unsigned elem::GetVertexElementIndex(const unsigned &inode,const unsigned &jnode)const {
-  return kvtel[inode][jnode];
+  return _kvtel[inode][jnode];
 }
 
 /**
  * Return the element address for the given i-node in the j-position with 0<=j<nve(i)
  **/
 const unsigned * elem::GetVertexElementAddress(const unsigned &inode,const unsigned &jnode)const {
-  return &kvtel[inode][jnode];
+  return &_kvtel[inode][jnode];
 }
 
 /**
  * Set the element index for the given i-node in the j-position with 0<=j<nve(i)
  **/
 void elem::SetVertexElementIndex(const unsigned &inode,const unsigned &jnode, const unsigned &value) {
-  kvtel[inode][jnode]=value;
+  _kvtel[inode][jnode]=value;
 }
 
 /**
@@ -566,46 +669,47 @@ unsigned elem::GetIndex(const char name[]) const {
 
 
 void elem::AllocateNodeRegion() {
-  _node_region_flag=1;
-  _node_region=new bool [nvt];
-  for (int i=0; i<nvt; i++) _node_region[i]=0;
+  _nodeRegionFlag=1;
+  _nodeRegion=new bool [_nvt];
+  for (int i=0; i<_nvt; i++) _nodeRegion[i]=0;
   // 0 means Fluid - 1 means Solid  ==> Solid wins on Fluid on Interface nodes
 }
 
 bool elem::GetNodeRegion(const unsigned &jnode) const {
-  return _node_region[jnode];
+  return _nodeRegion[jnode];
 }
 
 void  elem::SetNodeRegion(const unsigned &jnode, const bool &value) {
-  _node_region[jnode]=value;
+  _nodeRegion[jnode]=value;
 }
 
 void elem::AllocateChildrenElement(const unsigned &refindex){
-  if(_child_elem_flag){
-    delete [] _child_elem_memory;
-    delete [] _child_elem;
+  if(_childElemFlag){
+    delete [] _childElemMemory;
+    delete [] _childElem;
   }
 
-  _child_elem_memory=new unsigned [nelr*refindex+(nel-nelr)];
-  _child_elem = new unsigned* [nel];
+  _childElemSize = _nelr*refindex+(_nel-_nelr);
+  _childElemMemory=new unsigned [_childElemSize];
+  _childElem = new unsigned* [_nel];
 
-  unsigned *ptr=_child_elem_memory;
-  for(int i=0;i<nel;i++){
-    _child_elem[i]=ptr;
-    if(elr[i]==1) ptr+=refindex;
+  unsigned *ptr=_childElemMemory;
+  for(int i=0;i<_nel;i++){
+    _childElem[i]=ptr;
+    if(_elr[i]==1) ptr+=refindex;
     else ptr+=1;
   }
-  _child_elem_flag=true;
+  _childElemFlag=true;
   return;
 }
 
 void elem::SetChildElement(const unsigned &iel,const unsigned &json, const unsigned &value){
-  _child_elem[iel][json]=value;
+  _childElem[iel][json]=value;
   return;
 }
 
 unsigned elem::GetChildElement(const unsigned &iel,const unsigned &json) const{
-  return _child_elem[iel][json];
+  return _childElem[iel][json];
 }
 
 

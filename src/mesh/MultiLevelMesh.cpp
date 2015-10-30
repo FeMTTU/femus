@@ -237,14 +237,12 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
 
     //totally refined meshes
     for (unsigned i=1; i<_gridr0; i++) {
-        MeshRefinement meshcoarser(*_level0[i-1u]);
-        meshcoarser.FlagAllElementsToBeRefined();
-        //_level0[i-1u]->FlagAllElementsToBeRefined();
+      MeshRefinement meshcoarser(*_level0[i-1u]);
+      meshcoarser.FlagAllElementsToBeRefined();
 
-	_level0[i] = new Mesh();
-	MeshRefinement meshfiner(*_level0[i]);
-        meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
-        //_level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
+      _level0[i] = new Mesh();
+      MeshRefinement meshfiner(*_level0[i]);
+      meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
     }
 
     //partially refined meshes
@@ -264,8 +262,8 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
       }
       else {
 	MeshRefinement meshcoarser(*_level0[i-1u]);
-        //meshcoarser.FlagElementsToBeRefined();
-	meshcoarser.FlagOnlyEvenElementsToBeRefined();
+        meshcoarser.FlagElementsToBeRefined();
+	//meshcoarser.FlagOnlyEvenElementsToBeRefined();
       }
       _level0[i] = new Mesh();
       MeshRefinement meshfiner(*_level0[i]);

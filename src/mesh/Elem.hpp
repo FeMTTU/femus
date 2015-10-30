@@ -16,6 +16,7 @@
 #ifndef __femus_mesh_Elem_hpp__
 #define __femus_mesh_Elem_hpp__
 
+#include <vector>
 
 namespace femus {
 
@@ -36,6 +37,13 @@ public:
     /** destructor */
     ~elem();
 
+    // reorder the element according to the new element mapping
+    void ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc);
+    
+    // reorder the nodes according to the new node mapping
+    void ReorderMeshNodes( const std::vector < unsigned > &nodeMapping);
+    
+    
     /** To be Added */
     unsigned GetMeshDof(const unsigned iel,const unsigned &inode,const unsigned &type)const;
 
@@ -47,7 +55,7 @@ public:
 
     /** Return the local->global node number */
     unsigned GetElementVertexIndex(const unsigned &iel,const unsigned &inode)const {
-        return kvert[iel][inode];
+        return _kvert[iel][inode];
     };
 
     /** To be Added */
@@ -174,10 +182,7 @@ public:
     void SetVertexElementIndex(const unsigned &inode,const unsigned &jnode, const unsigned &value);
 
     /** To be Added */
-    unsigned GetElementFather(const unsigned &iel) const;
-
-    /** To be Added */
-    void SetElementFather(const unsigned &iel, const unsigned &value,  const bool &refined);
+    void SetIfFatherIsRefined(const unsigned &iel, const bool &refined);
     
     /** To be Added */
     bool IsFatherRefined(const unsigned &iel) const;
@@ -204,35 +209,48 @@ public:
     unsigned GetChildElement(const unsigned &iel,const unsigned &json) const;
     
     const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const;
+    unsigned int* _kvert_memory;
 
 private:
 
     // member data
-    int **kel;
-    unsigned *elr;
-    unsigned *_child_elem_memory;
-    unsigned **_child_elem;
-    bool _child_elem_flag;
-    unsigned **kvtel; //node->element
-    unsigned *kvtel_memory;
-    unsigned *nve;
-    unsigned *kvert_memory;
-    int *kel_memory;
-    unsigned nvt,nv0,nv1,nv2;
-    unsigned nel,nelt[6];
-    unsigned nelr,nelrt[6];
-    unsigned ngroup;
-    short unsigned *elt,*elg,*elmat; //element
-    bool *_node_region;
-    bool  _node_region_flag;
-    unsigned *elf;
-    bool *elfRef; //element
-    unsigned nelf;
-    unsigned **kvert; //element -> nodes
+    int **_kel;
+    int *_kelMemory;
+    unsigned _kelSize;
+    
+    unsigned **_kvtel; //node->element
+    unsigned *_kvtelMemory;
+    unsigned *_nve;
+        
+    unsigned **_kvert; //element -> nodes
+    unsigned *_kvertMemory;
+    unsigned _kvertSize;
+    
+    
+    unsigned *_elr;
+    
+    
+    unsigned **_childElem;
+    unsigned *_childElemMemory;
+    unsigned _childElemSize;
+    bool _childElemFlag;
+   
+    short unsigned *_elementType,*_elementGroup,*_elementMaterial; //element
+    
+        
+    unsigned _nvt,_nv0,_nv1,_nv2;
+    unsigned _nel,_nelt[6];
+    unsigned _nelr,_nelrt[6];
+    unsigned _ngroup; 
+    
+    bool *_nodeRegion;
+    bool  _nodeRegionFlag;
+    bool *_elRef; //element
+    unsigned _nelf;
 
 };
 
-//vertices,edges,faces,interior,element,element+derivatives
+//linear, quadratic, biquadratic, picewise costant, picewise linear discontinuous
   const unsigned NVE[6][5]= {
     {8,20,27,1,4},  //hex
     {4,10,10,1,4},   //tet

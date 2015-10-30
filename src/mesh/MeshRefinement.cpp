@@ -58,7 +58,7 @@ void MeshRefinement::FlagElementsToBeRefined() {
     if(_mesh._IsUserRefinementFunctionDefined){
       for (int iel_metis=_mesh.IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _mesh.IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
 	unsigned kel = _mesh.IS_Mts2Gmt_elem[iel_metis];
-	if(_mesh.el->IsFatherRefined(kel)){
+	if( _mesh.GetLevel() == 0 || _mesh.el->IsFatherRefined(kel)  ){
 	  short unsigned kelt=_mesh.el->GetElementType(kel);
 	  unsigned nve=_mesh.el->GetElementDofNumber(kel,0);
 	  std::vector < double > vtx(3,0.);
@@ -104,13 +104,13 @@ void MeshRefinement::FlagOnlyEvenElementsToBeRefined() {
 
   for (int iel_metis=_mesh.IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _mesh.IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
     unsigned kel = _mesh.IS_Mts2Gmt_elem[iel_metis];
-    if(_mesh.el->IsFatherRefined(kel)){
+    if( _mesh.GetLevel() == 0 || _mesh.el->IsFatherRefined(kel)){
       if( (*_mesh._coordinate->_Sol[3])(iel_metis) < 0.5 && kel%2 == 0) {
 	_mesh._coordinate->_Sol[3]->set(iel_metis,1.);
       }
     }
   }
-  
+
   std::vector<double> AMR_local;
   _mesh._coordinate->_Sol[3]->localize_to_all(AMR_local);
 
@@ -165,7 +165,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
       // project element type
       for (unsigned j=0; j<_mesh.GetRefIndex(); j++) {
         _mesh.el->SetElementType(jel+j,elt);
-        _mesh.el->SetElementFather(jel+j, iel, true);
+        _mesh.el-> SetIfFatherIsRefined(jel+j, true);
 	elc->SetChildElement(iel,j,jel+j);
       }
 
@@ -199,7 +199,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 
       // project element type
       _mesh.el->SetElementType(jel,elt);
-      _mesh.el->SetElementFather(jel, iel, false);
+      _mesh.el-> SetIfFatherIsRefined(jel, false);
       elc->SetChildElement(iel,0,jel);
 
       unsigned elg = elc->GetElementGroup(iel);
@@ -307,13 +307,13 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
     meshmetispartitioning.DoPartition(*mshc);
   }
 
-  _mesh.FillISvector();
-  
+  _mesh.FillISvector(elc);
+
   _mesh.BuildAdjVtx(); //TODO
-  
+
   _mesh.Buildkel();
 
-  
+
 
   // build Mesh coordinates by projecting the coarse coordinats
   _mesh._coordinate = new Solution(&_mesh);

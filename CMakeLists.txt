@@ -149,6 +149,13 @@ OPTION(BUILD_WILLMORE_SURFACE "Build the Generalized Willmore problem" ON)
 # --
 OPTION(BUILD_TUTORIAL "Build the tutorial problems" ON)
 
+# --
+OPTION(BUILD_MGAMR "Build the MGAMR" ON)
+
+# --
+OPTION(BUILD_PCFIELDSPLIT "Build the PCFIELDSPLIT apps" ON)
+
+
 
 #############################################################################################
 ### Build documentation (Doxygen)
