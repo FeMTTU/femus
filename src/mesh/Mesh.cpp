@@ -555,73 +555,69 @@ void Mesh::FillISvector(elem *elc) {
      
     
     
-   
+//-------------------------- Reordering of the nodes as linear, quadratic, biquadratic ------------------
   for(unsigned i=0;i<_nnodes;i++){
     IS_Gmt2Mts_dof[k][i]=i;
   }
-  
-//   //reorder vertices and mid-points vs central points
-//    for(int isdom = 0; isdom < _nprocs; isdom++){
-//      for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
-//        for (unsigned inode=0; inode<el->GetElementDofNumber(iel,1); inode++) {
-//          for (unsigned jel=0; jel<IS_Mts2Gmt_elem_offset[isdom+1]; jel++) {
-// 	   for (unsigned jnode=el->GetElementDofNumber(jel,1); jnode<el->GetElementDofNumber(jel,2); jnode++) {
-// 	     unsigned ii=el->GetElementVertexIndex(iel,inode)-1u;
-// 	     unsigned jj=el->GetElementVertexIndex(jel,jnode)-1u;
-// 	    
-// 	     unsigned i0=IS_Gmt2Mts_dof[k][ii];
-//              unsigned i1=IS_Gmt2Mts_dof[k][jj];
-// 	    
-// 	     if(i0 > MetisOffset[k][isdom] && i1 > MetisOffset[k][isdom] && i0>i1){
-// 	       IS_Gmt2Mts_dof[k][ii]=i1;
-// 	       IS_Gmt2Mts_dof[k][jj]=i0;
-// 	     }
-// 	   }
-//         }
-//       }
-//     }
-//   }
-//   //reorder vertices vs mid-points
-//   for (unsigned iel=0; iel<_nelem; iel++) {
-//     for (unsigned inode=0; inode<el->GetElementDofNumber(iel,0); inode++) {
-//       for (unsigned jel=0; jel<_nelem; jel++) {
-//         for (unsigned jnode=el->GetElementDofNumber(jel,0); jnode<el->GetElementDofNumber(jel,1); jnode++) {
-//           unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
-// 	  unsigned jj=el->GetElementVertexIndex(jel,jnode)-1;
-// 	  unsigned i0=dof_index[ii];
-//           unsigned i1=dof_index[jj];
-// 	  if(i0>i1){
-// 	    dof_index[ii]=i1;
-// 	    dof_index[jj]=i0;
-// 	  }
-// 	}
-//       }
-//     }
-//   }
+  //reorder vertices and mid-points vs central points
+   for(int isdom = 0; isdom < _nprocs; isdom++){
+     for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
+       for (unsigned inode=0; inode<el->GetElementDofNumber(iel,1); inode++) {
+         for (unsigned jel = IS_Mts2Gmt_elem_offset[isdom]; jel<IS_Mts2Gmt_elem_offset[isdom+1]; jel++) {
+	   for (unsigned jnode=el->GetElementDofNumber(jel,1); jnode<el->GetElementDofNumber(jel,2); jnode++) {
+	     unsigned ii=el->GetElementVertexIndex(iel,inode)-1u;
+	     unsigned jj=el->GetElementVertexIndex(jel,jnode)-1u;
+	    
+	     unsigned i0=IS_Gmt2Mts_dof[k][ii];
+             unsigned i1=IS_Gmt2Mts_dof[k][jj];
+	    
+	     if(i0 > MetisOffset[k][isdom] && i1 > MetisOffset[k][isdom] && i0>i1){
+	       IS_Gmt2Mts_dof[k][ii]=i1;
+	       IS_Gmt2Mts_dof[k][jj]=i0;
+	     }
+	   }
+        }
+      }
+    }
+  }
+  //reorder vertices vs mid-points
+  for(int isdom = 0; isdom < _nprocs; isdom++){
+    for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
+      for (unsigned inode=0; inode<el->GetElementDofNumber(iel,0); inode++) {
+        for (unsigned jel = IS_Mts2Gmt_elem_offset[isdom]; jel<IS_Mts2Gmt_elem_offset[isdom+1]; jel++) {
+          for (unsigned jnode=el->GetElementDofNumber(jel,0); jnode<el->GetElementDofNumber(jel,1); jnode++) {
+            unsigned ii=el->GetElementVertexIndex(iel,inode)-1u;
+	    unsigned jj=el->GetElementVertexIndex(jel,jnode)-1u;
+	    
+	    unsigned i0=IS_Gmt2Mts_dof[k][ii];
+            unsigned i1=IS_Gmt2Mts_dof[k][jj];
+	    
+	    if(i0 > MetisOffset[k][isdom] && i1 > MetisOffset[k][isdom] && i0>i1){
+	       IS_Gmt2Mts_dof[k][ii]=i1;
+	       IS_Gmt2Mts_dof[k][jj]=i0;
+	    }
+	  }
+        }
+      }
+    }
+  }   
     
-    
-//     el->ReorderMeshNodes( IS_Gmt2Mts_dof[k]);
-//      
-//     if(GetLevel() == 0){
-//       vector <double> coords_temp;
-//       for(int i=0;i<3;i++){
-// 	coords_temp=coords[i];
-// 	  for(unsigned j=0;j<GetDofNumber(2);j++) {
-// 	    coords[i][IS_Gmt2Mts_dof[k][j]]=coords_temp[j];
-// 	}
-//       }
-//     }  
+    el->ReorderMeshNodes( IS_Gmt2Mts_dof[k]);
      
-     
+    if(GetLevel() == 0){
+      vector <double> coords_temp;
+      for(int i=0;i<3;i++){
+	coords_temp=coords[i];
+	  for(unsigned j=0;j<GetDofNumber(2);j++) {
+	    coords[i][IS_Gmt2Mts_dof[k][j]]=coords_temp[j];
+	}
+      }
+    }  
+//------------------------------------------------------------------------------------------------------------------      
      
     for(unsigned j=0;j<GetDofNumber(2);j++) {
       IS_Gmt2Mts_dof[k][j]=j;
     } 
-    
-    
-    
-    
-    
     
     
     // ghost nodes
