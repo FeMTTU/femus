@@ -106,7 +106,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("P");
 
   //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
+  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 

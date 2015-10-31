@@ -3,9 +3,9 @@
   Program: FEMUS
   Module: LinearEquationSolver
   Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
- 
+
   Copyright (c) FEMTTU
-  All rights reserved. 
+  All rights reserved.
 
   This software is distributed WITHOUT ANY WARRANTY; without even
   the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -21,12 +21,13 @@
 #include "FemusConfig.hpp"
 #include "PrecondtypeEnum.hpp"
 #include "petscksp.h"
-#include "petscvec.h" 
+#include "petscvec.h"
 
 // Local Includes
 #include "AsmPetscLinearEquationSolver.hpp"
 #include "GmresPetscLinearEquationSolver.hpp"
 #include "VankaPetscLinearEquationSolver.hpp"
+#include "FieldSplitPetscLinearEquationSolver.hpp"
 #include "Preconditioner.hpp"
 
 namespace femus {
@@ -34,7 +35,7 @@ namespace femus {
   // =============================================================
   std::auto_ptr<LinearEquationSolver> LinearEquationSolver::build(const unsigned &igrid, Mesh *other_mesh,const MgSmoother & smoother_type, const SolverPackage solver_package) {
     // Build the appropriate solver
-   
+
     switch (solver_package)  {
 #ifdef HAVE_PETSC
     case PETSC_SOLVERS:  {
@@ -51,6 +52,10 @@ namespace femus {
 	std::auto_ptr<LinearEquationSolver> ap(new VankaPetscLinearEquationSolver(igrid, other_mesh));
 	return ap;
       }
+      case FIELDSPLIT_SMOOTHER:{
+        std::auto_ptr<LinearEquationSolver> ap(new FieldSplitPetscLinearEquationSolver(igrid, other_mesh));
+        return ap;
+      }
       }
     }
 #endif
@@ -58,7 +63,7 @@ namespace femus {
     case TRILINOS_SOLVERS:  {
       std::auto_ptr<LinearEquationSolver> ap(new AztecLinearEquationSolver);
       return ap;
-    } 
+    }
 #endif
     default:
       std::cerr << "ERROR:  Unrecognized solver package: "
