@@ -42,12 +42,15 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 
-bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
+bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
-  bool refine=0;
-  if (elemgroupnumber==6 && level<4) refine=1;
-  if (elemgroupnumber==7 && level<5) refine=1;
-  if (elemgroupnumber==8 && level<6) refine=1;
+  bool refine = 0;
+
+  if (elemgroupnumber == 6 && level < 4) refine = 1;
+
+  if (elemgroupnumber == 7 && level < 5) refine = 1;
+
+  if (elemgroupnumber == 8 && level < 6) refine = 1;
 
   return refine;
 
@@ -359,103 +362,104 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       }
     }
 
-   // if (level == levelMax || !el->GetRefinedElementIndex(kel)) {      // do not care about this if now (it is used for the AMR)
-      // start a new recording of all the operations involving adept::adouble variables
-      s.new_recording();
+    // if (level == levelMax || !el->GetRefinedElementIndex(kel)) {      // do not care about this if now (it is used for the AMR)
+    // start a new recording of all the operations involving adept::adouble variables
+    s.new_recording();
 
-      // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solVType]->GetGaussPointNumber(); ig++) {
-        // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[kelGeom][solTType]->Jacobian(coordX, ig, weight, phiT, phiT_x, phiT_xx);
-        msh->_finiteElement[kelGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
-        phiP = msh->_finiteElement[kelGeom][solPType]->GetPhi(ig);
+    // *** Gauss point loop ***
+    for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solVType]->GetGaussPointNumber(); ig++) {
+      // *** get gauss point weight, test function and test function partial derivatives ***
+      msh->_finiteElement[kelGeom][solTType]->Jacobian(coordX, ig, weight, phiT, phiT_x, phiT_xx);
+      msh->_finiteElement[kelGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
+      phiP = msh->_finiteElement[kelGeom][solPType]->GetPhi(ig);
 
-        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-        adept::adouble solT_gss = 0;
-        vector < adept::adouble > gradSolT_gss(dim, 0.);
+      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+      adept::adouble solT_gss = 0;
+      vector < adept::adouble > gradSolT_gss(dim, 0.);
 
-        for (unsigned i = 0; i < nDofsT; i++) {
-          solT_gss += phiT[i] * solT[i];
+      for (unsigned i = 0; i < nDofsT; i++) {
+        solT_gss += phiT[i] * solT[i];
 
-          for (unsigned j = 0; j < dim; j++) {
-            gradSolT_gss[j] += phiT_x[i * dim + j] * solT[i];
-          }
+        for (unsigned j = 0; j < dim; j++) {
+          gradSolT_gss[j] += phiT_x[i * dim + j] * solT[i];
+        }
+      }
+
+      vector < adept::adouble > solV_gss(dim, 0);
+      vector < vector < adept::adouble > > gradSolV_gss(dim);
+
+      for (unsigned  k = 0; k < dim; k++) {
+        gradSolV_gss[k].resize(dim);
+        std::fill(gradSolV_gss[k].begin(), gradSolV_gss[k].end(), 0);
+      }
+
+      for (unsigned i = 0; i < nDofsV; i++) {
+        for (unsigned  k = 0; k < dim; k++) {
+          solV_gss[k] += phiV[i] * solV[k][i];
         }
 
-        vector < adept::adouble > solV_gss(dim, 0);
-        vector < vector < adept::adouble > > gradSolV_gss(dim);
+        for (unsigned j = 0; j < dim; j++) {
+          for (unsigned  k = 0; k < dim; k++) {
+            gradSolV_gss[k][j] += phiV_x[i * dim + j] * solV[k][i];
+          }
+        }
+      }
+
+      adept::adouble solP_gss = 0;
+
+      for (unsigned i = 0; i < nDofsP; i++) {
+        solP_gss += phiP[i] * solP[i];
+      }
+
+      double nu = 1.;
+      double alpha = 1.;
+      double beta = 2000.;
+
+      // *** phiT_i loop ***
+      for (unsigned i = 0; i < nDofsT; i++) {
+        adept::adouble Temp = 0.;
+
+        for (unsigned j = 0; j < dim; j++) {
+          Temp +=  alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
+          Temp +=  phiT[i] * (solV_gss[j] * gradSolT_gss[j]);
+        }
+
+        aResT[i] += - Temp * weight;
+      } // end phiT_i loop
+
+
+      // *** phiV_i loop ***
+      for (unsigned i = 0; i < nDofsV; i++) {
+        vector < adept::adouble > NSV(dim, 0.);
+
+        for (unsigned j = 0; j < dim; j++) {
+          for (unsigned  k = 0; k < dim; k++) {
+            NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
+            NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
+          }
+        }
 
         for (unsigned  k = 0; k < dim; k++) {
-          gradSolV_gss[k].resize(dim);
-          std::fill(gradSolV_gss[k].begin(), gradSolV_gss[k].end(), 0);
+          NSV[k] += -solP_gss * phiV_x[i * dim + k];
         }
 
-        for (unsigned i = 0; i < nDofsV; i++) {
-          for (unsigned  k = 0; k < dim; k++) {
-            solV_gss[k] += phiV[i] * solV[k][i];
-          }
+        NSV[1] += -beta * solT_gss * phiV[i];
 
-          for (unsigned j = 0; j < dim; j++) {
-            for (unsigned  k = 0; k < dim; k++) {
-              gradSolV_gss[k][j] += phiV_x[i * dim + j] * solV[k][i];
-            }
-          }
+        for (unsigned  k = 0; k < dim; k++) {
+          aResV[k][i] += - NSV[k] * weight;
         }
+      } // end phiV_i loop
 
-        adept::adouble solP_gss = 0;
-
-        for (unsigned i = 0; i < nDofsP; i++) {
-          solP_gss += phiP[i] * solP[i];
+      // *** phiP_i loop ***
+      for (unsigned i = 0; i < nDofsP; i++) {
+        for (int k = 0; k < dim; k++) {
+          aResP[i] += - (gradSolV_gss[k][k]) * phiP[i]  * weight;
         }
+      } // end phiP_i loop
 
-        double nu = 1.;
-        double alpha = 1.;
-        double beta = 2000.;
+    } // end gauss point loop
 
-        // *** phiT_i loop ***
-        for (unsigned i = 0; i < nDofsT; i++) {
-          adept::adouble Temp = 0.;
-
-          for (unsigned j = 0; j < dim; j++) {
-            Temp +=  alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
-            Temp +=  phiT[i] * (solV_gss[j] * gradSolT_gss[j]);
-          }
-
-          aResT[i] += - Temp * weight;
-        } // end phiT_i loop
-
-
-        // *** phiV_i loop ***
-        for (unsigned i = 0; i < nDofsV; i++) {
-          vector < adept::adouble > NSV(dim, 0.);
-
-          for (unsigned j = 0; j < dim; j++) {
-            for (unsigned  k = 0; k < dim; k++) {
-              NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
-              NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
-            }
-          }
-
-          for (unsigned  k = 0; k < dim; k++) {
-            NSV[k] += -solP_gss * phiV_x[i * dim + k];
-          }
-
-          NSV[1] += -beta * solT_gss * phiV[i];
-
-          for (unsigned  k = 0; k < dim; k++) {
-            aResV[k][i] += - NSV[k] * weight;
-          }
-        } // end phiV_i loop
-
-        // *** phiP_i loop ***
-        for (unsigned i = 0; i < nDofsP; i++) {
-          for (int k = 0; k < dim; k++) {
-            aResP[i] += - (gradSolV_gss[k][k]) * phiP[i]  * weight;
-          }
-        } // end phiP_i loop
-
-      } // end gauss point loop
-   // } // endif single element not refined or fine grid loop
+    // } // endif single element not refined or fine grid loop
 
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
