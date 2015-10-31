@@ -165,7 +165,7 @@ int main(int argc, char** args) {
     system.AddSolutionToSystemPDE("H");
 
     
-    system.SetMaxNumberOfNonLinearIterations(1);
+    system.SetMaxNumberOfNonLinearIterations(6);
     
 
     // attach the assembling function to system
@@ -442,12 +442,13 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
       // start a new recording of all the operations involving adept::adouble variables
       s.new_recording();
 
+      
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solHType]->GetGaussPointNumber(); ig++) {
         // *** get gauss point weight, test function and test function partial derivatives ***
         msh->_finiteElement[kelGeom][solHType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
-        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+	// evaluate the solution, the solution derivatives and the coordinates in the gauss point
         adept::adouble solRGauss[3]; 
         adept::adouble solRGauss_x[3][2];
 	adept::adouble solRGauss_xx[3][2][2];
@@ -484,24 +485,21 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	    }
             solHGauss_x[u] += phi_x[i * dim + u] * solH[i];
           }
-          
-          
+                  
 	  for( unsigned u = 0; u < dim; u++ ) { // hessian
 	    for( unsigned v = 0; v < dim; v++ ) {
 	      unsigned uvindex = 0; //_uu
 	      if( u != v ) uvindex = 2; //_uv or _vu
-	      else if( u = 1 ) uvindex = 1; //_vv
+	      else if( u == 1 ) uvindex = 1; //_vv
 	      for(int k = 0; k < 3; k++){
 		solRGauss_xx[k][u][v] += phi_xx[i * dim2 + uvindex] * solR[k][i];
 	      }
 	    }
 	  }
 	}
+	
         adept::adouble g[2][2];
-	
-	
-	
-	
+		
         g[0][0] = g[0][1] = g[1][0] = g[1][1] = 0.;
 	
 	for(int k = 0; k < 3; k++){
@@ -511,19 +509,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	    }
 	  }
 	}
-	
-	
-// 	std::cout<< g[0][0] <<" "<<1.<<std::endl;
-// 	std::cout<< g[0][1] <<" "<<0.<<std::endl;
-// 	std::cout<< g[1][0] <<" "<<0.<<std::endl;
-// 	std::cout<< g[1][1] <<" "<< (a+cos(sol_x[0]))*(a+cos(sol_x[0])) <<std::endl;
-	/*
-	g[0][0] = 1.; 
-	g[0][1] = 0.;
-	g[1][0] = 0.;
-	g[1][1] = (a+cos(sol_x[0]))*(a+cos(sol_x[0]));*/
-	
-	
+		
 	adept::adouble detg = g[0][0]*g[1][1]-g[0][1]*g[1][0];
 	
 	adept::adouble  A = sqrt(detg);
@@ -541,13 +527,6 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	N[1] = ( solRGauss_x[2][0] * solRGauss_x[0][1] - solRGauss_x[2][1] * solRGauss_x[0][0] ) / A;
 	N[2] = ( solRGauss_x[0][0] * solRGauss_x[1][1] - solRGauss_x[0][1] * solRGauss_x[1][0] ) / A;
 	
-	/*
-	N[0] = -cos(sol_x[0])*cos(sol_x[1]);
-	N[1] = -cos(sol_x[0])*sin(sol_x[1]);
-	N[2] = -sin(sol_x[0]);*/
-	
-	
-	
 	adept::adouble h[2][2];
 	
         h[0][0]=h[0][1]=h[1][0]=h[1][1]=0.;
@@ -556,10 +535,11 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	  for(int u=0; u<dim; u++){
 	    for(int v=0; v<dim; v++){
 	      h[u][v] += solRGauss_xx[k][u][v] * N[k];
+	     
 	    }
 	  }
 	}
-        
+              
         //adept::adouble K = cos(sol_x[0])/(a+cos(sol_x[0]));//(h[0][0]*h[1][1]-h[0][1]*h[1][0])/detg;
         
 	adept::adouble K = (h[0][0]*h[1][1]-h[0][1]*h[1][0])/detg;
@@ -573,11 +553,11 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	    for(int u=0; u<dim; u++){
 	      adept::adouble AgIgradRgradPhi=0;
 	      for(int v=0; v<dim; v++){
-		AgIgradRgradPhi += A * gI[u][v] * solRGauss_x[k][v];
+		AgIgradRgradPhi += A * gI[u][v].value() * solRGauss_x[k][v];
 	      }
 	      aResR[k][i] += AgIgradRgradPhi * phi_x[i * dim + u] * weight;
 	    }
-	    aResR[k][i] += 2.* A * H_exact * N[k] * phi[i] * weight;
+	    aResR[k][i] += 2.* A * solHGauss.value() * N[k] * phi[i] * weight;
 	        
 	  }
 	  
@@ -585,11 +565,11 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	  for(int u=0; u<dim; u++){
 	    adept::adouble AgIgradHgradPhi=0;
 	    for(int v=0; v<dim; v++){
-	      AgIgradHgradPhi += A * gI[u][v] * solHGauss_x[v];
+	      AgIgradHgradPhi += A * gI[u][v].value() * solHGauss_x[v];
 	    }
 	    aResH[i] -= AgIgradHgradPhi * phi_x[i * dim + u] * weight;
 	  }
-	   aResH[i] += 2 * A * solHGauss * ( solHGauss * solHGauss  - K ) * phi[i] * weight; 
+	   aResH[i] += 2. * A * solHGauss * ( solHGauss * solHGauss  - K.value() ) * phi[i] * weight; 
 	} // end phi_i loop
       } // end gauss point loop
     } // endif single element not refined or fine grid loop
