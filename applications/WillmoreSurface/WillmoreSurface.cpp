@@ -42,7 +42,7 @@ bool SetBoundaryConditionTorus(const std::vector < double >& x, const char SolNa
     value = sin(u);
   }
   else if (!strcmp("H", SolName)) {
-    value = -0.5*(1. + cos(u)/(a+cos(u)));
+    value = 0.5*(1. + cos(u)/(a+cos(u)));
   }
 
   return dirichlet;
@@ -165,7 +165,7 @@ int main(int argc, char** args) {
     system.AddSolutionToSystemPDE("H");
 
     
-    system.SetMaxNumberOfNonLinearIterations(1);
+    system.SetMaxNumberOfNonLinearIterations(6);
     
 
     // attach the assembling function to system
@@ -188,11 +188,11 @@ int main(int argc, char** args) {
     surfaceVariables.push_back("Z");
 
     VTKWriter vtkIO(&mlSol);
-   // vtkIO.SetSurfaceVariables(surfaceVariables);
+    vtkIO.SetSurfaceVariables(surfaceVariables);
     vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
 
     GMVWriter gmvIO(&mlSol);
-    //gmvIO.SetSurfaceVariables(surfaceVariables);
+    gmvIO.SetSurfaceVariables(surfaceVariables);
     gmvIO.SetDebugOutput(true);
     gmvIO.Pwrite(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
     
@@ -442,15 +442,19 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
       // start a new recording of all the operations involving adept::adouble variables
       s.new_recording();
 
+      
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solHType]->GetGaussPointNumber(); ig++) {
         // *** get gauss point weight, test function and test function partial derivatives ***
         msh->_finiteElement[kelGeom][solHType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
-        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+	// evaluate the solution, the solution derivatives and the coordinates in the gauss point
         adept::adouble solRGauss[3]; 
         adept::adouble solRGauss_x[3][2];
 	adept::adouble solRGauss_xx[3][2][2];
+	
+	adept::adouble sol_x[2];
+	sol_x[0]=sol_x[1]=0.;
 	
 	for(int k=0; k<3; k++){
 	  solRGauss[k]=0.;
@@ -470,28 +474,32 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	    solRGauss[k] += phi[i] * solR[k][i];
 	  }
           solHGauss += phi[i] * solH[i];
-
+	  
+	  for (unsigned u = 0; u < dim; u++) {
+	    sol_x[u] += phi[i] * x[u][i];
+	  }
+	  
           for (unsigned u = 0; u < dim; u++) { // gradient
 	    for(int k=0; k < 3; k++){
 	      solRGauss_x[k][u] += phi_x[i * dim + u] * solR[k][i];
 	    }
             solHGauss_x[u] += phi_x[i * dim + u] * solH[i];
           }
-          
-          
+                  
 	  for( unsigned u = 0; u < dim; u++ ) { // hessian
 	    for( unsigned v = 0; v < dim; v++ ) {
 	      unsigned uvindex = 0; //_uu
 	      if( u != v ) uvindex = 2; //_uv or _vu
-	      else if( u = 1 ) uvindex = 1; //_vv
+	      else if( u == 1 ) uvindex = 1; //_vv
 	      for(int k = 0; k < 3; k++){
-		solRGauss_xx[k][u][v] += phi_xx[i * dim + uvindex] * solR[k][i];
+		solRGauss_xx[k][u][v] += phi_xx[i * dim2 + uvindex] * solR[k][i];
 	      }
 	    }
 	  }
 	}
-        adept::adouble g[2][2];
 	
+        adept::adouble g[2][2];
+		
         g[0][0] = g[0][1] = g[1][0] = g[1][1] = 0.;
 	
 	for(int k = 0; k < 3; k++){
@@ -501,10 +509,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	    }
 	  }
 	}
-	
-	g[0][0]=g[1][1]=1.;
-	g[0][1]=g[1][0]=0.;
-	
+		
 	adept::adouble detg = g[0][0]*g[1][1]-g[0][1]*g[1][0];
 	
 	adept::adouble  A = sqrt(detg);
@@ -530,40 +535,42 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	  for(int u=0; u<dim; u++){
 	    for(int v=0; v<dim; v++){
 	      h[u][v] += solRGauss_xx[k][u][v] * N[k];
+	     
 	    }
 	  }
 	}
+              
+        //adept::adouble K = cos(sol_x[0])/(a+cos(sol_x[0]));//(h[0][0]*h[1][1]-h[0][1]*h[1][0])/detg;
         
-        adept::adouble K =1;// (h[0][0]*h[1][1]-h[0][1]*h[1][0])/detg;
-        
-         // *** phi_i loop ***
+	adept::adouble K = (h[0][0]*h[1][1]-h[0][1]*h[1][0])/detg;
+	
+	adept::adouble H_exact = 0.5*(1. + cos(sol_x[0])/(a+cos(sol_x[0])));
+		
+        // *** phi_i loop ***
         for (unsigned i = 0; i < nDofs; i++) {
 	  
 	  for(int k=0; k<3; k++){
 	    for(int u=0; u<dim; u++){
-	      adept::adouble gIgradRgradPhi=0;
+	      adept::adouble AgIgradRgradPhi=0;
 	      for(int v=0; v<dim; v++){
-		gIgradRgradPhi += gI[u][v] * solRGauss_x[k][v];
+		AgIgradRgradPhi += A * gI[u][v].value() * solRGauss_x[k][v];
 	      }
-	      aResR[k][i] += gIgradRgradPhi * phi_x[i * dim + u] * weight;
+	      aResR[k][i] += AgIgradRgradPhi * phi_x[i * dim + u] * weight;
 	    }
-	    aResR[k][i] += solHGauss * N[k] * phi[i] * weight;
-	    
-	    //aResR[k][i] += solHGauss * phi[i] * weight;
+	    aResR[k][i] += 2.* A * solHGauss.value() * N[k] * phi[i] * weight;
+	        
 	  }
 	  
 	  
 	  for(int u=0; u<dim; u++){
 	    adept::adouble AgIgradHgradPhi=0;
 	    for(int v=0; v<dim; v++){
-	      AgIgradHgradPhi += A * gI[u][v] * solHGauss_x[v];
+	      AgIgradHgradPhi += A * gI[u][v].value() * solHGauss_x[v];
 	    }
 	    aResH[i] -= AgIgradHgradPhi * phi_x[i * dim + u] * weight;
 	  }
-	   aResH[i] += 2 * A * solHGauss * ( solHGauss * solHGauss  - K ) * phi[i] * weight; 
-	   //aResH[i] += 1 * phi[i] * weight; 
-
-        } // end phi_i loop
+	   aResH[i] += 2. * A * solHGauss * ( solHGauss * solHGauss  - K.value() ) * phi[i] * weight; 
+	} // end phi_i loop
       } // end gauss point loop
     } // endif single element not refined or fine grid loop
 
