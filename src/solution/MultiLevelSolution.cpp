@@ -351,7 +351,7 @@ unsigned MultiLevelSolution::GetIndex(const char name[]) const {
   while (strcmp(_SolName[index],name)) {
     index++;
     if (index==_SolType.size()) {
-      cout<<"error! invalid solution name "<< name <<"entry GetIndex(...)"<<endl;
+      cout << "error! invalid solution name " << name << " entry GetIndex(...)"<<endl;
       abort();
     }
   }
