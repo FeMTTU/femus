@@ -97,13 +97,13 @@ int main(int argc, char** args) {
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");
 
   // add solution "u" to system
-  system.AddSolutionToSystemPDE("T");
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-
+  system.AddSolutionToSystemPDE("P");
+  
   if (dim == 3) system.AddSolutionToSystemPDE("W");
 
-  system.AddSolutionToSystemPDE("P");
+  system.AddSolutionToSystemPDE("T");
 
   //system.SetMgSmoother(GMRES_SMOOTHER);
   system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method

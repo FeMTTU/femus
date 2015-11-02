@@ -132,181 +132,28 @@ namespace femus {
 
   // ==============================================
 
-  clock_t FieldSplitPetscLinearEquationSolver::BuildAMSIndex(const vector <unsigned>& variable_to_be_solved) {
+  clock_t FieldSplitPetscLinearEquationSolver::BuildFieldSplitIndex(const vector <unsigned>& variable_to_be_solved) {
     clock_t SearchTime = 0;
     clock_t start_time = clock();
 
-    unsigned nel = _msh->GetNumberOfElements();
-
-    bool FastVankaBlock = true;
-    if (_NSchurVar == !0) {
-      FastVankaBlock = (_SolType[_SolPdeIndex[variable_to_be_solved[variable_to_be_solved.size() - _NSchurVar]]] < 3) ? false : true;
-    }
-
-    unsigned iproc = processor_id();
-
-    unsigned DofOffset = KKoffset[0][iproc];
-    unsigned DofOffsetSize = KKoffset[KKIndex.size() - 1][iproc] - KKoffset[0][iproc];
-    vector < unsigned > indexa(DofOffsetSize, DofOffsetSize);
-    vector < unsigned > indexb(DofOffsetSize, DofOffsetSize);
-    vector <bool> owned(DofOffsetSize, false);
-
-    map<int, bool> mymap;
-
-    unsigned ElemOffset   = _msh->MetisOffset[3][iproc];
-    unsigned ElemOffsetp1 = _msh->MetisOffset[3][iproc + 1];
-    unsigned ElemOffsetSize = ElemOffsetp1 - ElemOffset;
-    vector <PetscInt> indexci(ElemOffsetSize);
-    vector < unsigned > indexc(ElemOffsetSize, ElemOffsetSize);
-
-    vector < vector < unsigned > > block_elements;
-
-    MeshASMPartitioning meshasmpartitioning(*_msh);
-    meshasmpartitioning.DoPartition(_element_block_number, block_elements, _block_type_range);
-
-    vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(), true);
-    for (unsigned iind = variable_to_be_solved.size() - _NSchurVar; iind < variable_to_be_solved.size(); iind++) {
-      unsigned PdeIndexSol = variable_to_be_solved[iind];
-      ThisVaribaleIsNonSchur[PdeIndexSol] = false;
-    }
-
-    // *** Start Vanka Block ***
-
-    _is_loc_idx.resize(block_elements.size());
-    _is_ovl_idx.resize(block_elements.size());
-
-    for (int vb_index = 0; vb_index < block_elements.size(); vb_index++) {
-      _is_loc_idx[vb_index].resize(DofOffsetSize);
-      _is_ovl_idx[vb_index].resize(DofOffsetSize);
-
-      PetscInt PAsize = 0;
-      PetscInt PBsize = 0;
-
-      PetscInt Csize = 0;
-
-      // ***************** NODE/ELEMENT SERCH *******************
-      for (int kel = 0; kel < block_elements[vb_index].size(); kel++) {
-        unsigned iel_mts = block_elements[vb_index][kel];
-        unsigned iel = _msh->IS_Mts2Gmt_elem[iel_mts];
-
-        for (unsigned i = 0; i < _msh->el->GetElementDofNumber(iel, 0); i++) {
-          unsigned inode = _msh->el->GetElementVertexIndex(iel, i) - 1u;
-          unsigned nvei = _msh->el->GetVertexElementNumber(inode);
-          const unsigned* pt_jel = _msh->el->GetVertexElementAddress(inode, 0);
-          for (unsigned j = 0; j < nvei * (!FastVankaBlock) + FastVankaBlock; j++) {
-            unsigned jel = (!FastVankaBlock) ? *(pt_jel++) - 1u : iel;
-            //add elements for velocity to be solved
-
-            unsigned jel_Metis = _msh->GetMetisDof(jel, 3);
-
-            if (jel_Metis >= ElemOffset && jel_Metis < ElemOffsetp1) {
-              if (indexc[jel_Metis - ElemOffset] == ElemOffsetSize) {
-                indexci[Csize] = jel_Metis - ElemOffset;
-                indexc[jel_Metis - ElemOffset] = Csize++;
-                //----------------------------------------------------------------------------------
-                //add non-schur node to be solved
-                for (int indexSol = 0; indexSol < _SolPdeIndex.size(); indexSol++) {
-                  if (ThisVaribaleIsNonSchur[indexSol]) {
-                    unsigned SolPdeIndex = _SolPdeIndex[indexSol];
-                    unsigned SolType = _SolType[SolPdeIndex];
-                    unsigned nvej = _msh->el->GetElementDofNumber(jel, SolType);
-                    for (unsigned jj = 0; jj < nvej; jj++) {
-                      unsigned jnode = _msh->el->GetMeshDof(jel, jj, SolType);
-
-// 		      bool solidmark = _msh->el->GetNodeRegion(jnode);
-// 		      if( vb_index < _block_type_range[0] || !solidmark ){
-                      unsigned jnode_Metis = _msh->GetMetisDof(jnode, SolType);
-                      unsigned kkdof = GetKKDof(SolPdeIndex, indexSol, jnode);
-                      if (jnode_Metis >= _msh->MetisOffset[SolType][iproc] &&
-                          jnode_Metis <  _msh->MetisOffset[SolType][iproc + 1]) {
-                        if (indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
-                          owned[kkdof - DofOffset] = true;
-                          _is_loc_idx[vb_index][PAsize] = kkdof;
-                          indexa[kkdof - DofOffset] = PAsize++;
-                        }
-                        if (indexb[kkdof - DofOffset] == DofOffsetSize) {
-                          _is_ovl_idx[vb_index][PBsize] = kkdof;
-                          indexb[kkdof - DofOffset] = PBsize++;
-                        }
-                      } else {
-                        mymap[kkdof] = true;
-                      }
-                    }
-// 		    }
-                  }
-                }
-              }
-            }
-          }
-        }
-        //-----------------------------------------------------------------------------------------
-        //Add Schur nodes (generally pressure) to be solved
-        {
-          for (int indexSol = 0; indexSol < _SolPdeIndex.size(); indexSol++) {
-            if (!ThisVaribaleIsNonSchur[indexSol]) {
-              unsigned SolPdeIndex = _SolPdeIndex[indexSol];
-              unsigned SolType = _SolType[SolPdeIndex];
-              unsigned nvei = _msh->el->GetElementDofNumber(iel, SolType);
-              for (unsigned ii = 0; ii < nvei; ii++) {
-                unsigned inode = _msh->el->GetMeshDof(iel, ii, SolType);
-                unsigned inode_Metis = _msh->GetMetisDof(inode, SolType);
-                unsigned kkdof = GetKKDof(SolPdeIndex, indexSol, inode);
-                if (inode_Metis >= _msh->MetisOffset[SolType][iproc] &&
-                    inode_Metis <  _msh->MetisOffset[SolType][iproc + 1]) {
-                  if (indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
-                    owned[kkdof - DofOffset] = true;
-                    _is_loc_idx[vb_index][PAsize] = kkdof;
-                    indexa[kkdof - DofOffset] = PAsize++;
-                  }
-                  if (indexb[kkdof - DofOffset] == DofOffsetSize) {
-                    _is_ovl_idx[vb_index][PBsize] = kkdof;
-                    indexb[kkdof - DofOffset] = PBsize++;
-                  }
-                } else {
-                  mymap[kkdof] = true;
-                }
-              }
-            }
-          }
-        }
-        //-----------------------------------------------------------------------------------------
+    unsigned nVariables = variable_to_be_solved.size();
+    unsigned iproc = processor_id(); 
+    
+    _is_loc_idx.resize(nVariables);
+    _is_loc.resize(nVariables);
+    
+    for( unsigned i = 0; i < nVariables; i++){
+      unsigned offset = KKoffset[i][iproc];
+      unsigned offsetp1 = KKoffset[i+1][iproc];
+      unsigned variableSize = offsetp1 - offset;
+      _is_loc_idx[i].resize(variableSize);
+      for(int j = 0; j < variableSize; j++){
+	_is_loc_idx[i][j] = offset + j;
       }
-
-      // *** re-initialize indeces(a,c,d)
-      for (PetscInt i = 0; i < PAsize; i++) {
-        indexa[_is_loc_idx[vb_index][i] - DofOffset] = DofOffsetSize;
-      }
-      for (PetscInt i = 0; i < PBsize; i++) {
-        indexb[_is_ovl_idx[vb_index][i] - DofOffset] = DofOffsetSize;
-      }
-      for (PetscInt i = 0; i < Csize; i++) {
-        indexc[indexci[i]] = ElemOffsetSize;
-      }
-
-      _is_loc_idx[vb_index].resize(PAsize);
-
-      _is_ovl_idx[vb_index].resize(PBsize + mymap.size());
-      int i = 0;
-      for (std::map<int, bool>::iterator it = mymap.begin(); it != mymap.end(); ++it, ++i) {
-        _is_ovl_idx[vb_index][PBsize + i] = it->first;
-      }
-
-      std::sort(_is_loc_idx[vb_index].begin(), _is_loc_idx[vb_index].end());
-      std::sort(_is_ovl_idx[vb_index].begin(), _is_ovl_idx[vb_index].end());
-    }
-
-    //BEGIN Generate std::vector<IS> for vanka solve ***********
-    _is_loc.resize(_is_loc_idx.size());
-    _is_ovl.resize(_is_ovl_idx.size());
-
-    for (unsigned vb_index = 0; vb_index < _is_loc_idx.size(); vb_index++) {
       PetscErrorCode ierr;
-      ierr = ISCreateGeneral(MPI_COMM_SELF, _is_loc_idx[vb_index].size(), &_is_loc_idx[vb_index][0], PETSC_USE_POINTER, &_is_loc[vb_index]);
-      CHKERRABORT(MPI_COMM_SELF, ierr);
-      ierr = ISCreateGeneral(MPI_COMM_SELF, _is_ovl_idx[vb_index].size(), &_is_ovl_idx[vb_index][0], PETSC_USE_POINTER, &_is_ovl[vb_index]);
+      ierr = ISCreateGeneral(MPI_COMM_SELF, _is_loc_idx[i].size(), &_is_loc_idx[i][0], PETSC_USE_POINTER, &_is_loc[i]);
       CHKERRABORT(MPI_COMM_SELF, ierr);
     }
-    //END Generate std::vector<IS> for vanka solve ***********
 
     clock_t end_time = clock();
     SearchTime += (end_time - start_time);
@@ -331,7 +178,7 @@ namespace femus {
     if (_indexai_init == 0) {
       _indexai_init = 1;
       if (!_standard_ASM)
-        BuildAMSIndex(variable_to_be_solved);
+        BuildFieldSplitIndex(variable_to_be_solved);
       BuildBDCIndex(variable_to_be_solved);
     }
     SearchTime = start_time - clock();
@@ -420,7 +267,9 @@ namespace femus {
     if (_indexai_init == 0) {
       _indexai_init = 1;
       if (!_standard_ASM)
-        BuildAMSIndex(variable_to_be_solved);
+	//BEGIN here
+        BuildFieldSplitIndex(variable_to_be_solved);
+        //END here
       BuildBDCIndex(variable_to_be_solved);
     }
 
@@ -465,56 +314,60 @@ namespace femus {
     PC subpc;
     KSPGetPC(subksp, &subpc);
 
-    PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, subpc);
-    if (!_standard_ASM) {
-      PCASMSetLocalSubdomains(subpc, _is_loc_idx.size(), &_is_ovl[0], &_is_loc[0]);
+    //BEGIN from here
+    
+    PCSetType(subpc, (char*) PCFIELDSPLIT);
+    for(int i=0; i<_is_loc_idx.size(); i++ ){
+      PCFieldSplitSetIS( subpc, NULL, _is_loc[i]);
     }
-    PCASMSetOverlap(subpc, _overlap);
-    //PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
-
+    
     KSPSetUp(subksp);
 
-    KSP* subksps;
-    PCASMGetSubKSP(subpc, &_nlocal, PETSC_NULL, &subksps);
+    
+    
+//     KSP* subksps;
+//     PCASMGetSubKSP(subpc, &_nlocal, PETSC_NULL, &subksps);
+// 
+//     PetscReal epsilon = 1.e-16;
+//     if (!_standard_ASM) {
+//       for (int i = 0; i < _block_type_range[0]; i++) {
+//         PC subpcs;
+//         KSPGetPC(subksps[i], &subpcs);
+//         KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
+//         KSPSetFromOptions(subksps[i]);
+//         PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND, subpcs);
+//         PCFactorSetZeroPivot(subpcs, epsilon);
+//         PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+//       }
+//       for (int i = _block_type_range[0]; i < _block_type_range[1]; i++) {
+//         PC subpcs;
+//         KSPGetPC(subksps[i], &subpcs);
+//         KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
+//         KSPSetFromOptions(subksps[i]);
+//         if (this->_preconditioner_type == ILU_PRECOND)
+//           PCSetType(subpcs, (char*) PCILU);
+//         else
+//           PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
+//         PCFactorSetZeroPivot(subpcs, epsilon);
+//         PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+//       }
+//     } else {
+//       for (int i = 0; i < _nlocal; i++) {
+//         PC subpcs;
+//         KSPGetPC(subksps[i], &subpcs);
+//         KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
+//         KSPSetFromOptions(subksps[i]);
+//         if (this->_preconditioner_type == ILU_PRECOND)
+//           PCSetType(subpcs, (char*) PCILU);
+//         else
+//           PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
+//         PCFactorSetZeroPivot(subpcs, epsilon);
+//         PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+//       }
+//     }
 
-    PetscReal epsilon = 1.e-16;
-    if (!_standard_ASM) {
-      for (int i = 0; i < _block_type_range[0]; i++) {
-        PC subpcs;
-        KSPGetPC(subksps[i], &subpcs);
-        KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
-        KSPSetFromOptions(subksps[i]);
-        PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND, subpcs);
-        PCFactorSetZeroPivot(subpcs, epsilon);
-        PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-      }
-      for (int i = _block_type_range[0]; i < _block_type_range[1]; i++) {
-        PC subpcs;
-        KSPGetPC(subksps[i], &subpcs);
-        KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
-        KSPSetFromOptions(subksps[i]);
-        if (this->_preconditioner_type == ILU_PRECOND)
-          PCSetType(subpcs, (char*) PCILU);
-        else
-          PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
-        PCFactorSetZeroPivot(subpcs, epsilon);
-        PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-      }
-    } else {
-      for (int i = 0; i < _nlocal; i++) {
-        PC subpcs;
-        KSPGetPC(subksps[i], &subpcs);
-        KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
-        KSPSetFromOptions(subksps[i]);
-        if (this->_preconditioner_type == ILU_PRECOND)
-          PCSetType(subpcs, (char*) PCILU);
-        else
-          PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
-        PCFactorSetZeroPivot(subpcs, epsilon);
-        PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-      }
-    }
-
+    //END here
+    
     if (level < levelMax) {   //all but finest
       PetscVector* EPSp = static_cast< PetscVector* >(_EPS);
       Vec EPS = EPSp->vec();
