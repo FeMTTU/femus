@@ -51,23 +51,22 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("U", LAGRANGE, FIRST);
-  mlSol.AddSolution("V", LAGRANGE, SERENDIPITY);
-  mlSol.AddSolution("W", LAGRANGE, SECOND);
-  mlSol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, ZERO);
-  mlSol.AddSolution("T", DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("Thom", LAGRANGE, SECOND);
+  mlSol.AddSolution("ThomAdj", LAGRANGE, SECOND);
+  mlSol.AddSolution("Tcont", LAGRANGE, SECOND);
 
   mlSol.Initialize("All");    // initialize all varaibles to zero
 
-  mlSol.Initialize("U", InitalValueU);
-  mlSol.Initialize("P", InitalValueP);
-  mlSol.Initialize("T", InitalValueT);    // note that this initialization is the same as piecewise constant element
-
+  mlSol.Initialize("Thom", InitalValueU);
+  mlSol.Initialize("ThomAdj", InitalValueP);
+  mlSol.Initialize("Tcont", InitalValueT);    // note that this initialization is the same as piecewise constant element
+ 
+  
   // print solutions
   std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("U");
-  variablesToBePrinted.push_back("P");
-  variablesToBePrinted.push_back("T");
+  variablesToBePrinted.push_back("Thom");
+  variablesToBePrinted.push_back("ThomAdj");
+  variablesToBePrinted.push_back("Tcont");
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
