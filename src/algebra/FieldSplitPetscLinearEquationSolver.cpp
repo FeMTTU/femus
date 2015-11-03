@@ -151,8 +151,8 @@ namespace femus {
 	_is_loc_idx[i][j] = offset + j;
       }
       PetscErrorCode ierr;
-      ierr = ISCreateGeneral(MPI_COMM_SELF, _is_loc_idx[i].size(), &_is_loc_idx[i][0], PETSC_USE_POINTER, &_is_loc[i]);
-      CHKERRABORT(MPI_COMM_SELF, ierr);
+      ierr = ISCreateGeneral(MPI_COMM_WORLD, _is_loc_idx[i].size(), &_is_loc_idx[i][0], PETSC_USE_POINTER, &_is_loc[i]);
+      CHKERRABORT(MPI_COMM_WORLD, ierr);
     }
 
     clock_t end_time = clock();
@@ -317,7 +317,7 @@ namespace femus {
     //BEGIN from here
     
     PCSetType(subpc, (char*) PCFIELDSPLIT);
-    for(int i=0; i<_is_loc_idx.size(); i++ ){
+    for(int i=0; i<_is_loc.size(); i++ ){
       PCFieldSplitSetIS( subpc, NULL, _is_loc[i]);
     }
     
