@@ -591,7 +591,9 @@ void Mesh::FillISvector(elem *elc) {
   
   ghost_nd[0].resize(_nprocs);   
   ghost_nd[1].resize(_nprocs);
-    
+  ghost_nd_mts[0].resize(_nprocs);  
+  ghost_nd_mts[1].resize(_nprocs);
+  
   for(int isdom=0; isdom<_nprocs; isdom++) {
     ghost_nd[2][isdom].resize(ghost_size[2][isdom]);
     ghost_nd_mts[2][isdom].resize(ghost_size[2][isdom]);
@@ -635,6 +637,9 @@ void Mesh::FillISvector(elem *elc) {
   //BEGIN building for k = 0, 1
 
   for(unsigned k = 0; k < 2; k++){
+    
+    IS_Gmt2Mts_dof[k].assign(GetDofNumber(2),GetDofNumber(2)-1);
+    
     std::vector < unsigned > ownedGhostCounter( _nprocs , 0);
     
     unsigned counter = 0;
@@ -658,7 +663,7 @@ void Mesh::FillISvector(elem *elc) {
 	  ghost_nd_mts[k][isdom][counter] = IS_Gmt2Mts_dof[k][ ghost_nd[k][isdom][inode] ];	
 	}
 	else{ // owned ghost nodes
-		
+	  std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::endl;	
 	  IS_Gmt2Mts_dof[k][ ghost_nd[k][isdom][inode] ] = counter;
 	  counter++;
 	  ownedGhostCounter[isdom]++;
@@ -682,9 +687,9 @@ void Mesh::FillISvector(elem *elc) {
       own_size[k][isdom] += ownedGhostCounter[isdom];
     }
   
-    for (int inode=0; inode<GetDofNumber(2); inode++){
-      std::cout<<"ciao"<<IS_Gmt2Mts_dof[k][inode]<<"bla"<<GetDofNumber(k)-1<<std::endl;
-    }
+//     for (int inode=0; inode<GetDofNumber(2); inode++){
+//       std::cout<<"ciao"<<IS_Gmt2Mts_dof[k][inode]<<"bla"<<GetDofNumber(2)-1<<std::endl;
+//     }
   }
 
    //END building for k = 0, 1
