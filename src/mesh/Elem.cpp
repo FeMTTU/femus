@@ -257,10 +257,10 @@ void elem::ReorderMeshNodes( const std::vector < unsigned > &nodeMapping){
     for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
       _kvert[iel][inode] =  nodeMapping[ _kvert[iel][inode] -1u] + 1u;
     }
-//     for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
-//       std::cout<<_kvert[iel][inode]-1u<<" ";
-//     }
-//     std::cout<<std::endl;
+    for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
+      std::cout<<_kvert[iel][inode]-1u<<" ";
+    }
+    std::cout<<std::endl;
 
   }
 
