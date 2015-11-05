@@ -559,16 +559,15 @@ void Mesh::FillISvector(elem *elc) {
   // ghost nodes
   
   for(int k = 0; k < 3; k++){
-    npart.assign(GetDofNumber(2), 0);
-    ghost_size[k].assign(_nprocs,0);
-    
+    ghost_size[k].assign(_nprocs,0);   
     for(int isdom = 0; isdom < _nprocs; isdom++){
+      std::map < unsigned, bool > mymap;
       for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
 	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
 	  unsigned ii = el->GetElementVertexIndex(iel,inode)-1;
-	  if(npart[ii] < isdom + 1){
-	    if(ii < MetisOffset[2][isdom]){
-	      npart[ii] = isdom + 1;
+	  if(ii < MetisOffset[2][isdom]){
+	     if ( mymap.count(ii) == 0) {
+	      mymap[ii] = true;
 	      ghost_size[k][isdom]++;
 	    }
 	  }
@@ -584,16 +583,15 @@ void Mesh::FillISvector(elem *elc) {
       if (k == 2) ghost_nd_mts[k][isdom].resize(ghost_size[k][isdom]);
     }
 
-    npart.assign (GetDofNumber(2), 0);
     ghost_size[k].assign(_nprocs,0);
-  
     for(int isdom = 0; isdom < _nprocs; isdom++){
+      std::map < unsigned, unsigned > mymap;
       for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
 	for (unsigned inode=0; inode<el->GetElementDofNumber(iel, k); inode++) {
 	  unsigned ii=el->GetElementVertexIndex(iel, inode) - 1;
-	  if(npart[ii] < isdom + 1){
-	    npart[ii] = isdom + 1;
-	    if(ii < MetisOffset[2][isdom]){
+	  if(ii < MetisOffset[2][isdom]){
+	    if ( mymap.count(ii) == 0) {
+	      mymap[ii] = ii;
 	      if ( k == 2 ) ghost_nd_mts[k][isdom][ghost_size[k][isdom]]=ii;//IS_Gmt2Mts_dof[2][ii];
 	      ghost_nd[k][isdom][ghost_size[k][isdom]]=ii;
 	      ghost_size[k][isdom]++;	      
@@ -628,8 +626,16 @@ void Mesh::FillISvector(elem *elc) {
       ghost_nd_mts[k][isdom].resize(0);
       for (unsigned inode = 0; inode < ghost_size[k][isdom]; inode++){
 	unsigned ghostNode = ghost_nd[k][isdom][inode];
-	unsigned ksdom = isdom-1;
-	while( ghostNode < MetisOffset[2][ksdom] ) ksdom--;
+	
+	unsigned isdom0 = 0;
+	unsigned isdom1 = isdom ;
+	unsigned ksdom  = isdom /2;
+	while( ghostNode < MetisOffset[2][ksdom] || ghostNode >= MetisOffset[2][ksdom + 1] ){
+	  if( ghostNode < MetisOffset[2][ksdom] ) isdom1 = ksdom;
+	  else isdom0 = ksdom + 1;
+	  ksdom = ( isdom0 + isdom1 ) / 2;
+	}
+	
 	int upperBound = MetisOffset[2][ksdom] + own_size[k][ksdom];
 	if( ghostNode < upperBound || IS_Gmt2Mts_dof[k][ ghostNode ] != GetDofNumber(2)){ // real ghost nodes
 	  unsigned ghostSize = ghost_nd_mts[k][isdom].size();
@@ -640,13 +646,14 @@ void Mesh::FillISvector(elem *elc) {
 	  IS_Gmt2Mts_dof[k][ ghostNode ] = counter;
 	  counter++;
 	  ownedGhostCounter[isdom]++;
-	    
+	  
+//	  ghost_nd[k].erase( ghost_nd[k].begin() + inode );
 	  for(unsigned jnode = inode; jnode < ghost_size[k][isdom]-1; jnode++ ){
 	    ghost_nd[k][isdom][jnode] = ghost_nd[k][isdom][jnode + 1];
 	  }
 	  
-	  ghost_size[k][isdom]--;
-	  ghost_nd[k][isdom].resize(ghost_size[k][isdom]);
+          ghost_size[k][isdom]--;
+          ghost_nd[k][isdom].resize(ghost_size[k][isdom]);
 	  inode--;
 	}	
       }
