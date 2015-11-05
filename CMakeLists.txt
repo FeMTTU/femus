@@ -155,7 +155,7 @@ OPTION(BUILD_MGAMR "Build the MGAMR" ON)
 # --
 OPTION(BUILD_PCFIELDSPLIT "Build the PCFIELDSPLIT apps" ON)
 
-
+OPTION(BUILD_AMR "Build the AMR apps" ON)
 
 #############################################################################################
 ### Build documentation (Doxygen)
