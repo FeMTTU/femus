@@ -473,7 +473,6 @@ void Mesh::FillISvector(elem *elc) {
   for( unsigned k = 0; k < 3; k++){
     own_size[k].assign(_nprocs,0);
   }
-  
   counter = 0;
   for(int isdom = 0; isdom < _nprocs; isdom++){
     for( unsigned k = 0; k < 3; k++){
@@ -501,7 +500,7 @@ void Mesh::FillISvector(elem *elc) {
     MetisOffset[2][i]= MetisOffset[2][i-1] + own_size[2][i-1];
   }
 
-  //reorder vertices and mid-points vs central points
+  //reorder quadratic(1) vs biquadratic(2)
   for(int isdom = 0; isdom < _nprocs; isdom++){
     for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
       for (unsigned inode=0; inode<el->GetElementDofNumber(iel,1); inode++) {
@@ -520,7 +519,7 @@ void Mesh::FillISvector(elem *elc) {
       }
     }
   }
-  //reorder vertices vs mid-points
+  //reorder linear(0) vs quadratic(1)
   for(int isdom = 0; isdom < _nprocs; isdom++){
     for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
       for (unsigned inode = 0; inode < el->GetElementDofNumber(iel,0); inode++) {
@@ -556,53 +555,40 @@ void Mesh::FillISvector(elem *elc) {
     IS_Gmt2Mts_dof[2][j]=j;
   }
 
-  // ghost nodes
+  //END building for k = 2
   
+  
+  
+  //BEGIN ghost nodes search
   for(int k = 0; k < 3; k++){
+    ghost_nd[k].resize(_nprocs);
+    ghost_nd_mts[k].resize(_nprocs);
     ghost_size[k].assign(_nprocs,0);   
     for(int isdom = 0; isdom < _nprocs; isdom++){
-      std::map < unsigned, bool > mymap;
+      std::map < unsigned, bool > ghostMap;
       for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
 	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
 	  unsigned ii = el->GetElementVertexIndex(iel,inode)-1;
 	  if(ii < MetisOffset[2][isdom]){
-	     if ( mymap.count(ii) == 0) {
-	      mymap[ii] = true;
+	     if ( ghostMap.count(ii) == 0) {
+	      ghostMap[ii] = true;
 	      ghost_size[k][isdom]++;
 	    }
 	  }
 	}
       }
-    }
-
-    ghost_nd[k].resize(_nprocs);
-    ghost_nd_mts[k].resize(_nprocs);
-
-    for(int isdom = 0; isdom < _nprocs; isdom++) {
-      ghost_nd[k][isdom].resize(ghost_size[k][isdom]);
-      if (k == 2) ghost_nd_mts[k][isdom].resize(ghost_size[k][isdom]);
-    }
-
-    ghost_size[k].assign(_nprocs,0);
-    for(int isdom = 0; isdom < _nprocs; isdom++){
-      std::map < unsigned, unsigned > mymap;
-      for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
-	for (unsigned inode=0; inode<el->GetElementDofNumber(iel, k); inode++) {
-	  unsigned ii=el->GetElementVertexIndex(iel, inode) - 1;
-	  if(ii < MetisOffset[2][isdom]){
-	    if ( mymap.count(ii) == 0) {
-	      mymap[ii] = ii;
-	      if ( k == 2 ) ghost_nd_mts[k][isdom][ghost_size[k][isdom]]=ii;//IS_Gmt2Mts_dof[2][ii];
-	      ghost_nd[k][isdom][ghost_size[k][isdom]]=ii;
-	      ghost_size[k][isdom]++;	      
-	    }
-	  }
-	}
+      ghost_size[k][isdom] = ghostMap.size();
+      ghost_nd[k][isdom].resize( ghostMap.size() );
+      ghost_nd_mts[k][isdom].resize( ghostMap.size() );
+      unsigned counter = 0;
+      for( std::map < unsigned, bool >::iterator it = ghostMap.begin(); it != ghostMap.end(); it++ ){
+	ghost_nd[k][isdom][counter] = it->first;
+	ghost_nd_mts[k][isdom][counter] = it->first;
+	counter++;	
       }
     }
   }
-  //END building for k = 2
-
+  //END ghost nodes search
 
 
   //BEGIN building for k = 0, 1
