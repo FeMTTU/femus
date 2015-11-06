@@ -41,7 +41,7 @@ bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumb
 //   if (elemgroupnumber==6 && level<1) refine=1;
 //   if (elemgroupnumber==7 && level<2) refine=1;
 //   if (elemgroupnumber==8 && level<3) refine=1;
-  
+
   return refine;
 
 }
@@ -86,12 +86,12 @@ int main(int argc, char** args) {
 
   // add variables to mlSol
   mlSol.AddSolution("U", LAGRANGE, SECOND);
- 
+
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
- 
+
   mlSol.GenerateBdc("All");
 
   // define the multilevel problem attach the mlSol object to it
@@ -182,21 +182,21 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
   unsigned solUIndex;
   solUIndex = mlSol->GetIndex("U");    // get the position of "T" in the ml_sol object
   unsigned solUType = mlSol->GetSolutionType(solUIndex);    // get the finite element type for "T"
-  
+
   unsigned solUPdeIndex;
   solUPdeIndex = mlPdeSys->GetSolPdeIndex("U");    // get the position of "T" in the pdeSys object
 
   vector < adept::adouble >  solU; // local solution
   vector< adept::adouble > aResU; // local redidual vector
-  
-  vector < vector < double > > coordX(dim);    // local coordinates
-  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
+  vector < vector < double > > crdX(dim);    // local coordinates
+  unsigned crdXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   solU.reserve(maxSize);
   aResU.reserve(maxSize);
 
   for (unsigned  k = 0; k < dim; k++) {
-    coordX[k].reserve(maxSize);
+    crdX[k].reserve(maxSize);
   }
 
   vector <double> phi;  // local test function
@@ -224,21 +224,22 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
   for (int iel = msh->IS_Mts2Gmt_elem_offset[iproc]; iel < msh->IS_Mts2Gmt_elem_offset[iproc + 1]; iel++) {
 
     unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
-    short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
+    short unsigned kelGeom = el->GetElementType( kel );    // element geometry type
 
-    unsigned nDofsU = el->GetElementDofNumber(kel, solUType);    // number of solution element dofs
-    unsigned nDofsX = el->GetElementDofNumber(kel, coordXType);    // number of solution element dofs
-     
+    unsigned nDofsU = el->GetElementDofNumber( kel, solUType );    // number of solution element dofs
+    unsigned nDofsX = el->GetElementDofNumber( kel, crdXType );    // number of solution element dofs
+
     // resize local arrays
-    KKDof.resize(nDofsU);
+    KKDof.resize( nDofsU );
 
-    solU.resize(nDofsU);
+    solU.resize( nDofsU );
 
     for (unsigned  k = 0; k < dim; k++) {
-      coordX[k].resize(nDofsU);
+      crdX[k].resize( nDofsX );
     }
 
-    std::fill(aResU.begin(), aResU.end(), 0);    //set aRes to zero
+    aResU.resize( nDofsU );
+    std::fill( aResU.begin(), aResU.end(), 0 );    //set aRes to zero
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsU; i++) {
@@ -247,14 +248,14 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
       solU[i] = (*sol->_Sol[solUIndex])(solUDof);      // global extraction and local storage for the solution
       KKDof[i] = pdeSys->GetKKDof(solUIndex, solUPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dofs
     }
-    
+
     // local storage of coordinates
     for (unsigned i = 0; i < nDofsX; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, coordXType);    // local to global coordinates node
-      unsigned coordXDof  = msh->GetMetisDof(iNode, coordXType);    // global to global mapping between coordinates node and coordinate dof
+      unsigned iNode = el->GetMeshDof(kel, i, crdXType);    // local to global coordinates node
+      unsigned coordXDof  = msh->GetMetisDof(iNode, crdXType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned k = 0; k < dim; k++) {
-        coordX[k][i] = (*msh->_coordinate->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
+        crdX[k][i] = (*msh->_coordinate->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -263,96 +264,34 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
       s.new_recording();
 
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solVType]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solUType]->GetGaussPointNumber(); ig++) {
         // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[kelGeom][solTType]->Jacobian(coordX, ig, weight, phiT, phiT_x, phiT_xx);
-        msh->_finiteElement[kelGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
-        phiP = msh->_finiteElement[kelGeom][solPType]->GetPhi(ig);
+        msh->_finiteElement[kelGeom][solUType]->Jacobian(crdX, ig, weight, phi, phi_x, phi_xx);
+
 
         // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-        adept::adouble solT_gss = 0;
-        vector < adept::adouble > gradSolT_gss(dim, 0.);
+        adept::adouble solUig = 0;
+        vector < adept::adouble > gradSolUig(dim, 0.);
 
-        for (unsigned i = 0; i < nDofsT; i++) {
-          solT_gss += phiT[i] * solT[i];
-
-          for (unsigned j = 0; j < dim; j++) {
-            gradSolT_gss[j] += phiT_x[i * dim + j] * solT[i];
-          }
-        }
-
-        vector < adept::adouble > solV_gss(dim, 0);
-        vector < vector < adept::adouble > > gradSolV_gss(dim);
-
-        for (unsigned  k = 0; k < dim; k++) {
-          gradSolV_gss[k].resize(dim);
-          std::fill(gradSolV_gss[k].begin(), gradSolV_gss[k].end(), 0);
-        }
-
-        for (unsigned i = 0; i < nDofsV; i++) {
-          for (unsigned  k = 0; k < dim; k++) {
-            solV_gss[k] += phiV[i] * solV[k][i];
-          }
+        for (unsigned i = 0; i < nDofsU; i++) {
+          solUig += phi[i] * solU[i];
 
           for (unsigned j = 0; j < dim; j++) {
-            for (unsigned  k = 0; k < dim; k++) {
-              gradSolV_gss[k][j] += phiV_x[i * dim + j] * solV[k][i];
-            }
+            gradSolUig[j] += phi_x[i * dim + j] * solU[i];
           }
-        }
-
-        adept::adouble solP_gss = 0;
-
-        for (unsigned i = 0; i < nDofsP; i++) {
-          solP_gss += phiP[i] * solP[i];
         }
 
         double nu = 1.;
-        double alpha = 1.;
-        double beta = 2000.;
 
-        // *** phiT_i loop ***
-        for (unsigned i = 0; i < nDofsT; i++) {
-          adept::adouble Temp = 0.;
+        // *** phiU_i loop ***
+        for (unsigned i = 0; i < nDofsU; i++) {
+          adept::adouble LaplaceU = 0.;
 
           for (unsigned j = 0; j < dim; j++) {
-            Temp +=  alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
-            Temp +=  phiT[i] * (solV_gss[j] * gradSolT_gss[j]);
+            LaplaceU +=  nu* phi_x[i * dim + j] * gradSolUig[j];
           }
-
-          aResT[i] += - Temp * weight;
-        } // end phiT_i loop
-
-
-        // *** phiV_i loop ***
-        for (unsigned i = 0; i < nDofsV; i++) {
-          vector < adept::adouble > NSV(dim, 0.);
-
-          for (unsigned j = 0; j < dim; j++) {
-            for (unsigned  k = 0; k < dim; k++) {
-              NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
-              NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
-            }
-          }
-
-          for (unsigned  k = 0; k < dim; k++) {
-            NSV[k] += -solP_gss * phiV_x[i * dim + k];
-          }
-
-          NSV[1] += -beta * solT_gss * phiV[i];
-
-          for (unsigned  k = 0; k < dim; k++) {
-            aResV[k][i] += - NSV[k] * weight;
-          }
-        } // end phiV_i loop
-
-        // *** phiP_i loop ***
-        for (unsigned i = 0; i < nDofsP; i++) {
-          for (int k = 0; k < dim; k++) {
-            aResP[i] += - (gradSolV_gss[k][k]) * phiP[i]  * weight;
-          }
-        } // end phiP_i loop
-
+          aResU[i] += ( phi[i] - LaplaceU ) * weight;
+        } // end phiU_i loop
       } // end gauss point loop
    // } // endif single element not refined or fine grid loop
 
@@ -360,44 +299,22 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
     // Add the local Matrix/Vector into the global Matrix/Vector
 
     //copy the value of the adept::adoube aRes in double Res and store them in RES
-    Res.resize(nDofsTVP);    //resize
+    Res.resize(nDofsU);    //resize
 
-    for (int i = 0; i < nDofsT; i++) {
-      Res[i] = -aResT[i].value();
-    }
-
-    for (int i = 0; i < nDofsV; i++) {
-      for (unsigned  k = 0; k < dim; k++) {
-        Res[ i + nDofsT + k * nDofsV ] = -aResV[k][i].value();
-      }
-    }
-
-    for (int i = 0; i < nDofsP; i++) {
-      Res[ i + nDofsT + dim * nDofsV ] = -aResP[i].value();
+    for (int i = 0; i < nDofsU; i++) {
+      Res[i] = -aResU[i].value();
     }
 
     RES->add_vector_blocked(Res, KKDof);
 
     //Extarct and store the Jacobian
     if (assembleMatrix) {
-      Jac.resize(nDofsTVP * nDofsTVP);
+      Jac.resize(nDofsU * nDofsU);
       // define the dependent variables
-      s.dependent(&aResT[0], nDofsT);
-
-      for (unsigned  k = 0; k < dim; k++) {
-        s.dependent(&aResV[k][0], nDofsV);
-      }
-
-      s.dependent(&aResP[0], nDofsP);
+      s.dependent(&aResU[0], nDofsU);
 
       // define the independent variables
-      s.independent(&solT[0], nDofsT);
-
-      for (unsigned  k = 0; k < dim; k++) {
-        s.independent(&solV[k][0], nDofsV);
-      }
-
-      s.independent(&solP[0], nDofsP);
+      s.independent(&solU[0], nDofsU);
 
       // get the and store jacobian matrix (row-major)
       s.jacobian(&Jac[0] , true);
