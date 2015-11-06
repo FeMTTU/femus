@@ -49,6 +49,10 @@ bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumb
   if (elemgroupnumber==7 && level<5) refine=1;
   if (elemgroupnumber==8 && level<6) refine=1;
 
+//   if (elemgroupnumber==6 && level<1) refine=1;
+//   if (elemgroupnumber==7 && level<2) refine=1;
+//   if (elemgroupnumber==8 && level<3) refine=1;
+  
   return refine;
 
 }

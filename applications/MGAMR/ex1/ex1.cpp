@@ -61,8 +61,8 @@ int main(int argc, char** args) {
   //read coarse level mesh and generate finers level meshes
   //mlMsh.ReadCoarseMesh("./input/box.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/square_tri.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_mixed.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/square_tri.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cube_mixed.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
   unsigned numberOfUniformLevels = 1;
@@ -78,14 +78,14 @@ int main(int argc, char** args) {
   mlSol.AddSolution("U", LAGRANGE, SECOND);
 //   mlSol.AddSolution("V", LAGRANGE, SERENDIPITY);
 //   mlSol.AddSolution("W", LAGRANGE, SECOND);
-//   mlSol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, ZERO);
-//   mlSol.AddSolution("T", DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSol.AddSolution("T", DISCONTINOUS_POLYNOMIAL, FIRST);
 //
   mlSol.Initialize("All");    // initialize all varaibles to zero
 //
   mlSol.Initialize("U", InitalValueU);
-//   mlSol.Initialize("P", InitalValueP);
-//   mlSol.Initialize("T", InitalValueT);    // note that this initialization is the same as piecewise constant element
+  mlSol.Initialize("P", InitalValueP);
+  mlSol.Initialize("T", InitalValueT);    // note that this initialization is the same as piecewise constant element
 //
 //   // print solutions
   
@@ -94,8 +94,8 @@ int main(int argc, char** args) {
   
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("U");
-//   variablesToBePrinted.push_back("P");
-//   variablesToBePrinted.push_back("T");
+  variablesToBePrinted.push_back("P");
+  variablesToBePrinted.push_back("T");
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);

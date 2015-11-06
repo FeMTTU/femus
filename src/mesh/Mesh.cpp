@@ -118,24 +118,16 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
               << std::endl;
   }
 
-  
-  ReorderMeshDofs(coords);
-    
+  el->SetNodeNumber(_nnodes);
+  //ReorderMeshDofs(coords);
+
   MeshMetisPartitioning meshmetispartitioning(*this);
   meshmetispartitioning.DoPartition();
-  
+
   FillISvector(NULL);
-  
+
   BuildAdjVtx();
   Buildkel();
-
-//   vector <double> coords_temp;
-//   for(int i=0;i<3;i++){
-//     coords_temp=coords[i];
-//     for(unsigned j=0;j<_nnodes;j++) {
-//       coords[i][GetMetisDof(j,2)]=coords_temp[j];
-//     }
-//   }
 
   _coordinate = new Solution(this);
 
@@ -173,26 +165,17 @@ void Mesh::GenerateCoarseBoxMesh(
 
   MeshTools::Generation::BuildBox(*this,coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,type_elem_flag);
 
-  ReorderMeshDofs(coords);
+  //ReorderMeshDofs(coords);
+  el->SetNodeNumber(_nnodes);
 
   MeshMetisPartitioning meshmetispartitioning(*this);
   meshmetispartitioning.DoPartition();
 
   FillISvector(NULL);
-    
+
   BuildAdjVtx();
 
   Buildkel();
-
- 
-
-//   vector <double> coords_temp;
-//   for(int i=0;i<3;i++){
-//     coords_temp=coords[i];
-//     for(unsigned j=0;j<_nnodes;j++) {
-//       coords[i][GetMetisDof(j,2)]=coords_temp[j];
-//     }
-//   }
 
   _coordinate = new Solution(this);
 
@@ -292,7 +275,7 @@ void Mesh::ReorderMeshDofs(vector < vector < double> > &coords) {
   el->SetCentralNodeNumber(_nnodes-nv1);
 
   el->SetNodeNumber(_nnodes);
-  
+
 }
 
 /**
@@ -416,344 +399,260 @@ void Mesh::FillISvector(elem *elc) {
   IS_Mts2Gmt_elem_offset.resize(_nprocs+1);
 
   IS_Mts2Gmt_elem_offset[0] = 0;
-  vector <unsigned> IS_Gmt2Mts_dof_counter(5,0);
 
   for(int k=0;k<5;k++) {
-    IS_Gmt2Mts_dof[k].assign(GetDofNumber(2),GetDofNumber(k)-1);
+    IS_Gmt2Mts_dof[k].assign(GetDofNumber(2), GetDofNumber(k)-1);
     // the non existing dofs will point to the last dof!
   }
   //END Initialization for k = 0,1,2,3,4
 
-  
-  for(int isdom=0;isdom<_nprocs;isdom++) { // isdom = iprocess
-    for(unsigned iel=0;iel<_nelem;iel++){
-      if( epart[iel] == isdom ){
-	//filling the piecewise IS_Mts2Gmt_elem metis->gambit
-	IS_Mts2Gmt_elem[ IS_Gmt2Mts_dof_counter[3] ] = iel;
-        IS_Gmt2Mts_dof_counter[3]++;
-	IS_Mts2Gmt_elem_offset[isdom+1]=IS_Gmt2Mts_dof_counter[3];
-      }
-    }
-  }
- 
-  el->ReorderMeshElements( IS_Mts2Gmt_elem, elc);
-  vector < int > epart_temp(_nelem);
-  for(unsigned iel=0;iel<_nelem;iel++){
-    epart_temp[iel]=epart[iel];
-  }
-  for(unsigned iel=0;iel<_nelem;iel++){
-    epart[iel] = epart_temp[IS_Mts2Gmt_elem[iel]];
-  }
-  for(unsigned iel=0;iel<_nelem;iel++){
-    IS_Mts2Gmt_elem[iel]=iel;
-  }
-  
-  
-  IS_Gmt2Mts_dof_counter[3]=0;
   //BEGIN building the  metis2Gambit_elem and  k = 3,4
-  for(int isdom=0;isdom<_nprocs;isdom++) { // isdom = iprocess
-    for(unsigned iel=0;iel<_nelem;iel++){
+  unsigned counter = 0;
+  for(int isdom = 0; isdom < _nprocs; isdom++) { // isdom = iprocess
+    for(unsigned iel = 0; iel < _nelem; iel++){
       if( epart[iel] == isdom ){
-	//filling the piecewise IS_Mts2Gmt_elem metis->gambit
-	//IS_Mts2Gmt_elem[ IS_Gmt2Mts_dof_counter[3] ] = iel;
-	IS_Gmt2Mts_dof[3][iel] = IS_Gmt2Mts_dof_counter[3];
-	IS_Gmt2Mts_dof_counter[3]++;
-	//IS_Mts2Gmt_elem_offset[isdom+1]=IS_Gmt2Mts_dof_counter[3];
-      }
-    }
-    for(unsigned k_dim=0;k_dim<_dimension+1;k_dim++){ //TODO maybe reverse the indexes
-      for(unsigned iel=0;iel<_nelem;iel++){
-     	if(epart[iel]==isdom){
-	  IS_Gmt2Mts_dof[4][iel+k_dim*_nelem]=IS_Gmt2Mts_dof_counter[4];
-	  IS_Gmt2Mts_dof_counter[4]++;
-	}
+	//filling the Metis to Mesh element mapping
+	IS_Mts2Gmt_elem[ counter ] = iel;
+        counter++;
+	IS_Mts2Gmt_elem_offset[isdom + 1] = counter;
       }
     }
   }
 
-  // ghost vs own nodes: 3 and 4 have no ghost nodes
-  for(unsigned k=3;k<5;k++){
+  el->ReorderMeshElements( IS_Mts2Gmt_elem, elc);
+
+  for(int isdom = 0; isdom < _nprocs; isdom++){
+    unsigned localSize = IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom];
+    unsigned offsetPWLD = IS_Mts2Gmt_elem_offset[isdom] * (_dimension + 1);
+    for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
+      epart[iel]=isdom;
+      IS_Mts2Gmt_elem[iel]=iel;
+      IS_Gmt2Mts_dof[3][iel]=iel;
+      //piecewise linear discontinuous
+      unsigned locIel = iel - IS_Mts2Gmt_elem_offset[isdom];
+      for(unsigned k = 0; k < _dimension + 1; k++){
+        unsigned locKel = ( k * localSize ) + locIel;
+        unsigned kel = offsetPWLD + locKel;
+        IS_Gmt2Mts_dof[4][iel + k * _nelem] =  kel;
+      }
+    }
+  }
+
+  // ghost vs owned nodes: 3 and 4 have no ghost nodes
+  for(unsigned k = 3; k < 5; k++){
     ghost_size[k].assign(_nprocs,0);
     own_size[k].assign(_nprocs,0);
   }
 
-  for(int isdom=0;isdom<_nprocs;isdom++){
-    own_size[3][isdom] = IS_Mts2Gmt_elem_offset[isdom+1]-IS_Mts2Gmt_elem_offset[isdom];
-    own_size[4][isdom] = (IS_Mts2Gmt_elem_offset[isdom+1]-IS_Mts2Gmt_elem_offset[isdom])*(_dimension+1);
+  for(int isdom = 0; isdom < _nprocs; isdom++){
+    own_size[3][isdom] = IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom];
+    own_size[4][isdom] = (IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom])*(_dimension+1);
   }
 
-  for(int k=3; k<5; k++) {
+  for(int k = 3; k < 5; k++) {
     ghost_nd[k].resize(_nprocs);
     ghost_nd_mts[k].resize(_nprocs);
-    for(int isdom=0; isdom<_nprocs; isdom++) {
-      ghost_nd[k][isdom].resize(ghost_size[k][isdom]);
-      ghost_nd_mts[k][isdom].resize(ghost_size[k][isdom]);
+    for(int isdom = 0; isdom < _nprocs; isdom++) {
+      ghost_nd[k][isdom].resize( ghost_size[k][isdom] );
+      ghost_nd_mts[k][isdom].resize( ghost_size[k][isdom] );
     }
   }
   //END building the  metis2Gambit_elem and  k = 3,4
-  
-  
-  //BEGIN building for k = 0,1,2
 
+
+  //BEGIN building for k = 2
   vector < unsigned > npart;
   npart.reserve(GetDofNumber(2));
 
-  
-
   MetisOffset.resize(5);
-    
-  for(unsigned k=2; k<3; k++) {
 
-    // Initialization for each k = 0,1,2
-    npart.assign(GetDofNumber(2),_nprocs);
-    IS_Gmt2Mts_dof_counter[k]=0;
-    IS_Gmt2Mts_dof[k].assign(GetDofNumber(2),GetDofNumber(k)-1);
-    
+  // Initialization for each k = 0,1,2
+  npart.assign(GetDofNumber(2),_nprocs);
+  IS_Gmt2Mts_dof[2].assign(GetDofNumber(2),GetDofNumber(2)-1);
+  
+  for( unsigned k = 0; k < 3; k++){
     own_size[k].assign(_nprocs,0);
-    
-    for(int isdom=0;isdom < _nprocs; isdom++){
-      for(unsigned i = IS_Mts2Gmt_elem_offset[isdom]; i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
-	unsigned iel=IS_Mts2Gmt_elem[i];
-	for (unsigned inode=0; inode < el->GetElementDofNumber(iel,k); inode++) {
+  }
+  counter = 0;
+  for(int isdom = 0; isdom < _nprocs; isdom++){
+    for( unsigned k = 0; k < 3; k++){
+      for( unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
+	unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel,k-1);
+	unsigned nodeEnd = el->GetElementDofNumber(iel,k);
+	for ( unsigned inode = nodeStart; inode < nodeEnd; inode++) {
 	  unsigned ii=el->GetElementVertexIndex(iel,inode) - 1;
 	  if(npart[ii] > isdom) {
 	    npart[ii] = isdom;
-	    IS_Gmt2Mts_dof[k][ii]=IS_Gmt2Mts_dof_counter[k];
-	    IS_Gmt2Mts_dof_counter[k]++;
-	    
-// 	    if( inode < el->GetElementDofNumber(iel,0) ){ //TODO
-// 	      own_size[0][isdom]++;
-// 	    }
-// 	    if( inode < el->GetElementDofNumber(iel,1) ){
-// 	      own_size[1][isdom]++;
-// 	    }
-	    
-	    own_size[2][isdom]++;
+	    IS_Gmt2Mts_dof[2][ii] = counter;
+	    counter++;
+	    for( int j = k; j < 3; j++){
+	      own_size[j][isdom]++;
+	    }
 	  }
 	}
       }
     }
-  
-   
-    MetisOffset[k].resize(_nprocs+1);
-    MetisOffset[k][0]=0;
-    for(int i = 1 ;i <= _nprocs; i++){
-      MetisOffset[k][i]= MetisOffset[k][i-1] + own_size[k][i-1];
-    }
-  
-    el->ReorderMeshNodes( IS_Gmt2Mts_dof[k]);
-     
-    if(GetLevel() == 0){
-      vector <double> coords_temp;
-      for(int i=0;i<3;i++){
-	coords_temp=coords[i];
-	  for(unsigned j=0;j<GetDofNumber(2);j++) {
-	    coords[i][IS_Gmt2Mts_dof[k][j]]=coords_temp[j];
-	}
+  }
+
+  MetisOffset[2].resize(_nprocs+1);
+  MetisOffset[2][0]=0;
+  for(int i = 1 ;i <= _nprocs; i++){
+    MetisOffset[2][i]= MetisOffset[2][i-1] + own_size[2][i-1];
+  }
+
+  //reorder quadratic(1) vs biquadratic(2)
+  for(int isdom = 0; isdom < _nprocs; isdom++){
+    for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
+      for (unsigned inode=0; inode<el->GetElementDofNumber(iel,1); inode++) {
+        for (unsigned jel = IS_Mts2Gmt_elem_offset[isdom]; jel<IS_Mts2Gmt_elem_offset[isdom+1]; jel++) {
+          for (unsigned jnode=el->GetElementDofNumber(jel,1); jnode<el->GetElementDofNumber(jel,2); jnode++) {
+            unsigned ii=el->GetElementVertexIndex(iel,inode)-1u;
+            unsigned jj=el->GetElementVertexIndex(jel,jnode)-1u;
+            unsigned i0=IS_Gmt2Mts_dof[2][ii];
+            unsigned i1=IS_Gmt2Mts_dof[2][jj];
+            if( i0 > i1 && i1 >= MetisOffset[2][isdom] ){
+              IS_Gmt2Mts_dof[2][ii] = i1;
+              IS_Gmt2Mts_dof[2][jj] = i0;
+            }
+          }
+        }
       }
     }
-     
-    
-    
-   
-  for(unsigned i=0;i<_nnodes;i++){
-    IS_Gmt2Mts_dof[k][i]=i;
   }
+  //reorder linear(0) vs quadratic(1)
+  for(int isdom = 0; isdom < _nprocs; isdom++){
+    for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
+      for (unsigned inode = 0; inode < el->GetElementDofNumber(iel,0); inode++) {
+        for (unsigned jel = IS_Mts2Gmt_elem_offset[isdom]; jel<IS_Mts2Gmt_elem_offset[isdom+1]; jel++) {
+          for (unsigned jnode=el->GetElementDofNumber(jel,0); jnode<el->GetElementDofNumber(jel,1); jnode++) {
+            unsigned ii=el->GetElementVertexIndex(iel,inode)-1u;
+            unsigned jj=el->GetElementVertexIndex(jel,jnode)-1u;
+            unsigned i0=IS_Gmt2Mts_dof[2][ii];
+            unsigned i1=IS_Gmt2Mts_dof[2][jj];
+            if( i0 > i1 && i1 >= MetisOffset[2][isdom] ){
+              IS_Gmt2Mts_dof[2][ii]=i1;
+              IS_Gmt2Mts_dof[2][jj]=i0;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  el->ReorderMeshNodes( IS_Gmt2Mts_dof[2]);
+
+  if(GetLevel() == 0){
+    vector <double> coords_temp;
+    for(int i=0;i<3;i++){
+      coords_temp=coords[i];
+        for(unsigned j=0;j<GetDofNumber(2);j++) {
+	  coords[i][IS_Gmt2Mts_dof[2][j]]=coords_temp[j];
+      }
+    }
+  }
+
+  for(unsigned j=0;j<GetDofNumber(2);j++) {
+    IS_Gmt2Mts_dof[2][j]=j;
+  }
+
+  //END building for k = 2
   
-//   //reorder vertices and mid-points vs central points
-//    for(int isdom = 0; isdom < _nprocs; isdom++){
-//      for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
-//        for (unsigned inode=0; inode<el->GetElementDofNumber(iel,1); inode++) {
-//          for (unsigned jel=0; jel<IS_Mts2Gmt_elem_offset[isdom+1]; jel++) {
-// 	   for (unsigned jnode=el->GetElementDofNumber(jel,1); jnode<el->GetElementDofNumber(jel,2); jnode++) {
-// 	     unsigned ii=el->GetElementVertexIndex(iel,inode)-1u;
-// 	     unsigned jj=el->GetElementVertexIndex(jel,jnode)-1u;
-// 	    
-// 	     unsigned i0=IS_Gmt2Mts_dof[k][ii];
-//              unsigned i1=IS_Gmt2Mts_dof[k][jj];
-// 	    
-// 	     if(i0 > MetisOffset[k][isdom] && i1 > MetisOffset[k][isdom] && i0>i1){
-// 	       IS_Gmt2Mts_dof[k][ii]=i1;
-// 	       IS_Gmt2Mts_dof[k][jj]=i0;
-// 	     }
-// 	   }
-//         }
-//       }
-//     }
-//   }
-//   //reorder vertices vs mid-points
-//   for (unsigned iel=0; iel<_nelem; iel++) {
-//     for (unsigned inode=0; inode<el->GetElementDofNumber(iel,0); inode++) {
-//       for (unsigned jel=0; jel<_nelem; jel++) {
-//         for (unsigned jnode=el->GetElementDofNumber(jel,0); jnode<el->GetElementDofNumber(jel,1); jnode++) {
-//           unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
-// 	  unsigned jj=el->GetElementVertexIndex(jel,jnode)-1;
-// 	  unsigned i0=dof_index[ii];
-//           unsigned i1=dof_index[jj];
-// 	  if(i0>i1){
-// 	    dof_index[ii]=i1;
-// 	    dof_index[jj]=i0;
-// 	  }
-// 	}
-//       }
-//     }
-//   }
-    
-    
-//     el->ReorderMeshNodes( IS_Gmt2Mts_dof[k]);
-//      
-//     if(GetLevel() == 0){
-//       vector <double> coords_temp;
-//       for(int i=0;i<3;i++){
-// 	coords_temp=coords[i];
-// 	  for(unsigned j=0;j<GetDofNumber(2);j++) {
-// 	    coords[i][IS_Gmt2Mts_dof[k][j]]=coords_temp[j];
-// 	}
-//       }
-//     }  
-     
-     
-     
-    for(unsigned j=0;j<GetDofNumber(2);j++) {
-      IS_Gmt2Mts_dof[k][j]=j;
-    } 
-    
-    
-    
-    
-    
-    
-    
-    // ghost nodes
-    npart.assign(GetDofNumber(2), 0);
-
-    ghost_size[k].assign(_nprocs,0);
-
+  
+  
+  //BEGIN ghost nodes search
+  for(int k = 0; k < 3; k++){
+    ghost_nd[k].resize(_nprocs);
+    ghost_nd_mts[k].resize(_nprocs);
+    ghost_size[k].assign(_nprocs,0);   
     for(int isdom = 0; isdom < _nprocs; isdom++){
+      std::map < unsigned, bool > ghostMap;
       for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
 	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
 	  unsigned ii = el->GetElementVertexIndex(iel,inode)-1;
-	  if(npart[ii] < isdom+1){
-	    npart[ii] = isdom+1;
-	    if( ii < MetisOffset[k][isdom]){
-	      ghost_size[k][isdom]++;
-	    }	    
-	  }
-	}
-      }
-    }
-
-    ghost_nd[k].resize(_nprocs);
-    ghost_nd_mts[k].resize(_nprocs);
-    for(int isdom=0; isdom<_nprocs; isdom++) {
-      ghost_nd[k][isdom].resize(ghost_size[k][isdom]);
-      ghost_nd_mts[k][isdom].resize(ghost_size[k][isdom]);
-    }
-
-    npart.assign (GetDofNumber(2), 0);
-    ghost_size[k].assign(_nprocs,0);
-
-    for(int isdom=0;isdom<_nprocs;isdom++) {
-      for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
-	unsigned iel=IS_Mts2Gmt_elem[i];
-	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
-	  unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
-	  if(npart[ii]<isdom+1){
-	    npart[ii]=isdom+1;
-	    
-	    //if(npart[ii] != isdom){
-	    if(ii < MetisOffset[k][isdom]){
-	      ghost_nd_mts[k][isdom][ghost_size[k][isdom]]=IS_Gmt2Mts_dof[k][ii];
-	      ghost_nd[k][isdom][ghost_size[k][isdom]]=ii;
+	  if(ii < MetisOffset[2][isdom]){
+	     if ( ghostMap.count(ii) == 0) {
+	      ghostMap[ii] = true;
 	      ghost_size[k][isdom]++;
 	    }
 	  }
 	}
+      }
+      ghost_size[k][isdom] = ghostMap.size();
+      ghost_nd[k][isdom].resize( ghostMap.size() );
+      ghost_nd_mts[k][isdom].resize( ghostMap.size() );
+      unsigned counter = 0;
+      for( std::map < unsigned, bool >::iterator it = ghostMap.begin(); it != ghostMap.end(); it++ ){
+	ghost_nd[k][isdom][counter] = it->first;
+	ghost_nd_mts[k][isdom][counter] = it->first;
+	counter++;	
       }
     }
   }
-  //END building for k = 0,1,2
+  //END ghost nodes search
 
-  vector <unsigned short> node_count;
-  node_count.reserve(GetDofNumber(2));
-  
-  for(unsigned k=0; k<2; k++) {
 
-    // Initialization for each k = 0,1,2
-    npart.assign(GetDofNumber(2),_nprocs);
+  //BEGIN building for k = 0, 1
 
-    for(int isdom=0;isdom < _nprocs; isdom++){
-      for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
-	unsigned iel=IS_Mts2Gmt_elem[i];
-	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
-	  unsigned ii=el->GetElementVertexIndex(iel,inode) - 1;
-	  if(npart[ii] > isdom) {
-	    npart[ii] = isdom;
-	    IS_Gmt2Mts_dof[k][ii]=IS_Gmt2Mts_dof_counter[k];
-	    IS_Gmt2Mts_dof_counter[k]++;
-	  }
+  for(unsigned k = 0; k < 2; k++){
+    
+    IS_Gmt2Mts_dof[k].assign(GetDofNumber(2),GetDofNumber(2));
+    std::vector < unsigned > ownedGhostCounter( _nprocs , 0);
+    unsigned counter = 0;
+    
+    for(int isdom = 0; isdom < _nprocs; isdom++){
+      
+      //owned nodes
+      for(unsigned inode = MetisOffset[2][isdom]; inode < own_size[k][isdom] + MetisOffset[2][isdom]; inode++) {
+	IS_Gmt2Mts_dof[k][inode] = counter;
+	counter++;
+      }
+            
+      //ghost nodes
+      ghost_nd_mts[k][isdom].reserve(ghost_size[k][isdom]);
+      ghost_nd_mts[k][isdom].resize(0);
+      for (unsigned inode = 0; inode < ghost_size[k][isdom]; inode++){
+	unsigned ghostNode = ghost_nd[k][isdom][inode];
+	
+	unsigned isdom0 = 0;
+	unsigned isdom1 = isdom ;
+	unsigned ksdom  = isdom /2;
+	while( ghostNode < MetisOffset[2][ksdom] || ghostNode >= MetisOffset[2][ksdom + 1] ){
+	  if( ghostNode < MetisOffset[2][ksdom] ) isdom1 = ksdom;
+	  else isdom0 = ksdom + 1;
+	  ksdom = ( isdom0 + isdom1 ) / 2;
 	}
+	
+	int upperBound = MetisOffset[2][ksdom] + own_size[k][ksdom];
+	if( ghostNode < upperBound || IS_Gmt2Mts_dof[k][ ghostNode ] != GetDofNumber(2)){ // real ghost nodes
+	  unsigned ghostSize = ghost_nd_mts[k][isdom].size();
+	  ghost_nd_mts[k][isdom].resize(ghostSize + 1);
+	  ghost_nd_mts[k][isdom][ghostSize] = IS_Gmt2Mts_dof[k][ ghostNode ];
+	}
+	else { // owned ghost nodes
+	  IS_Gmt2Mts_dof[k][ ghostNode ] = counter;
+	  counter++;
+	  ownedGhostCounter[isdom]++;
+	  
+//	  ghost_nd[k].erase( ghost_nd[k].begin() + inode );
+	  for(unsigned jnode = inode; jnode < ghost_size[k][isdom]-1; jnode++ ){
+	    ghost_nd[k][isdom][jnode] = ghost_nd[k][isdom][jnode + 1];
+	  }
+	  
+          ghost_size[k][isdom]--;
+          ghost_nd[k][isdom].resize(ghost_size[k][isdom]);
+	  inode--;
+	}	
       }
     }
 
-    // ghost vs own nodes
-    node_count.assign(GetDofNumber(2), 0);
-
-    ghost_size[k].assign(_nprocs,0);
-    own_size[k].assign(_nprocs,0);
-
-    for(int isdom=0;isdom<_nprocs;isdom++){
-      for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
-	unsigned iel=IS_Mts2Gmt_elem[i];
-	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
-	  unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
-	  if(node_count[ii] < isdom+1){
-	    node_count[ii]=isdom+1;
-	    if( npart[ii] != isdom){
-	      ghost_size[k][isdom]++;
-	    }
-	    else {
-	      own_size[k][isdom]++;
-	    }
-	  }
-	}
-      }
-    }
-
-    ghost_nd[k].resize(_nprocs);
-    ghost_nd_mts[k].resize(_nprocs);
-    for(int isdom=0; isdom<_nprocs; isdom++) {
-      ghost_nd[k][isdom].resize(ghost_size[k][isdom]);
-      ghost_nd_mts[k][isdom].resize(ghost_size[k][isdom]);
-    }
-
-    node_count.assign (GetDofNumber(2), 0);
-    ghost_size[k].assign(_nprocs,0);
-
-    for(int isdom=0;isdom<_nprocs;isdom++) {
-      for(unsigned i=IS_Mts2Gmt_elem_offset[isdom];i<IS_Mts2Gmt_elem_offset[isdom+1];i++){
-	unsigned iel=IS_Mts2Gmt_elem[i];
-	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
-	  unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
-	  if(node_count[ii]<isdom+1){
-	    node_count[ii]=isdom+1;
-	    if(npart[ii] != isdom){
-	      ghost_nd_mts[k][isdom][ghost_size[k][isdom]]=IS_Gmt2Mts_dof[k][ii];
-	      ghost_nd[k][isdom][ghost_size[k][isdom]]=ii;
-	      ghost_size[k][isdom]++;
-	    }
-	  }
-	}
-      }
+    for(int isdom = 0; isdom < _nprocs; isdom++){
+      own_size[k][isdom] += ownedGhostCounter[isdom];
     }
   }
+
+  //END building for k = 0, 1
   
-  
-  
-  
-  
-  
-  
+    
   //BEGIN Initilize and set all the Offsets
   MetisOffset.resize(5);
   for(int k=0;k<5;k++) {
@@ -764,8 +663,85 @@ void Mesh::FillISvector(elem *elc) {
     }
   }
   //END Initilize and set all the Offsets
-
+  
 }
+  
+  
+
+//   vector <unsigned short> node_count;
+//   node_count.reserve(GetDofNumber(2));
+//
+//   for(unsigned k=0; k<2; k++) {
+//
+//     // Initialization for each k = 0,1,2
+//     npart.assign(GetDofNumber(2),_nprocs);
+//     unsigned counter = 0;
+//     for(int isdom = 0; isdom < _nprocs; isdom++){
+//       for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
+// 	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
+// 	  unsigned ii=el->GetElementVertexIndex(iel,inode) - 1;
+// 	  if(npart[ii] > isdom) {
+// 	    npart[ii] = isdom;
+// 	    IS_Gmt2Mts_dof[k][ii] = counter;
+// 	    counter++;
+// 	  }
+// 	}
+//       }
+//     }
+//
+//     // ghost vs own nodes
+//     node_count.assign(GetDofNumber(2), 0);
+//
+//     ghost_size[k].assign(_nprocs,0);
+//     own_size[k].assign(_nprocs,0);
+//
+//     for(int isdom = 0; isdom < _nprocs; isdom++){
+//       for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
+// 	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
+// 	  unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
+// 	  if(node_count[ii] < isdom+1){
+// 	    node_count[ii]=isdom+1;
+// 	    if( npart[ii] != isdom){
+// 	      ghost_size[k][isdom]++;
+// 	    }
+// 	    else {
+// 	      own_size[k][isdom]++;
+// 	    }
+// 	  }
+// 	}
+//       }
+//     }
+//
+//     ghost_nd[k].resize(_nprocs);
+//     ghost_nd_mts[k].resize(_nprocs);
+//     for(int isdom=0; isdom<_nprocs; isdom++) {
+//       ghost_nd[k][isdom].resize(ghost_size[k][isdom]);
+//       ghost_nd_mts[k][isdom].resize(ghost_size[k][isdom]);
+//     }
+//
+//     node_count.assign (GetDofNumber(2), 0);
+//     ghost_size[k].assign(_nprocs,0);
+//
+//     for(int isdom = 0; isdom < _nprocs; isdom++){
+//       for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
+// 	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
+// 	  unsigned ii=el->GetElementVertexIndex(iel,inode)-1;
+// 	  if(node_count[ii]<isdom+1){
+// 	    node_count[ii]=isdom+1;
+// 	    if(npart[ii] != isdom){
+// 	      ghost_nd_mts[k][isdom][ghost_size[k][isdom]]=IS_Gmt2Mts_dof[k][ii];
+// 	      ghost_nd[k][isdom][ghost_size[k][isdom]]=ii;
+// 	      ghost_size[k][isdom]++;
+// 	    }
+// 	  }
+// 	}
+//       }
+//     }
+//   }
+//    //END building for k = 0, 1
+
+ 
+
 
 
 // void Mesh::FillISvector() {
