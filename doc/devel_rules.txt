@@ -79,12 +79,20 @@ FEMuS includes,
 ###### GIT CHEAT SHEET ###########
 ##################################
 
+- First golden rule: using the manual never hurts.
+
 - Set name and email in your computer:
 
-git config --global user.name "Name Surname"
-git config --global user.email "name.surname@example.com"
+  git config --global user.name "Name Surname"
+  git config --global user.email "name.surname@example.com"
 
-- Using the manual never hurts...
+  To check what configuration you obtained, do 
+
+  git config --list 
+
+  (this shows you more than you see with "git config -e"
+  because it also reads other git configuration files,
+  such as $HOME/.gitconfig)
 
 - To contribute:
   Create a personal github account 
