@@ -438,9 +438,9 @@ void Mesh::FillISvector(elem *elc) {
     }
   }
 
-  for(unsigned iel=0; iel<_nelem; iel++){
-    std::cout<<"bla"<<IS_Gmt2Mts_dof[4][iel+ 2 * _nelem]<<"buh"<<GetMetisDof(2, iel, 4)<<std::endl;
-  }
+//   for(unsigned iel=0; iel<_nelem; iel++){
+//     std::cout<<"bla"<<IS_Gmt2Mts_dof[4][iel+ 2 * _nelem]<<"buh"<<GetMetisDof(2, iel, 4)<<std::endl;
+//   }
   
   // ghost vs owned nodes: 3 and 4 have no ghost nodes
   for(unsigned k = 3; k < 5; k++){

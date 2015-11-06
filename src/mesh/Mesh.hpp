@@ -105,32 +105,42 @@ public:
     }
 
     /** Get the metis dof from the gambit dof */
-    const unsigned GetMetisDof(unsigned inode, short unsigned SolType) const {
-      return IS_Gmt2Mts_dof[SolType][inode];
+    const unsigned GetMetisDof(unsigned inode, short unsigned solType) const {
+      return IS_Gmt2Mts_dof[solType][inode];
     }
     
-     const unsigned GetMetisDof(unsigned inode, unsigned iel, short unsigned SolType) const {
-       if(SolType == 0 || SolType == 1){
-         return IS_Gmt2Mts_dof[SolType][inode];
-       }  
-       if (SolType == 2) {
-         return inode;
-       }
-       if (SolType == 3) {
-         return iel;   
-	  }
-       if (SolType == 4) {
-         for(int isdom = 0; isdom < _nprocs; isdom++){
-           if(IS_Mts2Gmt_elem_offset[isdom] < iel && iel < IS_Mts2Gmt_elem_offset[isdom+1]){
-             unsigned localSize = IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom];
-             unsigned offsetPWLD = IS_Mts2Gmt_elem_offset[isdom] * (_dimension + 1);
-             unsigned locIel = iel - IS_Mts2Gmt_elem_offset[isdom];
-             unsigned kel = offsetPWLD + ( inode * localSize ) + locIel;
-             return kel;
-           }
-         } 
-       }
-     }
+    const unsigned GetMetisDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const {
+       
+      unsigned dof;
+      switch(solType){
+	case 0:
+	  dof = IS_Gmt2Mts_dof[solType][ el->GetMeshDof( iel, i, solType) ];
+	  break;
+	case 1:
+	  dof = IS_Gmt2Mts_dof[solType][ el->GetMeshDof( iel, i, solType) ];
+	  break;
+	case 2:
+	  dof = el->GetMeshDof( iel, i, solType);
+	  break;
+	case 3:
+	  dof = iel;
+	  break;
+	case 4:
+	  for(int isdom = 0; isdom < _nprocs; isdom++){
+	    if(iel >= IS_Mts2Gmt_elem_offset[isdom] && iel < IS_Mts2Gmt_elem_offset[isdom+1]){
+	      
+	      if(isdom != _iproc) abort();
+	      
+	      unsigned localSize = IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom];
+	      unsigned offsetPWLD = IS_Mts2Gmt_elem_offset[isdom] * (_dimension + 1);
+	      unsigned locIel = iel - IS_Mts2Gmt_elem_offset[isdom];
+	      dof = offsetPWLD + ( i * localSize ) + locIel;
+	    }
+          } 
+        break;
+      }
+      return dof;
+    }
 
     /** To be added */
     const unsigned GetFaceIndex() const {
@@ -231,6 +241,7 @@ private:
     vector <unsigned> IS_Gmt2Mts_dof_offset[5]; //< map offset
     static const unsigned _END_IND[5];
     vector < vector < double > > coords;
+    
 };
 
 } //end namespace femus

@@ -330,7 +330,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsT; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, solTType);    // local to global solution node
-      unsigned solTDof = msh->GetMetisDof(iNode, solTType);    // global to global mapping between solution node and solution dof
+      unsigned solTDof = msh->GetMetisDof(i, kel, solTType);    // global to global mapping between solution node and solution dof
       solT[i] = (*sol->_Sol[solTIndex])(solTDof);      // global extraction and local storage for the solution
       KKDof[i] = pdeSys->GetKKDof(solTIndex, solTPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dofs
     }
@@ -338,7 +338,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsV; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, solVType);    // local to global solution node
-      unsigned solVDof = msh->GetMetisDof(iNode, solVType);    // global to global mapping between solution node and solution dof
+      unsigned solVDof = msh->GetMetisDof(i, kel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < dim; k++) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
@@ -348,7 +348,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     for (unsigned i = 0; i < nDofsP; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, solPType);    // local to global solution node
-      unsigned solPDof = msh->GetMetisDof(iNode, solPType);    // global to global mapping between solution node and solution dof
+      unsigned solPDof = msh->GetMetisDof(i, kel, solPType);    // global to global mapping between solution node and solution dof
       solP[i] = (*sol->_Sol[solPIndex])(solPDof);      // global extraction and local storage for the solution
       KKDof[i + nDofsT + dim * nDofsV] = pdeSys->GetKKDof(solPIndex, solPPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dof
     }
@@ -356,7 +356,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     // local storage of coordinates
     for (unsigned i = 0; i < nDofsX; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, coordXType);    // local to global coordinates node
-      unsigned coordXDof  = msh->GetMetisDof(iNode, coordXType);    // global to global mapping between coordinates node and coordinate dof
+      unsigned coordXDof  = msh->GetMetisDof(i, kel, coordXType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned k = 0; k < dim; k++) {
         coordX[k][i] = (*msh->_coordinate->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
