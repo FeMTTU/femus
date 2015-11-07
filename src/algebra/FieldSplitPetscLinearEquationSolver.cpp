@@ -136,15 +136,37 @@ namespace femus {
     clock_t SearchTime = 0;
     clock_t start_time = clock();
 
-    unsigned nVariables = variable_to_be_solved.size();
+//     unsigned nVariables = variable_to_be_solved.size();
+//     unsigned iproc = processor_id(); 
+//     
+//     _is_loc_idx.resize(nVariables);
+//     _is_loc.resize(nVariables);
+//     
+//     for( unsigned i = 0; i < nVariables; i++){
+//       unsigned offset = KKoffset[i][iproc];
+//       unsigned offsetp1 = KKoffset[i+1][iproc];
+//       unsigned variableSize = offsetp1 - offset;
+//       _is_loc_idx[i].resize(variableSize);
+//       for(int j = 0; j < variableSize; j++){
+// 	_is_loc_idx[i][j] = offset + j;
+//       }
+//       PetscErrorCode ierr;
+//       ierr = ISCreateGeneral(MPI_COMM_WORLD, _is_loc_idx[i].size(), &_is_loc_idx[i][0], PETSC_USE_POINTER, &_is_loc[i]);
+//       CHKERRABORT(MPI_COMM_WORLD, ierr);
+//     }
+    
+    
+    unsigned nVariables = 2;
     unsigned iproc = processor_id(); 
     
     _is_loc_idx.resize(nVariables);
     _is_loc.resize(nVariables);
     
     for( unsigned i = 0; i < nVariables; i++){
-      unsigned offset = KKoffset[i][iproc];
-      unsigned offsetp1 = KKoffset[i+1][iproc];
+      unsigned start = (i == 0) ? 0 : 3;
+      unsigned end = (i == 1) ? 3:4;
+      unsigned offset = KKoffset[start][iproc];
+      unsigned offsetp1 = KKoffset[end][iproc];
       unsigned variableSize = offsetp1 - offset;
       _is_loc_idx[i].resize(variableSize);
       for(int j = 0; j < variableSize; j++){
@@ -154,7 +176,7 @@ namespace femus {
       ierr = ISCreateGeneral(MPI_COMM_WORLD, _is_loc_idx[i].size(), &_is_loc_idx[i][0], PETSC_USE_POINTER, &_is_loc[i]);
       CHKERRABORT(MPI_COMM_WORLD, ierr);
     }
-
+    
     clock_t end_time = clock();
     SearchTime += (end_time - start_time);
     return SearchTime;
@@ -317,6 +339,7 @@ namespace femus {
     //BEGIN from here
     
     PCSetType(subpc, (char*) PCFIELDSPLIT);
+    PCFieldSplitSetType(subpc, PC_COMPOSITE_ADDITIVE);
     for(int i=0; i<_is_loc.size(); i++ ){
       PCFieldSplitSetIS( subpc, NULL, _is_loc[i]);
     }
