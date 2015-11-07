@@ -574,10 +574,7 @@ void Mesh::FillISvector(elem *elc) {
 	for (unsigned inode=0; inode<el->GetElementDofNumber(iel,k); inode++) {
 	  unsigned ii = el->GetElementVertexIndex(iel,inode)-1;
 	  if(ii < MetisOffset[2][isdom]){
-	     if ( ghostMap.count(ii) == 0) {
-	      ghostMap[ii] = true;
-	      ghost_size[k][isdom]++;
-	    }
+	    ghostMap[ii] = true;	 
 	  }
 	}
       }
