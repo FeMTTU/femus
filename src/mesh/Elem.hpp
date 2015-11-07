@@ -39,11 +39,11 @@ public:
 
     // reorder the element according to the new element mapping
     void ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc);
-    
+
     // reorder the nodes according to the new node mapping
     void ReorderMeshNodes( const std::vector < unsigned > &nodeMapping);
-    
-    
+
+
     /** To be Added */
     unsigned GetMeshDof(const unsigned iel,const unsigned &inode,const unsigned &type)const;
 
@@ -137,25 +137,7 @@ public:
     unsigned GetNodeNumber()const;
 
     /** To be Added */
-    unsigned GetVertexNodeNumber()const;
-
-    /** To be Added */
-    unsigned GetMidpointNodeNumber()const;
-
-    /** To be Added */
-    unsigned GetCentralNodeNumber()const;
-
-    /** To be Added */
     void SetNodeNumber(const unsigned &value);
-
-    /** To be Added */
-    void SetVertexNodeNumber(const unsigned &value);
-
-    /** To be Added */
-    void SetMidpointNodeNumber(const unsigned &value);
-
-    /** To be Added */
-    void SetCentralNodeNumber(const unsigned &value);
 
     /** To be Added */
     unsigned GetElementFaceNumber(const unsigned &iel,const unsigned &type=1)const;
@@ -183,10 +165,10 @@ public:
 
     /** To be Added */
     void SetIfFatherIsRefined(const unsigned &iel, const bool &refined);
-    
+
     /** To be Added */
     bool IsFatherRefined(const unsigned &iel) const;
- 
+
     /** To be Added */
     void SetNumberElementFather(const unsigned &value);
 
@@ -207,9 +189,8 @@ public:
 
     /** To be Added */
     unsigned GetChildElement(const unsigned &iel,const unsigned &json) const;
-    
+
     const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const;
-    unsigned int* _kvert_memory;
 
 private:
 
@@ -217,35 +198,32 @@ private:
     int **_kel;
     int *_kelMemory;
     unsigned _kelSize;
-    
+
     unsigned **_kvtel; //node->element
     unsigned *_kvtelMemory;
     unsigned *_nve;
-        
+
     unsigned **_kvert; //element -> nodes
     unsigned *_kvertMemory;
     unsigned _kvertSize;
-    
-    
+
     unsigned *_elr;
-    
-    
+
     unsigned **_childElem;
     unsigned *_childElemMemory;
     unsigned _childElemSize;
     bool _childElemFlag;
-   
+
     short unsigned *_elementType,*_elementGroup,*_elementMaterial; //element
-    
-        
-    unsigned _nvt,_nv0,_nv1,_nv2;
+
+    unsigned _nvt;
     unsigned _nel,_nelt[6];
     unsigned _nelr,_nelrt[6];
-    unsigned _ngroup; 
-    
+    unsigned _ngroup;
+
     bool *_nodeRegion;
     bool  _nodeRegionFlag;
-    bool *_elRef; //element
+    bool *_isFatherElementRefined; //element
     unsigned _nelf;
 
 };
@@ -259,7 +237,7 @@ private:
     {3, 6, 6,1,3},   //tri
     {2, 3, 3,1,2}    //line
   };
-  
+
  //number of dof objects, or "dof carriers" for every geometric element and every FE family
   const unsigned NDOFOBJS[6][5]= {
     {8,20,27,1,1},  //hex
@@ -268,7 +246,7 @@ private:
     {4, 8, 9,1,1},   //quad
     {3, 6, 6,1,1},   //tri
     {2, 3, 3,1,1}    //line
-  }; 
+  };
 
 /**
  * Number of elements obtained with one refinement
@@ -363,14 +341,14 @@ const unsigned NFACENODES[6][6][3] =
 
 
 const unsigned referenceElementDirection[6][3][2]={ //Endpoint1, Endpoint2 =rEED[elemem type][direction][0,1]
-  {	
+  {
     {23,21}, {20,22}, {24,25}
   },
   {
     {0,1}, {0,2}, {0,3}
   },
-  { 
-    {12,13}, {12,14}, {0,3}  
+  {
+    {12,13}, {12,14}, {0,3}
   },
   {
     {7,5},{4,6}
