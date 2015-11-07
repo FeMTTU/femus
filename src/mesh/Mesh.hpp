@@ -141,7 +141,7 @@ public:
 
 
     /** To be added */
-    void FillISvector(elem* elc);
+    void FillISvector(vector < int > &epart);
 
     /** To be added */
     void Buildkel();
@@ -162,8 +162,6 @@ public:
     vector< vector < int > > ghost_nd_mts[5];
 
     elem *el;  // topology object
-    vector < int > epart;
-    //int nsubdom;
     static bool (* _SetRefinementFlag)(const std::vector < double >& x,
                                        const int &ElemGroupNumber,const int &level);
     static bool _IsUserRefinementFunctionDefined;
@@ -197,9 +195,6 @@ private:
     /** Build the coarse to the fine projection matrix */
     void BuildCoarseToFineProjection(const unsigned& solType);
 
-//     /** Reorder mesh dofs in the following order: vertices, face, center */
-//     void ReorderMeshDofs(vector < vector < double> > &coords);
-
     //member-data
     int _nelem;                                //< number of elements
     unsigned _nnodes;                          //< number of nodes
@@ -210,7 +205,7 @@ private:
     vector <unsigned> IS_Gmt2Mts_dof[5];        //< dof map
     vector <unsigned> IS_Gmt2Mts_dof_offset[5]; //< map offset
     static const unsigned _END_IND[5];
-    vector < vector < double > > coords;
+    vector < vector < double > > _coords;
 
 };
 

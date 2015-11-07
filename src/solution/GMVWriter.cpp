@@ -226,11 +226,14 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 
     int icount=0;
     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-      for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-	if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	  var_el[icount]=_ml_mesh->GetLevel(ig)->epart[ii];
-	  icount++;
-	}
+      for(int isdom = 0; isdom < _nprocs; isdom++){
+        for( unsigned ii = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom];
+             ii < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; ii++){
+          if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+            var_el[icount]=isdom;
+            icount++;
+          }
+        }
       }
     }
     fout.write((char *)&var_el[0],nel*sizeof(double));
@@ -606,7 +609,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
       for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
       unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
       if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
-	  var_el[icount]=_ml_mesh->GetLevel(ig)->epart[kel];
+	  var_el[icount]=_iproc;
 	  icount++;
 	}
       }

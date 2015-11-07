@@ -191,7 +191,6 @@ public:
     unsigned GetChildElement(const unsigned &iel,const unsigned &json) const;
 
     const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const;
-    unsigned int* _kvert_memory;
 
 private:
 
@@ -208,9 +207,7 @@ private:
     unsigned *_kvertMemory;
     unsigned _kvertSize;
 
-
     unsigned *_elr;
-
 
     unsigned **_childElem;
     unsigned *_childElemMemory;
@@ -219,15 +216,14 @@ private:
 
     short unsigned *_elementType,*_elementGroup,*_elementMaterial; //element
 
-
-    unsigned _nvt,_nv0,_nv1,_nv2;
+    unsigned _nvt;
     unsigned _nel,_nelt[6];
     unsigned _nelr,_nelrt[6];
     unsigned _ngroup;
 
     bool *_nodeRegion;
     bool  _nodeRegionFlag;
-    bool *_elRef; //element
+    bool *_isFatherElementRefined; //element
     unsigned _nelf;
 
 };

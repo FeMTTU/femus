@@ -326,13 +326,14 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   //-------------------------------------------------------------------------------------------------------
   // print partitioning
   icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-
-    for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-      if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,3);
-	    var_proc[icount] = _ml_mesh->GetLevel(ig)->epart[ii];
-	icount++;
+  for (unsigned ig=_gridr-1u; ig < _gridn; ig++) {
+    for(int isdom = 0; isdom < _nprocs; isdom++){
+      for( unsigned ii = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom];
+        ii < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; ii++){
+        if ( ig == _gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+          var_proc[icount] = isdom;
+          icount++;
+        }
       }
     }
   }

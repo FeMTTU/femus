@@ -132,7 +132,6 @@ void MeshRefinement::FlagOnlyEvenElementsToBeRefined() {
 //---------------------------------------------------------------------------------------------------------------
 void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_type *otherFiniteElement[6][5]) {
 
-
   _mesh.SetCoarseMesh(mshc);
 
   _mesh.SetFiniteElementPtr(otherFiniteElement);
@@ -140,8 +139,6 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   elem *elc = mshc->el;
 
   _mesh.SetLevel(igrid);
-  //_grid=igrid;
-
 
   // total number of elements on the fine level
   int nelem = elc->GetRefinedElementNumber() * _mesh.GetRefIndex(); // refined
@@ -225,11 +222,9 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
     }
   }
 
-  int ncoarsenodes=elc->GetNodeNumber();
-  _mesh.SetNumberOfNodes(ncoarsenodes);
-  _mesh.el->SetNodeNumber(ncoarsenodes);
-
-  int nnodes = _mesh.GetNumberOfNodes();
+  int nnodes = elc->GetNodeNumber();
+  _mesh.SetNumberOfNodes(nnodes);
+  _mesh.el->SetNodeNumber(nnodes);
 
   //find all the elements near each vertex
   _mesh.BuildAdjVtx(); //TODO
@@ -248,10 +243,9 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
       unsigned istart=_mesh.el->GetElementDofNumber(iel,0);
       unsigned iend=_mesh.el->GetElementDofNumber(iel,1);
       for (unsigned inode=istart; inode<iend; inode++) {
-	if (0 == _mesh.el->GetElementVertexIndex(iel,inode)) {
+	if (0 == _mesh.el->GetElementVertexIndex(iel, inode)) {
 	  nnodes++;
-	  //_mesh.SetNumberOfNodes(nnodes);
-	  _mesh.el->SetElementVertexIndex(iel,inode,nnodes);
+	  _mesh.el->SetElementVertexIndex(iel, inode, nnodes);
 	  unsigned im=_mesh.el->GetElementVertexIndex(iel,edge2VerticesMapping[ielt][inode-istart][0]);
 	  unsigned ip=_mesh.el->GetElementVertexIndex(iel,edge2VerticesMapping[ielt][inode-istart][1]);
 	  //find all the near elements which share the same middle edge point
@@ -293,15 +287,16 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 
   Buildkmid();
 
+  vector < int > epart(_mesh.GetNumberOfElements());
   MeshMetisPartitioning meshmetispartitioning(_mesh);
   if( AMR == true ){
-    meshmetispartitioning.DoPartition(AMR);
+    meshmetispartitioning.DoPartition(epart, AMR);
   }
   else{
-    meshmetispartitioning.DoPartition(*mshc);
+    meshmetispartitioning.DoPartition(epart, *mshc);
   }
-
-  _mesh.FillISvector(elc);
+  _mesh.FillISvector(epart);
+  epart.resize(0);
 
   _mesh.BuildAdjVtx(); //TODO
 

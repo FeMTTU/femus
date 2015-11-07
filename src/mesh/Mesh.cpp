@@ -99,16 +99,16 @@ void Mesh::PrintInfo() {
  **/
 void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag) {
 
-  coords.resize(3);
+  _coords.resize(3);
 
   _level = 0;
 
   if(name.rfind(".neu") < name.size())
   {
-    GambitIO(*this).read(name,coords,Lref,type_elem_flag);
+    GambitIO(*this).read(name,_coords,Lref,type_elem_flag);
   }
   else if(name.rfind(".med") < name.size()) {
-    SalomeIO(*this).read(name,coords,Lref,type_elem_flag);
+    SalomeIO(*this).read(name,_coords,Lref,type_elem_flag);
   }
   else
   {
@@ -120,10 +120,12 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
 
   el->SetNodeNumber(_nnodes);
 
+  std::vector < int > epart(GetNumberOfElements());
   MeshMetisPartitioning meshmetispartitioning(*this);
-  meshmetispartitioning.DoPartition();
+  meshmetispartitioning.DoPartition(epart, false);
+  FillISvector(epart);
+  epart.resize(0);
 
-  FillISvector(NULL);
 
   BuildAdjVtx();
   Buildkel();
@@ -138,9 +140,9 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _coordinate->ResizeSolutionVector("Y");
   _coordinate->ResizeSolutionVector("Z");
 
-  _coordinate->GetSolutionName("X") = coords[0];
-  _coordinate->GetSolutionName("Y") = coords[1];
-  _coordinate->GetSolutionName("Z") = coords[2];
+  _coordinate->GetSolutionName("X") = _coords[0];
+  _coordinate->GetSolutionName("Y") = _coords[1];
+  _coordinate->GetSolutionName("Z") = _coords[2];
 
   _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
 
@@ -158,18 +160,19 @@ void Mesh::GenerateCoarseBoxMesh(
         const double zmin, const double zmax,
         const ElemType type, std::vector<bool> &type_elem_flag) {
 
-  coords.resize(3);
+  _coords.resize(3);
 
   _level = 0;
 
-  MeshTools::Generation::BuildBox(*this,coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,type_elem_flag);
+  MeshTools::Generation::BuildBox(*this,_coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,type_elem_flag);
 
   el->SetNodeNumber(_nnodes);
 
+  std::vector < int > epart(GetNumberOfElements());
   MeshMetisPartitioning meshmetispartitioning(*this);
-  meshmetispartitioning.DoPartition();
-
-  FillISvector(NULL);
+  meshmetispartitioning.DoPartition(epart, false);
+  FillISvector(epart);
+  epart.resize(0);
 
   BuildAdjVtx();
 
@@ -185,9 +188,9 @@ void Mesh::GenerateCoarseBoxMesh(
   _coordinate->ResizeSolutionVector("Y");
   _coordinate->ResizeSolutionVector("Z");
 
-  _coordinate->GetSolutionName("X") = coords[0];
-  _coordinate->GetSolutionName("Y") = coords[1];
-  _coordinate->GetSolutionName("Z") = coords[2];
+  _coordinate->GetSolutionName("X") = _coords[0];
+  _coordinate->GetSolutionName("Y") = _coords[1];
+  _coordinate->GetSolutionName("Z") = _coords[2];
 
   _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
 
@@ -282,7 +285,7 @@ void Mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]){
 
 //dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
 
-void Mesh::FillISvector(elem *elc) {
+void Mesh::FillISvector(vector < int > &epart) {
 
   //BEGIN Initialization for k = 0,1,2,3,4
   //resize the vector IS_Gmt2Mts_dof and dof
@@ -307,8 +310,14 @@ void Mesh::FillISvector(elem *elc) {
       }
     }
   }
+  epart.resize(0);
 
-  el->ReorderMeshElements( IS_Mts2Gmt_elem, elc);
+  if( GetLevel() == 0 ){
+    el->ReorderMeshElements(IS_Mts2Gmt_elem, NULL);
+  }
+  else{
+    el->ReorderMeshElements(IS_Mts2Gmt_elem, _coarseMsh->el);
+  }
 
   IS_Gmt2Mts_dof[3].assign(GetNumberOfElements(), 0);
   IS_Gmt2Mts_dof[4].assign(GetNumberOfElements() * (_dimension + 1), 0);
@@ -397,9 +406,9 @@ void Mesh::FillISvector(elem *elc) {
   if( GetLevel() == 0 ){
     vector <double> coords_temp;
     for(int i = 0;i < 3; i++){
-      coords_temp = coords[i];
+      coords_temp = _coords[i];
         for(unsigned j = 0; j < GetNumberOfNodes(); j++) {
-	  coords[i][IS_Gmt2Mts_dof[2][j]] = coords_temp[j];
+	  _coords[i][IS_Gmt2Mts_dof[2][j]] = coords_temp[j];
       }
     }
   }
