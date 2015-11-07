@@ -345,55 +345,10 @@ unsigned elem::GetNodeNumber()const {
 }
 
 /**
- * Return the total vertex number
- **/
-unsigned elem::GetVertexNodeNumber()const {
-  return _nv0;
-}
-
-/**
- * Return the total vertex+midpoint number
- **/
-unsigned elem::GetMidpointNodeNumber()const {
-  return _nv1;
-}
-
-/**
- * Return the total vertex+midpoint+facepoint number
- **/
-unsigned elem::GetCentralNodeNumber()const {
-  return _nv2;
-}
-
-/**
  * Set the total node number
  **/
 void elem::SetNodeNumber(const unsigned &value) {
   _nvt=value;
-}
-
-/**
- * Set the total vertex number
- **/
-void elem::SetVertexNodeNumber(const unsigned &value) {
-  _nv0=value;
-  _nvt=_nv0;
-}
-
-/**
- * Set the total vertex+midpoint number
- **/
-void elem::SetMidpointNodeNumber(const unsigned &value) {
-  _nv1=value;
-  _nvt=_nv0+_nv1;
-}
-
-/**
- * Set the total vertex+midpoint+facepoint number
- **/
-void elem::SetCentralNodeNumber(const unsigned &value) {
-  _nv2=value;
-  _nvt=_nv0+_nv1+_nv2;
 }
 
 /**

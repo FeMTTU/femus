@@ -147,7 +147,6 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   int nelem = elc->GetRefinedElementNumber() * _mesh.GetRefIndex(); // refined
   nelem += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // not-refined
 
-
   _mesh.SetNumberOfElements(nelem);
   _mesh.el = new elem( elc, _mesh.GetRefIndex() );
 
@@ -228,14 +227,9 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 
   int ncoarsenodes=elc->GetNodeNumber();
   _mesh.SetNumberOfNodes(ncoarsenodes);
-  _mesh.el->SetVertexNodeNumber(ncoarsenodes); //TODO
-  int nnodes = _mesh.GetNumberOfNodes();
+  _mesh.el->SetNodeNumber(ncoarsenodes);
 
-  //int ncoarsenodes=elc->GetNodeNumber();
-  //numOfNotRefElem = elc->GetElementNumber() - elc->GetRefinedElementNumber();
-  //int nnodes = ncoarsenodes - ((numOfNotRefElem * _mesh.GetRefIndex()) - 1);
-  //_mesh.SetNumberOfNodes(nnodes);
-  //_mesh.el->SetVertexNodeNumber(nnodes);
+  int nnodes = _mesh.GetNumberOfNodes();
 
   //find all the elements near each vertex
   _mesh.BuildAdjVtx(); //TODO
@@ -295,7 +289,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
     }
   }
   _mesh.SetNumberOfNodes(nnodes);
-  _mesh.el->SetMidpointNodeNumber(nnodes - _mesh.el->GetVertexNodeNumber());
+  _mesh.el->SetNodeNumber(nnodes);
 
   Buildkmid();
 
@@ -402,11 +396,6 @@ void MeshRefinement::Buildkmid() {
     }
   }
   _mesh.el->SetNodeNumber(nnodes);
-
-  unsigned nv0= _mesh.el->GetVertexNodeNumber();
-  unsigned nv1= _mesh.el->GetMidpointNodeNumber();
-  _mesh.el->SetCentralNodeNumber(nnodes-nv0-nv1);
-
   _mesh.SetNumberOfNodes(nnodes);
 
 }
