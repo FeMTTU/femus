@@ -326,7 +326,6 @@ void Mesh::FillISvector(vector < int > &epart) {
     unsigned localSize = IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom];
     unsigned offsetPWLD = IS_Mts2Gmt_elem_offset[isdom] * (_dimension + 1);
     for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
-      epart[iel] = isdom;
       IS_Mts2Gmt_elem[iel] = iel;
       IS_Gmt2Mts_dof[3][iel] = iel;
       //piecewise linear discontinuous
