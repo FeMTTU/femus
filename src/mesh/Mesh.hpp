@@ -54,10 +54,12 @@ public:
     void PrintInfo();
 
     /** Get the dof number for the element -type- */
-    unsigned GetDofNumber(const unsigned type) const;
+    unsigned GetTotalNumberOfDofs(const unsigned &type) const {
+      return MetisOffset[type][_nprocs];
+    }
 
     /** Set the number of nodes */
-    void SetNumberOfNodes(const unsigned nnodes) {
+    void SetNumberOfNodes(const unsigned &nnodes) {
       _nnodes = nnodes;
     };
 
@@ -67,7 +69,7 @@ public:
     }
 
     /** Set the number of element */
-    void SetNumberOfElements(const unsigned nelem) {
+    void SetNumberOfElements(const unsigned &nelem) {
       _nelem = nelem;
     };
 
@@ -77,7 +79,7 @@ public:
     }
 
     /** Set the grid number */
-    void SetLevel(const unsigned i) {
+    void SetLevel(const unsigned &i) {
         _level=i;
     };
 
@@ -87,7 +89,7 @@ public:
     }
 
     /** Set the dimension of the problem (1D, 2D, 3D) */
-    void SetDimension(const unsigned dim) {
+    void SetDimension(const unsigned &dim) {
       Mesh::_dimension = dim;
       Mesh::_ref_index = pow(2,Mesh::_dimension);  // 8*DIM[2]+4*DIM[1]+2*DIM[0];
       Mesh::_face_index = pow(2,Mesh::_dimension-1u);
@@ -105,9 +107,11 @@ public:
     }
 
     /** Get the metis dof from the gambit dof */
-    const unsigned GetMetisDof(unsigned inode, short unsigned SolType) const {
-      return IS_Gmt2Mts_dof[SolType][inode];
+    unsigned GetMetisDof(const unsigned &inode, const short unsigned &solType) const {
+      return IS_Gmt2Mts_dof[solType][inode];
     }
+
+    unsigned GetMetisDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const;
 
     /** To be added */
     const unsigned GetFaceIndex() const {
@@ -128,16 +132,16 @@ public:
 
     /** This function generates a coarse box mesh */
     void GenerateCoarseBoxMesh(const unsigned int nx,
-                                  const unsigned int ny,
-                                  const unsigned int nz,
-                                  const double xmin, const double xmax,
-                                  const double ymin, const double ymax,
-                                  const double zmin, const double zmax,
-                                  const ElemType type, std::vector<bool> &type_elem_flag);
+                               const unsigned int ny,
+                               const unsigned int nz,
+                               const double xmin, const double xmax,
+                               const double ymin, const double ymax,
+                               const double zmin, const double zmax,
+                               const ElemType type, std::vector<bool> &type_elem_flag);
 
 
     /** To be added */
-    void FillISvector(elem* elc);
+    void FillISvector(vector < int > &epart);
 
     /** To be added */
     void Buildkel();
@@ -156,11 +160,8 @@ public:
     vector <vector < unsigned > > MetisOffset;
     vector< vector < unsigned > > ghost_nd[5];
     vector< vector < int > > ghost_nd_mts[5];
-    vector < unsigned > ghost_size[5];
+
     elem *el;  // topology object
-    vector < int > epart;
-    //vector < int > npart;
-    //int nsubdom;
     static bool (* _SetRefinementFlag)(const std::vector < double >& x,
                                        const int &ElemGroupNumber,const int &level);
     static bool _IsUserRefinementFunctionDefined;
@@ -194,9 +195,6 @@ private:
     /** Build the coarse to the fine projection matrix */
     void BuildCoarseToFineProjection(const unsigned& solType);
 
-    /** Reorder mesh dofs in the following order: vertices, face, center */
-    void ReorderMeshDofs(vector < vector < double> > &coords);
-
     //member-data
     int _nelem;                                //< number of elements
     unsigned _nnodes;                          //< number of nodes
@@ -207,7 +205,8 @@ private:
     vector <unsigned> IS_Gmt2Mts_dof[5];        //< dof map
     vector <unsigned> IS_Gmt2Mts_dof_offset[5]; //< map offset
     static const unsigned _END_IND[5];
-    vector < vector < double > > coords;
+    vector < vector < double > > _coords;
+
 };
 
 } //end namespace femus

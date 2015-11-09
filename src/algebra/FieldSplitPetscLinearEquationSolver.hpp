@@ -120,7 +120,7 @@ private:
     clock_t BuildBDCIndex(const vector <unsigned> &variable_to_be_solved);
 
     /** To be Added */
-    clock_t BuildAMSIndex(const vector <unsigned> &variable_to_be_solved);
+    clock_t BuildFieldSplitIndex(const vector <unsigned> &variable_to_be_solved);
 
     // member data
 
